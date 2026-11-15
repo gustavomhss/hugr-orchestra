@@ -1,0 +1,30 @@
+{
+  "schema": "s1-01-context-truncation-correction/v1",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "producer_host_id": "/root/l1_a1_completion",
+  "artifact_key": "s1.core.context",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "finding": "J1-CONTEXT-F1",
+  "original": {
+    "path": "originals/context.md",
+    "byte_length": 5541,
+    "sha256": "205b44488e2b6349a55480d3becf2e59806c185bec90d43af283e11b3933b1fd",
+    "inherited_commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+    "inherited_repo_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/context.md"
+  },
+  "candidate": {
+    "path": "bodies/context.md",
+    "byte_length": 5909,
+    "sha256": "94e04589d726a017c3cbeb8f758d5d23aae773733597a15ea5236e8e1288aea7"
+  },
+  "change": {
+    "before": "Tool text in this summary input has a separate 2,000-character cap.",
+    "after": "For completed assistant tool results in this summary input, only the serialized output content is truncated when it exceeds 2,000 UTF-16 code units: the serializer keeps the first 2,000 units using JavaScript `slice(0, 2000)` and appends `\\n[truncated]`, so the marked result is longer than 2,000 units. This output truncation does not cap tool arguments or error messages, and is not a universal cap on all model-visible tool content.",
+    "scope": "Only the truncation sentence is replaced; every other original byte is preserved."
+  },
+  "source_evidence": "evidence/context-truncation.md",
+  "delta": "evidence/context-truncation.delta.patch",
+  "semantic_verdict": "NOT_ISSUED",
+  "product_tests": "NOT_RUN",
+  "provider_calls": "NOT_RUN"
+}

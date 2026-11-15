@@ -1,0 +1,54 @@
+{
+  "schema": "s1-01-runtime-r2-bootstrap/v1",
+  "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "previous_code_preserved_at": "/workspace/scratch/efdebfac3411/s1_01/runtime-code",
+  "copied_files": 402,
+  "source_manifest_sha256": "09b5b91ee9ebd2deba7b883ee5d427c2f82d2bea9d3064b5093ecf551e34c66d",
+  "complete_comparison": "/workspace/scratch/efdebfac3411/s1_01/receipts/runtime-candidate-comparison.json",
+  "commands": [
+    {
+      "argv": [
+        "npm",
+        "ci",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "cwd": "/workspace/scratch/efdebfac3411/s1_01/runtime-r2/modules/atlas",
+      "started_at": "2026-11-14T23:50:59.064358+00:00",
+      "ended_at": "2026-11-14T23:51:01.822680+00:00",
+      "exit_code": 0,
+      "stdout_sha256": "ad1a23317dc28ffd134c535f27b0adca3bd330c18cc72c0509e94ef3bf680584",
+      "stderr_sha256": "7125f194612fcff2f454c05d848e7cb71facc1967b4d5017e25b34fdee3ba74f"
+    },
+    {
+      "argv": [
+        "node",
+        "scripts/fix-scip-types.mjs"
+      ],
+      "cwd": "/workspace/scratch/efdebfac3411/s1_01/runtime-r2/modules/atlas",
+      "started_at": "2026-11-14T23:51:01.823043+00:00",
+      "ended_at": "2026-11-14T23:51:01.889009+00:00",
+      "exit_code": 0,
+      "stdout_sha256": "9ce7ef0c8339d106f3259c824a6e88c0bb408b11e790b226a18b79bb888eb3a5",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "argv": [
+        "/workspace/scratch/efdebfac3411/s1_01/runtime-tools/bun",
+        "run",
+        "typecheck",
+        "--force"
+      ],
+      "cwd": "/workspace/scratch/efdebfac3411/s1_01/runtime-r2/modules/atlas",
+      "started_at": "2026-11-14T23:51:01.889362+00:00",
+      "ended_at": "2026-11-14T23:51:07.412324+00:00",
+      "exit_code": 0,
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "4fec200faf0180516bb7b68652c0c2c29e56573b8c74611b73fa9d49cf7f5e6c"
+    }
+  ],
+  "product_tests": "NOT_RUN",
+  "binding": "NEW_EXACT_BINDING_REQUIRED",
+  "publication_policy_created": false
+}

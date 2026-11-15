@@ -1,0 +1,20 @@
+{
+  "schema": "s1-01-actual-command/v1",
+  "purpose": "Real prepublication refusal control; no package has been imported or published in this isolated state. Not successful consumption.",
+  "code_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "argv": [
+    "/workspace/scratch/efdebfac3411/s1_01/runtime-tools/bun",
+    "scripts/genesis-native.ts",
+    "index",
+    "/workspace/scratch/efdebfac3411/s1_01/atlas-source",
+    "/workspace/scratch/efdebfac3411/s1_01/receipts/atlas-prepublication/index-query.json"
+  ],
+  "cwd": "/workspace/scratch/efdebfac3411/s1_01/runtime-code/modules/atlas",
+  "isolated_root": "/workspace/scratch/efdebfac3411/s1_01/atlas-source",
+  "started_at": "2026-11-14T23:34:00.422707+00:00",
+  "ended_at": "2026-11-14T23:34:00.911377+00:00",
+  "exit_code": 2,
+  "stdout_sha256": "2dd4491a6b54276f5ecac40debfd740cb87c68b5e7eaf55f0ab4a01efbf5cb60",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "product_test": false
+}

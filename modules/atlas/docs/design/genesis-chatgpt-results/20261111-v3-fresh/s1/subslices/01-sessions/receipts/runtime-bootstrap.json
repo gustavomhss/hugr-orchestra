@@ -1,0 +1,63 @@
+{
+  "schema": "genesis-s1-01-runtime-bootstrap-receipt/v1",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "runtime_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "code_root": "/workspace/scratch/efdebfac3411/s1_01/runtime-code/modules/atlas",
+  "materialization": "399 connector-captured files; Git blob hashes verified in capture-manifest.json; not a Git checkout",
+  "operations": [
+    {
+      "argv": [
+        "npm",
+        "ci",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "exit_code": 0,
+      "observed_summary": "167 packages installed; npm warned of unknown http-proxy environment config",
+      "source": "Visible execution output in current host conversation; this record is a retrospective summary, not raw stdout"
+    },
+    {
+      "argv": [
+        "node",
+        "scripts/fix-scip-types.mjs"
+      ],
+      "exit_code": 0,
+      "observed_summary": "Official package type/exports repair script completed",
+      "source": "Visible execution output"
+    },
+    {
+      "argv": [
+        "/workspace/scratch/efdebfac3411/s1_01/runtime-tools/bun",
+        "scripts/genesis-native.ts"
+      ],
+      "exit_code": 1,
+      "observed_summary": "Before typecheck: @atlas/knowledge dist missing",
+      "source": "Visible execution output; failure preserved"
+    },
+    {
+      "argv": [
+        "/workspace/scratch/efdebfac3411/s1_01/runtime-tools/bun",
+        "typecheck",
+        "--force"
+      ],
+      "exit_code": 0,
+      "observed_summary": "$ tsc -b --force",
+      "source": "Visible execution output, session23337 completed; receipt is not CI"
+    },
+    {
+      "argv": [
+        "/workspace/scratch/efdebfac3411/s1_01/runtime-tools/bun",
+        "scripts/genesis-native.ts"
+      ],
+      "exit_code": 1,
+      "observed_summary": "After compilation: expected usage error listing prepare, publish, index, read",
+      "source": "Visible execution output; entrypoint load only, not product test"
+    }
+  ],
+  "limits": [
+    "The package-local TypeScript build covers the exact materialized runtime sources; tests were not captured or executed.",
+    "No aggregate S1 CI or guard PASS is claimed.",
+    "No provider call, authentication change or product activation occurred."
+  ]
+}

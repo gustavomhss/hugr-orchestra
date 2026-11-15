@@ -1,0 +1,978 @@
+{
+  "schema": "genesis-native-package/v1",
+  "campaign": "20261111-v1",
+  "protocol_epoch": "parallel-v3-fresh",
+  "results_epoch": "20261111-v3-fresh",
+  "session": "S1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_ref": {
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "path": ".orchestra/skills/execute-genesis/SKILL.md",
+    "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+  },
+  "scope": "orchestra.s1",
+  "package_state": "IN_PROGRESS",
+  "contract": {
+    "criteria": [
+      "GO-A1",
+      "GO-A2",
+      "GO-A3",
+      "GO-A4",
+      "GO-A5",
+      "QS-1",
+      "QS-2",
+      "QS-3",
+      "QS-4",
+      "QS-5",
+      "QS-6",
+      "AC-01",
+      "AC-02",
+      "AC-03",
+      "CC-1",
+      "CC-2",
+      "CC-3",
+      "CC-7",
+      "GO-I1",
+      "GO-I2",
+      "GO-I7",
+      "GO-I8"
+    ],
+    "oracle_ref": null
+  },
+  "required_artifact_keys": [
+    "s1.core.configuration",
+    "s1.core.project",
+    "s1.subslice01.config-project-supplement"
+  ],
+  "artifacts": [
+    {
+      "key": "s1.core.configuration",
+      "scope": "orchestra.s1",
+      "title": "Configuration precedence, trust and Location service lifetime",
+      "layer": 1,
+      "need": "component",
+      "body": {
+        "path": "inherited/configuration.md",
+        "encoding": "utf-8",
+        "byte_length": 4414,
+        "sha256": "eed22f8ddd9f3fdad18b39cfb8e52ca5f412bad8b21de10fef58ce113ba60ab1"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned repository implementation and explicitly distinguished repository normative documentation; source inspection only. No product execution or test result is asserted.",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+      },
+      "validity": "supported",
+      "gaps": [
+        "Project configuration remains an open-time snapshot while globals refresh per entries call.",
+        "Legacy upgrade helpers and consumer-specific policies are not exhaustively inspected.",
+        "No Location eviction/reload or trust transition was executed."
+      ],
+      "evidence": [
+        {
+          "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/review-evidence-compact.md",
+          "sha256": "1d28ad12ce7c525d230e42486b6bccd691104d5e6acd4a815728dda7b8ed8676"
+        },
+        {
+          "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/excerpt-map.json",
+          "sha256": "301173d05efb7a14a5fedfafbf6755d34e413100dadd7f21560a62e0f4cff471"
+        }
+      ],
+      "input_keys": [
+        "file:packages/core/src/config.ts",
+        "file:packages/core/src/config/trust.ts",
+        "file:packages/core/src/location-services.ts",
+        "file:packages/core/src/location-service-map.ts",
+        "file:docs/specs/v2/config.md"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config.ts",
+          "git_blob_sha": "52985a1dfc3575efca662dcb0667d81a1ab6f1de",
+          "sha256": "bc4ce670f2214fcecab7f7a705f04aecd0f48c7cf03076c67e55421956a625e6"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/trust.ts",
+          "git_blob_sha": "a8b068f1fdb5c01e59ad43c56b9e6241ec3dfc78",
+          "sha256": "f00fbbf4cb98646c376ff14662e4e43d16ad64b11b439d7abccffae7723569b9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/location-services.ts",
+          "git_blob_sha": "c754426dde31acad2dbbfd96459b32624cfdd2e4",
+          "sha256": "1b44f26207ca9fed468fb440d3b8fe0b55cabd5207958f097a7fd2d1488d9131"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/location-service-map.ts",
+          "git_blob_sha": "2f9f70c7edf21ab9e8d57eb6966aacab13c47c33",
+          "sha256": "eab185ee9a1ec6ec1c16bb686b5cd57caf9b6ef21100393277c902e7f4b8977f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "docs/specs/v2/config.md",
+          "git_blob_sha": "81353980473012b1b3d311f0a638e3d65ba8cbcd",
+          "sha256": "5b8df788e30f2120eaa1c12c94d9ca19738fb16d14ddc4cc372b129d535d37f8"
+        }
+      ],
+      "recipe_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/recipe.json",
+        "sha256": "79c21a0eb94bf9eb6927984134592a688d3b028c2213e5552bb1017ae50bd8fb"
+      },
+      "build_dependencies": [],
+      "navigation": [],
+      "producer_request_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/request.txt",
+        "sha256": "5ade453a557acd559e6796cab8f6ed42d5141ddf668d3c6f06169e7ce8840d7d"
+      },
+      "producer_response_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/response.md",
+        "sha256": "79a01b28b5df5d99a60f8dfd5af2b223671aec009ec9e77ae755cf38096ff12d"
+      },
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "s1.core.project",
+      "scope": "orchestra.s1",
+      "title": "Project identity, canonical paths and retained checkpoints",
+      "layer": 1,
+      "need": "component",
+      "body": {
+        "path": "inherited/project.md",
+        "encoding": "utf-8",
+        "byte_length": 4569,
+        "sha256": "937f99ba01085530af69abf620793e1b518c32867b956e805a5c68d65f950c43"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned repository implementation and explicitly distinguished repository normative documentation; source inspection only. No product execution or test result is asserted.",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+      },
+      "validity": "supported",
+      "gaps": [
+        "Git mutation, copy strategies, repository caches, snapshots/revert and formatter/LSP leaves require deeper source reads for behavior-specific changes.",
+        "Historical project route sketches are not current API proof.",
+        "Checkpoint semantic validity and runtime restoration were not tested."
+      ],
+      "evidence": [
+        {
+          "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/review-evidence-compact.md",
+          "sha256": "1d28ad12ce7c525d230e42486b6bccd691104d5e6acd4a815728dda7b8ed8676"
+        },
+        {
+          "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/excerpt-map.json",
+          "sha256": "301173d05efb7a14a5fedfafbf6755d34e413100dadd7f21560a62e0f4cff471"
+        }
+      ],
+      "input_keys": [
+        "file:packages/core/src/project.ts",
+        "file:packages/core/src/project/directories.ts",
+        "file:packages/core/src/location-mutation.ts",
+        "file:packages/core/src/filesystem.ts",
+        "file:packages/core/src/project/checkpoint.ts",
+        "file:packages/core/src/session.ts",
+        "file:docs/specs/project.md"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/project.ts",
+          "git_blob_sha": "bbedbbf34cbc5b431538db37993c0cc0830fa393",
+          "sha256": "a430e2c36fdf6544efcb36c6d13da86826083b41073a010d788e8629b9f89a63"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/project/directories.ts",
+          "git_blob_sha": "7863f4d2640a9b4bd85febab338610446bf839ef",
+          "sha256": "2b4d307a7098dd77da07bcd6dfcdd3bc552b7f6a585e35ff49aba6f320985d4a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/location-mutation.ts",
+          "git_blob_sha": "5c80742365c78301f296d5fe87fd8844a1efc44c",
+          "sha256": "1eef86e372d56b4137ea0b6576b13f8eff655737d451e2446f87f97c8a02001a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/filesystem.ts",
+          "git_blob_sha": "46791eb40338be5fcc31bc22d110a9899d6b5d80",
+          "sha256": "035a149e885fb7bb69b4c9a5ce42ee5368eef0d6b23d8140062d5a086ba8135f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/project/checkpoint.ts",
+          "git_blob_sha": "5972b18ab5b5bd6792447261cd65933aee379e99",
+          "sha256": "25156c4e4b8cdb91db190f5d388c78b48e198be8511dd95c0aaef4821213531a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/session.ts",
+          "git_blob_sha": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+          "sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "docs/specs/project.md",
+          "git_blob_sha": "35adeb94cff7e1d24adc9844f9e25fdb17df08a5",
+          "sha256": "f1b96968476b6e0723fb5f42a9a3d9741cb2381b2892ae27392127a19507374c"
+        }
+      ],
+      "recipe_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/recipe.json",
+        "sha256": "79c21a0eb94bf9eb6927984134592a688d3b028c2213e5552bb1017ae50bd8fb"
+      },
+      "build_dependencies": [],
+      "navigation": [],
+      "producer_request_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/request.txt",
+        "sha256": "5ade453a557acd559e6796cab8f6ed42d5141ddf668d3c6f06169e7ce8840d7d"
+      },
+      "producer_response_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/response.md",
+        "sha256": "79a01b28b5df5d99a60f8dfd5af2b223671aec009ec9e77ae755cf38096ff12d"
+      },
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "s1.subslice01.config-project-supplement",
+      "scope": "orchestra.s1",
+      "title": "Configuration and project source supplement",
+      "layer": 1,
+      "need": "component",
+      "body": {
+        "path": "bodies/config-project-supplement.md",
+        "encoding": "utf-8",
+        "byte_length": 16077,
+        "sha256": "2dc31d71b747415a9a7e9ffaaeeddd53ad74dda21ab66320468ff45dd40d45d3"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "S1-01 assigned configuration/project implementation; exact baseline source inspection and explicit cross-owner boundaries. No product execution.",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+      },
+      "validity": "supported",
+      "gaps": [
+        "Independent semantic review is pending.",
+        "Source-only limits and partial reads are explicit in body and coverage; runtime operations are NOT_RUN.",
+        "Actual Atlas input versions and binding/publication receipts are not supplied by producer."
+      ],
+      "evidence": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/config_project/evidence.md",
+          "sha256": "094cba07d3242c6cf70116a8374df92430b81c831ff303099c7a10426917c69d"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/config_project/excerpt-map.json",
+          "sha256": "f719fc37627f56b87e9f3cfd6bcfdd4c67167d2ab3087cc758121a00031fae03"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/config_project/coverage.json",
+          "sha256": "310923117ea11a12233044feb263527dc3747c62f017b013188506458e51aae7"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/config_project/source-capture-manifest.json",
+          "sha256": "092f6cea9f9f4ea19c99d5091e3cd011827ebaa1c79311d9aee08b2a7c31f08e"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/config_project/inherited/provenance.json",
+          "sha256": "1669d522d758891dda8dee14b0d5cc9674a8400701920c73d771aab5f6ba7f90"
+        }
+      ],
+      "input_keys": [
+        "file:apps/cli/script/schema-files.ts",
+        "file:apps/cli/script/schema.ts",
+        "file:docs/specs/project.md",
+        "file:docs/specs/v2/config.md",
+        "file:packages/core/src/behavior.ts",
+        "file:packages/core/src/config/agent-file.ts",
+        "file:packages/core/src/config/agent.ts",
+        "file:packages/core/src/config/attachments.ts",
+        "file:packages/core/src/config/command.ts",
+        "file:packages/core/src/config/compaction.ts",
+        "file:packages/core/src/config/continuity.ts",
+        "file:packages/core/src/config/experimental.ts",
+        "file:packages/core/src/config/formatter.ts",
+        "file:packages/core/src/config/lsp.ts",
+        "file:packages/core/src/config/markdown.ts",
+        "file:packages/core/src/config/plugin/agent.ts",
+        "file:packages/core/src/config/plugin/command.ts",
+        "file:packages/core/src/config/plugin/external.ts",
+        "file:packages/core/src/config/plugin/provider.ts",
+        "file:packages/core/src/config/plugin/reference.ts",
+        "file:packages/core/src/config/plugin/skill.ts",
+        "file:packages/core/src/config/plugin-file.ts",
+        "file:packages/core/src/config/plugin.ts",
+        "file:packages/core/src/config/provider-options.ts",
+        "file:packages/core/src/config/provider.ts",
+        "file:packages/core/src/config/reference.ts",
+        "file:packages/core/src/config/relay.ts",
+        "file:packages/core/src/config/research.ts",
+        "file:packages/core/src/config/tool-output.ts",
+        "file:packages/core/src/config/trust.ts",
+        "file:packages/core/src/config/upgrade/agent.ts",
+        "file:packages/core/src/config/upgrade/attachment.ts",
+        "file:packages/core/src/config/upgrade/command.ts",
+        "file:packages/core/src/config/upgrade/formatter.ts",
+        "file:packages/core/src/config/upgrade/lsp.ts",
+        "file:packages/core/src/config/upgrade/mcp.ts",
+        "file:packages/core/src/config/upgrade/permission.ts",
+        "file:packages/core/src/config/upgrade/plugin.ts",
+        "file:packages/core/src/config/upgrade/provider.ts",
+        "file:packages/core/src/config/upgrade/skills.ts",
+        "file:packages/core/src/config/upgrade/source.ts",
+        "file:packages/core/src/config/upgrade/upgrade.ts",
+        "file:packages/core/src/config/watcher.ts",
+        "file:packages/core/src/config.ts",
+        "file:packages/core/src/file-mutation.ts",
+        "file:packages/core/src/file.ts",
+        "file:packages/core/src/filesystem/fff.bun.ts",
+        "file:packages/core/src/filesystem/fff.node.ts",
+        "file:packages/core/src/filesystem/ignore.ts",
+        "file:packages/core/src/filesystem/protected.ts",
+        "file:packages/core/src/filesystem/search.ts",
+        "file:packages/core/src/filesystem/watcher.ts",
+        "file:packages/core/src/filesystem.ts",
+        "file:packages/core/src/flag/flag.ts",
+        "file:packages/core/src/fs-util.ts",
+        "file:packages/core/src/git-cli.ts",
+        "file:packages/core/src/git.ts",
+        "file:packages/core/src/guardrail.ts",
+        "file:packages/core/src/location-mutation.ts",
+        "file:packages/core/src/location-service-map.ts",
+        "file:packages/core/src/location-services.ts",
+        "file:packages/core/src/location.ts",
+        "file:packages/core/src/patch.ts",
+        "file:packages/core/src/policy.ts",
+        "file:packages/core/src/project/checkpoint.sql.ts",
+        "file:packages/core/src/project/checkpoint.ts",
+        "file:packages/core/src/project/copy-strategies.ts",
+        "file:packages/core/src/project/copy.ts",
+        "file:packages/core/src/project/directories.ts",
+        "file:packages/core/src/project/schema.ts",
+        "file:packages/core/src/project/sql.ts",
+        "file:packages/core/src/project.ts",
+        "file:packages/core/src/pull-request.ts",
+        "file:packages/core/src/repository-cache.ts",
+        "file:packages/core/src/repository.ts",
+        "file:packages/core/src/session/execution/local.ts",
+        "file:packages/core/src/session.ts",
+        "file:packages/core/src/snapshot.ts",
+        "file:packages/core/src/tui-config-files.ts",
+        "file:packages/core/src/vcs.ts",
+        "file:packages/core/src/workspace.ts",
+        "file:packages/core/test/config/config-global.test.ts",
+        "file:packages/core/test/config/config.test.ts",
+        "file:packages/core/test/config/provider-policy-migration.test.ts",
+        "file:packages/core/test/config/trust.test.ts",
+        "file:packages/core/test/location-hoisted-map.test.ts",
+        "file:packages/core/test/location-mutation.test.ts",
+        "file:packages/core/test/project-checkpoint-errors.test.ts",
+        "file:packages/core/test/project-copy.test.ts",
+        "file:packages/schema/src/location.ts",
+        "file:schema/config.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/01-sessions/sources.jsonl",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/config_project/recipe.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/config_project/public-contract-v1.json"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "apps/cli/script/schema-files.ts",
+          "git_blob_sha": "b965bf921f0a75ab6abfd2149e1d24b50f86f83b",
+          "sha256": "557cffde6807b3d8f038719eddc65f6eccf546d7d01347011572e5291b7ca9a3"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "apps/cli/script/schema.ts",
+          "git_blob_sha": "d590a1671d7c3034652b842fc330080f2ae21086",
+          "sha256": "2bfffb625a6523c85c5681f44906505c0f701cb966fbf37a49fa45b8b99b24ca"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "docs/specs/project.md",
+          "git_blob_sha": "35adeb94cff7e1d24adc9844f9e25fdb17df08a5",
+          "sha256": "f1b96968476b6e0723fb5f42a9a3d9741cb2381b2892ae27392127a19507374c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "docs/specs/v2/config.md",
+          "git_blob_sha": "81353980473012b1b3d311f0a638e3d65ba8cbcd",
+          "sha256": "5b8df788e30f2120eaa1c12c94d9ca19738fb16d14ddc4cc372b129d535d37f8"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/behavior.ts",
+          "git_blob_sha": "4d678d8b4b34b01d1dd6cb828963ae2bed223697",
+          "sha256": "fa9b716c91dbd12964ef65dc86d3a4e864d8bfb279a9969553ee2c1bb12324c4"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/agent-file.ts",
+          "git_blob_sha": "a9c4b087c78a6e6de5cc809091d583d16838b662",
+          "sha256": "4945496acac980f49dad47d87733ea1e118ea3402d502e4db5f2ff70f2bcb052"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/agent.ts",
+          "git_blob_sha": "43c40ed0ca24c5c8e9450b82c973d246756a7eeb",
+          "sha256": "3e54e91c80e320bf83c3103134d125a5b887f8b7539c7a2f2ab99f408b8cc3d4"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/attachments.ts",
+          "git_blob_sha": "f14775ff3f7d24cab32662498d93d9ff19582e13",
+          "sha256": "7ac5e3d8cd80fcc9d3a2fd0c885647b04843879b60f30d197425b1127c331db1"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/command.ts",
+          "git_blob_sha": "394079b1e983a33aa0ca7243b9672a22cc78c28c",
+          "sha256": "0446598d8f0686d3240cfed1b914237267d7e82eb9b9d4c6c213b65c7ef3e128"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/compaction.ts",
+          "git_blob_sha": "3c5960c835568c73ef4167b90b2869e8e1a3b378",
+          "sha256": "6d9247b8155b368c6de2e13b48fce9e1a87468ac442dba0a29f7b3b3cbfb10b6"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/continuity.ts",
+          "git_blob_sha": "c39bf1fb9b0582535874cf9e52d0fb84b0101cb4",
+          "sha256": "dd158ab3e528f458e2ec11bb082d09905ca6e6591458e5f6359b85a69aa06d9e"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/experimental.ts",
+          "git_blob_sha": "90793b7bfbe725cb44e0c8f15db01523657b2ce3",
+          "sha256": "b0a808b772e40701e09346b779bf1a052e28e16c743582d4bef030ef0097acaa"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/formatter.ts",
+          "git_blob_sha": "e1f90302d1a99b5e06040725428f19f15b93bdc7",
+          "sha256": "270d5a02e544033d55f6241b74aa7e37e7507e59b35442ab76f3e1a660bf69b6"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/lsp.ts",
+          "git_blob_sha": "651597befddec760addf139c0edc82bb3e65910e",
+          "sha256": "d69ab9324e93c42df302ac5b195a298dc73af52cc72dbafa68e2d1ad7c4e09fc"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/markdown.ts",
+          "git_blob_sha": "41607478aec6bad2a958fa666de49d7775fb6206",
+          "sha256": "73342be1fcc51b47bb7961dea1be5284d1b62bb8ca4623a60fea66924ffc8079"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/plugin/agent.ts",
+          "git_blob_sha": "5d95b5ffc582e6f841cb1245099d9c0b2b7c9b5b",
+          "sha256": "c147c373a924480fed6d2e3e947127b44dba3a4603d9c74d0de79996bad8f91b"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/plugin/command.ts",
+          "git_blob_sha": "f9b31f8e45a1ad10c3543b4ba700ddb178ddd227",
+          "sha256": "a16fb813a004effa9379edb5fba6b8b0bdb051af38d64fc6488f9c86f0b203ea"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/plugin/external.ts",
+          "git_blob_sha": "cb47c685fb303085f39ba1b520c9c740701941fe",
+          "sha256": "b87d6e60db4795c2526b5fba6054ea82033399e5702f993d83394b2d7da2239f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/plugin/provider.ts",
+          "git_blob_sha": "6f6e0528da7334228da7b5238ea9319c3b2247d4",
+          "sha256": "fd5a10579ff6b12192540d82d0ca78098fad370c3267b69c8fa6f02161f85334"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/plugin/reference.ts",
+          "git_blob_sha": "d5fa53c41129ccfabb91d077ec7c2c1fdb3b68ba",
+          "sha256": "c3a387629c6f99c5ca5eb8eca8d21fa1d56f86d683713eca67e484a559671f5a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/plugin/skill.ts",
+          "git_blob_sha": "ee16e6694a52221899b2853f5bd85dd686f95bb6",
+          "sha256": "0ede3a6fac0677b83cb8499afaacda3ca33ab48bee5c2e5dad776c2d4494579e"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/plugin-file.ts",
+          "git_blob_sha": "5a17a19e04defc4a2fccfd1b2b7be113528d45df",
+          "sha256": "6e0911e17c225b03fe70b40f8b8982970c6aa3b0a42fb8fbe618d5dee6c959cb"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/plugin.ts",
+          "git_blob_sha": "e5fd6661ff52d001b15c967d935c8e0ede2f73a3",
+          "sha256": "8b17944b7a97e7b2d06d5a71143a58f35385822b082567dc46015c84d73bd807"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/provider-options.ts",
+          "git_blob_sha": "8d2b70ec531a941db108918edf49c687a9788a82",
+          "sha256": "5144061e190db96a4396f3c4ea48fbea5b1fa55566de76f0adf4d6e5a236987d"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/provider.ts",
+          "git_blob_sha": "1b547570783a08f90db666e1eee37b4a66cc3e5c",
+          "sha256": "1cf407997171fb2ff7f870a891ac227d23240b201cda86876ed91e075da84f99"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/reference.ts",
+          "git_blob_sha": "4518eb4f87d630c469d99a761ca9d97690c690c3",
+          "sha256": "a58d18d8506e015f9a161b65acf8695e723ae556ffe8a04e959c61786825b728"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/relay.ts",
+          "git_blob_sha": "93a668aaca401305b76af9b33ba4618038497084",
+          "sha256": "c42da75505d46fc36a0014ae59d990a8ed01916b554f6f1cbcc25bbf49427629"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/research.ts",
+          "git_blob_sha": "f25e8f9b0bf290b3d49d449b9b1da95e4d127c02",
+          "sha256": "e316c7e71aebd0f6fddd334dbf4b4f9a2be6a8a40a7c8a65709e32be250b9d3c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/tool-output.ts",
+          "git_blob_sha": "12358540c334e30729629816da9a7b75e1a7adcd",
+          "sha256": "534412385f933f041c89ba8f7bde46f09be5467e70e6ff520a0c6d32d8bd3da0"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/trust.ts",
+          "git_blob_sha": "a8b068f1fdb5c01e59ad43c56b9e6241ec3dfc78",
+          "sha256": "f00fbbf4cb98646c376ff14662e4e43d16ad64b11b439d7abccffae7723569b9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/upgrade/agent.ts",
+          "git_blob_sha": "8274dc4b186c9d18e9b86f3c88f760d6238e1cd8",
+          "sha256": "36c6aa7625992bb18c4e4cee870311c02c31e44c0beefad15d44b7c80578914c"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/upgrade/attachment.ts",
+          "git_blob_sha": "0b90bbf8224f63f3b3e404a59733f7657890494d",
+          "sha256": "8c2c143ce047666be4ac1b0ea13c5938e3126b90aa00d357b7aa83bddaa61930"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/upgrade/command.ts",
+          "git_blob_sha": "f3c9a8fdc5abacab5f31e7678cad0ba344b5b34f",
+          "sha256": "c73c8275889ffb117b4618c778ac362f56d00ac20914a37e6bffb873b297d745"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/upgrade/formatter.ts",
+          "git_blob_sha": "e8b723afd807cd0fe16ba2e403f6e3ce7bc52be8",
+          "sha256": "1ef793e327f718fa9747c8cd27ed90cb083f35f13c72cb5c23aaca32bc798657"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/upgrade/lsp.ts",
+          "git_blob_sha": "dc4e9fb2188e58409957ec57ae27df918059767a",
+          "sha256": "e1d2d194139aec26cfaecad8cd60e3e3b0edb9993a3d4afae834b2605fa2a0b8"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/upgrade/mcp.ts",
+          "git_blob_sha": "85c6c2089cf69f7eb9b7e0884ab1f6abe0694b21",
+          "sha256": "8e99de3b323601aa974c4efdcd3b571474da4f6ed1228628a59fb8010d4348fc"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/upgrade/permission.ts",
+          "git_blob_sha": "1397266474ef6b43eaccac49375eb0a5c4a0684d",
+          "sha256": "7e554518d9b252f9cc530559b86fe9b1a34f8c51f41e02991c7a8c862e4154b6"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/upgrade/plugin.ts",
+          "git_blob_sha": "7c5bf561985ee4a0c96e53267aafecc9c244f505",
+          "sha256": "68208addfc90b1eaae38c469f5111c1e10dad86e78e413fedf9f024b30010b21"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/upgrade/provider.ts",
+          "git_blob_sha": "3dc9448f95cad0246ec92acb4f5b122b6ee80f80",
+          "sha256": "2acd3556182c14ca45838905c8bdbf1b745bd810eadc867c612e02da73d68462"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/upgrade/skills.ts",
+          "git_blob_sha": "7a72bd6652d66616c01298a36dd3bccf1752581e",
+          "sha256": "56d2f8014547ae2a26a37effe0f717f03bcb1790224f8848f1f3fd80b6df9ac2"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/upgrade/source.ts",
+          "git_blob_sha": "df3f45e41effe725e09fd540048c85432cec15ca",
+          "sha256": "b89b00e7c2df1c2fc646ea918df1e6c935724dc7ebeadde88f168ecd141e6cc4"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/upgrade/upgrade.ts",
+          "git_blob_sha": "581d2e879c6a70587a2a0c675c7433eddb9e85d7",
+          "sha256": "4dbb3329bd0c2f4dc58d436e232332bdadf9033ca2cf14a113c3d754a59a4e68"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/watcher.ts",
+          "git_blob_sha": "2df6c876bfc65bd7c10d8fcda91c97eaf888554d",
+          "sha256": "641b131c4c169e222b1513ff8e9ff982a173d4ab6023e7c85a9f2b46796a95c0"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config.ts",
+          "git_blob_sha": "52985a1dfc3575efca662dcb0667d81a1ab6f1de",
+          "sha256": "bc4ce670f2214fcecab7f7a705f04aecd0f48c7cf03076c67e55421956a625e6"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/file-mutation.ts",
+          "git_blob_sha": "1a1af7ca0edd6b51db81820cbd8b45cad1eb7a3a",
+          "sha256": "ce3a0492d328541fec740d127abfa7cbfe5fb50a952cf5cf459c423d25e1a9bf"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/file.ts",
+          "git_blob_sha": "84f181e0300b3be31cca73625f77d15154df4e8f",
+          "sha256": "9fbb71d49fa149c17322ec82bb61649231a4b14f2ad53d481d4d8c3126420d66"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/filesystem/fff.bun.ts",
+          "git_blob_sha": "4a6bd0e70782fa550d6c856e588a38e45d2de603",
+          "sha256": "1e5a67ea2b927446fb1573e1ea3634c360db7fae006aaec80fbce000059bfb5a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/filesystem/fff.node.ts",
+          "git_blob_sha": "22e97469a02a529d4717499ae0fcdc81329c6f3e",
+          "sha256": "e7af2da03536cd35ba1408742394789567c4f71bae917aa9836030104c262690"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/filesystem/ignore.ts",
+          "git_blob_sha": "7d68c38e192b926ac0c8bebc3ede6fe0a1b65387",
+          "sha256": "dde6ddd6d75a2ab4089e62c73ff0edb352db35619608af4375e1968768c0a427"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/filesystem/protected.ts",
+          "git_blob_sha": "a7646dfb48f2103bac170a983af45647e48e1be4",
+          "sha256": "c2ed8521ace1153b7fbf29366a9919eaea20561de605f4ae5552abc73e4da100"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/filesystem/search.ts",
+          "git_blob_sha": "4a5ff27504876a2766ae2ee90c42c864aa5aaabc",
+          "sha256": "aeafe401f997e9fd27ad2601fa147c37ed285bc33ccf708e2f7b36882c6c68f7"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/filesystem/watcher.ts",
+          "git_blob_sha": "4983f9de6580fff07e3359692304c2fcea966dc0",
+          "sha256": "9792349b86b6fbda623f16c86d9ddad5ac619f467788545476ff249e2303bfb0"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/filesystem.ts",
+          "git_blob_sha": "46791eb40338be5fcc31bc22d110a9899d6b5d80",
+          "sha256": "035a149e885fb7bb69b4c9a5ce42ee5368eef0d6b23d8140062d5a086ba8135f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/flag/flag.ts",
+          "git_blob_sha": "c189af8a66d69e7d755a1ef0a0e8e36a32e71ff2",
+          "sha256": "94fd46ee9897ab4c3350ad90915f6abeb653272237cd61e4823db02f6572cbdc"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/fs-util.ts",
+          "git_blob_sha": "695361a7b2812386ceb0dfcc0f535c146e744a9e",
+          "sha256": "075165942ad976929aa9e3257d63f6812a3f943472aeb960ffeb9be81ecc312a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/git-cli.ts",
+          "git_blob_sha": "16794c1268c48aac93e894777a37e676a2b44c2a",
+          "sha256": "338e900d0432677f5557c8275cdb4777dbd780735146dcfcb1a24aa450902e6b"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/git.ts",
+          "git_blob_sha": "a90b3707a8d125ea8d4f78b70e03575a45a2fce3",
+          "sha256": "097e4477983842cddc5edebd6826767f8bbda9753c68eb7255165019fbbdbeaf"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/guardrail.ts",
+          "git_blob_sha": "fd60ef512f2c2250f08d9313b09052c2e1fc232c",
+          "sha256": "95f28f7c9b06b031cb4a2f58554f151975909a51f94b1d4139735607e025ef91"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/location-mutation.ts",
+          "git_blob_sha": "5c80742365c78301f296d5fe87fd8844a1efc44c",
+          "sha256": "1eef86e372d56b4137ea0b6576b13f8eff655737d451e2446f87f97c8a02001a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/location-service-map.ts",
+          "git_blob_sha": "2f9f70c7edf21ab9e8d57eb6966aacab13c47c33",
+          "sha256": "eab185ee9a1ec6ec1c16bb686b5cd57caf9b6ef21100393277c902e7f4b8977f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/location-services.ts",
+          "git_blob_sha": "c754426dde31acad2dbbfd96459b32624cfdd2e4",
+          "sha256": "1b44f26207ca9fed468fb440d3b8fe0b55cabd5207958f097a7fd2d1488d9131"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/location.ts",
+          "git_blob_sha": "af889448fe9340187266ab622cb7249751e52328",
+          "sha256": "69c9d5e02ae2b0526e2662457c38ac408cab0bc931eee6b9e470d6cac558b0fa"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/patch.ts",
+          "git_blob_sha": "0a71f3a9234802dee1a20964c08f2babe69809c7",
+          "sha256": "c3eee05f61b4d680f3b127d340fce08457265942040790acac86f6733020dea8"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/policy.ts",
+          "git_blob_sha": "043d52eec849a25d2f904152cbe2afd1b83a78ef",
+          "sha256": "9cf9b6ad447ecd5dffb488a22554f32d9d27fbb202992c8597b8791bf757dea8"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/project/checkpoint.sql.ts",
+          "git_blob_sha": "23c42d9d2198d2962024271f213cd1e5c415ab9c",
+          "sha256": "7af54465c2ace49e3e39d9690613329cdcf9d935a3ca57286ad2a9fcd4545026"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/project/checkpoint.ts",
+          "git_blob_sha": "5972b18ab5b5bd6792447261cd65933aee379e99",
+          "sha256": "25156c4e4b8cdb91db190f5d388c78b48e198be8511dd95c0aaef4821213531a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/project/copy-strategies.ts",
+          "git_blob_sha": "59466b9901ae58098bf892dde8bf4bb69a970072",
+          "sha256": "99c2e75ddab2bcec8d95a3071814292afbf223f09b37654d0219e0ba145765a8"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/project/copy.ts",
+          "git_blob_sha": "11e941c573dca760eb95641f45597f48412ea98c",
+          "sha256": "de6171c6977466da7c5fa074cacc9c8e858780ea8726f82167e805d7a015b56a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/project/directories.ts",
+          "git_blob_sha": "7863f4d2640a9b4bd85febab338610446bf839ef",
+          "sha256": "2b4d307a7098dd77da07bcd6dfcdd3bc552b7f6a585e35ff49aba6f320985d4a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/project/schema.ts",
+          "git_blob_sha": "937b05a8415c94724a6e18742c790007e6f829cf",
+          "sha256": "fac39d6e6306d9ff88af010476eee1279da0f1a1cd66f1ae2b1d8ad2998367f8"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/project/sql.ts",
+          "git_blob_sha": "ab05fdac4a1adb971ec18ecb53c80bd8859be188",
+          "sha256": "bcf48e11441a49df3fb586ccfcbb7996a2f18af29d0b8b1dfc0d8edb36e16959"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/project.ts",
+          "git_blob_sha": "bbedbbf34cbc5b431538db37993c0cc0830fa393",
+          "sha256": "a430e2c36fdf6544efcb36c6d13da86826083b41073a010d788e8629b9f89a63"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/pull-request.ts",
+          "git_blob_sha": "a2310fcaba3e9666056927b6c0f89d4f1629ff12",
+          "sha256": "3a0f0fa3645bb4ab69d1e08aa516a8ac7cf0cc2e40d33abd1a1b8c447cd08e0d"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/repository-cache.ts",
+          "git_blob_sha": "bcdc9de5686e25a71e0f83655bd19c0f87f7f29e",
+          "sha256": "47553ee98730d975ad7b22a1b7e70fb6f1c9e6ab3ced30a96d02451ae01328cc"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/repository.ts",
+          "git_blob_sha": "828b5b97037ed9df925284200b61368337f2e7c2",
+          "sha256": "96ae7211007dc6d04891694bae8c0286d06e054f592728ce6d65d70e7622312b"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/session/execution/local.ts",
+          "git_blob_sha": "e7b758462abfd388f937fb18b79f82f2733dffad",
+          "sha256": "74621798a88cf5f9cb05306616d1896b752b4f4f001c3ae03bafc2e0b3910f97"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/session.ts",
+          "git_blob_sha": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+          "sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/snapshot.ts",
+          "git_blob_sha": "c7e9926fb6d27804df408f628f387de890dbbd90",
+          "sha256": "08ac00a57d9d9bbc066e853e73a8bbb6838d2086edcabff333fe9a750ed1c7c1"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/tui-config-files.ts",
+          "git_blob_sha": "ff0af1809c35ffa6165e61a4d1fa99b8f89a364f",
+          "sha256": "edf71ffae5bf0fce41ffb16412ed916bc774e609f5b8f01634dece1df8404e32"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/vcs.ts",
+          "git_blob_sha": "5576086137755e4a1b471141c71d08803f3dc1f3",
+          "sha256": "60e354f8eb2def7c7dbd7fcd31a164f88eaabed98b1db4a42caf87c5a58291aa"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/workspace.ts",
+          "git_blob_sha": "73fc2bfb517008424bb203e71cfc04b59ebf9460",
+          "sha256": "0930dcdaf4c7a2b442dce9378a11bf173e213f291d040cbae1d9f32335b3bdc7"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/test/config/config-global.test.ts",
+          "git_blob_sha": "c588a2faa706a57795ec5bb84b4e18ac1b1f1d32",
+          "sha256": "7a05205786425d828cfb50f3e06e5a13e29379522fb8500f9c4753ea5fdaf2c7"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/test/config/config.test.ts",
+          "git_blob_sha": "32d5b5c2921edea7c72c1c47523f38439f9b7833",
+          "sha256": "98071c465be482c6c445c40237e9696b859628234c49912eaede560ca0e24acd"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/test/config/provider-policy-migration.test.ts",
+          "git_blob_sha": "1faf787af8df4a5dd76129487790b7f90e34dc0f",
+          "sha256": "55c4ee7ed27bdc09f7b7e3f01d7526378ede93254e924f67e9c70c50cda05ce0"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/test/config/trust.test.ts",
+          "git_blob_sha": "d5fdf45c158e4f3d4968a5054c53c65cf933f003",
+          "sha256": "44c0927613ebbc6dbcfbda624924f5fe107385c861168c0afd7c02035c50b42a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/test/location-hoisted-map.test.ts",
+          "git_blob_sha": "174bd6fb36fef3bf7a91521357c1c0f35f892a4f",
+          "sha256": "4aa6683b6e86b28a4e85304061d35dd7a1c1429b652cd152434ac4cacae8e7ab"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/test/location-mutation.test.ts",
+          "git_blob_sha": "59f0fea398b7c2ab71735b701d41f592e82878ea",
+          "sha256": "8950040b688aa59fb2fe12bad299ba465b5f4409ea689776a049156d0f460c91"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/test/project-checkpoint-errors.test.ts",
+          "git_blob_sha": "9f76247a40dd62fcc64681ca86535150bc1fe3f2",
+          "sha256": "9f743cfc6c19f2293b893b137d5869affbf2ce14ac6f6956403ee21f68cad287"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/test/project-copy.test.ts",
+          "git_blob_sha": "577810932d3ae2d6e9cb6c2e897a7717cce74491",
+          "sha256": "05e89cef6bad195680624396382507dd6548b2ec4bfeb0319be95a0cd88fdc74"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/schema/src/location.ts",
+          "git_blob_sha": "c01ce36372a698a289b1591466d4b01b323543d9",
+          "sha256": "69198bd4bcbec4dc406d5e8d35977ccb3174828fee859814462e3278caf2a603"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "schema/config.json",
+          "git_blob_sha": "ba9b5d2121a9a3bda733cba0459094b69757ede6",
+          "sha256": "8fda412b89aa5630cfd7b2e2116a0789ab7b793423edfbf8dcec3927c6016747"
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/config_project/recipe.json",
+        "sha256": "fa13cbfa01149c9e9b97b302d48238dfa7e278ade7fdedc016b7682e95abd08a"
+      },
+      "build_dependencies": [],
+      "navigation": [
+        {
+          "key": "s1.core.configuration",
+          "same_package": true
+        },
+        {
+          "key": "s1.core.project",
+          "same_package": true
+        }
+      ],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/config_project/request.txt",
+        "sha256": "b0ba005603db38f3b90f9ce370079c8a6133086ab906af58ed27f483ad0c1b8d"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/config_project/response.md",
+        "sha256": "b2b642ca1030aa0af580b84ae342b9ff54ea29ec715f760ab761fd1887e30780"
+      },
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": []
+    }
+  ],
+  "roots": {
+    "component": [
+      "s1.subslice01.config-project-supplement"
+    ]
+  },
+  "missing_required_artifact_keys": [],
+  "known_limits": [
+    "Producer-local fragment, not a published or served package. Principal must bind exact oracle reference and independent review/runtime receipts.",
+    "Both inherited bodies are preserved without an inherited dual acceptance claim. New artifact source validity is not semantic PASS.",
+    "Body paths are relative to this native-package.json; rebase consistently if assembled elsewhere.",
+    "No global S1 or S1-01 delivery completion is asserted."
+  ]
+}

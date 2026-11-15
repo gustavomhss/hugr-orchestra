@@ -1,0 +1,187 @@
+{
+  "schema": "s1-native-producer-recipe/v1",
+  "recipe_id": "s1.subslice01.runtime-models-economy-completion.recipe.v1",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "producer": "/root/l1_runtime_completion",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "scope": "orchestra.s1",
+  "layer": 1,
+  "assigned_sources": 235,
+  "auxiliary_sources": [
+    "packages/core/src/session/runner/llm.ts"
+  ],
+  "criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "AC-01",
+    "AC-02",
+    "AC-03",
+    "CC-1",
+    "CC-2",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "public_contract": {
+    "local_input_path": "control/public-contract-v1.json",
+    "encoding": "utf-8",
+    "byte_length": 2295,
+    "sha256": "f84ef5ef4bf8104988275e73837c13fd6128e2cbe4e901440e62baadc6288029"
+  },
+  "mandatory_inputs_read_in_full": [
+    {
+      "local_input_path": "control/COMMON.md",
+      "encoding": "utf-8",
+      "byte_length": 12959,
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7"
+    },
+    {
+      "local_input_path": "control/mission.json",
+      "encoding": "utf-8",
+      "byte_length": 6329,
+      "sha256": "2d9a28fd086955ada4753b6c42452cdaac9fb0cc31c4cf78e3de2b09d81c7808"
+    },
+    {
+      "local_input_path": "control/AGENTS.md",
+      "encoding": "utf-8",
+      "byte_length": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+    },
+    {
+      "local_input_path": "control/execute-genesis.md",
+      "encoding": "utf-8",
+      "byte_length": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+    },
+    {
+      "local_input_path": "control/protocol/principles.md",
+      "encoding": "utf-8",
+      "byte_length": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230"
+    },
+    {
+      "local_input_path": "control/protocol/fatia-1.md",
+      "encoding": "utf-8",
+      "byte_length": 3987,
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae"
+    },
+    {
+      "local_input_path": "control/protocol/fresh-start.md",
+      "encoding": "utf-8",
+      "byte_length": 4983,
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166"
+    },
+    {
+      "local_input_path": "control/protocol/orchestration.md",
+      "encoding": "utf-8",
+      "byte_length": 4408,
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb"
+    },
+    {
+      "local_input_path": "control/protocol/judging.md",
+      "encoding": "utf-8",
+      "byte_length": 5787,
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb"
+    },
+    {
+      "local_input_path": "control/protocol/transport.md",
+      "encoding": "utf-8",
+      "byte_length": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+    },
+    {
+      "local_input_path": "control/public-contract-v1.json",
+      "encoding": "utf-8",
+      "byte_length": 2295,
+      "sha256": "f84ef5ef4bf8104988275e73837c13fd6128e2cbe4e901440e62baadc6288029"
+    }
+  ],
+  "root_followup_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/producers/runtime-completion/root-followups.txt",
+    "sha256": "bdd7579f2f5768824590331473de8a4c475279b5b824fd8bbdfa7e97beda3637"
+  },
+  "body_revision_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/producers/runtime-completion/revision-log.json",
+    "sha256": "524b1e42a91ce950fac5b013884151153f42d2bde9fd2d0e7a5a55e3e7a45fb1"
+  },
+  "sanitized_input_refs": [
+    {
+      "local_input_path": "runtime_models/handoff.md",
+      "encoding": "utf-8",
+      "byte_length": 11846,
+      "sha256": "5643f22321f1808f5a456c9ca68ee275db5c3b636d682a23efcec0ea181e360d"
+    },
+    {
+      "local_input_path": "runtime_models/history-status.json",
+      "encoding": "utf-8",
+      "byte_length": 3006,
+      "sha256": "74941e79bb2e71f98de77a045ee0d943d4ffe50e5a1c26e9eb900d1c7d03bb62"
+    },
+    {
+      "local_input_path": "runtime_models/transport-verification.json",
+      "encoding": "utf-8",
+      "byte_length": 3954,
+      "sha256": "f001d00849cdeec6b9286b7135ca1393e2bf74199d3e4ddc7426da7d6bf99da5"
+    },
+    {
+      "local_input_path": "runtime_models/coverage.jsonl",
+      "encoding": "utf-8",
+      "byte_length": 333337,
+      "sha256": "6449918d2ea664615411df69d7f519fbaafa12cb83dcbc011a914caa1806c29d"
+    },
+    {
+      "local_input_path": "runtime_models/coverage-summary.json",
+      "encoding": "utf-8",
+      "byte_length": 896,
+      "sha256": "60b59c35dbc1eca0fbb480860593565b8230c094c65bfe06143e1736160fb2af"
+    },
+    {
+      "local_input_path": "runtime_models/coverage-groups.json",
+      "encoding": "utf-8",
+      "byte_length": 6665,
+      "sha256": "187913406ccdaca01463836e1cfd596aa36cb65fb69d0728fbca7b44af111347"
+    },
+    {
+      "local_input_path": "runtime_models/capture-manifest.jsonl",
+      "encoding": "utf-8",
+      "byte_length": 127965,
+      "sha256": "cad30d8dac0d2c598b17badb6f542d5fa8c9d28371c4944ceca1134e201e799d"
+    }
+  ],
+  "source_read_method": "Native producer read numbered baseline captures; helpers only extracted/hashed text. No source import, test, model call or semantic classifier was run.",
+  "meaning_of_coverage": "162 full,20 excerpts,50 structural declarations,3 group-only: extents of visible reads, not semantic acceptance. Authored purposes/dispositions in source-coverage.jsonl are separately accountable.",
+  "grouping_policy": "By actual ownership/contracts and required needs; schemas/simple helpers/fixtures grouped after reading; partially seen recipes/vendor classes/tests retain exact limits.",
+  "preservation": "Inherited runtime/models/economy copied byte-identically; no delta and no inherited PASS transferred. Economy B15 remains candidate with judgments absent.",
+  "build_dependencies": [],
+  "build_dependency_reason": "L1 is source-grounded; legacy candidates are navigation/context only and are not accepted mandatory predecessors. No L2-L4 produced.",
+  "protected_material": "Producer did not access reserved/oracle/expected answers/raw historical judging-preparation/control inputs. Public contract only; oracle receipt binding belongs to root.",
+  "execution_constraints": [
+    "root sole remote writer",
+    "write only local runtime_completion namespace",
+    "no product tests",
+    "no external model calls",
+    "no Internet sources"
+  ],
+  "gates": "Independent native dual semantic review remains pending. Product CI/OS/provider behavior remains NOT_RUN, consistent with this production mandate.",
+  "planned_remote_placement": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/producers/runtime-completion",
+  "placement_authority": "Root message authorizes only subslices/01-sessions/producers/runtime-completion; earlier proposed s1/runtime_completion discarded before metadata freeze.",
+  "state": "READY_FOR_INDEPENDENT_REVIEW",
+  "semantic_acceptance": "NOT_REVIEWED",
+  "runtime_import": "NOT_PERFORMED",
+  "runtime_model_id": null,
+  "physical_tokens": null,
+  "physical_attempts": null,
+  "physical_billing": null
+}

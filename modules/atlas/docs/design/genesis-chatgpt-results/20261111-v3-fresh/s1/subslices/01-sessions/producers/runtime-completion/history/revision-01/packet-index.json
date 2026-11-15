@@ -1,0 +1,100 @@
+{
+  "schema": "s1-no-tool-packet-index/v1",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "body": {
+    "local_path": "bodies/runtime-models-economy-completion.md",
+    "encoding": "utf-8",
+    "byte_length": 35043,
+    "sha256": "538e10133d348412c62d4cc69bb4faf5d425954456c3636e30e481272bec3365"
+  },
+  "primary": {
+    "local_path": "judge-packet.md",
+    "encoding": "utf-8",
+    "byte_length": 277781,
+    "sha256": "479b4b337dadd5f968e070c9e67585732066b87821dd9912256bf7a3618bab22"
+  },
+  "extended_annex": {
+    "local_path": "judge-packet-extended.md",
+    "encoding": "utf-8",
+    "byte_length": 425803,
+    "sha256": "2232ac44bb746a6a53acc2cb5083c7d942bb70dee896c1548554329194159bc3"
+  },
+  "source_evidence": {
+    "local_path": "source-evidence.md",
+    "encoding": "utf-8",
+    "byte_length": 196701,
+    "sha256": "22c6bff0a84c2cc3e82d7db193504eb3c23ec7f416deca6c546cd8e904b8aa10"
+  },
+  "extended_source_evidence": {
+    "local_path": "source-evidence-extended.md",
+    "encoding": "utf-8",
+    "byte_length": 333831,
+    "sha256": "70717db42efca657e2cdd2847b3d4bb5b840ce1db33ac1255f42f105c32743ab"
+  },
+  "parts": [
+    {
+      "order": 1,
+      "local_path": "judge-packet.parts/01.md",
+      "encoding": "utf-8",
+      "byte_length": 79992,
+      "sha256": "15a7839ad0cd8408372264694feaac91c9bab5b175653483e61da06e48ba57f6",
+      "start_byte": 0,
+      "end_byte_exclusive": 79992
+    },
+    {
+      "order": 2,
+      "local_path": "judge-packet.parts/02.md",
+      "encoding": "utf-8",
+      "byte_length": 79934,
+      "sha256": "693888333f63c5bea6fa10328398d1ee0cd9d51dcdf4280057866dba9d30d74e",
+      "start_byte": 79992,
+      "end_byte_exclusive": 159926
+    },
+    {
+      "order": 3,
+      "local_path": "judge-packet.parts/03.md",
+      "encoding": "utf-8",
+      "byte_length": 79824,
+      "sha256": "dcb34b011dc001db18a941c1e9baf8849966ca36d279433bce63542905e5ef2d",
+      "start_byte": 159926,
+      "end_byte_exclusive": 239750
+    },
+    {
+      "order": 4,
+      "local_path": "judge-packet.parts/04.md",
+      "encoding": "utf-8",
+      "byte_length": 38031,
+      "sha256": "3e640d54fcc948def90139a3ee3227a090fade46a41f2fbaf861140fa96202e6",
+      "start_byte": 239750,
+      "end_byte_exclusive": 277781
+    }
+  ],
+  "parts_concatenate_sha256": "479b4b337dadd5f968e070c9e67585732066b87821dd9912256bf7a3618bab22",
+  "part_count": 4,
+  "delivery_state": "NOT_SENT; root has not yet authorized transmission or judging",
+  "source_excerpts": {
+    "local_path": "source-excerpts.json",
+    "encoding": "utf-8",
+    "byte_length": 42313,
+    "sha256": "ac84bd9a719a06fc68d544b2fca704cfbffb8023ab3095e7dcc4d01a7373213d"
+  },
+  "source_coverage": {
+    "local_path": "source-coverage.jsonl",
+    "encoding": "utf-8",
+    "byte_length": 455202,
+    "sha256": "3cf77b8f11e4e2a4718818a33fb76c326b9eddf3382fbc36c863d2b03e00b54d"
+  },
+  "coverage_summary": {
+    "local_path": "coverage-summary.json",
+    "encoding": "utf-8",
+    "byte_length": 1368,
+    "sha256": "52bcee69aebc77fcc0ea062da35c89a51de1cca094ae9df65b5a9dc07b129035"
+  },
+  "family_dispositions": {
+    "local_path": "family-dispositions.json",
+    "encoding": "utf-8",
+    "byte_length": 6666,
+    "sha256": "929ec0fe67c71daa94b29d1f321d067b06de1e48583a2e71b394e36975b0896b"
+  },
+  "no_tools_review": "Full body+inherited bodies+all235 depth/disposition+decisive literal source excerpts included. Annex consumption not assumed."
+}

@@ -1,0 +1,27 @@
+{
+  "schema": "genesis-s1-01-consumer-plan/v1",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "frozen_at": "2026-11-14T23:11:03.686080+00:00",
+  "scope": "orchestra.s1",
+  "transport_session": "S1",
+  "limits": {
+    "routine_max_index_calls": 1,
+    "routine_max_read_calls": 2,
+    "routine_max_response_bytes": 40000,
+    "deep_max_index_calls": 2,
+    "deep_max_read_calls": 5,
+    "deep_max_response_bytes": 100000,
+    "direct_max_index_calls": 1,
+    "direct_max_read_calls": 1,
+    "direct_max_response_bytes": 40000,
+    "source_reads": 0,
+    "oracle_reads": 0
+  },
+  "mode": "Fresh native contexts; faithful relay of real ownership.index/read request and response only; no fallback source files. If runtime returns HOLD, consumer must state unavailable evidence; this does not pass the missing ownership cases.",
+  "case_sources": [
+    "inherited consumer-v1 questions for lead S1-O1,O2,O4,O5 and support O3,O6,O9",
+    "new preproduction oracle-v1 questions N1..N5"
+  ],
+  "intermediate_direct_use": "A direct question for every required artifact will be frozen with exact final key before consumption. Post-production direct questions are usage checks, not retroactive semantic production oracles.",
+  "state": "FROZEN_BEFORE_CONSUMPTION"
+}

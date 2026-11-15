@@ -1,0 +1,45 @@
+{
+  "schema": "genesis-producer-recipe/v1",
+  "producer_role": "L1 correction producer; not a judge",
+  "producer_handle": "/root/l1_config_project",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "revision": "v2",
+  "produced_at_utc": "2026-11-14T23:41:43.687152+00:00",
+  "original_recipe_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/config_project/revisions/v1/recipe.json",
+    "sha256": "fa13cbfa01149c9e9b97b302d48238dfa7e278ade7fdedc016b7682e95abd08a"
+  },
+  "public_contract_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/config_project/public-contract-v1.json",
+    "sha256": "f84ef5ef4bf8104988275e73837c13fd6128e2cbe4e901440e62baadc6288029"
+  },
+  "request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/config_project/revisions/v2/request.txt",
+    "sha256": "447f1d6628de4ba3283b499e0b52a5de92a31c2d8cea7f71b2c419bd7507ee3e"
+  },
+  "review_receipts_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/config_project/revisions/v2/review-receipts.json",
+    "sha256": "dcdcdb1ec7b110da4e843c25620496e2dd50227a9bfd5742ee339e67bfae2c88"
+  },
+  "method": "Four minimal source-grounded descriptions corrected; exact frozen-baseline snippets added for all 14 mandatory same-pair findings; only read.ts/read-filesystem.ts newly captured; inherited bodies and 123 dispositions unchanged.",
+  "candidate_body_ref": {
+    "path": "bodies/config-project-supplement-v2.md",
+    "byte_length": 18797,
+    "sha256": "555549f9971e6b6d8c8edd4799841e3f54259c9289b399da0eeb84336a896b13"
+  },
+  "previous_body_ref": {
+    "path": "bodies/config-project-supplement.md",
+    "byte_length": 16077,
+    "sha256": "2dc31d71b747415a9a7e9ffaaeeddd53ad74dda21ab66320468ff45dd40d45d3"
+  },
+  "build_dependencies": [],
+  "oracle_contents_read": false,
+  "product_execution": "NOT_RUN",
+  "remote_writes": false,
+  "judges_contacted": false,
+  "usage": {
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN"
+  }
+}

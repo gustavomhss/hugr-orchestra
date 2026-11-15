@@ -1,0 +1,827 @@
+L72
+
+```ts
+  mcp: ConfigMCP.Info.pipe(Schema.optional).annotate({
+```
+
+L75
+
+```ts
+  trusted_projects: Schema.String.pipe(Schema.Array, Schema.optional).annotate({
+```
+
+L79
+
+```ts
+  compaction: ConfigCompaction.Info.pipe(Schema.optional).annotate({
+```
+
+L82
+
+```ts
+  continuity: ConfigContinuity.Info.pipe(Schema.optional).annotate({
+```
+
+L85
+
+```ts
+  skills: Schema.String.pipe(Schema.Array, Schema.optional).annotate({
+```
+
+L88
+
+```ts
+  commands: Schema.Record(Schema.String, ConfigCommand.Info).pipe(Schema.optional).annotate({
+```
+
+L91
+
+```ts
+  instructions: Schema.String.pipe(Schema.Array, Schema.optional).annotate({
+```
+
+L95
+
+```ts
+  references: ConfigReference.Info.pipe(Schema.optional).annotate({
+```
+
+L98
+
+```ts
+  plugins: ConfigPlugin.Plugins.pipe(Schema.optional).annotate({
+```
+
+L101–103
+
+```ts
+  experimental: ConfigExperimental.Experimental.pipe(Schema.optional),
+  relay: ConfigRelay.Info.pipe(Schema.optional).annotate({ description: "Relay workflow and hook engine settings" }),
+  research: ConfigResearch.Info.pipe(Schema.optional).annotate({
+```
+
+L106
+
+```ts
+  maestro: ConfigMaestro.Info.pipe(Schema.optional).annotate({
+```
+
+L109–110
+
+```ts
+  providers: Schema.Record(Schema.String, ConfigProvider.Info).pipe(Schema.optional),
+}) {}
+```
+
+L162–187
+
+```ts
+    const packagedSkills = yield* Effect.promise(() =>
+      PackagedSkills.materialize({ cache: global.cache, version: InstallationVersion }),
+    )
+    const location = yield* Location.Service
+    const policy = yield* Policy.Service
+    const names = ["orchestra.json", "orchestra.jsonc"]
+    const decodeOptions = { errors: "all", onExcessProperty: "ignore", propertyOrder: "original" } as const
+    const decodeInfo = Schema.decodeUnknownEffect(Info, decodeOptions)
+    const decodeOldInfo = Schema.decodeUnknownEffect(ConfigUpgradeSource.Info, decodeOptions)
+
+    const loadFile = Effect.fnUntraced(function* (filepath: string) {
+      const text = yield* fs.readFileStringSafe(filepath)
+      if (!text) return
+
+      const errors: ParseError[] = []
+      const input: unknown = parse(text, errors, { allowTrailingComma: true })
+      if (errors.length)
+        return yield* new InvalidError({
+          path: filepath,
+          message: `${filepath}: ${errors.map((error) => `${printParseErrorCode(error.error)} at offset ${error.offset}`).join(", ")}`,
+        })
+
+      const info = yield* (
+        ConfigUpgrade.needsUpgrade(input)
+          ? decodeOldInfo(input).pipe(
+              Effect.map(ConfigUpgrade.migrate),
+```
+
+L189–204
+
+```ts
+              Effect.map((info) => {
+                const rules = [...(info.permissions ?? []), ...settings(text).permissions]
+                return { ...info, permissions: rules.length ? rules : undefined }
+              }),
+              Effect.flatMap(decodeInfo),
+            )
+          : decodeInfo(input)
+      ).pipe(Effect.mapError((error) => new InvalidError({ path: filepath, message: `${filepath}: ${error.message}` })))
+      const remote = info.instructions?.find((entry) => /^[a-z][a-z0-9+.-]*:\/\//i.test(entry))
+      if (remote !== undefined)
+        return yield* new InvalidError({
+          path: filepath,
+          message: `${filepath}: instructions must be local file paths; remote URLs are not supported (${remote})`,
+        })
+      return new Document({ type: "document", path: filepath, info })
+    })
+```
+
+L219–234
+
+```ts
+    const discovered = locationIsGlobal
+      ? []
+      : yield* fs
+          .up({
+            targets: [".orchestra", ...names.toReversed()],
+            start: location.directory,
+            stop: location.project.directory,
+          })
+          .pipe(Effect.orDie)
+    const directories = [
+      globalDirectory,
+      ...discovered
+        .filter((item) => path.basename(item) === ".orchestra")
+        .toReversed()
+        .map((directory) => AbsolutePath.make(directory)),
+    ]
+```
+
+L237–242
+
+```ts
+    const directPaths = discovered.filter((item) => path.basename(item) !== ".orchestra").toReversed()
+    const direct = yield* Effect.forEach(directPaths, loadFile).pipe(
+      Effect.orDie,
+      Effect.map((configs) => configs.filter((config): config is Document => config !== undefined)),
+    )
+    const supplementary = yield* Effect.forEach(directories, loadDirectory).pipe(Effect.orDie)
+```
+
+L245
+
+```ts
+    const configs = [...(supplementary[0] ?? []), ...direct, ...supplementary.slice(1).flat()]
+```
+
+L248–259
+
+```ts
+    const loadPolicies = (configs: ReadonlyArray<Document | Directory>) =>
+      policy.load(
+        configs
+          .filter((config): config is Document => config.type === "document")
+          .toReversed()
+          .flatMap((config) => config.info.experimental?.policies ?? []),
+      )
+    yield* loadPolicies(configs)
+
+    return Service.of({
+      packagedSkills: () => Effect.succeed(packagedSkills),
+      entries: Effect.fn("Config.entries")(function* () {
+```
+
+L263–267
+
+```ts
+        const globals = yield* loadDirectory(globalDirectory).pipe(Effect.orDie)
+        const configs = [...globals, ...direct, ...supplementary.slice(1).flat()]
+        yield* loadPolicies(configs)
+        return configs
+      }),
+```
+
+## E02
+
+packages/core/src/config.ts — blob 52985a1dfc3575efca662dcb0667d81a1ab6f1de.
+
+L292–305
+
+```ts
+export const updateGlobal = Effect.fn("Config.updateGlobal")(function* (patch: GlobalPatch) {
+  const fs = yield* FSUtil.Service
+  const target = yield* globalDocument()
+  const leaves = (value: unknown, at: string[]): [string[], unknown][] =>
+    value !== null && typeof value === "object"
+      ? Object.entries(value).flatMap(([key, item]) => leaves(item, [...at, key]))
+      : value === undefined
+        ? []
+        : [[at, value]]
+  const text = target.text?.trim() ? target.text : "{}"
+  const next = [
+    ...leaves({ model: patch.model, shell: patch.shell, agents: patch.agents }, []),
+    ...(patch.disabledProviders === undefined ? [] : providerEdits(text, patch.disabledProviders)),
+    ...Object.entries(patch.providers ?? {}).map(([id, value]): [string[], unknown] => [["providers", id], value]),
+```
+
+L307–317
+
+```ts
+    ...(patch.permissions === undefined ? [] : [[["permissions"], [...patch.permissions]] as [string[], unknown]]),
+    ...(patch.trustedProjects === undefined ? [] : [[["trusted_projects"], [...patch.trustedProjects]] as [string[], unknown]]),
+  ].reduce(
+    (text, [at, value]) =>
+      applyEdits(text, modify(text, at, value, { formattingOptions: { insertSpaces: true, tabSize: 2 } })),
+    text,
+  )
+  yield* fs.makeDirectory(path.dirname(target.file), { recursive: true }).pipe(Effect.orDie)
+  yield* fs.writeAtomic(target.file, next).pipe(Effect.orDie)
+  globalCache.delete(path.dirname(target.file))
+})
+```
+
+L324–341
+
+```ts
+export const readGlobal = Effect.fn("Config.readGlobal")(function* () {
+  const fs = yield* FSUtil.Service
+  const directory = (yield* Global.Service).config
+  const signature = (yield* Effect.forEach(["orchestra.jsonc", "orchestra.json"], (name) =>
+    fs.stat(path.join(directory, name)).pipe(
+      Effect.map(
+        (info) =>
+          `${Option.getOrElse(Option.map(info.mtime, (date) => date.getTime()), () => 0)}:${info.size}:${Option.getOrElse(info.ino, () => 0)}`,
+      ),
+      Effect.orElseSucceed(() => "absent"),
+    ),
+  )).join("|")
+  const cached = globalCache.get(directory)
+  if (cached?.signature === signature) return structuredClone(cached.value)
+  const value = yield* readGlobalDocument()
+  globalCache.set(directory, { signature, value })
+  return structuredClone(value)
+})
+```
+
+L372–374
+
+```ts
+const globalDocument = Effect.fnUntraced(function* () {
+  const fs = yield* FSUtil.Service
+  const global = yield* Global.Service
+```
+
+L376–381
+
+```ts
+  const files = yield* Effect.forEach(["orchestra.jsonc", "orchestra.json"], (name) => {
+    const file = path.join(global.config, name)
+    return fs.readFileStringSafe(file).pipe(Effect.map((text) => ({ file, text })))
+  }).pipe(Effect.orDie)
+  return files.find((item) => item.text !== undefined) ?? { file: path.join(global.config, "orchestra.json"), text: undefined }
+})
+```
+
+L385–396
+
+```ts
+function providerEdits(text: string, disabled: ReadonlyArray<string>): [string[], unknown][] {
+  const document = settings(text)
+  return [
+    [
+      ["experimental", "policies"],
+      [
+        ...document.policies.filter((item) => !providerDenial(item)),
+        ...disabled.map((id) => ({ action: "provider.use", effect: "deny", resource: id })),
+      ],
+    ],
+    ...(document.hasDisabled ? [[["disabled_providers"], [...disabled]] as [string[], unknown]] : []),
+  ]
+```
+
+L417–419
+
+```ts
+function providerDenial(item: Record<string, unknown>): item is { action: "provider.use"; effect: "deny"; resource: string } {
+  return item.action === "provider.use" && item.effect === "deny" && typeof item.resource === "string" && item.resource !== "*"
+}
+```
+
+## E03
+
+packages/core/src/fs-util.ts — blob 695361a7b2812386ceb0dfcc0f535c146e744a9e.
+
+L71–75
+
+```ts
+      const readFileStringSafe = Effect.fn("FileSystem.readFileStringSafe")(function* (path: string) {
+        return yield* fs.readFileString(path).pipe(
+          Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(undefined)),
+          Effect.catchReason("PlatformError", "PermissionDenied", () => Effect.succeed(undefined)),
+        )
+```
+
+L119
+
+```ts
+      const writeAtomic = Effect.fn("FileSystem.writeAtomic")(function* (path: string, content: string, mode?: number) {
+```
+
+L121–127
+
+```ts
+        const target = yield* fs.realPath(path).pipe(Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(path)))
+        const temp = `${target}.${process.pid}.${Date.now()}.tmp`
+        yield* fs.writeFileString(temp, content).pipe(
+          Effect.andThen(mode ? fs.chmod(temp, mode) : Effect.void),
+          Effect.andThen(fs.rename(temp, target)),
+          Effect.tapError(() => fs.remove(temp, { force: true }).pipe(Effect.ignore)),
+        )
+```
+
+## E04
+
+packages/core/src/config/upgrade/upgrade.ts — blob 581d2e879c6a70587a2a0c675c7433eddb9e85d7.
+
+L13–35
+
+```ts
+const keys = new Set([
+  "logLevel",
+  "server",
+  "command",
+  "reference",
+  "snapshot",
+  "plugin",
+  "disabled_providers",
+  "enabled_providers",
+  "small_model",
+  "mode",
+  "agent",
+  "provider",
+  "permission",
+  "tools",
+  "attachment",
+  "layout",
+])
+
+export function needsUpgrade(input: unknown) {
+  if (typeof input !== "object" || input === null || Array.isArray(input)) return false
+  return Object.keys(input).some((key) => keys.has(key)) || ("mcp" in input && oldMcp(input.mcp))
+}
+```
+
+L39–41
+
+```ts
+function oldMcp(mcp: unknown) {
+  if (typeof mcp !== "object" || mcp === null) return false
+  return Object.values(mcp).some((entry) => typeof entry === "object" && entry !== null && "type" in entry)
+```
+
+L44–77
+
+```ts
+export function migrate(info: typeof ConfigUpgradeSource.Info.Type) {
+  return {
+    $schema: info.$schema,
+    shell: info.shell,
+    model: info.model,
+    default_agent: info.default_agent,
+    permissions: permissions(info.permission, info.tools),
+    agents: agents(info),
+    snapshots: info.snapshot,
+    watcher: info.watcher,
+    formatter: info.formatter,
+    lsp: info.lsp,
+    attachments: info.attachment,
+    tool_output: info.tool_output,
+    mcp: mcp(info),
+    compaction: info.compaction && {
+      auto: info.compaction.auto,
+      prune: info.compaction.prune,
+      keep: {
+        tokens: info.compaction.preserve_recent_tokens,
+      },
+      buffer: info.compaction.reserved,
+    },
+    continuity: info.continuity,
+    skills: info.skills && [...(info.skills.paths ?? []), ...(info.skills.urls ?? [])],
+    commands: info.command,
+    instructions: info.instructions,
+    references: info.references ?? info.reference,
+    plugins: info.plugin?.map((plugin) =>
+      typeof plugin === "string" ? plugin : { package: plugin[0], options: plugin[1] },
+    ),
+    experimental: policies(info),
+    relay: info.relay,
+    research: info.research,
+```
+
+L79–85
+
+```ts
+    maestro: info.maestro && Schema.encodeSync(ConfigMaestro.Info)(info.maestro),
+    providers: providers(info.provider),
+  }
+}
+
+function policies(info: typeof ConfigUpgradeSource.Info.Type) {
+  const original = info.experimental?.policies ?? []
+```
+
+L88–107
+
+```ts
+  const allowed = info.enabled_providers
+  const statements = [
+    ...original,
+    ...(allowed === undefined
+      ? []
+      : [
+          { action: "provider.use", effect: "deny" as const, resource: "*" },
+          ...allowed.map((id) => ({
+            action: "provider.use",
+            resource: id,
+            effect:
+              original.findLast(
+                (policy) => Wildcard.match("provider.use", policy.action) && Wildcard.match(id, policy.resource),
+              )?.effect ?? ("allow" as const),
+          })),
+        ]),
+    ...(info.disabled_providers ?? []).map((id) => ({ action: "provider.use", effect: "deny" as const, resource: id })),
+  ]
+  return statements.length ? { policies: statements } : undefined
+}
+```
+
+## E05
+
+packages/core/src/policy.ts — blob 043d52eec849a25d2f904152cbe2afd1b83a78ef.
+
+L31–42
+
+```ts
+    return Service.of({
+      load: EffectRuntime.fn("Policy.load")(function* (input) {
+        statements = input
+      }),
+      hasStatements: () => statements.length > 0,
+      evaluate: EffectRuntime.fn("Policy.evaluate")(function* (action, resource, fallback) {
+        return (
+          statements.findLast(
+            (statement) => Wildcard.match(action, statement.action) && Wildcard.match(resource, statement.resource),
+          )?.effect ?? fallback
+        )
+      }),
+```
+
+packages/core/src/config/trust.ts — blob a8b068f1fdb5c01e59ad43c56b9e6241ec3dfc78.
+
+L13–15
+
+```ts
+export function isUser(globalConfig: string, entry: Config.Entry) {
+  return entry.path === undefined || within(globalConfig, entry.path)
+}
+```
+
+L18–24
+
+```ts
+export function isTrusted(entries: readonly Config.Entry[], globalConfig: string, directory: string) {
+  return entries
+    .filter((entry): entry is Config.Document => entry.type === "document")
+    .filter((entry) => isUser(globalConfig, entry))
+    .flatMap((entry) => entry.info.trusted_projects ?? [])
+    .some((root) => within(root, directory))
+}
+```
+
+L27–29
+
+```ts
+export function runnable(entries: readonly Config.Entry[], globalConfig: string, directory: string) {
+  return isTrusted(entries, globalConfig, directory) ? entries : entries.filter((entry) => isUser(globalConfig, entry))
+}
+```
+
+L41–46
+
+```ts
+export const approve = Effect.fn("ConfigTrust.approve")(function* (directory: string) {
+  const root = yield* canonical(directory)
+  const trusted = yield* list()
+  if (trusted.some((item) => within(item, root))) return
+  yield* Config.updateGlobal({ trustedProjects: [...trusted, root] })
+})
+```
+
+L49–56
+
+```ts
+export const revoke = Effect.fn("ConfigTrust.revoke")(function* (directory: string) {
+  const fs = yield* FSUtil.Service
+  const root = yield* fs.resolve(directory)
+  const trusted = yield* list()
+  const resolved = yield* Effect.forEach(trusted, (item) => fs.resolve(item))
+  const kept = trusted.filter((_, index) => resolved[index] !== root)
+  if (kept.length === trusted.length) return
+  yield* Config.updateGlobal({ trustedProjects: kept })
+```
+
+L64–76
+
+```ts
+const canonical = Effect.fnUntraced(function* (directory: string) {
+  const fs = yield* FSUtil.Service
+  if (!path.isAbsolute(directory))
+    return yield* new DirectoryError({ message: `Project folder must be an absolute path: ${directory}` })
+  if (!(yield* fs.isDir(directory)))
+    return yield* new DirectoryError({ message: `Project folder does not exist: ${directory}` })
+  const real = yield* fs.realPath(directory).pipe(Effect.orDie)
+  if (path.parse(real).root === real)
+    return yield* new DirectoryError({
+      message: "The filesystem root cannot be trusted: it would approve every project on this machine.",
+    })
+  return real
+})
+```
+
+L79–81
+
+```ts
+export function within(root: string, target: string) {
+  const relative = path.relative(path.resolve(root), path.resolve(target))
+  return relative.split(path.sep)[0] !== ".." && !path.isAbsolute(relative)
+```
+
+## E06
+
+apps/cli/script/schema-files.ts — blob b965bf921f0a75ab6abfd2149e1d24b50f86f83b.
+
+L11–23
+
+```ts
+export function generateEffect(schema: Schema.Top) {
+  const document = Schema.toJsonSchemaDocument(schema)
+  const normalized = normalize({
+    $schema: "https://json-schema.org/draft/2020-12/schema",
+    ...document.schema,
+    $defs: document.definitions,
+  })
+  if (!isRecord(normalized)) throw new Error("schema generator produced a non-object schema")
+  const restored = restoreModelRefs(normalized)
+  if (!isRecord(restored)) throw new Error("schema generator produced a non-object schema")
+  restored.allowComments = true
+  restored.allowTrailingCommas = true
+  return restored
+```
+
+L53–61
+
+```ts
+function restoreModelRefs(value: unknown, key?: string): unknown {
+  if (Array.isArray(value)) return value.map((item) => restoreModelRefs(item))
+  if (!isRecord(value)) return value
+
+  const schema = Object.fromEntries(Object.entries(value).map(([name, item]) => [name, restoreModelRefs(item, name)]))
+  if ((key === "model" || key === "small_model") && schema.type === "string") {
+    return { ...schema, $ref: MODEL_REF }
+  }
+  return schema
+```
+
+L68–74
+
+```ts
+export const configSchemaFile = path.resolve(import.meta.dir, "../../../schema/config.json")
+export const tuiSchemaFile = path.resolve(import.meta.dir, "../../../schema/tui.json")
+export const themeSchemaFile = path.resolve(import.meta.dir, "../../../schema/theme.json")
+export const themeSchemaSource = path.resolve(import.meta.dir, "../../../packages/ui/src/theme/desktop-theme.schema.json")
+
+export const configSchemaText = () => JSON.stringify(generateEffect(Config.Info), null, 2)
+export const tuiSchemaText = () => JSON.stringify(generateEffect(TuiConfig.Info), null, 2)
+```
+
+L77–83
+
+```ts
+if (import.meta.main) {
+  await Bun.write(configSchemaFile, configSchemaText())
+  await Bun.write(tuiSchemaFile, tuiSchemaText())
+  await Bun.write(themeSchemaFile, Bun.file(themeSchemaSource))
+  console.log(configSchemaFile)
+  console.log(tuiSchemaFile)
+  console.log(themeSchemaFile)
+```
+
+apps/cli/script/schema.ts — blob d590a1671d7c3034652b842fc330080f2ae21086.
+
+L1–7
+
+```ts
+#!/usr/bin/env bun
+
+const args = process.argv.slice(2)
+if (args.length !== 1 || !args[0]) {
+  console.error("Usage: bun --bun apps/cli/script/schema.ts <output>")
+  process.exit(2)
+}
+```
+
+L10–27
+
+```ts
+const { Config } = await import("@orchestra/core/config")
+const { Schema } = await import("effect")
+const document = Schema.toJsonSchemaDocument(Config.Info)
+
+await Bun.write(
+  args[0],
+  JSON.stringify(
+    {
+      $schema: "https://json-schema.org/draft/2020-12/schema",
+      ...document.schema,
+      $defs: document.definitions,
+      allowComments: true,
+      allowTrailingCommas: true,
+    },
+    null,
+    2,
+  ) + "\n",
+)
+```
+
+schema/config.json — blob ba9b5d2121a9a3bda733cba0459094b69757ede6.
+
+L1–4
+
+```json
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$ref": "#/$defs/Config.Info",
+  "$defs": {
+```
+
+L1054–1058
+
+```json
+    "Config.Info": {
+      "type": "object",
+      "properties": {
+        "$schema": {
+          "type": "string",
+```
+
+L1240–1246
+
+```json
+      },
+      "additionalProperties": false
+    }
+  },
+  "allowComments": true,
+  "allowTrailingCommas": true
+}
+```
+
+## E07
+
+packages/core/src/config/plugin/external.ts — blob cb47c685fb303085f39ba1b520c9c740701941fe.
+
+L42–53
+
+```ts
+export const Plugin = define({
+  id: "config-plugin",
+  effect: Effect.fn(function* (ctx) {
+    const config = yield* Config.Service
+    const fs = yield* FSUtil.Service
+    const global = yield* Global.Service
+    const location = yield* Location.Service
+    const npm = yield* Npm.Service
+    yield* Effect.gen(function* () {
+      const configured: { package: string; options?: Record<string, any> }[] = []
+
+      const entries = yield* config.entries()
+```
+
+L55–107
+
+```ts
+      const allowed = ConfigTrust.runnable(entries, global.config, location.directory)
+      if (entries.some((entry) => !allowed.includes(entry) && (entry.type === "directory" || entry.info.plugins?.length)))
+        yield* Effect.logWarning(`Project plugins not loaded. ${ConfigTrust.approveHint(location.directory)}`)
+
+      for (const entry of allowed) {
+        if (entry.type === "document") {
+          const directory = entry.path ? path.dirname(entry.path) : location.directory
+          for (const item of entry.info.plugins ?? []) {
+            const ref = typeof item === "string" ? { package: item } : item
+            const packageName = (() => {
+              if (ref.package.startsWith("file://")) return fileURLToPath(ref.package)
+              if (ref.package.startsWith("./") || ref.package.startsWith("../")) {
+                return path.resolve(directory, ref.package)
+              }
+              return ref.package
+            })()
+            configured.push({ package: packageName, options: ref.options })
+          }
+        }
+
+        if (entry.type === "directory") {
+          const files = yield* fs
+            .glob("{plugin,plugins}/*.{ts,js}", {
+              cwd: entry.path,
+              absolute: true,
+              include: "file",
+              dot: true,
+              symlink: true,
+            })
+            .pipe(Effect.orElseSucceed(() => []))
+          files.sort()
+          for (const file of files) configured.push({ package: file })
+        }
+      }
+
+      for (const ref of configured) {
+        yield* Effect.gen(function* () {
+          const entrypoint = path.isAbsolute(ref.package)
+            ? pathToFileURL(ref.package).href
+            : (yield* npm.add(ref.package)).entrypoint
+          if (!entrypoint) return
+
+          const value = yield* Effect.promise(() => loadExternalPlugin(entrypoint, path.isAbsolute(ref.package) ? path.dirname(ref.package) : undefined))
+          const plugin = "effect" in value ? value : PluginPromise.fromPromise(value)
+          yield* ctx.plugin.add({
+            id: plugin.id,
+            effect: (host) => plugin.effect({ ...host, options: ref.options ?? {} }),
+          })
+        }).pipe(Effect.catchCause((cause) => Effect.logError("External plugin setup blocked", cause)))
+      }
+    }).pipe(Effect.forkScoped({ startImmediately: true }))
+  }),
+})
+```
+
+## E08
+
+packages/core/src/config/agent-file.ts — blob a9c4b087c78a6e6de5cc809091d583d16838b662.
+
+L33–35
+
+```ts
+export function validName(name: string) {
+  return NAME.test(name) && !RESERVED.test(name)
+}
+```
+
+L45–51
+
+```ts
+export const write = Effect.fn("ConfigAgentFile.write")(function* (
+  directory: string,
+  name: string,
+  input: AgentFile.Input,
+) {
+  const fs = yield* FSUtil.Service
+  const filepath = yield* locate(fs, directory, name)
+```
+
+L53–70
+
+```ts
+  if (name === AgentV2.defaultID && (input.disable || (input.mode ?? "primary") !== "primary"))
+    return yield* new RejectedError({
+      path: filepath,
+      reason: "protected",
+      message: "Maestro runs every session, so it cannot be disabled or set to a mode other than primary.",
+    })
+  const existing = yield* content(fs, filepath)
+  if (input.revision !== undefined && input.revision !== revision(existing))
+    return yield* new ConflictError({ path: filepath, message: "The agent file changed since it was read." })
+  const next = render(existing, input)
+  if (next === undefined)
+    return yield* new RejectedError({
+      path: filepath,
+      reason: "unparseable",
+      message: "The agent file's front matter cannot be parsed. Fix it by hand.",
+    })
+  yield* replace(fs, filepath, next)
+  return info(filepath, next)
+```
+
+L146–151
+
+```ts
+const locate = Effect.fnUntraced(function* (fs: FSUtil.Interface, directory: string, name: string) {
+  const folders = ["agent", "agents"].map((folder) => path.join(directory, ".orchestra", folder))
+  const file = `${name}.md`
+  const listed = yield* Effect.forEach(folders, (folder) =>
+    fs.readDirectoryEntries(folder).pipe(Effect.orElseSucceed((): FSUtil.DirEntry[] => [])),
+  )
+```
+
+L154–159
+
+```ts
+  if (listed.flat().some((entry) => entry.name !== file && entry.name.toLowerCase() === file.toLowerCase()))
+    return yield* new RejectedError({
+      path: path.join(folders[0], file),
+      reason: "case",
+      message: "An agent file with the same name in different letter case already exists.",
+    })
+```
+
+L161–165
+

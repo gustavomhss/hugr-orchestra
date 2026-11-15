@@ -1,0 +1,685 @@
+  if (!FSUtil.contains(directory, absolute)) return yield* new PathError({ path: relative, reason: "outside" })
+  const real = yield* fs.realPath(absolute).pipe(Effect.mapError(() => new PathError({ path: relative, reason: "missing" })))
+  if (!FSUtil.contains(root, real)) return yield* new PathError({ path: relative, reason: "outside" })
+  return { absolute, real, directory, root }
+})
+```
+
+L104–112
+
+```ts
+export const list = Effect.fn("FileSystem.list")(function* (
+  fs: FSUtil.Interface,
+  directory: string,
+  input: ListInput = {},
+) {
+  const target = yield* within(fs, directory, input.path).pipe(Effect.orDie)
+  const info = yield* fs.stat(target.real).pipe(Effect.orDie)
+  if (info.type !== "Directory") return yield* Effect.die(new Error("Path is not a directory"))
+  return yield* fs.readDirectoryEntries(target.real).pipe(
+```
+
+## E15
+
+packages/core/src/file-mutation.ts — blob 1a1af7ca0edd6b51db81820cbd8b45cad1eb7a3a.
+
+L80–89
+
+```ts
+const layer = Layer.effect(
+  Service,
+  Effect.gen(function* () {
+    const fs = yield* FSUtil.Service
+    const format = yield* Format.Service
+    const locks = KeyedMutex.makeUnsafe<string>()
+    const withTargetLock =
+      (target: Target) =>
+      <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+        locks.withLock(target.canonical)(Effect.uninterruptible(effect))
+```
+
+L152–164
+
+```ts
+    const writeIfUnchanged = Effect.fn("FileMutation.writeIfUnchanged")((input: ConditionalWriteInput) =>
+      withTargetLock(input.target)(
+        Effect.gen(function* () {
+          const current = yield* fs.readFile(input.target.canonical)
+          if (!sameBytes(current, input.expected)) {
+            return yield* new StaleContentError({ path: input.target.canonical })
+          }
+          yield* fs.writePhysical(input.target.canonical, input.content)
+          yield* format.file(input.target.canonical)
+          return writeResult(input.target, true)
+        }),
+      ),
+    )
+```
+
+L205–213
+
+```ts
+/**
+ * Deferred until the corresponding V2 integrations exist.
+ */
+// TODO: Publish watcher/file-edit events after V2 watcher integration exists.
+// TODO: Add snapshots / undo after V2 snapshot design exists.
+// TODO: Notify LSP and collect diagnostics after V2 LSP runtime exists.
+// TODO: Design multi-file transactions / rollback if apply_patch needs atomic edits.
+// Until then, edits are sequential and report partial application.
+// TODO: Define crash recovery and idempotency for side effects between Tool.Called and durable settlement.
+```
+
+packages/core/src/fs-util.ts — blob 695361a7b2812386ceb0dfcc0f535c146e744a9e.
+
+L165–181
+
+```ts
+      const writePhysical = Effect.fn("FileSystem.writePhysical")(function* (
+        path: string,
+        content: string | Uint8Array,
+        options?: { exclusive?: boolean },
+      ) {
+        yield* Effect.tryPromise({
+          try: () => PhysicalPath.writePhysical(path, content, options),
+          catch: (cause) =>
+            systemError({
+              _tag: cause instanceof Error && "code" in cause && cause.code === "EEXIST" ? "AlreadyExists" : "Unknown",
+              module: "FileSystem",
+              method: "writePhysical",
+              pathOrDescriptor: path,
+              cause,
+            }),
+        })
+      })
+```
+
+packages/core/src/patch.ts — blob 0a71f3a9234802dee1a20964c08f2babe69809c7.
+
+L30–31
+
+```ts
+export function parse(patchText: string): ReadonlyArray<Hunk> {
+  const lines = stripHeredoc(patchText.trim()).split("\n")
+```
+
+L33–41
+
+```ts
+  const begin = lines.findIndex((line) => line.trim() === "*** Begin Patch")
+  const end = lines.findLastIndex((line) => line.trim() === "*** End Patch")
+  if (begin === -1 || end === -1 || begin >= end) throw new Error("Invalid patch format: missing Begin/End markers")
+
+  const body = lines.slice(begin + 1, end)
+  const hunks: Hunk[] = []
+  let index = 0
+  while (index < body.length) {
+    const line = body[index]
+```
+
+L43
+
+```ts
+    if (blank(line)) {
+```
+
+## E16
+
+packages/core/src/project/checkpoint.ts — blob 5972b18ab5b5bd6792447261cd65933aee379e99.
+
+L84–121
+
+```ts
+      save: Effect.fn("ProjectCheckpoint.save")(function* (input) {
+        const value = { ...input }
+        if (
+          (value.attempt !== 0 && value.attempt !== 1) ||
+          typeof value.forkID !== "string" ||
+          !value.forkID.trim() ||
+          typeof value.boundary !== "string" ||
+          !value.boundary.trim() ||
+          typeof value.payload !== "string" ||
+          !value.payload.trim() ||
+          Buffer.from(value.payload, "utf8").toString("utf8") !== value.payload ||
+          Option.isNone(decodePayload(value.payload))
+        )
+          return yield* new CheckpointError({ reason: "invalid_input" })
+
+        const id = `${value.forkID}:${value.attempt}`
+        const hash = digest(value.payload)
+        return yield* database.db.transaction(
+          (tx) =>
+            Effect.gen(function* () {
+              const existing = yield* tx
+                .select({ ...metadata, payload: ProjectCheckpointTable.payload })
+                .from(ProjectCheckpointTable)
+                .where(eq(ProjectCheckpointTable.id, id))
+                .get()
+              if (existing) {
+                if (
+                  existing.sessionID !== value.sessionID ||
+                  existing.forkID !== value.forkID ||
+                  existing.boundary !== value.boundary ||
+                  existing.attempt !== value.attempt ||
+                  existing.payload !== value.payload
+                )
+                  return yield* new CheckpointError({ reason: "conflict" })
+                if (existing.digest !== hash) return yield* new CheckpointError({ reason: "corrupt" })
+                const { payload, ...result } = existing
+                return result
+              }
+```
+
+L125–199
+
+```ts
+              const session = yield* tx
+                .select({ projectID: SessionTable.project_id, directory: SessionTable.directory })
+                .from(SessionTable)
+                .where(eq(SessionTable.id, value.sessionID))
+                .get()
+              if (!session) return yield* new CheckpointError({ reason: "missing_session" })
+
+              const createdAt = yield* Clock.currentTimeMillis
+              yield* tx
+                .insert(ProjectCheckpointTable)
+                .values({
+                  id,
+                  project_id: session.projectID,
+                  session_id: value.sessionID,
+                  fork_id: value.forkID,
+                  boundary: value.boundary,
+                  attempt: value.attempt,
+                  directory: session.directory,
+                  time_created: createdAt,
+                  digest: hash,
+                  payload: value.payload,
+                })
+                .run()
+              return {
+                id,
+                projectID: session.projectID,
+                sessionID: value.sessionID,
+                forkID: value.forkID,
+                boundary: value.boundary,
+                attempt: value.attempt,
+                directory: session.directory,
+                createdAt,
+                digest: hash,
+              }
+            }),
+          { behavior: "immediate" },
+        )
+      }, storageBoundary),
+      read: Effect.fn("ProjectCheckpoint.read")(function* (input) {
+        const row = yield* database.db
+          .select({ ...metadata, payload: ProjectCheckpointTable.payload })
+          .from(ProjectCheckpointTable)
+          .where(and(eq(ProjectCheckpointTable.project_id, input.projectID), eq(ProjectCheckpointTable.id, input.id)))
+          .get()
+        if (!row) return undefined
+        if (digest(row.payload) !== row.digest) return yield* new CheckpointError({ reason: "corrupt" })
+        return row
+      }, storageBoundary),
+      list: Effect.fn("ProjectCheckpoint.list")(function* (input) {
+        const offset = input.offset === undefined ? 0 : input.offset
+        const limit = input.limit === undefined ? 20 : input.limit
+        if (
+          !Number.isSafeInteger(offset) ||
+          offset < 0 ||
+          offset > Number.MAX_SAFE_INTEGER - 50 ||
+          !Number.isSafeInteger(limit) ||
+          limit < 1 ||
+          limit > 50
+        )
+          return yield* new CheckpointError({ reason: "invalid_input" })
+        const items = yield* database.db
+          .select(metadata)
+          .from(ProjectCheckpointTable)
+          .where(
+            and(
+              eq(ProjectCheckpointTable.project_id, input.projectID),
+              input.directory === undefined ? undefined : eq(ProjectCheckpointTable.directory, input.directory),
+            ),
+          )
+          .orderBy(desc(ProjectCheckpointTable.time_created), desc(ProjectCheckpointTable.id))
+          .offset(offset)
+          .limit(limit + 1)
+          .all()
+        return items.length > limit ? { items: items.slice(0, limit), nextOffset: offset + limit } : { items }
+      }, storageBoundary),
+```
+
+L205–209
+
+```ts
+function storageBoundary<A, E, R>(effect: Effect.Effect<A, E, R>) {
+  return effect.pipe(
+    Effect.mapError((error) => (error instanceof CheckpointError ? error : new CheckpointError({ reason: "storage" }))),
+    Effect.catchDefect(() => Effect.fail(new CheckpointError({ reason: "storage" }))),
+  )
+```
+
+packages/core/src/project/checkpoint.sql.ts — blob 23c42d9d2198d2962024271f213cd1e5c415ab9c.
+
+L12–15
+
+```ts
+    project_id: text()
+      .$type<ProjectSchema.ID>()
+      .notNull()
+      .references(() => ProjectTable.id, { onDelete: "cascade" }),
+```
+
+L17–29
+
+```ts
+    session_id: text().$type<SessionSchema.ID>().notNull(),
+    fork_id: text().notNull(),
+    boundary: text().notNull(),
+    attempt: integer().$type<0 | 1>().notNull(),
+    directory: directoryColumn().notNull(),
+    time_created: integer().notNull(),
+    digest: text().notNull(),
+    payload: text().notNull(),
+  },
+  (table) => [
+    index("project_checkpoint_project_time_id_idx").on(table.project_id, table.time_created, table.id),
+    check("project_checkpoint_attempt_check", sql`${table.attempt} in (0, 1)`),
+  ],
+```
+
+## E17
+
+packages/core/src/project/copy.ts — blob 11e941c573dca760eb95641f45597f48412ea98c.
+
+L171–176
+
+```ts
+    const registry = new Map<StrategyID, Strategy>()
+
+    const register = Effect.fn("ProjectCopy.register")(function* (strategy: Strategy) {
+      if (registry.has(strategy.id)) return yield* new DuplicateStrategyError({ strategy: strategy.id })
+      registry.set(strategy.id, strategy)
+    })
+```
+
+L179–185
+
+```ts
+    yield* register(makeGitWorktreeStrategy({ git, canonical })).pipe(Effect.orDie)
+
+    const strategies = () => Array.from(registry.values())
+
+    const source = Effect.fnUntraced(function* (input: AbsolutePath, projectID: Project.ID) {
+      const sourceDirectory = yield* canonical(input)
+      if (yield* directories.contains({ projectID, directory: sourceDirectory })) return sourceDirectory
+```
+
+L187–244
+
+```ts
+      const project = yield* db
+        .select({ worktree: ProjectTable.worktree })
+        .from(ProjectTable)
+        .where(eq(ProjectTable.id, projectID))
+        .get()
+        .pipe(Effect.orDie)
+      if (!project || (yield* fs.resolve(project.worktree)) !== sourceDirectory)
+        return yield* new SourceDirectoryNotFoundError({ directory: sourceDirectory })
+      yield* changed(projectID, yield* directories.create({ projectID, directory: sourceDirectory }))
+      return sourceDirectory
+    })
+
+    const getStrategy = Effect.fnUntraced(function* (id: StrategyID) {
+      const found = registry.get(id)
+      if (!found) return yield* new StrategyUnavailableError({ strategy: id })
+      return found
+    })
+
+    const create = Effect.fn("ProjectCopy.create")(function* (input: CreateInput) {
+      const selected = yield* getStrategy(input.strategy)
+      const sourceDirectory = yield* source(input.sourceDirectory, input.projectID)
+      yield* fs.makeDirectory(input.directory, { recursive: true }).pipe(Effect.orDie)
+      const name = input.name ?? Slug.create()
+      let suffix = 1
+      let copyDirectory = AbsolutePath.make(path.join(input.directory, name))
+      while (yield* fs.existsSafe(copyDirectory)) {
+        suffix++
+        if (suffix > 10) return yield* new DestinationExistsError({ directory: copyDirectory })
+        copyDirectory = AbsolutePath.make(path.join(input.directory, `${name}-${suffix}`))
+      }
+
+      const result = yield* selected.create({
+        directory: copyDirectory,
+        sourceDirectory,
+      })
+      yield* changed(
+        input.projectID,
+        yield* directories.create({
+          projectID: input.projectID,
+          directory: result.directory,
+          strategy: input.strategy,
+          behavior: "replace",
+        }),
+      )
+      return result
+    })
+
+    const remove = Effect.fn("ProjectCopy.remove")(function* (input: RemoveInput) {
+      const copyDirectory = yield* canonical(input.directory)
+      const stored = yield* directories.get({ projectID: input.projectID, directory: copyDirectory })
+      if (!stored?.strategy) return yield* new InvalidDirectoryError({ directory: copyDirectory })
+      yield* (yield* getStrategy(StrategyID.make(stored.strategy))).remove({
+        directory: copyDirectory,
+        force: input.force,
+      })
+      yield* changed(
+        input.projectID,
+        yield* directories.remove({ projectID: input.projectID, directory: copyDirectory }),
+```
+
+L275–302
+
+```ts
+      )
+      const removed = checked.filter((item) => !item.exists).map((item) => item.directory)
+      const result = yield* db
+        .transaction((tx) =>
+          Effect.all({
+            updated: Effect.forEach(discovered, (item) =>
+              directories.create(
+                {
+                  projectID: input.projectID,
+                  directory: item.directory,
+                  strategy: item.strategy,
+                  behavior: "replace",
+                },
+                tx,
+              ),
+            ),
+            removed: Effect.forEach(removed, (directory) =>
+              directories.remove({ projectID: input.projectID, directory }, tx),
+            ),
+          }),
+        )
+        .pipe(Effect.orDie)
+      const changes = {
+        updated: discovered.filter((_, index) => result.updated[index]).map((item) => item.directory),
+        removed: removed.filter((_, index) => result.removed[index]),
+      }
+      yield* changed(input.projectID, changes.updated.length > 0 || changes.removed.length > 0)
+      return changes
+```
+
+packages/core/src/project/copy-strategies.ts — blob 59466b9901ae58098bf892dde8bf4bb69a970072.
+
+L9–35
+
+```ts
+}) {
+  return {
+    id: StrategyID.make("git_worktree"),
+    create: Effect.fn("ProjectCopy.GitWorktree.create")(function* (options) {
+      const repository = yield* input.git.repo.discover(options.sourceDirectory)
+      if (!repository) return yield* new DirectoryUnavailableError({ directory: options.sourceDirectory })
+      yield* input.git.worktree.create({ repository, directory: options.directory })
+      return { directory: yield* input.canonical(options.directory) }
+    }),
+    remove: Effect.fn("ProjectCopy.GitWorktree.remove")(function* (options) {
+      const found = yield* input.git.repo.discover(options.directory)
+      if (!found) return yield* new DirectoryUnavailableError({ directory: options.directory })
+      yield* input.git.worktree.remove({ repository: found, directory: options.directory, force: options.force })
+    }),
+    list: Effect.fn("ProjectCopy.GitWorktree.list")(function* (directory) {
+      const found = yield* input.git.repo.discover(directory)
+      if (!found) return yield* new DirectoryUnavailableError({ directory })
+      const entries = yield* input.git.worktree.list(found)
+      return yield* Effect.forEach(entries, (entry) =>
+        input.canonical(entry.directory).pipe(
+          Effect.map((directory) => ({ directory, type: entry.kind === "main" ? "root" : "copy" }) as const),
+          Effect.catchTag("ProjectCopy.DirectoryUnavailableError", () => Effect.succeed(undefined)),
+        ),
+      ).pipe(Effect.map((items) => items.filter((item): item is ListEntry => item !== undefined)))
+    }),
+  } satisfies Strategy
+}
+```
+
+## E18
+
+packages/core/src/snapshot.ts — blob c7e9926fb6d27804df408f628f387de890dbbd90.
+
+L84–105
+
+```ts
+export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/Snapshot") {}
+
+const layer = Layer.effect(
+  Service,
+  Effect.gen(function* () {
+    const config = yield* Config.Service
+    const fs = yield* FSUtil.Service
+    const git = yield* Git.Service
+    const global = yield* Global.Service
+    const location = yield* Location.Service
+    const source = yield* git.repo.discover(location.project.directory)
+    const worktree = source
+      ? AbsolutePath.make(yield* fs.realPath(source.worktree).pipe(Effect.orDie))
+      : location.project.directory
+    const gitDirectory = AbsolutePath.make(path.join(global.data, "snapshot", location.project.id, Hash.fast(worktree)))
+
+    const scope = Effect.fnUntraced(function* () {
+      const relative = path.relative(worktree, location.directory)
+      if (relative.startsWith("..") || path.isAbsolute(relative))
+        return yield* new Error({ operation: "capture", message: "Location is outside the project" })
+      return RelativePath.make(relative.replaceAll("\\", "/") || ".")
+    })
+```
+
+L124–147
+
+```ts
+    const enabled = Effect.fnUntraced(function* () {
+      if (location.vcs?.type !== "git") return false
+      return Config.latest(yield* config.entries(), "snapshots") !== false
+    })
+
+    const capture = Effect.fn("Snapshot.capture")(function* () {
+      if (!(yield* enabled())) return undefined
+      return yield* Effect.gen(function* () {
+        const repo = yield* repository()
+        return ID.make(
+          yield* git.tree.capture({
+            repository: repo,
+            scopes: [yield* scope()],
+            ignores: source,
+            maximumUntrackedFileBytes: 2 * 1024 * 1024,
+          }),
+        )
+      }).pipe(
+        Effect.catch((cause) => Effect.logWarning("failed to capture snapshot", { cause }).pipe(Effect.as(undefined))),
+      )
+    })
+
+    const compare = Effect.fnUntraced(function* (operation: "files" | "diff", input: CompareInput) {
+      const repo = yield* repository().pipe(Effect.mapError((cause) => failure(operation, cause)))
+```
+
+L178–224
+
+```ts
+    const plan = Effect.fnUntraced(function* (operation: "preview" | "restore", input: RestoreInput) {
+      const files = new Map<RelativePath, Git.TreeID>()
+      for (const [file, snapshot] of input.files) {
+        const absolute = path.resolve(worktree, file)
+        if (!FSUtil.contains(worktree, absolute))
+          return yield* new Error({ operation, message: `Path escapes the project: ${file}` })
+        files.set(file, Git.TreeID.make(snapshot))
+      }
+      return files
+    })
+
+    const preview = Effect.fn("Snapshot.preview")(function* (input: PreviewInput) {
+      if (!(yield* enabled())) return yield* new Error({ operation: "preview", message: "Snapshots are disabled" })
+      const repo = yield* repository().pipe(Effect.mapError((cause) => failure("preview", cause)))
+      const files = yield* plan("preview", input)
+      const current = yield* git.tree
+        .capture({
+          repository: repo,
+          scopes: Array.from(files.keys()),
+          ignores: source,
+          maximumUntrackedFileBytes: 2 * 1024 * 1024,
+        })
+        .pipe(Effect.mapError((cause) => failure("preview", cause)))
+      return yield* git.tree
+        .preview({
+          repository: repo,
+          current,
+          files,
+          context: input.context,
+        })
+        .pipe(Effect.mapError((cause) => failure("preview", cause)))
+    })
+
+    const restore = Effect.fn("Snapshot.restore")(function* (input: RestoreInput) {
+      if (!(yield* enabled())) return yield* new Error({ operation: "restore", message: "Snapshots are disabled" })
+      const repo = yield* repository().pipe(Effect.mapError((cause) => failure("restore", cause)))
+      yield* git.tree
+        .restore({ repository: repo, files: yield* plan("restore", input) })
+        .pipe(Effect.mapError((cause) => failure("restore", cause)))
+    })
+
+    const checkout = Effect.fn("Snapshot.checkout")(function* (snapshot: ID) {
+      const repo = yield* repository().pipe(Effect.mapError((cause) => failure("restore", cause)))
+      yield* git.tree
+        .checkout({ repository: repo, tree: Git.TreeID.make(snapshot) })
+        .pipe(Effect.mapError((cause) => failure("restore", cause)))
+    })
+```
+
+## E19
+
+packages/core/src/git.ts — blob a90b3707a8d125ea8d4f78b70e03575a45a2fce3.
+
+L324–353
+
+```ts
+    const repositoryOperation = Effect.fnUntraced(function* (
+      operationName: OperationError["operation"],
+      repository: Repository,
+      args: string[],
+      options?: { stdin?: string; env?: Record<string, string> },
+    ) {
+      const result = yield* proc
+        .run(
+          ChildProcess.make("git", repositoryArgs(repository, args), {
+            cwd: repository.worktree,
+            env: options?.env,
+            extendEnv: true,
+          }),
+          { stdin: options?.stdin },
+        )
+        .pipe(
+          Effect.mapError(
+            (cause) =>
+              new OperationError({
+                operation: operationName,
+                directory: repository.worktree,
+                message: cause.message,
+                cause,
+              }),
+          ),
+        )
+      const text = result.stdout.toString("utf8")
+      if (result.exitCode === 0) return { text, stderr: result.stderr.toString("utf8") }
+      return yield* new OperationError({
+        operation: operationName,
+```
+
+L686–729
+
+```ts
+          }),
+        ),
+    )
+
+    const restore = Effect.fn("Git.tree.restore")(
+      (input: { repository: Repository; files: ReadonlyMap<RelativePath, TreeID> }) =>
+        locked(
+          input.repository,
+          Effect.forEach(
+            input.files,
+            ([file, tree]) =>
+              Effect.gen(function* () {
+                if (yield* entry(input.repository, tree, file)) {
+                  yield* repositoryOperation("restore", input.repository, ["checkout", tree, "--", file])
+                  return
+                }
+                yield* fs.remove(path.join(input.repository.worktree, file), { recursive: true, force: true }).pipe(
+                  Effect.mapError(
+                    (cause) =>
+                      new OperationError({
+                        operation: "restore",
+                        directory: input.repository.worktree,
+                        message: `Failed to remove ${file}`,
+                        cause,
+                      }),
+                  ),
+                )
+              }),
+            { discard: true },
+          ),
+        ),
+    )
+
+    const checkoutTree = Effect.fn("Git.tree.checkout")((input: { repository: Repository; tree: TreeID }) =>
+      locked(
+        input.repository,
+        Effect.gen(function* () {
+          yield* repositoryOperation("restore", input.repository, ["read-tree", input.tree])
+          yield* repositoryOperation("restore", input.repository, ["checkout-index", "--all", "--force"])
+        }),
+      ),
+    )
+
+    const capture = Effect.fn("Git.change.capture")(function* (input: { repository: Repository; path: AbsolutePath }) {
+```
+
+## E20
+
+packages/core/src/repository.ts — blob 828b5b97037ed9df925284200b61368337f2e7c2.
+
+L88–111
+
+```ts
+export function parseRemote(input: string): RemoteReference {
+  const reference = parse(input)
+  if (!reference) {
+    throw new InvalidReferenceError({
+      repository: input,
+      message: "Repository must be a git URL, host/path reference, or GitHub owner/repo shorthand",
+    })
+  }
+  if (!isRemote(reference)) {
+    throw new UnsupportedLocalRepositoryError({
+      repository: input,
+      message: "Local file repositories are not supported",
+    })
+  }
+  return reference
+}
+
+export function validateBranch(branch: string): void {
+  if (/^[A-Za-z0-9/_.-]+$/.test(branch) && !branch.startsWith("-") && !branch.includes("..")) return
+  throw new InvalidBranchError({
+    branch,
+    message: "Branch must contain only alphanumeric characters, /, _, ., and -, and cannot start with - or contain ..",
+  })
+}
+```
+
+L126–137
+
+```ts
+export function cachePath(root: string, reference: Reference, branch?: string): string {

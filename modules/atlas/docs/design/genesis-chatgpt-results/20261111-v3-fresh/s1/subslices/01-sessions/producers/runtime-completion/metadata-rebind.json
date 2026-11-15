@@ -1,0 +1,15 @@
+{
+  "schema": "s1-placement-rebind/v1",
+  "body_changed": false,
+  "body": {
+    "local_path": "bodies/runtime-models-economy-completion.md",
+    "encoding": "utf-8",
+    "byte_length": 35465,
+    "sha256": "c1b2e02eca65e7de23d8302c92a5b3f1e0b3670efbbb8318e215e4f956521f20"
+  },
+  "discarded_uncommitted_proposal": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/runtime_completion/",
+  "authorized_payload_directory": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/producers/runtime-completion/",
+  "body_relative_to_native_package": "producers/runtime-completion/bodies/runtime-models-economy-completion.md",
+  "native_package_root": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions",
+  "binding_state": "local fragment; root must commit exact payload and record commit, no invented SHA"
+}

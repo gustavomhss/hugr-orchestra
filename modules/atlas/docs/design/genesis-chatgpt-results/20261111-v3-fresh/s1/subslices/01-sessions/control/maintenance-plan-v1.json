@@ -1,0 +1,25 @@
+{
+  "schema": "genesis-s1-01-maintenance-plan/v1",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "frozen_at": "2026-11-14T23:22:45.233778+00:00",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "scope": "orchestra.s1",
+  "mode": "Isolated private knowledge maintenance; no deployment or production policy change. Exact baseline and successor bindings required.",
+  "scenarios": [
+    {
+      "id": "S101-M1",
+      "question": "Observe changes to the declared Session admission input and database migration source, reconcile the affected knowledge and preserve independent configuration/runtime artifacts. Distinguish private candidate validation from governed activation.",
+      "changed_input_keys": [
+        "file:packages/core/src/session/input.ts",
+        "file:packages/core/src/database/migration.ts"
+      ]
+    },
+    {
+      "id": "S101-M2",
+      "question": "Compare unchanged inputs/recipe, a changed config/project supplement recipe, a receipt-only renewal with equal full result, and equal prose with changed authority/gaps. Report actual interpretation callbacks and downstream consequences.",
+      "recipe_input_key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/producers/config-project/recipe.json"
+    }
+  ],
+  "shared_controls": "Reuse version-compatible S4 7102f2e controls by exact case; do not claim those were this package maintenance.",
+  "limits": "No frozen expected result is exposed to producer/consumer. If publication authority is unavailable, execute independent private operations and keep governed end-to-end obligations HOLD."
+}

@@ -1,0 +1,204 @@
+{
+  "source_path": "review-packets/compact.md",
+  "source_sha256": "ac9ebd1a44eb199971dec2b5f2400341af07d04849d339af9ce600eb0527966d",
+  "source_byte_length": 133205,
+  "sender": "/root/l1_config_project",
+  "role": "transport messenger only; no review requested or triggered",
+  "recipients": [
+    "/root/judge1",
+    "/root/judge2"
+  ],
+  "parts": [
+    {
+      "part": 1,
+      "count": 6,
+      "path": "review-packets/transmitted/part-1.txt",
+      "characters": 11052,
+      "byte_length": 11116,
+      "sha256": "20382b9cce58213267fed90156d04bf5a0674a5cf3c1ad0db019b0e8791225ac",
+      "source_content_sha256": "e6c2e74b35a31be67b9688d6db5ee637ef5567e5a4cfee148f3afa66c2a4d21d",
+      "source_content_byte_length": 11049,
+      "destinations": [
+        "/root/judge1",
+        "/root/judge2"
+      ],
+      "status": "SENT_TO_BOTH_ACKNOWLEDGED"
+    },
+    {
+      "part": 2,
+      "count": 6,
+      "path": "review-packets/transmitted/part-2.txt",
+      "characters": 24463,
+      "byte_length": 24559,
+      "sha256": "c5b7b129a0993b728d27f71bb6fa752d242ce14d6cefc2adb61b475c4613f307",
+      "source_content_sha256": "c8ec4e46a492c138be7bf73326be7e58eb0e1fcc8788422e11061e780369265e",
+      "source_content_byte_length": 24492,
+      "destinations": [
+        "/root/judge1",
+        "/root/judge2"
+      ],
+      "status": "SENT_TO_BOTH_ACKNOWLEDGED"
+    },
+    {
+      "part": 3,
+      "count": 6,
+      "path": "review-packets/transmitted/part-3.txt",
+      "characters": 24460,
+      "byte_length": 24576,
+      "sha256": "e02b1f365a49ce024d40406807de80f963e780c1071a9424521f43ff67bb159b",
+      "source_content_sha256": "5dddd6407658b25408faa9c2f9775e4bcfa572de21936da5602e5efc9bd6cc23",
+      "source_content_byte_length": 24509,
+      "destinations": [
+        "/root/judge1",
+        "/root/judge2"
+      ],
+      "status": "SENT_TO_BOTH_ACKNOWLEDGED"
+    },
+    {
+      "part": 4,
+      "count": 6,
+      "path": "review-packets/transmitted/part-4.txt",
+      "characters": 24461,
+      "byte_length": 24541,
+      "sha256": "09114e7bb1d027d46d3c80a79ab48706579b1c97c9b8ff5507d5225b29b5f2b3",
+      "source_content_sha256": "c1f8597468eb7650bc46bbfae28744dd313ad46ad0b376fe3cc676f7a0908a66",
+      "source_content_byte_length": 24474,
+      "destinations": [
+        "/root/judge1",
+        "/root/judge2"
+      ],
+      "status": "SENT_TO_BOTH_ACKNOWLEDGED"
+    },
+    {
+      "part": 5,
+      "count": 6,
+      "path": "review-packets/transmitted/part-5.txt",
+      "characters": 24444,
+      "byte_length": 24514,
+      "sha256": "260e2057c23a72d777df33d121d43780d0100608b32318bbc41583ef3825b2bf",
+      "source_content_sha256": "27fed4a5c2858a88dbf78ea3ccd1781d22195576f388e6173e201f7afe0fa061",
+      "source_content_byte_length": 24447,
+      "destinations": [
+        "/root/judge1",
+        "/root/judge2"
+      ],
+      "status": "SENT_TO_BOTH_ACKNOWLEDGED"
+    },
+    {
+      "part": 6,
+      "count": 6,
+      "path": "review-packets/transmitted/part-6.txt",
+      "characters": 24334,
+      "byte_length": 24444,
+      "sha256": "347f4c27614aebe44c87b6ad85a38da51d0aad0d106700360067f42922de9774",
+      "source_content_sha256": "1de5bd5c03600948ac4ad866334fa3a906230f075cd712e4a5e0d2045f150141",
+      "source_content_byte_length": 24234,
+      "destinations": [
+        "/root/judge1",
+        "/root/judge2"
+      ],
+      "status": "SENT_TO_BOTH_CALLS_COMPLETED",
+      "acknowledgments": {
+        "/root/judge1": "success_empty_ack",
+        "/root/judge2": "tool_output_context_truncated_no_explicit_error_reported"
+      }
+    }
+  ],
+  "send_receipts": [
+    {
+      "order": 1,
+      "part": 1,
+      "recipient": "/root/judge1",
+      "tool": "collaboration.send_message",
+      "result": "success_empty_ack"
+    },
+    {
+      "order": 2,
+      "part": 1,
+      "recipient": "/root/judge2",
+      "tool": "collaboration.send_message",
+      "result": "success_empty_ack"
+    },
+    {
+      "order": 3,
+      "part": 2,
+      "recipient": "/root/judge1",
+      "tool": "collaboration.send_message",
+      "result": "success_empty_ack"
+    },
+    {
+      "order": 4,
+      "part": 2,
+      "recipient": "/root/judge2",
+      "tool": "collaboration.send_message",
+      "result": "success_empty_ack"
+    },
+    {
+      "order": 5,
+      "part": 3,
+      "recipient": "/root/judge1",
+      "tool": "collaboration.send_message",
+      "result": "success_empty_ack"
+    },
+    {
+      "order": 6,
+      "part": 3,
+      "recipient": "/root/judge2",
+      "tool": "collaboration.send_message",
+      "result": "success_empty_ack"
+    },
+    {
+      "order": 7,
+      "part": 4,
+      "recipient": "/root/judge1",
+      "tool": "collaboration.send_message",
+      "result": "success_empty_ack"
+    },
+    {
+      "order": 8,
+      "part": 4,
+      "recipient": "/root/judge2",
+      "tool": "collaboration.send_message",
+      "result": "success_empty_ack"
+    },
+    {
+      "order": 9,
+      "part": 5,
+      "recipient": "/root/judge1",
+      "tool": "collaboration.send_message",
+      "result": "success_empty_ack"
+    },
+    {
+      "order": 10,
+      "part": 5,
+      "recipient": "/root/judge2",
+      "tool": "collaboration.send_message",
+      "result": "success_empty_ack"
+    },
+    {
+      "order": 11,
+      "part": 6,
+      "recipient": "/root/judge1",
+      "tool": "collaboration.send_message",
+      "result": "success_empty_ack"
+    },
+    {
+      "order": 12,
+      "part": 6,
+      "recipient": "/root/judge2",
+      "tool": "collaboration.send_message",
+      "result": "tool_output_context_truncated_no_explicit_error_reported"
+    }
+  ],
+  "transport_status": "ALL_12_SEND_CALLS_COMPLETED_NO_EXPLICIT_ERROR_REPORTED",
+  "integrity": {
+    "frozen_source_sha256": "ac9ebd1a44eb199971dec2b5f2400341af07d04849d339af9ce600eb0527966d",
+    "source_unchanged": true,
+    "raw_parts_reconstruct_source_exactly": true,
+    "all_message_hashes_verified": true,
+    "all_messages_at_most_25000_characters": true,
+    "judge_activation_requested": false,
+    "judgment_requested": false,
+    "last_tool_output_note": "The final send_message call to /root/judge2 returned a context truncation notice rather than an explicit error; no recipient read or acceptance is claimed."
+  }
+}

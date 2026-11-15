@@ -1,0 +1,18 @@
+{
+  "assigned_population": 123,
+  "assigned_dispositions_changed": false,
+  "coverage_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/config_project/coverage.json",
+    "sha256": "310923117ea11a12233044feb263527dc3747c62f017b013188506458e51aae7"
+  },
+  "inherited_body_changes": false,
+  "original_capture_count": 91,
+  "new_capture_count": 93,
+  "new_cross_boundary_captures": [
+    "packages/core/src/tool/read.ts",
+    "packages/core/src/tool/read-filesystem.ts"
+  ],
+  "new_cross_boundary_semantic_reads": "Both files read in full; this does not transfer ownership or imply complete tool-family coverage.",
+  "existing_source_ranges": "New packet excerpts were already captured at the baseline; their former omission from judge transport is corrected. No assigned row is dropped or reclassified.",
+  "product_execution": "NOT_RUN"
+}

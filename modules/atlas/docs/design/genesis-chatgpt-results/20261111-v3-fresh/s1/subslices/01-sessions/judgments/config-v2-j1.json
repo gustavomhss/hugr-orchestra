@@ -1,0 +1,101 @@
+{
+  "execution": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "judge": "parallel-v3-fresh/S1-01/J1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "packet": {
+    "name": "CONFIG-PROJECT-DELTA-v2",
+    "sha256": "41b63d9b72da5effd3f99fcb5badcc0fa61414159ef039a45e3eb375d229bc54",
+    "received_parts": [1, 2, 3, 4],
+    "final_marker_received": true
+  },
+  "decisions": [
+    {
+      "artifact": "s1.core.configuration",
+      "body_sha256": "eed22f8ddd9f3fdad18b39cfb8e52ca5f412bad8b21de10fef58ce113ba60ab1",
+      "verdict": "PASS",
+      "criteria": {
+        "QS-1": "PASS",
+        "QS-2": "PASS",
+        "QS-4": "PASS",
+        "QS-5": "PASS",
+        "QS-6": "PASS",
+        "CC-1": "PASS",
+        "CC-3": "PASS",
+        "CC-7": "PASS",
+        "GO-I1": "PASS",
+        "GO-I2": "PASS",
+        "GO-I7": "PASS",
+        "GO-I8": "PASS"
+      },
+      "evidence": "Reutilizo minhas conclusões anteriores sobre decode, releitura global, snapshot de projeto, políticas, trust e lifetime. E27 fecha a cadeia de ordenação: loadDirectory percorre JSON antes de JSONC; FSUtil.up percorre do diretório próximo aos ancestrais; as reversões e Config.latest sustentam a precedência descrita. E28 demonstra os labels e a natureza de revisão da especificação.",
+      "closed_findings": ["J1-CONFIG-R1", "J1-CONFIG-R2"],
+      "open_findings": []
+    },
+    {
+      "artifact": "s1.core.project",
+      "body_sha256": "937f99ba01085530af69abf620793e1b518c32867b956e805a5c68d65f950c43",
+      "verdict": "PASS",
+      "criteria": {
+        "QS-1": "PASS",
+        "QS-2": "PASS",
+        "QS-4": "PASS",
+        "QS-5": "PASS",
+        "QS-6": "PASS",
+        "CC-1": "PASS",
+        "CC-3": "PASS",
+        "CC-7": "PASS",
+        "GO-I1": "PASS",
+        "GO-I2": "PASS",
+        "GO-I7": "PASS",
+        "GO-I8": "PASS"
+      },
+      "evidence": "Reutilizo minhas conclusões anteriores sobre identidade, containment, membership, checkpoint retido, fork e move. E29 demonstra UnknownFromJsonString e SHA-256 sobre UTF-8, fechando a lacuna dos helpers. E30 mostra diretamente o objetivo multi-project/worktree e o sketch de rotas. E35 também sustenta a distinção entre FileSystem e o read tool com suas permissões e limites próprios.",
+      "closed_findings": ["J1-PROJECT-R1", "J1-PROJECT-R2"],
+      "open_findings": []
+    },
+    {
+      "artifact": "s1.subslice01.config-project-supplement",
+      "body_sha256": "555549f9971e6b6d8c8edd4799841e3f54259c9289b399da0eeb84336a896b13",
+      "body_bytes": 18797,
+      "verdict": "PASS",
+      "criteria": {
+        "QS-1": "PASS",
+        "QS-2": "PASS",
+        "QS-4": "PASS",
+        "QS-5": "PASS",
+        "QS-6": "PASS",
+        "CC-1": "PASS",
+        "CC-3": "PASS",
+        "CC-7": "PASS",
+        "GO-I1": "PASS",
+        "GO-I2": "PASS",
+        "GO-I7": "PASS",
+        "GO-I8": "PASS"
+      },
+      "evidence": "O v2 corrige os três enunciados que identifiquei: predicado exato dos denials, seleção de estratégia antes da fonte e discriminator de ownership de Behavior. E34 demonstra o retorno de head/branch/status, inclusive undefined, e sustenta a nova descrição do fallback HEAD. E27 e E29 fecham as lacunas compartilhadas. A adição sobre read distingue corretamente o limiar inicial de whole text, os limites da paginação e o limite de ingestão de imagens; não atribui uma garantia universal de race safety.",
+      "closed_findings": [
+        "J1-SUPPLEMENT-F1",
+        "J1-SUPPLEMENT-F2",
+        "J1-SUPPLEMENT-F3",
+        "J1-SUPPLEMENT-R1",
+        "J1-CONFIG-R1",
+        "J1-PROJECT-R1"
+      ],
+      "open_findings": []
+    }
+  ],
+  "preservation": {
+    "previous_supplement_sha256": "2dc31d71b747415a9a7e9ffaaeeddd53ad74dda21ab66320468ff45dd40d45d3",
+    "previous_supplement_verdict": "FIX-FIRST",
+    "status": "Preservado. Este PASS pertence exclusivamente ao v2 identificado. Os REQUEST_EVIDENCE anteriores dos corpos herdados também permanecem como registros históricos."
+  },
+  "mandatory_findings_open": [],
+  "optional_suggestions": [],
+  "limits": [
+    "Aceite semântico estático destes três corpos, fundamentado nos trechos recebidos e nas minhas avaliações anteriores, sem inferência do outro juiz.",
+    "A disposição dos 123 itens permanece limitada às profundidades declaradas. Captura, inventário e hash não equivalem a leitura semântica integral ou execução.",
+    "As duas leituras adicionais do read tool são evidência de fronteira; não transferem ownership nem aprovam a família inteira de ferramentas.",
+    "Não estabelece testes executados, CI, comportamento real do sistema operacional, publicação, consumidores, manutenção ou camadas superiores.",
+    "Os fragmentos de runtime/models/economy recebidos permanecem dados pendentes e não foram avaliados nesta rodada."
+  ]
+}

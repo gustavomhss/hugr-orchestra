@@ -1,0 +1,63 @@
+{
+  "local_source_production": "FINITE_A_B_C_COMPLETE",
+  "acceptance": "PENDING_INDEPENDENT_DUAL_REVIEW",
+  "remaining_source_read_limits": [
+    {
+      "scope": "owned S1-01 runtime, outside these two families",
+      "path": "packages/core/src/util/physical-path.ts",
+      "reason": "FSUtil delegates physical writes here. This producer did not inspect its implementation; do not assert complete OS race safety."
+    },
+    {
+      "scope": "owned S1-01 runtime/process integration",
+      "paths": [
+        "packages/core/src/git.ts",
+        "packages/core/src/guardrail.ts",
+        "packages/core/src/pull-request.ts"
+      ],
+      "reason": "Exact listed source ranges establish adapters; external process/lock/engine behavior and uninspected branches require targeted follow-up for corresponding changes."
+    },
+    {
+      "scope": "this producer's 123-row inventory",
+      "reason": "12 partial source/document reads, 38 inventory-only grouped test/fixture rows, and five captured tests without assertion-level reads remain honestly bounded in coverage.json; no missing row is hidden."
+    }
+  ],
+  "cross_owner_handoffs": [
+    {
+      "recipient": "S1-05",
+      "subject": "Configuration decoder/settings writer versus published schema",
+      "owned_sources": [
+        "packages/core/src/config.ts",
+        "packages/core/src/config/upgrade/upgrade.ts",
+        "packages/core/src/policy.ts",
+        "packages/core/src/config/trust.ts"
+      ],
+      "unowned_sources": [
+        "apps/cli/script/schema.ts",
+        "apps/cli/script/schema-files.ts",
+        "schema/config.json"
+      ],
+      "required_action_if_changed": "Owner uses the appropriate official generator and reconciles normalization/output differences; compare current decoder acceptance and exported object constraints. No generator was executed or generated output changed."
+    },
+    {
+      "recipient": "S1-04",
+      "subject": "Location identity and stored Session placement",
+      "sources": [
+        "packages/schema/src/location.ts",
+        "packages/core/src/location.ts",
+        "packages/core/src/location-service-map.ts",
+        "packages/core/src/location-services.ts",
+        "packages/core/src/session.ts",
+        "packages/core/src/session/execution/local.ts"
+      ],
+      "required_action_if_changed": "Preserve directory/workspace identity, same-project move constraint, process-global Session-ID routing and Location-scoped graph. Public schema changes remain its owner's responsibility; no remote/distributed placement is inferred."
+    }
+  ],
+  "deferred_to_principal": [
+    "Dual semantic review and exact mandatory corrections",
+    "Accepted-dependency L2-L4 production",
+    "Atlas binding/publication/index/read",
+    "Consumers and maintenance scenarios",
+    "Required repository gates and remote seal"
+  ],
+  "runtime_state": "NOT_RUN"
+}

@@ -1,0 +1,173 @@
+PACOTE CONFIG/PROJECT PARTE 2/6 — dados congelados da principal
+
+# Configuration and project source supplement
+
+Layer: **L1**. Need: `component`. Key: `s1.subslice01.config-project-supplement`. Scope: `orchestra.s1`.
+Source: `gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+
+## Authority and finite delta
+
+This supplement supplies three finite additions: **A**, configuration decoding, settings publication and supporting leaves; **B**, Location, mutation, checkpoint, copy, snapshot and repository boundaries; **C**, an honest disposition for all 123 configuration/project inventory rows. It was produced after the public contract was frozen. It is independently grounded in captured source, with no build dependency on an unaccepted historical artifact. References E01–E26 below identify exact excerpts in `evidence.md`; `source-capture-manifest.json` binds each complete captured file to its Git blob and SHA-256.
+
+The inherited `s1.core.configuration` and `s1.core.project` bodies remain byte-identical, with their original authorship, request, recipe and response. The pinned history labels them `supported` but contains no preserved dual acceptance for these exact A3 bodies in the inspected judgment, transport and revision trees. The A3 dossier is a submission, not a verdict. Neither reuse nor this supplement supplies a missing acceptance decision. `inherited/provenance.json` records the bounded search and hashes.
+
+## A. Configuration: decoder, settings writer and publication
+
+**Admission and lifetime.** `Config.Info` is the current schema. The Location loader parses JSONC with trailing commas, decodes with `onExcessProperty: "ignore"`, and uses the live legacy schema and migration when `needsUpgrade` detects old keys or MCP shape. After legacy migration it appends current `permissions` recovered from the same text, then decodes the current result. Remote instruction URLs are rejected. A nonempty readable file with parse/schema errors fails loading; empty text returns no document, and `readFileStringSafe` maps both missing and permission-denied reads to `undefined`. Consequently, “every invalid or inaccessible file must fail” is too strong. Required packaged-skill materialization precedes recoverable plugin boot. [E01, E03]
+
+Ordinary settings order is global documents, direct ancestor/project documents, then `.orchestra` documents, with nearer discoveries applied later. Within a directory JSON precedes JSONC. Project discovery and parsed project documents are retained from Location opening. `entries()` rereads global documents and reloads policy, but does not rediscover all project configuration. `Policy.evaluate` takes the last matching wildcard statement or the caller's fallback; policy documents are reversed before loading so a user-global policy can override a repository policy. These policy statements and tool permission rules are distinct surfaces. [E01, E05]
+
+**Settings publication is a separate path.** `updateGlobal` chooses the highest-priority existing readable global JSONC/JSON document, otherwise creates JSON. It edits JSONC properties, replaces each supplied provider definition, and replaces the entire permissions/trusted-projects arrays so removed tails do not survive. Disabled-provider edits replace exact `provider.use` denials, retain wildcard denials and unrelated statements, and rewrite a legacy `disabled_providers` list when present. The write uses the filesystem's temporary-file/rename helper and invalidates the global settings cache. This helper follows an existing symlink to its real target; it is not the Location mutation admission service. [E02, E03]
+
+`readGlobal` is a limited settings reader with a process cache keyed by config directory and both files' mtime/size/inode signatures. It returns cloned values. A same-signature external edit can remain stale; `updateGlobal` explicitly drops the entry. `entries()` follows its own reread path. Stat failures are folded into an `"absent"` signature by this implementation; that sentinel is not evidence that an inaccessible file was physically removed. [E02, E26]
+
+**Compatibility is active code.** Migration maps singular legacy families to current fields, including agents/mode, commands, plugins, providers, MCP, permissions, snapshots and compaction. Legacy allowlists first add a wildcard denial, then per-ID allowances that retain a matching existing denial; disabled IDs are appended last. An explicitly empty allowlist therefore differs from an omitted allowlist. Legacy schema leaves are decoded inputs to these mappings, not dead/generated material. The migration constructs an explicit result, so lossless preservation of every unknown or current-only field is not promised. The 12 upgrade source files and current leaf schemas are individually captured and mapped in coverage. [E04]
+
+**Trust and plugin admission.** Only user-owned entries—pathless documents or paths under global config—contribute `trusted_projects`. A project cannot approve itself. Approval requires an existing absolute canonical directory and rejects a filesystem root; revoking a child entry does not remove a parent's coverage. `ConfigTrust.runnable` selects repository entries only when the directory is trusted. The external plugin loader actually applies that selection before preparing/importing project plugins, while individual setup failures are logged and recovered. This establishes that consumer's admission point, not universal authorization of every command or a grant of tool permission. [E05, E07]
+
+The other configuration writers have their own contracts. `ConfigAgentFile.write` checks a supplied revision, protects Maestro from disable/non-primary edits, confines existing profile paths and performs a temporary rename. The revision check is optional; the exported name validator is not automatically invoked by `write`. `ConfigPluginFile.add` chooses the first existing file in its own low-to-high file list, retains an existing package unless forced, and writes through Bun. Its selection order and installation behavior should not be inferred from `updateGlobal`. [E08]
+
+**Published schema boundary for S1-05.** The actual exported `schema/config.json` points to `Config.Info`, advertises comments/trailing commas, and declares `additionalProperties: false` for that object. The runtime loader's explicit excess-property ignore option has a different acceptance policy. `apps/cli/script/schema-files.ts` exports `configSchemaText()` from `Config.Info`, normalizes generated schema and restores model references; its main path writes config, TUI and theme outputs. The separate `schema.ts` validates one output argument, converts `Config.Info` directly and appends a newline. These are two source-visible publication paths; equality, freshness and regeneration were not executed. Both scripts, the exported schema and the schema-package Location contract are outside the 123-row ownership set. Any generated-output change must go to its owner through the official generator. No generated file was edited. [E06]
+
+## B. Location and project boundaries
+
+**Identity and execution placement.** `Location.Ref` contains an absolute directory and optional workspace ID; the bound Location preserves those fields and resolves its project. Project identity prefers a normalized remote hash, then the common-directory cache, then a root commit. A directory with no discovered repository resolves to the global project and filesystem root; that project root does not enlarge the active Location's file boundary. Exact project/directory membership and copy strategy are stored separately. [E09, E12]
+
+The Location map applies replacements before hoisting globals, substitutes native tool nodes, compiles a fresh graph and uses a 60-minute idle TTL. Recovery starts only after graph construction succeeds, in its scope. `withGlobalContext` waits for completed global exports before lazy cache acquisition. Graph membership alone proves neither successful external initialization nor credentials. The current `SessionExecutionLocal` is global and Session-ID based: at drain or `withRunner` time it reads the stored Session and provides `locations.get(session.location)`. Session move resolves the destination project and rejects a different project ID before exclusive event publication. These source paths support the S1-04 Location/session handoff; optional workspace identity is not proof of remote placement or clustered ownership. [E10, E11]
+
+**Path resolution and mutation remain separate.** `LocationMutation.resolve` rejects relative lexical escape and an internal-looking path whose resolved physical target escapes the Location root. Missing targets resolve through an existing real ancestor; dangling links have bounded traversal. Absolute external targets produce canonical `external_directory` permission resources. This function expressly does not approve the mutation. `FileSystem` independently enforces containment/type for read/list while delegating search; it is not the model tool's permission layer. [E13, E14]
+
+`FileMutation` uses a KeyedMutex in its service instance, keyed by canonical target. Conditional writes compare bytes and write under that lock, then run the configured formatter before releasing it. The write delegates to `FSUtil.writePhysical` and onward to `PhysicalPath`; this packet does not inspect that transitive implementation or establish every OS race guarantee. These cooperating, process-local mutations do not provide cross-process locking. The source explicitly leaves multi-file rollback, watcher/edit events, LSP integration, side-effect recovery and idempotency deferred; sequential edits may be partially applied. The shared patch parser is an input grammar, not a transaction or authorization layer. [E15]
+
+**Checkpoints retain original ownership.** Save admits nonempty UTF-8 JSON, attempt 0/1 and a nonempty fork/boundary. Identity is `forkID:attempt`. Inside a transaction, an existing record must match Session, fork, boundary, attempt and exact payload, with a matching digest; that retained record returns before consulting the current Session. Only insertion derives project/directory from the Session. An exact retry can therefore survive Session deletion or movement without assigning the old checkpoint to its new location. The table retains the Session ID without a Session foreign key, while project deletion cascades. Read requires project ID plus checkpoint ID and checks the digest; list has bounded pagination. Driver errors/defects are sanitized to a storage reason. The digest does not prove payload meaning, consumer authorization, restore success or crash recovery. [E16, E26]
+
+**Copies are physical operations followed by membership.** The default strategy delegates to Git worktrees. Create first resolves a registered source or the project's own stored worktree, selects a strategy and collision candidate, performs strategy creation, then records exact directory/strategy membership and publishes a change. Remove requires stored strategy membership and performs physical removal before deleting membership. Refresh reconciles existence and strategy discoveries with membership in a database transaction. These orderings expose a filesystem/database boundary; they are not a transaction covering both physical worktrees and SQL. Registry duplication and strategy errors have explicit failure paths. [E17]
+
+**Snapshots are selective and best effort.** Capture uses a separate Git directory under global data, checks Git/config enablement, scopes collection to the Location and limits untracked files to 2 MiB; capture failure may yield `undefined`. Preview/restore map selected project-relative paths to trees and reject lexical project escape. Restore removes a selected path absent from its tree. Checkout uses `read-tree` plus `checkout-index --all` and leaves other paths untouched; unlike preview/restore, the wrapper has no `enabled()` check. None of these observations establishes atomic rollback of arbitrary multi-file tool side effects. [E18, E19]
+
+**Repository caches are mutable checkouts.** Reference parsing and branch validation define cache identity; branch-specific references have separate cache paths. `RepositoryCache.ensure` uses a per-path flock. Reuse requires a checkout exactly at the canonical cache path and a matching origin, since upward repository discovery alone could select an enclosing checkout. Invalid existing cache entries can be removed and cloned again. Refresh fetches and resets to the relevant remote branch, returning current head/branch and a cloned/cached/refreshed status. This is not immutable versioned knowledge: readers can see the latest refreshed checkout. Git operations delegate through AppProcess; native process, locking and Git behavior were not executed here. [E20]
+
+## C. Coverage, supporting leaves and remaining evidence limits
+
+`coverage.json` reconciles **all 123 original rows**, preserving each path/blob, legacy key and inherited read status. It adds this execution's exact capture status, semantic read ranges, responsibility group, required-needs mapping and next-read boundary. The 75 implementation files and two documents were captured; complete versus partial semantic reads are distinguished. Eight test files were also captured, with only inspected case ranges or declarations counted as read. The other 37 test files and one fixture are explicitly grouped as indexed, uncaptured regression/support material; no behavior is inferred merely from their filenames. Six additional captures establish cross-owner boundaries. Counts and byte identities are mechanical checks, not comprehension or runtime receipts.
+
+The supporting families have distinct roles: current config schemas constrain decoded shapes; upgrade schemas supply live compatibility inputs; agent/command/provider/reference/skill plugins translate entries for their specific registries; provider option lowering separates API configuration from request options without proving native adapter compatibility. Behavior storage supplies project-scoped context records. TUI config discovery has its own project-config flag handling, so its behavior is not automatically Core Config behavior. These files are individually accounted for, with field-presence claims kept separate from consumer execution. [E21, coverage groups C02–C06]
+
+Project support is likewise bounded. GitCLI caches a limited result set for 1.5 seconds and clears it after its patch application path; VCS exposes bounded/truncated views. Search has FFF/ripgrep integration, platform wrappers and fallback; watcher availability, enablement and failure handling are explicit, so “all files always watched” is unsupported. Ignore/protected lists are scan filters, not a permission sandbox. Guardrail and pull-request adapters invoke external process surfaces in product code; no such command was invoked in this investigation. Thin `file`/`workspace` exports and SQL/schema leaves are mapped to their owner rather than inflated into independent services. [E22–E25, coverage groups P03–P08]
+
+For a change, first follow the specific owner and inspected ranges in coverage. A decoder/settings change must reconcile current schema, migration, settings writer, policy ordering and the unowned publisher. A Location change must preserve stored Session placement and process-global routing. A physical mutation or cache change must inspect the named transitive process/path/locking implementation and relevant test assertions before claiming stronger guarantees. Partial Git/search/VCS/adapter reads remain partial; the public interface is not a substitute for those leaves.
+
+All product tests, CI, typechecks, guards, Atlas operations, provider calls and filesystem/Git side effects are **NOT_RUN** in this producer task. The test excerpts record intended cases only, including same-signature global-cache staleness, legacy policy precedence and sanitized checkpoint storage failure. New semantic acceptance, runtime use and subsequent L2–L4 remain separate work for the principal and independent judges. [E26]
+
+# 123-row disposition summary
+
+Exact coverage.json SHA-256: 310923117ea11a12233044feb263527dc3747c62f017b013188506458e51aae7. Inventory: 62 configuration + 61 project = 123 unique rows; 75 implementation, 45 test, 2 documentation, 1 fixture. Captures: 85 assigned + 6 boundary = 91 verified baseline blobs; 9 historical blobs and 42 historical tree objects verified. Depth: 65 complete semantic reads, 12 decisive-range reads, 3 tests with assertions read, 4 test-declaration reads, 1 captured test without semantic reading, 38 inventory-only grouped tests/fixture. No filename or interface is treated as a semantic read.
+
+Implementation groups serve purpose/contract, safe change, diagnosis, impact and ownership; schema groups establish shape, not consumer execution. Test/fixture groups serve diagnosis and future maintenance verification, never executed proof. Historical docs establish intent/status, not current route authority. The complete path membership is below; ordinary source paths begin packages/core/src/, tests begin packages/core/test/. Group IDs match coverage.json and the body.
+
+| Group / purpose | Count | Exact member paths (prefix abbreviations above) |
+| --- | ---: | --- |
+| C01: Current loader, global settings, policy and trust | 3 | src/config.ts; src/config/trust.ts; src/policy.ts |
+| C02: Current configuration schema and markdown leaves | 16 | src/config/agent.ts; src/config/attachments.ts; src/config/command.ts; src/config/compaction.ts; src/config/continuity.ts; src/config/experimental.ts; src/config/formatter.ts; src/config/lsp.ts; src/config/markdown.ts; src/config/plugin.ts; src/config/provider.ts; src/config/reference.ts; src/config/relay.ts; src/config/research.ts; src/config/tool-output.ts; src/config/watcher.ts |
+| C03: Live legacy decode and migration inputs | 12 | src/config/upgrade/agent.ts; src/config/upgrade/attachment.ts; src/config/upgrade/command.ts; src/config/upgrade/formatter.ts; src/config/upgrade/lsp.ts; src/config/upgrade/mcp.ts; src/config/upgrade/permission.ts; src/config/upgrade/plugin.ts; src/config/upgrade/provider.ts; src/config/upgrade/skills.ts; src/config/upgrade/source.ts; src/config/upgrade/upgrade.ts |
+| C04: Configuration-to-registry plugins and provider lowering | 7 | src/config/plugin/agent.ts; src/config/plugin/command.ts; src/config/plugin/external.ts; src/config/plugin/provider.ts; src/config/plugin/reference.ts; src/config/plugin/skill.ts; src/config/provider-options.ts |
+| C05: Agent and plugin configuration editors | 2 | src/config/agent-file.ts; src/config/plugin-file.ts |
+| C06: Behavior storage, feature flags and TUI discovery | 3 | src/behavior.ts; src/flag/flag.ts; src/tui-config-files.ts |
+| P01: Project/Location identity, graph and directory membership | 7 | src/location-service-map.ts; src/location-services.ts; src/location.ts; src/project.ts; src/project/directories.ts; src/project/schema.ts; src/project/sql.ts |
+| P02: Canonical filesystem resolution and mutation | 5 | src/file-mutation.ts; src/filesystem.ts; src/fs-util.ts; src/location-mutation.ts; src/patch.ts |
+| P03: Retained checkpoint storage and schema | 2 | src/project/checkpoint.sql.ts; src/project/checkpoint.ts |
+| P04: Project copies and worktree strategy | 2 | src/project/copy-strategies.ts; src/project/copy.ts |
+| P05: Git, snapshots, reference parsing and repository cache | 4 | src/git.ts; src/repository-cache.ts; src/repository.ts; src/snapshot.ts |
+| P06: Cached and bounded VCS views | 2 | src/git-cli.ts; src/vcs.ts |
+| P07: Filesystem search, watcher and platform support | 6 | src/filesystem/fff.bun.ts; src/filesystem/fff.node.ts; src/filesystem/ignore.ts; src/filesystem/protected.ts; src/filesystem/search.ts; src/filesystem/watcher.ts |
+| P08: External repository adapters and thin schema exports | 4 | src/file.ts; src/guardrail.ts; src/pull-request.ts; src/workspace.ts |
+| D01: Historical project/config design material | 2 | docs/specs/project.md; docs/specs/v2/config.md |
+| T01: Configuration regression-source family | 17 | test/behavior.test.ts; test/config/agent-file.test.ts; test/config/agent.test.ts; test/config/command.test.ts; test/config/config-global.test.ts; test/config/config.test.ts; test/config/lsp.test.ts; test/config/markdown.test.ts; test/config/plugin-file.test.ts; test/config/plugin.test.ts; test/config/provider-options.test.ts; test/config/provider-policy-migration.test.ts; test/config/provider.test.ts; test/config/skill.test.ts; test/config/tool-output-lean.test.ts; test/config/trust.test.ts; test/policy.test.ts |
+| T02: Project/filesystem regression-source family | 28 | test/file-mutation.test.ts; test/filesystem/filesystem.test.ts; test/filesystem/ignore.test.ts; test/filesystem/search-fff.test.ts; test/filesystem/search-ripgrep.test.ts; test/filesystem/search.test.ts; test/filesystem/watcher.test.ts; test/git-cli.test.ts; test/git.test.ts; test/guardrail.test.ts; test/location-filesystem.test.ts; test/location-hoisted-map.test.ts; test/location-layer.test.ts; test/location-mutation.test.ts; test/location-startup-globals.test.ts; test/location.test.ts; test/patch.test.ts; test/patched-dependencies.test.ts; test/project-checkpoint-errors.test.ts; test/project-checkpoint.test.ts; test/project-copy.test.ts; test/project-directories.test.ts; test/project-root.test.ts; test/project.test.ts; test/pull-request.test.ts; test/repository-cache.test.ts; test/repository.test.ts; test/snapshot.test.ts |
+| F01: Plugin regression fixture | 1 | test/config/fixtures/plugin/directory-plugin.ts |
+
+Partial implementation/document reads remain bounded: docs/specs/v2/config.md:1–30,382–396; src/filesystem/search.ts:28–58,142–190,275–308; src/filesystem/watcher.ts:31–82,90–184; src/fs-util.ts:1–31,67–184,190–220,295–312; src/git-cli.ts:1–105,229–290,482–496; src/git.ts:184–204,242–284,324–382,429–489,638–729,842–987; src/guardrail.ts:34–108; src/patch.ts:24–100,196–243; src/project/copy.ts:1–100,125–325; src/pull-request.ts:23–90,187–280,293–394; src/snapshot.ts:43–238; src/vcs.ts:1–210,280–385.
+
+Assertion-level tests: config-global (173–225), provider-policy-migration (26–63), project-checkpoint-errors (15–44). Declaration-only: trust, location-mutation, location-hoisted-map, project-copy. config/config.test.ts is captured but not semantically read. Remaining 37 tests and the plugin fixture are inventory-only support; inspect assertions/fixtures before a corresponding change. util/physical-path.ts is a local S1-01 runtime boundary not inspected by this producer. Unowned schema publisher/export changes remain with their owner.
+
+# Decisive source excerpts
+
+E identifiers match the candidate. Each file header gives its exact Git blob; each code fence contains the indicated original inclusive lines, unchanged. Discontinuous ranges omit repeated explanations, schema descriptions, test scaffolding or nondecisive helpers; full implementation remains captured and the complete review parts remain preserved. Full-line comments are generally omitted; explicit mutation TODO/partial-application limits are retained. Selected source spans and their SHA-256 values are recorded in compact-manifest.json. These excerpts are evidence, not executable fragments or test results.
+
+## E01
+
+packages/core/src/config.ts — blob 52985a1dfc3575efca662dcb0667d81a1ab6f1de.
+
+L35–36
+
+```ts
+export class Info extends Schema.Class<Info>("Config.Info")({
+  $schema: Schema.optional(Schema.String).annotate({
+```
+
+L39
+
+```ts
+  shell: Schema.String.pipe(Schema.optional).annotate({
+```
+
+L42
+
+```ts
+  model: Schema.String.pipe(Schema.optional).annotate({
+```
+
+L45
+
+```ts
+  default_agent: Schema.String.pipe(Schema.optional).annotate({
+```
+
+L48
+
+```ts
+  permissions: Permission.Ruleset.pipe(Schema.optional).annotate({
+```
+
+L51
+
+```ts
+  agents: Schema.Record(Schema.String, ConfigAgent.Info).pipe(Schema.optional).annotate({
+```
+
+L54
+
+```ts
+  snapshots: Schema.Boolean.pipe(Schema.optional).annotate({
+```
+
+L57
+
+```ts
+  watcher: ConfigWatcher.Info.pipe(Schema.optional).annotate({
+```
+
+L60
+
+```ts
+  formatter: ConfigFormatter.Info.pipe(Schema.optional).annotate({
+```
+
+L63
+
+```ts
+  lsp: ConfigLSP.Info.pipe(Schema.optional).annotate({
+```
+
+L66
+
+```ts
+  attachments: ConfigAttachments.Info.pipe(Schema.optional).annotate({
+```
+
+L69
+
+```ts
+  tool_output: ConfigToolOutput.Info.pipe(Schema.optional).annotate({
+```
+

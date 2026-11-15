@@ -1,0 +1,61 @@
+{
+  "schema": "genesis-producer-recipe/v1",
+  "producer_role": "L1 source producer; not a judge",
+  "producer_handle": "/root/l1_config_project",
+  "host_conversation_id": "UNKNOWN",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "history_revision": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+  "production_authorized_after": "2026-11-14T22:44:38.921307Z",
+  "packaged_at_utc": "2026-11-14T23:02:57.253180+00:00",
+  "public_contract_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/config_project/public-contract-v1.json",
+    "sha256": "f84ef5ef4bf8104988275e73837c13fd6128e2cbe4e901440e62baadc6288029"
+  },
+  "criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "AC-01",
+    "AC-02",
+    "AC-03",
+    "CC-1",
+    "CC-2",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "oracle_freeze_identity": {
+    "sha256": "9e4d27be0148aad11a9b1daf5b5d4221ace44f752918661825a12f6dc136374f",
+    "frozen_at": "2026-11-14T22:44:38.921307Z",
+    "contents_read": false
+  },
+  "request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/config_project/request.txt",
+    "sha256": "b0ba005603db38f3b90f9ce370079c8a6133086ab906af58ed27f483ad0c1b8d"
+  },
+  "steering_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/config_project/request-steering.txt",
+    "sha256": "52f35da53f775463949b9e414aafaa90fa34e2eec121dd765005bdf460425d7e"
+  },
+  "method": "Exact GitHub connector source capture, source-specific semantic reads, inherited-byte and Git object verification, complete 123-row disposition and deterministic exact excerpt assembly.",
+  "evaluated_output": "bodies/config-project-supplement.md",
+  "build_dependencies": [],
+  "reused_bodies": "Byte-identical copies only; no new authorship or accepted status.",
+  "forbidden_operations_performed": false,
+  "product_execution": "NOT_RUN",
+  "token_usage": "UNKNOWN",
+  "physical_attempts": "UNKNOWN",
+  "billing": "UNKNOWN"
+}

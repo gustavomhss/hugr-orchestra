@@ -1,0 +1,51 @@
+{
+  "schema": "genesis-command-receipt/v1",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "operation": "official-static-guards",
+  "argv": [
+    "/workspace/scratch/efdebfac3411/s1_01/runtime-tools/bun",
+    "run",
+    "check:guards",
+    "--base",
+    "origin/dev",
+    "--json"
+  ],
+  "cwd": "/workspace/scratch/efdebfac3411/s1_01/guard-materialization",
+  "source_revision": "45cf4cd48f2038dca56b859f763da2c28d862c12",
+  "started_at": "2026-11-14T23:06:43.524568+00:00",
+  "exit_code": 1,
+  "stdout": "{\"base\":null,\"bootstrap\":false,\"rules\":0,\"files\":0,\"findings\":[],\"errors\":[{\"kind\":\"no-repository\",\"message\":\"/workspace/scratch/efdebfac3411/s1_01/guard-materialization is not a git repository\"}],\"approved\":[],\"touchesGuards\":false}\n",
+  "stderr": "$ bun run script/guards/run.ts --base origin/dev --json\nerror: script \"check:guards\" exited with code 1\n",
+  "verified_sources": [
+    {
+      "path": "script/guards/run.ts",
+      "git_blob_sha": "24c89b6fdbce07d778d2d1520ff4680d51c8c0f3",
+      "sha256": "2dfe91f11b237588f8f07e6119ab7ed28d3b6f524060519734517ce5d2bf83c7"
+    },
+    {
+      "path": "script/guards/diff.ts",
+      "git_blob_sha": "e0336749f5b9f6dc471dedff2bfa0674ab18ebd7",
+      "sha256": "a783cf3a5dbf7527bd240b4cc147dd7e2fe9acae73428a1e70d6493dde8c419e"
+    },
+    {
+      "path": "script/guards/engine.ts",
+      "git_blob_sha": "7ff689772ac0460e7aa9b3ad93ca3b003b992c0f",
+      "sha256": "6f16d7b83c63f590569815e5bbb26488be3dd31063788af4488e0680fb720fe1"
+    },
+    {
+      "path": "script/guards/rule.ts",
+      "git_blob_sha": "e831bd89a05d4bbea86cbabf0a461b9b124cb185",
+      "sha256": "707473799508f7f8959ac6c0b8804e49ccdc2f1b64b11d8354beb4d62c343949"
+    },
+    {
+      "path": "package.json",
+      "git_blob_sha": "59b01ce720d2fbc13ac27b0f93e444e4e7e42bd0",
+      "sha256": "797b93c084aaf809f0bc02013e9e1eb0ae0d0addfa9ae8b9b783ceb83e6173ab"
+    }
+  ],
+  "materialization_is_git_checkout": false,
+  "result": "BLOCKED",
+  "limits": [
+    "Exact connector-captured guard implementation; no rule or approval changes. No local Git objects/HEAD/merge-base were fabricated."
+  ]
+}

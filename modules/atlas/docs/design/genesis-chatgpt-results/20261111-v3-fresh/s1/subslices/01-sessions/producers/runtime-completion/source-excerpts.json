@@ -1,0 +1,1237 @@
+{
+  "schema": "s1-decisive-source-excerpts/v1",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "excerpts": [
+    {
+      "id": "E01",
+      "topic": "Composição",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/host.ts",
+      "git_blob_sha": "a0fc5bc9a36e50315b0ddddf4de3566555711250",
+      "sha256": "9c20433f123ac8ea41773434faaceaecfe87787143689f6862ef28e05a87cb0f",
+      "ranges": [
+        {
+          "start": 23,
+          "end": 63,
+          "raw_excerpt_sha256": "6cc5dd7d8b903b98c20afd1d02c7fcad2dd2435d1826a3e45113c953700f4d43"
+        }
+      ]
+    },
+    {
+      "id": "E02",
+      "topic": "Composição/ligação LLM",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/effect/app-node-platform.ts",
+      "git_blob_sha": "3238fc642c5124e9de82de23d4c6a8bbb0107f00",
+      "sha256": "3607751ac0c9cfeb54d3d94f13eb66175d58c3e1dd648328d22d63f85e954ffe",
+      "ranges": [
+        {
+          "start": 9,
+          "end": 18,
+          "raw_excerpt_sha256": "a270bb2961e41ab81e1390befb1cb9d6ab53d32235ad3a9d17483664d00575f4"
+        }
+      ]
+    },
+    {
+      "id": "E03",
+      "topic": "Composição",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/effect/app-node-builder.ts",
+      "git_blob_sha": "f81f07cd9f4876742c1e8039f4453bf31fd55f58",
+      "sha256": "753fe1a4b14d038ad93836eb92a9a9e28458c9fdf73e61a56804bf5477dc2c0e",
+      "ranges": [
+        {
+          "start": 12,
+          "end": 42,
+          "raw_excerpt_sha256": "44398eb2552ea3a390de0a805b31d993519509b9e0d5dbfbe639f6f975cbd783"
+        }
+      ]
+    },
+    {
+      "id": "E04",
+      "topic": "Composição",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/effect/layer-node.ts",
+      "git_blob_sha": "ca703af7aa7ad50217eead2d5b34030a0d6e4e33",
+      "sha256": "012e5e57b186ee0ec13451edcc4f9205d3a3a793f050d56fa040e443567795f4",
+      "ranges": [
+        {
+          "start": 284,
+          "end": 310,
+          "raw_excerpt_sha256": "e802b79687d530d3e5f27fbc70bb16a95c971d9acf51ce1fbb5ac8c727d40bd2"
+        }
+      ]
+    },
+    {
+      "id": "E05",
+      "topic": "Composição",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/state.ts",
+      "git_blob_sha": "116e268bb9edf045985e1598a4e1a3ed1d410872",
+      "sha256": "237de5f76069595f50c7e7049dc72fe295a6b0ecaa615d849ef5b67ecd9f4189",
+      "ranges": [
+        {
+          "start": 57,
+          "end": 97,
+          "raw_excerpt_sha256": "31b75e0df99ff05d0b392b90ce60b31f506c9ac17becf6c31a45d2f71a619664"
+        }
+      ]
+    },
+    {
+      "id": "E06",
+      "topic": "Ligação nativa auxiliar",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/session/runner/llm.ts",
+      "git_blob_sha": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+      "sha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+      "ranges": [
+        {
+          "start": 117,
+          "end": 130,
+          "raw_excerpt_sha256": "f2cfc8323e0cc19a14d3ed072ea79e609f8913bab4e218f92eea6b4c481d3f83"
+        },
+        {
+          "start": 427,
+          "end": 448,
+          "raw_excerpt_sha256": "acd2ba39f442ac7be09279773359974b18b8c8fe6eb47a1ea17b8b1c502ee56d"
+        },
+        {
+          "start": 731,
+          "end": 745,
+          "raw_excerpt_sha256": "b7a17b2caa50f17d98f6004935a36b4d7314e6f431e56a88df2a1057ab7d36ae"
+        }
+      ]
+    },
+    {
+      "id": "E07",
+      "topic": "Catálogo",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/catalog.ts",
+      "git_blob_sha": "86acb93f550bc2b941e85d42cc4d62d73cbf64ba",
+      "sha256": "5c1ca6d62c4116070583f9c443be2e15c5913039415dca0bfad4c1c52508d562",
+      "ranges": [
+        {
+          "start": 84,
+          "end": 91,
+          "raw_excerpt_sha256": "721e951dd71e495e45f47d4c891977e195c90434a374ffa7f29044749625ff48"
+        },
+        {
+          "start": 179,
+          "end": 222,
+          "raw_excerpt_sha256": "c454d5a083c96444bcf4cb503f8a64d92704a81d507ab4ef4ea5852ee1c35095"
+        },
+        {
+          "start": 289,
+          "end": 312,
+          "raw_excerpt_sha256": "bf3a4e88772a30c988bfbf17d5d52e7b3b8162a655ca8a252168e835625f0186"
+        }
+      ]
+    },
+    {
+      "id": "E08",
+      "topic": "Ingestão",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/models-dev.ts",
+      "git_blob_sha": "881ba850d9a6b8c67896cface5cffab15d5ebd0e",
+      "sha256": "b7ba76f7f8439345a77cec56357971aa36c3dfd9370797b5368e0e0c4a33e535",
+      "ranges": [
+        {
+          "start": 159,
+          "end": 199,
+          "raw_excerpt_sha256": "9c3ee8e237d9ede17c36ba1e6dc0e054e6c5401a2d1c2aff97829ffe638c42e0"
+        },
+        {
+          "start": 217,
+          "end": 240,
+          "raw_excerpt_sha256": "bf45debd95947b75e5649b2505cb1770f054211f20962bfda7ea11c46d96549e"
+        }
+      ]
+    },
+    {
+      "id": "E09",
+      "topic": "Adaptação nativa",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/session/runner/model.ts",
+      "git_blob_sha": "188abc7053f9a02b8dd84ce7bdc30e0e7c001b3b",
+      "sha256": "25c8400ee9162fb798aafa3cf2c540b7364c097e669a7b361489e5cf1610db5f",
+      "ranges": [
+        {
+          "start": 188,
+          "end": 244,
+          "raw_excerpt_sha256": "0c9f22a801f9050083260305f518387b772633e4ee26987e95e40b4cba721070"
+        },
+        {
+          "start": 259,
+          "end": 270,
+          "raw_excerpt_sha256": "7c9fc219ab2d8cd2f651d6f4929736965150f361e5e1938d751c29276378b035"
+        },
+        {
+          "start": 285,
+          "end": 329,
+          "raw_excerpt_sha256": "9e660b0e56e6c1b71cd75e4e6058b3c3d1b504729b8ac8bcb93dd2864f2b0ac5"
+        }
+      ]
+    },
+    {
+      "id": "E10",
+      "topic": "Tetos",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/session/subagent-models.ts",
+      "git_blob_sha": "18c24ee3248a7f3de398077d44c4282e80214041",
+      "sha256": "d4a93874cee96eeb2c396f7588ab7b126d7643b41b8571ab762d28e6c86aaeba",
+      "ranges": [
+        {
+          "start": 176,
+          "end": 218,
+          "raw_excerpt_sha256": "73402e7dee8f3565a881ea76b293a1cabf553fb965d50690abf693cca60a2576"
+        },
+        {
+          "start": 234,
+          "end": 250,
+          "raw_excerpt_sha256": "4768372df7ddd40bc6b752126628132eca7a065b341e3d85cad8fe2d33b970b5"
+        }
+      ]
+    },
+    {
+      "id": "E11",
+      "topic": "SDK distinto",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/aisdk.ts",
+      "git_blob_sha": "c5f21baea562c0a8eeeb568929d7971f4c80a3dd",
+      "sha256": "b9352f91d4dd078df2416b83e147273396cf0087d5b05d4c62031fb5664eb8df",
+      "ranges": [
+        {
+          "start": 94,
+          "end": 122,
+          "raw_excerpt_sha256": "7258397d341a270c4f66d8d5100ad7d2164882ae327b3279db103f7bcd9594fe"
+        },
+        {
+          "start": 164,
+          "end": 200,
+          "raw_excerpt_sha256": "b6dfd5fed466ea95db03b775966a173dad5cf65538a64501b864b9d25caccb50"
+        }
+      ]
+    },
+    {
+      "id": "E12",
+      "topic": "Registro providers",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/plugin/provider.ts",
+      "git_blob_sha": "1749b474ed338579cef78d6f86bb8b98068f93d2",
+      "sha256": "4541bd8b36b68838aa1e19114bd2a40e111bcd763fd92b88a12911eb89c08f7f",
+      "ranges": [
+        {
+          "start": 34,
+          "end": 71,
+          "raw_excerpt_sha256": "c9e5153f6b27f38e705f25c93c122e6dc08f0885f3981d68523a564f4b4e49a8"
+        }
+      ]
+    },
+    {
+      "id": "E13",
+      "topic": "Providers",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/plugin/provider/dynamic.ts",
+      "git_blob_sha": "c84a6ed51f895f7972b907a2f32113c4f412ce5e",
+      "sha256": "0438bb6937de48275dcc6569531a44c796fbf22d77fd3ec067fdba39018b9c6c",
+      "ranges": [
+        {
+          "start": 13,
+          "end": 31,
+          "raw_excerpt_sha256": "b7e1a06b72ba398bbaf5c4fdf92b1335aad359f11380ff6678059d091952aa6d"
+        }
+      ]
+    },
+    {
+      "id": "E14",
+      "topic": "Providers",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/plugin/provider/github-copilot.ts",
+      "git_blob_sha": "356768a5afe9c3619b57d12297d4986cfdfdfe0a",
+      "sha256": "16c95e95ae49a44e41312860f952733367e0c0705511cfa4e6efe65fc641d064",
+      "ranges": [
+        {
+          "start": 24,
+          "end": 52,
+          "raw_excerpt_sha256": "a90318cba0b8638ee3ed402d295ed2577c3cde20bff62614923aedafc2ffbefd"
+        }
+      ]
+    },
+    {
+      "id": "E15",
+      "topic": "Providers",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/plugin/provider/cloudflare-ai-gateway.ts",
+      "git_blob_sha": "7024fd12b2df81e2b8f79f21b66cfba119ce057e",
+      "sha256": "d6687653eae0f8cbda25e671fe23b48f2e704079db609814f5a4d1d338c3555f",
+      "ranges": [
+        {
+          "start": 71,
+          "end": 106,
+          "raw_excerpt_sha256": "bf2593fae620ca1f1e71ee71585e3ed8c25a9a4a29be06f9dd8fd1120986f93f"
+        }
+      ]
+    },
+    {
+      "id": "E16",
+      "topic": "Providers",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/plugin/provider/snowflake-cortex.ts",
+      "git_blob_sha": "788ac63eb0370f89461a1acecfd018b72729bfa4",
+      "sha256": "6d098714050bc9208313932e8dc3c633ef8c1cb414355dbea1173d6340379487",
+      "ranges": [
+        {
+          "start": 43,
+          "end": 89,
+          "raw_excerpt_sha256": "a3adbe23c3e2bb261ab9f2b1fcf77e3ed9a7112eb919ff03752a531ab411ef46"
+        }
+      ]
+    },
+    {
+      "id": "E17",
+      "topic": "Vendor",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/github-copilot/README.md",
+      "git_blob_sha": "d1051a4da0411e6f4ae288144154e755320b84cd",
+      "sha256": "62969b3ac55adab013546f90667ff48924880bfe07cd2504de0d40a3e6eb0aa0",
+      "ranges": [
+        {
+          "start": 1,
+          "end": 5,
+          "raw_excerpt_sha256": "62969b3ac55adab013546f90667ff48924880bfe07cd2504de0d40a3e6eb0aa0"
+        }
+      ]
+    },
+    {
+      "id": "E18",
+      "topic": "Vendor",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/github-copilot/chat/openai-compatible-prepare-tools.ts",
+      "git_blob_sha": "ac907f52542666905181160d17f6096b1b751b62",
+      "sha256": "dd61ebd4aeb11b6b84fd132039e555e65af8fea4dfaf76420797cf32ecce29be",
+      "ranges": [
+        {
+          "start": 41,
+          "end": 53,
+          "raw_excerpt_sha256": "ef31be7b56ee098157a2a511851e4dc4379e96fd58326e4214e2b6fa138c6679"
+        }
+      ]
+    },
+    {
+      "id": "E19",
+      "topic": "Vendor",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/github-copilot/chat/openai-compatible-chat-language-model.ts",
+      "git_blob_sha": "280970c41b4f2dace7a49db86735da20144b1f92",
+      "sha256": "375c0bca4fb26709b007300219bb9ba9701deeede09caa3458e029915ac7d7ea",
+      "ranges": [
+        {
+          "start": 468,
+          "end": 478,
+          "raw_excerpt_sha256": "c29c6874cf8232673c4cfb7177aaf013e5dbb04817c42eb7e6251ccb8093fc4c"
+        }
+      ]
+    },
+    {
+      "id": "E20",
+      "topic": "Vendor",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/github-copilot/responses/openai-responses-language-model.ts",
+      "git_blob_sha": "8df1dcedadb3bcc4878cb538f5324d34d8113756",
+      "sha256": "ba074469423956aa690e084485c49f266f479195ae050b97ea6b54b37b2bfb13",
+      "ranges": [
+        {
+          "start": 1261,
+          "end": 1276,
+          "raw_excerpt_sha256": "c4541506431a4ea8d421e03a81e0b8fe712b796091fe2cad5ae645501fb06441"
+        },
+        {
+          "start": 1379,
+          "end": 1386,
+          "raw_excerpt_sha256": "1ae3f25fce2b8e6a30416336a51b1f0b207efe6ad92bb2b3cd33bf8a4d616e73"
+        },
+        {
+          "start": 1594,
+          "end": 1597,
+          "raw_excerpt_sha256": "ccd66a432a16a4e1c60823cb2defef44604e6364107d070b5431ffa77f5da079"
+        }
+      ]
+    },
+    {
+      "id": "E21",
+      "topic": "Vendor",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/github-copilot/responses/tool/local-shell.ts",
+      "git_blob_sha": "45230d5ce55d8cf66bd1ab3d8e71a6f8d2364c7c",
+      "sha256": "b36380334c0f916b07dac6bfe0236ec9058ac95eca093118c161141737c52bc6",
+      "ranges": [
+        {
+          "start": 4,
+          "end": 19,
+          "raw_excerpt_sha256": "6e9a09039302d41ae55167139b727c70f45f5bf6a76ce9f07035ba3056b192cc"
+        },
+        {
+          "start": 59,
+          "end": 64,
+          "raw_excerpt_sha256": "4bf252a439c2d12062a0c906872c0ad0951f70db790a9bb68228e99c51f21a32"
+        }
+      ]
+    },
+    {
+      "id": "E22",
+      "topic": "Economia vínculo",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/economy/executor.ts",
+      "git_blob_sha": "925984643e4a4cd5b844e02e9d48c473b8d3353c",
+      "sha256": "cb5b65de77236a3203ac6bb9bde259057ca9b5e87b2428a4c5330fdeaa2a8b9e",
+      "ranges": [
+        {
+          "start": 1,
+          "end": 19,
+          "raw_excerpt_sha256": "e5d69053db23b81c01295460bdd1fff69902e3ccc7e65ab3458f360a5ac564ad"
+        },
+        {
+          "start": 102,
+          "end": 137,
+          "raw_excerpt_sha256": "d2f77e99f1065f5994c916d9f57b152b4f8a15f7d5bfeb828e4d47c5d7782e2b"
+        },
+        {
+          "start": 278,
+          "end": 313,
+          "raw_excerpt_sha256": "b768cedc84eca36a051490bc9b86f75521c744f3606cf76a6fec93057ac5fc6a"
+        }
+      ]
+    },
+    {
+      "id": "E23",
+      "topic": "Economia fechamento",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/economy/executor.ts",
+      "git_blob_sha": "925984643e4a4cd5b844e02e9d48c473b8d3353c",
+      "sha256": "cb5b65de77236a3203ac6bb9bde259057ca9b5e87b2428a4c5330fdeaa2a8b9e",
+      "ranges": [
+        {
+          "start": 139,
+          "end": 253,
+          "raw_excerpt_sha256": "7e82ea3b026c8487a5a22222541f54e0a539fdb5c2cf9a2a0547120d7f70166e"
+        },
+        {
+          "start": 321,
+          "end": 370,
+          "raw_excerpt_sha256": "d77275007906d06cdf199c27572c4bd2814b68d38dcd4ef90a8f1eabfbc8e015"
+        },
+        {
+          "start": 375,
+          "end": 399,
+          "raw_excerpt_sha256": "69b0a67603cc2cf03cc0cdc75ea1ef4e5ac4c84ded2bdd05b09dfcecac975b68"
+        }
+      ]
+    },
+    {
+      "id": "E24",
+      "topic": "Economia ledger",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/economy/admission.ts",
+      "git_blob_sha": "914a0b925dd282e264292b2247189c549c993a3f",
+      "sha256": "4806923787eb5724f7d70f9316bec2f74e3bd94fa48e8e62f9d4674dbf469dd7",
+      "ranges": [
+        {
+          "start": 409,
+          "end": 510,
+          "raw_excerpt_sha256": "b6d4130e796b35701e63e8aaa7b3e6e8ac2c570844fe81dba3c7a08469900f54"
+        },
+        {
+          "start": 550,
+          "end": 588,
+          "raw_excerpt_sha256": "997abbede2fd254e340859505347c7deb1a78e4a2ff018d88093989cbeaa32fd"
+        },
+        {
+          "start": 630,
+          "end": 704,
+          "raw_excerpt_sha256": "c1933c0e083f7ce566c812d6d510d59e3545354d5fbd5d678eec01f4588a662c"
+        },
+        {
+          "start": 751,
+          "end": 780,
+          "raw_excerpt_sha256": "880947c8f7753fdab8185d8c829af9e93821e63a439ac781f96d41cb9d73f18a"
+        }
+      ]
+    },
+    {
+      "id": "E25",
+      "topic": "Economia schema",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/economy/sql.ts",
+      "git_blob_sha": "1e59043d1231ac888116d96c73b2c2671b989abd",
+      "sha256": "3b9d5a5c27a6bb66ba8e771c9aebe32c11e699f97f094270b0e16cfa379a3ef4",
+      "ranges": [
+        {
+          "start": 49,
+          "end": 75,
+          "raw_excerpt_sha256": "bf530f70f79dda8c4de8a99f20a974d9e8551670805fe437ee9a081c9e457627"
+        }
+      ]
+    },
+    {
+      "id": "E26",
+      "topic": "Economia composição e teste fonte",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/test/economy/executor.test.ts",
+      "git_blob_sha": "ec84047bc6a2064a35f88d2deac269f119f96bf2",
+      "sha256": "f0d09baa7db5530605a7a4c71debca71897938809d9bdc295d081e43d21430e1",
+      "ranges": [
+        {
+          "start": 72,
+          "end": 100,
+          "raw_excerpt_sha256": "fe2adf0eba046f04942460ebbd983ab44165ac0e2d9d7973d2effafda1761401"
+        },
+        {
+          "start": 221,
+          "end": 245,
+          "raw_excerpt_sha256": "83228eee49465bfe8b7441e715dc303215cd1be9d0d3a4b0903a4c23425a351f"
+        }
+      ]
+    },
+    {
+      "id": "E27",
+      "topic": "Processo",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/process.ts",
+      "git_blob_sha": "a2c29d4a18c44ff407e6055b27830fade5d43f20",
+      "sha256": "7bfd3adf7274bd90bfe4cf1d7fd3f4bb256f6914dbd74cea00127e33704a6875",
+      "ranges": [
+        {
+          "start": 131,
+          "end": 169,
+          "raw_excerpt_sha256": "f43db745a1abc38a0246dcd9d99eb2a10891421ca46021685f88dcf677a8c5b5"
+        },
+        {
+          "start": 221,
+          "end": 272,
+          "raw_excerpt_sha256": "0567b841a9554b54610fa6a9f69ed6ea720e897c7f779229fd49b8bcb50b0ed4"
+        }
+      ]
+    },
+    {
+      "id": "E28",
+      "topic": "Omni",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/omni.ts",
+      "git_blob_sha": "94a19789cef782806a80432c9a86f28bccbdecac",
+      "sha256": "b032344ff11c078ecdc062bd796a5ad75ccb046a319d674ab7faba659d84b3ab",
+      "ranges": [
+        {
+          "start": 47,
+          "end": 112,
+          "raw_excerpt_sha256": "15939851dbfbffc7e6d97fc250c4d0b9b8ca213f53c544397e4d7fd0d27f52f0"
+        }
+      ]
+    },
+    {
+      "id": "E29",
+      "topic": "Omni fallback",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/omni-spawner.ts",
+      "git_blob_sha": "ff176729415c15d4644c69cac19e23ad5559f196",
+      "sha256": "9e3bd1a3156903ec2717ba347ba6c31c8076eaeebdee7243b035186e0568f53f",
+      "ranges": [
+        {
+          "start": 79,
+          "end": 135,
+          "raw_excerpt_sha256": "65060cb5c6a067159084534d9b92466a31625d2f4868643e08ff700ae903ce14"
+        }
+      ]
+    },
+    {
+      "id": "E30",
+      "topic": "Omni saída",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/omni-output.ts",
+      "git_blob_sha": "1410c5bf73c9e76225b0fbe1e7290096073854e1",
+      "sha256": "d768e4ab31a1f3765f47f4f2b7c3d0e0a59c2c26e6c29a2a7a88f24219fab7cf",
+      "ranges": [
+        {
+          "start": 1,
+          "end": 29,
+          "raw_excerpt_sha256": "4cd1b75c53deca8e6485423d154db855cf5442469f4b97c57cfafbe3a915184c"
+        },
+        {
+          "start": 116,
+          "end": 146,
+          "raw_excerpt_sha256": "3cd49d3a14e96f647dea64bb61fc65b5b803581805ff62580633a9fd6c943f64"
+        }
+      ]
+    },
+    {
+      "id": "E31",
+      "topic": "Background",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/omni-adoption.ts",
+      "git_blob_sha": "a62284d5809aa4dfec83476ae5c0228f72427d7e",
+      "sha256": "7b37501b9a24294a2390d48fa800e2e4425c525d5b6fcf9109f49848fdacb5b6",
+      "ranges": [
+        {
+          "start": 29,
+          "end": 56,
+          "raw_excerpt_sha256": "3859180f2be39ebcb050cf24b5d29b5b3c61100cc9d6aec67b1ad029e8e597d0"
+        }
+      ]
+    },
+    {
+      "id": "E32",
+      "topic": "Background",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/omni-background.ts",
+      "git_blob_sha": "5799ec268ca459f673a40a7fc868dbffca106269",
+      "sha256": "27e5fec693ecd407ee0f9efcc5ea617cfcacccac5e325e746f851024d7e06d2e",
+      "ranges": [
+        {
+          "start": 33,
+          "end": 65,
+          "raw_excerpt_sha256": "84e20338b3d90d20808e325e1ef2ad48ba52f3af5115669c45dbf84e427bf72a"
+        },
+        {
+          "start": 129,
+          "end": 151,
+          "raw_excerpt_sha256": "52fdfd81f9357e841795ecf10b3559bf2cf73067a84e91f6a3bb324928376d69"
+        }
+      ]
+    },
+    {
+      "id": "E33",
+      "topic": "PTY",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/pty.ts",
+      "git_blob_sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f",
+      "sha256": "03f62b4e17ac231291eb4c726d92415f63fa4b08eb66ced6d5c60cb9a3d0b4be",
+      "ranges": [
+        {
+          "start": 23,
+          "end": 39,
+          "raw_excerpt_sha256": "a58681ecc906ad3e8bb8e35a929b81bb5d4f8d683def1988df6863c0958c1f9a"
+        },
+        {
+          "start": 229,
+          "end": 270,
+          "raw_excerpt_sha256": "ed55db90cfed5e7cd641e880b1fdee0d95cc38ab1562cae3febffd776020fd23"
+        },
+        {
+          "start": 370,
+          "end": 423,
+          "raw_excerpt_sha256": "1fd6a6d5a48d2054a87ae072d652fd1c9ebe9dac4d1f2d538268dc29262c441d"
+        }
+      ]
+    },
+    {
+      "id": "E34",
+      "topic": "PTY protocolo",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/pty/protocol.ts",
+      "git_blob_sha": "cca1266bd0235f21bbac04454824c04b5c839aeb",
+      "sha256": "a75e3b002aabddb3c9c53a848cfec6650207beca43b471041b21c148587d86f4",
+      "ranges": [
+        {
+          "start": 9,
+          "end": 39,
+          "raw_excerpt_sha256": "c1009d104a4e99e94da8e2ced6de9be9918bbe7d83e6dd78270c11272ccabd16"
+        }
+      ]
+    },
+    {
+      "id": "E35",
+      "topic": "PTY backend",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/pty/omni.ts",
+      "git_blob_sha": "0fe80b0947866958b287078e12c4d9db407965f3",
+      "sha256": "fb35d0452c4a02cc2c19277125cb2fc39f427f6b8784fe22e6b6c80441076be0",
+      "ranges": [
+        {
+          "start": 114,
+          "end": 159,
+          "raw_excerpt_sha256": "3c75724f56ebca56df9084e02f8d87856485369a6c9350d6a03c942af5732732"
+        }
+      ]
+    },
+    {
+      "id": "E36",
+      "topic": "PTY ticket",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/pty/ticket.ts",
+      "git_blob_sha": "aaa22ac97bb5577b4379127dabe39c8fff747ee8",
+      "sha256": "86a9f97dafadd648f1c548f880dcb0fa77adb3eece06947ead6b2c1be960fd93",
+      "ranges": [
+        {
+          "start": 19,
+          "end": 56,
+          "raw_excerpt_sha256": "11a086e9ef6d683c8fed2f72a2dcb9151ea6040a6a283ad1c937d8c77a388569"
+        }
+      ]
+    },
+    {
+      "id": "E37",
+      "topic": "PTY limites históricos",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "docs/specs/terminal/plan.md",
+      "git_blob_sha": "0d54e8d122fbc6aff2391c7176b60f3cd73aacd0",
+      "sha256": "1de81397aa0ec298798f2bbcd33baf50340ffc4dbc968ea9fe9f8038b6040ac5",
+      "ranges": [
+        {
+          "start": 27,
+          "end": 47,
+          "raw_excerpt_sha256": "2947d3e393de490d09ebaa88af425388768f75f883a37d078b1c8e98d1e1d865"
+        }
+      ]
+    },
+    {
+      "id": "E38",
+      "topic": "PTY status histórico",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "docs/specs/terminal/status.md",
+      "git_blob_sha": "199f9fc5cea367d2d653305683c8ada505f89bef",
+      "sha256": "13c3d793076427965dbe015434d69b5d6f7cf26814eed731861d4874d1db4730",
+      "ranges": [
+        {
+          "start": 18,
+          "end": 35,
+          "raw_excerpt_sha256": "39bc783af6aab9edb0f3a445a82cc8468162b28b92e23f4beea87be31b9bc86b"
+        }
+      ]
+    },
+    {
+      "id": "E39",
+      "topic": "PTY marcas",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/pty/shell-marks.ts",
+      "git_blob_sha": "fbb66a3444c631f956fb5d53827ebc23937fd9c8",
+      "sha256": "3e5b4902f2a8cbcf2aadd61f10acdab2ffebe0859a40e6fe70aa15aef67a73e3",
+      "ranges": [
+        {
+          "start": 28,
+          "end": 67,
+          "raw_excerpt_sha256": "a90e9eb47140864ccf4c759ec5b9a81ca95fbc19ef7dff14e24086343c0b00e8"
+        }
+      ]
+    },
+    {
+      "id": "E40",
+      "topic": "Shell",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/shell.ts",
+      "git_blob_sha": "39a461317e0ef3a2d0e4cec2292698808ad46d11",
+      "sha256": "e01fa329fdf8f606ff9f2fbbc0da69b46a62e6175d9bd3ee2077657ef8ad16cb",
+      "ranges": [
+        {
+          "start": 31,
+          "end": 60,
+          "raw_excerpt_sha256": "4e3a088e05d4f280de78858db5ba453814d72ab4de87874bcce3f5b27eaeec00"
+        },
+        {
+          "start": 202,
+          "end": 221,
+          "raw_excerpt_sha256": "ea489f1e29460f27a46c17cebf24c3e85253611e9dbaf5041ceabd1f3005f77b"
+        }
+      ]
+    },
+    {
+      "id": "E41",
+      "topic": "TCP",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/tcp-proxy.ts",
+      "git_blob_sha": "b07f1e36c85f3f9913a77f6eeccddd2cfb8e303c",
+      "sha256": "878ebb3148202870032da1f5a7aed0950770488fd7bb098dcdaa9a05bb67db5d",
+      "ranges": [
+        {
+          "start": 16,
+          "end": 27,
+          "raw_excerpt_sha256": "94b3c9f80d5c066286136a8f09951c406f730c5d08d2ee90a84782d9a177dd21"
+        },
+        {
+          "start": 129,
+          "end": 133,
+          "raw_excerpt_sha256": "5f9494be9c92c524fa83a879494688d541282f56581ea30b336ebd6fcba4f71e"
+        },
+        {
+          "start": 154,
+          "end": 174,
+          "raw_excerpt_sha256": "3c142e52fda4f9e7ed4a5dee42b09d0542c3b1cbeaea3e60fd3aec4588f635ce"
+        }
+      ]
+    },
+    {
+      "id": "E42",
+      "topic": "Busca",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/ripgrep.ts",
+      "git_blob_sha": "1528fd5571644d622b6f0847ab4d1275df747da6",
+      "sha256": "4a3931ef91ecc7dfbf51421f2bf7d191c90e2ba383d762ccf7cd9cdcae37ad01",
+      "ranges": [
+        {
+          "start": 130,
+          "end": 175,
+          "raw_excerpt_sha256": "7f7bc0a213354d3485dd7dd9a55a0807800719b809da5b7bdcbe9564c44812bf"
+        },
+        {
+          "start": 224,
+          "end": 238,
+          "raw_excerpt_sha256": "1cb6ea578e41a5d3365f36b5af9b01ff857b38d310b5f0c973d9422dcaaf4d4e"
+        }
+      ]
+    },
+    {
+      "id": "E43",
+      "topic": "Binário",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/ripgrep/binary.ts",
+      "git_blob_sha": "cd98a7b533a35192829df8c73c31316aea227831",
+      "sha256": "ba0d4f83dfcd29fc41a36f31d034a424da6410d83ed2ebb6096a68fe2fa5c379",
+      "ranges": [
+        {
+          "start": 157,
+          "end": 195,
+          "raw_excerpt_sha256": "fd68f22ceb143c7bd30a737b6f8f88aa3345069fe7c5db17659fbc7e692c5a52"
+        },
+        {
+          "start": 309,
+          "end": 337,
+          "raw_excerpt_sha256": "03c543943e5b3e1e18129db23ee678fe6017fdbc9d850ec43ffe274fe15ea695"
+        }
+      ]
+    },
+    {
+      "id": "E44",
+      "topic": "Bundle",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/ripgrep/bundle.ts",
+      "git_blob_sha": "72d1b057fbdc9e8ba38fa5ffb00687a91c592762",
+      "sha256": "271f4018fe2b9bb8afd22db1fa1afafb95d6767bcd2d44bc464a125c4cb71f4e",
+      "ranges": [
+        {
+          "start": 54,
+          "end": 85,
+          "raw_excerpt_sha256": "d94efe9bc25cf1e1ccdd3cf014fbaea1140b19c846419d1693f63b132ec9cfce"
+        },
+        {
+          "start": 116,
+          "end": 147,
+          "raw_excerpt_sha256": "6c49a673435bb0a51bfc197194c9b30bdbcba0c89b8612969122fd59bb44b199"
+        }
+      ]
+    },
+    {
+      "id": "E45",
+      "topic": "ABI Windows",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/artifact-native-windows.ts",
+      "git_blob_sha": "53c097c3c87399edb764d3a0ce8a40ed518bd7e4",
+      "sha256": "15a6ebb45c9af009f2753ab25a9abe8ef1bb1a0c156af93ecf7d0bc218ae48b9",
+      "ranges": [
+        {
+          "start": 11,
+          "end": 35,
+          "raw_excerpt_sha256": "689f82f8b72a8b83f4efee60cea3b2c0e58ed9f2d64c0d0141584e3df4e714ee"
+        },
+        {
+          "start": 172,
+          "end": 214,
+          "raw_excerpt_sha256": "ac42689e18a4eba00108e9776a498252ec868110e0aa68e4525af9361373d08c"
+        }
+      ]
+    },
+    {
+      "id": "E46",
+      "topic": "LSP",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/lsp/lsp.ts",
+      "git_blob_sha": "7848ef568344421190171962367fe2836170d084",
+      "sha256": "e7500203a6b6dc05949917252e32d6e50a605b80d186f7b596c7a294654cb3f6",
+      "ranges": [
+        {
+          "start": 149,
+          "end": 176,
+          "raw_excerpt_sha256": "f660c46826da1cba87f4e64b777b70f74ae42f7c955c44a3d6830d652cad0fc4"
+        },
+        {
+          "start": 223,
+          "end": 282,
+          "raw_excerpt_sha256": "bbc98b01fad6f28747801d04c235932572397faa2a136a542ba379137e2d892b"
+        },
+        {
+          "start": 444,
+          "end": 470,
+          "raw_excerpt_sha256": "dd31c0bed777fa5f0f158dfe7c80ec9cebfe0204e4f136ccf93783b7995ad575"
+        }
+      ]
+    },
+    {
+      "id": "E47",
+      "topic": "LSP ownership",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/lsp/ownership.ts",
+      "git_blob_sha": "7bf14b7659a6cd02f33e58a56b6e3e92d5659172",
+      "sha256": "18bcb8a1625473dae25aba4ab04a2e18e264e900ba945bd2326935867b14fa95",
+      "ranges": [
+        {
+          "start": 39,
+          "end": 77,
+          "raw_excerpt_sha256": "46f6f6a7d07ecd04ecdb9dc0c8265c3daa1620942b321f9e7f73a0143b6b566c"
+        }
+      ]
+    },
+    {
+      "id": "E48",
+      "topic": "LSP processo",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/lsp/launch.ts",
+      "git_blob_sha": "01b5c78fa18a83e6e85f81b6ab6427899197935b",
+      "sha256": "68e099af5f6c7fb43cf2455b4c06d31f5515f4a6001dd6090282f5ad89869b16",
+      "ranges": [
+        {
+          "start": 144,
+          "end": 185,
+          "raw_excerpt_sha256": "ce90fd0890146d6066cff31f45ab25da612daccd20cdbf9a824aeafbd208071a"
+        }
+      ]
+    },
+    {
+      "id": "E49",
+      "topic": "LSP cliente",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/lsp/client.ts",
+      "git_blob_sha": "aa329773a2fe3a0665b292bf984cc1bdce7724f5",
+      "sha256": "4de3dfa35a046fee6b85ebfd0766f713e8e18a7720e96dc0703c23efd4a9679b",
+      "ranges": [
+        {
+          "start": 98,
+          "end": 120,
+          "raw_excerpt_sha256": "a56f5bd92e9d29493970169bab9632748fe3e4a07529e32bedbc7cfd4ac6c061"
+        },
+        {
+          "start": 625,
+          "end": 649,
+          "raw_excerpt_sha256": "d4c475527846b7ba1c9339b5bbb7bd539589dfef6597d433f34ad925ff926093"
+        }
+      ]
+    },
+    {
+      "id": "E50",
+      "topic": "LSP receitas",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/lsp/server-support.ts",
+      "git_blob_sha": "22bbb97a5ed335e1663ff248e1ddd11f4078b0bd",
+      "sha256": "a82519328a631be4c2d3e76df555ddfe7a146a62b49c29082f2d206cc89e2e8f",
+      "ranges": [
+        {
+          "start": 34,
+          "end": 75,
+          "raw_excerpt_sha256": "46b215d632d422fc479919989f4b25cb9de2d3338f556f455bdee6c325889e5a"
+        }
+      ]
+    },
+    {
+      "id": "E51",
+      "topic": "LSP receitas",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/lsp/server-a.ts",
+      "git_blob_sha": "6d31936e59a23f100804c540d45fb75071e22b4a",
+      "sha256": "d6c58a700bf5ec6a9a8600a4edee69c8c9f451750225c806f7d8fb54c12cfdb3",
+      "ranges": [
+        {
+          "start": 277,
+          "end": 304,
+          "raw_excerpt_sha256": "a48afb67326a6ddcbc6f3ae006c5156152d0fa5b56c02a6778f9ce150159947e"
+        }
+      ]
+    },
+    {
+      "id": "E52",
+      "topic": "LSP receitas",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/lsp/server-b.ts",
+      "git_blob_sha": "524aacd6c58074fdc78d440975848f858839a9dc",
+      "sha256": "2babf52f38fcd1a9b3fb10b527609d19967671520af74de76d5dbd4059e86102",
+      "ranges": [
+        {
+          "start": 205,
+          "end": 229,
+          "raw_excerpt_sha256": "1f5a2c969dfb34466b44887eece9385f3e5cd77f68543eaa1a271dad86c39f91"
+        }
+      ]
+    },
+    {
+      "id": "E53",
+      "topic": "LSP receitas",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/lsp/server-c.ts",
+      "git_blob_sha": "d393b9fa8eb45c13062f57276eb0229ebea2dd53",
+      "sha256": "4af28e2c6f422f702a1afa7b2165eaad666aacb7fcbc7b777dfc20fa083b69ee",
+      "ranges": [
+        {
+          "start": 134,
+          "end": 160,
+          "raw_excerpt_sha256": "fac4b55701d206bef143807dae84c51b969e9f879ed0bfafa903811b76ad6107"
+        }
+      ]
+    },
+    {
+      "id": "E54",
+      "topic": "Format",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/format/format.ts",
+      "git_blob_sha": "0198f9c0d4aa4a9e1452339ca5c3302611478aba",
+      "sha256": "1a9918459995534b16242fcdd18c576de735fdac63a87603e0ad3ca215b036fd",
+      "ranges": [
+        {
+          "start": 73,
+          "end": 109,
+          "raw_excerpt_sha256": "71e3bf2d6bd86684fdb48220ff92a253aacade57ebc60e88e6ed77096a13eb67"
+        },
+        {
+          "start": 122,
+          "end": 158,
+          "raw_excerpt_sha256": "5f2469ae38c23a217a45b3780c7850784ba60c641e3ae00cd9ee4c8c73873cea"
+        },
+        {
+          "start": 184,
+          "end": 218,
+          "raw_excerpt_sha256": "06a8b6746ea9663f9561938988a2aff9468001926f37d67669dbff56dc2046a7"
+        }
+      ]
+    },
+    {
+      "id": "E55",
+      "topic": "Format receitas",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/format/formatter.ts",
+      "git_blob_sha": "977a61e73f532677624ce1368dda876c411f8eb0",
+      "sha256": "cb7374d613928814d69585912b17149214e5d3141c291d413989acd0e960aee8",
+      "ranges": [
+        {
+          "start": 60,
+          "end": 83,
+          "raw_excerpt_sha256": "e4e4eec29d8706532faa91b454e21d2c5141eeadf9b3e00f9e1ee975ef5bd2aa"
+        },
+        {
+          "start": 353,
+          "end": 377,
+          "raw_excerpt_sha256": "6d88be804e219f7b513ec8ef942cb85f408eb178524084b08717f816ea334d85"
+        }
+      ]
+    },
+    {
+      "id": "E56",
+      "topic": "Install",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/installation/service.ts",
+      "git_blob_sha": "4a75cd0fdf8467866c10c692987769751edd0f42",
+      "sha256": "4d8978f8734107e6f9bb57b5025bf75b1cd0f2320cf3a3f6aad8c8165ad79aed",
+      "ranges": [
+        {
+          "start": 156,
+          "end": 196,
+          "raw_excerpt_sha256": "a03e5915ed65620d0ab1f9a44bfe3cc49cfcc9f141c3d647bb55c5d6fe3dbda6"
+        }
+      ]
+    },
+    {
+      "id": "E57",
+      "topic": "Npm",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/npm.ts",
+      "git_blob_sha": "4ca07a184fd99dc6e6ce8b42dfa42d2f5979ca79",
+      "sha256": "984a3fdcfb1f4c56dc42ec742b9b7875542e873d820a780dcb45631c57a7f0a9",
+      "ranges": [
+        {
+          "start": 113,
+          "end": 145,
+          "raw_excerpt_sha256": "e377aa6af1e7faa70eb7f4d237596b4245e81fcf3f7bafaa5c486eee6659d837"
+        },
+        {
+          "start": 252,
+          "end": 278,
+          "raw_excerpt_sha256": "3692f2507202b3672d3d14abbf2333d11b4ec5ea6fc96b8f51d32ca9ad97128f"
+        }
+      ]
+    },
+    {
+      "id": "E58",
+      "topic": "Logging",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/observability/logging.ts",
+      "git_blob_sha": "767f81368730a7adc82924c4090daa2a01de2ae7",
+      "sha256": "5185f7aa206c45653c5ecab2052c35ec466b116b6f2bfc85c4d2685727410578",
+      "ranges": [
+        {
+          "start": 44,
+          "end": 83,
+          "raw_excerpt_sha256": "2df53f6e565ac49a6c30339f1d622d85182d559d0be79ace6ed5512a941dd076"
+        }
+      ]
+    },
+    {
+      "id": "E59",
+      "topic": "OTLP",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/observability/otlp.ts",
+      "git_blob_sha": "4d403d30bded809a37d426a8c56361ca8d66ddf7",
+      "sha256": "4a76113bce60f765e3d431eb6c5c46e3d224d889da83a8cfd00143d1c52a3003",
+      "ranges": [
+        {
+          "start": 7,
+          "end": 18,
+          "raw_excerpt_sha256": "d8159f942607767abf435c4d6c7a3aa20cf505931df328af680985f2858b1b15"
+        },
+        {
+          "start": 68,
+          "end": 76,
+          "raw_excerpt_sha256": "c9170cad6a6251318af61d01050b536336fd5f73836903d40785ff380b6841e0"
+        }
+      ]
+    },
+    {
+      "id": "E60",
+      "topic": "Utilities",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/util/timeout.ts",
+      "git_blob_sha": "22f2648c92b530f0a8aa9e8bc1c8602eb79ab294",
+      "sha256": "b6da291f317d4ed7ac25d7dc18335f878a8979a904a2b0cc4adcfdcda4f9b6ab",
+      "ranges": [
+        {
+          "start": 1,
+          "end": 13,
+          "raw_excerpt_sha256": "b6da291f317d4ed7ac25d7dc18335f878a8979a904a2b0cc4adcfdcda4f9b6ab"
+        }
+      ]
+    },
+    {
+      "id": "E61",
+      "topic": "Utilities",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/util/token.ts",
+      "git_blob_sha": "d3d4a8de29bb5d101e967433cbc389bd5d7dcfd3",
+      "sha256": "a157df378a5baaf7a35ac1cb9c94dd29266d916329545529604274d6cddbc635",
+      "ranges": [
+        {
+          "start": 1,
+          "end": 5,
+          "raw_excerpt_sha256": "a157df378a5baaf7a35ac1cb9c94dd29266d916329545529604274d6cddbc635"
+        }
+      ]
+    },
+    {
+      "id": "E62",
+      "topic": "Utilities arquivo",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/util/physical-path.ts",
+      "git_blob_sha": "f5c112bce604f1d178673bc68b21ff8b50a23e42",
+      "sha256": "fb186058a108effad2bd8ac1b1e02b8d53ba7a6094066e9f3eea5cbbc608aae0",
+      "ranges": [
+        {
+          "start": 29,
+          "end": 65,
+          "raw_excerpt_sha256": "d9728da36e3f6d4ee9fc4a4809d1ea10aa583822d60977855310871b42c74bde"
+        }
+      ]
+    },
+    {
+      "id": "E63",
+      "topic": "Utilities lock",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/util/flock.ts",
+      "git_blob_sha": "958bd9fd1da6dfd472e3a0ab7aec8038dca7a6f0",
+      "sha256": "205c59f5d56dd10145393627e6d3bb81a069674422c3ca835d2c9f8a9ff7ef85",
+      "ranges": [
+        {
+          "start": 225,
+          "end": 264,
+          "raw_excerpt_sha256": "8e96e7329b721a965b89af046f055b4860c3cd1ff925f17adf7de1cd4e2f027a"
+        },
+        {
+          "start": 326,
+          "end": 342,
+          "raw_excerpt_sha256": "68d63b87638b95123dc76cf5d3234c9c870f7608b506aedac05d1d768ea492e8"
+        }
+      ]
+    },
+    {
+      "id": "E64",
+      "topic": "Utilities lock",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/util/effect-flock.ts",
+      "git_blob_sha": "b85900118a38d9bb000ed2beff9add8f41e222d9",
+      "sha256": "926d0d566e1101ae4374576781f6015a33ae42ad5fd161286539ec6f284a15cf",
+      "ranges": [
+        {
+          "start": 244,
+          "end": 284,
+          "raw_excerpt_sha256": "1667e765d5afbee9282426b8ca5f0fed80741c8a0a8f48c8aab149417d2c52c0"
+        }
+      ]
+    },
+    {
+      "id": "E65",
+      "topic": "Imagem",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/image/photon.ts",
+      "git_blob_sha": "097894d3a4da52246ab8c3e92ed79bee698ec066",
+      "sha256": "20ab783408a8718092d0b18b74ca6f5d27dbf707fefe4e743dd804df6d0be922",
+      "ranges": [
+        {
+          "start": 40,
+          "end": 70,
+          "raw_excerpt_sha256": "721411f05fb852292a63a18cb151aefbe87c2285d0c727e75218644c179c351c"
+        }
+      ]
+    },
+    {
+      "id": "E66",
+      "topic": "Teste fonte",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/test/format.test.ts",
+      "git_blob_sha": "bb7545f92d8124d723b54ea5e97561591061a6e5",
+      "sha256": "95ab421c55cbc858d8a7acc3007a9bb421e1f6ed4c414bb70b70d557abdc963c",
+      "ranges": [
+        {
+          "start": 38,
+          "end": 64,
+          "raw_excerpt_sha256": "6ab9565d39a49d456f85f16ca26cc36a32d5e731682bf86ac4ac544f88f6d6b2"
+        }
+      ]
+    },
+    {
+      "id": "E67",
+      "topic": "Teste fonte",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/test/lsp-stdio.test.ts",
+      "git_blob_sha": "79a3c7bb7c8a6464913bdbe475eeb27f65202a83",
+      "sha256": "5a5c342e1584a1f77bb1fb1f99ba03b30c5043fd966b721fdc93eb71e6eef870",
+      "ranges": [
+        {
+          "start": 42,
+          "end": 58,
+          "raw_excerpt_sha256": "ab22538f0396d10b4073a5b9a2c03801052fc88b55a7e44626c0074993a2fd88"
+        }
+      ]
+    },
+    {
+      "id": "E68",
+      "topic": "Probe fonte",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/test/omni-worker.probe.ts",
+      "git_blob_sha": "bc474819d7dfd15254cb5b5645bfde438483b36a",
+      "sha256": "a7548a0726674c5f9d446cbcc8d0b2e4be731c5b05e967d325ecdd4cf24b10aa",
+      "ranges": [
+        {
+          "start": 1,
+          "end": 9,
+          "raw_excerpt_sha256": "23422431b248ea06c9940a43583b080f9c73703d91dfce25cf15886c690f3765"
+        },
+        {
+          "start": 14,
+          "end": 25,
+          "raw_excerpt_sha256": "d57041f1c7b27b981377a4702cdd81b70ff12b42f22e9e01c6f308538ddbfb00"
+        }
+      ]
+    }
+  ]
+}

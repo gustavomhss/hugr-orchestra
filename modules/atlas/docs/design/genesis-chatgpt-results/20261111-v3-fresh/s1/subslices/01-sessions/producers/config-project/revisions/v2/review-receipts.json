@@ -1,0 +1,16 @@
+[
+  {
+    "source_path": "/workspace/scratch/efdebfac3411/s1_01/judgments/a1-config-v1-j1.json",
+    "path": "revisions/v2/reviews/a1-config-v1-j1.json",
+    "byte_length": 10690,
+    "sha256": "a32b7bec928315cdd77f7fdb32909f5ee5d316eb576816a1cce9985b632d8ff7",
+    "role": "Original independent judge decision, copied byte-identically; no new vote or producer verdict."
+  },
+  {
+    "source_path": "/workspace/scratch/efdebfac3411/s1_01/judgments/a1-config-v1-j2.json",
+    "path": "revisions/v2/reviews/a1-config-v1-j2.json",
+    "byte_length": 13808,
+    "sha256": "fd2dd0e2d76379e7d4e128b1fa1e77ce81cf95dd8bc5ef18051475f641187349",
+    "role": "Original independent judge decision, copied byte-identically; no new vote or producer verdict."
+  }
+]

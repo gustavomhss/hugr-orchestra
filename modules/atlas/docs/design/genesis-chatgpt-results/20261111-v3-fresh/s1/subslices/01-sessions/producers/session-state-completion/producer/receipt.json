@@ -1,0 +1,106 @@
+{
+  "schema": "s1-01-native-producer-receipt/v1",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "producer": "/root/l1_a1_completion",
+  "advertised_model": "GPT-6 Astra Pro",
+  "model_telemetry_id": null,
+  "role": "clean_native_producer_not_judge",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "oracle_access": false,
+  "reserved_access": false,
+  "request": {
+    "path": "producer/request.md",
+    "sha256": "ddc40db3631803a7c6b26d6372e35b2af2e27d0e705d066bb291cf236b93ed79",
+    "byte_length": 3360
+  },
+  "steering": {
+    "path": "producer/steering.md",
+    "sha256": "a3bcc8864a6ddc5043688d26d80126c91c553e196730b55a1e8fa75d68ed58e9",
+    "byte_length": 853
+  },
+  "recipe": {
+    "path": "producer/recipe.json",
+    "sha256": "f3e2cc6c579e044aa8d94183a0326e930a9a9e0d53162d74407b68e9e986eb1c",
+    "byte_length": 5293
+  },
+  "response": {
+    "path": "producer/response.md",
+    "sha256": "43c73d0d6ffa2ba8ce4569a4797b06dea348458d9c000071bd08043257d054eb",
+    "byte_length": 2974
+  },
+  "candidate": {
+    "path": "bodies/session-state-completion.md",
+    "sha256": "2621a48ba336ad17db711b556ee65a62fe527221052b1736452460bbe661efa7",
+    "byte_length": 25450
+  },
+  "context_correction": {
+    "path": "bodies/context.md",
+    "sha256": "94e04589d726a017c3cbeb8f758d5d23aae773733597a15ea5236e8e1288aea7",
+    "byte_length": 5909
+  },
+  "principal_packet": {
+    "path": "packets/principal-review.md",
+    "sha256": "942c1335ad35e4076792f222d97db5388c8380aa02e251d5a303d2c68879eff8",
+    "byte_length": 210654
+  },
+  "full_packet": {
+    "path": "packets/complete-review-bundle.md",
+    "sha256": "856d3d995230dd0773e89ca51e592452b8c0883c50d2a4aefd911c256ed818c5",
+    "byte_length": 393981
+  },
+  "dispositions": {
+    "path": "row-dispositions.jsonl",
+    "sha256": "b1f3a307b2b13bd36d75aba0b8dfdcd87e1f327313d69a4da0306f302ece7349",
+    "byte_length": 207332
+  },
+  "structural_validation": {
+    "path": "structural-validation.json",
+    "sha256": "2831b28918fd63f89b123a4021a44ea2edc530d15f44b089eba4c025b73f2cdc",
+    "byte_length": 807
+  },
+  "source_population": 197,
+  "new_population_captures": 171,
+  "reused_population_captures": 26,
+  "additional_cross_sources": 2,
+  "drafts": [
+    {
+      "path": "originals/session-state-completion-v0.md",
+      "sha256": "a05a61bdc798feddde5ae137e55e139f2cd4b35f4e8c05c829c4424d927dd6dd",
+      "byte_length": 25351
+    },
+    {
+      "path": "originals/session-state-completion-v1.md",
+      "sha256": "dc93eec36b110f0ab80699bea7b2d4115b3c2c1666c9d2da5aec9f3ebd691ec6",
+      "byte_length": 25426
+    }
+  ],
+  "draft_preservation_note": "V1 reconstructed by reversing the one known visible edit and verified against its previously reported SHA256; V0 reconstructed by reversing the earlier visible engine-selection edit. Neither draft has a judge verdict.",
+  "draft_deltas": [
+    {
+      "path": "evidence/session-state-completion-v0-to-v1.patch",
+      "sha256": "7e60fa1b9092c2d3fd9da7eef72887459443611f57db2e0b54b157bac51e921e",
+      "byte_length": 3440
+    },
+    {
+      "path": "evidence/session-state-completion-v1-to-v2.patch",
+      "sha256": "b32f1297a9e22266ffe6c5129fc1ac58374126bc354e3a340da86cd8e79d9a8b",
+      "byte_length": 2882
+    }
+  ],
+  "semantic_reviews": [],
+  "product_execution": false,
+  "tests_execution": false,
+  "provider_execution": false,
+  "git_mutations": false,
+  "remote_writes": false,
+  "judge_transmission": false,
+  "l2_l4_produced": false,
+  "metadata_rebind_owner": "/root",
+  "remote_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/producers/session-state-completion",
+  "remaining": [
+    "Same two independent semantic reviews of exact body/dispositions.",
+    "Root metadata rebind and actual publication/runtime/import gates.",
+    "L2-L4 only after accepted predecessors."
+  ]
+}

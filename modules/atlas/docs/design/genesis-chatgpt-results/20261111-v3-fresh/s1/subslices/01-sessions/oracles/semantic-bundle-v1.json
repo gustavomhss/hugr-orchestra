@@ -1,0 +1,34 @@
+{
+  "schema": "genesis-s1-01-oracle-assembly/v1",
+  "assembled_at": "2026-11-14T23:42:30.807464+00:00",
+  "assembly_is_not_new_oracle_freeze": true,
+  "original_bytes_unchanged": true,
+  "provenance": "Original freezes and timestamps remain inside the exact listed files. This manifest binds preserved oracles for final native transport; it does not create retroactive semantic acceptance.",
+  "references": [
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/oracles/l1-inherited.json",
+      "sha256": "01689e1afd57acd85eb0fbdb967e8853821e38a5a21c52994882eeb68d07d42f",
+      "byte_length": 2175,
+      "purpose": "Frozen inherited L1 criteria and regression expectations"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/oracles/consumer-v1.json",
+      "sha256": "24870345aa621f95bc240735aee26912f0788e81bdfab83b39f66f6cb2fdcc1c",
+      "byte_length": 10951,
+      "purpose": "Inherited lead/support consumer expectations"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/oracles/s1-01-oracle-v1.json",
+      "sha256": "9e4d27be0148aad11a9b1daf5b5d4221ace44f752918661825a12f6dc136374f",
+      "byte_length": 7078,
+      "purpose": "New preproduction S1-01 held-out consumer expectations"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/oracles/maintenance-oracle-v1.json",
+      "sha256": "9ec970e140bbd1b6904577b9c1c6fa4de5bd8053214636658473610bad5e3d8f",
+      "byte_length": 2152,
+      "purpose": "Independent maintenance expected sets and invariants"
+    }
+  ],
+  "direct_use_note": "control/direct-use-cases-v1.json contains usage questions only, explicitly not a retrospective production oracle."
+}

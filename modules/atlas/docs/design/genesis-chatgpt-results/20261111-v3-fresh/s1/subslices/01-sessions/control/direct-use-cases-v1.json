@@ -1,0 +1,217 @@
+{
+  "schema": "genesis-s1-01-direct-use-cases/v1",
+  "frozen_at": "2026-11-14T23:39:25.287112+00:00",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "purpose": "Direct use of every planned necessary artifact; usage checks, not retroactive production-oracle acceptance. Questions only; no reserved answers.",
+  "limits_ref": "control/consumer-plan-v1.json",
+  "cases": [
+    {
+      "id": "S101-D01",
+      "key": "s1.core.session-admission",
+      "question": "What identifies an exact prompt retry, and may changing only resume create another durable input?",
+      "mode": "direct",
+      "required_queries": {
+        "index_max": 1,
+        "read_max": 1,
+        "response_bytes_max": 40000,
+        "source_reads": 0,
+        "oracle_reads": 0
+      }
+    },
+    {
+      "id": "S101-D02",
+      "key": "s1.core.session-execution",
+      "question": "How do local drain ownership and steer/queue continuation differ from durable crash recovery?",
+      "mode": "direct",
+      "required_queries": {
+        "index_max": 1,
+        "read_max": 1,
+        "response_bytes_max": 40000,
+        "source_reads": 0,
+        "oracle_reads": 0
+      }
+    },
+    {
+      "id": "S101-D03",
+      "key": "s1.core.persistence",
+      "question": "For replay from another owner in non-strict mode, what happens to an old divergent sequence versus a new discontinuous sequence?",
+      "mode": "direct",
+      "required_queries": {
+        "index_max": 1,
+        "read_max": 1,
+        "response_bytes_max": 40000,
+        "source_reads": 0,
+        "oracle_reads": 0
+      }
+    },
+    {
+      "id": "S101-D04",
+      "key": "s1.core.context",
+      "question": "Which summarized tool text is truncated, what is the exact bound unit, and which arguments or error text are outside that helper?",
+      "mode": "direct",
+      "required_queries": {
+        "index_max": 1,
+        "read_max": 1,
+        "response_bytes_max": 40000,
+        "source_reads": 0,
+        "oracle_reads": 0
+      }
+    },
+    {
+      "id": "S101-D05",
+      "key": "s1.core.configuration",
+      "question": "After a global settings edit, which configuration is reread and which project data stays snapshotted?",
+      "mode": "direct",
+      "required_queries": {
+        "index_max": 1,
+        "read_max": 1,
+        "response_bytes_max": 40000,
+        "source_reads": 0,
+        "oracle_reads": 0
+      }
+    },
+    {
+      "id": "S101-D06",
+      "key": "s1.core.project",
+      "question": "Can an exact checkpoint save retry succeed after its source Session disappears, and what does the digest prove?",
+      "mode": "direct",
+      "required_queries": {
+        "index_max": 1,
+        "read_max": 1,
+        "response_bytes_max": 40000,
+        "source_reads": 0,
+        "oracle_reads": 0
+      }
+    },
+    {
+      "id": "S101-D07",
+      "key": "s1.core.models",
+      "question": "Does a model in the catalog imply native Session support for that provider/protocol?",
+      "mode": "direct",
+      "required_queries": {
+        "index_max": 1,
+        "read_max": 1,
+        "response_bytes_max": 40000,
+        "source_reads": 0,
+        "oracle_reads": 0
+      }
+    },
+    {
+      "id": "S101-D08",
+      "key": "s1.core.economy",
+      "question": "When can an admitted request be settled, and does an HTTP error alone remove uncertainty or a reservation?",
+      "mode": "direct",
+      "required_queries": {
+        "index_max": 1,
+        "read_max": 1,
+        "response_bytes_max": 40000,
+        "source_reads": 0,
+        "oracle_reads": 0
+      }
+    },
+    {
+      "id": "S101-D09",
+      "key": "s1.core.runtime",
+      "question": "What do process-local runtime composition and PTY buffering establish, and which OS or distributed guarantees remain outside scope?",
+      "mode": "direct",
+      "required_queries": {
+        "index_max": 1,
+        "read_max": 1,
+        "response_bytes_max": 40000,
+        "source_reads": 0,
+        "oracle_reads": 0
+      }
+    },
+    {
+      "id": "S101-D10",
+      "key": "s1.subslice01.session-state-completion",
+      "question": "How do migration backups, explicit restore, and EventV2 notification relate to the actual outer transaction boundary?",
+      "mode": "direct",
+      "required_queries": {
+        "index_max": 1,
+        "read_max": 1,
+        "response_bytes_max": 40000,
+        "source_reads": 0,
+        "oracle_reads": 0
+      }
+    },
+    {
+      "id": "S101-D11",
+      "key": "s1.subslice01.config-project-supplement",
+      "question": "What is the relation between the runtime config decoder and its generated JSON Schema publisher, and who owns a publisher correction?",
+      "mode": "direct",
+      "required_queries": {
+        "index_max": 1,
+        "read_max": 1,
+        "response_bytes_max": 40000,
+        "source_reads": 0,
+        "oracle_reads": 0
+      }
+    },
+    {
+      "id": "S101-D12",
+      "key": "s1.subslice01.runtime-models-economy-completion",
+      "question": "Which production graph adopts the admission guard, and what should an operator infer from a completed transport without provider terminal evidence?",
+      "mode": "direct",
+      "required_queries": {
+        "index_max": 1,
+        "read_max": 1,
+        "response_bytes_max": 40000,
+        "source_reads": 0,
+        "oracle_reads": 0
+      }
+    },
+    {
+      "id": "S101-D13",
+      "key": "s1.subslice01.session-lifecycle",
+      "question": "How should an operator diagnose a durably admitted input whose local execution has not progressed without duplicating the input or claiming automatic restart recovery?",
+      "mode": "direct",
+      "required_queries": {
+        "index_max": 1,
+        "read_max": 1,
+        "response_bytes_max": 40000,
+        "source_reads": 0,
+        "oracle_reads": 0
+      }
+    },
+    {
+      "id": "S101-D14",
+      "key": "s1.subslice01.environment-runtime",
+      "question": "When a repository command fails to run, how should trust, configuration lifetime, model compatibility and process policy be distinguished?",
+      "mode": "direct",
+      "required_queries": {
+        "index_max": 1,
+        "read_max": 1,
+        "response_bytes_max": 40000,
+        "source_reads": 0,
+        "oracle_reads": 0
+      }
+    },
+    {
+      "id": "S101-D15",
+      "key": "s1.subslice01.change-impact",
+      "question": "How should an admission/persistence change be routed through build dependencies, independent components and verification, and why are navigation links different?",
+      "mode": "direct",
+      "required_queries": {
+        "index_max": 1,
+        "read_max": 1,
+        "response_bytes_max": 40000,
+        "source_reads": 0,
+        "oracle_reads": 0
+      }
+    },
+    {
+      "id": "S101-D16",
+      "key": "s1.subslice01.session-ownership",
+      "question": "How should a maintainer begin a bounded Atlas consultation, choose deeper evidence, preserve approvals and abstain on claims beyond this source pin?",
+      "mode": "direct",
+      "required_queries": {
+        "index_max": 1,
+        "read_max": 1,
+        "response_bytes_max": 40000,
+        "source_reads": 0,
+        "oracle_reads": 0
+      }
+    }
+  ]
+}

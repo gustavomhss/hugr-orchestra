@@ -1,0 +1,67 @@
+{
+  "schema": "s1-native-producer-receipt/v1",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "native_agent_task": "/root/l1_runtime_completion",
+  "role": "producer, not judge",
+  "host_runtime_agent_uuid": null,
+  "declared_model_label": "GPT-6 Astra Pro",
+  "host_runtime_model_id": null,
+  "request": {
+    "local_path": "producer-request.txt",
+    "encoding": "utf-8",
+    "byte_length": 3775,
+    "sha256": "c3b9a1383d16023143a58c30bf76b68f8822f144405d9e2642f677822a68ed63"
+  },
+  "root_followups": {
+    "local_path": "root-followups.txt",
+    "encoding": "utf-8",
+    "byte_length": 1254,
+    "sha256": "bdd7579f2f5768824590331473de8a4c475279b5b824fd8bbdfa7e97beda3637"
+  },
+  "response": {
+    "local_path": "producer-response.txt",
+    "encoding": "utf-8",
+    "byte_length": 2067,
+    "sha256": "469229279f660919b43b6fd4a81ec7ce589902af40f7075dceca5636f4c82312"
+  },
+  "recipe": {
+    "local_path": "recipe.json",
+    "encoding": "utf-8",
+    "byte_length": 7445,
+    "sha256": "a62d95f78dbdc589032f000ed90fc09a189482b08e8d8fcb65c9e6bc87df35f6"
+  },
+  "body": {
+    "local_path": "bodies/runtime-models-economy-completion.md",
+    "encoding": "utf-8",
+    "byte_length": 35465,
+    "sha256": "c1b2e02eca65e7de23d8302c92a5b3f1e0b3670efbbb8318e215e4f956521f20"
+  },
+  "body_revision": {
+    "local_path": "revision-log.json",
+    "encoding": "utf-8",
+    "byte_length": 4596,
+    "sha256": "524b1e42a91ce950fac5b013884151153f42d2bde9fd2d0e7a5a55e3e7a45fb1"
+  },
+  "request_copy": "Visible delegation text copied UTF-8; no API envelope or token telemetry inferred.",
+  "fragment": {
+    "local_path": "native-artifact-fragment.json",
+    "encoding": "utf-8",
+    "byte_length": 83488,
+    "sha256": "ee8cedbd48a1fcc72d31140bfa2982f714658eab62ae83b5b21926b6a87a8195"
+  },
+  "packet_index": {
+    "local_path": "packet-index.json",
+    "encoding": "utf-8",
+    "byte_length": 3437,
+    "sha256": "beb8b44ab7dfd2bc6d75d070f10ded05f7d47db5131f549b2dbd5ce21f22c597"
+  },
+  "physical_tokens": null,
+  "physical_attempts": null,
+  "physical_billing": null,
+  "external_model_calls": "NONE",
+  "product_execution": "NOT_RUN",
+  "remote_writes": "NONE",
+  "review_state": "NOT_REVIEWED",
+  "timestamp_kind": "local receipt materialization clock, not remote commit/acceptance time",
+  "local_materialized_at": "2026-11-14T23:29:41.864943+00:00"
+}

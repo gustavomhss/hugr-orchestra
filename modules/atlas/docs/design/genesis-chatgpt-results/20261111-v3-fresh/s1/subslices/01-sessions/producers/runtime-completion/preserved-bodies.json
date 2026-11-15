@@ -1,0 +1,31 @@
+{
+  "schema": "s1-preserved-bodies/v1",
+  "bodies": [
+    {
+      "key": "s1.core.runtime",
+      "local_path": "inherited-bodies/runtime.md",
+      "encoding": "utf-8",
+      "byte_length": 5451,
+      "sha256": "331d26e17158e0770af02c8772bd01a421dbda1a0bc82802da825f3666fba534",
+      "operation": "byte-for-byte copy; no rewrite or decision change"
+    },
+    {
+      "key": "s1.core.models",
+      "local_path": "inherited-bodies/models.md",
+      "encoding": "utf-8",
+      "byte_length": 3987,
+      "sha256": "4af060adbf07f6e7e759bd8574793155c5676fd87fbef77125c70cc618ffdcfe",
+      "operation": "byte-for-byte copy; no rewrite or decision change"
+    },
+    {
+      "key": "s1.core.economy",
+      "local_path": "inherited-bodies/economy.md",
+      "encoding": "utf-8",
+      "byte_length": 3288,
+      "sha256": "74a59d062ae560dc633abd7561b1a763a7a9982db587d5c0076b8fc8f4a9b6bf",
+      "operation": "byte-for-byte copy; no rewrite or decision change"
+    }
+  ],
+  "body_delta": [],
+  "reason": "Supplement-only; originals immutable."
+}

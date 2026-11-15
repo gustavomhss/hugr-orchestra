@@ -1,0 +1,29 @@
+        const chunk = yield* file.readAlloc(64 * 1024)
+        if (Option.isNone(chunk)) break
+        yield* inspectChunk(chunk.value)
+        done = !(yield* consumeChunk(chunk.value))
+      }
+      if (!done) {
+        const tail = yield* decodeUtf8(resource, decoder)
+        if (!discard) pending += tail
+        if (pending) append(pending.endsWith("\r") ? pending.slice(0, -1) : pending)
+      }
+      if (lines.length === 0 && offset !== 1) return yield* Effect.fail(new OffsetOutOfRangeError({ offset }))
+      const reason = inspector.finish()
+      if (reason) return yield* new ToolSafety.Denied({ reason })
+      return new TextPage({
+        type: "text-page",
+        content: lines.join("\n"),
+        mime: FSUtil.mimeType(real),
+        offset,
+        truncated: next !== undefined,
+        ...(next === undefined ? {} : { next }),
+      })
+    }),
+  )
+})
+```
+
+## Coverage and execution disposition
+
+All 123 original rows retain their paths, blobs, family keys and explicit semantic read depths. No assigned disposition or old evidence has been removed. The existing 85 captured assigned rows and six original boundary captures remain; only the two read-tool files are additional, making 93 captures. Both new files were read in full. Reading their code does not transfer ownership from S1-02 or prove the rest of the tool family. No product execution or runtime proof is claimed. Original producer/recipe/request/response identities and the preserved same-pair decisions remain independently linked in the v2 manifest.

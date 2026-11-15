@@ -1,0 +1,99 @@
+{
+  "schema": "genesis-config-project-mechanical-verification/v1",
+  "verified_at_utc": "2026-11-14T23:02:57.253180+00:00",
+  "checks": {
+    "inventory_projection_exact": true,
+    "assigned_rows_unique": 123,
+    "assigned_rows_dispositioned": 123,
+    "baseline_capture_git_blobs_verified": 91,
+    "historical_capture_git_blobs_verified": 9,
+    "inherited_bodies_byte_identical": true,
+    "original_recipe_request_response_hashes_match": true,
+    "public_contract_hash_matches": true,
+    "source_spans_exact": 87,
+    "every_required_body_present": true,
+    "body_paths_relative_no_parent_or_symlink": true,
+    "new_body_build_dependencies_empty": true,
+    "historical_tree_objects_verified": 42,
+    "each_review_part_under_15000_words": true
+  },
+  "counts": {
+    "assigned_rows": 123,
+    "assigned_by_kind": {
+      "documentation": 2,
+      "implementation": 75,
+      "test_code": 45,
+      "test_fixture": 1
+    },
+    "assigned_by_legacy_key": {
+      "s1.core.project": 61,
+      "s1.core.configuration": 62
+    },
+    "captures_total": 91,
+    "captures_owned": 85,
+    "captures_cross_boundary": 6,
+    "capture_status": {
+      "captured_blob_verified": 85,
+      "not_captured": 38
+    },
+    "semantic_read_status": {
+      "semantically_read_complete": 65,
+      "semantically_read_decisive_ranges": 12,
+      "inventory_only_grouped": 38,
+      "case_assertions_read": 3,
+      "captured_not_semantically_read": 1,
+      "case_declarations_only": 4
+    },
+    "disposition_group": {
+      "D01": 2,
+      "C06": 3,
+      "C01": 3,
+      "C05": 2,
+      "C02": 16,
+      "C04": 7,
+      "C03": 12,
+      "P02": 5,
+      "P08": 4,
+      "P07": 6,
+      "P06": 2,
+      "P05": 4,
+      "P01": 7,
+      "P03": 2,
+      "P04": 2,
+      "T01": 17,
+      "F01": 1,
+      "T02": 28
+    }
+  },
+  "review_packets": [
+    {
+      "path": "review-packets/part-1-configuration.md",
+      "encoding": "utf-8",
+      "byte_length": 108379,
+      "sha256": "2d1da26042879e2f450795180a2338453f3a24a3442ff4a21d6945f3e4158b3d",
+      "whitespace_words": 11156
+    },
+    {
+      "path": "review-packets/part-2-project.md",
+      "encoding": "utf-8",
+      "byte_length": 107094,
+      "sha256": "cba2942fb5ae42296c541a63275d8eaf95d54e83e388f983d1cb375bf2def13e",
+      "whitespace_words": 10473
+    }
+  ],
+  "semantic_review": "NOT_PERFORMED_BY_PRODUCER",
+  "product_tests": "NOT_RUN",
+  "CI": "NOT_RUN",
+  "typecheck": "NOT_RUN",
+  "guards": "NOT_RUN",
+  "Atlas": "NOT_RUN",
+  "remote_writes": "NONE",
+  "credentials_access": "NONE",
+  "generator_execution": "NOT_RUN",
+  "interpretation": "Mechanical byte/identity/coverage checks only. No semantic PASS, product execution, runtime import or delivery completion is certified.",
+  "usage": {
+    "tokens": "UNKNOWN",
+    "physical_attempts": "UNKNOWN",
+    "billing": "UNKNOWN"
+  }
+}

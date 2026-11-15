@@ -1,0 +1,127 @@
+{
+  "judge": "parallel-v3-fresh/S1-01/J2",
+  "execution": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "record": "Reavaliação canônica independente de CONFIG-PROJECT-DELTA-v2.",
+  "transport": {
+    "packet_sha256": "41b63d9b72da5effd3f99fcb5badcc0fa61414159ef039a45e3eb375d229bc54",
+    "parts_received": [1, 2, 3, 4],
+    "final_marker_received": true,
+    "missing_part": null
+  },
+  "artifacts": [
+    {
+      "artifact": "s1.core.configuration",
+      "body_sha256": "eed22f8ddd9f3fdad18b39cfb8e52ca5f412bad8b21de10fef58ce113ba60ab1",
+      "verdict": "PASS",
+      "criteria": {
+        "QS-1": "PASS",
+        "QS-2": "PASS",
+        "QS-4": "PASS",
+        "QS-5": "PASS",
+        "QS-6": "PASS",
+        "CC-1": "PASS",
+        "CC-3": "PASS",
+        "CC-7": "PASS",
+        "GO-I1": "PASS",
+        "GO-I2": "PASS",
+        "GO-I7": "PASS",
+        "GO-I8": "PASS"
+      },
+      "basis": "E27 fecha QS-1: loadDirectory percorre JSON antes de JSONC; FSUtil.up percorre do diretório aberto aos ancestrais; as reversões e a composição dos grupos estabelecem a ordem declarada; Config.latest seleciona o último documento com o campo definido. E28 também apresenta o caráter histórico de revisão da especificação. Reutilizo explicitamente meus outros onze PASS anteriores para este corpo inalterado.",
+      "findings_closed": ["J2-CONFIG-E1"],
+      "findings_open": []
+    },
+    {
+      "artifact": "s1.core.project",
+      "body_sha256": "937f99ba01085530af69abf620793e1b518c32867b956e805a5c68d65f950c43",
+      "verdict": "PASS",
+      "criteria": {
+        "QS-1": "PASS",
+        "QS-2": "PASS",
+        "QS-4": "PASS",
+        "QS-5": "PASS",
+        "QS-6": "PASS",
+        "CC-1": "PASS",
+        "CC-3": "PASS",
+        "CC-7": "PASS",
+        "GO-I1": "PASS",
+        "GO-I2": "PASS",
+        "GO-I7": "PASS",
+        "GO-I8": "PASS"
+      },
+      "basis": "E29 apresenta o decoder JSON e SHA-256 sobre UTF-8. E35 demonstra as permissões do read leaf e os controles de texto/mídia do helper, fechando a afirmação cruzada sem transferir ownership. E30 apresenta o objetivo histórico e o esboço de rotas sem atribuir-lhes autoridade atual. Reutilizo explicitamente meus outros onze PASS anteriores para este corpo inalterado.",
+      "findings_closed": ["J2-PROJECT-E1", "J2-PROJECT-E2"],
+      "findings_open": []
+    },
+    {
+      "artifact": "s1.subslice01.config-project-supplement",
+      "body_sha256": "555549f9971e6b6d8c8edd4799841e3f54259c9289b399da0eeb84336a896b13",
+      "previous_body_sha256": "2dc31d71b747415a9a7e9ffaaeeddd53ad74dda21ab66320468ff45dd40d45d3",
+      "verdict": "PASS",
+      "criteria": {
+        "QS-1": "PASS",
+        "QS-2": "PASS",
+        "QS-4": "PASS",
+        "QS-5": "PASS",
+        "QS-6": "PASS",
+        "CC-1": "PASS",
+        "CC-3": "PASS",
+        "CC-7": "PASS",
+        "GO-I1": "PASS",
+        "GO-I2": "PASS",
+        "GO-I7": "PASS",
+        "GO-I8": "PASS"
+      },
+      "basis": "O corpo v2 corrige o predicado de providerEdits, a ordem de criação de cópias e o fallback HEAD do cache. E27/E29 fecham as lacunas compartilhadas. Também verifiquei as novas descrições: owner de Behavior em E33, retorno do cache em E34 e distinções de autorização, tamanho inicial, paginação, truncamento e ingestão de imagens em E35. Reutilizo meus dez PASS anteriores nos aspectos preservados; QS-1 e QS-4 passam após avaliar as correções e os acréscimos. A disposição mantém a população de 123 linhas e distingue as duas novas capturas de fronteira.",
+      "findings_closed": [
+        "J2-CONFIG-E1",
+        "J2-PROJECT-E1",
+        "J2-CONFIG-PROJECT-F1",
+        "J2-CONFIG-PROJECT-F2",
+        "J2-CONFIG-PROJECT-F3"
+      ],
+      "findings_open": []
+    }
+  ],
+  "closed_findings": [
+    {
+      "id": "J2-CONFIG-E1",
+      "evidence": "E27 contém loadDirectory, FSUtil.up, composição/reversão dos documentos e Config.latest; a cadeia de precedência está demonstrada."
+    },
+    {
+      "id": "J2-PROJECT-E1",
+      "evidence": "E29 define decodeUnknownOption(Schema.UnknownFromJsonString) e createHash('sha256').update(payload, 'utf8').digest('hex')."
+    },
+    {
+      "id": "J2-PROJECT-E2",
+      "evidence": "E35 mostra external_directory quando necessário, read antes da leitura/listagem e os limites efetivamente aplicados pelo helper."
+    },
+    {
+      "id": "J2-CONFIG-PROJECT-F1",
+      "evidence": "O v2 descreve o predicado literal: denials provider.use com resource string diferente de '*' são removidos, inclusive outros padrões. E31 confirma."
+    },
+    {
+      "id": "J2-CONFIG-PROJECT-F2",
+      "evidence": "O v2 coloca getStrategy antes de source, distingue possível registro/publicação da origem antes da operação física e registro do destino depois dela. E32 confirma."
+    },
+    {
+      "id": "J2-CONFIG-PROJECT-F3",
+      "evidence": "O v2 conserva explicitamente origin/target versus HEAD e o retorno condicionado à descoberta do checkout. E34 confirma."
+    }
+  ],
+  "mandatory_findings": [],
+  "optional_suggestions": [],
+  "preservation": {
+    "supplement_v1_verdict": "FIX-FIRST permanece vinculado ao SHA256 2dc31d71b747415a9a7e9ffaaeeddd53ad74dda21ab66320468ff45dd40d45d3.",
+    "prior_requests": "Os REQUEST_EVIDENCE dos corpos herdados permanecem no histórico, acompanhados deste fechamento; não foram apagados.",
+    "independence": "Não inferi aprovação a partir do outro juiz ou da tabela de resoluções do produtor."
+  },
+  "limits": [
+    "Avaliação estática na revisão 1cde2ff7a71bcf7aecb5d030917b577165135d38, sem ferramentas, testes ou execução de produto por este juiz.",
+    "Hashes vinculam os corpos recebidos; não os recomputei nesta revisão.",
+    "PASS limitado aos três corpos L1 identificados, sem promover capturas ou disposição de inventário a leitura integral de todas as fontes.",
+    "Leitura cruzada do read tool sustenta os enunciados apresentados e não transfere ownership nem aprova toda a família de ferramentas.",
+    "Runtime binding, consumidores, CI, manutenção, publicação e camadas superiores permanecem fora deste aceite.",
+    "Os fragmentos runtime/models/economy recebidos continuam dados pendentes e não foram avaliados nesta rodada."
+  ]
+}

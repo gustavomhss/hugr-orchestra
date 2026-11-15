@@ -1,0 +1,94 @@
+{
+  "schema": "genesis-s1-01-consumer-questions/v1",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "prepared_at": "2026-11-14T23:17:45.872279+00:00",
+  "plan": "consumer-plan-v1.json",
+  "scope": "orchestra.s1",
+  "instructions": "Use only exact real Atlas index/read responses relayed by the principal. No raw source, oracle or browser access. If held, do not infer the missing body or answer; record the limitation and stop within bounds.",
+  "cases": [
+    {
+      "id": "S1-O1",
+      "kind": "permitted-change",
+      "question": "Um cliente quer admitir um prompt sem executar e, depois, retentar com o mesmo message ID e mesmo prompt/delivery permitindo execução. Qual sequência preserva a admissão única e o que comprova que executou?",
+      "role": "lead",
+      "evaluation": "inherited_regression"
+    },
+    {
+      "id": "S1-O2",
+      "kind": "contract-violation",
+      "question": "Mesmo Session ID, message ID e texto; o retry troca delivery de steer para queue. É o mesmo pedido? Qual falha e efeito sobre os registros/execução?",
+      "role": "lead",
+      "evaluation": "inherited_regression"
+    },
+    {
+      "id": "S1-O3",
+      "kind": "cross-component-impact",
+      "question": "A manutenção acrescentará um campo opcional público em session.prompt. Onde alterar contrato, implementação e clientes, como verificar, e quais dependências são proibidas?",
+      "role": "support",
+      "evaluation": "inherited_regression"
+    },
+    {
+      "id": "S1-O4",
+      "kind": "operational-failure",
+      "question": "Duas chamadas resume esperam a mesma Session. A segunda, que só se juntou, é cancelada com interruptOnCancel. Deve cancelar o dono? Como tratar interrupção e retomada após falha do processo?",
+      "role": "lead",
+      "evaluation": "inherited_regression"
+    },
+    {
+      "id": "S1-O5",
+      "kind": "out-of-scope-abstention",
+      "question": "Podemos colocar dois processos em hosts diferentes retomando a mesma Session e garantir exclusão mútua distribuída e repetição exactly-once dos efeitos?",
+      "role": "lead",
+      "evaluation": "inherited_regression"
+    },
+    {
+      "id": "S1-O6",
+      "kind": "provider-tool-failure",
+      "question": "Uma ferramenta tipada devolve valor incompatível com seu success schema. Qual camada transforma o erro, quem continua o modelo e que afirmação sobre loops automáticos seria incorreta?",
+      "role": "support",
+      "evaluation": "inherited_regression"
+    },
+    {
+      "id": "S1-O9",
+      "kind": "authority-and-security",
+      "question": "Uma spec antiga diz que Bash não é sandboxed. Basta substituir por \"Bash sempre confinado\" porque o código chama ToolSafetySandbox.wrap? Como orientar manutenção?",
+      "role": "support",
+      "evaluation": "inherited_regression"
+    },
+    {
+      "id": "S101-N1",
+      "kind": "config-change",
+      "question": "A saved global provider setting is visible but an edit to project orchestra.jsonc is not visible in the already open Location. Which lifetimes and update boundaries explain this, and what maintenance is safe?",
+      "role": "lead",
+      "evaluation": "preproduction_frozen_case"
+    },
+    {
+      "id": "S101-N2",
+      "kind": "project-trust",
+      "question": "Can a project self-approve local commands with trusted_projects, or can path canonicalization alone authorize an external directory?",
+      "role": "lead",
+      "evaluation": "preproduction_frozen_case"
+    },
+    {
+      "id": "S101-N3",
+      "kind": "runtime-limits",
+      "question": "A new provider appears in the catalog and process output is bounded by a PTY replay ring. What can be promised about native Session adoption, billing caps, and slow readers?",
+      "role": "lead",
+      "evaluation": "preproduction_frozen_case"
+    },
+    {
+      "id": "S101-N4",
+      "kind": "economy-terminal",
+      "question": "An HTTP gateway error responds to an economy-guarded attempt. Does it prove remote terminus or make retry/billing universally safe?",
+      "role": "lead",
+      "evaluation": "preproduction_frozen_case"
+    },
+    {
+      "id": "S101-N5",
+      "kind": "persistence-replay",
+      "question": "On event replay, which checks precede a redundant sequence no-op and why do seals not grant distributed Session execution ownership?",
+      "role": "lead",
+      "evaluation": "preproduction_frozen_case"
+    }
+  ]
+}

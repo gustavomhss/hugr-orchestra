@@ -1,0 +1,40 @@
+{
+  "schema": "s1-coverage-summary/v1",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "assigned": 235,
+  "covered_rows": 235,
+  "read_extent_counts": {
+    "full-source-read": 162,
+    "source-excerpts-read": 20,
+    "declarations-read": 50,
+    "captured-group-disposition-only": 3
+  },
+  "family_counts": {
+    "terminal-docs": 7,
+    "models-catalog": 11,
+    "pty-process": 31,
+    "economy": 3,
+    "composition-state": 12,
+    "lsp-format": 16,
+    "copilot-vendor": 25,
+    "install-observability": 7,
+    "utilities-schema": 28,
+    "provider-plugins": 33,
+    "tests": 58,
+    "test-support": 4
+  },
+  "inherited_counts_preserved": {
+    "full-source-read": 21,
+    "source-excerpts-read": 12,
+    "captured-and-structurally-indexed-only": 202
+  },
+  "semantic_acceptance": "NOT_REVIEWED",
+  "product_execution": "NOT_RUN",
+  "source_hashes_verified": 235,
+  "one_visible_output_truncation": "bundled-artifact output lost about 290 tokens; missing bundle tail and artifact TS head were returned again in remaining-support, all ranges now covered.",
+  "no_auto_promotion": "Read extent is range union only. Authored purposes/family limits, not the count, carry substantive claims.",
+  "auxiliary_sources_outside_assigned_235": [
+    "packages/core/src/session/runner/llm.ts"
+  ]
+}

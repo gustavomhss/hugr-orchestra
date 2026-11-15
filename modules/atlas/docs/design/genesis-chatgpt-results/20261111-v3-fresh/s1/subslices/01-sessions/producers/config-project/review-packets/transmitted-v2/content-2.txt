@@ -1,0 +1,204 @@
+ The inherited `s1.core.configuration` and `s1.core.project` bodies remain byte-identical, with their original authorship, request, recipe and response. The pinned history labels them `supported` but contains no preserved dual acceptance for these exact A3 bodies in the inspected judgment, transport and revision trees. The A3 dossier is a submission, not a verdict. Neither reuse nor this supplement supplies a missing acceptance decision. `inherited/provenance.json` records the bounded search and hashes.
+ 
+@@ -13,9 +13,9 @@
+ 
+ **Admission and lifetime.** `Config.Info` is the current schema. The Location loader parses JSONC with trailing commas, decodes with `onExcessProperty: "ignore"`, and uses the live legacy schema and migration when `needsUpgrade` detects old keys or MCP shape. After legacy migration it appends current `permissions` recovered from the same text, then decodes the current result. Remote instruction URLs are rejected. A nonempty readable file with parse/schema errors fails loading; empty text returns no document, and `readFileStringSafe` maps both missing and permission-denied reads to `undefined`. Consequently, “every invalid or inaccessible file must fail” is too strong. Required packaged-skill materialization precedes recoverable plugin boot. [E01, E03]
+ 
+-Ordinary settings order is global documents, direct ancestor/project documents, then `.orchestra` documents, with nearer discoveries applied later. Within a directory JSON precedes JSONC. Project discovery and parsed project documents are retained from Location opening. `entries()` rereads global documents and reloads policy, but does not rediscover all project configuration. `Policy.evaluate` takes the last matching wildcard statement or the caller's fallback; policy documents are reversed before loading so a user-global policy can override a repository policy. These policy statements and tool permission rules are distinct surfaces. [E01, E05]
++Ordinary settings order is global documents, direct ancestor/project documents, then `.orchestra` documents, with nearer discoveries applied later. Within a directory JSON precedes JSONC. Project discovery and parsed project documents are retained from Location opening. `entries()` rereads global documents and reloads policy, but does not rediscover all project configuration. `Policy.evaluate` takes the last matching wildcard statement or the caller's fallback; policy documents are reversed before loading so a user-global policy can override a repository policy. These policy statements and tool permission rules are distinct surfaces. `Config.latest` selects the last document whose requested field is defined. The exact directory loader and upward discovery loop substantiate the stated iteration order. [E01, E05, E27]
+ 
+-**Settings publication is a separate path.** `updateGlobal` chooses the highest-priority existing readable global JSONC/JSON document, otherwise creates JSON. It edits JSONC properties, replaces each supplied provider definition, and replaces the entire permissions/trusted-projects arrays so removed tails do not survive. Disabled-provider edits replace exact `provider.use` denials, retain wildcard denials and unrelated statements, and rewrite a legacy `disabled_providers` list when present. The write uses the filesystem's temporary-file/rename helper and invalidates the global settings cache. This helper follows an existing symlink to its real target; it is not the Location mutation admission service. [E02, E03]
++**Settings publication is a separate path.** `updateGlobal` chooses the highest-priority existing readable global JSONC/JSON document, otherwise creates JSON. It edits JSONC properties, replaces each supplied provider definition, and replaces the entire permissions/trusted-projects arrays so removed tails do not survive. Disabled-provider edits remove every statement whose action is exactly `provider.use`, effect is `deny`, and resource is a string other than the literal `"*"`, then append denials for the supplied disabled strings. A pattern such as `"open*"` also meets that removal predicate. Only the literal `"*"` denial and statements that do not meet the predicate are retained; the selection is not limited to exact provider IDs. A legacy `disabled_providers` list is also rewritten when present. The write uses the filesystem's temporary-file/rename helper and invalidates the global settings cache. This helper follows an existing symlink to its real target; it is not the Location mutation admission service. [E02, E03, E31]
+ 
+ `readGlobal` is a limited settings reader with a process cache keyed by config directory and both files' mtime/size/inode signatures. It returns cloned values. A same-signature external edit can remain stale; `updateGlobal` explicitly drops the entry. `entries()` follows its own reread path. Stat failures are folded into an `"absent"` signature by this implementation; that sentinel is not evidence that an inaccessible file was physically removed. [E02, E26]
+ 
+@@ -35,21 +35,23 @@
+ 
+ **Path resolution and mutation remain separate.** `LocationMutation.resolve` rejects relative lexical escape and an internal-looking path whose resolved physical target escapes the Location root. Missing targets resolve through an existing real ancestor; dangling links have bounded traversal. Absolute external targets produce canonical `external_directory` permission resources. This function expressly does not approve the mutation. `FileSystem` independently enforces containment/type for read/list while delegating search; it is not the model tool's permission layer. [E13, E14]
+ 
++The `read` tool crosses that separate boundary: it resolves a canonical target, asserts `external_directory` permission when needed, inspects target kind, then asserts the `read` action before reading or listing. Its reader distinguishes whole text using the initially observed 50 KiB size threshold from paged text capped at 2,000 lines and 50 KiB, truncating long lines to 2,000 JavaScript string units plus a marker. Explicit offset/limit also selects paging. Recognized JPEG/PNG/GIF/WebP inputs have a 20 MiB ingestion bound checked against size and accumulated bytes. In the non-image path, PDF signatures, listed binary extensions, encountered binary content and malformed UTF-8 text are refused. These are the inspected leaf/helper controls, not a claim of universal authorization or OS race safety. This cross-read adds evidence only; tool ownership remains outside these two assigned families. [E35]
++
+ `FileMutation` uses a KeyedMutex in its service instance, keyed by canonical target. Conditional writes compare bytes and write under that lock, then run the configured formatter before releasing it. The write delegates to `FSUtil.writePhysical` and onward to `PhysicalPath`; this packet does not inspect that transitive implementation or establish every OS race guarantee. These cooperating, process-local mutations do not provide cross-process locking. The source explicitly leaves multi-file rollback, watcher/edit events, LSP integration, side-effect recovery and idempotency deferred; sequential edits may be partially applied. The shared patch parser is an input grammar, not a transaction or authorization layer. [E15]
+ 
+-**Checkpoints retain original ownership.** Save admits nonempty UTF-8 JSON, attempt 0/1 and a nonempty fork/boundary. Identity is `forkID:attempt`. Inside a transaction, an existing record must match Session, fork, boundary, attempt and exact payload, with a matching digest; that retained record returns before consulting the current Session. Only insertion derives project/directory from the Session. An exact retry can therefore survive Session deletion or movement without assigning the old checkpoint to its new location. The table retains the Session ID without a Session foreign key, while project deletion cascades. Read requires project ID plus checkpoint ID and checks the digest; list has bounded pagination. Driver errors/defects are sanitized to a storage reason. The digest does not prove payload meaning, consumer authorization, restore success or crash recovery. [E16, E26]
++**Checkpoints retain original ownership.** Save admits nonempty UTF-8 JSON, attempt 0/1 and a nonempty fork/boundary. Identity is `forkID:attempt`. Inside a transaction, an existing record must match Session, fork, boundary, attempt and exact payload, with a matching digest; that retained record returns before consulting the current Session. Only insertion derives project/directory from the Session. An exact retry can therefore survive Session deletion or movement without assigning the old checkpoint to its new location. The table retains the Session ID without a Session foreign key, while project deletion cascades. Read requires project ID plus checkpoint ID and checks the digest; list has bounded pagination. Driver errors/defects are sanitized to a storage reason. The digest does not prove payload meaning, consumer authorization, restore success or crash recovery. The decoder is `Schema.UnknownFromJsonString`; the digest is SHA-256 over the payload encoded as UTF-8. [E16, E26, E29]
+ 
+-**Copies are physical operations followed by membership.** The default strategy delegates to Git worktrees. Create first resolves a registered source or the project's own stored worktree, selects a strategy and collision candidate, performs strategy creation, then records exact directory/strategy membership and publishes a change. Remove requires stored strategy membership and performs physical removal before deleting membership. Refresh reconciles existence and strategy discoveries with membership in a database transaction. These orderings expose a filesystem/database boundary; they are not a transaction covering both physical worktrees and SQL. Registry duplication and strategy errors have explicit failure paths. [E17]
++**Copies register the destination after physical creation.** The default strategy delegates to Git worktrees. Create first selects the strategy with `getStrategy`, then resolves and admits its source. If the canonical source lacks membership but matches the project's stored worktree, `source` can register that origin and publish `changed` before physical copy creation. Create then prepares the destination parent and collision candidate, invokes the selected strategy's physical creation, and records the returned destination's exact directory/strategy membership followed by its change publication. Remove requires stored strategy membership and performs physical removal before deleting membership. Refresh reconciles existence and strategy discoveries with membership in a database transaction. These orderings expose a filesystem/database boundary; they are not a transaction covering both physical worktrees and SQL. Registry duplication and strategy errors have explicit failure paths. [E17, E32]
+ 
+ **Snapshots are selective and best effort.** Capture uses a separate Git directory under global data, checks Git/config enablement, scopes collection to the Location and limits untracked files to 2 MiB; capture failure may yield `undefined`. Preview/restore map selected project-relative paths to trees and reject lexical project escape. Restore removes a selected path absent from its tree. Checkout uses `read-tree` plus `checkout-index --all` and leaves other paths untouched; unlike preview/restore, the wrapper has no `enabled()` check. None of these observations establishes atomic rollback of arbitrary multi-file tool side effects. [E18, E19]
+ 
+-**Repository caches are mutable checkouts.** Reference parsing and branch validation define cache identity; branch-specific references have separate cache paths. `RepositoryCache.ensure` uses a per-path flock. Reuse requires a checkout exactly at the canonical cache path and a matching origin, since upward repository discovery alone could select an enclosing checkout. Invalid existing cache entries can be removed and cloned again. Refresh fetches and resets to the relevant remote branch, returning current head/branch and a cloned/cached/refreshed status. This is not immutable versioned knowledge: readers can see the latest refreshed checkout. Git operations delegate through AppProcess; native process, locking and Git behavior were not executed here. [E20]
++**Repository caches are mutable checkouts.** Reference parsing and branch validation define cache identity; branch-specific references have separate cache paths. `RepositoryCache.ensure` uses a per-path flock. Reuse requires a checkout exactly at the canonical cache path and a matching origin, since upward repository discovery alone could select an enclosing checkout. Invalid existing cache entries can be removed and cloned again. On refresh, the cache fetches remotes and, when supplied, the requested branch. It selects that branch or the default remote branch and checks it out when available, then chooses `target` from that selection or the checkout's current branch. `resetHard` receives `origin/${target}` when target exists and `HEAD` otherwise; refresh does not unconditionally advance to a remote branch. The return rediscovers the cache checkout and provides its head/branch when discovery succeeds, otherwise `undefined`, together with the selected cloned/cached/refreshed status. This is not immutable versioned knowledge: readers can see the latest refreshed checkout. Git operations delegate through AppProcess; native process, locking and Git behavior were not executed here. [E20, E34]
+ 
+ ## C. Coverage, supporting leaves and remaining evidence limits
+ 
+-`coverage.json` reconciles **all 123 original rows**, preserving each path/blob, legacy key and inherited read status. It adds this execution's exact capture status, semantic read ranges, responsibility group, required-needs mapping and next-read boundary. The 75 implementation files and two documents were captured; complete versus partial semantic reads are distinguished. Eight test files were also captured, with only inspected case ranges or declarations counted as read. The other 37 test files and one fixture are explicitly grouped as indexed, uncaptured regression/support material; no behavior is inferred merely from their filenames. Six additional captures establish cross-owner boundaries. Counts and byte identities are mechanical checks, not comprehension or runtime receipts.
++`coverage.json` reconciles **all 123 original rows**, preserving each path/blob, legacy key and inherited read status. It adds this execution's exact capture status, semantic read ranges, responsibility group, required-needs mapping and next-read boundary. The 75 implementation files and two documents were captured; complete versus partial semantic reads are distinguished. Eight test files were also captured, with only inspected case ranges or declarations counted as read. The other 37 test files and one fixture are explicitly grouped as indexed, uncaptured regression/support material; no behavior is inferred merely from their filenames. Six original additional captures establish cross-owner boundaries; v2 adds two read-tool boundary captures without changing the assigned 123-row population. Counts and byte identities are mechanical checks, not comprehension or runtime receipts.
+ 
+-The supporting families have distinct roles: current config schemas constrain decoded shapes; upgrade schemas supply live compatibility inputs; agent/command/provider/reference/skill plugins translate entries for their specific registries; provider option lowering separates API configuration from request options without proving native adapter compatibility. Behavior storage supplies project-scoped context records. TUI config discovery has its own project-config flag handling, so its behavior is not automatically Core Config behavior. These files are individually accounted for, with field-presence claims kept separate from consumer execution. [E21, coverage groups C02–C06]
++The supporting families have distinct roles: current config schemas constrain decoded shapes; upgrade schemas supply live compatibility inputs; agent/command/provider/reference/skill plugins translate entries for their specific registries; provider option lowering separates API configuration from request options without proving native adapter compatibility. Behavior storage chooses `project:<id>` as owner for a non-global project, but `directory:<location.directory>` when the project is `Project.ID.global`, separating directories that share the global project identity. TUI config discovery has its own project-config flag handling, so its behavior is not automatically Core Config behavior. These files are individually accounted for, with field-presence claims kept separate from consumer execution. [E21, E33, coverage groups C02–C06]
+ 
+ Project support is likewise bounded. GitCLI caches a limited result set for 1.5 seconds and clears it after its patch application path; VCS exposes bounded/truncated views. Search has FFF/ripgrep integration, platform wrappers and fallback; watcher availability, enablement and failure handling are explicit, so “all files always watched” is unsupported. Ignore/protected lists are scan filters, not a permission sandbox. Guardrail and pull-request adapters invoke external process surfaces in product code; no such command was invoked in this investigation. Thin `file`/`workspace` exports and SQL/schema leaves are mapped to their owner rather than inflated into independent services. [E22–E25, coverage groups P03–P08]
+ 
+```
+
+## Additional decisive source excerpts
+
+# v2 mandatory correction evidence
+
+All excerpts are exact contiguous source lines at `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Line numbers are metadata outside fences; code is not normalized. Existing E01–E26 remain in the unchanged v1 review packet. These snippets supplement the same judges’ evidence requests; they are not runtime results. E30 demonstrates the historical goal and route sketch only, not current Protocol/Server authority. E35 is a cross-read without ownership transfer.
+
+## E27 — Configuration discovery, directory loading and last defined value
+
+Source `packages/core/src/config.ts`; blob `52985a1dfc3575efca662dcb0667d81a1ab6f1de`; full-file SHA256 `bc4ce670f2214fcecab7f7a705f04aecd0f48c7cf03076c67e55421956a625e6`.
+
+Lines 125–129:
+
+```ts
+export function latest<K extends keyof Info>(entries: readonly Entry[], key: K): Info[K] | undefined {
+  return entries
+    .filter((entry): entry is Document => entry.type === "document")
+    .findLast((entry) => entry.info[key] !== undefined)?.info[key]
+}
+```
+
+Lines 167–170:
+
+```ts
+    const names = ["orchestra.json", "orchestra.jsonc"]
+    const decodeOptions = { errors: "all", onExcessProperty: "ignore", propertyOrder: "original" } as const
+    const decodeInfo = Schema.decodeUnknownEffect(Info, decodeOptions)
+    const decodeOldInfo = Schema.decodeUnknownEffect(ConfigUpgradeSource.Info, decodeOptions)
+```
+
+Lines 206–268:
+
+```ts
+    const loadDirectory = Effect.fnUntraced(function* (directory: AbsolutePath) {
+      return [
+        ...(yield* Effect.forEach(names, (file) => loadFile(path.join(directory, file))).pipe(
+          Effect.map((configs) => configs.filter((config): config is Document => config !== undefined)),
+        )),
+        new Directory({ type: "directory", path: directory }),
+      ]
+    })
+
+    const globalDirectory = AbsolutePath.make(global.config)
+    const locationIsGlobal = path.resolve(location.directory) === path.resolve(global.config)
+    // Read configuration once when this location opens. Later calls reuse these
+    // values until the location is reopened.
+    const discovered = locationIsGlobal
+      ? []
+      : yield* fs
+          .up({
+            targets: [".orchestra", ...names.toReversed()],
+            start: location.directory,
+            stop: location.project.directory,
+          })
+          .pipe(Effect.orDie)
+    const directories = [
+      globalDirectory,
+      ...discovered
+        .filter((item) => path.basename(item) === ".orchestra")
+        .toReversed()
+        .map((directory) => AbsolutePath.make(directory)),
+    ]
+    // A config closer to the opened directory should win over one higher up.
+    // Search starts nearby, so reverse the results before applying them.
+    const directPaths = discovered.filter((item) => path.basename(item) !== ".orchestra").toReversed()
+    const direct = yield* Effect.forEach(directPaths, loadFile).pipe(
+      Effect.orDie,
+      Effect.map((configs) => configs.filter((config): config is Document => config !== undefined)),
+    )
+    const supplementary = yield* Effect.forEach(directories, loadDirectory).pipe(Effect.orDie)
+    // Apply general settings first and more specific settings last:
+    // global config, project files, then `.orchestra` files.
+    const configs = [...(supplementary[0] ?? []), ...direct, ...supplementary.slice(1).flat()]
+    // Rules use the opposite order so a user-global rule can override a
+    // repository rule. Statement order inside each file stays unchanged.
+    const loadPolicies = (configs: ReadonlyArray<Document | Directory>) =>
+      policy.load(
+        configs
+          .filter((config): config is Document => config.type === "document")
+          .toReversed()
+          .flatMap((config) => config.info.experimental?.policies ?? []),
+      )
+    yield* loadPolicies(configs)
+
+    return Service.of({
+      packagedSkills: () => Effect.succeed(packagedSkills),
+      entries: Effect.fn("Config.entries")(function* () {
+        // Global documents are read again so a settings write (`updateGlobal`) reaches the next agent or catalog
+        // reload without reopening the location; project documents keep the snapshot taken at open.
+        // Policies reload with them, so a disabled provider leaves the catalog on its next reload.
+        const globals = yield* loadDirectory(globalDirectory).pipe(Effect.orDie)
+        const configs = [...globals, ...direct, ...supplementary.slice(1).flat()]
+        yield* loadPolicies(configs)
+        return configs
+      }),
+    })
+```
+
+Source `packages/core/src/fs-util.ts`; blob `695361a7b2812386ceb0dfcc0f535c146e744a9e`; full-file SHA256 `075165942ad976929aa9e3257d63f6812a3f943472aeb960ffeb9be81ecc312a`.
+
+Lines 204–218:
+
+```ts
+      const up = Effect.fn("FileSystem.up")(function* (options: { targets: string[]; start: string; stop?: string }) {
+        const result: string[] = []
+        let current = options.start
+        while (true) {
+          for (const target of options.targets) {
+            const search = join(current, target)
+            if (yield* fs.exists(search)) result.push(search)
+          }
+          if (options.stop === current) break
+          const parent = dirname(current)
+          if (parent === current) break
+          current = parent
+        }
+        return result
+      })
+```
+
+## E28 — Historical config field-review labels and review order
+
+Source `docs/specs/v2/config.md`; blob `81353980473012b1b3d311f0a638e3d65ba8cbcd`; full-file SHA256 `5b8df788e30f2120eaa1c12c94d9ca19738fb16d14ddc4cc372b129d535d37f8`.
+
+Lines 1–18:
+
+```markdown
+# V2 Config Review
+
+This document breaks the legacy configuration schema into small review groups. Work through one group at a time and decide whether each field should be ported as-is, removed, or redesigned for v2.
+
+## Status Labels
+
+- `pending`: not discussed yet
+- `keep`: port with substantially the existing meaning
+- `remove`: do not carry forward
+- `redesign`: keep the capability with a different shape, scope, or owning module
+
+## Schema Scope
+
+Use one v2 config schema for now. Some fields are intended for global/user configuration, but there is not yet enough benefit to enforce that with separate global and location schemas. Revisit this if more scope-sensitive fields survive the review.
+
+V2 core discovers config documents named `orchestra.json` or `orchestra.jsonc` in the global config directory, ancestor project directories, and `.orchestra` config directories. The legacy `config.json` filename is not supported in V2.
+
+## Group 1: File Metadata
+```
+
+Lines 382–390:
+
+```markdown
+## Review Order
+
+Work through the groups in this order unless a dependency between decisions becomes clear:
+
+1. File Metadata
+2. Process And Server Settings
+3. Providers And Model Selection
+4. Commands And Project Resources
+5. Plugins
+```

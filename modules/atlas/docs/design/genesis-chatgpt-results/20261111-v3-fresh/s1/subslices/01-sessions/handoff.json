@@ -3,36 +3,50 @@
   "campaign": "20261111-v1",
   "protocol_epoch": "parallel-v3-fresh",
   "results_epoch": "20261111-v3-fresh",
-  "session": "S1",
   "subslice_id": "S1-01",
+  "session": "S1",
   "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
   "branch": "genesis-s1-sessions",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
-  "observed_branch_head": "9daa0e1203cc7c772ae04398ec326faba6874c99",
-  "candidate_revision": null,
-  "artifact_revision": "e6ef63616aa4f9662e218ff7cc3cfddd3bdfaa21",
+  "observed_branch_head": "45cf4cd48f2038dca56b859f763da2c28d862c12",
+  "artifact_revision": null,
   "completion_state": "IN_PROGRESS",
+  "checkpoint_only": true,
+  "recorded_at": "2026-11-14T23:58:08.858Z",
+  "package": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/native-package.json",
+  "package_state": "7 accepted L1, 5 pending L1, required cumulative layers not yet produced",
   "work": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/work.md",
   "ledger": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/execution-ledger.jsonl",
-  "package": null,
-  "judgments": [],
-  "supersedes": {
-    "commit": "9daa0e1203cc7c772ae04398ec326faba6874c99",
-    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/handoff.json"
-  },
-  "local_obligations_open": [
-    "A1 exact evidence and dual review",
-    "B15 and remaining L1 dual review and coverage",
-    "Necessary L2–L4",
-    "Local Atlas package/import/binding/publication/read",
-    "Independent consumers and local maintenance",
-    "Applicable gates and final 50-criterion matrix"
+  "coverage": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/coverage.json",
+  "judgments": [
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j1.json",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j2.json",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/config-v2-j1.json",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/config-v2-j2.json"
   ],
+  "native_judges": [
+    "/root/judge1",
+    "/root/judge2"
+  ],
+  "local_obligations_open": [
+    "Complete five L1 judgments and mandatory corrections.",
+    "Produce and independently judge necessary L2–L4 after accepted predecessors.",
+    "Prepare complete package; separate runtime binding; governed publication and real index/read.",
+    "Own independent consumers/direct-use cases and maintenance.",
+    "Reconcile gates, fifty-criterion matrix, economics and final payload/seal read-back."
+  ],
+  "runtime_selection": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/control/runtime-selection-final.json",
+  "supersedes_checkpoint": "45cf4cd48f2038dca56b859f763da2c28d862c12",
   "global_integration": {
     "owner": "S1_COORDINATION",
     "branch": "genesis-fresh-s1",
-    "status": "NOT_REVIEWED"
+    "scope": "Only later composition; no local obligation transferred."
   },
-  "progress_only": true
+  "limitations": [
+    "Checkpoint does not close the mission.",
+    "Current source materialization is not a Git checkout; observed_head is null.",
+    "No policy, approval, product behavior, PR or merge changed.",
+    "Tokens, physical attempts and billing are UNKNOWN."
+  ]
 }

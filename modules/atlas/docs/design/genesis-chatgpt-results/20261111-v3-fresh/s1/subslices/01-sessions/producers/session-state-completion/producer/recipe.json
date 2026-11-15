@@ -1,0 +1,138 @@
+{
+  "schema": "s1-01-clean-native-producer-recipe/v1",
+  "version": 1,
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "task_name": "/root/l1_a1_completion",
+  "role": "clean_native_L1_producer_not_judge",
+  "artifact_key": "s1.subslice01.session-state-completion",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "public_contract_sha256": "f84ef5ef4bf8104988275e73837c13fd6128e2cbe4e901440e62baadc6288029",
+  "criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "AC-01",
+    "AC-02",
+    "AC-03",
+    "CC-1",
+    "CC-2",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "scope": "orchestra.s1",
+  "session": "S1",
+  "need": "evidence",
+  "layer": 1,
+  "request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/producers/session-state-completion/producer/request.md",
+    "sha256": "ddc40db3631803a7c6b26d6372e35b2af2e27d0e705d066bb291cf236b93ed79"
+  },
+  "steering_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/producers/session-state-completion/producer/steering.md",
+    "sha256": "a3bcc8864a6ddc5043688d26d80126c91c553e196730b55a1e8fa75d68ed58e9"
+  },
+  "control_inputs_read": [
+    {
+      "local_source": "control/COMMON.md",
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "byte_length": 12959
+    },
+    {
+      "local_source": "control/mission.json",
+      "sha256": "2d9a28fd086955ada4753b6c42452cdaac9fb0cc31c4cf78e3de2b09d81c7808",
+      "byte_length": 6329
+    },
+    {
+      "local_source": "control/AGENTS.md",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "byte_length": 16501
+    },
+    {
+      "local_source": "control/execute-genesis.md",
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "byte_length": 8143
+    },
+    {
+      "local_source": "control/public-contract-v1.json",
+      "sha256": "f84ef5ef4bf8104988275e73837c13fd6128e2cbe4e901440e62baadc6288029",
+      "byte_length": 2295
+    },
+    {
+      "local_source": "control/protocol/principles.md",
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "byte_length": 6010
+    },
+    {
+      "local_source": "control/protocol/fatia-1.md",
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "byte_length": 3987
+    },
+    {
+      "local_source": "control/protocol/fresh-start.md",
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "byte_length": 4983
+    },
+    {
+      "local_source": "control/protocol/orchestration.md",
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "byte_length": 4408
+    },
+    {
+      "local_source": "control/protocol/judging.md",
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "byte_length": 5787
+    },
+    {
+      "local_source": "control/protocol/transport.md",
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "byte_length": 8478
+    }
+  ],
+  "source_method": "Connector base64 captures at fixed commit; inherited captures checked byte-identical; semantic reading of implementation contracts and individual grouped-purpose review of migration/generated/test/document/prompt rows.",
+  "capture_and_semantics_separate": true,
+  "oracle_access": false,
+  "reserved_access": false,
+  "write_scope": "s1_01/a1_completion/ only",
+  "proposed_remote_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/producers/session-state-completion",
+  "procedure": [
+    "Preserve original context body and replace only the specified truncation sentence.",
+    "Materialize the exact 197-path assigned population; verify source Git blobs and SHA-256.",
+    "Read source contracts and supporting leaves; compare documentation with executable branches.",
+    "Read historical migrations by identity/DDL/DML purpose, with full critical reset/seal/retirement/rebuild steps.",
+    "Classify test sources and harness by verification intent; execute no product tests.",
+    "Write useful independent L1 supplement, exact row dispositions and literal decisive evidence.",
+    "Preserve producer drafts/deltas, full and principal tool-free review packets and receipt hashes.",
+    "Hand exact bytes to root for the same two judges and metadata binding; do not generate L2-L4."
+  ],
+  "forbidden_actions": [
+    "product/provider/paid-API execution",
+    "product tests",
+    "Git mutations",
+    "PR/merge",
+    "remote publication",
+    "product/skill/AGENTS edits",
+    "reserved/oracle/expected-answer reading"
+  ],
+  "tools_used": [
+    "GitHub connector read-only fetch_file",
+    "host shell for source reads and deterministic Python file processing",
+    "apply_patch for own artifact files",
+    "clock current time"
+  ],
+  "tests": "NOT_RUN",
+  "runtime": "NOT_RUN",
+  "semantic_judgment": "NOT_ISSUED"
+}

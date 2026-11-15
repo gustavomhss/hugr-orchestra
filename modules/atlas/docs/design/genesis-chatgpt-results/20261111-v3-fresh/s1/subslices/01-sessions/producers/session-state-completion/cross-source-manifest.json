@@ -1,0 +1,22 @@
+[
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "packages/effect-drizzle-sqlite/src/effect-sqlite/session.ts",
+    "git_blob_sha": "e7b9d6b32cd835bdf54d70ba39e92a5839f26968",
+    "sha256": "4fa29583a6cbd148a5a8699dfd96d87944b2b04a559335c461a6e3635d7d9cf1",
+    "byte_length": 10799,
+    "capture": "captures/cross-source-driver.json",
+    "read_depth": "full_transaction_driver_contract",
+    "included_in_population": false
+  },
+  {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "packages/effect-drizzle-sqlite/src/effect-sqlite/driver.ts",
+    "git_blob_sha": "f2ffc207d355b4227c39dbc831d7701786330256",
+    "sha256": "3f58650cd257c28b80ce752684f0bd0b53c07a8b6990fd293f39c953d1dbded3",
+    "byte_length": 3088,
+    "capture": "captures/cross-source-driver.json",
+    "read_depth": "full_transaction_driver_contract",
+    "included_in_population": false
+  }
+]

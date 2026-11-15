@@ -1,0 +1,41 @@
+{
+  "schema": "genesis-s1-01-public-contract/v1",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "inventory": "555 exact paths in sources.jsonl",
+  "evaluation_scope": "New source-grounded supplements and cumulative local L2–L4; original bodies retain their immutable provenance. Reuse decisions only for identical accepted bytes.",
+  "criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "AC-01",
+    "AC-02",
+    "AC-03",
+    "CC-1",
+    "CC-2",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "requirements": [
+    "Explain real source behavior, authority, meaningful limits, safe change and diagnostics without invented runtime success.",
+    "Cover every assigned source row by honest evidence depth/disposition; grouped implementation/helper/test/fixture/vendor treatment requires explicit family rationale and required-needs mapping.",
+    "Config/project supplement: current/legacy decoder, global setting publisher/cache, policy/trust admission, Location identity/lifetime and graph, canonical file mutation, project checkpoint/copy/snapshot/Git/repository-cache boundaries; cross-owner handoff only for unowned code.",
+    "Models/runtime/economy supplement: catalog versus native Session provider adoption, API/protocol distinctions, economy caller binding and terminal/uncertainty semantics, process/OS/PTY limits, supporting LSP/format/plugin/install/utility family ownership and checks.",
+    "Session/persistence/context supplement if required: admission/execution/store/replay/context code, driver composition, migration backup/restore and post-commit boundaries; no distributed ownership or crash recovery claim.",
+    "L2–L4 later depend only on accepted predecessors; freeze exact dependency closure and maintenance expected sets before evaluation.",
+    "Tests described as source evidence; no product execution claimed. Gates per AGENTS; root sole remote writer."
+  ],
+  "output": "Useful concise body files plus exact source references/excerpts and coverage deltas; preserve original candidate texts, requests and responses. No protected oracle access."
+}

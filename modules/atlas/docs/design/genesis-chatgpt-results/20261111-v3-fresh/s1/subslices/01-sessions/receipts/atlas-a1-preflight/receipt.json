@@ -1,0 +1,31 @@
+{
+  "schema": "s1-01-actual-native-prepare/v1",
+  "purpose": "Early real prepare of four accepted A1 bodies; not final16 package, binding or publication.",
+  "argv": [
+    "/workspace/scratch/efdebfac3411/s1_01/runtime-tools/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/workspace/scratch/efdebfac3411/s1_01/atlas-source",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/native-a1-preflight.json",
+    "/workspace/scratch/efdebfac3411/s1_01/receipts/atlas-a1-preflight/prepared.json"
+  ],
+  "cwd": "/workspace/scratch/efdebfac3411/s1_01/runtime-code/modules/atlas",
+  "code_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "started_at": "2026-11-14T23:48:26.699061+00:00",
+  "ended_at": "2026-11-14T23:48:27.528555+00:00",
+  "exit_code": 0,
+  "transport_sha256": "7329d50ec1081907fae20b95c561d5ebdc1f377d3105fc2be35f8f8342c09856",
+  "stdout_sha256": "509042ecbd5a6f57df37c0c07c7387315c970ac61f19ae23431e98b66bc9aaa8",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "source_root_is_git_checkout": false,
+  "observed_head": null,
+  "candidate_id": "f1fba28f5299cedf2d5ea4a7b160c57eb6f425a07e63cee92440d8cdca51e91a",
+  "entries": 4,
+  "observations": 34,
+  "implementation": {
+    "adapter": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312",
+    "format": "e7a3b3147cad680111edcf78031fa4ab881a822ef0684067bc2b9174b8baf349",
+    "io": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+    "binding": "13161114324f43f97e81970c00c1ff2527b15879e6a43a770ff753f6d4315b19"
+  }
+}

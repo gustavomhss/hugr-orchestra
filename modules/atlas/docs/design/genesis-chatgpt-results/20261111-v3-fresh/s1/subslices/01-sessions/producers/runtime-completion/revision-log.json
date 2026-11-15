@@ -1,0 +1,160 @@
+{
+  "schema": "s1-artifact-revision/v1",
+  "revision": 2,
+  "key": "s1.subslice01.runtime-models-economy-completion",
+  "reason": "Root source-anchor finding: aggregator is plugin/provider.ts, not plugin/provider/provider.ts. Same-class contextual anchor abbreviations expanded under the declared path base.",
+  "semantic_behavior_change": false,
+  "scope_change": false,
+  "new_sources_read": false,
+  "previous_body": {
+    "path": "history/revision-01/bodies/runtime-models-economy-completion.md",
+    "sha256": "538e10133d348412c62d4cc69bb4faf5d425954456c3636e30e481272bec3365",
+    "byte_length": 35043
+  },
+  "current_body": {
+    "path": "bodies/runtime-models-economy-completion.md",
+    "sha256": "c1b2e02eca65e7de23d8302c92a5b3f1e0b3670efbbb8318e215e4f956521f20",
+    "byte_length": 35465
+  },
+  "delta": {
+    "path": "reference-correction.diff",
+    "sha256": "8e44ce838a2e77fa5d769cc916e010b6957d6ae1476658d6901820e459cb3eb5"
+  },
+  "contextual_path_expansions": [
+    {
+      "before": "`app-node-builder.ts:",
+      "after": "`effect/app-node-builder.ts:"
+    },
+    {
+      "before": "`layer-node.ts:",
+      "after": "`effect/layer-node.ts:"
+    },
+    {
+      "before": "`memo-map.ts:",
+      "after": "`effect/memo-map.ts:"
+    },
+    {
+      "before": "`service-use.ts:",
+      "after": "`effect/service-use.ts:"
+    },
+    {
+      "before": "`keyed-mutex.ts:",
+      "after": "`effect/keyed-mutex.ts:"
+    },
+    {
+      "before": "`local-shell.ts`",
+      "after": "`github-copilot/responses/tool/local-shell.ts`"
+    },
+    {
+      "before": "`copilot-provider.ts:",
+      "after": "`github-copilot/copilot-provider.ts:"
+    },
+    {
+      "before": "`chat/convert-to-openai-compatible-chat-messages.ts:",
+      "after": "`github-copilot/chat/convert-to-openai-compatible-chat-messages.ts:"
+    },
+    {
+      "before": "`chat/openai-compatible-prepare-tools.ts:",
+      "after": "`github-copilot/chat/openai-compatible-prepare-tools.ts:"
+    },
+    {
+      "before": "`chat/openai-compatible-chat-language-model.ts:",
+      "after": "`github-copilot/chat/openai-compatible-chat-language-model.ts:"
+    },
+    {
+      "before": "`responses/openai-responses-prepare-tools.ts:",
+      "after": "`github-copilot/responses/openai-responses-prepare-tools.ts:"
+    },
+    {
+      "before": "`responses/openai-responses-language-model.ts:",
+      "after": "`github-copilot/responses/openai-responses-language-model.ts:"
+    },
+    {
+      "before": "`responses/tool/*.ts`",
+      "after": "`github-copilot/responses/tool/*.ts`"
+    },
+    {
+      "before": "`status.md:27–35`",
+      "after": "`docs/specs/terminal/status.md:27–35`"
+    },
+    {
+      "before": "`pty.bun.ts:",
+      "after": "`pty/pty.bun.ts:"
+    },
+    {
+      "before": "`pty.node.ts:",
+      "after": "`pty/pty.node.ts:"
+    },
+    {
+      "before": "`shell-marks.ts:",
+      "after": "`pty/shell-marks.ts:"
+    },
+    {
+      "before": "`shell-cwd.ts:",
+      "after": "`pty/shell-cwd.ts:"
+    },
+    {
+      "before": "`shell-integration.ts:",
+      "after": "`pty/shell-integration.ts:"
+    },
+    {
+      "before": "`bundle.ts:",
+      "after": "`ripgrep/bundle.ts:"
+    },
+    {
+      "before": "`release.ts:",
+      "after": "`ripgrep/release.ts:"
+    },
+    {
+      "before": "`artifact-native-windows.ts/.rs`",
+      "after": "`artifact-native-windows.ts` e `artifact-native-windows.rs`"
+    },
+    {
+      "before": "`diagnostic.ts`",
+      "after": "`lsp/diagnostic.ts`"
+    },
+    {
+      "before": "`language.ts`",
+      "after": "`lsp/language.ts`"
+    },
+    {
+      "before": "`client.ts:",
+      "after": "`lsp/client.ts:"
+    },
+    {
+      "before": "`diagnostic.ts:",
+      "after": "`lsp/diagnostic.ts:"
+    },
+    {
+      "before": "`language.ts:",
+      "after": "`lsp/language.ts:"
+    },
+    {
+      "before": "`server-support.ts:",
+      "after": "`lsp/server-support.ts:"
+    },
+    {
+      "before": "`server-a/b/c.ts`",
+      "after": "`lsp/server-a.ts`, `lsp/server-b.ts` e `lsp/server-c.ts`"
+    },
+    {
+      "before": "`version.ts:",
+      "after": "`installation/version.ts:"
+    },
+    {
+      "before": "`otlp.ts:",
+      "after": "`observability/otlp.ts:"
+    },
+    {
+      "before": "`shared.ts:",
+      "after": "`observability/shared.ts:"
+    },
+    {
+      "before": "`omni-worker.probe.ts`",
+      "after": "`test/omni-worker.probe.ts`"
+    }
+  ],
+  "inherited_bodies_changed": false,
+  "previous_request_response_and_packet_preserved": "history/revision-01/",
+  "review_status": "Not sent to judges; previous candidate had no semantic judgment to transfer."
+}

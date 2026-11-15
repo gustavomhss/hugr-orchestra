@@ -1,0 +1,1064 @@
+[
+  {
+    "group": "state",
+    "path": "packages/core/src/session/store.ts",
+    "sha256": "2532e550ec0d74f7b07c33560651db176479d6b9d827fdc19d1d1198ba0628de",
+    "ranges": [
+      [
+        23,
+        105
+      ]
+    ]
+  },
+  {
+    "group": "state",
+    "path": "packages/core/src/session/projector.ts",
+    "sha256": "41e2b996cc570b3db0cc844619454f61234fd499390d5cefa340a6ad2cb0a6ba",
+    "ranges": [
+      [
+        30,
+        47
+      ],
+      [
+        101,
+        145
+      ],
+      [
+        170,
+        187
+      ],
+      [
+        192,
+        218
+      ],
+      [
+        237,
+        250
+      ],
+      [
+        283,
+        331
+      ],
+      [
+        350,
+        387
+      ]
+    ]
+  },
+  {
+    "group": "state",
+    "path": "packages/core/src/session/message-updater.ts",
+    "sha256": "c0e1e9ac9c6c01389a8f47fe1c169ad7f395a772d9d1ef959696ed597be7cbb1",
+    "ranges": [
+      [
+        197,
+        212
+      ],
+      [
+        346,
+        370
+      ]
+    ]
+  },
+  {
+    "group": "state",
+    "path": "packages/core/src/session/archive.ts",
+    "sha256": "38ba7bf0ca4ff67c6f094d6cd4e6bb723f5ab33b66585893ce7aff66bf2617d9",
+    "ranges": [
+      [
+        18,
+        39
+      ],
+      [
+        41,
+        84
+      ],
+      [
+        90,
+        113
+      ]
+    ]
+  },
+  {
+    "group": "state",
+    "path": "packages/core/src/session/lifecycle.ts",
+    "sha256": "919ad674719459a28016ae868146ba683f131f45f3005951c782ed79a8bc9c5a",
+    "ranges": [
+      [
+        29,
+        60
+      ]
+    ]
+  },
+  {
+    "group": "state",
+    "path": "packages/core/src/session.ts",
+    "sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58",
+    "ranges": [
+      [
+        418,
+        435
+      ],
+      [
+        519,
+        590
+      ],
+      [
+        625,
+        630
+      ]
+    ]
+  },
+  {
+    "group": "state",
+    "path": "packages/core/src/session/revert.ts",
+    "sha256": "4112d928af40b9d4326f6029f3093519ca6d7bef6def11d48cef8159e9bfb239",
+    "ranges": [
+      [
+        112,
+        146
+      ],
+      [
+        150,
+        173
+      ]
+    ]
+  },
+  {
+    "group": "state",
+    "path": "packages/core/src/session/legacy-import.ts",
+    "sha256": "ffc6396ccfa0f9c8eb30280d52cd3ee0787c6cff6eb5fbddbd6b9522145c5184",
+    "ranges": [
+      [
+        19,
+        44
+      ],
+      [
+        77,
+        108
+      ],
+      [
+        113,
+        166
+      ],
+      [
+        175,
+        206
+      ],
+      [
+        250,
+        280
+      ]
+    ]
+  },
+  {
+    "group": "state",
+    "path": "packages/core/src/session/legacy-transcript.ts",
+    "sha256": "765951af8d4fe9d154e4dbf429dedba2fc6037a4ac6afba41bcfb2591a5f004c",
+    "ranges": [
+      [
+        1,
+        4
+      ]
+    ]
+  },
+  {
+    "group": "runner",
+    "path": "packages/core/src/session/runner/llm.ts",
+    "sha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+    "ranges": [
+      [
+        185,
+        215
+      ],
+      [
+        225,
+        305
+      ],
+      [
+        306,
+        426
+      ],
+      [
+        449,
+        486
+      ],
+      [
+        536,
+        578
+      ],
+      [
+        616,
+        642
+      ],
+      [
+        697,
+        730
+      ]
+    ]
+  },
+  {
+    "group": "runner",
+    "path": "packages/core/src/session/runner/step-tools.ts",
+    "sha256": "ecd3ce06c813a61ec61de37bed039bfdb7b440b664078bb2b834b70ecf2ac59b",
+    "ranges": [
+      [
+        1,
+        48
+      ]
+    ]
+  },
+  {
+    "group": "runner",
+    "path": "packages/core/src/session/runner/max-steps.ts",
+    "sha256": "c72de48cbee0b57fdeeabdb1369afe77be81845c06c257d02f7bd444d39fbf21",
+    "ranges": [
+      [
+        1,
+        19
+      ]
+    ]
+  },
+  {
+    "group": "runner",
+    "path": "packages/core/src/session/runner/hosted-call.ts",
+    "sha256": "c26df9d06efed39341a37e2bdfb01e94cd07f5c3247e964ff7ea9936f2648aba",
+    "ranges": [
+      [
+        1,
+        68
+      ]
+    ]
+  },
+  {
+    "group": "runner",
+    "path": "packages/core/src/session/runner/execution-host.ts",
+    "sha256": "b2fb2a1ace88be09a099f386269d71b12f3b00f838557590f2bf916a3507ced7",
+    "ranges": [
+      [
+        113,
+        125
+      ],
+      [
+        147,
+        191
+      ]
+    ]
+  },
+  {
+    "group": "runner",
+    "path": "packages/core/src/session/runner/publish-llm-event.ts",
+    "sha256": "517410d4d2446db3adf7b4a94f6007f2f41ead4ef4c93d0259b79809a5752bf4",
+    "ranges": [
+      [
+        40,
+        73
+      ],
+      [
+        92,
+        126
+      ],
+      [
+        250,
+        299
+      ],
+      [
+        395,
+        447
+      ],
+      [
+        471,
+        507
+      ]
+    ]
+  },
+  {
+    "group": "runner",
+    "path": "packages/core/src/session/runner/to-llm-message.ts",
+    "sha256": "cc2300a504bb0aab7c28eedad81066723d6b9fc3bc6999254f92ac969012be60",
+    "ranges": [
+      [
+        14,
+        54
+      ],
+      [
+        86,
+        198
+      ]
+    ]
+  },
+  {
+    "group": "runner",
+    "path": "packages/core/src/session/runner/mentions.ts",
+    "sha256": "009628c4c66fea78ece82b246b60a05801af4690c770ddbaedcb1c6d0ff1687c",
+    "ranges": [
+      [
+        28,
+        58
+      ],
+      [
+        76,
+        150
+      ]
+    ]
+  },
+  {
+    "group": "runner",
+    "path": "packages/core/src/session/runner/direct-commands.ts",
+    "sha256": "3999d82e433a5283513fdbc23e9bfbc3dbeb5739598b35d3d660408dff1ef928",
+    "ranges": [
+      [
+        19,
+        52
+      ],
+      [
+        71,
+        117
+      ]
+    ]
+  },
+  {
+    "group": "runner",
+    "path": "packages/core/src/session/runner/title.ts",
+    "sha256": "09f33cd758eee47c943efdcfce32f71e460ef6271373ae8b97fb64cea533f796",
+    "ranges": [
+      [
+        27,
+        73
+      ]
+    ]
+  },
+  {
+    "group": "database",
+    "path": "packages/core/src/database/database.ts",
+    "sha256": "04091781f953b67209dae075a13ff3f118abaab7534e58c77fb065ccafa0dd1b",
+    "ranges": [
+      [
+        19,
+        67
+      ]
+    ]
+  },
+  {
+    "group": "database",
+    "path": "packages/core/src/database/migration.ts",
+    "sha256": "3586274f5aa72a80d5645f5caea718d3c9234f69c15ca8ddbfbb8c0b5f37186d",
+    "ranges": [
+      [
+        1,
+        169
+      ]
+    ]
+  },
+  {
+    "group": "database",
+    "path": "packages/core/src/database/sqlite.bun.ts",
+    "sha256": "44a7bfca98332195019529e3e42e955fe8b828ed0648e48efa22ec9ebfe2d372",
+    "ranges": [
+      [
+        17,
+        20
+      ],
+      [
+        58,
+        108
+      ],
+      [
+        143,
+        169
+      ],
+      [
+        191,
+        219
+      ]
+    ]
+  },
+  {
+    "group": "database",
+    "path": "packages/core/src/database/sqlite.node.ts",
+    "sha256": "69c3c70e2cf00d84ede97d12bb1fdbd3dc65ef0732d30f2fbd6ca0e45e6313c2",
+    "ranges": [
+      [
+        56,
+        104
+      ],
+      [
+        118,
+        144
+      ]
+    ]
+  },
+  {
+    "group": "database",
+    "path": "packages/core/src/database/README.md",
+    "sha256": "5bd3a917366391323a94bec85ace411f4d8ce1ee098a4ea062bd2f75b1fcaf83",
+    "ranges": [
+      [
+        1,
+        38
+      ]
+    ]
+  },
+  {
+    "group": "database",
+    "path": "packages/core/src/database/schema.gen.ts",
+    "sha256": "f5213fd40afee89a700bb85a071cc932f697e0cd6206417f78f9b134d580b05e",
+    "ranges": [
+      [
+        685,
+        704
+      ],
+      [
+        879,
+        910
+      ],
+      [
+        1038,
+        1055
+      ]
+    ]
+  },
+  {
+    "group": "events",
+    "path": "packages/core/src/event.ts",
+    "sha256": "4da815f4da0f85c45b45b6af49fdfd94889fe0e167025b8b49a6a25805217b80",
+    "ranges": [
+      [
+        222,
+        256
+      ],
+      [
+        391,
+        435
+      ],
+      [
+        442,
+        501
+      ],
+      [
+        564,
+        607
+      ],
+      [
+        637,
+        700
+      ]
+    ]
+  },
+  {
+    "group": "events",
+    "path": "packages/core/src/event/compaction.ts",
+    "sha256": "f1e8faf55425b138a13dd7c98a970d4a3e678ad0359c489959fb011ac5659b30",
+    "ranges": [
+      [
+        1,
+        5
+      ]
+    ]
+  },
+  {
+    "group": "events",
+    "path": "packages/core/src/event/sql.ts",
+    "sha256": "0598a4763030fb7c1441d7e3302dd350e847b4f182cfc03c5e786ef385220fd7",
+    "ranges": [
+      [
+        1,
+        28
+      ]
+    ]
+  },
+  {
+    "group": "events",
+    "path": "packages/core/src/event/seal.ts",
+    "sha256": "64fa8568bb118d3b838961e46a5b679381f4966db203629c517075e781e9a9f2",
+    "ranges": [
+      [
+        10,
+        14
+      ],
+      [
+        68,
+        97
+      ],
+      [
+        100,
+        196
+      ],
+      [
+        239,
+        340
+      ]
+    ]
+  },
+  {
+    "group": "context",
+    "path": "packages/core/src/system-context/index.ts",
+    "sha256": "1f75c1982f73364cd29d5b5a5d0e34e2c848b83de0d5024be63ae61d24e448b1",
+    "ranges": [
+      [
+        137,
+        182
+      ],
+      [
+        201,
+        295
+      ]
+    ]
+  },
+  {
+    "group": "context",
+    "path": "packages/core/src/system-context/registry.ts",
+    "sha256": "27505e7f29016e62fc521c6d20a132003d1487c9e7099859cd7c1cab4ff1952e",
+    "ranges": [
+      [
+        25,
+        65
+      ]
+    ]
+  },
+  {
+    "group": "context",
+    "path": "packages/core/src/system-context/builtins.ts",
+    "sha256": "57520a5beaea3ceee69dbfa4e2e0360a713082ba7376a3fd8a9ab1626d08abac",
+    "ranges": [
+      [
+        14,
+        52
+      ]
+    ]
+  },
+  {
+    "group": "context",
+    "path": "packages/core/src/instruction-context.ts",
+    "sha256": "1ad05d900edbf814b3ed68200eb5f452089a112de60cf8b8eae0d1553d0896e1",
+    "ranges": [
+      [
+        23,
+        40
+      ],
+      [
+        84,
+        151
+      ]
+    ]
+  },
+  {
+    "group": "context",
+    "path": "packages/core/src/session/context-epoch.ts",
+    "sha256": "b6e07dccc330779192975a58d763941a9b8ae458cc6974e040c26cd149ff7fd8",
+    "ranges": [
+      [
+        40,
+        88
+      ],
+      [
+        111,
+        138
+      ],
+      [
+        161,
+        174
+      ]
+    ]
+  },
+  {
+    "group": "context",
+    "path": "packages/core/src/session/history.ts",
+    "sha256": "1989745f9737d404950f166faf43df5890ccb13df6561eeae106032dc79ae79a",
+    "ranges": [
+      [
+        37,
+        83
+      ]
+    ]
+  },
+  {
+    "group": "context",
+    "path": "packages/core/src/session/compaction.ts",
+    "sha256": "d6becda5c14c0679b6d5bf509a04631309518bd0ca0ba35d1b6f7e8296266d84",
+    "ranges": [
+      [
+        89,
+        140
+      ],
+      [
+        158,
+        179
+      ],
+      [
+        197,
+        215
+      ],
+      [
+        224,
+        256
+      ],
+      [
+        265,
+        276
+      ],
+      [
+        284,
+        309
+      ],
+      [
+        322,
+        326
+      ]
+    ]
+  },
+  {
+    "group": "support",
+    "path": "packages/core/src/session/todo.ts",
+    "sha256": "8de221b40c719a71f1c29a94fe29ed84a86f9fd22b022ef8558b09aec9069af5",
+    "ranges": [
+      [
+        58,
+        89
+      ]
+    ]
+  },
+  {
+    "group": "support",
+    "path": "packages/core/src/session-process.ts",
+    "sha256": "0367a44cdb6fc3e23586f09d3084492862c565fc0efcd0635c99ac14524c7016",
+    "ranges": [
+      [
+        61,
+        87
+      ],
+      [
+        104,
+        138
+      ],
+      [
+        179,
+        214
+      ],
+      [
+        256,
+        280
+      ]
+    ]
+  },
+  {
+    "group": "support",
+    "path": "packages/core/src/session/lean-profile-preferences.ts",
+    "sha256": "0847f7768ef27559f659ea5c3834b5dc3c48435c1187b788b6fc4980fa310d5c",
+    "ranges": [
+      [
+        22,
+        37
+      ],
+      [
+        46,
+        77
+      ],
+      [
+        91,
+        143
+      ]
+    ]
+  },
+  {
+    "group": "support",
+    "path": "packages/core/src/session/lean-project.ts",
+    "sha256": "c4aeae7175bce93cf9b3a4843ba45675930c60cd1442065031f46e91ca252cc7",
+    "ranges": [
+      [
+        63,
+        77
+      ],
+      [
+        119,
+        127
+      ],
+      [
+        155,
+        196
+      ],
+      [
+        207,
+        222
+      ],
+      [
+        253,
+        261
+      ]
+    ]
+  },
+  {
+    "group": "support",
+    "path": "packages/core/src/session/activity.ts",
+    "sha256": "dc08f5f5895575bcd80a82ed71a6bf683f5e19d4237c9a290f4d83d19d5b9214",
+    "ranges": [
+      [
+        110,
+        122
+      ],
+      [
+        140,
+        162
+      ],
+      [
+        187,
+        214
+      ],
+      [
+        233,
+        260
+      ]
+    ]
+  },
+  {
+    "group": "support",
+    "path": "packages/core/src/session/meeting.sql.ts",
+    "sha256": "b71e5a2c571e8d8a1dd1ca69c962b4a74d85e79ae4ad682eba5e445c43f90bcd",
+    "ranges": [
+      [
+        1,
+        43
+      ]
+    ]
+  },
+  {
+    "group": "support",
+    "path": "packages/core/src/session/meeting.ts",
+    "sha256": "cbf0e00d783dccdd70344a21d624da8fc1cc69c70ac6debbedf045e3c7331d5d",
+    "ranges": [
+      [
+        105,
+        157
+      ],
+      [
+        174,
+        187
+      ]
+    ]
+  },
+  {
+    "group": "support",
+    "path": "packages/core/src/session/meeting-memory.ts",
+    "sha256": "78b0fd816e67bc0c94a56495a29b6f6b495dd83a02a792b4defc38ddf9d79861",
+    "ranges": [
+      [
+        19,
+        45
+      ],
+      [
+        62,
+        100
+      ]
+    ]
+  },
+  {
+    "group": "support",
+    "path": "packages/core/src/session/meeting-verdict.ts",
+    "sha256": "9ebe8308cd7a2cea9e1068f2fd2ffcc3a16c2af75d52f930f538f3dd36ca0fbd",
+    "ranges": [
+      [
+        19,
+        62
+      ]
+    ]
+  },
+  {
+    "group": "support",
+    "path": "packages/core/src/session/meeting-context.ts",
+    "sha256": "f548fbef1c32e3807b7256ab26376a95e378164209464d8f07d80019daa42fc1",
+    "ranges": [
+      [
+        19,
+        66
+      ]
+    ]
+  },
+  {
+    "group": "support",
+    "path": "packages/core/src/session/meeting-briefing.ts",
+    "sha256": "1e6d76fe987c4302add4f1cec1f50e5251dfb138fc07af4ab186efc2eaa77955",
+    "ranges": [
+      [
+        15,
+        31
+      ],
+      [
+        73,
+        102
+      ]
+    ]
+  },
+  {
+    "group": "support",
+    "path": "packages/core/src/session/meeting-consolidation.ts",
+    "sha256": "77276b835b1ce2735d7f71a40b5c3746872f0e6a79df708c24710c8ac2903104",
+    "ranges": [
+      [
+        56,
+        106
+      ],
+      [
+        109,
+        151
+      ],
+      [
+        161,
+        192
+      ],
+      [
+        204,
+        227
+      ]
+    ]
+  },
+  {
+    "group": "support",
+    "path": "packages/core/src/session/meeting-handoff.ts",
+    "sha256": "6bb698c2ea16487155c727c2b0712ce314d529ee7af1cced9db4fc052a04e72e",
+    "ranges": [
+      [
+        39,
+        112
+      ]
+    ]
+  },
+  {
+    "group": "support",
+    "path": "packages/core/src/session/meeting-consolidation.txt",
+    "sha256": "cf3904d64ef573e699655624c4993d2e96a221410981e3bdebc6aec474e85504",
+    "ranges": [
+      [
+        1,
+        11
+      ]
+    ]
+  },
+  {
+    "group": "migration-critical",
+    "path": "packages/core/src/database/migration/20260603040000_session_message_projection_order.ts",
+    "sha256": "9899c029d31c7bdd767cba272c68f0eed63de5cb5e3b8a2d00d6a090edf69a8c",
+    "ranges": [
+      [
+        1,
+        19
+      ]
+    ]
+  },
+  {
+    "group": "migration-critical",
+    "path": "packages/core/src/database/migration/20260604172448_event_sourced_session_input.ts",
+    "sha256": "9990ace4d25a7941c953297ec1fb4e13de1ba38e2997a88629ffccf1ce561099",
+    "ranges": [
+      [
+        1,
+        47
+      ]
+    ]
+  },
+  {
+    "group": "migration-critical",
+    "path": "packages/core/src/database/migration/20260622170816_reset_v2_session_state.ts",
+    "sha256": "c3113099b2151cfb394ee6439976fe2678b7d6eb6d301365a75d9795a7894489",
+    "ranges": [
+      [
+        1,
+        17
+      ]
+    ]
+  },
+  {
+    "group": "migration-critical",
+    "path": "packages/core/src/database/migration/20260622202450_simplify_session_input.ts",
+    "sha256": "28cba1f4a10ee368606772097e7623121aa9719fb6dd2d70b91800fd4ef98362",
+    "ranges": [
+      [
+        1,
+        17
+      ]
+    ]
+  },
+  {
+    "group": "migration-critical",
+    "path": "packages/core/src/database/migration/20261002195730_event_seals.ts",
+    "sha256": "db4a2ac2560301c6a172e8dec349adf96e6be08fecdd93363191f008dacd6072",
+    "ranges": [
+      [
+        1,
+        13
+      ]
+    ]
+  },
+  {
+    "group": "migration-critical",
+    "path": "packages/core/src/database/migration/20261026013700_retire_legacy_session_events.ts",
+    "sha256": "83a7bdc91037bdaddd1358efc995ffbcbee26d92a534915992c4978089fcbdc8",
+    "ranges": [
+      [
+        1,
+        38
+      ]
+    ]
+  },
+  {
+    "group": "migration-critical",
+    "path": "packages/core/src/database/migration/20261026232319_meeting_memory.ts",
+    "sha256": "1d0719679b31dccad57a935fe8a2e548cab11555f43f1b2c8f0465b55187eba0",
+    "ranges": [
+      [
+        46,
+        85
+      ]
+    ]
+  },
+  {
+    "group": "migration-critical",
+    "path": "packages/core/src/database/migration/20260510033149_session_usage.ts",
+    "sha256": "dd2ed1311568a4bf129f7bba749e911bd7fec4a0af946e7eac98f4f45ba7b198",
+    "ranges": [
+      [
+        8,
+        56
+      ]
+    ]
+  },
+  {
+    "group": "tests-selected",
+    "path": "packages/core/test/session-archive.test.ts",
+    "sha256": "6ce9f5e11cc778e424a2d08ac3edc1638f80ec66d95844d703a2a201b44256c5",
+    "ranges": [
+      [
+        64,
+        82
+      ],
+      [
+        87,
+        129
+      ]
+    ]
+  },
+  {
+    "group": "tests-selected",
+    "path": "packages/core/test/session-persistence.test.ts",
+    "sha256": "37181a217e21d1e979219c0c18f74e094c29fb249953f918738cfbfecbcb3f9b",
+    "ranges": [
+      [
+        39,
+        48
+      ],
+      [
+        132,
+        145
+      ],
+      [
+        198,
+        210
+      ],
+      [
+        223,
+        237
+      ]
+    ]
+  },
+  {
+    "group": "tests-selected",
+    "path": "packages/core/test/database-sqlite-preparation.test.ts",
+    "sha256": "cf631946e2b4b395eae6027d2ac006035b55e5345216bca46231f55485e3b0fe",
+    "ranges": [
+      [
+        1,
+        15
+      ],
+      [
+        17,
+        37
+      ],
+      [
+        118,
+        129
+      ]
+    ]
+  },
+  {
+    "group": "tests-selected",
+    "path": "packages/core/test/session-runner-harness.ts",
+    "sha256": "2b41c603d6fd8be7008a7628dcc44d74d7c1ce209db548c8c9fdc938c7531a2d",
+    "ranges": [
+      [
+        63,
+        81
+      ],
+      [
+        211,
+        229
+      ]
+    ]
+  },
+  {
+    "group": "tests-selected",
+    "path": "packages/core/test/session-runner-governance.test.ts",
+    "sha256": "bb7b4107180432a9c9261d053b031b20d7aec4c112d076f5643bfcf27dc25529",
+    "ranges": [
+      [
+        94,
+        119
+      ],
+      [
+        122,
+        140
+      ]
+    ]
+  },
+  {
+    "group": "tests-selected",
+    "path": "docs/specs/v2/session.md",
+    "sha256": "7aa5aea4fba7bab44bd70b552812651e5d097b579c7bf5d797f8b8751c05c81e",
+    "ranges": [
+      [
+        82,
+        82
+      ],
+      [
+        101,
+        109
+      ],
+      [
+        135,
+        151
+      ],
+      [
+        212,
+        219
+      ]
+    ]
+  },
+  {
+    "group": "cross-driver",
+    "path": "packages/effect-drizzle-sqlite/src/effect-sqlite/driver.ts",
+    "sha256": "3f58650cd257c28b80ce752684f0bd0b53c07a8b6990fd293f39c953d1dbded3",
+    "ranges": [
+      [
+        24,
+        77
+      ]
+    ]
+  },
+  {
+    "group": "cross-driver",
+    "path": "packages/effect-drizzle-sqlite/src/effect-sqlite/session.ts",
+    "sha256": "4fa29583a6cbd148a5a8699dfd96d87944b2b04a559335c461a6e3635d7d9cf1",
+    "ranges": [
+      [
+        100,
+        108
+      ],
+      [
+        111,
+        218
+      ],
+      [
+        237,
+        260
+      ]
+    ]
+  }
+]

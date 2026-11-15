@@ -1,0 +1,215 @@
+{
+  "oracle_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/oracles/semantic-bundle-v1.json",
+    "sha256": "ebfd89e4e6fb97230ac1c27eafe5478853e2835d272585b0c493031d7510f995"
+  },
+  "criteria": [
+    "CC-1",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8",
+    "QS-1",
+    "QS-2",
+    "QS-4",
+    "QS-5",
+    "QS-6"
+  ],
+  "criteria_scope": "Exact-body semantic contract used by both native judges. This is not a waiver or PASS of the 50 delivery criteria, which remain in the final independent evidence matrix, including Atlas consumption, maintenance and gates.",
+  "artifacts": {
+    "s1.core.session-admission": {
+      "body_sha256": "2535bba77505ed74e7dc2759dce815c8e9684e68e2f0a10fa75f9813192e7ae1",
+      "validity": "supported",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j1.json",
+          "sha256": "a32b7bec928315cdd77f7fdb32909f5ee5d316eb576816a1cce9985b632d8ff7"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j2.json",
+          "sha256": "fd2dd0e2d76379e7d4e128b1fa1e77ce81cf95dd8bc5ef18051475f641187349"
+        }
+      ],
+      "gaps": [
+        "Runtime retry races and crash behavior were not executed; source evidence only.",
+        "The Session spec contains historical V1/route sections and must not be promoted wholesale to current API authority."
+      ]
+    },
+    "s1.core.session-execution": {
+      "body_sha256": "470ddb1eacfe7294071893968d7de999c90ea98cb0fd48c48e0730ded51d1663",
+      "validity": "supported",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j1.json",
+          "sha256": "a32b7bec928315cdd77f7fdb32909f5ee5d316eb576816a1cce9985b632d8ff7"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j2.json",
+          "sha256": "fd2dd0e2d76379e7d4e128b1fa1e77ce81cf95dd8bc5ef18051475f641187349"
+        }
+      ],
+      "gaps": [
+        "Durable multi-node ownership and automatic post-crash provider recovery are explicitly not implemented by this local coordinator.",
+        "ExecutionHost internals are a separate owner boundary; only the Core port and invocation path are inspected.",
+        "No runtime or product test result was obtained."
+      ]
+    },
+    "s1.core.persistence": {
+      "body_sha256": "0b43f9bd316aca25361f934e63723f2aa6220a3deb97a4447266fbbc5d350762",
+      "validity": "supported",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j1.json",
+          "sha256": "a32b7bec928315cdd77f7fdb32909f5ee5d316eb576816a1cce9985b632d8ff7"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j2.json",
+          "sha256": "fd2dd0e2d76379e7d4e128b1fa1e77ce81cf95dd8bc5ef18051475f641187349"
+        }
+      ],
+      "gaps": [
+        "Historical migrations and driver implementations have grouped inventory disposition; they were not exhaustively read or executed.",
+        "Projector registration is not yet keyed by exact durable type plus version.",
+        "Seals do not establish authentication or Session execution ownership."
+      ]
+    },
+    "s1.core.context": {
+      "body_sha256": "94e04589d726a017c3cbeb8f758d5d23aae773733597a15ea5236e8e1288aea7",
+      "validity": "supported",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j1.json",
+          "sha256": "a32b7bec928315cdd77f7fdb32909f5ee5d316eb576816a1cce9985b632d8ff7"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j2.json",
+          "sha256": "fd2dd0e2d76379e7d4e128b1fa1e77ce81cf95dd8bc5ef18051475f641187349"
+        }
+      ],
+      "gaps": [
+        "Provider token estimates and generated summaries were not measured or evaluated.",
+        "External Context Source producers and Continuity replacement layers are separate source boundaries."
+      ]
+    },
+    "s1.core.configuration": {
+      "body_sha256": "eed22f8ddd9f3fdad18b39cfb8e52ca5f412bad8b21de10fef58ce113ba60ab1",
+      "validity": "supported",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/config-v2-j1.json",
+          "sha256": "53172bb65049c344b0af72a6bc0c063a78207bf73e8feedc79f8ce8971096d63"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/config-v2-j2.json",
+          "sha256": "dfde36a7c76031d4364703b4e8971d8d20828932656efe0ad4cea60d9c9a29f0"
+        }
+      ],
+      "gaps": [
+        "Project configuration remains an open-time snapshot while globals refresh per entries call.",
+        "Legacy upgrade helpers and consumer-specific policies are not exhaustively inspected.",
+        "No Location eviction/reload or trust transition was executed."
+      ]
+    },
+    "s1.core.project": {
+      "body_sha256": "937f99ba01085530af69abf620793e1b518c32867b956e805a5c68d65f950c43",
+      "validity": "supported",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/config-v2-j1.json",
+          "sha256": "53172bb65049c344b0af72a6bc0c063a78207bf73e8feedc79f8ce8971096d63"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/config-v2-j2.json",
+          "sha256": "dfde36a7c76031d4364703b4e8971d8d20828932656efe0ad4cea60d9c9a29f0"
+        }
+      ],
+      "gaps": [
+        "Git mutation, copy strategies, repository caches, snapshots/revert and formatter/LSP leaves require deeper source reads for behavior-specific changes.",
+        "Historical project route sketches are not current API proof.",
+        "Checkpoint semantic validity and runtime restoration were not tested."
+      ]
+    },
+    "s1.subslice01.config-project-supplement": {
+      "body_sha256": "555549f9971e6b6d8c8edd4799841e3f54259c9289b399da0eeb84336a896b13",
+      "validity": "supported",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/config-v2-j1.json",
+          "sha256": "53172bb65049c344b0af72a6bc0c063a78207bf73e8feedc79f8ce8971096d63"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/config-v2-j2.json",
+          "sha256": "dfde36a7c76031d4364703b4e8971d8d20828932656efe0ad4cea60d9c9a29f0"
+        }
+      ],
+      "gaps": [
+        "Source-only limits and partial reads remain explicit; all product and Atlas operations by this producer are NOT_RUN.",
+        "Runtime input versions, binding/publication and consumption receipts remain the principal's responsibility."
+      ]
+    }
+  },
+  "support_files": [
+    {
+      "local_path": "judgments/a1-config-v1-j1.json",
+      "repository_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j1.json",
+      "purpose": "Exact root-owned control or actual visible judgment record; no decision fabricated.",
+      "sha256": "a32b7bec928315cdd77f7fdb32909f5ee5d316eb576816a1cce9985b632d8ff7"
+    },
+    {
+      "local_path": "judgments/a1-config-v1-j2.json",
+      "repository_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j2.json",
+      "purpose": "Exact root-owned control or actual visible judgment record; no decision fabricated.",
+      "sha256": "fd2dd0e2d76379e7d4e128b1fa1e77ce81cf95dd8bc5ef18051475f641187349"
+    },
+    {
+      "local_path": "judgments/config-v2-j1.json",
+      "repository_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/config-v2-j1.json",
+      "purpose": "Exact root-owned control or actual visible judgment record; no decision fabricated.",
+      "sha256": "53172bb65049c344b0af72a6bc0c063a78207bf73e8feedc79f8ce8971096d63"
+    },
+    {
+      "local_path": "judgments/config-v2-j2.json",
+      "repository_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/config-v2-j2.json",
+      "purpose": "Exact root-owned control or actual visible judgment record; no decision fabricated.",
+      "sha256": "dfde36a7c76031d4364703b4e8971d8d20828932656efe0ad4cea60d9c9a29f0"
+    },
+    {
+      "local_path": "judgments/acceptance-index.json",
+      "repository_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/acceptance-index.json",
+      "purpose": "Exact root-owned control or actual visible judgment record; no decision fabricated.",
+      "sha256": "814d3767f780b5ebcecc42d963f27c4e4100e9fd9a3cb10bfdfa8899cc44de43"
+    },
+    {
+      "local_path": "control/consumer-plan-v1.json",
+      "repository_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/control/consumer-plan-v1.json",
+      "purpose": "Exact root-owned control or actual visible judgment record; no decision fabricated.",
+      "sha256": "51a303877c6f2b4b019b073f00cbda1e26d7ee6f56c63082c08d68612089f1f0"
+    },
+    {
+      "local_path": "control/production-plan-v2.json",
+      "repository_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/control/production-plan-v2.json",
+      "purpose": "Exact root-owned control or actual visible judgment record; no decision fabricated.",
+      "sha256": "aa7e965dd34a307beeaff18e5803ba073d4a3a7c768f54ddc1ce05f7d1deceeb"
+    },
+    {
+      "local_path": "control/maintenance-plan-v1.json",
+      "repository_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/control/maintenance-plan-v1.json",
+      "purpose": "Exact root-owned control or actual visible judgment record; no decision fabricated.",
+      "sha256": "50529eb544ed402cecb5e0ec76860c648890a9548859c0baba089c69e6c69f43"
+    },
+    {
+      "local_path": "control/direct-use-cases-v1.json",
+      "repository_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/control/direct-use-cases-v1.json",
+      "purpose": "Exact root-owned control or actual visible judgment record; no decision fabricated.",
+      "sha256": "4ce78035fbec7fbb97978cb009dc4e18148b548feab6cc02c7c49524cfe14472"
+    },
+    {
+      "local_path": "control/runtime-selection-final.json",
+      "repository_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/control/runtime-selection-final.json",
+      "purpose": "Exact root-owned control or actual visible judgment record; no decision fabricated.",
+      "sha256": "cb837b2987ba69e7a6021dc67597355b9f29c0f93759b4e2411610c5483da529"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "schema": "genesis-s1-01-final-runtime-selection/v1",
+  "frozen_at": "2026-11-14T23:52:04.961482+00:00",
+  "runtime_code_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "runtime_root": "runtime-r2/modules/atlas",
+  "previous_preflight_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "previous_preflight_preserved": "receipts/atlas-a1-preflight/receipt.json",
+  "release_ref": "control/runtime-release.json",
+  "reason": "Use the exact candidate of the reusable S4 common-control CI for the final own-package operations. Recompile and obtain new exact candidate binding; do not transfer an e3 binding.",
+  "observed_delta": "Two TypeScript files change three double assertions to direct validated assertions; three official generated outputs differ. No behavioral source or dependency lock change was found in the complete compared materialized runtime set.",
+  "materialization": "runtime-r2/capture-manifest.json",
+  "bootstrap": "receipts/runtime-r2-bootstrap/receipt.json",
+  "code_source_is_git_checkout": false,
+  "package_observed_head_expected": null,
+  "new_binding_required": true,
+  "product_tests": "NOT_RUN_LOCALLY",
+  "published_authority_claim": false
+}

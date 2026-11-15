@@ -1,0 +1,403 @@
+{
+  "schema": "genesis-config-project-inheritance/v1",
+  "history_revision": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+  "source_package": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.json",
+    "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+    "sha256": "102d668428ec8ef3ba8313fcf3b7a7bece6318482882265ae7929fb68efdd7e8",
+    "local_reference": "../control/historical-package.json"
+  },
+  "captured_files": [
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/configuration.md",
+      "git_blob_sha": "c9a325719013b75f825f8e8c184b242e565d07e8",
+      "sha256": "eed22f8ddd9f3fdad18b39cfb8e52ca5f412bad8b21de10fef58ce113ba60ab1",
+      "byte_length": 4414,
+      "local_path": "inherited/configuration.md",
+      "git_blob_verified": true
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/project.md",
+      "git_blob_sha": "fe5495b25dcc594abc812faf39e14ab145472deb",
+      "sha256": "937f99ba01085530af69abf620793e1b518c32867b956e805a5c68d65f950c43",
+      "byte_length": 4569,
+      "local_path": "inherited/project.md",
+      "git_blob_verified": true
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/recipe.json",
+      "git_blob_sha": "2291c105b2f9eda4354e995f0d31007ac7918155",
+      "sha256": "79c21a0eb94bf9eb6927984134592a688d3b028c2213e5552bb1017ae50bd8fb",
+      "byte_length": 1657,
+      "local_path": "inherited/recipe.json",
+      "git_blob_verified": true
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/request.txt",
+      "git_blob_sha": "96d4d37847a65d98be4cffcec72e2f655c5aa48d",
+      "sha256": "5ade453a557acd559e6796cab8f6ed42d5141ddf668d3c6f06169e7ce8840d7d",
+      "byte_length": 2656,
+      "local_path": "inherited/request.txt",
+      "git_blob_verified": true
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/request-steering.txt",
+      "git_blob_sha": "992ab0fe5820f6ad76143475fbb97a88300adb08",
+      "sha256": "e6e6a3ab050966717aaffb8f4059f134368fee7778fa135defa2077309a4a72c",
+      "byte_length": 2404,
+      "local_path": "inherited/request-steering.txt",
+      "git_blob_verified": true
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/response.md",
+      "git_blob_sha": "2b0fb3ce38ea667804faa8ec0d00d484203329a1",
+      "sha256": "79a01b28b5df5d99a60f8dfd5af2b223671aec009ec9e77ae755cf38096ff12d",
+      "byte_length": 9902,
+      "local_path": "inherited/response.md",
+      "git_blob_verified": true
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a3-v1-dossier.md",
+      "git_blob_sha": "285e56c1680153ce75c71fd99bcf9455bde70d4d",
+      "sha256": "36416073165d59eec9c7d847a26f414d855cc2a40758d548f4dd49669dccc5d4",
+      "byte_length": 177076,
+      "local_path": "inherited/l1-a3-v1-dossier.md",
+      "git_blob_verified": true
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/work.md",
+      "git_blob_sha": "7573759c19f76b0c640c750db671c749139a4653",
+      "sha256": "48741ade1eef9c559fa5c57252a9e8b61348bfb24a475f6cd6bd4252598049b7",
+      "byte_length": 6275,
+      "local_path": "inherited/history-work.md",
+      "git_blob_verified": true
+    },
+    {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/execution-ledger.jsonl",
+      "git_blob_sha": "ee5bed9d114ae87e5472956d8f9f21c61847151a",
+      "sha256": "97742834c438e82c8ca9ef7443471837c91168af04ccd5c21e64212264b4b855",
+      "byte_length": 14939,
+      "local_path": "inherited/history-execution-ledger.jsonl",
+      "git_blob_verified": true
+    }
+  ],
+  "original_artifact_records": [
+    {
+      "key": "s1.core.configuration",
+      "scope": "orchestra.s1",
+      "title": "Configuration precedence, trust and Location service lifetime",
+      "layer": 1,
+      "need": "component",
+      "body": {
+        "path": "producers/a/bodies/configuration.md",
+        "encoding": "utf-8",
+        "byte_length": 4414,
+        "sha256": "eed22f8ddd9f3fdad18b39cfb8e52ca5f412bad8b21de10fef58ce113ba60ab1"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned repository implementation and explicitly distinguished repository normative documentation; source inspection only. No product execution or test result is asserted.",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+      },
+      "validity": "supported",
+      "gaps": [
+        "Project configuration remains an open-time snapshot while globals refresh per entries call.",
+        "Legacy upgrade helpers and consumer-specific policies are not exhaustively inspected.",
+        "No Location eviction/reload or trust transition was executed."
+      ],
+      "evidence": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/review-evidence-compact.md",
+          "sha256": "1d28ad12ce7c525d230e42486b6bccd691104d5e6acd4a815728dda7b8ed8676"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/excerpt-map.json",
+          "sha256": "301173d05efb7a14a5fedfafbf6755d34e413100dadd7f21560a62e0f4cff471"
+        }
+      ],
+      "input_keys": [
+        "file:packages/core/src/config.ts",
+        "file:packages/core/src/config/trust.ts",
+        "file:packages/core/src/location-services.ts",
+        "file:packages/core/src/location-service-map.ts",
+        "file:docs/specs/v2/config.md"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config.ts",
+          "git_blob_sha": "52985a1dfc3575efca662dcb0667d81a1ab6f1de",
+          "sha256": "bc4ce670f2214fcecab7f7a705f04aecd0f48c7cf03076c67e55421956a625e6"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/config/trust.ts",
+          "git_blob_sha": "a8b068f1fdb5c01e59ad43c56b9e6241ec3dfc78",
+          "sha256": "f00fbbf4cb98646c376ff14662e4e43d16ad64b11b439d7abccffae7723569b9"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/location-services.ts",
+          "git_blob_sha": "c754426dde31acad2dbbfd96459b32624cfdd2e4",
+          "sha256": "1b44f26207ca9fed468fb440d3b8fe0b55cabd5207958f097a7fd2d1488d9131"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/location-service-map.ts",
+          "git_blob_sha": "2f9f70c7edf21ab9e8d57eb6966aacab13c47c33",
+          "sha256": "eab185ee9a1ec6ec1c16bb686b5cd57caf9b6ef21100393277c902e7f4b8977f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "docs/specs/v2/config.md",
+          "git_blob_sha": "81353980473012b1b3d311f0a638e3d65ba8cbcd",
+          "sha256": "5b8df788e30f2120eaa1c12c94d9ca19738fb16d14ddc4cc372b129d535d37f8"
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/recipe.json",
+        "sha256": "79c21a0eb94bf9eb6927984134592a688d3b028c2213e5552bb1017ae50bd8fb"
+      },
+      "build_dependencies": [],
+      "navigation": [],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/request.txt",
+        "sha256": "5ade453a557acd559e6796cab8f6ed42d5141ddf668d3c6f06169e7ce8840d7d"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/response.md",
+        "sha256": "79a01b28b5df5d99a60f8dfd5af2b223671aec009ec9e77ae755cf38096ff12d"
+      },
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": []
+    },
+    {
+      "key": "s1.core.project",
+      "scope": "orchestra.s1",
+      "title": "Project identity, canonical paths and retained checkpoints",
+      "layer": 1,
+      "need": "component",
+      "body": {
+        "path": "producers/a/bodies/project.md",
+        "encoding": "utf-8",
+        "byte_length": 4569,
+        "sha256": "937f99ba01085530af69abf620793e1b518c32867b956e805a5c68d65f950c43"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned repository implementation and explicitly distinguished repository normative documentation; source inspection only. No product execution or test result is asserted.",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+      },
+      "validity": "supported",
+      "gaps": [
+        "Git mutation, copy strategies, repository caches, snapshots/revert and formatter/LSP leaves require deeper source reads for behavior-specific changes.",
+        "Historical project route sketches are not current API proof.",
+        "Checkpoint semantic validity and runtime restoration were not tested."
+      ],
+      "evidence": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/review-evidence-compact.md",
+          "sha256": "1d28ad12ce7c525d230e42486b6bccd691104d5e6acd4a815728dda7b8ed8676"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/excerpt-map.json",
+          "sha256": "301173d05efb7a14a5fedfafbf6755d34e413100dadd7f21560a62e0f4cff471"
+        }
+      ],
+      "input_keys": [
+        "file:packages/core/src/project.ts",
+        "file:packages/core/src/project/directories.ts",
+        "file:packages/core/src/location-mutation.ts",
+        "file:packages/core/src/filesystem.ts",
+        "file:packages/core/src/project/checkpoint.ts",
+        "file:packages/core/src/session.ts",
+        "file:docs/specs/project.md"
+      ],
+      "source_refs": [
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/project.ts",
+          "git_blob_sha": "bbedbbf34cbc5b431538db37993c0cc0830fa393",
+          "sha256": "a430e2c36fdf6544efcb36c6d13da86826083b41073a010d788e8629b9f89a63"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/project/directories.ts",
+          "git_blob_sha": "7863f4d2640a9b4bd85febab338610446bf839ef",
+          "sha256": "2b4d307a7098dd77da07bcd6dfcdd3bc552b7f6a585e35ff49aba6f320985d4a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/location-mutation.ts",
+          "git_blob_sha": "5c80742365c78301f296d5fe87fd8844a1efc44c",
+          "sha256": "1eef86e372d56b4137ea0b6576b13f8eff655737d451e2446f87f97c8a02001a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/filesystem.ts",
+          "git_blob_sha": "46791eb40338be5fcc31bc22d110a9899d6b5d80",
+          "sha256": "035a149e885fb7bb69b4c9a5ce42ee5368eef0d6b23d8140062d5a086ba8135f"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/project/checkpoint.ts",
+          "git_blob_sha": "5972b18ab5b5bd6792447261cd65933aee379e99",
+          "sha256": "25156c4e4b8cdb91db190f5d388c78b48e198be8511dd95c0aaef4821213531a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "packages/core/src/session.ts",
+          "git_blob_sha": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+          "sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "docs/specs/project.md",
+          "git_blob_sha": "35adeb94cff7e1d24adc9844f9e25fdb17df08a5",
+          "sha256": "f1b96968476b6e0723fb5f42a9a3d9741cb2381b2892ae27392127a19507374c"
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/recipe.json",
+        "sha256": "79c21a0eb94bf9eb6927984134592a688d3b028c2213e5552bb1017ae50bd8fb"
+      },
+      "build_dependencies": [],
+      "navigation": [],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/request.txt",
+        "sha256": "5ade453a557acd559e6796cab8f6ed42d5141ddf668d3c6f06169e7ce8840d7d"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/response.md",
+        "sha256": "79a01b28b5df5d99a60f8dfd5af2b223671aec009ec9e77ae755cf38096ff12d"
+      },
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": []
+    }
+  ],
+  "original_producer_recipe": {
+    "schema": "genesis-producer-recipe/v1",
+    "task": "S1-L1-A",
+    "producer_handle": "/root/producer_a",
+    "principal_execution": "c56ee4c3-b9dc-4569-aeb0-d3cfa5c2a502",
+    "repository": "gustavomhss/hugr-orchestra",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "scope": "orchestra.s1",
+    "layer": 1,
+    "criteria": [
+      "QS-1",
+      "QS-2",
+      "QS-4",
+      "QS-5",
+      "QS-6",
+      "CC-1",
+      "CC-3",
+      "CC-7",
+      "GO-I1",
+      "GO-I2",
+      "GO-I7",
+      "GO-I8"
+    ],
+    "request_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/request.txt",
+      "sha256": "5ade453a557acd559e6796cab8f6ed42d5141ddf668d3c6f06169e7ce8840d7d"
+    },
+    "steering_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/request-steering.txt",
+      "sha256": "e6e6a3ab050966717aaffb8f4059f134368fee7778fa135defa2077309a4a72c"
+    },
+    "source_acquisition": "GitHub connector fetch_file at exact pin; base64 decoded without byte normalization",
+    "production": "Decisive source reading and explicitly bounded family synthesis; implementation, normative intent and gaps distinguished",
+    "validation": "Deterministic bytes/hashes/line spans/population/transport checks only; no product execution",
+    "constraints": [
+      "Exclusive producer A write area",
+      "No remote writes",
+      "No product tests",
+      "No reserved oracle or other producer output reads",
+      "No L2-L4 authorship"
+    ],
+    "unknown_usage": [
+      "tokens",
+      "physical model attempts",
+      "billing"
+    ]
+  },
+  "acceptance_search": {
+    "status": "NO_PRESERVED_DUAL_ACCEPTANCE_FOUND_IN_PINNED_HISTORY",
+    "areas": [
+      {
+        "area": "judgments",
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "tree_sha": "14f1b7dcf3cae581db5d70c9b92912875edac406",
+        "local_path": "history-trees/judgments.json",
+        "sha256": "fdba4dd8c3e5712434fe4952a5841ee2b6d4b74cf36a40e9ebba4c08bccda409",
+        "truncated": false,
+        "entry_count": 10,
+        "tree_objects_recomputed": 1,
+        "representation": "Preserved connector GitHub REST tree JSON; JSON hash is not a Git blob hash."
+      },
+      {
+        "area": "producers",
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "tree_sha": "beb9a22836c37c19691d6c58a5ab51b5255f6b3f",
+        "local_path": "history-trees/producers.json",
+        "sha256": "bb42a8d5c6ebc7b793eb79cbf5e972a5f33f02f43370acf92546311b6532299b",
+        "truncated": false,
+        "entry_count": 119,
+        "tree_objects_recomputed": 13,
+        "representation": "Preserved connector GitHub REST tree JSON; JSON hash is not a Git blob hash."
+      },
+      {
+        "area": "review-packets",
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "tree_sha": "a06065e5168cac078f5e7fc411c41d10a65a2249",
+        "local_path": "history-trees/review-packets.json",
+        "sha256": "50b6be22828a04ee0d314ee442864d2025ab5c162df1587d5916ab8bd272b3d7",
+        "truncated": false,
+        "entry_count": 9,
+        "tree_objects_recomputed": 1,
+        "representation": "Preserved connector GitHub REST tree JSON; JSON hash is not a Git blob hash."
+      },
+      {
+        "area": "revisions",
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "tree_sha": "03ed1c840a225d2ee594e001e9da94f4f2b41946",
+        "local_path": "history-trees/revisions.json",
+        "sha256": "5fc87df8620bb1a1b1c096a9ebeb6ca561a7d900e20a4473b4044089a14f16f9",
+        "truncated": false,
+        "entry_count": 193,
+        "tree_objects_recomputed": 20,
+        "representation": "Preserved connector GitHub REST tree JSON; JSON hash is not a Git blob hash."
+      },
+      {
+        "area": "transports",
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "tree_sha": "ed3c91af10f54db49fdfad83b363fe4c07a410b2",
+        "local_path": "history-trees/transports.json",
+        "sha256": "f4514a321128c912e41529282d8047e13829bc69d3a1d9c22941350fbd49dcac",
+        "truncated": false,
+        "entry_count": 144,
+        "tree_objects_recomputed": 7,
+        "representation": "Preserved connector GitHub REST tree JSON; JSON hash is not a Git blob hash."
+      }
+    ],
+    "positive_observations": [
+      "A3 dossier contains these exact two bodies among five submitted bodies, not a verdict.",
+      "Historical work tracks A2-A4 native review as REVIEW; execution ledger has no A3 acceptance record.",
+      "Historical artifact semantic_review_refs and runtime_receipt_refs are empty."
+    ],
+    "bounded_negative_observation": "No judgment/transport/revision with a configuration/project A3 decision was found in these complete pinned subtrees. This is not a claim about unavailable later commits or other sessions.",
+    "decision": "Preserve original bytes/authorship and request new independent acceptance; do not convert supported metadata into PASS.",
+    "preserved_configuration_project_judgments": []
+  }
+}

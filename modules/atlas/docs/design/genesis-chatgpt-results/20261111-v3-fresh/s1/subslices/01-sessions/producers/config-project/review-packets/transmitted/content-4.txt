@@ -1,0 +1,757 @@
+```ts
+  const owner = folders.filter((_, index) => listed[index].some((entry) => entry.name === file)).at(-1)
+  const filepath = path.join(owner ?? folders[0], file)
+  yield* confine(fs, directory, filepath)
+  return filepath
+})
+```
+
+L168–179
+
+```ts
+const confine = Effect.fnUntraced(function* (fs: FSUtil.Interface, directory: string, filepath: string) {
+  const root = yield* fs.realPath(directory)
+  const resolved = yield* Effect.forEach([path.join(directory, ".orchestra"), path.dirname(filepath), filepath], (item) =>
+    fs.realPath(item).pipe(Effect.orElseSucceed(() => undefined)),
+  )
+  if (resolved.every((item) => item === undefined || item === root || item.startsWith(root + path.sep))) return
+  return yield* new RejectedError({
+    path: filepath,
+    reason: "outside",
+    message: "The agent file resolves outside this profile.",
+  })
+})
+```
+
+L182–190
+
+```ts
+const replace = Effect.fnUntraced(function* (fs: FSUtil.Interface, filepath: string, text: string) {
+  const folder = path.dirname(filepath)
+  const temp = path.join(folder, `.${path.basename(filepath)}.${randomUUID()}.tmp`)
+  yield* fs.ensureDir(folder)
+  yield* fs.writeFileString(temp, text).pipe(
+    Effect.andThen(fs.rename(temp, filepath)),
+    Effect.tapError(() => fs.remove(temp).pipe(Effect.ignore)),
+  )
+})
+```
+
+packages/core/src/config/plugin-file.ts — blob 5a17a19e04defc4a2fccfd1b2b7be113528d45df.
+
+L10–17
+
+```ts
+export function files(directory: string) {
+  return [
+    path.join(directory, "orchestra.json"),
+    path.join(directory, "orchestra.jsonc"),
+    path.join(directory, ".orchestra", "orchestra.json"),
+    path.join(directory, ".orchestra", "orchestra.jsonc"),
+  ]
+}
+```
+
+L20–23
+
+```ts
+export function packageName(spec: string) {
+  const at = spec.lastIndexOf("@")
+  return at > 0 ? spec.slice(0, at) : spec
+}
+```
+
+L29–47
+
+```ts
+export async function add(directory: string, spec: string, options: { readonly force?: boolean } = {}): Promise<Result> {
+  const file = (await Promise.all(files(directory).map(async (item) => ((await Bun.file(item).exists()) ? item : undefined)))).find(
+    (item) => item !== undefined,
+  ) ?? files(directory)[0]
+  const text = (await Bun.file(file).exists()) ? await Bun.file(file).text() : "{}"
+  const errors: ParseError[] = []
+  const document = parse(text, errors, { allowTrailingComma: true })
+  if (errors.length > 0) throw new Error(`Invalid JSON in ${file} (${printParseErrorCode(errors[0].error)} at offset ${errors[0].offset})`)
+  const existing: unknown[] = Array.isArray(document?.plugins) ? document.plugins : []
+
+  const name = packageName(spec)
+  const index = existing.findIndex((entry) => packageName(typeof entry === "string" ? entry : String((entry as { package?: unknown })?.package ?? "")) === name)
+  if (index >= 0 && (!options.force || existing[index] === spec)) return { file, mode: "noop" }
+
+  const format = { formattingOptions: { tabSize: 2, insertSpaces: true } }
+  const edits = modify(text, ["plugins", index >= 0 ? index : existing.length], spec, { ...format, isArrayInsertion: index < 0 })
+  await Bun.write(file, applyEdits(text, edits))
+  return { file, mode: index >= 0 ? "replace" : "add" }
+}
+```
+
+## E09
+
+packages/schema/src/location.ts — blob c01ce36372a698a289b1591466d4b01b323543d9.
+
+L1–25
+
+```ts
+export * as Location from "./location"
+
+import { Schema } from "effect"
+import { AbsolutePath, optional } from "./schema"
+import { ProjectID } from "./project-id"
+import { WorkspaceID } from "./workspace-id"
+
+export interface Ref extends Schema.Schema.Type<typeof Ref> {}
+export const Ref = Schema.Struct({
+  directory: AbsolutePath,
+  workspaceID: optional(WorkspaceID),
+}).annotate({ identifier: "Location.Ref" })
+
+export class Info extends Schema.Class<Info>("Location.Info")({
+  directory: AbsolutePath,
+  workspaceID: optional(WorkspaceID),
+  project: Schema.Struct({
+    id: ProjectID,
+    directory: AbsolutePath,
+  }),
+}) {}
+
+export function response<S extends Schema.Top>(data: S) {
+  return Schema.Struct({ location: Info, data })
+}
+```
+
+packages/core/src/location.ts — blob af889448fe9340187266ab622cb7249751e52328.
+
+L19–39
+
+```ts
+const layer = (ref: Ref) =>
+  Layer.effect(
+    Service,
+    Effect.gen(function* () {
+      const project = yield* Project.Service
+      const resolved = yield* project.resolve(ref.directory)
+      return Service.of({
+        directory: ref.directory,
+        workspaceID: ref.workspaceID,
+        project: { id: resolved.id, directory: resolved.directory },
+        vcs: resolved.vcs,
+      })
+    }),
+  )
+
+export const boundNode = (ref: Ref) =>
+  makeLocationNode({
+    service: Service,
+    layer: layer(ref),
+    deps: [Project.node],
+  })
+```
+
+## E10
+
+packages/core/src/location-services.ts — blob c754426dde31acad2dbbfd96459b32624cfdd2e4.
+
+L58–111
+
+```ts
+export const locationServices = LayerNode.group([
+  Location.node,
+  Policy.node,
+  Config.node,
+  AgentV2.node,
+  CommandV2.node,
+  Reference.node,
+  Integration.node,
+  Catalog.node,
+  AISDK.node,
+  PluginV2.node,
+  PluginInternal.node,
+  ProjectCopy.node,
+  ProjectCopy.refreshNode,
+  PullRequest.node,
+  Guardrail.node,
+  Actions.node,
+  FileSystemSearch.node,
+  FileSystem.node,
+  Watcher.node,
+  Pty.node,
+  SkillV2.node,
+  SystemContextRegistry.node,
+  SystemContextBuiltIns.node,
+  BehaviorV2.node,
+  LocationMutation.node,
+  FileMutation.node,
+  PermissionV2.node,
+  ToolOutputStore.node,
+  ToolRegistry.node,
+  ToolRegistry.toolsNode,
+  Image.node,
+  SkillGuidance.node,
+  ReferenceGuidance.node,
+  SessionTodo.node,
+  SessionMeeting.node,
+  MeetingBriefing.node,
+  MeetingContext.node,
+  MeetingHandoff.node,
+  QuestionV2.node,
+  ReadToolFileSystem.node,
+  BuiltInTools.node,
+  Mcp.node,
+  LSP.node,
+  Format.node,
+  SessionRunnerModel.node,
+  Snapshot.node,
+  Relay.node,
+  RelayHookRecovery.node,
+  TaskGovernance.node,
+  SessionCompaction.node,
+  SessionRunnerLLM.node,
+  MeetingConsolidation.node,
+])
+```
+
+L125–133
+
+```ts
+      const self = Deferred.makeUnsafe<Context.Service.Shape<typeof LocationServiceMap.Service>>()
+      const locations = yield* LayerMap.make(
+        (ref: Location.Ref) => {
+          const allReplacements: LayerNode.Replacements = [
+            [ToolRegistry.node, ToolRegistry.nativeNode],
+            [ToolRegistry.toolsNode, ToolRegistry.nativeToolsNode],
+            ...replacements,
+            [Location.node, Location.boundNode(ref)],
+          ]
+```
+
+L138
+
+```ts
+          const location = LayerNode.hoist(LayerNode.group([locationServices, ...extra]), Node.tags.values.global, allReplacements)
+```
+
+L140–150
+
+```ts
+          const services: Layer.Layer<LocationServices, LocationError> = LayerNode.compile(location.node)
+
+          return services.pipe(
+            Layer.fresh,
+            Layer.tap((context) =>
+              Effect.gen(function* () {
+                const recovery = Context.get(context, RelayHookRecovery.Service)
+                yield* Effect.logInfo("booting location services", {
+                  directory: ref.directory,
+                  workspaceID: ref.workspaceID,
+                })
+```
+
+L152–164
+
+```ts
+                yield* recovery.recover().pipe(Effect.forkScoped)
+              }),
+            ),
+            Layer.provide(
+              LayerNode.compile(location.hoisted, [
+                [LocationServiceMap.node, Layer.effect(LocationServiceMap.Service, Deferred.await(self))],
+              ]),
+            ),
+          )
+        },
+        { idleTimeToLive: "60 minutes" },
+      )
+      yield* Deferred.succeed(self, locations)
+```
+
+packages/core/src/location-service-map.ts — blob 2f9f70c7edf21ab9e8d57eb6966aacab13c47c33.
+
+L19–26
+
+```ts
+export function withGlobalContext<A, E, R>(
+  layer: Layer.Layer<A, E, R>,
+  globalContext: Effect.Effect<Context.Context<never>>,
+) {
+  return layer.pipe(
+    Layer.flatMap((context) => {
+      const locations = Context.getUnsafe(context, Service)
+      const contextEffect = (ref: Location.Ref) =>
+```
+
+L28–43
+
+```ts
+        globalContext.pipe(
+          Effect.flatMap((globals) =>
+            locations
+              .contextEffect(ref)
+              .pipe(Effect.updateContext((current: Context.Context<Scope.Scope>) => Context.merge(current, globals))),
+          ),
+        )
+      return Layer.succeedContext(
+        Context.add(context, Service, {
+          ...locations,
+          get: (ref) => Layer.effectContext(contextEffect(ref)),
+          contextEffect,
+        }),
+      )
+    }),
+  )
+```
+
+## E11
+
+packages/core/src/session/execution/local.ts — blob e7b758462abfd388f937fb18b79f82f2733dffad.
+
+L11–55
+
+```ts
+const layer = Layer.effect(
+  SessionExecution.Service,
+  Effect.gen(function* () {
+    const store = yield* SessionStore.Service
+    const locations = yield* LocationServiceMap.Service
+    const coordinator = yield* SessionRunCoordinator.make<SessionSchema.ID, SessionRunner.RunError>({
+      drain: Effect.fnUntraced(function* (sessionID: SessionSchema.ID, force) {
+        const session = yield* store.get(sessionID)
+        if (!session) return yield* Effect.die(`Session not found: ${sessionID}`)
+        return yield* SessionRunner.Service.use((runner) => runner.run({ sessionID, force })).pipe(
+          Effect.provide(locations.get(session.location)),
+          Effect.mapError((error) => error as SessionRunner.RunError),
+          Effect.tapCause((cause) =>
+            Cause.hasInterruptsOnly(cause)
+              ? Effect.void
+              : Effect.logError("Failed to drain Session", cause).pipe(Effect.annotateLogs({ sessionID })),
+          ),
+        )
+      }),
+    })
+
+    return SessionExecution.Service.of({
+      active: coordinator.active,
+      interrupt: coordinator.interrupt,
+      resume: (sessionID, options) => coordinator.run(sessionID, options),
+      wake: coordinator.wake,
+      exclusive: coordinator.exclusive,
+      withRunner: <A, E>(sessionID: SessionSchema.ID, use: (runner: SessionRunner.Interface) => Effect.Effect<A, E>) =>
+        Effect.gen(function* () {
+          const session = yield* store.get(sessionID)
+          if (!session) return yield* Effect.die(`Session not found: ${sessionID}`)
+          return yield* SessionRunner.Service.use(use).pipe(
+            Effect.provide(locations.get(session.location)),
+            Effect.mapError((error) => error as E),
+          )
+        }) as Effect.Effect<A, E, never>,
+    })
+  }),
+)
+
+export const node = makeGlobalNode({
+  service: SessionExecution.Service,
+  layer,
+  deps: [SessionStore.node, LocationServiceMap.node],
+})
+```
+
+packages/core/src/session.ts — blob 402a192a69bcad6a4b08c695657e24ff5e335f93.
+
+L519–533
+
+```ts
+      fork: Effect.fn("V2Session.fork")(function* (input) {
+        const source = yield* result.get(input.sessionID)
+        const rows = yield* db
+          .select()
+          .from(SessionMessageTable)
+          .where(eq(SessionMessageTable.session_id, source.id))
+          .orderBy(asc(SessionMessageTable.seq))
+          .all()
+          .pipe(Effect.orDie)
+        const target = input.messageID ? rows.findIndex((row) => row.id === input.messageID) : rows.length
+        if (target < 0) return yield* new MessageNotFoundError({ sessionID: source.id, messageID: input.messageID! })
+        const reverted = source.revert ? rows.findIndex((row) => row.id === source.revert?.messageID) : -1
+        const kept = rows.slice(0, reverted < 0 ? target : Math.min(target, reverted))
+        const forked = yield* result.create({ location: source.location, agent: source.agent, model: source.model })
+        yield* SessionLifecycle.rename(db, events, { sessionID: forked.id, title: forkedTitle(source.title) })
+```
+
+L535–590
+
+```ts
+        yield* db
+          .transaction(
+            () =>
+              Effect.forEach(
+                kept,
+                (row, index) =>
+                  decode(row).pipe(
+                    Effect.orDie,
+                    Effect.flatMap((message) => {
+                      const { id, type, ...data } = encodeMessage({
+                        ...message,
+                        id: SessionMessage.ID.create(),
+                        ...(message.type === "synthetic" ? { sessionID: forked.id } : {}),
+                      })
+                      return db
+                        .insert(SessionMessageTable)
+                        .values({
+                          id: SessionMessage.ID.make(id),
+                          session_id: forked.id,
+                          type,
+                          seq: index - kept.length,
+                          time_created: row.time_created,
+                          data,
+                        })
+                        .run()
+                    }),
+                  ),
+                { discard: true },
+              ),
+            { behavior: "immediate" },
+          )
+          .pipe(Effect.orDie)
+        return yield* result.get(forked.id)
+      }),
+      move: Effect.fn("V2Session.move")(function* (input) {
+        const session = yield* result.get(input.sessionID)
+        const project = yield* projects.resolve(input.location.directory)
+        if (project.id !== session.projectID)
+          return yield* new MoveError({ sessionID: session.id, directory: input.location.directory })
+        const subdirectory = path.relative(project.directory, input.location.directory).replaceAll("\\", "/")
+        yield* exclusive(
+          session,
+          Effect.gen(function* () {
+            yield* events.publish(
+              SessionEvent.Moved,
+              {
+                sessionID: session.id,
+                timestamp: yield* DateTime.now,
+                location: input.location,
+                ...(subdirectory ? { subdirectory: RelativePath.make(subdirectory) } : {}),
+              },
+              { location: input.location },
+            )
+          }),
+        )
+      }),
+```
+
+## E12
+
+packages/core/src/project.ts — blob bbedbbf34cbc5b431538db37993c0cc0830fa393.
+
+L30–49
+
+```ts
+export const isRoot = (directory: string, paths: path.PlatformPath = path) => paths.parse(directory).root === directory
+
+export class Info extends Schema.Class<Info>("Project.Info")({
+  id: ID,
+}) {}
+
+export const DirectoriesInput = ProjectDirectories.ListInput
+export type DirectoriesInput = typeof DirectoriesInput.Type
+
+export const Directories = ProjectDirectories.ListOutput
+export type Directories = typeof Directories.Type
+
+export interface Resolved {
+  readonly previous?: ID
+  readonly id: ID
+  readonly directory: AbsolutePath
+  readonly vcs?: Vcs
+}
+
+export interface Interface {
+```
+
+L51–53
+
+```ts
+  readonly list: () => Effect.Effect<ProjectInfo.Info[]>
+  readonly directories: (input: DirectoriesInput) => Effect.Effect<Directories>
+  readonly resolve: (input: AbsolutePath) => Effect.Effect<Resolved>
+```
+
+L63–64
+
+```ts
+  readonly commit: (input: { store: AbsolutePath; id: ID }) => Effect.Effect<void>
+}
+```
+
+L85–148
+
+```ts
+    const cached = Effect.fnUntraced(function* (dir: string) {
+      return yield* fs.readFileString(path.join(dir, "orchestra")).pipe(
+        Effect.map((value) => value.trim()),
+        Effect.map((value) => (value ? ID.make(value) : undefined)),
+        Effect.catch(() => Effect.succeed(undefined)),
+      )
+    })
+
+    const remote = Effect.fnUntraced(function* (repo: Git.Repository) {
+      const origin = yield* git.remote.get(repo)
+      if (!origin) return undefined
+      const normalized = url(origin)
+      if (!normalized) return undefined
+      return ID.make(Hash.fast(`git-remote:${normalized}`))
+    })
+
+    function url(input: string) {
+      const value = input.trim()
+      if (!value) return undefined
+
+      try {
+        const parsed = new URL(value)
+        if (parsed.protocol === "file:") return undefined
+        return parts(parsed.hostname, parsed.pathname)
+      } catch {
+        const scp = value.match(/^([^@/:]+@)?([^/:]+):(.+)$/)
+        if (scp) return parts(scp[2], scp[3])
+        return undefined
+      }
+    }
+
+    function parts(host: string, name: string) {
+      const pathname = name
+        .replace(/^\/+/, "")
+        .replace(/\.git\/?$/, "")
+        .replace(/\/+$/, "")
+      if (!host || !pathname) return undefined
+      return `${host.toLowerCase()}/${pathname}`
+    }
+
+    const root = Effect.fnUntraced(function* (repo: Git.Repository) {
+      const root = (yield* git.history.rootCommits(repo))[0]
+      return root ? ID.make(root) : undefined
+    })
+
+    const resolve = Effect.fn("Project.resolve")(function* (input: AbsolutePath) {
+      const repo = yield* git.repo.discover(input)
+      if (!repo) return { id: ID.global, directory: AbsolutePath.make(path.parse(input).root), vcs: undefined }
+
+      const previous = yield* cached(repo.commonDirectory)
+      const id = (yield* remote(repo)) ?? previous ?? (yield* root(repo))
+      return {
+        previous,
+        id: id ?? ID.global,
+        directory: repo.worktree,
+        vcs: { type: "git" as const, store: repo.commonDirectory },
+      }
+    })
+
+    const commit = Effect.fn("Project.commit")(function* (input: { store: AbsolutePath; id: ID }) {
+      yield* fs.writeFileString(path.join(input.store, "orchestra"), input.id).pipe(Effect.ignore)
+    })
+
+    return Service.of({ list, directories, resolve, commit })
+```
+
+L174–191
+
+```ts
+export const record = Effect.fn("Project.record")(function* (
+  db: Database.Interface["db"],
+  events: EventV2.Interface,
+  project: Resolved,
+) {
+  const existing = yield* db.select().from(ProjectTable).where(eq(ProjectTable.id, project.id)).get().pipe(Effect.orDie)
+  const vcs = project.vcs?.type
+  if (existing && (!vcs || existing.vcs === vcs)) return
+  if (existing) yield* db.update(ProjectTable).set({ vcs }).where(eq(ProjectTable.id, project.id)).run().pipe(Effect.orDie)
+  if (!existing)
+    yield* db
+      .insert(ProjectTable)
+      .values({ id: project.id, worktree: project.directory, vcs, sandboxes: [] })
+      .onConflictDoNothing()
+      .run()
+      .pipe(Effect.orDie)
+  const row = yield* db.select().from(ProjectTable).where(eq(ProjectTable.id, project.id)).get().pipe(Effect.orDie)
+  if (row) yield* events.publish(ProjectInfo.Event.Updated, toInfo(row))
+```
+
+packages/core/src/project/directories.ts — blob 7863f4d2640a9b4bd85febab338610446bf839ef.
+
+L65–82
+
+```ts
+    const create = Effect.fn("ProjectDirectories.create")(function* (input: CreateInput, tx?: Transaction) {
+      const insert = (tx ?? db)
+        .insert(ProjectDirectoryTable)
+        .values({ project_id: input.projectID, directory: input.directory, strategy: input.strategy })
+      const query =
+        input.behavior === "replace"
+          ? insert.onConflictDoUpdate({
+              target: [ProjectDirectoryTable.project_id, ProjectDirectoryTable.directory],
+              set: { strategy: input.strategy ?? null },
+              setWhere: input.strategy
+                ? or(isNull(ProjectDirectoryTable.strategy), ne(ProjectDirectoryTable.strategy, input.strategy))
+                : isNotNull(ProjectDirectoryTable.strategy),
+            })
+          : insert.onConflictDoNothing()
+      return (
+        (yield* query.returning({ directory: ProjectDirectoryTable.directory }).get().pipe(Effect.orDie)) !== undefined
+      )
+    })
+```
+
+packages/core/src/project/sql.ts — blob ab05fdac4a1adb971ec18ecb53c80bd8859be188.
+
+L18–35
+
+```ts
+})
+
+export const ProjectDirectoryTable = sqliteTable(
+  "project_directory",
+  {
+    project_id: text()
+      .$type<ProjectSchema.ID>()
+      .notNull()
+      .references(() => ProjectTable.id, { onDelete: "cascade" }),
+    directory: DatabasePath.absoluteColumn().notNull(),
+    type: text().$type<"main" | "root" | "git_worktree">(),
+    strategy: text(),
+    time_created: integer()
+      .notNull()
+      .$default(() => Date.now()),
+  },
+  (table) => [primaryKey({ columns: [table.project_id, table.directory] })],
+)
+```
+
+## E13
+
+packages/core/src/location-mutation.ts — blob 5c80742365c78301f296d5fe87fd8844a1efc44c.
+
+L52
+
+```ts
+export interface Interface {
+```
+
+L58–59
+
+```ts
+  readonly resolve: (input: ResolveInput) => Effect.Effect<Target, PathError | FSUtil.Error>
+}
+```
+
+L91–131
+
+```ts
+    const followDangling = Effect.fnUntraced(function* (start: string) {
+      let current = start
+      for (let hops = 0; hops < 40; hops++) {
+        if ((yield* notFound(fs.realPath(current))) !== undefined) return current
+        const link = yield* fs.readLink(current).pipe(Effect.orElseSucceed(() => undefined))
+        if (link === undefined) return current
+        const parent = (yield* notFound(fs.realPath(path.dirname(current)))) ?? path.dirname(current)
+        current = path.resolve(parent, link)
+      }
+      return current
+    })
+
+    const resolvePath = Effect.fnUntraced(function* (requested: string) {
+      const absolute = yield* followDangling(requested)
+      const existing = yield* notFound(fs.realPath(absolute))
+      if (existing !== undefined) {
+        const info = yield* fs.stat(existing)
+        return {
+          canonical: existing,
+          type: info.type,
+          directory: info.type === "Directory" ? existing : path.dirname(existing),
+        } satisfies ResolvedPath
+      }
+
+      let anchor = path.dirname(absolute)
+      while (true) {
+        const canonical = yield* notFound(fs.realPath(anchor))
+        if (canonical !== undefined) {
+          const info = yield* fs.stat(canonical)
+          if (info.type !== "Directory") {
+            return yield* new PathError({ path: absolute, reason: "non_directory_ancestor" })
+          }
+          return {
+            canonical: path.resolve(canonical, path.relative(anchor, absolute)),
+            directory: canonical,
+          } satisfies ResolvedPath
+        }
+        const parent = path.dirname(anchor)
+        if (parent === anchor) return yield* new PathError({ path: absolute, reason: "non_directory_ancestor" })
+        anchor = parent
+      }
+```
+
+L134–164
+
+```ts
+    const resolve = Effect.fn("LocationMutation.resolve")(function* (input: ResolveInput) {
+      const relative = !path.isAbsolute(input.path)
+      const absolute = path.resolve(location.directory, input.path)
+      const lexicallyInternal = FSUtil.contains(location.directory, absolute)
+      if (relative && !lexicallyInternal) return yield* new PathError({ path: input.path, reason: "relative_escape" })
+
+      const resolved = yield* resolvePath(absolute)
+      if (lexicallyInternal && !FSUtil.contains(locationRoot, resolved.canonical)) {
+        return yield* new PathError({ path: input.path, reason: "location_escape" })
+      }
+
+      const external = !lexicallyInternal
+      const resource = external
+        ? slash(resolved.canonical)
+        : slash(path.relative(locationRoot, resolved.canonical) || ".")
+      const externalDirectory =
+        input.kind === "directory" && resolved.type === "Directory" ? resolved.canonical : resolved.directory
+      const externalResource = slash(path.join(externalDirectory, "*"))
+      return {
+        canonical: resolved.canonical,
+        resource,
+        externalDirectory: external
+          ? {
+              action: "external_directory",
+              directory: externalDirectory,
+              resource: externalResource,
+              save: externalResource,
+            }
+          : undefined,
+      } satisfies Target
+    })
+```
+
+## E14
+
+packages/core/src/filesystem.ts — blob 46791eb40338be5fcc31bc22d110a9899d6b5d80.
+
+L68–98
+
+```ts
+    const fs = yield* FSUtil.Service
+    const location = yield* Location.Service
+    const search = yield* FileSystemSearch.Service
+    const resolve = (input?: RelativePath) => within(fs, location.directory, input)
+    return Service.of({
+      find: search.find,
+      glob: search.glob,
+      grep: search.grep,
+      read: Effect.fn("FileSystem.read")(function* (input) {
+        const target = yield* resolve(input.path)
+        const info = yield* fs.stat(target.real).pipe(Effect.orDie)
+        if (info.type !== "File") return yield* new PathError({ path: input.path, reason: "not-file" })
+        return {
+          content: yield* fs.readFile(target.real).pipe(Effect.orDie),
+          mime: FSUtil.mimeType(target.real),
+        }
+      }),
+      list: (input = {}) => list(fs, location.directory, input),
+    })
+  }),
+)
+
+const within = Effect.fnUntraced(function* (fs: FSUtil.Interface, directory: string, input?: RelativePath) {
+  const root = yield* fs.realPath(directory).pipe(Effect.orDie)
+  const relative = input ?? "."
+  const absolute = path.resolve(directory, relative)

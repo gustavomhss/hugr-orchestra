@@ -1,0 +1,172 @@
+{
+  "schema": "genesis-s1-01-oracle/v1",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "frozen_at": "2026-11-14T22:44:38.921307+00:00",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "status": "FROZEN_BEFORE_NEW_BODY_PRODUCTION",
+  "reserved": true,
+  "inherited_regressions": [
+    "L1-FIDELITY",
+    "L1-POPULATION specialized to the 555 assigned paths",
+    "L1-SESSION",
+    "L1-ARCH",
+    "L1-RUNTIME",
+    "S1-O1",
+    "S1-O2",
+    "S1-O4",
+    "S1-O5"
+  ],
+  "public_criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "AC-01",
+    "AC-02",
+    "AC-03",
+    "CC-1",
+    "CC-2",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "cases": [
+    {
+      "id": "S101-N1",
+      "kind": "config-change",
+      "question": "A saved global provider setting is visible but an edit to project orchestra.jsonc is not visible in the already open Location. Which lifetimes and update boundaries explain this, and what maintenance is safe?",
+      "expected": [
+        "Config.entries rereads globals and reloads policies; direct project and supplementary project data retain open-time snapshot",
+        "updateGlobal chooses highest-priority existing orchestra.jsonc then json, writes atomically and invalidates readGlobal cache",
+        "Do not promise all config hot reload; reopen affected Location only through authorized lifecycle; do not restart user app",
+        "Schema decode and legacy migration do not prove every consumer applies a field"
+      ],
+      "critical": [
+        "All config live",
+        "Manual generated schema edits",
+        "Local product tests presented as allowed"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 60000
+      }
+    },
+    {
+      "id": "S101-N2",
+      "kind": "project-trust",
+      "question": "Can a project self-approve local commands with trusted_projects, or can path canonicalization alone authorize an external directory?",
+      "expected": [
+        "Only user-owned global/pathless trust entries count",
+        "Project cannot trust itself; absolute external canonical path is an approval resource, not permission",
+        "Revocation of own entry can still leave inherited parent trust",
+        "Canonicalization/digest validity is distinct from authorization"
+      ],
+      "critical": [
+        "Self-trust from project configuration",
+        "canonicalization grants permission"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 60000
+      }
+    },
+    {
+      "id": "S101-N3",
+      "kind": "runtime-limits",
+      "question": "A new provider appears in the catalog and process output is bounded by a PTY replay ring. What can be promised about native Session adoption, billing caps, and slow readers?",
+      "expected": [
+        "Catalog existence requires explicit native adapter composition before Session support is claimed",
+        "OS/native adapters and caller options can differ; source inspection not execution",
+        "PTY replay retention does not bound unread WebSocket client's memory",
+        "Economy guard scope/protocol routes and unknown physical usage are explicit"
+      ],
+      "critical": [
+        "Uniform provider support",
+        "Bounded ring solves slow WebSocket-client memory",
+        "Universal hard billing guarantee"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 5,
+        "body_bytes": 70000
+      }
+    },
+    {
+      "id": "S101-N4",
+      "kind": "economy-terminal",
+      "question": "An HTTP gateway error responds to an economy-guarded attempt. Does it prove remote terminus or make retry/billing universally safe?",
+      "expected": [
+        "HTTP answered distinct from canonical protocol terminal",
+        "Gateway >=400 recorded as transport error retains reservation, retry chain constraints still apply",
+        "Only actual configured guarded routes composed through context layer are covered; unknown remote/physical usage remains unknown",
+        "Old unsupported body claims corrected without rewriting historical decisions"
+      ],
+      "critical": [
+        "HTTP failure implies remote work never happened",
+        "Timeout frees cost reservation",
+        "Every provider globally guarded"
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 3,
+        "body_bytes": 40000
+      }
+    },
+    {
+      "id": "S101-N5",
+      "kind": "persistence-replay",
+      "question": "On event replay, which checks precede a redundant sequence no-op and why do seals not grant distributed Session execution ownership?",
+      "expected": [
+        "Verify actual replay verification order from EventV2 source, including durable definition and seal/owner verification before sequence redundant path",
+        "Preserve exact mismatch/sequence failures and duplicate semantics",
+        "Seal integrity/provenance not authentication/distributed scheduler lock",
+        "Backup/restore and post-commit policies require driver and SQLite composed evidence"
+      ],
+      "critical": [
+        "Duplicate bypasses verification",
+        "seal grants distributed ownership"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 60000
+      }
+    }
+  ],
+  "maintenance": [
+    {
+      "id": "S101-M1",
+      "change": "Modify observed admission source input and then persistence source input",
+      "expected": "Artifact owning changed file and reverse build closure become affected. Navigation-only and independent artifacts preserve results. Expected set must be calculated independently from frozen package dependency map before execution; exact runtime results separately observed.",
+      "critical": [
+        "Only detect stale without rebuilding",
+        "Make unavailable into absent",
+        "Include all navigation neighbors in build set"
+      ]
+    },
+    {
+      "id": "S101-M2",
+      "change": "Same source/recipe replay, then config recipe change, then receipt-only result-preserving renewal",
+      "expected": "Unchanged valid inputs/recipe reuse without new producer; changed recipe cannot be cache-hit under old receipt; canonical unchanged full result may stop propagation while receipt/version binding renews. Equal prose with changed authority/gaps/validity must propagate.",
+      "critical": [
+        "Cost saving inferred from token guesses",
+        "Equal prose equated with full result",
+        "Synthetic callbacks labelled native model"
+      ]
+    }
+  ],
+  "intermediate_direct_use": "Before independent consumer, freeze one direct-use question per accepted artifact; this is new use evaluation, not retroactive semantic acceptance.",
+  "isolation": "Producer sees public need/criteria and baseline source only, not expected answers. Consumers see faithful real Atlas replies only. Textual isolation must not be described as technical sandbox."
+}

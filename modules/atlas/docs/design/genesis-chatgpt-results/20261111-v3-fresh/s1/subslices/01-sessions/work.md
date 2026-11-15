@@ -64,3 +64,18 @@ Estado atual: IN_PROGRESS. O bloqueio de criação de juízes da execução ante
 6. Executar gates aplicáveis ou registrar impedimento concreto; finalizar matriz, economia UNKNOWN onde não observada, handoff payload/selo e releitura GitHub.
 
 Nenhum checkpoint encerra a missão. Sem alegação de testes, Atlas, consumidores ou aceite novo neste registro inicial. Tokens/tentativas físicas/cobrança: UNKNOWN; o histórico não reconciliado não foi zerado.
+
+
+## Continuação nativa — preservação intermediária 2026-11-14T23:58:08.858Z
+
+A missão permanece IN_PROGRESS. Este checkpoint preserva trabalho caro de reproduzir e não encerra nenhuma obrigação restante.
+
+- 555/555 paths reconciliados com profundidade de leitura e necessidade explícitas; captura não equivale a leitura semântica.
+- Sete corpos L1 aceitos pelo mesmo par /root/judge1 e /root/judge2: quatro A1, configuration, project e suplemento config/project v2. Pareceres anteriores e correções estão preservados.
+- Cinco corpos L1 ainda aguardam o par; L2–L4 serão produzidos somente após aceite dos predecessores obrigatórios.
+- Prepare real da seleção A1: exit0, quatro entradas, 34 inputs, candidate f1fba28f5299cedf2d5ea4a7b160c57eb6f425a07e63cee92440d8cdca51e91a. Não é binding/publicação/consumo nem o pacote final.
+- Índice/leitura anteriores à publicação retornaram HOLD ownership-store-unavailable no estado isolado.
+- Candidato final de código Atlas fixado separadamente em 7102f2e3a1a9a3822bcd0ae054b36ecffe9da553, 402 arquivos conferidos, npm ci e typecheck local exit0; testes de produto não executados localmente. Binding novo obrigatório.
+- Gate check:guards foi tentado com Bun real e falhou com no-repository na materialização sem Git. Workflows de guards existentes são PR-only; não há autorização para PR nem ferramenta de dispatch disponível. A pendência permanece explícita, sem contorno.
+
+Fila executável atual: concluir cinco L1 e correções; produzir/julgar dois L2, um L3 e um L4; preparar pacote completo; obter binding separado; tentar publicação governada; executar leitores/consumidores reais e manutenção própria; reutilizar controles S4 compatíveis; fechar matriz50, accounting, payload e selo finais. Tokens, tentativas físicas e billing UNKNOWN.

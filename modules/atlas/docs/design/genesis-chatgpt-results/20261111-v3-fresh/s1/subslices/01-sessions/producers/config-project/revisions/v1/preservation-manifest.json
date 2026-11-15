@@ -1,0 +1,71 @@
+{
+  "preserved_at": "2026-11-14T23:41:43.687152+00:00",
+  "files": [
+    {
+      "path": "bodies/config-project-supplement.md",
+      "byte_length": 16077,
+      "sha256": "2dc31d71b747415a9a7e9ffaaeeddd53ad74dda21ab66320468ff45dd40d45d3"
+    },
+    {
+      "path": "artifacts.json",
+      "byte_length": 44107,
+      "sha256": "fa8b4bc6ca3b0faaed2d3477084fead6e719d37e5307bd6393947538ac5e1219"
+    },
+    {
+      "path": "native-package.json",
+      "byte_length": 47611,
+      "sha256": "d3f5ff533d3448cef377b2242907e20070db620ac94ca1ace7d42e1024b259e8"
+    },
+    {
+      "path": "recipe.json",
+      "byte_length": 2297,
+      "sha256": "fa13cbfa01149c9e9b97b302d48238dfa7e278ade7fdedc016b7682e95abd08a"
+    },
+    {
+      "path": "request.txt",
+      "byte_length": 1482,
+      "sha256": "b0ba005603db38f3b90f9ce370079c8a6133086ab906af58ed27f483ad0c1b8d"
+    },
+    {
+      "path": "request-steering.txt",
+      "byte_length": 1221,
+      "sha256": "52f35da53f775463949b9e414aafaa90fa34e2eec121dd765005bdf460425d7e"
+    },
+    {
+      "path": "response.md",
+      "byte_length": 1868,
+      "sha256": "b2b642ca1030aa0af580b84ae342b9ff54ea29ec715f760ab761fd1887e30780"
+    },
+    {
+      "path": "source-capture-manifest.json",
+      "byte_length": 67668,
+      "sha256": "092f6cea9f9f4ea19c99d5091e3cd011827ebaa1c79311d9aee08b2a7c31f08e"
+    },
+    {
+      "path": "coverage.json",
+      "byte_length": 150771,
+      "sha256": "310923117ea11a12233044feb263527dc3747c62f017b013188506458e51aae7"
+    },
+    {
+      "path": "coverage.md",
+      "byte_length": 24015,
+      "sha256": "29d21a8270167192e1dcf29812579aa5046fd82220eb8126d4181efc06f608ad"
+    },
+    {
+      "path": "verification.json",
+      "byte_length": 2844,
+      "sha256": "69cf137344bdac8d8fc150415189fa942191feb28b6b098b612a7009d57e78e4"
+    },
+    {
+      "path": "source-gaps.json",
+      "byte_length": 2873,
+      "sha256": "84ecde2c763bcc2bbdc4d1a0a281dc566dc48a3fda323fd0a238ca09ecbc9880"
+    },
+    {
+      "path": "handoff.json",
+      "byte_length": 3743,
+      "sha256": "7a48a5fe89f5f9f9b5b63d72c00a1ac5ecedac596c6dd744db10f09bf13cfb1e"
+    }
+  ],
+  "note": "The frozen v1 compact/full packets and transmitted parts also remain in their original paths unchanged."
+}

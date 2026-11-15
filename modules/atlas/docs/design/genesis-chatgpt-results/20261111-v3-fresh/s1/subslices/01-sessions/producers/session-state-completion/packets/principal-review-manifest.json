@@ -1,0 +1,12 @@
+{
+  "schema": "s1-01-principal-review/v1",
+  "path": "packets/principal-review.md",
+  "sha256": "942c1335ad35e4076792f222d97db5388c8380aa02e251d5a303d2c68879eff8",
+  "byte_length": 210654,
+  "body_sha256": "2621a48ba336ad17db711b556ee65a62fe527221052b1736452460bbe661efa7",
+  "body_occurrences": 1,
+  "population": 197,
+  "prior_evidence_reused": true,
+  "judge_tools": "FORBIDDEN",
+  "sent_to_judges": false
+}

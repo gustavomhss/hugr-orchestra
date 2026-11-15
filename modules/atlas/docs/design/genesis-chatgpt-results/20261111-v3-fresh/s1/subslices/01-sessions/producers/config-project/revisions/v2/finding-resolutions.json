@@ -1,0 +1,128 @@
+[
+  {
+    "id": "J1-CONFIG-R1",
+    "change_type": "Evidence",
+    "producer_response": "E27 supplies loadDirectory plus FSUtil.up; names, discovery/reversal and selection are shown in the same chain.",
+    "evidence_ids": [
+      "E27"
+    ],
+    "review_status": "PENDING_SAME_PAIR_REVIEW"
+  },
+  {
+    "id": "J1-CONFIG-R2",
+    "change_type": "Evidence",
+    "producer_response": "Pinned config review labels/scope and review-order passages are supplied verbatim.",
+    "evidence_ids": [
+      "E28"
+    ],
+    "review_status": "PENDING_SAME_PAIR_REVIEW"
+  },
+  {
+    "id": "J1-PROJECT-R1",
+    "change_type": "Evidence",
+    "producer_response": "decodePayload and digest definitions show JSON decoding and SHA-256 over UTF-8.",
+    "evidence_ids": [
+      "E29"
+    ],
+    "review_status": "PENDING_SAME_PAIR_REVIEW"
+  },
+  {
+    "id": "J1-PROJECT-R2",
+    "change_type": "Evidence",
+    "producer_response": "Pinned document shows the multi-project/worktree goal and route sketch; no current Server claim is added.",
+    "evidence_ids": [
+      "E30"
+    ],
+    "review_status": "PENDING_SAME_PAIR_REVIEW"
+  },
+  {
+    "id": "J1-SUPPLEMENT-F1",
+    "change_type": "Body correction",
+    "producer_response": "The body now states the exact predicate, literal \"*\" exception and removal of other string patterns such as \"open*\".",
+    "evidence_ids": [
+      "E31"
+    ],
+    "review_status": "PENDING_SAME_PAIR_REVIEW"
+  },
+  {
+    "id": "J1-SUPPLEMENT-F2",
+    "change_type": "Body correction",
+    "producer_response": "The body now orders strategy selection before source resolution/admission and distinguishes prior source membership from later destination membership.",
+    "evidence_ids": [
+      "E32"
+    ],
+    "review_status": "PENDING_SAME_PAIR_REVIEW"
+  },
+  {
+    "id": "J1-SUPPLEMENT-F3",
+    "change_type": "Body correction",
+    "producer_response": "The body now distinguishes project:<id> storage from directory:<location.directory> for Project.ID.global.",
+    "evidence_ids": [
+      "E33"
+    ],
+    "review_status": "PENDING_SAME_PAIR_REVIEW"
+  },
+  {
+    "id": "J1-SUPPLEMENT-R1",
+    "change_type": "Evidence",
+    "producer_response": "The omitted cache checkout discovery and returned head, branch and status are included, with undefined values when discovery fails.",
+    "evidence_ids": [
+      "E34"
+    ],
+    "review_status": "PENDING_SAME_PAIR_REVIEW"
+  },
+  {
+    "id": "J2-CONFIG-E1",
+    "change_type": "Evidence",
+    "producer_response": "E27 supplies loadDirectory, FSUtil.up and Config.latest alongside their caller ordering.",
+    "evidence_ids": [
+      "E27"
+    ],
+    "review_status": "PENDING_SAME_PAIR_REVIEW"
+  },
+  {
+    "id": "J2-PROJECT-E1",
+    "change_type": "Evidence",
+    "producer_response": "The actual JSON decoder and UTF-8 SHA-256 helper definitions are supplied.",
+    "evidence_ids": [
+      "E29"
+    ],
+    "review_status": "PENDING_SAME_PAIR_REVIEW"
+  },
+  {
+    "id": "J2-PROJECT-E2",
+    "change_type": "Evidence",
+    "producer_response": "The pinned read leaf shows both permission assertions; its reader helper shows enforced media and paged-text limits. This is cross-read evidence, not ownership transfer.",
+    "evidence_ids": [
+      "E35"
+    ],
+    "review_status": "PENDING_SAME_PAIR_REVIEW"
+  },
+  {
+    "id": "J2-CONFIG-PROJECT-F1",
+    "change_type": "Body correction",
+    "producer_response": "The body removes the claim that all wildcard denials survive and that only exact provider IDs are selected.",
+    "evidence_ids": [
+      "E31"
+    ],
+    "review_status": "PENDING_SAME_PAIR_REVIEW"
+  },
+  {
+    "id": "J2-CONFIG-PROJECT-F2",
+    "change_type": "Body correction",
+    "producer_response": "Strategy selection precedes origin resolution; possible origin registration/publication precedes physical creation, while destination registration follows it. FS/SQL non-atomicity remains explicit.",
+    "evidence_ids": [
+      "E32"
+    ],
+    "review_status": "PENDING_SAME_PAIR_REVIEW"
+  },
+  {
+    "id": "J2-CONFIG-PROJECT-F3",
+    "change_type": "Body correction",
+    "producer_response": "The body explicitly retains origin/${target} versus HEAD and no longer promises unconditional remote-branch advancement.",
+    "evidence_ids": [
+      "E34"
+    ],
+    "review_status": "PENDING_SAME_PAIR_REVIEW"
+  }
+]

@@ -1,0 +1,90 @@
+PACOTE CONFIG/PROJECT PARTE 1/6 — dados congelados da principal
+
+# Compact configuration/project L1 review packet
+
+Transport reduction only. The three candidate bodies below appear once and retain their frozen bytes. The two full review parts remain unchanged. All source below was already captured and included in the full parts; no new research, candidate change or product execution occurred.
+
+Repository: gustavomhss/hugr-orchestra. Baseline: 1cde2ff7a71bcf7aecb5d030917b577165135d38. Inheritance: a8df22ae3a140c58c63f62ce2a634c84f415c943. Scope: orchestra.s1; session S1; sub-slice S1-01.
+
+Judge source sufficiency, honest coverage and the exact candidates under the public criteria; preserve original authorship and distinguish mandatory findings from suggestions. Source validity metadata is not a semantic verdict. Runtime, tests, CI, guards, generators and Atlas: NOT_RUN.
+
+Public criteria: GO-A1, GO-A2, GO-A3, GO-A4, GO-A5, QS-1, QS-2, QS-3, QS-4, QS-5, QS-6, AC-01, AC-02, AC-03, CC-1, CC-2, CC-3, CC-7, GO-I1, GO-I2, GO-I7, GO-I8. Public-contract SHA-256: f84ef5ef4bf8104988275e73837c13fd6128e2cbe4e901440e62baadc6288029. Production followed the public freeze; reserved answers were not read.
+
+| Candidate | Bytes | SHA-256 |
+| --- | ---: | --- |
+| inherited/configuration.md | 4414 | eed22f8ddd9f3fdad18b39cfb8e52ca5f412bad8b21de10fef58ce113ba60ab1 |
+| inherited/project.md | 4569 | 937f99ba01085530af69abf620793e1b518c32867b956e805a5c68d65f950c43 |
+| bodies/config-project-supplement.md | 16077 | 2dc31d71b747415a9a7e9ffaaeeddd53ad74dda21ab66320468ff45dd40d45d3 |
+
+Historical status: NO_PRESERVED_DUAL_ACCEPTANCE_FOUND_IN_PINNED_HISTORY. The complete inspected judgments/transports/revisions subtrees and historical work/ledger supplied no dual A3 decision for these exact bodies. A3 dossier is a submission. Original recipe/request/steering/response and nine historical blobs remain preserved in inherited/; supported labels are not PASS. No acceptance is fabricated.
+
+# Exact candidate: inherited/configuration.md
+
+# Configuration precedence, trust and Location service lifetime
+
+Layer: **L1 — pinned factual basis**. Need: `component`. Scope: `orchestra.s1`.
+Source revision: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+
+## Observed implementation
+
+Config is a Location service returning ordered documents and supplemental directories. It materializes required packaged skills before recoverable plugin boot. It reads `orchestra.json` then `orchestra.jsonc`, supports JSON comments/trailing commas, validates either current format or a migrated legacy format, and ignores excess properties through explicit decode options. Remote instruction URLs are rejected. General settings apply global documents, direct project files, then `.orchestra` files; nearer project configuration wins within discovered ordering. Experimental policies are loaded in the reverse document order so a global-user rule can override repository policy. [1]
+
+Project configuration is snapshotted when the Location opens. `entries()` rereads global documents and reloads policies so user settings changes can reach the next agent/catalog reload without reopening; it does not rediscover/reload every project file. Treating all config as live would be incorrect. The schema includes agents, providers, permissions, tools/output, attachments, MCP, references, instructions, plugins, compaction/continuity, Relay, research and Maestro static context settings, but the presence of a field is not proof of every consumer's behavior. [1]
+
+`ConfigTrust` distinguishes user-owned entries under the global configuration folder (or pathless documents) from repository entries. Only user-owned `trusted_projects` entries establish trust. `runnable` includes repository-declared commands only for a trusted directory; a project cannot trust itself. Approval canonicalizes an existing absolute directory and refuses a filesystem root. Revocation removes the folder's own entry; a trusted parent can continue to cover it. Trust is a command-admission boundary and does not replace tool permissions. [2]
+
+`buildLocationServiceMap` compiles a Location graph with supplied replacements and extra nodes, binds the concrete Location, and hoists global dependencies. It substitutes native ToolRegistry nodes, applies `Layer.fresh`, and caches with a 60-minute idle time to live. Relay hook recovery starts only after the entire Location graph succeeds and is scoped to that Location. `withGlobalContext` delays lazy acquisition until the completed application's global exports are available. [3,4]
+
+The default graph contains configuration, agent/catalog/provider support, plugins, filesystem and mutation, tools, permissions, questions, MCP/LSP/formatting, runner/model, context, snapshots, project-copy and product-facing adapters. Membership is useful dependency evidence; it is not proof that every integration is connected or has valid credentials. Session execution remains process-global and chooses the Location only when it drains a stored Session. [3]
+
+## Normative intent and limits
+
+The V2 config document is a field-review/decision record with pending/keep/remove/redesign labels, not a complete description of actual loading. The schema and loader are implementation authority for this pin. Old-format migration helpers are compatibility source and require source-specific examination before changing mappings; they must not be dismissed as unused generated files. [1,5]
+
+No config reload, trust transition or Location eviction was run. This L1 proves the visible ordering/lifetime code and identifies its boundary; OS paths, policy consumers and legacy-upgrade cases remain targeted follow-up reads before corresponding mutations.
+
+## Source anchors
+
+- **1.** `packages/core/src/config.ts:52985a1dfc3575efca662dcb0667d81a1ab6f1de` — Info and Location loader, lines 35–110,147–268.
+- **2.** `packages/core/src/config/trust.ts:a8b068f1fdb5c01e59ad43c56b9e6241ec3dfc78` — isUser, isTrusted, runnable, approve and revoke, lines 8–81.
+- **3.** `packages/core/src/location-services.ts:c754426dde31acad2dbbfd96459b32624cfdd2e4` — locationServices and buildLocationServiceMap, lines 58–171.
+- **4.** `packages/core/src/location-service-map.ts:2f9f70c7edf21ab9e8d57eb6966aacab13c47c33` — withGlobalContext, lines 18–43.
+- **5.** `docs/specs/v2/config.md:81353980473012b1b3d311f0a638e3d65ba8cbcd` — review labels and scope, lines 1–18,382–390.
+
+# Exact candidate: inherited/project.md
+
+# Project identity, canonical paths and retained checkpoints
+
+Layer: **L1 — pinned factual basis**. Need: `component`. Scope: `orchestra.s1`.
+Source revision: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+
+## Observed implementation
+
+`Project.resolve` discovers a Git repository. Without one it uses the global project identity and the filesystem root as project directory; callers must not mistake that root for the active Location's work area. In a repository, identity preference is normalized remote URL hash, existing common-directory cache, then root commit. The worktree is the resolved project directory and the Git common directory is its VCS store. A cache-write bridge remains for compatibility. `record` inserts/upgrades a project row and publishes an update; `ProjectDirectories` separately stores exact project/directory/strategy membership. [1,2]
+
+Location mutation resolves both lexical and physical identity. Relative paths cannot escape the active Location; a lexical-internal path resolving outside its physical root fails. Absolute external paths produce canonical external-directory approval resources rather than granting access. Missing targets resolve through a real existing directory; dangling symlinks are followed with a bounded hop loop. Path resolution and permission are separate stages. [3]
+
+The general FileSystem service exposes read/list/find/glob/grep. Its read/list boundary validates lexical and physical containment, requires the right target kind, and returns content/listing; search is delegated to `FileSystemSearch`. This service is not itself the model-tool permission surface. The `read` leaf described in the tool artifact adds permission and media/text limits. The list helper can browse directories without opening all Location services. [4]
+
+`ProjectCheckpoint` stores a UTF-8 JSON payload with SHA-256 digest, a Session-derived project/directory owner, a fork ID, boundary and attempt 0 or 1. Its identity is `forkID:attempt`. Save checks exact retries against retained Session ID, fork ID, boundary, attempt and payload before resolving a current Session; exact retries still work after the source Session is gone. A differing payload or identity is a conflict. Reads require project ID plus checkpoint ID and verify the digest; list bounds offset and limit (default 20, maximum 50). Storage/preparation errors are mapped to a safe `storage` reason. [5]
+
+The Session facade restricts move to another resolved directory/workspace in the same project and uses exclusive execution ownership. A fork copies projected history before the requested/staged-revert boundary into a new Session with new message IDs and negative projection sequences; it is not a replay of original external effects. [6]
+
+## Normative intent and limits
+
+The older project specification states the multi-project/worktree goal, but its sketch of HTTP routes is historical design material. Current route authority belongs to the Protocol/Server sources, outside this artifact. [7]
+
+Project-copy strategies, Git mutation, snapshot/revert, formatting/LSP and repository cache each have their own source families. This L1 establishes their ownership and the shared identity/path boundary, not complete implementation of every Git or filesystem operation. Digest checking detects payload mismatch; it does not establish semantic validity, authorization to consume a checkpoint, or guaranteed future restoration. No filesystem mutation, Git operation, checkpoint save/read or product test was run.
+
+## Source anchors
+
+- **1.** `packages/core/src/project.ts:bbedbbf34cbc5b431538db37993c0cc0830fa393` — isRoot, identity resolution and record, lines 26–64,85–148,170–191.
+- **2.** `packages/core/src/project/directories.ts:7863f4d2640a9b4bd85febab338610446bf839ef` — exact directory/strategy membership, lines 47–158.
+- **3.** `packages/core/src/location-mutation.ts:5c80742365c78301f296d5fe87fd8844a1efc44c` — resolve and canonical/external resources, lines 12–59,90–175.
+- **4.** `packages/core/src/filesystem.ts:46791eb40338be5fcc31bc22d110a9899d6b5d80` — service, containment and list helper, lines 55–135.
+- **5.** `packages/core/src/project/checkpoint.ts:5972b18ab5b5bd6792447261cd65933aee379e99` — save/read/list identity, digests and storage boundary, lines 13–212.
+- **6.** `packages/core/src/session.ts:402a192a69bcad6a4b08c695657e24ff5e335f93` — fork and move, lines 519–590.
+- **7.** `docs/specs/project.md:35adeb94cff7e1d24adc9844f9e25fdb17df08a5` — historical multi-project goal and route sketch, lines 1–64.
+
+# Exact candidate: bodies/config-project-supplement.md
+

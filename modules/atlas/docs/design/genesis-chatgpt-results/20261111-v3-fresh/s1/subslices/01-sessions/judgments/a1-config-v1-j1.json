@@ -1,0 +1,170 @@
+{
+  "execution": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "judge": "parallel-v3-fresh/S1-01/J1",
+  "record": "Novo recibo canônico; preserva meus juízos anteriores e não utiliza decisões do outro juiz.",
+  "transport": {
+    "config_project_packet_sha256": "ac9ebd1a44eb199971dec2b5f2400341af07d04849d339af9ce600eb0527966d",
+    "received_parts": [1, 2, 3, 4, 5, 6],
+    "missing_parts": [],
+    "note": "O mensageiro não recebe autoridade semântica. As pendências abaixo são trechos de fonte omitidos do pacote compacto, não partes de transporte ausentes."
+  },
+  "decisions": [
+    {
+      "artifact": "s1.core.session-admission",
+      "body_sha256": "2535bba77505ed74e7dc2759dce815c8e9684e68e2f0a10fa75f9813192e7ae1",
+      "verdict": "PASS",
+      "criteria": {
+        "QS-1": "PASS", "QS-2": "PASS", "QS-4": "PASS", "QS-5": "PASS", "QS-6": "PASS",
+        "CC-1": "PASS", "CC-3": "PASS", "CC-7": "PASS",
+        "GO-I1": "PASS", "GO-I2": "PASS", "GO-I7": "PASS", "GO-I8": "PASS"
+      },
+      "evidence": "Reconfirmo meu aceite do mesmo corpo. Os ramos demonstram admissão antes de wake, resume:false, equivalência e consistência, esquema e escrita visível. O delta EventV2/Database/adapter demonstrou o contexto transacional compartilhado.",
+      "closed_findings": ["J1-R1"],
+      "open_findings": []
+    },
+    {
+      "artifact": "s1.core.session-execution",
+      "body_sha256": "470ddb1eacfe7294071893968d7de999c90ea98cb0fd48c48e0730ded51d1663",
+      "verdict": "PASS",
+      "criteria": {
+        "QS-1": "PASS", "QS-2": "PASS", "QS-4": "PASS", "QS-5": "PASS", "QS-6": "PASS",
+        "CC-1": "PASS", "CC-3": "PASS", "CC-7": "PASS",
+        "GO-I1": "PASS", "GO-I2": "PASS", "GO-I7": "PASS", "GO-I8": "PASS"
+      },
+      "evidence": "Reconfirmo meu aceite do mesmo corpo: coordenação local, loops steer/queue, seleção de stream, host ausente, portas controladas, publicação antes de settlement, espera dos filhos, noopLayer e registro best-effort de falha estão sustentados.",
+      "closed_evidence_gaps": ["A1-R2"],
+      "open_findings": []
+    },
+    {
+      "artifact": "s1.core.persistence",
+      "body_sha256": "0b43f9bd316aca25361f934e63723f2aa6220a3deb97a4447266fbbc5d350762",
+      "verdict": "PASS",
+      "criteria": {
+        "QS-1": "PASS", "QS-2": "PASS", "QS-4": "PASS", "QS-5": "PASS", "QS-6": "PASS",
+        "CC-1": "PASS", "CC-3": "PASS", "CC-7": "PASS",
+        "GO-I1": "PASS", "GO-I2": "PASS", "GO-I7": "PASS", "GO-I8": "PASS"
+      },
+      "evidence": "Reconfirmo meu aceite da ordem corrigida de replay e dos contratos demonstrados de persistência, migração, seals e decode. O complemento allBounded confirma Queue.dropping e falha por overflow no adapter separado; não altera os buses genéricos unbounded.",
+      "closed_evidence_gaps": ["A1-R3"],
+      "open_findings": []
+    },
+    {
+      "artifact": "s1.core.context",
+      "body_sha256": "94e04589d726a017c3cbeb8f758d5d23aae773733597a15ea5236e8e1288aea7",
+      "verdict": "PASS",
+      "criteria": {
+        "QS-1": "PASS", "QS-2": "PASS", "QS-4": "PASS", "QS-5": "PASS", "QS-6": "PASS",
+        "CC-1": "PASS", "CC-3": "PASS", "CC-7": "PASS",
+        "GO-I1": "PASS", "GO-I2": "PASS", "GO-I7": "PASS", "GO-I8": "PASS"
+      },
+      "evidence": "A substituição exata fecha minha objeção: limita o truncamento ao conteúdo serializado dos resultados completed, identifica 2.000 unidades UTF-16 e o marcador adicional e exclui argumentos, erros e um limite universal. Reutilizo minhas conclusões anteriores sobre as demais partes inalteradas e suas evidências.",
+      "closed_findings": ["J1-CONTEXT-F1"],
+      "closed_evidence_gaps": ["A1-R4"],
+      "open_findings": [],
+      "preservation": "O FIX-FIRST do corpo anterior 205b44488e2b6349a55480d3becf2e59806c185bec90d43af283e11b3933b1fd permanece no histórico."
+    },
+    {
+      "artifact": "s1.core.configuration",
+      "body_sha256": "eed22f8ddd9f3fdad18b39cfb8e52ca5f412bad8b21de10fef58ce113ba60ab1",
+      "verdict": "REQUEST_EVIDENCE",
+      "criteria": {
+        "QS-1": "REQUEST_EVIDENCE", "QS-2": "PASS", "QS-4": "PASS", "QS-5": "PASS", "QS-6": "PASS",
+        "CC-1": "PASS", "CC-3": "PASS", "CC-7": "REQUEST_EVIDENCE",
+        "GO-I1": "PASS", "GO-I2": "PASS", "GO-I7": "PASS", "GO-I8": "PASS"
+      },
+      "evidence": "E01–E11 sustentam decode, rejeição de URLs, snapshot de documentos do projeto, releitura global, políticas, trust e lifetime da Location. O corpo é substantivo e delimita integrações e execução. Faltam os helpers decisivos para duas afirmações de ordenação e o trecho documental que caracteriza a especificação histórica.",
+      "open_findings": ["J1-CONFIG-R1", "J1-CONFIG-R2"]
+    },
+    {
+      "artifact": "s1.core.project",
+      "body_sha256": "937f99ba01085530af69abf620793e1b518c32867b956e805a5c68d65f950c43",
+      "verdict": "REQUEST_EVIDENCE",
+      "criteria": {
+        "QS-1": "REQUEST_EVIDENCE", "QS-2": "PASS", "QS-4": "PASS", "QS-5": "PASS", "QS-6": "PASS",
+        "CC-1": "PASS", "CC-3": "PASS", "CC-7": "REQUEST_EVIDENCE",
+        "GO-I1": "PASS", "GO-I2": "PASS", "GO-I7": "PASS", "GO-I8": "PASS"
+      },
+      "evidence": "E11–E16 sustentam identidade, containment, membership, retry retido de checkpoint, erros sanitizados, fork e move. Os limites de autorização e restauração são corretos. Entretanto, chamadas a digest e decodePayload não demonstram seus algoritmos; a caracterização do documento histórico também carece do trecho correspondente.",
+      "open_findings": ["J1-PROJECT-R1", "J1-PROJECT-R2"]
+    },
+    {
+      "artifact": "s1.subslice01.config-project-supplement",
+      "body_sha256": "2dc31d71b747415a9a7e9ffaaeeddd53ad74dda21ab66320468ff45dd40d45d3",
+      "verdict": "FIX-FIRST",
+      "criteria": {
+        "QS-1": "FIX-FIRST", "QS-2": "PASS", "QS-4": "FIX-FIRST", "QS-5": "PASS", "QS-6": "PASS",
+        "CC-1": "PASS", "CC-3": "PASS", "CC-7": "PASS",
+        "GO-I1": "PASS", "GO-I2": "PASS", "GO-I7": "PASS", "GO-I8": "PASS"
+      },
+      "evidence": "O suplemento acrescenta mecanismos concretos e distingue captura, leitura parcial, inventário e testes não executados. Os totais apresentados são coerentes. Há três descrições que excedem ou invertem os ramos exibidos, além de pequenas lacunas de evidência compartilhadas. A disposição dos 123 itens não é tomada como prova de compreensão integral.",
+      "open_findings": [
+        "J1-SUPPLEMENT-F1", "J1-SUPPLEMENT-F2", "J1-SUPPLEMENT-F3",
+        "J1-CONFIG-R1", "J1-PROJECT-R1", "J1-SUPPLEMENT-R1"
+      ]
+    }
+  ],
+  "mandatory_findings": [
+    {
+      "id": "J1-CONFIG-R1",
+      "type": "EVIDENCE",
+      "claim": "JSON precede JSONC dentro do diretório; descobertas mais próximas são aplicadas depois.",
+      "basis": "E01 mostra names, fs.up e reversões, mas não mostra loadDirectory nem a ordem produzida por FSUtil.up.",
+      "required": "Fornecer os trechos de loadDirectory e FSUtil.up que determinam iteração dos nomes e ordem de descoberta. Não é necessário executar o loader."
+    },
+    {
+      "id": "J1-CONFIG-R2",
+      "type": "EVIDENCE",
+      "claim": "docs/specs/v2/config.md é um registro de revisão com labels pending/keep/remove/redesign.",
+      "required": "Fornecer as passagens decisivas do documento fixado, correspondentes às âncoras 1–18 e 382–390. O path, hash e relato de captura não demonstram esse conteúdo."
+    },
+    {
+      "id": "J1-PROJECT-R1",
+      "type": "EVIDENCE",
+      "claim": "Checkpoint valida JSON e utiliza SHA-256.",
+      "basis": "E16 demonstra roundtrip UTF-8, chamada decodePayload e comparação de digest, mas omite suas definições.",
+      "required": "Fornecer as definições de decodePayload e digest em checkpoint.ts. Aplica-se ao corpo project e à descrição equivalente no suplemento."
+    },
+    {
+      "id": "J1-PROJECT-R2",
+      "type": "EVIDENCE",
+      "claim": "docs/specs/project.md contém objetivo multi-project/worktree e sketch histórico de rotas.",
+      "required": "Fornecer as passagens decisivas do documento fixado que sustentam essa caracterização; não é necessário investigar o Server."
+    },
+    {
+      "id": "J1-SUPPLEMENT-F1",
+      "type": "BODY_CORRECTION",
+      "claim": "Disabled-provider edits retain wildcard denials.",
+      "basis": "E02: providerDenial remove todo denial com action exatamente provider.use e resource string diferente do literal '*'. Um resource como 'open*' também satisfaz esse predicado.",
+      "required": "Restringir a descrição da retenção ao literal '*' e aos casos que não satisfazem o predicado. Não prometer preservação geral de denials com padrões wildcard."
+    },
+    {
+      "id": "J1-SUPPLEMENT-F2",
+      "type": "BODY_CORRECTION",
+      "claim": "Create primeiro resolve a fonte e depois seleciona a estratégia.",
+      "basis": "E17 executa getStrategy(input.strategy) antes de source(...). A resolução da fonte pode registrar membership, tornando a ordem relevante também para falhas.",
+      "required": "Corrigir a sequência descrita: selecionar a estratégia, resolver a fonte, escolher o destino, criar fisicamente e registrar o destino."
+    },
+    {
+      "id": "J1-SUPPLEMENT-F3",
+      "type": "BODY_CORRECTION",
+      "claim": "Behavior storage supplies project-scoped context records.",
+      "basis": "E21 usa project:<id> para projetos não globais e directory:<location.directory> quando Project.ID.global.",
+      "required": "Qualificar o escopo por projeto com a exceção explícita de armazenamento por diretório no projeto global."
+    },
+    {
+      "id": "J1-SUPPLEMENT-R1",
+      "type": "EVIDENCE",
+      "claim": "RepositoryCache.ensure retorna head/branch atuais e status.",
+      "basis": "E20 mostra a escolha de status e as operações, mas omite a construção do retorno.",
+      "required": "Fornecer o trecho entre as passagens 202–217 e 230–237 que obtém e retorna esses campos."
+    }
+  ],
+  "optional_suggestions": [],
+  "limits": [
+    "As quatro decisões A1 reutilizam minhas próprias avaliações; as três decisões de configuração/projeto são novas e independentes.",
+    "Nenhum pedido de evidência acima exige runtime, testes, CI, Atlas, publicação ou revisão de um subsistema inteiro.",
+    "Os PASS são de unidades L1 e não aprovam todos os 197/555 paths, camadas superiores, consumidores, manutenção ou entrega final.",
+    "Hashes e números de captura vinculam material e disposição; não substituem os ramos semânticos.",
+    "Não estabeleço recuperação pós-crash, ownership distribuído, billing ou efeitos externos exatamente uma vez."
+  ]
+}

@@ -1,0 +1,48 @@
+{
+  "schema": "genesis-s1-01-maintenance-oracle/v1",
+  "frozen_at": "2026-11-14T23:22:45.233778+00:00",
+  "reserved": true,
+  "basis": "Independent semantic dependency reasoning from frozen production-plan-v2 before upper-layer production or maintenance evaluation; not read from runtime plan output.",
+  "M1_expected_affected": [
+    "s1.core.session-admission",
+    "s1.core.persistence",
+    "s1.subslice01.session-state-completion",
+    "s1.subslice01.session-lifecycle",
+    "s1.subslice01.change-impact",
+    "s1.subslice01.session-ownership"
+  ],
+  "M1_expected_independent": [
+    "s1.core.session-execution",
+    "s1.core.context",
+    "s1.core.configuration",
+    "s1.core.project",
+    "s1.core.runtime",
+    "s1.core.models",
+    "s1.core.economy",
+    "s1.subslice01.config-project-supplement",
+    "s1.subslice01.runtime-models-economy-completion",
+    "s1.subslice01.environment-runtime"
+  ],
+  "M2_recipe_expected_affected": [
+    "s1.subslice01.config-project-supplement",
+    "s1.subslice01.environment-runtime",
+    "s1.subslice01.change-impact",
+    "s1.subslice01.session-ownership"
+  ],
+  "M2_rules": [
+    "Unchanged valid inputs/recipe: no recipe callback; exact result identity retained.",
+    "Recipe input change is observed; source freshness alone cannot reuse an old receipt.",
+    "Receipt-only renewal with identical complete OwnershipResult stops downstream interpretation after local revalidation.",
+    "Same body with changed authority,validity,gaps or evidence is a new result and must propagate.",
+    "Navigation alone does not extend build closure.",
+    "Unavailable observations cause HOLD, not an empty worklist."
+  ],
+  "critical_failures": [
+    "Expected affected key missing",
+    "Unrelated result rebuilt solely due navigation",
+    "Stale or unreviewed source binding published current",
+    "Transport SHA reused as kernel input version",
+    "Native judge authority invented by a synthetic callback"
+  ],
+  "evaluation_note": "Any legitimate change in declared semantic dependencies must be independently reconciled before evaluation; never change expected answers to match observed engine output."
+}

@@ -1,0 +1,718 @@
+  const base = path.join(root, ...reference.host.split(":"), ...reference.segments)
+  return branch ? `${base}@${encodeURIComponent(branch)}` : base
+}
+
+export function cacheIdentity(reference: Reference): string {
+  return `${reference.host}/${reference.path}`
+}
+
+export function same(left: Reference, right: Reference): boolean {
+  return cacheIdentity(left) === cacheIdentity(right)
+}
+```
+
+packages/core/src/repository-cache.ts — blob bcdc9de5686e25a71e0f83655bd19c0f87f7f29e.
+
+L141–155
+
+```ts
+        ensure: Effect.fn("RepositoryCache.ensure")(function* (input) {
+          if (input.branch) yield* validateBranch(input.branch)
+
+          const repository = input.reference.label
+          const localPath = Repository.cachePath(global.repos, input.reference, input.branch)
+          const cloneTarget = Repository.parse(input.reference.remote) ?? input.reference
+
+          return yield* flock
+            .withLock(
+              Effect.gen(function* () {
+                yield* cacheOperation(fs.ensureDir(path.dirname(localPath)), "ensure cache directory", localPath)
+
+                const existing = yield* git.repo.discover(AbsolutePath.make(localPath))
+                const origin = existing ? yield* git.remote.get(existing) : undefined
+                const originReference = origin ? Repository.parse(origin) : undefined
+```
+
+L159–197
+
+```ts
+                const worktree = existing ? yield* fs.resolve(localPath) : undefined
+                const reuse = Boolean(
+                  existing &&
+                    existing.worktree === worktree &&
+                    originReference &&
+                    Repository.same(originReference, cloneTarget),
+                )
+                if (!reuse && (yield* fs.existsSafe(localPath))) {
+                  yield* cacheOperation(fs.remove(localPath, { recursive: true }), "remove stale cache", localPath)
+                }
+
+                const status = !reuse
+                  ? ("cloned" as const)
+                  : input.refresh
+                    ? ("refreshed" as const)
+                    : ("cached" as const)
+
+                if (status === "cloned") {
+                  yield* git.repo
+                    .clone({
+                      remote: input.reference.remote,
+                      directory: AbsolutePath.make(localPath),
+                      branch: input.branch,
+                    })
+                    .pipe(Effect.mapError((error) => new CloneFailedError({ repository, message: error.message })))
+                }
+
+                if (status === "refreshed") {
+                  if (!existing)
+                    return yield* new FetchFailedError({ repository, message: "Repository is unavailable" })
+                  yield* git.sync
+                    .fetchRemotes(existing)
+                    .pipe(Effect.mapError((error) => new FetchFailedError({ repository, message: error.message })))
+
+                  if (input.branch) {
+                    yield* git.sync
+                      .fetchBranch(existing, { branch: input.branch })
+                      .pipe(Effect.mapError((error) => new FetchFailedError({ repository, message: error.message })))
+                  }
+```
+
+L202–217
+
+```ts
+                  const branch = input.branch ?? (yield* git.history.defaultRemoteBranch(existing))
+                  if (branch) {
+                    yield* git.sync
+                      .checkoutRemoteBranch(existing, { branch })
+                      .pipe(
+                        Effect.mapError(
+                          (error) => new CheckoutFailedError({ repository, branch, message: error.message }),
+                        ),
+                      )
+                  }
+
+                  const target = branch ?? (yield* git.history.branch(existing))
+                  yield* git.sync
+                    .resetHard(existing, target ? `origin/${target}` : "HEAD")
+                    .pipe(Effect.mapError((error) => new ResetFailedError({ repository, message: error.message })))
+                }
+```
+
+L230–237
+
+```ts
+              }),
+              `repository-cache:${localPath}`,
+            )
+            .pipe(
+              Effect.mapError((error) =>
+                isError(error) ? error : new LockFailedError({ localPath, message: errorMessage(error) }),
+              ),
+            )
+```
+
+## E21
+
+packages/core/src/config/plugin/provider.ts — blob 6f6e0528da7334228da7b5238ea9319c3b2247d4.
+
+L41–60
+
+```ts
+    yield* ctx.catalog.transform(
+      Effect.fn(function* (catalog) {
+        const entries = yield* config.entries()
+        const files = entries.filter((entry): entry is Config.Document => entry.type === "document")
+        const configuredDefault = Config.latest(entries, "model")
+        if (configuredDefault !== undefined) {
+          const model = ModelV2.parse(configuredDefault)
+          catalog.model.default.set(model.providerID, model.modelID)
+        }
+        for (const file of files) {
+          for (const [id, item] of Object.entries(file.info.providers ?? {})) {
+            const providerID = id
+            catalog.provider.update(providerID, (provider) => {
+              if (item.name !== undefined) provider.name = item.name
+              if (item.api !== undefined) provider.api = { ...item.api }
+              if (item.request !== undefined) {
+                Object.assign(provider.request.headers, item.request.headers)
+                Object.assign(provider.request.body, item.request.body)
+              }
+            })
+```
+
+packages/core/src/config/provider-options.ts — blob 8d2b70ec531a941db108918edf49c687a9788a82.
+
+L5–27
+
+```ts
+export interface ProviderResult {
+  readonly headers?: Record<string, string>
+  readonly body?: Record<string, unknown>
+  readonly url?: string
+  readonly settings?: Record<string, unknown>
+}
+
+export interface Lowerer {
+  readonly provider: (options: Options) => ProviderResult
+  readonly request: (options: Options) => Record<string, unknown>
+}
+
+export function get(packageName?: string): Lowerer {
+  const key = packageName ?? ""
+  return Object.hasOwn(lowerers, key) ? lowerers[key]! : raw
+}
+
+const raw: Lowerer = {
+  provider(options) {
+    return { body: clone(options) }
+  },
+  request: clone,
+}
+```
+
+packages/core/src/behavior.ts — blob 4d678d8b4b34b01d1dd6cb828963ae2bed223697.
+
+L40–51
+
+```ts
+const Stored = Schema.fromJsonString(Schema.Struct({ behaviors: Schema.Array(Info) }))
+const decodeStored = Schema.decodeUnknownOption(Stored)
+const encodeStored = Schema.encodeSync(Stored)
+const Content = Schema.Struct({ name: Schema.String, instructions: Schema.String })
+
+const layer = Layer.effect(
+  Service,
+  Effect.gen(function* () {
+    const fs = yield* FSUtil.Service
+    const global = yield* Global.Service
+    const location = yield* Location.Service
+    const registry = yield* SystemContextRegistry.Service
+```
+
+L54–56
+
+```ts
+    const owner =
+      location.project.id === Project.ID.global ? `directory:${location.directory}` : `project:${location.project.id}`
+    const file = path.join(global.data, "behavior", `${Hash.fast(owner)}.json`)
+```
+
+L59–70
+
+```ts
+    const list = Effect.fn("BehaviorV2.list")(function* () {
+      const text = yield* fs
+        .readFileStringSafe(file)
+        .pipe(
+          Effect.catch((error) =>
+            Effect.logWarning("behavior file unreadable", { file, error }).pipe(Effect.as(undefined)),
+          ),
+        )
+      if (text === undefined) return []
+      const stored = decodeStored(text)
+      if (Option.isSome(stored)) return stored.value.behaviors
+      yield* Effect.logWarning("behavior file malformed", { file })
+```
+
+packages/core/src/tui-config-files.ts — blob ff0af1809c35ffa6165e61a4d1fa99b8f89a364f.
+
+L14
+
+```ts
+}
+```
+
+L22–33
+
+```ts
+export async function read(directory: string, globalConfig = Global.make().config): Promise<File[]> {
+  const folders = [globalConfig, ...(Flag.ORCHESTRA_DISABLE_PROJECT_CONFIG ? [] : await projectFolders(directory))]
+  const files = await Promise.all(folders.flatMap((folder) => names.map((name) => path.join(folder, name))).map(load))
+  return files.filter((file): file is File => file !== undefined)
+}
+
+async function projectFolders(directory: string) {
+  const ancestors = async (current: string): Promise<string[]> => {
+    const parent = path.dirname(current)
+    if (parent === current || (await fs.stat(path.join(current, ".git")).catch(() => undefined))) return [current]
+    return [current, ...(await ancestors(parent))]
+  }
+```
+
+L35–36
+
+```ts
+  return (await ancestors(path.resolve(directory))).toReversed().flatMap((folder) => [folder, path.join(folder, ".orchestra")])
+}
+```
+
+## E22
+
+packages/core/src/git-cli.ts — blob 16794c1268c48aac93e894777a37e676a2b44c2a.
+
+L12–13
+
+```ts
+export const CACHE_WINDOW = Duration.millis(1500)
+const CACHE_MAX_ENTRIES = 64
+```
+
+L482–491
+
+```ts
+    const cache = {
+      branch: memoize(window, branch),
+      defaultBranch: memoize(window, defaultBranch),
+      hasHead: memoize(window, hasHead),
+      status: memoize(window, status),
+      stats: memoize(window, stats),
+    }
+
+    const applyPatch = Effect.fn("Git.applyPatch")(function* (cwd: string, patch: string) {
+      const result = yield* run(["apply", "-"], { cwd, stdin: stdin(patch) })
+```
+
+L493–495
+
+```ts
+      Object.values(cache).forEach((entry) => entry.clear())
+      return result
+    })
+```
+
+packages/core/src/vcs.ts — blob 5576086137755e4a1b471141c71d08803f3dc1f3.
+
+L318–345
+
+```ts
+export const activity = Effect.fn("Vcs.activity")(function* (
+  git: GitCli.Interface,
+  directory: string,
+  input: ActivityInput,
+  repository: boolean,
+  root: GitCli.Base | undefined,
+) {
+  const window = { since: Math.max(input.since, input.until - ACTIVITY_MAX_WINDOW_MS), until: input.until }
+  const empty = summarize({ commits: [], merges: [], lines: [] }, window)
+  if (!repository) return { ...empty, repository: false }
+  if (!(yield* git.hasHead(directory))) return empty
+  const scan = {
+    ...window,
+    merges: false,
+    numstat: false,
+    limit: ACTIVITY_MAX_COMMITS,
+    maxOutputBytes: ACTIVITY_MAX_OUTPUT_BYTES,
+    timeout: ACTIVITY_TIMEOUT,
+  }
+  const [commits, merges, lines, divergence] = yield* Effect.all(
+    [
+      git.log(directory, scan),
+      git.log(directory, { ...scan, merges: true }),
+      git.log(directory, { ...scan, numstat: true, timeout: ACTIVITY_LINES_BUDGET }),
+      upstreamDivergence(git, directory, root),
+    ],
+    { concurrency: 4 },
+  )
+```
+
+## E23
+
+packages/core/src/filesystem/search.ts — blob 4a5ff27504876a2766ae2ee90c42c864aa5aaabc.
+
+L142–168
+
+```ts
+              ),
+              Effect.mapError(searchError),
+            )
+        }),
+      find: (input) =>
+        Effect.gen(function* () {
+          yield* indexed
+          const items =
+            input.type === "file"
+              ? state.files
+              : input.type === "directory"
+                ? state.directories
+                : [...state.files, ...state.directories]
+          return fuzzysort.go(input.query, items, { limit: input.limit ?? 50 }).map((item) => {
+            const relative = item.target
+            const type = relative.endsWith(path.sep) ? ("directory" as const) : ("file" as const)
+            return FileSystem.Entry.make({
+              path: RelativePath.make(relative),
+              type,
+            })
+          })
+        }),
+    })
+  }),
+)
+
+export const fffLayer = Layer.effect(
+```
+
+L304–308
+
+```ts
+const layer = Layer.unwrap(Effect.sync(() => (Flag.ORCHESTRA_DISABLE_FFF || !Fff.available() ? ripgrepLayer : fffLayer)))
+
+export const locationLayer = layer
+
+export const node = makeLocationNode({ service: Service, layer, deps: [FSUtil.node, Location.node, Ripgrep.node] })
+```
+
+packages/core/src/filesystem/watcher.ts — blob 4983f9de6580fff07e3359692304c2fcea966dc0.
+
+L90–115
+
+```ts
+const layer = Layer.effect(
+  Service,
+  Effect.gen(function* () {
+    if (yield* Flag.ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER) return Service.of({})
+
+    const backend = getBackend()
+    const location = yield* Location.Service
+    if (!backend) {
+      yield* Effect.logError("watcher backend not supported", {
+        directory: location.directory,
+        platform: process.platform,
+      })
+      return Service.of({})
+    }
+
+    const w = watcher()
+    if (!w) return Service.of({})
+
+    yield* Effect.logInfo("watcher backend", { directory: location.directory, platform: process.platform, backend })
+    const events = yield* EventV2.Service
+    const fs = yield* FSUtil.Service
+    const git = yield* Git.Service
+    const context = yield* Effect.context()
+    const runFork = Effect.runForkWith(context)
+    const pendingSubscriptions = new Set<Promise<ParcelWatcher.AsyncSubscription>>()
+    yield* Effect.addFinalizer(() => Effect.promise(() => closeSubscriptions(pendingSubscriptions)))
+```
+
+L118–142
+
+```ts
+    const head = { file: undefined as string | undefined, check: Effect.void as Effect.Effect<void> }
+    const callback: ParcelWatcher.SubscribeCallback = (_error, updates) => {
+      for (const update of updates) {
+        if (update.type === "create") runFork(events.publish(Event.Updated, { file: update.path, event: "add" }))
+        if (update.type === "update") runFork(events.publish(Event.Updated, { file: update.path, event: "change" }))
+        if (update.type === "delete") runFork(events.publish(Event.Updated, { file: update.path, event: "unlink" }))
+        if (update.path === head.file) runFork(head.check)
+      }
+    }
+
+    const subscribe = (directory: string, ignore: string[]) => {
+      const pending = w.subscribe(directory, callback, { ignore, backend })
+      pendingSubscriptions.add(pending)
+      return Effect.promise(() => pending).pipe(
+        Effect.timeout(SUBSCRIBE_TIMEOUT_MS),
+        Effect.catchCause((cause) => {
+          return Effect.logError("failed to subscribe", { directory, cause: Cause.pretty(cause) })
+        }),
+      )
+    }
+
+    const config = (yield* (yield* Config.Service).entries())
+      .filter((entry): entry is Config.Document => entry.type === "document")
+      .flatMap((item) => item.info.watcher?.ignore ?? [])
+    if (location.vcs && (yield* Flag.ORCHESTRA_EXPERIMENTAL_FILEWATCHER)) {
+```
+
+## E24
+
+packages/core/src/filesystem/ignore.ts — blob 7d68c38e192b926ac0c8bebc3ede6fe0a1b65387.
+
+L56–66
+
+```ts
+  ".npm",
+  "dist",
+  ".next",
+  "target",
+  ".git",
+  ".svn",
+  ".hg",
+  ".turbo",
+  ".output",
+  ".sst",
+  ".cache",
+```
+
+packages/core/src/filesystem/protected.ts — blob a7646dfb48f2103bac170a983af45647e48e1be4.
+
+L36–39
+
+```ts
+  if (process.platform === "darwin") return new Set(DARWIN_HOME)
+  if (process.platform === "win32") return new Set(WIN32_HOME)
+  return new Set()
+}
+```
+
+L42–53
+
+```ts
+export function paths(): string[] {
+  if (process.platform === "darwin")
+    return [
+      ...DARWIN_HOME.map((name) => path.join(home, name)),
+      ...DARWIN_LIBRARY.map((name) => path.join(home, "Library", name)),
+      ...DARWIN_ROOT,
+    ]
+  if (process.platform === "win32") return WIN32_HOME.map((name) => path.join(home, name))
+  return []
+}
+
+export * as Protected from "./protected"
+```
+
+packages/core/src/file.ts — blob 84f181e0300b3be31cca73625f77d15154df4e8f.
+
+L1–6
+
+```ts
+export * as File from "./file"
+
+import { Revert } from "@orchestra/schema/revert"
+
+export const Diff = Revert.FileDiff
+export type Diff = typeof Diff.Type
+```
+
+packages/core/src/workspace.ts — blob 73fc2bfb517008424bb203e71cfc04b59ebf9460.
+
+L1–6
+
+```ts
+export * as WorkspaceV2 from "./workspace"
+
+import { Workspace } from "@orchestra/schema/workspace"
+
+export const ID = Workspace.ID
+export type ID = typeof ID.Type
+```
+
+## E25
+
+packages/core/src/guardrail.ts — blob fd60ef512f2c2250f08d9313b09052c2e1fc232c.
+
+L44–64
+
+```ts
+  const engine = Effect.fn("Guardrail.engine")(function* (args: string[]) {
+    const script = path.join(input.directory, ENGINE)
+    if (!fs.existsSync(script))
+      return yield* new EngineError({ kind: "no-engine", message: "This repository has no script/guards engine" })
+    const bun = which("bun", input.env ?? process.env)
+    if (!bun) return yield* new EngineError({ kind: "no-bun", message: "bun is not installed on this server" })
+    const result = yield* proc
+      .run(
+        ChildProcess.make(bun, [script, "--cwd", input.directory, ...args], {
+          cwd: input.directory,
+          env: engineEnv(input.env ?? process.env),
+          extendEnv: false,
+          stdin: "ignore",
+        }),
+        { maxOutputBytes: 8 * 1024 * 1024, maxErrorBytes: 16 * 1024, timeout: `${SECONDS} seconds` },
+      )
+      .pipe(
+        Effect.mapError(
+          (error) => new EngineError({ kind: "failed", message: `The guards engine did not finish: ${error}`.slice(0, 300) }),
+        ),
+      )
+```
+
+L66–67
+
+```ts
+    if (result.stdoutTruncated) return yield* unreadable()
+    return result.stdout.toString("utf8")
+```
+
+packages/core/src/pull-request.ts — blob a2310fcaba3e9666056927b6c0f89d4f1629ff12.
+
+L187–215
+
+```ts
+export const make = Effect.fn("PullRequest.make")(function* (input: { directory: string; env?: NodeJS.ProcessEnv }) {
+  const proc = yield* AppProcess.Service
+
+  const git = (args: string[]) =>
+    proc
+      .run(
+        ChildProcess.make("git", ["--no-optional-locks", "-c", "core.fsmonitor=false", ...args], {
+          cwd: input.directory,
+          extendEnv: true,
+          stdin: "ignore",
+        }),
+        { maxOutputBytes: 64 * 1024, maxErrorBytes: 4 * 1024, timeout: "10 seconds" },
+      )
+      .pipe(
+        Effect.map((result) => ({
+          ok: result.exitCode === 0 && !result.stdoutTruncated,
+          text: result.stdout.toString("utf8").trim(),
+        })),
+        Effect.catch(() => Effect.succeed({ ok: false, text: "" })),
+      )
+
+  const target = Effect.fn("PullRequest.target")(function* () {
+    const listed = yield* git(["remote", "-v"])
+    const remotes = listed.text.split(/\r?\n/).flatMap((line) => {
+      const match = /^(\S+)\s+(\S+)\s+\(fetch\)$/.exec(line.trim())
+      const repository = match ? hostRepository(match[2]!) : undefined
+      return match && repository ? [{ name: match[1]!, ...repository }] : []
+    })
+    const chosen = remotes.find((remote) => remote.name === "origin") ?? remotes[0]
+```
+
+## E26
+
+packages/core/test/config/config-global.test.ts — blob c588a2faa706a57795ec5bb84b4e18ac1b1f1d32.
+
+L173
+
+```ts
+  it.live("reuses the decoded global settings until a file changes or updateGlobal writes", () =>
+```
+
+L182–186
+
+```ts
+          yield* Effect.promise(async () => {
+            await fs.mkdir(globalDirectory, { recursive: true })
+            await fs.writeFile(file, `{"model":"a/one"}`)
+          })
+          expect((yield* Config.readGlobal()).model).toBe("a/one")
+```
+
+L189–194
+
+```ts
+          yield* Effect.promise(async () => {
+            const before = await fs.stat(file)
+            await fs.writeFile(file, `{"model":"b/two"}`)
+            await fs.utimes(file, before.atime, new Date(Math.floor(before.mtimeMs)))
+          })
+          expect((yield* Config.readGlobal()).model).toBe("a/one")
+```
+
+L197–199
+
+```ts
+          const first = yield* Config.readGlobal()
+          first.trustedProjects.push("/mutated")
+          expect((yield* Config.readGlobal()).trustedProjects).toEqual([])
+```
+
+L202–203
+
+```ts
+          yield* Effect.promise(() => fs.writeFile(file, `{"model":"c/three"}`))
+          expect((yield* Config.readGlobal()).model).toBe("c/three")
+```
+
+L206–210
+
+```ts
+          const jsonc = path.join(globalDirectory, "orchestra.jsonc")
+          yield* Effect.promise(() => fs.writeFile(jsonc, `{"model":"d/four"}`))
+          expect((yield* Config.readGlobal()).model).toBe("d/four")
+          yield* Effect.promise(() => fs.rm(jsonc))
+          expect((yield* Config.readGlobal()).model).toBe("c/three")
+```
+
+L213–214
+
+```ts
+          yield* Config.updateGlobal({ model: "e/five" })
+          expect((yield* Config.readGlobal()).model).toBe("e/five")
+```
+
+packages/core/test/config/provider-policy-migration.test.ts — blob 1faf787af8df4a5dd76129487790b7f90e34dc0f.
+
+L26–63
+
+```ts
+it.effect("legacy allowlist and disabled providers retain restrictions and existing policy denials", () =>
+  Effect.gen(function* () {
+    const policy = yield* Policy.Service
+    const config = migrate({
+      enabled_providers: ["opencode", "openrouter", "denied"],
+      disabled_providers: ["opencode"],
+      experimental: {
+        policies: [
+          { action: "provider.use", resource: "*", effect: "allow" },
+          { action: "provider.use", resource: "denied", effect: "deny" },
+        ],
+      },
+    })
+    yield* policy.load((config.experimental?.policies ?? []).map((item) => new Policy.Info(item)))
+    expect(yield* policy.evaluate("provider.use", "opencode", "allow")).toBe("deny")
+    expect(yield* policy.evaluate("provider.use", "openrouter", "allow")).toBe("allow")
+    expect(yield* policy.evaluate("provider.use", "denied", "allow")).toBe("deny")
+    expect(yield* policy.evaluate("provider.use", "unlisted", "allow")).toBe("deny")
+  }),
+)
+
+it.effect("an empty legacy allowlist denies every provider; omitted allowlist leaves policy intact", () =>
+  Effect.gen(function* () {
+    const policy = yield* Policy.Service
+    yield* policy.load(
+      (migrate({ enabled_providers: [] }).experimental?.policies ?? []).map((item) => new Policy.Info(item)),
+    )
+    expect(yield* policy.evaluate("provider.use", "opencode", "allow")).toBe("deny")
+    const config = migrate({
+      experimental: { policies: [{ action: "provider.use", resource: "blocked", effect: "deny" }] },
+    })
+    expect(config.experimental?.policies).toEqual([{ action: "provider.use", resource: "blocked", effect: "deny" }])
+    yield* policy.load((config.experimental?.policies ?? []).map((item) => new Policy.Info(item)))
+    expect(yield* policy.evaluate("provider.use", "opencode", "allow")).toBe("allow")
+    expect(yield* policy.evaluate("provider.use", "blocked", "allow")).toBe("deny")
+    expect(migrate({}).experimental).toBeUndefined()
+  }),
+)
+```
+
+packages/core/test/project-checkpoint-errors.test.ts — blob 9f76247a40dd62fcc64681ca86535150bc1fe3f2.
+
+L15–44
+
+```ts
+it.live("checkpoint storage sanitizes a proven driver error containing private context", () => Effect.gen(function* () {
+  const database = yield* Database.Service
+  const store = yield* ProjectCheckpoint.Service
+  const projectID = ProjectSchema.ID.make("checkpoint-errors")
+  const sessionID = SessionSchema.ID.make("ses_checkpoint_errors")
+  const directory = AbsolutePath.make("/checkpoint-errors")
+  const secret = "CHECKPOINT_PRIVATE_DRIVER_CONTROL"
+  yield* database.db.insert(ProjectTable).values({ id: projectID, worktree: directory, sandboxes: [] }).run()
+  yield* database.db.insert(SessionTable).values({ id: sessionID, project_id: projectID, directory,
+    slug: "checkpoint-errors", title: "Checkpoint errors", version: "1" }).run()
+  yield* database.db.run(`CREATE TRIGGER checkpoint_private BEFORE INSERT ON project_checkpoint
+    BEGIN SELECT RAISE(ABORT, '${secret}'); END`)
+  const raw = yield* database.db.insert(ProjectCheckpointTable).values({ id: "raw:0", project_id: projectID,
+    session_id: sessionID, fork_id: "raw", boundary: "msg_boundary", attempt: 0, directory,
+    time_created: 1, digest: "synthetic", payload: JSON.stringify(secret) }).run().pipe(Effect.exit)
+  expect(raw._tag).toBe("Failure")
+  if (raw._tag !== "Failure") throw new Error("Missing private-error positive control")
+  expect(Cause.pretty(raw.cause)).toContain(secret)
+  const input = { sessionID, forkID: "saved", boundary: "msg_boundary", attempt: 0 as const, payload: JSON.stringify(secret) }
+  const error = yield* store.save(input).pipe(Effect.flip)
+  expect(error.reason).toBe("storage")
+  expect(String(error)).not.toContain(secret)
+  expect(error.message).not.toContain(secret)
+  expect(JSON.stringify(error)).not.toContain(secret)
+  expect(Reflect.get(error, "cause")).toBeUndefined()
+  expect((yield* store.list({ projectID })).items).toEqual([])
+  yield* database.db.run("DROP TRIGGER checkpoint_private")
+  const saved = yield* store.save(input)
+  expect((yield* store.read({ projectID, id: saved.id }))?.payload).toBe(input.payload)
+}))
+```
+

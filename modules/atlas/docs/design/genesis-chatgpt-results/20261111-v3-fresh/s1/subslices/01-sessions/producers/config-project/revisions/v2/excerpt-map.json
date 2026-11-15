@@ -1,0 +1,211 @@
+[
+  {
+    "evidence_id": "E27",
+    "path": "packages/core/src/config.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "start_line": 125,
+    "end_line": 129,
+    "sha256": "dba16fbede2e18223e476ed518d6612f405a17406720c3bc91b6fe24268be73c",
+    "byte_length": 258,
+    "git_blob_sha": "52985a1dfc3575efca662dcb0667d81a1ab6f1de",
+    "source_sha256": "bc4ce670f2214fcecab7f7a705f04aecd0f48c7cf03076c67e55421956a625e6"
+  },
+  {
+    "evidence_id": "E27",
+    "path": "packages/core/src/config.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "start_line": 167,
+    "end_line": 170,
+    "sha256": "048c21dce7ac85ed269b5b56f6c0061f56aec3a8cec5df16d2c81157623ccfea",
+    "byte_length": 329,
+    "git_blob_sha": "52985a1dfc3575efca662dcb0667d81a1ab6f1de",
+    "source_sha256": "bc4ce670f2214fcecab7f7a705f04aecd0f48c7cf03076c67e55421956a625e6"
+  },
+  {
+    "evidence_id": "E27",
+    "path": "packages/core/src/config.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "start_line": 206,
+    "end_line": 268,
+    "sha256": "165de07285e4486b83907f4c47b515eb5fcb29dcde2978c6fd9a1a86b3d10ab2",
+    "byte_length": 3108,
+    "git_blob_sha": "52985a1dfc3575efca662dcb0667d81a1ab6f1de",
+    "source_sha256": "bc4ce670f2214fcecab7f7a705f04aecd0f48c7cf03076c67e55421956a625e6"
+  },
+  {
+    "evidence_id": "E27",
+    "path": "packages/core/src/fs-util.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "start_line": 204,
+    "end_line": 218,
+    "sha256": "d538e3a3162bbfdaab2a3419bfbf27953baf1151d4cbaad320db0626300ab1e1",
+    "byte_length": 583,
+    "git_blob_sha": "695361a7b2812386ceb0dfcc0f535c146e744a9e",
+    "source_sha256": "075165942ad976929aa9e3257d63f6812a3f943472aeb960ffeb9be81ecc312a"
+  },
+  {
+    "evidence_id": "E28",
+    "path": "docs/specs/v2/config.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "start_line": 1,
+    "end_line": 18,
+    "sha256": "554e906a443cd19078b0ced5f4132a0699ed344dbd2494bfb0c9c43f2a244254",
+    "byte_length": 968,
+    "git_blob_sha": "81353980473012b1b3d311f0a638e3d65ba8cbcd",
+    "source_sha256": "5b8df788e30f2120eaa1c12c94d9ca19738fb16d14ddc4cc372b129d535d37f8"
+  },
+  {
+    "evidence_id": "E28",
+    "path": "docs/specs/v2/config.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "start_line": 382,
+    "end_line": 390,
+    "sha256": "9489fc95b44e1808df603f76cabd872abd28b1716ada28bf31860b84843a0286",
+    "byte_length": 235,
+    "git_blob_sha": "81353980473012b1b3d311f0a638e3d65ba8cbcd",
+    "source_sha256": "5b8df788e30f2120eaa1c12c94d9ca19738fb16d14ddc4cc372b129d535d37f8"
+  },
+  {
+    "evidence_id": "E29",
+    "path": "packages/core/src/project/checkpoint.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "start_line": 3,
+    "end_line": 5,
+    "sha256": "e5831fbb30cfe7883b3a721f710764adf1970f4b6effb35a73477cdf8d8c233b",
+    "byte_length": 156,
+    "git_blob_sha": "5972b18ab5b5bd6792447261cd65933aee379e99",
+    "source_sha256": "25156c4e4b8cdb91db190f5d388c78b48e198be8511dd95c0aaef4821213531a"
+  },
+  {
+    "evidence_id": "E29",
+    "path": "packages/core/src/project/checkpoint.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "start_line": 75,
+    "end_line": 100,
+    "sha256": "549b2fc0279fc2c8274ff542aa919c7513d5ce9c3d08084693800d8febe9d798",
+    "byte_length": 1057,
+    "git_blob_sha": "5972b18ab5b5bd6792447261cd65933aee379e99",
+    "source_sha256": "25156c4e4b8cdb91db190f5d388c78b48e198be8511dd95c0aaef4821213531a"
+  },
+  {
+    "evidence_id": "E30",
+    "path": "docs/specs/project.md",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "start_line": 1,
+    "end_line": 64,
+    "sha256": "f1b96968476b6e0723fb5f42a9a3d9741cb2381b2892ae27392127a19507374c",
+    "byte_length": 1727,
+    "git_blob_sha": "35adeb94cff7e1d24adc9844f9e25fdb17df08a5",
+    "source_sha256": "f1b96968476b6e0723fb5f42a9a3d9741cb2381b2892ae27392127a19507374c"
+  },
+  {
+    "evidence_id": "E31",
+    "path": "packages/core/src/config.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "start_line": 383,
+    "end_line": 419,
+    "sha256": "c925e8d2365e15b65ce962c3c647ffe66886ef2731804c90f0235c21028bdfe5",
+    "byte_length": 1762,
+    "git_blob_sha": "52985a1dfc3575efca662dcb0667d81a1ab6f1de",
+    "source_sha256": "bc4ce670f2214fcecab7f7a705f04aecd0f48c7cf03076c67e55421956a625e6"
+  },
+  {
+    "evidence_id": "E32",
+    "path": "packages/core/src/project/copy.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "start_line": 161,
+    "end_line": 232,
+    "sha256": "2880b241c73181885a99147dbf7ecfd5354fa6ccdf393a0325cb323a1cdcc0be",
+    "byte_length": 3121,
+    "git_blob_sha": "11e941c573dca760eb95641f45597f48412ea98c",
+    "source_sha256": "de6171c6977466da7c5fa074cacc9c8e858780ea8726f82167e805d7a015b56a"
+  },
+  {
+    "evidence_id": "E33",
+    "path": "packages/core/src/behavior.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "start_line": 45,
+    "end_line": 57,
+    "sha256": "eed426758b3fe396d52609938b2f8640f2a367adea08e2e818861bb25cb5eb7a",
+    "byte_length": 653,
+    "git_blob_sha": "4d678d8b4b34b01d1dd6cb828963ae2bed223697",
+    "source_sha256": "fa9b716c91dbd12964ef65dc86d3a4e864d8bfb279a9969553ee2c1bb12324c4"
+  },
+  {
+    "evidence_id": "E34",
+    "path": "packages/core/src/repository-cache.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "start_line": 170,
+    "end_line": 230,
+    "sha256": "54c54f432ae45bf3894a89af9c100f27abb6b56035355d669b371ac2fe106013",
+    "byte_length": 2803,
+    "git_blob_sha": "bcdc9de5686e25a71e0f83655bd19c0f87f7f29e",
+    "source_sha256": "47553ee98730d975ad7b22a1b7e70fb6f1c9e6ab3ced30a96d02451ae01328cc"
+  },
+  {
+    "evidence_id": "E35",
+    "path": "packages/core/src/tool/read.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "start_line": 17,
+    "end_line": 29,
+    "sha256": "d8d987f8aff8bbf12c4df1ed37afbf493af349617c7d0b63ed56b2d996c25624",
+    "byte_length": 631,
+    "git_blob_sha": "1e38e74b7231691a31d2ba217267326e74189558",
+    "source_sha256": "1ca9741cfd96e11391c0cd457a354ad07a45072ed005b2c77b07c2710c6134c1"
+  },
+  {
+    "evidence_id": "E35",
+    "path": "packages/core/src/tool/read.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "start_line": 58,
+    "end_line": 109,
+    "sha256": "c1156f7287220f3c1c992c6b4ee0f2e8cdc6fbf21ab19dacc7c6a9a71c030f01",
+    "byte_length": 2599,
+    "git_blob_sha": "1e38e74b7231691a31d2ba217267326e74189558",
+    "source_sha256": "1ca9741cfd96e11391c0cd457a354ad07a45072ed005b2c77b07c2710c6134c1"
+  },
+  {
+    "evidence_id": "E35",
+    "path": "packages/core/src/tool/read-filesystem.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "start_line": 13,
+    "end_line": 17,
+    "sha256": "aa183735f4a1db9ce71ce3ffe68dfd9662a45f9516f4924999eacba59406f5da",
+    "byte_length": 236,
+    "git_blob_sha": "651e3b5f8852ed7a135763e0a32a12c897ef2da7",
+    "source_sha256": "d219062814c8e3e1eaedbd59b025836acac1c73cd480e4c470c25f61231c156f"
+  },
+  {
+    "evidence_id": "E35",
+    "path": "packages/core/src/tool/read-filesystem.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "start_line": 75,
+    "end_line": 78,
+    "sha256": "71b0643d1d9d7131b647cf107390e26df7142015f419e51cd5bc0fc12b84d364",
+    "byte_length": 183,
+    "git_blob_sha": "651e3b5f8852ed7a135763e0a32a12c897ef2da7",
+    "source_sha256": "d219062814c8e3e1eaedbd59b025836acac1c73cd480e4c470c25f61231c156f"
+  },
+  {
+    "evidence_id": "E35",
+    "path": "packages/core/src/tool/read-filesystem.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "start_line": 108,
+    "end_line": 165,
+    "sha256": "f5b564d608c104aca9d952de6329de31d07700645bb7882d6e51b6eba5ce3c1a",
+    "byte_length": 1694,
+    "git_blob_sha": "651e3b5f8852ed7a135763e0a32a12c897ef2da7",
+    "source_sha256": "d219062814c8e3e1eaedbd59b025836acac1c73cd480e4c470c25f61231c156f"
+  },
+  {
+    "evidence_id": "E35",
+    "path": "packages/core/src/tool/read-filesystem.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "start_line": 174,
+    "end_line": 337,
+    "sha256": "e4613cf1ea27fadc52ec2b1b45f6e06aa2b697ca2b21265f415fcbc66503a711",
+    "byte_length": 6387,
+    "git_blob_sha": "651e3b5f8852ed7a135763e0a32a12c897ef2da7",
+    "source_sha256": "d219062814c8e3e1eaedbd59b025836acac1c73cd480e4c470c25f61231c156f"
+  }
+]

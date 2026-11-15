@@ -1,0 +1,151 @@
+{
+  "source_path": "review-packets/correction-v2.md",
+  "source_sha256": "41b63d9b72da5effd3f99fcb5badcc0fa61414159ef039a45e3eb375d229bc54",
+  "source_byte_length": 74611,
+  "prepared_at_utc": "2026-11-14T23:43:02.218476+00:00",
+  "sender": "/root/l1_config_project",
+  "role": "mechanical transport only; no review request or activation",
+  "recipients": [
+    "/root/judge1",
+    "/root/judge2"
+  ],
+  "parts": [
+    {
+      "part": 1,
+      "count": 4,
+      "path": "review-packets/transmitted-v2/part-1.txt",
+      "characters": 24257,
+      "byte_length": 24293,
+      "sha256": "d364cbafcb2fe56d46e8ad367a3fc76711d389ce400c682ae5e5fdf17fb3154a",
+      "content_path": "review-packets/transmitted-v2/content-1.txt",
+      "content_sha256": "a0a1e8f107e62a806882909e35c04727a1fcf6cf9e55dd5019a3bb687443c3cc",
+      "content_byte_length": 24258,
+      "destinations": [
+        "/root/judge1",
+        "/root/judge2"
+      ],
+      "status": "SENT_TO_BOTH_ACKNOWLEDGED"
+    },
+    {
+      "part": 2,
+      "count": 4,
+      "path": "review-packets/transmitted-v2/part-2.txt",
+      "characters": 24421,
+      "byte_length": 24457,
+      "sha256": "8993e27b72a0dae0b124f17001b50ab2ef42765fe220478568e0946e584d5857",
+      "content_path": "review-packets/transmitted-v2/content-2.txt",
+      "content_sha256": "d7e77d336d80e3a303e0fc92687e1767f5ecdbb40375d61728f65946fb7a91c2",
+      "content_byte_length": 24422,
+      "destinations": [
+        "/root/judge1",
+        "/root/judge2"
+      ],
+      "status": "SENT_TO_BOTH_ACKNOWLEDGED"
+    },
+    {
+      "part": 3,
+      "count": 4,
+      "path": "review-packets/transmitted-v2/part-3.txt",
+      "characters": 24387,
+      "byte_length": 24427,
+      "sha256": "4463afd5b7f7380f31d483dc9e28ee0504cb9a08b658190f3be3c950c464516e",
+      "content_path": "review-packets/transmitted-v2/content-3.txt",
+      "content_sha256": "c7c0c715652275746cc5ddd3981721808dd416382c79261188eda8ad5873ed15",
+      "content_byte_length": 24392,
+      "destinations": [
+        "/root/judge1",
+        "/root/judge2"
+      ],
+      "status": "SENT_TO_BOTH_ACKNOWLEDGED"
+    },
+    {
+      "part": 4,
+      "count": 4,
+      "path": "review-packets/transmitted-v2/part-4.txt",
+      "characters": 1716,
+      "byte_length": 1716,
+      "sha256": "cfb7156cac214412dbfa9b8f743a2e53b7e2385cac3876a408a34fa972990119",
+      "content_path": "review-packets/transmitted-v2/content-4.txt",
+      "content_sha256": "a2c86de1708d0246885a62379e884480639bbece42bddb331e57886909ca41e5",
+      "content_byte_length": 1539,
+      "destinations": [
+        "/root/judge1",
+        "/root/judge2"
+      ],
+      "status": "SENT_TO_BOTH_ACKNOWLEDGED"
+    }
+  ],
+  "send_receipts": [
+    {
+      "order": 1,
+      "part": 1,
+      "recipient": "/root/judge1",
+      "tool": "collaboration.send_message",
+      "result": "success_empty_ack"
+    },
+    {
+      "order": 2,
+      "part": 1,
+      "recipient": "/root/judge2",
+      "tool": "collaboration.send_message",
+      "result": "success_empty_ack"
+    },
+    {
+      "order": 3,
+      "part": 2,
+      "recipient": "/root/judge1",
+      "tool": "collaboration.send_message",
+      "result": "success_empty_ack"
+    },
+    {
+      "order": 4,
+      "part": 2,
+      "recipient": "/root/judge2",
+      "tool": "collaboration.send_message",
+      "result": "success_empty_ack"
+    },
+    {
+      "order": 5,
+      "part": 3,
+      "recipient": "/root/judge1",
+      "tool": "collaboration.send_message",
+      "result": "success_empty_ack"
+    },
+    {
+      "order": 6,
+      "part": 3,
+      "recipient": "/root/judge2",
+      "tool": "collaboration.send_message",
+      "result": "success_empty_ack"
+    },
+    {
+      "order": 7,
+      "part": 4,
+      "recipient": "/root/judge1",
+      "tool": "collaboration.send_message",
+      "result": "success_empty_ack"
+    },
+    {
+      "order": 8,
+      "part": 4,
+      "recipient": "/root/judge2",
+      "tool": "collaboration.send_message",
+      "result": "success_empty_ack"
+    }
+  ],
+  "source_reconstruction_verified": true,
+  "boundary_note": "The literal part-2 send calls ended with the code-fence LF; the following original LF belongs to part 3. Prepared partition files retained for audit. Source bytes and concatenated transport content remain identical.",
+  "status": "ALL_8_SEND_CALLS_SUCCESS_EMPTY_ACK",
+  "completed_at_utc": "2026-11-14T23:49:47.246459+00:00",
+  "final_integrity": {
+    "source_sha256": "41b63d9b72da5effd3f99fcb5badcc0fa61414159ef039a45e3eb375d229bc54",
+    "source_byte_length": 74611,
+    "reconstructed_from_literal_message_files_byte_identical": true,
+    "all_message_hashes_verified": true,
+    "all_messages_at_most_25000_characters": true,
+    "source_edited": false,
+    "followup_task_used": false,
+    "judgment_requested": false,
+    "recipient_read_or_verdict_claimed": false
+  }
+}
