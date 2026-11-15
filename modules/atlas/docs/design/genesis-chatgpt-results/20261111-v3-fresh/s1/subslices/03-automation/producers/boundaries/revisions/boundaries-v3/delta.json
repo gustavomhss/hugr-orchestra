@@ -1,0 +1,84 @@
+{
+  "schema": "s1-03-exact-literal-delta/v1",
+  "artifact": "s1.core.boundaries",
+  "from_version": 2,
+  "to_version": 3,
+  "prior_body": {
+    "path": "producers/boundaries/bodies/boundaries.md",
+    "bytes": 23665,
+    "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+    "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74"
+  },
+  "prior_body_preserved_as": {
+    "path": "producers/boundaries/revisions/boundaries-v3/history/body.md",
+    "bytes": 23665,
+    "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+    "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74"
+  },
+  "current_body": {
+    "path": "producers/boundaries/bodies/boundaries.md",
+    "bytes": 23769,
+    "sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+    "git_blob_sha": "d3b070015882d10f778f563438eb3f9d67cab061"
+  },
+  "operations": [
+    {
+      "id": "ROOT-BND-L1-F01",
+      "section": "§3.2",
+      "before": "Seu caráter de dry grading evita avanço/ledger, mas o shell executado pode produzir efeitos no mundo.",
+      "after": "Esse percurso executa o comando e retorna seu resultado, sem grading nem registro de veredito; o shell executado pode produzir efeitos no mundo.",
+      "before_start_byte": 9520,
+      "before_end_byte_exclusive": 9623,
+      "after_start_byte": 9520,
+      "after_end_byte_exclusive": 9664,
+      "before_bytes": 103,
+      "after_bytes": 144,
+      "before_sha256": "49427583718a274581a827a64e7e9ee432c284e156b5817708f9656aa36af076",
+      "after_sha256": "6ef541aed10ab35a58608c9ed146c907464c0ce7c674932f3435acb75d99df76"
+    },
+    {
+      "id": "ROOT-BND-L1-F02",
+      "section": "§6",
+      "before": "chunks com texto/linhas/hash/boundary",
+      "after": "chunks com texto, hash, boundary e campos inteiros `start`/`end` (sem unidade declarada pelo schema)",
+      "before_start_byte": 21237,
+      "before_end_byte_exclusive": 21274,
+      "after_start_byte": 21278,
+      "after_end_byte_exclusive": 21378,
+      "before_bytes": 37,
+      "after_bytes": 100,
+      "before_sha256": "07ad62af0d2a0c77a0f0984ae3392b1e72d9c9a8e72b70d8aa45675974d9ceba",
+      "after_sha256": "d16ba749aa54e1308ae09e0eb881fe417506897fe7a40d5e4936b8c85f5f2492"
+    }
+  ],
+  "unchanged_segments": [
+    {
+      "before_start_byte": 0,
+      "before_end_byte_exclusive": 9520,
+      "after_start_byte": 0,
+      "after_end_byte_exclusive": 9520,
+      "bytes": 9520,
+      "sha256": "c217a4b0edf87ac089bd20f08a0ddc5877733197260a79503314f1644ca0e077"
+    },
+    {
+      "before_start_byte": 9623,
+      "before_end_byte_exclusive": 21237,
+      "after_start_byte": 9664,
+      "after_end_byte_exclusive": 21278,
+      "bytes": 11614,
+      "sha256": "43549bc57db5a3cc3f850addeba786d689dd414d202d1a835c81e5ac749681a0"
+    },
+    {
+      "before_start_byte": 21274,
+      "before_end_byte_exclusive": 23665,
+      "after_start_byte": 21378,
+      "after_end_byte_exclusive": 23769,
+      "bytes": 2391,
+      "sha256": "2db9cd6c4a0cce2e4667b04ab238716929dc097b9317a2d522716deb8b465480"
+    }
+  ],
+  "inverse_reconstruction_sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+  "inverse_reconstruction_byte_identical": true,
+  "other_body_bytes_unchanged": true,
+  "semantic_status": "PENDING_SAME_PAIR_REEVALUATION"
+}

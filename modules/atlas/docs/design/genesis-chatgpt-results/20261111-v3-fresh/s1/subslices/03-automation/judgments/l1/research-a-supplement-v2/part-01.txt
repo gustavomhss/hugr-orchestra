@@ -1,0 +1,938 @@
+# Complemento literal e revisão v2 — research
+
+Execução 34269cf4-d631-41c5-a30b-85b0ec217390, S1-03, fonte 1cde2ff7a71bcf7aecb5d030917b577165135d38. Mesmo par /root/s1_03_j1 e /root/s1_03_j2, sem ferramentas. A autoria não recebeu oracle. Este complemento atende aos pedidos públicos de evidência já emitidos; o corpo v1 recebido continua disponível no histórico, e os únicos deltas textuais da versão agora submetida estão abaixo. Os intervalos/offsets dos lotes originais continuam vinculados à v1, não devem ser silenciosamente reinterpretados como offsets v2. A principal verificou a aplicação exata e a igualdade de todos os outros bytes. Pareceres originais permanecem preservados, ainda sem PASS global.
+
+Corpo v1: {'bytes': 63389, 'sha256': '1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73', 'git_blob_sha': 'c29b9f5b8a8913cc4afa58d3e9cdede292f0657e'}
+
+Corpo v2: {'bytes': 63501, 'sha256': 'd2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661', 'git_blob_sha': 'bb0eaa73b4fe9120fb46d9304778649b5c7205dd'}
+
+## Delta literal 1
+
+ANTES
+```text
+Memoiza no máximo dois dumps por path, mtime e tamanho;
+```
+
+DEPOIS
+```text
+O memo mantém no máximo duas entradas no total, uma por path, validadas por mtime e tamanho;
+```
+
+## Delta literal 2
+
+ANTES
+```text
+`query.ts` abre shard atual ou o mais novo retido de mesmo id quando o atual falta.
+```
+
+DEPOIS
+```text
+`query.ts` abre o shard atual ou o primeiro retido de mesmo id ainda presente, na ordem do manifesto (atualizada por `retain`/`touch`), quando o atual falta.
+```
+
+As propostas nos suplementos foram redigidas antes desta correção; suas frases de status “não aplicada” descrevem aquele momento e são supersedidas SOMENTE pelos deltas v2 acima. O conteúdo literal de fontes permanece intacto. Nenhum teste de produto/provider foi executado; assertions são evidência de contrato, não execução. Critérios: todos os pertinentes já recebidos, com suficiência restrita ao lote e sem promoção de semântica a binding/runtime. Avalie após FIM_DO_LOTE; parte intermediária é apenas recebimento.
+
+## INICIO_DO_SUPLEMENTO_LITERAL
+
+# Suplemento literal research-a — RE-A1 a RE-A5
+
+**Corpo avaliado permanece congelado:** `body.md`, SHA-256 `1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73`. Este arquivo responde somente ao pedido de evidência pública encaminhado pela principal. Não contém oracle, parecer, resultado de teste ou novo aceite. As únicas transformações não literais são as projeções mecânicas explicitamente marcadas de cobertura/contagens; não são apresentadas como rows integrais.
+
+**Leitura:** cada fonte recebe uma identidade completa na primeira ocorrência; referências seguintes usam esse mesmo ID. Intervalos são linhas originais e não contêm código reescrito. Índice e recibo: `review-supplement-a-index.json` e `review-supplement-a-receipt.json`. O histórico integral é preservado sem prefixos de linha dentro de seu bloco. Os demais blocos acrescentam apenas números de linha. A suficiência é decisão dos juízes, não deste produtor.
+
+## RE-A1
+
+### RA1-01 — Corpo histórico integral — 3.942 bytes
+
+**RA-S001 — `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/research.md`**
+
+Commit `a8df22ae3a140c58c63f62ce2a634c84f415c943` · Git blob `d7c550b41f36ba6ae001ef5f7d8c041b26854f2f` · SHA-256 `76a39828caccbb41b99fe0f7d480f4a35abac7722d5c34ddfe5c7ddd67c7c202` · 3942 bytes.
+
+Linhas 1–25.
+
+~~~markdown
+# Pinned toolkits and retained research evidence
+
+Layer: **L1 — pinned factual basis**. Need: `component`. Scope: `orchestra.s1`.
+Source revision: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+
+## Observed implementation
+
+BackendToolkit has explicit absent/fetching/ready/failed/unsupported states, a root separated by engine version and target, and manifest-supplied engines/runtimes. `ensure` rejects an unsupported host and checks dependency ordering and host floor before acquisition. Downloaded engines use `PinnedArtifact.install`; hosted engines use the hosted lifecycle. Readiness requires installed markers, executable files, runtime executables where needed and exact host shim text. A cache marker alone is insufficient. Cross-target prefetch does not execute that target or write its host shim. [1]
+
+`prepare` recognizes commands naming `BACKEND_TOOLKIT_BIN` engines and acquires only those engines and dependencies. The source describes a 60-second shell preparation wait while acquisition may continue; installation has its own attempt lifecycle. The README assigns lockfiles and generated entry skills to owning packs and keeps Core independent of product specialist modules. Those manifest pins and platform floor values are inputs, not evidence that an engine was downloaded or qualified on this machine. [1,2]
+
+ResearchToolkit reuses BackendToolkit with its own root and manifest. Default owner caps are 2 GiB indexer, 1 GiB probe, 2 GiB scratch, 4 GiB index storage, eight commits and a 15-minute shard timeout; config can lower byte caps, not raise them. The default index adapter plans no shards and fails a build as unavailable, so providing the real adapter is necessary. Prewarm records building/skipped state outside the worktree, uses a host-wide file lock for indexer work and retries lock timeouts. A building status older than the shard timeout no longer claims live building. Status writes are best effort and may lose status without making the underlying index successful. `warm` also catches a planning error as an empty shard list: a no-work warm-up is therefore not proof of complete index coverage. [3]
+
+ResearchLedger canonicalizes JSON with sorted object keys, omitted undefined fields and preserved array order. Operation identity derives from Session/message/call/action; event identity derives from execution Session and operation key. Retained entries query versioned event types within project and execution scope, decode each row and reject scope/receipt mismatches. Placement is re-resolved before reuse. A repeated operation with a different input hash or multiple matching records fails conflict. This is retained evidence identity, not a proof of the truth of admitted source text. [4]
+
+## Normative intent and limits
+
+The bodies establish acquisition, readiness, resource-cap and evidence-ledger boundaries. Individual engine manifests, parsers, language indexes, sandbox build adapters and research source/document validation remain owned by the corresponding toolkit/leaf families in coverage. No engine install, language server, index build, source admission or research publication was executed. “Ready” here describes the source predicate, not a current host observation.
+
+## Source anchors
+
+- **1.** `packages/core/src/backend-toolkit/index.ts:e5c8e61d202f8a79a5b967d5abc467a97b58f4a3` — state, prepare, acquire and readiness, lines 17–107,108–179,180–279.
+- **2.** `packages/core/src/backend-toolkit/README.md:a7efc8b49f165ad767f51cb49ad9bdbb220215d1` — pack ownership, lockfiles and generated entry skills, lines 1–24.
+- **3.** `packages/core/src/research-toolkit/index.ts:a6e7b3bf6dd0ba44d0f0de5cac3eebe5c9f36095` — caps, adapter boundary, prewarm and shard status, lines 15–107,150–218,220–300.
+- **4.** `packages/core/src/research/ledger.ts:6b6ca2931b6aa8bdd2156b47fc13005aab93dcbf` — canonical identity, retained scope and replay, lines 30–84,145–157.
+~~~
+
+### RA1-02 — A3: supported, quatro inputs e 39/38 folhas retidas
+
+**RA-S041 — `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a3-v1-dossier.md`**
+
+Commit `a8df22ae3a140c58c63f62ce2a634c84f415c943` · Git blob `285e56c1680153ce75c71fd99bcf9455bde70d4d` · SHA-256 `36416073165d59eec9c7d847a26f414d855cc2a40758d548f4dd49669dccc5d4` · 177076 bytes.
+
+Linhas 225–251.
+
+```text
+225:   "key": "s1.core.research",
+226:   "title": "Pinned toolkits and retained research evidence",
+227:   "layer": 1,
+228:   "need": "component",
+229:   "body": {
+230:     "path": "producers/a/bodies/research.md",
+231:     "encoding": "utf-8",
+232:     "byte_length": 3942,
+233:     "sha256": "76a39828caccbb41b99fe0f7d480f4a35abac7722d5c34ddfe5c7ddd67c7c202"
+234:   },
+235:   "authority": {
+236:     "scope": "orchestra.s1",
+237:     "basis": "Pinned repository implementation and explicitly distinguished repository normative documentation; source inspection only. No product execution or test result is asserted.",
+238:     "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+239:   },
+240:   "validity": "supported",
+241:   "gaps": [
+242:     "Toolkit manifests, index adapters and individual research validators need leaf inspection for operation-specific changes.",
+243:     "No engine availability or platform qualification was measured."
+244:   ],
+245:   "input_keys": [
+246:     "file:packages/core/src/backend-toolkit/index.ts",
+247:     "file:packages/core/src/backend-toolkit/README.md",
+248:     "file:packages/core/src/research-toolkit/index.ts",
+249:     "file:packages/core/src/research/ledger.ts"
+250:   ],
+251:   "build_dependencies": []
+```
+
+Linhas 431–442.
+
+```text
+431: ### `s1.core.research` — `component`
+432: 
+433: Corpo congelado: `bodies/research.md`, SHA256 `76a39828caccbb41b99fe0f7d480f4a35abac7722d5c34ddfe5c7ddd67c7c202`. Validade original: `supported`.
+434: 
+435: **Gaps originais, verbatim:**
+436: 
+437: - Toolkit manifests, index adapters and individual research validators need leaf inspection for operation-specific changes.
+438: - No engine availability or platform qualification was measured.
+439: 
+440: **Inputs originais:** `file:packages/core/src/backend-toolkit/index.ts`, `file:packages/core/src/backend-toolkit/README.md`, `file:packages/core/src/research-toolkit/index.ts`, `file:packages/core/src/research/ledger.ts`.
+441: 
+442: **Explicitação nova nesta revisão:** Acquisition/readiness e identidade de pesquisa retida. Ler manifests/adapters/validators antes de usar algoritmos específicos; no-work após erro e adapter vazio não comprovam índice.
+```
+
+Linhas 485–499.
+
+```text
+485: ### backend-toolkit — 59 entradas
+486: 
+487: **Profundidades originais:** `decisive_source_read`=2, `grouped_generated_contract`=1, `grouped_support_contract`=4, `grouped_validation_inventory`=13, `representative_family_boundary`=39.
+488: 
+489: **Read status original:** `not_read`=57, `semantically_read_decisive_ranges`=2.
+490: 
+491: **Rota original:** `s1.core.research`. **Artefatos que de fato citam fontes da família:** `s1.core.research`.
+492: 
+493: **Fontes decisivas listadas no original:** `packages/core/src/backend-toolkit/README.md`, `packages/core/src/backend-toolkit/index.ts`.
+494: 
+495: **Razões originais aplicáveis:** R013, R022, R041, R074, R103.
+496: 
+497: **Alcance sustentado (explicitação):** O entry e README sustentam aquisição por pin, piso do host, readiness composto e ownership dos packs/gerados.
+498: 
+499: **Obrigação/lacuna retida (explicitação):** Os manifests, downloaders, adapters, pins e gerador não foram validados como um conjunto funcional. Um engine ou alteração de pin exige esses inputs e qualificação autorizada do alvo; um marcador não basta.
+```
+
+Linhas 587–601.
+
+```text
+587: ### research — 71 entradas
+588: 
+589: **Profundidades originais:** `decisive_source_read`=2, `grouped_support_contract`=3, `grouped_validation_inventory`=28, `representative_family_boundary`=38.
+590: 
+591: **Read status original:** `not_read`=69, `semantically_read_decisive_ranges`=2.
+592: 
+593: **Rota original:** `s1.core.research`. **Artefatos que de fato citam fontes da família:** `s1.core.research`.
+594: 
+595: **Fontes decisivas listadas no original:** `packages/core/src/research-toolkit/index.ts`, `packages/core/src/research/ledger.ts`.
+596: 
+597: **Razões originais aplicáveis:** R013, R060, R091, R107.
+598: 
+599: **Alcance sustentado (explicitação):** ResearchToolkit e Ledger sustentam caps, adapter vazio padrão, status best effort e identidade/replay da evidência.
+600: 
+601: **Obrigação/lacuna retida (explicitação):** 38 leaves e três inputs não lidos retêm validação de documentos, índices, parsers e sandbox builds. Planejamento que falhou e virou lista vazia não comprova cobertura; conteúdo admitido não comprova sua verdade.
+```
+
+### RA1-03 — A4: população, profundidades e limite de verificação
+
+**RA-S042 — `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a4-v1-dossier.md`**
+
+Commit `a8df22ae3a140c58c63f62ce2a634c84f415c943` · Git blob `6f872ea0e22097d8084fd587f585751a436f607e` · SHA-256 `83b544ac46f99b2bf3585ff4e607bcd403e49eb20dd128deb5b6a029a772ead0` · 155061 bytes.
+
+Linhas 269–269.
+
+```text
+269: | backend-toolkit | 59 | `s1.core.research` |
+```
+
+Linhas 289–289.
+
+```text
+289: | research | 71 | `s1.core.research` |
+```
+
+Linhas 299–301.
+
+```text
+299: Decisive implementation/control-flow and normative reads back the claims actually made in the other bodies. An unread substantive implementation is explicitly classified `representative_family_boundary`, never silently converted to support or semantic acceptance. Exact operation-specific leaf behavior remains a deeper-read obligation. This bounded L1 grouping covers the entry, authority and lifecycle questions; it does not certify every line of every member.
+300: 
+301: Historical migrations retain compatibility authority under the inspected migration engine. Generated schema/export/support files remain tied to their generators and owning contracts. The vendored Copilot family remains an upstream compatibility boundary. Tests, fixture trees, assets and harnesses have grouped validation disposition; their existence proves no executed result. Runtime pins and bundled text are change-sensitive inputs even when their leaf content is not interpreted here. Historical phase plans, runtime-closure qualification documents and old V2 sketches are retained as historical/normative inputs to compare with current code, never promoted by filename to current behavior or a fresh PASS. [1,3]
+```
+
+Linhas 309–313.
+
+```text
+309: ## Verification boundary and open work
+310: 
+311: Performed: connector capture, canonical Git-object/SHA-256/size checks, source inspection, line-anchor reconciliation, per-entry population reconciliation and artifact/excerpt binding checks. No product tests, provider calls, shell tools inside Orchestra, database migrations, external mutations, remote commits or Atlas publication were performed. The producer's local Python only processed evidence and authored this transport fragment. Hash validity is not semantic acceptance; independent judges and principal packaging are separate steps.
+312: 
+313: Unresolved limits include runtime/OS qualification, unread leaf-specific semantics, native engine/provider boundaries outside Core, historical document reconciliation beyond the cited conflicts, and the observed implementation gaps called out per body. All source-reading status remains visible. This unit is a source-supported L1 candidate, not an accepted complete S1 delivery or live Atlas publication.
+```
+
+### RA1-04 — Projeção histórica: contagens e validade literais
+
+**RA-S043 — `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json`**
+
+Commit `a8df22ae3a140c58c63f62ce2a634c84f415c943` · Git blob `2e91d0f916dfa95a2dd0ef7ae74ff8c1bb427045` · SHA-256 `05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf` · 726892 bytes.
+
+Linhas 12954–12961.
+
+```text
+12954:         "family": "backend-toolkit",
+12955:         "population_count": 59,
+12956:         "artifact_keys": [
+12957:           "s1.core.research"
+12958:         ],
+12959:         "read_source_paths": [
+12960:           "packages/core/src/backend-toolkit/README.md",
+12961:           "packages/core/src/backend-toolkit/index.ts"
+```
+
+Linhas 13013–13025.
+
+```text
+13013:       "derived_counts": {
+13014:         "by_depth": {
+13015:           "decisive_source_read": 2,
+13016:           "grouped_generated_contract": 1,
+13017:           "grouped_support_contract": 4,
+13018:           "grouped_validation_inventory": 13,
+13019:           "representative_family_boundary": 39
+13020:         },
+13021:         "by_read_status": {
+13022:           "not_read": 57,
+13023:           "semantically_read_decisive_ranges": 2
+13024:         },
+13025:         "unread_substantive_count": 39
+```
+
+Linhas 14262–14270.
+
+```text
+14262:         "family": "research",
+14263:         "population_count": 71,
+14264:         "artifact_keys": [
+14265:           "s1.core.research"
+14266:         ],
+14267:         "read_source_paths": [
+14268:           "packages/core/src/research-toolkit/index.ts",
+14269:           "packages/core/src/research/ledger.ts"
+14270:         ],
+```
+
+Linhas 14318–14329.
+
+```text
+14318:       "derived_counts": {
+14319:         "by_depth": {
+14320:           "decisive_source_read": 2,
+14321:           "grouped_support_contract": 3,
+14322:           "grouped_validation_inventory": 28,
+14323:           "representative_family_boundary": 38
+14324:         },
+14325:         "by_read_status": {
+14326:           "not_read": 69,
+14327:           "semantically_read_decisive_ranges": 2
+14328:         },
+14329:         "unread_substantive_count": 38
+```
+
+Linhas 14337–14343.
+
+```text
+14337:       "artifacts_actually_citing_family_sources": [
+14338:         "s1.core.research"
+14339:       ],
+14340:       "clarification_authored_in_this_revision": {
+14341:         "supported_boundary": "ResearchToolkit e Ledger sustentam caps, adapter vazio padrão, status best effort e identidade/replay da evidência.",
+14342:         "mandatory_remaining_boundary": "38 leaves e três inputs não lidos retêm validação de documentos, índices, parsers e sandbox builds. Planejamento que falhou e virou lista vazia não comprova cobertura; conteúdo admitido não comprova sua verdade.",
+14343:         "semantic_acceptance": false
+```
+
+Linhas 16522–16542.
+
+```text
+16522:         "key": "s1.core.research",
+16523:         "scope": "orchestra.s1",
+16524:         "title": "Pinned toolkits and retained research evidence",
+16525:         "layer": 1,
+16526:         "need": "component",
+16527:         "body": {
+16528:           "path": "bodies/research.md",
+16529:           "encoding": "utf-8",
+16530:           "byte_length": 3942,
+16531:           "sha256": "76a39828caccbb41b99fe0f7d480f4a35abac7722d5c34ddfe5c7ddd67c7c202"
+16532:         },
+16533:         "authority": {
+16534:           "scope": "orchestra.s1",
+16535:           "basis": "Pinned repository implementation and explicitly distinguished repository normative documentation; source inspection only. No product execution or test result is asserted.",
+16536:           "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+16537:         },
+16538:         "validity": "supported",
+16539:         "gaps": [
+16540:           "Toolkit manifests, index adapters and individual research validators need leaf inspection for operation-specific changes.",
+16541:           "No engine availability or platform qualification was measured."
+16542:         ],
+```
+
+Linhas 16553–16558.
+
+```text
+16553:         "input_keys": [
+16554:           "file:packages/core/src/backend-toolkit/index.ts",
+16555:           "file:packages/core/src/backend-toolkit/README.md",
+16556:           "file:packages/core/src/research-toolkit/index.ts",
+16557:           "file:packages/core/src/research/ledger.ts"
+16558:         ],
+```
+
+### RA1-P — Projeção MECÂNICA de população e coverage (não são rows integrais)
+
+**RA-S044 — `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/03-automation/sources.jsonl`**
+
+Commit `70234d541a9a3539935ef16f19e33c8f2d5f30ec` · Git blob `71374892d3a7bda60aaf48cc8bd2c43e4d9e4c85` · SHA-256 `1643a358ccaafe0ca9e6a9051d7c1a9bc9a1922834d6183e52703f6de2db077c` · 119405 bytes.
+
+**RA-S045 — `producers/research/coverage.jsonl`**
+
+Artefato local congelado · Git blob `48b8beafa81098be06c37b4f4ec1a3044e77414d` · SHA-256 `bb06bcef77a2dbeccabc70dd00dc10d70bf22cb338588661d7ecc9f49e01eec9` · 127215 bytes.
+
+Operação: selecionar no inventário `legacy_artifact_key == "s1.core.research"`; comparar o conjunto de paths com `coverage.jsonl`; contar `family` e `kind`. Resultado mecânico: **130 = 59 backend-toolkit + 71 research**; **80 implementation + 41 test_code + 7 runtime_data_or_pin + 1 generated_output + 1 documentation**. Os 130 paths coincidem, sem ausentes/duplicados; os bytes capturados somam 1.212.271. Isso não é aceite semântico.
+
+Projeção abaixo: campos `path`, `role`, `need`, `read_depth`, `body_sections` das **130 rows**. Destas, **103** têm interseção com R0–R7 (59 backend-toolkit e 44 research); as outras **27** servem R8–R14 e permanecem aqui para compartilhar a mesma população integral com research-b. O número inicial é a linha do JSONL congelado; o índice contém os valores projetados, a pertinência a R0–R7 e o hash da row original.
+
+| Linha coverage | path | role | need | read_depth | body_sections |
+| ---: | --- | --- | --- | --- | --- |
+| 1 | `packages/core/src/backend-toolkit/acquisition.ts` | `implementation` | `component` | `implementation_control_flow` | `R2` |
+| 2 | `packages/core/src/backend-toolkit/attempts.ts` | `implementation` | `component` | `implementation_control_flow` | `R2` |
+| 3 | `packages/core/src/backend-toolkit/cassandra-dialer.ts` | `implementation` | `component` | `implementation_control_flow` | `R4` |
+| 4 | `packages/core/src/backend-toolkit/cassandra-metadata.ts` | `implementation` | `component` | `implementation_control_flow` | `R4` |
+| 5 | `packages/core/src/backend-toolkit/diagnostics.ts` | `implementation` | `component` | `implementation_control_flow` | `R2` |
+| 6 | `packages/core/src/backend-toolkit/entry-skills.gen.ts` | `generated_registry` | `component` | `generated_contract_read` | `R1` |
+| 7 | `packages/core/src/backend-toolkit/hosted.ts` | `implementation` | `component` | `implementation_control_flow` | `R2` |
+| 8 | `packages/core/src/backend-toolkit/index.ts` | `implementation` | `component` | `implementation_control_flow` | `R2` |
+| 9 | `packages/core/src/backend-toolkit/launcher.ts` | `implementation` | `component` | `implementation_control_flow` | `R2` |
+| 10 | `packages/core/src/backend-toolkit/manifest.ts` | `implementation` | `component` | `implementation_control_flow` | `R1` |
+| 11 | `packages/core/src/backend-toolkit/packs/ast-grep.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 12 | `packages/core/src/backend-toolkit/packs/buf.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 13 | `packages/core/src/backend-toolkit/packs/controller-gen.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 14 | `packages/core/src/backend-toolkit/packs/datafusion-cli.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 15 | `packages/core/src/backend-toolkit/packs/datamodel-codegen.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 16 | `packages/core/src/backend-toolkit/packs/datamodel-codegen.wheels.ts` | `acquisition_pin_data` | `component` | `hash_list_and_platform_contract` | `R3` |
+| 17 | `packages/core/src/backend-toolkit/packs/gitleaks.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 18 | `packages/core/src/backend-toolkit/packs/gocqlx-schemagen.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 19 | `packages/core/src/backend-toolkit/packs/index.ts` | `pack_registry` | `component` | `manifest_recipe_and_constraints` | `R1,R3` |
+| 20 | `packages/core/src/backend-toolkit/packs/kiota.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 21 | `packages/core/src/backend-toolkit/packs/kopium.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 22 | `packages/core/src/backend-toolkit/packs/kubeconform.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 23 | `packages/core/src/backend-toolkit/packs/kysely-codegen.package-lock.json` | `acquisition_lock` | `component` | `locked_data_contract_inspection` | `R3` |
+| 24 | `packages/core/src/backend-toolkit/packs/kysely-codegen.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 25 | `packages/core/src/backend-toolkit/packs/modelina.package-lock.json` | `acquisition_lock` | `component` | `locked_data_contract_inspection` | `R3` |
+| 26 | `packages/core/src/backend-toolkit/packs/modelina.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 27 | `packages/core/src/backend-toolkit/packs/ogen.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 28 | `packages/core/src/backend-toolkit/packs/openapi-generator.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 29 | `packages/core/src/backend-toolkit/packs/orval.package-lock.json` | `acquisition_lock` | `component` | `locked_data_contract_inspection` | `R3` |
+| 30 | `packages/core/src/backend-toolkit/packs/orval.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 31 | `packages/core/src/backend-toolkit/packs/postgres-language-server.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 32 | `packages/core/src/backend-toolkit/packs/protoc-gen-es.package-lock.json` | `acquisition_lock` | `component` | `locked_data_contract_inspection` | `R3` |
+| 33 | `packages/core/src/backend-toolkit/packs/protoc-gen-es.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 34 | `packages/core/src/backend-toolkit/packs/sqlc.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 35 | `packages/core/src/backend-toolkit/packs/sqlglot.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 36 | `packages/core/src/backend-toolkit/packs/sqlx.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 37 | `packages/core/src/backend-toolkit/packs/squawk.ts` | `engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 38 | `packages/core/src/backend-toolkit/project-version.ts` | `implementation` | `component` | `implementation_control_flow` | `R4` |
+| 39 | `packages/core/src/backend-toolkit/README.md` | `documentation` | `component` | `normative_contract_read` | `R1` |
+| 40 | `packages/core/src/backend-toolkit/runtimes/go.ts` | `runtime_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 41 | `packages/core/src/backend-toolkit/runtimes/java.ts` | `runtime_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 42 | `packages/core/src/backend-toolkit/runtimes/node.ts` | `runtime_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 43 | `packages/core/src/backend-toolkit/runtimes/python.ts` | `runtime_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 44 | `packages/core/src/backend-toolkit/runtimes/rust.ts` | `runtime_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 45 | `packages/core/src/backend-toolkit/target.ts` | `implementation` | `component` | `implementation_control_flow` | `R2` |
+| 46 | `packages/core/src/pinned-artifact.ts` | `implementation` | `component` | `implementation_control_flow` | `R2` |
+| 47 | `packages/core/src/research-toolkit/code-index/build.ts` | `implementation` | `component` | `implementation_control_flow` | `R6` |
+| 48 | `packages/core/src/research-toolkit/code-index/callers.ts` | `implementation` | `component` | `implementation_control_flow` | `R7` |
+| 49 | `packages/core/src/research-toolkit/code-index/enclosing.ts` | `implementation` | `component` | `implementation_control_flow` | `R7` |
+| 50 | `packages/core/src/research-toolkit/code-index/extract.ts` | `implementation` | `component` | `implementation_control_flow` | `R5,R6,R7` |
+| 51 | `packages/core/src/research-toolkit/code-index/filter.ts` | `implementation` | `component` | `implementation_control_flow` | `R7` |
+| 52 | `packages/core/src/research-toolkit/code-index/go.ts` | `implementation` | `component` | `implementation_control_flow` | `R7` |
+| 53 | `packages/core/src/research-toolkit/code-index/python.ts` | `implementation` | `component` | `implementation_control_flow` | `R7` |
+| 54 | `packages/core/src/research-toolkit/code-index/query.ts` | `implementation` | `component` | `implementation_control_flow` | `R8` |
+| 55 | `packages/core/src/research-toolkit/code-index/rank.ts` | `implementation` | `component` | `implementation_control_flow` | `R7` |
+| 56 | `packages/core/src/research-toolkit/code-index/resolve.ts` | `implementation` | `component` | `implementation_control_flow` | `R7` |
+| 57 | `packages/core/src/research-toolkit/code-index/rust.ts` | `implementation` | `component` | `implementation_control_flow` | `R7` |
+| 58 | `packages/core/src/research-toolkit/code-index/scip.ts` | `implementation` | `component` | `implementation_control_flow` | `R7` |
+| 59 | `packages/core/src/research-toolkit/code-index/shard.ts` | `implementation` | `component` | `implementation_control_flow` | `R6` |
+| 60 | `packages/core/src/research-toolkit/code-index/store.ts` | `implementation` | `component` | `implementation_control_flow` | `R6` |
+| 61 | `packages/core/src/research-toolkit/code-index/tree-sitter.ts` | `implementation` | `component` | `implementation_control_flow` | `R7` |
+| 62 | `packages/core/src/research-toolkit/code-index/types.ts` | `implementation` | `component` | `implementation_control_flow` | `R8` |
+| 63 | `packages/core/src/research-toolkit/index.ts` | `implementation` | `component` | `implementation_control_flow` | `R5` |
+| 64 | `packages/core/src/research-toolkit/liveness.ts` | `implementation` | `component` | `implementation_control_flow` | `R8` |
+| 65 | `packages/core/src/research-toolkit/locate.ts` | `implementation` | `component` | `implementation_control_flow` | `R8` |
+| 66 | `packages/core/src/research-toolkit/manifest.ts` | `implementation` | `component` | `implementation_control_flow` | `R3` |
+| 67 | `packages/core/src/research-toolkit/packs/index.ts` | `pack_registry` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 68 | `packages/core/src/research-toolkit/packs/rust-analyzer.ts` | `research_engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 69 | `packages/core/src/research-toolkit/packs/scip-go.ts` | `research_engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 70 | `packages/core/src/research-toolkit/packs/scip-python.package-lock.json` | `acquisition_lock` | `component` | `locked_data_contract_inspection` | `R3` |
+| 71 | `packages/core/src/research-toolkit/packs/scip-python.ts` | `research_engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 72 | `packages/core/src/research-toolkit/packs/scip-typescript.package-lock.json` | `acquisition_lock` | `component` | `locked_data_contract_inspection` | `R3` |
+| 73 | `packages/core/src/research-toolkit/packs/scip-typescript.ts` | `research_engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 74 | `packages/core/src/research-toolkit/packs/typescript.package-lock.json` | `acquisition_lock` | `component` | `locked_data_contract_inspection` | `R3` |
+| 75 | `packages/core/src/research-toolkit/packs/typescript.ts` | `research_engine_recipe` | `component` | `manifest_recipe_and_constraints` | `R3` |
+| 76 | `packages/core/src/research-toolkit/probe/assets.ts` | `implementation` | `component` | `implementation_control_flow` | `R9` |
+| 77 | `packages/core/src/research-toolkit/probe/run.ts` | `implementation` | `component` | `implementation_control_flow` | `R9` |
+| 78 | `packages/core/src/research-toolkit/probe/runners.ts` | `implementation` | `component` | `implementation_control_flow` | `R9` |
+| 79 | `packages/core/src/research-toolkit/probe/snapshot.ts` | `implementation` | `component` | `implementation_control_flow` | `R9` |
+| 80 | `packages/core/src/research-toolkit/probe/typecheck.ts` | `implementation` | `component` | `implementation_control_flow` | `R9` |
+| 81 | `packages/core/src/research-toolkit/probe/types.ts` | `implementation` | `component` | `implementation_control_flow` | `R9` |
+| 82 | `packages/core/src/research-toolkit/process.ts` | `implementation` | `component` | `implementation_control_flow` | `R9` |
+| 83 | `packages/core/src/research-toolkit/search.ts` | `implementation` | `component` | `implementation_control_flow` | `R8` |
+| 84 | `packages/core/src/research/allowance.ts` | `implementation` | `component` | `implementation_control_flow` | `R10` |
+| 85 | `packages/core/src/research/artifacts.ts` | `implementation` | `component` | `implementation_control_flow` | `R11,R12` |
+| 86 | `packages/core/src/research/binding.ts` | `implementation` | `component` | `implementation_control_flow` | `R10` |
+| 87 | `packages/core/src/research/ledger.ts` | `implementation` | `component` | `implementation_control_flow` | `R11,R12` |
+| 88 | `packages/core/src/research/records.ts` | `implementation` | `component` | `implementation_control_flow` | `R11,R12` |
+| 89 | `packages/core/src/research/seat-tools.ts` | `implementation` | `component` | `implementation_control_flow` | `R10` |
+| 90 | `packages/core/test/backend-toolkit-acquisition.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R2,R3,R4,R13` |
+| 91 | `packages/core/test/backend-toolkit-cassandra.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R2,R3,R4,R13` |
+| 92 | `packages/core/test/backend-toolkit-cli.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R2,R3,R4,R13` |
+| 93 | `packages/core/test/backend-toolkit-floors.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R2,R3,R4,R13` |
+| 94 | `packages/core/test/backend-toolkit-hosted.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R2,R3,R4,R13` |
+| 95 | `packages/core/test/backend-toolkit-packs.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R2,R3,R4,R13` |
+| 96 | `packages/core/test/backend-toolkit-process.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R2,R3,R4,R13` |
+| 97 | `packages/core/test/backend-toolkit-project-version.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R2,R3,R4,R13` |
+| 98 | `packages/core/test/backend-toolkit-source-readiness.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R2,R3,R4,R13` |
+| 99 | `packages/core/test/backend-toolkit-source.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R2,R3,R4,R13` |
+| 100 | `packages/core/test/backend-toolkit-target.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R2,R3,R4,R13` |
+| 101 | `packages/core/test/backend-toolkit.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R2,R3,R4,R13` |
+| 102 | `packages/core/test/code-index-query.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R5,R6,R7,R8,R13` |
+| 103 | `packages/core/test/code-index-rank.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R5,R6,R7,R8,R13` |
+| 104 | `packages/core/test/code-index-store.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R5,R6,R7,R8,R13` |
+| 105 | `packages/core/test/pinned-artifact.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R2,R3,R4,R13` |
+| 106 | `packages/core/test/research-allowance.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R8,R13` |
+| 107 | `packages/core/test/research-artifacts.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R8,R13` |
+| 108 | `packages/core/test/research-binding.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R8,R13` |
+| 109 | `packages/core/test/research-inquiry-ledger.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R8,R13` |
+| 110 | `packages/core/test/research-locate.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R8,R13` |
+| 111 | `packages/core/test/research-probe-units.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R9,R13` |
+| 112 | `packages/core/test/research-probe.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R9,R13` |
+| 113 | `packages/core/test/research-records.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R8,R13` |
+| 114 | `packages/core/test/research-search.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R8,R13` |
+| 115 | `packages/core/test/research-toolkit-callers.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R5,R6,R7,R8,R13` |
+| 116 | `packages/core/test/research-toolkit-enclosing.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R5,R6,R7,R8,R13` |
+| 117 | `packages/core/test/research-toolkit-liveness.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R5,R6,R7,R8,R13` |
+| 118 | `packages/core/test/research-toolkit-packs.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R5,R6,R7,R8,R13` |
+| 119 | `packages/core/test/research-toolkit-scip.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R5,R6,R7,R8,R13` |
+| 120 | `packages/core/test/research-toolkit.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R5,R6,R7,R8,R13` |
+| 121 | `packages/core/test/research-toolkit/capability.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R5,R6,R7,R8,R13` |
+| 122 | `packages/core/test/research-toolkit/code-index-filter.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R5,R6,R7,R8,R13` |
+| 123 | `packages/core/test/research-toolkit/code-index-go.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R5,R6,R7,R8,R13` |
+| 124 | `packages/core/test/research-toolkit/code-index-python.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R5,R6,R7,R8,R13` |
+| 125 | `packages/core/test/research-toolkit/code-index-resolve.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R5,R6,R7,R8,R13` |
+| 126 | `packages/core/test/research-toolkit/code-index-rust.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R5,R6,R7,R8,R13` |
+| 127 | `packages/core/test/research-toolkit/code-index-scip-encoding.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R5,R6,R7,R8,R13` |
+| 128 | `packages/core/test/research-toolkit/code-index-structural.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R5,R6,R7,R8,R13` |
+| 129 | `packages/core/test/research-toolkit/code-index-toolkit.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R5,R6,R7,R8,R13` |
+| 130 | `packages/core/test/research-toolkit/code-index-tree-sitter.test.ts` | `test_contract_not_executed` | `component` | `decisive_validation_contract_read` | `R5,R6,R7,R8,R13` |
+
+## RE-A2
+
+### RA2-01 — 21 engines backend: identidade, aquisição, restrições e fit
+
+**RA-S002 — `packages/core/src/backend-toolkit/packs/ast-grep.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `c59c577e3ac8b36c8cd70f3af5c62145fa72f559` · SHA-256 `4c38bf4a298cdc6d68db78893a13cdf8279a768487de6e0e44af29e7e0b08846` · 2166 bytes.
+
+Linhas 3–22.
+
+```text
+3: 
+4: // npm pins are the registry's `dist.integrity`; sample archives were downloaded to check entry layouts.
+5: const VERSION = "0.45.3"
+6: 
+7: // The npm package also ships `sg`, which shadows the shadow-utils `sg` on Linux; only `ast-grep` is exposed.
+8: const target = (pkg: string, integrity: PinnedArtifact.Artifact["integrity"], executable = "ast-grep") => ({
+9:   artifact: {
+10:     url: `https://registry.npmjs.org/@ast-grep/cli-${pkg}/-/cli-${pkg}-${VERSION}.tgz`,
+11:     integrity,
+12:     format: "tar.gz" as const,
+13:     entries: [{ from: `package/${executable}`, to: executable, executable: true }],
+14:   },
+15:   executable,
+16: })
+17: 
+18: export default {
+19:   id: "ast-grep",
+20:   version: VERSION,
+21:   license: "MIT",
+22:   upstream: "ast-grep/ast-grep",
+```
+
+Linhas 54–59.
+
+```text
+54:   fit: {
+55:     role: "generator",
+56:     input: "a syntax pattern, its rewrite and the files to apply it to",
+57:     skills: ["backend-refactor"],
+58:   },
+59: } as const satisfies Pack
+```
+
+**RA-S003 — `packages/core/src/backend-toolkit/packs/sqlc.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `821a12bf764c932b5b0140be0b4317e45a0ebc8a` · SHA-256 `642f56d93028b821f8c2d39bb1da0d15e4bf93a669721364914a489cf9359084` · 1654 bytes.
+
+Linhas 3–21.
+
+```text
+3: 
+4: // Pins are the GitHub release assets' sha256 digests in SRI form; sqlc publishes no checksum file.
+5: const VERSION = "1.31.1"
+6: 
+7: const target = (asset: string, integrity: PinnedArtifact.Artifact["integrity"], executable = "sqlc") => ({
+8:   artifact: {
+9:     url: `https://github.com/sqlc-dev/sqlc/releases/download/v${VERSION}/sqlc_${VERSION}_${asset}.tar.gz`,
+10:     integrity,
+11:     format: "tar.gz" as const,
+12:     entries: [{ from: executable, to: executable, executable: true }],
+13:   },
+14:   executable,
+15: })
+16: 
+17: export default {
+18:   id: "sqlc",
+19:   version: VERSION,
+20:   license: "MIT",
+21:   upstream: "sqlc-dev/sqlc",
+```
+
+Linhas 37–38.
+
+```text
+37:   fit: { role: "generator", input: "SQL query files and the schema DDL sqlc reads", skills: ["backend-data"] },
+38: } as const satisfies Pack
+```
+
+**RA-S004 — `packages/core/src/backend-toolkit/packs/buf.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `d8d06b5fb1f1b1df4bfbd437fbbc110e0225fc66` · SHA-256 `23eff54fd15efc953e1d9a779b64b058c54e67fdf30216bf0552a08cd5f2eedb` · 1675 bytes.
+
+Linhas 3–21.
+
+```text
+3: 
+4: // Pins are the GitHub release assets' sha256 digests in SRI form; buf's sha256.txt agreed with them when pinning.
+5: const VERSION = "1.73.0"
+6: 
+7: const target = (asset: string, integrity: PinnedArtifact.Artifact["integrity"], executable = "buf") => ({
+8:   artifact: {
+9:     url: `https://github.com/bufbuild/buf/releases/download/v${VERSION}/buf-${asset}`,
+10:     integrity,
+11:     format: "raw" as const,
+12:     entries: [{ from: `buf-${asset}`, to: executable, executable: true }],
+13:   },
+14:   executable,
+15: })
+16: 
+17: export default {
+18:   id: "buf",
+19:   version: VERSION,
+20:   license: "Apache-2.0",
+21:   upstream: "bufbuild/buf",
+```
+
+Linhas 30–30.
+
+```text
+30:   dependencies: ["protoc-gen-es"],
+```
+
+Linhas 38–39.
+
+```text
+38:   fit: { role: "check", input: "a Buf module of .proto files", skills: ["backend-api"] },
+39: } as const satisfies Pack
+```
+
+**RA-S005 — `packages/core/src/backend-toolkit/packs/gitleaks.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `ca2e4948a9b81538b5d013c730c041490795794a` · SHA-256 `ebd3745fb377d2fe38b166497edfb68f1bbd7202ba27592d00935e9d946e8da4` · 1865 bytes.
+
+Linhas 3–25.
+
+```text
+3: 
+4: // Pins are the GitHub release assets' sha256 digests in SRI form; gitleaks' checksums.txt agreed with them when pinning.
+5: const VERSION = "8.30.1"
+6: 
+7: const target = (asset: string, integrity: PinnedArtifact.Artifact["integrity"], executable = "gitleaks") => ({
+8:   artifact: {
+9:     url: `https://github.com/gitleaks/gitleaks/releases/download/v${VERSION}/gitleaks_${VERSION}_${asset}`,
+10:     integrity,
+11:     format: asset.endsWith(".zip") ? ("zip" as const) : ("tar.gz" as const),
+12:     entries: [
+13:       { from: executable, to: executable, executable: true },
+14:       { from: "LICENSE", to: "LICENSE" },
+15:     ],
+16:   },
+17:   executable,
+18: })
+19: 
+20: // The host-side Memory scanner: it serves no entry skill and has no recipe.
+21: export default {
+22:   id: "gitleaks",
+23:   version: VERSION,
+24:   license: "MIT",
+25:   upstream: "gitleaks/gitleaks",
+```
+
+Linhas 41–42.
+
+```text
+41:   fit: { role: "check", input: "Memory text before it is stored", skills: [] },
+42: } as const satisfies Pack
+```
+
+**RA-S006 — `packages/core/src/backend-toolkit/packs/kiota.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `62648da970ce5f94bf540acea7d84d3bfc2cdb2f` · SHA-256 `2409e1b56b8b552c34066942aca1dab95afedac59c0a09d4278bd54f12a3b91f` · 1902 bytes.
+
+Linhas 3–25.
+
+```text
+3: 
+4: // Pins are the GitHub release assets' sha256 digests in SRI form; kiota publishes no checksum file.
+5: const VERSION = "1.35.0"
+6: 
+7: // The self-contained .NET single-file build reads appsettings.json beside it; the archive's debug symbols are left out.
+8: const target = (asset: string, integrity: PinnedArtifact.Artifact["integrity"], executable = "kiota") => ({
+9:   artifact: {
+10:     url: `https://github.com/microsoft/kiota/releases/download/v${VERSION}/${asset}.zip`,
+11:     integrity,
+12:     format: "zip" as const,
+13:     entries: [
+14:       { from: executable, to: executable, executable: true },
+15:       { from: "appsettings.json", to: "appsettings.json" },
+16:     ],
+17:   },
+18:   executable,
+19: })
+20: 
+21: export default {
+22:   id: "kiota",
+23:   version: VERSION,
+24:   license: "MIT",
+25:   upstream: "microsoft/kiota",
+```
+
+Linhas 34–34.
+
+```text
+34:   env: { KIOTA_OFFLINE_ENABLED: "true", KIOTA_CLI_TELEMETRY_OPTOUT: "true" },
+```
+
+Linhas 42–43.
+
+```text
+42:   fit: { role: "generator", input: "an OpenAPI description", skills: ["backend-api"] },
+43: } as const satisfies Pack
+```
+
+**RA-S007 — `packages/core/src/backend-toolkit/packs/orval.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `afdc69072ae464f07a5686fd3828f73d558e0b81` · SHA-256 `cfa18aa4707d83c3ad83aab06263be68234c186145bdd2b718b9e4d3863abf5a` · 1113 bytes.
+
+Linhas 5–5.
+
+```text
+5: const VERSION = "8.39.0"
+```
+
+Linhas 7–31.
+
+```text
+7: export default {
+8:   id: "orval",
+9:   version: VERSION,
+10:   license: "MIT",
+11:   upstream: "orval-labs/orval",
+12:   // Measured with script/toolkit-floors.ts (F5.4): esbuild's per-target binary, the only native file in the install.
+13:   floor: {
+14:     "darwin-arm64": { macos: "12.0" },
+15:     "darwin-x64": { macos: "12.0" },
+16:     "linux-arm64": {},
+17:     "linux-x64": {},
+18:     "win32-x64": {},
+19:   },
+20:   runtime: "node",
+21:   install: {
+22:     kind: "npm",
+23:     // The package.json text the lock was written from, in npm's own formatting.
+24:     packageJson:
+25:       JSON.stringify({ name: "backend-toolkit-orval", private: true, dependencies: { orval: VERSION } }, null, 2) +
+26:       "\n",
+27:     lock: JSON.stringify(lock, null, 2) + "\n",
+28:   },
+29:   launch: ["{install}/node_modules/orval/dist/bin/orval.mjs"],
+30:   fit: { role: "generator", input: "an OpenAPI description", skills: ["backend-api"] },
+31: } as const satisfies Pack
+```
+
+**RA-S008 — `packages/core/src/backend-toolkit/packs/protoc-gen-es.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `6b8dc5112e0d5c09493f2700d2a8a44a66de4ee8` · SHA-256 `36c5526a297dba47104e6e772f4dd3c6f8a1a02b3b0d57a0b94f72f23cfb6035` · 824 bytes.
+
+Linhas 4–4.
+
+```text
+4: const VERSION = "2.16.0"
+```
+
+Linhas 6–25.
+
+```text
+6: export default {
+7:   id: "protoc-gen-es",
+8:   version: VERSION,
+9:   license: "Apache-2.0",
+10:   upstream: "bufbuild/protobuf-es",
+11:   runtime: "node",
+12:   install: {
+13:     kind: "npm",
+14:     // The package.json text the lock was written from, in npm's own formatting.
+15:     packageJson:
+16:       JSON.stringify(
+17:         { name: "backend-toolkit-protoc-gen-es", private: true, dependencies: { "@bufbuild/protoc-gen-es": VERSION } },
+18:         null,
+19:         2,
+20:       ) + "\n",
+21:     lock: JSON.stringify(lock, null, 2) + "\n",
+22:   },
+23:   launch: ["{install}/node_modules/@bufbuild/protoc-gen-es/bin/protoc-gen-es"],
+24:   fit: { role: "generator", input: "a Buf module of .proto files", skills: ["backend-api"] },
+25: } as const satisfies Pack
+```
+
+**RA-S009 — `packages/core/src/backend-toolkit/packs/openapi-generator.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `928930908862f17b5df6fb3d8a376d85ed7d5884` · SHA-256 `173c8f226dd169b990ca9ce52053a2b05cb62658df84ff994a611d4b3b7bf248` · 884 bytes.
+
+Linhas 4–4.
+
+```text
+4: const VERSION = "7.25.0"
+```
+
+Linhas 6–23.
+
+```text
+6: export default {
+7:   id: "openapi-generator",
+8:   version: VERSION,
+9:   license: "Apache-2.0",
+10:   upstream: "OpenAPITools/openapi-generator",
+11:   runtime: "java",
+12:   install: {
+13:     kind: "jar",
+14:     artifact: {
+15:       url: `https://repo1.maven.org/maven2/org/openapitools/openapi-generator-cli/${VERSION}/openapi-generator-cli-${VERSION}.jar`,
+16:       integrity: "sha256-Qc5PawfxlmdkOdcQdZ+hzteggGbQb/G/MUaBRwKJ764=",
+17:       format: "raw",
+18:       entries: [{ from: `openapi-generator-cli-${VERSION}.jar`, to: "openapi-generator-cli.jar" }],
+19:     },
+20:   },
+21:   launch: ["-jar", "{install}/openapi-generator-cli.jar"],
+22:   fit: { role: "generator", input: "an OpenAPI description", skills: ["backend-api"] },
+23: } as const satisfies Pack
+```
+
+**RA-S010 — `packages/core/src/backend-toolkit/packs/datamodel-codegen.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `feab5b5a517a598338b7cc18c863d10b841302d5` · SHA-256 `52c7ee7257e696d7728cd12b6c59d9d7e52afb512b8b84320e62feced373d124` · 1335 bytes.
+
+Linhas 4–31.
+
+```text
+4: export default {
+5:   id: "datamodel-codegen",
+6:   version: "0.83.0",
+7:   license: "MIT",
+8:   upstream: "koxudaxi/datamodel-code-generator",
+9:   // Measured with script/toolkit-floors.ts (F5.4): the highest requirement among the compiled wheels of each target.
+10:   floor: {
+11:     "darwin-arm64": { macos: "11.0" },
+12:     "darwin-x64": { macos: "10.13" },
+13:     "linux-arm64": { glibc: "2.17" },
+14:     "linux-x64": { glibc: "2.14" },
+15:     "win32-x64": {},
+16:   },
+17:   runtime: "python",
+18:   install: {
+19:     kind: "pip",
+20:     // One `name==version --hash=...` line per pin, with the sha256 of every wheel any target may pick.
+21:     requirements:
+22:       Object.entries(WHEELS)
+23:         .map(([pin, wheels]) => [pin, ...Object.values(wheels).map((hex) => `--hash=sha256:${hex}`)].join(" "))
+24:         .join("\n") + "\n",
+25:   },
+26:   launch: ["-m", "datamodel_code_generator"],
+27:   // PYTHONSAFEPATH keeps `-m` from putting the working directory first on sys.path, where a project package could
+28:   // shadow the pinned ones; PYTHONNOUSERSITE does the same for the user's site-packages.
+29:   env: { PYTHONPATH: "{install}", PYTHONSAFEPATH: "1", PYTHONNOUSERSITE: "1" },
+30:   fit: { role: "generator", input: "an OpenAPI document or JSON Schema", skills: ["backend-api"] },
+31: } as const satisfies Pack
+```
+
+**RA-S011 — `packages/core/src/backend-toolkit/packs/ogen.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `302a4c0f91b4fa0aef370d8c6cb7ae48ab414482` · SHA-256 `c1df3ae0c7b885ad04631d083c76d34802c836a6df049589900e2969c05daabc` · 2104 bytes.
+
+Linhas 4–4.
+
+```text
+4: const VERSION = "1.24.0"
+```
+
+Linhas 8–13.
+
+```text
+8: const SOURCE = [
+9:   ".codecov.yaml",
+10:   ".editorconfig",
+11:   ".gitattributes",
+12:   ".github",
+13:   ".gitignore",
+```
+
+Linhas 31–32.
+
+```text
+31:   "go.mod",
+32:   "go.sum",
+```
+
+Linhas 63–83.
+
+```text
+63: export default {
+64:   id: "ogen",
+65:   version: VERSION,
+66:   license: "Apache-2.0",
+67:   upstream: "ogen-go/ogen",
+68:   runtime: "go",
+69:   install: {
+70:     kind: "source",
+71:     artifact: {
+72:       url: `https://proxy.golang.org/github.com/ogen-go/ogen/@v/v${VERSION}.zip`,
+73:       integrity: "sha256-QAbV57ez2whdMjgjZ2SVFjcb6Cbzc4fx9PJ9lyEZOAk=",
+74:       format: "zip",
+75:       entries: SOURCE.map((name) => ({ from: `github.com/ogen-go/ogen@v${VERSION}/${name}`, to: `src/${name}` })),
+76:     },
+77:     build: "go",
+78:     path: "./cmd/ogen",
+79:     binary: "ogen",
+80:   },
+81:   launch: [],
+82:   fit: { role: "generator", input: "an OpenAPI description", skills: ["backend-api"] },
+83: } as const satisfies Pack
+```
+
+**RA-S012 — `packages/core/src/backend-toolkit/packs/sqlx.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `bdaa2f4e6147bda107c67aae416b8eb97773eaae` · SHA-256 `869d64285186d2f8bc2dcdbc5dabffc5488257a903e7662d0c99b63c79dce96e` · 1729 bytes.
+
+Linhas 4–4.
+
+```text
+4: const VERSION = "0.9.0"
+```
+
+Linhas 9–40.
+
+```text
+9: export default {
+10:   id: "sqlx",
+11:   version: VERSION,
+12:   license: "MIT OR Apache-2.0",
+13:   upstream: "transact-rs/sqlx",
+14:   runtime: "rust",
+15:   install: {
+16:     kind: "source",
+17:     artifact: {
+18:       url: `https://static.crates.io/crates/sqlx-cli/sqlx-cli-${VERSION}.crate`,
+19:       integrity: "sha256-k+84V6SgtI/L9Ta3epEio1x2MWhvLM+8deYWM1dx6NA=",
+20:       format: "tar.gz",
+21:       // PinnedArtifact refuses `.` as a destination, so the crate root is lifted member by member; `tests` comes along
+22:       // so every target path the manifest declares exists.
+23:       entries: ["Cargo.toml", "Cargo.lock", "README.md", "LICENSE-APACHE", "LICENSE-MIT", "src", "tests"].map(
+24:         (name) => ({
+25:           from: `sqlx-cli-${VERSION}/${name}`,
+26:           to: `src/${name}`,
+27:         }),
+28:       ),
+29:     },
+30:     build: "cargo",
+31:     path: ".",
+32:     binary: "sqlx",
+33:     features: ["rustls", "postgres", "mysql", "sqlite", "sqlx-toml"],
+34:   },
+35:   launch: [],
+36:   // The msvc toolchain links only through Microsoft's `link.exe`, and the standalone gnu toolchain ships a linker but
+37:   // no C compiler for ring and SQLite.
+38:   unsupported: { "win32-x64": "needs-msvc-linker" },
+39:   fit: { role: "generator", input: "a SQLx project's migrations and a disposable database", skills: ["backend-data"] },
+40: } as const satisfies Pack
+```
+
+**RA-S013 — `packages/core/src/backend-toolkit/packs/controller-gen.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `55bf77a6e053b7ec32e77f1c0c7ab2ecf410b150` · SHA-256 `6182cca9af788189579ba431f639e386b45791fda6d9835e1cb4879c071b0aad` · 2915 bytes.
+
+Linhas 3–9.
+
+```text
+3: const VERSION = "0.22.0"
+4: 
+5: export default {
+6:   id: "controller-gen",
+7:   version: VERSION,
+8:   license: "Apache-2.0",

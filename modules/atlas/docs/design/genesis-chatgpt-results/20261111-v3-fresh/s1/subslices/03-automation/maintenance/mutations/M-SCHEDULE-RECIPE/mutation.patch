@@ -1,0 +1,15 @@
+--- a/packages/core/src/scheduled-task/model.ts
++++ b/packages/core/src/scheduled-task/model.ts
+@@ -20,10 +20,10 @@
+ 
+ const HOUR = 3_600_000
+ const DAY = 24 * HOUR
+-const LATE = DAY
++const LATE = 12 * HOUR
+ 
+ // What the scheduler owes a task at `now`. Only the latest due slot can run; older slots were overtaken
+-// and count as missed. A one-off or weekly slot more than a day late is skipped, never caught up. Hourly
++// and count as missed. A one-off or weekly slot more than twelve hours late is skipped, never caught up. Hourly
+ // and daily slots are always within one cadence of the next slot.
+ export function plan(task: Timing, now: number): Plan {
+   if (!task.enabled || task.next > now) return { type: "wait" }

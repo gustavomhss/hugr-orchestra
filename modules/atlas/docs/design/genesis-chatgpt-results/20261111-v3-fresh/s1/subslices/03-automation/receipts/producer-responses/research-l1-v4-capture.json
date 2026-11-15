@@ -1,0 +1,12 @@
+{
+  "target": "/root/research_l1",
+  "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/receipts/producer-responses/research-l1-v4-original.md",
+  "origin": "collaboration.list_agents agent_status.completed",
+  "bytes": 3536,
+  "sha256": "ede14af134d6c3179fc6deac476fe577eb4681f8acd01387dddbb8b2a07bcbe4",
+  "terminal_newline": false,
+  "literal": true,
+  "scope": "Original visible producer final captured before any new dispatch; relay did not evaluate or reconstruct producer output.",
+  "original_capture_file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/producer-responses/research-l1-v4-original.md",
+  "copy_note": "Byte-identical copy of original visible producer final captured by relay; no changes or reconstruction."
+}

@@ -1,0 +1,55 @@
+{
+  "schema": "s1-03-minimal-consistency-correction-recipe/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "frozen_at_utc": "2026-11-15T03:59:20.816418+00:00",
+  "state": "FROZEN_BEFORE_DISPATCH",
+  "artifact": "s1.core.research",
+  "version": 4,
+  "prior_version": 3,
+  "body": "producers/research/body.md",
+  "exclusive_revision_directory": "producers/research/revisions/v4",
+  "allowed_current_changes": [
+    "producers/research/body.md"
+  ],
+  "inputs": [
+    {
+      "path": "producers/research/body.md",
+      "bytes": 63841,
+      "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+      "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4"
+    },
+    {
+      "path": "producers/research/sources/packages/core/src/research-toolkit/code-index/query.ts",
+      "bytes": 32872,
+      "sha256": "ec1dd4a297e6e798c497d67ac5ed21cd4c6484e2aba3c2bed60dbd8f174f05e8",
+      "git_blob_sha": "25d652ee0ce78d327427837466b5d7fe5886013f"
+    },
+    {
+      "path": "producers/research/revisions/v3/input-manifest-extension.json",
+      "bytes": 7585,
+      "sha256": "95e1d759bace7baa2f8e5bed6f65ee9f5fba1f4a4c24b7f93a4b8d2318bc1101",
+      "git_blob_sha": "6910dfb1a66c7140c3d06c0eb19b182c56ba4e30"
+    },
+    {
+      "path": "producers/research/recipe-v3.json",
+      "bytes": 2901,
+      "sha256": "cd8813f5a1d2157546b762c60b0ff08812281a4138006fdc282a3fdab809abe0",
+      "git_blob_sha": "70600277e27b5f50ff5bec43a08eee08451ae922"
+    },
+    {
+      "path": "producers/research/revisions/v4/public-findings.md",
+      "bytes": 1370,
+      "sha256": "274bc65c13abadb0c847c71b7acaf135759d89282b2509cc970f67d4d13e5d42",
+      "git_blob_sha": "e4c19a874355af85e5852cdf648af954527b13ab"
+    }
+  ],
+  "context": "Continue original oracle-blind L1 family author. Retain all previous actual input lineage; no new semantic agent and no oracle. Sources are already inherited, read them whole if reread. Do not open judges or descendants.",
+  "instructions": [
+    "Read this recipe, request, public findings and the enumerated files in full; retain exact dispatch. Additional prior-context records may be reused only if already actually consumed; declare any actual read or hash-only input, do not silently omit mechanical reads.",
+    "Before mutation, preserve exact current body and any output to be superseded within the revision directory history, with hashes; do not overwrite an older frozen revision. Freeze a concise actual apply procedure and its input identities BEFORE execution. Execute the procedure once and record the actual order. A postproduction recipe.json is not an earlier recipe.",
+    "Make only the minimum semantic correction stated in public-findings.md. Preserve other bytes. Emit exact before/after literals, UTF-8 offsets, prefix/suffix hashes or inverse verification, prior/current body identities and an independent delta.patch.",
+    "Write in the exclusive revision directory: dispatch-message.txt, actual apply.py, procedure-freeze.json, history/body.md, delta.json/delta.patch, review-supplement.md containing literal delta and decisive exact source excerpts with original line/path/hash identities, input-manifest-extension.json with every new whole-file input and retained lineage, producer-verification.json, response.md. Preserve request.txt/recipe.json/public-findings.md. Only the current body listed above may change outside this directory.",
+    "All reading/processing inputs, including preservation/hash-only files, scripts, requests and dispatch, are whole-file input units. Preserve aliases for any prior version changed in place. Do not list current outputs as self-inputs. Declare procedure and supplemental summary separately.",
+    "No network, remote writes, product changes/tests, policy/guard changes, delegation or L2–L4 production. No semantic self-PASS or runtime claims. Report completion and hashes; the same independent pair must reevaluate before any dependent gate. Tokens/physical attempts/cost UNKNOWN when unexposed."
+  ]
+}

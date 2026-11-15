@@ -1,0 +1,63 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "derived-research-flow-v3",
+  "source": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/derived-research-flow-v3.md",
+  "source_bytes": 38782,
+  "source_sha256": "a0670c2aabad63a8ab0106591b8023739bc39a3eb6f30e02cc6648e99278b64c",
+  "parts_per_target": 1,
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 39953,
+      "request_file_sha256": "152cb248d28e0d287059dfdb7084779ecdb62441a859331c12daac19a64e0a0e",
+      "message_bytes": 39384,
+      "message_sha256": "1c8eee69dee7940064d86825eeb66e7e89eb10c2f76885cdac21fb274ed7ff77",
+      "payload_bytes": 38782,
+      "payload_sha256": "a0670c2aabad63a8ab0106591b8023739bc39a3eb6f30e02cc6648e99278b64c",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Literal UTF-8 packet only; final signal is outside payload.",
+  "slot_handling": "Root liberou dois juízes com autores ociosos. J2 recebeu R L2 v3 após original BND v2 salvo; J1 ainda em support, este lote pendente para J1.",
+  "judgment_capture": "J2 original preserved; J1 not yet dispatched.",
+  "dispatch_count": 1,
+  "recorded_at_utc": "2026-11-15T04:44:39.250636+00:00",
+  "completed_targets": [
+    "/root/s1_03_j2"
+  ],
+  "pending_targets": [
+    "/root/s1_03_j1"
+  ],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j2",
+      "bytes": 38782,
+      "sha256": "a0670c2aabad63a8ab0106591b8023739bc39a3eb6f30e02cc6648e99278b64c",
+      "equals_source": true,
+      "raw_bytes": 38782,
+      "raw_sha256": "a0670c2aabad63a8ab0106591b8023739bc39a3eb6f30e02cc6648e99278b64c",
+      "corrections_applied": false
+    }
+  ],
+  "judgment_captures": {
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-research-flow-v3/j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 2519,
+      "sha256": "3a8274022dc6bf53c8e95e00b9bd4e327885848a87dc9622ea73805cc2815f47",
+      "terminal_newline": false,
+      "literal": true,
+      "identity_note": "Judge handle and dispatch identify origin; original text not edited to add judge_id."
+    }
+  }
+}

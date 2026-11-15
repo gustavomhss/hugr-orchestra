@@ -1,0 +1,1 @@
+ACK — parte 4/5 recebida, até o cabeçalho `HK02-1`. Aguardo a parte 5/5 e o sinal externo `FIM_DO_LOTE`; sem julgamento intermediário.

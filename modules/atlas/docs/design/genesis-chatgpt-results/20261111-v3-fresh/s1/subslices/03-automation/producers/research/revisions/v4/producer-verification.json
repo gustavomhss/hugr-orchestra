@@ -1,0 +1,213 @@
+{
+  "schema": "genesis-producer-mechanical-verification/v1",
+  "revision": 4,
+  "artifact": "s1.core.research",
+  "classification": "MECHANICAL_PRODUCER_VERIFICATION_NOT_SEMANTIC_JUDGMENT",
+  "started_at_utc": "2026-11-15T04:08:28.455649+00:00",
+  "completed_at_utc": "2026-11-15T04:08:28.464731+00:00",
+  "procedure_frozen_at_utc": "2026-11-15T04:08:23.868865+00:00",
+  "procedure": {
+    "path": "producers/research/revisions/v4/apply.py",
+    "bytes": 17467,
+    "sha256": "5bfdf994e961bdac05212b2a981aa8f50fcdf60bd5d440988fca5247e4bab89b",
+    "git_blob_sha": "235ce74826e8c995b5ed8e75bed02f8d8af9b07c"
+  },
+  "freeze": {
+    "path": "producers/research/revisions/v4/procedure-freeze.json",
+    "bytes": 5148,
+    "sha256": "6cd8fcb3642f22bf1f6831047db7e4ecc7b4e782c1681ccec4e400f798858a48",
+    "git_blob_sha": "16d17b90d6ca6a9eecbddf447fb70d51decc60ed"
+  },
+  "invocation": [
+    "python",
+    "producers/research/revisions/v4/apply.py",
+    "6cd8fcb3642f22bf1f6831047db7e4ecc7b4e782c1681ccec4e400f798858a48"
+  ],
+  "recorded_apply_invocations": 1,
+  "bootstrap_incident": {
+    "stage": "initial inline bootstrap parsing",
+    "error": "SyntaxError: closing parenthesis does not match opening parenthesis (nested triple-quoted script text)",
+    "effect": "Python failed compilation before any instruction; no file read/write and no apply.py invocation in that attempt",
+    "record_source": "tool transcript",
+    "resolution": "Correct quoting, parse source before creation, then freeze real apply.py before execution"
+  },
+  "actual_order": [
+    {
+      "sequence": 1,
+      "at_utc": "2026-11-15T04:08:28.455837+00:00",
+      "action": "verify-procedure-and-freeze-created-before-invocation"
+    },
+    {
+      "sequence": 2,
+      "at_utc": "2026-11-15T04:08:28.456682+00:00",
+      "action": "read-and-verify-eight-whole-file-input-units",
+      "paths": [
+        "producers/research/body.md",
+        "producers/research/sources/packages/core/src/research-toolkit/code-index/query.ts",
+        "producers/research/revisions/v3/input-manifest-extension.json",
+        "producers/research/recipe-v3.json",
+        "producers/research/revisions/v4/public-findings.md",
+        "producers/research/revisions/v4/request.txt",
+        "producers/research/revisions/v4/recipe.json",
+        "producers/research/revisions/v4/dispatch-message.txt"
+      ]
+    },
+    {
+      "sequence": 3,
+      "at_utc": "2026-11-15T04:08:28.457133+00:00",
+      "action": "verify-one-literal-change-and-pinned-source-conditions",
+      "changed_lines": [
+        225
+      ]
+    },
+    {
+      "sequence": 4,
+      "at_utc": "2026-11-15T04:08:28.457765+00:00",
+      "action": "preserve-and-verify-v3-before-current-body-mutation",
+      "path": "producers/research/revisions/v4/history/body.md",
+      "identity": {
+        "bytes": 63841,
+        "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+        "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4"
+      }
+    },
+    {
+      "sequence": 5,
+      "at_utc": "2026-11-15T04:08:28.460794+00:00",
+      "action": "apply-single-literal-substitution-and-read-back-v4",
+      "identity": {
+        "bytes": 64106,
+        "sha256": "c3925ca6e27465598796ef21815e79980277d4c3194a8b2fda7cf433700675d1",
+        "git_blob_sha": "69fda8b4a63d5480b7d78e8f915e1d90fb8a2b8b"
+      }
+    },
+    {
+      "sequence": 6,
+      "at_utc": "2026-11-15T04:08:28.462624+00:00",
+      "action": "emit-exact-delta-independent-patch-and-neutral-literal-evidence"
+    },
+    {
+      "sequence": 7,
+      "at_utc": "2026-11-15T04:08:28.463465+00:00",
+      "action": "emit-original-response-and-whole-file-input-extension"
+    },
+    {
+      "sequence": 8,
+      "at_utc": "2026-11-15T04:08:28.464726+00:00",
+      "action": "verify-preserved-inputs-and-all-written-outputs"
+    }
+  ],
+  "single_literal_substitution": true,
+  "changed_lines": [
+    225
+  ],
+  "prefix_and_suffix_unchanged": true,
+  "inverse_exact": true,
+  "preserved_input_identities": [
+    {
+      "path": "producers/research/revisions/v4/history/body.md",
+      "bytes": 63841,
+      "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+      "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4"
+    },
+    {
+      "path": "producers/research/sources/packages/core/src/research-toolkit/code-index/query.ts",
+      "bytes": 32872,
+      "sha256": "ec1dd4a297e6e798c497d67ac5ed21cd4c6484e2aba3c2bed60dbd8f174f05e8",
+      "git_blob_sha": "25d652ee0ce78d327427837466b5d7fe5886013f"
+    },
+    {
+      "path": "producers/research/revisions/v3/input-manifest-extension.json",
+      "bytes": 7585,
+      "sha256": "95e1d759bace7baa2f8e5bed6f65ee9f5fba1f4a4c24b7f93a4b8d2318bc1101",
+      "git_blob_sha": "6910dfb1a66c7140c3d06c0eb19b182c56ba4e30"
+    },
+    {
+      "path": "producers/research/recipe-v3.json",
+      "bytes": 2901,
+      "sha256": "cd8813f5a1d2157546b762c60b0ff08812281a4138006fdc282a3fdab809abe0",
+      "git_blob_sha": "70600277e27b5f50ff5bec43a08eee08451ae922"
+    },
+    {
+      "path": "producers/research/revisions/v4/public-findings.md",
+      "bytes": 1370,
+      "sha256": "274bc65c13abadb0c847c71b7acaf135759d89282b2509cc970f67d4d13e5d42",
+      "git_blob_sha": "e4c19a874355af85e5852cdf648af954527b13ab"
+    },
+    {
+      "path": "producers/research/revisions/v4/request.txt",
+      "bytes": 548,
+      "sha256": "53d5398d52c804a75572f369ab9a08049872041080f16fdf167ae38f56a94531",
+      "git_blob_sha": "ca74b4ecd789bb7894860912677d138762e33a98"
+    },
+    {
+      "path": "producers/research/revisions/v4/recipe.json",
+      "bytes": 4029,
+      "sha256": "5eb8b298dd8ca73b66d0869424782f73dbf539c0a6c37aaa837686976da2fc57",
+      "git_blob_sha": "e217a08a971ff0e42a2af40f22bc12d060834fff"
+    },
+    {
+      "path": "producers/research/revisions/v4/dispatch-message.txt",
+      "bytes": 1059,
+      "sha256": "c800eb38cedaf8523662529d676cf30e4b67a8491afd943dc081c6c44381d5cc",
+      "git_blob_sha": "5d49d538ecc87957d4e3f27815dd74b14b65adc3"
+    }
+  ],
+  "outputs_before_this_receipt": [
+    {
+      "path": "producers/research/body.md",
+      "bytes": 64106,
+      "sha256": "c3925ca6e27465598796ef21815e79980277d4c3194a8b2fda7cf433700675d1",
+      "git_blob_sha": "69fda8b4a63d5480b7d78e8f915e1d90fb8a2b8b"
+    },
+    {
+      "path": "producers/research/revisions/v4/history/body.md",
+      "bytes": 63841,
+      "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+      "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4"
+    },
+    {
+      "path": "producers/research/revisions/v4/delta.patch",
+      "bytes": 2508,
+      "sha256": "006c3d6f4a57f82863ff1a508408d4703d0e1cbe1d3aad94274133002cb4a0a7",
+      "git_blob_sha": "06a6008d20fe5cac6530464d30d6f427540e38ac"
+    },
+    {
+      "path": "producers/research/revisions/v4/delta.json",
+      "bytes": 3594,
+      "sha256": "101c4331a8cda599527fbbfb60a2e96336cfae47f29d885b13c39dcf73903278",
+      "git_blob_sha": "9de9896d94d1d9ba5d06c75ea81da32f38d14a9e"
+    },
+    {
+      "path": "producers/research/revisions/v4/review-supplement.md",
+      "bytes": 6375,
+      "sha256": "b1d76b7ca5e1dd897846d6fa8398b32de921829598dbd32b07eb7e3c5d9a0081",
+      "git_blob_sha": "6bfc9a8bf6f7ab72b8cf5c9ee995b0eee20bfe35"
+    },
+    {
+      "path": "producers/research/revisions/v4/response.md",
+      "bytes": 2939,
+      "sha256": "ab45f984ea21f8f8aa17fef8403e8d702efd05d1dfff713af9ad860963d0f837",
+      "git_blob_sha": "605a7c1777344f2550f684a08f268e9c4e548eb2"
+    },
+    {
+      "path": "producers/research/revisions/v4/input-manifest-extension.json",
+      "bytes": 19044,
+      "sha256": "90281c42bf33b412090a99e8e2e791cf79c38c6c03380856309ed6ed05e23c02",
+      "git_blob_sha": "93e6024fdba93dc7ac0d8a6f1e5b308c80e54f59"
+    }
+  ],
+  "output_self_hash": "Excluded to avoid self-reference; reported after writing.",
+  "write_scope": [
+    "producers/research/body.md",
+    "producers/research/revisions/v4/"
+  ],
+  "external_or_reserved_reads": 0,
+  "network_calls": 0,
+  "product_test_runs": 0,
+  "semantic_self_pass": false,
+  "limitations": [
+    "Documentary replacement and fixed-source inspection only.",
+    "No runtime qualification, oracle, new judge, dependent gate or later layer."
+  ]
+}

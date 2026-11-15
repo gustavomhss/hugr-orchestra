@@ -1,0 +1,1 @@
+Recebido o **subenvio 1/2 da parte 2/5** de **research-b-supplement-v2**, com os offsets e a identidade informados pela principal. Aguardarei os demais subenvios e **FIM_DO_LOTE**, sem emitir julgamento intermediário.

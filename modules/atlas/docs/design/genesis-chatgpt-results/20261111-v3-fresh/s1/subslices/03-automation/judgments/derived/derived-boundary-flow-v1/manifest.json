@@ -1,0 +1,53 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "lot": "derived-boundary-flow-v1",
+  "source": "review-packets/derived-boundary-flow-v1.md",
+  "source_bytes": 42613,
+  "source_sha256": "5de70da90077795058e339218d73562692c610f494b847df5ea03abccd1ef3e4",
+  "frozen_manifest": {
+    "schema": "s1-03-derived-review-packet/v1",
+    "lot": "derived-boundary-flow-v1",
+    "artifact": "s1.subslice03.boundary-flow",
+    "layer": 2,
+    "bytes": 42613,
+    "sha256": "5de70da90077795058e339218d73562692c610f494b847df5ea03abccd1ef3e4",
+    "git_blob_sha": "e2db63c3f19e7c13e83cbddbcfa0dffcbb7b8339",
+    "body_bytes": 16112,
+    "body_sha256": "83c961e473f666034b6db197ead28594580f4a953fc9f6f4bb63f006ab65ddbd",
+    "literal_files": [
+      {
+        "label": "body",
+        "bytes": 16112,
+        "sha256": "83c961e473f666034b6db197ead28594580f4a953fc9f6f4bb63f006ab65ddbd"
+      },
+      {
+        "label": "evidence",
+        "bytes": 8327,
+        "sha256": "4e42f26758255ed63978d5e027a165a4eaaecfe645c78571365c4f5a2e81a780"
+      },
+      {
+        "label": "task_recipe",
+        "bytes": 8459,
+        "sha256": "3e4c7ebbb94d3fb6d7c4de5238aaea74e817cbfb1e80ea2c15bb259bc20eb544"
+      },
+      {
+        "label": "common_recipe",
+        "bytes": 4017,
+        "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588"
+      }
+    ],
+    "input_table": "Explicit mechanical projection of actual manifest; original remains preserved.",
+    "dispatch_state": "NOT_YET_DISPATCHED"
+  },
+  "split_rule": "One literal UTF-8 part. Read in two local views to avoid output truncation; canonical part remains whole. Prepared-only until direct dispatch returns.",
+  "parts": [
+    {
+      "part": 1,
+      "file": "part-01.txt",
+      "start": 0,
+      "end": 42613,
+      "bytes": 42613,
+      "sha256": "5de70da90077795058e339218d73562692c610f494b847df5ea03abccd1ef3e4"
+    }
+  ]
+}

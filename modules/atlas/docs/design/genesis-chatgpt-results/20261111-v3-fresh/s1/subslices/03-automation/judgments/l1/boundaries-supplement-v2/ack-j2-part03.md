@@ -1,0 +1,1 @@
+ACK — parte 3/5 recebida, até o cabeçalho `BT09-2`. Aguardo as partes 4/5 e 5/5 e o sinal externo `FIM_DO_LOTE`, sem julgamento intermediário.

@@ -1,0 +1,474 @@
+Mesmo lote research-b-supplement-v2, J2, parte 2/5, subenvio 1/2. A principal transmite J2; o mesmo par e o candidato researchv2 continuam. Cada par de subenvios recompõe exatamente o fragmento canônico, sem alterar o pacote263486bytes SHA2568e94a5f458c6e53d8d4340e3fd218acab70667b58982261b5258adc5245b15fe. Este trecho literal: 26318bytes, SHA256b125a4ff93b2496e793187375f9b4e835d354aeaf317b66c7268931f5cb8343f, offsets globais[52689,79007). Não use ferramentas; marcadores externos não pertencem ao pacote.
+INICIO_PARTE_LITERAL
+Arquivo integral: `sources/packages/core/src/research-toolkit/locate.ts`; archive: E27.
+
+Linhas 24–43.
+
+```text
+24: /**
+25:  * The ranges a retained code_locate snapshot holds, with each original line's offset among the snapshot's lines, or
+26:  * undefined when the text is not a snapshot. Readers map snapshot evidence back to the worktree file it came from.
+27:  */
+28: export function blocks(text: string) {
+29:   const rows = text.split(/\r\n|\n|\r/)
+30:   if (rows[0] !== SNAPSHOT) return undefined
+31:   return rows.flatMap((row, index) => {
+32:     const head = /^==> (.+):(\d+)-(\d+)$/.exec(row)
+33:     return head ? [{ path: head[1], start: Number(head[2]), end: Number(head[3]), row: index + 1 }] : []
+34:   })
+35: }
+36: 
+37: export const MAX_SEARCHES = 32
+38: export const DEFAULT_LIMIT = 12
+39: const RRF_K = 60
+40: const PER_FILE = 3
+41: const CONTEXT = 3
+42: const PAGE = 50
+43: const SEEDS = 5
+```
+
+Linhas 56–110.
+
+```text
+56: export const run = Effect.fn("Locate.run")(function* (input: CodeIndex.LocateInput, sources: Sources) {
+57:   const started = Date.now()
+58:   const limit = input.limit ?? DEFAULT_LIMIT
+59:   const scope = (input.paths ?? []).map((pattern) => new Bun.Glob(pattern))
+60:   const inScope = (file: string) => !scope.length || scope.some((glob) => glob.match(file))
+61:   if (!input.question && !input.terms?.length && !input.symbols?.length)
+62:     return yield* new Research.Error({ code: "unsupported", message: "code_locate needs at least one of question, terms or symbols" })
+63:   const prior = yield* ranks(sources.query)
+64:   const query = prior ? sources.query : undefined
+65:   const rank = prior ?? new Map<string, number>()
+66:   const terms = [...new Set([...(input.terms ?? []), ...(input.question ? extract(input.question) : []),
+67:     // Without an index, symbol names can only be found lexically.
+68:     ...(query ? [] : (input.symbols ?? []).map((symbol) => symbol.split(".").at(-1) ?? symbol))])]
+69:   // The prior costs one search; neighbours keep two per seed. The rest goes to terms and symbols, best lists first.
+70:   const first = [
+71:     ...(query ? (input.symbols ?? []).map((symbol) => definitions(query, symbol, inScope)) : []),
+72:     ...terms.map((term) => lexical(sources.search, term, "lexical", input.paths)),
+73:     ...(query ? (input.symbols ?? []).map((symbol) => named(query, symbol, inScope)) : []),
+74:     ...terms.map((term) => lexical(sources.search, term, "lexical-wide", input.paths)),
+75:   ].slice(0, MAX_SEARCHES - (query ? 1 + 2 * SEEDS : 0))
+76:   const lists = yield* Effect.forEach(first, (planned) => planned.run, { concurrency: "unbounded" })
+77:   const second = query ? [...new Set(fuse(lists, rank).map((unit) => unit.path))].slice(0, SEEDS)
+78:     .flatMap((file) => neighbours(query, file, inScope)) : []
+79:   const near = yield* Effect.forEach(second, (planned) => planned.run, { concurrency: "unbounded" })
+80:   const planned = [...first, ...second]
+81:   const all = [...lists, ...near]
+82: 
+83:   const fused = fuse(all, rank)
+84:   const files = new Map(yield* Effect.forEach([...new Set(fused.map((unit) => unit.path))],
+85:     (file) => sources.read(file).pipe(Effect.map((text) => [file, text?.split(/\r\n|\n|\r/)] as const)), { concurrency: "unbounded" }))
+86:   const verified = fused.flatMap((unit) => {
+87:     const lines = files.get(unit.path)
+88:     if (!lines) return []
+89:     // A context window may run past the end of the file; a definition must exist on exactly the lines it declares.
+90:     const clamped = unit.symbol ? unit : { ...unit, endLine: Math.min(unit.endLine, lines.length) }
+91:     return clamped.endLine <= lines.length && clamped.checks.every((check) => valid(clamped, check, lines)) ? [clamped] : []
+92:   })
+93:   const perFile = new Map<string, number>()
+94:   const kept = verified.filter((unit) => {
+95:     const count = (perFile.get(unit.path) ?? 0) + 1
+96:     perFile.set(unit.path, count)
+97:     return count <= PER_FILE
+98:   }).slice(0, limit)
+99:   const evidence = yield* sources.retain([SNAPSHOT, ...kept.map((unit) => [`==> ${unit.path}:${unit.startLine}-${unit.endLine}`,
+100:     ...(files.get(unit.path) ?? []).slice(unit.startLine - 1, unit.endLine).map((text, index) => `${unit.startLine + index}: ${text}`)].join("\n"))]
+101:     .join("\n\n"))
+102:   return {
+103:     ranges: kept.map((unit) => ({ path: unit.path, startLine: unit.startLine, endLine: unit.endLine,
+104:       ...(unit.symbol ? { symbol: unit.symbol } : {}), why: unit.why, score: Number(unit.score.toFixed(6)) })),
+105:     searches: planned.map((search, index) => ({ kind: search.kind, query: search.query, hits: all[index].hits, truncated: all[index].truncated })),
+106:     evidence,
+107:     basis: basis(all, { indexed: query !== undefined, ms: Date.now() - started, limit, discarded: fused.length - verified.length,
+108:       truncated: verified.length > kept.length, files: [...files.keys()] }),
+109:   } satisfies CodeIndex.LocateResult
+110: })
+```
+
+Linhas 116–128.
+
+```text
+116: export function extract(question: string) {
+117:   const quoted = [...question.matchAll(/"([^"]+)"|'([^']+)'|`([^`]+)`/g)].map((match) => match[1] ?? match[2] ?? match[3])
+118:   const rest = question.replace(/"[^"]+"|'[^']+'|`[^`]+`/g, " ")
+119:   const identifiers = rest.match(/[\w$@.-]{0,200}[/.][\w$@./-]{0,200}\w|\b[a-z]+[A-Z][\w$]*|\b[A-Z][a-z0-9]+[A-Z][\w$]*|\b\w+_\w+\b|\b[a-z0-9]+(?:-[a-z0-9]+)+\b/g) ?? []
+120:   const words = (rest.match(/\p{L}{4,}/gu) ?? []).filter((word) => !STOPWORDS.has(word.toLowerCase()))
+121:   const seen = new Set<string>()
+122:   return [...quoted, ...identifiers, ...words].map((term) => term.trim().replace(/(?<![.,;:!?])[.,;:!?]+$/, "")).filter((term) => {
+123:     const key = term.toLowerCase()
+124:     if (!term || seen.has(key)) return false
+125:     seen.add(key)
+126:     return true
+127:   })
+128: }
+```
+
+Linhas 130–199.
+
+```text
+130: function lexical(search: Sources["search"], term: string, kind: "lexical" | "lexical-wide", paths?: ReadonlyArray<string>): Planned {
+131:   const input = kind === "lexical"
+132:     ? { pattern: term, mode: "identifier" as const, caseSensitive: true, limit: PAGE }
+133:     : { pattern: term, mode: "literal" as const, caseSensitive: false, limit: PAGE }
+134:   return {
+135:     kind, query: term,
+136:     run: search({ ...input, ...(paths?.length ? { paths: [...paths] } : {}) }).pipe(Effect.map((result) => ({
+137:       hits: result.matches.length, truncated: result.basis.bounds.truncated || result.next !== undefined, basis: result.basis,
+138:       units: result.matches.map((match): Unit => ({
+139:         ...(match.enclosing && match.enclosing.range.path === match.path && match.enclosing.range.startLine <= match.line &&
+140:           match.line <= match.enclosing.range.endLine
+141:           ? { ...match.enclosing.range, symbol: match.enclosing.name }
+142:           : { path: match.path, startLine: Math.max(1, match.line - CONTEXT), endLine: match.line + CONTEXT }),
+143:         why: `${kind === "lexical" ? "rg" : "rg-wide"}:${term}`,
+144:         check: { line: match.line, text: match.text.trim() },
+145:       })),
+146:     }))),
+147:   }
+148: }
+149: 
+150: function definitions(query: NonNullable<Sources["query"]>, symbol: string, inScope: (file: string) => boolean): Planned {
+151:   return indexed("definition", symbol, query({ op: "definition", name: symbol }), `def:${symbol}`, inScope)
+152: }
+153: 
+154: /** FTS prefix and camelCase/snake_case parts: the index matches `name` against `symbol_name` (J2). */
+155: function named(query: NonNullable<Sources["query"]>, symbol: string, inScope: (file: string) => boolean): Planned {
+156:   const name = symbol.split(".").at(-1) ?? symbol
+157:   return indexed("definition", `${name}*`, query({ op: "symbols", name, limit: PAGE }), `name:${name}`, inScope)
+158: }
+159: 
+160: function neighbours(query: NonNullable<Sources["query"]>, file: string, inScope: (file: string) => boolean): Planned[] {
+161:   return [
+162:     indexed("neighbors", `importers:${file}`, query({ op: "importers", path: file, limit: PAGE }), `importer-of:${file}`, inScope),
+163:     indexed("neighbors", `imports:${file}`, query({ op: "imports", path: file, limit: PAGE }), `imported-by:${file}`, inScope),
+164:   ]
+165: }
+166: 
+167: function indexed(kind: Kind, label: string, effect: Effect.Effect<CodeIndex.CodeQueryResult, Research.Error>, why: string,
+168:   inScope: (file: string) => boolean): Planned {
+169:   return {
+170:     kind, query: label,
+171:     run: effect.pipe(Effect.map((result) => {
+172:       const symbols = [...(result.resolved ? [result.resolved] : result.candidates),
+173:         ...result.hits.flatMap((hit) => hit.role === "definition" && hit.via ? [hit.via] : [])]
+174:       const units = [
+175:         ...symbols.map((ref): Unit => ({ ...ref.range, symbol: ref.name, why, check: { line: ref.nameLine, text: ref.name } })),
+176:         ...result.hits.filter((hit) => hit.role !== "definition" || !hit.via)
+177:           .map((hit): Unit => hit.via ? { ...hit.via.range, symbol: hit.via.name, why, check: { line: hit.via.nameLine, text: hit.via.name } }
+178:             : { ...hit.range, why }),
+179:       ].filter((unit) => inScope(unit.path))
+180:       return { units, hits: units.length, truncated: result.basis.bounds.truncated || result.next !== undefined, basis: result.basis }
+181:     }), Effect.catchIf((error) => UNINDEXED.has(error.code), (): Effect.Effect<List> =>
+182:       // A shard that stopped serving mid-call costs this list, not the call; coverage then says incomplete.
+183:       Effect.succeed({ units: [], hits: 0, truncated: true }))),
+184:   }
+185: }
+186: 
+187: /**
+188:  * L5: PageRank position over the resolved import graph, used only to break ties. One `map` page. It also probes the
+189:  * index: an index that is not ready yields undefined, and locate degrades to the lexical lists (J3.7).
+190:  */
+191: function ranks(query: Sources["query"]) {
+192:   if (!query) return Effect.succeed(undefined)
+193:   return query({ op: "map", limit: 200 }).pipe(
+194:     Effect.map((result) => new Map(result.hits.map((hit, index, hits) => [hit.range.path, 1 - index / hits.length] as const))),
+195:     Effect.catchIf((error) => UNINDEXED.has(error.code), () => Effect.succeed(undefined)),
+196:   )
+197: }
+198: 
+199: const UNINDEXED = new Set<Research.Error["code"]>(["index_unavailable", "index_building"])
+```
+
+Linhas 205–235.
+
+```text
+205: function fuse(lists: ReadonlyArray<List>, rank: ReadonlyMap<string, number>) {
+206:   const units = new Map<string, CodeIndex.Range & { symbol?: string; score: number; why: string[]; checks: NonNullable<Unit["check"]>[] }>()
+207:   const definitions = lists.flatMap((list) => list.units).filter((unit) => unit.symbol)
+208:   lists.forEach((list) => {
+209:     const seen = new Set<string>()
+210:     list.units.forEach((unit, index) => {
+211:       const line = unit.check?.line
+212:       const home = unit.symbol || line === undefined ? unit
+213:         : definitions.find((definition) => definition.path === unit.path && definition.startLine <= line && line <= definition.endLine) ?? unit
+214:       const key = `${home.path}:${home.startLine}:${home.endLine}`
+215:       const entry = units.get(key) ?? { path: home.path, startLine: home.startLine, endLine: home.endLine,
+216:         ...(home.symbol ? { symbol: home.symbol } : {}), score: 0.1 * (rank.get(home.path) ?? 0), why: [], checks: [] }
+217:       units.set(key, entry)
+218:       if (unit.check) entry.checks.push(unit.check)
+219:       if (!entry.why.includes(unit.why)) entry.why.push(unit.why)
+220:       if (seen.has(key)) return
+221:       seen.add(key)
+222:       entry.score += 1 / (RRF_K + index + 1)
+223:     })
+224:   })
+225:   return [...units.values()].toSorted(order)
+226: }
+227: 
+228: function valid(unit: CodeIndex.Range, check: NonNullable<Unit["check"]>, lines: ReadonlyArray<string>) {
+229:   return unit.startLine <= check.line && check.line <= unit.endLine && check.line <= lines.length &&
+230:     lines[check.line - 1].includes(check.text)
+231: }
+232: 
+233: function order(left: { score: number } & CodeIndex.Range, right: { score: number } & CodeIndex.Range) {
+234:   return right.score - left.score || left.path.localeCompare(right.path) || left.startLine - right.startLine
+235: }
+```
+
+Linhas 237–265.
+
+```text
+237: function basis(lists: ReadonlyArray<List>, run: { indexed: boolean; ms: number; limit: number; discarded: number; truncated: boolean
+238:   files: ReadonlyArray<string> }): CodeIndex.Basis {
+239:   const bases = lists.flatMap((list) => list.basis ? [list.basis] : [])
+240:   const freshness = bases.map((item) => item.freshness)
+241:   // Without an index, the languages of the files the lexical lists reached are the ones no index served.
+242:   const missing = run.indexed ? [] : run.files.flatMap((file) => LANGUAGES[file.split(".").at(-1) ?? ""] ?? [])
+243:   return {
+244:     basis: {
+245:       commit: bases.find((item) => item.basis.commit)?.basis.commit ?? "",
+246:       ...(bases.find((item) => item.basis.dirtyDigest) ? { dirtyDigest: bases.find((item) => item.basis.dirtyDigest)!.basis.dirtyDigest } : {}),
+247:       shards: [...new Map(bases.flatMap((item) => item.basis.shards).map((shard) => [shard.id, shard])).values()],
+248:     },
+249:     execution: { op: "locate", ms: run.ms, semantic: "absent" },
+250:     coverage: {
+251:       documents: Math.max(0, ...bases.map((item) => item.coverage.documents)),
+252:       skipped: [...new Map(bases.flatMap((item) => item.coverage.skipped).map((skip) => [`${skip.path}\0${skip.reason}`, skip])).values()],
+253:       languagesMissing: [...new Set([...bases.flatMap((item) => item.coverage.languagesMissing), ...missing])],
+254:       opaqueSites: bases.reduce((sum, item) => sum + item.coverage.opaqueSites, 0),
+255:       complete: run.indexed && bases.every((item) => item.coverage.complete) && lists.every((list) => !list.truncated),
+256:       discarded: run.discarded,
+257:     },
+258:     // J3.7: the lexical lists read the worktree itself, so they are fresh; only index lists can be stale.
+259:     freshness: freshness.includes("stale") ? "stale" : freshness.includes("dirty-overlay") ? "dirty-overlay" : "fresh",
+260:     bounds: { limit: run.limit, truncated: run.truncated },
+261:   }
+262: }
+263: 
+264: const LANGUAGES: Record<string, string> = { ts: "ts", tsx: "ts", mts: "ts", cts: "ts", js: "js", jsx: "js", mjs: "js", cjs: "js",
+265:   py: "py", go: "go", rs: "rust" }
+```
+
+## RE-B2
+
+### RB2-01 — Liveness: allowed/check/probe completos, DNS, requests e limites locais
+
+Vínculo: corpo R8; archive E28.
+
+Observação: o atalho de captura é anterior a probe; allowed é uma helper separada; refusal resolve DNS e request recebe a URL. A chamada a fetch e os ramos HEAD/GET/redirect/timeout são o limite de prova local, sem qualificação externa de isolamento.
+
+**RB-S006 — `packages/core/src/research-toolkit/liveness.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `3b6335d550f6979d9aca63cd0e524b3e43b0a9b2` · SHA-256 `9703355fbfac94a32110e810f0843ce22285895cc45b8da3f534f36a61f772af` · 6955 bytes.
+
+Arquivo integral: `sources/packages/core/src/research-toolkit/liveness.ts`; archive: E28.
+
+Linhas 9–46.
+
+```text
+9: export type Status = "LIVE" | "DEAD" | "LIKELY_HALLUCINATED" | "UNKNOWN"
+10: export type Result = { readonly url: string; readonly status: Status; readonly httpStatus?: number; readonly reason: string }
+11: 
+12: export const USER_AGENT = "Orchestra-LinkCheck/1.0"
+13: export const Limits = Object.freeze({ timeoutMs: 8_000, redirects: 5, parallel: 8, freshMs: 24 * 60 * 60 * 1000 })
+14: 
+15: export type Options = {
+16:   /** URLs this dispatch saw: retained web-search results and captured `url` sources. Used only to name hallucinations. */
+17:   readonly seen?: readonly string[]
+18:   /** `url` sources already captured successfully; a capture younger than 24 h counts as LIVE with no request. */
+19:   readonly captured?: ReadonlyArray<{ readonly url: string; readonly capturedAt: number }>
+20:   readonly now?: number
+21:   /** Loopback and private addresses are refused (UNKNOWN) so a cited URL cannot probe the host's network. Tests only. */
+22:   readonly privateNetwork?: boolean
+23: }
+24: 
+25: /** Label-suffix match: `docs.github.com` matches `github.com`, `evilgithub.com` does not. */
+26: export function allowed(url: string, domains: readonly string[] | "unrestricted") {
+27:   if (domains === "unrestricted") return true
+28:   const host = hostname(url)
+29:   if (!host) return false
+30:   return domains.some((entry) => {
+31:     const domain = entry.trim().toLowerCase().replace(/^\*\./, "").replace(/\.$/, "")
+32:     return domain !== "" && (host === domain || host.endsWith(`.${domain}`))
+33:   })
+34: }
+35: 
+36: export function hostname(url: string) {
+37:   if (!URL.canParse(url)) return undefined
+38:   return new URL(url).hostname.toLowerCase().replace(/\.$/, "")
+39: }
+40: 
+41: /** Identity used to compare cited URLs with captured ones: no fragment, no trailing slash. */
+42: export function normal(url: string) {
+43:   if (!URL.canParse(url)) return url
+44:   const parsed = new URL(url)
+45:   return `${parsed.origin}${parsed.pathname.replace(/\/+$/, "")}${parsed.search}`
+46: }
+```
+
+Linhas 48–69.
+
+```text
+48: export const check = (urls: readonly string[], options: Options = {}) => Effect.promise(async () => {
+49:   const now = options.now ?? Date.now()
+50:   const seen = new Set((options.seen ?? []).map(normal))
+51:   const fresh = new Set((options.captured ?? []).filter((item) => now - item.capturedAt < Limits.freshMs).map((item) => normal(item.url)))
+52:   const unique = [...new Set(urls)]
+53:   const results = new Map<string, Result>()
+54:   const queue = unique.filter((url) => {
+55:     if (!fresh.has(normal(url))) return true
+56:     results.set(url, { url, status: "LIVE", reason: "captured in this dispatch less than 24 h ago" })
+57:     return false
+58:   })
+59:   // A bounded pool: at most `parallel` requests in flight.
+60:   const workers = Array.from({ length: Math.min(Limits.parallel, queue.length) }, async () => {
+61:     for (let url = queue.shift(); url !== undefined; url = queue.shift()) {
+62:       const outcome = await probe(url, options.privateNetwork === true)
+63:       const status = outcome.status === "DEAD" && !seen.has(normal(url)) ? "LIKELY_HALLUCINATED" : outcome.status
+64:       results.set(url, { url, ...outcome, status })
+65:     }
+66:   })
+67:   await Promise.all(workers)
+68:   return unique.map((url) => results.get(url)!)
+69: })
+```
+
+Linhas 73–126.
+
+```text
+73: async function probe(start: string, privateNetwork: boolean): Promise<Outcome> {
+74:   let current = start
+75:   for (let hop = 0; hop <= Limits.redirects; hop++) {
+76:     if (!URL.canParse(current)) return { status: "DEAD", reason: "malformed URL" }
+77:     const target = new URL(current)
+78:     if (target.protocol !== "http:" && target.protocol !== "https:") return { status: "UNKNOWN", reason: `scheme ${target.protocol} not checked` }
+79:     const refused = await refusal(target.hostname, privateNetwork)
+80:     if (refused) return refused
+81:     const response = await request(current, "HEAD").then((head) => head.status >= 400 ? request(current, "GET") : head)
+82:     if ("error" in response) return response.error
+83:     if (response.status >= 300 && response.status < 400) {
+84:       const location = response.headers.get("location")
+85:       if (!location) return { status: "DEAD", httpStatus: response.status, reason: "redirect without a location" }
+86:       current = new URL(location, current).href
+87:       continue
+88:     }
+89:     if (response.status >= 200 && response.status < 300) return { status: "LIVE", httpStatus: response.status, reason: "reachable" }
+90:     // A rate limit says nothing about whether the page exists.
+91:     if (response.status === 429) return { status: "UNKNOWN", httpStatus: 429, reason: "rate limited" }
+92:     return { status: "DEAD", httpStatus: response.status, reason: `HTTP ${response.status}` }
+93:   }
+94:   return { status: "DEAD", reason: `more than ${Limits.redirects} redirects` }
+95: }
+96: 
+97: /** HEAD first; the caller retries with a one-byte ranged GET for servers that reject HEAD. */
+98: async function request(url: string, method: "HEAD" | "GET") {
+99:   const headers: Record<string, string> = { "user-agent": USER_AGENT, ...(method === "GET" ? { range: "bytes=0-0" } : {}) }
+100:   try {
+101:     const response = await fetch(url, { method, headers, redirect: "manual", signal: AbortSignal.timeout(Limits.timeoutMs) })
+102:     await response.body?.cancel()
+103:     return response
+104:   } catch (error) {
+105:     const name = error instanceof Error ? error.name : ""
+106:     if (name === "TimeoutError" || name === "AbortError") return { status: 0, headers: new Headers(), error: { status: "UNKNOWN", reason: "timeout" } as Outcome }
+107:     return { status: 0, headers: new Headers(), error: { status: "DEAD", reason: `connection failed: ${error instanceof Error ? error.message : String(error)}` } as Outcome }
+108:   }
+109: }
+110: 
+111: async function refusal(host: string, privateNetwork: boolean): Promise<Outcome | undefined> {
+112:   const name = host.replace(/^\[|\]$/g, "").toLowerCase()
+113:   if (!privateNetwork && /(^|\.)(localhost|local|internal|localdomain)$/.test(name)) return { status: "UNKNOWN", reason: "local host refused by policy" }
+114:   const addresses = isIP(name) ? [name] : await lookup(name, { all: true }).then((list) => list.map((item) => item.address), (error: NodeJS.ErrnoException) => error)
+115:   if (addresses instanceof Error) return { status: addresses.code === "EAI_AGAIN" ? "UNKNOWN" : "DEAD", reason: `DNS ${addresses.code ?? "failure"}` }
+116:   if (!privateNetwork && addresses.some(isPrivate)) return { status: "UNKNOWN", reason: "private address refused by policy" }
+117: }
+118: 
+119: function isPrivate(address: string) {
+120:   const lower = address.toLowerCase()
+121:   if (lower.startsWith("::ffff:")) return isPrivate(lower.slice(7))
+122:   if (isIP(lower) === 6) return lower === "::" || lower === "::1" || /^f[cd]/.test(lower) || /^fe[89ab]/.test(lower)
+123:   const [a, b] = lower.split(".").map(Number)
+124:   return a === 0 || a === 10 || a === 127 || (a === 169 && b === 254) || (a === 172 && b >= 16 && b <= 31) ||
+125:     (a === 192 && b === 168) || (a === 100 && b >= 64 && b <= 127)
+126: }
+```
+
+## RE-B3
+
+### RB3-01 — Probe: união fechada, execução, retorno, verdict e slots
+
+Vínculo: corpo R9; archive E29.
+
+Os comentários de enforcement expressam intenção do código. As chamadas a confine/AppProcess/Omni e o flag memoryCap não comprovam eficácia externa do jail. O caminho integral de run mostra o retorno e não admite nem cobra automaticamente uma fonte.
+
+**RB-S007 — `packages/core/src/research-toolkit/probe/types.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `a3859179186c2e7f55aa401fa4b3f091540eaffe` · SHA-256 `7946f380ef918f065273afa09304cdf61da2d88d78bb287cff0ad5812e45c3e6` · 3631 bytes.
+
+Arquivo integral: `sources/packages/core/src/research-toolkit/probe/types.ts`; archive: E29.
+
+Linhas 10–84.
+
+```text
+10: export const Limits = Object.freeze({
+11:   heapMiB: 1024,
+12:   /** Resident memory of the whole probe tree, enforced by omni (J4.7, D2). */
+13:   rssBytes: 1024 * 1024 * 1024,
+14:   scratchBytes: 2 * 1024 * 1024 * 1024,
+15:   outputBytes: 1024 * 1024,
+16:   tailBytes: 64 * 1024,
+17:   scriptBytes: 16 * 1024,
+18:   perDispatch: 1,
+19:   perHost: 2,
+20:   queueSeconds: 30,
+21: })
+22: 
+23: const file = Schema.NonEmptyString.check(Schema.isMaxLength(8192))
+24: const expectation = Schema.Struct({
+25:   exitCode: optional(Schema.Int),
+26:   stdoutIncludes: optional(Schema.NonEmptyString.check(Schema.isMaxLength(4096))),
+27:   stderrIncludes: optional(Schema.NonEmptyString.check(Schema.isMaxLength(4096))),
+28:   diagnosticCode: optional(Schema.NonEmptyString.check(Schema.isMaxLength(64))),
+29: })
+30: 
+31: export const ProbeInput = Schema.Struct({
+32:   // revision: a full hash or a ref the host resolves first (J5.15).
+33:   snapshot: Schema.Union([
+34:     Schema.Struct({ kind: Schema.Literal("commit"), revision: Schema.NonEmptyString.check(Schema.isMaxLength(256)) }),
+35:     Schema.Struct({ kind: Schema.Literal("worktree") }),
+36:   ]),
+37:   runner: Schema.Union([
+38:     // project: a tsconfig path inside the snapshot.
+39:     Schema.Struct({ kind: Schema.Literal("typecheck"), project: file }),
+40:     Schema.Struct({ kind: Schema.Literal("test"), file, name: optional(Schema.NonEmptyString.check(Schema.isMaxLength(1024))) }),
+41:     Schema.Struct({
+42:       // The schema bounds characters; the host also refuses more than scriptBytes of UTF-8.
+43:       kind: Schema.Literal("script"), language: Schema.Literals(["ts", "js", "py"]),
+44:       source: Schema.NonEmptyString.check(Schema.isMaxLength(Limits.scriptBytes)),
+45:     }),
+46:   ]),
+47:   expect: optional(expectation),
+48:   hypothesis: optional(Research.RecordRef),
+49:   // At most what remains of the dispatch probe allowance.
+50:   timeoutSeconds: optional(PositiveInt),
+51: })
+52: export type ProbeInput = typeof ProbeInput.Type
+53: 
+54: export type Verdict =
+55:   | "passed" | "failed" | "reproduced" | "not_reproduced" | "timeout" | "memory_exceeded" | "blocked_by_repo_guard" | "error"
+56: 
+57: export type Stream = { readonly tail: string; readonly bytes: number; readonly truncated: boolean }
+58: 
+59: /** Retained as structured-json at `probe:<executionSessionID>/<probeID>`, even when the probe fails (J4.9). */
+60: export type ProbeResult = {
+61:   readonly probeID: string
+62:   readonly snapshot: { readonly kind: "commit" | "worktree"; readonly revision: string; readonly dirtyDigest?: string; readonly files: number }
+63:   /** argv as executed, with scratch paths. */
+64:   readonly runner: { readonly kind: string; readonly binary: string; readonly version: string; readonly argv: ReadonlyArray<string> }
+65:   /** reproduced and not_reproduced appear only with expect. */
+66:   readonly verdict: Verdict
+67:   readonly exitCode: number | null
+68:   readonly durationMs: number
+69:   readonly memoryCap: "heap-only" | "rss"
+FIM_PARTE_LITERAL
+Recebimento intermediário: apenas ACK. Aguarde os próximos subenvios e o sinal externo FIM_DO_LOTE.

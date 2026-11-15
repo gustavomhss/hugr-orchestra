@@ -1,0 +1,12 @@
+{
+  "lot": "boundaries-supplement-v2",
+  "path": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/boundaries-supplement-v2.md",
+  "packet": {
+    "bytes": 287371,
+    "sha256": "b69a7681e5fe1d996836c6e3825f9f57e05f2989318d6134d9078b38c45410dc",
+    "git_blob_sha": "cae18d3d88cd16a8650d92e5ab22eedc5b76ee07"
+  },
+  "body_sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+  "source_supplement_sha256": "665c05eff1fd9db5cc1a75636fc883adf8c43cac6f8069dfe3fc5010225ef0b1",
+  "oracle_access_by_relay": false
+}

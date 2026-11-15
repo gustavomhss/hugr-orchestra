@@ -1,0 +1,192 @@
+{
+  "schema": "s1-03-derived-mechanical-verification/v1",
+  "at_utc": "2026-11-15T03:34:37.835534+00:00",
+  "artifact": {
+    "key": "s1.subslice03.boundary-flow",
+    "layer": 2,
+    "need": "flow",
+    "required_build_predecessors": [
+      "s1.core.boundaries"
+    ],
+    "purpose": "Encadeamento e limites do lado Core das portas externas"
+  },
+  "version": "v1",
+  "checks": "Exact whole-file sizes/SHA256/Git blobs for every declared actual input and output; UTF-8, JSON and unique depth2 headings. No semantic, runtime or product-test result.",
+  "input_units": [
+    {
+      "local_path": "inputs/AGENTS.md",
+      "byte_length": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "calculated_git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "role": "Public repository authority snapshot; no product changes or tests authorized for this task."
+    },
+    {
+      "local_path": "inputs/COMMON.md",
+      "byte_length": 12959,
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "calculated_git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+      "role": "Public S1 subdivision protocol; consumed fully, task-specific producer restrictions take precedence."
+    },
+    {
+      "local_path": "inputs/mission.json",
+      "byte_length": 6006,
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "calculated_git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+      "role": "Public S1-03 mission identity and authority boundaries; not a release of broader authoring."
+    },
+    {
+      "local_path": "inputs/SKILL.md",
+      "byte_length": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "calculated_git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "role": "Public execute-genesis procedural snapshot, scoped by frozen producer request."
+    },
+    {
+      "local_path": "inputs/references/principles.md",
+      "byte_length": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "calculated_git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "role": "Public quality, invariants and completion distinctions."
+    },
+    {
+      "local_path": "inputs/references/fatia-1.md",
+      "byte_length": 3987,
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "calculated_git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+      "role": "Public S1 context, superseded by mission/task for local assignment."
+    },
+    {
+      "local_path": "inputs/references/fresh-start.md",
+      "byte_length": 4983,
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "calculated_git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+      "role": "Public isolation, provenance and accounting procedure."
+    },
+    {
+      "local_path": "inputs/references/orchestration.md",
+      "byte_length": 4408,
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "calculated_git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+      "role": "Public producer-role, preservation and predecessor-gate procedure."
+    },
+    {
+      "local_path": "inputs/references/judging.md",
+      "byte_length": 5787,
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "calculated_git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "role": "Public semantic-review and consumer separation; not judge prose."
+    },
+    {
+      "local_path": "inputs/references/transport.md",
+      "byte_length": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "calculated_git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "role": "Public transport identity, input/version and build/navigation rules."
+    },
+    {
+      "local_path": "payload/artifact-plan.json",
+      "byte_length": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+      "calculated_git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+      "role": "Frozen artifact graph; only boundary-flow L2 released in this task."
+    },
+    {
+      "local_path": "payload/recipes/derived-contract.json",
+      "byte_length": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "calculated_git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+      "role": "Actual pre-dispatch common authoring recipe and L2 role."
+    },
+    {
+      "local_path": "payload/recipes/derived-public-criteria.json",
+      "byte_length": 16244,
+      "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+      "calculated_git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+      "role": "Frozen full public criteria excerpt; not reserved expected answers."
+    },
+    {
+      "local_path": "producers/boundaries/bodies/boundaries.md",
+      "byte_length": 23665,
+      "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+      "calculated_git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
+      "role": "Only accepted semantic build predecessor; full body read, no raw evidence links followed."
+    },
+    {
+      "local_path": "payload/recipes/derived/boundary-flow.json",
+      "byte_length": 8459,
+      "sha256": "3e4c7ebbb94d3fb6d7c4de5238aaea74e817cbfb1e80ea2c15bb259bc20eb544",
+      "calculated_git_blob_sha": "5d9e75ef89341aad6010d398cd6125a7c8dcf05c",
+      "role": "Effective per-task recipe, frozen before author dispatch."
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/request.txt",
+      "byte_length": 850,
+      "sha256": "46437f5558525bd36b082915531c5ee70f8ab53a0b40c11270b7f313581c2d89",
+      "calculated_git_blob_sha": "3018a711f06aaecf12bc80fa5512b22126ab558b",
+      "role": "Frozen request preserved byte-identically; actual input, not output."
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/dispatch-message.txt",
+      "byte_length": 1421,
+      "sha256": "0790d3883cf33e37a3f4fd338c3d9cfc36f3b2625c0b0072fd9155e2f526b2d2",
+      "calculated_git_blob_sha": "0b5d88ff0888d4f5b175e1a433b46970efd389ad",
+      "role": "Exact visible parent dispatch encoded UTF-8 without an appended newline; preserved separately from frozen request."
+    }
+  ],
+  "input_count": 17,
+  "body_bytes": 16112,
+  "body_sha256": "83c961e473f666034b6db197ead28594580f4a953fc9f6f4bb63f006ab65ddbd",
+  "body_git_blob_sha": "6420523de8f6d8e5fa5aac4b8f76bab2c5c6fceb",
+  "depth2_headings": [
+    "1. Escopo, evidência e entrada na leitura",
+    "2. Atlas: abrir a superfície, executar um plano e propor conteúdo",
+    "3. Relay: da sugestão de comando ao resultado registrado",
+    "4. Hooks: pin validado, decisão durável e shipping separado",
+    "5. Workflow: adquirir a versão e projetar o passo",
+    "6. Workflow: fence, checkpoint e settlement autenticado",
+    "7. Movimentação e RAG: separar persistência de coordenação",
+    "8. Limites de conclusão e encaminhamento"
+  ],
+  "output_files": [
+    {
+      "path": "producers/derived-boundary-flow/body.md",
+      "bytes": 16112,
+      "sha256": "83c961e473f666034b6db197ead28594580f4a953fc9f6f4bb63f006ab65ddbd",
+      "git_blob_sha": "6420523de8f6d8e5fa5aac4b8f76bab2c5c6fceb"
+    },
+    {
+      "path": "producers/derived-boundary-flow/dispatch-message.txt",
+      "bytes": 1421,
+      "sha256": "0790d3883cf33e37a3f4fd338c3d9cfc36f3b2625c0b0072fd9155e2f526b2d2",
+      "git_blob_sha": "0b5d88ff0888d4f5b175e1a433b46970efd389ad"
+    },
+    {
+      "path": "producers/derived-boundary-flow/evidence.md",
+      "bytes": 8327,
+      "sha256": "4e42f26758255ed63978d5e027a165a4eaaecfe645c78571365c4f5a2e81a780",
+      "git_blob_sha": "927e668b759b50bbeb28f92eca596cfc03d79b60"
+    },
+    {
+      "path": "producers/derived-boundary-flow/production-manifest.json",
+      "bytes": 20090,
+      "sha256": "93baa2def94d8fe3d05984211d05f68c0c18c8b021953bf67153f7b9eb56c2f0",
+      "git_blob_sha": "1b542614c236efe8f534e44c8982d49cade7002f"
+    },
+    {
+      "path": "producers/derived-boundary-flow/request.txt",
+      "bytes": 850,
+      "sha256": "46437f5558525bd36b082915531c5ee70f8ab53a0b40c11270b7f313581c2d89",
+      "git_blob_sha": "3018a711f06aaecf12bc80fa5512b22126ab558b"
+    },
+    {
+      "path": "producers/derived-boundary-flow/response.md",
+      "bytes": 2097,
+      "sha256": "ab0d39f8f925f504f7505e1fc04192e27f9f3d0e2a79cec3bf637953b36e61ac",
+      "git_blob_sha": "881e93d76f4f2b51d8efbbf803f72fa4d83bd7ac"
+    }
+  ],
+  "recipe_sha256": "3e4c7ebbb94d3fb6d7c4de5238aaea74e817cbfb1e80ea2c15bb259bc20eb544",
+  "production_manifest_sha256": "93baa2def94d8fe3d05984211d05f68c0c18c8b021953bf67153f7b9eb56c2f0",
+  "producer_reporting_limit": "The author reports complete reads and exact allowed file access; this does not assert an operating-system sandbox or expose private reasoning.",
+  "semantic_status": "PENDING_SAME_PAIR"
+}

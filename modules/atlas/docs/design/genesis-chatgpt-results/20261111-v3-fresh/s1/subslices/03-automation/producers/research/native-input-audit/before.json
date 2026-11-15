@@ -1,0 +1,767 @@
+[
+  {
+    "path": "body.md",
+    "bytes": 63501,
+    "sha256": "d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661"
+  },
+  {
+    "path": "captures.json",
+    "bytes": 52221,
+    "sha256": "4275f6f649be64c3e0fb948115f3260b618d633e98a650824f58b17ac3036a52"
+  },
+  {
+    "path": "correction-v2-request.txt",
+    "bytes": 918,
+    "sha256": "cd859a2dc0b42377f83e755618967acfa4de82becc565bb06730c866bcef245a"
+  },
+  {
+    "path": "correction-v2-response.md",
+    "bytes": 2686,
+    "sha256": "fa3cddb9cb13dd2093b14464c9009c0b885f21999ee3328d7b887eba03698bcf"
+  },
+  {
+    "path": "correction-v2.json",
+    "bytes": 10767,
+    "sha256": "841e52a9c651d03a67dcc1e3ea8fd7bae9effd50ae804f0552854c3109edf849"
+  },
+  {
+    "path": "coverage.jsonl",
+    "bytes": 127215,
+    "sha256": "bb06bcef77a2dbeccabc70dd00dc10d70bf22cb338588661d7ecc9f49e01eec9"
+  },
+  {
+    "path": "evidence-index.json",
+    "bytes": 63265,
+    "sha256": "219182fe48272b4eb6c8f21507e337730c09b86e1c9ef47e973d7846ec75a4c0"
+  },
+  {
+    "path": "evidence-review.md",
+    "bytes": 89675,
+    "sha256": "3496f3e102e5db734d2954cf18e9bea6da5fbc418d2084f56814eefb5347788e"
+  },
+  {
+    "path": "evidence.md",
+    "bytes": 599806,
+    "sha256": "e8cc0b447e48f26b3a059dc70c7ad7e607ec9b60a9af3d605e76f4c10b1da05b"
+  },
+  {
+    "path": "history/body-initial.md",
+    "bytes": 63291,
+    "sha256": "172e61c2f199fe1b9c4fc787922d669e95da2dcaa35aa065aea01d2a146bc6e5"
+  },
+  {
+    "path": "history/body-v1.md",
+    "bytes": 63389,
+    "sha256": "1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73"
+  },
+  {
+    "path": "history/recipe-v1.json",
+    "bytes": 134003,
+    "sha256": "a5bd9215347a9eb06ab008846f2ef169e1d3269f0f6c0a75f73da72d914178a2"
+  },
+  {
+    "path": "recipe-v2.json",
+    "bytes": 138195,
+    "sha256": "09505ca6228267ab6ad9c0397c7a45690009b1738ae3aa53c8b8df722db5598b"
+  },
+  {
+    "path": "recipe.json",
+    "bytes": 134003,
+    "sha256": "a5bd9215347a9eb06ab008846f2ef169e1d3269f0f6c0a75f73da72d914178a2"
+  },
+  {
+    "path": "request.txt",
+    "bytes": 3325,
+    "sha256": "4e11428b6ece1d3fe3769a5f1ca7c4d3eb36654ccdec504500bb6622aec86adc"
+  },
+  {
+    "path": "response.md",
+    "bytes": 5451,
+    "sha256": "d91be8e07e1f38bd712a2f178fd0ee800af5e6fb0e5c4a92cccdf672e5922780"
+  },
+  {
+    "path": "review-supplement-a-index.json",
+    "bytes": 202490,
+    "sha256": "74787dca5c9311883708cffb23fb90eb889e45f5258046e39d3a941c265bce8b"
+  },
+  {
+    "path": "review-supplement-a-receipt.json",
+    "bytes": 7963,
+    "sha256": "e716c72c9a4dd0f0066ea56780a7a2651db9a50ed5fa6affd36e3e6367073f61"
+  },
+  {
+    "path": "review-supplement-a.md",
+    "bytes": 220079,
+    "sha256": "900fd149a1182df270ef6f71fce883793dba1a836df2dd2dd67e500c268f4aca"
+  },
+  {
+    "path": "review-supplement-b-index.json",
+    "bytes": 94776,
+    "sha256": "c497861cfb349283f21fa464237d0fc71995b1c2392620dcf2a49aac71ca0dd1"
+  },
+  {
+    "path": "review-supplement-b-receipt.json",
+    "bytes": 11009,
+    "sha256": "3dd0bf49d13493c4b62069154075b18a58834cec9f459f343f5d739355268b2d"
+  },
+  {
+    "path": "review-supplement-b.md",
+    "bytes": 261153,
+    "sha256": "5f06a933f3e0b95f994af2ad56a1ec44363b5ed650bbe7e8fedb18bb238f5ed5"
+  },
+  {
+    "path": "review-supplements-dispatch.md",
+    "bytes": 5272,
+    "sha256": "1eddda9c2ed04f65f12f4c2fee808f9d5cc01b950865eabbac716e5625617ce8"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/README.md",
+    "bytes": 1411,
+    "sha256": "c121de28e34b278db6e4868eeea3b09ab793c1aca1cdf0b5c304cc9d8a12529d"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/acquisition.ts",
+    "bytes": 1870,
+    "sha256": "11b7834f6537e1d2556136dc50306dc3bda0a3381cca07f640b5c93e2f8c54d8"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/attempts.ts",
+    "bytes": 1652,
+    "sha256": "75382ae48fcc113ed71ea4a61d4122dc24b5ad5c6e4f3d5af52d3938688290eb"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/cassandra-dialer.ts",
+    "bytes": 8978,
+    "sha256": "3943c718ce59b671dcbd21085bd1907ad5d91de0f0e2fc34e5b2d7f85dc1e2da"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/cassandra-metadata.ts",
+    "bytes": 5323,
+    "sha256": "adffa5bbb4e9ab695e7879cf4db83d4982562e69aa74b60b7a016072079428cb"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/diagnostics.ts",
+    "bytes": 1795,
+    "sha256": "d556fb8a95fdaff9ca4ec23b8ff137f37c3a7547c8ceb4d2d83810e7c2c86814"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/entry-skills.gen.ts",
+    "bytes": 273,
+    "sha256": "5b46f884721943ba81cdaffebbb81ad5c031392bc812209794eaec01e1ef568b"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/hosted.ts",
+    "bytes": 11390,
+    "sha256": "6d3ea35691832eddb90ce8563679390a1030b71d636a01a4c5cd59ad78ebeb34"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/index.ts",
+    "bytes": 15426,
+    "sha256": "d420651f26050d31c924b078a59fff12081be914cb8cb94685aad720a9275d9a"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/launcher.ts",
+    "bytes": 4090,
+    "sha256": "12a6f931b7e080fc25722c966b88822d572fd5ebec86ca52e9e8710ac59d7c36"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/manifest.ts",
+    "bytes": 5839,
+    "sha256": "2fdbb18ddc44c50456322b2fc55ed1d1c3fd7d69f15cf807c5a2a40c0231f63d"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/ast-grep.ts",
+    "bytes": 2166,
+    "sha256": "4c38bf4a298cdc6d68db78893a13cdf8279a768487de6e0e44af29e7e0b08846"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/buf.ts",
+    "bytes": 1675,
+    "sha256": "23eff54fd15efc953e1d9a779b64b058c54e67fdf30216bf0552a08cd5f2eedb"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/controller-gen.ts",
+    "bytes": 2915,
+    "sha256": "6182cca9af788189579ba431f639e386b45791fda6d9835e1cb4879c071b0aad"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/datafusion-cli.ts",
+    "bytes": 2044,
+    "sha256": "7597abd91ed4574bf68cbf7303825f294146dc078f14a6371df0bf81230c4efd"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/datamodel-codegen.ts",
+    "bytes": 1335,
+    "sha256": "52c7ee7257e696d7728cd12b6c59d9d7e52afb512b8b84320e62feced373d124"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/datamodel-codegen.wheels.ts",
+    "bytes": 6586,
+    "sha256": "e1882f2135d3980986ac47eb35f30b3df45bfe63a3de1489bc4e04572e3ad02b"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/gitleaks.ts",
+    "bytes": 1865,
+    "sha256": "ebd3745fb377d2fe38b166497edfb68f1bbd7202ba27592d00935e9d946e8da4"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/gocqlx-schemagen.ts",
+    "bytes": 2428,
+    "sha256": "85794568238124594e4bb9fa1ee663c88c3d606d3221079795b4a72705e7db47"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/index.ts",
+    "bytes": 1599,
+    "sha256": "84ae51f15fced0c14efd44917c698366de7b65b33228208ff147ed452646ed51"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/kiota.ts",
+    "bytes": 1902,
+    "sha256": "2409e1b56b8b552c34066942aca1dab95afedac59c0a09d4278bd54f12a3b91f"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/kopium.ts",
+    "bytes": 1646,
+    "sha256": "eb7187300e2b0966e2faad3c9048ffda2da09910ddf9dc506d3c7669ee262a9d"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/kubeconform.ts",
+    "bytes": 2763,
+    "sha256": "96bd9cc1cf933cdb56995a320b70d897f498a6bf738baaf5565785d2bcaefc17"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/kysely-codegen.package-lock.json",
+    "bytes": 27939,
+    "sha256": "9de6d58c097012a2022acbedbe1a1d7ff7b25d08bc23c65ca912f6a851401641"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/kysely-codegen.ts",
+    "bytes": 1390,
+    "sha256": "ef5ae2d54be68713f9a133650800f493828dfd10059b71ceccda717a6bb1b831"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+    "bytes": 266885,
+    "sha256": "0fc1a48c86b45b4749fda6d5e811a1f9b3f55a246fa5e8dd035435e84d2149d2"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/modelina.ts",
+    "bytes": 1103,
+    "sha256": "f2685a235805dd4b286ded02fec5d3f109256a5c9ed20a46c9fe6b405f9c882b"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/ogen.ts",
+    "bytes": 2104,
+    "sha256": "c1df3ae0c7b885ad04631d083c76d34802c836a6df049589900e2969c05daabc"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/openapi-generator.ts",
+    "bytes": 884,
+    "sha256": "173c8f226dd169b990ca9ce52053a2b05cb62658df84ff994a611d4b3b7bf248"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/orval.package-lock.json",
+    "bytes": 50428,
+    "sha256": "a3b052e1684e432a80198786e8d5b3744a7b4635dadb5fa4088853817a4f2026"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/orval.ts",
+    "bytes": 1113,
+    "sha256": "cfa18aa4707d83c3ad83aab06263be68234c186145bdd2b718b9e4d3863abf5a"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/postgres-language-server.ts",
+    "bytes": 2087,
+    "sha256": "f1c76d324ebb548e7ca2850bcace878da77626e4dcc716cd9f2c4974383ce951"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/protoc-gen-es.package-lock.json",
+    "bytes": 3392,
+    "sha256": "7bb67cf09c2d6fb3314b69705375ffda7bf68b2dda8f7917941e97da41aa03bd"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/protoc-gen-es.ts",
+    "bytes": 824,
+    "sha256": "36c5526a297dba47104e6e772f4dd3c6f8a1a02b3b0d57a0b94f72f23cfb6035"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/sqlc.ts",
+    "bytes": 1654,
+    "sha256": "642f56d93028b821f8c2d39bb1da0d15e4bf93a669721364914a489cf9359084"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/sqlglot.ts",
+    "bytes": 998,
+    "sha256": "0a6db1cf8a8689413e40b7edc2cb7a46ac55454d6872ce9a5fc2da99147b20db"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/sqlx.ts",
+    "bytes": 1729,
+    "sha256": "869d64285186d2f8bc2dcdbc5dabffc5488257a903e7662d0c99b63c79dce96e"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/packs/squawk.ts",
+    "bytes": 1730,
+    "sha256": "ebec8aa73f4acd6b93172538f776e77805bac9877e12396a43c5cd326a6e930c"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/project-version.ts",
+    "bytes": 11911,
+    "sha256": "c82bf83182a6d03b13755e5c97eed67bf4dd8298226bd9f79277c94bff94e263"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/runtimes/go.ts",
+    "bytes": 2028,
+    "sha256": "607c8ef56bc75a8134be5535aba9ccce72efbcc44e01d2110c7577c73cc9ed4c"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/runtimes/java.ts",
+    "bytes": 2261,
+    "sha256": "02a8a16f2d274950dbde60c64750296f69488bedde47612645de894eeb34d438"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/runtimes/node.ts",
+    "bytes": 2466,
+    "sha256": "8c461b59200597711ebec02c490dc96e5b279b41540f1042a5105fbd6750517b"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/runtimes/python.ts",
+    "bytes": 2738,
+    "sha256": "d4b61a00828e88ee1cfaece927eff526458c350740c07736c6c9a16495343e4a"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/runtimes/rust.ts",
+    "bytes": 2526,
+    "sha256": "d27529a3cf34ab368d03f04ff78ed8494e013c6ab0443f88fb1448e8d1e18770"
+  },
+  {
+    "path": "sources/packages/core/src/backend-toolkit/target.ts",
+    "bytes": 6940,
+    "sha256": "fc76f5c887936816fc46826cacb01a4f19d04fe823ca16a82fac83f9337bffd7"
+  },
+  {
+    "path": "sources/packages/core/src/pinned-artifact.ts",
+    "bytes": 7384,
+    "sha256": "896dbe5b74a60a2bcae81e9d7b4634aad178debddfeeeb452734552cd0aa504f"
+  },
+  {
+    "path": "sources/packages/core/src/research/allowance.ts",
+    "bytes": 11674,
+    "sha256": "177b564304a9d79e9144da70a6c97107b604d40dde16ae8185467d801fd3c3eb"
+  },
+  {
+    "path": "sources/packages/core/src/research/artifacts.ts",
+    "bytes": 16639,
+    "sha256": "57e6e7d99c507014c52b887d21dfe766311a1a20a5e3e24837665fed7091d24f"
+  },
+  {
+    "path": "sources/packages/core/src/research/binding.ts",
+    "bytes": 7351,
+    "sha256": "b64e476309f22af194c1459389814939887c117819be494adaac0b2fa73d1701"
+  },
+  {
+    "path": "sources/packages/core/src/research/ledger.ts",
+    "bytes": 9660,
+    "sha256": "67e07368ea820ec0c1cb791d601a10acdfa2e9259605a1bec4f556f6bb121839"
+  },
+  {
+    "path": "sources/packages/core/src/research/records.ts",
+    "bytes": 42199,
+    "sha256": "6f38acb52606d54c2b070057b301cfc82cba29f814599a0dee480c110cee558d"
+  },
+  {
+    "path": "sources/packages/core/src/research/seat-tools.ts",
+    "bytes": 1258,
+    "sha256": "d88373a47e970593f281019269874b0cbe981e09b86d500604eaa4e24b29c36e"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/code-index/build.ts",
+    "bytes": 6330,
+    "sha256": "bd648215442616d09b710190ee5e22fb4e9f82890bc2967430724954734f7425"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/code-index/callers.ts",
+    "bytes": 6727,
+    "sha256": "c5f23cb31a51945af79347ffe03db97c1ff7f184abc22d99c13c852bb48ed39c"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/code-index/enclosing.ts",
+    "bytes": 4930,
+    "sha256": "5abb45da734f51ab5446e6bbe34868e890d65fa9bde57e6e9a40251386379cd6"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/code-index/extract.ts",
+    "bytes": 22551,
+    "sha256": "80b2e9c6091bb6c342bfefa9582bd164fc5dffc239cdf67417dba4c0e79747af"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/code-index/filter.ts",
+    "bytes": 3739,
+    "sha256": "4f64a348c5e6e2343c3451de78f32f832579576183eeba21a40c7051989cdf0a"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/code-index/go.ts",
+    "bytes": 3561,
+    "sha256": "caec6569041361ba4ab456923846ddccc104006086b8c6a1901296b0a6aa45b9"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/code-index/python.ts",
+    "bytes": 1186,
+    "sha256": "6388a271df4127e60855282f05052cc12c54ba8f86e039fe2f369a83a6aec48b"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/code-index/query.ts",
+    "bytes": 32872,
+    "sha256": "ec1dd4a297e6e798c497d67ac5ed21cd4c6484e2aba3c2bed60dbd8f174f05e8"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/code-index/rank.ts",
+    "bytes": 3043,
+    "sha256": "4bf06c19df12dba5c60d6118ca7693951e7d857254cda46b43c6b716007d8911"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/code-index/resolve.ts",
+    "bytes": 8917,
+    "sha256": "e864ec0f1d25d9d81ce880c450feb4f0adf28cd79d32b0f665d753420a0fa8ba"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/code-index/rust.ts",
+    "bytes": 5480,
+    "sha256": "0f3bd2e8e7615b3fb8ce0770fc66c1a00a371c20e04e0798c250b1d107058c1c"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/code-index/scip.ts",
+    "bytes": 10599,
+    "sha256": "fa1f6dee8938ca64e416758acedf759e44904e1a8d6a44c0778ae610ee9f9947"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/code-index/shard.ts",
+    "bytes": 10497,
+    "sha256": "5177e7c28ec2351c637e199497126c1cf5ee19eba364705b2feedc84d27fb7f0"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/code-index/store.ts",
+    "bytes": 13372,
+    "sha256": "570a81a04360d060a7c67a436e531b4c079ba7a9951130a2648ca986846b5e11"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/code-index/tree-sitter.ts",
+    "bytes": 16595,
+    "sha256": "b0e13b1436402cd34060218f8845de757486769df22824a357bbc05dfc39d8e2"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/code-index/types.ts",
+    "bytes": 7619,
+    "sha256": "2bc3804460a0faf5ddf2e62d19ca86efd39db0a8142dc75787e60cdd2519332f"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/index.ts",
+    "bytes": 14147,
+    "sha256": "9c1bfe5c5a7bc0c8d4d1f835e61031e0cca06b9ed6567415d9d04ff6e84b599c"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/liveness.ts",
+    "bytes": 6955,
+    "sha256": "9703355fbfac94a32110e810f0843ce22285895cc45b8da3f534f36a61f772af"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/locate.ts",
+    "bytes": 16148,
+    "sha256": "0ebac9d228ca1764020e0f7ccf260228dc02c1169c0143c07f258e7c7ac650f2"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/manifest.ts",
+    "bytes": 804,
+    "sha256": "c157bc4d55f9108eee8d7328482016c831ee8763929565e04a063e8a8e9eb943"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/packs/index.ts",
+    "bytes": 545,
+    "sha256": "b48a9611134151e4e44643cf8bf21e84dba990ba9a65ad644788535133bd5b2d"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/packs/rust-analyzer.ts",
+    "bytes": 1916,
+    "sha256": "e43f4d1b6b57910cc7b4a43306f033700443f8d79b65cf84edc3ab052e6abb96"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/packs/scip-go.ts",
+    "bytes": 1765,
+    "sha256": "7c20e1d6fd8e2d7331a43caa152c7db860620f0dfbdbd15e74b11c48f0d89e8b"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/packs/scip-python.package-lock.json",
+    "bytes": 28385,
+    "sha256": "a9bf75b6185aad8130476c5c4234026ea059400241720e7db2b11c575eecdf03"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/packs/scip-python.ts",
+    "bytes": 1073,
+    "sha256": "b4d35ef1e9b11ec8687f39c6e51f4b3d9b2afa5908de3a46b41ea05b63e7fbd1"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/packs/scip-typescript.package-lock.json",
+    "bytes": 2274,
+    "sha256": "50c220b0739d12746c369da1296b8176737768b43b1ce393532f7cf306ceeb48"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/packs/scip-typescript.ts",
+    "bytes": 1057,
+    "sha256": "97fd24e79cc805da3f89b7ae31d8e52e25a946b7249b1421a85b7923b06c4773"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/packs/typescript.package-lock.json",
+    "bytes": 667,
+    "sha256": "442acbeda058036d02d4f2483e19149512ebde276c57d65ad3aa664735ff0a76"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/packs/typescript.ts",
+    "bytes": 867,
+    "sha256": "7c125ffd1acf9381933be0709209d97e79b91b3b1e3abccab4cb8e7d2a57f845"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/probe/assets.ts",
+    "bytes": 3800,
+    "sha256": "3fd210e83469c18a58aa2ffade6286cd1fdbd21ea1f8280cfad9c949ef77f1d9"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/probe/run.ts",
+    "bytes": 8683,
+    "sha256": "80ece4f75445501ac55ecc69bee4a00ca46f88bf931ba0b1f71c6ec5aa53f73c"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/probe/runners.ts",
+    "bytes": 8962,
+    "sha256": "551427a96e05cf5562e8d6eff1873b91a538a9614869ae2323d4b40a7120a028"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/probe/snapshot.ts",
+    "bytes": 6868,
+    "sha256": "c376cc01e1e893d3fac7cff70f6858888b29145546e36c36ce4d4b0a4655ea77"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/probe/typecheck.ts",
+    "bytes": 6837,
+    "sha256": "929d76e274a17b9eae1f25eab1349fe72f625805c9457110c25f13c618e91cb9"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/probe/types.ts",
+    "bytes": 3631,
+    "sha256": "7946f380ef918f065273afa09304cdf61da2d88d78bb287cff0ad5812e45c3e6"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/process.ts",
+    "bytes": 6087,
+    "sha256": "4d040e1cd277492ec22ef7dc3b06fb77a4bfd73064c45ee1fe894992a8948f77"
+  },
+  {
+    "path": "sources/packages/core/src/research-toolkit/search.ts",
+    "bytes": 7919,
+    "sha256": "5d69897854d3c3ef0b305f4977163233ff73eea0525ad40a2b1d9b606f97cc93"
+  },
+  {
+    "path": "sources/packages/core/test/backend-toolkit-acquisition.test.ts",
+    "bytes": 3777,
+    "sha256": "e1a210d6a3955f4d6b7832ee1251f003982b9f41fa54ca082971213f38f03697"
+  },
+  {
+    "path": "sources/packages/core/test/backend-toolkit-cassandra.test.ts",
+    "bytes": 16059,
+    "sha256": "3e94bc8dbc81aab1dc9ba1946a4a890dbeee7ed24f8b68b7c86985bede387e4e"
+  },
+  {
+    "path": "sources/packages/core/test/backend-toolkit-cli.test.ts",
+    "bytes": 10060,
+    "sha256": "f6d565da408d0ac9222c7f4d1dc8b3cbe270a33404254d893eac101a38fc3856"
+  },
+  {
+    "path": "sources/packages/core/test/backend-toolkit-floors.test.ts",
+    "bytes": 7931,
+    "sha256": "7046d64913ea8b3c42e23e4db3a49818336f9629cecd8960285b105c2ff8d9b4"
+  },
+  {
+    "path": "sources/packages/core/test/backend-toolkit-hosted.test.ts",
+    "bytes": 18371,
+    "sha256": "a143a4f87382719c7ab3d496dfe176fe447034735da56361d39681060c293061"
+  },
+  {
+    "path": "sources/packages/core/test/backend-toolkit-packs.test.ts",
+    "bytes": 5613,
+    "sha256": "657cf39e42dea2a7eb94557e3227454a63580e1dd4306eea764abab4744779f8"
+  },
+  {
+    "path": "sources/packages/core/test/backend-toolkit-process.test.ts",
+    "bytes": 15442,
+    "sha256": "bd9c8418f5286ac92e6afab582e38bec49357f0e87e9d619607257390692ad19"
+  },
+  {
+    "path": "sources/packages/core/test/backend-toolkit-project-version.test.ts",
+    "bytes": 14524,
+    "sha256": "e9d2a53a6526adf8b7fb92082961237557ced844c212a67b1eb269f0f33c91ee"
+  },
+  {
+    "path": "sources/packages/core/test/backend-toolkit-source-readiness.test.ts",
+    "bytes": 7634,
+    "sha256": "049b094e5266d65b48f48feb3cf526eccb9aefc36e00aa9e0ef79352aa03d157"
+  },
+  {
+    "path": "sources/packages/core/test/backend-toolkit-source.test.ts",
+    "bytes": 12550,
+    "sha256": "8f75a59e16b3d1cb07b0e32d7690b4d485b1a23a2fd1efc44d55fe3240a2804d"
+  },
+  {
+    "path": "sources/packages/core/test/backend-toolkit-target.test.ts",
+    "bytes": 2997,
+    "sha256": "d45a81b68701c819c43868425b1939210f31cbb777613c947d1f9ac29a7ab939"
+  },
+  {
+    "path": "sources/packages/core/test/backend-toolkit.test.ts",
+    "bytes": 17079,
+    "sha256": "0c455829b290c1d35b67cd6bc1777918943fa1b7b1d37880c0a978075af71fa0"
+  },
+  {
+    "path": "sources/packages/core/test/code-index-query.test.ts",
+    "bytes": 25982,
+    "sha256": "5759817d4df6aafb66b8a6827a4c4a0942ff8ea4f2e7f755abe3c0f952e81be4"
+  },
+  {
+    "path": "sources/packages/core/test/code-index-rank.test.ts",
+    "bytes": 2768,
+    "sha256": "9ca82360fcef1061d1e42c73b1b7e3ea5cb5f1540583d11f8b66f67a71697fe2"
+  },
+  {
+    "path": "sources/packages/core/test/code-index-store.test.ts",
+    "bytes": 5359,
+    "sha256": "1b6bcbc705aefe57d2620982e4cc3914fa67bd67464bcda16dfbcf587341c730"
+  },
+  {
+    "path": "sources/packages/core/test/pinned-artifact.test.ts",
+    "bytes": 8309,
+    "sha256": "7f55d37d71175bcf32346648e5321514619eaf753b022f14ade12c352aa442d1"
+  },
+  {
+    "path": "sources/packages/core/test/research-allowance.test.ts",
+    "bytes": 17963,
+    "sha256": "4eec8c9322095c6c6f8b33a9f74ea6655400ff332678c90da62f2e9aad9edc2b"
+  },
+  {
+    "path": "sources/packages/core/test/research-artifacts.test.ts",
+    "bytes": 10671,
+    "sha256": "47960eef80bbae8f9aad0254f15c5278dcb5ff9e319c3a8cb74acf4303231810"
+  },
+  {
+    "path": "sources/packages/core/test/research-binding.test.ts",
+    "bytes": 8564,
+    "sha256": "3fc62da977ccf97ebd3fa989448432f44f8dcd861c06e831756b2ad050a45db5"
+  },
+  {
+    "path": "sources/packages/core/test/research-inquiry-ledger.test.ts",
+    "bytes": 6648,
+    "sha256": "5a50187b432fe80d8c07ed712c27f419c7af026263512ee81912eea04e71d0d9"
+  },
+  {
+    "path": "sources/packages/core/test/research-locate.test.ts",
+    "bytes": 8418,
+    "sha256": "ef4ff4e93af664f8810da34386b235ef33071fcbba9868bf9904aa40f72f801a"
+  },
+  {
+    "path": "sources/packages/core/test/research-probe-units.test.ts",
+    "bytes": 7284,
+    "sha256": "a0acf57278b74d352af8448be69dff6d7c6a9ac214007301ddd436f1e79d87c4"
+  },
+  {
+    "path": "sources/packages/core/test/research-probe.test.ts",
+    "bytes": 10594,
+    "sha256": "8b68cb18e71ba3291b86e2943b754ae701bb4f9ed8db0be059aaca3e57935bfb"
+  },
+  {
+    "path": "sources/packages/core/test/research-records.test.ts",
+    "bytes": 20826,
+    "sha256": "b2dda3fe95b4fdc32ed63d6e1fe06c10d1fe9e1cb50d28f373cd5dc79b4c879f"
+  },
+  {
+    "path": "sources/packages/core/test/research-search.test.ts",
+    "bytes": 5955,
+    "sha256": "5d776ea45efbb391b7fefc1eb225b34e7701b0222fdacf077808019bd8fd45b6"
+  },
+  {
+    "path": "sources/packages/core/test/research-toolkit/capability.test.ts",
+    "bytes": 5039,
+    "sha256": "a61f41b1d83c4fc2805a1730b752eb1ba9c8fe5fac6191f60fc10b258d87a574"
+  },
+  {
+    "path": "sources/packages/core/test/research-toolkit/code-index-filter.test.ts",
+    "bytes": 2487,
+    "sha256": "367b0e31ef325b110537498f1ece2a97e22af86711164bd7df7699c74a12044d"
+  },
+  {
+    "path": "sources/packages/core/test/research-toolkit/code-index-go.test.ts",
+    "bytes": 4623,
+    "sha256": "a696f15bbdb5b60de2478ce3eb79e2706d690968b264ba21bdb5e2d79d8977ef"
+  },
+  {
+    "path": "sources/packages/core/test/research-toolkit/code-index-python.test.ts",
+    "bytes": 1370,
+    "sha256": "35257d6d995914fdeb69f18166a39080d38ead1ac36fbca6c72465836894d5c5"
+  },
+  {
+    "path": "sources/packages/core/test/research-toolkit/code-index-resolve.test.ts",
+    "bytes": 5144,
+    "sha256": "868598c30f99139eaab361d95b975d655fa3b610535cb705cfb6945527872853"
+  },
+  {
+    "path": "sources/packages/core/test/research-toolkit/code-index-rust.test.ts",
+    "bytes": 4711,
+    "sha256": "a5ada0a8d7b636a3c88cc608f3aeb85ad37b696a62ca6a42c2da7098f849ce3e"
+  },
+  {
+    "path": "sources/packages/core/test/research-toolkit/code-index-scip-encoding.test.ts",
+    "bytes": 3163,
+    "sha256": "84837ea6b1f329ed10c6abdbaa4d8206f15ad113584ab5a3ef8bf0f841e062cf"
+  },
+  {
+    "path": "sources/packages/core/test/research-toolkit/code-index-structural.test.ts",
+    "bytes": 6494,
+    "sha256": "60e1481b763e8740c47129ef35f661e887f8f98b92a516035ea4df80959739e8"
+  },
+  {
+    "path": "sources/packages/core/test/research-toolkit/code-index-toolkit.test.ts",
+    "bytes": 2843,
+    "sha256": "75ed5e2db86795b00569982cdfb973b864cbad34c4616b6d710b979a7d211ef3"
+  },
+  {
+    "path": "sources/packages/core/test/research-toolkit/code-index-tree-sitter.test.ts",
+    "bytes": 5189,
+    "sha256": "fac2770b3cc7f4de7e9bc64271a747da09ad92b5f5b007dea39a8a6b39fddd4d"
+  },
+  {
+    "path": "sources/packages/core/test/research-toolkit-callers.test.ts",
+    "bytes": 4349,
+    "sha256": "5829cf205ff803aa208d831885d3e8727b6903962502034fb549ad16eae06c10"
+  },
+  {
+    "path": "sources/packages/core/test/research-toolkit-enclosing.test.ts",
+    "bytes": 3658,
+    "sha256": "211cd241c78fadac73c3dfa22964c1bfb41d53e6cb672c6ae76298be4f252014"
+  },
+  {
+    "path": "sources/packages/core/test/research-toolkit-liveness.test.ts",
+    "bytes": 3669,
+    "sha256": "032ace516862a654d0a588c1d4efc6ef8d306149fe2e1c138a9f21261818741d"
+  },
+  {
+    "path": "sources/packages/core/test/research-toolkit-packs.test.ts",
+    "bytes": 5414,
+    "sha256": "18634b672155bf2464d94b555f2e9906f55c76b8961340f341d6ee8fb2cb60dc"
+  },
+  {
+    "path": "sources/packages/core/test/research-toolkit-scip.test.ts",
+    "bytes": 7709,
+    "sha256": "d6a06e512f263fe0e6bf50f748a6bea9840e98320260035df3b50a7acb32349f"
+  },
+  {
+    "path": "sources/packages/core/test/research-toolkit.test.ts",
+    "bytes": 9357,
+    "sha256": "307994cee76a9d44d823921574b47cb650305561bdfafe814d8280742bc78282"
+  }
+]

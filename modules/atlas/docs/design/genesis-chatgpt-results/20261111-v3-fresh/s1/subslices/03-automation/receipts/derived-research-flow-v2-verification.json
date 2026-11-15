@@ -1,0 +1,196 @@
+{
+  "schema": "s1-03-research-flow-v2-principal-verification/v1",
+  "at_utc": "2026-11-15T03:51:08.843818+00:00",
+  "artifact": "s1.subslice03.research-flow",
+  "new_body_bytes": 17113,
+  "new_body_sha256": "f6dce8d080ff5bdd3a5409bd16b846c176c8270135eb51a6cd0329413e3d0994",
+  "checks": {
+    "exact_one_body_sentence_change": true,
+    "exact_one_evidence_row_change": true,
+    "inverse_restores_both_originals": true,
+    "all_four_prior_outputs_equal_previously_staged_v1": true,
+    "all28_actual_input_identities_match": true,
+    "no_current_output_self_input": true,
+    "parent_L1_v3_unchanged": true
+  },
+  "inputs": [
+    {
+      "local_path": "inputs/AGENTS.md",
+      "bytes": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f"
+    },
+    {
+      "local_path": "inputs/COMMON.md",
+      "bytes": 12959,
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8"
+    },
+    {
+      "local_path": "inputs/mission.json",
+      "bytes": 6006,
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4"
+    },
+    {
+      "local_path": "inputs/SKILL.md",
+      "bytes": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877"
+    },
+    {
+      "local_path": "inputs/references/principles.md",
+      "bytes": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765"
+    },
+    {
+      "local_path": "inputs/references/fatia-1.md",
+      "bytes": 3987,
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9"
+    },
+    {
+      "local_path": "inputs/references/fresh-start.md",
+      "bytes": 4983,
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0"
+    },
+    {
+      "local_path": "inputs/references/orchestration.md",
+      "bytes": 4408,
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac"
+    },
+    {
+      "local_path": "inputs/references/judging.md",
+      "bytes": 5787,
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183"
+    },
+    {
+      "local_path": "inputs/references/transport.md",
+      "bytes": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5"
+    },
+    {
+      "local_path": "payload/artifact-plan.json",
+      "bytes": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+      "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68"
+    },
+    {
+      "local_path": "payload/recipes/derived-contract.json",
+      "bytes": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd"
+    },
+    {
+      "local_path": "payload/recipes/derived-public-criteria.json",
+      "bytes": 16244,
+      "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+      "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c"
+    },
+    {
+      "local_path": "producers/research/body.md",
+      "bytes": 63841,
+      "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+      "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4"
+    },
+    {
+      "local_path": "payload/recipes/derived/research-flow.json",
+      "bytes": 8423,
+      "sha256": "543c6045bfb145c0db4b2779b12c96c140ff20198c408357c7d84bcf0a7f71e1",
+      "git_blob_sha": "db976816322808b79ec62b9451e89b9beb084521"
+    },
+    {
+      "local_path": "producers/derived-research-flow/request.txt",
+      "bytes": 850,
+      "sha256": "351e7104bfdbc75075906493ef2db4d3f689d4181f7e621f64e75e6caf31f6ee",
+      "git_blob_sha": "d8607ddacf8da2198ba41fe912675f5127204bff"
+    },
+    {
+      "local_path": "producers/derived-research-flow/dispatch-message.txt",
+      "bytes": 1511,
+      "sha256": "2252f97394d8dbc61fd0e629ce1a16700f8a81bc78673add06985842fc75efcf",
+      "git_blob_sha": "0c546d156615e7cd044ec432ec27342941f20bce"
+    },
+    {
+      "local_path": "producers/derived-research-flow/history/v1/body.md",
+      "bytes": 16980,
+      "sha256": "a4b50fa9ae0b781dbea831aefcb98cb099f93167d4a7a584dc88878fc93bc044",
+      "git_blob_sha": "8b7c702e3d5d6e0d9a8f303136a9d97ac280d82c"
+    },
+    {
+      "local_path": "producers/derived-research-flow/history/v1/evidence.md",
+      "bytes": 11305,
+      "sha256": "8e2b11c446ef73d166c98f7d852d5ca674a0a056779351e393a2d8b832cbf365",
+      "git_blob_sha": "83aff55b8282a7aa0e4ea0c99ecdbb31f4b7ba4f"
+    },
+    {
+      "local_path": "producers/derived-research-flow/history/v1/production-manifest.json",
+      "bytes": 19363,
+      "sha256": "363c7e06f9ec4f0ea2165c81204c238f2972d702875b2d2d445607c0d2e66fcf",
+      "git_blob_sha": "b4cc419dda2ef5cb89667c9cf9d28236964ae7f1"
+    },
+    {
+      "local_path": "producers/derived-research-flow/history/v1/response.md",
+      "bytes": 2472,
+      "sha256": "4d10e4cbaacffd86da6c9c32091576608e3a0937a6f5ef5489c7f142778540ac",
+      "git_blob_sha": "75520523f4f50e0ab3ee7eaa597936fc1c23bc18"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v2/request.txt",
+      "bytes": 503,
+      "sha256": "4c2c7a3e6262ab721b25b5aef283d6dfbbb9edacb6cd20da73e5212f55a9840a",
+      "git_blob_sha": "6c6411040020aca556afa20bef466541746cb713"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v2/recipe.json",
+      "bytes": 3279,
+      "sha256": "007fa924ee039cce045c481143b71fff2dc3b6f6776b9cc77edfff1b386ca8b9",
+      "git_blob_sha": "5bba5c3eef5d7f20318a37d82c3ba929e93957b4"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v2/public-finding.md",
+      "bytes": 1080,
+      "sha256": "8230c3ca27cd3416c801ff0080dc102a41b0fb16ee6ecdf94aae0c8612f33bf7",
+      "git_blob_sha": "02c3ea691918f6bc541b644b664d3c5f057d9916"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v2/dispatch-message.txt",
+      "bytes": 1669,
+      "sha256": "9de6643262b0eef5014515544cc97d0d3ed334a70598c3d86b6f5a89bacfe15d",
+      "git_blob_sha": "c3312b633045dc7633131c8a71cc918e97d51610"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v2/prior-output-preservation.json",
+      "bytes": 2036,
+      "sha256": "af0552a04cae4c5e2c1eb6f32b00e0a372ed9028542298808debeae4b8d5b00d",
+      "git_blob_sha": "d4d44dff034ca16d383628b2109c2fbdcf451cc7"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v2/apply.py",
+      "bytes": 19851,
+      "sha256": "3404af9b477c4d07b170d03f7068d4152b2bd4cb76c607cf1a0f24320bd67bf8",
+      "git_blob_sha": "f4de05371a97cd74ff333030a8949770888bd1b1"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v2/procedure-freeze.json",
+      "bytes": 15402,
+      "sha256": "b2b63dbbe1ac9cfdeb619ba074d2e8b8abc809b00bf13a72aea7f6235e746356",
+      "git_blob_sha": "0edb4f1d7effd4b3cf125eda56d05a345294bfb2"
+    }
+  ],
+  "procedure_timing": "Producer records freeze before actual invocation; principal checks the reported ordering and exact frozen procedure/freezer identities. No independent host wire-timestamp attestation is exposed.",
+  "parent_literal_excerpt": {
+    "heading": "R8.1",
+    "bytes": 2586,
+    "sha256": "a6308d95c9c79262f924529d23c920dc6ab4e0547660784663ae086729a83412",
+    "utf8_byte_start": 35264,
+    "utf8_byte_end": 37850
+  },
+  "product_tests": "NOT_RUN",
+  "semantic_status": "PENDING_SAME_PAIR_CURRENT_BODY"
+}

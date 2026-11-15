@@ -1,0 +1,739 @@
+{
+  "schema": "s1-03-actual-input-manifest-extension/v1",
+  "artifact": "s1.core.boundaries",
+  "version": 3,
+  "unit_rule": "Every file read or hashed is a whole-file input unit; selected excerpts are evidence projections only.",
+  "new_dispatch_whole_file_reads": [
+    {
+      "path": "producers/boundaries/bodies/boundaries.md",
+      "bytes": 23665,
+      "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+      "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
+      "role": "semantic_full_read; prior version for preservation and exact diff",
+      "unit": "whole_file"
+    },
+    {
+      "path": "producers/boundaries/sources/packages/core/src/relay.ts",
+      "bytes": 30225,
+      "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+      "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16",
+      "role": "semantic_full_read; F01 source evidence; whole-file hash verification",
+      "unit": "whole_file"
+    },
+    {
+      "path": "producers/boundaries/sources/packages/core/src/rag-studio/sql.ts",
+      "bytes": 2519,
+      "sha256": "e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9",
+      "git_blob_sha": "214ab3375acc34072ee74c3123501c80615bf488",
+      "role": "semantic_full_read; F02 source evidence; whole-file hash verification",
+      "unit": "whole_file"
+    },
+    {
+      "path": "producers/boundaries/revisions/boundaries-v2/recipe.json",
+      "bytes": 3501,
+      "sha256": "13d95ddbf05625b6f270972422a3603669ff238cc7152a3e1c1789106af70bf4",
+      "git_blob_sha": "63e56fa6badaab561f04f48ef0033dd6d4d21d71",
+      "role": "semantic_full_read; retained prior actual input lineage",
+      "unit": "whole_file"
+    },
+    {
+      "path": "producers/boundaries/effective-inputs.json",
+      "bytes": 22879,
+      "sha256": "6ecae50d90933e555a874b209c6553750d85192df44c36df2418b3ff696890fc",
+      "git_blob_sha": "2d099dcbef9b537a5e22a634642c1317bd0464f4",
+      "role": "semantic_full_read; retained whole-file units and aliases",
+      "unit": "whole_file"
+    },
+    {
+      "path": "producers/boundaries/revisions/boundaries-v3/public-findings.md",
+      "bytes": 1532,
+      "sha256": "6fd63340ed96690dcad680ded43d4815666ac042397cff5587c1413b1183deae",
+      "git_blob_sha": "0a9093ae89e653c458432402f7098286ebefb375",
+      "role": "semantic_full_read; two public findings and authorized correction scope",
+      "unit": "whole_file"
+    },
+    {
+      "path": "producers/boundaries/revisions/boundaries-v3/recipe.json",
+      "bytes": 4346,
+      "sha256": "8e51dad268ee1fc9ade4b91c4d4ff1c08a76aa3f0ec9636786d778026085f385",
+      "git_blob_sha": "0d233b8ff8d4ce26cb6bbd31c9a7698723d35152",
+      "role": "frozen authorization recipe; read in full and mechanically verified",
+      "unit": "whole_file"
+    },
+    {
+      "path": "producers/boundaries/revisions/boundaries-v3/request.txt",
+      "bytes": 576,
+      "sha256": "4cb6d8bd17c1ee1879f75734724997b3e6793eadfce37bafb0b2501a6bd19afb",
+      "git_blob_sha": "6c0341c591547d0a968d058fbc4edef5e304067a",
+      "role": "frozen request; read in full and mechanically verified",
+      "unit": "whole_file"
+    },
+    {
+      "path": "producers/boundaries/revisions/boundaries-v3/dispatch-message.txt",
+      "bytes": 1096,
+      "sha256": "9b60555882d38a25f64edc8120f524ea839a52fdb1cb309a70d2e737864dbe9b",
+      "git_blob_sha": "1063c479080912bf7f8c4c81376e200b5cdb7d68",
+      "role": "literal dispatch preservation; whole-file read/hash for procedure identity",
+      "unit": "whole_file"
+    },
+    {
+      "path": "producers/boundaries/revisions/boundaries-v3/history/body.md",
+      "bytes": 23665,
+      "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+      "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
+      "role": "preservation alias of prior current body; whole-file mechanical equality/hash verification",
+      "unit": "whole_file"
+    }
+  ],
+  "procedure_inputs": [
+    {
+      "path": "producers/boundaries/revisions/boundaries-v3/apply.py",
+      "bytes": 16667,
+      "sha256": "8ca6ab3b26860f1d5f4c2c4eb0f329c45aa66a6fed9976f2707570418866e6fe",
+      "git_blob_sha": "d74b4d117a673586e9a5e7cfbba573b1f2c35a31"
+    },
+    {
+      "path": "producers/boundaries/revisions/boundaries-v3/procedure-freeze.json",
+      "bytes": 10260,
+      "sha256": "671995910e5e85b1a4dcdbaea8ecec19fa3f762e800fa7fed8467806b0907d03",
+      "git_blob_sha": "ffd7cb0acba77a1d9f8d6d354ff95c560b94804d"
+    }
+  ],
+  "changed_in_place_aliases": [
+    {
+      "path": "producers/boundaries/bodies/boundaries.md",
+      "prior_identity": {
+        "path": "producers/boundaries/bodies/boundaries.md",
+        "bytes": 23665,
+        "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+        "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74"
+      },
+      "stable_alias": {
+        "path": "producers/boundaries/revisions/boundaries-v3/history/body.md",
+        "bytes": 23665,
+        "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+        "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74"
+      },
+      "new_identity_is_output_only": {
+        "path": "producers/boundaries/bodies/boundaries.md",
+        "bytes": 23769,
+        "sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+        "git_blob_sha": "d3b070015882d10f778f563438eb3f9d67cab061"
+      }
+    }
+  ],
+  "retained_lineage": {
+    "scope": "All actual original L1-family input lineage is retained; this two-claim correction does not narrow or reclassify prior inputs.",
+    "boundary_prior_recipe": {
+      "kind": "local_producer_delta_recipe",
+      "version": 2,
+      "artifact_key": "s1.core.boundaries",
+      "layer": 1,
+      "need": "component",
+      "producer": "/root/boundaries_l1",
+      "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "base_recipe": {
+        "path": "revisions/boundaries-v1/recipe.json",
+        "bytes": 15087,
+        "sha256": "b55bbbda05c426500409dfb49610dc2f83e520dd6dd37721ec1cb93507687a51",
+        "git_blob_sha": "338d6dfd78dbf80bb3f46d4685a12146d794f500"
+      },
+      "base_body": {
+        "path": "revisions/boundaries-v1/bodies/boundaries.md",
+        "bytes": 22938,
+        "sha256": "c557b33392cae8d0078a7da17f3421bb57ec2434f3bf5bba3b54f4172faeadae",
+        "git_blob_sha": "8232a8f75cc7b75614d2fd8873cc935edb84c538"
+      },
+      "body": {
+        "path": "bodies/boundaries.md",
+        "bytes": 23665,
+        "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+        "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74"
+      },
+      "authorized_operations": [
+        "BND-PRECISION-01",
+        "BND-PRECISION-02"
+      ],
+      "request": {
+        "path": "revisions/boundaries-v2/request.txt",
+        "bytes": 3063,
+        "sha256": "5902662ae03576f5b1c1d3d44286e6ec733a0c514c3b7d67359a975642d49924",
+        "git_blob_sha": "89f147501b7721de5135d71b8536a44696e60d2c"
+      },
+      "judge_public_requests": [
+        {
+          "path": "revisions/boundaries-v2/inputs/j1-response.md",
+          "bytes": 8320,
+          "sha256": "ccad14b91237930376d42ebb54d39bdd3f35e3b7587d5cb8935bc121202ae376",
+          "git_blob_sha": "0b120a7769854058fb6da37770f81ec7d2c55d77"
+        },
+        {
+          "path": "revisions/boundaries-v2/inputs/j2-response.md",
+          "bytes": 6656,
+          "sha256": "677ce359667553b2e3ab5cc3855897ca003db08ba1ded0e1004b96653c726b0a",
+          "git_blob_sha": "7acc3d649d4194ef350d25fbfc3fd35cbfc2d35a"
+        }
+      ],
+      "effective_inputs": {
+        "path": "effective-inputs.json",
+        "bytes": 22879,
+        "sha256": "6ecae50d90933e555a874b209c6553750d85192df44c36df2418b3ff696890fc",
+        "git_blob_sha": "2d099dcbef9b537a5e22a634642c1317bd0464f4"
+      },
+      "evidence": {
+        "path": "suplemento-boundaries-1.md",
+        "bytes": 285965,
+        "sha256": "665c05eff1fd9db5cc1a75636fc883adf8c43cac6f8069dfe3fc5010225ef0b1",
+        "git_blob_sha": "30ecf397cbb35da0a98b73cbf333ab8031d32c56"
+      },
+      "evidence_index": {
+        "path": "suplemento-boundaries-1.index.json",
+        "bytes": 136517,
+        "sha256": "dee45614a91d42cd8de571ccd2f5c1a18c81d762ca354f94caf256d40e077141",
+        "git_blob_sha": "bb71cb705224b0247c18766a0fcdd2109f578ecc"
+      },
+      "delta": {
+        "path": "revisions/boundaries-v2/delta.json",
+        "bytes": 4643,
+        "sha256": "cec49ee29edcb7637cfc36dcf4a8d3b0f98685c1e1a2739c279f4c6f6d890c9b",
+        "git_blob_sha": "9a78dde4211f6a3ccc01571e0e52856684d9a4b8"
+      },
+      "delta_patch": {
+        "path": "revisions/boundaries-v2/delta.patch",
+        "bytes": 4125,
+        "sha256": "a7483401cc444bf710e8d1427917a110cb4b9e9561a1975e5b08c027ef50ae70",
+        "git_blob_sha": "6de4de7de7873f8bbe4925d542ec8c86925571f3"
+      },
+      "response": {
+        "path": "revisions/boundaries-v2/response.md",
+        "bytes": 3271,
+        "sha256": "8ff2291b94024d4d5820ac123aa0a0ec6058ba313f20467f1ca42bc3d01c0867",
+        "git_blob_sha": "d6a33a643bfea704bd226236ef2d78ed3766f555"
+      },
+      "preservation_notice": "Original v1 records remain byte-identical; historical full files remain actual inputs; no acceptance transferred.",
+      "test_runtime": "NOT_RUN",
+      "semantic_status": "PENDING_SAME_PAIR_REEVALUATION",
+      "usage": "UNKNOWN"
+    },
+    "effective_inputs_manifest": {
+      "path": "producers/boundaries/effective-inputs.json",
+      "bytes": 22879,
+      "sha256": "6ecae50d90933e555a874b209c6553750d85192df44c36df2418b3ff696890fc",
+      "git_blob_sha": "2d099dcbef9b537a5e22a634642c1317bd0464f4"
+    },
+    "source_groups": {
+      "boundaries_assigned": {
+        "paths": [
+          "packages/core/src/atlas.ts",
+          "packages/core/src/control-plane/move-session.ts",
+          "packages/core/src/control-plane/workspace.sql.ts",
+          "packages/core/src/rag-studio/sql.ts",
+          "packages/core/src/relay-commands.ts",
+          "packages/core/src/relay-hook-install.ts",
+          "packages/core/src/relay-hook-recovery.ts",
+          "packages/core/src/relay-hook-shipper.ts",
+          "packages/core/src/relay-workflow-binding.ts",
+          "packages/core/src/relay-workflow-currentstep.ts",
+          "packages/core/src/relay-workflow-evaluator.ts",
+          "packages/core/src/relay-workflow-session.ts",
+          "packages/core/src/relay-workflow-transition.ts",
+          "packages/core/src/relay.ts",
+          "packages/core/test/move-session.test.ts",
+          "packages/core/test/relay-commands.test.ts",
+          "packages/core/test/relay-hook-install.test.ts",
+          "packages/core/test/relay-hook-recovery-startup.test.ts",
+          "packages/core/test/relay-hook-recovery.test.ts",
+          "packages/core/test/relay-hook-session.test.ts",
+          "packages/core/test/relay-hook-shipper.test.ts",
+          "packages/core/test/relay-workflow-binding.test.ts",
+          "packages/core/test/relay-workflow-evaluator.test.ts",
+          "packages/core/test/relay.test.ts"
+        ],
+        "count": 24,
+        "identity_manifest": "captures.json",
+        "reason": "Fourteen full implementation leaves and ten prepared test contracts supply the local adapter claims."
+      },
+      "support_assigned": {
+        "paths": [
+          "docs/architecture/phase-plans/70-90-briefs/EXP-CORE.md",
+          "docs/architecture/phase-plans/70-90-briefs/RD-CTRLPLANE.md",
+          "docs/architecture/phase-plans/70-90-briefs/RD-SESSION.md",
+          "docs/specs/runtime-closure/ARCHIE-QUALIFICATION.md",
+          "docs/specs/runtime-closure/CHECKPOINT.md",
+          "docs/specs/runtime-closure/PLAN.md",
+          "docs/specs/runtime-closure/PRODUCER-BOUNDARY.md",
+          "docs/specs/runtime-closure/SNAPSHOT-QUALIFICATION.md",
+          "docs/specs/runtime-closure/WAVE-2.md",
+          "docs/specs/v2/api.html",
+          "docs/specs/v2/schema-changelog.md",
+          "docs/specs/v2/todo.md",
+          "packages/core/bunfig.toml",
+          "packages/core/drizzle.config.ts",
+          "packages/core/package.json",
+          "packages/core/README.md",
+          "packages/core/schema.json",
+          "packages/core/script/fix-node-pty.ts",
+          "packages/core/script/migration.ts",
+          "packages/core/script/toolkit-floors.ts",
+          "packages/core/script/toolkit-pack.ts",
+          "packages/core/test/background-job.test.ts",
+          "packages/core/test/bun-test-timeout.test.ts",
+          "packages/core/test/distribution-bundle-boundaries.test.ts",
+          "packages/core/test/distribution-bundle-deno.test.ts",
+          "packages/core/test/distribution-bundle-execution.test.ts",
+          "packages/core/test/distribution-bundle-gates.ts",
+          "packages/core/test/distribution-bundle-workflow.test.ts",
+          "packages/core/test/fixture/actions-cli.ts",
+          "packages/core/test/fixture/actions-http.ts",
+          "packages/core/test/fixture/actions-network.ts",
+          "packages/core/test/fixture/actions-resource-runtime.ts",
+          "packages/core/test/fixture/actions-transport.ts",
+          "packages/core/test/fixture/board-queue.ts",
+          "packages/core/test/fixture/capability-artifacts.ts",
+          "packages/core/test/fixture/capability-channel.ts",
+          "packages/core/test/fixture/capability-children.ts",
+          "packages/core/test/fixture/capability-connection-management.ts",
+          "packages/core/test/fixture/capability-connection-setup-sql.ts",
+          "packages/core/test/fixture/capability-connection-setup.ts",
+          "packages/core/test/fixture/capability-discovery.ts",
+          "packages/core/test/fixture/capability-mcp.ts",
+          "packages/core/test/fixture/capability-policy.ts",
+          "packages/core/test/fixture/capability-process-control.ts",
+          "packages/core/test/fixture/capability-schedule.ts",
+          "packages/core/test/fixture/capability-service-call.ts",
+          "packages/core/test/fixture/capability-services.ts",
+          "packages/core/test/fixture/distribution-bundle.ts",
+          "packages/core/test/fixture/effect-flock-worker.ts",
+          "packages/core/test/fixture/flock-worker.ts",
+          "packages/core/test/fixture/git.ts",
+          "packages/core/test/fixture/github-command-cli.ts",
+          "packages/core/test/fixture/github-command.ts",
+          "packages/core/test/fixture/github-read-cli.ts",
+          "packages/core/test/fixture/github-read.ts",
+          "packages/core/test/fixture/location.ts",
+          "packages/core/test/fixture/lsp-stdio-server.js",
+          "packages/core/test/fixture/lsp/fake-lsp-server.js",
+          "packages/core/test/fixture/mcp-omni-stdio.ts",
+          "packages/core/test/fixture/mcp-session-recovery.ts",
+          "packages/core/test/fixture/monolith-inventory.ts",
+          "packages/core/test/fixture/omni-effect.ts",
+          "packages/core/test/fixture/omni-expect.ts",
+          "packages/core/test/fixture/packaged-skills.ts",
+          "packages/core/test/fixture/pinned-artifact/tool.zip",
+          "packages/core/test/fixture/process-tree.ts",
+          "packages/core/test/fixture/ripgrep-release.ts",
+          "packages/core/test/fixture/scip-alias/core.scip",
+          "packages/core/test/fixture/scip-alias/orchestra.scip",
+          "packages/core/test/fixture/sdk-registry.ts",
+          "packages/core/test/fixture/tmpdir.ts",
+          "packages/core/test/fixture/upstream-arsenal-proof.ts",
+          "packages/core/test/fixture/upstream-arsenal-registry.ts",
+          "packages/core/test/fixture/upstream-arsenal-runtime.ts",
+          "packages/core/test/fixture/windows-process-query.ts",
+          "packages/core/test/fixtures/cassandra-dialer_test.go",
+          "packages/core/test/fixtures/cassandra-dialer-linux_test.go",
+          "packages/core/test/fixtures/recordings/session-runner/openai-chat-streams-text.json",
+          "packages/core/test/godfile.test.ts",
+          "packages/core/test/lib/effect.ts",
+          "packages/core/test/lib/rejection.ts",
+          "packages/core/test/lib/sandbox-host.ts",
+          "packages/core/test/lib/tool.ts",
+          "packages/core/test/maestro-arsenal-package.test.ts",
+          "packages/core/test/maestro-arsenal.test.ts",
+          "packages/core/test/monolith-inventory-source.test.ts",
+          "packages/core/test/monolith-inventory.test.ts",
+          "packages/core/test/omni.node-smoke.mjs",
+          "packages/core/test/output-quarantine.test.ts",
+          "packages/core/test/preload.ts",
+          "packages/core/test/process/process.test.ts",
+          "packages/core/test/rename-guard.test.ts",
+          "packages/core/test/setup-bun-cache.test.ts",
+          "packages/core/test/shared-schema.test.ts",
+          "packages/core/test/task-governance.test.ts",
+          "packages/core/test/test-ci-request.test.ts",
+          "packages/core/test/test-ci-upload.test.ts",
+          "packages/core/test/test-omni-control.test.ts",
+          "packages/core/test/upstream-arsenal.test.ts",
+          "packages/core/test/upstream-settlement-preservation.test.ts",
+          "packages/core/test/windows-process-query.hosted.ts",
+          "packages/core/tsconfig.json",
+          "packages/core/vendor/hugr-lean-0.4.0-0660c2b5dc92.tgz",
+          "packages/core/vendor/README.md"
+        ],
+        "count": 104,
+        "identity_manifest": "captures.json",
+        "reason": "Each historical/documentation/package/fixture disposition uses its actual full captured file identity; depth is coverage.jsonl."
+      },
+      "boundary_cross_support_readme": {
+        "paths": [
+          "packages/core/README.md"
+        ],
+        "count": 1,
+        "identity_manifest": "captures.json",
+        "reason": "Architecture, entry points and maintenance authority explicitly cited in boundaries."
+      },
+      "kit_navigation": {
+        "paths": [
+          "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/01-sessions/mission.json",
+          "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/02-tools/mission.json",
+          "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/03-automation/mission.json",
+          "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/04-api/mission.json",
+          "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/05-libraries/mission.json",
+          "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/dependencies.json",
+          "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/partition.json",
+          "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/delegation-20261114/roster.json"
+        ],
+        "count": 8,
+        "identity_manifest": "captures.json",
+        "reason": "Actual partition, obligations, owners, keys and missions for navigation and source population; no accepted artifact version."
+      }
+    },
+    "historical_full_inputs": [
+      {
+        "local_path": "inputs-effective/history/a3-dossier.md",
+        "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a3-v1-dossier.md",
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "sha256": "36416073165d59eec9c7d847a26f414d855cc2a40758d548f4dd49669dccc5d4",
+        "git_blob_sha": "285e56c1680153ce75c71fd99bcf9455bde70d4d",
+        "bytes": 177076,
+        "role": "effective_full_historical_input",
+        "read_mode": "selected relevant ranges/records from the original whole file",
+        "file_identity_unit": "whole original file, not the excerpt or projection",
+        "needed_for": [
+          "s1.core.boundaries",
+          "s1.subslice03.support"
+        ],
+        "rationale": "Explicit claims of historical reuse, predecessor scope and inherited coverage depend on this actual input."
+      },
+      {
+        "local_path": "inputs-effective/history/a4-dossier.md",
+        "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/review-packets/l1-a4-v1-dossier.md",
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "sha256": "83b544ac46f99b2bf3585ff4e607bcd403e49eb20dd128deb5b6a029a772ead0",
+        "git_blob_sha": "6f872ea0e22097d8084fd587f585751a436f607e",
+        "bytes": 155061,
+        "role": "effective_full_historical_input",
+        "read_mode": "selected relevant ranges/records from the original whole file",
+        "file_identity_unit": "whole original file, not the excerpt or projection",
+        "needed_for": [
+          "s1.core.boundaries",
+          "s1.subslice03.support"
+        ],
+        "rationale": "Explicit claims of historical reuse, predecessor scope and inherited coverage depend on this actual input."
+      },
+      {
+        "local_path": "inputs-effective/history/coverage-needs-projection.json",
+        "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json",
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+        "git_blob_sha": "2e91d0f916dfa95a2dd0ef7ae74ff8c1bb427045",
+        "bytes": 726892,
+        "role": "effective_full_historical_input",
+        "read_mode": "selected relevant ranges/records from the original whole file",
+        "file_identity_unit": "whole original file, not the excerpt or projection",
+        "needed_for": [
+          "s1.core.boundaries",
+          "s1.subslice03.support"
+        ],
+        "rationale": "Explicit claims of historical reuse, predecessor scope and inherited coverage depend on this actual input."
+      }
+    ],
+    "historical_bodies": [
+      {
+        "local_path": "history/boundaries.md",
+        "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/boundaries.md",
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "sha256": "7b20ed7cedf86c24fb1d9c3471250fcddf666f9c66e7de2dba9852df1fa17143",
+        "git_blob_sha": "7c4b50cdc6f00552c1289c4221855d3120dd6572",
+        "bytes": 3905
+      },
+      {
+        "local_path": "history/entry.md",
+        "source_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/bodies/entry.md",
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "sha256": "6a488ca8f9717a497949b71ed41db84d995f23b90c31cc59c22c5bd86239ca6c",
+        "git_blob_sha": "894266bd4543763fb1ee2a4dbf0ba749a244ec48",
+        "bytes": 7312
+      }
+    ],
+    "guidance_and_authority_inputs": [
+      {
+        "local_path": "inputs-effective/COMMON.md",
+        "source_path": "provided-inputs/COMMON.md",
+        "commit": null,
+        "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+        "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+        "bytes": 12959,
+        "role": "effective_recipe_or_authority_input",
+        "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+      },
+      {
+        "local_path": "inputs-effective/mission.json",
+        "source_path": "provided-inputs/mission.json",
+        "commit": null,
+        "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+        "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+        "bytes": 6006,
+        "role": "effective_recipe_or_authority_input",
+        "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+      },
+      {
+        "local_path": "inputs-effective/inputs.json",
+        "source_path": "provided-inputs/inputs.json",
+        "commit": null,
+        "sha256": "8388b4899512c8a7a8ac358a322da64bf8b2db5651f228e9090bebfc21a606a0",
+        "git_blob_sha": "521964f9882a62f5a79ba5be6658b44b9fd464d0",
+        "bytes": 6979,
+        "role": "effective_recipe_or_authority_input",
+        "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+      },
+      {
+        "local_path": "inputs-effective/AGENTS.md",
+        "source_path": "provided-inputs/AGENTS.md",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+        "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+        "bytes": 16501,
+        "role": "effective_recipe_or_authority_input",
+        "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+      },
+      {
+        "local_path": "inputs-effective/SKILL.md",
+        "source_path": "provided-inputs/SKILL.md",
+        "commit": null,
+        "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+        "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+        "bytes": 8143,
+        "role": "effective_recipe_or_authority_input",
+        "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+      },
+      {
+        "local_path": "inputs-effective/sources.jsonl",
+        "source_path": "provided-inputs/sources.jsonl",
+        "commit": null,
+        "sha256": "1643a358ccaafe0ca9e6a9051d7c1a9bc9a1922834d6183e52703f6de2db077c",
+        "git_blob_sha": "71374892d3a7bda60aaf48cc8bd2c43e4d9e4c85",
+        "bytes": 119405,
+        "role": "effective_recipe_or_authority_input",
+        "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+      },
+      {
+        "local_path": "inputs-effective/references/principles.md",
+        "source_path": "provided-inputs/references/principles.md",
+        "commit": null,
+        "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+        "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+        "bytes": 6010,
+        "role": "effective_recipe_or_authority_input",
+        "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+      },
+      {
+        "local_path": "inputs-effective/references/fatia-1.md",
+        "source_path": "provided-inputs/references/fatia-1.md",
+        "commit": null,
+        "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+        "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+        "bytes": 3987,
+        "role": "effective_recipe_or_authority_input",
+        "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+      },
+      {
+        "local_path": "inputs-effective/references/fresh-start.md",
+        "source_path": "provided-inputs/references/fresh-start.md",
+        "commit": null,
+        "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+        "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+        "bytes": 4983,
+        "role": "effective_recipe_or_authority_input",
+        "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+      },
+      {
+        "local_path": "inputs-effective/references/orchestration.md",
+        "source_path": "provided-inputs/references/orchestration.md",
+        "commit": null,
+        "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+        "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+        "bytes": 4408,
+        "role": "effective_recipe_or_authority_input",
+        "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+      },
+      {
+        "local_path": "inputs-effective/references/judging.md",
+        "source_path": "provided-inputs/references/judging.md",
+        "commit": null,
+        "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+        "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+        "bytes": 5787,
+        "role": "effective_recipe_or_authority_input",
+        "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+      },
+      {
+        "local_path": "inputs-effective/references/transport.md",
+        "source_path": "provided-inputs/references/transport.md",
+        "commit": null,
+        "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+        "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+        "bytes": 8478,
+        "role": "effective_recipe_or_authority_input",
+        "rationale": "Original task guidance/inventory/authority actually read; no source identity is fabricated for locally supplied wrappers."
+      }
+    ],
+    "per_artifact": {
+      "s1.core.boundaries": {
+        "source_groups": [
+          "boundaries_assigned",
+          "boundary_cross_support_readme",
+          "kit_navigation"
+        ],
+        "historical_full_inputs": [
+          "inputs-effective/history/a3-dossier.md",
+          "inputs-effective/history/a4-dossier.md",
+          "inputs-effective/history/coverage-needs-projection.json"
+        ],
+        "historical_bodies": [
+          "history/boundaries.md",
+          "history/entry.md"
+        ],
+        "authority": "inputs-effective/AGENTS.md",
+        "recipe_inputs": [
+          "inputs-effective/COMMON.md",
+          "inputs-effective/mission.json",
+          "inputs-effective/inputs.json",
+          "inputs-effective/AGENTS.md",
+          "inputs-effective/SKILL.md",
+          "inputs-effective/sources.jsonl",
+          "inputs-effective/references/principles.md",
+          "inputs-effective/references/fatia-1.md",
+          "inputs-effective/references/fresh-start.md",
+          "inputs-effective/references/orchestration.md",
+          "inputs-effective/references/judging.md",
+          "inputs-effective/references/transport.md"
+        ],
+        "note": "History is needed for actual reuse/population/navigation claims; engine guarantees are not transferred."
+      },
+      "s1.subslice03.support": {
+        "source_groups": [
+          "support_assigned",
+          "kit_navigation"
+        ],
+        "historical_full_inputs": [
+          "inputs-effective/history/a3-dossier.md",
+          "inputs-effective/history/a4-dossier.md",
+          "inputs-effective/history/coverage-needs-projection.json"
+        ],
+        "historical_bodies": [
+          "history/entry.md",
+          "history/boundaries.md"
+        ],
+        "authority": "inputs-effective/AGENTS.md",
+        "recipe_inputs": [
+          "inputs-effective/COMMON.md",
+          "inputs-effective/mission.json",
+          "inputs-effective/inputs.json",
+          "inputs-effective/AGENTS.md",
+          "inputs-effective/SKILL.md",
+          "inputs-effective/sources.jsonl",
+          "inputs-effective/references/principles.md",
+          "inputs-effective/references/fatia-1.md",
+          "inputs-effective/references/fresh-start.md",
+          "inputs-effective/references/orchestration.md",
+          "inputs-effective/references/judging.md",
+          "inputs-effective/references/transport.md"
+        ],
+        "shared_population_reference": "coverage.jsonl original all 128 rows; uses boundaries counts/read-depth, not an accepted boundary body as build predecessor",
+        "note": "Actual full archives, generated schema, fixtures, history and guidance remain inputs with declared semantic read depth; no metadata-only relabel to fit native cap."
+      }
+    },
+    "capture_manifest": {
+      "path": "captures.json",
+      "sha256": "0500a1208b1767f90af8ed8e439106d1c995242f1d5b1707714e031b364a4d73",
+      "git_blob_sha": "b17df7713f9462b253bdf0d99a0a3b9768559a8b",
+      "bytes": 90599
+    },
+    "coverage_manifest": {
+      "path": "coverage.jsonl",
+      "sha256": "d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9",
+      "git_blob_sha": "c95f8432d35a98d5a84ca8946b623a1eb5582210",
+      "bytes": 157032
+    },
+    "large_input_notice": {
+      "path": "inputs-effective/history/coverage-needs-projection.json",
+      "bytes": 726892,
+      "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+      "exceeds_256KiB": true,
+      "disposition": "preserved as actual full input; no splitting or projection substitution to evade an input limit",
+      "native_binding_status": "NOT_RUN_NOT_SELECTED"
+    },
+    "prior_context_records_not_reopened": [
+      {
+        "path": "producers/boundaries/effective-inputs.support-v2.json",
+        "bytes": 4467,
+        "sha256": "4c1de7eb42f336a328efeb1d5b647eb5d0d9c1e0048e4d6a5551902c0775f605",
+        "status": "identity retained from actual previous author context; no read or current-path assertion in this dispatch"
+      },
+      {
+        "path": "producers/boundaries/revisions/support-v2/recipe.json",
+        "bytes": 6253,
+        "sha256": "99fc9e0ec430749fca8a34758179e66ba7e7aebbc5dce9436f6e15b58572604f",
+        "status": "identity retained from actual previous author context; no read or current-path assertion in this dispatch"
+      },
+      {
+        "path": "producers/boundaries/revisions/union-supplement-1/recipe.json",
+        "bytes": 9155,
+        "sha256": "b7d5cd3fdb40da10694f17eb3299314a94ede98f580cb471082981eaef0811ff",
+        "status": "identity retained from actual previous author context; no read or current-path assertion in this dispatch"
+      }
+    ],
+    "not_a_dependency_acceptance": true
+  },
+  "current_outputs_are_not_self_inputs": true,
+  "postwrite_body_read": "Whole resulting body is read only for mechanical output verification and recorded in producer-verification, not listed as its own production input.",
+  "supplemental_summary": "review-supplement.md is a new output derived from the frozen two operations and the whole source inputs; it is not a substitute input.",
+  "preparation_record": [
+    {
+      "sequence": 1,
+      "action": "Read and verify frozen recipe.json and request.txt in full."
+    },
+    {
+      "sequence": 2,
+      "action": "List exclusive revision directory: only supplied recipe/request/public-findings existed; preserve dispatch-message.txt literal (1096 bytes) without trailing newline."
+    },
+    {
+      "sequence": 3,
+      "action": "Read current boundaries v2, whole rag-studio/sql.ts and public-findings.md in full; verify their supplied identities."
+    },
+    {
+      "sequence": 4,
+      "action": "Read whole relay.ts and boundaries-v2/recipe.json in full; verify identities."
+    },
+    {
+      "sequence": 5,
+      "action": "Read effective-inputs.json in full; verify identity."
+    },
+    {
+      "sequence": 6,
+      "action": "Read whole relay.ts again to project line-numbered contract and implementation ranges; this is the same whole-file input unit."
+    },
+    {
+      "sequence": 7,
+      "action": "Write actual apply.py once in exclusive revision directory; no body mutation yet."
+    },
+    {
+      "sequence": 8,
+      "action": "Preserve current body bytes exclusively as history/body.md and compare full bytes; no older frozen record overwritten."
+    },
+    {
+      "sequence": 9,
+      "action": "Read/hash all enumerated input units, request, dispatch, preserved alias and apply.py; verify two unique old literals and absence of outputs to supersede."
+    },
+    {
+      "sequence": 10,
+      "action": "Freeze this procedure record and input identities before invoking apply.py."
+    }
+  ],
+  "no_new_source_fetch": true,
+  "tokens": "UNKNOWN",
+  "physical_attempts": "UNKNOWN",
+  "cost": "UNKNOWN"
+}

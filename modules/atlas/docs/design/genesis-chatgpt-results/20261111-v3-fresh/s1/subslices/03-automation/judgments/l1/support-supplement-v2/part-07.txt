@@ -1,0 +1,1183 @@
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "text/event-stream; charset=utf-8"
+        },
+        "body": "data: {\"id\":\"chatcmpl-DmPRwO9SjY0GJZ3TFFe1Be72wysEG\",\"object\":\"chat.completion.chunk\",\"created\":1780429944,\"model\":\"gpt-4o-mini-2024-07-18\",\"service_tier\":\"default\",\"system_fingerprint\":\"fp_40bf7dabb5\",\"choices\":[{\"index\":0,\"delta\":{\"role\":\"assistant\",\"content\":\"\",\"refusal\":null},\"logprobs\":null,\"finish_reason\":null}],\"usage\":null,\"obfuscation\":\"f3yrdno80\"}\n\ndata: {\"id\":\"chatcmpl-DmPRwO9SjY0GJZ3TFFe1Be72wysEG\",\"object\":\"chat.completion.chunk\",\"created\":1780429944,\"model\":\"gpt-4o-mini-2024-07-18\",\"service_tier\":\"default\",\"system_fingerprint\":\"fp_40bf7dabb5\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"Hello\"},\"logprobs\":null,\"finish_reason\":null}],\"usage\":null,\"obfuscation\":\"fDsGzJ\"}\n\ndata: {\"id\":\"chatcmpl-DmPRwO9SjY0GJZ3TFFe1Be72wysEG\",\"object\":\"chat.completion.chunk\",\"created\":1780429944,\"model\":\"gpt-4o-mini-2024-07-18\",\"service_tier\":\"default\",\"system_fingerprint\":\"fp_40bf7dabb5\",\"choices\":[{\"index\":0,\"delta\":{\"content\":\"!\"},\"logprobs\":null,\"finish_reason\":null}],\"usage\":null,\"obfuscation\":\"RqaP5kpPNU\"}\n\ndata: {\"id\":\"chatcmpl-DmPRwO9SjY0GJZ3TFFe1Be72wysEG\",\"object\":\"chat.completion.chunk\",\"created\":1780429944,\"model\":\"gpt-4o-mini-2024-07-18\",\"service_tier\":\"default\",\"system_fingerprint\":\"fp_40bf7dabb5\",\"choices\":[{\"index\":0,\"delta\":{},\"logprobs\":null,\"finish_reason\":\"stop\"}],\"usage\":null,\"obfuscation\":\"B19l5\"}\n\ndata: {\"id\":\"chatcmpl-DmPRwO9SjY0GJZ3TFFe1Be72wysEG\",\"object\":\"chat.completion.chunk\",\"created\":1780429944,\"model\":\"gpt-4o-mini-2024-07-18\",\"service_tier\":\"default\",\"system_fingerprint\":\"fp_40bf7dabb5\",\"choices\":[],\"usage\":{\"prompt_tokens\":22,\"completion_tokens\":2,\"total_tokens\":24,\"prompt_tokens_details\":{\"cached_tokens\":0,\"audio_tokens\":0},\"completion_tokens_details\":{\"reasoning_tokens\":0,\"audio_tokens\":0,\"accepted_prediction_tokens\":0,\"rejected_prediction_tokens\":0}},\"obfuscation\":\"kbiJobM55YE\"}\n\ndata: [DONE]\n\n"
+      }
+    }
+  ]
+}
+`````
+
+## RE-SUP-05 — Processo e harness: mecanismos/precondições, não resultados executados
+
+Este bloco atende também à lista de helpers de RE-SUP-04 de J2. SUP-F02 foi resolvido por qualificação: nenhuma promessa de exclusividade é inferida do contador. O comentário afterEach permanece intenção até prova de integração do runner; não foi necessário expandir o escopo a uma auditoria de runner.
+
+### HAR-OPEN-1 — `packages/core/test/fixture/omni-expect.ts` 8–12
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `067fbf7a21e008caacfab46a2eaeb878ac7bcaac`; SHA256 integral `33272d6488f070f4ca10fbaa5e9c113e4ed9eabd4c2d148dbd2321b6dc4d4ab9`. Bytes fonte 1376; recorte [639, 788); SHA256 trecho `b31bdad2216077fba14ad2c6a6397947eb09f240eede3415d95038f984847126`.
+
+`````text
+import { Omni } from "../../src/omni"
+
+let open: { file: string; start: number } | undefined
+const settled: { file: string; spawns: number }[] = []
+
+`````
+
+### HAR-IDENTITY-1 — `packages/core/test/fixture/omni-effect.ts` 1–3
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `3d1b4f7b1e372d63d9b7d042a8063bba6233e2f3`; SHA256 integral `0147e533beb7950107884df539b6b4025449e5be6a64b6cb046df54ef402b4d7`. Bytes fonte 211; recorte [0, 211); SHA256 trecho `0147e533beb7950107884df539b6b4025449e5be6a64b6cb046df54ef402b4d7`.
+
+`````text
+// Resolve the campaign's Effect from its real Core caller in both isolated and hoisted dependency layouts.
+export { Effect, ManagedRuntime } from "effect"
+export { ChildProcess } from "effect/unstable/process"
+`````
+
+### PROC-NONCE-1 — `packages/core/test/fixture/process-tree.ts` 23–95
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `5e4121f21d19e2eacf9441ca57288ad0fb9a125d`; SHA256 integral `0faac770f6bea7ac1e47d43b2b900eaa4d4f5e0effa209f3d0237d34ba2ac5e8`. Bytes fonte 14087; recorte [1480, 5110); SHA256 trecho `4e1fab07cbf63361abbbda6f088bc0f8159e3c1085166cc8a2647838d353ebce`.
+
+`````text
+function startTimes(pids, helper) {
+  const cp = process.getBuiltinModule("node:child_process")
+  const fs = process.getBuiltinModule("node:fs")
+  const result = {}
+  if (!pids.length) return result
+  if (process.platform === "win32") {
+    try {
+      const settings = JSON.parse(fs.readFileSync(helper + '.config', 'utf8'))
+      const out = cp.spawnSync(settings.node, ['--experimental-strip-types', helper, JSON.stringify(pids)],
+        {encoding: 'utf8', windowsHide: true, timeout: 15000, killSignal: 'SIGKILL'})
+      if (out.error || out.status !== 0 || !out.stdout?.trim()) throw Error(String(out.error ?? out.stderr ?? 'empty identity reply'))
+      const births = JSON.parse(out.stdout)
+      if (!births || typeof births !== 'object' || Array.isArray(births)) throw Error('malformed identity reply')
+      for (const pid of pids) {
+        if (births[pid] === undefined) continue // A successful complete inventory can prove the process exited.
+        if (typeof births[pid] !== 'string' || !/^\\d+$/.test(births[pid])) throw Error('invalid creation time for PID ' + pid)
+        result[pid] = births[pid]
+      }
+      return result
+    } catch (error) { throw Error('fixture birth query failed: ' + String(error)) }
+  }
+  if (process.platform === "linux") {
+    for (const pid of pids) {
+      try {
+        const stat = fs.readFileSync("/proc/" + pid + "/stat", "utf8")
+        const birth = stat.slice(stat.lastIndexOf(")") + 2).split(" ")[19]
+        if (!/^\\d+$/.test(birth ?? '')) throw Error('invalid procfs creation time for PID ' + pid)
+        result[pid] = birth
+      } catch (error) {
+        if (error.code === 'ENOENT') continue
+        throw Error('fixture birth query failed: ' + String(error))
+      }
+    }
+    return result
+  }
+  const out = cp.spawnSync("ps", ["-o", "pid=,lstart=", "-p", pids.join(",")],
+    { encoding: "utf8", timeout: 10000, killSignal: 'SIGKILL', env: { ...process.env, TZ: "UTC", LC_ALL: "C" } })
+  // ps exits 1 without diagnostics when all requested PIDs have exited; every other failure is named.
+  if (out.error || out.status !== 0 && !(out.status === 1 && !out.stderr?.trim()))
+    throw Error('fixture birth query failed: ' + String(out.error ?? out.stderr))
+  for (const line of (out.stdout || "").split("\\n")) {
+    if (!line.trim()) continue
+    const match = line.trim().match(/^(\\d+)\\s+(.+)$/)
+    if (!match) throw Error('fixture birth query failed: malformed ps creation-time row ' + line)
+    result[match[1]] = "UTC:" + match[2].trim()
+  }
+  return result
+}
+`
+
+const BODY = `${START_TIMES}
+const fs = process.getBuiltinModule("node:fs")
+const path = process.getBuiltinModule("node:path")
+const [nonce, depth, dir] = process.argv.slice(-3)
+const file = path.join(dir, process.pid + ".json")
+const startTime = startTimes([process.pid], path.join(dir, 'identity.mjs'))[process.pid]
+if (typeof startTime !== 'string' || !startTime) throw Error('fixture birth identity missing creation time for PID ' + process.pid)
+fs.writeFileSync(file + ".tmp", JSON.stringify({ pid: process.pid, nonce, startTime }))
+fs.renameSync(file + ".tmp", file)
+setInterval(() => {}, 1 << 30)
+if (Number(depth) === 0) console.log("ready " + nonce)
+else {
+  const child = process.getBuiltinModule("node:child_process").spawn(
+    process.execPath,
+    ["-e", "const S = " + JSON.stringify(S) + "; eval(S)", nonce, String(Number(depth) - 1), dir],
+    { stdio: ["ignore", "pipe", "inherit"], windowsHide: true },
+  )
+  child.stdout.pipe(process.stdout)
+}
+`
+
+const startTimes = new Function("pids", "helper", `${START_TIMES}\nreturn startTimes(pids, helper)`) as (
+  pids: number[],
+`````
+
+### PROC-NONCE-2 — `packages/core/test/fixture/process-tree.ts` 144–218
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `5e4121f21d19e2eacf9441ca57288ad0fb9a125d`; SHA256 integral `0faac770f6bea7ac1e47d43b2b900eaa4d4f5e0effa209f3d0237d34ba2ac5e8`. Bytes fonte 14087; recorte [8715, 12152); SHA256 trecho `c9c1913e359daa67d3cfa27772e3a9950d14ce564e5daee7b36daa59cc7edf85`.
+
+`````text
+export function tree(depth = 2) {
+  const nonce = `omni-tree-${randomUUID()}`
+  const dir = path.join(os.tmpdir(), nonce)
+  mkdirSync(dir)
+  if (process.platform === "win32") {
+    writeFileSync(path.join(dir, "identity.mjs"), WINDOWS_READER)
+    writeFileSync(path.join(dir, "identity.mjs.config"), JSON.stringify({ node: WindowsProcessQuery.nodeExecutable(),
+      decoder: new URL("../../../../native/omni/campaign/windows-inventory.ts", import.meta.url).href }))
+  }
+  return {
+    nonce,
+    size: depth + 1,
+    ready: `ready ${nonce}`,
+    command: process.execPath,
+    args: ["-e", `const S = ${JSON.stringify(BODY)}; eval(S)`, nonce, String(depth), dir],
+  }
+}
+
+function records(nonce: string): Entry[] {
+  const dir = path.join(os.tmpdir(), nonce)
+  return readdirSync(dir)
+    .filter((file) => file.endsWith(".json"))
+    .map((file) => {
+      const record = JSON.parse(readFileSync(path.join(dir, file), "utf8")) as Entry
+      if (record.nonce !== nonce || !Number.isSafeInteger(record.pid) || record.pid <= 0 ||
+        typeof record.startTime !== "string" || !record.startTime)
+        throw new Error(`fixture birth identity missing creation time or invalid record: ${path.join(dir, file)}: ${JSON.stringify(record)}`)
+      return record
+    })
+}
+
+function signalable(pid: number) {
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch (error) {
+    return (error as { code?: string }).code === "EPERM"
+  }
+}
+
+/** How many processes retain their recorded identity: Windows uses complete CIM, Unix signal 0 plus birth query. */
+export async function alive(nonce: string) {
+  // Bun's Windows signal-0 result can miss a live child; the authoritative CIM snapshot decides there.
+  const running = process.platform === "win32" ? records(nonce) : records(nonce).filter((record) => signalable(record.pid))
+  if (running.length === 0) return 0
+  const now = process.platform === "win32"
+    ? JSON.parse(await windowsQuery(nonce, running.map((record) => record.pid))) as Record<string, string>
+    : startTimes(running.map((record) => record.pid), path.join(os.tmpdir(), nonce, "identity.mjs"))
+  return running.filter((record) => now[record.pid] === record.startTime).length
+}
+
+/** Polls alive() until it reaches 0 or the deadline passes; returns the last count. Bounds a death, never a latency. */
+export async function gone(nonce: string, timeoutMs = 20_000) {
+  const deadline = Date.now() + timeoutMs
+  for (;;) {
+    // alive() reading 0 is confirmed by the command-line sweep: under Bun on Windows signal 0 was seen to miss live
+    // processes, and a missed process must never pass as gone.
+    const recorded = await alive(nonce)
+    const count = recorded === 0 ? (await sweep(nonce)).length : recorded
+    if (count === 0 || Date.now() > deadline) return count
+    await new Promise((resolve) => setTimeout(resolve, recorded === 0 ? 500 : 100))
+  }
+}
+
+/** Kills whatever is left of the tree (test cleanup; never an assertion). */
+export async function reap(nonce: string) {
+  const now = process.platform === "win32"
+    ? JSON.parse(await windowsQuery(nonce, records(nonce).map((record) => record.pid))) as Record<string, string>
+    : startTimes(records(nonce).map((record) => record.pid), path.join(os.tmpdir(), nonce, "identity.mjs"))
+  for (const record of records(nonce)) {
+    if (now[record.pid] !== record.startTime) continue
+    try {
+      process.kill(record.pid, "SIGKILL")
+    } catch {}
+  }
+`````
+
+### PROC-WINDOWS-1 — `packages/core/test/fixture/windows-process-query.ts` 78–118
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `f24e303349266553e9c3ba3c40f16ac7daab078a`; SHA256 integral `8293cc5be741860c8966a21da8418feb3beb96a24e334bf5d957c77c054a1b75`. Bytes fonte 17877; recorte [5898, 8469); SHA256 trecho `82b31a50ffff56008ca7e50d68c69aa4ba7743c32c672b3408860b24cd7dc927`.
+
+`````text
+/** Resolve a candidate without spawning; invoke must attest its runtime, not trust its filename. */
+export function nodeExecutable(): string {
+  const explicit = process.env.OMNI_CAMPAIGN_NODE
+  if (explicit && !path.isAbsolute(explicit)) throw new Error("OMNI_CAMPAIGN_NODE must be an absolute native Node path")
+  const native = !process.versions.bun && process.release.name === "node" && Boolean(process.versions.node)
+  const search = Object.entries(process.env).find(([key]) => key.toLowerCase() === "path")?.[1] ?? ""
+  const candidates = explicit ? [explicit] : native ? [process.execPath] : search.split(path.delimiter)
+    .filter(Boolean).map((dir) => path.resolve(dir.replace(/^"|"$/g, ""), process.platform === "win32" ? "node.exe" : "node"))
+  const bun = process.versions.bun ? realpathSync(process.execPath) : undefined
+  const errors: unknown[] = []
+  for (const candidate of candidates) {
+    try {
+      const resolved = realpathSync(candidate)
+      if (resolved === bun || !statSync(resolved).isFile()) throw new Error("not a native Node executable")
+      accessSync(resolved, constants.X_OK)
+      return resolved
+    } catch (error) { errors.push(error) }
+  }
+  throw new AggregateError(errors, "native Node executable unavailable")
+}
+
+/** Own the helper until OS exit AND stdio close; a failed join retains its files for diagnosis.
+ * ownedQuery runs PowerShell under the broker, gates census on source admission,
+ * and publishes <source>.result only after query OS/stdio close. Source must not
+ * spawn an unowned query itself; its death/timeout joins this exact query handle.
+ */
+export async function invoke(source: string, decoder: string, request: readonly number[] | { nonce: string }, deadlineMs = 15000, ownedQuery?: string): Promise<string> {
+  if (!Number.isFinite(deadlineMs) || deadlineMs <= 0) throw new Error("Windows process query requires a positive deadline")
+  const started = performance.now()
+  const deadline = started + deadlineMs
+  const node = nodeExecutable()
+  const dir = mkdtempSync(path.join(os.tmpdir(), "omni-windows-query-"))
+  const file = path.join(dir, "query.mjs")
+  const nonce = randomUUID()
+  const state = { closed: true, failure: undefined as unknown }
+  try {
+    writeFileSync(file, source)
+    writeFileSync(file + ".config", JSON.stringify({ node, decoder, ownedQuery }))
+    writeFileSync(path.join(dir, "broker.mjs"), BROKER)
+    writeFileSync(path.join(dir, "launcher.mjs"), LAUNCHER)
+    if (performance.now() >= deadline) throw new Error("Windows process query deadline expired before startup")
+`````
+
+### PROC-WINDOWS-2 — `packages/core/test/fixture/windows-process-query.ts` 184–221
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `f24e303349266553e9c3ba3c40f16ac7daab078a`; SHA256 integral `8293cc5be741860c8966a21da8418feb3beb96a24e334bf5d957c77c054a1b75`. Bytes fonte 17877; recorte [12862, 15550); SHA256 trecho `4ce6a8717b232e5cc11438885c1b41430919dc72e2e22fd5790a8f82e77cb15d`.
+
+`````text
+          const reply = message as Record<string, unknown>
+          const source = reply.source as typeof output.source
+          if (reply.nonce !== nonce) throw new Error("control nonce mismatch")
+          if (!output.attested && reply.type === "attested" && reply.bun === false && reply.release === "node" && typeof reply.version === "string" && /^\d+\.\d+\.\d+/.test(reply.version)) {
+            output.attested = true
+            phaseMs.attested = performance.now() - started
+            if (!output.error && performance.now() < deadline) child.stdin!.write("RUN\n")
+            if (output.error || performance.now() >= deadline) child.stdin!.end()
+            return
+          }
+          if (output.attested && !output.source && !output.complete && reply.type === "not-admitted") {
+            output.complete = true; phaseMs.completed = performance.now() - started; return
+          }
+          if (output.attested && !output.source && !output.complete && reply.type === "admitted" && source && Number.isSafeInteger(source.pid) && source.pid > 0 && source.file === file && source.nonce === nonce) {
+            if (ownedQuery !== undefined) {
+              if (typeof reply.queryPID !== "number" || !Number.isSafeInteger(reply.queryPID) || reply.queryPID <= 0)
+                throw new Error("owned Windows query admission missing PID")
+              query.pid = reply.queryPID
+            }
+            output.source = source
+            phaseMs.admitted = performance.now() - started
+            if (!output.error && performance.now() < deadline) child.stdin!.write("SOURCE\n")
+            if (output.error || performance.now() >= deadline) child.stdin!.end()
+            return
+          }
+          if (output.source && !output.complete && reply.type === "completed" && reply.pid === output.source.pid && reply.osClosed === true && reply.stdioClosed === true && (reply.code === null || Number.isInteger(reply.code)) && (reply.signal === null || typeof reply.signal === "string")) {
+            if (ownedQuery !== undefined) {
+              if (reply.queryPID !== query.pid || reply.queryOSClosed !== true || reply.queryStdioClosed !== true)
+                throw new Error("owned Windows query OS/stdio close missing")
+              query.osClosed = true
+              query.stdioClosed = true
+            }
+            output.complete = true; phaseMs.completed = performance.now() - started; return
+          }
+          throw new Error("invalid control order or runtime identity")
+        } catch (error) { fail(new Error("Windows process query native Node attestation/control invalid", { cause: error })) }
+      })
+      child.stderr!.on("data", (chunk: Buffer) => {
+`````
+
+### HAR-EFFECT-1 — `packages/core/test/lib/effect.ts` 1–40
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `4e9a5c195d29d621f96f326041fa1d8a52be7147`; SHA256 integral `835060b44a2229edd851c34a7f648f062d54aea2babb4f1e3e63197a48402d6f`. Bytes fonte 2864; recorte [0, 1909); SHA256 trecho `85fdef3ad079e1a5ceb3f0fe619d5105372247df4188d9f819aec6ed14e04799`.
+
+`````text
+import { test, type TestOptions } from "bun:test"
+import { Cause, Effect, Exit, Layer } from "effect"
+import type * as Scope from "effect/Scope"
+import * as TestClock from "effect/testing/TestClock"
+import * as TestConsole from "effect/testing/TestConsole"
+
+type Body<A, E, R> = Effect.Effect<A, E, R> | (() => Effect.Effect<A, E, R>)
+
+const body = <A, E, R>(value: Body<A, E, R>) => Effect.suspend(() => (typeof value === "function" ? value() : value))
+
+const run = <A, E, R, E2>(value: Body<A, E, R | Scope.Scope>, layer: Layer.Layer<R, E2>) =>
+  Effect.gen(function* () {
+    const exit = yield* body(value).pipe(Effect.scoped, Effect.provide(layer), Effect.exit)
+    if (Exit.isFailure(exit)) {
+      for (const err of Cause.prettyErrors(exit.cause)) {
+        yield* Effect.logError(err)
+      }
+    }
+    return yield* exit
+  }).pipe(Effect.runPromise)
+
+const make = <R, E>(testLayer: Layer.Layer<R, E>, liveLayer: Layer.Layer<R, E>) => {
+  const effect = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
+    test(name, () => run(value, testLayer), opts)
+
+  effect.only = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
+    test.only(name, () => run(value, testLayer), opts)
+
+  effect.skip = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
+    test.skip(name, () => run(value, testLayer), opts)
+
+  const live = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
+    test(name, () => run(value, liveLayer), opts)
+
+  live.only = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
+    test.only(name, () => run(value, liveLayer), opts)
+
+  live.skip = <A, E2>(name: string, value: Body<A, E2, R | Scope.Scope>, opts?: number | TestOptions) =>
+    test.skip(name, () => run(value, liveLayer), opts)
+
+`````
+
+### HAR-REJECTION-1 — `packages/core/test/lib/rejection.ts` 1–19
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `1687c3e363bab431a4e9e9b0a12f901f9bec1c49`; SHA256 integral `24f7689ecaa3d5164dbb24e158d08fd4e8de8005e2cdbad9f5014d8a1c4da951`. Bytes fonte 740; recorte [0, 740); SHA256 trecho `24f7689ecaa3d5164dbb24e158d08fd4e8de8005e2cdbad9f5014d8a1c4da951`.
+
+`````text
+// expect(promise).rejects waits in a nested event loop, and on Windows Bun 1.3.14 can spin there forever when the
+// promise needs a timer to settle. Awaiting these instead keeps each assertion and its failure meaning.
+
+// The rejection reason; a promise that resolves fails the test instead.
+export function rejection(promise: unknown) {
+  return Promise.resolve(promise).then(
+    (value) => {
+      throw new Error("Expected promise to reject", { cause: value })
+    },
+    (error: unknown) => error,
+  )
+}
+
+// Outside .rejects, toThrow only accepts a function, so this hands it one that throws the rejection reason.
+export function rethrow(promise: unknown) {
+  return rejection(promise).then((error) => () => {
+    throw error
+  })
+}
+`````
+
+### HAR-TMP-1 — `packages/core/test/fixture/tmpdir.ts` 1–43
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `f15d9766a2cd72f9bd0164308c3fe25c0900b289`; SHA256 integral `538b6d77e4bcbe10bdd342d7b20b37c9130d371eff304513039fc211fd7d26fe`. Bytes fonte 1725; recorte [0, 1725); SHA256 trecho `538b6d77e4bcbe10bdd342d7b20b37c9130d371eff304513039fc211fd7d26fe`.
+
+`````text
+import fs from "fs/promises"
+import { tmpdir as osTmpdir } from "os"
+import path from "path"
+
+export const tmpdir = async () => {
+  const dir = await fs.realpath(await fs.mkdtemp(path.join(osTmpdir(), "orchestra-core-test-")))
+  return {
+    path: dir,
+    async [Symbol.asyncDispose]() {
+      await remove(dir)
+    },
+  }
+}
+
+async function remove(dir: string, retries = 30): Promise<void> {
+  try {
+    await fs.rm(dir, { recursive: true, force: true })
+  } catch (error) {
+    if (retries === 0 || !error || typeof error !== "object" || !("code" in error) || error.code !== "EBUSY")
+      throw error
+    Bun.gc(true)
+    await Bun.sleep(100)
+    return remove(dir, retries - 1)
+  }
+}
+
+/**
+ * Removes a fixture root holding executables the test just ran. On GitHub's Windows runners, provjobd.exe<n> (started
+ * from %TEMP% by GitHub's hosted-compute-agent, outside the test's process tree) opens each newly run image for a moment
+ * after its process exits, so deleting it fails with EBUSY. Restart Manager named it as the only holder in all 11 holds
+ * caught (10 in 1,704 runs of a fresh node.exe copy, 1 in a whole core run); each released within 152 ms. Only EBUSY is
+ * retried, for at most 5 s: any other failure, or a holder that outlasts the bound, still fails the test.
+ */
+export async function removeExecuted(dir: string) {
+  const deadline = performance.now() + 5_000
+  for (;;) {
+    const error = await fs.rm(dir, { recursive: true, force: true }).then(() => undefined, (error: unknown) => error)
+    if (error === undefined) return
+    if (performance.now() >= deadline || !error || typeof error !== "object" || !("code" in error) || error.code !== "EBUSY")
+      throw error
+    await Bun.sleep(25)
+  }
+}
+`````
+
+### HAR-TOOL-1 — `packages/core/test/lib/tool.ts` 1–21
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `0d46e1c34bcf90b8841cdcd70c49b698de4713b4`; SHA256 integral `1b395b0c47a1091cee4a9a419f38fa76c12198b9761dcb2c678f38e3765a923d`. Bytes fonte 1038; recorte [0, 1038); SHA256 trecho `1b395b0c47a1091cee4a9a419f38fa76c12198b9761dcb2c678f38e3765a923d`.
+
+`````text
+import { AgentV2 } from "@orchestra/core/agent"
+import { SessionMessage } from "@orchestra/core/session/message"
+import { ToolRegistry } from "@orchestra/core/tool/registry"
+import { Effect } from "effect"
+
+// A caller that is not Maestro: the Maestro Arsenal tests rely on this identity being refused.
+export const toolIdentity = {
+  agent: AgentV2.ID.make("general"),
+  assistantMessageID: SessionMessage.ID.make("msg_tool_test"),
+}
+
+export const toolDefinitions = (
+  registry: ToolRegistry.Interface,
+  permissions?: Parameters<typeof registry.materialize>[0],
+) => registry.materialize(permissions).pipe(Effect.map((materialized) => materialized.definitions))
+
+export const settleTool = (registry: ToolRegistry.Interface, input: ToolRegistry.ExecuteInput) =>
+  registry.materialize().pipe(Effect.flatMap((materialized) => materialized.settle(input)))
+
+export const executeTool = (registry: ToolRegistry.Interface, input: ToolRegistry.ExecuteInput) =>
+  settleTool(registry, input).pipe(Effect.map((settlement) => settlement.result))
+`````
+
+### HAR-LOCATION-1 — `packages/core/test/fixture/location.ts` 1–26
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `b0ae64263ca047a557c4668ac083fbcbdbbe0fb3`; SHA256 integral `14f72e558218a270b4e4f555028371947f306641404a4d7af3b092bd35f39a7e`. Bytes fonte 950; recorte [0, 950); SHA256 trecho `14f72e558218a270b4e4f555028371947f306641404a4d7af3b092bd35f39a7e`.
+
+`````text
+import { Location } from "@orchestra/core/location"
+import { Project } from "@orchestra/core/project"
+import { AbsolutePath } from "@orchestra/core/schema"
+import { Effect, Layer } from "effect"
+import { tmpdir } from "./tmpdir"
+
+export function location(ref: Location.Ref, input: { projectDirectory?: AbsolutePath; vcs?: Project.Vcs } = {}) {
+  return {
+    directory: ref.directory,
+    workspaceID: ref.workspaceID,
+    project: { id: Project.ID.global, directory: input.projectDirectory ?? ref.directory },
+    vcs: input.vcs,
+  } satisfies Location.Interface
+}
+
+export const tempLocationLayer = Layer.unwrap(
+  Effect.acquireRelease(
+    Effect.promise(() => tmpdir()),
+    (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+  ).pipe(
+    Effect.map((tmp) => {
+      const ref = Location.Ref.make({ directory: AbsolutePath.make(tmp.path) })
+      return Layer.succeed(Location.Service, Location.Service.of(location(ref)))
+    }),
+  ),
+)
+`````
+
+### HAR-SHARED-1 — `packages/core/test/shared-schema.test.ts` 33–59
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `3e7344d564d90c3574363eb35f423607a771813e`; SHA256 integral `90eb879e84c7986773af24ab71a9c19d896a367401c5ecc2f514326b3bbde1b9`. Bytes fonte 9251; recorte [1730, 2376); SHA256 trecho `c8079cf5f02586be7b1d2d04d95d3c71c687b98b2fb549d9aa5badffceced47a`.
+
+`````text
+test("Core reuses the canonical shared schemas", async () => {
+  const [
+    coreCommand,
+    coreConnection,
+    coreCredential,
+    coreFileSystem,
+    coreIntegration,
+    coreLocation,
+    coreLLM,
+    corePermission,
+    coreProjectCopy,
+    corePty,
+    coreProject,
+    coreReference,
+    coreSessionInput,
+    coreSessionMessage,
+    coreSessionTodo,
+    corePrompt,
+    coreSkill,
+    coreV2Schema,
+    coreSchema,
+    coreWorkspace,
+  ] = await Promise.all([
+    import("@orchestra/core/command"),
+    import("@orchestra/core/integration/connection"),
+    import("@orchestra/core/credential"),
+    import("@orchestra/core/filesystem"),
+`````
+
+### HAR-SHARED-2 — `packages/core/test/shared-schema.test.ts` 167–202
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `3e7344d564d90c3574363eb35f423607a771813e`; SHA256 integral `90eb879e84c7986773af24ab71a9c19d896a367401c5ecc2f514326b3bbde1b9`. Bytes fonte 9251; recorte [7377, 9251); SHA256 trecho `9c52e14395f2df3dcf7fee507c19494f7022827c390d60c4dd0f90533d88014f`.
+
+`````text
+    [coreSkill.DirectorySource, Skill.DirectorySource],
+    [coreSkill.UrlSource, Skill.UrlSource],
+    [coreSkill.EmbeddedSource, Skill.EmbeddedSource],
+    [coreSkill.Source, Skill.Source],
+    [coreSkill.Info, Skill.Info],
+    [coreV2Schema.DateTimeUtcFromMillis, DateTimeUtcFromMillis],
+    [coreSchema.optional, optional],
+    [coreSchema.statics, statics],
+    [coreWorkspace.ID, Workspace.ID],
+  ]
+  for (const [core, shared] of schemas) expect(core).toBe(shared)
+
+  expect(Agent.Info.empty(Agent.ID.make("test"))).toEqual(AgentV2.Info.empty(AgentV2.ID.make("test")))
+  expect(Model.Info.empty(Provider.ID.make("test"), Model.ID.make("model"))).toEqual(
+    ModelV2.Info.empty(ProviderV2.ID.make("test"), ModelV2.ID.make("model")),
+  )
+  expect(Provider.Info.empty(Provider.ID.make("test"))).toEqual(ProviderV2.Info.empty(ProviderV2.ID.make("test")))
+  expect(Skill.Source.key(Skill.DirectorySource.make({ type: "directory", path: AbsolutePath.make("/tmp") }))).toBe(
+    "directory:/tmp",
+  )
+})
+
+test("shared record schemas construct and decode plain objects", () => {
+  const made = Prompt.make({ text: "hello" })
+  const decoded = Schema.decodeUnknownSync(Prompt)({ text: "hello" })
+  const content = Schema.decodeUnknownSync(SessionMessage.AssistantText)({ type: "text", id: "part_1", text: "hi" })
+
+  expect(Object.getPrototypeOf(made)).toBe(Object.prototype)
+  expect(Object.getPrototypeOf(decoded)).toBe(Object.prototype)
+  expect(Object.getPrototypeOf(content)).toBe(Object.prototype)
+  expect(Prompt.ast.annotations?.identifier).toBe("Prompt")
+  expect(SessionMessage.AssistantText.ast.annotations?.identifier).toBe("Session.Message.Assistant.Text")
+  expect(Prompt.equivalence(Prompt.make({ text: "hello" }), decoded)).toBe(true)
+  expect(Prompt.fromUserMessage({ text: "hello" })).toEqual(made)
+  expect(Workspace.ID.ascending("")).toStartWith("wrk_")
+})
+`````
+
+### HAR-GOVERNANCE-1 — `packages/core/test/task-governance.test.ts` 1–63
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `b40ac84ae3fa542fa23871cfa5d93b332faeb549`; SHA256 integral `6276912b7745c424961d08da63926088cda560526e944d388b0d4464cb19e3da`. Bytes fonte 2372; recorte [0, 2372); SHA256 trecho `6276912b7745c424961d08da63926088cda560526e944d388b0d4464cb19e3da`.
+
+`````text
+import { describe, expect } from "bun:test"
+import { AgentV2 } from "@orchestra/core/agent"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { ProjectV2 } from "@orchestra/core/project"
+import { SessionMessage } from "@orchestra/core/session/message"
+import { SessionSchema } from "@orchestra/core/session/schema"
+import { TaskGovernance } from "@orchestra/core/tool/task-governance"
+import { Effect, Schema } from "effect"
+import { testEffect } from "./lib/effect"
+
+const it = testEffect(AppNodeBuilder.build(TaskGovernance.node))
+
+const session = Schema.decodeUnknownSync(SessionSchema.Info)({
+  id: "ses_governance",
+  projectID: ProjectV2.ID.global,
+  cost: 0,
+  tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+  time: { created: 0, updated: 0 },
+  title: "governance",
+  location: { directory: "/governance" },
+})
+
+const reply = Schema.decodeUnknownSync(SessionMessage.Assistant)({
+  id: "msg_governance",
+  type: "assistant",
+  agent: "worker",
+  model: { providerID: "provider", id: "model" },
+  content: [
+    { type: "text", id: "first", text: "first line" },
+    { type: "reasoning", id: "thought", text: "hidden reasoning" },
+    { type: "text", id: "second", text: "second line" },
+  ],
+  finish: "stop",
+  time: { created: 0, completed: 1 },
+})
+
+const context = {
+  sessionID: session.id,
+  agent: AgentV2.ID.make("caller"),
+  assistantMessageID: SessionMessage.ID.make("msg_caller"),
+  toolCallID: "call",
+}
+
+describe("TaskGovernance.allowAll", () => {
+  it.effect("is the Location default and leaves Task unchanged", () => Effect.gen(function* () {
+    const governance = yield* TaskGovernance.Service
+    expect(governance).toBe(TaskGovernance.allowAll)
+    expect(governance.input).toEqual({})
+    expect(yield* governance.admit({
+      parent: session,
+      target: AgentV2.Info.empty(AgentV2.ID.make("worker")),
+      input: { description: "d", prompt: "p", subagent_type: "worker" },
+      context,
+    })).toEqual({})
+    yield* governance.beforeTurn(session)
+  }))
+
+  it.effect("settles a reply as its text parts joined by newlines", () => Effect.gen(function* () {
+    const governance = yield* TaskGovernance.Service
+    const settled = yield* governance.settle({ child: session, reply, admission: {}, context })
+    expect(settled).toEqual({ text: "first line\nsecond line" })
+  }))
+})
+`````
+
+### PROC-FLOCK-1 — `packages/core/test/fixture/flock-worker.ts` 23–72
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `4d375f38b74b2b0fb04c1c529eb810b899146be5`; SHA256 integral `6f40dcfa93a97db5830c3361ca750bcf6f1adae81892a56000a528821d1e623c`. Bytes fonte 1424; recorte [386, 1424); SHA256 trecho `9970c19f95228a8c473049b52de13490e0bda6b460ef80a5dcd60620ea2999e5`.
+
+`````text
+function input() {
+  const raw = process.argv[2]
+  if (!raw) {
+    throw new Error("Missing flock worker input")
+  }
+
+  return JSON.parse(raw) as Msg
+}
+
+async function job(input: Msg) {
+  if (input.ready) {
+    await fs.writeFile(input.ready, String(process.pid))
+  }
+
+  if (input.active) {
+    await fs.writeFile(input.active, String(process.pid), { flag: "wx" })
+  }
+
+  try {
+    if (input.holdMs && input.holdMs > 0) {
+      await sleep(input.holdMs)
+    }
+
+    if (input.done) {
+      await fs.appendFile(input.done, "1\n")
+    }
+  } finally {
+    if (input.active) {
+      await fs.rm(input.active, { force: true })
+    }
+  }
+}
+
+async function main() {
+  const msg = input()
+
+  await Flock.withLock(msg.key, () => job(msg), {
+    dir: msg.dir,
+    staleMs: msg.staleMs,
+    timeoutMs: msg.timeoutMs,
+    baseDelayMs: msg.baseDelayMs,
+    maxDelayMs: msg.maxDelayMs,
+  })
+}
+
+await main().catch((err) => {
+  const text = err instanceof Error ? (err.stack ?? err.message) : String(err)
+  process.stderr.write(text)
+  process.exit(1)
+})
+`````
+
+### PROC-EFLOCK-1 — `packages/core/test/fixture/effect-flock-worker.ts` 24–60
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `e84508a69063d4c8da035df05175db38ee46967f`; SHA256 integral `e3528623c9e447f8e441df7a88dc31eff7d1066d52325cb580e808181b1c7f3c`. Bytes fonte 1569; recorte [561, 1569); SHA256 trecho `fe6f83f554232ce536c63d328f7584f49a4b300f9ed65c21b1a4b87309fd545f`.
+
+`````text
+  home: os.homedir(),
+  data: os.tmpdir(),
+  cache: os.tmpdir(),
+  config: os.tmpdir(),
+  state: os.tmpdir(),
+  bin: os.tmpdir(),
+  log: os.tmpdir(),
+})
+
+const testLayer = AppNodeBuilder.build(EffectFlock.node, [[Global.node, testGlobal]])
+
+async function job() {
+  if (msg.ready) await fs.writeFile(msg.ready, String(process.pid))
+  if (msg.active) await fs.writeFile(msg.active, String(process.pid), { flag: "wx" })
+
+  try {
+    if (msg.holdMs && msg.holdMs > 0) await sleep(msg.holdMs)
+    if (msg.done) await fs.appendFile(msg.done, "1\n")
+  } finally {
+    if (msg.active) await fs.rm(msg.active, { force: true })
+  }
+}
+
+await Effect.runPromise(
+  Effect.gen(function* () {
+    const flock = yield* EffectFlock.Service
+    yield* flock.withLock(
+      Effect.promise(() => job()),
+      msg.key,
+      msg.dir,
+    )
+  }).pipe(Effect.provide(testLayer)),
+).catch((err) => {
+  const text = err instanceof Error ? (err.stack ?? err.message) : String(err)
+  process.stderr.write(text)
+  process.exit(1)
+})
+`````
+
+### PROC-BACKGROUND-1 — `packages/core/test/background-job.test.ts` 1–104
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `ffe7f371cc6f3144ac80ec83ddcab1f0e9c1f09e`; SHA256 integral `080927c6b18aa9be31431b94349ef1245a30d388b271d19dbcf4f6e6bfbe6440`. Bytes fonte 6168; recorte [0, 3869); SHA256 trecho `6a0c3f91f744095a62c026eaebe611a1c93a9c4f4b19208b7dfe32054913d214`.
+
+`````text
+import { describe, expect } from "bun:test"
+import { BackgroundJob } from "@orchestra/core/background-job"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { Deferred, Effect, Exit, Scope } from "effect"
+import { it } from "./lib/effect"
+
+const jobsLayer = LayerNode.compile(BackgroundJob.node)
+
+describe("BackgroundJob", () => {
+  it.live("tracks process-local work through explicit observation", () =>
+    Effect.gen(function* () {
+      const jobs = yield* BackgroundJob.Service
+      const latch = yield* Deferred.make<void>()
+      const job = yield* jobs.start({
+        type: "test",
+        metadata: { durable: false },
+        run: Deferred.await(latch).pipe(Effect.as("done")),
+      })
+
+      expect(job).toMatchObject({ type: "test", status: "running", metadata: { durable: false } })
+      expect(yield* jobs.wait({ id: job.id, timeout: 0 })).toMatchObject({
+        timedOut: true,
+        info: { status: "running" },
+      })
+
+      yield* Deferred.succeed(latch, undefined)
+      expect(yield* jobs.wait({ id: job.id })).toMatchObject({
+        timedOut: false,
+        info: { status: "completed", output: "done" },
+      })
+    }).pipe(Effect.provide(jobsLayer)),
+  )
+
+  it.live("publishes jobs before starting immediately settling work", () =>
+    Effect.gen(function* () {
+      const jobs = yield* BackgroundJob.Service
+
+      yield* Effect.forEach(Array.from({ length: 100 }), (_, index) => {
+        const id = `job_immediate_start_${index}`
+        return Effect.gen(function* () {
+          const job = yield* jobs.start({
+            id,
+            type: "test",
+            run: jobs
+              .get(id)
+              .pipe(
+                Effect.flatMap((info) =>
+                  info?.status === "running"
+                    ? Effect.succeed(`done-${index}`)
+                    : Effect.fail("job started before publish"),
+                ),
+              ),
+          })
+
+          expect(yield* jobs.wait({ id: job.id })).toMatchObject({
+            timedOut: false,
+            info: { status: "completed", output: `done-${index}` },
+          })
+        })
+      })
+    }).pipe(Effect.provide(jobsLayer)),
+  )
+
+  it.live("increments pending work before starting immediately settling extensions", () =>
+    Effect.gen(function* () {
+      const jobs = yield* BackgroundJob.Service
+
+      yield* Effect.forEach(Array.from({ length: 100 }), (_, index) =>
+        Effect.gen(function* () {
+          const first = yield* Deferred.make<void>()
+          const job = yield* jobs.start({
+            type: "test",
+            run: Deferred.await(first).pipe(Effect.as(`first-${index}`)),
+          })
+
+          expect(yield* jobs.extend({ id: job.id, run: Effect.succeed(`second-${index}`) })).toBe(true)
+          expect((yield* jobs.get(job.id))?.status).toBe("running")
+
+          yield* Deferred.succeed(first, undefined)
+          expect(yield* jobs.wait({ id: job.id })).toMatchObject({
+            timedOut: false,
+            info: { status: "completed", output: `second-${index}` },
+          })
+        }),
+      )
+    }).pipe(Effect.provide(jobsLayer)),
+  )
+
+  it.live("interrupts live work without promising settlement after the owning process-local scope closes", () =>
+    Effect.gen(function* () {
+      const scope = yield* Scope.make()
+      const interrupted = yield* Deferred.make<void>()
+      const jobs = yield* BackgroundJob.make.pipe(Scope.provide(scope))
+      const job = yield* jobs.start({
+        type: "test",
+        run: Effect.never.pipe(Effect.ensuring(Deferred.succeed(interrupted, undefined))),
+      })
+
+      yield* Scope.close(scope, Exit.void)
+
+      yield* Deferred.await(interrupted).pipe(Effect.timeout("1 second"))
+      // The abandoned in-memory registry is not a durable observation channel.
+      expect((yield* jobs.get(job.id))?.status).toBe("running")
+    }),
+`````
+
+### PROC-APP-1 — `packages/core/test/process/process.test.ts` 31–85
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `8eb6563adcd0b92f4a86f9fbbb2a1392119443d7`; SHA256 integral `4029c018eb9ffbd7c6135dbc0e81c73f9115ba3ae31a33ce02def7b942e78d65`. Bytes fonte 14753; recorte [1069, 3374); SHA256 trecho `aa84fedc00ba9e016495dfba2853e653ba8baf8cafb3705ecc8d5be0bbe0dd61`.
+
+`````text
+describe("AppProcess", () => {
+  describe("run", () => {
+    it.effect(
+      "captures stdout and exit code zero",
+      Effect.gen(function* () {
+        const svc = yield* AppProcess.Service
+        const result = yield* svc.run(cmd("-e", "process.stdout.write('hi\\n')"))
+        expect(result.exitCode).toBe(0)
+        expect(result.stdout.toString("utf8")).toBe("hi\n")
+        expect(result.stdoutTruncated).toBe(false)
+        expect(result.stderrTruncated).toBe(false)
+      }),
+    )
+
+    it.effect(
+      "captures both output streams while preserving each stream's order",
+      Effect.gen(function* () {
+        const svc = yield* AppProcess.Service
+        const script = [
+          'process.stdout.write("out 1\\n")',
+          'setTimeout(() => process.stderr.write("err 1\\n"), 10)',
+          'setTimeout(() => process.stdout.write("out 2\\n"), 20)',
+        ].join(";")
+        const result = yield* svc.run(cmd("-e", script), { combineOutput: true })
+        // Separate OS pipes do not define a total order between stdout and stderr reads.
+        const lines = result.output?.toString("utf8").split("\n")
+        expect(lines?.at(-1)).toBe("")
+        expect(lines?.slice(0, -1).toSorted()).toEqual(["err 1", "out 1", "out 2"])
+        expect(lines?.filter((line) => line.startsWith("out "))).toEqual(["out 1", "out 2"])
+        expect(result.stdout.toString("utf8")).toBe("")
+        expect(result.stderr.toString("utf8")).toBe("")
+      }),
+    )
+
+    it.effect(
+      "non-zero exit returns RunResult; caller can require success",
+      Effect.gen(function* () {
+        const svc = yield* AppProcess.Service
+        const result = yield* svc.run(cmd("-e", "process.exit(1)"))
+        expect(result.exitCode).toBe(1)
+      }),
+    )
+
+    it.effect(
+      "requireSuccess fails on non-zero exit",
+      Effect.gen(function* () {
+        const svc = yield* AppProcess.Service
+        const exit = yield* Effect.exit(
+          svc.run(cmd("-e", "process.exit(1)")).pipe(Effect.flatMap(AppProcess.requireSuccess)),
+        )
+        expect(Exit.isFailure(exit)).toBe(true)
+        if (Exit.isFailure(exit)) {
+          const reason = exit.cause.reasons[0]
+          if (reason && reason._tag === "Fail") {
+            expect(reason.error).toBeInstanceOf(AppProcess.AppProcessError)
+`````
+
+### PROC-APP-2 — `packages/core/test/process/process.test.ts` 235–274
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `8eb6563adcd0b92f4a86f9fbbb2a1392119443d7`; SHA256 integral `4029c018eb9ffbd7c6135dbc0e81c73f9115ba3ae31a33ce02def7b942e78d65`. Bytes fonte 14753; recorte [9716, 11082); SHA256 trecho `b3587a2b537e1ce60a3eb3203850d25ae524a680a17258a458940e531e9787ba`.
+
+`````text
+      }),
+    )
+
+    it.effect(
+      "feeds a Uint8Array to stdin",
+      Effect.gen(function* () {
+        const svc = yield* AppProcess.Service
+        const bytes = new TextEncoder().encode("bytes")
+        const result = yield* svc.run(cmd("-e", echoStdin), { stdin: bytes })
+        expect(result.exitCode).toBe(0)
+        expect(result.stdout.toString("utf8")).toBe("bytes")
+      }),
+    )
+
+    it.effect(
+      "feeds a Stream of Uint8Array chunks to stdin",
+      Effect.gen(function* () {
+        const svc = yield* AppProcess.Service
+        const enc = new TextEncoder()
+        const stream = Stream.fromIterable([enc.encode("one"), enc.encode("-two"), enc.encode("-three")])
+        const result = yield* svc.run(cmd("-e", echoStdin), { stdin: stream })
+        expect(result.exitCode).toBe(0)
+        expect(result.stdout.toString("utf8")).toBe("one-two-three")
+      }),
+    )
+
+    it.effect(
+      "completes correctly with empty input",
+      Effect.gen(function* () {
+        const svc = yield* AppProcess.Service
+        const result = yield* svc.run(cmd("-e", echoStdin), { stdin: "" })
+        expect(result.exitCode).toBe(0)
+        expect(result.stdout.toString("utf8")).toBe("")
+      }),
+    )
+
+    it.effect(
+      "carries existing Command options like env",
+      Effect.gen(function* () {
+        const svc = yield* AppProcess.Service
+`````
+
+### PROC-DIALER-1 — `packages/core/test/fixtures/cassandra-dialer_test.go` 207–257
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `4b96c06c405b7f1a889206f04a3cd189e7bedc67`; SHA256 integral `c231e17601f43fcbba1241f6359dab0efaf63478ee5324baa9ba0035f51dae55`. Bytes fonte 14804; recorte [7097, 8884); SHA256 trecho `018998e313c83d3fd95667081e456406c4f1473018c984bfa30745940e25ad4a`.
+
+`````text
+func within(t *testing.T, what string, result chan error) error {
+	t.Helper()
+	select {
+	case err := <-result:
+		return err
+	case <-time.After(2 * time.Second):
+		t.Fatalf("%s did not return promptly", what)
+		return nil
+	}
+}
+
+// Go connections cannot return a context error, so a driver abandons a blocked call by closing or by moving the deadline.
+func TestOrchestraInflightReadCancel(t *testing.T) {
+	conn, peer := stalledPair(t)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	stop := context.AfterFunc(ctx, func() { conn.Close() })
+	defer stop()
+	read := make(chan error, 1)
+	go func() { _, err := conn.Read(make([]byte, 1)); read <- err }()
+	select {
+	case err := <-read:
+		t.Fatal("read returned before cancellation", err)
+	case <-time.After(100 * time.Millisecond):
+	}
+	cancel()
+	if err := within(t, "canceled read", read); !errors.Is(err, net.ErrClosed) || !errors.Is(ctx.Err(), context.Canceled) {
+		t.Fatal("canceled read did not report a closed conn", err)
+	}
+	if _, err := conn.Write([]byte("x")); !errors.Is(err, net.ErrClosed) {
+		t.Fatal("conn stayed writable after cancellation", err)
+	}
+	peer.SetReadDeadline(time.Now().Add(2 * time.Second))
+	if _, err := peer.Read(make([]byte, 1)); err != io.EOF {
+		t.Fatal("peer did not observe the closed Unix socket", err)
+	}
+}
+
+func TestOrchestraInflightReadDeadlineMove(t *testing.T) {
+	conn, _ := stalledPair(t)
+	read := make(chan error, 1)
+	go func() { _, err := conn.Read(make([]byte, 1)); read <- err }()
+	time.Sleep(100 * time.Millisecond)
+	if err := conn.SetReadDeadline(time.Unix(1, 0)); err != nil {
+		t.Fatal(err)
+	}
+	if err, ok := within(t, "read after deadline moved", read).(net.Error); !ok || !err.Timeout() {
+		t.Fatal("moved deadline did not wake the blocked read with a timeout")
+	}
+}
+
+`````
+
+### PROC-DIALER-2 — `packages/core/test/fixtures/cassandra-dialer_test.go` 269–302
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `4b96c06c405b7f1a889206f04a3cd189e7bedc67`; SHA256 integral `c231e17601f43fcbba1241f6359dab0efaf63478ee5324baa9ba0035f51dae55`. Bytes fonte 14804; recorte [9148, 10258); SHA256 trecho `0df334363d3458c4600af583553012fe672771a6c3521608321d1bc1bf31aa90`.
+
+`````text
+func TestOrchestraInflightWriteDeadline(t *testing.T) {
+	conn, _ := stalledPair(t)
+	if err := conn.SetWriteDeadline(time.Now().Add(300 * time.Millisecond)); err != nil {
+		t.Fatal(err)
+	}
+	started := time.Now()
+	write := make(chan error, 1)
+	go fill(conn, write)
+	err := within(t, "write against a silent peer", write)
+	if timeout, ok := err.(net.Error); !ok || !timeout.Timeout() || !errors.Is(err, os.ErrDeadlineExceeded) {
+		t.Fatal("write deadline did not produce a timeout", err)
+	}
+	if time.Since(started) < 250*time.Millisecond {
+		t.Fatal("write failed before its deadline, so the buffer was never the blocker", err)
+	}
+}
+
+func TestOrchestraInflightWriteCancel(t *testing.T) {
+	conn, _ := stalledPair(t)
+	write := make(chan error, 1)
+	go fill(conn, write)
+	select {
+	case err := <-write:
+		t.Fatal("write returned without a deadline or cancellation", err)
+	case <-time.After(300 * time.Millisecond):
+	}
+	if err := conn.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := within(t, "canceled write", write); !errors.Is(err, net.ErrClosed) {
+		t.Fatal("close did not cancel the blocked write", err)
+	}
+}
+
+`````
+
+### PROC-DIALER-3 — `packages/core/test/fixtures/cassandra-dialer_test.go` 330–360
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `4b96c06c405b7f1a889206f04a3cd189e7bedc67`; SHA256 integral `c231e17601f43fcbba1241f6359dab0efaf63478ee5324baa9ba0035f51dae55`. Bytes fonte 14804; recorte [11980, 12993); SHA256 trecho `2f4b86e212aa96d22e3b5e9253bfcd0148901953eb982aeb0c68b6515d8db3c9`.
+
+`````text
+// A local CONNECT peer stands in for the sandbox proxy; the real srt proxy is exercised by the hosted Linux proof.
+func TestOrchestraTunnel(t *testing.T) {
+	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer listener.Close()
+	requests := make(chan string, 8)
+	go func() {
+		for {
+			conn, err := listener.Accept()
+			if err != nil {
+				return
+			}
+			go func() {
+				defer conn.Close()
+				header := make([]byte, 0, 256)
+				next := make([]byte, 1)
+				for !strings.HasSuffix(string(header), "\r\n\r\n") {
+					if _, err := io.ReadFull(conn, next); err != nil {
+						return
+					}
+					header = append(header, next[0])
+				}
+				requests <- string(header)
+				switch {
+				case strings.HasPrefix(string(header), "CONNECT 127.0.0.1:9042 "):
+					io.WriteString(conn, "HTTP/1.1 200 Connection Established\r\n\r\n")
+					io.Copy(conn, conn)
+				case strings.HasPrefix(string(header), "CONNECT 127.0.0.1:9043 "):
+					io.WriteString(conn, "HTTP/1.1 403 Forbidden\r\n\r\n")
+`````
+
+### PROC-DIALER-LINUX-1 — `packages/core/test/fixtures/cassandra-dialer-linux_test.go` 1–88
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `81f9a09b8b8840718e48148fbcfefb29f83975db`; SHA256 integral `eef3a4a276b942ae3ead0c28ae0f3bf7ecb6cd020b374874331607b04fe5a4b5`. Bytes fonte 2358; recorte [0, 2358); SHA256 trecho `eef3a4a276b942ae3ead0c28ae0f3bf7ecb6cd020b374874331607b04fe5a4b5`.
+
+`````text
+//go:build linux
+
+package main
+
+import (
+	"context"
+	"encoding/hex"
+	"errors"
+	"net"
+	"os"
+	"syscall"
+	"testing"
+	"time"
+)
+
+// A Unix listener with backlog 0 and one unaccepted client refuses further connects; Linux reports that as EAGAIN.
+func TestOrchestraDialFullBacklog(t *testing.T) {
+	dir, err := os.MkdirTemp("", "odb")
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer os.RemoveAll(dir)
+	socket := dir + "/s"
+	fd, err := syscall.Socket(syscall.AF_UNIX, syscall.SOCK_STREAM|syscall.SOCK_CLOEXEC, 0)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer syscall.Close(fd)
+	if err := syscall.Bind(fd, &syscall.SockaddrUnix{Name: socket}); err != nil {
+		t.Fatal(err)
+	}
+	if err := syscall.Listen(fd, 0); err != nil {
+		t.Fatal(err)
+	}
+	d, err := newOrchestraGeneratorDialer("9042:"+hex.EncodeToString([]byte(socket)), time.Second)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var queued []net.Conn
+	defer func() {
+		for _, conn := range queued {
+			conn.Close()
+		}
+	}()
+	// Nobody accepts, so the backlog fills; the first refused dial proves it is full.
+	var refused error
+	for i := 0; i < 64 && refused == nil; i++ {
+		conn, err := d.DialContext(context.Background(), "tcp", "127.0.0.1:9042")
+		if err != nil {
+			refused = err
+			break
+		}
+		queued = append(queued, conn)
+	}
+	if refused == nil {
+		t.Skip("kernel never filled the Unix backlog")
+	}
+	fds := func() int {
+		entries, err := os.ReadDir("/proc/self/fd")
+		if err != nil {
+			t.Fatal(err)
+		}
+		return len(entries)
+	}
+	before := fds()
+	for i := 0; i < 20; i++ {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		started := time.Now()
+		conn, err := d.DialContext(ctx, "tcp", "127.0.0.1:9042")
+		if conn != nil {
+			conn.Close()
+			t.Fatal("dial succeeded against a full backlog")
+		}
+		if err == nil || time.Since(started) > time.Second {
+			t.Fatalf("dial against a full backlog was not refused promptly: %v after %v", err, time.Since(started))
+		}
+		cancel()
+	}
+	// A canceled context still wins over the refusal.
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+	if conn, err := d.DialContext(ctx, "tcp", "127.0.0.1:9042"); conn != nil || !errors.Is(err, context.Canceled) {
+		t.Fatal("canceled dial against a full backlog lost its cause", err)
+	}
+	if after := fds(); after > before {
+		t.Fatalf("failed dials leaked descriptors: %d before, %d after", before, after)
+	}
+}
+`````
+
+## Encerramento probatório e inputs
+
+A evidência nova complementa os trechos reconhecidos, com identificação por path no índice. A população é a mesma 104+24, sem recontagem inflacionada por auxiliares. Os três deltas e duas razões estão isolados; histórico e proposta não foram reescritos. Inputs históricos integrais A3/A4/projection permanecem efetivos conforme `effective-inputs.json`; o arquivo 726.892 bytes não foi recortado/reclassificado para contornar limite nativo. O recibo independente e seu procedimento são novas entradas probatórias desta revisão. Status estrutural do recibo não promove suficiência semântica, operação ou união. A decisão é do mesmo par.
+
+## FIM_DO_SUPLEMENTO_LITERAL

@@ -1,0 +1,53 @@
+{
+  "schema": "s1-03-derived-minimal-correction-recipe/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "frozen_at_utc": "2026-11-15T03:42:38.210701+00:00",
+  "artifact": "s1.subslice03.research-flow",
+  "version": 2,
+  "finding": "RF-J2-F01",
+  "state": "FROZEN_BEFORE_CORRECTION_DISPATCH",
+  "base_body": {
+    "local_path": "producers/derived-research-flow/body.md",
+    "bytes": 16980,
+    "sha256": "a4b50fa9ae0b781dbea831aefcb98cb099f93167d4a7a584dc88878fc93bc044"
+  },
+  "unchanged_accepted_semantic_predecessor": {
+    "key": "s1.core.research",
+    "local_path": "producers/research/body.md",
+    "bytes": 63841,
+    "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f"
+  },
+  "inherited_contracts": [
+    "payload/recipes/derived/research-flow.json",
+    "payload/recipes/derived-contract.json"
+  ],
+  "public_finding": {
+    "local_path": "producers/derived-research-flow/revisions/v2/public-finding.md",
+    "sha256": "8230c3ca27cd3416c801ff0080dc102a41b0fb16ee6ecdf94aae0c8612f33bf7"
+  },
+  "author_context": "Same oracle-blind research family author; retain actual earlier context/input identities. No later layer authorized.",
+  "allowed_changes": [
+    "One precise substitution of the defective F3 sentence, from the already accepted L1 R8.1 conditions.",
+    "Only corresponding E1 mapping if needed.",
+    "New revision provenance, exact prior-version preservation, procedure and response records."
+  ],
+  "preservation": [
+    "Before changing any prior output, copy exact bytes of body.md, evidence.md, production-manifest.json and response.md into history/v1/ and verify their identities. Do not overwrite request.txt, dispatch-message.txt or prior frozen recipes.",
+    "Persist the actual correction procedure as revisions/v2/apply.py and freeze its SHA/inputs before executing it; no posterior JSON is an earlier recipe.",
+    "Record all actual inherited and newly read inputs, including mechanical preservation reads. Old body/evidence/manifest/response input paths must use verified history/v1 aliases after the current output changes; avoid self-inputs.",
+    "Keep exact literal BEFORE/AFTER and their offsets/hashes, root/producer verification and new current body/evidence/manifest/response. The old original responses and judge votes remain immutable."
+  ],
+  "read_authority": "Only files already authorized/consumed in this family, the four prior outputs named for preservation, these revision controls and the unchanged accepted predecessor. Any new need goes to principal before reading. No raw source or full judge prose.",
+  "verification": "Deterministically prove only authorized sentence/map changes; no product tests/runtime/provider/network. Judge reevaluation remains required on exact new bytes.",
+  "outputs": [
+    "current body.md and evidence.md",
+    "current production-manifest.json and response.md",
+    "history/v1 exact preserved prior outputs",
+    "revisions/v2/apply.py and pre-execution freeze",
+    "revisions/v2/delta.json and literal review-supplement.md",
+    "revisions/v2/input-manifest-extension.json",
+    "revisions/v2/dispatch-message.txt and response.md"
+  ],
+  "reserved_answers_included": false,
+  "usage": "physical attempts/tokens/cost UNKNOWN when not exposed"
+}

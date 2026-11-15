@@ -1,0 +1,841 @@
+110: /** A model-chosen path, accepted only as an existing entry inside the snapshot after realpath (J4.2). */
+111: export const inside = Effect.fn("ProbeRunners.inside")(function* (root: string, file: string) {
+112:   const physical = yield* Effect.promise(() => realpath(path.resolve(root, file)).catch(() => undefined))
+113:   if (!physical || !FSUtil.contains(root, physical)) return yield* denied(`path-outside-snapshot: ${file}`)
+114:   return physical
+115: })
+116: 
+117: const program = Effect.fnUntraced(function* (name: string, env: Record<string, string>) {
+118:   const found = Bun.which(name, { PATH: env.PATH ?? "" })
+119:   if (!found) return yield* denied(`runner-binary-missing: ${name}`)
+120:   return found
+121: })
+122: 
+123: /** A toolchain's own version line, run outside the snapshot with GOTOOLCHAIN=local so go cannot fetch one. */
+124: const version = Effect.fnUntraced(function* (binary: string, args: ReadonlyArray<string>, input: { env: Record<string, string>; scratch: string }) {
+125:   const outcome = yield* ResearchProcess.run({ command: binary, args, cwd: input.scratch, env: { ...input.env, ...GO }, timeoutMs: 10_000, maxBytes: 4096 })
+126:   return `${outcome.stdout.data}${outcome.stderr.data}`.trim().split("\n")[0] || "unknown"
+127: })
+128: 
+129: const MARKERS: ReadonlyArray<{ runner: TestRunner; files: ReadonlyArray<string>; languages: ReadonlyArray<string> }> = [
+130:   { runner: "bun", files: ["bunfig.toml"], languages: ["js"] },
+131:   { runner: "vitest", files: ["ts", "mts", "cts", "js", "mjs", "cjs"].map((ext) => `vitest.config.${ext}`), languages: ["js"] },
+132:   { runner: "jest", files: ["ts", "mts", "cts", "js", "mjs", "cjs", "json"].map((ext) => `jest.config.${ext}`), languages: ["js"] },
+133:   { runner: "pytest", files: ["pytest.ini", "conftest.py", "pyproject.toml", "setup.cfg", "tox.ini"], languages: ["py"] },
+134:   { runner: "go", files: ["go.mod"], languages: ["go"] },
+135: ]
+136: 
+137: /** The nearest directory, from the test file up to the snapshot root, whose config names runners for its language. */
+138: export async function detect(file: string, root: string) {
+139:   const language = file.endsWith(".py") ? "py" : file.endsWith(".go") ? "go" : "js"
+140:   const markers = MARKERS.filter((marker) => marker.languages.includes(language))
+141:   const search = async (dir: string): Promise<{ dir: string; runners: TestRunner[] } | undefined> => {
+142:     const names = new Set(await readdir(dir).catch(() => []))
+143:     const pkg = names.has("package.json") ? await Bun.file(path.join(dir, "package.json")).json().catch(() => undefined) : undefined
+144:     const runners = markers.filter((marker) => marker.files.some((name) => names.has(name)) ||
+145:       (marker.runner === "jest" && pkg && typeof pkg === "object" && "jest" in pkg)).map((marker) => marker.runner)
+146:     if (runners.length) return { dir, runners }
+147:     if (dir === root || !FSUtil.contains(root, dir)) return undefined
+148:     return search(path.dirname(dir))
+149:   }
+150:   const start = await lstat(file).then((stat) => (stat.isDirectory() ? file : path.dirname(file)))
+151:   return search(start)
+152: }
+```
+
+### RB3-04 — Typecheck: comando, tsconfig, diagnósticos, causas e caminhos
+
+Vínculo: corpo R9; archive E33.
+
+A apresentação de no máximo 200 diagnósticos está em run:40,67–69,85 (RB3-01). Aqui ficam a seleção e os parsers; menção a oracle no comentário da fonte refere-se ao compilador TypeScript, não a material reservado da missão.
+
+**RB-S012 — `packages/core/src/research-toolkit/probe/typecheck.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `ce72fc2597ac4a25486bc96c88411a3a7cbf9269` · SHA-256 `929d76e274a17b9eae1f25eab1349fe72f625805c9457110c25f13c618e91cb9` · 6837 bytes.
+
+Arquivo integral: `sources/packages/core/src/research-toolkit/probe/typecheck.ts`; archive: E33.
+
+Linhas 18–26.
+
+```text
+18: export const UNUSED = ["--noUnusedLocals", "--noUnusedParameters"]
+19: 
+20: export function argv(input: { readonly node: string; readonly tsc: string; readonly project: string; readonly heapMiB: number; readonly unused?: boolean }) {
+21:   return [input.node, `--max-old-space-size=${input.heapMiB}`, input.tsc, "-p", input.project, "--noEmit", "--pretty", "false",
+22:     ...(input.unused ? UNUSED : [])]
+23: }
+24: 
+25: /** verify-in-project.ts `normErr`: the same error reads identically wherever it sits. */
+26: export const signature = (item: Diagnostic) => `error ${item.code}: ${item.message}`
+```
+
+Linhas 32–42.
+
+```text
+32: export function missing(diagnostics: ReadonlyArray<Diagnostic>) {
+33:   return [...new Set(diagnostics.flatMap((item) => {
+34:     const name = ["TS2304", "TS2552", "TS2593"].includes(item.code) ? /Cannot find name '([^']+)'/.exec(item.message)?.[1]
+35:       : item.code === "TS2339" ? /on type '([^']+)'/.exec(item.message)?.[1]
+36:       : item.code === "TS18004" ? /shorthand property '([^']+)'/.exec(item.message)?.[1]
+37:       : undefined
+38:     return name ? [name] : []
+39:   }))]
+40: }
+41: 
+42: const TEST_GLOBALS = new Set(["describe", "it", "test", "expect", "beforeEach", "afterEach", "vi", "jest"])
+```
+
+Linhas 48–67.
+
+```text
+48: export function causes(diagnostics: ReadonlyArray<Diagnostic>) {
+49:   const codes = new Set(diagnostics.map((item) => item.code))
+50:   const names = missing(diagnostics)
+51:   const assigned = [...new Set(diagnostics.flatMap((item) => item.code === "TS2632" ? [/Cannot assign to '([^']+)'/.exec(item.message)?.[1] ?? ""] : []))].filter(Boolean)
+52:   const modules = [...new Set(diagnostics.flatMap((item) => ["TS2307", "TS2792"].includes(item.code) ? [/module '([^']+)'/.exec(item.message)?.[1] ?? ""] : []))].filter(Boolean)
+53:   const reasons = [
+54:     codes.has("TS2593") || names.some((name) => TEST_GLOBALS.has(name)) ? "cause: test-runner globals (describe/it/expect) have no types in this project" : "",
+55:     codes.has("TS2591") ? "cause: a Node global (e.g. process) has no types in scope; the project lacks @types/node there" : "",
+56:     assigned.length ? `cause: assignment to an imported binding (${assigned.join(", ")}); ES modules forbid it` : "",
+57:     modules.length ? `cause: unresolved modules: ${modules.join(", ")}` : "",
+58:     names.length ? `cause: names not found: ${names.join(", ")}` : "",
+59:   ].filter(Boolean)
+60:   const groups = diagnostics.reduce((map, item) => {
+61:     const key = signature(item)
+62:     map.set(key, { first: map.get(key)?.first ?? item, count: (map.get(key)?.count ?? 0) + 1 })
+63:     return map
+64:   }, new Map<string, { first: Diagnostic; count: number }>())
+65:   return [...reasons, ...[...groups.entries()].map(([key, group]) =>
+66:     `${group.count > 1 ? `${group.count}x ` : ""}${key.split("\n")[0]} (first at ${group.first.path || "<config>"}:${group.first.line}:${group.first.column})`)]
+67: }
+```
+
+Linhas 73–118.
+
+```text
+73: export const project = Effect.fn("ProbeTypecheck.project")(function* (file: string, root: string) {
+74:   if (file.endsWith(".json")) return file
+75:   const stat = yield* Effect.promise(() => lstat(file))
+76:   if (stat.isDirectory()) return file
+77:   return yield* Effect.promise(() => nearest(path.dirname(file), root))
+78: })
+79: 
+80: async function nearest(start: string, root: string): Promise<string | undefined> {
+81:   if (!FSUtil.contains(root, start)) return undefined
+82:   if (await Bun.file(path.join(start, "tsconfig.json")).exists()) return path.join(start, "tsconfig.json")
+83:   if (start === root) return undefined
+84:   return nearest(path.dirname(start), root)
+85: }
+86: 
+87: const LINE = /^(.+?)\((\d+),(\d+)\): error (TS\d+): (.*)$/
+88: const GLOBAL = /^error (TS\d+): (.*)$/
+89: 
+90: /**
+91:  * Diagnostics from tsc's plain output. Paths resolve against `cwd` and come back relative to the original worktree;
+92:  * indented lines continue the previous message. A diagnostic with no file (config errors) has line and column 0.
+93:  */
+94: export function parse(output: string, cwd: string, snapshot: Pick<ProbeSnapshot.Snapshot, "root" | "origin">) {
+95:   // Appends in place: a broken project can print thousands of diagnostics.
+96:   return output.split(/\r?\n/).reduce<Diagnostic[]>((list, line) => {
+97:     const located = LINE.exec(line)
+98:     const global = located ? undefined : GLOBAL.exec(line)
+99:     const last = list.at(-1)
+100:     if (located)
+101:       list.push({ path: original(located[1], cwd, snapshot), line: Number(located[2]), column: Number(located[3]), code: located[4], message: located[5] })
+102:     if (global) list.push({ path: "", line: 0, column: 0, code: global[1], message: global[2] })
+103:     if (!located && !global && last && /^\s+\S/.test(line)) list[list.length - 1] = { ...last, message: `${last.message}\n${line.trim()}` }
+104:     return list
+105:   }, [])
+106: }
+107: 
+108: /** Whether a stdout line is one parse() turned into a diagnostic (or its continuation), so the tail can leave it out. */
+109: export function structured(line: string) {
+110:   return LINE.test(line) || GLOBAL.test(line) || /^\s+\S/.test(line)
+111: }
+112: 
+113: /** A snapshot path, or one tsc printed through a dependency link, as the original worktree spells it. */
+114: export function original(file: string, cwd: string, snapshot: Pick<ProbeSnapshot.Snapshot, "root" | "origin">) {
+115:   const absolute = path.resolve(cwd, file)
+116:   const base = FSUtil.contains(snapshot.root, absolute) ? snapshot.root : FSUtil.contains(snapshot.origin, absolute) ? snapshot.origin : undefined
+117:   return base ? path.relative(base, absolute).split(path.sep).join("/") : absolute
+118: }
+```
+
+### RB3-05 — ResearchProcess: env, hard cap, cauda, overflow, memória e timeout
+
+Vínculo: corpo R9; archive E30.
+
+O ramo drain rejeita o chunk que ultrapassaria max antes de push; bytes conta os chunks aceitos. A finalização scoped e MemoryCap são delegações visíveis, sem alegação de eficácia externa.
+
+**RB-S013 — `packages/core/src/research-toolkit/process.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `04f6a92d3a145da49f9934983ea20fc0b2266490` · SHA-256 `4d040e1cd277492ec22ef7dc3b06fb77a4bfd73064c45ee1fe894992a8948f77` · 6087 bytes.
+
+Arquivo integral: `sources/packages/core/src/research-toolkit/process.ts`; archive: E30.
+
+Linhas 12–21.
+
+```text
+12: // CI=true and ORCHESTRA_LOCAL_TESTS=1 switch off script/test-guard.ts; the host never hands a child either (J4.8).
+13: const STRIPPED = ["NODE_OPTIONS", "NODE_PATH", "ORCHESTRA_LOCAL_TESTS", "CI"]
+14: 
+15: export function environment(input: NodeJS.ProcessEnv = process.env): Record<string, string> {
+16:   return {
+17:     ...Object.fromEntries(Object.entries(ToolSafetySandbox.environment(input)).filter(
+18:       (entry): entry is [string, string] => entry[1] !== undefined && !entry[0].startsWith("GIT_") && !STRIPPED.includes(entry[0]))),
+19:     GIT_OPTIONAL_LOCKS: "0", GIT_TERMINAL_PROMPT: "0", GIT_CONFIG_GLOBAL: "/dev/null", GIT_CONFIG_NOSYSTEM: "1",
+20:   }
+21: }
+```
+
+Linhas 23–37.
+
+```text
+23: export type Captured = { readonly data: Buffer; readonly bytes: number; readonly truncated: boolean }
+24: 
+25: export type Outcome = {
+26:   readonly exitCode: number | null
+27:   readonly durationMs: number
+28:   readonly timedOut: boolean
+29:   /** A stream passed maxBytes; the process was stopped there. */
+30:   readonly overflow: boolean
+31:   /** The tree went over maxRssBytes and omni killed it. */
+32:   readonly memoryExceeded: boolean
+33:   /** The process could not be started or supervised. */
+34:   readonly failure?: string
+35:   readonly stdout: Captured
+36:   readonly stderr: Captured
+37: }
+```
+
+Linhas 46–126.
+
+```text
+46: /** Runs one fixed command. Each stream keeps its last `tailBytes` (default all of `maxBytes`); past `maxBytes` the run stops. */
+47: export const run = Effect.fn("ResearchProcess.run")(function* (input: {
+48:   readonly command: string
+49:   readonly args: ReadonlyArray<string>
+50:   readonly cwd: string
+51:   readonly env: Record<string, string>
+52:   readonly timeoutMs: number
+53:   readonly maxBytes: number
+54:   readonly tailBytes?: number
+55:   /** Resident bytes of the whole tree; omni kills it above (J4.7). */
+56:   readonly maxRssBytes?: number
+57: }) {
+58:   const processes = yield* AppProcess.Service
+59:   const started = Date.now()
+60:   const stdout = sink(input.tailBytes ?? input.maxBytes)
+61:   const stderr = sink(input.tailBytes ?? input.maxBytes)
+62:   const settled = yield* Effect.scoped(Effect.gen(function* () {
+63:     const handle = yield* processes.spawn(ChildProcess.make(input.command, [...input.args], {
+64:       cwd: input.cwd, env: input.env, extendEnv: false, stdin: "ignore",
+65:     })).pipe(Effect.provideService(OmniSpawner.MemoryCap, input.maxRssBytes))
+66:     const all = yield* Effect.all([drain(handle.stdout, stdout, input.maxBytes), drain(handle.stderr, stderr, input.maxBytes), handle.exitCode],
+67:       { concurrency: "unbounded" })
+68:     return { exitCode: Number(all[2]) as number | null, timedOut: false, overflow: false, memoryExceeded: false, failure: undefined as string | undefined }
+69:   })).pipe(
+70:     // Closing the scope stops the child; omni stops its whole tree.
+71:     Effect.timeoutOption(Duration.millis(input.timeoutMs)),
+72:     Effect.map(Option.getOrElse(() => ({ exitCode: null, timedOut: true, overflow: false, memoryExceeded: false, failure: undefined }))),
+73:     Effect.catch((error) => Effect.succeed(error instanceof Overflow
+74:       ? { exitCode: null, timedOut: false, overflow: true, memoryExceeded: false, failure: undefined }
+75:       : memory(error)
+76:         ? { exitCode: null, timedOut: false, overflow: false, memoryExceeded: true, failure: undefined }
+77:         : { exitCode: null, timedOut: false, overflow: false, memoryExceeded: false, failure: error.message })),
+78:   )
+79:   return { ...settled, durationMs: Date.now() - started, stdout: stdout.captured(), stderr: stderr.captured() } satisfies Outcome
+80: })
+81: 
+82: /** A host-side git read with the sanitized environment; non-zero exit fails with its stderr. */
+83: export const git = Effect.fn("ResearchProcess.git")(function* (cwd: string, args: ReadonlyArray<string>) {
+84:   const outcome = yield* run({ command: "git", args: ["-C", cwd, ...args], cwd, env: environment(), timeoutMs: 120_000, maxBytes: 256 * 1024 * 1024 })
+85:   if (outcome.exitCode === 0) return outcome.stdout.data
+86:   return yield* new Failed({
+87:     command: `git ${args.join(" ")}`,
+88:     detail: outcome.failure ?? (outcome.timedOut ? "timed out" : outcome.overflow ? "output cap" : outcome.stderr.data.toString("utf8").trim()),
+89:   })
+90: })
+91: 
+92: // Omni fails the exit code with a PlatformError whose cause chain holds MemoryExceeded.
+93: function memory(error: unknown): boolean {
+94:   if (error instanceof OmniSpawner.MemoryExceeded) return true
+95:   return error instanceof Error && error.cause !== undefined && memory(error.cause)
+96: }
+97: 
+98: function sink(keep: number) {
+99:   const state = { chunks: [] as Uint8Array[], kept: 0, bytes: 0 }
+100:   return {
+101:     push(chunk: Uint8Array) {
+102:       state.bytes += chunk.length
+103:       state.chunks.push(chunk)
+104:       state.kept += chunk.length
+105:       // Trim only when twice over, so a chatty child does not pay a copy per chunk.
+106:       if (state.kept <= keep * 2) return
+107:       const tail = Buffer.concat(state.chunks).subarray(-keep)
+108:       state.chunks = [tail]
+109:       state.kept = tail.length
+110:     },
+111:     get bytes() {
+112:       return state.bytes
+113:     },
+114:     captured(): Captured {
+115:       const data = Buffer.concat(state.chunks).subarray(-keep)
+116:       return { data, bytes: state.bytes, truncated: state.bytes > data.length }
+117:     },
+118:   }
+119: }
+120: 
+121: const drain = <E>(stream: Stream.Stream<Uint8Array, E>, into: ReturnType<typeof sink>, max: number) =>
+122:   Stream.runForEach(stream, (chunk) => {
+123:     if (into.bytes + chunk.length > max) return Effect.fail(new Overflow())
+124:     into.push(chunk)
+125:     return Effect.void
+126:   })
+```
+
+## RE-B4
+
+### RB4-01 — Binding: Task, author Session, worktree e duas representações de tool part
+
+Vínculo: corpo R10; archive E34.
+
+**RB-S014 — `packages/core/src/research/binding.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `5f5c7f92d7ade9c902d54c0e9bce713871952e78` · SHA-256 `b64e476309f22af194c1459389814939887c117819be494adaac0b2fa73d1701` · 7351 bytes.
+
+Arquivo integral: `sources/packages/core/src/research/binding.ts`; archive: E34.
+
+Linhas 21–104.
+
+```text
+21: /** Human reads validate retained native placement; they do not issue a tool invocation. */
+22: export const resolve = Effect.fn("ResearchBinding.resolve")(function* (sessionID: SessionID, projectID: Project.ID) {
+23:   const database = yield* Database.Service
+24:   const session = yield* database.db.select().from(SessionTable).where(eq(SessionTable.id, sessionID)).get().pipe(Effect.orDie)
+25:   if (!session || session.project_id !== projectID || session.agent !== "jimmy")
+26:     return yield* new Research.Error({ code: "not_found", message: "Research binding not found" })
+27:   const rows = yield* database.db.select().from(EventTable).where(and(
+28:     eq(EventTable.aggregate_id, sessionID),
+29:     eq(EventTable.type, EventV2.versionedType(MaestroEvent.Task.Bound.type, 1)),
+30:   )).all().pipe(Effect.orDie)
+31:   if (rows.length !== 1)
+32:     return yield* new Research.Error({ code: "binding_missing", message: "Retained task binding is missing or ambiguous" })
+33:   const bound = yield* Schema.decodeUnknownEffect(MaestroEvent.Task.Bound.data)(rows[0].data).pipe(
+34:     Effect.mapError(() => new Research.Error({ code: "binding_mismatch", message: "Invalid retained task binding" })),
+35:   )
+36:   const identities = yield* database.db.select({ id: EventTable.id }).from(EventTable).where(and(
+37:     eq(EventTable.type, EventV2.versionedType(MaestroEvent.Task.Bound.type, 1)),
+38:     sql`json_extract(${EventTable.data}, '$.projectID') = ${projectID}`,
+39:     sql`json_extract(${EventTable.data}, '$.taskId') = ${bound.taskId}`,
+40:   )).all().pipe(Effect.orDie)
+41:   if (identities.length !== 1)
+42:     return yield* new Research.Error({ code: "binding_mismatch", message: "Retained logical task identity is ambiguous" })
+43:   const authorityID = yield* Schema.decodeUnknownEffect(SessionID)(bound.authoritySessionID).pipe(
+44:     Effect.mapError(() => new Research.Error({ code: "binding_mismatch", message: "Invalid retained authority Session" })),
+45:   )
+46:   const authority = yield* database.db.select().from(SessionTable).where(
+47:     eq(SessionTable.id, authorityID),
+48:   ).get().pipe(Effect.orDie)
+49:   if (bound.memberID !== "jimmy" || bound.projectID !== projectID || bound.executionSessionID !== sessionID ||
+50:     !authority || authority.project_id !== projectID ||
+51:     (session.parent_id ?? session.id) !== authority.id)
+52:     return yield* new Research.Error({ code: "binding_mismatch", message: "Retained task placement does not match" })
+53:   const project = yield* database.db.select().from(ProjectTable).where(eq(ProjectTable.id, projectID)).get().pipe(Effect.orDie)
+54:   const directories = yield* database.db.select().from(ProjectDirectoryTable).where(eq(ProjectDirectoryTable.project_id, projectID)).all().pipe(Effect.orDie)
+55:   const roots = [...directories.filter((entry) => entry.type === "git_worktree" || entry.type === "main").map((entry) => entry.directory),
+56:     ...(project && project.worktree !== "/" ? [project.worktree] : [])]
+57:     .filter((root) => session.directory === root || session.directory.startsWith(root + path.sep))
+58:     .sort((a, b) => b.length - a.length)
+59:   return yield* Schema.decodeUnknownEffect(Research.Binding)({
+60:     projectID, memberID: "jimmy", taskId: bound.taskId, executionSessionID: sessionID,
+61:     authoritySessionID: authority.id, directory: session.directory, worktree: roots[0] ?? session.directory,
+62:   }).pipe(Effect.mapError(() => new Research.Error({ code: "binding_mismatch", message: "Invalid research placement" })))
+63: })
+64: 
+65: export const require = Effect.fn("ResearchBinding.require")(function* (binding: Research.Binding, context: Tool.Context) {
+66:   const frame = yield* CapabilityInvocation.require(context, {
+67:     projectID: binding.projectID, location: { directory: binding.directory },
+68:   }).pipe(Effect.mapError((error) => new Research.Error({
+69:     code: error.code === "invocation_binding_missing" ? "binding_missing" : "binding_mismatch",
+70:     message: "Research invocation is not bound",
+71:   })))
+72:   if (frame.owner.agentID !== "jimmy" || context.agent !== "jimmy" || context.sessionID !== binding.executionSessionID)
+73:     return yield* new Research.Error({ code: "binding_mismatch", message: "Research invocation owner does not match" })
+74:   const retained = yield* resolve(binding.executionSessionID, binding.projectID)
+75:   if (!isDeepStrictEqual(retained, binding))
+76:     return yield* new Research.Error({ code: "binding_mismatch", message: "Research binding does not match retained placement" })
+77:   const database = yield* Database.Service
+78:   // Both native runtimes share Session placement. Legacy parts and assistant message content remain distinct projections.
+79:   const messages = yield* database.db.select().from(MessageTable).where(and(
+80:     sql`${MessageTable.id} = ${context.assistantMessageID}`, eq(MessageTable.session_id, context.sessionID),
+81:   )).all().pipe(Effect.orDie)
+82:   if (messages.length) {
+83:     const message = messages[0].data
+84:     const parts = yield* database.db.select().from(PartTable).where(and(
+85:       sql`${PartTable.message_id} = ${context.assistantMessageID}`, eq(PartTable.session_id, context.sessionID),
+86:     )).all().pipe(Effect.orDie)
+87:     if (message.role === "assistant" && message.agent === "jimmy" && parts.some((part) => {
+88:       const tool = Schema.decodeUnknownOption(SessionLegacyTranscript.ToolPart)({ ...part.data, id: part.id, messageID: part.message_id, sessionID: part.session_id })
+89:       return tool._tag === "Some" && tool.value.callID === context.toolCallID && tool.value.tool === frame.rootToolName
+90:     }))
+91:       return retained
+92:     return yield* new Research.Error({ code: "binding_mismatch", message: "Native assistant/tool part does not match" })
+93:   }
+94:   const row = yield* database.db.select().from(SessionMessageTable).where(and(
+95:     eq(SessionMessageTable.id, context.assistantMessageID), eq(SessionMessageTable.session_id, context.sessionID),
+96:   )).get().pipe(Effect.orDie)
+97:   const assistant = row ? yield* Schema.decodeUnknownEffect(SessionMessage.Message)({
+98:     ...row.data, id: row.id, type: row.type,
+99:   }).pipe(Effect.mapError(() => new Research.Error({ code: "binding_mismatch", message: "Invalid native assistant" }))) : undefined
+100:   if (assistant?.type === "assistant" && assistant.agent === "jimmy" && assistant.content.some((part) =>
+101:     part.type === "tool" && part.id === context.toolCallID && part.name === frame.rootToolName))
+102:     return retained
+103:   return yield* new Research.Error({ code: "binding_missing", message: "Native assistant/tool part is missing" })
+104: })
+```
+
+### RB4-02 — Allowance: bind repetido, compatibilidade, charge, reconciliação e interrupção
+
+Vínculo: corpo R10; archive E35.
+
+**RB-S015 — `packages/core/src/research/allowance.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `2a2b412f57e8b34016ff5bdbfe6f638e9616cf80` · SHA-256 `177b564304a9d79e9144da70a6c97107b604d40dde16ae8185467d801fd3c3eb` · 11674 bytes.
+
+Arquivo integral: `sources/packages/core/src/research/allowance.ts`; archive: E35.
+
+Linhas 41–179.
+
+```text
+41:     const read = (id: EventV2.ID) => database.db.select().from(EventTable).where(eq(EventTable.id, id)).get()
+42:     const bound = Effect.fn("ResearchAllowance.bound")(function* (allowance: Research.Allowance) {
+43:       const row = yield* read(eventID("bound", allowance.binding.executionSessionID, allowance.dispatchCallID))
+44:       if (!row) return yield* new Research.Error({ code: "binding_missing", message: "Dispatch allowance is not admitted" })
+45:       if (row.type !== EventV2.versionedType(ResearchEvent.AllowanceBound.type, 1) ||
+46:         row.aggregate_id !== allowance.binding.executionSessionID)
+47:         return yield* new Research.Error({ code: "binding_mismatch", message: "Allowance ledger identity differs" })
+48:       const stored = yield* Schema.decodeUnknownEffect(ResearchEvent.AllowanceBound.data)(row.data)
+49:       if (stored.sessionID !== allowance.binding.executionSessionID || !isDeepStrictEqual(stored.allowance, allowance))
+50:         return yield* new Research.Error({ code: "binding_mismatch", message: "Dispatch allowance differs from admitted binding or limits" })
+51:     })
+52: 
+53:     const bind: Interface["bind"] = Effect.fn("ResearchAllowance.bind")((binding, dispatchCallID, tier = "quick") =>
+54:       Effect.gen(function* () {
+55:         if (!Object.hasOwn(Research.Tiers, tier))
+56:           return yield* new Research.Error({ code: "unsupported", message: `Unknown research effort tier: ${String(tier)}` })
+57:         const limits = Research.Tiers[tier]
+58:         const allowance = yield* Schema.decodeUnknownEffect(Research.Allowance)({
+59:           binding, dispatchCallID, tier,
+60:           providerLimit: limits.providerCalls,
+61:           toolLimit: limits.toolCalls,
+62:           byteLimit: limits.capturedBytes,
+63:           deadlineSeconds: limits.deadlineSeconds,
+64:           probeSecondsLimit: Research.ProbeSeconds[tier],
+65:         })
+66:         const id = eventID("bound", binding.executionSessionID, dispatchCallID)
+67:         const row = yield* read(id)
+68:         if (row) {
+69:           // A dispatch admitted before probe seconds existed keeps the limit its stored row decodes to.
+70:           const stored = yield* Schema.decodeUnknownEffect(ResearchEvent.AllowanceBound.data)(row.data)
+71:           const admitted = typeof row.data.allowance === "object" && row.data.allowance !== null &&
+72:             !("probeSecondsLimit" in row.data.allowance) ? { ...allowance, probeSecondsLimit: stored.allowance.probeSecondsLimit } : allowance
+73:           yield* bound(admitted)
+74:           return admitted
+75:         }
+76:         yield* events.publish(ResearchEvent.AllowanceBound, { sessionID: binding.executionSessionID, allowance }, {
+77:           id, persist: true,
+78:         }).pipe(Effect.catchCause((cause) => Effect.gen(function* () {
+79:           // Only the committed native row can reconcile a competing insert or lost publication response.
+80:           if (!(yield* read(id))) return yield* Effect.failCause(cause)
+81:           yield* bound(allowance)
+82:         })))
+83:         return allowance
+84:       }).pipe(researchFailure),
+85:     )
+86: 
+87:     const charged = Effect.fn("ResearchAllowance.charged")(function* (
+88:       allowance: Research.Allowance,
+89:       operation: string,
+90:     ) {
+91:       const row = yield* read(eventID("charged", allowance.binding.executionSessionID, allowance.dispatchCallID, operation))
+92:       if (!row) return undefined
+93:       if (row.type !== EventV2.versionedType(ResearchEvent.AllowanceCharged.type, 1) ||
+94:         row.aggregate_id !== allowance.binding.executionSessionID)
+95:         return yield* new Research.Error({ code: "conflict", message: "Charge ledger identity differs" })
+96:       const stored = yield* Schema.decodeUnknownEffect(ResearchEvent.AllowanceCharged.data)(row.data)
+97:       if (stored.sessionID !== allowance.binding.executionSessionID || stored.dispatchCallID !== allowance.dispatchCallID ||
+98:         stored.operation !== operation)
+99:         return yield* new Research.Error({ code: "conflict", message: "Charge operation identity differs" })
+100:       return stored
+101:     })
+102: 
+103:     const spent = Effect.fn("ResearchAllowance.spent")(function* (allowance: Research.Allowance, kind: Kind) {
+104:       const sessionID = allowance.binding.executionSessionID
+105:       const rows = yield* database.db.select({ data: EventTable.data }).from(EventTable).where(and(
+106:         eq(EventTable.aggregate_id, sessionID),
+107:         eq(EventTable.type, EventV2.versionedType(ResearchEvent.AllowanceCharged.type, 1)),
+108:       )).all()
+109:       const ledger = yield* Effect.forEach(rows, (row) => Schema.decodeUnknownEffect(ResearchEvent.AllowanceCharged.data)(row.data))
+110:       if (ledger.some((entry) => entry.sessionID !== sessionID || !Number.isSafeInteger(entry.amount) ||
+111:         (entry.kind !== "bytes" && entry.kind !== "probe" && entry.amount !== 1)))
+112:         return yield* new Research.Error({ code: "publication_uncertain", message: "Invalid allowance ledger" })
+113:       return ledger.filter((entry) => entry.dispatchCallID === allowance.dispatchCallID && entry.kind === kind)
+114:         .reduce((total, entry) => total + entry.amount, 0)
+115:     })
+116: 
+117:     const charge: Interface["charge"] = Effect.fn("ResearchAllowance.charge")((allowance, kind, operation, amount = 1) =>
+118:       Effect.gen(function* () {
+119:         if (!operation.trim() || operation.length > 256 || !Number.isSafeInteger(amount) || amount < 0 ||
+120:           (kind !== "bytes" && kind !== "probe" && amount !== 1))
+121:           return yield* new Research.Error({ code: "over_cap", message: "Invalid allowance charge operation or amount" })
+122:         const data = yield* Schema.decodeUnknownEffect(ResearchEvent.AllowanceCharged.data)({
+123:           sessionID: allowance.binding.executionSessionID, dispatchCallID: allowance.dispatchCallID, operation, kind, amount,
+124:         })
+125:         yield* bound(allowance)
+126:         const retry = yield* charged(allowance, operation)
+127:         if (retry) {
+128:           if (isDeepStrictEqual(retry, data)) return
+129:           return yield* new Research.Error({ code: "conflict", message: "Charge operation was reused with different kind or amount" })
+130:         }
+131:         yield* events.publish(ResearchEvent.AllowanceCharged, data, {
+132:           id: eventID("charged", data.sessionID, data.dispatchCallID, operation),
+133:           persist: true,
+134:           // EventV2 runs this callback before insertion under BEGIN IMMEDIATE on the same native connection.
+135:           // A preflight total outside this transaction would allow concurrent tools to overspend.
+136:           commit: () => Effect.gen(function* () {
+137:             yield* bound(allowance)
+138:             const used = yield* spent(allowance, kind)
+139:             const limit = kind === "provider" ? allowance.providerLimit : kind === "tool" ? allowance.toolLimit
+140:               : kind === "probe" ? allowance.probeSecondsLimit : allowance.byteLimit
+141:             if (!Number.isSafeInteger(used) || amount > limit - used)
+142:               return yield* Effect.die(new Research.Error({ code: "budget_exhausted", message: `Research ${kind} allowance exhausted (${used}/${limit}); retained work remains available` }))
+143:           }).pipe(Effect.orDie),
+144:         }).pipe(Effect.catchCause((cause) => Effect.gen(function* () {
+145:           const stored = yield* charged(allowance, operation)
+146:           if (!stored) return yield* Effect.failCause(cause)
+147:           if (!isDeepStrictEqual(stored, data))
+148:             return yield* new Research.Error({ code: "conflict", message: "Charge operation was reused with different kind or amount" })
+149:         })))
+150:       }).pipe(researchFailure),
+151:     )
+152: 
+153:     const reconcileBytes: Interface["reconcileBytes"] = Effect.fn("ResearchAllowance.reconcileBytes")((allowance, operation, bytes) =>
+154:       Effect.gen(function* () {
+155:         yield* bound(allowance)
+156:         const reservation = yield* charged(allowance, operation)
+157:         if (!reservation || reservation.kind !== "bytes")
+158:           return yield* new Research.Error({ code: "binding_missing", message: "Byte reservation is not admitted" })
+159:         if (!Number.isSafeInteger(bytes) || bytes < 0 || bytes > reservation.amount)
+160:           return yield* new Research.Error({ code: "over_cap", message: "Observed bytes exceed reservation or are invalid" })
+161:         // The frozen ledger has no credit event. Even a known unused remainder stays charged; uncertain
+162:         // publication and repeated reconciliation cannot release bytes or admit a second write for free.
+163:       }).pipe(researchFailure),
+164:     )
+165: 
+166:     const used: Interface["used"] = Effect.fn("ResearchAllowance.used")((allowance, kind) =>
+167:       Effect.gen(function* () {
+168:         yield* bound(allowance)
+169:         return yield* spent(allowance, kind)
+170:       }).pipe(researchFailure),
+171:     )
+172: 
+173:     return Service.of({
+174:       bind,
+175:       charge,
+176:       reserveBytes: (allowance, operation, bytes) => charge(allowance, "bytes", operation, bytes),
+177:       reconcileBytes,
+178:       used,
+179:     })
+```
+
+Linhas 185–197.
+
+```text
+185: function eventID(kind: string, ...parts: string[]) {
+186:   return EventV2.ID.make(`evt_research_allowance_${kind}_${createHash("sha256").update(JSON.stringify(parts), "utf8").digest("hex")}`)
+187: }
+188: 
+189: function researchFailure<A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, Research.Error, R> {
+190:   return effect.pipe(Effect.catchCause((cause) => {
+191:     if (Cause.hasInterrupts(cause)) return Effect.failCause(cause).pipe(Effect.orDie)
+192:     const error = cause.reasons.flatMap((reason) => Cause.isDieReason(reason) ? [reason.defect]
+193:       : Cause.isFailReason(reason) ? [reason.error] : []).find((error) => error instanceof Research.Error)
+194:     return Effect.fail(error instanceof Research.Error ? error
+195:       : new Research.Error({ code: "publication_uncertain", message: "Native allowance ledger could not be verified or committed" }))
+196:   }))
+197: }
+```
+
+### RB4-03 — Ledger: tipos, hash canônico, operation/eventID, scope, retenção e replay
+
+Vínculo: corpo R10, R11, R12; archive E36.
+
+dispatch/closed/owned são entregues completos em RB6-04, sem repetição neste grupo.
+
+**RB-S016 — `packages/core/src/research/ledger.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `6b6ca2931b6aa8bdd2156b47fc13005aab93dcbf` · SHA-256 `67e07368ea820ec0c1cb791d601a10acdfa2e9259605a1bec4f556f6bb121839` · 9660 bytes.
+
+Arquivo integral: `sources/packages/core/src/research/ledger.ts`; archive: E36.
+
+Linhas 15–84.
+
+```text
+15: export const Entry = Schema.Union([ResearchEvent.SourceAdmitted, ResearchEvent.RecordCommitted, ResearchEvent.DocumentPublished])
+16: export type Entry = typeof Entry.Type
+17: const types = [ResearchEvent.SourceAdmitted, ResearchEvent.RecordCommitted, ResearchEvent.DocumentPublished]
+18:   .map((definition) => EventV2.versionedType(definition.type, 1))
+19: 
+20: /** The inquiry's own events (J5.1). They sit beside Entry: corpus readers and artifact staging never see them. */
+21: export const Inquiry = Schema.Union([ResearchEvent.InquiryOpened, ResearchEvent.InquiryChecked, ResearchEvent.InquiryClosed])
+22: export type Inquiry = typeof Inquiry.Type
+23: /** Everything one dispatch's inquiry folds over, in ledger order. */
+24: export const Step = Schema.Union([ResearchEvent.SourceAdmitted, ResearchEvent.RecordCommitted, ResearchEvent.AllowanceCharged,
+25:   ResearchEvent.InquiryOpened, ResearchEvent.InquiryChecked, ResearchEvent.InquiryClosed])
+26: export type Step = typeof Step.Type
+27: const bound = EventV2.versionedType(ResearchEvent.AllowanceBound.type, 1)
+28: const steps = [ResearchEvent.SourceAdmitted, ResearchEvent.RecordCommitted, ResearchEvent.AllowanceCharged,
+29:   ResearchEvent.InquiryOpened, ResearchEvent.InquiryChecked, ResearchEvent.InquiryClosed]
+30:   .map((definition) => EventV2.versionedType(definition.type, 1))
+31: 
+32: /** Canonical JSON ignores object insertion order and absent optional fields, preserving array order. */
+33: export function canonical(value: unknown): string {
+34:   if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`
+35:   if (value !== null && typeof value === "object") return `{${Object.entries(value)
+36:     .filter((entry) => entry[1] !== undefined).sort((a, b) => a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0)
+37:     .map((entry) => `${JSON.stringify(entry[0])}:${canonical(entry[1])}`).join(",")}}`
+38:   return JSON.stringify(value)
+39: }
+40: 
+41: export function digest(value: string | Uint8Array) {
+42:   return createHash("sha256").update(value).digest("hex")
+43: }
+44: 
+45: export function operation(context: Tool.Context, action: string) {
+46:   return digest(canonical([context.sessionID, context.assistantMessageID, context.toolCallID, action]))
+47: }
+48: 
+49: export function eventID(binding: Research.Binding, key: string) {
+50:   return EventV2.ID.make(`evt_research_${digest(canonical([binding.executionSessionID, key]))}`)
+51: }
+52: 
+53: export function cap(value: unknown, limit = Research.Limits.eventBytes) {
+54:   if (Buffer.byteLength(typeof value === "string" ? value : canonical(value), "utf8") > limit)
+55:     throw new Research.Error({ code: "over_cap", message: "Research UTF-8 byte limit exceeded" })
+56: }
+57: 
+58: export const bounded = (value: unknown, limit = Research.Limits.eventBytes) => Effect.try({
+59:   try: () => cap(value, limit), catch: () => new Research.Error({ code: "over_cap", message: "Research UTF-8 byte limit exceeded" }),
+60: })
+61: 
+62: export const entries = Effect.fn("ResearchLedger.entries")(function* (binding: Research.Binding, explicitID?: string, executionOnly = false) {
+63:   const database = yield* Database.Service
+64:   const rows = yield* database.db.select().from(EventTable).where(and(
+65:     inArray(EventTable.type, types),
+66:     sql`json_extract(${EventTable.data}, '$.binding.projectID') = ${binding.projectID}`,
+67:     executionOnly ? eq(EventTable.aggregate_id, binding.executionSessionID) : undefined,
+68:     explicitID === undefined ? eq(EventTable.aggregate_id, binding.executionSessionID) : sql`(
+69:       json_extract(${EventTable.data}, '$.record.id') = ${explicitID} OR
+70:       json_extract(${EventTable.data}, '$.receipt.ref.id') = ${explicitID} OR
+71:       json_extract(${EventTable.data}, '$.receipt.ref.artifact.id') = ${explicitID} OR
+72:       json_extract(${EventTable.data}, '$.receipt.artifact.id') = ${explicitID})`,
+73:   )).orderBy(asc(EventTable.seq)).all().pipe(Effect.orDie)
+74:   return yield* Effect.forEach(rows, (row) => Schema.decodeUnknownEffect(Entry)({
+75:     id: row.id, type: row.type.slice(0, -2), data: row.data,
+76:     durable: { aggregateID: row.aggregate_id, seq: row.seq, version: 1 },
+77:   }).pipe(
+78:     Effect.mapError(() => new Research.Error({ code: "source_unavailable", message: "Invalid retained research event" })),
+79:     Effect.flatMap((entry) => entry.data.sessionID !== row.aggregate_id || entry.data.binding.executionSessionID !== row.aggregate_id ||
+80:       (entry.type !== "research.record.committed" && !isDeepStrictEqual(entry.data.receipt.binding, entry.data.binding))
+81:       ? Effect.fail(new Research.Error({ code: "source_unavailable", message: "Research event scope does not match admission" }))
+82:       : Effect.succeed(entry)),
+83:   ))
+84: })
+```
+
+Linhas 145–157.
+
+```text
+145: export const retained = Effect.fn("ResearchLedger.retained")(function* (binding: Research.Binding) {
+146:   const actual = yield* ResearchBinding.resolve(binding.executionSessionID, binding.projectID)
+147:   if (!isDeepStrictEqual(actual, binding))
+148:     return yield* new Research.Error({ code: "binding_mismatch", message: "Research placement changed" })
+149:   return actual
+150: })
+151: 
+152: export function replay(entries: readonly Entry[], operation: string, inputHash: string) {
+153:   const found = entries.filter((entry) => entry.data.operation === operation)
+154:   if (found.length > 1 || found.some((entry) => entry.data.inputHash !== inputHash))
+155:     throw new Research.Error({ code: "conflict", message: "Research operation was reused with different input" })
+156:   return found[0]
+157: }
+```
+
+## RE-B5
+
+### RB5-01 — Artifacts: put, admissão, manifest, verifySource e paginação UTF-8
+
+Vínculo: corpo R11; archive E37.
+
+**RB-S017 — `packages/core/src/research/artifacts.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `7c8bb90f269ad00d3779923dd1d8211e3d4edbd4` · SHA-256 `57e6e7d99c507014c52b887d21dfe766311a1a20a5e3e24837665fed7091d24f` · 16639 bytes.
+
+Arquivo integral: `sources/packages/core/src/research/artifacts.ts`; archive: E37, E38.
+
+Linhas 32–148.
+
+```text
+32: const Manifest = Schema.Struct({
+33:   binding: Research.Binding, operation: Schema.String, ref: Capability.ArtifactRef,
+34:   representation: Research.Representation, digest: Research.Digest, bytes: Schema.Int,
+35: })
+36: const Cursor = Schema.Struct({
+37:   bindingHash: Research.Digest, ref: Capability.ArtifactRef, digest: Research.Digest,
+38:   representation: Research.Representation, offset: Schema.Int, size: Schema.Literal(Research.Limits.pageBytes),
+39: })
+40: 
+41: export const layer = Layer.effect(Service, Effect.gen(function* () {
+42:   const global = yield* Global.Service
+43:   const database = yield* Database.Service
+44:   const retained = (binding: Research.Binding) => ResearchLedger.retained(binding).pipe(Effect.provideService(Database.Service, database))
+45:   const entries = (binding: Research.Binding, id: string, scope?: "task") => ResearchLedger.entries(binding, id, scope === "task").pipe(Effect.provideService(Database.Service, database))
+46: 
+47:   const put = Effect.fn("ResearchArtifacts.put")(function* (binding: Research.Binding, input: PutInput, operation: string) {
+48:     if ((typeof input.content === "string" ? Buffer.byteLength(input.content, "utf8") : input.content.byteLength) > Research.Limits.sourceBytes)
+49:       return yield* new Research.Error({ code: "over_cap", message: "Research artifact exceeds source byte limit" })
+50:     const content = typeof input.content === "string" ? Buffer.from(input.content, "utf8") : Buffer.from(input.content)
+51:     const representation = yield* Schema.decodeUnknownEffect(Research.Representation)(input.representation).pipe(
+52:       Effect.mapError(() => new Research.Error({ code: "unsupported", message: "Unsupported research representation" })),
+53:     )
+54:     if (!operation || Buffer.byteLength(operation) > 256)
+55:       return yield* new Research.Error({ code: "reference_invalid", message: "Invalid host operation" })
+56:     yield* retained(binding)
+57:     const ref = yield* Schema.decodeUnknownEffect(Capability.ArtifactRef)(input.artifact ?? {
+58:       id: `cart_${ResearchLedger.digest(ResearchLedger.canonical([binding, operation])).slice(0, 26)}`, revision: 1,
+59:     }).pipe(Effect.mapError(() => new Research.Error({ code: "reference_invalid", message: "Invalid artifact reference" })))
+60:     const manifest = { binding, operation, ref, representation, digest: ResearchLedger.digest(content), bytes: content.byteLength }
+61:     return yield* Effect.tryPromise({
+62:       try: async () => {
+63:         const root = await directory(global.data, binding, true)
+64:         const operationPath = path.join(root, `op-${ResearchLedger.digest(operation)}.json`)
+65:         const existing = await bytes(operationPath, Research.Limits.eventBytes).catch((error: unknown) => {
+66:           if (missing(error)) return undefined
+67:           throw error
+68:         })
+69:         const stored = existing ? Schema.decodeUnknownSync(Schema.fromJsonString(Manifest))(existing.toString("utf8")) : undefined
+70:         if (stored && ResearchLedger.canonical(stored) !== ResearchLedger.canonical(manifest))
+71:           throw new Research.Error({ code: "conflict", message: "Artifact operation was reused with different input or reference" })
+72:         // Immutable deterministic body survives a crash before its operation manifest or ledger receipt.
+73:         await publish(path.join(root, `${ref.id}-${ref.revision}.body`), content)
+74:         await publish(operationPath, Buffer.from(ResearchLedger.canonical(manifest)))
+75:         return { ref, digest: manifest.digest, bytes: manifest.bytes }
+76:       },
+77:       catch: (error) => error instanceof Research.Error ? error : new Research.Error({ code: "publication_uncertain", message: "Research artifact publication is uncertain" }),
+78:     })
+79:   })
+80: 
+81:   const load = Effect.fn("ResearchArtifacts.load")(function* (binding: Research.Binding, artifact: Capability.ArtifactRef, scope?: "task") {
+82:     const ref = yield* Schema.decodeUnknownEffect(Capability.ArtifactRef)(artifact).pipe(
+83:       Effect.mapError(() => new Research.Error({ code: "not_found", message: "Research artifact not found" })),
+84:     )
+85:     yield* retained(binding)
+86:     const admitted = (yield* entries(binding, ref.id, scope)).filter((entry) => {
+87:       if (entry.type === "research.source.admitted") return entry.data.receipt.ref.artifact.revision === ref.revision
+88:       if (entry.type === "research.document.published") return entry.data.receipt.artifact.revision === ref.revision
+89:       return false
+90:     })
+91:     const event = admitted[0]
+92:     if (admitted.length !== 1 || !event || event.type === "research.record.committed")
+93:       return yield* new Research.Error({ code: "not_found", message: "Research artifact not found" })
+94:     yield* retained(event.data.binding)
+95:     const receipt = event.data.receipt
+96:     const representation = event.type === "research.source.admitted" ? event.data.receipt.ref.representation : "markdown"
+97:     const digest = event.type === "research.source.admitted" ? event.data.receipt.ref.digest : event.data.receipt.digest
+98:     const content = yield* Effect.tryPromise({
+99:       try: async () => {
+100:         const root = await directory(global.data, event.data.binding, false)
+101:         const manifest = Schema.decodeUnknownSync(Schema.fromJsonString(Manifest))(
+102:           (await bytes(path.join(root, `op-${ResearchLedger.digest(event.data.operation)}.json`), Research.Limits.eventBytes)).toString("utf8"),
+103:         )
+104:         if (manifest.operation !== event.data.operation || manifest.ref.id !== ref.id || manifest.ref.revision !== ref.revision || manifest.digest !== digest ||
+105:           manifest.representation !== representation || manifest.bytes !== receipt.bytes ||
+106:           ResearchLedger.canonical(manifest.binding) !== ResearchLedger.canonical(event.data.binding))
+107:           throw new Error("Manifest differs from admission")
+108:         const body = await bytes(path.join(root, `${ref.id}-${ref.revision}.body`), Research.Limits.sourceBytes)
+109:         if (body.byteLength !== receipt.bytes || ResearchLedger.digest(body) !== digest) throw new Error("Body differs from admission")
+110:         return body
+111:       },
+112:       catch: () => new Research.Error({ code: "source_unavailable", message: "Admitted research bytes are missing or corrupt" }),
+113:     })
+114:     return { ref, receipt, representation, digest, content, event }
+115:   })
+116:   const verifySource = Effect.fn("ResearchArtifacts.verifySource")(function* (binding: Research.Binding, ref: Research.SourceRef) {
+117:     const stored = yield* load(binding, ref.artifact)
+118:     if (stored.event.type !== "research.source.admitted" || stored.digest !== ref.digest || stored.representation !== ref.representation)
+119:       return yield* new Research.Error({ code: "reference_invalid", message: "Source representation does not match its admission" })
+120:   })
+121:   const read = Effect.fn("ResearchArtifacts.read")(function* (binding: Research.Binding, artifact: Capability.ArtifactRef, cursor?: string, scope?: "task") {
+122:     const stored = yield* load(binding, artifact, scope)
+123:     const decoded = cursor === undefined ? undefined : Schema.decodeUnknownOption(Schema.fromJsonString(Cursor))(
+124:       Buffer.from(cursor, "base64url").toString("utf8"),
+125:     )
+126:     if (decoded && (Option.isNone(decoded) || decoded.value.bindingHash !== ResearchLedger.digest(ResearchLedger.canonical(binding)) ||
+127:       decoded.value.ref.id !== stored.ref.id || decoded.value.ref.revision !== stored.ref.revision || decoded.value.digest !== stored.digest ||
+128:       decoded.value.representation !== stored.representation))
+129:       return yield* new Research.Error({ code: "reference_invalid", message: "Research artifact cursor does not match" })
+130:     const offset = decoded && Option.isSome(decoded) ? decoded.value.offset : 0
+131:     if (!Number.isSafeInteger(offset) || offset < 0 || offset > stored.content.byteLength ||
+132:       (offset > 0 && (offset === stored.content.byteLength || (stored.content[offset] & 0xc0) === 0x80)))
+133:       return yield* new Research.Error({ code: "reference_invalid", message: "Invalid research artifact cursor offset" })
+134:     // Validate the whole admitted representation before returning any textual page; binary is never replacement-decoded.
+135:     yield* Effect.try({ try: () => new TextDecoder("utf-8", { fatal: true }).decode(stored.content),
+136:       catch: () => new Research.Error({ code: "unsupported", message: "Research artifact is not supported UTF-8 text" }) })
+137:     const end = Math.min(offset + Research.Limits.pageBytes, stored.content.byteLength)
+138:     const boundary = end === stored.content.byteLength ? end : end - ([0, 1, 2, 3].find((back) => (stored.content[end - back] & 0xc0) !== 0x80) ?? 0)
+139:     const next = boundary < stored.content.byteLength ? Buffer.from(ResearchLedger.canonical({
+140:       bindingHash: ResearchLedger.digest(ResearchLedger.canonical(binding)), ref: stored.ref, digest: stored.digest, representation: stored.representation,
+141:       offset: boundary, size: Research.Limits.pageBytes,
+142:     })).toString("base64url") : undefined
+143:     return {
+144:       ref: stored.ref, representation: stored.representation, text: stored.content.subarray(offset, boundary).toString("utf8"), receipt: stored.receipt,
+145:       complete: next === undefined && (stored.event.type !== "research.source.admitted" || stored.event.data.receipt.complete),
+146:       ...(next ? { cursor: next } : {}),
+147:     }
+148:   })
+```
+
+### RB5-02 — Artifacts: intent estável, diretórios, bytes e publicação imutável
+
+Vínculo: corpo R11, R12; archive E38.
+
+**RB-S017** — mesma fonte e identidade declaradas acima.
+
+Linhas 162–194.
+
+```text
+162:   const prepare = Effect.fn("ResearchArtifacts.prepare")(function* (binding: Research.Binding, raw: ResearchLedger.Entry) {
+163:     yield* ResearchLedger.bounded(raw)
+164:     const entry = yield* Schema.decodeUnknownEffect(ResearchLedger.Entry)(raw).pipe(
+165:       Effect.mapError(() => new Research.Error({ code: "reference_invalid", message: "Invalid research publication intent" })),
+166:     )
+167:     if (ResearchLedger.canonical(entry.data.binding) !== ResearchLedger.canonical(binding) || entry.data.sessionID !== binding.executionSessionID)
+168:       return yield* new Research.Error({ code: "binding_mismatch", message: "Research intent scope does not match" })
+169:     yield* retained(binding)
+170:     return yield* Effect.tryPromise({
+171:       try: async () => {
+172:         const root = await directory(global.data, binding, true)
+173:         const filename = path.join(root, `intent-${ResearchLedger.digest(entry.data.operation)}.json`)
+174:         const reconcile = async () => {
+175:           const saved = Schema.decodeUnknownSync(Schema.fromJsonString(ResearchLedger.Entry))((await bytes(filename, Research.Limits.eventBytes)).toString("utf8"))
+176:           if (saved.type !== entry.type || saved.id !== entry.id || saved.data.operation !== entry.data.operation ||
+177:             saved.data.inputHash !== entry.data.inputHash || ResearchLedger.canonical(saved.data.binding) !== ResearchLedger.canonical(binding))
+178:             throw new Research.Error({ code: "conflict", message: "Research intent was reused with different input" })
+179:           return saved
+180:         }
+181:         const existing = await reconcile().catch((error: unknown) => {
+182:           if (missing(error)) return undefined
+183:           throw error
+184:         })
+185:         if (existing) return existing

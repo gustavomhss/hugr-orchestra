@@ -1,0 +1,939 @@
+{
+  "schema": "s1-03-derived-production-manifest/v2",
+  "manifest_role": "POSTPRODUCTION_RECORD_NOT_AN_EARLIER_RECIPE",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "artifact": {
+    "key": "s1.subslice03.boundary-flow",
+    "layer": 2,
+    "need": "flow",
+    "required_build_predecessors": [
+      "s1.core.boundaries"
+    ],
+    "purpose": "Encadeamento e limites do lado Core das portas externas"
+  },
+  "scope": "Only s1.subslice03.boundary-flow L2; no later layer produced or released.",
+  "state": "CORRECTION_COMPLETE_AWAITING_SAME_TWO_NATIVE_JUDGES",
+  "producer": {
+    "host_task_name": "/root/derived_boundaries",
+    "host_agent_id": "UNKNOWN",
+    "role": "native_author",
+    "fresh_context": "Same native oracle-blind family author continued; prior actual context retained.",
+    "delegation": "NOT_USED"
+  },
+  "exclusive_output_directory": "producers/derived-boundary-flow",
+  "payload_output_directory": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-boundary-flow",
+  "source_revision_inherited_from_predecessor": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "actual_recipe": {
+    "correction": {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/recipe.json",
+      "bytes": 5580,
+      "sha256": "19923925cfbf39dcbbb33cb8fb00615dd2b37c5678a250f41dbd09ad4a398d30",
+      "git_blob_sha": "91ffc90bccaf9fd4a50e994c5fb3288b4f99bcb0",
+      "whole_file_identity": true
+    },
+    "common_retained": {
+      "local_path": "payload/recipes/derived-contract.json",
+      "bytes": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+      "whole_file_identity": true
+    },
+    "visible_dispatch": {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/dispatch-message.txt",
+      "bytes": 1273,
+      "sha256": "74633d78ff34d49f5d7db8fbe1fd6f6c22cf6f63ee95151bba5d58c8e8381e3f",
+      "git_blob_sha": "3821692669a52627613e830c4633958bbe2c36ea",
+      "whole_file_identity": true
+    },
+    "frozen_request": {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/request.txt",
+      "bytes": 397,
+      "sha256": "9e5163515be025e4f73fd410beda312a415890832e3aa16917c1b4aca54e39fc",
+      "git_blob_sha": "ca5b0415dba1cba57da4431e292b7c5765429ca4",
+      "whole_file_identity": true
+    },
+    "public_findings": {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/public-findings.md",
+      "bytes": 1561,
+      "sha256": "bdf2775890fc18bb642fc4e341b5984b8c2fb3fc0ef15217ded1650d44e196ca",
+      "git_blob_sha": "179c431b87984d73c9e8633fe0aed6213dabbf98",
+      "whole_file_identity": true
+    },
+    "actual_procedure": {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/apply.py",
+      "bytes": 36148,
+      "sha256": "fbf7ef729de0f11bc3df2ccbe77da99d9e69171f21c36bbea62421d93c984a6e",
+      "git_blob_sha": "102c9f6aa526b77add7dc3b09044003dd5448b6d",
+      "whole_file_identity": true
+    },
+    "procedure_freeze": {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/procedure-freeze.json",
+      "bytes": 8086,
+      "sha256": "adb5dbdd94d5786d8a1211be748c3e0a4459d5a5ba8234e73fb4957c991c3f4b",
+      "git_blob_sha": "157a73b5e5b94fc19b5060c20ef9f35f16c4c0ca",
+      "whole_file_identity": true
+    },
+    "not_retroactive": true
+  },
+  "inputs": [
+    {
+      "local_path": "inputs/AGENTS.md",
+      "bytes": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "whole_file_identity": true,
+      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+      "role": "Public repository authority snapshot; no product changes or tests authorized for this task.",
+      "consumption": "FULL_UTF8_TEXT",
+      "identity_check": "MATCH",
+      "original_read_paths": [
+        "inputs/AGENTS.md"
+      ],
+      "context_origin_revision": 1,
+      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "inputs/COMMON.md",
+      "bytes": 12959,
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+      "whole_file_identity": true,
+      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+      "role": "Public S1 subdivision protocol; consumed fully, task-specific producer restrictions take precedence.",
+      "consumption": "FULL_UTF8_TEXT",
+      "identity_check": "MATCH",
+      "original_read_paths": [
+        "inputs/COMMON.md"
+      ],
+      "context_origin_revision": 1,
+      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "inputs/mission.json",
+      "bytes": 6006,
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+      "whole_file_identity": true,
+      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+      "role": "Public S1-03 mission identity and authority boundaries; not a release of broader authoring.",
+      "consumption": "FULL_UTF8_TEXT",
+      "identity_check": "MATCH",
+      "original_read_paths": [
+        "inputs/mission.json"
+      ],
+      "context_origin_revision": 1,
+      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "inputs/SKILL.md",
+      "bytes": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "whole_file_identity": true,
+      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+      "role": "Public execute-genesis procedural snapshot, scoped by frozen producer request.",
+      "consumption": "FULL_UTF8_TEXT",
+      "identity_check": "MATCH",
+      "original_read_paths": [
+        "inputs/SKILL.md"
+      ],
+      "context_origin_revision": 1,
+      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "inputs/references/principles.md",
+      "bytes": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "whole_file_identity": true,
+      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+      "role": "Public quality, invariants and completion distinctions.",
+      "consumption": "FULL_UTF8_TEXT",
+      "identity_check": "MATCH",
+      "original_read_paths": [
+        "inputs/references/principles.md"
+      ],
+      "context_origin_revision": 1,
+      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "inputs/references/fatia-1.md",
+      "bytes": 3987,
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+      "whole_file_identity": true,
+      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+      "role": "Public S1 context, superseded by mission/task for local assignment.",
+      "consumption": "FULL_UTF8_TEXT",
+      "identity_check": "MATCH",
+      "original_read_paths": [
+        "inputs/references/fatia-1.md"
+      ],
+      "context_origin_revision": 1,
+      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "inputs/references/fresh-start.md",
+      "bytes": 4983,
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+      "whole_file_identity": true,
+      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+      "role": "Public isolation, provenance and accounting procedure.",
+      "consumption": "FULL_UTF8_TEXT",
+      "identity_check": "MATCH",
+      "original_read_paths": [
+        "inputs/references/fresh-start.md"
+      ],
+      "context_origin_revision": 1,
+      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "inputs/references/orchestration.md",
+      "bytes": 4408,
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+      "whole_file_identity": true,
+      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+      "role": "Public producer-role, preservation and predecessor-gate procedure.",
+      "consumption": "FULL_UTF8_TEXT",
+      "identity_check": "MATCH",
+      "original_read_paths": [
+        "inputs/references/orchestration.md"
+      ],
+      "context_origin_revision": 1,
+      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "inputs/references/judging.md",
+      "bytes": 5787,
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "whole_file_identity": true,
+      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+      "role": "Public semantic-review and consumer separation; not judge prose.",
+      "consumption": "FULL_UTF8_TEXT",
+      "identity_check": "MATCH",
+      "original_read_paths": [
+        "inputs/references/judging.md"
+      ],
+      "context_origin_revision": 1,
+      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "inputs/references/transport.md",
+      "bytes": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "whole_file_identity": true,
+      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+      "role": "Public transport identity, input/version and build/navigation rules.",
+      "consumption": "FULL_UTF8_TEXT",
+      "identity_check": "MATCH",
+      "original_read_paths": [
+        "inputs/references/transport.md"
+      ],
+      "context_origin_revision": 1,
+      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "payload/artifact-plan.json",
+      "bytes": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+      "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+      "whole_file_identity": true,
+      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+      "role": "Frozen artifact graph; only boundary-flow L2 released in this task.",
+      "consumption": "FULL_UTF8_TEXT",
+      "identity_check": "MATCH",
+      "original_read_paths": [
+        "payload/artifact-plan.json"
+      ],
+      "context_origin_revision": 1,
+      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "payload/recipes/derived-contract.json",
+      "bytes": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+      "whole_file_identity": true,
+      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+      "role": "Actual pre-dispatch common authoring recipe and L2 role.",
+      "consumption": "FULL_UTF8_TEXT",
+      "identity_check": "MATCH",
+      "original_read_paths": [
+        "payload/recipes/derived-contract.json"
+      ],
+      "context_origin_revision": 1,
+      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "payload/recipes/derived-public-criteria.json",
+      "bytes": 16244,
+      "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+      "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+      "whole_file_identity": true,
+      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+      "role": "Frozen full public criteria excerpt; not reserved expected answers.",
+      "consumption": "FULL_UTF8_TEXT",
+      "identity_check": "MATCH",
+      "original_read_paths": [
+        "payload/recipes/derived-public-criteria.json"
+      ],
+      "context_origin_revision": 1,
+      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "producers/boundaries/revisions/boundaries-v3/history/body.md",
+      "bytes": 23665,
+      "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+      "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
+      "whole_file_identity": true,
+      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+      "role": "Historical accepted L1 v2 context; contains the original trial/chunk imprecisions and is not the current build predecessor.",
+      "consumption": "FULL_UTF8_TEXT",
+      "identity_check": "MATCH",
+      "original_read_paths": [
+        "producers/boundaries/bodies/boundaries.md",
+        "producers/boundaries/revisions/boundaries-v3/history/body.md"
+      ],
+      "context_origin_revision": 1,
+      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "consumption_in_this_revision": "FULL_UTF8_TEXT_READ_AT_RETAINED_ALIAS",
+      "current_semantic_build_predecessor": false,
+      "retained_alias": "producers/boundaries/revisions/boundaries-v3/history/body.md",
+      "original_role": "Only accepted semantic build predecessor; full body read, no raw evidence links followed.",
+      "historical_accepted_predecessor_key": "s1.core.boundaries"
+    },
+    {
+      "local_path": "payload/recipes/derived/boundary-flow.json",
+      "bytes": 8459,
+      "sha256": "3e4c7ebbb94d3fb6d7c4de5238aaea74e817cbfb1e80ea2c15bb259bc20eb544",
+      "git_blob_sha": "5d9e75ef89341aad6010d398cd6125a7c8dcf05c",
+      "whole_file_identity": true,
+      "provenance": "Explicitly authorized as other_actual_inputs by the effective frozen recipe.",
+      "role": "Effective per-task recipe, frozen before author dispatch.",
+      "consumption": "FULL_UTF8_TEXT",
+      "identity_check": "MATCH",
+      "original_read_paths": [
+        "payload/recipes/derived/boundary-flow.json"
+      ],
+      "context_origin_revision": 1,
+      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/request.txt",
+      "bytes": 850,
+      "sha256": "46437f5558525bd36b082915531c5ee70f8ab53a0b40c11270b7f313581c2d89",
+      "git_blob_sha": "3018a711f06aaecf12bc80fa5512b22126ab558b",
+      "whole_file_identity": true,
+      "provenance": "Explicitly authorized as other_actual_inputs by the effective frozen recipe.",
+      "role": "Frozen request preserved byte-identically; actual input, not output.",
+      "consumption": "FULL_UTF8_TEXT",
+      "identity_check": "MATCH",
+      "original_read_paths": [
+        "producers/derived-boundary-flow/request.txt"
+      ],
+      "context_origin_revision": 1,
+      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/dispatch-message.txt",
+      "bytes": 1421,
+      "sha256": "0790d3883cf33e37a3f4fd338c3d9cfc36f3b2625c0b0072fd9155e2f526b2d2",
+      "git_blob_sha": "0b5d88ff0888d4f5b175e1a433b46970efd389ad",
+      "whole_file_identity": true,
+      "provenance": "Explicitly authorized as other_actual_inputs by the effective frozen recipe.",
+      "role": "Exact visible parent dispatch encoded UTF-8 without an appended newline; preserved separately from frozen request.",
+      "consumption": "FULL_UTF8_TEXT",
+      "identity_check": "MATCH",
+      "original_read_paths": [
+        "producers/derived-boundary-flow/dispatch-message.txt"
+      ],
+      "context_origin_revision": 1,
+      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/body.md",
+      "bytes": 16112,
+      "sha256": "83c961e473f666034b6db197ead28594580f4a953fc9f6f4bb63f006ab65ddbd",
+      "git_blob_sha": "6420523de8f6d8e5fa5aac4b8f76bab2c5c6fceb",
+      "whole_file_identity": true,
+      "original_read_paths": [
+        "producers/derived-boundary-flow/body.md",
+        "producers/derived-boundary-flow/revisions/v2/history/body.md"
+      ],
+      "context_origin_revision": 2,
+      "consumption_in_this_revision": "FULL_UTF8_TEXT",
+      "provenance": "Enumerated in frozen correction recipe read_exactly; whole-file identity matched before execution.",
+      "current_semantic_build_predecessor": false,
+      "retained_alias": "producers/derived-boundary-flow/revisions/v2/history/body.md",
+      "role": "L2 v1 output consumed as correction/preservation input, now retained byte-identically."
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/evidence.md",
+      "bytes": 8327,
+      "sha256": "4e42f26758255ed63978d5e027a165a4eaaecfe645c78571365c4f5a2e81a780",
+      "git_blob_sha": "927e668b759b50bbeb28f92eca596cfc03d79b60",
+      "whole_file_identity": true,
+      "original_read_paths": [
+        "producers/derived-boundary-flow/evidence.md",
+        "producers/derived-boundary-flow/revisions/v2/history/evidence.md"
+      ],
+      "context_origin_revision": 2,
+      "consumption_in_this_revision": "FULL_UTF8_TEXT",
+      "provenance": "Enumerated in frozen correction recipe read_exactly; whole-file identity matched before execution.",
+      "current_semantic_build_predecessor": false,
+      "retained_alias": "producers/derived-boundary-flow/revisions/v2/history/evidence.md",
+      "role": "L2 v1 output consumed as correction/preservation input, now retained byte-identically."
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "bytes": 20090,
+      "sha256": "93baa2def94d8fe3d05984211d05f68c0c18c8b021953bf67153f7b9eb56c2f0",
+      "git_blob_sha": "1b542614c236efe8f534e44c8982d49cade7002f",
+      "whole_file_identity": true,
+      "original_read_paths": [
+        "producers/derived-boundary-flow/production-manifest.json",
+        "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json"
+      ],
+      "context_origin_revision": 2,
+      "consumption_in_this_revision": "FULL_UTF8_TEXT",
+      "provenance": "Enumerated in frozen correction recipe read_exactly; whole-file identity matched before execution.",
+      "current_semantic_build_predecessor": false,
+      "retained_alias": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "role": "L2 v1 output consumed as correction/preservation input, now retained byte-identically."
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/response.md",
+      "bytes": 2097,
+      "sha256": "ab0d39f8f925f504f7505e1fc04192e27f9f3d0e2a79cec3bf637953b36e61ac",
+      "git_blob_sha": "881e93d76f4f2b51d8efbbf803f72fa4d83bd7ac",
+      "whole_file_identity": true,
+      "original_read_paths": [
+        "producers/derived-boundary-flow/response.md",
+        "producers/derived-boundary-flow/revisions/v2/history/response.md"
+      ],
+      "context_origin_revision": 2,
+      "consumption_in_this_revision": "FULL_UTF8_TEXT",
+      "provenance": "Enumerated in frozen correction recipe read_exactly; whole-file identity matched before execution.",
+      "current_semantic_build_predecessor": false,
+      "retained_alias": "producers/derived-boundary-flow/revisions/v2/history/response.md",
+      "role": "L2 v1 output consumed as correction/preservation input, now retained byte-identically."
+    },
+    {
+      "local_path": "producers/boundaries/bodies/boundaries.md",
+      "bytes": 23769,
+      "sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+      "git_blob_sha": "d3b070015882d10f778f563438eb3f9d67cab061",
+      "whole_file_identity": true,
+      "original_read_paths": [
+        "producers/boundaries/bodies/boundaries.md"
+      ],
+      "context_origin_revision": 2,
+      "consumption_in_this_revision": "FULL_UTF8_TEXT",
+      "provenance": "Enumerated in frozen correction recipe read_exactly; whole-file identity matched before execution.",
+      "current_semantic_build_predecessor": true,
+      "role": "Only current accepted semantic predecessor: s1.core.boundaries L1 v3.",
+      "accepted_predecessor_key": "s1.core.boundaries"
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/public-findings.md",
+      "bytes": 1561,
+      "sha256": "bdf2775890fc18bb642fc4e341b5984b8c2fb3fc0ef15217ded1650d44e196ca",
+      "git_blob_sha": "179c431b87984d73c9e8633fe0aed6213dabbf98",
+      "whole_file_identity": true,
+      "original_read_paths": [
+        "producers/derived-boundary-flow/revisions/v2/public-findings.md"
+      ],
+      "context_origin_revision": 2,
+      "consumption_in_this_revision": "FULL_UTF8_TEXT",
+      "provenance": "Enumerated in frozen correction recipe read_exactly; whole-file identity matched before execution.",
+      "current_semantic_build_predecessor": false,
+      "role": "Public local correction findings; no full judge prose or oracle."
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/recipe.json",
+      "bytes": 5580,
+      "sha256": "19923925cfbf39dcbbb33cb8fb00615dd2b37c5678a250f41dbd09ad4a398d30",
+      "git_blob_sha": "91ffc90bccaf9fd4a50e994c5fb3288b4f99bcb0",
+      "whole_file_identity": true,
+      "original_read_paths": [
+        "producers/derived-boundary-flow/revisions/v2/recipe.json"
+      ],
+      "context_origin_revision": 2,
+      "consumption_in_this_revision": "FULL_UTF8_TEXT",
+      "provenance": "Explicit other_actual_inputs of correction recipe.",
+      "role": "Effective frozen correction recipe, not a postproduction reconstruction.",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/request.txt",
+      "bytes": 397,
+      "sha256": "9e5163515be025e4f73fd410beda312a415890832e3aa16917c1b4aca54e39fc",
+      "git_blob_sha": "ca5b0415dba1cba57da4431e292b7c5765429ca4",
+      "whole_file_identity": true,
+      "original_read_paths": [
+        "producers/derived-boundary-flow/revisions/v2/request.txt"
+      ],
+      "context_origin_revision": 2,
+      "consumption_in_this_revision": "FULL_UTF8_TEXT",
+      "provenance": "Explicit other_actual_inputs of correction recipe.",
+      "role": "Frozen correction request preserved unchanged.",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/dispatch-message.txt",
+      "bytes": 1273,
+      "sha256": "74633d78ff34d49f5d7db8fbe1fd6f6c22cf6f63ee95151bba5d58c8e8381e3f",
+      "git_blob_sha": "3821692669a52627613e830c4633958bbe2c36ea",
+      "whole_file_identity": true,
+      "original_read_paths": [
+        "producers/derived-boundary-flow/revisions/v2/dispatch-message.txt"
+      ],
+      "context_origin_revision": 2,
+      "consumption_in_this_revision": "FULL_UTF8_TEXT",
+      "provenance": "Explicit other_actual_inputs of correction recipe.",
+      "role": "Exact visible correction dispatch preserved UTF-8 without an appended newline.",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/apply.py",
+      "bytes": 36148,
+      "sha256": "fbf7ef729de0f11bc3df2ccbe77da99d9e69171f21c36bbea62421d93c984a6e",
+      "git_blob_sha": "102c9f6aa526b77add7dc3b09044003dd5448b6d",
+      "whole_file_identity": true,
+      "original_read_paths": [
+        "producers/derived-boundary-flow/revisions/v2/apply.py"
+      ],
+      "context_origin_revision": 2,
+      "consumption_in_this_revision": "EXECUTED_PROCEDURE",
+      "provenance": "Own genuine pre-execution procedure/freeze explicitly authorized as other_actual_inputs.",
+      "role": "Actual Python correction procedure, written and pinned before its single observed invocation.",
+      "current_semantic_build_predecessor": false
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/procedure-freeze.json",
+      "bytes": 8086,
+      "sha256": "adb5dbdd94d5786d8a1211be748c3e0a4459d5a5ba8234e73fb4957c991c3f4b",
+      "git_blob_sha": "157a73b5e5b94fc19b5060c20ef9f35f16c4c0ca",
+      "whole_file_identity": true,
+      "original_read_paths": [
+        "producers/derived-boundary-flow/revisions/v2/procedure-freeze.json"
+      ],
+      "context_origin_revision": 2,
+      "consumption_in_this_revision": "FULL_JSON_INPUT",
+      "provenance": "Own genuine pre-execution procedure/freeze explicitly authorized as other_actual_inputs.",
+      "role": "Pre-execution freeze pinning the actual procedure and exact read paths.",
+      "current_semantic_build_predecessor": false
+    }
+  ],
+  "input_counts": {
+    "retained_prior_units": 17,
+    "new_units": 11,
+    "total_unique_actual_input_units": 28,
+    "total_input_bytes": 260375,
+    "direct_whole_file_units_this_revision": 12,
+    "direct_read_paths_this_revision": 16,
+    "alias_reads_add_units": false,
+    "raw_source_units": 0,
+    "full_judge_response_units": 0,
+    "oracle_units": 0
+  },
+  "build_dependencies": [
+    {
+      "key": "s1.core.boundaries",
+      "version": 3,
+      "local_body_path": "producers/boundaries/bodies/boundaries.md",
+      "body_bytes": 23769,
+      "body_sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+      "body_git_blob_sha": "d3b070015882d10f778f563438eb3f9d67cab061",
+      "acceptance_gate": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+          "original_response_sha256": "1f4b25f011a54a640723d4660aa69cae6e6920fe46f92d8a3f49ae13c3ff5923"
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+          "original_response_sha256": "24109643bb94e2c8c1124d9996e5bb4af83a5030c74ae276e466fee526c2e816"
+        }
+      ],
+      "acceptance_provenance": "Frozen correction recipe supplies the same two native judges accepting all L1 v3 bytes; full responses not consumed.",
+      "unselected_package_ref": null
+    }
+  ],
+  "navigation": {
+    "adds_build_dependencies": false,
+    "external_owners_named_only": [
+      "S1-01",
+      "S1-02",
+      "S1-04",
+      "S1-05",
+      "S3",
+      "S4"
+    ],
+    "external_versions_selected": false,
+    "raw_links_in_predecessor_followed": false
+  },
+  "outputs": [
+    {
+      "local_path": "producers/derived-boundary-flow/body.md",
+      "bytes": 16484,
+      "sha256": "e18fe141b88a3aba6ede8e8a0dd138876161984db36d4b8e5540f9ab329c0771",
+      "git_blob_sha": "4e4b5590f59c67e4fd101e9fcc3d840c9f3da355",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/evidence.md",
+      "bytes": 10057,
+      "sha256": "b87c56d31e6b0f846b0cab7e9d329bdcb40fcbffcbb1025a3cd4b864f0f97f4d",
+      "git_blob_sha": "f18d89ad036b816a8e78d01a185e5225388a83c0",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/production-manifest.json",
+      "bytes": null,
+      "sha256": null,
+      "git_blob_sha": null,
+      "integrity_provenance": "Measured after serialization in producer-verification.json or final envelope; excluded here to avoid cyclic/self identities."
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/response.md",
+      "bytes": 1859,
+      "sha256": "c78d324a4e88c3e9b70bee14d89a0e46fcc20f678959c9dbc88ca10e39388cbd",
+      "git_blob_sha": "03140e9b619cee3c55130315b1f36dec72a2517b",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/dispatch-message.txt",
+      "bytes": 1273,
+      "sha256": "74633d78ff34d49f5d7db8fbe1fd6f6c22cf6f63ee95151bba5d58c8e8381e3f",
+      "git_blob_sha": "3821692669a52627613e830c4633958bbe2c36ea",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/apply.py",
+      "bytes": 36148,
+      "sha256": "fbf7ef729de0f11bc3df2ccbe77da99d9e69171f21c36bbea62421d93c984a6e",
+      "git_blob_sha": "102c9f6aa526b77add7dc3b09044003dd5448b6d",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/procedure-freeze.json",
+      "bytes": 8086,
+      "sha256": "adb5dbdd94d5786d8a1211be748c3e0a4459d5a5ba8234e73fb4957c991c3f4b",
+      "git_blob_sha": "157a73b5e5b94fc19b5060c20ef9f35f16c4c0ca",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/delta.json",
+      "bytes": null,
+      "sha256": null,
+      "git_blob_sha": null,
+      "integrity_provenance": "Measured after serialization in producer-verification.json or final envelope; excluded here to avoid cyclic/self identities."
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/delta.patch",
+      "bytes": null,
+      "sha256": null,
+      "git_blob_sha": null,
+      "integrity_provenance": "Measured after serialization in producer-verification.json or final envelope; excluded here to avoid cyclic/self identities."
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/review-supplement.md",
+      "bytes": 3529,
+      "sha256": "169632697f2faf8959bbf74df3005845f0822803cc93cd5f505e9eb9b972e385",
+      "git_blob_sha": "8998dbf0f23e6d853dbaf55f9ef32869ce713935",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/input-manifest-extension.json",
+      "bytes": 13339,
+      "sha256": "9f8352d25b2ee2f7270d4d56f10746a428e40100799934c8799fa6591d407447",
+      "git_blob_sha": "33f2033b2265a5096a2e9bf885ce557226619999",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/producer-verification.json",
+      "bytes": null,
+      "sha256": null,
+      "git_blob_sha": null,
+      "integrity_provenance": "Measured after serialization in producer-verification.json or final envelope; excluded here to avoid cyclic/self identities."
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/body.md",
+      "bytes": 16112,
+      "sha256": "83c961e473f666034b6db197ead28594580f4a953fc9f6f4bb63f006ab65ddbd",
+      "git_blob_sha": "6420523de8f6d8e5fa5aac4b8f76bab2c5c6fceb",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/evidence.md",
+      "bytes": 8327,
+      "sha256": "4e42f26758255ed63978d5e027a165a4eaaecfe645c78571365c4f5a2e81a780",
+      "git_blob_sha": "927e668b759b50bbeb28f92eca596cfc03d79b60",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "bytes": 20090,
+      "sha256": "93baa2def94d8fe3d05984211d05f68c0c18c8b021953bf67153f7b9eb56c2f0",
+      "git_blob_sha": "1b542614c236efe8f534e44c8982d49cade7002f",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/response.md",
+      "bytes": 2097,
+      "sha256": "ab0d39f8f925f504f7505e1fc04192e27f9f3d0e2a79cec3bf637953b36e61ac",
+      "git_blob_sha": "881e93d76f4f2b51d8efbbf803f72fa4d83bd7ac",
+      "whole_file_identity": true
+    }
+  ],
+  "output_count": 16,
+  "preserved_request": {
+    "local_path": "producers/derived-boundary-flow/request.txt",
+    "bytes": 850,
+    "sha256": "46437f5558525bd36b082915531c5ee70f8ab53a0b40c11270b7f313581c2d89",
+    "git_blob_sha": "3018a711f06aaecf12bc80fa5512b22126ab558b",
+    "whole_file_identity": true
+  },
+  "verification": {
+    "input_identity": "Seven enumerated whole files plus recipe/request/dispatch verified; procedure/freeze pinned before execution; four history aliases verified. Earlier public context retained without rereading unlisted paths.",
+    "output_identity": "Known output hashes recorded here; final delta/patch/self-manifest identities are in producer-verification.json and the external envelope.",
+    "utf8": "All inputs and authored outputs decode as UTF-8.",
+    "body_depth2_headings": [
+      "## 1. Escopo, evidência e entrada na leitura",
+      "## 2. Atlas: abrir a superfície, executar um plano e propor conteúdo",
+      "## 3. Relay: da sugestão de comando ao resultado registrado",
+      "## 4. Hooks: pin validado, decisão durável e shipping separado",
+      "## 5. Workflow: adquirir a versão e projetar o passo",
+      "## 6. Workflow: fence, checkpoint e settlement autenticado",
+      "## 7. Movimentação e RAG: separar persistência de coordenação",
+      "## 8. Limites de conclusão e encaminhamento"
+    ],
+    "body_byte_length": 16484,
+    "body_sizing": "Prior sizing retained; only mandatory localized repairs and predecessor metadata changed.",
+    "product_tests": "NOT_RUN",
+    "typecheck": "NOT_RUN",
+    "guards": "NOT_RUN",
+    "runtime_atlas": "NOT_RUN",
+    "provider_execution": "NOT_RUN",
+    "consumers": "NOT_RUN",
+    "maintenance": "NOT_RUN",
+    "inverse_verification": "Exact prior bytes reconstructed for body/evidence and regenerated manifest/response.",
+    "unchanged_segments": "All segments outside explicit body/evidence replacements verified byte-identical.",
+    "one_observed_application_invocation": true
+  },
+  "procedure_provenance": [
+    {
+      "procedure": "Dispatch and recipe verification",
+      "implementation": "Inline Python pathlib/hashlib through functions.exec -> tools.exec_command; no procedure source file consumed.",
+      "effect": "Read only the frozen request and per-task recipe; compared exact byte lengths/SHA256 against parent dispatch."
+    },
+    {
+      "procedure": "Exact visible dispatch preservation",
+      "implementation": "UTF-8 encoding of the visible parent message literal without an appended newline; write only dispatch-message.txt.",
+      "effect": "Recorded one exact input/output identity; kept request.txt unchanged."
+    },
+    {
+      "procedure": "Enumerated source consumption",
+      "implementation": "Inline Python json/pathlib/hashlib iterated only listed indices of recipe.read_exactly; Git blob computed as SHA1 of blob header plus bytes.",
+      "effect": "Read all 14 full public/predecessor units. A tool output initially truncated COMMON; it was reread in full in a smaller batch before composition. No unlisted path, raw link, recursive inventory, oracle or full judgment was opened."
+    },
+    {
+      "procedure": "Native semantic composition",
+      "implementation": "This author composed a Portuguese L2 flow reference and evidence map from accepted L1 and public task inputs.",
+      "effect": "Wrote body.md and evidence.md only inside the exclusive producer directory. No external model/tool/provider route, delegation or product execution."
+    },
+    {
+      "procedure": "Output and response preservation",
+      "implementation": "Inline Python UTF-8 writes, identity calculation, depth2 heading count, JSON manifest serialization and exact final response preservation.",
+      "effect": "Five requested outputs, one preserved request; deterministic metadata only. No self-hash is embedded in the manifest."
+    },
+    {
+      "procedure": "Revision 2 exact correction",
+      "implementation": {
+        "local_path": "producers/derived-boundary-flow/revisions/v2/apply.py",
+        "bytes": 36148,
+        "sha256": "fbf7ef729de0f11bc3df2ccbe77da99d9e69171f21c36bbea62421d93c984a6e",
+        "git_blob_sha": "102c9f6aa526b77add7dc3b09044003dd5448b6d",
+        "whole_file_identity": true
+      },
+      "pre_execution_freeze": {
+        "local_path": "producers/derived-boundary-flow/revisions/v2/procedure-freeze.json",
+        "bytes": 8086,
+        "sha256": "adb5dbdd94d5786d8a1211be748c3e0a4459d5a5ba8234e73fb4957c991c3f4b",
+        "git_blob_sha": "157a73b5e5b94fc19b5060c20ef9f35f16c4c0ca",
+        "whole_file_identity": true
+      },
+      "effect": "Seven enumerated full-file reads; preserve four v1 outputs before edits; apply only three substantive body repairs plus metadata; update evidence and cumulative input aliases; verify inverse and unchanged segments; preserve exact visible response.",
+      "prior_input_policy": "Prior normative/recipe/request/dispatch units retained from same author context and preserved v1 manifest, without rereading unlisted paths."
+    }
+  ],
+  "semantic_review": {
+    "this_artifact": "REVISION_2_NOT_YET_REVIEWED",
+    "prior_findings_source": "producers/derived-boundary-flow/revisions/v2/public-findings.md",
+    "required_pair": [
+      "parallel-v3-fresh/S1-03/J1",
+      "parallel-v3-fresh/S1-03/J2"
+    ],
+    "next_layer_released": false
+  },
+  "limitations": [
+    "L2 derives static findings and prepared test expectations from accepted L1; no raw source or test execution was used.",
+    "External engine/provider/platform qualification, cryptographic resistance and integration guarantees are not established.",
+    "Runtime binding, publication, actual bounded reads, consumers and maintenance require separate receipts.",
+    "No global S1/S1-03 completion, native package activation or later-layer acceptance is claimed.",
+    "L1 v3 supplies corrected trial and chunk interval descriptions; L1 v2 remains preserved with its original imprecisions. No retroactive correction or acceptance is asserted."
+  ],
+  "usage": {
+    "physical_attempts": "UNKNOWN",
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "inference_method": "No physical attempt or cost estimates inferred from one observed script invocation or file sizes."
+  },
+  "version": 2,
+  "prior_version": 1,
+  "initial_recipe_preserved": {
+    "per_task": {
+      "local_path": "payload/recipes/derived/boundary-flow.json",
+      "bytes": 8459,
+      "sha256": "3e4c7ebbb94d3fb6d7c4de5238aaea74e817cbfb1e80ea2c15bb259bc20eb544",
+      "git_blob_sha": "5d9e75ef89341aad6010d398cd6125a7c8dcf05c",
+      "whole_file_identity": true
+    },
+    "common": {
+      "local_path": "payload/recipes/derived-contract.json",
+      "bytes": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+      "whole_file_identity": true
+    },
+    "visible_dispatch": {
+      "local_path": "producers/derived-boundary-flow/dispatch-message.txt",
+      "bytes": 1421,
+      "sha256": "0790d3883cf33e37a3f4fd338c3d9cfc36f3b2625c0b0072fd9155e2f526b2d2",
+      "git_blob_sha": "0b5d88ff0888d4f5b175e1a433b46970efd389ad",
+      "whole_file_identity": true
+    },
+    "frozen_request": {
+      "local_path": "producers/derived-boundary-flow/request.txt",
+      "bytes": 850,
+      "sha256": "46437f5558525bd36b082915531c5ee70f8ab53a0b40c11270b7f313581c2d89",
+      "git_blob_sha": "3018a711f06aaecf12bc80fa5512b22126ab558b",
+      "whole_file_identity": true
+    },
+    "precedence_note": "The per-task recipe preserves request.txt and stores visible dispatch separately; this specializes the common contract output wording. No authority expansion was inferred from broad mission/protocol references."
+  },
+  "historical_parent_alias": {
+    "local_path": "producers/boundaries/revisions/boundaries-v3/history/body.md",
+    "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+    "role": "Prior actual context only; not current semantic predecessor; old trial/chunk wording preserved."
+  },
+  "preserved_prior_outputs": [
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/body.md",
+      "bytes": 16112,
+      "sha256": "83c961e473f666034b6db197ead28594580f4a953fc9f6f4bb63f006ab65ddbd",
+      "git_blob_sha": "6420523de8f6d8e5fa5aac4b8f76bab2c5c6fceb",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/evidence.md",
+      "bytes": 8327,
+      "sha256": "4e42f26758255ed63978d5e027a165a4eaaecfe645c78571365c4f5a2e81a780",
+      "git_blob_sha": "927e668b759b50bbeb28f92eca596cfc03d79b60",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "bytes": 20090,
+      "sha256": "93baa2def94d8fe3d05984211d05f68c0c18c8b021953bf67153f7b9eb56c2f0",
+      "git_blob_sha": "1b542614c236efe8f534e44c8982d49cade7002f",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/response.md",
+      "bytes": 2097,
+      "sha256": "ab0d39f8f925f504f7505e1fc04192e27f9f3d0e2a79cec3bf637953b36e61ac",
+      "git_blob_sha": "881e93d76f4f2b51d8efbbf803f72fa4d83bd7ac",
+      "whole_file_identity": true
+    }
+  ],
+  "correction_scope": {
+    "body_substantive_replacements": 3,
+    "body_metadata_replacements": 2,
+    "findings": [
+      "BFLOW-J1-F01",
+      "BF-J2-F01",
+      "BF-J2-F02",
+      "BF-J2-F03"
+    ],
+    "unchanged_body_sections": [
+      {
+        "section": 1,
+        "bytes": 1364,
+        "sha256": "b14f831e521f307d1d6eaf4d0daafb17847b669b0df070fe7b157915e9a1b3b9"
+      },
+      {
+        "section": 4,
+        "bytes": 2695,
+        "sha256": "d57b5718bf929be9fd06494da658fa43124d5ba74f48812478ebaff3cb5e2263"
+      },
+      {
+        "section": 5,
+        "bytes": 2108,
+        "sha256": "adad99683afafc0fe7d03e8ccfb61a6806fc0ad33a4a8697ce24b091f0e9290d"
+      },
+      {
+        "section": 6,
+        "bytes": 1665,
+        "sha256": "c6720e9b1c7e9af0520d366e09e72a8ce30cbc2e5c57c789eeb353f8a1ff08f6"
+      },
+      {
+        "section": 8,
+        "bytes": 1236,
+        "sha256": "fd4a2376394040e4d5b3c9e7f37d35f09b9502f7f6c10d379c859d34290bc10f"
+      }
+    ],
+    "cumulative_current_output_self_inputs": false,
+    "later_layers_produced": false
+  }
+}

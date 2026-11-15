@@ -1,0 +1,4 @@
+{
+  "target": "/root/s1_03_j1",
+  "message": "CORRECAO_LITERAL_DE_TRANSPORTE — boundaries-supplement-v2, parte 4/5. O relay acrescentou por engano um LF imediatamente após INICIO_PARTE_LITERAL e antes de `Commit: `; o primeiro byte do payload canônico é o `C` de `Commit`. Para a reconstrução, remova somente essa única linha em branco inicial da parte 4. Os demais bytes dessa parte permanecem exatamente como enviados. Payload efetivamente enviado: 57415 bytes, SHA256 7139062f082efb798d532d8282f4158394aaea644dfd522e63e9ad64107d0ceb. Payload após essa remoção única: 57414 bytes, SHA256 7310875cad3f7d39c14c3e95dc2d85aca647e5776d9cc90623c5cff781a18af7. Original defeituoso e correção serão preservados; nenhuma alteração de corpo, fonte ou mérito. Sem ferramentas. Aguarde a parte 5/5 e o sinal externo final."
+}

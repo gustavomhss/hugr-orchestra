@@ -1,0 +1,18 @@
+{
+  "lot": "research-a-supplement-v2",
+  "path": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/research-a-supplement-v2.md",
+  "body_version": "v2",
+  "packet": {
+    "bytes": 222260,
+    "sha256": "1c5510b28da046945353c98bca685c86f9449d01c4042366d41dbfcc8505e222",
+    "git_blob_sha": "f89931efa34c9d9b022268226da8d4591ee3e88c"
+  },
+  "source_supplement": {
+    "bytes": 220079,
+    "sha256": "900fd149a1182df270ef6f71fce883793dba1a836df2dd2dd67e500c268f4aca",
+    "git_blob_sha": "22c601309312a8b61692bd73bf5a4a8c5da7a48f"
+  },
+  "producer": "/root/research_l1",
+  "scope": "evidence requests and exact declared corrections only",
+  "oracle_access_by_relay": false
+}

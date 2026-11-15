@@ -1,0 +1,108 @@
+{
+  "schema": "s1-03-root-minimal-correction-verification/v1",
+  "artifact": "s1.core.research",
+  "version": 4,
+  "at_utc": "2026-11-15T04:10:16.564284+00:00",
+  "prior_body": {
+    "read_path": "producers/research/body.md",
+    "retained_path": "producers/research/revisions/v4/history/body.md",
+    "bytes": 63841,
+    "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+    "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4"
+  },
+  "current_body": {
+    "path": "producers/research/body.md",
+    "bytes": 64106,
+    "sha256": "c3925ca6e27465598796ef21815e79980277d4c3194a8b2fda7cf433700675d1",
+    "git_blob_sha": "69fda8b4a63d5480b7d78e8f915e1d90fb8a2b8b"
+  },
+  "exact_literal_replacements": 1,
+  "unchanged_prefix_suffix": true,
+  "inverse_byte_identical": true,
+  "literal_source_excerpts_verified": 1,
+  "whole_input_units": [
+    {
+      "read_path": "producers/research/body.md",
+      "retained_path": "producers/research/revisions/v4/history/body.md",
+      "bytes": 63841,
+      "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+      "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4"
+    },
+    {
+      "read_path": "producers/research/sources/packages/core/src/research-toolkit/code-index/query.ts",
+      "retained_path": "producers/research/sources/packages/core/src/research-toolkit/code-index/query.ts",
+      "bytes": 32872,
+      "sha256": "ec1dd4a297e6e798c497d67ac5ed21cd4c6484e2aba3c2bed60dbd8f174f05e8",
+      "git_blob_sha": "25d652ee0ce78d327427837466b5d7fe5886013f"
+    },
+    {
+      "read_path": "producers/research/revisions/v3/input-manifest-extension.json",
+      "retained_path": "producers/research/revisions/v3/input-manifest-extension.json",
+      "bytes": 7585,
+      "sha256": "95e1d759bace7baa2f8e5bed6f65ee9f5fba1f4a4c24b7f93a4b8d2318bc1101",
+      "git_blob_sha": "6910dfb1a66c7140c3d06c0eb19b182c56ba4e30"
+    },
+    {
+      "read_path": "producers/research/recipe-v3.json",
+      "retained_path": "producers/research/recipe-v3.json",
+      "bytes": 2901,
+      "sha256": "cd8813f5a1d2157546b762c60b0ff08812281a4138006fdc282a3fdab809abe0",
+      "git_blob_sha": "70600277e27b5f50ff5bec43a08eee08451ae922"
+    },
+    {
+      "read_path": "producers/research/revisions/v4/public-findings.md",
+      "retained_path": "producers/research/revisions/v4/public-findings.md",
+      "bytes": 1370,
+      "sha256": "274bc65c13abadb0c847c71b7acaf135759d89282b2509cc970f67d4d13e5d42",
+      "git_blob_sha": "e4c19a874355af85e5852cdf648af954527b13ab"
+    },
+    {
+      "read_path": "producers/research/revisions/v4/request.txt",
+      "retained_path": "producers/research/revisions/v4/request.txt",
+      "bytes": 548,
+      "sha256": "53d5398d52c804a75572f369ab9a08049872041080f16fdf167ae38f56a94531",
+      "git_blob_sha": "ca74b4ecd789bb7894860912677d138762e33a98"
+    },
+    {
+      "read_path": "producers/research/revisions/v4/recipe.json",
+      "retained_path": "producers/research/revisions/v4/recipe.json",
+      "bytes": 4029,
+      "sha256": "5eb8b298dd8ca73b66d0869424782f73dbf539c0a6c37aaa837686976da2fc57",
+      "git_blob_sha": "e217a08a971ff0e42a2af40f22bc12d060834fff"
+    },
+    {
+      "read_path": "producers/research/revisions/v4/dispatch-message.txt",
+      "retained_path": "producers/research/revisions/v4/dispatch-message.txt",
+      "bytes": 1059,
+      "sha256": "c800eb38cedaf8523662529d676cf30e4b67a8491afd943dc081c6c44381d5cc",
+      "git_blob_sha": "5d49d538ecc87957d4e3f27815dd74b14b65adc3"
+    },
+    {
+      "read_path": "producers/research/revisions/v4/apply.py",
+      "retained_path": "producers/research/revisions/v4/apply.py",
+      "bytes": 17467,
+      "sha256": "5bfdf994e961bdac05212b2a981aa8f50fcdf60bd5d440988fca5247e4bab89b",
+      "git_blob_sha": "235ce74826e8c995b5ed8e75bed02f8d8af9b07c"
+    },
+    {
+      "read_path": "producers/research/revisions/v4/procedure-freeze.json",
+      "retained_path": "producers/research/revisions/v4/procedure-freeze.json",
+      "bytes": 5148,
+      "sha256": "6cd8fcb3642f22bf1f6831047db7e4ecc7b4e782c1681ccec4e400f798858a48",
+      "git_blob_sha": "16d17b90d6ca6a9eecbddf447fb70d51decc60ed"
+    }
+  ],
+  "prior_audited_input_count_after_v3": 159,
+  "prior_lineage_retained": true,
+  "freeze_precedes_execution": true,
+  "producer_reported_invocations": 1,
+  "bootstrap_incident": {
+    "stage": "initial inline bootstrap parsing",
+    "error": "SyntaxError: closing parenthesis does not match opening parenthesis (nested triple-quoted script text)",
+    "effect": "Python failed compilation before any instruction; no file read/write and no apply.py invocation in that attempt",
+    "record_source": "tool transcript",
+    "resolution": "Correct quoting, parse source before creation, then freeze real apply.py before execution"
+  },
+  "semantic_result": "PENDING_SAME_PAIR",
+  "runtime_result": "NOT_RUN"
+}

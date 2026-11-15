@@ -1,0 +1,193 @@
+{
+  "schema": "s1-03-author-correction-procedure-freeze/v1",
+  "state": "FROZEN_BEFORE_EXECUTION",
+  "frozen_at_utc": "2026-11-15T04:25:17.907695+00:00",
+  "artifact": "s1.subslice03.boundary-flow",
+  "revision": 2,
+  "procedure": {
+    "local_path": "producers/derived-boundary-flow/revisions/v2/apply.py",
+    "bytes": 36148,
+    "sha256": "fbf7ef729de0f11bc3df2ccbe77da99d9e69171f21c36bbea62421d93c984a6e",
+    "git_blob_sha": "102c9f6aa526b77add7dc3b09044003dd5448b6d",
+    "whole_file_identity": true
+  },
+  "read_paths": [
+    {
+      "local_path": "producers/derived-boundary-flow/body.md",
+      "bytes": 16112,
+      "sha256": "83c961e473f666034b6db197ead28594580f4a953fc9f6f4bb63f006ab65ddbd",
+      "git_blob_sha": "6420523de8f6d8e5fa5aac4b8f76bab2c5c6fceb",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/evidence.md",
+      "bytes": 8327,
+      "sha256": "4e42f26758255ed63978d5e027a165a4eaaecfe645c78571365c4f5a2e81a780",
+      "git_blob_sha": "927e668b759b50bbeb28f92eca596cfc03d79b60",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/production-manifest.json",
+      "bytes": 20090,
+      "sha256": "93baa2def94d8fe3d05984211d05f68c0c18c8b021953bf67153f7b9eb56c2f0",
+      "git_blob_sha": "1b542614c236efe8f534e44c8982d49cade7002f",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/response.md",
+      "bytes": 2097,
+      "sha256": "ab0d39f8f925f504f7505e1fc04192e27f9f3d0e2a79cec3bf637953b36e61ac",
+      "git_blob_sha": "881e93d76f4f2b51d8efbbf803f72fa4d83bd7ac",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/boundaries/bodies/boundaries.md",
+      "bytes": 23769,
+      "sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+      "git_blob_sha": "d3b070015882d10f778f563438eb3f9d67cab061",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/boundaries/revisions/boundaries-v3/history/body.md",
+      "bytes": 23665,
+      "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+      "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/public-findings.md",
+      "bytes": 1561,
+      "sha256": "bdf2775890fc18bb642fc4e341b5984b8c2fb3fc0ef15217ded1650d44e196ca",
+      "git_blob_sha": "179c431b87984d73c9e8633fe0aed6213dabbf98",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/recipe.json",
+      "bytes": 5580,
+      "sha256": "19923925cfbf39dcbbb33cb8fb00615dd2b37c5678a250f41dbd09ad4a398d30",
+      "git_blob_sha": "91ffc90bccaf9fd4a50e994c5fb3288b4f99bcb0",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/request.txt",
+      "bytes": 397,
+      "sha256": "9e5163515be025e4f73fd410beda312a415890832e3aa16917c1b4aca54e39fc",
+      "git_blob_sha": "ca5b0415dba1cba57da4431e292b7c5765429ca4",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/dispatch-message.txt",
+      "bytes": 1273,
+      "sha256": "74633d78ff34d49f5d7db8fbe1fd6f6c22cf6f63ee95151bba5d58c8e8381e3f",
+      "git_blob_sha": "3821692669a52627613e830c4633958bbe2c36ea",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/body.md",
+      "bytes": 16112,
+      "sha256": "83c961e473f666034b6db197ead28594580f4a953fc9f6f4bb63f006ab65ddbd",
+      "git_blob_sha": "6420523de8f6d8e5fa5aac4b8f76bab2c5c6fceb",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/evidence.md",
+      "bytes": 8327,
+      "sha256": "4e42f26758255ed63978d5e027a165a4eaaecfe645c78571365c4f5a2e81a780",
+      "git_blob_sha": "927e668b759b50bbeb28f92eca596cfc03d79b60",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "bytes": 20090,
+      "sha256": "93baa2def94d8fe3d05984211d05f68c0c18c8b021953bf67153f7b9eb56c2f0",
+      "git_blob_sha": "1b542614c236efe8f534e44c8982d49cade7002f",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/response.md",
+      "bytes": 2097,
+      "sha256": "ab0d39f8f925f504f7505e1fc04192e27f9f3d0e2a79cec3bf637953b36e61ac",
+      "git_blob_sha": "881e93d76f4f2b51d8efbbf803f72fa4d83bd7ac",
+      "whole_file_identity": true
+    }
+  ],
+  "read_policy": "Only these current paths plus the actual procedure/freeze; previous cumulative public inputs retained in context without reread. Output readback is verification, not a new source.",
+  "original_current_output_paths": [
+    "producers/derived-boundary-flow/body.md",
+    "producers/derived-boundary-flow/evidence.md",
+    "producers/derived-boundary-flow/production-manifest.json",
+    "producers/derived-boundary-flow/response.md"
+  ],
+  "preservation": "Four v1 outputs were copied byte-identically with exclusive creation to history before freeze or edit. Old L1 alias is provided by the frozen correction recipe.",
+  "body_plan": {
+    "substantive_replacements": 3,
+    "metadata_replacements": 2,
+    "unchanged_sections": [
+      1,
+      4,
+      5,
+      6,
+      8
+    ],
+    "findings": [
+      "BFLOW-J1-F01",
+      "BF-J2-F01",
+      "BF-J2-F02",
+      "BF-J2-F03"
+    ]
+  },
+  "expected_cumulative_input_units": 28,
+  "expected_outputs": [
+    "producers/derived-boundary-flow/body.md",
+    "producers/derived-boundary-flow/evidence.md",
+    "producers/derived-boundary-flow/production-manifest.json",
+    "producers/derived-boundary-flow/response.md",
+    "producers/derived-boundary-flow/revisions/v2/dispatch-message.txt",
+    "producers/derived-boundary-flow/revisions/v2/apply.py",
+    "producers/derived-boundary-flow/revisions/v2/procedure-freeze.json",
+    "producers/derived-boundary-flow/revisions/v2/delta.json",
+    "producers/derived-boundary-flow/revisions/v2/delta.patch",
+    "producers/derived-boundary-flow/revisions/v2/review-supplement.md",
+    "producers/derived-boundary-flow/revisions/v2/input-manifest-extension.json",
+    "producers/derived-boundary-flow/revisions/v2/producer-verification.json",
+    "producers/derived-boundary-flow/revisions/v2/history/body.md",
+    "producers/derived-boundary-flow/revisions/v2/history/evidence.md",
+    "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+    "producers/derived-boundary-flow/revisions/v2/history/response.md"
+  ],
+  "created_by_apply": [
+    "producers/derived-boundary-flow/revisions/v2/delta.json",
+    "producers/derived-boundary-flow/revisions/v2/delta.patch",
+    "producers/derived-boundary-flow/revisions/v2/review-supplement.md",
+    "producers/derived-boundary-flow/revisions/v2/input-manifest-extension.json",
+    "producers/derived-boundary-flow/revisions/v2/producer-verification.json"
+  ],
+  "verification_plan": [
+    "verify exact frozen script/inputs",
+    "refuse repeat application",
+    "verify all historical copies",
+    "exact literal replacements with byte offsets",
+    "inverse reconstruction for four current outputs",
+    "hash unchanged segments and named body sections",
+    "retain cumulative identities with aliases and read lineage",
+    "write outputs only within exclusive directory",
+    "read back all produced bytes"
+  ],
+  "execution_contract": "Invoke the pinned apply.py once with SHA256 of this freeze as sole argument; do not edit procedure or inputs after freeze.",
+  "semantic_verdict": "NOT_AUTHORIZED_FOR_AUTHOR",
+  "not_authorized": [
+    "network",
+    "raw sources",
+    "full judgments",
+    "oracle",
+    "delegation",
+    "product tests",
+    "Atlas",
+    "later layers"
+  ],
+  "usage": {
+    "physical_attempts": "UNKNOWN",
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN"
+  }
+}

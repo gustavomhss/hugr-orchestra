@@ -1,0 +1,413 @@
+{
+  "schema": "s1-03-derived-production-manifest/v1",
+  "record_role": "Postproduction provenance record; not a preexisting executable recipe or runtime receipt",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "author": {
+    "native_task": "/root/derived_research",
+    "role": "L2 research producer",
+    "context": "Fresh family context per visible dispatch; no oracle or full judge prose consumed",
+    "actual_model_id": "UNKNOWN"
+  },
+  "artifact": {
+    "key": "s1.subslice03.research-flow",
+    "layer": 2,
+    "need": "flow",
+    "required_build_predecessors": [
+      "s1.core.research"
+    ],
+    "purpose": "Entendimento local da aquisição, índice, custódia e investigação"
+  },
+  "authoring_status": "DELIVERED_FOR_INDEPENDENT_REVIEW",
+  "exclusive_output_directory": "producers/derived-research-flow",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "kit_revision_from_public_contract": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+  "effective_authoring_recipe": {
+    "task_recipe": {
+      "local_path": "payload/recipes/derived/research-flow.json",
+      "byte_length": 8423,
+      "sha256": "543c6045bfb145c0db4b2779b12c96c140ff20198c408357c7d84bcf0a7f71e1",
+      "calculated_git_blob_sha": "db976816322808b79ec62b9451e89b9beb084521",
+      "whole_file_consumed": true,
+      "role": "Frozen per-task recipe read before authoring",
+      "provenance": "Visible task dispatch and its frozen request/recipe; the dispatch is also a required preservation output",
+      "expected_identity_match": true,
+      "read_completeness": "Full file or exact visible dispatch"
+    },
+    "common_recipe": {
+      "local_path": "payload/recipes/derived-contract.json",
+      "byte_length": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "calculated_git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+      "whole_file_consumed": true,
+      "role": "Actual common authoring recipe and layer role",
+      "provenance": "Enumerated in the frozen per-task recipe",
+      "expected_identity_match": true,
+      "read_completeness": "Full file"
+    },
+    "request": {
+      "local_path": "producers/derived-research-flow/request.txt",
+      "byte_length": 850,
+      "sha256": "351e7104bfdbc75075906493ef2db4d3f689d4181f7e621f64e75e6caf31f6ee",
+      "calculated_git_blob_sha": "d8607ddacf8da2198ba41fe912675f5127204bff",
+      "whole_file_consumed": true,
+      "role": "Frozen task request, preserved without modification",
+      "provenance": "Visible task dispatch and its frozen request/recipe; the dispatch is also a required preservation output",
+      "expected_identity_match": true,
+      "read_completeness": "Full file or exact visible dispatch"
+    },
+    "visible_dispatch": {
+      "local_path": "producers/derived-research-flow/dispatch-message.txt",
+      "byte_length": 1511,
+      "sha256": "2252f97394d8dbc61fd0e629ce1a16700f8a81bc78673add06985842fc75efcf",
+      "calculated_git_blob_sha": "0c546d156615e7cd044ec432ec27342941f20bce",
+      "whole_file_consumed": true,
+      "role": "Exact visible native dispatch, captured as UTF-8 without an added newline",
+      "provenance": "Visible task dispatch and its frozen request/recipe; the dispatch is also a required preservation output",
+      "expected_identity_match": true,
+      "read_completeness": "Full file or exact visible dispatch"
+    }
+  },
+  "predecessor_gate": {
+    "basis": "Acceptance tuples supplied by the frozen recipe; principal checked original responses before dispatch",
+    "full_judgments_consumed": false,
+    "predecessors": [
+      {
+        "key": "s1.core.research",
+        "local_body_path": "producers/research/body.md",
+        "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/body.md",
+        "body_bytes": 63841,
+        "body_sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+        "body_git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4",
+        "acceptance_gate": [
+          {
+            "judge_id": "parallel-v3-fresh/S1-03/J1",
+            "status": "PASS",
+            "body_sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+            "original_response_sha256": "e52fc2d9eb369da417d7ea035ec641839ca4714be9f75b4b0f2ac4bab35e3cc7"
+          },
+          {
+            "judge_id": "parallel-v3-fresh/S1-03/J2",
+            "status": "PASS",
+            "body_sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+            "original_response_sha256": "8dd9f7ae58de3cda63482558e2940931b185a644bcbd8cafd0b7d5463ea835c6"
+          }
+        ],
+        "gate_scope": "Semantic acceptance only; runtime and consumers are separate. Full judge prose is not an author input."
+      }
+    ],
+    "scope": "Semantic predecessor acceptance only; no L2 verdict, provider qualification, runtime or consumer proof"
+  },
+  "inputs": [
+    {
+      "local_path": "inputs/AGENTS.md",
+      "byte_length": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "calculated_git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "whole_file_consumed": true,
+      "role": "Repository instructions within the delegated authoring boundary",
+      "provenance": "Enumerated in the frozen per-task recipe",
+      "expected_identity_match": true,
+      "read_completeness": "Full file"
+    },
+    {
+      "local_path": "inputs/COMMON.md",
+      "byte_length": 12959,
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "calculated_git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+      "whole_file_consumed": true,
+      "role": "Public S1 subdivision authority and preservation rules",
+      "provenance": "Enumerated in the frozen per-task recipe",
+      "expected_identity_match": true,
+      "read_completeness": "Full file"
+    },
+    {
+      "local_path": "inputs/mission.json",
+      "byte_length": 6006,
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "calculated_git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+      "whole_file_consumed": true,
+      "role": "S1-03 scope and ownership",
+      "provenance": "Enumerated in the frozen per-task recipe",
+      "expected_identity_match": true,
+      "read_completeness": "Full file"
+    },
+    {
+      "local_path": "inputs/SKILL.md",
+      "byte_length": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "calculated_git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "whole_file_consumed": true,
+      "role": "Public execute-genesis procedure, specialized by the frozen task",
+      "provenance": "Enumerated in the frozen per-task recipe",
+      "expected_identity_match": true,
+      "read_completeness": "Full file"
+    },
+    {
+      "local_path": "inputs/references/principles.md",
+      "byte_length": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "calculated_git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "whole_file_consumed": true,
+      "role": "Public principles and criteria",
+      "provenance": "Enumerated in the frozen per-task recipe",
+      "expected_identity_match": true,
+      "read_completeness": "Full file"
+    },
+    {
+      "local_path": "inputs/references/fatia-1.md",
+      "byte_length": 3987,
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "calculated_git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+      "whole_file_consumed": true,
+      "role": "Public S1 contract, specialized by S1-03",
+      "provenance": "Enumerated in the frozen per-task recipe",
+      "expected_identity_match": true,
+      "read_completeness": "Full file"
+    },
+    {
+      "local_path": "inputs/references/fresh-start.md",
+      "byte_length": 4983,
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "calculated_git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+      "whole_file_consumed": true,
+      "role": "Public context/provenance rules",
+      "provenance": "Enumerated in the frozen per-task recipe",
+      "expected_identity_match": true,
+      "read_completeness": "Full file"
+    },
+    {
+      "local_path": "inputs/references/orchestration.md",
+      "byte_length": 4408,
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "calculated_git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+      "whole_file_consumed": true,
+      "role": "Public producer and principal responsibilities",
+      "provenance": "Enumerated in the frozen per-task recipe",
+      "expected_identity_match": true,
+      "read_completeness": "Full file"
+    },
+    {
+      "local_path": "inputs/references/judging.md",
+      "byte_length": 5787,
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "calculated_git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "whole_file_consumed": true,
+      "role": "Public separation of authorship and semantic judgment",
+      "provenance": "Enumerated in the frozen per-task recipe",
+      "expected_identity_match": true,
+      "read_completeness": "Full file"
+    },
+    {
+      "local_path": "inputs/references/transport.md",
+      "byte_length": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "calculated_git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "whole_file_consumed": true,
+      "role": "Public transport identity and dependency rules",
+      "provenance": "Enumerated in the frozen per-task recipe",
+      "expected_identity_match": true,
+      "read_completeness": "Full file"
+    },
+    {
+      "local_path": "payload/artifact-plan.json",
+      "byte_length": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+      "calculated_git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+      "whole_file_consumed": true,
+      "role": "Frozen graph; only the L2 research node released",
+      "provenance": "Enumerated in the frozen per-task recipe",
+      "expected_identity_match": true,
+      "read_completeness": "Full file"
+    },
+    {
+      "local_path": "payload/recipes/derived-contract.json",
+      "byte_length": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "calculated_git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+      "whole_file_consumed": true,
+      "role": "Actual common authoring recipe and layer role",
+      "provenance": "Enumerated in the frozen per-task recipe",
+      "expected_identity_match": true,
+      "read_completeness": "Full file"
+    },
+    {
+      "local_path": "payload/recipes/derived-public-criteria.json",
+      "byte_length": 16244,
+      "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+      "calculated_git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+      "whole_file_consumed": true,
+      "role": "Public fixed criteria; no reserved answers",
+      "provenance": "Enumerated in the frozen per-task recipe",
+      "expected_identity_match": true,
+      "read_completeness": "Full file"
+    },
+    {
+      "local_path": "producers/research/body.md",
+      "byte_length": 63841,
+      "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+      "calculated_git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4",
+      "whole_file_consumed": true,
+      "role": "Exact accepted L1 semantic predecessor",
+      "provenance": "Enumerated in the frozen per-task recipe",
+      "expected_identity_match": true,
+      "read_completeness": "Full file; predecessor displayed as consecutive line spans 1-230 and 231-378",
+      "accepted_predecessor_key": "s1.core.research"
+    },
+    {
+      "local_path": "payload/recipes/derived/research-flow.json",
+      "byte_length": 8423,
+      "sha256": "543c6045bfb145c0db4b2779b12c96c140ff20198c408357c7d84bcf0a7f71e1",
+      "calculated_git_blob_sha": "db976816322808b79ec62b9451e89b9beb084521",
+      "whole_file_consumed": true,
+      "role": "Frozen per-task recipe read before authoring",
+      "provenance": "Visible task dispatch and its frozen request/recipe; the dispatch is also a required preservation output",
+      "expected_identity_match": true,
+      "read_completeness": "Full file or exact visible dispatch"
+    },
+    {
+      "local_path": "producers/derived-research-flow/request.txt",
+      "byte_length": 850,
+      "sha256": "351e7104bfdbc75075906493ef2db4d3f689d4181f7e621f64e75e6caf31f6ee",
+      "calculated_git_blob_sha": "d8607ddacf8da2198ba41fe912675f5127204bff",
+      "whole_file_consumed": true,
+      "role": "Frozen task request, preserved without modification",
+      "provenance": "Visible task dispatch and its frozen request/recipe; the dispatch is also a required preservation output",
+      "expected_identity_match": true,
+      "read_completeness": "Full file or exact visible dispatch"
+    },
+    {
+      "local_path": "producers/derived-research-flow/dispatch-message.txt",
+      "byte_length": 1511,
+      "sha256": "2252f97394d8dbc61fd0e629ce1a16700f8a81bc78673add06985842fc75efcf",
+      "calculated_git_blob_sha": "0c546d156615e7cd044ec432ec27342941f20bce",
+      "whole_file_consumed": true,
+      "role": "Exact visible native dispatch, captured as UTF-8 without an added newline",
+      "provenance": "Visible task dispatch and its frozen request/recipe; the dispatch is also a required preservation output",
+      "expected_identity_match": true,
+      "read_completeness": "Full file or exact visible dispatch"
+    }
+  ],
+  "input_counts": {
+    "enumerated_public_inputs": 14,
+    "recipe_request_dispatch_units": 3,
+    "unique_whole_file_units": 17,
+    "total_unique_input_bytes": 177165,
+    "raw_source_units": 0,
+    "oracle_units": 0,
+    "full_judgment_units": 0
+  },
+  "build_dependencies": [
+    {
+      "key": "s1.core.research",
+      "body_byte_length": 63841,
+      "body_sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+      "scope": "Only semantic build predecessor"
+    }
+  ],
+  "navigation": {
+    "target": "Sections R0-R14 of that same accepted predecessor",
+    "adds_build_edges": false,
+    "unlisted_references_expanded": false,
+    "later_layers_authored": []
+  },
+  "procedure_provenance": [
+    {
+      "operation": "Reading",
+      "implementation": "functions.exec -> tools.exec_command -> inline Python standard library pathlib/json",
+      "scope": "Frozen request/recipe and exactly enumerated inputs; no recursive inventory",
+      "read_recovery": "First grouped output truncated COMMON in transit; COMMON was subsequently displayed in full. Predecessor displayed in consecutive spans 1-230 and 231-378."
+    },
+    {
+      "operation": "Identity verification",
+      "implementation": "Python hashlib SHA-256 and Git blob SHA-1 over whole exact bytes; lengths over UTF-8 bytes",
+      "scope": "14 expected identities verified, plus request/recipe/dispatch. Git blob hashes are calculated identities, not newly fetched Git evidence."
+    },
+    {
+      "operation": "Native composition",
+      "implementation": "The assigned native author composed body and claim-to-predecessor evidence mapping from those inputs",
+      "scope": "Local L2 only; no other agent or external provider invoked by this producer"
+    },
+    {
+      "operation": "Writing and deterministic checks",
+      "implementation": "Inline Python pathlib/json/hashlib; explicit output paths only",
+      "scope": "Five required outputs, UTF-8, nine unique depth2 sections, JSON manifest, output identities, preserved request; no product tests"
+    }
+  ],
+  "verification": {
+    "enumerated_input_identity_matches": true,
+    "request_preserved": true,
+    "recipe_identity_matches": true,
+    "predecessor_complete_read": true,
+    "body_byte_length": 16980,
+    "independent_depth2_sections": 9,
+    "body_size_note": "16980 bytes exceeds the normal 6000-14000 preference to preserve decision-changing qualifications; that preference is not a hard bound",
+    "semantic_review": "PENDING_PRINCIPAL_SAME_PAIR",
+    "product_tests": "NOT_RUN",
+    "runtime_binding_and_reads": "NOT_RUN",
+    "independent_consumers": "NOT_RUN",
+    "maintenance_execution": "NOT_RUN"
+  },
+  "outputs": [
+    {
+      "local_path": "producers/derived-research-flow/body.md",
+      "byte_length": 16980,
+      "sha256": "a4b50fa9ae0b781dbea831aefcb98cb099f93167d4a7a584dc88878fc93bc044",
+      "calculated_git_blob_sha": "8b7c702e3d5d6e0d9a8f303136a9d97ac280d82c"
+    },
+    {
+      "local_path": "producers/derived-research-flow/evidence.md",
+      "byte_length": 11305,
+      "sha256": "8e2b11c446ef73d166c98f7d852d5ca674a0a056779351e393a2d8b832cbf365",
+      "calculated_git_blob_sha": "83aff55b8282a7aa0e4ea0c99ecdbb31f4b7ba4f"
+    },
+    {
+      "local_path": "producers/derived-research-flow/response.md",
+      "byte_length": 2472,
+      "sha256": "4d10e4cbaacffd86da6c9c32091576608e3a0937a6f5ef5489c7f142778540ac",
+      "calculated_git_blob_sha": "75520523f4f50e0ab3ee7eaa597936fc1c23bc18"
+    },
+    {
+      "local_path": "producers/derived-research-flow/dispatch-message.txt",
+      "byte_length": 1511,
+      "sha256": "2252f97394d8dbc61fd0e629ce1a16700f8a81bc78673add06985842fc75efcf",
+      "calculated_git_blob_sha": "0c546d156615e7cd044ec432ec27342941f20bce"
+    },
+    {
+      "local_path": "producers/derived-research-flow/production-manifest.json",
+      "identity_location": "Final external producer digest report; no self-hash embedded"
+    }
+  ],
+  "output_counts": {
+    "new_required_files": 5,
+    "preserved_existing_request_files": 1,
+    "semantic_bodies": 1,
+    "layers_authored": [
+      2
+    ]
+  },
+  "limitations": [
+    "Static accepted L1 is the semantic basis; no fresh raw-source or runtime corroboration.",
+    "Prior PASS is only the supplied L1 gate; this author cannot certify L2 semantic acceptance.",
+    "Marker/readiness, plan/build/store existence, coverage/freshness, probe result, charge, custody, admission, record and inquiry retain different authority.",
+    "External host, engines, providers, sandbox/process/memory/DB and Atlas guarantees remain outside this production.",
+    "Modelina 266885-byte versus S4 r3 256000-byte source limit remains an inherited report, not an executed runtime diagnosis.",
+    "No L3/L4 delivery, consumer result, maintenance success or S1/global acceptance is claimed."
+  ],
+  "usage": {
+    "physical_attempts": "UNKNOWN",
+    "input_tokens": "UNKNOWN",
+    "output_tokens": "UNKNOWN",
+    "total_tokens": "UNKNOWN",
+    "billing_cost": "UNKNOWN",
+    "observed_native_author_task_dispatches": 1
+  },
+  "preservation": {
+    "request_unchanged": true,
+    "dispatch_exact": true,
+    "dispatch_terminal_newline_added": false,
+    "body_revisions_written": 1,
+    "oracle_or_private_reasoning_copied": false,
+    "hash_graph": "Manifest hashes body/evidence/response/dispatch. Its own identity is reported externally to avoid recursive self-reference."
+  }
+}

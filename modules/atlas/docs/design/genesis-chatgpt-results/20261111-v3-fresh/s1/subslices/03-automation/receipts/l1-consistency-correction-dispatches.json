@@ -1,0 +1,53 @@
+{
+  "schema": "s1-03-actual-native-dispatches/v1",
+  "calls": [
+    {
+      "id": "research-l1-consistency-correction-v4",
+      "method": "collaboration.followup_task",
+      "target": "/root/research_l1",
+      "artifact": "s1.core.research",
+      "version": 4,
+      "recipe": "producers/research/revisions/v4/recipe.json",
+      "recipe_sha256": "5eb8b298dd8ca73b66d0869424782f73dbf539c0a6c37aaa837686976da2fc57",
+      "request": "producers/research/revisions/v4/request.txt",
+      "request_sha256": "53d5398d52c804a75572f369ab9a08049872041080f16fdf167ae38f56a94531",
+      "observed_at_utc": "2026-11-15T04:00:19.934548+00:00",
+      "tool_returned_normally": true,
+      "state": "COMPLETED_FOR_REVIEW",
+      "tokens": "UNKNOWN",
+      "physical_attempts": "UNKNOWN",
+      "cost": "UNKNOWN",
+      "dispatch_retention": "Author must preserve exact visible message; no fabricated call id.",
+      "producer_response": "producers/research/revisions/v4/response.md",
+      "producer_response_sha256": "ab45f984ea21f8f8aa17fef8403e8d702efd05d1dfff713af9ad860963d0f837",
+      "dispatch_message": "producers/research/revisions/v4/dispatch-message.txt",
+      "dispatch_message_sha256": "c800eb38cedaf8523662529d676cf30e4b67a8491afd943dc081c6c44381d5cc",
+      "original_native_final_archive": "payload/receipts/producer-responses/research-l1-v4-original.md",
+      "original_native_final_sha256": "ede14af134d6c3179fc6deac476fe577eb4681f8acd01387dddbb8b2a07bcbe4"
+    },
+    {
+      "id": "boundaries-l1-consistency-correction-v3",
+      "method": "collaboration.followup_task",
+      "target": "/root/boundaries_l1",
+      "artifact": "s1.core.boundaries",
+      "version": 3,
+      "recipe": "producers/boundaries/revisions/boundaries-v3/recipe.json",
+      "recipe_sha256": "8e51dad268ee1fc9ade4b91c4d4ff1c08a76aa3f0ec9636786d778026085f385",
+      "request": "producers/boundaries/revisions/boundaries-v3/request.txt",
+      "request_sha256": "4cb6d8bd17c1ee1879f75734724997b3e6793eadfce37bafb0b2501a6bd19afb",
+      "observed_at_utc": "2026-11-15T04:00:19.934639+00:00",
+      "tool_returned_normally": true,
+      "state": "COMPLETED_FOR_REVIEW",
+      "tokens": "UNKNOWN",
+      "physical_attempts": "UNKNOWN",
+      "cost": "UNKNOWN",
+      "dispatch_retention": "Author must preserve exact visible message; no fabricated call id.",
+      "producer_response": "producers/boundaries/revisions/boundaries-v3/response.md",
+      "producer_response_sha256": "4831b00675515d0a69a9f9ce36072162c5e248c98a4679abf369dd10bb7458bd",
+      "dispatch_message": "producers/boundaries/revisions/boundaries-v3/dispatch-message.txt",
+      "dispatch_message_sha256": "9b60555882d38a25f64edc8120f524ea839a52fdb1cb309a70d2e737864dbe9b",
+      "original_native_final_archive": "payload/receipts/producer-responses/boundaries-l1-v3-original.md",
+      "original_native_final_sha256": "66ee96d447bd1a90f6ba4d182c70da62874009a8e400a09db37b2c22c85b3f8e"
+    }
+  ]
+}

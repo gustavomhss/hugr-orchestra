@@ -1,0 +1,88 @@
+{
+  "schema": "s1-03-s4-source-cap-proposal-extension/v2",
+  "owner": "S4 runtime owner",
+  "status": "PROPOSED_NOT_APPLIED_NOT_TESTED",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "release_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "prior_proposal": "proposals/s4-source-limit.json",
+  "patch": "proposals/s4-source-limit.patch",
+  "patch_sha256": "5cadc6c0892bfbff286a742a309570452b50566382cb0404ed85350fa2ac7e28",
+  "observation_basis": "Native L1 mechanical audit; research v3 adds only smaller whole inputs and retains its v2 input closure. Final selected package prepare remains a separate required operation.",
+  "unchanged_whole_input_limit": 256000,
+  "proposed_bound": 1048576,
+  "required_oversized_whole_inputs": [
+    {
+      "canonical_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json",
+      "bytes": 726892,
+      "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+      "git_blob_sha": "2e91d0f916dfa95a2dd0ef7ae74ff8c1bb427045",
+      "input_for": [
+        "s1.core.automation",
+        "s1.core.research",
+        "s1.core.boundaries",
+        "s1.subslice03.support"
+      ]
+    },
+    {
+      "canonical_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/evidence.md",
+      "bytes": 953016,
+      "sha256": "de46e809f97346c81701ee8af0144abbe8458386787a2598b2bc88b81ec2b400",
+      "git_blob_sha": "a00e38106ddfe903960659b3bfa4cb3fc73e69d3",
+      "input_for": [
+        "s1.core.automation"
+      ]
+    },
+    {
+      "canonical_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/review-supplement-1.md",
+      "bytes": 338932,
+      "sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+      "git_blob_sha": "dab732abd7f47eb3f26473b5614fa92d2b747a46",
+      "input_for": [
+        "s1.core.automation"
+      ]
+    },
+    {
+      "canonical_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/review-supplement-2.md",
+      "bytes": 375497,
+      "sha256": "208b0ba87350a91970d28f298d802512b72b6834360815b95ca17ab22ebc54b1",
+      "git_blob_sha": "bf43391979916e85f44ac4841926954d2c13362f",
+      "input_for": [
+        "s1.core.automation"
+      ]
+    },
+    {
+      "canonical_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/review-supplement-3.md",
+      "bytes": 404469,
+      "sha256": "e8158270e77a88cde1ec5db114c51e79004264ff80be667aebde8e365ede1d8c",
+      "git_blob_sha": "22a025bbc012ed09130f0d778e34e188f5533c89",
+      "input_for": [
+        "s1.core.automation"
+      ]
+    },
+    {
+      "canonical_path": "packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+      "bytes": 266885,
+      "sha256": "0fc1a48c86b45b4749fda6d5e811a1f9b3f55a246fa5e8dd035435e84d2149d2",
+      "git_blob_sha": "9fc9ef1bc7124fcead2d83cea20f2bff4340949c",
+      "input_for": [
+        "s1.core.research"
+      ]
+    }
+  ],
+  "proposed_bound_contains_all_six": true,
+  "mechanical_dependency_note": "The four large automation evidence/supplement files were actually read by the v4 correction preservation procedure. They remain whole inputs even though they are not independent semantic authority. Removing or splitting them would misstate the executed build.",
+  "required_owner_validation": [
+    "Review the bounded resource envelope before applying the existing patch to the capability candidate.",
+    "In remote scoped tests, capture and observe the exact six full files with matching byte length, SHA256, Git blob and native input identity. These are not output payload fragments.",
+    "Exercise limit-1, limit, limit+1 and retain unavailable rather than absent for rejected inputs. Preserve path, symlink, nonregular-file, mutation/race and identity controls.",
+    "Run affected runtime/typecheck/generation checks with exact candidate and capability scope. Reuse unaffected controls only with explicit compatibility evidence.",
+    "Publish a new immutable capability-scoped release. A changed candidate requires new preparation and same-pair native binding; prior transport hashes and controls do not supply either.",
+    "After a real prepared candidate and authorized ownership policy exist, reexecute actual publish/index/read, fresh bounded consumers, and both complete maintenance scenarios on the same isolated root."
+  ],
+  "not_authorized_by_this_proposal": [
+    "S1-03 applying S4 product or generated changes",
+    "Policy/approval creation",
+    "Dropping, splitting, normalizing or reclassifying true inputs to meet the cap",
+    "Claiming native preparation or maintenance succeeded"
+  ]
+}

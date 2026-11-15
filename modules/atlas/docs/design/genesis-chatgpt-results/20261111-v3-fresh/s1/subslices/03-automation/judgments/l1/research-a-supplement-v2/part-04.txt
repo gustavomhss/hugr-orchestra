@@ -1,0 +1,1030 @@
+130:       }))).pipe(Effect.map((shards) => shards.flat())))),
+131:     build: (shard: ResearchToolkit.Shard, input: { readonly worktree: string; readonly executable: string; readonly memoryBytes: number }) =>
+132:       Effect.gen(function* () {
+133:         const ready = yield* prepared(input.worktree)
+134:         const plan = ready.plan
+135:         const planned = plan.shards.find((entry) => entry.key === shard.id)
+136:         if (!planned) return yield* new ResearchToolkit.ShardFailed({ reason: "shard-not-at-head" })
+137:         const content = yield* extract({ root: ready.root, commit: plan.commit, shard: planned.shard, indexer: planned.indexer },
+138:           { executable: input.executable, memoryBytes: input.memoryBytes }).pipe(Effect.mapError(failed))
+139:         yield* CodeIndexStore.write(plan.dir, { shardKey: planned.key, commit: plan.commit, indexer: planned.indexer.id,
+140:           version: planned.indexer.version }, content).pipe(Effect.mapError(failed))
+141:         const present = yield* Effect.forEach(plan.shards, (entry) => CodeIndexStore.exists(plan.dir, entry.key))
+142:         const caps = yield* ResearchToolkit.Caps
+143:         yield* CodeIndexStore.retain(plan.dir, {
+144:           commit: plan.commit, at: Date.now(),
+145:           shards: plan.shards.filter((_, index) => present[index]).map((entry) => ({ id: entry.shard.id, key: entry.key })),
+146:         }, { commits: caps.indexCommits, bytes: caps.indexBytes })
+147:       }).pipe(Effect.provideService(AppProcess.Service, proc)),
+148:   }
+149: })
+```
+
+Linhas 181–225.
+
+```text
+181: const scip = Effect.fn("CodeIndexExtract.scip")(function* (
+182:   input: Parameters<CodeIndexBuild.Extract>[0],
+183:   launch: { readonly executable: string; readonly memoryBytes: number } | undefined,
+184:   // The shard's source text by repository-relative path, for dumps whose columns are not UTF-16.
+185:   texts: ReadonlyMap<string, string>,
+186: ) {
+187:   const proc = yield* AppProcess.Service
+188:   const caps = yield* ResearchToolkit.Caps
+189:   const engine = IDS.find((id) => id === input.indexer.id)
+190:   if (!engine) return yield* new Research.Error({ code: "index_unavailable", message: `toolkit-not-ready:unsupported:${input.indexer.id}:pack-not-shipped` })
+191:   // The toolkit's warm-up has already ensured the pack and names the cap; a query-started build ensures it here.
+192:   const ready = launch ?? (yield* ResearchToolkit.ensure(engine).pipe(
+193:     Effect.map((ensured) => ({ executable: ensured.executable, memoryBytes: caps.indexerBytes })),
+194:     Effect.mapError((error) => new Research.Error({ code: "index_unavailable", message: error.reason }))))
+195:   const failed = (message: string) => new Research.Error({ code: "index_unavailable", message: `${engine}: ${message}` })
+196:   return yield* Effect.gen(function* () {
+197:     // The dump lives outside the worktree (JI-1); confine grants writes only to it and the run's own scratch.
+198:     const directory = yield* Effect.acquireRelease(
+199:       Effect.promise(() => mkdtemp(path.join(os.tmpdir(), "orchestra-scip-"))),
+200:       (directory) => Effect.promise(() => rm(directory, { recursive: true, force: true })),
+201:     )
+202:     const output = path.join(directory, "index.scip")
+203:     yield* Effect.promise(() => writeFile(output, ""))
+204:     const launch = yield* ToolSafetySandbox.confine({
+205:       command: ready.executable, cwd: directory, write: [output],
+206:       args: input.shard.language === "py" ? CodeIndexPython.args({ project: input.shard.project, output })
+207:         : input.shard.language === "go" ? CodeIndexGo.args(output)
+208:         : input.shard.language === "rust" ? CodeIndexRust.args(output)
+209:         : ["index", "--output", output],
+210:       env: { ...process.env, ...(input.shard.language === "go" ? CodeIndexGo.ENV : input.shard.language === "rust" ? CodeIndexRust.ENV : {}) },
+211:     }).pipe(Effect.mapError((denied) => failed(`sandbox ${denied.reason}`)))
+212:     const result = yield* proc.run(
+213:       ChildProcess.make(launch.command, launch.args, {
+214:         cwd: path.join(input.root, input.shard.project), env: launch.env, extendEnv: false, stdin: "ignore",
+215:       }),
+216:       { timeout: caps.shardTimeoutMs, maxRssBytes: ready.memoryBytes, maxOutputBytes: 64 * 1024, maxErrorBytes: 64 * 1024 },
+217:     ).pipe(Effect.mapError((cause) => failed(cause.message)))
+218:     if (result.exitCode !== 0)
+219:       return yield* failed(`exit ${result.exitCode}: ${(result.stderr.toString("utf8") || result.stdout.toString("utf8")).trim().slice(0, 500)}`)
+220:     // The temp dump is deleted when this scope closes and its path never recurs, so its decode must not outlive it.
+221:     return yield* Effect.try({
+222:       try: () => Scip.readScip(output, { prefix: input.shard.project === "." ? "" : input.shard.project, source: (file) => texts.get(file) }),
+223:       catch: (cause) => failed(`dump unreadable: ${String(cause)}`),
+224:     }).pipe(Effect.ensuring(Effect.sync(() => Scip.forgetScip(output))))
+225:   }).pipe(Effect.scoped)
+```
+
+## RE-A5
+
+### RA5-01 — Filtro, bytes, parse parcial, exports e imports
+
+**RA-S059 — `packages/core/src/research-toolkit/code-index/filter.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `55fff12895cfcd287ebcf6e78a3b60933726ae98` · SHA-256 `4f64a348c5e6e2343c3451de78f32f832579576183eeba21a40c7051989cdf0a` · 3739 bytes.
+
+Linhas 10–36.
+
+```text
+10: const GRAMMARS: Record<string, Grammar> = {
+11:   ".ts": "typescript",
+12:   ".mts": "typescript",
+13:   ".cts": "typescript",
+14:   ".tsx": "tsx",
+15:   ".js": "tsx",
+16:   ".jsx": "tsx",
+17:   ".mjs": "tsx",
+18:   ".cjs": "tsx",
+19:   ".py": "python",
+20:   ".pyi": "python",
+21:   ".go": "go",
+22:   ".rs": "rust",
+23: }
+24: 
+25: export const SKIP_SEGMENTS = new Set([
+26:   "node_modules", ".git", "vendor", "third_party", "third-party", "legacy", ".venv", "venv", ".tox", "build",
+27:   "coverage", ".next", "out", ".cache", "__pycache__", ".pytest_cache", ".mypy_cache", ".gradle", "captured",
+28:   "snapshots", "__snapshots__", "testdata", "test-data", "golden",
+29: ])
+30: export const LOCKFILE_BASENAMES = new Set(["package-lock.json", "yarn.lock", "pnpm-lock.yaml", "Cargo.lock", "poetry.lock", "Gemfile.lock", "composer.lock", "bun.lock", "bun.lockb"])
+31: export const GENERATED_SUFFIXES = [".min.js", ".min.css", ".map", ".d.ts", ".d.mts", ".d.cts", ".generated.ts", ".generated.js", "_pb2.py", ".pb.go"] as const
+32: export const BINARY_EXTENSIONS = new Set([
+33:   ".png", ".jpg", ".jpeg", ".gif", ".svg", ".ico", ".webp", ".pdf", ".zip", ".tar", ".gz", ".tgz", ".bz2", ".woff",
+34:   ".woff2", ".ttf", ".eot", ".otf", ".mp4", ".mov", ".avi", ".mp3", ".wav", ".wasm", ".so", ".dylib", ".dll", ".exe",
+35:   ".bin", ".parquet", ".sqlite", ".db", ".csv", ".tsv", ".lock",
+36: ])
+```
+
+Linhas 52–79.
+
+```text
+52: export function select(paths: Iterable<string>, grammars: ReadonlySet<Grammar> = new Set(Object.values(GRAMMARS))) {
+53:   const files: Array<{ path: string; grammar: Grammar }> = []
+54:   const skipped: Array<{ path: string; reason: string }> = []
+55:   for (const path of paths) {
+56:     const kind = grammar(path)
+57:     if (!kind || !grammars.has(kind)) continue
+58:     const reason = skip(path)
+59:     if (reason) skipped.push({ path, reason })
+60:     if (!reason) files.push({ path, grammar: kind })
+61:   }
+62:   return { files, skipped }
+63: }
+64: 
+65: /** True when `path` (POSIX, repository-relative) is worth reading: not generated, vendored, a lockfile or binary. */
+66: export function shouldRead(path: string) {
+67:   return skip(path) === undefined
+68: }
+69: 
+70: function skip(path: string) {
+71:   const segments = path.split("/")
+72:   const base = segments.at(-1) ?? ""
+73:   if (segments.some((segment) => SKIP_SEGMENTS.has(segment))) return "vendored-or-build"
+74:   if (segments.some(isGeneratedSegment) || GENERATED_SUFFIXES.some((suffix) => base.endsWith(suffix))) return "generated"
+75:   if (LOCKFILE_BASENAMES.has(base)) return "lockfile"
+76:   const dot = base.lastIndexOf(".")
+77:   if (dot !== -1 && BINARY_EXTENSIONS.has(base.slice(dot).toLowerCase())) return "binary"
+78:   return undefined
+79: }
+```
+
+**RA-S060 — `packages/core/src/research-toolkit/code-index/tree-sitter.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `b470c5e20ba95693296a1ac4d2520ac4bc1a10d5` · SHA-256 `b0e13b1436402cd34060218f8845de757486769df22824a357bbc05dfc39d8e2` · 16595 bytes.
+
+Linhas 19–19.
+
+```text
+19: export const MAX_BYTES = 2 * 1024 * 1024
+```
+
+Linhas 54–79.
+
+```text
+54: export const extract = Effect.fn("CodeIndexTreeSitter.extract")(function* (path: string, source: string, grammar: Grammar) {
+55:   const lines = source.length === 0 ? 0 : source.split("\n").length - (source.endsWith("\n") ? 1 : 0)
+56:   if (Buffer.byteLength(source) > MAX_BYTES)
+57:     return { path, lines, definitions: [], imports: [], coverage: { complete: false, reason: "too-large" } } satisfies Extract
+58:   // The wasm runtime and grammar load are the genuinely fallible boundary; the pipeline survives them with a reason.
+59:   const loaded = yield* Effect.promise(() => grammars().then(
+60:     (value) => ({ value }),
+61:     (cause: unknown) => ({ detail: cause instanceof Error ? cause.message : String(cause) }),
+62:   ))
+63:   if (!("value" in loaded))
+64:     return { path, lines, definitions: [], imports: [], coverage: { complete: false, reason: "parser-unavailable", detail: loaded.detail } } satisfies Extract
+65:   const entry = loaded.value[grammar]
+66:   const tree = entry.parser.parse(source)
+67:   if (!tree) return { path, lines, definitions: [], imports: [], coverage: { complete: false, reason: "partial-parse" } } satisfies Extract
+68:   const result = {
+69:     path,
+70:     lines,
+71:     definitions: definitions(entry.tags, tree.rootNode, grammar),
+72:     imports: entry.calls ? scriptImports(entry.calls, tree.rootNode)
+73:       : grammar === "go" ? CodeIndexGo.imports(tree.rootNode)
+74:       : grammar === "rust" ? CodeIndexRust.imports(tree.rootNode)
+75:       : pythonImports(tree.rootNode),
+76:     coverage: tree.rootNode.hasError ? { complete: false, reason: "partial-parse" } : { complete: true },
+77:   } satisfies Extract
+78:   tree.delete()
+79:   return result
+```
+
+Linhas 120–153.
+
+```text
+120: function definitions(query: Query, root: Node, grammar: Grammar) {
+121:   const found = new Map<number, { node: Node; name: Node; kind: string }>()
+122:   query.matches(root).forEach((match) => {
+123:     const definition = match.captures.find((capture) => capture.name.startsWith("definition."))
+124:     const name = match.captures.find((capture) => capture.name === "name")
+125:     if (!definition || !name) return
+126:     const captured = definition.name.slice("definition.".length)
+127:     const kind = grammar === "rust" ? CodeIndexRust.kind(definition.node, captured) : captured
+128:     // Upstream and EXTRA can both match one declarator; the upstream kind (function) wins over constant.
+129:     if (found.has(definition.node.id) && kind === "constant") return
+130:     if (kind === "constant" && (grammar === "typescript" || grammar === "tsx") && !constantInScope(definition.node)) return
+131:     found.set(definition.node.id, { node: definition.node, name: name.node, kind: kind === "constant" ? declarationKind(definition.node) : kind })
+132:   })
+133:   const ordered = [...found.values()].toSorted((a, b) => a.node.startIndex - b.node.startIndex || b.node.endIndex - a.node.endIndex)
+134:   const index = new Map(ordered.map((item, position) => [item.node.id, position]))
+135:   const result: Definition[] = []
+136:   ordered.forEach((item) => {
+137:     const container = enclosing(item.node, index)
+138:     const parent = container === undefined ? undefined : result[container]
+139:     const range = span(item.node)
+140:     result.push({
+141:       name: item.name.text,
+142:       qualified: parent ? `${parent.qualified}.${item.name.text}` : item.name.text,
+143:       kind: parent && ["class", "interface"].includes(parent.kind) && item.kind === "function" ? "method" : item.kind,
+144:       startLine: range.start,
+145:       endLine: range.end,
+146:       nameLine: item.name.startPosition.row + 1,
+147:       exported: exported(item.node, item.name.text, parent, root, grammar),
+148:       ...(container === undefined ? {} : { container }),
+149:     })
+150:   })
+151:   return result
+152: }
+153: 
+```
+
+Linhas 163–196.
+
+```text
+163: function constantInScope(declarator: Node) {
+164:   const value = declarator.childForFieldName("value")?.type
+165:   if (value === "arrow_function" || value === "function_expression") return true
+166:   const declaration = declarator.parent
+167:   const scope = declaration?.parent
+168:   if (!scope || !SCOPES.has(scope.type)) return false
+169:   return scope.type !== "statement_block" || scope.parent?.type === "internal_module"
+170: }
+171: 
+172: function declarationKind(declarator: Node) {
+173:   if (declarator.type !== "variable_declarator") return "constant"
+174:   const keyword = declarator.parent?.child(0)?.text
+175:   return keyword === "let" || keyword === "var" ? "variable" : "const"
+176: }
+177: 
+178: // Ranges are 1-based and closed. A decorated or exported declaration starts at its wrapper; an end at column 0
+179: // belongs to the previous line.
+180: function span(node: Node) {
+181:   const declarator = node.type === "variable_declarator" ? (node.parent ?? node) : node
+182:   const outer = ["export_statement", "decorated_definition"].includes(declarator.parent?.type ?? "") ? declarator.parent! : declarator
+183:   const end = outer.endPosition.column === 0 && outer.endPosition.row > outer.startPosition.row ? outer.endPosition.row : outer.endPosition.row + 1
+184:   return { start: outer.startPosition.row + 1, end }
+185: }
+186: 
+187: function exported(node: Node, name: string, parent: Definition | undefined, root: Node, grammar: Grammar) {
+188:   if (grammar === "python") return !name.startsWith("_") && (!parent || (parent.exported && parent.kind === "class"))
+189:   if (grammar === "go") return CodeIndexGo.exported(name, parent)
+190:   if (grammar === "rust") return CodeIndexRust.exported(node, parent)
+191:   if (parent) return parent.exported && !name.startsWith("#") && !node.text.startsWith("private ") && ["class", "interface", "namespace", "module"].includes(parent.kind)
+192:   const declaration = node.type === "variable_declarator" ? node.parent : node
+193:   if (declaration?.parent?.type === "export_statement") return true
+194:   return localExports(root).has(name)
+195: }
+196: 
+```
+
+Linhas 210–267.
+
+```text
+210: function scriptImports(calls: Query, root: Node) {
+211:   const statements = root.namedChildren.flatMap((node): Import[] => {
+212:     if (node?.type !== "import_statement" && node?.type !== "export_statement") return []
+213:     const source = node.childForFieldName("source") ?? node.namedChildren.find((child) => child?.type === "string")
+214:     if (!source) return []
+215:     const form = node.type === "import_statement" ? "static" : "reexport"
+216:     return [{ specifier: stripQuotes(source.text), line: node.startPosition.row + 1, form, names: importNames(node) }]
+217:   })
+218:   const dynamic = calls.matches(root).flatMap((match): Import[] => {
+219:     const specifier = match.captures.find((capture) => capture.name === "specifier")
+220:     const call = match.captures.find((capture) => capture.name === "dynamic" || capture.name === "require")
+221:     if (!specifier || !call) return []
+222:     return [{ specifier: specifier.node.text, line: call.node.startPosition.row + 1, form: call.name as "dynamic" | "require", names: [] }]
+223:   })
+224:   return [...statements, ...dynamic].toSorted((a, b) => a.line - b.line)
+225: }
+226: 
+227: // Default, namespace and named bindings of an import clause; for `export ... from`, the exported names.
+228: function importNames(node: Node) {
+229:   const clause = node.namedChildren.find((child) => child?.type === "import_clause" || child?.type === "export_clause" || child?.type === "namespace_export")
+230:   if (!clause) return []
+231:   if (clause.type === "namespace_export") return clause.namedChildren.flatMap((child) => (child?.type === "identifier" ? [child.text] : []))
+232:   return clause.namedChildren.flatMap((child) => {
+233:     if (!child) return []
+234:     if (child.type === "identifier") return [child.text]
+235:     if (child.type === "namespace_import") return child.namedChildren.flatMap((id) => (id?.type === "identifier" ? [id.text] : []))
+236:     if (child.type === "export_specifier") return child.childForFieldName("name")?.text ?? []
+237:     return child.namedChildren.flatMap((spec) => (spec?.type === "import_specifier" ? (spec.childForFieldName("name")?.text ?? []) : []))
+238:   })
+239: }
+240: 
+241: function stripQuotes(text: string) {
+242:   return text.replace(/^['"`]|['"`]$/g, "")
+243: }
+244: 
+245: function pythonImports(root: Node) {
+246:   return root.namedChildren.flatMap((node): Import[] => {
+247:     if (!node) return []
+248:     const line = node.startPosition.row + 1
+249:     if (node.type === "import_from_statement") {
+250:       const module = node.childForFieldName("module_name")
+251:       const names = node.namedChildren.flatMap((child) => {
+252:         if (!child || child.id === module?.id) return []
+253:         if (child.type === "aliased_import") return child.childForFieldName("name")?.text ?? []
+254:         return child.type === "dotted_name" || child.type === "identifier" ? [child.text] : []
+255:       })
+256:       return module ? [{ specifier: module.text, line, form: "static", names }] : []
+257:     }
+258:     if (node.type !== "import_statement") return []
+259:     // `import a, b.c as d`: one import per module, with no names.
+260:     return node.namedChildren.flatMap((child) => {
+261:       if (!child) return []
+262:       const module = child.type === "aliased_import" ? child.childForFieldName("name") : child.type === "dotted_name" ? child : undefined
+263:       return module ? [{ specifier: module.text, line, form: "static" as const, names: [] }] : []
+264:     })
+265:   })
+266: }
+267: 
+```
+
+### RA5-02 — SCIP: defaults/UTF-16/span e memo global de duas entradas
+
+**RA-S061 — `packages/core/src/research-toolkit/code-index/scip.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `2e8f9fa18bf6661bc7510dae3106010ef0babf81` · SHA-256 `fa1f6dee8938ca64e416758acedf759e44904e1a8d6a44c0778ae610ee9f9947` · 10599 bytes.
+
+Linhas 12–26.
+
+```text
+12: // T-X1: the SCIP reader, transplanted from Atlas `adapter-io/src/scip.ts:95-160`. Atlas projects a dump down to
+13: // (symbol, definition|reference); the index needs ranges, roles, enclosing ranges and relationships, so this
+14: // projection keeps them. Every range is converted once, here, from SCIP's 0-based half-open form to the index's
+15: // 1-based closed lines and columns (UTF-16 units, the encoding scip-typescript declares).
+16: //
+17: // A document's `position_encoding` says how its columns count: UTF-8 bytes, UTF-16 or UTF-32 units. When it is unset
+18: // the indexer's own convention applies (DEFAULT_ENCODING). Columns in another encoding are converted to UTF-16 against
+19: // the line's text: the dump's own `text`, else the source the caller passes. Without either they stay as emitted.
+20: 
+21: /** Per indexer, the column encoding it uses without declaring one; any other indexer counts UTF-16 units. */
+22: const DEFAULT_ENCODING: Readonly<Record<string, PositionEncoding>> = {
+23:   // go/token columns are byte offsets.
+24:   "scip-go": PositionEncoding.UTF8CodeUnitOffsetFromLineStart,
+25:   "rust-analyzer": PositionEncoding.UTF8CodeUnitOffsetFromLineStart,
+26: }
+```
+
+Linhas 69–110.
+
+```text
+69: /**
+70:  * The raw decode, memoized per (path, mtime, size). `statSync` runs on every call and a changed mtime or size
+71:  * forces a fresh decode. What the key cannot see: a rewrite on the same mtime tick with the same byte length
+72:  * serves the old decode, because (mtime, size) is a proxy for content. Atlas reproduced that collision with
+73:  * `utimesSync`. Shard dumps here are written once under a content key (J2.2) and never rewritten in place, so the
+74:  * collision needs a caller that rewrites a dump in place mid-process; such a caller must hash the bytes or bypass
+75:  * the memo. A throw (missing, not a regular file, corrupt protobuf) is never cached.
+76:  *
+77:  * The regular-file check is the guard: `readFileSync` on a character device such as `/dev/zero` never returns, and
+78:  * no `catch` can see a read that does not return. A symlink to a real dump stays supported, since `statSync`
+79:  * follows links; a device, FIFO, socket or directory target is refused before any byte is read.
+80:  */
+81: const memo = new Map<string, { readonly mtimeMs: number; readonly size: number; readonly raw: ReturnType<typeof decode> }>()
+82: 
+83: /**
+84:  * The memo serves back-to-back reads of one dump (`readScip` then `readScipIndexerName`), not a history. A decode holds
+85:  * the whole dump as JS objects, hundreds of MB for a large repository, and the indexer writes each shard run to a
+86:  * fresh temp path that is deleted afterwards and never read again, so a memo that kept every key grew by one dead
+87:  * decode per shard run for the life of the server. It keeps the most recently used entries only, and a caller
+88:  * that knows a dump is single-use drops it with `forgetScip`.
+89:  */
+90: export const MEMO_LIMIT = 2
+91: 
+92: export function forgetScip(file: string) {
+93:   memo.delete(file)
+94: }
+95: 
+96: export function decodeScipCached(file: string) {
+97:   const stat = statSync(file)
+98:   if (!stat.isFile()) throw new Error(`scip: '${file}' is not a regular file, so it is not an indexer dump`)
+99:   const cached = memo.get(file)
+100:   if (cached && cached.mtimeMs === stat.mtimeMs && cached.size === stat.size) {
+101:     // Map keeps insertion order: re-insert so the entry evicted below is the least recently used.
+102:     memo.delete(file)
+103:     memo.set(file, cached)
+104:     return cached.raw
+105:   }
+106:   const raw = decode(readFileSync(file))
+107:   memo.delete(file)
+108:   memo.set(file, { mtimeMs: stat.mtimeMs, size: stat.size, raw })
+109:   while (memo.size > MEMO_LIMIT) memo.delete(memo.keys().next().value!)
+110:   return raw
+```
+
+Linhas 117–133.
+
+```text
+117: export function readScip(
+118:   file: string,
+119:   options?: { readonly prefix?: string; readonly source?: (path: string) => string | undefined },
+120: ): Index {
+121:   const raw = decodeScipCached(file)
+122:   const prefix = options?.prefix ?? ""
+123:   const tool = raw.metadata?.toolInfo
+124:   const documents = raw.documents.map((doc) => {
+125:     const relative = path.posix.join(prefix, doc.relativePath.replaceAll("\\", "/"))
+126:     const encoding = doc.positionEncoding || DEFAULT_ENCODING[tool?.name ?? ""] || PositionEncoding.UTF16CodeUnitOffsetFromLineStart
+127:     const text = encoding === PositionEncoding.UTF16CodeUnitOffsetFromLineStart ? undefined : doc.text || options?.source?.(relative)
+128:     const convert = text === undefined ? (range: ReadonlyArray<number>) => range : utf16(text.split("\n"), encoding)
+129:     const occurrences = doc.occurrences.flatMap((occ) => {
+130:       const range = span(convert(occ.range))
+131:       if (!range) return []
+132:       const enclosingRange = span(convert(occ.enclosingRange))
+133:       return [{ ...range, symbol: occ.symbol, role: role(occ.symbolRoles), ...(enclosingRange ? { enclosingRange } : {}) }]
+```
+
+Linhas 153–162.
+
+```text
+153:   return {
+154:     indexer: tool ? { name: tool.name, version: tool.version } : undefined,
+155:     documents,
+156:     malformed: raw.documents.reduce((sum, doc) => sum + doc.occurrences.filter((occ) => !span(occ.range)).length, 0),
+157:   }
+158: }
+159: 
+160: /** `readScip`, degrading to an empty index when the dump is missing, not a regular file, or corrupt. */
+161: export function readScipOrEmpty(file: string, options?: { readonly prefix?: string }): Index {
+162:   try {
+```
+
+Linhas 199–224.
+
+```text
+199: // A range's columns re-counted in UTF-16 units of their line. An ASCII line, or a line the text does not have, keeps
+200: // its columns: they are the same in every encoding there, or cannot be checked.
+201: function utf16(lines: ReadonlyArray<string>, encoding: PositionEncoding) {
+202:   const column = (line: number, offset: number) => {
+203:     const text = lines[line]
+204:     if (text === undefined || !/[^\x00-\x7f]/.test(text)) return offset
+205:     if (encoding === PositionEncoding.UTF32CodeUnitOffsetFromLineStart) return [...text].slice(0, offset).join("").length
+206:     return Buffer.from(text, "utf8").subarray(0, offset).toString("utf8").length
+207:   }
+208:   return (range: ReadonlyArray<number>) => {
+209:     if (range.length === 3) return [range[0], column(range[0], range[1]), column(range[0], range[2])]
+210:     if (range.length === 4) return [range[0], column(range[0], range[1]), range[2], column(range[2], range[3])]
+211:     return range
+212:   }
+213: }
+214: 
+215: function span(range: ReadonlyArray<number>): Span | undefined {
+216:   if (range.length === 3) return { startLine: range[0] + 1, startCol: range[1] + 1, endLine: range[0] + 1, endCol: range[2] }
+217:   if (range.length === 4) return { startLine: range[0] + 1, startCol: range[1] + 1, endLine: range[2] + 1, endCol: range[3] }
+218:   return undefined
+219: }
+220: 
+221: function role(bits: number) {
+222:   if (bits & SymbolRole.Definition) return Role.definition
+223:   return Role.reference | (bits & SymbolRole.Import ? Role.import : 0) | (bits & SymbolRole.WriteAccess ? Role.write : 0)
+224: }
+```
+
+### RA5-03 — enclosing e callers: associação, canonicalização e resolução
+
+**RA-S062 — `packages/core/src/research-toolkit/code-index/enclosing.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `bc64ec6b4850f673d603aa76096d328300c692ad` · SHA-256 `5abb45da734f51ab5446e6bbe34868e890d65fa9bde57e6e9a40251386379cd6` · 4930 bytes.
+
+Linhas 31–79.
+
+```text
+31: export function join(doc: Scip.Document, structural: Structural = {}): Document {
+32:   const definitions = definitionsOf(doc, structural.definitions ?? [])
+33:   const imports = structural.imports ?? []
+34:   const occurrences = doc.occurrences.map((occ) =>
+35:     occ.role & Role.definition || !imports.some((stmt) => occ.startLine >= stmt.startLine && occ.startLine <= stmt.endLine)
+36:       ? occ
+37:       : { ...occ, role: occ.role | Role.import },
+38:   )
+39:   // A sweep in position order. Definitions open at their start and stay active until their end; the innermost
+40:   // active one is the latest-starting. Ranges from two layers need not nest perfectly, so the active set is
+41:   // filtered rather than treated as a stack. Ties on the start put the wider range first.
+42:   const opening = definitions.toSorted((a, b) => compare(start(a.range), start(b.range)) || compare(end(b.range), end(a.range)))
+43:   const order = occurrences.map((_, i) => i).toSorted((a, b) => compare(start(occurrences[a]), start(occurrences[b])))
+44:   const enclosing = new Array<string | undefined>(occurrences.length)
+45:   let cursor = 0
+46:   let active: Definition[] = []
+47:   for (const i of order) {
+48:     const occ = occurrences[i]
+49:     const at = start(occ)
+50:     while (cursor < opening.length && compare(start(opening[cursor].range), at) <= 0) active.push(opening[cursor++])
+51:     active = active.filter((def) => compare(end(def.range), at) >= 0)
+52:     // A definition never encloses its own definition occurrence; its container does, and a container must hold the
+53:     // whole declaration. Without that, a zero-width file module definition at 1:1 would sit inside its first child.
+54:     const own = occ.role & Role.definition
+55:     const until = end(own ? (occ.enclosingRange ?? occ) : occ)
+56:     enclosing[i] = active.findLast((def) => !(own && def.symbol === occ.symbol) && compare(end(def.range), until) >= 0)?.symbol
+57:   }
+58:   return { ...doc, occurrences, enclosing, definitions }
+59: }
+60: 
+61: function definitionsOf(doc: Scip.Document, structural: NonNullable<Structural["definitions"]>) {
+62:   const byLine = Map.groupBy(structural, (def) => def.nameLine)
+63:   const seen = new Set<string>()
+64:   return doc.occurrences.flatMap((occ): Definition[] => {
+65:     if (!(occ.role & Role.definition) || seen.has(occ.symbol)) return []
+66:     if (occ.enclosingRange) {
+67:       seen.add(occ.symbol)
+68:       return [{ symbol: occ.symbol, range: occ.enclosingRange, source: "scip" }]
+69:     }
+70:     const name = Scip.descriptorName(occ.symbol)
+71:     const match = name === undefined ? undefined : byLine.get(occ.startLine)?.find((def) => def.name === name)
+72:     if (!match) return []
+73:     seen.add(occ.symbol)
+74:     return [{
+75:       symbol: occ.symbol,
+76:       range: { startLine: match.startLine, startCol: 1, endLine: match.endLine, endCol: Number.MAX_SAFE_INTEGER },
+77:       source: "tree-sitter",
+78:     }]
+79:   })
+```
+
+**RA-S063 — `packages/core/src/research-toolkit/code-index/callers.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `dbfb863c0f57df3b85f33456188a1532e9cffe6c` · SHA-256 `c5f23cb31a51945af79347ffe03db97c1ff7f184abc22d99c13c852bb48ed39c` · 6727 bytes.
+
+Linhas 13–25.
+
+```text
+13: export const SUPPORTED_INDEXER = "scip-typescript"
+14: 
+15: export type Site = { readonly path: string; readonly line: number }
+16: 
+17: export type Resolution =
+18:   /** An in-index definition, directly or after canonicalization; `symbol` is the defined (source) form. */
+19:   | { readonly kind: "resolved"; readonly symbol: string }
+20:   /** A document-scoped local with a local definition in the same document. */
+21:   | { readonly kind: "local" }
+22:   /** A local with no local definition in its document: a cross-package reference the indexer collapsed. */
+23:   | { readonly kind: "opaque" }
+24:   /** A global symbol with no in-index definition, such as a library outside every shard. */
+25:   | { readonly kind: "unresolved" }
+```
+
+Linhas 38–125.
+
+```text
+38:  * flattens declarations could land on a wrong source symbol that still exists. Orchestra packages export `src/*.ts`
+39:  * directly, so the rewrite is a fallback here, not the main path.
+40:  */
+41: export function canonicalizeSymbol(symbol: string) {
+42:   return symbol.replace(/ dist\/(?:src\/)?((?:[^`]*\/)?`[^`]+)\.d\.ts`/, " src/$1.ts`")
+43: }
+44: 
+45: /**
+46:  * Builds the reverse view over every document of the shards in scope; a reference resolves against definitions in
+47:  * any of them, which is how a call from one workspace package reaches a definition in another.
+48:  */
+49: export function create(docs: ReadonlyArray<Enclosing.Document>, options?: { readonly indexerName?: string }) {
+50:   // The collapsed-local heuristic is trusted only for the proven indexer; otherwise every local is plain local.
+51:   const trustCollapsedLocal = options?.indexerName === SUPPORTED_INDEXER
+52:   const defs = new Map<string, Site>()
+53:   docs.forEach((doc) =>
+54:     doc.occurrences.forEach((occ) => {
+55:       if (occ.role & Role.definition && !Scip.isLocalSymbol(occ.symbol) && !defs.has(occ.symbol))
+56:         defs.set(occ.symbol, { path: doc.path, line: occ.startLine })
+57:     }),
+58:   )
+59: 
+60:   const resolutions = new Map<Scip.Occurrence, Resolution>()
+61:   const groups = new Map<string, Map<string, Group>>()
+62:   const holes: Site[] = []
+63:   const opaque: Site[] = []
+64:   docs.forEach((doc) => {
+65:     const ranges = new Map(doc.definitions.map((def) => [def.symbol, def.range]))
+66:     // `local N` means nothing across documents, so a local definition vouches only for its own document.
+67:     const localDefs = new Set(
+68:       doc.occurrences.filter((occ) => occ.role & Role.definition && Scip.isLocalSymbol(occ.symbol)).map((occ) => occ.symbol),
+69:     )
+70:     doc.occurrences.forEach((occ, i) => {
+71:       if (occ.role & Role.definition) return
+72:       const resolution = resolve(occ.symbol)
+73:       resolutions.set(occ, resolution)
+74:       const site = { path: doc.path, line: occ.startLine }
+75:       if (resolution.kind === "opaque") opaque.push(site)
+76:       if (resolution.kind === "unresolved") holes.push(site)
+77:       // An import names a symbol without calling it; it stays a resolved reference but joins no caller group.
+78:       if (resolution.kind !== "resolved" || occ.role & Role.import) return
+79:       const enclosing = doc.enclosing[i]
+80:       const bucket = groups.get(resolution.symbol) ?? new Map<string, Group>()
+81:       groups.set(resolution.symbol, bucket)
+82:       const key = `${doc.path}\0${enclosing ?? ""}`
+83:       const group = bucket.get(key) ?? { path: doc.path, enclosing, range: enclosing ? ranges.get(enclosing) : undefined, sites: new Set<number>() }
+84:       bucket.set(key, group)
+85:       group.sites.add(occ.startLine)
+86:     })
+87: 
+88:     function resolve(symbol: string): Resolution {
+89:       if (Scip.isLocalSymbol(symbol))
+90:         return trustCollapsedLocal && !localDefs.has(symbol) ? { kind: "opaque" } : { kind: "local" }
+91:       if (defs.has(symbol)) return { kind: "resolved", symbol }
+92:       const canonical = canonicalizeSymbol(symbol)
+93:       if (defs.has(canonical)) return { kind: "resolved", symbol: canonical }
+94:       return { kind: "unresolved" }
+95:     }
+96:   })
+97: 
+98:   return {
+99:     /** References grouped by enclosing definition, sorted by path and start line; `[]` for a phantom or a local. */
+100:     callers(symbol: string): ReadonlyArray<Caller> {
+101:       return [...(groups.get(symbol)?.values() ?? [])]
+102:         .map((group) => ({ ...group, sites: [...group.sites].toSorted((a, b) => a - b) }))
+103:         .toSorted((a, b) => byPath(a.path, b.path) || (a.range?.startLine ?? 0) - (b.range?.startLine ?? 0) || a.sites[0] - b.sites[0])
+104:     },
+105:     /** Whether the symbol has an in-index definition; separates "defined but uncalled" from "cannot see it". */
+106:     resolves(symbol: string) {
+107:       return !Scip.isLocalSymbol(symbol) && defs.has(symbol)
+108:     },
+109:     /** The first definition site of a global symbol. */
+110:     definesAt(symbol: string) {
+111:       return Scip.isLocalSymbol(symbol) ? undefined : defs.get(symbol)
+112:     },
+113:     /** How a reference occurrence resolved; undefined for a definition occurrence or one from another view. */
+114:     resolution(occ: Scip.Occurrence) {
+115:       return resolutions.get(occ)
+116:     },
+117:     /** Sites of references to global symbols no shard defines. */
+118:     holes: () => sorted(holes),
+119:     /** Sites of collapsed local references: `coverage.opaqueSites` and `occurrence.opaque`. */
+120:     opaque: () => sorted(opaque),
+121:   }
+122: }
+123: 
+124: type Group = { path: string; enclosing: string | undefined; range: Scip.Span | undefined; sites: Set<number> }
+125: 
+```
+
+### RA5-04 — Adapters Go, Python e Rust
+
+**RA-S064 — `packages/core/src/research-toolkit/code-index/go.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `cd3dd8cc3bf0af5848bb10a303e01ce41ad42eda` · SHA-256 `caec6569041361ba4ab456923846ddccc104006086b8c6a1901296b0a6aa45b9` · 3561 bytes.
+
+Linhas 15–63.
+
+```text
+15: export const TOOLCHAIN = "go"
+16: 
+17: export const ENV = { GOPROXY: "off", GOTOOLCHAIN: "local" }
+18: 
+19: /** Arguments after the executable; the run's cwd is the module root. */
+20: export function args(output: string) {
+21:   return ["index", "--quiet", "--module-root", ".", "--module-version", "0", "--output", output]
+22: }
+23: 
+24: /** An identifier is exported when it starts with an upper-case letter; a member also needs its type exported. */
+25: export function exported(name: string, parent?: CodeIndexTreeSitter.Definition) {
+26:   return /^\p{Lu}/u.test(name) && (!parent || parent.exported)
+27: }
+28: 
+29: /** Every `import` spec, with its alias as the bound name; `_` and `.` bind none. */
+30: export function imports(root: Node) {
+31:   return root.namedChildren.flatMap((node): CodeIndexTreeSitter.Import[] => node?.type !== "import_declaration" ? [] :
+32:     node.descendantsOfType("import_spec").flatMap((spec): CodeIndexTreeSitter.Import[] => {
+33:       const target = spec?.childForFieldName("path")
+34:       if (!spec || !target) return []
+35:       const alias = spec.childForFieldName("name")?.text
+36:       return [{ specifier: target.text.slice(1, -1), line: spec.startPosition.row + 1, form: "static",
+37:         names: alias && alias !== "_" && alias !== "." ? [alias] : [] }]
+38:     }))
+39: }
+40: 
+41: /**
+42:  * An import path under the importing file's own module (the nearest go.mod's `module` line) resolves to the package
+43:  * directory's first non-test source file; any other path is a package outside the repository.
+44:  */
+45: export function resolver(root: string) {
+46:   const modules = new Map<string, { readonly dir: string; readonly path: string } | undefined>()
+47:   const owner = (dir: string): { readonly dir: string; readonly path: string } | undefined => {
+48:     if (modules.has(dir)) return modules.get(dir)
+49:     const file = path.join(dir, "go.mod")
+50:     const declared = existsSync(file) ? readFileSync(file, "utf8").match(/^module\s+"?([^\s"]+)"?/m)?.[1] : undefined
+51:     const parent = path.dirname(dir)
+52:     const found = declared ? { dir, path: declared } : dir === root || parent === dir ? undefined : owner(parent)
+53:     modules.set(dir, found)
+54:     return found
+55:   }
+56:   return (from: string, specifier: string): CodeIndexResolve.Resolution => {
+57:     const module = owner(path.dirname(path.join(root, from)))
+58:     if (!module || (specifier !== module.path && !specifier.startsWith(`${module.path}/`))) return { kind: "package" }
+59:     const dir = path.join(module.dir, specifier.slice(module.path.length))
+60:     const file = (existsSync(dir) ? readdirSync(dir) : []).filter((name) => name.endsWith(".go") && !name.endsWith("_test.go")).toSorted()[0]
+61:     return file ? { kind: "alias", to: path.relative(root, path.join(dir, file)).replaceAll("\\", "/") } : { kind: "unresolved" }
+62:   }
+63: }
+```
+
+**RA-S065 — `packages/core/src/research-toolkit/code-index/python.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `bd6f5a72c2d9a5682abdd1db06233e4085b174fd` · SHA-256 `6388a271df4127e60855282f05052cc12c54ba8f86e039fe2f369a83a6aec48b` · 1186 bytes.
+
+Linhas 4–22.
+
+```text
+4: // same `--output` as scip-typescript, but names the project and version in every symbol. The version is pinned to a
+5: // constant because the default is the git revision, which would make a dump depend on the worktree's history; the
+6: // shard key already carries the commit's tree hash (J2.2).
+7: 
+8: /** Arguments after the executable. The project name is the shard's directory, so shards of one repository stay distinct. */
+9: export function args(input: { readonly project: string; readonly output: string }) {
+10:   return [
+11:     "index", "--quiet", "--project-name", input.project === "." ? "root" : input.project.replaceAll("/", "-"),
+12:     "--project-version", "0", "--output", input.output,
+13:   ]
+14: }
+15: 
+16: /**
+17:  * scip-python gives every module a `<module>/__init__:` symbol, defined at the top of its file and referenced by every
+18:  * import of it. It is the file module, as scip-typescript's `path/` is, and no definition a caller or an outline names.
+19:  */
+20: export function indexable(symbol: string) {
+21:   return !symbol.endsWith("/__init__:")
+22: }
+```
+
+**RA-S066 — `packages/core/src/research-toolkit/code-index/rust.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `9fb795b9e7b368f4596a781516e942ec760ae020` · SHA-256 `0f3bd2e8e7615b3fb8ce0770fc66c1a00a371c20e04e0798c250b1d107058c1c` · 5480 bytes.
+
+Linhas 15–80.
+
+```text
+15: export const TOOLCHAIN = "cargo"
+16: 
+17: export const ENV = { CARGO_NET_OFFLINE: "true" }
+18: 
+19: /** Arguments after the executable; the run's cwd is the crate root. */
+20: export function args(output: string) {
+21:   return ["scip", ".", "--output", output, "--exclude-vendored-libraries"]
+22: }
+23: 
+24: /**
+25:  * Upstream tags.scm captures every function in a `declaration_list` as a method, which a `mod` body also is: a function
+26:  * is a method only inside an `impl` or a `trait`.
+27:  */
+28: export function kind(node: Node, captured: string) {
+29:   if (node.type !== "function_item") return captured
+30:   return ["impl_item", "trait_item"].includes(node.parent?.parent?.type ?? "") ? "method" : "function"
+31: }
+32: 
+33: /** `pub` exports (`pub(crate)` does not); a trait's members follow the trait. */
+34: export function exported(node: Node, parent?: CodeIndexTreeSitter.Definition) {
+35:   if (parent?.kind === "interface") return parent.exported
+36:   return node.namedChildren.some((child) => child?.type === "visibility_modifier" && child.text === "pub")
+37: }
+38: 
+39: /**
+40:  * Top-level `use` paths, with the names a use list or an `as` binds, and `mod name;` declarations as `self::name`: the
+41:  * declaration is what pulls the module's file into the crate.
+42:  */
+43: export function imports(root: Node) {
+44:   return root.namedChildren.flatMap((node): CodeIndexTreeSitter.Import[] => {
+45:     if (!node) return []
+46:     const line = node.startPosition.row + 1
+47:     if (node.type === "mod_item" && !node.childForFieldName("body")) {
+48:       const name = node.childForFieldName("name")?.text
+49:       return name ? [{ specifier: `self::${name}`, line, form: "static", names: [] }] : []
+50:     }
+51:     const argument = node.type === "use_declaration" ? node.childForFieldName("argument") : undefined
+52:     if (!argument) return []
+53:     if (argument.type === "scoped_use_list") {
+54:       const names = argument.childForFieldName("list")?.namedChildren.flatMap((child) => child ? [bound(child)] : []) ?? []
+55:       return [{ specifier: argument.childForFieldName("path")?.text ?? "", line, form: "static", names }]
+56:     }
+57:     if (argument.type === "use_as_clause")
+58:       return [{ specifier: argument.childForFieldName("path")?.text ?? "", line, form: "static", names: [argument.childForFieldName("alias")?.text ?? ""] }]
+59:     if (argument.type === "use_wildcard") return [{ specifier: argument.text.replace(/::\*$/, ""), line, form: "static", names: [] }]
+60:     return [{ specifier: argument.text, line, form: "static", names: [bound(argument)] }]
+61:   })
+62: }
+63: 
+64: /**
+65:  * `crate::`, `self::` and `super::` paths resolve to the module file they name, the longest prefix that is a file
+66:  * (`a/b.rs` or `a/b/mod.rs`); any other path is a crate outside the repository, or `std`.
+67:  */
+68: export function resolver(root: string) {
+69:   return (from: string, specifier: string): CodeIndexResolve.Resolution => {
+70:     const segments = specifier.split("::").filter(Boolean)
+71:     const head = segments[0]
+72:     if (head !== "crate" && head !== "self" && head !== "super") return { kind: "package" }
+73:     const start = head === "crate" ? crateSource(root, from) : moduleDir(from)
+74:     const ups = segments.findIndex((segment) => segment !== "super")
+75:     const base = head === "super" ? path.posix.join(start ?? ".", ...Array<string>(ups === -1 ? segments.length : ups).fill("..")) : start
+76:     const rest = segments.slice(head === "super" ? (ups === -1 ? segments.length : ups) : 1)
+77:     const to = base === undefined ? undefined : rest.map((_, index) => rest.slice(0, rest.length - index))
+78:       .flatMap((prefix) => [`${path.posix.join(base, ...prefix)}.rs`, path.posix.join(base, ...prefix, "mod.rs")])
+79:       .find((candidate) => existsSync(path.join(root, candidate)))
+80:     if (to) return { kind: head === "crate" ? "alias" : "relative", to }
+```
+
+Linhas 85–103.
+
+```text
+85: function bound(node: Node) {
+86:   if (node.type === "use_as_clause") return node.childForFieldName("alias")?.text ?? ""
+87:   return node.text.split("::").at(-1) ?? node.text
+88: }
+89: 
+90: // The directory a file's child modules live in: its own for a crate root or `mod.rs`, else one named after it.
+91: function moduleDir(file: string) {
+92:   const base = path.posix.basename(file)
+93:   if (["mod.rs", "lib.rs", "main.rs"].includes(base)) return path.posix.dirname(file)
+94:   return path.posix.join(path.posix.dirname(file), base.slice(0, -".rs".length))
+95: }
+96: 
+97: // The nearest Cargo.toml's `src`, the crate root's directory under the default layout.
+98: function crateSource(root: string, file: string): string | undefined {
+99:   const dir = path.posix.dirname(file)
+100:   if (existsSync(path.join(root, dir, "Cargo.toml"))) return path.posix.join(dir, "src")
+101:   if (dir === "." || dir === "") return undefined
+102:   return crateSource(root, dir)
+103: }
+```
+
+### RA5-05 — Resolução TS/Python/workspace e PageRank
+
+**RA-S067 — `packages/core/src/research-toolkit/code-index/resolve.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `c8ddb8e3acb6059962605907e00c6b37422ed2c3` · SHA-256 `e864ec0f1d25d9d81ce880c450feb4f0adf28cd79d32b0f665d753420a0fa8ba` · 8917 bytes.
+
+Linhas 21–77.
+
+```text
+21: export const make = Effect.fn("CodeIndexResolve.make")(function* (root: string) {
+22:   const { default: typescript } = yield* Effect.promise(() => import("typescript"))
+23:   const workspaces = yield* Effect.promise(() => workspaceDirs(root))
+24:   const host = redirectingHost(typescript, root, workspaces)
+25:   const configs = new Map<string, { options: ts.CompilerOptions; cache: ts.ModuleResolutionCache }>()
+26: 
+27:   const settings = (file: string) => {
+28:     const config = typescript.findConfigFile(path.dirname(file), host.fileExists)
+29:     const key = config ?? ""
+30:     const cached = configs.get(key)
+31:     if (cached) return cached
+32:     const options = withDefaults(typescript, config ? parseConfig(typescript, host, config) : {})
+33:     const created = { options, cache: typescript.createModuleResolutionCache(root, (name) => name, options) }
+34:     configs.set(key, created)
+35:     return created
+36:   }
+37: 
+38:   const script = (from: string, specifier: string): Resolution => {
+39:     const file = path.join(root, from)
+40:     const config = settings(file)
+41:     const resolved = typescript.resolveModuleName(specifier, file, config.options, host, config.cache).resolvedModule
+42:     const to = resolved ? inside(root, resolved.resolvedFileName) : undefined
+43:     if (specifier.startsWith(".") || specifier.startsWith("/")) return to ? { kind: "relative", to } : { kind: "unresolved" }
+44:     const workspace = [...workspaces.keys()].some((name) => specifier === name || specifier.startsWith(`${name}/`))
+45:     if (to) return { kind: workspace ? "workspace" : "alias", to }
+46:     if (resolved) return { kind: "package" }
+47:     // A bare specifier the repository claims (a workspace name, a paths pattern, a #subpath import) and that does not
+48:     // resolve is a broken local import, not an external package.
+49:     const claimed = workspace || specifier.startsWith("#") || Object.keys(config.options.paths ?? {}).some((pattern) => matches(pattern, specifier))
+50:     return { kind: claimed ? "unresolved" : "package" }
+51:   }
+52: 
+53:   const python = (from: string, specifier: string): Resolution => {
+54:     const dots = specifier.match(/^\.*/)![0].length
+55:     const rest = specifier.slice(dots).split(".").filter(Boolean)
+56:     const bases = dots > 0
+57:       ? [path.join(root, path.dirname(from), ...Array<string>(dots - 1).fill(".."))]
+58:       : pythonRoots(root, path.join(root, path.dirname(from)), host.fileExists)
+59:     const to = bases.flatMap((base) => {
+60:       const target = path.join(base, ...rest)
+61:       return [`${target}.py`, `${target}.pyi`, path.join(target, "__init__.py"), path.join(target, "__init__.pyi")]
+62:     }).find((candidate) => host.fileExists(candidate) && inside(root, candidate))
+63:     if (to) return { kind: dots > 0 ? "relative" : "alias", to: inside(root, to) }
+64:     return { kind: dots > 0 ? "unresolved" : "package" }
+65:   }
+66: 
+67:   const go = CodeIndexGo.resolver(root)
+68:   const rust = CodeIndexRust.resolver(root)
+69: 
+70:   return {
+71:     resolve(from: string, specifier: string): Resolution {
+72:       if (from.endsWith(".go")) return go(from, specifier)
+73:       if (from.endsWith(".rs")) return rust(from, specifier)
+74:       return /\.pyi?$/.test(from) ? python(from, specifier) : script(from, specifier)
+75:     },
+76:   }
+77: })
+```
+
+Linhas 93–141.
+
+```text
+93: function redirectingHost(typescript: typeof ts, root: string, workspaces: Map<string, string>) {
+94:   const redirect = (file: string) => {
+95:     const normalized = file.replaceAll("\\", "/")
+96:     const at = normalized.lastIndexOf("/node_modules/")
+97:     if (at === -1) return file
+98:     const rest = normalized.slice(at + "/node_modules/".length).split("/")
+99:     const length = rest[0]?.startsWith("@") ? 2 : 1
+100:     const target = workspaces.get(rest.slice(0, length).join("/"))
+101:     return target ? path.join(target, ...rest.slice(length)) : file
+102:   }
+103:   const scopes = new Set([...workspaces.keys()].flatMap((name) => (name.startsWith("@") ? [name.split("/")[0]] : [])))
+104:   const linkParent = (dir: string) => {
+105:     const normalized = dir.replaceAll("\\", "/").replace(/\/$/, "")
+106:     if (workspaces.size > 0 && normalized.endsWith("/node_modules")) return true
+107:     const at = normalized.lastIndexOf("/node_modules/")
+108:     return at !== -1 && scopes.has(normalized.slice(at + "/node_modules/".length))
+109:   }
+110:   const sys = typescript.sys
+111:   return {
+112:     useCaseSensitiveFileNames: sys.useCaseSensitiveFileNames,
+113:     fileExists: (file: string) => sys.fileExists(redirect(file)),
+114:     readFile: (file: string) => sys.readFile(redirect(file)),
+115:     // TypeScript probes node_modules (and node_modules/@scope) before descending; uninstalled ones must still exist.
+116:     directoryExists: (dir: string) => sys.directoryExists(redirect(dir)) || linkParent(dir),
+117:     realpath: (file: string) => (sys.realpath ? sys.realpath(redirect(file)) : redirect(file)),
+118:     getCurrentDirectory: () => root,
+119:     getDirectories: (dir: string) => sys.getDirectories(redirect(dir)),
+120:     // Resolution needs compiler options only; enumerating every project's include set would walk the whole tree.
+121:     readDirectory: () => [],
+122:   }
+123: }
+124: 
+125: function parseConfig(typescript: typeof ts, host: ts.ParseConfigHost, config: string) {
+126:   const read = typescript.readConfigFile(config, host.readFile)
+127:   if (read.error) return {}
+128:   return typescript.parseJsonConfigFileContent(read.config, host, path.dirname(config), undefined, config).options
+129: }
+130: 
+131: // A file with no tsconfig, or one whose extends chain is missing, still resolves the way the repository's bundler does.
+132: function withDefaults(typescript: typeof ts, options: ts.CompilerOptions): ts.CompilerOptions {
+133:   const moduleResolution = options.moduleResolution ?? typescript.ModuleResolutionKind.Bundler
+134:   return {
+135:     ...options,
+136:     moduleResolution,
+137:     module: options.module ?? (moduleResolution === typescript.ModuleResolutionKind.Bundler ? typescript.ModuleKind.ESNext : undefined),
+138:     allowJs: options.allowJs ?? true,
+139:     resolveJsonModule: options.resolveJsonModule ?? true,
+140:   }
+141: }
+```
+
+Linhas 157–164.
+
+```text
+157: function pythonRoots(root: string, dir: string, exists: (file: string) => boolean): string[] {
+158:   const project = PYTHON_ROOTS.some((name) => exists(path.join(dir, name)))
+159:   if (project || path.relative(root, dir) === "" || path.relative(root, dir).startsWith("..")) {
+160:     const base = project ? dir : root
+161:     return [path.join(base, "src"), base]
+162:   }
+163:   return pythonRoots(root, path.dirname(dir), exists)
+164: }
+```
+
+**RA-S068 — `packages/core/src/research-toolkit/code-index/rank.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `47f1ac907480aa33ac17a1d0d2a6557345e4d1ba` · SHA-256 `4bf06c19df12dba5c60d6118ca7693951e7d857254cda46b43c6b716007d8911` · 3043 bytes.
+
+Linhas 9–19.
+
+```text
+9: const DAMPING = 0.85
+10: const ITERATIONS = 20
+11: 
+12: /** Test/benchmark/example paths describe the scaffolding, not the project's core; the map lists them after it. */
+13: const TEST_DIRS = new Set(["tests", "test", "__tests__", "spec", "benchmark", "benchmarks", "examples", "example", "e2e", "fixtures"])
+14: export function isTestPath(file: string) {
+15:   const segments = file.split("/")
+16:   if (segments.some((segment) => TEST_DIRS.has(segment))) return true
+17:   return /^test[_.]|[_.]test\.|\.spec\.|^conftest\./i.test(segments.at(-1) ?? "")
+18: }
+19: 
+```
+
+Linhas 24–58.
+
+```text
+24: export function ranks(documents: ReadonlyArray<Document>, imports: ReadonlyArray<Import>) {
+25:   const rank = computePageRank(documents.map((document) => document.path), imports)
+26:   return documents.map((document) => ({ path: document.path, rank: rank.get(document.path) ?? 0, loc: document.lines, bytes: document.bytes }))
+27: }
+28: 
+29: /**
+30:  * PageRank over the file-import graph. Edge A → B means A imports from B (A gives rank to B), so files imported by
+31:  * many others rank higher. A dangling node distributes its rank equally to all nodes.
+32:  */
+33: export function computePageRank(paths: ReadonlyArray<string>, imports: ReadonlyArray<Import>) {
+34:   const N = paths.length
+35:   if (N === 0) return new Map<string, number>()
+36:   const pathSet = new Set(paths)
+37:   // outgoing[path] = the files this file imports from, deduped; self and out-of-shard targets give no edge.
+38:   const outgoing = new Map(paths.map((file) => [file, new Set<string>()]))
+39:   imports.forEach((item) => {
+40:     if (item.toPath !== undefined && item.toPath !== item.fromPath && pathSet.has(item.toPath)) outgoing.get(item.fromPath)?.add(item.toPath)
+41:   })
+42:   const rank = new Map(paths.map((file) => [file, 1 / N]))
+43:   for (let iter = 0; iter < ITERATIONS; iter++) {
+44:     const next = new Map(paths.map((file) => [file, (1 - DAMPING) / N]))
+45:     paths.forEach((file) => {
+46:       const targets = outgoing.get(file)!
+47:       if (targets.size === 0) {
+48:         const share = (rank.get(file)! * DAMPING) / N
+49:         paths.forEach((target) => next.set(target, next.get(target)! + share))
+50:         return
+51:       }
+52:       const share = (rank.get(file)! * DAMPING) / targets.size
+53:       targets.forEach((target) => next.set(target, next.get(target)! + share))
+54:     })
+55:     next.forEach((value, file) => rank.set(file, value))
+56:   }
+57:   return rank
+58: }
+```
+
+## Proposta separada de precisão textual do memo
+
+A evidência literal RA5-02 inclui `const memo = new Map<string,...>()`, `MEMO_LIMIT = 2`, `memo.get(file)`, substituição por `memo.set(file, ...)` e evicção por `memo.size`. O índice registra uma proposta mínima **não aplicada** para explicitar duas entradas no total, uma por path, com validação por mtime/size. `body.md` permanece no SHA-256 congelado acima; a proposta não é parecer semântico.
+
+## FIM_DO_SUPLEMENTO_LITERAL

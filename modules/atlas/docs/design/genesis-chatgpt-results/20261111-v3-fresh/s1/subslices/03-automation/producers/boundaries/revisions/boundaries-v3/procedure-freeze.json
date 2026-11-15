@@ -1,0 +1,237 @@
+{
+  "schema": "s1-03-actual-procedure-freeze/v1",
+  "state": "FROZEN_BEFORE_EXECUTION",
+  "frozen_at_utc": "2026-11-15T04:06:09.432292+00:00",
+  "artifact": "s1.core.boundaries",
+  "version": 3,
+  "authorization_recipe": {
+    "path": "producers/boundaries/revisions/boundaries-v3/recipe.json",
+    "bytes": 4346,
+    "sha256": "8e51dad268ee1fc9ade4b91c4d4ff1c08a76aa3f0ec9636786d778026085f385",
+    "git_blob_sha": "0d233b8ff8d4ce26cb6bbd31c9a7698723d35152"
+  },
+  "procedure_file": {
+    "path": "producers/boundaries/revisions/boundaries-v3/apply.py",
+    "bytes": 16667,
+    "sha256": "8ca6ab3b26860f1d5f4c2c4eb0f329c45aa66a6fed9976f2707570418866e6fe",
+    "git_blob_sha": "d74b4d117a673586e9a5e7cfbba573b1f2c35a31"
+  },
+  "command": "python producers/boundaries/revisions/boundaries-v3/apply.py",
+  "planned_invocations": 1,
+  "whole_file_inputs": [
+    {
+      "path": "producers/boundaries/bodies/boundaries.md",
+      "bytes": 23665,
+      "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+      "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
+      "role": "semantic_full_read; prior version for preservation and exact diff",
+      "unit": "whole_file"
+    },
+    {
+      "path": "producers/boundaries/sources/packages/core/src/relay.ts",
+      "bytes": 30225,
+      "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+      "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16",
+      "role": "semantic_full_read; F01 source evidence; whole-file hash verification",
+      "unit": "whole_file"
+    },
+    {
+      "path": "producers/boundaries/sources/packages/core/src/rag-studio/sql.ts",
+      "bytes": 2519,
+      "sha256": "e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9",
+      "git_blob_sha": "214ab3375acc34072ee74c3123501c80615bf488",
+      "role": "semantic_full_read; F02 source evidence; whole-file hash verification",
+      "unit": "whole_file"
+    },
+    {
+      "path": "producers/boundaries/revisions/boundaries-v2/recipe.json",
+      "bytes": 3501,
+      "sha256": "13d95ddbf05625b6f270972422a3603669ff238cc7152a3e1c1789106af70bf4",
+      "git_blob_sha": "63e56fa6badaab561f04f48ef0033dd6d4d21d71",
+      "role": "semantic_full_read; retained prior actual input lineage",
+      "unit": "whole_file"
+    },
+    {
+      "path": "producers/boundaries/effective-inputs.json",
+      "bytes": 22879,
+      "sha256": "6ecae50d90933e555a874b209c6553750d85192df44c36df2418b3ff696890fc",
+      "git_blob_sha": "2d099dcbef9b537a5e22a634642c1317bd0464f4",
+      "role": "semantic_full_read; retained whole-file units and aliases",
+      "unit": "whole_file"
+    },
+    {
+      "path": "producers/boundaries/revisions/boundaries-v3/public-findings.md",
+      "bytes": 1532,
+      "sha256": "6fd63340ed96690dcad680ded43d4815666ac042397cff5587c1413b1183deae",
+      "git_blob_sha": "0a9093ae89e653c458432402f7098286ebefb375",
+      "role": "semantic_full_read; two public findings and authorized correction scope",
+      "unit": "whole_file"
+    },
+    {
+      "path": "producers/boundaries/revisions/boundaries-v3/recipe.json",
+      "bytes": 4346,
+      "sha256": "8e51dad268ee1fc9ade4b91c4d4ff1c08a76aa3f0ec9636786d778026085f385",
+      "git_blob_sha": "0d233b8ff8d4ce26cb6bbd31c9a7698723d35152",
+      "role": "frozen authorization recipe; read in full and mechanically verified",
+      "unit": "whole_file"
+    },
+    {
+      "path": "producers/boundaries/revisions/boundaries-v3/request.txt",
+      "bytes": 576,
+      "sha256": "4cb6d8bd17c1ee1879f75734724997b3e6793eadfce37bafb0b2501a6bd19afb",
+      "git_blob_sha": "6c0341c591547d0a968d058fbc4edef5e304067a",
+      "role": "frozen request; read in full and mechanically verified",
+      "unit": "whole_file"
+    },
+    {
+      "path": "producers/boundaries/revisions/boundaries-v3/dispatch-message.txt",
+      "bytes": 1096,
+      "sha256": "9b60555882d38a25f64edc8120f524ea839a52fdb1cb309a70d2e737864dbe9b",
+      "git_blob_sha": "1063c479080912bf7f8c4c81376e200b5cdb7d68",
+      "role": "literal dispatch preservation; whole-file read/hash for procedure identity",
+      "unit": "whole_file"
+    },
+    {
+      "path": "producers/boundaries/revisions/boundaries-v3/history/body.md",
+      "bytes": 23665,
+      "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+      "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
+      "role": "preservation alias of prior current body; whole-file mechanical equality/hash verification",
+      "unit": "whole_file"
+    }
+  ],
+  "operations": [
+    {
+      "id": "ROOT-BND-L1-F01",
+      "section": "§3.2",
+      "before": "Seu caráter de dry grading evita avanço/ledger, mas o shell executado pode produzir efeitos no mundo.",
+      "after": "Esse percurso executa o comando e retorna seu resultado, sem grading nem registro de veredito; o shell executado pode produzir efeitos no mundo."
+    },
+    {
+      "id": "ROOT-BND-L1-F02",
+      "section": "§6",
+      "before": "chunks com texto/linhas/hash/boundary",
+      "after": "chunks com texto, hash, boundary e campos inteiros `start`/`end` (sem unidade declarada pelo schema)"
+    }
+  ],
+  "pre_execution_order": [
+    {
+      "sequence": 1,
+      "action": "Read and verify frozen recipe.json and request.txt in full."
+    },
+    {
+      "sequence": 2,
+      "action": "List exclusive revision directory: only supplied recipe/request/public-findings existed; preserve dispatch-message.txt literal (1096 bytes) without trailing newline."
+    },
+    {
+      "sequence": 3,
+      "action": "Read current boundaries v2, whole rag-studio/sql.ts and public-findings.md in full; verify their supplied identities."
+    },
+    {
+      "sequence": 4,
+      "action": "Read whole relay.ts and boundaries-v2/recipe.json in full; verify identities."
+    },
+    {
+      "sequence": 5,
+      "action": "Read effective-inputs.json in full; verify identity."
+    },
+    {
+      "sequence": 6,
+      "action": "Read whole relay.ts again to project line-numbered contract and implementation ranges; this is the same whole-file input unit."
+    },
+    {
+      "sequence": 7,
+      "action": "Write actual apply.py once in exclusive revision directory; no body mutation yet."
+    },
+    {
+      "sequence": 8,
+      "action": "Preserve current body bytes exclusively as history/body.md and compare full bytes; no older frozen record overwritten."
+    },
+    {
+      "sequence": 9,
+      "action": "Read/hash all enumerated input units, request, dispatch, preserved alias and apply.py; verify two unique old literals and absence of outputs to supersede."
+    },
+    {
+      "sequence": 10,
+      "action": "Freeze this procedure record and input identities before invoking apply.py."
+    }
+  ],
+  "procedure_steps": [
+    "Verify this freeze, actual apply.py and all declared whole-file inputs.",
+    "Refuse any pre-existing output to avoid overwriting a frozen revision.",
+    "Build exactly two literal substitutions in memory; verify three untouched byte segments and inverse reconstruction.",
+    "Generate a unified diff independently from the whole before/after bodies.",
+    "Build decisive literal evidence with original source path/commit/line/hash and exact byte offsets.",
+    "Write revision body and authorized current body once; read resulting body only as output verification.",
+    "Write delta, patch, evidence/index, input manifest extension, response and producer byte verification; record actual order."
+  ],
+  "source_excerpts": [
+    {
+      "id": "V3-TRIAL-CONTRACT",
+      "input_path": "producers/boundaries/sources/packages/core/src/relay.ts",
+      "source_path": "packages/core/src/relay.ts",
+      "first_line": 125,
+      "last_line": 136
+    },
+    {
+      "id": "V3-TRIAL",
+      "input_path": "producers/boundaries/sources/packages/core/src/relay.ts",
+      "source_path": "packages/core/src/relay.ts",
+      "first_line": 420,
+      "last_line": 481
+    },
+    {
+      "id": "V3-EVALUATE",
+      "input_path": "producers/boundaries/sources/packages/core/src/relay.ts",
+      "source_path": "packages/core/src/relay.ts",
+      "first_line": 491,
+      "last_line": 501
+    },
+    {
+      "id": "V3-RAG-CHUNK",
+      "input_path": "producers/boundaries/sources/packages/core/src/rag-studio/sql.ts",
+      "source_path": "packages/core/src/rag-studio/sql.ts",
+      "first_line": 19,
+      "last_line": 32
+    }
+  ],
+  "retained_prior_context_records_not_reopened": [
+    {
+      "path": "producers/boundaries/effective-inputs.support-v2.json",
+      "bytes": 4467,
+      "sha256": "4c1de7eb42f336a328efeb1d5b647eb5d0d9c1e0048e4d6a5551902c0775f605",
+      "status": "identity retained from actual previous author context; no read or current-path assertion in this dispatch"
+    },
+    {
+      "path": "producers/boundaries/revisions/support-v2/recipe.json",
+      "bytes": 6253,
+      "sha256": "99fc9e0ec430749fca8a34758179e66ba7e7aebbc5dce9436f6e15b58572604f",
+      "status": "identity retained from actual previous author context; no read or current-path assertion in this dispatch"
+    },
+    {
+      "path": "producers/boundaries/revisions/union-supplement-1/recipe.json",
+      "bytes": 9155,
+      "sha256": "b7d5cd3fdb40da10694f17eb3299314a94ede98f580cb471082981eaef0811ff",
+      "status": "identity retained from actual previous author context; no read or current-path assertion in this dispatch"
+    }
+  ],
+  "outputs_created_by_apply": [
+    "body.md",
+    "delta.json",
+    "delta.patch",
+    "review-supplement.md",
+    "review-supplement.index.json",
+    "input-manifest-extension.json",
+    "response.md",
+    "producer-verification.json"
+  ],
+  "outputs_superseded_before_apply": [],
+  "current_body_only_mutation": "producers/boundaries/bodies/boundaries.md",
+  "input_output_separation": "Current v2 body is an input with a stable history alias. New v3 body/evidence/manifest are outputs, not self-inputs. apply.py and this freeze are procedural whole-file inputs; supplemental evidence is a distinct output.",
+  "preserved_request_recipe_findings": true,
+  "semantic_status": "PENDING_SAME_PAIR_REEVALUATION",
+  "network_product_tests_runtime": "NOT_RUN",
+  "tokens": "UNKNOWN",
+  "physical_attempts": "UNKNOWN",
+  "cost": "UNKNOWN"
+}

@@ -1,0 +1,916 @@
+# Complemento literal e revisão v2 — research
+
+Execução 34269cf4-d631-41c5-a30b-85b0ec217390, S1-03, fonte 1cde2ff7a71bcf7aecb5d030917b577165135d38. Mesmo par /root/s1_03_j1 e /root/s1_03_j2, sem ferramentas. A autoria não recebeu oracle. Este complemento atende aos pedidos públicos de evidência já emitidos; o corpo v1 recebido continua disponível no histórico, e os únicos deltas textuais da versão agora submetida estão abaixo. Os intervalos/offsets dos lotes originais continuam vinculados à v1, não devem ser silenciosamente reinterpretados como offsets v2. A principal verificou a aplicação exata e a igualdade de todos os outros bytes. Pareceres originais permanecem preservados, ainda sem PASS global.
+
+Corpo v1: {'bytes': 63389, 'sha256': '1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73', 'git_blob_sha': 'c29b9f5b8a8913cc4afa58d3e9cdede292f0657e'}
+
+Corpo v2: {'bytes': 63501, 'sha256': 'd2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661', 'git_blob_sha': 'bb0eaa73b4fe9120fb46d9304778649b5c7205dd'}
+
+## Delta literal 1
+
+ANTES
+```text
+Memoiza no máximo dois dumps por path, mtime e tamanho;
+```
+
+DEPOIS
+```text
+O memo mantém no máximo duas entradas no total, uma por path, validadas por mtime e tamanho;
+```
+
+## Delta literal 2
+
+ANTES
+```text
+`query.ts` abre shard atual ou o mais novo retido de mesmo id quando o atual falta.
+```
+
+DEPOIS
+```text
+`query.ts` abre o shard atual ou o primeiro retido de mesmo id ainda presente, na ordem do manifesto (atualizada por `retain`/`touch`), quando o atual falta.
+```
+
+As propostas nos suplementos foram redigidas antes desta correção; suas frases de status “não aplicada” descrevem aquele momento e são supersedidas SOMENTE pelos deltas v2 acima. O conteúdo literal de fontes permanece intacto. Nenhum teste de produto/provider foi executado; assertions são evidência de contrato, não execução. Critérios: todos os pertinentes já recebidos, com suficiência restrita ao lote e sem promoção de semântica a binding/runtime. Avalie após FIM_DO_LOTE; parte intermediária é apenas recebimento.
+
+A projeção compartilhada de130 fontes e o histórico foram fornecidos no suplemento A; reutilizar esse contexto preservado, sem criar nova contagem.
+
+## INICIO_DO_SUPLEMENTO_LITERAL
+
+# Suplemento literal research-b — RE-B1 a RE-B7
+
+**Corpo congelado:** `body.md`, SHA-256 `1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73`. Evidência pública adicional para R8–R14, com as dependências R6/R7 solicitadas. Este suplemento não é parecer dos juízes, resultado de execução nem aceite. `review-supplement-a.md` permanece no SHA-256 `900fd149a1182df270ef6f71fce883793dba1a836df2dd2dd67e500c268f4aca`; a projeção das 130 fontes é compartilhada, não refeita.
+
+**Leitura e fidelidade:** cada fonte tem path, pin, Git blob e SHA-256 declarados uma vez. Os blocos seguintes são linhas originais literais com prefixo numérico; saltos são intervalos separados, sem código reescrito ou elipses dentro das linhas. O índice registra hashes dos bytes brutos de cada intervalo e offsets dos grupos. Fontes integrais permanecem em `sources/<path>`, vinculadas a `captures.json`. O arquivo `evidence.md`, SHA-256 `e8cc0b447e48f26b3a059dc70c7ad7e607ec9b60a9af3d605e76f4c10b1da05b`, e seu índice permanecem intactos para aprofundamento.
+
+**Natureza:** prosa curta é orientação/limite do produtor. Comentários e nomes de testes dentro das fontes são dados literais; intenções declaradas não se convertem em observações de runtime. As expectativas de E44–E46 foram lidas e não executadas. Nenhuma dependência externa, plataforma, jail, publicação Atlas ou fornecedor foi exercitado nesta entrega.
+
+## RE-B1
+
+### RB1-01 — Uniões públicas, operações, coordenadas e limites de entrada
+
+Vínculo: corpo R8; archive E24.
+
+**RB-S001 — `packages/core/src/research-toolkit/code-index/types.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `f0690be298513ba918b88c59eb01c2142f8133dc` · SHA-256 `2bc3804460a0faf5ddf2e62d19ca86efd39db0a8142dc75787e60cdd2519332f` · 7619 bytes.
+
+Arquivo integral: `sources/packages/core/src/research-toolkit/code-index/types.ts`; archive: E24.
+
+Linhas 7–8.
+
+```text
+7: // J2 (index and code_query) and J3 (code_search, code_locate). Lines are original-file coordinates, 1-based and
+8: // closed (JI-3); columns are UTF-16 units, the encoding SCIP declares for TypeScript.
+```
+
+Linhas 20–40.
+
+```text
+20: const name = Schema.NonEmptyString.check(Schema.isMaxLength(1024))
+21: const file = Schema.NonEmptyString.check(Schema.isMaxLength(8192))
+22: const page = { limit: optional(PositiveInt.check(Schema.isLessThanOrEqualTo(200))), offset: optional(NonNegativeInt) }
+23: const target = {
+24:   // A short ("assemble") or qualified ("DiscoveryResult.assemble") name; path narrows the definition to one file.
+25:   name: optional(name),
+26:   path: optional(file),
+27:   symbol: optional(Schema.NonEmptyString.check(Schema.isMaxLength(4096))),
+28:   at: optional(Schema.Struct({ path: file, line: PositiveInt, column: optional(PositiveInt) })),
+29: }
+30: 
+31: export const CodeQuery = Schema.Union([
+32:   Schema.Struct({ op: Schema.Literal("definition"), ...target }),
+33:   Schema.Struct({ op: Schema.Literals(["references", "callers", "callees", "implementations"]), ...target, ...page }),
+34:   Schema.Struct({ op: Schema.Literals(["imports", "importers"]), path: file, ...page }),
+35:   Schema.Struct({
+36:     op: Schema.Literal("symbols"), path: optional(file), name: optional(name), kind: optional(name),
+37:     exported: optional(Schema.Boolean), ...page,
+38:   }),
+39:   Schema.Struct({ op: Schema.Literal("map"), path: optional(file), depth: optional(PositiveInt), ...page }),
+40: ])
+```
+
+Linhas 43–70.
+
+```text
+43: /** The six dimensions every seat tool returns beside its findings (JT.1). */
+44: export type Basis = {
+45:   readonly basis: {
+46:     readonly commit: string
+47:     readonly dirtyDigest?: string
+48:     readonly shards: ReadonlyArray<{
+49:       readonly id: string
+50:       readonly language: string
+51:       readonly project: string
+52:       readonly indexer: string
+53:       readonly version: string
+54:     }>
+55:   }
+56:   readonly execution: { readonly op: string; readonly ms: number; readonly semantic?: "absent" | "present" }
+57:   readonly coverage: {
+58:     readonly documents: number
+59:     readonly skipped: ReadonlyArray<{ readonly path: string; readonly reason: string }>
+60:     readonly languagesMissing: ReadonlyArray<string>
+61:     readonly opaqueSites: number
+62:     readonly complete: boolean
+63:     /** code_search: whether .gitignore was respected and how many binaries were skipped (J3.3). */
+64:     readonly ignoreRespected?: boolean
+65:     readonly binariesSkipped?: number
+66:     /** code_locate: ranges dropped by verification against current content (J3.5 step 4). */
+67:     readonly discarded?: number
+68:   }
+69:   readonly freshness: "fresh" | "stale" | "dirty-overlay"
+70:   readonly bounds: { readonly limit: number; readonly truncated: boolean }
+```
+
+Linhas 81–98.
+
+```text
+81: export type CodeQueryResult = {
+82:   /** Undefined when the name is ambiguous or absent; candidates then holds at most 20. */
+83:   readonly resolved: SymbolRef | undefined
+84:   readonly candidates: ReadonlyArray<SymbolRef>
+85:   readonly hits: ReadonlyArray<Hit>
+86:   readonly next?: number
+87:   readonly basis: Basis
+88: }
+89: 
+90: export const SearchInput = Schema.Struct({
+91:   pattern: Schema.NonEmptyString.check(Schema.isMaxLength(512)),
+92:   mode: optional(Schema.Literals(["literal", "regex", "identifier"])),
+93:   paths: optional(Schema.Array(file).check(Schema.isMaxLength(16))),
+94:   caseSensitive: optional(Schema.Boolean),
+95:   context: optional(NonNegativeInt.check(Schema.isLessThanOrEqualTo(5))),
+96:   ...page,
+97: })
+98: export type SearchInput = typeof SearchInput.Type
+```
+
+Linhas 110–134.
+
+```text
+110: export type SearchResult = { readonly matches: ReadonlyArray<SearchMatch>; readonly next?: number; readonly basis: Basis }
+111: 
+112: const terms = Schema.Array(Schema.NonEmptyString.check(Schema.isMaxLength(512))).check(Schema.isMaxLength(16))
+113: /** At least one of question, terms or symbols; the host checks it, since a struct schema cannot. */
+114: export const LocateInput = Schema.Struct({
+115:   question: optional(Schema.NonEmptyString.check(Schema.isMaxLength(2000))),
+116:   terms: optional(terms),
+117:   symbols: optional(terms),
+118:   paths: optional(Schema.Array(file).check(Schema.isMaxLength(16))),
+119:   limit: optional(PositiveInt.check(Schema.isLessThanOrEqualTo(40))),
+120: })
+121: export type LocateInput = typeof LocateInput.Type
+122: 
+123: export type LocateResult = {
+124:   readonly ranges: ReadonlyArray<Range & { readonly symbol?: string; readonly why: ReadonlyArray<string>; readonly score: number }>
+125:   readonly searches: ReadonlyArray<{
+126:     readonly kind: "lexical" | "lexical-wide" | "definition" | "neighbors"
+127:     readonly query: string
+128:     readonly hits: number
+129:     readonly truncated: boolean
+130:   }>
+131:   /** One retained snapshot holding the lines of every range (origin file, original coordinates). */
+132:   readonly evidence: Research.SourceRef
+133:   readonly basis: Basis
+134: }
+```
+
+### RB1-02 — Query: basis, paths, abertura e ordem real dos shards retidos
+
+Vínculo: corpo R6, R8; archive E17, E24.
+
+Observação de fonte: previous.find segue a ordem do manifesto, preservada por records(); retain antepõe o commit recebido e touch promove o commit usado. A proposta de precisão textual ao final não altera o corpo.
+
+**RB-S002 — `packages/core/src/research-toolkit/code-index/query.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `25d652ee0ce78d327427837466b5d7fe5886013f` · SHA-256 `ec1dd4a297e6e798c497d67ac5ed21cd4c6484e2aba3c2bed60dbd8f174f05e8` · 32872 bytes.
+
+Arquivo integral: `sources/packages/core/src/research-toolkit/code-index/query.ts`; archive: E24, E25.
+
+Linhas 58–60.
+
+```text
+58: const DEFAULT_LIMIT = 50
+59: const CANDIDATES = 20
+60: const SKIPPED_LIMIT = 200
+```
+
+Linhas 82–134.
+
+```text
+82: export const run = Effect.fn("CodeIndexQuery.run")(function* (ctx: Context, input: CodeIndex.CodeQuery) {
+83:   const started = performance.now()
+84:   const query = normalize(ctx.root, input)
+85:   if (!query) return yield* new Research.Error({ code: "reference_invalid", message: "Query path is outside the bound worktree" })
+86:   if (Object.keys(ctx.indexers).length === 0)
+87:     return yield* new Research.Error({ code: "index_unavailable", message: "No research index pack is ready on this machine" })
+88:   const plan = yield* CodeIndexBuild.plan(ctx)
+89:   // Only path-scoped operations narrow the shards (J2.10); a symbol's references may live in any shard.
+90:   const prefix = query.op === "imports" || query.op === "symbols" || query.op === "map" ? query.path : undefined
+91:   const scope = yield* open(ctx, plan, inScope(plan, prefix ?? (query.op === "definition" ? query.path : undefined)))
+92:   const limit = "limit" in query && query.limit !== undefined ? query.limit : DEFAULT_LIMIT
+93:   const offset = "offset" in query && query.offset !== undefined ? query.offset : 0
+94:   const findings = yield* execute(scope, query)
+95:   const page = findings.hits.slice(offset, offset + limit)
+96:   const documents = yield* count(scope, prefix)
+97:   const languagesMissing = [...new Set(plan.unindexed.filter((shard) => covers(shard.project, prefix)).map((shard) => shard.language))]
+98:   const skipped = [
+99:     ...scope.skipped,
+100:     ...plan.orphans.filter((file) => within(file, prefix)).map((file) => ({ path: file, reason: "no-project" })),
+101:     ...(yield* recorded(scope, prefix)),
+102:   ]
+103:   const paths = [findings.resolved?.ref.range.path, ...findings.candidates.map((ref) => ref.range.path), ...page.map((hit) => hit.range.path)]
+104:   const result: CodeIndex.CodeQueryResult = {
+105:     resolved: findings.resolved?.ref,
+106:     candidates: findings.candidates,
+107:     hits: page,
+108:     ...(offset + limit < findings.hits.length ? { next: offset + limit } : {}),
+109:     basis: {
+110:       basis: {
+111:         commit: plan.commit,
+112:         ...(scope.dirtyDigest ? { dirtyDigest: scope.dirtyDigest } : {}),
+113:         shards: scope.ready.map((ready) => ({
+114:           id: ready.planned.shard.id, language: ready.planned.shard.language, project: ready.planned.shard.project,
+115:           indexer: ready.planned.indexer.id, version: ready.planned.indexer.version,
+116:         })),
+117:       },
+118:       execution: { op: query.op, ms: Math.round(performance.now() - started) },
+119:       coverage: {
+120:         documents,
+121:         skipped: skipped.length > SKIPPED_LIMIT
+122:           ? [...skipped.slice(0, SKIPPED_LIMIT), { path: "*", reason: `${skipped.length - SKIPPED_LIMIT} more skipped paths` }]
+123:           : skipped,
+124:         languagesMissing,
+125:         opaqueSites: findings.hits.filter((hit) => hit.opaque).reduce((sum, hit) => sum + (hit.sites?.length ?? 1), 0),
+126:         complete: skipped.length === 0 && languagesMissing.length === 0,
+127:       },
+128:       freshness: scope.ready.some((ready) => ready.stale) ? "stale"
+129:         : paths.some((file) => file !== undefined && scope.dirty.has(file)) ? "dirty-overlay" : "fresh",
+130:       bounds: { limit, truncated: offset + limit < findings.hits.length },
+131:     },
+132:   }
+133:   return result
+134: })
+```
+
+Linhas 137–169.
+
+```text
+137: function normalize(root: string, query: CodeIndex.CodeQuery): CodeIndex.CodeQuery | undefined {
+138:   const relative = (file: string) => {
+139:     const result = path.relative(root, path.resolve(root, file)).replaceAll("\\", "/")
+140:     if (result === "") return "."
+141:     return result === ".." || result.startsWith("../") || path.isAbsolute(result) ? undefined : result
+142:   }
+143:   const next = { ...query } as CodeIndex.CodeQuery & { path?: string; at?: { path: string; line: number; column?: number } }
+144:   if (next.path !== undefined) {
+145:     const file = relative(next.path)
+146:     if (file === undefined) return undefined
+147:     next.path = file
+148:   }
+149:   if (next.at !== undefined) {
+150:     const file = relative(next.at.path)
+151:     if (file === undefined) return undefined
+152:     next.at = { ...next.at, path: file }
+153:   }
+154:   return next
+155: }
+156: 
+157: const within = (file: string, prefix: string | undefined) =>
+158:   prefix === undefined || prefix === "." || file === prefix || file.startsWith(prefix + "/")
+159: 
+160: // A shard covers a scope when the scope is inside the project or the project is inside the scope.
+161: const covers = (project: string, prefix: string | undefined) =>
+162:   prefix === undefined || project === "." || within(project, prefix) || within(prefix, project)
+163: 
+164: function inScope(plan: CodeIndexBuild.Plan, prefix: string | undefined) {
+165:   if (prefix === undefined) return plan.shards
+166:   const file = plan.shards.filter((planned) => planned.shard.files.includes(prefix))
+167:   if (file.length > 0) return file
+168:   return plan.shards.filter((planned) => planned.shard.files.some((entry) => within(entry, prefix)) ||
+169:     (CodeIndexShard.language(prefix) === planned.shard.language && within(prefix, planned.shard.project)))
+```
+
+Linhas 176–225.
+
+```text
+176: function open(ctx: Context, plan: CodeIndexBuild.Plan, shards: ReadonlyArray<CodeIndexBuild.Planned>) {
+177:   return Effect.gen(function* () {
+178:     if (shards.length === 0)
+179:       return yield* new Research.Error({ code: "index_unavailable", message: "No supported language with a ready indexer in this scope" })
+180:     const records = yield* CodeIndexStore.records(plan.dir)
+181:     const skipped: Array<{ path: string; reason: string }> = []
+182:     // A shard whose last build in this process failed says why, whether or not an older version serves meanwhile.
+183:     const failed = new Map(shards.flatMap((planned) => {
+184:       const reason = CodeIndexStore.failure(ctx.storeRoot, planned.key)
+185:       return reason === undefined ? [] : [[planned.key, reason] as const]
+186:     }))
+187:     const choices = yield* Effect.forEach(shards, (planned) => Effect.gen(function* () {
+188:       if (yield* CodeIndexStore.exists(plan.dir, planned.key)) return { planned, key: planned.key } satisfies Ready
+189:       const previous = records.flatMap((record) => record.shards
+190:         .filter((shard) => shard.id === planned.shard.id && shard.key !== planned.key)
+191:         .map((shard) => ({ commit: record.commit, key: shard.key })))
+192:       const present = yield* Effect.forEach(previous, (entry) => CodeIndexStore.exists(plan.dir, entry.key))
+193:       const fallback = previous.find((_, index) => present[index])
+194:       const reason = failed.get(planned.key)
+195:       if (reason !== undefined) skipped.push({ path: planned.shard.project, reason: `index-failed: ${reason}` })
+196:       if (fallback) return { planned, key: fallback.key, stale: fallback.commit } satisfies Ready
+197:       if (reason === undefined) skipped.push({ path: planned.shard.project, reason: "index-building" })
+198:       return undefined
+199:     }))
+200:     const missing = choices.some((choice) => choice === undefined || choice.stale)
+201:     const progress = CodeIndexBuild.building(plan.dir)
+202:     const building = progress !== undefined || shards.some((planned) => CodeIndexStore.building(ctx.storeRoot, planned.key))
+203:     // A failed build is retried by the next query that finds the shard still missing; the build is single-flight.
+204:     if (missing && !building && ctx.extract)
+205:       yield* Effect.forkDetach(CodeIndexBuild.build({ ...ctx, extract: ctx.extract }).pipe(Effect.ignore))
+206:     const ready = choices.filter((choice): choice is NonNullable<typeof choice> => choice !== undefined)
+207:     if (ready.length === 0) {
+208:       const cause = [...failed.values()][0]
+209:       if (cause !== undefined && !building)
+210:         return yield* new Research.Error({ code: "index_unavailable", message:
+211:           `Index build failed${ctx.extract ? " (retrying)" : ""}: ${cause}` })
+212:       if (building || ctx.extract)
+213:         return yield* new Research.Error({ code: "index_building", message:
+214:           `Index is building: shardsDone ${progress?.shardsDone ?? 0} of shardsTotal ${progress?.shardsTotal ?? shards.length}` +
+215:           (cause === undefined ? "" : `; last attempt failed: ${cause}`) })
+216:       return yield* new Research.Error({ code: "index_unavailable", message: "Index has not been built for this commit" })
+217:     }
+218:     if (!missing) yield* CodeIndexStore.touch(plan.dir, plan.commit)
+219:     const stale = [...new Set(ready.flatMap((choice) => choice.stale ? [choice.stale] : []))]
+220:     const changes = new Set((yield* Effect.forEach(stale, (from) => CodeIndexShard.changed(ctx.git, from, plan.commit))).flat())
+221:     ready.filter((choice) => choice.stale).forEach((choice) =>
+222:       choice.planned.shard.files.filter((file) => changes.has(file)).forEach((file) => skipped.push({ path: file, reason: "changed-since-index" })))
+223:     return yield* overlay(ctx, plan, ready, skipped)
+224:   })
+225: }
+```
+
+**RB-S003 — `packages/core/src/research-toolkit/code-index/store.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `f71cdf0ae1979f002fce68b53eae445647682d73` · SHA-256 `570a81a04360d060a7c67a436e531b4c079ba7a9951130a2648ca986846b5e11` · 13372 bytes.
+
+Arquivo integral: `sources/packages/core/src/research-toolkit/code-index/store.ts`; archive: E17.
+
+Linhas 170–215.
+
+```text
+170: export const records = (dir: string) =>
+171:   Effect.promise(() => Bun.file(path.join(dir, MANIFEST)).json().then((value: ReadonlyArray<Entry>) => value, () => [] as ReadonlyArray<Entry>))
+172: 
+173: /**
+174:  * J2.4: put the commit first, keep at most `limits.commits` commits, then drop the least recently used commits until
+175:  * the shards they alone hold fit `limits.bytes`. The newest commit is always kept. Returns the removed shard keys.
+176:  */
+177: export const retain = Effect.fn("CodeIndexStore.retain")(function* (
+178:   dir: string,
+179:   record: Entry,
+180:   limits: { readonly commits: number; readonly bytes: number },
+181: ) {
+182:   const previous = yield* records(dir)
+183:   const ordered = [record, ...previous.filter((entry) => entry.commit !== record.commit)].slice(0, Math.max(1, limits.commits))
+184:   const sizes = new Map(yield* Effect.promise(() => readdir(dir).then((names) => Promise.all(names
+185:     .filter((name) => name.endsWith(".sqlite"))
+186:     .map((name) => stat(path.join(dir, name)).then((info) => [name.slice(0, -".sqlite".length), info.size] as const, () => [name.slice(0, -".sqlite".length), 0] as const))))))
+187:   const kept = fit(ordered, sizes, limits.bytes)
+188:   const live = new Set(kept.flatMap((entry) => entry.shards.map((shard) => shard.key)))
+189:   const removed = [...sizes.keys()].filter((key) => !live.has(key))
+190:   yield* Effect.promise(() => Promise.all(removed.map((key) => rm(file(dir, key), { force: true }))))
+191:   yield* save(dir, kept)
+192:   return removed
+193: })
+194: 
+195: /** Mark a commit most recently used without touching its shards. */
+196: export const touch = Effect.fn("CodeIndexStore.touch")(function* (dir: string, commit: string) {
+197:   const previous = yield* records(dir)
+198:   const found = previous.find((entry) => entry.commit === commit)
+199:   if (!found || previous[0]?.commit === commit) return
+200:   yield* save(dir, [{ ...found, at: Date.now() }, ...previous.filter((entry) => entry !== found)])
+201: })
+202: 
+203: function fit(ordered: ReadonlyArray<Entry>, sizes: ReadonlyMap<string, number>, bytes: number): ReadonlyArray<Entry> {
+204:   const total = [...new Set(ordered.flatMap((entry) => entry.shards.map((shard) => shard.key)))]
+205:     .reduce((sum, key) => sum + (sizes.get(key) ?? 0), 0)
+206:   if (total <= bytes || ordered.length <= 1) return ordered
+207:   return fit(ordered.slice(0, -1), sizes, bytes)
+208: }
+209: 
+210: const save = (dir: string, entries: ReadonlyArray<Entry>) =>
+211:   Effect.promise(async () => {
+212:     const temporary = path.join(dir, `.${MANIFEST}.${randomUUID()}.tmp`)
+213:     await Bun.write(temporary, JSON.stringify(entries))
+214:     await rename(temporary, path.join(dir, MANIFEST))
+215:   })
+```
+
+### RB1-03 — Query: overlay dirty e resolução por id, posição ou nome
+
+Vínculo: corpo R8; archive E24, E25.
+
+**RB-S002** — mesma fonte e identidade declaradas acima.
+
+Linhas 228–261.
+
+```text
+228: function overlay(ctx: Context, plan: CodeIndexBuild.Plan, ready: ReadonlyArray<Ready>, skipped: Array<{ path: string; reason: string }>) {
+229:   return Effect.gen(function* () {
+230:     const changes = yield* CodeIndexShard.dirty(ctx.git)
+231:     const owner = (file: string) => ready
+232:       .filter((choice) => choice.planned.shard.files.includes(file) ||
+233:         (CodeIndexShard.language(file) === choice.planned.shard.language && within(file, choice.planned.shard.project)))
+234:       .sort((a, b) => b.planned.shard.project.length - a.planned.shard.project.length)[0]
+235:     const owned = changes.flatMap((change) => {
+236:       const choice = owner(change.path)
+237:       return choice ? [{ ...change, choice }] : []
+238:     })
+239:     const groups = Map.groupBy(owned.filter((change) => !change.deleted), (change) => change.choice)
+240:     const files = (yield* Effect.forEach([...groups], ([choice, entries]) =>
+241:       ctx.overlay({ root: ctx.root, shard: choice.planned.shard, paths: entries.map((entry) => entry.path) }))).flat()
+242:     const digest = owned.length === 0 ? undefined : yield* Effect.promise(async () => {
+243:       const hash = createHash("sha256")
+244:       for (const change of owned.toSorted((a, b) => a.path.localeCompare(b.path)))
+245:         hash.update(change.path).update("\0").update(change.deleted ? "deleted" : new Uint8Array(await Bun.file(path.join(ctx.root, change.path)).arrayBuffer().catch(() => new ArrayBuffer(0)))).update("\0")
+246:       return hash.digest("hex")
+247:     })
+248:     return {
+249:       plan, ready, skipped, dirty: new Set(owned.map((change) => change.path)),
+250:       ...(digest ? { dirtyDigest: digest } : {}),
+251:       overlay: new Map(files.map((entry) => [entry.path, {
+252:         lines: entry.lines,
+253:         symbols: entry.symbols.map((symbol): CodeIndex.SymbolRef => ({
+254:           symbol: `overlay:${entry.path}:${symbol.startLine}:${symbol.name}`, name: symbol.name, kind: symbol.kind,
+255:           range: { path: entry.path, startLine: symbol.startLine, endLine: symbol.endLine },
+256:           nameLine: symbol.nameLine, exported: symbol.exported,
+257:         })),
+258:       }])),
+259:     } satisfies Scope
+260:   })
+261: }
+```
+
+Linhas 263–287.
+
+```text
+263: function execute(scope: Scope, query: CodeIndex.CodeQuery): Effect.Effect<Findings, Research.Error> {
+264:   switch (query.op) {
+265:     case "imports":
+266:       return each(scope, (sql) => sql.unsafe<{ from_path: string; line: number; specifier: string; to_path: string | null; kind: string }>(
+267:         `SELECT from_path, line, specifier, to_path, kind FROM import WHERE from_path = ? ORDER BY line`, [query.path]))
+268:         .pipe(Effect.map((rows) => ({ candidates: [], hits: sorted(rows.flatMap((entry) => entry.rows).map((row) => moduleHit(row.from_path, row.line, row))) })))
+269:     case "importers":
+270:       return each(scope, (sql) => sql.unsafe<{ from_path: string; line: number; specifier: string; to_path: string | null; kind: string }>(
+271:         `SELECT from_path, line, specifier, to_path, kind FROM import WHERE to_path = ? ORDER BY from_path, line`, [query.path]))
+272:         .pipe(Effect.map((rows) => ({ candidates: [], hits: sorted(rows.flatMap((entry) => entry.rows).map((row) => moduleHit(row.from_path, row.line, row))) })))
+273:     case "symbols":
+274:       return symbols(scope, query)
+275:     case "map":
+276:       return map(scope, query)
+277:     default:
+278:       return Effect.gen(function* () {
+279:         const found = yield* resolve(scope, query)
+280:         if (!found.resolved) return { candidates: found.candidates, hits: [] } satisfies Findings
+281:         const resolved = found.resolved
+282:         if (query.op === "definition")
+283:           return { resolved, candidates: [], hits: [{ range: resolved.ref.range, role: "definition", via: resolved.ref }] } satisfies Findings
+284:         return { resolved, candidates: [], hits: yield* related(scope, resolved, query.op) } satisfies Findings
+285:       })
+286:   }
+287: }
+```
+
+Linhas 292–345.
+
+```text
+292: function resolve(scope: Scope, target: Target): Effect.Effect<{ resolved?: Found; candidates: ReadonlyArray<CodeIndex.SymbolRef> }, Research.Error> {
+293:   return Effect.gen(function* () {
+294:     const overlaid = [...scope.overlay.values()].flatMap((entry) => entry.symbols)
+295:     if (target.symbol?.startsWith("overlay:")) {
+296:       const ref = overlaid.find((symbol) => symbol.symbol === target.symbol)
+297:       return ref ? { resolved: { ref }, candidates: [] } : { candidates: [] }
+298:     }
+299:     if (target.at) {
+300:       const at = target.at
+301:       const local = scope.overlay.get(at.path)?.symbols.filter((symbol) => symbol.range.startLine <= at.line && symbol.range.endLine >= at.line)
+302:         .sort((a, b) => (a.range.endLine - a.range.startLine) - (b.range.endLine - b.range.startLine))[0]
+303:       if (local) return { resolved: { ref: local }, candidates: [] }
+304:       const found = (yield* each(scope, (sql) => at.column === undefined
+305:         ? sql.unsafe<Row>(`SELECT s.* FROM occurrence o JOIN symbol s ON s.id = o.symbol_id WHERE o.path = ? AND o.line = ?
+306:             ORDER BY (o.role & 1) DESC, o.col LIMIT 1`, [at.path, at.line])
+307:         : sql.unsafe<Row>(`SELECT s.* FROM occurrence o JOIN symbol s ON s.id = o.symbol_id WHERE o.path = ? AND o.line <= ? AND o.end_line >= ?
+308:             AND (o.line < ? OR o.col <= ?) AND (o.end_line > ? OR o.end_col > ?) ORDER BY (o.end_line - o.line), (o.end_col - o.col) LIMIT 1`,
+309:             [at.path, at.line, at.line, at.line, at.column - 1, at.line, at.column - 1]))).flatMap(definitions)
+310:       if (found[0]) return { resolved: found[0], candidates: [] }
+311:       const enclosing = (yield* each(scope, (sql) => sql.unsafe<Row>(`SELECT * FROM symbol WHERE path = ? AND start_line <= ? AND end_line >= ?
+312:         ORDER BY end_line - start_line LIMIT 1`, [at.path, at.line, at.line]))).flatMap(definitions)
+313:       return enclosing[0] ? { resolved: enclosing[0], candidates: [] } : { candidates: [] }
+314:     }
+315:     if (target.symbol?.startsWith("#")) {
+316:       const [, shard, id] = target.symbol.split("#")
+317:       const scoped = { ...scope, ready: scope.ready.filter((choice) => choice.planned.shard.id === shard) }
+318:       const found = (yield* each(scoped, (sql) => sql.unsafe<Row>(`SELECT * FROM symbol WHERE id = ?`, [Number(id)]))).flatMap(definitions)
+319:       return found[0] ? { resolved: found[0], candidates: [] } : { candidates: [] }
+320:     }
+321:     if (target.symbol !== undefined) {
+322:       const found = (yield* each(scope, (sql) => sql.unsafe<Row>(`SELECT * FROM symbol WHERE scip = ? AND path IN (SELECT path FROM document)`, [target.symbol]))).flatMap(definitions)
+323:       return found[0] ? { resolved: found[0], candidates: [] } : { candidates: [] }
+324:     }
+325:     if (target.name === undefined) return yield* new Research.Error({ code: "reference_invalid", message: "Query needs name, symbol or at" })
+326:     const parts = target.name.split(".")
+327:     const last = parts.at(-1)!
+328:     const stored = (yield* each(scope, (sql) => sql.unsafe<Row & { qualified: string }>(`
+329:       WITH RECURSIVE up(origin, id, container_id, depth, name) AS (
+330:         SELECT id, id, container_id, 0, name FROM symbol WHERE name = ? ${target.path ? "AND path = ?" : ""} AND path IN (SELECT path FROM document)
+331:         UNION ALL SELECT up.origin, s.id, s.container_id, up.depth + 1, s.name FROM symbol s JOIN up ON s.id = up.container_id WHERE up.depth < 16)
+332:       SELECT s.*, (SELECT group_concat(name, '.') FROM (SELECT name FROM up WHERE up.origin = s.id ORDER BY depth DESC)) AS qualified
+333:       FROM symbol s WHERE s.id IN (SELECT origin FROM up)`, target.path ? [last, target.path] : [last])))
+334:       .flatMap((entry) => entry.rows.filter((row) => (row.qualified === target.name || row.qualified.endsWith("." + target.name)) && !scope.dirty.has(row.path))
+335:         .map((row) => found(entry.choice, row)))
+336:     const named: ReadonlyArray<Found> = [...stored, ...overlaid
+337:       .filter((ref) => ref.name === last && parts.length === 1 && (target.path === undefined || ref.range.path === target.path))
+338:       .map((ref) => ({ ref }))]
+339:     const unique = [...new Map(named.map((entry) => [entry.ref.symbol, entry])).values()]
+340:     if (unique.length === 1) return { resolved: unique[0], candidates: [] }
+341:     if (unique.length > 1)
+342:       return { candidates: unique.map((entry) => entry.ref).sort((a, b) => Number(b.exported) - Number(a.exported) || a.range.path.localeCompare(b.range.path)).slice(0, CANDIDATES) }
+343:     return { candidates: (yield* fuzzy(scope, last, target.path)).slice(0, CANDIDATES) }
+344:   })
+345: }
+```
+
+Linhas 348–356.
+
+```text
+348: function fuzzy(scope: Scope, name: string, file?: string) {
+349:   const match = CodeIndexStore.tokens(name).split(" ").filter(Boolean).map((token) => `"${token}"*`).join(" ")
+350:   if (!match) return Effect.succeed([] as ReadonlyArray<CodeIndex.SymbolRef>)
+351:   return each(scope, (sql) => sql.unsafe<Row & { score: number }>(`SELECT s.*, bm25(symbol_name) AS score FROM symbol_name
+352:       JOIN symbol s ON s.id = symbol_name.rowid WHERE symbol_name MATCH ? ${file ? "AND s.path = ?" : ""}
+353:       AND s.path IN (SELECT path FROM document) ORDER BY score LIMIT ${CANDIDATES * 5}`, file ? [match, file] : [match]))
+354:     .pipe(Effect.map((rows) => rows.flatMap((entry) => entry.rows.filter((row) => !scope.dirty.has(row.path)).map((row) => ({ score: row.score, ref: found(entry.choice, row).ref })))
+355:       .sort((a, b) => a.score - b.score).map((entry) => entry.ref)))
+356: }
+```
+
+### RB1-04 — Query: referências, callers/callees, imports, símbolos, map e leituras
+
+Vínculo: corpo R8; archive E25.
+
+A função execute completa está em RB1-03, inclusive imports/importers. Estes ramos expõem onde há filtros dirty e onde as tabelas persistidas são usadas; não inferem atualização global das relações.
+
+**RB-S002** — mesma fonte e identidade declaradas acima.
+
+Linhas 358–410.
+
+```text
+358: function related(scope: Scope, target: Found, op: "references" | "callers" | "callees" | "implementations") {
+359:   return Effect.gen(function* () {
+360:     if (target.id === undefined || !target.shard) return [] as ReadonlyArray<CodeIndex.Hit>
+361:     // A SCIP symbol is global, so its occurrences are read in every shard; a local one only in its own shard.
+362:     const shards = target.scip ? scope : { ...scope, ready: [target.shard] }
+363:     const match = target.scip ? "s.scip = ?" : "s.id = ?"
+364:     const key = target.scip ?? target.id
+365:     if (op === "implementations") {
+366:       const rows = yield* each(shards, (sql) => sql.unsafe<Row>(`SELECT i.* FROM relation r JOIN symbol s ON s.id = r.target_id
+367:         JOIN symbol i ON i.id = r.symbol_id WHERE ${match} AND r.kind = 'implementation'`, [key]))
+368:       return sorted(rows.flatMap(definitions).map((entry) => ({ range: entry.ref.range, role: "definition" as const, via: entry.ref })))
+369:     }
+370:     if (op === "callees") {
+371:       const rows = yield* each({ ...scope, ready: [target.shard] }, (sql) => sql.unsafe<Row & { site: number; opaque_site: number }>(`
+372:         SELECT t.*, o.line AS site, o.opaque AS opaque_site FROM occurrence o JOIN symbol t ON t.id = o.symbol_id
+373:         WHERE o.path = ? AND o.line BETWEEN ? AND ? AND (o.role & 1) = 0 AND o.symbol_id != ?`,
+374:         [target.ref.range.path, target.ref.range.startLine, target.ref.range.endLine, target.id]))
+375:       return grouped(rows.flatMap((entry) => entry.rows.map((row) => ({ via: found(entry.choice, row).ref, site: row.site, opaque: row.opaque_site === 1 }))))
+376:     }
+377:     const rows = yield* each(shards, (sql) => sql.unsafe<SiteRow>(`
+378:       SELECT o.path AS site_path, o.line AS site_line, o.end_line AS site_end, o.role AS site_role, o.opaque AS site_opaque,
+379:         e.id, e.scip, e.name, e.kind, e.path, e.start_line, e.end_line, e.name_line, e.exported, e.container_id
+380:       FROM occurrence o JOIN symbol s ON s.id = o.symbol_id LEFT JOIN symbol e ON e.id = o.enclosing_id
+381:       WHERE ${match} AND (o.role & ${CodeIndex.Role.definition}) = 0`, [key]))
+382:     if (op === "references")
+383:       return sorted(rows.flatMap((entry) => entry.rows).map((row): CodeIndex.Hit => ({
+384:         range: { path: row.site_path, startLine: row.site_line, endLine: row.site_end },
+385:         role: row.site_role & CodeIndex.Role.write ? "write" : row.site_role & CodeIndex.Role.import ? "import" : "reference",
+386:         ...(row.site_opaque ? { opaque: true } : {}),
+387:       })))
+388:     // callers (J2.9): references grouped by the definition that encloses them; top-level sites stay single references.
+389:     // An import names a symbol without calling it, as in X1's caller view (callers.ts), so it is no caller site.
+390:     const sites = rows.flatMap((entry) => entry.rows.filter((row) => !(row.site_role & CodeIndex.Role.import)).map((row) => ({
+391:       site: row.site_line, path: row.site_path, opaque: row.site_opaque === 1,
+392:       via: row.id === null ? undefined : found(entry.choice, row as Row).ref,
+393:     })))
+394:     return sorted([
+395:       ...grouped(sites.flatMap((site) => site.via ? [{ via: site.via, site: site.site, opaque: site.opaque }] : [])),
+396:       ...sites.filter((site) => !site.via).map((site): CodeIndex.Hit => ({
+397:         range: { path: site.path, startLine: site.site, endLine: site.site }, role: "reference", sites: [site.site],
+398:         ...(site.opaque ? { opaque: true } : {}),
+399:       })),
+400:     ])
+401:   })
+402: }
+```
+
+Linhas 404–410.
+
+```text
+404: function grouped(sites: ReadonlyArray<{ readonly via: CodeIndex.SymbolRef; readonly site: number; readonly opaque: boolean }>) {
+405:   return sorted([...Map.groupBy(sites, (site) => site.via.symbol).values()].map((group): CodeIndex.Hit => ({
+406:     range: group[0]!.via.range, role: "call", via: group[0]!.via,
+407:     sites: [...new Set(group.map((site) => site.site))].sort((a, b) => a - b),
+408:     ...(group.some((site) => site.opaque) ? { opaque: true } : {}),
+409:   })))
+410: }
+```
+
+Linhas 413–439.
+
+```text
+413: function symbols(scope: Scope, query: Extract<CodeIndex.CodeQuery, { op: "symbols" }>) {
+414:   return Effect.gen(function* () {
+415:     const keep = (ref: CodeIndex.SymbolRef) => within(ref.range.path, query.path) && (query.kind === undefined || ref.kind === query.kind) &&
+416:       (query.exported === undefined || ref.exported === query.exported)
+417:     const overlaid = [...scope.overlay.values()].flatMap((entry) => entry.symbols).filter(keep)
+418:     if (query.name !== undefined) {
+419:       const name = query.name
+420:       const ranked = (yield* fuzzy(scope, name)).filter(keep)
+421:       const local = overlaid.filter((ref) => CodeIndexStore.tokens(ref.name).includes(CodeIndexStore.tokens(name)))
+422:       return { candidates: [], hits: [...ranked, ...local].map((ref): CodeIndex.Hit => ({ range: ref.range, role: "definition", via: ref })) }
+423:     }
+424:     const filters = [
+425:       ...(query.path && query.path !== "." ? [{ sql: "(path = ? OR substr(path, 1, ?) = ?)", params: [query.path, query.path.length + 1, query.path + "/"] }] : []),
+426:       ...(query.kind !== undefined ? [{ sql: "kind = ?", params: [query.kind] }] : []),
+427:       ...(query.exported !== undefined ? [{ sql: "exported = ?", params: [query.exported ? 1 : 0] }] : []),
+428:     ]
+429:     const rows = yield* each(scope, (sql) => sql.unsafe<Row>(`SELECT * FROM symbol WHERE path IN (SELECT path FROM document)
+430:       ${filters.map((filter) => `AND ${filter.sql}`).join(" ")} ORDER BY path, start_line, id`, filters.flatMap((filter) => filter.params)))
+431:     const stored = rows.flatMap(definitions).map((entry) => entry.ref).filter((ref) => !scope.dirty.has(ref.range.path))
+432:     return {
+433:       candidates: [],
+434:       hits: [...stored, ...overlaid]
+435:         .sort((a, b) => a.range.path.localeCompare(b.range.path) || a.range.startLine - b.range.startLine)
+436:         .map((ref): CodeIndex.Hit => ({ range: ref.range, role: "definition", via: ref })),
+437:     }
+438:   })
+439: }
+```
+
+Linhas 445–474.
+
+```text
+445: function map(scope: Scope, query: Extract<CodeIndex.CodeQuery, { op: "map" }>) {
+446:   return Effect.gen(function* () {
+447:     const rows = (yield* each(scope, (sql) => sql.unsafe<{ path: string; rank: number; loc: number }>(`SELECT path, rank, loc FROM file_rank`)))
+448:       .flatMap((entry) => entry.rows).filter((row) => within(row.path, query.path))
+449:     const base = query.path === undefined || query.path === "." ? [] : query.path.split("/")
+450:     const depth = query.depth ?? Number.POSITIVE_INFINITY
+451:     const dirs = new Map<string, { rank: number; loc: number }>()
+452:     rows.forEach((row) => row.path.split("/").slice(0, -1).forEach((_, index, parts) => {
+453:       if (index < base.length) return
+454:       const dir = parts.slice(0, index + 1).join("/")
+455:       const entry = dirs.get(dir) ?? { rank: 0, loc: 0 }
+456:       dirs.set(dir, { rank: entry.rank + row.rank, loc: entry.loc + row.loc })
+457:     }))
+458:     const levels = (file: string) => file.split("/").length - base.length
+459:     const entries = [
+460:       ...[...dirs].map(([dir, entry]) => ({ path: dir, rank: entry.rank, loc: entry.loc, kind: "directory" })),
+461:       ...rows.map((row) => ({ path: row.path, rank: row.rank, loc: row.loc, kind: "file" })),
+462:     ].filter((entry) => levels(entry.path) <= depth)
+463:       // As the techlead's deriveMap: core before test scaffolding, then rank, then path.
+464:       .sort((a, b) => Number(CodeIndexRank.isTestPath(a.path)) - Number(CodeIndexRank.isTestPath(b.path)) ||
+465:         b.rank - a.rank || a.path.localeCompare(b.path))
+466:     return {
+467:       candidates: [],
+468:       hits: entries.map((entry): CodeIndex.Hit => {
+469:         const range = { path: entry.path, startLine: 1, endLine: Math.max(1, entry.loc) }
+470:         return { range, role: "definition", via: { symbol: entry.path, name: path.posix.basename(entry.path), kind: entry.kind, range, nameLine: 1, exported: false } }
+471:       }),
+472:     }
+473:   })
+474: }
+```
+
+Linhas 477–523.
+
+```text
+477: function count(scope: Scope, prefix: string | undefined) {
+478:   return each(scope, (sql) => prefix === undefined || prefix === "."
+479:     ? sql.unsafe<{ path: string }>(`SELECT path FROM document`)
+480:     : sql.unsafe<{ path: string }>(`SELECT path FROM document WHERE path = ? OR substr(path, 1, ?) = ?`, [prefix, prefix.length + 1, prefix + "/"]))
+481:     .pipe(Effect.map((rows) => new Set([...rows.flatMap((entry) => entry.rows.map((row) => row.path)),
+482:       ...[...scope.overlay.keys()].filter((file) => within(file, prefix))]).size))
+483: }
+484: 
+485: // The build's named gaps (meta.skipped) inside the scope.
+486: function recorded(scope: Scope, prefix: string | undefined) {
+487:   return each(scope, (sql) => sql.unsafe<{ value: string }>(`SELECT value FROM meta WHERE key = 'skipped'`)).pipe(
+488:     Effect.map((rows) => rows.flatMap((entry) => entry.rows.flatMap((row) => JSON.parse(row.value) as Array<{ path: string; reason: string }>))
+489:       .filter((entry) => within(entry.path, prefix))))
+490: }
+491: 
+492: /** Run one read against every ready shard of the scope; each shard is opened read-only for the duration. */
+493: function each<A extends object>(scope: Pick<Scope, "plan" | "ready">, read: (sql: SqlClient.SqlClient) => Effect.Effect<ReadonlyArray<A>, unknown>) {
+494:   return Effect.forEach(scope.ready, (choice) =>
+495:     CodeIndexStore.read(scope.plan.dir, choice.key, Effect.gen(function* () {
+496:       const sql = yield* SqlClient.SqlClient
+497:       return { choice, rows: yield* read(sql) }
+498:     })))
+499: }
+500: 
+501: const definitions = (entry: { readonly choice: Ready; readonly rows: ReadonlyArray<Row> }) => entry.rows.map((row) => found(entry.choice, row))
+502: 
+503: function found(choice: Ready, row: Row): Found & { shard: Ready; id: number } {
+504:   return {
+505:     shard: choice, id: row.id, ...(row.scip ? { scip: row.scip } : {}),
+506:     ref: {
+507:       symbol: row.scip ?? `#${choice.planned.shard.id}#${row.id}`, name: row.name, kind: row.kind,
+508:       range: { path: row.path, startLine: row.start_line, endLine: row.end_line }, nameLine: row.name_line, exported: row.exported === 1,
+509:     },
+510:   }
+511: }
+512: 
+513: function moduleHit(from: string, line: number, row: { specifier: string; to_path: string | null; kind: string }): CodeIndex.Hit {
+514:   const range = { path: from, startLine: line, endLine: line }
+515:   return {
+516:     range, role: "import",
+517:     via: { symbol: row.to_path ?? row.specifier, name: row.specifier, kind: `module:${row.kind}`,
+518:       range: row.to_path ? { path: row.to_path, startLine: 1, endLine: 1 } : range, nameLine: row.to_path ? 1 : line, exported: false },
+519:   }
+520: }
+521: 
+522: const sorted = (hits: ReadonlyArray<CodeIndex.Hit>) =>
+523:   hits.toSorted((a, b) => a.range.path.localeCompare(b.range.path) || a.range.startLine - b.range.startLine)
+```
+
+### RB1-05 — Search: 8 MiB, literal default, JSON, paginação e recorte UTF-16
+
+Vínculo: corpo R8; archive E26.
+
+Limite: parse usa JSON.parse sem converter stream inválido em resultado vazio. incomplete usa os flags da passada textual mostrados no ramo, e não os da passada binária.
+
+**RB-S004 — `packages/core/src/research-toolkit/search.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `c02ca1932f9782f4a2c141a892db5938b3d2c514` · SHA-256 `5d69897854d3c3ef0b305f4977163233ff73eea0525ad40a2b1d9b606f97cc93` · 7919 bytes.
+
+Arquivo integral: `sources/packages/core/src/research-toolkit/search.ts`; archive: E26.
+
+Linhas 26–55.
+
+```text
+26: const DEFAULT_LIMIT = 50
+27: const MAX_TEXT = 300
+28: // Capture ceiling for rg's JSON stream; hitting it is reported as an incomplete search, never as a clean zero.
+29: const MAX_STDOUT = 8 * 1024 * 1024
+30: 
+31: /** `binaries` lists the files that match only when binary files are searched too: the ones the main pass skipped. */
+32: export const argv = (input: CodeIndex.SearchInput, binaries = false) => {
+33:   const limit = (input.limit ?? DEFAULT_LIMIT) + (input.offset ?? 0) + 1
+34:   const mode = input.mode ?? "literal"
+35:   return [
+36:     "--no-config", "--no-messages", "--hidden", "--no-require-git",
+37:     ...(binaries
+38:       ? ["--files-with-matches", "--binary"]
+39:       : [
+40:           "--json", "--stats",
+41:           // Stable order: offset pages must not shift between calls.
+42:           "--sort=path",
+43:           // At most this many hits can ever be returned from one file, so a larger count is wasted output.
+44:           `--max-count=${limit}`,
+45:         ]),
+46:     ...(mode === "regex" ? [] : ["--fixed-strings"]),
+47:     ...(mode === "identifier" ? ["--word-regexp"] : []),
+48:     input.caseSensitive === false ? "--ignore-case" : "--case-sensitive",
+49:     ...(input.context && !binaries ? [`--context=${input.context}`] : []),
+50:     "--glob=!**/.git/**",
+51:     ...(input.paths ?? []).map((glob) => `--glob=${glob.replace(/^(?:\.[\\/])+/u, "")}`),
+52:     // -e keeps a pattern that starts with "-" from being read as an option; the explicit root stops rg reading stdin.
+53:     "-e", input.pattern, "--", ".",
+54:   ]
+55: }
+```
+
+Linhas 57–124.
+
+```text
+57: export const run = (input: CodeIndex.SearchInput, options: Options) =>
+58:   Effect.gen(function* () {
+59:     const started = Date.now()
+60:     const process = yield* AppProcess.Service
+61:     const binary = yield* RipgrepBinary.Service
+62:     const command = yield* binary.filepath.pipe(
+63:       Effect.mapError((cause) => new Failure({ reason: "index_unavailable", message: cause.message })),
+64:     )
+65:     const result = yield* process
+66:       .run(ChildProcess.make(command, argv(input), { cwd: options.cwd, extendEnv: true, stdin: "ignore" }), {
+67:         maxOutputBytes: MAX_STDOUT,
+68:         maxErrorBytes: 8 * 1024,
+69:         signal: options.signal,
+70:       })
+71:       .pipe(Effect.mapError((cause) => new Failure({ reason: "search_failed", message: cause.message })))
+72:     const stderr = result.stderr.toString("utf8").trim()
+73:     if (result.exitCode === 2 && /regex parse error|error parsing regex/.test(stderr))
+74:       return yield* new Failure({ reason: "pattern_invalid", message: stderr })
+75:     // Exit 2 with some output is a partial search (unreadable files); it is reported as incomplete below.
+76:     if (result.exitCode > 2) return yield* new Failure({ reason: "search_failed", message: stderr || `ripgrep exited ${result.exitCode}` })
+77: 
+78:     // ripgrep skips binary files without a trace, so the files that match only as binary come from a second pass.
+79:     const binaryPass = yield* process
+80:       .run(ChildProcess.make(command, argv(input, true), { cwd: options.cwd, extendEnv: true, stdin: "ignore" }), {
+81:         maxOutputBytes: MAX_STDOUT,
+82:         maxErrorBytes: 8 * 1024,
+83:         signal: options.signal,
+84:       })
+85:       .pipe(Effect.mapError((cause) => new Failure({ reason: "search_failed", message: cause.message })))
+86: 
+87:     const parsed = parse(result.stdout.toString("utf8"), input.context ?? 0)
+88:     const seen = new Set(parsed.matches.map((match) => match.path))
+89:     const binaryFiles = binaryPass.stdout.toString("utf8").split("\n").filter(Boolean).map(normalize)
+90:     const offset = input.offset ?? 0
+91:     const limit = input.limit ?? DEFAULT_LIMIT
+92:     const page = parsed.matches.slice(offset, offset + limit)
+93:     const more = parsed.matches.length > offset + limit
+94:     const matches: ReadonlyArray<CodeIndex.SearchMatch> = options.enclosing
+95:       ? yield* Effect.forEach(page, (match) =>
+96:           options.enclosing!(match.path, match.line).pipe(
+97:             Effect.map((enclosing) => (enclosing ? { ...match, enclosing } : match)),
+98:           ),
+99:         )
+100:       : page
+101:     const incomplete = result.exitCode === 2 || result.stdoutTruncated || (result.outputTruncated ?? false)
+102:     return {
+103:       matches,
+104:       ...(more ? { next: offset + limit } : {}),
+105:       basis: {
+106:         basis: { commit: options.commit ?? "unversioned", shards: [] },
+107:         execution: { op: "code_search", ms: Date.now() - started },
+108:         coverage: {
+109:           documents: parsed.searched,
+110:           skipped: incomplete
+111:             ? [{ path: ".", reason: result.exitCode === 2 ? "ripgrep could not read some paths" : "output ceiling reached" }]
+112:             : [],
+113:           languagesMissing: [],
+114:           opaqueSites: 0,
+115:           // Absence is claimable only from a search that ran to its end; a page cut by limit does not count.
+116:           complete: !incomplete && !more,
+117:           ignoreRespected: true,
+118:           binariesSkipped: binaryFiles.filter((file) => !seen.has(file)).length,
+119:         },
+120:         freshness: "fresh" as const,
+121:         bounds: { limit, truncated: more },
+122:       },
+123:     } satisfies CodeIndex.SearchResult
+124:   })
+```
+
+Linhas 137–175.
+
+```text
+137: function parse(stdout: string, context: number) {
+138:   const matches: Array<{ path: string; line: number; text: string; before?: string[]; after?: string[] }> = []
+139:   let searched = 0
+140:   // Context lines of the file being read, kept until the next match claims them as "before".
+141:   let pending: Array<{ line: number; text: string }> = []
+142:   let last: (typeof matches)[number] | undefined
+143:   let file = ""
+144:   for (const row of stdout.split("\n")) {
+145:     if (!row) continue
+146:     const event = JSON.parse(row) as Row
+147:     if (event.type === "summary") searched = event.data.stats?.searches ?? 0
+148:     if (event.type === "begin") {
+149:       file = event.data.path?.text ?? ""
+150:       pending = []
+151:       last = undefined
+152:     }
+153:     if (!file) continue
+154:     const line = event.data.line_number ?? 0
+155:     const text = clip(event.data.lines?.text ?? Buffer.from(event.data.lines?.bytes ?? "", "base64").toString("utf8"))
+156:     if (event.type === "context") {
+157:       if (last && line <= last.line + context) (last.after ??= []).push(text)
+158:       else pending.push({ line, text })
+159:     }
+160:     if (event.type === "match") {
+161:       const before = pending.slice(-context).map((item) => item.text)
+162:       last = { path: normalize(file), line, text, ...(before.length ? { before } : {}) }
+163:       matches.push(last)
+164:       pending = []
+165:     }
+166:   }
+167:   return { matches, searched }
+168: }
+169: 
+170: const normalize = (file: string) => file.replace(/^(?:\.[\\/])+/u, "").replaceAll("\\", "/")
+171: 
+172: function clip(line: string) {
+173:   const text = line.replace(/\r?\n$/u, "")
+174:   return text.length > MAX_TEXT ? text.slice(0, MAX_TEXT).replace(/[\uD800-\uDBFF]$/u, "") + "..." : text
+175: }
+```
+
+### RB1-06 — Locate: seleção, limites completos, materialização, fallback e descarte
+
+Vínculo: corpo R8; archive E27.
+
+O bloco 83–108 inclui a releitura, o bound do range completo antes de valid(check), o limite por arquivo, a retenção e discarded/bounds; valid não é apresentado isoladamente como se fosse toda a validação.
+
+**RB-S005 — `packages/core/src/research-toolkit/locate.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `d1343801f7b336d5e5b46eac860f6a07a0ae19fa` · SHA-256 `0ebac9d228ca1764020e0f7ccf260228dc02c1169c0143c07f258e7c7ac650f2` · 16148 bytes.
+

@@ -1,0 +1,84 @@
+{
+  "schema": "s1-03-minimal-literal-delta/v1",
+  "artifact": "s1.subslice03.research-flow",
+  "from_version": 1,
+  "to_version": 2,
+  "finding": "RF-J2-F01",
+  "effective_procedure": {
+    "local_path": "producers/derived-research-flow/revisions/v2/apply.py",
+    "byte_length": 19851,
+    "sha256": "3404af9b477c4d07b170d03f7068d4152b2bd4cb76c607cf1a0f24320bd67bf8",
+    "calculated_git_blob_sha": "f4de05371a97cd74ff333030a8949770888bd1b1"
+  },
+  "pre_execution_freeze": {
+    "local_path": "producers/derived-research-flow/revisions/v2/procedure-freeze.json",
+    "byte_length": 15402,
+    "sha256": "b2b63dbbe1ac9cfdeb619ba074d2e8b8abc809b00bf13a72aea7f6235e746356",
+    "calculated_git_blob_sha": "0edb4f1d7effd4b3cf125eda56d05a345294bfb2"
+  },
+  "changes": [
+    {
+      "file": "body.md",
+      "historical_input": {
+        "local_path": "producers/derived-research-flow/history/v1/body.md",
+        "byte_length": 16980,
+        "sha256": "a4b50fa9ae0b781dbea831aefcb98cb099f93167d4a7a584dc88878fc93bc044",
+        "calculated_git_blob_sha": "8b7c702e3d5d6e0d9a8f303136a9d97ac280d82c"
+      },
+      "new_output": {
+        "local_path": "producers/derived-research-flow/body.md",
+        "byte_length": 17113,
+        "sha256": "f6dce8d080ff5bdd3a5409bd16b846c176c8270135eb51a6cd0329413e3d0994",
+        "calculated_git_blob_sha": "2bd9021ea932e9afb5fdd8619b5b6b16e4bfc440"
+      },
+      "byte_offset_zero_based": 6695,
+      "before_end_byte_exclusive": 6779,
+      "after_end_byte_exclusive": 6912,
+      "line_one_based": 48,
+      "before": "Sem shard aberto, dispara build detached e responde building/unavailable com motivo.",
+      "after": "Sem shard aberto, só inicia build detached se houver extrator, construção necessária e nenhum build em curso; a resposta building/unavailable com motivo não comprova, por si, que a consulta iniciou novo trabalho.",
+      "before_utf8_bytes": 84,
+      "after_utf8_bytes": 217,
+      "before_sha256": "693d5046f90042f2647f15a011dfc91b3d3e8a6b43ca5ee83020db4cee8fe4a0",
+      "after_sha256": "0507146c6d769086763227bb6adbc254f498abb56417ddd9363c347351026168",
+      "unchanged_prefix_sha256": "cb001605e08269efe371c02b0221b728a21353867bac45d6e9f2ffe0f7a83db8",
+      "unchanged_suffix_sha256": "def06c2daff4506ae6b86149a2f88a49a4ef6dc797c2ed1c4d7536e2d4c92841",
+      "prefix_identical": true,
+      "suffix_identical": true,
+      "occurrences_replaced": 1
+    },
+    {
+      "file": "evidence.md",
+      "historical_input": {
+        "local_path": "producers/derived-research-flow/history/v1/evidence.md",
+        "byte_length": 11305,
+        "sha256": "8e2b11c446ef73d166c98f7d852d5ca674a0a056779351e393a2d8b832cbf365",
+        "calculated_git_blob_sha": "83aff55b8282a7aa0e4ea0c99ecdbb31f4b7ba4f"
+      },
+      "new_output": {
+        "local_path": "producers/derived-research-flow/evidence.md",
+        "byte_length": 11457,
+        "sha256": "b7d51d3bab6f9d8538d6b6362953647eedfbc5fad905c69b5d3fd38b0ea75022",
+        "calculated_git_blob_sha": "18797d0844d84082dc39e99acbc10f9de03c46ea"
+      },
+      "byte_offset_zero_based": 4283,
+      "before_end_byte_exclusive": 4516,
+      "after_end_byte_exclusive": 4668,
+      "line_one_based": 27,
+      "before": "| F3, query/stale/dirty | building/unavailable, retido stale, basis do plano atual, overlay limitado, candidates e limites de cobertura | R8.1 Query: vazio, stale e dirty | Observação; ausência de hit não prova ausência de uso |",
+      "after": "| F3, query/stale/dirty | Build condicionado a extrator presente, construção necessária e nenhum build em curso; building/unavailable não comprova novo disparo; retido stale, basis do plano atual, overlay limitado, candidates e limites de cobertura | R8.1 Query: vazio, stale e dirty; qualificação pública RF-J2-F01 | Observação; ausência de hit não prova ausência de uso |",
+      "before_utf8_bytes": 233,
+      "after_utf8_bytes": 385,
+      "before_sha256": "81be80ecac76fcb5361adf8089a69fa77a7a1e2aaf5f9fa07f7c8b5ab491eb10",
+      "after_sha256": "6ffb41d3f19349d369ae2c1ad697272561eefbc60b050bd49c1976341d8495e7",
+      "unchanged_prefix_sha256": "943c08c668e12b2cddccbc1d1c710b62df54c518e8f3e07ec2159e979f5abcf2",
+      "unchanged_suffix_sha256": "dd8a3290c3e8a4dd146e64dd46ec71400a5d4e0d00f1871542707ab24da324dd",
+      "prefix_identical": true,
+      "suffix_identical": true,
+      "occurrences_replaced": 1
+    }
+  ],
+  "body_and_evidence_other_bytes_unchanged": true,
+  "semantic_predecessor_unchanged": true,
+  "later_layers_authored": []
+}

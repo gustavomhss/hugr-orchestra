@@ -1,0 +1,7 @@
+Produza somente s1.subslice03.boundary-flow, L2, need=flow, da missão S1-03.
+Raiz da execução: /workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390
+Receita efetiva congelada: payload/recipes/derived/boundary-flow.json
+Receita SHA256: 3e4c7ebbb94d3fb6d7c4de5238aaea74e817cbfb1e80ea2c15bb259bc20eb544
+Leia integralmente a receita e exatamente os inputs nela enumerados. O gate dos predecessores foi conferido nos dois pareceres originais antes deste pedido.
+Diretório de escrita exclusivo: producers/derived-boundary-flow
+Preserve este request.txt; registre o dispatch visível separadamente. Não leia os pareceres completos, oracle ou fontes brutas. Não delegue. Execute a autoria e verificação determinística permitidas até entregar os cinco outputs da receita. Nenhum nível posterior está liberado por este pedido.

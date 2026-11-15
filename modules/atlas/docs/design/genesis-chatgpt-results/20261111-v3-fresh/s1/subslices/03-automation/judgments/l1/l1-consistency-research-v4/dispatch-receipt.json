@@ -1,0 +1,95 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "l1-consistency-research-v4",
+  "source": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/l1-consistency-research-v4.md",
+  "source_bytes": 8393,
+  "source_sha256": "d5968ca0cf7ca629c983b251feef3ef827c8d13506e4846f03627d3595c7a99f",
+  "parts_per_target": 1,
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 9162,
+      "request_file_sha256": "d9c26610b8347fc52ff17637ac8d5b142db9683f0483e978e67eef8bc2950092",
+      "message_bytes": 8997,
+      "message_sha256": "4bdfd6dcaa794da51ac29ed350106c3a5013adcafb3d90c02c5fe38338147596",
+      "payload_bytes": 8393,
+      "payload_sha256": "d5968ca0cf7ca629c983b251feef3ef827c8d13506e4846f03627d3595c7a99f",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 9162,
+      "request_file_sha256": "aa4005f90d2a79b8a8401d759222e3ddaae6e47ed7c0e4bfc1738f94eb1a5eb4",
+      "message_bytes": 8997,
+      "message_sha256": "4bdfd6dcaa794da51ac29ed350106c3a5013adcafb3d90c02c5fe38338147596",
+      "payload_bytes": 8393,
+      "payload_sha256": "d5968ca0cf7ca629c983b251feef3ef827c8d13506e4846f03627d3595c7a99f",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Literal UTF-8 packet only; final signal is outside payload.",
+  "slot_handling": "Per-handle pipeline authorized by principal. J1 research began after its BND final was saved while J2 still reviewed BND. J2 research began after both its BND final and J1 research final were saved. Principal reserved one author slot for BND L2 correction; J1 remains idle while J2 research runs.",
+  "judgment_capture": "Both original final answers saved verbatim; see response-capture.json.",
+  "dispatch_count": 2,
+  "recorded_at_utc": "2026-11-15T04:17:42.221190+00:00",
+  "completed_targets": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "pending_targets": [],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 8393,
+      "sha256": "d5968ca0cf7ca629c983b251feef3ef827c8d13506e4846f03627d3595c7a99f",
+      "equals_source": true,
+      "raw_bytes": 8393,
+      "raw_sha256": "d5968ca0cf7ca629c983b251feef3ef827c8d13506e4846f03627d3595c7a99f",
+      "corrections_applied": false
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "bytes": 8393,
+      "sha256": "d5968ca0cf7ca629c983b251feef3ef827c8d13506e4846f03627d3595c7a99f",
+      "equals_source": true,
+      "raw_bytes": 8393,
+      "raw_sha256": "d5968ca0cf7ca629c983b251feef3ef827c8d13506e4846f03627d3595c7a99f",
+      "corrections_applied": false
+    }
+  ],
+  "judgment_captures": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/l1-consistency-research-v4/j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 2991,
+      "sha256": "f0aa061a964bc10e7429dde0b54c2f74c465bdb1e1a7198544541af0fc23218e",
+      "terminal_newline": false,
+      "literal": true
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/l1-consistency-research-v4/j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 2462,
+      "sha256": "1d6caeecccc795766c71a3cb9822c8feb1939c8477d7c1d6c9d5ff90d96bea35",
+      "terminal_newline": false,
+      "literal": true
+    }
+  }
+}

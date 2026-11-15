@@ -1,0 +1,89 @@
+{
+  "schema": "genesis-minimal-l1-delta/v1",
+  "artifact": "s1.core.research",
+  "revision": 4,
+  "finding": "ROOT-R-L1-F01",
+  "prior_body": {
+    "read_path": "producers/research/body.md",
+    "retained_path": "producers/research/revisions/v4/history/body.md",
+    "bytes": 63841,
+    "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+    "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4"
+  },
+  "current_body": {
+    "path": "producers/research/body.md",
+    "bytes": 64106,
+    "sha256": "c3925ca6e27465598796ef21815e79980277d4c3194a8b2fda7cf433700675d1",
+    "git_blob_sha": "69fda8b4a63d5480b7d78e8f915e1d90fb8a2b8b"
+  },
+  "replacement_count": 1,
+  "section": "R8.1",
+  "line": 225,
+  "before": "Se não há shard aberto, dispara build detached e devolve building/unavailable com motivo, sem fabricar resultado vazio limpo.",
+  "after": "O build detached exige shard ausente ou stale, ausência de build em andamento do plano ou dos shards e `ctx.extract` disponível (`missing && !building && ctx.extract`). Sem shards no escopo, retorna `index_unavailable` antes desse caminho; sem shard utilizável, devolve building/unavailable com motivo, sem fabricar resultado vazio limpo. Esse erro não implica novo disparo nesta chamada.",
+  "utf8_offsets": {
+    "convention": "zero-based bytes; end exclusive",
+    "before": {
+      "start": 35896,
+      "end": 36023
+    },
+    "after": {
+      "start": 35896,
+      "end": 36288
+    }
+  },
+  "before_literal": {
+    "bytes": 127,
+    "sha256": "c62a10e8a8ec9e93434db92473ede474e8da919c5e281901b68b364b538b7a23",
+    "git_blob_sha": "2ca22c59231a3c10785aee4d791a74bede848170"
+  },
+  "after_literal": {
+    "bytes": 392,
+    "sha256": "d7b0b397c4e9d3795f04c3b6696582a5939aaafc1a812f21da2ad0aff1e6532d",
+    "git_blob_sha": "8a2c2ea59e1f7120d2c73706545a04862d269cff"
+  },
+  "unchanged_prefix": {
+    "bytes": 35896,
+    "sha256": "3cd41c59dd868135a4f4bd3700e76959e10751516350cdf16f94e5f6f366577a",
+    "git_blob_sha": "a240e76212f0383255fd256f567c414e91d601bf"
+  },
+  "unchanged_suffix": {
+    "bytes": 27818,
+    "sha256": "20f00cf7aaf5142bf1323bd33abb0183c3e690a40a39fcb044225b4ea69011bb",
+    "git_blob_sha": "0c563a60eef3694f711d6c0b7fb50070e6acccc3"
+  },
+  "inverse_reconstruction_equals_v3": true,
+  "all_other_bytes_unchanged": true,
+  "changed_lines": [
+    225
+  ],
+  "source": {
+    "id": "RB-S002",
+    "repository_path": "packages/core/src/research-toolkit/code-index/query.ts",
+    "capture_path": "producers/research/sources/packages/core/src/research-toolkit/code-index/query.ts",
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "identity": {
+      "bytes": 32872,
+      "sha256": "ec1dd4a297e6e798c497d67ac5ed21cd4c6484e2aba3c2bed60dbd8f174f05e8",
+      "git_blob_sha": "25d652ee0ce78d327427837466b5d7fe5886013f"
+    },
+    "range": {
+      "start_line": 176,
+      "end_line_inclusive": 225,
+      "utf8_start_offset_inclusive": 8891,
+      "utf8_end_offset_exclusive": 12563,
+      "literal_excerpt_identity": {
+        "bytes": 3672,
+        "sha256": "d5247bd567dedef70790e07a2ed1a976c147315f0b9a6d954eec438f6b099ec4",
+        "git_blob_sha": "c0b836682518b65cbfc415b61e974a903bfc049f"
+      }
+    }
+  },
+  "independent_unified_diff": {
+    "path": "producers/research/revisions/v4/delta.patch",
+    "bytes": 2508,
+    "sha256": "006c3d6f4a57f82863ff1a508408d4703d0e1cbe1d3aad94274133002cb4a0a7",
+    "git_blob_sha": "06a6008d20fe5cac6530464d30d6f427540e38ac"
+  },
+  "verification_scope": "Byte identity and exact replacement; no semantic verdict or product execution."
+}

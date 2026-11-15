@@ -1,0 +1,1021 @@
+# Reavaliação support-supplement-v2
+
+Mesmo par /root/s1_03_j1 e /root/s1_03_j2, execução34269cf4-d631-41c5-a30b-85b0ec217390. Sem ferramentas. Autoria e relay não receberam oracle. Julgar após FIM_DO_LOTE externo final. Os corpos originais foram recebidos nos lotes support/union-proposal; o suplemento identifica exatamente os deltas autorizados ou a ausência de mudança, preservando as versões e pareceres anteriores.
+
+A principal verificou 149 trechos novos, 36 intervalos reutilizados, bytes/linhas/hashes originais e a identidade da reconciliação compartilhada já transportada no suplemento boundaries. Para suporte, conferiu também somente três substituições de corpo e duas razões de coverage. Essas verificações são de custódia/derivação, não aceite semântico nem execução de testes. Reavaliar todos os critérios pertinentes já recebidos e somente as pendências obrigatórias delimitadas. O reúso aceito de controles históricos não substitui estes juízos.
+
+## INICIO_DO_SUPLEMENTO_LITERAL
+
+# Suplemento support 1 — correções e RE-SUP-01..05
+
+Produtor original `/root/boundaries_l1`; pedidos públicos J1/J2 lidos integralmente e preservados. Nenhum oracle ou outro parecer reservado foi consultado. Estado: resposta a FIX-FIRST/REQUEST_EVIDENCE, com três precisões autorizadas; nenhuma decisão de aceite atribuída pelo produtor.
+
+Corpo v1 `3a4ef5ee6925eb3c80404181f00a0e4e012750459f2dbb1ab11076b69449d684` (22388 bytes); corpo v2 `498a0454418a14977b9b2f4c4f515711d941b6d4bbece13f1baaa8feaa76d378` (23025 bytes). Original, receita, resposta e coverage v1 estão preservados em `revisions/support-v1/`.
+
+## SUP-F01/D-SUP-01 — delta literal autorizado
+
+Anterior:
+
+`````text
+A direção declarada vai de Schema/Protocol para Core e daí para Server; Core não deve importar Client/Server.
+`````
+
+Novo:
+
+`````text
+A fonte declara separadamente `Schema → Core` e `Protocol → Server`; também informa que Server expõe os serviços Core por HTTP. Core não deve importar Client/Server.
+`````
+
+## SUP-F03 — delta literal autorizado
+
+Anterior:
+
+`````text
+aponta a chave de testes para arquivo temporário
+`````
+
+Novo:
+
+`````text
+fornece um caminho temporário para a chave de testes quando `ORCHESTRA_CREDENTIAL_KEY_FILE` ainda não está definida (`??=` preserva um valor previamente definido)
+`````
+
+## SUP-F02 — delta literal autorizado
+
+Anterior:
+
+`````text
+`omni-expect.ts` registra snapshot de contagem no próprio teste e compara apenas seus spawns quando o teste termina. Outro teste não pode satisfazer a expectativa aberta; caso filtrado/skipped que não abriu expectativa não declara controle.
+`````
+
+Novo:
+
+`````text
+`omni-expect.ts` mantém uma única expectativa `open` e calcula a diferença do contador `Omni.snapshot().spawns` na janela entre `expectSpawn` e `settle`. O comentário declara a intenção de atribuir os spawns ao teste e descreve liquidação por `afterEach`; a folha isolada não demonstra atribuição individual de cada spawn nem exclusão de sobreposição. Interpretar a diferença como contagem exclusiva de um teste exige que essa janela não contenha spawns de outros testes ou trabalhos e que a integração ao runner delimite a janela corretamente. Caso filtrado/skipped que não chamou `expectSpawn` não abriu expectativa. Essa qualificação não afirma que tenha ocorrido uma falha real.
+`````
+
+## Erratum compartilhado de duas razões de coverage
+
+O original e o bloco compartilhado já congelado permanecem intactos. Só README e omni-expect recebem nova razão, em arquivo v2 separado.
+
+### SUP-COVERAGE-ERRATUM — `shared-reconciliation-2.delta.md` 1–37
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `2c72c406a9c44cbd32e2563f15cc3f08d589a4ce`; SHA256 integral `d2a6755fbb6f1aa41ab93be1ac42478de9bed062330489eff68ca34fb4b0b48a`. Bytes fonte 1966; recorte [0, 1966); SHA256 trecho `d2a6755fbb6f1aa41ab93be1ac42478de9bed062330489eff68ca34fb4b0b48a`.
+
+`````text
+# Erratum compartilhado — duas razões de coverage
+
+Autorizado pela principal para alinhar exclusivamente SUP-F01/D-SUP-01 e SUP-F02. `coverage.jsonl` v1 e `shared-reconciliation-1.md` permanecem byte-idênticos; use `coverage-v2.jsonl` para estas duas razões corrigidas. Contagens, paths, hashes das fontes, profundidades e estados não mudam. Não há novo aceite.
+
+v1 SHA256 `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`; v2 SHA256 `d1ed0705d256b1578a0debce284c3a2c4dd3bd2e00bf9f8f60e047b097d5bf74`. Exatamente duas linhas modificadas.
+
+## SUP-F01/D-SUP-01 — `packages/core/README.md`
+
+Razão anterior (literal):
+
+`````text
+Entrada pública e direção Schema/Protocol→Core→Server, composição e geradores oficiais; intenção de arquitetura não prova todas as folhas.
+`````
+
+Razão corrigida (literal):
+
+`````text
+Entrada pública: Schema→Core e Protocol→Server são relações separadas; Server expõe serviços Core por HTTP. Composição e geradores oficiais são declarados; intenção de arquitetura não prova todas as folhas.
+`````
+
+Linha 16, SHA256 da linha v1 `60bec29f8994fbfa5b8def81c75bbe31d1c37d692beec4c7c230674407ba6579`, linha v2 `9e68bdedf893a3bb659e225f1cba4f871d2b9a4d5d006aa2e14735f61d6fa167`.
+
+## SUP-F02 — `packages/core/test/fixture/omni-expect.ts`
+
+Razão anterior (literal):
+
+`````text
+Controle positivo abre expectativa no próprio teste e computa apenas seus spawns; outro teste não satisfaz a declaração.
+`````
+
+Razão corrigida (literal):
+
+`````text
+Mantém uma expectativa open e mede diferença do contador de spawns na janela expectSpawn→settle. Exclusividade por teste é intenção do comentário e exige ausência de sobreposição/integração correta com runner, não demonstradas só por esta folha.
+`````
+
+Linha 77, SHA256 da linha v1 `04ce87f24436a300e75936ae56404b47c77eb2299950b7db068cc65d6e01fc30`, linha v2 `13dd2bc2e03bb8374d6778d8c7b26139b742de825e9208c985c2dd2718a28be0`.
+`````
+
+## Plano de reuso do que J1/J2 já receberam
+
+R042–R077, I01 e S29 foram reconhecidos nos pedidos públicos. Os ramos abaixo complementam esses recortes. O comentário de omni-expect é intenção; a correção escolhe a descrição limitada da janela, não tenta provar exclusividade com uma integração de runner não exibida. Não se afirma falha real.
+
+| R | Fonte / linhas | Offset na fonte | SHA256 trecho | Offset em evidence-review.md |
+|---|---|---|---|---|
+| R042 | `packages/core/README.md` 1–27 | [0, 2131) | `1d4c069166cb530621c4bf35ad166fe05996dcb54e58431a8e36d6f26e0fbe5e` | [58874, 61005) |
+| R043 | `packages/core/README.md` 48–62 | [3086, 4053) | `83c0452c7a83b6ec2e2462325060ad5d5bb582a114c32716f6ff6f4a2466a0c6` | [61358, 62325) |
+| R044 | `packages/core/package.json` 1–22 | [0, 776) | `63b49e189893202b209c0c4406a32483d1b641a7a12c888378d0f6bfb4eae4e3` | [62679, 63455) |
+| R045 | `packages/core/bunfig.toml` 1–2 | [0, 106) | `bc68812446e4beefbffc44973ea98521f9d95ea9096849ff2d2ac30fa1ad4ca2` | [63806, 63912) |
+| R046 | `packages/core/test/preload.ts` 4–11 | [45, 660) | `87f85c05405dccc8eff327b7b22ef016f6e597f5b9124e22d71eeccb4aa3b4e6` | [64269, 64884) |
+| R047 | `packages/core/script/migration.ts` 37–58 | [1068, 2128) | `67cb9b784dbea632e49e95e4ba23e162219e18fb6acb1477b6125e56d2cb2df4` | [65247, 66307) |
+| R048 | `packages/core/script/migration.ts` 71–88 | [2528, 3434) | `5e5fe1d38508707f85bc88b608df7ddb8b456af9a1c0dfd22bdcd391816bd8a3` | [66670, 67576) |
+| R049 | `packages/core/script/toolkit-pack.ts` 1–15 | [0, 1400) | `b8ae9793c3d04bbe4f6908fa3200793f6a0d9175596873ec1e52ede789f9b839` | [67940, 69340) |
+| R050 | `packages/core/script/toolkit-pack.ts` 345–360 | [15585, 16119) | `f8498e7a54b8f6da483e9c3af1e03b3a8fa9b741f54b1abfb73a63eea2bd625f` | [69710, 70244) |
+| R051 | `packages/core/script/toolkit-floors.ts` 1–17 | [0, 1457) | `adb80283ddc6d935d68fab9068e5198a146a636ec3e2e40fd3d03db77c408fe7` | [70610, 72067) |
+| R052 | `packages/core/vendor/README.md` 1–22 | [0, 1599) | `608743a6ac169ad6040bc2f399e0d6af6d6c993369c79539cbb952855d4f5e85` | [72425, 74024) |
+| R053 | `packages/core/vendor/README.md` 28–43 | [1916, 2871) | `d3e91ac5fc12cc7425b959e7e86281a89448f3ecc0174f639b3fd8a439bfb6f1` | [74383, 75338) |
+| R054 | `docs/architecture/phase-plans/70-90-briefs/EXP-CORE.md` 49–56 | [2818, 3715) | `e9d2b43a633e3a27ce97ea428a1a5ae68fe353b655c0809cbd53e840bc8a39c6` | [75722, 76619) |
+| R055 | `docs/specs/runtime-closure/PRODUCER-BOUNDARY.md` 1–21 | [0, 1143) | `3e7b36ff1a1b15b4d81a0d0aeadcea70bc205a8223db4afe4bd55870930a9829` | [76994, 78137) |
+| R056 | `docs/specs/runtime-closure/CHECKPOINT.md` 39–56 | [6056, 8092) | `f9825b4497f2fd8dbb3cf2ae042c83fb35c67d7dd7d57a83ee57eefc6fc066ea` | [78507, 80543) |
+| R057 | `docs/specs/runtime-closure/ARCHIE-QUALIFICATION.md` 52–76 | [4385, 8788) | `b38dc0822be2732f0e0947a3b37258248eac6e4cd4492566ab0ffe08bc1cddc0` | [80923, 85326) |
+| R058 | `docs/specs/v2/api.html` 919–925 | [35002, 35349) | `0dc9b2d572db698486503d79f5c06985f9d6cd813451701b9de6557eeb7a7cd9` | [85682, 86029) |
+| R059 | `docs/specs/v2/todo.md` 56–74 | [2789, 3767) | `aae64b83c19d85d938b0bfd00c1afdbbc90859dd2a0f3eb72dbb0e8eabd39097` | [86380, 87358) |
+| R060 | `packages/core/test/fixture/omni-expect.ts` 1–7 | [0, 639) | `b74576f4f2676cf6f3e92342cb80aded095a63df731fbdbde448f68a18035221` | [87726, 88365) |
+| R061 | `packages/core/test/fixture/omni-expect.ts` 13–27 | [788, 1374) | `07c0e7573fde3edd8b0f03142f5cf065ba60f5bdc3adb0a5e2e9602b60e5fc0b` | [88735, 89321) |
+| R062 | `packages/core/test/fixture/actions-transport.ts` 55–67 | [2999, 3736) | `ca8fd0d63f34a480badc8b39a7f33da1823a2d982f37e3b4cea4dc97cee1adef` | [89698, 90435) |
+| R063 | `packages/core/test/fixture/board-queue.ts` 27–38 | [1343, 2029) | `16e67e208d307b0382d06b62515be67dcf872fa1dc67a61db8f397eb86d8d2e5` | [90806, 91492) |
+| R064 | `packages/core/test/fixture/board-queue.ts` 132–147 | [7673, 8395) | `e16afd0b04ffa9d1aa18af13f38b9cb52590e30df08456f40e2c03b56381ba27` | [91867, 92589) |
+| R065 | `packages/core/test/fixture/board-queue.ts` 333–351 | [17127, 17881) | `0eabf0e1481d7703a3b65df865b537f9dab38a9fe0b45fb5b8be0e45d8c23531` | [92964, 93718) |
+| R066 | `packages/core/test/fixture/capability-schedule.ts` 37–52 | [2029, 3259) | `5fb24b30119eb80629e0d98c9b731843b96209af31b78739500f7640d98220ce` | [94097, 95327) |
+| R067 | `packages/core/test/fixture/capability-schedule.ts` 72–85 | [4517, 5794) | `8e976db28ec43fe70fd733a7687388658232dde9f4751da039e4fcea9ea3276d` | [95706, 96983) |
+| R068 | `packages/core/test/fixture/capability-connection-management.ts` 34–41 | [1881, 2440) | `1281e9e410eb39c570436ee31fb0a9b2f96476523a4309d1c5688b01e5de66ab` | [97375, 97934) |
+| R069 | `packages/core/test/distribution-bundle-execution.test.ts` 13–26 | [574, 1445) | `a3f4f2c76131279922f02cca875c11730dd7e2f72b21d319ed68f928ebc7e73d` | [98320, 99191) |
+| R070 | `packages/core/test/distribution-bundle-boundaries.test.ts` 13–23 | [596, 1085) | `9b5992aeb4b74a766d3bb2c256533406908f4814b4a5b8bd90df849f46c495b7` | [99578, 100067) |
+| R071 | `packages/core/test/fixture/github-read.ts` 27–32 | [1488, 1998) | `64d9962c1a649ca65d5e1ae2ac5e4ccde443c9b7bf87c67ad579fef6aa8d6069` | [100438, 100948) |
+| R072 | `packages/core/test/fixture/process-tree.ts` 1–9 | [0, 784) | `cf8d286443d0466cc35041dea6b46696d89322844e95f3dc5820f06c29ab0b40` | [101317, 102101) |
+| R073 | `packages/core/test/windows-process-query.hosted.ts` 9–23 | [447, 1406) | `a4fb28ac7cd5a25c9a8c5400c34f793dcce28f981a308c1341c7077f53f8e1ae` | [102479, 103438) |
+| R074 | `packages/core/test/lib/effect.ts` 41–60 | [1909, 2864) | `b4fb05ecf3b4ddb316c7c7f3e7eb65ceae8273045b4245d4fb43417273a3087e` | [103800, 104755) |
+| R075 | `packages/core/test/lib/sandbox-host.ts` 5–17 | [180, 1023) | `706009731422d25b3a422649b0611340fe32aa14472a8b40a3412b7ad12eb077` | [105121, 105964) |
+| R076 | `packages/core/test/upstream-settlement-preservation.test.ts` 29–40 | [1383, 2065) | `771a340bd67f929022ccd306ffe56272d3e6b6ea03bdd982c29c356168071b35` | [106353, 107035) |
+| R077 | `packages/core/test/fixture/packaged-skills.ts` 9–18 | [240, 713) | `fc8119756b4ce970c44d0e984bc54558ad88b42079654a18c2d6dc2270fe8dce` | [107408, 107881) |
+
+## RE-SUP-01 — População/herança reutilizadas e fatos estruturais independentes
+
+O bloco `shared-reconciliation-1.md` deve ser transportado uma única vez no lote boundaries; é reutilizado aqui sem duplicação. SHA256 `75aa4f74aba2ddcecd58c52fd329481dffabc60271a57bf0bfbe358d0b903992`, 121449 bytes. Está integralmente em `suplemento-boundaries-1.md` nos bytes [9742, 131191). A principal deve manter esse bloco no contexto do par para este reuso; a referência não afirma entrega já concluída pelo produtor.
+
+Esse bloco fornece as 24 linhas originais completas e a projeção individual dos 104 paths (path/read_depth/role/rationale), com identidade do JSONL, composição 9/3/12/80, históricos boundaries/entry/manifest, 1441/2236, e os campos literais 2+102/4+20 da projeção original. O erratum acima substitui somente duas razões; `coverage-v2.jsonl` conserva 128 linhas e todos os outros bytes de linha. Os 104 continuam no artefato `s1.subslice03.support`, need `entry`; os 24 continuam em `s1.core.boundaries`, need `component`.
+
+### Verificação independente da principal
+
+O recibo tem 58.492 bytes, SHA256 `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Ele liga seis inputs aos blobs/SHA/bytes capturados. Confirmou 437 exports sem raiz/wildcard; 63 tables, 637 columns, 59 fks, 63 pks, 52 indexes, 3 uniques e 1 check; 191 membros no tar. O escopo do resultado é estrutural; o próprio recibo mantém semantic_acceptance NOT_ASSIGNED e product_execution NOT_RUN. O procedimento foi lido, não reexecutado por este produtor.
+
+### MECH-PROCEDURE — `scripts/verify-support-structure.py` 1–43
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `7784f7f6038805961f963653f4015accae642d18`; SHA256 integral `ce242e9fe2d969baf176a4c1d101342e265d5c0857dd8d8fcbbc70a82cd2bb52`. Bytes fonte 3713; recorte [0, 3713); SHA256 trecho `ce242e9fe2d969baf176a4c1d101342e265d5c0857dd8d8fcbbc70a82cd2bb52`.
+
+`````text
+from pathlib import Path
+from collections import Counter
+import hashlib,json,sys,io,tarfile,zipfile,re
+
+root=Path(sys.argv[1]);manifest=Path(sys.argv[2]);output=Path(sys.argv[3])
+captures={x['path']:x for x in map(json.loads,manifest.read_text().splitlines())}
+sources=[]
+def load(path):
+    b=(root/path).read_bytes();c=captures[path]
+    assert hashlib.sha256(b).hexdigest()==c['sha256']
+    assert hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()==c['git_blob_sha']
+    assert len(b)==c['byte_length']
+    sources.append({k:c[k] for k in ['path','commit','git_blob_sha','sha256','byte_length']})
+    return b
+pkg=json.loads(load('packages/core/package.json'));exports=pkg['exports']
+schema=json.loads(load('packages/core/schema.json'));counts=dict(Counter(x['entityType'] for x in schema['ddl']))
+tb=load('packages/core/vendor/hugr-lean-0.4.0-0660c2b5dc92.tgz')
+with tarfile.open(fileobj=io.BytesIO(tb),mode='r:gz') as tar:
+    members=[{'name':m.name,'size':m.size,'type':m.type.decode('ascii','backslashreplace')} for m in tar.getmembers()]
+    package_json=tar.extractfile('package/package.json').read()
+    meta=json.loads(package_json)
+zb=load('packages/core/test/fixture/pinned-artifact/tool.zip')
+with zipfile.ZipFile(io.BytesIO(zb)) as z:
+    zipped=[{'member':v.filename,'bytes':len(z.read(v)),'sha256':hashlib.sha256(z.read(v)).hexdigest(),'hex':z.read(v).hex()} for v in z.infolist()]
+scip=[]
+for name in ['core','orchestra']:
+    path='packages/core/test/fixture/scip-alias/'+name+'.scip';b=load(path)
+    scip.append({'path':path,'ascii_printable_strings_min_length':4,'strings':[{'byte_start':m.start(),'byte_end_exclusive':m.end(),'text':m.group().decode('ascii')} for m in re.finditer(rb'[ -~]{4,}',b)],'semantic_protocol_decode':False})
+result={
+ 'schema':'s1-03-independent-support-structure/v1',
+ 'method':'Python stdlib only: exact captured bytes and source hashes checked; JSON parse, Counter(entityType) over ddl list, tar member metadata/read package.json in memory, ZIP member bytes, ASCII printable SCIP strings with byte offsets. No archive extraction to filesystem, import, install, build, test, generator or binary execution.',
+ 'sources':sources,
+ 'package':{'name':pkg['name'],'version':pkg['version'],'exports_count':len(exports),'has_bare_export':'.' in exports,'has_wildcard':any('*' in k for k in exports),'exports_keys':list(exports)},
+ 'schema_snapshot':{'version':schema['version'],'dialect':schema['dialect'],'id':schema['id'],'prevIds':schema['prevIds'],'ddl_total':len(schema['ddl']),'ddl_entities':counts},
+ 'tar':{'member_count':len(members),'members':members,'package_json_exact_utf8':package_json.decode(),'package_json_bytes':len(package_json),'package_json_sha256':hashlib.sha256(package_json).hexdigest(),'package_name':meta['name'],'package_version':meta['version']},
+ 'zip_fixture':zipped,'scip_fixtures':scip,
+ 'status':'PASS_STRUCTURAL_FACTS_ONLY','semantic_acceptance':'NOT_ASSIGNED','product_execution':'NOT_RUN'}
+assert result['package']['exports_count']==437
+assert not result['package']['has_bare_export'] and not result['package']['has_wildcard']
+assert counts=={'tables':63,'columns':637,'fks':59,'pks':63,'indexes':52,'uniques':3,'checks':1}
+assert len(members)==191 and hashlib.sha256(package_json).hexdigest()=='eb1e4264a0ddc9a050fe30490415dc020f33d2bb7a3de73e768943ef499851fa'
+output.parent.mkdir(parents=True,exist_ok=True);output.write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n')
+print(json.dumps({'output':str(output),'bytes':output.stat().st_size,'sha256':hashlib.sha256(output.read_bytes()).hexdigest(),'exports':len(exports),'ddl':counts,'tar_members':len(members),'status':result['status']},ensure_ascii=False))
+`````
+
+### MECH-RECEIPT-1 — `payload/receipts/independent-support-structure.json` 3–3
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [68, 397); SHA256 trecho `c85e039d382c84cdd159797e00c15003a8e3c426422211ecf91923f9720b6c7d`.
+
+`````text
+"Python stdlib only: exact captured bytes and source hashes checked; JSON parse, Counter(entityType) over ddl list, tar member metadata/read package.json in memory, ZIP member bytes, ASCII printable SCIP strings with byte offsets. No archive extraction to filesystem, import, install, build, test, generator or binary execution."
+`````
+
+### MECH-RECEIPT-2 — `payload/receipts/independent-support-structure.json` 4–47
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [412, 2276); SHA256 trecho `9beeaed263f678155ccc3cf9ba983b544e860aacf52fa91c7a3578536b683fe9`.
+
+`````text
+[
+    {
+      "path": "packages/core/package.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "8ee8ebb666051c9b5ee0fcd4a54bceb3a2cb3c43",
+      "sha256": "1c58faa263c2bb931b9789722342645e94cb30f0b91613b9093aa2ed422c8385",
+      "byte_length": 31912
+    },
+    {
+      "path": "packages/core/schema.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "31e3169da5ae7c3f15108cdbc773cc5ec9111bd5",
+      "sha256": "2655ceef23cb605ebb16630396831df540e104c362bbc168061b7ecfd9ef2fe5",
+      "byte_length": 202139
+    },
+    {
+      "path": "packages/core/vendor/hugr-lean-0.4.0-0660c2b5dc92.tgz",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "62cbd7c7df2ae07cdd3b623d4d3d6ee3fe3134ab",
+      "sha256": "5ff983c58aa056d82059d5edd5b428478dda50a7683a201b7d844949aa1712a3",
+      "byte_length": 205370
+    },
+    {
+      "path": "packages/core/test/fixture/pinned-artifact/tool.zip",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "41208db9a073ce776d126fcc6db9376533efb50a",
+      "sha256": "4b6fcf6a45c68b0620f6c5c3b25d66dbbe37d7e653d817aa1c098c26600c9f2b",
+      "byte_length": 136
+    },
+    {
+      "path": "packages/core/test/fixture/scip-alias/core.scip",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3fc1467571db2fdd0320695f8fcfd4671cda8e31",
+      "sha256": "1204e841efb9f7ee9e609b4224f65fdd0067c02d7ee28bd12c571a3b32757d66",
+      "byte_length": 1447
+    },
+    {
+      "path": "packages/core/test/fixture/scip-alias/orchestra.scip",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e004123513137fe7c73803dc3535606d84cccb7e",
+      "sha256": "a173da17ce68aee1f5026a4d70e6288ef0eae1d19cbc00dd1f856d02258e26bc",
+      "byte_length": 3850
+    }
+  ]
+`````
+
+### MECH-RECEIPT-3 — `payload/receipts/independent-support-structure.json` 494–511
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [16227, 16581); SHA256 trecho `d9e572ec392de451b5fae0b99ecff97168066c9f5eaa4c37aa254e9c3922822b`.
+
+`````text
+{
+    "version": "7",
+    "dialect": "sqlite",
+    "id": "e6e8468f-7bbe-4c35-aef1-3303e28aaf44",
+    "prevIds": [
+      "71037a02-42ad-482f-b987-e20674ec0701"
+    ],
+    "ddl_total": 878,
+    "ddl_entities": {
+      "tables": 63,
+      "columns": 637,
+      "fks": 59,
+      "pks": 63,
+      "indexes": 52,
+      "uniques": 3,
+      "checks": 1
+    }
+  }
+`````
+
+### MECH-RECEIPT-4 — `payload/receipts/independent-support-structure.json` 1477–1484
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [41619, 41827); SHA256 trecho `da91f26dd3e27af06818e01fe3573832c6a88c16f0fcfe89838cb05ec6fa4153`.
+
+`````text
+[
+    {
+      "member": "bin/tool",
+      "bytes": 22,
+      "sha256": "25eda55137747802ce9a30f1ce9a86b1c75e8a43797a2284eed853f1d4f7243e",
+      "hex": "23212f62696e2f73680a6563686f207a69707065640a"
+    }
+  ]
+`````
+
+### MECH-RECEIPT-5 — `payload/receipts/independent-support-structure.json` 2026–2026
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [58386, 58414); SHA256 trecho `6a32633ff0656c6ddd67c05770350a88981d41db2bd33859e06d2cd37da5d4d4`.
+
+`````text
+"PASS_STRUCTURAL_FACTS_ONLY"
+`````
+
+### MECH-RECEIPT-6 — `payload/receipts/independent-support-structure.json` 2027–2027
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [58441, 58455); SHA256 trecho `222bf2e8f1614e4f17bd7f257c75d4b36a92371df128849559bbc9bd903ce9dd`.
+
+`````text
+"NOT_ASSIGNED"
+`````
+
+### MECH-RECEIPT-7 — `payload/receipts/independent-support-structure.json` 2028–2028
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [58480, 58489); SHA256 trecho `685a776931a76735cbc38157245411d368b7cc7c5f63f24f6acab775f2d607ab`.
+
+`````text
+"NOT_RUN"
+`````
+
+### MECH-PACKAGE-COUNTS — `payload/receipts/independent-support-structure.json` 48–54
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [2291, 2437); SHA256 trecho `b6c971c8d036fbaa64558eaf8ec63da0e3ae65cb6abcf02fd6ee2a62ac549e05`.
+
+`````text
+{
+    "name": "@orchestra/core",
+    "version": "1.18.27",
+    "exports_count": 437,
+    "has_bare_export": false,
+    "has_wildcard": false,
+    
+`````
+
+### MECH-EXPORT-12 — `payload/receipts/independent-support-structure.json` 67–67
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [2765, 2774); SHA256 trecho `566b42bf88aebb52d14a22b7be1e8cbc07b5d89be926255430fd8ade85149669`.
+
+`````text
+"./atlas"
+`````
+
+### MECH-EXPORT-97 — `payload/receipts/independent-support-structure.json` 152–152
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [5889, 5919); SHA256 trecho `a92d57ad45933b5696d943f640045483c760fe796a77833228bfa58dc3ccce71`.
+
+`````text
+"./control-plane/move-session"
+`````
+
+### MECH-EXPORT-255 — `payload/receipts/independent-support-structure.json` 310–310
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [11016, 11044); SHA256 trecho `700b1acd8b86f2e133571b12bc26801cf35d3a4befc7ca7ee97a239636bb3046`.
+
+`````text
+"./test/fixture/omni-expect"
+`````
+
+### MECH-EXPORT-256 — `payload/receipts/independent-support-structure.json` 311–311
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [11052, 11071); SHA256 trecho `0e7760097df773d0f59eab0249d168ba644980003d4268690661656860f23693`.
+
+`````text
+"./test/lib/effect"
+`````
+
+### MECH-EXPORT-280 — `payload/receipts/independent-support-structure.json` 335–335
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [11689, 11707); SHA256 trecho `b78925566634f6b1fc04211e36b1752be948cc84f2e3a6b18857ec1f3d81c683`.
+
+`````text
+"./rag-studio/sql"
+`````
+
+### MECH-EXPORT-283 — `payload/receipts/independent-support-structure.json` 338–338
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [11766, 11775); SHA256 trecho `9da5a00e132467d5e4745a9bfc7381b6e9ff0777662fa09f566fd4633ef014bc`.
+
+`````text
+"./relay"
+`````
+
+### MECH-TAR-PACKAGE-JSON — `packages/core/vendor/hugr-lean-0.4.0-0660c2b5dc92.tgz!package/package.json` 1–83
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `475fe00141815b216de7381815f39a7444bd670d`; SHA256 integral `eb1e4264a0ddc9a050fe30490415dc020f33d2bb7a3de73e768943ef499851fa`. Bytes fonte 2070; recorte [0, 2070); SHA256 trecho `eb1e4264a0ddc9a050fe30490415dc020f33d2bb7a3de73e768943ef499851fa`.
+
+`````text
+{
+  "name": "hugr-lean",
+  "version": "0.4.0",
+  "description": "OpenCode plugin that summarizes large tool outputs before they reach the model, keeps failures whole and stores every original for exact recall",
+  "keywords": [
+    "opencode",
+    "opencode-plugin",
+    "plugin",
+    "coding-agent",
+    "llm",
+    "context",
+    "tokens",
+    "tool-output",
+    "summarize",
+    "compression"
+  ],
+  "homepage": "https://github.com/gustavomhss/HuGR-Lean#readme",
+  "bugs": {
+    "url": "https://github.com/gustavomhss/HuGR-Lean/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gustavomhss/HuGR-Lean.git"
+  },
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "NOTICE",
+    "CHANGELOG.md",
+    "SECURITY.md",
+    "licenses",
+    "docs/BENCHMARK_REAL.md",
+    "fixtures/**/SOURCES.md"
+  ],
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./server": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./core": {
+      "types": "./dist/core/index.d.ts",
+      "import": "./dist/core/index.js"
+    },
+    "./raw": {
+      "types": "./dist/raw/index.d.ts",
+      "import": "./dist/raw/index.js"
+    }
+  },
+  "bin": {
+    "hugr-lean": "dist/cli/index.js"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "tsx --test tests/*.test.ts",
+    "structure": "node scripts/check-structure.mjs",
+    "smoke": "node scripts/package-smoke.mjs",
+    "benchmark": "node scripts/benchmark.mjs",
+    "benchmark:real": "node scripts/real-world/run.mjs",
+    "benchmark:real:host": "node scripts/real-world/host.mjs",
+    "check": "npm run structure && npm run typecheck && npm test && npm run build",
+    "prepack": "npm run build"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0"
+  }
+}
+`````
+
+### MECH-TAR-MEMBER-10 — `payload/receipts/independent-support-structure.json` 565–569
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [18040, 18126); SHA256 trecho `4d35ea469d31e8f3956a25044cebcb24729ee2f1bba814c2b940effdb4a71820`.
+
+`````text
+{
+        "name": "package/LICENSE",
+        "size": 1066,
+        "type": "0"
+      }
+`````
+
+### MECH-TAR-MEMBER-11 — `payload/receipts/independent-support-structure.json` 570–574
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [18134, 18219); SHA256 trecho `535239c0d2cf61549b216b9127682a045ad08823fcfc4d431abc8ad6967e3747`.
+
+`````text
+{
+        "name": "package/NOTICE",
+        "size": 2563,
+        "type": "0"
+      }
+`````
+
+### MECH-TAR-MEMBER-74 — `payload/receipts/independent-support-structure.json` 885–889
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [25252, 25343); SHA256 trecho `5726bece13635057441358008cb822bb003a76e386f4f3215631acabb6b9669b`.
+
+`````text
+{
+        "name": "package/package.json",
+        "size": 2070,
+        "type": "0"
+      }
+`````
+
+### MECH-TAR-MEMBER-190 — `payload/receipts/independent-support-structure.json` 1465–1469
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [38911, 39010); SHA256 trecho `0755b98ca00a706e013294337e3847634d56a783a1a8905ba94a577728d96340`.
+
+`````text
+{
+        "name": "package/licenses/TRS-MIT.txt",
+        "size": 1065,
+        "type": "0"
+      }
+`````
+
+SCIP `packages/core/test/fixture/scip-alias/core.scip`: strings ASCII apenas; nenhum decode semântico do protocolo. Os offsets abaixo referem-se ao binário capturado.
+
+### MECH-SCIP-0-0 — `payload/receipts/independent-support-structure.json` 1490–1494
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [41995, 42105); SHA256 trecho `727e67a7ad791b0f633e4ef3cdcfecc6d512d65db03f49abd0c947f81857288f`.
+
+`````text
+{
+          "byte_start": 7,
+          "byte_end_exclusive": 22,
+          "text": "scip-typescript"
+        }
+`````
+
+### MECH-SCIP-0-4 — `payload/receipts/independent-support-structure.json` 1510–1514
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [42614, 42770); SHA256 trecho `8cc0785bb352f7e8685e9d8e56c76b9328fd511f2aeb471930c5e724ca06622a`.
+
+`````text
+{
+          "byte_start": 219,
+          "byte_end_exclusive": 277,
+          "text": "9scip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/"
+        }
+`````
+
+### MECH-SCIP-0-5 — `payload/receipts/independent-support-structure.json` 1515–1519
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [42780, 42944); SHA256 trecho `044fe606d6af1237c8e4515c6dca344d3f0bdbb6f74d556a0fcfd063b56a4925`.
+
+`````text
+{
+          "byte_start": 293,
+          "byte_end_exclusive": 359,
+          "text": "Ascip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/Greeter#"
+        }
+`````
+
+### MECH-SCIP-0-6 — `payload/receipts/independent-support-structure.json` 1520–1524
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [42954, 43126); SHA256 trecho `765711144183c39b510f3ab0c115759a081cae7aaa83dbdca31f934443f42f93`.
+
+`````text
+{
+          "byte_start": 375,
+          "byte_end_exclusive": 449,
+          "text": "Iscip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/Greeter#greet()."
+        }
+`````
+
+### MECH-SCIP-0-7 — `payload/receipts/independent-support-structure.json` 1525–1529
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [43136, 43314); SHA256 trecho `eeb6bb8c3947ddc8195546a8d763431b48eb2580f100a6927544c5434bf956ab`.
+
+`````text
+{
+          "byte_start": 459,
+          "byte_end_exclusive": 539,
+          "text": "Oscip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/Greeter#greet().(name)"
+        }
+`````
+
+SCIP `packages/core/test/fixture/scip-alias/orchestra.scip`: strings ASCII apenas; nenhum decode semântico do protocolo. Os offsets abaixo referem-se ao binário capturado.
+
+### MECH-SCIP-1-0 — `payload/receipts/independent-support-structure.json` 1642–1646
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [46632, 46742); SHA256 trecho `727e67a7ad791b0f633e4ef3cdcfecc6d512d65db03f49abd0c947f81857288f`.
+
+`````text
+{
+          "byte_start": 7,
+          "byte_end_exclusive": 22,
+          "text": "scip-typescript"
+        }
+`````
+
+### MECH-SCIP-1-12 — `payload/receipts/independent-support-structure.json` 1702–1706
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [48420, 48529); SHA256 trecho `d5547df43296bddb6f0e17d0d9424dfccb95e06815e15f9b8d04c9f88534abf6`.
+
+`````text
+{
+          "byte_start": 570,
+          "byte_end_exclusive": 581,
+          "text": "src/main.ts"
+        }
+`````
+
+### MECH-SCIP-1-16 — `payload/receipts/independent-support-structure.json` 1722–1726
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [49035, 49199); SHA256 trecho `7a146851edc5450b8f855e55b28d3c72b9897de6b744a4ed0aa78b4da03e41aa`.
+
+`````text
+{
+          "byte_start": 793,
+          "byte_end_exclusive": 859,
+          "text": "Ascip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/greet()."
+        }
+`````
+
+### MECH-SCIP-1-17 — `payload/receipts/independent-support-structure.json` 1727–1731
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [49209, 49373); SHA256 trecho `da7135d2a79aeae58e57c90054f6e432ecdf268a503b23ddda8d768626a84739`.
+
+`````text
+{
+          "byte_start": 867,
+          "byte_end_exclusive": 933,
+          "text": "Ascip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/Greeter#"
+        }
+`````
+
+### MECH-SCIP-1-18 — `payload/receipts/independent-support-structure.json` 1732–1736
+
+Commit `LOCAL_OR_INDEPENDENT_RECORD`; blob `d96d7c7dd3efd4691a3c325518e9ee6c3845c348`; SHA256 integral `d2938337ccfad084d4e4e6c9d6ecd08c9b26701e86d69ca760601a93e76ca3eb`. Bytes fonte 58492; recorte [49383, 49539); SHA256 trecho `6374a49eb049c92e00acb92ee32d2d03ccf3028934e6d941f053c48e88709640`.
+
+`````text
+{
+          "byte_start": 941,
+          "byte_end_exclusive": 999,
+          "text": "9scip-typescript npm @orchestra/core 1.0.0 src/`greet.ts`/"
+        }
+`````
+
+## RE-SUP-02 — Geradores/configuração: implementação e limites, sem execução
+
+
+### CFG-TS-1 — `packages/core/tsconfig.json` 1–8
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `636b03034ffbcd5ea02d8f1f7d450a7bb359a236`; SHA256 integral `dd131865c7f2df85b08afdbcf4b8bef3695febe658d56ee4c156e83b95cabc6a`. Bytes fonte 234; recorte [0, 234); SHA256 trecho `dd131865c7f2df85b08afdbcf4b8bef3695febe658d56ee4c156e83b95cabc6a`.
+
+`````text
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "extends": "@tsconfig/bun/tsconfig.json",
+  "compilerOptions": {
+    "lib": ["ESNext", "DOM", "DOM.Iterable", "DOM.AsyncIterable"],
+    "noUncheckedIndexedAccess": false
+  }
+}
+`````
+
+### CFG-DRIZZLE-1 — `packages/core/drizzle.config.ts` 1–10
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `f574118fbf1656f8f00e5f2612f38f2fdb69587e`; SHA256 integral `d40ef20b1a875f46b172b7d2a04994f3b41c88c3d38bc4aedd1af63e775cd1ed`. Bytes fonte 256; recorte [0, 256); SHA256 trecho `d40ef20b1a875f46b172b7d2a04994f3b41c88c3d38bc4aedd1af63e775cd1ed`.
+
+`````text
+import { defineConfig } from "drizzle-kit"
+
+export default defineConfig({
+  dialect: "sqlite",
+  schema: ["./src/**/*.sql.ts", "./src/**/sql.ts"],
+  out: "./migration",
+  dbCredentials: {
+    url: "/home/thdxr/.local/share/orchestra/orchestra.db",
+  },
+})
+`````
+
+### GEN-PTY-1 — `packages/core/script/fix-node-pty.ts` 1–28
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `93641adbdf3c873a088ab145279f75acacf3e872`; SHA256 integral `f5488e74cf12b343852847769d85860f8e24ee2bbb3e34e62deb4fef1a0576ad`. Bytes fonte 986; recorte [0, 986); SHA256 trecho `f5488e74cf12b343852847769d85860f8e24ee2bbb3e34e62deb4fef1a0576ad`.
+
+`````text
+#!/usr/bin/env bun
+
+import fs from "fs/promises"
+import path from "path"
+import { fileURLToPath } from "url"
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const dir = path.resolve(__dirname, "..")
+
+if (process.platform !== "win32") {
+  const root = path.join(dir, "node_modules", "node-pty", "prebuilds")
+  const dirs = await fs.readdir(root, { withFileTypes: true }).catch(() => [])
+  const files = dirs.filter((x) => x.isDirectory()).map((x) => path.join(root, x.name, "spawn-helper"))
+  const result = await Promise.all(
+    files.map(async (file) => {
+      const stat = await fs.stat(file).catch(() => undefined)
+      if (!stat) return
+      if ((stat.mode & 0o111) === 0o111) return
+      await fs.chmod(file, stat.mode | 0o755)
+      return file
+    }),
+  )
+  const fixed = result.filter(Boolean)
+  if (fixed.length) {
+    console.log(`fixed node-pty permissions for ${fixed.length} helper${fixed.length === 1 ? "" : "s"}`)
+  }
+}
+`````
+
+### GEN-MIG-1 — `packages/core/script/migration.ts` 1–36
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `e0d10349f7352be10dda179324fc39a7dbbe1ba7`; SHA256 integral `256a4dd869d0d482986e8ff44b02a377053389eeee034f944deca2deeaaddcc7`. Bytes fonte 6720; recorte [0, 1068); SHA256 trecho `bda65331c758c0c4b0325ee674455993b38242bc5ee49e533f89eee2a039e6da`.
+
+`````text
+#!/usr/bin/env bun
+
+import { $ } from "bun"
+import fs from "fs/promises"
+import os from "os"
+import path from "path"
+import { pathToFileURL } from "url"
+import { parseArgs } from "util"
+
+const root = path.resolve(import.meta.dirname, "../../..")
+const snapshot = path.join(root, "packages/core/schema.json")
+const tsDir = path.join(root, "packages/core/src/database/migration")
+const registry = path.join(root, "packages/core/src/database/migration.gen.ts")
+const schema = path.join(root, "packages/core/src/database/schema.gen.ts")
+const args = parseArgs({
+  args: process.argv.slice(2),
+  options: {
+    check: { type: "boolean" },
+    name: { type: "string" },
+  },
+})
+
+if (args.values.check) {
+  await check()
+  process.exit(0)
+}
+
+await generate()
+
+async function generate() {
+  const temporary = await fs.mkdtemp(path.join(os.tmpdir(), "orchestra-core-migration-"))
+  const incremental = path.join(temporary, "incremental")
+  const full = path.join(temporary, "full")
+  try {
+    await fs.mkdir(incremental)
+    await fs.mkdir(path.join(incremental, "baseline"))
+`````
+
+### GEN-MIG-2 — `packages/core/script/migration.ts` 59–70
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `e0d10349f7352be10dda179324fc39a7dbbe1ba7`; SHA256 integral `256a4dd869d0d482986e8ff44b02a377053389eeee034f944deca2deeaaddcc7`. Bytes fonte 6720; recorte [2128, 2528); SHA256 trecho `0bda64a09c2debaa5a157036d6247e8908576fc0f8d49a8b24e01bf8356d50ce`.
+
+`````text
+  } finally {
+    await fs.rm(temporary, { recursive: true, force: true })
+  }
+}
+
+async function check() {
+  const temporary = await fs.mkdtemp(path.join(os.tmpdir(), "orchestra-core-migration-check-"))
+  const incremental = path.join(temporary, "incremental")
+  const full = path.join(temporary, "full")
+  try {
+    await fs.mkdir(incremental)
+    await fs.mkdir(path.join(incremental, "baseline"))
+`````
+
+### GEN-MIG-3 — `packages/core/script/migration.ts` 89–126
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `e0d10349f7352be10dda179324fc39a7dbbe1ba7`; SHA256 integral `256a4dd869d0d482986e8ff44b02a377053389eeee034f944deca2deeaaddcc7`. Bytes fonte 6720; recorte [3434, 4755); SHA256 trecho `6beadc83d9d2e0c5d4f8139b5a169d74cdf0fae616d46064b98a0cfe609a2205`.
+
+`````text
+  } finally {
+    await fs.rm(temporary, { recursive: true, force: true })
+  }
+}
+
+async function drizzle(temporary: string, output: string, name?: string) {
+  const config = path.join(temporary, `${path.basename(output)}.config.ts`)
+  await Bun.write(
+    config,
+    `import config from ${JSON.stringify(pathToFileURL(path.join(root, "packages/core/drizzle.config.ts")).href)}
+
+export default { ...config, out: ${JSON.stringify(output)} }
+`,
+  )
+  await $`bun drizzle-kit generate --config ${config} ${name ? ["--name", name] : []}`.cwd(
+    path.join(root, "packages/core"),
+  )
+}
+
+async function generatedMigrations(directory: string) {
+  return (await Array.fromAsync(new Bun.Glob("*/migration.sql").scan({ cwd: directory })))
+    .map((file) => file.split("/")[0])
+    .filter((name): name is string => name !== undefined)
+    .sort()
+}
+
+async function generatedSql(directory: string) {
+  const generated = await generatedMigrations(directory)
+  if (generated.length !== 1) throw new Error(`Expected one full schema migration, found ${generated.length}.`)
+  return Bun.file(path.join(directory, generated[0]!, "migration.sql")).text()
+}
+
+async function typescriptMigrations() {
+  return (await Array.fromAsync(new Bun.Glob("*.ts").scan({ cwd: tsDir })))
+    .map((file) => path.basename(file, ".ts"))
+    .sort()
+}
+
+`````
+
+### GEN-MIG-4 — `packages/core/script/migration.ts` 171–196
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `e0d10349f7352be10dda179324fc39a7dbbe1ba7`; SHA256 integral `256a4dd869d0d482986e8ff44b02a377053389eeee034f944deca2deeaaddcc7`. Bytes fonte 6720; recorte [5906, 6720); SHA256 trecho `82e2483bc835dcb21980dc8f8b047a88aed9b25632c73ca0d74c057b262360f1`.
+
+`````text
+function escapeTemplate(line: string) {
+  return line.replaceAll("\\", "\\\\").replaceAll("`", "\\`").replaceAll("${", "\\${")
+}
+
+async function formatTypescript(input: string) {
+  const prettier = await import("prettier")
+  const typescript = await import("prettier/plugins/typescript")
+  const estree = await import("prettier/plugins/estree")
+  return prettier.format(input, {
+    parser: "typescript",
+    plugins: [typescript.default, estree.default],
+    semi: false,
+    printWidth: 120,
+  })
+}
+
+function renderRegistry(names: string[]) {
+  return `import type { DatabaseMigration } from "./migration"
+
+export const migrations = (
+  await Promise.all([
+${names.map((name) => `    import("./migration/${name}"),`).join("\n")}
+  ])
+).map((module) => module.default) satisfies DatabaseMigration.Migration[]
+`
+}
+`````
+
+### GEN-PACK-1 — `packages/core/script/toolkit-pack.ts` 26–149
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `c77e95e4fa8228bea806a29f66ed4d28c6abeac3`; SHA256 integral `cc01627f1823cd53a45f3d4a1b87fbef9de1349440dec721ccc1dd036286a308`. Bytes fonte 16119; recorte [1731, 7554); SHA256 trecho `dfa49d08dd5689b774f7d2ac77fcefd423617c95408b91958ae84fd98201db15`.
+
+`````text
+const PACKS = path.join(import.meta.dir, "../src/backend-toolkit/packs")
+const RECIPES = path.join(import.meta.dir, "../../../modules/specialists/backend/skills/backend-codegen")
+const SKILLS = (await readdir(path.resolve(import.meta.dir, "../../../modules/specialists/backend/skills"), { withFileTypes: true }))
+  .filter((entry) => entry.isDirectory()).map((entry) => entry.name).toSorted()
+if (SKILLS.length === 0) throw new Error("No packaged backend entry skills")
+await Promise.all(SKILLS.map(async (name) => {
+  if (!/^backend-[a-z]+(?:-[a-z]+)*$/.test(name)) throw new Error(`Invalid backend entry skill directory: ${name}`)
+  const skill = matter(await readFile(path.resolve(import.meta.dir, "../../../modules/specialists/backend/skills", name, "SKILL.md"), "utf8"))
+  if (skill.data.name !== name) throw new Error(`Backend entry skill name mismatch: ${name}`)
+}))
+
+const args = parseArgs({
+  args: process.argv.slice(2),
+  allowPositionals: true,
+  options: {
+    kind: { type: "string" },
+    upstream: { type: "string" },
+    version: { type: "string" },
+    asset: { type: "string", multiple: true },
+    role: { type: "string" },
+    input: { type: "string" },
+    skill: { type: "string", multiple: true },
+    group: { type: "string" },
+  },
+})
+const [command, id, bumped] = args.positionals
+
+const valid =
+  command === "skills" ||
+  (id && command === "add" && args.values.kind && args.values.upstream && args.values.version && args.values.group) ||
+  (id && command === "bump" && bumped)
+if (!valid) {
+  console.error("usage: see the header of script/toolkit-pack.ts")
+  process.exit(1)
+}
+(args.values.skill ?? []).forEach((skill) => {
+  if (!SKILLS.includes(skill)) throw new Error(`Unknown backend entry skill: ${skill}`)
+})
+await writeFile(path.resolve(import.meta.dir, "../src/backend-toolkit/entry-skills.gen.ts"), [
+  "// Generated from modules/specialists/backend/skills by script/toolkit-pack.ts skills.",
+  "export const ENTRY_SKILLS = [",
+  ...SKILLS.map((skill) => `  ${JSON.stringify(skill)},`),
+  "] as const",
+  "",
+].join("\n"))
+if (command === "skills") process.exit(0)
+if (command === "add") await add(id)
+if (command === "bump") await bump(id, bumped!)
+
+async function add(id: string) {
+  const kind = args.values.kind!
+  const upstream = args.values.upstream!
+  const version = args.values.version!
+  const fit = {
+    role: args.values.role ?? "generator",
+    input: args.values.input ?? "TODO-PIN",
+    skills: args.values.skill ?? [],
+  }
+  const body = await template(id, kind, upstream, version)
+  await writeFile(
+    path.join(PACKS, `${id}.ts`),
+    [
+      `import type { Pack } from "../manifest"`,
+      ...(kind === "npm" ? [`import lock from "./${id}.package-lock.json"`] : []),
+      "",
+      `const VERSION = "${version}"`,
+      "",
+      "export default {",
+      `  id: "${id}",`,
+      "  version: VERSION,",
+      body,
+      `  fit: { role: ${JSON.stringify(fit.role)}, input: ${JSON.stringify(fit.input)}, skills: ${JSON.stringify(fit.skills)} },`,
+      "} as const satisfies Pack",
+      "",
+    ].join("\n"),
+  )
+  const group = args.values.group!
+  if (!(await Bun.file(path.join(RECIPES, group, "SKILL.md")).exists())) throw new Error(`Unknown codegen group: ${group}`)
+  await mkdir(path.join(RECIPES, group, id), { recursive: true })
+  await writeFile(path.join(RECIPES, group, id, "SKILL.md"), recipe(id, version, group, fit))
+  const name = id.replace(/-([a-z0-9])/g, (_, letter: string) => letter.toUpperCase())
+  const barrel = await readFile(path.join(PACKS, "index.ts"), "utf8")
+  const imports = [...barrel.matchAll(/^import .*$/gm)].map((match) => match[0])
+  await writeFile(
+    path.join(PACKS, "index.ts"),
+    barrel
+      .replace(imports.join("\n"), [...imports, `import ${name} from "./${id}"`].toSorted().join("\n"))
+      .replace(/\n}\n*$/, `\n  [${name}.id]: ${name},\n}\n`),
+  )
+  console.log(`wrote packs/${id}.ts, backend-codegen/${group}/${id}/SKILL.md and the barrel entry; fill every TODO-PIN`)
+}
+
+async function bump(id: string, version: string) {
+  const file = path.join(PACKS, `${id}.ts`)
+  const pack: Pack = (await import(file)).default
+  const old = pack.version
+  const text = (await readFile(file, "utf8")).replaceAll(`"${old}"`, `"${version}"`)
+  const pins = "targets" in pack ? Object.values(pack.targets).map((pin) => pin.artifact) : []
+  const filled = await Promise.all(
+    pins.map(async (artifact) => ({
+      from: artifact.integrity,
+      to: await digest(artifact.url.replaceAll(old, version), version),
+    })),
+  )
+  const npm = !("targets" in pack) && pack.install.kind === "npm"
+  // A pin this script cannot refresh is cleared, so the old digest can never pass for the new version.
+  const next = filled.length
+    ? filled.reduce((current, pin) => current.replaceAll(pin.from, pin.to), text)
+    : npm
+      ? text
+      : `// TODO-PIN: refresh every pin for ${version}.\n` +
+        text.replace(/"sha(256|512)-[A-Za-z0-9+/=]+"/g, '"sha256-TODO-PIN"')
+  await writeFile(file, next)
+  if (npm) await lock(id, packageName(pack), version)
+  const card = [...new Bun.Glob(`*/${id}/SKILL.md`).scanSync(RECIPES)].map((match) => path.join(RECIPES, match))[0]
+  if (card && pack.fit.skills.length)
+    await writeFile(card, (await readFile(card, "utf8")).replaceAll(`\`${old}\``, `\`${version}\``))
+  console.log(`bumped ${id} ${old} -> ${version}; review the diff and fill any TODO-PIN`)
+  // The recorded host floor (F5.4) belongs to the bytes just pinned, so it is measured again unless a pin is still open.
+  if (!next.includes("TODO-PIN")) {
+    const floors = await $`bun ${path.join(import.meta.dir, "toolkit-floors.ts")} --engine ${id} --check`.nothrow()
+    if (floors.exitCode) console.error(`update ${id}'s \`floor\` to the measurement above (bun script/toolkit-floors.ts --engine ${id})`)
+  }
+}
+`````
+
+### GEN-PACK-2 — `packages/core/script/toolkit-pack.ts` 151–246
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `c77e95e4fa8228bea806a29f66ed4d28c6abeac3`; SHA256 integral `cc01627f1823cd53a45f3d4a1b87fbef9de1349440dec721ccc1dd036286a308`. Bytes fonte 16119; recorte [7555, 11966); SHA256 trecho `2b09d53dab923175fbed77220b494bb04b59c237b6c67e56bb9b2c5d6a3648fa`.
+
+`````text
+async function template(id: string, kind: string, upstream: string, version: string) {
+  const at = (text: string) => text.replaceAll(version, "${VERSION}")
+  if (kind === "binary") {
+    const release = await github(upstream, version)
+    const globs = new Map((args.values.asset ?? []).map((pair) => pair.split("=", 2) as [string, string]))
+    const repo = (await fetch(`https://api.github.com/repos/${upstream}`, { headers: auth() }).then((response) =>
+      response.json(),
+    )) as { license?: { spdx_id?: string } }
+    const targets = TARGETS.map((target) => {
+      const glob = globs.get(target)
+      const asset = glob ? release.assets.find((item) => new Bun.Glob(glob).match(item.name)) : undefined
+      const exe = target === "win32-x64" ? `${id}.exe` : id
+      const format = asset?.name.endsWith(".zip")
+        ? "zip"
+        : /\.(tar\.gz|tgz)$/.test(asset?.name ?? "")
+          ? "tar.gz"
+          : "raw"
+      return [
+        `    "${target}": {`,
+        "      artifact: {",
+        `        url: \`${asset ? at(asset.browser_download_url) : "https://github.com/TODO-PIN"}\`,`,

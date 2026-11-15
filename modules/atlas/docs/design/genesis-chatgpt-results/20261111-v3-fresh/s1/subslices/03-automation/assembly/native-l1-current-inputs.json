@@ -1,0 +1,242 @@
+{
+  "schema": "s1-03-current-l1-native-input-configuration/v1",
+  "created_at_utc": "2026-11-15T04:45:28.472769+00:00",
+  "role": "Transport configuration only, not a producer recipe or a semantic acceptance",
+  "audit_base": "assembly/native-l1-v2/descriptors.json",
+  "audit_base_sha256": "cc4c2cf63301a3df4da44efe53535766642bf1c7acea8f7eb9fd0783eed66c19",
+  "artifacts": {
+    "s1.core.automation": {
+      "additional_actual_inputs": [],
+      "audited_path_aliases": {},
+      "actual_recipe_local_path": "producers/automation/revisions/v4/apply.py",
+      "request_local_path": "producers/automation/revisions/v4/request.txt",
+      "response_local_path": "producers/automation/revisions/v4/response.md",
+      "audited_base_version": "v4"
+    },
+    "s1.core.research": {
+      "additional_actual_inputs": [
+        {
+          "local_path": "producers/research/revisions/v3/request.txt",
+          "bytes": 2899,
+          "sha256": "34c7f006385a7921ca3ebb3aaf7ff31a866c16192c49f8211cf27fab95964224",
+          "git_blob_sha": "b09b0a85f6a41fa1e5269903c0d0538ef0b54105"
+        },
+        {
+          "local_path": "producers/research/revisions/v3/j2-finding.md",
+          "bytes": 974,
+          "sha256": "a7504bff3418ff3778e5d56b2c403858eb08f6c97fb3dfbefd7d66dae1b4316a",
+          "git_blob_sha": "accb3f921308f1c3c665d20b1aa7f6e40104b976"
+        },
+        {
+          "local_path": "producers/research/body.md",
+          "bytes": 63501,
+          "sha256": "d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661",
+          "git_blob_sha": "bb0eaa73b4fe9120fb46d9304778649b5c7205dd",
+          "retained_alias": "producers/research/history/body-v2.md"
+        },
+        {
+          "local_path": "producers/research/recipe-v2.json",
+          "bytes": 138195,
+          "sha256": "09505ca6228267ab6ad9c0397c7a45690009b1738ae3aa53c8b8df722db5598b",
+          "git_blob_sha": "cd3e47810afc47fec314bab149c7ce0653f4fc9b",
+          "retained_alias": "producers/research/history/recipe-v2.json"
+        },
+        {
+          "local_path": "producers/research/sources/packages/core/src/research-toolkit/locate.ts",
+          "bytes": 16148,
+          "sha256": "0ebac9d228ca1764020e0f7ccf260228dc02c1169c0143c07f258e7c7ac650f2",
+          "git_blob_sha": "d1343801f7b336d5e5b46eac860f6a07a0ae19fa"
+        },
+        {
+          "local_path": "producers/research/sources/packages/core/test/research-locate.test.ts",
+          "bytes": 8418,
+          "sha256": "ef4ff4e93af664f8810da34386b235ef33071fcbba9868bf9904aa40f72f801a",
+          "git_blob_sha": "53aed544518715b880e3415295e94da7756cc9ad"
+        },
+        {
+          "local_path": "producers/research/revisions/v3/apply.py",
+          "bytes": 17112,
+          "sha256": "1a06fb787058915ac20e696c5c8ea855dcda7813d9b208d15fa3770336de2f2e",
+          "git_blob_sha": "224ac97db71f108e4e8a945a6a3327afad725af7"
+        },
+        {
+          "local_path": "producers/research/revisions/v3/apply-freeze.json",
+          "bytes": 4550,
+          "sha256": "65ceaf32de80a5b134d63e28fadc9271c822470d768d9d852d1ce8ce5287bacd",
+          "git_blob_sha": "f4cce3bb20fe952594a39e886d58d2ecb9dd4b64"
+        },
+        {
+          "local_path": "producers/research/body.md",
+          "bytes": 63841,
+          "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+          "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4",
+          "retained_alias": "producers/research/revisions/v4/history/body.md"
+        },
+        {
+          "local_path": "producers/research/sources/packages/core/src/research-toolkit/code-index/query.ts",
+          "bytes": 32872,
+          "sha256": "ec1dd4a297e6e798c497d67ac5ed21cd4c6484e2aba3c2bed60dbd8f174f05e8",
+          "git_blob_sha": "25d652ee0ce78d327427837466b5d7fe5886013f"
+        },
+        {
+          "local_path": "producers/research/revisions/v3/input-manifest-extension.json",
+          "bytes": 7585,
+          "sha256": "95e1d759bace7baa2f8e5bed6f65ee9f5fba1f4a4c24b7f93a4b8d2318bc1101",
+          "git_blob_sha": "6910dfb1a66c7140c3d06c0eb19b182c56ba4e30"
+        },
+        {
+          "local_path": "producers/research/recipe-v3.json",
+          "bytes": 2901,
+          "sha256": "cd8813f5a1d2157546b762c60b0ff08812281a4138006fdc282a3fdab809abe0",
+          "git_blob_sha": "70600277e27b5f50ff5bec43a08eee08451ae922"
+        },
+        {
+          "local_path": "producers/research/revisions/v4/public-findings.md",
+          "bytes": 1370,
+          "sha256": "274bc65c13abadb0c847c71b7acaf135759d89282b2509cc970f67d4d13e5d42",
+          "git_blob_sha": "e4c19a874355af85e5852cdf648af954527b13ab"
+        },
+        {
+          "local_path": "producers/research/revisions/v4/request.txt",
+          "bytes": 548,
+          "sha256": "53d5398d52c804a75572f369ab9a08049872041080f16fdf167ae38f56a94531",
+          "git_blob_sha": "ca74b4ecd789bb7894860912677d138762e33a98"
+        },
+        {
+          "local_path": "producers/research/revisions/v4/recipe.json",
+          "bytes": 4029,
+          "sha256": "5eb8b298dd8ca73b66d0869424782f73dbf539c0a6c37aaa837686976da2fc57",
+          "git_blob_sha": "e217a08a971ff0e42a2af40f22bc12d060834fff"
+        },
+        {
+          "local_path": "producers/research/revisions/v4/dispatch-message.txt",
+          "bytes": 1059,
+          "sha256": "c800eb38cedaf8523662529d676cf30e4b67a8491afd943dc081c6c44381d5cc",
+          "git_blob_sha": "5d49d538ecc87957d4e3f27815dd74b14b65adc3"
+        },
+        {
+          "local_path": "producers/research/revisions/v4/apply.py",
+          "bytes": 17467,
+          "sha256": "5bfdf994e961bdac05212b2a981aa8f50fcdf60bd5d440988fca5247e4bab89b",
+          "git_blob_sha": "235ce74826e8c995b5ed8e75bed02f8d8af9b07c"
+        },
+        {
+          "local_path": "producers/research/revisions/v4/procedure-freeze.json",
+          "bytes": 5148,
+          "sha256": "6cd8fcb3642f22bf1f6831047db7e4ecc7b4e782c1681ccec4e400f798858a48",
+          "git_blob_sha": "16d17b90d6ca6a9eecbddf447fb70d51decc60ed"
+        }
+      ],
+      "audited_path_aliases": {},
+      "actual_recipe_local_path": "producers/research/revisions/v4/apply.py",
+      "request_local_path": "producers/research/revisions/v4/request.txt",
+      "response_local_path": "producers/research/revisions/v4/response.md",
+      "audited_base_version": "v2"
+    },
+    "s1.core.boundaries": {
+      "additional_actual_inputs": [
+        {
+          "local_path": "producers/boundaries/bodies/boundaries.md",
+          "bytes": 23665,
+          "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+          "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
+          "retained_alias": "producers/boundaries/revisions/boundaries-v3/history/body.md"
+        },
+        {
+          "local_path": "producers/boundaries/sources/packages/core/src/relay.ts",
+          "bytes": 30225,
+          "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+          "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16"
+        },
+        {
+          "local_path": "producers/boundaries/sources/packages/core/src/rag-studio/sql.ts",
+          "bytes": 2519,
+          "sha256": "e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9",
+          "git_blob_sha": "214ab3375acc34072ee74c3123501c80615bf488"
+        },
+        {
+          "local_path": "producers/boundaries/revisions/boundaries-v2/recipe.json",
+          "bytes": 3501,
+          "sha256": "13d95ddbf05625b6f270972422a3603669ff238cc7152a3e1c1789106af70bf4",
+          "git_blob_sha": "63e56fa6badaab561f04f48ef0033dd6d4d21d71"
+        },
+        {
+          "local_path": "producers/boundaries/effective-inputs.json",
+          "bytes": 22879,
+          "sha256": "6ecae50d90933e555a874b209c6553750d85192df44c36df2418b3ff696890fc",
+          "git_blob_sha": "2d099dcbef9b537a5e22a634642c1317bd0464f4"
+        },
+        {
+          "local_path": "producers/boundaries/revisions/boundaries-v3/public-findings.md",
+          "bytes": 1532,
+          "sha256": "6fd63340ed96690dcad680ded43d4815666ac042397cff5587c1413b1183deae",
+          "git_blob_sha": "0a9093ae89e653c458432402f7098286ebefb375"
+        },
+        {
+          "local_path": "producers/boundaries/revisions/boundaries-v3/recipe.json",
+          "bytes": 4346,
+          "sha256": "8e51dad268ee1fc9ade4b91c4d4ff1c08a76aa3f0ec9636786d778026085f385",
+          "git_blob_sha": "0d233b8ff8d4ce26cb6bbd31c9a7698723d35152"
+        },
+        {
+          "local_path": "producers/boundaries/revisions/boundaries-v3/request.txt",
+          "bytes": 576,
+          "sha256": "4cb6d8bd17c1ee1879f75734724997b3e6793eadfce37bafb0b2501a6bd19afb",
+          "git_blob_sha": "6c0341c591547d0a968d058fbc4edef5e304067a"
+        },
+        {
+          "local_path": "producers/boundaries/revisions/boundaries-v3/dispatch-message.txt",
+          "bytes": 1096,
+          "sha256": "9b60555882d38a25f64edc8120f524ea839a52fdb1cb309a70d2e737864dbe9b",
+          "git_blob_sha": "1063c479080912bf7f8c4c81376e200b5cdb7d68"
+        },
+        {
+          "local_path": "producers/boundaries/revisions/boundaries-v3/history/body.md",
+          "bytes": 23665,
+          "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+          "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74"
+        },
+        {
+          "local_path": "producers/boundaries/revisions/boundaries-v3/apply.py",
+          "bytes": 16667,
+          "sha256": "8ca6ab3b26860f1d5f4c2c4eb0f329c45aa66a6fed9976f2707570418866e6fe",
+          "git_blob_sha": "d74b4d117a673586e9a5e7cfbba573b1f2c35a31"
+        },
+        {
+          "local_path": "producers/boundaries/revisions/boundaries-v3/procedure-freeze.json",
+          "bytes": 10260,
+          "sha256": "671995910e5e85b1a4dcdbaea8ecec19fa3f762e800fa7fed8467806b0907d03",
+          "git_blob_sha": "ffd7cb0acba77a1d9f8d6d354ff95c560b94804d"
+        }
+      ],
+      "audited_path_aliases": {},
+      "actual_recipe_local_path": "producers/boundaries/revisions/boundaries-v3/apply.py",
+      "request_local_path": "producers/boundaries/revisions/boundaries-v3/request.txt",
+      "response_local_path": "producers/boundaries/revisions/boundaries-v3/response.md",
+      "audited_base_version": "v2"
+    },
+    "s1.subslice03.support": {
+      "additional_actual_inputs": [],
+      "audited_path_aliases": {
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/boundaries/bodies/boundaries.md": {
+          "original_local_path": "producers/boundaries/bodies/boundaries.md",
+          "retained_local_path": "producers/boundaries/revisions/boundaries-v3/history/body.md",
+          "original_origin_commit": "f6ffb725704cc01682847d7e175f22b6ead3894c",
+          "reason": "Exact earlier boundaries v2 consumed as a mechanical preservation sentinel by support v2; not the new boundaries v3 semantic predecessor."
+        }
+      },
+      "actual_recipe_local_path": "producers/boundaries/records/prepare_support_v2.py",
+      "request_local_path": "producers/boundaries/revisions/support-v2/request.txt",
+      "response_local_path": "producers/boundaries/revisions/support-v2/response.md",
+      "audited_base_version": "v2"
+    }
+  },
+  "no_input_split_or_removed": true,
+  "versions": [
+    "automation v4",
+    "research v4",
+    "boundaries v3",
+    "support v2"
+  ],
+  "pending_gate_note": "Assembly still requires two current complete-body PASS decisions for each selected artifact and every required derived artifact."
+}

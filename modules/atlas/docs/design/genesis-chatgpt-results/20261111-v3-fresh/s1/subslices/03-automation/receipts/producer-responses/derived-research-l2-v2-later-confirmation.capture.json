@@ -1,0 +1,10 @@
+{
+  "schema": "s1-03-native-visible-message-capture/v1",
+  "agent": "/root/derived_research",
+  "kind": "LATER_CONFIRMATION_NOT_ORIGINAL_V2_FINAL",
+  "source": "Native FINAL visible in this principal turn and collaboration.list_agents result; copied exact visible Markdown, no terminal LF. Host wire hash/id unexposed.",
+  "bytes": 2902,
+  "sha256": "1ea44c9a77e5211ad649b32ba689ef0f744549df731efda794822fab5ac1eeb8",
+  "new_authoring": false,
+  "new_file_reads_reported": false
+}

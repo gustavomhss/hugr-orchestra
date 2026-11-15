@@ -1,0 +1,744 @@
+export const allow: PermissionV2.Ruleset = [{ action: "read", resource: "*", effect: "allow" }]
+export const deny: PermissionV2.Ruleset = [{ action: "read", resource: "*", effect: "deny" }]
+export const input = { action: "read", resources: ["src/index.ts"] }
+export const timestamp = DateTime.makeUnsafe(1)
+export const secrets = ["secret provider feedback", "secret-resource", "secret-rule", "secret-call", "secret-agent"]
+`````
+
+### FX-CAP-POLICY-2 — `packages/core/test/fixture/capability-policy.ts` 50–95
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `419350085a348fec5b9aa4d7e1a4d58eccecfe36`; SHA256 integral `867795737d699edba38e7631a4347db3f2721a8421f8deae9adc10119c78ec69`. Bytes fonte 7802; recorte [2684, 5184); SHA256 trecho `7e3a26a7e7edab73859458a0515c73ff123966a58ba8661bc4b9c4410f49a0bd`.
+
+`````text
+export function fixture(options: { message?: boolean; part?: boolean; agent?: string; name?: string } = {}) {
+  return Effect.gen(function* () {
+    const database = yield* Database.Service
+    const events = yield* EventV2.Service
+    const permissions = yield* PermissionV2.Service
+    const context: Tool.Context = {
+      sessionID: SessionV2.ID.create(), agent: AgentV2.ID.make("test"),
+      assistantMessageID: SessionMessage.ID.create(), toolCallID: "root-call",
+    }
+    yield* database.db.insert(ProjectTable).values({
+      id: Project.ID.global, worktree: placement.directory, sandboxes: [],
+    }).onConflictDoNothing().run().pipe(Effect.orDie)
+    yield* database.db.insert(SessionTable).values({
+      id: context.sessionID, project_id: Project.ID.global, directory: placement.directory,
+      slug: "policy", title: "policy", version: "test", agent: "test",
+    }).run().pipe(Effect.orDie)
+    if (options.message !== false) {
+      yield* events.publish(SessionEvent.Step.Started, {
+        ...context, timestamp, agent: options.agent ?? "test",
+        model: { id: Model.ID.make("model"), providerID: Provider.ID.make("provider") },
+      })
+      if (options.part !== false) yield* events.publish(SessionEvent.Tool.Input.Started, {
+        sessionID: context.sessionID, assistantMessageID: context.assistantMessageID,
+        callID: context.toolCallID, name: options.name ?? "service_call", timestamp,
+      })
+    }
+    yield* setRules(allow)
+    const binding: CapabilityInvocation.HostInput = {
+      issuer: "core", owner: {
+        projectID: placement.project.id, location: { directory: placement.directory },
+        sessionID: context.sessionID, agentID: context.agent,
+      }, invocation: {
+        sessionID: context.sessionID, agentID: context.agent,
+        assistantMessageID: context.assistantMessageID, callID: context.toolCallID,
+      }, rootToolName: "service_call", effectiveRules: allow.map((rule) => ({ ...rule })), nativeDenyFloor: [],
+    }
+    const policy = yield* CapabilityPolicy.make
+    // Authorization sentinel only: this fixture does not dispatch a native adapter.
+    const effects = yield* Ref.make(0)
+    const target = Ref.update(effects, (n) => n + 1)
+    const run = (host = binding, supplied = context, request = input) => CapabilityInvocation.withContext(
+      host, policy.assert(supplied, request).pipe(Effect.andThen(target)),
+    )
+    return { context, binding, policy, run, target, events, permissions, database, effects }
+  })
+}
+`````
+
+### FX-CAP-POLICY-3 — `packages/core/test/fixture/capability-policy.ts` 97–130
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `419350085a348fec5b9aa4d7e1a4d58eccecfe36`; SHA256 integral `867795737d699edba38e7631a4347db3f2721a8421f8deae9adc10119c78ec69`. Bytes fonte 7802; recorte [5185, 6858); SHA256 trecho `ce6fedb133caadb36efb9a3cf668765325af09b9f678a8d68fcfbea9cd36452d`.
+
+`````text
+export function observeAsked(context: Tool.Context) {
+  return Effect.gen(function* () {
+    const events = yield* EventV2.Service
+    const count = yield* Ref.make(0)
+    const first = yield* Deferred.make<PermissionV2.Request>()
+    const repeated = yield* Deferred.make<void>()
+    const unsubscribe = yield* events.listen((event) => Effect.gen(function* () {
+      if (event.type !== PermissionV2.Event.Asked.type) return
+      const request = Schema.decodeUnknownSync(PermissionV2.Request)(event.data)
+      if (request.sessionID !== context.sessionID || request.source?.type !== "tool" ||
+        request.source.messageID !== context.assistantMessageID || request.source.callID !== context.toolCallID) return
+      const n = yield* Ref.updateAndGet(count, (n) => n + 1)
+      yield* Deferred.succeed(first, request)
+      if (n > 1) yield* Deferred.succeed(repeated, undefined)
+    }))
+    yield* Effect.addFinalizer(() => unsubscribe)
+    return { count, first, repeated, unsubscribe }
+  })
+}
+
+export function queued<E>(context: Tool.Context, effect: Effect.Effect<void, E>) {
+  return Effect.gen(function* () {
+    const observation = yield* observeAsked(context)
+    const fiber = yield* effect.pipe(Effect.result, Effect.forkChild)
+    const request = yield* Effect.raceFirst(Deferred.await(observation.first), Fiber.join(fiber).pipe(
+      Effect.andThen(Effect.fail(new Error("POLICY_BYPASSED_PERMISSION_QUEUE"))),
+    ))
+    const join = Effect.raceFirst(Fiber.join(fiber), Deferred.await(observation.repeated).pipe(
+      Effect.andThen(Effect.fail(new Error("POLICY_QUEUED_SECOND_APPROVAL"))),
+    ))
+    return { fiber, request, observation, join }
+  })
+}
+
+`````
+
+### FX-CAP-PROCESS-1 — `packages/core/test/fixture/capability-process-control.ts` 43–96
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `93f92885438e5194ff888144be00e643187914f8`; SHA256 integral `1bd414b7d8542994a5aa43399afed45704eaa8a3fa9c9c5be5f09ae170485fa0`. Bytes fonte 7279; recorte [2377, 6815); SHA256 trecho `0444c9bc27f6162fcf718a83f61e0530d0d742cd23074224d6141c1688b712b5`.
+
+`````text
+export const tmp = await tmpdir()
+const placement = location(Location.Ref.make({ directory: AbsolutePath.make(tmp.path) }))
+export const layer = AppNodeBuilder.build(LayerNode.group([Database.node, EventV2.node, SessionProjector.node,
+  SessionStore.node, PermissionV2.node, PermissionSaved.node, AgentV2.node, Location.node, FSUtil.node, Global.node,
+  LocationMutation.node, AppProcess.node, CapabilityProcessRegistry.node, ToolRegistry.node]), [
+  [Database.node, Database.layerFromPath(join(tmp.path, "process.sqlite"))],
+  [Location.node, Layer.succeed(Location.Service, Location.Service.of(placement))],
+  [Global.node, Global.layerWith({ data: tmp.path, home: tmp.path })],
+])
+export const allow: PermissionV2.Ruleset = [{ action: "*", resource: "*", effect: "allow" }]
+export const child = (script: string) => [process.execPath, "-e", script]
+export const echo = child(`process.stdout.write("key:" + process.env.CUSTOM_API_KEY + "\\n"); process.stdin.on("data", (d) => process.stdout.write("got:" + d)); process.stdin.on("end", () => process.exit(3))`)
+
+export const setup = Effect.gen(function* () {
+  const database = yield* Database.Service
+  const events = yield* EventV2.Service
+  const registry = yield* ToolRegistry.Service
+  const tools = yield* Tools.Service
+  const jobs = yield* CapabilityJobs.make
+  const leaf = yield* CapabilityProcessControl.make({ jobs })
+  yield* tools.register(leaf.tools)
+  yield* database.db.insert(ProjectTable).values({ id: Project.ID.global, worktree: placement.directory, sandboxes: [] })
+    .onConflictDoNothing().run().pipe(Effect.orDie)
+  yield* CapabilityPolicyFixture.setRules(allow)
+  const session = (options: { parentID?: SessionV2.ID } = {}) => Effect.gen(function* () {
+    const context = { sessionID: SessionV2.ID.create(), agent: AgentV2.ID.make("test"), assistantMessageID: SessionMessage.ID.create() }
+    yield* database.db.insert(SessionTable).values({ id: context.sessionID, project_id: Project.ID.global, directory: placement.directory,
+      slug: "p", title: "p", version: "test", agent: "test", parent_id: options.parentID }).run().pipe(Effect.orDie)
+    yield* events.publish(SessionEvent.Step.Started, { ...context, timestamp: DateTime.makeUnsafe(1), agent: "test",
+      model: { id: Model.ID.make("model"), providerID: Provider.ID.make("provider") } })
+    const counter = { n: 0 }
+    const bound = <A, E>(input: Schema.Json, run: (call: { toolCallID: string; input: Schema.Json }) => Effect.Effect<A, E>) =>
+      Effect.gen(function* () {
+        const toolCallID = `call-${++counter.n}`
+        yield* events.publish(SessionEvent.Tool.Input.Started, { sessionID: context.sessionID,
+          assistantMessageID: context.assistantMessageID, callID: toolCallID, name: "process_control", timestamp: DateTime.makeUnsafe(1) })
+        const owner = { projectID: placement.project.id, location: { directory: placement.directory },
+          sessionID: context.sessionID, agentID: context.agent }
+        return yield* CapabilityInvocation.withContext({ issuer: "core", owner, invocation: { sessionID: context.sessionID,
+          agentID: context.agent, assistantMessageID: context.assistantMessageID, callID: toolCallID },
+        rootToolName: "process_control", effectiveRules: allow, nativeDenyFloor: [] }, run({ toolCallID, input }))
+      })
+    const call = (input: Schema.Json) => bound(input, (next) => Tool.settle(leaf.tools.process_control,
+      { type: "tool-call", id: next.toolCallID, name: "process_control", input }, { ...context, toolCallID: next.toolCallID }))
+    // Through ToolRegistry: ToolSafety.before, askBefore and hooks run exactly as for a model call.
+    const settle = (input: Schema.Json) => bound(input, (next) => registry.materialize(allow).pipe(Effect.flatMap((tools) =>
+      tools.settle({ ...context, call: { type: "tool-call", id: next.toolCallID, name: "process_control", input } }))))
+    const output = (input: Schema.Json) => call(input).pipe(
+      Effect.flatMap((result) => Schema.decodeUnknownEffect(CapabilityProcessContract.Output)(result.structured)))
+    const failure = (input: Schema.Json) => call(input).pipe(Effect.flip, Effect.map((error) => error.message))
+    return { context, call, settle, output, failure }
+  })
+  const rows = (sessionID: string) => database.db.select().from(CapabilityJobTable).all()
+    .pipe(Effect.orDie, Effect.map((all) => all.filter((row) => row.owner.sessionID === sessionID)))
+`````
+
+### FX-CAP-SCHEDULE-1 — `packages/core/test/fixture/capability-schedule.ts` 53–71
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `bd376bd299100cca1f8ebda844518ec0190d8652`; SHA256 integral `68302e3706d5ed9895422a5e620167b8d2e3ee1a8546320fb4449d12141a9855`. Bytes fonte 6481; recorte [3259, 4517); SHA256 trecho `121718e1ec88b1c6b5b41f86d1cf0d7610d5960bb9774a360cc726b8c9c0db1a`.
+
+`````text
+export const allow: PermissionV2.Ruleset = [{ action: "*", resource: "*", effect: "allow" }]
+
+export const setup = Effect.gen(function* () {
+  const database = yield* Database.Service
+  const events = yield* EventV2.Service
+  const registry = yield* ToolRegistry.Service
+  const tools = yield* Tools.Service
+  const leaf = yield* CapabilitySchedule.make()
+  yield* tools.register(leaf.tools)
+  yield* database.db.insert(ProjectTable).values({ id: Project.ID.global, worktree: placement.directory, sandboxes: [] })
+    .onConflictDoNothing().run().pipe(Effect.orDie)
+  yield* CapabilityPolicyFixture.setRules(allow)
+  const session = Effect.gen(function* () {
+    const context = { sessionID: SessionV2.ID.create(), agent: AgentV2.ID.make("test"), assistantMessageID: SessionMessage.ID.create() }
+    yield* database.db.insert(SessionTable).values({ id: context.sessionID, project_id: Project.ID.global,
+      directory: placement.directory, slug: "s", title: "s", version: "test", agent: "test" }).run().pipe(Effect.orDie)
+    yield* events.publish(SessionEvent.Step.Started, { ...context, timestamp: DateTime.makeUnsafe(1), agent: "test",
+      model: { id: Model.ID.make("model"), providerID: Provider.ID.make("provider") } })
+    const counter = { n: 0 }
+`````
+
+### FX-CAP-SCHEDULE-2 — `packages/core/test/fixture/capability-schedule.ts` 86–96
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `bd376bd299100cca1f8ebda844518ec0190d8652`; SHA256 integral `68302e3706d5ed9895422a5e620167b8d2e3ee1a8546320fb4449d12141a9855`. Bytes fonte 6481; recorte [5794, 6481); SHA256 trecho `242621e4596e477b25676e491d17ef1efa23413f5f5982cb55f7d50054d6adeb`.
+
+`````text
+    })
+    const output = (input: Schema.Json, callID?: string) => call(input, callID).pipe(Effect.flatMap((settled) =>
+      settled.result.type === "error" ? Effect.die(new Error(String(settled.result.value)))
+        : Schema.decodeUnknownEffect(CapabilityScheduleContract.Output)(settled.output?.structured)))
+    const failure = (input: Schema.Json) => call(input).pipe(Effect.map((settled) =>
+      settled.result.type === "error" ? String(settled.result.value) : "unexpected success"))
+    return { context, output, failure, last: () => `call-${counter.n}` }
+  })
+  const rows = database.db.select().from(ScheduledTaskTable).all().pipe(Effect.orDie)
+  return { session, rows }
+})
+`````
+
+### FX-CAP-CALL-1 — `packages/core/test/fixture/capability-service-call.ts` 52–87
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `01444aad2d0106bfd27e29ba147653a517afa9e5`; SHA256 integral `58cdb067390d3702c35bceb514c0fd13315811fe572534eed6bafa251f00e285`. Bytes fonte 24581; recorte [3308, 6191); SHA256 trecho `20c3e1d6852a738bb5ab11c2225eaab73136077d973c2cba1bd9a4c8350aa68d`.
+
+`````text
+export const fixture = (options: { rootName?: string; resource?: Schema.Json; oauth?: boolean; timeout?: number;
+  tool?: Schema.JsonObject; artifactFault?: Cause.Cause<SqlError> } = {}) =>
+  Effect.gen(function* () {
+    const rootName = options.rootName ?? "platform_cloudflare"
+    const f = yield* CapabilityPolicyFixture.fixture({ name: rootName })
+    yield* CapabilityPolicyFixture.setRules(rules)
+    const binding = { ...f.binding, rootToolName: rootName, effectiveRules: rules }
+    yield* f.events.publish(SessionEvent.Tool.Called, { sessionID: f.context.sessionID,
+      assistantMessageID: f.context.assistantMessageID, callID: f.context.toolCallID, tool: rootName, input: {},
+      timestamp: CapabilityPolicyFixture.timestamp, provider: { executed: false } })
+    const called = yield* Deferred.make<void>()
+    const state: State = { mode: "json", tools: [options.tool ?? { name: "mutate", description: "Selected mutation", inputSchema, outputSchema }],
+      result: { content: [{ type: "text", text: "done" }], structuredContent: { changed: true } },
+      time: 1000, excluded: false, lists: 0, calls: [], requests: [], response: "normal", called, errors: [] }
+    const server = yield* Effect.acquireRelease(Effect.sync(() => Bun.serve({ hostname: "127.0.0.1", port: 0,
+      async fetch(request) {
+        const body = request.method === "DELETE" ? {} : Schema.decodeUnknownSync(Schema.Record(Schema.String, Schema.Json))(await request.json())
+        const recorded = { body, headers: request.headers, method: request.method }
+        state.requests.push(recorded)
+        const send = (result: Schema.Json, session?: string) => {
+          const envelope = JSON.stringify({ jsonrpc: "2.0", id: body.id, result })
+          return new Response(state.mode === "json" ? envelope : `: prime\r\n\r\ndata: ${envelope}\r\n\r\n`, { headers: {
+            "content-type": state.mode === "json" ? "application/json" : "text/event-stream",
+            ...(session ? { "mcp-session-id": session } : {}),
+          } })
+        }
+        if (request.method === "DELETE") return new Response(null, { status: 204 })
+        if (body.method === "initialize") return send({ protocolVersion: "2025-11-25", capabilities: { tools: {} },
+          serverInfo: { name: "fixture", version: "1" } }, `private-session-${state.requests.length}`)
+        if (body.method === "notifications/initialized") return new Response(null, { status: 202 })
+        if (body.method === "tools/list") { state.lists++; await state.beforeList?.(state.lists); return send({ tools: state.tools }) }
+        if (body.method !== "tools/call") return new Response(null, { status: 400 })
+        state.calls.push(recorded)
+        state.beforeCall?.()
+        if (state.response !== "hold") {
+          const response = state.response === "loss" ? new Response("lost", { status: 503 }) : send(state.result)
+`````
+
+### FX-CAP-CALL-2 — `packages/core/test/fixture/capability-service-call.ts` 118–153
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `01444aad2d0106bfd27e29ba147653a517afa9e5`; SHA256 integral `58cdb067390d3702c35bceb514c0fd13315811fe572534eed6bafa251f00e285`. Bytes fonte 24581; recorte [8201, 11241); SHA256 trecho `7253aa0d467d4a6a7860eb2f9a36afd515e30b335148bba33918e058a5abefb0`.
+
+`````text
+    const transport = CapabilityMcp.make({ fixtureOrigin: server.url.origin, timeoutMs: options.timeout ?? 10000 })
+    const filterCatalog = (_: string, list: CapabilityDiscovery.VendorList): CapabilityDiscovery.VendorList => ({ ...list,
+      tools: state.excluded ? list.tools.filter((tool) => tool.name !== "mutate") : list.tools })
+    const discovery = yield* CapabilityDiscovery.make({ source: { listTools: (selection) => transport.listTools(selection).pipe(
+      Effect.map((list) => filterCatalog(selection.connection.provider, list))) }, now: () => state.time })
+    const jobs = yield* CapabilityJobs.make
+    const global = yield* Global.Service
+    const fs = yield* FSUtil.Service
+    const artifactRoot = join(global.data, "service-artifacts", f.context.sessionID)
+    const writerProof = { completed: 0 }
+    const fault = options.artifactFault
+    const optionsResource = options.resource ?? { arguments: { account: "bound-account", zero: 0, flag: false, nil: null } }
+    const transaction: typeof f.database.db.transaction = (use, options) => f.database.db.transaction((tx) => Effect.gen(function* () {
+      if (!fault) return yield* use(tx)
+      // Native publication supplied the real writer after its actual approvals. Verify complete selected proof before injecting a platform fault.
+      const binding = yield* f.policy.binding(f.context).pipe(Effect.exit)
+      if (Exit.isFailure(binding)) return yield* CapabilityServiceProjection.fatal(binding.cause)
+      const resolution = { connection, target, credentialID: selected.id, endpoint: "https://mcp.cloudflare.com/mcp?codemode=false",
+        resource: optionsResource }
+      const checked = yield* checkSelection(tx, f.context, binding.value.owner, { action: "service_call",
+        resources: ["cloudflare", connection.id, target.id, "cloudflare:mutate"],
+        selection: { resolution, credentialHash: CapabilityArtifacts.selectionCredentialHash(selected.value) },
+      }, Option.some(credentials)).pipe(Effect.exit)
+      if (Exit.isFailure(checked)) return yield* CapabilityServiceProjection.fatal(checked.cause)
+      writerProof.completed++
+      return yield* Effect.failCause(fault)
+    }), options)
+    const artifactDatabase = new Proxy(f.database.db, { get: (db, key) => key === "transaction" ? transaction : Reflect.get(db, key, db) })
+    const artifacts = yield* CapabilityArtifacts.make({ root: artifactRoot }).pipe(
+      Effect.provideService(Database.Service, { ...f.database, db: artifactDatabase }))
+    const execute = yield* CapabilityServiceExecution.make({ transport, discovery, connections, jobs, artifacts, filterCatalog })
+    const registry = yield* ToolRegistry.Service
+    const platform = Tool.make({ description: "Actual canonical platform fixture", input: CapabilityServiceSchema.CallInput,
+      output: CapabilityServiceSchema.CallOutput,
+      execute: (input, context) => execute(state.provider ?? "cloudflare", state.supplied ?? input, state.context ?? context)
+        .pipe(Effect.exit, Effect.flatMap((exit) => {
+`````
+
+### FX-CAP-CALL-3 — `packages/core/test/fixture/capability-service-call.ts` 187–212
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `01444aad2d0106bfd27e29ba147653a517afa9e5`; SHA256 integral `58cdb067390d3702c35bceb514c0fd13315811fe572534eed6bafa251f00e285`. Bytes fonte 24581; recorte [13722, 15656); SHA256 trecho `e22578fb6df18fa7e558a00ec7785d45810b6c7040b07740fbd8bfc39466d6b4`.
+
+`````text
+export function publicationRace(mode: "retarget" | "rotate" | "disconnect") {
+  return Effect.gen(function* () {
+    const f = yield* fixture()
+    f.state.result = { content: [], structuredContent: { changed: true, value: "PRIVATE-ARTIFACT-RESPONSE".repeat(500) } }
+    yield* CapabilityPolicyFixture.setRules([...rules, { action: "artifact.write", resource: "*", effect: "ask" }])
+    const asked = yield* CapabilityPolicyFixture.observeAsked(f.context)
+    const fiber = yield* f.call().pipe(Effect.forkChild)
+    const request = yield* Effect.raceFirst(Deferred.await(asked.first), Fiber.join(fiber).pipe(Effect.andThen(Effect.die("SKIPPED_ARTIFACT_APPROVAL"))))
+    expect(request.action).toBe("artifact.write")
+    expect((yield* f.rows())[0]).toMatchObject({ state: "completed", observation: { data: { remoteOutcome: "completed", materialization: "pending" } } })
+    if (mode === "retarget") yield* f.connections.retargetTarget(f.target, { environment: "changed", resource: {} })
+    if (mode === "rotate") yield* f.credentials.update(f.selected.id, { value: { type: "key", key: "rotated-after-ACK" } })
+    if (mode === "disconnect") yield* f.connections.disconnect(f.connection)
+    yield* CapabilityPolicyFixture.setRules(rules)
+    yield* f.permissions.reply({ requestID: request.id, reply: "once" })
+    const result = f.output(yield* Fiber.join(fiber))
+    expect(result.result.status).toBe("partial")
+    expect(result.data).toBeUndefined()
+    if (result.result.status === "partial") expect(result.result.artifactRefs).toEqual([])
+    expect(JSON.stringify(result)).not.toContain("PRIVATE-ARTIFACT-RESPONSE")
+    expect(yield* f.artifactRows()).toEqual([])
+    expect(yield* f.fs.exists(f.artifactRoot)).toBe(false)
+    expect((yield* f.rows())[0]).toMatchObject({ state: "completed", observation: { data: { remoteOutcome: "completed", materialization: "failed" } } })
+    expect(f.state.calls).toHaveLength(1)
+  })
+}
+`````
+
+### FX-CAP-SERVICES-1 — `packages/core/test/fixture/capability-services.ts` 42–60
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `5adb23a13279f415e17d29c1e08b879e6bba0c97`; SHA256 integral `835a29cce718eba056da1c83c062240eff62de98bdfc5c8d6ad094cf4a4bd32c`. Bytes fonte 10634; recorte [2495, 3817); SHA256 trecho `a073b1f44d0de871206ed39d1a1b6f87c7841f941d9f8d3f4432e5c1127fd49f`.
+
+`````text
+export class OutputLimits extends Context.Service<OutputLimits, Ref.Ref<{ max_bytes: number; max_lines: number }>>()
+  ("@orchestra/test/CapabilityServices/OutputLimits") {}
+
+export const layer = Layer.unwrap(Effect.gen(function* () {
+  const tmp = yield* Effect.acquireRelease(Effect.promise(() => tmpdir()),
+    (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()))
+  const limits = yield* Ref.make({ max_bytes: ToolOutputStore.MAX_BYTES, max_lines: ToolOutputStore.MAX_LINES })
+  return Layer.merge(AppNodeBuilder.build(LayerNode.group([
+    Database.node, EventV2.node, SessionProjector.node, SessionStore.node, PermissionV2.node, AgentV2.node,
+    Location.node, PermissionSaved.node, ToolRegistry.nativeNode, Global.node, FSUtil.node, Credential.node, ToolOutputStore.node,
+  ]), [
+    [Location.node, Layer.succeed(Location.Service, CapabilityPolicyFixture.placement)],
+    [Global.node, Global.layerWith({ data: join(tmp.path, "data"), home: tmp.path })],
+    [Credential.node, Credential.layerFrom(undefined)],
+    [Config.node, Layer.succeed(Config.Service, Config.Service.of({ entries: () => Ref.get(limits).pipe(Effect.map((limits) => [
+      new Config.Document({ type: "document", info: { tool_output: new ConfigToolOutput.Info(limits) } }),
+    ])) }))],
+  ]), Layer.succeed(OutputLimits, limits))
+}))
+`````
+
+### FX-CAP-SERVICES-2 — `packages/core/test/fixture/capability-services.ts` 79–147
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `5adb23a13279f415e17d29c1e08b879e6bba0c97`; SHA256 integral `835a29cce718eba056da1c83c062240eff62de98bdfc5c8d6ad094cf4a4bd32c`. Bytes fonte 10634; recorte [4920, 10417); SHA256 trecho `72e86c5eacd08e06255fbf6d0c1d4dc2ec688416c12bd80ce905196c8193f1fe`.
+
+`````text
+export function fixture(options: { name?: string; clock?: { time: number }; descriptors?: CapabilityDescriptors.Store } = {}) {
+  return Effect.gen(function* () {
+    const f = yield* CapabilityPolicyFixture.fixture(options)
+    yield* CapabilityPolicyFixture.setRules(allow)
+    const binding = { ...f.binding, rootToolName: options.name ?? "service_call", effectiveRules: allow }
+    yield* f.events.publish(SessionEvent.Tool.Called, {
+      sessionID: f.context.sessionID, assistantMessageID: f.context.assistantMessageID,
+      callID: f.context.toolCallID, tool: binding.rootToolName, input: {},
+      timestamp: CapabilityPolicyFixture.timestamp, provider: { executed: false },
+    })
+    const registry = yield* ToolRegistry.Service
+    const connections = yield* CapabilityConnections.make
+    const credentials = yield* Credential.Service
+    const integrationID = Integration.ID.make("service-fixture")
+    const credential = yield* credentials.create({ integrationID, value: { type: "key", key: secret } })
+    const connection = yield* connections.create({ provider: request.provider, integrationID, credentialID: credential.id,
+      endpoint: "https://service.example.test/mcp", scopeHash: "a".repeat(64), subjectID: "fixture" })
+    const target = yield* connections.createTarget(connection, { environment: "test", resource: { project: "selected" } })
+    yield* connections.bind({ target, sessionID: f.context.sessionID, agentID: f.context.agent, actions: ["service_discover", "service_call"] })
+    const calls = yield* Ref.make<CapabilityDiscovery.Selection[]>([])
+    const credentialReads = yield* Ref.make(0)
+    const list = yield* Ref.make<CapabilityDiscovery.VendorList>({ tools, catalogGeneration: 1, coverage: "complete", byteLength: 1024 })
+    const clock = options.clock ?? { time: 1000 }
+    const discovery = yield* CapabilityDiscovery.make({ ttlMillis: 100, now: () => clock.time, descriptors: options.descriptors,
+      source: { listTools: (selection) => Effect.gen(function* () {
+        yield* Ref.update(calls, (calls) => [...calls, selection])
+        return CapabilityServiceProviders.filterCatalog(selection.connection.provider, yield* Ref.get(list))
+      }) },
+    }).pipe(Effect.provideService(Credential.Service, Credential.Service.of({ ...credentials,
+      get: (id) => Ref.update(credentialReads, (n) => n + 1).pipe(Effect.andThen(credentials.get(id))),
+    })))
+    const seen = yield* Ref.make<readonly Readonly<{
+      provider: string; context: Tool.Context; binding: CapabilityInvocation.Binding; hook?: string; captured?: ToolRegistry.Materialization
+    }>[]>([])
+    const response = yield* Ref.make(output)
+    const behavior = yield* Ref.make<Effect.Effect<void, Capability.Failure | CapabilityArtifacts.Failure>>(Effect.void)
+    // Only execution dependency is a fixture leaf. Discovery, SQL child admission, policy and safety remain real.
+    const execute: CapabilityServiceContract.Execute = (provider, input, context) => Effect.gen(function* () {
+      const binding = yield* f.policy.binding(context)
+      const captured = yield* ToolRegistry.captured
+      if (!captured) return yield* new Capability.Failure({ code: "invocation_binding_missing", message: "Missing captured fixture" })
+      const description = yield* discovery.describe(context, input.descriptor, captured)
+      const validator = yield* CapabilityVendorSchema.compile(description.inputSchema, description.outputSchema)
+      if (!validator.validateInput(input.input).valid)
+        return yield* new Capability.Failure({ code: "unsupported_schema", message: "Invalid fixture input" })
+      const permit = yield* f.policy.authorize(context, { action: "service_call", resources: ["service_call", provider,
+        input.descriptor.connectionID, input.descriptor.targetID, `${provider}:${description.name}`] })
+      yield* Ref.get(behavior).pipe(Effect.flatten)
+      yield* f.policy.commit(permit, () => f.target).pipe(Effect.catchTag("SqlError", Effect.die))
+      const hook = yield* ToolSafety.HookedCall
+      yield* Ref.update(seen, (seen) => [...seen, { provider, context, binding, hook, captured }])
+      return yield* Ref.get(response)
+    })
+    const services = yield* CapabilityServices.make({ discovery, execute })
+    yield* registry.register(services.tools)
+    const materialization = yield* registry.materialize(undefined, { advertisedNames: ["service_find", "service_describe", "service_call"] })
+    const run = <A, E, R>(effect: Effect.Effect<A, E, R>, host = binding) => CapabilityInvocation.withContext(host, effect)
+    const find = (m = materialization) => run(discovery.find(f.context, request, m))
+    const locate = (ref: Capability.DescriptorRef, m = materialization) => run(discovery.locate(f.context, ref, m))
+    const settle = (name: string, input: Schema.Json, host = binding, m = materialization) => run(m.settle({
+      sessionID: f.context.sessionID, agent: f.context.agent, assistantMessageID: f.context.assistantMessageID,
+      call: { type: "tool-call", id: f.context.toolCallID, name, input },
+    }), host)
+    const rows = () => f.database.db.select().from(CapabilityChildTable)
+      .where(eq(CapabilityChildTable.session_id, f.context.sessionID)).all().pipe(Effect.orDie)
+    return { ...f, binding, registry, connections, credentials, credential, connection, target, calls, credentialReads, list, clock,
+      discovery, seen, response, behavior, services, materialization, run, find, locate, settle, rows }
+  })
+}
+`````
+
+### DIST-GATES-1 — `packages/core/test/distribution-bundle-gates.ts` 1–31
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `7e454200e9bed37746cb2e685f25b4aeefdd9512`; SHA256 integral `d0faddffdfb072c5bab805f7dbfaf7598189e0a9a0c0d2874abe6675a9b9acdb`. Bytes fonte 2200; recorte [0, 2200); SHA256 trecho `d0faddffdfb072c5bab805f7dbfaf7598189e0a9a0c0d2874abe6675a9b9acdb`.
+
+`````text
+// Closed cargo/libtest output contract, not source/prose detection. Fake cargo controls
+// exercise orchestration only; qualification requires the native job's real cargo log.
+export const nativeJobTest = "windows::tests::job_lifetime::native_job_closes_before_stopped_and_release"
+
+export function requireNativeJobReceipts(output: string) {
+  const lines = output.replaceAll("\r\n", "\n").trimEnd().split("\n")
+  const prefix = `test ${nativeJobTest} ... `
+  const tests = lines.filter((line) => line.startsWith(prefix))
+  if (tests.length !== 1) throw new Error("BUNDLE_NATIVE_JOB_TEST_MISSING")
+  const start = lines.findIndex((line) => line.startsWith(prefix))
+  const end = lines.findIndex((line, index) => index > start && (line.startsWith("test ") || line.startsWith("test result:")))
+  const summary = lines.find((line, index) => index > start && line.startsWith("test result:"))
+  if (end < 0 || !summary) throw new Error("BUNDLE_NATIVE_JOB_RESULT_INVALID")
+  const normalized = lines.slice(start, end).map((line) => line.startsWith(prefix) ? line.slice(prefix.length) : line)
+  const receipts = [
+    ...["stop", "natural", "descendant", "unknown"].map((name) => `native Job lifetime control: ${name} passed`),
+    "native Job mutation control: original owned handle stayed valid; OS oracle rejected it",
+  ]
+  receipts.forEach((receipt) => {
+    if (normalized.filter((line) => line === receipt).length !== 1) throw new Error(`BUNDLE_NATIVE_JOB_RECEIPT_MISSING: ${receipt}`)
+  })
+  if (normalized.filter((line) => line === "ok").length !== 1 ||
+      !/^test result: ok\. [1-9]\d* passed; 0 failed; 0 ignored; 0 measured; \d+ filtered out; finished in [\d.]+s$/.test(summary) ||
+      lines.some((line) => /^test result: (?!ok\..*; 0 failed;)/.test(line)))
+    throw new Error("BUNDLE_NATIVE_JOB_RESULT_INVALID")
+  const positions = receipts.map((receipt) => normalized.indexOf(receipt))
+  if (positions.some((position, index) => index > 0 && position <= positions[index - 1]) ||
+      normalized.indexOf("ok") <= positions[positions.length - 1]) throw new Error("BUNDLE_NATIVE_JOB_RECEIPT_ORDER")
+}
+
+if (import.meta.main) requireNativeJobReceipts(await Bun.file(process.argv[2]).text())
+`````
+
+### DIST-DENO-1 — `packages/core/test/distribution-bundle-deno.test.ts` 12–64
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `6ce00d3283fd0da58c3dcfb455655e33536eeea4`; SHA256 integral `79ce4546acce744631a635e4a0d237268aa7362de79778e9aa9dfb8a20e8800e`. Bytes fonte 11168; recorte [583, 4224); SHA256 trecho `caae9fd1de9d7fbd44579d272dbf47405abbce3ae7d3db3235151bb431bfa34a`.
+
+`````text
+const box = () => Effect.gen(function* () {
+  if (process.env.RUNNER_ENVIRONMENT !== "github-hosted" || !process.env.RUNNER_TEMP) throw new Error("DENO_CONTROLS_HOSTED_ONLY")
+  const root = yield* Effect.promise(() => realpath(path.resolve(import.meta.dirname, "../../..")))
+  const parent = process.env.RUNNER_TEMP
+  const temp = yield* Effect.acquireRelease(Effect.promise(() => mkdtemp(path.join(parent, "deno-controls-"))),
+    (temp) => Effect.promise(() => rm(temp, { recursive: true, force: true })))
+  const envFile = path.join(temp, "github-env")
+  yield* Effect.promise(() => writeFile(envFile, "existing environment\n"))
+  const row = { package: "cli", platform: process.platform, cpu: process.arch === "x64" ? "X64" : "ARM64",
+    host: process.platform === "win32" ? "windows-latest" : "ubuntu-latest" }
+  return { root, temp, envFile, env: { ...process.env, GITHUB_WORKSPACE: root, RUNNER_TEMP: temp, GITHUB_ENV: envFile,
+    ROW: JSON.stringify(row), RUNNER_OS: process.platform === "win32" ? "Windows" : "Linux", RUNNER_ARCH: row.cpu }, row }
+})
+
+it.live("Deno setup admits actual hosted row and regular single-link environment without writes", () => Effect.gen(function* () {
+  const owned = yield* box()
+  expect(yield* Effect.promise(() => admitDistributionDeno(owned.env))).toMatchObject({ checkout: owned.root, temp: owned.temp, githubEnv: owned.envFile })
+  expect(yield* Effect.promise(() => readFile(owned.envFile, "utf8"))).toBe("existing environment\n")
+  expect(yield* Effect.promise(() => readdir(owned.temp))).toEqual(["github-env"])
+}))
+
+const hosts = [
+  ["wrong hosted environment", { RUNNER_ENVIRONMENT: "self-hosted" }, "DENO_OWNED_HOSTED_SETUP_REQUIRED"],
+  ["wrong runner OS", { RUNNER_OS: "unsupported" }, "DENO_NATIVE_HOST_MISMATCH"],
+  ["wrong runner CPU", { RUNNER_ARCH: "unsupported" }, "DENO_NATIVE_HOST_MISMATCH"],
+  ["missing row", { ROW: "null" }, "DENO_NATIVE_HOST_MISMATCH"],
+] as const
+hosts.forEach(([name, env, diagnostic]) => it.live(`Deno actual admission rejects ${name} before writes`, () => Effect.gen(function* () {
+  const owned = yield* box()
+  yield* Effect.promise(() => rejectDenoSetup({ ...owned.env, ...env }, diagnostic))
+  expect(yield* Effect.promise(() => readFile(owned.envFile, "utf8"))).toBe("existing environment\n")
+  expect(yield* Effect.promise(() => readdir(owned.temp))).toEqual(["github-env"])
+})))
+
+for (const field of ["platform", "cpu", "host", "package"]) it.live(`Deno actual admission rejects wrong row ${field}`, () => Effect.gen(function* () {
+  const owned = yield* box()
+  yield* Effect.promise(() => rejectDenoSetup({ ...owned.env, ROW: JSON.stringify({ ...owned.row, [field]: "unsupported" }) }, "DENO_NATIVE_HOST_MISMATCH"))
+  expect(yield* Effect.promise(() => readFile(owned.envFile, "utf8"))).toBe("existing environment\n")
+}))
+
+for (const defect of ["wrong checkout", "relative temp", "outside environment", "missing environment", "directory environment", "hardlink environment", "symlink environment", "symlink temp"]) {
+  it.live(`Deno actual filesystem admission rejects ${defect}`, () => Effect.gen(function* () {
+    const owned = yield* box()
+    const changed = { ...owned.env }
+    const target = path.join(owned.temp, "control")
+    yield* Effect.promise(async () => {
+      if (defect === "wrong checkout") changed.GITHUB_WORKSPACE = owned.temp
+      if (defect === "relative temp") changed.RUNNER_TEMP = path.relative(process.cwd(), owned.temp)
+      if (defect === "outside environment") {
+        await mkdir(target)
+        changed.RUNNER_TEMP = target
+      }
+      if (defect === "missing environment") changed.GITHUB_ENV = target
+`````
+
+### DIST-DENO-2 — `packages/core/test/distribution-bundle-deno.test.ts` 79–115
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `6ce00d3283fd0da58c3dcfb455655e33536eeea4`; SHA256 integral `79ce4546acce744631a635e4a0d237268aa7362de79778e9aa9dfb8a20e8800e`. Bytes fonte 11168; recorte [5284, 7047); SHA256 trecho `ee7115625658876b827863379a02a6771f22d1b216e0332055c06479adfd2145`.
+
+`````text
+  const bytes = new TextEncoder().encode("digest control")
+  const digest = createHash("sha256").update(bytes).digest("hex")
+  const server = yield* Effect.acquireRelease(Effect.promise(async () => {
+    const server = createServer((request, response) => {
+      state.sockets.add(request.socket)
+      request.socket.once("close", () => {
+        state.sockets.delete(request.socket)
+        // Observe the real connection, not a ReadableStream cancellation callback.
+        if (!response.writableFinished) state.transportClosed = true
+      })
+      response.once("finish", () => { state.responseFinished = true })
+      const route = new URL(request.url ?? "/", "http://127.0.0.1").pathname
+      if (route === "/ok") return response.end(bytes)
+      if (route === "/http-error") { response.statusCode = 503; return response.end("unavailable") }
+      if (route === "/empty") return response.end()
+      if (route === "/length") {
+        response.setHeader("content-length", String(distributionDenoMaxBytes + 1))
+        response.flushHeaders()
+        response.write(bytes)
+        return // Deliberately unfinished: the client must close this transport.
+      }
+      response.flushHeaders()
+      const chunk = Buffer.alloc(8 * 1024 * 1024)
+      const pump = () => {
+        while (!response.destroyed && state.chunks < 64) {
+          state.chunks++
+          if (!response.write(chunk)) { response.once("drain", pump); return }
+        }
+        // Never end the response: draining buffered bytes is not a cancellation oracle.
+      }
+      pump()
+    })
+    await new Promise<void>((resolve, reject) => {
+      server.once("error", reject)
+      server.listen(0, "127.0.0.1", () => { server.off("error", reject); resolve() })
+    })
+    return server
+`````
+
+### DIST-DENO-3 — `packages/core/test/distribution-bundle-deno.test.ts` 121–176
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `6ce00d3283fd0da58c3dcfb455655e33536eeea4`; SHA256 integral `79ce4546acce744631a635e4a0d237268aa7362de79778e9aa9dfb8a20e8800e`. Bytes fonte 11168; recorte [7251, 10557); SHA256 trecho `35dd71e405e2bedb3829d00f3f8a8a0d8e4e507146110b578eca9b7216c6923a`.
+
+`````text
+  if (!address || typeof address === "string") throw new Error("DENO_HTTP_FIXTURE_ADDRESS_MISSING")
+  return { state, bytes, digest, url: `http://127.0.0.1:${address.port}` }
+})
+
+it.live("Deno actual streaming download returns bytes only after digest positive control", () => Effect.gen(function* () {
+  yield* box()
+  const server = yield* http()
+  const result = yield* Effect.promise(() => downloadDistributionDeno(`${server.url}/ok`, server.digest))
+  expect(result.bytes).toEqual(Buffer.from(server.bytes))
+  expect(result.sha256).toBe(server.digest)
+  expect(server.state.responseFinished, "DENO_HTTP_POSITIVE_RESPONSE_INCOMPLETE").toBe(true)
+  expect(server.state.transportClosed).toBe(false)
+}))
+
+it.live("Deno HTTP cancellation oracle rejects a live response and observes actual fetch abort", () => Effect.gen(function* () {
+  yield* box()
+  const server = yield* http()
+  const controller = yield* Effect.acquireRelease(Effect.sync(() => new AbortController()),
+    (controller) => Effect.sync(() => controller.abort()))
+  const response = yield* Effect.promise(() => fetch(`${server.url}/length`, { signal: controller.signal }))
+  expect(response.headers.get("content-length")).toBe(String(distributionDenoMaxBytes + 1))
+  const live = yield* Effect.exit(Effect.promise(() => requireTransportClosed(server.state, "length", 50)))
+  expect(live._tag === "Failure" && Cause.pretty(live.cause).includes("DENO_OVERFLOW_HTTP_LENGTH_NOT_CANCELLED")).toBe(true)
+  controller.abort()
+  yield* Effect.promise(async () => { await response.body?.cancel().catch(() => {}) })
+  yield* Effect.promise(() => requireTransportClosed(server.state, "length"))
+}))
+
+for (const [route, diagnostic] of [["http-error", "DENO_UPSTREAM_DOWNLOAD_FAILED: HTTP 503"], ["empty", "DENO_DOWNLOAD_SIZE_MISMATCH"],
+  ["length", "DENO_DOWNLOAD_CONTENT_LENGTH_LIMIT"], ["ok", "DENO_UPSTREAM_DIGEST_MISMATCH"], ["stream", "DENO_DOWNLOAD_STREAM_LIMIT"]]) {
+  it.live(`Deno actual HTTP rejects ${route} with ${diagnostic}`, () => Effect.gen(function* () {
+    const owned = yield* box()
+    const server = yield* http()
+    yield* Effect.promise(async () => {
+      const error = await downloadDistributionDeno(`${server.url}/${route}`, "0".repeat(64)).then(() => undefined, (error: unknown) => error)
+      if (!(error instanceof Error)) throw new Error("DENO_DOWNLOAD_NAMED_ERROR_MISSING")
+      if (route === "length" || route === "stream") { expect(error.message).toBe(diagnostic); return }
+      expect(error.message).toContain(diagnostic)
+    })
+    if (route === "length" || route === "stream") {
+      yield* Effect.promise(() => requireTransportClosed(server.state, route))
+    }
+    if (route === "stream") {
+      expect(server.state.chunks).toBeGreaterThan(16)
+    }
+    expect(yield* Effect.promise(() => readdir(owned.temp))).toEqual(["github-env"])
+  }))
+}
+
+test("Deno actual runtime version parser rejects wrong/empty/comment-only version", () => {
+  requireDistributionDenoVersion(`deno ${distributionDenoVersion} (stable, release, x86_64-unknown-linux-gnu)\nv8 14\ntypescript 6\n`)
+  for (const output of ["", "# deno 2.9.7", "deno 2.9.70", "deno 2.9.6", "deno 2.9.7-canary", "warning\ndeno 2.9.7"]) {
+    expect(() => requireDistributionDenoVersion(output), output).toThrow("DENO_RUNTIME_VERSION_MISMATCH")
+  }
+})
+
+`````
+
+### DIST-WORKFLOW-1 — `packages/core/test/distribution-bundle-workflow.test.ts` 1–40
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `3e95940d6d99808919981d35d455ed5b6d457b30`; SHA256 integral `1089bdac6f924958c7e9dd93a3041a380ad61be6004880b42229bc70dc73d539`. Bytes fonte 23702; recorte [0, 3306); SHA256 trecho `8f497dcecd2f3fba4e237bc239f0d9cd3d65ccf185fab999877e0aff7cc020d3`.
+
+`````text
+import { YAML } from "bun"
+import { expect, test } from "bun:test"
+import { statSync } from "node:fs"
+import path from "node:path"
+import { fileURLToPath } from "node:url"
+import { Schema } from "effect"
+import { preloadsControl } from "../../../script/test-ci-request"
+
+const root = fileURLToPath(new URL("../../../", import.meta.url))
+const Step = Schema.Struct({
+  name: Schema.optional(Schema.String), run: Schema.optional(Schema.String), uses: Schema.optional(Schema.String),
+  if: Schema.optional(Schema.String), shell: Schema.optional(Schema.String), "working-directory": Schema.optional(Schema.String),
+  "continue-on-error": Schema.optional(Schema.Boolean), env: Schema.optional(Schema.Record(Schema.String, Schema.String)),
+  with: Schema.optional(Schema.Record(Schema.String, Schema.Unknown)),
+})
+const Row = Schema.Struct({ lane: Schema.optional(Schema.String), package: Schema.String, host: Schema.String, cpu: Schema.String, platform: Schema.String,
+  files: Schema.optional(Schema.Array(Schema.String)) })
+const Job = Schema.Struct({ name: Schema.optional(Schema.String), "runs-on": Schema.String, "timeout-minutes": Schema.Number,
+  defaults: Schema.optional(Schema.Struct({ run: Schema.Struct({ shell: Schema.String }) })),
+  "continue-on-error": Schema.optional(Schema.Boolean), if: Schema.optional(Schema.String),
+  env: Schema.optional(Schema.Record(Schema.String, Schema.String)), steps: Schema.Array(Step),
+  strategy: Schema.optional(Schema.Struct({ "fail-fast": Schema.Boolean, "max-parallel": Schema.Number,
+    matrix: Schema.StructWithRest(Schema.Struct({ include: Schema.optional(Schema.Array(Row)) }), [Schema.Record(Schema.String, Schema.Unknown)]) })) })
+const Workflow = Schema.Struct({ name: Schema.String, on: Schema.Record(Schema.String, Schema.Unknown),
+  permissions: Schema.Record(Schema.String, Schema.String), defaults: Schema.Struct({ run: Schema.Struct({ shell: Schema.String }) }),
+  env: Schema.Record(Schema.String, Schema.String), jobs: Schema.Record(Schema.String, Job) })
+const source = YAML.parse(await Bun.file(path.join(root, ".github/workflows/distribution-bundle.yml")).text())
+const selector = await Bun.file(path.join(root, "apps/cli/script/test.ts")).text()
+const distribution = [...new Bun.Glob("test/distribution-*.test.ts").scanSync({ cwd: path.join(root, "apps/cli") })].map((file) => `./${file.replaceAll("\\", "/")}`)
+const checkout = "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5"
+const upload = "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02"
+
+test("real bundle source passes structural coverage and generic CLI discovery checks", async () => {
+  inspect(source)
+  check(preloadsControl(Schema.decodeUnknownSync(Schema.Struct({ test: Schema.Struct({ preload: Schema.Array(Schema.String) }) }))(Bun.TOML.parse(await Bun.file(path.join(root, "packages/core/bunfig.toml")).text()))), "BUNDLE_CORE_PRELOAD")
+  check(preloadsControl(Schema.decodeUnknownSync(Schema.Struct({ test: Schema.Struct({ preload: Schema.Array(Schema.String) }) }))(Bun.TOML.parse(await Bun.file(path.join(root, "apps/desktop/bunfig.toml")).text()))), "BUNDLE_DESKTOP_PRELOAD")
+  for (const platform of ["linux", "win32", "darwin"]) {
+    for (const exitCode of [0, 17]) {
+      const calls: string[][] = []
+      const exits: number[] = []
+`````
+
+### DIST-WORKFLOW-2 — `packages/core/test/distribution-bundle-workflow.test.ts` 75–115
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `3e95940d6d99808919981d35d455ed5b6d457b30`; SHA256 integral `1089bdac6f924958c7e9dd93a3041a380ad61be6004880b42229bc70dc73d539`. Bytes fonte 23702; recorte [6885, 11718); SHA256 trecho `b7e6bcf06e8b3471d1807591f39e9f0c40959f96a18ed7f0d3af7c984f9dbb00`.
+
+`````text
+    ["BUNDLE_ARTIFACT_NAME", (value) => patchStep(value, undefined, (step) => step.uses === upload ? { ...step, with: { ...step.with, name: "distribution-${{ matrix.package }}-${{ matrix.host }}-${{ github.run_attempt }}" } } : step)],
+    ["BUNDLE_FILES", (value) => patchRows(value, (row) => ({ ...row, files: undefined }))],
+    ["BUNDLE_FILES", (value) => patchRows(value, (row) => ({ ...row, files: [] }))],
+    ["BUNDLE_FILES_REPEATED", (value) => patchRows(value, (row) => ({ ...row, files: [...(row.files ?? []), ...(row.files?.slice(0, 1) ?? [])] }))],
+    ["BUNDLE_FILES_OVERLAP", (value) => patchRows(value, (row) => row.lane === "regression" && row.package === "cli" && row.platform === "linux" ? { ...row, files: [...(row.files ?? []), "./test/distribution-musl.test.ts"] } : row)],
+    ["BUNDLE_FILES_OVERLAP", (value) => patchRows(value, (row) => row.lane === "musl" ? { ...row, files: [...(row.files ?? []), "./test/packaged-skills-build.test.ts"] } : row)],
+    ["BUNDLE_EXACT_FILES", (value) => patchRows(value, (row) => row.lane === "musl" ? { ...row, files: [...(row.files ?? []), "./test/artifact-native-lane.test.ts"] } : row)],
+    ["BUNDLE_EXACT_FILES", (value) => patchRows(value, (row) => row.package === "core" ? { ...row, files: row.files?.filter((file) => !file.endsWith("ripgrep-binary.test.ts")) } : row)],
+    ["BUNDLE_NATIVE_PROOF", (value) => patchRows(value, (row) => ({ ...row, files: row.files?.filter((file) => !file.endsWith("distribution-native.test.ts")) }))],
+    ["BUNDLE_WINDOWS_PROOF", (value) => patchRows(value, (row) => ({ ...row, files: row.files?.filter((file) => !file.endsWith("distribution-windows.test.ts")) }))],
+    ["BUNDLE_MUSL_PROOF", (value) => patchRows(value, (row) => row.lane === "musl" ? { ...row, files: ["./test/artifact-native-lane.test.ts"] } : row)],
+    ["BUNDLE_DENO", (value) => patchStep(value, "Install native Deno", () => undefined)],
+    ["BUNDLE_DENO", (value) => patchStep(value, "Install native Deno", (step) => ({ ...step, if: "matrix.lane == 'regression' && matrix.package == 'cli'" }))],
+    ["BUNDLE_NATIVE_JOB", (value) => patchStep(value, "Prove native Windows Job handle closure", () => undefined)],
+    ["BUNDLE_NATIVE_POSIX", (value) => patchStep(value, "Prove native POSIX ABI", () => undefined)],
+    ["BUNDLE_NATIVE_POSIX", (value) => patchStep(value, "Prove native POSIX ABI", (step) => ({ ...step, if: "matrix.platform == 'linux'" }))],
+    ["BUNDLE_NATIVE_POSIX", (value) => patchStep(value, "Prove native POSIX ABI", (step) => ({ ...step, run: step.run?.replace("-t POSIX", "-t unobserved") }))],
+    ["BUNDLE_NATIVE_POSIX", (value) => patchStep(value, "Prove native POSIX ABI", (step) => ({ ...step, run: step.run?.replace("export ORCHESTRA_ARTIFACT_DARWIN_SDK", "export UNOBSERVED_SDK") }))],
+    ["BUNDLE_SOURCE_ABI", (value) => patchStep(value, "Prove source ABI producers", () => undefined)],
+    ["BUNDLE_SOURCE_ABI", (value) => patchStep(value, "Prove source ABI producers", (step) => ({ ...step, if: "matrix.package == 'cli' && matrix.host == 'ubuntu-latest'" }))],
+    ["BUNDLE_DESKTOP_ABI", (value) => patchStep(value, "Prove Desktop ABI consumer", () => undefined)],
+    ["BUNDLE_SCHEMA_ELF", (value) => patchStep(value, "Prove Schema ELF ABI", () => undefined)],
+    ["BUNDLE_PARSER_ABI", (value) => patchStep(value, "Prove packaged parser ABI", () => undefined)],
+    ["BUNDLE_CONTROL", (value) => patchStep(value, "Require nonce-bound positive control", () => undefined)],
+  ]
+  mutations.forEach(([name, mutate]) => expect(() => inspect(mutate(Schema.decodeUnknownSync(Workflow)(source))), name).toThrow(name))
+})
+
+test("root discovery coverage rejects omissions in both directions and accepts row/file reordering", () => {
+  expect(() => inspect(source, [])).toThrow("BUNDLE_DISTRIBUTION_DISCOVERY_EMPTY")
+  expect(() => inspect(source, [...distribution, "./test/distribution-new.test.ts"])).toThrow("BUNDLE_UNREACHED: ./test/distribution-new.test.ts")
+  expect(() => inspect(source, distribution.filter((file) => file !== "./test/distribution-musl.test.ts"))).toThrow("BUNDLE_UNDISCOVERED: ./test/distribution-musl.test.ts")
+  inspect(patchMatrix(Schema.decodeUnknownSync(Workflow)(source), (rows) => rows.toReversed().map((row) => ({ ...row, files: row.files?.toReversed() }))))
+})
+
+function inspect(input: unknown, discovered = distribution) {
+  const value = Schema.decodeUnknownSync(Workflow)(input)
+  check(value.name === "distribution-bundle" && Object.keys(value.on).toSorted().join() === "push,workflow_call,workflow_dispatch", "BUNDLE_TRIGGERS")
+  // Neither trigger takes inputs or secrets: no hosted-model calls in CI (owner, 2026-10-27).
+  check(value.on.workflow_dispatch === null && value.on.workflow_call === null, "BUNDLE_TRIGGERS")
+  expect(value.on.push).toEqual({ branches: ["distribution-bundle"] })
+`````
+
+### CI-REQUEST-1 — `packages/core/test/test-ci-request.test.ts` 152–182
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `bb26003da8bc849ecd562789cc8847469297e49f`; SHA256 integral `2295faed2168e2f3063797b95c0ab1f1304c0253efc4570e2946af5a40237bbb`. Bytes fonte 21226; recorte [9533, 11679); SHA256 trecho `62fbe827fb441e7dca7b284e7add52106a478763fc3a5d7b457cff25a27db5dd`.
+
+`````text
+test("selection rejects empty, partially ignored and extra files; accepts exact files", () => {
+  expect(() => validateSelection([spec], [spec])).not.toThrow()
+  expect(() => validateSelection([], [])).toThrow("nonempty")
+  expect(() => validateSelection([spec], [])).toThrow(`empty selection: ${spec}`)
+  expect(() => validateSelection([spec, benchmark], [spec])).toThrow(`empty selection: ${benchmark}`)
+  expect(() => validateSelection([spec], [spec, benchmark])).toThrow(`unexpected selection: ${benchmark}`)
+})
+
+for (const flag of ["--os", "--runner", "--config", "--benchmark-renderer"])
+  test(`${flag} rejects missing and repeated values`, () => {
+    expect(() => parseOptions(["app", flag])).toThrow(`${flag} needs a value`)
+    expect(() => parseOptions(["app", flag, "--help"])).toThrow(`${flag} needs a value`)

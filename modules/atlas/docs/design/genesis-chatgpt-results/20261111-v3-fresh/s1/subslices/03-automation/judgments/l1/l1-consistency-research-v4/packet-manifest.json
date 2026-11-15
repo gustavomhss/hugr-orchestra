@@ -1,0 +1,14 @@
+{
+  "schema": "s1-03-minimal-review-packet/v1",
+  "lot": "l1-consistency-research-v4",
+  "artifact": "s1.core.research",
+  "version": 4,
+  "bytes": 8393,
+  "sha256": "d5968ca0cf7ca629c983b251feef3ef827c8d13506e4846f03627d3595c7a99f",
+  "git_blob_sha": "7363704e2f6b41ef23203e0eec3b736c13084799",
+  "body_bytes": 64106,
+  "body_sha256": "c3925ca6e27465598796ef21815e79980277d4c3194a8b2fda7cf433700675d1",
+  "body_git_blob_sha": "69fda8b4a63d5480b7d78e8f915e1d90fb8a2b8b",
+  "dispatch_state": "NOT_YET_DISPATCHED",
+  "root_verified": true
+}

@@ -1,0 +1,371 @@
+{
+  "schema": "s1-03-producer-byte-verification/v1",
+  "artifact": "s1.core.boundaries",
+  "version": 3,
+  "scope": "Mechanical byte/delta/evidence verification only; no semantic self-PASS.",
+  "frozen_recipe": {
+    "path": "producers/boundaries/revisions/boundaries-v3/recipe.json",
+    "bytes": 4346,
+    "sha256": "8e51dad268ee1fc9ade4b91c4d4ff1c08a76aa3f0ec9636786d778026085f385",
+    "git_blob_sha": "0d233b8ff8d4ce26cb6bbd31c9a7698723d35152"
+  },
+  "procedure_freeze": {
+    "path": "producers/boundaries/revisions/boundaries-v3/procedure-freeze.json",
+    "bytes": 10260,
+    "sha256": "671995910e5e85b1a4dcdbaea8ecec19fa3f762e800fa7fed8467806b0907d03",
+    "git_blob_sha": "ffd7cb0acba77a1d9f8d6d354ff95c560b94804d"
+  },
+  "procedure": {
+    "path": "producers/boundaries/revisions/boundaries-v3/apply.py",
+    "bytes": 16667,
+    "sha256": "8ca6ab3b26860f1d5f4c2c4eb0f329c45aa66a6fed9976f2707570418866e6fe",
+    "git_blob_sha": "d74b4d117a673586e9a5e7cfbba573b1f2c35a31"
+  },
+  "actual_order": [
+    {
+      "sequence": 1,
+      "utc": "2026-11-15T04:06:17.858738+00:00",
+      "action": "apply_invocation_started"
+    },
+    {
+      "sequence": 2,
+      "utc": "2026-11-15T04:06:17.859042+00:00",
+      "action": "procedure_and_freeze_read_whole",
+      "procedure": {
+        "path": "producers/boundaries/revisions/boundaries-v3/apply.py",
+        "bytes": 16667,
+        "sha256": "8ca6ab3b26860f1d5f4c2c4eb0f329c45aa66a6fed9976f2707570418866e6fe",
+        "git_blob_sha": "d74b4d117a673586e9a5e7cfbba573b1f2c35a31"
+      },
+      "freeze": {
+        "path": "producers/boundaries/revisions/boundaries-v3/procedure-freeze.json",
+        "bytes": 10260,
+        "sha256": "671995910e5e85b1a4dcdbaea8ecec19fa3f762e800fa7fed8467806b0907d03",
+        "git_blob_sha": "ffd7cb0acba77a1d9f8d6d354ff95c560b94804d"
+      }
+    },
+    {
+      "sequence": 3,
+      "utc": "2026-11-15T04:06:17.859119+00:00",
+      "action": "whole_input_verified",
+      "path": "producers/boundaries/bodies/boundaries.md",
+      "bytes": 23665,
+      "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+      "role": "semantic_full_read; prior version for preservation and exact diff"
+    },
+    {
+      "sequence": 4,
+      "utc": "2026-11-15T04:06:17.859206+00:00",
+      "action": "whole_input_verified",
+      "path": "producers/boundaries/sources/packages/core/src/relay.ts",
+      "bytes": 30225,
+      "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+      "role": "semantic_full_read; F01 source evidence; whole-file hash verification"
+    },
+    {
+      "sequence": 5,
+      "utc": "2026-11-15T04:06:17.859233+00:00",
+      "action": "whole_input_verified",
+      "path": "producers/boundaries/sources/packages/core/src/rag-studio/sql.ts",
+      "bytes": 2519,
+      "sha256": "e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9",
+      "role": "semantic_full_read; F02 source evidence; whole-file hash verification"
+    },
+    {
+      "sequence": 6,
+      "utc": "2026-11-15T04:06:17.859283+00:00",
+      "action": "whole_input_verified",
+      "path": "producers/boundaries/revisions/boundaries-v2/recipe.json",
+      "bytes": 3501,
+      "sha256": "13d95ddbf05625b6f270972422a3603669ff238cc7152a3e1c1789106af70bf4",
+      "role": "semantic_full_read; retained prior actual input lineage"
+    },
+    {
+      "sequence": 7,
+      "utc": "2026-11-15T04:06:17.859347+00:00",
+      "action": "whole_input_verified",
+      "path": "producers/boundaries/effective-inputs.json",
+      "bytes": 22879,
+      "sha256": "6ecae50d90933e555a874b209c6553750d85192df44c36df2418b3ff696890fc",
+      "role": "semantic_full_read; retained whole-file units and aliases"
+    },
+    {
+      "sequence": 8,
+      "utc": "2026-11-15T04:06:17.859368+00:00",
+      "action": "whole_input_verified",
+      "path": "producers/boundaries/revisions/boundaries-v3/public-findings.md",
+      "bytes": 1532,
+      "sha256": "6fd63340ed96690dcad680ded43d4815666ac042397cff5587c1413b1183deae",
+      "role": "semantic_full_read; two public findings and authorized correction scope"
+    },
+    {
+      "sequence": 9,
+      "utc": "2026-11-15T04:06:17.859393+00:00",
+      "action": "whole_input_verified",
+      "path": "producers/boundaries/revisions/boundaries-v3/recipe.json",
+      "bytes": 4346,
+      "sha256": "8e51dad268ee1fc9ade4b91c4d4ff1c08a76aa3f0ec9636786d778026085f385",
+      "role": "frozen authorization recipe; read in full and mechanically verified"
+    },
+    {
+      "sequence": 10,
+      "utc": "2026-11-15T04:06:17.859412+00:00",
+      "action": "whole_input_verified",
+      "path": "producers/boundaries/revisions/boundaries-v3/request.txt",
+      "bytes": 576,
+      "sha256": "4cb6d8bd17c1ee1879f75734724997b3e6793eadfce37bafb0b2501a6bd19afb",
+      "role": "frozen request; read in full and mechanically verified"
+    },
+    {
+      "sequence": 11,
+      "utc": "2026-11-15T04:06:17.859430+00:00",
+      "action": "whole_input_verified",
+      "path": "producers/boundaries/revisions/boundaries-v3/dispatch-message.txt",
+      "bytes": 1096,
+      "sha256": "9b60555882d38a25f64edc8120f524ea839a52fdb1cb309a70d2e737864dbe9b",
+      "role": "literal dispatch preservation; whole-file read/hash for procedure identity"
+    },
+    {
+      "sequence": 12,
+      "utc": "2026-11-15T04:06:17.859493+00:00",
+      "action": "whole_input_verified",
+      "path": "producers/boundaries/revisions/boundaries-v3/history/body.md",
+      "bytes": 23665,
+      "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+      "role": "preservation alias of prior current body; whole-file mechanical equality/hash verification"
+    },
+    {
+      "sequence": 13,
+      "utc": "2026-11-15T04:06:17.859687+00:00",
+      "action": "preflight_and_prior_body_preservation_verified"
+    },
+    {
+      "sequence": 14,
+      "utc": "2026-11-15T04:06:17.860350+00:00",
+      "action": "two_substitutions_inverse_and_unchanged_segments_verified_in_memory"
+    },
+    {
+      "sequence": 15,
+      "utc": "2026-11-15T04:06:17.861220+00:00",
+      "action": "supplement_literal_offsets_verified_in_memory"
+    },
+    {
+      "sequence": 16,
+      "utc": "2026-11-15T04:06:17.861702+00:00",
+      "action": "revision_output_written",
+      "path": "producers/boundaries/revisions/boundaries-v3/body.md",
+      "sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070"
+    },
+    {
+      "sequence": 17,
+      "utc": "2026-11-15T04:06:17.862381+00:00",
+      "action": "current_body_written_once",
+      "path": "producers/boundaries/bodies/boundaries.md",
+      "identity": {
+        "path": "producers/boundaries/bodies/boundaries.md",
+        "bytes": 23769,
+        "sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+        "git_blob_sha": "d3b070015882d10f778f563438eb3f9d67cab061"
+      }
+    },
+    {
+      "sequence": 18,
+      "utc": "2026-11-15T04:06:17.862449+00:00",
+      "action": "current_output_whole_bytes_verified",
+      "path": "producers/boundaries/bodies/boundaries.md",
+      "identity": {
+        "path": "producers/boundaries/bodies/boundaries.md",
+        "bytes": 23769,
+        "sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+        "git_blob_sha": "d3b070015882d10f778f563438eb3f9d67cab061"
+      },
+      "classification": "postproduction_output_verification_not_self_input"
+    },
+    {
+      "sequence": 19,
+      "utc": "2026-11-15T04:06:17.862652+00:00",
+      "action": "revision_output_written",
+      "path": "producers/boundaries/revisions/boundaries-v3/delta.json",
+      "sha256": "204aa0a2b338053ff545b51ec01096d7094a101677e60005f4d082d93c23acd2"
+    },
+    {
+      "sequence": 20,
+      "utc": "2026-11-15T04:06:17.862695+00:00",
+      "action": "revision_output_written",
+      "path": "producers/boundaries/revisions/boundaries-v3/delta.patch",
+      "sha256": "d86158cf27cb7e6d78a28038711e38d04c17814fb7a00e34c20d2d87086e14a1"
+    },
+    {
+      "sequence": 21,
+      "utc": "2026-11-15T04:06:17.862776+00:00",
+      "action": "revision_output_written",
+      "path": "producers/boundaries/revisions/boundaries-v3/review-supplement.md",
+      "sha256": "b2458ebc0d3499394873afc9baa24cee46f680fd344ca805165e6249606b4036"
+    },
+    {
+      "sequence": 22,
+      "utc": "2026-11-15T04:06:17.862944+00:00",
+      "action": "revision_output_written",
+      "path": "producers/boundaries/revisions/boundaries-v3/review-supplement.index.json",
+      "sha256": "ba565797fdbfbb1d33e5fa40952211531087f2c3cee5073e99abf9996a42384c"
+    },
+    {
+      "sequence": 23,
+      "utc": "2026-11-15T04:06:17.863655+00:00",
+      "action": "revision_output_written",
+      "path": "producers/boundaries/revisions/boundaries-v3/input-manifest-extension.json",
+      "sha256": "53eb33d86d3f96c4f4c38a6023af697f384f80745eebacba478e659d98875964"
+    },
+    {
+      "sequence": 24,
+      "utc": "2026-11-15T04:06:17.863832+00:00",
+      "action": "revision_output_written",
+      "path": "producers/boundaries/revisions/boundaries-v3/response.md",
+      "sha256": "4831b00675515d0a69a9f9ce36072162c5e248c98a4679abf369dd10bb7458bd"
+    },
+    {
+      "sequence": 25,
+      "utc": "2026-11-15T04:06:17.863837+00:00",
+      "action": "all_requested_artifacts_except_this_verification_record_written"
+    }
+  ],
+  "pre_execution_order": [
+    {
+      "sequence": 1,
+      "action": "Read and verify frozen recipe.json and request.txt in full."
+    },
+    {
+      "sequence": 2,
+      "action": "List exclusive revision directory: only supplied recipe/request/public-findings existed; preserve dispatch-message.txt literal (1096 bytes) without trailing newline."
+    },
+    {
+      "sequence": 3,
+      "action": "Read current boundaries v2, whole rag-studio/sql.ts and public-findings.md in full; verify their supplied identities."
+    },
+    {
+      "sequence": 4,
+      "action": "Read whole relay.ts and boundaries-v2/recipe.json in full; verify identities."
+    },
+    {
+      "sequence": 5,
+      "action": "Read effective-inputs.json in full; verify identity."
+    },
+    {
+      "sequence": 6,
+      "action": "Read whole relay.ts again to project line-numbered contract and implementation ranges; this is the same whole-file input unit."
+    },
+    {
+      "sequence": 7,
+      "action": "Write actual apply.py once in exclusive revision directory; no body mutation yet."
+    },
+    {
+      "sequence": 8,
+      "action": "Preserve current body bytes exclusively as history/body.md and compare full bytes; no older frozen record overwritten."
+    },
+    {
+      "sequence": 9,
+      "action": "Read/hash all enumerated input units, request, dispatch, preserved alias and apply.py; verify two unique old literals and absence of outputs to supersede."
+    },
+    {
+      "sequence": 10,
+      "action": "Freeze this procedure record and input identities before invoking apply.py."
+    }
+  ],
+  "procedure_invocations_in_this_dispatch": 1,
+  "current_body_write_calls": 1,
+  "prior_body": {
+    "path": "producers/boundaries/revisions/boundaries-v3/history/body.md",
+    "bytes": 23665,
+    "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+    "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74"
+  },
+  "current_body": {
+    "path": "producers/boundaries/bodies/boundaries.md",
+    "bytes": 23769,
+    "sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+    "git_blob_sha": "d3b070015882d10f778f563438eb3f9d67cab061"
+  },
+  "operations": 2,
+  "unchanged_segments": [
+    {
+      "before_start_byte": 0,
+      "before_end_byte_exclusive": 9520,
+      "after_start_byte": 0,
+      "after_end_byte_exclusive": 9520,
+      "bytes": 9520,
+      "sha256": "c217a4b0edf87ac089bd20f08a0ddc5877733197260a79503314f1644ca0e077"
+    },
+    {
+      "before_start_byte": 9623,
+      "before_end_byte_exclusive": 21237,
+      "after_start_byte": 9664,
+      "after_end_byte_exclusive": 21278,
+      "bytes": 11614,
+      "sha256": "43549bc57db5a3cc3f850addeba786d689dd414d202d1a835c81e5ac749681a0"
+    },
+    {
+      "before_start_byte": 21274,
+      "before_end_byte_exclusive": 23665,
+      "after_start_byte": 21378,
+      "after_end_byte_exclusive": 23769,
+      "bytes": 2391,
+      "sha256": "2db9cd6c4a0cce2e4667b04ab238716929dc097b9317a2d522716deb8b465480"
+    }
+  ],
+  "inverse_verified_byte_identical": true,
+  "literal_source_excerpts": 4,
+  "literal_offsets_and_hashes_verified": true,
+  "frozen_supplied_inputs_preserved_by_no_write": true,
+  "output_identities": {
+    "body.md": {
+      "path": "producers/boundaries/revisions/boundaries-v3/body.md",
+      "bytes": 23769,
+      "sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+      "git_blob_sha": "d3b070015882d10f778f563438eb3f9d67cab061"
+    },
+    "delta.json": {
+      "path": "producers/boundaries/revisions/boundaries-v3/delta.json",
+      "bytes": 3340,
+      "sha256": "204aa0a2b338053ff545b51ec01096d7094a101677e60005f4d082d93c23acd2",
+      "git_blob_sha": "b0acd8ab663747f7d62a5280201300a9193d1c09"
+    },
+    "delta.patch": {
+      "path": "producers/boundaries/revisions/boundaries-v3/delta.patch",
+      "bytes": 4254,
+      "sha256": "d86158cf27cb7e6d78a28038711e38d04c17814fb7a00e34c20d2d87086e14a1",
+      "git_blob_sha": "5eb6e5d7d9eb958b41be105052b87d61a8c9ccb3"
+    },
+    "review-supplement.md": {
+      "path": "producers/boundaries/revisions/boundaries-v3/review-supplement.md",
+      "bytes": 9151,
+      "sha256": "b2458ebc0d3499394873afc9baa24cee46f680fd344ca805165e6249606b4036",
+      "git_blob_sha": "40b9b3dde36229f95b1f36c19a40eaf1d87b8178"
+    },
+    "review-supplement.index.json": {
+      "path": "producers/boundaries/revisions/boundaries-v3/review-supplement.index.json",
+      "bytes": 3871,
+      "sha256": "ba565797fdbfbb1d33e5fa40952211531087f2c3cee5073e99abf9996a42384c",
+      "git_blob_sha": "509627ae83408f5757594f1f80e5952b1e373b17"
+    },
+    "input-manifest-extension.json": {
+      "path": "producers/boundaries/revisions/boundaries-v3/input-manifest-extension.json",
+      "bytes": 36415,
+      "sha256": "53eb33d86d3f96c4f4c38a6023af697f384f80745eebacba478e659d98875964",
+      "git_blob_sha": "da748a97004901411c3f65482f83f5e1ce7f0d22"
+    },
+    "response.md": {
+      "path": "producers/boundaries/revisions/boundaries-v3/response.md",
+      "bytes": 2240,
+      "sha256": "4831b00675515d0a69a9f9ce36072162c5e248c98a4679abf369dd10bb7458bd",
+      "git_blob_sha": "e38ed46dc5926238650f87fc06db73204593d2ea"
+    }
+  },
+  "write_scope": "Only exclusive revision directory and the one authorized current boundaries body.",
+  "support_union_status": "NOT_OPENED_NOT_WRITTEN_IN_THIS_DISPATCH",
+  "verification_record_emission": "This record is emitted last; its own file hash is returned in tool output, avoiding self-reference.",
+  "product_tests_runtime_network": "NOT_RUN",
+  "semantic_status": "PENDING_SAME_PAIR_REEVALUATION",
+  "tokens": "UNKNOWN",
+  "physical_attempts": "UNKNOWN",
+  "cost": "UNKNOWN"
+}

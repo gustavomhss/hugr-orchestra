@@ -1,0 +1,24 @@
+{
+  "lot": "l1-consistency-research-v4",
+  "responses": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/l1-consistency-research-v4/j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 2991,
+      "sha256": "f0aa061a964bc10e7429dde0b54c2f74c465bdb1e1a7198544541af0fc23218e",
+      "terminal_newline": false,
+      "literal": true
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/l1-consistency-research-v4/j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 2462,
+      "sha256": "1d6caeecccc795766c71a3cb9822c8feb1939c8477d7c1d6c9d5ff90d96bea35",
+      "terminal_newline": false,
+      "literal": true
+    }
+  },
+  "pending": []
+}

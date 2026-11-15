@@ -1,0 +1,152 @@
+{
+  "schema": "s1-03-semantic-acceptances/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "scope": "Semantic current-body gates only. Not runtime binding, consumers, maintenance or delivery. Original verdicts remain authoritative at their own versions.",
+  "artifacts": [
+    {
+      "key": "s1.core.boundaries",
+      "layer": 1,
+      "version": "3",
+      "status": "PASS_SEMANTIC_CURRENT_BODY",
+      "local_body_path": "producers/boundaries/bodies/boundaries.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/boundaries/bodies/boundaries.md",
+      "body_bytes": 23769,
+      "body_sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+      "body_git_blob_sha": "d3b070015882d10f778f563438eb3f9d67cab061",
+      "judgments": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+          "original_response_path": "relay/l1-consistency-boundaries-v3/j1-response.md",
+          "original_response_sha256": "1f4b25f011a54a640723d4660aa69cae6e6920fe46f92d8a3f49ae13c3ff5923",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Judge role explicitly present in original verdict.",
+          "transport_receipt": null
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+          "original_response_path": "relay/l1-consistency-boundaries-v3/j2-response.md",
+          "original_response_sha256": "24109643bb94e2c8c1124d9996e5bb4af83a5030c74ae276e466fee526c2e816",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Role assigned to the persistent native handle at initial creation; exact original FINAL captured from that handle and linked by dispatch/capture receipt. Missing display heading was not added to the verdict.",
+          "transport_receipt": "relay/l1-consistency-boundaries-v3/dispatch-receipt.json"
+        }
+      ],
+      "verified_at_utc": "2026-11-15T04:17:29.156472+00:00",
+      "recording_basis": "Principal read both original full-body PASS decisions and closed mandatory findings; this command only checks their identity strings and archives the gate, not semantic sufficiency."
+    },
+    {
+      "key": "s1.core.research",
+      "layer": 1,
+      "version": "4",
+      "status": "PASS_SEMANTIC_CURRENT_BODY",
+      "local_body_path": "producers/research/body.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/body.md",
+      "body_bytes": 64106,
+      "body_sha256": "c3925ca6e27465598796ef21815e79980277d4c3194a8b2fda7cf433700675d1",
+      "body_git_blob_sha": "69fda8b4a63d5480b7d78e8f915e1d90fb8a2b8b",
+      "judgments": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "c3925ca6e27465598796ef21815e79980277d4c3194a8b2fda7cf433700675d1",
+          "original_response_path": "relay/l1-consistency-research-v4/j1-response.md",
+          "original_response_sha256": "f0aa061a964bc10e7429dde0b54c2f74c465bdb1e1a7198544541af0fc23218e",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Judge role explicitly present in original verdict.",
+          "transport_receipt": null
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "c3925ca6e27465598796ef21815e79980277d4c3194a8b2fda7cf433700675d1",
+          "original_response_path": "relay/l1-consistency-research-v4/j2-response.md",
+          "original_response_sha256": "1d6caeecccc795766c71a3cb9822c8feb1939c8477d7c1d6c9d5ff90d96bea35",
+          "complete_body_explicit": true,
+          "judge_identity_basis": "Role assigned to the persistent native handle at initial creation; exact original FINAL captured from that handle and linked by dispatch/capture receipt. Missing display heading was not added to the verdict.",
+          "transport_receipt": "relay/l1-consistency-research-v4/dispatch-receipt.json"
+        }
+      ],
+      "verified_at_utc": "2026-11-15T04:19:15.897592+00:00",
+      "recording_basis": "Principal read both original full-body PASS decisions and closed mandatory findings; this command only checks their identity strings and archives the gate, not semantic sufficiency."
+    }
+  ],
+  "prior_acceptances": [
+    {
+      "key": "s1.core.boundaries",
+      "layer": 1,
+      "version": "v2",
+      "status": "REOPENED_SOURCE_FIDELITY",
+      "local_body_path": "producers/boundaries/bodies/boundaries.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/boundaries/bodies/boundaries.md",
+      "body_bytes": 23665,
+      "body_sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+      "body_git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
+      "judgments": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+          "original_response_path": "relay/boundaries-supplement-v2/j1-response.md",
+          "original_response_sha256": "9c7496988762a6455d1682eea750037377778c316d37071203f1c8b719951adc",
+          "complete_body_explicit": true
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+          "original_response_path": "relay/boundaries-supplement-v2/j2-response.md",
+          "original_response_sha256": "5ae3e9104142c41c0d261bb979dc29607a69065d019d3899d28c9fea52334801",
+          "complete_body_explicit": true
+        }
+      ],
+      "verified_at_utc": "2026-11-15T03:25:49.241046+00:00",
+      "recording_basis": "Principal read both original full-body PASS decisions and closed mandatory findings; this command only checks their identity strings and archives the gate, not semantic sufficiency.",
+      "historical_accepted_status": "PASS_SEMANTIC_CURRENT_BODY",
+      "root_finding_path": "producers/boundaries/revisions/boundaries-v3/public-findings.md",
+      "reopened_at_utc": "2026-11-15T03:59:20.820869+00:00",
+      "prior_verdicts_preserved": true,
+      "historical_retained_body_path": "producers/boundaries/revisions/boundaries-v3/history/body.md",
+      "original_body_path_superseded": true
+    },
+    {
+      "key": "s1.core.research",
+      "layer": 1,
+      "version": 3,
+      "status": "REOPENED_SOURCE_FIDELITY",
+      "local_body_path": "producers/research/body.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/body.md",
+      "body_bytes": 63841,
+      "body_sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+      "body_git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4",
+      "judgments": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+          "original_response_path": "relay-root/research-aggregate-v3/j1-response.md",
+          "original_response_sha256": "e52fc2d9eb369da417d7ea035ec641839ca4714be9f75b4b0f2ac4bab35e3cc7",
+          "complete_body_explicit": true
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+          "original_response_path": "relay-root/research-aggregate-v3/j2-response.md",
+          "original_response_sha256": "8dd9f7ae58de3cda63482558e2940931b185a644bcbd8cafd0b7d5463ea835c6",
+          "complete_body_explicit": true
+        }
+      ],
+      "verified_at_utc": "2026-11-15T03:12:26.414543+00:00",
+      "historical_accepted_status": "PASS_SEMANTIC_CURRENT_BODY",
+      "root_finding_path": "producers/research/revisions/v4/public-findings.md",
+      "reopened_at_utc": "2026-11-15T03:59:20.820860+00:00",
+      "prior_verdicts_preserved": true,
+      "historical_retained_body_path": "producers/research/revisions/v4/history/body.md",
+      "original_body_path_superseded": true
+    }
+  ]
+}

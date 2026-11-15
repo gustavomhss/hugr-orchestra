@@ -1,0 +1,1395 @@
+9:   upstream: "kubernetes-sigs/controller-tools",
+```
+
+Linhas 20–29.
+
+```text
+20:   targets: {
+21:     "darwin-arm64": {
+22:       artifact: {
+23:         url: `https://github.com/kubernetes-sigs/controller-tools/releases/download/v${VERSION}/controller-gen-darwin-arm64`,
+24:         integrity: "sha256-Xg18Fu2cwK6IfALr9SRKJzlJXJPuqnsgzN06uyClOEY=",
+25:         format: "raw",
+26:         entries: [{ from: "controller-gen-darwin-arm64", to: "controller-gen", executable: true }],
+27:       },
+28:       executable: "controller-gen",
+29:     },
+```
+
+Linhas 67–72.
+
+```text
+67:   fit: {
+68:     role: "generator",
+69:     input: "Go API types with kubebuilder markers the packet assigns",
+70:     skills: ["backend-api"],
+71:   },
+72: } as const satisfies Pack
+```
+
+**RA-S014 — `packages/core/src/backend-toolkit/packs/kubeconform.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `81fb16e67c3fbc464421945d548fd96ff80e3c57` · SHA-256 `96bd9cc1cf933cdb56995a320b70d897f498a6bf738baaf5565785d2bcaefc17` · 2763 bytes.
+
+Linhas 3–9.
+
+```text
+3: const VERSION = "0.8.0"
+4: 
+5: export default {
+6:   id: "kubeconform",
+7:   version: VERSION,
+8:   license: "Apache-2.0",
+9:   upstream: "yannh/kubeconform",
+```
+
+Linhas 20–29.
+
+```text
+20:   targets: {
+21:     "darwin-arm64": {
+22:       artifact: {
+23:         url: `https://github.com/yannh/kubeconform/releases/download/v${VERSION}/kubeconform-darwin-arm64.tar.gz`,
+24:         integrity: "sha256-+E9N++v0prCyMDhfoGWjnqNeAmCMK1DQJdz2R3WmnWc=",
+25:         format: "tar.gz",
+26:         entries: [{ from: "kubeconform", to: "kubeconform", executable: true }],
+27:       },
+28:       executable: "kubeconform",
+29:     },
+```
+
+Linhas 67–72.
+
+```text
+67:   fit: {
+68:     role: "check",
+69:     input: "Kubernetes manifests the change wrote, with the schemas the packet supplies",
+70:     skills: ["backend-check"],
+71:   },
+72: } as const satisfies Pack
+```
+
+**RA-S015 — `packages/core/src/backend-toolkit/packs/kopium.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `c5c0d2e7d05b7cb869e899d0013c02f13c7fa15b` · SHA-256 `eb7187300e2b0966e2faad3c9048ffda2da09910ddf9dc506d3c7669ee262a9d` · 1646 bytes.
+
+Linhas 3–37.
+
+```text
+3: // The pin is the crate's sha256 in SRI form, from the crates.io index `cksum`, which its download matched.
+4: const VERSION = "0.24.1"
+5: 
+6: // Built from the crate: upstream's release binaries are `.tar.xz`, which PinnedArtifact does not unpack, and cover no
+7: // Windows target. `cli` is the crate's only default feature and gates the binary. kube's rustls pulls in ring, which
+8: // compiles C, so the build host needs a C compiler and linker: the Xcode command line tools on macOS, cc on Linux.
+9: export default {
+10:   id: "kopium",
+11:   version: VERSION,
+12:   license: "Apache-2.0",
+13:   upstream: "kube-rs/kopium",
+14:   runtime: "rust",
+15:   install: {
+16:     kind: "source",
+17:     artifact: {
+18:       url: `https://static.crates.io/crates/kopium/kopium-${VERSION}.crate`,
+19:       integrity: "sha256-Fcw6D/0oHqbjZpbJotOmp6nm6hzw01tdq1TAIdreb8k=",
+20:       format: "tar.gz",
+21:       // PinnedArtifact refuses `.` as a destination, so the crate root is lifted member by member; `tests` comes along
+22:       // so every target path the manifest declares exists.
+23:       entries: ["Cargo.toml", "Cargo.lock", "README.md", "LICENSE", "src", "tests"].map((name) => ({
+24:         from: `kopium-${VERSION}/${name}`,
+25:         to: `src/${name}`,
+26:       })),
+27:     },
+28:     build: "cargo",
+29:     path: ".",
+30:     binary: "kopium",
+31:     features: ["cli"],
+32:   },
+33:   launch: [],
+34:   // The msvc toolchain links only through Microsoft's `link.exe`, which the Rust runtime does not ship.
+35:   unsupported: { "win32-x64": "needs-msvc-linker" },
+36:   fit: { role: "generator", input: "a CustomResourceDefinition file the packet supplies", skills: ["backend-api"] },
+37: } as const satisfies Pack
+```
+
+**RA-S016 — `packages/core/src/backend-toolkit/packs/squawk.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `fe59f063520d0a445eba6f4dcc5f300159a70c6c` · SHA-256 `ebec8aa73f4acd6b93172538f776e77805bac9877e12396a43c5cd326a6e930c` · 1730 bytes.
+
+Linhas 3–21.
+
+```text
+3: 
+4: // Pins are the GitHub release assets' sha256 digests in SRI form; squawk ships each target as one bare executable.
+5: const VERSION = "2.67.0"
+6: 
+7: const target = (asset: string, integrity: PinnedArtifact.Artifact["integrity"], executable = "squawk") => ({
+8:   artifact: {
+9:     url: `https://github.com/sbdchd/squawk/releases/download/v${VERSION}/squawk-${asset}`,
+10:     integrity,
+11:     format: "raw" as const,
+12:     entries: [{ from: `squawk-${asset}`, to: executable, executable: true }],
+13:   },
+14:   executable,
+15: })
+16: 
+17: export default {
+18:   id: "squawk",
+19:   version: VERSION,
+20:   license: "Apache-2.0",
+21:   upstream: "sbdchd/squawk",
+```
+
+Linhas 37–42.
+
+```text
+37:   fit: {
+38:     role: "check",
+39:     input: "the PostgreSQL migration files the change wrote",
+40:     skills: ["backend-data", "backend-check"],
+41:   },
+42: } as const satisfies Pack
+```
+
+**RA-S017 — `packages/core/src/backend-toolkit/packs/postgres-language-server.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `0e51cf0e5c7774ab3124e8150904301cac44c57a` · SHA-256 `f1c76d324ebb548e7ca2850bcace878da77626e4dcc716cd9f2c4974383ce951` · 2087 bytes.
+
+Linhas 3–26.
+
+```text
+3: 
+4: // Pins are the GitHub release assets' sha256 digests in SRI form. The release also ships the same CLI under its old
+5: // name, `postgrestools`; the pack pins the current `postgres-language-server` assets.
+6: const VERSION = "0.27.1"
+7: 
+8: const target = (
+9:   triple: string,
+10:   integrity: PinnedArtifact.Artifact["integrity"],
+11:   executable = "postgres-language-server",
+12: ) => ({
+13:   artifact: {
+14:     url: `https://github.com/supabase-community/postgres-language-server/releases/download/${VERSION}/postgres-language-server_${triple}`,
+15:     integrity,
+16:     format: "raw" as const,
+17:     entries: [{ from: `postgres-language-server_${triple}`, to: executable, executable: true }],
+18:   },
+19:   executable,
+20: })
+21: 
+22: export default {
+23:   id: "postgres-language-server",
+24:   version: VERSION,
+25:   license: "MIT",
+26:   upstream: "supabase-community/postgres-language-server",
+```
+
+Linhas 46–51.
+
+```text
+46:   fit: {
+47:     role: "check",
+48:     input: "the SQL the change wrote and a disposable PostgreSQL database holding the schema",
+49:     skills: ["backend-data", "backend-check"],
+50:   },
+51: } as const satisfies Pack
+```
+
+**RA-S018 — `packages/core/src/backend-toolkit/packs/sqlglot.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `9649773f069a32df82c9793475cfecf3e6f963fa` · SHA-256 `0a6db1cf8a8689413e40b7edc2cb7a46ac55454d6872ce9a5fc2da99147b20db` · 998 bytes.
+
+Linhas 5–5.
+
+```text
+5: const VERSION = "30.21.0"
+```
+
+Linhas 7–26.
+
+```text
+7: export default {
+8:   id: "sqlglot",
+9:   version: VERSION,
+10:   license: "MIT",
+11:   upstream: "tobymao/sqlglot",
+12:   runtime: "python",
+13:   install: {
+14:     kind: "pip",
+15:     requirements: `sqlglot==${VERSION} --hash=sha256:816d1a4815b7562b3976efcc0b561c928a743f976efd0fb8ad6db7a5b96c069e\n`,
+16:   },
+17:   launch: ["-m", "sqlglot"],
+18:   // PYTHONSAFEPATH keeps `-m` from putting the working directory first on sys.path, where a project package could
+19:   // shadow the pinned one; PYTHONNOUSERSITE does the same for the user's site-packages.
+20:   env: { PYTHONPATH: "{install}", PYTHONSAFEPATH: "1", PYTHONNOUSERSITE: "1" },
+21:   fit: {
+22:     role: "check",
+23:     input: "the Spark or other-dialect SQL the change wrote",
+24:     skills: ["backend-data", "backend-check"],
+25:   },
+26: } as const satisfies Pack
+```
+
+**RA-S019 — `packages/core/src/backend-toolkit/packs/kysely-codegen.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `08c150c9918b67928ffb4cfec41b11b24dad9bc0` · SHA-256 `ef5ae2d54be68713f9a133650800f493828dfd10059b71ceccda717a6bb1b831` · 1390 bytes.
+
+Linhas 3–37.
+
+```text
+3: 
+4: // kysely-codegen loads its database driver as an optional peer and requires `typescript` without declaring it, so the
+5: // pack pins the PostgreSQL and MySQL drivers and TypeScript alongside it (`kysely` comes in as its required peer).
+6: // TypeScript stays on 6.x: 7.x is the native port without the JavaScript compiler API kysely-codegen calls.
+7: // SQLite's better-sqlite3 is left out: it needs a native build, and the install runs no scripts.
+8: const VERSION = "0.20.0"
+9: 
+10: export default {
+11:   id: "kysely-codegen",
+12:   version: VERSION,
+13:   license: "MIT",
+14:   upstream: "RobinBlomberg/kysely-codegen",
+15:   runtime: "node",
+16:   install: {
+17:     kind: "npm",
+18:     // The package.json text the lock was written from, in npm's own formatting.
+19:     packageJson:
+20:       JSON.stringify(
+21:         {
+22:           name: "backend-toolkit-kysely-codegen",
+23:           private: true,
+24:           dependencies: { "kysely-codegen": VERSION, mysql2: "3.24.5", pg: "8.23.1", typescript: "6.0.3" },
+25:         },
+26:         null,
+27:         2,
+28:       ) + "\n",
+29:     lock: JSON.stringify(lock, null, 2) + "\n",
+30:   },
+31:   launch: ["{install}/node_modules/kysely-codegen/dist/cli/bin.js"],
+32:   fit: {
+33:     role: "generator",
+34:     input: "a disposable PostgreSQL or MySQL database holding the schema",
+35:     skills: ["backend-data"],
+36:   },
+37: } as const satisfies Pack
+```
+
+**RA-S020 — `packages/core/src/backend-toolkit/packs/datafusion-cli.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `4843bece0d3ad44712b170c25e161763caa8172f` · SHA-256 `7597abd91ed4574bf68cbf7303825f294146dc078f14a6371df0bf81230c4efd` · 2044 bytes.
+
+Linhas 3–41.
+
+```text
+3: // Apache publishes no datafusion-cli binaries, only source, so the host builds the crate. Its `rust-version` is 1.94.0,
+4: // which the Rust runtime satisfies. The pin is the crate's sha256 in SRI form, from the crates.io `checksum`, which its
+5: // download matched.
+6: const VERSION = "55.1.0"
+7: 
+8: // The crate unconditionally enables cloud and Parquet dependencies. aws-lc-rs, ring, zstd and mimalloc compile C, so the build host needs a C compiler and
+9: // linker: the Xcode command line tools on macOS, cc on Linux.
+10: export default {
+11:   id: "datafusion-cli",
+12:   version: VERSION,
+13:   license: "Apache-2.0",
+14:   upstream: "apache/datafusion",
+15:   runtime: "rust",
+16:   install: {
+17:     kind: "source",
+18:     artifact: {
+19:       url: `https://static.crates.io/crates/datafusion-cli/datafusion-cli-${VERSION}.crate`,
+20:       integrity: "sha256-/7mDOhAvAaJXmU3pZsc/v3RB2DRyB9hnbIIbcxjAPuY=",
+21:       format: "tar.gz",
+22:       // PinnedArtifact refuses `.` as a destination, so the crate root is lifted member by member; `examples` and
+23:       // `tests` come along so every target path the manifest declares exists, and `README.md` because lib.rs includes it.
+24:       entries: ["Cargo.toml", "Cargo.lock", "README.md", "src", "examples", "tests"].map((name) => ({
+25:         from: `datafusion-cli-${VERSION}/${name}`,
+26:         to: `src/${name}`,
+27:       })),
+28:     },
+29:     build: "cargo",
+30:     path: ".",
+31:     binary: "datafusion-cli",
+32:     // This engine checks plans, not throughput. Keep release semantics and the full locked dependency graph, but avoid
+33:     // optimizing that graph during cold acquisition. SQL, CSV and EXPLAIN support are unchanged.
+34:     optLevel: 0,
+35:   },
+36:   launch: [],
+37:   // The msvc toolchain links only through Microsoft's `link.exe`, and the standalone gnu toolchain ships a linker but
+38:   // no C compiler for the C dependencies.
+39:   unsupported: { "win32-x64": "needs-msvc-linker" },
+40:   fit: { role: "check", input: "the schema DDL and the SQL the change wrote", skills: ["backend-data", "backend-check"] },
+41: } as const satisfies Pack
+```
+
+**RA-S021 — `packages/core/src/backend-toolkit/packs/gocqlx-schemagen.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `ec10ad95405ed2712bf956538ae0873484d8632c` · SHA-256 `85794568238124594e4bb9fa1ee663c88c3d606d3221079795b4a72705e7db47` · 2428 bytes.
+
+Linhas 5–5.
+
+```text
+5: const VERSION = "3.0.4"
+```
+
+Linhas 7–15.
+
+```text
+7: // The module zip's top-level children under its `<module>@<version>/` prefix, moved to the root of the source dir so
+8: // the build runs in the module root next to its go.mod and go.sum.
+9: const SOURCE = [
+10:   ".github",
+11:   ".gitignore",
+12:   ".golangci.yml",
+13:   "LICENSE",
+14:   "Makefile",
+15:   "README.md",
+```
+
+Linhas 24–25.
+
+```text
+24:   "go.mod",
+25:   "go.sum",
+```
+
+Linhas 45–75.
+
+```text
+45: // The pin is the sha256 of the proxy's module zip, computed from the download. `go mod download` of the same zip
+46: // verified it against h1:37rMVFEUlsGGNYB7OLR7991KwBYR2WA5TU7wtduClas=, the hash sum.golang.org records for the module.
+47: // Its dependencies are pinned by the module's own go.sum and verified against the checksum database at build time.
+48: export default {
+49:   id: "gocqlx-schemagen",
+50:   version: `${VERSION}+orchestra.cassandra4`,
+51:   license: "Apache-2.0",
+52:   // Owned build: gocqlx v3.0.4 command-only Dialer overlay (Darwin Unix routes, Linux srt CONNECT proxy) + Scylla gocql v1.15.3 catalog-availability backport.
+53:   // Both upstream licenses and source notices remain in the install; provenance and byte pins live in the helper.
+54:   upstream: "scylladb/gocqlx",
+55:   runtime: "go",
+56:   install: {
+57:     kind: "source",
+58:     artifact: {
+59:       url: `https://proxy.golang.org/github.com/scylladb/gocqlx/v3/@v/v${VERSION}.zip`,
+60:       integrity: "sha256-wvq2iEEB9xQiuX2E19BS8d3AdTRECF54YDWzrOm9aDc=",
+61:       format: "zip",
+62:       entries: SOURCE.map((name) => ({ from: `github.com/scylladb/gocqlx/v3@v${VERSION}/${name}`, to: `src/${name}` })),
+63:     },
+64:     build: "go",
+65:     path: "./cmd/schemagen",
+66:     binary: "gocqlx-schemagen",
+67:     compatibility: "cassandra-metadata",
+68:   },
+69:   launch: [],
+70:   fit: {
+71:     role: "generator",
+72:     input: "a disposable Cassandra or Scylla cluster holding the packet's keyspace schema",
+73:     skills: ["backend-data"],
+74:   },
+75: } as const satisfies Pack
+```
+
+**RA-S022 — `packages/core/src/backend-toolkit/packs/modelina.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `e3f90fbca7f3150c43a231f4029bb8caf5abc043` · SHA-256 `f2685a235805dd4b286ded02fec5d3f109256a5c9ed20a46c9fe6b405f9c882b` · 1103 bytes.
+
+Linhas 3–28.
+
+```text
+3: 
+4: // The AsyncAPI CLI's `generate models` delegates to this package, so it is the engine itself without the CLI's
+5: // server, generator and linter. The lock's `node_modules/npm/node_modules/*` entries are bundled inside the npm tarball
+6: // that @oclif/plugin-plugins depends on; that tarball's integrity covers them.
+7: const VERSION = "5.10.1"
+8: 
+9: export default {
+10:   id: "modelina",
+11:   version: VERSION,
+12:   license: "Apache-2.0",
+13:   upstream: "asyncapi/modelina",
+14:   runtime: "node",
+15:   install: {
+16:     kind: "npm",
+17:     // The package.json text the lock was written from, in npm's own formatting.
+18:     packageJson:
+19:       JSON.stringify(
+20:         { name: "backend-toolkit-modelina", private: true, dependencies: { "@asyncapi/modelina-cli": VERSION } },
+21:         null,
+22:         2,
+23:       ) + "\n",
+24:     lock: JSON.stringify(lock, null, 2) + "\n",
+25:   },
+26:   launch: ["{install}/node_modules/@asyncapi/modelina-cli/bin/run_bin"],
+27:   fit: { role: "generator", input: "an AsyncAPI document", skills: ["backend-api"] },
+28: } as const satisfies Pack
+```
+
+### RA2-02 — Cinco runtimes: versão, estrutura, executável e floors
+
+**RA-S023 — `packages/core/src/backend-toolkit/runtimes/go.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `75c6d31c2ee8e54f9e3cfedf5f30d5449a63a417` · SHA-256 `607c8ef56bc75a8134be5535aba9ccce72efbcc44e01d2110c7577c73cc9ed4c` · 2028 bytes.
+
+Linhas 3–54.
+
+```text
+3: 
+4: // Go pins are the sha256 fields of https://go.dev/dl/?mode=json&include=all for the release, in SRI form; each download
+5: // hashed to the same value when pinning.
+6: const GO_VERSION = "1.25.14"
+7: 
+8: // Every archive holds one `go/` tree with these children; all of them move, so the runtime is a complete GOROOT
+9: // (`go.env` carries the toolchain's defaults, `pkg/tool` its compiler and linker).
+10: const GOROOT = [
+11:   "CONTRIBUTING.md",
+12:   "LICENSE",
+13:   "PATENTS",
+14:   "README.md",
+15:   "SECURITY.md",
+16:   "VERSION",
+17:   "api",
+18:   "bin",
+19:   "codereview.cfg",
+20:   "doc",
+21:   "go.env",
+22:   "lib",
+23:   "misc",
+24:   "pkg",
+25:   "src",
+26:   "test",
+27: ]
+28: 
+29: const go = (asset: string, integrity: PinnedArtifact.Artifact["integrity"]) => {
+30:   const windows = asset.startsWith("windows-")
+31:   return {
+32:     artifact: {
+33:       url: `https://go.dev/dl/go${GO_VERSION}.${asset}.${windows ? "zip" : "tar.gz"}`,
+34:       integrity,
+35:       format: windows ? ("zip" as const) : ("tar.gz" as const),
+36:       entries: GOROOT.map((name) => ({ from: `go/${name}`, to: name })),
+37:     },
+38:     executable: windows ? "bin/go.exe" : "bin/go",
+39:   }
+40: }
+41: 
+42: export default {
+43:   id: "go",
+44:   version: GO_VERSION,
+45:   license: "BSD-3-Clause",
+46:   upstream: "golang/go",
+47:   // Measured host floor of the interpreter or toolchain (F5.4, script/toolkit-floors.ts).
+48:   floor: {
+49:     "darwin-arm64": { macos: "12.0" },
+50:     "darwin-x64": { macos: "12.0" },
+51:     "linux-arm64": {},
+52:     "linux-x64": {},
+53:     "win32-x64": {},
+54:   },
+```
+
+**RA-S024 — `packages/core/src/backend-toolkit/runtimes/java.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `7e8f97536e3d79488f7bb05cce689162a2420b8a` · SHA-256 `02a8a16f2d274950dbde60c64750296f69488bedde47612645de894eeb34d438` · 2261 bytes.
+
+Linhas 3–37.
+
+```text
+3: 
+4: // Pins are the Temurin release assets' sha256 digests in SRI form; each `.sha256.txt` companion agreed with them when
+5: // pinning.
+6: const TEMURIN = "17.0.20.1+1"
+7: 
+8: // Every archive holds one JRE home with these six children. They move as whole directories, so the installed tree is
+9: // the complete JRE with its tar modes intact. macOS nests the home in a bundle whose launcher stub and signature
+10: // resources are left out: `bin/java` loads only from the home.
+11: const temurin = (asset: string, integrity: PinnedArtifact.Artifact["integrity"]) => {
+12:   const windows = asset.endsWith("_windows")
+13:   const home = asset.endsWith("_mac") ? `jdk-${TEMURIN}-jre/Contents/Home` : `jdk-${TEMURIN}-jre`
+14:   return {
+15:     artifact: {
+16:       url: `https://github.com/adoptium/temurin17-binaries/releases/download/jdk-${encodeURIComponent(TEMURIN)}/OpenJDK17U-jre_${asset}_hotspot_${TEMURIN.replace("+", "_")}.${windows ? "zip" : "tar.gz"}`,
+17:       integrity,
+18:       format: windows ? ("zip" as const) : ("tar.gz" as const),
+19:       entries: ["NOTICE", "bin", "conf", "legal", "lib", "release"].map((name) => ({ from: `${home}/${name}`, to: name })),
+20:     },
+21:     executable: windows ? "bin/java.exe" : "bin/java",
+22:   }
+23: }
+24: 
+25: export default {
+26:   id: "java",
+27:   version: TEMURIN,
+28:   license: "GPL-2.0-only WITH Classpath-exception-2.0",
+29:   upstream: "adoptium/temurin17-binaries",
+30:   // Measured host floor of the interpreter or toolchain (F5.4, script/toolkit-floors.ts).
+31:   floor: {
+32:     "darwin-arm64": { macos: "11.0" },
+33:     "darwin-x64": { macos: "11.0" },
+34:     "linux-arm64": { glibc: "2.17" },
+35:     "linux-x64": { glibc: "2.9" },
+36:     "win32-x64": { windows: "10.0" },
+37:   },
+```
+
+**RA-S025 — `packages/core/src/backend-toolkit/runtimes/node.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `23817c461874f9fe103c46e48cd143fdb1a1a8d9` · SHA-256 `8c461b59200597711ebec02c490dc96e5b279b41540f1042a5105fbd6750517b` · 2466 bytes.
+
+Linhas 3–36.
+
+```text
+3: 
+4: // Node pins are the sha256 lines of nodejs.org's SHASUMS256.txt for the release, in SRI form. Engine locks on this
+5: // runtime are written by `npm install --package-lock-only --ignore-scripts` with the npm it bundles (10.9.8).
+6: const NODE_VERSION = "22.23.2"
+7: 
+8: // Only the interpreter, the bundled npm and the license are installed. Archive symlinks (bin/npm, bin/npx) are left
+9: // out: npm runs as `<node> lib/node_modules/npm/bin/npm-cli.js` (Windows: `node_modules/npm/bin/npm-cli.js`).
+10: const unix = (asset: string, integrity: PinnedArtifact.Artifact["integrity"]) => ({
+11:   artifact: {
+12:     url: `https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-${asset}.tar.gz`,
+13:     integrity,
+14:     format: "tar.gz" as const,
+15:     entries: [
+16:       { from: `node-v${NODE_VERSION}-${asset}/bin/node`, to: "bin/node", executable: true },
+17:       { from: `node-v${NODE_VERSION}-${asset}/lib`, to: "lib" },
+18:       { from: `node-v${NODE_VERSION}-${asset}/LICENSE`, to: "LICENSE" },
+19:     ],
+20:   },
+21:   executable: "bin/node",
+22: })
+23: 
+24: export default {
+25:   id: "node",
+26:   version: NODE_VERSION,
+27:   license: "MIT",
+28:   upstream: "nodejs/node",
+29:   // Measured host floor of the interpreter or toolchain (F5.4, script/toolkit-floors.ts).
+30:   floor: {
+31:     "darwin-arm64": { macos: "11.0" },
+32:     "darwin-x64": { macos: "11.0" },
+33:     "linux-arm64": { glibc: "2.28" },
+34:     "linux-x64": { glibc: "2.28" },
+35:     "win32-x64": {},
+36:   },
+```
+
+**RA-S026 — `packages/core/src/backend-toolkit/runtimes/python.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `d3744fe808d49f0710756ff40d8478e1f8da8874` · SHA-256 `d4b61a00828e88ee1cfaece927eff526458c350740c07736c6c9a16495343e4a` · 2738 bytes.
+
+Linhas 3–33.
+
+```text
+3: 
+4: // Pins are the `install_only` archives of python-build-standalone release 20261003; digests are the release's
+5: // SHA256SUMS lines in SRI form, which agreed with GitHub's asset digests when pinning.
+6: const CPYTHON = "3.13.16"
+7: const RELEASE = "20261003"
+8: 
+9: // Each archive holds one `python/` directory. Its top-level children move as whole trees so the interpreter keeps
+10: // its standard library, bundled pip and (on Windows) its DLLs; the Windows debug symbols (`*.pdb`) are left out.
+11: const unix = (triple: string, integrity: PinnedArtifact.Artifact["integrity"]) => ({
+12:   artifact: {
+13:     url: `https://github.com/astral-sh/python-build-standalone/releases/download/${RELEASE}/cpython-${CPYTHON}%2B${RELEASE}-${triple}-install_only.tar.gz`,
+14:     integrity,
+15:     format: "tar.gz" as const,
+16:     entries: ["bin", "include", "lib", "share"].map((name) => ({ from: `python/${name}`, to: name })),
+17:   },
+18:   executable: "bin/python3",
+19: })
+20: 
+21: export default {
+22:   id: "python",
+23:   version: CPYTHON,
+24:   license: "PSF-2.0",
+25:   upstream: "astral-sh/python-build-standalone",
+26:   // Measured host floor of the interpreter or toolchain (F5.4, script/toolkit-floors.ts).
+27:   floor: {
+28:     "darwin-arm64": { macos: "11.0" },
+29:     "darwin-x64": { macos: "10.15" },
+30:     "linux-arm64": { glibc: "2.17" },
+31:     "linux-x64": { glibc: "2.17" },
+32:     "win32-x64": {},
+33:   },
+```
+
+**RA-S027 — `packages/core/src/backend-toolkit/runtimes/rust.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `1e2696f2f7ed5265edb397ea8e2f7f71f9256ebd` · SHA-256 `d27529a3cf34ab368d03f04ff78ed8494e013c6ab0443f88fb1448e8d1e18770` · 2526 bytes.
+
+Linhas 3–44.
+
+```text
+3: 
+4: // Pins are the sha256 digests in SRI form, each from its static.rust-lang.org `.sha256` companion, which the downloaded
+5: // darwin-x64 archive matched.
+6: const RUST_VERSION = "1.99.0"
+7: 
+8: // The standalone archive expects its `install.sh`; moving these component directories instead lays out the same
+9: // sysroot. `rustc` finds `lib/rustlib/<triple>/lib` (from rust-std) relative to its own `bin`, and none of these
+10: // destinations overlap. Cargo looks for `rustc` on PATH, so the build sets RUSTC to this runtime's `bin/rustc`.
+11: const rust = (triple: string, integrity: PinnedArtifact.Artifact["integrity"]) => {
+12:   const root = `rust-${RUST_VERSION}-${triple}`
+13:   const exe = triple.includes("windows") ? ".exe" : ""
+14:   return {
+15:     artifact: {
+16:       url: `https://static.rust-lang.org/dist/${root}.tar.gz`,
+17:       integrity,
+18:       format: "tar.gz" as const,
+19:       entries: [
+20:         { from: `${root}/rustc/bin`, to: "bin" },
+21:         { from: `${root}/rustc/lib`, to: "lib" },
+22:         { from: `${root}/cargo/bin/cargo${exe}`, to: `bin/cargo${exe}` },
+23:         { from: `${root}/rust-std-${triple}/lib/rustlib/${triple}/lib`, to: `lib/rustlib/${triple}/lib` },
+24:         ...["COPYRIGHT", "LICENSE-APACHE", "LICENSE-MIT"].map((name) => ({ from: `${root}/${name}`, to: name })),
+25:       ],
+26:     },
+27:     executable: `bin/cargo${exe}`,
+28:   }
+29: }
+30: 
+31: export default {
+32:   id: "rust",
+33:   version: RUST_VERSION,
+34:   license: "MIT OR Apache-2.0",
+35:   upstream: "rust-lang/rust",
+36:   // Measured host floor of the interpreter or toolchain (F5.4, script/toolkit-floors.ts). The darwin-x64 archive's
+37:   // executables need 10.12; 11.0 comes from the arm64 slice of its `rtsan` sanitizer dylib, which is installed too.
+38:   floor: {
+39:     "darwin-arm64": { macos: "11.0" },
+40:     "darwin-x64": { macos: "11.0" },
+41:     "linux-arm64": { glibc: "2.17" },
+42:     "linux-x64": { glibc: "2.17" },
+43:     "win32-x64": {},
+44:   },
+```
+
+### RA2-03 — Cinco packs research: compiler separado, toolchains e VSIX
+
+**RA-S028 — `packages/core/src/research-toolkit/packs/rust-analyzer.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `617871bdf12fd837043ded8b6fde6b1d19caf56c` · SHA-256 `e43f4d1b6b57910cc7b4a43306f033700443f8d79b65cf84edc3ab052e6abb96` · 1916 bytes.
+
+Linhas 4–29.
+
+```text
+4: // Pins are the GitHub release assets' sha256 digests in SRI form; the darwin-arm64 and win32-x64 downloads hashed to the
+5: // same values when pinning. The per-target VS Code packages are zips (the bare `.gz` binaries are no PinnedArtifact
+6: // format) that carry the server at `extension/server/`. Releases are tagged by date; the version is the server's own,
+7: // from the package's package.json. `rust-analyzer scip` loads the workspace through the host's `cargo metadata`; a host
+8: // without cargo keeps the tree-sitter layer (code-index/extract.ts).
+9: const RELEASE = "2026-09-28"
+10: const VERSION = "0.3.3065"
+11: 
+12: const target = (asset: string, integrity: PinnedArtifact.Artifact["integrity"], executable = "rust-analyzer") => ({
+13:   artifact: {
+14:     url: `https://github.com/rust-lang/rust-analyzer/releases/download/${RELEASE}/rust-analyzer-${asset}.vsix`,
+15:     integrity,
+16:     format: "zip" as const,
+17:     entries: [
+18:       { from: `extension/server/${executable}`, to: executable, executable: true },
+19:       { from: "extension/LICENSE.txt", to: "LICENSE.txt" },
+20:     ],
+21:   },
+22:   executable,
+23: })
+24: 
+25: export default {
+26:   id: "rust-analyzer",
+27:   version: VERSION,
+28:   license: "MIT OR Apache-2.0",
+29:   upstream: "rust-lang/rust-analyzer",
+```
+
+Linhas 37–38.
+
+```text
+37:   fit: { role: "indexer", languages: ["rust"] },
+38: } as const satisfies ResearchPack
+```
+
+**RA-S029 — `packages/core/src/research-toolkit/packs/scip-go.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `047a037a20dc3902328c76dd41c46cd7f7dafd2f` · SHA-256 `7c20e1d6fd8e2d7331a43caa152c7db860620f0dfbdbd15e74b11c48f0d89e8b` · 1765 bytes.
+
+Linhas 3–10.
+
+```text
+3: // scip-go publishes binaries for three of the five targets only, so it builds from the module source on the private
+4: // Go runtime, as the backend's ogen does. The module moved from sourcegraph to scip-code; its go.mod declares
+5: // `go 1.25.0`, which the Go runtime satisfies. At index time it loads packages through the host's own `go`
+6: // toolchain (`go list`); a host without one keeps the tree-sitter layer (code-index/extract.ts).
+7: const VERSION = "0.2.7"
+8: 
+9: // The module zip's top-level children under its `<module>@<version>/` prefix, moved to the root of the source dir.
+10: const SOURCE = [".agents", ".github", ".gitignore", "LICENSE", "README.md", "cmd", "flake.lock", "flake.nix", "go.mod", "go.sum", "internal"]
+```
+
+Linhas 15–35.
+
+```text
+15: export default {
+16:   id: "scip-go",
+17:   version: VERSION,
+18:   license: "Apache-2.0",
+19:   upstream: "scip-code/scip-go",
+20:   runtime: "go",
+21:   install: {
+22:     kind: "source",
+23:     artifact: {
+24:       url: `https://proxy.golang.org/github.com/scip-code/scip-go/@v/v${VERSION}.zip`,
+25:       integrity: "sha256-UrTV3vykBXbGTyGhlsYeCMxUSB1yy25Yor2gfLtB5wE=",
+26:       format: "zip",
+27:       entries: SOURCE.map((name) => ({ from: `github.com/scip-code/scip-go@v${VERSION}/${name}`, to: `src/${name}` })),
+28:     },
+29:     build: "go",
+30:     path: "./cmd/scip-go",
+31:     binary: "scip-go",
+32:   },
+33:   launch: [],
+34:   fit: { role: "indexer", languages: ["go"] },
+35: } as const satisfies ResearchPack
+```
+
+**RA-S030 — `packages/core/src/research-toolkit/packs/scip-python.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `ba07604bc14e0b439b7fe0e92194eb07f8f078c1` · SHA-256 `b4d35ef1e9b11ec8687f39c6e51f4b3d9b2afa5908de3a46b41ea05b63e7fbd1` · 1073 bytes.
+
+Linhas 4–32.
+
+```text
+4: // A bundled pyright fork in pure JavaScript with no install scripts, so one lock installs on all five targets. It runs
+5: // on node and reads the project's Python source and installed packages; it needs no Python interpreter to index the
+6: // project's own files.
+7: const VERSION = "0.6.6"
+8: 
+9: export default {
+10:   id: "scip-python",
+11:   version: VERSION,
+12:   license: "MIT",
+13:   upstream: "sourcegraph/scip-python",
+14:   runtime: "node",
+15:   install: {
+16:     kind: "npm",
+17:     // The package.json text the lock was written from, in npm's own formatting.
+18:     packageJson:
+19:       JSON.stringify(
+20:         {
+21:           name: "research-toolkit-scip-python",
+22:           private: true,
+23:           dependencies: { "@sourcegraph/scip-python": VERSION },
+24:         },
+25:         null,
+26:         2,
+27:       ) + "\n",
+28:     lock: JSON.stringify(lock, null, 2) + "\n",
+29:   },
+30:   launch: ["{install}/node_modules/@sourcegraph/scip-python/index.js"],
+31:   fit: { role: "indexer", languages: ["py"] },
+32: } as const satisfies ResearchPack
+```
+
+**RA-S031 — `packages/core/src/research-toolkit/packs/scip-typescript.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `a879dd486a40a0553a6fdedf82e093251ce2ec07` · SHA-256 `97fd24e79cc805da3f89b7ae31d8e52e25a946b7249b1421a85b7923b06c4773` · 1057 bytes.
+
+Linhas 4–31.
+
+```text
+4: // Pure JavaScript with no install scripts, so one lock installs on all five targets. It carries its own TypeScript 5.x
+5: // compiler; the `typescript` oracle pack is separate and pinned independently.
+6: const VERSION = "0.4.0"
+7: 
+8: export default {
+9:   id: "scip-typescript",
+10:   version: VERSION,
+11:   license: "Apache-2.0",
+12:   upstream: "sourcegraph/scip-typescript",
+13:   runtime: "node",
+14:   install: {
+15:     kind: "npm",
+16:     // The package.json text the lock was written from, in npm's own formatting.
+17:     packageJson:
+18:       JSON.stringify(
+19:         {
+20:           name: "research-toolkit-scip-typescript",
+21:           private: true,
+22:           dependencies: { "@sourcegraph/scip-typescript": VERSION },
+23:         },
+24:         null,
+25:         2,
+26:       ) + "\n",
+27:     lock: JSON.stringify(lock, null, 2) + "\n",
+28:   },
+29:   launch: ["{install}/node_modules/@sourcegraph/scip-typescript/dist/src/main.js"],
+30:   fit: { role: "indexer", languages: ["ts", "js"] },
+31: } as const satisfies ResearchPack
+```
+
+**RA-S032 — `packages/core/src/research-toolkit/packs/typescript.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `781df87bba6bdb1002aadf61574498c96410155f` · SHA-256 `7c125ffd1acf9381933be0709209d97e79b91b3b1e3abccab4cb8e7d2a57f845` · 867 bytes.
+
+Linhas 4–26.
+
+```text
+4: // The fallback oracle (J6.4). TypeScript stays on 6.x: 7.x is the native port without the JavaScript compiler API.
+5: const VERSION = "6.0.3"
+6: 
+7: export default {
+8:   id: "typescript",
+9:   version: VERSION,
+10:   license: "Apache-2.0",
+11:   upstream: "microsoft/TypeScript",
+12:   runtime: "node",
+13:   install: {
+14:     kind: "npm",
+15:     // The package.json text the lock was written from, in npm's own formatting.
+16:     packageJson:
+17:       JSON.stringify(
+18:         { name: "research-toolkit-typescript", private: true, dependencies: { typescript: VERSION } },
+19:         null,
+20:         2,
+21:       ) + "\n",
+22:     lock: JSON.stringify(lock, null, 2) + "\n",
+23:   },
+24:   launch: ["{install}/node_modules/typescript/lib/tsc.js"],
+25:   fit: { role: "oracle", languages: ["ts", "js"] },
+26: } as const satisfies ResearchPack
+```
+
+**RA-S046 — `packages/core/src/research-toolkit/packs/index.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `c560a0cf8a33ec10e1cf199c905517a6c629da15` · SHA-256 `b48a9611134151e4e44643cf8bf21e84dba990ba9a65ad644788535133bd5b2d` · 545 bytes.
+
+Linhas 7–15.
+
+```text
+7: // One import and one entry per pack, keyed by its own id (J6.4).
+8: // The tree-sitter grammars and `@c4312/scip` are not packs: they are core dependencies (J6.5).
+9: export const PACKS = {
+10:   [rustAnalyzer.id]: rustAnalyzer,
+11:   [scipGo.id]: scipGo,
+12:   [scipPython.id]: scipPython,
+13:   [scipTypescript.id]: scipTypescript,
+14:   [typescript.id]: typescript,
+15: }
+```
+
+### RA2-04 — Sete locks e wheels: campos de aquisição e exceções bundled
+
+**RA-S033 — `packages/core/src/backend-toolkit/packs/kysely-codegen.package-lock.json`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `4c258c62096c9a119896f0826836d3653645f0f1` · SHA-256 `9de6d58c097012a2022acbedbe1a1d7ff7b25d08bc23c65ca912f6a851401641` · 27939 bytes.
+
+Linhas 6–14.
+
+```text
+6:     "": {
+7:       "name": "backend-toolkit-kysely-codegen",
+8:       "dependencies": {
+9:         "kysely-codegen": "0.20.0",
+10:         "mysql2": "3.24.5",
+11:         "pg": "8.23.1",
+12:         "typescript": "6.0.3"
+13:       }
+14:     },
+```
+
+Linhas 352–357.
+
+```text
+352:     "node_modules/kysely-codegen": {
+353:       "version": "0.20.0",
+354:       "resolved": "https://registry.npmjs.org/kysely-codegen/-/kysely-codegen-0.20.0.tgz",
+355:       "integrity": "sha512-LSi2KBG7uDmNCZ+XurLSA9LH7XFyyoQ6xb5DLJSInPTSYLVApjOP2KwO8mSaREWTtoX+C2AG2GTlYR0DLjTbcA==",
+356:       "license": "MIT",
+357:       "dependencies": {
+```
+
+**RA-S034 — `packages/core/src/backend-toolkit/packs/modelina.package-lock.json`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `9fc9ef1bc7124fcead2d83cea20f2bff4340949c` · SHA-256 `0fc1a48c86b45b4749fda6d5e811a1f9b3f55a246fa5e8dd035435e84d2149d2` · 266885 bytes.
+
+Linhas 6–11.
+
+```text
+6:     "": {
+7:       "name": "backend-toolkit-modelina",
+8:       "dependencies": {
+9:         "@asyncapi/modelina-cli": "5.10.1"
+10:       }
+11:     },
+```
+
+Linhas 111–116.
+
+```text
+111:     "node_modules/@asyncapi/modelina-cli": {
+112:       "version": "5.10.1",
+113:       "resolved": "https://registry.npmjs.org/@asyncapi/modelina-cli/-/modelina-cli-5.10.1.tgz",
+114:       "integrity": "sha512-qBPW0XDfQkHNyhrStd4e5midehoy9PUPHVz0koyf2s9rg/SpossUyCFCYWD6n34ru1tNH1Mkjhuuu9iFNcAMvg==",
+115:       "license": "Apache-2.0",
+116:       "dependencies": {
+```
+
+Linhas 265–271.
+
+```text
+265:     "node_modules/@hyperjump/json-pointer": {
+266:       "version": "0.9.8",
+267:       "resolved": "https://registry.npmjs.org/@hyperjump/json-pointer/-/json-pointer-0.9.8.tgz",
+268:       "integrity": "sha512-6D6okhpH5VOS3oSYUtxu8nClsOcp59aC+sS06/tCxEta4T5Gk1yaycLiCkG8kE9eh+9AJUHsvQEJJrWBfLOjvA==",
+269:       "hasInstallScript": true,
+270:       "license": "MIT",
+271:       "dependencies": {
+```
+
+Linhas 4289–4298.
+
+```text
+4289:     "node_modules/npm": {
+4290:       "version": "11.21.0",
+4291:       "resolved": "https://registry.npmjs.org/npm/-/npm-11.21.0.tgz",
+4292:       "integrity": "sha512-Zov8KhamNneiLdELtj5YALtNmJW4L4fCLTzjfpzXG2w6MSHcf0UxgdlK5uloCuksWT+7mGUU7wi79cO6RqivPg==",
+4293:       "bundleDependencies": [
+4294:         "@isaacs/string-locale-compare",
+4295:         "@npmcli/arborist",
+4296:         "@npmcli/config",
+4297:         "@npmcli/fs",
+4298:         "@npmcli/map-workspaces",
+```
+
+Linhas 4473–4480.
+
+```text
+4473:     "node_modules/npm/node_modules/@gar/promise-retry": {
+4474:       "version": "1.0.3",
+4475:       "inBundle": true,
+4476:       "license": "MIT",
+4477:       "engines": {
+4478:         "node": "^20.17.0 || >=22.9.0"
+4479:       }
+4480:     },
+```
+
+**RA-S035 — `packages/core/src/backend-toolkit/packs/orval.package-lock.json`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `af0c40af9f14e14b7703b94d2b475f1e2f159c2a` · SHA-256 `a3b052e1684e432a80198786e8d5b3744a7b4635dadb5fa4088853817a4f2026` · 50428 bytes.
+
+Linhas 6–11.
+
+```text
+6:     "": {
+7:       "name": "backend-toolkit-orval",
+8:       "dependencies": {
+9:         "orval": "8.39.0"
+10:       }
+11:     },
+```
+
+Linhas 277–292.
+
+```text
+277:     "node_modules/@esbuild/linux-x64": {
+278:       "version": "0.28.2",
+279:       "resolved": "https://registry.npmjs.org/@esbuild/linux-x64/-/linux-x64-0.28.2.tgz",
+280:       "integrity": "sha512-4xTZr1FUmSoQW4XIWmit3tzQrUTZM+N3P0XV8xROKYF50XfI7xeO90+1bZvNwxIufQ9hDQVRJH5YhgPVF8A/HQ==",
+281:       "cpu": [
+282:         "x64"
+283:       ],
+284:       "license": "MIT",
+285:       "optional": true,
+286:       "os": [
+287:         "linux"
+288:       ],
+289:       "engines": {
+290:         "node": ">=18"
+291:       }
+292:     },
+```
+
+Linhas 899–905.
+
+```text
+899:     "node_modules/esbuild": {
+900:       "version": "0.28.2",
+901:       "resolved": "https://registry.npmjs.org/esbuild/-/esbuild-0.28.2.tgz",
+902:       "integrity": "sha512-HKVLS8dvII+xoKW9kmqxbRKrnWEXfJJr/FZhhJmiqIB0e053QNYFqOBouTMO/k5sID4MvCiUCvv8b9M4h32wIA==",
+903:       "hasInstallScript": true,
+904:       "license": "MIT",
+905:       "bin": {
+```
+
+Linhas 911–919.
+
+```text
+911:       "optionalDependencies": {
+912:         "@esbuild/aix-ppc64": "0.28.2",
+913:         "@esbuild/android-arm": "0.28.2",
+914:         "@esbuild/android-arm64": "0.28.2",
+915:         "@esbuild/android-x64": "0.28.2",
+916:         "@esbuild/darwin-arm64": "0.28.2",
+917:         "@esbuild/darwin-x64": "0.28.2",
+918:         "@esbuild/freebsd-arm64": "0.28.2",
+919:         "@esbuild/freebsd-x64": "0.28.2",
+```
+
+Linhas 1215–1220.
+
+```text
+1215:     "node_modules/orval": {
+1216:       "version": "8.39.0",
+1217:       "resolved": "https://registry.npmjs.org/orval/-/orval-8.39.0.tgz",
+1218:       "integrity": "sha512-QHMA1sYzmUCAh5CJN3t/s+/JfphIM8JUjShi1oRhhX4YDk59nAnl/lDXMSMWprw0kFmZJs3HTnYBInLW4CafyQ==",
+1219:       "license": "MIT",
+1220:       "dependencies": {
+```
+
+**RA-S036 — `packages/core/src/backend-toolkit/packs/protoc-gen-es.package-lock.json`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `14948253df8c32134e869f975a8e5f634dc44ad2` · SHA-256 `7bb67cf09c2d6fb3314b69705375ffda7bf68b2dda8f7917941e97da41aa03bd` · 3392 bytes.
+
+Linhas 6–11.
+
+```text
+6:     "": {
+7:       "name": "backend-toolkit-protoc-gen-es",
+8:       "dependencies": {
+9:         "@bufbuild/protoc-gen-es": "2.16.0"
+10:       }
+11:     },
+```
+
+Linhas 18–23.
+
+```text
+18:     "node_modules/@bufbuild/protoc-gen-es": {
+19:       "version": "2.16.0",
+20:       "resolved": "https://registry.npmjs.org/@bufbuild/protoc-gen-es/-/protoc-gen-es-2.16.0.tgz",
+21:       "integrity": "sha512-LbPrEaGd7bOxKbJHllTR5439+PZjqd6fM7xyDZkDVtZ+Efzr7TMdMqShG9Qkf/nYVyiNS/SK5r9JhRaBTFkfZw==",
+22:       "license": "Apache-2.0",
+23:       "dependencies": {
+```
+
+**RA-S037 — `packages/core/src/research-toolkit/packs/scip-python.package-lock.json`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `d6912c185ec9c376dca28c4246ba12e7385389d8` · SHA-256 `a9bf75b6185aad8130476c5c4234026ea059400241720e7db2b11c575eecdf03` · 28385 bytes.
+
+Linhas 6–11.
+
+```text
+6:     "": {
+7:       "name": "research-toolkit-scip-python",
+8:       "dependencies": {
+9:         "@sourcegraph/scip-python": "0.6.6"
+10:       }
+11:     },
+```
+
+Linhas 55–60.
+
+```text
+55:     "node_modules/@sourcegraph/scip-python": {
+56:       "version": "0.6.6",
+57:       "resolved": "https://registry.npmjs.org/@sourcegraph/scip-python/-/scip-python-0.6.6.tgz",
+58:       "integrity": "sha512-qoKL1Rggg0o5newAFbCFAKlS0AjWxG5MA+mC28BtgxOv0DhO4zdL8u7151FxEppDpXMVvm7+yXSjXotoVH9cMQ==",
+59:       "license": "MIT",
+60:       "dependencies": {
+```
+
+**RA-S038 — `packages/core/src/research-toolkit/packs/scip-typescript.package-lock.json`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `e6b78e912d54fd5115fb0c4c804c41f175ac82c8` · SHA-256 `50c220b0739d12746c369da1296b8176737768b43b1ce393532f7cf306ceeb48` · 2274 bytes.
+
+Linhas 6–26.
+
+```text
+6:     "": {
+7:       "name": "research-toolkit-scip-typescript",
+8:       "dependencies": {
+9:         "@sourcegraph/scip-typescript": "0.4.0"
+10:       }
+11:     },
+12:     "node_modules/@sourcegraph/scip-typescript": {
+13:       "version": "0.4.0",
+14:       "resolved": "https://registry.npmjs.org/@sourcegraph/scip-typescript/-/scip-typescript-0.4.0.tgz",
+15:       "integrity": "sha512-k+AtsrqmS41Sd5qjkZlHcmvoSQIvBOonRj4jpgp0KNFM6aqvMGpdSuPUqrUcg8ENTKjUbfaUVszgQwq3bCOvwA==",
+16:       "license": "Apache-2.0",
+17:       "dependencies": {
+18:         "commander": "^12.1.0",
+19:         "google-protobuf": "^3.21.4",
+20:         "progress": "^2.0.3",
+21:         "typescript": "^5.6.2"
+22:       },
+23:       "bin": {
+24:         "scip-typescript": "dist/src/main.js"
+25:       }
+26:     },
+```
+
+Linhas 51–56.
+
+```text
+51:     "node_modules/typescript": {
+52:       "version": "5.9.3",
+53:       "resolved": "https://registry.npmjs.org/typescript/-/typescript-5.9.3.tgz",
+54:       "integrity": "sha512-jl1vZzPDinLr9eUt3J/t7V6FgNEw9QjvBPdysz9KfQDD41fQrC2Y4vKQdiaUpFT4bXlb1RHhLpp8wtm6M5TgSw==",
+55:       "license": "Apache-2.0",
+56:       "bin": {
+```
+
+**RA-S039 — `packages/core/src/research-toolkit/packs/typescript.package-lock.json`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `5b547b8a8d1157434b4aa5d1a46d4f4fee79651c` · SHA-256 `442acbeda058036d02d4f2483e19149512ebde276c57d65ad3aa664735ff0a76` · 667 bytes.
+
+Linhas 6–24.
+
+```text
+6:     "": {
+7:       "name": "research-toolkit-typescript",
+8:       "dependencies": {
+9:         "typescript": "6.0.3"
+10:       }
+11:     },
+12:     "node_modules/typescript": {
+13:       "version": "6.0.3",
+14:       "resolved": "https://registry.npmjs.org/typescript/-/typescript-6.0.3.tgz",
+15:       "integrity": "sha512-y2TvuxSZPDyQakkFRPZHKFm+KKVqIisdg9/CZwm9ftvKXLP8NRWj38/ODjNbr43SsoXqNuAisEf1GdCxqWcdBw==",
+16:       "license": "Apache-2.0",
+17:       "bin": {
+18:         "tsc": "bin/tsc",
+19:         "tsserver": "bin/tsserver"
+20:       },
+21:       "engines": {
+22:         "node": ">=14.17"
+23:       }
+24:     }
+```
+
+**RA-S040 — `packages/core/src/backend-toolkit/packs/datamodel-codegen.wheels.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `6385060213d539fb5547b2aa3f342a721f5f2b8c` · SHA-256 `e1882f2135d3980986ac47eb35f30b3df45bfe63a3de1489bc4e04572e3ad02b` · 6586 bytes.
+
+Linhas 1–24.
+
+```text
+1: // The full closure of datamodel-code-generator 0.83.0 for CPython 3.13 on the five toolkit targets, as resolved by
+2: // `uv pip compile --only-binary :all: --python-version 3.13 --python-platform <target>` (the same 22 pins on every
+3: // target). Each pin lists every wheel PyPI publishes for it that a target can install: platform wheels for the
+4: // compiled packages and the py3-none-any wheel where one exists. Digests are PyPI's sha256, each checked against a
+5: // download of the wheel when pinning.
+6: export const WHEELS: Readonly<Record<string, Readonly<Record<string, string>>>> = {
+7:   "annotated-types==0.8.0": {
+8:     "annotated_types-0.8.0-py3-none-any.whl": "f072f4d804ea359e4eaf198b1af7a8b0943881a87f31bb764f8bf219bb9419e0",
+9:   },
+10:   "argcomplete==3.7.2": {
+11:     "argcomplete-3.7.2-py3-none-any.whl": "6029205678bdd9c1c728a155f5f9ecf5812393f969eef58807641a2bc2aa5b19",
+12:   },
+13:   "black==26.10.0": {
+14:     "black-26.10.0-cp313-cp313-macosx_10_13_x86_64.whl": "db0894554f5a95b33874ad7bc6040360f2b126b8d6c9b47d8ddfbd5c6a030618",
+15:     "black-26.10.0-cp313-cp313-macosx_11_0_arm64.whl": "69e5bf5e22660dba002e102e43a2dce1924b098781c9665bffa1ffd2d490ebc5",
+16:     "black-26.10.0-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl": "87fd0c6c769c650439e7107742f0d6493bfb117fab95d97ef1eb2381d1713258",
+17:     "black-26.10.0-cp313-cp313-win_amd64.whl": "7ced1df50785931b06d5ee7264cdcd246fab0cacd83c8dc7f1b2774d85d23e05",
+18:     "black-26.10.0-py3-none-any.whl": "b532e40012f21a8a0e8c5996ea8f5f8413dc89793361aa9e2f451826d0ebd711",
+19:   },
+20:   "click==8.5.0": {
+21:     "click-8.5.0-py3-none-any.whl": "255bc9599cf7748b4b1a446ccc735421bd08a2ae529a8b88597d3de5664ee360",
+22:   },
+23:   "datamodel-code-generator==0.83.0": {
+24:     "datamodel_code_generator-0.83.0-py3-none-any.whl": "371d80be360b2a57bc48462169553af57fa30225c0264ad85ae5f0d59b9d143a",
+```
+
+Linhas 76–93.
+
+```text
+76:   },
+77:   "pyyaml==6.0.3": {
+78:     "pyyaml-6.0.3-cp313-cp313-macosx_10_13_x86_64.whl": "8da9669d359f02c0b91ccc01cac4a67f16afec0dac22c2ad09f46bee0697eba8",
+79:     "pyyaml-6.0.3-cp313-cp313-macosx_11_0_arm64.whl": "2283a07e2c21a2aa78d9c4442724ec1eb15f5e42a723b99cb3d822d48f5f7ad1",
+80:     "pyyaml-6.0.3-cp313-cp313-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl": "ee2922902c45ae8ccada2c5b501ab86c36525b883eff4255313a253a3160861c",
+81:     "pyyaml-6.0.3-cp313-cp313-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl": "0f29edc409a6392443abf94b9cf89ce99889a1dd5376d94316ae5145dfedd5d6",
+82:     "pyyaml-6.0.3-cp313-cp313-win_amd64.whl": "79005a0d97d5ddabfeeea4cf676af11e647e41d81c9a7722a193022accdb6b7c",
+83:   },
+84:   "typeguard==4.6.0": {
+85:     "typeguard-4.6.0-py3-none-any.whl": "79878165bb86f2cf5d41d159a0ff1792a796cf496882d2fe1b1c6c7049b9cdd7",
+86:   },
+87:   "typing-extensions==4.16.0": {
+88:     "typing_extensions-4.16.0-py3-none-any.whl": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+89:   },
+90:   "typing-inspection==0.4.4": {
+91:     "typing_inspection-0.4.4-py3-none-any.whl": "65b8397ba37ccbce054456aaccddfc91e6e3083c92824df348d96ca832f3f147",
+92:   },
+93: }
+```
+
+### RA2-P — Contagem MECÂNICA de campos dos sete locks
+
+Procedimento: decodificar cada JSON integral fixado e contar entradas de `packages`, sem executar npm/pip. `resolved-registry` e `integrity-sha512` contam entradas não-root. Exceções sem integrity individual são examinadas em `inBundle`; não são apagadas nem substituídas. A tabela é cálculo de dados, não trecho literal e não certificação upstream.
+
+| Lock | packages (com root) | resolved-registry | integrity-sha512 | sem integrity | todas as exceções inBundle | hasInstallScript | optional |
+| --- | ---: | ---: | ---: | ---: | --- | ---: | ---: |
+| `packages/core/src/backend-toolkit/packs/kysely-codegen.package-lock.json` | 66 | 65 | 65 | 0 | True | 0 | 1 |
+| `packages/core/src/backend-toolkit/packs/modelina.package-lock.json` | 613 | 469 | 469 | 143 | True | 6 | 2 |
+| `packages/core/src/backend-toolkit/packs/orval.package-lock.json` | 105 | 104 | 104 | 0 | True | 1 | 26 |
+| `packages/core/src/backend-toolkit/packs/protoc-gen-es.package-lock.json` | 8 | 7 | 7 | 0 | True | 0 | 0 |
+| `packages/core/src/research-toolkit/packs/scip-python.package-lock.json` | 62 | 61 | 61 | 0 | True | 0 | 20 |
+| `packages/core/src/research-toolkit/packs/scip-typescript.package-lock.json` | 6 | 5 | 5 | 0 | True | 0 | 0 |
+| `packages/core/src/research-toolkit/packs/typescript.package-lock.json` | 2 | 1 | 1 | 0 | True | 0 | 0 |
+
+O lock Modelina integral de 266.885 bytes continua em `sources/`, com a mesma identidade de captura. Este suplemento seleciona campos; não o substitui como input nem modifica o bloqueio de transporte informado pela principal.
+
+## RE-A3
+
+### RA3-01 — prepare/prefetch: variável, espera, PATH e estado por engine
+
+**RA-S047 — `packages/core/src/backend-toolkit/index.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `e5c8e61d202f8a79a5b967d5abc467a97b58f4a3` · SHA-256 `d420651f26050d31c924b078a59fff12081be914cb8cb94685aad720a9275d9a` · 15426 bytes.
+
+Linhas 65–65.
+
+```text
+65: const PREPARE_MS = 60_000
+```
+
+Linhas 86–134.
+
+```text
+86: /** Fetch engines (all by default) for a target (the host's by default); shims are written only for the host target. */
+87: export const prefetch = Effect.fn("BackendToolkit.prefetch")(function* <Id extends string = EngineId>(
+88:   engines?: ReadonlyArray<Id>,
+89:   target?: TargetId,
+90: ): Effect.fn.Return<ReadonlyArray<State<Id>>> {
+91:   const manifest = yield* Manifest
+92:   const host = yield* Target
+93:   const ids = engines ?? Object.values(manifest).map((item) => item.id as Id)
+94:   const chosen = target ?? ("target" in host ? host.target : undefined)
+95:   if (!chosen) return yield* status<Id>().pipe(Effect.map((all) => all.filter((state) => ids.includes(state.engine))))
+96:   yield* Effect.forEach(ids, (id) => request(id, chosen, "target" in host && host.target === chosen).pipe(Effect.ignore), {
+97:     concurrency: "unbounded",
+98:     discard: true,
+99:   })
+100:   return yield* states(ids, chosen)
+101: })
+102: 
+103: /**
+104:  * The toolkit environment for one shell command. Engines named through BACKEND_TOOLKIT_BIN and their owned dependencies
+105:  * acquire on demand. A command naming none never fetches. A cold acquisition exceeding the shell wait returns a named
+106:  * fetching blocker while acquisition continues; `ensure`/`prefetch` await the install budget.
+107:  */
+108: export const prepare = Effect.fn("BackendToolkit.prepare")(function* (command: string, callerEnv: NodeJS.ProcessEnv = process.env) {
+109:   const root = yield* Root
+110:   const manifest = yield* Manifest
+111:   // `$BACKEND_TOOLKIT_BIN/<id>`, `${BACKEND_TOOLKIT_BIN}/<id>`, `"$BACKEND_TOOLKIT_BIN"/<id>` and PowerShell's
+112:   // `$env:BACKEND_TOOLKIT_BIN\<id>.cmd`, with either separator.
+113:   const named = Object.values(manifest)
+114:     .map((engine) => engine.id)
+115:     .filter((id) =>
+116:       new RegExp(String.raw`\$(?:env:)?(?:BACKEND_TOOLKIT_BIN|\{BACKEND_TOOLKIT_BIN\})"?[\\/]${id}(?![\w-])`).test(
+117:         command,
+118:       ),
+119:     )
+120:   const env = {
+121:     BACKEND_TOOLKIT_BIN: path.join(root, "bin"),
+122:     ...(named.some((id) => manifest[id].dependencies?.length)
+123:       ? { PATH: [path.join(root, "bin"), callerEnv.PATH ?? callerEnv.Path ?? ""].join(path.delimiter) }
+124:       : {}),
+125:   }
+126:   const blocked = yield* Effect.forEach(named, (id) => ensure(id).pipe(Effect.timeoutOrElse({
+127:     duration: PREPARE_MS,
+128:     orElse: () => Effect.fail(new NotReady({ reason: `toolkit-not-ready:fetching:${id}` })),
+129:   })), { concurrency: "unbounded", discard: true }).pipe(
+130:     Effect.match({ onSuccess: () => undefined, onFailure: (error) => error.reason }),
+131:   )
+132:   if (blocked) return { env, blocked }
+133:   return { env }
+134: })
+```
+
+### RA3-02 — Allowlist e HOME/config privados; Go/Cargo e limites
+
+**RA-S048 — `packages/core/src/backend-toolkit/diagnostics.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `82c79df31ad65365a2945d516a2e890e2da0d9af` · SHA-256 `d556fb8a95fdaff9ca4ec23b8ff137f37c3a7547c8ceb4d2d83810e7c2c86814` · 1795 bytes.
+
+Linhas 18–29.
+
+```text
+18: export function environment(cwd: string, env: NodeJS.ProcessEnv = process.env) {
+19:   const allowed = new Set(["PATH", "SYSTEMROOT", "WINDIR", "COMSPEC", "PATHEXT", "TMPDIR", "TMP", "TEMP", "LANG", "LC_ALL", "LC_CTYPE",
+20:     "SDKROOT", "DEVELOPER_DIR", "MACOSX_DEPLOYMENT_TARGET", "CC", "CXX", "AR", "INCLUDE", "LIB", "LIBPATH"])
+21:   return {
+22:     ...Object.fromEntries(Object.entries(env).filter(([key, value]) => value !== undefined && allowed.has(key.toUpperCase()))),
+23:     HOME: `${cwd}/.installer-home`,
+24:     USERPROFILE: `${cwd}/.installer-home`,
+25:     npm_config_userconfig: `${cwd}/.installer-home/npmrc`,
+26:     npm_config_globalconfig: `${cwd}/.installer-home/global-npmrc`,
+27:     PIP_CONFIG_FILE: process.platform === "win32" ? "NUL" : "/dev/null",
+28:   }
+29: }
+```
+
+**RA-S049 — `packages/core/src/backend-toolkit/attempts.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `320456d5837420999da0034870cedf86b5b8dc05` · SHA-256 `75382ae48fcc113ed71ea4a61d4122dc24b5ad5c6e4f3d5af52d3938688290eb` · 1652 bytes.
+
+Linhas 20–23.
+
+```text
+20: // A failed fetch is retried by a later need after this window, not by every command.
+21: const RETRY_MS = 5 * 60_000
+22: // A cold cargo build of a CLI with its whole dependency graph takes minutes.
+23: export const INSTALL_MS = 30 * 60_000
+```
+
+**RA-S050 — `packages/core/src/backend-toolkit/hosted.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `987657dcb1ce8d9cc9f623713673f99dd376e86c` · SHA-256 `6d3ea35691832eddb90ce8563679390a1030b71d636a01a4c5cd59ad78ebeb34` · 11390 bytes.
+
+Linhas 61–70.
+
+```text
+61:                 if (install.kind === "npm") {
+62:                   await writeFile(path.join(staging, "package.json"), install.packageJson)
+63:                   await writeFile(path.join(staging, "package-lock.json"), install.lock)
+64:                   // Node's Windows zip keeps npm beside node.exe; the POSIX tarballs keep it under lib/.
+65:                   const npm = windows
+66:                     ? path.join(path.dirname(interpreter), "node_modules", "npm", "bin", "npm-cli.js")
+67:                     : path.join(home, "lib", "node_modules", "npm", "bin", "npm-cli.js")
+68:                   await run(
+69:                     interpreter,
+70:                     [npm, "ci", "--ignore-scripts", "--no-audit", "--no-fund", "--offline=false"],
+```
+
+Linhas 79–99.
+
+```text
+79:                 if (install.kind === "pip") {
+80:                   const requirements = path.join(staging, "requirements.txt")
+81:                   await writeFile(requirements, install.requirements)
+82:                   await run(
+83:                     interpreter,
+84:                     [
+85:                       "-m",
+86:                       "pip",
+87:                       "install",
+88:                       "--require-hashes",
+89:                       "--no-deps",
+90:                       "--only-binary=:all:",
+91:                       "--target",
+92:                       staging,
+93:                       "-r",
+94:                       requirements,
+95:                     ],
+96:                     staging,
+97:                     { PIP_CACHE_DIR: path.join(root, "cache", "pip"), PIP_DISABLE_PIP_VERSION_CHECK: "1" },
+98:                     signal,
+99:                   )
+```
+
+Linhas 101–146.
+
+```text

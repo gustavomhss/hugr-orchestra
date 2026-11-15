@@ -1,0 +1,4 @@
+{
+  "target": "/root/s1_03_j2",
+  "message": "CORRECAO_LITERAL_DE_TRANSPORTE — research-b-supplement-v2, parte 5/5, subenvio 1/2, grupo RB7-05. O relay inseriu indevidamente um caractere de dois-pontos no metadado abaixo. Preserve o envio original como incidente e, na composição literal, substitua somente esta ocorrência.\nANTES_EFETIVAMENTE_ENVIADO:\nVínculo: corpo R10, R11, R12, R13; archive: E46.\nDEPOIS_CANONICO:\nVínculo: corpo R10, R11, R12, R13; archive E46.\nNenhum outro byte é alterado; o trecho canônico recomposto tem 26.341 bytes, SHA256 923db1452c01e249c4c3b8504ca4da405b6d0a333ba376e22c066fe470fef0c9. Sem ferramentas, sem julgamento intermediário; aguarde o último subenvio e o sinal externo final."
+}

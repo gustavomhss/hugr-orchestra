@@ -1,0 +1,833 @@
+        `        integrity: "${asset?.digest ? sri(asset.digest) : "sha256-TODO-PIN"}",`,
+        `        format: "${format}",`,
+        `        entries: [{ from: "${format === "raw" ? (asset?.name ?? exe) : exe}", to: "${exe}", executable: true }],`,
+        "      },",
+        `      executable: "${exe}",`,
+        "    },",
+      ].join("\n")
+    })
+    return [
+      `  license: "${repo.license?.spdx_id ?? "TODO-PIN"}",`,
+      `  upstream: "${upstream}",`,
+      "  // Asset digests from the GitHub release API; check each entry layout against a downloaded sample.",
+      "  targets: {",
+      ...targets,
+      "  },",
+    ].join("\n")
+  }
+  if (kind === "npm") {
+    const meta = (await fetch(`https://registry.npmjs.org/${upstream}/${version}`).then((response) =>
+      response.json(),
+    )) as NpmVersion
+    const bin = typeof meta.bin === "string" ? meta.bin : Object.values(meta.bin ?? {})[0]
+    await lock(id, upstream, version)
+    return [
+      `  license: "${meta.license ?? "TODO-PIN"}",`,
+      `  upstream: "${meta.repository?.url?.match(/github\.com[/:]([^/]+\/[^/.]+)/)?.[1] ?? "TODO-PIN"}",`,
+      '  runtime: "node",',
+      "  install: {",
+      '    kind: "npm",',
+      `    packageJson: JSON.stringify({ name: "backend-toolkit-${id}", private: true, dependencies: { "${upstream}": VERSION } }, null, 2) + "\\n",`,
+      '    lock: JSON.stringify(lock, null, 2) + "\\n",',
+      "  },",
+      `  launch: ["{install}/node_modules/${upstream}/${String(bin ?? "TODO-PIN").replace(/^\.\//, "")}"],`,
+    ].join("\n")
+  }
+  const install = {
+    pip: [
+      '  runtime: "python",',
+      `  install: { kind: "pip", requirements: \`${upstream}==\${VERSION} --hash=sha256:TODO-PIN\\n\` },`,
+      '  launch: ["-m", "TODO-PIN"],',
+      '  env: { PYTHONPATH: "{install}", PYTHONSAFEPATH: "1", PYTHONNOUSERSITE: "1" },',
+    ],
+    jar: [
+      '  runtime: "java",',
+      "  install: {",
+      '    kind: "jar",',
+      `    artifact: { url: \`https://repo1.maven.org/maven2/TODO-PIN/\${VERSION}/${id}-\${VERSION}.jar\`, integrity: "sha256-TODO-PIN", format: "raw", entries: [{ from: \`${id}-\${VERSION}.jar\`, to: "${id}.jar" }] },`,
+      "  },",
+      `  launch: ["-jar", "{install}/${id}.jar"],`,
+    ],
+    "go-source": [
+      '  runtime: "go",',
+      "  install: {",
+      '    kind: "source",',
+      `    artifact: { url: \`https://proxy.golang.org/github.com/${upstream.toLowerCase()}/@v/v\${VERSION}.zip\`, integrity: "sha256-TODO-PIN", format: "zip", entries: [{ from: "TODO-PIN", to: "src/TODO-PIN" }] },`,
+      `    build: "go",`,
+      '    path: "./cmd/TODO-PIN",',
+      `    binary: "${id}",`,
+      "  },",
+      "  launch: [],",
+    ],
+    "cargo-source": [
+      '  runtime: "rust",',
+      "  install: {",
+      '    kind: "source",',
+      `    artifact: { url: \`https://static.crates.io/crates/${id}/${id}-\${VERSION}.crate\`, integrity: "sha256-TODO-PIN", format: "tar.gz", entries: [{ from: "TODO-PIN", to: "src/TODO-PIN" }] },`,
+      `    build: "cargo",`,
+      '    path: ".",',
+      `    binary: "${id}",`,
+      "  },",
+      "  launch: [],",
+    ],
+  }[kind]
+  if (!install) throw new Error(`unknown kind ${kind}`)
+  return ['  license: "TODO-PIN",', `  upstream: "${kind === "pip" ? "TODO-PIN" : upstream}",`, ...install].join("\n")
+`````
+
+### GEN-PACK-3 — `packages/core/script/toolkit-pack.ts` 249–342
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `c77e95e4fa8228bea806a29f66ed4d28c6abeac3`; SHA256 integral `cc01627f1823cd53a45f3d4a1b87fbef9de1349440dec721ccc1dd036286a308`. Bytes fonte 16119; recorte [11969, 15582); SHA256 trecho `df62580a283036252c19c970cf58d59c33647d734acf4eb0a532eed984be4070`.
+
+`````text
+/** The SRI digest of one pinned download, from its GitHub release or the npm registry; TODO-PIN for any other host. */
+async function digest(url: string, version: string) {
+  const parsed = new URL(url)
+  const release = parsed.pathname.match(/^\/([^/]+\/[^/]+)\/releases\/download\/[^/]+\/(.+)$/)
+  if (parsed.hostname === "github.com" && release) {
+    const asset = (await github(release[1], version)).assets.find(
+      (item) => item.name === decodeURIComponent(release[2]),
+    )
+    return asset?.digest ? sri(asset.digest) : "sha256-TODO-PIN"
+  }
+  const tarball = parsed.pathname.match(/^\/((?:@[^/]+\/)?[^/]+)\/-\//)
+  if (parsed.hostname === "registry.npmjs.org" && tarball) {
+    const meta = (await fetch(`https://registry.npmjs.org/${tarball[1]}/${version}`).then((response) =>
+      response.json(),
+    )) as NpmVersion
+    return meta.dist?.integrity ?? "sha256-TODO-PIN"
+  }
+  return "sha256-TODO-PIN"
+}
+
+async function github(repo: string, version: string) {
+  const tagged = await fetch(`https://api.github.com/repos/${repo}/releases/tags/v${version}`, { headers: auth() })
+  if (tagged.ok) return (await tagged.json()) as Release
+  const bare = await fetch(`https://api.github.com/repos/${repo}/releases/tags/${version}`, { headers: auth() })
+  if (bare.ok) return (await bare.json()) as Release
+  return { assets: [] } satisfies Release
+}
+
+/** The engine's lock, written by npm from the exact package.json the pack installs. */
+async function lock(id: string, name: string, version: string) {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "toolkit-pack-"))
+  const manifest = JSON.stringify(
+    { name: `backend-toolkit-${id}`, private: true, dependencies: { [name]: version } },
+    null,
+    2,
+  )
+  await writeFile(path.join(dir, "package.json"), manifest + "\n")
+  const result = await $`npm install --package-lock-only --ignore-scripts --no-audit --no-fund`
+    .cwd(dir)
+    .nothrow()
+    .quiet()
+  const text =
+    result.exitCode === 0
+      ? await readFile(path.join(dir, "package-lock.json"), "utf8")
+      : '{ "TODO-PIN": "npm failed" }\n'
+  await writeFile(path.join(PACKS, `${id}.package-lock.json`), text)
+  await rm(dir, { recursive: true, force: true })
+}
+
+function packageName(pack: Pack) {
+  if ("targets" in pack || pack.install.kind !== "npm") return pack.id
+  return Object.keys(JSON.parse(pack.install.packageJson).dependencies)[0]
+}
+
+function recipe(id: string, version: string, group: string, fit: { role: string; input: string }) {
+  return [
+    "---",
+    `name: backend-codegen-${group}-${id}`,
+    `description: "${id}: ${fit.role}; input: ${fit.input}."`,
+    `when: "TODO-PIN: the packet assigns this engine's artifacts."`,
+    `not-when: "TODO-PIN"`,
+    "---",
+    "",
+    `# ${id}`,
+    "",
+    "## Applicability",
+    "",
+    `TODO-PIN: when the packet assigns this engine's artifacts. The engine is ${id} \`${version}\`, provided by the host and run only as \`"$BACKEND_TOOLKIT_BIN/${id}"\`.`,
+    "",
+    "## Non-trigger",
+    "",
+    "- TODO-PIN",
+    "",
+    "## Inputs",
+    "",
+    "- TODO-PIN",
+    "",
+    "## Steps",
+    "",
+    "1. TODO-PIN:",
+    "   ```sh",
+    `   "$BACKEND_TOOLKIT_BIN/${id}" <args>`,
+    "   ```",
+    "",
+    "## Tools and outputs",
+    "",
+    "- The host fetches the engine on first use; the seat's shell has no network. Never install, download or substitute it.",
+    "- When the shell output reports `toolkit-not-ready:...` or `unsupported-target:...`, stop and return a `tool` blocker whose code is that text verbatim.",
+    "",
+    "## Limits and checks",
+    "",
+    "- TODO-PIN",
+    "",
+  ].join("\n")
+`````
+
+### GEN-FLOOR-1 — `packages/core/script/toolkit-floors.ts` 35–119
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `bcb3e1f747870448172525b1b402ca3310ecf2f0`; SHA256 integral `fe962720c76ab7cc5a84c98cd373f73ec5baaf6f951b111df87d7883e2b8b424`. Bytes fonte 18151; recorte [2202, 6477); SHA256 trecho `f2949c75bea1c528749334172756e83b669f1d69358b94ff8082bd8f7c5791af`.
+
+`````text
+/** Win32 functions that a binary imports unconditionally, with the Windows 10 build that introduced each. */
+const NEWER_WINDOWS: Readonly<Record<string, string>> = {
+  SetThreadDescription: "10.0.14393",
+  GetThreadDescription: "10.0.14393",
+  CreatePseudoConsole: "10.0.17763",
+  ResizePseudoConsole: "10.0.17763",
+  ClosePseudoConsole: "10.0.17763",
+}
+
+const higher = (a: string | undefined, b: string | undefined) => (!a || (b && compareVersions(b, a) > 0) ? b : a)
+
+export function scan(file: string, bytes: Buffer): Finding | undefined {
+  if (bytes.length < 64) return
+  if (bytes.readUInt32BE(0) === 0x7f454c46) return elf(file, bytes)
+  const magic = bytes.readUInt32LE(0)
+  if (magic === 0xfeedfacf) return macho(file, [bytes])
+  // Java class files share the fat magic; a fat header's slices are real Mach-O images.
+  if (bytes.readUInt32BE(0) === 0xcafebabe && bytes.readUInt32BE(4) < 16) {
+    const slices = Array.from({ length: bytes.readUInt32BE(4) }, (_, index) => {
+      const offset = bytes.readUInt32BE(16 + index * 20)
+      const size = bytes.readUInt32BE(20 + index * 20)
+      return bytes.subarray(offset, offset + size)
+    })
+    return slices.every((slice) => slice.length > 32 && slice.readUInt32LE(0) === 0xfeedfacf) ? macho(file, slices) : undefined
+  }
+  if (bytes.readUInt16LE(0) === 0x5a4d) return pe(file, bytes)
+}
+
+function version(value: string, prefix: string) {
+  return value.startsWith(prefix) ? value.slice(prefix.length) : undefined
+}
+
+function elf(file: string, bytes: Buffer): Finding | undefined {
+  // The toolkit targets are all 64-bit little-endian.
+  if (bytes[4] !== 2 || bytes[5] !== 1) return
+  const strings = (offset: number) => bytes.toString("utf8", offset, bytes.indexOf(0, offset))
+  const phoff = Number(bytes.readBigUInt64LE(0x20))
+  const interpreter = Array.from({ length: bytes.readUInt16LE(0x38) }, (_, index) => phoff + index * bytes.readUInt16LE(0x36))
+    .filter((offset) => bytes.readUInt32LE(offset) === 3)
+    .map((offset) => strings(Number(bytes.readBigUInt64LE(offset + 8))))[0]
+  const shoff = Number(bytes.readBigUInt64LE(0x28))
+  const sections = Array.from({ length: bytes.readUInt16LE(0x3c) }, (_, index) => {
+    const offset = shoff + index * bytes.readUInt16LE(0x3a)
+    return {
+      type: bytes.readUInt32LE(offset + 4),
+      offset: Number(bytes.readBigUInt64LE(offset + 0x18)),
+      size: Number(bytes.readBigUInt64LE(offset + 0x20)),
+      link: bytes.readUInt32LE(offset + 0x28),
+      info: bytes.readUInt32LE(offset + 0x2c),
+    }
+  })
+  const highest: Record<string, string | undefined> = {}
+  for (const section of sections.filter((item) => item.type === 0x6ffffffe)) {
+    const names = sections[section.link]?.offset ?? 0
+    let need = section.offset
+    for (let index = 0; index < section.info; index++) {
+      const count = bytes.readUInt16LE(need + 2)
+      let aux = need + bytes.readUInt32LE(need + 8)
+      for (let item = 0; item < count; item++) {
+        const name = strings(names + bytes.readUInt32LE(aux + 8))
+        const key = name.split("_")[0]
+        const number = name.split("_").slice(1).join("_")
+        // GLIBC_PRIVATE and the like are not versions.
+        if (/^\d/.test(number)) highest[key] = higher(highest[key], number)
+        aux += bytes.readUInt32LE(aux + 12)
+      }
+      need += bytes.readUInt32LE(need + 12)
+    }
+  }
+  const needed = sections
+    .filter((item) => item.type === 6)
+    .flatMap((dynamic) =>
+      Array.from({ length: dynamic.size / 16 }, (_, index) => dynamic.offset + index * 16)
+        .filter((offset) => bytes.readBigUInt64LE(offset) === 1n)
+        .map((offset) => strings((sections[dynamic.link]?.offset ?? 0) + Number(bytes.readBigUInt64LE(offset + 8)))),
+    )
+  const notes = [
+    ...(interpreter?.includes("musl") ? ["musl"] : []),
+    ...(!interpreter && !needed.length ? ["static"] : []),
+    ...(highest.GLIBCXX ? [`GLIBCXX ${highest.GLIBCXX}`] : []),
+    ...(highest.CXXABI ? [`CXXABI ${highest.CXXABI}`] : []),
+    ...(highest.GCC ? [`GCC ${highest.GCC}`] : []),
+    ...(needed.some((name) => name.startsWith("libstdc++")) ? [] : highest.GLIBCXX ? ["libstdc++ symbols without libstdc++.so"] : []),
+  ]
+  return { file, format: "elf", needs: highest.GLIBC ? { glibc: highest.GLIBC } : {}, notes }
+`````
+
+### GEN-FLOOR-2 — `packages/core/script/toolkit-floors.ts` 122–186
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `bcb3e1f747870448172525b1b402ca3310ecf2f0`; SHA256 integral `fe962720c76ab7cc5a84c98cd373f73ec5baaf6f951b111df87d7883e2b8b424`. Bytes fonte 18151; recorte [6480, 9918); SHA256 trecho `3fe53f5afb8d140fd28811b0ef9f55d875e686310126224d0dfbe85c2d5bafcd`.
+
+`````text
+function macho(file: string, slices: ReadonlyArray<Buffer>): Finding {
+  const found = slices.map((slice) => {
+    const arch = slice.readUInt32LE(4) === 0x0100000c ? "arm64" : slice.readUInt32LE(4) === 0x01000007 ? "x86_64" : "other"
+    let offset = 32
+    let minos: string | undefined
+    for (let command = 0; command < slice.readUInt32LE(16); command++) {
+      const kind = slice.readUInt32LE(offset)
+      // LC_BUILD_VERSION: platform 1 is macOS; LC_VERSION_MIN_MACOSX carries the version alone.
+      if (kind === 0x32 && slice.readUInt32LE(offset + 8) === 1) minos = packed(slice.readUInt32LE(offset + 12))
+      if (kind === 0x24) minos = packed(slice.readUInt32LE(offset + 8))
+      offset += slice.readUInt32LE(offset + 4)
+    }
+    return { arch, minos }
+  })
+  const highest = found.reduce<string | undefined>((all, item) => higher(all, item.minos), undefined)
+  return {
+    file,
+    format: "macho",
+    needs: highest ? { macos: highest } : {},
+    notes: found.map((item) => `${item.arch} ${item.minos ?? "no-version"}`),
+  }
+}
+
+// X.Y.Z packed as xxxx.yy.zz
+const packed = (value: number) => `${value >> 16}.${(value >> 8) & 0xff}`
+
+function pe(file: string, bytes: Buffer): Finding | undefined {
+  const header = bytes.readUInt32LE(0x3c)
+  if (header + 0x100 > bytes.length || bytes.readUInt32LE(header) !== 0x4550) return
+  const optional = header + 24
+  const plus = bytes.readUInt16LE(optional) === 0x20b
+  const sections = Array.from({ length: bytes.readUInt16LE(header + 6) }, (_, index) => {
+    const offset = optional + bytes.readUInt16LE(header + 20) + index * 40
+    return { rva: bytes.readUInt32LE(offset + 12), size: Math.max(bytes.readUInt32LE(offset + 8), bytes.readUInt32LE(offset + 16)), raw: bytes.readUInt32LE(offset + 20) }
+  })
+  const at = (rva: number) => {
+    const section = sections.find((item) => rva >= item.rva && rva < item.rva + item.size)
+    return section ? rva - section.rva + section.raw : -1
+  }
+  const imports = bytes.readUInt32LE(optional + (plus ? 120 : 104))
+  const names: string[] = []
+  for (let descriptor = at(imports); descriptor > 0 && bytes.readUInt32LE(descriptor + 12) !== 0; descriptor += 20) {
+    for (
+      let thunk = at(bytes.readUInt32LE(descriptor) || bytes.readUInt32LE(descriptor + 16));
+      thunk > 0 && Number(plus ? bytes.readBigUInt64LE(thunk) : bytes.readUInt32LE(thunk)) !== 0;
+      thunk += plus ? 8 : 4
+    ) {
+      const value = Number(plus ? bytes.readBigUInt64LE(thunk) : bytes.readUInt32LE(thunk))
+      const hint = plus ? value < 2 ** 63 : value < 2 ** 31
+      if (hint) names.push(bytes.toString("latin1", at(value) + 2, bytes.indexOf(0, at(value) + 2)))
+    }
+  }
+  const newer = names.filter((name) => name in NEWER_WINDOWS)
+  const os = `${bytes.readUInt16LE(optional + 40)}.${bytes.readUInt16LE(optional + 42)}`
+  const subsystem = `${bytes.readUInt16LE(optional + 48)}.${bytes.readUInt16LE(optional + 50)}`
+  // A PE stamped 10.0 declares Windows 10 itself; older stamps (6.x) say nothing, since toolchains default to them.
+  const stamped = compareVersions(os, "10.0") >= 0 || compareVersions(subsystem, "10.0") >= 0 ? "10.0" : undefined
+  const windows = newer.reduce<string | undefined>((all, name) => higher(all, NEWER_WINDOWS[name]), stamped)
+  return {
+    file,
+    format: "pe",
+    needs: windows ? { windows } : {},
+    notes: [`os ${os}`, `subsystem ${subsystem}`, ...newer.map((name) => `imports ${name}`)],
+  }
+}
+`````
+
+### GEN-FLOOR-3 — `packages/core/script/toolkit-floors.ts` 202–258
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `bcb3e1f747870448172525b1b402ca3310ecf2f0`; SHA256 integral `fe962720c76ab7cc5a84c98cd373f73ec5baaf6f951b111df87d7883e2b8b424`. Bytes fonte 18151; recorte [10402, 13179); SHA256 trecho `241702198881e36194c81b6d956e182b3dc5b33c3f1e26f123fc8cac4c707782`.
+
+`````text
+async function walk(directory: string): Promise<string[]> {
+  const info = await stat(directory).catch(() => undefined)
+  if (!info) return []
+  if (!info.isDirectory()) return [directory]
+  const entries = await readdir(directory, { withFileTypes: true })
+  return (
+    await Promise.all(
+      entries.filter((entry) => !entry.isSymbolicLink()).map((entry) => walk(path.join(directory, entry.name))),
+    )
+  ).flat()
+}
+
+// What the host never runs: fixtures under `testdata` (the Go tree ships dozens of foreign ELF, Mach-O and PE samples),
+// linkable objects (`.syso`, `.o`, `.obj`) and, on a target, the binaries of the other operating systems (pip's Windows
+// launchers sit in every Python tree).
+const FORMAT: Record<string, Finding["format"]> = { darwin: "macho", linux: "elf", win32: "pe" }
+
+async function findings(root: string, from: ReadonlyArray<string>, target: TargetId) {
+  const files = (await Promise.all(from.map((item) => walk(path.join(root, item)))))
+    .flat()
+    .filter((file) => !/(^|\/)testdata\/|\.(syso|o|obj)$/.test(file))
+  return (
+    await Promise.all(
+      files.map(async (file) => {
+        const bytes = await readFile(file)
+        return scan(path.relative(root, file), bytes)
+      }),
+    )
+  ).filter((item): item is Finding => item?.format === FORMAT[target.split("-")[0]!])
+}
+
+async function download(url: string, integrity: string, cache: string) {
+  const file = path.join(cache, createHash("sha256").update(url).digest("hex") + path.extname(new URL(url).pathname))
+  const cached = await Bun.file(file).exists()
+  const body = cached ? Buffer.from(await Bun.file(file).arrayBuffer()) : Buffer.from(await (await fetch(url)).arrayBuffer())
+  const [algorithm, expected] = integrity.split("-", 2) as [string, string]
+  if (createHash(algorithm).update(body).digest("base64") !== expected) throw new Error(`integrity mismatch: ${url}`)
+  if (!cached) await writeFile(file, body)
+  return file
+}
+
+async function unpack(file: string, url: string, format: PinnedArtifact.Artifact["format"], directory: string) {
+  await mkdir(directory, { recursive: true })
+  if (format === "raw") await copyFile(file, path.join(directory, path.basename(new URL(url).pathname)))
+  else if (format === "zip") await $`unzip -q -o ${file} -d ${directory}`.quiet()
+  else await $`tar -xzf ${file} -C ${directory}`.quiet()
+}
+
+async function artifact(item: PinnedArtifact.Artifact, cache: string, target: TargetId) {
+  const directory = await mkdtemp(path.join(cache, "unpack-"))
+  try {
+    await unpack(await download(item.url, item.integrity, cache), item.url, item.format, directory)
+    return await findings(directory, item.entries.map((entry) => entry.from), target)
+  } finally {
+    await rm(directory, { recursive: true, force: true })
+  }
+}
+`````
+
+### GEN-FLOOR-4 — `packages/core/script/toolkit-floors.ts` 268–317
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `bcb3e1f747870448172525b1b402ca3310ecf2f0`; SHA256 integral `fe962720c76ab7cc5a84c98cd373f73ec5baaf6f951b111df87d7883e2b8b424`. Bytes fonte 18151; recorte [13486, 16116); SHA256 trecho `2d460b761f03f137fbe9a5e46b45cdd4e28ba6a84c88ddb49ceafde5360b26e3`.
+
+`````text
+/** The npm lock's packages that install only on this target (an `os`/`cpu` constraint), e.g. esbuild's binary. */
+async function npmNative(lock: { packages: Record<string, { resolved?: string; integrity?: string; os?: string[]; cpu?: string[]; [key: string]: unknown }> }, target: TargetId, cache: string) {
+  const platform = NODE_PLATFORM[target]
+  const packages = Object.values(lock.packages).filter(
+    (item) => item.os?.includes(platform.os) && item.cpu?.includes(platform.cpu) && item.resolved && item.integrity,
+  )
+  return (await Promise.all(packages.map((item) => artifact({ url: item.resolved!, integrity: item.integrity! as PinnedArtifact.Artifact["integrity"], format: "tar.gz", entries: [{ from: "package", to: "package" }] }, cache, target)))).flat()
+}
+
+const WHEEL_TAG: Record<TargetId, RegExp> = {
+  "darwin-arm64": /macosx_\d+_\d+_arm64\.whl$/,
+  "darwin-x64": /macosx_\d+_\d+_x86_64\.whl$/,
+  "linux-arm64": /manylinux\w*_aarch64.*\.whl$/,
+  "linux-x64": /manylinux\w*_x86_64.*\.whl$/,
+  "win32-x64": /win_amd64\.whl$/,
+}
+
+/** The compiled wheels pip would pick on this target; PyPI's file index resolves each pinned filename to its URL. */
+async function wheels(target: TargetId, cache: string) {
+  const picked = Object.entries(WHEELS).flatMap(([pin, files]) =>
+    Object.entries(files)
+      .filter(([name]) => WHEEL_TAG[target].test(name))
+      .map(([name, hex]) => ({ pin, name, hex })),
+  )
+  return (
+    await Promise.all(
+      picked.map(async (wheel) => {
+        const [name, version] = wheel.pin.split("==") as [string, string]
+        const index = (await (await fetch(`https://pypi.org/pypi/${name}/${version}/json`)).json()) as {
+          urls: { filename: string; url: string }[]
+        }
+        const url = index.urls.find((item) => item.filename === wheel.name)?.url
+        if (!url) throw new Error(`wheel not on PyPI: ${wheel.name}`)
+        const found = await artifact(
+          { url, integrity: `sha256-${Buffer.from(wheel.hex, "hex").toString("base64")}`, format: "zip", entries: [{ from: ".", to: "." }] },
+          cache,
+          target,
+        )
+        return found.map((item) => ({ ...item, file: `${wheel.name}:${item.file}`, notes: [...item.notes, `tag ${wheel.name.split("-").slice(4).join("-")}`] }))
+      }),
+    )
+  ).flat()
+}
+
+export async function measure(item: Engine | Runtime, target: TargetId, cache: string) {
+  if ("targets" in item) return artifact(item.targets[target].artifact, cache, target)
+  if (item.id === "orval") return npmNative(orvalLock, target, cache)
+  if (item.id === "datamodel-codegen") return wheels(target, cache)
+  return []
+}
+`````
+
+### GEN-FLOOR-5 — `packages/core/script/toolkit-floors.ts` 319–351
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `bcb3e1f747870448172525b1b402ca3310ecf2f0`; SHA256 integral `fe962720c76ab7cc5a84c98cd373f73ec5baaf6f951b111df87d7883e2b8b424`. Bytes fonte 18151; recorte [16117, 17801); SHA256 trecho `42dfee45a76a004b20721c293a0e3385f643d185d5c10e8d3d39791208757e8c`.
+
+`````text
+if (import.meta.main) {
+  const args = parseArgs({
+    args: process.argv.slice(2),
+    options: {
+      engine: { type: "string", multiple: true },
+      runtime: { type: "string", multiple: true },
+      target: { type: "string", multiple: true },
+      json: { type: "boolean" },
+      files: { type: "boolean" },
+      check: { type: "boolean" },
+      cache: { type: "string" },
+    },
+  })
+  const cache = args.values.cache ?? path.join(os.tmpdir(), "toolkit-floors")
+  await mkdir(cache, { recursive: true })
+  const targets = (args.values.target ?? TARGETS) as TargetId[]
+  const all = !args.values.engine && !args.values.runtime
+  const items: ReadonlyArray<Engine | Runtime> = [
+    ...Object.values(ENGINES).filter((engine) => all || args.values.engine?.includes(engine.id)),
+    ...Object.values(RUNTIMES).filter((runtime) => all || args.values.runtime?.includes(runtime.id)),
+  ]
+  // One at a time: the Rust and Java archives are hundreds of megabytes each.
+  const rows = []
+  for (const item of items)
+    for (const target of targets) {
+      const found = await measure(item, target, cache)
+      rows.push({ id: item.id, target, ...reduce(found), files: found.length, notes: [...new Set(found.flatMap((entry) => entry.notes))], detail: args.values.files ? found : undefined })
+    }
+  const stale = rows.filter((row, index) => JSON.stringify(row.floor) !== JSON.stringify(items[Math.floor(index / targets.length)]?.floor?.[row.target] ?? {}))
+  if (args.values.check) {
+    stale.forEach((row) => console.error(`floor differs: ${row.id} ${row.target} measured ${JSON.stringify(row.floor)} (${JSON.stringify(row.setBy)})`))
+    if (stale.length) process.exit(1)
+  }
+`````
+
+## RE-SUP-03 — História adicional: época, intenção, candidatos e exclusões
+
+
+### DOC-CTRL-1 — `docs/architecture/phase-plans/70-90-briefs/RD-CTRLPLANE.md` 1–17
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `625853ed9615189b409a97273669805e00947232`; SHA256 integral `77f9eb4b14e96df443482f44c197cd5ddd384be54833426f81d22a28a87491dd`. Bytes fonte 4696; recorte [0, 1195); SHA256 trecho `abedee361f82e20810df6baca618e6ccfb58fa08ef62bccc8dc25a3a55d98989`.
+
+`````text
+# Card RD-CTRLPLANE
+
+You execute one mechanical card. Do exactly the steps below, in order. Do not research, improve, reformat or fix anything else.
+
+The file does not exist yet. Write it with exactly the content given; do not add, drop or reword facts.
+
+- Worktree (already created for you): `/Users/gustavoschneiter/Documents/HuGR/_worktrees/ms-rd-ctrlplane`
+- Branch (already checked out): `ms-rd-ctrlplane`
+- BASE commit: `7181942eaa733b9cc3f4ff6aef79231d0d1c2f93`
+- Remote: `fork`
+
+## Hard rules
+
+1. Work only inside the worktree. Never write, create or delete anything outside it.
+2. Never run `bun install`, `bun typecheck`, `bun test`, `bun run test:ci`, `turbo`, `tsgo`, `tsc`, `bunx`, or any build.
+3. Allowed commands: `git status|diff|grep|add|commit|push`, `node -e` one-liners, `python3 -` when a step gives the script, the `bun run script/<tool>.ts` commands below, and `bun run check:boundaries --no-stale --json --scope ...` (through the `SCOPED` helper).
+4. Edit only the owned files listed below. Never edit `script/boundary-ledger.json`, `script/module-architecture.json`, any other `package.json`, `.github/**`, `turbo.json`, `nix/**`, `bun.lock`, or generated directories.
+`````
+
+### DOC-CTRL-2 — `docs/architecture/phase-plans/70-90-briefs/RD-CTRLPLANE.md` 36–77
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `625853ed9615189b409a97273669805e00947232`; SHA256 integral `77f9eb4b14e96df443482f44c197cd5ddd384be54833426f81d22a28a87491dd`. Bytes fonte 4696; recorte [2450, 3644); SHA256 trecho `e915df82deb12c915958ab6f3e306838b9dbc04a268c80c685f3f76ce6695bce`.
+
+`````text
+
+## Steps
+
+1. Create the file with this exact content (the quoted heredoc writes it byte for byte):
+
+```bash
+cat > 'removed-v1/src/control-plane/README.md' <<'README_EOF'
+# Control plane domain
+
+## Purpose and ownership
+
+- Workspace control plane: `adapters/`, `workspace.ts`, `workspace-adapter-runtime.ts`, `workspace-context.ts`, `types.ts`, `util.ts`, and `dev/` with its own README (`removed-v1/src/control-plane/dev/README.md`).
+- Kind: platform-legacy.
+- Target: `packages/core/src/control-plane` (it already holds `packages/core/src/control-plane/move-session.ts` and `packages/core/src/control-plane/workspace.sql.ts`) plus server handlers.
+
+## Public entry points and consumers
+
+- Consumers: server, effect, plugin and project.
+
+## Dependencies and boundaries
+
+- Platform-legacy: may not import product domains (rule R11).
+
+## Assets, schemas and generated files
+
+- None.
+
+## Persistence, identity and lifetime
+
+- Process-global move service.
+- The `packages/core/src/control-plane/workspace.sql.ts` table is core-owned; never move a `*.sql.ts` file.
+
+## Commands
+
+- `bun run test:ci orchestra test/control-plane/<file>`
+
+## Contracts and verification limits
+
+- None.
+README_EOF
+```
+
+`````
+
+### DOC-SESSION-1 — `docs/architecture/phase-plans/70-90-briefs/RD-SESSION.md` 1–17
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `c968edcfd847e3d32415fd79613562c4d2934d01`; SHA256 integral `38c0f501d80c5ab015ff3f902ed003951f9a70872f98d09d2fdffa5f6a641a21`. Bytes fonte 4871; recorte [0, 1189); SHA256 trecho `8e32b2c9fe0a10d29f751efd59a7dcc8de185d4a9be07a93ba825d6abbc79432`.
+
+`````text
+# Card RD-SESSION
+
+You execute one mechanical card. Do exactly the steps below, in order. Do not research, improve, reformat or fix anything else.
+
+The file does not exist yet. Write it with exactly the content given; do not add, drop or reword facts.
+
+- Worktree (already created for you): `/Users/gustavoschneiter/Documents/HuGR/_worktrees/ms-rd-session`
+- Branch (already checked out): `ms-rd-session`
+- BASE commit: `7181942eaa733b9cc3f4ff6aef79231d0d1c2f93`
+- Remote: `fork`
+
+## Hard rules
+
+1. Work only inside the worktree. Never write, create or delete anything outside it.
+2. Never run `bun install`, `bun typecheck`, `bun test`, `bun run test:ci`, `turbo`, `tsgo`, `tsc`, `bunx`, or any build.
+3. Allowed commands: `git status|diff|grep|add|commit|push`, `node -e` one-liners, `python3 -` when a step gives the script, the `bun run script/<tool>.ts` commands below, and `bun run check:boundaries --no-stale --json --scope ...` (through the `SCOPED` helper).
+4. Edit only the owned files listed below. Never edit `script/boundary-ledger.json`, `script/module-architecture.json`, any other `package.json`, `.github/**`, `turbo.json`, `nix/**`, `bun.lock`, or generated directories.
+`````
+
+### DOC-SESSION-2 — `docs/architecture/phase-plans/70-90-briefs/RD-SESSION.md` 36–79
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `c968edcfd847e3d32415fd79613562c4d2934d01`; SHA256 integral `38c0f501d80c5ab015ff3f902ed003951f9a70872f98d09d2fdffa5f6a641a21`. Bytes fonte 4871; recorte [2439, 4037); SHA256 trecho `29bdd530cb48e93817d453a9bd9817352b01843c9c52fcc55f9330bf82d2f4a5`.
+
+`````text
+
+## Steps
+
+1. Create the file with this exact content (the quoted heredoc writes it byte for byte):
+
+```bash
+cat > 'packages/core/src/session/README.md' <<'README_EOF'
+# Core Session domain
+
+## Purpose and ownership
+
+- V2 Session core: the `packages/core/src/session.ts` facade, `packages/core/src/session/input.ts` (admission and retry identity), the projector, `packages/core/src/session/execution` (the process-global coordinator, `local.ts`) and `packages/core/src/session/runner` (the Location-scoped runner, exported as `@orchestra/core/session/runner`).
+
+## Public entry points and consumers
+
+- Consumers: server, removed-v1, apps/cli and sdk-next; other packages should import the entries.
+
+## Dependencies and boundaries
+
+- Follow AGENTS.md, "V2 Session Core": durable admission before an advisory wake, one `llm.stream` call per provider turn, no `SessionPrompt.loop` bridge, steer versus queue delivery. Read it there; it is not copied here.
+
+## Assets, schemas and generated files
+
+- None.
+
+## Persistence, identity and lifetime
+
+- `session_input` rows and events are durable user data.
+
+## Commands
+
+- `bun run test:ci core test/session-create.test.ts`
+
+## Contracts and verification limits
+
+- Path-pinned: `packages/core/src/session.ts`, `packages/core/src/session/runner/model.ts`, `packages/core/src/session/runner/llm.ts`, `packages/core/src/session/execution/local.ts`.
+README_EOF
+```
+
+## Commit and push
+
+```bash
+git add 'packages/core/src/session/README.md'
+git commit -m "docs(core): add core-session domain README" -m "Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
+`````
+
+### DOC-PLAN-1 — `docs/specs/runtime-closure/PLAN.md` 1–40
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `86273b3eb5ae3d1720767210005ec41594a3cca9`; SHA256 integral `ba6332039082f1d1d2a5a4614774996e348a691b9fcf15313188be4963e9e7e5`. Bytes fonte 20380; recorte [0, 4609); SHA256 trecho `79afe75a1a2fae5bf81a9b1e9fae6f461e9e8e20fe60167baa5fd8b6d423bbdf`.
+
+`````text
+# Runtime distribution and integration closure
+
+Baseline: `fork/dev` at `2d5d5d2f81770207a346aa14394fc4e6eedd6b39` (rename milestone #92).
+
+## Demand and stopping rule
+
+Ship owned Orchestra CLI artifacts in the desktop and WSL; remove unowned SDK/release registry dependencies; prove real Nix builds; make OAuth authorization identify Orchestra. Every work package must satisfy its named acceptance items, preserve the invariants below and provide current Actions evidence. One integrated milestone PR and merge close this work.
+
+Owner clarification: **“nao, tem que aparecer orchestra”**. Own OAuth registrations and provider approval are completion requirements. Configurable IDs or mocked consent screens alone do not satisfy that item. Missing operational access is a named blocker, not a silently deferred requirement.
+
+Cadence correction from the owner: **“vamos rapido, sem suites de teste pesadas rodando a cada wp, cada agent testa so o que mexeu, PR so no final do milestone ok?”** Each WP runs only its changed-file/changed-behavior checks. Cross-target builds, complete package suites, full matrices and the single milestone PR wait for integration/closure. Batch controls where they answer the same changed behavior; do not repeat full work for every edit.
+
+Product architecture steering: the owner decided to transfer decomposition, planning, tasks and WPs from Maestro to a new team member, **Archie**, which another front is building. The owner renamed the proposed planner from Wallie to Archie; older snapshots use the former name. Maestro owns orchestration, organization and decisions, with further decision/orchestration capabilities planned later. Existing runtime snapshots must distinguish the current installed contract from this owner-directed transition. This implementation wave's own engineering plan is not the product's future Maestro capability charter; roster/prompt migrations require coordination with the Archie owner and current executable gates. Stable member IDs and charters must come from that front's frozen interface, not be guessed from display names.
+
+## Recovered implementation facts
+
+These observations describe the frozen baseline, before the implementation wave; current closure status is tracked by acceptance evidence.
+
+- Desktop still installs upstream CLI packages and expects a Rust service-password command its owned V2 CLI does not implement.
+- The owned V2 CLI builder emits a differently named executable and its entrypoint reports `local` even in compiled builds.
+- WSL installation is disabled; its foreground startup arguments/password convention belong to the other runtime.
+- Core serves bundled public SDK modules, but npm dependency resolution and warm caches can still fetch/expose registry SDK copies.
+- Release version bumps fetch an unowned npm package name.
+- Nix hashes cover installed dependency output, not lockfile bytes; evaluation alone cannot establish a working build.
+- OAuth app IDs and some provider attribution fields remain third-party identities. A new app requires real registration/entitlement, not a locally invented ID.
+
+These are source observations, not measured red-test results. The baseline acceptance runs below must record actual failures before implementations are graded.
+
+## Invariants
+
+1. Client runtime never imports Core or Server; existing Schema/Core/Protocol/Server direction remains intact.
+2. V2 prompt admission, process-global Session execution and Location-scoped runners remain unchanged.
+3. No upstream executable/installer or unowned SDK package is a runtime fallback.
+4. Declared public SDK imports use bundled objects; unknown/deep imports cannot execute a planted registry copy. Ordinary plugin dependencies still work.
+5. Copilot, xAI, DigitalOcean and other changed OAuth flows must display Orchestra through real registered identities. No fabricated client IDs, insecure TLS or hidden third-party fallback.
+6. Keep OpenCode Zen/Go as ordinary providers; every provider request, Codex included, presents Orchestra's own client identity.
+7. Artifact target, version and bytes are explicit and verified; caches cannot silently reuse another executable.
+8. Test data, daemons and credentials are isolated. Do not restart the running app/server or use its data roots for smoke tests.
+9. Tests run on Actions; local package typecheck/godfile only. Stage by exact paths. No hook bypass, force push, shared git-config edits or bulk cleanup.
+10. Visual/Relay branches remain owned by their peer. Any necessary new user-facing copy goes through the shared i18n rules and visual coordination.
+`````
+
+### DOC-PLAN-2 — `docs/specs/runtime-closure/PLAN.md` 115–167
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `86273b3eb5ae3d1720767210005ec41594a3cca9`; SHA256 integral `ba6332039082f1d1d2a5a4614774996e348a691b9fcf15313188be4963e9e7e5`. Bytes fonte 20380; recorte [10466, 20380); SHA256 trecho `7abd8fcd11f006342278086234d02560712e74b2ffb6de17d12b9568d83e46ef`.
+
+`````text
+| A01 | Release/preview versions derive from owned source/explicit overrides with registry networking disabled; invalid bump inputs fail. | W1 |
+| A02 | Owned compiled V2 CLI has correct name/version and real service/serve commands on supported targets. | W2 |
+| A03 | Native desktop stages/verifies owned artifacts, starts its isolated service and includes artifacts in every channel; fresh dev bootstrap works. | W3 |
+| A04 | WSL selects guest architecture, installs/updates owned bytes atomically without upstream download, and reaches authenticated health. | W4 |
+| A05 | Real npm resolver installs ordinary dependencies but performs zero external SDK fetches for direct/transitive/alias/peer/optional cases, including warm caches. | W5 |
+| A06 | Prepared external plugin/custom-tool footprints use bundled public/alias SDK identities under Bun, Node, compiled binary and OpenTUI. Unknown/deep canonical SDK imports cannot execute registry copies; foreign SDK trees or unprovable footprints fail admission intact. | W5 |
+| A07 | Each OAuth authorize/poll/refresh path uses its owned configured registration; missing registration produces a named setup blocker. | W6 |
+| A08 | Real login/consent identifies Orchestra and entitled inference remains usable; refresh/re-login verified without leaking credentials. **Human/operational evidence required.** | W6 + owner |
+| A09 | Attribution probes record tiny redacted requests and preserve compatibility/plan entitlement; unprobed identities stay explicitly unresolved. | W6 |
+| A10 | Nix dependency hashes are regenerated/deterministic on all four declared platforms; wrong hashes fail. | W7 |
+| A11 | Real Nix CLI and desktop builds/install checks pass, with matching Electron/platform artifacts; evaluation-only/skips cannot satisfy this item. | W7 |
+| A12 | Integrated seam checks, independent reviews/mutation probes and full applicable exact-head epic CI pass; manifest and generated sources correspond. | Lead |
+
+Baseline evidence lives with the named test runs. Already-green items are existing capability evidence, not proof of newly implemented work; the delta still requires a targeted failing counterexample.
+
+## Exact verification matrix
+
+- Native distribution targets: Darwin x64-baseline/arm64, Windows x64-baseline/arm64, Linux x64-baseline/arm64. Each must compile to the expected executable format/architecture and version. Native executable smoke/service checks run on matching OS/CPU runners; an unavailable required runner is an infrastructure blocker, not a skip counted as proof. Builder support for existing musl variants must not regress.
+- Desktop channels: dev, beta, prod. Each package configuration includes the same owned manifest/native executable outside app.asar; Windows channels additionally include both Linux guest artifacts. A clean bootstrap must install/find Electron, build its own artifacts, launch the desktop process in isolated app data and prove its server is ready through the real integration path.
+- WSL guests: supported Bash/coreutils Linux guests on x64 and arm64. Tests cover new installation, update, existing foreign executable, wrong digest/architecture, interrupted copy, version mismatch, symlink/traversal rejection, cancellation and unhealthy startup. Failure preserves the previously installed executable. A protected API request with the guest credential succeeds and a wrong credential is rejected; mere open port/HTTP 200 is insufficient. Real Windows/WSL transport evidence is required in addition to Linux transfer/script tests.
+- Artifact provenance: manifest SHA matches the actually staged bytes after signing; compiled `--version` matches manifest and server registration. Reused staged caches are checked again. Missing/malformed descriptors, duplicate targets and altered cached executables fail or are replaced atomically from verified owned bytes; no network fallback.
+- Resolver forms: direct, transitive at two depths, alias, peer, optional, and multiple requested SDK ranges, each cold and warm. Include existing package locks, permissive/planted SDK exports and bundled nested SDK copies. Unsupported SDK versions produce a local named error rather than registry fallback. Ordinary dependency metadata/tarball fetch and execution provide the positive control for zero SDK requests. Canonical public and alias imports must not execute planted bytes; arbitrary code explicitly bundled by a selected third-party plugin is not claimed to be a sandboxed program.
+- SDK authority: exactly the seven exports in the plugin manifest (root, tool, tui, effect, effect/integration, effect/plugin, promise). Exercise prepared external ESM imports and supported require paths under Bun, Node desktop bundle and compiled Bun; OpenTUI covers its UI entrypoint and mixed imports after admission. Unknown canonical SDK spellings delegate to closed bridge exports and cannot execute registry bytes. Bun's `.js` export retry and `package.json` exception may reach owned bridge code/metadata only. Foreign permissive/extensionless/native SDK targets are rejected before evaluation without deleting user work. Type-only exports are verified as such instead of receiving fake runtime identity checks. This guarantee covers the admitted footprint, not deliberate escapes or later mutation by selected plugin code.
+- OAuth registrations: Copilot, xAI, DigitalOcean, plus OpenAI/Codex if its visible app identity also needs replacement. Official issuer/grant/callback/scope requirements remain provider-owned. Verify ID propagation for authorization, device polling, token exchange and refresh/re-login, no fallback to known third-party app IDs, and preservation of account/model/plan entitlement. The actual consent page/registered-app record must say Orchestra; this operational/human item never becomes green from a configured string or local mock.
+- Attribution probes: one request per configured provider/variant, no project code/transcript/tools, output limit at most 16 tokens, no automatic retry. Compare existing versus proposed identity using the same model/account. Results store only provider/model, identity variant, HTTP/error classification and minimal usage; token/refresh/password/authorization values never enter logs/artifacts. Unsupported or missing credentials are named unresolved evidence and block closure of that provider item.
+- Nix systems: `x86_64-linux`, `aarch64-linux`, `x86_64-darwin`, `aarch64-darwin`. The fake-hash updater must produce the resolver's hash-mismatch result; unrelated acquisition/build failures are not hashes. Two independent clean dependency-output builds produce the same recursive hash per platform. Deliberately wrong hashes fail actual builds. CLI and desktop both build/install, CLI version/help execute, and installed desktop/server smoke runs on matching OS with the configured Electron version.
+- Required seams: W1 version → W2 compiled version → W3 signed manifest/cache → W4 copied guest/version/auth; W5 actual resolver → runtime module identity on every supported import path; final W1–W6 dependency inputs → W7 hashes/builds. These require real integration checks, not only per-package unit results.
+- Final evidence: independent author/reviewer contexts, measured red baseline/counterexample and green result, exact file manifest, generator correspondence, local package typechecks/godfile and full applicable exact-head Actions. No missing required item or skipped required check is a pass. Final merge must have the validated tree; an operational blocker keeps this milestone open.
+
+## Work packages and conflict map
+
+| WP | Responsibility / write ownership | Dependencies |
+|---|---|---|
+| W1 | `packages/script/src/index.ts`, version tests; owned release metadata only | none |
+| W2 | `packages/cli/script/**`, `packages/cli/bin/**`, `packages/cli/src/index.ts`, CLI build/runtime tests | W1 version contract |
+| W3 | Desktop native scripts/staging, `cli-artifacts.ts`, `background-cli.ts`, Electron bootstrap and packaging tests/config | W2 artifact contract |
+| W4 | Desktop `src/main/wsl/**`, WSL tests; consumes shared reader without editing it | W2/W3 contract |
+| W5 | Core npm/SDK install/resolution and tests; SDK/OpenTUI integration files by explicit lead assignment | npm seam freeze |
+| W6 | Provider/OAuth identities, registration/probe harness and tests; source maps/config list frozen before edits | owner registrations/access |
+| W7 | `nix/**`, hash tooling and real-build CI; no desktop/script package edits | final manifests/artifacts/dependencies |
+| Lead | root/package manifests, shared lockfile, rename ledger, acceptance anchor, CI integration, final evidence and merge | all |
+
+The first six execution fronts are disjoint or contract-bound. W7 can prepare tooling in parallel but final hash/build capture follows final dependency inputs. Shared files never get concurrent writers. Default maximum six nontrivial execution agents, plus short cold reviews as slots free; heavy builds/tests stay on Actions.
+
+## Verification and landing
+
+1. Author concrete baseline failures for assigned acceptance items and run them on Actions.
+2. Obtain independent cold acceptance-suite critique before implementation; reconcile two consecutive rounds with no missing items.
+3. Compile against frozen seams; push the first useful commit for resumability.
+4. Each agent returns SHA, exact file set, actual gate URLs/results, mutation before/after and blockers. No self-reported pass substitutes for evidence.
+5. Lead reads all gate changes first, reviews full file manifest and independently verifies controls/results before integrating.
+6. Regenerate public SDK/Client only through their generators when public APIs change. Recompute Nix hashes after final dependency inputs.
+7. One final milestone PR/epic CI; merge only the exact validated head. A08 operational blockers remain blockers until real evidence is supplied.
+`````
+
+### DOC-SNAPSHOT-1 — `docs/specs/runtime-closure/SNAPSHOT-QUALIFICATION.md` 1–31
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `b19b43d4bfbefac2ba49d564d98963af7b454d86`; SHA256 integral `06b5881efcaa1bb749bfb3062038877e6205ac96de85c79a20e2a3aaa43cbd05`. Bytes fonte 8185; recorte [0, 2373); SHA256 trecho `fcc933b8c441d89792fb63e10db23af46f64d99c14d63067e97a04a8e3e0b2d8`.
+
+`````text
+# Task observation snapshot qualification — 2026-10-09
+
+## Source identity
+
+- Reviewed candidate: `5c6426d8f5bb0a473d15447dece6e205be7cc32c`.
+- Composed source and successful prior Nix-request ancestry: `f48ed761aa23702ecea589628fd8a5c3929f6fa9`.
+- Qualification base including the Windows compiler-acquisition repair: `905facae5508054e98f617f9345de8a3eaae9222`, tree `949c4cc0fa2ef4a4b861db1b92753a71e0a601ff`.
+- Production updater blob: `9a863008a73a6f54ef8b67c5f69e48f19342f1d2`.
+- Native workflow blob: `2cd60aac24191ef0e93f5cc49b0f52818ea11d6f`.
+
+The candidate changes only the updater's representation at comparison time: `current(match.state)` supplies the current plain snapshot inside `produce`. Strict equality, stored ownership/placement/author facts, failure precedence and private receipt guards remain. The observation replaces only retained `metadata.workResult`.
+
+## Measured first rejection
+
+The previous actual runs failed on both operating systems: Core [37981431526](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37981431526) reported 73 passed / 8 failed across its selected files; Orchestra [37981431470](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37981431470) reported 88 passed / 2 failed. The eight Core failures were real eligible/restored host observations, including the live side of the fresh replay oracle. The two Orchestra failures were actual completed-native/dual Task delivery cases.
+
+Temporary integrator instrumentation ran the unchanged real Core fixture and assertions through the actual database-backed projector and updater:
+
+```sh
+bun run test:ci core test/upstream-settlement-preservation.test.ts --os both --timeout 120000
+```
+
+Diagnostic [37988400717](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37988400717), head `18262711b544b006587ff07ba0e67191d2336679`, parent `f48ed761aa23702ecea589628fd8a5c3929f6fa9`: **24 passed / 0 failed / 251 assertions on each OS**, launcher exit 0. Linux job `114016065848`; Windows job `114016065380`.
+
+For eligible native, legacy and dual authors, restored original/author/workspace facts, and live plus fresh replay:
+
+| Measured value | Result on Linux and Windows |
+|---|---|
+| Database validation / observation present | true / true |
+| Strict draft input versus validated input | false |
+| Strict snapshot input versus validated input | true |
+`````
+
+### DOC-SNAPSHOT-2 — `docs/specs/runtime-closure/SNAPSHOT-QUALIFICATION.md` 57–87
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `b19b43d4bfbefac2ba49d564d98963af7b454d86`; SHA256 integral `06b5881efcaa1bb749bfb3062038877e6205ac96de85c79a20e2a3aaa43cbd05`. Bytes fonte 8185; recorte [4916, 8185); SHA256 trecho `5bacdd220b6f98aa0136d57f5ba70d551103ec67ec578370ba94d0f3c967fdad`.
+
+`````text
+```
+
+## Windows x64 native repair
+
+Native [37984603006](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37984603006), attempt 2, head `e2ec5a868f983da025e5eb3611589e1b39b2f986`: models, Linux x64/ARM64, Darwin Intel/ARM64 and Windows ARM64 producer/consumer succeeded. Windows x64 job `114008171552` failed in CLI build, before exporter or consumer qualification:
+
+```text
+error: Failed to extract executable for 'bun-windows-x64-baseline-v1.3.14'. The download may be incomplete.
+```
+
+The repair acquires the official `bun-v1.3.14/bun-windows-x64-baseline.zip`, release asset `418774449`, verifies SHA-256 `538f9c846355d9e847b2671bc00c47da4229a0befb24df3282b739770f3b475f`, extracts it and requires actual version `1.3.14` before placing that compiler on PATH. Bun's tagged `CompileTarget.zig` uses its current executable for a matching default target, avoiding the nondefault extraction path. The CLI still explicitly requests the baseline target; native host, exact version, exporter and consumer checks remain.
+
+```sh
+gh workflow run 379787522 --repo gustavomhss/hugr-orchestra --ref runtime-closure -f windows_x64_only=true
+```
+
+Failed-lane-only dispatch [37988853607](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37988853607), head qualification base: **success**, `gh run watch --exit-status` exit 0. Windows job `114017634907` executed verified baseline acquisition, matching native host, frozen/ignore-scripts installation, real model snapshot, actual CLI build, exporter/resource verification, compiled version, isolated daemon health, wrong-password and unauthenticated rejection, cleanup, report readback and upload. The actual report was independently downloaded:
+
+```json
+{"target":"windows-x64-baseline","version":"1.18.27","sha256":"f7071ab0f2a9ac16208bcce1b429fb754f3703197b8ffda9753b7e1bdc406742","healthy":true,"wrongPasswordRejected":true,"unauthenticatedRejected":true}
+```
+
+Report artifact `11644950455`, archive SHA-256 `d15c3726ea51f08f0d74c8898547a08354dc1aad2e5e76fc4d5fdc2141d1e245`, is bound by GitHub artifact metadata to that exact run/head. This explicit dispatch does not claim to qualify skipped lanes; their previous successful lane evidence remains separately identified. The default full matrix remains enabled. Independent static approval `ses_ede10b10bffeZj7Sr8S8b57wwj` covers the exact workflow delta and pinned publisher asset.
+
+## Nix and operational boundaries
+
+Nix [37981869304](https://github.com/gustavomhss/hugr-orchestra/actions/runs/37981869304) successfully measured four native dependency outputs and completion controls on the earlier `9c76824c5ce27849f42685dc3579e3201e6103af` request. Its ancestry is preserved and `ready: false` remains. No candidate hashes were applied.
+
+The updater changed from `3f4db93e7a` to the production blob above. All-package dependency input fingerprinting therefore requires a fresh four-platform measurement against the next qualified freeze, even if a resulting NAR happens to match. Relay remains the sole Nix capture/hash writer. Measurement success is not distribution/consumer acceptance.

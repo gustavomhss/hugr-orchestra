@@ -1,0 +1,20 @@
+--- boundaries-v3/history/body.md
++++ boundaries-v3/body.md
+@@ -54,7 +54,7 @@
+ 
+ **Observação.** A recuperação de arm examina locks anteriores ao `performance.timeOrigin` do processo e que não estejam retidos em `ArmState.held`. Um lock mais recente desconhecido é deixado intacto. Ela escreve `gate-recovered` antes de remover o diretório do lock. Essa seleção é local e temporal; não demonstra morte de outro host ou processo arbitrário. [B10, 374–418]
+ 
+-**Observação.** `trial` exige trust de configuração antes de executar comandos. Seu caráter de dry grading evita avanço/ledger, mas o shell executado pode produzir efeitos no mundo. O tail de saída de trial não deve ser automaticamente descrito com todas as regras de sanitização do executor de gates, pois usa outro caminho da folha. `check` sem state directory também pode avaliar sem registrar. No caminho genérico, tokens inválidos são recusados e metadata de workflow retorna `WORKFLOW_NATIVE_SETTLEMENT_REQUIRED`; workflow precisa do adaptador nativo descrito adiante. [B10, 420–439 e 491–515; captura integral 420–481]
++**Observação.** `trial` exige trust de configuração antes de executar comandos. Esse percurso executa o comando e retorna seu resultado, sem grading nem registro de veredito; o shell executado pode produzir efeitos no mundo. O tail de saída de trial não deve ser automaticamente descrito com todas as regras de sanitização do executor de gates, pois usa outro caminho da folha. `check` sem state directory também pode avaliar sem registrar. No caminho genérico, tokens inválidos são recusados e metadata de workflow retorna `WORKFLOW_NATIVE_SETTLEMENT_REQUIRED`; workflow precisa do adaptador nativo descrito adiante. [B10, 420–439 e 491–515; captura integral 420–481]
+ 
+ **Limite.** Semáforos, checks e chamadas ao engine observados no Core não transferem a este corpo as garantias de ArmEvaluate, GateControl, HMAC ou reparo interno de S3. Este L1 descreve como o caller exige essas capacidades e quando suspende o fluxo.
+ 
+@@ -110,7 +110,7 @@
+ 
+ **Observação e limite.** O evento constrói `Location.Ref` com diretório. Este código não autoriza inferir uma migração completa de identidade de workspace nem paralisa o runner: suas dependências são Git/Event/Project/SessionStore. A regra de chamar sob exclusão/quiescência, e a relação com Context Epoch e drain, precisam da autoridade S1-01 e de versão aceita para uma alegação integrada. `workspace.sql.ts` define ID, tipo, nome, branch/diretório/extra, projeto com cascade e tempo de uso; isso não implementa warp/sync nem executor remoto. [B03–B04; I01]
+ 
+-**Observação.** `rag-studio/sql.ts` persiste fontes com localização/path/hash/status, chunks com texto/linhas/hash/boundary, revisions e associação de fontes, perguntas e traces; também mantém configuração de pipeline. Índices e chaves compostas organizam essas relações. Chunks deliberadamente não têm FK para permitir limpeza de órfãos no caminho indicado pelo comentário. O índice location/path não é uma declaração de unicidade. A folha não contém coluna de embedding ou tabela vetorial; comentários de pipeline distinguem lexical de embedding. [B05]
++**Observação.** `rag-studio/sql.ts` persiste fontes com localização/path/hash/status, chunks com texto, hash, boundary e campos inteiros `start`/`end` (sem unidade declarada pelo schema), revisions e associação de fontes, perguntas e traces; também mantém configuração de pipeline. Índices e chaves compostas organizam essas relações. Chunks deliberadamente não têm FK para permitir limpeza de órfãos no caminho indicado pelo comentário. O índice location/path não é uma declaração de unicidade. A folha não contém coluna de embedding ou tabela vetorial; comentários de pipeline distinguem lexical de embedding. [B05]
+ 
+ **Limite.** Ausência de implementação de retrieval nesta folha não significa ausência de todo retrieval no produto. Significa que esta evidência é de persistência, e a capacidade/qualidade/qualificação de retrieval, embedding, indexador ou engine precisa de fonte e dono próprios, sobretudo S4. Um schema estável não prova busca correta.
+ 

@@ -1,0 +1,1195 @@
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `1bb5b9805043d297395a551d6e10a679cfb1c94e`. SHA256 integral: `42c3b75989f047a24903de8aba524a56099fa228652cb48e364f517f69d299b3`. Bytes fonte: 17132. Intervalo byte `[ 5644, 8213 )`, zero-based, fim exclusivo. SHA256 trecho: `1543b5e04f627d8cba4f62fac0abe3004da7183d023ae898d7f3adc55fe225a5`.
+
+`````text
+    }
+  })
+
+  test("partial advance repairs cursor/base/macro from signed receipt without grading", async () => {
+    const item = await fixture(false, true)
+    // The next base isn't read until disposition writes; force failure after cursor writes reached disk.
+    mkdirSync(path.join(item.env.arm, "base_second"))
+    held(await transition(item.env, item.input), "WORKFLOW_SETTLEMENT_ACQUISITION")
+    expect(await read(path.join(item.env.arm, "position"))).toBe("next.second")
+    const ledger = await read(path.join(item.env.arm, "ledger.jsonl"))
+    rmSync(path.join(item.env.arm, "base_second"), { recursive: true })
+    const resumed = await transition(item.env, item.input)
+    expect(resumed._tag).toBe("Success")
+    if (resumed._tag === "Success") expect(resumed.success.outcome).toBe("advance")
+    expect(await read(path.join(item.env.arm, "counter"))).toBe("1\n")
+    expect(await read(path.join(item.env.arm, "base_second"))).toMatch(/^[0-9a-f]{40}$/)
+    expect(await Bun.file(path.join(item.env.arm, "macro_next")).exists()).toBe(true)
+    expect(await read(path.join(item.env.work, "grades"))).toBe("grade\n")
+    expect(await read(path.join(item.env.arm, "ledger.jsonl"))).toBe(ledger)
+  })
+
+  test("partial failed round repairs retry once", async () => {
+    const item = await fixture(true)
+    // Fresh rounds do not read repeat_first; its write fails after the signed workflow-disposition receipt.
+    const input = { ...item.input, observe: () => Effect.sync(() => { mkdirSync(path.join(item.env.arm, "repeat_first")) }) }
+    held(await transition(item.env, input), "WORKFLOW_SETTLEMENT_ACQUISITION")
+    expect((await entries(item.env)).filter((entry) => entry.event === "workflow-disposition")).toMatchObject([{
+      checkpoint: { binding: item.input.binding, settlement: item.input.settlement },
+      evaluation: { outcome: "gate-fail", wp: "first" },
+      writes: expect.arrayContaining([{ name: "repeat_first", value: "0" }, { name: "retry_first", value: "1" }]),
+    }])
+    const ledger = await read(path.join(item.env.arm, "ledger.jsonl"))
+    rmSync(path.join(item.env.arm, "repeat_first"), { recursive: true })
+    const repaired = await transition(item.env, input)
+    expect(repaired._tag).toBe("Success")
+    expect(await read(path.join(item.env.arm, "retry_first"))).toBe("1\n")
+    expect(await read(path.join(item.env.arm, "round_first"))).toMatch(/^[0-9a-f]{64}$/)
+    expect(await read(path.join(item.env.work, "grades"))).toBe("grade\n")
+    expect(await read(path.join(item.env.arm, "ledger.jsonl"))).toBe(ledger)
+  })
+`````
+
+### BT09-3 — `packages/core/test/relay-workflow-evaluator.test.ts` linhas 162–190
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `1bb5b9805043d297395a551d6e10a679cfb1c94e`. SHA256 integral: `42c3b75989f047a24903de8aba524a56099fa228652cb48e364f517f69d299b3`. Bytes fonte: 17132. Intervalo byte `[ 10095, 11965 )`, zero-based, fim exclusivo. SHA256 trecho: `02859a130af0a4a6ec2c9da157b1fa239607de94b9454766b570a9ac76ffd797`.
+
+`````text
+    expect(await transition(item.env, item.input)).toEqual(result)
+    expect(await read(path.join(item.env.work, "grades"))).toBe("grade\n")
+    expect(await Bun.file(path.join(item.env.arm, "workflow_pending.json")).exists()).toBe(false)
+    expect(ArmState.held(item.env.arm)).toBe(false)
+  })
+
+  test("revalidation error cannot bind, grade or advance", async () => {
+    const item = await fixture()
+    held(await transition(item.env, { ...item.input, agentID: "worker", revalidate: () =>
+      Effect.fail(new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PUBLICATION_DRIFT" })) }), "WORKFLOW_PUBLICATION_DRIFT")
+    expect(await Bun.file(path.join(item.env.arm, "agent_id")).exists()).toBe(false)
+    expect(await Bun.file(path.join(item.env.work, "grades")).exists()).toBe(false)
+    expect(await read(path.join(item.env.arm, "counter"))).toBe("0\n")
+  })
+
+  test("unsigned settled JSON cannot impersonate a different assistant's receipt", async () => {
+    const item = await fixture(true)
+    const first = await transition(item.env, item.input)
+    expect(first._tag).toBe("Success")
+    if (first._tag !== "Success") throw new Error("fixture did not settle")
+    const settlement = Schema.decodeUnknownSync(RelayArm.WorkflowSettlement)({ ...item.input.settlement, assistantMessageID: "msg_forged" })
+    await write(item.env.arm, { [`workflow_${RelayWorkflowBinding.digest(Buffer.from(settlement.assistantMessageID))}.json`]:
+      JSON.stringify({ binding: item.input.binding, settlement, phase: "settled", evaluation: first.success }) })
+    held(await transition(item.env, { ...item.input, settlement }), "WORKFLOW_SETTLEMENT_EVIDENCE_MISSING")
+    expect(await read(path.join(item.env.work, "grades"))).toBe("grade\n")
+  })
+
+  test("reconciliation cannot acquire a second lock or repair outside ownership", async () => {
+    const item = await fixture()
+`````
+
+### BT10-1 — `packages/core/test/relay.test.ts` linhas 187–274
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `3acdc0d11e60ed2119059ac59eab60184a341795`. SHA256 integral: `e54d1c70ad6dc2affe31ac1f8ea231acb5745664eb9e724f3d8df76d22e0118f`. Bytes fonte: 28130. Intervalo byte `[ 6929, 10846 )`, zero-based, fim exclusivo. SHA256 trecho: `b30ae0556bb6eccbf054e478ff8fe42775d5db663982141a0409e9e714e8e402`.
+
+`````text
+      yield* use(dirs, (relay) =>
+        Effect.gen(function* () {
+          expect(relay.paths).toEqual({
+            root,
+            authoring: path.join(root, "authoring.sqlite3"),
+            arms: path.join(root, "arms"),
+            hooks: path.join(root, "hooks"),
+            key: path.join(root, "ledger.key"),
+          })
+          // Opening the Location touches nothing; the first operation that needs the data creates it.
+          expect(existsSync(root)).toBe(false)
+          expect((yield* relay.record("h-0123", installed)).seq).toBe(0)
+          expect(
+            yield* relay.create({
+              token: "run-1",
+              sprint: { work_packages: [{ id: "wp-1" }] },
+              meta: { workdir: dirs.work },
+            }),
+          ).toBe("created")
+          // An install ID names a directory.
+          expect((yield* relay.record("../escape", installed).pipe(Effect.flip)).reason).toBe("install-invalid")
+        }),
+      )
+      // Windows stat modes do not represent owner-only ACLs.
+      if (process.platform !== "win32") {
+        expect(statSync(root).mode & 0o777).toBe(0o700)
+        expect(statSync(path.join(root, "ledger.key")).mode & 0o777).toBe(0o600)
+      }
+      const key = readFileSync(path.join(root, "ledger.key"), "utf8")
+      expect(key).toMatch(/^[0-9a-f]{64}$/)
+      expect(existsSync(path.join(root, "arms", "run-1", "sprint.json"))).toBe(true)
+      expect(existsSync(path.join(dirs.data, "relay", "escape"))).toBe(false)
+      // `ts` is stamped first, the chain suffix last, and the chain is keyed with ledger.key.
+      expect(Object.keys(JSON.parse(lines(ledger)[0]!))).toEqual([
+        "ts",
+        ...Object.keys(installed),
+        "gen",
+        "prev",
+        "seq",
+        "mac",
+        "h",
+      ])
+      expect((yield* LedgerVerify.verify(ledger, Redacted.make(key))).exit).toBe(0)
+      expect((yield* LedgerVerify.verify(ledger)).stdout).toStartWith("REFUSED line 1: this is a KEYED chain")
+
+      // A reopened Location reuses the key and extends the same chain.
+      yield* use(dirs, (relay) => relay.record("h-0123", { ...installed, event: "hook-disabled" }))
+      expect(readFileSync(path.join(root, "ledger.key"), "utf8")).toBe(key)
+      expect(lines(ledger)).toHaveLength(2)
+      expect((yield* LedgerVerify.verify(ledger, Redacted.make(key))).exit).toBe(0)
+    }),
+  )
+
+  it.live("refuses a ledger.key it did not write instead of replacing it, and keeps the key owner-only", () =>
+    Effect.gen(function* () {
+      const dirs = yield* fixture
+      const root = path.join(dirs.data, "relay", projectID)
+      const file = path.join(root, "ledger.key")
+      const record = use(dirs, (relay) => relay.record("h-0123", installed))
+      mkdirSync(root, { recursive: true })
+
+      writeFileSync(file, "not a key")
+      expect((yield* record.pipe(Effect.flip)).reason).toBe("key-acquisition")
+      expect(readFileSync(file, "utf8")).toBe("not a key")
+
+      // A symlink is refused even when it points at a well-formed key.
+      rmSync(file)
+      writeFileSync(path.join(dirs.home, "elsewhere"), "a".repeat(64), { mode: 0o600 })
+      symlinkSync(path.join(dirs.home, "elsewhere"), file)
+      expect((yield* record.pipe(Effect.flip)).reason).toBe("key-acquisition")
+
+      rmSync(file)
+      const key = "b".repeat(64)
+      writeFileSync(file, key)
+      chmodSync(file, 0o644)
+      yield* record
+      if (process.platform !== "win32") expect(statSync(file).mode & 0o777).toBe(0o600)
+      expect(readFileSync(file, "utf8")).toBe(key)
+      expect(
+        (yield* LedgerVerify.verify(path.join(root, "hooks", "h-0123", "ledger.jsonl"), Redacted.make(key))).exit,
+      ).toBe(0)
+    }),
+  )
+
+  it.live("isolates check env to PATH, HOME, params and closed shell/runtime defaults", () =>
+    Effect.gen(function* () {
+      const dirs = yield* fixture
+      const startup = path.join(dirs.home, "startup.sh")
+`````
+
+## RE-BND-02 — Atlas e descoberta de comandos
+
+
+**Plano `packages/core/src/atlas.ts` 103–148:** reuso R002, R003; complemento literal abaixo.
+
+### AT01-1 — `packages/core/src/atlas.ts` linhas 103–108
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `f6718654785fb155e1bb1b2acb7e9985478b983b`. SHA256 integral: `4a80f71532a9766f0cfaa67e4a4474ae4d49dbe30a811033ce57a1fb9c58bec4`. Bytes fonte: 16892. Intervalo byte `[ 4715, 5174 )`, zero-based, fim exclusivo. SHA256 trecho: `613ca14e14019fe508fd26fec52026c53f23bef07d8cc00e14aaee6c7a294c80`.
+
+`````text
+/** The store root (D5): the project worktree, or the directory when the project has none ("/"). */
+export const storeRoot = (worktree: string, directory: string) => (Project.isRoot(worktree) ? directory : worktree)
+
+/**
+ * The surface over the store at `root`. `projectID` is the Orchestra project id the first territory catalog records
+ * (issues/c-engine.md item 2): the client never sends it, and an existing catalog of another project refuses the write.
+`````
+
+### AT01-2 — `packages/core/src/atlas.ts` linhas 126–131
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `f6718654785fb155e1bb1b2acb7e9985478b983b`. SHA256 integral: `4a80f71532a9766f0cfaa67e4a4474ae4d49dbe30a811033ce57a1fb9c58bec4`. Bytes fonte: 16892. Intervalo byte `[ 6126, 6545 )`, zero-based, fim exclusivo. SHA256 trecho: `dea1d4d5f0a59431b56e3747f9443f5ec7f2c4001a9483c809d6097ec34d1ab2`.
+
+`````text
+    emit: (input) => run("emit", (surface) => surface.emit(input)),
+    link: (input) => run("link", (surface) => surface.link(input)),
+    verify: (input) => run("verify", (surface) => surface.verify(input)),
+    review: () => run("review", (surface) => surface.review()),
+    hold: (input) => run("hold", (surface) => surface.hold(input)),
+    release: (input) => run("release", (surface) => surface.release(input)),
+`````
+
+**Plano `packages/core/src/atlas.ts` 152–195:** reuso nenhum; complemento literal abaixo.
+
+### AT01-3 — `packages/core/src/atlas.ts` linhas 152–195
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `f6718654785fb155e1bb1b2acb7e9985478b983b`. SHA256 integral: `4a80f71532a9766f0cfaa67e4a4474ae4d49dbe30a811033ce57a1fb9c58bec4`. Bytes fonte: 16892. Intervalo byte `[ 7490, 9853 )`, zero-based, fim exclusivo. SHA256 trecho: `4991dc6be840cc944e278d77e1af10c5190b2d74fa3006bad7833974bc88f540`.
+
+`````text
+// D38: Orchestra runs the indexer the store's plan names, from the repository root, so Genesis has the code graph it
+// ranks sites by. TypeScript first, else Python, else nothing: both tools write the one `.atlas/index.scip` the readers
+// open. The package comes from Orchestra's package cache at the version Atlas pins (adapter-io/src/scip.ts) and runs with
+// Orchestra's own Bun, so the machine needs no Node. A failed run reports the tail of its stderr.
+const PACKAGES = [
+  ["scip-typescript", "@sourcegraph/scip-typescript"],
+  ["scip-python", "@sourcegraph/scip-python"],
+] as const
+
+const index = Effect.fn("AtlasIndex.index")(function* (
+  dependencies: Dependencies,
+  health: () => Effect.Effect<AtlasHealthResult, Unavailable>,
+  root: string,
+) {
+  const before = yield* health()
+  if (before.state === "empty") return EMPTY
+  const planned = PACKAGES.flatMap(([tool, pkg]) =>
+    before.index.configured.filter((lang) => lang.plan.tool === tool).map((lang) => ({ ...lang.plan, pkg })),
+  )[0]
+  if (!planned) return indexed(false, null, null, null, "no indexer is configured for this repository's languages")
+  const bin = yield* dependencies.npm.which(`${planned.pkg}@${planned.version}`, planned.tool)
+  if (!bin) return indexed(false, planned.tool, null, null, `could not install ${planned.pkg}@${planned.version}`)
+  const args = [
+    ...planned.args,
+    ...(planned.tool === "scip-typescript" && !existsSync(join(root, "tsconfig.json")) ? ["--infer-tsconfig"] : []),
+  ]
+  const ran = yield* dependencies.processes
+    .run(
+      ChildProcess.make(process.execPath, [bin, ...args], {
+        cwd: root,
+        env: { BUN_BE_BUN: "1" },
+        extendEnv: true,
+        stdin: "ignore",
+      }),
+      { timeout: "10 minutes", maxOutputBytes: 1_000_000, maxErrorBytes: 64_000 },
+    )
+    .pipe(
+      Effect.map((result) => ({ exitCode: result.exitCode, stderr: result.stderr.toString("utf8") })),
+      Effect.catch((error) => Effect.succeed({ exitCode: -1, stderr: error.message })),
+    )
+  const after = yield* health()
+  const documents = after.state === "ok" && after.index.scip.kind === "present" ? after.index.scip.documents : null
+  const failure = ran.stderr.trim().slice(-300) || `${planned.tool} exited with ${ran.exitCode}`
+  return indexed(true, planned.tool, ran.exitCode, documents, ran.exitCode === 0 ? null : failure)
+`````
+
+**Plano `packages/core/src/atlas.ts` 208–258:** reuso nenhum; complemento literal abaixo.
+
+### AT01-4 — `packages/core/src/atlas.ts` linhas 208–258
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `f6718654785fb155e1bb1b2acb7e9985478b983b`. SHA256 integral: `4a80f71532a9766f0cfaa67e4a4474ae4d49dbe30a811033ce57a1fb9c58bec4`. Bytes fonte: 16892. Intervalo byte `[ 10081, 13119 )`, zero-based, fim exclusivo. SHA256 trecho: `e0b0dfa9f6ee8099f0604bc1634f2afdc22950b6e8a8307a0cbe66854357f127`.
+
+`````text
+// R11 delegation (DECISIONS.md D33). A model drafts an answer to each chosen open interview question, one call per
+// question, replying `{ answer, why }`. Each draft is written through the surface as an `answer` carrying `drafted`. A
+// draft never ratifies and keeps its question open (D29): a person accepts it by answering with the same text. One
+// question's failure (unknown model, provider error, unreadable reply, a refused write) is that question's row; only an
+// unavailable store fails the whole call.
+
+export type DelegateInput = {
+  readonly questionIds: readonly string[]
+  readonly providerID: string
+  readonly modelID: string
+}
+export type Drafted = { readonly questionId: string; readonly ok: boolean; readonly rejected: string | null }
+export type DelegateResult = Empty | { readonly state: "ok"; readonly drafted: readonly Drafted[] }
+
+// An empty system prompt would fall back to the model's general coding prompt.
+export const DELEGATE_SYSTEM =
+  "You draft an answer to one open question about a codebase's recorded knowledge. A person reviews every draft before it counts. Answer only from what the question gives you. When the question lists options, the answer must be exactly one of those option strings, copied character for character, with nothing added: for a tier question the answer reads like T1 or T0. The why is one or two plain sentences on what the answer rests on, and says so when the question does not give enough to decide."
+
+export const Reply = Schema.Struct({ answer: Schema.String, why: Schema.String })
+export type Reply = typeof Reply.Type
+
+export const REPLY_JSON_SCHEMA = {
+  type: "object",
+  properties: { answer: { type: "string" }, why: { type: "string" } },
+  required: ["answer", "why"],
+  additionalProperties: false,
+}
+
+/** A `{ answer, why }` reply, read from the outermost JSON object so a fenced reply still counts; else `undefined`. */
+export const decodeReply = (text: string) =>
+  Option.getOrUndefined(
+    Schema.decodeUnknownOption(Schema.fromJsonString(Reply))(text.slice(text.indexOf("{"), text.lastIndexOf("}") + 1)),
+  )
+
+export type DelegateServices = {
+  readonly atlas: Pick<Interface, "review" | "answer">
+  /** One model call for one question's prompt; `undefined` when the reply is not a readable `{ answer, why }`. */
+  readonly draft: (prompt: string) => Effect.Effect<Reply | undefined, unknown>
+}
+
+export const delegate = Effect.fn("AtlasDelegate.delegate")(function* (
+  services: DelegateServices,
+  input: DelegateInput,
+) {
+  const review = yield* services.atlas.review()
+  if (review.state === "empty") return EMPTY as DelegateResult
+  const drafted = yield* Effect.forEach(input.questionIds, (questionId) => {
+    const question = review.interview.batch.find((item) => item.id === questionId)
+    if (!question) return Effect.succeed(refused(questionId, "not an open question in the current interview batch"))
+    return draftOne(services, input, question).pipe(
+      Effect.catch((error) => Effect.succeed(refused(questionId, firstLine(error)))),
+`````
+
+**Plano `packages/core/src/atlas.ts` 312–347:** reuso R005; complemento literal abaixo.
+
+### AT01-5 — `packages/core/src/atlas.ts` linhas 313–347
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `f6718654785fb155e1bb1b2acb7e9985478b983b`. SHA256 integral: `4a80f71532a9766f0cfaa67e4a4474ae4d49dbe30a811033ce57a1fb9c58bec4`. Bytes fonte: 16892. Intervalo byte `[ 15454, 16892 )`, zero-based, fim exclusivo. SHA256 trecho: `cde77483309c4704ab9e416544ffebfce667fb3f9c68712cad393482a76cb8ff`.
+
+`````text
+  readonly atlas: Pick<Interface, "mineSites" | "mineWith">
+  /** Resolves the chosen model once; its failure fails the whole run. The returned call answers one site's prompt. */
+  readonly model: Effect.Effect<(prompt: string) => Effect.Effect<string, unknown>, unknown>
+}
+
+export const mine = Effect.fn("AtlasMine.mine")(function* (services: MineServices, input: MineInput) {
+  const ceiling = Math.min(200, Math.max(1, Math.floor(input.ceiling)))
+  const listed = yield* services.atlas.mineSites(ceiling)
+  if (listed.state === "empty") return listed
+  const ask = yield* services.model.pipe(Effect.mapError((error) => new Unavailable({ message: firstLine(error) })))
+  const replies = yield* Effect.forEach(
+    listed.sites,
+    (site) =>
+      ask(site.prompt).pipe(
+        Effect.map((text) => [[site.key, text] as const]),
+        Effect.catch((error) =>
+          Effect.logWarning("Atlas mine: the model call failed; the site abstains", {
+            site: site.key,
+            error: firstLine(error),
+          }).pipe(Effect.as([])),
+        ),
+      ),
+    { concurrency: 4 },
+  )
+  return yield* services.atlas.mineWith({
+    ceiling,
+    answers: Object.fromEntries(replies.flat()),
+    model: `${input.providerID}/${input.modelID}`,
+  })
+})
+
+export function firstLine(error: unknown) {
+  const text = error instanceof Error && error.message ? error.message : String(error)
+  return text.split("\n")[0]!.slice(0, 300)
+}
+`````
+
+**Plano `packages/core/src/relay-commands.ts` 7–114:** reuso R011, R012; complemento literal abaixo.
+
+### AT02-1 — `packages/core/src/relay-commands.ts` linhas 12–83
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `e2858f395f7c09e0a2cfb7c5b55a96c073d33926`. SHA256 integral: `d129efe12ceff333c6f6186a40cc679efcbbacb9b9164c40eea404a89de09b2c`. Bytes fonte: 5046. Intervalo byte `[ 443, 3678 )`, zero-based, fim exclusivo. SHA256 trecho: `78d35309eb842bb24272643392f588c479eadfd77aa286e50848ca1e73562f96`.
+
+`````text
+  // The manifest that declares it, e.g. `package.json` or `Makefile`.
+  readonly source: string
+  readonly kind: "test" | "lint" | "typecheck" | "format" | "build"
+}
+
+export interface Detected {
+  readonly commands: ReadonlyArray<Command>
+  // pytest test files relative to the project, for one check per test file.
+  readonly pytest: ReadonlyArray<string>
+}
+
+const PYTEST_FILES = 200
+
+export const detect = Effect.fn("RelayCommands.detect")(function* (directory: string) {
+  const read = (name: string) =>
+    Effect.promise(() => readFile(path.join(directory, name), "utf8").catch(() => undefined))
+  const pkg = yield* read("package.json")
+  const pyproject = yield* read("pyproject.toml")
+  const cargo = yield* read("Cargo.toml")
+  const gomod = yield* read("go.mod")
+  const makefile = yield* read("Makefile")
+  const runner = yield* packageRunner(directory)
+  const pytest = pyproject?.includes("pytest") ? yield* pytestFiles(directory) : []
+  return {
+    commands: [
+      ...scripts(pkg).flatMap((script): Command[] => {
+        const kind = kindOf(script)
+        return kind ? [{ command: `${runner} run ${script}`, source: "package.json", kind }] : []
+      }),
+      ...(pyproject?.includes("pytest") ? [{ command: "pytest -q", source: "pyproject.toml", kind: "test" } as const] : []),
+      ...(pyproject?.includes("ruff") ? [{ command: "ruff check .", source: "pyproject.toml", kind: "lint" } as const] : []),
+      ...(pyproject?.includes("mypy") ? [{ command: "mypy .", source: "pyproject.toml", kind: "typecheck" } as const] : []),
+      ...(cargo
+        ? ([
+            { command: "cargo test", source: "Cargo.toml", kind: "test" },
+            { command: "cargo clippy -- -D warnings", source: "Cargo.toml", kind: "lint" },
+            { command: "cargo fmt --check", source: "Cargo.toml", kind: "format" },
+          ] as const)
+        : []),
+      ...(gomod
+        ? ([
+            { command: "go test ./...", source: "go.mod", kind: "test" },
+            { command: "go vet ./...", source: "go.mod", kind: "lint" },
+          ] as const)
+        : []),
+      ...[...(makefile ?? "").matchAll(/^([A-Za-z][\w-]*)\s*:(?!=)/gm)].flatMap((match): Command[] => {
+        const kind = kindOf(match[1]!)
+        return kind ? [{ command: `make ${match[1]}`, source: "Makefile", kind }] : []
+      }),
+    ].filter((command, index, all) => all.findIndex((other) => other.command === command.command) === index),
+    pytest,
+  } satisfies Detected
+})
+
+function scripts(text: string | undefined) {
+  if (!text) return []
+  const parsed = Option.getOrUndefined(Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(text))
+  if (typeof parsed !== "object" || parsed === null || !("scripts" in parsed)) return []
+  const listed = parsed.scripts
+  if (typeof listed !== "object" || listed === null) return []
+  return Object.keys(listed)
+}
+
+function kindOf(name: string): Command["kind"] | undefined {
+  if (/typecheck|type-check|tsc/.test(name)) return "typecheck"
+  if (/^test|:test|^check$/.test(name)) return "test"
+  if (/lint|clippy|vet/.test(name)) return "lint"
+  if (/^(fmt|format)(:check)?$|format:check|fmt-check/.test(name)) return "format"
+  if (/^build$/.test(name)) return "build"
+  return undefined
+}
+
+`````
+
+### AT02-2 — `packages/core/src/relay-commands.ts` linhas 99–114
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `e2858f395f7c09e0a2cfb7c5b55a96c073d33926`. SHA256 integral: `d129efe12ceff333c6f6186a40cc679efcbbacb9b9164c40eea404a89de09b2c`. Bytes fonte: 5046. Intervalo byte `[ 4343, 5046 )`, zero-based, fim exclusivo. SHA256 trecho: `83815471b58831d439bbce4b92685ea4eb408321364f1522f6859b9da907f2b6`.
+
+`````text
+
+const pytestFiles = (directory: string) =>
+  Effect.promise(async () => {
+    // The project root and the usual test roots only: a scan of the whole tree would walk virtualenvs and node_modules.
+    const files = await Promise.all([
+      readdir(directory).catch(() => []),
+      ...["test", "tests", "src"].map((root) =>
+        readdir(path.join(directory, root), { recursive: true })
+          .then((names) => names.map((name) => path.posix.join(root, name.split(path.sep).join("/"))))
+          .catch(() => []),
+      ),
+    ])
+    return [...new Set(files.flat().filter((file) => /^(test_.*|.*_test)\.py$/.test(path.posix.basename(file))))]
+      .toSorted()
+      .slice(0, PYTEST_FILES)
+  })
+`````
+
+## RE-BND-03 — Relay: paths, chave, ambiente, registro e recuperação
+
+A detecção de comandos pedida também por J2 está integralmente recomposta por AT02 + R011/R012; não é repetida aqui.
+
+**Plano `packages/core/src/relay.ts` 42–48:** reuso nenhum; complemento literal abaixo.
+
+### RL01-1 — `packages/core/src/relay.ts` linhas 42–48
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `25fb509203f933a2e8b0f311c3fc8f9476d53e16`. SHA256 integral: `446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a`. Bytes fonte: 30225. Intervalo byte `[ 2251, 2706 )`, zero-based, fim exclusivo. SHA256 trecho: `f8464d817b8c2f94b2f0111eba703abd3a832c357784aa854cc2ea77f45c0c25`.
+
+`````text
+// A check's process group is killed at its timeout: a hook's before-verify, and each check of a workflow gate.
+export const VERIFY_TIMEOUT = Duration.seconds(60)
+export const GATE_TIMEOUT = Duration.minutes(15)
+// "Test now" in the workflow editor: one command, cut at a minute.
+export const TRIAL_TIMEOUT = Duration.seconds(60)
+// The end of a trial's output, where a failing test or linter puts its summary.
+export const TRIAL_OUTPUT_BYTES = 32 * 1024
+`````
+
+**Plano `packages/core/src/relay.ts` 184–217:** reuso nenhum; complemento literal abaixo.
+
+### RL01-2 — `packages/core/src/relay.ts` linhas 184–217
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `25fb509203f933a2e8b0f311c3fc8f9476d53e16`. SHA256 integral: `446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a`. Bytes fonte: 30225. Intervalo byte `[ 8830, 10296 )`, zero-based, fim exclusivo. SHA256 trecho: `28a32af448c8895f67973af828ff748d5e493eb44427ccca90d344251827057e`.
+
+`````text
+    const root = path.join(global.data, "relay", location.project.id)
+    const paths = {
+      root,
+      authoring: path.join(root, "authoring.sqlite3"),
+      arms: path.join(root, "arms"),
+      hooks: path.join(root, "hooks"),
+      key: path.join(root, "ledger.key"),
+    }
+    const judge = settings(yield* config.entries())
+    const judging = yield* JudgeConfig.Service.pipe(Effect.provide(JudgeConfig.layer(judge)))
+    const verifies = yield* Semaphore.make(1)
+    // Nothing touches the disk until an operation needs it, so a Location never fails to open over Relay.
+    const cache: { key?: Redacted.Redacted<string> } = {}
+
+    const ready = Effect.gen(function* () {
+      if (!ID.test(location.project.id)) return yield* new Unavailable({ reason: "project-invalid" })
+      const info = yield* Effect.try({
+        try: () => {
+          mkdirSync(root, { recursive: true, mode: 0o700 })
+          return lstatSync(root)
+        },
+        catch: () => new Unavailable({ reason: "data-acquisition" }),
+      })
+      // A symlinked data directory would put the key and every ledger somewhere else.
+      if (!info.isDirectory()) return yield* new Unavailable({ reason: "data-acquisition" })
+    })
+
+    const ledgerKey = Effect.suspend(() => {
+      if (cache.key) return Effect.succeed(cache.key)
+      return ready.pipe(
+        Effect.andThen(loadKey(paths.key)),
+        Effect.tap((key) => Effect.sync(() => (cache.key = key))),
+      )
+    })
+`````
+
+**Plano `packages/core/src/relay.ts` 240–246:** reuso nenhum; complemento literal abaixo.
+
+### RL01-3 — `packages/core/src/relay.ts` linhas 240–246
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `25fb509203f933a2e8b0f311c3fc8f9476d53e16`. SHA256 integral: `446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a`. Bytes fonte: 30225. Intervalo byte `[ 11632, 11930 )`, zero-based, fim exclusivo. SHA256 trecho: `29a3c831b12f7a1bc7d0d7c39aecc75b567a2f6dea603a924155eefb3cd8d807`.
+
+`````text
+                extendEnv: false,
+                stdin: "ignore",
+                // Untrappable, and sent to the whole group when the timeout interrupts the run.
+                killSignal: "SIGKILL",
+              }),
+            ).pipe(
+              Effect.provideService(FSUtil.Service, fs),
+`````
+
+**Plano `packages/core/src/relay.ts` 284–300:** reuso nenhum; complemento literal abaixo.
+
+### RL01-4 — `packages/core/src/relay.ts` linhas 284–300
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `25fb509203f933a2e8b0f311c3fc8f9476d53e16`. SHA256 integral: `446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a`. Bytes fonte: 30225. Intervalo byte `[ 13983, 14767 )`, zero-based, fim exclusivo. SHA256 trecho: `74a1a34f187b0004f9acc6f94d621bbded04e02ef4f33261a4ec73b60d43113b`.
+
+`````text
+            }),
+            { maxOutputBytes: GIT_OUTPUT_BYTES, maxErrorBytes: 1024 },
+          )
+          .pipe(
+            Effect.mapError(() => new GateShell.Unavailable({ reason: "spawn" })),
+            Effect.timeoutOrElse({
+              duration: GIT_TIMEOUT,
+              orElse: () => Effect.fail(new GateShell.Unavailable({ reason: "timeout" })),
+            }),
+            // A cut diff would reach the judge as if it were the whole change; the diff is unavailable instead.
+            Effect.flatMap((result) =>
+              result.stdoutTruncated
+                ? Effect.fail(new GateShell.Unavailable({ reason: "spawn" }))
+                : Effect.succeed({ exitCode: result.exitCode, stdout: new Uint8Array(result.stdout) }),
+            ),
+          ),
+    })
+`````
+
+**Plano `packages/core/src/relay.ts` 319–334:** reuso nenhum; complemento literal abaixo.
+
+### RL01-5 — `packages/core/src/relay.ts` linhas 319–334
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `25fb509203f933a2e8b0f311c3fc8f9476d53e16`. SHA256 integral: `446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a`. Bytes fonte: 30225. Intervalo byte `[ 15433, 16264 )`, zero-based, fim exclusivo. SHA256 trecho: `61af2ada1596b66cff6443675db44347890c9307c023f4c17f138cd41e7396fb`.
+
+`````text
+    const record = Effect.fn("Relay.record")(function* (installID: string, body: Readonly<Record<string, unknown>>) {
+      if (!ID.test(installID)) return yield* new Unavailable({ reason: "install-invalid" })
+      const key = yield* ledgerKey
+      const directory = path.join(paths.hooks, installID)
+      yield* Effect.try({
+        try: () => mkdirSync(directory, { recursive: true, mode: 0o700 }),
+        catch: () => new Unavailable({ reason: "data-acquisition" }),
+      })
+      const ts = Math.floor((yield* Clock.currentTimeMillis) / 1000)
+      const text = yield* RelayJson.compact({
+        ts,
+        ...Object.fromEntries(Object.entries(body).filter((entry) => entry[0] !== "ts")),
+      })
+      return yield* LedgerChain.append({ ledger: path.join(directory, "ledger.jsonl"), body: text, gen: 0, key })
+    })
+
+`````
+
+**Plano `packages/core/src/relay.ts` 390–418:** reuso nenhum; complemento literal abaixo.
+
+### RL01-6 — `packages/core/src/relay.ts` linhas 390–418
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `25fb509203f933a2e8b0f311c3fc8f9476d53e16`. SHA256 integral: `446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a`. Bytes fonte: 30225. Intervalo byte `[ 19401, 20528 )`, zero-based, fim exclusivo. SHA256 trecho: `30e6255e93c3e69346da8d063c17e65fff42b3b6136aeeaffab2494758cd396b`.
+
+`````text
+      const wp = Option.flatMap(loaded, (value) =>
+        Option.flatMap(position, (raw) =>
+          Option.map(ArmState.resolve(value.sprint, raw), (index) => value.sprint.work_packages[index]!.id),
+        ),
+      ).pipe(
+        Option.orElse(() => position),
+        Option.getOrElse(() => "?"),
+      )
+      const gen = Option.match(loaded, {
+        onNone: () => 0,
+        onSome: (value) =>
+          LedgerChain.generation(
+            Result.getOrUndefined(RelayJson.read(new TextDecoder().decode(value.sprintBytes), { flavor: "jq" })),
+          ),
+      })
+      const ts = Math.floor((yield* Clock.currentTimeMillis) / 1000)
+      // Noted before the lock goes: a recovery that cannot be recorded does not happen.
+      yield* LedgerChain.append({
+        ledger: path.join(arm, RelayArm.Files.ledger),
+        body: yield* RelayJson.compact({ ts, arm: token, wp, event: "gate-recovered" }),
+        gen,
+        key,
+      })
+      yield* Effect.try({
+        try: () => rmdirSync(lock),
+        catch: () => new ArmState.StateError({ path: lock, reason: "lock-release" }),
+      })
+      return true
+    })
+`````
+
+**Plano `packages/core/src/relay.ts` 434–481:** reuso nenhum; complemento literal abaixo.
+
+### RL01-7 — `packages/core/src/relay.ts` linhas 434–481
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `25fb509203f933a2e8b0f311c3fc8f9476d53e16`. SHA256 integral: `446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a`. Bytes fonte: 30225. Intervalo byte `[ 21145, 23137 )`, zero-based, fim exclusivo. SHA256 trecho: `6f937c3e8a168ea0ba2f9f0291f178fd49ad059057774b655dd11d450f13f697`.
+
+`````text
+      if (!(yield* Effect.promise(() => which("bash", { path: env.PATH, nothrow: true }))))
+        return yield* new GateShell.Unavailable({ reason: "missing" })
+      const argv = GateShell.argv(input.command)
+      const native = yield* ToolSafety.NativeContext
+      const command = yield* ToolSafetySandbox.wrap(
+        ChildProcess.make(argv[0], argv.slice(1), {
+          cwd: location.directory,
+          env,
+          extendEnv: false,
+          stdin: "ignore",
+          killSignal: "SIGKILL",
+        }),
+      ).pipe(
+        Effect.provideService(FSUtil.Service, fs),
+        Effect.provideService(ToolSafety.NativeContext, native ?? { directory: location.directory }),
+        Effect.mapError(() => new GateShell.Unavailable({ reason: "spawn" })),
+      )
+      // The capture keeps the start of the output; the summary is at the end, so the tail is kept here instead.
+      const tail = outputTail(TRIAL_OUTPUT_BYTES)
+      const started = yield* Clock.currentTimeMillis
+      const result = yield* processes
+        .run(command, { combineOutput: true, maxOutputBytes: 0, inspect: tail.keep })
+        .pipe(
+          Effect.map((done) => ({ exitCode: done.exitCode, timedOut: false })),
+          Effect.mapError(() => new GateShell.Unavailable({ reason: "spawn" })),
+          Effect.timeoutOrElse({
+            duration: TRIAL_TIMEOUT,
+            orElse: () => Effect.succeed({ exitCode: -1, timedOut: true }),
+          }),
+        )
+      const kept = tail.read()
+      return {
+        ...result,
+        output: kept.text,
+        truncated: kept.truncated,
+        durationMs: (yield* Clock.currentTimeMillis) - started,
+      } satisfies Trial
+    }, Effect.scoped)
+
+    return Service.of({
+      paths,
+      judge,
+      verify,
+      trusted,
+      trial,
+      check: Effect.fn("Relay.check")(function* (input: Omit<GateCheck.Input, "stateDir">) {
+        return yield* GateCheck.check({ ...input, stateDir: undefined }).pipe(ports(GATE_TIMEOUT))
+      }),
+`````
+
+**Plano `packages/core/src/relay.ts` 568–629:** reuso nenhum; complemento literal abaixo.
+
+### RL01-8 — `packages/core/src/relay.ts` linhas 568–629
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `25fb509203f933a2e8b0f311c3fc8f9476d53e16`. SHA256 integral: `446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a`. Bytes fonte: 30225. Intervalo byte `[ 27665, 30225 )`, zero-based, fim exclusivo. SHA256 trecho: `32c8f2cf865b669414e350c5effae5fcca8fb7897333636f8652f62f8c9742d0`.
+
+`````text
+/**
+ * ledger.key: 32 random bytes as hex, owner-only, created once and never rewritten, since ledgers chained with it would
+ * stop verifying. Concurrent creators settle on one key: a fully written temporary file is hard-linked into place, and
+ * a link refuses a target that exists.
+ */
+function loadKey(file: string) {
+  return readKey(file).pipe(
+    Effect.flatMap((found) =>
+      Option.isSome(found) ? Effect.succeed(found) : createKey(file).pipe(Effect.andThen(readKey(file))),
+    ),
+    Effect.flatMap((found) =>
+      Option.isSome(found) ? Effect.succeed(found.value) : Effect.fail(new Unavailable({ reason: "key-acquisition" })),
+    ),
+  )
+}
+
+// A symlink, a non-file or malformed contents are refused, never followed or replaced.
+function readKey(file: string) {
+  const failed = () => new Unavailable({ reason: "key-acquisition" })
+  return Effect.try({ try: () => lstatSync(file, { throwIfNoEntry: false }), catch: failed }).pipe(
+    Effect.flatMap((info) => {
+      if (info === undefined) return Effect.succeed(Option.none<Redacted.Redacted<string>>())
+      if (!info.isFile()) return Effect.fail(failed())
+      return Effect.try({
+        try: () => {
+          // Narrowed, never widened: the key stays owner-only even if its mode was loosened.
+          if ((info.mode & 0o077) !== 0) chmodSync(file, 0o600)
+          return readFileSync(file, "utf8")
+        },
+        catch: failed,
+      }).pipe(
+        Effect.flatMap((text) =>
+          KEY.test(text) ? Effect.succeed(Option.some(Redacted.make(text))) : Effect.fail(failed()),
+        ),
+      )
+    }),
+  )
+}
+
+function createKey(file: string) {
+  const temp = path.join(path.dirname(file), `.ledger.key.${randomUUID()}`)
+  return Effect.try({
+    try: () => {
+      writeFileSync(temp, randomBytes(32).toString("hex"), { flag: "wx", mode: 0o600 })
+      // The creation mode passes through the umask; set it exactly.
+      chmodSync(temp, 0o600)
+      linkSync(temp, file)
+    },
+    catch: (error) => error,
+  }).pipe(
+    // Another creator linked its key first, and that key is the project's.
+    Effect.catchIf(
+      (error) => typeof error === "object" && error !== null && "code" in error && error.code === "EEXIST",
+      () => Effect.void,
+    ),
+    Effect.mapError(() => new Unavailable({ reason: "key-acquisition" })),
+    // Synchronous: effect 4.0.0-beta.83 drops an async finalizer step when the fiber is interrupted.
+    Effect.ensuring(
+      Effect.try({ try: () => rmSync(temp, { force: true }), catch: () => undefined }).pipe(Effect.ignore),
+    ),
+  )
+}
+`````
+
+## RE-BND-04 — Lifecycle/parse de hooks, shipping e loop de recovery
+
+
+**Plano `packages/core/src/relay-hook-install.ts` 1–215:** reuso nenhum; complemento literal abaixo.
+
+### HK01-1 — `packages/core/src/relay-hook-install.ts` linhas 1–215
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `df1a8ef2e1656d4f2a9a235447c3439fa25fa0f1`. SHA256 integral: `3663a7a5f1eedca77f66ce09229839aeec433440e2bd23d38fa36957d5e46833`. Bytes fonte: 22715. Intervalo byte `[ 0, 8880 )`, zero-based, fim exclusivo. SHA256 trecho: `7bb1b352075235f5761611b8c5a165a30c88d652bb35c1be384dc028b000715e`.
+
+`````text
+export * as RelayHookInstall from "./relay-hook-install"
+
+import path from "path"
+import { createHash, randomBytes, randomUUID } from "crypto"
+import { rmSync } from "fs"
+import { Clock, Effect, Option, Result, Schema, Struct } from "effect"
+import { RelayHook } from "@orchestra/schema/relay-hook"
+import type { RelayLedger } from "@orchestra/schema/relay-ledger"
+import { RelayJson } from "@orchestra/relay/json"
+import { KeyedMutex } from "./effect/keyed-mutex"
+import { FSUtil } from "./fs-util"
+import { MaestroArsenal } from "./tool/maestro-arsenal"
+import { ToolSafetyProfile } from "./tool-safety-profile"
+
+// The hook install writer (relay-exec-spec H1). Orchestra's server is the only writer of `hooks.json`: every install
+// pins a published `relay.hook.v1` snapshot under the graph rules of Relay's `compile_hook`, so enforcement never sees
+// a graph the compiler would refuse, even from a crafted export. `hooks.json` sits beside `preferences.json` in the
+// project's ToolSafety profile directory, and reads follow the profile loader's rules.
+
+/** The profile loader's cap. A larger file would hold every tool call, so the writer never produces one. */
+export const MAX_BYTES = 512 * 1024
+
+export const Reason = Schema.Literals([
+  // Reading hooks.json, as the profile loader names them.
+  "profile-project-invalid",
+  "profile-state-root-acquisition",
+  "profile-not-file-or-overflow",
+  "profile-symlink-denied",
+  "profile-changed-during-read",
+  "profile-read-acquisition",
+  "profile-invalid",
+  // Writing hooks.json.
+  "profile-overflow",
+  "profile-write-acquisition",
+  // The install request.
+  "snapshot-invalid",
+  "sha256-mismatch",
+  "document-installed",
+  "install-missing",
+  "order-mismatch",
+  // Repairing hooks.json.
+  "repair-not-needed",
+  "repair-refused",
+])
+export type Reason = typeof Reason.Type
+
+export class Refused extends Schema.TaggedErrorClass<Refused>()("RelayHookInstall.Refused", {
+  reason: Reason,
+  message: Schema.String,
+}) {}
+
+/** `data` is `Global.data`; installs are pinned per project, in `file(data, projectID)`. */
+export interface Binding {
+  readonly data: string
+  readonly projectID: string
+}
+
+/** A lifecycle receipt for `hooks/<installID>/ledger.jsonl`; the ledger writer stamps `ts`. */
+export type Receipt = Omit<RelayLedger.HookLifecycle, "ts">
+
+export interface Changed {
+  readonly install: RelayHook.Install
+  readonly receipt: Receipt
+}
+
+/** Beside `preferences.json`, in the ToolSafety profile directory the profile loader reads. */
+export const file = (data: string, projectID: string) =>
+  path.join(ToolSafetyProfile.profileDirectory(MaestroArsenal.stateDirectory(data, projectID), projectID), "hooks.json")
+
+/**
+ * The installs of a project; an absent file is none. Refuses `profile-invalid` when the file does not decode strictly
+ * or when an install no longer holds what the writer checked (its graph rules and its sha256).
+ */
+export const read = Effect.fn("RelayHookInstall.read")(function* (binding: Binding) {
+  const fs = yield* FSUtil.Service
+  return yield* load(fs, yield* locate(fs, binding))
+})
+
+/** Pins a published version; one install per document. Its sha256 must be sha256(json.compact(snapshot)). */
+export const install = Effect.fn("RelayHookInstall.install")(function* (
+  input: Binding & {
+    readonly document: string
+    readonly version: string
+    readonly snapshot: unknown
+    readonly sha256: string
+    readonly principal: string
+  },
+) {
+  const snapshot = yield* pin(input.snapshot, input.sha256)
+  const installedAt = yield* Clock.currentTimeMillis
+  return yield* mutate(input, (installs) => {
+    const existing = installs.find((item) => item.document === input.document)
+    if (existing)
+      return refuse(
+        "document-installed",
+        `Document ${input.document} is already installed as ${existing.installID}; update that install instead.`,
+      )
+    const created = {
+      installID: `h-${randomBytes(8).toString("hex")}`,
+      document: input.document,
+      version: input.version,
+      sha256: input.sha256,
+      order: Math.max(-1, ...installs.map((item) => item.order)) + 1,
+      enabled: true,
+      installedBy: input.principal,
+      installedAt,
+      snapshot,
+    }
+    return Effect.succeed({ installs: [...installs, created], changed: changed(created, "hook-installed", input) })
+  })
+})
+
+/** Repins an install to another version of its document, keeping its ID, order and enabled state. */
+export const update = Effect.fn("RelayHookInstall.update")(function* (
+  input: Binding & {
+    readonly installID: string
+    readonly version: string
+    readonly snapshot: unknown
+    readonly sha256: string
+    readonly principal: string
+  },
+) {
+  const snapshot = yield* pin(input.snapshot, input.sha256)
+  const installedAt = yield* Clock.currentTimeMillis
+  return yield* replace(input, (current) => ({
+    // Only a published version can be pinned, so an update also ends an unpublished pause.
+    install: {
+      ...Struct.omit(current, ["unpublished"]),
+      version: input.version,
+      sha256: input.sha256,
+      installedBy: input.principal,
+      installedAt,
+      snapshot,
+    },
+    event: "hook-updated",
+  }))
+})
+
+export const setEnabled = Effect.fn("RelayHookInstall.setEnabled")(function* (
+  input: Binding & { readonly installID: string; readonly enabled: boolean; readonly principal: string },
+) {
+  return yield* replace(input, (current) => ({
+    install: { ...current, enabled: input.enabled },
+    event: input.enabled ? "hook-enabled" : "hook-disabled",
+  }))
+})
+
+export const uninstall = Effect.fn("RelayHookInstall.uninstall")(function* (
+  input: Binding & { readonly installID: string; readonly principal: string },
+) {
+  return yield* mutate(input, (installs) => {
+    const current = installs.find((item) => item.installID === input.installID)
+    if (!current) return missing(input.installID)
+    return Effect.succeed({
+      installs: installs.filter((item) => item !== current),
+      changed: changed(current, "hook-uninstalled", input),
+    })
+  })
+})
+
+/**
+ * Marks every install of one document unpublished, or clears the mark, in one write. An unpublished install keeps its
+ * pin, order and enabled state but does not fire, as a pinned workflow run holds while its workflow is unpublished;
+ * a publish lets it fire its pinned version again. Only installs whose mark changes are receipted.
+ */
+export const setPublished = Effect.fn("RelayHookInstall.setPublished")(function* (
+  input: Binding & { readonly document: string; readonly published: boolean; readonly principal: string },
+) {
+  const pending = (install: RelayHook.Install) =>
+    install.document === input.document && !!install.unpublished === input.published
+  // A project with no install of this document is left as it is: no hooks.json is written where none was.
+  if (!(yield* read(input)).installs.some(pending)) return []
+  return yield* mutate(input, (installs) => {
+    const changes = installs.filter(pending)
+    const next = (install: RelayHook.Install): RelayHook.Install =>
+      input.published ? Struct.omit(install, ["unpublished"]) : { ...install, unpublished: true }
+    return Effect.succeed({
+      installs: installs.map((install) => (changes.includes(install) ? next(install) : install)),
+      changed: changes.map((install) =>
+        changed(next(install), input.published ? "hook-republished" : "hook-unpublished", input),
+      ),
+    })
+  })
+})
+
+/** Retire every snapshot of one document in a single authoritative profile write before deleting its authoring row. */
+export const uninstallDocument = Effect.fn("RelayHookInstall.uninstallDocument")(function* (
+  input: Binding & { readonly document: string; readonly principal: string },
+) {
+  return yield* mutate(input, (installs) => Effect.succeed({
+    installs: installs.filter((install) => install.document !== input.document),
+    changed: installs.filter((install) => install.document === input.document)
+      .map((install) => changed(install, "hook-uninstalled", input)),
+  }))
+})
+
+/** Sets the evaluation order to the given sequence, which must name every install exactly once. */
+export const reorder = Effect.fn("RelayHookInstall.reorder")(function* (
+  input: Binding & { readonly installIDs: ReadonlyArray<string> },
+) {
+  return yield* mutate(input, (installs) => {
+    const known = new Set(installs.map((item) => item.installID))
+    if (
+      input.installIDs.length !== installs.length ||
+      new Set(input.installIDs).size !== installs.length ||
+      input.installIDs.some((id) => !known.has(id))
+    )
+      return refuse("order-mismatch", "The order must name every installed hook exactly once.")
+    const reordered = input.installIDs.map((id, order) => ({
+      ...installs.find((item) => item.installID === id)!,
+      order,
+    }))
+    return Effect.succeed({ installs: reordered, changed: reordered })
+  })
+})
+`````
+
+**Plano `packages/core/src/relay-hook-install.ts` 240–252:** reuso nenhum; complemento literal abaixo.
+
+### HK01-2 — `packages/core/src/relay-hook-install.ts` linhas 240–252
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `df1a8ef2e1656d4f2a9a235447c3439fa25fa0f1`. SHA256 integral: `3663a7a5f1eedca77f66ce09229839aeec433440e2bd23d38fa36957d5e46833`. Bytes fonte: 22715. Intervalo byte `[ 10632, 11109 )`, zero-based, fim exclusivo. SHA256 trecho: `4d01e9d1bd4cf5203eafe1c49a1090adafcb51b61db97dc62cf91c4587901999`.
+
+`````text
+      const backup = `${target}.corrupt-${yield* Clock.currentTimeMillis}-${randomBytes(4).toString("hex")}`
+      yield* fs
+        .rename(target, backup)
+        .pipe(
+          Effect.mapError(
+            () => new Refused({ reason: "profile-write-acquisition", message: "Unable to move hooks.json aside." }),
+          ),
+        )
+      yield* write(fs, target, { installs: [] })
+      return { backup, installs: [] as ReadonlyArray<RelayHook.Install> }
+    }),
+  )
+})
+`````
+
+**Plano `packages/core/src/relay-hook-install.ts` 274–282:** reuso nenhum; complemento literal abaixo.
+
+### HK01-3 — `packages/core/src/relay-hook-install.ts` linhas 274–282
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `df1a8ef2e1656d4f2a9a235447c3439fa25fa0f1`. SHA256 integral: `3663a7a5f1eedca77f66ce09229839aeec433440e2bd23d38fa36957d5e46833`. Bytes fonte: 22715. Intervalo byte `[ 12547, 13014 )`, zero-based, fim exclusivo. SHA256 trecho: `5003391ac398ce2fc93d82c0ccc76a9e20e0725a8ec30b0f5a8e6e190aef2689`.
+
+`````text
+  if (hook.connections.some((edge) => edge.to === trigger.id)) return "The event takes no incoming connections"
+  const adjacency = Map.groupBy(hook.connections, (edge) => edge.from)
+  const seen = new Set<string>()
+  const visiting = new Set<string>()
+  const cyclic = (id: string): boolean => {
+    if (visiting.has(id)) return true
+    if (seen.has(id)) return false
+    visiting.add(id)
+    const found = (adjacency.get(id) ?? []).some((edge) => cyclic(edge.to))
+`````
+
+**Plano `packages/core/src/relay-hook-install.ts` 337–500:** reuso R023; complemento literal abaixo.
+
+### HK01-4 — `packages/core/src/relay-hook-install.ts` linhas 337–453
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `df1a8ef2e1656d4f2a9a235447c3439fa25fa0f1`. SHA256 integral: `3663a7a5f1eedca77f66ce09229839aeec433440e2bd23d38fa36957d5e46833`. Bytes fonte: 22715. Intervalo byte `[ 15430, 20805 )`, zero-based, fim exclusivo. SHA256 trecho: `c82921bb554753a8e25f3abb7e3af6a9bb085ba09aa3ceeed53ae7292927712a`.
+
+`````text
+const locate = Effect.fnUntraced(function* (fs: FSUtil.Interface, binding: Binding) {
+  if (!ID.test(binding.projectID)) return yield* refuse("profile-project-invalid", "Invalid project ID.")
+  const root = yield* fs
+    .realPath(binding.data)
+    .pipe(
+      Effect.mapError(
+        () => new Refused({ reason: "profile-state-root-acquisition", message: "The data directory is unavailable." }),
+      ),
+    )
+  return file(root, binding.projectID)
+})
+
+// The profile loader's rules: a regular file, no symlink on the way, at most MAX_BYTES, unchanged while read.
+const load = Effect.fnUntraced(function* (fs: FSUtil.Interface, target: string) {
+  const unreadable = () => new Refused({ reason: "profile-read-acquisition", message: "Unable to read hooks.json." })
+  const stat = fs.stat(target).pipe(
+    Effect.map((info) => Option.some(info)),
+    Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(Option.none())),
+    Effect.mapError(unreadable),
+  )
+  const before = yield* stat
+  if (Option.isNone(before)) return { installs: [] } satisfies RelayHook.Installs
+  if (before.value.type !== "File" || before.value.size > MAX_BYTES)
+    return yield* refuse("profile-not-file-or-overflow", "hooks.json is not a regular file within the size cap.")
+  if ((yield* fs.realPath(target).pipe(Effect.mapError(unreadable))) !== target)
+    return yield* refuse("profile-symlink-denied", "hooks.json resolves through a symlink.")
+  const bytes = yield* fs.readFile(target).pipe(Effect.mapError(unreadable))
+  const after = yield* stat
+  if (Option.isNone(after) || bytes.length !== Number(before.value.size) || stamp(after.value) !== stamp(before.value))
+    return yield* refuse("profile-changed-during-read", "hooks.json changed while it was read.")
+  const text = utf8(bytes)
+  if (Option.isNone(text)) return yield* refuse("profile-invalid", "hooks.json is not UTF-8.")
+  return yield* parse(text.value)
+})
+
+// Fatal: a replacement character would silently change what was written.
+const utf8 = Option.liftThrowable((bytes: Uint8Array) => new TextDecoder("utf-8", { fatal: true }).decode(bytes))
+
+function stamp(info: {
+  readonly size: unknown
+  readonly ino: Option.Option<number>
+  readonly mtime: Option.Option<Date>
+}) {
+  return JSON.stringify([
+    String(info.size),
+    Option.getOrUndefined(info.ino),
+    Option.getOrUndefined(info.mtime)?.getTime(),
+  ])
+}
+
+const parse = Effect.fnUntraced(function* (text: string) {
+  const corrupt = (message: string) => new Refused({ reason: "profile-invalid", message })
+  const parsed = yield* Schema.decodeUnknownEffect(Schema.UnknownFromJsonString)(text).pipe(
+    Effect.mapError(() => corrupt("hooks.json is not JSON.")),
+  )
+  const decoded = yield* Schema.decodeUnknownEffect(RelayHook.Installs)(parsed, STRICT).pipe(
+    Effect.mapError((error) => corrupt(`hooks.json is not a hook install list: ${error.message}`)),
+  )
+  if (new Set(decoded.installs.map((item) => item.installID)).size !== decoded.installs.length)
+    return yield* corrupt("hooks.json repeats an install ID.")
+  // Kept as read, not as decoded, so each snapshot keeps the key order its sha256 covers.
+  const installs = (parsed as RelayHook.Installs).installs
+  const broken = yield* Effect.forEach(installs, (item) =>
+    Effect.gen(function* () {
+      if (!ID.test(item.installID)) return `Install ${item.installID} has an invalid ID.`
+      const digest = yield* RelayJson.compact(item.snapshot).pipe(Effect.map(sha256), Effect.option)
+      if (!Option.contains(digest, item.sha256)) return `Install ${item.installID} does not match its sha256.`
+      const rule = violation(item.snapshot)
+      return rule ? `Install ${item.installID}: ${rule}` : undefined
+    }),
+  ).pipe(Effect.map((reasons) => reasons.find((reason) => reason !== undefined)))
+  if (broken) return yield* corrupt(broken)
+  return { installs } satisfies RelayHook.Installs
+})
+
+// Read, change and replace hooks.json under the file's lock.
+function mutate<A>(
+  binding: Binding,
+  change: (
+    installs: ReadonlyArray<RelayHook.Install>,
+  ) => Effect.Effect<{ readonly installs: ReadonlyArray<RelayHook.Install>; readonly changed: A }, Refused>,
+) {
+  return Effect.gen(function* () {
+    const fs = yield* FSUtil.Service
+    const target = yield* locate(fs, binding)
+    return yield* locks.withLock(target)(
+      Effect.gen(function* () {
+        const next = yield* change((yield* load(fs, target)).installs)
+        yield* write(fs, target, { installs: next.installs })
+        return next.changed
+      }),
+    )
+  })
+}
+
+function replace(
+  input: Binding & { readonly installID: string; readonly principal: string },
+  edit: (current: RelayHook.Install) => {
+    readonly install: RelayHook.Install
+    readonly event: RelayLedger.HookLifecycleEvent
+  },
+) {
+  return mutate(input, (installs) => {
+    const current = installs.find((item) => item.installID === input.installID)
+    if (!current) return missing(input.installID)
+    const next = edit(current)
+    return Effect.succeed({
+      installs: installs.map((item) => (item === current ? next.install : item)),
+      changed: changed(next.install, next.event, input),
+    })
+  })
+}
+
+/**
+ * Write beside the target and rename over it, so a reader sees the old file or the new one, never a part. The file is
+ * read back first: the writer never leaves a file the loader would refuse.
+ */
+`````
+
+### HK01-5 — `packages/core/src/relay-hook-install.ts` linhas 475–500
+
+Commit: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Blob: `df1a8ef2e1656d4f2a9a235447c3439fa25fa0f1`. SHA256 integral: `3663a7a5f1eedca77f66ce09229839aeec433440e2bd23d38fa36957d5e46833`. Bytes fonte: 22715. Intervalo byte `[ 22122, 22715 )`, zero-based, fim exclusivo. SHA256 trecho: `8a881aa2c4caa31ecd2c040409d69006e5498927ce64144b9c77966414eb7438`.
+
+`````text
+
+function changed(
+  install: RelayHook.Install,
+  event: RelayLedger.HookLifecycleEvent,
+  input: { readonly principal: string },
+): Changed {
+  return {
+    install,
+    receipt: {
+      event,
+      install: install.installID,
+      document: install.document,
+      version: install.version,
+      sha256: install.sha256,
+      principal: input.principal,
+    },
+  }
+}
+
+function missing(installID: string) {
+  return refuse("install-missing", `No installed hook ${installID}.`)
+}
+
+function refuse(reason: Reason, message: string) {
+  return Effect.fail(new Refused({ reason, message }))
+}
+`````
+
+**Plano `packages/core/src/relay-hook-shipper.ts` 1–130:** reuso R028, R029; complemento literal abaixo.
+
+### HK02-1 — `packages/core/src/relay-hook-shipper.ts` linhas 1–38
+

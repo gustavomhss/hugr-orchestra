@@ -1,0 +1,176 @@
+{
+  "schema": "genesis-l1-literal-correction/v1",
+  "revision": 3,
+  "finding": "RB-J2-F01",
+  "status": "APPLIED_DOCUMENTARY_QUALIFICATION",
+  "produced_at_utc": "2026-11-15T02:50:25.790847+00:00",
+  "BEFORE": "`locate.ts` combina termos/símbolos/pergunta, mapa e buscas, com orçamento máximo de 32 buscas, no máximo dez buscas de vizinhos, cinco seeds e três snippets por arquivo.",
+  "AFTER": "`locate.ts` combina termos/símbolos/pergunta, mapa e buscas. Com índice utilizável, a seleção reserva uma chamada `map` e até dez buscas de vizinhos dentro do orçamento de 32; sem `sources.query`, permite até 32 listas lexicais. Se `sources.query` existe, mas a sondagem `map` retorna `index_unavailable` ou `index_building`, essa chamada já ocorreu e não é descontada das 32 listas lexicais: 16 termos distintos podem gerar 33 consultas internas. O limite é de cinco seeds e três snippets por arquivo.",
+  "BEFORE_literal_sha256": "bff391791117c1945034cb28dcf9358bd0b5987ff8dbbbb4017b8486a05667d1",
+  "AFTER_literal_sha256": "b9d3931ab4f9145f2374857bc28d6553e87c1bad5b28c0de0258f26693e745eb",
+  "before_body": {
+    "path": "history/body-v2.md",
+    "bytes": 63501,
+    "sha256": "d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661",
+    "git_blob_sha": "bb0eaa73b4fe9120fb46d9304778649b5c7205dd"
+  },
+  "after_body": {
+    "path": "body.md",
+    "bytes": 63841,
+    "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+    "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4"
+  },
+  "body_line": 239,
+  "before_byte_range": [
+    38749,
+    38924
+  ],
+  "after_byte_range": [
+    38749,
+    39264
+  ],
+  "substitutions": 1,
+  "line_diff_operations": [
+    [
+      "replace",
+      238,
+      239,
+      238,
+      239
+    ]
+  ],
+  "remaining_body_bytes_identical": true,
+  "static_finding": {
+    "classification": "confirmed_by_static_source_reading",
+    "path_condition": "sources.query exists; initial map returns index_unavailable or index_building; 16 distinct terms",
+    "count": "1 initial map query + 16 lexical + 16 lexical-wide = 33 internal calls",
+    "runtime_reproduction": "NOT_RUN"
+  },
+  "sources": [
+    {
+      "source_id": "RB-S005",
+      "path": "packages/core/src/research-toolkit/locate.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bytes": 16148,
+      "sha256": "0ebac9d228ca1764020e0f7ccf260228dc02c1169c0143c07f258e7c7ac650f2",
+      "git_blob_sha": "d1343801f7b336d5e5b46eac860f6a07a0ae19fa",
+      "archive_path": "sources/packages/core/src/research-toolkit/locate.ts",
+      "excerpts": [
+        {
+          "lines": [
+            37,
+            43
+          ],
+          "bytes": 149,
+          "sha256": "a09a6fa5a7b035b52c445e8f86581789c7fc8b467beeeb89f5a027ed7a0cd939"
+        },
+        {
+          "lines": [
+            56,
+            79
+          ],
+          "bytes": 1884,
+          "sha256": "241f6e9f17a2e4f530d245d5055986a2dce7efed8ee2cceaca3c63381c828253"
+        },
+        {
+          "lines": [
+            187,
+            199
+          ],
+          "bytes": 683,
+          "sha256": "41ef7a0a4be2d003d5dea2922a0e184c8a55a00777455435b8c29d8ca2a91000"
+        }
+      ]
+    },
+    {
+      "source_id": "RB-S032",
+      "path": "packages/core/test/research-locate.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "bytes": 8418,
+      "sha256": "ef4ff4e93af664f8810da34386b235ef33071fcbba9868bf9904aa40f72f801a",
+      "git_blob_sha": "53aed544518715b880e3415295e94da7756cc9ad",
+      "archive_path": "sources/packages/core/test/research-locate.test.ts",
+      "excerpts": [
+        {
+          "lines": [
+            34,
+            62
+          ],
+          "bytes": 1479,
+          "sha256": "afeb22edfa8cc31a3661842d2b5a69b0c532c7142b287b5a5084be35dd09dff6"
+        },
+        {
+          "lines": [
+            98,
+            114
+          ],
+          "bytes": 1129,
+          "sha256": "581f5c889e20c0bb5c68127d7978e0f2b2e1fc2d418ee06979f5566110055e97"
+        },
+        {
+          "lines": [
+            116,
+            121
+          ],
+          "bytes": 417,
+          "sha256": "e30b9a119dcf52fceccfc0645aa270335a0a2ab41ea41babe8b589e59cef20c8"
+        }
+      ]
+    }
+  ],
+  "request": {
+    "path": "revisions/v3/request.txt",
+    "bytes": 2899,
+    "sha256": "34c7f006385a7921ca3ebb3aaf7ff31a866c16192c49f8211cf27fab95964224",
+    "git_blob_sha": "b09b0a85f6a41fa1e5269903c0d0538ef0b54105"
+  },
+  "public_finding": {
+    "path": "revisions/v3/j2-finding.md",
+    "bytes": 974,
+    "sha256": "a7504bff3418ff3778e5d56b2c403858eb08f6c97fb3dfbefd7d66dae1b4316a",
+    "git_blob_sha": "accb3f921308f1c3c665d20b1aa7f6e40104b976"
+  },
+  "effective_procedure": {
+    "path": "revisions/v3/apply.py",
+    "bytes": 17112,
+    "sha256": "1a06fb787058915ac20e696c5c8ea855dcda7813d9b208d15fa3770336de2f2e",
+    "git_blob_sha": "224ac97db71f108e4e8a945a6a3327afad725af7"
+  },
+  "procedure_freeze": {
+    "path": "revisions/v3/apply-freeze.json",
+    "bytes": 4550,
+    "sha256": "65ceaf32de80a5b134d63e28fadc9271c822470d768d9d852d1ce8ce5287bacd",
+    "git_blob_sha": "f4cce3bb20fe952594a39e886d58d2ecb9dd4b64"
+  },
+  "input_extension": {
+    "path": "revisions/v3/input-manifest-extension.json",
+    "bytes": 7585,
+    "sha256": "95e1d759bace7baa2f8e5bed6f65ee9f5fba1f4a4c24b7f93a4b8d2318bc1101",
+    "git_blob_sha": "6910dfb1a66c7140c3d06c0eb19b182c56ba4e30"
+  },
+  "review_supplement": {
+    "path": "revisions/v3/review-supplement.md",
+    "bytes": 9589,
+    "sha256": "46ba4a495ad9d9a25f19d8ca410ee45f606c390aa1f8e7dd73766e200fe112a6",
+    "git_blob_sha": "86bacfefc5063338fed38b986b11cc44bc0a2eeb"
+  },
+  "preservation_scope": "Only consumed v2 body/recipe and the two source files were compared. No full archive hash sweep was performed. Other earlier artifacts were neither opened nor written by this executable.",
+  "prior_recipe_v2": {
+    "path": "history/recipe-v2.json",
+    "bytes": 138195,
+    "sha256": "09505ca6228267ab6ad9c0397c7a45690009b1738ae3aa53c8b8df722db5598b",
+    "git_blob_sha": "cd3e47810afc47fec314bab149c7ce0653f4fc9b"
+  },
+  "semantic_status": "SAME_PAIR_REEVALUATION_PENDING; no producer PASS",
+  "not_performed": [
+    "product edit",
+    "product test",
+    "network call",
+    "publication",
+    "oracle access",
+    "reserved judgment access",
+    "new judge",
+    "L2 production",
+    "prior audit alteration"
+  ]
+}

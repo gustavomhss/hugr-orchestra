@@ -1,0 +1,802 @@
+20: 
+21: /** Outputs retained as evidence. */
+22: export const RETAINED = ["read", "grep", "glob", "websearch", "code_locate", "code_query", "code_search", "probe_run", "atlas_context"] as const
+23: 
+24: /** Claude Code builtins whose output PostToolUse captures. */
+25: export const CAPTURED = ["Read", "Grep", "Glob", "WebSearch"] as const
+```
+
+**Referência compartilhada verificável:** `review-supplement-a.md`, SHA-256 `900fd149a1182df270ef6f71fce883793dba1a836df2dd2dd67e500c268f4aca`, grupo `RA1-P`, linhas 293–439, bytes [17509, 38167) (offset zero, fim exclusivo). Hash do recorte: `a9cfbf2fbe35f2fdac2631378652a7d75e034b5fc49dea45cf6caa61f06bd835`.
+
+A projeção contém os campos `path/role/need/read_depth/body_sections` das **130** rows de `coverage.jsonl` (SHA-256 `bb06bcef77a2dbeccabc70dd00dc10d70bf22cb338588661d7ecc9f49e01eec9`), preserva número de linha original e guarda no índice A o hash de cada row. Reconciliação mecânica: **130 = 59 backend-toolkit + 71 research = 80 implementation + 41 test_code + 7 runtime_data_or_pin + 1 generated_output + 1 documentation**. A marca de pertinência R0–R7 em A não exclui as 27 rows posteriores: todas as 130 estão presentes. O suplemento B referencia essa mesma população integral.
+
+### RB7-02 — E44: expectativas decisivas de marker, shim e binário ausente
+
+Vínculo: corpo R2, R13; archive E44.
+
+**Contrato de fonte, sem execução.** Asserções abaixo não são resultados desta produção.
+
+**RB-S020 — `packages/core/test/backend-toolkit.test.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `3eea6205614cc9cea12be23c820e1d53f9b6ffac` · SHA-256 `0c455829b290c1d35b67cd6bc1777918943fa1b7b1d37880c0a978075af71fa0` · 17079 bytes.
+
+Arquivo integral: `sources/packages/core/test/backend-toolkit.test.ts`; archive: E44.
+
+Linhas 161–174.
+
+```text
+161: it.live("complete caches need a host shim and an executable; prefetch repairs the missing shim", () =>
+162:   Effect.gen(function* () {
+163:     const f = yield* fixture
+164:     const scoped = within(f.root, f.manifest())
+165:     const result = yield* BackendToolkit.ensure("sqlc").pipe(scoped)
+166:     yield* Effect.promise(() => rm(path.join(f.root, "bin", file("sqlc"))))
+167:     expect(yield* BackendToolkit.status("sqlc").pipe(scoped)).toMatchObject([{ status: "absent" }])
+168:     expect(yield* BackendToolkit.prefetch(["sqlc"]).pipe(scoped)).toMatchObject([{ status: "ready", executable: result.executable }])
+169:     yield* Effect.promise(() => rm(result.executable))
+170:     expect(yield* BackendToolkit.status("sqlc").pipe(scoped)).toMatchObject([{ status: "absent" }])
+171:     expect(yield* BackendToolkit.prefetch(["sqlc"]).pipe(scoped)).toMatchObject([{ status: "failed", cause: "executable-missing" }])
+172:     expect(f.hits).toEqual({ ["/" + file("sqlc")]: 1 })
+173:   }), 30_000,
+174: )
+```
+
+**RB-S021 — `packages/core/test/backend-toolkit-source-readiness.test.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `0b5ddae83a45a11e5a546be9edc8393d1b161791` · SHA-256 `049b094e5266d65b48f48feb3cf526eccb9aefc36e00aa9e0ef79352aa03d157` · 7634 bytes.
+
+Arquivo integral: `sources/packages/core/test/backend-toolkit-source-readiness.test.ts`; archive: E44.
+
+Linhas 106–122.
+
+```text
+106: ;(["hosted", "ensure"] as const).forEach((api) => {
+107:   ;(["directory", "nonexecutable"] as const).forEach((mode) => {
+108:     const test = mode === "nonexecutable" && process.platform === "win32" ? it.live.skip : it.live
+109:     test(`zero-exit source builder ${mode} rejected before publication through ${api}`, () => Effect.gen(function* () {
+110:       const f = yield* fixture
+111:       const failure = yield* f.install(mode, api).pipe(Effect.flip)
+112:       expect(failure).toContain("install:go:failed:source-executable-not-ready")
+113:       const call = yield* Effect.promise(() => Bun.file(path.join(f.root, "cache", "call.json")).json())
+114:       expect(call.mode).toBe(mode)
+115:       expect(call.cwd).toStartWith(path.join(path.dirname(f.directory), ".staging-"))
+116:       expect(call.args).toEqual(["-trimpath", "-o", call.output, mode])
+117:       expect(yield* PinnedArtifact.installed(f.directory)).toBe(false)
+118:       expect(yield* Effect.promise(() => stat(f.directory).catch(() => undefined))).toBeUndefined()
+119:       expect(yield* Effect.promise(() => stat(path.dirname(call.cwd)).catch(() => undefined))).toBeUndefined()
+120:       expect(yield* Effect.promise(() => readdir(path.dirname(f.directory)))).toEqual([])
+121:     }))
+122:   })
+```
+
+### RB7-03 — E45: expectativas stale/dirty/encoding e retenção acima do budget
+
+Vínculo: corpo R6, R7, R8, R13; archive E45.
+
+**Contrato de fonte, sem execução.** Asserções abaixo não são resultados desta produção.
+
+**RB-S022 — `packages/core/test/code-index-query.test.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `89bd7ce2a6edaa5af7df10dcee03de0bdd2fa06e` · SHA-256 `5759817d4df6aafb66b8a6827a4c4a0942ff8ea4f2e7f755abe3c0f952e81be4` · 25982 bytes.
+
+Arquivo integral: `sources/packages/core/test/code-index-query.test.ts`; archive: E45.
+
+Linhas 347–383.
+
+```text
+347:   test("a modified file comes back as dirty-overlay, and a definition only in the dirty file is found", async () => {
+348:     const f = await fixture()
+349:     await using _ = f.tmp
+350:     await f.build()
+351:     await Bun.write(path.join(f.root, "packages/a/src/use.ts"), "edited")
+352:     f.repo.state.dirty = [{ path: "packages/a/src/use.ts" }]
+353:     const result = await query(f.context, { op: "definition", name: "freshlyAdded" })
+354:     expect(result.resolved?.range).toEqual({ path: "packages/a/src/use.ts", startLine: 22, endLine: 28 })
+355:     expect(result.basis.freshness).toBe("dirty-overlay")
+356:     expect(result.basis.basis.dirtyDigest).toMatch(/^[0-9a-f]{64}$/)
+357:     expect(f.overlays).toEqual([["packages/a/src/use.ts"]])
+358:     const clean = await query(f.context, { op: "definition", name: "main" })
+359:     expect(clean.basis.freshness).toBe("fresh")
+360:   })
+361: 
+362:   test("while a shard rebuilds the query answers from the previous commit as stale", async () => {
+363:     const f = await fixture()
+364:     await using _ = f.tmp
+365:     await f.build()
+366:     f.repo.commit("c2", { "packages/b/src/main.ts": lines(9) + "\n// edit" })
+367:     const result = await query(f.context, { op: "definition", name: "main" })
+368:     expect(result.resolved?.name).toBe("main")
+369:     expect(result.basis.freshness).toBe("stale")
+370:     expect(result.basis.coverage.skipped).toContainEqual({ path: "packages/b/src/main.ts", reason: "changed-since-index" })
+371:     expect(result.basis.basis.commit).toBe("c2")
+372:   })
+373: 
+374:   test("named failures, never an empty success", async () => {
+375:     const f = await fixture()
+376:     await using _ = f.tmp
+377:     expect((await failure({ ...f.context, indexers: {} }, { op: "symbols" })).code).toBe("index_unavailable")
+378:     expect((await failure(f.context, { op: "symbols" })).code).toBe("index_unavailable")
+379:     expect((await failure(f.context, { op: "imports", path: "../outside.ts" })).code).toBe("reference_invalid")
+380:     expect((await failure(f.context, { op: "map", path: "scripts" })).code).toBe("index_unavailable")
+381:     // With an extractor the query starts the first build in the background and says so.
+382:     expect((await failure({ ...f.context, extract: f.built.extract }, { op: "symbols" })).code).toBe("index_building")
+383:   })
+```
+
+**RB-S023 — `packages/core/test/code-index-store.test.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `cb745065bf6208f70ec38456e78d0dba7bdad26d` · SHA-256 `1b6bcbc705aefe57d2620982e4cc3914fa67bd67464bcda16dfbcf587341c730` · 5359 bytes.
+
+Arquivo integral: `sources/packages/core/test/code-index-store.test.ts`; archive: E45.
+
+Linhas 53–87.
+
+```text
+53:   test("keeps the most recent commits and evicts least recently used shards over the byte cap", async () => {
+54:     await using tmp = await tmpdir()
+55:     const keys = Array.from({ length: 10 }, (_, index) => `k${index}`)
+56:     const record = (index: number) => ({ commit: `c${index}`, at: index, shards: [{ id: "ts:.", key: keys[index]! }, { id: "ts:lib", key: "shared" }] })
+57:     await writeFile(path.join(tmp.path, "shared.sqlite"), Buffer.alloc(100))
+58:     const removed = await Effect.runPromise(Effect.gen(function* () {
+59:       // Each commit's shard lands just before the commit is recorded, as a build does.
+60:       const all = yield* Effect.forEach(keys.map((_, index) => index), (index) =>
+61:         Effect.promise(() => writeFile(path.join(tmp.path, `${keys[index]}.sqlite`), Buffer.alloc(100))).pipe(
+62:           Effect.andThen(CodeIndexStore.retain(tmp.path, record(index), { commits: 8, bytes: 1_000_000 }))))
+63:       return all.flat()
+64:     }))
+65:     // Ten commits under an eight-commit limit: the two oldest commits' own shards go, the shared one stays.
+66:     expect(removed.sort()).toEqual(["k0", "k1"])
+67:     const after = await Effect.runPromise(CodeIndexStore.records(tmp.path))
+68:     expect(after.map((entry) => entry.commit)).toEqual(["c9", "c8", "c7", "c6", "c5", "c4", "c3", "c2"])
+69: 
+70:     // 300 bytes keep the newest commit plus one: each commit adds 100 bytes beyond the shared shard.
+71:     const evicted = await Effect.runPromise(CodeIndexStore.retain(tmp.path, record(9), { commits: 8, bytes: 300 }))
+72:     expect(evicted.sort()).toEqual(["k2", "k3", "k4", "k5", "k6", "k7"])
+73:     expect((await readdir(tmp.path)).filter((name) => name.endsWith(".sqlite")).sort()).toEqual(["k8.sqlite", "k9.sqlite", "shared.sqlite"])
+74: 
+75:     // The newest commit survives even when it alone exceeds the cap.
+76:     expect(await Effect.runPromise(CodeIndexStore.retain(tmp.path, record(9), { commits: 8, bytes: 1 }))).toEqual(["k8"])
+77:   })
+78: 
+79:   test("touch moves a commit to the front without dropping shards", async () => {
+80:     await using tmp = await tmpdir()
+81:     await Effect.runPromise(Effect.gen(function* () {
+82:       yield* CodeIndexStore.retain(tmp.path, { commit: "old", at: 1, shards: [] }, { commits: 8, bytes: 1 })
+83:       yield* CodeIndexStore.retain(tmp.path, { commit: "new", at: 2, shards: [] }, { commits: 8, bytes: 1 })
+84:       yield* CodeIndexStore.touch(tmp.path, "old")
+85:     }))
+86:     expect((await Effect.runPromise(CodeIndexStore.records(tmp.path))).map((entry) => entry.commit)).toEqual(["old", "new"])
+87:   })
+```
+
+**RB-S024 — `packages/core/test/research-toolkit/code-index-scip-encoding.test.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `72dfcf7b6b82f3755923e9ab81898b15e9e33f06` · SHA-256 `84837ea6b1f329ed10c6abdbaa4d8206f15ad113584ab5a3ef8bf0f841e062cf` · 3163 bytes.
+
+Arquivo integral: `sources/packages/core/test/research-toolkit/code-index-scip-encoding.test.ts`; archive: E45.
+
+Linhas 13–26.
+
+```text
+13: const GO = `package main\n\nfunc run() int {\n\tlabel := "ünï→✓"; return helpers.DoubleIt(len(label))\n}\n`
+14: const RUST = `pub fn run() -> i32 {\n    let label = "ünï→✓🚀"; helpers::double_it(label.len() as i32)\n}\n`
+15: 
+16: const dump = async (dir: string, tool: string, document: { path: string; range: number[]; encoding?: PositionEncoding; text?: string }) => {
+17:   const file = path.join(dir, `${tool}.scip`)
+18:   await Bun.write(file, toBinary(IndexSchema, create(IndexSchema, {
+19:     metadata: { toolInfo: { name: tool, version: "0" } },
+20:     documents: [{
+21:       relativePath: document.path, language: "x", positionEncoding: document.encoding, text: document.text,
+22:       occurrences: [{ range: document.range, symbol: `${tool} x x 0 pkg/Target().`, symbolRoles: 0 }],
+23:     }],
+24:   })))
+25:   return file
+26: }
+```
+
+Linhas 28–53.
+
+```text
+28: const columns = (index: Scip.Index) => index.documents[0]!.occurrences.map((occ) => [occ.startLine, occ.startCol, occ.endCol])
+29: 
+30: describe("SCIP columns in UTF-16 units", () => {
+31:   test("scip-go's undeclared UTF-8 byte offsets are converted against the Go source line", async () => {
+32:     await using dir = await tmpdir()
+33:     const file = await dump(dir.path, "scip-go", { path: "main.go", range: [3, 40, 48] })
+34:     // 1-based start, exclusive end: `DoubleIt` starts at UTF-16 offset 34 on line 4.
+35:     expect(columns(Scip.readScip(file, { prefix: "go", source: (name) => name === "go/main.go" ? GO : undefined }))).toEqual([[4, 35, 42]])
+36:   })
+37: 
+38:   test("rust-analyzer's declared UTF-8 offsets are converted, an astral character counting two units", async () => {
+39:     await using dir = await tmpdir()
+40:     const file = await dump(dir.path, "rust-analyzer", {
+41:       path: "src/lib.rs", range: [1, 44, 53], encoding: PositionEncoding.UTF8CodeUnitOffsetFromLineStart,
+42:     })
+43:     expect(columns(Scip.readScip(file, { source: () => RUST }))).toEqual([[2, 37, 45]])
+44:   })
+45: 
+46:   test("UTF-32 offsets convert from the dump's own text, and UTF-16 offsets stay as emitted", async () => {
+47:     await using dir = await tmpdir()
+48:     const utf32 = await dump(dir.path, "utf32", { path: "src/lib.rs", range: [1, 35, 44], encoding: PositionEncoding.UTF32CodeUnitOffsetFromLineStart, text: RUST })
+49:     expect(columns(Scip.readScip(utf32))).toEqual([[2, 37, 45]])
+50:     // scip-typescript and scip-python count UTF-16 units already.
+51:     const utf16 = await dump(dir.path, "scip-typescript", { path: "src/lib.rs", range: [1, 36, 45] })
+52:     expect(columns(Scip.readScip(utf16, { source: () => RUST }))).toEqual([[2, 37, 45]])
+53:   })
+```
+
+### RB7-04 — E46: expectativas de binding, custódia, fonte parcial, symlink e corrupção
+
+Vínculo: corpo R10, R11, R13; archive E46.
+
+**Contrato de fonte, sem execução.** Asserções abaixo não são resultados desta produção.
+
+**RB-S025 — `packages/core/test/research-binding.test.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `a0bed7ab69d086b18cd4e921e477a9b35a0ed4a9` · SHA-256 `3fc62da977ccf97ebd3fa989448432f44f8dcd861c06e831756b2ad050a45db5` · 8564 bytes.
+
+Arquivo integral: `sources/packages/core/test/research-binding.test.ts`; archive: E46.
+
+Linhas 95–121.
+
+```text
+95:   it.live("retained child binding and actual invocation admit; missing frame and forged claims fail", () => researchFixture((fixture) =>
+96:     Effect.gen(function* () {
+97:       const valid = yield* callFrame(fixture.binding, fixture.context, ResearchBinding.require(fixture.binding, fixture.context))
+98:       expect(valid).toEqual(fixture.binding)
+99:       const missing = yield* ResearchBinding.require(fixture.binding, fixture.context).pipe(Effect.flip)
+100:       expect(missing.code).toBe("binding_missing")
+101:       const forged = { ...fixture.binding, taskId: "copied-title" }
+102:       expect((yield* callFrame(fixture.binding, fixture.context, ResearchBinding.require(forged, fixture.context)).pipe(Effect.flip)).code).toBe("binding_mismatch")
+103:       const unpersisted = { ...fixture.context, toolCallID: "forged-call" }
+104:       expect((yield* callFrame(fixture.binding, unpersisted, ResearchBinding.require(fixture.binding, unpersisted)).pipe(Effect.flip)).code).toBe("binding_mismatch")
+105:       expect((yield* ResearchBinding.resolve(fixture.binding.executionSessionID, Project.ID.make("foreign-project")).pipe(Effect.flip)).code).toBe("not_found")
+106:     }),
+107:   ))
+108: 
+109:   it.live("caller seat/label cannot substitute for retained native owner; deleted Session loses access", () => researchFixture((fixture) =>
+110:     Effect.gen(function* () {
+111:       const database = yield* Database.Service
+112:       const foreign = { ...fixture.context, agent: Agent.ID.make("backend") }
+113:       expect((yield* callFrame(fixture.binding, foreign, ResearchBinding.require(fixture.binding, foreign)).pipe(Effect.flip)).code).toBe("binding_mismatch")
+114:       yield* database.db.update(SessionTable).set({ agent: "configured-lookalike" }).where(eq(SessionTable.id, fixture.binding.executionSessionID)).run().pipe(Effect.orDie)
+115:       expect((yield* ResearchBinding.resolve(fixture.binding.executionSessionID, fixture.binding.projectID).pipe(Effect.flip)).code).toBe("not_found")
+116:       yield* database.db.update(SessionTable).set({ agent: "jimmy" }).where(eq(SessionTable.id, fixture.binding.executionSessionID)).run().pipe(Effect.orDie)
+117:       expect(yield* ResearchBinding.resolve(fixture.binding.executionSessionID, fixture.binding.projectID)).toEqual(fixture.binding)
+118:       yield* database.db.delete(SessionTable).where(eq(SessionTable.id, fixture.binding.executionSessionID)).run().pipe(Effect.orDie)
+119:       expect((yield* ResearchBinding.resolve(fixture.binding.executionSessionID, fixture.binding.projectID).pipe(Effect.flip)).code).toBe("not_found")
+120:     }),
+121:   ))
+```
+
+**RB-S026 — `packages/core/test/research-artifacts.test.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `31ae551a9de42954c9f06984eeecba98b725eb77` · SHA-256 `47960eef80bbae8f9aad0254f15c5278dcb5ff9e319c3a8cb74acf4303231810` · 10671 bytes.
+
+Arquivo integral: `sources/packages/core/test/research-artifacts.test.ts`; archive: E46.
+
+Linhas 40–91.
+
+```text
+40:   it.live("file-before-event recovery uses stable operation; a file/ref alone grants no read", () => researchFixture((fixture) =>
+41:     Effect.gen(function* () {
+42:       const artifacts = yield* ResearchArtifacts.Service
+43:       const records = yield* ResearchRecords.Service
+44:       const operation = ResearchLedger.operation(fixture.context, "capture:text")
+45:       const first = yield* artifacts.put(fixture.binding, { content: "historical bytes", representation: "text" }, operation)
+46:       expect((yield* artifacts.read(fixture.binding, first.ref).pipe(Effect.flip)).code).toBe("not_found")
+47:       const replay = yield* artifacts.put(fixture.binding, { content: "historical bytes", representation: "text", artifact: first.ref }, operation)
+48:       expect(replay).toEqual(first)
+49:       const changed = yield* artifacts.put(fixture.binding, { content: "new live bytes", representation: "text", artifact: first.ref }, operation).pipe(Effect.flip)
+50:       expect(changed.code).toBe("conflict")
+51:       const wrongRef = yield* artifacts.put(fixture.binding, { content: "historical bytes", representation: "text", artifact: { id: Capability.ArtifactID.create(), revision: 1 } }, operation).pipe(Effect.flip)
+52:       expect(wrongRef.code).toBe("conflict")
+53:       const receipt = yield* callFrame(fixture.binding, fixture.context, records.capture(fixture.binding, fixture.context, {
+54:         origin: { kind: "url", uri: "https://fixture.invalid/versioned" }, representation: "text", mediaType: "text/plain", content: "historical bytes", complete: true,
+55:       }))
+56:       expect(receipt.ref.artifact).toEqual(first.ref)
+57:       const page = yield* artifacts.read(fixture.binding, receipt.ref.artifact)
+58:       expect(page.text).toBe("historical bytes")
+59:       expect(page.receipt).toEqual(receipt)
+60:       expect(page.complete).toBe(true)
+61:       expect((yield* artifacts.read({ ...fixture.binding, taskId: "guessed-task" }, receipt.ref.artifact).pipe(Effect.flip)).code).toBe("binding_mismatch")
+62:     }),
+63:   ))
+64: 
+65:   it.live("UTF-8 pages remain <=16KiB and exact; cursor cannot select another admitted artifact", () => researchFixture((fixture) =>
+66:     Effect.gen(function* () {
+67:       const records = yield* ResearchRecords.Service
+68:       const artifacts = yield* ResearchArtifacts.Service
+69:       const text = "a" + "😀".repeat(10000) + " decisive qualifier"
+70:       const receipt = yield* callFrame(fixture.binding, fixture.context, records.capture(fixture.binding, fixture.context, {
+71:         origin: { kind: "file", uri: "fixture.txt", revision: "dirty-observed" }, representation: "text", mediaType: "text/plain", content: text, complete: false,
+72:       }))
+73:       const first = yield* artifacts.read(fixture.binding, receipt.ref.artifact)
+74:       expect(Buffer.byteLength(first.text)).toBeLessThanOrEqual(Research.Limits.pageBytes)
+75:       expect(first.cursor).toBeDefined()
+76:       if (!first.cursor) throw new Error("Expected bounded continuation")
+77:       const second = yield* artifacts.read(fixture.binding, receipt.ref.artifact, first.cursor)
+78:       expect(Buffer.byteLength(second.text)).toBeLessThanOrEqual(Research.Limits.pageBytes)
+79:       if (!second.cursor) throw new Error("Expected second continuation")
+80:       const third = yield* artifacts.read(fixture.binding, receipt.ref.artifact, second.cursor)
+81:       expect(Buffer.byteLength(third.text)).toBeLessThanOrEqual(Research.Limits.pageBytes)
+82:       expect(first.text + second.text + third.text).toBe(text)
+83:       expect(third.complete).toBe(false)
+84:       expect(third.cursor).toBeUndefined()
+85:       const context = yield* fixture.call()
+86:       const other = yield* callFrame(fixture.binding, context, records.capture(fixture.binding, context, {
+87:         origin: { kind: "file", uri: "other.txt" }, representation: "text", mediaType: "text/plain", content: "other", complete: true,
+88:       }))
+89:       expect((yield* artifacts.read(fixture.binding, other.ref.artifact, first.cursor).pipe(Effect.flip)).code).toBe("reference_invalid")
+90:       expect((yield* artifacts.read(fixture.binding, receipt.ref.artifact, "not-json").pipe(Effect.flip)).code).toBe("reference_invalid")
+91:     }),
+```
+
+Linhas 94–113.
+
+```text
+94:   it.live("old captures retain task lifetime; corrupt/missing bytes and symlinked roots are unavailable", () => researchFixture((fixture) =>
+95:     Effect.gen(function* () {
+96:       const records = yield* ResearchRecords.Service
+97:       const artifacts = yield* ResearchArtifacts.Service
+98:       const receipt = yield* callFrame(fixture.binding, fixture.context, records.capture(fixture.binding, fixture.context, {
+99:         origin: { kind: "file", uri: "retained.txt" }, representation: "text", mediaType: "text/plain", content: "exact capture", complete: true,
+100:       }))
+101:       const root = path.join(fixture.root, "research", ResearchLedger.digest(fixture.binding.projectID), ResearchLedger.digest(fixture.binding.taskId))
+102:       const filename = path.join(root, `${receipt.ref.artifact.id}-1.body`)
+103:       yield* Effect.promise(() => fs.utimes(filename, new Date(0), new Date(0)))
+104:       expect((yield* artifacts.read(fixture.binding, receipt.ref.artifact)).text).toBe("exact capture")
+105:       yield* Effect.promise(() => fs.writeFile(filename, "same-length!!"))
+106:       expect((yield* artifacts.read(fixture.binding, receipt.ref.artifact).pipe(Effect.flip)).code).toBe("source_unavailable")
+107:       yield* Effect.promise(() => fs.unlink(filename))
+108:       expect((yield* artifacts.read(fixture.binding, receipt.ref.artifact).pipe(Effect.flip)).code).toBe("source_unavailable")
+109:       yield* Effect.promise(() => fs.rename(root, root + "-owned"))
+110:       yield* Effect.promise(() => fs.symlink(root + "-owned", root, process.platform === "win32" ? "junction" : "dir"))
+111:       expect((yield* artifacts.read(fixture.binding, receipt.ref.artifact).pipe(Effect.flip)).code).toBe("source_unavailable")
+112:     }),
+113:   ))
+```
+
+### RB7-05 — E46: expectativas de replay, CAS, locator ambíguo e allowance
+
+Vínculo: corpo R10, R11, R12, R13; archive E46.
+
+**Contrato de fonte, sem execução.** Asserções abaixo não são resultados desta produção.
+
+**RB-S027 — `packages/core/test/research-records.test.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `355e6b47b052251b57ee4f4dc56cfe1aee257e99` · SHA-256 `b2dda3fe95b4fdc32ed63d6e1fe06c10d1fe9e1cb50d28f373cd5dc79b4c879f` · 20826 bytes.
+
+Arquivo integral: `sources/packages/core/test/research-records.test.ts`; archive: E46.
+
+Linhas 18–20.
+
+```text
+18: const finding = {
+19:   action: "finding", proposition: "Works only under stated condition", nature: "inference", conditions: ["Only version 1"], evidence: [], contrary: [],
+20: } satisfies Research.RecordInput
+```
+
+Linhas 23–66.
+
+```text
+23:   it.live("request preflight refuses unsettled/conflicting retries and returns only a settled historical source", () => researchFixture((fixture) =>
+24:     Effect.gen(function* () {
+25:       const records = yield* ResearchRecords.Service
+26:       const hash = "a".repeat(64)
+27:       expect(yield* callFrame(fixture.binding, fixture.context, records.beginAcquisition(fixture.binding, fixture.context, hash))).toBeUndefined()
+28:       expect((yield* callFrame(fixture.binding, fixture.context, records.beginAcquisition(fixture.binding, fixture.context, hash)).pipe(Effect.flip)).code).toBe("publication_uncertain")
+29:       expect((yield* callFrame(fixture.binding, fixture.context, records.beginAcquisition(fixture.binding, fixture.context, "b".repeat(64))).pipe(Effect.flip)).code).toBe("conflict")
+30:       const captured = yield* callFrame(fixture.binding, fixture.context, records.capture(fixture.binding, fixture.context, {
+31:         origin: { kind: "file", uri: "historical.txt" }, representation: "text", mediaType: "text/plain", content: "historical", complete: true,
+32:       }))
+33:       const settled = yield* callFrame(fixture.binding, fixture.context, records.attempt(fixture.binding, fixture.context, {
+34:         outcome: "captured", stage: "representation", reason: "complete", source: captured.ref, returned: true,
+35:       }))
+36:       expect(yield* callFrame(fixture.binding, fixture.context, records.beginAcquisition(fixture.binding, fixture.context, hash))).toEqual(settled)
+37:       const failed = yield* fixture.call()
+38:       yield* callFrame(fixture.binding, failed, records.beginAcquisition(fixture.binding, failed, hash))
+39:       yield* callFrame(fixture.binding, failed, records.attempt(fixture.binding, failed, {
+40:         outcome: "unavailable", stage: "acquisition", reason: "http_status", returned: false,
+41:       }))
+42:       expect((yield* callFrame(fixture.binding, failed, records.beginAcquisition(fixture.binding, failed, hash)).pipe(Effect.flip)).code).toBe("source_unavailable")
+43:     }),
+44:   ))
+45: 
+46:   it.live("acquisition outcomes replay durably and remain distinct from admitted corpus bytes", () => researchFixture((fixture) =>
+47:     Effect.gen(function* () {
+48:       const records = yield* ResearchRecords.Service
+49:       const failed = { outcome: "unavailable", stage: "acquisition", reason: "http_status" } as const
+50:       const first = yield* callFrame(fixture.binding, fixture.context, records.attempt(fixture.binding, fixture.context, failed))
+51:       expect(yield* callFrame(fixture.binding, fixture.context, records.attempt(fixture.binding, fixture.context, failed))).toEqual(first)
+52:       expect((yield* callFrame(fixture.binding, fixture.context, records.attempt(fixture.binding, fixture.context, {
+53:         ...failed, outcome: "captured",
+54:       })).pipe(Effect.flip)).code).toBe("conflict")
+55:       const attempts = yield* records.view(fixture.binding, { action: "attempts" })
+56:       expect("attempts" in attempts && attempts.attempts).toEqual([first])
+57:       expect(yield* records.view(fixture.binding, { action: "corpus" })).toEqual({ sources: [], records: [], documents: [], complete: true, total: 0 })
+58:       const context = yield* fixture.call()
+59:       const partial = yield* callFrame(fixture.binding, context, records.capture(fixture.binding, context, {
+60:         origin: { kind: "file", uri: "slice.txt" }, representation: "text", mediaType: "text/plain", content: "one retained line",
+61:         complete: false, observed: { byteStart: 10, lineStart: 4, lineEnd: 4 },
+62:       }))
+63:       expect((yield* records.view(fixture.binding, { action: "source", ref: partial.ref }))).toMatchObject({ text: "one retained line", complete: false })
+64:       expect(yield* records.view(fixture.binding, { action: "corpus" })).toMatchObject({ sources: [partial], complete: true, total: 1 })
+65:     }),
+66:   ))
+```
+
+Linhas 141–155.
+
+```text
+141:       const first = yield* callFrame(fixture.binding, fixture.context, records.record(fixture.binding, fixture.context, finding))
+142:       const second = yield* callFrame(fixture.binding, fixture.context, records.record(fixture.binding, fixture.context, {
+143:         contrary: [], evidence: [], conditions: ["Only version 1"], nature: "inference", proposition: finding.proposition, action: "finding",
+144:       }))
+145:       expect(second).toEqual(first)
+146:       expect(first.record?.revision).toBe(1)
+147:       if (!first.record) throw new Error("Expected admitted record")
+148:       const rows = yield* database.db.select().from(EventTable).where(and(
+149:         eq(EventTable.aggregate_id, fixture.binding.executionSessionID), eq(EventTable.type, "research.record.committed.1"),
+150:       )).all().pipe(Effect.orDie)
+151:       expect(rows).toHaveLength(1)
+152:       expect(String(rows[0].id)).toBe(first.receipt.eventID)
+153:       expect((yield* callFrame(fixture.binding, fixture.context, records.record(fixture.binding, fixture.context, { ...finding, proposition: "Conflicting reuse" })).pipe(Effect.flip)).code).toBe("conflict")
+154:       const restored = yield* records.view(fixture.binding, { action: "record", ref: { id: first.record.id, revision: first.record.revision } })
+155:       expect(restored).toEqual(first.record)
+```
+
+Linhas 159–188.
+
+```text
+159:   it.live("two writers cannot publish same next revision; historical wording and exact relations survive", () => researchFixture((fixture) =>
+160:     Effect.gen(function* () {
+161:       const records = yield* ResearchRecords.Service
+162:       const original = yield* callFrame(fixture.binding, fixture.context, records.record(fixture.binding, fixture.context, finding))
+163:       if (original.record?.kind !== "finding") throw new Error("Expected admitted finding")
+164:       const ref = { id: original.record.id, revision: original.record.revision }
+165:       const update: Research.RecordInput = { ...finding, id: original.record.id, baseRevision: 1, reason: "Observed narrower scope", proposition: "Only version 1, feature enabled" }
+166:       const contexts = yield* Effect.all([fixture.call(), fixture.call()])
+167:       const outcomes = yield* Effect.all(contexts.map((context) => callFrame(fixture.binding, context, records.record(fixture.binding, context, update)).pipe(Effect.exit)), { concurrency: "unbounded" })
+168:       expect(outcomes.filter(Exit.isSuccess)).toHaveLength(1)
+169:       const failures = outcomes.filter(Exit.isFailure)
+170:       expect(failures).toHaveLength(1)
+171:       expect(failures[0].cause.reasons.some((reason) => {
+172:         const error = Cause.isFailReason(reason) ? reason.error : Cause.isDieReason(reason) ? reason.defect : undefined
+173:         return error instanceof Research.Error && error.code === "conflict"
+174:       })).toBe(true)
+175:       expect(yield* records.view(fixture.binding, { action: "record", ref })).toEqual(original.record)
+176:       const revised = yield* records.view(fixture.binding, { action: "record", ref: { id: original.record.id, revision: 2 } })
+177:       expect(revised).toMatchObject({ revision: 2, proposition: "Only version 1, feature enabled", reason: "Observed narrower scope" })
+178:       const context = yield* fixture.call()
+179:       const relation = yield* callFrame(fixture.binding, context, records.record(fixture.binding, context, {
+180:         action: "relation", from: ref, to: { id: original.record.id, revision: 2 }, relation: "related", reason: "Historical narrowing",
+181:       }))
+182:       expect(relation.record).toMatchObject({ from: original.receipt.ref, to: { id: original.record.id, revision: 2 } })
+183:       const missing = yield* fixture.call()
+184:       expect((yield* callFrame(fixture.binding, missing, records.record(fixture.binding, missing, {
+185:         action: "relation", from: ref, to: { id: Research.FindingID.create(), revision: 1 }, relation: "supports", reason: "Must not invent endpoint",
+186:       })).pipe(Effect.flip)).code).toBe("reference_invalid")
+187:     }),
+188:   ))
+```
+
+Linhas 190–208.
+
+```text
+190:   it.live("quotes detect overlapping ambiguity; exact qualifiers and line/JSON locators resolve only admitted bytes", () => researchFixture((fixture) =>
+191:     Effect.gen(function* () {
+192:       const records = yield* ResearchRecords.Service
+193:       const source = yield* callFrame(fixture.binding, fixture.context, records.capture(fixture.binding, fixture.context, {
+194:         origin: { kind: "file", uri: "quotes.txt", revision: "observed" }, representation: "text", mediaType: "text/plain", content: "aaa\nonly version 1\n", complete: true,
+195:       }))
+196:       const ambiguous = yield* fixture.call()
+197:       expect((yield* callFrame(fixture.binding, ambiguous, records.record(fixture.binding, ambiguous, {
+198:         ...finding, evidence: [{ source: source.ref, locator: { kind: "quote", exact: "aa" } }],
+199:       })).pipe(Effect.flip)).code).toBe("locator_ambiguous")
+200:       const valid = yield* fixture.call()
+201:       const admitted = yield* callFrame(fixture.binding, valid, records.record(fixture.binding, valid, {
+202:         ...finding, evidence: [{ source: source.ref, locator: { kind: "quote", exact: "aa", suffix: "a\n" } }, { source: source.ref, locator: { kind: "lines", start: 2, end: 2 } }],
+203:       }))
+204:       expect(admitted.record?.kind).toBe("finding")
+205:       const wrong = yield* fixture.call()
+206:       expect((yield* callFrame(fixture.binding, wrong, records.record(fixture.binding, wrong, {
+207:         ...finding, evidence: [{ source: { ...source.ref, digest: "0".repeat(64) }, locator: { kind: "lines", start: 1, end: 1 } }],
+208:       })).pipe(Effect.flip)).code).toBe("reference_invalid")
+```
+
+**RB-S028 — `packages/core/test/research-allowance.test.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `0925c03cdf252fe2ae8338c6f31e6d6be172f876` · SHA-256 `4eec8c9322095c6c6f8b33a9f74ea6655400ff332678c90da62f2e9aad9edc2b` · 17963 bytes.
+
+Arquivo integral: `sources/packages/core/test/research-allowance.test.ts`; archive: E46.
+
+Linhas 38–53.
+
+```text
+38:   it.live("concurrent exact bind and charge retries admit one row; changed input conflicts", () => Effect.gen(function* () {
+39:     const service = yield* ResearchAllowance.Service
+40:     const native = binding()
+41:     const allowances = yield* Effect.forEach(Array.from({ length: 8 }), () => service.bind(native, "dispatch"), { concurrency: "unbounded" })
+42:     expect(allowances.every((value) => value.providerLimit === 24 && value.toolLimit === 64 && value.byteLimit === 64 * 1024 * 1024)).toBe(true)
+43:     const allowance = allowances[0]
+44:     yield* Effect.forEach(Array.from({ length: 8 }), () => service.charge(allowance, "provider", "primary:1"), { concurrency: "unbounded" })
+45:     expect(yield* ledger(native.executionSessionID)).toHaveLength(2)
+46:     expect(error(yield* Effect.exit(service.charge(allowance, "tool", "primary:1")))?.code).toBe("conflict")
+47:     expect(error(yield* Effect.exit(service.bind({ ...native, taskId: "other-task" }, "dispatch")))?.code).toBe("binding_mismatch")
+48:     expect(error(yield* Effect.exit(service.charge({ ...allowance, providerLimit: 240 }, "provider", "widen")))?.code).toBe("binding_mismatch")
+49:     expect(yield* ledger(native.executionSessionID)).toHaveLength(2)
+50:     const resumed = yield* service.bind(native, "authorized-new-call")
+51:     yield* service.charge(resumed, "provider", "primary:1")
+52:     expect(yield* ledger(native.executionSessionID)).toHaveLength(4)
+53:   }))
+```
+
+Linhas 90–108.
+
+```text
+90:   it.live("byte reservations race one allowance; repeated and uncertain reconciliation never refunds", () => Effect.gen(function* () {
+91:     const service = yield* ResearchAllowance.Service
+92:     const allowance = yield* service.bind(binding(), "dispatch")
+93:     const reserved = allowance.byteLimit / 4
+94:     const results = yield* Effect.forEach(Array.from({ length: 8 }, (_, index) => `capture:${index}`),
+95:       (operation) => Effect.exit(service.reserveBytes(allowance, operation, reserved)), { concurrency: "unbounded" })
+96:     expect(results.filter(Exit.isSuccess)).toHaveLength(4)
+97:     expect(results.filter(Exit.isFailure).map((exit) => error(exit)?.code)).toEqual(Array.from({ length: 4 }, () => "budget_exhausted"))
+98:     const rows = yield* ledger(allowance.binding.executionSessionID)
+99:     const admitted = rows.filter((row) => row.type === EventV2.versionedType(ResearchEvent.AllowanceCharged.type, 1))
+100:       .map((row) => Schema.decodeUnknownSync(ResearchEvent.AllowanceCharged.data)(row.data))
+101:     yield* Effect.forEach(admitted, (entry) => service.reconcileBytes(allowance, entry.operation, 0))
+102:     yield* Effect.forEach(admitted, (entry) => service.reconcileBytes(allowance, entry.operation, 0))
+103:     expect(error(yield* Effect.exit(service.reserveBytes(allowance, "new-write", 1)))?.code).toBe("budget_exhausted")
+104:     expect(error(yield* Effect.exit(service.reconcileBytes(allowance, admitted[0].operation, reserved + 1)))?.code).toBe("over_cap")
+105:     expect(error(yield* Effect.exit(service.reconcileBytes(allowance, "unadmitted", 0)))?.code).toBe("binding_missing")
+106:     expect(admitted.reduce((total, entry) => total + entry.amount, 0)).toBe(allowance.byteLimit)
+107:     expect(yield* ledger(allowance.binding.executionSessionID)).toEqual(rows)
+108:   }))
+```
+
+Linhas 232–244.
+
+```text
+232:   it.live("a focused dispatch admitted before probe seconds keeps its stored limit on re-bind", () => Effect.gen(function* () {
+233:     const service = yield* ResearchAllowance.Service
+234:     const database = yield* Database.Service
+235:     const native = binding()
+236:     yield* service.bind(native, "dispatch", "focused")
+237:     const row = (yield* ledger(native.executionSessionID))[0]
+238:     const legacy = structuredClone(row.data) as { allowance: Record<string, unknown> }
+239:     delete legacy.allowance.probeSecondsLimit
+240:     yield* database.db.update(EventTable).set({ data: legacy }).where(eq(EventTable.id, row.id)).run().pipe(Effect.orDie)
+241:     const rebound = yield* service.bind(native, "dispatch", "focused")
+242:     expect(rebound.probeSecondsLimit).toBe(Research.ProbeSeconds.quick)
+243:     yield* service.charge(rebound, "probe", "probe:legacy", 1)
+244:   }))
+```
+
+### RB7-06 — E46: expectativas de inquiry, original lineStart, guard e timeout
+
+Vínculo: corpo R9, R11, R12, R13; archive E46.
+
+**Contrato de fonte, sem execução.** Asserções abaixo não são resultados desta produção.
+
+**RB-S029 — `packages/core/test/research-inquiry-ledger.test.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `25743a3cdea9e2191146694dfdb9c9fe41e44577` · SHA-256 `5a50187b432fe80d8c07ed712c27f419c7af026263512ee81912eea04e71d0d9` · 6648 bytes.
+
+Arquivo integral: `sources/packages/core/test/research-inquiry-ledger.test.ts`; archive: E46.
+
+Linhas 20–69.
+
+```text
+20:   it.live("a dispatch opens and closes its inquiry once; exact retries replay and nothing follows a close", () => researchFixture((fixture) =>
+21:     Effect.gen(function* () {
+22:       const records = yield* ResearchRecords.Service
+23:       const allowances = yield* ResearchAllowance.Service
+24:       const allowance = yield* allowances.bind(fixture.binding, "dispatch-one")
+25:       const question = yield* callFrame(fixture.binding, fixture.context, records.record(fixture.binding, fixture.context,
+26:         { action: "question", question: "Where?", selection: { profile: "locate", depth: "quick", genre: "answer" } }, "open:question"))
+27:       if (!question.record) throw new Error("Expected the question record")
+28:       const ref = { id: question.record.id, revision: question.record.revision }
+29:       const opened = { type: "research.inquiry.opened", question: ref, subquestions: [ref] } as const
+30:       const first = yield* callFrame(fixture.binding, fixture.context, records.inquire(allowance, fixture.context, opened))
+31:       expect(yield* callFrame(fixture.binding, fixture.context, records.inquire(allowance, fixture.context, opened))).toEqual(first)
+32:       const again = yield* fixture.call()
+33:       expect((yield* callFrame(fixture.binding, again, records.inquire(allowance, again, opened)).pipe(Effect.flip)).code).toBe("inquiry_state")
+34:       const checking = yield* fixture.call()
+35:       yield* callFrame(fixture.binding, checking, records.inquire(allowance, checking, { type: "research.inquiry.checked", check }))
+36:       const closing = yield* fixture.call()
+37:       yield* callFrame(fixture.binding, closing, records.inquire(allowance, closing, { type: "research.inquiry.closed", card: card(check) }))
+38:       const late = yield* fixture.call()
+39:       expect((yield* callFrame(fixture.binding, late, records.inquire(allowance, late, { type: "research.inquiry.checked", check })).pipe(Effect.flip)).code)
+40:         .toBe("inquiry_state")
+41:       const steps = yield* records.dispatch(allowance)
+42:       expect(steps.map((step) => step.type).filter((type) => type.startsWith("research.inquiry."))).toEqual([
+43:         "research.inquiry.opened", "research.inquiry.checked", "research.inquiry.closed",
+44:       ])
+45:       // The parent reads the closed card by binding (J5.13).
+46:       expect(yield* ResearchLedger.closed(fixture.binding)).toEqual(card(check))
+47:       // A resumed Task is a new dispatch: its stream starts after its own allowance and holds no earlier inquiry.
+48:       const resumed = yield* allowances.bind(fixture.binding, "dispatch-two")
+49:       expect(yield* ResearchLedger.closed(fixture.binding)).toBeUndefined()
+50:       expect((yield* records.dispatch(resumed)).filter((step) => step.type.startsWith("research.inquiry."))).toEqual([])
+51:       expect((yield* records.dispatch({ ...resumed, dispatchCallID: "never-bound" }).pipe(Effect.flip)).code).toBe("binding_missing")
+52:     }).pipe(Effect.provide(ResearchAllowance.layer)),
+53:   ))
+54: 
+55:   it.live("original-file lines resolve through the captured span's first line (J5.3)", () => researchFixture((fixture) =>
+56:     Effect.gen(function* () {
+57:       const records = yield* ResearchRecords.Service
+58:       const source = yield* callFrame(fixture.binding, fixture.context, records.capture(fixture.binding, fixture.context, {
+59:         origin: { kind: "file", uri: "span.ts" }, representation: "text", mediaType: "text/plain", content: "line four\nline five",
+60:         complete: false, observed: { byteStart: 30, lineStart: 4, lineEnd: 5 },
+61:       }))
+62:       const lines = (start: number, end: number, basis?: "original" | "retained") =>
+63:         records.verifyEvidence(fixture.binding, { source: source.ref, locator: { kind: "lines", start, end, ...(basis ? { basis } : {}) } })
+64:       yield* lines(4, 5, "original")
+65:       yield* lines(1, 2)
+66:       expect((yield* lines(1, 2, "original").pipe(Effect.flip)).code).toBe("reference_invalid")
+67:       expect((yield* lines(5, 6, "original").pipe(Effect.flip)).code).toBe("reference_invalid")
+68:     }),
+69:   ))
+```
+
+**RB-S030 — `packages/core/test/research-probe.test.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `92f668b9b22842f2210103138cbdb7a95fa4c3a5` · SHA-256 `8b68cb18e71ba3291b86e2943b754ae701bb4f9ed8db0be059aaca3e57935bfb` · 10594 bytes.
+
+Arquivo integral: `sources/packages/core/test/research-probe.test.ts`; archive: E46.
+
+Linhas 116–144.
+
+```text
+116: live("a repository test guard yields blocked_by_repo_guard; the host hands the child neither CI nor ORCHESTRA_LOCAL_TESTS", () =>
+117:   Effect.gen(function* () {
+118:     expectSpawn(import.meta.path)
+119:     const dir = yield* repo
+120:     yield* Effect.promise(async () => {
+121:       await writeFile(path.join(dir.path, "bunfig.toml"), `[test]\npreload = ["./guard.ts"]\n`)
+122:       await writeFile(path.join(dir.path, "guard.ts"),
+123:         `if (process.env.CI !== "true" && process.env.ORCHESTRA_LOCAL_TESTS !== "1") { console.error("${ProbeRun.GUARD}; tests run on GitHub Actions."); process.exit(1) }\n`)
+124:       await writeFile(path.join(dir.path, "x.test.ts"), `import { test } from "bun:test"\ntest("x", () => {})\n`)
+125:     })
+126:     const guarded = yield* ProbeRun.run({ snapshot: { kind: "worktree" }, runner: { kind: "test", file: "x.test.ts", name: "x" } }, context(dir.path))
+127:     expect(guarded.verdict, guarded.stderr.tail).toBe("blocked_by_repo_guard")
+128:     expect(guarded.runner.argv.slice(-2)).toEqual(["-t", "x"])
+129:     const env = yield* ProbeRun.run(script(`console.log(JSON.stringify([process.env.CI ?? null, process.env.ORCHESTRA_LOCAL_TESTS ?? null, process.env.NODE_OPTIONS ?? null]))`),
+130:       context(dir.path))
+131:     expect(env.stdout.tail).toBe("[null,null,null]")
+132:   }), 120_000,
+133: )
+134: 
+135: live("the timeout stops the probe and names it", () =>
+136:   Effect.gen(function* () {
+137:     expectSpawn(import.meta.path)
+138:     const dir = yield* repo
+139:     const result = yield* ProbeRun.run(script("setInterval(() => {}, 1000)", { timeoutSeconds: 30 }), context(dir.path, { remainingSeconds: 2 }))
+140:     expect(result.verdict).toBe("timeout")
+141:     expect(result.exitCode).toBeNull()
+142:     expect(result.durationMs).toBeLessThan(20_000)
+143:   }), 60_000,
+144: )
+```
+
+### RB7-07 — E46: expectativas de paginação search e descarte/fallback locate
+
+Vínculo: corpo R8, R13; archive E46.
+
+**Contrato de fonte, sem execução.** Asserções abaixo não são resultados desta produção.
+
+**RB-S031 — `packages/core/test/research-search.test.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `4993ba8decd55d2bc8ed812e30227a67595e2f33` · SHA-256 `5d776ea45efbb391b7fefc1eb225b34e7701b0222fdacf077808019bd8fd45b6` · 5955 bytes.
+
+Arquivo integral: `sources/packages/core/test/research-search.test.ts`; archive: E46.
+
+Linhas 74–90.
+
+```text
+74:   it.live("pages deterministically and marks a cut page incomplete", () =>
+75:     withTree(Object.fromEntries([1, 2, 3, 4, 5].map((n) => [`f${n}.ts`, "hit\nhit\n"])), (cwd) =>
+76:       Effect.gen(function* () {
+77:         const first = yield* CodeSearch.run({ pattern: "hit", limit: 4 }, { cwd })
+78:         expect(first.matches).toHaveLength(4)
+79:         expect(first.next).toBe(4)
+80:         expect(first.basis.bounds.truncated).toBe(true)
+81:         expect(first.basis.coverage.complete).toBe(false)
+82:         const second = yield* CodeSearch.run({ pattern: "hit", limit: 4, offset: first.next }, { cwd })
+83:         expect(second.matches.map((m) => `${m.path}:${m.line}`)).toEqual(["f3.ts:1", "f3.ts:2", "f4.ts:1", "f4.ts:2"])
+84:         const last = yield* CodeSearch.run({ pattern: "hit", limit: 4, offset: 8 }, { cwd })
+85:         expect(last.matches).toHaveLength(2)
+86:         expect(last.next).toBeUndefined()
+87:         expect(last.basis.coverage.complete).toBe(true)
+88:       }),
+89:     ),
+90:   )
+```
+
+Linhas 102–123.
+
+```text
+102:   it.live("a clean zero is complete; an invalid regex fails by name", () =>
+103:     withTree({ "a.ts": "x\n" }, (cwd) =>
+104:       Effect.gen(function* () {
+105:         const zero = yield* CodeSearch.run({ pattern: "absent" }, { cwd })
+106:         expect(zero.matches).toEqual([])
+107:         expect(zero.basis.coverage.complete).toBe(true)
+108:         const bad = yield* CodeSearch.run({ pattern: "(", mode: "regex" }, { cwd }).pipe(Effect.flip)
+109:         expect(bad.reason).toBe("pattern_invalid")
+110:       }),
+111:     ),
+112:   )
+113: 
+114:   it.live("counts binaries it skipped and truncates long lines", () =>
+115:     withTree({ "bin.dat": "needle\u0000\u0001", "long.ts": `needle ${"x".repeat(2000)}\n` }, (cwd) =>
+116:       Effect.gen(function* () {
+117:         const result = yield* CodeSearch.run({ pattern: "needle" }, { cwd })
+118:         expect(result.matches.map((m) => m.path)).toEqual(["long.ts"])
+119:         expect(result.matches[0]?.text.length).toBeLessThanOrEqual(303)
+120:         expect(result.basis.coverage.binariesSkipped).toBe(1)
+121:       }),
+122:     ),
+123:   )
+```
+
+**RB-S032 — `packages/core/test/research-locate.test.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `53aed544518715b880e3415295e94da7756cc9ad` · SHA-256 `ef4ff4e93af664f8810da34386b235ef33071fcbba9868bf9904aa40f72f801a` · 8418 bytes.
+
+Arquivo integral: `sources/packages/core/test/research-locate.test.ts`; archive: E46.
+
+Linhas 83–114.
+
+```text
+83:   test("drops a range whose hit no longer matches the current file and counts it", async () => {
+84:     const stale: Record<string, string> = { ...FILES, "src/check.ts": ["export function renamed(x: number) {", "  return x", "}"].join("\n") }
+85:     const result = await run({ terms: ["citationCheck"] }, sources({ read: (path) => Effect.succeed(stale[path]) }).value)
+86:     expect(result.ranges.some((range) => range.path === "src/check.ts")).toBe(false)
+87:     expect(result.basis.coverage.discarded).toBeGreaterThan(0)
+88:   })
+89: 
+90:   test("drops a definition whose name is not on its declared line", async () => {
+91:     const moved: Record<string, string> = { ...FILES, "src/assemble.ts": ["", "", "", "export function assemble() {", "}"].join("\n") }
+92:     const fake = sources({ read: (path) => Effect.succeed(moved[path]), search: () => Effect.succeed({ matches: [], basis: basis() }) })
+93:     const result = await run({ symbols: ["assemble"] }, fake.value)
+94:     expect(result.ranges.some((range) => range.symbol === "assemble")).toBe(false)
+95:     expect(result.basis.coverage.discarded).toBeGreaterThan(0)
+96:   })
+97: 
+98:   test("runs at most 32 searches per call", async () => {
+99:     const fake = sources()
+100:     const names = Array.from({ length: 16 }, (_, index) => `name${index}`)
+101:     const result = await run({ terms: names, symbols: names.map((name) => `Sym${name}`) }, fake.value)
+102:     expect(fake.calls.search.length + fake.calls.query.length).toBeLessThanOrEqual(Locate.MAX_SEARCHES)
+103:     expect(result.searches.length + 1).toBeLessThanOrEqual(Locate.MAX_SEARCHES)
+104:     expect(result.searches.length).toBeGreaterThan(16)
+105:   })
+106: 
+107:   test("without an index runs the lexical lists only and declares the languages it reached", async () => {
+108:     const result = await run({ symbols: ["assemble"] }, sources({ query: undefined }).value)
+109:     expect(new Set(result.searches.map((search) => search.kind))).toEqual(new Set(["lexical", "lexical-wide"]))
+110:     expect(result.ranges.some((range) => range.path === "src/assemble.ts" && range.startLine <= 3 && 3 <= range.endLine)).toBe(true)
+111:     expect(result.basis.freshness).toBe("fresh")
+112:     expect(result.basis.coverage.languagesMissing).toContain("ts")
+113:     expect(result.basis.coverage.complete).toBe(false)
+114:   })
+```
+
+## Proposta separada de precisão da ordem do fallback
+
+**Não aplicada.** A expressão “mais novo retido” pode ser lida como ordenação cronológica do commit/build; RB1-02 mostra a ordem do manifesto, que `touch` também altera por uso. Substituição mínima proposta, sujeita à decisão da principal:
+
+Original literal: `query.ts` abre shard atual ou o mais novo retido de mesmo id quando o atual falta.
+
+Proposto: `query.ts` abre o shard atual ou o primeiro retido de mesmo id ainda presente, na ordem do manifesto (atualizada por `retain`/`touch`), quando o atual falta.
+
+SHA-256 prospectivo do corpo com apenas essa substituição: `81dfb4356b48331a4e348af3735de2697a23297a45994a3049f6948f9b4290bf`; Git blob `452d64304666380d4abcd758dfb85569447d2f3a`. Nenhum corpo prospectivo foi gravado. A proposta do memo SCIP permanece separada no índice A; este hash não a incorpora. O corpo avaliado continua `1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73`.
+
+## Entrega incremental dos recortes
+
+Usar a ordem e os offsets de `review-supplements-dispatch.md`. O corpo já entregue aos juízes não deve ser repetido entre os lotes. Primeiro enviar os lotes A em ordem, depois os B, preservando os IDs de fonte e de grupo. Não reescrever blocos para reduzir tamanho. A principal mantém a decisão de suficiência e os pedidos adicionais separados da produção.
+
+## FIM_DO_SUPLEMENTO_LITERAL

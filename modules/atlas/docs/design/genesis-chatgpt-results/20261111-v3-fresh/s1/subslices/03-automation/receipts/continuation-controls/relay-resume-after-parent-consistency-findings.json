@@ -1,0 +1,13 @@
+{
+  "id": "relay-resume-after-parent-consistency-findings",
+  "method": "collaboration.followup_task",
+  "target": "/root/review_relay",
+  "message": "Retome transporte, sem autoria/julgamento. Ambos os juízes agora livres. NÃO envie research L2 v2 ainda: a principal encontrou a mesma imprecisão no L1, e correções L1 research v4/boundaries v3 estão sendo feitas pelos autores originais (ambos ativos). Primeiro preserve em payload/receipts/producer-responses/derived-research-l2-v2-later-confirmation.md o FINAL atual de /root/derived_research, obtendo-o por list_agents e copiando verbatim, com nota de confirmação posterior, não reconstrução do FINAL anterior. Preserve também seu próprio último FINAL em recibo de transporte se necessário. Pode preparar support-supplement-v2 e continuar a fila, mas só inicie UM juiz quando houver slot realmente livre; root+relay+um autor+um juiz=4. Nunca interrompa lote. Após cada FINAL preserve original e avise a principal antes de novo lote; deltas curtos L1 terão prioridade assim que principal verificar. Support ainda zero despachos. Não modifique produtores/semantics/native package. Use mensagens e receipts exatos, todas chamadas reais contabilizadas; não crie juízes nem terceiro voto.",
+  "kind": "TRANSPORT_COORDINATION",
+  "response_state": "RUNNING",
+  "tool_returned_normally": true,
+  "provider_dispatch_id": null,
+  "tokens": "UNKNOWN",
+  "physical_attempts": "UNKNOWN",
+  "cost": "UNKNOWN"
+}

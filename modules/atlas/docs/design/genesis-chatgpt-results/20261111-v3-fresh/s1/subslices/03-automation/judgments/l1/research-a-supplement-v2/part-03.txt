@@ -1,0 +1,1067 @@
+101:                 // Dependencies are pinned by the module's go.sum, checked against the checksum DB.
+102:                 if (install.kind === "source" && install.build === "go")
+103:                   await run(
+104:                     interpreter,
+105:                     ["build", "-trimpath", "-o", executable(engine, staging, target), install.path],
+106:                     path.join(staging, "src"),
+107:                     {
+108:                       GOFLAGS: "-mod=readonly",
+109:                       GOTOOLCHAIN: "local",
+110:                       GOPATH: path.join(root, "cache", "go"),
+111:                       GOCACHE: path.join(root, "cache", "go-build"),
+112:                       GOPROXY: "https://proxy.golang.org",
+113:                       GOSUMDB: "sum.golang.org",
+114:                       CGO_ENABLED: "0",
+115:                     },
+116:                     signal,
+117:                   )
+118:                 // Dependencies are pinned by the crate's packaged Cargo.lock (`--locked`). Cargo runs `rustc` from PATH unless
+119:                 // RUSTC names one, so it names the toolchain's own.
+120:                 if (install.kind === "source" && install.build === "cargo")
+121:                   await run(
+122:                     interpreter,
+123:                     [
+124:                       "install",
+125:                       "--path",
+126:                       path.join(staging, "src", install.path),
+127:                       "--locked",
+128:                       "--root",
+129:                       staging,
+130:                       "--no-default-features",
+131:                       ...(install.features?.length ? ["--features", install.features.join(",")] : []),
+132:                     ],
+133:                     path.join(staging, "src"),
+134:                     {
+135:                       CARGO_HOME: path.join(root, "cache", "cargo"),
+136:                       CARGO_TARGET_DIR: path.join(root, "cache", "cargo-target"),
+137:                       RUSTC: path.join(path.dirname(interpreter), windows ? "rustc.exe" : "rustc"),
+138:                       ...(install.optLevel !== undefined ? { CARGO_PROFILE_RELEASE_OPT_LEVEL: String(install.optLevel) } : {}),
+139:                     },
+140:                     signal,
+141:                   )
+142:                 if (install.kind === "source") {
+143:                   // Reject invalid builder output before PinnedArtifact publishes its complete cache.
+144:                   if (!(await Effect.runPromise(fileReady(executable(engine, staging, target), target))))
+145:                     throw new Error("source-executable-not-ready")
+146:                   return
+```
+
+Linhas 179–210.
+
+```text
+179: const run = (
+180:   file: string,
+181:   args: ReadonlyArray<string>,
+182:   cwd: string,
+183:   env: Record<string, string>,
+184:   signal: AbortSignal,
+185: ) =>
+186:   Effect.runPromise(
+187:     Effect.gen(function* () {
+188:       const processService = yield* AppProcess.Service
+189:       const result = yield* processService
+190:         .run(ChildProcess.make(file, args, { cwd, env: { ...BackendToolkitDiagnostics.environment(cwd), ...env }, forceKillAfter: "5 seconds" }), {
+191:           timeout: INSTALL_MS,
+192:           maxOutputBytes: 64 * 1024 * 1024,
+193:           maxErrorBytes: 64 * 1024 * 1024,
+194:         })
+195:       // AppProcess caps capture without failing the run; an incomplete install log must still fail the install.
+196:       if (result.stdoutTruncated || result.stderrTruncated)
+197:         return yield* new AppProcess.AppProcessError({
+198:           command: result.command,
+199:           cause: new Error("Output exceeded 64 MiB"),
+200:         })
+201:       if (result.exitCode !== 0)
+202:         return yield* new AppProcess.AppProcessError({
+203:           command: result.command,
+204:           exitCode: result.exitCode,
+205:           stderr: result.stderr.toString(),
+206:           cause: { stdout: result.stdout.toString() },
+207:         })
+208:     }).pipe(Effect.provide(LayerNode.compile(AppProcess.node))),
+209:     { signal },
+210:   )
+```
+
+### RA3-03 — Parser e caminhos do guard OpenAPI
+
+**RA-S051 — `packages/core/src/backend-toolkit/project-version.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `00be68470409c48e585aa1ab764e6d8872ddd44e` · SHA-256 `c82bf83182a6d03b13755e5c97eed67bf4dd8298226bd9f79277c94bff94e263` · 11911 bytes.
+
+Linhas 18–30.
+
+```text
+18: const VALUES = new Set([
+19:   "-i", "--input-spec", "-g", "--generator-name", "-o", "--output", "-c", "--config",
+20:   "-t", "--template-dir", "-p", "--additional-properties", "--global-property", "--library",
+21:   "--api-package", "--model-package", "--invoker-package", "--package-name", "--artifact-id",
+22:   "--artifact-version", "--group-id", "--git-host", "--git-user-id", "--git-repo-id",
+23:   "--ignore-file-override", "--openapi-normalizer", "--type-mappings", "--import-mappings",
+24:   "--schema-mappings", "--name-mappings", "--inline-schema-name-mappings", "--inline-schema-options",
+25:   "--reserved-words-mappings", "--server-variables", "--operation-id-name-mappings", "--strict-spec",
+26: ])
+27: const SWITCHES = new Set([
+28:   "--dry-run", "--minimal-update", "--skip-overwrite", "--skip-validate-spec", "--enable-post-process-file",
+29:   "--remove-operation-id-prefix", "--log-to-stderr", "-v", "--verbose",
+30: ])
+```
+
+Linhas 50–60.
+
+```text
+50:   if (options.config !== undefined && !boundPath(options.config)) return yield* blocked("unbound-config")
+51:   const config = options.config === undefined ? undefined : yield* readMetadata(root, path.resolve(cwd, options.config), "config", true)
+52:   const fields = config === undefined ? undefined : yield* document(config, "config", options.config?.endsWith(".json"))
+53:   if (fields?.outputDir !== undefined && (typeof fields.outputDir !== "string" || !fields.outputDir.trim()))
+54:     return yield* blocked("malformed-config")
+55:   const output = options.output ?? (typeof fields?.outputDir === "string" ? fields.outputDir : undefined)
+56:   if (!output || !boundPath(output)) return yield* blocked("unbound-output")
+57:   if (options.output && typeof fields?.outputDir === "string" && path.resolve(cwd, options.output) !== path.resolve(cwd, fields.outputDir))
+58:     return yield* blocked("conflicting-output")
+59:   // Check the physical output even when it does not yet exist; symlink ancestors are not first generation.
+60:   yield* physical(root, path.resolve(cwd, output), "output")
+```
+
+Linhas 82–107.
+
+```text
+82: function boundPath(file: string) {
+83:   // No deferred substitution or symlink/.. normalization ambiguity in the supported path grammar.
+84:   return !["\0", "$", "%", "~"].some((char) => file.includes(char)) && !file.split(/[\\/]/).includes("..")
+85: }
+86: 
+87: function generationOptions(argv: readonly string[]) {
+88:   const options: { output?: string; config?: string } = {}
+89:   for (let i = 1; i < argv.length; i++) {
+90:     const equal = argv[i].indexOf("=")
+91:     const flag = equal < 0 ? argv[i] : argv[i].slice(0, equal)
+92:     if (SWITCHES.has(flag) && equal < 0) continue
+93:     if (!VALUES.has(flag)) throw blocked("unsupported-owned-call")
+94:     const value = equal < 0 ? argv[++i] : argv[i].slice(equal + 1)
+95:     if (!value || value.startsWith("-")) throw blocked("unbound-args")
+96:     if (flag === "--strict-spec" && value !== "true" && value !== "false") throw blocked("unsupported-owned-call")
+97:     if (flag === "-o" || flag === "--output") {
+98:       if (options.output !== undefined) throw blocked("conflicting-output")
+99:       options.output = value
+100:     }
+101:     if (flag === "-c" || flag === "--config") {
+102:       if (options.config !== undefined) throw blocked("conflicting-config")
+103:       options.config = value
+104:     }
+105:   }
+106:   return options
+107: }
+```
+
+Linhas 109–148.
+
+```text
+109: function inside(root: string, file: string) {
+110:   const relative = path.relative(root, file)
+111:   return relative === "" || (!path.isAbsolute(relative) && relative !== ".." && !relative.startsWith(`..${path.sep}`))
+112: }
+113: 
+114: // Walk from the canonical project, checking each existing component before reading any bytes.
+115: // Only lstat ENOENT means absent. Broken links, denied traversal and ENOTDIR are named failures.
+116: const physical = Effect.fnUntraced(function* (root: string, file: string, kind: string) {
+117:   if (!inside(root, file)) return yield* blocked(`escaping-${kind}`)
+118:   const components = path.relative(root, file).split(path.sep).filter(Boolean)
+119:   for (let i = 0; i < components.length; i++) {
+120:     const candidate = path.join(root, ...components.slice(0, i + 1))
+121:     const info = yield* Effect.tryPromise({
+122:       try: () => lstat(candidate).catch((error: unknown) => {
+123:         if (typeof error === "object" && error !== null && "code" in error && error.code === "ENOENT") return undefined
+124:         throw error
+125:       }),
+126:       catch: () => blocked(`unreadable-${kind}`),
+127:     })
+128:     if (!info) return undefined
+129:     const resolved = yield* Effect.tryPromise({ try: () => realpath(candidate), catch: () => blocked(`unreadable-${kind}`) })
+130:     if (!inside(root, resolved)) return yield* blocked(`escaping-${kind}`)
+131:     if (i < components.length - 1 && !(yield* Effect.tryPromise({ try: () => lstat(resolved), catch: () => blocked(`unreadable-${kind}`) })).isDirectory())
+132:       return yield* blocked(`malformed-${kind}`)
+133:   }
+134:   return file
+135: })
+136: 
+137: const readMetadata = Effect.fnUntraced(function* (root: string, file: string, kind: string, required = false) {
+138:   const resolved = yield* physical(root, file, kind)
+139:   if (!resolved) {
+140:     if (required) return yield* blocked(`missing-${kind}`)
+141:     return undefined
+142:   }
+143:   const info = yield* Effect.tryPromise({ try: () => lstat(resolved), catch: () => blocked(`unreadable-${kind}`) })
+144:   // realpath was checked above; a symlink to an in-project regular file is allowed.
+145:   const target = yield* Effect.tryPromise({ try: () => realpath(resolved).then(lstat), catch: () => blocked(`unreadable-${kind}`) })
+146:   if ((!info.isFile() && !info.isSymbolicLink()) || !target.isFile() || target.size > 1024 * 1024)
+147:     return yield* blocked(`malformed-${kind}`)
+148:   return yield* Effect.tryPromise({ try: () => readFile(resolved, "utf8"), catch: () => blocked(`unreadable-${kind}`) })
+```
+
+Linhas 151–185.
+
+```text
+151: const document = Effect.fnUntraced(function* (text: string, kind: string, json = false) {
+152:   if (!text.trim() || text.includes("\0")) return yield* blocked(`malformed-${kind}`)
+153:   if (json) yield* Schema.decodeUnknownEffect(Schema.UnknownFromJsonString)(text).pipe(
+154:     Effect.mapError(() => blocked(`malformed-${kind}`)),
+155:   )
+156:   if (!json) yield* Effect.try({ try: () => validateYamlSource(text), catch: (error) =>
+157:     error instanceof Blocked ? error : blocked("unsupported-yaml-config") })
+158:   // safeLoad is not Jackson-equivalent. Bind only the closed YAML source grammar checked above, or strict JSON.
+159:   const value: unknown = yield* Effect.try({
+160:     try: () => matter(`\0begin\n${text}\n\0end`, { delimiters: ["\0begin", "\0end"], language: "yaml" }).data,
+161:     catch: () => blocked(`malformed-${kind}`),
+162:   })
+163:   return yield* Schema.decodeUnknownEffect(Schema.Record(Schema.String, Schema.Unknown))(value).pipe(
+164:     Effect.mapError(() => blocked(`malformed-${kind}`)),
+165:   )
+166: })
+167: 
+168: // Supported YAML is block mappings with simple string keys and single-line scalar values. Flow collections,
+169: // sequences, directives, tags, anchors, aliases, merge keys and folded/block scalars are outside this grammar.
+170: // Inspect source tokens before safeLoad can resolve/coerce them; quoted punctuation remains literal data.
+171: function validateYamlSource(text: string) {
+172:   const ambiguous = new Set(["y", "yes", "n", "no", "true", "false", "on", "off", "null", "~", ".inf", ".nan"])
+173:   for (const line of text.split("\n")) {
+174:     const source = line.replace(/\r$/, "").trimStart()
+175:     if (!source || source.startsWith("#")) continue
+176:     if (line.includes("\t") || /[\u0085\u2028\u2029]/.test(line)) throw blocked("unsupported-yaml-config")
+177:     const colon = source.indexOf(":")
+178:     const key = source.slice(0, colon)
+179:     if (colon < 1 || !/^[A-Za-z_][A-Za-z0-9_-]*$/.test(key) || (source[colon + 1] !== undefined && source[colon + 1] !== " "))
+180:       throw blocked("unsupported-yaml-config")
+181:     const scalar = source.slice(colon + 1).trimStart()
+182:     const path = key === "outputDir" || key === "inputSpec"
+183:     if (!scalar || scalar.startsWith("#")) {
+184:       if (path) throw blocked(`ambiguous-yaml-scalar:${key}`)
+185:       continue
+```
+
+Linhas 187–214.
+
+```text
+187:     if (scalar[0] === "'" || scalar[0] === '"') {
+188:       let end = 1
+189:       for (; end < scalar.length; end++) {
+190:         if (scalar[0] === '"' && scalar[end] === "\\") {
+191:           end++
+192:           continue
+193:         }
+194:         if (scalar[end] !== scalar[0]) continue
+195:         if (scalar[0] === "'" && scalar[end + 1] === "'") {
+196:           end++
+197:           continue
+198:         }
+199:         break
+200:       }
+201:       const trailing = scalar.slice(end + 1)
+202:       if (end === scalar.length || (trailing.trim() && (!trailing.startsWith(" ") || !trailing.trimStart().startsWith("#"))))
+203:         throw blocked("unsupported-yaml-config")
+204:       if (scalar[0] === '"') Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(scalar.slice(0, end + 1))
+205:       continue
+206:     }
+207:     const comment = scalar.indexOf(" #")
+208:     const token = (comment < 0 ? scalar : scalar.slice(0, comment)).trimEnd()
+209:     // This is a closed scalar token alphabet, not a scan for selected YAML features in arbitrary source.
+210:     if (!/^[A-Za-z0-9_./\\ +~-]+$/.test(token)) throw blocked("unsupported-yaml-config")
+211:     if (path && (ambiguous.has(token.toLowerCase()) || !/^[A-Za-z_./\\]/.test(token) || /^\.\d/.test(token)))
+212:       throw blocked(`ambiguous-yaml-scalar:${key}`)
+213:   }
+214: }
+```
+
+### RA3-04 — Cassandra: inputs, staging/replace, licença/notices, modos e túnel
+
+**RA-S052 — `packages/core/src/backend-toolkit/cassandra-metadata.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `be309cc1fe2edeeefe82c5c042987a26622d964a` · SHA-256 `adffa5bbb4e9ab695e7879cf4db83d4982562e69aa74b60b7a016072079428cb` · 5323 bytes.
+
+Linhas 10–44.
+
+```text
+10: // Apache-2.0, scylladb/gocql v1.15.3, revision e35803084ebafd200e3f7fd74a5be5dfdb409b2d.
+11: // Public module sum: h1:0vJT5pm7g5v8/pCs3tuXuRAfSRWvc1kib8J846Z+Z4g=.
+12: // The whole verified module (including LICENSE and notices) stays private to this engine's staging directory.
+13: export const artifact = {
+14:   url: "https://proxy.golang.org/github.com/scylladb/gocql/@v/v1.15.3.zip",
+15:   integrity: "sha256-h+5UlJ6dhZVFcKZjNXwjEdXUoFZ4gCx9GGdF9A3Ev7E=",
+16:   format: "zip",
+17:   entries: [{ from: "github.com/scylladb/gocql@v1.15.3", to: "driver" }],
+18: } as const satisfies PinnedArtifact.Artifact
+19: 
+20: export const BEFORE = "f378e73b05f84f325cccea3e20291a7802406dede1c1ced1bd9477602b67db1a"
+21: export const AFTER = "a9c4427039563b57c9b2597ceeb6aa603b50fb34c918823336aaca1b24d5d111"
+22: const MODULE = "88e0b9f90ed4a25ae3b4caf8ef44fd6b4d773b1ac6c18ea3b8d4adab3ada0954"
+23: const REPLACED_MODULE = "813bf43cbf7732310489d0cc6dbe046e144af305952c1d2ab3eeeaa4734aac40"
+24: const SUM = "05120abdde922346d67397c8bf7b5aafa0a1e5291fa051d4567c2a0d7d4d6621"
+25: 
+26: // Exact catalog-guard prototype. Hashes, not Go spelling heuristics, authorize this single insertion.
+27: const GUARD = '\n\t// Cassandra has the standard schema catalog but not Scylla\'s optional extension table.\n' +
+28:   '\titer = session.control.querySystem(`SELECT table_name FROM system_schema.tables WHERE keyspace_name = ? AND table_name = ?`, "system_schema", "scylla_tables")\n' +
+29:   '\tvar extensionTableName string\n' +
+30:   '\thasScyllaTables := iter.Scan(&extensionTableName)\n' +
+31:   '\tif err := iter.Close(); err != nil {\n' +
+32:   '\t\treturn nil, fmt.Errorf("error querying scylla table schema availability: %v", err)\n' +
+33:   '\t}\n' +
+34:   '\tif !hasScyllaTables {\n' +
+35:   '\t\treturn tables, nil\n' +
+36:   '\t}\n'
+37: 
+38: export function patch(source: Uint8Array) {
+39:   requireHash(source, BEFORE, "driver-source")
+40:   const anchor = '\n\tstmt = `SELECT * FROM system_schema.scylla_tables WHERE keyspace_name = ? AND table_name = ?`'
+41:   const patched = Buffer.from(Buffer.from(source).toString("utf8").replace(anchor, `${GUARD}${anchor}`))
+42:   requireHash(patched, AFTER, "patched-driver-source")
+43:   return patched
+44: }
+```
+
+Linhas 46–79.
+
+```text
+46: /** Runs only inside the pinned artifact installer, before the readonly Go build. Never touches a module cache. */
+47: export const prepare = Effect.fn("BackendToolkitCassandra.prepare")(function* (staging: string) {
+48:   const driver = yield* read(path.join(staging, "driver", "metadata_scylla.go"), "driver-source")
+49:   const module = yield* read(path.join(staging, "src", "go.mod"), "generator-module")
+50:   const sum = yield* read(path.join(staging, "src", "go.sum"), "generator-sum")
+51:   const generator = yield* read(path.join(staging, "src", "cmd", "schemagen", "schemagen.go"), "generator-source")
+52:   const prepared = yield* Effect.try({
+53:     try: () => {
+54:       requireHash(module, MODULE, "generator-module")
+55:       requireHash(sum, SUM, "generator-sum")
+56:       const replaced = Buffer.from(module.toString("utf8").replace(
+57:         "replace github.com/gocql/gocql => github.com/scylladb/gocql v1.15.3",
+58:         "replace github.com/gocql/gocql => ../driver",
+59:       ))
+60:       requireHash(replaced, REPLACED_MODULE, "replaced-generator-module")
+61:       return { driver: patch(driver), module: replaced, generator: BackendToolkitCassandraDialer.patch(generator) }
+62:     },
+63:     catch: (error) => error instanceof PinnedArtifact.Failed ? error : hold("source-invalid"),
+64:   })
+65:   yield* Effect.tryPromise({
+66:     try: async () => {
+67:       await writeFile(path.join(staging, "driver", "metadata_scylla.go"), prepared.driver)
+68:       await writeFile(path.join(staging, "src", "go.mod"), prepared.module)
+69:       await writeFile(path.join(staging, "src", "cmd", "schemagen", "schemagen.go"), prepared.generator)
+70:       await writeFile(path.join(staging, "src", "cmd", "schemagen", "ORCHESTRA-MODIFICATIONS.txt"),
+71:         "Orchestra cassandra4: schemagen.go changed to dial host-captured Unix routes (slash or Windows drive paths) or granted ports through the sandbox's CONNECT proxy, " +
+72:         "using the pinned driver's public Dialer API.\n" +
+73:         `Upstream gocqlx v3.0.4 (Apache-2.0); source SHA-256 ${BackendToolkitCassandraDialer.BEFORE}; modified SHA-256 ${BackendToolkitCassandraDialer.AFTER}.\n`)
+74:       await writeFile(path.join(staging, "driver", "ORCHESTRA-MODIFICATIONS.txt"),
+75:         "Orchestra cassandra1: metadata_scylla.go changed to check the standard catalog before reading optional Scylla metadata.\n" +
+76:         `Upstream scylladb/gocql v1.15.3 (Apache-2.0); source SHA-256 ${BEFORE}; modified SHA-256 ${AFTER}.\n`)
+77:     },
+78:     catch: () => hold("write"),
+79:   })
+```
+
+Linhas 82–87.
+
+```text
+82: function requireHash(bytes: Uint8Array, expected: string, name: string) {
+83:   if (createHash("sha256").update(bytes).digest("hex") !== expected) throw hold(`${name}-hash-mismatch`)
+84: }
+85: 
+86: const read = (file: string, name: string) => Effect.tryPromise({ try: () => readFile(file), catch: () => hold(`${name}-unreadable`) })
+87: const hold = (reason: string) => new PinnedArtifact.Failed({ cause: `compatibility:cassandra-metadata:${reason}` })
+```
+
+**RA-S053 — `packages/core/src/backend-toolkit/cassandra-dialer.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `94282bf8f1c851b477f80a57b006df309c243c67` · SHA-256 `3943c718ce59b671dcbd21085bd1907ad5d91de0f0e2fc34e5b2d7f85dc1e2da` · 8978 bytes.
+
+Linhas 12–34.
+
+```text
+12: export const HOOK = String.raw`	// Orchestra cassandra4: host-owned exact routes use the driver's public Dialer API.
+13: 	routes, unix := os.LookupEnv("ORCHESTRA_TCP_PROXY_ROUTES")
+14: 	ports, connect := os.LookupEnv("ORCHESTRA_TCP_PROXY_CONNECT")
+15: 	if unix || connect {
+16: 		var dialer *orchestraGeneratorDialer
+17: 		err := fmt.Errorf("orchestra-cassandra-dialer:invalid-routes")
+18: 		switch {
+19: 		case unix && !connect:
+20: 			dialer, err = newOrchestraGeneratorDialer(routes, cluster.ConnectTimeout)
+21: 		case connect && !unix:
+22: 			dialer, err = newOrchestraConnectDialer(ports, os.Getenv("HTTP_PROXY"), cluster.ConnectTimeout)
+23: 		}
+24: 		if err != nil {
+25: 			return gocqlx.Session{}, err
+26: 		}
+27: 		for _, addr := range clusterHosts() {
+28: 			if _, _, err := dialer.address("tcp", addr); err != nil {
+29: 				return gocqlx.Session{}, err
+30: 			}
+31: 		}
+32: 		cluster.Dialer = dialer
+33: 		cluster.WriteCoalesceWaitTime = 0
+34: 	}
+```
+
+Linhas 129–188.
+
+```text
+129: func (d *orchestraGeneratorDialer) DialContext(ctx context.Context, network, addr string) (net.Conn, error) {
+130: 	socket, port, err := d.address(network, addr)
+131: 	if err != nil {
+132: 		return nil, err
+133: 	}
+134: 	if d.proxy != "" {
+135: 		return d.tunnel(ctx, port)
+136: 	}
+137: 	conn, err := d.dialer.DialContext(ctx, "unix", socket)
+138: 	if err != nil {
+139: 		return nil, err
+140: 	}
+141: 	return &orchestraGeneratorConn{Conn: conn, port: port}, nil
+142: }
+143: 
+144: // One CONNECT per driver connection. Headers are read byte by byte so no tunneled byte is buffered here.
+145: func (d *orchestraGeneratorDialer) tunnel(ctx context.Context, port int) (net.Conn, error) {
+146: 	conn, err := d.dialer.DialContext(ctx, "tcp", d.proxy)
+147: 	if err != nil {
+148: 		return nil, err
+149: 	}
+150: 	deadline, bounded := ctx.Deadline()
+151: 	if !bounded && d.dialer.Timeout > 0 {
+152: 		deadline = time.Now().Add(d.dialer.Timeout)
+153: 	}
+154: 	conn.SetDeadline(deadline)
+155: 	stop := context.AfterFunc(ctx, func() { conn.SetDeadline(time.Unix(1, 0)) })
+156: 	target := "127.0.0.1:" + strconv.Itoa(port)
+157: 	_, err = io.WriteString(conn, "CONNECT "+target+" HTTP/1.1\r\nHost: "+target+"\r\n"+d.auth+"\r\n")
+158: 	header := make([]byte, 0, 512)
+159: 	next := make([]byte, 1)
+160: 	for err == nil && !bytes.HasSuffix(header, []byte("\r\n\r\n")) && len(header) < 8192 {
+161: 		_, err = io.ReadFull(conn, next)
+162: 		header = append(header, next[0])
+163: 	}
+164: 	if !stop() && ctx.Err() != nil {
+165: 		err = ctx.Err()
+166: 	}
+167: 	status := ""
+168: 	if fields := strings.Fields(strings.SplitN(string(header), "\r\n", 2)[0]); len(fields) >= 2 && bytes.HasSuffix(header, []byte("\r\n\r\n")) &&
+169: 		(fields[0] == "HTTP/1.1" || fields[0] == "HTTP/1.0") {
+170: 		status = fields[1]
+171: 	}
+172: 	if err == nil && status == "" {
+173: 		err = fmt.Errorf("orchestra-cassandra-dialer:proxy-invalid-response")
+174: 	}
+175: 	if code, _ := strconv.Atoi(status); err == nil && status != "200" {
+176: 		err = fmt.Errorf("orchestra-cassandra-dialer:proxy-refused:%d", code)
+177: 	}
+178: 	if err == nil {
+179: 		err = conn.SetDeadline(time.Time{})
+180: 	}
+181: 	if err != nil {
+182: 		conn.Close()
+183: 		return nil, err
+184: 	}
+185: 	return &orchestraGeneratorConn{Conn: conn, port: port}, nil
+186: }
+187: 
+188: type orchestraGeneratorConn struct {
+```
+
+## RE-A4
+
+### RA4-01 — Caps, engine ausente e estados de shard
+
+**RA-S054 — `packages/core/src/research-toolkit/index.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `a6e7b3bf6dd0ba44d0f0de5cac3eebe5c9f36095` · SHA-256 `9c1bfe5c5a7bc0c8d4d1f835e61031e0cca06b9ed6567415d9d04ff6e84b599c` · 14147 bytes.
+
+Linhas 30–67.
+
+```text
+30: /** Owner caps (D2, 2026-10-18) and the index disk budget (J2.4); config `research.limits.*` may lower them. */
+31: export const Limits = Object.freeze({
+32:   indexerBytes: 2 * 1024 * 1024 * 1024,
+33:   probeBytes: 1024 * 1024 * 1024,
+34:   scratchBytes: 2 * 1024 * 1024 * 1024,
+35:   indexBytes: 4 * 1024 * 1024 * 1024,
+36:   indexCommits: 8,
+37:   shardTimeoutMs: 15 * 60_000,
+38: })
+39: 
+40: export const Root = Context.Reference<string>("@orchestra/ResearchToolkit/Root", {
+41:   defaultValue: () => process.env.RESEARCH_TOOLKIT_ROOT ?? path.join(Global.Path.cache, "research-toolkit"),
+42: })
+43: 
+44: export const Manifest = Context.Reference<Readonly<Partial<Record<ResearchEngineId, ResearchPack>>>>(
+45:   "@orchestra/ResearchToolkit/Manifest",
+46:   { defaultValue: () => ENGINES },
+47: )
+48: 
+49: /** The caps in force; the instance provides `research.limits.*` here, which may only lower `Limits`. */
+50: export const Caps = Context.Reference<typeof Limits>("@orchestra/ResearchToolkit/Caps", { defaultValue: () => Limits })
+51: 
+52: /** `Caps` from config `research.limits.*`: each configured value lowers its owner cap and never raises it (D2). */
+53: export function caps(limits?: {
+54:   readonly indexer_bytes?: number
+55:   readonly probe_bytes?: number
+56:   readonly scratch_bytes?: number
+57:   readonly index_bytes?: number
+58: }): typeof Limits {
+59:   const lower = (cap: number, value?: number) => Math.min(cap, value ?? cap)
+60:   return Object.freeze({
+61:     ...Limits,
+62:     indexerBytes: lower(Limits.indexerBytes, limits?.indexer_bytes),
+63:     probeBytes: lower(Limits.probeBytes, limits?.probe_bytes),
+64:     scratchBytes: lower(Limits.scratchBytes, limits?.scratch_bytes),
+65:     indexBytes: lower(Limits.indexBytes, limits?.index_bytes),
+66:   })
+67: }
+```
+
+Linhas 69–83.
+
+```text
+69: /** One (language, project) shard of a worktree's index (J2.1), as the index store sees it at the worktree's commit. */
+70: export type Shard = {
+71:   /** The shard key (J2.2); a new commit that changes the project's tree is a new id. */
+72:   readonly id: string
+73:   readonly language: Language
+74:   readonly project: string
+75:   /** The project's aggregated `file_rank`; higher builds first. */
+76:   readonly rank: number
+77:   readonly engine: ResearchEngineId
+78:   readonly state: "ready" | "stale" | "absent"
+79: }
+80: 
+81: export type ShardState = Pick<Shard, "id" | "language" | "project"> &
+82:   ({ readonly status: Shard["state"] | "building" } | { readonly status: "skipped"; readonly reason: string })
+83: 
+```
+
+Linhas 111–143.
+
+```text
+111: export const status: (id?: ResearchEngineId) => Effect.Effect<ReadonlyArray<State>> = Effect.fn("ResearchToolkit.status")(
+112:   function* (id?: ResearchEngineId) {
+113:     const manifest = yield* Manifest
+114:     const ids = id ? [id] : IDS
+115:     const states: ReadonlyArray<BackendToolkit.State<ResearchEngineId>> = ids.some((item) => manifest[item])
+116:       ? yield* BackendToolkit.status<ResearchEngineId>(id).pipe(lifecycle)
+117:       : []
+118:     return ids.map((item): State => states.find((state) => state.engine === item) ?? unshipped(item))
+119:   },
+120: )
+121: 
+122: /** Every failure is `toolkit-not-ready:<state>:<id>[:<cause>]`, the blocker `code_query` reports (J6.10). */
+123: export const ensure: (id: ResearchEngineId) => Effect.Effect<{ readonly executable: string }, BackendToolkit.NotReady> =
+124:   Effect.fn("ResearchToolkit.ensure")(function* (id: ResearchEngineId) {
+125:     const manifest = yield* Manifest
+126:     if (!manifest[id]) return yield* new BackendToolkit.NotReady({ reason: `toolkit-not-ready:unsupported:${id}:pack-not-shipped` })
+127:     return yield* BackendToolkit.ensure(id).pipe(
+128:       lifecycle,
+129:       Effect.mapError((error) => new BackendToolkit.NotReady({ reason: named(id, error.reason) })),
+130:     )
+131:   })
+132: 
+133: export const prefetch: (ids?: ReadonlyArray<ResearchEngineId>) => Effect.Effect<ReadonlyArray<State>> = Effect.fn(
+134:   "ResearchToolkit.prefetch",
+135: )(function* (ids?: ReadonlyArray<ResearchEngineId>) {
+136:   const manifest = yield* Manifest
+137:   const chosen = ids ?? IDS
+138:   const shipped = chosen.filter((id) => manifest[id])
+139:   const states: ReadonlyArray<BackendToolkit.State<ResearchEngineId>> = shipped.length
+140:     ? yield* BackendToolkit.prefetch(shipped).pipe(lifecycle)
+141:     : []
+142:   return chosen.map((id): State => states.find((state) => state.engine === id) ?? unshipped(id))
+143: })
+```
+
+Linhas 221–235.
+
+```text
+221: export const shards = Effect.fn("ResearchToolkit.shards")(function* (worktree: string) {
+222:   const index = yield* Index
+223:   const caps = yield* Caps
+224:   const root = yield* Root
+225:   const plan = yield* index.plan(worktree)
+226:   const records = yield* read(root, worktree)
+227:   return plan.map((shard): ShardState => {
+228:     const base = { id: shard.id, language: shard.language, project: shard.project }
+229:     const entry = records[shard.id]
+230:     // A building record outlives a process that died mid-build; past the shard timeout it no longer claims the shard.
+231:     if (entry?.status === "building" && Date.now() - entry.at < caps.shardTimeoutMs) return { ...base, status: "building" }
+232:     if (entry?.status === "skipped" && shard.state !== "ready") return { ...base, status: "skipped", reason: entry.reason ?? "unknown" }
+233:     return { ...base, status: shard.state }
+234:   })
+235: })
+```
+
+Linhas 251–254.
+
+```text
+251: function unshipped(id: ResearchEngineId): State {
+252:   return { engine: id, version: "none", status: "unsupported", reason: "pack-not-shipped" }
+253: }
+254: 
+```
+
+### RA4-02 — Git, .pyi, descoberta por projeto e órfãos
+
+**RA-S055 — `packages/core/src/research-toolkit/code-index/shard.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `2065d1521347762a7ea3599f97ff9c2f96d9036c` · SHA-256 `5177e7c28ec2351c637e199497126c1cf5ee19eba364705b2feedc84d27fb7f0` · 10497 bytes.
+
+Linhas 38–51.
+
+```text
+38: const EXTENSIONS: Record<string, Language> = {
+39:   ".ts": "ts", ".tsx": "ts", ".mts": "ts", ".cts": "ts", ".js": "ts", ".jsx": "ts", ".mjs": "ts", ".cjs": "ts",
+40:   ".py": "py", ".go": "go", ".rs": "rust",
+41: }
+42: const MARKERS: Record<string, Language> = {
+43:   "tsconfig.json": "ts", "pyproject.toml": "py", "setup.cfg": "py", "setup.py": "py", "go.mod": "go", "Cargo.toml": "rust",
+44: }
+45: const LOCKFILES = [
+46:   "bun.lock", "bun.lockb", "package-lock.json", "yarn.lock", "pnpm-lock.yaml",
+47:   "uv.lock", "poetry.lock", "Pipfile.lock", "requirements.txt", "go.sum", "Cargo.lock",
+48: ]
+49: 
+50: /** The language a source file is indexed as, or undefined when no shard kind covers it. */
+51: export const language = (file: string): Language | undefined => EXTENSIONS[path.posix.extname(file)]
+```
+
+Linhas 54–78.
+
+```text
+54: export const live = (root: string) =>
+55:   Effect.gen(function* () {
+56:     const proc = yield* AppProcess.Service
+57:     const env = environment()
+58:     return {
+59:       run: (args, stdin) =>
+60:         // No output caps: an uncapped, all-pipe command is collected natively by omni (OmniSpawner.collectable).
+61:         proc.run(ChildProcess.make("git", [...args], { cwd: root, env, extendEnv: false }), { stdin, timeout: "60 seconds" }).pipe(
+62:           Effect.mapError(() => new Research.Error({ code: "source_unavailable", message: `git ${args[0]} could not run` })),
+63:           Effect.flatMap((result) => result.exitCode !== 0 || result.stdoutTruncated
+64:             ? Effect.fail(new Research.Error({ code: "source_unavailable", message: `git ${args[0]} failed: ${result.stderr.toString("utf8").trim().slice(0, 500)}` }))
+65:             : Effect.succeed(result.stdout)),
+66:         ),
+67:     } satisfies Git
+68:   })
+69: 
+70: /** As modules/maestro/arsenal/src/engine/process.ts: the caller environment minus anything that redirects git. */
+71: export function environment(source: NodeJS.ProcessEnv = process.env): Record<string, string> {
+72:   return {
+73:     ...Object.fromEntries(Object.entries(source).filter((entry): entry is [string, string] => entry[1] !== undefined &&
+74:       !entry[0].toUpperCase().startsWith("GIT_") && !["NODE_OPTIONS", "NODE_PATH"].includes(entry[0].toUpperCase()))),
+75:     GIT_CONFIG_GLOBAL: process.platform === "win32" ? "NUL" : "/dev/null", GIT_CONFIG_NOSYSTEM: "1",
+76:     GIT_TERMINAL_PROMPT: "0", GIT_OPTIONAL_LOCKS: "0",
+77:   }
+78: }
+```
+
+Linhas 87–97.
+
+```text
+87: export const tree = (git: Git, commit: string) =>
+88:   git.run(["ls-tree", "-r", "-z", "--full-tree", commit]).pipe(Effect.map((out): Tree => ({
+89:     commit,
+90:     // `<mode> <type> <oid>\t<path>`; submodules (commit entries) carry no indexable files.
+91:     blobs: new Map(out.toString("utf8").split("\0").flatMap((entry) => {
+92:       const tab = entry.indexOf("\t")
+93:       const fields = entry.slice(0, tab).split(" ")
+94:       return tab > 0 && fields[1] === "blob" ? [[entry.slice(tab + 1), fields[2]!] as const] : []
+95:     })),
+96:   })))
+97: 
+```
+
+Linhas 112–126.
+
+```text
+112: export const contents = (git: Git, tree: Tree, files: ReadonlyArray<string>) =>
+113:   files.length === 0
+114:     ? Effect.succeed(new Map<string, string>())
+115:     : git.run(["cat-file", "--batch"], files.map((file) => tree.blobs.get(file)).join("\n") + "\n").pipe(Effect.map((out) => {
+116:         const result = new Map<string, string>()
+117:         // Each answer is `<oid> <type> <size>\n<content>\n`; sizes are bytes, so the buffer is walked, not the text.
+118:         files.reduce((offset, file) => {
+119:           const newline = out.indexOf(10, offset)
+120:           const size = Number(out.subarray(offset, newline).toString("utf8").split(" ")[2])
+121:           result.set(file, out.subarray(newline + 1, newline + 1 + size).toString("utf8"))
+122:           return newline + 1 + size + 1
+123:         }, 0)
+124:         return result
+125:       }))
+126: 
+```
+
+Linhas 128–179.
+
+```text
+128: export const configFiles = (tree: Tree) =>
+129:   [...tree.blobs.keys()].filter((file) => {
+130:     const base = path.posix.basename(file)
+131:     return base in MARKERS || /^tsconfig.*\.json$/.test(base)
+132:   })
+133: 
+134: /**
+135:  * J2.1: TypeScript/JavaScript per tsconfig.json that is more than an `extends` and owns files; Python per
+136:  * pyproject.toml, setup.cfg or setup.py, else the root; Go per go.mod; Rust per Cargo.toml. A file belongs to its
+137:  * nearest project of its language. Files with no project are `orphans`, reported as skipped, never dropped silently.
+138:  */
+139: export function discover(tree: Tree, configs: ReadonlyMap<string, string>) {
+140:   const files = [...tree.blobs.keys()].sort()
+141:   const projects = files.flatMap((file) => {
+142:     const kind = MARKERS[path.posix.basename(file)]
+143:     if (!kind) return []
+144:     if (kind === "ts" && !ownsSources(configs.get(file))) return []
+145:     return [{ language: kind, project: path.posix.dirname(file), config: file }]
+146:   })
+147:   const byLanguage = Map.groupBy(projects, (project) => project.language)
+148:   const owned = files.flatMap((file) => {
+149:     const kind = language(file)
+150:     if (!kind) return []
+151:     const candidates = byLanguage.get(kind) ?? (kind === "py" ? [{ language: kind, project: ".", config: undefined }] : [])
+152:     const owner = candidates
+153:       .filter((project) => project.project === "." || file.startsWith(project.project + "/"))
+154:       .sort((a, b) => b.project.length - a.project.length)[0]
+155:     return [{ file, owner, kind }]
+156:   })
+157:   const groups = Map.groupBy(owned.filter((entry) => entry.owner), (entry) => `${entry.kind}:${entry.owner!.project}`)
+158:   const shards = [...groups.entries()].map(([id, entries]): Shard => ({
+159:     id,
+160:     language: entries[0]!.kind,
+161:     project: entries[0]!.owner!.project,
+162:     files: entries.map((entry) => entry.file),
+163:     config: entries[0]!.owner!.config,
+164:   }))
+165:   return { shards, orphans: owned.filter((entry) => !entry.owner).map((entry) => entry.file) }
+166: }
+167: 
+168: // A tsconfig that is only `extends`, or a solution file with `files: []` and no include, owns no sources.
+169: function ownsSources(text: string | undefined) {
+170:   const config = text === undefined ? undefined : parse(text)
+171:   if (!config || typeof config !== "object") return false
+172:   if (Object.keys(config).every((key) => key === "extends")) return false
+173:   return !(Array.isArray(config.files) && config.files.length === 0 && config.include === undefined)
+174: }
+175: 
+176: /**
+177:  * J2.2: sha256 over the indexer, its version, the project's content, the lockfiles and the config chain. The content
+178:  * is the blob ids of the shard's own files, which is the project's tree hash without its nested projects: a root
+179:  * project then does not rebuild when only a nested package changes (JE-AC-X8).
+```
+
+### RA4-03 — Memo de plano, build em curso, singleFlight e falhas
+
+**RA-S056 — `packages/core/src/research-toolkit/code-index/build.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `b89de3c2f4a985c08e5789020bbf3fcf4fc5b251` · SHA-256 `bd648215442616d09b710190ee5e22fb4e9f82890bc2967430724954734f7425` · 6330 bytes.
+
+Linhas 47–74.
+
+```text
+47: const progress = new Map<string, Progress>()
+48: // Plans per worktree and commit; a commit's tree never changes, so the cache only needs a bound.
+49: const plans = new Map<string, Plan>()
+50: const PLAN_CACHE = 16
+51: 
+52: export const building = (dir: string) => progress.get(dir)
+53: 
+54: /** Shards and their keys for the worktree's HEAD; git runs three times on a commit this process has not seen. */
+55: export const plan = Effect.fn("CodeIndexBuild.plan")(function* (input: Input) {
+56:   const commit = yield* CodeIndexShard.head(input.git)
+57:   const cached = plans.get(`${input.root}\0${commit}`)
+58:   if (cached && sameIndexers(cached, input.indexers)) return cached
+59:   const dir = CodeIndexStore.directory(input.storeRoot, yield* CodeIndexStore.repoKey(yield* CodeIndexShard.commonDir(input.git)))
+60:   const tree = yield* CodeIndexShard.tree(input.git, commit)
+61:   const configs = yield* CodeIndexShard.contents(input.git, tree, CodeIndexShard.configFiles(tree))
+62:   const discovered = CodeIndexShard.discover(tree, configs)
+63:   const result: Plan = {
+64:     commit, tree, dir, orphans: discovered.orphans,
+65:     shards: discovered.shards.flatMap((shard) => {
+66:       const indexer = input.indexers[shard.language]
+67:       return indexer ? [{ shard, indexer, key: CodeIndexShard.key(shard, indexer, tree, configs) }] : []
+68:     }),
+69:     unindexed: discovered.shards.filter((shard) => !input.indexers[shard.language]),
+70:   }
+71:   plans.set(`${input.root}\0${commit}`, result)
+72:   if (plans.size > PLAN_CACHE) plans.delete(plans.keys().next().value!)
+73:   return result
+74: })
+```
+
+Linhas 81–122.
+
+```text
+81: export const build = Effect.fn("CodeIndexBuild.build")(function* (
+82:   input: Input & { readonly extract: Extract; readonly maxBytes?: number },
+83: ) {
+84:   const current = yield* plan(input)
+85:   if (progress.get(current.dir)?.commit === current.commit) return { plan: current, built: [], failed: [] }
+86:   const present = yield* Effect.forEach(current.shards, (planned) => CodeIndexStore.exists(current.dir, planned.key))
+87:   const missing = current.shards.filter((_, index) => !present[index])
+88:   progress.set(current.dir, { commit: current.commit, shardsDone: 0, shardsTotal: missing.length })
+89:   const outcomes = yield* Effect.forEach(missing, (planned, index) =>
+90:     // One build per shard in this process: a warm-up or another query already building it is awaited, not repeated.
+91:     CodeIndexStore.singleFlight(input.storeRoot, planned.key,
+92:       input.extract({ root: input.root, commit: current.commit, shard: planned.shard, indexer: planned.indexer }).pipe(
+93:         Effect.flatMap((content) => CodeIndexStore.write(current.dir, {
+94:           shardKey: planned.key, commit: current.commit, indexer: planned.indexer.id, version: planned.indexer.version,
+95:         }, content)),
+96:       ),
+97:       { describe: (error) => error.message, join: (message) => new Research.Error({ code: "index_unavailable", message }) },
+98:     ).pipe(
+99:       Effect.as({ id: planned.shard.id, key: planned.key }),
+100:       Effect.result,
+101:       Effect.tap(() => Effect.sync(() =>
+102:         progress.set(current.dir, { commit: current.commit, shardsDone: index + 1, shardsTotal: missing.length }))),
+103:     )).pipe(Effect.ensuring(Effect.sync(() => progress.delete(current.dir))))
+104:   const failed = outcomes.flatMap((outcome, index) =>
+105:     outcome._tag === "Failure" ? [{ id: missing[index]!.shard.id, message: outcome.failure.message }] : [])
+106:   const failedIds = new Set(failed.map((entry) => entry.id))
+107:   yield* CodeIndexStore.retain(current.dir, {
+108:     commit: current.commit, at: Date.now(),
+109:     shards: current.shards.filter((planned) => !failedIds.has(planned.shard.id)).map((planned) => ({ id: planned.shard.id, key: planned.key })),
+110:   }, { commits: Limits.indexCommits, bytes: input.maxBytes ?? Limits.indexBytes })
+111:   return {
+112:     plan: current,
+113:     built: outcomes.flatMap((outcome) => outcome._tag === "Success" ? [outcome.success] : []),
+114:     failed,
+115:   }
+116: })
+117: 
+118: function sameIndexers(plan: Plan, indexers: Input["indexers"]) {
+119:   return plan.shards.every((planned) => indexers[planned.shard.language]?.id === planned.indexer.id &&
+120:     indexers[planned.shard.language]?.version === planned.indexer.version) &&
+121:     plan.unindexed.every((shard) => !indexers[shard.language])
+122: }
+```
+
+**RA-S057 — `packages/core/src/research-toolkit/code-index/store.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `f71cdf0ae1979f002fce68b53eae445647682d73` · SHA-256 `570a81a04360d060a7c67a436e531b4c079ba7a9951130a2648ca986846b5e11` · 13372 bytes.
+
+Linhas 86–123.
+
+```text
+86: const flights = new Map<string, Deferred.Deferred<void, string>>()
+87: const failures = new Map<string, string>()
+88: const flightKey = (root: string, shardKey: string) => `${root}\0${shardKey}`
+89: 
+90: /**
+91:  * Run `work` unless the same shard is already being built in this process, in which case await that build. A failure
+92:  * is remembered as `failure` (and a joiner fails with `join(reason)`), so the next caller retries and the cause shows.
+93:  */
+94: export const singleFlight = <E>(
+95:   root: string,
+96:   shardKey: string,
+97:   work: Effect.Effect<void, E>,
+98:   adapt: { readonly describe: (error: E) => string; readonly join: (reason: string) => E },
+99: ): Effect.Effect<void, E> =>
+100:   Effect.gen(function* () {
+101:     const key = flightKey(root, shardKey)
+102:     const mine = yield* Deferred.make<void, string>()
+103:     // Checked and claimed in one synchronous step, so two callers cannot both own the build.
+104:     const running = yield* Effect.sync(() => {
+105:       const existing = flights.get(key)
+106:       if (!existing) flights.set(key, mine)
+107:       return existing
+108:     })
+109:     if (running) return yield* Deferred.await(running).pipe(Effect.mapError(adapt.join))
+110:     return yield* work.pipe(
+111:       Effect.tapError((error) => Effect.sync(() => failures.set(key, adapt.describe(error)))),
+112:       Effect.tap(() => Effect.sync(() => failures.delete(key))),
+113:       Effect.onExit((exit) => Effect.sync(() => flights.delete(key)).pipe(
+114:         Effect.andThen(Deferred.done(mine, Exit.isSuccess(exit) ? Exit.succeed(undefined) : Exit.fail(failures.get(key) ?? "interrupted")))),
+115:       ),
+116:     )
+117:   })
+118: 
+119: /** Whether this process is building the shard now. */
+120: export const building = (root: string, shardKey: string) => flights.has(flightKey(root, shardKey))
+121: 
+122: /** Why the shard's last build in this process failed, until a later build succeeds. */
+123: export const failure = (root: string, shardKey: string) => failures.get(flightKey(root, shardKey))
+```
+
+### RA4-04 — Store: transação, rename, leitura scoped e manifesto
+
+**RA-S057** — mesma fonte e identidade declaradas acima.
+
+Linhas 126–172.
+
+```text
+126: export const write = Effect.fn("CodeIndexStore.write")(function* (dir: string, meta: Meta, content: Content) {
+127:   yield* Effect.promise(() => mkdir(dir, { recursive: true }))
+128:   const temporary = path.join(dir, `.${meta.shardKey}.${randomUUID()}.tmp`)
+129:   yield* Effect.gen(function* () {
+130:     yield* Effect.gen(function* () {
+131:       const sql = yield* SqlClient.SqlClient
+132:       yield* Effect.forEach([...statements(CodeIndex.SCHEMA), ...INDEXES], (statement) => sql.unsafe(statement), { discard: true })
+133:       yield* sql.withTransaction(Effect.gen(function* () {
+134:         yield* insert(sql, "document", ["path", "language", "sha256", "lines", "layer"],
+135:           content.documents.map((row) => [row.path, row.language, row.sha256, row.lines, row.layer]))
+136:         yield* insert(sql, "symbol", ["id", "scip", "name", "kind", "path", "start_line", "end_line", "name_line", "exported", "container_id", "tokens"],
+137:           content.symbols.map((row) => [row.id, row.scip ?? null, row.name, row.kind, row.path, row.startLine, row.endLine,
+138:             row.nameLine, row.exported ? 1 : 0, row.containerId ?? null, tokens(row.name)]))
+139:         yield* insert(sql, "occurrence", ["symbol_id", "path", "line", "col", "end_line", "end_col", "role", "enclosing_id", "opaque"],
+140:           content.occurrences.map((row) => [row.symbolId, row.path, row.line, row.col, row.endLine, row.endCol, row.role,
+141:             row.enclosingId ?? null, row.opaque ? 1 : 0]))
+142:         yield* insert(sql, "relation", ["symbol_id", "target_id", "kind"], content.relations.map((row) => [row.symbolId, row.targetId, row.kind]))
+143:         yield* insert(sql, "import", ["from_path", "line", "specifier", "to_path", "kind"],
+144:           content.imports.map((row) => [row.fromPath, row.line, row.specifier, row.toPath ?? null, row.kind]))
+145:         yield* insert(sql, "file_rank", ["path", "rank", "loc", "bytes"],
+146:           ranks(content).map((row) => [row.path, row.rank, row.loc, row.bytes]))
+147:         yield* insert(sql, "meta", ["key", "value"], [
+148:           ["shardKey", meta.shardKey], ["commit", meta.commit], ["indexer", meta.indexer], ["version", meta.version],
+149:           ["skipped", JSON.stringify(content.skipped)],
+150:         ])
+151:         yield* sql.unsafe("INSERT INTO symbol_name (symbol_name) VALUES ('rebuild')")
+152:       }))
+153:     }).pipe(Effect.provide(layer({ filename: temporary, disableWAL: true })), Effect.scoped)
+154:     yield* Effect.promise(() => rename(temporary, file(dir, meta.shardKey)))
+155:   }).pipe(
+156:     Effect.mapError((cause) => new Research.Error({ code: "index_unavailable", message: `Shard ${meta.shardKey} could not be written: ${String(cause)}` })),
+157:     Effect.ensuring(Effect.promise(() => rm(temporary, { force: true }))),
+158:   )
+159: })
+160: 
+161: /** Run `effect` against one shard opened read-only; the connection closes when it ends. */
+162: export const read = <A, E>(dir: string, shardKey: string, effect: Effect.Effect<A, E, SqlClient.SqlClient>) =>
+163:   effect.pipe(
+164:     Effect.provide(layer({ filename: file(dir, shardKey), readonly: true, readwrite: false, create: false, disableWAL: true })),
+165:     Effect.scoped,
+166:     Effect.mapError((cause) => cause instanceof Research.Error ? cause
+167:       : new Research.Error({ code: "index_unavailable", message: `Shard ${shardKey} could not be read: ${String(cause)}` })),
+168:   )
+169: 
+170: export const records = (dir: string) =>
+171:   Effect.promise(() => Bun.file(path.join(dir, MANIFEST)).json().then((value: ReadonlyArray<Entry>) => value, () => [] as ReadonlyArray<Entry>))
+172: 
+```
+
+Linhas 177–195.
+
+```text
+177: export const retain = Effect.fn("CodeIndexStore.retain")(function* (
+178:   dir: string,
+179:   record: Entry,
+180:   limits: { readonly commits: number; readonly bytes: number },
+181: ) {
+182:   const previous = yield* records(dir)
+183:   const ordered = [record, ...previous.filter((entry) => entry.commit !== record.commit)].slice(0, Math.max(1, limits.commits))
+184:   const sizes = new Map(yield* Effect.promise(() => readdir(dir).then((names) => Promise.all(names
+185:     .filter((name) => name.endsWith(".sqlite"))
+186:     .map((name) => stat(path.join(dir, name)).then((info) => [name.slice(0, -".sqlite".length), info.size] as const, () => [name.slice(0, -".sqlite".length), 0] as const))))))
+187:   const kept = fit(ordered, sizes, limits.bytes)
+188:   const live = new Set(kept.flatMap((entry) => entry.shards.map((shard) => shard.key)))
+189:   const removed = [...sizes.keys()].filter((key) => !live.has(key))
+190:   yield* Effect.promise(() => Promise.all(removed.map((key) => rm(file(dir, key), { force: true }))))
+191:   yield* save(dir, kept)
+192:   return removed
+193: })
+194: 
+195: /** Mark a commit most recently used without touching its shards. */
+```
+
+Linhas 203–223.
+
+```text
+203: function fit(ordered: ReadonlyArray<Entry>, sizes: ReadonlyMap<string, number>, bytes: number): ReadonlyArray<Entry> {
+204:   const total = [...new Set(ordered.flatMap((entry) => entry.shards.map((shard) => shard.key)))]
+205:     .reduce((sum, key) => sum + (sizes.get(key) ?? 0), 0)
+206:   if (total <= bytes || ordered.length <= 1) return ordered
+207:   return fit(ordered.slice(0, -1), sizes, bytes)
+208: }
+209: 
+210: const save = (dir: string, entries: ReadonlyArray<Entry>) =>
+211:   Effect.promise(async () => {
+212:     const temporary = path.join(dir, `.${MANIFEST}.${randomUUID()}.tmp`)
+213:     await Bun.write(temporary, JSON.stringify(entries))
+214:     await rename(temporary, path.join(dir, MANIFEST))
+215:   })
+216: 
+217: function insert(sql: SqlClient.SqlClient, table: string, columns: ReadonlyArray<string>, rows: ReadonlyArray<ReadonlyArray<unknown>>) {
+218:   const chunks = Array.from({ length: Math.ceil(rows.length / CHUNK) }, (_, index) => rows.slice(index * CHUNK, (index + 1) * CHUNK))
+219:   const values = `(${columns.map(() => "?").join(", ")})`
+220:   return Effect.forEach(chunks, (chunk) =>
+221:     sql.unsafe(`INSERT INTO "${table}" (${columns.join(", ")}) VALUES ${chunk.map(() => values).join(", ")}`, chunk.flat()),
+222:   { discard: true })
+223: }
+```
+
+### RA4-05 — Adapter real: plataforma, ordem do fallback, HEAD e processo SCIP
+
+**RA-S058 — `packages/core/src/research-toolkit/code-index/extract.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `ccd710035774d754490d00f36eb16c0103355175` · SHA-256 `80b2e9c6091bb6c342bfefa9582bd164fc5dffc239cdf67417dba4c0e79747af` · 22551 bytes.
+
+Linhas 63–100.
+
+```text
+63: export const indexers = Effect.fn("CodeIndexExtract.indexers")(function* () {
+64:   if (process.platform !== "darwin" && process.platform !== "linux")
+65:     return yield* new Research.Error({ code: "index_unavailable",
+66:       message: `toolkit-not-ready:unsupported:scip-typescript:sandbox-platform-unsupported: ${process.platform}` })
+67:   const manifest = yield* ResearchToolkit.Manifest
+68:   const states = (yield* ResearchToolkit.status()).filter((state) => manifest[state.engine]?.fit.role === "indexer")
+69:   const usable = states.filter((state) => state.status === "ready" || state.status === "absent" || state.status === "fetching")
+70:   const blocked = states[0]
+71:   if (usable.length === 0)
+72:     return yield* new Research.Error({ code: "index_unavailable", message: blocked
+73:       ? `toolkit-not-ready:${blocked.status}:${blocked.engine}${"reason" in blocked ? `:${blocked.reason}` : "cause" in blocked ? `:${blocked.cause}` : ""}`
+74:       : "toolkit-not-ready:unsupported:index:no-indexer-pack" })
+75:   const ready = Object.fromEntries(usable.flatMap((state) => (manifest[state.engine]?.fit.languages ?? [])
+76:     .map((language) => [language, { id: state.engine, version: state.version } satisfies CodeIndexShard.Indexer] as const)))
+77:   return structural(ready, Bun.which, (language) => {
+78:     const state = states.find((entry) => manifest[entry.engine]?.fit.languages.includes(language))
+79:     return state ? `toolkit-not-ready:${state.status}:${state.engine}` : "toolkit-not-ready:unsupported:pack-not-shipped"
+80:   })
+81: })
+82: 
+83: /**
+84:  * Go and Rust languages without a precise indexer, or whose host toolchain `which` cannot find, map to the STRUCTURAL
+85:  * indexer; every other language keeps its own. `blocked` names why a language has no indexer.
+86:  */
+87: export function structural(
+88:   indexers: Partial<Record<Language, CodeIndexShard.Indexer>>,
+89:   which: (command: string) => string | null,
+90:   blocked: (language: Language) => string,
+91: ): Partial<Record<Language, CodeIndexShard.Indexer>> {
+92:   const toolchains = { go: CodeIndexGo.TOOLCHAIN, rust: CodeIndexRust.TOOLCHAIN }
+93:   return {
+94:     ...indexers,
+95:     ...Object.fromEntries((["go", "rust"] as const).flatMap((language) => {
+96:       const missing = !indexers[language] ? blocked(language) : which(toolchains[language]) ? undefined : `toolchain-missing:${toolchains[language]}`
+97:       return missing ? [[language, { id: STRUCTURAL, version: missing }] as const] : []
+98:     })),
+99:   }
+100: }
+```
+
+Linhas 107–149.
+
+```text
+107: export const toolkit = Effect.gen(function* () {
+108:   const proc = yield* AppProcess.Service
+109:   const failed = (error: { readonly message: string }) => new ResearchToolkit.ShardFailed({ reason: error.message })
+110:   const prepared = (worktree: string) => Effect.gen(function* () {
+111:     const root = yield* Effect.tryPromise({ try: () => realpath(worktree), catch: () => new ResearchToolkit.ShardFailed({ reason: "worktree-missing" }) })
+112:     const manifest = yield* ResearchToolkit.Manifest
+113:     const plan = yield* CodeIndexBuild.plan({
+114:       root, git: yield* CodeIndexShard.live(root), storeRoot: yield* ResearchToolkit.Root,
+115:       // The warm-up acquires absent packs, so only a missing toolchain falls back here; the fallback is no engine, so
+116:       // the warm-up leaves its shard to the first query.
+117:       indexers: structural(Object.fromEntries(Object.values(manifest).flatMap((pack) => pack?.fit.role === "indexer"
+118:         ? pack.fit.languages.map((language) => [language, { id: pack.id, version: pack.version }] as const) : [])),
+119:       Bun.which, () => "toolkit-not-ready:unsupported:pack-not-shipped"),
+120:     }).pipe(Effect.mapError(failed))
+121:     return { root, plan }
+122:   }).pipe(Effect.provideService(AppProcess.Service, proc))
+123:   return {
+124:     plan: (worktree: string) => prepared(worktree).pipe(Effect.flatMap(({ plan }) => Effect.forEach(plan.shards, (planned) =>
+125:       CodeIndexStore.exists(plan.dir, planned.key).pipe(Effect.map((ready) => {
+126:         const engine = IDS.find((id) => id === planned.indexer.id)
+127:         // An unbuilt shard has no file_rank yet; its file count stands in for the project's aggregated rank.
+128:         return engine ? [{ id: planned.key, language: planned.shard.language, project: planned.shard.project,
+129:           rank: planned.shard.files.length, engine, state: ready ? "ready" as const : "absent" as const }] : []

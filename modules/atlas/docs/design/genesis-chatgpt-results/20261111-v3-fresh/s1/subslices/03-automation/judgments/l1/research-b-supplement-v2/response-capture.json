@@ -1,0 +1,27 @@
+{
+  "lot": "research-b-supplement-v2",
+  "captured_by": "/root/review_relay",
+  "recorded_at_utc": "2026-11-15T02:44:36.186408+00:00",
+  "responses": [
+    {
+      "judge": "/root/s1_03_j1",
+      "file": "j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed, captured before next followup",
+      "bytes": 6061,
+      "sha256": "a2379e0b595ad8ce71260d56055abfda3931228c3e85b2710803faac41ad0786",
+      "terminal_newline": false,
+      "literal": true
+    },
+    {
+      "judge": "/root/s1_03_j2",
+      "file": "j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed, captured before next followup",
+      "bytes": 4071,
+      "sha256": "1946ed2f9637e1a530513edb5e29b3d5869817076ddb93c705bf49af80676aac",
+      "terminal_newline": false,
+      "literal": true
+    }
+  ],
+  "pending": [],
+  "pending_note": "Root handles J2 remaining transport and capture separately under relay-root/."
+}

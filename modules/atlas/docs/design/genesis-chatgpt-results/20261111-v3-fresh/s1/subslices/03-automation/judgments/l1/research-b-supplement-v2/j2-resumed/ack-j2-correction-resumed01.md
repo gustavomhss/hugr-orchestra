@@ -1,0 +1,1 @@
+Correção incorporada em **RB7-05**: removido somente o dois-pontos indevido de `archive: E46`, restaurando `archive E46`. O incidente permanece registrado. Aguardarei o último subenvio e **FIM_DO_LOTE**.

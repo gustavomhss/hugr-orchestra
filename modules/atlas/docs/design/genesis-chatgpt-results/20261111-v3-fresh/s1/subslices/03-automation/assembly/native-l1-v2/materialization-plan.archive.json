@@ -1,0 +1,29 @@
+{
+  "schema": "s1-03-lossless-new-audit-file-archive/v1",
+  "logical_file": "materialization-plan.json",
+  "original": {
+    "bytes": 1138771,
+    "sha256": "56b6e787d7cb3b4346d3b36a224e5246038446e407a859db2b74bc19e455f5a6",
+    "git_blob_sha": "23e2d4be8756679b1e0a930ba05336ccfbff08a5"
+  },
+  "parts": [
+    {
+      "path": "materialization-plan.part-01.txt",
+      "start": 0,
+      "end": 700000,
+      "bytes": 700000,
+      "sha256": "6bdbfdc879541a91d773a796bda06ef897bc6ebe9306b06c453c23acd8a7cb59",
+      "git_blob_sha": "019d3e7b39d4543682960f7297fc5e1ef2e8f95d"
+    },
+    {
+      "path": "materialization-plan.part-02.txt",
+      "start": 700000,
+      "end": 1138771,
+      "bytes": 438771,
+      "sha256": "04f2781aa00c23bd7b66f63b8f3bb54ac1225374053aceb85b1bb89c6a85d7c2",
+      "git_blob_sha": "5fc9ce10e918da8886dea8181c9829a5754a2f0c"
+    }
+  ],
+  "reconstruction": "Concatenate part bytes in listed order; no normalization.",
+  "scope": "New post-production audit table, not a split or replacement of a body/source/native input. Original full file retained locally and its whole-file identities preserved."
+}

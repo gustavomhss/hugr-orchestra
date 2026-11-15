@@ -1,0 +1,104 @@
+{
+  "schema": "genesis-effective-procedure-freeze/v1",
+  "revision": 3,
+  "finding": "RB-J2-F01",
+  "frozen_at_utc": "2026-11-15T02:50:06.797002+00:00",
+  "status": "FROZEN_BEFORE_EXECUTION",
+  "effective_procedure": {
+    "path": "revisions/v3/apply.py",
+    "identity": {
+      "bytes": 17112,
+      "sha256": "1a06fb787058915ac20e696c5c8ea855dcda7813d9b208d15fa3770336de2f2e",
+      "git_blob_sha": "224ac97db71f108e4e8a945a6a3327afad725af7"
+    },
+    "read_only_mode": "0444"
+  },
+  "effective_recipe": [
+    "revisions/v3/request.txt",
+    "revisions/v3/apply.py"
+  ],
+  "inputs": [
+    {
+      "id": "request",
+      "read_path": "revisions/v3/request.txt",
+      "retained_path": "revisions/v3/request.txt",
+      "origin": "local-production",
+      "role": "effective correction request preexisting before apply.py execution",
+      "identity": {
+        "bytes": 2899,
+        "sha256": "34c7f006385a7921ca3ebb3aaf7ff31a866c16192c49f8211cf27fab95964224",
+        "git_blob_sha": "b09b0a85f6a41fa1e5269903c0d0538ef0b54105"
+      }
+    },
+    {
+      "id": "public-finding",
+      "read_path": "revisions/v3/j2-finding.md",
+      "retained_path": "revisions/v3/j2-finding.md",
+      "origin": "local-production",
+      "role": "public J2 finding as relayed by principal, preserved before execution",
+      "identity": {
+        "bytes": 974,
+        "sha256": "a7504bff3418ff3778e5d56b2c403858eb08f6c97fb3dfbefd7d66dae1b4316a",
+        "git_blob_sha": "accb3f921308f1c3c665d20b1aa7f6e40104b976"
+      }
+    },
+    {
+      "id": "body-v2",
+      "read_path": "body.md",
+      "retained_path": "history/body-v2.md",
+      "origin": "local-production",
+      "role": "full exact base body v2; versioned alias prevents current-output self-edge",
+      "identity": {
+        "bytes": 63501,
+        "sha256": "d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661",
+        "git_blob_sha": "bb0eaa73b4fe9120fb46d9304778649b5c7205dd"
+      }
+    },
+    {
+      "id": "recipe-v2",
+      "read_path": "recipe-v2.json",
+      "retained_path": "history/recipe-v2.json",
+      "origin": "local-production",
+      "role": "prior descriptive recipe read only to verify and preserve its exact bytes; not the effective v3 procedure",
+      "identity": {
+        "bytes": 138195,
+        "sha256": "09505ca6228267ab6ad9c0397c7a45690009b1738ae3aa53c8b8df722db5598b",
+        "git_blob_sha": "cd3e47810afc47fec314bab149c7ce0653f4fc9b"
+      }
+    },
+    {
+      "id": "locate-source",
+      "read_path": "sources/packages/core/src/research-toolkit/locate.ts",
+      "repository_path": "packages/core/src/research-toolkit/locate.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "origin": "pinned-source-capture",
+      "role": "decisive selection and ranks branches; full-file input identity even with selective semantic reads",
+      "identity": {
+        "bytes": 16148,
+        "sha256": "0ebac9d228ca1764020e0f7ccf260228dc02c1169c0143c07f258e7c7ac650f2",
+        "git_blob_sha": "d1343801f7b336d5e5b46eac860f6a07a0ae19fa"
+      }
+    },
+    {
+      "id": "locate-contract-test",
+      "read_path": "sources/packages/core/test/research-locate.test.ts",
+      "repository_path": "packages/core/test/research-locate.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "origin": "pinned-source-capture",
+      "role": "read fixture and assertions as contract, never executed; full-file input identity",
+      "identity": {
+        "bytes": 8418,
+        "sha256": "ef4ff4e93af664f8810da34386b235ef33071fcbba9868bf9904aa40f72f801a",
+        "git_blob_sha": "53aed544518715b880e3415295e94da7756cc9ad"
+      }
+    }
+  ],
+  "correction": {
+    "BEFORE": "`locate.ts` combina termos/símbolos/pergunta, mapa e buscas, com orçamento máximo de 32 buscas, no máximo dez buscas de vizinhos, cinco seeds e três snippets por arquivo.",
+    "AFTER": "`locate.ts` combina termos/símbolos/pergunta, mapa e buscas. Com índice utilizável, a seleção reserva uma chamada `map` e até dez buscas de vizinhos dentro do orçamento de 32; sem `sources.query`, permite até 32 listas lexicais. Se `sources.query` existe, mas a sondagem `map` retorna `index_unavailable` ou `index_building`, essa chamada já ocorreu e não é descontada das 32 listas lexicais: 16 termos distintos podem gerar 33 consultas internas. O limite é de cinco seeds e três snippets por arquivo.",
+    "expected_occurrences": 1,
+    "expected_body_line": 239
+  },
+  "execution_has_not_occurred_at_freeze": true,
+  "no_archive_sweep": true
+}

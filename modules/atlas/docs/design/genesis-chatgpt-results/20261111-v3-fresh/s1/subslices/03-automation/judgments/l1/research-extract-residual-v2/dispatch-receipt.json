@@ -1,0 +1,51 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "research-extract-residual-v2",
+  "source": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/research-extract-residual-v2.md",
+  "source_bytes": 4202,
+  "source_sha256": "c9b2419ec07411c2f0d0a9bb79150f991b37d745effe5fbd31b0f1b8d0299446",
+  "parts_per_target": 1,
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 4916,
+      "request_file_sha256": "3c9f7930f0de4d036b88dcd4760bc15c4e26c3c4e88ba9c73b7fbd3e74104485",
+      "message_bytes": 4808,
+      "message_sha256": "34dbee73ca475f108f58fab024b6b685aca8ed19d4d402c5065d6985baa4d034",
+      "payload_bytes": 4202,
+      "payload_sha256": "c9b2419ec07411c2f0d0a9bb79150f991b37d745effe5fbd31b0f1b8d0299446",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Literal UTF-8 packet only; final signal is outside payload.",
+  "slot_handling": "Sequential judges; preserve each original final before reactivation.",
+  "judgment_capture": "J1 original aggregate final captured literally in j1-response.md; J2 pending.",
+  "dispatch_count": 1,
+  "recorded_at_utc": "2026-11-15T02:26:06.909450+00:00",
+  "completed_targets": [
+    "/root/s1_03_j1"
+  ],
+  "pending_targets": [
+    "/root/s1_03_j2"
+  ],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 4202,
+      "sha256": "c9b2419ec07411c2f0d0a9bb79150f991b37d745effe5fbd31b0f1b8d0299446",
+      "equals_source": true,
+      "raw_bytes": 4202,
+      "raw_sha256": "c9b2419ec07411c2f0d0a9bb79150f991b37d745effe5fbd31b0f1b8d0299446",
+      "corrections_applied": false
+    }
+  ]
+}

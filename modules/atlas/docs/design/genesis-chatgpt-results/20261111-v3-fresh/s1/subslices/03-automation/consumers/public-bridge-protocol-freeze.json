@@ -1,0 +1,13 @@
+{
+  "schema": "s1-03-consumer-public-protocol-freeze/v1",
+  "at_utc": "2026-11-15T03:37:08.758274+00:00",
+  "protocol": "consumers/public-bridge-protocol.md",
+  "bytes": 3285,
+  "sha256": "83ee13b6ee7a92ceb87be728640f028769e88be69eb72eebde2a33b7a2ad1839",
+  "frozen_cases_ref": "consumers/public-cases.json",
+  "frozen_cases_sha256": "6f555dc22ea571bc2d6a683587cb320b7681b6bd22367a2f33e6fc8eb3741ab2",
+  "case_questions_or_limits_changed": false,
+  "reserved_answers_included": false,
+  "consumer_dispatches_before_this_freeze": 0,
+  "runtime_operation_not_performed_by_freeze": true
+}

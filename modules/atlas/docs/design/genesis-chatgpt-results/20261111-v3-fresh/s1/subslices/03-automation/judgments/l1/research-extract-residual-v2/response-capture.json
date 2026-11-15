@@ -1,0 +1,19 @@
+{
+  "lot": "research-extract-residual-v2",
+  "captured_by": "/root/review_relay",
+  "recorded_at_utc": "2026-11-15T02:30:41.477038+00:00",
+  "responses": [
+    {
+      "judge": "/root/s1_03_j1",
+      "file": "j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed, captured before next followup",
+      "bytes": 3806,
+      "sha256": "1ccac4f140bb369379d66085601c524e4a3ee066a45614879aa7a4d8bc96fb62",
+      "terminal_newline": false,
+      "literal": true
+    }
+  ],
+  "pending": [
+    "/root/s1_03_j2"
+  ]
+}

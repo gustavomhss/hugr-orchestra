@@ -1,0 +1,14 @@
+{
+  "schema": "s1-03-minimal-review-packet/v1",
+  "lot": "l1-consistency-boundaries-v3",
+  "artifact": "s1.core.boundaries",
+  "version": 3,
+  "bytes": 11145,
+  "sha256": "c72a64933deb87bcd8bacb0cb8406292a00fe8ec84387f37e3bd8d8d0d73ca3b",
+  "git_blob_sha": "7a0d333bd186e766dabec86cb346ff6879806c55",
+  "body_bytes": 23769,
+  "body_sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+  "body_git_blob_sha": "d3b070015882d10f778f563438eb3f9d67cab061",
+  "dispatch_state": "NOT_YET_DISPATCHED",
+  "root_verified": true
+}

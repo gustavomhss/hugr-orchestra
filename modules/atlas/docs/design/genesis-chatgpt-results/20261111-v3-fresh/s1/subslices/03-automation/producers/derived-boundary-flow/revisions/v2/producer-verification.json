@@ -1,0 +1,211 @@
+{
+  "schema": "s1-03-producer-correction-verification/v1",
+  "artifact": "s1.subslice03.boundary-flow",
+  "version": 2,
+  "verification_kind": "Deterministic file verification only; not product tests or semantic PASS.",
+  "procedure": {
+    "local_path": "producers/derived-boundary-flow/revisions/v2/apply.py",
+    "bytes": 36148,
+    "sha256": "fbf7ef729de0f11bc3df2ccbe77da99d9e69171f21c36bbea62421d93c984a6e",
+    "git_blob_sha": "102c9f6aa526b77add7dc3b09044003dd5448b6d",
+    "whole_file_identity": true
+  },
+  "freeze": {
+    "local_path": "producers/derived-boundary-flow/revisions/v2/procedure-freeze.json",
+    "bytes": 8086,
+    "sha256": "adb5dbdd94d5786d8a1211be748c3e0a4459d5a5ba8234e73fb4957c991c3f4b",
+    "git_blob_sha": "157a73b5e5b94fc19b5060c20ef9f35f16c4c0ca",
+    "whole_file_identity": true
+  },
+  "invocation": [
+    "python",
+    "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/producers/derived-boundary-flow/revisions/v2/apply.py",
+    "adb5dbdd94d5786d8a1211be748c3e0a4459d5a5ba8234e73fb4957c991c3f4b"
+  ],
+  "observed_apply_invocations": 1,
+  "physical_attempts": "UNKNOWN",
+  "enumerated_inputs_matched": 7,
+  "preserved_prior_outputs_matched": 4,
+  "cumulative_input_units": 28,
+  "new_input_units": 11,
+  "direct_units_this_revision": 12,
+  "direct_read_paths_this_revision": 16,
+  "current_output_self_inputs": false,
+  "unique_current_semantic_predecessor": {
+    "key": "s1.core.boundaries",
+    "layer": 1,
+    "version": "3",
+    "body_bytes": 23769,
+    "body_sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+    "body_git_blob_sha": "d3b070015882d10f778f563438eb3f9d67cab061",
+    "local_body_path": "producers/boundaries/bodies/boundaries.md"
+  },
+  "body_substantive_replacements": 3,
+  "body_metadata_replacements": 2,
+  "unchanged_body_sections": [
+    {
+      "section": 1,
+      "bytes": 1364,
+      "sha256": "b14f831e521f307d1d6eaf4d0daafb17847b669b0df070fe7b157915e9a1b3b9"
+    },
+    {
+      "section": 4,
+      "bytes": 2695,
+      "sha256": "d57b5718bf929be9fd06494da658fa43124d5ba74f48812478ebaff3cb5e2263"
+    },
+    {
+      "section": 5,
+      "bytes": 2108,
+      "sha256": "adad99683afafc0fe7d03e8ccfb61a6806fc0ad33a4a8697ce24b091f0e9290d"
+    },
+    {
+      "section": 6,
+      "bytes": 1665,
+      "sha256": "c6720e9b1c7e9af0520d366e09e72a8ce30cbc2e5c57c789eeb353f8a1ff08f6"
+    },
+    {
+      "section": 8,
+      "bytes": 1236,
+      "sha256": "fd4a2376394040e4d5b3c9e7f37d35f09b9502f7f6c10d379c859d34290bc10f"
+    }
+  ],
+  "exact_inverse_all_four_outputs": true,
+  "unchanged_segments_exact": true,
+  "body_depth2_heading_count": 8,
+  "frozen_inputs_and_histories_unchanged_after_application": true,
+  "outputs": [
+    {
+      "local_path": "producers/derived-boundary-flow/body.md",
+      "bytes": 16484,
+      "sha256": "e18fe141b88a3aba6ede8e8a0dd138876161984db36d4b8e5540f9ab329c0771",
+      "git_blob_sha": "4e4b5590f59c67e4fd101e9fcc3d840c9f3da355",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/evidence.md",
+      "bytes": 10057,
+      "sha256": "b87c56d31e6b0f846b0cab7e9d329bdcb40fcbffcbb1025a3cd4b864f0f97f4d",
+      "git_blob_sha": "f18d89ad036b816a8e78d01a185e5225388a83c0",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/production-manifest.json",
+      "bytes": 45337,
+      "sha256": "3f5fa039c209bdecbe7df56534526fc3956d42f0ebdef84c053dd8dbe174951d",
+      "git_blob_sha": "d458b70a14bc5b1ec1a5cc00da955bb25ae6f4ba",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/response.md",
+      "bytes": 1859,
+      "sha256": "c78d324a4e88c3e9b70bee14d89a0e46fcc20f678959c9dbc88ca10e39388cbd",
+      "git_blob_sha": "03140e9b619cee3c55130315b1f36dec72a2517b",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/dispatch-message.txt",
+      "bytes": 1273,
+      "sha256": "74633d78ff34d49f5d7db8fbe1fd6f6c22cf6f63ee95151bba5d58c8e8381e3f",
+      "git_blob_sha": "3821692669a52627613e830c4633958bbe2c36ea",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/apply.py",
+      "bytes": 36148,
+      "sha256": "fbf7ef729de0f11bc3df2ccbe77da99d9e69171f21c36bbea62421d93c984a6e",
+      "git_blob_sha": "102c9f6aa526b77add7dc3b09044003dd5448b6d",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/procedure-freeze.json",
+      "bytes": 8086,
+      "sha256": "adb5dbdd94d5786d8a1211be748c3e0a4459d5a5ba8234e73fb4957c991c3f4b",
+      "git_blob_sha": "157a73b5e5b94fc19b5060c20ef9f35f16c4c0ca",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/delta.json",
+      "bytes": 100289,
+      "sha256": "559a67a719de30af25f5c76265aedfb52af4349e9f3015dc292e6cca807aa877",
+      "git_blob_sha": "a47f25d9a33064bc5d2132a8e41e0a8ce980b02a",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/delta.patch",
+      "bytes": 80166,
+      "sha256": "0c961f04cdb8b03e3e0fbb20bdf63487bcf06d6f890bd7ba2e571a029292a2eb",
+      "git_blob_sha": "f001f738b2963914d534841cb65759df1d5d9172",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/review-supplement.md",
+      "bytes": 3529,
+      "sha256": "169632697f2faf8959bbf74df3005845f0822803cc93cd5f505e9eb9b972e385",
+      "git_blob_sha": "8998dbf0f23e6d853dbaf55f9ef32869ce713935",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/input-manifest-extension.json",
+      "bytes": 13339,
+      "sha256": "9f8352d25b2ee2f7270d4d56f10746a428e40100799934c8799fa6591d407447",
+      "git_blob_sha": "33f2033b2265a5096a2e9bf885ce557226619999",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/body.md",
+      "bytes": 16112,
+      "sha256": "83c961e473f666034b6db197ead28594580f4a953fc9f6f4bb63f006ab65ddbd",
+      "git_blob_sha": "6420523de8f6d8e5fa5aac4b8f76bab2c5c6fceb",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/evidence.md",
+      "bytes": 8327,
+      "sha256": "4e42f26758255ed63978d5e027a165a4eaaecfe645c78571365c4f5a2e81a780",
+      "git_blob_sha": "927e668b759b50bbeb28f92eca596cfc03d79b60",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "bytes": 20090,
+      "sha256": "93baa2def94d8fe3d05984211d05f68c0c18c8b021953bf67153f7b9eb56c2f0",
+      "git_blob_sha": "1b542614c236efe8f534e44c8982d49cade7002f",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/history/response.md",
+      "bytes": 2097,
+      "sha256": "ab0d39f8f925f504f7505e1fc04192e27f9f3d0e2a79cec3bf637953b36e61ac",
+      "git_blob_sha": "881e93d76f4f2b51d8efbbf803f72fa4d83bd7ac",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/producer-verification.json",
+      "bytes": null,
+      "sha256": null,
+      "git_blob_sha": null,
+      "integrity_provenance": "Self identity delivered in final external envelope."
+    }
+  ],
+  "output_count": 16,
+  "not_run": [
+    "network",
+    "GitHub",
+    "delegation",
+    "product_changes",
+    "product_tests",
+    "Atlas",
+    "consumers",
+    "maintenance",
+    "later_layers"
+  ],
+  "not_consumed": [
+    "oracle",
+    "full_judge_responses",
+    "raw_sources",
+    "unlisted_sibling_files"
+  ],
+  "semantic_review": "Awaiting same J1/J2; no self-PASS.",
+  "tokens": "UNKNOWN",
+  "billing": "UNKNOWN"
+}

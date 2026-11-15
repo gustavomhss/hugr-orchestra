@@ -1,0 +1,11 @@
+--- a/packages/core/src/actions/authoring/remote.ts
++++ b/packages/core/src/actions/authoring/remote.ts
+@@ -82,7 +82,7 @@
+       value.commit.toLowerCase() === intent.expected?.commit?.toLowerCase() ||
+       commit !== undefined && value.commit.toLowerCase() !== commit.toLowerCase() || value.text !== text ||
+       native.blob_id.toLowerCase() !== blob(text, native.blob_id) || blobID !== undefined && native.blob_id.toLowerCase() !== blobID.toLowerCase() ||
+-      native.last_commit_id !== undefined && native.last_commit_id.toLowerCase() !== value.commit.toLowerCase())
++      native.last_commit_id === undefined || native.last_commit_id.toLowerCase() !== value.commit.toLowerCase())
+       throw error(binding, "outcome_unknown", "Provider did not prove the exact written file, branch, blob and new commit", "unknown")
+     decode(binding, GitHubNative.SHA, value.commit)
+     return { acknowledgement: { resourceID: value.commit } }

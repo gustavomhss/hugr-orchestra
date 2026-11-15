@@ -1,0 +1,1 @@
+ACK — parte 2/5 recebida, incluindo a continuação do censo de suporte, os históricos e o início de `COMMON-S01`. Aguardo as partes restantes e `FIM_DO_LOTE`; sem julgamento intermediário.

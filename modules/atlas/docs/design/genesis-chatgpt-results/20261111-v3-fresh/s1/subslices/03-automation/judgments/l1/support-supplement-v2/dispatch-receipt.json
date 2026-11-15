@@ -1,0 +1,259 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "support-supplement-v2",
+  "source": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/support-supplement-v2.md",
+  "source_bytes": 367662,
+  "source_sha256": "5631c1d57feb979e1ab149b9384bc7f9c2cc584ee78c2048b15380302fffed7f",
+  "parts_per_target": 7,
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 54896,
+      "request_file_sha256": "1a4ad2f7858c8c6cb954e394a18d4b9f519653b152a03aa380f4df8be51c74af",
+      "message_bytes": 52994,
+      "message_sha256": "67659efccc11e3cb899efed95eeca08af86c66077ab6d1b829d5acc5745b7b8c",
+      "payload_bytes": 52533,
+      "payload_sha256": "1513f988397813e267303e1269d4c14cf4a2509db583be92acc2fd5027a0d636",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j1",
+      "part": 2,
+      "request_file": "request-j1-02.json",
+      "request_file_bytes": 54116,
+      "request_file_sha256": "82662d6bf8c6da7211979aa3aa9f2d7977fc4cc95d10ac7cf4e039e843c6b70c",
+      "message_bytes": 52749,
+      "message_sha256": "18a3902be09ae11a408c18a1fc1becaabc5c40f364bda7f7a4b4d575b0993339",
+      "payload_bytes": 52609,
+      "payload_sha256": "25989b0eaa841616dfadd07eca72ba64aa6487ec678691d224fa260aa654c266",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 3,
+      "target": "/root/s1_03_j1",
+      "part": 3,
+      "request_file": "request-j1-03.json",
+      "request_file_bytes": 53971,
+      "request_file_sha256": "4d9dda0b23d488913eeef51e6afb9afe21d6f2353a10e1bd54c293e36011e21f",
+      "message_bytes": 52551,
+      "message_sha256": "0d3b68d9b471f4f7341de9b08ac20e0b5668f153052cc3f00d2cad14908a3ddd",
+      "payload_bytes": 52411,
+      "payload_sha256": "df70d4cf7901cec06c2b7f3d93ad691ada2a74a35399ce892fc0fb7620846f2a",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": null,
+      "tool_result_text": "Output exceeded the available model context and was truncated",
+      "provider_dispatch_id": null,
+      "tool_result_display_truncated": true,
+      "dispatch_observation": "Actual followup_task invoked; truncated tool-result display. Subsequent original ACK explicitly confirms receipt of part 3/7. No resend."
+    },
+    {
+      "sequence": 4,
+      "target": "/root/s1_03_j1",
+      "part": 4,
+      "request_file": "request-j1-04.json",
+      "request_file_bytes": 54173,
+      "request_file_sha256": "50adb6921df1d161232849ec5253ecfa5f54a75028792f182e041f4d7e6be7cb",
+      "message_bytes": 52673,
+      "message_sha256": "e91fece08c561df49cd1b43abbef7f1834f155b2549e78ecfa0c0da5283f3d4c",
+      "payload_bytes": 52533,
+      "payload_sha256": "04d8946648b4379a6196a5d8bf7b8ece54fa0f9825cdbf9e5aab2b046cd691ed",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 5,
+      "target": "/root/s1_03_j1",
+      "part": 4,
+      "kind": "literal_transport_correction",
+      "request_file": "request-j1-04-correction.json",
+      "request_file_bytes": 925,
+      "request_file_sha256": "2234d7a1c78be770425e65fef6b3ad548a22479569f35e0a30aa8e717c422ed0",
+      "message_bytes": 867,
+      "message_sha256": "f7305f46f46681c4cf1c6e10aade46e8fed5f0799e62deecc6754b6b9124db7d",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 6,
+      "target": "/root/s1_03_j1",
+      "part": 5,
+      "request_file": "request-j1-05.json",
+      "request_file_bytes": 54259,
+      "request_file_sha256": "00a70b5c232f5bcb6e652a9f517734bf1d84dd43525b432dd4a8ce3887c26de8",
+      "message_bytes": 52652,
+      "message_sha256": "556585e3b026bc597605982ee3f8105f85c5a2dbd8e20d941edba613ea1db956",
+      "payload_bytes": 52512,
+      "payload_sha256": "438dbcb3439ccc20c1b5b4f56b9990c3ed5756ca55034e497b2567b9de648626",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 7,
+      "target": "/root/s1_03_j1",
+      "part": 6,
+      "request_file": "request-j1-06.json",
+      "request_file_bytes": 54988,
+      "request_file_sha256": "395f8be86f6817ddbbf3f3dcc31c729ddcf63924a67799b4ed03e00d6cb91a02",
+      "message_bytes": 52789,
+      "message_sha256": "7372b5d55c4e3c962d70f25b67fb71356a0d61a9eb4865c64f1900c9a2200663",
+      "payload_bytes": 52649,
+      "payload_sha256": "103614f47283ecd4c0641fd5aadf623239fa23a6e0b16240d9a6a7cef457f149",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 8,
+      "target": "/root/s1_03_j1",
+      "part": 7,
+      "request_file": "request-j1-07.json",
+      "request_file_bytes": 55689,
+      "request_file_sha256": "aedccfcf49d74883330c9f4654c105fbcd35b00920e9ff8b025394441d395296",
+      "message_bytes": 53014,
+      "message_sha256": "7642978ee75e1b3170b9826247844f4d8d492187ad6a48dbd6b1a99c3805d1f6",
+      "payload_bytes": 52415,
+      "payload_sha256": "b117de9530cd836d86cbaea41820fe624a6d8f8cef83212c54fc3a3db524935a",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "known_transcription_corrections": [
+    {
+      "target": "/root/s1_03_j1",
+      "part": 4,
+      "payload_before": "        generation: ref.generation, project_id: owner.projectID,\n        directory: owner.location.directory, workspace_id: owner.location.workspaceID, integration_id: integrationID, credential_id: credentialID,\n",
+      "payload_after": "        generation: ref.generation, project_id: owner.projectID, directory: owner.location.directory,\n        workspace_id: owner.location.workspaceID, integration_id: integrationID, credential_id: credentialID,\n",
+      "request_file": "request-j1-04-correction.json",
+      "actual_payload_file": "actual-j1-part-04-with-linebreak-defect.txt",
+      "scope": "Literal line break position in FX-CAP-MANAGEMENT-1; source unchanged",
+      "ack_pending": false,
+      "ack_file": "ack-j1-04-correction.md"
+    }
+  ],
+  "receipt_limit": "Os hashes descrevem pedidos registrados e reconstrução local, não verificação remota nem suficiência semântica. A chamada 3 teve saída da ferramenta truncada na exibição; o ACK original confirmou recebimento. Nenhum ID de despacho foi exposto.",
+  "delivery_scope": "Literal UTF-8 packet only; final signal is outside payload.",
+  "slot_handling": "J1 support sequencial por partes; root liberou J2 para lotes curtos separados após autoria L2 research concluir. Nenhuma mistura dentro de um handle.",
+  "judgment_capture": "Pending; see response-capture.json when available.",
+  "dispatch_count": 8,
+  "recorded_at_utc": "2026-11-15T04:47:40.746555+00:00",
+  "completed_targets": [
+    "/root/s1_03_j1"
+  ],
+  "pending_targets": [
+    "/root/s1_03_j2"
+  ],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 367662,
+      "sha256": "5631c1d57feb979e1ab149b9384bc7f9c2cc584ee78c2048b15380302fffed7f",
+      "equals_source": true,
+      "raw_bytes": 367662,
+      "raw_sha256": "68290289e57c09f5c5d488e2f09924194656dbbf52d5585ce65c9675fe0dfcf3",
+      "corrections_applied": true
+    }
+  ],
+  "acknowledgments": [
+    {
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "file": "ack-j1-01.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 193,
+      "sha256": "b2c6ba533a394b4d0f930ed53dfbdac8026dbf98924b81a30441dbd97a90ca44",
+      "terminal_newline": false,
+      "literal": true
+    },
+    {
+      "target": "/root/s1_03_j1",
+      "part": 2,
+      "file": "ack-j1-02.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 191,
+      "sha256": "a95361c65c3786bffd80955baff6c2275d6360410febb85311dc730255d0b427",
+      "terminal_newline": false,
+      "literal": true
+    },
+    {
+      "target": "/root/s1_03_j1",
+      "part": 3,
+      "file": "ack-j1-03.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 196,
+      "sha256": "66dab6b3a711c4cd5fc6fbab85208a93552add3b3b5a30b74d1fd60cae003601",
+      "terminal_newline": false,
+      "literal": true
+    },
+    {
+      "target": "/root/s1_03_j1",
+      "part": 4,
+      "file": "ack-j1-04.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 171,
+      "sha256": "e9f4c3751565c45b7f5f8aa1f168c7aaf8448c5a789f94d98c01773a6b253673",
+      "terminal_newline": false,
+      "literal": true
+    },
+    {
+      "target": "/root/s1_03_j1",
+      "part": 4,
+      "kind": "literal_transport_correction",
+      "file": "ack-j1-04-correction.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 272,
+      "sha256": "808d645d310273b2e14c532c72e7e2ae4d42dbc2377a7557fde4f4d9407b099e",
+      "terminal_newline": false,
+      "literal": true
+    },
+    {
+      "target": "/root/s1_03_j1",
+      "part": 5,
+      "file": "ack-j1-05.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 204,
+      "sha256": "b734bf5e643017742c55d4b823d81f46ac98f1ff0bd412a0d28ec575b72c1ebc",
+      "terminal_newline": false,
+      "literal": true
+    },
+    {
+      "target": "/root/s1_03_j1",
+      "part": 6,
+      "file": "ack-j1-06.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 171,
+      "sha256": "f8ce0162824b5647751538a5a92d4f540fcd271ec6850fbaa1dc22b8d36983e6",
+      "terminal_newline": false,
+      "literal": true
+    }
+  ],
+  "coordination_metadata_corrections": [
+    {
+      "target": "/root",
+      "scope": "Status message only, not a judge payload or canonical request",
+      "incorrect_sha256_in_status": "1513f988397813e267303e1269d4c14a2509db583be92acc2fd5027a0d636",
+      "correct_sha256": "1513f988397813e267303e1269d4c14cf4a2509db583be92acc2fd5027a0d636",
+      "explicit_correction_sent": true,
+      "method": "collaboration.send_message"
+    }
+  ]
+}

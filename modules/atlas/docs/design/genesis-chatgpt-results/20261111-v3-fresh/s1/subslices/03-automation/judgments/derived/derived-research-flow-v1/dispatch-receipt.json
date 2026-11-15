@@ -1,0 +1,95 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "derived-research-flow-v1",
+  "source": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/derived-research-flow-v1.md",
+  "source_bytes": 45949,
+  "source_sha256": "3d766aa35df678bd01b2c36f947267ee5382543df430957c81e476901d90bc0f",
+  "parts_per_target": 1,
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 47587,
+      "request_file_sha256": "3d86af993daf6e0bcbe02bbed39b50961bbeb7fc2e70558db908437a9d84b8a9",
+      "message_bytes": 46551,
+      "message_sha256": "2408cd1f56889e77806ea6ee25f8d0ceab7a20cb98a52cf586f935d184292669",
+      "payload_bytes": 45949,
+      "payload_sha256": "3d766aa35df678bd01b2c36f947267ee5382543df430957c81e476901d90bc0f",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 47587,
+      "request_file_sha256": "3c5f73cf78256b818ee4e33adf4fc29572b3561bf08e16a8f09b2d112e75fb33",
+      "message_bytes": 46551,
+      "message_sha256": "2408cd1f56889e77806ea6ee25f8d0ceab7a20cb98a52cf586f935d184292669",
+      "payload_bytes": 45949,
+      "payload_sha256": "3d766aa35df678bd01b2c36f947267ee5382543df430957c81e476901d90bc0f",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Literal UTF-8 packet only; final signal is outside payload.",
+  "slot_handling": "Sequential judges; preserve each original final before reactivation.",
+  "judgment_capture": "Both original final answers saved verbatim; see response-capture.json.",
+  "dispatch_count": 2,
+  "recorded_at_utc": "2026-11-15T03:37:09.059185+00:00",
+  "completed_targets": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "pending_targets": [],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 45949,
+      "sha256": "3d766aa35df678bd01b2c36f947267ee5382543df430957c81e476901d90bc0f",
+      "equals_source": true,
+      "raw_bytes": 45949,
+      "raw_sha256": "3d766aa35df678bd01b2c36f947267ee5382543df430957c81e476901d90bc0f",
+      "corrections_applied": false
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "bytes": 45949,
+      "sha256": "3d766aa35df678bd01b2c36f947267ee5382543df430957c81e476901d90bc0f",
+      "equals_source": true,
+      "raw_bytes": 45949,
+      "raw_sha256": "3d766aa35df678bd01b2c36f947267ee5382543df430957c81e476901d90bc0f",
+      "corrections_applied": false
+    }
+  ],
+  "judgment_captures": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-research-flow-v1/j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 4878,
+      "sha256": "a7f953fdedc9afb7a84f9dd6e93229e1c82efbe9e2fca47d926a3f7f77139130",
+      "terminal_newline": false,
+      "literal": true
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-research-flow-v1/j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 4553,
+      "sha256": "3a07f4cfb2d3eb0d3527f889aeafa1a6ea27b8600744558f1228ccfb7f9f9cc0",
+      "terminal_newline": false,
+      "literal": true
+    }
+  }
+}

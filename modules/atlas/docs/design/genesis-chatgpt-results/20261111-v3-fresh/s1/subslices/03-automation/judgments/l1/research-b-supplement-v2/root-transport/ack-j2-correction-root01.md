@@ -1,0 +1,1 @@
+Correção incorporada: em **RB-S008, `probe/run.ts`, linha 146**, removido somente o `=> ` indevido após `function* ()`. O incidente de transporte permanece registrado. Aguardarei as partes 3–5 e **FIM_DO_LOTE**.

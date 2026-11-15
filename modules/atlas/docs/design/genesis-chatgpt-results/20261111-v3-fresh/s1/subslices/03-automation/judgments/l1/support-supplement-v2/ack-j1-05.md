@@ -1,0 +1,1 @@
+Recebida a parte **5/7** de `support-supplement-v2`. Aguardo as partes 6–7 e o `FIM_DO_LOTE` externo final, mantendo a correção de transporte já registrada e os pareceres anteriores, sem ferramentas.

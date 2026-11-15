@@ -1,0 +1,42 @@
+{
+  "schema": "s1-03-research-v3-principal-verification/v1",
+  "body": {
+    "path": "body.md",
+    "bytes": 63841,
+    "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+    "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4"
+  },
+  "before": {
+    "path": "history/body-v2.md",
+    "bytes": 63501,
+    "sha256": "d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661",
+    "git_blob_sha": "bb0eaa73b4fe9120fb46d9304778649b5c7205dd"
+  },
+  "literal_replacements": 1,
+  "inverse_exact": true,
+  "source_excerpts_verified": 6,
+  "actual_correction_inputs_verified": 8,
+  "older_observed_files_compared": 1319,
+  "only_changed_preexisting_file": [
+    "producers/research/body.md"
+  ],
+  "prior_audit_unchanged": true,
+  "input_identity_preservation": "Whole files; no source split or omission",
+  "semantic_status": "PENDING_SAME_PAIR",
+  "packet": {
+    "lot": "research-aggregate-v3",
+    "path": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/research-aggregate-v3.md",
+    "bytes": 14533,
+    "sha256": "8e8d1035f6f29dc61a7148ea893a8d5dab8b4a8e558f8ac314bf08efa1b78a7d",
+    "git_blob_sha": "991725630d034922849d1759746156c17b9771e4",
+    "body_version": 3,
+    "body_sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+    "body_bytes": 63841,
+    "source_excerpt_count": 6,
+    "raw_residual_excerpt_bytes": 1969,
+    "old_body_reused_exact_except_one_literal_replacement": true,
+    "other_judge_verdict_included": false,
+    "reserved_oracle_included": false
+  },
+  "script_execution": "This verifier hashes/compares/stages only; did not execute product or rerun apply.py."
+}

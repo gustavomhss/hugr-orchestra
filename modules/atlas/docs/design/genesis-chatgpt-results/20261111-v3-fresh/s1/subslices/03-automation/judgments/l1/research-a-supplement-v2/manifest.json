@@ -1,0 +1,68 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "lot": "research-a-supplement-v2",
+  "source": "review-packets/research-a-supplement-v2.md",
+  "source_bytes": 222260,
+  "source_sha256": "1c5510b28da046945353c98bca685c86f9449d01c4042366d41dbfcc8505e222",
+  "frozen_manifest": {
+    "lot": "research-a-supplement-v2",
+    "path": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/research-a-supplement-v2.md",
+    "body_version": "v2",
+    "packet": {
+      "bytes": 222260,
+      "sha256": "1c5510b28da046945353c98bca685c86f9449d01c4042366d41dbfcc8505e222",
+      "git_blob_sha": "f89931efa34c9d9b022268226da8d4591ee3e88c"
+    },
+    "source_supplement": {
+      "bytes": 220079,
+      "sha256": "900fd149a1182df270ef6f71fce883793dba1a836df2dd2dd67e500c268f4aca",
+      "git_blob_sha": "22c601309312a8b61692bd73bf5a4a8c5da7a48f"
+    },
+    "producer": "/root/research_l1",
+    "scope": "evidence requests and exact declared corrections only",
+    "oracle_access_by_relay": false
+  },
+  "split_rule": "Autorização posterior da raiz: partes até aproximadamente 55–60KB; cortes balanceados em LF, alvo 58000 bytes.",
+  "parts": [
+    {
+      "part": 1,
+      "file": "part-01.txt",
+      "start": 0,
+      "end": 55544,
+      "bytes": 55544,
+      "sha256": "2650a121b5bd2a84d6d2c48f23602051a26d95a0fb819b3ebc02b0efa54a6ade"
+    },
+    {
+      "part": 2,
+      "file": "part-02.txt",
+      "start": 55544,
+      "end": 111089,
+      "bytes": 55545,
+      "sha256": "d442a4b08db94dfb22a5398b1a884c53fc659b9831041b6d929f38f887b4aaa9"
+    },
+    {
+      "part": 3,
+      "file": "part-03.txt",
+      "start": 111089,
+      "end": 166714,
+      "bytes": 55625,
+      "sha256": "528b4273c1aabaf58901bcd534cd3cea93323ba90c35d17281aaedd4c900da80"
+    },
+    {
+      "part": 4,
+      "file": "part-04.txt",
+      "start": 166714,
+      "end": 222260,
+      "bytes": 55546,
+      "sha256": "d2a45697584c6348b7196c9ba91a37d74a4919f529bcbd62541ece822d0c7a61"
+    }
+  ],
+  "end_marker_counts_per_part": [
+    1,
+    0,
+    0,
+    0
+  ],
+  "previous_preparation": "prepared-32k/manifest.json (nunca despachada)",
+  "framing_rule": "Ocorrência interna de FIM_DO_LOTE é menção de dados; sinal externo acrescentado somente após FIM_PARTE_LITERAL da última mensagem, conforme confirmação da raiz."
+}

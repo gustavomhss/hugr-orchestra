@@ -1,0 +1,9 @@
+{
+  "target": "/root/derived_research",
+  "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/receipts/producer-responses/derived-research-l2-v3-original.md",
+  "origin": "collaboration.list_agents agent_status.completed",
+  "bytes": 5556,
+  "sha256": "ce765d5c0f8f763f8f37962ea84112ddacc1a57a6224581381e9c4f21f2d7ae8",
+  "terminal_newline": false,
+  "literal": true
+}

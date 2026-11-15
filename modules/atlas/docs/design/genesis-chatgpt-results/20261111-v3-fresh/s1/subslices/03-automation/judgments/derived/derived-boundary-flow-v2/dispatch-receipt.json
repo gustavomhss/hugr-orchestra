@@ -1,0 +1,63 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "derived-boundary-flow-v2",
+  "source": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/derived-boundary-flow-v2.md",
+  "source_bytes": 23572,
+  "source_sha256": "38ff1387d8e67251cdfb39fecf1d38ed32f8baf011ef2de6ec3cbf022f2d2ea1",
+  "parts_per_target": 1,
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 24695,
+      "request_file_sha256": "891d1f6f901f1d4a3643043d386f6364aadb732e7acb29181672f32606ca74d8",
+      "message_bytes": 24174,
+      "message_sha256": "5c2fc739ab8d7b0ebac561cf10e22914bedaf8629c7749a56c0528839d0104a2",
+      "payload_bytes": 23572,
+      "payload_sha256": "38ff1387d8e67251cdfb39fecf1d38ed32f8baf011ef2de6ec3cbf022f2d2ea1",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Literal UTF-8 packet only; final signal is outside payload.",
+  "slot_handling": "Root liberou dois juízes com autores ociosos; J2 recebeu lote curto independente enquanto J1 recebe support. J1 deste lote ainda não enviado.",
+  "judgment_capture": "J2 original preserved; J1 not yet dispatched.",
+  "dispatch_count": 1,
+  "recorded_at_utc": "2026-11-15T04:39:31.643652+00:00",
+  "completed_targets": [
+    "/root/s1_03_j2"
+  ],
+  "pending_targets": [
+    "/root/s1_03_j1"
+  ],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j2",
+      "bytes": 23572,
+      "sha256": "38ff1387d8e67251cdfb39fecf1d38ed32f8baf011ef2de6ec3cbf022f2d2ea1",
+      "equals_source": true,
+      "raw_bytes": 23572,
+      "raw_sha256": "38ff1387d8e67251cdfb39fecf1d38ed32f8baf011ef2de6ec3cbf022f2d2ea1",
+      "corrections_applied": false
+    }
+  ],
+  "judgment_captures": {
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-boundary-flow-v2/j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 2784,
+      "sha256": "74fc5fd95de927e18837c7051daaf3bfa1c6a326c9a229e76020441d63a18638",
+      "terminal_newline": false,
+      "literal": true,
+      "identity_note": "Judge handle and dispatch identify origin; original text not edited to add judge_id."
+    }
+  }
+}

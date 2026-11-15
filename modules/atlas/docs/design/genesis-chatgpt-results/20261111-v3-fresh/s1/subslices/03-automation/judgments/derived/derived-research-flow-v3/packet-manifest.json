@@ -1,0 +1,16 @@
+{
+  "schema": "s1-03-derived-delta-review-packet/v1",
+  "lot": "derived-research-flow-v3",
+  "artifact": "s1.subslice03.research-flow",
+  "version": 3,
+  "bytes": 38782,
+  "sha256": "a0670c2aabad63a8ab0106591b8023739bc39a3eb6f30e02cc6648e99278b64c",
+  "git_blob_sha": "98a1f702c364dc1e19e6aafd02b9b0927bb41612",
+  "body_bytes": 17124,
+  "body_sha256": "f2c19caaa501ea0e135cbbfb4768b4bd68c4e729e5545cb5f80e45c655f52ab7",
+  "body_git_blob_sha": "1ceb2496a2185042e3eb564e80828bd85ac08f7f",
+  "dispatch_state": "NOT_YET_DISPATCHED",
+  "mechanical_verification": "receipts/derived-research-flow-v3-verification.json",
+  "last_judged_version": 1,
+  "v2_packet_superseded_without_dispatch": true
+}

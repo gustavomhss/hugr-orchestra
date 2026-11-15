@@ -1,0 +1,83 @@
+{
+  "schema": "s1-03-native-research-v3-materialization/v1",
+  "at_utc": "2026-11-15T03:14:22.078403+00:00",
+  "source_root": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/native-source",
+  "observed_git_head": null,
+  "preexisting_prepared_generation": false,
+  "prior_body_sha256": "d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661",
+  "body_bytes": 63841,
+  "body_sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+  "input_extension": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/revisions/v3/request.txt",
+      "bytes": 2899,
+      "sha256": "34c7f006385a7921ca3ebb3aaf7ff31a866c16192c49f8211cf27fab95964224",
+      "git_blob_sha": "b09b0a85f6a41fa1e5269903c0d0538ef0b54105",
+      "action": "materialized_whole",
+      "publication_pin": "PENDING_NEW_PAYLOAD_COMMIT"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/revisions/v3/j2-finding.md",
+      "bytes": 974,
+      "sha256": "a7504bff3418ff3778e5d56b2c403858eb08f6c97fb3dfbefd7d66dae1b4316a",
+      "git_blob_sha": "accb3f921308f1c3c665d20b1aa7f6e40104b976",
+      "action": "materialized_whole",
+      "publication_pin": "PENDING_NEW_PAYLOAD_COMMIT"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/history/body-v2.md",
+      "bytes": 63501,
+      "sha256": "d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661",
+      "git_blob_sha": "bb0eaa73b4fe9120fb46d9304778649b5c7205dd",
+      "action": "materialized_whole",
+      "publication_pin": "PENDING_NEW_PAYLOAD_COMMIT"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/history/recipe-v2.json",
+      "bytes": 138195,
+      "sha256": "09505ca6228267ab6ad9c0397c7a45690009b1738ae3aa53c8b8df722db5598b",
+      "git_blob_sha": "cd3e47810afc47fec314bab149c7ce0653f4fc9b",
+      "action": "materialized_whole",
+      "publication_pin": "PENDING_NEW_PAYLOAD_COMMIT"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/locate.ts",
+      "bytes": 16148,
+      "sha256": "0ebac9d228ca1764020e0f7ccf260228dc02c1169c0143c07f258e7c7ac650f2",
+      "git_blob_sha": "d1343801f7b336d5e5b46eac860f6a07a0ae19fa",
+      "action": "kept_exact",
+      "publication_pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "path": "packages/core/test/research-locate.test.ts",
+      "bytes": 8418,
+      "sha256": "ef4ff4e93af664f8810da34386b235ef33071fcbba9868bf9904aa40f72f801a",
+      "git_blob_sha": "53aed544518715b880e3415295e94da7756cc9ad",
+      "action": "kept_exact",
+      "publication_pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/revisions/v3/apply.py",
+      "bytes": 17112,
+      "sha256": "1a06fb787058915ac20e696c5c8ea855dcda7813d9b208d15fa3770336de2f2e",
+      "git_blob_sha": "224ac97db71f108e4e8a945a6a3327afad725af7",
+      "action": "materialized_whole",
+      "publication_pin": "PENDING_NEW_PAYLOAD_COMMIT"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/revisions/v3/apply-freeze.json",
+      "bytes": 4550,
+      "sha256": "65ceaf32de80a5b134d63e28fadc9271c822470d768d9d852d1ce8ce5287bacd",
+      "git_blob_sha": "f4cce3bb20fe952594a39e886d58d2ecb9dd4b64",
+      "action": "materialized_whole",
+      "publication_pin": "PENDING_NEW_PAYLOAD_COMMIT"
+    }
+  ],
+  "complete_effective_input_count": 159,
+  "prior_descriptor": "assembly/native-l1-v2/descriptors.json",
+  "inherited_effective_input_count": 153,
+  "new_unique_input_count": 6,
+  "retention": "All prior actual file inputs remain required. Two raw sources were already materialized; the six new local whole-file identities need real new payload pins before final source_refs. No input was split, dropped or made absent.",
+  "not_a_runtime_binding": true,
+  "prepare_executed": false
+}

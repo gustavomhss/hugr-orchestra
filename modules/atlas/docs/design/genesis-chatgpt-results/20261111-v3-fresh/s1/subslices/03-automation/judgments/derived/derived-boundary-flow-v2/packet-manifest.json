@@ -1,0 +1,14 @@
+{
+  "schema": "s1-03-derived-delta-review-packet/v1",
+  "lot": "derived-boundary-flow-v2",
+  "artifact": "s1.subslice03.boundary-flow",
+  "version": 2,
+  "bytes": 23572,
+  "sha256": "38ff1387d8e67251cdfb39fecf1d38ed32f8baf011ef2de6ec3cbf022f2d2ea1",
+  "git_blob_sha": "8c4298603fa452a6497e11ebb4fa862dc1af8038",
+  "body_bytes": 16484,
+  "body_sha256": "e18fe141b88a3aba6ede8e8a0dd138876161984db36d4b8e5540f9ab329c0771",
+  "body_git_blob_sha": "4e4b5590f59c67e4fd101e9fcc3d840c9f3da355",
+  "dispatch_state": "NOT_YET_DISPATCHED",
+  "mechanical_verification": "receipts/derived-boundary-flow-v2-verification.json"
+}

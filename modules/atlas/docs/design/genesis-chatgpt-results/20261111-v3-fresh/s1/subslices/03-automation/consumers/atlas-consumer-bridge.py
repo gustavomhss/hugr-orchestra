@@ -6,14 +6,14 @@ import json
 import subprocess
 import sys
 
-W = Path(__file__).resolve().parents[1]
+if len(sys.argv) != 5:
+    raise SystemExit('usage: atlas-consumer-bridge.py EXECUTION_ROOT CASE index|read QUERY_JSON')
+W = Path(sys.argv[1]).resolve(strict=True)
 P = W / 'payload'
 PUBLIC = json.loads((P / 'consumers/public-cases.json').read_text())
 LIMITS = PUBLIC['limits']
 CASES = {row['id'] for row in PUBLIC['cases']}
-if len(sys.argv) != 4:
-    raise SystemExit('usage: atlas-consumer-bridge.py CASE index|read QUERY_JSON')
-case_id, mode, encoded = sys.argv[1:]
+case_id, mode, encoded = sys.argv[2:]
 if case_id not in CASES or mode not in {'index', 'read'}:
     raise SystemExit('unknown frozen case or forbidden operation')
 query = json.loads(encoded)
@@ -26,6 +26,8 @@ if set(query) - allowed:
 # A final whole-selection attempt precedes consumption, even when it is blocked.
 preparation_path = P / 'receipts/native-prepare-final.json'
 preparation = json.loads(preparation_path.read_text())
+if preparation.get('source_root') != str(W / 'native-source'):
+    raise SystemExit('preparation source root differs; a moved root requires its own preparation and bindings')
 directory = P / 'consumers' / case_id / 'bridge'
 directory.mkdir(parents=True, exist_ok=True)
 prior = [json.loads(path.read_text()) for path in sorted(directory.glob('call-*.json'))]

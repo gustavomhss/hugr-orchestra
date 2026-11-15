@@ -1,0 +1,261 @@
+{
+  "schema": "s1-03-derived-public-criteria-excerpt/v1",
+  "normative_source": {
+    "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+    "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+    "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+  },
+  "purpose": "Public normative text only; no local judgment, oracle or expected consumer answer. Frozen before dependent authoring.",
+  "rows": [
+    {
+      "id": "GO-A1",
+      "normative_source_line": 52,
+      "normative_text": "| GO-A1 | The product is transferable ownership: purpose, behavior, constraints, decisions, impact and safe maintenance; claim count is not delivery. |"
+    },
+    {
+      "id": "GO-A2",
+      "normative_source_line": 53,
+      "normative_text": "| GO-A2 | Construction is cumulative; intermediate knowledge is persistent and independently useful, not disposable model scratch. |"
+    },
+    {
+      "id": "GO-A3",
+      "normative_source_line": 54,
+      "normative_text": "| GO-A3 | Consumption starts small: skills prescribe work and when/how to consult a scoped index; depth is pulled recursively as needed. Skills are not link inventories. |"
+    },
+    {
+      "id": "GO-A4",
+      "normative_source_line": 55,
+      "normative_text": "| GO-A4 | Code/product changes enter their affected knowledge surfaces; unchanged validated knowledge is reused. Initial construction and maintenance use the same dependency/validation semantics. |"
+    },
+    {
+      "id": "GO-A5",
+      "normative_source_line": 56,
+      "normative_text": "| GO-A5 | Knowledge and source evolve together through Git, governed publication and CI consistency controls. Freshness, semantic validity and authority are different properties. |"
+    },
+    {
+      "id": "GO-A6",
+      "normative_source_line": 57,
+      "normative_text": "| GO-A6 | Mechanize what tools can determine; pay models for interpretation/composition that tools cannot supply. Bound execution before starting it and preserve useful completed work. |"
+    },
+    {
+      "id": "GO-A7",
+      "normative_source_line": 58,
+      "normative_text": "| GO-A7 | Extend the existing Atlas with the minimum justified mechanisms; no parallel store, governance system or general-purpose orchestration framework by default. |"
+    },
+    {
+      "id": "GO-I1",
+      "normative_source_line": 120,
+      "normative_text": "| GO-I1 | Original campaign receipts, responses, claims and source identities remain immutable; retries have new linked identities. | AC-10 |"
+    },
+    {
+      "id": "GO-I2",
+      "normative_source_line": 121,
+      "normative_text": "| GO-I2 | Observed behavior, authorized intent, interpretation and gaps remain distinguishable; a structural freshness check cannot promote semantic certainty. | AC-02, AC-04 |"
+    },
+    {
+      "id": "GO-I3",
+      "normative_source_line": 122,
+      "normative_text": "| GO-I3 | Current reads bind exact artifact versions to an accepted scope/dependency manifest valid for current inputs/contracts; prior acceptance or rollback cannot make stale knowledge current. Historical reads are labelled. | AC-06, AC-07, AC-09 |"
+    },
+    {
+      "id": "GO-I4",
+      "normative_source_line": 123,
+      "normative_text": "| GO-I4 | Unchanged valid inputs/recipe reuse output without another interpretation call; independent artifacts are not rebuilt merely because navigation links exist. | AC-05 |"
+    },
+    {
+      "id": "GO-I5",
+      "normative_source_line": 124,
+      "normative_text": "| GO-I5 | Source additions, changes, removals and relevant non-code changes enter impact analysis; unavailable impact is HOLD, not an empty successful worklist. | AC-06 |"
+    },
+    {
+      "id": "GO-I6",
+      "normative_source_line": 125,
+      "normative_text": "| GO-I6 | Every issued model request consumes the shared run budget, including validation/retry and unresolved in-flight work; no silent fallback provider/model. | AC-08 |"
+    },
+    {
+      "id": "GO-I7",
+      "normative_source_line": 126,
+      "normative_text": "| GO-I7 | Governed doors, secret handling, project boundaries and Knowledge/Memory separation remain intact. Imported source/docs/tool text is data, not execution authority. | AC-04, AC-09, AC-10 |"
+    },
+    {
+      "id": "GO-I8",
+      "normative_source_line": 127,
+      "normative_text": "| GO-I8 | A scope, generation or artifact is not declared semantically complete just because its graph, source hashes, required sections or tests are complete. | AC-01, AC-02, AC-03 |"
+    },
+    {
+      "id": "AC-01",
+      "normative_source_line": 138,
+      "normative_text": "| AC-01 | **Coverage, judged + mechanical:** freeze the finite slice inventory: needs → required artifacts → sources → cases below. Every required need has accepted support; intentional unknowns are named in advance. Unknown critical required knowledge fails acceptance. Mechanical mapping completeness does not judge semantic sufficiency. |"
+    },
+    {
+      "id": "AC-02",
+      "normative_source_line": 139,
+      "normative_text": "| AC-02 | **Ownership, judged:** an Atlas-only consumer correctly handles a permitted change, contract violation, cross-component impact, operational failure and deliberately out-of-scope question. Freeze expected reasoning/consequences, critical mistakes and evidence before production. All required answers must match; the unknown case must abstain. The author alone cannot certify this row. |"
+    },
+    {
+      "id": "AC-03",
+      "normative_source_line": 140,
+      "normative_text": "| AC-03 | **Consumption, mixed:** skill states working protocol and index usage; actual index reads reach purpose, behavior, constraints, decisions, impact, verification and evidence within fixed task-specific read/context bounds. A routine task stops shallow; a deeper task reaches supporting knowledge. Each intermediate artifact has a direct-use case. Validate real readers, not only Markdown links. |"
+    },
+    {
+      "id": "AC-04",
+      "normative_source_line": 141,
+      "normative_text": "| AC-04 | **Construction, mixed:** real paths ingest existing knowledge and construct missing understanding; labelled stale/conflicting/missing/malicious-source fixtures are handled without inventing intent, hiding conflict, granting authority or publishing unsupported required content. A canned final document cannot satisfy the producer test. |"
+    },
+    {
+      "id": "AC-05",
+      "normative_source_line": 142,
+      "normative_text": "| AC-05 | **Reuse, mechanical:** identical inputs/recipe produce a cache hit with zero proposer calls; an independent edit preserves unrelated result identities and call counts. Equal prose with changed authority/validity/gaps MUST propagate; a receipt-only change refreshes bindings without new downstream interpretation. An unchanged validated consumer-visible result stops downstream rebuild. Build dependency edits invalidate dependents, unlike navigation-only links. |"
+    },
+    {
+      "id": "AC-06",
+      "normative_source_line": 143,
+      "normative_text": "| AC-06 | **Incremental correctness, mixed:** behavior edit, added/removed source, intent-doc change and recipe change produce the independently expected affected set. Rebuilds restore required knowledge; mutation controls omit an edge/input and must fail. Detecting staleness alone is insufficient. |"
+    },
+    {
+      "id": "AC-07",
+      "normative_source_line": 144,
+      "normative_text": "| AC-07 | **Publication/recovery, mechanical:** inject failure between generation and activation, interrupt/resume, and concurrent reads. A separate reader observes only a complete accepted manifest valid for current inputs/contracts or HOLD. A failed rebuild after source drift cannot fall back to stale knowledge as current. Resume reuses durable completions; rollback rejects incompatible source bindings; historical reads are labelled. |"
+    },
+    {
+      "id": "AC-08",
+      "normative_source_line": 145,
+      "normative_text": "| AC-08 | **Economy, mechanical + approval:** one run ledger/reservation governs production, evaluation, retries and concurrent calls. Synthetic checks precede real calls. If real adapter conformance requires a paid call, it needs a bounded explicit authorization first, charged to the same global envelope. Only a conforming route may run the real slice. Report limits, usage and unsettled calls; no bytes-to-token or call-count-to-dollar fiction. |"
+    },
+    {
+      "id": "AC-09",
+      "normative_source_line": 146,
+      "normative_text": "| AC-09 | **Git/CI/host, mechanical:** changed declared input, new input under registered scope, missing artifact, broken index reference, incompatible dependency version and invalid generation are rejected at intended gates/readers. A local invalid unit holds its required closure while an independent valid scope remains readable; shared manifest corruption holds its dependent reads. Known-good/bad controls use actual entry points. Report workflow scope and branch-protection enforcement separately. |"
+    },
+    {
+      "id": "AC-10",
+      "normative_source_line": 147,
+      "normative_text": "| AC-10 | **Preservation/migration, mechanical + review:** baseline inventory of protected campaign objects remains exact; old producers cannot publish into the new accepted scope accidentally. Stage new outputs without consumer authority, activate explicitly, preserve old accepted state for rollback and keep unrelated scopes usable. Generated boundaries change only through their generators. |"
+    },
+    {
+      "id": "CC-1",
+      "normative_source_line": 159,
+      "normative_text": "| CC-1 | Scope, sources, gaps, existing/missing knowledge and the finite required-artifact inventory are frozen. | AC-01, AC-04 |"
+    },
+    {
+      "id": "CC-2",
+      "normative_source_line": 160,
+      "normative_text": "| CC-2 | The slice is constructed cumulatively and every required level is persisted, directly usable and reachable through the real index/skill path. | AC-03, AC-04 |"
+    },
+    {
+      "id": "CC-3",
+      "normative_source_line": 161,
+      "normative_text": "| CC-3 | Product purpose, behavior, contracts, decisions, impact and safe maintenance are supported, not merely titled. | AC-02 |"
+    },
+    {
+      "id": "CC-4",
+      "normative_source_line": 162,
+      "normative_text": "| CC-4 | Initial build, invalidation, rebuild, reuse and relevant additions/removals/non-code inputs work end to end. | AC-05, AC-06 |"
+    },
+    {
+      "id": "CC-5",
+      "normative_source_line": 163,
+      "normative_text": "| CC-5 | Coherent publication, reader verification, failure recovery and rollback work without weakening governance. | AC-07, AC-09, AC-10 |"
+    },
+    {
+      "id": "CC-6",
+      "normative_source_line": 164,
+      "normative_text": "| CC-6 | Execution economics are enforced/reported to the stated adapter guarantee and the approved run reconciles. | AC-08 |"
+    },
+    {
+      "id": "CC-7",
+      "normative_source_line": 165,
+      "normative_text": "| CC-7 | Compatibility, generated surfaces, applicable docs/skills/guides and old-campaign obligations have explicit dispositions; expansion is not silently claimed complete. | AC-09, AC-10 |"
+    },
+    {
+      "id": "SC-1",
+      "normative_source_line": 169,
+      "normative_text": "- **SC-1 — ownership:** AC-02 passes all frozen required cases without a critical mistake or source discovery by the consumer."
+    },
+    {
+      "id": "SC-2",
+      "normative_source_line": 170,
+      "normative_text": "- **SC-2 — progressive use:** AC-03 meets the read/context limits frozen before evaluation; routine use does not require loading the full graph."
+    },
+    {
+      "id": "SC-3",
+      "normative_source_line": 171,
+      "normative_text": "- **SC-3 — incrementality:** AC-05/06 preserve independent knowledge and reconcile the expected affected set; unchanged work incurs no new interpretation calls."
+    },
+    {
+      "id": "SC-4",
+      "normative_source_line": 172,
+      "normative_text": "- **SC-4 — economics:** separately report initial construction, validation, incremental update and daily reads; stay within the approved envelope and never call missing usage zero. No savings percentage without a comparable measured baseline, and no rerun of old mining merely to obtain one."
+    },
+    {
+      "id": "SC-5",
+      "normative_source_line": 173,
+      "normative_text": "- **SC-5 — consistency:** AC-07/09 demonstrate coherent accepted reads and refusal of the specified invalid states, without asserting CI proves semantic truth."
+    },
+    {
+      "id": "QS-1",
+      "normative_source_line": 180,
+      "normative_text": "- **QS-1 Fidelity:** preserve evidence and disagreements; use correct epistemic labels; no unsupported product rationale."
+    },
+    {
+      "id": "QS-2",
+      "normative_source_line": 181,
+      "normative_text": "- **QS-2 Operational utility:** concise skills prescribe actions; index entries state what a deeper artifact answers; explanations/procedures are readable, scoped and non-redundant."
+    },
+    {
+      "id": "QS-3",
+      "normative_source_line": 182,
+      "normative_text": "- **QS-3 Simplicity:** every new mechanism names an acceptance need existing code cannot satisfy; no speculative framework, per-layer agent, vector store, bespoke database or mandatory deepening loop."
+    },
+    {
+      "id": "QS-4",
+      "normative_source_line": 183,
+      "normative_text": "- **QS-4 Engineering:** repository style/dependency boundaries, generated-code discipline, safe persistence, input validation and secret handling; no global test hacks or duplicated implementation in tests."
+    },
+    {
+      "id": "QS-5",
+      "normative_source_line": 184,
+      "normative_text": "- **QS-5 Evidence:** actual implementation/reader controls, anti-vacuity mutations where relevant, bounded semantic review and explicit scope of proof; review a fixed bar, not endless optional improvements."
+    },
+    {
+      "id": "QS-6",
+      "normative_source_line": 185,
+      "normative_text": "- **QS-6 Economy:** scoped evidence packs, shared validated context, deterministic derivation first, reusable completions and honest accounting; no automatic retry/refinement campaign."
+    },
+    {
+      "id": "DOD-1",
+      "normative_source_line": 223,
+      "normative_text": "- **DOD-1:** CC-1..7 and SC-1..5 have explicit evidence/verdicts; judged rows have named acceptance, not inferred approval from tests."
+    },
+    {
+      "id": "DOD-2",
+      "normative_source_line": 224,
+      "normative_text": "- **DOD-2:** all applicable invariants and QS-1..6 are reviewed; known-bad controls demonstrate relevant gates can reject defects."
+    },
+    {
+      "id": "DOD-3",
+      "normative_source_line": 225,
+      "normative_text": "- **DOD-3:** real consumers use accepted artifacts through the index/skill path; end-to-end update/publication/recovery, not only isolated modules, is verified."
+    },
+    {
+      "id": "DOD-4",
+      "normative_source_line": 226,
+      "normative_text": "- **DOD-4:** scoped remote tests, package-local typechecks, generated checks where applicable and `bun run check:guards --base origin/dev` are reconciled; one final epic covers the integrated bundle. Never report unrun gates as green."
+    },
+    {
+      "id": "DOD-5",
+      "normative_source_line": 227,
+      "normative_text": "- **DOD-5:** real authorized usage/cost and unresolved requests reconcile; no unapproved calls, silent fallback or budget reset between stages."
+    },
+    {
+      "id": "DOD-6",
+      "normative_source_line": 228,
+      "normative_text": "- **DOD-6:** docs/skills/operator guidance, migration/rollback and historical obligation dispositions are accurate; independent review is complete before landing and only verified owned resources are cleaned."
+    },
+    {
+      "id": "DOD-7",
+      "normative_source_line": 229,
+      "normative_text": "- **DOD-7:** owner acceptance and governed integration are recorded. Code complete, tested, semantically accepted and landed are distinct states. No silent waiver; a failed criterion remains open or an explicit owner amendment changes this contract."
+    }
+  ]
+}

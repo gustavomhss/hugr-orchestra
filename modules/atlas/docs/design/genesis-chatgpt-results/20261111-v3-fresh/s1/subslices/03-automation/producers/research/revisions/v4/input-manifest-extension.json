@@ -1,0 +1,374 @@
+{
+  "schema": "genesis-native-input-extension/v2",
+  "artifact": "s1.core.research",
+  "revision": 4,
+  "finding": "ROOT-R-L1-F01",
+  "status": "ACTUAL_EXECUTED_CORRECTION_INPUTS",
+  "whole_file_identity": true,
+  "path_base": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390",
+  "inheritance": {
+    "predecessor_extension": {
+      "path": "producers/research/revisions/v3/input-manifest-extension.json",
+      "bytes": 7585,
+      "sha256": "95e1d759bace7baa2f8e5bed6f65ee9f5fba1f4a4c24b7f93a4b8d2318bc1101",
+      "git_blob_sha": "6910dfb1a66c7140c3d06c0eb19b182c56ba4e30"
+    },
+    "predecessor_descriptive_recipe": {
+      "path": "producers/research/recipe-v3.json",
+      "bytes": 2901,
+      "sha256": "cd8813f5a1d2157546b762c60b0ff08812281a4138006fdc282a3fdab809abe0",
+      "git_blob_sha": "70600277e27b5f50ff5bec43a08eee08451ae922",
+      "classification": "POST_EXECUTION_DESCRIPTIVE_OUTPUT_NOT_EFFECTIVE_RECIPE"
+    },
+    "predecessor_inheritance_retained_verbatim_as_json_value": {
+      "body_v2": {
+        "path": "history/body-v2.md",
+        "bytes": 63501,
+        "sha256": "d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661",
+        "git_blob_sha": "bb0eaa73b4fe9120fb46d9304778649b5c7205dd"
+      },
+      "descriptive_recipe_v2": {
+        "path": "history/recipe-v2.json",
+        "bytes": 138195,
+        "sha256": "09505ca6228267ab6ad9c0397c7a45690009b1738ae3aa53c8b8df722db5598b",
+        "git_blob_sha": "cd3e47810afc47fec314bab149c7ce0653f4fc9b"
+      },
+      "prior_audit": {
+        "path": "native-input-audit/native-input-disposition.json",
+        "sha256": "3b1695b21f8bb70014e65acd200456b8dd56e0bf7688cfe6bbe3aa003c240b79",
+        "use": "historical provenance reference from prior delivery; not read or changed in this correction"
+      },
+      "policy": "Inherit v2 content/lineage; list only files actually read in this v3 correction. No audit output is made a retroactive v2 input."
+    },
+    "predecessor_inputs_retained_verbatim_as_json_value": [
+      {
+        "id": "request",
+        "read_path": "revisions/v3/request.txt",
+        "retained_path": "revisions/v3/request.txt",
+        "origin": "local-production",
+        "role": "effective correction request preexisting before apply.py execution",
+        "identity": {
+          "bytes": 2899,
+          "sha256": "34c7f006385a7921ca3ebb3aaf7ff31a866c16192c49f8211cf27fab95964224",
+          "git_blob_sha": "b09b0a85f6a41fa1e5269903c0d0538ef0b54105"
+        },
+        "whole_original_file": true,
+        "canonical_destination": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/revisions/v3/request.txt"
+      },
+      {
+        "id": "public-finding",
+        "read_path": "revisions/v3/j2-finding.md",
+        "retained_path": "revisions/v3/j2-finding.md",
+        "origin": "local-production",
+        "role": "public J2 finding as relayed by principal, preserved before execution",
+        "identity": {
+          "bytes": 974,
+          "sha256": "a7504bff3418ff3778e5d56b2c403858eb08f6c97fb3dfbefd7d66dae1b4316a",
+          "git_blob_sha": "accb3f921308f1c3c665d20b1aa7f6e40104b976"
+        },
+        "whole_original_file": true,
+        "canonical_destination": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/revisions/v3/j2-finding.md"
+      },
+      {
+        "id": "body-v2",
+        "read_path": "body.md",
+        "retained_path": "history/body-v2.md",
+        "origin": "local-production",
+        "role": "full exact base body v2; versioned alias prevents current-output self-edge",
+        "identity": {
+          "bytes": 63501,
+          "sha256": "d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661",
+          "git_blob_sha": "bb0eaa73b4fe9120fb46d9304778649b5c7205dd"
+        },
+        "whole_original_file": true,
+        "canonical_destination": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/history/body-v2.md"
+      },
+      {
+        "id": "recipe-v2",
+        "read_path": "recipe-v2.json",
+        "retained_path": "history/recipe-v2.json",
+        "origin": "local-production",
+        "role": "prior descriptive recipe read only to verify and preserve its exact bytes; not the effective v3 procedure",
+        "identity": {
+          "bytes": 138195,
+          "sha256": "09505ca6228267ab6ad9c0397c7a45690009b1738ae3aa53c8b8df722db5598b",
+          "git_blob_sha": "cd3e47810afc47fec314bab149c7ce0653f4fc9b"
+        },
+        "whole_original_file": true,
+        "canonical_destination": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/history/recipe-v2.json"
+      },
+      {
+        "id": "locate-source",
+        "read_path": "sources/packages/core/src/research-toolkit/locate.ts",
+        "repository_path": "packages/core/src/research-toolkit/locate.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "origin": "pinned-source-capture",
+        "role": "decisive selection and ranks branches; full-file input identity even with selective semantic reads",
+        "identity": {
+          "bytes": 16148,
+          "sha256": "0ebac9d228ca1764020e0f7ccf260228dc02c1169c0143c07f258e7c7ac650f2",
+          "git_blob_sha": "d1343801f7b336d5e5b46eac860f6a07a0ae19fa"
+        },
+        "whole_original_file": true,
+        "canonical_destination": "packages/core/src/research-toolkit/locate.ts"
+      },
+      {
+        "id": "locate-contract-test",
+        "read_path": "sources/packages/core/test/research-locate.test.ts",
+        "repository_path": "packages/core/test/research-locate.test.ts",
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "origin": "pinned-source-capture",
+        "role": "read fixture and assertions as contract, never executed; full-file input identity",
+        "identity": {
+          "bytes": 8418,
+          "sha256": "ef4ff4e93af664f8810da34386b235ef33071fcbba9868bf9904aa40f72f801a",
+          "git_blob_sha": "53aed544518715b880e3415295e94da7756cc9ad"
+        },
+        "whole_original_file": true,
+        "canonical_destination": "packages/core/test/research-locate.test.ts"
+      },
+      {
+        "id": "effective-apply",
+        "read_path": "revisions/v3/apply.py",
+        "identity": {
+          "bytes": 17112,
+          "sha256": "1a06fb787058915ac20e696c5c8ea855dcda7813d9b208d15fa3770336de2f2e",
+          "git_blob_sha": "224ac97db71f108e4e8a945a6a3327afad725af7"
+        },
+        "whole_original_file": true,
+        "role": "effective executable procedure frozen before execution",
+        "origin": "local-production",
+        "retained_path": "revisions/v3/apply.py",
+        "canonical_destination": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/revisions/v3/apply.py"
+      },
+      {
+        "id": "pre-execution-freeze",
+        "read_path": "revisions/v3/apply-freeze.json",
+        "identity": {
+          "bytes": 4550,
+          "sha256": "65ceaf32de80a5b134d63e28fadc9271c822470d768d9d852d1ce8ce5287bacd",
+          "git_blob_sha": "f4cce3bb20fe952594a39e886d58d2ecb9dd4b64"
+        },
+        "whole_original_file": true,
+        "role": "pre-execution identity and exact-input freeze consumed by apply.py",
+        "origin": "local-production",
+        "retained_path": "revisions/v3/apply-freeze.json",
+        "canonical_destination": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/revisions/v3/apply-freeze.json"
+      }
+    ],
+    "predecessor_paths_base": "producers/research/",
+    "policy": "All prior actual lineage remains inherited. Ancestor references are not new reads or hashes. Historical v2 audit and v3 extension remain unchanged."
+  },
+  "inputs": [
+    {
+      "path": "producers/research/body.md",
+      "identity": {
+        "bytes": 63841,
+        "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+        "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4"
+      },
+      "role": "full v3 body; exact base and preservation input",
+      "origin": "local-preexisting-file",
+      "read_path": "producers/research/body.md",
+      "whole_original_file": true,
+      "input_unit": "complete UTF-8 file; no excerpt replaces file identity",
+      "retained_path": "producers/research/revisions/v4/history/body.md",
+      "canonical_destination": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/revisions/v4/history/body.md",
+      "aliases": [
+        "producers/research/body.md",
+        "producers/research/revisions/v4/history/body.md"
+      ],
+      "version": 3
+    },
+    {
+      "path": "producers/research/sources/packages/core/src/research-toolkit/code-index/query.ts",
+      "identity": {
+        "bytes": 32872,
+        "sha256": "ec1dd4a297e6e798c497d67ac5ed21cd4c6484e2aba3c2bed60dbd8f174f05e8",
+        "git_blob_sha": "25d652ee0ce78d327427837466b5d7fe5886013f"
+      },
+      "role": "full pinned query.ts; semantic source of correction",
+      "origin": "pinned-source-capture",
+      "read_path": "producers/research/sources/packages/core/src/research-toolkit/code-index/query.ts",
+      "whole_original_file": true,
+      "input_unit": "complete UTF-8 file; no excerpt replaces file identity",
+      "retained_path": "producers/research/sources/packages/core/src/research-toolkit/code-index/query.ts",
+      "canonical_destination": "packages/core/src/research-toolkit/code-index/query.ts",
+      "repository_path": "packages/core/src/research-toolkit/code-index/query.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    {
+      "path": "producers/research/revisions/v3/input-manifest-extension.json",
+      "identity": {
+        "bytes": 7585,
+        "sha256": "95e1d759bace7baa2f8e5bed6f65ee9f5fba1f4a4c24b7f93a4b8d2318bc1101",
+        "git_blob_sha": "6910dfb1a66c7140c3d06c0eb19b182c56ba4e30"
+      },
+      "role": "full v3 actual-input extension; retained lineage",
+      "origin": "local-preexisting-file",
+      "read_path": "producers/research/revisions/v3/input-manifest-extension.json",
+      "whole_original_file": true,
+      "input_unit": "complete UTF-8 file; no excerpt replaces file identity",
+      "retained_path": "producers/research/revisions/v3/input-manifest-extension.json",
+      "canonical_destination": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/revisions/v3/input-manifest-extension.json"
+    },
+    {
+      "path": "producers/research/recipe-v3.json",
+      "identity": {
+        "bytes": 2901,
+        "sha256": "cd8813f5a1d2157546b762c60b0ff08812281a4138006fdc282a3fdab809abe0",
+        "git_blob_sha": "70600277e27b5f50ff5bec43a08eee08451ae922"
+      },
+      "role": "full prior descriptive recipe; not the effective v4 recipe",
+      "origin": "local-preexisting-file",
+      "read_path": "producers/research/recipe-v3.json",
+      "whole_original_file": true,
+      "input_unit": "complete UTF-8 file; no excerpt replaces file identity",
+      "retained_path": "producers/research/recipe-v3.json",
+      "canonical_destination": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/recipe-v3.json"
+    },
+    {
+      "path": "producers/research/revisions/v4/public-findings.md",
+      "identity": {
+        "bytes": 1370,
+        "sha256": "274bc65c13abadb0c847c71b7acaf135759d89282b2509cc970f67d4d13e5d42",
+        "git_blob_sha": "e4c19a874355af85e5852cdf648af954527b13ab"
+      },
+      "role": "public technical finding and scope; preserved unchanged",
+      "origin": "local-preexisting-file",
+      "read_path": "producers/research/revisions/v4/public-findings.md",
+      "whole_original_file": true,
+      "input_unit": "complete UTF-8 file; no excerpt replaces file identity",
+      "retained_path": "producers/research/revisions/v4/public-findings.md",
+      "canonical_destination": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/revisions/v4/public-findings.md"
+    },
+    {
+      "path": "producers/research/revisions/v4/request.txt",
+      "identity": {
+        "bytes": 548,
+        "sha256": "53d5398d52c804a75572f369ab9a08049872041080f16fdf167ae38f56a94531",
+        "git_blob_sha": "ca74b4ecd789bb7894860912677d138762e33a98"
+      },
+      "role": "effective request",
+      "origin": "local-preexisting-control",
+      "read_path": "producers/research/revisions/v4/request.txt",
+      "whole_original_file": true,
+      "input_unit": "complete UTF-8 file; no excerpt replaces file identity",
+      "retained_path": "producers/research/revisions/v4/request.txt",
+      "canonical_destination": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/revisions/v4/request.txt"
+    },
+    {
+      "path": "producers/research/revisions/v4/recipe.json",
+      "identity": {
+        "bytes": 4029,
+        "sha256": "5eb8b298dd8ca73b66d0869424782f73dbf539c0a6c37aaa837686976da2fc57",
+        "git_blob_sha": "e217a08a971ff0e42a2af40f22bc12d060834fff"
+      },
+      "role": "effective recipe frozen before dispatch",
+      "origin": "local-preexisting-control",
+      "read_path": "producers/research/revisions/v4/recipe.json",
+      "whole_original_file": true,
+      "input_unit": "complete UTF-8 file; no excerpt replaces file identity",
+      "retained_path": "producers/research/revisions/v4/recipe.json",
+      "canonical_destination": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/revisions/v4/recipe.json"
+    },
+    {
+      "path": "producers/research/revisions/v4/dispatch-message.txt",
+      "identity": {
+        "bytes": 1059,
+        "sha256": "c800eb38cedaf8523662529d676cf30e4b67a8491afd943dc081c6c44381d5cc",
+        "git_blob_sha": "5d49d538ecc87957d4e3f27815dd74b14b65adc3"
+      },
+      "role": "literal dispatch preserved before correction",
+      "origin": "local-preexisting-control",
+      "read_path": "producers/research/revisions/v4/dispatch-message.txt",
+      "whole_original_file": true,
+      "input_unit": "complete UTF-8 file; no excerpt replaces file identity",
+      "retained_path": "producers/research/revisions/v4/dispatch-message.txt",
+      "canonical_destination": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/revisions/v4/dispatch-message.txt"
+    },
+    {
+      "path": "producers/research/revisions/v4/apply.py",
+      "read_path": "producers/research/revisions/v4/apply.py",
+      "retained_path": "producers/research/revisions/v4/apply.py",
+      "identity": {
+        "bytes": 17467,
+        "sha256": "5bfdf994e961bdac05212b2a981aa8f50fcdf60bd5d440988fca5247e4bab89b",
+        "git_blob_sha": "235ce74826e8c995b5ed8e75bed02f8d8af9b07c"
+      },
+      "role": "effective executable procedure frozen before execution",
+      "origin": "local-pre-execution-control",
+      "whole_original_file": true,
+      "canonical_destination": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/revisions/v4/apply.py"
+    },
+    {
+      "path": "producers/research/revisions/v4/procedure-freeze.json",
+      "read_path": "producers/research/revisions/v4/procedure-freeze.json",
+      "retained_path": "producers/research/revisions/v4/procedure-freeze.json",
+      "identity": {
+        "bytes": 5148,
+        "sha256": "6cd8fcb3642f22bf1f6831047db7e4ecc7b4e782c1681ccec4e400f798858a48",
+        "git_blob_sha": "16d17b90d6ca6a9eecbddf447fb70d51decc60ed"
+      },
+      "role": "pre-execution procedure/input identity freeze consumed by apply.py",
+      "origin": "local-pre-execution-control",
+      "whole_original_file": true,
+      "canonical_destination": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/revisions/v4/procedure-freeze.json"
+    }
+  ],
+  "counts": {
+    "whole_file_input_units_this_revision": 10,
+    "enumerated_recipe_inputs": 5,
+    "other_preexisting_control_files": 3,
+    "new_pre_execution_procedure_files": 2,
+    "pinned_source_files_reread": 1
+  },
+  "effective_recipe": [
+    "producers/research/revisions/v4/request.txt",
+    "producers/research/revisions/v4/recipe.json",
+    "producers/research/revisions/v4/dispatch-message.txt",
+    "producers/research/revisions/v4/public-findings.md",
+    "producers/research/revisions/v4/apply.py",
+    "producers/research/revisions/v4/procedure-freeze.json"
+  ],
+  "procedure_frozen_before_execution": true,
+  "script_creation": "Inline producer bootstrap wrote apply.py and freeze before invocation; bootstrap code is retained in the tool transcript, not invented later as a file input. Initial bootstrap SyntaxError occurred before all file writes.",
+  "semantic_reads": "Request, recipe, dispatch, findings and five enumerated files consumed in full; body/query display split or repeated when output was truncated.",
+  "mechanical_reads": "Eight initial file units re-read for hashing/preservation; apply.py and procedure-freeze.json read in full. No broad archive hash sweep.",
+  "version_alias": {
+    "input_read_path": "producers/research/body.md",
+    "input_version": 3,
+    "retained_alias": "producers/research/revisions/v4/history/body.md",
+    "current_output_version": 4
+  },
+  "new_outputs_not_self_inputs": [
+    "producers/research/body.md",
+    "producers/research/revisions/v4/history/body.md",
+    "producers/research/revisions/v4/delta.patch",
+    "producers/research/revisions/v4/delta.json",
+    "producers/research/revisions/v4/review-supplement.md",
+    "producers/research/revisions/v4/response.md",
+    "producers/research/revisions/v4/input-manifest-extension.json",
+    "producers/research/revisions/v4/producer-verification.json"
+  ],
+  "verification_output_reads": [
+    "producers/research/body.md",
+    "producers/research/revisions/v4/history/body.md",
+    "producers/research/revisions/v4/delta.patch",
+    "producers/research/revisions/v4/delta.json",
+    "producers/research/revisions/v4/review-supplement.md",
+    "producers/research/revisions/v4/response.md",
+    "producers/research/revisions/v4/input-manifest-extension.json",
+    "producers/research/revisions/v4/producer-verification.json"
+  ],
+  "metadata_only_checks": "existence preflight, directory creation and chmod; no additional source content read",
+  "source_text_is_data": true,
+  "usage": {
+    "tokens": "UNKNOWN",
+    "physical_model_attempts": "UNKNOWN",
+    "cost": "UNKNOWN",
+    "recorded_apply_invocations": 1,
+    "network_calls": 0,
+    "product_test_runs": 0
+  }
+}

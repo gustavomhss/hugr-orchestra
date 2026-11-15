@@ -1,0 +1,156 @@
+[
+  {
+    "probe": "update-affected-order",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.1 ownership affected-set planning UP-24 an unchanged prerequisite cannot delay lexicographic selection among affected artifacts"
+    ]
+  },
+  {
+    "probe": "update-input",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.1 ownership affected-set planning UP-2 source drift selects required dependents but schedules only the first revalidation frontier"
+    ]
+  },
+  {
+    "probe": "update-dependency",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.1 ownership affected-set planning UP-2 source drift selects required dependents but schedules only the first revalidation frontier"
+    ]
+  },
+  {
+    "probe": "update-frontier",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.1 ownership affected-set planning UP-9 simultaneous upstream and downstream edits cannot run a dependent before its changed prerequisite"
+    ]
+  },
+  {
+    "probe": "update-unavailable",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.1 ownership affected-set planning UP-7 unavailable observations HOLD instead of returning a partial or empty worklist"
+    ]
+  },
+  {
+    "probe": "need-root",
+    "exitCode": 1,
+    "namedFailures": [
+      "ownership accepted closure reader RP-1 refuses a need root bound to an artifact declaring another need"
+    ]
+  },
+  {
+    "probe": "current-input",
+    "exitCode": 1,
+    "namedFailures": [
+      "ownership accepted closure reader IFIT-4 holds a changed required source, never falls back to a prior accepted body"
+    ]
+  },
+  {
+    "probe": "composed-ratify",
+    "exitCode": 1,
+    "namedFailures": [
+      "KNOW-18 \u2014 the fast path does not apply to a write the door derived as `promoted` IFIT-2 a composed ownership publication also requires ratification without inventing contention"
+    ]
+  },
+  {
+    "probe": "worker-ast",
+    "exitCode": 1,
+    "namedFailures": [
+      "S26 \u2014 the symbol arm is REACHED through the proposer pool, and arm FILE is untouched THE GUARD: every `::` site is visited and seeded when the run goes through worker threads"
+    ]
+  },
+  {
+    "probe": "observer-error-as-absent",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 host observer HO-04 read errors never become absence"
+    ]
+  },
+  {
+    "probe": "observer-members-index-only",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 host observer HO-08 unstaged deletion and eligible recreation change members"
+    ]
+  },
+  {
+    "probe": "observer-accept-partial-git",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 host observer HO-10 incomplete Git enumeration is unavailable"
+    ]
+  },
+  {
+    "probe": "rebuild-every-affected",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 incremental rebuild RB-08 equal result renews receipt and stops downstream calls"
+    ]
+  },
+  {
+    "probe": "rebuild-return-old-result",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 incremental rebuild RB-02 source edit rebuilds the independently expected closure"
+    ]
+  },
+  {
+    "probe": "rebuild-body-only-stop",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 incremental rebuild RB-12 full result identity controls propagation"
+    ]
+  },
+  {
+    "probe": "rebuild-ignore-direct-child-change",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 incremental rebuild RB-10 parent equality cannot hide a direct child change"
+    ]
+  },
+  {
+    "probe": "rebuild-omit-input",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 incremental rebuild RB-14 an omitted declared input prevents successful rebuild"
+    ]
+  },
+  {
+    "probe": "rebuild-omit-required-edge",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 incremental rebuild RB-15 an omitted required edge prevents successful rebuild"
+    ]
+  },
+  {
+    "probe": "rebuild-accept-stale-review",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 incremental rebuild RB-13 rejected or unbound revalidation cannot renew a receipt"
+    ]
+  },
+  {
+    "probe": "rebuild-skip-preflight",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 concurrency TC-01 drift before first dispatch invalidates the plan"
+    ]
+  },
+  {
+    "probe": "rebuild-skip-final-sweep",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 concurrency TC-03 drift in a reused artifact fails the final sweep"
+    ]
+  },
+  {
+    "probe": "rebuild-read-live-path",
+    "exitCode": 1,
+    "namedFailures": [
+      "G2.2 concurrency TC-05 ABA cannot change the bytes consumed by the recipe"
+    ]
+  }
+]

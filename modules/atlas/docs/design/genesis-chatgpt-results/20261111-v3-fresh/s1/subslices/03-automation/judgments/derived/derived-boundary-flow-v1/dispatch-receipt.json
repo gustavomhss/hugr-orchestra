@@ -1,0 +1,95 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root/review_relay",
+  "packet": "derived-boundary-flow-v1",
+  "source": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/derived-boundary-flow-v1.md",
+  "source_bytes": 42613,
+  "source_sha256": "5de70da90077795058e339218d73562692c610f494b847df5ea03abccd1ef3e4",
+  "parts_per_target": 1,
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j1",
+      "part": 1,
+      "request_file": "request-j1-01.json",
+      "request_file_bytes": 44223,
+      "request_file_sha256": "30b6643e7f9a0fa3da4b543bdeda018fdc51b276ae0cf64e0dcadc12baac479c",
+      "message_bytes": 43215,
+      "message_sha256": "2c0f78ed5c65c6ab43ee2dc1498651946a0735a96040f1d4da80922fa040df42",
+      "payload_bytes": 42613,
+      "payload_sha256": "5de70da90077795058e339218d73562692c610f494b847df5ea03abccd1ef3e4",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j2",
+      "part": 1,
+      "request_file": "request-j2-01.json",
+      "request_file_bytes": 44223,
+      "request_file_sha256": "2941fc7db0a86d0d1b0583f18d82c46beeb5700af4ba388ee79b8d818a32ac32",
+      "message_bytes": 43215,
+      "message_sha256": "2c0f78ed5c65c6ab43ee2dc1498651946a0735a96040f1d4da80922fa040df42",
+      "payload_bytes": 42613,
+      "payload_sha256": "5de70da90077795058e339218d73562692c610f494b847df5ea03abccd1ef3e4",
+      "method": "collaboration.followup_task",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "known_transcription_corrections": [],
+  "receipt_limit": "Ferramenta retornou normalmente sem texto nem ID de despacho; os hashes descrevem os pedidos registrados e sua reconstrução local, não verificação remota nem suficiência semântica.",
+  "delivery_scope": "Literal UTF-8 packet only; final signal is outside payload.",
+  "slot_handling": "Sequential judges; preserve each original final before reactivation.",
+  "judgment_capture": "Both original final answers saved verbatim; see response-capture.json.",
+  "dispatch_count": 2,
+  "recorded_at_utc": "2026-11-15T03:48:54.124472+00:00",
+  "completed_targets": [
+    "/root/s1_03_j1",
+    "/root/s1_03_j2"
+  ],
+  "pending_targets": [],
+  "local_recorded_reconstruction": [
+    {
+      "target": "/root/s1_03_j1",
+      "bytes": 42613,
+      "sha256": "5de70da90077795058e339218d73562692c610f494b847df5ea03abccd1ef3e4",
+      "equals_source": true,
+      "raw_bytes": 42613,
+      "raw_sha256": "5de70da90077795058e339218d73562692c610f494b847df5ea03abccd1ef3e4",
+      "corrections_applied": false
+    },
+    {
+      "target": "/root/s1_03_j2",
+      "bytes": 42613,
+      "sha256": "5de70da90077795058e339218d73562692c610f494b847df5ea03abccd1ef3e4",
+      "equals_source": true,
+      "raw_bytes": 42613,
+      "raw_sha256": "5de70da90077795058e339218d73562692c610f494b847df5ea03abccd1ef3e4",
+      "corrections_applied": false
+    }
+  ],
+  "judgment_captures": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-boundary-flow-v1/j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 4034,
+      "sha256": "04f04a9ef7a5d83dbdf95c3107f13595b975395fb3cb13a72af31e51aa496143",
+      "terminal_newline": false,
+      "literal": true
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-boundary-flow-v1/j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 5665,
+      "sha256": "e43a2e5dec7fd6a523062bf3a27437c5eaa76816136c0464fba2ba9c7cc354ba",
+      "terminal_newline": false,
+      "literal": true
+    }
+  }
+}

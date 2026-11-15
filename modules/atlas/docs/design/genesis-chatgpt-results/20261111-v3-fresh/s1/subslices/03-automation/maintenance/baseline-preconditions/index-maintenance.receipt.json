@@ -1,0 +1,33 @@
+{
+  "schema": "s1-03-maintenance-baseline-port-query/v1",
+  "purpose": "Observe existing selected own baseline before later maintenance; not consumer or maintenance success",
+  "command": [
+    "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/runtime-preflight/bun-runtime/node_modules/.bin/bun",
+    "scripts/genesis-native.ts",
+    "index",
+    "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/native-source",
+    "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/maintenance/baseline-preconditions/index-maintenance.query.json"
+  ],
+  "cwd": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/runtime-preflight/candidate/modules/atlas",
+  "source_root": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/native-source",
+  "observed_git_head": null,
+  "release_commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "started_utc": "2026-11-15T02:31:17.302954+00:00",
+  "query": {
+    "scope": "orchestra.s1",
+    "need": "maintenance"
+  },
+  "exit_code": 2,
+  "stdout": "{\"kind\":\"hold\",\"reason\":\"ownership-store-unavailable\",\"evidence\":[\"orchestra.s1\"]}\n",
+  "stderr": "",
+  "runtime_derived": true,
+  "operation_is_product_test": false,
+  "publication_attempted": false,
+  "frozen_scenario_ids": [
+    "M-ACTIONS",
+    "M-SCHEDULE-RECIPE"
+  ],
+  "maintenance_case_success": false,
+  "producer_callback_executed": false
+}

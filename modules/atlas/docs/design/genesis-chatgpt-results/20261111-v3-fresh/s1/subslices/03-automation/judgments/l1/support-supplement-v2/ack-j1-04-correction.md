@@ -1,0 +1,1 @@
+Recebida a correção de transporte de **FX-CAP-MANAGEMENT-1**, parte **4/7**. Preservo o envio original e considero somente a quebra de linha corrigida na composição. Aguardo as partes restantes e o `FIM_DO_LOTE` externo final, sem ferramentas e sem julgamento parcial.

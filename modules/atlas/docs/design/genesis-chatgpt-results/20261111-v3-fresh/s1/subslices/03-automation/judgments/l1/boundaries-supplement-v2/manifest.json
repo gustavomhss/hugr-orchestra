@@ -1,0 +1,70 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "lot": "boundaries-supplement-v2",
+  "source": "review-packets/boundaries-supplement-v2.md",
+  "source_bytes": 287371,
+  "source_sha256": "b69a7681e5fe1d996836c6e3825f9f57e05f2989318d6134d9078b38c45410dc",
+  "frozen_manifest": {
+    "lot": "boundaries-supplement-v2",
+    "path": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/boundaries-supplement-v2.md",
+    "packet": {
+      "bytes": 287371,
+      "sha256": "b69a7681e5fe1d996836c6e3825f9f57e05f2989318d6134d9078b38c45410dc",
+      "git_blob_sha": "cae18d3d88cd16a8650d92e5ab22eedc5b76ee07"
+    },
+    "body_sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+    "source_supplement_sha256": "665c05eff1fd9db5cc1a75636fc883adf8c43cac6f8069dfe3fc5010225ef0b1",
+    "oracle_access_by_relay": false
+  },
+  "split_rule": "Autorização da raiz para suplementos: partes até aproximadamente 55–60KB; cortes balanceados em LF, alvo 58000 bytes.",
+  "parts": [
+    {
+      "part": 1,
+      "file": "part-01.txt",
+      "start": 0,
+      "end": 57432,
+      "bytes": 57432,
+      "sha256": "ef2406a5872347c962d74dbfab449c397266b9311b095654627b935cc47ac5ca"
+    },
+    {
+      "part": 2,
+      "file": "part-02.txt",
+      "start": 57432,
+      "end": 114994,
+      "bytes": 57562,
+      "sha256": "c6e34983dd75618c7fbcb283db571f358708837f3981e4e38c466abb7b7ce7e9"
+    },
+    {
+      "part": 3,
+      "file": "part-03.txt",
+      "start": 114994,
+      "end": 172339,
+      "bytes": 57345,
+      "sha256": "f8cf25f72f33202b9f5ec9810efa6c92383c14a21a5d8ddd969eb72e7c21cc46"
+    },
+    {
+      "part": 4,
+      "file": "part-04.txt",
+      "start": 172339,
+      "end": 229753,
+      "bytes": 57414,
+      "sha256": "7310875cad3f7d39c14c3e95dc2d85aca647e5776d9cc90623c5cff781a18af7"
+    },
+    {
+      "part": 5,
+      "file": "part-05.txt",
+      "start": 229753,
+      "end": 287371,
+      "bytes": 57618,
+      "sha256": "f83e72a2c8cdc07a0990c988ee70a02773283514ba008439e30161ebf9f23a0c"
+    }
+  ],
+  "end_marker_counts_per_part": [
+    1,
+    0,
+    0,
+    0,
+    0
+  ],
+  "framing_rule": "Menção interna é dado; sinal FIM_DO_LOTE externo somente depois do delimitador final."
+}

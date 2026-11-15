@@ -1,0 +1,63 @@
+{
+  "case_id": "M-SCHEDULE-RECIPE",
+  "state": "PREPARED_NOT_EXECUTED",
+  "purpose": "Scheduling-contract branch of the already frozen case: reduce the late threshold for once/weekly slots to twelve hours. Source intent comment is changed consistently. No scheduling runtime is executed.",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_path": "packages/core/src/scheduled-task/model.ts",
+  "before": {
+    "bytes": 6670,
+    "sha256": "f29962a40bd89bca23cff892d3ff01fcfa8e660b390c4831c88ca7cc695f0b5d",
+    "git_blob_sha": "a5560b15853e2941c31bf9e803560bbea0c24c4e"
+  },
+  "after": {
+    "bytes": 6683,
+    "sha256": "8bcec653beaa51b28eea06d3f2ed83ddabc4c51ba6e20f9dd9eaad46085ee6cc",
+    "git_blob_sha": "2b92e1609fe6e15887c6563fe675b03ad1b52cc0"
+  },
+  "literal_replacements": [
+    {
+      "before": "const LATE = DAY",
+      "after": "const LATE = 12 * HOUR"
+    },
+    {
+      "before": "A one-off or weekly slot more than a day late is skipped",
+      "after": "A one-off or weekly slot more than twelve hours late is skipped"
+    }
+  ],
+  "patch": {
+    "path": "maintenance/mutations/M-SCHEDULE-RECIPE/mutation.patch",
+    "bytes": 726,
+    "sha256": "901cf8d3f994f8fdbe41ccf5f5bbe29c0038da91172009f6ab315cb2fda42688",
+    "git_blob_sha": "67620e4f543f4a3162c193870d00587e673381be"
+  },
+  "selected_baseline_manifest": null,
+  "runtime_changed_observation": null,
+  "runtime_plan": null,
+  "runtime_rebuild": null,
+  "runtime_read_after_rebuild": null,
+  "expected_affected_static_only": [
+    "s1.core.automation",
+    "s1.subslice03.automation-flow",
+    "s1.subslice03.automation-impact",
+    "s1.subslice03.automation-maintenance",
+    "s1.subslice03.entry"
+  ],
+  "expected_independent_static_only": [
+    "s1.core.boundaries",
+    "s1.core.research",
+    "s1.subslice03.boundary-flow",
+    "s1.subslice03.research-flow",
+    "s1.subslice03.research-impact",
+    "s1.subslice03.research-maintenance",
+    "s1.subslice03.support"
+  ],
+  "dependency_basis": {
+    "path": "artifact-plan.json",
+    "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad"
+  },
+  "runtime_result_claimed": false,
+  "applied_to_source_root": false,
+  "applied_to_repository_product": false,
+  "product_execution": false,
+  "prerequisite": "A complete supported native package, actual prepare, same-pair binding and governed publication for this isolated root; current index/read reports ownership-store-unavailable. Final whole-package attempt remains required."
+}

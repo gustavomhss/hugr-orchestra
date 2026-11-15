@@ -1,0 +1,7 @@
+Produza somente s1.subslice03.research-flow, L2, need=flow, da missão S1-03.
+Raiz da execução: /workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390
+Receita efetiva congelada: payload/recipes/derived/research-flow.json
+Receita SHA256: 543c6045bfb145c0db4b2779b12c96c140ff20198c408357c7d84bcf0a7f71e1
+Leia integralmente a receita e exatamente os inputs nela enumerados. O gate dos predecessores foi conferido nos dois pareceres originais antes deste pedido.
+Diretório de escrita exclusivo: producers/derived-research-flow
+Preserve este request.txt; registre o dispatch visível separadamente. Não leia os pareceres completos, oracle ou fontes brutas. Não delegue. Execute a autoria e verificação determinística permitidas até entregar os cinco outputs da receita. Nenhum nível posterior está liberado por este pedido.

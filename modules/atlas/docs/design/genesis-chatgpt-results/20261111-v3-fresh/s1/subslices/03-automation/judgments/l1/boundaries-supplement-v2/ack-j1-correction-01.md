@@ -1,0 +1,1 @@
+Recebida a correção de transporte da **parte 4/5**: na composição, removo somente a linha em branco inicial entre `INICIO_PARTE_LITERAL` e `Commit:`, preservando o envio original e a correção como registro do incidente. Nenhum outro byte ou parecer é alterado. Aguardo a parte 5/5 e o sinal externo final, sem ferramentas.

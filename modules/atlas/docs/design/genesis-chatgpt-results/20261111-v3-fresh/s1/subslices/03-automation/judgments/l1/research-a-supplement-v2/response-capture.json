@@ -1,0 +1,25 @@
+{
+  "recorded_at_utc": "2026-11-15T02:05:33.351624+00:00",
+  "responses": [
+    {
+      "judge": "/root/s1_03_j1",
+      "file": "j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 6201,
+      "sha256": "c537733b9c593020cbbe1227231794d9e33c0f531c5d63f39140559612f0ba6f",
+      "terminal_newline": false,
+      "literal": true
+    },
+    {
+      "judge": "/root/s1_03_j2",
+      "file": "j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 3953,
+      "sha256": "5b6b6fb288dcfcd9ae8a190cc593e7a660ba44e8924198a739812cc073a13134",
+      "terminal_newline": false,
+      "literal": true
+    }
+  ],
+  "pending": [],
+  "sync_state": "Both original responses preserved before respective next-lot activation."
+}

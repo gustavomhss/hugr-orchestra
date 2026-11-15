@@ -1,0 +1,165 @@
+{
+  "schema": "s1-03-derived-task-recipe/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "frozen_at_utc": "2026-11-15T03:25:49.273278+00:00",
+  "state": "FROZEN_BEFORE_AUTHOR_DISPATCH",
+  "artifact": {
+    "key": "s1.subslice03.boundary-flow",
+    "layer": 2,
+    "need": "flow",
+    "required_build_predecessors": [
+      "s1.core.boundaries"
+    ],
+    "purpose": "Encadeamento e limites do lado Core das portas externas"
+  },
+  "predecessors": [
+    {
+      "key": "s1.core.boundaries",
+      "local_body_path": "producers/boundaries/bodies/boundaries.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/boundaries/bodies/boundaries.md",
+      "body_bytes": 23665,
+      "body_sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+      "body_git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
+      "acceptance_gate": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+          "original_response_sha256": "9c7496988762a6455d1682eea750037377778c316d37071203f1c8b719951adc"
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+          "original_response_sha256": "5ae3e9104142c41c0d261bb979dc29607a69065d019d3899d28c9fea52334801"
+        }
+      ],
+      "gate_scope": "Semantic acceptance only; runtime and consumers are separate. Full judge prose is not an author input."
+    }
+  ],
+  "author_context": "Fresh native fork none for this family; no oracle, no judge prose and no raw source. Later family layers reuse this author only after their gates. Do not delegate.",
+  "retained_family_context": null,
+  "exclusive_output_directory": "producers/derived-boundary-flow",
+  "payload_output_directory": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-boundary-flow",
+  "read_exactly": [
+    {
+      "local_path": "inputs/AGENTS.md",
+      "bytes": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/COMMON.md",
+      "bytes": 12959,
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/mission.json",
+      "bytes": 6006,
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/SKILL.md",
+      "bytes": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/references/principles.md",
+      "bytes": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/references/fatia-1.md",
+      "bytes": 3987,
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/references/fresh-start.md",
+      "bytes": 4983,
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/references/orchestration.md",
+      "bytes": 4408,
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/references/judging.md",
+      "bytes": 5787,
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "inputs/references/transport.md",
+      "bytes": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "payload/artifact-plan.json",
+      "bytes": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+      "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "payload/recipes/derived-contract.json",
+      "bytes": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "payload/recipes/derived-public-criteria.json",
+      "bytes": 16244,
+      "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+      "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+      "whole_file_identity": true
+    },
+    {
+      "local_path": "producers/boundaries/bodies/boundaries.md",
+      "bytes": 23665,
+      "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+      "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
+      "whole_file_identity": true,
+      "accepted_predecessor_key": "s1.core.boundaries"
+    }
+  ],
+  "other_actual_inputs": "This frozen recipe, the request file and the visible dispatch. Record their full identities. If an extra source is needed, ask principal before reading.",
+  "instructions": [
+    "Read the listed public authority, plan, common recipe and criteria in full unless already completely read in this same family context, then the exact accepted predecessor body. Avoid output truncation. Retain all earlier actual context inputs in the new manifest. Do not open any oracle, judgment response, unlisted sibling file or recursive directory inventory.",
+    "Produce only this artifact and its evidence/manifest. Do not preproduce a later layer. Use the accepted body as semantic authority, preserving its qualifications. The normative recipe states the role of this layer.",
+    "Write a coherent useful Portuguese reference, normally 6000–14000 UTF-8 bytes, with independent depth2 headings for bounded Atlas read. This is a sizing preference, not permission to omit necessary meaning.",
+    "Explain the defined need, mechanisms, decision boundaries and relevant limitations without copying the full predecessor. Distinguish static findings, contract-test expectations, inference and actual execution.",
+    "Map claims to exact predecessor keys/hashes/sections in evidence.md. Navigation is not a build edge. Do not claim provider qualification, runtime binding, live consumers, maintenance success or global S1 acceptance.",
+    "Store body.md, evidence.md, production-manifest.json, response.md and the exact visible dispatch record in the exclusive directory. Preserve existing request.txt. Include every actual consumed whole-file unit and provenance in production-manifest.json; do not call a postproduction manifest an earlier recipe.",
+    "No network, GitHub writes, product tests or product changes, policy/guard changes, sibling mutations or other agents. Python/file tools may read the enumerated inputs and write your outputs; deterministic hashing is permitted.",
+    "Stop after this one authoring delivery and report hashes, input/output counts and limitations. The principal obtains the same two native judges before releasing a dependent."
+  ],
+  "outputs": [
+    "body.md",
+    "evidence.md",
+    "production-manifest.json",
+    "response.md",
+    "dispatch-message.txt"
+  ],
+  "reserved_answers_included": false,
+  "usage_fields": "Physical attempts, tokens and billing UNKNOWN when not exposed."
+}

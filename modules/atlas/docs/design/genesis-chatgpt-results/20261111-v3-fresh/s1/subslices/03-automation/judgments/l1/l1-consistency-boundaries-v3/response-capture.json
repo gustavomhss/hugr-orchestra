@@ -1,0 +1,24 @@
+{
+  "lot": "l1-consistency-boundaries-v3",
+  "responses": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/l1-consistency-boundaries-v3/j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 3284,
+      "sha256": "1f4b25f011a54a640723d4660aa69cae6e6920fe46f92d8a3f49ae13c3ff5923",
+      "terminal_newline": false,
+      "literal": true
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/l1-consistency-boundaries-v3/j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 2612,
+      "sha256": "24109643bb94e2c8c1124d9996e5bb4af83a5030c74ae276e466fee526c2e816",
+      "terminal_newline": false,
+      "literal": true
+    }
+  },
+  "pending": []
+}

@@ -1,0 +1,9 @@
+{
+  "schema": "s1-03-branch-observation/v1",
+  "source": "GitHub connector GET /repos/gustavomhss/hugr-orchestra/branches/genesis-s1-automation",
+  "head": "332a0b292123de704ec0b4b393e77e0902a00b01",
+  "tree": "fb37d739740a04226414b9e00ba74e9e64b7c447",
+  "branch": "genesis-s1-automation",
+  "protected": false,
+  "scope": "Mid-review observation; no write, branch reset, PR, merge, protection or policy change. Final lease must read HEAD again."
+}

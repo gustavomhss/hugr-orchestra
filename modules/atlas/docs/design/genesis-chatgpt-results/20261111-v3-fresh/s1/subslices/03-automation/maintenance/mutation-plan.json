@@ -1,0 +1,142 @@
+{
+  "schema": "s1-03-frozen-maintenance-mutation-materialization/v1",
+  "oracle_frozen_before_production": "oracles/consumer-maintenance-v1.json",
+  "state": "PREPARED_NOT_EXECUTED",
+  "cases": [
+    {
+      "case_id": "M-ACTIONS",
+      "state": "PREPARED_NOT_EXECUTED",
+      "purpose": "Fixture mutation strengthens written-source proof: a readback without last_commit_id now refuses proof. It is a proposed Genesis input mutation, not an authorized feature or applied product fix.",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_path": "packages/core/src/actions/authoring/remote.ts",
+      "before": {
+        "bytes": 8787,
+        "sha256": "458a706a6415cb1e3d554169149215269f49bcbd5a5fc77f51162840cfcb13d8",
+        "git_blob_sha": "0ef1c6bbc54e8e4a73bc9e82a7f1b6653161d3d7"
+      },
+      "after": {
+        "bytes": 8787,
+        "sha256": "4752e4b2b2e71c814c9a4af2b3462241013d01ac02ca8abb66f69624f89d3e56",
+        "git_blob_sha": "de2f4cd8388c4d7daffc443dffd267d743a23bc2"
+      },
+      "literal_replacements": [
+        {
+          "before": "native.last_commit_id !== undefined && native.last_commit_id.toLowerCase() !== value.commit.toLowerCase()",
+          "after": "native.last_commit_id === undefined || native.last_commit_id.toLowerCase() !== value.commit.toLowerCase()"
+        }
+      ],
+      "patch": {
+        "path": "maintenance/mutations/M-ACTIONS/mutation.patch",
+        "bytes": 941,
+        "sha256": "6b6922f91b912e34bfa28d804d3a7d061da27b09edca795b845cc2e677c54b65",
+        "git_blob_sha": "5a21b9ee33a557e9d3eff94cada0f5287c68710a"
+      },
+      "selected_baseline_manifest": null,
+      "runtime_changed_observation": null,
+      "runtime_plan": null,
+      "runtime_rebuild": null,
+      "runtime_read_after_rebuild": null,
+      "expected_affected_static_only": [
+        "s1.core.automation",
+        "s1.subslice03.automation-flow",
+        "s1.subslice03.automation-impact",
+        "s1.subslice03.automation-maintenance",
+        "s1.subslice03.entry"
+      ],
+      "expected_independent_static_only": [
+        "s1.core.boundaries",
+        "s1.core.research",
+        "s1.subslice03.boundary-flow",
+        "s1.subslice03.research-flow",
+        "s1.subslice03.research-impact",
+        "s1.subslice03.research-maintenance",
+        "s1.subslice03.support"
+      ],
+      "dependency_basis": {
+        "path": "artifact-plan.json",
+        "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad"
+      },
+      "runtime_result_claimed": false,
+      "applied_to_source_root": false,
+      "applied_to_repository_product": false,
+      "product_execution": false,
+      "prerequisite": "A complete supported native package, actual prepare, same-pair binding and governed publication for this isolated root; current index/read reports ownership-store-unavailable. Final whole-package attempt remains required."
+    },
+    {
+      "case_id": "M-SCHEDULE-RECIPE",
+      "state": "PREPARED_NOT_EXECUTED",
+      "purpose": "Scheduling-contract branch of the already frozen case: reduce the late threshold for once/weekly slots to twelve hours. Source intent comment is changed consistently. No scheduling runtime is executed.",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_path": "packages/core/src/scheduled-task/model.ts",
+      "before": {
+        "bytes": 6670,
+        "sha256": "f29962a40bd89bca23cff892d3ff01fcfa8e660b390c4831c88ca7cc695f0b5d",
+        "git_blob_sha": "a5560b15853e2941c31bf9e803560bbea0c24c4e"
+      },
+      "after": {
+        "bytes": 6683,
+        "sha256": "8bcec653beaa51b28eea06d3f2ed83ddabc4c51ba6e20f9dd9eaad46085ee6cc",
+        "git_blob_sha": "2b92e1609fe6e15887c6563fe675b03ad1b52cc0"
+      },
+      "literal_replacements": [
+        {
+          "before": "const LATE = DAY",
+          "after": "const LATE = 12 * HOUR"
+        },
+        {
+          "before": "A one-off or weekly slot more than a day late is skipped",
+          "after": "A one-off or weekly slot more than twelve hours late is skipped"
+        }
+      ],
+      "patch": {
+        "path": "maintenance/mutations/M-SCHEDULE-RECIPE/mutation.patch",
+        "bytes": 726,
+        "sha256": "901cf8d3f994f8fdbe41ccf5f5bbe29c0038da91172009f6ab315cb2fda42688",
+        "git_blob_sha": "67620e4f543f4a3162c193870d00587e673381be"
+      },
+      "selected_baseline_manifest": null,
+      "runtime_changed_observation": null,
+      "runtime_plan": null,
+      "runtime_rebuild": null,
+      "runtime_read_after_rebuild": null,
+      "expected_affected_static_only": [
+        "s1.core.automation",
+        "s1.subslice03.automation-flow",
+        "s1.subslice03.automation-impact",
+        "s1.subslice03.automation-maintenance",
+        "s1.subslice03.entry"
+      ],
+      "expected_independent_static_only": [
+        "s1.core.boundaries",
+        "s1.core.research",
+        "s1.subslice03.boundary-flow",
+        "s1.subslice03.research-flow",
+        "s1.subslice03.research-impact",
+        "s1.subslice03.research-maintenance",
+        "s1.subslice03.support"
+      ],
+      "dependency_basis": {
+        "path": "artifact-plan.json",
+        "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad"
+      },
+      "runtime_result_claimed": false,
+      "applied_to_source_root": false,
+      "applied_to_repository_product": false,
+      "product_execution": false,
+      "prerequisite": "A complete supported native package, actual prepare, same-pair binding and governed publication for this isolated root; current index/read reports ownership-store-unavailable. Final whole-package attempt remains required."
+    }
+  ],
+  "operation_sequence_required": [
+    "observe exact published own baseline and input versions",
+    "apply only the frozen fixture mutation to an isolated input copy under new candidate identity",
+    "call actual observation and planner; retain actual refused current read",
+    "native author interprets only affected change with frozen public criteria; same two judges evaluate updated bytes and exact binding",
+    "run actual rebuild/publish/read with valid owned authority and compare independent result identities/call counts"
+  ],
+  "no_canned_rebuild": "No producer output or manifest/approval is invented to make the blocked operation callable.",
+  "current_baseline_port_evidence": [
+    "maintenance/baseline-preconditions/index-maintenance.receipt.json",
+    "maintenance/baseline-preconditions/read-actions-baseline.receipt.json"
+  ],
+  "common_control_reuse": "receipts/common-control-compatibility.json; common synthetic controls do not fulfill either own case"
+}

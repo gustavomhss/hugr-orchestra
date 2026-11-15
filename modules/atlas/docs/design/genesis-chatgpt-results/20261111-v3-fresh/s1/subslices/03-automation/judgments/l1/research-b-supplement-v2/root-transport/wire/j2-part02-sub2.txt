@@ -1,0 +1,445 @@
+Mesmo lote research-b-supplement-v2, J2, parte 2/5, subenvio 2/2. A principal transmite J2; o mesmo par e o candidato researchv2 continuam. Cada par de subenvios recompõe exatamente o fragmento canônico, sem alterar o pacote263486bytes SHA2568e94a5f458c6e53d8d4340e3fd218acab70667b58982261b5258adc5245b15fe. Este trecho literal: 26344bytes, SHA256efa9eede5092f5e102947f6d956f60a17d1826ed6174b9a06c68ec77e1dbc097, offsets globais[79007,105351). Não use ferramentas; marcadores externos não pertencem ao pacote.
+INICIO_PARTE_LITERAL
+70:   readonly peakRssBytes?: number
+71:   readonly stdout: Stream
+72:   readonly stderr: Stream
+73:   /** Paths translated from the scratch to the original file. */
+74:   readonly diagnostics?: ReadonlyArray<{
+75:     readonly path: string
+76:     readonly line: number
+77:     readonly column: number
+78:     readonly code: string
+79:     readonly message: string
+80:   }>
+81:   readonly expect?: ProbeInput["expect"]
+82:   /** The script text, retained separately. */
+83:   readonly script?: Research.SourceRef
+84: }
+```
+
+**RB-S008 — `packages/core/src/research-toolkit/probe/run.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `be267f2f07e4c59a2b69f58b98ddc9499dd550ab` · SHA-256 `80ece4f75445501ac55ecc69bee4a00ca46f88bf931ba0b1f71c6ec5aa53f73c` · 8683 bytes.
+
+Arquivo integral: `sources/packages/core/src/research-toolkit/probe/run.ts`; archive: E29.
+
+Linhas 21–110.
+
+```text
+21: export type Context = {
+22:   readonly worktree: string
+23:   readonly executionSessionID: string
+24:   readonly dispatchID: string
+25:   /** What remains of the dispatch's probe allowance in seconds (J1.10); the probe never runs longer. */
+26:   readonly remainingSeconds: number
+27:   /** Adds --noUnusedLocals --noUnusedParameters to a typecheck (T-P3). */
+28:   readonly unused?: boolean
+29:   readonly heapMiB?: number
+30:   readonly rssBytes?: number
+31:   readonly queueSeconds?: number
+32: }
+33: 
+34: /** The receipt URI the caller retains the result under (J4.9). */
+35: export const uri = (executionSessionID: string, probeID: string) => `probe:${executionSessionID}/${probeID}`
+36: 
+37: /** The line script/test-guard.ts prints when a repository refuses local tests (J4.8). */
+38: export const GUARD = "Local test runs are disabled in this repository"
+39: 
+40: const DIAGNOSTICS = 200
+41: 
+42: export const run = Effect.fn("Probe.run")(function* (input: Probe.ProbeInput, context: Context) {
+43:   if (process.platform !== "darwin" && process.platform !== "linux")
+44:     return yield* new ProbeError({ code: "probe_unsupported_platform", reason: process.platform })
+45:   const seconds = Math.min(input.timeoutSeconds ?? context.remainingSeconds, context.remainingSeconds)
+46:   if (!(seconds > 0)) return yield* denied("allowance-exhausted")
+47:   yield* slot(context.dispatchID, context.queueSeconds ?? Probe.Limits.queueSeconds)
+48:   const probeID = Bun.randomUUIDv7()
+49:   const scratch = yield* Effect.acquireRelease(
+50:     Effect.promise(() => mkdtemp(path.join(os.tmpdir(), "orchestra-probe-")).then((made) => realpath(made))),
+51:     (directory) => Effect.promise(() => rm(directory, { recursive: true, force: true })),
+52:   )
+53:   const snapshot = yield* ProbeSnapshot.create({ worktree: context.worktree, snapshot: input.snapshot, scratch, maxBytes: Probe.Limits.scratchBytes })
+54:   const env = ResearchProcess.environment()
+55:   const plan = yield* ProbeRunners.plan({ runner: input.runner, snapshot, scratch, heapMiB: context.heapMiB ?? Probe.Limits.heapMiB, unused: context.unused, env })
+56:   const launch = yield* ToolSafetySandbox.confine({ command: plan.argv[0], args: plan.argv.slice(1), cwd: plan.cwd, env: { ...env, ...plan.env }, write: [] }).pipe(
+57:     Effect.mapError((error) => error.reason.startsWith("sandbox-platform-unsupported")
+58:       ? new ProbeError({ code: "probe_unsupported_platform", reason: error.reason })
+59:       : denied(`jail-unavailable: ${error.reason}`)))
+60:   const outcome = yield* ResearchProcess.run({
+61:     command: launch.command, args: launch.args, cwd: plan.cwd,
+62:     env: Object.fromEntries(Object.entries(launch.env).filter((entry): entry is [string, string] => entry[1] !== undefined)),
+63:     timeoutMs: seconds * 1000, maxBytes: Probe.Limits.outputBytes, maxRssBytes: context.rssBytes ?? Probe.Limits.rssBytes,
+64:   })
+65:   const stdout = outcome.stdout.data.toString("utf8")
+66:   const stderr = outcome.stderr.data.toString("utf8")
+67:   const diagnostics = plan.kind === "typecheck" ? ProbeTypecheck.parse(stdout, plan.cwd, snapshot) : undefined
+68:   const shown = diagnostics?.slice(0, DIAGNOSTICS)
+69:   const hidden = (diagnostics?.length ?? 0) - (shown?.length ?? 0)
+70:   return {
+71:     probeID,
+72:     snapshot: { kind: snapshot.kind, revision: snapshot.revision, dirtyDigest: snapshot.dirtyDigest, files: snapshot.files },
+73:     runner: { kind: plan.kind, binary: plan.binary, version: plan.version, argv: plan.argv },
+74:     verdict: verdict(input.expect, outcome, `${stdout}\n${stderr}`, diagnostics),
+75:     exitCode: outcome.exitCode,
+76:     durationMs: outcome.durationMs,
+77:     memoryCap: memoryCap(),
+78:     // A typecheck's diagnostic lines are already structured: its tail leads with their causes and keeps only the rest.
+79:     stdout: stream(outcome.stdout, diagnostics ? (line) => !ProbeTypecheck.structured(line) : undefined, [
+80:       ...(diagnostics ? ProbeTypecheck.causes(diagnostics) : []),
+81:       ...(hidden > 0 ? [`${hidden} more diagnostics not listed`] : []),
+82:       ...(outcome.failure ? [outcome.failure] : []),
+83:     ]),
+84:     stderr: stream(outcome.stderr),
+85:     diagnostics: shown,
+86:     expect: input.expect,
+87:   } satisfies Probe.ProbeResult
+88: }, Effect.scoped)
+89: 
+90: /**
+91:  * Omni enforces the RSS cap over the whole tree, a jail's workload included: under srt (linux) bubblewrap's
+92:  * `--new-session` takes it out of omni's session, and omni counts it as the jail's descendant. The legacy spawner
+93:  * bounds only the runner's heap (J4.7).
+94:  */
+95: export function memoryCap(): Probe.ProbeResult["memoryCap"] {
+96:   return Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER !== "off" ? "rss" : "heap-only"
+97: }
+98: 
+99: function verdict(expect: Probe.ProbeInput["expect"], outcome: ResearchProcess.Outcome, text: string, diagnostics?: ReadonlyArray<ProbeTypecheck.Diagnostic>): Probe.Verdict {
+100:   if (outcome.timedOut) return "timeout"
+101:   if (outcome.memoryExceeded) return "memory_exceeded"
+102:   if (outcome.failure !== undefined || outcome.overflow) return "error"
+103:   if (text.includes(GUARD)) return "blocked_by_repo_guard"
+104:   if (!expect) return outcome.exitCode === 0 ? "passed" : "failed"
+105:   const code = (value: string) => value.replace(/^TS/i, "")
+106:   const met = (expect.exitCode === undefined || expect.exitCode === outcome.exitCode) &&
+107:     (expect.stdoutIncludes === undefined || outcome.stdout.data.toString("utf8").includes(expect.stdoutIncludes)) &&
+108:     (expect.stderrIncludes === undefined || outcome.stderr.data.toString("utf8").includes(expect.stderrIncludes)) &&
+109:     (expect.diagnosticCode === undefined || (diagnostics ?? []).some((item) => code(item.code) === code(expect.diagnosticCode!)))
+110:   return met ? "reproduced" : "not_reproduced"
+```
+
+Linhas 113–152.
+
+```text
+113: const ANSI = /\x1b\[[0-9;?]*[ -/]*[@-~]/g
+114: 
+115: /** A condensed tail: no color codes, repeated lines folded, notes last, at most tailBytes. */
+116: function stream(captured: ResearchProcess.Captured, keep?: (line: string) => boolean, notes: ReadonlyArray<string> = []): Probe.Stream {
+117:   const lines = captured.data.toString("utf8").replace(ANSI, "").split(/\r?\n/).filter((line) => !keep || keep(line))
+118:   const folded = lines.reduce<{ line: string; count: number }[]>((list, line) => {
+119:     const last = list.at(-1)
+120:     if (last && last.line === line) last.count++
+121:     if (!last || last.line !== line) list.push({ line, count: 1 })
+122:     return list
+123:   }, []).map((entry) => (entry.count > 1 ? `${entry.line} (x${entry.count})` : entry.line))
+124:   // The tail keeps the end, so the notes go last where truncation cannot drop them.
+125:   const text = [...folded, ...notes].join("\n").trim()
+126:   const tail = Buffer.from(text).subarray(-Probe.Limits.tailBytes).toString("utf8")
+127:   return { tail, bytes: captured.bytes, truncated: captured.truncated || Buffer.byteLength(text) > Probe.Limits.tailBytes }
+128: }
+129: 
+130: // J4.12: one probe at a time per dispatch, two per host; a waiter gives up after queueSeconds as busy.
+131: const host = Semaphore.makeUnsafe(Probe.Limits.perHost)
+132: const dispatches = new Map<string, { semaphore: Semaphore.Semaphore; users: number }>()
+133: 
+134: const slot = Effect.fnUntraced(function* (dispatchID: string, queueSeconds: number) {
+135:   const entry = yield* Effect.acquireRelease(Effect.sync(() => {
+136:     const found = dispatches.get(dispatchID) ?? { semaphore: Semaphore.makeUnsafe(Probe.Limits.perDispatch), users: 0 }
+137:     found.users++
+138:     dispatches.set(dispatchID, found)
+139:     return found
+140:   }), (found) => Effect.sync(() => {
+141:     found.users--
+142:     if (found.users === 0) dispatches.delete(dispatchID)
+143:   }))
+144:   // A permit's release is registered only once it is held; the wait itself stays interruptible.
+145:   const deadline = Date.now() + queueSeconds * 1000
+146:   const take = (semaphore: Semaphore.Semaphore) => Effect.gen(function* () {
+147:     const got = yield* semaphore.take(1).pipe(Effect.timeoutOption(Duration.millis(Math.max(0, deadline - Date.now()))))
+148:     if (Option.isSome(got)) yield* Effect.addFinalizer(() => semaphore.release(1))
+149:     return Option.isSome(got)
+150:   })
+151:   if (!((yield* take(entry.semaphore)) && (yield* take(host)))) return yield* denied("busy")
+152: })
+```
+
+### RB3-02 — Snapshot: seleção commit/worktree, cópia, desaparecidos, digest e links
+
+Vínculo: corpo R9; archive E31.
+
+O digest dirty é calculado sobre as cópias ou o marcador deleted; a seleção tolera caminhos sem lstat e mantém links de dependências do original. Nenhuma atomicidade/hermeticidade além desses ramos é inferida.
+
+**RB-S009 — `packages/core/src/research-toolkit/probe/snapshot.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `0e89bf342e5c4567c4c2cfc180a3d3961ffec91e` · SHA-256 `c376cc01e1e893d3fac7cff70f6858888b29145546e36c36ce4d4b0a4655ea77` · 6868 bytes.
+
+Arquivo integral: `sources/packages/core/src/research-toolkit/probe/snapshot.ts`; archive: E31.
+
+Linhas 25–65.
+
+```text
+25: const DEPENDENCIES = ["node_modules", ".venv", "target"]
+26: 
+27: export const create = Effect.fn("ProbeSnapshot.create")(function* (input: {
+28:   readonly worktree: string
+29:   readonly snapshot: Probe.ProbeInput["snapshot"]
+30:   /** An empty directory the caller owns and removes. */
+31:   readonly scratch: string
+32:   readonly maxBytes: number
+33: }) {
+34:   const origin = yield* Effect.promise(() => realpath(input.worktree))
+35:   const top = (yield* ResearchProcess.git(origin, ["rev-parse", "--show-toplevel"]).pipe(Effect.mapError(fail))).toString("utf8").trim()
+36:   const repo = yield* Effect.promise(() => realpath(top))
+37:   const root = path.join(input.scratch, "snapshot")
+38:   yield* Effect.promise(() => mkdir(root))
+39:   const made = input.snapshot.kind === "commit"
+40:     ? yield* commit(repo, root, input.snapshot.revision, input)
+41:     : yield* worktree(repo, root, input)
+42:   yield* link(repo, root, made.paths)
+43:   return { root, origin: repo, kind: input.snapshot.kind, revision: made.revision, dirtyDigest: made.dirtyDigest, files: made.paths.length } satisfies Snapshot
+44: })
+45: 
+46: /** `git archive` of the resolved commit, extracted into the scratch; the size is checked from the tree first. */
+47: const commit = Effect.fnUntraced(function* (repo: string, root: string, revision: string, input: { scratch: string; maxBytes: number }) {
+48:   const hash = (yield* ResearchProcess.git(repo, ["rev-parse", "--verify", "--end-of-options", `${revision}^{commit}`]).pipe(
+49:     Effect.mapError(() => denied(`snapshot-revision-unknown: ${revision}`)))).toString("utf8").trim()
+50:   const entries = (yield* ResearchProcess.git(repo, ["ls-tree", "-r", "-l", "-z", hash]).pipe(Effect.mapError(fail)))
+51:     .toString("utf8").split("\0").filter(Boolean).map((line) => {
+52:       const tab = line.indexOf("\t")
+53:       return { size: Number(line.slice(0, tab).trim().split(/\s+/)[3]) || 0, path: line.slice(tab + 1) }
+54:     })
+55:   // The tar and its extraction coexist briefly.
+56:   if (entries.reduce((sum, entry) => sum + entry.size, 0) * 2 > input.maxBytes) return yield* denied("snapshot-exceeds-scratch-cap")
+57:   const tar = path.join(input.scratch, "snapshot.tar")
+58:   yield* ResearchProcess.git(repo, ["archive", "--format=tar", "-o", tar, hash]).pipe(Effect.mapError(fail))
+59:   const extracted = yield* ResearchProcess.run({
+60:     command: "tar", args: ["-xf", tar, "-C", root], cwd: input.scratch, env: ResearchProcess.environment(), timeoutMs: 300_000, maxBytes: 1024 * 1024,
+61:   })
+62:   yield* Effect.promise(() => rm(tar, { force: true }))
+63:   if (extracted.exitCode !== 0) return yield* fail(new ResearchProcess.Failed({ command: "tar", detail: extracted.stderr.data.toString("utf8").trim() }))
+64:   return { revision: hash, dirtyDigest: undefined, paths: entries.map((entry) => entry.path) }
+65: })
+```
+
+Linhas 67–113.
+
+```text
+67: /** File clones (clonefile on APFS, reflink where the filesystem has it, else a copy) of the tracked and unignored files. */
+68: const worktree = Effect.fnUntraced(function* (repo: string, root: string, input: { maxBytes: number }) {
+69:   const revision = (yield* ResearchProcess.git(repo, ["rev-parse", "--verify", "HEAD"]).pipe(
+70:     Effect.mapError(() => denied("snapshot-worktree-has-no-commit")))).toString("utf8").trim()
+71:   const listed = (yield* ResearchProcess.git(repo, ["ls-files", "-co", "--exclude-standard", "-z"]).pipe(Effect.mapError(fail)))
+72:     .toString("utf8").split("\0").filter(Boolean)
+73:   // Deleted tracked files and submodule gitlinks are listed but are no file to copy.
+74:   const present = (yield* Effect.forEach([...new Set(listed)], (file) => Effect.promise(() =>
+75:     lstat(path.join(repo, file)).then((stat) => stat.isFile() || stat.isSymbolicLink() ? [{ file, size: stat.size, link: stat.isSymbolicLink() }] : [], () => [])),
+76:   { concurrency: 64 })).flat()
+77:   if (present.reduce((sum, entry) => sum + entry.size, 0) > input.maxBytes) return yield* denied("snapshot-exceeds-scratch-cap")
+78:   yield* Effect.forEach(present, (entry) => Effect.promise(async () => {
+79:     const target = path.join(root, entry.file)
+80:     await mkdir(path.dirname(target), { recursive: true })
+81:     if (entry.link) return symlink(await readlink(path.join(repo, entry.file)), target)
+82:     return copyFile(path.join(repo, entry.file), target, constants.COPYFILE_FICLONE)
+83:   }), { concurrency: 64, discard: true })
+84:   const dirty = (yield* ResearchProcess.git(repo, ["ls-files", "-mo", "--exclude-standard", "-z"]).pipe(Effect.mapError(fail)))
+85:     .toString("utf8").split("\0").filter(Boolean).sort()
+86:   const dirtyDigest = dirty.length ? yield* Effect.promise(async () => {
+87:     const hasher = new Bun.CryptoHasher("sha256")
+88:     for (const file of dirty) {
+89:       hasher.update(`${file}\0`)
+90:       const copy = Bun.file(path.join(root, file))
+91:       hasher.update(await copy.exists() ? new Uint8Array(await copy.arrayBuffer()) : "deleted")
+92:       hasher.update("\0")
+93:     }
+94:     return hasher.digest("hex")
+95:   }) : undefined
+96:   return { revision, dirtyDigest, paths: present.map((entry) => entry.file) }
+97: })
+98: 
+99: /** Dependency directories of the original enter as symlinks, at the root and next to every package.json. */
+100: const link = Effect.fnUntraced(function* (repo: string, root: string, paths: ReadonlyArray<string>) {
+101:   const dirs = new Set(["", ...paths.filter((file) => path.basename(file) === "package.json" && !file.split("/").some((part) => DEPENDENCIES.includes(part)))
+102:     .map((file) => path.dirname(file)).map((dir) => (dir === "." ? "" : dir))])
+103:   yield* Effect.forEach([...dirs].flatMap((dir) => DEPENDENCIES.map((name) => path.join(dir, name))), (relative) => Effect.promise(async () => {
+104:     const source = path.join(repo, relative)
+105:     const stat = await lstat(source).catch(() => undefined)
+106:     if (!stat?.isDirectory()) return
+107:     if (await lstat(path.join(root, relative)).then(() => true, () => false)) return
+108:     await mkdir(path.dirname(path.join(root, relative)), { recursive: true })
+109:     await symlink(source, path.join(root, relative))
+110:   }), { concurrency: 16, discard: true })
+111: })
+112: 
+113: const fail = (error: ResearchProcess.Failed) => denied(`snapshot-git-failed: ${error.command}: ${error.detail}`)
+```
+
+### RB3-03 — Assets e runners: seleção, identidade, argv, ambiente e contenção de path
+
+Vínculo: corpo R9; archive E32.
+
+**RB-S010 — `packages/core/src/research-toolkit/probe/assets.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `723a227214d129eed66a8e6d43d3277ae0f199d1` · SHA-256 `3fd210e83469c18a58aa2ffade6286cd1fdbd21ea1f8280cfad9c949ef77f1d9` · 3800 bytes.
+
+Arquivo integral: `sources/packages/core/src/research-toolkit/probe/assets.ts`; archive: E32.
+
+Linhas 12–64.
+
+```text
+12: export class ProbeError extends Schema.TaggedErrorClass<ProbeError>()("Probe.Error", {
+13:   code: Schema.Literals(["probe_denied", "probe_unsupported_platform"]),
+14:   reason: Schema.String,
+15:   /** The runners an ambiguous project offers. */
+16:   options: Schema.optional(Schema.Array(Schema.String)),
+17: }) {}
+18: 
+19: export const denied = (reason: string, options?: ReadonlyArray<string>) => new ProbeError({ code: "probe_denied", reason, options })
+20: 
+21: export type Kind = "typescript" | "vitest" | "jest"
+22: 
+23: const BIN: Record<Kind, string> = { typescript: "tsc", vitest: "vitest", jest: "jest" }
+24: 
+25: export type Asset = { readonly kind: Kind; readonly root: string; readonly entry: string; readonly version: string }
+26: 
+27: /** The nearest `node_modules/<kind>` from `from` up to `top`, verified; undefined when the project has none. */
+28: export const project = Effect.fn("ProbeAssets.project")(function* (kind: Kind, from: string, top: string) {
+29:   const found = yield* Effect.promise(() => nearest(kind, from, top))
+30:   if (!found) return undefined
+31:   return yield* verify(kind, found)
+32: })
+33: 
+34: /** The project's typescript, else the research pack's (J6). */
+35: export const typescript = Effect.fn("ProbeAssets.typescript")(function* (from: string, top: string) {
+36:   const own = yield* project("typescript", from, top)
+37:   if (own) return own
+38:   // The pack may not be installed or ready yet; the probe then names the gap.
+39:   const pack = yield* ResearchToolkit.ensure("typescript").pipe(Effect.catchCause(() => Effect.succeed(undefined)))
+40:   if (!pack) return yield* denied("typescript-unavailable: the project has no node_modules/typescript and the research pack is not ready")
+41:   return { kind: "typescript" as const, root: path.dirname(pack.executable), entry: pack.executable, version: "pack" }
+42: })
+43: 
+44: export const verify = Effect.fn("ProbeAssets.verify")(function* (kind: Kind, metadata: string) {
+45:   const root = path.dirname(yield* Effect.promise(() => realpath(metadata)))
+46:   const info: unknown = yield* Effect.promise(() => Bun.file(metadata).json().catch(() => undefined))
+47:   if (!info || typeof info !== "object" || !("name" in info) || info.name !== kind)
+48:     return yield* denied(`trusted-asset-package-invalid: ${kind}`)
+49:   const bin = "bin" in info ? info.bin : undefined
+50:   const declared = typeof bin === "string" ? bin : bin && typeof bin === "object" && BIN[kind] in bin ? (bin as Record<string, unknown>)[BIN[kind]] : undefined
+51:   if (typeof declared !== "string") return yield* denied(`trusted-asset-entry-invalid: ${kind}`)
+52:   const entry = yield* Effect.promise(() => realpath(path.resolve(root, declared)).catch(() => undefined))
+53:   const file = entry ? yield* Effect.promise(() => lstat(entry).then((stat) => stat.isFile(), () => false)) : false
+54:   if (!entry || !file || !FSUtil.contains(root, entry)) return yield* denied(`trusted-asset-escape: ${kind}`)
+55:   const version = "version" in info && typeof info.version === "string" ? info.version : "unknown"
+56:   return { kind, root, entry, version } satisfies Asset
+57: })
+58: 
+59: async function nearest(kind: Kind, from: string, top: string): Promise<string | undefined> {
+60:   const metadata = path.join(from, "node_modules", kind, "package.json")
+61:   if (await Bun.file(metadata).exists()) return metadata
+62:   if (from === top || !FSUtil.contains(top, from)) return undefined
+63:   return nearest(kind, path.dirname(from), top)
+64: }
+```
+
+**RB-S011 — `packages/core/src/research-toolkit/probe/runners.ts`**
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38` · Git blob `5d56b469bb20f80dff4cd89d034706ee8db4798d` · SHA-256 `551427a96e05cf5562e8d6eff1873b91a538a9614869ae2323d4b40a7120a028` · 8962 bytes.
+
+Arquivo integral: `sources/packages/core/src/research-toolkit/probe/runners.ts`; archive: E32.
+
+Linhas 27–56.
+
+```text
+27: export type TestRunner = "bun" | "vitest" | "jest" | "pytest" | "go"
+28: 
+29: export const plan = Effect.fn("ProbeRunners.plan")(function* (input: {
+30:   readonly runner: Probe.ProbeInput["runner"]
+31:   readonly snapshot: ProbeSnapshot.Snapshot
+32:   readonly scratch: string
+33:   readonly heapMiB: number
+34:   readonly unused?: boolean
+35:   readonly env: Record<string, string>
+36: }) {
+37:   const runner = input.runner
+38:   const root = input.snapshot.root
+39:   if (runner.kind === "script") return yield* script(runner, input)
+40:   if (runner.kind === "typecheck") {
+41:     const file = yield* inside(root, runner.project)
+42:     const project = yield* ProbeTypecheck.project(file, root)
+43:     if (!project) return yield* denied(`typecheck-no-tsconfig: ${runner.project}`)
+44:     const tsc = yield* ProbeAssets.typescript(path.dirname(project), root)
+45:     const node = yield* program("node", input.env)
+46:     return {
+47:       kind: "typecheck", binary: tsc.entry, version: tsc.version, cwd: root, env: {},
+48:       argv: ProbeTypecheck.argv({ node, tsc: tsc.entry, project: path.relative(root, project) || ".", heapMiB: input.heapMiB, unused: input.unused }),
+49:     } satisfies Plan
+50:   }
+51:   const file = yield* inside(root, runner.file)
+52:   const found = yield* Effect.promise(() => detect(file, root))
+53:   if (!found) return yield* denied(`test-runner-unknown: no test runner config found for ${runner.file}`)
+54:   if (found.runners.length > 1) return yield* denied(`test-runner-ambiguous: ${runner.file}`, found.runners)
+55:   return yield* test(found.runners[0], { file: path.relative(found.dir, file), name: runner.name, cwd: found.dir, root }, input)
+56: })
+```
+
+Linhas 58–108.
+
+```text
+58: const test = Effect.fnUntraced(function* (
+59:   runner: TestRunner,
+60:   target: { file: string; name?: string; cwd: string; root: string },
+61:   input: { heapMiB: number; env: Record<string, string>; scratch: string },
+62: ) {
+63:   const filter = (flag: string) => (target.name === undefined ? [] : [flag, target.name])
+64:   if (runner === "bun")
+65:     return { kind: "test", binary: process.execPath, version: Bun.version, cwd: target.cwd, env: BUN,
+66:       // A bare name is a filter over discovered *.test files; a ./ path runs exactly that file, whatever its name.
+67:       argv: [process.execPath, "--no-env-file", "test", `./${target.file.split(path.sep).join("/")}`, ...filter("-t")] } satisfies Plan
+68:   if (runner === "vitest" || runner === "jest") {
+69:     const asset = yield* ProbeAssets.project(runner, target.cwd, target.root)
+70:     if (!asset) return yield* denied(`test-runner-missing: ${runner} is configured but not installed`)
+71:     const node = yield* program("node", input.env)
+72:     const args = runner === "vitest" ? ["run", target.file] : ["--runTestsByPath", target.file]
+73:     return { kind: "test", binary: asset.entry, version: asset.version, cwd: target.cwd, env: {},
+74:       argv: [node, `--max-old-space-size=${input.heapMiB}`, asset.entry, ...args, ...filter("-t")] } satisfies Plan
+75:   }
+76:   if (runner === "pytest") {
+77:     const python = yield* program("python3", input.env)
+78:     return { kind: "test", binary: python, version: yield* version(python, ["--version"], input), cwd: target.cwd, env: PYTHON,
+79:       argv: [python, "-B", "-m", "pytest", "-p", "no:cacheprovider", target.file, ...filter("-k")] } satisfies Plan
+80:   }
+81:   const go = yield* program("go", input.env)
+82:   const dir = path.dirname(target.file)
+83:   return { kind: "test", binary: go, version: yield* version(go, ["version"], input), cwd: target.cwd, env: GO,
+84:     argv: [go, "test", dir === "." ? "." : `./${dir.split(path.sep).join("/")}`, ...filter("-run")] } satisfies Plan
+85: })
+86: 
+87: const script = Effect.fnUntraced(function* (
+88:   runner: Extract<Probe.ProbeInput["runner"], { kind: "script" }>,
+89:   input: { snapshot: ProbeSnapshot.Snapshot; scratch: string; env: Record<string, string> },
+90: ) {
+91:   if (Buffer.byteLength(runner.source, "utf8") > Probe.Limits.scriptBytes) return yield* denied("script-too-large")
+92:   // Written to the scratch, never into the snapshot.
+93:   const file = path.join(input.scratch, "script", `probe.${runner.language}`)
+94:   yield* Effect.promise(() => mkdir(path.dirname(file)).then(() => Bun.write(file, runner.source)))
+95:   if (runner.language === "py") {
+96:     const python = yield* program("python3", input.env)
+97:     return { kind: "script", binary: python, version: yield* version(python, ["--version"], input), cwd: input.snapshot.root,
+98:       env: { ...PYTHON, PYTHONPATH: input.snapshot.root }, argv: [python, "-B", file] } satisfies Plan
+99:   }
+100:   return { kind: "script", binary: process.execPath, version: Bun.version, cwd: input.snapshot.root, env: BUN,
+101:     argv: [process.execPath, "--no-env-file", file] } satisfies Plan
+102: })
+103: 
+104: // A compiled Orchestra binary is Bun; BUN_BE_BUN makes it act as the bun CLI. --no-env-file keeps a workspace .env out.
+105: const BUN = { BUN_BE_BUN: "1" }
+106: const PYTHON = { PYTHONDONTWRITEBYTECODE: "1", PYTHONNOUSERSITE: "1" }
+107: // No toolchain download and no module proxy: the jail has no network anyway, this fails fast instead of timing out.
+108: const GO = { GOTOOLCHAIN: "local", GOPROXY: "off" }
+```
+
+Linhas 110–152.
+
+```text
+FIM_PARTE_LITERAL
+Recebimento intermediário: apenas ACK. Aguarde os próximos subenvios e o sinal externo FIM_DO_LOTE.

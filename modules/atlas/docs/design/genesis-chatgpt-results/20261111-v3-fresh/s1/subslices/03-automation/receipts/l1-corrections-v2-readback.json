@@ -1,0 +1,30 @@
+{
+  "schema": "s1-03-payload-seal-readback/v1",
+  "state": "IN_PROGRESS",
+  "base": "63e99146961161b8596bbe8b51e293c92eba4182",
+  "payload": "f6ffb725704cc01682847d7e175f22b6ead3894c",
+  "seal": "332a0b292123de704ec0b4b393e77e0902a00b01",
+  "root_tree": "fb37d739740a04226414b9e00ba74e9e64b7c447",
+  "out_tree": "3f4fa3e0f6e5fdeef61bdb3f68e10c1c6eb3b30d",
+  "lease": {
+    "expected_sha": "63e99146961161b8596bbe8b51e293c92eba4182",
+    "force": false,
+    "success": true
+  },
+  "payload_files_verified": 438,
+  "payload_bytes": 21831522,
+  "git_sha_and_sizes_all_match": true,
+  "critical_actual_byte_readback": [
+    "handoff.json",
+    "producers/boundaries/bodies/boundaries.md",
+    "producers/boundaries/bodies/support.md",
+    "historical s1.core.entry"
+  ],
+  "historical_entry_unchanged": true,
+  "handoff": {
+    "bytes": 7805,
+    "sha256": "6de46c853033fe288ca414f149ff51495a8d0a06989f7a493bf829b32cdbbbb3",
+    "git_blob_sha": "7c16d45422bd6dbe19a843632bc43e1866b8f254"
+  },
+  "scope": "Only S1-03 output subtree; checkpoint does not end mission"
+}

@@ -1,0 +1,68 @@
+{
+  "schema": "s1-03-semantic-acceptances/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "scope": "Semantic current-body gates only. Not runtime binding, consumers, maintenance or delivery. Original verdicts remain authoritative at their own versions.",
+  "artifacts": [
+    {
+      "key": "s1.core.research",
+      "layer": 1,
+      "version": 3,
+      "status": "PASS_SEMANTIC_CURRENT_BODY",
+      "local_body_path": "producers/research/body.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/body.md",
+      "body_bytes": 63841,
+      "body_sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+      "body_git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4",
+      "judgments": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+          "original_response_path": "relay-root/research-aggregate-v3/j1-response.md",
+          "original_response_sha256": "e52fc2d9eb369da417d7ea035ec641839ca4714be9f75b4b0f2ac4bab35e3cc7",
+          "complete_body_explicit": true
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+          "original_response_path": "relay-root/research-aggregate-v3/j2-response.md",
+          "original_response_sha256": "8dd9f7ae58de3cda63482558e2940931b185a644bcbd8cafd0b7d5463ea835c6",
+          "complete_body_explicit": true
+        }
+      ],
+      "verified_at_utc": "2026-11-15T03:12:26.414543+00:00"
+    },
+    {
+      "key": "s1.core.boundaries",
+      "layer": 1,
+      "version": "v2",
+      "status": "PASS_SEMANTIC_CURRENT_BODY",
+      "local_body_path": "producers/boundaries/bodies/boundaries.md",
+      "payload_body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/boundaries/bodies/boundaries.md",
+      "body_bytes": 23665,
+      "body_sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+      "body_git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
+      "judgments": [
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J1",
+          "status": "PASS",
+          "body_sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+          "original_response_path": "relay/boundaries-supplement-v2/j1-response.md",
+          "original_response_sha256": "9c7496988762a6455d1682eea750037377778c316d37071203f1c8b719951adc",
+          "complete_body_explicit": true
+        },
+        {
+          "judge_id": "parallel-v3-fresh/S1-03/J2",
+          "status": "PASS",
+          "body_sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+          "original_response_path": "relay/boundaries-supplement-v2/j2-response.md",
+          "original_response_sha256": "5ae3e9104142c41c0d261bb979dc29607a69065d019d3899d28c9fea52334801",
+          "complete_body_explicit": true
+        }
+      ],
+      "verified_at_utc": "2026-11-15T03:25:49.241046+00:00",
+      "recording_basis": "Principal read both original full-body PASS decisions and closed mandatory findings; this command only checks their identity strings and archives the gate, not semantic sufficiency."
+    }
+  ]
+}

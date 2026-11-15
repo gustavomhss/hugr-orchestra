@@ -1,0 +1,18 @@
+{
+  "lot": "derived-boundary-flow-v2",
+  "responses": {
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-boundary-flow-v2/j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 2784,
+      "sha256": "74fc5fd95de927e18837c7051daaf3bfa1c6a326c9a229e76020441d63a18638",
+      "terminal_newline": false,
+      "literal": true,
+      "identity_note": "Judge handle and dispatch identify origin; original text not edited to add judge_id."
+    }
+  },
+  "pending": [
+    "j1"
+  ]
+}

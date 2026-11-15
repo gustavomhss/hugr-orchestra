@@ -1,0 +1,4 @@
+{
+  "target": "/root/s1_03_j1",
+  "message": "CORRECAO_LITERAL_DE_TRANSPORTE support-supplement-v2 — parte 4/7, somente FX-CAP-MANAGEMENT-1. Preserve o envio original e aplique esta substituição exata na composição; o relay deslocou uma quebra de linha ao transcrever. Não há alteração do pacote fonte ou de mérito. Não use ferramentas; aguarde as partes restantes e o FIM_DO_LOTE externo final.\nINICIO_TRECHO_ENVIADO\n        generation: ref.generation, project_id: owner.projectID,\n        directory: owner.location.directory, workspace_id: owner.location.workspaceID, integration_id: integrationID, credential_id: credentialID,\nFIM_TRECHO_ENVIADO\nINICIO_TRECHO_CORRETO\n        generation: ref.generation, project_id: owner.projectID, directory: owner.location.directory,\n        workspace_id: owner.location.workspaceID, integration_id: integrationID, credential_id: credentialID,\nFIM_TRECHO_CORRETO"
+}

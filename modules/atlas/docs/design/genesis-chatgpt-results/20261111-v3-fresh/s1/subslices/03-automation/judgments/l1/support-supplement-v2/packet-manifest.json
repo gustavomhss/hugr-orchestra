@@ -1,0 +1,26 @@
+{
+  "lot": "support-supplement-v2",
+  "path": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/support-supplement-v2.md",
+  "packet": {
+    "bytes": 367662,
+    "sha256": "5631c1d57feb979e1ab149b9384bc7f9c2cc584ee78c2048b15380302fffed7f",
+    "git_blob_sha": "b037c4b7df86798e4ae34afcc611fe2ecd9dd1e4"
+  },
+  "verification": {
+    "lot": "support-supplement-v2",
+    "new_literal_entries": 149,
+    "reused_intervals": 36,
+    "supplement_sha256": "7069f8fb20eb0c08e0d7e5438d0c13c5a776e9982ca88cf14a02b7d397c075b5",
+    "shared_reconciliation_sha256": "75aa4f74aba2ddcecd58c52fd329481dffabc60271a57bf0bfbe358d0b903992",
+    "status": "PASS_LITERAL_IDENTITY",
+    "semantic_acceptance": "PENDING_SAME_PAIR",
+    "body_before_sha256": "3a4ef5ee6925eb3c80404181f00a0e4e012750459f2dbb1ab11076b69449d684",
+    "body_after_sha256": "498a0454418a14977b9b2f4c4f515711d941b6d4bbece13f1baaa8feaa76d378",
+    "body_substitutions": 3,
+    "remaining_body_bytes_identical": true,
+    "coverage_substitutions": 2,
+    "coverage_after_sha256": "d1ed0705d256b1578a0debce284c3a2c4dd3bd2e00bf9f8f60e047b097d5bf74",
+    "support_mapping_rows": 104
+  },
+  "oracle_access_by_relay": false
+}

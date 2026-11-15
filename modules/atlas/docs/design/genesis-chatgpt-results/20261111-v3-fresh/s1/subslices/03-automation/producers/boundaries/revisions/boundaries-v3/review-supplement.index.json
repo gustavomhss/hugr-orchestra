@@ -1,0 +1,100 @@
+{
+  "supplement": {
+    "path": "producers/boundaries/revisions/boundaries-v3/review-supplement.md",
+    "bytes": 9151,
+    "sha256": "b2458ebc0d3499394873afc9baa24cee46f680fd344ca805165e6249606b4036",
+    "git_blob_sha": "40b9b3dde36229f95b1f36c19a40eaf1d87b8178"
+  },
+  "literal_entries": [
+    {
+      "id": "V3-TRIAL-CONTRACT",
+      "input_path": "producers/boundaries/sources/packages/core/src/relay.ts",
+      "source_path": "packages/core/src/relay.ts",
+      "first_line": 125,
+      "last_line": 136,
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_identity": {
+        "path": "producers/boundaries/sources/packages/core/src/relay.ts",
+        "bytes": 30225,
+        "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+        "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16"
+      },
+      "source_start_byte": 5502,
+      "source_end_byte_exclusive": 6209,
+      "excerpt_sha256": "74fb0a688d48a9ea6f3d9832774762cf3d28784abd8b051f44314505e2860e88",
+      "excerpt_bytes": 707,
+      "supplement_start_byte": 2461,
+      "supplement_end_byte_exclusive": 3168
+    },
+    {
+      "id": "V3-TRIAL",
+      "input_path": "producers/boundaries/sources/packages/core/src/relay.ts",
+      "source_path": "packages/core/src/relay.ts",
+      "first_line": 420,
+      "last_line": 481,
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_identity": {
+        "path": "producers/boundaries/sources/packages/core/src/relay.ts",
+        "bytes": 30225,
+        "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+        "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16"
+      },
+      "source_start_byte": 20529,
+      "source_end_byte_exclusive": 23137,
+      "excerpt_sha256": "c687548e24a7ca7a528299278ccc4e480e125d8fa085b6d5c0fe33601e7b5f42",
+      "excerpt_bytes": 2608,
+      "supplement_start_byte": 3546,
+      "supplement_end_byte_exclusive": 6154
+    },
+    {
+      "id": "V3-EVALUATE",
+      "input_path": "producers/boundaries/sources/packages/core/src/relay.ts",
+      "source_path": "packages/core/src/relay.ts",
+      "first_line": 491,
+      "last_line": 501,
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_identity": {
+        "path": "producers/boundaries/sources/packages/core/src/relay.ts",
+        "bytes": 30225,
+        "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+        "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16"
+      },
+      "source_start_byte": 23610,
+      "source_end_byte_exclusive": 24469,
+      "excerpt_sha256": "c9e2066fd654c9f00cd4d661a0d684db2526c41e425d1fa9f4e4580f959d8e2f",
+      "excerpt_bytes": 859,
+      "supplement_start_byte": 6535,
+      "supplement_end_byte_exclusive": 7394
+    },
+    {
+      "id": "V3-RAG-CHUNK",
+      "input_path": "producers/boundaries/sources/packages/core/src/rag-studio/sql.ts",
+      "source_path": "packages/core/src/rag-studio/sql.ts",
+      "first_line": 19,
+      "last_line": 32,
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_identity": {
+        "path": "producers/boundaries/sources/packages/core/src/rag-studio/sql.ts",
+        "bytes": 2519,
+        "sha256": "e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9",
+        "git_blob_sha": "214ab3375acc34072ee74c3123501c80615bf488"
+      },
+      "source_start_byte": 632,
+      "source_end_byte_exclusive": 1075,
+      "excerpt_sha256": "a1bc0942b6df86a5cc0fce07d1e870bbf493bd6179cb030d27307a2bebda65ba",
+      "excerpt_bytes": 443,
+      "supplement_start_byte": 7779,
+      "supplement_end_byte_exclusive": 8222
+    }
+  ],
+  "finding_map": {
+    "ROOT-BND-L1-F01": [
+      "V3-TRIAL-CONTRACT",
+      "V3-TRIAL",
+      "V3-EVALUATE"
+    ],
+    "ROOT-BND-L1-F02": [
+      "V3-RAG-CHUNK"
+    ]
+  }
+}

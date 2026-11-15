@@ -1,0 +1,16 @@
+{
+  "source": "review-packets/derived-research-flow-v3.md",
+  "source_bytes": 38782,
+  "source_sha256": "a0670c2aabad63a8ab0106591b8023739bc39a3eb6f30e02cc6648e99278b64c",
+  "parts": [
+    {
+      "part": 1,
+      "file": "part-01.txt",
+      "start": 0,
+      "end": 38782,
+      "bytes": 38782,
+      "sha256": "a0670c2aabad63a8ab0106591b8023739bc39a3eb6f30e02cc6648e99278b64c"
+    }
+  ],
+  "prepared_only": true
+}

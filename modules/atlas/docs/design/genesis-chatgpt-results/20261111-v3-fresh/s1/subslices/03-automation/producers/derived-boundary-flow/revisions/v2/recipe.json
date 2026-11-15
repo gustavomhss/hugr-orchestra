@@ -1,0 +1,89 @@
+{
+  "schema": "s1-03-derived-parent-correction-recipe/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "frozen_at_utc": "2026-11-15T04:17:29.189300+00:00",
+  "state": "FROZEN_AFTER_PARENT_GATE_BEFORE_DISPATCH",
+  "artifact": "s1.subslice03.boundary-flow",
+  "version": 2,
+  "prior_version": 1,
+  "author_context": "Continue exactly the same oracle-blind native family author; no fork replacement, raw sources or judge prose. Retain cumulative actual input context.",
+  "exclusive_output_directory": "producers/derived-boundary-flow",
+  "revision_directory": "producers/derived-boundary-flow/revisions/v2",
+  "new_predecessor": {
+    "key": "s1.core.boundaries",
+    "layer": 1,
+    "version": "3",
+    "body_bytes": 23769,
+    "body_sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+    "body_git_blob_sha": "d3b070015882d10f778f563438eb3f9d67cab061",
+    "local_body_path": "producers/boundaries/bodies/boundaries.md"
+  },
+  "predecessor_acceptance_gate": [
+    {
+      "judge_id": "parallel-v3-fresh/S1-03/J1",
+      "status": "PASS",
+      "body_sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+      "original_response_sha256": "1f4b25f011a54a640723d4660aa69cae6e6920fe46f92d8a3f49ae13c3ff5923"
+    },
+    {
+      "judge_id": "parallel-v3-fresh/S1-03/J2",
+      "status": "PASS",
+      "body_sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+      "original_response_sha256": "24109643bb94e2c8c1124d9996e5bb4af83a5030c74ae276e466fee526c2e816"
+    }
+  ],
+  "read_exactly": [
+    {
+      "local_path": "producers/derived-boundary-flow/body.md",
+      "bytes": 16112,
+      "sha256": "83c961e473f666034b6db197ead28594580f4a953fc9f6f4bb63f006ab65ddbd",
+      "git_blob_sha": "6420523de8f6d8e5fa5aac4b8f76bab2c5c6fceb"
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/evidence.md",
+      "bytes": 8327,
+      "sha256": "4e42f26758255ed63978d5e027a165a4eaaecfe645c78571365c4f5a2e81a780",
+      "git_blob_sha": "927e668b759b50bbeb28f92eca596cfc03d79b60"
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/production-manifest.json",
+      "bytes": 20090,
+      "sha256": "93baa2def94d8fe3d05984211d05f68c0c18c8b021953bf67153f7b9eb56c2f0",
+      "git_blob_sha": "1b542614c236efe8f534e44c8982d49cade7002f"
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/response.md",
+      "bytes": 2097,
+      "sha256": "ab0d39f8f925f504f7505e1fc04192e27f9f3d0e2a79cec3bf637953b36e61ac",
+      "git_blob_sha": "881e93d76f4f2b51d8efbbf803f72fa4d83bd7ac"
+    },
+    {
+      "local_path": "producers/boundaries/bodies/boundaries.md",
+      "bytes": 23769,
+      "sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
+      "git_blob_sha": "d3b070015882d10f778f563438eb3f9d67cab061"
+    },
+    {
+      "local_path": "producers/boundaries/revisions/boundaries-v3/history/body.md",
+      "bytes": 23665,
+      "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+      "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74"
+    },
+    {
+      "local_path": "producers/derived-boundary-flow/revisions/v2/public-findings.md",
+      "bytes": 1561,
+      "sha256": "bdf2775890fc18bb642fc4e341b5984b8c2fb3fc0ef15217ded1650d44e196ca",
+      "git_blob_sha": "179c431b87984d73c9e8633fe0aed6213dabbf98"
+    }
+  ],
+  "other_actual_inputs": "This recipe, its request and the exact visible dispatch; own pre-execution procedure and freeze if used. Retain previously consumed full files with stable aliases, including prior accepted parent version.",
+  "instructions": [
+    "Read all enumerated files in full, avoiding truncated outputs. Do not read full judges/oracle/raw source/sibling data, invent inputs or create another agent.",
+    "Before editing, preserve the four current outputs body/evidence/manifest/response byte-identically in revision history. Do not overwrite old frozen revisions. Capture actual procedure and input identities before executing it once; preserve request, recipe, findings and dispatch.",
+    "Apply only the public findings and necessary predecessor/identity updates. Keep exact before/after literals and offsets, inverse verification and unchanged segments; distinguish substantive and metadata edits. New output manifest is not a retroactive recipe.",
+    "Write body.md, evidence.md, production-manifest.json and response.md current plus revision records: dispatch-message.txt, actual apply.py, procedure-freeze.json, history/, delta.json, review-supplement.md, input-manifest-extension.json and producer-verification.json. A delta patch is useful if deterministic.",
+    "The current production-manifest.json must enumerate all cumulative actual input units, with byte length, SHA256 and Git blob; use local_path consistently. Prior versions changed in place get retained_alias paths, never current outputs as self-inputs. Do not erase earlier public procedure/recipe/request context or genuinely read hash/preservation inputs. Preserve original read-path lineage separately from retained transport aliases.",
+    "Evidence current must map claims to the new accepted predecessor. Historical evidence/manifest/request remain unchanged in preserved prior versions. The prior parent alias is earlier context provenance, not another current semantic build predecessor.",
+    "No product/network/Atlas/test/remote operation. No L3/L4 release or self-PASS. Deliver one complete correction and stop for the same two judges. Unexposed physical attempts/tokens/cost remain UNKNOWN."
+  ]
+}

@@ -1,0 +1,123 @@
+{
+  "schema": "genesis-procedure-freeze/v1",
+  "state": "FROZEN_BEFORE_EXECUTION",
+  "artifact": "s1.core.research",
+  "revision": 4,
+  "frozen_at_utc": "2026-11-15T04:08:23.868865+00:00",
+  "procedure": {
+    "path": "producers/research/revisions/v4/apply.py",
+    "identity": {
+      "bytes": 17467,
+      "sha256": "5bfdf994e961bdac05212b2a981aa8f50fcdf60bd5d440988fca5247e4bab89b",
+      "git_blob_sha": "235ce74826e8c995b5ed8e75bed02f8d8af9b07c"
+    }
+  },
+  "inputs": [
+    {
+      "path": "producers/research/body.md",
+      "identity": {
+        "bytes": 63841,
+        "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+        "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4"
+      },
+      "role": "full v3 body; exact base and preservation input",
+      "origin": "local-preexisting-file"
+    },
+    {
+      "path": "producers/research/sources/packages/core/src/research-toolkit/code-index/query.ts",
+      "identity": {
+        "bytes": 32872,
+        "sha256": "ec1dd4a297e6e798c497d67ac5ed21cd4c6484e2aba3c2bed60dbd8f174f05e8",
+        "git_blob_sha": "25d652ee0ce78d327427837466b5d7fe5886013f"
+      },
+      "role": "full pinned query.ts; semantic source of correction",
+      "origin": "pinned-source-capture"
+    },
+    {
+      "path": "producers/research/revisions/v3/input-manifest-extension.json",
+      "identity": {
+        "bytes": 7585,
+        "sha256": "95e1d759bace7baa2f8e5bed6f65ee9f5fba1f4a4c24b7f93a4b8d2318bc1101",
+        "git_blob_sha": "6910dfb1a66c7140c3d06c0eb19b182c56ba4e30"
+      },
+      "role": "full v3 actual-input extension; retained lineage",
+      "origin": "local-preexisting-file"
+    },
+    {
+      "path": "producers/research/recipe-v3.json",
+      "identity": {
+        "bytes": 2901,
+        "sha256": "cd8813f5a1d2157546b762c60b0ff08812281a4138006fdc282a3fdab809abe0",
+        "git_blob_sha": "70600277e27b5f50ff5bec43a08eee08451ae922"
+      },
+      "role": "full prior descriptive recipe; not the effective v4 recipe",
+      "origin": "local-preexisting-file"
+    },
+    {
+      "path": "producers/research/revisions/v4/public-findings.md",
+      "identity": {
+        "bytes": 1370,
+        "sha256": "274bc65c13abadb0c847c71b7acaf135759d89282b2509cc970f67d4d13e5d42",
+        "git_blob_sha": "e4c19a874355af85e5852cdf648af954527b13ab"
+      },
+      "role": "public technical finding and scope; preserved unchanged",
+      "origin": "local-preexisting-file"
+    },
+    {
+      "path": "producers/research/revisions/v4/request.txt",
+      "identity": {
+        "bytes": 548,
+        "sha256": "53d5398d52c804a75572f369ab9a08049872041080f16fdf167ae38f56a94531",
+        "git_blob_sha": "ca74b4ecd789bb7894860912677d138762e33a98"
+      },
+      "role": "effective request",
+      "origin": "local-preexisting-control"
+    },
+    {
+      "path": "producers/research/revisions/v4/recipe.json",
+      "identity": {
+        "bytes": 4029,
+        "sha256": "5eb8b298dd8ca73b66d0869424782f73dbf539c0a6c37aaa837686976da2fc57",
+        "git_blob_sha": "e217a08a971ff0e42a2af40f22bc12d060834fff"
+      },
+      "role": "effective recipe frozen before dispatch",
+      "origin": "local-preexisting-control"
+    },
+    {
+      "path": "producers/research/revisions/v4/dispatch-message.txt",
+      "identity": {
+        "bytes": 1059,
+        "sha256": "c800eb38cedaf8523662529d676cf30e4b67a8491afd943dc081c6c44381d5cc",
+        "git_blob_sha": "5d49d538ecc87957d4e3f27815dd74b14b65adc3"
+      },
+      "role": "literal dispatch preserved before correction",
+      "origin": "local-preexisting-control"
+    }
+  ],
+  "replacement": {
+    "before": "Se não há shard aberto, dispara build detached e devolve building/unavailable com motivo, sem fabricar resultado vazio limpo.",
+    "after": "O build detached exige shard ausente ou stale, ausência de build em andamento do plano ou dos shards e `ctx.extract` disponível (`missing && !building && ctx.extract`). Sem shards no escopo, retorna `index_unavailable` antes desse caminho; sem shard utilizável, devolve building/unavailable com motivo, sem fabricar resultado vazio limpo. Esse erro não implica novo disparo nesta chamada.",
+    "count": 1
+  },
+  "allowed_writes": [
+    "producers/research/body.md",
+    "producers/research/revisions/v4/"
+  ],
+  "planned_order": [
+    "verify frozen procedure and input identities",
+    "preserve exact v3 within v4 history",
+    "apply one literal substitution",
+    "emit delta, independent patch, neutral evidence and input extension",
+    "verify only authorized files and write receipt"
+  ],
+  "procedure_execution_count_at_freeze": 0,
+  "bootstrap_incident": {
+    "stage": "initial inline bootstrap parsing",
+    "error": "SyntaxError: closing parenthesis does not match opening parenthesis (nested triple-quoted script text)",
+    "effect": "Python failed compilation before any instruction; no file read/write and no apply.py invocation in that attempt",
+    "record_source": "tool transcript",
+    "resolution": "Correct quoting, parse source before creation, then freeze real apply.py before execution"
+  },
+  "product_test_runs": 0,
+  "network_calls": 0
+}

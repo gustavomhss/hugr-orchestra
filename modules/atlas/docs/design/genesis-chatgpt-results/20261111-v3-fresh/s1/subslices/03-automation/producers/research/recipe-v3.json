@@ -1,0 +1,78 @@
+{
+  "schema": "genesis-native-l1-descriptive-recipe/v1",
+  "revision": 3,
+  "artifact_key": "s1.core.research",
+  "task": "RESEARCH-L1",
+  "classification": "POST_EXECUTION_DESCRIPTIVE_OUTPUT_NOT_EFFECTIVE_RECIPE",
+  "produced_at_utc": "2026-11-15T02:50:25.791372+00:00",
+  "body": {
+    "path": "body.md",
+    "bytes": 63841,
+    "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+    "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4"
+  },
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "effective_recipe": [
+    {
+      "path": "revisions/v3/request.txt",
+      "bytes": 2899,
+      "sha256": "34c7f006385a7921ca3ebb3aaf7ff31a866c16192c49f8211cf27fab95964224",
+      "git_blob_sha": "b09b0a85f6a41fa1e5269903c0d0538ef0b54105"
+    },
+    {
+      "path": "revisions/v3/apply.py",
+      "bytes": 17112,
+      "sha256": "1a06fb787058915ac20e696c5c8ea855dcda7813d9b208d15fa3770336de2f2e",
+      "git_blob_sha": "224ac97db71f108e4e8a945a6a3327afad725af7"
+    }
+  ],
+  "freeze": {
+    "path": "revisions/v3/apply-freeze.json",
+    "bytes": 4550,
+    "sha256": "65ceaf32de80a5b134d63e28fadc9271c822470d768d9d852d1ce8ce5287bacd",
+    "git_blob_sha": "f4cce3bb20fe952594a39e886d58d2ecb9dd4b64"
+  },
+  "input_extension": {
+    "path": "revisions/v3/input-manifest-extension.json",
+    "bytes": 7585,
+    "sha256": "95e1d759bace7baa2f8e5bed6f65ee9f5fba1f4a4c24b7f93a4b8d2318bc1101",
+    "git_blob_sha": "6910dfb1a66c7140c3d06c0eb19b182c56ba4e30"
+  },
+  "delta": {
+    "path": "revisions/v3/delta.json",
+    "bytes": 6422,
+    "sha256": "6fe47e6bc32f1d4623c8683c5aaa78305ce692d8f8f91681dc34f06a97e9ffa2",
+    "git_blob_sha": "78bbdf1f46438e1449af72e20f60bc75ed6e89f4"
+  },
+  "review_supplement": {
+    "path": "revisions/v3/review-supplement.md",
+    "bytes": 9589,
+    "sha256": "46ba4a495ad9d9a25f19d8ca410ee45f606c390aa1f8e7dd73766e200fe112a6",
+    "git_blob_sha": "86bacfefc5063338fed38b986b11cc44bc0a2eeb"
+  },
+  "previous_body": {
+    "path": "history/body-v2.md",
+    "bytes": 63501,
+    "sha256": "d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661",
+    "git_blob_sha": "bb0eaa73b4fe9120fb46d9304778649b5c7205dd"
+  },
+  "previous_recipe": {
+    "path": "history/recipe-v2.json",
+    "bytes": 138195,
+    "sha256": "09505ca6228267ab6ad9c0397c7a45690009b1738ae3aa53c8b8df722db5598b",
+    "git_blob_sha": "cd3e47810afc47fec314bab149c7ce0653f4fc9b"
+  },
+  "change_scope": "One literal substitution in R8 line 239, solely qualifying search-list budget versus the already-consumed map probe.",
+  "semantic_review": "EXTERNAL; same-pair reevaluation requested by principal; no new producer PASS",
+  "outputs_after_execution": [
+    "recipe-v3.json",
+    "revisions/v3/response.md"
+  ],
+  "usage": {
+    "tokens": "UNKNOWN",
+    "physical_attempts": "UNKNOWN",
+    "cost": "UNKNOWN",
+    "network_calls": 0,
+    "product_test_runs": 0
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "schema": "s1-03-minimal-consistency-correction-recipe/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "frozen_at_utc": "2026-11-15T03:59:20.820229+00:00",
+  "state": "FROZEN_BEFORE_DISPATCH",
+  "artifact": "s1.core.boundaries",
+  "version": 3,
+  "prior_version": 2,
+  "body": "producers/boundaries/bodies/boundaries.md",
+  "exclusive_revision_directory": "producers/boundaries/revisions/boundaries-v3",
+  "allowed_current_changes": [
+    "producers/boundaries/bodies/boundaries.md"
+  ],
+  "inputs": [
+    {
+      "path": "producers/boundaries/bodies/boundaries.md",
+      "bytes": 23665,
+      "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+      "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74"
+    },
+    {
+      "path": "producers/boundaries/sources/packages/core/src/relay.ts",
+      "bytes": 30225,
+      "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+      "git_blob_sha": "25fb509203f933a2e8b0f311c3fc8f9476d53e16"
+    },
+    {
+      "path": "producers/boundaries/sources/packages/core/src/rag-studio/sql.ts",
+      "bytes": 2519,
+      "sha256": "e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9",
+      "git_blob_sha": "214ab3375acc34072ee74c3123501c80615bf488"
+    },
+    {
+      "path": "producers/boundaries/revisions/boundaries-v2/recipe.json",
+      "bytes": 3501,
+      "sha256": "13d95ddbf05625b6f270972422a3603669ff238cc7152a3e1c1789106af70bf4",
+      "git_blob_sha": "63e56fa6badaab561f04f48ef0033dd6d4d21d71"
+    },
+    {
+      "path": "producers/boundaries/effective-inputs.json",
+      "bytes": 22879,
+      "sha256": "6ecae50d90933e555a874b209c6553750d85192df44c36df2418b3ff696890fc",
+      "git_blob_sha": "2d099dcbef9b537a5e22a634642c1317bd0464f4"
+    },
+    {
+      "path": "producers/boundaries/revisions/boundaries-v3/public-findings.md",
+      "bytes": 1532,
+      "sha256": "6fd63340ed96690dcad680ded43d4815666ac042397cff5587c1413b1183deae",
+      "git_blob_sha": "0a9093ae89e653c458432402f7098286ebefb375"
+    }
+  ],
+  "context": "Continue original oracle-blind L1 family author. Retain all previous actual input lineage; no new semantic agent and no oracle. Sources are already inherited, read them whole if reread. Do not open judges or descendants.",
+  "instructions": [
+    "Read this recipe, request, public findings and the enumerated files in full; retain exact dispatch. Additional prior-context records may be reused only if already actually consumed; declare any actual read or hash-only input, do not silently omit mechanical reads.",
+    "Before mutation, preserve exact current body and any output to be superseded within the revision directory history, with hashes; do not overwrite an older frozen revision. Freeze a concise actual apply procedure and its input identities BEFORE execution. Execute the procedure once and record the actual order. A postproduction recipe.json is not an earlier recipe.",
+    "Make only the minimum semantic correction stated in public-findings.md. Preserve other bytes. Emit exact before/after literals, UTF-8 offsets, prefix/suffix hashes or inverse verification, prior/current body identities and an independent delta.patch.",
+    "Write in the exclusive revision directory: dispatch-message.txt, actual apply.py, procedure-freeze.json, history/body.md, delta.json/delta.patch, review-supplement.md containing literal delta and decisive exact source excerpts with original line/path/hash identities, input-manifest-extension.json with every new whole-file input and retained lineage, producer-verification.json, response.md. Preserve request.txt/recipe.json/public-findings.md. Only the current body listed above may change outside this directory.",
+    "All reading/processing inputs, including preservation/hash-only files, scripts, requests and dispatch, are whole-file input units. Preserve aliases for any prior version changed in place. Do not list current outputs as self-inputs. Declare procedure and supplemental summary separately.",
+    "No network, remote writes, product changes/tests, policy/guard changes, delegation or L2–L4 production. No semantic self-PASS or runtime claims. Report completion and hashes; the same independent pair must reevaluate before any dependent gate. Tokens/physical attempts/cost UNKNOWN when unexposed."
+  ]
+}

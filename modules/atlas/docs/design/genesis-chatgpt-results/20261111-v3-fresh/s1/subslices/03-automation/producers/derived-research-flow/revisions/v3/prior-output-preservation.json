@@ -1,0 +1,51 @@
+{
+  "schema": "s1-03-prior-output-preservation/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "artifact": "s1.subslice03.research-flow",
+  "preserved_version": 2,
+  "created_at_utc": "2026-11-15T04:28:46.292551+00:00",
+  "preserved_before_current_mutation": true,
+  "files": [
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/history/body.md",
+      "retained_alias": "producers/derived-research-flow/revisions/v3/history/body.md",
+      "original_read_path": "producers/derived-research-flow/body.md",
+      "version": 2,
+      "byte_length": 17113,
+      "sha256": "f6dce8d080ff5bdd3a5409bd16b846c176c8270135eb51a6cd0329413e3d0994",
+      "git_blob_sha": "2bd9021ea932e9afb5fdd8619b5b6b16e4bfc440",
+      "copy_verified_byte_identical": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/history/evidence.md",
+      "retained_alias": "producers/derived-research-flow/revisions/v3/history/evidence.md",
+      "original_read_path": "producers/derived-research-flow/evidence.md",
+      "version": 2,
+      "byte_length": 11457,
+      "sha256": "b7d51d3bab6f9d8538d6b6362953647eedfbc5fad905c69b5d3fd38b0ea75022",
+      "git_blob_sha": "18797d0844d84082dc39e99acbc10f9de03c46ea",
+      "copy_verified_byte_identical": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/history/production-manifest.json",
+      "retained_alias": "producers/derived-research-flow/revisions/v3/history/production-manifest.json",
+      "original_read_path": "producers/derived-research-flow/production-manifest.json",
+      "version": 2,
+      "byte_length": 34692,
+      "sha256": "32c07a3198dfd1bcada8d932e2a61d6dc09c129f6a53fd0c42467611cc7a9831",
+      "git_blob_sha": "6a8563a63ff00393e2497f95313df53caf80bd00",
+      "copy_verified_byte_identical": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/history/response.md",
+      "retained_alias": "producers/derived-research-flow/revisions/v3/history/response.md",
+      "original_read_path": "producers/derived-research-flow/response.md",
+      "version": 2,
+      "byte_length": 2016,
+      "sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+      "git_blob_sha": "e3e6ca3002c8d235f59537e5c5175461fda03c0b",
+      "copy_verified_byte_identical": true
+    }
+  ],
+  "mechanical_reads": "All four current v2 outputs read in full, copied and reread byte-for-byte under revisions/v3/history before editing; original read paths retained separately."
+}

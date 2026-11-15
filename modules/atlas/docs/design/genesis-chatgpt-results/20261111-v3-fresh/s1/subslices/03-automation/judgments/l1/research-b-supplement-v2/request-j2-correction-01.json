@@ -1,0 +1,4 @@
+{
+  "target": "/root/s1_03_j2",
+  "message": "CORRECAO_LITERAL_DE_TRANSPORTE — research-b-supplement-v2, parte 1/5, RB-S002/query.ts, passagem das linhas 402–404. O relay substituiu indevidamente a linha numerada 403 por fechamento de bloco e título. Preserve o pedido original como registro do incidente e, na composição do pacote, substitua exclusivamente o trecho enviado abaixo pelo trecho literal correto; nenhum outro byte muda. Não julgue ainda; aguarde as partes 2–5 e o sinal externo final.\nTRECHO_ENVIADO_COM_ERRO\n402: }\n```\n\nLinhas 404–410.\n\n```text\n404: function grouped(\nTRECHO_LITERAL_CORRETO\n402: }\n403: \n404: function grouped(\nFIM_DA_CORRECAO_LITERAL"
+}

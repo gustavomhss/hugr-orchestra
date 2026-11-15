@@ -1,0 +1,1 @@
+Recebida a parte **4/7** de `support-supplement-v2`. A composição permanece aberta; aguardo as partes 5–7 e o `FIM_DO_LOTE` externo final para julgar, sem ferramentas.

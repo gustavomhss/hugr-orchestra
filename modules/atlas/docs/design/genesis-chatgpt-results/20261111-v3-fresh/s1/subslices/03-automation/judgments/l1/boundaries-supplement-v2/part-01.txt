@@ -1,0 +1,332 @@
+# Reavaliação de boundaries v2 — suplemento completo
+
+Mesmo par /root/s1_03_j1 e /root/s1_03_j2, execução34269cf4-d631-41c5-a30b-85b0ec217390. Não usar ferramentas. Autoria e relay sem oracle. Julgar somente ao receber FIM_DO_LOTE no envelope final.
+
+O corpo v1 foi recebido integralmente no lote boundaries. Os dois únicos deltas literais v1→v2 aparecem no suplemento abaixo, com bytes/hash da nova versão. A principal verificou aplicação exata, todos os outros bytes idênticos,107trechos novos,41intervalos reutilizados e a projeção determinística dos104paths. Isso comprova transporte/custódia, não suficiência semântica.
+
+Avaliar todos os critérios pertinentes já recebidos e fechar ou especificar estritamente as pendências RE-BND-01..06 de ambos os juízes. A proposta union e o README de support já recebidos podem ser reutilizados conforme suas decisões; não selecionam donos externos. A reconciliação compartilhada abaixo será reutilizada no futuro suplemento support sem repetir o censo. Os dois motivos de coverage relativos a README/omni-expect serão corrigidos por erratum no lote support; sua versão histórica aqui permanece preservada.
+
+Nenhum teste de produto/Atlas/provider foi executado; trechos de assertions são contratos preparados. Semântica, binding e operação continuam separados.
+
+## INICIO_DO_SUPLEMENTO_LITERAL
+
+# Suplemento boundaries 1 — RE-BND-01..06
+
+Autor: produtor `/root/boundaries_l1`, mesma execução e sem acesso a oracle. Inputs públicos: J1/J2 integrais preservados em `revisions/boundaries-v2/inputs/`. Estado: resposta a REQUEST_EVIDENCE e duas correções de precisão autorizadas; sem julgamento atribuído pelo produtor, teste/runtime ou aceite externo.
+
+## Candidato v2 e deltas autorizados
+
+v1: 22938 bytes, SHA256 `c557b33392cae8d0078a7da17f3421bb57ec2434f3bf5bba3b54f4172faeadae`. v2: 23665 bytes, SHA256 `ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6`. O corpo/receita/resposta v1 permanecem byte-idênticos em `revisions/boundaries-v1/`. Suporte e proposta não foram alterados nesta etapa.
+
+### BND-PRECISION-01
+
+Anterior, literal do corpo v1:
+
+`````text
+O comentário de `mineWith` distingue o fluxo legado de tela da publicação Genesis.
+`````
+
+Novo, literal do corpo v2:
+
+`````text
+O comentário de `atlas.ts` 301–304 chama o fluxo de “Genesis mining from the screen” e descreve respostas passando pelo gate/admission do Atlas até o staging, sem promoção. Essa é a atribuição textual sustentada; “legado” era uma classificação interpretativa do corpo histórico, não uma distinção declarada por esse comentário.
+`````
+
+### BND-PRECISION-02
+
+Anterior, literal do corpo v1:
+
+`````text
+A sequência substantiva é capturar alterações de origem, aplicá-las no destino, publicar `Session.Moved` e depois descartar a parte correspondente da origem, preservando index e alterações não envolvidas conforme o caminho Git.
+`````
+
+Novo, literal do corpo v2:
+
+`````text
+A sequência substantiva é capturar alterações de origem, aplicá-las no destino, publicar `Session.Moved` e depois descartar alterações no diretório de origem da Session, com `index: "preserve"` e `untracked: "remove"`. O código do teste de sessão aninhada prepara alterações em `packages/` e contém asserções de preservação do arquivo staged nesse path e de arquivos alterados na raiz, fora de `packages/`. Esse caso preparado não exercita alterações concorrentes posteriores à captura dentro do mesmo diretório. A chamada `discard` recebe diretório e opções, sem receber o patch capturado. O trecho literal do teste está em `suplemento-boundaries-1.md`, RE-BND-06/BT01.
+`````
+
+## Plano de reuso: R001–R041 já recebidos
+
+Os dois pedidos reconhecem esse conjunto. A tabela fornece offsets/hashes para recompor intervalos, sem repeti-los no suplemento. Cada trecho novo abaixo complementa os ramos recebidos. Exceção explícita: RAG 1–81 é retransmitido integralmente a pedido de J1, para preservar a unidade completa do schema.
+
+| R | Fonte e linhas | Bytes na fonte | SHA256 do trecho | Bytes em evidence-review.md |
+|---|---|---|---|---|
+| R001 | `packages/core/src/atlas.ts` 38–48 | [1033, 1884) | `563edd58082b309091eeacfece73526e772a0c2f51682d233f5c8683fcd832f9` | [1247, 2098) |
+| R002 | `packages/core/src/atlas.ts` 109–125 | [5174, 6126) | `0afd3100af381a552b078f72fb9e06a16855a86cbd00623800c1a67ada028df8` | [2458, 3410) |
+| R003 | `packages/core/src/atlas.ts` 132–148 | [6545, 7448) | `60fb78951c8180953fe30027987fe4cbfc7c53d93b8133a88dcfd7f3d427bf1d` | [3770, 4673) |
+| R004 | `packages/core/src/atlas.ts` 259–280 | [13119, 13995) | `a49655487628d72601ba2e9bc01d8d16c282d2b1b4715047fe48a72a9e8632a5` | [5033, 5909) |
+| R005 | `packages/core/src/atlas.ts` 301–312 | [14587, 15454) | `1e5f5ce36026f5eaf1a6f63afc1a18cbfb8e95df7986b8b2cfe5476108531842` | [6269, 7136) |
+| R006 | `packages/core/src/control-plane/move-session.ts` 87–111 | [3064, 4386) | `c125deda18951ae663e9f40e740f9af36835befcacc859d8f547d9508e29fdb5` | [7515, 8837) |
+| R007 | `packages/core/src/control-plane/move-session.ts` 113–148 | [4387, 5381) | `ea6710cb925cd3c0dd6f7bc03aa40a771e1e8420068cbc3fa8ca5269429e031a` | [9217, 10211) |
+| R008 | `packages/core/src/control-plane/workspace.sql.ts` 7–20 | [255, 644) | `058414273bafda8a012099538f352903fe9c455d414956735a8481042424a956` | [10587, 10976) |
+| R009 | `packages/core/src/rag-studio/sql.ts` 1–11 | [0, 447) | `a8d85c912e32f244d5326d7d6502d6df836f9011ae42fbdfa8238df346cdba4c` | [11339, 11786) |
+| R010 | `packages/core/src/rag-studio/sql.ts` 72–81 | [2101, 2519) | `0cb2df26a50267d608c3f24fdb576545f85a57247eda0e8edb2f8405bbf2fc60` | [12151, 12569) |
+| R011 | `packages/core/src/relay-commands.ts` 7–11 | [185, 443) | `1b10e66b73f48419d09d5f21ab9627e6b4291cb073acc57aca298945a820446e` | [12932, 13190) |
+| R012 | `packages/core/src/relay-commands.ts` 84–98 | [3678, 4343) | `ebc649ad188fa75a02bce0668ebda721c9c8880bb6d27350c2d5aecc88250c7b` | [13556, 14221) |
+| R013 | `packages/core/src/relay.ts` 219–239 | [10297, 11632) | `7c4e1ad44ef73c3a3fb5cb661e45f9cb582bddf34c2353ec7841e0459d75f9a4` | [14581, 15916) |
+| R014 | `packages/core/src/relay.ts` 247–264 | [11930, 13150) | `4b9da786f2913a5807a5405e1912ca380ae6440f19a7434d08e6a0d8a2444617` | [16276, 17496) |
+| R015 | `packages/core/src/relay.ts` 267–283 | [13160, 13983) | `ed5fa25dccd1ecf91e1ec68e4988261614d02ba1400b4d2b15f493da78f7c0d3` | [17856, 18679) |
+| R016 | `packages/core/src/relay.ts` 335–372 | [16264, 18281) | `b4a7fa173877493bd4f3bdf0c1ec2996e53e5806975dab984be97e5f441158ba` | [19039, 21056) |
+| R017 | `packages/core/src/relay.ts` 374–389 | [18282, 19401) | `7b06effb9899018a70362eb83c34f360186ebd02a034729117c1af2179d67d92` | [21416, 22535) |
+| R018 | `packages/core/src/relay.ts` 420–433 | [20529, 21145) | `7a6c814013d5eccf0fd0ccc9baa70cb579749b05df17fd7c156515f0f9c39d5f` | [22895, 23511) |
+| R019 | `packages/core/src/relay.ts` 491–501 | [23610, 24469) | `c9e2066fd654c9f00cd4d661a0d684db2526c41e425d1fa9f4e4580f959d8e2f` | [23871, 24730) |
+| R020 | `packages/core/src/relay-hook-install.ts` 219–239 | [9002, 10632) | `f690f6bc2db567929c864515168032d8ce2de590073c3d3549aaa73ddcb7f575` | [25103, 26733) |
+| R021 | `packages/core/src/relay-hook-install.ts` 300–302 | [13695, 13942) | `00315641cf1c3db04f4e9c71abced754c0ed57d7209f7bb045e40977a52ba919` | [27106, 27353) |
+| R022 | `packages/core/src/relay-hook-install.ts` 314–335 | [14422, 15429) | `fe2684d4adb55d76ba201161d7a7d03269f6e0c7f45004f148b455da0c8750b0` | [27726, 28733) |
+| R023 | `packages/core/src/relay-hook-install.ts` 454–474 | [20805, 22122) | `bfb6fedc4e20189ff392d1bf9bc4c0be1fe87eee3eae00c35cabc62ed9853b5e` | [29106, 30423) |
+| R024 | `packages/core/src/relay-hook-install.ts` 254–273 | [11110, 12547) | `e068c27e94273d9fdefa2c12b5c251462f71669f0550181098d80cb4586df604` | [30796, 32233) |
+| R025 | `packages/core/src/relay-hook-install.ts` 283–295 | [13014, 13476) | `8e52721febcf48e40a6e00fa4f97ccefe85f415e2c5caceef0c65d85bee05cc9` | [32606, 33068) |
+| R026 | `packages/core/src/relay-hook-recovery.ts` 34–47 | [1338, 2193) | `4ca8c0cdd407ea249cfec40813221a71a1e8344bca17085843188aacc675572d` | [33438, 34293) |
+| R027 | `packages/core/src/relay-hook-recovery.ts` 50–64 | [2284, 2968) | `b0d762c34c311a673d11ecb736f55a90056c72a439af7b6f289a6bb6d737afc4` | [34663, 35347) |
+| R028 | `packages/core/src/relay-hook-shipper.ts` 39–54 | [1895, 2672) | `ac0a4368313daf9ef4554603c932eb45c9661538912a163be20e7491f451c582` | [35716, 36493) |
+| R029 | `packages/core/src/relay-hook-shipper.ts` 101–120 | [4561, 5375) | `55ac8cee62d7ad0321671da6898ef04b41e1e6e5e5219104f5338490391dab40` | [36865, 37679) |
+| R030 | `packages/core/src/relay-workflow-binding.ts` 50–61 | [2581, 3413) | `6b77d7505e389d1f7c3673acb018f6029db9c99344f74f60ce63ab599d3bdd1f` | [38052, 38884) |
+| R031 | `packages/core/src/relay-workflow-binding.ts` 129–147 | [7632, 8855) | `1710252f9549c6fcd93155627e8c437cdea654ff20838a84062f27767f90ee90` | [39261, 40484) |
+| R032 | `packages/core/src/relay-workflow-binding.ts` 223–256 | [12629, 14752) | `812d4693000b800603e1f4c0fb0149972e621143de8c7171f0d4fa1c6049b825` | [40861, 42984) |
+| R033 | `packages/core/src/relay-workflow-currentstep.ts` 38–48 | [1405, 2041) | `38cafef22637ca0fd22aa098659a91f2301f8701b40c936261f60aa450a41030` | [43361, 43997) |
+| R034 | `packages/core/src/relay-workflow-currentstep.ts` 69–90 | [3837, 5478) | `cba6fdadbd7213b0b1c3e91922a30c6fd8d7c4757c4237806d7353c08aa7a9b9` | [44374, 46015) |
+| R035 | `packages/core/src/relay-workflow-session.ts` 51–68 | [2473, 3746) | `c311a0febde4327fd4e676d6810bb41489c82eaed923f2e29fdb069938b73286` | [46388, 47661) |
+| R036 | `packages/core/src/relay-workflow-session.ts` 82–96 | [4331, 5399) | `5b0ac6c3d8e6688cb50b416c9cc80e7511351abdcdb665942a698708f9e45650` | [48034, 49102) |
+| R037 | `packages/core/src/relay-workflow-transition.ts` 67–91 | [3717, 5564) | `d0346ca3922a4368c709cd6a685f08c4a3213b66b88f1667f5d1dcd7dcc316b7` | [49478, 51325) |
+| R038 | `packages/core/src/relay-workflow-evaluator.ts` 50–70 | [2891, 4186) | `2ff8a57462a151e60efc1aabc7e0a7dde405cd4254859fe7c0fe5ccb482de405` | [51701, 52996) |
+| R039 | `packages/core/src/relay-workflow-evaluator.ts` 106–125 | [6501, 7885) | `4c9f97a397d330691d0eecca0ad6b5eb2b803c43b4599edbfcb6585cde2053eb` | [53374, 54758) |
+| R040 | `packages/core/src/relay-workflow-evaluator.ts` 133–149 | [8113, 9341) | `c6526b1b1508c6face996eedb24fb6de36f207f3f3a88a3b48d713fd5bfdf8d9` | [55137, 56365) |
+| R041 | `packages/core/src/relay-workflow-evaluator.ts` 170–193 | [10819, 12459) | `f6b605ccca60d026a3d6080e749d7f40b7e528ceb76fab19b660b6bcd4c82f36` | [56744, 58384) |
+
+## RE-BND-01 — População, herança, navegação e dez contratos de teste
+
+A reconciliação comum seguinte é incluída integralmente uma única vez neste pacote. O arquivo irmão `shared-reconciliation-1.md` contém os mesmos bytes e poderá ser referenciado por offset/hash no lote de suporte, sem retransmissão.
+
+# Reconciliação compartilhada 1 — fronteiras e suporte
+
+Prova comum congelada para RE-BND-01 e futuros pedidos públicos de suporte. Não altera corpos de suporte/proposta, não cria aceite e não converte navegação em build dependency. A origem é `coverage.jsonl` v1, SHA256 `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`, e os inputs históricos integrais identificados abaixo.
+
+| População | Quantidade | Disposição |
+|---|---:|---|
+| Fronteiras | 24 | 14 implementações e 10 testes preparados |
+| Suporte local | 104 | 9 históricos, 3 documentação, 12 package/tooling, 80 validação/fixtures/harness |
+| Total deste produtor | 128 | Cada path aparece uma única vez em coverage |
+| Core inteiro histórico | 1441 | Escopo do corpo herdado de entrada; não é o recorte atual |
+| União S1 no kit | 2236 | Meta de união; não resultado de aceite |
+
+## 24 disposições individuais literais
+
+Cada fence contém uma linha original inteira do JSONL, incluindo read_depth, role, need, artifact e reason.
+
+### POP-B022 — `coverage.jsonl` linhas 22–22
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 26046, 27457 )`, zero-based, fim exclusivo. SHA256 trecho: `6b4a88a0274ae28324f31cd4536e4edec90c816847039c58188a1c40bec55005`.
+
+`````text
+{"path":"packages/core/src/atlas.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"f6718654785fb155e1bb1b2acb7e9985478b983b","sha256":"4a80f71532a9766f0cfaa67e4a4474ae4d49dbe30a811033ce57a1fb9c58bec4","bytes":16892,"legacy_artifact_key":"s1.core.boundaries","family":"atlas","kind":"implementation","owner":"S1-03","read_depth":"decisive_full_source_read","role":"atlas_host_port","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Abre superfície pelo projeto/raiz do host, traduz indisponibilidade e prepara indexação/drafting; propõe conteúdo sem atribuir aceite do engine Atlas.","maintenance_trigger":"Reler a folha completa quando identidade, ordem, autoridade, erro ou persistência mudar; limitar engine/caller ao dono nomeado: S1-03; engine Atlas S4.","evidence":[{"id":"B01","first_line":38,"last_line":48},{"id":"B01","first_line":103,"last_line":195},{"id":"B02","first_line":208,"last_line":218},{"id":"B02","first_line":239,"last_line":280},{"id":"B02","first_line":301,"last_line":321}],"capture_path":"sources/packages/core/src/atlas.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Leitura integral da folha de implementação, sem execução ou transferência de garantia externa."}
+`````
+
+### POP-B023 — `coverage.jsonl` linhas 23–23
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 27457, 28722 )`, zero-based, fim exclusivo. SHA256 trecho: `38980b082e8211e73cba6bc3be6f8102a9a04da719fe8caf99c2a18e21011782`.
+
+`````text
+{"path":"packages/core/src/control-plane/move-session.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"49fe728d6956ca1555a763548e9458ea5f3938dc","sha256":"302fd923821d8f2d4124b8e4cca38485abe86c3f3c74e2f0b9bc420b56ec2518","bytes":5381,"legacy_artifact_key":"s1.core.boundaries","family":"control-plane","kind":"implementation","owner":"S1-03","read_depth":"decisive_full_source_read","role":"location_transfer","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Ordena apply no destino, evento e descarte de origem; falha pós-evento e ausência de coordenação do runner são limites explícitos.","maintenance_trigger":"Reler a folha completa quando identidade, ordem, autoridade, erro ou persistência mudar; limitar engine/caller ao dono nomeado: S1-03; caller Session S1-01.","evidence":[{"id":"B03","first_line":77,"last_line":148}],"capture_path":"sources/packages/core/src/control-plane/move-session.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Leitura integral da folha de implementação, sem execução ou transferência de garantia externa."}
+`````
+
+### POP-B024 — `coverage.jsonl` linhas 24–24
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 28722, 29962 )`, zero-based, fim exclusivo. SHA256 trecho: `e94119b048a552925713564b96459541afcafe2556a7922e5bea2935ea37a63a`.
+
+`````text
+{"path":"packages/core/src/control-plane/workspace.sql.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"ef5195216acf535817143614ccb517ef02197c5f","sha256":"b85701f8a1ee137d04553459849e84e85e191e89641a2f779cf06140b8612cae","bytes":644,"legacy_artifact_key":"s1.core.boundaries","family":"control-plane","kind":"implementation","owner":"S1-03","read_depth":"decisive_full_source_read","role":"workspace_storage_schema","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Define registro Workspace e relação de projeto; tabela não implementa warp, sync ou execução distribuída.","maintenance_trigger":"Reler a folha completa quando identidade, ordem, autoridade, erro ou persistência mudar; limitar engine/caller ao dono nomeado: S1-03; Location S1-01.","evidence":[{"id":"B04","first_line":1,"last_line":20}],"capture_path":"sources/packages/core/src/control-plane/workspace.sql.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Leitura integral da folha de implementação, sem execução ou transferência de garantia externa."}
+`````
+
+### POP-B025 — `coverage.jsonl` linhas 25–25
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 29962, 31239 )`, zero-based, fim exclusivo. SHA256 trecho: `620547bbd4f8f616200bd60403b45f7d90211937f6ba7791a9c32da93439bc21`.
+
+`````text
+{"path":"packages/core/src/rag-studio/sql.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"214ab3375acc34072ee74c3123501c80615bf488","sha256":"e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9","bytes":2519,"legacy_artifact_key":"s1.core.boundaries","family":"rag-studio","kind":"implementation","owner":"S1-03","read_depth":"decisive_full_source_read","role":"rag_persistence_schema","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Distingue fontes/chunks/revisions/traces/pipeline; índices e ausência deliberada de FK não estabelecem retrieval ou embedding.","maintenance_trigger":"Reler a folha completa quando identidade, ordem, autoridade, erro ou persistência mudar; limitar engine/caller ao dono nomeado: S1-03; retrieval/engine S4.","evidence":[{"id":"B05","first_line":1,"last_line":36},{"id":"B05","first_line":38,"last_line":81}],"capture_path":"sources/packages/core/src/rag-studio/sql.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Leitura integral da folha de implementação, sem execução ou transferência de garantia externa."}
+`````
+
+### POP-B026 — `coverage.jsonl` linhas 26–26
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 31239, 32522 )`, zero-based, fim exclusivo. SHA256 trecho: `f92a8e0d7eca73e649384fbecaa76c87f6418a7830a884914e289b5eafec2aaa`.
+
+`````text
+{"path":"packages/core/src/relay-commands.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"e2858f395f7c09e0a2cfb7c5b55a96c073d33926","sha256":"d129efe12ceff333c6f6186a40cc679efcbbacb9b9164c40eea404a89de09b2c","bytes":5046,"legacy_artifact_key":"s1.core.boundaries","family":"relay","kind":"implementation","owner":"S1-03","read_depth":"decisive_full_source_read","role":"command_discovery","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Lê manifests, lockfiles e pytest limitado para sugestões; classificação heurística não executa nem valida comandos.","maintenance_trigger":"Reler a folha completa quando identidade, ordem, autoridade, erro ou persistência mudar; limitar engine/caller ao dono nomeado: S1-03.","evidence":[{"id":"B06","first_line":7,"last_line":11},{"id":"B06","first_line":25,"last_line":39},{"id":"B06","first_line":75,"last_line":114}],"capture_path":"sources/packages/core/src/relay-commands.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Leitura integral da folha de implementação, sem execução ou transferência de garantia externa."}
+`````
+
+### POP-B027 — `coverage.jsonl` linhas 27–27
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 32522, 33957 )`, zero-based, fim exclusivo. SHA256 trecho: `2affa192617113e727d586d77217e2960b99c6ab5269b984b22da71718e1e89a`.
+
+`````text
+{"path":"packages/core/src/relay-hook-install.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"df1a8ef2e1656d4f2a9a235447c3439fa25fa0f1","sha256":"3663a7a5f1eedca77f66ce09229839aeec433440e2bd23d38fa36957d5e46833","bytes":22715,"legacy_artifact_key":"s1.core.boundaries","family":"relay","kind":"implementation","owner":"S1-03","read_depth":"decisive_full_source_read","role":"hook_install_lifecycle","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Verifica snapshot/digest/grafo, arquivo e lifecycle; reparo explícito, escrita substitutiva e lock só no processo delimitam autoridade.","maintenance_trigger":"Reler a folha completa quando identidade, ordem, autoridade, erro ou persistência mudar; limitar engine/caller ao dono nomeado: S1-03; publicação pelo host.","evidence":[{"id":"B11","first_line":217,"last_line":252},{"id":"B11","first_line":300,"last_line":410},{"id":"B11","first_line":454,"last_line":474},{"id":"B12","first_line":166,"last_line":194},{"id":"B12","first_line":254,"last_line":295}],"capture_path":"sources/packages/core/src/relay-hook-install.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Leitura integral da folha de implementação, sem execução ou transferência de garantia externa."}
+`````
+
+### POP-B028 — `coverage.jsonl` linhas 28–28
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 33957, 35175 )`, zero-based, fim exclusivo. SHA256 trecho: `889b5d76dca75fa6b3b7a391aefb7714954f7648fc09890e008e1cbe36f52e13`.
+
+`````text
+{"path":"packages/core/src/relay-hook-recovery.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"dac90dd02db4e0382932576d7041bee5142d4067","sha256":"370b5746163de1f543102b3872c76c28331d82084984b2178d2e03127a74cea9","bytes":3787,"legacy_artifact_key":"s1.core.boundaries","family":"relay","kind":"implementation","owner":"S1-03","read_depth":"decisive_full_source_read","role":"hook_local_recovery","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Recupera decisões só em implicit-local/projeto/diretório exatos; conta tentativas e não garante todos os recibos.","maintenance_trigger":"Reler a folha completa quando identidade, ordem, autoridade, erro ou persistência mudar; limitar engine/caller ao dono nomeado: S1-03; Session S1-01.","evidence":[{"id":"B13","first_line":25,"last_line":88}],"capture_path":"sources/packages/core/src/relay-hook-recovery.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Leitura integral da folha de implementação, sem execução ou transferência de garantia externa."}
+`````
+
+### POP-B029 — `coverage.jsonl` linhas 29–29
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 35175, 36429 )`, zero-based, fim exclusivo. SHA256 trecho: `5242ef1fa8dd35603e80b0c77adcce40f699ee42e8d5bcc19b757159cc8c4ddb`.
+
+`````text
+{"path":"packages/core/src/relay-hook-shipper.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"ab87545ec4552ec2fb5a4f2c1b586e98313ed92a","sha256":"6ce3c6f822f5fa17d8d5f2c1880e0e085365c913db24cd59a4ad2b51b0c6437c","bytes":5723,"legacy_artifact_key":"s1.core.boundaries","family":"relay","kind":"implementation","owner":"S1-03","read_depth":"decisive_full_source_read","role":"hook_receipt_shipping","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Separa decisão durável de recibo, deduplica por install/ledger e absorve falhas por grupo; inFlight é local ao processo.","maintenance_trigger":"Reler a folha completa quando identidade, ordem, autoridade, erro ou persistência mudar; limitar engine/caller ao dono nomeado: S1-03.","evidence":[{"id":"B14","first_line":26,"last_line":65},{"id":"B14","first_line":67,"last_line":130}],"capture_path":"sources/packages/core/src/relay-hook-shipper.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Leitura integral da folha de implementação, sem execução ou transferência de garantia externa."}
+`````
+
+### POP-B030 — `coverage.jsonl` linhas 30–30
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 36429, 37831 )`, zero-based, fim exclusivo. SHA256 trecho: `0fec3c8a661547ca39c3e3b9fa633f02d893427bc8980e2ed0145697d0115cdd`.
+
+`````text
+{"path":"packages/core/src/relay-workflow-binding.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"7149e276e0c214d70c2dafad90dadff5d2c21059","sha256":"3174f65f835ea0c4ba64c6a597a2169902627b94673cbb1c54cc5e90a414e0e2","bytes":14859,"legacy_artifact_key":"s1.core.boundaries","family":"relay","kind":"implementation","owner":"S1-03","read_depth":"decisive_full_source_read","role":"workflow_publication_binding","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Adquire publicação/version/skills/âncoras e revalida bytes e identidade; exige resolver/autor quando conhecimento é necessário.","maintenance_trigger":"Reler a folha completa quando identidade, ordem, autoridade, erro ou persistência mudar; limitar engine/caller ao dono nomeado: S1-03; host S1-02/API S1-04; Atlas S4.","evidence":[{"id":"B15","first_line":17,"last_line":48},{"id":"B15","first_line":50,"last_line":75},{"id":"B15","first_line":106,"last_line":147},{"id":"B16","first_line":149,"last_line":261}],"capture_path":"sources/packages/core/src/relay-workflow-binding.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Leitura integral da folha de implementação, sem execução ou transferência de garantia externa."}
+`````
+
+### POP-B031 — `coverage.jsonl` linhas 31–31
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 37831, 39109 )`, zero-based, fim exclusivo. SHA256 trecho: `a0a7f095211e66f9a08452f4f67ec6b459a33575bed880d4e6eec9d8d330f776`.
+
+`````text
+{"path":"packages/core/src/relay-workflow-currentstep.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"c34249dde50c821e405128a148f015775095ac62","sha256":"00b948197cb77d072629820bc844f9ddae0527561e04b4cab9922dd2460e6a22","bytes":8522,"legacy_artifact_key":"s1.core.boundaries","family":"relay","kind":"implementation","owner":"S1-03","read_depth":"decisive_full_source_read","role":"workflow_read_projection","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Projeta passo atual sem mutação, confere posição/attempt/ledgerSeq e mantém conteúdo de fonte/check como não confiável.","maintenance_trigger":"Reler a folha completa quando identidade, ordem, autoridade, erro ou persistência mudar; limitar engine/caller ao dono nomeado: S1-03.","evidence":[{"id":"B17","first_line":38,"last_line":90},{"id":"B17","first_line":116,"last_line":139}],"capture_path":"sources/packages/core/src/relay-workflow-currentstep.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Leitura integral da folha de implementação, sem execução ou transferência de garantia externa."}
+`````
+
+### POP-B032 — `coverage.jsonl` linhas 32–32
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 39109, 40401 )`, zero-based, fim exclusivo. SHA256 trecho: `cef204c2308e9376654529e8d33da9341359d06645b65e60d86c30513682efa8`.
+
+`````text
+{"path":"packages/core/src/relay-workflow-evaluator.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"898d949b03a82453955e1100335c2150fa51a881","sha256":"eb9862b86f9aa64e34e8f52ae25ac079c6d464da9599433dd34625e620c5138c","bytes":13052,"legacy_artifact_key":"s1.core.boundaries","family":"relay","kind":"implementation","owner":"S1-03","read_depth":"decisive_full_source_read","role":"workflow_native_settlement","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Exige identidade e recibo autenticado sob lock do engine; reconcilia writes sem regrading, old PASS/JSON sozinho não basta.","maintenance_trigger":"Reler a folha completa quando identidade, ordem, autoridade, erro ou persistência mudar; limitar engine/caller ao dono nomeado: S1-03; engine Relay S3.","evidence":[{"id":"B20","first_line":29,"last_line":125},{"id":"B20","first_line":130,"last_line":208}],"capture_path":"sources/packages/core/src/relay-workflow-evaluator.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Leitura integral da folha de implementação, sem execução ou transferência de garantia externa."}
+`````
+
+### POP-B033 — `coverage.jsonl` linhas 33–33
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 40401, 41635 )`, zero-based, fim exclusivo. SHA256 trecho: `b5ff6764d14c1a4d7099c949060a962580cede3b823b6890e37cda7928f4fee5`.
+
+`````text
+{"path":"packages/core/src/relay-workflow-session.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"fc006686eb25e96aa55cd8b93fc60994ebdd9dfd","sha256":"c5aefaf53fcd61059a68ee2b0411e587f4d125a42fae8169f8846c4d37c70221","bytes":5399,"legacy_artifact_key":"s1.core.boundaries","family":"relay","kind":"implementation","owner":"S1-03","read_depth":"decisive_full_source_read","role":"workflow_session_bridge","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Liga evento de Session ao host nativo único, recusa binding múltiplo/host ausente e decide continuação por disposition.","maintenance_trigger":"Reler a folha completa quando identidade, ordem, autoridade, erro ou persistência mudar; limitar engine/caller ao dono nomeado: S1-03; Session S1-01.","evidence":[{"id":"B18","first_line":31,"last_line":96}],"capture_path":"sources/packages/core/src/relay-workflow-session.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Leitura integral da folha de implementação, sem execução ou transferência de garantia externa."}
+`````
+
+### POP-B034 — `coverage.jsonl` linhas 34–34
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 41635, 42916 )`, zero-based, fim exclusivo. SHA256 trecho: `0a48199945576eee6e9114e6139c7e0077fb92f6a80f36c9bc1a497fb2b2e75d`.
+
+`````text
+{"path":"packages/core/src/relay-workflow-transition.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"a200d327a4e1f9f7c3b0e7c986f6a848608f6d6b","sha256":"25e53b33dcccd86354775369126f63fcfee5fc89c324d3b7c1e00bd84b0ea28c","bytes":7385,"legacy_artifact_key":"s1.core.boundaries","family":"relay","kind":"implementation","owner":"S1-03","read_depth":"decisive_full_source_read","role":"workflow_checkpoint_fence","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Persiste fence global antes do checkpoint por assistantMessageID e reconcilia settled/pending com tripla esperada.","maintenance_trigger":"Reler a folha completa quando identidade, ordem, autoridade, erro ou persistência mudar; limitar engine/caller ao dono nomeado: S1-03; engine Relay S3.","evidence":[{"id":"B19","first_line":35,"last_line":99},{"id":"B19","first_line":108,"last_line":125}],"capture_path":"sources/packages/core/src/relay-workflow-transition.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Leitura integral da folha de implementação, sem execução ou transferência de garantia externa."}
+`````
+
+### POP-B035 — `coverage.jsonl` linhas 35–35
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 42916, 44500 )`, zero-based, fim exclusivo. SHA256 trecho: `dedbbeb5d1cbd9bc328704b8c4affa7a955bfa8dfd3d3f7345932cc14e56cb32`.
+
+`````text
+{"path":"packages/core/src/relay.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"25fb509203f933a2e8b0f311c3fc8f9476d53e16","sha256":"446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a","bytes":30225,"legacy_artifact_key":"s1.core.boundaries","family":"relay","kind":"implementation","owner":"S1-03","read_depth":"decisive_full_source_read","role":"relay_host_ports","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Vincula diretórios, chave, processo/sandbox, gates e trial; aprovação calculada sem registro não se torna pass durável.","maintenance_trigger":"Reler a folha completa quando identidade, ordem, autoridade, erro ou persistência mudar; limitar engine/caller ao dono nomeado: S1-03; Relay S3; sandbox S1-02; Omni S4.","evidence":[{"id":"B07","first_line":184,"last_line":217},{"id":"B07","first_line":568,"last_line":592},{"id":"B07","first_line":611,"last_line":629},{"id":"B08","first_line":219,"last_line":264},{"id":"B08","first_line":267,"last_line":283},{"id":"B09","first_line":319,"last_line":372},{"id":"B10","first_line":374,"last_line":418},{"id":"B10","first_line":420,"last_line":481},{"id":"B10","first_line":491,"last_line":515}],"capture_path":"sources/packages/core/src/relay.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Leitura integral da folha de implementação, sem execução ou transferência de garantia externa."}
+`````
+
+### POP-B102 — `coverage.jsonl` linhas 102–102
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 124572, 125792 )`, zero-based, fim exclusivo. SHA256 trecho: `5cd7649bb2abff1b50b5d4f119f4dfa8cad6f9d6bfdb0e17db74bda0e639cbfc`.
+
+`````text
+{"path":"packages/core/test/move-session.test.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"187f0dd72465af96e8bcebf8242756a88b99228b","sha256":"114b271ad80fb562ccc3965a06beb22476ab6d41fbeb9e430712cc1c9cbac2fa","bytes":11019,"legacy_artifact_key":"s1.core.boundaries","family":"control-plane","kind":"test_code","owner":"S1-03","read_depth":"targeted_test_contract_read","role":"prepared_boundary_test","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Cenários fonte com Git/DB para transferência, mesmo root e preservação de staged/unrelated; não executados.","maintenance_trigger":"Reler asserções e fixture junto da implementação alterada; só execução autorizada com candidato/caso identifica resultado.","evidence":[{"id":"T01","first_line":83,"last_line":117}],"capture_path":"sources/packages/core/test/move-session.test.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Profundidade declarada do path; agrupamento ou leitura estrutural não significa revisão semântica integral nem PASS."}
+`````
+
+### POP-B107 — `coverage.jsonl` linhas 107–107
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 130581, 131766 )`, zero-based, fim exclusivo. SHA256 trecho: `952578989b42bdbe199f693edabb9a022d082bc4670a80c168fd5bb38e8d8963`.
+
+`````text
+{"path":"packages/core/test/relay-commands.test.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"7d6e9bdf25955bd4a7451db57205638bcfdbff2b","sha256":"899dc3433d30d7e539dbb1b7b6aa38e94528ab30a8b68c508e8170a7bcbe82dd","bytes":2119,"legacy_artifact_key":"s1.core.boundaries","family":"relay","kind":"test_code","owner":"S1-03","read_depth":"full_test_source_read","role":"prepared_boundary_test","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Asserções de sugestões Bun/Makefile/pytest e diretório vazio; valida intenção do detector, não qualidade do comando sugerido.","maintenance_trigger":"Reler asserções e fixture junto da implementação alterada; só execução autorizada com candidato/caso identifica resultado.","evidence":[],"capture_path":"sources/packages/core/test/relay-commands.test.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Profundidade declarada do path; agrupamento ou leitura estrutural não significa revisão semântica integral nem PASS."}
+`````
+
+### POP-B108 — `coverage.jsonl` linhas 108–108
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 131766, 132969 )`, zero-based, fim exclusivo. SHA256 trecho: `aed12a619c2c53f13299b11fed6612bef4ee2593b0e1a21629682dd5efc814fc`.
+
+`````text
+{"path":"packages/core/test/relay-hook-install.test.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"fb903ba67d4dcfa55bdea704d27435d930a0e823","sha256":"b6cf2cd2727906d64ab13a9ddf308a0d9bab841b233fb355da7f7088b387661f","bytes":30672,"legacy_artifact_key":"s1.core.boundaries","family":"relay","kind":"test_code","owner":"S1-03","read_depth":"targeted_test_contract_read","role":"prepared_boundary_test","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Asserções de digest, regras de grafo, lifecycle, arquivos inválidos/symlink e falhas/concor­rência de escrita; sem resultado novo.","maintenance_trigger":"Reler asserções e fixture junto da implementação alterada; só execução autorizada com candidato/caso identifica resultado.","evidence":[],"capture_path":"sources/packages/core/test/relay-hook-install.test.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Profundidade declarada do path; agrupamento ou leitura estrutural não significa revisão semântica integral nem PASS."}
+`````
+
+### POP-B109 — `coverage.jsonl` linhas 109–109
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 132969, 134190 )`, zero-based, fim exclusivo. SHA256 trecho: `ceae0bf0295b51d04152eb7352bfc3d35adfb1c5eaa6db1a9615bd8fd185cb98`.
+
+`````text
+{"path":"packages/core/test/relay-hook-recovery-startup.test.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"d7f18c2688d8a35ac2e804777cf510242ce36168","sha256":"37188aa1f6766eee436288c0c7351f0bac0c458eec3c6a16bfe26f60f2a627df","bytes":12611,"legacy_artifact_key":"s1.core.boundaries","family":"relay","kind":"test_code","owner":"S1-03","read_depth":"targeted_test_contract_read","role":"prepared_boundary_test","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Prepara startup em Location real do harness, finalizer, falha não fatal e explicit-workspace unsupported; não comprova startup atual.","maintenance_trigger":"Reler asserções e fixture junto da implementação alterada; só execução autorizada com candidato/caso identifica resultado.","evidence":[],"capture_path":"sources/packages/core/test/relay-hook-recovery-startup.test.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Profundidade declarada do path; agrupamento ou leitura estrutural não significa revisão semântica integral nem PASS."}
+`````
+
+### POP-B110 — `coverage.jsonl` linhas 110–110
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 134190, 135439 )`, zero-based, fim exclusivo. SHA256 trecho: `41c42348824a628fa0910ff5cf3edd1b170fcf93245735811dbf03d444183878`.
+
+`````text
+{"path":"packages/core/test/relay-hook-recovery.test.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"ec6537a5ab3a4c87acb5d18cfc008673a1a678e5","sha256":"28fb6359ae61921abd52eb9553690d5c357131edb7adfac22ba6d0e956c6d5de","bytes":13978,"legacy_artifact_key":"s1.core.boundaries","family":"relay","kind":"test_code","owner":"S1-03","read_depth":"targeted_test_contract_read","role":"prepared_boundary_test","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Prepara filtro de projeto/diretório, paginação, órfãos, inFlight, falha/retry e workspace explícito; fonte de caso, não recibo.","maintenance_trigger":"Reler asserções e fixture junto da implementação alterada; só execução autorizada com candidato/caso identifica resultado.","evidence":[{"id":"T03","first_line":211,"last_line":249}],"capture_path":"sources/packages/core/test/relay-hook-recovery.test.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Profundidade declarada do path; agrupamento ou leitura estrutural não significa revisão semântica integral nem PASS."}
+`````
+
+### POP-B111 — `coverage.jsonl` linhas 111–111
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 135439, 136636 )`, zero-based, fim exclusivo. SHA256 trecho: `23c8cbb5395962774e4f23a1f530690934b59856d9f0796bb75c599e8828fd50`.
+
+`````text
+{"path":"packages/core/test/relay-hook-session.test.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"9bbd6f9e04e42d430d787551b0c817ae752cd4fa","sha256":"0b3d9c08be21fdb3a10dac2c9edc06fe0b03289bac0b18ce419607bb045abca7","bytes":20657,"legacy_artifact_key":"s1.core.boundaries","family":"relay","kind":"test_code","owner":"S1-03","read_depth":"targeted_test_contract_read","role":"prepared_boundary_test","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Prepara block/approve nos boundaries de sessão/ferramenta e retry exato; aceitação depende da execução e identidade do caso.","maintenance_trigger":"Reler asserções e fixture junto da implementação alterada; só execução autorizada com candidato/caso identifica resultado.","evidence":[],"capture_path":"sources/packages/core/test/relay-hook-session.test.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Profundidade declarada do path; agrupamento ou leitura estrutural não significa revisão semântica integral nem PASS."}
+`````
+
+### POP-B112 — `coverage.jsonl` linhas 112–112
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 136636, 137829 )`, zero-based, fim exclusivo. SHA256 trecho: `3f9c563b6983ec17aa164a2f3bee32136bbcd9871c2b901680719ba6d50bfe91`.
+
+`````text
+{"path":"packages/core/test/relay-hook-shipper.test.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"4d80ef6db7a101281c5c34a26ff105ec099473b2","sha256":"37be7a11d5c201cfae2f241f66d11042332e1e6d9c572624e1090b76d1434d10","bytes":16675,"legacy_artifact_key":"s1.core.boundaries","family":"relay","kind":"test_code","owner":"S1-03","read_depth":"targeted_test_contract_read","role":"prepared_boundary_test","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Prepara deferred receipt, deduplicação, inFlight e falha por install sem apagar decisões; não atesta shipping neste host.","maintenance_trigger":"Reler asserções e fixture junto da implementação alterada; só execução autorizada com candidato/caso identifica resultado.","evidence":[],"capture_path":"sources/packages/core/test/relay-hook-shipper.test.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Profundidade declarada do path; agrupamento ou leitura estrutural não significa revisão semântica integral nem PASS."}
+`````
+
+### POP-B113 — `coverage.jsonl` linhas 113–113
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 137829, 139040 )`, zero-based, fim exclusivo. SHA256 trecho: `a3390041624a044a2b989726e39e8da5b4dd842b39da89f902c462579eb5b0ff`.
+
+`````text
+{"path":"packages/core/test/relay-workflow-binding.test.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"6205649eb98d965768999475a475a4578b15f0e9","sha256":"7205cb7c76733f23dcec5d98b3f9fcb7413d494272627d8b1007a38ae681fc8c","bytes":35647,"legacy_artifact_key":"s1.core.boundaries","family":"relay","kind":"test_code","owner":"S1-03","read_depth":"targeted_test_contract_read","role":"prepared_boundary_test","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Prepara publicação/checksum/materialização/skills/âncoras, read-only currentStep e holder; não transfere aceite de Atlas ou host.","maintenance_trigger":"Reler asserções e fixture junto da implementação alterada; só execução autorizada com candidato/caso identifica resultado.","evidence":[],"capture_path":"sources/packages/core/test/relay-workflow-binding.test.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Profundidade declarada do path; agrupamento ou leitura estrutural não significa revisão semântica integral nem PASS."}
+`````
+
+### POP-B114 — `coverage.jsonl` linhas 114–114
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 139040, 140356 )`, zero-based, fim exclusivo. SHA256 trecho: `932811644e37f03cf88d6517d482909aee23f66dcff411398088f7b5268e48cd`.
+
+`````text
+{"path":"packages/core/test/relay-workflow-evaluator.test.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"1bb5b9805043d297395a551d6e10a679cfb1c94e","sha256":"42c3b75989f047a24903de8aba524a56099fa228652cb48e364f517f69d299b3","bytes":17132,"legacy_artifact_key":"s1.core.boundaries","family":"relay","kind":"test_code","owner":"S1-03","read_depth":"targeted_test_contract_read","role":"prepared_boundary_test","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Asserções sobre duplicate settlement, signed receipt, partial repair, old PASS, HMAC e lock; sem execução, não são qualificação do engine.","maintenance_trigger":"Reler asserções e fixture junto da implementação alterada; só execução autorizada com candidato/caso identifica resultado.","evidence":[{"id":"T02","first_line":89,"last_line":126},{"id":"T02","first_line":162,"last_line":190}],"capture_path":"sources/packages/core/test/relay-workflow-evaluator.test.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Profundidade declarada do path; agrupamento ou leitura estrutural não significa revisão semântica integral nem PASS."}
+`````
+
+### POP-B115 — `coverage.jsonl` linhas 115–115
+
+Commit: `LOCAL_CANDIDATE_OR_PROVIDED_INPUT`. Blob: `c95f8432d35a98d5a84ca8946b623a1eb5582210`. SHA256 integral: `d7e73779d4d0eca6a0edd56921c612955f82a564831c9fc6bf05353c1ae0c4b9`. Bytes fonte: 157032. Intervalo byte `[ 140356, 141537 )`, zero-based, fim exclusivo. SHA256 trecho: `c891480033e060c8446a91eff16d4646116d634e283f6f2b6c8dc0a43b054cc7`.
+
+`````text
+{"path":"packages/core/test/relay.test.ts","commit":"1cde2ff7a71bcf7aecb5d030917b577165135d38","git_blob_sha":"3acdc0d11e60ed2119059ac59eab60184a341795","sha256":"e54d1c70ad6dc2affe31ac1f8ea231acb5745664eb9e724f3d8df76d22e0118f","bytes":28130,"legacy_artifact_key":"s1.core.boundaries","family":"relay","kind":"test_code","owner":"S1-03","read_depth":"targeted_test_contract_read","role":"prepared_boundary_test","need":"component","artifact":"s1.core.boundaries","serves_needs":["component","flow","ownership","evidence"],"disposition":"included_l1_candidate_with_stated_limits","reason":"Asserções sobre paths/chave, ambiente/timeout, semáforo, judge config e locks; distinguir cada caso de garantia universal de plataforma.","maintenance_trigger":"Reler asserções e fixture junto da implementação alterada; só execução autorizada com candidato/caso identifica resultado.","evidence":[],"capture_path":"sources/packages/core/test/relay.test.ts","execution_status":"NOT_RUN","semantic_acceptance":"PENDING_INDEPENDENT_JUDGMENT","read_depth_limit":"Profundidade declarada do path; agrupamento ou leitura estrutural não significa revisão semântica integral nem PASS."}
+`````
+
+## Relação exata das 104 fontes locais de suporte
+
+Esta tabela é projeção determinística de campos do mesmo JSONL, sem substituir seus bytes. Os valores de path, profundidade, role e rationale vêm das entradas originais. Ela poderá ser reutilizada no lote de suporte sem repetir o censo. Nenhuma linha afirma PASS.
+
+| Path | Read depth / role | Rationale original |
+|---|---|---|
+| `docs/architecture/phase-plans/70-90-briefs/EXP-CORE.md` | `historical_plan_full_read` / `historical_context` | Card mecânico de exports no baseline histórico; confrontado com os 437 exports atuais, sem transformar a meta antiga em censo vigente. |
+| `docs/architecture/phase-plans/70-90-briefs/RD-CTRLPLANE.md` | `historical_plan_full_read` / `historical_context` | Card de README/retirada de control plane legado; serve para entender intenção e localizar contratos atuais, não para provar implementação. |
+| `docs/architecture/phase-plans/70-90-briefs/RD-SESSION.md` | `historical_plan_full_read` / `historical_context` | Card histórico sobre admissão/execução/persistência de Session; navega para S1-01 e conserva sua época. |
+| `docs/specs/runtime-closure/ARCHIE-QUALIFICATION.md` | `historical_qualification_targeted_read` / `historical_context` | Recibos e candidatos do recorte Archie com exclusões explícitas; não repassa aprovação a dual V2, W6 ou plataformas fora do recorte. |
+| `docs/specs/runtime-closure/CHECKPOINT.md` | `historical_qualification_targeted_read` / `historical_context` | Checkpoint de casos/candidatos anteriores, com CI integral/plataformas ainda limitadas; não é recibo do pin atual. |
+| `docs/specs/runtime-closure/PLAN.md` | `historical_plan_targeted_read` / `historical_context` | Plano de closure CLI/WSL/SDK/Nix/OAuth, invariantes e WPs; ações e observações são intenção contextual, não resultados novos. |
+| `docs/specs/runtime-closure/PRODUCER-BOUNDARY.md` | `historical_contract_full_read` / `historical_context` | Preserva exceção humana de namespace controlado e controles de produtor, excluindo adversário same-UID; não concede permissão nesta execução. |
+| `docs/specs/runtime-closure/SNAPSHOT-QUALIFICATION.md` | `historical_qualification_targeted_read` / `historical_context` | Comparação datada de updater/snapshot com candidatos e limitações; medir um caminho não fecha todas as capacidades/plataformas. |
+| `docs/specs/runtime-closure/WAVE-2.md` | `historical_plan_targeted_read` / `historical_context` | Cadência e owners da onda, preparação e conclusões específicas; não confundir harness preparado/falho com runtime efetivamente exercido. |
+| `docs/specs/v2/api.html` | `documentation_targeted_read` / `documentation_context` | Mapa visual de rotas/contextos com discussão pendente e vocabulário immediate/deferred histórico; contrato vigente requer S1-04 e Session. |
+| `docs/specs/v2/schema-changelog.md` | `documentation_targeted_read` / `documentation_context` | Registro datado de schemas/compatibilidade e direção de manutenção; cada mudança exige fonte atual, sem herdar comportamento por narrativa histórica. |
+| `docs/specs/v2/todo.md` | `documentation_full_read` / `documentation_context` | Backlog e decisões de rebuild; distingue replay de evento de recuperação provider pós-crash, sem declarar toda lacuna ainda aberta hoje. |
+| `packages/core/bunfig.toml` | `configuration_full_read` / `package_support` | Declara preloads de guard/controle Omni/Core; é configuração do harness, não autorização nem resultado de teste. |
+| `packages/core/drizzle.config.ts` | `configuration_full_read` / `package_support` | Configura dialect/globs/output de geração SQLite; dbCredentials de tooling não define localização runtime universal. |
+| `packages/core/package.json` | `manifest_structural_and_targeted_read` / `package_support` | 437 exports explícitos sem bare/wildcard, scripts e dependências; distingue folhas produtivas e helpers de teste e identifica os entry points reais. |
+| `packages/core/README.md` | `documentation_full_read` / `package_support` | Entrada pública e direção Schema/Protocol→Core→Server, composição e geradores oficiais; intenção de arquitetura não prova todas as folhas. |
+| `packages/core/schema.json` | `generated_json_structural_read` / `package_support` | Snapshot SQLite formato7 com ddl/IDs e 63 tabelas contado estruturalmente; manter via migration generator, não editar snapshot manualmente. |
+| `packages/core/script/fix-node-pty.ts` | `maintenance_source_full_read` / `package_support` | Ajusta bit executável de spawn-helper existente fora Windows; não comprova execução de PTY ou sandbox. |

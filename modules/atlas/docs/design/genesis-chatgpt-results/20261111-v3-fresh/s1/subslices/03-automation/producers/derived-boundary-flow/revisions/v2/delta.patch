@@ -1,0 +1,1272 @@
+--- producers/derived-boundary-flow/revisions/v2/history/body.md
++++ producers/derived-boundary-flow/body.md
+@@ -5,8 +5,8 @@
+ | Artefato | `s1.subslice03.boundary-flow` |
+ | Camada / necessidade | L2 / `flow` |
+ | Escopo | S1-03; entendimento local das portas externas do Core |
+-| Predecessor obrigatório | `s1.core.boundaries`, 23.665 bytes UTF-8 |
+-| SHA256 do predecessor | `ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6` |
++| Predecessor obrigatório | `s1.core.boundaries` v3, 23.769 bytes UTF-8 |
++| SHA256 do predecessor | `937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070` |
+ | Fonte investigada pelo L1 | `1cde2ff7a71bcf7aecb5d030917b577165135d38` |
+ 
+ ## 1. Escopo, evidência e entrada na leitura
+@@ -23,7 +23,9 @@
+ 
+ Quando há um plano de indexação, o Core prefere TypeScript a Python, resolve o executável pela versão do plano e o executa por AppProcess com limites de tempo e coleta. O diagnóstico é abreviado e a leitura posterior de saúde vem da superfície. **Inferência:** esta cadeia materializa um comando e contém sua execução; não qualifica o pacote, plataforma, linguagem ou a completude do SCIP produzido. [L1 §2]
+ 
+-Na delegação de respostas, a pergunta precisa pertencer ao lote corrente. O esquema solicita `answer` e `why` como strings, mas a verificação explícita de conteúdo testa `answer.trim()`; não há base para exigir que `why` esteja preenchido. Falhas por pergunta retornam diagnóstico e respostas malsucedidas são omitidas/abstidas. O fluxo descrito pelo comentário como “Genesis mining from the screen” usa teto de 1–200 e concorrência quatro, envia resposta, justificativa e modelo à superfície e passa por gate/admission até staging, sem promoção. [L1 §2]
++Na delegação de respostas, a pergunta precisa pertencer ao lote corrente. O esquema solicita `answer` e `why` como strings, mas a verificação explícita de conteúdo testa `answer.trim()`; não há base para exigir que `why` esteja preenchido. A delegação conserva disposição/diagnóstico por pergunta. O host envia à superfície resposta, justificativa e identificação do modelo; a decisão final pertence ao protocolo da superfície. [L1 §2]
++
++O caminho distinto de mining, descrito pelo comentário como “Genesis mining from the screen”, usa teto de 1–200 e concorrência quatro. Respostas de chamadas malsucedidas são omitidas/abstidas nesse caminho, que passa por gate/admission até staging, sem promoção. A justificativa estruturada descrita para delegação não é transferida a esse contrato de mining. [L1 §2]
+ 
+ **Fronteira de decisão:** geração ou staging de uma proposta não libera tratá-la como conhecimento publicado e aceito. O protocolo da superfície decide o passo seguinte. O comentário não institui uma distinção formal chamada “legado” para esse fluxo da tela; tampouco o nome mine constitui prova de importação/publicação Genesis. Aprofundamento: L1 §2, “Atlas: disponibilidade, identidade e proposta de conhecimento”.
+ 
+@@ -31,7 +33,7 @@
+ 
+ **Mecanismo estático.** A descoberta sugere comandos a partir de manifests, lockfiles, marcadores e targets. Classificação por nome é heurística; a ordem de preferência é Bun, pnpm, Yarn, npm. A busca pytest se limita a raízes previstas e a 200 arquivos, e certas falhas de leitura viram lista vazia. Detectar um comando não o executa, por isso o comentário desse passo dispensa trust. Essa dispensa não se estende à execução. [L1 §3.1]
+ 
+-`trial` exige trust antes de executar. Seu dry grading evita avanço/ledger, mas os comandos ainda podem produzir efeitos. O tail segue um caminho distinto do executor de gates; não se pode atribuir a ele automaticamente toda a sanitização dos gates. Também existe `check` sem state directory que avalia sem registrar. [L1 §3.2]
++`trial` exige trust antes de executar. Executa o comando e devolve seu resultado, sem grading nem registro de veredito; os comandos ainda podem produzir efeitos. O tail segue um caminho distinto do executor de gates; não se pode atribuir a ele automaticamente toda a sanitização dos gates. Também existe `check` sem state directory que avalia sem registrar. [L1 §3.2]
+ 
+ Nos gates, o ambiente é composto explicitamente, sem `extendEnv`, com stdin ignorado e remoção de variáveis de startup de shell. `ToolSafetySandbox.wrap` recebe o perfil do caller; prazo, término e coleta são limitados. Valores de parâmetros de comprimento pelo menos oito são substituídos por `[redacted]` na saída. Esse mecanismo não constitui redator universal nem qualificação de jail em toda plataforma. O helper Git remove `GIT_*`, desliga locks opcionais/fsmonitor e limita a execução, mas a leitura não demonstra o mesmo `wrap`. [L1 §3.1]
+ 
+@@ -77,7 +79,7 @@
+ 
+ O evento constrói `Location.Ref` com diretório; não comprova migração completa de workspace. Esta folha tampouco paralisa o runner. Exclusão/quiescência pelo caller e relação com Context Epoch/drain exigem a autoridade de S1-01 em versão aceita. `workspace.sql.ts` define identidade, tipo, nome, branch/diretório/extra, projeto com cascade e tempo de uso; essas tabelas não executam warp/sync ou coordenação remota. [L1 §6]
+ 
+-RAG Studio persiste fontes/localização/path/hash/status, chunks/texto/linhas/hash/boundary, revisions/associações, perguntas/traces e configuração de pipeline. Chunks deliberadamente não têm FK, conforme comentário sobre limpeza de órfãos; o índice location/path não declara unicidade. A folha examinada não define coluna de embedding ou tabela vetorial. **Limite:** isso não prova ausência de retrieval no produto inteiro; capacidade e qualidade de busca, embedding ou indexador exigem fonte/dono próprios, sobretudo S4. Schema não qualifica busca. [L1 §6]
++RAG Studio persiste fontes/localização/path/hash/status, chunks com texto, hash, boundary e campos inteiros `start`/`end` (sem unidade declarada pelo schema), revisions/associações, perguntas/traces e configuração de pipeline. Chunks deliberadamente não têm FK, conforme comentário sobre limpeza de órfãos; o índice location/path não declara unicidade. A folha examinada não define coluna de embedding ou tabela vetorial. **Limite:** isso não prova ausência de retrieval no produto inteiro; capacidade e qualidade de busca, embedding ou indexador exigem fonte/dono próprios, sobretudo S4. Schema não qualifica busca. [L1 §6]
+ 
+ ## 8. Limites de conclusão e encaminhamento
+ 
+--- producers/derived-boundary-flow/revisions/v2/history/evidence.md
++++ producers/derived-boundary-flow/evidence.md
+@@ -2,11 +2,13 @@
+ 
+ ## Identidade e cadeia de autoridade
+ 
+-A única base semântica de build é `s1.core.boundaries`, arquivo `producers/boundaries/bodies/boundaries.md`, 23.665 bytes, SHA256 `ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6`, Git blob `6821d54aec4f8015dd00d634f632dc9960d1bd74`. O corpo foi lido integralmente e as três identidades foram recalculadas. Fonte investigada pelo L1: `1cde2ff7a71bcf7aecb5d030917b577165135d38`; não houve releitura dessa fonte bruta pelo autor L2.
++A única base semântica de build atual é `s1.core.boundaries` L1 v3, arquivo `producers/boundaries/bodies/boundaries.md`, 23.769 bytes, SHA256 `937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070`, Git blob `d3b070015882d10f778f563438eb3f9d67cab061`. O corpo foi lido integralmente e as três identidades foram recalculadas. Fonte investigada pelo L1: `1cde2ff7a71bcf7aecb5d030917b577165135d38`; não houve releitura dessa fonte bruta pelo autor L2.
+ 
+-A receita efetivamente usada é `payload/recipes/derived/boundary-flow.json`, 8.459 bytes, SHA256 `3e4c7ebbb94d3fb6d7c4de5238aaea74e817cbfb1e80ea2c15bb259bc20eb544`, em conjunto com `payload/recipes/derived-contract.json` e o dispatch preservado. Foi congelada antes do dispatch. `production-manifest.json` registra a produção depois dela; não é uma receita anterior.
++A receita efetivamente usada nesta correção é `producers/derived-boundary-flow/revisions/v2/recipe.json`, 5.580 bytes, SHA256 `19923925cfbf39dcbbb33cb8fb00615dd2b37c5678a250f41dbd09ad4a398d30`, em conjunto com o request e o dispatch adjacentes, os achados públicos e o contrato público retido. A receita inicial `payload/recipes/derived/boundary-flow.json` continua no contexto histórico com SHA256 `3e4c7ebbb94d3fb6d7c4de5238aaea74e817cbfb1e80ea2c15bb259bc20eb544`. A receita de correção precede o dispatch; `revisions/v2/apply.py` e `procedure-freeze.json` foram fixados antes da aplicação. O manifesto atual registra a produção depois dela; não é uma receita anterior.
+ 
+-A receita informa PASS de `parallel-v3-fresh/S1-03/J1` e `parallel-v3-fresh/S1-03/J2` sobre o mesmo hash do predecessor. Os hashes das respostas originais nela citados são, respectivamente, `9c7496988762a6455d1682eea750037377778c316d37071203f1c8b719951adc` e `5ae3e9104142c41c0d261bb979dc29607a69065d019d3899d28c9fea52334801`. São metadados de gate fornecidos pela principal, não pareceres consumidos ou novo juízo deste autor. O cabeçalho original do L1 ainda diz candidato/aceite pendente; foi preservado sem correção. A autoridade para liberar a derivação vem do gate da receita sobre aqueles bytes, sem reescrever o histórico.
++A receita de correção informa PASS dos mesmos `parallel-v3-fresh/S1-03/J1` e `parallel-v3-fresh/S1-03/J2` sobre o hash integral do L1 v3. Os hashes das respostas originais nela citados são, respectivamente, `1f4b25f011a54a640723d4660aa69cae6e6920fe46f92d8a3f49ae13c3ff5923` e `24109643bb94e2c8c1124d9996e5bb4af83a5030c74ae276e466fee526c2e816`. São metadados fornecidos pela principal, não pareceres consumidos ou juízo deste autor. O cabeçalho do L1 ainda diz candidato/aceite pendente; sua preservação não substitui o gate da receita.
++
++O L1 v2 anterior, SHA256 `ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6`, permanece no alias `producers/boundaries/revisions/boundaries-v3/history/body.md`. Ele atribuía dry grading a trial e linhas aos intervalos dos chunks. As duas qualificações corrigidas pertencem ao L1 v3 e não são atribuídas retroativamente ao v2. Esse alias é proveniência cumulativa, sem segunda dependência semântica atual. Os quatro outputs L2 v1 estão preservados em `revisions/v2/history/`.
+ 
+ ## Mapa de afirmações para seções exatas do predecessor
+ 
+@@ -15,15 +17,15 @@
+ | Seção do L2 | Seção exata do L1 | Afirmações e tipo de suporte |
+ | --- | --- | --- |
+ | §1 — Escopo, evidência e entrada na leitura | §1 “O que o Core fornece na fronteira” | Responsabilidades locais e módulos externos; regra arquitetural e limite da verificação de imports. Síntese de mecanismo e intenção declarados pelo L1. O gate é metadado da receita, não afirmação de código. |
+-| §2 — Atlas | §2 “Atlas: disponibilidade, identidade e proposta de conhecimento” | Escolha da raiz e identidade do projeto pelo host; Unavailable/fiber; mine sem `.atlas`; seleção/limites do indexador; perguntas do lote, answer.trim e ausência de garantia de why não vazio; teto/concorrência, staging sem promoção. Mecanismo relatado e distinção explícita entre comentário e classificação interpretativa. Nenhuma qualificação de indexador/engine foi inferida. |
+-| §3 — Relay | §3.1 “Sugestões e execução têm autoridades diferentes” e §3.2 “Uma avaliação aprovada precisa do registro correspondente” | Descoberta heurística e limitada; ambiente, wrap, redaction e helper Git distintos; chave/ledger; verify/record; aprovação sem recibo; recuperação local de arm; trial com efeitos; check sem registro e recusa do settlement genérico. Consequências são delimitadas à implementação relatada. |
++| §2 — Atlas | §2 “Atlas: disponibilidade, identidade e proposta de conhecimento” | Escolha da raiz e identidade do projeto pelo host; Unavailable/fiber; mine sem `.atlas`; seleção/limites do indexador; delegação com disposição/diagnóstico por pergunta, answer.trim sem garantia extra de why e resposta/justificativa/modelo à superfície; mining separado com omissão/abstenção, teto/concorrência e staging sem promoção, sem transferir justificativa estruturada. Mecanismo relatado e distinção explícita entre comentário e classificação interpretativa. Nenhuma qualificação de indexador/engine foi inferida. |
++| §3 — Relay | §3.1 “Sugestões e execução têm autoridades diferentes” e §3.2 “Uma avaliação aprovada precisa do registro correspondente” | Descoberta heurística e limitada; ambiente, wrap, redaction e helper Git distintos; chave/ledger; verify/record; aprovação sem recibo; recuperação local de arm; trial executa comando sem grading nem registro de veredito, com efeitos possíveis; check pode avaliar sem registro e recusa do settlement genérico. Consequências são delimitadas à implementação relatada. |
+ | §4 — Hooks: instalação | §4.1 “Instalação pinada e escrita deliberada” | Pin, identidade, ordem, pause/update/remove; validação estrutural e limite da proveniência; leitura/escrita, lock de processo e reparo explícito. Não atribui publicação autorizada ao checksum, nem transação ao backup/rename. |
+ | §4 — Hooks: shipping/recuperação | §4.2 “Decisão durável não é recibo de ledger” | Sequência de decisões, grupos/inFlight, cache, falhas absorvidas e preservação da decisão; recuperação implicit-local/exclusão explicit workspace, filtros, 64 IDs; attemptedSessions/errors não equivalem a recibos. Cenários de teste são apenas expectativas não executadas. |
+ | §5 — Workflow: aquisição | §5.1 “Publicação e materialização são adquiridas por port do host” | PublicationPort, checks de projeto/publicação/versão, skills e checks; resolver/autor/âncoras de conhecimento; reconsulta final, pin, unpublish e revalidação. Limite de autoridade do conhecimento preservado. |
+ | §5 — Workflow: projeção/Session | §5.2 “Ler o passo não o executa” | View pura, verificações de identidade/posição/pending, expansão separada do conteúdo Atlas, dados não confiáveis, awaiting-human; host nativo, até dois bindings, hold, identidade esperada e disposições. Não promove leitura a execução. |
+ | §6 — Settlement | §5.3 “Fence, checkpoint e recibo autenticado têm funções distintas” | Ordem fence global/checkpoint individual, lock/revalidação, settled/limpeza pending; recibo HMAC e writes/sequence; reparo sem regrading sob condições estritas; PASS antigo insuficiente e hold quando incompleto. Inferência explicitamente delimitada no L1, sem prova criptográfica ou garantia do engine. |
+ | §7 — Move | §6 “Control plane e RAG: persistência versus ação” | Condições da transferência, capture/apply/event/discard, erro após efeitos e ausência de transação; teste aninhado limitado e concorrência não exercitada; caller quiescente, Location.Ref e autoridade S1-01. Asserções do teste não foram executadas. |
+-| §7 — Persistência | §6 “Control plane e RAG: persistência versus ação” | Workspace como schema; entidades RAG, chunks sem FK, índice sem unicidade declarada, ausência de vetores nessa folha; recusa de generalizar para ausência de retrieval no produto. |
++| §7 — Persistência | §6 “Control plane e RAG: persistência versus ação” | Workspace como schema; entidades RAG, chunks com start/end inteiros sem unidade declarada e sem FK, índice sem unicidade declarada, ausência de vetores nessa folha; recusa de generalizar para ausência de retrieval no produto. |
+ | §8 — Encaminhamento e limites | §7 “Reuso, deltas e navegação ainda não aceita”; limites das §§2–6 | Donos externos e versões não selecionadas; navegação sem dependência de build; síntese dos limites. Não incorpora suporte de artefatos externos ausentes. Estado desta autoria vem de procedimentos e escopo registrados no manifesto. |
+ 
+ ## Inputs normativos e critério de composição
+@@ -34,6 +36,8 @@
+ 
+ ## Verificações e limitações efetivas
+ 
+-Foram consumidas 14 unidades integrais enumeradas pela receita, mais a própria receita, request e dispatch: 17 unidades de input. O primeiro lote de saída da ferramenta truncou um trecho de COMMON; COMMON foi relido integralmente em lote menor antes da composição. As identidades integrais de todos os inputs constam no manifesto. Os outputs foram relidos para verificação de bytes, UTF-8, hashes e headings; essas releituras são verificação dos próprios outputs, não fontes adicionais.
++O manifesto atual conserva 28 unidades cumulativas: as 17 da autoria v1 e 11 unidades novas da correção. Nesta revisão foram lidos integralmente os sete arquivos enumerados, incluindo o alias do L1 v2 já conhecido, mais receita/request/dispatch; o procedimento e seu freeze também foram consumidos, totalizando 12 unidades diretas distintas. As quatro cópias de histórico são aliases dos outputs v1, sem inflar essa contagem. Os demais inputs anteriores foram retidos do contexto e do manifesto preservado, sem nova leitura de arquivos. O truncamento histórico de COMMON já havia sido resolvido por releitura integral na autoria v1.
++
++O procedimento congelado aplicou três reparos substantivos e duas atualizações de metadados no corpo. `delta.json` conserva literais antes/depois, offsets de bytes UTF-8, segmentos inalterados e reconstrução inversa. As seções 1, 4, 5, 6 e 8 do corpo permanecem byte-idênticas. As identidades e aliases cumulativos constam no manifesto e em `input-manifest-extension.json`; o readback dos outputs e a verificação inversa constam em `producer-verification.json`. Essas verificações determinísticas de arquivos não são testes de produto nem juízo semântico.
+ 
+ Não foram abertos oracle, pareceres integrais, evidências brutas do predecessor, arquivos irmãos ou referências adicionais. Não houve rede, GitHub, delegação, testes de produto, runtime Atlas, consumidor, manutenção, alteração de produto/política/guard ou escrita fora do diretório exclusivo. A afirmação sobre essas operações descreve esta autoria; não apaga obrigações da principal. Campos de tentativas físicas, tokens e cobrança permanecem `UNKNOWN`. O novo L2 está pronto para submissão ao mesmo par, sem aceite próprio ou liberação de dependente.
+--- producers/derived-boundary-flow/revisions/v2/history/production-manifest.json
++++ producers/derived-boundary-flow/production-manifest.json
+@@ -1,5 +1,5 @@
+ {
+-  "schema": "s1-03-derived-production-manifest/v1",
++  "schema": "s1-03-derived-production-manifest/v2",
+   "manifest_role": "POSTPRODUCTION_RECORD_NOT_AN_EARLIER_RECIPE",
+   "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+   "artifact": {
+@@ -12,244 +12,563 @@
+     "purpose": "Encadeamento e limites do lado Core das portas externas"
+   },
+   "scope": "Only s1.subslice03.boundary-flow L2; no later layer produced or released.",
+-  "state": "AUTHORING_COMPLETE_AWAITING_TWO_NATIVE_JUDGES",
++  "state": "CORRECTION_COMPLETE_AWAITING_SAME_TWO_NATIVE_JUDGES",
+   "producer": {
+     "host_task_name": "/root/derived_boundaries",
+     "host_agent_id": "UNKNOWN",
+     "role": "native_author",
+-    "fresh_context": "Declared fresh native family context with no oracle; no raw source or full judgment was consumed.",
++    "fresh_context": "Same native oracle-blind family author continued; prior actual context retained.",
+     "delegation": "NOT_USED"
+   },
+   "exclusive_output_directory": "producers/derived-boundary-flow",
+   "payload_output_directory": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-boundary-flow",
+   "source_revision_inherited_from_predecessor": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+   "actual_recipe": {
+-    "per_task": {
++    "correction": {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/recipe.json",
++      "bytes": 5580,
++      "sha256": "19923925cfbf39dcbbb33cb8fb00615dd2b37c5678a250f41dbd09ad4a398d30",
++      "git_blob_sha": "91ffc90bccaf9fd4a50e994c5fb3288b4f99bcb0",
++      "whole_file_identity": true
++    },
++    "common_retained": {
++      "local_path": "payload/recipes/derived-contract.json",
++      "bytes": 4017,
++      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
++      "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
++      "whole_file_identity": true
++    },
++    "visible_dispatch": {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/dispatch-message.txt",
++      "bytes": 1273,
++      "sha256": "74633d78ff34d49f5d7db8fbe1fd6f6c22cf6f63ee95151bba5d58c8e8381e3f",
++      "git_blob_sha": "3821692669a52627613e830c4633958bbe2c36ea",
++      "whole_file_identity": true
++    },
++    "frozen_request": {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/request.txt",
++      "bytes": 397,
++      "sha256": "9e5163515be025e4f73fd410beda312a415890832e3aa16917c1b4aca54e39fc",
++      "git_blob_sha": "ca5b0415dba1cba57da4431e292b7c5765429ca4",
++      "whole_file_identity": true
++    },
++    "public_findings": {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/public-findings.md",
++      "bytes": 1561,
++      "sha256": "bdf2775890fc18bb642fc4e341b5984b8c2fb3fc0ef15217ded1650d44e196ca",
++      "git_blob_sha": "179c431b87984d73c9e8633fe0aed6213dabbf98",
++      "whole_file_identity": true
++    },
++    "actual_procedure": {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/apply.py",
++      "bytes": 36148,
++      "sha256": "fbf7ef729de0f11bc3df2ccbe77da99d9e69171f21c36bbea62421d93c984a6e",
++      "git_blob_sha": "102c9f6aa526b77add7dc3b09044003dd5448b6d",
++      "whole_file_identity": true
++    },
++    "procedure_freeze": {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/procedure-freeze.json",
++      "bytes": 8086,
++      "sha256": "adb5dbdd94d5786d8a1211be748c3e0a4459d5a5ba8234e73fb4957c991c3f4b",
++      "git_blob_sha": "157a73b5e5b94fc19b5060c20ef9f35f16c4c0ca",
++      "whole_file_identity": true
++    },
++    "not_retroactive": true
++  },
++  "inputs": [
++    {
++      "local_path": "inputs/AGENTS.md",
++      "bytes": 16501,
++      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
++      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
++      "whole_file_identity": true,
++      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
++      "role": "Public repository authority snapshot; no product changes or tests authorized for this task.",
++      "consumption": "FULL_UTF8_TEXT",
++      "identity_check": "MATCH",
++      "original_read_paths": [
++        "inputs/AGENTS.md"
++      ],
++      "context_origin_revision": 1,
++      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
++      "current_semantic_build_predecessor": false
++    },
++    {
++      "local_path": "inputs/COMMON.md",
++      "bytes": 12959,
++      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
++      "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
++      "whole_file_identity": true,
++      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
++      "role": "Public S1 subdivision protocol; consumed fully, task-specific producer restrictions take precedence.",
++      "consumption": "FULL_UTF8_TEXT",
++      "identity_check": "MATCH",
++      "original_read_paths": [
++        "inputs/COMMON.md"
++      ],
++      "context_origin_revision": 1,
++      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
++      "current_semantic_build_predecessor": false
++    },
++    {
++      "local_path": "inputs/mission.json",
++      "bytes": 6006,
++      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
++      "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
++      "whole_file_identity": true,
++      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
++      "role": "Public S1-03 mission identity and authority boundaries; not a release of broader authoring.",
++      "consumption": "FULL_UTF8_TEXT",
++      "identity_check": "MATCH",
++      "original_read_paths": [
++        "inputs/mission.json"
++      ],
++      "context_origin_revision": 1,
++      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
++      "current_semantic_build_predecessor": false
++    },
++    {
++      "local_path": "inputs/SKILL.md",
++      "bytes": 8143,
++      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
++      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
++      "whole_file_identity": true,
++      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
++      "role": "Public execute-genesis procedural snapshot, scoped by frozen producer request.",
++      "consumption": "FULL_UTF8_TEXT",
++      "identity_check": "MATCH",
++      "original_read_paths": [
++        "inputs/SKILL.md"
++      ],
++      "context_origin_revision": 1,
++      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
++      "current_semantic_build_predecessor": false
++    },
++    {
++      "local_path": "inputs/references/principles.md",
++      "bytes": 6010,
++      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
++      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
++      "whole_file_identity": true,
++      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
++      "role": "Public quality, invariants and completion distinctions.",
++      "consumption": "FULL_UTF8_TEXT",
++      "identity_check": "MATCH",
++      "original_read_paths": [
++        "inputs/references/principles.md"
++      ],
++      "context_origin_revision": 1,
++      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
++      "current_semantic_build_predecessor": false
++    },
++    {
++      "local_path": "inputs/references/fatia-1.md",
++      "bytes": 3987,
++      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
++      "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
++      "whole_file_identity": true,
++      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
++      "role": "Public S1 context, superseded by mission/task for local assignment.",
++      "consumption": "FULL_UTF8_TEXT",
++      "identity_check": "MATCH",
++      "original_read_paths": [
++        "inputs/references/fatia-1.md"
++      ],
++      "context_origin_revision": 1,
++      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
++      "current_semantic_build_predecessor": false
++    },
++    {
++      "local_path": "inputs/references/fresh-start.md",
++      "bytes": 4983,
++      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
++      "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
++      "whole_file_identity": true,
++      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
++      "role": "Public isolation, provenance and accounting procedure.",
++      "consumption": "FULL_UTF8_TEXT",
++      "identity_check": "MATCH",
++      "original_read_paths": [
++        "inputs/references/fresh-start.md"
++      ],
++      "context_origin_revision": 1,
++      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
++      "current_semantic_build_predecessor": false
++    },
++    {
++      "local_path": "inputs/references/orchestration.md",
++      "bytes": 4408,
++      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
++      "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
++      "whole_file_identity": true,
++      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
++      "role": "Public producer-role, preservation and predecessor-gate procedure.",
++      "consumption": "FULL_UTF8_TEXT",
++      "identity_check": "MATCH",
++      "original_read_paths": [
++        "inputs/references/orchestration.md"
++      ],
++      "context_origin_revision": 1,
++      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
++      "current_semantic_build_predecessor": false
++    },
++    {
++      "local_path": "inputs/references/judging.md",
++      "bytes": 5787,
++      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
++      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
++      "whole_file_identity": true,
++      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
++      "role": "Public semantic-review and consumer separation; not judge prose.",
++      "consumption": "FULL_UTF8_TEXT",
++      "identity_check": "MATCH",
++      "original_read_paths": [
++        "inputs/references/judging.md"
++      ],
++      "context_origin_revision": 1,
++      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
++      "current_semantic_build_predecessor": false
++    },
++    {
++      "local_path": "inputs/references/transport.md",
++      "bytes": 8478,
++      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
++      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
++      "whole_file_identity": true,
++      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
++      "role": "Public transport identity, input/version and build/navigation rules.",
++      "consumption": "FULL_UTF8_TEXT",
++      "identity_check": "MATCH",
++      "original_read_paths": [
++        "inputs/references/transport.md"
++      ],
++      "context_origin_revision": 1,
++      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
++      "current_semantic_build_predecessor": false
++    },
++    {
++      "local_path": "payload/artifact-plan.json",
++      "bytes": 5017,
++      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
++      "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
++      "whole_file_identity": true,
++      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
++      "role": "Frozen artifact graph; only boundary-flow L2 released in this task.",
++      "consumption": "FULL_UTF8_TEXT",
++      "identity_check": "MATCH",
++      "original_read_paths": [
++        "payload/artifact-plan.json"
++      ],
++      "context_origin_revision": 1,
++      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
++      "current_semantic_build_predecessor": false
++    },
++    {
++      "local_path": "payload/recipes/derived-contract.json",
++      "bytes": 4017,
++      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
++      "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
++      "whole_file_identity": true,
++      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
++      "role": "Actual pre-dispatch common authoring recipe and L2 role.",
++      "consumption": "FULL_UTF8_TEXT",
++      "identity_check": "MATCH",
++      "original_read_paths": [
++        "payload/recipes/derived-contract.json"
++      ],
++      "context_origin_revision": 1,
++      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
++      "current_semantic_build_predecessor": false
++    },
++    {
++      "local_path": "payload/recipes/derived-public-criteria.json",
++      "bytes": 16244,
++      "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
++      "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
++      "whole_file_identity": true,
++      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
++      "role": "Frozen full public criteria excerpt; not reserved expected answers.",
++      "consumption": "FULL_UTF8_TEXT",
++      "identity_check": "MATCH",
++      "original_read_paths": [
++        "payload/recipes/derived-public-criteria.json"
++      ],
++      "context_origin_revision": 1,
++      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
++      "current_semantic_build_predecessor": false
++    },
++    {
++      "local_path": "producers/boundaries/revisions/boundaries-v3/history/body.md",
++      "bytes": 23665,
++      "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
++      "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
++      "whole_file_identity": true,
++      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
++      "role": "Historical accepted L1 v2 context; contains the original trial/chunk imprecisions and is not the current build predecessor.",
++      "consumption": "FULL_UTF8_TEXT",
++      "identity_check": "MATCH",
++      "original_read_paths": [
++        "producers/boundaries/bodies/boundaries.md",
++        "producers/boundaries/revisions/boundaries-v3/history/body.md"
++      ],
++      "context_origin_revision": 1,
++      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "consumption_in_this_revision": "FULL_UTF8_TEXT_READ_AT_RETAINED_ALIAS",
++      "current_semantic_build_predecessor": false,
++      "retained_alias": "producers/boundaries/revisions/boundaries-v3/history/body.md",
++      "original_role": "Only accepted semantic build predecessor; full body read, no raw evidence links followed.",
++      "historical_accepted_predecessor_key": "s1.core.boundaries"
++    },
++    {
+       "local_path": "payload/recipes/derived/boundary-flow.json",
+       "bytes": 8459,
+       "sha256": "3e4c7ebbb94d3fb6d7c4de5238aaea74e817cbfb1e80ea2c15bb259bc20eb544",
+       "git_blob_sha": "5d9e75ef89341aad6010d398cd6125a7c8dcf05c",
+-      "whole_file_identity": true
+-    },
+-    "common": {
+-      "local_path": "payload/recipes/derived-contract.json",
+-      "bytes": 4017,
+-      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+-      "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+-      "whole_file_identity": true
+-    },
+-    "visible_dispatch": {
++      "whole_file_identity": true,
++      "provenance": "Explicitly authorized as other_actual_inputs by the effective frozen recipe.",
++      "role": "Effective per-task recipe, frozen before author dispatch.",
++      "consumption": "FULL_UTF8_TEXT",
++      "identity_check": "MATCH",
++      "original_read_paths": [
++        "payload/recipes/derived/boundary-flow.json"
++      ],
++      "context_origin_revision": 1,
++      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
++      "current_semantic_build_predecessor": false
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/request.txt",
++      "bytes": 850,
++      "sha256": "46437f5558525bd36b082915531c5ee70f8ab53a0b40c11270b7f313581c2d89",
++      "git_blob_sha": "3018a711f06aaecf12bc80fa5512b22126ab558b",
++      "whole_file_identity": true,
++      "provenance": "Explicitly authorized as other_actual_inputs by the effective frozen recipe.",
++      "role": "Frozen request preserved byte-identically; actual input, not output.",
++      "consumption": "FULL_UTF8_TEXT",
++      "identity_check": "MATCH",
++      "original_read_paths": [
++        "producers/derived-boundary-flow/request.txt"
++      ],
++      "context_origin_revision": 1,
++      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
++      "current_semantic_build_predecessor": false
++    },
++    {
+       "local_path": "producers/derived-boundary-flow/dispatch-message.txt",
+       "bytes": 1421,
+       "sha256": "0790d3883cf33e37a3f4fd338c3d9cfc36f3b2625c0b0072fd9155e2f526b2d2",
+       "git_blob_sha": "0b5d88ff0888d4f5b175e1a433b46970efd389ad",
+-      "whole_file_identity": true
+-    },
+-    "frozen_request": {
+-      "local_path": "producers/derived-boundary-flow/request.txt",
+-      "bytes": 850,
+-      "sha256": "46437f5558525bd36b082915531c5ee70f8ab53a0b40c11270b7f313581c2d89",
+-      "git_blob_sha": "3018a711f06aaecf12bc80fa5512b22126ab558b",
+-      "whole_file_identity": true
+-    },
+-    "precedence_note": "The per-task recipe preserves request.txt and stores visible dispatch separately; this specializes the common contract output wording. No authority expansion was inferred from broad mission/protocol references."
+-  },
+-  "inputs": [
+-    {
+-      "local_path": "inputs/AGENTS.md",
+-      "bytes": 16501,
+-      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+-      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+-      "whole_file_identity": true,
+-      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+-      "role": "Public repository authority snapshot; no product changes or tests authorized for this task.",
+-      "consumption": "FULL_UTF8_TEXT",
+-      "identity_check": "MATCH"
+-    },
+-    {
+-      "local_path": "inputs/COMMON.md",
+-      "bytes": 12959,
+-      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+-      "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+-      "whole_file_identity": true,
+-      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+-      "role": "Public S1 subdivision protocol; consumed fully, task-specific producer restrictions take precedence.",
+-      "consumption": "FULL_UTF8_TEXT",
+-      "identity_check": "MATCH"
+-    },
+-    {
+-      "local_path": "inputs/mission.json",
+-      "bytes": 6006,
+-      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+-      "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+-      "whole_file_identity": true,
+-      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+-      "role": "Public S1-03 mission identity and authority boundaries; not a release of broader authoring.",
+-      "consumption": "FULL_UTF8_TEXT",
+-      "identity_check": "MATCH"
+-    },
+-    {
+-      "local_path": "inputs/SKILL.md",
+-      "bytes": 8143,
+-      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+-      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+-      "whole_file_identity": true,
+-      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+-      "role": "Public execute-genesis procedural snapshot, scoped by frozen producer request.",
+-      "consumption": "FULL_UTF8_TEXT",
+-      "identity_check": "MATCH"
+-    },
+-    {
+-      "local_path": "inputs/references/principles.md",
+-      "bytes": 6010,
+-      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+-      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+-      "whole_file_identity": true,
+-      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+-      "role": "Public quality, invariants and completion distinctions.",
+-      "consumption": "FULL_UTF8_TEXT",
+-      "identity_check": "MATCH"
+-    },
+-    {
+-      "local_path": "inputs/references/fatia-1.md",
+-      "bytes": 3987,
+-      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+-      "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+-      "whole_file_identity": true,
+-      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+-      "role": "Public S1 context, superseded by mission/task for local assignment.",
+-      "consumption": "FULL_UTF8_TEXT",
+-      "identity_check": "MATCH"
+-    },
+-    {
+-      "local_path": "inputs/references/fresh-start.md",
+-      "bytes": 4983,
+-      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+-      "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+-      "whole_file_identity": true,
+-      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+-      "role": "Public isolation, provenance and accounting procedure.",
+-      "consumption": "FULL_UTF8_TEXT",
+-      "identity_check": "MATCH"
+-    },
+-    {
+-      "local_path": "inputs/references/orchestration.md",
+-      "bytes": 4408,
+-      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+-      "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+-      "whole_file_identity": true,
+-      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+-      "role": "Public producer-role, preservation and predecessor-gate procedure.",
+-      "consumption": "FULL_UTF8_TEXT",
+-      "identity_check": "MATCH"
+-    },
+-    {
+-      "local_path": "inputs/references/judging.md",
+-      "bytes": 5787,
+-      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+-      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+-      "whole_file_identity": true,
+-      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+-      "role": "Public semantic-review and consumer separation; not judge prose.",
+-      "consumption": "FULL_UTF8_TEXT",
+-      "identity_check": "MATCH"
+-    },
+-    {
+-      "local_path": "inputs/references/transport.md",
+-      "bytes": 8478,
+-      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+-      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+-      "whole_file_identity": true,
+-      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+-      "role": "Public transport identity, input/version and build/navigation rules.",
+-      "consumption": "FULL_UTF8_TEXT",
+-      "identity_check": "MATCH"
+-    },
+-    {
+-      "local_path": "payload/artifact-plan.json",
+-      "bytes": 5017,
+-      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+-      "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+-      "whole_file_identity": true,
+-      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+-      "role": "Frozen artifact graph; only boundary-flow L2 released in this task.",
+-      "consumption": "FULL_UTF8_TEXT",
+-      "identity_check": "MATCH"
+-    },
+-    {
+-      "local_path": "payload/recipes/derived-contract.json",
+-      "bytes": 4017,
+-      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+-      "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+-      "whole_file_identity": true,
+-      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+-      "role": "Actual pre-dispatch common authoring recipe and L2 role.",
+-      "consumption": "FULL_UTF8_TEXT",
+-      "identity_check": "MATCH"
+-    },
+-    {
+-      "local_path": "payload/recipes/derived-public-criteria.json",
+-      "bytes": 16244,
+-      "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+-      "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+-      "whole_file_identity": true,
+-      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+-      "role": "Frozen full public criteria excerpt; not reserved expected answers.",
+-      "consumption": "FULL_UTF8_TEXT",
+-      "identity_check": "MATCH"
+-    },
+-    {
+-      "local_path": "producers/boundaries/bodies/boundaries.md",
+-      "bytes": 23665,
+-      "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+-      "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
+-      "whole_file_identity": true,
+-      "provenance": "Enumerated and pinned in the effective frozen per-task recipe read_exactly list.",
+-      "role": "Only accepted semantic build predecessor; full body read, no raw evidence links followed.",
+-      "consumption": "FULL_UTF8_TEXT",
+-      "identity_check": "MATCH",
+-      "accepted_predecessor_key": "s1.core.boundaries"
+-    },
+-    {
+-      "local_path": "payload/recipes/derived/boundary-flow.json",
+-      "bytes": 8459,
+-      "sha256": "3e4c7ebbb94d3fb6d7c4de5238aaea74e817cbfb1e80ea2c15bb259bc20eb544",
+-      "git_blob_sha": "5d9e75ef89341aad6010d398cd6125a7c8dcf05c",
+-      "whole_file_identity": true,
+-      "provenance": "Explicitly authorized as other_actual_inputs by the effective frozen recipe.",
+-      "role": "Effective per-task recipe, frozen before author dispatch.",
+-      "consumption": "FULL_UTF8_TEXT",
+-      "identity_check": "MATCH"
+-    },
+-    {
+-      "local_path": "producers/derived-boundary-flow/request.txt",
+-      "bytes": 850,
+-      "sha256": "46437f5558525bd36b082915531c5ee70f8ab53a0b40c11270b7f313581c2d89",
+-      "git_blob_sha": "3018a711f06aaecf12bc80fa5512b22126ab558b",
+-      "whole_file_identity": true,
+-      "provenance": "Explicitly authorized as other_actual_inputs by the effective frozen recipe.",
+-      "role": "Frozen request preserved byte-identically; actual input, not output.",
+-      "consumption": "FULL_UTF8_TEXT",
+-      "identity_check": "MATCH"
+-    },
+-    {
+-      "local_path": "producers/derived-boundary-flow/dispatch-message.txt",
+-      "bytes": 1421,
+-      "sha256": "0790d3883cf33e37a3f4fd338c3d9cfc36f3b2625c0b0072fd9155e2f526b2d2",
+-      "git_blob_sha": "0b5d88ff0888d4f5b175e1a433b46970efd389ad",
+       "whole_file_identity": true,
+       "provenance": "Explicitly authorized as other_actual_inputs by the effective frozen recipe.",
+       "role": "Exact visible parent dispatch encoded UTF-8 without an appended newline; preserved separately from frozen request.",
+       "consumption": "FULL_UTF8_TEXT",
+-      "identity_check": "MATCH"
++      "identity_check": "MATCH",
++      "original_read_paths": [
++        "producers/derived-boundary-flow/dispatch-message.txt"
++      ],
++      "context_origin_revision": 1,
++      "retained_from_manifest": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "consumption_in_this_revision": "RETAINED_AUTHOR_CONTEXT_NOT_REREAD",
++      "current_semantic_build_predecessor": false
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/history/body.md",
++      "bytes": 16112,
++      "sha256": "83c961e473f666034b6db197ead28594580f4a953fc9f6f4bb63f006ab65ddbd",
++      "git_blob_sha": "6420523de8f6d8e5fa5aac4b8f76bab2c5c6fceb",
++      "whole_file_identity": true,
++      "original_read_paths": [
++        "producers/derived-boundary-flow/body.md",
++        "producers/derived-boundary-flow/revisions/v2/history/body.md"
++      ],
++      "context_origin_revision": 2,
++      "consumption_in_this_revision": "FULL_UTF8_TEXT",
++      "provenance": "Enumerated in frozen correction recipe read_exactly; whole-file identity matched before execution.",
++      "current_semantic_build_predecessor": false,
++      "retained_alias": "producers/derived-boundary-flow/revisions/v2/history/body.md",
++      "role": "L2 v1 output consumed as correction/preservation input, now retained byte-identically."
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/history/evidence.md",
++      "bytes": 8327,
++      "sha256": "4e42f26758255ed63978d5e027a165a4eaaecfe645c78571365c4f5a2e81a780",
++      "git_blob_sha": "927e668b759b50bbeb28f92eca596cfc03d79b60",
++      "whole_file_identity": true,
++      "original_read_paths": [
++        "producers/derived-boundary-flow/evidence.md",
++        "producers/derived-boundary-flow/revisions/v2/history/evidence.md"
++      ],
++      "context_origin_revision": 2,
++      "consumption_in_this_revision": "FULL_UTF8_TEXT",
++      "provenance": "Enumerated in frozen correction recipe read_exactly; whole-file identity matched before execution.",
++      "current_semantic_build_predecessor": false,
++      "retained_alias": "producers/derived-boundary-flow/revisions/v2/history/evidence.md",
++      "role": "L2 v1 output consumed as correction/preservation input, now retained byte-identically."
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "bytes": 20090,
++      "sha256": "93baa2def94d8fe3d05984211d05f68c0c18c8b021953bf67153f7b9eb56c2f0",
++      "git_blob_sha": "1b542614c236efe8f534e44c8982d49cade7002f",
++      "whole_file_identity": true,
++      "original_read_paths": [
++        "producers/derived-boundary-flow/production-manifest.json",
++        "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json"
++      ],
++      "context_origin_revision": 2,
++      "consumption_in_this_revision": "FULL_UTF8_TEXT",
++      "provenance": "Enumerated in frozen correction recipe read_exactly; whole-file identity matched before execution.",
++      "current_semantic_build_predecessor": false,
++      "retained_alias": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "role": "L2 v1 output consumed as correction/preservation input, now retained byte-identically."
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/history/response.md",
++      "bytes": 2097,
++      "sha256": "ab0d39f8f925f504f7505e1fc04192e27f9f3d0e2a79cec3bf637953b36e61ac",
++      "git_blob_sha": "881e93d76f4f2b51d8efbbf803f72fa4d83bd7ac",
++      "whole_file_identity": true,
++      "original_read_paths": [
++        "producers/derived-boundary-flow/response.md",
++        "producers/derived-boundary-flow/revisions/v2/history/response.md"
++      ],
++      "context_origin_revision": 2,
++      "consumption_in_this_revision": "FULL_UTF8_TEXT",
++      "provenance": "Enumerated in frozen correction recipe read_exactly; whole-file identity matched before execution.",
++      "current_semantic_build_predecessor": false,
++      "retained_alias": "producers/derived-boundary-flow/revisions/v2/history/response.md",
++      "role": "L2 v1 output consumed as correction/preservation input, now retained byte-identically."
++    },
++    {
++      "local_path": "producers/boundaries/bodies/boundaries.md",
++      "bytes": 23769,
++      "sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
++      "git_blob_sha": "d3b070015882d10f778f563438eb3f9d67cab061",
++      "whole_file_identity": true,
++      "original_read_paths": [
++        "producers/boundaries/bodies/boundaries.md"
++      ],
++      "context_origin_revision": 2,
++      "consumption_in_this_revision": "FULL_UTF8_TEXT",
++      "provenance": "Enumerated in frozen correction recipe read_exactly; whole-file identity matched before execution.",
++      "current_semantic_build_predecessor": true,
++      "role": "Only current accepted semantic predecessor: s1.core.boundaries L1 v3.",
++      "accepted_predecessor_key": "s1.core.boundaries"
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/public-findings.md",
++      "bytes": 1561,
++      "sha256": "bdf2775890fc18bb642fc4e341b5984b8c2fb3fc0ef15217ded1650d44e196ca",
++      "git_blob_sha": "179c431b87984d73c9e8633fe0aed6213dabbf98",
++      "whole_file_identity": true,
++      "original_read_paths": [
++        "producers/derived-boundary-flow/revisions/v2/public-findings.md"
++      ],
++      "context_origin_revision": 2,
++      "consumption_in_this_revision": "FULL_UTF8_TEXT",
++      "provenance": "Enumerated in frozen correction recipe read_exactly; whole-file identity matched before execution.",
++      "current_semantic_build_predecessor": false,
++      "role": "Public local correction findings; no full judge prose or oracle."
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/recipe.json",
++      "bytes": 5580,
++      "sha256": "19923925cfbf39dcbbb33cb8fb00615dd2b37c5678a250f41dbd09ad4a398d30",
++      "git_blob_sha": "91ffc90bccaf9fd4a50e994c5fb3288b4f99bcb0",
++      "whole_file_identity": true,
++      "original_read_paths": [
++        "producers/derived-boundary-flow/revisions/v2/recipe.json"
++      ],
++      "context_origin_revision": 2,
++      "consumption_in_this_revision": "FULL_UTF8_TEXT",
++      "provenance": "Explicit other_actual_inputs of correction recipe.",
++      "role": "Effective frozen correction recipe, not a postproduction reconstruction.",
++      "current_semantic_build_predecessor": false
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/request.txt",
++      "bytes": 397,
++      "sha256": "9e5163515be025e4f73fd410beda312a415890832e3aa16917c1b4aca54e39fc",
++      "git_blob_sha": "ca5b0415dba1cba57da4431e292b7c5765429ca4",
++      "whole_file_identity": true,
++      "original_read_paths": [
++        "producers/derived-boundary-flow/revisions/v2/request.txt"
++      ],
++      "context_origin_revision": 2,
++      "consumption_in_this_revision": "FULL_UTF8_TEXT",
++      "provenance": "Explicit other_actual_inputs of correction recipe.",
++      "role": "Frozen correction request preserved unchanged.",
++      "current_semantic_build_predecessor": false
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/dispatch-message.txt",
++      "bytes": 1273,
++      "sha256": "74633d78ff34d49f5d7db8fbe1fd6f6c22cf6f63ee95151bba5d58c8e8381e3f",
++      "git_blob_sha": "3821692669a52627613e830c4633958bbe2c36ea",
++      "whole_file_identity": true,
++      "original_read_paths": [
++        "producers/derived-boundary-flow/revisions/v2/dispatch-message.txt"
++      ],
++      "context_origin_revision": 2,
++      "consumption_in_this_revision": "FULL_UTF8_TEXT",
++      "provenance": "Explicit other_actual_inputs of correction recipe.",
++      "role": "Exact visible correction dispatch preserved UTF-8 without an appended newline.",
++      "current_semantic_build_predecessor": false
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/apply.py",
++      "bytes": 36148,
++      "sha256": "fbf7ef729de0f11bc3df2ccbe77da99d9e69171f21c36bbea62421d93c984a6e",
++      "git_blob_sha": "102c9f6aa526b77add7dc3b09044003dd5448b6d",
++      "whole_file_identity": true,
++      "original_read_paths": [
++        "producers/derived-boundary-flow/revisions/v2/apply.py"
++      ],
++      "context_origin_revision": 2,
++      "consumption_in_this_revision": "EXECUTED_PROCEDURE",
++      "provenance": "Own genuine pre-execution procedure/freeze explicitly authorized as other_actual_inputs.",
++      "role": "Actual Python correction procedure, written and pinned before its single observed invocation.",
++      "current_semantic_build_predecessor": false
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/procedure-freeze.json",
++      "bytes": 8086,
++      "sha256": "adb5dbdd94d5786d8a1211be748c3e0a4459d5a5ba8234e73fb4957c991c3f4b",
++      "git_blob_sha": "157a73b5e5b94fc19b5060c20ef9f35f16c4c0ca",
++      "whole_file_identity": true,
++      "original_read_paths": [
++        "producers/derived-boundary-flow/revisions/v2/procedure-freeze.json"
++      ],
++      "context_origin_revision": 2,
++      "consumption_in_this_revision": "FULL_JSON_INPUT",
++      "provenance": "Own genuine pre-execution procedure/freeze explicitly authorized as other_actual_inputs.",
++      "role": "Pre-execution freeze pinning the actual procedure and exact read paths.",
++      "current_semantic_build_predecessor": false
+     }
+   ],
+   "input_counts": {
+-    "recipe_enumerated_whole_file_units": 14,
+-    "explicit_other_actual_units": 3,
+-    "total_unique_actual_input_units": 17,
+-    "total_input_bytes": 136935,
+-    "retained_earlier_family_units": 0,
++    "retained_prior_units": 17,
++    "new_units": 11,
++    "total_unique_actual_input_units": 28,
++    "total_input_bytes": 260375,
++    "direct_whole_file_units_this_revision": 12,
++    "direct_read_paths_this_revision": 16,
++    "alias_reads_add_units": false,
+     "raw_source_units": 0,
+     "full_judge_response_units": 0,
+     "oracle_units": 0
+@@ -257,25 +576,26 @@
+   "build_dependencies": [
+     {
+       "key": "s1.core.boundaries",
++      "version": 3,
+       "local_body_path": "producers/boundaries/bodies/boundaries.md",
+-      "body_bytes": 23665,
+-      "body_sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+-      "body_git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
++      "body_bytes": 23769,
++      "body_sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
++      "body_git_blob_sha": "d3b070015882d10f778f563438eb3f9d67cab061",
+       "acceptance_gate": [
+         {
+           "judge_id": "parallel-v3-fresh/S1-03/J1",
+           "status": "PASS",
+-          "body_sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+-          "original_response_sha256": "9c7496988762a6455d1682eea750037377778c316d37071203f1c8b719951adc"
++          "body_sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
++          "original_response_sha256": "1f4b25f011a54a640723d4660aa69cae6e6920fe46f92d8a3f49ae13c3ff5923"
+         },
+         {
+           "judge_id": "parallel-v3-fresh/S1-03/J2",
+           "status": "PASS",
+-          "body_sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+-          "original_response_sha256": "5ae3e9104142c41c0d261bb979dc29607a69065d019d3899d28c9fea52334801"
++          "body_sha256": "937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070",
++          "original_response_sha256": "24109643bb94e2c8c1124d9996e5bb4af83a5030c74ae276e466fee526c2e816"
+         }
+       ],
+-      "acceptance_provenance": "Gate metadata supplied in frozen recipe; full responses were not consumed and no new verdict is issued here.",
++      "acceptance_provenance": "Frozen correction recipe supplies the same two native judges accepting all L1 v3 bytes; full responses not consumed.",
+       "unselected_package_ref": null
+     }
+   ],
+@@ -295,44 +615,118 @@
+   "outputs": [
+     {
+       "local_path": "producers/derived-boundary-flow/body.md",
++      "bytes": 16484,
++      "sha256": "e18fe141b88a3aba6ede8e8a0dd138876161984db36d4b8e5540f9ab329c0771",
++      "git_blob_sha": "4e4b5590f59c67e4fd101e9fcc3d840c9f3da355",
++      "whole_file_identity": true
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/evidence.md",
++      "bytes": 10057,
++      "sha256": "b87c56d31e6b0f846b0cab7e9d329bdcb40fcbffcbb1025a3cd4b864f0f97f4d",
++      "git_blob_sha": "f18d89ad036b816a8e78d01a185e5225388a83c0",
++      "whole_file_identity": true
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/production-manifest.json",
++      "bytes": null,
++      "sha256": null,
++      "git_blob_sha": null,
++      "integrity_provenance": "Measured after serialization in producer-verification.json or final envelope; excluded here to avoid cyclic/self identities."
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/response.md",
++      "bytes": 1859,
++      "sha256": "c78d324a4e88c3e9b70bee14d89a0e46fcc20f678959c9dbc88ca10e39388cbd",
++      "git_blob_sha": "03140e9b619cee3c55130315b1f36dec72a2517b",
++      "whole_file_identity": true
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/dispatch-message.txt",
++      "bytes": 1273,
++      "sha256": "74633d78ff34d49f5d7db8fbe1fd6f6c22cf6f63ee95151bba5d58c8e8381e3f",
++      "git_blob_sha": "3821692669a52627613e830c4633958bbe2c36ea",
++      "whole_file_identity": true
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/apply.py",
++      "bytes": 36148,
++      "sha256": "fbf7ef729de0f11bc3df2ccbe77da99d9e69171f21c36bbea62421d93c984a6e",
++      "git_blob_sha": "102c9f6aa526b77add7dc3b09044003dd5448b6d",
++      "whole_file_identity": true
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/procedure-freeze.json",
++      "bytes": 8086,
++      "sha256": "adb5dbdd94d5786d8a1211be748c3e0a4459d5a5ba8234e73fb4957c991c3f4b",
++      "git_blob_sha": "157a73b5e5b94fc19b5060c20ef9f35f16c4c0ca",
++      "whole_file_identity": true
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/delta.json",
++      "bytes": null,
++      "sha256": null,
++      "git_blob_sha": null,
++      "integrity_provenance": "Measured after serialization in producer-verification.json or final envelope; excluded here to avoid cyclic/self identities."
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/delta.patch",
++      "bytes": null,
++      "sha256": null,
++      "git_blob_sha": null,
++      "integrity_provenance": "Measured after serialization in producer-verification.json or final envelope; excluded here to avoid cyclic/self identities."
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/review-supplement.md",
++      "bytes": 3529,
++      "sha256": "169632697f2faf8959bbf74df3005845f0822803cc93cd5f505e9eb9b972e385",
++      "git_blob_sha": "8998dbf0f23e6d853dbaf55f9ef32869ce713935",
++      "whole_file_identity": true
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/input-manifest-extension.json",
++      "bytes": 13339,
++      "sha256": "9f8352d25b2ee2f7270d4d56f10746a428e40100799934c8799fa6591d407447",
++      "git_blob_sha": "33f2033b2265a5096a2e9bf885ce557226619999",
++      "whole_file_identity": true
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/producer-verification.json",
++      "bytes": null,
++      "sha256": null,
++      "git_blob_sha": null,
++      "integrity_provenance": "Measured after serialization in producer-verification.json or final envelope; excluded here to avoid cyclic/self identities."
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/history/body.md",
+       "bytes": 16112,
+       "sha256": "83c961e473f666034b6db197ead28594580f4a953fc9f6f4bb63f006ab65ddbd",
+       "git_blob_sha": "6420523de8f6d8e5fa5aac4b8f76bab2c5c6fceb",
+-      "whole_file_identity": true,
+-      "purpose": "L2 semantic artifact"
+-    },
+-    {
+-      "local_path": "producers/derived-boundary-flow/evidence.md",
++      "whole_file_identity": true
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/history/evidence.md",
+       "bytes": 8327,
+       "sha256": "4e42f26758255ed63978d5e027a165a4eaaecfe645c78571365c4f5a2e81a780",
+       "git_blob_sha": "927e668b759b50bbeb28f92eca596cfc03d79b60",
+-      "whole_file_identity": true,
+-      "purpose": "Claim-to-predecessor mapping and scope of evidence"
+-    },
+-    {
+-      "local_path": "producers/derived-boundary-flow/production-manifest.json",
+-      "bytes": null,
+-      "sha256": null,
+-      "integrity_provenance": "Self identity is measured after serialization and delivered separately to the principal; embedding the same file hash here would be self-referential."
+-    },
+-    {
+-      "local_path": "producers/derived-boundary-flow/response.md",
++      "whole_file_identity": true
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "bytes": 20090,
++      "sha256": "93baa2def94d8fe3d05984211d05f68c0c18c8b021953bf67153f7b9eb56c2f0",
++      "git_blob_sha": "1b542614c236efe8f534e44c8982d49cade7002f",
++      "whole_file_identity": true
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/history/response.md",
+       "bytes": 2097,
+       "sha256": "ab0d39f8f925f504f7505e1fc04192e27f9f3d0e2a79cec3bf637953b36e61ac",
+       "git_blob_sha": "881e93d76f4f2b51d8efbbf803f72fa4d83bd7ac",
+-      "whole_file_identity": true,
+-      "purpose": "Exact authored visible final response, stored before delivery"
+-    },
+-    {
+-      "local_path": "producers/derived-boundary-flow/dispatch-message.txt",
+-      "bytes": 1421,
+-      "sha256": "0790d3883cf33e37a3f4fd338c3d9cfc36f3b2625c0b0072fd9155e2f526b2d2",
+-      "git_blob_sha": "0b5d88ff0888d4f5b175e1a433b46970efd389ad",
+-      "whole_file_identity": true,
+-      "purpose": "Exact original visible parent dispatch, also an actual input"
++      "whole_file_identity": true
+     }
+   ],
+-  "output_count": 5,
++  "output_count": 16,
+   "preserved_request": {
+     "local_path": "producers/derived-boundary-flow/request.txt",
+     "bytes": 850,
+@@ -341,8 +735,8 @@
+     "whole_file_identity": true
+   },
+   "verification": {
+-    "input_identity": "All 17 input whole-file identities recalculated; 14 enumerated inputs matched bytes/SHA256/Git blob, recipe/request matched dispatch pins, visible dispatch matched stored exact UTF-8 text.",
+-    "output_identity": "Nonmanifest output bytes/SHA256/Git blob recorded after writing; manifest self digest delivered externally after final serialization.",
++    "input_identity": "Seven enumerated whole files plus recipe/request/dispatch verified; procedure/freeze pinned before execution; four history aliases verified. Earlier public context retained without rereading unlisted paths.",
++    "output_identity": "Known output hashes recorded here; final delta/patch/self-manifest identities are in producer-verification.json and the external envelope.",
+     "utf8": "All inputs and authored outputs decode as UTF-8.",
+     "body_depth2_headings": [
+       "## 1. Escopo, evidência e entrada na leitura",
+@@ -354,15 +748,18 @@
+       "## 7. Movimentação e RAG: separar persistência de coordenação",
+       "## 8. Limites de conclusão e encaminhamento"
+     ],
+-    "body_byte_length": 16112,
+-    "body_sizing": "16112 bytes exceeds the normal 6000–14000 preference, which the task makes nonbinding; retained distinct mechanisms and material limitations across all required ports.",
++    "body_byte_length": 16484,
++    "body_sizing": "Prior sizing retained; only mandatory localized repairs and predecessor metadata changed.",
+     "product_tests": "NOT_RUN",
+     "typecheck": "NOT_RUN",
+     "guards": "NOT_RUN",
+     "runtime_atlas": "NOT_RUN",
+     "provider_execution": "NOT_RUN",
+     "consumers": "NOT_RUN",
+-    "maintenance": "NOT_RUN"
++    "maintenance": "NOT_RUN",
++    "inverse_verification": "Exact prior bytes reconstructed for body/evidence and regenerated manifest/response.",
++    "unchanged_segments": "All segments outside explicit body/evidence replacements verified byte-identical.",
++    "one_observed_application_invocation": true
+   },
+   "procedure_provenance": [
+     {
+@@ -389,10 +786,30 @@
+       "procedure": "Output and response preservation",
+       "implementation": "Inline Python UTF-8 writes, identity calculation, depth2 heading count, JSON manifest serialization and exact final response preservation.",
+       "effect": "Five requested outputs, one preserved request; deterministic metadata only. No self-hash is embedded in the manifest."
++    },
++    {
++      "procedure": "Revision 2 exact correction",
++      "implementation": {
++        "local_path": "producers/derived-boundary-flow/revisions/v2/apply.py",
++        "bytes": 36148,
++        "sha256": "fbf7ef729de0f11bc3df2ccbe77da99d9e69171f21c36bbea62421d93c984a6e",
++        "git_blob_sha": "102c9f6aa526b77add7dc3b09044003dd5448b6d",
++        "whole_file_identity": true
++      },
++      "pre_execution_freeze": {
++        "local_path": "producers/derived-boundary-flow/revisions/v2/procedure-freeze.json",
++        "bytes": 8086,
++        "sha256": "adb5dbdd94d5786d8a1211be748c3e0a4459d5a5ba8234e73fb4957c991c3f4b",
++        "git_blob_sha": "157a73b5e5b94fc19b5060c20ef9f35f16c4c0ca",
++        "whole_file_identity": true
++      },
++      "effect": "Seven enumerated full-file reads; preserve four v1 outputs before edits; apply only three substantive body repairs plus metadata; update evidence and cumulative input aliases; verify inverse and unchanged segments; preserve exact visible response.",
++      "prior_input_policy": "Prior normative/recipe/request/dispatch units retained from same author context and preserved v1 manifest, without rereading unlisted paths."
+     }
+   ],
+   "semantic_review": {
+-    "this_artifact": "NOT_YET_REVIEWED",
++    "this_artifact": "REVISION_2_NOT_YET_REVIEWED",
++    "prior_findings_source": "producers/derived-boundary-flow/revisions/v2/public-findings.md",
+     "required_pair": [
+       "parallel-v3-fresh/S1-03/J1",
+       "parallel-v3-fresh/S1-03/J2"
+@@ -403,13 +820,120 @@
+     "L2 derives static findings and prepared test expectations from accepted L1; no raw source or test execution was used.",
+     "External engine/provider/platform qualification, cryptographic resistance and integration guarantees are not established.",
+     "Runtime binding, publication, actual bounded reads, consumers and maintenance require separate receipts.",
+-    "Predecessor body original candidate wording remains unchanged; recipe gate metadata is the provided release authority for this derivation.",
+-    "No global S1/S1-03 completion, native package activation or later-layer acceptance is claimed."
++    "No global S1/S1-03 completion, native package activation or later-layer acceptance is claimed.",
++    "L1 v3 supplies corrected trial and chunk interval descriptions; L1 v2 remains preserved with its original imprecisions. No retroactive correction or acceptance is asserted."
+   ],
+   "usage": {
+     "physical_attempts": "UNKNOWN",
+     "tokens": "UNKNOWN",
+     "billing": "UNKNOWN",
+-    "inference_method": "No usage estimates inferred from bytes or tool-call counts."
++    "inference_method": "No physical attempt or cost estimates inferred from one observed script invocation or file sizes."
++  },
++  "version": 2,
++  "prior_version": 1,
++  "initial_recipe_preserved": {
++    "per_task": {
++      "local_path": "payload/recipes/derived/boundary-flow.json",
++      "bytes": 8459,
++      "sha256": "3e4c7ebbb94d3fb6d7c4de5238aaea74e817cbfb1e80ea2c15bb259bc20eb544",
++      "git_blob_sha": "5d9e75ef89341aad6010d398cd6125a7c8dcf05c",
++      "whole_file_identity": true
++    },
++    "common": {
++      "local_path": "payload/recipes/derived-contract.json",
++      "bytes": 4017,
++      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
++      "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
++      "whole_file_identity": true
++    },
++    "visible_dispatch": {
++      "local_path": "producers/derived-boundary-flow/dispatch-message.txt",
++      "bytes": 1421,
++      "sha256": "0790d3883cf33e37a3f4fd338c3d9cfc36f3b2625c0b0072fd9155e2f526b2d2",
++      "git_blob_sha": "0b5d88ff0888d4f5b175e1a433b46970efd389ad",
++      "whole_file_identity": true
++    },
++    "frozen_request": {
++      "local_path": "producers/derived-boundary-flow/request.txt",
++      "bytes": 850,
++      "sha256": "46437f5558525bd36b082915531c5ee70f8ab53a0b40c11270b7f313581c2d89",
++      "git_blob_sha": "3018a711f06aaecf12bc80fa5512b22126ab558b",
++      "whole_file_identity": true
++    },
++    "precedence_note": "The per-task recipe preserves request.txt and stores visible dispatch separately; this specializes the common contract output wording. No authority expansion was inferred from broad mission/protocol references."
++  },
++  "historical_parent_alias": {
++    "local_path": "producers/boundaries/revisions/boundaries-v3/history/body.md",
++    "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
++    "role": "Prior actual context only; not current semantic predecessor; old trial/chunk wording preserved."
++  },
++  "preserved_prior_outputs": [
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/history/body.md",
++      "bytes": 16112,
++      "sha256": "83c961e473f666034b6db197ead28594580f4a953fc9f6f4bb63f006ab65ddbd",
++      "git_blob_sha": "6420523de8f6d8e5fa5aac4b8f76bab2c5c6fceb",
++      "whole_file_identity": true
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/history/evidence.md",
++      "bytes": 8327,
++      "sha256": "4e42f26758255ed63978d5e027a165a4eaaecfe645c78571365c4f5a2e81a780",
++      "git_blob_sha": "927e668b759b50bbeb28f92eca596cfc03d79b60",
++      "whole_file_identity": true
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
++      "bytes": 20090,
++      "sha256": "93baa2def94d8fe3d05984211d05f68c0c18c8b021953bf67153f7b9eb56c2f0",
++      "git_blob_sha": "1b542614c236efe8f534e44c8982d49cade7002f",
++      "whole_file_identity": true
++    },
++    {
++      "local_path": "producers/derived-boundary-flow/revisions/v2/history/response.md",
++      "bytes": 2097,
++      "sha256": "ab0d39f8f925f504f7505e1fc04192e27f9f3d0e2a79cec3bf637953b36e61ac",
++      "git_blob_sha": "881e93d76f4f2b51d8efbbf803f72fa4d83bd7ac",
++      "whole_file_identity": true
++    }
++  ],
++  "correction_scope": {
++    "body_substantive_replacements": 3,
++    "body_metadata_replacements": 2,
++    "findings": [
++      "BFLOW-J1-F01",
++      "BF-J2-F01",
++      "BF-J2-F02",
++      "BF-J2-F03"
++    ],
++    "unchanged_body_sections": [
++      {
++        "section": 1,
++        "bytes": 1364,
++        "sha256": "b14f831e521f307d1d6eaf4d0daafb17847b669b0df070fe7b157915e9a1b3b9"
++      },
++      {
++        "section": 4,
++        "bytes": 2695,
++        "sha256": "d57b5718bf929be9fd06494da658fa43124d5ba74f48812478ebaff3cb5e2263"
++      },
++      {
++        "section": 5,
++        "bytes": 2108,
++        "sha256": "adad99683afafc0fe7d03e8ccfb61a6806fc0ad33a4a8697ce24b091f0e9290d"
++      },
++      {
++        "section": 6,
++        "bytes": 1665,
++        "sha256": "c6720e9b1c7e9af0520d366e09e72a8ce30cbc2e5c57c789eeb353f8a1ff08f6"
++      },
++      {
++        "section": 8,
++        "bytes": 1236,
++        "sha256": "fd4a2376394040e4d5b3c9e7f37d35f09b9502f7f6c10d379c859d34290bc10f"
++      }
++    ],
++    "cumulative_current_output_self_inputs": false,
++    "later_layers_produced": false
+   }
+ }
+--- producers/derived-boundary-flow/revisions/v2/history/response.md
++++ producers/derived-boundary-flow/response.md
+@@ -1,15 +1,14 @@
+-Entregue **`s1.subslice03.boundary-flow` — L2, `need=flow`**, exclusivamente em `producers/derived-boundary-flow`.
++Entregue **`s1.subslice03.boundary-flow` L2 v2**, pronta para reavaliação pelo mesmo par, em `producers/derived-boundary-flow`.
+ 
+-O corpo explica os fluxos de Atlas, gates Relay, hooks, workflow nativo, movimentação de Session e persistência RAG, com oito seções depth2. Preserva as distinções entre proposta e promoção, decisão e recibo, projeção e execução, schema e capacidade externa. O mapa de evidências liga cada seção à chave, ao hash e aos títulos exatos do predecessor aceito.
++Foram aplicados somente os três reparos públicos: separação entre delegação e mining; retirada de grading de `trial`; substituição de “linhas” por `start`/`end` inteiros sem unidade declarada. O único predecessor atual é `s1.core.boundaries` L1 v3, SHA256 `937208953bb286da7bcefad8fd145d935a0ed00ee7d8f87d87c840973033d070`. As qualificações novas de trial/chunks não foram atribuídas ao L1 v2 histórico.
+ 
+-| Output de conteúdo/proveniência | Bytes UTF-8 | SHA256 |
++| Output atual | Bytes | SHA256 |
+ | --- | ---: | --- |
+-| `body.md` | 16112 | `83c961e473f666034b6db197ead28594580f4a953fc9f6f4bb63f006ab65ddbd` |
+-| `evidence.md` | 8327 | `4e42f26758255ed63978d5e027a165a4eaaecfe645c78571365c4f5a2e81a780` |
+-| `dispatch-message.txt` | 1421 | `0790d3883cf33e37a3f4fd338c3d9cfc36f3b2625c0b0072fd9155e2f526b2d2` |
++| `body.md` | 16484 | `e18fe141b88a3aba6ede8e8a0dd138876161984db36d4b8e5540f9ab329c0771` |
++| `evidence.md` | 10057 | `b87c56d31e6b0f846b0cab7e9d329bdcb40fcbffcbb1025a3cd4b864f0f97f4d` |
+ 
+-Foram consumidos **17 inputs integrais**: os 14 enumerados, a receita efetiva, o request e o dispatch. Todos tiveram identidade conferida. Foram produzidos **cinco outputs**: os três acima, `production-manifest.json` e esta `response.md`. O request de 850 bytes permanece com SHA256 `46437f5558525bd36b082915531c5ee70f8ab53a0b40c11270b7f313581c2d89`. O manifesto registra as identidades integrais, a proveniência, os procedimentos e os outputs; os hashes do próprio manifesto e desta resposta são enviados separadamente à principal para evitar autorreferência.
++Os quatro outputs v1 foram preservados byte-identicamente em `revisions/v2/history/`. O procedimento foi congelado antes da aplicação. O delta registra cinco substituições no corpo, sendo três substantivas e duas de metadados, com literais, offsets UTF-8, segmentos inalterados e reconstrução inversa exata. As seções 1, 4, 5, 6 e 8 permanecem byte-idênticas.
+ 
+-**Limitações:** apenas autoria e verificação determinística de arquivos foram executadas. Não houve leitura de oracle, pareceres integrais ou fonte bruta; rede, GitHub, delegação, testes de produto, binding/publicação Atlas, consumidores e manutenção não foram executados. O corpo tem 16.112 bytes, acima da preferência de 6.000–14.000, para conservar os contratos distintos destas portas sem omitir suas qualificações; cada seção pode ser lida separadamente.
++O manifesto conserva **28 unidades cumulativas de input**, com aliases estáveis e linhagem de leitura, sem usar outputs atuais como self-inputs. Esta revisão produziu **16 arquivos**, incluindo os quatro outputs atuais, quatro cópias históricas e oito registros em `revisions/v2/`. Os hashes do manifesto, desta resposta e da verificação final são enviados no envelope separado para evitar autorreferência.
+ 
+-O L2 está pronto para os mesmos dois juízes, sem declarar seu próprio PASS, liberar camada posterior ou alegar aceite global S1. Tentativas físicas, tokens e custo: **UNKNOWN**.
++Não houve oracle, parecer integral, fonte bruta, rede, GitHub, delegação, alteração/teste de produto, operação Atlas, consumidor ou manutenção. Nenhuma camada posterior foi produzida ou liberada. **Não há self-PASS. Tentativas físicas, tokens e custo: UNKNOWN.**

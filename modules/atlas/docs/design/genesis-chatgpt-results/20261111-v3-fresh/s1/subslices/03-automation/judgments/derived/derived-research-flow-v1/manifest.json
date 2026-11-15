@@ -1,0 +1,53 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "lot": "derived-research-flow-v1",
+  "source": "review-packets/derived-research-flow-v1.md",
+  "source_bytes": 45949,
+  "source_sha256": "3d766aa35df678bd01b2c36f947267ee5382543df430957c81e476901d90bc0f",
+  "frozen_manifest": {
+    "schema": "s1-03-derived-review-packet/v1",
+    "lot": "derived-research-flow-v1",
+    "artifact": "s1.subslice03.research-flow",
+    "layer": 2,
+    "bytes": 45949,
+    "sha256": "3d766aa35df678bd01b2c36f947267ee5382543df430957c81e476901d90bc0f",
+    "git_blob_sha": "c960ecc2f0e474459645a78ff9c9ccb5ccd27cf9",
+    "body_bytes": 16980,
+    "body_sha256": "a4b50fa9ae0b781dbea831aefcb98cb099f93167d4a7a584dc88878fc93bc044",
+    "literal_files": [
+      {
+        "label": "body",
+        "bytes": 16980,
+        "sha256": "a4b50fa9ae0b781dbea831aefcb98cb099f93167d4a7a584dc88878fc93bc044"
+      },
+      {
+        "label": "evidence",
+        "bytes": 11305,
+        "sha256": "8e2b11c446ef73d166c98f7d852d5ca674a0a056779351e393a2d8b832cbf365"
+      },
+      {
+        "label": "task_recipe",
+        "bytes": 8423,
+        "sha256": "543c6045bfb145c0db4b2779b12c96c140ff20198c408357c7d84bcf0a7f71e1"
+      },
+      {
+        "label": "common_recipe",
+        "bytes": 4017,
+        "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588"
+      }
+    ],
+    "input_table": "Explicit mechanical projection of actual manifest; original remains preserved.",
+    "dispatch_state": "NOT_YET_DISPATCHED"
+  },
+  "split_rule": "One literal UTF-8 part. Read in two local views to avoid output truncation; canonical part remains whole. Prepared-only until direct dispatch returns.",
+  "parts": [
+    {
+      "part": 1,
+      "file": "part-01.txt",
+      "start": 0,
+      "end": 45949,
+      "bytes": 45949,
+      "sha256": "3d766aa35df678bd01b2c36f947267ee5382543df430957c81e476901d90bc0f"
+    }
+  ]
+}

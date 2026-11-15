@@ -1,0 +1,57 @@
+{
+  "schema": "s1-03-root-derived-correction-verification/v1",
+  "artifact": "s1.subslice03.boundary-flow",
+  "version": 2,
+  "at_utc": "2026-11-15T04:29:45.272831+00:00",
+  "files": [
+    {
+      "path": "producers/derived-boundary-flow/body.md",
+      "prior_alias": "producers/derived-boundary-flow/revisions/v2/history/body.md",
+      "before_sha256": "83c961e473f666034b6db197ead28594580f4a953fc9f6f4bb63f006ab65ddbd",
+      "after_sha256": "e18fe141b88a3aba6ede8e8a0dd138876161984db36d4b8e5540f9ab329c0771",
+      "changes": 5,
+      "inverse_exact": true
+    },
+    {
+      "path": "producers/derived-boundary-flow/evidence.md",
+      "prior_alias": "producers/derived-boundary-flow/revisions/v2/history/evidence.md",
+      "before_sha256": "4e42f26758255ed63978d5e027a165a4eaaecfe645c78571365c4f5a2e81a780",
+      "after_sha256": "b87c56d31e6b0f846b0cab7e9d329bdcb40fcbffcbb1025a3cd4b864f0f97f4d",
+      "changes": 7,
+      "inverse_exact": true
+    },
+    {
+      "path": "producers/derived-boundary-flow/production-manifest.json",
+      "prior_alias": "producers/derived-boundary-flow/revisions/v2/history/production-manifest.json",
+      "before_sha256": "93baa2def94d8fe3d05984211d05f68c0c18c8b021953bf67153f7b9eb56c2f0",
+      "after_sha256": "3f5fa039c209bdecbe7df56534526fc3956d42f0ebdef84c053dd8dbe174951d",
+      "changes": 1,
+      "inverse_exact": true
+    },
+    {
+      "path": "producers/derived-boundary-flow/response.md",
+      "prior_alias": "producers/derived-boundary-flow/revisions/v2/history/response.md",
+      "before_sha256": "ab0d39f8f925f504f7505e1fc04192e27f9f3d0e2a79cec3bf637953b36e61ac",
+      "after_sha256": "c78d324a4e88c3e9b70bee14d89a0e46fcc20f678959c9dbc88ca10e39388cbd",
+      "changes": 1,
+      "inverse_exact": true
+    }
+  ],
+  "whole_inputs_verified": 28,
+  "body_bytes": 16484,
+  "body_sha256": "e18fe141b88a3aba6ede8e8a0dd138876161984db36d4b8e5540f9ab329c0771",
+  "body_git_blob_sha": "4e4b5590f59c67e4fd101e9fcc3d840c9f3da355",
+  "evidence_bytes": 10057,
+  "evidence_sha256": "b87c56d31e6b0f846b0cab7e9d329bdcb40fcbffcbb1025a3cd4b864f0f97f4d",
+  "body_substantive_changes": 3,
+  "body_metadata_changes": 2,
+  "all_inverse_checks_exact": true,
+  "freeze_file_timestamp_precedes_body_write": true,
+  "producer_reported_observed_apply_invocations": 1,
+  "original_native_final": "payload/receipts/producer-responses/derived-boundaries-l2-v2-original.md",
+  "original_native_final_bytes": 1858,
+  "original_native_final_sha256": "cc80f155489e2cc8b1e5bff9284e4519db52d09e186ca256829519ec10dfec29",
+  "capture_note": "Visible original native FINAL copied exactly, without terminal LF; matches producer response file apart from that LF. Host wire hash/id unknown.",
+  "semantic_status": "PENDING_SAME_PAIR",
+  "runtime_status": "NOT_RUN"
+}

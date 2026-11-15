@@ -1,0 +1,1 @@
+Recebida a **parte 2/5 de `boundaries-supplement-v2`**, com a continuação das 104 disposições, os históricos integrais, o manifesto, as projeções históricas e o início de COMMON-S01. Preservo o material para composição do lote; aguardarei as partes 3–5 e o `FIM_DO_LOTE` externo, sem ferramentas e sem emitir decisão parcial.

@@ -1,0 +1,69 @@
+{
+  "schema": "s1-03-derived-public-authoring-contract/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "purpose": "Actual common recipe for future L2-L4 derivation; frozen before those author dispatches. Not semantic output or acceptance.",
+  "scope": "S1-03 only",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "kit_revision": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+  "artifact_plan": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/artifact-plan.json",
+    "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad"
+  },
+  "author_context": "fresh fork none; no reserved answers; read exactly listed accepted predecessor bodies plus public task/recipe/authority inputs; new raw-source needs return to principal before use",
+  "gate": "Only dispatch a derived artifact after the same two current native judges accept every declared required predecessor at exact bytes. Recipe preparation does not release the gate.",
+  "layer_roles": {
+    "2": "Explain local working flow and decision boundaries from accepted L1, giving useful direct entry points into the detailed contracts.",
+    "3": "Explain relationships, change impact and which knowledge/consumers need re-evaluation; distinguish build dependencies from navigation and independent families.",
+    "4": "Ownership, maintenance/diagnosis, verification and escalation; entry gives shallow orientation and concrete deeper navigation while preserving the historical Core entry."
+  },
+  "quality_rules": [
+    "Write a usable Portuguese reference with clear depth2 section headings so a consumer can request a bounded section through ownership.read.",
+    "Make distinct the source-supported mechanism, authorized intent, inference and remaining gap. Do not upgrade tests listed to executions.",
+    "Cite exact accepted predecessor keys, bytes/hashes and relevant sections. Do not invent line evidence, raw source details or external engine guarantees.",
+    "Avoid reprinting the full predecessor or adding a file per source; satisfy the defined need with a compact coherent explanation.",
+    "Describe known failures and authority boundaries explicitly. A proposed operational action does not prove it was executed.",
+    "Do not include reserved oracle answers or infer a consumer PASS; public questions are needs, not outcomes.",
+    "No product edits, local tests, network/provider calls, GitHub writes, policy/guard changes or external messages.",
+    "Preserve exact visible request/response and body bytes; retain every revision and actual input identity, including genuine procedures used. No private reasoning.",
+    "Use only authorized exclusive producer directory. No sibling payload/producer mutation or recursive filesystem discovery. If an extra input is necessary, identify it before reading.",
+    "The actual authoring recipe is this contract plus the per-task frozen recipe and visible dispatch. A descriptive output manifest created afterwards is not a preexisting executable recipe."
+  ],
+  "public_criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "CC-1",
+    "CC-3",
+    "CC-4",
+    "CC-7",
+    "AC-01"
+  ],
+  "outputs": [
+    "body.md",
+    "evidence.md mapping claims/sections to exact accepted predecessor sections",
+    "production-manifest.json listing actual consumed whole-file units and the scope of each, output hashes, gaps and procedure provenance",
+    "request.txt exact visible dispatch",
+    "response.md original visible result and limitations"
+  ],
+  "not_outputs": [
+    "No oracle copy",
+    "No new AGENTS or authority file",
+    "No claimed runtime receipts or semantic verdicts",
+    "No replacement of historical s1.core.entry"
+  ]
+}

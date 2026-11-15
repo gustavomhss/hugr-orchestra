@@ -1,0 +1,1 @@
+Recebido o **subenvio 2/2 da parte 3/5** de **research-b-supplement-v2**. A parte 3/5 está completa no transporte recebido. Aguardarei as partes 4–5 e **FIM_DO_LOTE**.

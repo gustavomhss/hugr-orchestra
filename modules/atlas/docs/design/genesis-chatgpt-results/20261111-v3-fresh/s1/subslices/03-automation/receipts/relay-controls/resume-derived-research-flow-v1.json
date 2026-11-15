@@ -1,0 +1,13 @@
+{
+  "event_id": "relay-resume-derived-research-flow-v1",
+  "method": "collaboration.followup_task",
+  "target": "/root/review_relay",
+  "message": "Retome como relay exclusivamente para lote PRIORITÁRIO derived-research-flow-v1, depois fila L1 restante. Raiz invariável. Pacote congelado review-packets/derived-research-flow-v1.md: 45.949 bytes, SHA256 3d766aa35df678bd01b2c36f947267ee5382543df430957c81e476901d90bc0f; manifesto .manifest.json adjacente. Inclui corpo L2 exato 16.980B SHA a4b50fa9ae0b781dbea831aefcb98cb099f93167d4a7a584dc88878fc93bc044, evidência, receita anterior real e common recipe, mais projeção mecânica explicitamente marcada dos17inputs. Root leu corpo/evidência/manifesto integralmente e verificou identidades. Não acrescentar interpretação. Ambos os handles estão livres após BND v2 e research v3. Transporte literalmente para J1 e J2, um juiz ativo por vez: autor /root/derived_boundaries está produzindo L2 em paralelo (root+relay+autor+1juiz =4). Pode usar1parte se leitura completa não truncada; ou2 partes fielmente delimitadas. FIM externo só após todo material. Salve originais/ACKs/calls e avise ambos os votos. Exigir decisão explícita corpo L2 inteiro, mesma barra pública, sem inferir runtime. Depois não inicie novo lote sem me informar o limite, pois podemos liberar research L3. Enquanto eu preparo próximo gate, continue support-supplement-v2 quando eu confirmar; union e automation permanecem na fila. Archiver/ledger agora encaminham lotes derived-* a judgments/derived/, mantendo relay/<lot> local. Nenhum oracle/arquivo extra está autorizado.",
+  "tool_returned_normally": true,
+  "tool_result_text": "",
+  "provider_dispatch_id": null,
+  "scope": "Actual already-issued relay control request; distinct from subsequent judge dispatches.",
+  "tokens": "UNKNOWN",
+  "physical_attempts": "UNKNOWN",
+  "cost": "UNKNOWN"
+}

@@ -1,0 +1,66 @@
+{
+  "schema": "s1-03-descriptor-delivery-identities/v1",
+  "files": [
+    {
+      "path": "REPORT.md",
+      "bytes": 10307,
+      "sha256": "b3ed984d387587da3e9ece40d5169b155bde5d63b286bdf628a79c9ff5476ff2",
+      "git_blob_sha": "f04f105ea1df5ce976cbfba6e692b2f981c05865"
+    },
+    {
+      "path": "assemble_descriptors.py",
+      "bytes": 39947,
+      "sha256": "bbafd26d610833c27d8afb1fb81c40f8a6d078d251b83169d77288bf8e770ba5",
+      "git_blob_sha": "2abf5b9c6d6290b988bb5dad94207e42656e0072"
+    },
+    {
+      "path": "descriptors.json",
+      "bytes": 903949,
+      "sha256": "cc4c2cf63301a3df4da44efe53535766642bf1c7acea8f7eb9fd0783eed66c19",
+      "git_blob_sha": "f5265fb0659cfffd04addc45335f79bfa3116129"
+    },
+    {
+      "path": "followups.txt",
+      "bytes": 684,
+      "sha256": "3b41efdbbb1125995b9ca265328a8baaab1853c128839eb149ca2c231fdf33c9",
+      "git_blob_sha": "fa457a3d42751913c0b90dedcb49133174e601ba"
+    },
+    {
+      "path": "materialization-plan.json",
+      "bytes": 1138771,
+      "sha256": "56b6e787d7cb3b4346d3b36a224e5246038446e407a859db2b74bc19e455f5a6",
+      "git_blob_sha": "23e2d4be8756679b1e0a930ba05336ccfbff08a5"
+    },
+    {
+      "path": "observed-identities.json",
+      "bytes": 361820,
+      "sha256": "6557a2be6e7c8ec8e56493421f2a60a0e77d5df8a9ed07a47d2ae3057f53b7e8",
+      "git_blob_sha": "cc002a120a2148914d884c13af4a5fb214587fb1"
+    },
+    {
+      "path": "request.txt",
+      "bytes": 3314,
+      "sha256": "ff73d5e54595ed82594022ff5f72ad885814be067233abfcba83c25fb2e7d095",
+      "git_blob_sha": "0eb2b1be65c07a705cd28fea1175f375038ae304"
+    },
+    {
+      "path": "response.md",
+      "bytes": 4094,
+      "sha256": "23efae7328493545cb12e5ab5a142b23388fd22689ae11841cfd1f36fc2663a2",
+      "git_blob_sha": "43bc596ba17388ad37160712992763c1e96f8ca9"
+    },
+    {
+      "path": "verification.json",
+      "bytes": 1456,
+      "sha256": "1712591ad1ae19ee59e44c3a09f8906d3792bbc98562afa214a62c277cc9ae8e",
+      "git_blob_sha": "e427323ab692c4a18bdb58c671a8a7e096e3409c"
+    },
+    {
+      "path": "verify_descriptors.py",
+      "bytes": 6783,
+      "sha256": "2c7ae4b3ba8978bd34908453b50d3c4efc769ae272475168c68e0dfb7381c86f",
+      "git_blob_sha": "5ac4d7d4e50bab2999747e1eca5857b8f7d3c3c9"
+    }
+  ],
+  "self_hash_excluded": true
+}

@@ -1,0 +1,1 @@
+Recebida a parte **1/7** de `support-supplement-v2`. Sigo como J1, preservando os pareceres anteriores. Aguardo as partes restantes e o `FIM_DO_LOTE` externo final para julgar, sem ferramentas.

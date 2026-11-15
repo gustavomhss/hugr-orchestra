@@ -1,0 +1,43 @@
+{
+  "schema": "s1-03-prior-output-preservation/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "artifact": "s1.subslice03.research-flow",
+  "preserved_version": 1,
+  "created_at_utc": "2026-11-15T03:44:43.380851+00:00",
+  "preserved_before_current_mutation": true,
+  "files": [
+    {
+      "historical_alias": "producers/derived-research-flow/history/v1/body.md",
+      "original_read_path": "producers/derived-research-flow/body.md",
+      "byte_length": 16980,
+      "sha256": "a4b50fa9ae0b781dbea831aefcb98cb099f93167d4a7a584dc88878fc93bc044",
+      "git_blob_sha": "8b7c702e3d5d6e0d9a8f303136a9d97ac280d82c",
+      "copy_verified_byte_identical": true
+    },
+    {
+      "historical_alias": "producers/derived-research-flow/history/v1/evidence.md",
+      "original_read_path": "producers/derived-research-flow/evidence.md",
+      "byte_length": 11305,
+      "sha256": "8e2b11c446ef73d166c98f7d852d5ca674a0a056779351e393a2d8b832cbf365",
+      "git_blob_sha": "83aff55b8282a7aa0e4ea0c99ecdbb31f4b7ba4f",
+      "copy_verified_byte_identical": true
+    },
+    {
+      "historical_alias": "producers/derived-research-flow/history/v1/production-manifest.json",
+      "original_read_path": "producers/derived-research-flow/production-manifest.json",
+      "byte_length": 19363,
+      "sha256": "363c7e06f9ec4f0ea2165c81204c238f2972d702875b2d2d445607c0d2e66fcf",
+      "git_blob_sha": "b4cc419dda2ef5cb89667c9cf9d28236964ae7f1",
+      "copy_verified_byte_identical": true
+    },
+    {
+      "historical_alias": "producers/derived-research-flow/history/v1/response.md",
+      "original_read_path": "producers/derived-research-flow/response.md",
+      "byte_length": 2472,
+      "sha256": "4d10e4cbaacffd86da6c9c32091576608e3a0937a6f5ef5489c7f142778540ac",
+      "git_blob_sha": "75520523f4f50e0ab3ee7eaa597936fc1c23bc18",
+      "copy_verified_byte_identical": true
+    }
+  ],
+  "mechanical_reads": "Original four paths were read for exact copying; historical aliases were then reread for equality. All refer to v1 bytes."
+}

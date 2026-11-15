@@ -1,0 +1,1210 @@
+{
+  "schema": "s1-03-derived-production-manifest/v1",
+  "record_role": "Postproduction cumulative provenance; not a preexisting recipe or semantic verdict",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "artifact": {
+    "key": "s1.subslice03.research-flow",
+    "layer": 2,
+    "need": "flow",
+    "required_build_predecessors": [
+      "s1.core.research"
+    ],
+    "purpose": "Entendimento local da aquisição, índice, custódia e investigação"
+  },
+  "version": 3,
+  "author": {
+    "native_task": "/root/derived_research",
+    "role": "Same research family producer; L2 only",
+    "actual_model_id": "UNKNOWN"
+  },
+  "authoring_status": "DELIVERED_FOR_SAME_PAIR_REEVALUATION",
+  "exclusive_output_directory": "producers/derived-research-flow",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "supersedes": {
+    "local_path": "producers/derived-research-flow/revisions/v3/history/production-manifest.json",
+    "byte_length": 34692,
+    "sha256": "32c07a3198dfd1bcada8d932e2a61d6dc09c129f6a53fd0c42467611cc7a9831",
+    "git_blob_sha": "6a8563a63ff00393e2497f95313df53caf80bd00"
+  },
+  "semantic_build_predecessors": [
+    {
+      "key": "s1.core.research",
+      "layer": 1,
+      "version": "4",
+      "body_bytes": 64106,
+      "body_sha256": "c3925ca6e27465598796ef21815e79980277d4c3194a8b2fda7cf433700675d1",
+      "body_git_blob_sha": "69fda8b4a63d5480b7d78e8f915e1d90fb8a2b8b",
+      "local_body_path": "producers/research/body.md",
+      "status": "Accepted predecessor only; no L2 acceptance inferred"
+    }
+  ],
+  "predecessor_gate": {
+    "basis": "Acceptance tuples supplied in frozen revision v3 recipe after principal gate",
+    "decisions": [
+      {
+        "judge_id": "parallel-v3-fresh/S1-03/J1",
+        "status": "PASS",
+        "body_sha256": "c3925ca6e27465598796ef21815e79980277d4c3194a8b2fda7cf433700675d1",
+        "original_response_sha256": "f0aa061a964bc10e7429dde0b54c2f74c465bdb1e1a7198544541af0fc23218e"
+      },
+      {
+        "judge_id": "parallel-v3-fresh/S1-03/J2",
+        "status": "PASS",
+        "body_sha256": "c3925ca6e27465598796ef21815e79980277d4c3194a8b2fda7cf433700675d1",
+        "original_response_sha256": "1d6caeecccc795766c71a3cb9822c8feb1939c8477d7c1d6c9d5ff90d96bea35"
+      }
+    ],
+    "full_judgments_read": false,
+    "scope": "Only semantic acceptance of exact L1 v4 body"
+  },
+  "historical_predecessor_context": {
+    "local_path": "producers/research/revisions/v4/history/body.md",
+    "byte_length": 63841,
+    "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+    "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4",
+    "input_group": "inherited_v2_manifest",
+    "role": "Earlier accepted L1 v3 consumed in v1/v2; historical context only",
+    "whole_file_consumed": true,
+    "original_read_paths": [
+      "producers/research/body.md"
+    ],
+    "provenance": "Actual earlier family input retained without byte change",
+    "retained_alias": "producers/research/revisions/v4/history/body.md",
+    "semantic_status": "historical_context_only_not_current_build_predecessor"
+  },
+  "correction_base_not_self_build_edge": {
+    "local_path": "producers/derived-research-flow/revisions/v3/history/body.md",
+    "byte_length": 17113,
+    "sha256": "f6dce8d080ff5bdd3a5409bd16b846c176c8270135eb51a6cd0329413e3d0994",
+    "git_blob_sha": "2bd9021ea932e9afb5fdd8619b5b6b16e4bfc440"
+  },
+  "actual_authoring_recipe": {
+    "current_recipe": {
+      "local_path": "producers/derived-research-flow/revisions/v3/recipe.json",
+      "byte_length": 5536,
+      "sha256": "6b77e699b909ae075954e1d0fb00cd205a4ada0f4cd5ed23eff6fdd350630eae",
+      "git_blob_sha": "80b6e35297886298166c74e3decddd499f75bfb7",
+      "input_group": "revision_v3_new",
+      "role": "Frozen revision v3 authoring recipe",
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v3/recipe.json"
+      ],
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    },
+    "current_request": {
+      "local_path": "producers/derived-research-flow/revisions/v3/request.txt",
+      "byte_length": 395,
+      "sha256": "8640ec3a0ce573741ca1ee42c582960f2d776b28af950757329ee199d090c993",
+      "git_blob_sha": "4b528bf3d9e7ca449c70854e77d7448b3cbdd089",
+      "input_group": "revision_v3_new",
+      "role": "Frozen revision v3 request",
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v3/request.txt"
+      ],
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    },
+    "current_dispatch": {
+      "local_path": "producers/derived-research-flow/revisions/v3/dispatch-message.txt",
+      "byte_length": 1273,
+      "sha256": "2319e6ae0efd79115f68d417dba4e6297bde4546d33f540840a1995fc6eaddaa",
+      "git_blob_sha": "ae06fd91c907ce12fbc02ffbaf1fdd9052918d3e",
+      "input_group": "revision_v3_new",
+      "role": "Exact visible revision v3 dispatch",
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v3/dispatch-message.txt"
+      ],
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    },
+    "public_findings": {
+      "local_path": "producers/derived-research-flow/revisions/v3/public-findings.md",
+      "byte_length": 1210,
+      "sha256": "e1f6536c5f2ca30f7ddb215fe5f0c888d1b7da01c29c437ee2cdb099077be1a7",
+      "git_blob_sha": "7b9778189193884b684f309cada1851b03f8abb0",
+      "input_group": "revision_v3_new",
+      "role": "Public predecessor update and unchanged semantic correction scope",
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v3/public-findings.md"
+      ],
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    },
+    "script": {
+      "local_path": "producers/derived-research-flow/revisions/v3/apply.py",
+      "byte_length": 20110,
+      "sha256": "fa8fb1920a259dda654fb75321d41bcd4416c8c03b69facbe7dcdd5088d48435",
+      "git_blob_sha": "5b52474a88d0bc9a64fedd9598a506d9e75bea6f"
+    },
+    "pre_execution_freeze": {
+      "local_path": "producers/derived-research-flow/revisions/v3/procedure-freeze.json",
+      "byte_length": 38389,
+      "sha256": "ab1c664955412b66e61c88a6213974944ec50ff4d9cadda593c5a3004db8ad4e",
+      "git_blob_sha": "7cc165d1c048f4e15a8e3c8a319ee1c68f0c26b6"
+    },
+    "inherited_recipes_and_controls_retained": [
+      {
+        "local_path": "payload/recipes/derived-contract.json",
+        "byte_length": 4017,
+        "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+        "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+        "input_group": "inherited_v2_manifest",
+        "role": "Actual common authoring recipe and layer role",
+        "whole_file_consumed": true,
+        "original_read_paths": [
+          "payload/recipes/derived-contract.json"
+        ],
+        "provenance": "Actual earlier family input retained without byte change",
+        "expected_identity_match": true
+      },
+      {
+        "local_path": "payload/recipes/derived-public-criteria.json",
+        "byte_length": 16244,
+        "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+        "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+        "input_group": "inherited_v2_manifest",
+        "role": "Public fixed criteria; no reserved answers",
+        "whole_file_consumed": true,
+        "original_read_paths": [
+          "payload/recipes/derived-public-criteria.json"
+        ],
+        "provenance": "Actual earlier family input retained without byte change",
+        "expected_identity_match": true
+      },
+      {
+        "local_path": "payload/recipes/derived/research-flow.json",
+        "byte_length": 8423,
+        "sha256": "543c6045bfb145c0db4b2779b12c96c140ff20198c408357c7d84bcf0a7f71e1",
+        "git_blob_sha": "db976816322808b79ec62b9451e89b9beb084521",
+        "input_group": "inherited_v2_manifest",
+        "role": "Frozen per-task recipe read before authoring",
+        "whole_file_consumed": true,
+        "original_read_paths": [
+          "payload/recipes/derived/research-flow.json"
+        ],
+        "provenance": "Actual earlier family input retained without byte change",
+        "expected_identity_match": true
+      },
+      {
+        "local_path": "producers/derived-research-flow/request.txt",
+        "byte_length": 850,
+        "sha256": "351e7104bfdbc75075906493ef2db4d3f689d4181f7e621f64e75e6caf31f6ee",
+        "git_blob_sha": "d8607ddacf8da2198ba41fe912675f5127204bff",
+        "input_group": "inherited_v2_manifest",
+        "role": "Frozen task request, preserved without modification",
+        "whole_file_consumed": true,
+        "original_read_paths": [
+          "producers/derived-research-flow/request.txt"
+        ],
+        "provenance": "Actual earlier family input retained without byte change",
+        "expected_identity_match": true
+      },
+      {
+        "local_path": "producers/derived-research-flow/dispatch-message.txt",
+        "byte_length": 1511,
+        "sha256": "2252f97394d8dbc61fd0e629ce1a16700f8a81bc78673add06985842fc75efcf",
+        "git_blob_sha": "0c546d156615e7cd044ec432ec27342941f20bce",
+        "input_group": "inherited_v2_manifest",
+        "role": "Exact visible native dispatch, captured as UTF-8 without an added newline",
+        "whole_file_consumed": true,
+        "original_read_paths": [
+          "producers/derived-research-flow/dispatch-message.txt"
+        ],
+        "provenance": "Actual earlier family input retained without byte change",
+        "expected_identity_match": true
+      },
+      {
+        "local_path": "producers/derived-research-flow/revisions/v2/request.txt",
+        "byte_length": 503,
+        "sha256": "4c2c7a3e6262ab721b25b5aef283d6dfbbb9edacb6cd20da73e5212f55a9840a",
+        "git_blob_sha": "6c6411040020aca556afa20bef466541746cb713",
+        "input_group": "inherited_v2_manifest",
+        "role": "Frozen correction request",
+        "whole_file_consumed": true,
+        "original_read_paths": [
+          "producers/derived-research-flow/revisions/v2/request.txt"
+        ],
+        "provenance": "Actual earlier family input retained without byte change",
+        "expected_identity_match": true
+      },
+      {
+        "local_path": "producers/derived-research-flow/revisions/v2/recipe.json",
+        "byte_length": 3279,
+        "sha256": "007fa924ee039cce045c481143b71fff2dc3b6f6776b9cc77edfff1b386ca8b9",
+        "git_blob_sha": "5bba5c3eef5d7f20318a37d82c3ba929e93957b4",
+        "input_group": "inherited_v2_manifest",
+        "role": "Frozen minimal correction recipe",
+        "whole_file_consumed": true,
+        "original_read_paths": [
+          "producers/derived-research-flow/revisions/v2/recipe.json"
+        ],
+        "provenance": "Actual earlier family input retained without byte change",
+        "expected_identity_match": true
+      },
+      {
+        "local_path": "producers/derived-research-flow/revisions/v2/public-finding.md",
+        "byte_length": 1080,
+        "sha256": "8230c3ca27cd3416c801ff0080dc102a41b0fb16ee6ecdf94aae0c8612f33bf7",
+        "git_blob_sha": "02c3ea691918f6bc541b644b664d3c5f057d9916",
+        "input_group": "inherited_v2_manifest",
+        "role": "Authorized public finding RF-J2-F01; no full judgment prose",
+        "whole_file_consumed": true,
+        "original_read_paths": [
+          "producers/derived-research-flow/revisions/v2/public-finding.md"
+        ],
+        "provenance": "Actual earlier family input retained without byte change",
+        "expected_identity_match": true
+      },
+      {
+        "local_path": "producers/derived-research-flow/revisions/v2/dispatch-message.txt",
+        "byte_length": 1669,
+        "sha256": "9de6643262b0eef5014515544cc97d0d3ed334a70598c3d86b6f5a89bacfe15d",
+        "git_blob_sha": "c3312b633045dc7633131c8a71cc918e97d51610",
+        "input_group": "inherited_v2_manifest",
+        "role": "Exact visible correction dispatch",
+        "whole_file_consumed": true,
+        "original_read_paths": [
+          "producers/derived-research-flow/revisions/v2/dispatch-message.txt"
+        ],
+        "provenance": "Actual earlier family input retained without byte change",
+        "expected_identity_match": true
+      },
+      {
+        "local_path": "producers/derived-research-flow/revisions/v2/apply.py",
+        "byte_length": 19851,
+        "sha256": "3404af9b477c4d07b170d03f7068d4152b2bd4cb76c607cf1a0f24320bd67bf8",
+        "git_blob_sha": "f4de05371a97cd74ff333030a8949770888bd1b1",
+        "input_group": "inherited_v2_manifest",
+        "role": "Persisted real executable correction procedure",
+        "whole_file_consumed": true,
+        "original_read_paths": [
+          "producers/derived-research-flow/revisions/v2/apply.py"
+        ],
+        "provenance": "Actual earlier family input retained without byte change",
+        "expected_identity_match": true
+      },
+      {
+        "local_path": "producers/derived-research-flow/revisions/v2/procedure-freeze.json",
+        "byte_length": 15402,
+        "sha256": "b2b63dbbe1ac9cfdeb619ba074d2e8b8abc809b00bf13a72aea7f6235e746356",
+        "git_blob_sha": "0edb4f1d7effd4b3cf125eda56d05a345294bfb2",
+        "input_group": "inherited_v2_manifest",
+        "role": "Pre-execution frozen procedure/input manifest; consumed by apply.py",
+        "whole_file_consumed": true,
+        "original_read_paths": [
+          "producers/derived-research-flow/revisions/v2/procedure-freeze.json"
+        ],
+        "provenance": "Actual earlier family input retained without byte change",
+        "expected_identity_match": true
+      }
+    ]
+  },
+  "inputs": [
+    {
+      "local_path": "inputs/AGENTS.md",
+      "byte_length": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "input_group": "inherited_v2_manifest",
+      "role": "Repository instructions within the delegated authoring boundary",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "inputs/AGENTS.md"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "inputs/COMMON.md",
+      "byte_length": 12959,
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+      "input_group": "inherited_v2_manifest",
+      "role": "Public S1 subdivision authority and preservation rules",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "inputs/COMMON.md"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "inputs/mission.json",
+      "byte_length": 6006,
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+      "input_group": "inherited_v2_manifest",
+      "role": "S1-03 scope and ownership",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "inputs/mission.json"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "inputs/SKILL.md",
+      "byte_length": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "input_group": "inherited_v2_manifest",
+      "role": "Public execute-genesis procedure, specialized by the frozen task",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "inputs/SKILL.md"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "inputs/references/principles.md",
+      "byte_length": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "input_group": "inherited_v2_manifest",
+      "role": "Public principles and criteria",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "inputs/references/principles.md"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "inputs/references/fatia-1.md",
+      "byte_length": 3987,
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+      "input_group": "inherited_v2_manifest",
+      "role": "Public S1 contract, specialized by S1-03",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "inputs/references/fatia-1.md"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "inputs/references/fresh-start.md",
+      "byte_length": 4983,
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+      "input_group": "inherited_v2_manifest",
+      "role": "Public context/provenance rules",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "inputs/references/fresh-start.md"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "inputs/references/orchestration.md",
+      "byte_length": 4408,
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+      "input_group": "inherited_v2_manifest",
+      "role": "Public producer and principal responsibilities",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "inputs/references/orchestration.md"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "inputs/references/judging.md",
+      "byte_length": 5787,
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "input_group": "inherited_v2_manifest",
+      "role": "Public separation of authorship and semantic judgment",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "inputs/references/judging.md"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "inputs/references/transport.md",
+      "byte_length": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "input_group": "inherited_v2_manifest",
+      "role": "Public transport identity and dependency rules",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "inputs/references/transport.md"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "payload/artifact-plan.json",
+      "byte_length": 5017,
+      "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+      "git_blob_sha": "8dba81b59cd093d28ea07cf4369d5842b6bdee68",
+      "input_group": "inherited_v2_manifest",
+      "role": "Frozen graph; only the L2 research node released",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "payload/artifact-plan.json"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "payload/recipes/derived-contract.json",
+      "byte_length": 4017,
+      "sha256": "bcde63f79d8cacd030293da38c580c55c5aa58e0a5ff3751f1d1e27971f17588",
+      "git_blob_sha": "b0687d5855dd78d7ce1959d217b4ad15143565cd",
+      "input_group": "inherited_v2_manifest",
+      "role": "Actual common authoring recipe and layer role",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "payload/recipes/derived-contract.json"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "payload/recipes/derived-public-criteria.json",
+      "byte_length": 16244,
+      "sha256": "1e7686491c5b68cb4f3d287377723edcd8932ae803c267ddbabf44a360dfc36e",
+      "git_blob_sha": "d4f6b765e6d78341ba2b77186c77b9177cf3156c",
+      "input_group": "inherited_v2_manifest",
+      "role": "Public fixed criteria; no reserved answers",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "payload/recipes/derived-public-criteria.json"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/research/revisions/v4/history/body.md",
+      "byte_length": 63841,
+      "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+      "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4",
+      "input_group": "inherited_v2_manifest",
+      "role": "Earlier accepted L1 v3 consumed in v1/v2; historical context only",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "producers/research/body.md"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "retained_alias": "producers/research/revisions/v4/history/body.md",
+      "semantic_status": "historical_context_only_not_current_build_predecessor",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "payload/recipes/derived/research-flow.json",
+      "byte_length": 8423,
+      "sha256": "543c6045bfb145c0db4b2779b12c96c140ff20198c408357c7d84bcf0a7f71e1",
+      "git_blob_sha": "db976816322808b79ec62b9451e89b9beb084521",
+      "input_group": "inherited_v2_manifest",
+      "role": "Frozen per-task recipe read before authoring",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "payload/recipes/derived/research-flow.json"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/request.txt",
+      "byte_length": 850,
+      "sha256": "351e7104bfdbc75075906493ef2db4d3f689d4181f7e621f64e75e6caf31f6ee",
+      "git_blob_sha": "d8607ddacf8da2198ba41fe912675f5127204bff",
+      "input_group": "inherited_v2_manifest",
+      "role": "Frozen task request, preserved without modification",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "producers/derived-research-flow/request.txt"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/dispatch-message.txt",
+      "byte_length": 1511,
+      "sha256": "2252f97394d8dbc61fd0e629ce1a16700f8a81bc78673add06985842fc75efcf",
+      "git_blob_sha": "0c546d156615e7cd044ec432ec27342941f20bce",
+      "input_group": "inherited_v2_manifest",
+      "role": "Exact visible native dispatch, captured as UTF-8 without an added newline",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "producers/derived-research-flow/dispatch-message.txt"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/history/v1/body.md",
+      "byte_length": 16980,
+      "sha256": "a4b50fa9ae0b781dbea831aefcb98cb099f93167d4a7a584dc88878fc93bc044",
+      "git_blob_sha": "8b7c702e3d5d6e0d9a8f303136a9d97ac280d82c",
+      "input_group": "inherited_v2_manifest",
+      "role": "Prior v1 output consumed for minimal correction and/or preservation",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "producers/derived-research-flow/body.md"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "retained_alias": "producers/derived-research-flow/history/v1/body.md",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/history/v1/evidence.md",
+      "byte_length": 11305,
+      "sha256": "8e2b11c446ef73d166c98f7d852d5ca674a0a056779351e393a2d8b832cbf365",
+      "git_blob_sha": "83aff55b8282a7aa0e4ea0c99ecdbb31f4b7ba4f",
+      "input_group": "inherited_v2_manifest",
+      "role": "Prior v1 output consumed for minimal correction and/or preservation",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "producers/derived-research-flow/evidence.md"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "retained_alias": "producers/derived-research-flow/history/v1/evidence.md",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/history/v1/production-manifest.json",
+      "byte_length": 19363,
+      "sha256": "363c7e06f9ec4f0ea2165c81204c238f2972d702875b2d2d445607c0d2e66fcf",
+      "git_blob_sha": "b4cc419dda2ef5cb89667c9cf9d28236964ae7f1",
+      "input_group": "inherited_v2_manifest",
+      "role": "Prior v1 output consumed for minimal correction and/or preservation",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "producers/derived-research-flow/production-manifest.json"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "retained_alias": "producers/derived-research-flow/history/v1/production-manifest.json",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/history/v1/response.md",
+      "byte_length": 2472,
+      "sha256": "4d10e4cbaacffd86da6c9c32091576608e3a0937a6f5ef5489c7f142778540ac",
+      "git_blob_sha": "75520523f4f50e0ab3ee7eaa597936fc1c23bc18",
+      "input_group": "inherited_v2_manifest",
+      "role": "Prior v1 output consumed for minimal correction and/or preservation",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "producers/derived-research-flow/response.md"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "retained_alias": "producers/derived-research-flow/history/v1/response.md",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v2/request.txt",
+      "byte_length": 503,
+      "sha256": "4c2c7a3e6262ab721b25b5aef283d6dfbbb9edacb6cd20da73e5212f55a9840a",
+      "git_blob_sha": "6c6411040020aca556afa20bef466541746cb713",
+      "input_group": "inherited_v2_manifest",
+      "role": "Frozen correction request",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v2/request.txt"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v2/recipe.json",
+      "byte_length": 3279,
+      "sha256": "007fa924ee039cce045c481143b71fff2dc3b6f6776b9cc77edfff1b386ca8b9",
+      "git_blob_sha": "5bba5c3eef5d7f20318a37d82c3ba929e93957b4",
+      "input_group": "inherited_v2_manifest",
+      "role": "Frozen minimal correction recipe",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v2/recipe.json"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v2/public-finding.md",
+      "byte_length": 1080,
+      "sha256": "8230c3ca27cd3416c801ff0080dc102a41b0fb16ee6ecdf94aae0c8612f33bf7",
+      "git_blob_sha": "02c3ea691918f6bc541b644b664d3c5f057d9916",
+      "input_group": "inherited_v2_manifest",
+      "role": "Authorized public finding RF-J2-F01; no full judgment prose",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v2/public-finding.md"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v2/dispatch-message.txt",
+      "byte_length": 1669,
+      "sha256": "9de6643262b0eef5014515544cc97d0d3ed334a70598c3d86b6f5a89bacfe15d",
+      "git_blob_sha": "c3312b633045dc7633131c8a71cc918e97d51610",
+      "input_group": "inherited_v2_manifest",
+      "role": "Exact visible correction dispatch",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v2/dispatch-message.txt"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v2/prior-output-preservation.json",
+      "byte_length": 2036,
+      "sha256": "af0552a04cae4c5e2c1eb6f32b00e0a372ed9028542298808debeae4b8d5b00d",
+      "git_blob_sha": "d4d44dff034ca16d383628b2109c2fbdcf451cc7",
+      "input_group": "inherited_v2_manifest",
+      "role": "Actual pre-mutation preservation receipt",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v2/prior-output-preservation.json"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v2/apply.py",
+      "byte_length": 19851,
+      "sha256": "3404af9b477c4d07b170d03f7068d4152b2bd4cb76c607cf1a0f24320bd67bf8",
+      "git_blob_sha": "f4de05371a97cd74ff333030a8949770888bd1b1",
+      "input_group": "inherited_v2_manifest",
+      "role": "Persisted real executable correction procedure",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v2/apply.py"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v2/procedure-freeze.json",
+      "byte_length": 15402,
+      "sha256": "b2b63dbbe1ac9cfdeb619ba074d2e8b8abc809b00bf13a72aea7f6235e746356",
+      "git_blob_sha": "0edb4f1d7effd4b3cf125eda56d05a345294bfb2",
+      "input_group": "inherited_v2_manifest",
+      "role": "Pre-execution frozen procedure/input manifest; consumed by apply.py",
+      "whole_file_consumed": true,
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v2/procedure-freeze.json"
+      ],
+      "provenance": "Actual earlier family input retained without byte change",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v2/delta.json",
+      "byte_length": 4551,
+      "sha256": "ae2265221d845124e5632ab460e4278c0d49c987a16d38739ddd5fa07f5de268",
+      "git_blob_sha": "bf56199cb38b472741264b5b179946a380a3bec1",
+      "input_group": "earlier_output_verification",
+      "role": "Previously consumed v2 output during actual hash/read verification; now historical input",
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v2/delta.json"
+      ],
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v2/review-supplement.md",
+      "byte_length": 3793,
+      "sha256": "c2a7d80a4e5bfb7c03a569c7106630d5f6d7cb14225e0450826f9eaa1b1dd727",
+      "git_blob_sha": "432d6899b2dfdcbce8fabb7ec80680119d1e887a",
+      "input_group": "earlier_output_verification",
+      "role": "Previously consumed v2 output during actual hash/read verification; now historical input",
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v2/review-supplement.md"
+      ],
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v2/input-manifest-extension.json",
+      "byte_length": 17986,
+      "sha256": "2cc6415416ae6f5a59ffbc908bae284d477671ab54ad1aca55033c7067eff463",
+      "git_blob_sha": "2fca473d46b981aa1ea22b4bd4e4845dd0e3c721",
+      "input_group": "earlier_output_verification",
+      "role": "Previously consumed v2 output during actual hash/read verification; now historical input",
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v2/input-manifest-extension.json"
+      ],
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v2/producer-verification.json",
+      "byte_length": 2298,
+      "sha256": "d8d249ca6064da8f00ac4cd10e5d655498e94120d4d142ddf09bed9a7a6eb709",
+      "git_blob_sha": "7022ef79dcfd962cd6514e991a06cdeca5d9e668",
+      "input_group": "earlier_output_verification",
+      "role": "Previously consumed v2 output during actual hash/read verification; now historical input",
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v2/producer-verification.json"
+      ],
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v2/response.md",
+      "byte_length": 2016,
+      "sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+      "git_blob_sha": "e3e6ca3002c8d235f59537e5c5175461fda03c0b",
+      "input_group": "earlier_output_verification",
+      "role": "Previously consumed v2 output during actual hash/read verification; now historical input",
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v2/response.md"
+      ],
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/history/body.md",
+      "byte_length": 17113,
+      "sha256": "f6dce8d080ff5bdd3a5409bd16b846c176c8270135eb51a6cd0329413e3d0994",
+      "git_blob_sha": "2bd9021ea932e9afb5fdd8619b5b6b16e4bfc440",
+      "input_group": "revision_v3_new",
+      "role": "Prior v2 output read in full and preserved before v3 mutation",
+      "original_read_paths": [
+        "producers/derived-research-flow/body.md"
+      ],
+      "retained_alias": "producers/derived-research-flow/revisions/v3/history/body.md",
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/history/evidence.md",
+      "byte_length": 11457,
+      "sha256": "b7d51d3bab6f9d8538d6b6362953647eedfbc5fad905c69b5d3fd38b0ea75022",
+      "git_blob_sha": "18797d0844d84082dc39e99acbc10f9de03c46ea",
+      "input_group": "revision_v3_new",
+      "role": "Prior v2 output read in full and preserved before v3 mutation",
+      "original_read_paths": [
+        "producers/derived-research-flow/evidence.md"
+      ],
+      "retained_alias": "producers/derived-research-flow/revisions/v3/history/evidence.md",
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/history/production-manifest.json",
+      "byte_length": 34692,
+      "sha256": "32c07a3198dfd1bcada8d932e2a61d6dc09c129f6a53fd0c42467611cc7a9831",
+      "git_blob_sha": "6a8563a63ff00393e2497f95313df53caf80bd00",
+      "input_group": "revision_v3_new",
+      "role": "Prior v2 output read in full and preserved before v3 mutation",
+      "original_read_paths": [
+        "producers/derived-research-flow/production-manifest.json"
+      ],
+      "retained_alias": "producers/derived-research-flow/revisions/v3/history/production-manifest.json",
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/history/response.md",
+      "byte_length": 2016,
+      "sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+      "git_blob_sha": "e3e6ca3002c8d235f59537e5c5175461fda03c0b",
+      "input_group": "revision_v3_new",
+      "role": "Prior v2 output read in full and preserved before v3 mutation",
+      "original_read_paths": [
+        "producers/derived-research-flow/response.md"
+      ],
+      "retained_alias": "producers/derived-research-flow/revisions/v3/history/response.md",
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/research/body.md",
+      "byte_length": 64106,
+      "sha256": "c3925ca6e27465598796ef21815e79980277d4c3194a8b2fda7cf433700675d1",
+      "git_blob_sha": "69fda8b4a63d5480b7d78e8f915e1d90fb8a2b8b",
+      "input_group": "revision_v3_new",
+      "role": "New L1 v4 sole accepted current semantic predecessor",
+      "original_read_paths": [
+        "producers/research/body.md"
+      ],
+      "whole_file_consumed": true,
+      "semantic_status": "sole_current_build_predecessor",
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/public-findings.md",
+      "byte_length": 1210,
+      "sha256": "e1f6536c5f2ca30f7ddb215fe5f0c888d1b7da01c29c437ee2cdb099077be1a7",
+      "git_blob_sha": "7b9778189193884b684f309cada1851b03f8abb0",
+      "input_group": "revision_v3_new",
+      "role": "Public predecessor update and unchanged semantic correction scope",
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v3/public-findings.md"
+      ],
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/recipe.json",
+      "byte_length": 5536,
+      "sha256": "6b77e699b909ae075954e1d0fb00cd205a4ada0f4cd5ed23eff6fdd350630eae",
+      "git_blob_sha": "80b6e35297886298166c74e3decddd499f75bfb7",
+      "input_group": "revision_v3_new",
+      "role": "Frozen revision v3 authoring recipe",
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v3/recipe.json"
+      ],
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/request.txt",
+      "byte_length": 395,
+      "sha256": "8640ec3a0ce573741ca1ee42c582960f2d776b28af950757329ee199d090c993",
+      "git_blob_sha": "4b528bf3d9e7ca449c70854e77d7448b3cbdd089",
+      "input_group": "revision_v3_new",
+      "role": "Frozen revision v3 request",
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v3/request.txt"
+      ],
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/dispatch-message.txt",
+      "byte_length": 1273,
+      "sha256": "2319e6ae0efd79115f68d417dba4e6297bde4546d33f540840a1995fc6eaddaa",
+      "git_blob_sha": "ae06fd91c907ce12fbc02ffbaf1fdd9052918d3e",
+      "input_group": "revision_v3_new",
+      "role": "Exact visible revision v3 dispatch",
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v3/dispatch-message.txt"
+      ],
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/prior-output-preservation.json",
+      "byte_length": 2545,
+      "sha256": "ec68bad4886debb07d01a4b70695d7a1e3c3cde0b98ff524919a02e517ee37d5",
+      "git_blob_sha": "c32e6779810c3b3dbd06bfcb90cd1f0f2b2ae8ef",
+      "input_group": "revision_v3_new",
+      "role": "Actual v2 preservation receipt",
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v3/prior-output-preservation.json"
+      ],
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/apply.py",
+      "byte_length": 20110,
+      "sha256": "fa8fb1920a259dda654fb75321d41bcd4416c8c03b69facbe7dcdd5088d48435",
+      "git_blob_sha": "5b52474a88d0bc9a64fedd9598a506d9e75bea6f",
+      "input_group": "revision_v3_new",
+      "role": "Actual persisted executable procedure",
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v3/apply.py"
+      ],
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/procedure-freeze.json",
+      "byte_length": 38389,
+      "sha256": "ab1c664955412b66e61c88a6213974944ec50ff4d9cadda593c5a3004db8ad4e",
+      "git_blob_sha": "7cc165d1c048f4e15a8e3c8a319ee1c68f0c26b6",
+      "role": "Actual pre-execution frozen procedure and input manifest",
+      "input_group": "revision_v3_new",
+      "original_read_paths": [
+        "producers/derived-research-flow/revisions/v3/procedure-freeze.json"
+      ],
+      "whole_file_consumed": true,
+      "expected_identity_match": true
+    }
+  ],
+  "input_counts": {
+    "carried_from_previous_input_manifest": 28,
+    "earlier_output_verification_units_now_enumerated": 5,
+    "new_revision_v3_units": 12,
+    "total_unique_whole_file_units": 45,
+    "total_unique_input_bytes": 500591
+  },
+  "retained_aliases": [
+    {
+      "local_path": "producers/research/revisions/v4/history/body.md",
+      "retained_alias": "producers/research/revisions/v4/history/body.md",
+      "original_read_paths": [
+        "producers/research/body.md"
+      ],
+      "byte_length": 63841,
+      "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+      "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4"
+    },
+    {
+      "local_path": "producers/derived-research-flow/history/v1/body.md",
+      "retained_alias": "producers/derived-research-flow/history/v1/body.md",
+      "original_read_paths": [
+        "producers/derived-research-flow/body.md"
+      ],
+      "byte_length": 16980,
+      "sha256": "a4b50fa9ae0b781dbea831aefcb98cb099f93167d4a7a584dc88878fc93bc044",
+      "git_blob_sha": "8b7c702e3d5d6e0d9a8f303136a9d97ac280d82c"
+    },
+    {
+      "local_path": "producers/derived-research-flow/history/v1/evidence.md",
+      "retained_alias": "producers/derived-research-flow/history/v1/evidence.md",
+      "original_read_paths": [
+        "producers/derived-research-flow/evidence.md"
+      ],
+      "byte_length": 11305,
+      "sha256": "8e2b11c446ef73d166c98f7d852d5ca674a0a056779351e393a2d8b832cbf365",
+      "git_blob_sha": "83aff55b8282a7aa0e4ea0c99ecdbb31f4b7ba4f"
+    },
+    {
+      "local_path": "producers/derived-research-flow/history/v1/production-manifest.json",
+      "retained_alias": "producers/derived-research-flow/history/v1/production-manifest.json",
+      "original_read_paths": [
+        "producers/derived-research-flow/production-manifest.json"
+      ],
+      "byte_length": 19363,
+      "sha256": "363c7e06f9ec4f0ea2165c81204c238f2972d702875b2d2d445607c0d2e66fcf",
+      "git_blob_sha": "b4cc419dda2ef5cb89667c9cf9d28236964ae7f1"
+    },
+    {
+      "local_path": "producers/derived-research-flow/history/v1/response.md",
+      "retained_alias": "producers/derived-research-flow/history/v1/response.md",
+      "original_read_paths": [
+        "producers/derived-research-flow/response.md"
+      ],
+      "byte_length": 2472,
+      "sha256": "4d10e4cbaacffd86da6c9c32091576608e3a0937a6f5ef5489c7f142778540ac",
+      "git_blob_sha": "75520523f4f50e0ab3ee7eaa597936fc1c23bc18"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/history/body.md",
+      "retained_alias": "producers/derived-research-flow/revisions/v3/history/body.md",
+      "original_read_paths": [
+        "producers/derived-research-flow/body.md"
+      ],
+      "byte_length": 17113,
+      "sha256": "f6dce8d080ff5bdd3a5409bd16b846c176c8270135eb51a6cd0329413e3d0994",
+      "git_blob_sha": "2bd9021ea932e9afb5fdd8619b5b6b16e4bfc440"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/history/evidence.md",
+      "retained_alias": "producers/derived-research-flow/revisions/v3/history/evidence.md",
+      "original_read_paths": [
+        "producers/derived-research-flow/evidence.md"
+      ],
+      "byte_length": 11457,
+      "sha256": "b7d51d3bab6f9d8538d6b6362953647eedfbc5fad905c69b5d3fd38b0ea75022",
+      "git_blob_sha": "18797d0844d84082dc39e99acbc10f9de03c46ea"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/history/production-manifest.json",
+      "retained_alias": "producers/derived-research-flow/revisions/v3/history/production-manifest.json",
+      "original_read_paths": [
+        "producers/derived-research-flow/production-manifest.json"
+      ],
+      "byte_length": 34692,
+      "sha256": "32c07a3198dfd1bcada8d932e2a61d6dc09c129f6a53fd0c42467611cc7a9831",
+      "git_blob_sha": "6a8563a63ff00393e2497f95313df53caf80bd00"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/history/response.md",
+      "retained_alias": "producers/derived-research-flow/revisions/v3/history/response.md",
+      "original_read_paths": [
+        "producers/derived-research-flow/response.md"
+      ],
+      "byte_length": 2016,
+      "sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+      "git_blob_sha": "e3e6ca3002c8d235f59537e5c5175461fda03c0b"
+    }
+  ],
+  "non_file_context": [
+    {
+      "kind": "visible_principal_control_message",
+      "role": "Reports mechanical v2 verification and pending judgment; no file operation authorized by that message",
+      "text": "Continuação de controle da mesma família. A correção L2 v2 foi verificada mecanicamente pela principal, mas ainda não recebeu novo parecer; não produza L3/L4. Confirme apenas a conclusão anterior, as identidades de body/evidence/manifest/response atuais e os paths dos seus registros v2 já existentes, usando o contexto anterior sem ler novos inputs. O FINAL nativo anterior não foi preservado separadamente antes da compactação da principal; não o reconstrua como verbatim. Sua resposta agora será registrada como confirmação posterior, distinguindo-a do response.md original já preservado. Aguarde; não altere arquivos, não leia oracle/juízes/raw, não delegue.",
+      "preservation_note": "Recorded from the retained visible same-family context now; not a reconstruction of the unpreserved prior FINAL."
+    }
+  ],
+  "procedure_provenance": {
+    "implementation": "Persisted apply.py executed once via functions.exec -> tools.exec_command -> python; standard library only",
+    "frozen_before_execution": true,
+    "whole_new_predecessor_read": "All 378 lines displayed in contiguous spans 1-230 and 231-378",
+    "historical_parent_read": "Whole-byte alias verified; complete same-byte content retained from earlier family reading",
+    "all_seven_recipe_units_read_in_full": true,
+    "prior_outputs_read_and_preserved_before_mutation": true,
+    "metadata_edits": 4,
+    "substantive_edits": 0,
+    "inverse_verification": true,
+    "delta": {
+      "local_path": "producers/derived-research-flow/revisions/v3/delta.json",
+      "byte_length": 15355,
+      "sha256": "ed857fc8035e8995ff52247170eae49e416a47ae1812760328aea6587065560f",
+      "git_blob_sha": "7a10971ccd4eb4b47b7d8bece88f0dd7116ccc52"
+    },
+    "producer_verification": {
+      "local_path": "producers/derived-research-flow/revisions/v3/producer-verification.json",
+      "byte_length": 2909,
+      "sha256": "751047a4ae095416c488ba28c83ca85cbfed37b82b47e460fde62d2e73909b39",
+      "git_blob_sha": "20f630685105a38090c9cbafc6584a714dd21ef4"
+    }
+  },
+  "verification": {
+    "all_45_input_identities_match": true,
+    "v2_history_exact": true,
+    "older_history_and_controls_unchanged": true,
+    "F3_and_F1_through_F8_byte_identical": true,
+    "body_bytes": 17124,
+    "evidence_bytes": 12878,
+    "depth2_sections": 9,
+    "root_verification_v3": "PENDING",
+    "semantic_reevaluation_v3": "PENDING",
+    "product_runtime_network_tests": "NOT_RUN"
+  },
+  "outputs": [
+    {
+      "local_path": "producers/derived-research-flow/body.md",
+      "byte_length": 17124,
+      "sha256": "f2c19caaa501ea0e135cbbfb4768b4bd68c4e729e5545cb5f80e45c655f52ab7",
+      "git_blob_sha": "1ceb2496a2185042e3eb564e80828bd85ac08f7f"
+    },
+    {
+      "local_path": "producers/derived-research-flow/evidence.md",
+      "byte_length": 12878,
+      "sha256": "6c6d9c59bf75c0636598315fad3d850426f9d473cc7cbd0ba2f385165992a614",
+      "git_blob_sha": "d1e80930db1d09f6deb84a188dd6093aa50445b7"
+    },
+    {
+      "local_path": "producers/derived-research-flow/response.md",
+      "byte_length": 2144,
+      "sha256": "1adbff35cf2884d6dc2a3fff4ae2703227cea6f045503a20f58c78b030f77696",
+      "git_blob_sha": "872b8983468990176c39d39dbd73707bf115c021"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/history/body.md",
+      "byte_length": 17113,
+      "sha256": "f6dce8d080ff5bdd3a5409bd16b846c176c8270135eb51a6cd0329413e3d0994",
+      "git_blob_sha": "2bd9021ea932e9afb5fdd8619b5b6b16e4bfc440"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/history/evidence.md",
+      "byte_length": 11457,
+      "sha256": "b7d51d3bab6f9d8538d6b6362953647eedfbc5fad905c69b5d3fd38b0ea75022",
+      "git_blob_sha": "18797d0844d84082dc39e99acbc10f9de03c46ea"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/history/production-manifest.json",
+      "byte_length": 34692,
+      "sha256": "32c07a3198dfd1bcada8d932e2a61d6dc09c129f6a53fd0c42467611cc7a9831",
+      "git_blob_sha": "6a8563a63ff00393e2497f95313df53caf80bd00"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/history/response.md",
+      "byte_length": 2016,
+      "sha256": "553422eb616a5e72a38d82810ba0cfbd4221baa8828333e5600f488c4e8fea90",
+      "git_blob_sha": "e3e6ca3002c8d235f59537e5c5175461fda03c0b"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/dispatch-message.txt",
+      "byte_length": 1273,
+      "sha256": "2319e6ae0efd79115f68d417dba4e6297bde4546d33f540840a1995fc6eaddaa",
+      "git_blob_sha": "ae06fd91c907ce12fbc02ffbaf1fdd9052918d3e"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/prior-output-preservation.json",
+      "byte_length": 2545,
+      "sha256": "ec68bad4886debb07d01a4b70695d7a1e3c3cde0b98ff524919a02e517ee37d5",
+      "git_blob_sha": "c32e6779810c3b3dbd06bfcb90cd1f0f2b2ae8ef"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/apply.py",
+      "byte_length": 20110,
+      "sha256": "fa8fb1920a259dda654fb75321d41bcd4416c8c03b69facbe7dcdd5088d48435",
+      "git_blob_sha": "5b52474a88d0bc9a64fedd9598a506d9e75bea6f"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/procedure-freeze.json",
+      "byte_length": 38389,
+      "sha256": "ab1c664955412b66e61c88a6213974944ec50ff4d9cadda593c5a3004db8ad4e",
+      "git_blob_sha": "7cc165d1c048f4e15a8e3c8a319ee1c68f0c26b6"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/delta.json",
+      "byte_length": 15355,
+      "sha256": "ed857fc8035e8995ff52247170eae49e416a47ae1812760328aea6587065560f",
+      "git_blob_sha": "7a10971ccd4eb4b47b7d8bece88f0dd7116ccc52"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/delta.patch",
+      "byte_length": 11130,
+      "sha256": "33abda8cf8387856ebe28a818cf1f17b20434cd705f10322f0b997d92e782e3b",
+      "git_blob_sha": "e232c059f4484b7ffd556c296dc7146346dd4735"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/review-supplement.md",
+      "byte_length": 11742,
+      "sha256": "2ab915b6becb96e0523fa59bad64ebd4ac1f73d3bc27c256cd371984a06bcd47",
+      "git_blob_sha": "1be0a107f95cfcf91d610c52f3256eb2cd8ca467"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/input-manifest-extension.json",
+      "byte_length": 34417,
+      "sha256": "4db94d8d4a5a028d742b4cd6f82d81c175ca3ae2194f42d3922f368e85acd26f",
+      "git_blob_sha": "66a992d77bf889766bdde2ffbe2f7f9b53145137"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/producer-verification.json",
+      "byte_length": 2909,
+      "sha256": "751047a4ae095416c488ba28c83ca85cbfed37b82b47e460fde62d2e73909b39",
+      "git_blob_sha": "20f630685105a38090c9cbafc6584a714dd21ef4"
+    },
+    {
+      "local_path": "producers/derived-research-flow/revisions/v3/response.md",
+      "byte_length": 2144,
+      "sha256": "1adbff35cf2884d6dc2a3fff4ae2703227cea6f045503a20f58c78b030f77696",
+      "git_blob_sha": "872b8983468990176c39d39dbd73707bf115c021"
+    },
+    {
+      "local_path": "producers/derived-research-flow/production-manifest.json",
+      "identity_location": "External final digest report; no self-hash"
+    }
+  ],
+  "output_counts": {
+    "current_files": 4,
+    "v2_historical_copies": 4,
+    "revision_v3_files": 10,
+    "total": 18,
+    "supplied_frozen_controls_preserved": 3
+  },
+  "limitations": [
+    "Only metadata and accepted-parent binding were updated; semantic RF-J2-F01 correction remains exactly as authored in v2.",
+    "The current semantic predecessor is L1 v4 only; old parent v3 is historical context.",
+    "Full new predecessor was read, but no raw source, full judge prose, oracle, runtime or consumer was read/executed.",
+    "No self-PASS, provider qualification, maintenance success, L3/L4 or S1/global completion is claimed.",
+    "Earlier UNKNOWN physical usage remains UNKNOWN; input byte counts are not token/cost estimates."
+  ],
+  "later_layers_authored_or_released": [],
+  "usage": {
+    "physical_attempts": "UNKNOWN",
+    "input_tokens": "UNKNOWN",
+    "output_tokens": "UNKNOWN",
+    "billing_cost": "UNKNOWN",
+    "observed_revision_v3_dispatches": 1
+  },
+  "preservation": {
+    "v1_preserved": true,
+    "v2_preserved": true,
+    "old_controls_unchanged": true,
+    "new_dispatch_exact": true,
+    "response_revision_copy_exact": true,
+    "original_read_lineage_separate_from_retained_alias": true
+  }
+}

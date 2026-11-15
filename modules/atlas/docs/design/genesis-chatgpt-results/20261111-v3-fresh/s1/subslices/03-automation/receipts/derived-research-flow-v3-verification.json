@@ -1,0 +1,49 @@
+{
+  "schema": "s1-03-root-derived-correction-verification/v1",
+  "artifact": "s1.subslice03.research-flow",
+  "version": 3,
+  "at_utc": "2026-11-15T04:41:52.539874+00:00",
+  "whole_inputs_verified": 45,
+  "input_bytes": 500591,
+  "input_groups": {
+    "carried_from_previous_input_manifest": 28,
+    "earlier_output_verification_units_now_enumerated": 5,
+    "new_revision_v3_units": 12,
+    "total_unique_whole_file_units": 45,
+    "total_unique_input_bytes": 500591
+  },
+  "files": [
+    {
+      "file": "body.md",
+      "before_sha256": "f6dce8d080ff5bdd3a5409bd16b846c176c8270135eb51a6cd0329413e3d0994",
+      "after_sha256": "f2c19caaa501ea0e135cbbfb4768b4bd68c4e729e5545cb5f80e45c655f52ab7",
+      "edits": 1,
+      "forward_and_inverse_exact": true
+    },
+    {
+      "file": "evidence.md",
+      "before_sha256": "b7d51d3bab6f9d8538d6b6362953647eedfbc5fad905c69b5d3fd38b0ea75022",
+      "after_sha256": "6c6d9c59bf75c0636598315fad3d850426f9d473cc7cbd0ba2f385165992a614",
+      "edits": 3,
+      "forward_and_inverse_exact": true
+    }
+  ],
+  "v1_to_v2_deltas_reverified": true,
+  "v2_to_v3_deltas_reverified": true,
+  "F1_through_F8_identical_to_v2": true,
+  "body_bytes": 17124,
+  "body_sha256": "f2c19caaa501ea0e135cbbfb4768b4bd68c4e729e5545cb5f80e45c655f52ab7",
+  "body_git_blob_sha": "1ceb2496a2185042e3eb564e80828bd85ac08f7f",
+  "evidence_bytes": 12878,
+  "evidence_sha256": "6c6d9c59bf75c0636598315fad3d850426f9d473cc7cbd0ba2f385165992a614",
+  "substantive_body_edits_since_last_reviewed_v1": 1,
+  "metadata_body_edits_since_last_reviewed_v1": 1,
+  "freeze_precedes_execution": true,
+  "current_parent": "s1.core.research L1 v4",
+  "old_parent_is_historical_alias_only": true,
+  "original_native_final": "payload/receipts/producer-responses/derived-research-l2-v3-original.md",
+  "original_native_final_sha256": "ce765d5c0f8f763f8f37962ea84112ddacc1a57a6224581381e9c4f21f2d7ae8",
+  "original_native_final_capture": "Relay original list_agents capture; no reconstruction of missing earlier v2 FINAL",
+  "semantic_status": "PENDING_SAME_PAIR",
+  "runtime_status": "NOT_RUN"
+}

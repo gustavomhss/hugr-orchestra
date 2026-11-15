@@ -1,0 +1,62 @@
+{
+  "recorded_utc": "2026-11-15T04:13:00.795506+00:00",
+  "observations": [
+    {
+      "id": 0,
+      "result": {
+        "status": "fulfilled",
+        "value": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Action completed."
+            }
+          ],
+          "structuredContent": {
+            "content": "{\"name\":\"genesis-fresh-s4\",\"commit\":{\"sha\":\"db9b4235022c4df32fe3bfd4faeea8adcd69abb7\",\"node_id\":\"C_kwDOU78kOtoAKGRiOWI0MjM1MDIyYzRkZjMyZmUzYmZkNGZhZWVhOGFkY2Q2OWFiYjc\",\"commit\":{\"author\":{\"name\":\"gustavomhss\",\"email\":\"gmhelmold@gmail.com\",\"date\":\"2026-11-13T01:18:39Z\"},\"committer\":{\"name\":\"gustavomhss\",\"email\":\"gmhelmold@gmail.com\",\"date\":\"2026-11-13T01:18:39Z\"},\"message\":\"test(atlas): exercise aliased CAS through the disk-store constructor\",\"tree\":{\"sha\":\"3c93c4636c1e4c4b704f8be9314e22b2149e5609\",\"url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/git/trees/3c93c4636c1e4c4b704f8be9314e22b2149e5609\"},\"url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/git/commits/db9b4235022c4df32fe3bfd4faeea8adcd69abb7\",\"comment_count\":0,\"verification\":{\"verified\":false,\"reason\":\"unsigned\",\"signature\":null,\"payload\":null,\"verified_at\":null}},\"url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/commits/db9b4235022c4df32fe3bfd4faeea8adcd69abb7\",\"html_url\":\"https://github.com/gustavomhss/hugr-orchestra/commit/db9b4235022c4df32fe3bfd4faeea8adcd69abb7\",\"comments_url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/commits/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/comments\",\"author\":{\"login\":\"gustavomhss\",\"id\":228147811,\"node_id\":\"U_kgDODZlCYw\",\"avatar_url\":\"https://avatars.githubusercontent.com/u/228147811?v=4\",\"gravatar_id\":\"\",\"url\":\"https://api.github.com/users/gustavomhss\",\"html_url\":\"https://github.com/gustavomhss\",\"followers_url\":\"https://api.github.com/users/gustavomhss/followers\",\"following_url\":\"https://api.github.com/users/gustavomhss/following{/other_user}\",\"gists_url\":\"https://api.github.com/users/gustavomhss/gists{/gist_id}\",\"starred_url\":\"https://api.github.com/users/gustavomhss/starred{/owner}{/repo}\",\"subscriptions_url\":\"https://api.github.com/users/gustavomhss/subscriptions\",\"organizations_url\":\"https://api.github.com/users/gustavomhss/orgs\",\"repos_url\":\"https://api.github.com/users/gustavomhss/repos\",\"events_url\":\"https://api.github.com/users/gustavomhss/events{/privacy}\",\"received_events_url\":\"https://api.github.com/users/gustavomhss/received_events\",\"type\":\"User\",\"user_view_type\":\"public\",\"site_admin\":false},\"committer\":{\"login\":\"gustavomhss\",\"id\":228147811,\"node_id\":\"U_kgDODZlCYw\",\"avatar_url\":\"https://avatars.githubusercontent.com/u/228147811?v=4\",\"gravatar_id\":\"\",\"url\":\"https://api.github.com/users/gustavomhss\",\"html_url\":\"https://github.com/gustavomhss\",\"followers_url\":\"https://api.github.com/users/gustavomhss/followers\",\"following_url\":\"https://api.github.com/users/gustavomhss/following{/other_user}\",\"gists_url\":\"https://api.github.com/users/gustavomhss/gists{/gist_id}\",\"starred_url\":\"https://api.github.com/users/gustavomhss/starred{/owner}{/repo}\",\"subscriptions_url\":\"https://api.github.com/users/gustavomhss/subscriptions\",\"organizations_url\":\"https://api.github.com/users/gustavomhss/orgs\",\"repos_url\":\"https://api.github.com/users/gustavomhss/repos\",\"events_url\":\"https://api.github.com/users/gustavomhss/events{/privacy}\",\"received_events_url\":\"https://api.github.com/users/gustavomhss/received_events\",\"type\":\"User\",\"user_view_type\":\"public\",\"site_admin\":false},\"parents\":[{\"sha\":\"10e23dd3619c6104f124764275e9d50282f7bc9a\",\"url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/commits/10e23dd3619c6104f124764275e9d50282f7bc9a\",\"html_url\":\"https://github.com/gustavomhss/hugr-orchestra/commit/10e23dd3619c6104f124764275e9d50282f7bc9a\"}]},\"_links\":{\"self\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/branches/genesis-fresh-s4\",\"html\":\"https://github.com/gustavomhss/hugr-orchestra/tree/genesis-fresh-s4\"},\"protected\":false,\"protection\":{\"enabled\":false,\"required_status_checks\":{\"enforcement_level\":\"off\",\"contexts\":[],\"checks\":[]}},\"protection_url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/branches/genesis-fresh-s4/protection\"}",
+            "title": "genesis-fresh-s4",
+            "modified_date": null,
+            "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/branches/genesis-fresh-s4",
+            "display_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/branches/genesis-fresh-s4",
+            "display_title": "genesis-fresh-s4",
+            "structuredContent": {
+              "title": "genesis-fresh-s4",
+              "content": "{\"name\":\"genesis-fresh-s4\",\"commit\":{\"sha\":\"db9b4235022c4df32fe3bfd4faeea8adcd69abb7\",\"node_id\":\"C_kwDOU78kOtoAKGRiOWI0MjM1MDIyYzRkZjMyZmUzYmZkNGZhZWVhOGFkY2Q2OWFiYjc\",\"commit\":{\"author\":{\"name\":\"gustavomhss\",\"email\":\"gmhelmold@gmail.com\",\"date\":\"2026-11-13T01:18:39Z\"},\"committer\":{\"name\":\"gustavomhss\",\"email\":\"gmhelmold@gmail.com\",\"date\":\"2026-11-13T01:18:39Z\"},\"message\":\"test(atlas): exercise aliased CAS through the disk-store constructor\",\"tree\":{\"sha\":\"3c93c4636c1e4c4b704f8be9314e22b2149e5609\",\"url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/git/trees/3c93c4636c1e4c4b704f8be9314e22b2149e5609\"},\"url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/git/commits/db9b4235022c4df32fe3bfd4faeea8adcd69abb7\",\"comment_count\":0,\"verification\":{\"verified\":false,\"reason\":\"unsigned\",\"signature\":null,\"payload\":null,\"verified_at\":null}},\"url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/commits/db9b4235022c4df32fe3bfd4faeea8adcd69abb7\",\"html_url\":\"https://github.com/gustavomhss/hugr-orchestra/commit/db9b4235022c4df32fe3bfd4faeea8adcd69abb7\",\"comments_url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/commits/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/comments\",\"author\":{\"login\":\"gustavomhss\",\"id\":228147811,\"node_id\":\"U_kgDODZlCYw\",\"avatar_url\":\"https://avatars.githubusercontent.com/u/228147811?v=4\",\"gravatar_id\":\"\",\"url\":\"https://api.github.com/users/gustavomhss\",\"html_url\":\"https://github.com/gustavomhss\",\"followers_url\":\"https://api.github.com/users/gustavomhss/followers\",\"following_url\":\"https://api.github.com/users/gustavomhss/following{/other_user}\",\"gists_url\":\"https://api.github.com/users/gustavomhss/gists{/gist_id}\",\"starred_url\":\"https://api.github.com/users/gustavomhss/starred{/owner}{/repo}\",\"subscriptions_url\":\"https://api.github.com/users/gustavomhss/subscriptions\",\"organizations_url\":\"https://api.github.com/users/gustavomhss/orgs\",\"repos_url\":\"https://api.github.com/users/gustavomhss/repos\",\"events_url\":\"https://api.github.com/users/gustavomhss/events{/privacy}\",\"received_events_url\":\"https://api.github.com/users/gustavomhss/received_events\",\"type\":\"User\",\"user_view_type\":\"public\",\"site_admin\":false},\"committer\":{\"login\":\"gustavomhss\",\"id\":228147811,\"node_id\":\"U_kgDODZlCYw\",\"avatar_url\":\"https://avatars.githubusercontent.com/u/228147811?v=4\",\"gravatar_id\":\"\",\"url\":\"https://api.github.com/users/gustavomhss\",\"html_url\":\"https://github.com/gustavomhss\",\"followers_url\":\"https://api.github.com/users/gustavomhss/followers\",\"following_url\":\"https://api.github.com/users/gustavomhss/following{/other_user}\",\"gists_url\":\"https://api.github.com/users/gustavomhss/gists{/gist_id}\",\"starred_url\":\"https://api.github.com/users/gustavomhss/starred{/owner}{/repo}\",\"subscriptions_url\":\"https://api.github.com/users/gustavomhss/subscriptions\",\"organizations_url\":\"https://api.github.com/users/gustavomhss/orgs\",\"repos_url\":\"https://api.github.com/users/gustavomhss/repos\",\"events_url\":\"https://api.github.com/users/gustavomhss/events{/privacy}\",\"received_events_url\":\"https://api.github.com/users/gustavomhss/received_events\",\"type\":\"User\",\"user_view_type\":\"public\",\"site_admin\":false},\"parents\":[{\"sha\":\"10e23dd3619c6104f124764275e9d50282f7bc9a\",\"url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/commits/10e23dd3619c6104f124764275e9d50282f7bc9a\",\"html_url\":\"https://github.com/gustavomhss/hugr-orchestra/commit/10e23dd3619c6104f124764275e9d50282f7bc9a\"}]},\"_links\":{\"self\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/branches/genesis-fresh-s4\",\"html\":\"https://github.com/gustavomhss/hugr-orchestra/tree/genesis-fresh-s4\"},\"protected\":false,\"protection\":{\"enabled\":false,\"required_status_checks\":{\"enforcement_level\":\"off\",\"contexts\":[],\"checks\":[]}},\"protection_url\":\"https://api.github.com/repos/gustavomhss/hugr-orchestra/branches/genesis-fresh-s4/protection\"}",
+              "display_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/branches/genesis-fresh-s4"
+            }
+          },
+          "isError": false
+        }
+      }
+    },
+    {
+      "id": 1,
+      "result": {
+        "status": "fulfilled",
+        "value": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Action completed."
+            }
+          ],
+          "structuredContent": {
+            "content": "{\"total_count\":0,\"workflow_runs\":[]}",
+            "title": "runs",
+            "modified_date": null,
+            "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/runs?branch=genesis-s1-automation&per_page=100",
+            "display_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/runs?branch=genesis-s1-automation&per_page=100",
+            "display_title": "runs",
+            "structuredContent": {
+              "title": "runs",
+              "content": "{\"total_count\":0,\"workflow_runs\":[]}",
+              "display_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/runs?branch=genesis-s1-automation&per_page=100"
+            }
+          },
+          "isError": false
+        }
+      }
+    }
+  ],
+  "scope": "Read-only discovery. No new CI, release change, runtime binding or native prepare claimed."
+}

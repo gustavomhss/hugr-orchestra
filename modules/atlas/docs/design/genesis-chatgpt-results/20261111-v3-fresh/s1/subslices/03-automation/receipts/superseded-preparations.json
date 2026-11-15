@@ -1,0 +1,29 @@
+{
+  "schema": "s1-03-superseded-preparations/v1",
+  "recorded_at_utc": "2026-11-15T04:21:07.915349+00:00",
+  "records": [
+    {
+      "path": "review-packets/derived-research-flow-v2.md",
+      "bytes": 8168,
+      "sha256": "4a653414456d0c9b7c20d1f13357579af646a80f7e77774a0302a778017c4bfb",
+      "state": "PREPARED_NOT_DISPATCHED_SUPERSEDED",
+      "reason": "Before native dispatch, the principal found the same source fidelity issue in accepted research L1 v3. L1 v4 was corrected and judged; L2 must rebind to that accepted predecessor in v3 before its same-pair reevaluation. Original prepared bytes retained."
+    },
+    {
+      "path": "review-packets/derived-research-flow-v2.manifest.json",
+      "bytes": 801,
+      "sha256": "5bc6803092e7cc0b300d0037eb4675922247b9b2c95a319e21c284219e58b0aa",
+      "state": "PREPARED_NOT_DISPATCHED_SUPERSEDED",
+      "reason": "Before native dispatch, the principal found the same source fidelity issue in accepted research L1 v3. L1 v4 was corrected and judged; L2 must rebind to that accepted predecessor in v3 before its same-pair reevaluation. Original prepared bytes retained."
+    },
+    {
+      "path": "relay-root/derived-research-flow-v2/request-j1.json",
+      "bytes": 8544,
+      "sha256": "778efb19b2c23daca5ce286f5bdde500e248e1ac54e0f3d6f8ed6e489bada907",
+      "state": "PREPARED_NOT_DISPATCHED_SUPERSEDED",
+      "reason": "Before native dispatch, the principal found the same source fidelity issue in accepted research L1 v3. L1 v4 was corrected and judged; L2 must rebind to that accepted predecessor in v3 before its same-pair reevaluation. Original prepared bytes retained."
+    }
+  ],
+  "actual_native_calls_for_these_preparations": 0,
+  "no_zero_claim_for_authoring_or_other_review_calls": true
+}

@@ -1,0 +1,1 @@
+Recebida a **parte 3/5 de `boundaries-supplement-v2`**, incluindo a conclusão de COMMON-S01, COMMON-I01, as rotas do kit e os trechos de testes até o início de BT09-2. Aguardarei as partes 4–5 e o `FIM_DO_LOTE` externo, sem ferramentas e sem antecipar o julgamento.

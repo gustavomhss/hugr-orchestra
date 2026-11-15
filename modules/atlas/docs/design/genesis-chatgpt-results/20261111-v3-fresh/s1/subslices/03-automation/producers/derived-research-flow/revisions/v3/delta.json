@@ -1,0 +1,197 @@
+{
+  "schema": "s1-03-parent-update-literal-delta/v1",
+  "artifact": "s1.subslice03.research-flow",
+  "from_version": 2,
+  "to_version": 3,
+  "changes": [
+    {
+      "edit_id": "F0-parent-identity",
+      "file": "body.md",
+      "category": "metadata",
+      "reason": "Atualizar identidade e versão do único predecessor aceito; preservar prosa funcional.",
+      "old_byte_offset": 375,
+      "old_end_exclusive": 500,
+      "new_byte_offset": 375,
+      "new_end_exclusive": 511,
+      "old_line_one_based": 7,
+      "before": "`s1.core.research`, corpo de **63.841 bytes**, SHA-256 **`f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f`**",
+      "after": "`s1.core.research`, versão 4, corpo de **64.106 bytes**, SHA-256 **`c3925ca6e27465598796ef21815e79980277d4c3194a8b2fda7cf433700675d1`**",
+      "before_byte_length": 125,
+      "after_byte_length": 136,
+      "before_sha256": "f4e910443bfed12985bfe464350c28c6bec93277a10af46ae8995500f595f95f",
+      "after_sha256": "8cc6ce49426231a5497ea519c7f74918fdd5fc72070592bb1760ea81d69fbd13"
+    },
+    {
+      "edit_id": "E0-current-predecessor-and-gate",
+      "file": "evidence.md",
+      "category": "metadata",
+      "reason": "Atualizar identidade, gate e leitura do L1 v4; conservar o L1 v3 somente por alias histórico.",
+      "old_byte_offset": 94,
+      "old_end_exclusive": 1419,
+      "new_byte_offset": 94,
+      "new_end_exclusive": 1819,
+      "old_line_one_based": 5,
+      "before": "A única autoridade semântica de construção é `s1.core.research`, L1/`component`, em `producers/research/body.md`, **63.841 bytes**, SHA-256 **`f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f`**, blob Git recalculado **`72bdc55fdf2dbda97e84c87111be73fa49aceeb4`**. A fonte investigada por esse L1 é `1cde2ff7a71bcf7aecb5d030917b577165135d38`; este produtor L2 não abriu essa fonte bruta, os captures, coverage ou evidence do L1.\n\nA receita congelada `payload/recipes/derived/research-flow.json`, 8.423 bytes, SHA-256 `543c6045bfb145c0db4b2779b12c96c140ff20198c408357c7d84bcf0a7f71e1`, declara que `parallel-v3-fresh/S1-03/J1` e `parallel-v3-fresh/S1-03/J2` aceitaram esse mesmo corpo. As respostas originais são identificadas na receita por `e52fc2d9eb369da417d7ea035ec641839ca4714be9f75b4b0f2ac4bab35e3cc7` e `8dd9f7ae58de3cda63482558e2940931b185a644bcbd8cafd0b7d5463ea835c6`. São referências de proveniência fornecidas pelo gate; os pareceres integrais não foram lidos. Nenhuma decisão L2 é atribuída aos juízes por este autor.\n\nO body do predecessor foi consumido integralmente em duas exibições contíguas, linhas 1–230 e 231–378. As referências abaixo apontam às seções desse arquivo exato, sem fabricar linhas de código ou substituir sua autoridade por referências externas.\n",
+      "after": "A única autoridade semântica corrente de construção é `s1.core.research`, L1/`component`, versão 4, em `producers/research/body.md`, **64.106 bytes**, SHA-256 **`c3925ca6e27465598796ef21815e79980277d4c3194a8b2fda7cf433700675d1`**, blob Git recalculado **`69fda8b4a63d5480b7d78e8f915e1d90fb8a2b8b`**. A fonte investigada por esse L1 é `1cde2ff7a71bcf7aecb5d030917b577165135d38`; este produtor L2 não abriu essa fonte bruta, os captures, coverage ou evidence do L1.\n\nA receita congelada desta revisão, `producers/derived-research-flow/revisions/v3/recipe.json`, 5.536 bytes, SHA-256 `6b77e699b909ae075954e1d0fb00cd205a4ada0f4cd5ed23eff6fdd350630eae`, declara que `parallel-v3-fresh/S1-03/J1` e `parallel-v3-fresh/S1-03/J2` aceitaram esse mesmo corpo L1 v4. As respostas originais são identificadas na receita por `f0aa061a964bc10e7429dde0b54c2f74c465bdb1e1a7198544541af0fc23218e` e `1d6caeecccc795766c71a3cb9822c8feb1939c8477d7c1d6c9d5ff90d96bea35`. São referências de proveniência fornecidas pelo gate; os pareceres integrais não foram lidos. Nenhuma decisão L2 é atribuída aos juízes por este autor; a v2 preparada não recebeu reavaliação semântica.\n\nO novo body L1 v4 foi relido integralmente em duas exibições contíguas, linhas 1–230 e 231–378. O L1 v3 anterior, já consumido integralmente neste contexto, permanece byte-verificado no alias `producers/research/revisions/v4/history/body.md`, 63.841 bytes, SHA-256 `f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f`; é proveniência histórica, não outro predecessor semântico corrente. As referências abaixo apontam às seções do L1 v4 aceito, sem fabricar linhas de código ou transferir autoridade de versões antigas.\n",
+      "before_byte_length": 1325,
+      "after_byte_length": 1725,
+      "before_sha256": "88be28eda023e9e114c619f8656902c8da51d757f2d5d9247b589edbeb95880e",
+      "after_sha256": "8b2d20dc0071e76bdbc0ffb6c0d1debdbbc519f5d7677fa7978925fa272c4d1b"
+    },
+    {
+      "edit_id": "E1-direct-accepted-mapping",
+      "file": "evidence.md",
+      "category": "metadata",
+      "reason": "O mecanismo condicionado está agora explícito no próprio predecessor aceito; a qualificação pública anterior permanece no histórico e nos inputs.",
+      "old_byte_offset": 4538,
+      "old_end_exclusive": 4666,
+      "new_byte_offset": 4938,
+      "new_end_exclusive": 5031,
+      "old_line_one_based": 27,
+      "before": "R8.1 Query: vazio, stale e dirty; qualificação pública RF-J2-F01 | Observação; ausência de hit não prova ausência de uso",
+      "after": "R8.1 Query: vazio, stale e dirty | Observação; ausência de hit não prova ausência de uso",
+      "before_byte_length": 128,
+      "after_byte_length": 93,
+      "before_sha256": "1ad5c29f4281d04269091df77599fa6f5f9d7782b0a73a5159b2f8e85ac3d107",
+      "after_sha256": "3826e8b2cb90e42bd53018f492e9d1ae318f1c3f7b39b0b587024462b2cab5c1"
+    },
+    {
+      "edit_id": "E3-current-version-provenance",
+      "file": "evidence.md",
+      "category": "metadata",
+      "reason": "Atualizar medições/proveniência corrente e distinguir explicitamente os registros históricos preservados.",
+      "old_byte_offset": 9776,
+      "old_end_exclusive": 11457,
+      "new_byte_offset": 10141,
+      "new_end_exclusive": 12878,
+      "old_line_one_based": 53,
+      "before": "Foram comparados tamanho, SHA-256 e blob Git recalculado dos 14 inputs enumerados com a receita congelada; todos coincidiram. Pedido, receita e dispatch são três unidades adicionais, totalizando **17 inputs integrais únicos**. O pedido foi preservado no hash `351e7104bfdbc75075906493ef2db4d3f689d4181f7e621f64e75e6caf31f6ee`. O dispatch exato, sem newline acrescentado, tem 1.511 bytes e SHA-256 `2252f97394d8dbc61fd0e629ce1a16700f8a81bc78673add06985842fc75efcf`.\n\nA primeira exibição agrupada excedeu o limite de saída da ferramenta e truncou a parte intermediária de COMMON; COMMON foi reapresentado integralmente em chamada separada. Nenhuma conclusão dependeu de trecho truncado. Os demais arquivos e o predecessor completo foram expostos integralmente antes da autoria. A verificação de completude de leitura é procedural, não uma prova de isolamento técnico do host.\n\nO body contém nove cabeçalhos depth2 independentes e 16.980 bytes UTF-8. Excede a preferência usual de 6.000–14.000 bytes para conservar as qualificações que alteram decisões entre aquisição, plano/build, stale/dirty, probe, orçamento, custódia e inquiry. Não reproduz o catálogo completo do predecessor. Hashing, UTF-8/JSON e consistência do conjunto de arquivos são verificações determinísticas, sem execução de teste de produto ou julgamento semântico.\n\n**NOT_RUN:** instalação/download de engines, providers/rede, testes/typecheck/guards do produto, Atlas import/binding/publicação/index/read, consumidor independente e manutenção. **UNKNOWN:** tentativas físicas do host, tokens e custo. L3/L4 não foram produzidos; a principal mantém seus gates separados.\n",
+      "after": "**Histórico preservado.** A produção inicial registrou 17 inputs integrais; sua verificação de 14 pins, pedido/dispatch e a recuperação da exibição truncada de COMMON permanecem nas versões preservadas. A v2 registrou 28 inputs e a correção RF-J2-F01. Os quatro outputs v1 continuam em `history/v1/`; os quatro outputs v2 foram copiados byte a byte para `revisions/v3/history/` antes de qualquer alteração. Pedidos, dispatches, receitas e procedimentos anteriores não foram reescritos.\n\n**Consumo cumulativo atual.** O manifesto v3 enumera **45 unidades integrais únicas**: 28 do manifesto anterior, cinco outputs v2 efetivamente lidos nas verificações de bytes/hashes e 12 unidades desta revisão. A inclusão dos cinco registros conserva leituras reais que eram verificações de outputs recém-produzidos na etapa anterior. Cada unidade tem local_path, tamanho, SHA-256 e blob Git; a linhagem de leitura original fica separada do alias retido. O L1 v3 usa seu alias histórico e não é predecessor corrente. Nenhum body/evidence/manifest/response atual é auto-input.\n\n**Leitura e identidade.** Os sete inputs enumerados na receita v3 foram lidos integralmente ou, no caso do alias do L1 v3 já integralmente consumido, relidos em bytes e conferidos contra a mesma identidade. O L1 v4 inteiro foi relido nesta revisão. Os tamanhos, SHA-256 e blobs Git coincidiram com os pins. A verificação de completude de leitura é procedural, sem alegação de isolamento técnico do host.\n\n**Mudanças e procedimento.** Foram quatro edições de metadata: identidade em F0, identidade/gate/leitura em E0, vínculo direto em E1 e registros atuais nesta E3. F3 e todos os bytes de F1–F8 permanecem idênticos à v2; nenhuma alteração substantiva adicional foi necessária. O script real e os inputs foram congelados antes da execução. O delta registra literais, offsets e segmentos inalterados; sua inversão recompõe body/evidence v2 byte a byte. O body atual contém nove cabeçalhos depth2 e 17.124 bytes UTF-8. A extensão acima da preferência usual conserva as qualificações já produzidas, sem reproduzir o catálogo integral do predecessor.\n\n**Estado de revisão.** A principal informou verificação mecânica da v2; nenhum parecer L2 v2 foi inferido. A v3 exige conferência independente e reavaliação pelos mesmos juízes. Hashes, preservação e prova inversa não são PASS semântico.\n\n**NOT_RUN:** instalação/download de engines, providers/rede, testes/typecheck/guards do produto, Atlas import/binding/publicação/index/read, consumidor independente e manutenção. **UNKNOWN:** tentativas físicas do host, tokens e custo. L3/L4 não foram produzidos; a principal mantém seus gates separados.\n",
+      "before_byte_length": 1681,
+      "after_byte_length": 2737,
+      "before_sha256": "a2ddccaffb9623e0741adac50b456f67f6b9ea7cacefc6a30ef9316856e09647",
+      "after_sha256": "b4c5680664d06e36932f3c0dcfea5fee6197f233fb483619d85813b3299b9352"
+    }
+  ],
+  "unchanged_segments": [
+    {
+      "file": "body.md",
+      "old_start": 0,
+      "old_end_exclusive": 375,
+      "new_start": 0,
+      "byte_length": 375,
+      "sha256": "639d2250ae604986ba9e2337fb3dd73759ceab6bfbbf15bb2eeeebe6a4c9177d"
+    },
+    {
+      "file": "body.md",
+      "old_start": 500,
+      "old_end_exclusive": 17113,
+      "new_start": 511,
+      "byte_length": 16613,
+      "sha256": "f70e60b4ca4841983cbfea3107464819ad056e76aec2b73c79415d500493f786"
+    },
+    {
+      "file": "evidence.md",
+      "old_start": 0,
+      "old_end_exclusive": 94,
+      "new_start": 0,
+      "byte_length": 94,
+      "sha256": "49ffe35f7badbae0f2573de0187b9393a10a27258dda7204847197af0a30db41"
+    },
+    {
+      "file": "evidence.md",
+      "old_start": 1419,
+      "old_end_exclusive": 4538,
+      "new_start": 1819,
+      "byte_length": 3119,
+      "sha256": "cdc7190dac46adcf989fd6a2bc73e43ecd9ea526158d840b88c104ffdc5a075b"
+    },
+    {
+      "file": "evidence.md",
+      "old_start": 4666,
+      "old_end_exclusive": 9776,
+      "new_start": 5031,
+      "byte_length": 5110,
+      "sha256": "b926041f37fbbd4e4dc77a45250a0c42ab065f3e8499ffabd3eee351e239946a"
+    },
+    {
+      "file": "evidence.md",
+      "old_start": 11457,
+      "old_end_exclusive": 11457,
+      "new_start": 12878,
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "files": [
+    {
+      "historical_input": {
+        "local_path": "producers/derived-research-flow/revisions/v3/history/body.md",
+        "byte_length": 17113,
+        "sha256": "f6dce8d080ff5bdd3a5409bd16b846c176c8270135eb51a6cd0329413e3d0994",
+        "git_blob_sha": "2bd9021ea932e9afb5fdd8619b5b6b16e4bfc440"
+      },
+      "new_output": {
+        "local_path": "producers/derived-research-flow/body.md",
+        "byte_length": 17124,
+        "sha256": "f2c19caaa501ea0e135cbbfb4768b4bd68c4e729e5545cb5f80e45c655f52ab7",
+        "git_blob_sha": "1ceb2496a2185042e3eb564e80828bd85ac08f7f"
+      }
+    },
+    {
+      "historical_input": {
+        "local_path": "producers/derived-research-flow/revisions/v3/history/evidence.md",
+        "byte_length": 11457,
+        "sha256": "b7d51d3bab6f9d8538d6b6362953647eedfbc5fad905c69b5d3fd38b0ea75022",
+        "git_blob_sha": "18797d0844d84082dc39e99acbc10f9de03c46ea"
+      },
+      "new_output": {
+        "local_path": "producers/derived-research-flow/evidence.md",
+        "byte_length": 12878,
+        "sha256": "6c6d9c59bf75c0636598315fad3d850426f9d473cc7cbd0ba2f385165992a614",
+        "git_blob_sha": "d1e80930db1d09f6deb84a188dd6093aa50445b7"
+      }
+    }
+  ],
+  "metadata_edits": 4,
+  "substantive_edits": 0,
+  "F3_exactly_preserved": true,
+  "all_F1_through_F8_bytes_preserved": true,
+  "inverse_verification": "PASS_DETERMINISTIC_ONLY",
+  "new_semantic_predecessor": {
+    "key": "s1.core.research",
+    "layer": 1,
+    "version": "4",
+    "body_bytes": 64106,
+    "body_sha256": "c3925ca6e27465598796ef21815e79980277d4c3194a8b2fda7cf433700675d1",
+    "body_git_blob_sha": "69fda8b4a63d5480b7d78e8f915e1d90fb8a2b8b",
+    "local_body_path": "producers/research/body.md"
+  },
+  "old_predecessor_retained_alias": {
+    "local_path": "producers/research/revisions/v4/history/body.md",
+    "byte_length": 63841,
+    "sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+    "git_blob_sha": "72bdc55fdf2dbda97e84c87111be73fa49aceeb4",
+    "input_group": "inherited_v2_manifest",
+    "role": "Earlier accepted L1 v3 consumed in v1/v2; historical context only",
+    "whole_file_consumed": true,
+    "original_read_paths": [
+      "producers/research/body.md"
+    ],
+    "provenance": "Actual earlier family input retained without byte change",
+    "retained_alias": "producers/research/revisions/v4/history/body.md",
+    "semantic_status": "historical_context_only_not_current_build_predecessor"
+  },
+  "procedure": {
+    "local_path": "producers/derived-research-flow/revisions/v3/apply.py",
+    "byte_length": 20110,
+    "sha256": "fa8fb1920a259dda654fb75321d41bcd4416c8c03b69facbe7dcdd5088d48435",
+    "git_blob_sha": "5b52474a88d0bc9a64fedd9598a506d9e75bea6f"
+  },
+  "pre_execution_freeze": {
+    "local_path": "producers/derived-research-flow/revisions/v3/procedure-freeze.json",
+    "byte_length": 38389,
+    "sha256": "ab1c664955412b66e61c88a6213974944ec50ff4d9cadda593c5a3004db8ad4e",
+    "git_blob_sha": "7cc165d1c048f4e15a8e3c8a319ee1c68f0c26b6"
+  }
+}

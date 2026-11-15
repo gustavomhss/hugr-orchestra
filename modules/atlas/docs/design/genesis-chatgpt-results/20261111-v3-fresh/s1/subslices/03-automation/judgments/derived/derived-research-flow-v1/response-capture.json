@@ -1,0 +1,24 @@
+{
+  "lot": "derived-research-flow-v1",
+  "responses": {
+    "j1": {
+      "target": "/root/s1_03_j1",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-research-flow-v1/j1-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 4878,
+      "sha256": "a7f953fdedc9afb7a84f9dd6e93229e1c82efbe9e2fca47d926a3f7f77139130",
+      "terminal_newline": false,
+      "literal": true
+    },
+    "j2": {
+      "target": "/root/s1_03_j2",
+      "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/derived-research-flow-v1/j2-response.md",
+      "origin": "collaboration.list_agents agent_status.completed",
+      "bytes": 4553,
+      "sha256": "3a07f4cfb2d3eb0d3527f889aeafa1a6ea27b8600744558f1228ccfb7f9f9cc0",
+      "terminal_newline": false,
+      "literal": true
+    }
+  },
+  "pending": []
+}

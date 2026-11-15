@@ -1,0 +1,4592 @@
+{
+  "schema": "genesis-native-l1-recipe/v1",
+  "task": "RESEARCH-L1",
+  "producer": "/root/research_l1",
+  "remote_writer": "/root",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "repository": "gustavomhss/hugr-orchestra",
+  "branch": "genesis-s1-automation",
+  "artifact_key": "s1.core.research",
+  "scope": "orchestra.s1",
+  "layer": 1,
+  "need": "component",
+  "output_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "kit_revision": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+  "inheritance_revision": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+  "public_criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I3",
+    "GO-I4",
+    "GO-I5",
+    "GO-I6",
+    "GO-I7",
+    "GO-I8",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "AC-01",
+    "AC-04",
+    "CC-1",
+    "CC-3",
+    "CC-7"
+  ],
+  "public_acceptance_scope": {
+    "AC-01": "L1 content only: explicit needs/artifact/source relationships and intentional unknowns; producer does not issue semantic acceptance or inspect reserved cases.",
+    "AC-04": "L1 content only: real captured pinned sources and existing knowledge reused; conflicts, stale/missing/invalid or hostile-source boundaries preserved. Runtime, publication and consumer proofs are separate principal obligations."
+  },
+  "population": {
+    "selector": {
+      "legacy_artifact_key": "s1.core.research"
+    },
+    "count": 130,
+    "families": {
+      "backend-toolkit": 59,
+      "research": 71
+    },
+    "kinds": {
+      "implementation": 80,
+      "test_code": 41,
+      "runtime_data_or_pin": 7,
+      "generated_output": 1,
+      "documentation": 1
+    },
+    "bytes": 1212271
+  },
+  "input_keys": [
+    "file:packages/core/src/backend-toolkit/acquisition.ts",
+    "file:packages/core/src/backend-toolkit/attempts.ts",
+    "file:packages/core/src/backend-toolkit/cassandra-dialer.ts",
+    "file:packages/core/src/backend-toolkit/cassandra-metadata.ts",
+    "file:packages/core/src/backend-toolkit/diagnostics.ts",
+    "file:packages/core/src/backend-toolkit/entry-skills.gen.ts",
+    "file:packages/core/src/backend-toolkit/hosted.ts",
+    "file:packages/core/src/backend-toolkit/index.ts",
+    "file:packages/core/src/backend-toolkit/launcher.ts",
+    "file:packages/core/src/backend-toolkit/manifest.ts",
+    "file:packages/core/src/backend-toolkit/packs/ast-grep.ts",
+    "file:packages/core/src/backend-toolkit/packs/buf.ts",
+    "file:packages/core/src/backend-toolkit/packs/controller-gen.ts",
+    "file:packages/core/src/backend-toolkit/packs/datafusion-cli.ts",
+    "file:packages/core/src/backend-toolkit/packs/datamodel-codegen.ts",
+    "file:packages/core/src/backend-toolkit/packs/datamodel-codegen.wheels.ts",
+    "file:packages/core/src/backend-toolkit/packs/gitleaks.ts",
+    "file:packages/core/src/backend-toolkit/packs/gocqlx-schemagen.ts",
+    "file:packages/core/src/backend-toolkit/packs/index.ts",
+    "file:packages/core/src/backend-toolkit/packs/kiota.ts",
+    "file:packages/core/src/backend-toolkit/packs/kopium.ts",
+    "file:packages/core/src/backend-toolkit/packs/kubeconform.ts",
+    "file:packages/core/src/backend-toolkit/packs/kysely-codegen.package-lock.json",
+    "file:packages/core/src/backend-toolkit/packs/kysely-codegen.ts",
+    "file:packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+    "file:packages/core/src/backend-toolkit/packs/modelina.ts",
+    "file:packages/core/src/backend-toolkit/packs/ogen.ts",
+    "file:packages/core/src/backend-toolkit/packs/openapi-generator.ts",
+    "file:packages/core/src/backend-toolkit/packs/orval.package-lock.json",
+    "file:packages/core/src/backend-toolkit/packs/orval.ts",
+    "file:packages/core/src/backend-toolkit/packs/postgres-language-server.ts",
+    "file:packages/core/src/backend-toolkit/packs/protoc-gen-es.package-lock.json",
+    "file:packages/core/src/backend-toolkit/packs/protoc-gen-es.ts",
+    "file:packages/core/src/backend-toolkit/packs/sqlc.ts",
+    "file:packages/core/src/backend-toolkit/packs/sqlglot.ts",
+    "file:packages/core/src/backend-toolkit/packs/sqlx.ts",
+    "file:packages/core/src/backend-toolkit/packs/squawk.ts",
+    "file:packages/core/src/backend-toolkit/project-version.ts",
+    "file:packages/core/src/backend-toolkit/README.md",
+    "file:packages/core/src/backend-toolkit/runtimes/go.ts",
+    "file:packages/core/src/backend-toolkit/runtimes/java.ts",
+    "file:packages/core/src/backend-toolkit/runtimes/node.ts",
+    "file:packages/core/src/backend-toolkit/runtimes/python.ts",
+    "file:packages/core/src/backend-toolkit/runtimes/rust.ts",
+    "file:packages/core/src/backend-toolkit/target.ts",
+    "file:packages/core/src/pinned-artifact.ts",
+    "file:packages/core/src/research-toolkit/code-index/build.ts",
+    "file:packages/core/src/research-toolkit/code-index/callers.ts",
+    "file:packages/core/src/research-toolkit/code-index/enclosing.ts",
+    "file:packages/core/src/research-toolkit/code-index/extract.ts",
+    "file:packages/core/src/research-toolkit/code-index/filter.ts",
+    "file:packages/core/src/research-toolkit/code-index/go.ts",
+    "file:packages/core/src/research-toolkit/code-index/python.ts",
+    "file:packages/core/src/research-toolkit/code-index/query.ts",
+    "file:packages/core/src/research-toolkit/code-index/rank.ts",
+    "file:packages/core/src/research-toolkit/code-index/resolve.ts",
+    "file:packages/core/src/research-toolkit/code-index/rust.ts",
+    "file:packages/core/src/research-toolkit/code-index/scip.ts",
+    "file:packages/core/src/research-toolkit/code-index/shard.ts",
+    "file:packages/core/src/research-toolkit/code-index/store.ts",
+    "file:packages/core/src/research-toolkit/code-index/tree-sitter.ts",
+    "file:packages/core/src/research-toolkit/code-index/types.ts",
+    "file:packages/core/src/research-toolkit/index.ts",
+    "file:packages/core/src/research-toolkit/liveness.ts",
+    "file:packages/core/src/research-toolkit/locate.ts",
+    "file:packages/core/src/research-toolkit/manifest.ts",
+    "file:packages/core/src/research-toolkit/packs/index.ts",
+    "file:packages/core/src/research-toolkit/packs/rust-analyzer.ts",
+    "file:packages/core/src/research-toolkit/packs/scip-go.ts",
+    "file:packages/core/src/research-toolkit/packs/scip-python.package-lock.json",
+    "file:packages/core/src/research-toolkit/packs/scip-python.ts",
+    "file:packages/core/src/research-toolkit/packs/scip-typescript.package-lock.json",
+    "file:packages/core/src/research-toolkit/packs/scip-typescript.ts",
+    "file:packages/core/src/research-toolkit/packs/typescript.package-lock.json",
+    "file:packages/core/src/research-toolkit/packs/typescript.ts",
+    "file:packages/core/src/research-toolkit/probe/assets.ts",
+    "file:packages/core/src/research-toolkit/probe/run.ts",
+    "file:packages/core/src/research-toolkit/probe/runners.ts",
+    "file:packages/core/src/research-toolkit/probe/snapshot.ts",
+    "file:packages/core/src/research-toolkit/probe/typecheck.ts",
+    "file:packages/core/src/research-toolkit/probe/types.ts",
+    "file:packages/core/src/research-toolkit/process.ts",
+    "file:packages/core/src/research-toolkit/search.ts",
+    "file:packages/core/src/research/allowance.ts",
+    "file:packages/core/src/research/artifacts.ts",
+    "file:packages/core/src/research/binding.ts",
+    "file:packages/core/src/research/ledger.ts",
+    "file:packages/core/src/research/records.ts",
+    "file:packages/core/src/research/seat-tools.ts",
+    "file:packages/core/test/backend-toolkit-acquisition.test.ts",
+    "file:packages/core/test/backend-toolkit-cassandra.test.ts",
+    "file:packages/core/test/backend-toolkit-cli.test.ts",
+    "file:packages/core/test/backend-toolkit-floors.test.ts",
+    "file:packages/core/test/backend-toolkit-hosted.test.ts",
+    "file:packages/core/test/backend-toolkit-packs.test.ts",
+    "file:packages/core/test/backend-toolkit-process.test.ts",
+    "file:packages/core/test/backend-toolkit-project-version.test.ts",
+    "file:packages/core/test/backend-toolkit-source-readiness.test.ts",
+    "file:packages/core/test/backend-toolkit-source.test.ts",
+    "file:packages/core/test/backend-toolkit-target.test.ts",
+    "file:packages/core/test/backend-toolkit.test.ts",
+    "file:packages/core/test/code-index-query.test.ts",
+    "file:packages/core/test/code-index-rank.test.ts",
+    "file:packages/core/test/code-index-store.test.ts",
+    "file:packages/core/test/pinned-artifact.test.ts",
+    "file:packages/core/test/research-allowance.test.ts",
+    "file:packages/core/test/research-artifacts.test.ts",
+    "file:packages/core/test/research-binding.test.ts",
+    "file:packages/core/test/research-inquiry-ledger.test.ts",
+    "file:packages/core/test/research-locate.test.ts",
+    "file:packages/core/test/research-probe-units.test.ts",
+    "file:packages/core/test/research-probe.test.ts",
+    "file:packages/core/test/research-records.test.ts",
+    "file:packages/core/test/research-search.test.ts",
+    "file:packages/core/test/research-toolkit-callers.test.ts",
+    "file:packages/core/test/research-toolkit-enclosing.test.ts",
+    "file:packages/core/test/research-toolkit-liveness.test.ts",
+    "file:packages/core/test/research-toolkit-packs.test.ts",
+    "file:packages/core/test/research-toolkit-scip.test.ts",
+    "file:packages/core/test/research-toolkit.test.ts",
+    "file:packages/core/test/research-toolkit/capability.test.ts",
+    "file:packages/core/test/research-toolkit/code-index-filter.test.ts",
+    "file:packages/core/test/research-toolkit/code-index-go.test.ts",
+    "file:packages/core/test/research-toolkit/code-index-python.test.ts",
+    "file:packages/core/test/research-toolkit/code-index-resolve.test.ts",
+    "file:packages/core/test/research-toolkit/code-index-rust.test.ts",
+    "file:packages/core/test/research-toolkit/code-index-scip-encoding.test.ts",
+    "file:packages/core/test/research-toolkit/code-index-structural.test.ts",
+    "file:packages/core/test/research-toolkit/code-index-toolkit.test.ts",
+    "file:packages/core/test/research-toolkit/code-index-tree-sitter.test.ts"
+  ],
+  "source_inputs": [
+    {
+      "path": "packages/core/src/backend-toolkit/acquisition.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "9d55862001f9a206018a288d9847ca7d1811b2c9",
+      "sha256": "11b7834f6537e1d2556136dc50306dc3bda0a3381cca07f640b5c93e2f8c54d8",
+      "bytes": 1870,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/attempts.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "320456d5837420999da0034870cedf86b5b8dc05",
+      "sha256": "75382ae48fcc113ed71ea4a61d4122dc24b5ad5c6e4f3d5af52d3938688290eb",
+      "bytes": 1652,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/cassandra-dialer.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "94282bf8f1c851b477f80a57b006df309c243c67",
+      "sha256": "3943c718ce59b671dcbd21085bd1907ad5d91de0f0e2fc34e5b2d7f85dc1e2da",
+      "bytes": 8978,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/cassandra-metadata.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "be309cc1fe2edeeefe82c5c042987a26622d964a",
+      "sha256": "adffa5bbb4e9ab695e7879cf4db83d4982562e69aa74b60b7a016072079428cb",
+      "bytes": 5323,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/diagnostics.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "82c79df31ad65365a2945d516a2e890e2da0d9af",
+      "sha256": "d556fb8a95fdaff9ca4ec23b8ff137f37c3a7547c8ceb4d2d83810e7c2c86814",
+      "bytes": 1795,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/entry-skills.gen.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "9bc0ef240df1d2f6cd08d0480604852e550015b0",
+      "sha256": "5b46f884721943ba81cdaffebbb81ad5c031392bc812209794eaec01e1ef568b",
+      "bytes": 273,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/hosted.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "987657dcb1ce8d9cc9f623713673f99dd376e86c",
+      "sha256": "6d3ea35691832eddb90ce8563679390a1030b71d636a01a4c5cd59ad78ebeb34",
+      "bytes": 11390,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/index.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e5c8e61d202f8a79a5b967d5abc467a97b58f4a3",
+      "sha256": "d420651f26050d31c924b078a59fff12081be914cb8cb94685aad720a9275d9a",
+      "bytes": 15426,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/launcher.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "79c8f7643e6aa23fe628a597422f63d7a033aace",
+      "sha256": "12a6f931b7e080fc25722c966b88822d572fd5ebec86ca52e9e8710ac59d7c36",
+      "bytes": 4090,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/manifest.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d756770cd4679a9c3c983703b2f7deae8ea1cced",
+      "sha256": "2fdbb18ddc44c50456322b2fc55ed1d1c3fd7d69f15cf807c5a2a40c0231f63d",
+      "bytes": 5839,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/ast-grep.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c59c577e3ac8b36c8cd70f3af5c62145fa72f559",
+      "sha256": "4c38bf4a298cdc6d68db78893a13cdf8279a768487de6e0e44af29e7e0b08846",
+      "bytes": 2166,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/buf.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d8d06b5fb1f1b1df4bfbd437fbbc110e0225fc66",
+      "sha256": "23eff54fd15efc953e1d9a779b64b058c54e67fdf30216bf0552a08cd5f2eedb",
+      "bytes": 1675,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/controller-gen.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "55bf77a6e053b7ec32e77f1c0c7ab2ecf410b150",
+      "sha256": "6182cca9af788189579ba431f639e386b45791fda6d9835e1cb4879c071b0aad",
+      "bytes": 2915,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/datafusion-cli.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4843bece0d3ad44712b170c25e161763caa8172f",
+      "sha256": "7597abd91ed4574bf68cbf7303825f294146dc078f14a6371df0bf81230c4efd",
+      "bytes": 2044,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/datamodel-codegen.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "feab5b5a517a598338b7cc18c863d10b841302d5",
+      "sha256": "52c7ee7257e696d7728cd12b6c59d9d7e52afb512b8b84320e62feced373d124",
+      "bytes": 1335,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/datamodel-codegen.wheels.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6385060213d539fb5547b2aa3f342a721f5f2b8c",
+      "sha256": "e1882f2135d3980986ac47eb35f30b3df45bfe63a3de1489bc4e04572e3ad02b",
+      "bytes": 6586,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/gitleaks.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ca2e4948a9b81538b5d013c730c041490795794a",
+      "sha256": "ebd3745fb377d2fe38b166497edfb68f1bbd7202ba27592d00935e9d946e8da4",
+      "bytes": 1865,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/gocqlx-schemagen.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ec10ad95405ed2712bf956538ae0873484d8632c",
+      "sha256": "85794568238124594e4bb9fa1ee663c88c3d606d3221079795b4a72705e7db47",
+      "bytes": 2428,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/index.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5cd9c5ab347992ab5abfb529ebd33221b93bc2e7",
+      "sha256": "84ae51f15fced0c14efd44917c698366de7b65b33228208ff147ed452646ed51",
+      "bytes": 1599,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/kiota.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "62648da970ce5f94bf540acea7d84d3bfc2cdb2f",
+      "sha256": "2409e1b56b8b552c34066942aca1dab95afedac59c0a09d4278bd54f12a3b91f",
+      "bytes": 1902,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/kopium.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c5c0d2e7d05b7cb869e899d0013c02f13c7fa15b",
+      "sha256": "eb7187300e2b0966e2faad3c9048ffda2da09910ddf9dc506d3c7669ee262a9d",
+      "bytes": 1646,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/kubeconform.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "81fb16e67c3fbc464421945d548fd96ff80e3c57",
+      "sha256": "96bd9cc1cf933cdb56995a320b70d897f498a6bf738baaf5565785d2bcaefc17",
+      "bytes": 2763,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/kysely-codegen.package-lock.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4c258c62096c9a119896f0826836d3653645f0f1",
+      "sha256": "9de6d58c097012a2022acbedbe1a1d7ff7b25d08bc23c65ca912f6a851401641",
+      "bytes": 27939,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/kysely-codegen.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "08c150c9918b67928ffb4cfec41b11b24dad9bc0",
+      "sha256": "ef5ae2d54be68713f9a133650800f493828dfd10059b71ceccda717a6bb1b831",
+      "bytes": 1390,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "9fc9ef1bc7124fcead2d83cea20f2bff4340949c",
+      "sha256": "0fc1a48c86b45b4749fda6d5e811a1f9b3f55a246fa5e8dd035435e84d2149d2",
+      "bytes": 266885,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/modelina.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e3f90fbca7f3150c43a231f4029bb8caf5abc043",
+      "sha256": "f2685a235805dd4b286ded02fec5d3f109256a5c9ed20a46c9fe6b405f9c882b",
+      "bytes": 1103,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/ogen.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "302a4c0f91b4fa0aef370d8c6cb7ae48ab414482",
+      "sha256": "c1df3ae0c7b885ad04631d083c76d34802c836a6df049589900e2969c05daabc",
+      "bytes": 2104,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/openapi-generator.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "928930908862f17b5df6fb3d8a376d85ed7d5884",
+      "sha256": "173c8f226dd169b990ca9ce52053a2b05cb62658df84ff994a611d4b3b7bf248",
+      "bytes": 884,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/orval.package-lock.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "af0c40af9f14e14b7703b94d2b475f1e2f159c2a",
+      "sha256": "a3b052e1684e432a80198786e8d5b3744a7b4635dadb5fa4088853817a4f2026",
+      "bytes": 50428,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/orval.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "afdc69072ae464f07a5686fd3828f73d558e0b81",
+      "sha256": "cfa18aa4707d83c3ad83aab06263be68234c186145bdd2b718b9e4d3863abf5a",
+      "bytes": 1113,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/postgres-language-server.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "0e51cf0e5c7774ab3124e8150904301cac44c57a",
+      "sha256": "f1c76d324ebb548e7ca2850bcace878da77626e4dcc716cd9f2c4974383ce951",
+      "bytes": 2087,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/protoc-gen-es.package-lock.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "14948253df8c32134e869f975a8e5f634dc44ad2",
+      "sha256": "7bb67cf09c2d6fb3314b69705375ffda7bf68b2dda8f7917941e97da41aa03bd",
+      "bytes": 3392,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/protoc-gen-es.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6b8dc5112e0d5c09493f2700d2a8a44a66de4ee8",
+      "sha256": "36c5526a297dba47104e6e772f4dd3c6f8a1a02b3b0d57a0b94f72f23cfb6035",
+      "bytes": 824,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/sqlc.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "821a12bf764c932b5b0140be0b4317e45a0ebc8a",
+      "sha256": "642f56d93028b821f8c2d39bb1da0d15e4bf93a669721364914a489cf9359084",
+      "bytes": 1654,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/sqlglot.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "9649773f069a32df82c9793475cfecf3e6f963fa",
+      "sha256": "0a6db1cf8a8689413e40b7edc2cb7a46ac55454d6872ce9a5fc2da99147b20db",
+      "bytes": 998,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/sqlx.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "bdaa2f4e6147bda107c67aae416b8eb97773eaae",
+      "sha256": "869d64285186d2f8bc2dcdbc5dabffc5488257a903e7662d0c99b63c79dce96e",
+      "bytes": 1729,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/packs/squawk.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "fe59f063520d0a445eba6f4dcc5f300159a70c6c",
+      "sha256": "ebec8aa73f4acd6b93172538f776e77805bac9877e12396a43c5cd326a6e930c",
+      "bytes": 1730,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/project-version.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "00be68470409c48e585aa1ab764e6d8872ddd44e",
+      "sha256": "c82bf83182a6d03b13755e5c97eed67bf4dd8298226bd9f79277c94bff94e263",
+      "bytes": 11911,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/README.md",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a7efc8b49f165ad767f51cb49ad9bdbb220215d1",
+      "sha256": "c121de28e34b278db6e4868eeea3b09ab793c1aca1cdf0b5c304cc9d8a12529d",
+      "bytes": 1411,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/runtimes/go.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "75c6d31c2ee8e54f9e3cfedf5f30d5449a63a417",
+      "sha256": "607c8ef56bc75a8134be5535aba9ccce72efbcc44e01d2110c7577c73cc9ed4c",
+      "bytes": 2028,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/runtimes/java.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "7e8f97536e3d79488f7bb05cce689162a2420b8a",
+      "sha256": "02a8a16f2d274950dbde60c64750296f69488bedde47612645de894eeb34d438",
+      "bytes": 2261,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/runtimes/node.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "23817c461874f9fe103c46e48cd143fdb1a1a8d9",
+      "sha256": "8c461b59200597711ebec02c490dc96e5b279b41540f1042a5105fbd6750517b",
+      "bytes": 2466,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/runtimes/python.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d3744fe808d49f0710756ff40d8478e1f8da8874",
+      "sha256": "d4b61a00828e88ee1cfaece927eff526458c350740c07736c6c9a16495343e4a",
+      "bytes": 2738,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/runtimes/rust.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "1e2696f2f7ed5265edb397ea8e2f7f71f9256ebd",
+      "sha256": "d27529a3cf34ab368d03f04ff78ed8494e013c6ab0443f88fb1448e8d1e18770",
+      "bytes": 2526,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/backend-toolkit/target.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "38c19f508bf3c5ab49fdfb0e10b60d762cf9a457",
+      "sha256": "fc76f5c887936816fc46826cacb01a4f19d04fe823ca16a82fac83f9337bffd7",
+      "bytes": 6940,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/pinned-artifact.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "360018d80541459f1a6caab9d8b2de5653411fb6",
+      "sha256": "896dbe5b74a60a2bcae81e9d7b4634aad178debddfeeeb452734552cd0aa504f",
+      "bytes": 7384,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/code-index/build.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b89de3c2f4a985c08e5789020bbf3fcf4fc5b251",
+      "sha256": "bd648215442616d09b710190ee5e22fb4e9f82890bc2967430724954734f7425",
+      "bytes": 6330,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/code-index/callers.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "dbfb863c0f57df3b85f33456188a1532e9cffe6c",
+      "sha256": "c5f23cb31a51945af79347ffe03db97c1ff7f184abc22d99c13c852bb48ed39c",
+      "bytes": 6727,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/code-index/enclosing.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "bc64ec6b4850f673d603aa76096d328300c692ad",
+      "sha256": "5abb45da734f51ab5446e6bbe34868e890d65fa9bde57e6e9a40251386379cd6",
+      "bytes": 4930,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/code-index/extract.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ccd710035774d754490d00f36eb16c0103355175",
+      "sha256": "80b2e9c6091bb6c342bfefa9582bd164fc5dffc239cdf67417dba4c0e79747af",
+      "bytes": 22551,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/code-index/filter.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "55fff12895cfcd287ebcf6e78a3b60933726ae98",
+      "sha256": "4f64a348c5e6e2343c3451de78f32f832579576183eeba21a40c7051989cdf0a",
+      "bytes": 3739,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/code-index/go.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "cd3dd8cc3bf0af5848bb10a303e01ce41ad42eda",
+      "sha256": "caec6569041361ba4ab456923846ddccc104006086b8c6a1901296b0a6aa45b9",
+      "bytes": 3561,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/code-index/python.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "bd6f5a72c2d9a5682abdd1db06233e4085b174fd",
+      "sha256": "6388a271df4127e60855282f05052cc12c54ba8f86e039fe2f369a83a6aec48b",
+      "bytes": 1186,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/code-index/query.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "25d652ee0ce78d327427837466b5d7fe5886013f",
+      "sha256": "ec1dd4a297e6e798c497d67ac5ed21cd4c6484e2aba3c2bed60dbd8f174f05e8",
+      "bytes": 32872,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/code-index/rank.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "47f1ac907480aa33ac17a1d0d2a6557345e4d1ba",
+      "sha256": "4bf06c19df12dba5c60d6118ca7693951e7d857254cda46b43c6b716007d8911",
+      "bytes": 3043,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/code-index/resolve.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c8ddb8e3acb6059962605907e00c6b37422ed2c3",
+      "sha256": "e864ec0f1d25d9d81ce880c450feb4f0adf28cd79d32b0f665d753420a0fa8ba",
+      "bytes": 8917,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/code-index/rust.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "9fb795b9e7b368f4596a781516e942ec760ae020",
+      "sha256": "0f3bd2e8e7615b3fb8ce0770fc66c1a00a371c20e04e0798c250b1d107058c1c",
+      "bytes": 5480,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/code-index/scip.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2e8f9fa18bf6661bc7510dae3106010ef0babf81",
+      "sha256": "fa1f6dee8938ca64e416758acedf759e44904e1a8d6a44c0778ae610ee9f9947",
+      "bytes": 10599,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/code-index/shard.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2065d1521347762a7ea3599f97ff9c2f96d9036c",
+      "sha256": "5177e7c28ec2351c637e199497126c1cf5ee19eba364705b2feedc84d27fb7f0",
+      "bytes": 10497,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/code-index/store.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f71cdf0ae1979f002fce68b53eae445647682d73",
+      "sha256": "570a81a04360d060a7c67a436e531b4c079ba7a9951130a2648ca986846b5e11",
+      "bytes": 13372,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/code-index/tree-sitter.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b470c5e20ba95693296a1ac4d2520ac4bc1a10d5",
+      "sha256": "b0e13b1436402cd34060218f8845de757486769df22824a357bbc05dfc39d8e2",
+      "bytes": 16595,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/code-index/types.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f0690be298513ba918b88c59eb01c2142f8133dc",
+      "sha256": "2bc3804460a0faf5ddf2e62d19ca86efd39db0a8142dc75787e60cdd2519332f",
+      "bytes": 7619,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/index.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a6e7b3bf6dd0ba44d0f0de5cac3eebe5c9f36095",
+      "sha256": "9c1bfe5c5a7bc0c8d4d1f835e61031e0cca06b9ed6567415d9d04ff6e84b599c",
+      "bytes": 14147,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/liveness.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3b6335d550f6979d9aca63cd0e524b3e43b0a9b2",
+      "sha256": "9703355fbfac94a32110e810f0843ce22285895cc45b8da3f534f36a61f772af",
+      "bytes": 6955,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/locate.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d1343801f7b336d5e5b46eac860f6a07a0ae19fa",
+      "sha256": "0ebac9d228ca1764020e0f7ccf260228dc02c1169c0143c07f258e7c7ac650f2",
+      "bytes": 16148,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/manifest.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5532b7fda4fef40c8ff7bd9e4224ac4288e35bb1",
+      "sha256": "c157bc4d55f9108eee8d7328482016c831ee8763929565e04a063e8a8e9eb943",
+      "bytes": 804,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/packs/index.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c560a0cf8a33ec10e1cf199c905517a6c629da15",
+      "sha256": "b48a9611134151e4e44643cf8bf21e84dba990ba9a65ad644788535133bd5b2d",
+      "bytes": 545,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/packs/rust-analyzer.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "617871bdf12fd837043ded8b6fde6b1d19caf56c",
+      "sha256": "e43f4d1b6b57910cc7b4a43306f033700443f8d79b65cf84edc3ab052e6abb96",
+      "bytes": 1916,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/packs/scip-go.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "047a037a20dc3902328c76dd41c46cd7f7dafd2f",
+      "sha256": "7c20e1d6fd8e2d7331a43caa152c7db860620f0dfbdbd15e74b11c48f0d89e8b",
+      "bytes": 1765,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/packs/scip-python.package-lock.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d6912c185ec9c376dca28c4246ba12e7385389d8",
+      "sha256": "a9bf75b6185aad8130476c5c4234026ea059400241720e7db2b11c575eecdf03",
+      "bytes": 28385,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/packs/scip-python.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ba07604bc14e0b439b7fe0e92194eb07f8f078c1",
+      "sha256": "b4d35ef1e9b11ec8687f39c6e51f4b3d9b2afa5908de3a46b41ea05b63e7fbd1",
+      "bytes": 1073,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/packs/scip-typescript.package-lock.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "e6b78e912d54fd5115fb0c4c804c41f175ac82c8",
+      "sha256": "50c220b0739d12746c369da1296b8176737768b43b1ce393532f7cf306ceeb48",
+      "bytes": 2274,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/packs/scip-typescript.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a879dd486a40a0553a6fdedf82e093251ce2ec07",
+      "sha256": "97fd24e79cc805da3f89b7ae31d8e52e25a946b7249b1421a85b7923b06c4773",
+      "bytes": 1057,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/packs/typescript.package-lock.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5b547b8a8d1157434b4aa5d1a46d4f4fee79651c",
+      "sha256": "442acbeda058036d02d4f2483e19149512ebde276c57d65ad3aa664735ff0a76",
+      "bytes": 667,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/packs/typescript.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "781df87bba6bdb1002aadf61574498c96410155f",
+      "sha256": "7c125ffd1acf9381933be0709209d97e79b91b3b1e3abccab4cb8e7d2a57f845",
+      "bytes": 867,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/probe/assets.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "723a227214d129eed66a8e6d43d3277ae0f199d1",
+      "sha256": "3fd210e83469c18a58aa2ffade6286cd1fdbd21ea1f8280cfad9c949ef77f1d9",
+      "bytes": 3800,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/probe/run.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "be267f2f07e4c59a2b69f58b98ddc9499dd550ab",
+      "sha256": "80ece4f75445501ac55ecc69bee4a00ca46f88bf931ba0b1f71c6ec5aa53f73c",
+      "bytes": 8683,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/probe/runners.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5d56b469bb20f80dff4cd89d034706ee8db4798d",
+      "sha256": "551427a96e05cf5562e8d6eff1873b91a538a9614869ae2323d4b40a7120a028",
+      "bytes": 8962,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/probe/snapshot.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "0e89bf342e5c4567c4c2cfc180a3d3961ffec91e",
+      "sha256": "c376cc01e1e893d3fac7cff70f6858888b29145546e36c36ce4d4b0a4655ea77",
+      "bytes": 6868,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/probe/typecheck.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ce72fc2597ac4a25486bc96c88411a3a7cbf9269",
+      "sha256": "929d76e274a17b9eae1f25eab1349fe72f625805c9457110c25f13c618e91cb9",
+      "bytes": 6837,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/probe/types.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a3859179186c2e7f55aa401fa4b3f091540eaffe",
+      "sha256": "7946f380ef918f065273afa09304cdf61da2d88d78bb287cff0ad5812e45c3e6",
+      "bytes": 3631,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/process.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "04f6a92d3a145da49f9934983ea20fc0b2266490",
+      "sha256": "4d040e1cd277492ec22ef7dc3b06fb77a4bfd73064c45ee1fe894992a8948f77",
+      "bytes": 6087,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research-toolkit/search.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c02ca1932f9782f4a2c141a892db5938b3d2c514",
+      "sha256": "5d69897854d3c3ef0b305f4977163233ff73eea0525ad40a2b1d9b606f97cc93",
+      "bytes": 7919,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research/allowance.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2a2b412f57e8b34016ff5bdbfe6f638e9616cf80",
+      "sha256": "177b564304a9d79e9144da70a6c97107b604d40dde16ae8185467d801fd3c3eb",
+      "bytes": 11674,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research/artifacts.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "7c8bb90f269ad00d3779923dd1d8211e3d4edbd4",
+      "sha256": "57e6e7d99c507014c52b887d21dfe766311a1a20a5e3e24837665fed7091d24f",
+      "bytes": 16639,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research/binding.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "5f5c7f92d7ade9c902d54c0e9bce713871952e78",
+      "sha256": "b64e476309f22af194c1459389814939887c117819be494adaac0b2fa73d1701",
+      "bytes": 7351,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research/ledger.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6b6ca2931b6aa8bdd2156b47fc13005aab93dcbf",
+      "sha256": "67e07368ea820ec0c1cb791d601a10acdfa2e9259605a1bec4f556f6bb121839",
+      "bytes": 9660,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research/records.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "17f942640c19e3057ef463252be56ad72a9fa4e7",
+      "sha256": "6f38acb52606d54c2b070057b301cfc82cba29f814599a0dee480c110cee558d",
+      "bytes": 42199,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/src/research/seat-tools.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "60cbc55506b5e3cd9cd7d937abf532399ec235b5",
+      "sha256": "d88373a47e970593f281019269874b0cbe981e09b86d500604eaa4e24b29c36e",
+      "bytes": 1258,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/backend-toolkit-acquisition.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "391a1ea3c8fb7a30afff29454f37449228810f6b",
+      "sha256": "e1a210d6a3955f4d6b7832ee1251f003982b9f41fa54ca082971213f38f03697",
+      "bytes": 3777,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/backend-toolkit-cassandra.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a0aa5c53d74b10062ad26fe52c712487c0b4f9b0",
+      "sha256": "3e94bc8dbc81aab1dc9ba1946a4a890dbeee7ed24f8b68b7c86985bede387e4e",
+      "bytes": 16059,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/backend-toolkit-cli.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "1f23219fe1d06c9c7b1dc98688a0685b36a5f666",
+      "sha256": "f6d565da408d0ac9222c7f4d1dc8b3cbe270a33404254d893eac101a38fc3856",
+      "bytes": 10060,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/backend-toolkit-floors.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3d1b44a6390ab81afe53686429e3faac48beb218",
+      "sha256": "7046d64913ea8b3c42e23e4db3a49818336f9629cecd8960285b105c2ff8d9b4",
+      "bytes": 7931,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/backend-toolkit-hosted.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6c46f1a1df342399afb95c2db68e7e2ad0d14dde",
+      "sha256": "a143a4f87382719c7ab3d496dfe176fe447034735da56361d39681060c293061",
+      "bytes": 18371,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/backend-toolkit-packs.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "360bf087226ae3c097917c477da1af1e91c5a388",
+      "sha256": "657cf39e42dea2a7eb94557e3227454a63580e1dd4306eea764abab4744779f8",
+      "bytes": 5613,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/backend-toolkit-process.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "875625179943d1b4d540c5da6b2e454cdbdb7387",
+      "sha256": "bd9c8418f5286ac92e6afab582e38bec49357f0e87e9d619607257390692ad19",
+      "bytes": 15442,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/backend-toolkit-project-version.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "62779ec4422ce8532dfbeebde74e6d038f737312",
+      "sha256": "e9d2a53a6526adf8b7fb92082961237557ced844c212a67b1eb269f0f33c91ee",
+      "bytes": 14524,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/backend-toolkit-source-readiness.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "0b5ddae83a45a11e5a546be9edc8393d1b161791",
+      "sha256": "049b094e5266d65b48f48feb3cf526eccb9aefc36e00aa9e0ef79352aa03d157",
+      "bytes": 7634,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/backend-toolkit-source.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "7e6d11255bd0c7711b3e50313105229b36e5366f",
+      "sha256": "8f75a59e16b3d1cb07b0e32d7690b4d485b1a23a2fd1efc44d55fe3240a2804d",
+      "bytes": 12550,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/backend-toolkit-target.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "bde74ba76f158a9e8c6298b787935026fa3e7c2d",
+      "sha256": "d45a81b68701c819c43868425b1939210f31cbb777613c947d1f9ac29a7ab939",
+      "bytes": 2997,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/backend-toolkit.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3eea6205614cc9cea12be23c820e1d53f9b6ffac",
+      "sha256": "0c455829b290c1d35b67cd6bc1777918943fa1b7b1d37880c0a978075af71fa0",
+      "bytes": 17079,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/code-index-query.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "89bd7ce2a6edaa5af7df10dcee03de0bdd2fa06e",
+      "sha256": "5759817d4df6aafb66b8a6827a4c4a0942ff8ea4f2e7f755abe3c0f952e81be4",
+      "bytes": 25982,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/code-index-rank.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3492a4ab972297533b12f9467ec92fd77bebcbdf",
+      "sha256": "9ca82360fcef1061d1e42c73b1b7e3ea5cb5f1540583d11f8b66f67a71697fe2",
+      "bytes": 2768,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/code-index-store.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "cb745065bf6208f70ec38456e78d0dba7bdad26d",
+      "sha256": "1b6bcbc705aefe57d2620982e4cc3914fa67bd67464bcda16dfbcf587341c730",
+      "bytes": 5359,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/pinned-artifact.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "c7eee4f2408e355edd7ab9bdaa1d0b1ac4e2c5dc",
+      "sha256": "7f55d37d71175bcf32346648e5321514619eaf753b022f14ade12c352aa442d1",
+      "bytes": 8309,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-allowance.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "0925c03cdf252fe2ae8338c6f31e6d6be172f876",
+      "sha256": "4eec8c9322095c6c6f8b33a9f74ea6655400ff332678c90da62f2e9aad9edc2b",
+      "bytes": 17963,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-artifacts.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "31ae551a9de42954c9f06984eeecba98b725eb77",
+      "sha256": "47960eef80bbae8f9aad0254f15c5278dcb5ff9e319c3a8cb74acf4303231810",
+      "bytes": 10671,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-binding.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "a0bed7ab69d086b18cd4e921e477a9b35a0ed4a9",
+      "sha256": "3fc62da977ccf97ebd3fa989448432f44f8dcd861c06e831756b2ad050a45db5",
+      "bytes": 8564,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-inquiry-ledger.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "25743a3cdea9e2191146694dfdb9c9fe41e44577",
+      "sha256": "5a50187b432fe80d8c07ed712c27f419c7af026263512ee81912eea04e71d0d9",
+      "bytes": 6648,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-locate.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "53aed544518715b880e3415295e94da7756cc9ad",
+      "sha256": "ef4ff4e93af664f8810da34386b235ef33071fcbba9868bf9904aa40f72f801a",
+      "bytes": 8418,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-probe-units.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "6ccd6d8718c8ffdee26279aef39e25a2dc479b05",
+      "sha256": "a0acf57278b74d352af8448be69dff6d7c6a9ac214007301ddd436f1e79d87c4",
+      "bytes": 7284,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-probe.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "92f668b9b22842f2210103138cbdb7a95fa4c3a5",
+      "sha256": "8b68cb18e71ba3291b86e2943b754ae701bb4f9ed8db0be059aaca3e57935bfb",
+      "bytes": 10594,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-records.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "355e6b47b052251b57ee4f4dc56cfe1aee257e99",
+      "sha256": "b2dda3fe95b4fdc32ed63d6e1fe06c10d1fe9e1cb50d28f373cd5dc79b4c879f",
+      "bytes": 20826,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-search.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "4993ba8decd55d2bc8ed812e30227a67595e2f33",
+      "sha256": "5d776ea45efbb391b7fefc1eb225b34e7701b0222fdacf077808019bd8fd45b6",
+      "bytes": 5955,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-toolkit-callers.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "17dd64948d3539303b0322d3348346c9d44fc5ca",
+      "sha256": "5829cf205ff803aa208d831885d3e8727b6903962502034fb549ad16eae06c10",
+      "bytes": 4349,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-toolkit-enclosing.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "eba2a2164725a46200063705d1ad4a5f34f3e54f",
+      "sha256": "211cd241c78fadac73c3dfa22964c1bfb41d53e6cb672c6ae76298be4f252014",
+      "bytes": 3658,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-toolkit-liveness.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ee4caf3c595af279d91f35ec47e4b670fb884251",
+      "sha256": "032ace516862a654d0a588c1d4efc6ef8d306149fe2e1c138a9f21261818741d",
+      "bytes": 3669,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-toolkit-packs.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "d5d83474b3abeeb16b95507cef2fde9f5aab0b5f",
+      "sha256": "18634b672155bf2464d94b555f2e9906f55c76b8961340f341d6ee8fb2cb60dc",
+      "bytes": 5414,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-toolkit-scip.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "cd9313e5674805bbb9449508d352734d8c638dad",
+      "sha256": "d6a06e512f263fe0e6bf50f748a6bea9840e98320260035df3b50a7acb32349f",
+      "bytes": 7709,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-toolkit.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "9acd2dfc384831aaefffff06049400e121540f70",
+      "sha256": "307994cee76a9d44d823921574b47cb650305561bdfafe814d8280742bc78282",
+      "bytes": 9357,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-toolkit/capability.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "2ea51ca30f7057c80c9a025b3e918136315323bc",
+      "sha256": "a61f41b1d83c4fc2805a1730b752eb1ba9c8fe5fac6191f60fc10b258d87a574",
+      "bytes": 5039,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-toolkit/code-index-filter.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "38e5316b72362b75041977ea77233026679d24a9",
+      "sha256": "367b0e31ef325b110537498f1ece2a97e22af86711164bd7df7699c74a12044d",
+      "bytes": 2487,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-toolkit/code-index-go.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ac07bb76924812a5c41a450c20384772a7473fe2",
+      "sha256": "a696f15bbdb5b60de2478ce3eb79e2706d690968b264ba21bdb5e2d79d8977ef",
+      "bytes": 4623,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-toolkit/code-index-python.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "b590f715b28d1f3a93fde1829a0511dc741ea337",
+      "sha256": "35257d6d995914fdeb69f18166a39080d38ead1ac36fbca6c72465836894d5c5",
+      "bytes": 1370,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-toolkit/code-index-resolve.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "cf207199f4ccbf7862fbe0314ae9a1208e5bb6b0",
+      "sha256": "868598c30f99139eaab361d95b975d655fa3b610535cb705cfb6945527872853",
+      "bytes": 5144,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-toolkit/code-index-rust.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "3cd914ecdfbfb95edcc5b726887df31e3ac7da4b",
+      "sha256": "a5ada0a8d7b636a3c88cc608f3aeb85ad37b696a62ca6a42c2da7098f849ce3e",
+      "bytes": 4711,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-toolkit/code-index-scip-encoding.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "72dfcf7b6b82f3755923e9ab81898b15e9e33f06",
+      "sha256": "84837ea6b1f329ed10c6abdbaa4d8206f15ad113584ab5a3ef8bf0f841e062cf",
+      "bytes": 3163,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-toolkit/code-index-structural.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "f690e5191ffde128804ed6550183918273834f1d",
+      "sha256": "60e1481b763e8740c47129ef35f661e887f8f98b92a516035ea4df80959739e8",
+      "bytes": 6494,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-toolkit/code-index-toolkit.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "19a2c8aeb7409ed5b0f961b9c953525f3f408f84",
+      "sha256": "75ed5e2db86795b00569982cdfb973b864cbad34c4616b6d710b979a7d211ef3",
+      "bytes": 2843,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    },
+    {
+      "path": "packages/core/test/research-toolkit/code-index-tree-sitter.test.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "30e690998f46e33e780f39d1aedc908afd819a95",
+      "sha256": "fac2770b3cc7f4de7e9bc64271a747da09ad92b5f5b007dea39a8a6b39fddd4d",
+      "bytes": 5189,
+      "capture_method": "GitHub connector fetch_blob; normative path binding from frozen sources.jsonl"
+    }
+  ],
+  "shared_inputs": [
+    {
+      "input_path": "COMMON.md",
+      "sha256": "ec78eb0fa7dd391c623bac4d953115df6fbd6ba77176dc1bf1cf43650e9a90e7",
+      "bytes": 12959,
+      "git_blob_sha": "893cbb5f5eda2d0c19753606a50d1c482523f0c8",
+      "read_scope": "full instructions or exact selected source rows; no oracle content"
+    },
+    {
+      "input_path": "mission.json",
+      "sha256": "32fc0a8d442eff56716ba86400b13109c4bbb97d047e12a2d597a930153e7f75",
+      "bytes": 6006,
+      "git_blob_sha": "48fa8da131e97c50110ee76e41e79283cd9a0ac4",
+      "read_scope": "full instructions or exact selected source rows; no oracle content"
+    },
+    {
+      "input_path": "inputs.json",
+      "sha256": "8388b4899512c8a7a8ac358a322da64bf8b2db5651f228e9090bebfc21a606a0",
+      "bytes": 6979,
+      "git_blob_sha": "521964f9882a62f5a79ba5be6658b44b9fd464d0",
+      "read_scope": "full instructions or exact selected source rows; no oracle content"
+    },
+    {
+      "input_path": "AGENTS.md",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "bytes": 16501,
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "read_scope": "full instructions or exact selected source rows; no oracle content"
+    },
+    {
+      "input_path": "SKILL.md",
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "bytes": 8143,
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "read_scope": "full instructions or exact selected source rows; no oracle content"
+    },
+    {
+      "input_path": "references/principles.md",
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "bytes": 6010,
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "read_scope": "full instructions or exact selected source rows; no oracle content"
+    },
+    {
+      "input_path": "references/fatia-1.md",
+      "sha256": "152429602222695674fe42b029e8d8d83c974c0369d6c441eccfa0cacfeba7ae",
+      "bytes": 3987,
+      "git_blob_sha": "78482ad7c72ec275fadb26ebece1c30bc1e5ccb9",
+      "read_scope": "full instructions or exact selected source rows; no oracle content"
+    },
+    {
+      "input_path": "references/fresh-start.md",
+      "sha256": "c5168fade744fd3809aeec6c48b22b85914c5257a0b7dd5b9dfcbb6c4c3b2166",
+      "bytes": 4983,
+      "git_blob_sha": "ca485b25e43293a309c5489279dce80ce1441ed0",
+      "read_scope": "full instructions or exact selected source rows; no oracle content"
+    },
+    {
+      "input_path": "references/orchestration.md",
+      "sha256": "b9c6b6cb8b67b4ff546c99aa62041657482a74f11822514e37e2dbbc755cbbcb",
+      "bytes": 4408,
+      "git_blob_sha": "4ffd37ea0015eb1d7529e23a2762aa2cec3dc8ac",
+      "read_scope": "full instructions or exact selected source rows; no oracle content"
+    },
+    {
+      "input_path": "references/judging.md",
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "bytes": 5787,
+      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "read_scope": "full instructions or exact selected source rows; no oracle content"
+    },
+    {
+      "input_path": "references/transport.md",
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "bytes": 8478,
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "read_scope": "full instructions or exact selected source rows; no oracle content"
+    },
+    {
+      "input_path": "history/bodies/research.md",
+      "sha256": "76a39828caccbb41b99fe0f7d480f4a35abac7722d5c34ddfe5c7ddd67c7c202",
+      "bytes": 3942,
+      "git_blob_sha": "d7c550b41f36ba6ae001ef5f7d8c041b26854f2f",
+      "read_scope": "full instructions or exact selected source rows; no oracle content"
+    },
+    {
+      "input_path": "history/a3-dossier.md",
+      "sha256": "36416073165d59eec9c7d847a26f414d855cc2a40758d548f4dd49669dccc5d4",
+      "bytes": 177076,
+      "git_blob_sha": "285e56c1680153ce75c71fd99bcf9455bde70d4d",
+      "read_scope": "research family/artifact and historical source-disposition portions only"
+    },
+    {
+      "input_path": "history/a4-dossier.md",
+      "sha256": "83b544ac46f99b2bf3585ff4e607bcd403e49eb20dd128deb5b6a029a772ead0",
+      "bytes": 155061,
+      "git_blob_sha": "6f872ea0e22097d8084fd587f585751a436f607e",
+      "read_scope": "research family/artifact and historical source-disposition portions only"
+    },
+    {
+      "input_path": "history/coverage-needs-projection.json",
+      "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+      "bytes": 726892,
+      "git_blob_sha": "2e91d0f916dfa95a2dd0ef7ae74ff8c1bb427045",
+      "read_scope": "research family/artifact and historical source-disposition portions only"
+    },
+    {
+      "input_path": "sources.jsonl",
+      "sha256": "1643a358ccaafe0ca9e6a9051d7c1a9bc9a1922834d6183e52703f6de2db077c",
+      "bytes": 119405,
+      "git_blob_sha": "71374892d3a7bda60aaf48cc8bd2c43e4d9e4c85",
+      "read_scope": "full instructions or exact selected source rows; no oracle content"
+    }
+  ],
+  "build_dependencies": [],
+  "historical_reuse": {
+    "artifact_key": "s1.core.research",
+    "body_sha256": "76a39828caccbb41b99fe0f7d480f4a35abac7722d5c34ddfe5c7ddd67c7c202",
+    "inherited_validity_label": "supported",
+    "meaning": "Historical label retained as data, never interpreted as two semantic PASS; four decisive historical sources reused, unread substantive leaves now inspected.",
+    "old_body_retained_unchanged": true
+  },
+  "capture_method": "GitHub connector fetch_blob for every normative Git blob; structured content encoded as UTF-8; SHA-256 and Git blob SHA-1 recomputed locally; source bytes not normalized.",
+  "interpretation_method": "Read control flow and semantic contracts of every implementation leaf; inspect manifests/runtimes/acquisition together; parse locked data and inspect fit/launch/restrictions; read tests as validation contracts without executing; preserve epistemic labels and gaps.",
+  "mechanical_checks": "Only artifact-integrity and inventory bookkeeping; never product tests or platform qualification.",
+  "not_performed": [
+    "product execution",
+    "local test execution",
+    "engine/runtime download or install",
+    "paid external provider call",
+    "GitHub write/branch/PR/merge",
+    "Atlas import/publication/read",
+    "consumer or judge role",
+    "L2-L4 production",
+    "reserved-oracle access"
+  ],
+  "semantic_status": "PRODUCED_NOT_JUDGED",
+  "usage": {
+    "provider_tokens": "UNKNOWN",
+    "provider_cost": "UNKNOWN",
+    "external_paid_provider_calls": 0,
+    "product_test_runs": 0
+  },
+  "transport_limit_report": {
+    "reported_by": "/root",
+    "source_path": "packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+    "source_bytes": 266885,
+    "reported_runtime_release": "20261111-v3-fresh-s4-r3",
+    "reported_max_source_bytes": 256000,
+    "status": "Full-package transport blocker reported by principal, not independently qualified here; exact source and required input retained without split/truncation/hash substitution."
+  },
+  "outputs": [
+    "body.md",
+    "sources/",
+    "captures.json",
+    "coverage.jsonl",
+    "evidence.md",
+    "evidence-review.md",
+    "response.md",
+    "recipe-v2.json",
+    "request.txt",
+    "evidence-index.json",
+    "history/body-initial.md",
+    "history/body-v1.md",
+    "history/recipe-v1.json",
+    "correction-v2-request.txt",
+    "correction-v2-response.md",
+    "correction-v2.json"
+  ],
+  "reserved_oracle": "NOT_ACCESSED; source text treated as data, never instructions",
+  "evidence_selection": [
+    {
+      "id": "E01",
+      "title": "Reúso histórico e lacunas originais",
+      "archive": [
+        {
+          "path": "@history/bodies/research.md",
+          "ranges": [
+            [
+              1,
+              25
+            ]
+          ]
+        },
+        {
+          "path": "@history/a3-dossier.md",
+          "ranges": [
+            [
+              485,
+              499
+            ],
+            [
+              587,
+              601
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "@history/bodies/research.md",
+          "ranges": [
+            [
+              1,
+              5
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E02",
+      "title": "Ownership, gerado e tipos de manifesto",
+      "archive": [
+        {
+          "path": "packages/core/src/backend-toolkit/README.md",
+          "ranges": [
+            [
+              1,
+              32
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/entry-skills.gen.ts",
+          "ranges": [
+            [
+              1,
+              10
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/manifest.ts",
+          "ranges": [
+            [
+              13,
+              123
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/backend-toolkit/README.md",
+          "ranges": [
+            [
+              5,
+              18
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E03",
+      "title": "Dependências, preparo e readiness",
+      "archive": [
+        {
+          "path": "packages/core/src/backend-toolkit/index.ts",
+          "ranges": [
+            [
+              27,
+              67
+            ],
+            [
+              80,
+              134
+            ],
+            [
+              137,
+              279
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/backend-toolkit/index.ts",
+          "ranges": [
+            [
+              137,
+              146
+            ],
+            [
+              246,
+              279
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E04",
+      "title": "Aquisição compartilhada e cooldown",
+      "archive": [
+        {
+          "path": "packages/core/src/backend-toolkit/acquisition.ts",
+          "ranges": [
+            [
+              8,
+              33
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/attempts.ts",
+          "ranges": [
+            [
+              8,
+              33
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/backend-toolkit/acquisition.ts",
+          "ranges": [
+            [
+              14,
+              33
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/attempts.ts",
+          "ranges": [
+            [
+              20,
+              25
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E05",
+      "title": "Targets, pisos e detecção permissiva",
+      "archive": [
+        {
+          "path": "packages/core/src/backend-toolkit/target.ts",
+          "ranges": [
+            [
+              7,
+              138
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/backend-toolkit/target.ts",
+          "ranges": [
+            [
+              31,
+              38
+            ],
+            [
+              46,
+              52
+            ],
+            [
+              81,
+              88
+            ],
+            [
+              129,
+              130
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E06",
+      "title": "PinnedArtifact: integridade, staging e limites",
+      "archive": [
+        {
+          "path": "packages/core/src/pinned-artifact.ts",
+          "ranges": [
+            [
+              20,
+              156
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/pinned-artifact.ts",
+          "ranges": [
+            [
+              46,
+              75
+            ],
+            [
+              77,
+              95
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E07",
+      "title": "Hosted: npm/pip/source e encerramento",
+      "archive": [
+        {
+          "path": "packages/core/src/backend-toolkit/hosted.ts",
+          "ranges": [
+            [
+              38,
+              225
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/backend-toolkit/hosted.ts",
+          "ranges": [
+            [
+              39,
+              46
+            ],
+            [
+              68,
+              70
+            ],
+            [
+              87,
+              91
+            ],
+            [
+              142,
+              146
+            ],
+            [
+              158,
+              166
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E08",
+      "title": "Launchers, shims e diagnóstico",
+      "archive": [
+        {
+          "path": "packages/core/src/backend-toolkit/launcher.ts",
+          "ranges": [
+            [
+              7,
+              67
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/diagnostics.ts",
+          "ranges": [
+            [
+              7,
+              29
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/backend-toolkit/launcher.ts",
+          "ranges": [
+            [
+              41,
+              47
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/diagnostics.ts",
+          "ranges": [
+            [
+              7,
+              14
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E09",
+      "title": "Guard de versão e parser de config",
+      "archive": [
+        {
+          "path": "packages/core/src/backend-toolkit/project-version.ts",
+          "ranges": [
+            [
+              15,
+              105
+            ],
+            [
+              115,
+              214
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/backend-toolkit/project-version.ts",
+          "ranges": [
+            [
+              33,
+              49
+            ],
+            [
+              61,
+              76
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E10",
+      "title": "Compatibilidade Cassandra e dialer fechado",
+      "archive": [
+        {
+          "path": "packages/core/src/backend-toolkit/cassandra-metadata.ts",
+          "ranges": [
+            [
+              9,
+              87
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/cassandra-dialer.ts",
+          "ranges": [
+            [
+              1,
+              217
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/backend-toolkit/cassandra-metadata.ts",
+          "ranges": [
+            [
+              31,
+              45
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/cassandra-dialer.ts",
+          "ranges": [
+            [
+              49,
+              69
+            ],
+            [
+              99,
+              126
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E11",
+      "title": "Todos os packs backend: versão, receita e fit",
+      "archive": [
+        {
+          "path": "packages/core/src/backend-toolkit/packs/ast-grep.ts",
+          "ranges": [
+            [
+              3,
+              30
+            ],
+            [
+              54,
+              59
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/buf.ts",
+          "ranges": [
+            [
+              3,
+              30
+            ],
+            [
+              38,
+              39
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/controller-gen.ts",
+          "ranges": [
+            [
+              3,
+              19
+            ],
+            [
+              67,
+              72
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/datafusion-cli.ts",
+          "ranges": [
+            [
+              3,
+              41
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/datamodel-codegen.ts",
+          "ranges": [
+            [
+              3,
+              31
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/datamodel-codegen.wheels.ts",
+          "ranges": [
+            [
+              1,
+              24
+            ],
+            [
+              76,
+              93
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/gitleaks.ts",
+          "ranges": [
+            [
+              3,
+              33
+            ],
+            [
+              41,
+              42
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/gocqlx-schemagen.ts",
+          "ranges": [
+            [
+              3,
+              75
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/index.ts",
+          "ranges": [
+            [
+              23,
+              47
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/kiota.ts",
+          "ranges": [
+            [
+              3,
+              34
+            ],
+            [
+              42,
+              43
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/kopium.ts",
+          "ranges": [
+            [
+              3,
+              37
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/kubeconform.ts",
+          "ranges": [
+            [
+              3,
+              19
+            ],
+            [
+              67,
+              72
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/kysely-codegen.ts",
+          "ranges": [
+            [
+              3,
+              37
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/modelina.ts",
+          "ranges": [
+            [
+              3,
+              28
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/ogen.ts",
+          "ranges": [
+            [
+              3,
+              83
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/openapi-generator.ts",
+          "ranges": [
+            [
+              3,
+              23
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/orval.ts",
+          "ranges": [
+            [
+              3,
+              31
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/postgres-language-server.ts",
+          "ranges": [
+            [
+              3,
+              34
+            ],
+            [
+              46,
+              51
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/protoc-gen-es.ts",
+          "ranges": [
+            [
+              3,
+              25
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/sqlc.ts",
+          "ranges": [
+            [
+              3,
+              29
+            ],
+            [
+              37,
+              38
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/sqlglot.ts",
+          "ranges": [
+            [
+              3,
+              26
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/sqlx.ts",
+          "ranges": [
+            [
+              3,
+              40
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/squawk.ts",
+          "ranges": [
+            [
+              3,
+              29
+            ],
+            [
+              37,
+              42
+            ]
+          ]
+        }
+      ],
+      "review": []
+    },
+    {
+      "id": "E12",
+      "title": "Cinco runtimes: versões, layouts e floors",
+      "archive": [
+        {
+          "path": "packages/core/src/backend-toolkit/runtimes/go.ts",
+          "ranges": [
+            [
+              3,
+              62
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/runtimes/java.ts",
+          "ranges": [
+            [
+              3,
+              45
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/runtimes/node.ts",
+          "ranges": [
+            [
+              3,
+              56
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/runtimes/python.ts",
+          "ranges": [
+            [
+              3,
+              65
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/runtimes/rust.ts",
+          "ranges": [
+            [
+              3,
+              52
+            ]
+          ]
+        }
+      ],
+      "review": []
+    },
+    {
+      "id": "E13",
+      "title": "Research packs e contratos de locks",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/manifest.ts",
+          "ranges": [
+            [
+              5,
+              17
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/packs/index.ts",
+          "ranges": [
+            [
+              1,
+              15
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/packs/rust-analyzer.ts",
+          "ranges": [
+            [
+              3,
+              38
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/packs/scip-go.ts",
+          "ranges": [
+            [
+              3,
+              35
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/packs/scip-python.ts",
+          "ranges": [
+            [
+              3,
+              32
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/packs/scip-typescript.ts",
+          "ranges": [
+            [
+              3,
+              31
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/packs/typescript.ts",
+          "ranges": [
+            [
+              3,
+              26
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/kysely-codegen.package-lock.json",
+          "ranges": [
+            [
+              1,
+              22
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+          "ranges": [
+            [
+              1,
+              22
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+          "ranges": [
+            [
+              4468,
+              4493
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/orval.package-lock.json",
+          "ranges": [
+            [
+              1,
+              22
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/backend-toolkit/packs/protoc-gen-es.package-lock.json",
+          "ranges": [
+            [
+              1,
+              22
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/packs/scip-python.package-lock.json",
+          "ranges": [
+            [
+              1,
+              22
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/packs/scip-typescript.package-lock.json",
+          "ranges": [
+            [
+              1,
+              22
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/packs/typescript.package-lock.json",
+          "ranges": [
+            [
+              1,
+              22
+            ]
+          ]
+        }
+      ],
+      "review": []
+    },
+    {
+      "id": "E14",
+      "title": "Caps, default adapter, packs ausentes e warm",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/index.ts",
+          "ranges": [
+            [
+              15,
+              145
+            ],
+            [
+              164,
+              218
+            ],
+            [
+              251,
+              263
+            ],
+            [
+              276,
+              300
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research-toolkit/index.ts",
+          "ranges": [
+            [
+              31,
+              38
+            ],
+            [
+              103,
+              108
+            ],
+            [
+              164,
+              178
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E15",
+      "title": "Prewarm detached, status de shard e lock",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/index.ts",
+          "ranges": [
+            [
+              146,
+              163
+            ],
+            [
+              191,
+              250
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research-toolkit/index.ts",
+          "ranges": [
+            [
+              149,
+              158
+            ],
+            [
+              191,
+              201
+            ],
+            [
+              276,
+              281
+            ],
+            [
+              293,
+              300
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E16",
+      "title": "Git, descoberta e identidade de shards",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/shard.ts",
+          "ranges": [
+            [
+              24,
+              204
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/shard.ts",
+          "ranges": [
+            [
+              181,
+              204
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E17",
+      "title": "Build, singleFlight, SQLite e retenção",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/build.ts",
+          "ranges": [
+            [
+              25,
+              122
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/code-index/store.ts",
+          "ranges": [
+            [
+              70,
+              233
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/store.ts",
+          "ranges": [
+            [
+              75,
+              77
+            ],
+            [
+              184,
+              191
+            ],
+            [
+              203,
+              208
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E18",
+      "title": "Adapter real, source worktree, estrutural e opacidade",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/extract.ts",
+          "ranges": [
+            [
+              46,
+              225
+            ],
+            [
+              238,
+              371
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/extract.ts",
+          "ranges": [
+            [
+              87,
+              100
+            ],
+            [
+              118,
+              128
+            ],
+            [
+              151,
+              166
+            ],
+            [
+              286,
+              295
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E19",
+      "title": "Filtro e parser estrutural",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/filter.ts",
+          "ranges": [
+            [
+              7,
+              79
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/code-index/tree-sitter.ts",
+          "ranges": [
+            [
+              19,
+              80
+            ],
+            [
+              120,
+              198
+            ],
+            [
+              210,
+              267
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/tree-sitter.ts",
+          "ranges": [
+            [
+              54,
+              79
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E20",
+      "title": "SCIP: arquivo regular, memo, encoding e empty helper",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/scip.ts",
+          "ranges": [
+            [
+              8,
+              224
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/scip.ts",
+          "ranges": [
+            [
+              97,
+              105
+            ],
+            [
+              124,
+              133
+            ],
+            [
+              163,
+              171
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E21",
+      "title": "Callers, canonicalização e enclosing",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/callers.ts",
+          "ranges": [
+            [
+              23,
+              135
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/code-index/enclosing.ts",
+          "ranges": [
+            [
+              22,
+              92
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/callers.ts",
+          "ranges": [
+            [
+              111,
+              135
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E22",
+      "title": "Adapters e resolução Go/Python/Rust",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/go.ts",
+          "ranges": [
+            [
+              7,
+              63
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/code-index/python.ts",
+          "ranges": [
+            [
+              3,
+              22
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/code-index/rust.ts",
+          "ranges": [
+            [
+              7,
+              103
+            ]
+          ]
+        }
+      ],
+      "review": []
+    },
+    {
+      "id": "E23",
+      "title": "Resolução TS/Python e rank",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/resolve.ts",
+          "ranges": [
+            [
+              21,
+              164
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/code-index/rank.ts",
+          "ranges": [
+            [
+              10,
+              58
+            ]
+          ]
+        }
+      ],
+      "review": []
+    },
+    {
+      "id": "E24",
+      "title": "Query: basis, stale e dirty overlay",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/types.ts",
+          "ranges": [
+            [
+              7,
+              88
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/code-index/query.ts",
+          "ranges": [
+            [
+              58,
+              261
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/query.ts",
+          "ranges": [
+            [
+              119,
+              135
+            ],
+            [
+              187,
+              226
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E25",
+      "title": "Query: resolução, hits e limites de overlay",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/query.ts",
+          "ranges": [
+            [
+              263,
+              524
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research-toolkit/code-index/query.ts",
+          "ranges": [
+            [
+              228,
+              247
+            ],
+            [
+              417,
+              422
+            ],
+            [
+              429,
+              437
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E26",
+      "title": "Busca lexical e limites de captura",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/search.ts",
+          "ranges": [
+            [
+              17,
+              175
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research-toolkit/search.ts",
+          "ranges": [
+            [
+              50,
+              54
+            ],
+            [
+              73,
+              85
+            ],
+            [
+              101,
+              122
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E27",
+      "title": "Locate: budget, ranking e verificação",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/locate.ts",
+          "ranges": [
+            [
+              24,
+              270
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research-toolkit/locate.ts",
+          "ranges": [
+            [
+              37,
+              43
+            ],
+            [
+              228,
+              250
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E28",
+      "title": "Liveness: alcance, HTTP, DNS e limites",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/liveness.ts",
+          "ranges": [
+            [
+              7,
+              126
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research-toolkit/liveness.ts",
+          "ranges": [
+            [
+              54,
+              64
+            ],
+            [
+              89,
+              94
+            ],
+            [
+              111,
+              116
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E29",
+      "title": "Probe: contrato fechado, execução e verdict",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/probe/types.ts",
+          "ranges": [
+            [
+              10,
+              84
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/probe/run.ts",
+          "ranges": [
+            [
+              18,
+              152
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research-toolkit/probe/types.ts",
+          "ranges": [
+            [
+              10,
+              21
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/probe/run.ts",
+          "ranges": [
+            [
+              42,
+              64
+            ],
+            [
+              95,
+              110
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E30",
+      "title": "Processos: ambiente, limites e encerramento",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/process.ts",
+          "ranges": [
+            [
+              16,
+              126
+            ]
+          ]
+        }
+      ],
+      "review": []
+    },
+    {
+      "id": "E31",
+      "title": "Snapshots e dependências compartilhadas",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/probe/snapshot.ts",
+          "ranges": [
+            [
+              12,
+              113
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research-toolkit/probe/snapshot.ts",
+          "ranges": [
+            [
+              94,
+              113
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E32",
+      "title": "Assets e runners fechados",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/probe/assets.ts",
+          "ranges": [
+            [
+              11,
+              64
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/src/research-toolkit/probe/runners.ts",
+          "ranges": [
+            [
+              15,
+              152
+            ]
+          ]
+        }
+      ],
+      "review": []
+    },
+    {
+      "id": "E33",
+      "title": "Typecheck e diagnóstico estruturado",
+      "archive": [
+        {
+          "path": "packages/core/src/research-toolkit/probe/typecheck.ts",
+          "ranges": [
+            [
+              14,
+              118
+            ]
+          ]
+        }
+      ],
+      "review": []
+    },
+    {
+      "id": "E34",
+      "title": "Binding nativo e invocação persistida",
+      "archive": [
+        {
+          "path": "packages/core/src/research/binding.ts",
+          "ranges": [
+            [
+              22,
+              104
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research/binding.ts",
+          "ranges": [
+            [
+              25,
+              32
+            ],
+            [
+              49,
+              52
+            ],
+            [
+              65,
+              76
+            ],
+            [
+              100,
+              103
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E35",
+      "title": "Allowance, charge idempotente e reserva irreversível",
+      "archive": [
+        {
+          "path": "packages/core/src/research/allowance.ts",
+          "ranges": [
+            [
+              16,
+              32
+            ],
+            [
+              40,
+              181
+            ],
+            [
+              189,
+              197
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research/allowance.ts",
+          "ranges": [
+            [
+              117,
+              142
+            ],
+            [
+              155,
+              163
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E36",
+      "title": "Ledger, escopo, dispatch, retenção e replay",
+      "archive": [
+        {
+          "path": "packages/core/src/research/ledger.ts",
+          "ranges": [
+            [
+              15,
+              157
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research/ledger.ts",
+          "ranges": [
+            [
+              62,
+              84
+            ],
+            [
+              145,
+              157
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E37",
+      "title": "Custódia e admissão são contratos diferentes",
+      "archive": [
+        {
+          "path": "packages/core/src/research/artifacts.ts",
+          "ranges": [
+            [
+              32,
+              148
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research/artifacts.ts",
+          "ranges": [
+            [
+              85,
+              94
+            ],
+            [
+              104,
+              112
+            ],
+            [
+              134,
+              145
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E38",
+      "title": "Intent estável e filesystem imutável",
+      "archive": [
+        {
+          "path": "packages/core/src/research/artifacts.ts",
+          "ranges": [
+            [
+              149,
+              259
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research/artifacts.ts",
+          "ranges": [
+            [
+              174,
+              190
+            ],
+            [
+              237,
+              255
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E39",
+      "title": "Records e locators de evidência",
+      "archive": [
+        {
+          "path": "packages/core/src/research/records.ts",
+          "ranges": [
+            [
+              73,
+              128
+            ],
+            [
+              492,
+              554
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research/records.ts",
+          "ranges": [
+            [
+              103,
+              115
+            ],
+            [
+              521,
+              552
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E40",
+      "title": "CAS de registros e captura admitida",
+      "archive": [
+        {
+          "path": "packages/core/src/research/records.ts",
+          "ranges": [
+            [
+              129,
+              259
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research/records.ts",
+          "ranges": [
+            [
+              149,
+              165
+            ],
+            [
+              191,
+              213
+            ],
+            [
+              238,
+              258
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E41",
+      "title": "Attempt e aquisição sem retry oculto",
+      "archive": [
+        {
+          "path": "packages/core/src/research/records.ts",
+          "ranges": [
+            [
+              262,
+              331
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research/records.ts",
+          "ranges": [
+            [
+              300,
+              320
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E42",
+      "title": "Views, inquiry e citações Markdown",
+      "archive": [
+        {
+          "path": "packages/core/src/research/records.ts",
+          "ranges": [
+            [
+              334,
+              472
+            ],
+            [
+              556,
+              577
+            ]
+          ]
+        }
+      ],
+      "review": [
+        {
+          "path": "packages/core/src/research/records.ts",
+          "ranges": [
+            [
+              447,
+              455
+            ],
+            [
+              564,
+              577
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "id": "E43",
+      "title": "Declarações de seat e ferramentas retidas",
+      "archive": [
+        {
+          "path": "packages/core/src/research/seat-tools.ts",
+          "ranges": [
+            [
+              1,
+              25
+            ]
+          ]
+        }
+      ],
+      "review": []
+    },
+    {
+      "id": "E44",
+      "title": "Contratos backend e artefatos pinados — NÃO EXECUTADOS",
+      "archive": [
+        {
+          "path": "packages/core/test/backend-toolkit-acquisition.test.ts",
+          "ranges": [
+            [
+              7,
+              9
+            ],
+            [
+              34,
+              36
+            ],
+            [
+              43,
+              45
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-cassandra.test.ts",
+          "ranges": [
+            [
+              31,
+              33
+            ],
+            [
+              68,
+              70
+            ],
+            [
+              113,
+              115
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-cli.test.ts",
+          "ranges": [
+            [
+              33,
+              35
+            ],
+            [
+              70,
+              72
+            ],
+            [
+              107,
+              109
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-floors.test.ts",
+          "ranges": [
+            [
+              53,
+              55
+            ],
+            [
+              60,
+              62
+            ],
+            [
+              73,
+              75
+            ],
+            [
+              107,
+              109
+            ],
+            [
+              116,
+              118
+            ],
+            [
+              124,
+              126
+            ],
+            [
+              133,
+              135
+            ],
+            [
+              142,
+              144
+            ],
+            [
+              149,
+              151
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-hosted.test.ts",
+          "ranges": [
+            [
+              159,
+              161
+            ],
+            [
+              193,
+              195
+            ],
+            [
+              219,
+              221
+            ],
+            [
+              234,
+              236
+            ],
+            [
+              268,
+              270
+            ],
+            [
+              278,
+              280
+            ],
+            [
+              299,
+              301
+            ],
+            [
+              331,
+              333
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-packs.test.ts",
+          "ranges": [
+            [
+              54,
+              56
+            ],
+            [
+              58,
+              60
+            ],
+            [
+              71,
+              73
+            ],
+            [
+              83,
+              85
+            ],
+            [
+              91,
+              93
+            ],
+            [
+              102,
+              104
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-process.test.ts",
+          "ranges": [
+            [
+              140,
+              143
+            ],
+            [
+              164,
+              167
+            ],
+            [
+              181,
+              184
+            ],
+            [
+              199,
+              202
+            ],
+            [
+              211,
+              214
+            ],
+            [
+              233,
+              236
+            ],
+            [
+              276,
+              279
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-project-version.test.ts",
+          "ranges": [
+            [
+              32,
+              34
+            ],
+            [
+              41,
+              43
+            ],
+            [
+              52,
+              54
+            ],
+            [
+              65,
+              67
+            ],
+            [
+              77,
+              79
+            ],
+            [
+              93,
+              95
+            ],
+            [
+              124,
+              126
+            ],
+            [
+              141,
+              143
+            ],
+            [
+              158,
+              160
+            ],
+            [
+              170,
+              172
+            ],
+            [
+              192,
+              194
+            ],
+            [
+              199,
+              201
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-source-readiness.test.ts",
+          "ranges": [
+            [
+              109,
+              111
+            ],
+            [
+              124,
+              126
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-source.test.ts",
+          "ranges": [
+            [
+              182,
+              184
+            ],
+            [
+              224,
+              226
+            ],
+            [
+              251,
+              253
+            ],
+            [
+              263,
+              265
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit-target.test.ts",
+          "ranges": [
+            [
+              43,
+              45
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/backend-toolkit.test.ts",
+          "ranges": [
+            [
+              101,
+              103
+            ],
+            [
+              122,
+              124
+            ],
+            [
+              135,
+              137
+            ],
+            [
+              148,
+              150
+            ],
+            [
+              161,
+              163
+            ],
+            [
+              176,
+              178
+            ],
+            [
+              187,
+              189
+            ],
+            [
+              196,
+              198
+            ],
+            [
+              214,
+              216
+            ],
+            [
+              229,
+              231
+            ],
+            [
+              245,
+              247
+            ],
+            [
+              256,
+              258
+            ],
+            [
+              274,
+              276
+            ],
+            [
+              310,
+              312
+            ],
+            [
+              320,
+              322
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/pinned-artifact.test.ts",
+          "ranges": [
+            [
+              66,
+              68
+            ],
+            [
+              83,
+              85
+            ],
+            [
+              93,
+              95
+            ],
+            [
+              104,
+              106
+            ],
+            [
+              120,
+              122
+            ],
+            [
+              142,
+              144
+            ],
+            [
+              156,
+              158
+            ]
+          ]
+        }
+      ],
+      "review": []
+    },
+    {
+      "id": "E45",
+      "title": "Contratos de índice/toolkit — NÃO EXECUTADOS",
+      "archive": [
+        {
+          "path": "packages/core/test/code-index-query.test.ts",
+          "ranges": [
+            [
+              170,
+              172
+            ],
+            [
+              182,
+              184
+            ],
+            [
+              204,
+              206
+            ],
+            [
+              214,
+              216
+            ],
+            [
+              226,
+              228
+            ],
+            [
+              241,
+              243
+            ],
+            [
+              255,
+              257
+            ],
+            [
+              265,
+              267
+            ],
+            [
+              283,
+              285
+            ],
+            [
+              296,
+              298
+            ],
+            [
+              309,
+              311
+            ],
+            [
+              324,
+              326
+            ],
+            [
+              347,
+              349
+            ],
+            [
+              362,
+              364
+            ],
+            [
+              374,
+              376
+            ],
+            [
+              397,
+              399
+            ],
+            [
+              427,
+              429
+            ],
+            [
+              443,
+              445
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/code-index-rank.test.ts",
+          "ranges": [
+            [
+              6,
+              8
+            ],
+            [
+              21,
+              23
+            ],
+            [
+              32,
+              34
+            ],
+            [
+              41,
+              43
+            ],
+            [
+              49,
+              51
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/code-index-store.test.ts",
+          "ranges": [
+            [
+              23,
+              25
+            ],
+            [
+              28,
+              30
+            ],
+            [
+              53,
+              55
+            ],
+            [
+              79,
+              81
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit-callers.test.ts",
+          "ranges": [
+            [
+              30,
+              32
+            ],
+            [
+              42,
+              44
+            ],
+            [
+              50,
+              52
+            ],
+            [
+              64,
+              66
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit-enclosing.test.ts",
+          "ranges": [
+            [
+              24,
+              26
+            ],
+            [
+              34,
+              36
+            ],
+            [
+              44,
+              46
+            ],
+            [
+              62,
+              64
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit-liveness.test.ts",
+          "ranges": [
+            [
+              25,
+              27
+            ],
+            [
+              31,
+              33
+            ],
+            [
+              35,
+              37
+            ],
+            [
+              41,
+              43
+            ],
+            [
+              51,
+              53
+            ],
+            [
+              58,
+              60
+            ],
+            [
+              62,
+              64
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit-packs.test.ts",
+          "ranges": [
+            [
+              15,
+              17
+            ],
+            [
+              26,
+              28
+            ],
+            [
+              37,
+              39
+            ],
+            [
+              53,
+              55
+            ],
+            [
+              68,
+              70
+            ],
+            [
+              78,
+              80
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit-scip.test.ts",
+          "ranges": [
+            [
+              23,
+              25
+            ],
+            [
+              36,
+              38
+            ],
+            [
+              60,
+              62
+            ],
+            [
+              71,
+              73
+            ],
+            [
+              91,
+              93
+            ],
+            [
+              107,
+              109
+            ],
+            [
+              116,
+              118
+            ],
+            [
+              129,
+              131
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit.test.ts",
+          "ranges": [
+            [
+              75,
+              77
+            ],
+            [
+              87,
+              89
+            ],
+            [
+              123,
+              125
+            ],
+            [
+              165,
+              167
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/capability.test.ts",
+          "ranges": [
+            [
+              21,
+              23
+            ],
+            [
+              37,
+              39
+            ],
+            [
+              65,
+              67
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/code-index-filter.test.ts",
+          "ranges": [
+            [
+              8,
+              10
+            ],
+            [
+              38,
+              40
+            ],
+            [
+              42,
+              44
+            ],
+            [
+              46,
+              48
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/code-index-go.test.ts",
+          "ranges": [
+            [
+              44,
+              46
+            ],
+            [
+              52,
+              54
+            ],
+            [
+              60,
+              62
+            ],
+            [
+              83,
+              85
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/code-index-python.test.ts",
+          "ranges": [
+            [
+              6,
+              8
+            ],
+            [
+              13,
+              15
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/code-index-resolve.test.ts",
+          "ranges": [
+            [
+              41,
+              43
+            ],
+            [
+              62,
+              64
+            ],
+            [
+              69,
+              71
+            ],
+            [
+              81,
+              83
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/code-index-rust.test.ts",
+          "ranges": [
+            [
+              41,
+              43
+            ],
+            [
+              49,
+              51
+            ],
+            [
+              71,
+              73
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/code-index-scip-encoding.test.ts",
+          "ranges": [
+            [
+              31,
+              33
+            ],
+            [
+              38,
+              40
+            ],
+            [
+              46,
+              48
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/code-index-structural.test.ts",
+          "ranges": [
+            [
+              30,
+              32
+            ],
+            [
+              46,
+              48
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/code-index-toolkit.test.ts",
+          "ranges": [
+            [
+              18,
+              20
+            ],
+            [
+              29,
+              31
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-toolkit/code-index-tree-sitter.test.ts",
+          "ranges": [
+            [
+              37,
+              39
+            ],
+            [
+              58,
+              60
+            ],
+            [
+              69,
+              71
+            ],
+            [
+              76,
+              78
+            ],
+            [
+              93,
+              95
+            ],
+            [
+              99,
+              101
+            ]
+          ]
+        }
+      ],
+      "review": []
+    },
+    {
+      "id": "E46",
+      "title": "Contratos de evidência/budget/probes — NÃO EXECUTADOS",
+      "archive": [
+        {
+          "path": "packages/core/test/research-allowance.test.ts",
+          "ranges": [
+            [
+              38,
+              40
+            ],
+            [
+              55,
+              57
+            ],
+            [
+              72,
+              74
+            ],
+            [
+              90,
+              92
+            ],
+            [
+              110,
+              112
+            ],
+            [
+              129,
+              131
+            ],
+            [
+              165,
+              167
+            ],
+            [
+              184,
+              186
+            ],
+            [
+              194,
+              196
+            ],
+            [
+              205,
+              207
+            ],
+            [
+              219,
+              221
+            ],
+            [
+              232,
+              234
+            ],
+            [
+              246,
+              248
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-artifacts.test.ts",
+          "ranges": [
+            [
+              15,
+              17
+            ],
+            [
+              40,
+              42
+            ],
+            [
+              65,
+              67
+            ],
+            [
+              94,
+              96
+            ],
+            [
+              115,
+              117
+            ],
+            [
+              130,
+              132
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-binding.test.ts",
+          "ranges": [
+            [
+              95,
+              97
+            ],
+            [
+              109,
+              111
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-inquiry-ledger.test.ts",
+          "ranges": [
+            [
+              20,
+              22
+            ],
+            [
+              55,
+              57
+            ],
+            [
+              71,
+              73
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-locate.test.ts",
+          "ranges": [
+            [
+              67,
+              69
+            ],
+            [
+              83,
+              85
+            ],
+            [
+              90,
+              92
+            ],
+            [
+              98,
+              100
+            ],
+            [
+              107,
+              109
+            ],
+            [
+              116,
+              118
+            ],
+            [
+              123,
+              125
+            ],
+            [
+              128,
+              130
+            ],
+            [
+              132,
+              134
+            ],
+            [
+              139,
+              141
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-probe-units.test.ts",
+          "ranges": [
+            [
+              12,
+              14
+            ],
+            [
+              27,
+              29
+            ],
+            [
+              44,
+              46
+            ],
+            [
+              62,
+              64
+            ],
+            [
+              106,
+              108
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-probe.test.ts",
+          "ranges": [
+            [
+              51,
+              53
+            ],
+            [
+              71,
+              73
+            ],
+            [
+              84,
+              86
+            ],
+            [
+              104,
+              106
+            ],
+            [
+              116,
+              118
+            ],
+            [
+              135,
+              137
+            ],
+            [
+              149,
+              151
+            ],
+            [
+              162,
+              164
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-records.test.ts",
+          "ranges": [
+            [
+              23,
+              25
+            ],
+            [
+              46,
+              48
+            ],
+            [
+              68,
+              70
+            ],
+            [
+              134,
+              136
+            ],
+            [
+              159,
+              161
+            ],
+            [
+              190,
+              192
+            ],
+            [
+              224,
+              226
+            ],
+            [
+              254,
+              256
+            ]
+          ]
+        },
+        {
+          "path": "packages/core/test/research-search.test.ts",
+          "ranges": [
+            [
+              30,
+              32
+            ],
+            [
+              40,
+              42
+            ],
+            [
+              51,
+              53
+            ],
+            [
+              62,
+              64
+            ],
+            [
+              74,
+              76
+            ],
+            [
+              92,
+              94
+            ],
+            [
+              102,
+              104
+            ],
+            [
+              114,
+              116
+            ],
+            [
+              125,
+              127
+            ]
+          ]
+        }
+      ],
+      "review": []
+    }
+  ],
+  "evidence_review_policy": "Decision branches by public need; archive/index retained for REQUEST_EVIDENCE. Missing optional excerpt is not inferred support or runtime PASS.",
+  "producer_corrections": [
+    {
+      "previous_body_path": "history/body-initial.md",
+      "previous_sha256": "172e61c2f199fe1b9c4fc787922d669e95da2dcaa35aa065aea01d2a146bc6e5",
+      "current_body_path": "body.md",
+      "current_sha256": "1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73",
+      "reason": "Literal comparison of cassandra-dialer.ts:99-113 corrected proxy grammar: empty or slash path accepted, userinfo converted to Basic auth; query/fragment refused. No product change or runtime test."
+    },
+    {
+      "previous_body_path": "history/body-v1.md",
+      "previous_sha256": "1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73",
+      "current_body_path": "body.md",
+      "current_sha256": "d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661",
+      "delta_path": "correction-v2.json",
+      "substitutions": 2,
+      "reason": "Apply the two explicitly authorized literal clarifications: global SCIP memo capacity and retained-shard manifest ordering. No other body change.",
+      "evidence_groups": [
+        "RA5-02",
+        "RB1-02"
+      ]
+    }
+  ],
+  "mechanical_integrity": {
+    "status": "VERIFIED",
+    "scope": "Artifact byte/hash/inventory/excerpt bookkeeping only; no product execution or tests",
+    "sources": 130,
+    "source_bytes": 1212271,
+    "matching_git_blobs": 130,
+    "coverage_rows": 130,
+    "families": {
+      "backend-toolkit": 59,
+      "research": 71
+    },
+    "kinds": {
+      "implementation": 80,
+      "generated_output": 1,
+      "runtime_data_or_pin": 7,
+      "documentation": 1,
+      "test_code": 41
+    },
+    "literal_lines_verified": {
+      "evidence.md": 8693,
+      "evidence-review.md": 1112
+    },
+    "evidence_groups": 46,
+    "source_mismatches": 0,
+    "missing_source_paths": [],
+    "missing_coverage_paths": []
+  },
+  "dispatch_clarifications": [
+    {
+      "sender": "/root",
+      "text": "AC-01: congelar necessidades→artefatos→fontes→casos; toda necessidade obrigatória tem suporte aceito, desconhecidos intencionais explícitos; mapeamento mecânico não julga suficiência semântica. AC-04: caminhos reais ingerem conhecimento existente e constroem entendimento faltante; fixtures stale/conflicting/missing/malicious-source devem preservar conflito/autoridade/lacunas, sem publicação unsupported; documento final enlatado não prova produção. Seu lote L1 cobre produção real, disposição/fontes e fidelidade (runtime/publicação são obrigações separadas da principal). Não invente casos extras como já executados. Casos conhecidos são regressão. Complemente corpos/evidência concretamente; a principal fará perguntas reservadas e juízo independente."
+    },
+    {
+      "sender": "/root",
+      "text": "Principal verificou tamanho real: packages/core/src/backend-toolkit/packs/modelina.package-lock.json tem 266885 bytes, acima do limite Atlas256000 no release S4r3. Preserve no inventário e input/dependência necessários; NÃO remova, resuma, divida nem troque por hash de transporte para fazer prepare passar. Conteúdo semântico L1 continua executável. Vou registrar bloqueio full-package e preparar seleções fechadas independentes quando possível."
+    },
+    {
+      "sender": "/root",
+      "request_path": "correction-v2-request.txt",
+      "request_sha256": "cd859a2dc0b42377f83e755618967acfa4de82becc565bb06730c866bcef245a",
+      "text": "Aplique agora as duas precisões mínimas que você demonstrou (memo global e ordem de fallback), pois a segunda corrige uma afirmação operacional importante. Preserve body v1 byte-idêntico e recipe v1 em history/ antes de alterar body.md; não sobrescreva suplementos/requests/responses originais. Produza correction-v2-request.txt com este pedido literal, correction-v2-response.md original, correction-v2.json com BEFORE/AFTER exatos, fontes/linhas e hashes, body.md v2 e recipe-v2.json (pode deixar recipe.json v1 intacta). Não acrescente novas afirmações nem reescreva o restante. Os dois juízes receberão o delta junto da evidência pertinente no mesmo handle; semoracle, semprodutotestes, semnovojuiz. Finalize rápido após verificar bytes/diff só2substituições. A principal cuidará do binding e de referências; o v1 já está preservado também no payload5eefca63b48970f3abb4d22e8dc2b1323487da92."
+    }
+  ],
+  "output_integrity": {
+    "body.md": {
+      "bytes": 63501,
+      "sha256": "d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661",
+      "git_blob_sha": "bb0eaa73b4fe9120fb46d9304778649b5c7205dd"
+    },
+    "captures.json": {
+      "bytes": 52221,
+      "sha256": "4275f6f649be64c3e0fb948115f3260b618d633e98a650824f58b17ac3036a52",
+      "git_blob_sha": "3c88d5718848071443d0c3cc412846a0ffba2e75"
+    },
+    "coverage.jsonl": {
+      "bytes": 127215,
+      "sha256": "bb06bcef77a2dbeccabc70dd00dc10d70bf22cb338588661d7ecc9f49e01eec9",
+      "git_blob_sha": "48b8beafa81098be06c37b4f4ec1a3044e77414d"
+    },
+    "evidence.md": {
+      "bytes": 599806,
+      "sha256": "e8cc0b447e48f26b3a059dc70c7ad7e607ec9b60a9af3d605e76f4c10b1da05b",
+      "git_blob_sha": "f828e2d973d4e21f84f052440cc2802dcc7f5fb0"
+    },
+    "evidence-review.md": {
+      "bytes": 89675,
+      "sha256": "3496f3e102e5db734d2954cf18e9bea6da5fbc418d2084f56814eefb5347788e",
+      "git_blob_sha": "6a0d62257e36fef18db108295f6325f059773a38"
+    },
+    "evidence-index.json": {
+      "bytes": 63265,
+      "sha256": "219182fe48272b4eb6c8f21507e337730c09b86e1c9ef47e973d7846ec75a4c0",
+      "git_blob_sha": "11aea05e6a5f4f1cd1a48481469a5366ab5d3700"
+    },
+    "request.txt": {
+      "bytes": 3325,
+      "sha256": "4e11428b6ece1d3fe3769a5f1ca7c4d3eb36654ccdec504500bb6622aec86adc",
+      "git_blob_sha": "3cf36fc80a69175f3db6fca92120b564601aaec5"
+    },
+    "history/body-initial.md": {
+      "bytes": 63291,
+      "sha256": "172e61c2f199fe1b9c4fc787922d669e95da2dcaa35aa065aea01d2a146bc6e5",
+      "git_blob_sha": "d1166e93f4105178518f09dc161cbfa4d94cad85"
+    },
+    "history/body-v1.md": {
+      "bytes": 63389,
+      "sha256": "1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73",
+      "git_blob_sha": "c29b9f5b8a8913cc4afa58d3e9cdede292f0657e"
+    },
+    "history/recipe-v1.json": {
+      "bytes": 134003,
+      "sha256": "a5bd9215347a9eb06ab008846f2ef169e1d3269f0f6c0a75f73da72d914178a2",
+      "git_blob_sha": "12ef72626a68da88e6b37523c54663119902a0e4"
+    },
+    "correction-v2-request.txt": {
+      "bytes": 918,
+      "sha256": "cd859a2dc0b42377f83e755618967acfa4de82becc565bb06730c866bcef245a",
+      "git_blob_sha": "0d3e0293eb9b44f9812aac9fff9e5bb2dc11cd95"
+    },
+    "correction-v2-response.md": {
+      "bytes": 2686,
+      "sha256": "fa3cddb9cb13dd2093b14464c9009c0b885f21999ee3328d7b887eba03698bcf",
+      "git_blob_sha": "dd6414a93fcf79e3f2fad94877519d9d5fd8c0ef"
+    }
+  },
+  "revision": 2,
+  "base_recipe": {
+    "path": "history/recipe-v1.json",
+    "bytes": 134003,
+    "sha256": "a5bd9215347a9eb06ab008846f2ef169e1d3269f0f6c0a75f73da72d914178a2",
+    "git_blob_sha": "12ef72626a68da88e6b37523c54663119902a0e4"
+  },
+  "body_revision": {
+    "version": 2,
+    "path": "body.md",
+    "bytes": 63501,
+    "sha256": "d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661",
+    "git_blob_sha": "bb0eaa73b4fe9120fb46d9304778649b5c7205dd",
+    "previous": {
+      "path": "history/body-v1.md",
+      "bytes": 63389,
+      "sha256": "1213f85cf16f73feed220e8c1b33ed52b2af75afd570b154a29eaf8f99f27d73",
+      "git_blob_sha": "c29b9f5b8a8913cc4afa58d3e9cdede292f0657e"
+    }
+  },
+  "correction_v2": {
+    "status": "APPLIED",
+    "request": {
+      "path": "correction-v2-request.txt",
+      "bytes": 918,
+      "sha256": "cd859a2dc0b42377f83e755618967acfa4de82becc565bb06730c866bcef245a",
+      "git_blob_sha": "0d3e0293eb9b44f9812aac9fff9e5bb2dc11cd95"
+    },
+    "delta_path": "correction-v2.json",
+    "exact_substitutions": 2,
+    "changed_body_lines": [
+      203,
+      225
+    ],
+    "source_population_unchanged": true,
+    "original_recipe_unchanged": true,
+    "body_rest_byte_identical": true,
+    "original_evidence_binding": "Original evidence indexes, supplements, requests and responses retain their v1 byte identities; principal handles binding and references for v2.",
+    "semantic_acceptance": "NOT_PERFORMED",
+    "new_product_test_runs": 0
+  }
+}

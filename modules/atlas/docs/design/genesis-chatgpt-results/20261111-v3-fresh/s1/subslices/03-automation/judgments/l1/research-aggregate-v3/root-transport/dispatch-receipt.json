@@ -1,0 +1,71 @@
+{
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "relay": "/root",
+  "packet": "research-aggregate-v3",
+  "source": "../../review-packets/research-aggregate-v3.md",
+  "source_bytes": 14533,
+  "source_sha256": "8e8d1035f6f29dc61a7148ea893a8d5dab8b4a8e558f8ac314bf08efa1b78a7d",
+  "calls": [
+    {
+      "sequence": 1,
+      "target": "/root/s1_03_j2",
+      "caller": "/root",
+      "method": "collaboration.followup_task",
+      "part": 1,
+      "request_file": "request-j2.json",
+      "request_file_bytes": 15137,
+      "request_file_sha256": "23b4a38b198b3f7282a59e6806467957b671da80e2adbfd05a55e64bf1dcf61b",
+      "message_bytes": 14793,
+      "message_sha256": "20969fefa908cc130353949775f797ed6dde3360e389cdc9e1b84bf67b970c73",
+      "payload_bytes": 14533,
+      "payload_sha256": "8e8d1035f6f29dc61a7148ea893a8d5dab8b4a8e558f8ac314bf08efa1b78a7d",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    },
+    {
+      "sequence": 2,
+      "target": "/root/s1_03_j1",
+      "caller": "/root",
+      "method": "collaboration.followup_task",
+      "part": 1,
+      "request_file": "request-j1.json",
+      "request_file_bytes": 15137,
+      "request_file_sha256": "cd3f68600a5f83f9ed87d2966808d118db8cb3a27c1c1fd2d7e04bacfc5a8197",
+      "message_bytes": 14793,
+      "message_sha256": "20969fefa908cc130353949775f797ed6dde3360e389cdc9e1b84bf67b970c73",
+      "payload_bytes": 14533,
+      "payload_sha256": "8e8d1035f6f29dc61a7148ea893a8d5dab8b4a8e558f8ac314bf08efa1b78a7d",
+      "tool_returned_normally": true,
+      "tool_result_text": "",
+      "provider_dispatch_id": null
+    }
+  ],
+  "recorded_at_utc": "2026-11-15T02:54:35.798135+00:00",
+  "receipt_limit": "Principal copied the frozen packet into the visible native tool argument. Archived reconstruction has exact bytes; independent host-provided argument hash/message id is not exposed. No claim of hash verification by the judge.",
+  "judgment_capture": "BOTH_ORIGINAL_FINALS_SAVED",
+  "pending_targets": [],
+  "judgments": [
+    {
+      "target": "/root/s1_03_j2",
+      "path": "j2-response.md",
+      "bytes": 6781,
+      "sha256": "8dd9f7ae58de3cda63482558e2940931b185a644bcbd8cafd0b7d5463ea835c6",
+      "verdict": "PASS_SEMANTIC_L1_COMPLETE",
+      "body_sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+      "capture": "Original FINAL_ANSWER copied verbatim from native channel; host wire-message id is not exposed.",
+      "serialization_note": "Preserved visible Markdown text with one terminal LF in the archive; host wire bytes/hash are not exposed."
+    },
+    {
+      "target": "/root/s1_03_j1",
+      "path": "j1-response.md",
+      "bytes": 4282,
+      "sha256": "e52fc2d9eb369da417d7ea035ec641839ca4714be9f75b4b0f2ac4bab35e3cc7",
+      "verdict": "PASS_SEMANTIC_L1_COMPLETE",
+      "body_sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+      "capture": "Original FINAL_ANSWER visible text, no terminal LF; host wire-message id/hash not exposed."
+    }
+  ],
+  "updated_at_utc": "2026-11-15T03:10:32.375102+00:00",
+  "completed_at_utc": "2026-11-15T03:12:26.412960+00:00"
+}

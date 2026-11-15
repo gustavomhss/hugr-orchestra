@@ -1,30 +1,48 @@
 {
+  "execution": "34269cf4-d631-41c5-a30b-85b0ec217390",
   "lot": "research-extract-residual-v2",
-  "path": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/research-extract-residual-v2.md",
-  "body_version": "v2",
-  "packet": {
-    "bytes": 4202,
-    "sha256": "c9b2419ec07411c2f0d0a9bb79150f991b37d745effe5fbd31b0f1b8d0299446",
-    "git_blob_sha": "13eab000d8c285f11f109c9a0dbdb88776d94ec3"
+  "source": "review-packets/research-extract-residual-v2.md",
+  "source_bytes": 4202,
+  "source_sha256": "c9b2419ec07411c2f0d0a9bb79150f991b37d745effe5fbd31b0f1b8d0299446",
+  "frozen_manifest": {
+    "lot": "research-extract-residual-v2",
+    "path": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/research-extract-residual-v2.md",
+    "body_version": "v2",
+    "packet": {
+      "bytes": 4202,
+      "sha256": "c9b2419ec07411c2f0d0a9bb79150f991b37d745effe5fbd31b0f1b8d0299446",
+      "git_blob_sha": "13eab000d8c285f11f109c9a0dbdb88776d94ec3"
+    },
+    "assembler": "/root",
+    "mode": "mechanical literal source transport; no body authorship",
+    "source": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/research-toolkit/code-index/extract.ts",
+      "git_blob_sha": "ccd710035774d754490d00f36eb16c0103355175",
+      "sha256": "80b2e9c6091bb6c342bfefa9582bd164fc5dffc239cdf67417dba4c0e79747af",
+      "byte_length": 22551,
+      "family": "research",
+      "legacy_artifact_key": "s1.core.research",
+      "capture_owner": "/root/research_l1",
+      "atlas_file_limit_compatible": true
+    },
+    "line_start": 150,
+    "line_end": 180,
+    "source_byte_start": 9545,
+    "source_byte_end_exclusive": 11514,
+    "source_piece_sha256": "3a2c129223f5a296e880bdcdb724f6115a811b0f504426d26e2cdaed653e07ff",
+    "scope": "residual evidence and aggregate semantic review of research L1 v2",
+    "oracle_access_by_relay": false
   },
-  "assembler": "/root",
-  "mode": "mechanical literal source transport; no body authorship",
-  "source": {
-    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
-    "path": "packages/core/src/research-toolkit/code-index/extract.ts",
-    "git_blob_sha": "ccd710035774d754490d00f36eb16c0103355175",
-    "sha256": "80b2e9c6091bb6c342bfefa9582bd164fc5dffc239cdf67417dba4c0e79747af",
-    "byte_length": 22551,
-    "family": "research",
-    "legacy_artifact_key": "s1.core.research",
-    "capture_owner": "/root/research_l1",
-    "atlas_file_limit_compatible": true
-  },
-  "line_start": 150,
-  "line_end": 180,
-  "source_byte_start": 9545,
-  "source_byte_end_exclusive": 11514,
-  "source_piece_sha256": "3a2c129223f5a296e880bdcdb724f6115a811b0f504426d26e2cdaed653e07ff",
-  "scope": "residual evidence and aggregate semantic review of research L1 v2",
-  "oracle_access_by_relay": false
+  "split_rule": "One complete literal UTF-8 packet.",
+  "parts": [
+    {
+      "part": 1,
+      "file": "part-01.txt",
+      "start": 0,
+      "end": 4202,
+      "bytes": 4202,
+      "sha256": "c9b2419ec07411c2f0d0a9bb79150f991b37d745effe5fbd31b0f1b8d0299446"
+    }
+  ]
 }

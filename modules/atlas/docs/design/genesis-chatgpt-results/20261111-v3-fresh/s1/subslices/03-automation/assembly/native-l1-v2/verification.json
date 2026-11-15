@@ -1,0 +1,48 @@
+{
+  "schema": "s1-03-native-descriptor-verification/v1",
+  "status": "VERIFIED_DOCUMENTARY_IDENTITIES_ONLY",
+  "checks": 13278,
+  "errors": [],
+  "observed_original_files_rechecked": 1319,
+  "canonical_files": 594,
+  "artifacts": [
+    {
+      "key": "s1.core.automation",
+      "inputs": 263,
+      "source_refs": 263,
+      "body_bytes": 60767,
+      "body_sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae"
+    },
+    {
+      "key": "s1.core.research",
+      "inputs": 153,
+      "source_refs": 153,
+      "body_bytes": 63501,
+      "body_sha256": "d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661"
+    },
+    {
+      "key": "s1.core.boundaries",
+      "inputs": 60,
+      "source_refs": 60,
+      "body_bytes": 23665,
+      "body_sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6"
+    },
+    {
+      "key": "s1.subslice03.support",
+      "inputs": 140,
+      "source_refs": 140,
+      "body_bytes": 23025,
+      "body_sha256": "498a0454418a14977b9b2f4c4f515711d941b6d4bbece13f1baaa8feaa76d378"
+    }
+  ],
+  "source_ref_pin_rule": "Every local P source_ref matched path + SHA256 + length + Git blob in the published index and the exact snapshot file. H is never used as a content commit.",
+  "not_run": [
+    "product tests",
+    "producer recipes",
+    "Atlas prepare",
+    "Atlas publish",
+    "network",
+    "semantic judgment"
+  ],
+  "no_original_bytes_changed_by_this_task": true
+}

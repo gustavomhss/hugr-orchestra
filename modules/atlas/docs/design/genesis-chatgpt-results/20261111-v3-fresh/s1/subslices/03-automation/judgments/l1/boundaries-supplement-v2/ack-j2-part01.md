@@ -1,0 +1,1 @@
+ACK — parte 1/5 de `boundaries-supplement-v2` recebida, com os dois deltas declarados e o início da reconciliação compartilhada. Aguardo as partes restantes e o sinal externo `FIM_DO_LOTE`, sem julgamento intermediário e sem ferramentas.

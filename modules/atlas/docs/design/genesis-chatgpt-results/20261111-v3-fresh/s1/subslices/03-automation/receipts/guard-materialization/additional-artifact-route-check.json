@@ -1,0 +1,21 @@
+{
+  "schema": "s1-03-guard-binary-route-check/v1",
+  "at_utc": "2026-11-15T03:47:58.809893+00:00",
+  "missing_git_blob": "d83941a9d836a23e466ca09ecba1f21d423094cb",
+  "missing_bytes": 1339105,
+  "repository_artifact_listing": {
+    "attempt": "GET /repos/gustavomhss/hugr-orchestra/actions/artifacts?per_page=100",
+    "result": "HTTP400 INVALID_ARGUMENT: not an allowed public GitHub repository/search endpoint; no repository-wide artifact inventory obtained"
+  },
+  "available_binary_route": "download_workflow_artifact requires an actual observed artifact ID; no raw repository binary mode exposed",
+  "checked_known_artifact": {
+    "artifact_id": 13883635728,
+    "run_id": 43077975153,
+    "archive_sha256": "cf4232dec016e07d63dc0b40497892e1f87dec7af812d6cd3fbc542f8816c7cd",
+    "member_count": 44,
+    "contains_required_binary": false
+  },
+  "previous_source_commit_runs": "Origin commit dd8d3effd86476f8ffde4c45f1843ca448144280 had zero workflow runs in the earlier recorded query.",
+  "conclusion": "The actual accessible known artifact is control evidence and does not supply the missing historical ZIP. Faithful guard materialization remains blocked; no omitted/empty/substituted ZIP or fabricated artifact ID used.",
+  "final_guard_status": "NOT_RUN"
+}

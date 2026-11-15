@@ -1,0 +1,12 @@
+{
+  "target": "/root/boundaries_l1",
+  "file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/receipts/producer-responses/boundaries-l1-v3-original.md",
+  "origin": "collaboration.list_agents agent_status.completed",
+  "bytes": 3749,
+  "sha256": "66ee96d447bd1a90f6ba4d182c70da62874009a8e400a09db37b2c22c85b3f8e",
+  "terminal_newline": false,
+  "literal": true,
+  "scope": "Original visible producer final captured before any new dispatch; relay did not evaluate or reconstruct producer output.",
+  "original_capture_file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/relay/producer-responses/boundaries-l1-v3-original.md",
+  "copy_note": "Byte-identical copy of original visible producer final captured by relay; no changes or reconstruction."
+}

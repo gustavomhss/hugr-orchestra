@@ -1,0 +1,996 @@
+    expect(() => parseOptions(["app", flag, "value", flag, "value"])).toThrow(`${flag} repeated`)
+  })
+
+for (const [argv, reason] of [
+  [["--os", "unknown"], "--os must be"], [["--runner", "shell"], "--runner must be"],
+  [["--config", config], "--config requires"], [["--runner", "playwright", "-t", "filter"], "only named"],
+] as const)
+  test(`invalid CLI ${argv.join(" ")}`, () => expect(() => parseOptions(["app", ...argv])).toThrow(reason))
+
+for (const [patch, reason] of [
+  [{ package: "../app" }, "valid package"], [{ package: "relay" }, "cannot run"],
+  [{ runner: "shell" }, "cannot run"], [{ runner: 0 }, "cannot run"], [{ config: undefined }, "config must be"],
+  [{ config: "playwright.config.ts" }, "config must be"], [{ args: [] }, "nonempty"],
+  [{ args: [spec, spec] }, "repeated"], [{ args: ["e2e/missing.spec.ts"] }, "spec missing"],
+  [{ args: ["e2e/../regression/x.spec.ts"] }, "invalid spec path"], [{ args: ["/tmp/x.spec.ts"] }, "invalid spec path"],
+  [{ args: ["e2e/**/*.spec.ts"] }, "invalid spec path"], [{ args: ["--pass-with-no-tests"] }, "invalid spec path"],
+  [{ args: [benchmark] }, "invalid spec path"], [{ args: [42] }, "string array"],
+] as const)
+  test(`invalid request ${JSON.stringify(patch)}`, () => expect(() => validateRequest({ ...valid, ...patch }, isFile)).toThrow(reason))
+`````
+
+### CI-REQUEST-2 — `packages/core/test/test-ci-request.test.ts` 212–236
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `bb26003da8bc849ecd562789cc8847469297e49f`; SHA256 integral `2295faed2168e2f3063797b95c0ab1f1304c0253efc4570e2946af5a40237bbb`. Bytes fonte 21226; recorte [13949, 16091); SHA256 trecho `bf78432f02e2dccebe8cfb97ca8d06683312b6217a0a5dc91f2668243791ea0a`.
+
+`````text
+test("report requires exact OS matrix jobs; missing, repeated and extra hosts fail", () => {
+  const jobs = ["ubuntu-24.04", "windows-latest", "macos-14"].map((host) => ({ name: `test (${host})` }))
+  expect(requireTestJobs("all", [...jobs, { name: "cleanup" }])).toEqual(jobs)
+  for (const [os, indices] of [["linux", [0]], ["windows", [1]], ["macos", [2]], ["both", [0, 1]]] as const)
+    expect(requireTestJobs(os, indices.map((index) => jobs[index]!))).toHaveLength(indices.length)
+  expect(() => requireTestJobs("linux", [])).toThrow("test (ubuntu-24.04): missing or repeated")
+  expect(() => requireTestJobs("linux", undefined as unknown as { name: string }[])).toThrow("missing matrix jobs")
+  expect(() => requireTestJobs("all", jobs.slice(0, 2))).toThrow("test (macos-14): missing or repeated")
+  expect(() => requireTestJobs("linux", [jobs[0]!, jobs[0]!])).toThrow("repeated")
+  expect(() => requireTestJobs("linux", jobs)).toThrow("test (windows-latest): unexpected")
+})
+
+test("successful report requires step metadata, step log, endgroup and nonempty output", () => {
+  const job = { name: "test (ubuntu-24.04)", conclusion: "success", steps: [{ name: "Run tests", conclusion: "success" }] }
+  const log = (text: string) => `test (ubuntu-24.04)\tRun tests\t2026-10-09T00:00:00Z ${text}`
+  expect(reportLines(job, [log("##[endgroup]"), log("\u001b[32m1 pass\u001b[0m")].join("\n"))).toEqual(["1 pass"])
+  expect(reportLines(job, [log("##[endgroup]"), log("1 pass")].join("\r\n"))).toEqual(["1 pass"])
+  expect(() => reportLines(job, " \n")).toThrow(`${job.name}: empty job log`)
+  expect(() => reportLines({ ...job, steps: [] }, log("1 pass"))).toThrow("missing successful Run tests step")
+  expect(() => reportLines({ ...job, steps: [{ name: "Run tests", conclusion: "skipped" }] }, log("1 pass"))).toThrow("missing successful Run tests step")
+  expect(() => reportLines(job, "test\tSetup Bun\tinstall failed")).toThrow("missing Run tests log")
+  expect(() => reportLines(job, log("1 pass"))).toThrow("missing Run tests endgroup marker")
+  expect(() => reportLines(job, log("##[endgroup]"))).toThrow("empty Run tests output")
+})
+
+`````
+
+### CI-REQUEST-3 — `packages/core/test/test-ci-request.test.ts` 265–295
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `bb26003da8bc849ecd562789cc8847469297e49f`; SHA256 integral `2295faed2168e2f3063797b95c0ab1f1304c0253efc4570e2946af5a40237bbb`. Bytes fonte 21226; recorte [17949, 21226); SHA256 trecho `0185a8b68f59d80b9e8fa323fd4baaa141924d1a99d77f9ed89292c829083454`.
+
+`````text
+test("controlVerdict accepts exactly one verdict line carrying this job's nonce, nothing else", () => {
+  const job = { name: "test (ubuntu-24.04)" }
+  const nonce = "0123456789abcdef0123456789abcdef"
+  const row = (step: string, text: string) => `test (ubuntu-24.04)\t${step}\t2026-10-12T03:10:05.9742438Z ${text}`
+  const nonceRow = row("Omni control nonce", `omni control nonce: ${nonce}`)
+  const header = row("Omni control nonce", 'echo "omni control nonce: $nonce"')
+  const verdict = row("Run tests", `omni positive control [${nonce}]: pass (declared: 1 test(s) in a.test.ts); 3 omni spawn(s), 0 delegated.`)
+  const thrown = row("Run tests", `error: omni positive control [${nonce}]: FAIL (suite: every run must spawn through omni). no omni spawn.`)
+  const fake = row("Run tests", "omni positive control: pass (suite: every run must spawn through omni); 9 omni spawn(s), 0 delegated.")
+  const otherNonce = row("Run tests", "omni positive control [ffffffffffffffffffffffffffffffff]: pass (suite: ...)")
+  const frame = row("Run tests", " 70 |   if (problem) throw new Error(`${tag}: FAIL (${reason}). ${problem}`)")
+  expect(controlVerdict(job, [header, nonceRow, fake, otherNonce, frame, verdict].join("\n")))
+    .toBe("omni positive control: pass (declared: 1 test(s) in a.test.ts); 3 omni spawn(s), 0 delegated.")
+  // Only "pass" and "not applicable" count: a FAIL or an "off" (legacy rollback, nothing checked) verdict is rejected.
+  expect(() => controlVerdict(job, [nonceRow, thrown].join("\r\n")))
+    .toThrow("did not pass: omni positive control: FAIL (suite: every run must spawn through omni). no omni spawn.")
+  const off = row("Run tests", `omni positive control [${nonce}]: off (legacy rollback); nothing checked.`)
+  expect(() => controlVerdict(job, [nonceRow, off].join("\n"))).toThrow("did not pass: omni positive control: off (legacy rollback)")
+  const passing = row("Run tests", `omni positive control [${nonce}]: passing (suite: ...)`)
+  expect(() => controlVerdict(job, [nonceRow, passing].join("\n"))).toThrow("did not pass")
+  // Interleaved output on the verdict's line still yields the verdict.
+  const interleaved = row("Run tests", `(pass) a [1ms]omni positive control [${nonce}]: not applicable (focused: no declaring test ran); nothing.`)
+  expect(controlVerdict(job, [nonceRow, interleaved].join("\n"))).toBe("omni positive control: not applicable (focused: no declaring test ran); nothing.")
+  // Step attribution can read UNKNOWN STEP; the nonce still counts unless it was printed by the tests.
+  expect(controlVerdict(job, [row("UNKNOWN STEP", `omni control nonce: ${nonce}`), verdict].join("\n"))).toContain("pass")
+  expect(() => controlVerdict(job, [nonceRow, fake].join("\n"))).toThrow("expected one omni positive control verdict for this run's nonce, found 0")
+  expect(() => controlVerdict(job, [nonceRow, verdict, verdict].join("\n"))).toThrow("found 2")
+  expect(() => controlVerdict(job, [verdict].join("\n"))).toThrow("expected one omni control nonce, found 0")
+  expect(() => controlVerdict(job, [row("Run tests", `omni control nonce: ${nonce}`), verdict].join("\n"))).toThrow("found 0")
+  expect(() => controlVerdict(job, [nonceRow, nonceRow, verdict].join("\n"))).toThrow("expected one omni control nonce, found 2")
+})
+`````
+
+### CI-UPLOAD-1 — `packages/core/test/test-ci-upload.test.ts` 79–123
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `b6b678f6d3281ac88d5a58f644d2535c07b4a031`; SHA256 integral `c0f7b483ea9209b9efc53bc68c32dffc6f59b352b50e45ce6716e676291165f8`. Bytes fonte 7579; recorte [3232, 5524); SHA256 trecho `15e5aaa1b8008e70570a8bd0edf65a45188e645bff0373c9b9c8e3fc15eddf78`.
+
+`````text
+// What `gh api --include` prints: the status line, CRLF-terminated headers, a blank line, then the body.
+const output = (status: string, headers: Record<string, string>, body: string) =>
+  `HTTP/2.0 ${status}\n${Object.entries({ "Content-Type": "application/json; charset=utf-8", ...headers })
+    .map((entry) => `${entry[0]}: ${entry[1]}\r\n`)
+    .join("")}\r\n${body}`
+
+const secondary = JSON.stringify({ message: "You have exceeded a secondary rate limit. Please wait a few minutes." })
+
+describe("test:ci rate limit", () => {
+  test("reads the status, headers and body gh prints", () => {
+    const response = parseResponse(output("201 Created", { "X-Ratelimit-Remaining": "4999" }, '{"sha":"abc"}'))
+    expect(response.status).toBe(201)
+    expect(response.headers.get("x-ratelimit-remaining")).toBe("4999")
+    expect(JSON.parse(response.body)).toEqual({ sha: "abc" })
+    expect(parseResponse(output("204 No Content", {}, "")).body).toBe("")
+    expect(parseResponse("").status).toBe(0)
+  })
+
+  test("honours Retry-After", () => {
+    expect(rateLimitDelay(parseResponse(output("403 Forbidden", { "Retry-After": "60" }, secondary)), 0)).toBe(60_000)
+    expect(rateLimitDelay(parseResponse(output("429 Too Many Requests", { "Retry-After": "5" }, "{}")), 3)).toBe(5_000)
+  })
+
+  test("waits for the reset when no requests remain", () => {
+    const response = output(
+      "429 Too Many Requests",
+      { "X-Ratelimit-Remaining": "0", "X-Ratelimit-Reset": "1030" },
+      "{}",
+    )
+    expect(rateLimitDelay(parseResponse(response), 0, 1_000_000)).toBe(30_000)
+  })
+
+  test("backs off from a minute when GitHub gives no hint", () => {
+    const response = parseResponse(output("403 Forbidden", {}, secondary))
+    expect([0, 1, 2].map((attempt) => rateLimitDelay(response, attempt))).toEqual([60_000, 120_000, 240_000])
+  })
+
+  test("does not retry other failures", () => {
+    const forbidden = JSON.stringify({ message: "Resource not accessible by integration" })
+    expect(
+      rateLimitDelay(parseResponse(output("403 Forbidden", { "Retry-After": "60" }, forbidden)), 0),
+    ).toBeUndefined()
+    expect(rateLimitDelay(parseResponse(output("422 Unprocessable Entity", {}, "{}")), 0)).toBeUndefined()
+    expect(rateLimitDelay(parseResponse(""), 0)).toBeUndefined()
+  })
+`````
+
+### CI-UPLOAD-2 — `packages/core/test/test-ci-upload.test.ts` 164–183
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `b6b678f6d3281ac88d5a58f644d2535c07b4a031`; SHA256 integral `c0f7b483ea9209b9efc53bc68c32dffc6f59b352b50e45ce6716e676291165f8`. Bytes fonte 7579; recorte [6999, 7579); SHA256 trecho `b7615d3575458ea52892b74106c3df3ff253de83877e56a0325f06dac7b980c2`.
+
+`````text
+          "packages\\orchestra\\a.test.ts",
+          ".\\a.test.ts",
+        ],
+        isFile,
+      ),
+    ).toEqual([
+      "./a.test.ts",
+      "./test/cli/run/permission.shared.test.ts",
+      "./test/cli/tui/editor-context.test.tsx",
+      "./a.test.ts",
+      "./a.test.ts",
+    ])
+  })
+
+  test("passes directories and filters through unchanged", () => {
+    expect(
+      testPaths("orchestra", ["test/cli", "permission", "packages/orchestra/test/cli", "*.test.ts", "--bail"], isFile),
+    ).toEqual(["test/cli", "permission", "test/cli", "*.test.ts", "--bail"])
+  })
+})
+`````
+
+### CI-CACHE-1 — `packages/core/test/setup-bun-cache.test.ts` 28–64
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `6497623ffb392b7b00eb4875ebf9f92080d50b45`; SHA256 integral `e6d0ca2d91d73b5dbe442317286c6914f946537d3dc03347bc2745d96293853a`. Bytes fonte 11241; recorte [1219, 3395); SHA256 trecho `e53dc989432ec5055d849c9ed97cf379b3c18a4fc82dc784a6bb7fa89f9d217e`.
+
+`````text
+describe("setup-bun cache architecture repair", () => {
+  it.live("real YAML Bash outputs isolate architectures and restore/save share those outputs", () =>
+    Effect.gen(function* () {
+      expectSpawn(import.meta.path)
+      const steps = yield* Effect.promise(loadSteps)
+      const keys = requireStep(steps, "id", "keys")
+      expect(keys.shell).toBe("bash")
+      const bunRestore = requireStep(steps, "id", "bun-cache")
+      const modulesRestore = requireStep(steps, "id", "modules-cache")
+      const bunSave = requireStep(steps, "name", "Save Bun dependencies")
+      const modulesSave = requireStep(steps, "name", "Save node_modules")
+      ;[bunRestore, modulesRestore].forEach((step) => {
+        expect(text(step.uses, "CACHE_RESTORE_USES_MISSING")).toStartWith("actions/cache/restore@")
+        expect(steps.indexOf(keys)).toBeLessThan(steps.indexOf(step))
+      })
+      ;[bunSave, modulesSave].forEach((step) =>
+        expect(text(step.uses, "CACHE_SAVE_USES_MISSING")).toStartWith("actions/cache/save@"),
+      )
+      expect(bunRestore.with?.key).toBe("${{ steps.keys.outputs.bun }}")
+      expect(bunSave.with?.key).toBe(bunRestore.with?.key)
+      expect(modulesRestore.with?.key).toBe("${{ steps.keys.outputs.modules }}")
+      expect(modulesSave.with?.key).toBe(modulesRestore.with?.key)
+      expect(modulesRestore.with?.["restore-keys"]).toBeUndefined()
+      expect(modulesSave.with?.path).toBe(modulesRestore.with?.path)
+      const paths = text(modulesRestore.with?.path, "CACHE_MODULE_PATHS_MISSING").trim().split(/\r?\n/)
+      ;["packages/*/node_modules", "packages/*/*/node_modules", "modules/*/node_modules", "modules/*/*/node_modules", "tooling/*/node_modules"]
+        .forEach((pattern) => expect(paths).toContain(pattern))
+
+      const rows = yield* Effect.all(
+        runners.map((runner) => runEmitter(text(keys.run, "CACHE_KEY_SCRIPT_MISSING"), runner)),
+        { concurrency: 1 },
+      )
+      expect(architectureCollisions(rows)).toEqual([])
+      rows.forEach((row) => {
+        expect(row.outputs).toEqual({
+          bun: `${row.os}-${row.arch}-bun-v3-${hash}`,
+          modules: `${row.os}-${row.arch}-modules-v4-${hash}`,
+`````
+
+### CI-CACHE-2 — `packages/core/test/setup-bun-cache.test.ts` 86–105
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `6497623ffb392b7b00eb4875ebf9f92080d50b45`; SHA256 integral `e6d0ca2d91d73b5dbe442317286c6914f946537d3dc03347bc2745d96293853a`. Bytes fonte 11241; recorte [4135, 5432); SHA256 trecho `95fb24bf3aad962b63dda06cee305f7ac961d50119c1f9bca5e6b5b15332c87e`.
+
+`````text
+      // Original emitter is the regression control, executed by the same Bash path as the parsed action.
+      const legacy = `echo "bun=\${{ runner.os }}-bun-v2-\${{ hashFiles('bun.lock') }}" >> "$GITHUB_OUTPUT"
+echo "modules=\${{ runner.os }}-modules-v1-\${{ hashFiles('bun.lock', 'patches/**', 'package.json') }}" >> "$GITHUB_OUTPUT"`
+      const rows = yield* Effect.all(runners.map((runner) => runEmitter(legacy, runner)), { concurrency: 1 })
+      expect(architectureCollisions(rows)).toEqual([
+        "CACHE_ARCH_COLLISION bun: Linux/X64 and Linux/ARM64",
+        "CACHE_ARCH_COLLISION modules: Linux/X64 and Linux/ARM64",
+        "CACHE_ARCH_COLLISION bun: macOS/X64 and macOS/ARM64",
+        "CACHE_ARCH_COLLISION modules: macOS/X64 and macOS/ARM64",
+        "CACHE_ARCH_COLLISION bun: Windows/X64 and Windows/ARM64",
+        "CACHE_ARCH_COLLISION modules: Windows/X64 and Windows/ARM64",
+      ])
+    }),
+  )
+
+  test("extraction and controlled expressions fail closed with named failures", () => {
+    const runner = { os: "Linux", arch: "ARM64" }
+    expect(() => requireStep([], "id", "keys")).toThrow("CACHE_STEP_MISSING_OR_DUPLICATE: id=keys")
+    expect(() => requireStep([{ id: "keys" }, { id: "keys" }], "id", "keys")).toThrow(
+      "CACHE_STEP_MISSING_OR_DUPLICATE: id=keys",
+`````
+
+### CI-CONTROL-1 — `packages/core/test/test-omni-control.test.ts` 26–70
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `6aa22b6b07807a4f9fd3fca3a16da10fe7519c05`; SHA256 integral `554f811655d221d7c8e7e7348c37d437cff9c498046bafd8deebdd257dd52ef5`. Bytes fonte 22771; recorte [1815, 4767); SHA256 trecho `aeba29b6202176cc2ad6901412c5dd845df20f18054cd2a171d94c8af1988595`.
+
+`````text
+async function control(files: Record<string, string>, env: Record<string, string | undefined>, args: string[] = []) {
+  const dir = await mkdtemp(path.join(tmpdir(), "omni-control-"))
+  try {
+    await Bun.write(path.join(dir, "bunfig.toml"),
+      `[test]\npreload = [${JSON.stringify(path.join(root, "script/test-omni-control.ts"))}]\n`)
+    await Promise.all(Object.entries(files).map(([name, body]) => Bun.write(path.join(dir, name), body)))
+    // This run's own preload marked it as the outermost run; the child must be an outermost run of its own.
+    const childEnv: Record<string, string | undefined> = { ...process.env, ORCHESTRA_OMNI_CONTROL_RUN: undefined,
+      ORCHESTRA_OMNI_CONTROL: undefined, ORCHESTRA_OMNI_CONTROL_NONCE: undefined, ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "1", ...env }
+    const result = Bun.spawnSync([process.execPath, "test", ...Object.keys(files).map((file) => `./${file}`), ...args], {
+      cwd: dir, env: Object.fromEntries(Object.entries(childEnv).filter((entry): entry is [string, string] => entry[1] !== undefined)),
+    })
+    return { code: result.exitCode, output: `${result.stdout.toString()}\n${result.stderr.toString()}` }
+  } finally {
+    await rm(dir, { recursive: true, force: true })
+  }
+}
+
+const declared = { ORCHESTRA_OMNI_CONTROL: "declared" }
+
+test("declared: a run in which no declaring test ran and nothing spawned is not applicable and passes", async () => {
+  const run = await control({ "plain.test.ts": plain }, declared)
+  expect(run.output).toContain("omni positive control: not applicable (focused: no declaring test ran)")
+  expect(run.code).toBe(0)
+}, 60_000)
+
+test("declared: a declaring test that made no omni spawn fails the run and names its file", async () => {
+  const run = await control({ "silent.test.ts": silent, "plain.test.ts": plain }, declared)
+  // The path is relative to the run's cwd; Windows may spell the temp directory in its short 8.3 form.
+  expect(run.output).toMatch(/omni positive control: FAIL \(declared: 1 test\(s\) in [^)]*silent\.test\.ts\)\. [^\n]*silent\.test\.ts: 1 of 1 declaring test\(s\) made no omni spawn of their own/)
+  expect(run.code).not.toBe(0)
+}, 60_000)
+
+test("declared: another file's spawn does not satisfy a declaring test that made none", async () => {
+  // Named files run in the given order: the other file's spawn is counted before the declaring test starts.
+  const run = await control({ "other.test.ts": other, "silent.test.ts": silent }, declared)
+  expect(run.output).toMatch(/silent\.test\.ts: 1 of 1 declaring test\(s\) made no omni spawn of their own/)
+  expect(run.code).not.toBe(0)
+}, 60_000)
+
+test("declared: a declaring test that spawned passes", async () => {
+  const run = await control({ "spawning.test.ts": spawning }, declared)
+  expect(run.output).toMatch(/omni positive control: pass \(declared: 1 test\(s\) in [^)]*spawning\.test\.ts\); 1 omni spawn\(s\), 0 delegated\./)
+  expect(run.code).toBe(0)
+}, 60_000)
+`````
+
+### PKG-SKILLS-1 — `packages/core/test/fixture/packaged-skills.ts` 30–82
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `e69c2361d0a4dec7e900e48ed8e5eeadb75aea1f`; SHA256 integral `3ee1d07bc4a68bcf9c0591def412f90904c8c0fb25216c07c9610c2a7b3177a3`. Bytes fonte 4720; recorte [979, 3613); SHA256 trecho `8a0b5ebefd3d6f05efa1e03f110c3d819272c0e24f338b5ac8d1c3c22751ffa1`.
+
+`````text
+export async function bundle(entry: string, payload: unknown, outfile: string) {
+  const packaged = path.resolve(import.meta.dirname, "../../src/packaged-skills.ts")
+  const result = await Bun.build({
+    entrypoints: [entry],
+    target: "bun",
+    format: "esm",
+    minify: true,
+    define: { ORCHESTRA_PACKAGED_SKILLS: JSON.stringify(payload) },
+    plugins: [{
+      name: "preserve-real-service-identities",
+      setup(build) {
+        // Bun can retain the original external specifier despite onResolve returning an absolute path.
+        // Rewrite only AST module specifiers, sharing the host's real modules without copying implementations.
+        build.onLoad({ filter: /\.ts$/ }, async (args) => {
+          if (args.path !== entry && args.path !== packaged) return
+          const text = await Bun.file(args.path).text()
+          const source = ts.createSourceFile(args.path, text, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS)
+          const edits = source.statements.flatMap((statement) => {
+            if (!ts.isImportDeclaration(statement) && !ts.isExportDeclaration(statement)) return []
+            const specifier = statement.moduleSpecifier
+            if (!specifier || !ts.isStringLiteral(specifier) || isBuiltin(specifier.text)) return []
+            const resolved = Bun.resolveSync(specifier.text, path.dirname(args.path))
+            // Keep entry/self namespace exports and packaged-skills inside this build's define boundary.
+            if (resolved === entry || resolved === packaged) return []
+            return [{
+              start: specifier.getStart(source),
+              end: specifier.getEnd(),
+              value: JSON.stringify(pathToFileURL(resolved).href),
+            }]
+          })
+          return {
+            contents: edits.toReversed().reduce(
+              (contents, edit) => contents.slice(0, edit.start) + edit.value + contents.slice(edit.end),
+              text,
+            ),
+            loader: "ts",
+          }
+        })
+        build.onResolve({ filter: /.*/ }, (args) => {
+          if (args.path === entry) return
+          if (isBuiltin(args.path) || args.path.startsWith("file:")) return { path: args.path, external: true }
+          const resolved = Bun.resolveSync(args.path, args.resolveDir)
+          if (resolved === entry || resolved === packaged) return { path: resolved }
+          throw new Error(`External module specifier was not rewritten: ${args.path}`)
+        })
+      },
+    }],
+  })
+  expect(result.success, JSON.stringify(result.logs)).toBe(true)
+  expect(result.outputs).toHaveLength(1)
+  await Bun.write(outfile, result.outputs[0])
+}
+
+`````
+
+### PKG-SDK-1 — `packages/core/test/fixture/sdk-registry.ts` 1–75
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `da67e07241321d2eed35dfd3786b17939cf21802`; SHA256 integral `3bbbc19a42bf97a83e39e19243f435ea1665c94f1a01b495508c5b0510ea7b40`. Bytes fonte 3421; recorte [0, 3421); SHA256 trecho `3bbbc19a42bf97a83e39e19243f435ea1665c94f1a01b495508c5b0510ea7b40`.
+
+`````text
+import path from "node:path"
+import { mkdir, readFile } from "node:fs/promises"
+import { createHash } from "node:crypto"
+import sdk from "../../../plugin/package.json"
+
+export const planted = 'throw new Error("planted SDK copy ran"); export const tool = () => {}; export const marker = true\n'
+
+// Real HTTP packuments and npm tarballs, consumed by the installed Arborist/pacote.
+export async function registry(root: string) {
+  const packages = new Map<string, { manifest: Record<string, unknown>; bytes: Buffer }>()
+  const hits: string[] = []
+  const held = new Map<string, { entered: () => void; wait: Promise<void> }>()
+  const server = Bun.serve({
+    hostname: "127.0.0.1",
+    port: 0,
+    async fetch(request) {
+      const name = decodeURIComponent(new URL(request.url).pathname.slice(1))
+      hits.push(name)
+      const gate = held.get(name)
+      if (gate) {
+        gate.entered()
+        await gate.wait
+      }
+      const archive = name.startsWith("tarballs/")
+      const item = packages.get(archive ? name.slice("tarballs/".length, -4) : name)
+      if (!item) return new Response("fixture package missing", { status: 404 })
+      if (archive) return new Response(Uint8Array.from(item.bytes))
+      return Response.json({
+        name,
+        "dist-tags": { latest: item.manifest.version },
+        versions: { [String(item.manifest.version)]: item.manifest },
+      })
+    },
+  })
+  const url = `http://127.0.0.1:${server.port}`
+  return {
+    url,
+    hits,
+    hold(name: string) {
+      const entered = Promise.withResolvers<void>()
+      const released = Promise.withResolvers<void>()
+      held.set(name, { entered: () => entered.resolve(), wait: released.promise })
+      return { entered: entered.promise, release: () => { held.delete(name); released.resolve() } }
+    },
+    async publish(name: string, manifest: Record<string, unknown> = {}, files: Record<string, string> = {}) {
+      const directory = path.join(root, "archives", name)
+      await mkdir(path.join(directory, "package"), { recursive: true })
+      const pkg = { name, version: sdk.version, type: "module", main: "index.js", ...manifest }
+      await Promise.all(Object.entries({ "package.json": JSON.stringify(pkg), "index.js": "export const ordinary = 42\n", ...files })
+        .map(([file, body]) => Bun.write(path.join(directory, "package", file), body)))
+      const tar = Bun.spawnSync(["tar", "-czf", "package.tgz", "package"], { cwd: directory })
+      if (tar.exitCode !== 0) throw new Error(`fixture tar failed: ${tar.stderr.toString()}`)
+      const bytes = await readFile(path.join(directory, "package.tgz"))
+      packages.set(name, {
+        bytes,
+        manifest: { ...pkg, dist: {
+          tarball: `${url}/tarballs/${encodeURIComponent(name)}.tgz`,
+          integrity: `sha512-${createHash("sha512").update(bytes).digest("base64")}`,
+        } },
+      })
+    },
+    async config(directory: string) {
+      await Bun.write(path.join(directory, "empty.npmrc"), "")
+      await Bun.write(path.join(directory, ".npmrc"), [
+        `registry=${url}/`, `@orchestra:registry=${url}/`,
+        `cache=${path.join(root, "npm-cache").replaceAll("\\", "/")}`,
+        `userconfig=${path.join(directory, "empty.npmrc").replaceAll("\\", "/")}`,
+        "audit=false", "fund=false", "fetch-retries=0",
+      ].join("\n"))
+    },
+    async [Symbol.asyncDispose]() { await server.stop(true) },
+  }
+}
+
+export { sdk }
+`````
+
+### PKG-RG-1 — `packages/core/test/fixture/ripgrep-release.ts` 14–36
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `4dca048a5b4e9e9b61e44d5d04580520f771b3bc`; SHA256 integral `49f09f732139b41ff81105da76dcee4bac4bdb3fcc7fa78a163dd489fc387f3f`. Bytes fonte 4415; recorte [591, 1706); SHA256 trecho `5391a40015d5bf5a9610f947e55aa88956af6c6c44c195508d130c0651c4a0ac`.
+
+`````text
+/** A gate a test opens when it chooses, so ordering never depends on how long something takes. */
+export const gate = () => {
+  const state: { open?: () => void } = {}
+  const promise = new Promise<void>((resolve) => (state.open = resolve))
+  return { promise, open: () => state.open?.() }
+}
+
+/** Waits, in real time and whatever clock the test runs on, until `ready` holds. */
+export const until = (ready: () => boolean) =>
+  Effect.promise(async () => {
+    for (let tries = 0; tries < 2_000 && !ready(); tries++) await Bun.sleep(5)
+    if (!ready()) throw new Error("condition never held")
+  })
+
+/** A release server whose handler sees the 1-based request number; `requests` counts every request it got. */
+export const serve = (handler: (request: number) => Response | Promise<Response>) =>
+  Effect.acquireRelease(
+    Effect.sync(() => {
+      const counter = { requests: 0 }
+      const server = Bun.serve({ port: 0, fetch: () => handler(++counter.requests) })
+      return { counter, server, url: new URL("/archive", server.url).href }
+    }),
+    (input) => Effect.promise(() => input.server.stop(true)),
+`````
+
+### PKG-RG-2 — `packages/core/test/fixture/ripgrep-release.ts` 42–95
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `4dca048a5b4e9e9b61e44d5d04580520f771b3bc`; SHA256 integral `49f09f732139b41ff81105da76dcee4bac4bdb3fcc7fa78a163dd489fc387f3f`. Bytes fonte 4415; recorte [1852, 4061); SHA256 trecho `ba41f60739a6febe8bb391eb7a4812b094c3881b612025939208eaa3502cb2a6`.
+
+`````text
+).pipe(Effect.map((tmp) => tmp.path))
+
+/**
+ * A real archive in this platform's release format holding ROOT/rg (rg.exe on Windows): by default a copy of the
+ * real `rg` on PATH, which CI provisions, so the installed copy passes the `rg --version` check.
+ */
+export const archive = Effect.fnUntraced(function* (dir: string, content?: string) {
+  const source = path.join(dir, "source")
+  yield* Effect.promise(() => fs.mkdir(path.join(source, ROOT), { recursive: true }))
+  const real = Bun.which(executable)
+  if (content === undefined && !real) throw new Error(`these tests copy the ${executable} on PATH, and there is none`)
+  const bytes = content === undefined ? yield* Effect.promise(() => Bun.file(real!).bytes()) : Buffer.from(content)
+  yield* Effect.promise(() => fs.writeFile(path.join(source, ROOT, executable), bytes))
+  const extension = process.platform === "win32" ? ("zip" as const) : ("tar.gz" as const)
+  const file = path.join(dir, `archive.${extension}`)
+  // Windows releases are zips, which the System32 bsdtar writes from the name; elsewhere a gzipped tarball.
+  yield* Effect.promise(() =>
+    process.platform === "win32"
+      ? Bun.$`${path.join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe")} -a -cf ${file} ${ROOT}`
+          .cwd(source)
+          .quiet()
+      : Bun.$`tar -czf ${file} ${ROOT}`.cwd(source).quiet(),
+  )
+  const archived = yield* Effect.promise(() => Bun.file(file).bytes())
+  return {
+    bytes: archived,
+    executable: bytes,
+    release: (url: string) => ({
+      url,
+      extension,
+      root: ROOT,
+      sha256: createHash("sha256").update(archived).digest("hex"),
+    }),
+  }
+})
+
+export const placeholder = (url: string): RipgrepBinary.Release => ({
+  url,
+  sha256: "0".repeat(64),
+  extension: "tar.gz",
+  root: ROOT,
+})
+
+export const options = (directory: string, release: RipgrepBinary.Release): Partial<RipgrepBinary.Options> => ({
+  system: () => undefined,
+  directory,
+  release,
+  // CI sets ORCHESTRA_DISABLE_RIPGREP_DOWNLOAD; these tests download only from their local server.
+  download: true,
+  connectTimeout: "2 seconds",
+  attemptTimeout: "10 seconds",
+  attempts: 3,
+  retryDelay: "10 millis",
+  wait: "1 minute",
+`````
+
+### UP-PROOF-1 — `packages/core/test/fixture/upstream-arsenal-proof.ts` 5–73
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `71fe273472282ecb9837d848dbdd8ebdceca5811`; SHA256 integral `d729374b9d708bef0d3855fc3052dc5b3b3c865e2ef497d8dabd03103086ca1d`. Bytes fonte 2657; recorte [98, 2657); SHA256 trecho `1e550cee5cdf7b48441cd34891532c68e56b36d52bc6652fb739aa113e41af68`.
+
+`````text
+export async function upstreamDriftProof(mode: "missing" | "nonpure", boundary: "catalog" | "describe" | "execute") {
+  const root = path.resolve(import.meta.dirname, "../..")
+  const originals = await Promise.all(
+    [
+      path.join(root, "src/tool/maestro-arsenal.ts"),
+      path.join(root, "src/tool/upstream-arsenal.ts"),
+      path.resolve(root, "../../modules/maestro/arsenal/src/registry.ts"),
+    ].map(async (file) => ({ file, bytes: await Bun.file(file).text() })),
+  )
+  // Package-local artifacts preserve dependency resolution on isolated Linux and hoisted Windows installs.
+  await using artifacts = {
+    path: await fs.mkdtemp(path.join(root, ".upstream-arsenal-proof-")),
+    async [Symbol.asyncDispose]() {
+      await fs.rm(this.path, { recursive: true, force: true, maxRetries: 30, retryDelay: 100 })
+    },
+  }
+  const snapshot = path.join(artifacts.path, "package")
+  const marker = path.join(artifacts.path, "operation-entered")
+  const config = path.join(artifacts.path, "bunfig.toml")
+  await Bun.write(
+    config,
+    "[test]\npreload = " +
+      JSON.stringify([
+        path.resolve(root, "../../script/test-guard.ts"),
+        path.join(root, "test/fixture/upstream-arsenal-registry.ts"),
+        path.join(root, "test/preload.ts"),
+      ]) +
+      "\n",
+  )
+  const child = Bun.spawn(
+    [
+      process.execPath,
+      "test",
+      `--config=${config}`,
+      "./test/fixture/upstream-arsenal-runtime.ts",
+      "--timeout",
+      "60000",
+    ],
+    {
+      cwd: root,
+      stdout: "pipe",
+      stderr: "pipe",
+      timeout: 90000,
+      env: {
+        ...process.env,
+        ORCHESTRA_UPSTREAM_SNAPSHOT: snapshot,
+        ORCHESTRA_UPSTREAM_OPERATION_MARKER: marker,
+        ORCHESTRA_UPSTREAM_DRIFT: mode,
+        ORCHESTRA_UPSTREAM_BOUNDARY: boundary,
+      },
+    },
+  )
+  const [stdout, stderr, exit] = await Promise.all([
+    new Response(child.stdout).text(),
+    new Response(child.stderr).text(),
+    child.exited,
+  ])
+  const diagnostics = `actual ${boundary} / ${mode} registry drift\n${stdout}\n${stderr}`
+  expect(child.signalCode, diagnostics).toBeNull()
+  expect(exit, diagnostics).toBe(0)
+  expect(stderr, diagnostics).toMatch(/\b1 pass\b/)
+  expect(stderr, diagnostics).not.toMatch(/\b[1-9]\d* skip\b/)
+  expect(stdout, diagnostics).toContain(
+    JSON.stringify({
+      upstreamDrift: { mode, boundary, realBackendControl: true, backendEnteredAfterDenial: false },
+    }),
+  )
+  for (const original of originals) expect(await Bun.file(original.file).text(), original.file).toBe(original.bytes)
+}
+`````
+
+### UP-REGISTRY-1 — `packages/core/test/fixture/upstream-arsenal-registry.ts` 7–49
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `b8929709e7823441736293b52685a3306ffe93b1`; SHA256 integral `2d5ed9f7379415020521ff6e4327d2cb26d4556aec7fcb3e7352552f906f1c9c`. Bytes fonte 2475; recorte [260, 2475); SHA256 trecho `ecab5ef3e6cf73c5e1f1d0fcc6d08a297528947a2e66f5bc13ecacd0266b57b3`.
+
+`````text
+const snapshot = process.env.ORCHESTRA_UPSTREAM_SNAPSHOT
+const marker = process.env.ORCHESTRA_UPSTREAM_OPERATION_MARKER
+const mode = process.env.ORCHESTRA_UPSTREAM_DRIFT
+if (!snapshot || !marker) throw new Error("UPSTREAM_DRIFT_FIXTURE_PLACEMENT_MISSING")
+if (mode !== "missing" && mode !== "nonpure") throw new Error("UPSTREAM_DRIFT_FIXTURE_MODE_INVALID")
+
+const source = path.resolve(import.meta.dirname, "../../../../modules/maestro/arsenal/src")
+await fs.cp(source, path.join(snapshot, "src"), { recursive: true })
+const file = path.join(snapshot, "src/registry.ts")
+const original = await Bun.file(file).text()
+const newline = original.includes("\r\n") ? "\r\n" : "\n"
+const targets = original.split(newline).filter((line) => line.startsWith('  ["conflict-map",'))
+if (targets.length !== 1 || !targets[0].endsWith(", []],"))
+  throw new Error("UPSTREAM_DRIFT_FIXTURE_DESCRIPTOR_TARGET_MISSING_OR_DUPLICATED")
+const target = targets[0] + newline
+if (original.split(target).length !== 2)
+  throw new Error("UPSTREAM_DRIFT_FIXTURE_DESCRIPTOR_TARGET_MISSING_OR_DUPLICATED")
+const changed = original.replace(
+  target,
+  mode === "missing" ? "" : targets[0].replace(/, \[\]\],$/, ', ["read"]],') + newline,
+)
+const entry =
+  "export async function execute(name: string, args: unknown, context?: ArsenalContext): Promise<ToolTextResult> {"
+if (changed.split(entry).length !== 2) throw new Error("UPSTREAM_DRIFT_FIXTURE_EXECUTE_TARGET_MISSING_OR_DUPLICATED")
+// This observes entry into the real backend, before its validation or handler dispatch.
+await Bun.write(
+  file,
+  changed.replace(entry, `${entry}${newline}  await Bun.write(${JSON.stringify(marker)}, "entered")`),
+)
+if ((await Bun.file(path.join(source, "registry.ts")).text()) !== original)
+  throw new Error("UPSTREAM_DRIFT_FIXTURE_LIVE_SOURCE_CHANGED")
+
+const registry = await Bun.file(file).text()
+plugin({
+  name: "upstream-arsenal-package-source-snapshot",
+  setup(build) {
+    // Load copied, narrowly changed bytes at the actual package registry path; all other modules stay real.
+    build.onLoad({ filter: /[\\/]modules[\\/]maestro[\\/]arsenal[\\/]src[\\/]registry\.ts$/ }, () => ({
+      loader: "ts",
+      contents: registry,
+    }))
+  },
+})
+`````
+
+### UP-RUNTIME-1 — `packages/core/test/fixture/upstream-arsenal-runtime.ts` 16–79
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `6dd1d01ea7cfaea8304af6bd709b43110e18623b`; SHA256 integral `9a699ab41e52ca3a77856441621e663ac8fc57a679a3dabac4f8760a0f4211a1`. Bytes fonte 3542; recorte [797, 3542); SHA256 trecho `fd37fe2ab669242cbff747d57226908c7a7d3dacf18e04a10ebba383b43bca6c`.
+
+`````text
+test(`actual ${boundary} rejects ${mode} registry drift before backend entry`, async () => {
+  const context = { sessionID: "ses_upstream_drift", agent: "archie" }
+  const host = {
+    directory,
+    stateDirectory: directory,
+    projectID: "upstream-drift",
+    nativeMaestro: true,
+    nativeUpstream: true,
+    ask: () => Effect.void,
+    authorize: () => Effect.void,
+    outputBudget: () => Effect.succeed({ maxLines: 2000, maxBytes: 50 * 1024 }),
+  }
+  const handlers = MaestroArsenal.makeHandlers(() => Effect.succeed(host))
+  const descriptors = await Arsenal.list()
+  expect(descriptors.filter((item) => item.name === "conflict-map")).toHaveLength(mode === "missing" ? 0 : 1)
+  if (mode === "nonpure") expect(await Arsenal.describe("conflict-map")).toMatchObject({ effects: ["read"] })
+  if (mode === "missing") await expect(Arsenal.describe("conflict-map")).rejects.toThrow("unknown tool: conflict-map")
+
+  // Positive control uses the actual handlers and registry entry instrumented by the source snapshot.
+  await Effect.runPromise(handlers.describe({ name: "sliceability" }, context))
+  const control = await Effect.runPromise(
+    handlers.execute(
+      {
+        name: "sliceability",
+        arguments: { symbols: ["only"], edges: [], k: 1 },
+      },
+      context,
+    ),
+  )
+  const result = Schema.decodeUnknownSync(
+    Schema.fromJsonString(
+      Schema.Struct({
+        content: Schema.Array(Schema.Struct({ text: Schema.String })),
+      }),
+    ),
+  )(control)
+  expect(Schema.decodeUnknownSync(Schema.UnknownFromJsonString)(result.content[0].text)).toMatchObject({
+    verdict: "SLICEABLE",
+  })
+  expect(await Bun.file(marker).text()).toBe("entered")
+  await fs.unlink(marker)
+
+  // An exact receipt for the drifted descriptor must not bypass current upstream purity checks.
+  if (mode === "nonpure" && boundary === "execute")
+    await Effect.runPromise(handlers.describe({ name: "conflict-map" }, context))
+  host.nativeMaestro = false
+  const response = await Effect.runPromise(
+    (boundary === "catalog"
+      ? handlers.catalog({ group: "pure", offset: 10, limit: 1 }, context)
+      : boundary === "describe"
+        ? handlers.describe({ name: "conflict-map" }, context)
+        : handlers.execute({ name: "conflict-map", arguments: { wps: [{ id: "only" }] } }, context)
+    ).pipe(Effect.result),
+  )
+  const entered = await Bun.file(marker).exists()
+  console.log(
+    JSON.stringify({ upstreamDrift: { mode, boundary, realBackendControl: true, backendEnteredAfterDenial: entered } }),
+  )
+  expect(response).toMatchObject({
+    _tag: "Failure",
+    failure: { message: `UPSTREAM_AUTHORING_DESCRIPTOR_${mode === "missing" ? "MISSING" : "NOT_PURE"}: conflict-map` },
+  })
+  expect(entered).toBe(false)
+})
+`````
+
+### UP-PACKAGE-1 — `packages/core/test/maestro-arsenal-package.test.ts` 1–15
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `5bf1d485083c3f565d5bb68a5c96f2541a88cd58`; SHA256 integral `dffb0186308dcae05d6e13405a55ed662b0ef0b74c252411f81cf1f063ee88e3`. Bytes fonte 8412; recorte [0, 773); SHA256 trecho `6a366082d7f56d8fdda6119223ef1c7a0a8756d60dc14119ed59a25597323b17`.
+
+`````text
+// Requires the actual assembled @orchestra/maestro-arsenal package. Never mock its validator/handlers.
+import { expect } from "bun:test"
+import { Effect, Schema } from "effect"
+import { realpath } from "node:fs/promises"
+import { FSUtil } from "@orchestra/core/fs-util"
+import { Global } from "@orchestra/core/global"
+import { Location } from "@orchestra/core/location"
+import { MaestroArsenal } from "@orchestra/core/tool/maestro-arsenal"
+import { ToolRegistry } from "@orchestra/core/tool/registry"
+import { testEffect } from "./lib/effect"
+import { executeTool, settleTool, toolIdentity } from "./lib/tool"
+import { hostLayer, maestro, sessionID, setup } from "./maestro-arsenal.test"
+
+const it = testEffect(hostLayer)
+const call = (name: string, input: unknown) => ({
+`````
+
+### UP-PACKAGE-2 — `packages/core/test/maestro-arsenal-package.test.ts` 95–117
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `5bf1d485083c3f565d5bb68a5c96f2541a88cd58`; SHA256 integral `dffb0186308dcae05d6e13405a55ed662b0ef0b74c252411f81cf1f063ee88e3`. Bytes fonte 8412; recorte [4827, 6120); SHA256 trecho `5e71515ba71fb24dd624894e78cd44ac4f110f93dd77d92dd1da34ee887aaa0c`.
+
+`````text
+    })
+    const registry = yield* ToolRegistry.Service
+    const filesystem = yield* FSUtil.Service
+    const location = yield* Location.Service
+    const global = yield* Global.Service
+    const directory = MaestroArsenal.stateDirectory(global.data, location.project.id)
+    const description = yield* settleTool(registry, call(MaestroArsenal.names.describe, { name: "profile" }))
+    expect(description.output?.structured).toBeString()
+    expect(yield* filesystem.readDirectory(directory)).toEqual([])
+    const input = { name: "profile", arguments: { action: "set", patch: { scrutiny: "strict" } } }
+    expect(yield* executeTool(registry, call(MaestroArsenal.names.execute, input))).toMatchObject({ type: "error" })
+    expect(yield* filesystem.readDirectory(directory)).toEqual([])
+    yield* agents.transform((editor) =>
+      editor.update(maestro, (agent) => {
+        agent.permissions = [{ action: "*", resource: "*", effect: "allow" }]
+      }),
+    )
+    expect(yield* executeTool(registry, call(MaestroArsenal.names.execute, input))).toMatchObject({ type: "text" })
+    expect((yield* filesystem.readDirectory(directory)).length).toBeGreaterThan(0)
+  }),
+)
+
+it.live("Arsenal package conformance: a handler refusal returns its static code, not an opaque execution_failed", () =>
+`````
+
+### UP-HOST-1 — `packages/core/test/maestro-arsenal.test.ts` 36–71
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `611d531dcf64de3bbb4dcdcd1e52ee71a183bc0f`; SHA256 integral `cfa36ea94fce99435a30f2343bf7ebbf5849966b7ea2c159e58f59a147123512`. Bytes fonte 16594; recorte [1716, 2750); SHA256 trecho `be3693114240786a699d6208e8590ec05e97046b92bff0a356d4da60d90ad9e2`.
+
+`````text
+export const hostLayer = AppNodeBuilder.build(
+  LayerNode.group([
+    FSUtil.node,
+    Global.node,
+    Location.node,
+    Database.node,
+    EventV2.node,
+    AgentV2.node,
+    SessionStore.node,
+    PermissionSaved.node,
+    PermissionV2.node,
+    ToolRegistry.node,
+    ToolRegistry.toolsNode,
+    ToolOutputStore.node,
+    LocationMutation.node,
+  ]),
+  [
+    [Location.node, tempLocationLayer],
+    [Global.node, data],
+    [ToolOutputStore.node, ToolOutputStore.nodeWithoutConfig],
+  ],
+)
+
+export const sessionID = SessionV2.ID.make("ses_arsenal_native")
+export const maestro = AgentV2.ID.make("maestro")
+export const setup = Effect.fn("ArsenalTest.setup")(function* (rules: PermissionV2.Ruleset) {
+  const database = yield* Database.Service
+  const location = yield* Location.Service
+  yield* database.db
+    .insert(ProjectTable)
+    .values({ id: location.project.id, worktree: location.directory, sandboxes: [] })
+    .onConflictDoNothing()
+    .run()
+    .pipe(Effect.orDie)
+  yield* database.db
+    .insert(SessionTable)
+`````
+
+### UP-HOST-2 — `packages/core/test/maestro-arsenal.test.ts` 96–148
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `611d531dcf64de3bbb4dcdcd1e52ee71a183bc0f`; SHA256 integral `cfa36ea94fce99435a30f2343bf7ebbf5849966b7ea2c159e58f59a147123512`. Bytes fonte 16594; recorte [3293, 5951); SHA256 trecho `0140722983c96f9a7ebc09a01d1965d4364501aee81c30ed12e51e69f376e0cd`.
+
+`````text
+  it.live("registers canonical tools within the real Tools scope and rejects non-Maestro invocations", () =>
+    Effect.gen(function* () {
+      const agents = yield* setup([{ action: "*", resource: "*", effect: "allow" }])
+      const registry = yield* ToolRegistry.Service
+      const scope = yield* Scope.make()
+      yield* MaestroArsenal.registerScoped({
+        nativeMaestro: (id) => agents.get(id).pipe(Effect.map((agent) => agent?.id === maestro)),
+      }).pipe(Scope.provide(scope))
+      expect((yield* toolDefinitions(registry)).map((definition) => definition.name).sort()).toEqual(
+        Object.values(MaestroArsenal.names).sort(),
+      )
+      expect(
+        yield* executeTool(registry, {
+          sessionID,
+          ...toolIdentity,
+          call: { type: "tool-call", id: "identity", name: MaestroArsenal.names.catalog, input: {} },
+        }),
+      ).toEqual({ type: "error", value: "Maestro Arsenal requires native Maestro identity." })
+      yield* Scope.close(scope, Exit.void)
+      expect(yield* toolDefinitions(registry)).toEqual([])
+      expect(
+        yield* executeTool(registry, {
+          sessionID,
+          ...toolIdentity,
+          call: { type: "tool-call", id: "closed", name: MaestroArsenal.names.catalog, input: {} },
+        }),
+      ).toEqual({ type: "error", value: `Unknown tool: ${MaestroArsenal.names.catalog}` })
+    }),
+  )
+
+  it.live("an upstream host flag cannot authorize the old upstream ID at any authoring boundary", () =>
+    Effect.gen(function* () {
+      const location = yield* Location.Service
+      const global = yield* Global.Service
+      const handlers = MaestroArsenal.makeHandlers(() => Effect.succeed({
+        directory: location.directory,
+        stateDirectory: MaestroArsenal.stateDirectory(global.data, location.project.id),
+        projectID: location.project.id,
+        nativeMaestro: false,
+        nativeUpstream: true,
+        ask: () => Effect.fail(new Tool.Failure({ message: "Unexpected permission request." })),
+        authorize: () => Effect.fail(new Tool.Failure({ message: "Unexpected effect request." })),
+        outputBudget: () => Effect.succeed({ maxLines: 1000, maxBytes: 32 * 1024 }),
+      }))
+      const context = { sessionID, agent: AgentV2.ID.make("walt") }
+      yield* Effect.forEach([
+        handlers.catalog({}, context),
+        handlers.describe({ name: "conflict-map" }, context),
+        handlers.execute({ name: "conflict-map", arguments: {} }, context),
+      ], (effect) => Effect.gen(function* () {
+        expect((yield* effect.pipe(Effect.flip)).message).toBe("Maestro Arsenal requires native Maestro identity.")
+      }))
+    }),
+`````
+
+### UP-OPS-1 — `packages/core/test/upstream-arsenal.test.ts` 89–120
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `917bbd9fdfbda0fd15b66d6e7662b114871c2f06`; SHA256 integral `2612d4ab63959417a3a505d2123dc557d7f6ddcc9bdd5c8f506eef6a8e4a106f`. Bytes fonte 22842; recorte [3330, 4844); SHA256 trecho `ffcee2778fa99310f3d62997bc630d4c775aded7f2458c6657893d01dcd50bdf`.
+
+`````text
+describe("Upstream Arsenal authoring access", () => {
+  it.live("exports exactly the frozen authoring IDs, all present and pure in the actual Arsenal registry", () =>
+    Effect.gen(function* () {
+      const { Arsenal } = yield* Effect.promise(() => import("@orchestra/maestro-arsenal"))
+      expect(UPSTREAM_AUTHORING_OPERATIONS).toEqual([
+        "anchor-gen",
+        "conflict-map",
+        "context-packer",
+        "contract-freezer",
+        "enrich-plan",
+        "plan-check",
+        "plan-compiler",
+        "plan-to-briefs",
+        "plan-to-dag",
+        "plan-to-gates",
+        "plan-to-policy",
+        "seam-checker",
+        "sliceability",
+      ])
+      expect(Object.isFrozen(UPSTREAM_AUTHORING_OPERATIONS)).toBe(true)
+      expect(MaestroArsenal.UPSTREAM_AUTHORING_OPERATIONS).toBe(UPSTREAM_AUTHORING_OPERATIONS)
+      const descriptors = yield* Effect.promise(() => Arsenal.list())
+      const selected = yield* Effect.fromResult(UpstreamArsenal.catalog(descriptors))
+      expect(selected.map((item) => item.name)).toEqual([...UPSTREAM_AUTHORING_OPERATIONS])
+      yield* Effect.forEach(selected, (item) =>
+        Effect.gen(function* () {
+          expect(item).toEqual(yield* Effect.promise(() => Arsenal.describe(item.name)))
+          expect(item.effects).toEqual([])
+        }),
+      )
+      // Positive controls: the real registry has excluded pure and effectful capabilities.
+      expect(yield* Effect.promise(() => Arsenal.describe("stub-gen"))).toMatchObject({ effects: [] })
+`````
+
+### UP-SETTLE-1 — `packages/core/test/upstream-settlement-preservation.test.ts` 165–215
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `12fee3da08fdac660d5952099920599509a25ffc`; SHA256 integral `caaa5e5990d40c1964578ce79e5795d62bb87f20f177627c27aa24b10b505c41`. Bytes fonte 46125; recorte [10903, 14265); SHA256 trecho `baea2e4b98da217960e038c8ea5070af530da382ea361d1fbf5448b48dda2536`.
+
+`````text
+    expect(before.state.status).toBe("completed")
+    const offered = { ...f.retainedMetadata, concurrent: "stale caller value", workResult: f.result }
+    for (const metadata of [
+      { ...offered, parentSessionId: "ses_forged" },
+      { ...offered, sessionId: "ses_forged" },
+      { ...offered, workResult: { ...f.result, taskId: "tsk_forged" } },
+      { ...offered, workResult: { ...f.result, card: { messageID: "msg_missing" },
+        author: { ...f.result.author, messageID: "msg_missing" } } },
+      { ...offered, workResult: { ...f.result, card: { messageID: f.parentMessageID },
+        author: { ...f.result.author, messageID: f.parentMessageID } } },
+      { ...offered, workResult: { ...f.result, author: { ...f.result.author, memberId: "maestro" } } },
+      { ...offered, workResult: { ...f.result, card: null } },
+      { ...offered, workResult: { ...f.result, author: "caller-authored" } },
+      { ...offered, workResult: { ...f.result, terminal: null } },
+      { ...offered, workResult: { ...f.result, terminal: { reason: "ended" } } },
+      { ...offered, upstreamSettlement: { forged: true } },
+    ]) {
+      yield* f.offer(metadata)
+      expect(yield* f.read()).toEqual(before)
+    }
+    for (const hostDetail of ["", 0, false, null, {}, []]) {
+      yield* f.offer({ ...offered, workResult: { ...f.result, terminal: { reason: "failed", hostDetail } } })
+      expect(yield* f.read()).toEqual(before)
+    }
+    yield* f.offer(offered, { callID: "forged-call" })
+    expect(yield* f.read()).toEqual(before)
+    yield* f.offer(offered, {}, Location.Ref.make({ directory: AbsolutePath.make("/other-project") }))
+    expect(yield* f.read()).toEqual(before)
+    yield* f.database.db.update(SessionTable).set({ parent_id: null }).where(eq(SessionTable.id, f.childID)).run()
+    yield* f.offer(offered)
+    expect(yield* f.read()).toEqual(before)
+    yield* f.database.db.update(SessionTable).set({ parent_id: f.parentID }).where(eq(SessionTable.id, f.childID)).run()
+    const foreignProjectID = Project.ID.make(`foreign-observation-${view}`)
+    yield* f.database.db.insert(ProjectTable).values({ id: foreignProjectID, worktree: AbsolutePath.make("/other-project"), sandboxes: [] }).run()
+    for (const patch of [{ project_id: foreignProjectID }, { directory: "/other-project" }, { agent: "maestro" }]) {
+      yield* f.database.db.update(SessionTable).set(patch).where(eq(SessionTable.id, f.childID)).run()
+      yield* f.offer(offered)
+      expect(yield* f.read()).toEqual(before)
+      yield* f.database.db.update(SessionTable).set({ project_id: f.projectID, directory: "/project", agent: "archie" })
+        .where(eq(SessionTable.id, f.childID)).run()
+    }
+    const reasonOnly = { ...f.result, terminal: { reason: "failed" } }
+    yield* f.offer({ ...offered, workResult: reasonOnly })
+    expect((yield* f.read()).state.structured.metadata).toMatchObject({ workResult: reasonOnly })
+    yield* f.offer(offered)
+    const observed = yield* f.read()
+    expect(observed).toEqual({ ...before, state: { ...before.state,
+      structured: { ...before.state.structured, metadata: { ...f.retainedMetadata, workResult: f.result } } } })
+    expect(observed.state.status).toBe("completed")
+    expect(observed.state.input).toEqual(f.selectedInput)
+    expect(observed.state.structured.metadata).not.toHaveProperty("upstreamSettlement")
+`````
+
+### FX-RECORDING-1 — `packages/core/test/fixtures/recordings/session-runner/openai-chat-streams-text.json` 1–27
+
+Commit `1cde2ff7a71bcf7aecb5d030917b577165135d38`; blob `bad659f93ef05ea94ce67036e5dd6944a2591d39`; SHA256 integral `3d19ba51f0855ca232aefd372c0c045ea6db01bbbb6474957700cd623f5011f8`. Bytes fonte 2872; recorte [0, 2872); SHA256 trecho `3d19ba51f0855ca232aefd372c0c045ea6db01bbbb6474957700cd623f5011f8`.
+
+`````text
+{
+  "version": 1,
+  "metadata": {
+    "name": "session-runner/openai-chat-streams-text",
+    "recordedAt": "2026-06-02T19:52:25.084Z"
+  },
+  "interactions": [
+    {
+      "transport": "http",
+      "request": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "headers": {
+          "content-type": "application/json"
+        },
+        "body": "{\"model\":\"gpt-4o-mini\",\"messages\":[{\"role\":\"user\",\"content\":\"Say hello in one short sentence.\"}],\"stream\":true,\"stream_options\":{\"include_usage\":true},\"max_tokens\":20,\"temperature\":0}"

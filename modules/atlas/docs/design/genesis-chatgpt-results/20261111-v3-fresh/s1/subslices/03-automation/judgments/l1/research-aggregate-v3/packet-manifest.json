@@ -1,0 +1,15 @@
+{
+  "lot": "research-aggregate-v3",
+  "path": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/review-packets/research-aggregate-v3.md",
+  "bytes": 14533,
+  "sha256": "8e8d1035f6f29dc61a7148ea893a8d5dab8b4a8e558f8ac314bf08efa1b78a7d",
+  "git_blob_sha": "991725630d034922849d1759746156c17b9771e4",
+  "body_version": 3,
+  "body_sha256": "f6e3fe95e3db7adab59087b780fb232ae62cc7a2ba83623d355bcbad250b431f",
+  "body_bytes": 63841,
+  "source_excerpt_count": 6,
+  "raw_residual_excerpt_bytes": 1969,
+  "old_body_reused_exact_except_one_literal_replacement": true,
+  "other_judge_verdict_included": false,
+  "reserved_oracle_included": false
+}
