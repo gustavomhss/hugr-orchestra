@@ -10,7 +10,7 @@
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
   "observed_branch_head": "45cf4cd48f2038dca56b859f763da2c28d862c12",
-  "artifact_revision": null,
+  "artifact_revision": "a2a5de03d7b1034373eb877d8f03c4cecc772dde",
   "completion_state": "IN_PROGRESS",
   "checkpoint_only": true,
   "recorded_at": "2026-11-14T23:58:08.858Z",
@@ -48,5 +48,8 @@
     "Current source materialization is not a Git checkout; observed_head is null.",
     "No policy, approval, product behavior, PR or merge changed.",
     "Tokens, physical attempts and billing are UNKNOWN."
-  ]
+  ],
+  "work_git_blob_sha": "b7bdd6751a9c959b793afa70f35c208cf1e2cc37",
+  "ledger_git_blob_sha": "0915e5c011127c8ea0e67ee1db4d91af6771ac59",
+  "seal_protocol": "Payload commit followed by a child seal commit; no self-referential commit SHA. Branch update uses expected_sha and force:false."
 }
