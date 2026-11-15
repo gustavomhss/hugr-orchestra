@@ -9,8 +9,8 @@
   "branch": "genesis-s1-automation",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
-  "observed_branch_head": "1423adaac613ffc361ca89aa70c77f9b7ed5b7f7",
-  "artifact_revision": "84b267fbe863e4ef728b9d54855f137f3057b3df",
+  "observed_branch_head": "63e99146961161b8596bbe8b51e293c92eba4182",
+  "artifact_revision": "f6ffb725704cc01682847d7e175f22b6ead3894c",
   "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
   "completion_state": "IN_PROGRESS",
   "work": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/work.md",
@@ -18,7 +18,7 @@
   "coverage": {
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/coverage.jsonl",
     "source_count": 462,
-    "sha256": "9311d15c6d6d361edf15de1bd98e52040b7430915e2418e50bc671212acc186e",
+    "sha256": "ac5032bd0f71fce700e8471ba2ef2d733d8f0cb906941f4a2310d5855793bc0f",
     "source_bytes": 4740213,
     "all_source_git_blobs_verified": true,
     "semantic_acceptance": "PENDING_INDEPENDENT_JUDGMENT"
@@ -51,22 +51,22 @@
       },
       "s1.core.boundaries": {
         "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/boundaries/bodies/boundaries.md",
-        "version": "v1",
-        "bytes": 22938,
-        "sha256": "c557b33392cae8d0078a7da17f3421bb57ec2434f3bf5bba3b54f4172faeadae",
-        "git_blob_sha": "8232a8f75cc7b75614d2fd8873cc935edb84c538",
+        "version": "v2",
+        "bytes": 23665,
+        "sha256": "ca7e76aa47100f32e2076b0a5055b2cebfe3d36cfb5c0d29601125db34d7b3c6",
+        "git_blob_sha": "6821d54aec4f8015dd00d634f632dc9960d1bd74",
         "semantic_acceptance": "PENDING_SAME_PAIR"
       },
       "s1.subslice03.support": {
         "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/boundaries/bodies/support.md",
-        "version": "v1",
-        "bytes": 22388,
-        "sha256": "3a4ef5ee6925eb3c80404181f00a0e4e012750459f2dbb1ab11076b69449d684",
-        "git_blob_sha": "d21c3271726295f09d297995688678dde9f2dd2a",
+        "version": "v2",
+        "bytes": 23025,
+        "sha256": "498a0454418a14977b9b2f4c4f515711d941b6d4bbece13f1baaa8feaa76d378",
+        "git_blob_sha": "facd86eb03aa44ba722a9dda77c4d820ad28479c",
         "semantic_acceptance": "PENDING_SAME_PAIR"
       }
     },
-    "correction_count_published": 8,
+    "correction_count_published": 13,
     "required_artifact_plan": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/artifact-plan.json",
     "required_artifact_count": 12
   },
@@ -78,8 +78,9 @@
     "fork_turns": "none",
     "tools_permitted": false,
     "no_full_L1_pass": true,
-    "original_reviews": "Both judges REQUEST_EVIDENCE on research-a/b, automation1-4 and boundaries. Supplement and corrected-body reviews are pending. No global L1 PASS.",
-    "reserved_oracle_delivery": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/judgments/oracle/dispatch-receipt.json"
+    "original_reviews": "Same pair retained. Original REQUEST_EVIDENCE/FIX-FIRST remain immutable. Current v4/v2 corrections and literal supplements are under same-pair review; no full L1 acceptance yet. Both PASS exact AC-04-local-native historical control reuse only.",
+    "reserved_oracle_delivery": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/judgments/oracle/dispatch-receipt.json",
+    "compatible_controls_reuse": "judgments/l1/controls-reuse"
   },
   "local_obligations_open": [
     "Resolve independent L1 evidence requests and any mandatory corrections",
@@ -108,9 +109,13 @@
     },
     {
       "id": "GIT-GUARD",
-      "state": "CAPABILITY_PROBE_FAILED_NO_REPOSITORY",
+      "state": "FAITHFUL_GIT_MATERIALIZATION_BLOCKED_ONE_BINARY",
       "final_gate": "NOT_RUN",
-      "receipt": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/receipts/guard-preflight.json"
+      "receipt": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/receipts/guard-materialization/binary-transport-blocker.json",
+      "missing_blob": "d83941a9d836a23e466ca09ecba1f21d423094cb",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip",
+      "bytes": 1339105,
+      "checkout": "1660 exact commits;2378 exact trees;1551changed paths;1634of1635 required blobs; no missing-as-absent classification"
     },
     {
       "id": "S4-HISTORICAL-INPUT-LIMIT",
@@ -134,7 +139,7 @@
     "branch": "genesis-fresh-s1",
     "status": "NOT_REVIEWED"
   },
-  "supersedes": "1423adaac613ffc361ca89aa70c77f9b7ed5b7f7",
+  "supersedes": "63e99146961161b8596bbe8b51e293c92eba4182",
   "checkpoint_only": true,
   "execution_continues": true,
   "criteria_matrix": {
@@ -148,5 +153,6 @@
     "candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
     "common_controls_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553"
   },
-  "publication_scope": "Git payload and seal only; not Atlas publication or completed subslice."
+  "publication_scope": "Git payload and seal only; not Atlas publication or completed subslice.",
+  "payload_file_count": 438
 }
