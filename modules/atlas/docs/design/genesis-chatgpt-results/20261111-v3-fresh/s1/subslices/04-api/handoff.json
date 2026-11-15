@@ -1,33 +1,402 @@
 {
+  "schema": "genesis-s1-subdivision-handoff/v1",
   "campaign": "20261111-v1",
   "protocol_epoch": "parallel-v3-fresh",
   "results_epoch": "20261111-v3-fresh",
   "session": "S1",
+  "scope": "orchestra.s1",
   "subslice_id": "S1-04",
+  "title": "Schema, contratos públicos, APIs, clientes e SDKs",
   "execution_id": "94f1e157-8c44-4e6e-a4af-7690a8845ecf",
   "branch": "genesis-s1-api",
-  "observed_branch_head": "89c78249e63060acf7c41f45f14af88fd51aa0c4",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
-  "artifact_revision": "96e9222f1f8f1fdd68693c8c30062a1544b3110d",
-  "candidate_revision": null,
-  "completion_state": "IN_PROGRESS",
+  "inheritance_revision": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+  "kit_revision": "70234d541a9a3539935ef16f19e33c8f2d5f30ec",
+  "initial_branch_head": "89c78249e63060acf7c41f45f14af88fd51aa0c4",
+  "observed_branch_head": "8835faf6329cc3d5f5de1097872882d57472b793",
+  "artifact_revision": "eb0758c3a521087310e1e91e3f3998e7e3fa41d5",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "completion_state": "INCOMPLETE_BLOCKED",
+  "content_state": "CONTENT_ACCEPTED_CANDIDATE_NOT_RUNTIME_PUBLISHED",
+  "package": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/native-package.json",
+    "sha256": "71bc1102fd5e2c6be166b2df790e8ee8fe4ecd053ab2d7fed5bbc46130349442",
+    "byte_length": 389819
+  },
+  "provenance": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/transport-provenance.json",
+    "sha256": "c13e8603502d968d347bdf277a885e76cd01d48f7a51d78191a701bb0d9c42da",
+    "byte_length": 353187
+  },
   "work": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/work.md",
   "ledger": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/execution-ledger.jsonl",
-  "package": null,
-  "judgments": [],
-  "local_obligations_open": [
-    "B-v3 dual review",
-    "L2-L4 and population reconciliation",
-    "Atlas operations",
-    "consumers",
-    "maintenance",
-    "gates and final seal"
+  "work_identity": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/work.md",
+    "sha256": "adc735ee9e7fb04fdc90c2d55646abe1e5e86ad7d124cc0511b04d4a455f1daa",
+    "byte_length": 8788
+  },
+  "ledger_identity": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/execution-ledger.jsonl",
+    "sha256": "fcfb6338533cebe7d1522123c3b9d690f36aca02e37ffd646e3850119627f591",
+    "byte_length": 26781
+  },
+  "criteria_matrix": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/criteria-matrix.json",
+    "sha256": "d00a55d8a10a245b5cebe738ab652d2f817eb2cdb1ce6c5a3678e51e02e2b387",
+    "byte_length": 86223
+  },
+  "payload_manifest": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/payload-manifest.json",
+    "sha256": "2ef3d993c107e12b1249f1c6839a43854e83618c7e46c0323f820fe286434f24",
+    "byte_length": 135992
+  },
+  "written_payload_files": 404,
+  "written_payload_bytes": 13467337,
+  "coverage": {
+    "assigned_sources": 472,
+    "families": 52,
+    "retained_prior_full_reads_assigned": 95,
+    "inherited_B_v3_full_reads_reused": 190,
+    "section_reads": 2,
+    "captured_generated_sources_not_claimed_read": 2,
+    "inventory_only": 183,
+    "whole_population_full_read_claim": false,
+    "disposition": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/source-disposition.jsonl",
+      "sha256": "6b20973fadbacb9033a760d441af7502da8ec828484e11d9423136d8080a53d5",
+      "byte_length": 184561
+    },
+    "native_artifacts": 16,
+    "own_artifacts": 13,
+    "exact_Core_copies": 3,
+    "unique_source_refs": 310,
+    "assigned_source_refs": 289,
+    "external_source_refs": 21
+  },
+  "content_acceptance": {
+    "judges": [
+      "parallel-v3-fresh/S1-04/J1",
+      "parallel-v3-fresh/S1-04/J2"
+    ],
+    "mode": "NATIVE_INDEPENDENT_TOOL_FREE",
+    "final_round": 12,
+    "decisions": [
+      "PASS_DELIMITED",
+      "PASS_DELIMITED"
+    ],
+    "mandatory_content_findings_open": [],
+    "B1_B2_B3": "Closed in accepted bounded content; unsupported stronger claims were retired rather than relabelled as proven.",
+    "release_refs": [
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/l1-release.json",
+        "sha256": "23674344f089dbc26e1cac7ee70e0de9809e663ed80a0967219ae53222d4b0fb",
+        "byte_length": 3522
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/l2-release.json",
+        "sha256": "35f6a60a7aca9937b957022fae7ef1868b84a5b4d4284f961882568675c3a2c9",
+        "byte_length": 830
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/core-reuse-release.json",
+        "sha256": "540c2ea49100afe42247ee419f6ce0c7c6f92511d8cbf371c63969cb9bea8266",
+        "byte_length": 677
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/l3-final-release.json",
+        "sha256": "23460fd3c06d24b6e3e5f2ba483903ab907539d0b3d054a06cf0596c9e33358a",
+        "byte_length": 866
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/l4-final-release.json",
+        "sha256": "2cff1e9b9386e4777a1f59f9680fd3f8c942280334f4acf73b401bc3a9ebfcf0",
+        "byte_length": 1368
+      }
+    ],
+    "final_review": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/final-review.json",
+      "sha256": "d7bce545cdebd1eddfaeccd7913b919cc491883ac86c74cd92451e65cbec7ef1",
+      "byte_length": 2988
+    },
+    "historical_transcription_erratum": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/l4-submission-erratum.json",
+      "sha256": "a1594a3de4eaebf040a07dc9112155c7ada69acb3b62f948ea6cd12d7f3de1a2",
+      "byte_length": 2300
+    },
+    "runtime_binding_approved": false
+  },
+  "judgments": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/12-j1-final.md",
+      "sha256": "5d729fa2a7d5efbac7b293410be90ac3bc5e3adffd1312e8946beb014c751f22",
+      "byte_length": 4360
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/judgments/12-j2-final.md",
+      "sha256": "d6eb1e29e145bbc1ed331adb5cc083af6fa1a5a84c88ac2ba8fa702e537d0c59",
+      "byte_length": 4879
+    }
   ],
+  "criteria_disposition": {
+    "PASS_LOCAL": 20,
+    "HOLD": 29,
+    "NOT_APPLICABLE_LOCAL": 1,
+    "qualifiers": "Economic PASS is limited to the native route and honest observed assurance; no numerical reconciliation, demonstrated hard cap or zero-cost claim. DOD-7 N/A concerns global human acceptance/landing/production only."
+  },
+  "consumed_dependencies": [
+    {
+      "owner": "S1-01",
+      "observed_seal": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+      "artifact_revision": "a2a5de03d7b1034373eb877d8f03c4cecc772dde",
+      "selected_keys": [
+        "s1.core.session-admission",
+        "s1.core.session-execution",
+        "s1.core.persistence"
+      ],
+      "external_refs": [
+        {
+          "commit": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/handoff.json",
+          "sha256": "01dcf77d1bb7ab5e0fdf0c249c95e93f981cb28d3b6236520e2f58ea71ec6ae2",
+          "byte_length": 3277,
+          "local_copy": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/dependencies/core/handoff.original.json"
+        },
+        {
+          "commit": "a2a5de03d7b1034373eb877d8f03c4cecc772dde",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/bodies/session-admission.md",
+          "sha256": "2535bba77505ed74e7dc2759dce815c8e9684e68e2f0a10fa75f9813192e7ae1",
+          "byte_length": 4261,
+          "local_copy": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/dependencies/core/bodies/session-admission.md"
+        },
+        {
+          "commit": "a2a5de03d7b1034373eb877d8f03c4cecc772dde",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/bodies/session-execution.md",
+          "sha256": "470ddb1eacfe7294071893968d7de999c90ea98cb0fd48c48e0730ded51d1663",
+          "byte_length": 4574,
+          "local_copy": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/dependencies/core/bodies/session-execution.md"
+        },
+        {
+          "commit": "a2a5de03d7b1034373eb877d8f03c4cecc772dde",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/bodies/persistence.md",
+          "sha256": "0b43f9bd316aca25361f934e63723f2aa6220a3deb97a4447266fbbc5d350762",
+          "byte_length": 5290,
+          "local_copy": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/dependencies/core/bodies/persistence.md"
+        },
+        {
+          "commit": "a2a5de03d7b1034373eb877d8f03c4cecc772dde",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j1.json",
+          "sha256": "a32b7bec928315cdd77f7fdb32909f5ee5d316eb576816a1cce9985b632d8ff7",
+          "byte_length": 10690,
+          "local_copy": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/dependencies/core/judgments/a1-config-v1-j1.json"
+        },
+        {
+          "commit": "a2a5de03d7b1034373eb877d8f03c4cecc772dde",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j2.json",
+          "sha256": "fd2dd0e2d76379e7d4e128b1fa1e77ce81cf95dd8bc5ef18051475f641187349",
+          "byte_length": 13808,
+          "local_copy": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/dependencies/core/judgments/a1-config-v1-j2.json"
+        }
+      ],
+      "reuse_proof": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/dependencies/core/reuse-proof.json",
+        "sha256": "94a82702b3dee239b237512c9fbbb19bf6a1e3f21b03da0836a7964abb5cd05a",
+        "byte_length": 9709
+      },
+      "limit": "Only the three selected L1 bodies and their origin decisions are reused. The wider Core delivery remains IN_PROGRESS; that is not a current unavailability blocker for these three contracts."
+    },
+    {
+      "owner": "S4",
+      "external_ref": {
+        "commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+        "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+        "byte_length": 28282,
+        "local_copy": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-release-frozen.json"
+      },
+      "release_id": "20261111-v3-fresh-s4-r3",
+      "native_candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+      "common_controls_candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+      "control_reuse": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-common-controls.json",
+        "sha256": "8992baa07dfcbb103b9f7de9711cefe5d873b669ca93f0ff0ecdb31dc263aff7",
+        "byte_length": 3059
+      },
+      "limit": "Capability-scoped reuse only; no transfer of another package's binding, consumer PASS or own maintenance execution."
+    }
+  ],
+  "runtime": {
+    "disposition": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/runtime-disposition.json",
+      "sha256": "d6ee80b38906d9906cd3f9ed312ab3ac63d7ffed019414a4ee92eae21591f166",
+      "byte_length": 3817
+    },
+    "qualified_R3": {
+      "prepare": "EXIT_1_NATIVE_FILE_LIMIT",
+      "candidate_created": false,
+      "file_limit_bytes": 256000,
+      "required_file": "packages/client/src/generated/types.ts",
+      "required_file_bytes": 462732,
+      "required_file_preserved_whole": true,
+      "index_and_read": "EXIT_2_OWNERSHIP_STORE_UNAVAILABLE",
+      "binding": "NOT_REACHED",
+      "publication": "NOT_REACHED"
+    },
+    "later_original_code_diagnostic": {
+      "revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "state": "PREPARED_DIAGNOSTIC_ONLY",
+      "exit_code": 0,
+      "qualified_release": false,
+      "candidate_id": "760034bfdb60b89530d33bb6a1302e9616f66ae010a97419660cc0b5d95b94a1",
+      "candidate": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas-diagnostic/prepared-candidate.json",
+        "sha256": "be267a8e2db79343731eba856d84ff914f1d43f8849b0072f05b1d0bbff794a6",
+        "byte_length": 292042
+      },
+      "prepare_receipt": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+        "sha256": "df6c1c9fbb2a1940898c7b750adeb2f658658ff3396a2b692d3eef71ad26adeb",
+        "byte_length": 2223
+      },
+      "cas_snapshot": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas-diagnostic/cas-snapshot-index.json",
+        "sha256": "7e408a0a75ee0be9706fea3a90854573f5a54837c81a2f95f034ada38f8c7b0a",
+        "byte_length": 21490
+      },
+      "index_and_read": "EXIT_2_OWNERSHIP_STORE_UNAVAILABLE_AFTER_PREPARE",
+      "limit": "Actual successful preparation with the complete required source; no automatic promotion to R4, native binding, publication or consumer acceptance."
+    }
+  },
+  "consumers": {
+    "frozen_cases": 22,
+    "semantic_passes": 0,
+    "case_state": "ALL_HOLD",
+    "fresh_O3_attempt": "One actual index request returned HOLD before any body read. This attempt belongs to the preserved pre-Core package and was not relabelled as final-package consumption.",
+    "public_contract": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/contracts/public.json",
+      "sha256": "7dcc9df0003b99722b18538fab1e45adb3ac60e6697397677200feddce40909e",
+      "byte_length": 10021
+    },
+    "reserved_oracle": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/oracles/reserved.json",
+      "sha256": "d6966c3eb500b6c2061cef8ced0cb57de3ab253bc1744ee83cf1489f3ad63023",
+      "byte_length": 17333
+    },
+    "disposition": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/consumers/cases.json",
+      "sha256": "2af8dbeba0d3131077d60b26aebb6404c0e5376e013c4f975c17b7ccf9b218fb",
+      "byte_length": 21786
+    }
+  },
+  "maintenance": {
+    "M1": "NOT_RUN_HOLD",
+    "M2": "NOT_RUN_HOLD",
+    "disposition": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/maintenance/disposition.json",
+      "sha256": "3b190790da83e14b84bddb8e584f8755640f270c3e69db71bbe66177668503f1",
+      "byte_length": 3177
+    },
+    "product_delta_applied": false,
+    "official_generation": "NOT_RUN_NO_PRODUCT_DELTA",
+    "generated_outputs_manually_edited": false
+  },
+  "gates": {
+    "disposition": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/gates.json",
+      "sha256": "523fef2e9659d3f2ecdf923a8f7529cff416e1321521dcf10419af6bd3c41109",
+      "byte_length": 2583
+    },
+    "original_guard": {
+      "command": "bun run check:guards --base origin/dev",
+      "state": "FAILED_TO_COMPLETE",
+      "exit_code": 1,
+      "missing_exact_git_blob": "d83941a9d836a23e466ca09ecba1f21d423094cb",
+      "historical_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip",
+      "receipt": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/guards/verified-check-guards-final-reconciled.receipt.json",
+        "sha256": "faa5f7658bf4e35f2e2bd7fde6ce1716e27e709dacf47e05a19732852c9aa265",
+        "byte_length": 99570
+      },
+      "limit": "The available connector routes did not return the exact binary bytes. This does not prove remote absence or a clean guard verdict."
+    },
+    "typechecks": "PASS_SETUP_ONLY",
+    "local_product_tests": false,
+    "own_product_test_result": "NOT_RUN",
+    "shared_Actions_controls": "Separately pinned; not own S1-04 gates"
+  },
+  "local_obligations_open": [
+    {
+      "id": "QUALIFIED_PREPARE_BIND_PUBLISH",
+      "owner": "S1-04",
+      "dependency_owner": "S4",
+      "state": "HOLD",
+      "unlock": "An explicitly qualified compatible release for complete required inputs; then exact preparation, same-pair binding and authorized isolated publication."
+    },
+    {
+      "id": "INDEX_READ_AND_FROZEN_CASES",
+      "owner": "S1-04",
+      "state": "HOLD",
+      "unlock": "Own accepted generation exposed through real index/read; fresh consumers within frozen budgets and independent reserved-oracle evaluation."
+    },
+    {
+      "id": "MAINTENANCE_M1_M2",
+      "owner": "S1-04",
+      "state": "HOLD",
+      "unlock": "Own accepted generation and qualified runtime, then actual public/generator deltas, official generation, affected sets, rebuild/cache/consumer checks and permitted gates."
+    },
+    {
+      "id": "ORIGINAL_STATIC_GUARD",
+      "owner": "S1-04",
+      "state": "HOLD",
+      "unlock": "Exact authorized binary object bytes or an authorized complete environment, then run the original unchanged guard and resolve actual findings."
+    }
+  ],
+  "execution_finalization": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/execution-finalization.json",
+    "sha256": "dba4743dd72b01b94712d61dfb2657da7ff719f81a6332fa14052bc48a35de63",
+    "byte_length": 2534
+  },
+  "usage": {
+    "tokens": "UNKNOWN",
+    "cost": "UNKNOWN",
+    "physical_attempts": "UNKNOWN",
+    "numerical_reconciliation_claimed": false
+  },
   "global_integration": {
     "owner": "S1_COORDINATION",
     "branch": "genesis-fresh-s1",
-    "status": "NOT_REVIEWED"
+    "status": "NOT_REVIEWED",
+    "global_owner": "ROOT",
+    "global_branch": "genesis-fresh-final",
+    "absorbs_local_open_obligations": false
   },
-  "supersedes": null
+  "publication": {
+    "protocol": "PAYLOAD_THEN_CHILD_SEAL",
+    "parent_of_payload": "8835faf6329cc3d5f5de1097872882d57472b793",
+    "payload_commit": "eb0758c3a521087310e1e91e3f3998e7e3fa41d5",
+    "payload_tree": "47a50e1e2a2ac04886cfaaa701053da6dad05ef4",
+    "lease_expected_sha": "8835faf6329cc3d5f5de1097872882d57472b793",
+    "force": false,
+    "writer": "PRINCIPAL_ONLY_GITHUB_CONNECTOR",
+    "permitted_prefix": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api",
+    "branch_creation": false,
+    "PR_or_merge": false,
+    "source_and_other_subslices": "Preserved by retaining all ancestor sibling tree identities.",
+    "readback_rule": "After branch lease succeeds, reread this handoff at the seal commit and every delivered payload file at artifact_revision; report that subsequent observation separately. This file contains no self SHA.",
+    "dependency_heads_rechecked": {
+      "observed_utc": "2026-11-15T01:20:05.857Z",
+      "heads": {
+        "genesis-s1-api": "8835faf6329cc3d5f5de1097872882d57472b793",
+        "genesis-fresh-s4": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+        "genesis-s1-sessions": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51"
+      }
+    }
+  },
+  "supersedes": {
+    "commit": "8835faf6329cc3d5f5de1097872882d57472b793",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/handoff.json",
+    "sha256": "6ffe9294c373203e50b722938edd40ebae1142ad4810d5fa66dd90482b7cf8aa",
+    "artifact_revision": "96e9222f1f8f1fdd68693c8c30062a1544b3110d"
+  },
+  "recorded_at_utc": "2026-11-15T01:22:49.735Z"
 }
