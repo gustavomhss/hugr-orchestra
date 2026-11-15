@@ -1,0 +1,181 @@
+DELIVERY-FINAL-V1 PARTE 2/7
+Fonte: 982076cfbbbbd34f70f02b6ebe150a276f97d3cf; 150497 B; SHA256 ceb4cbdb5056cc25dc372efeb4e739692ef62f5e045d2a014253249405952ea9. Transporte literal; sem ferramentas.
+BEGIN PART
+al construction and maintenance use the same dependency/validation semantics. |
+Disposição local: Dependências e procedimentos estão definidos, mas os dois casos próprios não executaram observe/plan/rebuild/read. Reúso histórico compatível não substitui manutenção local.
+Evidência: maintenance/mutation-plan.json; maintenance/final-disposition-after-environment.json; receipts/native-prepare-final.json; receipts/final-operational-disposition-after-environment.json
+Dono local: S1-03
+
+## GO-A5 — HOLD
+Linha normativa 56: | GO-A5 | Knowledge and source evolve together through Git, governed publication and CI consistency controls. Freshness, semantic validity and authority are different properties. |
+Disposição local: Inputs e conhecimento foram versionados com payload/selo e readback. Faltam ativação governada, leituras aceitas e gates próprios; Git, semântica, frescor e autoridade não foram confundidos.
+Evidência: receipts/native-prepare-final.json; receipts/final-operational-disposition-after-environment.json; receipts/final-capability-refresh-20261115.json; receipts/guard-materialization/binary-transport-blocker.json
+Dono local: S1-03
+
+## GO-A6 — PASS
+Linha normativa 57: | GO-A6 | Mechanize what tools can determine; pay models for interpretation/composition that tools cannot supply. Bound execution before starting it and preserve useful completed work. |
+Disposição local: Inventário, identidade, montagem e recuperação foram mecanizados; interpretação ficou com autores/juízes. Plano finito e quotas por consumidor precederam o uso. Este PASS de disciplina local não certifica teto financeiro ou total físico.
+Evidência: semantic-acceptances.json; native-package.json; receipts/package-exact-recovery.json; economy/final-visible-accounting.json
+Dono local: S1-03
+
+## GO-A7 — PASS
+Linha normativa 58: | GO-A7 | Extend the existing Atlas with the minimum justified mechanisms; no parallel store, governance system or general-purpose orchestration framework by default. |
+Disposição local: Usou-se Atlas e sua CLI publicada, com ponte fiel. Não foi criado store, motor, governança ou framework paralelo; a proposta de limite S4 não foi aplicada.
+Evidência: receipts/native-prepare-final.json; receipts/final-operational-disposition-after-environment.json
+Dono local: S1-03
+
+## GO-I1 — HOLD
+Linha normativa 120: | GO-I1 | Original campaign receipts, responses, claims and source identities remain immutable; retries have new linked identities. | AC-10 |
+Disposição local: O FINAL nativo research-flow L2 v2 não foi capturado separadamente antes de compactação. Além disso, a queda do ambiente tornou inacessíveis vários originais locais ainda não publicados, incluindo cinco FINALs de consumidores e registros brutos. Arquivos recuperados têm identidades verificadas; resumos e confirmações não substituem originais.
+Evidência: receipts/environment-loss-custody.json; receipts/preservation-recovery-capability-check.json; assembly/consumer-summary-run/REPORT.md; assembly/consumer-summary-run/response.md
+Dono local: S1-03
+
+## GO-I2 — PASS
+Linha normativa 121: | GO-I2 | Observed behavior, authorized intent, interpretation and gaps remain distinguishable; a structural freshness check cannot promote semantic certainty. | AC-02, AC-04 |
+Disposição local: Corpos e relato distinguem comportamento observado, intenção autorizada, interpretação e lacuna. Censo/hashes/PASS documental não são binding, conclusão de produto ou confirmação de uma operação não executada.
+Evidência: semantic-acceptances.json; native-package.json; receipts/package-exact-recovery.json; receipts/native-prepare-final.json; receipts/final-operational-disposition-after-environment.json; receipts/environment-loss-custody.json; receipts/preservation-recovery-capability-check.json
+Dono local: S1-03
+
+## GO-I3 — HOLD
+Linha normativa 122: | GO-I3 | Current reads bind exact artifact versions to an accepted scope/dependency manifest valid for current inputs/contracts; prior acceptance or rollback cannot make stale knowledge current. Historical reads are labelled. | AC-06, AC-07, AC-09 |
+Disposição local: Todos os quinze reads atuais retornaram ownership-store-unavailable. Vinculação corrente, stale refusal após mutação e recuperação não foram provadas nesta seleção.
+Evidência: maintenance/mutation-plan.json; maintenance/final-disposition-after-environment.json; receipts/native-prepare-final.json; receipts/final-operational-disposition-after-environment.json; assembly/consumer-summary-run/REPORT.md; assembly/consumer-summary-run/response.md; receipts/environment-loss-custody.json
+Dono local: S1-03
+
+## GO-I4 — HOLD
+Linha normativa 123: | GO-I4 | Unchanged valid inputs/recipe reuse output without another interpretation call; independent artifacts are not rebuilt merely because navigation links exist. | AC-05 |
+Disposição local: A regra de reúso e independência está documentada e há controles comuns delimitados. Falta o caso próprio comparando identidades e chamadas após uma mudança independente.
+Evidência: maintenance/mutation-plan.json; maintenance/final-disposition-after-environment.json; receipts/native-prepare-final.json; receipts/final-operational-disposition-after-environment.json; assembly/consumer-summary-run/REPORT.md; assembly/consumer-summary-run/response.md; receipts/environment-loss-custody.json
+Dono local: S1-03
+
+## GO-I5 — HOLD
+Linha normativa 124: | GO-I5 | Source additions, changes, removals and relevant non-code changes enter impact analysis; unavailable impact is HOLD, not an empty successful worklist. | AC-06 |
+Disposição local: Impacto de mudanças/adições/remoções/inputs não código está descrito, mas não há conjunto afetado observado do planner próprio. Cinco afetados e sete independentes são expectativas estáticas.
+Evidência: maintenance/mutation-plan.json; maintenance/final-disposition-after-environment.json; receipts/native-prepare-final.json; receipts/final-operational-disposition-after-environment.json; assembly/consumer-summary-run/REPORT.md; assembly/consumer-summary-run/response.md; receipts/environment-loss-custody.json
+Dono local: S1-03
+
+## GO-I6 — HOLD
+Linha normativa 125: | GO-I6 | Every issued model request consumes the shared run budget, including validation/retry and unresolved in-flight work; no silent fallback provider/model. | AC-08 |
+Disposição local: O ledger publicado anterior é preservado e novos eventos observáveis recebem adendos. O estado local de 550 linhas ficou inacessível; total físico, reservas e cobrança não são certificados. Sem fallback silencioso, reset ou chamada externa paga; UNKNOWN não é zero nem bloqueio financeiro artificial.
+Evidência: economy/final-visible-accounting.json; receipts/environment-loss-custody.json; receipts/preservation-recovery-capability-check.json
+Dono local: S1-03
+
+## GO-I7 — PASS
+Linha normativa 126: | GO-I7 | Governed doors, secret handling, project boundaries and Knowledge/Memory separation remain intact. Imported source/docs/tool text is data, not execution authority. | AC-04, AC-09, AC-10 |
+Disposição local: Portas governadas e limites de propriedade foram preservadas. Sem política/segredo/guard/workflow alterado, autoridade S4 copiada ou fonte promovida a instrução. Oracle não foi entregue a autores, consumidores ou courier.
+Evidência: receipts/native-prepare-final.json; receipts/final-operational-disposition-after-environment.json; receipts/environment-loss-custody.json; receipts/preservation-recovery-capability-check.json
+Dono local: S1-03
+
+## GO-I8 — PASS
+Linha normativa 127: | GO-I8 | A scope, generation or artifact is not declared semantically complete just because its graph, source hashes, required sections or tests are complete. | AC-01, AC-02, AC-03 |
+Disposição local: A entrega permanece INCOMPLETE_BLOCKED apesar dos doze aceites integrais. Grafo, hashes, censo, controles comuns e recuperação parcial não viraram completude semântica ou operacional.
+Evidência: receipts/native-prepare-final.json; receipts/final-operational-disposition-after-environment.json; receipts/environment-loss-custody.json; receipts/preservation-recovery-capability-check.json
+Dono local: S1-03
+
+## AC-01 — PASS
+Linha normativa 138: | AC-01 | **Coverage, judged + mechanical:** freeze the finite slice inventory: needs → required artifacts → sources → cases below. Every required need has accepted support; intentional unknowns are named in advance. Unknown critical required knowledge fails acceptance. Mechanical mapping completeness does not judge semantic sufficiency. |
+Disposição local: 462 fontes reconciliadas: 204 automação, 130 research/toolkits, 24 fronteiras e 104 suporte. Os doze artefatos necessários têm apoio aceito pelo mesmo par, com profundidade/grupos e limites explícitos. PASS de cobertura local; não qualifica engines/plataformas/produção.
+Evidência: semantic-acceptances.json; native-package.json; receipts/package-exact-recovery.json; coverage.jsonl; receipts/final-coverage-reconciliation.json; artifact-plan.json
+Dono local: S1-03
+
+## AC-02 — HOLD
+Linha normativa 139: | AC-02 | **Ownership, judged:** an Atlas-only consumer correctly handles a permitted change, contract violation, cross-component impact, operational failure and deliberately out-of-scope question. Freeze expected reasoning/consequences, critical mistakes and evidence before production. All required answers must match; the unknown case must abstain. The author alone cannot certify this row. |
+Disposição local: Sete consumidores novos consultaram Atlas; nenhum recebeu corpo. A auditoria original registra 22 HOLDs e quatro erros de need em 26 chamadas. Dois FINALs integrais foram recuperados; cinco permanecem inacessíveis. Não há caso de domínio aprovado, inclusive B-ABSTAIN.
+Evidência: assembly/consumer-summary-run/REPORT.md; assembly/consumer-summary-run/response.md; receipts/environment-loss-custody.json; consumers/R-FAILURE/final-response.md; consumers/ENTRY-NAV/final-response.md
+Dono local: S1-03
+
+## AC-03 — HOLD
+Linha normativa 140: | AC-03 | **Consumption, mixed:** skill states working protocol and index usage; actual index reads reach purpose, behavior, constraints, decisions, impact, verification and evidence within fixed task-specific read/context bounds. A routine task stops shallow; a deeper task reaches supporting knowledge. Each intermediate artifact has a direct-use case. Validate real readers, not only Markdown links. |
+Disposição local: As doze chaves receberam tentativa direta e as quotas de 2 index/5 read/60000 bytes por caso foram cumpridas. Tentativa não é consumo: nenhum corpo foi entregue. A cadeia bruta completa também não está disponível após a queda.
+Evidência: assembly/consumer-summary-run/REPORT.md; assembly/consumer-summary-run/response.md; receipts/environment-loss-custody.json; consumers/public-cases.json; consumers/direct-read-supplement-v1.json
+Dono local: S1-03
+
+## AC-04 — HOLD
+Linha normativa 141: | AC-04 | **Construction, mixed:** real paths ingest existing knowledge and construct missing understanding; labelled stale/conflicting/missing/malicious-source fixtures are handled without inventing intent, hiding conflict, granting authority or publishing unsupported required content. A canned final document cannot satisfy the producer test. |
+Disposição local: Produção nativa e correções foram reais; quatro controles históricos AC-04-local-native foram aceitos para reúso delimitado. O prepare da seleção completa falhou; construção/importação operacional própria continua aberta.
+Evidência: semantic-acceptances.json; native-package.json; receipts/package-exact-recovery.json; receipts/native-prepare-final.json; receipts/final-operational-disposition-after-environment.json; receipts/common-control-compatibility.json
+Dono local: S1-03
+
+## AC-05 — HOLD
+Linha normativa 142: | AC-05 | **Reuse, mechanical:** identical inputs/recipe produce a cache hit with zero proposer calls; an independent edit preserves unrelated result identities and call counts. Equal prose with changed authority/validity/gaps MUST propagate; a receipt-only change refreshes bindings without new downstream interpretation. An unchanged validated consumer-visible result stops downstream rebuild. Build dependency edits invalidate dependents, unlike navigation-only links. |
+Disposição local: Controles comuns mantêm seu alcance de cache/reúso. Não há caso próprio executado de independentes, receipt-only, authority/gap change ou parada downstream; zero proposer calls local não foi inferido.
+Evidência: maintenance/mutation-plan.json; maintenance/final-disposition-after-environment.json
+Dono local: S1-03
+
+## AC-06 — HOLD
+Linha normativa 143: | AC-06 | **Incremental correctness, mixed:** behavior edit, added/removed source, intent-doc change and recipe change produce the independently expected affected set. Rebuilds restore required knowledge; mutation controls omit an edge/input and must fail. Detecting staleness alone is insufficient. |
+Disposição local: M-ACTIONS e M-SCHEDULE-RECIPE têm patches/expectativas congelados. Mutação, planner, rebuild e comparação real não ocorreram por falta de baseline aceito. Conjuntos estáticos e staleness não passam incrementalidade.
+Evidência: maintenance/mutation-plan.json; maintenance/final-disposition-after-environment.json
+Dono local: S1-03
+
+## AC-07 — HOLD
+Linha normativa 144: | AC-07 | **Publication/recovery, mechanical:** inject failure between generation and activation, interrupt/resume, and concurrent reads. A separate reader observes only a complete accepted manifest valid for current inputs/contracts or HOLD. A failed rebuild after source drift cannot fall back to stale knowledge as current. Resume reuses durable completions; rollback rejects incompatible source bindings; historical reads are labelled. |
+Disposição local: Não houve publicação governada própria, falha entre geração/ativação, leitores concorrentes, retomada ou rollback. HOLD de store indisponível antes de baseline não prova as recusas específicas exigidas.
+Evidência: receipts/native-prepare-final.json; receipts/final-operational-disposition-after-environment.json; maintenance/mutation-plan.json; maintenance/final-disposition-after-environment.json
+Dono local: S1-03
+
+## AC-08 — HOLD
+Linha normativa 145: | AC-08 | **Economy, mechanical + approval:** one run ledger/reservation governs production, evaluation, retries and concurrent calls. Synthetic checks precede real calls. If real adapter conformance requires a paid call, it needs a bounded explicit authorization first, charged to the same global envelope. Only a conforming route may run the real slice. Report limits, usage and unsettled calls; no bytes-to-token or call-count-to-dollar fiction. |
+Disposição local: Há contabilidade visível e auditoria original de 33 requests/33 completions de consumidores, distinta das 26 CLI. Total de host, reservas, uso físico e custo não são certificados; o ledger local posterior ficou inacessível. Histórico GLOBAL_UNRECONCILED, sem cálculo financeiro fictício, fallback pago ou reset.
+Evidência: economy/final-visible-accounting.json; receipts/environment-loss-custody.json; receipts/preservation-recovery-capability-check.json
+Dono local: S1-03
+
+## AC-09 — HOLD
+Linha normativa 146: | AC-09 | **Git/CI/host, mechanical:** changed declared input, new input under registered scope, missing artifact, broken index reference, incompatible dependency version and invalid generation are rejected at intended gates/readers. A local invalid unit holds its required closure while an independent valid scope remains readable; shared manifest corruption holds its dependent reads. Known-good/bad controls use actual entry points. Report workflow scope and branch-protection enforcement separately. |
+Disposição local: O guard final não rodou: falta o ZIP histórico exato para checkout fiel; a queda posterior também impede execução local. Zero runs próprios observados. protected=false é campo API, não prova completa de rulesets. Controles S4 não passam os gates próprios.
+Evidência: receipts/final-capability-refresh-20261115.json; receipts/guard-materialization/binary-transport-blocker.json; receipts/native-prepare-final.json; receipts/final-operational-disposition-after-environment.json; maintenance/mutation-plan.json; maintenance/final-disposition-after-environment.json
+Dono local: S1-03
+
+## AC-10 — HOLD
+Linha normativa 147: | AC-10 | **Preservation/migration, mechanical + review:** baseline inventory of protected campaign objects remains exact; old producers cannot publish into the new accepted scope accidentally. Stage new outputs without consumer authority, activate explicitly, preserve old accepted state for rollback and keep unrelated scopes usable. Generated boundaries change only through their generators. |
+Disposição local: A publicação preserva Core histórico, outras subfatias e s1.core.entry. Não houve ativação própria ou prova de rollback/independentes; GO-I1 conserva lacunas. Novos arquivos ficam sem autoridade de consumidor; nenhum gerado foi editado.
+Evidência: receipts/environment-loss-custody.json; receipts/preservation-recovery-capability-check.json; receipts/native-prepare-final.json; receipts/final-operational-disposition-after-environment.json
+Dono local: S1-03
+
+## CC-1 — PASS
+Linha normativa 159: | CC-1 | Scope, sources, gaps, existing/missing knowledge and the finite required-artifact inventory are frozen. | AC-01, AC-04 |
+Disposição local: Escopo, herança/gaps, fontes, doze artefatos, sete casos e dois cenários foram congelados antes das etapas correspondentes. O suplemento de read foi anterior a qualquer consumidor, sem mudar pergunta/oracle/quota/grafo.
+Evidência: coverage.jsonl; receipts/final-coverage-reconciliation.json; artifact-plan.json; consumers/public-cases.json; maintenance/mutation-plan.json
+Dono local: S1-03
+
+## CC-2 — HOLD
+Linha normativa 160: | CC-2 | The slice is constructed cumulatively and every required level is persisted, directly usable and reachable through the real index/skill path. | AC-03, AC-04 |
+Disposição local: Todos os níveis estão produzidos e persistidos, mas a usabilidade direta pelo reader/índice não foi demonstrada. Dois aceites de corpo não aprovam essa parcela.
+Evidência: semantic-acceptances.json; native-package.json; receipts/package-exact-recovery.json; assembly/consumer-summary-run/REPORT.md; assembly/consumer-summary-run/response.md; receipts/environment-loss-custody.json
+Dono local: S1-03
+
+## CC-3 — PASS
+Linha normativa 161: | CC-3 | Product purpose, behavior, contracts, decisions, impact and safe maintenance are supported, not merely titled. | AC-02 |
+Disposição local: Os dois juízes aceitaram integralmente propósito, comportamento, contratos, decisões, impacto e manutenção dos corpos atuais. PASS documental local; a transferência pelos casos AC-02 continua aberta.
+Evidência: semantic-acceptances.json; native-package.json; receipts/package-exact-recovery.json
+Dono local: S1-03
+
+## CC-4 — HOLD
+Linha normativa 162: | CC-4 | Initial build, invalidation, rebuild, reuse and relevant additions/removals/non-code inputs work end to end. | AC-05, AC-06 |
+Disposição local: Build/invalidação/rebuild/reúso e mudanças de inputs não fecharam ponta a ponta. Os dois cenários próprios ficaram antes da mutação por ausência de baseline utilizável.
+Evidência: maintenance/mutation-plan.json; maintenance/final-disposition-after-environment.json; receipts/native-prepare-final.json; receipts/final-operational-disposition-after-environment.json
+Dono local: S1-03
+
+## CC-5 — HOLD
+Linha normativa 163: | CC-5 | Coherent publication, reader verification, failure recovery and rollback work without weakening governance. | AC-07, AC-09, AC-10 |
+Disposição local: Sem candidato preparado e autoridade S1 provisionada, não houve ativação ou recuperação/rollback. Branch Git acessível não é manifesto Atlas ativo.
+Evidência: receipts/native-prepare-final.json; receipts/final-operational-disposition-after-environment.json; maintenance/mutation-plan.json; maintenance/final-disposition-after-environment.json
+Dono local: S1-03
+
+## CC-6 — HOLD
+Linha normativa 164: | CC-6 | Execution economics are enforced/reported to the stated adapter guarantee and the approved run reconciles. | AC-08 |
+Disposição local: A economia visível é reportada por etapa e sem ficção financeira. Não se certificam envelope/reservas/total físico; dez linhas iniciais são agregadas e o ledger local de 550 linhas ficou inacessível.
+Evidência: economy/final-visible-accounting.json; receipts/environment-loss-custody.json; receipts/preservation-recovery-capability-check.json
+Dono local: S1-03
+
+## CC-7 — PASS
+Linha normativa 165: | CC-7 | Compatibility, generated surfaces, applicable docs/skills/guides and old-campaign obligations have explicit dispositions; expansion is not silently claimed complete. | AC-09, AC-10 |
+Disposição local: Compatibilidade, gerados não alterados, docs/guias e obrigações históricas têm disposição explícita. A navegação local é proposta para coordenação, sem seleção de versões externas ou expansão silenciosamente completa.
+Evidência: navigation-acceptance.json; producers/boundaries/union-navigation-proposal.md; receipts/native-prepare-final.json; receipts/final-operational-disposition-after-environment.json; receipts/environment-loss-custody.json; receipts/preservation-recovery-capability-check.json
+Dono local: S1-03
+
+## SC-1 — HOLD
+Linha normativa 169: - **SC-1 — ownership:** AC-02 passes all frozen required cases without a critical mistake or source discovery by the consumer.
+Disposição local: AC-02 não passou. Abstinência por store indisponível não comprova domínio 
+END PART
+ACK desta parte apenas; aguarde as demais, sem julgamento.

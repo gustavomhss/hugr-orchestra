@@ -1,0 +1,244 @@
+DELIVERY-FINAL-V1 PARTE 5/7
+Fonte: 982076cfbbbbd34f70f02b6ebe150a276f97d3cf; 150497 B; SHA256 ceb4cbdb5056cc25dc372efeb4e739692ef62f5e045d2a014253249405952ea9. Transporte literal; sem ferramentas.
+BEGIN PART
+/derived-research-maintenance/request.txt","sha256":"aaa18954282dd9b9b7b3bac4e3db9ed8076e0311dd07f231219e205db0598471"},"producer_response_ref":{"payload_path":"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-research-maintenance/response.md","sha256":"e3b49ac28e16c456d37259c1895111564356058b4e930c2b3e3bbf2bf7f26eeb"},"semantic_review_refs":[{"payload_path":"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/judgments/derived/derived-research-maintenance-v1/j1-response.md","sha256":"3631f846544e74c09a11caf52c6d29e557e29c9cb88f21aa4dfa094522b91258"},{"payload_path":"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/judgments/derived/derived-research-maintenance-v1/root-transport/j2-response.md","sha256":"f20d3d04c4caeb254371f63438a671da9339939fabd8b60911bcc046fbabc253"}],"runtime_receipt_refs":[]},{"key":"s1.subslice03.entry","scope":"orchestra.s1","title":"Entrada local rasa e aprofundamento com proposta de navegação para a união","layer":4,"need":"entry","body":{"path":"producers/derived-entry/body.md","encoding":"utf-8","byte_length":15409,"sha256":"e167d2bc65603a3caffe094f5be269bb428f0636a03e00b66383769566657503"},"authority":{"scope":"orchestra.s1","basis":"S1-03 COMMON/mission at 70234d541a9a3539935ef16f19e33c8f2d5f30ec; current body accepted by the same two local native judges. Content authority only; no runtime or production activation authority is conferred."},"validity":"supported","gaps":["Own Atlas preparation, exact runtime binding, governed publication, consumers and maintenance are assessed separately; semantic PASS does not certify those operations."],"evidence":["semantic-acceptances.json#s1.subslice03.entry","judgments/derived/derived-entry-v1/j1-response.md","judgments/derived/derived-entry-v1/j2-response.md","producers/derived-entry/evidence.md"],"input_keys":{"omitted_array_count":21,"compact_JSON_SHA256":"b46ca20b89f48ea8fc660e5081cabd81921f8874f0759e9d1a2bb81e16cab915"},"source_refs":{"omitted_array_count":21,"compact_JSON_SHA256":"73ee6f96326c58cd96b94c19c7d0de55da122036ee5e5d1a1a031c62c3f90f59"},"recipe_ref":{"payload_path":"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/recipes/derived/entry.json","sha256":"6b8a14e9f0f0c131cc0b06bab60771de0d811b6f4b6f79617f0ffabf7c2a4c5a"},"build_dependencies":[{"key":"s1.subslice03.support","same_package":true},{"key":"s1.subslice03.boundary-flow","same_package":true},{"key":"s1.subslice03.automation-maintenance","same_package":true},{"key":"s1.subslice03.research-maintenance","same_package":true}],"navigation":["s1.core.automation","s1.core.research","s1.core.boundaries","s1.subslice03.support","s1.subslice03.automation-flow","s1.subslice03.research-flow","s1.subslice03.boundary-flow","s1.subslice03.automation-impact","s1.subslice03.research-impact","s1.subslice03.automation-maintenance","s1.subslice03.research-maintenance"],"producer_request_ref":{"payload_path":"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-entry/request.txt","sha256":"adb85bb9f171bb36aa888314412354f60e0a751775ebf846cbaecb777b27f91c"},"producer_response_ref":{"payload_path":"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/derived-entry/response.md","sha256":"6d5db8e3dc0dfb03c6f6972deba1e4612bb8fe168083e8ddaf21e00d8c06b560"},"semantic_review_refs":[{"payload_path":"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/judgments/derived/derived-entry-v1/j1-response.md","sha256":"877d8bc5850817e09838acba169d63fcb74c2c2cf78efdb4f54eee960662353a"},{"payload_path":"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/judgments/derived/derived-entry-v1/j2-response.md","sha256":"8eebf7d53891e40679cb0642deb83c978e34cccf0c65d6a7649e24ede1059ca4"}],"runtime_receipt_refs":[]}],"whole_unique_inputs":694,"total_input_uses":979,"oversized_inputs_from_frozen_inventory":[{"path":"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json","bytes":726892,"sha256":"05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf","git_blob_sha":"2e91d0f916dfa95a2dd0ef7ae74ff8c1bb427045"},{"path":"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/evidence.md","bytes":953016,"sha256":"de46e809f97346c81701ee8af0144abbe8458386787a2598b2bc88b81ec2b400","git_blob_sha":"a00e38106ddfe903960659b3bfa4cb3fc73e69d3"},{"path":"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/review-supplement-1.md","bytes":338932,"sha256":"274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed","git_blob_sha":"dab732abd7f47eb3f26473b5614fa92d2b747a46"},{"path":"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/review-supplement-2.md","bytes":375497,"sha256":"208b0ba87350a91970d28f298d802512b72b6834360815b95ca17ab22ebc54b1","git_blob_sha":"bf43391979916e85f44ac4841926954d2c13362f"},{"path":"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/review-supplement-3.md","bytes":404469,"sha256":"e8158270e77a88cde1ec5db114c51e79004264ff80be667aebde8e365ede1d8c","git_blob_sha":"22a025bbc012ed09130f0d778e34e188f5533c89"},{"path":"packages/core/src/backend-toolkit/packs/modelina.package-lock.json","bytes":266885,"sha256":"0fc1a48c86b45b4749fda6d5e811a1f9b3f55a246fa5e8dd035435e84d2149d2","git_blob_sha":"9fc9ef1bc7124fcead2d83cea20f2bff4340949c"}],"verification":"72 reference files reread from immutable P0 and matched Git tree SHA/length; 12 bodies and 24 original review files additionally matched semantic gate SHA256. Exact package SHA256 matches pre-failure executed package. This is not an independent semantic vote, new binding, full source reread or runtime reexecution."}
+===== END assembly/final-package-review-projection.json =====
+
+===== BEGIN receipts/native-prepare-final.json =====
+Source file identity: {"bytes":2576,"sha256":"469f4cdf21af6e295378b975a75e6670c4a07f4452335b4dbc76e64ce4eedc81"}
+Rendering: literal recovered original, hash checked
+
+{
+  "schema": "s1-03-full-selection-native-prepare/v1",
+  "started_utc": "2026-11-15T11:08:53.656750+00:00",
+  "ended_utc": "2026-11-15T11:08:54.053082+00:00",
+  "command": [
+    "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/runtime-preflight/bun-runtime/node_modules/.bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/native-source",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/native-package.json",
+    "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/runtime-final/selection-prepared.json"
+  ],
+  "cwd": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/runtime-preflight/candidate/modules/atlas",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "release_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "source_root": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/native-source",
+  "observed_source_git_head": null,
+  "source_git_head_command_exit": 128,
+  "source_payload_commit": "191a3b3a12c60a2df70c1dbf36510303c025c5ea",
+  "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/native-package.json",
+  "package_sha256": "ddada3d4b67cff13ef3a5817b95efc275b0d288061436546c8ec6b73290766a6",
+  "package_bytes": 485602,
+  "artifact_count": 12,
+  "unique_input_count": 694,
+  "all_399_runtime_source_files_match_frozen_candidate": true,
+  "runtime_source_file_checks": 399,
+  "no_product_policy_guard_or_source_limit_patch_applied": true,
+  "exit_code": 1,
+  "timeout": false,
+  "stdout_bytes": 0,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_bytes": 175,
+  "stderr_sha256": "f8f1b8ba145d56d12892bb4827ebff3f138822c4a92e615955ad9bc542e9bdd7",
+  "stdout_file": "receipts/native-prepare-final.stdout",
+  "stderr_file": "receipts/native-prepare-final.stderr",
+  "observed_error": "native-file-limit: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json",
+  "prepared_file": "/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/runtime-final/selection-prepared.json",
+  "prepared_file_exists": false,
+  "state": "BLOCKED_ACTUAL_PREPARE",
+  "semantic_acceptance_is_not_runtime_binding": true,
+  "publication_attempted_by_this_command": false,
+  "inputs_not_removed_or_split": true
+}
+===== END receipts/native-prepare-final.json =====
+
+===== BEGIN receipts/native-prepare-final.stderr =====
+Source file identity: {"bytes":175,"sha256":"f8f1b8ba145d56d12892bb4827ebff3f138822c4a92e615955ad9bc542e9bdd7"}
+Rendering: literal recovered original, hash checked
+
+{"kind":"error","error":"native-file-limit: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json"}
+===== END receipts/native-prepare-final.stderr =====
+
+===== BEGIN consumers/public-cases.json =====
+Source file identity: {"bytes":2568,"sha256":"6f555dc22ea571bc2d6a683587cb320b7681b6bd22367a2f33e6fc8eb3741ab2"}
+Rendering: literal frozen public cases
+
+{
+  "schema": "s1-03-public-consumer-cases/v1",
+  "execution_id": "34269cf4-d631-41c5-a30b-85b0ec217390",
+  "scope": "S1-03 only",
+  "source_access": false,
+  "oracle_access": false,
+  "cases": [
+    {
+      "id": "A-PERMITTED",
+      "kind": "permitted_change",
+      "question": "Um fluxo precisa despachar um workflow GitHub ativo em uma ref diferente da default branch com input environment. Quais precondições locais e provas de resultado a alteração deve preservar?"
+    },
+    {
+      "id": "A-VIOLATION",
+      "kind": "contract_violation",
+      "question": "Após timeout de um write aceito na admissão, um operador quer usar polling para converter outcome_unknown em accepted e reenviar o write se não achar run. O procedimento é válido?"
+    },
+    {
+      "id": "A-IMPACT",
+      "kind": "impact",
+      "question": "Mudou a regra que prova o conteúdo escrito por Actions Authoring. Quais conhecimentos/consumidores precisam de reavaliação e quais podem permanecer independentes?"
+    },
+    {
+      "id": "S-FAILURE",
+      "kind": "operational_failure",
+      "question": "Um task perdeu a autorização depois da última verificação de claim e retornou started; a UI quer marcá-lo como concluído e garantir que nunca excedeu repeat limit. Como diagnosticar e responder?"
+    },
+    {
+      "id": "R-FAILURE",
+      "kind": "operational_failure",
+      "question": "O warm de research terminou sem shards e um toolkit tem marker local. Isso basta para declarar indexação pronta e confiar em todo conteúdo do ledger?"
+    },
+    {
+      "id": "B-ABSTAIN",
+      "kind": "abstention",
+      "question": "Só com esta seleção Core, é possível garantir recuperação distribuída de Relay, publicação Atlas da união ou retrieval vetorial em produção?"
+    },
+    {
+      "id": "ENTRY-NAV",
+      "kind": "navigation_direct_intermediate",
+      "question": "Onde começar uma manutenção de automação, como aprofundar até o contrato de provider e como localizar os donos das outras partes do Core?"
+    }
+  ],
+  "limits": {
+    "access": "ownership.index/read only through actual Atlas or faithfully recorded bridge",
+    "max_index_calls_per_case": 2,
+    "max_read_calls_per_case": 5,
+    "max_returned_utf8_bytes_per_case": 60000,
+    "source_access": false,
+    "oracle_access": false,
+    "required_direct_use": "Every necessary L1/L2/L3 intermediate must be explicitly read in at least one case; no claim of product runtime qualification"
+  },
+  "status": "FROZEN_QUESTIONS_BEFORE_PRODUCTION_PROJECTED_WITHOUT_ANSWERS"
+}
+===== END consumers/public-cases.json =====
+
+===== BEGIN consumers/public-bridge-protocol.md =====
+Source file identity: {"bytes":3285,"sha256":"83ee13b6ee7a92ceb87be728640f028769e88be69eb72eebde2a33b7a2ad1839"}
+Rendering: literal frozen public protocol
+
+# Protocolo público dos consumidores S1-03
+
+Este procedimento implementa as perguntas e quotas congeladas em `public-cases.json`; não muda perguntas, respostas esperadas ou critérios. Nenhum resultado de caso está antecipado aqui. Cada caso usa contexto nativo novo, sem fonte bruta, oracle reservado, texto de juízes ou respostas de outros consumidores.
+
+## Acesso e pedidos
+
+Use somente respostas reais de `ownership.index` e `ownership.read`, executadas pela principal através da ponte que chama a CLI oficial do release S4. Não use ferramentas próprias, filesystem, rede, memória de outros casos ou conhecimento geral como evidência deste produto. A separação é por contexto e protocolo; não há alegação de filesystem sandbox.
+
+Solicite uma operação de cada vez, em JSON visível:
+
+```json
+{"operation":"index","query":{"scope":"orchestra.s1","need":"flow"}}
+```
+
+Para ler, forneça exatamente uma seleção, `key` ou `need`, e um limite de bytes positivo. `section` é opcional e deve usar o título exato de uma seção depth2 obtido pela navegação disponível. Exemplo de forma, sem resposta de domínio:
+
+```json
+{"operation":"read","query":{"scope":"orchestra.s1","key":"CHAVE_DO_ARTEFATO","maxBytes":12000}}
+```
+
+O retorno inclui pedido, exit code e stdout/stderr originais da CLI. O envelope não substitui a resposta Atlas. Solicitações inválidas ou acima da quota são recusadas pela ponte e não se tornam consultas Atlas fictícias. A principal preserva pedidos, respostas, bytes encaminhados e recibos.
+
+## Quotas e uso direto
+
+Por caso: no máximo **2 consultas index**, **5 consultas read** e **60.000 bytes UTF-8 efetivamente devolvidos**, incluindo o envelope da ponte. Os limites são os congelados antes da produção. Um pedido de read não pode ultrapassar o saldo de bytes do caso; não se estima uso de tokens a partir desses números.
+
+Comece pelo index pertinente ao pedido. O despacho identifica os intermediários previstos no plano público, apenas por chave. Solicite leitura direta de cada uma dessas chaves dentro da quota para registrar o caminho realmente disponível, mesmo que uma consulta anterior tenha retornado HOLD. Uma tentativa recusada não conta como consumo do corpo nem como satisfação da obrigação de uso direto.
+
+Se o index estiver disponível, use suas seções e links para uma leitura pequena e aprofunde somente quando o problema exigir. Se houver indisponibilidade do store ou de uma seleção, mantenha a razão exata e não trate fonte indisponível como ausente. Não leia versões históricas para apresentá-las como atuais.
+
+## Resposta do consumidor
+
+Depois das consultas necessárias, responda à pergunta somente com apoio no conteúdo efetivamente recebido. Identifique as consultas que sustentam a resposta, as incertezas e o que não pôde ser determinado. Uma recusa da porta pode demonstrar impedimento de acesso; ela não demonstra a resposta de domínio nem um PASS do caso, inclusive no caso de abstenção.
+
+Não emita aceite da missão, binding, manutenção ou conclusão global. Os mesmos dois juízes da execução avaliarão o resultado contra os critérios e respostas reservadas que permanecem fora deste contexto. Campos físicos de uso/cobrança não expostos são UNKNOWN.
+===== END consumers/public-bridge-protocol.md =====
+
+===== BEGIN consumers/direct-read-supplement-v1.json =====
+Source file identity: {"bytes":1409,"sha256":"cbcf7cdce494e2b07affb8cd95a0f80c0f23a64f49dcc98e292c78e4268bc85a"}
+Rendering: literal supplement frozen before any consumer
+
+{
+  "schema": "s1-03-public-direct-read-supplement/v1",
+  "frozen_at_utc": "2026-11-15T08:48:04.196004+00:00",
+  "state": "FROZEN_BEFORE_ANY_CONSUMER_DISPATCH_OR_EVALUATION",
+  "reason": "AC-03 requires a direct-use case for every intermediate artifact. research-maintenance is itself a predecessor of the local entry. The original public mapping named eleven of the twelve required artifacts; add its explicit read to the already frozen research operational-failure case. This is a navigation/consultation addition, not a new question, expected answer or retrospective production acceptance.",
+  "original_artifact_plan": {
+    "path": "artifact-plan.json",
+    "bytes": 5017,
+    "sha256": "6bf70a5c448d65ec3a046aefc0b0b9db2f783dcd8573a2d2ea69487bec7ce9ad",
+    "preserved_unchanged": true
+  },
+  "public_cases": {
+    "path": "consumers/public-cases.json",
+    "sha256": "6f555dc22ea571bc2d6a683587cb320b7681b6bd22367a2f33e6fc8eb3741ab2",
+    "questions_and_quotas_unchanged": true
+  },
+  "additional_required_direct_keys": {
+    "R-FAILURE": [
+      "s1.subslice03.research-maintenance"
+    ]
+  },
+  "artifact_count_unchanged": 12,
+  "build_graph_unchanged": true,
+  "case_count_unchanged": 7,
+  "source_population_unchanged": 462,
+  "reserved_answers_included": false,
+  "native_calls_created_by_this_control": 0,
+  "operational_read_is_still_required": true,
+  "refused_read_is_not_consumption": true
+}
+===== END consumers/direct-read-supplement-v1.json =====
+
+===== BEGIN assembly/consumer-summary-run/REPORT.md =====
+Source file identity: {"bytes":7877,"sha256":"38e27c0f3087ae77c7412e08c61618a6930c3e3ec67c441f11fc4b74a4d07d20"}
+Rendering: literal original mechanical report; links retain original local paths, unavailable originals explicitly listed later
+
+# S1-03 — execução do helper e auditoria de dispatch dos consumidores
+
+## Resultado mecânico
+
+O helper preservado foi executado uma vez no destino novo payload/consumers/verified-summary-v1 e terminou com **exit code 0**, estado **MECHANICAL_REPORT_WRITTEN**. A auditoria adicional encontrou **zero divergências de identidade ou vínculo** nos registros examinados. Isso não atribui PASS de domínio, critério ou missão.
+
+Foram conferidos **33 pedidos nativos e 33 completions**, com **sete handles distintos**, **sete spawns declarando fork_turns=none**, **26 followups**, **26 respostas de consulta** e **sete FINALs de caso**. As chamadas CLI registradas são **26: 11 index e 15 read**. Não se somam esses números como tentativas físicas de modelo.
+
+| Caso | Chamadas e retornos nativos, cada | Index | Read | HOLD | Erros CLI | Bytes UTF-8 dos forwards |
+|---|---:|---:|---:|---:|---:|---:|
+| A-PERMITTED | 4 | 1 | 2 | 3 | 0 | 921 |
+| A-VIOLATION | 5 | 2 | 2 | 3 | 1 | 1172 |
+| A-IMPACT | 5 | 2 | 2 | 3 | 1 | 1162 |
+| S-FAILURE | 4 | 1 | 2 | 3 | 0 | 915 |
+| R-FAILURE | 6 | 2 | 3 | 4 | 1 | 1480 |
+| B-ABSTAIN | 5 | 2 | 2 | 3 | 1 | 1155 |
+| ENTRY-NAV | 4 | 1 | 2 | 3 | 0 | 908 |
+| Total | 33 | 11 | 15 | 22 | 4 | 7713 |
+
+Fontes: [consumer-summary.json](sandbox:/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/consumers/verified-summary-v1/consumer-summary.json), [consumer-dispatches.json](sandbox:/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/receipts/consumer-dispatches.json) e [dispatch-audit.json](sandbox:/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/assembly-native-descriptors/consumer-summary-run/dispatch-audit.json). Os FINALs por caso somam **12.461 bytes** e são cópias exatas do último retorno nativo preservado de cada handle.
+
+## Estado operacional observado
+
+A preparação real de **12 artefatos** ficou **BLOCKED_ACTUAL_PREPARE**, exit code **1**, sem timeout e sem arquivo preparado. Seu stderr preserva native-file-limit no path modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json. Não foi tentada publicação por esse comando. O recibo [native-prepare-final.json](sandbox:/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/receipts/native-prepare-final.json) tem **2576 bytes**, SHA-256 **469f4cdf21af6e295378b975a75e6670c4a07f4452335b4dbc76e64ce4eedc81**.
+
+As consultas posteriores registraram:
+
+- **22 HOLDs**, exit code 2, reason ownership-store-unavailable.
+- **Quatro erros native-query-need**, exit code 1, no primeiro index de A-VIOLATION, A-IMPACT, R-FAILURE e B-ABSTAIN.
+- **Zero timeouts, streams não UTF-8/base64, forwards parciais ou suprimidos por quota.**
+- **26 envelopes completos preservados**, mesmo quando contêm HOLD ou erro. Envelope completo não significa conteúdo de corpo disponível.
+
+Todos os **12 artefatos planejados receberam tentativa direta de read** no conjunto dos casos, incluindo research-maintenance em R-FAILURE pelo suplemento público. Os 15 reads retornaram HOLD; não há conteúdo de corpo confirmado nesses forwards. As quotas de **2 index, 5 read e 60.000 bytes por caso** foram conferidas pelo helper. Os 7.713 bytes contam os envelopes UTF-8, inclusive sua estrutura JSON; não são tokens.
+
+## Vínculos de dispatch efetivamente conferidos
+
+Para cada uma das 33 chamadas, foram comparados path, tamanho e SHA-256 do JSON de argumentos e de message_source. A string message, codificada integralmente em UTF-8, é idêntica aos bytes da fonte preservada, sem normalização de LF. Os sete primeiros pedidos correspondem aos requests congelados; os 26 seguintes correspondem, um a um, aos forwards da ponte.
+
+Cada completion foi associado à mesma dupla case_id/turn e ao mesmo handle. Os **33 registros capture embutidos** conferem file, bytes, sha256, literal=true e agent_id contra a resposta preservada. As 26 respostas de consulta são JSON literal coerente com parsed_operation
+END PART
+ACK desta parte apenas; aguarde as demais, sem julgamento.

@@ -1,0 +1,339 @@
+DELIVERY-FINAL-V1 PARTE 6/7
+Fonte: 982076cfbbbbd34f70f02b6ebe150a276f97d3cf; 150497 B; SHA256 ceb4cbdb5056cc25dc372efeb4e739692ef62f5e045d2a014253249405952ea9. Transporte literal; sem ferramentas.
+BEGIN PART
+, com a query executada e com a operação resumida pelo helper. Cada forward aparece em um único pedido nativo posterior.
+
+Os **sete arquivos final-capture.json** e final-response.md conferem com o último retorno nativo do caso. A auditoria também conferiu os inventários restritos de native-turns, sem deduzir chamadas de arquivos preparados. Todos os bytes lidos foram novamente comparados antes da saída.
+
+Contagens de bytes, em categorias que se sobrepõem:
+
+| Categoria | Bytes |
+|---|---:|
+| 33 JSONs de argumentos nativos | 45264 |
+| 33 mensagens UTF-8 contidas nesses argumentos | 40996 |
+| 33 respostas nativas preservadas | 14782 |
+| Sete FINALs de caso, subconjunto das respostas | 12461 |
+| 26 forwards, subconjunto das mensagens | 7713 |
+
+A auditoria adicional leu **167 arquivos**, incluindo o recibo e o JSON produzido pelo helper; suas identidades e papéis estão em dispatch-audit.json. O helper registra **169 inputs, 173.203 bytes**, com sobreposição à auditoria adicional. Esses inventários não representam número de execuções ou cobrança.
+
+O snapshot da auditoria vai de **2026-11-15T11:25:07.967014+00:00** a **2026-11-15T11:25:08.005936+00:00**. Não afirma captura de eventos futuros.
+
+## Limites da prova
+
+A conclusão é de **coerência de arquivos e da atestação preservada da principal**. Não é checksum independente do wire do host, verificação por logs internos ou prova de ausência técnica de acesso ao filesystem. Os sete handles e fork_turns=none documentam o contexto declarado; não demonstram um sandbox técnico.
+
+O helper permanece inalterado: seu campo de atestação independente de entrega nativa continua UNKNOWN. A auditoria adicional vincula os forwards aos argumentos e retornos preservados pela principal, sem elevar essa prova a observação independente do transporte. Também permanece a limitação do helper quanto ao schema formal de ownership.read; nenhum schema de sucesso foi inventado.
+
+Não houve consulta a oracle, corpo de produtor, julgamento, fonte de produto, rede ou logs internos. Nenhuma nova operação Atlas, teste de produto ou execução de modelo foi criada pela consolidação/auditoria. As 26 chamadas CLI descritas são registros anteriores. Tokens, tentativas físicas e custo: **UNKNOWN**.
+
+## Identidades de entrada e de saída
+
+| Entrada autorizada | Bytes | SHA-256 |
+|---|---:|---|
+| summarize_consumers.py | 44200 | 452a59a1b27a25c58f79582643cbe064bef1c30910b558c6faa85d0da6328629 |
+| README.md do helper | 9168 | b1630f6340f825f85d8b7b68f872ba869ce72f5c369b4dd11c569950bec70378 |
+| consumer-dispatches.json | 65941 | 22f2d14860df2df8bf975d0955b664d4dfecbf450d46e526e7e2222afcfe2ff9 |
+
+| Output concluído | Bytes | SHA-256 |
+|---|---:|---|
+| [consumer-summary.json](sandbox:/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/consumers/verified-summary-v1/consumer-summary.json) | 134340 | 37dc9ccfa9ceaae418fed41fc931b9ad12f9919de73b893c72d4279ef5775b73 |
+| [consumer-summary.md](sandbox:/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/consumers/verified-summary-v1/consumer-summary.md) | 32399 | 5b306a9db2bfaa2bc9982dce20e0cf05ab28e7dc9439c555042f31f6dab0a90c |
+| [dispatch-audit.json](sandbox:/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/assembly-native-descriptors/consumer-summary-run/dispatch-audit.json) | 138951 | 96b92fc0b4dd5743355ddd33fd9b4889f62fa7a49642fb3d6ac3678a351acd5d |
+
+São cinco outputs: os dois do helper e dispatch-audit.json, este REPORT.md e response.md. Os hashes do relatório e da resposta são emitidos após a escrita, sem autorreferência. response.md é congelado sem LF terminal e corresponde exatamente ao FINAL. Os inputs e o helper permanecem originais.
+===== END assembly/consumer-summary-run/REPORT.md =====
+
+===== BEGIN assembly/consumer-summary-run/response.md =====
+Source file identity: {"bytes":3453,"sha256":"900d042f79685e17917be398993894d3d17ed711f7655b7593756be9042662a4"}
+Rendering: literal original native mechanical helper FINAL; not a judge
+
+Executei o helper preservado e concluí a auditoria adicional **sem divergências de identidade ou vínculo nos arquivos examinados**. O helper terminou com **exit code 0**; os inputs e o script permaneceram originais.
+
+### Números conferidos
+
+- **33 chamadas nativas e 33 completions:** sete spawns com `fork_turns=none` e 26 followups.
+- **Sete handles distintos e sete FINALs de caso**, com 12.461 bytes ao todo.
+- **26 chamadas CLI registradas:** 11 `index` e 15 `read`.
+- **26 forwards**, totalizando **7.713 bytes UTF-8**, cada um vinculado uma única vez ao pedido nativo seguinte.
+- **12 chaves de artefato tentadas diretamente**, incluindo research-maintenance em R-FAILURE.
+- **22 HOLDs** por `ownership-store-unavailable`, exit code 2, e **quatro erros** `native-query-need`, exit code 1.
+- **Zero timeouts, streams não UTF-8/base64, envelopes parciais ou suprimidos por quota.**
+
+Os quatro erros ocorreram no primeiro `index` de A-VIOLATION, A-IMPACT, R-FAILURE e B-ABSTAIN. Todos os 15 reads registrados retornaram HOLD; **não há conteúdo de corpo confirmado nesses forwards**. A preparação real dos 12 artefatos permaneceu `BLOCKED_ACTUAL_PREPARE`, com `native-file-limit` na projeção histórica. Nenhum PASS de domínio, critério ou missão foi atribuído.
+
+Conferi tamanho/hash e correspondência integral dos 33 requests, suas mensagens e message_source, das 33 respostas e capturas embutidas, dos 26 forwards e dos sete pares final-response/final-capture. Cada FINAL de caso coincide byte a byte com o último retorno nativo preservado daquele handle.
+
+### Arquivos e hashes
+
+| Arquivo | Bytes | SHA-256 |
+|---|---:|---|
+| [consumer-summary.json](sandbox:/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/consumers/verified-summary-v1/consumer-summary.json) | 134340 | 37dc9ccfa9ceaae418fed41fc931b9ad12f9919de73b893c72d4279ef5775b73 |
+| [consumer-summary.md](sandbox:/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/payload/consumers/verified-summary-v1/consumer-summary.md) | 32399 | 5b306a9db2bfaa2bc9982dce20e0cf05ab28e7dc9439c555042f31f6dab0a90c |
+| [dispatch-audit.json](sandbox:/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/assembly-native-descriptors/consumer-summary-run/dispatch-audit.json) | 138951 | 96b92fc0b4dd5743355ddd33fd9b4889f62fa7a49642fb3d6ac3678a351acd5d |
+| [REPORT.md](sandbox:/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/assembly-native-descriptors/consumer-summary-run/REPORT.md) | 7877 | 38e27c0f3087ae77c7412e08c61618a6930c3e3ec67c441f11fc4b74a4d07d20 |
+
+O quinto output é [response.md](sandbox:/workspace/scratch/ef5eb2eb4a70/s1-03-34269cf4-d631-41c5-a30b-85b0ec217390/assembly-native-descriptors/consumer-summary-run/response.md), congelado sem LF terminal e idêntico a este FINAL; seu hash é emitido após a escrita, fora do próprio conteúdo.
+
+**Limite da prova:** a contabilidade confirma coerência dos arquivos e da atestação preservada da principal. Não fornece checksum independente do wire, prova técnica de impedimento de acesso ao filesystem ou avaliação semântica dos consumidores. O helper preserva seus UNKNOWNs sobre atestação independente e schema de resposta. Não executei novas consultas Atlas, rede, modelos ou testes, nem abri conteúdo reservado, corpos de produtores ou julgamentos. Tokens, tentativas físicas e custo permanecem **UNKNOWN**.
+===== END assembly/consumer-summary-run/response.md =====
+
+===== BEGIN consumers/R-FAILURE/final-response.md =====
+Source file identity: {"bytes":1697,"sha256":"fb08a2d9c954157179012bd7abb0d458dc4d5a20e4ee8da6803e6d341e4b225b"}
+Rendering: literal original native case FINAL recovered at its pre-failure hash
+
+**Não foi possível determinar se o warm sem shards e o marker local bastam para declarar a indexação pronta ou confiar em todo o conteúdo do ledger.** Nenhuma das consultas devolveu conteúdo que permita avaliar esses sinais. Portanto, não posso confirmar essa conclusão nem estabelecer a resposta de domínio contrária.
+
+### Consultas e evidências recebidas
+
+| Consulta | Operação e seleção | Resultado |
+|---|---|---|
+| 1 | `index`, scope `orchestra.s1`, need `research` | Exit code `1`; erro `native-query-need`; sem conteúdo. |
+| 2 | `index`, scope `orchestra.s1`, need `flow` | Exit code `2`; `hold`, razão `ownership-store-unavailable`, evidência `["orchestra.s1"]`. |
+| 3 | `read`, key `s1.core.research`, `maxBytes: 12000` | Mesmo `hold` por `ownership-store-unavailable`; sem conteúdo do artefato. |
+| 4 | `read`, key `s1.subslice03.research-flow`, `maxBytes: 12000` | Mesmo `hold` por `ownership-store-unavailable`; sem conteúdo do artefato. |
+| 5 | `read`, key `s1.subslice03.research-maintenance`, `maxBytes: 12000` | Mesmo `hold` por `ownership-store-unavailable`; sem conteúdo do artefato. |
+
+As três chaves previstas foram consultadas diretamente. As consultas 2 a 5 sustentam somente a constatação de impedimento de acesso ao store naquele momento. **Indisponibilidade não demonstra ausência dos artefatos e não responde à pergunta sobre indexação ou confiança no ledger.**
+
+Permanecem indeterminados o significado operacional do warm sem shards, o alcance do marker local, os critérios de prontidão da indexação e as condições de confiança aplicáveis ao conteúdo do ledger. Os campos físicos de uso ou cobrança não expostos são `UNKNOWN`.
+===== END consumers/R-FAILURE/final-response.md =====
+
+===== BEGIN consumers/ENTRY-NAV/final-response.md =====
+Source file identity: {"bytes":1821,"sha256":"8f933247a2d3367df901ef0708800d45129dc523814697d773bc42488f412557"}
+Rendering: literal original native case FINAL recovered at its pre-failure hash
+
+Não foi possível determinar **onde começar a manutenção de automação, como chegar ao contrato de provider ou como localizar os donos das outras partes do Core** a partir do conteúdo recebido.
+
+As três consultas executadas retornaram `exit_code: 2`, com a mesma resposta Atlas:
+
+```json
+{"kind":"hold","reason":"ownership-store-unavailable","evidence":["orchestra.s1"]}
+```
+
+### Consultas realizadas
+
+| Consulta | Operação e seleção | Resultado |
+|---|---|---|
+| 1 | `ownership.index`, escopo `orchestra.s1`, `need: "flow"` | `HOLD`, razão `ownership-store-unavailable` |
+| 2 | `ownership.read`, chave `s1.subslice03.entry`, `maxBytes: 12000` | `HOLD`, razão `ownership-store-unavailable` |
+| 3 | `ownership.read`, chave `s1.subslice03.support`, `maxBytes: 12000` | `HOLD`, razão `ownership-store-unavailable` |
+
+O índice e ambas as chaves previstas foram consultados. Nenhuma consulta devolveu conteúdo de documentação, seções, links de navegação, contratos ou identificação de responsáveis.
+
+### O que permanece indeterminado
+
+- **Ponto de entrada da manutenção:** não foi recebido um caminho, artefato ou procedimento que o estabeleça.
+- **Aprofundamento até o contrato de provider:** não foram recebidos os passos de navegação nem o contrato.
+- **Donos das demais partes do Core:** não foram recebidos nomes, referências ou instruções para localizá-los.
+
+A razão registrada é a **indisponibilidade do store**. Essas respostas não permitem concluir que os artefatos ou as informações solicitadas estejam ausentes. As consultas sustentam somente o impedimento de acesso observado; não sustentam uma resposta de domínio nem um `PASS` do caso.
+
+Foram realizadas **1 consulta index e 2 consultas read**. Dados físicos de uso ou cobrança não expostos permanecem **UNKNOWN**.
+===== END consumers/ENTRY-NAV/final-response.md =====
+
+===== BEGIN maintenance/final-disposition-after-environment.json =====
+Source file identity: {"bytes":5620,"sha256":"e2bb7119ecb6f84e2ed80d345567b90bf9b15cb2eadc838e2c204c49808ee149"}
+Rendering: current disposition; no mutation or runtime planner result
+
+{
+  "schema": "s1-03-maintenance-disposition-after-environment/v1",
+  "recorded_at_utc": "2026-11-15T11:54:16.872Z",
+  "state": "INCOMPLETE_BLOCKED",
+  "original_frozen_plan": {
+    "path": "maintenance/mutation-plan.json",
+    "sha256": "df10eeb783319fe42e597bd833bf109141a341e885c76e7e032826bcb5e52364"
+  },
+  "actual_prepare": {
+    "path": "receipts/native-prepare-final.json",
+    "sha256": "469f4cdf21af6e295378b975a75e6670c4a07f4452335b4dbc76e64ce4eedc81"
+  },
+  "current_read_evidence": {
+    "original_audit_report": "assembly/consumer-summary-run/REPORT.md",
+    "original_native_audit_final": "assembly/consumer-summary-run/response.md",
+    "observed_total_reads": 15,
+    "observed_holds": 15,
+    "bodies_delivered": 0,
+    "raw_record_custody": "Partial; environment-loss-custody.json identifies unavailable originals."
+  },
+  "cases": [
+    {
+      "case_id": "M-ACTIONS",
+      "state": "BLOCKED_BASELINE_PRECONDITION",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_path": "packages/core/src/actions/authoring/remote.ts",
+      "frozen_patch": {
+        "path": "maintenance/mutations/M-ACTIONS/mutation.patch",
+        "bytes": 941,
+        "sha256": "6b6922f91b912e34bfa28d804d3a7d061da27b09edca795b845cc2e677c54b65",
+        "git_blob_sha": "5a21b9ee33a557e9d3eff94cada0f5287c68710a"
+      },
+      "fixture_applied": false,
+      "product_changed": false,
+      "expected_affected_static_only": [
+        "s1.core.automation",
+        "s1.subslice03.automation-flow",
+        "s1.subslice03.automation-impact",
+        "s1.subslice03.automation-maintenance",
+        "s1.subslice03.entry"
+      ],
+      "expected_independent_static_only": [
+        "s1.core.boundaries",
+        "s1.core.research",
+        "s1.subslice03.boundary-flow",
+        "s1.subslice03.research-flow",
+        "s1.subslice03.research-impact",
+        "s1.subslice03.research-maintenance",
+        "s1.subslice03.support"
+      ],
+      "actual_planner_result": null,
+      "required_operations_not_run": [
+        "isolated fixture mutation",
+        "observe changed accepted baseline",
+        "plan affected set",
+        "current read stale refusal after mutation",
+        "native reinterpretation of affected closure",
+        "exact same-pair runtime rebinding",
+        "governed rebuild and activation",
+        "read rebuilt selection",
+        "compare independent identities and call counts",
+        "failure recovery and rollback"
+      ],
+      "reason": "The full selection did not prepare, no exact runtime binding/activation exists, and all observed current reads returned ownership-store-unavailable. Static sets and prepared patches are not runtime results.",
+      "local_obligation_owner": "S1-03",
+      "unblock": "Restore usable execution environment, obtain released support for every genuine whole input and actual S1 publication authority; prepare, exact-bind and activate the baseline; then execute this frozen isolated case through official observe/plan/rebuild/read. No common control discharges this own case."
+    },
+    {
+      "case_id": "M-SCHEDULE-RECIPE",
+      "state": "BLOCKED_BASELINE_PRECONDITION",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "source_path": "packages/core/src/scheduled-task/model.ts",
+      "frozen_patch": {
+        "path": "maintenance/mutations/M-SCHEDULE-RECIPE/mutation.patch",
+        "bytes": 726,
+        "sha256": "901cf8d3f994f8fdbe41ccf5f5bbe29c0038da91172009f6ab315cb2fda42688",
+        "git_blob_sha": "67620e4f543f4a3162c193870d00587e673381be"
+      },
+      "fixture_applied": false,
+      "product_changed": false,
+      "expected_affected_static_only": [
+        "s1.core.automation",
+        "s1.subslice03.automation-flow",
+        "s1.subslice03.automation-impact",
+        "s1.subslice03.automation-maintenance",
+        "s1.subslice03.entry"
+      ],
+      "expected_independent_static_only": [
+        "s1.core.boundaries",
+        "s1.core.research",
+        "s1.subslice03.boundary-flow",
+        "s1.subslice03.research-flow",
+        "s1.subslice03.research-impact",
+        "s1.subslice03.research-maintenance",
+        "s1.subslice03.support"
+      ],
+      "actual_planner_result": null,
+      "required_operations_not_run": [
+        "isolated fixture mutation",
+        "observe changed accepted baseline",
+        "plan affected set",
+        "current read stale refusal after mutation",
+        "native reinterpretation of affected closure",
+        "exact same-pair runtime rebinding",
+        "governed rebuild and activation",
+        "read rebuilt selection",
+        "compare independent identities and call counts",
+        "failure recovery and rollback"
+      ],
+      "reason": "The full selection did not prepare, no exact runtime binding/activation exists, and all observed current reads returned ownership-store-unavailable. Static sets and prepared patches are not runtime results.",
+      "local_obligation_owner": "S1-03",
+      "unblock": "Restore usable execution environment, obtain released support for every genuine whole input and actual S1 publication authority; prepare, exact-bind and activate the baseline; then execute this frozen isolated case through official observe/plan/rebuild/read. No common control discharges this own case."
+    }
+  ],
+  "original_pre_loss_final_disposition": "An 8212-byte local disposition was written before failure but is not available for upload. This new disposition reports current conditions and does not masquerade as those original bytes.",
+  "new_runtime_calls_performed_by_this_disposition": 0
+}
+===== END maintenance/final-disposition-after-environment.json =====
+
+===== BEGIN receipts/final-operational-disposition-after-environment.json =====
+Source file identity: {"bytes":7349,"sha256":"7350099624b57584aaad7ea2cbd76f9d73763dfb8b1e2eaab0371d8b1c962c46"}
+Rendering: current observed operations/blockers
+
+{
+  "schema": "s1-03-operational-disposition-after-environment/v1",
+  "recorded_at_utc": "2026-11-15T11:54:16.872Z",
+  "completion_state": "INCOMPLETE_BLOCKED",
+  "scope": "S1-03 only",
+  "package": {
+    "path": "native-package.json",
+    "bytes": 485602,
+    "sha256": "ddada3d4b67cff13ef3a5817b95efc275b0d288061436546c8ec6b73290766a6"
+  },
+  "source_input_payload": "191a3b3a12c60a2df70c1dbf36510303c025c5ea",
+  "native_prepare": "ACTUALLY_EXECUTED_BLOCKED",
+  "runtime_binding": "NOT_RUN_PRECONDITION_NO_PREPARED_CANDIDATE",
+  "governed_publish": "NOT_RUN_PRECONDITION_NOT_OBSERVED_POLICY_DENIAL",
+  "consumers": {
+    "actual_native_requests": 33,
+    "actual_native_completions": 33,
+    "actual_CLI": 26,
+    "index": 11,
+    "read": 15,
+    "holds": 22,
+    "need_errors": 4,
+    "returned_envelope_utf8_bytes": 7713,
+    "direct_keys_attempted": 12,
+    "bodies_consumed": 0,
+    "domain_cases_passed": 0,
+    "proof": "Original audit REPORT and native FINAL recovered exactly. Two original case FINALs recovered exactly; five and all raw query chains unavailable. No reconstruction or replacement execution."
+  },
+  "maintenance": "maintenance/final-disposition-after-environment.json",
+  "blocks": [
+    {
+      "id": "B-NATIVE-INPUT-LIMIT",
+      "operation": "Official full-selection prepare",
+      "observed": "exit 1 / native-file-limit at historical coverage-needs-projection.json; no prepared candidate; all six oversized inputs retained.",
+      "evidence": [
+        "receipts/native-prepare-final.json",
+        "receipts/native-prepare-final.stderr",
+        "proposals/s4-source-limit.patch",
+        "proposals/s4-source-limit-validation-v2.json"
+      ],
+      "local_owner": "S1-03",
+      "dependency_owner": "S4 / Atlas runtime",
+      "unblock": "Released compatible support for all exact whole inputs; the existing 1 MiB two-file proposal is unapplied and untested outside S1 ownership. Repeat actual preparation and dependent proof with a valid new candidate."
+    },
+    {
+      "id": "B-PUBLICATION-AUTHORITY",
+      "operation": "Exact runtime binding and governed publication",
+      "observed": "NOT_RUN_PRECONDITION. No prepared candidate; S1 policy/actor/ratifier unprovisioned. No actual policy rejection was observed.",
+      "evidence": [
+        "receipts/native-prepare-final.json",
+        "receipts/s4-runtime-release-original.json"
+      ],
+      "local_owner": "S1-03",
+      "dependency_owner": "Authorized Atlas policy owner / coordination",
+      "unblock": "After successful preparation, actual authorized S1 isolated authority and two exact runtime binding decisions. Do not copy nominal S4 responsibility or modify policy excluded by COMMON."
+    },
+    {
+      "id": "B-OWN-CONSUMPTION-MAINTENANCE",
+      "operation": "Own accepted consumers and frozen maintenance cases",
+      "observed": "Seven real consumers issued 26 CLI calls; 22 store HOLDs and four need errors; fifteen reads delivered no body. Both maintenance scenarios are NOT_RUN_PRECONDITION.",
+      "evidence": [
+        "assembly/consumer-summary-run/REPORT.md",
+        "maintenance/final-disposition-after-environment.json"
+      ],
+      "local_owner": "S1-03",
+      "dependency_owner": "Prior prepare/authority/runtime preconditions",
+      "unblock": "Establish accepted readable baseline and execute the seven cases and both frozen own maintenance cases with actual results and same-pair review. Preserve current failed attempts; no domain PASS inferred."
+    },
+    {
+      "id": "B-FINAL-GUARD",
+      "operation": "Faithful checkout and bun run check:guards --base origin/dev --json",
+      "observed": "Official final guard NOT_RUN. Exact 1339105-byte historical ZIP, Git blob d83941a9d836a23e466ca09ecba1f21d423094cb, could not be retrieved; current H0 base64 fetch still returned empty content. Environment subsequently unavailable.",
+      "evidence": [
+        "receipts/guard-materialization/binary-transport-blocker.json",
+        "receipts/guard-materialization/materialization-verification.json",
+        "receipts/guard-materializat
+END PART
+ACK desta parte apenas; aguarde as demais, sem julgamento.

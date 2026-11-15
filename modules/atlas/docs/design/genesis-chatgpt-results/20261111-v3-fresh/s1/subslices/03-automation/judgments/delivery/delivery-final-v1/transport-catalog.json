@@ -1,0 +1,97 @@
+{
+  "schema": "s103-final-review-transport-catalog/v1",
+  "source_commit": "982076cfbbbbd34f70f02b6ebe150a276f97d3cf",
+  "source_packet": "review-packets/delivery-final-v1.md",
+  "source_identity": {
+    "bytes": 150497,
+    "sha256": "ceb4cbdb5056cc25dc372efeb4e739692ef62f5e045d2a014253249405952ea9"
+  },
+  "not_an_actual_dispatch_receipt": true,
+  "hash_scope": "Canonical recorded UTF-8 messages, not an independently observed host wire checksum. Actual calls, corrections, ACKs and original judgments are recorded separately.",
+  "parts": [
+    {
+      "part": 1,
+      "source_part": {
+        "bytes": 22000,
+        "sha256": "d1cd96ba17a09b7e4719d54761c5ac1e4eff044196e2e4943527b447a6fc4b0b"
+      },
+      "message": {
+        "path": "judgments/delivery/delivery-final-v1/canonical-message-01.txt",
+        "bytes": 22276,
+        "sha256": "f9397a520fea8d73ebec38b2b77ee1433365b27ce651a3a25dd9ff627c150687"
+      }
+    },
+    {
+      "part": 2,
+      "source_part": {
+        "bytes": 22000,
+        "sha256": "cb917b95f7fca1add58d711a59e39cbdc0f2de76d3ed3341296dc1b593a76a89"
+      },
+      "message": {
+        "path": "judgments/delivery/delivery-final-v1/canonical-message-02.txt",
+        "bytes": 22276,
+        "sha256": "489a07030c13700b54ef6f11b0ec1782cc487f1495e070a97b4735720bdcc53c"
+      }
+    },
+    {
+      "part": 3,
+      "source_part": {
+        "bytes": 22000,
+        "sha256": "f994739d4a4b87c25bc410413d2a9522827c8c76069fd374ec00615132babde2"
+      },
+      "message": {
+        "path": "judgments/delivery/delivery-final-v1/canonical-message-03.txt",
+        "bytes": 22276,
+        "sha256": "89a8a11e26cbd757feb608f97b6b6aea9652e9f162cdf61ffe2ed50fe487edd7"
+      }
+    },
+    {
+      "part": 4,
+      "source_part": {
+        "bytes": 22000,
+        "sha256": "0af611139c6d540a324786a961ab0cbf06790864beac626ed273154698fd965e"
+      },
+      "message": {
+        "path": "judgments/delivery/delivery-final-v1/canonical-message-04.txt",
+        "bytes": 22276,
+        "sha256": "63d7298614fc7b6d102dce184ecfc2aa339f8ae26c424ea20890b05256324b23"
+      }
+    },
+    {
+      "part": 5,
+      "source_part": {
+        "bytes": 22000,
+        "sha256": "baf95dfa38dd6044c92e987dfc453fbe37e1e9178cec2203a06feaca4524dcec"
+      },
+      "message": {
+        "path": "judgments/delivery/delivery-final-v1/canonical-message-05.txt",
+        "bytes": 22276,
+        "sha256": "cc29498150348dc8dae33ea3d4468d938aa7f067c917a5786b1cba75e29703d3"
+      }
+    },
+    {
+      "part": 6,
+      "source_part": {
+        "bytes": 22000,
+        "sha256": "a75bc8e4e0af40aeba23f1b8d1c119d8cc47186f5af878c0463506425a44fa92"
+      },
+      "message": {
+        "path": "judgments/delivery/delivery-final-v1/canonical-message-06.txt",
+        "bytes": 22276,
+        "sha256": "50c2472611d3bd57b4c018312e7dfb5ffa0d233e675843901b00371253e16d51"
+      }
+    },
+    {
+      "part": 7,
+      "source_part": {
+        "bytes": 18497,
+        "sha256": "6b53d04e4c37cc2c2e4263618aaaac13db0c548103fff4b4fea58a06d758cafc"
+      },
+      "message": {
+        "path": "judgments/delivery/delivery-final-v1/canonical-message-07.txt",
+        "bytes": 19006,
+        "sha256": "a482b0d48bdf681eab5aab8e86676c17ce721aae2d157fc76318d0842e2b4340"
+      }
+    }
+  ]
+}
