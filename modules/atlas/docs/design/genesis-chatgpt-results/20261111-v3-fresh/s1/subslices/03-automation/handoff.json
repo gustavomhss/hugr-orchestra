@@ -9,8 +9,8 @@
   "branch": "genesis-s1-automation",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
-  "observed_branch_head": "e23c1c695071af92d8f4d78a715daaeb7ef213db",
-  "artifact_revision": "5eefca63b48970f3abb4d22e8dc2b1323487da92",
+  "observed_branch_head": "1423adaac613ffc361ca89aa70c77f9b7ed5b7f7",
+  "artifact_revision": "84b267fbe863e4ef728b9d54855f137f3057b3df",
   "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
   "completion_state": "IN_PROGRESS",
   "work": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/work.md",
@@ -24,14 +24,51 @@
     "semantic_acceptance": "PENDING_INDEPENDENT_JUDGMENT"
   },
   "production": {
-    "phase": "L1",
+    "phase": "L1_REVIEW_AND_CORRECTION",
     "producer_ids": [
       "/root/automation_l1",
       "/root/research_l1",
       "/root/boundaries_l1"
     ],
-    "freeze": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/receipts/l1-freeze.json",
-    "entry_historical_sha256": "6a488ca8f9717a497949b71ed41db84d995f23b90c31cc59c22c5bd86239ca6c"
+    "entry_historical_sha256": "6a488ca8f9717a497949b71ed41db84d995f23b90c31cc59c22c5bd86239ca6c",
+    "original_v1_freeze": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/receipts/l1-freeze.json",
+    "bodies": {
+      "s1.core.automation": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/body.md",
+        "version": "v4",
+        "bytes": 60767,
+        "sha256": "968965f1b15d633cefc8a78868d9d1049147f23dff409c6cb05c7a75e3561cae",
+        "git_blob_sha": "e26213eb2fc76dc843dca17d1111334c76f88890",
+        "semantic_acceptance": "PENDING_SAME_PAIR"
+      },
+      "s1.core.research": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/research/body.md",
+        "version": "v2",
+        "bytes": 63501,
+        "sha256": "d2def4b82495605b491e0d5494b1511e1b68c47dcffa84af87c8d35705468661",
+        "git_blob_sha": "bb0eaa73b4fe9120fb46d9304778649b5c7205dd",
+        "semantic_acceptance": "PENDING_SAME_PAIR"
+      },
+      "s1.core.boundaries": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/boundaries/bodies/boundaries.md",
+        "version": "v1",
+        "bytes": 22938,
+        "sha256": "c557b33392cae8d0078a7da17f3421bb57ec2434f3bf5bba3b54f4172faeadae",
+        "git_blob_sha": "8232a8f75cc7b75614d2fd8873cc935edb84c538",
+        "semantic_acceptance": "PENDING_SAME_PAIR"
+      },
+      "s1.subslice03.support": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/boundaries/bodies/support.md",
+        "version": "v1",
+        "bytes": 22388,
+        "sha256": "3a4ef5ee6925eb3c80404181f00a0e4e012750459f2dbb1ab11076b69449d684",
+        "git_blob_sha": "d21c3271726295f09d297995688678dde9f2dd2a",
+        "semantic_acceptance": "PENDING_SAME_PAIR"
+      }
+    },
+    "correction_count_published": 8,
+    "required_artifact_plan": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/artifact-plan.json",
+    "required_artifact_count": 12
   },
   "judges": {
     "ids": [
@@ -40,9 +77,9 @@
     ],
     "fork_turns": "none",
     "tools_permitted": false,
-    "research_a": "REQUEST_EVIDENCE",
-    "research_b": "REVIEW_IN_PROGRESS_AT_SNAPSHOT",
-    "no_full_L1_pass": true
+    "no_full_L1_pass": true,
+    "original_reviews": "Both judges REQUEST_EVIDENCE on research-a/b, automation1-4 and boundaries. Supplement and corrected-body reviews are pending. No global L1 PASS.",
+    "reserved_oracle_delivery": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/judgments/oracle/dispatch-receipt.json"
   },
   "local_obligations_open": [
     "Resolve independent L1 evidence requests and any mandatory corrections",
@@ -74,6 +111,22 @@
       "state": "CAPABILITY_PROBE_FAILED_NO_REPOSITORY",
       "final_gate": "NOT_RUN",
       "receipt": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/receipts/guard-preflight.json"
+    },
+    {
+      "id": "S4-HISTORICAL-INPUT-LIMIT",
+      "state": "REAL_PREPARE_FAILED",
+      "operation": "genesis-native prepare with entire declared automation input closure, preacceptance blocked candidate body",
+      "declared_inputs": 231,
+      "declared_source_refs": 226,
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json",
+      "bytes": 726892,
+      "limit": 256000,
+      "exit_code": 1,
+      "error": "native-file-limit",
+      "prepared_candidate_created": false,
+      "receipt": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/receipts/automation-native-prepare-probe.json",
+      "source_preserved": true,
+      "final_full_package_prepare": "STILL_REQUIRED"
     }
   ],
   "global_integration": {
@@ -81,7 +134,19 @@
     "branch": "genesis-fresh-s1",
     "status": "NOT_REVIEWED"
   },
-  "supersedes": "e23c1c695071af92d8f4d78a715daaeb7ef213db",
+  "supersedes": "1423adaac613ffc361ca89aa70c77f9b7ed5b7f7",
   "checkpoint_only": true,
-  "execution_continues": true
+  "execution_continues": true,
+  "criteria_matrix": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/criteria-matrix.json",
+    "count": 50,
+    "state": "IN_PROGRESS_HOLD"
+  },
+  "runtime_release_observed": {
+    "branch": "genesis-fresh-s4",
+    "head": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "common_controls_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553"
+  },
+  "publication_scope": "Git payload and seal only; not Atlas publication or completed subslice."
 }
