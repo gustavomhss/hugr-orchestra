@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "effect": "catalog:",
-    "prettier": "3.6.2"
+    "prettier": "3.10.1"
   },
   "devDependencies": {
     "@tsconfig/bun": "catalog:",
