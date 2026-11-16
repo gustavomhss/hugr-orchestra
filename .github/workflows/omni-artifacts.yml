@@ -60,13 +60,13 @@ jobs:
         working-directory: native/omni
     steps:
       - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ inputs.ref || '' }}
           persist-credentials: false
 
       - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: "22"
 
@@ -110,7 +110,7 @@ jobs:
         run: HUGR_PROOF_REAL=true node --test scripts/artifacts.node-smoke.mjs
 
       - name: Upload omni-${{ matrix.id }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: omni-${{ matrix.id }}
           path: native/omni/dist/omni/${{ matrix.id }}/
@@ -136,7 +136,7 @@ jobs:
 
       - name: Upload npm-${{ matrix.id }}
         if: inputs.pack
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: npm-${{ matrix.id }}
           path: |
