@@ -1,4 +1,4 @@
-import { InvalidRequestError, ServiceUnavailableError } from "@orchestra/protocol/errors"
+import { InvalidRequestError } from "@orchestra/protocol/errors"
 import { ActivityMonitor } from "@orchestra/schema/activity-monitor"
 import { Schema } from "effect"
 import { check } from "./assertions"
@@ -44,11 +44,14 @@ export const activityScenarios: Scenario[] = [
   http.protected
     .post("/api/activity/docker/read", "activity.readDocker")
     .global()
+    .probe({ path: "/api/activity/docker/read" })
     .json(
-      503,
+      200,
       (body) => {
-        const error = Schema.decodeUnknownSync(ServiceUnavailableError)(body)
-        check(error.service === "activity.docker", "expected the Docker collector unavailable error")
+        const snapshot = Schema.decodeUnknownSync(ActivityMonitor.DockerSnapshot)(body)
+        check(snapshot.snapshotRevision === "1", "expected the first Docker attempt")
+        check(snapshot.attempt?.state === "complete", "expected the fixture's Docker read to complete")
+        check(snapshot.inventory?.containers[0]?.containerID === "exercise-container", "expected the fixture container")
       },
       "status",
     ),
