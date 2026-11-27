@@ -137,6 +137,16 @@ fn observation_refuses_an_older_supervisor_without_sending_a_request() {
         "does not support independent process observations",
     );
     assert!(sup.alive());
+    let lister = std::thread::spawn(move || block(spawned.tree.processes()));
+    let Msg::List { req, id: 1 } = peer.recv() else {
+        panic!("unsupported observation must not send an Observe frame");
+    };
+    peer.send(&Msg::Processes {
+        req,
+        id: 1,
+        list: Vec::new(),
+    });
+    assert!(lister.join().unwrap().unwrap().is_empty());
 }
 
 /// R2: several waiters of one `Stop` (and of `exited`) all get the answer; a later `stop` is answered
