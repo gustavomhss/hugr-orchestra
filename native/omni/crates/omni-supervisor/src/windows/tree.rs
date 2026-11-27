@@ -168,11 +168,13 @@ impl Tree {
             return Ok(Vec::new());
         }
         // A Windows root that exited is not a member any more; it is excluded in case the scan races it.
-        let job = self
-            .job
+        inventory::list(self.inventory_job()?, self.exit.map(|_| self.pid))
+    }
+
+    pub(super) fn inventory_job(&self) -> std::io::Result<&OwnedHandle> {
+        self.job
             .as_ref()
-            .ok_or_else(|| std::io::Error::other("a live tree has no Job handle"))?;
-        inventory::list(job, self.exit.map(|_| self.pid))
+            .ok_or_else(|| std::io::Error::other("a live tree has no Job handle"))
     }
 
     pub(super) fn resize(&self, cols: u16, rows: u16) -> Ack {

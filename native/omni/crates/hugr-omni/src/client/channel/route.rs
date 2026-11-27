@@ -8,7 +8,7 @@ use std::mem;
 use std::sync::Arc;
 use std::time::Instant;
 
-use omni_proto::{Exit, Msg, VERSION, decode};
+use omni_proto::{Exit, INFO_OBSERVE, Msg, VERSION, decode};
 use tokio::sync::watch;
 
 use super::{Answer, Gen, Life, LifeTx, State, Waiter, Want, deliver};
@@ -133,8 +133,11 @@ impl Gen {
     fn route(&self, st: &mut State, msg: Msg, fds: &mut VecDeque<Pipe>) -> Result<Routed, String> {
         if !st.ready {
             return match msg {
-                Msg::Ready { version: VERSION, .. } => {
+                Msg::Ready {
+                    version: VERSION, info, ..
+                } => {
                     st.ready = true;
+                    st.observes = info & INFO_OBSERVE != 0;
                     if let Some(hello) = st.hello.take() {
                         let _ = hello.try_send(());
                     }
@@ -259,6 +262,7 @@ fn kind(msg: &Msg) -> &'static str {
         Msg::Stop { .. } => "Stop",
         Msg::Resize { .. } => "Resize",
         Msg::List { .. } => "List",
+        Msg::Observe { .. } => "Observe",
         Msg::Release { .. } => "Release",
         Msg::Ready { .. } => "Ready",
         Msg::Spawned { .. } => "Spawned",

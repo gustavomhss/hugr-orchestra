@@ -81,6 +81,10 @@ impl Error {
         ))
     }
 
+    pub(crate) fn observation_unavailable() -> Error {
+        io_error("the hugr-omni supervisor does not support independent process observations".into())
+    }
+
     pub(crate) fn observation_pending() -> Error {
         io_error("a process observation is already waiting for the hugr-omni supervisor".into())
     }

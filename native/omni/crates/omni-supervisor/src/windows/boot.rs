@@ -5,7 +5,7 @@ use std::io;
 use std::os::windows::io::{AsRawHandle, HandleOrNull, OwnedHandle};
 use std::sync::Arc;
 
-use omni_proto::{INFO_PIDFD_HOST, Msg, VERSION};
+use omni_proto::{INFO_OBSERVE, INFO_PIDFD_HOST, Msg, VERSION};
 use windows_sys::Win32::Foundation::{FALSE, TRUE};
 use windows_sys::Win32::System::Console::SetConsoleCtrlHandler;
 use windows_sys::Win32::System::Threading::{INFINITE, OpenProcess, PROCESS_SYNCHRONIZE, WaitForSingleObject};
@@ -39,7 +39,7 @@ pub(super) fn start(args: &Args) -> io::Result<Supervisor> {
     sup.send(&Msg::Ready {
         version: VERSION,
         pid: std::process::id(),
-        info: INFO_PIDFD_HOST, // the host is watched through its process handle
+        info: INFO_PIDFD_HOST | INFO_OBSERVE, // the host is watched through its process handle
     });
     Ok(sup)
 }

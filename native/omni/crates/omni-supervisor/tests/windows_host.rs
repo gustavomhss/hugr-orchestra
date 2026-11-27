@@ -127,7 +127,7 @@ impl Host {
             Msg::Ready {
                 version: VERSION,
                 pid: host.sup.id(),
-                info: INFO_PIDFD_HOST
+                info: INFO_PIDFD_HOST | omni_proto::INFO_OBSERVE
             }
         );
         host

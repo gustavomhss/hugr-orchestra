@@ -19,7 +19,7 @@ use windows_sys::Win32::System::Threading::CreateEventW;
 
 use super::queues::{Event, Inbox, Outbox};
 
-/// Stack of every helper thread: they only wait and copy.
+/// Stack of every helper thread. Inventory allocates its buffers on the heap.
 pub(super) const STACK: usize = 64 * 1024;
 
 /// Opens the host's pipe and checks that its server is the host (`--host-pid`).
@@ -84,6 +84,7 @@ fn read_requests(io: &Overlapped, inbox: &Inbox) {
                         | Msg::Stop { .. }
                         | Msg::Resize { .. }
                         | Msg::List { .. }
+                        | Msg::Observe { .. }
                         | Msg::Release { .. }
                 );
                 // A supervisor-bound kind from the host is malformed: the host is gone.

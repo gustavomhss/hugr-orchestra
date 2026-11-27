@@ -136,7 +136,7 @@ fn host_dies_while_a_forked_copy_keeps_the_channel_open() {
 #[test]
 fn host_dies_while_the_channel_is_held_and_pidfd_is_missing() {
     let (info, _) = host_dies("held-nopidfd", By::Test(libc::SIGKILL), Death::Signal(libc::SIGKILL));
-    assert_eq!(info, 0);
+    assert_eq!(info, omni_proto::INFO_OBSERVE);
 }
 
 #[test]
