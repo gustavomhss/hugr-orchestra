@@ -71,22 +71,22 @@ The category names stay in English in both supported languages. Tab through the 
 
 ## Docker API
 
-Use authenticated \`GET /api/activity/docker\` to read the server's cache. Before
-the first attempt, revision \`"0"\` has no inventory or attempt. Repeated GET
+Use authenticated `GET /api/activity/docker` to read the server's cache. Before
+the first attempt, revision `"0"` has no inventory or attempt. Repeated GET
 requests use the same revision until an explicit read commits a new attempt.
 
-Send an authenticated \`POST /api/activity/docker/read\` with an empty body to
+Send an authenticated `POST /api/activity/docker/read` with an empty body to
 request a bounded inventory of containers. Concurrent POSTs share an attempt.
-The server uses Omni to run \`docker container ls --all --no-trunc --size --format json\`
+The server uses Omni to run `docker container ls --all --no-trunc --size --format json`
 with a five-second deadline and separate limits of 256 KiB for stdout and 16 KiB
-for stderr. A complete empty response includes \`inventory.containers: []\`.
+for stderr. A complete empty response includes `inventory.containers: []`.
 Coverage is limited to containers.
 
 Partial, failed and unavailable attempts return their status and gaps in the
 snapshot and retain the last complete inventory and its original sample time.
 The server returns a typed HTTP 503 when the collector service itself is
-unavailable. Responses carry the server's \`instanceID\` and exact decimal-string
-\`snapshotRevision\`. Docker's formatted size is optional source text, and
+unavailable. Responses carry the server's `instanceID` and exact decimal-string
+`snapshotRevision`. Docker's formatted size is optional source text, and
 logical bytes stay unread.
 
 ## Host CPU
