@@ -14,7 +14,7 @@ export const activityScenarios: Scenario[] = [
   http.protected
     .get("/api/activity", "activity.snapshot")
     .global()
-    .json(200, Schema.decodeUnknownSync(ActivityMonitor.Snapshot), "status"),
+    .json(200, (body) => Schema.decodeUnknownSync(ActivityMonitor.Snapshot)(body), "status"),
   http.protected
     .get("/api/activity/{recordID}/inspection", "activity.inspect")
     .global()

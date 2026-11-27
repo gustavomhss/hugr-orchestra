@@ -12,6 +12,7 @@ type Entry = {
   closed?: number
   rootSettled: boolean
   sampling?: Promise<void>
+  inspections: number
 }
 
 /** An observer never owns a child or changes its I/O, stop policy, adoption or lifetime. */
@@ -22,7 +23,7 @@ export function make() {
 
   const retire = () => {
     const closed = [...entries.values()]
-      .filter((entry) => entry.closed !== undefined)
+      .filter((entry) => entry.closed !== undefined && entry.inspections === 0)
       .sort((a, b) => (a.closed ?? 0) - (b.closed ?? 0))
     closed.slice(0, Math.max(0, closed.length - FINISHED_KEPT)).forEach((entry) => {
       entries.delete(entry.record.recordID)
@@ -34,7 +35,7 @@ export function make() {
   // Collection means the observation handle is unavailable, never proof that the native tree exited.
   // Retire such metadata even when no Monitor window is open; the observer must not accumulate dead handles.
   const collected = new FinalizationRegistry<Entry>((entry) => {
-    if (entry.record.state !== "gone") entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
+    entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
     entry.closed ??= ++status.closure
     retire()
   })
@@ -44,7 +45,7 @@ export function make() {
     const child = entry.child.deref()
     if (!child) {
       // Losing an observation handle does not prove the tree exited.
-      if (entry.record.state !== "gone") entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
+      entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
       entry.closed ??= ++status.closure
       return Promise.resolve()
     }
@@ -60,7 +61,7 @@ export function make() {
         (members) => {
           entry.record = {
             ...entry.record,
-            state: members.length ? "alive" : entry.rootSettled ? "gone" : "unknown",
+            state: members.length ? "alive" : "unknown",
             inspectionFailed: false,
             source: "omni.processes",
             sampledAt: Date.now(),
@@ -79,6 +80,27 @@ export function make() {
         entry.sampling = undefined
       })
     return entry.sampling
+  }
+
+  function snapshot(): ActivityMonitor.Snapshot {
+    // A paint/refresh reads only the ledger and logical-CPU counters; it never enumerates OS processes.
+    entries.forEach((entry) => {
+      if (entry.closed === undefined && !entry.child.deref()) {
+        entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
+        entry.closed = ++status.closure
+      }
+    })
+    retire()
+    const reading = cpu()
+    return structuredClone({
+      instanceID: status.instanceID,
+      ...(reading ? { cpu: reading } : {}),
+      readAt: Date.now(),
+      source: "orchestra.omni.ledger" as const,
+      coverage: "server-pipe-spawns" as const,
+      retired: status.retired,
+      records: [...entries.values()].map((entry) => entry.record),
+    })
   }
 
   return {
@@ -106,45 +128,31 @@ export function make() {
           inspectionFailed: false,
         },
         rootSettled: false,
+        inspections: 0,
       }
       entries.set(entry.record.recordID, entry)
       collected.register(child, entry, entry)
       // Root exit is not tree exit. Membership remains an explicitly requested reading.
       const rootExited = () => {
         entry.rootSettled = true
-        if (entry.record.state !== "gone") entry.record = { ...entry.record, state: "unknown" }
+        entry.record = { ...entry.record, state: "unknown" }
       }
       void child.wait().then(rootExited, rootExited)
       return entry.record.recordID
     },
     async inspect(recordID: string) {
       const entry = entries.get(recordID)
-      if (!entry) return false
-      // An empty sample is refreshable while the original observation handle is available.
-      await sample(entry)
-      retire()
-      return true
+      if (!entry) return
+      entry.inspections++
+      try {
+        await sample(entry)
+        return snapshot()
+      } finally {
+        entry.inspections--
+        retire()
+      }
     },
-    async snapshot(): Promise<ActivityMonitor.Snapshot> {
-      // A paint/refresh reads only the ledger and logical-CPU counters; it never enumerates OS processes.
-      entries.forEach((entry) => {
-        if (entry.closed === undefined && !entry.child.deref()) {
-          entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
-          entry.closed = ++status.closure
-        }
-      })
-      retire()
-      const reading = cpu()
-      return structuredClone({
-        instanceID: status.instanceID,
-        ...(reading ? { cpu: reading } : {}),
-        readAt: Date.now(),
-        source: "orchestra.omni.ledger" as const,
-        coverage: "server-pipe-spawns" as const,
-        retired: status.retired,
-        records: [...entries.values()].map((entry) => entry.record),
-      })
-    },
+    snapshot,
   }
 }
 

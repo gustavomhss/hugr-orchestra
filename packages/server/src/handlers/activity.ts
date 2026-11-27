@@ -58,13 +58,13 @@ export const ActivityHandler = HttpApiBuilder.group(Api, "server.activity", (han
       .handle("activity.snapshot", () => Effect.promise(() => ActivityMonitor.snapshot()))
       .handle("activity.inspect", (ctx) =>
         Effect.gen(function* () {
-          const found = yield* Effect.promise(() => ActivityMonitor.inspect(ctx.params.recordID))
-          if (!found)
+          const snapshot = yield* Effect.promise(() => ActivityMonitor.inspect(ctx.params.recordID))
+          if (!snapshot)
             return yield* new InvalidRequestError({
               message: "Process observation is no longer available",
               field: "recordID",
             })
-          return yield* Effect.promise(() => ActivityMonitor.snapshot())
+          return snapshot
         }),
       )
   }),
