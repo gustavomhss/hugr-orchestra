@@ -22,6 +22,7 @@ test("keeps Inbox independent in primary navigation, then Advanced, with Setting
     "workflows",
     "atlas",
     "rag-studio",
+    "activity",
     "mcp",
     "integrations",
     "skills",
