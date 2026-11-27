@@ -89,8 +89,10 @@ export const DiskSnapshot = Schema.Struct({
 }).annotate({ identifier: "ActivityMonitor.DiskSnapshot" })
 export interface DiskSnapshot extends Schema.Schema.Type<typeof DiskSnapshot> {}
 
+const decimalRevision = Schema.isPattern(/^(0|[1-9][0-9]*)(?![\s\S])/)
+
 export const WorktreeRevision = Schema.String.annotate({ identifier: "ActivityMonitor.WorktreeRevision" }).check(
-  Schema.isPattern(/^(0|[1-9][0-9]*)(?![\s\S])/),
+  decimalRevision,
 )
 export type WorktreeRevision = typeof WorktreeRevision.Type
 
@@ -115,3 +117,99 @@ export const WorktreeSnapshot = Schema.Struct({
   records: Schema.Array(WorktreeRecord),
 }).annotate({ identifier: "ActivityMonitor.WorktreeSnapshot" })
 export interface WorktreeSnapshot extends Schema.Schema.Type<typeof WorktreeSnapshot> {}
+
+export const dockerSource = "docker container ls --all --no-trunc --size --format json"
+export const dockerRowLimit = 1000
+
+export const DockerRevision = Schema.String.annotate({ identifier: "ActivityMonitor.DockerRevision" }).check(
+  decimalRevision,
+)
+export type DockerRevision = typeof DockerRevision.Type
+
+const DockerPublishedRevision = DockerRevision.check(Schema.isPattern(/^[1-9]/)).annotate({
+  identifier: "ActivityMonitor.DockerPublishedRevision",
+})
+
+export const DockerContainer = Schema.Struct({
+  containerID: Schema.NonEmptyString,
+  name: optional(Schema.String),
+  sizeText: optional(Schema.String),
+  owner: Schema.Literal(""),
+  logical: Schema.Null,
+  unique: Schema.Literal("não colapsei"),
+  useProof: Schema.Literal("unproved"),
+}).annotate({ identifier: "ActivityMonitor.DockerContainer" })
+export interface DockerContainer extends Schema.Schema.Type<typeof DockerContainer> {}
+
+export const DockerInventory = Schema.Struct({
+  sampledAt: NonNegativeInt,
+  containers: Schema.Array(DockerContainer).check(Schema.isMaxLength(dockerRowLimit)),
+}).annotate({ identifier: "ActivityMonitor.DockerInventory" })
+export interface DockerInventory extends Schema.Schema.Type<typeof DockerInventory> {}
+
+export const DockerGap = Schema.Literals([
+  "executable-missing",
+  "process-unavailable",
+  "timeout",
+  "nonzero-exit",
+  "execution-failed",
+  "stdout-truncated",
+  "stderr-truncated",
+  "output-truncated",
+  "row-limit",
+  "invalid-record",
+  "missing-id",
+  "duplicate-id",
+]).annotate({ identifier: "ActivityMonitor.DockerGap" })
+export type DockerGap = typeof DockerGap.Type
+
+const dockerAttemptTimes = {
+  startedAt: NonNegativeInt,
+  sampledAt: NonNegativeInt,
+}
+
+const DockerCompleteAttempt = Schema.Struct({
+  ...dockerAttemptTimes,
+  state: Schema.Literal("complete"),
+  gaps: Schema.Tuple([]),
+}).annotate({ identifier: "ActivityMonitor.DockerCompleteAttempt" })
+
+const DockerIncompleteAttempt = Schema.Struct({
+  ...dockerAttemptTimes,
+  state: Schema.Literals(["partial", "failed", "unavailable"]),
+  gaps: Schema.Array(DockerGap).check(Schema.isMinLength(1)),
+}).annotate({ identifier: "ActivityMonitor.DockerIncompleteAttempt" })
+
+export const DockerAttempt = Schema.Union([DockerCompleteAttempt, DockerIncompleteAttempt]).annotate({
+  identifier: "ActivityMonitor.DockerAttempt",
+})
+export type DockerAttempt = typeof DockerAttempt.Type
+
+const dockerSnapshotHeader = {
+  instanceID: Schema.NonEmptyString,
+  readAt: NonNegativeInt,
+  source: Schema.Literal(dockerSource),
+  coverage: Schema.Literal("containers"),
+}
+
+export const DockerSnapshot = Schema.Union([
+  Schema.Struct({
+    ...dockerSnapshotHeader,
+    snapshotRevision: DockerPublishedRevision,
+    inventory: DockerInventory,
+    attempt: DockerCompleteAttempt,
+  }),
+  Schema.Struct({
+    ...dockerSnapshotHeader,
+    snapshotRevision: DockerPublishedRevision,
+    inventory: optional(DockerInventory),
+    attempt: DockerIncompleteAttempt,
+  }),
+  Schema.Struct({
+    ...dockerSnapshotHeader,
+    snapshotRevision: Schema.Literal("0"),
+    inventory: Schema.optionalKey(Schema.Never),
+    attempt: Schema.optionalKey(Schema.Never),
+  }),
+]).annotate({ identifier: "ActivityMonitor.DockerSnapshot" })
+export type DockerSnapshot = typeof DockerSnapshot.Type

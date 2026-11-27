@@ -1,5 +1,6 @@
 import { ActivityMonitor } from "@orchestra/core/activity-monitor"
 import { ActivityDisk } from "@orchestra/core/activity-disk"
+import { ActivityDocker } from "@orchestra/core/activity-docker"
 import { ActivityWorktree } from "@orchestra/core/activity-worktree"
 import { Global } from "@orchestra/core/global"
 import { ConflictError, InvalidRequestError, ServiceUnavailableError } from "@orchestra/protocol/errors"
@@ -17,6 +18,7 @@ const disk = ActivityDisk.make([
 export const ActivityHandler = HttpApiBuilder.group(Api, "server.activity", (handlers) =>
   Effect.gen(function* () {
     const worktrees = yield* ActivityWorktreeRegistry.Service
+    const docker = ActivityDocker.make()
     return handlers
       .handle("activity.worktrees", () =>
         Effect.tryPromise({
@@ -50,6 +52,15 @@ export const ActivityHandler = HttpApiBuilder.group(Api, "server.activity", (han
             })
           return snapshot
         }),
+      )
+      .handle("activity.docker", () => Effect.sync(docker.snapshot))
+      .handle("activity.readDocker", () =>
+        Effect.fail(
+          new ServiceUnavailableError({
+            message: "Docker container inventory collector is unavailable",
+            service: "activity.docker",
+          }),
+        ),
       )
       .handle("activity.disk", () => Effect.sync(() => disk.snapshot()))
       .handle("activity.readDisk", (ctx) =>

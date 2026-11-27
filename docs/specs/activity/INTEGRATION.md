@@ -44,6 +44,6 @@ lines. Review the generated Client commit with its input contract.
 | Request ownership / W3 · App after generated Client | R20 delayed data cannot overwrite newer facts. | W09 and W12 error ordering tests. | Concurrent rows, stale and equal revisions, replacement instance, target errors. | Active context owns abort signals and admits only newer exact revisions. | Reordered responses preserve facts and independent row failures. | Browser-condition tests run actual Solid store code. |
 | Presentation / W3 · App after ownership | R19 tabs expose honest source, age and empty states. | W10/W11/W12 view-model and copy tests, user guide. | Blank owner, uncollapsed unique, filter miss and true empty registry, changing clock. | Each unchanged sample keeps its monotonic anchor across revisions. | Partial attempts age independently and localized strings bind their values. | Keyboard access, narrow table scrolling, EN/pt-BR. |
 
-Docker starts at [D1-A](https://github.com/gustavomhss/hugr-orchestra/blob/0168657720c392bad22424f8f6a3f4c4d7cc32aa/docs/specs/activity/DOCKER-WAVE.md).
+Docker starts at the [D1-A contract](./DOCKER-D1-A.md).
 This candidate covers G01–G04 and W01–W12. The full R1–R20 product, external
 cache inventory, use proofs, process control and cleanup have separate gates.
