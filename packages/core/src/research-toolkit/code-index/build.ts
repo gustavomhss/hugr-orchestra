@@ -52,9 +52,10 @@ const PLAN_CACHE = 16
 export const building = (dir: string) => progress.get(dir)
 
 /** Shards and their keys for the worktree's HEAD; git runs three times on a commit this process has not seen. */
-export const plan = Effect.fn("CodeIndexBuild.plan")(function* (input: Input) {
+export const plan = Effect.fn("CodeIndexBuild.plan")(function* (input: Input & { readonly uncached?: boolean }) {
   const commit = yield* CodeIndexShard.head(input.git)
-  const cached = plans.get(`${input.root}\0${commit}`)
+  // Captured readers cannot reuse a live view's replacement refs or another store root's directory.
+  const cached = input.uncached ? undefined : plans.get(`${input.root}\0${commit}`)
   if (cached && sameIndexers(cached, input.indexers)) return cached
   const dir = CodeIndexStore.directory(input.storeRoot, yield* CodeIndexStore.repoKey(yield* CodeIndexShard.commonDir(input.git)))
   const tree = yield* CodeIndexShard.tree(input.git, commit)
@@ -68,8 +69,10 @@ export const plan = Effect.fn("CodeIndexBuild.plan")(function* (input: Input) {
     }),
     unindexed: discovered.shards.filter((shard) => !input.indexers[shard.language]),
   }
-  plans.set(`${input.root}\0${commit}`, result)
-  if (plans.size > PLAN_CACHE) plans.delete(plans.keys().next().value!)
+  if (!input.uncached) {
+    plans.set(`${input.root}\0${commit}`, result)
+    if (plans.size > PLAN_CACHE) plans.delete(plans.keys().next().value!)
+  }
   return result
 })
 

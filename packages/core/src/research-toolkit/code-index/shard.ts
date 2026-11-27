@@ -34,6 +34,8 @@ export type Tree = {
   readonly commit: string
   /** Every tracked file at the commit with its blob id. */
   readonly blobs: ReadonlyMap<string, string>
+  /** Regular files only. A link's blob is its target text, never the linked file's bytes. */
+  readonly regular?: ReadonlySet<string>
 }
 
 const EXTENSIONS: Record<string, Language> = {
@@ -77,30 +79,47 @@ export const captured = (root: string, commit: string): Effect.Effect<Git, Resea
   Effect.gen(function* () {
     if (!COMMIT_ID.test(commit))
       return yield* new Research.Error({ code: "source_unavailable", message: "commit must be a full lowercase hex id" })
-    const proc = yield* AppProcess.Service
-    const env = { ...environment(), ...ReviewGit.environment }
-    const run = (args: ReadonlyArray<string>, stdin?: string) =>
-      proc.run(ChildProcess.make("git", [...args], { cwd: root, env, extendEnv: false }), {
-        stdin, timeout: "60 seconds", maxOutputBytes: CAPTURED_OUTPUT_CAP, maxErrorBytes: CAPTURED_OUTPUT_CAP,
-      }).pipe(
-        Effect.mapError(() => new Research.Error({ code: "source_unavailable", message: `git ${args[0]} could not run` })),
-        Effect.flatMap((result) => result.exitCode !== 0 || result.stdoutTruncated
-          ? Effect.fail(new Research.Error({ code: "source_unavailable", message: `git ${args[0]} failed: ${result.stderr.toString("utf8").trim().slice(0, 500)}` }))
-          : Effect.succeed(result.stdout)),
-      )
-    const resolved = yield* run(["rev-parse", "--verify", `${commit}^{commit}`])
+    const git = yield* immutable(root)
+    const resolved = yield* git.run(["rev-parse", "--verify", `${commit}^{commit}`])
     if (resolved.toString("utf8").trim() !== commit)
       return yield* new Research.Error({ code: "source_unavailable", message: "commit did not resolve to the given id" })
     return {
-      run: (args, stdin) => {
-        const command = args[0]
-        if (!CAPTURED_COMMANDS.has(command ?? ""))
-          return Effect.fail(new Research.Error({ code: "source_unavailable", message: `git ${command ?? ""} is not allowed` }))
-        if (command === "status") return Effect.succeed(Buffer.alloc(0))
-        return run(args.map((arg) => arg === "HEAD^{commit}" ? `${commit}^{commit}` : arg), stdin)
-      },
+      run: (args, stdin) => git.run(args.map((arg) => arg === "HEAD^{commit}" ? `${commit}^{commit}` : arg), stdin),
     } satisfies Git
   })
+
+/** A host-owned object may identify a commit or a tree; this returns its actual tree, never a semantic commit. */
+export const resolveTree = (root: string, revision: string) => Effect.gen(function* () {
+  if (!COMMIT_ID.test(revision))
+    return yield* new Research.Error({ code: "source_unavailable", message: "tree revision must be a full lowercase hex id" })
+  const git = yield* immutable(root)
+  const tree = (yield* git.run(["rev-parse", "--verify", "--end-of-options", `${revision}^{tree}`])).toString("utf8").trim()
+  if (!COMMIT_ID.test(tree) || (yield* git.run(["cat-file", "-t", tree])).toString("utf8").trim() !== "tree")
+    return yield* new Research.Error({ code: "source_unavailable", message: "revision did not resolve to a tree" })
+  return { git, tree }
+})
+
+/** No replace refs, lazy object fetches, writes or caller-controlled Git configuration. */
+const immutable = (root: string) => Effect.gen(function* () {
+  const proc = yield* AppProcess.Service
+  const env = { ...environment(), ...ReviewGit.environment }
+  return {
+    run: (args, stdin) => {
+      const command = args[0]
+      if (!CAPTURED_COMMANDS.has(command ?? ""))
+        return Effect.fail(new Research.Error({ code: "source_unavailable", message: `git ${command ?? ""} is not allowed` }))
+      if (command === "status") return Effect.succeed(Buffer.alloc(0))
+      return proc.run(ChildProcess.make("git", [...args], { cwd: root, env, extendEnv: false }), {
+        stdin, timeout: "60 seconds", maxOutputBytes: CAPTURED_OUTPUT_CAP, maxErrorBytes: CAPTURED_OUTPUT_CAP,
+      }).pipe(
+        Effect.mapError(() => new Research.Error({ code: "source_unavailable", message: `git ${command} could not run` })),
+        Effect.flatMap((result) => result.exitCode !== 0 || result.stdoutTruncated || result.outputTruncated
+          ? Effect.fail(new Research.Error({ code: "source_unavailable", message: `git ${command} failed: ${result.stderr.toString("utf8").trim().slice(0, 500)}` }))
+          : Effect.succeed(result.stdout)),
+      )
+    },
+  } satisfies Git
+})
 
 /** As modules/maestro/arsenal/src/engine/process.ts: the caller environment minus anything that redirects git. */
 export function environment(source: NodeJS.ProcessEnv = process.env): Record<string, string> {
@@ -128,6 +147,11 @@ export const tree = (git: Git, commit: string) =>
       const fields = entry.slice(0, tab).split(" ")
       return tab > 0 && fields[1] === "blob" ? [[entry.slice(tab + 1), fields[2]!] as const] : []
     })),
+    regular: new Set(out.toString("utf8").split("\0").flatMap((entry) => {
+      const tab = entry.indexOf("\t")
+      const fields = entry.slice(0, tab).split(" ")
+      return tab > 0 && /^(100644|100755)$/.test(fields[0] ?? "") && fields[1] === "blob" ? [entry.slice(tab + 1)] : []
+    })),
   })))
 
 /** Paths that differ from HEAD in the worktree: modified, added, deleted and untracked (J2.8). */
@@ -143,21 +167,34 @@ export const changed = (git: Git, from: string, to: string) =>
   git.run(["diff", "--name-only", "-z", "--no-renames", from, to]).pipe(
     Effect.map((out) => out.toString("utf8").split("\0").filter(Boolean)))
 
-/** Blob contents by path at the commit, in one `cat-file --batch`. */
+/** Raw captured blobs, with exact batch framing. Hashes must be computed before any UTF-8 conversion. */
+export const bytes = (git: Git, tree: Tree, files: ReadonlyArray<string>) => Effect.gen(function* () {
+  if (files.length === 0) return new Map<string, Buffer>()
+  const ids = files.map((file) => tree.blobs.get(file))
+  if (ids.some((id) => id === undefined || !COMMIT_ID.test(id)))
+    return yield* new Research.Error({ code: "source_unavailable", message: "captured blob path is unavailable" })
+  const out = yield* git.run(["cat-file", "--batch"], ids.join("\n") + "\n")
+  const result = new Map<string, Buffer>()
+  const position = { offset: 0 }
+  for (const [index, file] of files.entries()) {
+    const newline = out.indexOf(10, position.offset)
+    const header = /^(\S+) blob (\d+)$/.exec(out.subarray(position.offset, newline).toString("utf8"))
+    const size = Number(header?.[2])
+    const end = newline + 1 + size
+    if (newline < position.offset || header?.[1] !== ids[index] || !Number.isSafeInteger(size) || size < 0 ||
+      end >= out.length || out[end] !== 10)
+      return yield* new Research.Error({ code: "source_unavailable", message: "captured blob batch is incomplete or invalid" })
+    result.set(file, out.subarray(newline + 1, end))
+    position.offset = end + 1
+  }
+  if (position.offset !== out.length)
+    return yield* new Research.Error({ code: "source_unavailable", message: "captured blob batch has unexpected bytes" })
+  return result
+})
+
+/** Blob text for configuration/discovery callers; raw-source consumers use `bytes`. */
 export const contents = (git: Git, tree: Tree, files: ReadonlyArray<string>) =>
-  files.length === 0
-    ? Effect.succeed(new Map<string, string>())
-    : git.run(["cat-file", "--batch"], files.map((file) => tree.blobs.get(file)).join("\n") + "\n").pipe(Effect.map((out) => {
-        const result = new Map<string, string>()
-        // Each answer is `<oid> <type> <size>\n<content>\n`; sizes are bytes, so the buffer is walked, not the text.
-        files.reduce((offset, file) => {
-          const newline = out.indexOf(10, offset)
-          const size = Number(out.subarray(offset, newline).toString("utf8").split(" ")[2])
-          result.set(file, out.subarray(newline + 1, newline + 1 + size).toString("utf8"))
-          return newline + 1 + size + 1
-        }, 0)
-        return result
-      }))
+  bytes(git, tree, files).pipe(Effect.map((found) => new Map([...found].map(([file, buffer]) => [file, buffer.toString("utf8")]))))
 
 /** The config files discovery and keys read: project markers and every tsconfig in the tree. */
 export const configFiles = (tree: Tree) =>

@@ -120,7 +120,7 @@ export const LocateInput = Schema.Struct({
 })
 export type LocateInput = typeof LocateInput.Type
 
-export type LocateResult = {
+export type LocateResult<Evidence = Research.SourceRef> = {
   readonly ranges: ReadonlyArray<Range & { readonly symbol?: string; readonly why: ReadonlyArray<string>; readonly score: number }>
   readonly searches: ReadonlyArray<{
     readonly kind: "lexical" | "lexical-wide" | "definition" | "neighbors"
@@ -129,7 +129,7 @@ export type LocateResult = {
     readonly truncated: boolean
   }>
   /** One retained snapshot holding the lines of every range (origin file, original coordinates). */
-  readonly evidence: Research.SourceRef
+  readonly evidence: Evidence
   readonly basis: Basis
 }
 

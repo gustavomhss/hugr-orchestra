@@ -1,4 +1,5 @@
 import { expect } from "bun:test"
+import { createHash } from "node:crypto"
 import { Effect } from "effect"
 import { Research } from "@orchestra/schema/research"
 import { GitCli } from "@orchestra/core/git-cli"
@@ -59,8 +60,9 @@ const commit = (git: GitCli.Interface, cwd: string, files: ReadonlyArray<readonl
 const oid = (git: GitCli.Interface, cwd: string, rev: string) =>
   git.run(["rev-parse", rev], { cwd }).pipe(Effect.map((result) => result.stdout.toString("utf8").trim()))
 
+const source = "export function symbol1() { return 1 }\n"
 const content = (name: string): CodeIndexStore.Content => ({
-  documents: [{ path: "a.ts", language: "ts", sha256: "seed", lines: 1, bytes: name.length, layer: 2 }],
+  documents: [{ path: "a.ts", language: "ts", sha256: createHash("sha256").update(source).digest("hex"), lines: 1, bytes: Buffer.byteLength(source), layer: 2 }],
   symbols: [{ id: 1, name, kind: "function", path: "a.ts", startLine: 1, endLine: 1, nameLine: 1, exported: true }],
   occurrences: [], relations: [], imports: [], skipped: [],
 })
@@ -134,7 +136,7 @@ it.live("queries an exact fresh sqlite cache without building an indexer", () =>
   return Effect.gen(function* () {
     const made = yield* repo()
     const storeRoot = yield* storeDirectory
-    yield* project(made.git, made.cwd, "export function symbol1() { return 1 }\n", "indexed")
+    yield* project(made.git, made.cwd, source, "indexed")
     const git = yield* CodeIndexShard.live(made.cwd)
     const plan = yield* CodeIndexBuild.plan({ root: made.cwd, git, storeRoot, indexers })
     const planned = plan.shards[0]
@@ -156,7 +158,7 @@ it.live("refuses a missing cache before extract when readOnly is set", () => {
   return Effect.gen(function* () {
     const made = yield* repo()
     const storeRoot = yield* storeDirectory
-    yield* project(made.git, made.cwd, "export function symbol1() { return 1 }\n", "indexed")
+    yield* project(made.git, made.cwd, source, "indexed")
     const git = yield* CodeIndexShard.live(made.cwd)
     const calls = { n: 0 }
     const extract: CodeIndexBuild.Extract = () => Effect.sync(() => {
@@ -177,7 +179,7 @@ it.live("refuses a retained older shard when readOnly is set, and still serves i
   return Effect.gen(function* () {
     const made = yield* repo()
     const storeRoot = yield* storeDirectory
-    yield* project(made.git, made.cwd, "export function symbol1() { return 1 }\n", "old")
+    yield* project(made.git, made.cwd, source, "old")
     const git = yield* CodeIndexShard.live(made.cwd)
     const older = yield* CodeIndexBuild.plan({ root: made.cwd, git, storeRoot, indexers })
     const previous = older.shards[0]

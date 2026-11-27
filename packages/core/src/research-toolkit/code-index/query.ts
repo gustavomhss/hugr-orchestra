@@ -3,7 +3,7 @@ export * as CodeIndexQuery from "./query"
 import { createHash } from "node:crypto"
 import { realpath } from "node:fs/promises"
 import path from "node:path"
-import { Effect } from "effect"
+import { Effect, Option, Schema } from "effect"
 import { SqlClient } from "effect/unstable/sql"
 import { Research } from "@orchestra/schema/research"
 import { AppProcess } from "../../process"
@@ -29,7 +29,7 @@ export type Overlay = (input: {
 }) => Effect.Effect<ReadonlyArray<{ readonly path: string; readonly lines: number; readonly symbols: ReadonlyArray<OverlaySymbol> }>, Research.Error>
 
 export type Context = CodeIndexBuild.Input & {
-  /** Exact prepared cache only; implementation follows the frozen acceptance suite. */
+  /** Exact validated prepared cache only, without a build, dirty overlay or manifest update. */
   readonly readOnly?: boolean
   readonly overlay: Overlay
   /** When present, a query that finds shards missing starts their build in the background. */
@@ -69,7 +69,7 @@ type Row = {
 type SiteRow = Omit<Row, "id"> & {
   id: number | null; site_path: string; site_line: number; site_end: number; site_role: number; site_opaque: number
 }
-type Ready = { readonly planned: CodeIndexBuild.Planned; readonly key: string; readonly stale?: string }
+type Ready = { readonly planned: CodeIndexBuild.Planned; readonly key: string; readonly stale?: string; readonly reader?: CodeIndexStore.Reader }
 type Found = { readonly ref: CodeIndex.SymbolRef; readonly shard?: Ready; readonly id?: number; readonly scip?: string }
 type Scope = {
   readonly plan: CodeIndexBuild.Plan
@@ -77,6 +77,7 @@ type Scope = {
   readonly dirty: ReadonlySet<string>
   readonly overlay: ReadonlyMap<string, { readonly lines: number; readonly symbols: ReadonlyArray<CodeIndex.SymbolRef> }>
   readonly skipped: Array<{ readonly path: string; readonly reason: string }>
+  readonly recorded?: ReadonlyArray<{ readonly path: string; readonly reason: string }>
   readonly dirtyDigest?: string
 }
 type Findings = { readonly resolved?: Found; readonly candidates: ReadonlyArray<CodeIndex.SymbolRef>; readonly hits: ReadonlyArray<CodeIndex.Hit> }
@@ -87,7 +88,7 @@ export const run = Effect.fn("CodeIndexQuery.run")(function* (ctx: Context, inpu
   if (!query) return yield* new Research.Error({ code: "reference_invalid", message: "Query path is outside the bound worktree" })
   if (Object.keys(ctx.indexers).length === 0)
     return yield* new Research.Error({ code: "index_unavailable", message: "No research index pack is ready on this machine" })
-  const plan = yield* CodeIndexBuild.plan(ctx)
+  const plan = yield* CodeIndexBuild.plan({ ...ctx, uncached: ctx.readOnly === true })
   // Only path-scoped operations narrow the shards (J2.10); a symbol's references may live in any shard.
   const prefix = query.op === "imports" || query.op === "symbols" || query.op === "map" ? query.path : undefined
   const scope = yield* open(ctx, plan, inScope(plan, prefix ?? (query.op === "definition" ? query.path : undefined)))
@@ -102,6 +103,13 @@ export const run = Effect.fn("CodeIndexQuery.run")(function* (ctx: Context, inpu
     ...plan.orphans.filter((file) => within(file, prefix)).map((file) => ({ path: file, reason: "no-project" })),
     ...(yield* recorded(scope, prefix)),
   ]
+  if (ctx.readOnly) {
+    const refs = [findings.resolved?.ref, ...findings.candidates, ...findings.hits.map((hit) => hit.via)]
+    const ranges = [...refs.flatMap((ref) => ref ? [ref.range] : []), ...findings.hits.map((hit) => hit.range)]
+    if (ranges.some((range) => !capturedPath(plan.tree, range.path, query.op === "map")) ||
+      skipped.some((entry) => !capturedPath(plan.tree, entry.path, true, true)))
+      return yield* new Research.Error({ code: "index_unavailable", message: "Cached result path is outside the captured source" })
+  }
   const paths = [findings.resolved?.ref.range.path, ...findings.candidates.map((ref) => ref.range.path), ...page.map((hit) => hit.range.path)]
   const result: CodeIndex.CodeQueryResult = {
     resolved: findings.resolved?.ref,
@@ -133,7 +141,7 @@ export const run = Effect.fn("CodeIndexQuery.run")(function* (ctx: Context, inpu
     },
   }
   return result
-})
+}, Effect.scoped)
 
 // Every path the caller names is resolved against the worktree; one that leaves it is reference_invalid (J2.12).
 function normalize(root: string, query: CodeIndex.CodeQuery): CodeIndex.CodeQuery | undefined {
@@ -179,6 +187,7 @@ function open(ctx: Context, plan: CodeIndexBuild.Plan, shards: ReadonlyArray<Cod
   return Effect.gen(function* () {
     if (shards.length === 0)
       return yield* new Research.Error({ code: "index_unavailable", message: "No supported language with a ready indexer in this scope" })
+    if (ctx.readOnly) return yield* prepared(ctx, plan, shards)
     const records = yield* CodeIndexStore.records(plan.dir)
     const skipped: Array<{ path: string; reason: string }> = []
     // A shard whose last build in this process failed says why, whether or not an older version serves meanwhile.
@@ -188,7 +197,6 @@ function open(ctx: Context, plan: CodeIndexBuild.Plan, shards: ReadonlyArray<Cod
     }))
     const choices = yield* Effect.forEach(shards, (planned) => Effect.gen(function* () {
       if (yield* CodeIndexStore.exists(plan.dir, planned.key)) return { planned, key: planned.key } satisfies Ready
-      if (ctx.readOnly) return yield* new Research.Error({ code: "index_unavailable", message: "Index has not been built for this commit" })
       const previous = records.flatMap((record) => record.shards
         .filter((shard) => shard.id === planned.shard.id && shard.key !== planned.key)
         .map((shard) => ({ commit: record.commit, key: shard.key })))
@@ -225,6 +233,51 @@ function open(ctx: Context, plan: CodeIndexBuild.Plan, shards: ReadonlyArray<Cod
       choice.planned.shard.files.filter((file) => changes.has(file)).forEach((file) => skipped.push({ path: file, reason: "changed-since-index" })))
     return yield* overlay(ctx, plan, ready, skipped)
   })
+}
+
+const decodeJson = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)
+const decodeSkipped = Schema.decodeUnknownOption(Schema.Array(Schema.Struct({ path: Schema.String, reason: Schema.String })))
+
+function prepared(ctx: Context, plan: CodeIndexBuild.Plan, shards: ReadonlyArray<CodeIndexBuild.Planned>) {
+  return Effect.gen(function* () {
+    const ready = yield* Effect.forEach(shards, (planned) => Effect.gen(function* () {
+      const reader = yield* CodeIndexStore.open(plan.dir, planned.key)
+      const skipped = yield* reader(Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient
+        const metadata = yield* sql.unsafe<{ key: string; value: string }>("SELECT key, value FROM meta")
+        const meta = new Map(metadata.map((entry) => [entry.key, entry.value]))
+        if (meta.size !== metadata.length || meta.get("shardKey") !== planned.key ||
+          meta.get("indexer") !== planned.indexer.id || meta.get("version") !== planned.indexer.version)
+          return yield* new Research.Error({ code: "index_unavailable", message: "Cached shard identity is incompatible" })
+        // meta.commit describes the producer. Identical source/configuration keys are reusable across commits.
+        const skipped = Option.flatMap(decodeJson(meta.get("skipped")), decodeSkipped)
+        if (Option.isNone(skipped))
+          return yield* new Research.Error({ code: "index_unavailable", message: "Cached coverage metadata is invalid" })
+        const documents = yield* sql.unsafe<{ path: string; sha256: string }>("SELECT path, sha256 FROM document")
+        if (documents.some((document) => !capturedPath(plan.tree, document.path) ||
+          !planned.shard.files.includes(document.path) || typeof document.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(document.sha256)))
+          return yield* new Research.Error({ code: "index_unavailable", message: "Cached document identity is outside the captured shard" })
+        const bytes = yield* CodeIndexShard.bytes(ctx.git, plan.tree, documents.map((document) => document.path))
+        if (documents.some((document) => {
+          const body = bytes.get(document.path)
+          return body === undefined || createHash("sha256").update(body).digest("hex") !== document.sha256
+        })) return yield* new Research.Error({ code: "index_unavailable", message: "Cached document hash does not match the captured source" })
+        return skipped.value
+      }))
+      return { planned, key: planned.key, reader, skipped }
+    }))
+    return {
+      plan, ready, dirty: new Set<string>(), overlay: new Map(), skipped: [], recorded: ready.flatMap((entry) => entry.skipped),
+    } satisfies Scope
+  })
+}
+
+function capturedPath(tree: CodeIndexShard.Tree, file: string, directory = false, skipped = false) {
+  if (typeof file !== "string" || !file || /[\\\0\r\n]/.test(file) || /^[a-z]:/i.test(file) || path.posix.isAbsolute(file)) return false
+  if (directory && file === ".") return tree.blobs.size > 0
+  if (file.split("/").some((part) => !part || part === "." || part === "..")) return false
+  const paths = skipped ? tree.blobs : tree.regular
+  return paths?.has(file) === true || (directory && [...(paths?.keys() ?? [])].some((entry) => entry.startsWith(file + "/")))
 }
 
 // J2.8: modified and untracked files of the scope's shards are re-read by the structural layer.
@@ -487,18 +540,21 @@ function count(scope: Scope, prefix: string | undefined) {
 
 // The build's named gaps (meta.skipped) inside the scope.
 function recorded(scope: Scope, prefix: string | undefined) {
+  if (scope.recorded !== undefined) return Effect.succeed(scope.recorded.filter((entry) => within(entry.path, prefix)))
   return each(scope, (sql) => sql.unsafe<{ value: string }>(`SELECT value FROM meta WHERE key = 'skipped'`)).pipe(
     Effect.map((rows) => rows.flatMap((entry) => entry.rows.flatMap((row) => JSON.parse(row.value) as Array<{ path: string; reason: string }>))
       .filter((entry) => within(entry.path, prefix))))
 }
 
-/** Run one read against every ready shard of the scope; each shard is opened read-only for the duration. */
+/** Prepared reads reuse the validated connection; research reads keep their existing per-operation lifetime. */
 function each<A extends object>(scope: Pick<Scope, "plan" | "ready">, read: (sql: SqlClient.SqlClient) => Effect.Effect<ReadonlyArray<A>, unknown>) {
-  return Effect.forEach(scope.ready, (choice) =>
-    CodeIndexStore.read(scope.plan.dir, choice.key, Effect.gen(function* () {
+  return Effect.forEach(scope.ready, (choice) => {
+    const query = Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient
       return { choice, rows: yield* read(sql) }
-    })))
+    })
+    return choice.reader ? choice.reader(query) : CodeIndexStore.read(scope.plan.dir, choice.key, query)
+  })
 }
 
 const definitions = (entry: { readonly choice: Ready; readonly rows: ReadonlyArray<Row> }) => entry.rows.map((row) => found(entry.choice, row))

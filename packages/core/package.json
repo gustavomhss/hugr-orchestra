@@ -350,6 +350,7 @@
     "./review-toolkit/sarif": "./src/review-toolkit/sarif.ts",
     "./review-toolkit/scratch-copy": "./src/review-toolkit/scratch-copy.ts",
     "./review/code-binary": "./src/review/code-binary.ts",
+    "./review/code-source": "./src/review/code-source.ts",
     "./review/catalog": "./src/review/catalog/index.ts",
     "./review/ledger": "./src/review/ledger.ts",
     "./review/outcomes": "./src/review/outcomes.ts",
