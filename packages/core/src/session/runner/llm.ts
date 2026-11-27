@@ -16,6 +16,7 @@ import { CapabilityInvocation } from "../../capability/invocation"
 import { Config } from "../../config"
 import { Database } from "../../database/database"
 import { EventV2 } from "../../event"
+import { InstructionContext } from "../../instruction-context"
 import { Location } from "../../location"
 import { ModelV2 } from "../../model"
 import { PermissionV2 } from "../../permission"
@@ -428,6 +429,7 @@ const layer = Layer.effect(
               model: modelRef,
               system: systemText,
               context: contextText,
+              instructionFiles: InstructionContext.agentsPaths(system.snapshot),
               history: context,
               tools: toolMaterialization?.definitions ?? [],
               ...(scoped ? { scope: scoped.scope } : {}),

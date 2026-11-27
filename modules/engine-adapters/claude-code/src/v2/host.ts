@@ -333,7 +333,7 @@ export const make = Effect.gen(function* () {
             // A scoped Session's engine is offered only the built-ins its scope names.
             disallowedTools: scope ? [...ClaudeHostOptions.SUBAGENT_TOOLS, ...[...SCOPED_BUILTINS, SKILL].filter(outside)] : ClaudeHostOptions.SUBAGENT_TOOLS,
             settingSources: [...ClaudeHostOptions.SETTING_SOURCES],
-            settings: ClaudeHostOptions.INSTRUCTION_SETTINGS,
+            settings: ClaudeHostOptions.instructionSettings(turn.instructionFiles),
             permissionMode: "default",
             canUseTool,
             hooks: {

@@ -32,6 +32,8 @@ export interface Turn {
   readonly system: ReadonlyArray<string>
   /** The Context Epoch baseline and workflow instructions alone: `system` without the agent's own text. */
   readonly context: ReadonlyArray<string>
+  /** AGENTS files Orchestra supplies through the context, for native import deduplication. */
+  readonly instructionFiles?: ReadonlyArray<string>
   /** Projected history the runner reloaded for this turn. */
   readonly history: ReadonlyArray<SessionMessage.Message>
   /** The agent's permission-filtered Orchestra tools, narrowed to the Session's scope, for the host to offer its engine. */

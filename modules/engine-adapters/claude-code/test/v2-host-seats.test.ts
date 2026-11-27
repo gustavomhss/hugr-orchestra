@@ -112,7 +112,11 @@ test("the Maestro note says where its processes, hooks, workflows, extensions an
 })
 
 test("a seat on Claude Code keeps its own Orchestra prompt, never the context, and gets no Claude Code subagents", async () => {
-  await run(turnOf("backend", { system: ["You are the backend seat.", "Context"], context: ["Context"] }))
+  await run(turnOf("backend", {
+    system: ["You are the backend seat.", "Context"],
+    context: ["Context"],
+    instructionFiles: ["/project/AGENTS.md"],
+  }))
   const append = ClaudeHostOptions.append("backend", [], ["You are the backend seat."])
 
   expect(append).toContain("You are the `backend` seat of HuGR Orchestra")
@@ -120,6 +124,7 @@ test("a seat on Claude Code keeps its own Orchestra prompt, never the context, a
   expect(append).not.toContain("Context")
   expect(calls.at(-1)).toMatchObject({
     systemPrompt: { type: "preset", preset: "claude_code", append },
+    settings: { claudeMdExcludes: ["/project/AGENTS.md"] },
     disallowedTools: ["Agent", "Task"],
   })
 })

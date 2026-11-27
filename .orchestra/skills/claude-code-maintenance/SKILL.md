@@ -57,7 +57,8 @@ Background: `modules/engine-adapters/claude-code/README.md`, `docs/specs/claude-
 - `settingSources` is `["project"]` (`ClaudeHostOptions.SETTING_SOURCES`): only the project's Claude Code settings load; the owner's `~/.claude` user settings, hooks and plugins do not. `permissionMode` is `default`.
 - The Maestro note's runtime section is built from the gate's own lists (`SUBAGENT_TOOLS`, `HOST_REACH`, `BUILT_IN`, `ABSENT`, `UNSERVED` in `src/host/options.ts`). Change a list there, never a copy in `host.ts`.
 - Orchestra supplies its project and global `AGENTS.md` through Context Epoch. The SDK flag settings use `claude-md`
-  for native project instruction discovery. Keep file updates and compaction recall on the Context Epoch path.
+  for native project instruction discovery. Derive explicit import exclusions from the admitted instruction snapshot
+  and pass exact canonical paths to the SDK. Keep file updates and compaction recall on the Context Epoch path.
 - Installed hooks settle through `Authorization.after` once per authorized `tool_use_id`. Successful `PostToolUse`
   calls pass `tool_response` as data to Relay Verify; `PostToolUseFailure` preserves before notes. Keep the original
   result available when a hook fails. MCP calls still settle through the runner.

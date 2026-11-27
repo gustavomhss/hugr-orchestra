@@ -1,6 +1,8 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
+import { mkdir } from "node:fs/promises"
 import { query, type HookInput } from "@anthropic-ai/claude-agent-sdk"
+import { InstructionContext } from "@orchestra/core/instruction-context"
 import { ClaudeHostOptions } from "../src/host/options"
 import { ClaudeCodeExecutable } from "../src/executable"
 import { tmpdir } from "./fixture/tmpdir"
@@ -22,8 +24,10 @@ const message = {
 test("the pinned Claude Code binary loads CLAUDE.md and relays context and the real Read response", async () => {
   await using project = await tmpdir()
   await using config = await tmpdir()
+  const directory = path.join(project.path, "probe[literal]")
+  await mkdir(directory)
   const inputs: string[] = []
-  const file = path.join(project.path, "probe.txt")
+  const file = path.join(directory, "probe.txt")
   const resultMarker = "orchestra_probe_read_result_39"
   const postMarker = "orchestra_probe_post_context_25"
   const toolID = "toolu_orchestra_probe_read"
@@ -57,20 +61,20 @@ test("the pinned Claude Code binary loads CLAUDE.md and relays context and the r
     },
   })
   try {
-    await Bun.write(path.join(project.path, "AGENTS.md"), agents)
+    await Bun.write(path.join(directory, "AGENTS.md"), agents)
     await Bun.write(file, resultMarker)
     const callbacks: HookInput[] = []
-    const send = async (hosted: boolean, read = false) => {
+    const send = async (hosted: boolean, read = false, exclusions: ReadonlyArray<string> = []) => {
       inputs.length = 0
       const failures: string[] = []
       const run = query({
         prompt: read ? "Run the read probe." : "Say OK.",
         options: {
-          cwd: project.path,
+          cwd: directory,
           model: message.model,
           maxTurns: 3,
           settingSources: [...ClaudeHostOptions.SETTING_SOURCES],
-          settings: hosted ? ClaudeHostOptions.INSTRUCTION_SETTINGS : undefined,
+          settings: hosted ? ClaudeHostOptions.instructionSettings(exclusions) : undefined,
           env: {
             PATH: process.env.PATH,
             SystemRoot: process.env.SystemRoot,
@@ -117,7 +121,7 @@ test("the pinned Claude Code binary loads CLAUDE.md and relays context and the r
     }
     expect((await send(false)).split(agents)).toHaveLength(2)
     expect((await send(true)).split(agents)).toHaveLength(2)
-    await Bun.write(path.join(project.path, "CLAUDE.md"), claude)
+    await Bun.write(path.join(directory, "CLAUDE.md"), claude)
     const both = await send(true)
     expect(both.split(agents)).toHaveLength(2)
     expect(both.split(claude)).toHaveLength(2)
@@ -132,6 +136,30 @@ test("the pinned Claude Code binary loads CLAUDE.md and relays context and the r
     if (settled?.hook_event_name === "PostToolUse") expect(JSON.stringify(settled.tool_response)).toContain(resultMarker)
     expect(afterRead).toContain(resultMarker)
     expect(afterRead).toContain(postMarker)
+
+    const admitted = async () => {
+      const file = path.join(directory, "AGENTS.md")
+      return InstructionContext.agentsPaths({
+        "core/instructions": { value: [{ path: file, content: await Bun.file(file).text() }] },
+      })
+    }
+    const importOnly = "orchestra_probe_import_only_71"
+    await mkdir(path.join(directory, "nested"))
+    await Bun.write(path.join(directory, "nested", "AGENTS.md"), importOnly)
+    await Bun.write(path.join(directory, "CLAUDE.md"), `${claude}\n\n@AGENTS.md\n\n@nested/AGENTS.md\n`)
+    const duplicate = await send(true)
+    expect(duplicate.split(agents)).toHaveLength(3)
+    const excluded = await send(true, false, await admitted())
+    expect(excluded.split(agents)).toHaveLength(2)
+    expect(excluded.split(claude)).toHaveLength(2)
+    expect(excluded.split(importOnly)).toHaveLength(2)
+
+    await Bun.write(path.join(directory, "CLAUDE.md"), `${claude}\n\n@AGENTS.md\n`)
+    await Bun.write(path.join(directory, "AGENTS.md"), `${agents}\n\n@nested/AGENTS.md\n`)
+    const transitive = await send(true, false, await admitted())
+    expect(transitive.split(agents)).toHaveLength(3)
+    expect(transitive.split(claude)).toHaveLength(2)
+    expect(transitive.split(importOnly)).toHaveLength(2)
   } finally {
     await server.stop(true)
   }

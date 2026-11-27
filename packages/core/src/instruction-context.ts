@@ -1,7 +1,7 @@
 export * as InstructionContext from "./instruction-context"
 
-import { Array, Effect, Layer, Schema } from "effect"
-import { dirname, isAbsolute, join, parse, relative, resolve, sep } from "path"
+import { Array, Effect, Layer, Option, Schema } from "effect"
+import { basename, dirname, isAbsolute, join, parse, relative, resolve, sep } from "path"
 import { Config } from "./config"
 import { FSUtil } from "./fs-util"
 import { Flag } from "./flag/flag"
@@ -15,6 +15,7 @@ import { makeLocationNode } from "./effect/app-node"
 class File extends Schema.Class<File>("InstructionContext.File")({
   path: AbsolutePath,
   content: Schema.String,
+  agentsAlias: Schema.optional(Schema.Literal(true)),
 }) {}
 
 const Files = Schema.Array(File)
@@ -69,7 +70,11 @@ const layer = Layer.effectDiscard(
                 )
               : [pattern]
             return yield* Effect.forEach(targets, (target) =>
-              fs.resolve(target).pipe(Effect.map((resolved) => ({ path: resolved, allowed: isGlobal || contains(project, resolved) }))),
+              fs.resolve(target).pipe(Effect.map((resolved) => ({
+                path: resolved,
+                allowed: isGlobal || contains(project, resolved),
+                agents: basename(target) === "AGENTS.md",
+              }))),
             )
           }),
       )).flat()
@@ -77,6 +82,7 @@ const layer = Layer.effectDiscard(
       return {
         paths: Array.dedupe(resolved.filter((item) => item.allowed).map((item) => item.path)),
         escaped: resolved.some((item) => !item.allowed),
+        agents: resolved.filter((item) => item.allowed && item.agents).map((item) => item.path),
       }
     })
 
@@ -102,7 +108,9 @@ const layer = Layer.effectDiscard(
         ),
       )
       const configured = yield* configuredInstructions
-      const paths = Array.dedupe([yield* fs.resolve(join(global.config, "AGENTS.md")), ...discovered, ...configured.paths])
+      const globalAgents = yield* fs.resolve(join(global.config, "AGENTS.md"))
+      const paths = Array.dedupe([globalAgents, ...discovered, ...configured.paths])
+      const agents = new Set([globalAgents, ...discovered, ...configured.agents])
       const files = yield* Effect.forEach(
         paths,
         (path) =>
@@ -110,7 +118,13 @@ const layer = Layer.effectDiscard(
             .readFileStringSafe(path)
             .pipe(
               Effect.map((content) =>
-                content === undefined ? undefined : new File({ path: AbsolutePath.make(path), content }),
+                content === undefined
+                  ? undefined
+                  : new File({
+                      path: AbsolutePath.make(path),
+                      content,
+                      ...(agents.has(path) && basename(path) !== "AGENTS.md" ? { agentsAlias: true as const } : {}),
+                    }),
               ),
             ),
         { concurrency: "unbounded" },
@@ -143,6 +157,16 @@ export const node = makeLocationNode({
   layer,
   deps: [Config.node, FSUtil.node, Global.node, Location.node, SystemContextRegistry.node],
 })
+
+/** AGENTS paths whose admitted content can replace the native import. */
+export function agentsPaths(snapshot: SystemContext.Snapshot): ReadonlyArray<string> {
+  const files = Schema.decodeUnknownOption(Files)(snapshot[key]?.value)
+  return Option.getOrElse(files, () => []).flatMap((file) => {
+    if (!file.agentsAlias && basename(file.path) !== "AGENTS.md") return []
+    // Claude skips the whole import subtree for an excluded file. Keep its native copy if it can include another file.
+    return /(^|[\s([>])@(?=[^\s`@])/.test(file.content) ? [] : [file.path]
+  })
+}
 
 function render(files: ReadonlyArray<File>) {
   return files.map((file) => `Instructions from: ${file.path}\n${file.content}`).join("\n\n")

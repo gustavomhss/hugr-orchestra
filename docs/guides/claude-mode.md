@@ -85,7 +85,9 @@ rules above require, is a defect.
   tools, exactly as in normal mode.
 - **Project context.** The project's context and the active workflow's instructions reach the model with your message.
   Orchestra supplies its global and project `AGENTS.md` and configured instruction files. Claude Code loads its
-  own `CLAUDE.md`. Orchestra sends context updates as instructions change and restores them after compaction.
+  own `CLAUDE.md` and its imports. An explicit `@AGENTS.md` import uses the Orchestra copy when that file is
+  already in the Session context. When that file imports other files itself, Claude Code keeps the native copy to
+  preserve those imports. Orchestra sends context updates as instructions change and restores them after compaction.
 
 ## What Claude Code requires
 

@@ -18,6 +18,7 @@ type DatabaseService = Database.Interface["db"]
 interface Prepared {
   readonly baseline: string
   readonly baselineSeq: number
+  readonly snapshot: SystemContext.Snapshot
 }
 
 export function initialize(
@@ -50,7 +51,7 @@ const prepareOnce = Effect.fnUntraced(function* (
   if (!stored) {
     const generation = yield* SystemContext.initialize(value)
     const baselineSeq = yield* insert(db, sessionID, generation)
-    return { baseline: generation.baseline, baselineSeq }
+    return { ...generation, baselineSeq }
   }
 
   const snapshot = yield* Schema.decodeUnknownEffect(SystemContext.Snapshot)(stored.snapshot).pipe(
@@ -61,12 +62,12 @@ const prepareOnce = Effect.fnUntraced(function* (
     ? yield* SystemContext.replace(value, snapshot)
     : yield* SystemContext.reconcile(value, snapshot)
   if (result._tag === "Unchanged" || result._tag === "ReplacementBlocked") {
-    return { baseline: stored.baseline, baselineSeq: stored.baseline_seq }
+    return { baseline: stored.baseline, baselineSeq: stored.baseline_seq, snapshot }
   }
   if (result._tag === "ReplacementReady") {
     const baselineSeq = replacementSeq ?? (yield* EventV2.latestSequence(db, sessionID))
     yield* replace(db, sessionID, baselineSeq, result.generation)
-    return { baseline: result.generation.baseline, baselineSeq }
+    return { ...result.generation, baselineSeq }
   }
 
   yield* events.publish(
@@ -74,7 +75,7 @@ const prepareOnce = Effect.fnUntraced(function* (
     { sessionID, messageID: SessionMessage.ID.create(), timestamp: yield* DateTime.now, text: result.text },
     { commit: () => advance(db, sessionID, result.snapshot).pipe(Effect.orDie) },
   )
-  return { baseline: stored.baseline, baselineSeq: stored.baseline_seq }
+  return { baseline: stored.baseline, baselineSeq: stored.baseline_seq, snapshot: result.snapshot }
 })
 
 const initializeOnce = Effect.fnUntraced(function* (
@@ -85,7 +86,7 @@ const initializeOnce = Effect.fnUntraced(function* (
   if (yield* exists(db, sessionID)) return
   const generation = yield* context.pipe(Effect.flatMap(SystemContext.initialize))
   const baselineSeq = yield* insert(db, sessionID, generation)
-  return { baseline: generation.baseline, baselineSeq }
+  return { ...generation, baselineSeq }
 })
 
 const exists = Effect.fn("SessionContextEpoch.exists")(function* (db: DatabaseService, sessionID: SessionSchema.ID) {
