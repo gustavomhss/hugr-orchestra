@@ -39,7 +39,27 @@ test("symlinks cannot turn an external directory into measured coverage", async 
   expect(result.state).toBe("partial")
   expect(result.observedBytes).toBe(0)
   expect(result.issues.some((issue) => issue.reason === "symlink")).toBe(true)
-  expect((await measure(path.join(root.directory, "escape"))).state).toBe("partial")
+  const link = path.join(root.directory, "escape")
+  for (const spelling of [link, link + path.sep, link + path.sep + "."]) {
+    const attempt = await measure(spelling)
+    expect(attempt.state).toBe("partial")
+    expect(attempt.observedBytes).toBe(0)
+    expect(attempt.issues).toContainEqual({ path: spelling, reason: "symlink" })
+  }
+})
+
+test.skipIf(process.platform !== "linux")("lossy directory names are explicit gaps", async () => {
+  await using root = await fixture()
+  const prefix = Buffer.from(root.directory + path.sep)
+  await fs.writeFile(Buffer.concat([prefix, Buffer.from([0xff])]), "invalid-name")
+  await fs.writeFile(path.join(root.directory, "\uFFFD"), "valid-name")
+  const attempt = await measure(root.directory)
+  expect(attempt.state).toBe("partial")
+  expect(attempt.observedBytes).toBeLessThanOrEqual(Buffer.byteLength("valid-name"))
+  expect(attempt.issues).toContainEqual({
+    path: await fs.realpath(root.directory),
+    reason: "unavailable",
+  })
 })
 
 test("missing roots and bounded walks stay partial with an explicit unread scope", async () => {

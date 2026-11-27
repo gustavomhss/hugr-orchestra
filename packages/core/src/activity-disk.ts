@@ -13,9 +13,12 @@ export async function measure(
   const start = performance.now()
   const issues: ActivityMonitor.DiskIssue[] = []
   const seen = new Set<string>()
-  const canonical = await fs.realpath(directory).catch(() => undefined)
-  const initial = await fs.lstat(directory).catch(() => undefined)
-  const pending = [{ path: canonical ?? directory, depth: 0 }]
+  // A terminal slash or "." makes lstat follow a symlink. Keep the declared spelling for reports.
+  const volume = path.parse(directory).root
+  const terminal = process.platform === "win32" ? /(?:[\\/]+\.)+[\\/]*$|[\\/]+$/ : /(?:\/+\.)+\/*$|\/+$/
+  const root = volume + directory.slice(volume.length).replace(terminal, "")
+  const initial = await fs.lstat(root, { bigint: true }).catch(() => undefined)
+  const pending: { path: string; depth: number }[] = []
   let issueCount = 0
   let observedBytes = 0
   let entries = 0
@@ -27,14 +30,25 @@ export async function measure(
     issueCount++
     if (issues.length < 32) issues.push({ path: value, reason })
   }
-  if (initial?.isSymbolicLink()) {
-    unread(directory, "symlink")
-    pending.length = 0
+  async function queueRoot() {
+    if (!initial) return unread(directory, "unavailable")
+    if (initial.isSymbolicLink()) return unread(directory, "symlink")
+    if (!initial.isDirectory()) return unread(directory, "unsupported")
+
+    const canonical = await fs.realpath(root).catch(() => undefined)
+    const verified =
+      canonical === undefined ? undefined : await fs.lstat(canonical, { bigint: true }).catch(() => undefined)
+    if (
+      canonical === undefined ||
+      !verified?.isDirectory() ||
+      verified.dev !== initial.dev ||
+      verified.ino !== initial.ino
+    )
+      return unread(directory, "changed")
+    pending.push({ path: canonical, depth: 0 })
   }
-  if (initial && !initial.isDirectory() && !initial.isSymbolicLink()) {
-    unread(directory, "unsupported")
-    pending.length = 0
-  }
+
+  await queueRoot()
   while (pending.length) {
     if (entries >= (limits.maxEntries ?? 10_000) || expired()) {
       unread(directory, "limit")
@@ -53,6 +67,10 @@ export async function measure(
     }
     if (stat.isSymbolicLink()) {
       unread(item.path, "symlink")
+      continue
+    }
+    if (item.depth === 0 && (stat.ino !== initial?.ino || stat.dev !== initial?.dev)) {
+      unread(directory, "changed")
       continue
     }
     // Reject a replaced ancestor before reading metadata through its new target.
@@ -86,13 +104,21 @@ export async function measure(
       unread(item.path, "unavailable")
       continue
     }
-    // Streaming enumeration bounds memory even when one directory has millions of entries.
+    // Delay admission until the directory identity is rechecked below.
+    const firstChild = pending.length
+    const names = new Set<string>()
     try {
       for await (const child of handle) {
         if (pending.length + entries >= (limits.maxEntries ?? 10_000) || expired()) {
           unread(directory, "limit")
           break
         }
+        if (names.has(child.name)) {
+          // Invalid UTF-8 names can decode to the same string as another entry.
+          unread(item.path, "unavailable")
+          continue
+        }
+        names.add(child.name)
         pending.push({ path: path.join(item.path, child.name), depth: item.depth + 1 })
       }
     } catch {
@@ -109,12 +135,15 @@ export async function measure(
       after.ino !== stat.ino ||
       after.dev !== stat.dev ||
       after.mtimeNs !== stat.mtimeNs
-    )
+    ) {
+      pending.length = firstChild
       unread(item.path, "changed")
+    }
   }
-  const final = await fs.lstat(directory).catch(() => undefined)
-  if (initial && (!final || final.isSymbolicLink() || final.ino !== initial.ino || final.dev !== initial.dev))
-    unread(directory, "changed")
+  if (initial?.isDirectory()) {
+    const final = await fs.lstat(root, { bigint: true }).catch(() => undefined)
+    if (!final?.isDirectory() || final.ino !== initial.ino || final.dev !== initial.dev) unread(directory, "changed")
+  }
   if (expired()) unread(directory, "limit")
   return {
     startedAt,
