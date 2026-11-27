@@ -17,6 +17,7 @@
     "../src/v2-wire.ts",
     "../src/v2-wire-review.ts",
     "../src/v2-wire/**/*.ts",
+    "../test-browser/board-chromium-required.ts",
     "../../../apps/desktop/src/renderer/env.d.ts",
     "../../../apps/desktop/src/preload/types.ts",
     "../../../apps/desktop/src/preload/response-download.ts",
