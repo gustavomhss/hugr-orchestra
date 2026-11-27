@@ -40,7 +40,7 @@ const LIMIT: Duration = Duration::from_secs(20);
 const READY: Msg = Msg::Ready {
     version: VERSION,
     pid: 4242,
-    info: 0,
+    info: omni_proto::INFO_OBSERVE,
 };
 
 fn rt() -> &'static tokio::runtime::Runtime {

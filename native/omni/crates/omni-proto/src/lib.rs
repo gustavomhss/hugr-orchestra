@@ -17,6 +17,8 @@ pub const MAX_FRAME: usize = 1 << 20;
 pub const INFO_PIDFD_HOST: u32 = 1;
 /// `Ready.info` bit: session members are signalled through pidfds (Linux) instead of `kill`.
 pub const INFO_PIDFD_MEMBERS: u32 = 2;
+/// `Ready.info` bit: membership observations are supported outside the control loop.
+pub const INFO_OBSERVE: u32 = 4;
 
 /// What a child gets on stdin or stderr (stdout is always a pipe).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -143,6 +145,13 @@ pub enum Msg {
     },
     /// host → supervisor: list the live processes `Stop` would reach. Reply: `Processes` or `Ack`.
     List {
+        /// Request id.
+        req: u64,
+        /// Tree id.
+        id: u64,
+    },
+    /// host → supervisor: independently sample membership. Reply: `Processes` or `Ack`.
+    Observe {
         /// Request id.
         req: u64,
         /// Tree id.

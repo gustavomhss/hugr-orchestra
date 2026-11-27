@@ -221,11 +221,17 @@ impl Tree {
         let id = self.id;
         match self
             .sup
-            .ask(want, id, Class::Normal, |req| Msg::List { req, id })
+            .ask(want, id, Class::Normal, |req| {
+                if want == Want::ObserveList {
+                    Msg::Observe { req, id }
+                } else {
+                    Msg::List { req, id }
+                }
+            })
             .await?
         {
             Answer::Processes(list) => Ok(list),
-            other => Err(self.refused("List", &other)),
+            other => Err(self.refused(want.name(), &other)),
         }
     }
 

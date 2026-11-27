@@ -14,6 +14,7 @@ const STOP: u8 = 0x03;
 const RESIZE: u8 = 0x04;
 const LIST: u8 = 0x05;
 const RELEASE: u8 = 0x06;
+const OBSERVE: u8 = 0x07;
 const READY: u8 = 0x81;
 const SPAWNED: u8 = 0x82;
 const SPAWN_FAILED: u8 = 0x83;
@@ -61,6 +62,7 @@ pub fn encode(msg: &Msg, out: &mut Vec<u8>) -> Result<(), ProtoError> {
         Msg::Stop { req, id, grace_ms } => _ = w.u8(STOP).u64(*req).u64(*id).u32(*grace_ms),
         Msg::Resize { req, id, cols, rows } => _ = w.u8(RESIZE).u64(*req).u64(*id).u16(*cols).u16(*rows),
         Msg::List { req, id } => _ = w.u8(LIST).u64(*req).u64(*id),
+        Msg::Observe { req, id } => _ = w.u8(OBSERVE).u64(*req).u64(*id),
         Msg::Release { req, id } => _ = w.u8(RELEASE).u64(*req).u64(*id),
         Msg::Ready { version, pid, info } => _ = w.u8(READY).u32(*version).u32(*pid).u32(*info),
         Msg::Spawned { req, id, pid, pty_ends } => {
@@ -136,6 +138,10 @@ pub fn decode(buf: &[u8]) -> Result<Option<(Msg, usize)>, ProtoError> {
             id: r.u64()?,
             cols: r.u16()?,
             rows: r.u16()?,
+        },
+        OBSERVE => Msg::Observe {
+            req: r.u64()?,
+            id: r.u64()?,
         },
         LIST => Msg::List {
             req: r.u64()?,

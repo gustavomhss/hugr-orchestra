@@ -135,17 +135,11 @@ impl Trees {
             });
             return;
         };
-        let live: Vec<&Member> = members.iter().filter(|m| m.live).collect();
-        let pids: HashSet<i32> = live.iter().map(|m| m.pid).collect();
-        let list = live
-            .iter()
-            .map(|m| ProcEntry {
-                pid: m.pid.cast_unsigned(),
-                ppid: pids.contains(&m.ppid).then_some(m.ppid.cast_unsigned()),
-                name: m.name.clone(),
-            })
-            .collect();
-        out.push(Msg::Processes { req, id, list });
+        out.push(Msg::Processes {
+            req,
+            id,
+            list: live_entries(&members),
+        });
     }
 
     /// Last resort at the supervisor's exit bound: SIGKILL to every tree not confirmed gone. False when the
@@ -186,7 +180,7 @@ fn needs_scan(t: &Tree) -> bool {
 /// torn down. If it does not, it may have just exited (macOS hides zombies); otherwise the inventory cannot
 /// be trusted.
 fn root_accounted(t: &mut Tree, members: &[Member], exiting: &[Exiting]) -> bool {
-    if t.exit.is_some() || members.iter().any(|m| m.pid == t.pid) || exiting.iter().any(|e| e.pid == t.pid) {
+    if t.exit.is_some() || root_seen(t.pid, members, exiting) {
         return true;
     }
     match wait_exit(t.pid) {
@@ -196,6 +190,24 @@ fn root_accounted(t: &mut Tree, members: &[Member], exiting: &[Exiting]) -> bool
         }
         _ => false,
     }
+}
+
+/// Whether the inventory accounted for the root, including its teardown.
+pub(super) fn root_seen(pid: i32, members: &[Member], exiting: &[Exiting]) -> bool {
+    members.iter().any(|m| m.pid == pid) || exiting.iter().any(|e| e.pid == pid)
+}
+
+/// Members reachable by a tree stop, with parent links confined to this list.
+pub(super) fn live_entries(members: &[Member]) -> Vec<ProcEntry> {
+    let live: Vec<&Member> = members.iter().filter(|m| m.live).collect();
+    let pids: HashSet<i32> = live.iter().map(|m| m.pid).collect();
+    live.iter()
+        .map(|m| ProcEntry {
+            pid: m.pid.cast_unsigned(),
+            ppid: pids.contains(&m.ppid).then_some(m.ppid.cast_unsigned()),
+            name: m.name.clone(),
+        })
+        .collect()
 }
 
 /// The processes being torn down that belong to `t` (pid, pgid): a member at the previous complete scan,

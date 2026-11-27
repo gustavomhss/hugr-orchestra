@@ -50,6 +50,7 @@ fn all() -> Vec<Msg> {
             rows: 30,
         },
         Msg::List { req: 1, id: 2 },
+        Msg::Observe { req: 91, id: u64::MAX },
         Msg::Release { req: 1, id: 2 },
         Msg::Ready {
             version: crate::VERSION,
