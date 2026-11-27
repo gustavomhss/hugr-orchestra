@@ -6,8 +6,8 @@ const manual = "Read containers"
 const unreadText = "Container inventory has not been read."
 const emptyText = "No containers in the last complete reading."
 const rawSize = "7 kB (virtual 91 MB)"
-const alpha = row("container-id-alpha", "fixture-alpha", rawSize)
-const beta = row("container-id-beta", "fixture-beta")
+const alpha = row("container-001", "fixture-alpha", rawSize)
+const beta = row("container-002", "fixture-beta")
 const text = (element: Element) => element.textContent?.trim() ?? ""
 const rows = (panel: HTMLElement) => [...panel.querySelectorAll("tbody tr")]
 const cells = (line: Element) => [...line.querySelectorAll("td")].map(text)
@@ -75,6 +75,7 @@ test("A01–A13/A83–A88/A152–A160/A216/A218/A345–A348 only manual POST rea
     expect(detail).toBeDefined()
     expect(detail?.hasAttribute("open")).toBe(false)
     expect(text(detail!)).toContain("Docker size (reported): " + rawSize)
+    expect(text(panel).split(rawSize)).toHaveLength(2)
     expect(text(rows(panel)[1]!.querySelector("details")!)).toContain("Docker size (reported): unread")
     expect(text(panel)).toContain(source)
     expect(age(panel, rows(panel)[0]!)).toBeGreaterThanOrEqual(2)
@@ -88,12 +89,19 @@ test("A01–A13/A83–A88/A152–A160/A216/A218/A345–A348 only manual POST rea
     const startingAge = age(panel, rows(panel)[0]!)
     await until("local age tick advances a displayed sample", () => age(panel, rows(panel)[0]!) > startingAge)
     expect(app.calls).toHaveLength(calls)
-    app.filter("BETA")
+    app.filter("FIXTURE-BETA")
     expect(
       rows(panel)
         .map((line) => cells(line)[0])
         .join(" "),
     ).toContain(beta.name!)
+    expect(rows(panel)).toHaveLength(1)
+    app.filter("container-001")
+    expect(
+      rows(panel)
+        .map((line) => cells(line)[0])
+        .join(" "),
+    ).toContain(alpha.name!)
     expect(rows(panel)).toHaveLength(1)
     app.filter("missing")
     expect(text(panel)).toContain("No row matches this filter.")
@@ -189,13 +197,23 @@ test("Docker orders concurrent, older and equal revisions without resetting the 
     await until("older cache request settled", () => !app.button("Refresh").disabled)
     expect(text(app.panel())).not.toContain(beta.name!)
 
+    await until("age advances before the equal revision", () => age(app.panel(), rows(app.panel())[0]!) >= 11)
+    const localAge = age(app.panel(), rows(app.panel())[0]!)
     app.button("Refresh").click()
-    ;(await app.call(2, "GET", cachePath)).respond(complete("9007199254740993", [beta], { readAt: 1_000 }))
+    ;(await app.call(2, "GET", cachePath)).respond(complete("9007199254740993", [beta], { readAt: 11_000 }))
     await until("equal cache request settled", () => !app.button("Refresh").disabled)
     expect(text(app.panel())).toContain(alpha.name!)
     expect(text(app.panel())).not.toContain(beta.name!)
-    expect(age(app.panel(), rows(app.panel())[0]!)).toBeGreaterThanOrEqual(10)
-    expect(app.calls).toHaveLength(3)
+    expect(age(app.panel(), rows(app.panel())[0]!)).toBeGreaterThanOrEqual(localAge)
+
+    app.button("Refresh").click()
+    ;(await app.call(3, "GET", cachePath)).respond(complete("9999999999999999", [beta]))
+    await until("larger decimal revision rendered", () => text(app.panel()).includes(beta.name!))
+    app.button("Refresh").click()
+    ;(await app.call(4, "GET", cachePath)).respond(complete("10000000000000000", [alpha]))
+    await until("cross-digit decimal revision rendered", () => text(app.panel()).includes(alpha.name!))
+    expect(text(app.panel())).not.toContain(beta.name!)
+    expect(app.calls).toHaveLength(5)
   } finally {
     app.dispose()
   }
