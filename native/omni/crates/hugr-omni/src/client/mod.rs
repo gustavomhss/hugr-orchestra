@@ -202,6 +202,14 @@ impl Tree {
 
     /// The live processes `stop` would end now; `[]` once gone; `Io` if the inventory is incomplete.
     pub(crate) async fn processes(&self) -> Result<Vec<ProcEntry>, Error> {
+        self.list(Want::List).await
+    }
+
+    pub(crate) async fn observe_processes(&self) -> Result<Vec<ProcEntry>, Error> {
+        self.list(Want::ObserveList).await
+    }
+
+    async fn list(&self, want: Want) -> Result<Vec<ProcEntry>, Error> {
         self.sup.home()?;
         let life = *self.life.borrow();
         if life.gone {
@@ -213,7 +221,7 @@ impl Tree {
         let id = self.id;
         match self
             .sup
-            .ask(Want::List, id, Class::Normal, |req| Msg::List { req, id })
+            .ask(want, id, Class::Normal, |req| Msg::List { req, id })
             .await?
         {
             Answer::Processes(list) => Ok(list),

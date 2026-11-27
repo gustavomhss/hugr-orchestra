@@ -171,6 +171,12 @@ impl NativeChild {
         let kid = Arc::clone(&self.kid);
         exec::promise(env, async move { kid.processes().await }, convert::processes)
     }
+
+    #[napi(js_name = "observeProcesses")]
+    pub fn observe_processes<'env>(&self, env: &'env Env) -> napi::Result<Object<'env>> {
+        let kid = self.kid.clone();
+        exec::promise(env, async move { kid.observe_processes().await }, convert::processes)
+    }
 }
 
 /// The JS object was collected: its tree is left alone, never killed.

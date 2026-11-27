@@ -129,6 +129,8 @@ export interface Child<D = string | Uint8Array> extends AsyncDisposable {
   stop(options?: { graceMs?: number }): Promise<Exit>;
   /** The live processes `stop()` would end right now; `[]` once the tree is gone. */
   processes(): Promise<ProcessInfo[]>;
+  /** A membership sample whose deadline does not terminate the supervisor. */
+  observeProcesses(): Promise<ProcessInfo[]>;
 }
 export interface PipeChild<D = string | Uint8Array> extends Child<D> {
   /** Waits for queued writes, then closes stdin; idempotent. */

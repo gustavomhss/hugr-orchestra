@@ -46,6 +46,7 @@ interface Child extends AsyncDisposable {       // what pipe and PTY children sh
   wait(): Promise<Exit>;                        // root process exited (see §5)
   stop(options?: { graceMs?: number }): Promise<Exit>;         // whole tree gone (see §5)
   processes(): Promise<ProcessInfo[]>;          // live processes stop() would end now (see §5)
+  observeProcesses(): Promise<ProcessInfo[]>;   // best-effort read with a nonfatal observation deadline
 }
 interface PipeChild extends Child { closeStdin(): Promise<void>; }
 interface PtyChild extends Child { resize(cols: number, rows: number): void; }
@@ -299,3 +300,8 @@ Reading it performs no I/O and changes no output, stdin or lifecycle state. It r
 and after stop. It is not a PID, authorization or control token, and the supervisor generation does not confirm
 current membership, paths or dirty state for an action. This adds no wire-protocol version or message change.
 The integration contract is Orchestra `docs/specs/activity/NATIVE-IDENTITY.md`.
+
+`Child.observeProcesses()` (Rust `Child::observe_processes()`) uses the same membership source. One
+observation per generation can be awaiting a reply. An observation deadline returns IO to the reader,
+keeps the generation running and holds that one admission slot until the reply is validated. Regular
+control requests retain their existing deadlines. An empty response is a sample and can be refreshed.

@@ -110,6 +110,11 @@ impl Child {
         self.inner.life.processes().await
     }
 
+    /// A best-effort membership sample. A missed observation deadline leaves the supervisor running.
+    pub async fn observe_processes(&self) -> Result<Vec<ProcessInfo>, Error> {
+        self.inner.life.observe_processes().await
+    }
+
     /// Wires a started tree to its output and input; on failure the tree is killed before the error returns. With
     /// an input, a task settles it with `Closed` once the root exited (contract §9).
     fn start(rt: &Handle, spawned: Spawned, text: bool, grace: Duration) -> Result<Child, Error> {

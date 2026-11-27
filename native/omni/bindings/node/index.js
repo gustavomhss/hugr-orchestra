@@ -268,6 +268,10 @@ class Child {
     return this.#native.processes();
   }
 
+  observeProcesses() {
+    return later(() => this.#native.observeProcesses());
+  }
+
   /** `await using`: leaving the scope awaits `stop()`. */
   [asyncDispose]() {
     return this.stop().then(() => undefined);
