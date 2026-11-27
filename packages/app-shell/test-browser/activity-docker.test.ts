@@ -39,7 +39,7 @@ test("A02–A04/A162–A171/A176/A316 Docker mounts unread and Refresh uses only
     expect(text(app.panel())).toContain(unreadText)
     expect(text(app.panel())).toContain("Age: unread")
     expect(text(app.panel())).not.toContain(emptyText)
-    await Bun.sleep(20)
+    await Bun.sleep(1_100)
     app.filter("nothing")
     expect(app.calls).toHaveLength(0)
 
@@ -75,20 +75,26 @@ test("A01–A13/A83–A88/A152–A160/A216/A218/A345–A348 only manual POST rea
     expect(detail).toBeDefined()
     expect(detail?.hasAttribute("open")).toBe(false)
     expect(text(detail!)).toContain("Docker size (reported): " + rawSize)
+    expect(text(detail!.querySelector("summary")!)).toBe("Reading")
     expect(text(panel).split(rawSize)).toHaveLength(2)
     expect(text(rows(panel)[1]!.querySelector("details")!)).toContain("Docker size (reported): unread")
     expect(text(panel)).toContain(source)
     expect(age(panel, rows(panel)[0]!)).toBeGreaterThanOrEqual(2)
     expect([...panel.querySelectorAll("button")].map(text)).toEqual(["Refresh", manual])
-    expect(panel.querySelectorAll("form, meter, progress, [role='progressbar'], [role='meter']")).toHaveLength(0)
+    expect(
+      panel.querySelectorAll(
+        "a[href], form, input, select, textarea, [contenteditable], [role='button'], [role='link'], meter, progress, [role='progressbar'], [role='meter']",
+      ),
+    ).toHaveLength(0)
     expect(text(panel)).not.toMatch(
       /\b(pressure|residence|frequency|reclaimable|remainder|bytes\/s|plan|model|manter|quarentena|mover)\b/i,
     )
 
-    const calls = app.calls.length
+    expect(app.calls).toHaveLength(1)
     const startingAge = age(panel, rows(panel)[0]!)
     await until("local age tick advances a displayed sample", () => age(panel, rows(panel)[0]!) > startingAge)
-    expect(app.calls).toHaveLength(calls)
+    expect(app.calls).toHaveLength(1)
+    expect(text(detail!)).toContain("Docker size (reported): " + rawSize)
     app.filter("FIXTURE-BETA")
     expect(
       rows(panel)
@@ -106,7 +112,7 @@ test("A01–A13/A83–A88/A152–A160/A216/A218/A345–A348 only manual POST rea
     app.filter("missing")
     expect(text(panel)).toContain("No row matches this filter.")
     expect(text(panel)).not.toContain(emptyText)
-    expect(app.calls).toHaveLength(calls)
+    expect(app.calls).toHaveLength(1)
   } finally {
     app.dispose()
   }
@@ -161,6 +167,7 @@ test("A01/A162–A174/A219 unsuccessful retries retain rows and last complete ag
       )
       await until(attempt.state, () => text(panel).includes(attempt.label))
       expect(text(panel)).toContain(attempt.detail)
+      expect(text(panel)).toMatch(new RegExp("Latest attempt: " + attempt.label + " · [0-2] s"))
       expect(cells(rows(panel)[0]!)[0]).toContain(alpha.name!)
       expect(age(panel, rows(panel)[0]!)).toBeGreaterThanOrEqual(10)
       expect(text(panel)).not.toContain(emptyText)
@@ -252,30 +259,43 @@ test("A09–A13/A153–A154 category and server changes abort old work and keep 
   try {
     app.select("Docker")
     app.button(manual).click()
-    const category = await app.call(0, "POST", readPath)
+    ;(await app.call(0, "POST", readPath)).respond(complete("1", [alpha]))
+    await until("first server row", () => text(app.panel()).includes(alpha.name!))
+    expect(cells(rows(app.panel())[0]!)[1]).toBe("")
+
+    app.button(manual).click()
+    const category = await app.call(1, "POST", readPath)
     app.select("Quarantine")
     expect(category.request.signal.aborted).toBe(true)
     app.select("Docker")
-    category.respond(complete("1", [alpha]))
+    category.respond(complete("2", [alpha]))
     await Bun.sleep(20)
     expect(text(app.panel())).toContain(unreadText)
     expect(text(app.panel())).not.toContain(alpha.name!)
+    expect(app.calls).toHaveLength(2)
+    app.button("Refresh").click()
+    ;(await app.call(2, "GET", cachePath)).respond(complete("2", [alpha]))
+    await until("cache row after tab round trip", () => text(app.panel()).includes(alpha.name!))
+    expect(cells(rows(app.panel())[0]!)[1]).toBe("")
 
     app.button(manual).click()
-    const oldServer = await app.call(1, "POST", readPath)
+    const oldServer = await app.call(3, "POST", readPath)
     app.switchServer("second")
     await until("request aborted after server switch", () => oldServer.request.signal.aborted)
     expect(text(app.panel())).toContain(unreadText)
-    expect(app.calls).toHaveLength(2)
+    expect(app.calls).toHaveLength(4)
     app.button(manual).click()
-    const active = await app.call(2, "POST", readPath)
+    const active = await app.call(4, "POST", readPath)
     expect(active.url.hostname).toBe("second.test")
+    oldServer.respond(complete("3", [alpha]))
+    await Bun.sleep(20)
+    expect(text(app.panel())).toContain(unreadText)
+    expect(text(app.panel())).not.toContain(alpha.name!)
+    expect(app.button(manual).disabled).toBe(true)
     active.respond(complete("1", [beta], { instanceID: "monitor-b" }))
-    oldServer.respond(complete("2", [alpha]))
     await until("new server sample rendered", () => text(app.panel()).includes(beta.name!))
     expect(cells(rows(app.panel())[0]!).slice(1, 5)).toEqual(["", "unread", "não colapsei", "unproved"])
-    expect(text(app.panel())).not.toContain(alpha.name!)
-    expect(app.calls).toHaveLength(3)
+    expect(app.calls).toHaveLength(5)
   } finally {
     app.dispose()
   }

@@ -41,7 +41,7 @@ export function row(containerID: string, name: string, sizeText?: string): Activ
 
 const head = { instanceID: "monitor-a", source, coverage: "containers" } as const
 
-export function unread(instanceID = head.instanceID as string): ActivityMonitor.DockerSnapshot {
+export function unread(instanceID: string = head.instanceID): ActivityMonitor.DockerSnapshot {
   return { ...head, instanceID, snapshotRevision: "0", readAt: 3_000 }
 }
 
@@ -95,8 +95,14 @@ function intercepted(request: Request) {
 }
 
 export function mount(initialLocale: Locale = "en") {
+  const attributes = ["lang", "dir"].map((name) => [name, document.documentElement.getAttribute(name)] as const)
+  const storage = ["orchestra.global.dat:language", "language.v1"].map(
+    (key) => [key, localStorage.getItem(key)] as const,
+  )
+  const localeCookie = document.cookie.split("; ").find((cookie) => cookie.startsWith("oc_locale="))
   const host = document.body.appendChild(document.createElement("div"))
   const calls: ReturnType<typeof intercepted>[] = []
+  const unexpected: string[] = []
   const transport = Object.assign(
     (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
       const request = new Request(input, init)
@@ -106,7 +112,7 @@ export function mount(initialLocale: Locale = "en") {
         calls.push(call)
         return call.response
       }
-      if (pathname === "/api/activity") {
+      if (pathname === "/api/activity" && request.method === "GET") {
         return Promise.resolve(
           Response.json({
             instanceID: "trees",
@@ -118,6 +124,7 @@ export function mount(initialLocale: Locale = "en") {
           }),
         )
       }
+      unexpected.push(request.method + " " + pathname)
       return Promise.resolve(Response.json({ message: "Unexpected fixture endpoint: " + pathname }, { status: 404 }))
     },
     { preconnect: fetch.preconnect },
@@ -200,6 +207,16 @@ export function mount(initialLocale: Locale = "en") {
       dispose()
       host.remove()
       for (const call of calls) call.respond({ message: "Fixture disposed" }, 503)
+      for (const [key, value] of storage) {
+        if (value === null) localStorage.removeItem(key)
+        else localStorage.setItem(key, value)
+      }
+      for (const [key, value] of attributes) {
+        if (value === null) document.documentElement.removeAttribute(key)
+        else document.documentElement.setAttribute(key, value)
+      }
+      document.cookie = localeCookie ? localeCookie + "; Path=/" : "oc_locale=; Path=/; Max-Age=0"
+      expect(unexpected).toEqual([])
     },
   }
 }
