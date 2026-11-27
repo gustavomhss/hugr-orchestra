@@ -406,7 +406,7 @@ export function tools(input: {
               { concurrency: 1 },
             ).pipe(Effect.provideService(AppProcess.Service, input.processes)),
           )
-          const binding = ReviewBindingV2.reviewBinding({ worktree, diff, cache, lenses: leadLenses, ledger, copies })
+          const binding = ReviewBindingV2.reviewBinding({ worktree, diff, cache, lenses: leadLenses, ledger, copies, processes: input.processes })
           const port: ReviewFanoutV2.Port = {
             create: (child) =>
               sessions

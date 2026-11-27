@@ -3,7 +3,9 @@ export * as ReviewBindingV2 from "./review-binding"
 import { createHash } from "node:crypto"
 import os from "node:os"
 import path from "node:path"
-import { Effect, type Scope } from "effect"
+import { Effect, Option, type Scope } from "effect"
+import { AppProcess } from "@orchestra/core/process"
+import { CodeIndexShard } from "@orchestra/core/research-toolkit/code-index/shard"
 import { ReviewTools } from "@orchestra/core/review/tools"
 import { ReviewAnalyze } from "@orchestra/core/review-toolkit/analyze"
 import { ReviewItem } from "@orchestra/core/review-toolkit/item"
@@ -51,6 +53,7 @@ export const reviewBinding = (held: {
     Scope.Scope
   >
   readonly headCommit?: string
+  readonly processes?: AppProcess.Interface
 }) => (bound: ReviewFanoutV2.BindInput) =>
   Effect.gen(function* () {
     if (bound.lenses) {
@@ -59,13 +62,23 @@ export const reviewBinding = (held: {
     const pageable = bound.lens !== undefined || (bound.lenses?.length ?? 0) > 0
     const needsProbe = bound.role === "verifier" && Object.values(bound.offered ?? {}).flat().some((id) => ReviewProbe.BUILT.some((built) => built === id))
     const made = needsProbe ? yield* held.copies.pipe(Effect.catch(() => Effect.succeed(undefined))) : undefined
+    const processes = held.processes ?? Option.getOrUndefined(yield* Effect.serviceOption(AppProcess.Service))
     const codeSource = held.copies.pipe(
       Effect.mapError(() => new Tool.Failure({ message: "review-code-source-unavailable" })),
-      Effect.map((made) => ({
-        directory: made.head.root,
-        worktree: held.worktree,
-        ...(made.head.kind === "commit" && held.headCommit ? { commit: held.headCommit } : {}),
-      })),
+      Effect.flatMap((made) => {
+        const source = {
+          directory: made.head.root, worktree: held.worktree,
+          ...(made.head.kind === "commit" && held.headCommit ? { commit: held.headCommit } : {}),
+        }
+        if (made.head.kind !== "commit") return Effect.succeed(source)
+        if (!processes) return Effect.fail(new Tool.Failure({ message: "review-code-source-unavailable" }))
+        // Snapshot revisions may be commits or trees. Resolve the real tree without replacement refs or lazy fetches.
+        return CodeIndexShard.resolveTree(held.worktree, made.head.revision).pipe(
+          Effect.provideService(AppProcess.Service, processes),
+          Effect.mapError(() => new Tool.Failure({ message: "review-code-source-unavailable" })),
+          Effect.map(({ tree }) => ({ ...source, tree })),
+        )
+      }),
     )
     return {
       repository: held.worktree,
