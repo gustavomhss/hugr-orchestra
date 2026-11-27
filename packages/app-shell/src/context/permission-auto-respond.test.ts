@@ -4,7 +4,7 @@ import type { Session } from "@/v2-wire"
 
 
 import { base64Encode } from "@orchestra/core/util/encode"
-import { autoRespondsPermission, isDirectoryAutoAccepting, isHookAsk, sessionAutoAccept } from "./permission-auto-respond"
+import { autoRespondsPermission, isDirectoryAutoAccepting, sessionAutoAccept } from "./permission-auto-respond"
 
 const session = (input: { id: string; parentID?: string }) =>
   ({
@@ -108,7 +108,7 @@ describe("autoRespondsPermission", () => {
     expect(autoRespondsPermission(autoAccept, sessions, permission("child"), directory)).toBe(true)
   })
 
-  test("a Relay hook's Ask is never answered by auto-accept, whichever level turned it on", () => {
+  test("ToolSafety and Relay approvals require a person at every auto-accept level", () => {
     const directory = "/tmp/project"
     const sessions = [session({ id: "root" }), session({ id: "child", parentID: "root" })]
     const hookAsk = (sessionID: string) => ({ sessionID, metadata: { action: "relay_hook", message: "Confirm." } })
@@ -118,10 +118,13 @@ describe("autoRespondsPermission", () => {
       { root: true },
     ]
 
+    const safetyAsk = { sessionID: "child", metadata: { action: "write", nativeSafety: true } }
     levels.forEach((autoAccept) => {
       expect(autoRespondsPermission(autoAccept, sessions, permission("child"), directory)).toBe(true)
       expect(autoRespondsPermission(autoAccept, sessions, hookAsk("child"), directory)).toBe(false)
       expect(sessionAutoAccept(autoAccept, sessions, hookAsk("child"), directory)).toBe(false)
+      expect(autoRespondsPermission(autoAccept, sessions, safetyAsk, directory)).toBe(false)
+      expect(sessionAutoAccept(autoAccept, sessions, safetyAsk, directory)).toBe(false)
     })
     // Other native asks still follow the setting.
     expect(
@@ -132,9 +135,6 @@ describe("autoRespondsPermission", () => {
         directory,
       ),
     ).toBe(true)
-    expect(isHookAsk({ metadata: { action: "relay_hook" } })).toBe(true)
-    expect(isHookAsk({ metadata: { action: "edit" } })).toBe(false)
-    expect(isHookAsk({})).toBe(false)
   })
 })
 

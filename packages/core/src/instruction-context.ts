@@ -1,13 +1,14 @@
 export * as InstructionContext from "./instruction-context"
 
 import { Array, Effect, Layer, Option, Schema } from "effect"
-import { basename, dirname, isAbsolute, join, parse, relative, resolve, sep } from "path"
+import { basename, dirname, extname, isAbsolute, join, parse, relative, resolve, sep } from "path"
 import { Config } from "./config"
 import { ConfigMarkdown } from "./config/markdown"
 import { FSUtil } from "./fs-util"
 import { Flag } from "./flag/flag"
 import { Global } from "./global"
 import { Location } from "./location"
+import { Project } from "./project"
 import { AbsolutePath } from "./schema"
 import { SystemContext } from "./system-context/index"
 import { SystemContextRegistry } from "./system-context/registry"
@@ -93,15 +94,16 @@ const layer = Layer.effectDiscard(
     const observe = Effect.fn("InstructionContext.observe")(function* () {
       const start = yield* fs.resolve(location.directory)
       const stop = yield* fs.resolve(location.project.directory)
-      const fromProject = relative(stop, start)
-      const insideProject =
-        fromProject === "" || (fromProject !== ".." && !fromProject.startsWith(`..${sep}`) && !isAbsolute(fromProject))
+      const turn = yield* SystemContextRegistry.Turn
+      const insideProject = contains(stop, start)
+      const importRoot = insideProject && !Project.isRoot(stop) ? stop : start
+      const discoveryStop = turn?.hosted ? importRoot : stop
       const discoveredFiles = yield* Effect.forEach(
-        Flag.ORCHESTRA_DISABLE_PROJECT_CONFIG || !insideProject ? [] : yield* fs.up({ targets: ["AGENTS.md"], start, stop }),
+        Flag.ORCHESTRA_DISABLE_PROJECT_CONFIG || !insideProject ? [] : yield* fs.up({ targets: ["AGENTS.md"], start, stop: discoveryStop }),
         (target) => fs.resolve(target).pipe(Effect.map((path) => ({ path, target }))),
       ).pipe(
         // Discovery finds lexical names; ignore tracked symlinks to host files before any content is read.
-        Effect.map((files) => files.filter((file) => contains(stop, file.path))),
+        Effect.map((files) => files.filter((file) => contains(discoveryStop, file.path))),
       )
       const discovered = new Set(discoveredFiles.map((file) => file.path))
       const configured = yield* configuredInstructions
@@ -130,9 +132,8 @@ const layer = Layer.effectDiscard(
       if (files.some((file, index) => file === undefined && (discovered.has(paths[index]) || configured.paths.includes(paths[index]))))
         return SystemContext.unavailable
       const admitted = files.filter((file): file is File => file !== undefined)
-      const turn = yield* SystemContextRegistry.Turn
       if (!turn?.hosted) return admitted
-      return yield* withImports(admitted, [...discoveredFiles, ...configured.aliases], stop, global.home, fs)
+      return yield* withImports(admitted, [...discoveredFiles, ...configured.aliases], importRoot, global.home, fs)
     })
 
     yield* registry.register({
@@ -170,6 +171,41 @@ export function agentsPaths(snapshot: SystemContext.Snapshot): ReadonlyArray<str
   }))
 }
 
+export const nativeExclusions = Effect.fnUntraced(function* (
+  snapshot: SystemContext.Snapshot,
+  location: Location.Interface,
+  fs: FSUtil.Interface,
+) {
+  const directory = yield* fs.resolve(location.directory)
+  const root = yield* fs.resolve(location.project.directory)
+  const project = !Project.isRoot(root) && contains(root, directory) ? root : directory
+  const excluded = new Set(agentsPaths(snapshot))
+  // The native AGENTS plugin walks ancestors above the project and can follow a root instruction symlink.
+  for (let current = directory; !Project.isRoot(current); current = dirname(current)) {
+    for (const path of [join(current, "AGENTS.md"), join(current, ".claude", "AGENTS.md")]) {
+      if (!contains(project, current)) {
+        excluded.add(path)
+        continue
+      }
+      const physical = yield* fs.realPath(path).pipe(Effect.option)
+      if (Option.isSome(physical) && (!contains(project, physical.value) || excluded.has(physical.value))) excluded.add(path)
+    }
+  }
+  return [...excluded]
+})
+
+// Text types accepted by the pinned Claude Code import loader. Extensionless files are also accepted.
+const importExtensions = new Set([
+  ".adoc", ".asciidoc", ".astro", ".bash", ".bat", ".c", ".cc", ".cfg", ".cjs", ".clj", ".cljc", ".cljs",
+  ".cmake", ".cmd", ".conf", ".config", ".cpp", ".cs", ".css", ".csv", ".cts", ".cxx", ".dart", ".diff", ".edn",
+  ".ejs", ".elm", ".env", ".erb", ".erl", ".ex", ".exs", ".f", ".f90", ".f95", ".fish", ".for", ".go", ".gql",
+  ".gradle", ".graphql", ".h", ".hbs", ".hpp", ".hrl", ".hs", ".htm", ".html", ".hxx", ".ini", ".jade", ".java",
+  ".js", ".json", ".jsx", ".kt", ".kts", ".latex", ".less", ".lhs", ".lock", ".log", ".lua", ".make", ".makefile",
+  ".md", ".mjs", ".ml", ".mli", ".mts", ".org", ".patch", ".php", ".pl", ".pm", ".properties", ".proto", ".ps1",
+  ".pug", ".py", ".pyi", ".pyw", ".r", ".rake", ".rb", ".rs", ".rst", ".sass", ".sbt", ".scala", ".scss", ".sh",
+  ".sql", ".svelte", ".swift", ".tex", ".text", ".toml", ".ts", ".tsx", ".txt", ".vue", ".xml", ".yaml", ".yml", ".zsh",
+])
+
 const withImports = Effect.fnUntraced(function* (
   admitted: ReadonlyArray<File>,
   aliases: ReadonlyArray<{ readonly path: string; readonly target: string }>,
@@ -188,7 +224,8 @@ const withImports = Effect.fnUntraced(function* (
       depths.set(file.path, depth)
       for (const reference of yield* importReferences(file.content)) {
         const target = reference.startsWith("~/") ? resolve(home, reference.slice(2)) : resolve(dirname(file.path), reference)
-        if (!contains(project, target)) continue
+        const extension = extname(target).toLowerCase()
+        if (!contains(project, target) || (extension && !importExtensions.has(extension))) continue
         const path = AbsolutePath.make(yield* fs.resolve(target))
         if (!contains(project, path)) continue
         const existing = files.get(path)
@@ -206,21 +243,32 @@ const withImports = Effect.fnUntraced(function* (
       }
     })
   yield* Effect.forEach(admitted, (file) => descend(file, 0), { discard: true })
-  return Array.from(files.values(), (file) => new File({ ...file, nativePaths: Array.from(nativePaths.get(file.path) ?? []) }))
+  return [...files.values()].map((file) => new File({ ...file, nativePaths: [...(nativePaths.get(file.path) ?? [])] }))
 })
 
 const importReferences = Effect.fnUntraced(function* (content: string) {
   if (!content.includes("@")) return []
   const { Lexer, defaults } = yield* Effect.promise(() => import("marked"))
   const references = new Set<string>()
-  const visit = (token: { readonly type: string; readonly text?: string; readonly tokens?: readonly unknown[]; readonly items?: readonly unknown[] }) => {
-    if (token.type === "code" || token.type === "codespan" || token.type === "html") return
-    if (token.type === "text" && !token.tokens?.length) {
-      for (const match of token.text?.matchAll(/(?:^|\s)@((?:[^\s\\]|\\ )+)/g) ?? []) {
-        const reference = match[1].split("#", 1)[0].replaceAll("\\ ", " ")
-        if (/^(?:[a-z0-9_.-]|~\/|\/)/i.test(reference)) references.add(reference)
-      }
+  const collect = (text: string) => {
+    for (const match of text.matchAll(/(?:^|\s)@((?:[^\s\\]|\\ )+)/g)) {
+      const reference = match[1].split("#", 1)[0].replaceAll("\\ ", " ")
+      if (/^(?:[a-z0-9_.-]|~\/|\/)/i.test(reference)) references.add(reference)
     }
+  }
+  const visit = (token: {
+    readonly type: string
+    readonly text?: string
+    readonly raw?: string
+    readonly tokens?: readonly unknown[]
+    readonly items?: readonly unknown[]
+  }) => {
+    if (token.type === "code" || token.type === "codespan") return
+    if (token.type === "html") {
+      if (token.raw?.trimStart().startsWith("<!--")) collect(token.raw.replace(/<!--[\s\S]*?-->/g, ""))
+      return
+    }
+    if (token.type === "text" && token.text && !token.tokens?.length) collect(token.text)
     for (const child of [...(token.tokens ?? []), ...(token.items ?? [])]) {
       if (isMarkdownToken(child)) visit(child)
     }

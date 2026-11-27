@@ -1,4 +1,5 @@
 import { base64Encode } from "@orchestra/core/util/encode"
+import { Permission } from "@orchestra/schema/permission"
 
 export function acceptKey(sessionID: string, directory?: string) {
   if (!directory) return sessionID
@@ -39,12 +40,6 @@ function sessionLineage(session: { id: string; parentID?: string }[], sessionID:
 
 type AutoRespondRequest = { sessionID: string; metadata?: Record<string, unknown> }
 
-// A Relay hook's Ask carries the hook's own words and is meant for a person. No auto-accept setting answers it, so the
-// card is never hidden and the hook's activity never records an approval nobody gave.
-export function isHookAsk(permission: Pick<AutoRespondRequest, "metadata">) {
-  return permission.metadata?.action === "relay_hook"
-}
-
 export function autoRespondsPermission(
   autoAccept: Record<string, boolean>,
   session: { id: string; parentID?: string }[],
@@ -62,7 +57,7 @@ export function sessionAutoAccept(
   permission: AutoRespondRequest,
   directory?: string,
 ) {
-  if (isHookAsk(permission)) return false
+  if (Permission.requiresOwnerReply(permission)) return false
   return sessionLineage(session, permission.sessionID)
     .map((id) => accepted(autoAccept, id, directory))
     .find((item): item is boolean => item !== undefined)

@@ -319,6 +319,7 @@ describe("run", () => {
     const events = [event(1, "session.next.prompted", { messageID: "msg_1" })]
     const denied = stub({ stream: events, permissions: [request], waitMs: 600 })
     const allowed = stub({ stream: events, permissions: [request], waitMs: 600 })
+    const explicit = stub({ stream: events, permissions: [{ ...request, metadata: { nativeSafety: true } }], waitMs: 600 })
     try {
       const rejected = await exec(denied.url, {})
       const granted = await exec(allowed.url, { auto: true })
@@ -332,9 +333,14 @@ describe("run", () => {
       })
       expect(granted.ok).toBe(true)
       expect(granted.err).toBe("")
+      const blocked = await exec(explicit.url, { auto: true })
+      expect(explicit.calls.find((call) => call.route.endsWith("/permission/per_1/reply"))?.body).toEqual({ reply: "reject" })
+      expect(blocked.ok).toBe(false)
+      expect(blocked.err).toContain("requires an owner reply in an interactive session")
     } finally {
       denied.server.stop(true)
       allowed.server.stop(true)
+      explicit.server.stop(true)
     }
   })
 

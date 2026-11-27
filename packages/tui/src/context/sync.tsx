@@ -18,6 +18,7 @@ import type {
   SessionMessage,
   Event,
 } from "../types"
+import { Permission } from "@orchestra/schema/permission"
 import { createStore, produce, reconcile } from "solid-js/store"
 import { useProject } from "./project"
 import { useEvent } from "./event"
@@ -142,7 +143,7 @@ export const {
     const requestLocations = new Map<string, { directory: string; workspaceID?: string }>()
 
     function acceptPermission(request: PermissionV2Request) {
-      if (permission.mode !== "auto") return false
+      if (permission.mode !== "auto" || Permission.requiresOwnerReply(request)) return false
       if (autoReplies.has(request.id)) return true
       autoReplies.add(request.id)
       void sdk.actions.reply({ sessionID: request.sessionID, requestID: request.id, reply: "once" }).catch((error) => {

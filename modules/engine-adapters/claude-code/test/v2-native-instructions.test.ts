@@ -1,11 +1,12 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
-import { mkdir, realpath } from "node:fs/promises"
+import { mkdir, realpath, symlink } from "node:fs/promises"
 import { query, type HookInput } from "@anthropic-ai/claude-agent-sdk"
 import { Effect, Layer } from "effect"
 import { Config } from "@orchestra/core/config"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { FSUtil } from "@orchestra/core/fs-util"
 import { Global } from "@orchestra/core/global"
 import { InstructionContext } from "@orchestra/core/instruction-context"
 import { Location } from "@orchestra/core/location"
@@ -34,22 +35,28 @@ const message = {
 test("the pinned Claude Code binary loads CLAUDE.md and relays context and the real Read response", async () => {
   await using project = await tmpdir()
   await using config = await tmpdir()
-  const root = await realpath(project.path)
+  const outer = await realpath(project.path)
+  const root = path.join(outer, "checkout")
   const directory = path.join(root, "probe[literal]")
-  await mkdir(directory)
-  const instructions = () => Effect.runPromise(
-    SystemContextRegistry.Service.use((registry) => registry.load({ sessionID: "test", agent: "maestro", hosted: true })).pipe(
-      Effect.flatMap(SystemContext.initialize),
-      Effect.provide(AppNodeBuilder.build(LayerNode.group([InstructionContext.node, SystemContextRegistry.node]), [
-        [Global.node, Global.layerWith({ config: config.path, home: config.path })],
-        [Location.node, Layer.succeed(Location.Service, {
-          directory: AbsolutePath.make(directory),
-          project: { id: Project.ID.make("native-instructions"), directory: AbsolutePath.make(root) },
-        })],
-        [Config.node, Layer.succeed(Config.Service, Config.Service.of({ entries: () => Effect.succeed([]) }))],
-      ])),
-    ),
-  )
+  await mkdir(directory, { recursive: true })
+  const instructions = (projectRoot = root) => {
+    const location = {
+      directory: AbsolutePath.make(directory),
+      project: { id: Project.ID.make("native-instructions"), directory: AbsolutePath.make(projectRoot) },
+    }
+    return Effect.runPromise(Effect.gen(function* () {
+      const registry = yield* SystemContextRegistry.Service
+      const fs = yield* FSUtil.Service
+      const initialized = yield* SystemContext.initialize(yield* registry.load({
+        sessionID: "test", agent: "maestro", hosted: true,
+      }))
+      return { ...initialized, exclusions: yield* InstructionContext.nativeExclusions(initialized.snapshot, location, fs) }
+    }).pipe(Effect.provide(AppNodeBuilder.build(LayerNode.group([InstructionContext.node, SystemContextRegistry.node, FSUtil.node]), [
+      [Global.node, Global.layerWith({ config: config.path, home: config.path })],
+      [Location.node, Layer.succeed(Location.Service, location)],
+      [Config.node, Layer.succeed(Config.Service, Config.Service.of({ entries: () => Effect.succeed([]) }))],
+    ]))))
+  }
   const inputs: string[] = []
   const file = path.join(directory, "probe.txt")
   const resultMarker = "orchestra_probe_read_result_39"
@@ -99,7 +106,7 @@ test("the pinned Claude Code binary loads CLAUDE.md and relays context and the r
           model: message.model,
           maxTurns: 3,
           settingSources: [...ClaudeHostOptions.SETTING_SOURCES],
-          settings: context ? ClaudeHostOptions.instructionSettings(InstructionContext.agentsPaths(context.snapshot)) : undefined,
+          settings: context ? ClaudeHostOptions.instructionSettings(context.exclusions) : undefined,
           env: {
             PATH: process.env.PATH,
             SystemRoot: process.env.SystemRoot,
@@ -166,23 +173,36 @@ test("the pinned Claude Code binary loads CLAUDE.md and relays context and the r
     const imported = "orchestra_probe_imported_71"
     const child = "orchestra_probe_child_42"
     const ignored = "orchestra_probe_code_example_95"
+    const outerAgents = "orchestra_probe_outside_74"
+    const outerImport = "orchestra_probe_outside_import_34"
+    const unsupported = "orchestra_probe_unsupported_61"
     await mkdir(path.join(directory, ".claude"))
     await mkdir(path.join(directory, "nested"))
     await Bun.write(path.join(directory, ".claude", "AGENTS.md"), nativeOnly)
     await Bun.write(path.join(directory, "nested", "AGENTS.md"), `${imported}\n\n@../AGENTS.md\n\n@child\\ rules.md#usage\n`)
     await Bun.write(path.join(directory, "nested", "child rules.md"), child)
     await Bun.write(path.join(directory, "nested", "example.md"), ignored)
-    await Bun.write(path.join(directory, "AGENTS.md"), `${agents}\n\n@nested/AGENTS.md\n\n\`@nested/example.md\`\n`)
+    await Bun.write(path.join(directory, "nested", "unsupported.pem"), unsupported)
+    await Bun.write(path.join(outer, "AGENTS.md"), outerAgents)
+    await Bun.write(path.join(outer, "adjacent.md"), outerImport)
+    if (process.platform !== "win32") {
+      await mkdir(path.join(root, ".claude"))
+      await symlink(path.join(outer, "adjacent.md"), path.join(root, ".claude", "AGENTS.md"))
+    }
+    await Bun.write(path.join(directory, "AGENTS.md"), `${agents}\n\n<!-- shared rules --> @nested/AGENTS.md\n\n\`@nested/example.md\`\n\n@nested/unsupported.pem\n\n@../../adjacent.md\n`)
     const markers = [agents, nativeOnly, imported, child]
     await Bun.file(path.join(directory, "CLAUDE.md")).delete()
     const standalone = await send(true)
     for (const marker of markers) expect(standalone.split(marker)).toHaveLength(2)
-    expect(standalone).not.toContain(ignored)
+    for (const marker of [ignored, outerAgents, outerImport, unsupported]) expect(standalone).not.toContain(marker)
+    const unversioned = await instructions(path.parse(directory).root)
+    expect(unversioned.baseline).not.toContain(outerImport)
+    expect(unversioned.baseline).not.toContain(outerAgents)
 
     await Bun.write(path.join(directory, "CLAUDE.md"), `${claude}\n\n@AGENTS.md\n\n@nested/AGENTS.md\n`)
     const explicit = await send(true)
     for (const marker of [...markers, claude]) expect(explicit.split(marker)).toHaveLength(2)
-    expect(explicit).not.toContain(ignored)
+    for (const marker of [ignored, outerAgents, outerImport, unsupported]) expect(explicit).not.toContain(marker)
   } finally {
     await server.stop(true)
   }

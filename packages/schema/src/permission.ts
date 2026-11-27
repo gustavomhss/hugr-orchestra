@@ -37,6 +37,11 @@ export const Request = Schema.Struct({
 }).annotate({ identifier: "PermissionV2.Request" })
 export interface Request extends Schema.Schema.Type<typeof Request> {}
 
+/** ToolSafety approvals require a reply from the owner in this invocation. */
+export function requiresOwnerReply(request: Pick<Request, "metadata">) {
+  return request.metadata?.nativeSafety === true || request.metadata?.action === "relay_hook"
+}
+
 export const Reply = Schema.Literals(["once", "always", "reject"]).annotate({ identifier: "PermissionV2.Reply" })
 export type Reply = typeof Reply.Type
 

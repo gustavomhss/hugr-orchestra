@@ -1,6 +1,6 @@
 import { expect } from "bun:test"
 import path from "path"
-import { Cause, Deferred, Effect, Exit, Fiber, Layer, Option, Schema, Stream } from "effect"
+import { Cause, Deferred, Effect, Exit, Fiber, Layer, Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { AppNodeBuilder } from "../src/effect/app-node-builder"
 import { LayerNode } from "../src/effect/layer-node"
@@ -102,13 +102,16 @@ it.live("askBefore enters the real native and hosted permission graph; model lab
         { signal },
       ))
       for (const reply of ["once", "reject"] as const) {
+        const asked = yield* Deferred.make<PermissionV2.Request>()
+        const unsubscribe = yield* events.listen((event) => {
+          if (event.type !== PermissionV2.Event.Asked.type) return Effect.void
+          const request = Schema.decodeUnknownSync(PermissionV2.Request)(event.data)
+          return request.metadata?.callID === `hosted-${reply}` ? Deferred.succeed(asked, request).pipe(Effect.asVoid) : Effect.void
+        })
+        yield* Effect.addFinalizer(() => unsubscribe)
         const pending = yield* approve(`hosted-${reply}`).pipe(Effect.forkScoped)
         const request = yield* Effect.raceFirst(
-          Stream.runHead(events.durable({ aggregateID: sessionID }).pipe(
-            Stream.filter((event) => event.type === PermissionV2.Event.Asked.type),
-            Stream.map((event) => Schema.decodeUnknownSync(PermissionV2.Request)(event.data)),
-            Stream.filter((request) => request.metadata.callID === `hosted-${reply}`),
-          )).pipe(Effect.map(Option.getOrThrow)),
+          Deferred.await(asked),
           Fiber.join(pending).pipe(Effect.flatMap((exit) => Effect.die(exit))),
         ).pipe(Effect.timeout("10 seconds"))
         expect(request.action).toBe("edit")
@@ -122,7 +125,7 @@ it.live("askBefore enters the real native and hosted permission graph; model lab
           if (Exit.isFailure(result)) expect(Cause.squash(result.cause)).toMatchObject({ reason: "approval-native-rejected" })
         }
       }
-    }).pipe(Effect.provide(AppNodeBuilder.build(LayerNode.group([ToolSafety.node, PermissionV2.node, AgentV2.node, EventV2.node, AppProcess.node, FSUtil.node, Database.node]), [
+    }).pipe(Effect.provide(AppNodeBuilder.build(LayerNode.group([ToolSafety.node, PermissionV2.node, AgentV2.node, EventV2.node, AppProcess.node, FSUtil.node, Database.node, Location.node]), [
       [Location.node, Layer.succeed(Location.Service, location({ directory: AbsolutePath.make(tmp.path) }))],
     ])))
   }),

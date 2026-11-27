@@ -289,6 +289,9 @@ test("auto mode replies to hydrated permissions once and keeps questions availab
   await Bun.write(`${tmp.path}/kv.json`, "{}")
   const state = { replies: 0 }
   const permission = { id: "per_auto_attach", sessionID, action: "read", resources: ["a.ts"] }
+  const explicit = {
+    id: "per_owner_approval", sessionID, action: "edit", resources: ["a.ts"], metadata: { nativeSafety: true },
+  }
   const question = {
     id: "que_auto_attach",
     sessionID,
@@ -296,9 +299,9 @@ test("auto mode replies to hydrated permissions once and keeps questions availab
   }
   const { app, sync } = await mount(
     (url) => {
-      if (url.pathname === "/api/permission/request") return json({ data: [permission] })
+      if (url.pathname === "/api/permission/request") return json({ data: [permission, explicit] })
       if (url.pathname === "/api/question/request") return json({ data: [question] })
-      if (url.pathname === `/api/session/${sessionID}/permission/${permission.id}/reply`) {
+      if (url.pathname.startsWith(`/api/session/${sessionID}/permission/`) && url.pathname.endsWith("/reply")) {
         state.replies++
         return new Response(null, { status: 204 })
       }
@@ -311,7 +314,7 @@ test("auto mode replies to hydrated permissions once and keeps questions availab
     await sync.bootstrap({ fatal: false })
     await wait(() => sync.status === "complete")
     expect(state.replies).toBe(1)
-    expect(sync.data.permission[sessionID] ?? []).toHaveLength(0)
+    expect(sync.data.permission[sessionID]?.map((request) => request.id)).toEqual([explicit.id])
     expect(sync.data.question[sessionID]?.map((item) => item.id)).toEqual([question.id])
   } finally {
     app.renderer.destroy()
