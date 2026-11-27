@@ -23,30 +23,25 @@ export function limitFor(pathname: string) {
 }
 
 /**
- * Caps request bodies outside installation mounts. A declared `Content-Length` over the limit is refused with 413 before a byte is read; a body
+ * Caps every request body. A declared `Content-Length` over the limit is refused with 413 before a byte is read; a body
  * with no length (chunked) is cut off once it passes the limit through `HttpServerRequest.MaxBodySize`, which the Node
  * server enforces while it reads, so memory stays bounded either way.
  */
-export function forRoutes(isExtensionRequest?: (url: string) => boolean) {
-  return HttpRouter.middleware(
-    (effect) =>
-      Effect.gen(function* () {
-        const request = yield* HttpServerRequest.HttpServerRequest
-        if (isExtensionRequest?.(request.url)) return yield* effect
-        const limit = limitFor(request.url.split("?", 1)[0])
-        const declared = Number(request.headers["content-length"])
-        if (declared > limit) return tooLarge(limit)
-        return yield* effect.pipe(
-          Effect.provideService(HttpServerRequest.MaxBodySize, FileSystem.Size(limit)),
-          // The API reads its payload with `orDie`, so the cut-off arrives as a defect.
-          Effect.catchDefect((defect) => (exceeded(defect) ? Effect.succeed(tooLarge(limit)) : Effect.die(defect))),
-        )
-      }),
-    { global: true },
-  )
-}
-
-export const layer = forRoutes()
+export const layer = HttpRouter.middleware(
+  (effect) =>
+    Effect.gen(function* () {
+      const request = yield* HttpServerRequest.HttpServerRequest
+      const limit = limitFor(request.url.split("?", 1)[0])
+      const declared = Number(request.headers["content-length"])
+      if (declared > limit) return tooLarge(limit)
+      return yield* effect.pipe(
+        Effect.provideService(HttpServerRequest.MaxBodySize, FileSystem.Size(limit)),
+        // The API reads its payload with `orDie`, so the cut-off arrives as a defect.
+        Effect.catchDefect((defect) => (exceeded(defect) ? Effect.succeed(tooLarge(limit)) : Effect.die(defect))),
+      )
+    }),
+  { global: true },
+)
 
 function exceeded(defect: unknown) {
   return (

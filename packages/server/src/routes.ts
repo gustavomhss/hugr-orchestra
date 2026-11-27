@@ -1,7 +1,7 @@
 export type { HttpExtension } from "./http-extensions"
 export { isHttpExtensionMount } from "./http-extensions"
 import type { HttpExtension } from "./http-extensions"
-import { extensionRequestMatcher, httpExtensionsLayer } from "./http-extensions"
+import { httpExtensionsLayer } from "./http-extensions"
 import { Database } from "@orchestra/core/database/database"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { httpClient, llmClient } from "@orchestra/core/effect/app-node-platform"
@@ -130,9 +130,6 @@ function makeRoutes<AuthError, AuthServices>(
     merged.locationNodes,
   )
 
-  const extensions = options.httpExtensions ?? []
-  const extensionLayer = httpExtensionsLayer(extensions)
-  const isExtensionRequest = extensionRequestMatcher(extensions)
   const api = HttpApiBuilder.layer(Api, { openapiPath: "/openapi.json" }).pipe(
     Layer.provide(handlers),
     Layer.provide(merged.references),
@@ -148,10 +145,11 @@ function makeRoutes<AuthError, AuthServices>(
     Layer.provide(options.verifier ? Layer.succeed(ServerCapabilityVerification.Service, options.verifier) : ServerCapabilityVerification.layer),
     Layer.provide(serviceLayer),
     // The desktop renderer (`oc://renderer`) calls a desktop-owned server cross-origin, as the earlier runtime did.
-    Layer.provide(corsLayer({ cors: options.cors }, isExtensionRequest)),
-    Layer.provide(isExtensionRequest ? BodyLimit.forRoutes(isExtensionRequest) : BodyLimit.layer),
+    Layer.provide(corsLayer({ cors: options.cors })),
+    Layer.provide(BodyLimit.layer),
   )
-  return Layer.mergeAll(api, options.webRoot ? WebUi.layer(options.webRoot) : Layer.empty, extensionLayer).pipe(
+  return Layer.merge(api, options.webRoot ? WebUi.layer(options.webRoot) : Layer.empty).pipe(
+    Layer.provide(httpExtensionsLayer(options.httpExtensions ?? [])),
     Layer.provide(hostPolicyLayer(options.allowedHosts)),
   )
 }

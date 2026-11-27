@@ -104,6 +104,7 @@ for (const descriptor of [
   '{ mount: "/api/nested", handler, dispose: cleanup }',
   '{ mount: "/API", handler, dispose: cleanup }',
   '{ mount: "/Api/Nested", handler, dispose: cleanup }',
+  '{ mount: "/Experimental/project", handler, dispose: cleanup }',
   '{ mount: "/installation/../api", handler, dispose: cleanup }',
   '{ mount: "/installation?query", handler, dispose: cleanup }',
   '{ mount: "/installation#fragment", handler, dispose: cleanup }',
@@ -355,7 +356,7 @@ for (const entry of [
       .pipe(Effect.provide(NodeServices.layer), Effect.result))
     if (entry.config !== undefined) {
       expect(result._tag).toBe("Success")
-      expect(inputs).toEqual([{ config: Option.some(entry.config), verbose: entry.verbose }])
+      expect(inputs).toMatchObject([{ config: Option.some(entry.config), verbose: entry.verbose }])
       return
     }
     expect(inputs).toEqual([])

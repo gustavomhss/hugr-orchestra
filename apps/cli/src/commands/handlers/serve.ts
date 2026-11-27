@@ -78,15 +78,14 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
       process.exit()
     }),
   )
+  // Capture the per-launch credentials before an installation can start subprocesses.
+  const launchPassword = process.env.ORCHESTRA_SERVER_PASSWORD
+  delete process.env.ORCHESTRA_SERVER_PASSWORD
+  delete process.env.ORCHESTRA_SERVER_USERNAME
   const start = (wait: Effect.Effect<void>) =>
     withInstallation(input, (httpExtensions) => Effect.gen(function* () {
       const daemon = yield* Daemon.Service
-      // A desktop-owned child gets a per-launch password in env and never touches the daemon's password file.
-      const password = process.env.ORCHESTRA_SERVER_PASSWORD || (yield* daemon.password())
-      // The password is captured: drop it from the environment so no child (stdio MCP server, LSP, PTY, omni) inherits it.
-      // The server authenticates from the value passed to createRoutes, never from env.
-      delete process.env.ORCHESTRA_SERVER_PASSWORD
-      delete process.env.ORCHESTRA_SERVER_USERNAME
+      const password = launchPassword || (yield* daemon.password())
       const root = yield* Effect.promise(() => webRoot())
       // Legacy transcripts on this database are copied to V2 before the server answers: a Session is eligible only
       // while it has no V2 message, so a prompt reaching an old Session first would skip its history forever.
@@ -99,7 +98,8 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
         Effect.catchCause((cause) => Effect.logError("legacy session import failed", cause)),
       )
       const allowedHosts = listenerHosts(input.hostname, input.allowedHosts)
-      const listening = yield* listen(input.hostname, input.port, password, hosts(), root, allowedHosts, input.cors, httpExtensions)
+      const bindHost = httpExtensions && input.hostname === "localhost" ? "127.0.0.1" : input.hostname
+      const listening = yield* listen(bindHost, input.port, password, hosts(), root, allowedHosts, input.cors, httpExtensions)
       const address = listening.address
       // Closing the server waits for every open connection, and the event stream never ends on its own. Scope
       // finalizers run in reverse, so this drops the connections before the server closes.

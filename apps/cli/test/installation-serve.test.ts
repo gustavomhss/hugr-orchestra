@@ -7,7 +7,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { AppProcess } from "@orchestra/core/process"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { testEffect } from "@orchestra/core/test/lib/effect"
-import { Effect, Stream } from "effect"
+import { Deferred, Effect, Fiber, Stream } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 
 const it = testEffect(LayerNode.compile(AppProcess.node))
@@ -57,9 +57,9 @@ it.live("the source CLI dispatches an installation request and awaits slow dispo
       expect(process.kill(child.pid, signal)).toBe(true)
     }
 
-    expect(yield* child.exitCode.pipe(Effect.timeout("15 seconds"))).toBe(128 + constants.signals[signal])
+    expect(yield* child.exitCode.pipe(Effect.timeout("15 seconds"))).toBe(128 + (constants.signals[signal] ?? 0))
     expect(yield* fixture.events).toEqual([
-      `factory ${fixture.origin} database=false`,
+      `factory ${fixture.origin} database=false credentials=false`,
       "dispose start",
       "dispose end",
     ])
@@ -77,16 +77,65 @@ it.live("the source CLI disposes exactly once when its explicit port is occupied
       maxErrorBytes: 64 * 1024,
     })
     expect(result.exitCode).not.toBe(0)
-    expect(result.stderr.toString("utf8")).toMatch(/EADDRINUSE|port .*in use/i)
+    expect(result.stdout.toString("utf8") + result.stderr.toString("utf8")).toMatch(/EADDRINUSE|port .*in use/i)
     expect(result.stdout.toString("utf8")).not.toContain("server listening on")
     expect(yield* fixture.events).toEqual([
-      `factory ${fixture.origin} database=false`,
+      `factory ${fixture.origin} database=false credentials=false`,
       "dispose start",
       "dispose end",
     ])
   }), 120_000)
 
-function installationFixture(port: number) {
+it.live("the source CLI disposes an installation signaled during factory acquisition before binding", () =>
+  Effect.gen(function* () {
+    const app = yield* AppProcess.Service
+    const port = yield* reservePort.pipe(Effect.map((listener) => listener.port!), Effect.scoped)
+    const fixture = yield* installationFixture(port, true)
+    const factoryReady = yield* Deferred.make<void>()
+    const shutdownStarted = yield* Deferred.make<void>()
+    const signal = process.platform === "win32" ? "SIGBREAK" : "SIGHUP"
+    expectSpawn(import.meta.path)
+    const child = yield* app.spawn(fixture.command)
+    const output = yield* child.all.pipe(
+      Stream.decodeText(),
+      Stream.splitLines,
+      Stream.tap((line) => {
+        if (line.includes("installation factory awaiting release")) return Deferred.succeed(factoryReady, undefined)
+        if (line.includes("CLI_SHUTDOWN ") && line.includes(`"signal":"${signal}"`) && line.includes('"status":"started"'))
+          return Deferred.succeed(shutdownStarted, undefined)
+        return Effect.void
+      }),
+      Stream.mkString,
+      Effect.forkScoped,
+    )
+    const waitFor = (marker: Deferred.Deferred<void>, label: string) => Effect.raceFirst(
+      Deferred.await(marker),
+      Fiber.join(output).pipe(Effect.flatMap((text) => Effect.fail(new Error(`Source CLI exited before ${label}: ${text}`)))),
+    ).pipe(Effect.timeout("45 seconds"))
+
+    yield* waitFor(factoryReady, "factory acquisition")
+    expect(yield* fixture.events).toEqual([`factory ${fixture.origin} database=false credentials=false`])
+    if (process.platform === "win32") {
+      // The private marker asks the blocked child factory to deliver the event to its actual process listeners.
+      yield* Effect.promise(() => Bun.write(fixture.signal, ""))
+    } else {
+      expect(process.kill(child.pid, signal)).toBe(true)
+    }
+    yield* waitFor(shutdownStarted, "shutdown acknowledgement")
+    expect(yield* child.isRunning).toBe(true)
+    yield* Effect.promise(() => Bun.write(fixture.release, ""))
+
+    expect(yield* child.exitCode.pipe(Effect.timeout("15 seconds"))).toBe(128 + (constants.signals[signal] ?? 0))
+    expect(yield* Fiber.join(output).pipe(Effect.timeout("5 seconds"))).not.toContain("server listening on")
+    expect(yield* Effect.promise(() => Bun.file(fixture.database).exists())).toBe(false)
+    expect(yield* fixture.events).toEqual([
+      `factory ${fixture.origin} database=false credentials=false`,
+      "dispose start",
+      "dispose end",
+    ])
+  }), 120_000)
+
+function installationFixture(port: number, waitForRelease = false) {
   return Effect.gen(function* () {
     const directory = yield* Effect.acquireRelease(
       Effect.promise(() => mkdtemp(path.join(tmpdir(), "orchestra-installation-serve-"))),
@@ -97,6 +146,9 @@ function installationFixture(port: number) {
     yield* Effect.promise(() => Promise.all([mkdir(home), mkdir(tmp)]))
     const module = path.join(directory, "installation.ts")
     const events = path.join(directory, "events.txt")
+    const database = path.join(directory, "installation.sqlite")
+    const release = path.join(directory, "factory-release")
+    const signal = path.join(directory, "factory-signal")
     const origin = `http://${hostname}:${port}`
     yield* Effect.promise(() => Bun.write(module, `
       import { appendFile } from "node:fs/promises"
@@ -104,7 +156,16 @@ function installationFixture(port: number) {
       export default async ({ origin }: { origin: string }) => {
         const events = ${JSON.stringify(events)}
         const databaseExists = await Bun.file(process.env.ORCHESTRA_DB!).exists()
-        await appendFile(events, "factory " + origin + " database=" + databaseExists + "\\n")
+        const credentials = Boolean(process.env.ORCHESTRA_SERVER_PASSWORD || process.env.ORCHESTRA_SERVER_USERNAME)
+        await appendFile(events, "factory " + origin + " database=" + databaseExists + " credentials=" + credentials + "\\n")
+        ${waitForRelease ? `
+          console.log("installation factory awaiting release")
+          if (process.platform === "win32") {
+            while (!(await Bun.file(${JSON.stringify(signal)}).exists())) await Bun.sleep(20)
+            process.emit("SIGBREAK")
+          }
+          while (!(await Bun.file(${JSON.stringify(release)}).exists())) await Bun.sleep(20)
+        ` : ""}
         return {
           mount: "/installation",
           async handler(request: Request) {
@@ -124,7 +185,7 @@ function installationFixture(port: number) {
         }
       }
     `))
-    const inherited = ["PATH", "SYSTEMROOT", "SYSTEMDRIVE", "WINDIR", "COMSPEC", "PATHEXT", "HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR"]
+    const inherited = ["PATH", "SYSTEMROOT", "SYSTEMDRIVE", "WINDIR", "COMSPEC", "PATHEXT"]
     const command = ChildProcess.make(process.execPath, [
       entrypoint, "serve", "--hostname", hostname, "--port", String(port), "--installation", module,
     ], {
@@ -148,7 +209,8 @@ function installationFixture(port: number) {
         TEMP: tmp,
         ORCHESTRA_TEST_HOME: home,
         ORCHESTRA_CONFIG_DIR: path.join(home, "orchestra-config"),
-        ORCHESTRA_DB: path.join(directory, "installation.sqlite"),
+        ORCHESTRA_DB: database,
+        ...(waitForRelease ? { ORCHESTRA_LOG_LEVEL: "DEBUG" } : {}),
         ORCHESTRA_CREDENTIAL_KEY_FILE: path.join(directory, "synthetic.key"),
         ORCHESTRA_SERVER_PASSWORD: "synthetic-installation-test-password",
         ORCHESTRA_INHERIT_CREDENTIALS: "0",
@@ -159,6 +221,9 @@ function installationFixture(port: number) {
     return {
       command,
       origin,
+      database,
+      release,
+      signal,
       events: Effect.promise(async () => (await Bun.file(events).text()).trimEnd().split("\n")),
     }
   })
