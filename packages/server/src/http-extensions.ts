@@ -52,6 +52,10 @@ export function httpExtensionsLayer(extensions: readonly HttpExtension[]) {
       const input = toRequest(request, controller.signal, body?.stream)
       if (router.find("GET", new URL(input.url).pathname)?.handler !== extension) return HttpServerResponse.empty({ status: 404 })
       const response = await extension.handler(input)
+      if (controller.signal.aborted && response?.body && !response.body.locked) {
+        await response.body.cancel(controller.signal.reason).catch(() => undefined)
+        return HttpServerResponse.empty({ status: 404 })
+      }
       return response === undefined
         ? HttpServerResponse.empty({ status: 404 })
         : toResponse(response, request, controller.signal)
@@ -128,8 +132,13 @@ function toResponse(
   request: HttpServerRequest.HttpServerRequest,
   signal: AbortSignal,
 ): HttpServerResponse.HttpServerResponse {
+  if (request.source instanceof Request) {
+    // The Web adapter passes through raw Web Responses. Keep their Headers through its stream scope handling.
+    const raw = HttpServerResponse.raw(response, { status: response.status, statusText: response.statusText })
+    return request.method === "HEAD" ? Object.assign(raw, { headers: new Headers(response.headers) }) : raw
+  }
   const normalized = HttpServerResponse.fromWeb(response)
-  const converted = response.body && request.method !== "HEAD" && !(request.source instanceof Request)
+  const converted = response.body && request.method !== "HEAD"
     ? HttpServerResponse.setBody(normalized, HttpBody.stream(
         Stream.fromReadableStream({ evaluate: () => abortableBody(response.body!, signal), onError: (error) => error }),
         response.headers.get("content-type") ?? undefined,
@@ -138,9 +147,9 @@ function toResponse(
   const setCookie = response.headers.getSetCookie()
   if (setCookie.length === 0) return converted
   // Effect's parsed cookie map is keyed by name. Preserve the original fields, including repeated names and attributes.
-  // The Web adapter accepts native Headers, and the Node adapter passes header arrays to ServerResponse.writeHead.
+  // The Node adapter passes header arrays to ServerResponse.writeHead.
   return Object.assign(HttpServerResponse.replaceCookies(converted, Cookies.empty), {
-    headers: request.source instanceof Request ? new Headers(response.headers) : { ...converted.headers, "set-cookie": setCookie },
+    headers: { ...converted.headers, "set-cookie": setCookie },
   })
 }
 

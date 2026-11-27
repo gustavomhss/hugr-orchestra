@@ -57,7 +57,7 @@ it.live("the source CLI dispatches an installation request and awaits slow dispo
       expect(process.kill(child.pid, signal)).toBe(true)
     }
 
-    expect(yield* child.exitCode.pipe(Effect.timeout("15 seconds"))).toBe(128 + (constants.signals[signal] ?? 0))
+    expect(Number(yield* child.exitCode.pipe(Effect.timeout("15 seconds")))).toBe(128 + (constants.signals[signal] ?? 0))
     expect(yield* fixture.events).toEqual([
       `factory ${fixture.origin} database=false credentials=false`,
       "dispose start",
@@ -125,7 +125,7 @@ it.live("the source CLI disposes an installation signaled during factory acquisi
     expect(yield* child.isRunning).toBe(true)
     yield* Effect.promise(() => Bun.write(fixture.release, ""))
 
-    expect(yield* child.exitCode.pipe(Effect.timeout("15 seconds"))).toBe(128 + (constants.signals[signal] ?? 0))
+    expect(Number(yield* child.exitCode.pipe(Effect.timeout("15 seconds")))).toBe(128 + (constants.signals[signal] ?? 0))
     expect(yield* Fiber.join(output).pipe(Effect.timeout("5 seconds"))).not.toContain("server listening on")
     expect(yield* Effect.promise(() => Bun.file(fixture.database).exists())).toBe(false)
     expect(yield* fixture.events).toEqual([

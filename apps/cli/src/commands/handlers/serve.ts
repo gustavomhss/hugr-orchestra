@@ -193,7 +193,13 @@ export function serveTransport(installation: boolean) {
     // Binding happens before route-layer initialization. Even a partially built server must close active connections.
     const close = server.close.bind(server)
     server.close = (callback) => {
+      const listening = server.listening
       server.closeAllConnections?.()
+      // Bun closes the listener as part of closeAllConnections. Node still needs close().
+      if (listening && !server.listening) {
+        if (callback) queueMicrotask(() => callback())
+        return server
+      }
       return close(callback)
     }
   }

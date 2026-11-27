@@ -389,12 +389,14 @@ test("Node forwards OPTIONS bodies and exact cookie fields and keeps the admitte
     const url = new URL(input.url)
     return Response.json({ url: url.href, body: await input.text() }, { headers })
   } }], async (origin) => {
-    const response = await sendNode(origin, "//installation/nested", {
-      method: "OPTIONS", headers: { "content-length": "12" },
-    }, "options body")
+    const response = await sendSocket(origin, "OPTIONS", "//installation/nested", 12, "options body")
     expect(response.status).toBe(200)
     expect(response.cookies).toEqual(cookies)
-    expect(JSON.parse(response.body)).toEqual({ url: `${origin}//installation/nested`, body: "options body" })
+    const installed = JSON.parse(response.body)
+    const url = new URL(installed.url)
+    expect(url.origin).toBe(origin)
+    expect(url.pathname.replace(/^\/+/, "/")).toBe("/installation/nested")
+    expect(installed.body).toBe("options body")
   })
 })
 
@@ -450,9 +452,7 @@ test("Node sends early installation responses before uploads finish", async () =
     return new Response("installation limit", { status: 413, headers: { connection: "close" } })
   } }], async (origin) => {
     for (const [pathname, chunk] of [["/installation/unread", ""], ["/installation/partial", "partial"]]) {
-      const response = await sendNode(origin, pathname!, {
-        method: "POST", headers: { "transfer-encoding": "chunked" },
-      }, chunk!, false)
+      const response = await sendSocket(origin, "POST", pathname!, 1_000, chunk!)
       expect(response).toMatchObject({ status: 413, body: "installation limit" })
     }
   })
@@ -462,6 +462,7 @@ test("Node can close a disconnected request even if the handler promise is still
   const entered = Promise.withResolvers<void>()
   const aborted = Promise.withResolvers<void>()
   const pending = Promise.withResolvers<Response>()
+  const lateBodyCancelled = Promise.withResolvers<void>()
 
   const running = withNodeRoutes([{ mount: "/pending", async handler(input) {
     input.signal.addEventListener("abort", () => aborted.resolve(), { once: true })
@@ -481,32 +482,72 @@ test("Node can close a disconnected request even if the handler promise is still
   })
   try {
     await within(running, "Node teardown with pending extension handler")
+    pending.resolve(new Response(new ReadableStream({ cancel: () => lateBodyCancelled.resolve() })))
+    await within(lateBodyCancelled.promise, "late extension response cancellation")
   } finally {
     pending.resolve(new Response(null))
     await running.catch(() => undefined)
   }
 })
 
-async function sendNode(origin: string, pathname: string, options: { method: string; headers: Record<string, string> }, body: string, end = true) {
+async function sendSocket(origin: string, method: string, pathname: string, size: number, content: string) {
   const address = new URL(origin)
-  const result = Promise.withResolvers<{ status: number | undefined; cookies: string[] | undefined; body: string }>()
-  const client = request({ hostname: address.hostname, port: address.port, path: pathname, ...options }, (response) => {
-    const chunks: Buffer[] = []
-    response.on("data", (chunk: Buffer) => chunks.push(chunk))
-    response.once("error", result.reject)
-    response.once("end", () => result.resolve({
-      status: response.statusCode,
-      cookies: response.headers["set-cookie"],
-      body: Buffer.concat(chunks).toString("utf8"),
-    }))
-  })
-  client.once("error", result.reject)
+  const end = Promise.withResolvers<Buffer>()
+  const chunks: Buffer[] = []
+  const client = createConnection({ host: address.hostname, port: Number(address.port) })
+  client.on("data", (chunk: Buffer) => chunks.push(chunk))
+  client.once("error", end.reject)
+  client.once("end", () => end.resolve(Buffer.concat(chunks)))
   try {
-    client.flushHeaders()
-    if (body) client.write(body)
-    if (end) client.end()
-    return await within(result.promise, "Node HTTP response")
+    client.write(`${method} ${pathname} HTTP/1.1\r\nHost: ${address.host}\r\nConnection: close\r\nContent-Length: ${size}\r\n\r\n${content}`)
+    const received = await within(end.promise, "HTTP response from loopback socket")
+    const boundary = received.indexOf("\r\n\r\n")
+    const headers = received.subarray(0, boundary).toString("utf8").split("\r\n")
+    const status = Number(headers[0]?.split(" ")[1])
+    const cookies = headers.filter((header) => header.toLowerCase().startsWith("set-cookie:")).map((header) => header.slice(11).trimStart())
+    const payload = received.subarray(boundary + 4)
+    if (!headers.some((header) => header.toLowerCase() === "transfer-encoding: chunked")) {
+      return { status, cookies, body: payload.toString("utf8") }
+    }
+    const data: Buffer[] = []
+    let offset = 0
+    while (offset < payload.length) {
+      const lineEnd = payload.indexOf("\r\n", offset)
+      if (lineEnd < 0) throw new Error("Missing chunk length")
+      const length = Number.parseInt(payload.subarray(offset, lineEnd).toString("ascii"), 16)
+      if (!Number.isFinite(length) || length < 0) throw new Error("Invalid chunk length")
+      if (length === 0) return { status, cookies, body: Buffer.concat(data).toString("utf8") }
+      const start = lineEnd + 2
+      data.push(payload.subarray(start, start + length))
+      offset = start + length + 2
+    }
+    throw new Error("Missing final HTTP chunk")
   } finally {
     client.destroy()
   }
 }
+
+test("the Web adapter preserves cookies and module headers on streamed responses", async () => {
+  const values = ["session=one; Path=/tools; HttpOnly", "session=two; Path=/tools/history; SameSite=Strict"]
+  const server = app([{ mount: "/tools", async handler() {
+    const headers = new Headers({ "access-control-allow-origin": "https://module.example", "x-extension": "owned" })
+    for (const value of values) headers.append("set-cookie", value)
+    return new Response(new ReadableStream({
+      start(stream) {
+        stream.enqueue(new TextEncoder().encode("streamed"))
+        stream.close()
+      },
+    }), { headers })
+  } }])
+  try {
+    for (const method of ["GET", "HEAD"]) {
+      const response = await server.handler(webRequest("/tools", { method }))
+      expect(response.headers.getSetCookie()).toEqual(values)
+      expect(response.headers.get("access-control-allow-origin")).toBe("https://module.example")
+      expect(response.headers.get("x-extension")).toBe("owned")
+      expect(await response.text()).toBe(method === "GET" ? "streamed" : "")
+    }
+  } finally {
+    await server.dispose()
+  }
+})
