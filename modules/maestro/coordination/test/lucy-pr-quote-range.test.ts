@@ -12,6 +12,7 @@ import { authoredSkills, run } from "./fixture/lucy-pr-entry"
 
 // Quote-range existence only. A decoded finding is not proof that its claim is true.
 // The fixture card stays the host's routing, scope, checks, blockers, outcome and verdict.
+// Windows refuses the private store before quote evaluation and must admit no precision row.
 
 const skills = await authoredSkills()
 const fence = (value: unknown) => "```" + ReviewResultV2.TAG + "\n" + JSON.stringify(value) + "\n```"
@@ -61,9 +62,19 @@ const commitHead = (directory: string, bytes: string) =>
     return yield* git(["rev-parse", "HEAD"])
   })
 
-test("a Quick blocked card admits one real added quote line and one precision row", () =>
+test(process.platform === "win32"
+  ? "Windows refuses a quoted PR before child execution or precision admission"
+  : "a Quick blocked card admits one real added quote line and one precision row", () =>
   Effect.runPromise(run(skills, { finishCard: withFinding(1, 1) }, (ctx) => Effect.gen(function* () {
     const result = yield* ctx.invoke("maestro", request(ctx.base, ctx.head))
+    if (process.platform === "win32") {
+      expect(result).toEqual({ type: "error", text: "pr-facts-unsupported: private replay store requires supported Unix" })
+      expect(ctx.touches.children).toEqual([])
+      expect(ctx.touches.prompts).toEqual([])
+      expect(ctx.touches.resumes).toBe(0)
+      expect(yield* precision()).toEqual([])
+      return
+    }
     expect(result.text).not.toContain("pr-card-invalid")
     expect(result.text).not.toContain("pr-quote-unavailable")
     const card = ReviewResultV2.parse(result.text)
@@ -75,9 +86,19 @@ test("a Quick blocked card admits one real added quote line and one precision ro
   }))),
 )
 
-test("a quote that includes the trailing split sentinel is unavailable and admits nothing", () =>
+test(process.platform === "win32"
+  ? "Windows refuses a sentinel-quote PR before quote evaluation or precision admission"
+  : "a quote that includes the trailing split sentinel is unavailable and admits nothing", () =>
   Effect.runPromise(run(skills, { finishCard: withFinding(1, 2) }, (ctx) => Effect.gen(function* () {
     const result = yield* ctx.invoke("maestro", request(ctx.base, ctx.head))
+    if (process.platform === "win32") {
+      expect(result).toEqual({ type: "error", text: "pr-facts-unsupported: private replay store requires supported Unix" })
+      expect(ctx.touches.children).toEqual([])
+      expect(ctx.touches.prompts).toEqual([])
+      expect(ctx.touches.resumes).toBe(0)
+      expect(yield* precision()).toEqual([])
+      return
+    }
     expect(result.type).toBe("error")
     expect(result.text).toContain("pr-quote-unavailable")
     expect(result.text).toContain("quote range is empty or outside the head blob")
@@ -86,9 +107,19 @@ test("a quote that includes the trailing split sentinel is unavailable and admit
   }))),
 )
 
-test("a finding on a line the diff did not add is rejected before the blob is read", () =>
+test(process.platform === "win32"
+  ? "Windows refuses a non-added-line PR before quote evaluation or precision admission"
+  : "a finding on a line the diff did not add is rejected before the blob is read", () =>
   Effect.runPromise(run(skills, { finishCard: withFinding(2, 2) }, (ctx) => Effect.gen(function* () {
     const result = yield* ctx.invoke("maestro", request(ctx.base, ctx.head))
+    if (process.platform === "win32") {
+      expect(result).toEqual({ type: "error", text: "pr-facts-unsupported: private replay store requires supported Unix" })
+      expect(ctx.touches.children).toEqual([])
+      expect(ctx.touches.prompts).toEqual([])
+      expect(ctx.touches.resumes).toBe(0)
+      expect(yield* precision()).toEqual([])
+      return
+    }
     expect(result.type).toBe("error")
     expect(result.text).toContain("pr-quote-unavailable")
     expect(result.text).toContain("finding is not an added head line")
@@ -97,10 +128,20 @@ test("a finding on a line the diff did not add is rejected before the blob is re
   }))),
 )
 
-test("a blank-only added range is unavailable", () =>
+test(process.platform === "win32"
+  ? "Windows refuses a blank-range PR before quote evaluation or precision admission"
+  : "a blank-only added range is unavailable", () =>
   Effect.runPromise(run(skills, { finishCard: withFinding(1, 2) }, (ctx) => Effect.gen(function* () {
     const head = yield* commitHead(ctx.directory, "\n\n")
     const result = yield* ctx.invoke("maestro", request(ctx.base, head))
+    if (process.platform === "win32") {
+      expect(result).toEqual({ type: "error", text: "pr-facts-unsupported: private replay store requires supported Unix" })
+      expect(ctx.touches.children).toEqual([])
+      expect(ctx.touches.prompts).toEqual([])
+      expect(ctx.touches.resumes).toBe(0)
+      expect(yield* precision()).toEqual([])
+      return
+    }
     expect(result.type).toBe("error")
     expect(result.text).toContain("pr-quote-unavailable")
     expect(result.text).toContain("quote range is empty or outside the head blob")
@@ -108,15 +149,25 @@ test("a blank-only added range is unavailable", () =>
   }))),
 )
 
-test("CRLF and a final line without a newline still admit the one real line", () =>
+test(process.platform === "win32"
+  ? "Windows refuses CRLF and unterminated-line PRs without precision admission"
+  : "CRLF and a final line without a newline still admit the one real line", () =>
   Effect.runPromise(run(skills, { finishCard: withFinding(1, 1) }, (ctx) => Effect.gen(function* () {
     for (const bytes of ["export const value = 2\r\n", "export const value = 2"]) {
       const head = yield* commitHead(ctx.directory, bytes)
       const result = yield* ctx.invoke("maestro", { ...request(ctx.base, head), prText: bytes })
+      if (process.platform === "win32") {
+        expect(result).toEqual({ type: "error", text: "pr-facts-unsupported: private replay store requires supported Unix" })
+        expect(ctx.touches.children).toEqual([])
+        expect(ctx.touches.prompts).toEqual([])
+        expect(ctx.touches.resumes).toBe(0)
+        expect(yield* precision()).toEqual([])
+        continue
+      }
       expect(result.text).not.toContain("pr-card-invalid")
       expect(result.text).not.toContain("pr-quote-unavailable")
       expect(ReviewResultV2.parse(result.text)?.findings[0]).toMatchObject({ line: 1, endLine: 1, severity: "P1" })
     }
-    expect(yield* precision()).toHaveLength(2)
+    expect(yield* precision()).toHaveLength(process.platform === "win32" ? 0 : 2)
   }))),
 )

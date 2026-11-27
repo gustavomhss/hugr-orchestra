@@ -9,6 +9,7 @@ import { authoredSkills, run } from "./fixture/lucy-pr-entry"
 // Registered PR check binding. The Session double is control-flow only: in-memory
 // prompts are not durable Session admission, and this is not an LLM fanout.
 // Finish replies copy the host check-facts JSON, not a model-authored card.
+// Windows proves the earlier private-store refusal and its retry without child execution.
 
 const skills = await authoredSkills()
 const request = (base: string, head: string) => ({
@@ -16,9 +17,19 @@ const request = (base: string, head: string) => ({
 })
 
 describe("lucy check binding", () => {
-  test("first response and completed retry keep the host's checks and reject a forged card", () =>
+  test(process.platform === "win32"
+    ? "Windows refuses PR check binding and retries before any child or prompt"
+    : "first response and completed retry keep the host's checks and reject a forged card", () =>
     Effect.runPromise(run(skills, {}, (ctx) => Effect.gen(function* () {
       const first = yield* ctx.invoke("maestro", request(ctx.base, ctx.head))
+      if (process.platform === "win32") {
+        expect(first).toEqual({ type: "error", text: "pr-facts-unsupported: private replay store requires supported Unix" })
+        expect(yield* ctx.invoke("maestro", request(ctx.base, ctx.head))).toEqual(first)
+        expect(ctx.touches.children).toEqual([])
+        expect(ctx.touches.prompts).toEqual([])
+        expect(ctx.touches.resumes).toBe(0)
+        return
+      }
       const card = ReviewResultV2.parse(first.text)
       const candidate = JSON.parse(first.text.slice("PR identity: ".length).split("\n")[0] ?? "").candidate as string
       const stored = yield* ReviewPRFactsV2.read(MaestroReviewTools.analysisStore(`pr_${candidate}`), candidate)

@@ -1,7 +1,7 @@
 export * as WorkflowReviewV2 from "./review"
 
 import { createHash, randomUUID } from "node:crypto"
-import { copyFile, realpath, rm } from "node:fs/promises"
+import { copyFile, realpath, rm, stat, utimes } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { isDeepStrictEqual } from "node:util"
@@ -49,9 +49,17 @@ export const result = Effect.fn("WorkflowReviewV2.result")(function* (
   return yield* Effect.gen(function* () {
     const head = yield* git.run(["rev-parse", "HEAD"], { cwd })
     if (head.exitCode || head.text().trim() !== input.base) return { status: "head-moved" as const }
-    // Starting from the real index keeps its stat cache, so `add` rehashes only files that changed.
+    // Git's racy-index check uses the index timestamp. The clone must not make cached entries look older.
     const shared = yield* git.run(["rev-parse", "--path-format=absolute", "--git-path", "index"], { cwd })
-    yield* Effect.tryPromise(() => copyFile(shared.text().trim(), index)).pipe(Effect.ignore)
+    if (shared.exitCode || shared.truncated) return { status: "unavailable" as const }
+    const copied = yield* Effect.tryPromise(async () => {
+      const source = shared.text().trim()
+      // Observe before copying: a concurrently replaced index can only require a more conservative check.
+      const timestamp = Math.floor((await stat(source)).mtimeMs / 1000)
+      await copyFile(source, index)
+      await utimes(index, timestamp, timestamp)
+    }).pipe(Effect.map(() => true), Effect.orElseSucceed(() => false), Effect.uninterruptible)
+    if (!copied) return { status: "unavailable" as const }
     const read = yield* git.run(["read-tree", "-m", input.base], { cwd, env })
     const added = read.exitCode ? read : yield* git.run(["add", "-A", "--", "."], { cwd, env })
     const written = added.exitCode ? added : yield* git.run(["write-tree"], { cwd, env })

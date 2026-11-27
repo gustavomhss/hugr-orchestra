@@ -12,8 +12,8 @@ import { ReviewProbe } from "@orchestra/core/review-toolkit/probe"
 import { ReviewScratch } from "@orchestra/core/review-toolkit/scratch-copy"
 import { ReviewTools } from "@orchestra/core/review/tools"
 import { SessionSchema } from "@orchestra/core/session/schema"
-import { expectSpawn } from "../../../../packages/core/test/fixture/omni-expect"
-import { testEffect } from "../../../../packages/core/test/lib/effect"
+import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
+import { testEffect } from "@orchestra/core/test/lib/effect"
 import { ReviewBindingV2 } from "../src/v2/tools/review-binding"
 
 // Fixture Scope is the frozen review-pr.ts caller seam, not a PR-controller proof.

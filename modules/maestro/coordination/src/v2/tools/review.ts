@@ -263,7 +263,7 @@ export function tools(input: {
             sessionID: context.sessionID, services, sessions: input.sessions, execution: input.execution,
             analyze, stages, processes: input.processes, binding: ReviewBindingV2.reviewBinding, analysisStore: ReviewBindingV2.analysisStore,
             settings: (projectID) => reviewSettings(services.db, projectID),
-          })
+          }).pipe(Effect.scoped)
           const card = params.card ? yield* BoardThread.card(services.db, params.card).pipe(Effect.orDie) : undefined
           if (params.card && !card) return yield* new Tool.Failure({ message: `Card ${params.card} is not on the board` })
           const validation = yield* GovernanceRecordsV2.readValidation(services.db, params.validationRecordID)
