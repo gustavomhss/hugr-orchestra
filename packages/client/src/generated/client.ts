@@ -601,6 +601,8 @@ import type {
   ActivityWorktreesOutput,
   ActivityReadWorktreeInput,
   ActivityReadWorktreeOutput,
+  ActivityDockerOutput,
+  ActivityReadDockerOutput,
   ActivityDiskOutput,
   ActivityReadDiskInput,
   ActivityReadDiskOutput,
@@ -4727,6 +4729,28 @@ export function make(options: ClientOptions) {
             path: `/api/activity/worktrees/${encodeURIComponent(input.recordID)}/read`,
             successStatus: 200,
             declaredStatuses: [400, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      docker: (requestOptions?: RequestOptions) =>
+        request<ActivityDockerOutput>(
+          {
+            method: "GET",
+            path: `/api/activity/docker`,
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      readDocker: (requestOptions?: RequestOptions) =>
+        request<ActivityReadDockerOutput>(
+          {
+            method: "POST",
+            path: `/api/activity/docker/read`,
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
             empty: false,
           },
           requestOptions,

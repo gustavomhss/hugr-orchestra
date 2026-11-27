@@ -24,6 +24,17 @@ export const ActivityGroup = HttpApiGroup.make("server.activity")
     ),
   )
   .add(
+    HttpApiEndpoint.get("activity.docker", "/api/activity/docker", {
+      success: ActivityMonitor.DockerSnapshot,
+    }).annotateMerge(OpenApi.annotations({ summary: "Read the cached Docker container inventory" })),
+  )
+  .add(
+    HttpApiEndpoint.post("activity.readDocker", "/api/activity/docker/read", {
+      success: ActivityMonitor.DockerSnapshot,
+      error: ServiceUnavailableError,
+    }).annotateMerge(OpenApi.annotations({ summary: "Request a bounded Docker container inventory reading" })),
+  )
+  .add(
     HttpApiEndpoint.get("activity.disk", "/api/activity/disk", {
       success: ActivityMonitor.DiskSnapshot,
     }),

@@ -1,4 +1,4 @@
-import { InvalidRequestError } from "@orchestra/protocol/errors"
+import { InvalidRequestError, ServiceUnavailableError } from "@orchestra/protocol/errors"
 import { ActivityMonitor } from "@orchestra/schema/activity-monitor"
 import { Schema } from "effect"
 import { check } from "./assertions"
@@ -37,6 +37,21 @@ export const activityScenarios: Scenario[] = [
     .global()
     .at(() => ({ path: route("/api/activity/worktrees/{recordID}/read", { recordID: "httpapi-missing" }) }))
     .json(400, missingRecord, "status"),
+  http.protected
+    .get("/api/activity/docker", "activity.docker")
+    .global()
+    .json(200, (body) => Schema.decodeUnknownSync(ActivityMonitor.DockerSnapshot)(body), "status"),
+  http.protected
+    .post("/api/activity/docker/read", "activity.readDocker")
+    .global()
+    .json(
+      503,
+      (body) => {
+        const error = Schema.decodeUnknownSync(ServiceUnavailableError)(body)
+        check(error.service === "activity.docker", "expected the Docker collector unavailable error")
+      },
+      "status",
+    ),
   http.protected
     .get(diskSnapshotPath, "activity.disk")
     .global()
