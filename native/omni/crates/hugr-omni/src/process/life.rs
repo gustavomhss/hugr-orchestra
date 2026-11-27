@@ -108,8 +108,7 @@ impl Life {
     }
 
     fn process_info(list: Vec<omni_proto::ProcEntry>) -> Vec<ProcessInfo> {
-        list
-            .into_iter()
+        list.into_iter()
             .map(|p| ProcessInfo {
                 pid: p.pid,
                 parent_pid: p.ppid,
