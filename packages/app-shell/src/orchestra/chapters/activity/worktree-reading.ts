@@ -109,7 +109,7 @@ export function make(input: {
       const receivedAt = Math.max(state.now, clock())
       const previous = new Map(state.snapshot?.records.map((record) => [record.recordID, record]))
       // Repeated snapshots keep each sample's client-clock anchor even if the server clock shifts.
-      const clock = { readAt: snapshot.readAt, receivedAt }
+      const sampleClock = { readAt: snapshot.readAt, receivedAt }
       const anchors = Object.fromEntries(
         snapshot.records.map((record) => {
           const prior = previous.get(record.recordID)
@@ -117,8 +117,8 @@ export function make(input: {
           return [
             record.recordID,
             {
-              logical: sampleAnchor(record.logical, prior?.logical, old?.logical, clock),
-              attempt: sampleAnchor(record.attempt, prior?.attempt, old?.attempt, clock),
+              logical: sampleAnchor(record.logical, prior?.logical, old?.logical, sampleClock),
+              attempt: sampleAnchor(record.attempt, prior?.attempt, old?.attempt, sampleClock),
             },
           ]
         }),
