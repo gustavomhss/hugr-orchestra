@@ -126,9 +126,7 @@ export function make(input: {
                 : anchor(logical.sampledAt)
           if (attempt)
             age.attempt =
-              old?.attempt !== undefined &&
-              prior?.attempt?.sampledAt === attempt.sampledAt &&
-              prior.attempt.startedAt === attempt.startedAt
+              old?.attempt !== undefined && JSON.stringify(prior?.attempt) === JSON.stringify(attempt)
                 ? old.attempt
                 : anchor(attempt.sampledAt)
           return [record.recordID, age]

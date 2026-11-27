@@ -103,6 +103,19 @@ test("W10 unread, complete zero and partial readings retain separate monotonic a
     expect(state.snapshot?.snapshotRevision).toBe("3")
     expect(age("a", "logical")).toBe(7000)
     expect(age("a", "attempt")).toBe(4500)
+
+    fixture.clock.now = 7100
+    const changedAttempt = fixture.controller.read("a")
+    operations.push(changedAttempt)
+    ;(await fixture.next()).respond(
+      snapshot("4", {
+        readAt: 9_003_000,
+        records: [row("a", { logical: { bytes: 0, sampledAt: 9_000_000 }, attempt: { ...partial, observedBytes: 8 } })],
+      }),
+    )
+    await bounded(changedAttempt)
+    expect(age("a", "logical")).toBe(8000)
+    expect(age("a", "attempt")).toBe(500)
   } finally {
     fixture.dispose()
     await bounded(Promise.allSettled(operations))
