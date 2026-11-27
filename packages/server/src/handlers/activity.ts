@@ -3,8 +3,9 @@ import { ActivityDisk } from "@orchestra/core/activity-disk"
 import { ActivityDocker } from "@orchestra/core/activity-docker"
 import { ActivityWorktree } from "@orchestra/core/activity-worktree"
 import { Global } from "@orchestra/core/global"
+import { AppProcess } from "@orchestra/core/process"
 import { ConflictError, InvalidRequestError, ServiceUnavailableError } from "@orchestra/protocol/errors"
-import { Effect } from "effect"
+import { Context, Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"
 import { ActivityWorktreeRegistry } from "../activity-worktree"
@@ -19,6 +20,9 @@ export const ActivityHandler = HttpApiBuilder.group(Api, "server.activity", (han
   Effect.gen(function* () {
     const worktrees = yield* ActivityWorktreeRegistry.Service
     const docker = ActivityDocker.make()
+    const processContext = yield* Effect.context<AppProcess.Service>().pipe(
+      Effect.map(Context.pick(AppProcess.Service)),
+    )
     return handlers
       .handle("activity.worktrees", () =>
         Effect.tryPromise({
@@ -56,6 +60,7 @@ export const ActivityHandler = HttpApiBuilder.group(Api, "server.activity", (han
       .handle("activity.docker", () => Effect.sync(docker.snapshot))
       .handle("activity.readDocker", () =>
         docker.read().pipe(
+          Effect.provideContext(processContext),
           Effect.mapError(
             () =>
               new ServiceUnavailableError({
