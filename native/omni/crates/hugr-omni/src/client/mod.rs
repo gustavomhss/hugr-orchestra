@@ -122,6 +122,11 @@ pub(crate) struct Tree {
 }
 
 impl Tree {
+    /// Opaque host-local identity qualified by the supervisor generation and tree id.
+    pub(crate) fn tree_id(&self) -> String {
+        format!("{}:{}", self.sup.num, self.id)
+    }
+
     /// Unix PTY roots: lets the held root exec, once the host's reader runs, and returns when exec
     /// succeeded or failed (the second bounded round trip of a PTY spawn). A no-op elsewhere.
     pub(crate) fn go(&self) -> Result<(), Error> {

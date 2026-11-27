@@ -236,6 +236,10 @@ class Child {
     return this.#native.pid;
   }
 
+  get treeId() {
+    return this.#native.treeId;
+  }
+
   get output() {
     return consumer(this.#native, false);
   }

@@ -46,6 +46,6 @@ output | CommonOptions.mergeStderr, SpawnOptions.backpressure, Child.output, Chi
   Command::merge_stderr, Command::backpressure, Child::output, Child::lines, Child::dropped_bytes, DroppedBytes, DroppedBytes.stdout, DroppedBytes.stderr,
   Output, Output::next, Lines, Lines::next, Chunk, Chunk.stream, Chunk.data, Chunk.lost_before, Line, Line.stream, Line.text,
   Line.lost_before, Line.continues, Stream
-Child | Child, Child.pid, Child.wait, Child.stop, Child.processes, ProcessInfo, ProcessInfo.pid, ProcessInfo.parentPid, ProcessInfo.name | Child, Child::pid, Child::wait, Child::stop, Child::processes, ProcessInfo, ProcessInfo.pid, ProcessInfo.parent_pid, ProcessInfo.name
+Child | Child, Child.pid, Child.treeId, Child.wait, Child.stop, Child.processes, ProcessInfo, ProcessInfo.pid, ProcessInfo.parentPid, ProcessInfo.name | Child, Child::pid, Child::tree_id, Child::wait, Child::stop, Child::processes, ProcessInfo, ProcessInfo.pid, ProcessInfo.parent_pid, ProcessInfo.name
 Exit / RunResult | Exit, Exit.exitCode, Exit.signal, Exit.reason, Exit.success, RunResult, RunResult.stdout, RunResult.stderr | Exit, Exit.code, Exit.signal, Exit.reason, Exit::success, Reason, RunOutput, RunOutput.exit, RunOutput.stdout, RunOutput.stderr
 OmniError | OmniError, OmniError.code, OmniError.result | Error, Error::code, Error::result, ErrorCode, ErrorCode::as_str

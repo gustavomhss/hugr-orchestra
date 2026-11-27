@@ -77,6 +77,12 @@ impl NativeChild {
         self.kid.pid()
     }
 
+    /// Opaque host-local tree identity, stable after exit and stop; not a PID or control token.
+    #[napi(getter)]
+    pub fn tree_id(&self) -> String {
+        self.kid.tree_id()
+    }
+
     /// Whether it runs inside a terminal (`PtyChild`).
     #[napi(getter)]
     pub fn is_pty(&self) -> bool {

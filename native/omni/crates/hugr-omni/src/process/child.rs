@@ -64,6 +64,11 @@ impl Child {
         self.pid
     }
 
+    /// Opaque host-local tree identity, stable after exit and stop; not a PID or control token.
+    pub fn tree_id(&self) -> String {
+        self.inner.life.tree_id()
+    }
+
     /// Claims the single output consumer as chunks (contract §4). A second claim, or a claim after the
     /// consumer was dropped, fails with `InvalidArgument`. Dropping the `Output` detaches for good.
     pub fn output(&self) -> Result<Output, Error> {
