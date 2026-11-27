@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { Effect, Exit, Scope } from "effect"
 import { createServer } from "node:net"
 import { request } from "node:http"
 import { addressInUse } from "./serve-port"
@@ -58,10 +59,20 @@ test("installation transport releases the bind before Bun reports listening", as
   try {
     server.listen(0, "127.0.0.1")
     const address = server.address()
-    expect(address).not.toBeNull()
+    if (!address || typeof address === "string") throw new Error("Missing bound loopback address")
     expect(server.listening).toBe(false)
     await Effect.runPromise(Scope.close(scope, Exit.void))
     expect(server.address()).toBeNull()
+
+    const replacement = createServer()
+    try {
+      await new Promise<void>((resolve, reject) => {
+        replacement.once("error", reject)
+        replacement.listen(address.port, "127.0.0.1", resolve)
+      })
+    } finally {
+      if (replacement.listening) await new Promise<void>((resolve) => replacement.close(() => resolve()))
+    }
   } finally {
     await Effect.runPromise(Scope.close(scope, Exit.void))
   }
