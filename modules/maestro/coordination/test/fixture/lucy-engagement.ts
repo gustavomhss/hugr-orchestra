@@ -41,7 +41,7 @@ import { SystemContext } from "@orchestra/core/system-context"
 import { SystemContextRegistry } from "@orchestra/core/system-context/registry"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { fragmentFixture, systemContextLayer } from "@orchestra/core/test/session-runner-harness"
-import { Context, Effect, Layer, Schema, Stream } from "effect"
+import { Context, Effect, Layer, Schema, Scope, Stream } from "effect"
 import { nativeProfiles } from "../../src/roster"
 import { GovernanceBackgroundV2 } from "../../src/v2/governance/background"
 import { ReviewResultV2 } from "../../src/v2/governance/review-result"
@@ -168,7 +168,7 @@ function opener(state: State) {
         permissions: Context.get(context, PermissionV2.Service), prepareIndex: () => prepared(state, processes),
         invoke: (input, agent, sessionID) => call("maestro_request_review", input, agent, sessionID), call,
       }).pipe(Effect.provide(context))
-    }).pipe(Effect.provide(Layer.fresh(graph(state, controls))), Effect.provideService(ResearchToolkit.Root, state.storeRoot)))
+    }).pipe(Effect.provide(graph(state, controls)), Effect.provideService(ResearchToolkit.Root, state.storeRoot)))
 }
 
 function graph(state: State, controls: Controls) {
@@ -178,7 +178,7 @@ function graph(state: State, controls: Controls) {
     Database.node, EventV2.node, SessionStore.node, LocationServiceMap.node, SessionV2.node, SessionExecution.node,
     GovernanceBackgroundV2.sessionsNode, MaestroReviewTools.executionNode, AppProcess.node, GitCli.node, researchRoot,
   ])
-  return AppNodeBuilder.build(nodes, [
+  const application = AppNodeBuilder.build(nodes, [
     ...globalBindings(LayerNode.group([nodes, locationServices, MaestroToolsV2.node,
       ToolRegistry.nativeNode, ToolRegistry.nativeToolsNode])),
     [Database.node, Database.layerFromPath(state.filename)],
@@ -203,6 +203,12 @@ function graph(state: State, controls: Controls) {
     }) }))],
     [Global.node, Global.layerWith(state.global)],
   ], [MaestroToolsV2.node])
+  // Lazy Locations must reuse the memo map that built the real Event projectors.
+  // Layer.fresh changes the build map without updating the CurrentMemoMap captured by LayerMap.
+  return Layer.effectContext(Effect.gen(function* () {
+    const memo = yield* Layer.makeMemoMap
+    return yield* Layer.buildWithMemoMap(application, memo, yield* Scope.Scope)
+  }))
 }
 
 // Pin the real global nodes before substituting the file database. The Location hoist otherwise sees both
