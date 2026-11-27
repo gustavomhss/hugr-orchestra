@@ -1,12 +1,14 @@
+import { NodeFileSystem, NodePath } from "@effect/platform-node"
 import { expect } from "bun:test"
 import { ActivityDocker } from "@orchestra/core/activity-docker"
+import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { AppProcess } from "@orchestra/core/process"
 import type { ActivityMonitor } from "@orchestra/schema/activity-monitor"
-import { Deferred, Effect, Fiber } from "effect"
+import { Deferred, Effect, Fiber, Layer } from "effect"
 import { systemError } from "effect/PlatformError"
 import { TestClock } from "effect/testing"
-import { ChildProcess } from "effect/unstable/process"
+import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process"
 import { expectSpawn } from "./fixture/omni-expect"
 import { testEffect } from "./lib/effect"
 
@@ -47,24 +49,34 @@ it.live(
     expect(monitor.snapshot().snapshotRevision).toBe("0")
     expect(calls).toHaveLength(0)
 
+    const firstID = "a".repeat(64)
+    const secondID = "a".repeat(63) + "b"
     const read = yield* withRun(monitor.read(), (command, options) => {
       calls.push({ command, options })
       return Effect.succeed(
         result(
-          '{"ID":"same-prefix-a","Names":"front","Size":"35.58 kB (virtual 109.2 MB)","State":"exited","Owner":"agent","Labels":"scope=agent","Mounts":"/tmp","UniqueSize":"42B"}\r\n' +
-            '{"ID":"same-prefix-b"}\r\n',
+          [
+            JSON.stringify({
+              ID: firstID,
+              Names: "front",
+              Size: "35.58 kB (virtual 109.2 MB)",
+              State: "exited",
+              Owner: "agent",
+              Labels: "scope=agent",
+              Mounts: "/tmp",
+              UniqueSize: "42B",
+            }),
+            JSON.stringify({ ID: secondID }),
+            "",
+          ].join("\r\n"),
         ),
       )
     })
 
     expect(calls).toHaveLength(1)
-    expect(calls[0]?.command).toMatchObject({
-      _tag: "StandardCommand",
-      command: "docker",
-      args: ["container", "ls", "--all", "--no-trunc", "--size", "--format", "json"],
-      options: {},
-    })
-    expect(calls[0]?.command._tag === "StandardCommand" && calls[0].command.options.shell).toBeFalsy()
+    expect(calls[0]?.command).toEqual(
+      ChildProcess.make("docker", ["container", "ls", "--all", "--no-trunc", "--size", "--format", "json"]),
+    )
     expect(calls[0]?.options).toEqual({ timeout: 5_000, maxOutputBytes: 262_144, maxErrorBytes: 16_384 })
     expect(read).toMatchObject({
       instanceID: now.instanceID,
@@ -72,15 +84,11 @@ it.live(
       source: docker,
       coverage: "containers",
     })
-    expect(read.attempt).toEqual({
-      state: "complete",
-      startedAt: expect.any(Number),
-      sampledAt: read.inventory?.sampledAt,
-      gaps: [],
-    })
+    expect(read.attempt).toMatchObject({ state: "complete", startedAt: expect.any(Number), gaps: [] })
+    expect(read.attempt?.sampledAt).toBe(read.inventory?.sampledAt)
     expect(read.inventory?.containers).toEqual([
       {
-        containerID: "same-prefix-a",
+        containerID: firstID,
         name: "front",
         sizeText: "35.58 kB (virtual 109.2 MB)",
         owner: "",
@@ -88,7 +96,7 @@ it.live(
         unique: "não colapsei",
         useProof: "unproved",
       },
-      { containerID: "same-prefix-b", owner: "", logical: null, unique: "não colapsei", useProof: "unproved" },
+      { containerID: secondID, owner: "", logical: null, unique: "não colapsei", useProof: "unproved" },
     ])
     expect(monitor.snapshot().snapshotRevision).toBe("1")
     expect(monitor.snapshot().inventory).toEqual(read.inventory)
@@ -108,23 +116,29 @@ it.live(
 )
 
 it.live(
-  "A219 a legacy-only AppProcess is unavailable without launching the Docker command",
+  "A219 strict AppProcess remains unavailable when its actual spawner uses legacy",
   Effect.gen(function* () {
     const monitor = ActivityDocker.make()
-    const processService = yield* AppProcess.Service
-    const legacy = {
-      ...processService,
-      omniEnabled: false,
-      run: () => Effect.die("the Docker collector must never call a legacy-only process service"),
-    }
-    const read = yield* monitor.read().pipe(Effect.provideService(AppProcess.Service, legacy))
+    const legacy = Layer.effect(ChildProcessSpawner.ChildProcessSpawner, CrossSpawnSpawner.makeWith("off")).pipe(
+      Layer.provide(Layer.mergeAll(NodeFileSystem.layer, NodePath.layer)),
+    )
+    const processService = yield* AppProcess.Service.pipe(
+      Effect.provide(AppProcess.layerWith("strict").pipe(Layer.provide(legacy))),
+    )
+    const read = yield* monitor.read().pipe(
+      Effect.provideService(AppProcess.Service, {
+        ...processService,
+        run: () => Effect.die("the Docker collector must never call a legacy-only process service"),
+      }),
+    )
     expect(read.snapshotRevision).toBe("1")
     expect(read.attempt).toMatchObject({ state: "unavailable", gaps: ["process-unavailable"] })
     expect(read.inventory).toBeUndefined()
   }),
 )
 
-const thousand = Array.from({ length: 1_000 }, (_, index) => JSON.stringify({ ID: "id-" + index })).join("\n")
+const rows = Array.from({ length: 1_000 }, (_, index) => JSON.stringify({ ID: "id-" + index }))
+const thousand = rows.join("\n")
 
 it.live(
   "A172 accepts exactly 1,000 records without requiring a final newline",
@@ -185,14 +199,23 @@ const scenarios: ReadonlyArray<{
     gaps: ["output-truncated"],
   },
   {
-    name: "more than 1,000 nonempty records wins before parsing malformed first and last records",
-    run: () => Effect.succeed(result("{\n" + thousand + "\n{")),
+    name: "1,001 nonempty records wins before parsing malformed first and last records",
+    run: () => Effect.succeed(result(["{", ...rows.slice(1), "{"].join("\n"))),
     state: "partial",
     gaps: ["row-limit"],
   },
   {
     name: "an extra empty line does not count toward a partial row cap",
     run: () => Effect.succeed(result(thousand + "\n\n")),
+    state: "failed",
+    gaps: ["invalid-record"],
+  },
+  {
+    name: "invalid UTF-8 in a JSON ID fails instead of publishing a replaced ID",
+    run: () =>
+      Effect.succeed(
+        result("", { stdout: Buffer.concat([Buffer.from('{"ID":"'), Buffer.from([0xff]), Buffer.from('"}')]) }),
+      ),
     state: "failed",
     gaps: ["invalid-record"],
   },
@@ -224,7 +247,8 @@ for (const scenario of scenarios) {
       expect(read.attempt?.state).toBe(scenario.state)
       expect(read.attempt?.gaps.toSorted()).toEqual(scenario.gaps.toSorted())
       expect(read.inventory).toBeUndefined()
-      expect(monitor.snapshot().attempt).toEqual(read.attempt)
+      expect(monitor.snapshot()).toMatchObject({ snapshotRevision: "1", attempt: read.attempt })
+      expect(monitor.snapshot().inventory).toBeUndefined()
     }),
   )
 }
@@ -305,8 +329,8 @@ it.live(
   Effect.gen(function* () {
     const monitor = ActivityDocker.make()
     const processService = yield* AppProcess.Service
+    expectSpawn(import.meta.path)
     const truncated = yield* withRun(monitor.read(), (_, options) => {
-      expectSpawn(import.meta.path)
       return processService
         .run(
           ChildProcess.make(process.execPath, [
@@ -316,12 +340,14 @@ it.live(
           options,
         )
         .pipe(
-          Effect.tap((output) => {
-            expect(output.stdout.length).toBe(262_144)
-            expect(output.stderr.length).toBe(16_384)
-            expect(output.stdoutTruncated).toBe(true)
-            expect(output.stderrTruncated).toBe(true)
-          }),
+          Effect.tap((output) =>
+            Effect.sync(() => {
+              expect(output.stdout.length).toBe(262_144)
+              expect(output.stderr.length).toBe(16_384)
+              expect(output.stdoutTruncated).toBe(true)
+              expect(output.stderrTruncated).toBe(true)
+            }),
+          ),
         )
     })
     expect(truncated.attempt?.state).toBe("partial")
@@ -339,8 +365,8 @@ it.live(
   "A172–A174 Omni deadline wins after a stream was truncated and preserves its diagnostic",
   Effect.gen(function* () {
     const processService = yield* AppProcess.Service
+    expectSpawn(import.meta.path)
     const read = yield* withRun(ActivityDocker.make().read(), (_, options) => {
-      expectSpawn(import.meta.path)
       return processService.run(
         ChildProcess.make(process.execPath, [
           "-e",
