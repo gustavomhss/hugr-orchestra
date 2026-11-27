@@ -41,19 +41,19 @@ test("Docker schema separates unread, complete empty, and retained inventory", (
     source: "docker container ls --all --no-trunc --size --format json",
     coverage: "containers",
     readAt: 300,
-  }
-  const unread = { ...header, snapshotRevision: "0" }
+  } as const
+  const unread = { ...header, snapshotRevision: "0" } as const
   const empty = {
     ...header,
     snapshotRevision: "9007199254740993",
     inventory: { sampledAt: 200, containers: [] },
     attempt: { startedAt: 199, sampledAt: 200, state: "complete", gaps: [] },
-  }
+  } as const
   const partial = {
     ...empty,
     snapshotRevision: "9007199254740994",
     attempt: { startedAt: 209, sampledAt: 210, state: "partial", gaps: ["stdout-truncated", "row-limit"] },
-  }
+  } as const
   expect(decodeSnapshot(unread)).toEqual(unread)
   expect(decodeSnapshot(empty)).toEqual(empty)
   expect(decodeSnapshot(partial)).toEqual(partial)
@@ -73,7 +73,7 @@ test("Docker rows expose formatted size only as text, with explicit unread logic
     logical: null,
     unique: "não colapsei",
     useProof: "unproved",
-  }
+  } as const
   const decodeRow = Schema.decodeUnknownSync(ActivityMonitor.DockerContainer)
   expect(decodeRow(row)).not.toHaveProperty("sizeText")
   const observed = { ...row, sizeText: "35.58 kB (virtual 109.2 MB)" }
