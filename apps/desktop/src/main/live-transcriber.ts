@@ -59,6 +59,8 @@ function deepgram(config: TranscriberConfig, onEvent: (event: TranscriberEvent) 
     attempt: 0,
     error: "",
     stopped: false,
+    finished: false,
+    stopping: undefined as Promise<void> | undefined,
     retry: undefined as ReturnType<typeof setTimeout> | undefined,
   }
   const watermark = () => Math.min(...finalEndMs)
@@ -69,19 +71,21 @@ function deepgram(config: TranscriberConfig, onEvent: (event: TranscriberEvent) 
   }
 
   const connect = () => {
+    if (state.stopped) return
     const socket = new WebSocket(url, ["token", config.key])
     socket.binaryType = "arraybuffer"
     state.socket = socket
     state.offsetMs = undefined
     state.error = ""
     socket.onopen = () => {
+      if (state.stopped) return socket.close()
       const replayFromMs = Math.max(watermark(), ring.startMs() ?? 0)
       onEvent({ kind: "open", attempt: state.attempt, replayFromMs })
       state.attempt = 0
       ring.since(replayFromMs).forEach((chunk) => write(socket, chunk.startMs, chunk.data))
     }
     socket.onmessage = (event) => {
-      if (typeof event.data !== "string") return
+      if (state.finished || state.socket !== socket || typeof event.data !== "string") return
       const message = Option.getOrUndefined(decodeMessage(event.data))
       if (!message || state.offsetMs === undefined) return
       const offsetMs = state.offsetMs
@@ -126,23 +130,40 @@ function deepgram(config: TranscriberConfig, onEvent: (event: TranscriberEvent) 
   connect()
   return {
     send(startMs, pcm) {
+      if (state.stopped) return
       ring.push(startMs, pcm)
       const socket = state.socket
       if (socket?.readyState === WebSocket.OPEN) write(socket, startMs, pcm)
     },
-    async stop() {
+    stop() {
+      if (state.stopping) return state.stopping
       state.stopped = true
       clearTimeout(state.retry)
       const socket = state.socket
-      if (!socket || socket.readyState === WebSocket.CLOSED) return
+      if (!socket || socket.readyState === WebSocket.CLOSED) {
+        state.finished = true
+        return state.stopping = Promise.resolve()
+      }
       // CloseStream asks the engine to flush its last finals before it closes; give it a bounded wait.
-      const closed = new Promise<void>((resolve) => {
-        socket.addEventListener("close", () => resolve())
-        setTimeout(resolve, 3000)
+      state.stopping = new Promise<void>((resolve) => {
+        const finish = () => {
+          clearTimeout(timer)
+          socket.removeEventListener("close", finish)
+          state.finished = true
+          state.socket = undefined
+          socket.onopen = null
+          socket.onmessage = null
+          socket.onerror = null
+          socket.onclose = null
+          socket.close()
+          resolve()
+        }
+        const timer = setTimeout(finish, 3000)
+        socket.addEventListener("close", finish, { once: true })
+        if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: "CloseStream" }))
+        if (socket.readyState === WebSocket.CONNECTING) socket.close()
       })
-      if (socket.readyState === WebSocket.OPEN) socket.send(JSON.stringify({ type: "CloseStream" }))
-      if (socket.readyState === WebSocket.CONNECTING) socket.close()
-      await closed
+      return state.stopping
     },
   }
 }

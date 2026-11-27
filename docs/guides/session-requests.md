@@ -24,3 +24,7 @@ Archiving or deleting a session stops its active run and discards pending wakeup
 Staging undo while a turn is running returns a conflict; stop the turn first. After staging undo, a new replacement message commits the selected history cut and its admission atomically. A conflicting message ID rejects the replacement without truncating history. Exact retries do not cut history again. Pending work cannot resume hidden history while undo remains staged.
 
 Creating a child and deleting its parent are serialized through the durable change. A child cannot survive deletion by racing its creation.
+
+The TUI loads pending permissions and questions when it connects and when a Session is opened, including requests from its Session family in the same Location. Replies received during that load take precedence over the snapshot. Auto-approve mode also applies to restored permission requests; questions still require an answer.
+
+If a history read fails temporarily, reopening the Session retries it and retains messages already received live.

@@ -118,7 +118,7 @@ export function Dialogs(props: ViewProps) {
        if (parsed.error) return setForm("error", props.t(parsed.error === "required" ? "orchestra.actions.required" : "orchestra.actions.invalidInputs"))
       const variables = selectedProvider === "gitlab" ? variablesFromForm(data) : undefined
       if (variables && "error" in variables) return setForm("error", props.t("orchestra.actions.invalidInputs"))
-      return submitCommand(owner, id, revision, generation, { provider: selectedProvider, ref: form.ref.trim(), inputs: parsed.value, ...(variables ? { variables } : {}) })
+      return submitCommand(owner, id, revision, generation, { provider: selectedProvider, ref: form.ref.trim(), ...(parsed.value !== undefined ? { inputs: parsed.value } : {}), ...(variables ? { variables } : {}) })
     }
     if (isSourceDialog(owner)) {
       const result = sourcePayload(owner, props, data)

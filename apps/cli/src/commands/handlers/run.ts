@@ -50,7 +50,8 @@ export default Runtime.handler(
     const piped = input.mini || process.stdin.isTTY || typed ? undefined : yield* Effect.promise(() => Bun.stdin.text())
     const message = !piped ? typed : !typed ? piped : typed + "\n" + piped
     const command = Option.getOrUndefined(input.command)
-    if (message.trim().length === 0 && !command && !input.mini) return yield* Effect.fail(new Error("You must provide a message or a command"))
+    if (message.trim().length === 0 && !command && !input.mini)
+      return yield* Effect.fail(new Error("You must provide a message or a command"))
 
     const dir = Option.getOrUndefined(input.dir)
     const daemon = yield* Daemon.Service
@@ -67,7 +68,10 @@ export default Runtime.handler(
         : yield* daemon.transport()
     const client = Orchestra.make({ baseUrl: transport.url, headers: transport.headers })
 
-    const mini = yield* Effect.try({ try: () => miniOptions(input), catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))) })
+    const mini = yield* Effect.try({
+      try: () => miniOptions(input),
+      catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))),
+    })
     if (input.mini) {
       if (command) return yield* Effect.fail(new Error("--mini cannot be used with --command"))
       if (input.format === "json") return yield* Effect.fail(new Error("--mini cannot be used with --format json"))
@@ -101,7 +105,12 @@ export default Runtime.handler(
         agent: Option.getOrUndefined(input.agent),
         json: input.format === "json",
         files,
-        title: title === undefined ? undefined : title !== "" ? title : message.slice(0, 50) + (message.length > 50 ? "..." : ""),
+        title:
+          title === undefined
+            ? undefined
+            : title !== ""
+              ? title
+              : message.slice(0, 50) + (message.length > 50 ? "..." : ""),
         // A daemon runs elsewhere than this shell, so it is always told the directory; an attached server is told only when asked.
         directory: dir ? (attach ? dir : path.resolve(process.cwd(), dir)) : attach ? undefined : process.cwd(),
         variant: Option.getOrUndefined(input.variant),
@@ -228,10 +237,13 @@ export async function execute(client: Client, options: Options) {
       warn(`! permission requested: ${request.action} (${resources}); auto-rejecting. Pass --auto to allow it.`)
       return "reject"
     },
-    submit: () =>
+    submit: (signal) =>
       options.command
-        ? client.sessions.command({ sessionID, command: options.command, arguments: options.message })
-        : client.sessions.prompt({ sessionID, prompt: { text: options.message, files: options.files.map((file) => ({ ...file })) } }),
+        ? client.sessions.command({ sessionID, command: options.command, arguments: options.message }, { signal })
+        : client.sessions.prompt(
+            { sessionID, prompt: { text: options.message, files: options.files.map((file) => ({ ...file })) } },
+            { signal },
+          ),
   }).catch((error: Error) => error)
   if (finished instanceof Error) return fail(options, finished.message || "Prompt was rejected")
   if (!finished) return fail(options, "The prompt was not processed")
@@ -239,7 +251,8 @@ export async function execute(client: Client, options: Options) {
 }
 
 function fail(options: Options, message: string) {
-  if (options.json) process.stdout.write(JSON.stringify({ type: "error", timestamp: Date.now(), data: { message } }) + EOL)
+  if (options.json)
+    process.stdout.write(JSON.stringify({ type: "error", timestamp: Date.now(), data: { message } }) + EOL)
   else process.stderr.write(message + EOL)
   return false
 }
@@ -248,7 +261,7 @@ async function resolveSession(client: Client, options: Options, location: { dire
   const found = options.session
     ? await client.sessions.get({ sessionID: options.session }).catch(() => undefined)
     : options.continue
-      ? (await client.sessions.list({ limit: 25, order: "desc", directory: location?.directory })).data.find((item) => !item.parentID)
+      ? await latestRoot(client, location)
       : undefined
   // An unknown --session resolves to undefined; every other path resolves to the session ID the run prompts.
   if (options.session && !found) return undefined
@@ -264,9 +277,21 @@ async function resolveSession(client: Client, options: Options, location: { dire
   return created.id
 }
 
+async function latestRoot(client: Client, location: { directory: string } | undefined) {
+  let cursor: string | undefined
+  while (true) {
+    const page = await client.sessions.list(
+      cursor ? { limit: 25, cursor } : { limit: 25, order: "desc", directory: location?.directory },
+    )
+    const root = page.data.find((item) => !item.parentID)
+    if (root || !page.cursor.next) return root
+    cursor = page.cursor.next
+  }
+}
+
 /** Headless runs cannot answer questions, so whichever Session they prompt (new, continued, resumed or forked) denies them. */
 async function denyQuestions(client: Client, sessionID: string) {
-  const current = (await client.sessions.getPermission({ sessionID }))
+  const current = await client.sessions.getPermission({ sessionID })
   if (current.some((rule) => rule.permission === "question" && rule.pattern === "*" && rule.action === "deny")) return
   // setPermission replaces the whole ruleset, so the Session's existing rules are kept and the deny goes last to win.
   await client.sessions.setPermission({
@@ -281,7 +306,8 @@ async function pickAgent(client: Client, name: string | undefined, location: { d
   if (!agents) return skip(`failed to list agents. Falling back to default agent`)
   const agent = agents.data.find((item) => item.id === name)
   if (!agent) return skip(`agent "${name}" not found. Falling back to default agent`)
-  if (agent.mode === "subagent") return skip(`agent "${name}" is a subagent, not a primary agent. Falling back to default agent`)
+  if (agent.mode === "subagent")
+    return skip(`agent "${name}" is a subagent, not a primary agent. Falling back to default agent`)
   return name
 }
 
@@ -310,13 +336,23 @@ export async function readFiles(paths: ReadonlyArray<string>, inline: boolean) {
       continue
     }
     if (await isDirectory(resolved)) return `Cannot attach local directory without a shared filesystem: ${input}`
-    if (file.size > ATTACH_FILE_MAX_BYTES) return `Cannot attach local file larger than 10 MiB or a special file: ${input}`
+    if (file.size > ATTACH_FILE_MAX_BYTES)
+      return `Cannot attach local file larger than 10 MiB or a special file: ${input}`
     const mime = file.type.split(";")[0] || "application/octet-stream"
-    files.push({ uri: `data:${mime};base64,${Buffer.from(await file.arrayBuffer()).toString("base64")}`, name: path.basename(resolved) })
+    files.push({
+      uri: `data:${mime};base64,${Buffer.from(await file.arrayBuffer()).toString("base64")}`,
+      name: path.basename(resolved),
+    })
   }
   return files
 }
 
 async function isDirectory(target: string) {
-  return (await Bun.file(target).stat().catch(() => undefined))?.isDirectory() ?? false
+  return (
+    (
+      await Bun.file(target)
+        .stat()
+        .catch(() => undefined)
+    )?.isDirectory() ?? false
+  )
 }

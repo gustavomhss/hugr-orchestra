@@ -1,7 +1,7 @@
 export * as ServeShutdown from "./serve-shutdown"
 
 import { constants } from "node:os"
-import * as Effect from "effect/Effect"
+import { Deferred, Effect } from "effect"
 
 export type Emitter = {
   once(signal: NodeJS.Signals, listener: () => void): unknown
@@ -37,6 +37,32 @@ export function untilSignal(emitter: Emitter, platform: NodeJS.Platform, onSigna
     })
     return Effect.sync(remove)
   })
+}
+
+/** Interrupt a scoped serve lifetime on the first signal and keep handling signals until its cleanup finishes. */
+export function withSignals<A, E, R>(
+  emitter: Pick<Emitter, "off"> & { prependListener(signal: NodeJS.Signals, listener: () => void): unknown },
+  platform: NodeJS.Platform,
+  onSignal: (signal: NodeJS.Signals) => void,
+  lifetime: Effect.Effect<A, E, R>,
+) {
+  return Effect.scoped(Effect.gen(function* () {
+    const received = yield* Deferred.make<void>()
+    yield* Effect.acquireRelease(
+      Effect.sync(() => signals(platform).map((signal) => {
+        const listener = () => {
+          if (Deferred.isDoneUnsafe(received)) return
+          onSignal(signal)
+          Deferred.doneUnsafe(received, Effect.void)
+        }
+        // Record SIGINT and SIGTERM before NodeRuntime interrupts the main fiber.
+        emitter.prependListener(signal, listener)
+        return { signal, listener }
+      })),
+      (listeners) => Effect.sync(() => listeners.forEach((item) => emitter.off(item.signal, item.listener))),
+    )
+    return yield* Effect.raceFirst(Deferred.await(received), lifetime)
+  }))
 }
 
 /** One evidence line per phase, read by native/omni/campaign/windows-lifecycle.ts. Only written under DEBUG logging. */

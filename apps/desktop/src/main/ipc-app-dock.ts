@@ -325,6 +325,7 @@ export function registerAppDockIpcHandlers() {
       throw new Error("Invalid MCP Dock profile deletion")
     }
     const profileID = appDockProfileID((payload as { profileID?: unknown }).profileID)
+    if (profileID === "default") throw new Error("APP_DOCK_DEFAULT_PROFILE_RESERVED")
     const profileStorage = appDockProfiles.markDeleting(profileID)
     await appDock.deleteStorage(profileStorage.storageKey, win)
     appDockProfiles.markDeleted(profileID)

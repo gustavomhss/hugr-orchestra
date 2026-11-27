@@ -3,7 +3,7 @@ export * as CodeIndexQuery from "./query"
 import { createHash } from "node:crypto"
 import { realpath } from "node:fs/promises"
 import path from "node:path"
-import { Effect } from "effect"
+import { Effect, Option, Schema } from "effect"
 import { SqlClient } from "effect/unstable/sql"
 import { Research } from "@orchestra/schema/research"
 import { AppProcess } from "../../process"
@@ -29,8 +29,10 @@ export type Overlay = (input: {
 }) => Effect.Effect<ReadonlyArray<{ readonly path: string; readonly lines: number; readonly symbols: ReadonlyArray<OverlaySymbol> }>, Research.Error>
 
 export type Context = CodeIndexBuild.Input & {
-  /** Exact prepared cache only; implementation follows the frozen acceptance suite. */
+  /** Exact validated prepared cache only, without a build, dirty overlay or manifest update. */
   readonly readOnly?: boolean
+  /** Host-owned exact captured file authority; absent preserves the full-source research/PR contract. */
+  readonly allowedFiles?: ReadonlySet<string>
   readonly overlay: Overlay
   /** When present, a query that finds shards missing starts their build in the background. */
   readonly extract?: CodeIndexBuild.Extract
@@ -69,7 +71,7 @@ type Row = {
 type SiteRow = Omit<Row, "id"> & {
   id: number | null; site_path: string; site_line: number; site_end: number; site_role: number; site_opaque: number
 }
-type Ready = { readonly planned: CodeIndexBuild.Planned; readonly key: string; readonly stale?: string }
+type Ready = { readonly planned: CodeIndexBuild.Planned; readonly key: string; readonly stale?: string; readonly reader?: CodeIndexStore.Reader }
 type Found = { readonly ref: CodeIndex.SymbolRef; readonly shard?: Ready; readonly id?: number; readonly scip?: string }
 type Scope = {
   readonly plan: CodeIndexBuild.Plan
@@ -77,31 +79,54 @@ type Scope = {
   readonly dirty: ReadonlySet<string>
   readonly overlay: ReadonlyMap<string, { readonly lines: number; readonly symbols: ReadonlyArray<CodeIndex.SymbolRef> }>
   readonly skipped: Array<{ readonly path: string; readonly reason: string }>
+  readonly recorded?: ReadonlyArray<{ readonly path: string; readonly reason: string }>
   readonly dirtyDigest?: string
+  readonly authority?: { readonly files: ReadonlySet<string>; readonly json: string }
 }
 type Findings = { readonly resolved?: Found; readonly candidates: ReadonlyArray<CodeIndex.SymbolRef>; readonly hits: ReadonlyArray<CodeIndex.Hit> }
 
 export const run = Effect.fn("CodeIndexQuery.run")(function* (ctx: Context, input: CodeIndex.CodeQuery) {
   const started = performance.now()
+  const allowedFiles = ctx.allowedFiles === undefined ? undefined : new Set(ctx.allowedFiles)
   const query = normalize(ctx.root, input)
   if (!query) return yield* new Research.Error({ code: "reference_invalid", message: "Query path is outside the bound worktree" })
+  if (allowedFiles && (("at" in query && query.at && !allowedFiles.has(query.at.path)) ||
+    ("path" in query && query.path !== undefined && !admitted(allowedFiles, query.path, query.op === "symbols" || query.op === "map"))))
+    return yield* new Research.Error({ code: "reference_invalid", message: "Query path is outside the admitted captured files" })
   if (Object.keys(ctx.indexers).length === 0)
     return yield* new Research.Error({ code: "index_unavailable", message: "No research index pack is ready on this machine" })
-  const plan = yield* CodeIndexBuild.plan(ctx)
+  const plan = yield* CodeIndexBuild.plan({ ...ctx, uncached: ctx.readOnly === true })
+  if (allowedFiles && [...allowedFiles].some((file) => !capturedPath(plan.tree, file)))
+    return yield* new Research.Error({ code: "reference_invalid", message: "Query authority is not an exact set of captured regular files" })
   // Only path-scoped operations narrow the shards (J2.10); a symbol's references may live in any shard.
   const prefix = query.op === "imports" || query.op === "symbols" || query.op === "map" ? query.path : undefined
-  const scope = yield* open(ctx, plan, inScope(plan, prefix ?? (query.op === "definition" ? query.path : undefined)))
+  const shards = inScope(plan, prefix ?? (query.op === "definition" ? query.path : undefined))
+    .filter((planned) => !allowedFiles || planned.shard.files.some((file) => allowedFiles.has(file)))
+  const opened = allowedFiles?.size === 0
+    ? { plan, ready: [], dirty: new Set<string>(), overlay: new Map(), skipped: [] }
+    : yield* open({ ...ctx, ...(allowedFiles ? { allowedFiles } : {}) }, plan, shards)
+  const scope: Scope = { ...opened,
+    ...(allowedFiles ? { authority: { files: allowedFiles, json: JSON.stringify([...allowedFiles]) } } : {}) }
   const limit = "limit" in query && query.limit !== undefined ? query.limit : DEFAULT_LIMIT
   const offset = "offset" in query && query.offset !== undefined ? query.offset : 0
   const findings = yield* execute(scope, query)
   const page = findings.hits.slice(offset, offset + limit)
   const documents = yield* count(scope, prefix)
-  const languagesMissing = [...new Set(plan.unindexed.filter((shard) => covers(shard.project, prefix)).map((shard) => shard.language))]
+  const languagesMissing = [...new Set(plan.unindexed.filter((shard) => covers(shard.project, prefix) &&
+    (!allowedFiles || shard.files.some((file) => allowedFiles.has(file) && within(file, prefix)))).map((shard) => shard.language))]
   const skipped = [
-    ...scope.skipped,
-    ...plan.orphans.filter((file) => within(file, prefix)).map((file) => ({ path: file, reason: "no-project" })),
+    ...scope.skipped.filter((entry) => admitted(allowedFiles, entry.path, true)),
+    ...plan.orphans.filter((file) => within(file, prefix) && admitted(allowedFiles, file)).map((file) => ({ path: file, reason: "no-project" })),
     ...(yield* recorded(scope, prefix)),
   ]
+  if (ctx.readOnly) {
+    const refs = [findings.resolved?.ref, ...findings.candidates, ...findings.hits.map((hit) => hit.via)]
+    const ranges = [...refs.flatMap((ref) => ref ? [ref.range] : []), ...findings.hits.map((hit) => hit.range)]
+    if (ranges.some((range) => !capturedPath(plan.tree, range.path, query.op === "map") ||
+      !admitted(allowedFiles, range.path, query.op === "map")) ||
+      skipped.some((entry) => !capturedPath(plan.tree, entry.path, true, true) || !admitted(allowedFiles, entry.path, true)))
+      return yield* new Research.Error({ code: "index_unavailable", message: "Cached result path is outside the captured source" })
+  }
   const paths = [findings.resolved?.ref.range.path, ...findings.candidates.map((ref) => ref.range.path), ...page.map((hit) => hit.range.path)]
   const result: CodeIndex.CodeQueryResult = {
     resolved: findings.resolved?.ref,
@@ -133,7 +158,7 @@ export const run = Effect.fn("CodeIndexQuery.run")(function* (ctx: Context, inpu
     },
   }
   return result
-})
+}, Effect.scoped)
 
 // Every path the caller names is resolved against the worktree; one that leaves it is reference_invalid (J2.12).
 function normalize(root: string, query: CodeIndex.CodeQuery): CodeIndex.CodeQuery | undefined {
@@ -159,6 +184,16 @@ function normalize(root: string, query: CodeIndex.CodeQuery): CodeIndex.CodeQuer
 const within = (file: string, prefix: string | undefined) =>
   prefix === undefined || prefix === "." || file === prefix || file.startsWith(prefix + "/")
 
+const admitted = (files: ReadonlySet<string> | undefined, file: string, directory = false) =>
+  files === undefined || files.has(file) || (directory && [...files].some((entry) => within(entry, file)))
+
+/** One JSON parameter keeps exact authority inside SQL before candidate limits without SQLite's variable cap. */
+function fileFilter(scope: Scope, column: string, nullable = false) {
+  return scope.authority
+    ? { text: ` AND (${nullable ? `${column} IS NULL OR ` : ""}${column} IN (SELECT value FROM json_each(?)))`, params: [scope.authority.json] }
+    : { text: "", params: [] }
+}
+
 // A shard covers a scope when the scope is inside the project or the project is inside the scope.
 const covers = (project: string, prefix: string | undefined) =>
   prefix === undefined || project === "." || within(project, prefix) || within(prefix, project)
@@ -179,6 +214,7 @@ function open(ctx: Context, plan: CodeIndexBuild.Plan, shards: ReadonlyArray<Cod
   return Effect.gen(function* () {
     if (shards.length === 0)
       return yield* new Research.Error({ code: "index_unavailable", message: "No supported language with a ready indexer in this scope" })
+    if (ctx.readOnly) return yield* prepared(ctx, plan, shards)
     const records = yield* CodeIndexStore.records(plan.dir)
     const skipped: Array<{ path: string; reason: string }> = []
     // A shard whose last build in this process failed says why, whether or not an older version serves meanwhile.
@@ -188,7 +224,6 @@ function open(ctx: Context, plan: CodeIndexBuild.Plan, shards: ReadonlyArray<Cod
     }))
     const choices = yield* Effect.forEach(shards, (planned) => Effect.gen(function* () {
       if (yield* CodeIndexStore.exists(plan.dir, planned.key)) return { planned, key: planned.key } satisfies Ready
-      if (ctx.readOnly) return yield* new Research.Error({ code: "index_unavailable", message: "Index has not been built for this commit" })
       const previous = records.flatMap((record) => record.shards
         .filter((shard) => shard.id === planned.shard.id && shard.key !== planned.key)
         .map((shard) => ({ commit: record.commit, key: shard.key })))
@@ -227,6 +262,54 @@ function open(ctx: Context, plan: CodeIndexBuild.Plan, shards: ReadonlyArray<Cod
   })
 }
 
+const decodeJson = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)
+const decodeSkipped = Schema.decodeUnknownOption(Schema.Array(Schema.Struct({ path: Schema.String, reason: Schema.String })))
+
+function prepared(ctx: Context, plan: CodeIndexBuild.Plan, shards: ReadonlyArray<CodeIndexBuild.Planned>) {
+  return Effect.gen(function* () {
+    const ready = yield* Effect.forEach(shards, (planned) => Effect.gen(function* () {
+      const reader = yield* CodeIndexStore.open(plan.dir, planned.key)
+      const skipped = yield* reader(Effect.gen(function* () {
+        const sql = yield* SqlClient.SqlClient
+        const metadata = yield* sql.unsafe<{ key: string; value: string }>("SELECT key, value FROM meta")
+        const meta = new Map(metadata.map((entry) => [entry.key, entry.value]))
+        if (meta.size !== metadata.length || meta.get("shardKey") !== planned.key ||
+          meta.get("indexer") !== planned.indexer.id || meta.get("version") !== planned.indexer.version)
+          return yield* new Research.Error({ code: "index_unavailable", message: "Cached shard identity is incompatible" })
+        // meta.commit describes the producer. Identical source/configuration keys are reusable across commits.
+        const skipped = Option.flatMap(decodeJson(meta.get("skipped")), decodeSkipped)
+        if (Option.isNone(skipped))
+          return yield* new Research.Error({ code: "index_unavailable", message: "Cached coverage metadata is invalid" })
+        // Validate the selected shard's full metadata before file authority can hide an excluded entry.
+        if (skipped.value.some((entry) => !capturedPath(plan.tree, entry.path, true, true)))
+          return yield* new Research.Error({ code: "index_unavailable", message: "Cached coverage path is outside the captured source" })
+        const documents = yield* sql.unsafe<{ path: string; sha256: string }>("SELECT path, sha256 FROM document")
+        if (documents.some((document) => !capturedPath(plan.tree, document.path) ||
+          !planned.shard.files.includes(document.path) || typeof document.sha256 !== "string" || !/^[0-9a-f]{64}$/.test(document.sha256)))
+          return yield* new Research.Error({ code: "index_unavailable", message: "Cached document identity is outside the captured shard" })
+        const bytes = yield* CodeIndexShard.bytes(ctx.git, plan.tree, documents.map((document) => document.path))
+        if (documents.some((document) => {
+          const body = bytes.get(document.path)
+          return body === undefined || createHash("sha256").update(body).digest("hex") !== document.sha256
+        })) return yield* new Research.Error({ code: "index_unavailable", message: "Cached document hash does not match the captured source" })
+        return skipped.value
+      }))
+      return { planned, key: planned.key, reader, skipped }
+    }))
+    return {
+      plan, ready, dirty: new Set<string>(), overlay: new Map(), skipped: [], recorded: ready.flatMap((entry) => entry.skipped),
+    } satisfies Scope
+  })
+}
+
+function capturedPath(tree: CodeIndexShard.Tree, file: string, directory = false, skipped = false) {
+  if (typeof file !== "string" || !file || /[\\\0\r\n]/.test(file) || /^[a-z]:/i.test(file) || path.posix.isAbsolute(file)) return false
+  if (directory && file === ".") return tree.blobs.size > 0
+  if (file.split("/").some((part) => !part || part === "." || part === "..")) return false
+  const paths = skipped ? tree.blobs : tree.regular
+  return paths?.has(file) === true || (directory && [...(paths?.keys() ?? [])].some((entry) => entry.startsWith(file + "/")))
+}
+
 // J2.8: modified and untracked files of the scope's shards are re-read by the structural layer.
 function overlay(ctx: Context, plan: CodeIndexBuild.Plan, ready: ReadonlyArray<Ready>, skipped: Array<{ path: string; reason: string }>) {
   return Effect.gen(function* () {
@@ -236,12 +319,14 @@ function overlay(ctx: Context, plan: CodeIndexBuild.Plan, ready: ReadonlyArray<R
         (CodeIndexShard.language(file) === choice.planned.shard.language && within(file, choice.planned.shard.project)))
       .sort((a, b) => b.planned.shard.project.length - a.planned.shard.project.length)[0]
     const owned = changes.flatMap((change) => {
+      if (!admitted(ctx.allowedFiles, change.path)) return []
       const choice = owner(change.path)
       return choice ? [{ ...change, choice }] : []
     })
     const groups = Map.groupBy(owned.filter((change) => !change.deleted), (change) => change.choice)
     const files = (yield* Effect.forEach([...groups], ([choice, entries]) =>
       ctx.overlay({ root: ctx.root, shard: choice.planned.shard, paths: entries.map((entry) => entry.path) }))).flat()
+      .filter((file) => admitted(ctx.allowedFiles, file.path))
     const digest = owned.length === 0 ? undefined : yield* Effect.promise(async () => {
       const hash = createHash("sha256")
       for (const change of owned.toSorted((a, b) => a.path.localeCompare(b.path)))
@@ -265,14 +350,18 @@ function overlay(ctx: Context, plan: CodeIndexBuild.Plan, ready: ReadonlyArray<R
 
 function execute(scope: Scope, query: CodeIndex.CodeQuery): Effect.Effect<Findings, Research.Error> {
   switch (query.op) {
-    case "imports":
+    case "imports": {
+      const target = fileFilter(scope, "to_path", true)
       return each(scope, (sql) => sql.unsafe<{ from_path: string; line: number; specifier: string; to_path: string | null; kind: string }>(
-        `SELECT from_path, line, specifier, to_path, kind FROM import WHERE from_path = ? ORDER BY line`, [query.path]))
+        `SELECT from_path, line, specifier, to_path, kind FROM import WHERE from_path = ?${target.text} ORDER BY line`, [query.path, ...target.params]))
         .pipe(Effect.map((rows) => ({ candidates: [], hits: sorted(rows.flatMap((entry) => entry.rows).map((row) => moduleHit(row.from_path, row.line, row))) })))
-    case "importers":
+    }
+    case "importers": {
+      const source = fileFilter(scope, "from_path")
       return each(scope, (sql) => sql.unsafe<{ from_path: string; line: number; specifier: string; to_path: string | null; kind: string }>(
-        `SELECT from_path, line, specifier, to_path, kind FROM import WHERE to_path = ? ORDER BY from_path, line`, [query.path]))
+        `SELECT from_path, line, specifier, to_path, kind FROM import WHERE to_path = ?${source.text} ORDER BY from_path, line`, [query.path, ...source.params]))
         .pipe(Effect.map((rows) => ({ candidates: [], hits: sorted(rows.flatMap((entry) => entry.rows).map((row) => moduleHit(row.from_path, row.line, row))) })))
+    }
     case "symbols":
       return symbols(scope, query)
     case "map":
@@ -295,34 +384,38 @@ type Target = { readonly name?: string; readonly path?: string; readonly symbol?
 function resolve(scope: Scope, target: Target): Effect.Effect<{ resolved?: Found; candidates: ReadonlyArray<CodeIndex.SymbolRef> }, Research.Error> {
   return Effect.gen(function* () {
     const overlaid = [...scope.overlay.values()].flatMap((entry) => entry.symbols)
+      .filter((ref) => admitted(scope.authority?.files, ref.range.path))
+    const symbol = fileFilter(scope, "path")
     if (target.symbol?.startsWith("overlay:")) {
       const ref = overlaid.find((symbol) => symbol.symbol === target.symbol)
       return ref ? { resolved: { ref }, candidates: [] } : { candidates: [] }
     }
     if (target.at) {
       const at = target.at
+      const definition = fileFilter(scope, "s.path")
       const local = scope.overlay.get(at.path)?.symbols.filter((symbol) => symbol.range.startLine <= at.line && symbol.range.endLine >= at.line)
         .sort((a, b) => (a.range.endLine - a.range.startLine) - (b.range.endLine - b.range.startLine))[0]
       if (local) return { resolved: { ref: local }, candidates: [] }
       const found = (yield* each(scope, (sql) => at.column === undefined
         ? sql.unsafe<Row>(`SELECT s.* FROM occurrence o JOIN symbol s ON s.id = o.symbol_id WHERE o.path = ? AND o.line = ?
-            ORDER BY (o.role & 1) DESC, o.col LIMIT 1`, [at.path, at.line])
+            ${definition.text} ORDER BY (o.role & 1) DESC, o.col LIMIT 1`, [at.path, at.line, ...definition.params])
         : sql.unsafe<Row>(`SELECT s.* FROM occurrence o JOIN symbol s ON s.id = o.symbol_id WHERE o.path = ? AND o.line <= ? AND o.end_line >= ?
-            AND (o.line < ? OR o.col <= ?) AND (o.end_line > ? OR o.end_col > ?) ORDER BY (o.end_line - o.line), (o.end_col - o.col) LIMIT 1`,
-            [at.path, at.line, at.line, at.line, at.column - 1, at.line, at.column - 1]))).flatMap(definitions)
+            AND (o.line < ? OR o.col <= ?) AND (o.end_line > ? OR o.end_col > ?)${definition.text} ORDER BY (o.end_line - o.line), (o.end_col - o.col) LIMIT 1`,
+            [at.path, at.line, at.line, at.line, at.column - 1, at.line, at.column - 1, ...definition.params]))).flatMap(definitions)
       if (found[0]) return { resolved: found[0], candidates: [] }
       const enclosing = (yield* each(scope, (sql) => sql.unsafe<Row>(`SELECT * FROM symbol WHERE path = ? AND start_line <= ? AND end_line >= ?
-        ORDER BY end_line - start_line LIMIT 1`, [at.path, at.line, at.line]))).flatMap(definitions)
+        ${symbol.text} ORDER BY end_line - start_line LIMIT 1`, [at.path, at.line, at.line, ...symbol.params]))).flatMap(definitions)
       return enclosing[0] ? { resolved: enclosing[0], candidates: [] } : { candidates: [] }
     }
     if (target.symbol?.startsWith("#")) {
       const [, shard, id] = target.symbol.split("#")
       const scoped = { ...scope, ready: scope.ready.filter((choice) => choice.planned.shard.id === shard) }
-      const found = (yield* each(scoped, (sql) => sql.unsafe<Row>(`SELECT * FROM symbol WHERE id = ?`, [Number(id)]))).flatMap(definitions)
+      const found = (yield* each(scoped, (sql) => sql.unsafe<Row>(`SELECT * FROM symbol WHERE id = ?${symbol.text}`, [Number(id), ...symbol.params]))).flatMap(definitions)
       return found[0] ? { resolved: found[0], candidates: [] } : { candidates: [] }
     }
     if (target.symbol !== undefined) {
-      const found = (yield* each(scope, (sql) => sql.unsafe<Row>(`SELECT * FROM symbol WHERE scip = ? AND path IN (SELECT path FROM document)`, [target.symbol]))).flatMap(definitions)
+      const found = (yield* each(scope, (sql) => sql.unsafe<Row>(`SELECT * FROM symbol WHERE scip = ? AND path IN (SELECT path FROM document)${symbol.text}`,
+        [target.symbol, ...symbol.params]))).flatMap(definitions)
       return found[0] ? { resolved: found[0], candidates: [] } : { candidates: [] }
     }
     if (target.name === undefined) return yield* new Research.Error({ code: "reference_invalid", message: "Query needs name, symbol or at" })
@@ -330,10 +423,10 @@ function resolve(scope: Scope, target: Target): Effect.Effect<{ resolved?: Found
     const last = parts.at(-1)!
     const stored = (yield* each(scope, (sql) => sql.unsafe<Row & { qualified: string }>(`
       WITH RECURSIVE up(origin, id, container_id, depth, name) AS (
-        SELECT id, id, container_id, 0, name FROM symbol WHERE name = ? ${target.path ? "AND path = ?" : ""} AND path IN (SELECT path FROM document)
+        SELECT id, id, container_id, 0, name FROM symbol WHERE name = ? ${target.path ? "AND path = ?" : ""} AND path IN (SELECT path FROM document)${symbol.text}
         UNION ALL SELECT up.origin, s.id, s.container_id, up.depth + 1, s.name FROM symbol s JOIN up ON s.id = up.container_id WHERE up.depth < 16)
       SELECT s.*, (SELECT group_concat(name, '.') FROM (SELECT name FROM up WHERE up.origin = s.id ORDER BY depth DESC)) AS qualified
-      FROM symbol s WHERE s.id IN (SELECT origin FROM up)`, target.path ? [last, target.path] : [last])))
+      FROM symbol s WHERE s.id IN (SELECT origin FROM up)`, [...(target.path ? [last, target.path] : [last]), ...symbol.params])))
       .flatMap((entry) => entry.rows.filter((row) => (row.qualified === target.name || row.qualified.endsWith("." + target.name)) && !scope.dirty.has(row.path))
         .map((row) => found(entry.choice, row)))
     const named: ReadonlyArray<Found> = [...stored, ...overlaid
@@ -351,9 +444,11 @@ function resolve(scope: Scope, target: Target): Effect.Effect<{ resolved?: Found
 function fuzzy(scope: Scope, name: string, file?: string) {
   const match = CodeIndexStore.tokens(name).split(" ").filter(Boolean).map((token) => `"${token}"*`).join(" ")
   if (!match) return Effect.succeed([] as ReadonlyArray<CodeIndex.SymbolRef>)
+  const allowed = fileFilter(scope, "s.path")
   return each(scope, (sql) => sql.unsafe<Row & { score: number }>(`SELECT s.*, bm25(symbol_name) AS score FROM symbol_name
       JOIN symbol s ON s.id = symbol_name.rowid WHERE symbol_name MATCH ? ${file ? "AND s.path = ?" : ""}
-      AND s.path IN (SELECT path FROM document) ORDER BY score LIMIT ${CANDIDATES * 5}`, file ? [match, file] : [match]))
+      AND s.path IN (SELECT path FROM document)${allowed.text} ORDER BY score LIMIT ${CANDIDATES * 5}`,
+      [...(file ? [match, file] : [match]), ...allowed.params]))
     .pipe(Effect.map((rows) => rows.flatMap((entry) => entry.rows.filter((row) => !scope.dirty.has(row.path)).map((row) => ({ score: row.score, ref: found(entry.choice, row).ref })))
       .sort((a, b) => a.score - b.score).map((entry) => entry.ref)))
 }
@@ -366,22 +461,27 @@ function related(scope: Scope, target: Found, op: "references" | "callers" | "ca
     const match = target.scip ? "s.scip = ?" : "s.id = ?"
     const key = target.scip ?? target.id
     if (op === "implementations") {
+      const allowed = fileFilter(scope, "i.path")
       const rows = yield* each(shards, (sql) => sql.unsafe<Row>(`SELECT i.* FROM relation r JOIN symbol s ON s.id = r.target_id
-        JOIN symbol i ON i.id = r.symbol_id WHERE ${match} AND r.kind = 'implementation'`, [key]))
+        JOIN symbol i ON i.id = r.symbol_id WHERE ${match} AND r.kind = 'implementation'${allowed.text}`, [key, ...allowed.params]))
       return sorted(rows.flatMap(definitions).map((entry) => ({ range: entry.ref.range, role: "definition" as const, via: entry.ref })))
     }
     if (op === "callees") {
+      const allowed = fileFilter(scope, "t.path")
       const rows = yield* each({ ...scope, ready: [target.shard] }, (sql) => sql.unsafe<Row & { site: number; opaque_site: number }>(`
         SELECT t.*, o.line AS site, o.opaque AS opaque_site FROM occurrence o JOIN symbol t ON t.id = o.symbol_id
-        WHERE o.path = ? AND o.line BETWEEN ? AND ? AND (o.role & 1) = 0 AND o.symbol_id != ?`,
-        [target.ref.range.path, target.ref.range.startLine, target.ref.range.endLine, target.id]))
+        WHERE o.path = ? AND o.line BETWEEN ? AND ? AND (o.role & 1) = 0 AND o.symbol_id != ?${allowed.text}`,
+        [target.ref.range.path, target.ref.range.startLine, target.ref.range.endLine, target.id, ...allowed.params]))
       return grouped(rows.flatMap((entry) => entry.rows.map((row) => ({ via: found(entry.choice, row).ref, site: row.site, opaque: row.opaque_site === 1 }))))
     }
+    const sitesAllowed = fileFilter(scope, "o.path")
+    const enclosingAllowed = fileFilter(scope, "e.path", true)
     const rows = yield* each(shards, (sql) => sql.unsafe<SiteRow>(`
       SELECT o.path AS site_path, o.line AS site_line, o.end_line AS site_end, o.role AS site_role, o.opaque AS site_opaque,
         e.id, e.scip, e.name, e.kind, e.path, e.start_line, e.end_line, e.name_line, e.exported, e.container_id
       FROM occurrence o JOIN symbol s ON s.id = o.symbol_id LEFT JOIN symbol e ON e.id = o.enclosing_id
-      WHERE ${match} AND (o.role & ${CodeIndex.Role.definition}) = 0`, [key]))
+      WHERE ${match} AND (o.role & ${CodeIndex.Role.definition}) = 0${sitesAllowed.text}${op === "callers" ? enclosingAllowed.text : ""}`,
+      [key, ...sitesAllowed.params, ...(op === "callers" ? enclosingAllowed.params : [])]))
     if (op === "references")
       return sorted(rows.flatMap((entry) => entry.rows).map((row): CodeIndex.Hit => ({
         range: { path: row.site_path, startLine: row.site_line, endLine: row.site_end },
@@ -416,7 +516,7 @@ function grouped(sites: ReadonlyArray<{ readonly via: CodeIndex.SymbolRef; reado
 function symbols(scope: Scope, query: Extract<CodeIndex.CodeQuery, { op: "symbols" }>) {
   return Effect.gen(function* () {
     const keep = (ref: CodeIndex.SymbolRef) => within(ref.range.path, query.path) && (query.kind === undefined || ref.kind === query.kind) &&
-      (query.exported === undefined || ref.exported === query.exported)
+      (query.exported === undefined || ref.exported === query.exported) && admitted(scope.authority?.files, ref.range.path)
     const overlaid = [...scope.overlay.values()].flatMap((entry) => entry.symbols).filter(keep)
     if (query.name !== undefined) {
       const name = query.name
@@ -429,8 +529,10 @@ function symbols(scope: Scope, query: Extract<CodeIndex.CodeQuery, { op: "symbol
       ...(query.kind !== undefined ? [{ sql: "kind = ?", params: [query.kind] }] : []),
       ...(query.exported !== undefined ? [{ sql: "exported = ?", params: [query.exported ? 1 : 0] }] : []),
     ]
-    const rows = yield* each(scope, (sql) => sql.unsafe<Row>(`SELECT * FROM symbol WHERE path IN (SELECT path FROM document)
-      ${filters.map((filter) => `AND ${filter.sql}`).join(" ")} ORDER BY path, start_line, id`, filters.flatMap((filter) => filter.params)))
+    const allowed = fileFilter(scope, "path")
+    const rows = yield* each(scope, (sql) => sql.unsafe<Row>(`SELECT * FROM symbol WHERE path IN (SELECT path FROM document)${allowed.text}
+      ${filters.map((filter) => `AND ${filter.sql}`).join(" ")} ORDER BY path, start_line, id`,
+      [...allowed.params, ...filters.flatMap((filter) => filter.params)]))
     const stored = rows.flatMap(definitions).map((entry) => entry.ref).filter((ref) => !scope.dirty.has(ref.range.path))
     return {
       candidates: [],
@@ -447,7 +549,9 @@ function symbols(scope: Scope, query: Extract<CodeIndex.CodeQuery, { op: "symbol
  */
 function map(scope: Scope, query: Extract<CodeIndex.CodeQuery, { op: "map" }>) {
   return Effect.gen(function* () {
-    const rows = (yield* each(scope, (sql) => sql.unsafe<{ path: string; rank: number; loc: number }>(`SELECT path, rank, loc FROM file_rank`)))
+    const allowed = fileFilter(scope, "path")
+    const rows = (yield* each(scope, (sql) => sql.unsafe<{ path: string; rank: number; loc: number }>(
+      `SELECT path, rank, loc FROM file_rank WHERE 1${allowed.text}`, allowed.params)))
       .flatMap((entry) => entry.rows).filter((row) => within(row.path, query.path))
     const base = query.path === undefined || query.path === "." ? [] : query.path.split("/")
     const depth = query.depth ?? Number.POSITIVE_INFINITY
@@ -478,27 +582,33 @@ function map(scope: Scope, query: Extract<CodeIndex.CodeQuery, { op: "map" }>) {
 
 // Documents examined: the index's documents in scope plus overlay files the index did not have.
 function count(scope: Scope, prefix: string | undefined) {
+  const allowed = fileFilter(scope, "path")
   return each(scope, (sql) => prefix === undefined || prefix === "."
-    ? sql.unsafe<{ path: string }>(`SELECT path FROM document`)
-    : sql.unsafe<{ path: string }>(`SELECT path FROM document WHERE path = ? OR substr(path, 1, ?) = ?`, [prefix, prefix.length + 1, prefix + "/"]))
+    ? sql.unsafe<{ path: string }>(`SELECT path FROM document WHERE 1${allowed.text}`, allowed.params)
+    : sql.unsafe<{ path: string }>(`SELECT path FROM document WHERE (path = ? OR substr(path, 1, ?) = ?)${allowed.text}`,
+      [prefix, prefix.length + 1, prefix + "/", ...allowed.params]))
     .pipe(Effect.map((rows) => new Set([...rows.flatMap((entry) => entry.rows.map((row) => row.path)),
-      ...[...scope.overlay.keys()].filter((file) => within(file, prefix))]).size))
+      ...[...scope.overlay.keys()].filter((file) => within(file, prefix) && admitted(scope.authority?.files, file))]).size))
 }
 
 // The build's named gaps (meta.skipped) inside the scope.
 function recorded(scope: Scope, prefix: string | undefined) {
+  const keep = (entry: { readonly path: string }) => within(entry.path, prefix) && admitted(scope.authority?.files, entry.path, true)
+  if (scope.recorded !== undefined) return Effect.succeed(scope.recorded.filter(keep))
   return each(scope, (sql) => sql.unsafe<{ value: string }>(`SELECT value FROM meta WHERE key = 'skipped'`)).pipe(
     Effect.map((rows) => rows.flatMap((entry) => entry.rows.flatMap((row) => JSON.parse(row.value) as Array<{ path: string; reason: string }>))
-      .filter((entry) => within(entry.path, prefix))))
+      .filter(keep)))
 }
 
-/** Run one read against every ready shard of the scope; each shard is opened read-only for the duration. */
+/** Prepared reads reuse the validated connection; research reads keep their existing per-operation lifetime. */
 function each<A extends object>(scope: Pick<Scope, "plan" | "ready">, read: (sql: SqlClient.SqlClient) => Effect.Effect<ReadonlyArray<A>, unknown>) {
-  return Effect.forEach(scope.ready, (choice) =>
-    CodeIndexStore.read(scope.plan.dir, choice.key, Effect.gen(function* () {
+  return Effect.forEach(scope.ready, (choice) => {
+    const query = Effect.gen(function* () {
       const sql = yield* SqlClient.SqlClient
       return { choice, rows: yield* read(sql) }
-    })))
+    })
+    return choice.reader ? choice.reader(query) : CodeIndexStore.read(scope.plan.dir, choice.key, query)
+  })
 }
 
 const definitions = (entry: { readonly choice: Ready; readonly rows: ReadonlyArray<Row> }) => entry.rows.map((row) => found(entry.choice, row))

@@ -42,3 +42,6 @@ Restart Orchestra to load the change. If you declare the server in a project's c
 You do not call Composer yourself. When Maestro hands backend work to the backend seat, the seat starts from `hugr-composer_fastapi_meta_home`, picks building blocks from the catalog and composes them instead of writing that infrastructure by hand. Without the server, the seat writes the code itself.
 
 If the server fails to start, its error appears with the other MCP failures (see [MCP and CLI failures](mcp-and-cli-failures.md)).
+
+
+An explicit workspace choice stays with its draft when you switch tabs or reload. Restoring a saved workspace checks the repository's current workspace list before enabling the draft. If that workspace was removed, the draft returns to the repository default; a temporary lookup failure keeps the saved choice available for retry.

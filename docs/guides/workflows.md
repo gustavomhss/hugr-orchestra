@@ -90,3 +90,6 @@ A failed run shows the step that stopped it and the reason. Open the step in the
 - Hooks are a different feature. A hook records what happens in a session and can ask before a command. A workflow is what gates a run. See [Hooks](hooks.md).
 - Runs are read in the app. Release, rerun and cancel happen in Maestro's chat.
 - A step's MCP list does not reach the MCP servers that a Claude Code engine brings on its own. Its bash commands are limited.
+
+
+Dispatching a workflow with no supplied inputs omits the inputs field. GitLab's pipeline-input capability is required only when the dispatch actually supplies inputs; defined boolean and numeric inputs retain `false` and `0`.

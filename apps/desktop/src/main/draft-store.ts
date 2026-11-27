@@ -44,7 +44,6 @@ export function createDesktopDraftStore(filename: string) {
     if (timer) clearTimeout(timer)
     timer = undefined
     const writes = [...pending]
-    pending.clear()
     db.transaction((tx) => {
       writes.forEach(([key, value]) => {
         if (value === null) tx.delete(documents).where(eq(documents.key, key)).run()
@@ -54,6 +53,9 @@ export function createDesktopDraftStore(filename: string) {
             .onConflictDoUpdate({ target: documents.key, set: { value } })
             .run()
       })
+    })
+    writes.forEach(([key, value]) => {
+      if (pending.get(key) === value) pending.delete(key)
     })
   }
   const schedule = () => {
