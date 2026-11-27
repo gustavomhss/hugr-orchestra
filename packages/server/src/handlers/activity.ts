@@ -55,11 +55,14 @@ export const ActivityHandler = HttpApiBuilder.group(Api, "server.activity", (han
       )
       .handle("activity.docker", () => Effect.sync(docker.snapshot))
       .handle("activity.readDocker", () =>
-        Effect.fail(
-          new ServiceUnavailableError({
-            message: "Docker container inventory collector is unavailable",
-            service: "activity.docker",
-          }),
+        docker.read().pipe(
+          Effect.mapError(
+            () =>
+              new ServiceUnavailableError({
+                message: "Docker container inventory collector is unavailable",
+                service: "activity.docker",
+              }),
+          ),
         ),
       )
       .handle("activity.disk", () => Effect.sync(() => disk.snapshot()))
