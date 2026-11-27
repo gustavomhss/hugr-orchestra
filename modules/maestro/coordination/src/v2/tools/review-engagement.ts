@@ -178,7 +178,7 @@ function perform(params: ReviewEngagementPolicyV2.Input, input: Input, parent: S
       create: (child) => Effect.gen(function* () {
         if (child.role === "lead" && child.key === "lead") return lead
         if (child.role === "lead" || child.key === "lead") return yield* failure("engagement-child-invalid", "child role conflicts with lead")
-        const id = SessionSchema.ID.make(`ses_lucy_engagement_${ReviewEngagementReportV2.digest({ key: identity.key, ...child })}`)
+        const id = SessionSchema.ID.make(`ses_lucy_engagement_${ReviewEngagementReportV2.digest({ namespace: identity.key, key: child.key, role: child.role })}`)
         yield* sessions.create({ id, parentID: lead, agent: AgentV2.ID.make("lucy"),
           ...(parent.model ? { model: parent.model } : {}), location: parent.location }).pipe(
           Effect.mapError(() => failure("engagement-session-unavailable", "child Session is unavailable")))

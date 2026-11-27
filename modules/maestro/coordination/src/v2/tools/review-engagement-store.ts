@@ -255,14 +255,20 @@ function pristine(db: Sql, row: Row) {
       row.tokens_cache_read !== 0 || row.tokens_cache_write !== 0)
       return yield* invalid("unclaimed Session is not pristine")
     const checks = [
-      db.select({ id: SessionMessageTable.id }).from(SessionMessageTable).where(eq(SessionMessageTable.session_id, row.id)).limit(1).all(),
-      db.select({ id: SessionInputTable.id }).from(SessionInputTable).where(eq(SessionInputTable.session_id, row.id)).limit(1).all(),
-      db.select({ id: MessageTable.id }).from(MessageTable).where(eq(MessageTable.session_id, row.id)).limit(1).all(),
-      db.select({ id: PartTable.id }).from(PartTable).where(eq(PartTable.session_id, row.id)).limit(1).all(),
-      db.select({ id: SessionContextEpochTable.session_id }).from(SessionContextEpochTable).where(eq(SessionContextEpochTable.session_id, row.id)).limit(1).all(),
-      db.select({ id: SessionTable.id }).from(SessionTable).where(eq(SessionTable.parent_id, row.id)).limit(1).all(),
+      db.select({ id: SessionMessageTable.id }).from(SessionMessageTable).where(eq(SessionMessageTable.session_id, row.id)).limit(1).all()
+        .pipe(Effect.map((rows) => rows.length > 0), Effect.orDie),
+      db.select({ id: SessionInputTable.id }).from(SessionInputTable).where(eq(SessionInputTable.session_id, row.id)).limit(1).all()
+        .pipe(Effect.map((rows) => rows.length > 0), Effect.orDie),
+      db.select({ id: MessageTable.id }).from(MessageTable).where(eq(MessageTable.session_id, row.id)).limit(1).all()
+        .pipe(Effect.map((rows) => rows.length > 0), Effect.orDie),
+      db.select({ id: PartTable.id }).from(PartTable).where(eq(PartTable.session_id, row.id)).limit(1).all()
+        .pipe(Effect.map((rows) => rows.length > 0), Effect.orDie),
+      db.select({ id: SessionContextEpochTable.session_id }).from(SessionContextEpochTable).where(eq(SessionContextEpochTable.session_id, row.id)).limit(1).all()
+        .pipe(Effect.map((rows) => rows.length > 0), Effect.orDie),
+      db.select({ id: SessionTable.id }).from(SessionTable).where(eq(SessionTable.parent_id, row.id)).limit(1).all()
+        .pipe(Effect.map((rows) => rows.length > 0), Effect.orDie),
     ]
-    for (const check of checks) if ((yield* check.pipe(Effect.orDie)).length) return yield* invalid("unclaimed Session has foreign activity")
+    for (const check of checks) if (yield* check) return yield* invalid("unclaimed Session has foreign activity")
   })
 }
 
