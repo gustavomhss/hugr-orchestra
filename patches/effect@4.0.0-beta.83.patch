@@ -145,3 +145,39 @@ diff --git a/dist/unstable/socket/Socket.js b/dist/unstable/socket/Socket.js
 @@ -431,1 +431,1 @@
 -    if (opts?.onOpen) yield* opts.onOpen;
 +    if (opts?.onOpen) yield* Effect.provideService(opts.onOpen, WebSocket, ws);
+diff --git a/src/unstable/cli/internal/parser.ts b/src/unstable/cli/internal/parser.ts
+--- a/src/unstable/cli/internal/parser.ts
++++ b/src/unstable/cli/internal/parser.ts
+@@ -499,6 +499,11 @@
+   return {
+-    _tag: "Value",
+-    value: undefined,
++    _tag: "Error",
++    error: new CliError.InvalidValue({
++      option: spec.name,
++      value: "",
++      expected: "a value after the option",
++      kind: "flag"
++    }),
+     tokens: []
+   }
+ }
+diff --git a/dist/unstable/cli/internal/parser.js b/dist/unstable/cli/internal/parser.js
+--- a/dist/unstable/cli/internal/parser.js
++++ b/dist/unstable/cli/internal/parser.js
+@@ -292,8 +292,13 @@
+     };
+   }
+   return {
+-    _tag: "Value",
+-    value: undefined,
++    _tag: "Error",
++    error: new CliError.InvalidValue({
++      option: spec.name,
++      value: "",
++      expected: "a value after the option",
++      kind: "flag"
++    }),
+     tokens: []
+   };
+ };

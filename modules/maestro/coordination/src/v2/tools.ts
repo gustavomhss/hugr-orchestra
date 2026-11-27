@@ -114,6 +114,7 @@ const layer = Layer.effectDiscard(
         ...MaestroPlanningTools.tools({ services, gate, publication }),
         ...MaestroReviewTools.tools({
           services,
+          database,
           gate,
           sessions: yield* GovernanceBackgroundV2.Sessions,
           execution: yield* MaestroReviewTools.Execution,

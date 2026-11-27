@@ -19,20 +19,29 @@ export type View = {
   readonly tree: string
   readonly commit?: string
   readonly git: CodeIndexShard.Git
+  /** Full captured metadata remains available for prepared-cache document validation. */
   readonly files: CodeIndexShard.Tree
+  readonly scope?: ReviewTools.CodeSource["scope"]
+  readonly allowedFiles?: ReadonlySet<string>
 }
 
 /** Only host-captured object identities authorize CODE reads. The shared probe directory is never read. */
 export const open = (source: ReviewTools.CodeSource) => Effect.gen(function* () {
+  const scope = source.scope ? { sha256: source.scope.sha256, files: [...source.scope.files] } : undefined
   if (!source.commit && !source.tree) return yield* unavailable("review source has no immutable Git tree identity")
   const resolved = yield* CodeIndexShard.resolveTree(source.worktree, source.commit ?? source.tree!)
   if (source.tree !== undefined && source.tree !== resolved.tree)
     return yield* unavailable("review source tree does not match its captured object")
   const git = source.commit ? yield* CodeIndexShard.captured(source.worktree, source.commit) : resolved.git
   const files = yield* CodeIndexShard.tree(git, resolved.tree)
+  if (scope && (!/^[0-9a-f]{64}$/.test(scope.sha256) || new Set(scope.files).size !== scope.files.length ||
+    scope.files.some((file) => typeof file !== "string" || relative(source.worktree, file) !== file ||
+      /[\\\0\r\n]/.test(file) || file.split("/").some((part) => !part || part === ".") || !files.regular?.has(file))))
+    return yield* invalid("review CODE authority is not an exact set of captured regular files")
   return {
     worktree: source.worktree, tree: resolved.tree, git, files,
     ...(source.commit ? { commit: source.commit } : {}),
+    ...(scope ? { scope, allowedFiles: new Set(scope.files) } : {}),
   } satisfies View
 })
 
@@ -57,8 +66,8 @@ export const checkPaths = (view: View, paths: ReadonlyArray<string>) => Effect.g
 
 /** Locate rereads raw captured blobs, not either filesystem copy; missing/invalid bytes are explicit failures. */
 export const read = (view: View, file: string) => Effect.gen(function* () {
-  if (relative(view.worktree, file) !== file || !view.files.regular?.has(file))
-    return yield* invalid("review CODE range is outside the captured regular files")
+  if (relative(view.worktree, file) !== file || !view.files.regular?.has(file) || (view.allowedFiles && !view.allowedFiles.has(file)))
+    return yield* invalid("review CODE range is outside the admitted captured regular files")
   const bytes = (yield* CodeIndexShard.bytes(view.git, view.files, [file])).get(file)
   if (!bytes) return yield* unavailable("captured range bytes are missing")
   return yield* Effect.try({
@@ -71,7 +80,8 @@ export const read = (view: View, file: string) => Effect.gen(function* () {
 export const project = (view: View) => Effect.gen(function* () {
   const caps = yield* ResearchToolkit.Caps
   const listing = yield* view.git.run(["ls-tree", "-r", "-l", "-z", "--full-tree", view.tree])
-  const entries = yield* Effect.try({ try: () => parse(listing), catch: () => unavailable("captured tree listing is invalid") })
+  const captured = yield* Effect.try({ try: () => parse(listing), catch: () => unavailable("captured tree listing is invalid") })
+  const entries = view.allowedFiles ? captured.filter((entry) => view.allowedFiles!.has(entry.path)) : captured
   const total = entries.reduce((sum, entry) => sum + entry.size, 0)
   if (!Number.isSafeInteger(total) || total > caps.scratchBytes || entries.some((entry) => entry.size >= 2 * BATCH_BYTES))
     return yield* unavailable("captured CODE tree exceeds its source byte limit")

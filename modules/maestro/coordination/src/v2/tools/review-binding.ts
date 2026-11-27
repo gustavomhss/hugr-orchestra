@@ -53,9 +53,11 @@ export const reviewBinding = (held: {
     Scope.Scope
   >
   readonly headCommit?: string
+  readonly scope?: ReviewTools.CodeSource["scope"]
   readonly processes?: AppProcess.Interface
 }) => (bound: ReviewFanoutV2.BindInput) =>
   Effect.gen(function* () {
+    const scope = held.scope ? { sha256: held.scope.sha256, files: [...held.scope.files] } : undefined
     if (bound.lenses) {
       for (const id of bound.lenses) if (!held.lenses.includes(id)) held.lenses.push(id)
     }
@@ -69,6 +71,7 @@ export const reviewBinding = (held: {
         const source = {
           directory: made.head.root, worktree: held.worktree,
           ...(made.head.kind === "commit" && held.headCommit ? { commit: held.headCommit } : {}),
+          ...(scope ? { scope } : {}),
         }
         if (made.head.kind !== "commit") return Effect.succeed(source)
         if (!processes) return Effect.fail(new Tool.Failure({ message: "review-code-source-unavailable" }))
