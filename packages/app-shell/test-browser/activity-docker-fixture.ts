@@ -107,7 +107,10 @@ export function mount(initialLocale: Locale = "en") {
     (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
       const request = new Request(input, init)
       const pathname = new URL(request.url).pathname
-      if (pathname === cachePath || pathname === readPath) {
+      if (
+        (pathname === cachePath && request.method === "GET") ||
+        (pathname === readPath && request.method === "POST")
+      ) {
         const call = intercepted(request)
         calls.push(call)
         return call.response

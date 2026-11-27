@@ -8,6 +8,8 @@ const emptyText = "No containers in the last complete reading."
 const rawSize = "7 kB (virtual 91 MB)"
 const alpha = row("container-001", "fixture-alpha", rawSize)
 const beta = row("container-002", "fixture-beta")
+const otherSize = "11 kB (virtual 33 MB)"
+const gamma = row("container-003", "fixture-gamma", otherSize)
 const text = (element: Element) => element.textContent?.trim() ?? ""
 const rows = (panel: HTMLElement) => [...panel.querySelectorAll("tbody tr")]
 const cells = (line: Element) => [...line.querySelectorAll("td")].map(text)
@@ -63,8 +65,8 @@ test("A01–A13/A83–A88/A152–A160/A216/A218/A345–A348 only manual POST rea
     const read = await app.call(0, "POST", readPath)
     expect(app.button(manual).disabled).toBe(true)
     expect(app.calls).toHaveLength(1)
-    read.respond(complete("1", [alpha, beta]))
-    await until("manual reading rows", () => rows(app.panel()).length === 2)
+    read.respond(complete("1", [alpha, beta, gamma]))
+    await until("manual reading rows", () => rows(app.panel()).length === 3)
 
     const panel = app.panel()
     expect(headings(panel)).toEqual(["Container", "Owner", "Logical", "Unique", "Use check", "Age", "Reading"])
@@ -78,6 +80,9 @@ test("A01–A13/A83–A88/A152–A160/A216/A218/A345–A348 only manual POST rea
     expect(text(detail!.querySelector("summary")!)).toBe("Reading")
     expect(text(panel).split(rawSize)).toHaveLength(2)
     expect(text(rows(panel)[1]!.querySelector("details")!)).toContain("Docker size (reported): unread")
+    expect(text(rows(panel)[2]!.querySelector("details")!)).toContain("Docker size (reported): " + otherSize)
+    expect(text(panel).split(otherSize)).toHaveLength(2)
+    expect(text(panel)).not.toMatch(/18 kB|124 MB|18,000|18 000|\btotal\b/i)
     expect(text(panel)).toContain(source)
     expect(age(panel, rows(panel)[0]!)).toBeGreaterThanOrEqual(2)
     expect([...panel.querySelectorAll("button")].map(text)).toEqual(["Refresh", manual])
@@ -94,7 +99,7 @@ test("A01–A13/A83–A88/A152–A160/A216/A218/A345–A348 only manual POST rea
     const startingAge = age(panel, rows(panel)[0]!)
     await until("local age tick advances a displayed sample", () => age(panel, rows(panel)[0]!) > startingAge)
     expect(app.calls).toHaveLength(1)
-    expect(text(detail!)).toContain("Docker size (reported): " + rawSize)
+    expect(text(rows(panel)[0]!.querySelector("details")!)).toContain("Docker size (reported): " + rawSize)
     app.filter("FIXTURE-BETA")
     expect(
       rows(panel)
@@ -265,8 +270,13 @@ test("A09–A13/A153–A154 category and server changes abort old work and keep 
 
     app.button(manual).click()
     const category = await app.call(1, "POST", readPath)
-    app.select("Quarantine")
+    app.select("IN/OUT")
     expect(category.request.signal.aborted).toBe(true)
+    expect(text(app.panel())).toContain("IN/OUT: collection unavailable")
+    expect(text(app.panel())).not.toContain(alpha.name!)
+    expect(app.panel().querySelectorAll("button, a[href], form, [role='button']")).toHaveLength(0)
+    app.select("Quarantine")
+    expect(text(app.panel())).toContain("Quarantine: collection unavailable")
     app.select("Docker")
     category.respond(complete("2", [alpha]))
     await Bun.sleep(20)
@@ -314,6 +324,7 @@ test("A83–A88/A153/A161/A216 Portuguese still displays the literal unique obse
     expect(headings(app.panel()).slice(1, 5)).toEqual(["Dono", "Lógico", "Único", "Verificação de uso"])
     expect(cells(rows(app.panel())[0]!).slice(1, 5)).toEqual(["", "não lido", "não colapsei", "não provado"])
     expect(app.tabs().map(text)).toEqual(labels)
+    expect(app.calls).toHaveLength(1)
   } finally {
     app.dispose()
   }
