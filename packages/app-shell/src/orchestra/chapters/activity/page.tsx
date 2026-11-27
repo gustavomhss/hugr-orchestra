@@ -9,6 +9,7 @@ import { tabs, type Tab } from "./reading"
 import { ActivityWorktrees } from "./worktrees"
 import { ActivityTrees } from "./trees"
 import { ActivityDisk } from "./disk"
+import { ActivityDocker } from "./docker"
 import "./activity.css"
 
 export default function ActivityPage(_props: ChapterPageProps) {
@@ -70,7 +71,7 @@ export default function ActivityPage(_props: ChapterPageProps) {
           <ActivityTrees query={state.query} />
         </Show>
         <Show
-          when={state.tab === "Worktrees" || state.tab === "Trees" || diskRoot()}
+          when={state.tab === "Worktrees" || state.tab === "Docker" || state.tab === "Trees" || diskRoot()}
           fallback={
             <div class="mx-empty" role="status">
               <strong>{language.t("orchestra.monitor.collectionUnavailable", { category: state.tab })}</strong>
@@ -80,6 +81,9 @@ export default function ActivityPage(_props: ChapterPageProps) {
         >
           <Show when={state.tab === "Worktrees"}>
             <ActivityWorktrees query={state.query} />
+          </Show>
+          <Show when={state.tab === "Docker"}>
+            <ActivityDocker query={state.query} />
           </Show>
         </Show>
       </div>

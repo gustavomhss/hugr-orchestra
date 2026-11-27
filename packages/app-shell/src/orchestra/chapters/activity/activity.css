@@ -139,3 +139,24 @@
 [data-mx-page="activity"] .activity-cpu .mx-note {
   margin: 0;
 }
+
+[data-mx-page="activity"] .activity-docker-heading {
+  flex-wrap: wrap;
+}
+
+[data-mx-page="activity"] .activity-docker-heading code {
+  overflow-wrap: anywhere;
+}
+
+[data-mx-page="activity"] .activity-docker-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+[data-mx-page="activity"] .activity-docker-size {
+  white-space: normal;
+  min-inline-size: 16ch;
+  max-inline-size: 40ch;
+  overflow-wrap: anywhere;
+}
