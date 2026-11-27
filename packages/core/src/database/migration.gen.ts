@@ -81,5 +81,6 @@ export const migrations = (
     import("./migration/20261105234041_inbox-feeds"),
     import("./migration/20261105235919_inbox-calendar"),
     import("./migration/20261112001106_rag-studio-embed"),
+    import("./migration/20261127213249_activity_registration_identity"),
   ])
 ).map((module) => module.default) satisfies DatabaseMigration.Migration[]

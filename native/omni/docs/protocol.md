@@ -34,7 +34,8 @@ it sends `Ready`. The host refuses another `version`, and a forked copy of the h
 | 0x04 | `Resize` | req u64 · id u64 · cols u16 · rows u16 |
 | 0x05 | `List` | req u64 · id u64 |
 | 0x06 | `Release` | req u64 · id u64 |
-| 0x81 | `Ready` | version u32 · pid u32 · info u32 (bit 0: event-based host watch — pidfd on Linux, kqueue on macOS, process handle on Windows; unset = `getppid` polling. bit 1: members signalled through pidfds) |
+| 0x07 | `Observe` | req u64 · id u64 (only when bit 2 of `Ready.info` is set) |
+| 0x81 | `Ready` | version u32 · pid u32 · info u32 (bit 0: event-based host watch — pidfd on Linux, kqueue on macOS, process handle on Windows; unset = `getppid` polling. bit 1: members signalled through pidfds. bit 2: independent membership observation) |
 | 0x82 | `Spawned` | req u64 · id u64 · pid u32 · pty_ends 2×u64 |
 | 0x83 | `SpawnFailed` | req u64 · code u8 (1 not found, 2 not executable, 3 bad cwd, 4 invalid, 5 io) · errno i32 · msg bytes |
 | 0x84 | `Exited` | id u64 · kind u8 (0 code, 1 signal) · value u32 |
@@ -60,6 +61,7 @@ released `id` gets `Ack unknown` for every request.
 | `Stop` | `Stopped` only once the tree is gone (at once if it already is); overlapping `Stop`s share the earliest deadline |
 | `Resize` | `Ack ok` / `closed` |
 | `List` | `Processes` (empty once gone), or `Ack error` if the inventory is incomplete |
+| `Observe` | `Processes`, or `Ack error` if a sample is occupied or unavailable |
 | `Release` | `Ack ok`; the supervisor keeps cleanup duty |
 
 - **Unsolicited:** `Ready` (once, first) and `Exited` (at root exit; descendants may live on).

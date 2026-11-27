@@ -122,6 +122,11 @@ pub(crate) struct Tree {
 }
 
 impl Tree {
+    /// Opaque host-local identity qualified by the supervisor generation and tree id.
+    pub(crate) fn tree_id(&self) -> String {
+        format!("{}:{}", self.sup.num, self.id)
+    }
+
     /// Unix PTY roots: lets the held root exec, once the host's reader runs, and returns when exec
     /// succeeded or failed (the second bounded round trip of a PTY spawn). A no-op elsewhere.
     pub(crate) fn go(&self) -> Result<(), Error> {
@@ -197,6 +202,14 @@ impl Tree {
 
     /// The live processes `stop` would end now; `[]` once gone; `Io` if the inventory is incomplete.
     pub(crate) async fn processes(&self) -> Result<Vec<ProcEntry>, Error> {
+        self.list(Want::List).await
+    }
+
+    pub(crate) async fn observe_processes(&self) -> Result<Vec<ProcEntry>, Error> {
+        self.list(Want::ObserveList).await
+    }
+
+    async fn list(&self, want: Want) -> Result<Vec<ProcEntry>, Error> {
         self.sup.home()?;
         let life = *self.life.borrow();
         if life.gone {
@@ -208,11 +221,17 @@ impl Tree {
         let id = self.id;
         match self
             .sup
-            .ask(Want::List, id, Class::Normal, |req| Msg::List { req, id })
+            .ask(want, id, Class::Normal, |req| {
+                if want == Want::ObserveList {
+                    Msg::Observe { req, id }
+                } else {
+                    Msg::List { req, id }
+                }
+            })
             .await?
         {
             Answer::Processes(list) => Ok(list),
-            other => Err(self.refused("List", &other)),
+            other => Err(self.refused(want.name(), &other)),
         }
     }
 

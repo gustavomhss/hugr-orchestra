@@ -73,40 +73,59 @@ pub(super) fn terminate(job: &OwnedHandle) {
 
 /// The pids the Job lists now. An error means "unknown", never "none".
 pub(super) fn member_pids(job: &OwnedHandle) -> io::Result<Vec<u32>> {
-    let header = size_of::<JOBOBJECT_BASIC_PROCESS_ID_LIST>() - size_of::<usize>();
     let mut room = 64usize;
     // The Job can grow between the size query and the next call: a few retries, then an error.
     for _ in 0..4 {
-        // usize-aligned buffer: the header, then `room` process ids.
-        let mut buf = vec![0usize; header.div_ceil(size_of::<usize>()) + room];
-        let bytes = u32::try_from(buf.len() * size_of::<usize>()).map_err(io::Error::other)?;
-        // SAFETY: `buf` is writable for `bytes` bytes and aligned for the structure.
-        let ok = unsafe {
-            QueryInformationJobObject(
-                job.as_raw_handle(),
-                JobObjectBasicProcessIdList,
-                buf.as_mut_ptr().cast(),
-                bytes,
-                std::ptr::null_mut(),
-            )
-        };
-        let err = io::Error::last_os_error();
-        // SAFETY: the buffer starts with the structure's header (written by the call, or still zeroed).
-        let list = unsafe { &*buf.as_ptr().cast::<JOBOBJECT_BASIC_PROCESS_ID_LIST>() };
-        let (assigned, listed) = (
-            list.NumberOfAssignedProcesses as usize,
-            list.NumberOfProcessIdsInList as usize,
-        );
-        if ok != 0 && listed == assigned {
-            let ids = buf.get(header.div_ceil(size_of::<usize>())..).unwrap_or_default();
-            return Ok(ids.iter().take(listed).map(|&p| p as u32).collect());
+        match query_member_pids(job, room)? {
+            PidList::Complete(pids) => return Ok(pids),
+            PidList::Incomplete(assigned) => room = assigned.max(room) + 16,
         }
-        if ok == 0 && err.raw_os_error() != Some(ERROR_MORE_DATA as i32) {
-            return Err(err);
-        }
-        room = assigned.max(room) + 16;
     }
     Err(io::Error::other("the Job kept growing while it was listed"))
+}
+
+/// The pids the Job lists now, using a single query with room for at most `limit` members.
+pub(super) fn bounded_member_pids(job: &OwnedHandle, limit: usize) -> io::Result<Vec<u32>> {
+    match query_member_pids(job, limit)? {
+        PidList::Complete(pids) => Ok(pids),
+        PidList::Incomplete(_) => Err(io::Error::other("the Job exceeds the observation member limit")),
+    }
+}
+
+enum PidList {
+    Complete(Vec<u32>),
+    Incomplete(usize),
+}
+
+fn query_member_pids(job: &OwnedHandle, room: usize) -> io::Result<PidList> {
+    let header = size_of::<JOBOBJECT_BASIC_PROCESS_ID_LIST>() - size_of::<usize>();
+    let header = header.div_ceil(size_of::<usize>());
+    // usize-aligned buffer: the header, then the process ids. The structure includes one id.
+    let mut buf = vec![0usize; header + room.max(1)];
+    let bytes = u32::try_from(buf.len() * size_of::<usize>()).map_err(io::Error::other)?;
+    // SAFETY: `buf` is writable for `bytes` bytes and aligned for the structure.
+    let ok = unsafe {
+        QueryInformationJobObject(
+            job.as_raw_handle(),
+            JobObjectBasicProcessIdList,
+            buf.as_mut_ptr().cast(),
+            bytes,
+            std::ptr::null_mut(),
+        )
+    };
+    let err = io::Error::last_os_error();
+    if ok == 0 && err.raw_os_error() != Some(ERROR_MORE_DATA as i32) {
+        return Err(err);
+    }
+    // SAFETY: the buffer starts with the structure's header (written by the call, or still zeroed).
+    let list = unsafe { &*buf.as_ptr().cast::<JOBOBJECT_BASIC_PROCESS_ID_LIST>() };
+    let assigned = list.NumberOfAssignedProcesses as usize;
+    let listed = list.NumberOfProcessIdsInList as usize;
+    if ok != 0 && listed == assigned && listed <= room {
+        let pids = buf.iter().skip(header).take(listed).map(|&p| p as u32).collect();
+        return Ok(PidList::Complete(pids));
+    }
+    Ok(PidList::Incomplete(assigned))
 }
 
 /// What a pid names now, as seen from `job`.

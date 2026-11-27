@@ -54,6 +54,7 @@ import { providerScenarios } from "./provider"
 import { mcpScenarios } from "./mcp"
 import { integrationScenarios } from "./integration"
 import { credentialScenarios } from "./credential"
+import { activityScenarios } from "./activity"
 import { sessionActivityScenarios } from "./session-activity"
 import { sessionOperationScenarios } from "./session-operations"
 import { ragStudioScenarios } from "./rag-studio"
@@ -83,6 +84,7 @@ export const scenarios: Scenario[] = [
   ...scheduleScenarios,
   ...capabilityScenarios,
   ...mcpScenarios,
+  ...activityScenarios,
   ...sessionActivityScenarios,
   ...sessionOperationScenarios,
   ...projectScenarios,

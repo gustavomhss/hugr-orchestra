@@ -236,6 +236,10 @@ class Child {
     return this.#native.pid;
   }
 
+  get treeId() {
+    return this.#native.treeId;
+  }
+
   get output() {
     return consumer(this.#native, false);
   }
@@ -262,6 +266,10 @@ class Child {
 
   processes() {
     return this.#native.processes();
+  }
+
+  observeProcesses() {
+    return later(() => this.#native.observeProcesses());
   }
 
   /** `await using`: leaving the scope awaits `stop()`. */

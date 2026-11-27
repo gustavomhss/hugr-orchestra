@@ -13,6 +13,7 @@ mod chan;
 mod diag;
 mod exits;
 mod fork;
+mod observe;
 mod procs;
 mod setup;
 mod spawn;
@@ -25,11 +26,12 @@ use std::os::fd::{AsFd, AsRawFd, OwnedFd};
 use std::process::ExitCode;
 use std::time::{Duration, Instant};
 
-use omni_proto::{Ack, FailCode, INFO_PIDFD_HOST, INFO_PIDFD_MEMBERS, Msg, Slot, Spawn, VERSION};
+use omni_proto::{Ack, FailCode, INFO_OBSERVE, INFO_PIDFD_HOST, INFO_PIDFD_MEMBERS, Msg, Slot, Spawn, VERSION};
 
 use crate::Args;
 use chan::{Chan, Closed};
 use diag::Diag;
+use observe::Observation;
 use setup::{drain, signals, take_channel};
 use spawn::{Fail, Prepared};
 use trees::{Exec, MAX_TREES, Trees};
@@ -40,7 +42,7 @@ const BATCH: usize = 64;
 /// After host death, how long past the last forced deadline the supervisor keeps sweeping (SIGKILL every
 /// 10 ms, inventory retried) before it gives up and exits 1, saying so on stderr.
 const EXIT_SLACK: Duration = Duration::from_secs(5);
-/// Reply bytes reserved for each `Stop` still waiting for its `Stopped` (21 bytes, rounded up).
+/// Reserved reply bytes per deferred request (a `Stopped` or the minimum observation reply).
 const RESERVE_PER_WAITER: usize = 32;
 
 /// Serves the host on fd 0 until the host is gone and every tree is gone.
@@ -67,6 +69,7 @@ struct Sup {
     sigchld: OwnedFd,
     _sigchld_w: OwnedFd,
     trees: Trees,
+    observation: Observation,
     out: Vec<Msg>,
     /// Set at host death: exit by then even if a tree cannot be confirmed gone.
     exit_by: Option<Instant>,
@@ -93,12 +96,15 @@ impl Sup {
             sigchld,
             _sigchld_w: sigchld_w,
             trees: Trees::new(pidfd),
+            observation: Observation::default(),
             out: Vec::new(),
             exit_by: None,
             broken: false,
             diag: Diag::default(),
         };
-        let info = if sup.watch.evented() { INFO_PIDFD_HOST } else { 0 } | if pidfd { INFO_PIDFD_MEMBERS } else { 0 };
+        let info = INFO_OBSERVE
+            | if sup.watch.evented() { INFO_PIDFD_HOST } else { 0 }
+            | if pidfd { INFO_PIDFD_MEMBERS } else { 0 };
         let pid = std::process::id();
         sup.out.push(Msg::Ready {
             version: VERSION,
@@ -133,6 +139,7 @@ impl Sup {
             {
                 self.channel_closed(closed, Instant::now());
             }
+            self.out.extend(self.observation.poll(&self.trees));
             self.emit();
         }
     }
@@ -184,6 +191,7 @@ impl Sup {
         self.broken = broken;
         self.chan.shut();
         self.out.clear();
+        self.observation = Observation::default();
         self.trees.host_death(now);
         self.exit_by = Some(self.trees.last_deadline().unwrap_or(now) + EXIT_SLACK);
     }
@@ -191,7 +199,8 @@ impl Sup {
     /// Replies queued plus replies owed: past the mark no request is read (admission resumes when the
     /// host drains; `wait` then polls for writability, so the loop always wakes).
     fn backlogged(&self) -> bool {
-        self.chan.backlogged(RESERVE_PER_WAITER * self.trees.waiters())
+        let pending = self.trees.waiters() + usize::from(self.observation.pending());
+        self.chan.backlogged(RESERVE_PER_WAITER * pending)
     }
 
     /// Reads once (only when no complete frame is buffered, so the buffer stays bounded by one frame plus one
@@ -219,6 +228,7 @@ impl Sup {
             Msg::Stop { req, id, grace_ms } => trees.stop(Some(req), id, grace_ms, Instant::now(), out),
             Msg::Resize { req, id, cols, rows } => trees.resize(req, id, (cols, rows), out),
             Msg::List { req, id } => trees.list(req, id, out),
+            Msg::Observe { req, id } => out.extend(self.observation.start(req, id, trees)),
             Msg::Release { req, id } => trees.release(req, id, out),
             other => return Err(Closed::Proto(format!("unexpected message from the host: {other:?}"))),
         }
@@ -337,7 +347,10 @@ impl Sup {
         fds.extend(execs.iter().map(|&(_, fd)| pollfd(fd, libc::POLLIN)));
 
         let now = Instant::now();
-        let mut wake = [self.trees.next_wake(), self.exit_by].into_iter().flatten().min();
+        let mut wake = [self.trees.next_wake(), self.exit_by, self.observation.next_wake(now)]
+            .into_iter()
+            .flatten()
+            .min();
         if alive && !self.watch.evented() {
             wake = Some(wake.map_or(now + watch::PARENT_POLL, |w| w.min(now + watch::PARENT_POLL)));
         }
