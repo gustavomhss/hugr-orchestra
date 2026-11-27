@@ -56,7 +56,11 @@ Background: `modules/engine-adapters/claude-code/README.md`, `docs/specs/claude-
 - `ENV_FLAGS` and the `CLAUDE_CODE_ENTRYPOINT` removal stay in `environment()`. Credentials are never added or removed.
 - `settingSources` is `["project"]` (`ClaudeHostOptions.SETTING_SOURCES`): only the project's Claude Code settings load; the owner's `~/.claude` user settings, hooks and plugins do not. `permissionMode` is `default`.
 - The Maestro note's runtime section is built from the gate's own lists (`SUBAGENT_TOOLS`, `HOST_REACH`, `BUILT_IN`, `ABSENT`, `UNSERVED` in `src/host/options.ts`). Change a list there, never a copy in `host.ts`.
-- Installed hooks' after step runs from the `PostToolUse` and `PostToolUseFailure` hooks through `Authorization.after`, and fails open.
+- Orchestra supplies its project and global `AGENTS.md` through Context Epoch. The SDK flag settings use `claude-md`
+  for native project instruction discovery. Keep file updates and compaction recall on the Context Epoch path.
+- Installed hooks settle through `Authorization.after` once per authorized `tool_use_id`. Successful `PostToolUse`
+  calls pass `tool_response` as data to Relay Verify; `PostToolUseFailure` preserves before notes. Keep the original
+  result available when a hook fails. MCP calls still settle through the runner.
 - Mid-session System Context changes reach Claude Code: `system` history messages not yet in `delivered` join the `UserPromptSubmit` hook text after the baseline. Record their ids only when the hook sent them, never when the prompt was merely handed. The compaction recall carries the baseline plus every update.
 - Maestro may call only Claude Code tools mapped in `PERMISSIONS` plus the bookkeeping set `MAESTRO_BOOKKEEPING` (todos, task list, plan mode, shell output); any other built-in is refused in `decide()` before `turn.authorize`. Maestro's conductor limits (`modules/maestro/coordination/src/v2/conductor.ts`) run inside `turn.authorize`, which wraps authorization only, so in Claude mode a call counts once it is authorized and the write budget is measured on the worktree, not on the tool's input.
 - Maestro's routing comes from the `<team>` System Context block (`modules/maestro/coordination/src/v2/team-source.ts`), which reaches Claude Code through the same path. The Maestro note in `host/options.ts` points at that list; never name seats or display names in the note.
@@ -65,5 +69,5 @@ Background: `modules/engine-adapters/claude-code/README.md`, `docs/specs/claude-
 
 - Host behaviour: `modules/engine-adapters/claude-code/test/v2-host.test.ts`. It drives the SDK seam with scripted frames, never the binary. The governed-gate test lives there.
 - Seats and host parity: `v2-host-seats.test.ts`, `preset-guard.test.ts`, `v2-account.test.ts`.
-- Run on GitHub Actions only: `bun run test:ci engine-claude-code <files>` from the repository root. Typecheck with `bun typecheck` in `modules/engine-adapters/claude-code`. Never run tests or typecheck on the Mac.
+- Run on GitHub Actions only: `bun run test:ci engine-claude-code <files>` from the repository root. Dispatch the `typecheck` workflow scoped to `@orchestra/engine-claude-code` for type checking.
 - A `test:ci` run can print "missing successful Run tests step" after the job succeeds. Read the pass and fail counts in the run log before deciding.

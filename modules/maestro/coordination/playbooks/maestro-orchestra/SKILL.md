@@ -66,9 +66,15 @@ In Claude mode Orchestra's tools are `mcp__orchestra__<name>`, and Claude Code's
 |---|---|
 | `question` | AskUserQuestion |
 | `todowrite` | TaskCreate and TaskUpdate |
-| `bash`, `read`, `glob`, `grep`, `edit`, `write` | Bash, Read, Glob, Grep, Edit, Write |
+| `bash` | Bash |
+| `read` | Read |
+| `glob` | Glob |
+| `grep` | Grep |
+| `edit` | Edit |
+| `write` | Write |
 | `apply_patch` | Edit |
-| `webfetch`, `websearch` | WebFetch, WebSearch |
+| `webfetch` | WebFetch |
+| `websearch` | WebSearch |
 | `context_compact` | none: Claude Code compacts its own context |
 | `process_get`, `process_wait`, `process_cancel` | none: use `process_control` |
 

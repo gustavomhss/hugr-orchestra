@@ -99,15 +99,7 @@ const layer = Layer.effectDiscard(
         ),
       )
       const configured = yield* configuredInstructions
-      // Claude Code loads the project's AGENTS.md files itself where no CLAUDE.md is found from the working directory
-      // up (its default `instructionFiles` mode), so a hosted turn leaves them out; with a CLAUDE.md they stay here.
-      const native =
-        (yield* SystemContextRegistry.Turn)?.hosted &&
-        (yield* fs.up({ targets: ["CLAUDE.md", ".claude/CLAUDE.md", "CLAUDE.local.md"], start })).length === 0
-          ? discovered
-          : new Set<string>()
       const paths = Array.dedupe([yield* fs.resolve(join(global.config, "AGENTS.md")), ...discovered, ...configured.paths])
-        .filter((path) => !native.has(path))
       const files = yield* Effect.forEach(
         paths,
         (path) =>

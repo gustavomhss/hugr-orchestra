@@ -32,6 +32,7 @@ export interface Scope {
   // The native profile, without hooks: a check's sandbox follows it like the tool's own processes do.
   readonly profile: ToolSafety.Profile | undefined
   // A Session event's: the sha256 of the prompt text, or nothing.
+  readonly result?: string
   readonly subject?: string
   readonly messageID?: ToolSafety.SessionEvent["messageID"]
   readonly events?: EventV2.Interface
@@ -111,11 +112,20 @@ export const session = Effect.fn("ToolSafetyHooks.session")(function* (input: {
  * the model itself (Claude Code's PostToolUse). A failed check or a Repair is a denial, which carries the notes; the
  * effect itself is not undone.
  */
-export const settle = (hooked: Hooked, succeeded: boolean) =>
+export const settle = (hooked: Hooked, succeeded: boolean, response?: unknown) =>
   Effect.gen(function* () {
     if (!succeeded) return hooked.notes
     const notes = [...hooked.notes]
-    yield* enforce(hooked.scope, "after", notes).pipe(Effect.mapError((denied) => noted(denied, notes)))
+    // A Verify can inspect a bounded, credential-checked JSON response as data through its environment.
+    const result = response === undefined ? undefined : yield* Effect.try(() => JSON.stringify(response)).pipe(
+      Effect.flatMap((value) =>
+        value !== undefined && Buffer.byteLength(value, "utf8") <= 16_384
+          ? ToolSafety.inspect(response).pipe(Effect.as(value))
+          : Effect.succeed(undefined),
+      ),
+      Effect.orElseSucceed(() => undefined),
+    )
+    yield* enforce({ ...hooked.scope, result }, "after", notes).pipe(Effect.mapError((denied) => noted(denied, notes)))
     return notes
   })
 
@@ -415,6 +425,7 @@ function params(scope: Scope) {
     ...(scope.invocation.tool === undefined ? {} : { RELAY_HOOK_TOOL: scope.call.tool }),
     ...(paths.length > 0 ? { RELAY_HOOK_PATH: paths.join("\n") } : {}),
     ...(scope.invocation.command === undefined ? {} : { RELAY_HOOK_COMMAND: scope.invocation.command }),
+    ...(scope.result === undefined ? {} : { RELAY_HOOK_RESULT: scope.result }),
   }
 }
 

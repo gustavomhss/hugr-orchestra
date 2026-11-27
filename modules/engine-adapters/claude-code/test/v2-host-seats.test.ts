@@ -77,7 +77,7 @@ test("the Maestro note states its runtime from the gate's own lists and offers n
       expect(note).toContain(`\`${name}\``)
       expect(note).toContain(tool)
     }
-    for (const name of ClaudeHostOptions.ABSENT) expect(note).toContain(`\`${name}\``)
+    for (const name of Object.keys(ClaudeHostOptions.ABSENT)) expect(note).toContain(`\`${name}\``)
     for (const name of ClaudeHostOptions.UNSERVED) expect(note).not.toContain(`mcp__orchestra__${name}\``)
     // The few safety rules of Orchestra's own Maestro prompt.
     expect(note).toContain("Authority, from highest: the owner's own words")
@@ -91,18 +91,17 @@ test("the Maestro note says where its processes, hooks, workflows, extensions an
   const bare = ClaudeHostOptions.append("maestro")
   const full = ClaudeHostOptions.append("maestro", ["task", "process_control", "maestro_workflows", "team_message", "meeting_read"])
   for (const note of [bare, full]) {
-    expect(note).toContain("Claude Code and its Bash run outside omni")
-    expect(note).toContain("installed Orchestra hooks run before each built-in call, at that check, and after it")
-    expect(note).toContain("The host's own Claude Code hooks only carry Orchestra's context")
-    expect(note).toContain("Claude Code's `Workflow` tool is separate: use it only when the owner asks for it explicitly")
-    expect(note).toContain("extensions reach you only as served `mcp__orchestra__*` tools; Claude Code plugins do not load")
+    expect(note).toContain("Claude Code starts its own process and Bash commands")
+    expect(note).toContain("Installed Orchestra hooks run around authorized built-in calls")
+    expect(note).toContain("Orchestra extensions reach you through the served `mcp__orchestra__*` tools")
   }
   // Positive control: each served-tool line appears when its tools are served, and only then.
   const served = [
-    "`mcp__orchestra__process_control` go through omni",
-    "list them with `mcp__orchestra__maestro_workflows` and run an approved one through `mcp__orchestra__task`",
+    "`mcp__orchestra__process_control` go through Omni",
+    "List them with `mcp__orchestra__maestro_workflows` and dispatch an approved workflow through `mcp__orchestra__task`",
     "the `live` seat on the Flight Engineer screen",
   ]
+  expect(bare).not.toContain("Relay workflows")
   for (const line of served) {
     expect(full).toContain(line)
     expect(bare).not.toContain(line)

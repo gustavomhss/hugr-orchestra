@@ -166,7 +166,9 @@ const layer = Layer.effect(
       ]
       // An agent whose engine names an execution host runs this provider turn through it (AGENTS "V2 Session Core").
       const engine = yield* engineOf(session)
-      const initialized = yield* SessionContextEpoch.initialize(db, loadSystemContext(session.id, agent, engine !== undefined), session.id)
+      const host = engine ? hosts.get(engine) : undefined
+      const systemContextForTurn = loadSystemContext(session.id, agent, host?.id === "claude-code")
+      const initialized = yield* SessionContextEpoch.initialize(db, systemContextForTurn, session.id)
       const toolFibers = yield* FiberSet.make<void, ToolOutputStore.Error>()
       let needsContinuation = false
       let currentStep = step
@@ -187,8 +189,7 @@ const layer = Layer.effect(
         }
       }
       const system =
-        initialized ?? (yield* SessionContextEpoch.prepare(db, events, loadSystemContext(session.id, agent, engine !== undefined), session.id))
-      const host = engine ? hosts.get(engine) : undefined
+        initialized ?? (yield* SessionContextEpoch.prepare(db, events, systemContextForTurn, session.id))
       if (engine && !host)
         return yield* Effect.die(new Error(`No execution host is registered for engine ${engine} (agent ${agent.id})`))
       const model = host ? undefined : yield* models.resolve(session)
@@ -335,7 +336,7 @@ const layer = Layer.effect(
           if (!input.safety) return {}
           const call = input.safety
           // The engine runs the call after this returns, so the installed hooks' after step is left to the host.
-          const hooks: { after?: (succeeded: boolean) => Effect.Effect<ReadonlyArray<string>, ToolSafety.Denied> } = {}
+          const hooks: { after?: ExecutionHost.Authorization["after"] } = {}
           const authorization = yield* tools.hosted(
             {
               tool: call.tool,

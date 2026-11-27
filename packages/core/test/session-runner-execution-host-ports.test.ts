@@ -254,13 +254,13 @@ describe("SessionRunner execution host ports", () => {
             })
           profile.current = ToolSafety.withHooks(undefined, [remind, style])
           const ran = yield* write("w1")
-          seen.succeeded = yield* ran.after?.(true) ?? Effect.succeed("no after step")
-          seen.failed = yield* (yield* write("w2")).after?.(false) ?? Effect.succeed("no after step")
+          seen.succeeded = yield* ran.after?.({ succeeded: true, response: { written: true } }) ?? Effect.succeed("no after step")
+          seen.failed = yield* (yield* write("w2")).after?.({ succeeded: false }) ?? Effect.succeed("no after step")
           // A Repair after the call would refuse the authorization itself if the after step ran there.
           profile.current = ToolSafety.withHooks(undefined, [guard])
           const guarded = yield* write("w3").pipe(Effect.exit)
           seen.guarded = guarded
-          seen.blocked = Exit.isSuccess(guarded) ? yield* (guarded.value.after?.(true) ?? Effect.void).pipe(Effect.exit) : undefined
+          seen.blocked = Exit.isSuccess(guarded) ? yield* (guarded.value.after?.({ succeeded: true, response: { written: true } }) ?? Effect.void).pipe(Effect.exit) : undefined
           return answer()
         }).pipe(Effect.orDie)
       yield* send(sessions, "go")

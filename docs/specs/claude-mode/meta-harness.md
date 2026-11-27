@@ -39,7 +39,9 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
    (`ContextUpdated`, projected as `system` history messages) go out in the same hook text after the baseline, each
    once: their ids join `delivered` only when the hook actually sent them, so a turn that ends before the hook runs
    sends them on the next turn. After a compaction the baseline, every update after it and the recalled todos are sent
-   again.
+   again. Orchestra remains the source for project and global `AGENTS.md` and configured instruction files, so
+   their changes continue through Context Epoch. The host sets Claude Code's project instruction mode to `claude-md`
+   for its own file discovery. Claude Code handles `CLAUDE.md` and its rules alongside Orchestra's context.
 3. **Seats through Orchestra's task (2026-10-28).** Claude mode delegates exactly as normal mode does. Maestro
    dispatches a seat with `mcp__orchestra__task`; the task tool opens a durable child Session, governed and admitted
    as on Orchestra's own engine, which the app shows from the task row. The child runs on the engine
@@ -72,9 +74,12 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
    other Claude sessions, fire the account's cloud routines or notify the owner's phone from an Orchestra session.
    Authorization goes through `ToolRegistry.hosted`, under the profile the Location's tool calls load, so the
    project's ToolSafety profile and installed Relay hooks apply. The hooks' before step runs at the gate; their after
-   step (`Authorization.after`) runs from a `PostToolUse` or `PostToolUseFailure` hook once Claude Code ran the call,
-   and their notes reach the model as `additionalContext` beside the real result. A hook's refusal after the call cannot
-   undo it, so its message goes the same way; any other failure there leaves the result as it is (fail open).
+   step (`Authorization.after`) settles once for the authorized `tool_use_id`. On success the SDK's `tool_response`
+   is available to Relay Verify checks in `RELAY_HOOK_RESULT`, as JSON data up to 16 KiB after ToolSafety inspection.
+   Checks can use it as a quoted shell variable. Missing, oversized or rejected response data leaves the variable unset.
+   A failed tool retains its before notes. On either callback the notes go to Claude Code as `additionalContext`.
+   A hook refusal adds its explanation alongside the result; a hook defect leaves the result available. Orchestra MCP calls
+   already settle through the runner under the Location profile.
 8. **What is served.** Orchestra tools that duplicate a Claude Code built-in or belong to Orchestra's own loop are not
    served (`UNSERVED`), and neither are `process_get`, `process_wait` and `process_cancel`, which read Orchestra's own
    bash processes. `skill` is served: Claude Code's Skill tool does not know Orchestra's playbooks. The Maestro note

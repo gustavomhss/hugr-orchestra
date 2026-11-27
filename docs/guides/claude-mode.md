@@ -84,7 +84,8 @@ rules above require, is a defect.
 - **Workflows, reviews and the board.** Governed workflows, review requests, Atlas and the board use Orchestra's own
   tools, exactly as in normal mode.
 - **Project context.** The project's context and the active workflow's instructions reach the model with your message.
-  They are sent again only when they change, and after the conversation is compacted.
+  Orchestra supplies its global and project `AGENTS.md` and configured instruction files. Claude Code loads its
+  own `CLAUDE.md`. Orchestra sends context updates as instructions change and restores them after compaction.
 
 ## What Claude Code requires
 
@@ -95,7 +96,9 @@ These follow from Claude Code running the model. None of them changes what you s
 - Built-in reading, editing and shell work still pass Orchestra's authorization gate. Orchestra-specific tools are served
   as `mcp__orchestra__*`, with their permissions settled by Orchestra's runner; selecting Claude Code is not permission
   bypass. See the [host's tool gate](../../modules/engine-adapters/claude-code/src/v2/host.ts#L152-L224).
-- Claude Code's own subagent tool is not used. Seats are always Orchestra Sessions.
+- Installed Orchestra hooks run around authorized Claude Code tool calls. After a successful call, a Relay Verify
+  check can read the tool response as JSON using `"$RELAY_HOOK_RESULT"`; Orchestra provides up to 16 KiB after checking
+  the response for credential-like data. Hook notes appear alongside the original result. Seats run as Orchestra Sessions.
 
 ## Known limits
 

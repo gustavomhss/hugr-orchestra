@@ -167,8 +167,10 @@ export const HookedCall = Context.Reference<string | undefined>("@orchestra/Tool
  * PostToolUse): `run` then leaves the installed hooks' `after` step out and fills `after` with it, bound to the run's
  * context, for the host to call once the engine's call has ended.
  */
+export type HostedOutcome = { readonly succeeded: true; readonly response: unknown } | { readonly succeeded: false }
+
 export const HostedHooks = Context.Reference<
-  { after?: (succeeded: boolean) => Effect.Effect<ReadonlyArray<string>, Denied> } | undefined
+  { after?: (outcome: HostedOutcome) => Effect.Effect<ReadonlyArray<string>, Denied> } | undefined
 >("@orchestra/ToolSafety/HostedHooks", { defaultValue: () => undefined })
 
 // Second HOLD line, written for the model: the cause, that nothing ran, and the next step.
@@ -555,7 +557,10 @@ export const make = Effect.gen(function* () {
       if (!hosted) return yield* ToolSafetyHooks.after(hooked, value, (outcome?.(value) ?? "success") === "success")
       // The effect only prepared the engine's call; the call itself has not run yet.
       const context = yield* Effect.context<never>()
-      hosted.after = (succeeded) => ToolSafetyHooks.settle(hooked, succeeded).pipe(Effect.provideContext(context))
+      hosted.after = (outcome) =>
+        ToolSafetyHooks.settle(hooked, outcome.succeeded, outcome.succeeded ? outcome.response : undefined).pipe(
+          Effect.provideContext(context),
+        )
       return value
     }).pipe(
       Effect.onExit((exit) => {

@@ -19,12 +19,13 @@ import { ClaudeCodeCatalog } from "./catalog"
 import { ClaudeCodeOutput } from "./output"
 import { ClaudeCodeRecord } from "./record"
 import { ClaudeCodeContext } from "./context"
+import { settleHook, type Decision } from "./tool-hooks"
 
 export const ID = "claude-code"
 /** The legacy `session.metadata` key (`host/session.ts`), so legacy Claude-hosted sessions resume on V2. */
 export const STATE_KEY = "claudeCode"
 /** The in-process MCP server that serves the Location's Orchestra tools to Claude Code. */
-export const MCP_SERVER = "orchestra"
+export const MCP_SERVER = ClaudeHostOptions.MCP_SERVER
 const MCP_PREFIX = `mcp__${MCP_SERVER}__`
 
 const GOVERNED_PLAYBOOK = "maestro-run-governed"
@@ -77,11 +78,6 @@ const SCOPED_BUILTINS = [
 ]
 const SKILL = "Skill"
 const OUTSIDE_SCOPE = "This tool is outside this Session's scope. Continue with the tools you are allowed to use."
-
-/** One gate decision, shared by the PreToolUse hook and `canUseTool` so both settle a call the same way. */
-type Decision =
-  | { readonly allow: true; readonly input?: Record<string, unknown>; readonly after?: ExecutionHost.Authorization["after"] }
-  | { readonly allow: false; readonly reason: string }
 
 /** How a Claude Code built-in maps to a V2 permission: its action and the input field that names the resource. */
 const PERMISSIONS: Readonly<Record<string, { action: string; field: string; path?: boolean }>> = {
@@ -207,7 +203,7 @@ export const make = Effect.gen(function* () {
                     ...permission(tool, input, turn.session.location.directory),
                     safety: safetyCall(tool, input),
                   }).pipe(
-                    Effect.map((authorization): Decision => ({ allow: true, input: replacements(tool, authorization), after: authorization.after })),
+                    Effect.map((authorization): Decision => ({ allow: true, tool, input: replacements(tool, authorization), after: authorization.after })),
                     Effect.catch((error) => Effect.succeed<Decision>({ allow: false, reason: denial(error) })),
                   ),
                   { signal },
@@ -259,28 +255,7 @@ export const make = Effect.gen(function* () {
               decision.allow ? { behavior: "allow" as const, updatedInput: { ...input, ...decision.input } } : { behavior: "deny" as const, message: decision.reason },
             )
           }
-          // The installed hooks' after step of a built-in Orchestra authorized, once Claude Code ran it: their notes reach
-          // the model beside the call's real result. A hook's refusal cannot undo the call, so its words go the same way;
-          // any other failure leaves the result as it is (fail open, as on Orchestra's own engine).
-          const settled: HookCallback = (input, _toolUseID, options) => {
-            if (input.hook_event_name !== "PostToolUse" && input.hook_event_name !== "PostToolUseFailure") return Promise.resolve({})
-            const event = input.hook_event_name
-            const made = PERMISSIONS[input.tool_name] ? decisions.get(input.tool_use_id) : undefined
-            if (!made) return Promise.resolve({})
-            return made
-              .then((decision) =>
-                decision.allow && decision.after
-                  ? Effect.runPromise(
-                      decision.after(event === "PostToolUse").pipe(Effect.catch((denied) => Effect.succeed([denied.message]))),
-                      { signal: options.signal },
-                    )
-                  : [],
-              )
-              .then(
-                (notes) => (notes.length ? { hookSpecificOutput: { hookEventName: event, additionalContext: notes.join("\n") } } : {}),
-                () => ({}),
-              )
-          }
+          const settled = settleHook(decisions)
           // Claude Code's documented channel for context beside a prompt. The baseline goes when it changed since the
           // Claude Code session last received it, the updates it has not received after it, once per turn.
           const prompted: HookCallback = (input) => {
@@ -358,6 +333,7 @@ export const make = Effect.gen(function* () {
             // A scoped Session's engine is offered only the built-ins its scope names.
             disallowedTools: scope ? [...ClaudeHostOptions.SUBAGENT_TOOLS, ...[...SCOPED_BUILTINS, SKILL].filter(outside)] : ClaudeHostOptions.SUBAGENT_TOOLS,
             settingSources: [...ClaudeHostOptions.SETTING_SOURCES],
+            settings: ClaudeHostOptions.INSTRUCTION_SETTINGS,
             permissionMode: "default",
             canUseTool,
             hooks: {

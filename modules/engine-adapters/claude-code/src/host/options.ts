@@ -12,6 +12,11 @@ export const ENV_FLAGS = { CLAUDE_CODE_ENABLE_TODO_TOOLS: "1" } as const
 /** The setting sources Claude Code loads: the project's only, never the owner's own `~/.claude` settings. */
 export const SETTING_SOURCES = ["project"] as const
 
+// Orchestra already delivers AGENTS.md in the Context Epoch. Keep native CLAUDE.md (and its rules) enabled.
+export const INSTRUCTION_SETTINGS = {
+  pluginConfigs: { "cc-plugin-agents-md@builtin": { options: { instructionFiles: "claude-md" } } },
+}
+
 /**
  * Claude Code's own subagent tools. A seat is dispatched through Orchestra's `task`, as in normal mode: its work is a
  * durable child Session the app shows the same way, and a seat on a Claude model runs on Claude Code there too.
@@ -44,13 +49,18 @@ export const BUILT_IN = new Map([
  * Orchestra tools of its own loop with no counterpart here. `process_*` read Orchestra's own bash background processes,
  * which Claude Code's Bash never starts; Claude Code compacts its own context.
  */
-export const ABSENT = ["context_compact", "process_get", "process_wait", "process_cancel"]
+export const ABSENT = {
+  context_compact: "none: Claude Code compacts its own context",
+  process_get: "none: use `process_control`",
+  process_wait: "none: use `process_control`",
+  process_cancel: "none: use `process_control`",
+}
 
 /**
  * Orchestra tools never served to Claude Code: its built-ins, its own loop's, and internal names no text offers. `skill`
  * is served: Claude Code's own Skill tool does not know Orchestra's playbooks and seat skills.
  */
-export const UNSERVED = new Set([...BUILT_IN.keys(), ...ABSENT, "lsp", "invalid", "execute"])
+export const UNSERVED = new Set([...BUILT_IN.keys(), ...Object.keys(ABSENT), "lsp", "invalid", "execute"])
 
 const REVIEW_NOTICE =
   "`mcp__orchestra__maestro_request_review` runs the governed cold review by `lucy` and records its receipt; use it " +
@@ -112,19 +122,15 @@ function maestro(tools: ReadonlyArray<string>) {
       `- Orchestra refuses Claude Code's ${list(SUBAGENT_TOOLS.map(code))}` +
         (tools.includes("task") ? " (dispatch seats with `mcp__orchestra__task`)" : "") +
         `, and ${list([...HOST_REACH].map(code))}, which reach outside this session.`,
-      "- Every built-in call passes Orchestra's permissions and ToolSafety first; Bash may run wrapped in Orchestra's " +
-        "sandbox.",
-      "- The owner's installed Orchestra hooks run before each built-in call, at that check, and after it; their notes " +
-        "reach you as context beside its result. The host's own Claude Code hooks only carry Orchestra's context to you.",
-      "- Claude Code and its Bash run outside omni, Orchestra's process runner: the host starts the Claude Code process " +
-        "itself." +
-        (tools.includes("process_control") ? " Processes started with `mcp__orchestra__process_control` go through omni." : ""),
-      (tools.includes("maestro_workflows") && tools.includes("task")
-        ? "- Orchestra workflows are Relay workflows: list them with `mcp__orchestra__maestro_workflows` and run an " +
-          "approved one through `mcp__orchestra__task`. "
-        : "- ") +
-        "Claude Code's `Workflow` tool is separate: use it only when the owner asks for it explicitly.",
-      "- Orchestra extensions reach you only as served `mcp__orchestra__*` tools; Claude Code plugins do not load here.",
+      "- Orchestra checks permissions and ToolSafety before work runs. Bash may run through Orchestra's sandbox. " +
+        "Installed Orchestra hooks run around authorized built-in calls and add notes beside the result.",
+      "- Claude Code starts its own process and Bash commands." +
+        (tools.includes("process_control") ? " Processes started with `mcp__orchestra__process_control` go through Omni." : ""),
+      ...(tools.includes("maestro_workflows") && tools.includes("task") ? [
+        "- Orchestra workflows are Relay workflows. List them with `mcp__orchestra__maestro_workflows` and dispatch " +
+          "an approved workflow through `mcp__orchestra__task`.",
+      ] : []),
+      "- Orchestra extensions reach you through the served `mcp__orchestra__*` tools.",
       ...(tools.includes("team_message") && has("meeting_")
         ? ["- The meeting copilot is the `live` seat on the Flight Engineer screen: reach it with " +
           "`mcp__orchestra__team_message` and the `mcp__orchestra__meeting_*` tools."]
@@ -134,7 +140,7 @@ function maestro(tools: ReadonlyArray<string>) {
       "- Orchestra's texts name tools Claude Code covers itself. Read " +
         mapped.filter((entry) => !same.includes(entry)).map(([name, tool]) => `${code(name)} as ${tool}`).join(", ") +
         `, and ${list(same.map(([name]) => code(name)))} as ${list(same.map(([, tool]) => tool))}. ` +
-        `${list(ABSENT.map(code))} do not exist here` +
+        `${list(Object.keys(ABSENT).map(code))} do not exist here` +
         (tools.includes("process_control") ? "; run a long command with `mcp__orchestra__process_control`." : "."),
     ].join("\n"),
     "## Authority and safety",
@@ -181,7 +187,7 @@ function maestro(tools: ReadonlyArray<string>) {
         ? ["- `mcp__orchestra__maestro_*` tools run Orchestra's governed workflow: admission, plans, reviews and approvals."]
         : []),
       ...(tools.includes("maestro_request_review") ? [`- ${REVIEW_NOTICE}`] : []),
-      ...(tools.includes("task") ? [`- ${WORKFLOW_NOTICE}`] : []),
+      ...(tools.includes("task") && tools.includes("maestro_workflows") ? [`- ${WORKFLOW_NOTICE}`] : []),
       ...(has("atlas_") ? ["- `mcp__orchestra__atlas_*` tools read Atlas, the project's ownership and history."] : []),
       ...(has("dock_") ? ["- `mcp__orchestra__dock_*` tools operate apps in the owner's MCP Dock."] : []),
       ...(tools.includes("context_recall")

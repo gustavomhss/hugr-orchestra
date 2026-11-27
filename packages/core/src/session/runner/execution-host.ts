@@ -115,12 +115,8 @@ export interface Authorization {
   readonly input?: Readonly<Record<string, unknown>>
   /** The web domains the Session's dispatch binds its searches to; absent: unrestricted. The host applies them. */
   readonly domains?: ReadonlyArray<string>
-  /**
-   * The installed hooks' after step, present when a hook is enabled: the host calls it once the engine's call ended,
-   * with whether it succeeded, and hands the notes to the model. A failure is a hook's refusal of a call that already
-   * ran. Absent: no hook runs after the call.
-   */
-  readonly after?: (succeeded: boolean) => Effect.Effect<ReadonlyArray<string>, ToolSafety.Denied>
+  /** Installed hooks to settle once the engine's built-in returns. The response is untrusted tool data. */
+  readonly after?: (outcome: ToolSafety.HostedOutcome) => Effect.Effect<ReadonlyArray<string>, ToolSafety.Denied>
 }
 
 /** A steer promoted into the Session while the turn ran. */

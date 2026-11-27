@@ -510,60 +510,6 @@ test("the PreToolUse gate settles every call through Orchestra, failing closed, 
   expect(executed[1]).not.toBe("tu-6")
 })
 
-test("after a built-in ran, the installed hooks' notes reach Claude Code beside its real result; a hook failure leaves the result as it is", async () => {
-  const after: { id: string; succeeded: boolean }[] = []
-  const results: unknown[] = []
-  const base = { session_id: "claude-1", transcript_path: "", cwd: "/project" }
-  const post = (options: Options, input: Record<string, unknown>) =>
-    options.hooks?.PostToolUse?.[0]?.hooks[0]?.({ ...base, hook_event_name: "PostToolUse", ...input } as HookInput, String(input.tool_use_id), { signal: new AbortController().signal })
-  const failed = (options: Options, input: Record<string, unknown>) =>
-    options.hooks?.PostToolUseFailure?.[0]?.hooks[0]?.({ ...base, hook_event_name: "PostToolUseFailure", ...input } as HookInput, String(input.tool_use_id), { signal: new AbortController().signal })
-  during = async (options) => {
-    for (const id of ["tu-1", "tu-2", "tu-3", "tu-4", "tu-5"]) await pre(options, "Write", { file_path: "/project/a.ts" }, id)
-    await pre(options, "mcp__orchestra__task", { prompt: "go" }, "tu-6")
-    const write = { tool_name: "Write", tool_input: { file_path: "/project/a.ts" } }
-    results.push(await post(options, { ...write, tool_use_id: "tu-1", tool_response: { type: "update", filePath: "/project/a.ts" } }))
-    results.push(await failed(options, { ...write, tool_use_id: "tu-2", error: "EACCES" }))
-    results.push(await post(options, { ...write, tool_use_id: "tu-3", tool_response: { type: "create" } }))
-    results.push(await post(options, { ...write, tool_use_id: "tu-4", tool_response: { type: "create" } }))
-    // No hook is enabled: nothing is added.
-    results.push(await post(options, { ...write, tool_use_id: "tu-5", tool_response: { type: "create" } }))
-    // An Orchestra tool's notes come with its MCP result, never through this hook.
-    results.push(await post(options, { tool_name: "mcp__orchestra__task", tool_input: {}, tool_use_id: "tu-6", tool_response: "ok" }))
-  }
-  script = [done]
-  await collect(turnOf({
-    authorize: (input) =>
-      Effect.succeed(input.callID === "tu-5" ? {} : {
-        after: (succeeded: boolean) =>
-          Effect.sync(() => after.push({ id: input.callID, succeeded })).pipe(
-            Effect.andThen(
-              input.callID === "tu-3" ? Effect.fail(new ToolSafety.Denied({ reason: "relay-hook-block", detail: "Blocked by hook 'Guard': Keep secrets out." }))
-                : input.callID === "tu-4" ? Effect.die("relay unavailable")
-                  : Effect.succeed(succeeded ? ["Hook 'Style': Mind the style.", "Hook 'Changelog': Update the changelog."] : ["Hook 'Style': Mind the style."]),
-            ),
-          ),
-      }),
-  }))
-
-  expect(after).toEqual([
-    { id: "tu-1", succeeded: true },
-    { id: "tu-2", succeeded: false },
-    { id: "tu-3", succeeded: true },
-    { id: "tu-4", succeeded: true },
-  ])
-  expect(results).toEqual([
-    { hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: "Hook 'Style': Mind the style.\nHook 'Changelog': Update the changelog." } },
-    { hookSpecificOutput: { hookEventName: "PostToolUseFailure", additionalContext: "Hook 'Style': Mind the style." } },
-    // A hook's refusal cannot undo a call that ran, so its words reach the model the same way.
-    { hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: new ToolSafety.Denied({ reason: "relay-hook-block", detail: "Blocked by hook 'Guard': Keep secrets out." }).message } },
-    // Fail open: a broken hook step leaves Claude Code's result as it is.
-    {},
-    {},
-    {},
-  ])
-})
-
 test("an assistant-level error fails the turn unless a later frame supersedes it", async () => {
   const stored: { value: unknown } = { value: undefined }
   const state = { get: Effect.sync(() => stored.value), update: (fn: (value: unknown) => unknown) => Effect.sync(() => void (stored.value = fn(stored.value))) }
