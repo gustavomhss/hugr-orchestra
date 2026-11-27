@@ -185,6 +185,16 @@ Never overwrite a terminal state with a late model response.
   HEAD movement, configuration reads changing or ambient parent prompts.
   It reads durable state before preparing Git/settings/catalog or executing
   any child. Original source, evidence and deadline remain unchanged.
+  The public registry still applies its dynamic output bounds and Lean policy
+  after the stored report returns. The retry test measures that native output
+  overhead with a separate, scoped tool returning the identical bytes, and
+  requires exactly that many configuration reads during replay. A second
+  control performs one additional real configuration read and must increase
+  the observation by one. Neither control replaces the review registration,
+  output store, configuration service or permission checks. This corrects the
+  initial zero-total-read observation, which counted three post-return native
+  output reads as review reconfiguration; it does not permit any extra review
+  configuration read or change the persisted-report guarantees.
 - Same-process concurrent exact requests have one execution owner. A cancelled
   waiter must not cancel the owner or reset its deadline.
 - Owner cancellation propagates interruption to that caller. Persist

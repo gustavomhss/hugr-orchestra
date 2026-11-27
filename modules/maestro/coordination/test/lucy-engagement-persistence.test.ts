@@ -2,13 +2,15 @@ import { expect, test } from "bun:test"
 import { createHash } from "node:crypto"
 import fs from "node:fs/promises"
 import path from "node:path"
-import { Effect } from "effect"
+import { Context, Effect, Schema } from "effect"
 import { Board } from "@orchestra/schema/board"
 import { AgentV2 } from "@orchestra/core/agent"
 import { BoardProjectTable } from "@orchestra/core/board/sql"
+import { Config } from "@orchestra/core/config"
 import { Database } from "@orchestra/core/database/database"
 import { SessionInputTable, SessionTable } from "@orchestra/core/session/sql"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
+import { Tool } from "@orchestra/core/tool/tool"
 import { ReviewResultV2 } from "../src/v2/governance/review-result"
 import { reviewRows } from "./fixture/lucy-pr-entry"
 import { reply, run, sourcePath, sourceText, text } from "./fixture/lucy-engagement"
@@ -82,6 +84,32 @@ test("completed engagement reopens the actual SQLite store and replays identical
     const gitCalls: string[][] = []
     let configReads = 0
     yield* root.open((host) => Effect.gen(function* () {
+      // Native output bounds and Lean settings are dynamic even for a cached tool result.
+      // Measure that boundary with the same bytes, then prove one extra read is observable.
+      const settlementReads = yield* Effect.scoped(Effect.gen(function* () {
+        const config = Context.get(host.context, Config.Service)
+        const control = (before: Effect.Effect<unknown>) => Tool.make({
+          description: "Measure native output settlement without review work.",
+          input: Schema.Struct({}), output: Schema.String,
+          execute: () => before.pipe(Effect.as(original.output.text)),
+        })
+        yield* host.registry.register({
+          engagement_settlement_control: control(Effect.void),
+          engagement_configuration_control: control(config.entries()),
+        })
+        const before = configReads
+        const settled = yield* host.call("engagement_settlement_control", {})
+        expect(settled.type, settled.text).toBe("text")
+        expect(settled.text).toBe(original.output.text)
+        const reads = configReads - before
+        expect(reads).toBeGreaterThan(0)
+        const configuredBefore = configReads
+        const configured = yield* host.call("engagement_configuration_control", {})
+        expect(configured.type, configured.text).toBe("text")
+        expect(configured.text).toBe(original.output.text)
+        expect(configReads - configuredBefore).toBe(reads + 1)
+        return reads
+      }))
       yield* host.sessions.prompt({ sessionID: root.parentID, prompt: { text: "Ambient parent history after reopening." }, resume: false })
       const admitted = yield* host.db.select().from(SessionInputTable).all().pipe(Effect.orDie)
       const sessions = yield* host.db.select().from(SessionTable).all().pipe(Effect.orDie)
@@ -104,7 +132,7 @@ test("completed engagement reopens the actual SQLite store and replays identical
       expect(value.citations).toEqual(original.value.citations)
       expect(root.requests.length).toBe(original.requests)
       expect(gitCalls.length).toBe(observed)
-      expect(configReads).toBe(configBeforeRetry)
+      expect(configReads - configBeforeRetry).toBe(settlementReads)
       expect(yield* host.db.select().from(SessionInputTable).all().pipe(Effect.orDie)).toEqual(admitted)
       expect(yield* host.db.select().from(SessionTable).all().pipe(Effect.orDie)).toEqual(sessions)
       expect(yield* reviewRows().pipe(Effect.provideService(Database.Service, host.database))).toEqual(receipts)
