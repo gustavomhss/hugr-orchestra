@@ -162,7 +162,7 @@ export class OrchestraAgent implements Agent {
       sessionID: params.sessionId,
       location: { directory: state.cwd },
       signal: cancelled.signal,
-      submit: () => this.client.sessions.prompt({ sessionID: params.sessionId, prompt }),
+      submit: (signal) => this.client.sessions.prompt({ sessionID: params.sessionId, prompt }, { signal }),
       onEvent: (event) => {
         if (event.type === "session.next.step.failed") failures.push((event.data as { error: { message: string } }).error.message)
         const update = toUpdate(event, tools)

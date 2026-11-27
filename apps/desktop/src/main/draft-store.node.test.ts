@@ -22,6 +22,36 @@ test("flushes the latest buffered draft and stores blobs", (t) => {
   assert.deepEqual(new Uint8Array(store.getBlob(id) ?? []), bytes)
 })
 
+test("retains buffered drafts and referenced blobs when a write transaction fails", (t) => {
+  const fixture = createWalFixture(t)
+  fixture.native.exec("BEGIN IMMEDIATE")
+  try {
+    assert.throws(() => fixture.writer.flush())
+    assert.equal(fixture.writer.get("prompt"), fixture.document)
+  } finally {
+    fixture.native.exec("ROLLBACK")
+  }
+  const bytes = new Uint8Array([3, 1, 4, 1, 5])
+  const id = fixture.writer.putBlob(bytes)
+  const updated = JSON.stringify({ text: "newer draft", attachments: [{ blob: { id } }] })
+  fixture.writer.set("updated", "old")
+  fixture.writer.set("updated", updated)
+  fixture.writer.flush()
+  assert.equal(fixture.native.prepare("SELECT value FROM document WHERE key = ?").get("prompt")?.value, fixture.document)
+  assert.equal(fixture.native.prepare("SELECT value FROM document WHERE key = ?").get("updated")?.value, updated)
+  assert.deepEqual(new Uint8Array(fixture.writer.getBlob(fixture.id) ?? []), fixture.bytes)
+  assert.deepEqual(new Uint8Array(fixture.writer.getBlob(id) ?? []), bytes)
+  const reopened = createDesktopDraftStore(fixture.filename)
+  try {
+    assert.equal(reopened.get("prompt"), fixture.document)
+    assert.equal(reopened.get("updated"), updated)
+    assert.deepEqual(new Uint8Array(reopened.getBlob(fixture.id) ?? []), fixture.bytes)
+    assert.deepEqual(new Uint8Array(reopened.getBlob(id) ?? []), bytes)
+  } finally {
+    reopened.close()
+  }
+})
+
 test("refuses a blob over the per-blob cap and stores one at the cap", (t) => {
   const store = createDesktopDraftStore(":memory:")
   t.after(() => store.close())
