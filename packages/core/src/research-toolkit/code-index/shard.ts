@@ -104,7 +104,7 @@ const immutable = (root: string) => Effect.gen(function* () {
   const proc = yield* AppProcess.Service
   const env = { ...environment(), ...ReviewGit.environment }
   return {
-    run: (args, stdin) => {
+    run: (args: ReadonlyArray<string>, stdin?: string) => {
       const command = args[0]
       if (!CAPTURED_COMMANDS.has(command ?? ""))
         return Effect.fail(new Research.Error({ code: "source_unavailable", message: `git ${command ?? ""} is not allowed` }))

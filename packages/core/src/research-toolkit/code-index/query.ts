@@ -91,7 +91,7 @@ export const run = Effect.fn("CodeIndexQuery.run")(function* (ctx: Context, inpu
   const plan = yield* CodeIndexBuild.plan({ ...ctx, uncached: ctx.readOnly === true })
   // Only path-scoped operations narrow the shards (J2.10); a symbol's references may live in any shard.
   const prefix = query.op === "imports" || query.op === "symbols" || query.op === "map" ? query.path : undefined
-  const scope = yield* open(ctx, plan, inScope(plan, prefix ?? (query.op === "definition" ? query.path : undefined)))
+  const scope: Scope = yield* open(ctx, plan, inScope(plan, prefix ?? (query.op === "definition" ? query.path : undefined)))
   const limit = "limit" in query && query.limit !== undefined ? query.limit : DEFAULT_LIMIT
   const offset = "offset" in query && query.offset !== undefined ? query.offset : 0
   const findings = yield* execute(scope, query)
