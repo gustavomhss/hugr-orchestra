@@ -49,8 +49,13 @@ export function make() {
       return Promise.resolve()
     }
     // Older installed bindings cannot safely perform this observation.
-    entry.sampling = Promise.resolve()
-      .then(() => child.observeProcesses())
+    const timer = { id: undefined as ReturnType<typeof setTimeout> | undefined }
+    entry.sampling = Promise.race([
+      Promise.resolve().then(() => child.observeProcesses()),
+      new Promise<never>((_, reject) => {
+        timer.id = setTimeout(() => reject(new Error("Process observation timed out")), 2000)
+      }),
+    ])
       .then(
         (members) => {
           entry.record = {
@@ -70,6 +75,7 @@ export function make() {
         },
       )
       .finally(() => {
+        clearTimeout(timer.id)
         entry.sampling = undefined
       })
     return entry.sampling
