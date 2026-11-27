@@ -1,6 +1,6 @@
 # Local installation HTTP modules
 
-An installation can mount an external HTTP module in the same Orchestra server. The module is loaded only when explicitly selected; it stays outside the Orchestra package and its generated clients.
+An installation can mount an external HTTP module in the same Orchestra server. Orchestra loads the module in its own process only when explicitly selected. Use a module you trust. It stays outside the Orchestra package and its generated clients.
 
 ```sh
 orchestra serve --hostname localhost --port 4110 --installation /absolute/path/to/entry.ts
@@ -24,8 +24,10 @@ export default async function installation(context: { origin: string }) {
 }
 ```
 
-The factory receives the selected origin and runs before database migration or HTTP binding. Orchestra disposes the returned installation on startup failure and shutdown. Its handler receives requests at the exact mount and below it. Returning `undefined` inside that owned namespace produces 404; failures produce a sanitized 500. Root, API, OpenAPI and overlapping mounts are rejected. Orchestra's Host validation also covers installation routes.
+The factory receives the selected origin and runs before database migration or HTTP binding. The factory cleans up resources it acquires before rejecting. Once it returns a valid installation, Orchestra awaits `dispose` on startup failure or graceful shutdown.
 
-An installation handler owns its authentication and authorization; the service password for Orchestra's API is not a business identity. Validate sessions and permissions on each business operation. Keep credentials outside the module source.
+The handler receives requests at the exact mount and below it. Returning `undefined` produces 404 in that namespace. Handler rejections produce a sanitized 500. Root, API, OpenAPI and overlapping mounts are rejected, regardless of capitalization. A client disconnect aborts the request signal, including while streaming a response.
+
+Orchestra applies its Host policy to installation routes. The module sets CORS, request body limits, authentication and authorization for its own routes. Use the module's business identities to validate sessions and permissions. Keep credentials outside the module source.
 
 For a separate homologation, set dedicated `XDG_DATA_HOME`, `XDG_CONFIG_HOME`, `XDG_CACHE_HOME`, `XDG_STATE_HOME`, `ORCHESTRA_DB`, and `ORCHESTRA_CONFIG_DIR` in the child environment before importing Orchestra. Disable inherited credentials with `ORCHESTRA_INHERIT_CREDENTIALS=0` and provide a dedicated `ORCHESTRA_CREDENTIAL_KEY_FILE`. Use a private working directory and avoid pointing any of these paths at the regular installation. The optional module loader does not choose storage or perform this isolation for you.

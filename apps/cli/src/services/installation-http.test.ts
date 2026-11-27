@@ -1,6 +1,6 @@
 import { afterEach, expect, test } from "bun:test"
 import { NodeServices } from "@effect/platform-node"
-import { Effect, Option } from "effect"
+import { Effect, Exit, Option } from "effect"
 import { Command, Flag } from "effect/unstable/cli"
 import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
@@ -16,8 +16,8 @@ afterEach(async () => {
   await Promise.all(directories.splice(0).map((directory) => rm(directory, { recursive: true, force: true })))
 })
 
-async function fixture(source: string, extension = ".mjs") {
-  const directory = await mkdtemp(path.join(tmpdir(), "orchestra-installation-"))
+async function fixture(source: string, extension = ".mjs", parent = tmpdir()) {
+  const directory = await mkdtemp(path.join(parent, "orchestra-installation-"))
   directories.push(directory)
   const file = path.join(directory, `local installation${extension}`)
   await Bun.write(file, source)
@@ -67,15 +67,26 @@ test("a trusted non-loopback origin is passed unchanged by the generic loader", 
   await loaded.dispose()
 })
 
-for (const file of ["./installation.ts", "installation.mjs", "https://example.test/installation.mjs", "http://127.0.0.1/installation.ts"]) {
-  test(`rejects non-absolute local module path ${file}`, async () => {
-    await rejection(file)
+test("rejects an existing relative module during path validation", async () => {
+  // Keeping the fixture on the working directory's volume makes it relative on Windows too.
+  const file = await fixture(`export default async () => ({
+    mount: "/installation", handler: async () => undefined, dispose: async () => {}
+  })`, ".mjs", process.cwd())
+  const relative = path.relative(process.cwd(), file)
+  expect(path.isAbsolute(relative)).toBe(false)
+  expect(await Bun.file(relative).exists()).toBe(true)
+  expect((await rejection(relative)).message).toContain("absolute local")
+})
+
+for (const file of ["https://example.test/installation.mjs", "http://127.0.0.1/installation.ts"]) {
+  test(`rejects non-local module URL ${file} during path validation`, async () => {
+    expect((await rejection(file)).message).toContain("absolute local")
   })
 }
 
-test("rejects an unsupported extension before evaluating the module", async () => {
-  const file = await fixture('export default (() => { throw new Error("MODULE_WAS_EVALUATED") })()', ".json")
-  expect(String(await rejection(file))).not.toContain("MODULE_WAS_EVALUATED")
+test("rejects an unsupported extension during path validation", async () => {
+  const file = await fixture('{"valid":"JSON"}', ".json")
+  expect((await rejection(file)).message).toContain("absolute local")
 })
 
 for (const source of ["export const handler = () => {}", "export default {}", "export default 42", "export default async () => null"]) {
@@ -91,6 +102,8 @@ for (const descriptor of [
   '{ mount: "/", handler, dispose: cleanup }',
   '{ mount: "/api", handler, dispose: cleanup }',
   '{ mount: "/api/nested", handler, dispose: cleanup }',
+  '{ mount: "/API", handler, dispose: cleanup }',
+  '{ mount: "/Api/Nested", handler, dispose: cleanup }',
   '{ mount: "/installation/../api", handler, dispose: cleanup }',
   '{ mount: "/installation?query", handler, dispose: cleanup }',
   '{ mount: "/installation#fragment", handler, dispose: cleanup }',
@@ -172,13 +185,17 @@ async function lifecycleFixture() {
   `)
 }
 
-for (const hostname of ["127.0.0.1", "localhost", "::1"]) {
-  test(`serve initializes once before its startup continuation and disposes after shutdown on ${hostname}`, async () => {
+for (const listener of [
+  { hostname: "127.0.0.1", port: 8079, origin: "http://127.0.0.1:8079" },
+  { hostname: "localhost", port: 1, origin: "http://localhost:1" },
+  { hostname: "::1", port: 65_535, origin: "http://[::1]:65535" },
+]) {
+  test(`serve initializes once before its startup continuation and disposes after shutdown at ${listener.origin}`, async () => {
     const { withInstallation } = await import("../commands/handlers/serve")
     const file = await lifecycleFixture()
     const module = await import(pathToFileURL(file).href)
     const result = await Effect.runPromise(withInstallation({
-      hostname, port: Option.some(8079), installation: Option.some(file), register: false,
+      hostname: listener.hostname, port: Option.some(listener.port), installation: Option.some(file), register: false,
     }, (extensions) => Effect.gen(function* () {
       expect(module.state.events).toEqual(["factory"])
       expect(extensions).toHaveLength(1)
@@ -192,7 +209,7 @@ for (const hostname of ["127.0.0.1", "localhost", "::1"]) {
     expect(result).toBe("shutdown")
     expect(module.state.calls).toBe(1)
     expect(module.state.disposed).toBe(1)
-    expect(module.state.origin).toBe(`http://${hostname === "::1" ? "[::1]" : hostname}:8079`)
+    expect(module.state.origin).toBe(listener.origin)
     expect(module.state.events).toEqual(["factory", "migration", "bind", "listener-close", "dispose"])
   })
 }
@@ -220,12 +237,16 @@ test("serve disposes once when its lifetime is interrupted", async () => {
   const { withInstallation } = await import("../commands/handlers/serve")
   const file = await lifecycleFixture()
   const module = await import(pathToFileURL(file).href)
-  await Effect.runPromise(withInstallation({
+  const result = await Effect.runPromise(withInstallation({
     hostname: "127.0.0.1", port: Option.some(8079), installation: Option.some(file), register: false,
-  }, () => Effect.interrupt).pipe(Effect.exit))
+  }, () => Effect.gen(function* () {
+    module.state.events.push("startup")
+    return yield* Effect.interrupt
+  })).pipe(Effect.exit))
+  expect(Exit.hasInterrupts(result)).toBe(true)
   expect(module.state.calls).toBe(1)
   expect(module.state.disposed).toBe(1)
-  expect(module.state.events).toEqual(["factory", "dispose"])
+  expect(module.state.events).toEqual(["factory", "startup", "dispose"])
 })
 
 for (const port of [Option.none<number>(), ...[0, -1, 65_536, 1.5, NaN, Infinity].map(Option.some)]) {
@@ -282,11 +303,16 @@ test("serve disposes when startup throws a defect", async () => {
   const { withInstallation } = await import("../commands/handlers/serve")
   const file = await lifecycleFixture()
   const module = await import(pathToFileURL(file).href)
-  await Effect.runPromise(withInstallation({
+  const result = await Effect.runPromise(withInstallation({
     hostname: "127.0.0.1", port: Option.some(8079), installation: Option.some(file), register: false,
-  }, () => Effect.sync(() => { throw new Error("Listener construction failed") })).pipe(Effect.exit))
+  }, () => Effect.sync(() => {
+    module.state.events.push("startup")
+    throw new Error("Listener construction failed")
+  })).pipe(Effect.exit))
+  expect(Exit.hasDies(result)).toBe(true)
   expect(module.state.calls).toBe(1)
   expect(module.state.disposed).toBe(1)
+  expect(module.state.events).toEqual(["factory", "startup", "dispose"])
 })
 
 for (const args of [["--config"], ["-c"], ["--config", "--verbose"]]) {
@@ -307,8 +333,14 @@ for (const args of [["--config"], ["-c"], ["--config", "--verbose"]]) {
   })
 }
 
-for (const args of [["child", "--config"], ["child", "-c"], ["--config", "--verbose", "child"]]) {
-  test(`inherited optional string flag requires a value: ${args.join(" ")}`, async () => {
+for (const entry of [
+  { args: ["child", "--config"] },
+  { args: ["child", "-c"] },
+  { args: ["--config", "--verbose", "child"] },
+  { args: ["--config", "before.json", "child"], config: "before.json", verbose: false },
+  { args: ["child", "-c", "after.json", "--verbose"], config: "after.json", verbose: true },
+]) {
+  test(`inherited optional string flag handles ${entry.args.join(" ")}`, async () => {
     const inputs: unknown[] = []
     const parent = Command.make("parent").pipe(Command.withSharedFlags({
       config: Flag.string("config").pipe(Flag.withAlias("c"), Flag.optional),
@@ -319,8 +351,13 @@ for (const args of [["child", "--config"], ["child", "-c"], ["--config", "--verb
       inputs.push(input)
     })))
     const command = parent.pipe(Command.withSubcommands([child]))
-    const result = await Effect.runPromise(Command.runWith(command, { version: "test" })(args)
+    const result = await Effect.runPromise(Command.runWith(command, { version: "test" })(entry.args)
       .pipe(Effect.provide(NodeServices.layer), Effect.result))
+    if (entry.config !== undefined) {
+      expect(result._tag).toBe("Success")
+      expect(inputs).toEqual([{ config: Option.some(entry.config), verbose: entry.verbose }])
+      return
+    }
     expect(inputs).toEqual([])
     expect(result._tag).toBe("Failure")
     if (result._tag === "Failure") expect(result.failure).toMatchObject({

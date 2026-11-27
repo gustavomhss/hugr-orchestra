@@ -1,5 +1,5 @@
-import { Context, Effect, Layer } from "effect"
-import { HttpMiddleware, HttpRouter, HttpServerResponse } from "effect/unstable/http"
+import { Context, Effect } from "effect"
+import { HttpMiddleware, HttpRouter, HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
 
 export type CorsOptions = { readonly cors?: ReadonlyArray<string> }
 
@@ -31,15 +31,15 @@ function sameHost(origin: string, host: string) {
   }
 }
 
-/** Global CORS for the HTTP server: the origins above (the desktop renderer, local web, Tauri) plus `opts.cors`. */
-export const corsLayer = (opts?: CorsOptions) =>
-  Layer.mergeAll(
-    corsVaryFix,
-    HttpRouter.middleware(
-      HttpMiddleware.cors({ allowedOrigins: (origin) => isAllowedCorsOrigin(origin, opts), maxAge: 86_400 }),
-      { global: true },
-    ),
-  )
+/** Global CORS for routes that use the server's origins, including the desktop renderer. */
+export function corsLayer(opts?: CorsOptions, isExtensionRequest?: (url: string) => boolean) {
+  const cors = HttpMiddleware.cors({ allowedOrigins: (origin) => isAllowedCorsOrigin(origin, opts), maxAge: 86_400 })
+  return HttpRouter.middleware((effect) => {
+    const withCors = cors(effect).pipe(Effect.map(varyOrigin))
+    if (!isExtensionRequest) return withCors
+    return HttpServerRequest.HttpServerRequest.use((request) => isExtensionRequest(request.url) ? effect : withCors)
+  }, { global: true })
+}
 
 // effect-smol's HttpMiddleware.cors builds OPTIONS preflight responses by
 // spreading allowOrigin() and allowHeaders() into the same record. Both set
@@ -50,20 +50,15 @@ export const corsLayer = (opts?: CorsOptions) =>
 //
 // TODO: upstream a fix that merges Vary values in headersFromRequestOptions
 // (packages/effect/src/unstable/http/HttpMiddleware.ts ~line 332).
-export const corsVaryFix = HttpRouter.middleware(
-  (effect) =>
-    Effect.gen(function* () {
-      const response = yield* effect
-      const allowOrigin = response.headers["access-control-allow-origin"]
-      if (!allowOrigin || allowOrigin === "*") return response
+function varyOrigin(response: HttpServerResponse.HttpServerResponse) {
+  const allowOrigin = response.headers["access-control-allow-origin"]
+  if (!allowOrigin || allowOrigin === "*") return response
 
-      const vary = response.headers["vary"]
-      if (!vary) return HttpServerResponse.setHeader(response, "vary", "Origin")
+  const vary = response.headers["vary"]
+  if (!vary) return HttpServerResponse.setHeader(response, "vary", "Origin")
 
-      const tokens = vary.split(",").map((s) => s.trim().toLowerCase())
-      if (tokens.includes("origin") || tokens.includes("*")) return response
+  const tokens = vary.split(",").map((s) => s.trim().toLowerCase())
+  if (tokens.includes("origin") || tokens.includes("*")) return response
 
-      return HttpServerResponse.setHeader(response, "vary", `${vary}, Origin`)
-    }),
-  { global: true },
-)
+  return HttpServerResponse.setHeader(response, "vary", `${vary}, Origin`)
+}

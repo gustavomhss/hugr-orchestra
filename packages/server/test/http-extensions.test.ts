@@ -1,8 +1,14 @@
+import "./httpapi-exercise/environment"
 import { describe, expect, test } from "bun:test"
-import { Context, Layer } from "effect"
+import { NodeHttpServer } from "@effect/platform-node"
+import { Context, Effect, Layer } from "effect"
+import { mkdtemp, rm } from "node:fs/promises"
+import { createServer } from "node:http"
+import { tmpdir } from "node:os"
+import path from "node:path"
 import { HttpRouter, HttpServer, HttpServerResponse } from "effect/unstable/http"
 import { httpExtensionsLayer } from "../src/http-extensions"
-import type { HttpExtension } from "../src/routes"
+import { createRoutes, type HttpExtension } from "../src/routes"
 import { hostPolicyLayer } from "../src/host-policy"
 
 function app(extensions: readonly HttpExtension[] = [], allowedHosts?: readonly string[]) {
@@ -168,8 +174,8 @@ describe("HTTP extensions", () => {
 
   test.each([
     ["/"], [""], ["tools"], ["/tools/"], ["/tools//child"], ["/tools?x=1"], ["/tools/*"], ["/tools/../child"],
-    ["/api"], ["/api/child"], ["/openapi.json"], ["/openapi.json/child"],
-    ["/tools", "/tools"], ["/tools", "/tools/child"], ["/tools/child", "/tools"],
+    ["/api"], ["/api/child"], ["/API"], ["/Api/child"], ["/openapi.json"], ["/OPENAPI.JSON/child"],
+    ["/tools", "/tools"], ["/tools", "/Tools"], ["/tools", "/TOOLS/child"], ["/tools/child", "/Tools"],
   ].map((mounts) => [mounts] as const))("rejects invalid, reserved or overlapping mounts %j", async (mounts) => {
     await expect((async () => {
       const server = app(mounts.map((mount) => ({ mount, handler: async () => new Response("unexpected") })))
@@ -230,4 +236,113 @@ describe("HTTP extensions", () => {
       await pending
     }
   })
+})
+
+test("production routes keep Host global and give installation routes their own preflights and limits", async () => {
+  const webRoot = await mkdtemp(path.join(tmpdir(), "orchestra-installation-web-"))
+  await Bun.write(path.join(webRoot, "index.html"), "installation-ui")
+  const seen: string[] = []
+  const password = "installation-synthetic-password"
+  const server = HttpRouter.toWebHandler(createRoutes({
+    password,
+    webRoot,
+    allowedHosts: ["localhost"],
+    httpExtensions: [{ mount: "/installation", async handler(input) {
+      const pathname = new URL(input.url).pathname
+      seen.push(input.method)
+      if (pathname.endsWith("/missing")) return undefined
+      if (input.method === "OPTIONS") {
+        return new Response(null, { status: 202, headers: { "access-control-allow-origin": "https://module.example" } })
+      }
+      return new Response(input.headers.get("content-length"), { status: 201 })
+    } }],
+  }).pipe(Layer.provide(HttpServer.layerServices)), { disableLogger: true, memoMap: Layer.makeMemoMapUnsafe() })
+  const send = (pathname: string, init: RequestInit = {}) => {
+    const headers = new Headers(init.headers)
+    if (!headers.has("host")) headers.set("host", "localhost")
+    return server.handler(request(pathname, { ...init, headers }), Context.makeUnsafe(new Map()))
+  }
+  const preflight = { origin: "oc://renderer", "access-control-request-method": "POST" }
+  try {
+    for (const pathname of ["/installation", "/INSTALLATION//child", "/%69nstallation/child"]) {
+      const owned = await send(pathname, { method: "OPTIONS", headers: preflight })
+      expect(owned.status).toBe(202)
+      expect(owned.headers.get("access-control-allow-origin")).toBe("https://module.example")
+      expect(owned.headers.get("vary")).toBeNull()
+    }
+    expect((await send("/installation/missing", { method: "OPTIONS", headers: preflight })).status).toBe(404)
+    expect((await send("/installation", {
+      method: "OPTIONS", headers: { ...preflight, host: "unrecognized.example" },
+    })).status).toBe(421)
+
+    const apiPreflight = await send("/api/health", { method: "OPTIONS", headers: preflight })
+    expect(apiPreflight.status).toBe(204)
+    expect(apiPreflight.headers.get("access-control-allow-origin")).toBe("oc://renderer")
+    const lookalike = await send("/installation-other", { method: "OPTIONS", headers: preflight })
+    expect(lookalike.status).toBe(204)
+    expect(lookalike.headers.get("access-control-allow-origin")).toBe("oc://renderer")
+
+    const size = String(16 * 1024 * 1024 + 1)
+    const owned = await send("/installation/upload", { method: "POST", headers: { "content-length": size } })
+    expect(owned.status).toBe(201)
+    expect(await owned.text()).toBe(size)
+    expect((await send("/api/health", { method: "POST", headers: { "content-length": size } })).status).toBe(413)
+    expect((await send("/api/health")).status).toBe(401)
+    const auth = `Basic ${Buffer.from(`orchestra:${password}`).toString("base64")}`
+    expect((await send("/api/health", { headers: { authorization: auth } })).status).toBe(200)
+    expect(await (await send("/")).text()).toBe("installation-ui")
+    expect(seen).toEqual(["OPTIONS", "OPTIONS", "OPTIONS", "OPTIONS", "POST"])
+  } finally {
+    await server.dispose()
+    await rm(webRoot, { recursive: true, force: true })
+  }
+})
+
+test("Node disconnect aborts the installation request after the first streamed response chunk", async () => {
+  const aborted = Promise.withResolvers<unknown>()
+  const cancelled = Promise.withResolvers<void>()
+  const stopWaiting = Promise.withResolvers<void>()
+  const server = createServer()
+  const middleware = HttpRouter.serve(createRoutes({
+    allowedHosts: ["127.0.0.1"],
+    httpExtensions: [{ mount: "/stream", async handler(input) {
+      input.signal.addEventListener("abort", () => aborted.resolve(input.signal.reason), { once: true })
+      return new Response(new ReadableStream({
+        start(stream) {
+          stream.enqueue(new TextEncoder().encode("first"))
+        },
+        async cancel() {
+          // Application cleanup may itself wait for the request to be aborted.
+          await Promise.race([aborted.promise, stopWaiting.promise])
+          cancelled.resolve()
+        },
+      }))
+    } }],
+  }), { disableListenLog: true, disableLogger: true }).pipe(
+    Layer.provideMerge(NodeHttpServer.layer(() => server, { host: "127.0.0.1", port: 0 })),
+  )
+
+  await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
+    const context = yield* Layer.build(middleware)
+    yield* Effect.addFinalizer(() => Effect.sync(() => server.closeAllConnections()))
+    const address = Context.get(context, HttpServer.HttpServer).address
+    yield* Effect.promise(async () => {
+      const controller = new AbortController()
+      try {
+        const response = await fetch(`${HttpServer.formatAddress(address)}/stream`, {
+          signal: AbortSignal.any([controller.signal, AbortSignal.timeout(5_000)]),
+        })
+        expect(response.status).toBe(200)
+        const first = await response.body!.getReader().read()
+        expect(new TextDecoder().decode(first.value)).toBe("first")
+        controller.abort()
+        const timeout = Bun.sleep(5_000).then(() => { throw new Error("client disconnect did not abort and cancel the response") })
+        const [reason] = await Promise.race([Promise.all([aborted.promise, cancelled.promise]), timeout])
+        expect(reason).toBeInstanceOf(DOMException)
+      } finally {
+        controller.abort()
+        stopWaiting.resolve()
+      }
+    })
+  })))
 })
