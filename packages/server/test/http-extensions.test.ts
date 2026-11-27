@@ -7,7 +7,7 @@ import { PermissionSaved } from "@orchestra/core/permission/saved"
 import { NodeHttpServer } from "@effect/platform-node"
 import { Context, Effect, Layer } from "effect"
 import { mkdtemp, rm } from "node:fs/promises"
-import { createServer } from "node:http"
+import { createServer, request } from "node:http"
 import { createConnection } from "node:net"
 import { tmpdir } from "node:os"
 import path from "node:path"
@@ -24,7 +24,7 @@ function app(extensions: readonly HttpExtension[] = [], allowedHosts?: readonly 
   return { handler: (input: Request) => server.handler(input, Context.empty()), dispose: server.dispose }
 }
 
-function request(path: string, init?: RequestInit) {
+function webRequest(path: string, init?: RequestInit) {
   return new Request(`http://localhost${path}`, init)
 }
 
@@ -32,8 +32,8 @@ describe("HTTP extensions", () => {
   test("default without extensions preserves baseline", async () => {
     const server = app()
     try {
-      expect(await (await server.handler(request("/api/health"))).text()).toBe("baseline")
-      expect((await server.handler(request("/tools"))).status).toBe(404)
+      expect(await (await server.handler(webRequest("/api/health"))).text()).toBe("baseline")
+      expect((await server.handler(webRequest("/tools"))).status).toBe(404)
     } finally { await server.dispose() }
   })
 
@@ -46,7 +46,7 @@ describe("HTTP extensions", () => {
     try {
       for (const path of ["/tools", "/tools/nested?key=value"]) {
         for (const method of ["GET", "POST", "HEAD"]) {
-          const response = await server.handler(request(path, { method, headers: { "x-input": "value" }, ...(method === "POST" ? { body: "payload" } : {}) }))
+          const response = await server.handler(webRequest(path, { method, headers: { "x-input": "value" }, ...(method === "POST" ? { body: "payload" } : {}) }))
           expect(response.status).toBe(202)
           expect(response.headers.get("x-output")).toBe("present")
           expect(await response.text()).toBe(method === "HEAD" ? "" : `value:${method === "POST" ? "payload" : ""}`)
@@ -64,7 +64,7 @@ describe("HTTP extensions", () => {
     try {
       for (const method of ["PUT", "PATCH", "DELETE", "OPTIONS", "PROPFIND"]) {
         for (const path of ["/tools", "/tools/nested"]) {
-          const response = await server.handler(request(path, { method }))
+          const response = await server.handler(webRequest(path, { method }))
           expect(response.status).toBe(202)
           expect(response.headers.get("x-extension-path")).toBe(path)
           expect(await response.text()).toBe(method)
@@ -120,7 +120,7 @@ describe("HTTP extensions", () => {
         },
       }),
     }
-    const pending = server.handler(request("/tools/upload", init))
+    const pending = server.handler(webRequest("/tools/upload", init))
     try {
       // The producer cannot send its final chunk until the extension has read the first.
       await within(Promise.race([
@@ -164,8 +164,8 @@ describe("HTTP extensions", () => {
       return new Response("extension")
     } }])
     try {
-      for (const path of ["/toolshed", "/tools-other", "/api/missing", "/openapi.json"]) expect((await server.handler(request(path))).status).toBe(404)
-      expect(await (await server.handler(request("/api/health"))).text()).toBe("baseline")
+      for (const path of ["/toolshed", "/tools-other", "/api/missing", "/openapi.json"]) expect((await server.handler(webRequest(path))).status).toBe(404)
+      expect(await (await server.handler(webRequest("/api/health"))).text()).toBe("baseline")
       expect(seen).toEqual([])
     } finally { await server.dispose() }
   })
@@ -173,7 +173,7 @@ describe("HTTP extensions", () => {
   test("undefined in an owned mount returns 404", async () => {
     const server = app([{ mount: "/tools", handler: async () => undefined }])
     try {
-      for (const path of ["/tools", "/tools/missing"]) expect((await server.handler(request(path))).status).toBe(404)
+      for (const path of ["/tools", "/tools/missing"]) expect((await server.handler(webRequest(path))).status).toBe(404)
     } finally { await server.dispose() }
   })
 
@@ -184,7 +184,7 @@ describe("HTTP extensions", () => {
   ].map((mounts) => [mounts] as const))("rejects invalid, reserved or overlapping mounts %j", async (mounts) => {
     await expect((async () => {
       const server = app(mounts.map((mount) => ({ mount, handler: async () => new Response("unexpected") })))
-      try { await server.handler(request("/api/health")) } finally { await server.dispose() }
+      try { await server.handler(webRequest("/api/health")) } finally { await server.dispose() }
     })()).rejects.toThrow()
   })
 
@@ -192,14 +192,14 @@ describe("HTTP extensions", () => {
     const mounts = ["/tools/a", "/tools/b", "/toolshed", "/api-tools"]
     const server = app(mounts.map((mount) => ({ mount, handler: async () => new Response(mount) })))
     try {
-      for (const mount of mounts) expect(await (await server.handler(request(mount))).text()).toBe(mount)
+      for (const mount of mounts) expect(await (await server.handler(webRequest(mount))).text()).toBe(mount)
     } finally { await server.dispose() }
   })
 
   test("promise errors return a sanitized 500", async () => {
     const server = app([{ mount: "/tools", handler: async () => { throw new Error("sentinel-private-extension-secret") } }])
     try {
-      const response = await server.handler(request("/tools"))
+      const response = await server.handler(webRequest("/tools"))
       expect(response.status).toBe(500)
       expect(await response.text()).not.toContain("sentinel-private-extension-secret")
       expect(JSON.stringify([...response.headers])).not.toContain("sentinel-private-extension-secret")
@@ -213,9 +213,9 @@ describe("HTTP extensions", () => {
       return new Response("allowed")
     } }], ["localhost"])
     try {
-      expect((await server.handler(request("/tools", { headers: { host: "untrusted.example" } }))).status).toBe(421)
+      expect((await server.handler(webRequest("/tools", { headers: { host: "untrusted.example" } }))).status).toBe(421)
       expect(seen).toEqual([])
-      expect(await (await server.handler(request("/tools", { headers: { host: "localhost" } }))).text()).toBe("allowed")
+      expect(await (await server.handler(webRequest("/tools", { headers: { host: "localhost" } }))).text()).toBe("allowed")
       expect(seen).toHaveLength(1)
     } finally { await server.dispose() }
   })
@@ -231,7 +231,7 @@ describe("HTTP extensions", () => {
       await Promise.race([aborted.promise, release.promise])
       return new Response("cancelled")
     } }])
-    const pending = server.handler(request("/tools", { signal: controller.signal })).catch(() => undefined)
+    const pending = server.handler(webRequest("/tools", { signal: controller.signal })).catch(() => undefined)
     try {
       await within(Promise.race([
         entered.promise,
@@ -270,7 +270,7 @@ test("production routes keep Host global and give installation routes their own 
   const send = (pathname: string, init: RequestInit = {}) => {
     const headers = new Headers(init.headers)
     if (!headers.has("host")) headers.set("host", "localhost")
-    return server.handler(request(pathname, { ...init, headers }), Context.makeUnsafe(new Map()))
+    return server.handler(webRequest(pathname, { ...init, headers }), Context.makeUnsafe(new Map()))
   }
   const preflight = { origin: "oc://renderer", "access-control-request-method": "POST" }
   try {
@@ -389,12 +389,12 @@ test("Node forwards OPTIONS bodies and exact cookie fields and keeps the admitte
     const url = new URL(input.url)
     return Response.json({ url: url.href, body: await input.text() }, { headers })
   } }], async (origin) => {
-    const response = await fetch(`${origin}//installation/nested`, {
-      method: "OPTIONS", body: "options body", signal: AbortSignal.timeout(5_000),
-    })
+    const response = await sendNode(origin, "//installation/nested", {
+      method: "OPTIONS", headers: { "content-length": "12" },
+    }, "options body")
     expect(response.status).toBe(200)
-    expect(response.headers.getSetCookie()).toEqual(cookies)
-    expect(await response.json()).toEqual({ url: `${origin}//installation/nested`, body: "options body" })
+    expect(response.cookies).toEqual(cookies)
+    expect(JSON.parse(response.body)).toEqual({ url: `${origin}//installation/nested`, body: "options body" })
   })
 })
 
@@ -439,3 +439,74 @@ test("Node leaves chunked installation payload limits to the extension and still
     expect(await api.json()).toMatchObject({ _tag: "PayloadTooLargeError" })
   })
 })
+
+test("Node sends early installation responses before uploads finish", async () => {
+  await withNodeRoutes([{ mount: "/installation", async handler(input) {
+    if (new URL(input.url).pathname.endsWith("/partial")) {
+      const reader = input.body!.getReader()
+      const chunk = await reader.read()
+      if (new TextDecoder().decode(chunk.value) !== "partial") return new Response(null, { status: 400 })
+    }
+    return new Response("installation limit", { status: 413, headers: { connection: "close" } })
+  } }], async (origin) => {
+    for (const [pathname, chunk] of [["/installation/unread", ""], ["/installation/partial", "partial"]]) {
+      const response = await sendNode(origin, pathname!, {
+        method: "POST", headers: { "transfer-encoding": "chunked" },
+      }, chunk!, false)
+      expect(response).toMatchObject({ status: 413, body: "installation limit" })
+    }
+  })
+})
+
+test("Node can close a disconnected request even if the handler promise is still pending", async () => {
+  const entered = Promise.withResolvers<void>()
+  const aborted = Promise.withResolvers<void>()
+  const pending = Promise.withResolvers<Response>()
+
+  const running = withNodeRoutes([{ mount: "/pending", async handler(input) {
+    input.signal.addEventListener("abort", () => aborted.resolve(), { once: true })
+    entered.resolve()
+    return pending.promise
+  } }], async (origin) => {
+    const client = request(`${origin}/pending`)
+    client.once("error", entered.reject)
+    try {
+      client.end()
+      await within(entered.promise, "Node handler entry")
+      client.destroy()
+      await within(aborted.promise, "Node handler request abort")
+    } finally {
+      client.destroy()
+    }
+  })
+  try {
+    await within(running, "Node teardown with pending extension handler")
+  } finally {
+    pending.resolve(new Response(null))
+    await running.catch(() => undefined)
+  }
+})
+
+async function sendNode(origin: string, pathname: string, options: { method: string; headers: Record<string, string> }, body: string, end = true) {
+  const address = new URL(origin)
+  const result = Promise.withResolvers<{ status: number | undefined; cookies: string[] | undefined; body: string }>()
+  const client = request({ hostname: address.hostname, port: address.port, path: pathname, ...options }, (response) => {
+    const chunks: Buffer[] = []
+    response.on("data", (chunk: Buffer) => chunks.push(chunk))
+    response.once("error", result.reject)
+    response.once("end", () => result.resolve({
+      status: response.statusCode,
+      cookies: response.headers["set-cookie"],
+      body: Buffer.concat(chunks).toString("utf8"),
+    }))
+  })
+  client.once("error", result.reject)
+  try {
+    client.flushHeaders()
+    if (body) client.write(body)
+    if (end) client.end()
+    return await within(result.promise, "Node HTTP response")
+  } finally {
+    client.destroy()
+  }
+}

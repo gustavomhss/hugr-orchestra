@@ -174,7 +174,7 @@ function bind(
   cors?: ReadonlyArray<string>,
   httpExtensions?: readonly HttpExtension[],
 ) {
-  const server = createServer()
+  const server = serveTransport(httpExtensions !== undefined)
   return Layer.build(
     HttpRouter.serve(createRoutes({ password, host, webRoot: root, cors, allowedHosts, httpExtensions }), {
       disableListenLog: true,
@@ -184,6 +184,20 @@ function bind(
       Layer.provide(AppNodeBuilder.build(LayerNode.group([Credential.node, PermissionSaved.node, ClaudeCodeAccount.node]))),
     ),
   ).pipe(Effect.map((context) => ({ address: Context.get(context, HttpServer.HttpServer).address, server })))
+}
+
+/** Own connection teardown from the moment the transport starts listening. */
+export function serveTransport(installation: boolean) {
+  const server = createServer()
+  if (installation) {
+    // Binding happens before route-layer initialization. Even a partially built server must close active connections.
+    const close = server.close.bind(server)
+    server.close = (callback) => {
+      server.closeAllConnections?.()
+      return close(callback)
+    }
+  }
+  return server
 }
 
 // The Dock tools exist only when the desktop that owns this child handed it a Dock channel.

@@ -84,6 +84,12 @@ for (const file of ["https://example.test/installation.mjs", "http://127.0.0.1/i
   })
 }
 
+test.skipIf(process.platform !== "win32")("requires a drive-qualified Windows installation file", async () => {
+  for (const file of ["/installation.mjs", "\\installation.mjs"]) {
+    expect((await rejection(file)).message).toContain("absolute local")
+  }
+})
+
 test("rejects an unsupported extension during path validation", async () => {
   const file = await fixture('{"valid":"JSON"}', ".json")
   expect((await rejection(file)).message).toContain("absolute local")
