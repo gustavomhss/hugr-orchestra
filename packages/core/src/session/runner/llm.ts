@@ -23,6 +23,7 @@ import { PermissionV2 } from "../../permission"
 import { Project } from "../../project"
 import { ProviderV2 } from "../../provider"
 import { QuestionV2 } from "../../question"
+import { Relay } from "../../relay"
 import { SystemContext } from "../../system-context/index"
 import { SystemContextRegistry } from "../../system-context/registry"
 import { SkillGuidance } from "../../skill/guidance"
@@ -104,6 +105,7 @@ const layer = Layer.effect(
     const database = yield* Database.Service
     const hosts = yield* ExecutionHost.Service
     const permissions = yield* PermissionV2.Service
+    const relay = yield* Relay.Service
     const fs = yield* FSUtil.Service
     const appProcess = yield* AppProcess.Service
     const skills = yield* SkillV2.Service
@@ -336,7 +338,10 @@ const layer = Layer.effect(
             .pipe(Effect.catchTag("Session.NotFoundError", (error) => Effect.die(error)))
           if (!input.safety) return {}
           const call = input.safety
-          const hooks = hostedHooks(permissions, { sessionID: session.id, agent: agent.id, location, fs })
+          const hooks = hostedHooks(permissions, {
+            sessionID: session.id, agent: agent.id, location, fs,
+            callID: input.callID, action: input.action, resources: input.resources,
+          })
           const authorization = yield* tools.hosted(
             {
               tool: call.tool,
@@ -349,7 +354,10 @@ const layer = Layer.effect(
               projectDirectory: Project.isRoot(location.project.directory) ? location.directory : location.project.directory,
             },
             hostedCall(call, location.directory, scope, fs),
-          ).pipe(Effect.provideService(ToolSafety.HostedHooks, hooks))
+          ).pipe(
+            Effect.provideService(ToolSafety.HostedHooks, hooks),
+            Effect.provideService(Relay.Service, relay),
+          )
           return hooks.after ? { ...authorization, after: hooks.after } : authorization
         })
       const memory: ExecutionHost.Turn["memory"] = {
@@ -751,6 +759,7 @@ export const node = makeLocationNode({
     Snapshot.node,
     Database.node,
     RelayWorkflowSession.node,
+    Relay.node,
     ExecutionHost.node,
     TaskGovernance.node,
     SessionCompaction.node,

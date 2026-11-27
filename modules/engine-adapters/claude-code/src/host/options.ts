@@ -12,10 +12,10 @@ export const ENV_FLAGS = { CLAUDE_CODE_ENABLE_TODO_TOOLS: "1" } as const
 /** The setting sources Claude Code loads: the project's only, never the owner's own `~/.claude` settings. */
 export const SETTING_SOURCES = ["project"] as const
 
-/** Keep native CLAUDE.md and its imports, except AGENTS files already delivered by Orchestra. */
+/** Keep native instruction discovery active, excluding files already delivered by Orchestra. */
 export function instructionSettings(files: ReadonlyArray<string> = []) {
   return {
-    pluginConfigs: { "cc-plugin-agents-md@builtin": { options: { instructionFiles: "claude-md" } } },
+    pluginConfigs: { "cc-plugin-agents-md@builtin": { options: { instructionFiles: "claude-md-and-agents-md" } } },
     claudeMdExcludes: files.flatMap((file) => {
       const path = process.platform === "win32" ? file.replaceAll("\\", "/") : file
       // Claude normalizes backslashes as separators in exclusion patterns, so quote glob characters in classes.

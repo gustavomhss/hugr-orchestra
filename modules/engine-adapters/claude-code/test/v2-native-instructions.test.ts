@@ -1,8 +1,18 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
-import { mkdir } from "node:fs/promises"
+import { mkdir, realpath } from "node:fs/promises"
 import { query, type HookInput } from "@anthropic-ai/claude-agent-sdk"
+import { Effect, Layer } from "effect"
+import { Config } from "@orchestra/core/config"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { Global } from "@orchestra/core/global"
 import { InstructionContext } from "@orchestra/core/instruction-context"
+import { Location } from "@orchestra/core/location"
+import { Project } from "@orchestra/core/project"
+import { AbsolutePath } from "@orchestra/core/schema"
+import { SystemContext } from "@orchestra/core/system-context"
+import { SystemContextRegistry } from "@orchestra/core/system-context/registry"
 import { ClaudeHostOptions } from "../src/host/options"
 import { ClaudeCodeExecutable } from "../src/executable"
 import { tmpdir } from "./fixture/tmpdir"
@@ -24,8 +34,22 @@ const message = {
 test("the pinned Claude Code binary loads CLAUDE.md and relays context and the real Read response", async () => {
   await using project = await tmpdir()
   await using config = await tmpdir()
-  const directory = path.join(project.path, "probe[literal]")
+  const root = await realpath(project.path)
+  const directory = path.join(root, "probe[literal]")
   await mkdir(directory)
+  const instructions = () => Effect.runPromise(
+    SystemContextRegistry.Service.use((registry) => registry.load({ sessionID: "test", agent: "maestro", hosted: true })).pipe(
+      Effect.flatMap(SystemContext.initialize),
+      Effect.provide(AppNodeBuilder.build(LayerNode.group([InstructionContext.node, SystemContextRegistry.node]), [
+        [Global.node, Global.layerWith({ config: config.path, home: config.path })],
+        [Location.node, Layer.succeed(Location.Service, {
+          directory: AbsolutePath.make(directory),
+          project: { id: Project.ID.make("native-instructions"), directory: AbsolutePath.make(root) },
+        })],
+        [Config.node, Layer.succeed(Config.Service, Config.Service.of({ entries: () => Effect.succeed([]) }))],
+      ])),
+    ),
+  )
   const inputs: string[] = []
   const file = path.join(directory, "probe.txt")
   const resultMarker = "orchestra_probe_read_result_39"
@@ -64,7 +88,8 @@ test("the pinned Claude Code binary loads CLAUDE.md and relays context and the r
     await Bun.write(path.join(directory, "AGENTS.md"), agents)
     await Bun.write(file, resultMarker)
     const callbacks: HookInput[] = []
-    const send = async (hosted: boolean, read = false, exclusions: ReadonlyArray<string> = []) => {
+    const send = async (hosted: boolean, read = false) => {
+      const context = hosted ? await instructions() : undefined
       inputs.length = 0
       const failures: string[] = []
       const run = query({
@@ -74,7 +99,7 @@ test("the pinned Claude Code binary loads CLAUDE.md and relays context and the r
           model: message.model,
           maxTurns: 3,
           settingSources: [...ClaudeHostOptions.SETTING_SOURCES],
-          settings: hosted ? ClaudeHostOptions.instructionSettings(exclusions) : undefined,
+          settings: context ? ClaudeHostOptions.instructionSettings(InstructionContext.agentsPaths(context.snapshot)) : undefined,
           env: {
             PATH: process.env.PATH,
             SystemRoot: process.env.SystemRoot,
@@ -89,7 +114,7 @@ test("the pinned Claude Code binary loads CLAUDE.md and relays context and the r
           systemPrompt: { type: "preset", preset: "claude_code" },
           hooks: hosted ? {
             UserPromptSubmit: [{ hooks: [async () => ({
-              hookSpecificOutput: { hookEventName: "UserPromptSubmit" as const, additionalContext: agents },
+              hookSpecificOutput: { hookEventName: "UserPromptSubmit" as const, additionalContext: context?.baseline },
             })] }],
             ...(read ? {
               PreToolUse: [{ matcher: "Read", hooks: [async (input) => {
@@ -137,29 +162,27 @@ test("the pinned Claude Code binary loads CLAUDE.md and relays context and the r
     expect(afterRead).toContain(resultMarker)
     expect(afterRead).toContain(postMarker)
 
-    const admitted = async () => {
-      const file = path.join(directory, "AGENTS.md")
-      return InstructionContext.agentsPaths({
-        "core/instructions": { value: [{ path: file, content: await Bun.file(file).text() }] },
-      })
-    }
-    const importOnly = "orchestra_probe_import_only_71"
+    const nativeOnly = "orchestra_probe_native_only_11"
+    const imported = "orchestra_probe_imported_71"
+    const child = "orchestra_probe_child_42"
+    const ignored = "orchestra_probe_code_example_95"
+    await mkdir(path.join(directory, ".claude"))
     await mkdir(path.join(directory, "nested"))
-    await Bun.write(path.join(directory, "nested", "AGENTS.md"), importOnly)
-    await Bun.write(path.join(directory, "CLAUDE.md"), `${claude}\n\n@AGENTS.md\n\n@nested/AGENTS.md\n`)
-    const duplicate = await send(true)
-    expect(duplicate.split(agents)).toHaveLength(3)
-    const excluded = await send(true, false, await admitted())
-    expect(excluded.split(agents)).toHaveLength(2)
-    expect(excluded.split(claude)).toHaveLength(2)
-    expect(excluded.split(importOnly)).toHaveLength(2)
+    await Bun.write(path.join(directory, ".claude", "AGENTS.md"), nativeOnly)
+    await Bun.write(path.join(directory, "nested", "AGENTS.md"), `${imported}\n\n@../AGENTS.md\n\n@child\\ rules.md#usage\n`)
+    await Bun.write(path.join(directory, "nested", "child rules.md"), child)
+    await Bun.write(path.join(directory, "nested", "example.md"), ignored)
+    await Bun.write(path.join(directory, "AGENTS.md"), `${agents}\n\n@nested/AGENTS.md\n\n\`@nested/example.md\`\n`)
+    const markers = [agents, nativeOnly, imported, child]
+    await Bun.file(path.join(directory, "CLAUDE.md")).delete()
+    const standalone = await send(true)
+    for (const marker of markers) expect(standalone.split(marker)).toHaveLength(2)
+    expect(standalone).not.toContain(ignored)
 
-    await Bun.write(path.join(directory, "CLAUDE.md"), `${claude}\n\n@AGENTS.md\n`)
-    await Bun.write(path.join(directory, "AGENTS.md"), `${agents}\n\n@nested/AGENTS.md\n`)
-    const transitive = await send(true, false, await admitted())
-    expect(transitive.split(agents)).toHaveLength(3)
-    expect(transitive.split(claude)).toHaveLength(2)
-    expect(transitive.split(importOnly)).toHaveLength(2)
+    await Bun.write(path.join(directory, "CLAUDE.md"), `${claude}\n\n@AGENTS.md\n\n@nested/AGENTS.md\n`)
+    const explicit = await send(true)
+    for (const marker of [...markers, claude]) expect(explicit.split(marker)).toHaveLength(2)
+    expect(explicit).not.toContain(ignored)
   } finally {
     await server.stop(true)
   }

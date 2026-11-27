@@ -31,6 +31,7 @@ import { Tool } from "@orchestra/core/tool/tool"
 import { AllowedDomains } from "@orchestra/core/tool/websearch"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { Cause, Effect, Exit, Fiber, Layer, Schema, Stream } from "effect"
+import { expectSpawn } from "./fixture/omni-expect"
 import { Harness, sessionID } from "./session-runner-harness"
 
 // The ports a Turn gives an execution host beyond streaming: Orchestra's decision on the engine's own calls (ToolSafety,
@@ -121,6 +122,7 @@ const it = Harness.make({
   directory: root,
   replacements: [
     [ToolSafety.node, safetyNode],
+    [Global.node, Global.layerWith({ data: path.join(root, "hooks") })],
     [
       QuestionV2.node,
       Layer.mock(QuestionV2.Service, {
@@ -166,14 +168,14 @@ const send = (sessions: SessionV2.Interface, text: string) =>
 const refusal = (exit: Exit.Exit<unknown, unknown>) => (Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined)
 
 // One installed Relay hook whose trigger fires on `event` (`<operation>.<timing>`), straight into one action.
-const installed = (name: string, event: string, type: RelayHook.NodeType, message: string) => {
+const installed = (name: string, event: string, type: RelayHook.NodeType, message: string, check?: string) => {
   const [operation, timing] = event.split(".")
   const snapshot = {
     schema: "relay.hook.v1",
     name,
     nodes: [
       { id: "event", name: "Event", type: RelayHook.NodeType.trigger, position: [0, 0], parameters: { operation, timing } },
-      { id: "act", name: "Act", type, position: [0, 0], parameters: { message } },
+      { id: "act", name: "Act", type, position: [0, 0], parameters: { message, ...(check === undefined ? {} : { check }) } },
     ],
     connections: [{ from: "event", port: 0, to: "act" }],
     binding: "host-required",
@@ -282,6 +284,37 @@ describe("SessionRunner execution host ports", () => {
         _tag: "ToolSafety.Denied",
         reason: "relay-hook-repair",
       })
+    }),
+  )
+
+  it.live("an SDK callback settles hosted Verify with the Location Relay and the real response", () =>
+    Effect.gen(function* () {
+      expectSpawn(import.meta.path)
+      const sessions = yield* hosted
+      const installedVerify = yield* installed("HostedVerify", "read.after", RelayHook.NodeType.verify, "Expected alpha.",
+        `test "\${RELAY_HOOK_RESULT}" = '{"text":"alpha"}'`)
+      const settled: Exit.Exit<ReadonlyArray<string>, ToolSafety.Denied>[] = []
+      script = (turn) =>
+        Effect.promise(async (signal) => {
+          profile.current = ToolSafety.withHooks(undefined, [installedVerify])
+          for (const text of ["alpha", "beta"]) {
+            const authorization = await Effect.runPromise(turn.authorize({
+              callID: `verify-${text}`,
+              tool: "Read",
+              action: "read",
+              resources: ["inside/a.ts"],
+              safety: { tool: "read", args: { filePath: path.join(inside, "a.ts") } },
+            }), { signal })
+            if (!authorization.after) throw new Error("Missing hosted result callback")
+            settled.push(await Effect.runPromiseExit(authorization.after({ succeeded: true, response: { text } }), { signal }))
+          }
+          return answer()
+        })
+      yield* send(sessions, "Verify results")
+
+      expect(settled).toHaveLength(2)
+      expect(settled[0]).toEqual(Exit.succeed([]))
+      expect(refusal(settled[1])).toMatchObject({ reason: "relay-hook-verify-failed" })
     }),
   )
 

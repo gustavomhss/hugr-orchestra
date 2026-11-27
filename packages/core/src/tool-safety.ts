@@ -421,12 +421,14 @@ export const make = Effect.gen(function* () {
     const actions = command ? ToolSafetyCommands.actions(command) : [input.tool]
     const required = actions.filter((action) => profile.askBefore?.includes(action))
     if (required.length) {
+      const hosted = yield* HostedHooks
       const host = yield* NativeHost
-      if (!host) return yield* new Denied({ reason: "ask-before-native-binding-missing" })
+      const approve = hosted?.approve ?? host?.ask
+      if (!approve) return yield* new Denied({ reason: "ask-before-native-binding-missing" })
       yield* Effect.forEach(
         required,
         (action) =>
-          host.ask({
+          approve({
             action,
             resources: command ? [command] : [input.tool],
             invocation: input,

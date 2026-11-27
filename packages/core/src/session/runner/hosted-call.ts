@@ -44,7 +44,7 @@ export const hostedCall = Effect.fnUntraced(function* (
   } satisfies ExecutionHost.Authorization
 })
 
-/** Bind installed Hook Approve to the live Session; its SDK transcript row may not have arrived yet. */
+/** Bind preflight approvals to the live Session before the SDK publishes the tool call. */
 export function hostedHooks(
   permissions: PermissionV2.Interface,
   binding: {
@@ -52,6 +52,9 @@ export function hostedHooks(
     readonly agent: AgentV2.ID
     readonly location: Location.Interface
     readonly fs: FSUtil.Interface
+    readonly callID: string
+    readonly action: string
+    readonly resources: ReadonlyArray<string>
   },
 ): ToolSafety.HostedCallHooks {
   return {
@@ -62,7 +65,8 @@ export function hostedHooks(
         invocation.agent !== binding.agent ||
         invocation.directory !== binding.location.directory ||
         invocation.projectID !== binding.location.project.id ||
-        !invocation.callID
+        !binding.callID || invocation.callID !== binding.callID ||
+        request.resources.length === 0
       )
         return yield* new ToolSafety.Denied({ reason: "approval-v2-invocation-identity-missing" })
       const args = invocation.args
@@ -77,11 +81,12 @@ export function hostedHooks(
             Effect.mapError(() => new ToolSafety.Denied({ reason: "approval-native-resources-invalid" })),
           )
         : undefined
+      const hook = request.action === "relay_hook"
       yield* permissions.askExplicit({
         sessionID: binding.sessionID,
         agent: binding.agent,
-        action: "relay_hook",
-        resources: resolved ? [resolved.resource] : [...request.resources],
+        action: hook ? "relay_hook" : binding.action,
+        resources: resolved ? [resolved.resource] : [...(hook ? request.resources : binding.resources)],
         metadata: {
           nativeSafety: true, action: request.action, callID: invocation.callID, tool: invocation.tool, projectID: invocation.projectID,
           ...(request.message === undefined ? {} : { message: request.message }),

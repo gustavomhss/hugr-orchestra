@@ -80,14 +80,15 @@ rules above require, is a defect.
   Session, which you open from the task row and follow live. A seat on a Claude model runs on Claude Code too; a seat
   on another provider's model runs as it would in normal mode.
 - **Seats.** Each seat works by its own Orchestra prompt and skills, under its own permissions.
-- **Permissions.** Every tool call is checked against Orchestra's permission rules before it runs.
+- **Permissions.** Every tool call is checked against Orchestra's permission rules before it runs. If the active
+  ToolSafety profile requires approval for an action, Orchestra waits for your reply before Claude Code can run it.
 - **Workflows, reviews and the board.** Governed workflows, review requests, Atlas and the board use Orchestra's own
   tools, exactly as in normal mode.
 - **Project context.** The project's context and the active workflow's instructions reach the model with your message.
-  Orchestra supplies its global and project `AGENTS.md` and configured instruction files. Claude Code loads its
-  own `CLAUDE.md` and its imports. An explicit `@AGENTS.md` import uses the Orchestra copy when that file is
-  already in the Session context. When that file imports other files itself, Claude Code keeps the native copy to
-  preserve those imports. Orchestra sends context updates as instructions change and restores them after compaction.
+  Orchestra supplies its global and project `AGENTS.md`, configured instruction files and their project-local
+  imports. Claude Code discovers `CLAUDE.md`, rules and additional `AGENTS.md` files. An explicit import of a file
+  already supplied by Orchestra uses the same copy, including project-local files it imports. Orchestra sends
+  context updates as instructions change and restores them after compaction.
 
 ## What Claude Code requires
 
