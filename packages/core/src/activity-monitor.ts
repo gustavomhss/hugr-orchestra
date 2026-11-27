@@ -9,7 +9,7 @@ const FINISHED_KEPT = 32
 type Entry = {
   child: WeakRef<Child>
   record: ActivityMonitor.Record
-  closed: boolean
+  closed?: number
   rootSettled: boolean
   sampling?: Promise<void>
 }
@@ -18,10 +18,12 @@ type Entry = {
 export function make() {
   const entries = new Map<string, Entry>()
   const cpu = ActivityCPU.make()
-  const status = { instanceID: crypto.randomUUID(), retired: 0 }
+  const status = { instanceID: crypto.randomUUID(), retired: 0, closure: 0 }
 
   const retire = () => {
-    const closed = [...entries.values()].filter((entry) => entry.closed)
+    const closed = [...entries.values()]
+      .filter((entry) => entry.closed !== undefined)
+      .sort((a, b) => (a.closed ?? 0) - (b.closed ?? 0))
     closed.slice(0, Math.max(0, closed.length - FINISHED_KEPT)).forEach((entry) => {
       entries.delete(entry.record.recordID)
       collected.unregister(entry)
@@ -33,7 +35,7 @@ export function make() {
   // Retire such metadata even when no Monitor window is open; the observer must not accumulate dead handles.
   const collected = new FinalizationRegistry<Entry>((entry) => {
     if (entry.record.state !== "gone") entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
-    entry.closed = true
+    entry.closed ??= ++status.closure
     retire()
   })
 
@@ -42,28 +44,29 @@ export function make() {
     const child = entry.child.deref()
     if (!child) {
       // Losing an observation handle does not prove the tree exited.
-      entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
-      entry.closed = true
+      if (entry.record.state !== "gone") entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
+      entry.closed ??= ++status.closure
       return Promise.resolve()
     }
-    entry.sampling = child
-      .processes()
+    // Older installed bindings cannot safely perform this observation.
+    entry.sampling = Promise.resolve()
+      .then(() => child.observeProcesses())
       .then(
         (members) => {
           entry.record = {
             ...entry.record,
-            state: members.length ? "alive" : "gone",
+            state: members.length ? "alive" : entry.rootSettled ? "gone" : "unknown",
             inspectionFailed: false,
             source: "omni.processes",
             sampledAt: Date.now(),
             members,
           }
-          entry.closed = members.length === 0
+          entry.closed = members.length === 0 && entry.rootSettled ? ++status.closure : undefined
         },
         () => {
           // Inspection failure is unknown; preserve the last measured members and their timestamp.
           entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
-          entry.closed = entry.rootSettled
+          entry.closed = entry.rootSettled ? ++status.closure : undefined
         },
       )
       .finally(() => {
@@ -96,7 +99,6 @@ export function make() {
           state: "alive",
           inspectionFailed: false,
         },
-        closed: false,
         rootSettled: false,
       }
       entries.set(entry.record.recordID, entry)
@@ -112,28 +114,17 @@ export function make() {
     async inspect(recordID: string) {
       const entry = entries.get(recordID)
       if (!entry) return false
-      if (entry.closed && entry.record.state === "gone") return true
-      // Only explicit inspection asks the native supervisor for membership. On Unix that API scans the OS table.
-      const pending = sample(entry)
-      const timer = { id: undefined as ReturnType<typeof setTimeout> | undefined }
-      await Promise.race([
-        pending,
-        new Promise<void>((resolve) => {
-          timer.id = setTimeout(() => {
-            if (entry.sampling) entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
-            resolve()
-          }, 2000)
-        }),
-      ]).finally(() => clearTimeout(timer.id))
+      // An empty sample is refreshable while the original observation handle is available.
+      await sample(entry)
       retire()
       return true
     },
     async snapshot(): Promise<ActivityMonitor.Snapshot> {
       // A paint/refresh reads only the ledger and logical-CPU counters; it never enumerates OS processes.
       entries.forEach((entry) => {
-        if (!entry.closed && !entry.child.deref()) {
+        if (entry.closed === undefined && !entry.child.deref()) {
           entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
-          entry.closed = true
+          entry.closed = ++status.closure
         }
       })
       retire()

@@ -159,7 +159,7 @@ export function ActivityTrees(props: { query: string }) {
                           <button
                             type="button"
                             class="mx-btn"
-                            disabled={state.busy || row.state === "gone"}
+                            disabled={state.busy}
                             onClick={() => void refresh(row.recordID)}
                           >
                             {language.t("orchestra.monitor.inspect")}

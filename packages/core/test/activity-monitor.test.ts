@@ -115,10 +115,10 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("activity ob
     const counts = { inspections: 0 }
     const observed = new Proxy(child, {
       get(target, key) {
-        if (key === "processes")
+        if (key === "observeProcesses")
           return () => {
             counts.inspections++
-            return target.processes()
+            return target.observeProcesses()
           }
         const value: unknown = Reflect.get(target, key, target)
         return typeof value === "function" ? value.bind(target) : value
@@ -144,6 +144,8 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("activity ob
     expect(await monitor.inspect(id)).toBe(true)
     expect((await monitor.snapshot()).records.find((row) => row.recordID === id)?.state).toBe("gone")
     expect(counts.inspections).toBe(2)
+    expect(await monitor.inspect(id)).toBe(true)
+    expect(counts.inspections).toBe(3)
     expect(observed.pid).toBe(child.pid)
   }, 30_000)
 })
