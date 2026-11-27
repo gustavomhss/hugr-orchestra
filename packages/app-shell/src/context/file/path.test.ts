@@ -13,6 +13,18 @@ describe("file path helpers", () => {
     expect(path.pathFromTab("other://src/app.ts")).toBeUndefined()
   })
 
+  test("raw filenames survive tab and normalize boundaries without URI decoding", () => {
+    const path = createPathHelpers(() => "/repo")
+    for (const name of ["notes#review.md", "notes?review.md", "a%20b.txt", "a%2520b.txt"]) {
+      expect(path.normalize(`/repo/${name}`)).toBe(name)
+      expect(path.pathFromTab(path.tab(name))).toBe(name)
+      expect(path.normalize(path.pathFromTab(path.tab(name))!)).toBe(name)
+    }
+    const windows = createPathHelpers(() => "C:\\repo")
+    expect(windows.normalize("C:\\repo\\notes#review%20.md")).toBe("notes#review%20.md")
+    expect(windows.pathFromTab("file:///C:/repo/notes%23review%2520.md")).toBe("notes#review%20.md")
+  })
+
   test("normalizes Windows absolute paths with mixed separators", () => {
     const path = createPathHelpers(() => "C:\\repo")
     expect(path.normalize("C:\\repo\\src\\app.ts")).toBe("src\\app.ts")
