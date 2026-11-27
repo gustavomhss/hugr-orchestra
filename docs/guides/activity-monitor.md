@@ -65,9 +65,22 @@ The spawner reads the stored session title at process creation through the tool 
 
 Per-process CPU, footprint and machine memory pressure have not been measured. The **Tree id** column shows the native identity when the installed binding exposes it. A missing identity stays **unread**. Root PID, native tree id and observation UUID remain separate; stop and suspend are not offered. The API also identifies the server observation lifetime with `instanceID`, so a host restart cannot reuse an old address unnoticed. An older binding without the observation request also leaves membership unavailable. Inspection failure displays **unknown** and preserves any previous members with their original reading age. Failed HTTP refreshes also preserve the previous snapshot. The observer keeps the last 32 finished or unavailable observations and reports how many older records it retired.
 
-The **Docker**, **IN/OUT** and **Quarantine** tabs currently show **collection unavailable** in the Monitor. Authenticated API clients can read the Docker container inventory through the endpoints below.
+The **IN/OUT** and **Quarantine** tabs currently show **collection unavailable** in the Monitor.
 
 The category names stay in English in both supported languages. Tab through the category strip once, then use Left/Right, Home or End to select a category.
+
+## Docker
+
+Open **Docker** in the Monitor to view the selected server's container inventory.
+The tab starts unread. Select **Refresh** to view the cached snapshot or
+**Read containers** to request a new reading. Filtering searches container names
+and IDs. Ages advance locally while the tab is open.
+
+Expand **Reading** to see the size text reported by Docker. Logical bytes stay
+unread, owner stays empty, Unique shows **não colapsei**, and the use check stays
+unproved. The latest attempt has its own status, age and gaps. A partial, failed
+or unavailable attempt preserves the last complete container list and its age.
+A complete reading with zero containers shows an explicit empty state.
 
 ## Docker API
 
