@@ -4,6 +4,7 @@ import type { Orchestra } from "@orchestra/client"
 import { ActivityMonitor } from "@orchestra/schema/activity-monitor"
 import { Schema } from "effect"
 import { createStore, reconcile } from "solid-js/store"
+import { sampleAnchor } from "./reading"
 
 export interface Status {
   readonly busy: boolean
@@ -19,7 +20,7 @@ export interface State {
 }
 
 type ReadingKind = "logical" | "attempt"
-type AgeAnchors = Partial<Record<ReadingKind, number>>
+type AgeAnchors = Record<ReadingKind, number | undefined>
 
 export interface Controller {
   readonly state: State
@@ -108,28 +109,18 @@ export function make(input: {
       const receivedAt = Math.max(state.now, clock())
       const previous = new Map(state.snapshot?.records.map((record) => [record.recordID, record]))
       // Repeated snapshots keep each sample's client-clock anchor even if the server clock shifts.
-      const anchor = (sampledAt: number) => receivedAt - Math.max(0, snapshot.readAt - sampledAt)
+      const clock = { readAt: snapshot.readAt, receivedAt }
       const anchors = Object.fromEntries(
         snapshot.records.map((record) => {
           const prior = previous.get(record.recordID)
-          const sameRegistration = prior?.registrationID === record.registrationID
-          const old = sameRegistration ? state.anchors[record.recordID] : undefined
-          const logical = record.logical
-          const attempt = record.attempt
-          const age: AgeAnchors = {}
-          if (logical)
-            age.logical =
-              old?.logical !== undefined &&
-              prior?.logical?.sampledAt === logical.sampledAt &&
-              prior.logical.bytes === logical.bytes
-                ? old.logical
-                : anchor(logical.sampledAt)
-          if (attempt)
-            age.attempt =
-              old?.attempt !== undefined && JSON.stringify(prior?.attempt) === JSON.stringify(attempt)
-                ? old.attempt
-                : anchor(attempt.sampledAt)
-          return [record.recordID, age]
+          const old = prior?.registrationID === record.registrationID ? state.anchors[record.recordID] : undefined
+          return [
+            record.recordID,
+            {
+              logical: sampleAnchor(record.logical, prior?.logical, old?.logical, clock),
+              attempt: sampleAnchor(record.attempt, prior?.attempt, old?.attempt, clock),
+            },
+          ]
         }),
       )
       setState((current) => ({

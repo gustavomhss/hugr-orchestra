@@ -13,6 +13,17 @@ export function readingAge(input: { sampledAt?: number; readAt: number; received
   return Math.max(0, input.readAt - input.sampledAt) + Math.max(0, input.now - input.receivedAt)
 }
 
+export function sampleAnchor<T extends { sampledAt: number }>(
+  sample: T | undefined,
+  previous: T | undefined,
+  previousAnchor: number | undefined,
+  clock: { readAt: number; receivedAt: number },
+) {
+  if (!sample) return
+  if (previousAnchor !== undefined && JSON.stringify(sample) === JSON.stringify(previous)) return previousAnchor
+  return clock.receivedAt - Math.max(0, clock.readAt - sample.sampledAt)
+}
+
 export const tabs = ["Trees", "Worktrees", "Cache", "Docker", "Temporary", "Logs", "IN/OUT", "Quarantine"] as const
 
 export const states = ["alive", "exiting", "zombie", "gone", "unknown", "suspended", "partial"] as const

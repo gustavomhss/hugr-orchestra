@@ -3,7 +3,7 @@ import { For, Show, createMemo, onCleanup, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { useServerSDK } from "@/context/server-sdk"
-import { readingAge } from "./reading"
+import { sampleAnchor } from "./reading"
 
 const columns = ["path", "owner", "logical", "unique", "proof", "state", "age"] as const
 
@@ -14,23 +14,17 @@ export function ActivityDisk(props: { rootID: ActivityMonitor.DiskRootID; query:
     snapshot: undefined as ActivityMonitor.DiskSnapshot | undefined,
     busy: false,
     failed: false,
-    receivedAt: performance.now(),
+    logicalAnchor: undefined as number | undefined,
+    attemptAnchor: undefined as number | undefined,
     now: performance.now(),
   })
   const controller = new AbortController()
   const root = createMemo(() => state.snapshot?.roots.find((row) => row.id === props.rootID))
   const matches = createMemo(() => root()?.path.toLowerCase().includes(props.query.trim().toLowerCase()))
-  const age = (sampledAt?: number) => {
-    const value = readingAge({
-      sampledAt,
-      readAt: state.snapshot?.readAt ?? NaN,
-      receivedAt: state.receivedAt,
-      now: state.now,
-    })
-    return value === undefined
+  const age = (anchor: number | undefined) =>
+    anchor === undefined
       ? language.t("orchestra.monitor.unread")
-      : language.t("orchestra.monitor.seconds", { count: Math.floor(value / 1000) })
-  }
+      : language.t("orchestra.monitor.seconds", { count: Math.floor((state.now - anchor) / 1000) })
   async function refresh(measure: boolean) {
     if (state.busy || controller.signal.aborted) return
     setState("busy", true)
@@ -43,8 +37,28 @@ export function ActivityDisk(props: { rootID: ActivityMonitor.DiskRootID; query:
       .then(
         (snapshot) => {
           if (controller.signal.aborted) return
-          const now = performance.now()
-          setState({ snapshot, receivedAt: now, now, failed: false })
+          const now = Math.max(state.now, performance.now())
+          const next = snapshot.roots.find((row) => row.id === props.rootID)
+          const previous = root()
+          const sameRoot = snapshot.instanceID === state.snapshot?.instanceID && next?.path === previous?.path
+          const clock = { readAt: snapshot.readAt, receivedAt: now }
+          setState({
+            snapshot,
+            logicalAnchor: sampleAnchor(
+              next?.logical,
+              previous?.logical,
+              sameRoot ? state.logicalAnchor : undefined,
+              clock,
+            ),
+            attemptAnchor: sampleAnchor(
+              next?.attempt,
+              previous?.attempt,
+              sameRoot ? state.attemptAnchor : undefined,
+              clock,
+            ),
+            now,
+            failed: false,
+          })
         },
         (error: unknown) => {
           if (controller.signal.aborted) return
@@ -120,7 +134,7 @@ export function ActivityDisk(props: { rootID: ActivityMonitor.DiskRootID; query:
                             )
                           : language.t("orchestra.monitor.unread")}
                       </td>
-                      <td>{age(row().logical?.sampledAt)}</td>
+                      <td>{age(state.logicalAnchor)}</td>
                     </tr>
                   </tbody>
                 </table>
@@ -132,7 +146,7 @@ export function ActivityDisk(props: { rootID: ActivityMonitor.DiskRootID; query:
                       {language.t("orchestra.monitor.walkDetails", {
                         bytes: attempt().observedBytes,
                         entries: attempt().entries,
-                        age: age(attempt().sampledAt),
+                        age: age(state.attemptAnchor),
                         issues: attempt().issueCount,
                       })}
                     </p>

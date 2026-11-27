@@ -10,6 +10,7 @@ import {
   unread,
   view,
   readingAge,
+  sampleAnchor,
   type ActivityRow,
 } from "./reading"
 
@@ -26,6 +27,16 @@ test("reading age cancels remote clock offsets and continues while a refresh is 
   expect(readingAge({ sampledAt: 1000, readAt: 2000, receivedAt: 100, now: 2600 })).toBe(3500)
   expect(readingAge({ sampledAt: undefined, readAt: 2000, receivedAt: 100, now: 2600 })).toBeUndefined()
   expect(readingAge({ sampledAt: 1000, readAt: NaN, receivedAt: 100, now: 2600 })).toBeUndefined()
+})
+
+test("the same sample keeps its anchor across a partial retry and a server clock change", () => {
+  const logical = { bytes: 5, sampledAt: 1000 }
+  const initial = sampleAnchor(logical, undefined, undefined, { readAt: 1200, receivedAt: 400 })
+  const clock = { readAt: 1100, receivedAt: 600 }
+  const unchanged = sampleAnchor({ ...logical }, logical, initial, clock)
+  expect(unchanged).toBe(200)
+  expect(sampleAnchor({ ...logical, bytes: 6 }, logical, initial, clock)).toBe(500)
+  expect(sampleAnchor(undefined, logical, initial, clock)).toBeUndefined()
 })
 
 test("a missing source is unread, never zero", () => {
