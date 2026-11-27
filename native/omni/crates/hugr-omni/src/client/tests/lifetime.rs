@@ -77,8 +77,15 @@ fn a_stalled_observation_preserves_the_generation_and_validates_its_late_reply()
     };
     assert_io(observer.join().unwrap(), "process observation timed out");
     assert!(sup.alive());
-    assert_io(block(tree.observe_processes()), "a process observation is already waiting");
-    peer.send(&Msg::Processes { req, id: 1, list: Vec::new() });
+    assert_io(
+        block(tree.observe_processes()),
+        "a process observation is already waiting",
+    );
+    peer.send(&Msg::Processes {
+        req,
+        id: 1,
+        list: Vec::new(),
+    });
 
     let lister = {
         let tree = tree.clone();
@@ -87,7 +94,11 @@ fn a_stalled_observation_preserves_the_generation_and_validates_its_late_reply()
     let Msg::List { req, id: 1 } = peer.recv() else {
         panic!("expected a regular List");
     };
-    peer.send(&Msg::Processes { req, id: 1, list: Vec::new() });
+    peer.send(&Msg::Processes {
+        req,
+        id: 1,
+        list: Vec::new(),
+    });
     assert!(lister.join().unwrap().unwrap().is_empty());
     assert!(sup.alive());
 
@@ -98,7 +109,11 @@ fn a_stalled_observation_preserves_the_generation_and_validates_its_late_reply()
     let Msg::List { req, id: 1 } = peer.recv() else {
         panic!("expected a new observation");
     };
-    peer.send(&Msg::Processes { req, id: 1, list: Vec::new() });
+    peer.send(&Msg::Processes {
+        req,
+        id: 1,
+        list: Vec::new(),
+    });
     assert!(observer.join().unwrap().unwrap().is_empty());
 }
 

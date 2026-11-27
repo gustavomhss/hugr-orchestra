@@ -218,8 +218,8 @@ impl Gen {
                 st.dues.remove(&(at, req));
                 st.pending.get_mut(&req).and_then(|pending| {
                     let (_, budget) = pending.due.take()?;
-                    let waiter = (pending.want == Want::ObserveList)
-                        .then(|| mem::replace(&mut pending.to, Waiter::Ignore));
+                    let waiter =
+                        (pending.want == Want::ObserveList).then(|| mem::replace(&mut pending.to, Waiter::Ignore));
                     Some((pending.want, budget, waiter))
                 })
             };
