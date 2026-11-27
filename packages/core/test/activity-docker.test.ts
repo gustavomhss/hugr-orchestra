@@ -107,6 +107,23 @@ it.live(
   }),
 )
 
+it.live(
+  "A219 a legacy-only AppProcess is unavailable without launching the Docker command",
+  Effect.gen(function* () {
+    const monitor = ActivityDocker.make()
+    const processService = yield* AppProcess.Service
+    const legacy = {
+      ...processService,
+      omniEnabled: false,
+      run: () => Effect.die("the Docker collector must never call a legacy-only process service"),
+    }
+    const read = yield* monitor.read().pipe(Effect.provideService(AppProcess.Service, legacy))
+    expect(read.snapshotRevision).toBe("1")
+    expect(read.attempt).toMatchObject({ state: "unavailable", gaps: ["process-unavailable"] })
+    expect(read.inventory).toBeUndefined()
+  }),
+)
+
 const thousand = Array.from({ length: 1_000 }, (_, index) => JSON.stringify({ ID: "id-" + index })).join("\n")
 
 it.live(
