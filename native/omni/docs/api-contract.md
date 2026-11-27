@@ -301,7 +301,9 @@ and after stop. It is not a PID, authorization or control token, and the supervi
 current membership, paths or dirty state for an action. This adds no wire-protocol version or message change.
 The integration contract is Orchestra `docs/specs/activity/NATIVE-IDENTITY.md`.
 
-`Child.observeProcesses()` (Rust `Child::observe_processes()`) uses the same membership source. One
+`Child.observeProcesses()` (Rust `Child::observe_processes()`) uses the same membership source while
+running the scan outside the supervisor's control loop. A supervisor that omits the capability
+returns an unsupported observation error from the client. One
 observation per generation can be awaiting a reply. An observation deadline returns IO to the reader,
 keeps the generation running and holds that one admission slot until the reply is validated. Regular
 control requests retain their existing deadlines. An empty response is a sample and can be refreshed.

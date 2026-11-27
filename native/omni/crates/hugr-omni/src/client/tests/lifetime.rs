@@ -72,8 +72,8 @@ fn a_stalled_observation_preserves_the_generation_and_validates_its_late_reply()
         let tree = tree.clone();
         std::thread::spawn(move || block(tree.observe_processes()))
     };
-    let Msg::List { req, id: 1 } = peer.recv() else {
-        panic!("expected List");
+    let Msg::Observe { req, id: 1 } = peer.recv() else {
+        panic!("expected Observe");
     };
     assert_io(observer.join().unwrap(), "process observation timed out");
     assert!(sup.alive());
@@ -106,7 +106,7 @@ fn a_stalled_observation_preserves_the_generation_and_validates_its_late_reply()
         let tree = tree.clone();
         std::thread::spawn(move || block(tree.observe_processes()))
     };
-    let Msg::List { req, id: 1 } = peer.recv() else {
+    let Msg::Observe { req, id: 1 } = peer.recv() else {
         panic!("expected a new observation");
     };
     peer.send(&Msg::Processes {
@@ -115,6 +115,28 @@ fn a_stalled_observation_preserves_the_generation_and_validates_its_late_reply()
         list: Vec::new(),
     });
     assert!(observer.join().unwrap().unwrap().is_empty());
+}
+
+#[test]
+fn observation_refuses_an_older_supervisor_without_sending_a_request() {
+    let ready = Msg::Ready {
+        version: omni_proto::VERSION,
+        pid: 4242,
+        info: 0,
+    };
+    let (sup, mut peer) = connect(1, BOUND, &ready);
+    let sup = sup.expect("start");
+    let caller = {
+        let sup = sup.clone();
+        std::thread::spawn(move || spawn_on(&sup, &spec(false)))
+    };
+    peer.spawned(1);
+    let spawned = caller.join().unwrap().unwrap();
+    assert_io(
+        block(spawned.tree.observe_processes()),
+        "does not support independent process observations",
+    );
+    assert!(sup.alive());
 }
 
 /// R2: several waiters of one `Stop` (and of `exited`) all get the answer; a later `stop` is answered
