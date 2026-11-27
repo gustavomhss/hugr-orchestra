@@ -4,6 +4,7 @@ import { ActivityMonitor } from "@orchestra/schema/activity-monitor"
 import { Clock, Deferred, Effect, Option, Schema } from "effect"
 import { PlatformError } from "effect/PlatformError"
 import { ChildProcess } from "effect/unstable/process"
+import { isUtf8 } from "node:buffer"
 import { AppProcess } from "./process"
 
 export class ReadUnavailable extends Schema.TaggedErrorClass<ReadUnavailable>()("DockerReadUnavailable", {}) {}
@@ -125,6 +126,7 @@ function classifyResult(output: AppProcess.RunResult): Outcome {
   if (lines.at(-1) === "") lines.pop()
   if (lines.filter((line) => line !== "").length > ActivityMonitor.dockerRowLimit)
     return { state: "partial", gaps: ["row-limit"] }
+  if (!isUtf8(output.stdout)) return { state: "failed", gaps: ["invalid-record"] }
 
   const containers: ActivityMonitor.DockerContainer[] = []
   const seen = new Set<string>()

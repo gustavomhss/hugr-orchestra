@@ -340,7 +340,7 @@ export const layerWith = (mode: typeof Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER)
       )
     }
 
-    return Service.of({ ...spawner, omniEnabled: omni !== undefined, run, runStream })
+    return Service.of({ ...spawner, omniEnabled: omni !== undefined && CrossSpawnSpawner.usesOmni(spawner), run, runStream })
   }),
 )
 
