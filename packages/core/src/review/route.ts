@@ -51,16 +51,19 @@ export class RouteError extends Error {
   }
 }
 
-export function route(request: Request, base: Tree, head: Head, catalog: Catalog): ReviewRouting.Record {
+export function route(request: Request, base: Tree, head: Head, catalog: Catalog, repositoryFiles?: readonly string[]): ReviewRouting.Record {
   const profile = requireProfile(request, catalog)
   const changes = head.changes
     .toSorted((left, right) => compare(left.path, right.path))
     .map((change) => ({ ...change, added: change.added.toSorted((left, right) => left.line - right.line) }))
+  // An engagement supplies captured file authority without manufacturing added lines or diff-risk signals.
+  const repository = repositoryFiles === undefined ? undefined : [...new Set(repositoryFiles)].toSorted(compare)
+  const signalFiles = repository ?? changes.map((change) => change.path)
   const overlays = profile.overlays ? routeOverlays(changes, catalog) : []
   const choice = chooseTier(request, profile, changes, overlays, catalog)
   const tier = requireTier(choice, catalog)
-  const languages = routeLanguages([...base.files, ...head.files], changes, catalog)
-  const packs = routePacks(base.files, changes, languages, overlays, tier.requested.id, tier.run.id, catalog)
+  const languages = routeLanguages(repository ?? [...base.files, ...head.files], signalFiles, catalog)
+  const packs = routePacks(repository ?? base.files, signalFiles, languages, overlays, tier.requested.id, tier.run.id, catalog)
   const lenses = routeLenses(profile, tier.run.id, overlays, packs, catalog)
   const max = tier.run.budget.lenses.max
   return {
@@ -194,14 +197,14 @@ function routeOverlays(changes: readonly Change[], catalog: Catalog): ReviewRout
   })
 }
 
-function routeLanguages(files: readonly string[], changes: readonly Change[], catalog: Catalog): ReviewRouting.Language[] {
+function routeLanguages(files: readonly string[], signalFiles: readonly string[], catalog: Catalog): ReviewRouting.Language[] {
   // route() does not sort files. Sort unique basenames so a glob signal is a stable project name, not input order or the pattern.
   const names = [...new Set(files.map((file) => path.posix.basename(file)))].toSorted(compare)
   return catalog.languages.flatMap((language): ReviewRouting.Language[] => {
     if (language.detection.absent.some((name) => names.includes(name))) return []
     const signal =
       language.detection.manifests.flatMap((pattern) => names.filter((name) => Glob.match(pattern, name)))[0] ??
-      changes.find((change) => language.detection.extensions.includes(path.posix.extname(change.path)))?.path
+      signalFiles.find((file) => language.detection.extensions.includes(path.posix.extname(file)))
     return signal ? [{ id: language.id, source: "path", signal }] : []
   })
 }
@@ -240,7 +243,7 @@ function routeLenses(profile: Profile, tier: string, overlays: readonly ReviewRo
 
 function routePacks(
   baseFiles: readonly string[],
-  changes: readonly Change[],
+  signalFiles: readonly string[],
   languages: readonly ReviewRouting.Language[],
   overlays: readonly ReviewRouting.Overlay[],
   requested: string,
@@ -265,8 +268,8 @@ function routePacks(
       !detection.absent.some((name) => names.has(name)) &&
       ((detection.manifests.length === 0 && detection.extensions.length === 0 && (detection.paths?.length ?? 0) === 0) ||
         detection.manifests.some((name) => names.has(name)) ||
-        changes.some((change) => detection.paths?.some((glob) => Glob.match(glob, change.path))) ||
-        changes.some((change) => detection.extensions.includes(path.posix.extname(change.path))))
+        signalFiles.some((file) => detection.paths?.some((glob) => Glob.match(glob, file))) ||
+        signalFiles.some((file) => detection.extensions.includes(path.posix.extname(file))))
     if (!fits) return []
     if (pack.tiers.includes(run)) return [{ id: pack.id, source: "catalog", lane: pack.lane, status: "routed" }]
     // R3: a pack only the requested, unbuilt tier runs is listed as not examined.
