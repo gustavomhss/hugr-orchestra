@@ -307,3 +307,6 @@ returns an unsupported observation error from the client unless it already knows
 is gone. One observation per generation can be awaiting a reply. An observation deadline returns IO to the reader,
 keeps the generation running and holds that one admission slot until the reply is validated. Regular
 control requests retain their existing deadlines. An empty response is a sample and can be refreshed.
+The worker refuses observations above 256 members. Linux requires a private descriptor table for its
+worker. Windows holds verified process handles while collecting metadata and keeps the Job handle on
+the control owner.
