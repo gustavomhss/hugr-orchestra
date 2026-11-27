@@ -2,13 +2,14 @@ import { expect } from "bun:test"
 import { Orchestra } from "@orchestra/client"
 import { ActivityDisk } from "@orchestra/core/activity-disk"
 import { Database } from "@orchestra/core/database/database"
+import { AppProcess } from "@orchestra/core/process"
 import { setup } from "../../core/test/fixture/activity-worktree"
 import { ActivityMonitor } from "@orchestra/schema/activity-monitor"
 import { ActivityGroup } from "@orchestra/protocol/groups/activity"
 import { Authorization } from "@orchestra/protocol/middleware/authorization"
 import { SchemaErrorMiddleware } from "@orchestra/protocol/middleware/schema-error"
-import { Context, Effect, Layer, Option, Schema } from "effect"
-import { HttpRouter, HttpServer } from "effect/unstable/http"
+import { Context, Effect, Fiber, Layer, Option, Schema } from "effect"
+import { HttpRouter, HttpServer, HttpServerRequest } from "effect/unstable/http"
 import { HttpApi, HttpApiBuilder } from "effect/unstable/httpapi"
 import { ActivityWorktreeRegistry } from "../src/activity-worktree"
 import { ActivityHandler } from "../src/handlers/activity"
@@ -24,6 +25,8 @@ export function serve(
     fixture?: Effect.Success<typeof setup>
     afterRegistryRead?: () => Promise<void>
     afterReadAdmission?: () => void
+    dockerProcess?: AppProcess.Interface
+    afterDockerPostDispatch?: () => void
   } = {},
 ) {
   return Effect.gen(function* () {
@@ -47,11 +50,37 @@ export function serve(
         return admitted
       },
     }
+    const afterDockerPostDispatch = input.afterDockerPostDispatch
+    const observeDockerPost = afterDockerPostDispatch
+      ? HttpRouter.middleware(
+          (effect) =>
+            Effect.gen(function* () {
+              const request = yield* HttpServerRequest.HttpServerRequest
+              if (
+                request.method !== "POST" ||
+                new URL(request.url, "http://activity.test").pathname !== "/api/activity/docker/read"
+              )
+                return yield* effect
+              // Start the bodyless handler through its first suspension before signalling the test.
+              const handling = yield* Effect.forkChild(effect, { startImmediately: true })
+              afterDockerPostDispatch()
+              return yield* Fiber.join(handling)
+            }),
+          { global: true },
+        )
+      : Layer.empty
     const routes = HttpApiBuilder.layer(
       HttpApi.make("server").add(ActivityGroup).middleware(Authorization).middleware(SchemaErrorMiddleware),
     ).pipe(
       Layer.provide(ActivityHandler),
       Layer.provide(Layer.succeed(ActivityWorktreeRegistry.Service, observed)),
+      Layer.provide(
+        input.dockerProcess
+          ? Layer.succeed(AppProcess.Service, input.dockerProcess)
+          : // Exercise the runtime boundary where the collector has no process service.
+            Layer.succeedContext(Context.makeUnsafe<AppProcess.Service>(new Map())),
+      ),
+      Layer.provide(observeDockerPost),
       Layer.provide(authorizationLayer),
       Layer.provide(schemaErrorLayer),
       Layer.provide(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.some("activity-test") })),

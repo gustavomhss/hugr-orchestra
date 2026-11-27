@@ -2,6 +2,7 @@ import { expect } from "bun:test"
 import { NodeHttpServer, NodeServices } from "@effect/platform-node"
 import { ActivityMonitor } from "@orchestra/schema/activity-monitor"
 import { Global } from "@orchestra/core/global"
+import { AppProcess } from "@orchestra/core/process"
 import { Database } from "@orchestra/core/database/database"
 import fs from "node:fs/promises"
 import path from "node:path"
@@ -21,11 +22,18 @@ import { ActivityHandler } from "../src/handlers/activity"
 import { ActivityWorktreeRegistry } from "../src/activity-worktree"
 import { authorizationLayer } from "../src/middleware/authorization"
 import { schemaErrorLayer } from "../src/middleware/schema-error"
+import { dockerProcess } from "./activity-docker-process-fixture"
 
 const routes = HttpApiBuilder.layer(
   HttpApi.make("server").add(ActivityGroup).middleware(Authorization).middleware(SchemaErrorMiddleware),
 ).pipe(
   Layer.provide(ActivityHandler),
+  Layer.provide(
+    Layer.succeed(
+      AppProcess.Service,
+      dockerProcess(() => Effect.die("Unexpected Docker read")),
+    ),
+  ),
   Layer.provide(authorizationLayer),
   Layer.provide(schemaErrorLayer),
   Layer.provide(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.some("activity-test") })),
