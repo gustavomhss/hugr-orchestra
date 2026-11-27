@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { ReviewSeatTools } from "@orchestra/core/review/seat-tools"
+import { Seats } from "../src/seats"
 import { BACKEND_DEFAULT_LABEL, UPSTREAM_DEFAULT_LABEL, createRoster, lookupRosterMember, nativeProfiles, roster } from "@orchestra/maestro/roster"
 
 describe("Maestro roster", () => {
@@ -200,11 +201,12 @@ describe("Maestro roster", () => {
     expect(lookupRosterMember("lucy")).toMatchObject({ status: "FOUND", member: { nativeProfile: "review" } })
   })
 
-  test("every native seat can propose an issue and request movement, without a movement grant", () => {
-    for (const member of roster.filter((member) => member.memberId !== "maestro")) {
-      expect(nativeProfiles[member.memberId]?.board_issue).toBe("allow")
-      expect(nativeProfiles[member.memberId]?.board_request_move).toBe("allow")
-      expect(nativeProfiles[member.memberId]?.board_move).not.toBe("allow")
+  test("staffing grants proposals and movement requests to non-review seats and reserves moves for Maestro", () => {
+    for (const seat of Object.values(Seats.all)) {
+      const grant = seat.profile === "review" ? undefined : "allow"
+      expect(nativeProfiles[seat.id]?.board_issue).toBe(grant)
+      expect(nativeProfiles[seat.id]?.board_request_move).toBe(grant)
+      expect(nativeProfiles[seat.id]?.board_move).not.toBe("allow")
     }
   })
 })

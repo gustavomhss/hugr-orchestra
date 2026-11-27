@@ -113,9 +113,8 @@ function seatProfile(seat: Seat): NativeProfile {
   if (seat.skills.length > 0 && !root) throw new Error(`Missing native seat skill root: ${seat.id}`)
   return Object.freeze({
     ...baseProfiles[seat.profile],
-    // Proposals and movement requests are open to every seat; the Core leaf still refuses updates and moves.
-    board_issue: "allow",
-    board_request_move: "allow",
+    // Review seats retain their read-only remit. Core still reserves updates and moves for Maestro.
+    ...(seat.profile === "review" ? {} : { board_issue: "allow" as const, board_request_move: "allow" as const }),
     ...Object.fromEntries((seat.mcp ?? []).map((server) => [`${server}_*`, "allow" as const])),
     // The review seat's tools come from its one descriptor (@orchestra/core/review/seat-tools); read keeps the base's
     // .env denial and skill is the seat's skills grant below. Atlas context arrives only through OWN. Memory names
