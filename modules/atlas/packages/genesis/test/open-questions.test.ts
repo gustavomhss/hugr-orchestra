@@ -46,6 +46,24 @@ describe("open-questions", () => {
     expect(q.rankReason).toBe("2 claims share one slot")
   })
 
+  it("owner options offer mined authors ahead of the fixed choices", () => {
+    const fixed = ["seat:orchestrator", "a person on the team", "nobody yet"]
+    const mined = deriveOpenQuestions({ ...input(), authorsOf: () => ["ada", "grace"] }).find((q) => q.kind === "owner")!
+    expect(mined.options).toEqual(["ada", "grace", ...fixed])
+
+    const omitted = deriveOpenQuestions(input()).find((q) => q.kind === "owner")!
+    expect(omitted.options).toEqual(fixed)
+
+    const empty = deriveOpenQuestions({ ...input(), authorsOf: () => [] }).find((q) => q.kind === "owner")!
+    expect(empty.options).toEqual(fixed)
+
+    const folded = deriveOpenQuestions({
+      ...input(),
+      authorsOf: () => ["grace", "ada", "ada", "nobody yet"],
+    }).find((q) => q.kind === "owner")!
+    expect(folded.options).toEqual(["ada", "grace", ...fixed])
+  })
+
   it("owner and intent details", () => {
     const owner = deriveOpenQuestions(input()).find((q) => q.kind === "owner")!
     const intent = deriveOpenQuestions(input()).find((q) => q.kind === "intent")!
