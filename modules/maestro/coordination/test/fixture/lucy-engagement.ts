@@ -16,7 +16,7 @@ import { GitCli } from "@orchestra/core/git-cli"
 import { Global } from "@orchestra/core/global"
 import { Location } from "@orchestra/core/location"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
-import type { LocationServices } from "@orchestra/core/location-services"
+import { locationServices, type LocationServices } from "@orchestra/core/location-services"
 import { ModelV2 } from "@orchestra/core/model"
 import { ModelsDev } from "@orchestra/core/models-dev"
 import { PermissionV2 } from "@orchestra/core/permission"
@@ -174,10 +174,13 @@ function opener(state: State) {
 function graph(state: State, controls: Controls) {
   const researchRoot = Node.makeGlobalNode({ name: "test/engagement-research-root",
     layer: Layer.succeed(ResearchToolkit.Root, state.storeRoot), deps: [] })
-  return AppNodeBuilder.build(LayerNode.group([
+  const nodes = LayerNode.group([
     Database.node, EventV2.node, SessionStore.node, LocationServiceMap.node, SessionV2.node, SessionExecution.node,
     GovernanceBackgroundV2.sessionsNode, MaestroReviewTools.executionNode, AppProcess.node, GitCli.node, researchRoot,
-  ]), [
+  ])
+  return AppNodeBuilder.build(nodes, [
+    ...globalBindings(LayerNode.group([nodes, locationServices, MaestroToolsV2.node,
+      ToolRegistry.nativeNode, ToolRegistry.nativeToolsNode])),
     [Database.node, Database.layerFromPath(state.filename)],
     [SessionExecution.node, SessionExecutionLocal.node],
     [LayerNodePlatform.llmClient, client(state.requests, controls)],
@@ -200,6 +203,25 @@ function graph(state: State, controls: Controls) {
     }) }))],
     [Global.node, Global.layerWith(state.global)],
   ], [MaestroToolsV2.node])
+}
+
+// Pin the real global nodes before substituting the file database. The Location hoist otherwise sees both
+// original globals and dependency-rewritten copies inside native tool replacements as conflicting objects.
+function globalBindings(root: LayerNode.Node<unknown, unknown, LayerNode.Tag | undefined>): LayerNode.Replacements {
+  const globals = new Map<string, LayerNode.Node<unknown, unknown, LayerNode.Tag | undefined>>()
+  const seen = new Set<LayerNode.Node<unknown, unknown, LayerNode.Tag | undefined>>()
+  const visit = (node: LayerNode.Node<unknown, unknown, LayerNode.Tag | undefined>) => {
+    if (seen.has(node)) return
+    seen.add(node)
+    if (node.kind === "layer" && node.tag === Node.tags.values.global) {
+      const existing = globals.get(node.name)
+      if (existing && existing !== node) throw new Error(`fixture has conflicting global nodes for ${node.name}`)
+      globals.set(node.name, node)
+    }
+    for (const dependency of node.dependencies) visit(dependency)
+  }
+  visit(root)
+  return [...globals.values()].map((node) => [node, node] as const)
 }
 
 function registered(registry: ToolRegistry.Interface, name: string, input: unknown, agent: string,
