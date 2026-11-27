@@ -56,7 +56,17 @@ export interface RunResult {
   readonly stderrTruncated: boolean
 }
 
+export type StreamTruncation = Pick<RunResult, "stdoutTruncated" | "stderrTruncated" | "outputTruncated">
+
+export class TimedOut extends Error {
+  constructor(readonly truncation: StreamTruncation) {
+    super("Timed out")
+  }
+}
+
 export type Interface = ChildProcessSpawner["Service"] & {
+  /** Whether this service is backed by an active Omni spawner. */
+  readonly omniEnabled?: boolean
   readonly run: (command: ChildProcess.Command, options?: RunOptions) => Effect.Effect<RunResult, AppProcessError>
   readonly runStream: (
     command: ChildProcess.Command,
@@ -128,7 +138,11 @@ const normalizeStdin = (
       ? Stream.make(input)
       : input
 
-export const collectStream = <E>(stream: Stream.Stream<Uint8Array, E>, maxOutputBytes: number | undefined) =>
+export const collectStream = <E>(
+  stream: Stream.Stream<Uint8Array, E>,
+  maxOutputBytes: number | undefined,
+  onTruncate?: () => void,
+) =>
   Stream.runFold(
     stream,
     () => ({ chunks: [] as Uint8Array[], bytes: 0, truncated: false }),
@@ -141,7 +155,10 @@ export const collectStream = <E>(stream: Stream.Stream<Uint8Array, E>, maxOutput
       const remaining = maxOutputBytes - acc.bytes
       if (remaining > 0) acc.chunks.push(remaining >= chunk.length ? chunk : chunk.slice(0, remaining))
       acc.bytes += chunk.length
-      acc.truncated = acc.truncated || acc.bytes > maxOutputBytes
+      if (!acc.truncated && acc.bytes > maxOutputBytes) {
+        acc.truncated = true
+        onTruncate?.()
+      }
       return acc
     },
   ).pipe(Effect.map((x) => ({ buffer: Buffer.concat(x.chunks), truncated: x.truncated })))
@@ -158,6 +175,8 @@ export const layerWith = (mode: typeof Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER)
 
     const runCommand = (command: ChildProcess.Command, options?: RunOptions) => {
       const description = describeCommand(command)
+      // A timeout interrupts the folds before they return their buffers.
+      const truncation = { stdoutTruncated: false, stderrTruncated: false, outputTruncated: false }
       const inspected = (stream: Stream.Stream<Uint8Array, PlatformError>) => options?.inspect
         ? stream.pipe(Stream.tap((chunk) => Effect.try({
             try: () => options.inspect?.(chunk),
@@ -170,7 +189,12 @@ export const layerWith = (mode: typeof Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER)
             .pipe(Effect.provideService(OmniSpawner.MemoryCap, options?.maxRssBytes))
           if (options?.combineOutput) {
             const [output, exitCode] = yield* Effect.all(
-              [collectStream(inspected(handle.all), options.maxOutputBytes), handle.exitCode],
+              [
+                collectStream(inspected(handle.all), options.maxOutputBytes, () => {
+                  truncation.outputTruncated = true
+                }),
+                handle.exitCode,
+              ],
               { concurrency: "unbounded" },
             )
             return {
@@ -186,8 +210,12 @@ export const layerWith = (mode: typeof Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER)
           }
           const [stdout, stderr, exitCode] = yield* Effect.all(
             [
-              collectStream(inspected(handle.stdout), options?.maxOutputBytes),
-              collectStream(inspected(handle.stderr), options?.maxErrorBytes),
+              collectStream(inspected(handle.stdout), options?.maxOutputBytes, () => {
+                truncation.stdoutTruncated = true
+              }),
+              collectStream(inspected(handle.stderr), options?.maxErrorBytes, () => {
+                truncation.stderrTruncated = true
+              }),
               handle.exitCode,
             ],
             { concurrency: "unbounded" },
@@ -205,7 +233,7 @@ export const layerWith = (mode: typeof Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER)
       const timed = options?.timeout
         ? Effect.timeoutOrElse(collect, {
             duration: options.timeout,
-            orElse: () => Effect.fail(new AppProcessError({ command: description, cause: new Error("Timed out") })),
+            orElse: () => Effect.fail(new AppProcessError({ command: description, cause: new TimedOut(truncation) })),
           })
         : collect
       const aborted = options?.signal
@@ -312,7 +340,7 @@ export const layerWith = (mode: typeof Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER)
       )
     }
 
-    return Service.of({ ...spawner, run, runStream })
+    return Service.of({ ...spawner, omniEnabled: omni !== undefined, run, runStream })
   }),
 )
 
