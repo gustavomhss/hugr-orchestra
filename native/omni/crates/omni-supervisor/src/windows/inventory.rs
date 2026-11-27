@@ -6,6 +6,7 @@
 use std::collections::HashMap;
 use std::io;
 use std::os::windows::io::{AsRawHandle, HandleOrInvalid, OwnedHandle};
+use std::time::{Duration, Instant};
 
 use omni_proto::ProcEntry;
 use windows_sys::Win32::Foundation::{ERROR_NO_MORE_FILES, FILETIME};
@@ -15,6 +16,12 @@ use windows_sys::Win32::System::Diagnostics::ToolHelp::{
 use windows_sys::Win32::System::Threading::GetProcessTimes;
 
 use super::job::{self, Probe};
+
+const OBSERVATION_MEMBERS: usize = 256;
+const PREPARATION_BUDGET: Duration = Duration::from_millis(25);
+
+/// Members whose identity was checked against the Job and whose process handles pin their pids.
+pub(super) type PinnedMembers = HashMap<u32, OwnedHandle>;
 
 /// The Job's live members, minus `exclude` (the root once it exited).
 pub(super) fn list(job: &OwnedHandle, exclude: Option<u32>) -> io::Result<Vec<ProcEntry>> {
@@ -28,18 +35,51 @@ pub(super) fn list(job: &OwnedHandle, exclude: Option<u32>) -> io::Result<Vec<Pr
 /// The live members among `candidates`. `ppid` is set only when the parent is listed and was created no
 /// later than the child (a parent pid reused by a younger member is not the parent).
 pub(super) fn of(job: &OwnedHandle, candidates: &[u32]) -> io::Result<Vec<ProcEntry>> {
+    scan(&pin(job, candidates.iter().copied(), None)?)
+}
+
+/// Pins a complete, bounded candidate set before handing off to the observer.
+pub(super) fn pin_observed(job: &OwnedHandle, exclude: Option<u32>) -> io::Result<PinnedMembers> {
+    let deadline = Instant::now() + PREPARATION_BUDGET;
+    let candidates = job::bounded_member_pids(job, OBSERVATION_MEMBERS)?;
+    pin(
+        job,
+        candidates.into_iter().filter(|&pid| Some(pid) != exclude),
+        Some(deadline),
+    )
+}
+
+fn pin(
+    job: &OwnedHandle,
+    candidates: impl Iterator<Item = u32>,
+    deadline: Option<Instant>,
+) -> io::Result<PinnedMembers> {
+    // Kernel calls are synchronous: enforce the budget between probes and after the last one.
+    let check_deadline = || {
+        if deadline.is_some_and(|end| Instant::now() >= end) {
+            return Err(io::Error::other("the Job observation preparation budget expired"));
+        }
+        Ok(())
+    };
     let mut held = HashMap::new();
-    for &pid in candidates {
+    for pid in candidates {
+        check_deadline()?;
         if let Probe::Member(h) = job::probe(job, pid)?
             && !job::exited(&h)
         {
             held.insert(pid, h);
         }
     }
-    let snap = snapshot(&held)?;
+    check_deadline()?;
+    Ok(held)
+}
+
+/// Collects parent and executable information for the pinned members. The Job itself is no longer needed.
+pub(super) fn scan(held: &PinnedMembers) -> io::Result<Vec<ProcEntry>> {
+    let snap = snapshot(held)?;
     // Liveness is confirmed after the snapshot; a member absent from it exited meanwhile.
     let mut live = HashMap::new();
-    for (pid, h) in &held {
+    for (pid, h) in held {
         if let Some((ppid, name)) = snap.get(pid).filter(|_| !job::exited(h)) {
             live.insert(*pid, (*ppid, name.clone(), created(h)?));
         }
@@ -70,7 +110,7 @@ fn created(process: &OwnedHandle) -> io::Result<u64> {
 
 /// `pid → (ppid, executable file name)` for the held processes found in one snapshot. Their handles pin
 /// their pids, so each entry found is the held process itself.
-fn snapshot(held: &HashMap<u32, OwnedHandle>) -> io::Result<HashMap<u32, (u32, String)>> {
+fn snapshot(held: &PinnedMembers) -> io::Result<HashMap<u32, (u32, String)>> {
     // SAFETY: a plain snapshot request; the result is checked for INVALID_HANDLE_VALUE.
     let snap = unsafe { CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0) };
     // SAFETY: `snap` is INVALID_HANDLE_VALUE or a fresh handle owned by nobody else.

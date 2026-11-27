@@ -115,6 +115,10 @@ impl Supervisor {
 
     /// One turn of the loop: due deadlines, then one event or request. `Some` = exit with that code.
     fn step(&mut self) -> Option<ExitCode> {
+        self.step_until(None)
+    }
+
+    fn step_until(&mut self, wait_until: Option<Instant>) -> Option<ExitCode> {
         let now = Instant::now();
         self.enforce(now);
         if let Some(bound) = self.host_gone {
@@ -127,7 +131,8 @@ impl Supervisor {
         }
         let owed = self.out.len() + self.stop_waiters + usize::from(self.observation.is_some());
         let admit = self.host_gone.is_none() && owed < MAX_REPLIES;
-        let item = self.inbox.next(admit, self.wake(now, admit));
+        let wake = self.wake(now, admit).into_iter().chain(wait_until).min();
+        let item = self.inbox.next(admit, wake);
         // The wait can be long: deadlines due by now go first, and the item is handled at the time it arrived.
         let now = Instant::now();
         self.enforce(now);
@@ -259,7 +264,7 @@ impl Supervisor {
                 },
             },
             Msg::Observe { req, id } => {
-                let Some(reply) = self.observe(req, id, inventory::list) else {
+                let Some(reply) = self.observe(req, id, inventory::scan) else {
                     return;
                 };
                 reply

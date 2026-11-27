@@ -33,7 +33,7 @@ pub(super) enum Event {
     Exited { id: u64, code: u32 },
     /// A tree's Job emptied, or its flush marker came back: try to prove it gone now.
     Settle { id: u64 },
-    /// The observation worker finished and dropped its Job handle.
+    /// The observation worker finished and dropped its process handles.
     Observed(std::io::Result<Vec<ProcEntry>>),
 }
 

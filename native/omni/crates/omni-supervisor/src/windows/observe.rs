@@ -1,10 +1,10 @@
-//! Activity observation runs Job inventory off the tree owner. The owner alone admits observations and replies.
+//! The tree owner verifies Job membership. Toolhelp runs on a worker holding the verified process handles.
 
 use std::io;
-use std::os::windows::io::OwnedHandle;
 
 use omni_proto::{Ack, Msg, ProcEntry};
 
+use super::inventory::{self, PinnedMembers};
 use super::queues::Event;
 use super::{Supervisor, channel};
 
@@ -13,7 +13,7 @@ impl Supervisor {
         &mut self,
         req: u64,
         id: u64,
-        scan: impl FnOnce(&OwnedHandle, Option<u32>) -> io::Result<Vec<ProcEntry>> + Send + 'static,
+        scan: impl FnOnce(&PinnedMembers) -> io::Result<Vec<ProcEntry>> + Send + 'static,
     ) -> Option<Msg> {
         let busy = self.observation.is_some();
         let result = match self.live(id) {
@@ -27,13 +27,14 @@ impl Supervisor {
             }
             Some(_) if busy => Ack::Error,
             Some(t) => {
-                let exclude = t.exit.map(|_| t.pid);
-                let job = t.inventory_job().and_then(OwnedHandle::try_clone);
+                let held = t
+                    .inventory_job()
+                    .and_then(|job| inventory::pin_observed(job, t.exit.map(|_| t.pid)));
                 let inbox = self.inbox.clone();
-                let started = job.and_then(|job| {
+                let started = held.and_then(|held| {
                     channel::helper("observe", move || {
-                        let result = scan(&job, exclude);
-                        drop(job);
+                        let result = scan(&held);
+                        drop(held);
                         inbox.event(Event::Observed(result));
                     })
                 });

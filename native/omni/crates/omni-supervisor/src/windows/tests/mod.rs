@@ -155,7 +155,7 @@ impl Looped {
                     rest = &rest[n..];
                 }
             } else {
-                assert!(self.sup.step().is_none());
+                assert!(self.sup.step_until(Some(end)).is_none());
             }
         }
     }

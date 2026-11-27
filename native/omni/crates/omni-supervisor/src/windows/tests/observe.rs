@@ -6,8 +6,9 @@ use std::time::Duration;
 
 use omni_proto::{Ack, Msg};
 
-use super::Looped;
-use crate::windows::inventory;
+use super::{Looped, until};
+use crate::windows::job::Probe;
+use crate::windows::{inventory, job};
 
 #[test]
 fn observation_leaves_spawn_and_stop_responsive_and_discards_a_gone_sample() {
@@ -98,6 +99,32 @@ fn an_observation_of_a_released_tree_replies_unknown() {
     );
 }
 
+#[test]
+fn a_held_observation_preserves_kill_on_last_job_close() {
+    let mut l = Looped::new();
+    let (id, pid) = l.spawn(&["pause"], true);
+    let job = l.sup.trees[&id].inventory_job().unwrap();
+    assert!(job::bounded_member_pids(job, 0).is_err());
+    assert_eq!(job::bounded_member_pids(job, 1).unwrap(), [pid]);
+    let Probe::Member(root) = job::probe(job, pid).unwrap() else {
+        panic!("root process did not join its Job");
+    };
+    let (pending, finish) = hold_observation(&mut l, id, pid);
+
+    // Drop the tree without calling Stop: only closing the last Job handle can kill the live root.
+    drop(l.sup.trees.remove(&id).unwrap());
+    assert!(until(|| job::exited(&root)), "the observation kept the Job alive");
+    finish.send(()).unwrap();
+    assert_eq!(
+        reply(&mut l, pending),
+        Msg::Ack {
+            req: pending,
+            id,
+            result: Ack::Unknown
+        }
+    );
+}
+
 fn hold_observation(l: &mut Looped, id: u64, pid: u32) -> (u64, Sender<()>) {
     let (sampled, sample) = mpsc::channel::<Vec<u32>>();
     let (finish, wait) = mpsc::channel();
@@ -105,12 +132,12 @@ fn hold_observation(l: &mut Looped, id: u64, pid: u32) -> (u64, Sender<()>) {
     let req = l.next_req;
     assert!(
         l.sup
-            .observe(req, id, move |job, exclude| {
-                let list = inventory::list(job, exclude)?;
+            .observe(req, id, move |held| {
+                let list = inventory::scan(held)?;
                 sampled
                     .send(list.iter().map(|p| p.pid).collect())
                     .map_err(io::Error::other)?;
-                wait.recv_timeout(Duration::from_secs(10)).map_err(io::Error::other)?;
+                wait.recv_timeout(Duration::from_secs(30)).map_err(io::Error::other)?;
                 Ok(list)
             })
             .is_none()
