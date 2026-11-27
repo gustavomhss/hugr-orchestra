@@ -55,7 +55,7 @@ export const ActivityHandler = HttpApiBuilder.group(Api, "server.activity", (han
       .handle("activity.readDisk", (ctx) =>
         Effect.promise(() => disk.read(ctx.params.rootID)).pipe(Effect.map(() => disk.snapshot())),
       )
-      .handle("activity.snapshot", () => Effect.promise(() => ActivityMonitor.snapshot()))
+      .handle("activity.snapshot", () => Effect.sync(ActivityMonitor.snapshot))
       .handle("activity.inspect", (ctx) =>
         Effect.gen(function* () {
           const snapshot = yield* Effect.promise(() => ActivityMonitor.inspect(ctx.params.recordID))

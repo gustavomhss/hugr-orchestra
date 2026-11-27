@@ -24,11 +24,11 @@ fx.live.skipIf(mode === "off")(
           }),
         )
       yield* ready(handle, "ready")
-      const before = yield* Effect.promise(() => ActivityMonitor.snapshot())
+      const before = yield* Effect.sync(ActivityMonitor.snapshot)
       const recordID = before.records.find((entry) => entry.pid === handle.pid)?.recordID
       expect(recordID).toBeDefined()
       expect(yield* Effect.promise(() => ActivityMonitor.inspect(recordID!))).toBeDefined()
-      const snapshot = yield* Effect.promise(() => ActivityMonitor.snapshot())
+      const snapshot = yield* Effect.sync(ActivityMonitor.snapshot)
       const row = snapshot.records.find((entry) => entry.pid === handle.pid)
       expect(row?.sessionID).toBe("ses_observed")
       expect(row?.agentID).toBe("backend")
@@ -53,18 +53,18 @@ fx.live.skipIf(mode === "off")(
       const fixture = tree(1)
       const handle = yield* spawner.spawn(exiting(fixture, "ignore"))
       yield* handle.exitCode
-      const before = yield* Effect.promise(() => ActivityMonitor.snapshot())
+      const before = yield* Effect.sync(ActivityMonitor.snapshot)
       const recordID = before.records.find((entry) => entry.pid === handle.pid)?.recordID
       expect(recordID).toBeDefined()
       expect(yield* Effect.promise(() => ActivityMonitor.inspect(recordID!))).toBeDefined()
-      const snapshot = yield* Effect.promise(() => ActivityMonitor.snapshot())
+      const snapshot = yield* Effect.sync(ActivityMonitor.snapshot)
       const row = snapshot.records.find((entry) => entry.pid === handle.pid)
       expect(row?.state).toBe("alive")
       expect(row?.members?.length).toBeGreaterThan(0)
       expect(row?.members?.some((member) => member.pid === handle.pid)).toBe(false)
       yield* handle.kill()
       expect(yield* Effect.promise(() => ActivityMonitor.inspect(recordID!))).toBeDefined()
-      const stopped = yield* Effect.promise(() => ActivityMonitor.snapshot())
+      const stopped = yield* Effect.sync(ActivityMonitor.snapshot)
       expect(stopped.records.find((entry) => entry.recordID === row?.recordID)?.state).toBe("unknown")
     }),
   30_000,
