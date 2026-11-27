@@ -60,7 +60,8 @@ export const run = (services: Services, request: Request, context: Tool.Context)
     const retain = access.retain
     const view = yield* checked(ReviewCodeSource.open(access.source))
     yield* ReviewCodeSource.checkPaths(view, requestedPaths(normalized))
-    const source = { worktree: view.worktree, tree: view.tree, ...(view.commit ? { commit: view.commit } : {}) }
+    const source = { worktree: view.worktree, tree: view.tree, ...(view.commit ? { commit: view.commit } : {}),
+      ...(view.scope ? { scope: view.scope } : {}) }
     const capture = (value: unknown): Effect.Effect<Evidence, Research.Error> => Effect.gen(function* () {
       const text = JSON.stringify(value)
       const sha256 = createHash("sha256").update(text, "utf8").digest("hex")
@@ -81,6 +82,7 @@ export const run = (services: Services, request: Request, context: Tool.Context)
     const state: { snapshot?: string; indexUnavailable?: string } = {}
     const query = (input: CodeIndex.CodeQuery) => checked(view.commit
       ? CodeIndexQuery.run({ root: view.worktree, git: view.git, storeRoot, indexers, readOnly: true,
+        ...(view.allowedFiles ? { allowedFiles: view.allowedFiles } : {}),
         overlay: () => Effect.succeed([]) }, input)
       : Effect.fail(unavailable("The captured review has no semantic commit for a prepared index"))).pipe(
       Effect.tapError((error) => Effect.sync(() => {
@@ -93,8 +95,8 @@ export const run = (services: Services, request: Request, context: Tool.Context)
     const allowed = normalized.name === "code_locate" && normalized.input.paths?.length
       ? yield* checked(CodeSearch.files(normalized.input.paths, { cwd: projection!.directory }).pipe(Effect.mapError(searchFailure)))
       : undefined
-    if (allowed && [...allowed].some((file) => !view.files.regular?.has(file)))
-      return yield* new Research.Error({ code: "source_unavailable", message: "ripgrep selected a path outside the captured regular files" })
+    if (allowed && [...allowed].some((file) => !view.files.regular?.has(file) || (view.allowedFiles && !view.allowedFiles.has(file))))
+      return yield* new Research.Error({ code: "source_unavailable", message: "ripgrep selected a path outside the admitted captured regular files" })
     const search = (input: CodeIndex.SearchInput) => checked(CodeSearch.run(input, {
       cwd: projection!.directory, ...(view.commit ? { commit: view.commit } : {}),
     }).pipe(
@@ -109,16 +111,20 @@ export const run = (services: Services, request: Request, context: Tool.Context)
       : normalized.name === "code_search" ? yield* search(normalized.input)
       : yield* Locate.run(normalized.input, {
         search, query, read: (file) => checked(ReviewCodeSource.read(view, file)),
-        inScope: (file) => !allowed || allowed.has(file),
+        inScope: (file) => (!view.allowedFiles || view.allowedFiles.has(file)) && (!allowed || allowed.has(file)),
         retain: (snapshot) => {
           state.snapshot = snapshot
           return capture({ source, snapshot })
         },
       })
-    const result = state.indexUnavailable ? { ...found, basis: { ...found.basis, coverage: {
-      ...found.basis.coverage, complete: false,
-      skipped: [...found.basis.coverage.skipped, { path: ".", reason: `prepared-index-unavailable: ${state.indexUnavailable}` }],
-    } } } : found
+    const result = { ...found, basis: { ...found.basis, coverage: {
+      ...found.basis.coverage,
+      // Exact-file projection omits unadmitted ignore configuration; it cannot attest the full repository policy.
+      ...(view.scope && normalized.name !== "code_query" ? { ignoreRespected: false } : {}),
+      ...(state.indexUnavailable ? { complete: false,
+        skipped: [...found.basis.coverage.skipped, { path: ".", reason: `prepared-index-unavailable: ${state.indexUnavailable}` }],
+      } : {}),
+    } } }
     const evidence = yield* capture({ source, result, ...(state.snapshot ? { snapshot: state.snapshot } : {}) })
     const output = {
       title: normalized.name === "code_search" ? normalized.input.pattern : normalized.name,
