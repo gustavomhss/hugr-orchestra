@@ -14068,6 +14068,154 @@ export type ActivityReadWorktreeOutput = {
   }>
 }
 
+export type ActivityDockerOutput =
+  | {
+      readonly instanceID: string
+      readonly readAt: number
+      readonly source: "docker container ls --all --no-trunc --size --format json"
+      readonly coverage: "containers"
+      readonly snapshotRevision: string
+      readonly inventory: {
+        readonly sampledAt: number
+        readonly containers: ReadonlyArray<{
+          readonly containerID: string
+          readonly name?: string
+          readonly sizeText?: string
+          readonly owner: ""
+          readonly logical: null
+          readonly unique: "não colapsei"
+          readonly useProof: "unproved"
+        }>
+      }
+      readonly attempt: {
+        readonly startedAt: number
+        readonly sampledAt: number
+        readonly state: "complete"
+        readonly gaps: readonly []
+      }
+    }
+  | {
+      readonly instanceID: string
+      readonly readAt: number
+      readonly source: "docker container ls --all --no-trunc --size --format json"
+      readonly coverage: "containers"
+      readonly snapshotRevision: string
+      readonly inventory?: {
+        readonly sampledAt: number
+        readonly containers: ReadonlyArray<{
+          readonly containerID: string
+          readonly name?: string
+          readonly sizeText?: string
+          readonly owner: ""
+          readonly logical: null
+          readonly unique: "não colapsei"
+          readonly useProof: "unproved"
+        }>
+      }
+      readonly attempt: {
+        readonly startedAt: number
+        readonly sampledAt: number
+        readonly state: "partial" | "failed" | "unavailable"
+        readonly gaps: ReadonlyArray<
+          | "executable-missing"
+          | "process-unavailable"
+          | "timeout"
+          | "nonzero-exit"
+          | "execution-failed"
+          | "stdout-truncated"
+          | "stderr-truncated"
+          | "output-truncated"
+          | "row-limit"
+          | "invalid-record"
+          | "missing-id"
+          | "duplicate-id"
+        >
+      }
+    }
+  | {
+      readonly instanceID: string
+      readonly readAt: number
+      readonly source: "docker container ls --all --no-trunc --size --format json"
+      readonly coverage: "containers"
+      readonly snapshotRevision: "0"
+      readonly inventory?: never
+      readonly attempt?: never
+    }
+
+export type ActivityReadDockerOutput =
+  | {
+      readonly instanceID: string
+      readonly readAt: number
+      readonly source: "docker container ls --all --no-trunc --size --format json"
+      readonly coverage: "containers"
+      readonly snapshotRevision: string
+      readonly inventory: {
+        readonly sampledAt: number
+        readonly containers: ReadonlyArray<{
+          readonly containerID: string
+          readonly name?: string
+          readonly sizeText?: string
+          readonly owner: ""
+          readonly logical: null
+          readonly unique: "não colapsei"
+          readonly useProof: "unproved"
+        }>
+      }
+      readonly attempt: {
+        readonly startedAt: number
+        readonly sampledAt: number
+        readonly state: "complete"
+        readonly gaps: readonly []
+      }
+    }
+  | {
+      readonly instanceID: string
+      readonly readAt: number
+      readonly source: "docker container ls --all --no-trunc --size --format json"
+      readonly coverage: "containers"
+      readonly snapshotRevision: string
+      readonly inventory?: {
+        readonly sampledAt: number
+        readonly containers: ReadonlyArray<{
+          readonly containerID: string
+          readonly name?: string
+          readonly sizeText?: string
+          readonly owner: ""
+          readonly logical: null
+          readonly unique: "não colapsei"
+          readonly useProof: "unproved"
+        }>
+      }
+      readonly attempt: {
+        readonly startedAt: number
+        readonly sampledAt: number
+        readonly state: "partial" | "failed" | "unavailable"
+        readonly gaps: ReadonlyArray<
+          | "executable-missing"
+          | "process-unavailable"
+          | "timeout"
+          | "nonzero-exit"
+          | "execution-failed"
+          | "stdout-truncated"
+          | "stderr-truncated"
+          | "output-truncated"
+          | "row-limit"
+          | "invalid-record"
+          | "missing-id"
+          | "duplicate-id"
+        >
+      }
+    }
+  | {
+      readonly instanceID: string
+      readonly readAt: number
+      readonly source: "docker container ls --all --no-trunc --size --format json"
+      readonly coverage: "containers"
+      readonly snapshotRevision: "0"
+      readonly inventory?: never
+      readonly attempt?: never
+    }
+
 export type ActivityDiskOutput = {
   readonly instanceID: string
   readonly readAt: number
