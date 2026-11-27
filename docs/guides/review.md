@@ -66,9 +66,12 @@ record, whose method reads like `review-v2/code/standard`. A committed PR review
 | `blocked` | `lucy` could not judge: missing intent or acceptance, a change too large to slice, or a required check that could not run | Brings the blocker to you |
 
 The review method requires a `blocked` card when `lucy` cannot judge; a verdict is never a vote across passes.
-For committed PR reviews, the current card validator does not independently verify check completeness or accepted
-lanes. Inspect the reported checks and coverage; `APPROVE` alone is not evidence that required lanes ran. Maestro
-never edits a finding.
+For committed PR reviews, the host validates the card against its retained check facts. The card must include
+exactly those checks: missing, additional, altered or duplicate checks are refused. Only host settings can accept
+an unavailable check or lane; model text cannot grant that exception. Acquisition errors in required checks remain blockers.
+A host blocker requires a `blocked` card, and a failed required repository command prevents `APPROVE`. A failed
+optional diagnostic or verifier probe remains evidence without automatically vetoing approval. Read the checks
+and coverage to see what actually ran and what remained unavailable. Maestro never edits a finding.
 
 Severities: **P0** data loss, a security breach, a crash or corruption on a main path; **P1** wrong behavior a user or
 caller will hit, a missing test for a stated behavior, or a broken written rule; **P2** a real defect with a narrow
@@ -279,9 +282,10 @@ A card states its limits; it never claims "no problems" for anything it did not 
   per reading pass, how many no model read.
 
 A long "not examined" list on an `APPROVE` is a reason to look closer, not a defect in the review. A catalog entry
-for an analyzer is not proof that its adapter exists or that it ran. The review method requires unavailable checks
-and their reasons to be reported, but the current PR card validator does not independently verify that the list is
-complete. Inspect checks and coverage; the review never installs or downloads a missing tool.
+for an analyzer is not proof that its adapter exists or that it ran. The host requires the PR card to repeat the
+retained checks, including unavailable checks and their reasons, and validates any accepted exception against
+host settings. Completeness of that check list does not establish that every file or capability was examined.
+Inspect checks and coverage; the review never installs or downloads a missing tool.
 
 ## Advanced proofs
 

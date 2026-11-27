@@ -182,7 +182,11 @@ describe("lucy pr retry", () => {
         expect(quick).toEqual({ type: "error", text: "pr-facts-unsupported: private replay store requires supported Unix" })
         expect(yield* ctx.invoke("maestro", input(ctx.base, ctx.head, "standard"))).toEqual(quick)
         expect(yield* ctx.invoke("maestro", input(ctx.base, ctx.head, "quick", "other text"))).toEqual(quick)
-        expect(yield* ctx.invoke("maestro", input(ctx.head, ctx.base, "quick"))).toEqual(quick)
+        // Reversing the ancestor refs has an empty merge-base diff, so source
+        // validation refuses it before the private-store platform check.
+        expect(yield* ctx.invoke("maestro", input(ctx.head, ctx.base, "quick"))).toEqual({
+          type: "error", text: "empty-diff: committed diff has no paths",
+        })
         expect(ctx.touches.children).toEqual([])
         expect(ctx.touches.prompts).toEqual([])
         expect(ctx.touches.resumes).toBe(0)
