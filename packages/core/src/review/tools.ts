@@ -49,6 +49,8 @@ export type CodeSource = {
   readonly commit?: string
   /** Host-captured Git tree, independently validated; it is not a semantic commit. */
   readonly tree?: string
+  /** Persisted host-owned exact file authority. Omission retains the full captured source. */
+  readonly scope?: { readonly sha256: string; readonly files: ReadonlyArray<string> }
 }
 
 /** What a review Session may reach, set by the fan-out for the Session's stage. */
