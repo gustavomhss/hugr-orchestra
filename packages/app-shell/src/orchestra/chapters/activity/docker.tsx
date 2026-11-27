@@ -71,11 +71,14 @@ export function ActivityDocker(props: { query: string }) {
       <Show when={snapshot()?.attempt}>
         {(attempt) => (
           <div>
-            <p class="mx-note" role="status">
-              {language.t("orchestra.monitor.dockerAttempt", {
-                state: language.t(`orchestra.monitor.dockerState.${attempt().state}`),
-                age: attemptAge(),
-              })}
+            <p class="mx-note">
+              <span role="status">
+                {language.t("orchestra.monitor.dockerAttempt", {
+                  state: language.t(`orchestra.monitor.dockerState.${attempt().state}`),
+                })}
+              </span>
+              {" · "}
+              {attemptAge()}
             </p>
             <Show when={attempt().gaps.length > 0}>
               <ul class="activity-members">
@@ -89,8 +92,8 @@ export function ActivityDocker(props: { query: string }) {
       <Show
         when={shown().length > 0}
         fallback={
-          <div class="mx-empty" role="status">
-            <strong>
+          <div class="mx-empty">
+            <strong role="status">
               {language.t(
                 !inventory()
                   ? "orchestra.monitor.dockerUnread"
