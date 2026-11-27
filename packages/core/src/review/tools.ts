@@ -43,7 +43,15 @@ export type Page = {
 
 export type PageResult = { readonly items: ReadonlyArray<ReviewItem.ToolItem>; readonly cursor?: string }
 
-export type CodeSource = { readonly directory: string; readonly worktree: string; readonly commit?: string }
+export type CodeSource = {
+  readonly directory: string
+  readonly worktree: string
+  readonly commit?: string
+  /** Host-captured Git tree, independently validated; it is not a semantic commit. */
+  readonly tree?: string
+  /** Persisted host-owned exact file authority. Omission retains the full captured source. */
+  readonly scope?: { readonly sha256: string; readonly files: ReadonlyArray<string> }
+}
 
 /** What a review Session may reach, set by the fan-out for the Session's stage. */
 export type Binding = {
@@ -73,32 +81,43 @@ export type Services = {
 }
 
 // Process-local, as the review's Sessions are: a review runs in the process that drains its Sessions.
-const bindings = new Map<string, Binding>()
+const bindings = new Map<string, { readonly binding: Binding }>()
 
 /** Binds a review Session for the life of the scope. */
 export const bind = (sessionID: string, binding: Binding) =>
   Effect.acquireRelease(
     Effect.gen(function* () {
       if (bindings.has(sessionID)) return yield* new Tool.Failure({ message: `review Session ${sessionID} is already bound` })
-      bindings.set(sessionID, binding)
+      const lifetime = { binding }
+      bindings.set(sessionID, lifetime)
+      return lifetime
     }),
-    () =>
+    (lifetime) =>
       Effect.sync(() => {
-        if (bindings.get(sessionID) === binding) bindings.delete(sessionID)
+        if (bindings.get(sessionID) === lifetime) bindings.delete(sessionID)
       }),
-  )
+  ).pipe(Effect.as(undefined))
 
 export function readCode(
   sessionID: string,
-): Effect.Effect<{ readonly source: CodeSource; readonly retain?: Binding["retain"] }, Tool.Failure, Scope.Scope> {
+): Effect.Effect<{
+  readonly source: CodeSource
+  readonly retain?: Binding["retain"]
+  /** Rechecks this exact binding after asynchronous work; rebinding the Session cannot revive an old read. */
+  readonly active: Effect.Effect<void, Tool.Failure>
+}, Tool.Failure, Scope.Scope> {
   return Effect.gen(function* () {
-    const binding = bindings.get(sessionID)
+    const lifetime = bindings.get(sessionID)
+    const binding = lifetime?.binding
     if (!binding?.codeSource) return yield* new Tool.Failure({ message: `review-code-binding-missing: ${sessionID}` })
+    const active = Effect.suspend(() => bindings.get(sessionID) === lifetime
+      ? Effect.void
+      : Effect.fail(new Tool.Failure({ message: `review-code-binding-missing: ${sessionID}` })))
     const source = yield* binding.codeSource.pipe(
-      Effect.mapError(() => new Tool.Failure({ message: "review-code-source-unavailable" })),
+      Effect.catch(() => active.pipe(Effect.andThen(Effect.fail(new Tool.Failure({ message: "review-code-source-unavailable" }))))),
     )
-    if (bindings.get(sessionID) !== binding) return yield* new Tool.Failure({ message: `review-code-binding-missing: ${sessionID}` })
-    return { source, ...(binding.retain ? { retain: binding.retain } : {}) }
+    yield* active
+    return { source, active, ...(binding.retain ? { retain: binding.retain } : {}) }
   })
 }
 
@@ -115,7 +134,7 @@ export function tools(services: Services) {
         source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
       })
       .pipe(Effect.mapError((error) => new Tool.Failure({ message: `${name} was not permitted`, error })))
-    const binding = bindings.get(context.sessionID)
+    const binding = bindings.get(context.sessionID)?.binding
     if (!binding) return yield* new Tool.Failure({ message: `${name} runs only inside a review` })
     return binding
   })

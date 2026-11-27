@@ -21,6 +21,7 @@ import { ResearchAllowance } from "@orchestra/core/research/allowance"
 import { ResearchRecords } from "@orchestra/core/research/records"
 import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
 import { ReviewTools } from "@orchestra/core/review/tools"
+import { ReviewCodeBinary } from "@orchestra/core/review/code-binary"
 import { Ripgrep } from "@orchestra/core/ripgrep"
 import { SessionStore } from "@orchestra/core/session"
 import { SkillV2 } from "@orchestra/core/skill"
@@ -113,6 +114,7 @@ const layer = Layer.effectDiscard(
         ...MaestroPlanningTools.tools({ services, gate, publication }),
         ...MaestroReviewTools.tools({
           services,
+          database,
           gate,
           sessions: yield* GovernanceBackgroundV2.Sessions,
           execution: yield* MaestroReviewTools.Execution,
@@ -139,6 +141,7 @@ const layer = Layer.effectDiscard(
           fs: services.atlas.fs,
           processes: yield* AppProcess.Service,
           ripgrep: yield* Ripgrep.RipgrepBinary.Service,
+          reviewRipgrep: yield* ReviewCodeBinary.Service,
           git,
           config: services.atlas.config,
           http: yield* HttpClient.HttpClient,
@@ -216,6 +219,7 @@ export const node = makeLocationNode({
     ReadToolFileSystem.node,
     AppProcess.node,
     Ripgrep.RipgrepBinary.node,
+    ReviewCodeBinary.node,
     LayerNodePlatform.httpClient,
   ],
 })

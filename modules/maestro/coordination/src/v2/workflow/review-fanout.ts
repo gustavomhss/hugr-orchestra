@@ -80,6 +80,8 @@ export type AnalyzeInput = {
   // Shared by every round of one validation, so a rereview reuses the analyzer cache by file digest.
   readonly cache: string
   readonly files: ReadonlyArray<string>
+  /** Exact admitted repository files for an engagement, without synthetic diff additions. */
+  readonly repositoryFiles?: ReadonlyArray<string>
   /** The tier this step actually runs. Absent only before a first round has an execution tier. */
   readonly executionTier?: string
 }
@@ -101,7 +103,7 @@ export type Port = {
   ) => Effect.Effect<string, Tool.Failure>
   readonly analyze: (input: AnalyzeInput) => Effect.Effect<Analysis, Tool.Failure>
   /** Lines `start..end` of a file at the reviewed head. */
-  readonly region: (file: string, start: number, end: number) => Effect.Effect<string>
+  readonly region: (file: string, start: number, end: number) => Effect.Effect<string, Tool.Failure>
   /** What this Session may reach. The fan-out binds it before the first turn and releases it when the review ends. */
   readonly binding: (input: BindInput) => Effect.Effect<ReviewTools.Binding, Tool.Failure, Scope.Scope>
   /** Adds lenses the Quick lead may page, after entry may have raised the route. */
@@ -132,7 +134,9 @@ export type Stages = {
 }
 
 export type Input = {
-  readonly completion?: "governed" | "card-only"
+  readonly completion?: "governed" | "card-only" | "report"
+  /** Host-owned captured file authority. Omission preserves the diff-review contract. */
+  readonly repositoryFiles?: ReadonlyArray<string>
   readonly request: ReviewRoute.Request
   readonly base: ReviewRoute.Tree
   // For a rereview, the delta since the first round's head.
@@ -195,7 +199,12 @@ type Counts = {
 export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port: Port) {
   if (input.firstRound && input.firstRound.reviewed === input.reviewed) return { status: "unaddressed" } as Result
   const cardOnly = input.completion === "card-only"
-  const stageTools = (ids: ReadonlyArray<string>) => ReviewFanoutSupportV2.tools(cardOnly ? ids.filter((id) => id !== ReviewSeatTools.RECORD) : ids)
+  const report = input.completion === "report"
+  if (report && input.repositoryFiles === undefined)
+    return yield* new Tool.Failure({ message: "ReviewRequestRejected: engagement-source-unavailable. A report requires captured file authority." })
+  const standalone = cardOnly || report
+  const authority = input.repositoryFiles === undefined ? undefined : new Set(input.repositoryFiles)
+  const stageTools = (ids: ReadonlyArray<string>) => ReviewFanoutSupportV2.tools(standalone ? ids.filter((id) => id !== ReviewSeatTools.RECORD) : ids, report)
   const catalog = input.catalog
   // Fail before analysis. A retained execution tier is that exact built id; do not reinterpret it through runTier.
   const retainedTier = input.firstRound
@@ -205,7 +214,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     return yield* new Tool.Failure({
       message: `ReviewRequestRejected: retained-tier-unavailable. Review tier ${input.firstRound.executionTier} is no longer built.`,
     })
-  const files = input.head.changes.map((change) => change.path)
+  const files = authority ? [...authority].toSorted() : input.head.changes.map((change) => change.path)
 
   // 1. Route (host, no model).
   const routed = yield* ReviewFanoutSupportV2.routeOf(input)
@@ -217,6 +226,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     packs: ReviewFanoutSupportV2.routable(routed.record.packs),
     cache: input.cache,
     files,
+    ...(authority ? { repositoryFiles: files } : {}),
     ...(input.firstRound ? { executionTier: input.firstRound.executionTier } : {}),
   })
 
@@ -235,6 +245,9 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
       return bound
     })
   const teamStack = ReviewFanoutSupportV2.stackNodes(routed.record, catalog)
+  const profileSkills = report ? ReviewFanoutSupportV2.reportSkills(routed.record.profile.id) : []
+  if (report && profileSkills.length === 0)
+    return yield* new Tool.Failure({ message: "ReviewRequestRejected: engagement-profile-unavailable. This profile has no independent report scope." })
   const auditNodes = new Set(["lucy-audit", ...ReviewFanoutSupportV2.below(input.skills, "lucy-audit")])
   const releaseNodes = new Set([ReviewCatalog.releaseChecks.lens.node, ...ReviewFanoutSupportV2.below(input.skills, ReviewCatalog.releaseChecks.lens.node)])
   // The generic security tree contains this specialized child; its ancestry does not grant the release route.
@@ -247,7 +260,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     // Seal is the post-record delivery barrier. Refuse before appending so a late page cannot change the snapshot.
     if (sealedReads) throw new Error("outcome-delivery-sealed")
     const current = delivered.get(sessionID) ?? []
-    delivered.set(sessionID, current.concat(items))
+    delivered.set(sessionID, current.concat(authority ? items.filter((item) => authority.has(item.path)) : items))
   }
   yield* bind(lead, "lead", {
     ...(quick ? { lenses: routed.record.lenses.map((lens) => lens.id) } : {}),
@@ -258,7 +271,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     skills: {
       entry: ENTRY_NODE,
       // At Quick the lead also hunts, so the leaves below its lens nodes are on its route from the start.
-      allow: quick ? unique([...routed.record.lenses.flatMap((lens) => lens.node === "lucy-audit-compliance-privacy" ? [lens.node] : allowedNodes(ReviewFanoutSupportV2.below(input.skills, lens.node), routed.record)), ...teamStack]) : [],
+      allow: unique([...profileSkills, ...(quick ? [...routed.record.lenses.flatMap((lens) => lens.node === "lucy-audit-compliance-privacy" ? [lens.node] : allowedNodes(ReviewFanoutSupportV2.below(input.skills, lens.node), routed.record)), ...teamStack] : [])]),
     },
     // K4 writes a scope once, so the lead holds its final turn's set; the record tool refuses outside that turn.
     tools: stageTools(quick ? [...input.stages.lead, ...input.stages.lens, ...input.stages.final] : [...input.stages.lead, ...input.stages.final]),
@@ -268,6 +281,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
   const profileNode = catalog.route.profiles.find((profile) => profile.id === routed.record.profile.id)?.node
   const entryBrief = [
     "Stage: entry. Return the entry record only; do not hunt.",
+    ...(report ? ["This is an independent engagement. The final report omits a verdict and cannot record a governed receipt."] : []),
     `Profile: ${routed.record.profile.id}. Tier: ${ReviewRouting.tier(routed.record)}.`,
     yield* ReviewFanoutSupportV2.deliver(input, leadScope, ENTRY_NODE),
     ...(profileNode ? [yield* ReviewFanoutSupportV2.deliver(input, leadScope, profileNode)] : []),
@@ -277,12 +291,14 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     DATA_RULE,
     ReviewFanoutSupportV2.data("work card", input.facts.workCard),
     ...(input.facts.prText === undefined ? [] : [ReviewFanoutSupportV2.data("pr text", JSON.stringify(input.facts.prText).replaceAll("<", "\\u003c"))]),
-    ReviewFanoutSupportV2.data("diff", input.facts.diff),
+    report ? ReviewFanoutSupportV2.data("captured repository files", JSON.stringify(files)) : ReviewFanoutSupportV2.data("diff", input.facts.diff),
     `Reply with exactly one \`\`\`${TAGS.entry} block holding the entry record as JSON.`,
   ].join("\n\n")
   const entryReply = yield* RUNNING.withPermit(port.run(lead, entryBrief, { key: "entry", finish: false }))
   const parsedEntry = ReviewResultV2.parseEntry(ReviewFanoutSupportV2.block(entryReply, TAGS.entry))
-  const capped = parsedEntry ? ReviewResultV2.capEntry(parsedEntry, lead) : undefined
+  const scopedEntry = parsedEntry && authority ? ReviewFanoutSupportV2.scopeEntry(parsedEntry, authority) : undefined
+  const returnedEntry = scopedEntry?.value ?? parsedEntry
+  const capped = returnedEntry ? ReviewResultV2.capEntry(returnedEntry, lead) : undefined
   const value = capped?.value
   const entry = value && value.status === "eligible" ? value : undefined
   const entered = entry ? ReviewFanoutSupportV2.applyEntry(routed.record, entry, catalog) : undefined
@@ -292,6 +308,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     deviations: [
       ...routed.record.deviations,
       ...(capped?.deviations ?? []),
+      ...(scopedEntry?.deviations ?? []),
       ...(entered?.deviations ?? []),
       ...leadEntryDeviations,
       ...(parsedEntry ? [] : [ReviewFanoutSupportV2.deviation("entry", "stage-return", "the entry record did not decode", lead)]),
@@ -301,7 +318,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
   if (afterEntry.lenses.some((lens) => auditNodes.has(lens.node) && lens.node !== "lucy-audit-compliance-privacy"))
     return yield* new Tool.Failure({ message: "Review route contains an unsupported audit lens" })
   const method = ReviewResultV2.method({ profile: afterEntry.profile.id, tier: tier.id })
-  const record = cardOnly ? [] : input.facts.record
+  const record = standalone ? [] : input.facts.record
   const observed: ReviewProbe.Observed[] = []
   // New attempts only. settle already appended the shared ledger; copying it would record the attempt twice.
   const observeProbes = (items: ReadonlyArray<ReviewProbe.Observed>) => {
@@ -356,6 +373,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
       }
       const reply = yield* RUNNING.withPermit(port.run(lead, [
         ...body,
+        ...(report ? [`Scope: ${JSON.stringify(input.facts.scope)}`, "The report must omit the verdict property. Return no governed receipt or record call."] : []),
         `reviewMethodVersion: ${method}`,
         `routingDigest: ${ReviewRouting.digest(sessionRecord)}`,
         `catalogDigest: ${sessionRecord.catalog}`,
@@ -364,8 +382,8 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
         "Each successfully paged primary item is also required, not-pursued at Quick. Its pack, rule and fingerprint are on that page. Do not invent items, and do not treat this initial list as empty or closed after a page.",
       ].join("\n\n"), {
         key: "finish",
-        finish: !cardOnly,
-        ...(cardOnly ? {} : { authorization }),
+        finish: !standalone,
+        ...(standalone ? {} : { authorization }),
       }))
       const closing = yield* ReviewFanoutSupportV2.deviationsOf(input.store, lead, "finish", leadEntryDeviations.length)
       return {
@@ -386,7 +404,8 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     return yield* finishTurn(
       afterEntry,
       [
-        cardOnly ? "Stage: finish. The entry stage returned no eligible record; write a blocked card." : "Stage: finish. The entry stage returned no eligible record; write a blocked card and do not call maestro_record_review.",
+        report ? "Stage: finish. The entry stage returned no eligible record; write a blocked report without a verdict."
+          : cardOnly ? "Stage: finish. The entry stage returned no eligible record; write a blocked card." : "Stage: finish. The entry stage returned no eligible record; write a blocked card and do not call maestro_record_review.",
         `Blocker: ${JSON.stringify(blocker)}`,
         `Routing record (embed it verbatim as the card's routing):\n${JSON.stringify(afterEntry)}`,
         `Reply with exactly one \`\`\`${ReviewResultV2.TAG} block.`,
@@ -399,8 +418,10 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
 
   // Packs an entry addition routed run before the hunt reads items; the cache makes the rerun cheap.
   const added = afterEntry.packs.filter((pack) => !routed.record.packs.some((other) => other.id === pack.id))
-   if (added.length) analysis = yield* port.analyze({ routing: afterEntry, packs: ReviewFanoutSupportV2.routable(afterEntry.packs), cache: input.cache, files, executionTier: tier.id })
-   const items = analysis.items
+  if (added.length) analysis = yield* port.analyze({ routing: afterEntry, packs: ReviewFanoutSupportV2.routable(afterEntry.packs), cache: input.cache, files,
+    ...(authority ? { repositoryFiles: files } : {}), executionTier: tier.id })
+  const items = authority ? Object.fromEntries(Object.entries(analysis.items).map(([lens, items]) =>
+    [lens, items.filter((item) => authority.has(item.path))])) : analysis.items
   const lensCap = Math.max(tier.budget.lenses.max, routed.record.lenses.length)
   const routedLenses = afterEntry.lenses.slice(0, lensCap)
   const running = routedLenses.filter((lens) => routed.runs(lens, open))
@@ -430,7 +451,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     return yield* finishTurn(
       afterEntry,
       [
-        `Stage: hunt and finish, in this Session (tier ${tier.id}). Hunt the lenses below, verify each candidate by quote, report only ${tier.report.join(" and ")}, then write the card${cardOnly ? "." : " and call maestro_record_review."}`,
+        `Stage: hunt and finish, in this Session (tier ${tier.id}). Hunt the lenses below, verify each candidate by quote, report only ${tier.report.join(" and ")}, then write the ${report ? "report without a verdict" : "card"}${standalone ? "." : " and call maestro_record_review."}`,
         ...nodes,
         yield* ReviewFanoutSupportV2.deliver(input, leadScope, QUOTE_NODE),
         ...(teamStack.length ? [`team-stack nodes you may load: ${teamStack.join(", ")}`] : []),
@@ -486,12 +507,15 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
             JSON.stringify(shown),
           ),
           ...(reopened.length ? [ReviewFanoutSupportV2.data("open findings of the first round in your lens", JSON.stringify(reopened))] : []),
-          ReviewFanoutSupportV2.data("diff slice", job.sample === 0 ? sliced : reorderDiff(sliced)),
+          report ? ReviewFanoutSupportV2.data("captured file slice", JSON.stringify(job.slice.paths))
+            : ReviewFanoutSupportV2.data("diff slice", job.sample === 0 ? sliced : reorderDiff(sliced)),
           `Reply with exactly one \`\`\`${TAGS.lens} block holding your lens return as JSON.`,
         ].join("\n\n")
         const reply = yield* RUNNING.withPermit(port.run(child, brief, { key: "hunt", finish: false }))
         const parsed = ReviewResultV2.parseLens(ReviewFanoutSupportV2.block(reply, TAGS.lens))
-        const result = parsed ? ReviewResultV2.capLens(parsed, tier.budget.candidatesPerLens, child) : undefined
+        const bounded = parsed && authority ? ReviewFanoutSupportV2.scopeLens(parsed, authority) : undefined
+        const returned = bounded?.value ?? parsed
+        const result = returned ? ReviewResultV2.capLens(returned, tier.budget.candidatesPerLens, child) : undefined
         const boundSources = result ? ReviewCandidatesV2.admitSources(result.value.candidates, delivered.get(child) ?? []) : { sources: [], invalid: [] }
         const scoped = yield* ReviewFanoutSupportV2.deviationsOf(input.store, child, "hunt", 0)
         return {
@@ -501,6 +525,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
           sources: boundSources.sources,
           deviations: [
             ...(result?.deviations ?? []),
+            ...(bounded?.removed ? [ReviewFanoutSupportV2.deviation("hunt", "source-outside-scope", `${bounded.removed} model source locations were outside the captured file authority`, child)] : []),
             ...scoped,
             ...(boundSources.invalid.length ? [ReviewFanoutSupportV2.deviation("hunt", "source-unbound", `claimed source not delivered to ${job.lens.id}: ${boundSources.invalid.join(", ")}`, child)] : []),
             ...(parsed ? [] : [ReviewFanoutSupportV2.deviation("hunt", "stage-return", `the ${job.lens.id} return did not decode`, child)]),
@@ -528,13 +553,16 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
   const queued = batches.flatMap((batch) => batch.candidates.map((candidate) => candidate.id))
   const overflow = merged.filter((candidate) => !queued.includes(candidate.id))
   const intent = { intent: entry.context.intent, acceptance: entry.context.acceptance }
+  // An engagement without a scoped probe executor cannot offer an executable proof rung.
+  const optionsFor = (candidate: ReviewCandidatesV2.Merged) => ReviewCandidatesV2.options(catalog, tier, afterEntry, candidate)
+    .filter((option) => !report || !option.id.startsWith("probe:"))
   const verified = yield* Effect.forEach(
     batches,
     (batch) =>
       Effect.gen(function* () {
         const child = yield* port.create({ key: `verify:${batch.class}`, role: "verifier" })
         const offered = Object.fromEntries(batch.candidates.map((candidate) =>
-          [candidate.id, ReviewCandidatesV2.options(catalog, tier, afterEntry, candidate).map((option) => option.id)]))
+          [candidate.id, optionsFor(candidate).map((option) => option.id)]))
         const bound = yield* bind(child, "verifier", { offered, cap: tier.probeAttempts, observeProbes })
         if (bound.probeUnavailable) {
           const reason = bound.probeUnavailable
@@ -567,7 +595,8 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
         }
         yield* ReviewFanoutSupportV2.narrow(input.store, child, scope)
         const candidates = yield* Effect.forEach(batch.candidates, (candidate) =>
-          port.region(candidate.path, Math.max(1, candidate.line - 3), (candidate.endLine ?? candidate.line) + 3).pipe(
+          port.region(candidate.path, report ? candidate.line : Math.max(1, candidate.line - 3),
+            (candidate.endLine ?? candidate.line) + (report ? 0 : 3)).pipe(
             Effect.map((region) => ({
               id: candidate.id,
               class: candidate.class,
@@ -578,7 +607,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
               severity: candidate.severity,
               claim: candidate.trigger,
               region,
-              options: ReviewCandidatesV2.options(catalog, tier, afterEntry, candidate),
+              options: optionsFor(candidate),
             })),
           ),
         )
@@ -688,14 +717,15 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
   return yield* finishTurn(
     final,
     [
-      cardOnly ? "Stage: finish. Rank the confirmed findings below, preserve every confirmed finding ID exactly once with open status and unchanged host identity and evidence, apply the verdict rules, and write coverage and the card. Only these confirmed findings may carry a verdict; questions never do." : "Stage: finish. Merge the confirmed findings below by root cause, rank them, apply the verdict rules, write coverage and the card, then call maestro_record_review. Only these confirmed findings may carry a verdict; questions never do.",
+      report ? "Stage: finish. Rank the confirmed findings below, preserve every confirmed finding ID exactly once with open status and unchanged host identity and evidence, and write coverage and the independent report without a verdict. Keep questions separate from confirmed findings."
+        : cardOnly ? "Stage: finish. Rank the confirmed findings below, preserve every confirmed finding ID exactly once with open status and unchanged host identity and evidence, apply the verdict rules, and write coverage and the card. Only these confirmed findings may carry a verdict; questions never do." : "Stage: finish. Merge the confirmed findings below by root cause, rank them, apply the verdict rules, write coverage and the card, then call maestro_record_review. Only these confirmed findings may carry a verdict; questions never do.",
       `Routing record (embed it verbatim as the card's routing):\n${JSON.stringify(final)}`,
       ReviewFanoutSupportV2.data("confirmed findings, as the host merged them", JSON.stringify(confirmed)),
       ReviewFanoutSupportV2.data("questions", JSON.stringify(questions)),
       ...(open.length ? [ReviewFanoutSupportV2.data("open findings of the first round; mark each resolved or still open", JSON.stringify(open))] : []),
       `Coverage the host recorded:\n${JSON.stringify(coverage)}`,
       `Counts: ${JSON.stringify(counts)}`,
-      `Scope: ${JSON.stringify(input.facts.scope)}`,
+      ...(report ? [] : [`Scope: ${JSON.stringify(input.facts.scope)}`]),
       ...record,
       `Reply with exactly one \`\`\`${ReviewResultV2.TAG} block.`,
     ],

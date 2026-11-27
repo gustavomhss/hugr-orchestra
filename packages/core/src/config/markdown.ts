@@ -2,6 +2,12 @@ export * as ConfigMarkdown from "./markdown"
 
 import matter from "gray-matter"
 export function parse(content: string) {
+  // gray-matter selects engines from the opening delimiter, including JavaScript aliases.
+  // Reject every non-data language before entering its parser or YAML fallback.
+  const source = content.replace(/^\uFEFF/, "")
+  const language = /^---(?!-)/.test(source) ? matter.language(source).name.toLowerCase() : undefined
+  if (language !== undefined && !["", "yaml", "yml", "json"].includes(language))
+    throw new Error(`Unsupported frontmatter language: ${language}`)
   // The options object bypasses gray-matter's cache: it keeps even a failed parse, so the next parse of the same text
   // would return empty data instead of reaching the fallback.
   try {
@@ -22,7 +28,7 @@ export function parseOption(content: string) {
 // Other coding agents accept unquoted colons in frontmatter values. Retry
 // those values as YAML block scalars so existing config files keep working.
 export function sanitize(content: string) {
-  const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/)
+  const match = content.match(/^---(?:yaml|yml)?\r?\n([\s\S]*?)\r?\n---/i)
   if (!match) return content
   const frontmatter = match[1]
   const result = frontmatter.split(/\r?\n/).flatMap((line) => {

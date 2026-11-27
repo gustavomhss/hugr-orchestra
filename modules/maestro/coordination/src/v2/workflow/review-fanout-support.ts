@@ -5,6 +5,7 @@ import { Effect, Option, Schema } from "effect"
 import { ReviewCatalog } from "@orchestra/core/review/catalog"
 import { ReviewRoute } from "@orchestra/core/review/route"
 import { ReviewRouting } from "@orchestra/core/review/routing"
+import { ReviewSeatTools } from "@orchestra/core/review/seat-tools"
 import type { SessionSchema, SessionStore } from "@orchestra/core/session"
 import type { SessionScope } from "@orchestra/core/session/scope"
 import { SkillV2 } from "@orchestra/core/skill"
@@ -14,6 +15,8 @@ import type { ReviewResultV2 } from "../governance/review-result"
 import type { ReviewFanoutV2 } from "./review-fanout"
 
 const DELEGATION = ["task"]
+const REPORT_TOOLS = new Set<string>([...ReviewSeatTools.CODE, "skill", "review_analyze"])
+const REPORT_TECHNIQUES = ["lucy-audit-context", "lucy-audit-spec-map", "lucy-audit-controls", "lucy-audit-report"]
 
 type Input = ReviewFanoutV2.Input
 type Tier = ReviewCatalog.Catalog["route"]["tiers"][number]
@@ -28,7 +31,7 @@ type Routed = {
 export function routeOf(input: Input) {
   return Effect.try({
     try: (): Routed => {
-      const delta = ReviewRoute.route(input.request, input.base, input.head, input.catalog)
+      const delta = ReviewRoute.route(input.request, input.base, input.head, input.catalog, input.repositoryFiles)
       const first = input.firstRound?.routing
       if (!first) return { record: delta, runs: () => true }
       // A rereview reuses the first round's route; the delta can only add lenses and packs to it.
@@ -135,6 +138,37 @@ export function below(skills: ReadonlyArray<SkillV2.Info>, name: string): string
   return node ? SkillV2.children(skills, node).flatMap((child) => [child.name, ...below(skills, child.name)]) : []
 }
 
+/** Explicit first-slice techniques; ancestry must not grant variants, forensics or compliance. */
+export function reportSkills(profile: string): string[] {
+  if (profile === "audit") return ["lucy-audit", ...REPORT_TECHNIQUES]
+  if (profile === "diligence") return ["lucy-audit-diligence", ...REPORT_TECHNIQUES]
+  if (profile === "artifact") return ["lucy-review-artifact"]
+  return []
+}
+
+/** Model-selected slices can narrow captured authority, never name additional files. */
+export function scopeEntry(value: ReviewResultV2.EntryRecord, files: ReadonlySet<string>) {
+  if (value.status !== "eligible" || value.slices.length === 0) return { value, deviations: [] }
+  const slices = value.slices.map((slice) => ({ ...slice, paths: unique(slice.paths.filter((file) => files.has(file))) }))
+    .filter((slice) => slice.paths.length > 0)
+  const removed = value.slices.reduce((sum, slice) => sum + slice.paths.filter((file) => !files.has(file)).length, 0)
+  const deviations = removed ? [deviation("entry", "slice-outside-scope", `${removed} slice paths were outside the captured file authority`)] : []
+  const scoped: ReviewResultV2.EntryRecord = slices.length ? { ...value, slices }
+    : { status: "blocked", blocker: { kind: "engagement-scope", reason: "The slice plan named no admitted captured files." } }
+  return { value: scoped, deviations }
+}
+
+/** Filter before model-output caps, merge, verifier reads and coverage accounting. */
+export function scopeLens(value: ReviewResultV2.LensReturn, files: ReadonlySet<string>) {
+  const candidates = value.candidates.filter((item) => files.has(item.path))
+  const observations = value.observations.filter((item) => files.has(item.path))
+  const hunks = value.hunks.filter((item) => files.has(item.path))
+  return {
+    value: { ...value, candidates, observations, hunks },
+    removed: value.candidates.length - candidates.length + value.observations.length - observations.length + value.hunks.length - hunks.length,
+  }
+}
+
 export function deliver(input: Input, scope: SessionScope.Scope, node: string) {
   // The delivered node renders as the tool would, its "Next level" narrowed to the Session's `allow`.
   return SkillTool.deliver(input.fs, input.skills, { ...scope, skills: { ...scope.skills, entry: node } }).pipe(
@@ -195,8 +229,8 @@ export function routable(packs: ReadonlyArray<ReviewRouting.Pack>) {
   return packs.filter((pack) => pack.status === "routed")
 }
 
-export function tools(ids: ReadonlyArray<string>) {
-  return unique(ids).filter((id) => !DELEGATION.includes(id))
+export function tools(ids: ReadonlyArray<string>, report = false) {
+  return unique(ids).filter((id) => !DELEGATION.includes(id) && (!report || REPORT_TOOLS.has(id)))
 }
 
 function unique<T>(items: ReadonlyArray<T>) {

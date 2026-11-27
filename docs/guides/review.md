@@ -8,8 +8,24 @@ this to know what a card says, how deep a review goes and which settings change 
 request, the acceptance criteria, the plan and the diff, never the author's conversation. Proofs that need to run
 code run in a throwaway copy of the tree, which is deleted when the review ends.
 
-The committed PR workflow described below is for the PR-capable campaign build, pending lead acceptance with the
-campaign bundle. This guide does not mean your installed app has already been updated.
+The committed PR, captured-CODE and independent engagement workflows described below are for the campaign build, pending lead
+acceptance with the campaign bundle. This guide does not mean your installed app has already been updated.
+
+## Reading the reviewed code
+
+During a review, `lucy` can search the captured source with `code_search`, consult a compatible prepared index with
+`code_query`, or locate relevant original file ranges with `code_locate`. These reads stay on the captured revision
+while you continue editing your working folder. Every successful call returns retained evidence with a URI and
+SHA-256 digest. The URI and digest identify the retained bytes behind the tool result.
+
+A review that captures a tree without a semantic commit can still search and locate its code; index queries return
+`index_unavailable`. A missing or incompatible prepared index also stays unavailable. Locate can continue with
+lexical results and reports incomplete coverage when the index cannot serve it. Review CODE calls never download a
+missing tool or rebuild an index.
+
+These tools require the review's active host binding. Calls after it closes return `review-code-binding-missing`.
+Source acquisition failures return `review-code-source-unavailable`, and a call that reaches its 60-second deadline
+returns `review-code-timeout`. An unavailable read does not establish that the code contains no matches.
 
 ## Prepare local review checks
 
@@ -39,7 +55,8 @@ supervision are reported as unavailable, not as successful checks.
 
 ## The card
 
-Every review ends with one `review-result` card:
+Governed and committed PR reviews end with one `review-result` card. Independent engagements return a durable
+report envelope containing a card without a verdict, as described below.
 
 | Field | What it holds |
 | --- | --- |
@@ -104,6 +121,9 @@ The profile is what is being reviewed. Maestro picks it.
 | `code` | The work a teammate returned: a diff or a result tree | By risk |
 | `pr` | A finished, committed diff outside the governed flow | By risk |
 | `rereview` | The round after a `FIX_FIRST`: only the open findings and what changed since | The first round's |
+| `audit` | An independent review of captured repository files | Deep |
+| `diligence` | An independent review framed around diligence concerns | Deep |
+| `artifact` | An independent review of captured artifact files | Standard |
 
 A `rereview` says so when the work came back unchanged.
 
@@ -146,6 +166,55 @@ It creates no review receipt, Board note or forge post. The card is neither gove
 merge. A completed retry of the same candidate reuses host facts and the completed reply. If the previous run is
 incomplete or crashed, the retry fails as `pr-retry-incomplete` before another provider run; it is not an automatic
 recovery. Do not change inputs merely to bypass that hold.
+
+## Independent engagement reports
+
+Ask Maestro for an audit, diligence or artifact report over committed files. For example:
+
+```json
+{
+  "kind": "engagement",
+  "requestID": "audit-42",
+  "profile": "audit",
+  "brief": "Inspect the captured src files for correctness and control gaps.",
+  "timeBoxMinutes": 5,
+  "revision": "HEAD",
+  "paths": ["src"]
+}
+```
+
+`timeBoxMinutes` is an integer from 1 to 120. Omitted `revision` means `HEAD`; omitted `paths` means the captured
+repository. Paths are literal repository-relative files or directory prefixes. Symlinks and submodules are listed
+as not examined. The request captures one commit and an exact regular-file manifest. Later edits do not change
+its CODE reads or report citations, and an omitted CODE path or a broad search glob cannot widen that manifest.
+
+These requests require no validation ID or governed work card. They return one JSON envelope with the original
+budget, captured source, terminal status and `reportID`. A completed envelope also includes the validated card,
+exact source quotations, citation digests and severity classifications. It has no `APPROVE`, `FIX_FIRST` or `REJECT`
+verdict and creates no governed review receipt. A completed report may still have a `blocked` card when required
+checks or evidence were unavailable. Read its checks and `notExamined` entries before relying on a conclusion.
+
+Audit classifications are material weakness (P0), significant deficiency (P1), deficiency (P2) and observation
+(P3). Diligence classifications are deal-breaker (P0), price or structure item (P1), condition or remediation (P2)
+and observation (P3). Artifact reports retain the P0–P3 labels. These labels classify supported findings; they do
+not establish a legal obligation or supply missing evidence.
+
+Keep the same `requestID` and exact input when retrying under the same parent Session. A terminal retry returns
+the same saved bytes, including after reopening the application or moving HEAD. Changing a supplied field,
+including an optional default or path order, returns `engagement-request-conflict`. Use a new request ID for a
+deliberately new engagement. Another parent Session has its own request namespace.
+
+One host deadline covers capture, analysis, provider turns, tools and final publication. Expiry returns `expired`
+with the remaining work marked `time-box`. Cancelling the owner stops its review Sessions, waits for cleanup and
+persists `cancelled`; cancelling a concurrent waiter leaves the owner running. A retry replays either terminal
+outcome. If the process ended before publishing one, the first retry fails closed as `engagement-interrupted`
+(or records expiry if the original deadline passed); it does not resume a provider with a fresh budget.
+
+This first engagement route exposes captured CODE and scoped analyzer pages. Native file reads, Atlas context,
+history and executable verifier probes are unavailable here. Reports explicitly retain unexamined history and
+probes. Audit variant search and fix review are not built in this slice; compliance requests and `fixReview`
+requests refuse before source capture. Artifact behavioral evaluation remains unexamined without owner permission.
+Those limits remain open even when an individual report completes successfully.
 
 ## Tiers
 
@@ -268,7 +337,7 @@ grant permission, and invented candidate IDs are refused. Probes run against a h
 commit or tree, not the current working directory. If entry adds an analyzer, paging and the final checks use the
 latest retained analysis rather than the earlier run.
 
-Raw probe and history output stays in the review's analysis cache after its Sessions and scratch copies close.
+Raw CODE, probe and history output stays in the review's analysis cache after its Sessions and scratch copies close.
 That cache is OS-managed temporary storage, not a permanent evidence archive.
 
 A card states its limits; it never claims "no problems" for anything it did not look at.

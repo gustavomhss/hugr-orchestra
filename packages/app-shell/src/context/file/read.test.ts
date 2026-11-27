@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { createPathHelpers } from "./path"
 import { readFileContent } from "./read"
 
 // The V2 server serves raw bytes; images keep them as base64 with a MIME type so the media viewers can preview them.
@@ -27,4 +28,32 @@ describe("readFileContent on V2", () => {
     })
     expect(await readFileContent(v2(new Uint8Array([1, 0, 2])), "data.bin")).toEqual({ type: "binary", content: "" })
   })
+})
+
+test("tab selection reads the exact literal filename rather than its similar neighbour", async () => {
+  const path = createPathHelpers(() => "/repo")
+  const files = new Map([
+    ["notes#review.md", "hash"],
+    ["notes?review.md", "query"],
+    ["a%20b.txt", "percent"],
+    ["notes", "wrong"],
+    ["a b.txt", "wrong"],
+  ])
+  const reads: string[] = []
+  const sdk = {
+    directory: "/repo",
+    api: {
+      file: {
+        read: async (input: { path: string }) => {
+          reads.push(input.path)
+          return new TextEncoder().encode(files.get(input.path))
+        },
+      },
+    },
+  } as unknown as Parameters<typeof readFileContent>[0]
+  for (const [name, expected] of [...files].slice(0, 3)) {
+    const selected = path.pathFromTab(path.tab(name))!
+    expect(await readFileContent(sdk, path.normalize(selected))).toEqual({ type: "text", content: expected })
+  }
+  expect(reads).toEqual(["notes#review.md", "notes?review.md", "a%20b.txt"])
 })

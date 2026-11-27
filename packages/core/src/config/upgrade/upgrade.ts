@@ -182,7 +182,7 @@ function migrateMcp(info: ConfigUpgradeMCP.Info) {
       cwd: info.cwd,
       environment: info.environment,
       disabled,
-      timeout: info.timeout === undefined ? undefined : { request: info.timeout },
+      timeout: typeof info.timeout === "number" ? { request: info.timeout } : info.timeout,
     }
   return {
     type: info.type,
@@ -196,7 +196,7 @@ function migrateMcp(info: ConfigUpgradeMCP.Info) {
       redirect_uri: info.oauth.redirectUri,
     },
     disabled,
-    timeout: info.timeout === undefined ? undefined : { request: info.timeout },
+    timeout: typeof info.timeout === "number" ? { request: info.timeout } : info.timeout,
   }
 }
 
