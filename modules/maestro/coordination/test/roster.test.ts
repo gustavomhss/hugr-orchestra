@@ -203,9 +203,9 @@ describe("Maestro roster", () => {
 
   test("staffing grants proposals and movement requests to non-review seats and reserves moves for Maestro", () => {
     for (const seat of Object.values(Seats.all)) {
-      const grant = seat.profile === "review" ? undefined : "allow"
-      expect(nativeProfiles[seat.id]?.board_issue).toBe(grant)
-      expect(nativeProfiles[seat.id]?.board_request_move).toBe(grant)
+      const canPropose = seat.profile !== "review"
+      expect(nativeProfiles[seat.id]?.board_issue === "allow").toBe(canPropose)
+      expect(nativeProfiles[seat.id]?.board_request_move === "allow").toBe(canPropose)
       expect(nativeProfiles[seat.id]?.board_move).not.toBe("allow")
     }
   })
