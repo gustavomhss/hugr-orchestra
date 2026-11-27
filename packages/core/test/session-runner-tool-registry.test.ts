@@ -1,6 +1,8 @@
 import { describe, expect } from "bun:test"
 import { Tool } from "@orchestra/core/tool/tool"
 import { AgentV2 } from "@orchestra/core/agent"
+import { Database } from "@orchestra/core/database/database"
+import { Location } from "@orchestra/core/location"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { ApplicationTools } from "@orchestra/core/tool/application-tools"
@@ -21,6 +23,7 @@ import { ProcessProvenance } from "@orchestra/core/process-provenance"
 import { executeTool, settleTool, toolDefinitions } from "./lib/tool"
 import { Cause, Deferred, Effect, Exit, Fiber, Layer, Option, Schema, SchemaGetter, SchemaIssue, Scope, Stream } from "effect"
 import { testEffect } from "./lib/effect"
+import { CapabilityPolicyFixture } from "./fixture/capability-policy"
 import { Harness, sessionID as runnerSessionID } from "./session-runner-harness"
 
 const bounds: ToolOutputStore.BoundInput[] = []
@@ -70,9 +73,17 @@ const make = (permission?: string) => {
   return permission ? Tool.withPermission(tool, permission) : tool
 }
 
+const withNativeRegistry = testEffect(
+  AppNodeBuilder.build(LayerNode.group([ToolRegistry.nativeNode, Database.node]), [
+    [ToolOutputStore.node, outputStore],
+    [Location.node, Layer.succeed(Location.Service, CapabilityPolicyFixture.placement)],
+  ]),
+)
+
 describe("ToolRegistry", () => {
-  it.effect("captures invocation provenance for subprocesses only inside the executing tool", () =>
+  withNativeRegistry.effect("captures persisted session provenance only inside the executing tool", () =>
     Effect.gen(function* () {
+      yield* Harness.setup
       const registry = yield* ToolRegistry.Service
       yield* registry.register({
         observe_provenance: Tool.make({
@@ -87,13 +98,18 @@ describe("ToolRegistry", () => {
         }),
       })
       expect(yield* ProcessProvenance.Current).toBeUndefined()
+      const unknown = yield* settleTool(registry, call("observe_provenance", "call-provenance-unknown"))
+      expect(unknown.output?.structured).toMatchObject({ owner: "", sessionID })
       const settlement = yield* settleTool(registry, {
-        ...identity, sessionID,
-        call: { type: "tool-call", name: "observe_provenance", id: "call-provenance", input: {} },
+        ...call("observe_provenance", "call-provenance"),
+        sessionID: runnerSessionID,
       })
       expect(settlement.output?.structured).toEqual({
-        owner: "",
-        sessionID, agentID: identity.agent, tool: "observe_provenance", callID: "call-provenance",
+        owner: "test",
+        sessionID: runnerSessionID,
+        agentID: identity.agent,
+        tool: "observe_provenance",
+        callID: "call-provenance",
       })
       expect(yield* ProcessProvenance.Current).toBeUndefined()
     }),
