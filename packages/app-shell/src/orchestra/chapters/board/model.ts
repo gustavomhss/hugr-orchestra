@@ -2,6 +2,7 @@ import type {
   ServerBoardActivityOutput,
   ServerBoardDecisionsOutput,
   ServerBoardGetOutput,
+  ServerBoardExecutionOutput,
   ServerBoardIssueOutput,
   ServerBoardProofOutput,
   ServerBoardSpendOutput,
@@ -10,6 +11,7 @@ import type {
 export type Snapshot = ServerBoardGetOutput
 export type Issue = Snapshot["issues"][number]
 export type Page = ServerBoardIssueOutput
+export type ExecutionReport = ServerBoardExecutionOutput
 export type Trail = Page["trail"]
 export type Check = Extract<Trail, { state: "ok" }>["pr"]["checks"][number]
 export type Column = (typeof columns)[number]
@@ -106,6 +108,30 @@ export function across(lanes: Record<Column, Issue[]>, current: string | undefin
   if (next === undefined) return current
   const lane = lanes[columns[next]]
   return lane[Math.min(row, lane.length - 1)].ref
+}
+
+// A stage that claims work, with nothing behind it. Signed out is not a claim; the trail already says it could not look.
+export function unproven(
+  issue: Pick<Issue, "stage" | "branch" | "prNumber">,
+  trail: Trail,
+  proof?: Pick<Proof, "pr" | "verifiedAt" | "attempts">,
+) {
+  if (issue.stage !== "building" && issue.stage !== "review") return
+  if (trail.state === "signed_out" || trail.state === "error") return
+  const hasBranch = Boolean(issue.branch) || trail.state === "ok"
+  const hasPr = Boolean(issue.prNumber) || trail.state === "ok" || Boolean(proof?.pr)
+  if (issue.stage === "building" && (hasBranch || hasPr)) return
+  if (issue.stage === "review" && hasPr) return
+  const missing = [
+    hasBranch ? undefined : ("branch" as const),
+    hasPr ? undefined : ("pr" as const),
+    proof ? ("verified" as const) : undefined,
+  ].filter((item) => item !== undefined)
+  return {
+    stage: issue.stage,
+    missing,
+    attempts: proof && proof.attempts.n > 0 ? proof.attempts : undefined,
+  }
 }
 
 // Whole days an issue has sat in its stage, counted from 1.

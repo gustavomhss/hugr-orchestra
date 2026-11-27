@@ -9,6 +9,7 @@ export type View = "board" | "timeline" | "list"
 export type Segment = "all" | "running" | "shipped" | "archived"
 export type Filter = "all" | "needs" | "building" | "review" | `seat:${string}`
 export type Grouping = "epic" | "stage"
+export type SortKey = "flow" | "title" | "age" | "size"
 export type Flow = (typeof flow)[number]
 
 // The list and the epic page read top down from what is closest to done; shipped work folds at the end.
@@ -46,6 +47,45 @@ export function filtered(snapshot: Pick<Snapshot, "issues" | "questions">, which
     if (which === "building" || which === "review") return issue.stage === which
     if (which.startsWith("seat:")) return issue.seat === which.slice(5)
     return true
+  })
+}
+
+// Blank search keeps the list. A query matches the ref, title, seat, branch, pull request, type or epic title.
+export function queried(issues: readonly Issue[], query: string, epicTitle: (epic: number) => string | undefined) {
+  const needle = query.trim().toLowerCase()
+  if (!needle) return issues
+  return issues.filter((issue) =>
+    haystack(issue, issue.epic === null ? undefined : epicTitle(issue.epic)).includes(needle),
+  )
+}
+
+function haystack(issue: Issue, epic: string | undefined) {
+  return [issue.ref, issue.title, issue.seat, issue.branch, issue.prNumber === null ? "" : `#${issue.prNumber}`, issue.type, epic]
+    .filter((part) => part)
+    .join(" ")
+    .toLowerCase()
+}
+
+const sizeRank = { s: 1, m: 2, l: 3 } as const
+
+// Column sort reorders within a group. Flow is the reading order the caller already applied.
+export function arrange(issues: readonly Issue[], key: SortKey, dir: "asc" | "desc") {
+  if (key === "flow") return dir === "asc" ? issues : [...issues].toReversed()
+  const sign = dir === "asc" ? 1 : -1
+  return issues.toSorted((a, b) => sign * compare(a, b, key) || a.number - b.number)
+}
+
+function compare(a: Issue, b: Issue, key: Exclude<SortKey, "flow">) {
+  if (key === "title") return a.title.localeCompare(b.title)
+  if (key === "age") return b.stageEnteredAt - a.stageEnteredAt
+  return (a.estimate ? sizeRank[a.estimate] : 0) - (b.estimate ? sizeRank[b.estimate] : 0)
+}
+
+// What an epic still has open, in the order you would read the board. Shipped is the fold, not a remainder.
+export function openStages(issues: readonly Issue[]) {
+  return (["review", "queue", "building", "ready", "backlog"] as const).flatMap((stage) => {
+    const count = issues.filter((issue) => issue.stage === stage).length
+    return count ? [{ stage, count }] : []
   })
 }
 
@@ -191,6 +231,17 @@ export function scopeLog(points: Snapshot["scope"]) {
     if (last && Math.floor(last.at / day) === Math.floor(point.at / day) && last.reason === point.reason)
       return [...log.slice(0, -1), { ...last, delta: last.delta + delta }]
     return [...log, { at: point.at, reason: point.reason, delta }]
+  }, [])
+}
+
+// One line per day. A day of eight "+1" notes is one change, with the reasons kept.
+export function scopeDays(changes: ReturnType<typeof scopeLog>) {
+  return changes.reduce<{ at: number; delta: number; reasons: string[] }[]>((days, change) => {
+    const last = days.at(-1)
+    const reasons = change.reason ? [change.reason] : []
+    if (last && Math.floor(last.at / day) === Math.floor(change.at / day))
+      return [...days.slice(0, -1), { ...last, delta: last.delta + change.delta, reasons: [...last.reasons, ...reasons] }]
+    return [...days, { at: change.at, delta: change.delta, reasons }]
   }, [])
 }
 

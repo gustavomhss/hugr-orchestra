@@ -19,6 +19,7 @@ export const actorKey = {
   maestro: "orchestra.board.actor.maestro",
   owner: "orchestra.board.actor.owner",
   github: "orchestra.board.actor.github",
+  seat: "orchestra.board.actor.seat",
 } as const
 export const actionKey = {
   "project.upsert": "orchestra.board.action.projectUpsert",
@@ -26,6 +27,7 @@ export const actionKey = {
   "issue.create": "orchestra.board.action.issueCreate",
   "issue.update": "orchestra.board.action.issueUpdate",
   "issue.move": "orchestra.board.action.issueMove",
+  "issue.move.request": "orchestra.board.action.issueMoveRequest",
   "steps.set": "orchestra.board.action.stepsSet",
   "question.ask": "orchestra.board.action.questionAsk",
   "question.withdraw": "orchestra.board.action.questionWithdraw",
@@ -65,6 +67,7 @@ export const decidedKey = {
   maestro: "orchestra.decisions.by.maestro",
   owner: "orchestra.decisions.by.owner",
   github: "orchestra.decisions.by.github",
+  seat: "orchestra.board.actor.seat",
 } as const
 export const checkKey = {
   pass: "orchestra.proof.check.pass",
