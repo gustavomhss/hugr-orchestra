@@ -89,7 +89,7 @@ const registryLayer = Layer.effect(
     const native = yield* NativeBinding
     const capturedProfile = yield* ToolSafety.RuntimeProfile
     const profileLoader = yield* ToolSafety.RuntimeProfileLoader
-    const sessions = Option.getOrUndefined(yield* Effect.serviceOption(SessionStore.Service))
+    const sessions = yield* SessionStore.Service
     type Registration = { readonly identity: object; readonly tool: AnyTool }
     const local = new Map<string, Array<{ readonly token: object; readonly registration: Registration }>>()
     const fatalToolCause = (cause: Cause.Cause<ToolFailure>) => Effect.failCause(Cause.fromReasons<never>(
@@ -142,12 +142,16 @@ const registryLayer = Layer.effect(
               callID: input.call.id,
             }),
             // Read through the captured store at spawn time; metadata failures leave the owner empty.
-            Effect.provideService(ProcessProvenance.Owner, sessions
-              ? sessions.get(input.sessionID).pipe(
-                  Effect.map((session) => session?.title ?? ""),
-                  Effect.catchCauseIf((cause) => !Cause.hasInterrupts(cause), () => Effect.succeed("")),
-                )
-              : Effect.succeed("")),
+            Effect.provideService(
+              ProcessProvenance.Owner,
+              sessions.get(input.sessionID).pipe(
+                Effect.map((session) => session?.title ?? ""),
+                Effect.catchCauseIf(
+                  (cause) => !Cause.hasInterrupts(cause),
+                  () => Effect.succeed(""),
+                ),
+              ),
+            ),
             Effect.exit,
           )
           if (Exit.isFailure(attempted)) {
@@ -347,15 +351,15 @@ export const node = makeLocationNode({
 /** Native host composition replacements: captures real Location/Event services while constructing the registry. */
 export const nativeNode = makeLocationNode({
   service: Service, layer: nativeLayer,
-  deps: [ApplicationTools.node, ToolOutputStore.node, ToolSafety.node, Location.node, EventV2.node],
+  deps: [ApplicationTools.node, ToolOutputStore.node, ToolSafety.node, Location.node, EventV2.node, SessionStore.node],
 })
 export const nativeToolsNode = makeLocationNode({
   service: Tools.Service, layer: nativeLayer,
-  deps: [ApplicationTools.node, ToolOutputStore.node, ToolSafety.node, Location.node, EventV2.node],
+  deps: [ApplicationTools.node, ToolOutputStore.node, ToolSafety.node, Location.node, EventV2.node, SessionStore.node],
 })
 
 export const toolsNode = makeLocationNode({
   service: Tools.Service,
   layer,
-  deps: [ApplicationTools.node, ToolOutputStore.node, ToolSafety.node],
+  deps: [ApplicationTools.node, ToolOutputStore.node, ToolSafety.node, SessionStore.node],
 })

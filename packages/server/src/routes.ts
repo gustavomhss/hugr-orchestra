@@ -138,11 +138,7 @@ function makeRoutes<AuthError, AuthServices>(
     Layer.provide(auth),
     Layer.provide(options.operator ? Layer.succeed(ServerOperator.Service, options.operator) : ServerOperator.layer),
     Layer.provide(ServerContentTicket.layer),
-    Layer.provide(
-      options.verifier
-        ? Layer.succeed(ServerCapabilityVerification.Service, options.verifier)
-        : ServerCapabilityVerification.layer,
-    ),
+    Layer.provide(options.verifier ? Layer.succeed(ServerCapabilityVerification.Service, options.verifier) : ServerCapabilityVerification.layer),
     Layer.provide(ActivityWorktreeRegistry.layer()),
     Layer.provide(serviceLayer),
     // The desktop renderer (`oc://renderer`) calls a desktop-owned server cross-origin, as the earlier runtime did.
