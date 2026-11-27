@@ -18,7 +18,7 @@ import { ToolSafetyCommands } from "./tool-safety-commands"
 
 // Installed Relay hooks on the tool path (relay-exec-spec H2, port plan §5). ToolSafety.run calls `before` once native
 // safety passed and `after` once the effect settled successfully, both over the snapshot it loaded at the call's start.
-// A host whose before and after are separate callbacks (Claude Code) uses ToolSafety.beforeHooked and `settle`.
+// A host whose before and after are separate callbacks (Claude Code) settles the hooks through its authorization.
 // Hooks only restrict: a Block, a Repair, a rejected Approve and a failed Verify deny; Remind, Record and Allow grant
 // nothing. Every matched action is first a durable `relay.hook.decided` event, then a receipt in the install's ledger,
 // but no outcome waits on either. Session events (`session-start`, `prompt`, `session-idle`) take the same path.
@@ -120,12 +120,16 @@ export const settle = (hooked: Hooked, succeeded: boolean, response?: unknown) =
     const result = response === undefined
       ? undefined
       : yield* Effect.try({
-          try: () => JSON.stringify(response),
+          try: () => {
+            const json = JSON.stringify(response)
+            if (json === undefined || Buffer.byteLength(json, "utf8") > 16_384) return
+            return { json, data: JSON.parse(json) as unknown }
+          },
           catch: () => new ToolSafety.Denied({ reason: "output-inspection-acquisition" }),
         }).pipe(
           Effect.flatMap((value) =>
-            value !== undefined && Buffer.byteLength(value, "utf8") <= 16_384
-              ? ToolSafety.inspect(response).pipe(Effect.andThen(ToolSafety.inspect(value)), Effect.as(value))
+            value
+              ? ToolSafety.inspect(value.data, true).pipe(Effect.andThen(ToolSafety.inspect(value.json)), Effect.as(value.json))
               : Effect.succeed(undefined),
           ),
           Effect.orElseSucceed(() => undefined),

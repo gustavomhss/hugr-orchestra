@@ -270,7 +270,10 @@ describe("SessionRunner execution host ports", () => {
         }).pipe(Effect.orDie)
       yield* send(sessions, "go")
 
-      expect(approvals).toMatchObject([{ sessionID, action: "relay_hook", metadata: { callID: "w1", tool: "write" } }])
+      expect(approvals).toMatchObject([{
+        sessionID, action: "relay_hook", resources: ["inside/a.ts"],
+        metadata: { action: "relay_hook", callID: "w1", tool: "write" },
+      }])
       expect(seen.succeeded).toEqual(["Hook 'Style': Mind the style.", "Hook 'Changelog': Update the changelog."])
       // A call that failed runs no after hook; the before step's notes still reach the model.
       expect(seen.failed).toEqual(["Hook 'Style': Mind the style."])

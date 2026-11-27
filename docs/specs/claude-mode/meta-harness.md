@@ -100,8 +100,9 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
    - `ToolSearch`, which only loads deferred tool schemas and has no Orchestra counterpart, is left off the record
      with its result (`ClaudeCodeRecord.UNRECORDED`), so the session shows no row Orchestra's own engine would not.
 
-   Only Orchestra's record changes, after Claude Code ran the call. The prompt, tools, inputs and results Claude Code
-   sends to and receives from Claude are untouched, and the permission gate still reads Claude Code's own names.
+   The record uses Orchestra's tool names and widgets. Claude Code receives its own built-in results with the hook
+   notes alongside them. The permission gate reads Claude Code's tool names and applies any required input constraints.
+
 ## Not in scope (known limits)
 
 - Claude Code loads the project's settings only (`settingSources: ["project"]`): the owner's own `~/.claude` user

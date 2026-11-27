@@ -17,6 +17,7 @@ import { Config } from "../../config"
 import { Database } from "../../database/database"
 import { EventV2 } from "../../event"
 import { Location } from "../../location"
+import { LocationMutation } from "../../location-mutation"
 import { ModelV2 } from "../../model"
 import { PermissionV2 } from "../../permission"
 import { Project } from "../../project"
@@ -94,6 +95,7 @@ const layer = Layer.effect(
     const subagentModels = yield* SessionSubagentModels.Service
     const store = yield* SessionStore.Service
     const location = yield* Location.Service
+    const mutations = yield* LocationMutation.Service
     const systemContext = yield* SystemContextRegistry.Service
     const skillGuidance = yield* SkillGuidance.Service
     const referenceGuidance = yield* ReferenceGuidance.Service
@@ -165,7 +167,6 @@ const layer = Layer.effect(
         ...(agent.info?.permissions.map((rule) => ({ ...rule })) ?? []),
         ...(yield* store.permissions(session.id)),
       ]
-      // An agent whose engine names an execution host runs this provider turn through it (AGENTS "V2 Session Core").
       const engine = yield* engineOf(session)
       const host = engine ? hosts.get(engine) : undefined
       const systemContextForTurn = loadSystemContext(session.id, agent, host?.id === "claude-code")
@@ -336,7 +337,7 @@ const layer = Layer.effect(
             .pipe(Effect.catchTag("Session.NotFoundError", (error) => Effect.die(error)))
           if (!input.safety) return {}
           const call = input.safety
-          const hooks = hostedHooks(permissions, session.id, agent.id)
+          const hooks = hostedHooks(permissions, mutations, session.id, agent.id)
           const authorization = yield* tools.hosted(
             {
               tool: call.tool,
@@ -352,7 +353,6 @@ const layer = Layer.effect(
           ).pipe(Effect.provideService(ToolSafety.HostedHooks, hooks))
           return hooks.after ? { ...authorization, after: hooks.after } : authorization
         })
-      // The Session's open todos, rendered for an engine that lost its context to its own compaction.
       const memory: ExecutionHost.Turn["memory"] = {
         recall: db
           .select()
@@ -759,7 +759,7 @@ export const node = makeLocationNode({
     AppProcess.node,
     SkillV2.node,
     QuestionV2.node,
-    ToolSafety.node,
+    LocationMutation.node,
   ],
 })
 

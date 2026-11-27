@@ -615,9 +615,9 @@ export const make = Effect.gen(function* () {
 })
 
 /** Stateless boundary usable by native producers before retention, including plugin producers. */
-export const inspect = (output: unknown) =>
+export const inspect = (output: unknown, includeKeys = false) =>
   Effect.try({
-    try: () => inspectValue(output),
+    try: () => inspectValue(output, includeKeys),
     catch: () => new Denied({ reason: "output-inspection-acquisition" }),
   }).pipe(Effect.flatMap((reason) => (reason ? Effect.fail(new Denied({ reason })) : Effect.void)))
 
@@ -682,7 +682,7 @@ const physical = Effect.fnUntraced(function* (fs: FSUtil.Interface, target: stri
 })
 
 /** Recognized credential shapes only. Encodings, binary attachments and unknown providers are not confinement. */
-function inspectValue(value: unknown, state = { seen: new Set<object>(), nodes: 0 }, depth = 0): string | undefined {
+function inspectValue(value: unknown, includeKeys: boolean, state = { seen: new Set<object>(), nodes: 0 }, depth = 0): string | undefined {
   state.nodes++
   if (depth > 64 || state.nodes > 10_000) return "output-inspection-budget"
   if (typeof value === "string") {
@@ -691,11 +691,11 @@ function inspectValue(value: unknown, state = { seen: new Set<object>(), nodes: 
   if (!value || typeof value !== "object" || state.seen.has(value)) return
   state.seen.add(value)
   if (value instanceof Error) {
-    const reason = inspectValue(value.message, state, depth + 1) ?? inspectValue(value.cause, state, depth + 1)
+    const reason = inspectValue(value.message, includeKeys, state, depth + 1) ?? inspectValue(value.cause, includeKeys, state, depth + 1)
     if (reason) return reason
   }
-  for (const child of Object.values(value)) {
-    const reason = inspectValue(child, state, depth + 1)
+  for (const [key, child] of Object.entries(value)) {
+    const reason = (includeKeys ? OutputInspector.reason(key) : undefined) ?? inspectValue(child, includeKeys, state, depth + 1)
     if (reason) return reason
   }
 }

@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import type { HookInput, Options, SDKMessage, SDKUserMessage, query } from "@anthropic-ai/claude-agent-sdk"
 import { AgentV2 } from "@orchestra/core/agent"
 import { SessionSchema } from "@orchestra/core/session"
+import { SessionMessage } from "@orchestra/core/session/message"
 import type { ExecutionHost } from "@orchestra/core/session/runner"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { Effect, Layer, Stream } from "effect"
@@ -20,7 +21,7 @@ test("settles authorized built-ins exactly once with Claude Code's real callback
     model: undefined,
     system: [],
     context: [],
-    history: [{ id: "prompt", type: "user", text: "Go", files: [], agents: [], time: { created: 0 } }] as ExecutionHost.Turn["history"],
+    history: [{ id: SessionMessage.ID.make("msg_prompt"), type: "user", text: "Go", files: [], agents: [], time: { created: 0 } }],
     tools: [],
     execute: () => Effect.die("unused"),
     authorize: (input) => {
