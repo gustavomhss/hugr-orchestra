@@ -75,7 +75,7 @@ const make = (permission?: string) => {
 
 const withNativeRegistry = testEffect(
   AppNodeBuilder.build(LayerNode.group([ToolRegistry.nativeNode, Database.node]), [
-    [ToolOutputStore.node, outputStore],
+    [ToolOutputStore.node, ToolOutputStore.nodeWithoutConfig],
     [Location.node, Layer.succeed(Location.Service, CapabilityPolicyFixture.placement)],
   ]),
 )
