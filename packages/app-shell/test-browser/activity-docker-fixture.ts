@@ -103,6 +103,7 @@ export function mount(initialLocale: Locale = "en") {
   const host = document.body.appendChild(document.createElement("div"))
   const calls: ReturnType<typeof intercepted>[] = []
   const unexpected: string[] = []
+  let treesRead = false
   const transport = Object.assign(
     (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
       const request = new Request(input, init)
@@ -115,7 +116,8 @@ export function mount(initialLocale: Locale = "en") {
         calls.push(call)
         return call.response
       }
-      if (pathname === "/api/activity" && request.method === "GET") {
+      if (pathname === "/api/activity" && request.method === "GET" && !treesRead) {
+        treesRead = true
         return Promise.resolve(
           Response.json({
             instanceID: "trees",

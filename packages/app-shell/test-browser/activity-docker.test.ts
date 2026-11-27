@@ -92,7 +92,7 @@ test("A01–A13/A83–A88/A152–A160/A216/A218/A345–A348 only manual POST rea
       ),
     ).toHaveLength(0)
     expect(text(panel)).not.toMatch(
-      /\b(pressure|residence|frequency|reclaimable|remainder|bytes\/s|plan|model|manter|quarentena|mover)\b/i,
+      /\b(pressure|residence|frequency|reclaimable|remainder|bytes\/s|df|healthy|free|important|plan|model|manter|quarentena|mover)\b/i,
     )
 
     expect(app.calls).toHaveLength(1)
