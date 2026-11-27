@@ -64,6 +64,11 @@ impl Child {
         self.pid
     }
 
+    /// Opaque host-local tree identity, stable after exit and stop; not a PID or control token.
+    pub fn tree_id(&self) -> String {
+        self.inner.life.tree_id()
+    }
+
     /// Claims the single output consumer as chunks (contract §4). A second claim, or a claim after the
     /// consumer was dropped, fails with `InvalidArgument`. Dropping the `Output` detaches for good.
     pub fn output(&self) -> Result<Output, Error> {
@@ -103,6 +108,11 @@ impl Child {
     /// The live processes `stop()` would end right now; `[]` once the tree is gone (contract §5).
     pub async fn processes(&self) -> Result<Vec<ProcessInfo>, Error> {
         self.inner.life.processes().await
+    }
+
+    /// A best-effort membership sample. A missed observation deadline leaves the supervisor running.
+    pub async fn observe_processes(&self) -> Result<Vec<ProcessInfo>, Error> {
+        self.inner.life.observe_processes().await
     }
 
     /// Wires a started tree to its output and input; on failure the tree is killed before the error returns. With

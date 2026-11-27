@@ -8,7 +8,8 @@
 //!
 //! Deadlines: every request has one, counted from when it is written or queued (`request` never blocks).
 //! A blocking `call` times itself; every other request is in `State::dues`, watched by one task. A missed
-//! deadline means the supervisor is stuck: the generation dies, so no waiter can wait forever.
+//! deadline on a control request ends the generation. An observation timeout settles only its waiter,
+//! holding one slot for validation of the late reply.
 
 mod route;
 
@@ -42,6 +43,7 @@ pub(super) enum Want {
     Stop,
     Resize,
     List,
+    ObserveList,
     Release,
 }
 
@@ -52,7 +54,7 @@ impl Want {
             Want::Go => "Go",
             Want::Stop => "Stop",
             Want::Resize => "Resize",
-            Want::List => "List",
+            Want::List | Want::ObserveList => "List",
             Want::Release => "Release",
         }
     }
@@ -288,6 +290,9 @@ impl Gen {
             if st.dead.is_some() {
                 drop(st);
                 return Err(self.gone());
+            }
+            if want == Want::ObserveList && st.pending.values().any(|pending| pending.want == Want::ObserveList) {
+                return Err(Error::observation_pending());
             }
             let n = st.pending.len();
             if class == Class::Normal && n >= ADMIT_NORMAL {

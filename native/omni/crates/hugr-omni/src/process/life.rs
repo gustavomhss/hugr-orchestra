@@ -38,6 +38,10 @@ enum Cause {
 }
 
 impl Life {
+    pub(super) fn tree_id(&self) -> String {
+        self.tree.tree_id()
+    }
+
     pub(super) fn new(tree: Tree) -> Life {
         Life {
             tree,
@@ -96,15 +100,21 @@ impl Life {
 
     /// The live members `stop` would end now (the supervisor sets `parent_pid` only when the parent is listed).
     pub(super) async fn processes(&self) -> Result<Vec<ProcessInfo>, Error> {
-        let list = self.tree.processes().await?;
-        Ok(list
-            .into_iter()
+        Ok(Self::process_info(self.tree.processes().await?))
+    }
+
+    pub(super) async fn observe_processes(&self) -> Result<Vec<ProcessInfo>, Error> {
+        Ok(Self::process_info(self.tree.observe_processes().await?))
+    }
+
+    fn process_info(list: Vec<omni_proto::ProcEntry>) -> Vec<ProcessInfo> {
+        list.into_iter()
             .map(|p| ProcessInfo {
                 pid: p.pid,
                 parent_pid: p.ppid,
                 name: p.name,
             })
-            .collect())
+            .collect()
     }
 
     /// Contract §7: the cause is committed when the library acts, before the termination is sent.

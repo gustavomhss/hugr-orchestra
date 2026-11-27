@@ -81,6 +81,14 @@ impl Error {
         ))
     }
 
+    pub(crate) fn observation_pending() -> Error {
+        io_error("a process observation is already waiting for the hugr-omni supervisor".into())
+    }
+
+    pub(crate) fn observation_timed_out(budget: std::time::Duration) -> Error {
+        io_error(format!("process observation timed out after {} ms", budget.as_millis()))
+    }
+
     pub(crate) fn request_too_big(err: &dyn Display) -> Error {
         io_error(format!(
             "cannot send this request to the hugr-omni supervisor: {err}. Pass a smaller environment or fewer \

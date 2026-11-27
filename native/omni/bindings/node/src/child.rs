@@ -77,6 +77,12 @@ impl NativeChild {
         self.kid.pid()
     }
 
+    /// Opaque host-local tree identity, stable after exit and stop; not a PID or control token.
+    #[napi(getter)]
+    pub fn tree_id(&self) -> String {
+        self.kid.tree_id()
+    }
+
     /// Whether it runs inside a terminal (`PtyChild`).
     #[napi(getter)]
     pub fn is_pty(&self) -> bool {
@@ -164,6 +170,12 @@ impl NativeChild {
     pub fn processes<'env>(&self, env: &'env Env) -> napi::Result<Object<'env>> {
         let kid = Arc::clone(&self.kid);
         exec::promise(env, async move { kid.processes().await }, convert::processes)
+    }
+
+    #[napi(js_name = "observeProcesses")]
+    pub fn observe_processes<'env>(&self, env: &'env Env) -> napi::Result<Object<'env>> {
+        let kid = self.kid.clone();
+        exec::promise(env, async move { kid.observe_processes().await }, convert::processes)
     }
 }
 

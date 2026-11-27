@@ -113,6 +113,8 @@ export type PtyOption = true | { cols?: number; rows?: number };
  */
 export interface Child<D = string | Uint8Array> extends AsyncDisposable {
   readonly pid: number;
+  /** Opaque, host-local supervisor-generation/tree identity. Stable after exit; never a PID or an action token. */
+  readonly treeId: string;
   /** Single consumer: the first iteration claims it; leaving the loop detaches for good. */
   readonly output: AsyncIterable<Chunk<D>>;
   /** Line view of the same single consumer. */
@@ -127,6 +129,8 @@ export interface Child<D = string | Uint8Array> extends AsyncDisposable {
   stop(options?: { graceMs?: number }): Promise<Exit>;
   /** The live processes `stop()` would end right now; `[]` once the tree is gone. */
   processes(): Promise<ProcessInfo[]>;
+  /** A membership sample whose deadline does not terminate the supervisor. */
+  observeProcesses(): Promise<ProcessInfo[]>;
 }
 export interface PipeChild<D = string | Uint8Array> extends Child<D> {
   /** Waits for queued writes, then closes stdin; idempotent. */
