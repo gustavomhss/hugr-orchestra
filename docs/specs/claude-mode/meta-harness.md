@@ -39,11 +39,10 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
    (`ContextUpdated`, projected as `system` history messages) go out in the same hook text after the baseline, each
    once: their ids join `delivered` only when the hook actually sent them, so a turn that ends before the hook runs
    sends them on the next turn. After a compaction the baseline, every update after it and the recalled todos are sent
-   again. Orchestra remains the source for project and global `AGENTS.md` and configured instruction files, so
-   their changes continue through Context Epoch. The host enables native discovery of both `CLAUDE.md` and
-   `AGENTS.md`. An exclusion also excludes that file's imports, so the instruction source admits project-local
-   imports before the runner derives exclusions from the latest admitted snapshot. Claude Code supplies the rest of
-   its own instructions, including `.claude/AGENTS.md` that Orchestra has not admitted.
+   again. Orchestra supplies the working directory's ancestor `AGENTS.md` and `.claude/AGENTS.md` within the
+   project, along with global and configured instructions. Their changes continue through Context Epoch. An exclusion
+   also excludes that file's imports, so the source admits project-local imports before the runner derives exclusions
+   from the latest admitted snapshot. The native `claude-md` mode keeps Claude Code's own rules and imports.
 3. **Seats through Orchestra's task (2026-10-28).** Claude mode delegates exactly as normal mode does. Maestro
    dispatches a seat with `mcp__orchestra__task`; the task tool opens a durable child Session, governed and admitted
    as on Orchestra's own engine, which the app shows from the task row. The child runs on the engine

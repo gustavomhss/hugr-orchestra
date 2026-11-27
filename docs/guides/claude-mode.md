@@ -85,10 +85,9 @@ rules above require, is a defect.
 - **Workflows, reviews and the board.** Governed workflows, review requests, Atlas and the board use Orchestra's own
   tools, exactly as in normal mode.
 - **Project context.** The project's context and the active workflow's instructions reach the model with your message.
-  Orchestra supplies its global and project `AGENTS.md`, configured instruction files and their project-local
-  imports. Claude Code discovers `CLAUDE.md`, rules and additional `AGENTS.md` files. An explicit import of a file
-  already supplied by Orchestra uses the same copy, including project-local files it imports. Orchestra sends
-  context updates as instructions change and restores them after compaction.
+  Orchestra supplies global `AGENTS.md`, project `AGENTS.md` and `.claude/AGENTS.md`, configured instruction files
+  and their project-local imports. Claude Code loads `CLAUDE.md` and its rules. An explicit import of a path already
+  supplied by Orchestra uses the same copy. Orchestra sends context updates and restores them after compaction.
 
 ## What Claude Code requires
 

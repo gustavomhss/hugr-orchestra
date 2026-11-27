@@ -437,7 +437,7 @@ const layer = Layer.effect(
               model: modelRef,
               system: systemText,
               context: contextText,
-              instructionFiles: yield* InstructionContext.nativeExclusions(system.snapshot, location, fs),
+              instructionFiles: InstructionContext.agentsPaths(system.snapshot),
               history: context,
               tools: toolMaterialization?.definitions ?? [],
               ...(scoped ? { scope: scoped.scope } : {}),

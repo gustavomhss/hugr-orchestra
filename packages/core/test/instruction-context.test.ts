@@ -325,6 +325,37 @@ describe("InstructionContext", () => {
     }),
   )
 
+  it.live("rejects configured instruction paths outside an unversioned hosted Location", () =>
+    Effect.gen(function* () {
+      const tmp = yield* Effect.acquireRelease(
+        Effect.promise(() => tmpdir()),
+        (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+      )
+      const directory = path.join(tmp.path, "workspace")
+      yield* Effect.promise(async () => {
+        await fs.mkdir(directory)
+        await fs.writeFile(path.join(tmp.path, "sibling.md"), "outside")
+      })
+      const context = yield* SystemContextRegistry.Service.use((service) =>
+        service.load({ sessionID: "ses_hosted_instructions", agent: "maestro", hosted: true }),
+      ).pipe(Effect.provide(instructionLayer({
+        config: path.join(tmp.path, "global"),
+        locationServiceLayer: Layer.succeed(Location.Service, location({ directory: AbsolutePath.make(directory) }, {
+          projectDirectory: AbsolutePath.make(path.parse(directory).root),
+        })),
+        entries: [new Config.Document({
+          type: "document",
+          path: AbsolutePath.make(path.join(directory, "orchestra.json")),
+          info: new Config.Info({ instructions: ["../sibling.md"] }),
+        })],
+      })))
+      expect(yield* Effect.flip(SystemContext.initialize(context))).toMatchObject({
+        _tag: "SystemContext.InitializationBlocked",
+        keys: ["core/instructions"],
+      })
+    }),
+  )
+
   it.live("loads configured instruction files relative to the config file and keeps project files inside the project", () =>
     Effect.acquireRelease(
       Effect.promise(() => tmpdir()),
