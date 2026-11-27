@@ -3,7 +3,7 @@
 // Extension: linux-arm64 adds native distribution qualification on exactly ubuntu-24.04-arm; existing selectors keep their runners.
 export const systems = {
   linux: ["ubuntu-24.04"], windows: ["windows-latest"], both: ["ubuntu-24.04", "windows-latest"],
-  macos: ["macos-14"], "macos-intel": ["macos-15-intel"], all: ["ubuntu-24.04", "windows-latest", "macos-14"],
+  macos: ["macos-15"], "macos-intel": ["macos-15-intel"], all: ["ubuntu-24.04", "windows-latest", "macos-15"],
   "linux-arm64": ["ubuntu-24.04-arm"],
 }
 // Variables a run may set (--env), and the only values they may take. test-ci.yml checks the same. The omni flag takes

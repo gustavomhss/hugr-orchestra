@@ -26,14 +26,24 @@ const block = (brief: string, name: string) => {
 }
 
 const skills = await authoredSkills()
+// PR replay needs the private Unix store. Windows executes the public refusal contract instead.
 
 describe("lucy pr entry", () => {
   const open = <A, E>(body: (ctx: Ctx) => Effect.Effect<A, E, HostEnv>) =>
     Effect.runPromise(run(skills, {}, body))
 
-  test("Maestro PR without validation returns one host-bound review-result", () =>
+  test(process.platform === "win32"
+    ? "Windows refuses Maestro PR before creating a child or admitting a prompt"
+    : "Maestro PR without validation returns one host-bound review-result", () =>
     open((ctx) => Effect.gen(function* () {
       const settled = yield* ctx.invoke("maestro", input(ctx.base, ctx.head))
+      if (process.platform === "win32") {
+        expect(settled).toEqual({ type: "error", text: "pr-facts-unsupported: private replay store requires supported Unix" })
+        expect(ctx.touches.children).toEqual([])
+        expect(ctx.touches.prompts).toEqual([])
+        expect(ctx.touches.resumes).toBe(0)
+        return
+      }
       const card = ReviewResultV2.parse(settled.text)
       expect(card?.profile).toBe("pr")
       expect(card?.scope).toEqual(scope(ctx.base, ctx.head))
@@ -72,9 +82,18 @@ describe("lucy pr entry", () => {
       expect(ctx.touches.children.length).toBe(children)
     })))
 
-  test("base rules bind and PR text cannot suppress the changed path", () =>
+  test(process.platform === "win32"
+    ? "Windows refuses PR with adversarial text before creating a child or prompt"
+    : "base rules bind and PR text cannot suppress the changed path", () =>
     open((ctx) => Effect.gen(function* () {
-      yield* ctx.invoke("maestro", input(ctx.base, ctx.head))
+      const settled = yield* ctx.invoke("maestro", input(ctx.base, ctx.head))
+      if (process.platform === "win32") {
+        expect(settled).toEqual({ type: "error", text: "pr-facts-unsupported: private replay store requires supported Unix" })
+        expect(ctx.touches.children).toEqual([])
+        expect(ctx.touches.prompts).toEqual([])
+        expect(ctx.touches.resumes).toBe(0)
+        return
+      }
       const brief = ctx.touches.prompts.join("\n")
       const rules = /<rules path="REVIEW.md" revision="base">\n([\s\S]*?)\n<\/rules>/.exec(brief)?.[1] ?? ""
       expect(rules).toContain("BASE-RULE-TOKEN")
@@ -88,7 +107,9 @@ describe("lucy pr entry", () => {
       expect(work.scope).toEqual(scope(ctx.base, ctx.head))
     })))
 
-  test("Quick and Standard cards write no review receipt or board review note", () =>
+  test(process.platform === "win32"
+    ? "Windows refuses Quick and Standard PRs without review receipts or board notes"
+    : "Quick and Standard cards write no review receipt or board review note", () =>
     open((ctx) => Effect.gen(function* () {
       const sibling = yield* seedReceipt(ctx.directory)
       expect((yield* reviewRows()).some((row) => row.aggregate_id === sibling)).toBe(true)
@@ -96,6 +117,16 @@ describe("lucy pr entry", () => {
       expect(notes.length).toBeGreaterThan(0)
       const quick = yield* ctx.invoke("maestro", input(ctx.base, ctx.head, "quick"))
       const standard = yield* ctx.invoke("maestro", input(ctx.base, ctx.head, "standard"))
+      if (process.platform === "win32") {
+        expect(quick).toEqual({ type: "error", text: "pr-facts-unsupported: private replay store requires supported Unix" })
+        expect(standard).toEqual(quick)
+        expect(ctx.touches.children).toEqual([])
+        expect(ctx.touches.prompts).toEqual([])
+        expect(ctx.touches.resumes).toBe(0)
+        expect((yield* reviewRows()).filter((row) => row.aggregate_id === ctx.parent)).toEqual([])
+        expect(yield* reviewNotes()).toEqual(notes)
+        return
+      }
       expect(ReviewResultV2.parse(quick.text)?.tier).toBe("quick")
       expect(ReviewResultV2.parse(quick.text)?.scope).toEqual(scope(ctx.base, ctx.head))
       expect(ReviewResultV2.parse(standard.text)?.tier).toBe("standard")
@@ -105,9 +136,19 @@ describe("lucy pr entry", () => {
       expect(yield* reviewNotes()).toEqual(notes)
     })))
 
-  test("a card-only child cannot record a receipt through the registered tool", () =>
+  test(process.platform === "win32"
+    ? "Windows refuses Standard PR before a card-only child or receipt can exist"
+    : "a card-only child cannot record a receipt through the registered tool", () =>
     open((ctx) => Effect.gen(function* () {
-      yield* ctx.invoke("maestro", input(ctx.base, ctx.head, "standard"))
+      const settled = yield* ctx.invoke("maestro", input(ctx.base, ctx.head, "standard"))
+      if (process.platform === "win32") {
+        expect(settled).toEqual({ type: "error", text: "pr-facts-unsupported: private replay store requires supported Unix" })
+        expect(ctx.touches.children).toEqual([])
+        expect(ctx.touches.prompts).toEqual([])
+        expect(ctx.touches.resumes).toBe(0)
+        expect((yield* reviewRows()).filter((row) => row.aggregate_id === ctx.parent)).toEqual([])
+        return
+      }
       const child = ctx.touches.children[0]
       if (!child) return yield* Effect.die("pr entry created no child session")
       const registry = yield* ToolRegistry.Service

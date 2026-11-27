@@ -26,6 +26,7 @@ const input = (base: string, head: string, tier?: string, prText = text) =>
   ({ kind: "pr", baseRef: base, headRef: head, prText, ...(tier ? { tier } : {}) })
 const scope = (base: string, head: string) => ({ base, head, files: 2, changedLines: 4 })
 const skills = await authoredSkills()
+// Replay needs the private Unix store; Windows exercises refusal and an unchanged retry before execution.
 
 function identity(reply: string) {
   return JSON.parse(reply.slice("PR identity: ".length).split("\n")[0] ?? "") as {
@@ -42,7 +43,9 @@ function retainedCount(candidate: string) {
 }
 
 describe("lucy pr retry", () => {
-  test("a held first resume admits one same-candidate retry and a later call adds no drain", () =>
+  test(process.platform === "win32"
+    ? "Windows refuses the initial PR and its retry without entering a held resume"
+    : "a held first resume admits one same-candidate retry and a later call adds no drain", () =>
     Effect.runPromise(Effect.gen(function* () {
       const release = yield* Deferred.make<void>()
       let held = false
@@ -88,6 +91,16 @@ describe("lucy pr retry", () => {
       }
       return yield* run(skills, controls, (gated) => Effect.gen(function* () {
         const request = input(gated.base, gated.head, "quick")
+        if (process.platform === "win32") {
+          const first = yield* gated.invoke("maestro", request)
+          expect(first).toEqual({ type: "error", text: "pr-facts-unsupported: private replay store requires supported Unix" })
+          expect(yield* gated.invoke("maestro", request)).toEqual(first)
+          expect(gated.touches.children).toEqual([])
+          expect(gated.touches.prompts).toEqual([])
+          expect(gated.touches.resumes).toBe(0)
+          expect(held).toBe(false)
+          return
+        }
         const watched = (value: unknown) => gated.invoke("maestro", value).pipe(
           Effect.provideService(ReviewPRConcurrencyV2.AdmissionObserver, observer),
         )
@@ -132,7 +145,9 @@ describe("lucy pr retry", () => {
       }))
     })))
 
-  test("a failed first leave is pr-retry-incomplete and adds no prompt", () =>
+  test(process.platform === "win32"
+    ? "Windows refuses the initial PR and its retry before a failing resume"
+    : "a failed first leave is pr-retry-incomplete and adds no prompt", () =>
     Effect.runPromise(run(skills, {
       beforeResume: () => Effect.fail(new SessionRunnerModel.ModelUnavailableError({
         providerID: ProviderV2.ID.make("provider"),
@@ -140,6 +155,15 @@ describe("lucy pr retry", () => {
       })),
     }, (ctx) => Effect.gen(function* () {
       const failed = yield* ctx.invoke("maestro", input(ctx.base, ctx.head, "quick"))
+      if (process.platform === "win32") {
+        expect(failed).toEqual({ type: "error", text: "pr-facts-unsupported: private replay store requires supported Unix" })
+        expect(yield* ctx.invoke("maestro", input(ctx.base, ctx.head, "quick"))).toEqual(failed)
+        expect(ctx.touches.children).toEqual([])
+        expect(ctx.touches.prompts).toEqual([])
+        expect(ctx.touches.resumes).toBe(0)
+        expect((yield* reviewRows()).filter((row) => row.aggregate_id === ctx.parent)).toEqual([])
+        return
+      }
       expect(failed.text).toContain("pr-execution-failed")
       expect(ctx.touches.children.length).toBeGreaterThan(0)
       const prompts = ctx.touches.prompts.length
@@ -149,9 +173,25 @@ describe("lucy pr retry", () => {
       expect((yield* reviewRows()).filter((row) => ctx.touches.children.includes(row.aggregate_id))).toEqual([])
     }))))
 
-  test("tier, text, and head each get a distinct candidate and retained artifact", () =>
+  test(process.platform === "win32"
+    ? "Windows refuses PR tier, text, and ref variants without child execution"
+    : "tier, text, and head each get a distinct candidate and retained artifact", () =>
     Effect.runPromise(run(skills, {}, (ctx) => Effect.gen(function* () {
       const quick = yield* ctx.invoke("maestro", input(ctx.base, ctx.head, "quick"))
+      if (process.platform === "win32") {
+        expect(quick).toEqual({ type: "error", text: "pr-facts-unsupported: private replay store requires supported Unix" })
+        expect(yield* ctx.invoke("maestro", input(ctx.base, ctx.head, "standard"))).toEqual(quick)
+        expect(yield* ctx.invoke("maestro", input(ctx.base, ctx.head, "quick", "other text"))).toEqual(quick)
+        // Reversing the ancestor refs has an empty merge-base diff, so source
+        // validation refuses it before the private-store platform check.
+        expect(yield* ctx.invoke("maestro", input(ctx.head, ctx.base, "quick"))).toEqual({
+          type: "error", text: "empty-diff: committed diff has no paths",
+        })
+        expect(ctx.touches.children).toEqual([])
+        expect(ctx.touches.prompts).toEqual([])
+        expect(ctx.touches.resumes).toBe(0)
+        return
+      }
       const quickId = identity(quick.text).candidate
       const quickArtifacts = retainedCount(quickId)
       const quickChildren = [...ctx.touches.children]
