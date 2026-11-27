@@ -152,7 +152,7 @@ it.live("overlapping authenticated Docker POSTs share one flight while GET reads
         const second = server.request(dockerReadPath, post)
         pending.push(second)
         await bounded(secondDispatched.promise)
-        const cached = decodeSnapshot(await server.client.activity.docker())
+        const cached = decodeSnapshot(await bounded(server.client.activity.docker()))
         expect(cached).toEqual({ ...unread, readAt: cached.readAt })
         expect(calls).toBe(1)
         release.resolve()
@@ -164,7 +164,7 @@ it.live("overlapping authenticated Docker POSTs share one flight while GET reads
         expect(secondSample).toEqual(firstSample)
         expect(calls).toBe(1)
 
-        const next = decodeSnapshot(await server.client.activity.readDocker())
+        const next = decodeSnapshot(await bounded(server.client.activity.readDocker()))
         expect(next).toMatchObject({ instanceID: firstSample.instanceID, snapshotRevision: "2" })
         expect(calls).toBe(2)
       } finally {

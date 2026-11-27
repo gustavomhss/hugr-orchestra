@@ -11,6 +11,7 @@ import type { ActiveScenario, BackendApp, CallResult, CaptureMode, RequestSpec }
 export type ExerciseApp = BackendApp & { readonly dispose: () => Promise<void>; ready?: Promise<void> }
 
 const credentials = { username: "orchestra", password: "secret" }
+const dockerArgs = ["container", "ls", "--all", "--no-trunc", "--size", "--format", "json"]
 
 const exerciseProcess = Layer.effect(
   AppProcess.Service,
@@ -20,7 +21,10 @@ const exerciseProcess = Layer.effect(
       ...live,
       omniEnabled: true,
       run: (command, options) =>
-        command._tag === "StandardCommand" && command.command === "docker"
+        command._tag === "StandardCommand" &&
+        command.command === "docker" &&
+        command.args.length === dockerArgs.length &&
+        dockerArgs.every((arg, index) => command.args[index] === arg)
           ? Effect.succeed(dockerResult('{"ID":"exercise-container"}'))
           : live.run(command, options),
     })

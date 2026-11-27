@@ -2,14 +2,20 @@ import "./httpapi-exercise/environment"
 import { expect, test } from "bun:test"
 import { ActivityMonitor } from "@orchestra/schema/activity-monitor"
 import { Effect, Schema } from "effect"
-import { main } from "./httpapi-exercise"
 import { activityScenarios } from "./httpapi-exercise/activity"
 import { callAuthProbe, makeApp } from "./httpapi-exercise/backend"
+import { parseOptions, selectedScenarios } from "./httpapi-exercise/routing"
+import { runScenario } from "./httpapi-exercise/runner"
 
 test("Docker effect exerciser runs the cached GET and explicit POST without a daemon", async () => {
-  await Effect.runPromise(
-    main(["--mode", "effect", "--include", "/api/activity/docker", "--fail-on-missing", "--fail-on-skip"]),
-  )
+  const options = parseOptions(["--mode", "effect", "--include", "/api/activity/docker"])
+  const scenarios = selectedScenarios(options, activityScenarios)
+  expect(scenarios).toHaveLength(2)
+  for (const scenario of scenarios) {
+    const result = await Effect.runPromise(runScenario(options, { auth: undefined })(scenario))
+    if (result.status === "fail") throw new Error(result.message)
+    expect(result.status).toBe("pass")
+  }
 })
 
 test("Docker authenticated exercise probe uses the same daemon-free collector fixture", async () => {
