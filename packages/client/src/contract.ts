@@ -25,6 +25,7 @@ export const ClientApi = makeDefaultApi({
 
 export const groupNames = {
   "server.health": "health",
+  "server.activity": "activity",
   "server.installation": "installation",
   "server.location": "location",
   "server.agent": "agents",
