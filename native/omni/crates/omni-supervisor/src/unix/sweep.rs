@@ -180,7 +180,7 @@ fn needs_scan(t: &Tree) -> bool {
 /// torn down. If it does not, it may have just exited (macOS hides zombies); otherwise the inventory cannot
 /// be trusted.
 fn root_accounted(t: &mut Tree, members: &[Member], exiting: &[Exiting]) -> bool {
-    if root_visible(t, members, exiting) {
+    if t.exit.is_some() || root_seen(t.pid, members, exiting) {
         return true;
     }
     match wait_exit(t.pid) {
@@ -192,9 +192,9 @@ fn root_accounted(t: &mut Tree, members: &[Member], exiting: &[Exiting]) -> bool
     }
 }
 
-/// A root accounted for by this inventory or an exit already recorded by the control thread.
-pub(super) fn root_visible(t: &Tree, members: &[Member], exiting: &[Exiting]) -> bool {
-    t.exit.is_some() || members.iter().any(|m| m.pid == t.pid) || exiting.iter().any(|e| e.pid == t.pid)
+/// Whether the inventory accounted for the root, including its teardown.
+pub(super) fn root_seen(pid: i32, members: &[Member], exiting: &[Exiting]) -> bool {
+    members.iter().any(|m| m.pid == pid) || exiting.iter().any(|e| e.pid == pid)
 }
 
 /// Members reachable by a tree stop, with parent links confined to this list.
