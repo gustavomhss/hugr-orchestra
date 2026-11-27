@@ -231,7 +231,7 @@ impl Tree {
             .await?
         {
             Answer::Processes(list) => Ok(list),
-            other => Err(self.refused("List", &other)),
+            other => Err(self.refused(want.name(), &other)),
         }
     }
 

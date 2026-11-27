@@ -58,7 +58,11 @@ fn an_incomplete_inventory_is_an_error_and_never_confirms_a_stop() {
 #[test]
 fn without_pidfd_members_in_other_groups_are_still_stopped() {
     let mut h = Host::start_with(os::without_pidfd);
-    assert_eq!(h.info, 0, "neither host watch nor member signalling may claim pidfd");
+    assert_eq!(
+        h.info,
+        omni_proto::INFO_OBSERVE,
+        "neither host watch nor member signalling may claim pidfd"
+    );
     let t = h.spawn(&Cmd::role("tree hang resist+group resist"));
     let leaves = field(&t.out.take("UP ", 2), 1);
     assert!(h.stop(t.id, 200) >= ms(200));

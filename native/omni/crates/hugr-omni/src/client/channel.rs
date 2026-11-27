@@ -48,7 +48,7 @@ pub(super) enum Want {
 }
 
 impl Want {
-    fn name(self) -> &'static str {
+    pub(super) fn name(self) -> &'static str {
         match self {
             Want::Spawn { .. } => "Spawn",
             Want::Go => "Go",
