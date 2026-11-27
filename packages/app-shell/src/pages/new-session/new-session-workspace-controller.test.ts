@@ -175,11 +175,16 @@ test("an initial project lookup in flight does not validate an empty workspace l
 })
 
 
-test("disabled workspace channel ignores saved picks without validating them", async () => {
+test("draft placement validates a saved pick independently of picker visibility", async () => {
   const draft = { worktree: "/project/feature" }
-  const selection = createNewSessionDraftWorkspace({ draft: () => draft, update: () => {}, directory: () => "/project", projectWorktree: () => "/project", workspaces: () => [], enabled: false, loadWorkspaces: async () => { throw new Error("disabled channel must not read workspaces") } })
+  const validation = { calls: 0 }
+  const selection = createNewSessionDraftWorkspace({
+    draft: () => draft, update: () => {}, directory: () => "/project", projectWorktree: () => "/project",
+    workspaces: () => [], loadWorkspaces: async () => { validation.calls++; return ["/project/feature"] },
+  })
   await selection.ready.promise
   expect(selection.ready()).toBe(true)
-  expect(selection.value()).toBeUndefined()
+  expect(selection.value()).toBe("/project/feature")
   expect(draft.worktree).toBe("/project/feature")
+  expect(validation.calls).toBe(1)
 })
