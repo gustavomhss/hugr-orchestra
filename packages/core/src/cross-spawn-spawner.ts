@@ -350,6 +350,10 @@ const legacy = (options?: { windowsHide?: boolean }) => Effect.gen(function* () 
   return { spawnCommand, cwd }
 })
 
+const omniSpawners = new WeakSet<ChildProcessSpawner["Service"]>()
+
+export const usesOmni = (spawner: ChildProcessSpawner["Service"]) => omniSpawners.has(spawner)
+
 /**
  * The spawner for a mode of ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER (D-L1): `off` uses the legacy spawner; `on` and
  * `strict` spawn through omni, which delegates (on) or refuses (strict) what it does not support.
@@ -358,7 +362,9 @@ const legacy = (options?: { windowsHide?: boolean }) => Effect.gen(function* () 
 export const makeWith = Effect.fnUntraced(function* (mode: typeof Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER, options?: { windowsHide?: boolean }) {
   const base = yield* legacy(options)
   if (mode === "off") return makeSpawner(base.spawnCommand)
-  return makeSpawner(yield* OmniSpawner.make({ mode, legacy: base.spawnCommand, cwd: base.cwd }))
+  const spawner = makeSpawner(yield* OmniSpawner.make({ mode, legacy: base.spawnCommand, cwd: base.cwd }))
+  omniSpawners.add(spawner)
+  return spawner
 })
 
 /** The flag is read once, when the layer is built. */
