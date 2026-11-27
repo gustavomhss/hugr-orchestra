@@ -128,15 +128,15 @@ import type { CommitResult } from "./sidecar.js"
 // The COMMIT-stage refusals (door-wide, outside the GateName ladder — neither discloses anything about a
 // node) + the ADDRESSABILITY commit-leg re-file (#136). See that file's header.
 import { commitRefusalOf } from "./governed-emit-address.js"
-import { REJECTED_CONTENDED, REJECTED_UNREADABLE_STORE } from "./governed-emit-reasons.js"
+import { REJECTED_CONTENDED, REJECTED_MALFORMED_TIER, REJECTED_UNREADABLE_STORE } from "./governed-emit-reasons.js"
 import type { AtlasPolicy } from "./policy.js"
 // The PROVENANCE refusal, shared with the read doors — one constant, so the write and read halves of the
 // tripwire cannot describe the same condition two different ways.
 import { REJECTED_UNTRUSTED_STORE } from "./read-provenance.js"
+import { emissionClaimReceipt, retainClaimReceipt, stripClaimReceipt, REJECTED_CLAIM_RECEIPT } from "./claim-receipt.js"
+import type { GovernedEmitOptions } from "./claim-receipt.js"
 
-// The ratification-CONTEXT seam (which gate a write owes — ARCH-9 / ADR-0010), extracted at the LOC ceiling.
-// Read that file before changing anything about how `route` is called: it records what the derivation does
-// NOT change at this door, and why the CREATE leg is deliberately unclosed.
+// Ratification context lives in governed-emit-route.ts; it deliberately does not close the CREATE leg.
 
 /** What the governed emit leg is composed over: the durable CAS store, the truth-gate seam, the admin
  *  policy (authz scopes), and the actor identity resolved from the environment. */
@@ -164,9 +164,17 @@ export interface GovernedEmitDeps extends NegationEmitDeps {
  * back invariant). Pure of clock/random given a pure store/gate/policy.
  */
 export function createGovernedEmit(deps: GovernedEmitDeps): {
-  readonly emit: (node: GroundedFact, at: Hash, opts?: { readonly replace?: true }) => EmitOut
+  readonly emit: (node: GroundedFact, at: Hash, opts?: GovernedEmitOptions) => EmitOut
 } {
-  const emit = (raw: GroundedFact, at: Hash, opts?: { readonly replace?: true }): EmitOut => {
+  const emit = (input: GroundedFact, at: Hash, opts?: GovernedEmitOptions): EmitOut => {
+    if (typeof input !== "object" || input === null || Array.isArray(input))
+      return { emitted: false, rejected: REJECTED_MALFORMED_TIER }
+    const raw = stripClaimReceipt(input)
+    const origin = deps.origin
+    const claimReceipt = origin === "promoted" ? opts?.claimReceipt : undefined
+    if (claimReceipt !== undefined && raw.kind !== "advisory" && raw.kind !== "predicate") {
+      return { emitted: false, rejected: REJECTED_CLAIM_RECEIPT }
+    }
     // #99b N2 — a negation re-routes to `emitNegation` (its own gate ladder, §4), branched before gate 0; `at` unused.
     if (raw.kind === "negation") return emitNegation(deps, raw as NegationNode)
     // #234 D4 — a transition re-routes to `emitTransition` (its own gate ladder), branched before gate 0. It
@@ -189,28 +197,24 @@ export function createGovernedEmit(deps: GovernedEmitDeps): {
     //    something else (a TOCTOU unreachable over the CLI/MCP wires but reachable through the exported
     //    library entry point). Gating a snapshot and persisting that same snapshot means what was checked
     //    is exactly what is stored.
-    const shapeVerdict = evalShapeGate(raw, deps.origin)
+    const shapeVerdict = evalShapeGate(raw, origin)
     if (!shapeVerdict.pass) {
       return { emitted: false, rejected: shapeVerdict.result.reason ?? shapeVerdict.result.gate }
     }
     const { node, tier, scope, family, contentHash } = shapeVerdict
+    // Only trusted promoted-origin OPTIONS can supply provenance; payload carriers were stripped above.
+    const receipt = claimReceipt !== undefined
+      ? emissionClaimReceipt(deps.store, node, String(contentHash), claimReceipt) : undefined
+    if (receipt !== undefined && "rejected" in receipt) return { emitted: false, rejected: receipt.rejected }
 
-    // 1. TRUTH DOOR (`GateName:'truth'`) — re-derive the citation; a non-HOLDS verdict fails closed,
-    //    nothing persisted. EXTRACTED to `evalTruthGate`.
+    // 1. TRUTH DOOR — re-derive the citation; a non-HOLDS verdict persists nothing.
     const truthVerdict = evalTruthGate(node, at, deps.gate)
     if (!truthVerdict.pass) {
       return { emitted: false, rejected: truthVerdict.reason ?? truthVerdict.gate }
     }
 
-    // A GroundedFact carries its slot as `predicateSlot`; the `Candidate` identity/route fns
-    // (`nodeKey`/`primaryAnchorId`/`route`/`stage`) read `.slot`/`.tier`/`.check`/`.grounding`. Map the slot
-    // onto a candidate VIEW ONCE — else a later `nodeKey` cast is LOSSY (`.slot` undefined) and the nodeKey is
-    // computed slot-free, diverging from the true `hash(primaryAnchorId ‖ predicateSlot)` identity (the E2E
-    // emit→query readback exposed this). The route reads the fact's REAL `tier`/`check`/`grounding` — no guess.
-    // A RelationNode (ADR-0015 D2) carries no `predicateSlot`; narrow it away. (A NEGATION — ADR-0015 D3 —
-    // branched to `governed-emit-negation.ts` before gate 0, so it never reaches here; `node` is already
-    // narrowed to exclude it.) The relation view is still built because `route` (the ratify gate below) reads
-    // its `tier`/`grounding` — it ratifies on the advisory path (no `check`); its IDENTITY is not this nodeKey.
+    // Identity/route read `.slot`, while stored facts carry `predicateSlot`. Preserve that mapping;
+    // relations use endpoint identity instead, but still need the candidate view for ratification.
     const candidateView = {
       ...node,
       slot: node.kind === "advisory" || node.kind === "predicate" ? node.predicateSlot : undefined,
@@ -288,7 +292,7 @@ export function createGovernedEmit(deps: GovernedEmitDeps): {
         const ratifyVerdict = evalRatifyGate({
           candidateView,
           derivedTier,
-          origin: deps.origin,
+          origin,
           ratifyToken: deps.ratifyToken,
           // ARCH-D3b (INV-AUTH-15) — DEVIVED fast-path verdicts. `lowRisk` from the TRUTH gate the write
           // already cleared (`truthVerdict.pass`, sealed above); `contested` from a CONFLICTING NODE —
@@ -313,6 +317,8 @@ export function createGovernedEmit(deps: GovernedEmitDeps): {
           contentHash: contentHash as unknown as string,
           family, // the CHECKED discriminant (gate 0), never the raw `node.kind` — see `familyOf`
           claimNorm,
+          ...(receipt !== undefined && "receipt" in receipt
+            ? { claimEvidenceByClaim: Object.fromEntries([[claimNorm, receipt.receipt]]) } : {}),
           ...((node.kind === "advisory" || node.kind === "predicate") && node.provenance !== undefined
             ? { provenanceByClaim: { [claimNorm]: node.provenance } }
             : {}),
@@ -323,17 +329,9 @@ export function createGovernedEmit(deps: GovernedEmitDeps): {
           ...((node.kind === "advisory" || node.kind === "predicate") && node.predicateSlot !== undefined
             ? { slot: node.predicateSlot }
             : {}),
-          // ── SEAL carrier (billy T0, #187 → SEAL-PROMOTE-CARRY; RELATION added #99 ADR-0018) — the seal is
-          //    trusted IFF the write is promote-origin (a mined fact re-emitted from content-addressed staging
-          //    written by the sound admit path), never from an authored operator payload. `node.seal` is present
-          //    here ONLY when the gate-0 snapshot above KEPT it: `origin==='promoted'` AND (for a relation) a
-          //    re-derivable witness survived the gate-0.05 forgery strip. An authored seal, and a witness-less
-          //    proven relation seal, were both already stripped there. Carry it onto the WriteRequest so a
-          //    PROVEN `depends-on` relation's seal reaches the durable current row — its witness rides the CAS
-          //    bytes (`node` itself, `put` below), exactly as a predicate witness does, so reverify re-derives
-          //    it. The `!== 'relation'` guard is LIFTED (a relation could formerly NEVER be persisted proven —
-          //    the #99 relation leg): all four sealed families now flow the same discipline. Provenance only,
-          //    never a `nodeKey`/route/authz leg (`upsert.ts`).
+          // Only promote-origin seals surviving gate 0's operator/forgery strips reach this request.
+          // A relation also requires its shape-valid witness; content re-verification remains read-owned.
+          // Provenance only, never identity/authz. The CAS fact below retains the witness for reverify.
           ...(node.seal !== undefined ? { seal: node.seal } : {}),
           // ── RELATION carrier (ADDITIVE — ADR-0015 D2) — a `family:'relation'` write stamps its endpoint pair
           //    + kind on the ROW so the read-side `relationsOf` fold indexes it by both endpoints. Empty for a
@@ -348,7 +346,11 @@ export function createGovernedEmit(deps: GovernedEmitDeps): {
           tier,
           ...(opts?.replace === true ? { replace: true as const } : {}), // R8 — the operator's `--replace`, never the payload
         }
-        const next = upsert(projection, req).store
+        const next = retainClaimReceipt(upsert(projection, req).store, req)
+        // DEDUP may know these bytes but no longer retain this claim (e.g. after a replacement).
+        if (receipt !== undefined && !next.current.get(targetKey)?.claims.includes(claimNorm)) {
+          return { out: { emitted: false, rejected: REJECTED_CLAIM_RECEIPT } }
+        }
 
         // 4. DURABLE PERSIST — the content-addressed bytes FIRST, then the projection sidecar that references
         //    them (INVARIANT: the CAS bytes ARE the fact, so driftFacts/doctor can read them back). The order is
@@ -384,8 +386,7 @@ export function createGovernedEmit(deps: GovernedEmitDeps): {
     //    was not a cosmetic mislabel: `unreadable store` tells the operator to restore
     //    `.atlas/projection.*.json` from a backup, which for a COMMITTED store is the wrong diagnosis, the
     //    wrong fix, and hides the only thing they need to know (`git rm -r --cached .atlas/…`). The store
-    //    layer had the named refusal all along; the door threw the name away. Reported as itself now, from
-    //    the SAME constant the read doors use.
+    //    layer had the named refusal all along; now it uses the SAME constant as the read doors.
     if (committed.settled) return committed.out
     const commitRefusal =
       committed.refusal === "contended"

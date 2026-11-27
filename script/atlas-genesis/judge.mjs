@@ -1,6 +1,7 @@
 // The automated judge for an Atlas genesis run (genesis-hardening S11, owner decision: no human in the volume
-// loop). A deterministic sample of the run's staged, non-quarantined candidates is shown to an independent model
+// loop). A deterministic sample of staged, non-quarantined candidates is judged in a separate model call
 // with only the claim and the source it cites; the verdicts decide whether the run may be published.
+// The workflow currently uses the same Grok model for proposing and judging, not an independent model.
 //
 // This script never spawns a process (the repository's spawn gate covers script/). The workflow runs the model
 // over the prompt files `prepare` writes, and `check` / `score` read what came back:
@@ -15,11 +16,13 @@ import { createHash, randomBytes } from "node:crypto"
 import { appendFileSync, existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs"
 import { join, relative, resolve } from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
+import { excerpt, requireSourceExcerpt, safeRepoPath } from "./judge-source.mjs"
+import { indexedWitnessEvidence } from "./judge-index.mjs"
+
+export { excerpt, safeRepoPath }
 
 export const BAR = { trueRate: 0.88, trueNonObviousRate: 0.4, failedShare: 0.1 }
 const SOUND_ARMS = new Set(["dependency", "count", "definition"])
-const WINDOW = 40
-const MAX_CHARS = 12000
 
 // ── sampling ─────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -168,41 +171,8 @@ function randomNonce(fields) {
   }
 }
 
-/** `±WINDOW` numbered lines of `file` around the first line naming `name` (or its head), capped. */
-/** A repo-relative path a fact or witness may name without leaving the checkout: not absolute (POSIX, UNC or a
- *  drive), no `..` or empty segment, no backslash, nothing under `.git/`. Fact paths are model-influenced data. */
-export function safeRepoPath(path) {
-  if (typeof path !== "string" || path.length === 0) return false
-  if (path.includes("\\") || path.startsWith("/") || /^[A-Za-z]:/.test(path)) return false
-  const segments = path.split("/")
-  return segments.every((s) => s !== "" && s !== "..") && segments[0] !== ".git" && !segments.includes(".git")
-}
-
-export function excerpt(repo, file, name) {
-  if (!safeRepoPath(file)) return `(${file} refused: not a plain repo-relative path)`
-  const abs = join(repo, file)
-  if (!existsSync(abs) || !statSync(abs).isFile()) return `(${file} is not in the checkout)`
-  const lines = readFileSync(abs, "utf8").split("\n")
-  const hit = name === undefined ? -1 : lines.findIndex((l) => l.includes(name))
-  const from = Math.max(0, (hit < 0 ? 0 : hit) - WINDOW)
-  const to = Math.min(lines.length, (hit < 0 ? 0 : hit) + WINDOW + 1)
-  const body = lines
-    .slice(from, to)
-    .map((l, i) => `${from + i + 1}: ${l}`)
-    .join("\n")
-    .slice(0, MAX_CHARS)
-  return `${file} (lines ${from + 1}-${to})\n\n\`\`\`\n${body}\n\`\`\``
-}
-
 /** The unit name a site path ends in (`file::a.b` ⇒ `b`, `file#x` ⇒ `x`), or undefined for a whole file. */
 const unitName = (qualifiedPath) => /(?:::|#)([^:#]+)$/.exec(qualifiedPath)?.[1]?.split(/[./]/).pop()
-
-/** File and name a SCIP symbol points at, best effort: `… src/\`lib.ts\`/Hash#` ⇒ `src/lib.ts`, `Hash`. */
-function symbolSite(symbol) {
-  const descriptors = String(symbol).split(" ").slice(4).join(" ").replace(/`/g, "")
-  const m = /^(.*?\.[A-Za-z]+)\/(.*)$/.exec(descriptors)
-  return m === null ? undefined : { file: m[1], name: m[2].replace(/[#.()]+$/, "").split(/[#./]/).pop() }
-}
 
 export function filesUnder(root, dir, limit = 5000) {
   if (dir !== "." && !safeRepoPath(dir)) return []
@@ -223,7 +193,7 @@ export function filesUnder(root, dir, limit = 5000) {
 
 /** The prompt fields for one fact. Only the claim, its subject and cited source: never the proposer's prompt,
  *  answer or derivation. */
-export function factFields(repo, fact) {
+export function factFields(repo, fact, scip) {
   const entry = fact.grounding?.entries?.[0]
   const qualified = entry?.anchor?.qualifiedPath ?? ""
   const file = entry?.path ?? qualified.split(/::|#/)[0]
@@ -231,18 +201,14 @@ export function factFields(repo, fact) {
   const related = []
   const w = fact.witness
   if (w !== undefined && (w.slot === "dependency" || w.slot === "count")) {
-    related.push(
-      `Proof target: ${w.target} within ${w.scope}${w.atLeast !== undefined ? `, at least ${w.atLeast} caller(s)` : ""}`,
-    )
-    const site = symbolSite(w.target)
-    const match = site === undefined ? undefined : filesUnder(repo, w.scope).find((f) => f.endsWith(site.file))
-    if (match !== undefined) related.push(excerpt(repo, match, site.name))
+    if (scip === undefined) throw new Error("judge: indexed witness requires a restored source index")
+    related.push(indexedWitnessEvidence(repo, fact, scip, requireSourceExcerpt))
   }
   return {
     kind: `${fact.kind}${fact.predicateSlot !== undefined ? ` (${fact.predicateSlot})` : ""}`,
     subject: qualified || file,
     claim,
-    source: file === "" ? "(no cited source)" : excerpt(repo, file, unitName(qualified)),
+    source: file === "" ? "(no cited source)" : requireSourceExcerpt(repo, file, unitName(qualified)),
     related: related.length > 0 ? related.join("\n\n") : "(none)",
   }
 }
@@ -263,9 +229,49 @@ export async function stagedFacts(repo) {
   const store = createDiskStore(join(repo, ".atlas", "cas"))
   const staged = store.commitStaging((p) => ({ out: p }))
   if (!staged.settled) throw new Error(`judge: the staging read refused (${staged.refusal})`)
+  const kernel = await import(pathToFileURL(resolve(repo, "modules/atlas/packages/kernel/dist/src/index.js")).href)
+  const knowledge = await import(pathToFileURL(resolve(repo, "modules/atlas/packages/knowledge/dist/src/index.js")).href)
+  const hash = /^[0-9a-f]{64}$/
+  const requireReceipt = (condition, reason) => {
+    if (!condition) throw new Error(`judge: invalid claim receipt (${reason})`)
+  }
   return [...staged.out.current.values()].flatMap((row) => {
-    const fact = store.get(row.contentHash)
-    return fact === undefined ? [] : [{ id: String(row.nodeKey), contentHash: String(row.contentHash), fact }]
+    const parent = String(row.nodeKey)
+    requireReceipt(typeof row.nodeKey === "string" && hash.test(parent) &&
+      typeof row.contentHash === "string" && hash.test(row.contentHash), "row identity")
+    requireReceipt(Array.isArray(row.claims) && row.claims.length > 0 &&
+      row.claims.every((claim) => typeof claim === "string" && claim.trim().length > 0) &&
+      new Set(row.claims).size === row.claims.length, "claim list")
+    const evidence = row.claimEvidenceByClaim === undefined ? (row.claims.length === 1
+      ? Object.fromEntries([[row.claims[0], { factRef: row.contentHash, ...(row.answerRef === undefined ? {} : { answerRef: row.answerRef }) }]])
+      : undefined) : row.claimEvidenceByClaim
+    requireReceipt(evidence !== undefined && evidence !== null && typeof evidence === "object" && !Array.isArray(evidence) &&
+      Object.keys(evidence).length === row.claims.length, "missing or extra per-claim entries")
+    const entries = row.claims.map((claim) => {
+      requireReceipt(Object.hasOwn(evidence, claim), "missing per-claim entry")
+      const receipt = evidence[claim]
+      requireReceipt(receipt !== null && typeof receipt === "object" && typeof receipt.factRef === "string" && hash.test(receipt.factRef), "factRef")
+      const fact = store.get(receipt.factRef)
+      requireReceipt(fact !== null && typeof fact === "object" && !Array.isArray(fact) && String(kernel.id(fact)) === receipt.factRef, "CAS fact unavailable")
+      const factClaim = fact.kind === "advisory" ? fact.claimNorm
+        : fact.kind === "predicate" ? knowledge.normalizeCheck(fact.check)
+          : fact.kind === "relation" ? `${fact.endpointA} ${fact.relationKind} ${fact.endpointB}`
+            : fact.kind === "negation" ? `NOT(${fact.target} ${fact.relationKind})@${fact.scope}` : undefined
+      requireReceipt(factClaim === claim && row.family === fact.kind, "claim does not match CAS fact")
+      const intrinsic = fact.kind === "relation" ? String(knowledge.relationKey(fact.endpointA, fact.relationKind, fact.endpointB))
+        : fact.kind === "negation" ? String(knowledge.negationKey(fact.relationKind, fact.target, fact.scope))
+          : String(knowledge.nodeKey({ ...fact, slot: fact.predicateSlot }))
+      const key = fact.kind === "advisory" && fact.quarantine !== undefined
+        ? String(kernel.id({ quarantineOf: intrinsic, reason: fact.quarantine })) : intrinsic
+      requireReceipt(key === parent, "CAS fact belongs to another place")
+      if (receipt.answerRef !== undefined) {
+        requireReceipt(typeof receipt.answerRef === "string" && hash.test(receipt.answerRef), "answerRef")
+        requireReceipt(typeof store.get(receipt.answerRef) === "string", "CAS answer unavailable")
+      }
+      return { id: row.claims.length === 1 ? parent : `${parent}:${receipt.factRef}`, nodeKey: parent, contentHash: receipt.factRef, fact }
+    })
+    requireReceipt(entries.some((entry) => entry.contentHash === row.contentHash), "representative fact is not a row claim")
+    return entries
   })
 }
 
@@ -273,17 +279,25 @@ async function prepare(argv) {
   const dir = argv[0]
   const repo = flag(argv, "--repo") ?? "."
   const seed = flag(argv, "--seed") ?? "0"
-  const eligible = (await stagedFacts(repo))
-    .filter(({ fact }) => fact.quarantine === undefined)
+  const staged = await stagedFacts(repo)
+  const quarantined = new Set(staged.filter(({ fact }) => fact.quarantine !== undefined).map((entry) => entry.nodeKey))
+  const eligible = staged
+    .filter((entry) => !quarantined.has(entry.nodeKey))
     .map((e) => ({ ...e, arm: armOf(e.fact) }))
   const chosen = sample(eligible, seed)
+  const needsIndex = chosen.some(({ fact }) => fact.witness?.slot === "dependency" || fact.witness?.slot === "count")
+  const adapter = needsIndex
+    ? await import(pathToFileURL(resolve(repo, "modules/atlas/packages/adapter-io/dist/src/index.js")).href)
+    : undefined
+  const scip = adapter?.readScip(join(repo, ".atlas", "index.scip"))
   const text = template()
+  if (existsSync(dir) && readdirSync(dir).length > 0) throw new Error("judge: preparation requires an empty output directory")
   mkdirSync(dir, { recursive: true })
-  chosen.forEach((e, i) => writeFileSync(join(dir, `${String(i).padStart(3, "0")}.prompt`), renderPrompt(text, factFields(repo, e.fact))))
+  chosen.forEach((e, i) => writeFileSync(join(dir, `${String(i).padStart(3, "0")}.prompt`), renderPrompt(text, factFields(repo, e.fact, scip))))
   writeFileSync(
     join(dir, "sample.json"),
     JSON.stringify(
-      { seed, eligible: eligible.length, promptHash: hashOf(text), facts: chosen.map((e) => ({ id: e.id, arm: e.arm })) },
+      { seed, eligible: eligible.length, promptHash: hashOf(text), facts: chosen.map((e) => ({ id: e.id, nodeKey: e.nodeKey, contentHash: e.contentHash, arm: e.arm })) },
       null,
       2,
     ),
@@ -325,7 +339,7 @@ function scoreDir(argv) {
   return verdict.pass || !binding ? 0 : 1
 }
 
-async function main(argv) {
+export async function main(argv) {
   const [command, ...rest] = argv
   if (command === "prepare") return prepare(rest)
   if (command === "check") return parseVerdict(existsSync(rest[0] ?? "") ? readFileSync(rest[0], "utf8") : "") === null ? 1 : 0

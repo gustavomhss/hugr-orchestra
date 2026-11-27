@@ -1,6 +1,7 @@
 // Tests for the atlas-genesis publish plan. Run: node --test script/atlas-genesis/publish-plan.test.mjs
 import { test } from "node:test"
 import assert from "node:assert/strict"
+import { score } from "./judge.mjs"
 import {
   computePlan,
   judgeEvidenceProblems,
@@ -95,18 +96,18 @@ test("promote check: ANY refusal fails (quarantined rows are never in the plan);
 })
 
 test("judge evidence: missing, failing or incomplete evidence stops the publish", () => {
-  const sample = JSON.stringify({ facts: [{ id: "a" }, { id: "b" }] })
-  const jsonl = '{"id":"a"}\n{"id":"b"}\n'
-  const pass = JSON.stringify({ pass: true })
+  const facts = ["a", "b"].map((c) => ({ id: hex(c), nodeKey: hex(c), contentHash: hex("c"), arm: "advisory" }))
+  const records = facts.map((fact) => ({ ...fact, verdict: "true", nonObvious: true, failed: false, reason: "synthetic" }))
+  const sample = JSON.stringify({ promptHash: hex("d"), facts })
+  const jsonl = records.map((row) => JSON.stringify(row)).join("\n") + "\n"
+  const pass = JSON.stringify(score(records, hex("d")))
   assert.deepEqual(judgeEvidenceProblems({ jsonl, verdict: pass, sample }), [])
   assert.match(judgeEvidenceProblems({ verdict: pass, sample })[0], /judge\.jsonl is missing/)
   assert.match(judgeEvidenceProblems({ jsonl, sample })[0], /judge-verdict\.json is missing/)
-  assert.deepEqual(judgeEvidenceProblems({ jsonl, verdict: JSON.stringify({ pass: false }), sample }), [
-    "judge-verdict.json does not record a pass",
-  ])
-  assert.deepEqual(judgeEvidenceProblems({ jsonl: '{"id":"a"}\n', verdict: pass, sample }), [
-    "judge.jsonl has 1 record(s) for 2 sampled fact(s)",
-  ])
+  assert.ok(judgeEvidenceProblems({ jsonl, verdict: JSON.stringify({ pass: false }), sample }).includes("judge-verdict.json does not record a pass"))
+  assert.ok(judgeEvidenceProblems({ jsonl: JSON.stringify(records[0]) + "\n", verdict: pass, sample }).includes("judge.jsonl has 1 record(s) for 2 sampled fact(s)"))
+  assert.ok(judgeEvidenceProblems({ jsonl: "not JSON", verdict: pass, sample }).includes("judge evidence is not valid JSON"))
+  assert.ok(judgeEvidenceProblems({ jsonl: "", verdict: pass, sample: JSON.stringify({ promptHash: hex("d"), facts: [] }) }).includes("sample.json has no sampled claims"))
 })
 
 /** An OWN-SNAPSHOT.json in the shape the retrieval contract validates (own-snapshot.ts): a unit's pack carries

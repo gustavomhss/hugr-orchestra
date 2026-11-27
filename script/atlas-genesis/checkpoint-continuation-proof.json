@@ -1,0 +1,14 @@
+{
+  "repository": "gustavomhss/hugr-orchestra",
+  "workflow": ".github/workflows/atlas-genesis.yml",
+  "event": "workflow_dispatch",
+  "branch": "genesis-run-fix",
+  "run": "42056319550",
+  "attempt": "1",
+  "head": "aa8b55fe75ce9f53045ac2bc8f5f89e0fa012291",
+  "artifact": {
+    "id": "13429298842",
+    "name": "atlas-genesis-exact-replay",
+    "digest": "sha256:e6cda4a2a21a36046f9433145eb995b1169cb7b825c9916f555a775c57ede5a2"
+  }
+}

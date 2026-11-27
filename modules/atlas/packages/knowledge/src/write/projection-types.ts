@@ -22,6 +22,8 @@ export interface WriteRequest {
   // ── CLAIM-PROVENANCE carrier (ADDITIVE, OPTIONAL — KNOW-14) — receipt keyed by claimNorm. The map keeps
   //    CurrentNode.claims compatible with legacy string arrays while making each durable claim auditable.
   readonly provenanceByClaim?: Readonly<Record<string, ClaimProvenance>>
+  // Per-claim CAS receipts are provenance only: they never participate in node identity or routing.
+  readonly claimEvidenceByClaim?: Readonly<Record<string, { readonly factRef: string; readonly answerRef?: string }>>
   // ── ADJACENCY carrier (ADDITIVE, OPTIONAL) — anchor+slot for WP-B's sibling-adjacency scan; NOT routed.
   readonly primaryAnchor?: string // the computed primaryAnchorId VALUE (qualifiedPath-prefix), string form
   readonly slot?: PredicateSlot //  the closed-vocabulary predicate slot the node lives at (R3-optional)
@@ -88,6 +90,8 @@ export interface CurrentNode {
   readonly claims: readonly string[] // claimNorms — the advisory set-union set (dedup by claimNorm)
   // ── CLAIM-PROVENANCE carrier (ADDITIVE, OPTIONAL — KNOW-14) — keyed by claimNorm; absent on legacy rows.
   readonly provenanceByClaim?: Readonly<Record<string, ClaimProvenance>>
+  // Receipts follow surviving claims; absent on legacy rows and carrierless replacements.
+  readonly claimEvidenceByClaim?: Readonly<Record<string, { readonly factRef: string; readonly answerRef?: string }>>
   readonly supersededBy?: string // predicate lineage pointer into CAS (KNOW-4e); absent for advisory
   // ── ADJACENCY carrier (ADDITIVE, OPTIONAL) — carried from the req for WP-B; store.ts WireProjection round-trips them free. NOT read here.
   readonly primaryAnchor?: string // the primaryAnchorId VALUE (qualifiedPath-prefix), string form

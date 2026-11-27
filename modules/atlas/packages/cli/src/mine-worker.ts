@@ -18,8 +18,9 @@
 
 import { parentPort, workerData } from "node:worker_threads"
 import type { MessagePort } from "node:worker_threads"
-import { initAst } from "@atlas/adapter-io"
-import type { Candidate, SeedProposal, SiteProposer } from "@atlas/genesis"
+import { initAst, ModelCommandError } from "@atlas/adapter-io"
+import type { ModelFailure } from "@atlas/adapter-io"
+import type { Candidate, SiteProposer } from "@atlas/genesis"
 import { resolveWorkerProposer } from "./mine-proposer.js"
 import type { MineSlot } from "./mine-proposer.js"
 
@@ -32,13 +33,11 @@ interface PoolJob {
 
 /** A worker's answer. An error is DATA, never a throw across the boundary: `name` is carried separately
  *  because it is load-bearing downstream (`mine.ts` reports only `ModelCommandError` as a wiring fault) and
- *  a structured clone of a custom Error subclass is not guaranteed to preserve the subclass. */
+ *  a structured clone of a custom Error subclass is not guaranteed to preserve the subclass. Model failure
+ *  reasons also travel explicitly so the parent cannot erase the bounded operational diagnostic. */
 export type PoolAnswer =
-  // [#195c] `{ abstain }` rides alongside `SeedProposal | null` so a MALFORMED-answer abstention survives the
-  // worker boundary too — the concurrent path is the production path the 2026-08-04 splice went invisible on,
-  // so dropping the tag here would re-open exactly the hole #195 closes. A plain string structured-clones fine.
-  | { readonly ok: true; readonly seed: SeedProposal | { readonly abstain: string } | null }
-  | { readonly ok: false; readonly name: string; readonly message: string }
+  | { readonly ok: true; readonly seed: ReturnType<SiteProposer["propose"]> }
+  | { readonly ok: false; readonly name: string; readonly message: string; readonly reason?: ModelFailure }
 
 /** The immutable context a worker rebuilds its proposer from. `resolveProposer(repoPath, env, slot)` is a
  *  pure function of these three, which is the entire reason the proposer can be reconstructed thread-side at
@@ -84,6 +83,7 @@ function serve(ctx: WorkerContext): void {
         ok: false,
         name: typeof err?.name === "string" ? err.name : "Error",
         message: typeof err?.message === "string" ? err.message : String(e),
+        ...(e instanceof ModelCommandError ? { reason: e.reason } : {}),
       }
     }
     ctx.port.postMessage({ slot: job.slot, answer })

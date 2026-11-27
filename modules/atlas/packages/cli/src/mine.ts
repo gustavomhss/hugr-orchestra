@@ -50,14 +50,15 @@ import { existsSync, readFileSync } from "node:fs"
 import { asSubtreeHash, id } from "@atlas/kernel"
 import type { Awareness } from "@atlas/memory"
 import { createDiskStore, headSha, createSkeletonSource, gitSidecarTrust } from "@atlas/adapter-io"
-import { resolveProposer, resolveMineBudget, NO_MODEL_IDENTITY } from "./mine-proposer.js"
+import { resolveProposer, resolveMineBudget, resolveMineSlot, NO_MODEL_IDENTITY } from "./mine-proposer.js"
 import type { MineSlot } from "./mine-proposer.js"
 import { resolveFrontier } from "./mine-frontier.js"
 import { createProposerPool, makeVisitAll, proposerPoolAvailable } from "./mine-pool.js"
+import { createMineProgress } from "./mine-progress.js"
+import { createMineEvidence } from "./mine-evidence.js"
 import type { ProposerPool, SiteVisit } from "./mine-pool.js"
 import { composedGate } from "./mine-gate.js"
 import { decideStaging } from "./mine-decide.js"
-import type { MintedFact } from "./mine-decide.js"
 import type { CommitRefusal, DiskStore } from "@atlas/adapter-io"
 import { join } from "node:path"
 import { StagingCommitError as StagingRefusalError } from "./mine-staging.js"
@@ -126,6 +127,7 @@ export interface MineDeps {
 export interface PassWatch {
   readonly onFault?: (e: Error) => void
   readonly onSeedsDropped?: (dropped: number) => void
+  readonly onPlan?: (sites: readonly Candidate[]) => void
 }
 
 /** A one-site extract budget: the controller already enforces the run ceiling; `visit` extracts its one cand. */
@@ -332,15 +334,40 @@ export function buildControllerDeps(
   watch?: PassWatch,
   pool?: ProposerPool,
   modelIdentity?: string,
-): ControllerDeps {
+): ControllerDeps & { stagedNodeKeys(): readonly string[] } {
   // THE ONE PER-SITE EXPRESSION — both `visit` and `visitAll` route through it, so neither can produce
   // different facts for a site: there is exactly one place facts come from (see `SiteVisit`, mine-pool.ts).
   const visitWith: SiteVisit = (cand, proposer) => runExtract([cand], SINGLE_SITE, { proposer, gate: d.gate })
+  // Spreading materializes the exact getter before model entry/structured clone. Prepare the WHOLE batch
+  // first: a later history failure must not leave an earlier site already spending a model call.
+  const hydrateSignals = (cands: readonly Candidate[]): readonly Candidate[] => {
+    try {
+      return cands.map((cand) => ({ ...cand }))
+    } catch (e) {
+      const failure = e as { name?: unknown; message?: unknown } | null
+      const error = new GenesisRunError({
+        name: typeof failure?.name === "string" ? failure.name : "Error",
+        message: typeof failure?.message === "string" ? failure.message : String(e),
+      })
+      watch?.onFault?.(error)
+      throw error
+    }
+  }
+  const progress = createMineProgress(d.env ?? process.env)
+  progress.pool(pool !== undefined)
   const mine = createMine({
     skeleton: d.skeleton,
-    history: d.history,
+    history: {
+      commitCount: (repo, rev) => progress.run("history-count", () => d.history.commitCount(repo, rev)),
+      shallow: (repo, rev) => progress.run("history-shallow", () => d.history.shallow(repo, rev)),
+      blameConcentration: (repo, rev) =>
+        progress.run("history-concentration", () => d.history.blameConcentration(repo, rev)),
+      frontier: (repo, rev) => progress.run("history-frontier", () => d.history.frontier(repo, rev)),
+      signals: (site) => progress.run("history-signals", () => d.history.signals(site), 1),
+    },
     ...(watch?.onSeedsDropped !== undefined ? { onSeedsDropped: watch.onSeedsDropped } : {}),
     ...(d.frontier !== undefined ? { frontier: d.frontier } : {}), // #182 — the A/B arm + its priors
+    deferSignals: true,
   })
   const scan = createScan(d.skeleton)
   // STAGING, NOT KNOWLEDGE (ADR-0008 / KNOW-8). `mine` is the explorer — no truth gate, no KNOW-11 authz, no
@@ -355,16 +382,18 @@ export function buildControllerDeps(
   // Read by `answerReceipts` below; fail-closed — a row that minted with NO `answerRef` (MintedFact carries
   // none) contributes nothing.
   const answerRefs = new Set<string>()
+  let lastSettledFactRefs: readonly string[] = []
 
   // THE WHOLE PASS BODY AS ONE PURE DECISION is `decideStaging` (mine-decide.ts) — extracted at the LOC ceiling
   // when #195 added the scrub→CAS answer-receipt to the write. `grounded` is threaded in (the caller keeps it
   // across settled commits); the decision stays a pure function of `(staged, incoming, grounded)`.
   return {
-    plan: (repo, rev, _scope): Plan => ({
-      malformed: false,
-      skeleton: scan.scan(repo, rev),
-      sites: mine.mine(repo, rev),
-    }),
+    plan: (repo, rev, _scope): Plan => {
+      const skeleton = progress.run("scan", () => scan.scan(repo, rev))
+      const sites = progress.run("rank-history", () => mine.mine(repo, rev))
+      watch?.onPlan?.(sites)
+      return { malformed: false, skeleton, sites }
+    },
     // A `ModelCommandError` is REPORTED on its way past, then re-thrown unchanged so GEN-8c still classifies
     // the site as an interruption. It is the one throw here that is NOT about this site: the model binary is
     // missing / timed out / exited non-zero for the whole run, and `describeModelFailure` (llm.ts:152) has
@@ -378,7 +407,7 @@ export function buildControllerDeps(
     // change needed for the per-site ledger to carry real abstentions instead of `unrecorded`.
     visit: (cand): ExtractResult => {
       try {
-        return visitWith(cand, d.proposer)
+        return progress.run("model-site", () => visitWith(hydrateSignals([cand])[0]!, d.proposer), 1)
       } catch (e) {
         if ((e as { name?: unknown } | null)?.name === "ModelCommandError") watch?.onFault?.(e as Error)
         throw e
@@ -386,11 +415,23 @@ export function buildControllerDeps(
     },
     // CONCURRENCY, ONLY WHEN A POOL WAS SUPPLIED (task #158): `visitAll` runs the batch's model calls in
     // parallel, then admits each site here in rank order through the SAME `visitWith` the arm above uses.
-    ...(pool !== undefined ? { visitAll: makeVisitAll(pool, visitWith, watch?.onFault) } : {}),
+    ...(pool !== undefined
+      ? {
+          visitAll: (cands: readonly Candidate[]) =>
+            progress.run(
+              "model-batch",
+              () => makeVisitAll(pool, visitWith, watch?.onFault)(hydrateSignals(cands)),
+              cands.length,
+            ),
+        }
+      : {}),
     upsert: (incoming): readonly Fact[] => {
       // THE CANDIDATE SIDECAR, NEVER THE KNOWLEDGE PROJECTION. An unconditional persist carries no decision
       // to re-run and so cannot be made concurrency-safe, which is why this door is the only one left.
-      const r = d.store.commitStaging<Map<string, MintedFact>>((staged) => decideStaging(staged, incoming, grounded))
+      const r = d.store.commitStaging((staged) => {
+        const decision = decideStaging(staged, incoming, grounded)
+        return { ...decision, out: { minted: decision.out, factRefs: decision.factRefs } }
+      })
       if (!r.settled) {
         // VISIBLE. Nothing was written, so returning the grounded set unchanged would report a successful
         // pass over a write that did not happen — the silent loss this seam removes.
@@ -398,7 +439,8 @@ export function buildControllerDeps(
         throw new StagingRefusalError(r.refusal)
       }
       // fold in only what actually settled — and [#209] its answerRef alongside it, when the row minted one.
-      for (const [key, f] of r.out) {
+      lastSettledFactRefs = r.out.factRefs // never expose a tentative/retried decision's refs
+      for (const [key, f] of r.out.minted) {
         grounded.set(key, f)
         if (f.answerRef !== undefined) answerRefs.add(f.answerRef)
       }
@@ -412,6 +454,9 @@ export function buildControllerDeps(
     // pass, so a call after several `upsert`s — or after a `resume`/`rerun` leg — reads everything settled so
     // far, never just the last batch).
     answerReceipts: () => [...answerRefs],
+    factRefs: () => lastSettledFactRefs,
+    // Only settled writes enter grounded; its keys are minted NodeKeys, not the facts' source-path ids.
+    stagedNodeKeys: () => [...grounded.keys()],
   }
 }
 
@@ -436,9 +481,12 @@ export function driveMinePass(repoPath: string, deps?: Partial<MineDeps>): MineP
   let refusal: CommitRefusal | undefined
   let fault: Error | undefined
   let seedsDropped = 0
+  const env = d.env ?? process.env
+  const evidence = createMineEvidence(env, deps?.slot ?? (env.ATLAS_MINE_EVIDENCE_DIR ? resolveMineSlot(env) : undefined), d.rev)
   const watch: PassWatch = {
     onFault: (e) => void (fault ??= e),
     onSeedsDropped: (n) => void (seedsDropped += n),
+    onPlan: evidence.plan,
   }
   // POOL ONLY WHEN THE PROPOSER CAME FROM OPERATOR CONFIG (task #158) — a fact about the seam, not a policy:
   // a worker rebuilds its proposer via `resolveProposer(repoPath, env, slot)`, pure in those three args, whereas
@@ -446,12 +494,19 @@ export function driveMinePass(repoPath: string, deps?: Partial<MineDeps>): MineP
   // artifact (a worker loads a file), so outside `dist/` there is nothing to start. The slot is the SAME
   // `deps?.slot` `withDefaults` resolved the in-thread proposer with, so each arm's workers mine that arm.
   const usePool = resolved.modelWired && deps?.proposer === undefined && proposerPoolAvailable()
-  const pool = usePool ? createProposerPool(repoPath, d.env ?? process.env, deps?.slot) : undefined
+  const pool = usePool ? createProposerPool(repoPath, env, deps?.slot) : undefined
   try {
     const ports = buildControllerDeps(repoPath, d, (r) => void (refusal = r), watch, pool, resolved.modelIdentity)
     const report = makeRunController(ports).genesis(repoPath, d.rev, d.budget, d.scope)
-    if (fault !== undefined) throw fault // a misconfigured model is not a mining outcome
-    if (report.failure !== undefined && refusal === undefined) throw new GenesisRunError(report.failure)
+    const failure = fault ?? (report.failure !== undefined && refusal === undefined ? new GenesisRunError(report.failure) : undefined)
+    try {
+      evidence.report(report)
+    } catch (error) {
+      if (failure === undefined) throw error
+      process.stderr.write("atlas-evidence: report-write-failed; original run fault preserved\n")
+      throw failure // Preserve the established run fault even when receipt persistence fails.
+    }
+    if (failure !== undefined) throw failure
     // GEN-9 — seed the Awareness sources AFTER the genesis run, from the run's OWN ratified/definite set.
     // On a candidate-only mine pass that set is structurally `[]`, so `constitution` renders UN-SEEDED
     // (never fabricated) while `taste` (CONVENTIONS.md@sha) and the unratified `mission` stub are seeded.
@@ -464,6 +519,7 @@ export function driveMinePass(repoPath: string, deps?: Partial<MineDeps>): MineP
       seed,
       modelWired: resolved.modelWired,
       seedsDropped,
+      stagedNodeKeys: ports.stagedNodeKeys(),
       ...(refusal !== undefined ? { refusal } : {}),
       ...(resolved.promptDigest !== undefined ? { promptDigest: resolved.promptDigest } : {}),
     }

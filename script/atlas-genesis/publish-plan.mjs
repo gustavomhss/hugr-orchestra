@@ -10,9 +10,10 @@
 //   node publish-plan.mjs leaks <plan.json> <file-or-dir>...
 //       exit 1 iff any file names an excluded fact (quarantined, held, or judged false) as an exact id token
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs"
+import { createHash } from "node:crypto"
 import { dirname, join } from "node:path"
 import { fileURLToPath } from "node:url"
-import { stagedFacts } from "./judge.mjs"
+import { score, stagedFacts } from "./judge.mjs"
 
 /** The repo-relative file a fact is about (its first grounding entry), or undefined. */
 export function subjectFile(fact) {
@@ -33,13 +34,39 @@ export function judgeEvidenceProblems(files) {
   if (files.jsonl === undefined) return ["judge.jsonl is missing: the judge's verdicts did not reach this job"]
   if (files.verdict === undefined) return ["judge-verdict.json is missing"]
   if (files.sample === undefined) return ["sample.json is missing"]
-  const problems = []
-  const verdict = JSON.parse(files.verdict)
-  if (verdict.pass !== true) problems.push("judge-verdict.json does not record a pass")
-  const records = files.jsonl.split("\n").filter((l) => l.trim().length > 0).length
-  const sampled = JSON.parse(files.sample).facts?.length ?? -1
-  if (records !== sampled) problems.push(`judge.jsonl has ${records} record(s) for ${sampled} sampled fact(s)`)
-  return problems
+  try {
+    const problems = []
+    const verdict = JSON.parse(files.verdict)
+    const sample = JSON.parse(files.sample)
+    const records = files.jsonl.split("\n").filter((line) => line.trim().length > 0).map((line) => JSON.parse(line))
+    if (verdict.pass !== true) problems.push("judge-verdict.json does not record a pass")
+    if (!Array.isArray(sample.facts) || sample.facts.length === 0) return [...problems, "sample.json has no sampled claims"]
+    if (records.length !== sample.facts.length) problems.push(`judge.jsonl has ${records.length} record(s) for ${sample.facts.length} sampled fact(s)`)
+    if (!/^[0-9a-f]{64}$/.test(sample.promptHash) || verdict.promptHash !== sample.promptHash)
+      problems.push("judge and sample prompt hashes do not match")
+    const sampled = new Map(sample.facts.map((fact) => [fact.id, fact]))
+    if (sampled.size !== sample.facts.length || new Set(records.map((record) => record.id)).size !== records.length)
+      problems.push("judge/sample contains duplicate claim IDs")
+    for (const record of records) {
+      const fact = sampled.get(record.id)
+      if (fact === undefined) { problems.push("judge contains an unsampled claim"); continue }
+      if (record.arm !== fact.arm || record.nodeKey !== fact.nodeKey || record.contentHash !== fact.contentHash)
+        problems.push("judge claim metadata does not match the sample")
+      if (!/^[0-9a-f]{64}$/.test(fact.nodeKey) || !/^[0-9a-f]{64}$/.test(fact.contentHash) ||
+        (fact.id !== fact.nodeKey && fact.id !== `${fact.nodeKey}:${fact.contentHash}`))
+        problems.push("sample claim identity is not bound to its parent and CAS fact")
+      if (!["true", "false", "unverifiable"].includes(record.verdict) || typeof record.nonObvious !== "boolean" ||
+        typeof record.failed !== "boolean" || typeof record.reason !== "string" ||
+        (record.failed && record.verdict !== "unverifiable"))
+        problems.push("judge contains an invalid verdict record")
+    }
+    const actual = score(records, sample.promptHash)
+    if (Object.keys(actual).some((key) => actual[key] !== verdict[key])) problems.push("judge summary does not match the actual scored claims")
+    if (!actual.pass && verdict.pass === true) problems.push("actual sampled claims do not meet the publication bar")
+    return problems
+  } catch {
+    return ["judge evidence is not valid JSON"]
+  }
 }
 
 /**
@@ -50,26 +77,35 @@ export function judgeEvidenceProblems(files) {
  * and its CAS address.
  */
 export function computePlan(staged, judged) {
-  const heldIds = new Set(judged.filter((r) => r.verdict === "false" || r.verdict === "unverifiable").map((r) => r.id))
-  const falseIds = new Set(judged.filter((r) => r.verdict === "false").map((r) => r.id))
-  const stagedIds = new Set(staged.map((s) => s.id))
-  const quarantined = staged.filter((s) => s.fact.quarantine !== undefined)
-  const held = [...heldIds].filter((id) => stagedIds.has(id)).sort()
-  const promotable = staged.filter((s) => s.fact.quarantine === undefined && !heldIds.has(s.id))
+  const parentOf = (entry) => entry.nodeKey ?? entry.id
+  const byClaim = new Map(staged.map((entry) => [entry.id, entry]))
+  const groups = new Map()
+  for (const entry of staged) {
+    const parent = parentOf(entry)
+    groups.set(parent, [...(groups.get(parent) ?? []), entry])
+  }
+  const heldIds = new Set(judged.filter((record) => record.verdict === "false" || record.verdict === "unverifiable")
+    .flatMap((record) => byClaim.has(record.id) ? [parentOf(byClaim.get(record.id))] : []))
+  const falseIds = new Set(judged.filter((record) => record.verdict === "false")
+    .flatMap((record) => byClaim.has(record.id) ? [parentOf(byClaim.get(record.id))] : []))
+  const quarantined = new Set(staged.filter((entry) => entry.fact.quarantine !== undefined).map(parentOf))
+  const held = [...heldIds].sort()
+  const promotable = staged.filter((entry) => !quarantined.has(parentOf(entry)) && !heldIds.has(parentOf(entry)))
   const units = [
     ...new Set(promotable.flatMap((s) => (subjectFile(s.fact) === undefined ? [] : [unitOf(subjectFile(s.fact))]))),
   ].sort()
-  const excluded = staged
-    .filter((s) => s.fact.quarantine !== undefined || heldIds.has(s.id))
-    .map((s) => ({
-      id: s.id,
-      ids: [...new Set([s.id, s.fact.id, s.contentHash].filter((x) => typeof x === "string" && x.length > 0))],
-      why: s.fact.quarantine !== undefined ? "quarantined" : falseIds.has(s.id) ? "judged false" : "held",
+  const excluded = [...groups]
+    .filter(([parent]) => quarantined.has(parent) || heldIds.has(parent))
+    .map(([parent, entries]) => ({
+      id: parent,
+      ids: [...new Set([parent, ...entries.flatMap((entry) => [entry.id, entry.fact.id, entry.contentHash])]
+        .filter((value) => typeof value === "string" && value.length > 0))],
+      why: quarantined.has(parent) ? "quarantined" : falseIds.has(parent) ? "judged false" : "held",
     }))
   return {
-    promote: promotable.map((s) => s.id).sort(),
+    promote: [...new Set(promotable.map(parentOf))].sort(),
     held,
-    quarantined: quarantined.map((s) => s.id).sort(),
+    quarantined: [...quarantined].sort(),
     units,
     excluded,
   }
@@ -112,7 +148,7 @@ export function leaks(excluded, files) {
 const flag = (argv, name) => (argv.indexOf(name) >= 0 ? argv[argv.indexOf(name) + 1] : undefined)
 const readIf = (path) => (existsSync(path) ? readFileSync(path, "utf8") : undefined)
 const filesOf = (path) => {
-  if (!existsSync(path)) return []
+  if (!existsSync(path)) throw new Error("publish leak check: requested path is missing")
   if (!statSync(path).isDirectory()) return [path]
   return readdirSync(path).flatMap((entry) => filesOf(join(path, entry)))
 }
@@ -134,7 +170,17 @@ async function main(argv) {
       .split("\n")
       .filter((l) => l.trim().length > 0)
       .map((l) => JSON.parse(l))
-    const plan = computePlan(await stagedFacts(flag(rest, "--repo") ?? "."), judged)
+    const sampled = JSON.parse(evidence.sample)
+    const expectedPrompt = createHash("sha256").update(readFileSync(new URL("./judge-prompt.md", import.meta.url))).digest("hex")
+    if (sampled.promptHash !== expectedPrompt) throw new Error("publish plan: judge template identity changed")
+    const staged = await stagedFacts(flag(rest, "--repo") ?? ".")
+    const indexed = new Map(staged.map((entry) => [entry.id, entry]))
+    for (const claim of sampled.facts) {
+      const actual = indexed.get(claim.id)
+      if (actual === undefined || actual.nodeKey !== claim.nodeKey || actual.contentHash !== claim.contentHash)
+        throw new Error("publish plan: sampled claim no longer matches the staged CAS evidence")
+    }
+    const plan = computePlan(staged, judged)
     mkdirSync(out, { recursive: true })
     writeFileSync(join(out, "plan.json"), JSON.stringify(plan, null, 2) + "\n")
     for (const key of ["promote", "held", "units"])
@@ -151,12 +197,11 @@ async function main(argv) {
   }
   if (command === "leaks") {
     const plan = JSON.parse(readFileSync(rest[0], "utf8"))
+    const files = rest.slice(1).flatMap(filesOf)
+    if (files.length === 0) throw new Error("publish leak check: no files were read")
     const found = leaks(
       plan.excluded,
-      rest
-        .slice(1)
-        .flatMap(filesOf)
-        .map((path) => ({ path, text: readFileSync(path, "utf8") })),
+      files.map((path) => ({ path, text: readFileSync(path, "utf8") })),
     )
     for (const f of found) console.log(`::error::excluded fact ${f.id} (${f.why}) reached ${f.at}`)
     console.log(`publish leak check: ${found.length === 0 ? "clean" : `${found.length} leak(s)`}`)
