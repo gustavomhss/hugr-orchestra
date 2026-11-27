@@ -17,7 +17,6 @@ import { Config } from "../../config"
 import { Database } from "../../database/database"
 import { EventV2 } from "../../event"
 import { Location } from "../../location"
-import { LocationMutation } from "../../location-mutation"
 import { ModelV2 } from "../../model"
 import { PermissionV2 } from "../../permission"
 import { Project } from "../../project"
@@ -95,7 +94,6 @@ const layer = Layer.effect(
     const subagentModels = yield* SessionSubagentModels.Service
     const store = yield* SessionStore.Service
     const location = yield* Location.Service
-    const mutations = yield* LocationMutation.Service
     const systemContext = yield* SystemContextRegistry.Service
     const skillGuidance = yield* SkillGuidance.Service
     const referenceGuidance = yield* ReferenceGuidance.Service
@@ -337,7 +335,7 @@ const layer = Layer.effect(
             .pipe(Effect.catchTag("Session.NotFoundError", (error) => Effect.die(error)))
           if (!input.safety) return {}
           const call = input.safety
-          const hooks = hostedHooks(permissions, mutations, session.id, agent.id)
+          const hooks = hostedHooks(permissions, { sessionID: session.id, agent: agent.id, location, fs })
           const authorization = yield* tools.hosted(
             {
               tool: call.tool,
@@ -759,7 +757,7 @@ export const node = makeLocationNode({
     AppProcess.node,
     SkillV2.node,
     QuestionV2.node,
-    LocationMutation.node,
+    ToolSafety.node,
   ],
 })
 

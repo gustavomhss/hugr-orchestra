@@ -2,7 +2,8 @@ import { Effect, Scope } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import type { AgentV2 } from "../../agent"
 import { FSUtil } from "../../fs-util"
-import type { LocationMutation } from "../../location-mutation"
+import { Location } from "../../location"
+import { LocationMutation } from "../../location-mutation"
 import { PermissionV2 } from "../../permission"
 import type { SessionSchema } from "../schema"
 import { ToolSafety } from "../../tool-safety"
@@ -46,25 +47,39 @@ export const hostedCall = Effect.fnUntraced(function* (
 /** Bind installed Hook Approve to the live Session; its SDK transcript row may not have arrived yet. */
 export function hostedHooks(
   permissions: PermissionV2.Interface,
-  mutations: LocationMutation.Interface,
-  sessionID: SessionSchema.ID,
-  agent: AgentV2.ID,
+  binding: {
+    readonly sessionID: SessionSchema.ID
+    readonly agent: AgentV2.ID
+    readonly location: Location.Interface
+    readonly fs: FSUtil.Interface
+  },
 ): ToolSafety.HostedCallHooks {
   return {
     approve: Effect.fnUntraced(function* (request: ToolSafety.Approval) {
       const invocation = request.invocation
-      if (invocation.sessionID !== sessionID || invocation.agent !== agent || !invocation.callID)
+      if (
+        invocation.sessionID !== binding.sessionID ||
+        invocation.agent !== binding.agent ||
+        invocation.directory !== binding.location.directory ||
+        invocation.projectID !== binding.location.project.id ||
+        !invocation.callID
+      )
         return yield* new ToolSafety.Denied({ reason: "approval-v2-invocation-identity-missing" })
       const args = invocation.args
-      const resolved = ["read", "write", "edit", "multiedit"].includes(invocation.tool)
-        && args && typeof args === "object" && "filePath" in args && typeof args.filePath === "string"
-        ? yield* mutations.resolve({ path: args.filePath, kind: invocation.tool === "read" ? "directory" : "file" }).pipe(
+      const filePath = args && typeof args === "object" && "filePath" in args ? args.filePath : undefined
+      const resolved = typeof filePath === "string" && ["read", "write", "edit", "multiedit"].includes(invocation.tool)
+        ? yield* LocationMutation.Service.use((mutations) =>
+            mutations.resolve({ path: filePath, kind: invocation.tool === "read" ? "directory" : "file" }),
+          ).pipe(
+            Effect.provide(LocationMutation.locationLayer),
+            Effect.provideService(Location.Service, binding.location),
+            Effect.provideService(FSUtil.Service, binding.fs),
             Effect.mapError(() => new ToolSafety.Denied({ reason: "approval-native-resources-invalid" })),
           )
         : undefined
       yield* permissions.askExplicit({
-        sessionID,
-        agent,
+        sessionID: binding.sessionID,
+        agent: binding.agent,
         action: "relay_hook",
         resources: resolved ? [resolved.resource] : [...request.resources],
         metadata: {
