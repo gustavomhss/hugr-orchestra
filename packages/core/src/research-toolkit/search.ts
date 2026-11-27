@@ -27,6 +27,10 @@ const DEFAULT_LIMIT = 50
 const MAX_TEXT = 300
 // Capture ceiling for rg's JSON stream; hitting it is reported as an incomplete search, never as a clean zero.
 const MAX_STDOUT = 8 * 1024 * 1024
+const globs = (paths: ReadonlyArray<string> = []) => [
+  "--glob=!**/.git/**",
+  ...paths.map((glob) => `--glob=${glob.replace(/^(?:\.[\\/])+/u, "")}`),
+]
 
 /** `binaries` lists the files that match only when binary files are searched too: the ones the main pass skipped. */
 export const argv = (input: CodeIndex.SearchInput, binaries = false) => {
@@ -47,12 +51,48 @@ export const argv = (input: CodeIndex.SearchInput, binaries = false) => {
     ...(mode === "identifier" ? ["--word-regexp"] : []),
     input.caseSensitive === false ? "--ignore-case" : "--case-sensitive",
     ...(input.context && !binaries ? [`--context=${input.context}`] : []),
-    "--glob=!**/.git/**",
-    ...(input.paths ?? []).map((glob) => `--glob=${glob.replace(/^(?:\.[\\/])+/u, "")}`),
+    ...globs(input.paths),
     // -e keeps a pattern that starts with "-" from being read as an option; the explicit root stops rg reading stdin.
     "-e", input.pattern, "--", ".",
   ]
 }
+
+/** The same path selection as lexical search, with a complete NUL-framed set or an explicit failure. */
+export const files = (paths: ReadonlyArray<string>, options: Pick<Options, "cwd" | "signal">) =>
+  Effect.gen(function* () {
+    const process = yield* AppProcess.Service
+    const binary = yield* RipgrepBinary.Service
+    const command = yield* binary.filepath.pipe(
+      Effect.mapError((cause) => new Failure({ reason: "index_unavailable", message: cause.message })),
+    )
+    const result = yield* process.run(ChildProcess.make(command, [
+      "--no-config", "--no-messages", "--hidden", "--no-require-git",
+      "--files", "--null", "--sort=path", ...globs(paths), "--", ".",
+    ], { cwd: options.cwd, extendEnv: true, stdin: "ignore" }), {
+      maxOutputBytes: MAX_STDOUT,
+      maxErrorBytes: 8 * 1024,
+      signal: options.signal,
+    }).pipe(Effect.mapError((cause) => new Failure({ reason: "search_failed", message: cause.message })))
+    if (result.exitCode !== 0 && result.exitCode !== 1)
+      return yield* new Failure({ reason: "search_failed", message: result.stderr.toString("utf8").trim() || `ripgrep exited ${result.exitCode}` })
+    if (result.stdoutTruncated || result.stderrTruncated || result.outputTruncated)
+      return yield* new Failure({ reason: "search_failed", message: "ripgrep path selection exceeded its output ceiling" })
+    return yield* Effect.try({
+      try: () => {
+        const text = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(result.stdout)
+        if (!text) return new Set<string>()
+        if (!text.endsWith("\0")) throw new Error("incomplete path selection")
+        return new Set(text.slice(0, -1).split("\0").map((row) => {
+          const file = normalize(row)
+          if (!file || file.startsWith("/") || /^[a-z]:/i.test(file) ||
+            file.split("/").some((part) => !part || part === "." || part === ".." || part.toLowerCase() === ".git"))
+            throw new Error("invalid selected path")
+          return file
+        }))
+      },
+      catch: () => new Failure({ reason: "search_failed", message: "ripgrep path selection is not a complete relative UTF-8 file list" }),
+    })
+  })
 
 export const run = (input: CodeIndex.SearchInput, options: Options) =>
   Effect.gen(function* () {

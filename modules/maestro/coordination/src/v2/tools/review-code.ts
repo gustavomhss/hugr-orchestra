@@ -33,6 +33,10 @@ export type Request =
 
 type Evidence = { readonly uri: string; readonly sha256: string }
 const unavailable = (message: string) => new Research.Error({ code: "index_unavailable", message })
+const searchFailure = (failure: CodeSearch.Failure) => new Research.Error({
+  code: failure.reason === "index_unavailable" ? "index_unavailable" : failure.reason === "pattern_invalid" ? "unsupported" : "source_unavailable",
+  message: failure.message,
+})
 
 /** One review call owns its deadline, source projection and exact binding through retained evidence delivery. */
 export const run = (services: Services, request: Request, context: Tool.Context) => Effect.gen(function* () {
@@ -85,13 +89,16 @@ export const run = (services: Services, request: Request, context: Tool.Context)
     )
     const projection = normalized.name === "code_query" ? undefined
       : yield* checked(ReviewCodeSource.project(view).pipe(Effect.provideService(ResearchToolkit.Caps, caps)))
+    // Use rg's own gitignore-style glob rules, including basename and directory exclusions, for indexed ranges too.
+    const allowed = normalized.name === "code_locate" && normalized.input.paths?.length
+      ? yield* checked(CodeSearch.files(normalized.input.paths, { cwd: projection!.directory }).pipe(Effect.mapError(searchFailure)))
+      : undefined
+    if (allowed && [...allowed].some((file) => !view.files.regular?.has(file)))
+      return yield* new Research.Error({ code: "source_unavailable", message: "ripgrep selected a path outside the captured regular files" })
     const search = (input: CodeIndex.SearchInput) => checked(CodeSearch.run(input, {
       cwd: projection!.directory, ...(view.commit ? { commit: view.commit } : {}),
     }).pipe(
-      Effect.mapError((failure) => new Research.Error({
-        code: failure.reason === "index_unavailable" ? "index_unavailable" : failure.reason === "pattern_invalid" ? "unsupported" : "source_unavailable",
-        message: failure.message,
-      })),
+      Effect.mapError(searchFailure),
       Effect.map((result) => projection?.skipped.length ? { ...result, basis: { ...result.basis,
         coverage: { ...result.basis.coverage, complete: false, skipped: [...result.basis.coverage.skipped, ...projection.skipped] },
       } } : result),
@@ -102,7 +109,7 @@ export const run = (services: Services, request: Request, context: Tool.Context)
       : normalized.name === "code_search" ? yield* search(normalized.input)
       : yield* Locate.run(normalized.input, {
         search, query, read: (file) => checked(ReviewCodeSource.read(view, file)),
-        inScope: accepts(normalized.input.paths),
+        inScope: (file) => !allowed || allowed.has(file),
         retain: (snapshot) => {
           state.snapshot = snapshot
           return capture({ source, snapshot })
@@ -155,12 +162,6 @@ function requestedPaths(request: Request) {
   if (request.name !== "code_query") return request.input.paths ?? []
   return ["path" in request.input ? request.input.path : undefined, "at" in request.input ? request.input.at?.path : undefined]
     .filter((file): file is string => file !== undefined)
-}
-
-function accepts(paths: ReadonlyArray<string> = []) {
-  const included = paths.filter((file) => !file.startsWith("!")).map((file) => new Bun.Glob(file))
-  const excluded = paths.filter((file) => file.startsWith("!")).map((file) => new Bun.Glob(file.slice(1)))
-  return (file: string) => (!included.length || included.some((glob) => glob.match(file))) && !excluded.some((glob) => glob.match(file))
 }
 
 function shown(snapshot: string) {
