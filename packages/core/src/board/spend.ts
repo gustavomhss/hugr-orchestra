@@ -23,7 +23,7 @@ export type Session = {
   readonly tokens: number
 }
 
-/** `none`: no PR, nothing to attribute. `pending`: a PR whose runs have not been fetched yet. */
+/** `none`: no PR, nothing to attribute. `pending`: CI measurements are unavailable or no longer attested. */
 export type Ci = { readonly kind: "none" } | { readonly kind: "pending" } | { readonly kind: "ok"; readonly usd: number }
 
 /** One card's spend. Subagent sessions of the card's session are included by the caller. */
@@ -44,7 +44,7 @@ export function card(input: { readonly sessions: readonly Session[]; readonly ci
   const infra: Board.Meter =
     input.ci.kind === "ok"
       ? { kind: "usd", usd: input.ci.usd }
-      : { kind: "not-metered", source: input.ci.kind === "pending" ? "GitHub Actions not fetched yet" : "no PR linked" }
+      : { kind: "not-metered", source: input.ci.kind === "pending" ? "GitHub Actions measurements unavailable" : "no PR linked" }
   return {
     models,
     infra,

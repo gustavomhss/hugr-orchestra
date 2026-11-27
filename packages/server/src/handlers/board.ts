@@ -9,6 +9,11 @@ export const BoardHandler = HttpApiBuilder.group(Api, "server.board", (handlers)
     const board = yield* Board.Service
 
     return handlers
+      .handle("board.create", (ctx) => board.issue(
+        { ...ctx.payload, project: ctx.params.key, reason: "Created by the owner." },
+        { kind: "owner", seat: null, sessionID: null, messageID: null, callID: null, model: null },
+      ).pipe(mapErrors))
+      .handle("board.execution", (ctx) => board.execution(ctx.params.key, ctx.params.number).pipe(mapNotFound))
       .handle("board.list", (ctx) => board.summaries({ archived: ctx.query.archived }))
       .handle("board.get", (ctx) => board.snapshot(ctx.params.key).pipe(mapNotFound))
       .handle("board.issue", (ctx) => board.issuePage(ctx.params.key, ctx.params.number).pipe(mapNotFound))

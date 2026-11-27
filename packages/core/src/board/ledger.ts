@@ -1,6 +1,6 @@
 export * as BoardLedger from "./ledger"
 
-import { and, asc, desc, eq, inArray, isNotNull } from "drizzle-orm"
+import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm"
 import { Effect } from "effect"
 import type { Board } from "@orchestra/schema/board"
 import { BoardActivityTable, BoardAttemptTable, BoardCheckTable, BoardIssueTable } from "./sql"
@@ -78,7 +78,18 @@ export const settled = Effect.fnUntraced(function* (tx: Tx, project: ProjectRow[
     .select({ outcome: BoardAttemptTable.outcome })
     .from(BoardAttemptTable)
     .innerJoin(BoardIssueTable, eq(BoardIssueTable.id, BoardAttemptTable.issue_id))
-    .where(and(eq(BoardIssueTable.project_id, project), inArray(BoardAttemptTable.outcome, ["merged", "ejected"])))
+    .where(and(
+      eq(BoardIssueTable.project_id, project),
+      inArray(BoardAttemptTable.outcome, ["merged", "ejected"]),
+      // New non-queue closures retain their attempt outcome but aren't queue sizing samples.
+      sql`NOT EXISTS (
+        SELECT 1 FROM board_activity AS activity, json_each(activity.after, '$.closedAttempts') AS closure
+        WHERE activity.issue_id = ${BoardAttemptTable.issue_id}
+          AND activity.action <> 'bundle.merge'
+          AND json_extract(closure.value, '$.n') = ${BoardAttemptTable.n}
+          AND json_extract(closure.value, '$.updatedAt') = ${BoardAttemptTable.time_updated}
+      )`,
+    ))
     .orderBy(desc(BoardAttemptTable.time_updated))
     .limit(50)
     .all()

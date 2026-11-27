@@ -278,11 +278,6 @@ export function makeSettle(
           .run()
         return yield* Effect.forEach(members, (item) =>
           Effect.gen(function* () {
-            yield* tx
-              .update(BoardAttemptTable)
-              .set({ outcome: "merged" })
-              .where(and(eq(BoardAttemptTable.issue_id, item.issue.id), isNull(BoardAttemptTable.outcome)))
-              .run()
             yield* tx.delete(BoardQueueTable).where(eq(BoardQueueTable.issue_id, item.issue.id)).run()
             const moving = yield* place(tx, row, item.issue, "shipped")
             const activity = yield* log(tx, {

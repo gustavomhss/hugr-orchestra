@@ -279,10 +279,6 @@ export function tools(input: {
           if (!validation.contextRecordID || !validation.contextHash)
             return yield* new Tool.Failure({ message: "Review delegation requires bound context" })
           const stage = params.stage ?? "plan"
-          if (card)
-            yield* BoardThread.write(services.db, {
-              id: `bno_review_${params.validationRecordID}_${stage}`, issue: card.id, kind: "review", author: "maestro", body: `Review requested (${stage}).`,
-            }).pipe(Effect.orDie)
           if (Option.isNone(input.sessions) || Option.isNone(input.execution))
             return yield* MaestroToolGate.hold(
               "session-execution-unavailable",
@@ -392,6 +388,8 @@ export function tools(input: {
                 )
               : yield* GovernanceEvidenceV2.contextIsCurrent(services, record)
           if (!current) return "LUCY_ERROR: Error: Review context changed before provider execution"
+          const requestID = `bno_review_${lead}_${stage}_${card?.id ?? "unlinked"}`
+          const attempt = card ? yield* BoardThread.association(services.db, requestID, card.id).pipe(Effect.orDie) : null
           const sessionID = (key: string) =>
             key === "lead" ? lead : SessionSchema.ID.make(`ses_lucy_review_${sha256(`${lead}\0${key}`)}`)
           const cache = ReviewReleaseRequestV2.key(`review_${params.validationRecordID}_${stage}`, release)
@@ -420,6 +418,17 @@ export function tools(input: {
                   location: parent.location,
                 })
                 .pipe(
+                  Effect.tap((created) => card && child.role === "lead"
+                    ? BoardThread.write(services.db, {
+                      id: requestID,
+                      issue: card.id,
+                      kind: "review",
+                      author: "maestro",
+                      body: `Review requested (${stage}).`,
+                      attempt,
+                      sessionID: created.id,
+                    }).pipe(Effect.orDie)
+                    : Effect.void),
                   Effect.map((created) => created.id),
                   Effect.mapError(() => new Tool.Failure({ message: `Session ${parent.id} is not available` })),
                 ),
@@ -523,7 +532,7 @@ export function tools(input: {
               "\n",
             )
             if (card)
-              yield* BoardThread.write(services.db, { id: `bno_verdict_${review.id}`, issue: card.id, kind: "review", author: "lucy", body: verdict }).pipe(Effect.orDie)
+              yield* BoardThread.write(services.db, { id: `bno_verdict_${review.id}_${card.id}`, issue: card.id, kind: "review", author: "lucy", body: verdict, attempt, sessionID: lead }).pipe(Effect.orDie)
             return verdict
           }
           return ran.reply ? `LUCY_NO_RECEIPT: ${ran.reply}` : `LUCY_NO_RECEIPT: ${ran.lead}`

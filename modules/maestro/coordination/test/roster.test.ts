@@ -199,4 +199,12 @@ describe("Maestro roster", () => {
     expect(nativeProfiles.lucy!.read).toEqual(nativeProfiles.review!.read)
     expect(lookupRosterMember("lucy")).toMatchObject({ status: "FOUND", member: { nativeProfile: "review" } })
   })
+
+  test("every native seat can propose an issue and request movement, without a movement grant", () => {
+    for (const member of roster.filter((member) => member.memberId !== "maestro")) {
+      expect(nativeProfiles[member.memberId]?.board_issue).toBe("allow")
+      expect(nativeProfiles[member.memberId]?.board_request_move).toBe("allow")
+      expect(nativeProfiles[member.memberId]?.board_move).not.toBe("allow")
+    }
+  })
 })
