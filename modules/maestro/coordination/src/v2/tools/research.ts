@@ -12,6 +12,7 @@ import { AppProcess } from "@orchestra/core/process"
 import { ResearchLedger } from "@orchestra/core/research/ledger"
 import type { ResearchRecords } from "@orchestra/core/research/records"
 import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
+import { ReviewSeatTools } from "@orchestra/core/review/seat-tools"
 import { CodeIndex } from "@orchestra/core/research-toolkit/code-index/types"
 import { Locate } from "@orchestra/core/research-toolkit/locate"
 import { ProbeRun } from "@orchestra/core/research-toolkit/probe/run"
@@ -43,6 +44,7 @@ import { denied } from "./research-denied"
 import { history } from "./research-history"
 import { basis, CONTEXT_CALLERS, CONTEXT_IMPORTS, enclosing, head, index, RANGE_LINES, scoped, section, SHOWN_LINES } from "./research-index"
 import { inquire } from "./research-inquire"
+import { MaestroReviewCode } from "./review-code"
 
 export {
   captureDescription,
@@ -57,9 +59,9 @@ export {
 export { environment } from "./research-history"
 export { caps, warm } from "./research-index"
 
-// The research seat tools. Each call is the research seat's own, under
+// The research seat tools. Its calls run under
 // its dispatch allowance and its retained logical-task binding; the runner's invocation frame
-// is what core `ResearchRecords` checks before it writes. `v2/seats.ts` hides these tools from every other agent.
+// is what core `ResearchRecords` checks before it writes. CODE also has an independent host-bound review route.
 
 export const names = {
   capture: "research_capture",
@@ -84,6 +86,7 @@ export type Services = ResearchDispatchV2.Services & {
   readonly fs: FSUtil.Interface
   readonly processes: AppProcess.Interface
   readonly ripgrep: Ripgrep.RipgrepBinary.Interface
+  readonly reviewRipgrep: Ripgrep.RipgrepBinary.Interface
   readonly git: GitCli.Interface
   readonly config: Config.Interface
   readonly http: HttpClient.HttpClient
@@ -375,6 +378,7 @@ export function tools(services: Services) {
       toModelOutput: ({ output }) => [{ type: "text", text: output.output }],
       execute: (input, context) =>
         Effect.gen(function* () {
+          if (context.agent === ReviewSeatTools.SEAT) return yield* MaestroReviewCode.run(services, { name: names.search, input }, context)
           const research = yield* bound(names.search, context)
           const directory = services.location.directory
           const worktree = research.binding.worktree
@@ -419,6 +423,7 @@ export function tools(services: Services) {
       toModelOutput: ({ output }) => [{ type: "text", text: output.output }],
       execute: (input, context) =>
         Effect.gen(function* () {
+          if (context.agent === ReviewSeatTools.SEAT) return yield* MaestroReviewCode.run(services, { name: names.query, input }, context)
           const research = yield* bound(names.query, context)
           const worktree = research.binding.worktree
           const query = yield* scoped(worktree, input).pipe(Effect.catch(denied))
@@ -593,6 +598,7 @@ export function tools(services: Services) {
       toModelOutput: ({ output }) => [{ type: "text", text: output.output }],
       execute: (input, context) =>
         Effect.gen(function* () {
+          if (context.agent === ReviewSeatTools.SEAT) return yield* MaestroReviewCode.run(services, { name: names.locate, input }, context)
           const research = yield* bound(names.locate, context)
           const worktree = research.binding.worktree
           const resolve = enclosing(services, worktree)

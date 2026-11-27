@@ -10,6 +10,11 @@ import { Location } from "../src/location"
 import { AbsolutePath } from "../src/schema"
 import { SessionSchema } from "../src/session/schema"
 import { Tool } from "../src/tool/tool"
+import { WriteTool } from "../src/tool/write"
+import { EditTool } from "../src/tool/edit"
+import { FileMutation } from "../src/file-mutation"
+import { LocationMutation } from "../src/location-mutation"
+import { PermissionV2 } from "../src/permission"
 import { ToolRegistry } from "../src/tool/registry"
 import { ToolOutputStore } from "../src/tool-output-store"
 import { ToolSafety } from "../src/tool-safety"
@@ -70,6 +75,91 @@ it.live("native V2 registry captures actual Location/Event services and durably 
         AppNodeBuilder.build(LayerNode.group([ToolRegistry.nativeNode, EventV2.node, FSUtil.node]), [
           [Location.node, Layer.succeed(Location.Service, active)], [ToolOutputStore.node, ToolOutputStore.nodeWithoutConfig],
         ]).pipe(Layer.provide(Layer.succeed(ToolSafety.RuntimeProfile, { writeRoots: [path.join(tmp.path, "owned")] }))),
+      ),
+    )
+  }),
+)
+
+it.live("real write and edit schemas respect native write roots and protected paths", () =>
+  Effect.gen(function* () {
+    const tmp = yield* Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    )
+    yield* Effect.gen(function* () {
+      const registry = yield* ToolRegistry.Service
+      const fs = yield* FSUtil.Service
+      yield* fs.ensureDir(path.join(tmp.path, "owned"))
+      yield* fs.writeFileString(path.join(tmp.path, "outside"), "original")
+      yield* fs.writeFileString(path.join(tmp.path, "owned", "protected"), "original")
+      const tools = yield* registry.materialize()
+      const invoke = (name: string, input: unknown, id: string) =>
+        tools.settle({
+          sessionID: SessionSchema.ID.make("ses_safety_real_mutation"),
+          ...toolIdentity,
+          call: { type: "tool-call", name, id, input },
+        })
+      expect((yield* invoke("write", { path: "owned/file", content: "first" }, "write")).result).toMatchObject({ type: "text" })
+      expect(yield* fs.readFileString(path.join(tmp.path, "owned/file"))).toBe("first")
+      expect(
+        (yield* invoke("edit", { path: "owned/file", oldString: "first", newString: "second" }, "edit")).result.type,
+      ).toBe("text")
+      expect(yield* fs.readFileString(path.join(tmp.path, "owned/file"))).toBe("second")
+      for (const target of ["outside", "owned/protected"]) {
+        expect((yield* invoke("write", { path: target, content: "changed" }, `deny-write-${target}`)).result.type).toBe(
+          "error",
+        )
+        expect(
+          (yield* invoke("edit", { path: target, oldString: "original", newString: "changed" }, `deny-edit-${target}`))
+            .result.type,
+        ).toBe("error")
+        expect((yield* invoke("write", { path: target, filePath: "owned/file", content: "changed" }, `conflicting-${target}`)).result.type).toBe("error")
+        expect(yield* fs.readFileString(path.join(tmp.path, target))).toBe("original")
+      }
+    }).pipe(
+      Effect.provide(
+        AppNodeBuilder.build(
+          LayerNode.group([
+            ToolRegistry.node,
+            ToolRegistry.toolsNode,
+            FSUtil.node,
+            FileMutation.node,
+            LocationMutation.node,
+            WriteTool.node,
+            EditTool.node,
+          ]),
+          [
+            [ToolRegistry.node, ToolRegistry.nativeNode],
+            [ToolRegistry.toolsNode, ToolRegistry.nativeToolsNode],
+            [Location.node, Layer.succeed(Location.Service, location({ directory: AbsolutePath.make(tmp.path) }))],
+            [ToolOutputStore.node, ToolOutputStore.nodeWithoutConfig],
+            [
+              PermissionV2.node,
+              Layer.succeed(
+                PermissionV2.Service,
+                PermissionV2.Service.of({
+                  evaluate: () => Effect.die("unused"),
+                  authorize: () => Effect.die("unused"),
+                  askExplicit: () => Effect.die("unused"),
+                  assert: () => Effect.void,
+                  ask: () => Effect.die("unused"),
+                  reply: () => Effect.die("unused"),
+                  cancelSession: () => Effect.void,
+                  get: () => Effect.die("unused"),
+                  forSession: () => Effect.die("unused"),
+                  list: () => Effect.die("unused"),
+                }),
+              ),
+            ],
+          ],
+        ).pipe(
+          Layer.provide(
+            Layer.succeed(ToolSafety.RuntimeProfile, {
+              writeRoots: [path.join(tmp.path, "owned")],
+              protectedWrites: ["owned/protected"],
+            }),
+          ),
+        ),
       ),
     )
   }),

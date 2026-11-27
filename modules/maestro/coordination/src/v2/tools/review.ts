@@ -42,6 +42,7 @@ import { ReviewRoundV2 } from "./review-round"
 import { ReviewChecksV2 } from "../workflow/review-checks"
 import { ReviewCardV2 } from "../workflow/review-card"
 import { ReviewFanoutV2 } from "../workflow/review-fanout"
+import { ReviewEngagementPolicyV2 } from "../workflow/review-engagement-policy"
 import { WorkflowReviewV2 } from "../workflow/review"
 
 export const names = {
@@ -97,7 +98,7 @@ const GovernedInput = Schema.Struct({
   release: Schema.optional(ReviewReleaseEvidence.Input),
   tier: Schema.optional(Schema.NonEmptyString),
 }).annotate({ parseOptions: { onExcessProperty: "error" } })
-const RequestInput = Schema.Union([GovernedInput, ReviewPRRequestV2.Input])
+const RequestInput = Schema.Union([GovernedInput, ReviewPRRequestV2.Input, ReviewEngagementPolicyV2.Input])
 
 const ReviewInput = Schema.Struct({
   validationRecordID: Schema.String,
@@ -161,8 +162,9 @@ const analyzeStep = (processes: AppProcess.Interface): Analyze => (input) => {
     catalog: input.catalog,
     lane: analyzeLane(trusted),
     packs: input.packs.map((pack) => pack.id),
-    scope: "diff",
+    scope: input.repositoryFiles === undefined ? "diff" : "files",
     files: [...input.files],
+    ...(input.repositoryFiles === undefined ? {} : { repositoryFiles: input.repositoryFiles }),
   }).pipe(
     Effect.provideService(AppProcess.Service, processes),
     Effect.mapError((error) => new Tool.Failure({ message: `ReviewAnalyzeFailed: ${String(error)}` })),
@@ -182,6 +184,7 @@ export function tools(input: {
   readonly gate: MaestroToolGate.Gate
   readonly sessions: Option.Option<SessionV2.Interface>
   readonly execution: Option.Option<SessionExecution.Interface>
+  readonly database?: Database.Interface
   // Seams over the review toolkit and the seat's stage tool sets; the defaults are the running build's.
   readonly analyze?: Analyze
   readonly stages?: ReviewFanoutV2.Stages
@@ -253,17 +256,27 @@ export function tools(input: {
     }),
     [names.request]: Tool.make({
       description:
-        'Delegate one read-only cold review to the native cold reviewer (`lucy`). Maestro only. Stage "plan" (default) reviews the plan and its committed spec before approval; stage "code" reviews what the workers committed after it, before the workflow completes.',
+        'Delegate one read-only cold review to the native cold reviewer (`lucy`). Maestro only. Stage "plan" (default) reviews the plan and its committed spec before approval; stage "code" reviews what the workers committed after it. Kind "pr" reviews local refs. Kind "engagement" requests an independent audit, diligence or artifact report over captured files with a request ID and host time box; it requires no validation and returns no merge verdict.',
       input: RequestInput,
       output: Schema.String,
       execute: (params, context) =>
         Effect.gen(function* () {
           yield* input.gate(context, AgentV2.defaultID, "Review delegation requires Maestro")
-          if ("kind" in params) return yield* ReviewPRRequestV2.run(params, {
-            sessionID: context.sessionID, services, sessions: input.sessions, execution: input.execution,
-            analyze, stages, processes: input.processes, binding: ReviewBindingV2.reviewBinding, analysisStore: ReviewBindingV2.analysisStore,
-            settings: (projectID) => reviewSettings(services.db, projectID),
-          }).pipe(Effect.scoped)
+          if ("kind" in params) {
+            if (params.kind === "engagement") {
+              const { ReviewEngagementRequestV2 } = yield* Effect.promise(() => import("./review-engagement"))
+              return yield* ReviewEngagementRequestV2.run(params, {
+                sessionID: context.sessionID, services, sessions: input.sessions, execution: input.execution,
+                database: input.database ?? { db: services.db }, analyze, stages, processes: input.processes,
+                settings: (projectID) => reviewSettings(services.db, projectID),
+              }).pipe(Effect.scoped)
+            }
+            return yield* ReviewPRRequestV2.run(params, {
+              sessionID: context.sessionID, services, sessions: input.sessions, execution: input.execution,
+              analyze, stages, processes: input.processes, binding: ReviewBindingV2.reviewBinding, analysisStore: ReviewBindingV2.analysisStore,
+              settings: (projectID) => reviewSettings(services.db, projectID),
+            }).pipe(Effect.scoped)
+          }
           const card = params.card ? yield* BoardThread.card(services.db, params.card).pipe(Effect.orDie) : undefined
           if (params.card && !card) return yield* new Tool.Failure({ message: `Card ${params.card} is not on the board` })
           const validation = yield* GovernanceRecordsV2.readValidation(services.db, params.validationRecordID)
@@ -406,7 +419,7 @@ export function tools(input: {
               { concurrency: 1 },
             ).pipe(Effect.provideService(AppProcess.Service, input.processes)),
           )
-          const binding = ReviewBindingV2.reviewBinding({ worktree, diff, cache, lenses: leadLenses, ledger, copies })
+          const binding = ReviewBindingV2.reviewBinding({ worktree, diff, cache, lenses: leadLenses, ledger, copies, processes: input.processes })
           const port: ReviewFanoutV2.Port = {
             create: (child) =>
               sessions

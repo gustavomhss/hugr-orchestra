@@ -59,14 +59,14 @@ export function parseInputs(raw: string, definitions: readonly Actions.InputDefi
       }
       return [[item.name, text]]
     })
-    return invalid ? { error: invalid } : { value: Object.fromEntries(values) }
+    return invalid ? { error: invalid } : { value: values.length ? Object.fromEntries(values) : undefined }
   }
-  if (!raw.trim()) return { value: {} }
+  if (!raw.trim()) return { value: undefined }
   try {
     const value: unknown = JSON.parse(raw)
     if (!isJsonObject(value)) return { error: true }
     if (provider === "github" && Object.values(value).some((item) => !isPrimitive(item))) return { error: true }
-    return { value }
+    return { value: Object.keys(value).length ? value : undefined }
   } catch {
     return { error: true }
   }

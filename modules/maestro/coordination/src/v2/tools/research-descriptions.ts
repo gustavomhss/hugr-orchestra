@@ -44,37 +44,39 @@ export const inquiryDescription = [
 ].join("\n")
 
 export const searchDescription = [
-  "Ripgrep search of the working tree for exact text. For a symbol's definition or callers use code_query; to find where a behavior lives, code_locate. Batch several patterns in one regex or parallel calls.",
+  "Ripgrep search for exact text in this Session's source: the linked working tree for research, the captured revision for review. For a symbol's definition or callers use code_query; to find where a behavior lives, code_locate. Batch several patterns in one regex or parallel calls.",
   "",
   "pattern: at most 512 characters. mode: literal (default), identifier (bounded by identifier characters) or regex. caseSensitive: false ignores case. paths: up to 16 globs, e.g. src/**/*.ts or !**/test/**. context: 0 to 5 lines. limit: default 50, max 200; next gives the offset. Hidden files are searched, .gitignore respected.",
   "",
-  "Lines: rows are path:line text, 1-based, sorted by path.",
+  "Lines: original 1-based coordinates, sorted by path. Research renders path:line rows; review returns captured-source matches.",
   "Empty: absent from this scope only when coverage.complete is true; otherwise it proves nothing.",
-  "Retains: nothing; capture the range to cite it.",
+  "Retains: research must capture the range to cite it; review returns {result,evidence} on the first line, with the retained evidence URI and SHA-256.",
   "Fails: index_unavailable (no ripgrep), unsupported (invalid pattern), source_unavailable.",
+  "Review additionally requires its active host binding: review-code-binding-missing after closure, review-code-source-unavailable on failed source acquisition, review-code-timeout after 60 seconds. Review never downloads a missing tool.",
 ].join("\n")
 
 export const locateDescription = [
-  "Start here for where, how and why questions about code. One call runs many searches (ripgrep and the code index), fuses them, rereads every range on disk and returns ranked file:line ranges with their lines.",
+  "Start here for where, how and why questions about code. One call runs many searches (ripgrep and the code index), fuses them, rereads every range from this Session's source and returns ranked file:line ranges with their lines. Review ranges stay on the captured revision despite later worktree edits.",
   "",
   "Give everything you know in one call: terms (up to 16), symbols (up to 16, e.g. DiscoveryResult.assemble), question (plain words). paths (globs) narrows; limit defaults to 12, max 40.",
   "",
   "Lines: original 1-based, inclusive startLine and endLine; a long range shows its first 40 lines.",
   "Empty: no range matched; check searches and basis.coverage.complete before claiming absence.",
-  "Retains: one snapshot of every range, citable by its ref and original lines, with no further capture.",
-  "Fails: index_unavailable (no ripgrep), unsupported (no input, or outside a research dispatch).",
+  "Retains: a snapshot of every range, citable by its ref and original lines, with no further capture. Review returns {result,evidence} with a retained URI and SHA-256; it may use lexical-only ranges when a prepared index is unavailable, with incomplete coverage.",
+  "Fails: index_unavailable (no ripgrep), unsupported (no input, or outside a research dispatch). Review requires an active binding and reports review-code-binding-missing, review-code-source-unavailable or review-code-timeout; it never downloads tools or rebuilds an index.",
 ].join("\n")
 
 export const queryDescription = [
   "Ask the prebuilt code index about a named symbol or file; one call answers what several greps would.",
   "",
-  "op: definition (also first callers and file imports), references, callers, callees, implementations, imports and importers (need path), symbols (outline of path, or by name, kind, exported), map (files ranked by importance).",
+  "op: definition (research also shows first callers and file imports), references, callers, callees, implementations, imports and importers (need path), symbols (outline of path, or by name, kind, exported), map (files ranked by importance).",
   "Target: name (\"DiscoveryResult.assemble\") narrowed by path, or symbol id, or at {path, line, column}. An ambiguous name returns candidates only: repeat with symbol. limit max 200; next pages.",
   "",
-  "Lines: 1-based, inclusive, as on disk.",
+  "Lines: 1-based and inclusive; captured-source lines for review, linked-worktree lines for research.",
   "Empty: no match in the index; absence is claimed only when basis.coverage.complete and freshness allow.",
-  "Retains: nothing; capture the file range to cite it.",
+  "Retains: research must capture the file range to cite it; review returns {result,evidence} with a retained URI and SHA-256.",
   "Fails: index_unavailable, index_building, reference_invalid.",
+  "Review uses only a compatible prepared index of its captured semantic commit. A tree-only review, missing or incompatible cache returns index_unavailable without rebuilding. A closed binding, unavailable source or 60-second deadline reports review-code-binding-missing, review-code-source-unavailable or review-code-timeout.",
 ].join("\n")
 
 export const probeDescription = [

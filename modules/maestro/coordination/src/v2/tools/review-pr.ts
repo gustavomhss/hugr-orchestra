@@ -111,7 +111,7 @@ export const run = Effect.fn("ReviewPRRequestV2.run")(function* (params: Input, 
       Effect.provideService(AppProcess.Service, input.processes),
       Effect.provideService(Scope.Scope, parentScope),
     ))
-    const binding = input.binding({ worktree, diff: prepared.diff, cache, lenses, ledger, copies, headCommit: prepared.headSHA })
+    const binding = input.binding({ worktree, diff: prepared.diff, cache, lenses, ledger, copies, headCommit: prepared.headSHA, processes: input.processes })
     let first = true
     const port: ReviewFanoutV2.Port = {
       create: (child) => sessions.create({ id: sessionID(child.key), parentID: child.role === "lead" ? parent.id : lead,

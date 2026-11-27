@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { EventEmitter } from "node:events"
-import * as Effect from "effect/Effect"
+import { Effect, Fiber } from "effect"
 import { ServeShutdown } from "./serve-shutdown"
 
 describe("serve shutdown signals", () => {
@@ -14,6 +14,72 @@ describe("serve shutdown signals", () => {
     await done
     expect(seen).toEqual(["SIGBREAK"])
     expect(ServeShutdown.signals("win32").map((signal) => emitter.listenerCount(signal))).toEqual([0, 0, 0, 0])
+  })
+
+  for (const [platform, signal] of [["linux", "SIGHUP"], ["win32", "SIGBREAK"], ["linux", "SIGTERM"]] as const) {
+    test(`${signal} during installation acquisition waits for disposal and keeps listening during cleanup`, async () => {
+      const emitter = new EventEmitter()
+      const events: string[] = []
+      const acquiring = Promise.withResolvers<void>()
+      const acquired = Promise.withResolvers<void>()
+      const disposing = Promise.withResolvers<void>()
+      const disposed = Promise.withResolvers<void>()
+      const runtime = () => void events.push("runtime")
+      emitter.on(signal, runtime)
+      const lifetime = Effect.scoped(Effect.gen(function* () {
+        yield* Effect.acquireRelease(
+          Effect.promise(async () => {
+            events.push("factory")
+            acquiring.resolve()
+            await acquired.promise
+          }),
+          () => Effect.promise(async () => {
+            events.push("dispose:start")
+            disposing.resolve()
+            await disposed.promise
+            events.push("dispose:done")
+          }),
+        )
+        events.push("bind")
+        return yield* Effect.never
+      }))
+      const fiber = Effect.runFork(ServeShutdown.withSignals(emitter, platform, (first) => void events.push(first), lifetime))
+      try {
+        await acquiring.promise
+        expect(ServeShutdown.signals(platform).map((name) => emitter.listenerCount(name)))
+          .toEqual(ServeShutdown.signals(platform).map((name) => name === signal ? 2 : 1))
+        emitter.emit(signal)
+        expect(events).toEqual(["factory", signal, "runtime"])
+        acquired.resolve()
+        await disposing.promise
+        expect(ServeShutdown.signals(platform).map((name) => emitter.listenerCount(name)))
+          .toEqual(ServeShutdown.signals(platform).map((name) => name === signal ? 2 : 1))
+        emitter.emit(signal)
+        expect(emitter.emit("SIGINT")).toBe(true)
+        expect(events).toEqual(["factory", signal, "runtime", "dispose:start", "runtime"])
+        disposed.resolve()
+        await Effect.runPromise(Fiber.join(fiber))
+        expect(events.at(-1)).toBe("dispose:done")
+        expect(ServeShutdown.signals(platform).map((name) => emitter.listenerCount(name)))
+          .toEqual(ServeShutdown.signals(platform).map((name) => name === signal ? 1 : 0))
+      } finally {
+        acquired.resolve()
+        disposed.resolve()
+        await Effect.runPromise(Fiber.interrupt(fiber))
+      }
+    })
+  }
+
+  test("removes installation signal listeners after startup failure", async () => {
+    const emitter = new EventEmitter()
+    const seen: NodeJS.Signals[] = []
+    const failure = new Error("bind failed")
+    const result = await Effect.runPromise(ServeShutdown.withSignals(
+      emitter, "win32", (signal) => void seen.push(signal), Effect.fail(failure),
+    ).pipe(Effect.flip))
+    expect(result).toBe(failure)
+    expect(emitter.eventNames()).toEqual([])
+    expect(seen).toEqual([])
   })
 
   test("SIGBREAK is not watched off Windows", () => {

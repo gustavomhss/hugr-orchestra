@@ -3,7 +3,7 @@ export * as CodeIndexStore from "./store"
 import { createHash, randomUUID } from "node:crypto"
 import { readdir, realpath, rename, rm, stat, mkdir } from "node:fs/promises"
 import path from "node:path"
-import { Deferred, Effect, Exit } from "effect"
+import { Context, Deferred, Effect, Exit, Layer } from "effect"
 import { SqlClient } from "effect/unstable/sql"
 import { layer } from "#sqlite"
 import { Research } from "@orchestra/schema/research"
@@ -166,6 +166,28 @@ export const read = <A, E>(dir: string, shardKey: string, effect: Effect.Effect<
     Effect.mapError((cause) => cause instanceof Research.Error ? cause
       : new Research.Error({ code: "index_unavailable", message: `Shard ${shardKey} could not be read: ${String(cause)}` })),
   )
+
+export type Reader = <A, E>(effect: Effect.Effect<A, E, SqlClient.SqlClient>) => Effect.Effect<A, Research.Error>
+
+/** One read-only snapshot for validation and every subsequent query; its owner must keep the scope open. */
+export const open = (dir: string, shardKey: string) => {
+  const unavailable = (cause: unknown) => cause instanceof Research.Error ? cause
+    : new Research.Error({ code: "index_unavailable", message: `Shard ${shardKey} could not be read: ${String(cause)}` })
+  return Effect.gen(function* () {
+    const context = yield* Layer.build(layer({
+      filename: file(dir, shardKey), readonly: true, readwrite: false, create: false, disableWAL: true,
+    }))
+    const sql = Context.get(context, SqlClient.SqlClient)
+    // A held read transaction also keeps the validated rows stable if another connection writes in place.
+    yield* sql.unsafe("BEGIN")
+    yield* Effect.addFinalizer(() => sql.unsafe("ROLLBACK").pipe(Effect.ignore))
+    const reader: Reader = (effect) => effect.pipe(
+      Effect.provideContext(context), Effect.mapError(unavailable),
+      Effect.catchDefect((cause) => Effect.fail(unavailable(cause))),
+    )
+    return reader
+  }).pipe(Effect.mapError(unavailable), Effect.catchDefect((cause) => Effect.fail(unavailable(cause))))
+}
 
 export const records = (dir: string) =>
   Effect.promise(() => Bun.file(path.join(dir, MANIFEST)).json().then((value: ReadonlyArray<Entry>) => value, () => [] as ReadonlyArray<Entry>))
