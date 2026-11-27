@@ -1,4 +1,4 @@
-//! `List`: the live processes `Stop` would reach. Every candidate pid is opened and checked to be in the Job
+//! `List` and `Observe`: the live processes `Stop` would reach. Every candidate pid is opened and checked to be in the Job
 //! before anything is read about it, and its handle is held while parent and name are collected, so a pid
 //! reused by an outside process is never listed. "Exited" (left out) and "unknown" (an error, `Ack error`)
 //! stay distinct.

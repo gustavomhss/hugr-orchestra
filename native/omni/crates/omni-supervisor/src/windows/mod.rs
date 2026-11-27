@@ -6,7 +6,8 @@
 //!
 //! One owner thread holds every tree and answers every request. Helper threads only wait and report:
 //! the channel reader and writer (`channel`), the Job completion port (`members`), the diagnostics drain
-//! (`diag`: the owner thread never writes to stderr), the host-process watch, and one exit watch per root.
+//! (`diag`: the owner thread never writes to stderr), the host-process watch, one exit watch per root,
+//! and at most one inventory observation (`observe`).
 
 mod boot;
 mod channel;
@@ -17,6 +18,7 @@ mod diag;
 mod inventory;
 mod job;
 mod members;
+mod observe;
 mod queues;
 mod spawn;
 mod tree;
@@ -86,6 +88,8 @@ struct Supervisor {
     next_id: u64,
     /// `Stop` replies owed (they count against `MAX_REPLIES`).
     stop_waiters: usize,
+    /// The `Observe` reply owed (request id, tree id), reserved until its worker's event is consumed.
+    observation: Option<(u64, u64)>,
     /// After host death: when to exit even if trees remain (exiting closes their Jobs).
     host_gone: Option<Instant>,
     next_poll: Instant,
@@ -103,6 +107,7 @@ impl Supervisor {
             max_trees: MAX_TREES,
             next_id: 1,
             stop_waiters: 0,
+            observation: None,
             host_gone: None,
             next_poll: Instant::now(),
         }
@@ -120,7 +125,8 @@ impl Supervisor {
                 return Some(ExitCode::FAILURE);
             }
         }
-        let admit = self.host_gone.is_none() && self.out.len() + self.stop_waiters < MAX_REPLIES;
+        let owed = self.out.len() + self.stop_waiters + usize::from(self.observation.is_some());
+        let admit = self.host_gone.is_none() && owed < MAX_REPLIES;
         let item = self.inbox.next(admit, self.wake(now, admit));
         // The wait can be long: deadlines due by now go first, and the item is handled at the time it arrived.
         let now = Instant::now();
@@ -129,6 +135,7 @@ impl Supervisor {
             Some(Item::Request(m)) => self.request(m, now),
             Some(Item::Event(Event::Exited { id, code })) => self.exited(id, code, now),
             Some(Item::Event(Event::Settle { id })) => self.settle(id, now),
+            Some(Item::Event(Event::Observed(result))) => self.observed(result),
             Some(Item::Event(Event::HostGone)) => self.host_died(now),
             None => {}
         }
@@ -251,6 +258,12 @@ impl Supervisor {
                     result: Ack::Error,
                 },
             },
+            Msg::Observe { req, id } => {
+                let Some(reply) = self.observe(req, id, inventory::list) else {
+                    return;
+                };
+                reply
+            }
             Msg::Release { req, id } => {
                 let result = self.live(id).map_or(Ack::Unknown, |t| {
                     t.released = true;
