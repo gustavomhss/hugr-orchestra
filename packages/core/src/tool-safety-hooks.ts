@@ -117,14 +117,19 @@ export const settle = (hooked: Hooked, succeeded: boolean, response?: unknown) =
     if (!succeeded) return hooked.notes
     const notes = [...hooked.notes]
     // A Verify can inspect a bounded, credential-checked JSON response as data through its environment.
-    const result = response === undefined ? undefined : yield* Effect.try(() => JSON.stringify(response)).pipe(
-      Effect.flatMap((value) =>
-        value !== undefined && Buffer.byteLength(value, "utf8") <= 16_384
-          ? ToolSafety.inspect(response).pipe(Effect.as(value))
-          : Effect.succeed(undefined),
-      ),
-      Effect.orElseSucceed(() => undefined),
-    )
+    const result = response === undefined
+      ? undefined
+      : yield* Effect.try({
+          try: () => JSON.stringify(response),
+          catch: () => new ToolSafety.Denied({ reason: "output-inspection-acquisition" }),
+        }).pipe(
+          Effect.flatMap((value) =>
+            value !== undefined && Buffer.byteLength(value, "utf8") <= 16_384
+              ? ToolSafety.inspect(response).pipe(Effect.andThen(ToolSafety.inspect(value)), Effect.as(value))
+              : Effect.succeed(undefined),
+          ),
+          Effect.orElseSucceed(() => undefined),
+        )
     yield* enforce({ ...hooked.scope, result }, "after", notes).pipe(Effect.mapError((denied) => noted(denied, notes)))
     return notes
   })
@@ -370,13 +375,15 @@ function ask(scope: Scope, timing: RelayHook.Timing, step: HookEvaluate.Step, me
       const started = yield* Clock.currentTimeMillis
       const decide = (outcome: RelayLedger.HookOutcome) => decided(scope, timing, step, outcome, started, "approve")
       const origin = { name: scope.installs.get(step.installID)!.snapshot.name, message: step.message }
+      const hosted = yield* ToolSafety.HostedHooks
       const host = yield* ToolSafety.NativeHost
-      if (!host) {
+      const approve = hosted?.approve ?? host?.ask
+      if (!approve) {
         yield* decide("rejected")
         return yield* deny("relay-hook-approve-native-binding-missing", message, origin)
       }
       const exit = yield* restore(
-        host.ask({
+        approve({
           action: "relay_hook",
           resources: resources(scope),
           invocation: scope.call,

@@ -42,28 +42,31 @@ it.live("an installed hosted Verify observes two different responses to the same
     mkdirSync(directory)
     mkdirSync(stateDirectory, { recursive: true })
     const location = Location.Service.of({ directory, project: { id: projectID, directory } })
-    const snapshot = {
+    const snapshotFor = (timing: "before" | "after") => ({
       schema: "relay.hook.v1",
-      name: "Result receipt",
+      name: timing === "before" ? "Authorization receipt" : "Result receipt",
       nodes: [
-        { id: "before", name: "Before read", type: RelayHook.NodeType.trigger, position: [0, 0], parameters: { operation: "read", timing: "before" } },
-        { id: "after", name: "After read", type: RelayHook.NodeType.trigger, position: [0, 0], parameters: { operation: "read", timing: "after" } },
-        { id: "record", name: "Record authorization", type: RelayHook.NodeType.record, position: [0, 0], parameters: { message: "Started." } },
-        { id: "verify", name: "Verify reply", type: RelayHook.NodeType.verify, position: [0, 0], parameters: { message: "Expected alpha.", check: `test "\${RELAY_HOOK_RESULT}" = '{"text":"alpha"}'` } },
+        { id: "event", name: "Read", type: RelayHook.NodeType.trigger, position: [0, 0], parameters: { operation: "read", timing } },
+        timing === "before"
+          ? { id: "action", name: "Record authorization", type: RelayHook.NodeType.record, position: [0, 0], parameters: { message: "Started." } }
+          : { id: "action", name: "Verify reply", type: RelayHook.NodeType.verify, position: [0, 0], parameters: { message: "Expected alpha.", check: `test "\${RELAY_HOOK_RESULT}" = '{"text":"alpha"}'` } },
       ],
-      connections: [{ from: "before", port: 0, to: "record" }, { from: "after", port: 0, to: "verify" }],
+      connections: [{ from: "event", port: 0, to: "action" }],
       binding: "host-required",
       installed: false,
-    }
+    })
     yield* Effect.gen(function* () {
       const fs = yield* FSUtil.Service
       const registry = yield* ToolRegistry.Service
       const events = yield* EventV2.Service
       const load = ToolSafetyProfile.makeLoader(fs, { directory, stateDirectory, projectID })
-      yield* RelayHookInstall.install({
-        data, projectID, document: "hosted-response", version: "v1", snapshot,
-        sha256: createHash("sha256").update(JSON.stringify(snapshot)).digest("hex"),
-        principal: "user:test",
+      yield* Effect.forEach(["before", "after"] as const, (timing) => {
+        const snapshot = snapshotFor(timing)
+        return RelayHookInstall.install({
+          data, projectID, document: `hosted-response-${timing}`, version: "v1", snapshot,
+          sha256: createHash("sha256").update(JSON.stringify(snapshot)).digest("hex"),
+          principal: "user:test",
+        })
       })
       const authorize = (callID: string) =>
         Effect.gen(function* () {

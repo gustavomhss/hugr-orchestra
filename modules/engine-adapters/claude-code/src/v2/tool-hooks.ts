@@ -13,7 +13,7 @@ export function settleHook(decisions: ReadonlyMap<string, Promise<Decision>>): H
     if (input.hook_event_name !== "PostToolUse" && input.hook_event_name !== "PostToolUseFailure") return {}
     const id = input.tool_use_id
     const decision = await decisions.get(id)
-    if (!decision?.allow || decision.tool !== input.tool_name || completed.has(id)) return {}
+    if (!decision?.allow || decision.tool !== input.tool_name || options.signal.aborted || completed.has(id)) return {}
     const after = decision.after
     if (!after) return {}
     // Claim the callback before running the hook. An interrupted hook may already have recorded a decision.

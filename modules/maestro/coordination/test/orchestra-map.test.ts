@@ -58,6 +58,37 @@ const host = AppNodeBuilder.build(
 
 test("the maestro-orchestra map names exactly the Maestro and board tools Maestro is given", async () => {
   const text = await Bun.file(path.join(import.meta.dir, "../playbooks/maestro-orchestra/SKILL.md")).text()
+  // The first cell of each row in the "## Yours" table, between that heading and the next one.
+  const section = text.split("\n## Yours\n")[1]?.split("\n## ")[0] ?? ""
+  const mapped = section
+    .split("\n")
+    .filter((line) => line.startsWith("| `"))
+    .flatMap((line) => [...line.split("|")[1].matchAll(/`([^`]+)`/g)].map((match) => match[1]))
+  const owned = (name: string) => name.startsWith("maestro_") || name.startsWith("board_")
+  const given = await Effect.runPromise(
+    Effect.gen(function* () {
+      const registry = yield* ToolRegistry.Service
+      const materialized = yield* registry.materialize([
+        { action: "*", resource: "*", effect: "allow" as const },
+        ...MaestroSeatsV2.floor(nativeProfiles.maestro),
+        ...MaestroSeatsV2.visibility("maestro"),
+      ])
+      return materialized.definitions.map((tool) => tool.name).filter(owned)
+    }).pipe(Effect.provide(host), Effect.scoped),
+  )
+
+  // Positive controls: the table parsed, and the host registered both families.
+  expect(mapped).toContain("board_read")
+  expect(given).toContain("board_read")
+  expect(given).toContain("maestro_workflows")
+  expect(mapped.filter(owned).toSorted()).toEqual(given.toSorted())
+})
+
+test("every tool the map names that Claude mode does not serve has its Claude Code counterpart on the map", async () => {
+  const text = await Bun.file(path.join(import.meta.dir, "../playbooks/maestro-orchestra/SKILL.md")).text()
+  const [before = "", after = ""] = text.split("\n## On Claude Code\n")
+  const [claude = "", ...rest] = after.split("\n## ")
+  const named = new Set([...[before, ...rest].join("\n").matchAll(/`([a-z_]+)`/g)].map((match) => match[1]))
   const mapped = new Map(claude.split("\n").flatMap((line) => {
     if (!line.startsWith("| `")) return []
     const [, tools, target] = line.split("|")

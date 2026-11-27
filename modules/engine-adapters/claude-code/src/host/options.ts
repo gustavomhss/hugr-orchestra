@@ -125,15 +125,14 @@ function maestro(tools: ReadonlyArray<string>) {
       "- Orchestra checks permissions and ToolSafety before work runs. Bash may run through Orchestra's sandbox. " +
         "Installed Orchestra hooks run around authorized built-in calls and add notes beside the result.",
       "- Claude Code starts its own process and Bash commands." +
-        (tools.includes("process_control") ? " Processes started with `mcp__orchestra__process_control` go through Omni." : ""),
+        (tools.includes("process_control") ? " Use `mcp__orchestra__process_control` for Orchestra-managed processes, which use Omni by default." : ""),
       ...(tools.includes("maestro_workflows") && tools.includes("task") ? [
         "- Orchestra workflows are Relay workflows. List them with `mcp__orchestra__maestro_workflows` and dispatch " +
           "an approved workflow through `mcp__orchestra__task`.",
       ] : []),
       "- Orchestra extensions reach you through the served `mcp__orchestra__*` tools.",
-      ...(tools.includes("team_message") && has("meeting_")
-        ? ["- The meeting copilot is the `live` seat on the Flight Engineer screen: reach it with " +
-          "`mcp__orchestra__team_message` and the `mcp__orchestra__meeting_*` tools."]
+      ...(tools.includes("team_message")
+        ? ["- The meeting copilot is the `live` seat on the Flight Engineer screen. Reach it with `mcp__orchestra__team_message`."]
         : []),
       "- Lean shortens only `mcp__orchestra__*` results, never what Claude Code's own tools return.",
       "- Claude Code compacts your context itself; Orchestra's open todos come back right after a compaction.",

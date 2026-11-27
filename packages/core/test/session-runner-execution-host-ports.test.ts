@@ -49,6 +49,7 @@ afterAll(() => rmSync(root, { recursive: true, force: true }))
 const profile: { current: ToolSafety.Profile | undefined } = { current: undefined }
 const dispatch: { domains: ReadonlyArray<string> | undefined } = { domains: undefined }
 const asked: PermissionV2.AssertInput[] = []
+const approvals: PermissionV2.AssertInput[] = []
 const questions: QuestionV2.AskInput[] = []
 let script: (turn: ExecutionHost.Turn) => Effect.Effect<ReadonlyArray<LLMEvent>> = () => Effect.succeed([])
 let provider: ((session: Parameters<SessionRunnerModel.Interface["resolve"]>[0]) => ReturnType<SessionRunnerModel.Interface["resolve"]>) | undefined
@@ -112,6 +113,7 @@ const it = Harness.make({
   ),
   permissions: Layer.mock(PermissionV2.Service, {
     authorize: (input) => Effect.sync(() => void asked.push(input)),
+    askExplicit: (input) => Effect.sync(() => void approvals.push(input)),
   }),
   systemContext: Harness.systemContextLayer,
   skillGuidance: Layer.mock(SkillGuidance.Service, { load: () => Effect.succeed(SystemContext.empty) }),
@@ -143,6 +145,7 @@ const hosted = Effect.gen(function* () {
   provider = undefined
   streamOf = undefined
   asked.length = 0
+  approvals.length = 0
   questions.length = 0
   const agents = yield* AgentV2.Service
   yield* agents.transform((draft) =>
@@ -240,6 +243,7 @@ describe("SessionRunner execution host ports", () => {
       const sessions = yield* hosted
       const remind = yield* installed("Changelog", "write.after", RelayHook.NodeType.remind, "Update the changelog.")
       const style = yield* installed("Style", "write.before", RelayHook.NodeType.remind, "Mind the style.")
+      const approve = yield* installed("Owner", "write.before", RelayHook.NodeType.approve, "Confirm the edit.")
       const guard = yield* installed("Entry", "write.after", RelayHook.NodeType.repair, "Add an entry.")
       const seen: Record<string, unknown> = {}
       script = (turn) =>
@@ -252,8 +256,9 @@ describe("SessionRunner execution host ports", () => {
               resources: ["inside/a.ts"],
               safety: { tool: "write", args: { filePath: path.join(inside, "a.ts") } },
             })
-          profile.current = ToolSafety.withHooks(undefined, [remind, style])
+          profile.current = ToolSafety.withHooks(undefined, [remind, style, approve])
           const ran = yield* write("w1")
+          profile.current = ToolSafety.withHooks(undefined, [style])
           seen.succeeded = yield* ran.after?.({ succeeded: true, response: { written: true } }) ?? Effect.succeed("no after step")
           seen.failed = yield* (yield* write("w2")).after?.({ succeeded: false }) ?? Effect.succeed("no after step")
           // A Repair after the call would refuse the authorization itself if the after step ran there.
@@ -265,6 +270,7 @@ describe("SessionRunner execution host ports", () => {
         }).pipe(Effect.orDie)
       yield* send(sessions, "go")
 
+      expect(approvals).toMatchObject([{ sessionID, action: "relay_hook", metadata: { callID: "w1", tool: "write" } }])
       expect(seen.succeeded).toEqual(["Hook 'Style': Mind the style.", "Hook 'Changelog': Update the changelog."])
       // A call that failed runs no after hook; the before step's notes still reach the model.
       expect(seen.failed).toEqual(["Hook 'Style': Mind the style."])

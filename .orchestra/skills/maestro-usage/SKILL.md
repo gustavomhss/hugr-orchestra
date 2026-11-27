@@ -100,10 +100,10 @@ plan-to-barrel).
 
 Same Maestro, same tools and screens, but not the same prompt: Claude Code runs the turn with its `claude_code` preset,
 and Orchestra appends a short Maestro note instead of `maestro.txt`. The note states the runtime (project settings
-only, refused built-ins, ToolSafety and hooks around every call, Lean on Orchestra tools only, compaction, the names
+only, refused built-ins, ToolSafety and installed hooks around authorized built-ins, Lean on Orchestra tools only, compaction, the names
 Claude Code covers) and the key safety rules. Orchestra tools arrive as `mcp__orchestra__<name>` from an in-process MCP server; Claude Code
 built-ins (Bash, Read, Edit, ...) show with Orchestra's widgets. `Agent` and `Task` are refused: delegation is
-`mcp__orchestra__task`. `ToolSearch` is allowed and its row is hidden. Details: `claude-mode-maintenance`.
+`mcp__orchestra__task`. `ToolSearch` is allowed and its row is hidden. See `claude-code-maintenance` for the host rules.
 
 ## Driving it in the dev app
 

@@ -1,6 +1,9 @@
 import { Effect, Scope } from "effect"
 import { ChildProcess } from "effect/unstable/process"
+import type { AgentV2 } from "../../agent"
 import { FSUtil } from "../../fs-util"
+import { PermissionV2 } from "../../permission"
+import type { SessionSchema } from "../schema"
 import { ToolSafety } from "../../tool-safety"
 import { ToolSafetySandbox } from "../../tool-safety-sandbox"
 import { AllowedDomains } from "../../tool/websearch"
@@ -38,6 +41,33 @@ export const hostedCall = Effect.fnUntraced(function* (
     ...(domains ? { domains } : {}),
   } satisfies ExecutionHost.Authorization
 })
+
+/** Bind installed Hook Approve to the live Session; its SDK transcript row may not have arrived yet. */
+export function hostedHooks(
+  permissions: PermissionV2.Interface,
+  sessionID: SessionSchema.ID,
+  agent: AgentV2.ID,
+): ToolSafety.HostedCallHooks {
+  return {
+    approve: (request) => {
+      const invocation = request.invocation
+      if (invocation.sessionID !== sessionID || invocation.agent !== agent || !invocation.callID)
+        return Effect.fail(new ToolSafety.Denied({ reason: "approval-v2-invocation-identity-missing" }))
+      return permissions.askExplicit({
+        sessionID,
+        agent,
+        action: "relay_hook",
+        resources: [...request.resources],
+        metadata: {
+          nativeSafety: true, callID: invocation.callID, tool: invocation.tool, projectID: invocation.projectID,
+          ...(request.message === undefined ? {} : { message: request.message }),
+        },
+      }).pipe(Effect.mapError((error) => new ToolSafety.Denied({
+        reason: error instanceof PermissionV2.BlockedError ? "approval-native-policy-denied" : "approval-native-rejected",
+      })))
+    },
+  }
+}
 
 /** Any restriction on a shell requires the jail, whether or not the profile set `requireSandbox`. */
 function confines(profile: ToolSafety.Profile | undefined) {

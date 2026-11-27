@@ -101,11 +101,14 @@ test("the pinned Claude Code binary loads CLAUDE.md and relays context and the r
         },
       })
       try {
+        const versions: string[] = []
+        const results: boolean[] = []
         for await (const frame of run) {
-          if (frame.type === "system" && frame.subtype === "init")
-            expect(frame.claude_code_version).toBe(ClaudeCodeExecutable.CODE_VERSION)
-          if (frame.type === "result") expect(frame.is_error, JSON.stringify(frame)).toBe(false)
+          if (frame.type === "system" && frame.subtype === "init") versions.push(frame.claude_code_version)
+          if (frame.type === "result") results.push(frame.is_error)
         }
+        expect(versions).toEqual([ClaudeCodeExecutable.CODE_VERSION])
+        expect(results, failures.join("\n")).toEqual([false])
         expect(inputs.length, failures.join("\n")).toBeGreaterThan(0)
         return inputs.at(-1) ?? ""
       } finally {
@@ -124,7 +127,9 @@ test("the pinned Claude Code binary loads CLAUDE.md and relays context and the r
       { hook_event_name: "PreToolUse", tool_name: "Read", tool_use_id: toolID },
       { hook_event_name: "PostToolUse", tool_name: "Read", tool_use_id: toolID },
     ])
-    expect(JSON.stringify(callbacks[1])).toContain(resultMarker)
+    const settled = callbacks[1]
+    expect(settled?.hook_event_name).toBe("PostToolUse")
+    if (settled?.hook_event_name === "PostToolUse") expect(JSON.stringify(settled.tool_response)).toContain(resultMarker)
     expect(afterRead).toContain(resultMarker)
     expect(afterRead).toContain(postMarker)
   } finally {

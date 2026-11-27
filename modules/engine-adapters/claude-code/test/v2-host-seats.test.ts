@@ -89,7 +89,7 @@ test("the Maestro note states its runtime from the gate's own lists and offers n
 
 test("the Maestro note says where its processes, hooks, workflows, extensions and the live seat stand, naming only served tools", () => {
   const bare = ClaudeHostOptions.append("maestro")
-  const full = ClaudeHostOptions.append("maestro", ["task", "process_control", "maestro_workflows", "team_message", "meeting_read"])
+  const full = ClaudeHostOptions.append("maestro", ["task", "process_control", "maestro_workflows", "team_message"])
   for (const note of [bare, full]) {
     expect(note).toContain("Claude Code starts its own process and Bash commands")
     expect(note).toContain("Installed Orchestra hooks run around authorized built-in calls")
@@ -97,7 +97,7 @@ test("the Maestro note says where its processes, hooks, workflows, extensions an
   }
   // Positive control: each served-tool line appears when its tools are served, and only then.
   const served = [
-    "`mcp__orchestra__process_control` go through Omni",
+    "Use `mcp__orchestra__process_control` for Orchestra-managed processes, which use Omni by default",
     "List them with `mcp__orchestra__maestro_workflows` and dispatch an approved workflow through `mcp__orchestra__task`",
     "the `live` seat on the Flight Engineer screen",
   ]
@@ -107,7 +107,8 @@ test("the Maestro note says where its processes, hooks, workflows, extensions an
     expect(bare).not.toContain(line)
   }
   expect(ClaudeHostOptions.append("maestro", ["maestro_workflows"])).not.toContain("mcp__orchestra__maestro_workflows")
-  expect(ClaudeHostOptions.append("maestro", ["team_message"])).not.toContain("`live` seat")
+  expect(ClaudeHostOptions.append("maestro", ["meeting_recall"])).not.toContain("`live` seat")
+  expect(full).not.toContain("mcp__orchestra__meeting_")
 })
 
 test("a seat on Claude Code keeps its own Orchestra prompt, never the context, and gets no Claude Code subagents", async () => {

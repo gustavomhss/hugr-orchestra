@@ -162,16 +162,17 @@ export const HookedCall = Context.Reference<string | undefined>("@orchestra/Tool
   defaultValue: () => undefined,
 })
 
-/**
- * Per-call cell for a host whose engine runs the call itself and reports its end in a separate callback (Claude Code's
- * PostToolUse): `run` then leaves the installed hooks' `after` step out and fills `after` with it, bound to the run's
- * context, for the host to call once the engine's call has ended.
- */
 export type HostedOutcome = { readonly succeeded: true; readonly response: unknown } | { readonly succeeded: false }
 
-export const HostedHooks = Context.Reference<
-  { after?: (outcome: HostedOutcome) => Effect.Effect<ReadonlyArray<string>, Denied> } | undefined
->("@orchestra/ToolSafety/HostedHooks", { defaultValue: () => undefined })
+export interface HostedCallHooks {
+  readonly approve?: (approval: Approval) => Effect.Effect<void, Denied>
+  after?: (outcome: HostedOutcome) => Effect.Effect<ReadonlyArray<string>, Denied>
+}
+
+/** Per-call binding for a host that prepares work here and executes it in its engine. */
+export const HostedHooks = Context.Reference<HostedCallHooks | undefined>("@orchestra/ToolSafety/HostedHooks", {
+  defaultValue: () => undefined,
+})
 
 // Second HOLD line, written for the model: the cause, that nothing ran, and the next step.
 // Only codes raised by the safety modules are listed; approval, completion and Maestro
@@ -535,10 +536,12 @@ export const make = Effect.gen(function* () {
       const profile = native(loaded)
       yield* before(input).pipe(Effect.provideService(RuntimeProfile, profile))
       const outer = yield* HookedCall
-      const hooked =
+      const hosted = yield* HostedHooks
+      const beforeHooks =
         loaded?.hooks && outer !== input.callID
-          ? yield* ToolSafetyHooks.before({ installs: loaded.hooks, call: input, profile, resolve: canonical, ambient })
-          : undefined
+          ? ToolSafetyHooks.before({ installs: loaded.hooks, call: input, profile, resolve: canonical, ambient })
+          : Effect.succeed(undefined)
+      const hooked = hosted ? undefined : yield* beforeHooks
       yield* observe({ ...observation, outcome: "started" })
       const ran = effect.pipe(
         Effect.provideService(RuntimeProfile, profile),
@@ -550,17 +553,21 @@ export const make = Effect.gen(function* () {
         Effect.provideService(HookedCall, hooked ? input.callID : outer),
         sanitizeFailure,
       )
-      if (!hooked) return yield* ran
-      // A call that fails instead of returning a result still hands its `before` notes to the model.
-      const value = yield* ToolSafetyHooks.failing(hooked, ran)
-      const hosted = yield* HostedHooks
-      if (!hosted) return yield* ToolSafetyHooks.after(hooked, value, (outcome?.(value) ?? "success") === "success")
-      // The effect only prepared the engine's call; the call itself has not run yet.
-      const context = yield* Effect.context<never>()
-      hosted.after = (outcome) =>
-        ToolSafetyHooks.settle(hooked, outcome.succeeded, outcome.succeeded ? outcome.response : undefined).pipe(
-          Effect.provideContext(context),
-        )
+      if (hooked) {
+        const value = yield* ToolSafetyHooks.failing(hooked, ran)
+        return yield* ToolSafetyHooks.after(hooked, value, (outcome?.(value) ?? "success") === "success")
+      }
+      const value = yield* ran
+      if (!hosted) return value
+      // A hosted effect only prepares the engine's call, including its sandbox. Run before hooks once preparation succeeds.
+      const prepared = yield* beforeHooks
+      if (prepared) {
+        const context = yield* Effect.context<never>()
+        hosted.after = (outcome) =>
+          ToolSafetyHooks.settle(prepared, outcome.succeeded, outcome.succeeded ? outcome.response : undefined).pipe(
+            Effect.provideContext(context),
+          )
+      }
       return value
     }).pipe(
       Effect.onExit((exit) => {

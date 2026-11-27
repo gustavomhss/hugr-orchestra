@@ -19,6 +19,7 @@ import { EventV2 } from "../../event"
 import { Location } from "../../location"
 import { ModelV2 } from "../../model"
 import { PermissionV2 } from "../../permission"
+import { Project } from "../../project"
 import { ProviderV2 } from "../../provider"
 import { QuestionV2 } from "../../question"
 import { SystemContext } from "../../system-context/index"
@@ -53,7 +54,7 @@ import { toLLMMessages } from "./to-llm-message"
 import { SessionTitle } from "./title"
 import { ReadToolFileSystem } from "../../tool/read-filesystem"
 import { SessionDirectCommands } from "./direct-commands"
-import { hostedCall } from "./hosted-call"
+import { hostedCall, hostedHooks } from "./hosted-call"
 import { STEP_TOOL_REFUSAL, narrowStepTools } from "./step-tools"
 import { TurnTransitionError, continueAfterCompaction, continueAfterOverflowCompaction } from "./turn-transition"
 import { DEFAULT_MAX_STEPS, MAX_STEPS_PROMPT } from "./max-steps"
@@ -335,8 +336,7 @@ const layer = Layer.effect(
             .pipe(Effect.catchTag("Session.NotFoundError", (error) => Effect.die(error)))
           if (!input.safety) return {}
           const call = input.safety
-          // The engine runs the call after this returns, so the installed hooks' after step is left to the host.
-          const hooks: { after?: ExecutionHost.Authorization["after"] } = {}
+          const hooks = hostedHooks(permissions, session.id, agent.id)
           const authorization = yield* tools.hosted(
             {
               tool: call.tool,
@@ -346,7 +346,7 @@ const layer = Layer.effect(
               agent: agent.id,
               directory: location.directory,
               projectID: location.project.id,
-              projectDirectory: location.project.directory === "/" ? location.directory : location.project.directory,
+              projectDirectory: Project.isRoot(location.project.directory) ? location.directory : location.project.directory,
             },
             hostedCall(call, location.directory, scope, fs),
           ).pipe(Effect.provideService(ToolSafety.HostedHooks, hooks))

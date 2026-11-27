@@ -78,7 +78,10 @@ test("settles authorized built-ins exactly once with Claude Code's real callback
       expect(await post("blocked", "unreachable")).toEqual({})
       await pre("mcp", "mcp__orchestra__task")
       expect(await post("mcp", "ok", "mcp__orchestra__task")).toEqual({})
-      yield { type: "result", subtype: "success", is_error: false, session_id: "claude-1", result: "" } as SDKMessage
+      yield {
+        type: "result", subtype: "success", is_error: false, session_id: "claude-1", result: "",
+        usage: { input_tokens: 1, output_tokens: 1, cache_read_input_tokens: 0, cache_creation_input_tokens: 0 },
+      } as SDKMessage
     })()) as unknown as typeof query,
   }))
   const events = await Effect.runPromise(
