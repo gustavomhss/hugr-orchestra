@@ -1,9 +1,16 @@
 import { describe, expect, test } from "bun:test"
 import fs from "fs/promises"
 import path from "path"
+import { Config } from "@orchestra/core/config"
+import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { Global } from "@orchestra/core/global"
+import { Location } from "@orchestra/core/location"
+import { AbsolutePath } from "@orchestra/core/schema"
+import { ConfigMCP } from "@orchestra/schema/config-mcp"
+import { location } from "../fixture/location"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
-import { Effect } from "effect"
+import { Effect, Layer } from "effect"
 import { McpProjectConfig } from "@orchestra/core/mcp/project-config"
 import { tmpdir } from "../fixture/tmpdir"
 import { testEffect } from "../lib/effect"
@@ -257,3 +264,65 @@ describe("McpProjectConfig", () => {
     expect(McpProjectConfig.validName(name)).toBe(valid)
   })
 })
+
+for (const server of [
+  new ConfigMCP.Remote({
+    type: "remote",
+    url: "https://mcp.example.test",
+    oauth: false,
+    timeout: new ConfigMCP.Timeout({ request: 7500 }),
+  }),
+  new ConfigMCP.Remote({
+    type: "remote",
+    url: "https://mcp.example.test",
+    headers: { "X-Token": "literal" },
+    oauth: new ConfigMCP.OAuth({
+      client_id: "client",
+      client_secret: "secret",
+      scope: "read write",
+      callback_port: 19877,
+      redirect_uri: "http://127.0.0.1:19877/callback",
+    }),
+    timeout: new ConfigMCP.Timeout({ startup: 8000, request: 9000 }),
+    disabled: true,
+  }),
+  new ConfigMCP.Local({
+    type: "local",
+    command: ["server"],
+    cwd: ".",
+    environment: { TEST: "value" },
+    timeout: new ConfigMCP.Timeout({ startup: 10000, request: 11000 }),
+  }),
+]) {
+  it.live(`written MCP survives a fresh Config service: ${server.type} ${JSON.stringify(server.timeout)}`, () =>
+    Effect.gen(function* () {
+      const dir = yield* scratch
+      yield* McpProjectConfig.write(dir.path, "svc", McpProjectConfig.written(server))
+      const loaded = yield* Config.Service.pipe(
+        Effect.flatMap((config) => config.entries()),
+        Effect.provide(
+          AppNodeBuilder.build(Config.node, [
+            [Location.node, Layer.succeed(Location.Service, location({ directory: AbsolutePath.make(dir.path) }))],
+            [Global.node, Global.layerWith({ config: path.join(dir.path, "global") })],
+          ]),
+        ),
+      )
+      expect(Config.latest(loaded, "mcp")?.servers?.svc).toEqual(server)
+    }),
+  )
+}
+
+it.live("remote to local transport clears stale OAuth and headers without touching common timeout", () =>
+  Effect.gen(function* () {
+    const dir = yield* scratch
+    const file = yield* McpProjectConfig.write(dir.path, "svc", {
+      type: "remote",
+      url: "https://mcp.example.test",
+      headers: { Token: "{env:TOKEN}" },
+      oauth: false,
+      timeout: 5000,
+    })
+    yield* McpProjectConfig.write(dir.path, "svc", { type: "local", command: ["server"] })
+    expect(JSON.parse(yield* text(file)).mcp.svc).toEqual({ type: "local", command: ["server"], timeout: 5000 })
+  }),
+)
