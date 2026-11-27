@@ -36,6 +36,8 @@ const unavailable = (message: string) => new Research.Error({ code: "index_unava
 
 /** One review call owns its deadline, source projection and exact binding through retained evidence delivery. */
 export const run = (services: Services, request: Request, context: Tool.Context) => Effect.gen(function* () {
+  // Effect 4's timeout race starts its work immediately. Yield until it owns cancellation before source callbacks can resume callers.
+  yield* Effect.yieldNow
   const completed = yield* Effect.scoped(Effect.gen(function* () {
     yield* services.gate(context, ReviewSeatTools.SEAT, `${request.name} runs only as the review seat`)
     yield* services.permission.assert({
@@ -100,6 +102,7 @@ export const run = (services: Services, request: Request, context: Tool.Context)
       : normalized.name === "code_search" ? yield* search(normalized.input)
       : yield* Locate.run(normalized.input, {
         search, query, read: (file) => checked(ReviewCodeSource.read(view, file)),
+        inScope: accepts(normalized.input.paths),
         retain: (snapshot) => {
           state.snapshot = snapshot
           return capture({ source, snapshot })
@@ -123,8 +126,7 @@ export const run = (services: Services, request: Request, context: Tool.Context)
   Effect.catchTag("Research.Error", (error) => Effect.fail(new Tool.Failure({ message:
     error.code === "source_unavailable" ? `review-code-source-unavailable: ${error.message}`
       : error.code === "binding_missing" ? error.message : `Review CODE ${error.code}: ${error.message}` }))),
-  Effect.catchDefect(() => Effect.fail(new Tool.Failure({ message: "review-code-source-unavailable: CODE read failed" }))),
-  // One budget surrounds acquisition, all reads, retention and scoped cleanup; no phase starts a fresh timer.
+  // One deadline covers acquisition, reads and retention. Required cleanup is awaited before delivering the timeout.
   Effect.timeoutOrElse({ duration: "60 seconds", orElse: () => Effect.fail(new Tool.Failure({ message: "review-code-timeout" })) }),
   Effect.provideService(AppProcess.Service, services.processes),
   Effect.provideService(Ripgrep.RipgrepBinary.Service, services.reviewRipgrep),
@@ -134,7 +136,10 @@ function normalize(worktree: string, request: Request): Request | undefined {
   if (request.name !== "code_query") {
     const paths = request.input.paths?.map((file) => ReviewCodeSource.relative(worktree, file, true))
     if (paths?.some((file) => file === undefined)) return
-    return { ...request, input: { ...request.input, ...(paths ? { paths: paths as string[] } : {}) } } as Request
+    const valid = paths?.filter((file): file is string => file !== undefined)
+    // Ripgrep globs are ordered: exclusions go last so a later positive cannot widen the caller's scope.
+    const ordered = valid ? [...valid.filter((file) => !file.startsWith("!")), ...valid.filter((file) => file.startsWith("!"))] : undefined
+    return { ...request, input: { ...request.input, ...(ordered ? { paths: ordered } : {}) } } as Request
   }
   const input = request.input
   const file = "path" in input && input.path !== undefined ? ReviewCodeSource.relative(worktree, input.path) : undefined
@@ -150,6 +155,12 @@ function requestedPaths(request: Request) {
   if (request.name !== "code_query") return request.input.paths ?? []
   return ["path" in request.input ? request.input.path : undefined, "at" in request.input ? request.input.at?.path : undefined]
     .filter((file): file is string => file !== undefined)
+}
+
+function accepts(paths: ReadonlyArray<string> = []) {
+  const included = paths.filter((file) => !file.startsWith("!")).map((file) => new Bun.Glob(file))
+  const excluded = paths.filter((file) => file.startsWith("!")).map((file) => new Bun.Glob(file.slice(1)))
+  return (file: string) => (!included.length || included.some((glob) => glob.match(file))) && !excluded.some((glob) => glob.match(file))
 }
 
 function shown(snapshot: string) {

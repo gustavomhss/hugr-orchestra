@@ -352,7 +352,7 @@ test("one CODE deadline covers source acquisition and later evidence retention t
     yield* TestClock.adjust("9 seconds")
     expect(pending.pollUnsafe()).toBeUndefined()
     yield* TestClock.adjust("1 second")
-    expect(pending.pollUnsafe()).toBeDefined()
+    expect(yield* Deferred.isDone(released)).toBe(true)
     const result = yield* Fiber.join(pending)
     expect(result.type).toBe("error")
     expect(String(result.value)).toContain("review-code-timeout")

@@ -16,6 +16,8 @@ export type Sources<Evidence = Research.SourceRef> = {
   readonly read: (path: string) => Effect.Effect<string | undefined, Research.Error>
   /** Retains the snapshot of every returned range and returns its ref. */
   readonly retain: (snapshot: string) => Effect.Effect<Evidence, Research.Error>
+  /** A host may supply its already-confined predicate, including exclusion globs. */
+  readonly inScope?: (path: string) => boolean
 }
 
 /** First line of the retained snapshot; every range follows as `==> path:start-end` and `<line>: <text>` rows. */
@@ -57,7 +59,7 @@ export const run = Effect.fn("Locate.run")(function* <Evidence = Research.Source
   const started = Date.now()
   const limit = input.limit ?? DEFAULT_LIMIT
   const scope = (input.paths ?? []).map((pattern) => new Bun.Glob(pattern))
-  const inScope = (file: string) => !scope.length || scope.some((glob) => glob.match(file))
+  const inScope = sources.inScope ?? ((file: string) => !scope.length || scope.some((glob) => glob.match(file)))
   if (!input.question && !input.terms?.length && !input.symbols?.length)
     return yield* new Research.Error({ code: "unsupported", message: "code_locate needs at least one of question, terms or symbols" })
   const prior = yield* ranks(sources.query)

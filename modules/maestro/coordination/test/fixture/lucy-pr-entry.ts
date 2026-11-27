@@ -36,11 +36,13 @@ import { ToolSafety } from "@orchestra/core/tool-safety"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { SeatSkillContent } from "@orchestra/maestro/seat-skill-content"
 import { Seats } from "@orchestra/maestro/seats"
+import { nativeProfiles } from "../../src/roster"
 import { GovernanceBackgroundV2 } from "../../src/v2/governance/background"
 import { WriteRootsV2 } from "../../src/v2/governance/write-roots"
 import { ReviewResultV2 } from "../../src/v2/governance/review-result"
 import { MaestroResearchInquiryV2 } from "../../src/v2/research-inquiry-source"
 import { MaestroGovernanceV2 } from "../../src/v2/governance"
+import { MaestroSeatsV2 } from "../../src/v2/seats"
 import { MaestroToolsV2 } from "../../src/v2/tools"
 import { MaestroReviewTools } from "../../src/v2/tools/review"
 import { ReviewFanoutV2 } from "../../src/v2/workflow/review-fanout"
@@ -98,6 +100,13 @@ function infos(root: string, files: Readonly<Record<string, string>>) {
 
 export function host(directory: string, skills: ReadonlyArray<SkillV2.Info>, touches: Touches, controls: HostControls = {}) {
   const admitted: { sessionID: string; id: SessionMessage.ID; text: string }[] = []
+  const agent = (id?: string): AgentV2.Info | undefined => {
+    if (!id || !["maestro", "backend", "lucy"].includes(id)) return
+    const info = AgentV2.Info.empty(AgentV2.ID.make(id))
+    return id === "lucy" ? { ...info, permissions: [
+      ...MaestroSeatsV2.floor(nativeProfiles.lucy), ...MaestroSeatsV2.visibility(id),
+    ] } : info
+  }
   const sessions = {
     create: (input: { id: SessionSchema.ID; parentID: SessionSchema.ID }) =>
       Effect.gen(function* () {
@@ -180,7 +189,8 @@ export function host(directory: string, skills: ReadonlyArray<SkillV2.Info>, tou
     [Config.node, Layer.mock(Config.Service, { entries: () => Effect.succeed([]) })],
     [SkillV2.node, Layer.mock(SkillV2.Service, { list: () => Effect.succeed([...skills]) })],
     [AgentV2.node, Layer.mock(AgentV2.Service, {
-      get: (id) => Effect.succeed(["maestro", "backend", "lucy"].includes(id) ? AgentV2.Info.empty(id) : undefined),
+      get: (id) => Effect.succeed(agent(id)),
+      resolve: (id) => Effect.succeed(agent(id)),
     })],
     [GitCli.node, git],
     [GovernanceBackgroundV2.sessionsNode, Layer.succeed(GovernanceBackgroundV2.Sessions, Option.some(sessions))],

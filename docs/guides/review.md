@@ -8,8 +8,24 @@ this to know what a card says, how deep a review goes and which settings change 
 request, the acceptance criteria, the plan and the diff, never the author's conversation. Proofs that need to run
 code run in a throwaway copy of the tree, which is deleted when the review ends.
 
-The committed PR workflow described below is for the PR-capable campaign build, pending lead acceptance with the
-campaign bundle. This guide does not mean your installed app has already been updated.
+The committed PR and captured-CODE workflows described below are for the PR-capable campaign build, pending lead
+acceptance with the campaign bundle. This guide does not mean your installed app has already been updated.
+
+## Reading the reviewed code
+
+During a review, `lucy` can search the captured source with `code_search`, consult a compatible prepared index with
+`code_query`, or locate relevant original file ranges with `code_locate`. These reads stay on the captured revision
+while you continue editing your working folder. Every successful call returns retained evidence with a URI and
+SHA-256 digest. The URI and digest identify the retained bytes behind the tool result.
+
+A review that captures a tree without a semantic commit can still search and locate its code; index queries return
+`index_unavailable`. A missing or incompatible prepared index also stays unavailable. Locate can continue with
+lexical results and reports incomplete coverage when the index cannot serve it. Review CODE calls never download a
+missing tool or rebuild an index.
+
+These tools require the review's active host binding. Calls after it closes return `review-code-binding-missing`.
+Source acquisition failures return `review-code-source-unavailable`, and a call that reaches its 60-second deadline
+returns `review-code-timeout`. An unavailable read does not establish that the code contains no matches.
 
 ## Prepare local review checks
 
@@ -268,7 +284,7 @@ grant permission, and invented candidate IDs are refused. Probes run against a h
 commit or tree, not the current working directory. If entry adds an analyzer, paging and the final checks use the
 latest retained analysis rather than the earlier run.
 
-Raw probe and history output stays in the review's analysis cache after its Sessions and scratch copies close.
+Raw CODE, probe and history output stays in the review's analysis cache after its Sessions and scratch copies close.
 That cache is OS-managed temporary storage, not a permanent evidence archive.
 
 A card states its limits; it never claims "no problems" for anything it did not look at.
