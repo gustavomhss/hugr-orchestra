@@ -381,22 +381,28 @@ async function within<A>(promise: Promise<A>, phase: string): Promise<A> {
   }
 }
 
-test("Node forwards OPTIONS bodies and exact cookie fields and keeps the admitted authority", async () => {
+test("Bun rejects OPTIONS bodies and preserves cookies and authority on ordinary OPTIONS", async () => {
   const cookies = ["session=one; Path=/installation; HttpOnly", "session=two; Path=/installation/nested; SameSite=Strict"]
+  const calls: string[] = []
   await withNodeRoutes([{ mount: "/installation", async handler(input) {
+    calls.push(input.method)
     const headers = new Headers()
     for (const cookie of cookies) headers.append("set-cookie", cookie)
     const url = new URL(input.url)
     return Response.json({ url: url.href, body: await input.text() }, { headers })
   } }], async (origin) => {
-    const response = await sendSocket(origin, "OPTIONS", "//installation/nested", 12, "options body")
+    const rejected = await sendSocket(origin, "OPTIONS", "/installation/nested", 12, "options body")
+    expect(rejected.status).toBe(400)
+    expect(calls).toEqual([])
+    const response = await sendSocket(origin, "OPTIONS", "//installation/nested", 0, "")
     expect(response.status).toBe(200)
     expect(response.cookies).toEqual(cookies)
     const installed = JSON.parse(response.body)
     const url = new URL(installed.url)
     expect(url.origin).toBe(origin)
     expect(url.pathname.replace(/^\/+/, "/")).toBe("/installation/nested")
-    expect(installed.body).toBe("options body")
+    expect(installed.body).toBe("")
+    expect(calls).toEqual(["OPTIONS"])
   })
 })
 
@@ -529,14 +535,18 @@ async function sendSocket(origin: string, method: string, pathname: string, size
 
 test("the Web adapter preserves cookies and module headers on streamed responses", async () => {
   const values = ["session=one; Path=/tools; HttpOnly", "session=two; Path=/tools/history; SameSite=Strict"]
-  const server = app([{ mount: "/tools", async handler() {
+  const headCancelled = Promise.withResolvers<void>()
+  const server = app([{ mount: "/tools", async handler(input) {
     const headers = new Headers({ "access-control-allow-origin": "https://module.example", "x-extension": "owned" })
     for (const value of values) headers.append("set-cookie", value)
     return new Response(new ReadableStream({
       start(stream) {
-        stream.enqueue(new TextEncoder().encode("streamed"))
-        stream.close()
+        if (input.method !== "HEAD") {
+          stream.enqueue(new TextEncoder().encode("streamed"))
+          stream.close()
+        }
       },
+      cancel: () => headCancelled.resolve(),
     }), { headers })
   } }])
   try {
@@ -547,6 +557,7 @@ test("the Web adapter preserves cookies and module headers on streamed responses
       expect(response.headers.get("x-extension")).toBe("owned")
       expect(await response.text()).toBe(method === "GET" ? "streamed" : "")
     }
+    await within(headCancelled.promise, "unused HEAD response cancellation")
   } finally {
     await server.dispose()
   }

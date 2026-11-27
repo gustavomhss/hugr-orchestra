@@ -174,36 +174,41 @@ function bind(
   cors?: ReadonlyArray<string>,
   httpExtensions?: readonly HttpExtension[],
 ) {
-  const server = serveTransport(httpExtensions !== undefined)
-  return Layer.build(
-    HttpRouter.serve(createRoutes({ password, host, webRoot: root, cors, allowedHosts, httpExtensions }), {
-      disableListenLog: true,
-      disableLogger: true,
-    }).pipe(
-      Layer.provideMerge(NodeHttpServer.layer(() => server, { port, host: hostname })),
-      Layer.provide(AppNodeBuilder.build(LayerNode.group([Credential.node, PermissionSaved.node, ClaudeCodeAccount.node]))),
-    ),
-  ).pipe(Effect.map((context) => ({ address: Context.get(context, HttpServer.HttpServer).address, server })))
+  return Effect.gen(function* () {
+    const server = yield* serveTransport(httpExtensions !== undefined)
+    return yield* Layer.build(
+      HttpRouter.serve(createRoutes({ password, host, webRoot: root, cors, allowedHosts, httpExtensions }), {
+        disableListenLog: true,
+        disableLogger: true,
+      }).pipe(
+        Layer.provideMerge(NodeHttpServer.layer(() => server, { port, host: hostname })),
+        Layer.provide(AppNodeBuilder.build(LayerNode.group([Credential.node, PermissionSaved.node, ClaudeCodeAccount.node]))),
+      ),
+    ).pipe(Effect.map((context) => ({ address: Context.get(context, HttpServer.HttpServer).address, server })))
+  })
 }
 
 /** Own connection teardown from the moment the transport starts listening. */
 export function serveTransport(installation: boolean) {
-  const server = createServer()
-  if (installation) {
-    // Binding happens before route-layer initialization. Even a partially built server must close active connections.
-    const close = server.close.bind(server)
-    server.close = (callback) => {
-      const listening = server.listening
-      server.closeAllConnections?.()
-      // Bun closes the listener as part of closeAllConnections. Node still needs close().
-      if (listening && !server.listening) {
-        if (callback) queueMicrotask(() => callback())
-        return server
+  return Effect.gen(function* () {
+    const server = createServer()
+    if (installation) {
+      // Bun can open the socket before reporting listening. Register cleanup before building the HTTP layer.
+      yield* Effect.addFinalizer(() => Effect.sync(() => { server.closeAllConnections?.() }))
+      const close = server.close.bind(server)
+      server.close = (callback) => {
+        const listening = server.listening
+        server.closeAllConnections?.()
+        // Bun closes the listener as part of closeAllConnections. Node still needs close().
+        if (listening && !server.listening) {
+          if (callback) queueMicrotask(() => callback())
+          return server
+        }
+        return close(callback)
       }
-      return close(callback)
     }
-  }
-  return server
+    return server
+  })
 }
 
 // The Dock tools exist only when the desktop that owns this child handed it a Dock channel.

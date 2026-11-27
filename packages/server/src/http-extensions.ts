@@ -33,6 +33,10 @@ export function httpExtensionsLayer(extensions: readonly HttpExtension[]) {
     const extension = router.find("GET", request.url)?.handler
     if (!extension) return yield* next
     if (fetchForbiddenMethods.has(request.method)) return HttpServerResponse.empty({ status: 405 })
+    if (request.method === "OPTIONS" && request.source instanceof IncomingMessage && process.versions.bun && hasPayload(request)) {
+      // Bun's listener drops OPTIONS request bodies. Reject the request before a module sees an incomplete payload.
+      return HttpServerResponse.empty({ status: 400, headers: { connection: "close" } })
+    }
 
     const controller = new AbortController()
     const abort = () => controller.abort()
@@ -52,10 +56,10 @@ export function httpExtensionsLayer(extensions: readonly HttpExtension[]) {
       const input = toRequest(request, controller.signal, body?.stream)
       if (router.find("GET", new URL(input.url).pathname)?.handler !== extension) return HttpServerResponse.empty({ status: 404 })
       const response = await extension.handler(input)
-      if (controller.signal.aborted && response?.body && !response.body.locked) {
-        await response.body.cancel(controller.signal.reason).catch(() => undefined)
-        return HttpServerResponse.empty({ status: 404 })
+      if ((controller.signal.aborted || request.method === "HEAD") && response?.body && !response.body.locked) {
+        void response.body.cancel(controller.signal.reason).catch(() => undefined)
       }
+      if (controller.signal.aborted) return HttpServerResponse.empty({ status: 404 })
       return response === undefined
         ? HttpServerResponse.empty({ status: 404 })
         : toResponse(response, request, controller.signal)
@@ -92,10 +96,15 @@ function requestTarget(url: URL) {
   return url.pathname + url.search
 }
 
+function hasPayload(request: HttpServerRequest.HttpServerRequest) {
+  return Number(request.headers["content-length"]) > 0 || request.headers["transfer-encoding"] !== undefined
+}
+
 function nativeRequestBody(request: HttpServerRequest.HttpServerRequest) {
   const source = request.source
-  if (!(source instanceof IncomingMessage) || request.method === "GET" || request.method === "HEAD" ||
-    !(Number(request.headers["content-length"]) > 0 || request.headers["transfer-encoding"])) return undefined
+  if (!(source instanceof IncomingMessage) || request.method === "GET" || request.method === "HEAD" || !hasPayload(request)) {
+    return undefined
+  }
 
   // The server can discard an unread upload itself. Start reading only at the handler's first pull.
   const iterator = source.iterator({ destroyOnReturn: false })

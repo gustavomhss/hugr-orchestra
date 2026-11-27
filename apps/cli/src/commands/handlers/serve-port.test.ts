@@ -28,7 +28,8 @@ describe("serve port retry", () => {
 
 test("installation transport closes requests accepted before routes are ready", async () => {
   const { serveTransport } = await import("./serve")
-  const server = serveTransport(true)
+  const scope = Scope.makeUnsafe()
+  const server = await Effect.runPromise(serveTransport(true).pipe(Scope.provide(scope)))
   await new Promise<void>((resolve) => server.listen(0, "127.0.0.1", resolve))
   const port = (server.address() as { port: number }).port
   const client = request(`http://127.0.0.1:${port}/installation`)
@@ -46,6 +47,22 @@ test("installation transport closes requests accepted before routes are ready", 
   } finally {
     clearTimeout(timeout)
     client.destroy()
-    if (server.listening) server.close()
+    await Effect.runPromise(Scope.close(scope, Exit.void))
+  }
+})
+
+test("installation transport releases the bind before Bun reports listening", async () => {
+  const { serveTransport } = await import("./serve")
+  const scope = Scope.makeUnsafe()
+  const server = await Effect.runPromise(serveTransport(true).pipe(Scope.provide(scope)))
+  try {
+    server.listen(0, "127.0.0.1")
+    const address = server.address()
+    expect(address).not.toBeNull()
+    expect(server.listening).toBe(false)
+    await Effect.runPromise(Scope.close(scope, Exit.void))
+    expect(server.address()).toBeNull()
+  } finally {
+    await Effect.runPromise(Scope.close(scope, Exit.void))
   }
 })

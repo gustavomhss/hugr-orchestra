@@ -26,7 +26,7 @@ export default async function installation(context: { origin: string }) {
 
 The factory receives the selected origin and runs before database migration or HTTP binding. The factory cleans up resources it acquires before rejecting. Once it returns a valid installation, Orchestra awaits `dispose` on startup failure or graceful shutdown.
 
-The handler receives requests at the exact mount and below it. Returning `undefined` produces 404 in that namespace. Handler rejections produce a sanitized 500. Root, built-in namespaces (`/api`, `/experimental`, and `/openapi.json`), and overlapping mounts are rejected, regardless of capitalization. HTTP methods forbidden by Fetch receive 405 when they reach the router. A client disconnect aborts the request signal, including while streaming a response.
+The handler receives requests at the exact mount and below it. Returning `undefined` produces 404 in that namespace. Handler rejections produce a sanitized 500. Root, built-in namespaces (`/api`, `/experimental`, and `/openapi.json`), and overlapping mounts are rejected, regardless of capitalization. HTTP methods forbidden by Fetch receive 405 when they reach the router. The Bun listener rejects OPTIONS requests with a body in installation routes. A client disconnect aborts the request signal, including while streaming a response.
 
 Orchestra applies its Host policy to installation routes. The module sets CORS, request body limits, authentication and authorization for its own routes. Use the module's business identities to validate sessions and permissions. Keep credentials outside the module source.
 
