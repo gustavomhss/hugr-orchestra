@@ -2,7 +2,6 @@ import { For, Show, createEffect, createMemo, on, onCleanup } from "solid-js"
 import { useLanguage } from "@/context/language"
 import { useServerSDK } from "@/context/server-sdk"
 import { WorktreeReading } from "./worktree-reading"
-import { readingAge } from "./reading"
 
 const columns = ["path", "project", "owner", "logical", "unique", "proof", "state", "age", "reading"] as const
 
@@ -28,13 +27,8 @@ export function ActivityWorktrees(props: { query: string }) {
   })
   const state = () => controller().state
   const shown = createMemo(() => WorktreeReading.matching(state().snapshot?.records ?? [], props.query))
-  function age(sampledAt?: number) {
-    const value = readingAge({
-      sampledAt,
-      readAt: state().snapshot?.readAt ?? NaN,
-      receivedAt: state().receivedAt ?? NaN,
-      now: state().now,
-    })
+  function age(recordID: string, kind: "logical" | "attempt") {
+    const value = controller().age(recordID, kind)
     return value === undefined
       ? language.t("orchestra.monitor.unread")
       : language.t("orchestra.monitor.seconds", { count: Math.floor(value / 1000) })
@@ -142,7 +136,7 @@ export function ActivityWorktrees(props: { query: string }) {
                             )
                           : language.t("orchestra.monitor.unread")}
                       </td>
-                      <td>{age(row.logical?.sampledAt)}</td>
+                      <td>{age(row.recordID, "logical")}</td>
                       <td>
                         <button
                           type="button"
@@ -163,7 +157,7 @@ export function ActivityWorktrees(props: { query: string }) {
                             <details class="activity-worktree-attempt">
                               <summary>
                                 {language.t("orchestra.monitor.worktreeAttempt", {
-                                  age: age(attempt().sampledAt),
+                                  age: age(row.recordID, "attempt"),
                                   issues: attempt().issueCount,
                                 })}
                               </summary>
@@ -171,7 +165,7 @@ export function ActivityWorktrees(props: { query: string }) {
                                 {language.t("orchestra.monitor.walkDetails", {
                                   bytes: attempt().observedBytes,
                                   entries: attempt().entries,
-                                  age: age(attempt().sampledAt),
+                                  age: age(row.recordID, "attempt"),
                                   issues: attempt().issueCount,
                                 })}
                               </p>

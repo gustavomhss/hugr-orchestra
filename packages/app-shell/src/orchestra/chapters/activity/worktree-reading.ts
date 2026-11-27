@@ -18,8 +18,12 @@ export interface State {
   readonly reads: Readonly<Record<string, Status>>
 }
 
+type ReadingKind = "logical" | "attempt"
+type AgeAnchors = Partial<Record<ReadingKind, number>>
+
 export interface Controller {
   readonly state: State
+  readonly age: (recordID: string, kind: ReadingKind) => number | undefined
   readonly refresh: () => Promise<void>
   readonly read: (recordID: string) => Promise<void>
   readonly tick: () => void
@@ -38,6 +42,7 @@ export function make(input: {
     snapshot: undefined as ActivityMonitor.WorktreeSnapshot | undefined,
     receivedAt: undefined as number | undefined,
     now: clock(),
+    anchors: {} as Record<string, AgeAnchors>,
     inventory: { busy: false, failed: false },
     reads: {} as Record<string, { busy: boolean; failed: boolean }>,
   })
@@ -81,7 +86,7 @@ export function make(input: {
     pending.controllers.clear()
     pending.inventory = undefined
     pending.reads.clear()
-    setState({ snapshot: undefined, receivedAt: undefined, inventory: { busy: false, failed: false } })
+    setState({ snapshot: undefined, receivedAt: undefined, anchors: {}, inventory: { busy: false, failed: false } })
     setState("reads", reconcile({}))
   }
 
@@ -100,14 +105,43 @@ export function make(input: {
         return
       }
       if (state.snapshot && BigInt(snapshot.snapshotRevision) <= BigInt(state.snapshot.snapshotRevision)) return
-      const receivedAt = clock()
+      const receivedAt = Math.max(state.now, clock())
+      const previous = new Map(state.snapshot?.records.map((record) => [record.recordID, record]))
+      // Repeated snapshots keep each sample's client-clock anchor even if the server clock shifts.
+      const anchor = (sampledAt: number) => receivedAt - Math.max(0, snapshot.readAt - sampledAt)
+      const anchors = Object.fromEntries(
+        snapshot.records.map((record) => {
+          const prior = previous.get(record.recordID)
+          const sameRegistration = prior?.registrationID === record.registrationID
+          const old = sameRegistration ? state.anchors[record.recordID] : undefined
+          const logical = record.logical
+          const attempt = record.attempt
+          const age: AgeAnchors = {}
+          if (logical)
+            age.logical =
+              old?.logical !== undefined &&
+              prior?.logical?.sampledAt === logical.sampledAt &&
+              prior.logical.bytes === logical.bytes
+                ? old.logical
+                : anchor(logical.sampledAt)
+          if (attempt)
+            age.attempt =
+              old?.attempt !== undefined &&
+              prior?.attempt?.sampledAt === attempt.sampledAt &&
+              prior.attempt.startedAt === attempt.startedAt
+                ? old.attempt
+                : anchor(attempt.sampledAt)
+          return [record.recordID, age]
+        }),
+      )
       setState((current) => ({
         snapshot:
           current.snapshot?.instanceID === snapshot.instanceID
             ? reconcile(snapshot, { key: "recordID" })(current.snapshot)
             : snapshot,
         receivedAt,
-        now: Math.max(current.now, receivedAt),
+        now: receivedAt,
+        anchors,
       }))
       pruneReads()
     } catch (error) {
@@ -160,6 +194,10 @@ export function make(input: {
 
   return {
     state,
+    age(recordID, kind) {
+      const since = state.anchors[recordID]?.[kind]
+      return since === undefined ? undefined : state.now - since
+    },
     refresh,
     read(recordID) {
       if (pending.disposed) return Promise.resolve()

@@ -1,19 +1,12 @@
 import { expect, test } from "bun:test"
 import { WorktreeReading } from "../src/orchestra/chapters/activity/worktree-reading"
-import { readingAge } from "../src/orchestra/chapters/activity/reading"
 import { bounded, row, setup, snapshot } from "./activity-worktree-fixture"
 
 test("W10 unread, complete zero and partial readings retain separate monotonic ages and named source", async () => {
   const fixture = setup()
   const operations: Promise<void>[] = []
   const state = fixture.controller.state
-  const age = (sampledAt?: number) =>
-    readingAge({
-      sampledAt,
-      readAt: state.snapshot?.readAt ?? NaN,
-      receivedAt: state.receivedAt ?? NaN,
-      now: state.now,
-    })
+  const age = fixture.controller.age
   try {
     const initial = fixture.controller.refresh()
     operations.push(initial)
@@ -21,7 +14,7 @@ test("W10 unread, complete zero and partial readings retain separate monotonic a
     await bounded(initial)
     expect(Object.hasOwn(state.snapshot!.records[0]!, "logical")).toBe(false)
     expect(Object.hasOwn(state.snapshot!.records[0]!, "attempt")).toBe(false)
-    expect(age()).toBeUndefined()
+    expect(age("a", "logical")).toBeUndefined()
 
     const complete = {
       startedAt: 8_999_999,
@@ -43,10 +36,10 @@ test("W10 unread, complete zero and partial readings retain separate monotonic a
     await bounded(first)
     expect(state.snapshot!.records[0]!.logical?.bytes).toBe(0)
     expect(state.snapshot!.source).toBe("node.fs.lstat")
-    expect(age(state.snapshot!.records[0]!.logical?.sampledAt)).toBe(1000)
+    expect(age("a", "logical")).toBe(1000)
     fixture.clock.now = 1100
     fixture.controller.tick()
-    expect(age(state.snapshot!.records[0]!.logical?.sampledAt)).toBe(2000)
+    expect(age("a", "logical")).toBe(2000)
 
     fixture.clock.now = 2100
     const partial = {
@@ -76,8 +69,8 @@ test("W10 unread, complete zero and partial readings retain separate monotonic a
     expect(state.snapshot!.source).toBe("node.fs.lstat")
     fixture.clock.now = 3100
     fixture.controller.tick()
-    expect(age(state.snapshot!.records[0]!.logical?.sampledAt)).toBe(4000)
-    expect(age(state.snapshot!.records[0]!.attempt?.sampledAt)).toBe(1500)
+    expect(age("a", "logical")).toBe(4000)
+    expect(age("a", "attempt")).toBe(1500)
 
     for (const revision of ["2", "1"]) {
       fixture.clock.now += 1000
@@ -91,8 +84,8 @@ test("W10 unread, complete zero and partial readings retain separate monotonic a
       expect(state.snapshot!.records[0]!.attempt?.sampledAt).toBe(9_002_500)
     }
     fixture.controller.tick()
-    expect(age(state.snapshot!.records[0]!.logical?.sampledAt)).toBe(6000)
-    expect(age(state.snapshot!.records[0]!.attempt?.sampledAt)).toBe(3500)
+    expect(age("a", "logical")).toBe(6000)
+    expect(age("a", "attempt")).toBe(3500)
     const failed = fixture.controller.read("a")
     operations.push(failed)
     ;(await fixture.next()).fail(new Error("current read failed"))
@@ -100,7 +93,16 @@ test("W10 unread, complete zero and partial readings retain separate monotonic a
     expect(state.reads.a?.failed).toBe(true)
     expect(fixture.reports).toHaveLength(1)
     expect(state.receivedAt).toBe(2100)
-    expect(age(state.snapshot!.records[0]!.logical?.sampledAt)).toBe(6000)
+    expect(age("a", "logical")).toBe(6000)
+
+    fixture.clock.now = 6100
+    const newer = fixture.controller.refresh()
+    operations.push(newer)
+    ;(await fixture.next()).respond(snapshot("3", { readAt: 9_001_200, records: state.snapshot!.records }))
+    await bounded(newer)
+    expect(state.snapshot?.snapshotRevision).toBe("3")
+    expect(age("a", "logical")).toBe(7000)
+    expect(age("a", "attempt")).toBe(4500)
   } finally {
     fixture.dispose()
     await bounded(Promise.allSettled(operations))
