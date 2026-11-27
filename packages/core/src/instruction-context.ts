@@ -96,6 +96,9 @@ const layer = Layer.effectDiscard(
                 stop,
               }),
           fs.resolve,
+        ).pipe(
+          // Discovery finds lexical names; ignore tracked symlinks to host files before any content is read.
+          Effect.map((paths) => paths.filter((path) => contains(stop, path))),
         ),
       )
       const configured = yield* configuredInstructions
