@@ -137,10 +137,11 @@ it.live("overlapping authenticated Docker POSTs share one flight while GET reads
     })
 
     yield* Effect.promise(async () => {
-      const unread = decodeSnapshot(await server.client.activity.docker())
-      const first = server.request(dockerReadPath, post)
-      const pending = [first]
+      const pending: Promise<Response>[] = []
       try {
+        const unread = decodeSnapshot(await bounded(server.client.activity.docker()))
+        const first = server.request(dockerReadPath, post)
+        pending.push(first)
         await bounded(
           Promise.race([
             started.promise,
