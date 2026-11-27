@@ -5,7 +5,7 @@ import { SessionSchema } from "@orchestra/core/session"
 import { SessionMessage } from "@orchestra/core/session/message"
 import type { ExecutionHost } from "@orchestra/core/session/runner"
 import { ToolSafety } from "@orchestra/core/tool-safety"
-import { Effect, Layer, Stream } from "effect"
+import { DateTime, Effect, Layer, Stream } from "effect"
 import { ClaudeCodeSDK } from "../src/sdk"
 import { ClaudeCodeHost } from "../src/v2/host"
 
@@ -21,7 +21,7 @@ test("settles authorized built-ins exactly once with Claude Code's real callback
     model: undefined,
     system: [],
     context: [],
-    history: [{ id: SessionMessage.ID.make("msg_prompt"), type: "user", text: "Go", files: [], agents: [], time: { created: 0 } }],
+    history: [{ id: SessionMessage.ID.make("msg_prompt"), type: "user", text: "Go", files: [], agents: [], time: { created: DateTime.makeUnsafe(0) } }],
     tools: [],
     execute: () => Effect.die("unused"),
     authorize: (input) => {
