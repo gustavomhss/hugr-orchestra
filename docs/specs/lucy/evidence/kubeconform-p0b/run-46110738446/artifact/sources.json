@@ -1,0 +1,295 @@
+{
+  "schema": "kubeconform-p0b-sources-v1",
+  "status": "frozen input inventory; hosted P0B measurement pending",
+  "inventoryAnchor": {
+    "repo": "gustavomhss/hugr-orchestra",
+    "measuredSource": "432c8415bb657c0041fd6b0fba084fa8e1d7a07d",
+    "measuredTree": "cfa170b66306328dcf69f931514b6ade851007ac",
+    "unchangedFiles": [
+      {
+        "path": "packages/core/src/backend-toolkit/packs/kubeconform.ts",
+        "sameAsMeasuredBase": true,
+        "sha256": "96bd9cc1cf933cdb56995a320b70d897f498a6bf738baaf5565785d2bcaefc17",
+        "gitBlob": "81fb16e67c3fbc464421945d548fd96ff80e3c57"
+      },
+      {
+        "path": "packages/core/src/backend-toolkit/runtimes/go.ts",
+        "sameAsMeasuredBase": true,
+        "sha256": "607c8ef56bc75a8134be5535aba9ccce72efbcc44e01d2110c7577c73cc9ed4c",
+        "gitBlob": "75c6d31c2ee8e54f9e3cfedf5f30d5449a63a417"
+      },
+      {
+        "path": "packages/core/src/backend-toolkit/manifest.ts",
+        "sameAsMeasuredBase": true,
+        "sha256": "a7a9e06838be8dbed048ea28bf1954a70d1e8a16951347e2170e1985b81aad61",
+        "gitBlob": "9a89f013980597a2a4b0d404f7213fab4ac74dbb"
+      }
+    ],
+    "planningDev": "7441df1347d98777259aa5b7e1f12ce46486ce85",
+    "planningDevTree": "8efd7f9d205ef552f7762f4fd0b3116c5ec87841",
+    "measurementParent": "3de68057c5b1da3697dfff4e0c165ae510753d9e",
+    "measurementParentTree": "0074c33df44a10de178554b9c97d96f6138ee9f1"
+  },
+  "upstream": {
+    "repo": "yannh/kubeconform",
+    "tag": "v0.8.0",
+    "commit": "02374e583d700721f57300fae78e11acd27ee539",
+    "tree": "1c4f6d5b7d8f8f020df501fcbae79483b38794d0"
+  },
+  "release": {
+    "id": 334579843,
+    "tag": "v0.8.0",
+    "url": "https://github.com/yannh/kubeconform/releases/tag/v0.8.0",
+    "publishedAt": "2026-06-04T20:08:59Z"
+  },
+  "reader": {
+    "kind": "inspection-only",
+    "version": "1.25.14",
+    "sourceCommit": "08118a942518cc18db507ec182acffe7364a92a3",
+    "url": "https://go.dev/dl/go1.25.14.linux-amd64.tar.gz",
+    "integrity": "sha256-ohrlYzomm81+kM92fkgiVjN5XpnYMXQsvzOXBk/udxI=",
+    "files": [
+      {
+        "path": "LICENSE",
+        "gitBlob": "2a7cf70da6e498df9c11ab6a5eaa2ddd7af34da4",
+        "bytes": 1453,
+        "url": "https://raw.githubusercontent.com/golang/go/08118a942518cc18db507ec182acffe7364a92a3/LICENSE",
+        "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+      },
+      {
+        "path": "PATENTS",
+        "gitBlob": "733099041f84fa1e58611ab2e11af51c1f26d1d2",
+        "bytes": 1303,
+        "url": "https://raw.githubusercontent.com/golang/go/08118a942518cc18db507ec182acffe7364a92a3/PATENTS",
+        "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+      }
+    ],
+    "expectedExecutableSha256": "9347e73e5188af1ef4c2046cbc9c985473f0155c187d4005ae44c21b300062eb",
+    "supportedFormatsSourceCommit": "08118a942518cc18db507ec182acffe7364a92a3",
+    "foreignFileExecution": false,
+    "fatMachoOnlyFirstSliceWarning": true
+  },
+  "previousLinuxEvidence": {
+    "runID": 46103282827,
+    "jobID": 140850316267,
+    "source": "432c8415bb657c0041fd6b0fba084fa8e1d7a07d",
+    "snapshot": "a82102da6f1e531821ab6d5ac31f0b6eacc51633",
+    "artifactID": 15246202661,
+    "zipBytes": 75086,
+    "zipSha256": "8820f721fda093fc75a8af63650ac176a48718dc2893b99ccf4d9a538744aafd",
+    "files": [
+      {
+        "path": "docs/specs/lucy/evidence/kubeconform-p0a/run-46103282827/artifact/measurement.json",
+        "bytes": 17047,
+        "sha256": "ad3de846ab6ac883e81aeb868597b00ebd7d5dfc00087c57f56ef7d2f10c9f7b"
+      },
+      {
+        "path": "docs/specs/lucy/evidence/kubeconform-p0a/run-46103282827/artifact/build-info.json",
+        "bytes": 1469,
+        "sha256": "86e5cf17d9900e3573f2cf23eced205c753f61b8b83d54380745c261196fc1f4"
+      },
+      {
+        "path": "docs/specs/lucy/evidence/kubeconform-p0a/run-46103282827/artifact/executable.json",
+        "bytes": 647,
+        "sha256": "c502d9b9fb0ced35212e1779d7b29dab6fd802b6910b2643a030a8dce7a4044e"
+      },
+      {
+        "path": "docs/specs/lucy/evidence/kubeconform-p0a/run-46103282827/artifact/sources.json",
+        "bytes": 13786,
+        "sha256": "ac95aee24abed6c146dad1593f428dfa1d7d0b0d51a11daad480bbc30a7f7049"
+      },
+      {
+        "path": "docs/specs/lucy/evidence/kubeconform-p0a/run-46103282827/artifact/compiler-source-pin.json",
+        "bytes": 1056,
+        "sha256": "fe48722fe13b59c6559e7035b0b650f81d4fec877b83c06f2ef32aaf828c67a7"
+      }
+    ],
+    "use": "exact prior Linux observation; no new Linux execution claim",
+    "retentionCommit": "3de68057c5b1da3697dfff4e0c165ae510753d9e",
+    "retentionTree": "0074c33df44a10de178554b9c97d96f6138ee9f1"
+  },
+  "targets": [
+    {
+      "target": "darwin-arm64",
+      "measurementOrigin": "hosted-static-read-pending",
+      "archive": {
+        "assetID": 438612680,
+        "name": "kubeconform-darwin-arm64.tar.gz",
+        "url": "https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-darwin-arm64.tar.gz",
+        "format": "tar.gz",
+        "bytes": 7276844,
+        "sha256": "f84f4dfbebf4a6b0b230385fa065a39ea35e02608c2b50d025dcf64775a69d67",
+        "integrity": "sha256-+E9N++v0prCyMDhfoGWjnqNeAmCMK1DQJdz2R3WmnWc="
+      },
+      "member": "kubeconform",
+      "expectedHeader": {
+        "format": "macho",
+        "class": 64,
+        "endianness": "little",
+        "magic": 4277009103,
+        "cpuType": 16777228,
+        "fileType": 2,
+        "universalPermitted": false
+      },
+      "expectedBuildSettings": {
+        "GOOS": "darwin",
+        "GOARCH": "arm64",
+        "CGO_ENABLED": "0"
+      },
+      "executableSha256": null,
+      "executableBytes": null
+    },
+    {
+      "target": "darwin-x64",
+      "measurementOrigin": "hosted-static-read-pending",
+      "archive": {
+        "assetID": 438612679,
+        "name": "kubeconform-darwin-amd64.tar.gz",
+        "url": "https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-darwin-amd64.tar.gz",
+        "format": "tar.gz",
+        "bytes": 7762426,
+        "sha256": "71dbc87ac9f24099a62b93570e65aa06312ba6ac8aea63b7f86e9d999edf5a92",
+        "integrity": "sha256-cdvIesnyQJmmK5NXDmWqBjErpqyK6mO3+G6dmZ7fWpI="
+      },
+      "member": "kubeconform",
+      "expectedHeader": {
+        "format": "macho",
+        "class": 64,
+        "endianness": "little",
+        "magic": 4277009103,
+        "cpuType": 16777223,
+        "fileType": 2,
+        "universalPermitted": false
+      },
+      "expectedBuildSettings": {
+        "GOOS": "darwin",
+        "GOARCH": "amd64",
+        "CGO_ENABLED": "0"
+      },
+      "executableSha256": null,
+      "executableBytes": null
+    },
+    {
+      "target": "linux-arm64",
+      "measurementOrigin": "hosted-static-read-pending",
+      "archive": {
+        "assetID": 438612685,
+        "name": "kubeconform-linux-arm64.tar.gz",
+        "url": "https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-arm64.tar.gz",
+        "format": "tar.gz",
+        "bytes": 6901136,
+        "sha256": "1f53fc8e81258197a35e8603054162a5af1de8c5af13746c71ab680d9534ed87",
+        "integrity": "sha256-H1P8joElgZejXoYDBUFipa8d6MWvE3RscatoDZU07Yc="
+      },
+      "member": "kubeconform",
+      "expectedHeader": {
+        "format": "elf",
+        "class": 64,
+        "endianness": "little",
+        "machine": 183
+      },
+      "expectedBuildSettings": {
+        "GOOS": "linux",
+        "GOARCH": "arm64",
+        "CGO_ENABLED": "0"
+      },
+      "executableSha256": null,
+      "executableBytes": null
+    },
+    {
+      "target": "linux-x64",
+      "measurementOrigin": "reuse-p0a2",
+      "archive": {
+        "assetID": 438612666,
+        "name": "kubeconform-linux-amd64.tar.gz",
+        "url": "https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-amd64.tar.gz",
+        "format": "tar.gz",
+        "bytes": 7534236,
+        "sha256": "9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883",
+        "integrity": "sha256-m8K/+/cfJhEoUz7a+RIVOUi3/yOPmlMa5tNEZuwoeIM="
+      },
+      "member": "kubeconform",
+      "expectedHeader": {
+        "format": "elf",
+        "class": 64,
+        "endianness": "little",
+        "machine": 62
+      },
+      "expectedBuildSettings": {
+        "GOOS": "linux",
+        "GOARCH": "amd64",
+        "CGO_ENABLED": "0"
+      },
+      "executableSha256": "457722b36e98d7bdbc91525e594951ef5d7ea3a29da2d13b9b28a2fb8a5097b7",
+      "executableBytes": 13944911
+    },
+    {
+      "target": "win32-x64",
+      "measurementOrigin": "hosted-static-read-pending",
+      "archive": {
+        "assetID": 438612665,
+        "name": "kubeconform-windows-amd64.zip",
+        "url": "https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-windows-amd64.zip",
+        "format": "zip",
+        "bytes": 7615744,
+        "sha256": "e3f56102bcf4f50b034a567e2482a1c5330799983ddd655952310211aef73d93",
+        "integrity": "sha256-4/VhArz09QsDSlZ+JIKhxTMHmZg93WVZUjECEa73PZM="
+      },
+      "member": "kubeconform.exe",
+      "expectedHeader": {
+        "format": "pe",
+        "class": 64,
+        "machine": 34404,
+        "optionalMagic": 523
+      },
+      "expectedBuildSettings": {
+        "GOOS": "windows",
+        "GOARCH": "amd64",
+        "CGO_ENABLED": "0"
+      },
+      "executableSha256": null,
+      "executableBytes": null
+    }
+  ],
+  "knownCompilerSources": [
+    {
+      "version": "go1.26.3",
+      "sourceCommit": "2dc996f71b0ebafb77e64433e58333e049488a3c",
+      "files": [
+        {
+          "path": "LICENSE",
+          "gitBlob": "2a7cf70da6e498df9c11ab6a5eaa2ddd7af34da4",
+          "bytes": 1453,
+          "url": "https://raw.githubusercontent.com/golang/go/2dc996f71b0ebafb77e64433e58333e049488a3c/LICENSE",
+          "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+        },
+        {
+          "path": "PATENTS",
+          "gitBlob": "733099041f84fa1e58611ab2e11af51c1f26d1d2",
+          "bytes": 1303,
+          "url": "https://raw.githubusercontent.com/golang/go/2dc996f71b0ebafb77e64433e58333e049488a3c/PATENTS",
+          "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+        }
+      ],
+      "observedOn": [
+        "linux-x64"
+      ],
+      "otherTargets": "unknown until measured"
+    }
+  ],
+  "sourceInventoryReference": {
+    "path": "packages/core/test/fixture/kubeconform-p0a.sources.json",
+    "gitBlob": "cdee1d3f8648fde7cf61dabb91c8d1e31c724455",
+    "sha256": "ac95aee24abed6c146dad1593f428dfa1d7d0b0d51a11daad480bbc30a7f7049",
+    "use": "pinned candidate source/module/notice mappings; target membership must come from actual build-info"
+  },
+  "unknownMappingPolicy": "retain actual observations, record unresolved compiler/module/source mapping, fail completeness; never guess or fetch unpinned version sources",
+  "claimLimits": {
+    "foreignTargetsExecuted": false,
+    "nativeHostQualification": false,
+    "analysisQualified": false,
+    "noticeDistributionClosed": false,
+    "signatureAttestationVerified": false,
+    "productionNoticesInstalled": false
+  }
+}

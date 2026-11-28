@@ -1,0 +1,15 @@
+{
+  "observed": {
+    "file": "kubeconform",
+    "format": "macho",
+    "needs": {
+      "macos": "12.0"
+    },
+    "notes": [
+      "arm64 12.0"
+    ]
+  },
+  "declared": {
+    "macos": "12.0"
+  }
+}

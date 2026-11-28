@@ -1,0 +1,27 @@
+{
+  "schema": "kubeconform-p0b-provenance-v1",
+  "origin": {
+    "kind": "this-run",
+    "workflowSHA": "cb188f6dcb5cf3d0830fb6b46d08634b875faa6d",
+    "runID": "46110738446",
+    "attempt": "1"
+  },
+  "inventorySha256": "01f1fc0bc8cd7bf3695108fdc1b7d9ab913b8cf4978023ab9a7617c60876c586",
+  "parent": "3de68057c5b1da3697dfff4e0c165ae510753d9e",
+  "parentTree": "0074c33df44a10de178554b9c97d96f6138ee9f1",
+  "platform": "linux",
+  "arch": "x64",
+  "upstream": {
+    "repo": "yannh/kubeconform",
+    "tag": "v0.8.0",
+    "commit": "02374e583d700721f57300fae78e11acd27ee539",
+    "tree": "1c4f6d5b7d8f8f020df501fcbae79483b38794d0"
+  },
+  "foreignTargetsExecuted": false,
+  "nativeHostQualification": false,
+  "analysisQualified": false,
+  "noticeDistributionClosed": false,
+  "signatureAttestationVerified": false,
+  "productionNoticesInstalled": false,
+  "nativeQualificationChanged": false
+}

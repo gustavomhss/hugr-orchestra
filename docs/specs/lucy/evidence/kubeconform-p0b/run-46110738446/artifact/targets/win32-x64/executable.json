@@ -1,0 +1,10 @@
+{
+  "sha256": "642bf8ea0d614a8c75d2bd012eb6042a90589ff846c69f04863afa446b30f2c1",
+  "bytes": 14132224,
+  "header": {
+    "format": "pe",
+    "class": 64,
+    "machine": 34404,
+    "optionalMagic": 523
+  }
+}

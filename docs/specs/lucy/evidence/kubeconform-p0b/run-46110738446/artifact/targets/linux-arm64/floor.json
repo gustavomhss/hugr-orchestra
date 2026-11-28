@@ -1,0 +1,11 @@
+{
+  "observed": {
+    "file": "kubeconform",
+    "format": "elf",
+    "needs": {},
+    "notes": [
+      "static"
+    ]
+  },
+  "declared": {}
+}

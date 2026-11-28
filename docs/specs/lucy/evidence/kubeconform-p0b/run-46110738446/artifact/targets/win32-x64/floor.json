@@ -1,0 +1,12 @@
+{
+  "observed": {
+    "file": "kubeconform.exe",
+    "format": "pe",
+    "needs": {},
+    "notes": [
+      "os 6.1",
+      "subsystem 6.1"
+    ]
+  },
+  "declared": {}
+}

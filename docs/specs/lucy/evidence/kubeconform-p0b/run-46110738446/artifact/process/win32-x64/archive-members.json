@@ -1,0 +1,29 @@
+{
+  "operation": {
+    "kind": "list",
+    "format": "zip",
+    "archive": "/tmp/orchestra-core-test-TQbZJ8/archives/win32-x64/kubeconform-windows-amd64.zip"
+  },
+  "command": "unzip",
+  "args": [
+    "-Z1",
+    "/tmp/orchestra-core-test-TQbZJ8/archives/win32-x64/kubeconform-windows-amd64.zip"
+  ],
+  "exitCode": 0,
+  "durationMs": 3,
+  "timedOut": false,
+  "overflow": false,
+  "memoryExceeded": false,
+  "stdout": {
+    "bytes": 24,
+    "retainedBytes": 24,
+    "truncated": false,
+    "sha256": "e1f767d108397d37dbfc1ccfcb0ec48aa58c80a64a7056c67d76b384fb5bf5e1"
+  },
+  "stderr": {
+    "bytes": 0,
+    "retainedBytes": 0,
+    "truncated": false,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}
