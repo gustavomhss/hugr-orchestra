@@ -19,6 +19,8 @@ import type {
 } from "../types"
 import { createStore } from "solid-js/store"
 
+export type SessionRevision = { id: string; timestamp: number; seq?: number }
+
 export function createSyncStore() {
   return createStore<{
     status: "loading" | "partial" | "complete"
@@ -39,6 +41,11 @@ export function createSyncStore() {
     }
     config: Config
     session: Session[]
+    session_metadata: Record<string, { epoch?: number; httpUpdated?: number; snapshot: Session }>
+    session_selection: Record<string, {
+      agent?: SessionRevision & { value: string }
+      model?: SessionRevision & { value: NonNullable<Session["model"]> }
+    }>
     session_status: {
       [sessionID: string]: SessionStatus
     }
@@ -80,6 +87,8 @@ export function createSyncStore() {
     provider: [],
     provider_default: {},
     session: [],
+    session_metadata: {},
+    session_selection: {},
     session_status: {},
     session_diff: {},
     todo: {},

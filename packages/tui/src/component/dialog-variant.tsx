@@ -7,8 +7,13 @@ export function DialogVariant() {
   const local = useLocal()
   const dialog = useDialog()
 
-  const options = createMemo(() => {
+  const selected = () => {
     const raw = local.model.variant.selected()
+    return raw === undefined ? local.model.variant.current() : raw
+  }
+  const options = createMemo(() => {
+    const variant = selected()
+    const variants = local.model.variant.list()
     return [
       {
         value: JSON.stringify(["model-default"]),
@@ -18,18 +23,18 @@ export function DialogVariant() {
           local.model.variant.set(undefined)
         },
       },
-      ...local.model.variant.list().map((variant) => ({
+      ...variants.map((variant) => ({
         value: JSON.stringify(["variant", variant]),
-        title: variant,
+        title: variant === "" ? '""' : variant,
         onSelect: () => {
           if (!local.model.variant.list().includes(variant)) return
           dialog.clear()
           local.model.variant.set(variant)
         },
       })),
-      ...(typeof raw === "string" && !local.model.variant.list().includes(raw) ? [{
-        value: JSON.stringify(["variant", raw]),
-        title: raw, disabled: true,
+      ...(typeof variant === "string" && !variants.includes(variant) ? [{
+        value: JSON.stringify(["variant", variant]),
+        title: variant === "" ? '""' : variant, disabled: true,
         footer: modelExecutionReason("variant-unavailable"), onSelect() {},
       }] : []),
     ]
@@ -39,11 +44,7 @@ export function DialogVariant() {
     <DialogSelect<string>
       options={options()}
       title={"Select variant"}
-      current={typeof local.model.variant.selected() === "string"
-        ? JSON.stringify(["variant", local.model.variant.selected()])
-        : local.model.variant.selected() === null ? JSON.stringify(["model-default"])
-          : typeof local.model.variant.current() === "string" ? JSON.stringify(["variant", local.model.variant.current()])
-            : JSON.stringify(["model-default"])}
+      current={typeof selected() === "string" ? JSON.stringify(["variant", selected()]) : JSON.stringify(["model-default"])}
       flat={true}
       showDisabled={true}
     />

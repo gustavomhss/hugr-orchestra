@@ -221,10 +221,17 @@ export function Session() {
 
   createEffect(() => {
     const sessionID = route.sessionID
+    const owner = { active: true }
+    onCleanup(() => { owner.active = false })
     void (async () => {
       const previousWorkspace = untrack(() => project.workspace.current())
       // A missing Session rejects, which the catch below reports before returning home.
-      const info = await sdk.catalog.session(sessionID)
+      const snapshot = await sync.session.refreshSelection(sessionID)
+      if (!owner.active) return
+      const info = snapshot ?? (sync.session.selectionReady(sessionID)
+        ? sync.session.get(sessionID)
+        : await sync.session.refreshSelection(sessionID))
+      if (!owner.active || !info) return
 
       if (info.location.workspaceID !== previousWorkspace) {
         project.workspace.set(info.location.workspaceID)
@@ -237,11 +244,13 @@ export function Session() {
           await sync.bootstrap({ fatal: false })
         } catch {}
       }
-      editor.reconnect(info.location.directory)
+      if (!owner.active) return
+      const placement = sync.session.get(sessionID)?.location
+      if (placement) editor.reconnect(placement.directory)
       await sync.session.sync(sessionID)
-      if (route.sessionID === sessionID && scroll) scroll.scrollBy(100_000)
+      if (owner.active && scroll) scroll.scrollBy(100_000)
     })().catch((error) => {
-      if (route.sessionID !== sessionID) return
+      if (!owner.active) return
       toast.show({
         message: errorMessage(error),
         variant: "error",

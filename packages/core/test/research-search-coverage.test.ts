@@ -257,7 +257,7 @@ describe("CodeSearch native binary completeness", () => {
       expect(secondary.command.options).toEqual(ordinarySecondary.command.options)
       expect(secondary.requested).toEqual(ordinarySecondary.requested)
       expect(secondary.forwarded?.maxOutputBytes).toBe(1)
-      expect({ ...secondary.forwarded, maxOutputBytes: secondary.requested?.maxOutputBytes }).toEqual(secondary.requested)
+      expect(secondary.requested).toEqual({ ...secondary.forwarded, maxOutputBytes: secondary.requested?.maxOutputBytes })
       expect(secondary.forwarded?.signal).toBe(options.signal)
       expect(secondary.result.exitCode).toBe(0)
       expect(secondary.result.stdoutTruncated).toBe(true)

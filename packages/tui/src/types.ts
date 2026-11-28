@@ -177,4 +177,10 @@ export type ProviderAuthAuthorization = {
 export type { Event }
 
 // The TUI wraps each V2 stream event in this envelope before it reaches the store handlers.
-export type GlobalEvent = { directory: string; workspace?: string; project?: string; payload: Event }
+export type GlobalEvent = {
+  directory: string
+  workspace?: string
+  project?: string
+  durable?: { aggregateID: string; seq: number }
+  payload: Event
+}

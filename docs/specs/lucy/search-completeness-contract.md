@@ -234,3 +234,35 @@ original freeze base. The model/runner changes require the existing Lucy
 model-identity and public Session preservation controls on the candidate;
 they do not replace the search RED. No new public Protocol or HttpApi change
 is authored by this slice; the incoming generated clients remain intact.
+
+## 9. First hosted preparation failure and exact repairs
+
+Run [46099153314](https://github.com/gustavomhss/hugr-orchestra/actions/runs/46099153314),
+source `7f545295c811e77f79c3882995815807ffb9f768`, snapshot
+`9b2d470b672d98c7e4d1454eadd738f6f9b1dc9a`, executed no tests. It is not
+a qualified RED. Windows and macOS Core typechecks stopped at TS2769 in the
+new test's capture-options equality. Linux passed source-size and spawn
+checks, then stopped at the inherited Server-to-Core fixture import R5.
+
+Before the next baseline, the two plain operands of that single `toEqual`
+are reversed to match the assertion library's overload. The new test blob is
+`75520016bd33835ffacfcebb0a85b5a1b9f40fcd`; reversing only that edit restores
+`1123327217f60024e9ca3c8fa30e7380eb765989` exactly. All native witnesses,
+values, deep equality and target assertions remain intact.
+
+The inherited boundary is repaired by an explicit Core package export for
+its unchanged `test/fixture/mcp-prompts.ts` and by changing only the Server
+test's import specifier to that export. No wildcard, boundary ledger or
+assertion is changed. Server typecheck and the exact affected HTTP test file
+will verify this resolution change in a separate hosted lane. It does not
+change Protocol, HttpApi or generated client bytes.
+
+The candidate also retains subsequent `dev` commit
+`bbe3a84cbf7adeae2ecd4413a2fc0e63cbd7ae28`, tree
+`7a96c20ce9d4341e39c19c9db30c3958825c0f6d` (#1635). Its effective delta
+contains only TUI files and the models guide; Core, Maestro, dependency
+manifests, CI and the search baseline are unchanged. The first RED source
+and this newer integration base are both preserved as parents.
+
+Production search remains unchanged until the corrected baseline compiles
+and reaches the four intended assertions after the native positive controls.
