@@ -62,6 +62,7 @@ export const run = (services: Services, request: Request, context: Tool.Context)
     yield* ReviewCodeSource.checkPaths(view, requestedPaths(normalized))
     const source = { worktree: view.worktree, tree: view.tree, ...(view.commit ? { commit: view.commit } : {}),
       ...(view.scope ? { scope: view.scope } : {}) }
+    const captures: ReviewTools.CodeCapture["evidence"][] = []
     const capture = (value: unknown): Effect.Effect<Evidence, Research.Error> => Effect.gen(function* () {
       const text = JSON.stringify(value)
       const sha256 = createHash("sha256").update(text, "utf8").digest("hex")
@@ -70,6 +71,7 @@ export const run = (services: Services, request: Request, context: Tool.Context)
       yield* retain({ uri, text }).pipe(Effect.catchDefect(() =>
         Effect.fail(new Research.Error({ code: "source_unavailable", message: "review-code-retention-unavailable" }))))
       yield* active
+      if (access.observeCode) captures.push({ uri, text, sha256 })
       return { uri, sha256 }
     })
     const manifest = yield* ResearchToolkit.Manifest
@@ -130,9 +132,21 @@ export const run = (services: Services, request: Request, context: Tool.Context)
       title: normalized.name === "code_search" ? normalized.input.pattern : normalized.name,
       output: [JSON.stringify({ result, evidence }), ...(state.snapshot ? [shown(state.snapshot)] : [])].join("\n\n"),
     }
-    return { active: access.active, output }
+    const observeCode = access.observeCode
+    const body = captures.at(-1)
+    if (observeCode && (!view.scope || !body))
+      return yield* new Tool.Failure({ message: "engagement-evidence-corrupt: captured CODE authority is missing",
+        metadata: { reason: "engagement-evidence-corrupt" } })
+    const captured: ReviewTools.CodeCapture | undefined = observeCode && view.scope && body ? {
+      ...normalized, sessionID: context.sessionID, assistantMessageID: context.assistantMessageID,
+      toolCallID: context.toolCallID, sourceSha256: view.scope.sha256, evidence: body, snapshots: captures.slice(0, -1),
+    } : undefined
+    return { active: access.active, output,
+      observe: observeCode && captured ? Effect.suspend(() => observeCode(captured)) : Effect.void }
   }))
   // Projection cleanup can itself suspend. The final delivery check follows it, using the original binding identity.
+  yield* completed.active
+  yield* completed.observe
   yield* completed.active
   return completed.output
 }).pipe(

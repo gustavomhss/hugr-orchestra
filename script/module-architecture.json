@@ -277,6 +277,9 @@
           "patterns": [
             "src/project/",
             "src/project.ts",
+            "src/activity-disk.ts",
+            "src/activity-worktree.ts",
+            "src/activity-worktree-state.ts",
             "src/filesystem/",
             "src/filesystem.ts",
             "src/fs-util.ts",
@@ -321,6 +324,10 @@
           "entry": "src/process.ts",
           "patterns": [
             "src/process.ts",
+            "src/activity-cpu.ts",
+            "src/activity-docker.ts",
+            "src/activity-monitor.ts",
+            "src/process-provenance.ts",
             "src/child-process-common.ts",
             "src/cross-spawn-command.ts",
             "src/cross-spawn-spawner.ts",

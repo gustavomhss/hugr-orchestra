@@ -16,11 +16,12 @@ import { expectSpawn } from "../fixture/omni-expect"
 import { tmpdir } from "../fixture/tmpdir"
 
 // Curated oxlint through ReviewAnalyze.run. Provisioning, including the full notice, happens outside the review.
-// A native cell names diagnostics, so an unsupported host or a missing Linux jail fails conformance-missing there.
-// The suite's Linux jail cell is the other hard failure. Sandbox denial is not-run, not acquisition-error.
-// Windows asserts the named refusal only and makes no native claim. A warning is not confirmation of project binding.
+// Linux x64 cells require real diagnostics and a prepared jail. Sandbox denial is not-run, not acquisition-error.
+// Other targets actively assert the named refusal before provisioning and make no native claim.
+// A warning is not confirmation of project binding.
 
 const it = testEffect(LayerNode.compile(LayerNode.group([AppProcess.node])))
+const nativeRuntime = process.platform === "linux" && process.arch === "x64"
 const DEBUGGER = "debugger;\n"
 const EXPLICIT_ANY = "const value: any = 1;\n"
 const BENIGN = "const answer = 42;\n"
@@ -81,13 +82,16 @@ it.live("the analyzer fixture keeps one oxlint pack and both curated rules", () 
   }),
 )
 
-if (process.platform !== "win32") it.live("a new head fires no-debugger and no-explicit-any, an unchanged warning is debt, and hostile config is not the scan", () =>
+it.live(nativeRuntime
+  ? "a new head fires no-debugger and no-explicit-any, an unchanged warning is debt, and hostile config is not the scan"
+  : "an unqualified host refuses new-head oxlint diagnostics without raw output", () =>
   Effect.gen(function* () {
     expectSpawn(import.meta.path)
     const made = yield* held()
     const freshRoot = yield* repo(path.join(made.path, "fresh"), { "broken.js": BENIGN, "any.ts": BENIGN }, {
       "broken.js": DEBUGGER, "any.ts": EXPLICIT_ANY,
     })
+    if (!nativeRuntime) return yield* unsupported(made, freshRoot, { changed: CHANGED })
     yield* ready(made.toolkit)
     const before = yield* Effect.promise(() => image(freshRoot))
     const fresh = yield* analyze(made, freshRoot, { changed: CHANGED })
@@ -127,11 +131,14 @@ if (process.platform !== "win32") it.live("a new head fires no-debugger and no-e
   }), 600_000,
 )
 
-if (process.platform !== "win32") it.live("a first source file keeps base metadata invoked false, and a head with no input is not-run", () =>
+it.live(nativeRuntime
+  ? "a first source file keeps base metadata invoked false, and a head with no input is not-run"
+  : "an unqualified host refuses a first source file without claiming base or head execution", () =>
   Effect.gen(function* () {
     expectSpawn(import.meta.path)
     const made = yield* held()
     const root = yield* repo(path.join(made.path, "first"), { "README.md": "no source\n" }, { "new.js": DEBUGGER })
+    if (!nativeRuntime) return yield* unsupported(made, root, { changed: { "new.js": [{ start: 1, end: 1 }] } })
     yield* ready(made.toolkit)
     const added = yield* analyze(made, root, { changed: { "new.js": [{ start: 1, end: 1 }] } })
     expect(added.checks[0]).toMatchObject({ status: "fail", workspaceExecuted: false })
@@ -149,13 +156,16 @@ if (process.platform !== "win32") it.live("a first source file keeps base metada
   }), 600_000,
 )
 
-if (process.platform !== "win32") it.live("dropped no-debugger is absent from raw while no-explicit-any fires, and demoted stays out of page", () =>
+it.live(nativeRuntime
+  ? "dropped no-debugger is absent from raw while no-explicit-any fires, and demoted stays out of page"
+  : "an unqualified host refuses precision-rule scans without diagnostics", () =>
   Effect.gen(function* () {
     expectSpawn(import.meta.path)
     const made = yield* held()
     const root = yield* repo(path.join(made.path, "rules"), { "broken.js": BENIGN, "any.ts": BENIGN }, {
       "broken.js": DEBUGGER, "any.ts": EXPLICIT_ANY,
     })
+    if (!nativeRuntime) return yield* unsupported(made, root, { changed: CHANGED })
     yield* ready(made.toolkit)
     const shot = yield* Effect.promise(() => image(root))
     const before = yield* analyze(made, root, { changed: CHANGED })
@@ -188,11 +198,16 @@ if (process.platform !== "win32") it.live("dropped no-debugger is absent from ra
   }), 600_000,
 )
 
-if (process.platform !== "win32") it.live("selected paths bind to the copied tree, and a base or head symlink is refused", () =>
+it.live(nativeRuntime
+  ? "selected paths bind to the copied tree, and a base or head symlink is refused"
+  : "an unqualified host refuses a selected-file oxlint scan without retained raw output", () =>
   Effect.gen(function* () {
     expectSpawn(import.meta.path)
     const made = yield* held()
     const root = yield* repo(path.join(made.path, "paths"), { "broken.js": BENIGN }, { "broken.js": DEBUGGER })
+    if (!nativeRuntime) return yield* unsupported(made, root, {
+      scope: "files", files: ["broken.js"], changed: { "broken.js": [{ start: 1, end: 1 }] },
+    })
     yield* ready(made.toolkit)
     const changed = { "broken.js": [{ start: 1, end: 1 }] }
     const relative = yield* analyze(made, root, { scope: "files", files: ["broken.js"], changed })
@@ -232,6 +247,25 @@ if (process.platform !== "win32") it.live("selected paths bind to the copied tre
     expect(items(gone)).toEqual([])
   }), 600_000,
 )
+
+function unsupported(made: { toolkit: string; store: string }, root: string, extra: Partial<ReviewAnalyze.RunInput>) {
+  return Effect.gen(function* () {
+    const before = yield* Effect.promise(() => image(root))
+    const result = yield* analyze(made, root, extra)
+    expect(result.checks).toHaveLength(1)
+    expect(result.checks[0]).toMatchObject({
+      pack: "oxlint", status: "not-run", reason: "oxlint unsupported: native-runtime-unqualified",
+      version: "1.91.0", workspaceExecuted: false,
+    })
+    expect(result.checks[0].uri).toBeUndefined()
+    expect(items(result)).toEqual([])
+    expect(result.retained.uri).toMatch(/^review:[0-9a-f-]{36}\/retained\.json$/)
+    const directory = path.dirname(path.join(made.store, result.retained.uri.slice("review:".length)))
+    expect(yield* Effect.promise(() => exists(path.join(directory, "raw")))).toBe(false)
+    expect(yield* Effect.promise(() => readdir(made.toolkit))).toEqual([])
+    expect(yield* Effect.promise(() => image(root))).toEqual(before)
+  })
+}
 
 function ready(toolkit: string) {
   return Effect.gen(function* () {

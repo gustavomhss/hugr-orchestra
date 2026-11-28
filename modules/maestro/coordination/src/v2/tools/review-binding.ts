@@ -55,6 +55,7 @@ export const reviewBinding = (held: {
   readonly headCommit?: string
   readonly scope?: ReviewTools.CodeSource["scope"]
   readonly processes?: AppProcess.Interface
+  readonly observeCode?: ReviewTools.Binding["observeCode"]
 }) => (bound: ReviewFanoutV2.BindInput) =>
   Effect.gen(function* () {
     const scope = held.scope ? { sha256: held.scope.sha256, files: [...held.scope.files] } : undefined
@@ -86,6 +87,7 @@ export const reviewBinding = (held: {
     return {
       repository: held.worktree,
       codeSource,
+      ...(held.observeCode ? { observeCode: held.observeCode } : {}),
       retain: (artifact: { readonly uri: string; readonly text: string }) => Effect.promise(async () => {
         await Bun.write(rawArtifactPath(held.cache, artifact.uri), JSON.stringify(artifact))
       }),

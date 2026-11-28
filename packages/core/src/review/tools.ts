@@ -4,6 +4,7 @@ import { Effect, Schema, Scope } from "effect"
 import { optional } from "@orchestra/schema/schema"
 import type { PermissionV2 } from "../permission"
 import { AppProcess } from "../process"
+import type { CodeIndex } from "../research-toolkit/code-index/types"
 import { ReviewHistory } from "../review-toolkit/history"
 import type { ReviewItem } from "../review-toolkit/item"
 import { ReviewProbe } from "../review-toolkit/probe"
@@ -53,6 +54,20 @@ export type CodeSource = {
   readonly scope?: { readonly sha256: string; readonly files: ReadonlyArray<string> }
 }
 
+/** Exact host capture, observed after retention and projection cleanup; it does not assert native delivery. */
+export type CodeCapture = {
+  readonly sessionID: string
+  readonly assistantMessageID: string
+  readonly toolCallID: string
+  readonly sourceSha256: string
+  readonly evidence: { readonly uri: string; readonly text: string; readonly sha256: string }
+  readonly snapshots: readonly { readonly uri: string; readonly text: string; readonly sha256: string }[]
+} & (
+  | { readonly name: "code_search"; readonly input: CodeIndex.SearchInput }
+  | { readonly name: "code_query"; readonly input: CodeIndex.CodeQuery }
+  | { readonly name: "code_locate"; readonly input: CodeIndex.LocateInput }
+)
+
 /** What a review Session may reach, set by the fan-out for the Session's stage. */
 export type Binding = {
   /** The repository `review_history` reads. */
@@ -71,6 +86,7 @@ export type Binding = {
   readonly probeUnavailable?: string
   /** Retains a raw output under its citation uri. */
   readonly retain?: (artifact: { readonly uri: string; readonly text: string }) => Effect.Effect<void>
+  readonly observeCode?: (capture: CodeCapture) => Effect.Effect<void, Tool.Failure>
 }
 
 export type Services = {
@@ -103,6 +119,7 @@ export function readCode(
 ): Effect.Effect<{
   readonly source: CodeSource
   readonly retain?: Binding["retain"]
+  readonly observeCode?: Binding["observeCode"]
   /** Rechecks this exact binding after asynchronous work; rebinding the Session cannot revive an old read. */
   readonly active: Effect.Effect<void, Tool.Failure>
 }, Tool.Failure, Scope.Scope> {
@@ -117,7 +134,8 @@ export function readCode(
       Effect.catch(() => active.pipe(Effect.andThen(Effect.fail(new Tool.Failure({ message: "review-code-source-unavailable" }))))),
     )
     yield* active
-    return { source, active, ...(binding.retain ? { retain: binding.retain } : {}) }
+    return { source, active, ...(binding.retain ? { retain: binding.retain } : {}),
+      ...(binding.observeCode ? { observeCode: binding.observeCode } : {}) }
   })
 }
 
