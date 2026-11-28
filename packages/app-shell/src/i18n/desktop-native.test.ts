@@ -94,7 +94,12 @@ describe("desktop native translations", () => {
         messages: Object.fromEntries(DESKTOP_NATIVE_KEYS.slice(1).map((key) => [key, bundle.messages[key]])),
       }),
     ).toBeUndefined()
-    expect(parseDesktopNativeBundle({ ...bundle, messages: { ...bundle.messages, extra: "no" } })).toBeUndefined()
+    expect(
+      parseDesktopNativeBundle({
+        ...bundle,
+        messages: { ...bundle.messages, "desktop.activity.arm.confirm": "Renderer-supplied confirmation" },
+      }),
+    ).toBeUndefined()
     expect(
       parseDesktopNativeBundle({
         ...bundle,

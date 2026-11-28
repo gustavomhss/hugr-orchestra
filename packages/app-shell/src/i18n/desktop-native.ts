@@ -298,11 +298,6 @@ export const DESKTOP_NATIVE_ENGLISH = {
   "desktop.dialog.files": "Files",
   "desktop.server.local": "Local Server",
 
-  "desktop.activity.arm.title": "Arm quarantine",
-  "desktop.activity.arm.message": "Arm quarantine for these targets?",
-  "desktop.activity.arm.cancel": "Cancel",
-  "desktop.activity.arm.confirm": "Arm quarantine",
-
   "desktop.wsl.error.windowsOnly": "WSL is only available on Windows",
   "desktop.wsl.error.unavailable": "WSL is unavailable",
   "desktop.wsl.error.listInstalled": "Failed to list installed WSL distros",
