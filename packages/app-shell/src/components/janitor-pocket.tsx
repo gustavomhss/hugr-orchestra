@@ -223,7 +223,10 @@ function PocketComposer(props: {
             </Show>
           }
         >
-          <PromptInputV2Composer controller={input} />
+          <PromptInputV2Composer
+            controller={input}
+            class="[&_[data-slot=prompt-input-v2-toolbar]]:h-auto [&_[data-slot=prompt-input-v2-toolbar]]:min-h-11 [&_[data-slot=prompt-input-v2-toolbar]]:py-2 [&_[data-slot=prompt-input-v2-controls]]:flex-wrap"
+          />
         </Show>
       </div>
     </div>

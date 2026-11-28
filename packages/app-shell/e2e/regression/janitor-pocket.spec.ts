@@ -194,6 +194,7 @@ test("Janitor uses the adopted Session model and policy while a draft tab is ope
   await expect(pocket.getByRole("textbox", { name: "Prompt" })).toBeEditable()
   await retryHistory.click()
   await expect(retryHistory).toHaveCount(0)
+  await expect(pocket.getByText("Build the timeline stability matrix.", { exact: true })).toBeVisible()
   expect(creates).toBe(0)
   await chip.click()
   await expect(dialog.locator('[data-status="none-allowed"]')).toBeVisible()
