@@ -1,13 +1,17 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "5c07798e-fe92-4802-8591-66a99f83e026",
+  "id": "c7aada81-687e-40d5-84b4-e3c6d64028b4",
   "prevIds": [
-    "b5adafd5-2ef0-4f00-a0ce-e82e4dd9f02c"
+    "5c07798e-fe92-4802-8591-66a99f83e026"
   ],
   "ddl": [
     {
       "name": "activity_action_ledger",
+      "entityType": "tables"
+    },
+    {
+      "name": "activity_arm",
       "entityType": "tables"
     },
     {
@@ -315,6 +319,66 @@
       "name": "observation",
       "entityType": "columns",
       "table": "activity_action_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "approval_id",
+      "entityType": "columns",
+      "table": "activity_arm"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "target_id",
+      "entityType": "columns",
+      "table": "activity_arm"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "generation",
+      "entityType": "columns",
+      "table": "activity_arm"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "approved_at",
+      "entityType": "columns",
+      "table": "activity_arm"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "receipt",
+      "entityType": "columns",
+      "table": "activity_arm"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "snapshot",
+      "entityType": "columns",
+      "table": "activity_arm"
     },
     {
       "type": "text",
@@ -8525,6 +8589,24 @@
       "name": "session_share_pk",
       "table": "session_share",
       "entityType": "pks"
+    },
+    {
+      "columns": [
+        {
+          "value": "target_id",
+          "isExpression": false
+        },
+        {
+          "value": "generation",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "activity_arm_target_generation_idx",
+      "entityType": "indexes",
+      "table": "activity_arm"
     },
     {
       "columns": [
