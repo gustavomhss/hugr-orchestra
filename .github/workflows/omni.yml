@@ -25,7 +25,7 @@ on:
         type: boolean
         default: false
       desktop_activity_arm:
-        description: Run Linux Desktop live object proof, native quarantine approval and protected Apply
+        description: Run unprivileged Linux Desktop native approval through the privileged file custody broker
         type: boolean
         default: false
       test_filter:
@@ -202,9 +202,15 @@ jobs:
             sudo apt-get update -qq
             sudo apt-get install -y -qq xdotool xvfb
           fi
-      - name: Exercise native approval with a complete Linux process view
+      - name: Enable the Chromium sandbox on the runner
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Exercise native approval from an ordinary Desktop and sidecar
         working-directory: apps/desktop
         run: |
-          # Run on the disposable VM's initial PID namespace so process visibility can be verified.
-          timeout -k 10s 2m sudo --preserve-env=CI,HUGR_OMNI_ADDON,HUGR_OMNI_SUPERVISOR \
-            dbus-run-session -- xvfb-run -a "$(command -v bun)" run ./test/activity-arm-electron.hosted.ts
+          export ACTIVITY_ARM_UID="$(id -u)" ACTIVITY_ARM_GID="$(id -g)"
+          test "$ACTIVITY_ARM_UID" -ne 0
+          # The administrator fixture and custody broker share the VM's initial PID namespace.
+          # Electron, its ordinary sidecar, and the PTY workload run as the runner account.
+          dbus-run-session -- xvfb-run -a timeout -k 10s 3m \
+            sudo --preserve-env=ACTIVITY_ARM_UID,ACTIVITY_ARM_GID,CI,DBUS_SESSION_BUS_ADDRESS,DISPLAY,XAUTHORITY,HUGR_OMNI_ADDON,HUGR_OMNI_SUPERVISOR \
+            "$(command -v bun)" run ./test/activity-arm-electron.hosted.ts
