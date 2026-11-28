@@ -1,0 +1,154 @@
+{
+  "schema": "s3-custody-github-search/v1",
+  "scope": "Read-only bounded GitHub search for original S3 payload. No original runtime result, original upper-layer body or upper-layer J1/J2 receipt recovered.",
+  "identities": {
+    "execution_id": "bdac971f-e4ee-40e5-ad9b-30d659303bab",
+    "package_sha256": "0f9444211faa6a20ff7d56bd583e784e62b1393708d90c046d2028e95964a400",
+    "candidate_id": "a32c0f65a6126be4ba6fa4c558bd3859598baf64e4bb11401e5dcacc5fe389d4",
+    "runtime_code_sha": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1"
+  },
+  "branches": [
+    {
+      "name": "genesis-fresh-s3",
+      "sha": "68fca8e90c3150416e4e7ef8410df1cc42ee9d1b",
+      "date": "2026-11-11T19:11:51Z"
+    },
+    {
+      "name": "genesis-chatgpt-s3",
+      "sha": "c9fcdb6215b9c939cedab0c044144366d4da74bb",
+      "date": "2026-11-11T14:42:59Z"
+    },
+    {
+      "name": "genesis-s3-resume",
+      "sha": "19b909ef3bf27e0332f24fc30e3a5c471ea37d78",
+      "date": "2026-11-28T05:53:46Z"
+    },
+    {
+      "name": "genesis-s3-resume-unit-20261114",
+      "sha": "7233f437b4a46c5845e9d88f68dadf8106224fe5",
+      "date": "2026-11-14T10:45:21Z"
+    },
+    {
+      "name": "genesis-s3-small-20261114",
+      "sha": "41cac646d2934785a6288d756e618137ec2b1c1f",
+      "date": "2026-11-14T16:21:07Z"
+    },
+    {
+      "name": "genesis-source-export-s3",
+      "sha": "8e8cd9e867fa842b75e57e1eaf28d39a26497f96",
+      "date": "2026-11-13T01:57:00Z"
+    }
+  ],
+  "checks": [
+    {
+      "route": "branches search s3, page_size=100; cursor Ng",
+      "result": "Six total matching branches, second page empty."
+    },
+    {
+      "route": "branches search genesis, page_size=100; cursor OTY",
+      "result": "96 matching branches, second page empty. Names inventoried, not all content inspected."
+    },
+    {
+      "route": "commits?sha=genesis-fresh-s3&per_page=20",
+      "result": "Most recent checkpoint still 68fca8e; previous eight recovery commits plus L1 checkpoint 4a8a2965 are ancestors."
+    },
+    {
+      "route": "s3/evidence, s3/judgments, s3/receipts and s3/review-packets contents at genesis-fresh-s3",
+      "result": "judgments contains only 12 L1 reviews. receipts/L2-all contains only recovery-producer.json. No original prepare/binding/publication receipt located."
+    },
+    {
+      "route": "s3-resume-20261114/handoff.md",
+      "result": "404 at 19b909e; recovered at explicit pin 7233f437b4a46c5845e9d88f68dadf8106224fe5."
+    },
+    {
+      "route": "commits?sha=<genesis-fresh-final|genesis-checkpoints|genesis-control-reconciliation-20261114>&path=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/&per_page=20",
+      "result": "Zero path commits for each of the three refs."
+    },
+    {
+      "route": "actions/runs?branch=<genesis-fresh-s3|genesis-chatgpt-s3|genesis-s3-resume|genesis-s3-resume-unit-20261114|genesis-s3-small-20261114>&per_page=100",
+      "result": "total_count=0 for each of five branches."
+    },
+    {
+      "route": "actions/artifacts?per_page=100",
+      "result": "BLOCKED: fetch connector rejected endpoint as not allowed. Global artifacts not inspected."
+    },
+    {
+      "route": "releases?per_page=100",
+      "result": "22 releases. No Genesis/S3 or exact identity match in title, tag, release body, or asset names. Binary release assets not downloaded."
+    },
+    {
+      "route": "GitHub code search for each of execution UUID, package SHA-256 and candidate ID",
+      "result": "No results. Search covers indexed default branch only, not all refs."
+    },
+    {
+      "route": "GitHub issue search for each of execution UUID, package SHA-256 and candidate ID",
+      "result": "No issues/PR results."
+    },
+    {
+      "route": "GitHub PR search S3 Genesis, state all",
+      "result": "No PR results."
+    },
+    {
+      "route": "GitHub commit search bdac971f",
+      "result": "No result. Branch-specific commit history was inspected separately."
+    },
+    {
+      "route": ".github/scripts/genesis-source-export.py@8e8cd9e867fa842b75e57e1eaf28d39a26497f96",
+      "result": "Explicitly excludes modules/atlas/docs/design/genesis-chatgpt-results/. Export not rerun."
+    },
+    {
+      "route": "s4/runtime-release.json@e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+      "result": "404; no original output filenames learned from this pin."
+    }
+  ],
+  "known_source_relative_paths_for_export": [
+    "native-package.json",
+    "bodies/l1-maestro.md",
+    "bodies/l1-relay.md",
+    "bodies/l1-integrations.md",
+    "bodies/l2-maestro.md",
+    "bodies/l2-relay.md",
+    "bodies/l2-integrations.md",
+    "bodies/l3-flows.md",
+    "bodies/l4-entry.md",
+    "bodies/l4-ownership.md",
+    "bodies/l4-maintenance.md",
+    "bodies/l4-operational.md",
+    "judgments/",
+    "review-packets/",
+    "receipts/",
+    "evidence/",
+    "execution-ledger.jsonl"
+  ],
+  "export_base": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/ in original executor; preserve original bytes and revisions, not current GitHub replacements.",
+  "additional_export_objects_source_filename_unknown": [
+    "Per-body original manifest: key, level, revision, exact bytes SHA-256, byte length, final J1/J2 decision linkage.",
+    "Original prepared candidate payload identified by a32c0f65a6126be4ba6fa4c558bd3859598baf64e4bb11401e5dcacc5fe389d4.",
+    "Original prepare receipt: actual argv/CWD/code SHA, input/package hash, stdout/stderr, exit=0 evidence, 5,244 distinct observations, CAS readback.",
+    "Original independent binding decisions from /root/judge_j1 and /root/judge_j2 tied to same candidate and inputs.",
+    "Publication invocation and final result (success/failure/HOLD), exact state/store/projection identity and any subsequent index/read receipts."
+  ],
+  "limitations": "Only reported existence of full local original package and binding in work.md; no byte-level proof of upper originals or operational receipts. This search does not prove those bytes do not exist in the original executor, inaccessible artifacts or other uninspected refs.",
+  "additional_routes": [
+    {
+      "route": "Personal Context",
+      "result": "Historical reports only; no original byte payload, per-body original manifest or operational receipt recovered. Private retrieved conversation content is not republished."
+    },
+    {
+      "route": "Connected browser, original-custody route",
+      "result": "Browser connected. Navigation to ChatGPT was denied by host security policy before the recovery conversation could be opened. Not a login failure, site-status conclusion or user rejection. No alternate browser route attempted and no private conversation content captured."
+    }
+  ],
+  "checked_at": "2026-11-28T06:01:34.916840+00:00",
+  "initial_diff": {
+    "base": "41cac646d2934785a6288d756e618137ec2b1c1f",
+    "head": "19b909ef3bf27e0332f24fc30e3a5c471ea37d78",
+    "ahead_by": 1,
+    "behind_by": 0,
+    "files": [
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/S3-MAESTRO-RELAY.md"
+    ],
+    "additions": 31,
+    "deletions": 0
+  }
+}
