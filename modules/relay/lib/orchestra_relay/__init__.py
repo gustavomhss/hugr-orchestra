@@ -27,6 +27,8 @@ class RelayError(Exception):
 
 def gated(builder, gates, dev=False):
     """Insert an approval node before each gated node that asks for one, and a check node after it."""
+    for node, gate in gates.items():
+        _validate_gate(builder, node, {"check": gate} if isinstance(gate, str) else gate)
     root = project_root()
     ignore = root / ".gitignore"
     if ".relay/" not in (ignore.read_text(encoding="utf-8").splitlines() if ignore.exists() else []):
@@ -36,11 +38,6 @@ def gated(builder, gates, dev=False):
     graph = {"name": root.name}
     # Approvals go first, before any check node adds conditional edges of its own.
     for node in [node for node, gate in gates.items() if isinstance(gate, dict) and gate.get("approve")]:
-        if any(node in (b.ends or {}).values() for branches in builder.branches.values() for b in branches.values()):
-            raise RelayError(
-                f'relay: node "{node}" is reached through a conditional edge, so relay cannot put its approval first.\n'
-                f'       Fix: route to a separate node that has one static edge to "{node}".'
-            )
         builder.edges = {(start, f"{node}__relay_approve" if end == node else end) for start, end in builder.edges}
     for node, gate in gates.items():
         _gate(builder, root, graph, node, {"check": gate} if isinstance(gate, str) else gate)
@@ -74,7 +71,7 @@ def project_root():
     return next((p for p in (cwd, *cwd.parents) if (p / ".git").exists()), cwd)
 
 
-def _gate(builder, root, graph, node, gate):
+def _validate_gate(builder, node, gate):
     if node not in builder.nodes:
         raise RelayError(
             f'relay: no node "{node}" in this graph.\n'
@@ -86,6 +83,21 @@ def _gate(builder, root, graph, node, gate):
             "       relay moves only static edges; anything else could run on unchecked output.\n"
             f'       Fix: give "{node}" one static edge to a separate router node, and gate "{node}".'
         )
+    if not gate.get("approve"):
+        return
+    if any(end == node for _, end in builder.waiting_edges):
+        raise RelayError(
+            f'relay: node "{node}" has an incoming join, so relay cannot put its approval first.\n'
+            f'       Fix: join at a separate node that has one static edge to "{node}".'
+        )
+    if any(node in (b.ends or {}).values() for branches in builder.branches.values() for b in branches.values()):
+        raise RelayError(
+            f'relay: node "{node}" is reached through a conditional edge, so relay cannot put its approval first.\n'
+            f'       Fix: route to a separate node that has one static edge to "{node}".'
+        )
+
+
+def _gate(builder, root, graph, node, gate):
     targets = sorted(end for start, end in builder.edges if start == node)
     builder.edges -= {(node, end) for end in targets}
     targets = [("relay__end" if end == END else end) for end in targets] or ["relay__end"]

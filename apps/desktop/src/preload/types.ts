@@ -3,6 +3,8 @@ import type {
   LiveHotkeyAction,
   LivePermission,
   LiveReadiness,
+  LiveRecoveryAction,
+  LiveRecoverySnapshot,
   LiveRunState,
   LiveSettings,
   LiveSource,
@@ -244,6 +246,11 @@ export type ElectronAPI = import("@orchestra/app/app-dock-linux").AppDockLinuxAP
   getLiveReadiness: () => Promise<LiveReadiness>
   requestLivePermission: (source: LiveSource) => Promise<LivePermission>
   onLiveLevels: (cb: (levels: Record<LiveSource, number>) => void) => () => void
+  getLiveRecoverySnapshot: () => Promise<LiveRecoverySnapshot>
+  retryLiveRecovery: (id: string) => Promise<LiveRecoveryAction>
+  finishLiveRecovery: (id: string) => Promise<LiveRecoveryAction>
+  exportLiveRecovery: (id: string) => Promise<LiveRecoveryAction>
+  discardLiveRecovery: (id: string) => Promise<LiveRecoveryAction>
   getLiveRunState: () => Promise<LiveRunState>
   onLiveRunState: (cb: (state: LiveRunState) => void) => () => void
   renameLiveMeeting: (meetingID: string, title: string) => Promise<void>

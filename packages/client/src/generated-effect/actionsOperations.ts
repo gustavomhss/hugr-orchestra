@@ -26,7 +26,7 @@ const Endpoint37_0 = (raw: RawClient["server.actionsOperation"]) => (input: Endp
       binding: input["binding"],
       kind: input["kind"],
       target: input["target"],
-      expected: input["expected"],
+      ...(input["expected"] === undefined ? {} : { expected: input["expected"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 

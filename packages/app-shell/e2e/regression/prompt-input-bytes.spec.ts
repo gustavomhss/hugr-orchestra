@@ -2,6 +2,7 @@ import { createHash, randomUUID } from "node:crypto"
 import { expect, test, type Page } from "@playwright/test"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { mockOrchestraServer } from "../utils/mock-server"
+import { installSseTransport } from "../utils/sse-transport"
 
 const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
 const directory = "C:/Orchestra/PromptBytesRegression"
@@ -52,309 +53,318 @@ const cases = [
 // Execution requests are captured and aborted, never replaced by model or Agent frames.
 for (const scenario of cases) {
   test(`prompt bytes: V2 ${scenario.mode}`, async ({ page, context }, info) => {
-    const sessionID = `ses_prompt_bytes_${randomUUID().replaceAll("-", "")}`
-    await mockOrchestraServer(page, {
-      directory,
-      project: {
-        id: projectID, worktree: directory, vcs: "git", name: "prompt-bytes",
-        time: { created: 1700000000000, updated: 1700000000000 }, sandboxes: [],
-      },
-      provider,
-      sessions: [{
-        id: sessionID, slug: "prompt-bytes", projectID, directory, title: info.title, version: "dev",
-        agent: "maestro", model: { id: "claude-opus-4-6", providerID: "orchestra" },
-        time: { created: 1700000000000, updated: 1700000000000 },
-      }],
-      pageMessages: () => ({ items: [] }),
-    })
-    // The shared mock does not serve the V2 file search yet; filter like the server, which returns only
-    // directories for type "directory" and files plus directories when the type is omitted.
-    await page.route((url) => url.pathname === "/api/fs/find", (route) => {
-      const params = new URL(route.request().url()).searchParams
-      const data = [{ path: "note.md", type: "file" }].filter((entry) =>
-        entry.path.includes(params.get("query") ?? "") && (!params.get("type") || params.get("type") === entry.type))
-      return route.fulfill({
-        status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
-        body: JSON.stringify({ location: { directory, project: { id: projectID, directory } }, data }),
+    const transport = await installSseTransport(page, { server })
+    try {
+      const sessionID = `ses_prompt_bytes_${randomUUID().replaceAll("-", "")}`
+      await mockOrchestraServer(page, {
+        directory,
+        project: {
+          id: projectID, worktree: directory, vcs: "git", name: "prompt-bytes",
+          time: { created: 1700000000000, updated: 1700000000000 }, sandboxes: [],
+        },
+        provider,
+        sessions: [{
+          id: sessionID, slug: "prompt-bytes", projectID, directory, title: info.title, version: "dev",
+          agent: "maestro", model: { id: "claude-opus-4-6", providerID: "orchestra" },
+          time: { created: 1700000000000, updated: 1700000000000 },
+        }],
+        pageMessages: () => ({ items: [] }),
       })
-    })
-    // The V2 prompt carries no model; the app selects it on the Session first.
-    const selections: unknown[] = []
-    await page.route((url) => /^\/api\/session\/[^/]+\/model$/.test(url.pathname), (route) => {
-      if (route.request().method() === "POST") selections.push(route.request().postDataJSON())
-      return route.fallback()
-    })
-    const endpoint = `/api/session/${sessionID}/prompt`
-    const executions: { url: string; body: string | null }[] = []
-    await page.route(/\/(?:api\/)?session\/[^/]+\/(?:prompt(?:_async)?|message|command|shell)(?:\?|$)/, (route) => {
-      const request = route.request()
-      if (request.method() !== "POST") return route.fallback()
-      executions.push({ url: request.url(), body: request.postData() })
-      return route.abort("blockedbyclient")
-    })
-    await page.addInitScript(({ directory, server, sessionID }) => {
-      localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
-      localStorage.setItem("orchestra.global.dat:server", JSON.stringify({
-        projects: { local: [{ worktree: directory, expanded: true }] }, lastProject: { local: directory },
-      }))
-      localStorage.setItem("orchestra.window.browser.dat:tabs", JSON.stringify([
-        { type: "session", server, sessionId: sessionID },
-      ]))
-    }, { directory, server, sessionID })
-    await page.goto(`/server/${base64Encode(server)}/session/${sessionID}`)
-    const editor = page.locator('[data-component="prompt-input"][contenteditable="true"]')
-    await expect(editor).toHaveCount(1)
-    await expect(editor).toBeEditable()
-    await expect(page.locator('[data-component="prompt-input-v2"]')).toHaveCount(1)
-    await expect(page.locator('[data-action="prompt-model"]')).toContainText("Claude Opus 4.6")
-    // Lead-owned join exposes the shared submitting lifecycle on the composer.
-    const admission = page.locator("[data-prompt-admitting]")
-    await expect(admission).toHaveCount(1)
-    await expect(admission).toHaveAttribute("data-prompt-admitting", "false")
-    expect(executions).toHaveLength(0)
+      // The shared mock does not serve the V2 file search yet; filter like the server, which returns only
+      // directories for type "directory" and files plus directories when the type is omitted.
+      await page.route((url) => url.pathname === "/api/fs/find", (route) => {
+        const params = new URL(route.request().url()).searchParams
+        const data = [{ path: "note.md", type: "file" }].filter((entry) =>
+          entry.path.includes(params.get("query") ?? "") && (!params.get("type") || params.get("type") === entry.type))
+        return route.fulfill({
+          status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+          body: JSON.stringify({ location: { directory, project: { id: projectID, directory } }, data }),
+        })
+      })
+      // The V2 prompt carries no model; the app selects it on the Session first.
+      const selections: unknown[] = []
+      await page.route((url) => /^\/api\/session\/[^/]+\/model$/.test(url.pathname), (route) => {
+        if (route.request().method() === "POST") selections.push(route.request().postDataJSON())
+        return route.fallback()
+      })
+      const endpoint = `/api/session/${sessionID}/prompt`
+      const executions: { url: string; body: string | null }[] = []
+      await page.route(/\/(?:api\/)?session\/[^/]+\/(?:prompt(?:_async)?|message|command|shell)(?:\?|$)/, (route) => {
+        const request = route.request()
+        if (request.method() !== "POST") return route.fallback()
+        executions.push({ url: request.url(), body: request.postData() })
+        return route.abort("blockedbyclient")
+      })
+      await page.addInitScript(({ directory, server, sessionID }) => {
+        localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
+        localStorage.setItem("orchestra.global.dat:server", JSON.stringify({
+          projects: { local: [{ worktree: directory, expanded: true }] }, lastProject: { local: directory },
+        }))
+        localStorage.setItem("orchestra.window.browser.dat:tabs", JSON.stringify([
+          { type: "session", server, sessionId: sessionID },
+        ]))
+      }, { directory, server, sessionID })
+      await page.goto(`/server/${base64Encode(server)}/session/${sessionID}`)
+      const editor = page.locator('[data-component="prompt-input"][contenteditable="true"]')
+      await expect(editor).toHaveCount(1)
+      await expect(editor).toBeEditable()
+      await expect(page.locator('[data-component="prompt-input-v2"]')).toHaveCount(1)
+      await expect(page.locator('[data-action="prompt-model"]')).toContainText("Claude Opus 4.6")
+      // Lead-owned join exposes the shared submitting lifecycle on the composer.
+      const admission = page.locator("[data-prompt-admitting]")
+      await expect(admission).toHaveCount(1)
+      await expect(admission).toHaveAttribute("data-prompt-admitting", "false")
+      expect(executions).toHaveLength(0)
 
-    const before = "before" in scenario ? scenario.before : undefined
-    if (before && scenario.mode !== "undo-pill" && scenario.mode !== "paste-pill-interior") await editor.fill(before)
-    if (scenario.mode === "replace-break" || scenario.mode === "insert-break") {
-      await editor.press(process.platform === "darwin" ? "Meta+ArrowUp" : "Control+Home")
-      await editor.press("ArrowRight")
-      if (scenario.mode === "replace-break") {
-        await editor.press("Shift+ArrowRight")
-        await context.grantPermissions(["clipboard-read", "clipboard-write"])
-        await page.evaluate(() => navigator.clipboard.writeText("x"))
-        await editor.press(process.platform === "darwin" ? "Meta+V" : "Control+V")
+      const before = "before" in scenario ? scenario.before : undefined
+      if (before && scenario.mode !== "undo-pill" && scenario.mode !== "paste-pill-interior") await editor.fill(before)
+      if (scenario.mode === "replace-break" || scenario.mode === "insert-break") {
+        await editor.press(process.platform === "darwin" ? "Meta+ArrowUp" : "Control+Home")
+        await editor.press("ArrowRight")
+        if (scenario.mode === "replace-break") {
+          await editor.press("Shift+ArrowRight")
+          await context.grantPermissions(["clipboard-read", "clipboard-write"])
+          await page.evaluate(() => navigator.clipboard.writeText("x"))
+          await editor.press(process.platform === "darwin" ? "Meta+V" : "Control+V")
+        }
+        if (scenario.mode === "insert-break") await editor.press("Shift+Enter")
       }
-      if (scenario.mode === "insert-break") await editor.press("Shift+Enter")
-    }
-    if (scenario.mode === "undo-shift-enter") await editor.press("Shift+Enter")
-    if (scenario.mode === "undo-raw-clipboard") {
-      // Known raw CR data enters the real paste handler; history actions below use native keyboard shortcuts.
-      await editor.evaluate((element, text) => {
-        const clipboardData = new DataTransfer()
-        clipboardData.setData("text/plain", text)
-        element.dispatchEvent(new ClipboardEvent("paste", { clipboardData, bubbles: true, cancelable: true }))
-      }, rawClipboard)
-    }
-    const pill = editor.locator('[data-mention="file"]')
-    const pillIdentity = (["undo-pill", "paste-pill-interior", "undo-pill-history"].includes(scenario.mode)) ? await (async () => {
-      await editor.fill("see @note")
-      await page.locator('[data-suggestion-id="file:note.md"]').click()
-      await expect(pill).toHaveText("@note.md")
-      await editor.press("End")
-      await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: "see @note.md ", cursor: 13 })
-      const identity = await pill.elementHandle()
-      if (!identity) throw new Error("PROMPT_BYTES_PILL_IDENTITY_MISSING")
-      if (scenario.mode === "undo-pill-history") {
-        await page.keyboard.insertText("base")
-        await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: "see @note.md base", cursor: 17 })
-        expect(await identity.evaluate((element) => element.isConnected)).toBe(true)
-        await editor.press("Shift+Enter")
-        await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: "see @note.md base\n", cursor: 18 })
-        expect(await identity.evaluate((element) => element.isConnected)).toBe(true)
-        // Fixture selects the known typed word; replacement and history below use native keyboard actions.
-        await editor.evaluate((element) => {
-          const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
-          let node = walker.nextNode()
-          while (node && !(node.textContent ?? "").endsWith("base")) node = walker.nextNode()
-          if (!node) throw new Error("PROMPT_HISTORY_TYPED_WORD_MISSING")
+      if (scenario.mode === "undo-shift-enter") await editor.press("Shift+Enter")
+      if (scenario.mode === "undo-raw-clipboard") {
+        // Known raw CR data enters the real paste handler; history actions below use native keyboard shortcuts.
+        await editor.evaluate((element, text) => {
+          const clipboardData = new DataTransfer()
+          clipboardData.setData("text/plain", text)
+          element.dispatchEvent(new ClipboardEvent("paste", { clipboardData, bubbles: true, cancelable: true }))
+        }, rawClipboard)
+      }
+      const pill = editor.locator('[data-mention="file"]')
+      const pillIdentity = (["undo-pill", "paste-pill-interior", "undo-pill-history"].includes(scenario.mode)) ? await (async () => {
+        await editor.fill("see @note")
+        await page.locator('[data-suggestion-id="file:note.md"]').click()
+        await expect(pill).toHaveText("@note.md")
+        await editor.press("End")
+        await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: "see @note.md ", cursor: 13 })
+        const identity = await pill.elementHandle()
+        if (!identity) throw new Error("PROMPT_BYTES_PILL_IDENTITY_MISSING")
+        if (scenario.mode === "undo-pill-history") {
+          await page.keyboard.insertText("base")
+          await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: "see @note.md base", cursor: 17 })
+          expect(await identity.evaluate((element) => element.isConnected)).toBe(true)
+          await editor.press("Shift+Enter")
+          await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: "see @note.md base\n", cursor: 18 })
+          expect(await identity.evaluate((element) => element.isConnected)).toBe(true)
+          // Fixture selects the known typed word; replacement and history below use native keyboard actions.
+          await editor.evaluate((element) => {
+            const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT)
+            let node = walker.nextNode()
+            while (node && !(node.textContent ?? "").endsWith("base")) node = walker.nextNode()
+            if (!node) throw new Error("PROMPT_HISTORY_TYPED_WORD_MISSING")
+            const range = document.createRange()
+            range.setStart(node, (node.textContent ?? "").length - 4)
+            range.setEnd(node, (node.textContent ?? "").length)
+            const selection = window.getSelection()!
+            selection.removeAllRanges()
+            selection.addRange(range)
+          })
+        }
+        if (scenario.mode === "paste-pill-interior") await pill.evaluate((element) => {
+          // Synthetic interior endpoint, followed by a genuine native paste: must snap left, outside the pill.
           const range = document.createRange()
-          range.setStart(node, (node.textContent ?? "").length - 4)
-          range.setEnd(node, (node.textContent ?? "").length)
+          range.setStart(element.firstChild!, 1)
+          range.collapse(true)
           const selection = window.getSelection()!
           selection.removeAllRanges()
           selection.addRange(range)
         })
+        await context.grantPermissions(["clipboard-read", "clipboard-write"])
+        await page.evaluate(() => navigator.clipboard.writeText("x"))
+        await editor.press(process.platform === "darwin" ? "Meta+V" : "Control+V")
+        return identity
+      })() : undefined
+
+      if (scenario.mode === "fill") await editor.fill(scenario.text)
+      if (scenario.mode === "paste") {
+        await context.grantPermissions(["clipboard-read", "clipboard-write"])
+        await editor.focus()
+        await page.evaluate((text) => navigator.clipboard.writeText(text), scenario.text)
+        const clipboard = await page.evaluate(() => navigator.clipboard.readText())
+        await info.attach("native-clipboard-receipt.json", {
+          contentType: "application/json",
+          body: JSON.stringify({ provenance: "native-clipboard-shortcut", text: clipboard, ...receipt(clipboard) }),
+        })
+        expect(clipboard).toBe(scenario.text)
+        await editor.press(process.platform === "darwin" ? "Meta+V" : "Control+V")
       }
-      if (scenario.mode === "paste-pill-interior") await pill.evaluate((element) => {
-        // Synthetic interior endpoint, followed by a genuine native paste: must snap left, outside the pill.
-        const range = document.createRange()
-        range.setStart(element.firstChild!, 1)
-        range.collapse(true)
-        const selection = window.getSelection()!
-        selection.removeAllRanges()
-        selection.addRange(range)
-      })
-      await context.grantPermissions(["clipboard-read", "clipboard-write"])
-      await page.evaluate(() => navigator.clipboard.writeText("x"))
-      await editor.press(process.platform === "darwin" ? "Meta+V" : "Control+V")
-      return identity
-    })() : undefined
+      if (scenario.mode === "shift-enter") {
+        await editor.fill("lead")
+        await editor.press("Shift+Enter")
+        await editor.press("Shift+Enter")
+        await page.keyboard.insertText("é — 😀\u200B")
+        await editor.press("Shift+Enter")
+        await editor.press("Shift+Enter")
+      }
+      if (scenario.mode === "raw-clipboard") {
+        await editor.focus()
+        await editor.evaluate((element, text) => {
+          const clipboardData = new DataTransfer()
+          clipboardData.setData("text/plain", text)
+          element.dispatchEvent(new ClipboardEvent("paste", { clipboardData, bubbles: true, cancelable: true }))
+        }, scenario.text)
+      }
 
-    if (scenario.mode === "fill") await editor.fill(scenario.text)
-    if (scenario.mode === "paste") {
-      await context.grantPermissions(["clipboard-read", "clipboard-write"])
-      await editor.focus()
-      await page.evaluate((text) => navigator.clipboard.writeText(text), scenario.text)
-      const clipboard = await page.evaluate(() => navigator.clipboard.readText())
-      await info.attach("native-clipboard-receipt.json", {
-        contentType: "application/json",
-        body: JSON.stringify({ provenance: "native-clipboard-shortcut", text: clipboard, ...receipt(clipboard) }),
-      })
-      expect(clipboard).toBe(scenario.text)
-      await editor.press(process.platform === "darwin" ? "Meta+V" : "Control+V")
-    }
-    if (scenario.mode === "shift-enter") {
-      await editor.fill("lead")
-      await editor.press("Shift+Enter")
-      await editor.press("Shift+Enter")
-      await page.keyboard.insertText("é — 😀\u200B")
-      await editor.press("Shift+Enter")
-      await editor.press("Shift+Enter")
-    }
-    if (scenario.mode === "raw-clipboard") {
-      await editor.focus()
-      await editor.evaluate((element, text) => {
-        const clipboardData = new DataTransfer()
-        clipboardData.setData("text/plain", text)
-        element.dispatchEvent(new ClipboardEvent("paste", { clipboardData, bubbles: true, cancelable: true }))
-      }, scenario.text)
-    }
+      if (scenario.mode === "popover-populated" || scenario.mode === "popover-empty") {
+        const query = scenario.mode === "popover-populated" ? "note" : "missing"
+        const fetched = page.waitForResponse((response) => {
+          const url = new URL(response.url())
+          return url.origin === new URL(server).origin && response.request().method() === "GET" &&
+            url.pathname === "/api/fs/find" && url.searchParams.get("query") === query
+        })
+        await editor.fill(`see @${query}`)
+        const response = await fetched
+        expect(response.ok()).toBe(true)
+        expect(await response.finished()).toBeNull()
+        if (scenario.mode === "popover-populated") await expect(page.locator('[data-suggestion-id="file:note.md"]')).toBeVisible()
+        if (scenario.mode === "popover-empty") await expect(page.getByText("No matching items", { exact: true })).toBeVisible()
+        await editor.press("Shift+Enter")
+        await expect(editor.locator("[data-mention]")).toHaveCount(0)
+      }
 
-    if (scenario.mode === "popover-populated" || scenario.mode === "popover-empty") {
-      const query = scenario.mode === "popover-populated" ? "note" : "missing"
-      const fetched = page.waitForResponse((response) => {
-        const url = new URL(response.url())
-        return url.origin === new URL(server).origin && response.request().method() === "GET" &&
-          url.pathname === "/api/fs/find" && url.searchParams.get("query") === query
-      })
-      await editor.fill(`see @${query}`)
-      const response = await fetched
-      expect(response.ok()).toBe(true)
-      expect(await response.finished()).toBeNull()
-      if (scenario.mode === "popover-populated") await expect(page.locator('[data-suggestion-id="file:note.md"]')).toBeVisible()
-      if (scenario.mode === "popover-empty") await expect(page.getByText("No matching items", { exact: true })).toBeVisible()
-      await editor.press("Shift+Enter")
-      await expect(editor.locator("[data-mention]")).toHaveCount(0)
-    }
-
-    if (scenario.mode === "guarded-enter") {
-      await editor.fill("keep")
-      // Synthetic dispatch verifies production handler guards; this is not a native OS IME proof.
-      for (const guard of [{ isComposing: true }, { keyCode: 229 }, { altKey: true }, { ctrlKey: true }, { metaKey: true }]) {
-        const result = await editor.evaluate((element, init) => {
-          const event = new KeyboardEvent("keydown", { key: "Enter", shiftKey: true, bubbles: true, cancelable: true, ...init })
+      if (scenario.mode === "guarded-enter") {
+        await editor.fill("keep")
+        // Synthetic dispatch verifies production handler guards; this is not a native OS IME proof.
+        for (const guard of [{ isComposing: true }, { keyCode: 229 }, { altKey: true }, { ctrlKey: true }, { metaKey: true }]) {
+          const result = await editor.evaluate((element, init) => {
+            const event = new KeyboardEvent("keydown", { key: "Enter", shiftKey: true, bubbles: true, cancelable: true, ...init })
+            element.dispatchEvent(event)
+            return { prevented: event.defaultPrevented, keyCode: event.keyCode, composing: event.isComposing }
+          }, guard)
+          expect(result).toEqual({ prevented: false, keyCode: "keyCode" in guard ? 229 : 0, composing: "isComposing" in guard })
+        }
+        await editor.dispatchEvent("compositionstart", { data: "候" })
+        expect(await editor.evaluate((element) => {
+          const event = new KeyboardEvent("keydown", { key: "Enter", shiftKey: true, bubbles: true, cancelable: true })
           element.dispatchEvent(event)
-          return { prevented: event.defaultPrevented, keyCode: event.keyCode, composing: event.isComposing }
-        }, guard)
-        expect(result).toEqual({ prevented: false, keyCode: "keyCode" in guard ? 229 : 0, composing: "isComposing" in guard })
+          return event.defaultPrevented
+        })).toBe(false)
+        await editor.dispatchEvent("compositionend", { data: "" })
       }
-      await editor.dispatchEvent("compositionstart", { data: "候" })
-      expect(await editor.evaluate((element) => {
-        const event = new KeyboardEvent("keydown", { key: "Enter", shiftKey: true, bubbles: true, cancelable: true })
-        element.dispatchEvent(event)
-        return event.defaultPrevented
-      })).toBe(false)
-      await editor.dispatchEvent("compositionend", { data: "" })
-    }
 
-    const insertionCursor = "cursor" in scenario ? scenario.cursor : scenario.text.length
-    const hasHistory = !!before || scenario.mode === "undo-pill-history"
-    await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: insertionCursor })
-    if (hasHistory) {
-      const inserted = await canonicalDraft(page, sessionID)
-      await info.attach("immediate-insertion-receipt.json", {
-        contentType: "application/json", body: JSON.stringify({ phase: "immediate-insertion", expectedLogicalCursor: insertionCursor, canonical: inserted, ...receipt(inserted.text) }),
-      })
-    }
-    if (scenario.mode === "undo-pill-history") {
-      for (const text of ["see @note.md base\n", "see @note.md base", "see @note.md "]) {
+      const insertionCursor = "cursor" in scenario ? scenario.cursor : scenario.text.length
+      const hasHistory = !!before || scenario.mode === "undo-pill-history"
+      await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: insertionCursor })
+      if (hasHistory) {
+        const inserted = await canonicalDraft(page, sessionID)
+        await info.attach("immediate-insertion-receipt.json", {
+          contentType: "application/json", body: JSON.stringify({ phase: "immediate-insertion", expectedLogicalCursor: insertionCursor, canonical: inserted, ...receipt(inserted.text) }),
+        })
+      }
+      if (scenario.mode === "undo-pill-history") {
+        for (const text of ["see @note.md base\n", "see @note.md base", "see @note.md "]) {
+          await editor.press(process.platform === "darwin" ? "Meta+Z" : "Control+Z")
+          await expect.poll(async () => (await canonicalDraft(page, sessionID)).text).toBe(text)
+          expect(await pillIdentity!.evaluate((element) => element.isConnected)).toBe(true)
+          const canonical = await canonicalDraft(page, sessionID)
+          await info.attach(`history-undo-${text.length}.json`, { contentType: "application/json", body: JSON.stringify({ phase: "native-undo", canonical, ...receipt(canonical.text) }) })
+        }
+        for (const text of ["see @note.md base", "see @note.md base\n", scenario.text]) {
+          await editor.press(process.platform === "darwin" ? "Meta+Shift+Z" : "Control+Shift+Z")
+          await expect.poll(async () => (await canonicalDraft(page, sessionID)).text).toBe(text)
+          expect(await pillIdentity!.evaluate((element) => element.isConnected)).toBe(true)
+          const canonical = await canonicalDraft(page, sessionID)
+          await info.attach(`history-redo-${text.length}.json`, { contentType: "application/json", body: JSON.stringify({ phase: "native-redo", selectionPolicy: "browser-owned", canonical, ...receipt(canonical.text) }) })
+        }
+      }
+      if (before) {
+        if (pillIdentity) expect(await pillIdentity.evaluate((element) => element.isConnected)).toBe(true)
         await editor.press(process.platform === "darwin" ? "Meta+Z" : "Control+Z")
-        await expect.poll(async () => (await canonicalDraft(page, sessionID)).text).toBe(text)
-        expect(await pillIdentity!.evaluate((element) => element.isConnected)).toBe(true)
-        const canonical = await canonicalDraft(page, sessionID)
-        await info.attach(`history-undo-${text.length}.json`, { contentType: "application/json", body: JSON.stringify({ phase: "native-undo", canonical, ...receipt(canonical.text) }) })
-      }
-      for (const text of ["see @note.md base", "see @note.md base\n", scenario.text]) {
+        await expect.poll(async () => (await canonicalDraft(page, sessionID)).text).toBe(before)
+        if (pillIdentity) expect(await pillIdentity.evaluate((element) => element.isConnected)).toBe(true)
+        const undone = await canonicalDraft(page, sessionID)
+        expect(undone.text).toBe(before)
+        await info.attach("native-undo-receipt.json", {
+          contentType: "application/json", body: JSON.stringify({ provenance: "native-keyboard-history", phase: "native-undo", canonical: undone, ...receipt(undone.text) }),
+        })
         await editor.press(process.platform === "darwin" ? "Meta+Shift+Z" : "Control+Shift+Z")
-        await expect.poll(async () => (await canonicalDraft(page, sessionID)).text).toBe(text)
-        expect(await pillIdentity!.evaluate((element) => element.isConnected)).toBe(true)
-        const canonical = await canonicalDraft(page, sessionID)
-        await info.attach(`history-redo-${text.length}.json`, { contentType: "application/json", body: JSON.stringify({ phase: "native-redo", selectionPolicy: "browser-owned", canonical, ...receipt(canonical.text) }) })
+        // Browser history owns Redo selection; our explicit post-insert caret move is outside its transaction.
+        // Immediate insertion above still requires the exact logical offset, including cursor 2 for boundary edits.
+        await expect.poll(async () => (await canonicalDraft(page, sessionID)).text).toBe(scenario.text)
+        if (pillIdentity) expect(await pillIdentity.evaluate((element) => element.isConnected)).toBe(true)
+        const redone = await canonicalDraft(page, sessionID)
+        await info.attach("native-redo-receipt.json", {
+          contentType: "application/json", body: JSON.stringify({ provenance: "native-keyboard-history", phase: "native-redo", selectionPolicy: "browser-owned", canonical: redone, ...receipt(redone.text) }),
+        })
       }
-    }
-    if (before) {
-      if (pillIdentity) expect(await pillIdentity.evaluate((element) => element.isConnected)).toBe(true)
-      await editor.press(process.platform === "darwin" ? "Meta+Z" : "Control+Z")
-      await expect.poll(async () => (await canonicalDraft(page, sessionID)).text).toBe(before)
-      if (pillIdentity) expect(await pillIdentity.evaluate((element) => element.isConnected)).toBe(true)
-      const undone = await canonicalDraft(page, sessionID)
-      expect(undone.text).toBe(before)
-      await info.attach("native-undo-receipt.json", {
-        contentType: "application/json", body: JSON.stringify({ provenance: "native-keyboard-history", phase: "native-undo", canonical: undone, ...receipt(undone.text) }),
-      })
-      await editor.press(process.platform === "darwin" ? "Meta+Shift+Z" : "Control+Shift+Z")
-      // Browser history owns Redo selection; our explicit post-insert caret move is outside its transaction.
-      // Immediate insertion above still requires the exact logical offset, including cursor 2 for boundary edits.
-      await expect.poll(async () => (await canonicalDraft(page, sessionID)).text).toBe(scenario.text)
-      if (pillIdentity) expect(await pillIdentity.evaluate((element) => element.isConnected)).toBe(true)
-      const redone = await canonicalDraft(page, sessionID)
-      await info.attach("native-redo-receipt.json", {
-        contentType: "application/json", body: JSON.stringify({ provenance: "native-keyboard-history", phase: "native-redo", selectionPolicy: "browser-owned", canonical: redone, ...receipt(redone.text) }),
-      })
-    }
 
-    const finalCursor = hasHistory ? scenario.text.length : insertionCursor
-    if (hasHistory) {
-      await editor.press(process.platform === "darwin" ? "Meta+ArrowDown" : "Control+End")
-      // Legacy persists navigation cursor on blur; use its normal focus lifecycle, never mutate draft storage.
-      await editor.blur()
+      const finalCursor = hasHistory ? scenario.text.length : insertionCursor
+      if (hasHistory) {
+        await editor.press(process.platform === "darwin" ? "Meta+ArrowDown" : "Control+End")
+        // Legacy persists navigation cursor on blur; use its normal focus lifecycle, never mutate draft storage.
+        await editor.blur()
+        await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: finalCursor })
+        const navigated = await canonicalDraft(page, sessionID)
+        await info.attach("post-history-navigation-receipt.json", {
+          contentType: "application/json", body: JSON.stringify({ phase: "explicit-end-navigation", expectedCursor: finalCursor, canonical: navigated, ...receipt(navigated.text) }),
+        })
+      }
+
+      await info.attach("prompt-dom-before-send.json", {
+        contentType: "application/json",
+        body: JSON.stringify(await editor.evaluate((element) => ({ html: element.innerHTML, textContent: element.textContent }))),
+      })
       await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: finalCursor })
-      const navigated = await canonicalDraft(page, sessionID)
-      await info.attach("post-history-navigation-receipt.json", {
-        contentType: "application/json", body: JSON.stringify({ phase: "explicit-end-navigation", expectedCursor: finalCursor, canonical: navigated, ...receipt(navigated.text) }),
+      const canonical = await canonicalDraft(page, sessionID)
+      const dom = await editor.evaluate((element) => ({ html: element.innerHTML, textContent: element.textContent }))
+      await expect(admission).toHaveAttribute("data-prompt-admitting", "false")
+      expect(executions).toHaveLength(0)
+      const pending = page.waitForRequest((request) => request.method() === "POST" && new URL(request.url()).pathname === endpoint)
+      const failed = page.waitForEvent("requestfailed", { predicate: async (candidate) => candidate === await pending })
+      expect((await transport.connections()).map((connection) => ({ path: connection.path, endedAt: connection.endedAt })))
+        .toEqual([{ path: "/api/event", endedAt: undefined }])
+      await editor.press("Enter")
+      const request = await pending
+      expect(new URL(request.url()).origin).toBe(new URL(server).origin)
+      expect(await failed).toBe(request)
+      await expect(admission).toHaveAttribute("data-prompt-admitting", "false")
+      expect(executions).toHaveLength(1)
+      expect(new URL(executions[0]!.url).pathname).toBe(endpoint)
+      expect(executions[0]!.body).toBe(request.postData())
+      const payload: {
+        prompt: { text: string; files?: { uri: string; source?: { text: string; start: number; end: number } }[]; agents?: unknown[] }
+      } = request.postDataJSON()
+      expect(payload.prompt.files ?? []).toHaveLength(pillIdentity ? 1 : 0)
+      expect(payload.prompt.agents ?? []).toHaveLength(0)
+      if (pillIdentity) {
+        const start = scenario.mode === "paste-pill-interior" ? 5 : 4
+        expect(payload.prompt.files?.[0]?.source).toEqual({ text: "@note.md", start, end: start + 8 })
+      }
+      const text = payload.prompt.text
+      await info.attach("prompt-byte-contract.json", {
+        contentType: "application/json",
+        body: JSON.stringify({
+          mode: scenario.mode, sessionID, dom, canonical, payload, executions,
+          cursorContract: { immediateInsertion: insertionCursor, finalBeforeSend: finalCursor, nativeRedo: "browser-owned selection recorded in history receipts" },
+          inputProvenance: scenario.mode === "raw-clipboard" || scenario.mode === "undo-raw-clipboard"
+            ? "synthetic-raw-clipboard-event; native keyboard history when requested"
+            : scenario.mode === "guarded-enter" ? "synthetic IME/modifier dispatch; no native OS IME claim"
+            : scenario.mode === "paste-pill-interior" ? "synthetic pill endpoint; native clipboard/history"
+            : scenario.mode === "undo-pill-history" ? "native typing/line edit/history; synthetic typed-word selection; native paste"
+            : scenario.mode === "paste" ? "native-clipboard-shortcut" : scenario.mode,
+          requestBody: request.postData(),
+          expected: receipt(scenario.text), domHTMLBytes: receipt(dom.html), domTextBytes: receipt(dom.textContent ?? ""),
+          canonicalBytes: receipt(canonical.text), requestBytes: receipt(text),
+          requestBodyBytes: receipt(request.postData() ?? ""),
+          boundary: "HTTP bootstrap fixtures; actual production UI execution request captured then aborted. No backend admission or model/tool proof.",
+        }, null, 2),
       })
+      expect(selections.at(-1)).toEqual({ model: { providerID: "orchestra", id: "claude-opus-4-6" } })
+      expect(text).toBe(scenario.text)
+      expect(receipt(text)).toEqual(receipt(scenario.text))
+      expect((await transport.connections()).map((connection) => ({ path: connection.path, endedAt: connection.endedAt })))
+        .toEqual([{ path: "/api/event", endedAt: undefined }])
+    } finally {
+      await transport.close()
     }
-
-    await info.attach("prompt-dom-before-send.json", {
-      contentType: "application/json",
-      body: JSON.stringify(await editor.evaluate((element) => ({ html: element.innerHTML, textContent: element.textContent }))),
-    })
-    await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: finalCursor })
-    const canonical = await canonicalDraft(page, sessionID)
-    const dom = await editor.evaluate((element) => ({ html: element.innerHTML, textContent: element.textContent }))
-    await expect(admission).toHaveAttribute("data-prompt-admitting", "false")
-    expect(executions).toHaveLength(0)
-    const pending = page.waitForRequest((request) => request.method() === "POST" && new URL(request.url()).pathname === endpoint)
-    const failed = page.waitForEvent("requestfailed", { predicate: async (candidate) => candidate === await pending })
-    await editor.press("Enter")
-    const request = await pending
-    expect(new URL(request.url()).origin).toBe(new URL(server).origin)
-    expect(await failed).toBe(request)
-    await expect(admission).toHaveAttribute("data-prompt-admitting", "false")
-    expect(executions).toHaveLength(1)
-    expect(new URL(executions[0]!.url).pathname).toBe(endpoint)
-    expect(executions[0]!.body).toBe(request.postData())
-    const payload: {
-      prompt: { text: string; files?: { uri: string; source?: { text: string; start: number; end: number } }[]; agents?: unknown[] }
-    } = request.postDataJSON()
-    expect(payload.prompt.files ?? []).toHaveLength(pillIdentity ? 1 : 0)
-    expect(payload.prompt.agents ?? []).toHaveLength(0)
-    if (pillIdentity) {
-      const start = scenario.mode === "paste-pill-interior" ? 5 : 4
-      expect(payload.prompt.files?.[0]?.source).toEqual({ text: "@note.md", start, end: start + 8 })
-    }
-    const text = payload.prompt.text
-    await info.attach("prompt-byte-contract.json", {
-      contentType: "application/json",
-      body: JSON.stringify({
-        mode: scenario.mode, sessionID, dom, canonical, payload, executions,
-        cursorContract: { immediateInsertion: insertionCursor, finalBeforeSend: finalCursor, nativeRedo: "browser-owned selection recorded in history receipts" },
-        inputProvenance: scenario.mode === "raw-clipboard" || scenario.mode === "undo-raw-clipboard"
-          ? "synthetic-raw-clipboard-event; native keyboard history when requested"
-          : scenario.mode === "guarded-enter" ? "synthetic IME/modifier dispatch; no native OS IME claim"
-          : scenario.mode === "paste-pill-interior" ? "synthetic pill endpoint; native clipboard/history"
-          : scenario.mode === "undo-pill-history" ? "native typing/line edit/history; synthetic typed-word selection; native paste"
-          : scenario.mode === "paste" ? "native-clipboard-shortcut" : scenario.mode,
-        requestBody: request.postData(),
-        expected: receipt(scenario.text), domHTMLBytes: receipt(dom.html), domTextBytes: receipt(dom.textContent ?? ""),
-        canonicalBytes: receipt(canonical.text), requestBytes: receipt(text),
-        requestBodyBytes: receipt(request.postData() ?? ""),
-        boundary: "HTTP bootstrap fixtures; actual production UI execution request captured then aborted. No backend admission or model/tool proof.",
-      }, null, 2),
-    })
-    expect(selections.at(-1)).toEqual({ model: { providerID: "orchestra", id: "claude-opus-4-6" } })
-    expect(text).toBe(scenario.text)
-    expect(receipt(text)).toEqual(receipt(scenario.text))
   })
 }
 

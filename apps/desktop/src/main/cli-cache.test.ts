@@ -131,14 +131,15 @@ test("CLI resolution prunes only after a successful matching runtime version", a
   expect(await readdir(ctx.root)).not.toContain(basename(old))
 })
 
-test("owned and shared startup both reach CLI finalization with their shell state root", async () => {
+test("owned and shared startup reach CLI finalization with their shell state root and cancellation", async () => {
   const source = await readFile(new URL("./background-cli.ts", import.meta.url), "utf8")
   const resolver = source.slice(source.indexOf("export async function resolveCliBinary"))
   expect(resolver).toMatch(/finishCliResolution\(\s*artifact,/)
   expect(resolver).toContain("cliStateHomes(")
-  expect(source).toMatch(/resolveCliBinary\(logger,\s*shellStateHome\)/)
+  expect(source).toMatch(/resolveCliBinary\(logger,\s*shellStateHome,\s*signal\)/)
   const main = await readFile(new URL("./index.ts", import.meta.url), "utf8")
-  expect(main).toMatch(/resolveCliBinary\(logger,\s*shellEnv\?\.XDG_STATE_HOME\)/)
+  expect(main).toMatch(/resolveCliBinary\(logger,\s*shellEnv\?\.XDG_STATE_HOME,\s*signal\)/)
+  expect(main).toMatch(/startBackgroundCli\(logger,\s*shellEnv\?\.XDG_STATE_HOME,\s*signal\)/)
 })
 
 test.skipIf(process.platform === "win32")(

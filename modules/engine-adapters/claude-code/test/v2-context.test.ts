@@ -1,3 +1,4 @@
+import { ClaudeCodeAccountFixture } from "./fixture/account"
 import { beforeEach, expect, test } from "bun:test"
 import type { HookInput, McpSdkServerConfigWithInstance, Options, SDKMessage, SDKUserMessage, query } from "@anthropic-ai/claude-agent-sdk"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
@@ -78,6 +79,7 @@ const turnOf = (input: Partial<ExecutionHost.Turn> = {}): ExecutionHost.Turn => 
 const collect = (turn: ExecutionHost.Turn) =>
   Effect.runPromise(
     ClaudeCodeHost.make.pipe(
+      Effect.provide(ClaudeCodeAccountFixture.layer),
       Effect.flatMap((host) => Stream.runCollect(host.stream(turn))),
       Effect.provide(sdk),
       Effect.provideService(ClaudeCodeSDK.Environment, {}),
@@ -258,7 +260,7 @@ test("tracked work receives a durable pending notice before cancellation, query 
     }
     const signal = new AbortController()
     try {
-      const host = await Effect.runPromise(ClaudeCodeHost.make.pipe(Effect.provide(sdk), Effect.provideService(ClaudeCodeSDK.Environment, {})))
+      const host = await Effect.runPromise(ClaudeCodeHost.make.pipe(Effect.provide(ClaudeCodeAccountFixture.layer), Effect.provide(sdk), Effect.provideService(ClaudeCodeSDK.Environment, {})))
       const running = Effect.runPromise(Stream.runCollect(host.stream(turnOf({ notify: (event) => Effect.sync(() => void notified.push(event)) }))), { signal: signal.signal }).catch(() => undefined)
       await reached
       if (mode === "cancel") signal.abort()
@@ -331,7 +333,7 @@ test("notify defect still settles handed input and closes the query without repl
     }
     const signal = new AbortController()
     try {
-      const host = await Effect.runPromise(ClaudeCodeHost.make.pipe(Effect.provide(sdk), Effect.provideService(ClaudeCodeSDK.Environment, {})))
+      const host = await Effect.runPromise(ClaudeCodeHost.make.pipe(Effect.provide(ClaudeCodeAccountFixture.layer), Effect.provide(sdk), Effect.provideService(ClaudeCodeSDK.Environment, {})))
       const providerErrors: string[] = []
       const running = Effect.runPromiseExit(host.stream(turnOf({ state, notify: () => Effect.sync(() => { noticeAttempts++; throw new Error("NOTICE_WRITE_FAILED") }) })).pipe(
         Stream.runForEach((event) => Effect.sync(() => { if (event.type === "provider-error") providerErrors.push(event.message) })),

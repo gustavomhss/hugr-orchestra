@@ -1,4 +1,5 @@
 import { Model } from "@orchestra/schema/model"
+import { ModelExecution } from "@orchestra/schema/model-execution"
 import { Schema } from "effect"
 import { array, check, locationData, object } from "./assertions"
 import { http, route } from "./dsl"
@@ -22,6 +23,25 @@ export const catalogScenarios: Scenario[] = [
       check(value.enabled === true, "default model must be enabled")
     }),
   ),
+  http.protected
+    .post("/api/model/execution", "v2.model.execution")
+    .inProject({
+      git: true,
+      trusted: true,
+      config: { formatter: false, lsp: false, agents: { "wire-exercise": { engine: "orchestra", mode: "primary" } } },
+    })
+    .at((ctx) => ({
+      path: "/api/model/execution",
+      headers: ctx.headers(),
+      body: { context: { type: "draft", agentID: "wire-exercise" } },
+    }))
+    .json(
+      200,
+      locationData((value: unknown) => {
+        const decoded = Schema.decodeUnknownSync(ModelExecution.Response)(value)
+        check(decoded.selection === undefined, "omitting a candidate must not manufacture a default model selection")
+      }),
+    ),
   // The isolated Git fixtures have no host remote. These requests exercise the real handler and its typed error
   // mapping without consulting the runner's signed-in gh/glab client or creating a remote pull request.
   http.protected.get("/api/pull-request", "v2.pullRequest.list").json(400, noPullRequestRemote, "status"),
@@ -71,7 +91,10 @@ export const catalogScenarios: Scenario[] = [
   http.protected.get("/api/config/shells", "v2.config.shells").global().json(200, array),
   http.protected
     .get("/api/project/{projectID}/directories", "v2.project.directories")
-    .at((ctx) => ({ path: route("/api/project/{projectID}/directories", { projectID: "global" }), headers: ctx.headers() }))
+    .at((ctx) => ({
+      path: route("/api/project/{projectID}/directories", { projectID: "global" }),
+      headers: ctx.headers(),
+    }))
     .json(200, array),
   http.protected
     .post("/api/session/{sessionID}/rename", "v2.session.rename")
@@ -134,7 +157,14 @@ export const catalogScenarios: Scenario[] = [
     ),
   http.protected
     .get("/api/model/default", "v2.model.default.empty")
-    .inProject({ git: true, config: { formatter: false, lsp: false, experimental: { policies: [{ action: "provider.use", effect: "deny", resource: "*" }] } } })
+    .inProject({
+      git: true,
+      config: {
+        formatter: false,
+        lsp: false,
+        experimental: { policies: [{ action: "provider.use", effect: "deny", resource: "*" }] },
+      },
+    })
     .json(
       200,
       locationData((value: unknown) => check(value === null, "empty provider allowlist should return a null default")),

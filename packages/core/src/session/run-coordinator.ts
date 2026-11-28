@@ -78,6 +78,7 @@ export const make = <Key, E>(options: {
       )
       entry.owner = owner
       if (!successor) Deferred.doneUnsafe(ready, Effect.void)
+      return owner
     }
 
     const settle = (key: Key, entry: Entry<E>, exit: Exit.Exit<void, E>) => {
@@ -144,10 +145,14 @@ export const make = <Key, E>(options: {
         active.set(key, next)
         const result = Deferred.makeUnsafe<A, E2>()
         // The caller hears the effect's own outcome; the entry only settles ownership, so it never fails.
-        start(key, next, effect.pipe(Effect.onExit((exit) => Deferred.done(result, exit)), Effect.ignore))
-        // An interrupt that lands before the effect starts settles only the entry.
-        const stopped = Deferred.await(next.done).pipe(Effect.exit, Effect.andThen(Effect.interrupt))
-        return restore(Effect.raceFirst(Deferred.await(result), stopped)).pipe(Effect.map(Option.some))
+        const owner = start(key, next, effect.pipe(Effect.onExit((exit) => Deferred.done(result, exit)), Effect.ignore))
+        // Join this owner, not its entry: a pending wake can reuse the entry for a held successor drain.
+        return restore(Fiber.await(owner)).pipe(
+          Effect.andThen(Deferred.isDone(result)),
+          // An interrupt before work starts completes the owner without publishing a result.
+          Effect.flatMap((done) => done ? Deferred.await(result) : Effect.interrupt),
+          Effect.map(Option.some),
+        )
       })
 
     const stop = (key: Key, expected?: Entry<E>, stopOptions?: InterruptOptions): Effect.Effect<void> =>

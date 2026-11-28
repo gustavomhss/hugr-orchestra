@@ -10,10 +10,11 @@ import { WebSocketExecutor } from "./transport"
 import type { Protocol } from "./protocol"
 import { applyCachePolicy } from "../cache-policy"
 import * as ProviderShared from "../protocols/shared"
-import type { LLMError, LLMEvent, PreparedRequestOf, ProtocolID, ProviderOptions } from "../schema"
+import type { LLMError, PreparedRequestOf, ProtocolID, ProviderOptions } from "../schema"
 import {
   GenerationOptions,
   HttpOptions,
+  LLMEvent,
   LLMRequest,
   LLMResponse,
   Model,
@@ -284,14 +285,35 @@ function makeFromTransport<Body, Prepared, Frame, Event, State>(
             Stream.mapEffect(decodeEvent(route)),
             protocol.stream.terminal ? Stream.takeUntil(protocol.stream.terminal) : (stream) => stream,
           )
-        return events.pipe(
-          Stream.mapAccumEffect(
-            () => protocol.stream.initial(request),
-            protocol.stream.step,
-            protocol.stream.onHalt ? { onHalt: protocol.stream.onHalt } : undefined,
-          ),
-          Stream.catchCause((cause) => Stream.fail(streamError(route, `Failed to read ${route} stream`, cause))),
-        )
+        return Stream.suspend(() => {
+          const terminal = { seen: false }
+          return events.pipe(
+            Stream.mapAccumEffect(
+              () => protocol.stream.initial(request),
+              protocol.stream.step,
+              protocol.stream.onHalt ? { onHalt: protocol.stream.onHalt } : undefined,
+            ),
+            Stream.tap((event) =>
+              Effect.sync(() => {
+                if (LLMEvent.is.finish(event) || LLMEvent.is.providerError(event)) terminal.seen = true
+              }),
+            ),
+            Stream.concat(
+              Stream.suspend(() =>
+                terminal.seen
+                  ? Stream.empty
+                  : Stream.fail(
+                      ProviderShared.eventError(route, "Provider stream ended without a terminal finish event"),
+                    ),
+              ),
+            ),
+            Stream.catchCause((cause) =>
+              Cause.hasInterruptsOnly(cause)
+                ? Stream.failCause(cause)
+                : Stream.fail(streamError(route, `Failed to read ${route} stream`, cause)),
+            ),
+          )
+        })
       },
     } satisfies Route<Body, Prepared>
     return route

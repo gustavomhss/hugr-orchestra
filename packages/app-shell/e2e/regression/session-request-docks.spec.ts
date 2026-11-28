@@ -154,7 +154,9 @@ test("shows a pending permission dock", async ({ page }) => {
   await expect(permission.getByRole("button", { name: "Deny" })).toBeVisible()
   await expect(page.locator('[data-component="session-composer"]')).toHaveCount(0)
 
-  const reply = page.waitForRequest((request) => request.method() === "POST")
+  // Canonical model execution is a metadata read despite using POST; every other write remains observable.
+  const reply = page.waitForRequest((request) =>
+    request.method() === "POST" && new URL(request.url()).pathname !== "/api/model/execution")
   await permission.getByRole("button", { name: "Allow once" }).click()
   const request = await reply
   expect(new URL(request.url()).pathname).toBe(`/api/session/${sessionID}/permission/permission-request/reply`)

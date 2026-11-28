@@ -12,6 +12,7 @@ import { PluginV2 } from "@orchestra/core/plugin"
 import { PluginHost } from "@orchestra/core/plugin/host"
 import { DynamicProviderPlugin } from "@orchestra/core/plugin/provider/dynamic"
 import { ProviderV2 } from "@orchestra/core/provider"
+import { ModelExecutionOptions } from "../../src/model-execution-options"
 import { testEffect } from "../lib/effect"
 import { PluginTestLayer } from "./fixture"
 
@@ -181,4 +182,61 @@ describe("DynamicProviderPlugin", () => {
       expect(language).toMatchObject({ modelID: "test-model-api", options: { name: "custom" } })
     }),
   )
+})
+
+describe("E6 literal variant AISDK cache", () => {
+  itWithAISDK.effect("CONTROL E6 an ordinary selected variant is constructed by the actual provider factory", () => Effect.gen(function* () {
+    const aisdk = yield* AISDK.Service
+    yield* addPlugin()
+    const base = ModelV2.Info.make({ ...ModelV2.Info.empty(ProviderV2.ID.make("e6-ordinary-cache"), ModelV2.ID.make("alias")),
+      api: { id: ModelV2.ID.make("fixture-api"), type: "aisdk", package: fixtureProvider },
+      variants: [{ id: ModelV2.VariantID.make("ordinary"), headers: {}, body: { marker: "ordinary" } }],
+    })
+    const selected = yield* ModelExecutionOptions.selectVariant(base, ModelV2.VariantID.make("ordinary"))
+    const language = yield* aisdk.language(selected.model)
+    expect(language).toMatchObject({ modelID: "fixture-api", options: { marker: "ordinary", name: "e6-ordinary-cache" } })
+  }))
+
+  itWithAISDK.effect("E6: actual language cache distinguishes omitted identity from literal default", () => Effect.gen(function* () {
+    const aisdk = yield* AISDK.Service
+    yield* addPlugin()
+    const base = ModelV2.Info.make({ ...ModelV2.Info.empty(ProviderV2.ID.make("e6-default-cache"), ModelV2.ID.make("alias")),
+      api: { id: ModelV2.ID.make("fixture-api"), type: "aisdk", package: fixtureProvider },
+      request: { headers: {}, body: { marker: "omitted" } },
+    })
+    const omitted = yield* aisdk.language(base)
+    const named = yield* aisdk.language(ModelV2.Info.make({ ...base,
+      request: { variant: "default", headers: {}, body: { marker: "literal-default" } },
+    }))
+    expect(omitted).toMatchObject({ options: { marker: "omitted" } })
+    expect(named).not.toBe(omitted)
+    expect(named).toMatchObject({ options: { marker: "literal-default" } })
+  }))
+
+  itWithAISDK.effect("E6: cache keys represent actual selected variants while inherited and explicit high can share", () => Effect.gen(function* () {
+    const aisdk = yield* AISDK.Service
+    yield* addPlugin()
+    const base = ModelV2.Info.make({ ...ModelV2.Info.empty(ProviderV2.ID.make("e6-effective-cache"), ModelV2.ID.make("alias")),
+      api: { id: ModelV2.ID.make("fixture-api"), type: "aisdk", package: fixtureProvider },
+      request: { variant: "high", headers: { "x-base": "untouched" }, body: { marker: "base" } },
+      variants: [
+        { id: ModelV2.VariantID.make("high"), headers: { "x-variant": "high" }, body: { marker: "high" } },
+        { id: ModelV2.VariantID.make("low"), headers: { "x-variant": "low" }, body: { marker: "low" } },
+      ],
+    })
+    const before = JSON.stringify(base)
+    const inherited = yield* ModelExecutionOptions.selectVariant(base, undefined)
+    const explicit = yield* ModelExecutionOptions.selectVariant(base, ModelV2.VariantID.make("high"))
+    const lower = yield* ModelExecutionOptions.selectVariant(base, ModelV2.VariantID.make("low"))
+    const high = yield* aisdk.language(inherited.model)
+    expect(yield* aisdk.language(explicit.model)).toBe(high)
+    const low = yield* aisdk.language(lower.model)
+    expect(high).toMatchObject({ options: { marker: "high" } })
+    expect(low).not.toBe(high)
+    expect(low).toMatchObject({ options: { marker: "low" } })
+    expect(inherited.model.request.variant).toBe("high")
+    expect(lower.model.request.variant).toBe("low")
+    expect(lower.model.request.headers).toMatchObject({ "x-base": "untouched", "x-variant": "low" })
+    expect(JSON.stringify(base)).toBe(before)
+  }))
 })

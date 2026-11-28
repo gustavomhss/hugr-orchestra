@@ -1,0 +1,639 @@
+{
+  "jobs": {
+    "total_count": 3,
+    "jobs": [
+      {
+        "id": 131655743397,
+        "run_id": 43355280790,
+        "workflow_name": "test-ci",
+        "head_branch": "ci-run-both-mwedufuh-4d23c82",
+        "run_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/runs/43355280790",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU78kOs8AAAAep0s3pQ",
+        "head_sha": "4d23c8297d83ed5ba6a64bb5e1c5da55beb07a67",
+        "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/jobs/131655743397",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43355280790/job/131655743397",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-13T02:53:49Z",
+        "started_at": "2026-11-13T02:53:52Z",
+        "completed_at": "2026-11-13T02:55:30Z",
+        "name": "test (ubuntu-24.04)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-13T02:53:52Z",
+            "completed_at": "2026-11-13T02:53:53Z"
+          },
+          {
+            "name": "Checkout repository",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-13T02:53:53Z",
+            "completed_at": "2026-11-13T02:53:58Z"
+          },
+          {
+            "name": "Assert Linux ARM64",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 3,
+            "started_at": "2026-11-13T02:53:58Z",
+            "completed_at": "2026-11-13T02:53:58Z"
+          },
+          {
+            "name": "Assert macOS arm64",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 4,
+            "started_at": "2026-11-13T02:53:58Z",
+            "completed_at": "2026-11-13T02:53:58Z"
+          },
+          {
+            "name": "Setup request validator Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-13T02:53:58Z",
+            "completed_at": "2026-11-13T02:54:03Z"
+          },
+          {
+            "name": "Read request",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-13T02:54:03Z",
+            "completed_at": "2026-11-13T02:54:03Z"
+          },
+          {
+            "name": "Fetch source history for Script fixtures",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 7,
+            "started_at": "2026-11-13T02:54:03Z",
+            "completed_at": "2026-11-13T02:54:03Z"
+          },
+          {
+            "name": "Setup Bun",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-13T02:54:03Z",
+            "completed_at": "2026-11-13T02:54:40Z"
+          },
+          {
+            "name": "ripgrep",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-13T02:54:40Z",
+            "completed_at": "2026-11-13T02:54:40Z"
+          },
+          {
+            "name": "Setup Playwright Node",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 10,
+            "started_at": "2026-11-13T02:54:40Z",
+            "completed_at": "2026-11-13T02:54:40Z"
+          },
+          {
+            "name": "Install Chromium",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 11,
+            "started_at": "2026-11-13T02:54:40Z",
+            "completed_at": "2026-11-13T02:54:40Z"
+          },
+          {
+            "name": "Linux sandbox dependencies",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 12,
+            "started_at": "2026-11-13T02:54:40Z",
+            "completed_at": "2026-11-13T02:54:50Z"
+          },
+          {
+            "name": "Setup Python",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 13,
+            "started_at": "2026-11-13T02:54:50Z",
+            "completed_at": "2026-11-13T02:54:50Z"
+          },
+          {
+            "name": "Install Python test dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 14,
+            "started_at": "2026-11-13T02:54:50Z",
+            "completed_at": "2026-11-13T02:54:50Z"
+          },
+          {
+            "name": "Configure git identity",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-11-13T02:54:50Z",
+            "completed_at": "2026-11-13T02:54:50Z"
+          },
+          {
+            "name": "Export requested environment",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-13T02:54:50Z",
+            "completed_at": "2026-11-13T02:54:50Z"
+          },
+          {
+            "name": "omni binaries",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-13T02:54:50Z",
+            "completed_at": "2026-11-13T02:55:21Z"
+          },
+          {
+            "name": "Rust toolchain (rust-toolchain.toml)",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 18,
+            "started_at": "2026-11-13T02:55:21Z",
+            "completed_at": "2026-11-13T02:55:21Z"
+          },
+          {
+            "name": "Omni control nonce",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-11-13T02:55:21Z",
+            "completed_at": "2026-11-13T02:55:21Z"
+          },
+          {
+            "name": "Run tests",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 20,
+            "started_at": "2026-11-13T02:55:21Z",
+            "completed_at": "2026-11-13T02:55:28Z"
+          },
+          {
+            "name": "Upload Lean dashboard previews (extension)",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 21,
+            "started_at": "2026-11-13T02:55:28Z",
+            "completed_at": "2026-11-13T02:55:28Z"
+          },
+          {
+            "name": "Upload Playwright evidence",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 22,
+            "started_at": "2026-11-13T02:55:28Z",
+            "completed_at": "2026-11-13T02:55:28Z"
+          },
+          {
+            "name": "Post Setup Bun",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 42,
+            "started_at": "2026-11-13T02:55:28Z",
+            "completed_at": "2026-11-13T02:55:28Z"
+          },
+          {
+            "name": "Post Setup request validator Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 43,
+            "started_at": "2026-11-13T02:55:28Z",
+            "completed_at": "2026-11-13T02:55:29Z"
+          },
+          {
+            "name": "Post Checkout repository",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 44,
+            "started_at": "2026-11-13T02:55:29Z",
+            "completed_at": "2026-11-13T02:55:29Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 45,
+            "started_at": "2026-11-13T02:55:29Z",
+            "completed_at": "2026-11-13T02:55:29Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/check-runs/131655743397",
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "runner_id": 1000055254,
+        "runner_name": "GitHub Actions 1000055254",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 131655743573,
+        "run_id": 43355280790,
+        "workflow_name": "test-ci",
+        "head_branch": "ci-run-both-mwedufuh-4d23c82",
+        "run_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/runs/43355280790",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU78kOs8AAAAep0s4VQ",
+        "head_sha": "4d23c8297d83ed5ba6a64bb5e1c5da55beb07a67",
+        "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/jobs/131655743573",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43355280790/job/131655743573",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-13T02:53:49Z",
+        "started_at": "2026-11-13T02:53:51Z",
+        "completed_at": "2026-11-13T02:59:05Z",
+        "name": "test (windows-latest)",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-13T02:53:52Z",
+            "completed_at": "2026-11-13T02:53:54Z"
+          },
+          {
+            "name": "Checkout repository",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-13T02:53:54Z",
+            "completed_at": "2026-11-13T02:54:07Z"
+          },
+          {
+            "name": "Assert Linux ARM64",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 3,
+            "started_at": "2026-11-13T02:54:07Z",
+            "completed_at": "2026-11-13T02:54:07Z"
+          },
+          {
+            "name": "Assert macOS arm64",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 4,
+            "started_at": "2026-11-13T02:54:07Z",
+            "completed_at": "2026-11-13T02:54:07Z"
+          },
+          {
+            "name": "Setup request validator Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 5,
+            "started_at": "2026-11-13T02:54:07Z",
+            "completed_at": "2026-11-13T02:54:15Z"
+          },
+          {
+            "name": "Read request",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 6,
+            "started_at": "2026-11-13T02:54:15Z",
+            "completed_at": "2026-11-13T02:54:16Z"
+          },
+          {
+            "name": "Fetch source history for Script fixtures",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 7,
+            "started_at": "2026-11-13T02:54:16Z",
+            "completed_at": "2026-11-13T02:54:16Z"
+          },
+          {
+            "name": "Setup Bun",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 8,
+            "started_at": "2026-11-13T02:54:16Z",
+            "completed_at": "2026-11-13T02:57:37Z"
+          },
+          {
+            "name": "ripgrep",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 9,
+            "started_at": "2026-11-13T02:57:37Z",
+            "completed_at": "2026-11-13T02:57:39Z"
+          },
+          {
+            "name": "Setup Playwright Node",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 10,
+            "started_at": "2026-11-13T02:57:39Z",
+            "completed_at": "2026-11-13T02:57:39Z"
+          },
+          {
+            "name": "Install Chromium",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 11,
+            "started_at": "2026-11-13T02:57:39Z",
+            "completed_at": "2026-11-13T02:57:39Z"
+          },
+          {
+            "name": "Linux sandbox dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 12,
+            "started_at": "2026-11-13T02:57:39Z",
+            "completed_at": "2026-11-13T02:57:39Z"
+          },
+          {
+            "name": "Setup Python",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 13,
+            "started_at": "2026-11-13T02:57:39Z",
+            "completed_at": "2026-11-13T02:57:39Z"
+          },
+          {
+            "name": "Install Python test dependencies",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 14,
+            "started_at": "2026-11-13T02:57:39Z",
+            "completed_at": "2026-11-13T02:57:39Z"
+          },
+          {
+            "name": "Configure git identity",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 15,
+            "started_at": "2026-11-13T02:57:39Z",
+            "completed_at": "2026-11-13T02:57:39Z"
+          },
+          {
+            "name": "Export requested environment",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 16,
+            "started_at": "2026-11-13T02:57:39Z",
+            "completed_at": "2026-11-13T02:57:39Z"
+          },
+          {
+            "name": "omni binaries",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 17,
+            "started_at": "2026-11-13T02:57:39Z",
+            "completed_at": "2026-11-13T02:58:54Z"
+          },
+          {
+            "name": "Rust toolchain (rust-toolchain.toml)",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 18,
+            "started_at": "2026-11-13T02:58:54Z",
+            "completed_at": "2026-11-13T02:58:54Z"
+          },
+          {
+            "name": "Omni control nonce",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 19,
+            "started_at": "2026-11-13T02:58:54Z",
+            "completed_at": "2026-11-13T02:58:54Z"
+          },
+          {
+            "name": "Run tests",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 20,
+            "started_at": "2026-11-13T02:58:54Z",
+            "completed_at": "2026-11-13T02:59:00Z"
+          },
+          {
+            "name": "Upload Lean dashboard previews (extension)",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 21,
+            "started_at": "2026-11-13T02:59:00Z",
+            "completed_at": "2026-11-13T02:59:01Z"
+          },
+          {
+            "name": "Upload Playwright evidence",
+            "status": "completed",
+            "conclusion": "skipped",
+            "number": 22,
+            "started_at": "2026-11-13T02:59:01Z",
+            "completed_at": "2026-11-13T02:59:01Z"
+          },
+          {
+            "name": "Post Setup Bun",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 42,
+            "started_at": "2026-11-13T02:59:01Z",
+            "completed_at": "2026-11-13T02:59:01Z"
+          },
+          {
+            "name": "Post Setup request validator Node",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 43,
+            "started_at": "2026-11-13T02:59:01Z",
+            "completed_at": "2026-11-13T02:59:01Z"
+          },
+          {
+            "name": "Post Checkout repository",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 44,
+            "started_at": "2026-11-13T02:59:01Z",
+            "completed_at": "2026-11-13T02:59:04Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 45,
+            "started_at": "2026-11-13T02:59:04Z",
+            "completed_at": "2026-11-13T02:59:04Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/check-runs/131655743573",
+        "labels": [
+          "windows-latest"
+        ],
+        "runner_id": 1000055255,
+        "runner_name": "GitHub Actions 1000055255",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      },
+      {
+        "id": 131657587932,
+        "run_id": 43355280790,
+        "workflow_name": "test-ci",
+        "head_branch": "ci-run-both-mwedufuh-4d23c82",
+        "run_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/runs/43355280790",
+        "run_attempt": 1,
+        "node_id": "CR_kwDOU78kOs8AAAAep2dc3A",
+        "head_sha": "4d23c8297d83ed5ba6a64bb5e1c5da55beb07a67",
+        "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/jobs/131657587932",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43355280790/job/131657587932",
+        "status": "completed",
+        "conclusion": "success",
+        "created_at": "2026-11-13T02:59:05Z",
+        "started_at": "2026-11-13T02:59:07Z",
+        "completed_at": "2026-11-13T02:59:11Z",
+        "name": "cleanup",
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 1,
+            "started_at": "2026-11-13T02:59:08Z",
+            "completed_at": "2026-11-13T02:59:08Z"
+          },
+          {
+            "name": "Delete the snapshot branch",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 2,
+            "started_at": "2026-11-13T02:59:08Z",
+            "completed_at": "2026-11-13T02:59:09Z"
+          },
+          {
+            "name": "Complete job",
+            "status": "completed",
+            "conclusion": "success",
+            "number": 3,
+            "started_at": "2026-11-13T02:59:09Z",
+            "completed_at": "2026-11-13T02:59:09Z"
+          }
+        ],
+        "check_run_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/check-runs/131657587932",
+        "labels": [
+          "ubuntu-24.04"
+        ],
+        "runner_id": 1000055259,
+        "runner_name": "GitHub Actions 1000055259",
+        "runner_group_id": 0,
+        "runner_group_name": "GitHub Actions"
+      }
+    ]
+  },
+  "proofs": [
+    {
+      "job": 131655743397,
+      "name": "test (ubuntu-24.04)",
+      "proof": {
+        "kind": "live-outbox-electron-capability-parent",
+        "report": {
+          "kind": "live-outbox-electron-capability",
+          "pid": 4319,
+          "ppid": 4304,
+          "processType": "browser",
+          "electron": "42.11.16",
+          "node": "24.19.0",
+          "sqlite": "3.53.3",
+          "runtimeSQLite": "3.53.3",
+          "userData": "/tmp/live-outbox-electron-EpI42c/profile",
+          "profileID": "9417e1ff-dcf5-4921-9588-de8cc412c636",
+          "reopenedProfileID": "9417e1ff-dcf5-4921-9588-de8cc412c636",
+          "recordID": "00000000-0000-4000-8000-000000000001",
+          "segmentID": "00000000-0000-4000-8000-000000000002",
+          "batchIDs": [
+            "00000000-0000-4000-8000-000000000002"
+          ],
+          "pendingCount": 1,
+          "rememberedCount": 1,
+          "segmentDigest": "35a2195746c23aca14f5b25394e75245b7ae1a4139e070a41ec0e050840cfdd6",
+          "integrity": "ok",
+          "storeBundleHash": "028c446bc7105e073dad4c6bf8a40fbd7514f3d569702224cb1990916cae4561",
+          "mainBundleHash": "656618fde9168b152fa081f4ca64e783e7775d37575e74504c06a3df03c516a3"
+        },
+        "ownedPID": 4304,
+        "binding": "immediate-wrapper-parent",
+        "stdoutBytes": 1008,
+        "stderrBytes": 0,
+        "sourceHashes": {
+          "store": "67b4744ef2ae5848fa08a08eb503bf11becaed0245912979b2c8475dec6aaa5d",
+          "fixture": "03944093cb27b24719d6218cd9dc9040ef3a29e496f8ea2c1edb27de2cf1f561",
+          "contract": "bc4782db64df0ca430dfdca81be727a73975103c77c50d5523246ba8bcabf6fc"
+        },
+        "bundleHashes": {
+          "store": "028c446bc7105e073dad4c6bf8a40fbd7514f3d569702224cb1990916cae4561",
+          "main": "656618fde9168b152fa081f4ca64e783e7775d37575e74504c06a3df03c516a3"
+        },
+        "executableHash": "8590f40d1c8f135934df031fff50fcb77598e0a9659a0a6869893b3248900e79",
+        "timings": {
+          "installerMs": 1832.539128,
+          "buildMs": 5.378573999999844,
+          "electronMs": 4110.876454
+        },
+        "electronPackageHash": "ebc5f6e740a4b6874d87e2eabb324de1f17f06771e47d20c3563da291c08b5c7",
+        "installerHash": "5a83199076ae20cfe57576a984e31b92890a2ae4e0759454bb6df4f9e7f47460",
+        "profileRemoved": true
+      }
+    },
+    {
+      "job": 131655743573,
+      "name": "test (windows-latest)",
+      "proof": {
+        "kind": "live-outbox-electron-capability-parent",
+        "report": {
+          "kind": "live-outbox-electron-capability",
+          "pid": 6900,
+          "ppid": 5756,
+          "processType": "browser",
+          "electron": "42.11.16",
+          "node": "24.19.0",
+          "sqlite": "3.53.3",
+          "runtimeSQLite": "3.53.3",
+          "userData": "C:\\Users\\RUNNER~1\\AppData\\Local\\Temp\\live-outbox-electron-MUr2Hq\\profile",
+          "profileID": "d0673781-4842-4499-a15a-d68b02fc4e62",
+          "reopenedProfileID": "d0673781-4842-4499-a15a-d68b02fc4e62",
+          "recordID": "00000000-0000-4000-8000-000000000001",
+          "segmentID": "00000000-0000-4000-8000-000000000002",
+          "batchIDs": [
+            "00000000-0000-4000-8000-000000000002"
+          ],
+          "pendingCount": 1,
+          "rememberedCount": 1,
+          "segmentDigest": "35a2195746c23aca14f5b25394e75245b7ae1a4139e070a41ec0e050840cfdd6",
+          "integrity": "ok",
+          "storeBundleHash": "028c446bc7105e073dad4c6bf8a40fbd7514f3d569702224cb1990916cae4561",
+          "mainBundleHash": "656618fde9168b152fa081f4ca64e783e7775d37575e74504c06a3df03c516a3"
+        },
+        "ownedPID": 6900,
+        "binding": "direct-pid",
+        "stdoutBytes": 863,
+        "stderrBytes": 0,
+        "sourceHashes": {
+          "store": "3a7bf5f92db83e69ac9612538ed470f65d63c0e80ee1b6b6bed0f8e4e05a8743",
+          "fixture": "796c51ab53cd15c264ebeae6f5102baaf1b613ae82a244e0483528887a5f15a8",
+          "contract": "816c7e280ea207865a10f0450458bcfdbb145e2321b70c86690844a759e4f667"
+        },
+        "bundleHashes": {
+          "store": "028c446bc7105e073dad4c6bf8a40fbd7514f3d569702224cb1990916cae4561",
+          "main": "656618fde9168b152fa081f4ca64e783e7775d37575e74504c06a3df03c516a3"
+        },
+        "executableHash": "43bff1270bb3362b17e0434cedf321a87dc789c80a7626be1d5a6a1df4625b6e",
+        "timings": {
+          "installerMs": 3451.339,
+          "buildMs": 13.92869999999948,
+          "electronMs": 864.0160999999998
+        },
+        "electronPackageHash": "ebc5f6e740a4b6874d87e2eabb324de1f17f06771e47d20c3563da291c08b5c7",
+        "installerHash": "5a83199076ae20cfe57576a984e31b92890a2ae4e0759454bb6df4f9e7f47460",
+        "profileRemoved": true
+      }
+    }
+  ]
+}

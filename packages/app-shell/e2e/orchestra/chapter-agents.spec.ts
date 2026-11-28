@@ -18,6 +18,12 @@ import {
 test.use({ viewport: { width: 1400, height: 900 }, serviceWorkers: "block" })
 test.setTimeout(120_000)
 
+// Eligibility is a read-only POST query; every other non-read request must still be absent.
+const unexpectedWrites = (requests: ReadonlyArray<{ method: string; url: string }>) => requests.filter((request) =>
+  !["GET", "HEAD", "OPTIONS"].includes(request.method) &&
+  !(request.method === "POST" && new URL(request.url).pathname === "/api/model/execution"),
+)
+
 for (const scheme of ["dark", "light"] as const) {
   test(`${scheme}: roster cards show the returned fields`, async ({ page }) => {
     const mock = await setup(page, { scheme, models: true })
@@ -80,7 +86,7 @@ test("Open Chat opens a blank draft with no agent choice for the same profile an
     .toMatchObject({ server: serverA, directory })
   await expect(page.locator('[contenteditable="true"]').first()).toHaveText("")
   await expect(page.getByRole("button", { name: "Choose agent", exact: true })).toHaveCount(0)
-  expect(mock.requests.filter((request) => !["GET", "HEAD", "OPTIONS"].includes(request.method))).toEqual([])
+  expect(unexpectedWrites(mock.requests)).toEqual([])
   expect(
     mock.requests
       .filter((request) => new URL(request.url).pathname === "/api/agent")
@@ -93,7 +99,7 @@ test("Open Chat opens a blank draft with no agent choice for the same profile an
   await page.reload()
   await expect(page.locator('[data-component="prompt-input-v2"]')).toBeVisible()
   await expect(page.getByRole("button", { name: "Choose agent", exact: true })).toHaveCount(0)
-  expect(mock.requests.filter((request) => !["GET", "HEAD", "OPTIONS"].includes(request.method))).toEqual([])
+  expect(unexpectedWrites(mock.requests)).toEqual([])
 })
 
 test("agent and agent file requests target the selected profile", async ({ page }) => {
@@ -134,7 +140,7 @@ test("Open Chat opens a draft on Maestro's configured model", async ({ page }) =
   // Maestro's model, not the provider default Builder, shows the draft runs on Maestro.
   await expect(page.locator('[data-action="prompt-model"]')).toContainText("Reasoner")
   await expect(page.getByRole("button", { name: "Choose agent", exact: true })).toHaveCount(0)
-  expect(mock.requests.filter((request) => !["GET", "HEAD", "OPTIONS"].includes(request.method))).toEqual([])
+  expect(unexpectedWrites(mock.requests)).toEqual([])
 })
 
 test("switching profiles during an agent request isolates servers and directories", async ({ page }) => {

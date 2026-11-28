@@ -20,6 +20,8 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
     events?: EventSource
   }) => {
     const abort = new AbortController()
+    const transportBinding = { url: props.url, directory: props.directory, fetch: props.fetch,
+      headers: JSON.stringify([...new Headers(props.headers).entries()]) }
     let sse: AbortController | undefined
 
     // The V2 client serves session actions, the catalog the store bootstraps from, and the event stream.
@@ -28,6 +30,8 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
     const catalog = createCatalog(v2)
     // True while the event stream is down and being retried. Embedded event sources have no stream to observe.
     const [offline, setOffline] = createSignal(false)
+    const [connectionEpoch, setConnectionEpoch] = createSignal(0)
+    const [modelExecutionEpoch, setModelExecutionEpoch] = createSignal(0)
 
     const handlers = new Set<(event: GlobalEvent) => void>()
     const emitter = {
@@ -63,6 +67,12 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
     }
 
     const handleEvent = (event: GlobalEvent) => {
+      if (abort.signal.aborted) return
+      if ((event.payload.type === "catalog.updated" || event.payload.type === "integration.connection.updated") &&
+        event.workspace === undefined && (!event.directory || event.directory === "global" || event.directory === props.directory))
+        setModelExecutionEpoch((value) => value + 1)
+      // Recovery owners may mount after this greeting, and all observers must see its new epoch.
+      if (event.payload.type === "server.connected") setConnectionEpoch((value) => value + 1)
       queue.push(event)
       const elapsed = Date.now() - last
 
@@ -111,10 +121,25 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
       })().catch(() => {})
     }
 
-    onMount(async () => {
-      if (props.events) {
-        const unsub = await props.events.subscribe(handleEvent)
-        onCleanup(unsub)
+    function releaseEvents(release: () => void, phase: "dispose" | "late") {
+      try {
+        release()
+      } catch {
+        // A delegated cleanup cannot prevent our own teardown or reject an unobserved subscription continuation.
+        console.error("tui event unsubscribe failed", { phase })
+      }
+    }
+
+    let unsubscribe: (() => void) | undefined
+    onMount(() => {
+      const source = props.events
+      if (source) {
+        void Promise.resolve().then(() => source.subscribe(handleEvent)).then((release) => {
+          if (abort.signal.aborted) return releaseEvents(release, "late")
+          unsubscribe = release
+        }, (error) => {
+          if (!abort.signal.aborted) console.error("tui event subscription failed", error)
+        })
         return
       }
       startSSE()
@@ -125,6 +150,10 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
       sse?.abort()
       if (timer) clearTimeout(timer)
       handlers.clear()
+      queue = []
+      const release = unsubscribe
+      unsubscribe = undefined
+      if (release) releaseEvents(release, "dispose")
     })
 
     // Replies to the requests the mini-mode demo made up are answered here instead of by the server.
@@ -165,6 +194,11 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
       actions,
       catalog,
       offline,
+      connectionEpoch,
+      modelExecutionEpoch,
+      binding: () => ({ url: props.url, directory: props.directory, headers: props.headers, fetch: props.fetch,
+        active: props.url === transportBinding.url && props.directory === transportBinding.directory &&
+          props.fetch === transportBinding.fetch && JSON.stringify([...new Headers(props.headers).entries()]) === transportBinding.headers }),
       directory: props.directory,
       event: emitter,
       fetch: props.fetch ?? fetch,

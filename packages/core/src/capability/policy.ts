@@ -124,7 +124,7 @@ export const make = Effect.gen(function* () {
       Effect.catchTags({
         "PermissionV2.BlockedError": () => Effect.fail(denied()),
         "PermissionV2.CorrectedError": () => Effect.fail(denied()),
-        "PermissionV2.DeclinedError": () => Effect.fail(denied()),
+        "PermissionV2.DeclinedError": () => validate(binding).pipe(Effect.andThen(Effect.fail(denied()))),
         "Session.NotFoundError": () => Effect.fail(mismatch()),
       }),
     )

@@ -8,6 +8,7 @@ import { SessionRunnerModel } from "./model"
 import type { SystemContext } from "../../system-context/index"
 import type { ToolOutputStore } from "../../tool-output-store"
 import type { SessionSubagentModels } from "../subagent-models"
+import type { ModelExecution } from "../../model-execution"
 
 /** A staged undo must be committed by replacement admission or cleared before an explicit continuation. */
 export class BusyError extends Schema.TaggedErrorClass<BusyError>()("Session.BusyError", { sessionID: SessionSchema.ID }) {}
@@ -16,6 +17,7 @@ export type RunError =
   | BusyError
   | LLMError
   | SessionRunnerModel.Error
+  | ModelExecution.ExecutionUnavailableError
   | MessageDecodeError
   | ContextSnapshotDecodeError
   | SystemContext.InitializationBlocked

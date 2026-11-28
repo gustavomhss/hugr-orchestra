@@ -14,7 +14,7 @@ const it = testEffect(LayerNode.compile(AppProcess.node))
 const root = path.resolve(import.meta.dir, "../../..")
 const unit = ["test", "--conditions=solid"]
 const browser = [
-  "test", "--conditions=browser",
+  "test", "--isolate", "--conditions=browser",
   "--preload", "../../script/test-omni-control.ts", "--preload", "./happydom.ts",
 ]
 const timeout = ["--timeout", "120000"]
@@ -51,7 +51,7 @@ const cases: {
   {
     name: "browser filter value resembling a browser selector remains a filter value",
     args: ["test-browser", ...timeout, ...pathFilter],
-    expected: [[...browser, "test-browser", ...timeout, ...pathFilter]],
+    expected: [[...browser, "./test-browser", ...timeout, ...pathFilter]],
   },
   {
     name: "unit filter value resembling a browser selector does not request browser",

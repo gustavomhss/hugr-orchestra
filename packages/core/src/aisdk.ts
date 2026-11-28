@@ -196,7 +196,7 @@ export const locationLayer = Layer.effect(
       runSDK: (event) => run(sdkHooks, event),
       runLanguage: (event) => run(languageHooks, event),
       language: Effect.fn("AISDK.language")(function* (model) {
-        const key = `${model.providerID}/${model.id}/${model.request.variant ?? "default"}`
+        const key = JSON.stringify([model.providerID, model.id, model.request.variant ?? null])
         const existing = languages.get(key)
         if (existing) return existing
         if (model.api.type !== "aisdk")

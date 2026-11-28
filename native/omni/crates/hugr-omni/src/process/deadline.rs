@@ -20,6 +20,7 @@ use tokio_util::sync::{CancellationToken, WaitForCancellationFutureOwned};
 
 use super::Options;
 use super::child::Inner;
+use crate::client::InventoryFailure;
 use crate::error::Error;
 use crate::types::Reason;
 
@@ -77,7 +78,7 @@ async fn enforce(mut deadline: Deadline, inner: Arc<Inner>) {
 }
 
 /// The lingering state: the child and the cause once the deadline fires, or `None` once the child was dropped,
-/// nothing is left of its tree, or its supervisor cannot tell. It holds the child only while it checks: a dropped
+/// nothing is left of its tree, or its inventory is terminal. It holds the child only while it checks: a dropped
 /// child fails to upgrade, and a stopped tree lists nothing without a round trip. The deadline races each whole
 /// check, so it wins over a pending `List` (the check is dropped, and the stop is sent at once).
 async fn linger(deadline: &mut Deadline, child: &Weak<Inner>) -> Option<(Arc<Inner>, Reason)> {
@@ -96,14 +97,16 @@ async fn still_lingering(child: &Weak<Inner>) -> bool {
     let Some(inner) = child.upgrade() else {
         return false;
     };
-    // `Err`: a lost supervisor (for good) or a broken inventory, which the client does not tell apart; through that
-    // supervisor the deadline could stop nothing reliably either way.
-    inner.life.processes().await.is_ok_and(|left| !left.is_empty())
+    match inner.life.inventory().await {
+        Ok(left) => !left.is_empty(),
+        Err(InventoryFailure::Retryable(_)) => true,
+        Err(InventoryFailure::Terminal(_)) => false,
+    }
 }
 
 /// How a child ended before its deadline fired.
 enum Settled {
-    /// The library stopped or killed the tree, nothing is left of it, or the supervisor cannot tell.
+    /// The library stopped or killed the tree, nothing is left of it, or its inventory is terminal.
     Over,
     /// The root ended on its own and the output is over, but the tree still has members.
     Lingering,
@@ -113,11 +116,11 @@ enum Settled {
 async fn settled(inner: &Inner) -> Settled {
     inner.pumps.ended().await;
     match inner.life.wait().await {
-        // The root's own end (or a library act after it): ask once whether anything is left to time (an `Err` ends
-        // it, as in `linger`).
-        Ok(exit) if matches!(exit.reason, Reason::Exit | Reason::Signal) => match inner.life.processes().await {
+        // A recoverable failure keeps the original deadline/token alive in the weak lingering state.
+        Ok(exit) if matches!(exit.reason, Reason::Exit | Reason::Signal) => match inner.life.inventory().await {
             Ok(left) if !left.is_empty() => Settled::Lingering,
-            Ok(_) | Err(_) => Settled::Over,
+            Err(InventoryFailure::Retryable(_)) => Settled::Lingering,
+            Ok(_) | Err(InventoryFailure::Terminal(_)) => Settled::Over,
         },
         _ => Settled::Over,
     }

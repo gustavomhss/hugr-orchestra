@@ -5,9 +5,9 @@ Audience: agents. Status: current.
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (`bin/gen-doc-index.py`).
 
-- **Generated:** 2026-11-01T10:36:16Z
+- **Generated:** 2026-11-12T01:28:53Z
 - **Files:** 75
-- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `e80af8ec7ecf9ded20954f56d49c3c90075a1b0f00a45d58e394da430ec215b7`
+- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `018c24f322bd27a5f1c2bf28838dba4fd576da51e57d6569b40364c772692f02`
 
 | File | Lines | Bytes | SHA-256 |
 |---|---|---|---|
@@ -16,7 +16,7 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `CONTRIBUTING.md` | 60 | 2842 | `953c9d8f8dced59cb5f460b3b2adf522fd791f0c51bc16252eaab35edef8a02b` |
 | `PRODUCT.md` | 114 | 11642 | `b277ced56835e975bf4159661593a43952550b8cbf153abfc11aaca2d67f0a91` |
 | `README.md` | 142 | 8323 | `7db61c7076b66cc627ce8769e0bb2b0932b9259d82778ed306871349fc4cb981` |
-| `SPEC.md` | 468 | 36911 | `890eda5a19aeaab567add78f77a6d91d1cd3f6ad78f8abaa3305a1fa44a65465` |
+| `SPEC.md` | 475 | 37435 | `01ba895dde7c5431e44e66cd2ca0c606968c78e3f6c677c9eea4769b3442d58a` |
 | `WHITEPAPER.md` | 123 | 7684 | `febba8ec4a88c9f2a8e4222039a9fab007eafe81c9f935a3b6ef731d292c912d` |
 | `benchmark/DESIGN.md` | 83 | 5594 | `96c0f824a36bf6fb4b7b2763cfba95499d1933680c6c7a8d4fcd3ce7df47e443` |
 | `benchmark/GOALS.md` | 44 | 3053 | `d138b4cdafe719702adf55d27e8f98628e862538fd399cf3733453e07fbaf29f` |
@@ -72,7 +72,7 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `docs/skills/relay-gate-core/SKILL.md` | 125 | 17366 | `10b212690f43852d573e83a67992a42d66da0433414485449424a72ea4e82b77` |
 | `docs/skills/relay-integration/SKILL.md` | 250 | 19454 | `67602443d4834ab66f090df5c2711f3983a741aa6190848e2311883a0f93302e` |
 | `docs/skills/relay-judge/SKILL.md` | 136 | 10357 | `6425ae13fe4a13953a4652afe81af0de45868b7588693e4113c1672603de6f38` |
-| `docs/skills/relay-langgraph/SKILL.md` | 23 | 965 | `3d3361fa63826f4b2e5c16aba3b50d0223c5b92e76523ef01a70a9b9e974cbdf` |
+| `docs/skills/relay-langgraph/SKILL.md` | 25 | 1563 | `7ae1c471260f3b2ff575622c8d913a115944dad6c65c4e3bac88f7a60b97f84b` |
 | `docs/skills/relay-maintenance/SKILL.md` | 134 | 11001 | `714ddde66e3e7046c10be48c03554cb10cae966404426a9b34365ae20bd93ad1` |
 | `docs/skills/relay-ownership/SKILL.md` | 109 | 9430 | `7be97798d0e82dae9f80c95a86caf4f9aa9ed87fdf96c41166719fb2be025967` |
 | `docs/skills/relay-planning/SKILL.md` | 100 | 8782 | `9a3461e0b7d46018a2e5e572aae70da7009dabf7d6f5ce822766b03255fc2fea` |

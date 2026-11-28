@@ -1,0 +1,413 @@
+{
+  "qualification": "Valid paired product RED to GREEN with the same awaited-projector and join-before-ACK fixture. No ledger closure performed.",
+  "expectedFixtureCommit": "1a1b4058b596300c0d5501c3b52fd1ff91a6ee26",
+  "runs": {
+    "baseline": {
+      "id": 43388260391,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43388260391",
+      "snapshot": "4a664082807a41d4697d4fa74bb8bb381849b108",
+      "snapshotParents": [
+        {
+          "oid": "a4da0b96f590b32e7825f7ec7fe317fb945bcabc"
+        }
+      ],
+      "conclusion": "failure",
+      "request": {
+        "package": "core",
+        "packageSelector": "packages/core",
+        "directory": "packages/core",
+        "runner": "bun",
+        "args": [
+          "./test/move-session.test.ts",
+          "--timeout",
+          "120000"
+        ],
+        "env": {}
+      },
+      "jobs": [
+        {
+          "os": "linux",
+          "id": 131761752751,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43388260391/job/131761752751",
+          "conclusion": "failure",
+          "pass": 3,
+          "fail": 3,
+          "assertions": 28,
+          "rawPath": "root-l9-joined-independent-baseline-linux.raw.log",
+          "rawSHA256": "b3530a5dd78f55563af9106143060de291a67ae25f7dbfc587a88cc3faaec46a",
+          "markers": [
+            {
+              "line": 870,
+              "text": "2026-11-13T07:48:56.9768207Z (fail) MoveSession > copies session changes to another project directory and retains the source [288.14ms]"
+            },
+            {
+              "line": 871,
+              "text": "2026-11-13T07:48:57.1077672Z (pass) MoveSession > moves within a checkout without transferring existing changes [133.86ms]"
+            },
+            {
+              "line": 914,
+              "text": "2026-11-13T07:48:57.3237160Z (fail) MoveSession > copies nested session changes and retains source and unrelated files [210.73ms]"
+            },
+            {
+              "line": 917,
+              "text": "2026-11-13T07:48:57.5808587Z 317 |       expect(observed).toEqual({ projections: 1, acknowledged: true })"
+            },
+            {
+              "line": 920,
+              "text": "2026-11-13T07:48:57.5811753Z 320 |       expect(Object.fromEntries(retained)).toEqual(MoveSessionWriter.contents)"
+            },
+            {
+              "line": 938,
+              "text": "2026-11-13T07:48:57.5819051Z 317 |       expect(observed).toEqual({ projections: 1, acknowledged: true })"
+            },
+            {
+              "line": 941,
+              "text": "2026-11-13T07:48:57.5822836Z 320 |       expect(Object.fromEntries(retained)).toEqual(MoveSessionWriter.contents)"
+            },
+            {
+              "line": 976,
+              "text": "2026-11-13T07:48:57.5837001Z (fail) MoveSession > retains every independent writer byte acknowledged before Session Moved commits, including an already-open descriptor [262.29ms]"
+            },
+            {
+              "line": 1006,
+              "text": "2026-11-13T07:48:57.7066525Z (pass) MoveSession > moves only the Session and retains source changes when moveChanges is undefined [125.04ms]"
+            },
+            {
+              "line": 1007,
+              "text": "2026-11-13T07:48:57.8284674Z (pass) MoveSession > moves only the Session and retains source changes when moveChanges is false [122.56ms]"
+            },
+            {
+              "line": 1008,
+              "text": "2026-11-13T07:48:57.8301547Z omni positive control [2a1617acb3e5bc7282f79888bc578a5c]: pass (declared: 6 test(s) in test/move-session.test.ts); 136 omni spawn(s), 0 delegated."
+            },
+            {
+              "line": 1013,
+              "text": "2026-11-13T07:48:57.8322223Z Ran 6 tests across 1 file. [2.31s]"
+            }
+          ]
+        },
+        {
+          "os": "windows",
+          "id": 131761753061,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43388260391/job/131761753061",
+          "conclusion": "failure",
+          "pass": 3,
+          "fail": 3,
+          "assertions": 28,
+          "rawPath": "root-l9-joined-independent-baseline-windows.raw.log",
+          "rawSHA256": "f37dc2b67860d42bdb0c017c230dd9633eb81ddb6954d348f26742e805640f61",
+          "markers": [
+            {
+              "line": 881,
+              "text": "2026-11-13T07:53:14.9990444Z (fail) MoveSession > copies session changes to another project directory and retains the source [1994.87ms]"
+            },
+            {
+              "line": 882,
+              "text": "2026-11-13T07:53:16.0914347Z (pass) MoveSession > moves within a checkout without transferring existing changes [1093.36ms]"
+            },
+            {
+              "line": 925,
+              "text": "2026-11-13T07:53:18.0733299Z (fail) MoveSession > copies nested session changes and retains source and unrelated files [1980.29ms]"
+            },
+            {
+              "line": 929,
+              "text": "2026-11-13T07:53:20.2514757Z 317 |       expect(observed).toEqual({ projections: 1, acknowledged: true })"
+            },
+            {
+              "line": 932,
+              "text": "2026-11-13T07:53:20.2517967Z 320 |       expect(Object.fromEntries(retained)).toEqual(MoveSessionWriter.contents)"
+            },
+            {
+              "line": 975,
+              "text": "2026-11-13T07:53:20.2531676Z 317 |       expect(observed).toEqual({ projections: 1, acknowledged: true })"
+            },
+            {
+              "line": 978,
+              "text": "2026-11-13T07:53:20.2536680Z 320 |       expect(Object.fromEntries(retained)).toEqual(MoveSessionWriter.contents)"
+            },
+            {
+              "line": 1016,
+              "text": "2026-11-13T07:53:20.2550782Z (fail) MoveSession > retains every independent writer byte acknowledged before Session Moved commits, including an already-open descriptor [2179.72ms]"
+            },
+            {
+              "line": 1017,
+              "text": "2026-11-13T07:53:21.3943786Z (pass) MoveSession > moves only the Session and retains source changes when moveChanges is undefined [1142.58ms]"
+            },
+            {
+              "line": 1018,
+              "text": "2026-11-13T07:53:22.5359064Z (pass) MoveSession > moves only the Session and retains source changes when moveChanges is false [1141.60ms]"
+            },
+            {
+              "line": 1019,
+              "text": "2026-11-13T07:53:22.5372833Z omni positive control [da20abec82e1061dda64d5b883b2cb47]: pass (declared: 6 test(s) in test/move-session.test.ts); 136 omni spawn(s), 0 delegated."
+            },
+            {
+              "line": 1024,
+              "text": "2026-11-13T07:53:22.5379905Z Ran 6 tests across 1 file. [11.98s]"
+            }
+          ]
+        }
+      ]
+    },
+    "final": {
+      "id": 43388297401,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43388297401",
+      "snapshot": "768f04b5343daa453b8a9c4ab9a6e90a13a74fae",
+      "snapshotParents": [
+        {
+          "oid": "6a0d01d332fa0ef2583391a6ddfa6b7efbebc3d1"
+        }
+      ],
+      "conclusion": "success",
+      "request": {
+        "package": "core",
+        "packageSelector": "packages/core",
+        "directory": "packages/core",
+        "runner": "bun",
+        "args": [
+          "./test/move-session.test.ts",
+          "--timeout",
+          "120000"
+        ],
+        "env": {}
+      },
+      "jobs": [
+        {
+          "os": "linux",
+          "id": 131761872961,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43388297401/job/131761872961",
+          "conclusion": "success",
+          "pass": 6,
+          "fail": 0,
+          "assertions": 42,
+          "rawPath": "root-l9-joined-independent-final-linux.raw.log",
+          "rawSHA256": "b70db7468d8da870918cc1d4f243a339eedc336e45de4a50ac464f0738dd1b47",
+          "markers": [
+            {
+              "line": 828,
+              "text": "2026-11-13T07:49:21.8484739Z (pass) MoveSession > copies session changes to another project directory and retains the source [308.43ms]"
+            },
+            {
+              "line": 829,
+              "text": "2026-11-13T07:49:21.9969855Z (pass) MoveSession > moves within a checkout without transferring existing changes [148.55ms]"
+            },
+            {
+              "line": 830,
+              "text": "2026-11-13T07:49:22.2024954Z (pass) MoveSession > copies nested session changes and retains source and unrelated files [205.49ms]"
+            },
+            {
+              "line": 831,
+              "text": "2026-11-13T07:49:22.4625387Z (pass) MoveSession > retains every independent writer byte acknowledged before Session Moved commits, including an already-open descriptor [259.92ms]"
+            },
+            {
+              "line": 832,
+              "text": "2026-11-13T07:49:22.6054021Z (pass) MoveSession > moves only the Session and retains source changes when moveChanges is undefined [142.88ms]"
+            },
+            {
+              "line": 833,
+              "text": "2026-11-13T07:49:22.7317399Z (pass) MoveSession > moves only the Session and retains source changes when moveChanges is false [126.39ms]"
+            },
+            {
+              "line": 835,
+              "text": "2026-11-13T07:49:22.7326690Z omni positive control [3325935d566fa442027a15a542c04e06]: pass (declared: 6 test(s) in test/move-session.test.ts); 121 omni spawn(s), 0 delegated."
+            },
+            {
+              "line": 839,
+              "text": "2026-11-13T07:49:22.7329044Z Ran 6 tests across 1 file. [2.35s]"
+            }
+          ]
+        },
+        {
+          "os": "windows",
+          "id": 131761872693,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43388297401/job/131761872693",
+          "conclusion": "success",
+          "pass": 6,
+          "fail": 0,
+          "assertions": 42,
+          "rawPath": "root-l9-joined-independent-final-windows.raw.log",
+          "rawSHA256": "6e64836f8bb96cdadc34c03f47d20253019f0122ae0d2a77f8423b7d563c3cdd",
+          "markers": [
+            {
+              "line": 837,
+              "text": "2026-11-13T07:53:17.0887755Z (pass) MoveSession > copies session changes to another project directory and retains the source [1748.72ms]"
+            },
+            {
+              "line": 838,
+              "text": "2026-11-13T07:53:18.1728913Z (pass) MoveSession > moves within a checkout without transferring existing changes [1084.16ms]"
+            },
+            {
+              "line": 839,
+              "text": "2026-11-13T07:53:20.0795715Z (pass) MoveSession > copies nested session changes and retains source and unrelated files [1906.63ms]"
+            },
+            {
+              "line": 840,
+              "text": "2026-11-13T07:53:22.2306534Z (pass) MoveSession > retains every independent writer byte acknowledged before Session Moved commits, including an already-open descriptor [2151.05ms]"
+            },
+            {
+              "line": 841,
+              "text": "2026-11-13T07:53:23.3745199Z (pass) MoveSession > moves only the Session and retains source changes when moveChanges is undefined [1143.47ms]"
+            },
+            {
+              "line": 842,
+              "text": "2026-11-13T07:53:24.4765079Z (pass) MoveSession > moves only the Session and retains source changes when moveChanges is false [1102.30ms]"
+            },
+            {
+              "line": 843,
+              "text": "2026-11-13T07:53:24.4776594Z omni positive control [fcd7a2a035bd6737a4bbeec6e7f1cf9e]: pass (declared: 6 test(s) in test/move-session.test.ts); 121 omni spawn(s), 0 delegated."
+            },
+            {
+              "line": 848,
+              "text": "2026-11-13T07:53:24.4784100Z Ran 6 tests across 1 file. [11.54s]"
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "bindings": [
+    {
+      "path": "packages/core/src/control-plane/move-session.ts",
+      "baseline": {
+        "gitBlob": "49fe728d6956ca1555a763548e9458ea5f3938dc",
+        "sha256": "302fd923821d8f2d4124b8e4cca38485abe86c3f3c74e2f0b9bc420b56ec2518",
+        "bytes": 5381
+      },
+      "final": {
+        "gitBlob": "986987d1dec8bdc99c86a2885728a14fad4a2b9f",
+        "sha256": "6683fc3897f752cc314f1b666e575eb97d7d150565811bfc278b5daf9ad89201",
+        "bytes": 4681
+      },
+      "same": false
+    },
+    {
+      "path": "packages/core/test/move-session.test.ts",
+      "baseline": {
+        "gitBlob": "e9a99d3ee611055bdb207a3b7a6148f72a64c7ca",
+        "sha256": "47959652415afd13726b0d759ed7805ede5b0831d278174bf53a9fa887d045d9",
+        "bytes": 19100
+      },
+      "final": {
+        "gitBlob": "e9a99d3ee611055bdb207a3b7a6148f72a64c7ca",
+        "sha256": "47959652415afd13726b0d759ed7805ede5b0831d278174bf53a9fa887d045d9",
+        "bytes": 19100
+      },
+      "same": true
+    },
+    {
+      "path": "packages/core/test/fixture/move-session-writer.ts",
+      "baseline": {
+        "gitBlob": "fe9bfcf15a3760351c76af076577c739dc19cb9c",
+        "sha256": "21bf73b1607da3b53ec46124bbe03cae9e518e6db76704c08a02b35a9ca76c27",
+        "bytes": 5941
+      },
+      "final": {
+        "gitBlob": "fe9bfcf15a3760351c76af076577c739dc19cb9c",
+        "sha256": "21bf73b1607da3b53ec46124bbe03cae9e518e6db76704c08a02b35a9ca76c27",
+        "bytes": 5941
+      },
+      "same": true
+    }
+  ],
+  "coreRuntimeTreeComparison": {
+    "baselineCount": 993,
+    "finalCount": 993,
+    "changed": [
+      "control-plane/move-session.ts"
+    ],
+    "unchangedRuntimeBlobs": 992,
+    "treeManifests": [
+      {
+        "path": "root-l9-final-independent-baseline-core-runtime-tree.json",
+        "sha256": "581b57ecee707b3707fe974d2d7766a1af9f6d0e94cee387f8f8f1cdea0d636c"
+      },
+      {
+        "path": "root-l9-final-independent-final-core-runtime-tree.json",
+        "sha256": "76766d8196931ccec68c122d4dad82e755bbe285e115e19143bce8f732bc7797"
+      }
+    ]
+  },
+  "causalOrdering": {
+    "source": "Exact shared test uses events.project(SessionEvent.Moved), filters Session/!replay/active. Real projector executes in commitDurableEvent SQL transaction and is awaited before commit/publication can return. Source move captures/applies before publish and old discard follows publish.",
+    "child": "Exact shared fixture first joins AppProcess child (20s bound) and requireSuccess, then reads its actual atomically published ACK with pid/writes5/descriptorClosedtrue. No ACK watcher remains. Actor writes five source paths, syncs/closes preopened descriptor, publishes ACK and exits.",
+    "baselineFailure": "Both OS fail source-byte equality at test line320 after projections1+acknowledgedtrue line317. Linux writer262.29ms; Windows2179.72ms. Not timeout, setup, or ACK/projection failure.",
+    "final": "All6 tests/42assertions pass on each OS, including subsequent captured destination, late-file absence, staged index and SQL placement controls.",
+    "historical": "Previous listen-based or ACK-watch race attempts remain failed/historical evidence only; not used as this causal baseline."
+  },
+  "http": {
+    "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43382931356",
+    "snapshot": "6feae43dd8159bf69b5ff7ee00cccc6fcf1cade8",
+    "conclusion": "success",
+    "sameFixedMoveSource": {
+      "gitBlob": "986987d1dec8bdc99c86a2885728a14fad4a2b9f",
+      "sha256": "6683fc3897f752cc314f1b666e575eb97d7d150565811bfc278b5daf9ad89201",
+      "bytes": 4681
+    },
+    "test": {
+      "gitBlob": "a3a586992b3bb895cfa5467b629c71f3ad6fc6f1",
+      "sha256": "4ccddad6fef7f30971ac194a40a37b0fc2bcfd17013b6d11bcc0f47c5dae7b29",
+      "bytes": 7977
+    },
+    "jobs": [
+      {
+        "os": "linux",
+        "id": 131744683558,
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43382931356/job/131744683558",
+        "conclusion": "success",
+        "pass": 3,
+        "fail": 0,
+        "assertions": 16,
+        "rawPath": "root-l9-final-independent-http-linux.raw.log",
+        "rawSHA256": "58ec12608049f45412740d53ec6b6877cb6dbd4a92bd451be45ec2a549095d43"
+      },
+      {
+        "os": "windows",
+        "id": 131744684028,
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43382931356/job/131744684028",
+        "conclusion": "success",
+        "pass": 3,
+        "fail": 0,
+        "assertions": 16,
+        "rawPath": "root-l9-final-independent-http-windows.raw.log",
+        "rawSHA256": "a3eb6876362c29ca8780a14cb472d0857e6954f98cee9037db168568350513cc"
+      }
+    ]
+  },
+  "staticReceipts": [
+    {
+      "package": "core",
+      "exit": 0,
+      "receiptPath": "root-l9-final-core-type.exit",
+      "logPath": "root-l9-final-core-type.log",
+      "logSHA256": "368609d37ae0ea32fe1c45cef55339149f0b5238b9e3bc8cae19f9d04765179d",
+      "note": "Existing Root receipt read; not rerun by independent reviewer."
+    },
+    {
+      "package": "protocol",
+      "exit": 0,
+      "receiptPath": "root-l9-final-protocol-type.exit",
+      "logPath": "root-l9-final-protocol-type.log",
+      "logSHA256": "368609d37ae0ea32fe1c45cef55339149f0b5238b9e3bc8cae19f9d04765179d",
+      "note": "Existing Root receipt read; not rerun by independent reviewer."
+    },
+    {
+      "package": "server",
+      "exit": 0,
+      "receiptPath": "root-l9-final-server-type.exit",
+      "logPath": "root-l9-final-server-type.log",
+      "logSHA256": "368609d37ae0ea32fe1c45cef55339149f0b5238b9e3bc8cae19f9d04765179d",
+      "note": "Existing Root receipt read; not rerun by independent reviewer."
+    },
+    {
+      "package": "tui",
+      "exit": 0,
+      "receiptPath": "root-l9-final-tui-type.exit",
+      "logPath": "root-l9-final-tui-type.log",
+      "logSHA256": "368609d37ae0ea32fe1c45cef55339149f0b5238b9e3bc8cae19f9d04765179d",
+      "note": "Existing Root receipt read; not rerun by independent reviewer."
+    }
+  ],
+  "scope": "Read-only GitHub metadata/log/source verification and /tmp artifacts. No new tests, uploads, source edits, or typechecks. Root owns ledger and official generation qualification43382932112; no regeneration performed here.",
+  "rootAssessment": "L9 closed for preserving source files/index by removing automatic discard. Actual paired projector/child-exit/ACK proof qualifies the old loss and corrected retention. No atomic capture or destination transaction guarantee.",
+  "clientGeneration": "l9-client-generation-validation.json"
+}

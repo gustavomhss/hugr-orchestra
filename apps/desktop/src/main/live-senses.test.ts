@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import type { LiveDeliveryManager } from "./live-delivery-contract"
 import { mockElectron } from "./electron-mock.fixture"
 
 mockElectron()
@@ -30,9 +31,32 @@ test.each(["permission", "meeting"])("cancels senses held at %s without starting
       return new Response(null, { status: 204 })
     },
   })
+  // This existing M11 unit boundary owns only the held remote acquisition/cancellation leg.
+  // The separate Node integration suite exercises the actual SQLite Store and delivery manager.
+  const delivery: LiveDeliveryManager = {
+    async start(input, signal) {
+      const response = await fetch(new URL("/api/meeting/start", server.url), {
+        method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(input),
+      })
+      const body = await response.json() as { data: { id: string } }
+      if (signal.aborted) {
+        await fetch(new URL("/api/meeting/stop", server.url), {
+          method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ meetingID: body.data.id }),
+        })
+        signal.throwIfAborted()
+      }
+      throw new Error("This unit fixture must cancel acquisition before exposing a producer")
+    },
+    snapshot: () => ({ state: "ready", items: [], unconfirmedStarts: [] }),
+    retry: () => ({ ok: false, reason: "closed" }), finish: () => ({ ok: false, reason: "closed" }),
+    discard: async () => ({ ok: false, reason: "closed" }),
+    export() { throw new Error("No export in the cancellation unit fixture") },
+    shutdown: async () => undefined,
+  }
   const attempt = new AbortController()
   const starting = startSenses({
     signal: attempt.signal,
+    delivery,
     server: { url: `http://127.0.0.1:${server.port}` },
     sessionID: "ses_pending",
     title: "Pending",

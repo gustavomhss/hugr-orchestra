@@ -8,6 +8,8 @@ import type { Tab } from "@/context/tabs"
 import type { PromptScope } from "@/context/prompt-state"
 import type { ServerScope } from "@/utils/server-scope"
 import type { SubagentModelPolicy } from "@/components/subagent-model-rules"
+import type { AdmissionOptions } from "@/server-api"
+import { registerSessionModelExecution } from "@/utils/session-model-execution"
 
 const servers = { A: "http://a.invalid", B: "http://b.invalid" }
 const [route, setRoute] = createStore({ server: "A" as "A" | "B", draftId: undefined as string | undefined, id: undefined as string | undefined })
@@ -123,7 +125,8 @@ beforeAll(async () => {
                 time: { created: 1, updated: 1 },
               }
             },
-            prompt: async (input: unknown) => {
+            prompt: async (input: unknown, options?: AdmissionOptions) => {
+              options?.beforeAdmission?.()
               requests.push({ server, operation: "prompt", input })
             },
           },
@@ -131,6 +134,12 @@ beforeAll(async () => {
       },
     ]),
   )
+  // Deliberate fake adapter contract only; the actual admission/ownership logic remains production code.
+  Object.values(clients).forEach((client) => registerSessionModelExecution(client.api.session, async (input) => {
+    if (!input.model) throw new Error("Fake admission-owner adapter requires an exact candidate")
+    return { location: { directory, project: { id: "project", directory } },
+      data: { models: [], selection: { status: "ready", ref: input.model, engine: "orchestra" } } }
+  }))
   const contexts = Object.fromEntries(
     (["A", "B"] as const).map((server) => [
       server,
@@ -168,10 +177,24 @@ beforeAll(async () => {
       child: () => [{ session: [] }, () => undefined],
     }),
   }))
+  const currentModel = () => ({ id: "model", provider: { id: "provider" } })
+  const currentVariant = () => undefined
   mock.module("@/context/local", () => ({
     useLocal: () => ({
       agent: { current: () => ({ id: "maestro", name: "Maestro" }) },
-      model: { current: () => ({ id: "model", provider: { id: "provider" } }), variant: { current: () => undefined } },
+      model: { current: currentModel, variant: { current: currentVariant },
+        intent: () => {
+          const current = currentModel()
+          return { model: current && { providerID: current.provider.id, modelID: current.id }, variant: currentVariant() }
+        },
+        execution: {
+          context: () => "controlled-admission-owner-metadata",
+          input: () => {
+            const current = currentModel()
+            return { model: current && { providerID: current.provider.id, id: current.id, variant: currentVariant() ?? undefined } }
+          },
+        },
+      },
       session: { promote: (directory: string, sessionID: string) => localPromotions.push({ directory, sessionID }) },
     }),
   }))

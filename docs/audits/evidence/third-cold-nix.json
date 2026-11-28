@@ -1,0 +1,19 @@
+{
+  "version": 1,
+  "status": "separate Nix workflow failed from hosted ARM64 runner capacity",
+  "run": "43479899493",
+  "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43479899493",
+  "event": "pull_request",
+  "head": "c9ffb56cb19050f65946b54ff9c5f799d0e6becb",
+  "conclusion": "failure",
+  "scope": "Separate auto-triggered nix-toolchain workflow; not part of the70-job test aggregate.",
+  "nativeJobs": [{"id": 132079463603, "name": "native (aarch64-linux)", "conclusion": "success"}, {"id": 132079463606, "name": "native (aarch64-darwin)", "conclusion": "cancelled"}, {"id": 132079463664, "name": "native (x86_64-linux)", "conclusion": "success"}, {"id": 132079463730, "name": "native (x86_64-darwin)", "conclusion": "success"}],
+  "nativeSummary": {"success": 3, "cancelled": 1, "allFourQualified": false},
+  "cancelledJob": {"id": "132079463606", "system": "aarch64-darwin", "label": "macos-15", "runnerName": "", "steps": [], "started": "2026-11-13T18:20:27Z", "completed": "2026-11-13T18:35:28Z", "classification": "Infrastructure capacity failure before execution; no code/test assertion failure or evidenced manual cancellation.", "failureAnnotation": "The job was not acquired by Runner of type hosted even after multiple attempts", "capacityAnnotation": "Due to capacity constraints, jobs targeting macOS arm64 runners may experience longer queue times.", "logs": "HTTP404/BlobNotFound; no runner log exists in the observed API response."},
+  "completion": {"job": "132087875432", "conclusion": "failure", "step": "Independent current-run completion and captured-metadata teeth", "error": "TOOLCHAIN_GATE_FAILURE:NATIVE_JOB_FAILED_OR_INCOMPLETE:native (aarch64-darwin)", "meaning": "Completion correctly refused an incomplete native matrix."},
+  "checkout": {"merge": "460fe93cda3979add5aa4727e61a0258cc7bbe3f", "headIncluded": "c9ffb56cb19050f65946b54ff9c5f799d0e6becb", "baseIncluded": "5804b4f794ba31f49890b79565cff62b65e37725", "limit": "Actual completion checkout is the PR merge containing c9ff, not an older head."},
+  "workflow": {"path": ".github/workflows/nix-toolchain.yml", "automaticPRTypes": ["opened", "reopened", "synchronize", "labeled"], "pathFilters": ["flake.nix", "flake.lock", "package.json", "apps/desktop/package.json", "nix/**", ".github/workflows/nix-toolchain.yml"], "pushBranch": "nix-closure", "workflowDispatch": true, "cancelInProgress": false},
+  "visibleRequiredness": {"classicDevProtection": "HTTP404 branch not protected", "rulesetID": 25919324, "ruleset": "dev-safety", "ref": "refs/heads/dev", "enforcement": "active", "ruleTypes": ["non_fast_forward", "deletion"], "requiredStatusOrWorkflowRules": [], "limit": "Only visible repository configuration inspected; no claim beyond the returned rules."},
+  "receipts": {"completionRawSHA256": "a607eea9f7be9da3a0aea41f633898ada67942d620ff2b2ade262a9f428b76e4", "completionRawPath": "/tmp/root-third-nix-132087875432.raw.log", "annotationsPath": "/tmp/root-third-nix-cancelled-annotations.json", "rulesetPath": "/tmp/root-third-nix-active-ruleset.json", "completionArtifact": "14065763548"},
+  "limits": ["No complete Nix/native distribution qualification asserted.", "Do not combine this failure or cancellation with the separate70-job test aggregate.", "No edit/retry/cancel/dispatch/type/build performed during this read-only diagnosis."]
+}

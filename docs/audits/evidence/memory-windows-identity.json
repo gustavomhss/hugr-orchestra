@@ -1,0 +1,94 @@
+{
+  "version": 1,
+  "scope": "Hosted qualification of L11 native process/receipt tests and physical Git-root CONTROL identity; no production changes.",
+  "qualified": {
+    "runID": "43451586669",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43451586669",
+    "snapshot": "2eab946e9fd3bd5c1fab7626c38eb6eebcc70c8c",
+    "conclusion": "success",
+    "linux": {
+      "jobID": 131974833476,
+      "pass": 5,
+      "fail": 0,
+      "assertions": 143,
+      "omniDeclared": 5,
+      "omniSpawns": 39,
+      "delegated": 0
+    },
+    "windows": {
+      "jobID": 131974832805,
+      "pass": 5,
+      "fail": 0,
+      "assertions": 142,
+      "omniDeclared": 5,
+      "omniSpawns": 39,
+      "delegated": 0
+    }
+  },
+  "prior": {
+    "runID": "43450201152",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43450201152",
+    "snapshot": "7c994b9f28bec8835586210018659a685cb31472",
+    "conclusion": "failure",
+    "linux": {
+      "jobID": 131970044330,
+      "pass": 5,
+      "fail": 0,
+      "assertions": 138,
+      "omniSpawns": 39,
+      "delegated": 0
+    },
+    "windows": {
+      "jobID": 131970044714,
+      "pass": 4,
+      "fail": 1,
+      "assertions": 138,
+      "omniSpawns": 39,
+      "delegated": 0
+    },
+    "onlyFailure": "CONTROL line42 compared Git --show-toplevel long runneradmin path against fixture RUNNER~1 alias; actual scanner, actors, both races and both Git-conflict cases passed.",
+    "correctedAssumption": "Bun1.3.14 Windows realpathSync did not expand the 8.3 RUNNER~1 alias in this hosted run. Slash normalization alone was insufficient."
+  },
+  "identityOracle": {
+    "integratedCommit": "7e2fc3e72ca635b8569a8f5a455c230607581da3",
+    "comparedRoot": "4ef69e493f8e61fb91aed293ec1f2de3654f3e0a",
+    "checks": [
+      "Both paths are directories using statSync({bigint:true}).",
+      "Fixture inode is strictly greater than zero.",
+      "Actual Git-root dev and ino each equal the fixture dev and ino.",
+      "Original exact Git-root text equality remains outside Windows."
+    ],
+    "actualHostedControlPassedBoth": true,
+    "sourceVectors": [
+      {
+        "path": "packages/core/test/memory-decision-process.test.ts",
+        "gitBlob": "51ce8bc2d7ef3decda11489ab015fe194b8fd695",
+        "sha256": "37c4afe2217c572362c7777a619507994bba8f2d421ca069792dd97ce034e60f",
+        "matchesRoot": true
+      },
+      {
+        "path": "packages/core/test/fixture/memory-decision-process.ts",
+        "gitBlob": "c19399e54d9e6103ff5ab0657e9e6ce543beb200",
+        "sha256": "1107c10c15389029dea4a14f9bff274e784c53d4da27bb8daae5c7098288f7fd",
+        "matchesRoot": true
+      },
+      {
+        "path": "packages/core/test/fixture/memory-decision-scanner.ts",
+        "gitBlob": "d74118f4a27716ffc833c06430f24c50bb7c266c",
+        "sha256": "4974b68dc2da6167cd2fada16fdf496f2e5d5357b18fa50e4afd6d2e781263e0",
+        "matchesRoot": true
+      }
+    ]
+  },
+  "preserved": [
+    "Actual Git execution and exitCode0, actor PID/result, scanner marker and reopened Memory/review checks.",
+    "Both concurrent receipt races and root/module Git-conflict no-activation assertions.",
+    "Existing timeouts, arguments and production implementation."
+  ],
+  "limits": [
+    "Only packages/core/test/memory-decision-process.test.ts: five cases per OS; not a full Core, Atlas or epic gate.",
+    "Inode identity was required and passed on these hosted runners; no universal Windows file-ID stability claim.",
+    "Prior failed run remains failed; later success does not rewrite baseline evidence.",
+    "No local tests, types, build, generation, dispatch or production edits."
+  ]
+}

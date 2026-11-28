@@ -14,7 +14,7 @@ import { SkillTool } from "@orchestra/core/tool/skill"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
 
-const urls = new Map<string, AbsolutePath[]>()
+const urls = new Map<string, readonly SkillDiscovery.RemoteSkill[]>()
 let pulls = 0
 const discovery = Layer.succeed(
   SkillDiscovery.Service,
@@ -281,7 +281,13 @@ describe("SkillV2", () => {
             await write(tmp.path, "deploy", "Deploy production")
           })
           pulls = 0
-          urls.set("https://example.test/skills/", [AbsolutePath.make(tmp.path)])
+          urls.set("https://example.test/skills/", [{
+            directory: AbsolutePath.make(tmp.path),
+            markdown: [{
+              filepath: path.join(tmp.path, "deploy", "SKILL.md"),
+              content: yield* Effect.promise(() => fs.readFile(path.join(tmp.path, "deploy", "SKILL.md"), "utf8")),
+            }],
+          }])
 
           const agents = yield* AgentV2.Service
           yield* agents.transform((editor) =>

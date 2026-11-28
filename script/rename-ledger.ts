@@ -204,6 +204,12 @@ export const protectedStrings: Protected[] = [
     reason: "reference to the frozen upstream OpenAPI fixture, whose basename is kept",
   },
 
+  {
+    pattern: /"packages\/codemode\/test\/fixtures\/opencode-v2-openapi\.json": "934b22e389f4ae86039967dd8134d750780b025c"/g,
+    paths: /^docs\/audits\/evidence\/m13-and-native-component-gates\.json$/,
+    reason: "historical component-gate receipt binds the frozen upstream fixture path to its immutable Git blob",
+  },
+
   // Unrelated words
   {
     pattern: /\bopenCode\b/g,

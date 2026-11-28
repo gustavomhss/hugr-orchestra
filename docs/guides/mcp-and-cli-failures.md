@@ -6,9 +6,25 @@
 - **A local server that exits or crashes** is `failed` with `Connection closed` (or the connect error), followed by `Last stderr lines:` and the last 20 lines it wrote. Use them to find why it stopped.
 - **`orchestra mcp logout <server>`** removes the stored OAuth credentials, disconnects the server and sets its status to `needs_auth`. Run `orchestra mcp auth <server>` to sign in again. Servers without OAuth are not changed.
 
-## Ambiguous tool names
+## OAuth authority changes
 
-If distinct MCP server/tool pairs produce the same canonical tool name, Orchestra refuses every ambiguous owner and names the conflicting pairs in the error. Rename the configured server or tool so the names are distinct, then reconnect. Existing permission keys are preserved; connection order does not choose a winner.
+Each remote server's stored login is bound to its resource URL and the authorization server discovered during sign-in. Older logins without that binding, or a changed authorization server, show `needs_auth`. Authenticate that server again; other servers keep their logins.
+
+Starting a new sign-in disconnects the server and clears its previous credentials. Cancelling or failing that attempt leaves it needing authentication. An earlier browser callback cannot overwrite a newer sign-in.
+
+A configured `oauth.client_id` is also bound to its authorization server. To change that ID or server, run `orchestra mcp logout <server>` and then authenticate again. Editing project config or merely starting another sign-in does not approve the change. The configured client secret stays in config and is not copied into the stored login file.
+
+## MCP tool identity failures
+
+A server can stay connected while some tools cannot be registered. Its accepted tools and resources remain available; refused tools are omitted from the catalog. Orchestra reports a bounded `MCP tool registration refused` warning with the server and refused count.
+
+MCP identities use a private random key stored as a sealed `mcp-tool-identity.key` in Orchestra's data directory. This key is independent of OAuth tokens and is encrypted using the existing credential key. An empty, corrupt, linked or unreadable identity file is refused and left untouched. Restore the matching identity file and credential key rather than replacing a damaged record with guessed contents.
+
+If the identity file is lost, a fresh key produces new tool identifiers and existing exact approvals no longer match. Back up and restore it with the matching credential keychain entry or credential key file. On systems using the credential-file fallback, that existing fallback remains the protection boundary. Windows inherits the data directory's existing ACL; POSIX mode bits are not a new Windows ACL guarantee.
+
+## Overlapping MCP tool names
+
+Different MCP server/tool pairs use separate opaque identifiers even when their display labels or sanitized names coincide. Execution and approvals use the captured authority and effective identifier; a legacy alias cannot choose another server's tool. Configuration changes that change authority require a newly authorized identity rather than transferring an old approval.
 
 ## OAuth callback port
 

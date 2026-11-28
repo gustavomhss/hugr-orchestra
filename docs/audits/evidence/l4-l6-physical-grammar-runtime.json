@@ -1,0 +1,925 @@
+{
+  "version": 1,
+  "status": "Independent scoped runtime evidence; no finding ledger closure",
+  "reference": {
+    "repository": "gustavomhss/hugr-orchestra",
+    "rootCommit": "3ed31aaac4edbfbd401040493c23c491c9e68c1b",
+    "productionFiles": 350,
+    "productionVectorSHA256": "6632ab55b0acacd61c549b48485a7f8515c5dc854a0a7971d144ae22bb8d4d10",
+    "vectorDefinition": "SHA256 of compact JSON encoding of lexicographically sorted [repository-relative path, Git blob SHA] pairs; source scope excludes test directories."
+  },
+  "method": "Read-only GitHub run/job metadata and exact job logs, immutable snapshot trees, local Git blobs addressed by the snapshot tree, and static comparisons against the reference Root commit. No new test run, build, typecheck, generation, upload or source edit.",
+  "linux38": {
+    "snapshot": {
+      "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43386082292",
+      "snapshot": "11951c038c601585aad3aeaa1bdbeb8dce8b052c",
+      "headBranch": "ci-run-both-mwenoksi-11951c0",
+      "runConclusion": "failure",
+      "runStatus": "completed",
+      "request": {
+        "package": "core",
+        "packageSelector": "packages/core",
+        "directory": "packages/core",
+        "runner": "bun",
+        "args": [
+          "./test/knowledge-replay-binding.test.ts",
+          "./test/knowledge-replay-advisory.test.ts",
+          "./test/knowledge-replay-negation.test.ts",
+          "./test/knowledge-replay-vacuity.test.ts",
+          "./test/knowledge-writer-order.test.ts",
+          "--timeout",
+          "120000"
+        ],
+        "env": {}
+      },
+      "cleanupJobs": [
+        {
+          "job": 131756718920,
+          "conclusion": "success"
+        }
+      ],
+      "runtimeSourceBinding": {
+        "scope": "All tracked modules/atlas/packages/*/src blobs, including source assets",
+        "files": 350,
+        "snapshotVectorSHA256": "6632ab55b0acacd61c549b48485a7f8515c5dc854a0a7971d144ae22bb8d4d10",
+        "referenceVectorSHA256": "6632ab55b0acacd61c549b48485a7f8515c5dc854a0a7971d144ae22bb8d4d10",
+        "exactFiles": 350,
+        "differentPaths": [],
+        "allRuntimeSourceBytesExact": true
+      },
+      "testAndSetupBindings": [
+        {
+          "path": "packages/core/test/knowledge-replay-binding.test.ts",
+          "snapshotGitBlob": "827b99bbcc153855b6279c8ab3c19e2e94bb8415",
+          "referenceGitBlob": "827b99bbcc153855b6279c8ab3c19e2e94bb8415",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/knowledge-replay-advisory.test.ts",
+          "snapshotGitBlob": "ddcf3745752210331889c905726c6973c145637c",
+          "referenceGitBlob": "ddcf3745752210331889c905726c6973c145637c",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/knowledge-replay-negation.test.ts",
+          "snapshotGitBlob": "373b1942349919358b38c75be368f3ffb94f83d2",
+          "referenceGitBlob": "373b1942349919358b38c75be368f3ffb94f83d2",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/knowledge-replay-vacuity.test.ts",
+          "snapshotGitBlob": "5e41b1523a5880c2c3f6eb64baf4a356b930ec4c",
+          "referenceGitBlob": "5e41b1523a5880c2c3f6eb64baf4a356b930ec4c",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/knowledge-writer-order.test.ts",
+          "snapshotGitBlob": "38afa0a8d232290907e58fa3683b31287bc350c8",
+          "referenceGitBlob": "38afa0a8d232290907e58fa3683b31287bc350c8",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/fixture/knowledge-replay-binding.ts",
+          "snapshotGitBlob": "a175a518369090d55694cdf5f3db1fc3d2c054dc",
+          "referenceGitBlob": "3f36195547f6fcf88123028b5ebac3103f43aad9",
+          "exact": false,
+          "actorsByteExact": true,
+          "differenceScope": "Test setup loader/physical parser or grammar resolution; actor strings and parent oracle files unchanged."
+        },
+        {
+          "path": "packages/core/test/fixture/knowledge-replay-advisory.ts",
+          "snapshotGitBlob": "e297923f4101d579a7413dbaf799ca03401cfcc1",
+          "referenceGitBlob": "6a9ae85ec5e79c9627253772ded6876b7fe6bb78",
+          "exact": false,
+          "actorsByteExact": true,
+          "differenceScope": "Test setup loader/physical parser or grammar resolution; actor strings and parent oracle files unchanged."
+        },
+        {
+          "path": "packages/core/test/fixture/knowledge-replay-negation.ts",
+          "snapshotGitBlob": "91b8380a4bb6afaeb879ad2a2b64c45e84a47612",
+          "referenceGitBlob": "119159dfadc876d613779e4e4a8ebe9dbbfa2380",
+          "exact": false,
+          "actorsByteExact": true,
+          "differenceScope": "Test setup loader/physical parser or grammar resolution; actor strings and parent oracle files unchanged."
+        },
+        {
+          "path": "packages/core/test/fixture/knowledge-replay-vacuity.ts",
+          "snapshotGitBlob": "63969a50c36ddfee05e67eb06eacf4df2f96c0c7",
+          "referenceGitBlob": "d1ec4adc4d1057a2cf389f81d89a0b540b5f42e2",
+          "exact": false,
+          "actorsByteExact": true,
+          "differenceScope": "Test setup loader/physical parser or grammar resolution; actor strings and parent oracle files unchanged."
+        },
+        {
+          "path": "packages/core/test/fixture/knowledge-writer-order.ts",
+          "snapshotGitBlob": "ee80a2a84ae0aa2beaf2ca19a967e24ac5e45c08",
+          "referenceGitBlob": "ee80a2a84ae0aa2beaf2ca19a967e24ac5e45c08",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/fixture/atlas-parser.ts",
+          "snapshotGitBlob": null,
+          "referenceGitBlob": "f2227ed3755ce9ad25603337e9197f0d436e9f32",
+          "exact": false,
+          "differenceScope": "Test setup loader/physical parser or grammar resolution; actor strings and parent oracle files unchanged."
+        }
+      ],
+      "criticalSourceBindings": [
+        {
+          "path": "modules/atlas/packages/adapter-io/src/knowledge-replay.ts",
+          "snapshotGitBlob": "089dacaba519cd6011423192ce3955707c040ef4",
+          "referenceGitBlob": "089dacaba519cd6011423192ce3955707c040ef4",
+          "snapshotSHA256": "16b0cdf73f3ce6d5652ae82a171e1198fc8f31cdd92a22962175cf908406d0dc",
+          "referenceSHA256": "16b0cdf73f3ce6d5652ae82a171e1198fc8f31cdd92a22962175cf908406d0dc",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/knowledge-replay-binding.ts",
+          "snapshotGitBlob": "ab07b3d13df582ffb3bd07ef7a69beb82caa8e22",
+          "referenceGitBlob": "ab07b3d13df582ffb3bd07ef7a69beb82caa8e22",
+          "snapshotSHA256": "a5943502f0fc2638bf06d5374a4b6b03bd24d5900b3c7435db075cfbf40c1990",
+          "referenceSHA256": "a5943502f0fc2638bf06d5374a4b6b03bd24d5900b3c7435db075cfbf40c1990",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/knowledge-log.ts",
+          "snapshotGitBlob": "2c660fd0db5a29e80c8b12fcf2cf908861747c41",
+          "referenceGitBlob": "2c660fd0db5a29e80c8b12fcf2cf908861747c41",
+          "snapshotSHA256": "408cca55c73d30c035227fb746e1c5e0cb5bbfcd041c3def7e24a4ffadf566c8",
+          "referenceSHA256": "408cca55c73d30c035227fb746e1c5e0cb5bbfcd041c3def7e24a4ffadf566c8",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/store.ts",
+          "snapshotGitBlob": "34da16bee8210982b205045361a9f0e3e6aa7c78",
+          "referenceGitBlob": "34da16bee8210982b205045361a9f0e3e6aa7c78",
+          "snapshotSHA256": "bd41b2b9326706eff5189bbaff76b171015ac5b4660a62f8a773377fa6d8b66b",
+          "referenceSHA256": "bd41b2b9326706eff5189bbaff76b171015ac5b4660a62f8a773377fa6d8b66b",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/sidecar-commit.ts",
+          "snapshotGitBlob": "37049c8ebd8dba2c8b387ef4f459f66bf446fe64",
+          "referenceGitBlob": "37049c8ebd8dba2c8b387ef4f459f66bf446fe64",
+          "snapshotSHA256": "89042790cf9b6065af58205887a565f1aa1208e977831ee1745d04118c815d9b",
+          "referenceSHA256": "89042790cf9b6065af58205887a565f1aa1208e977831ee1745d04118c815d9b",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/policy.ts",
+          "snapshotGitBlob": "62a8c9d0179afea50fdb63ea46c7ef1b773a4e66",
+          "referenceGitBlob": "62a8c9d0179afea50fdb63ea46c7ef1b773a4e66",
+          "snapshotSHA256": "9f78c90f8a0b1ef89e0b5369487fa76ec1ffbd4644a5c889158c68f32b154000",
+          "referenceSHA256": "9f78c90f8a0b1ef89e0b5369487fa76ec1ffbd4644a5c889158c68f32b154000",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+          "snapshotGitBlob": "8c51bd1e667dd97978c33e0b687b6f94287e61f3",
+          "referenceGitBlob": "8c51bd1e667dd97978c33e0b687b6f94287e61f3",
+          "snapshotSHA256": "7b2b2542e620be48678373f653068d79f5411a20ec3d1fe8be37241da0e17a80",
+          "referenceSHA256": "7b2b2542e620be48678373f653068d79f5411a20ec3d1fe8be37241da0e17a80",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/ast.ts",
+          "snapshotGitBlob": "47eb8647dbd6477c3c33b15c5a2c61787839f3d3",
+          "referenceGitBlob": "47eb8647dbd6477c3c33b15c5a2c61787839f3d3",
+          "snapshotSHA256": "ab892f779fbc79e0249b2a65d525d35d466ff38ab9fd4cd8df44d6959bb78803",
+          "referenceSHA256": "ab892f779fbc79e0249b2a65d525d35d466ff38ab9fd4cd8df44d6959bb78803",
+          "exact": true
+        }
+      ]
+    },
+    "job": {
+      "job": 131754787296,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43386082292/job/131754787296",
+      "name": "test (ubuntu-24.04)",
+      "conclusion": "success",
+      "completedAt": "2026-11-13T07:30:41Z",
+      "stats": {
+        "pass": 38,
+        "fail": 0,
+        "expect() calls": 1122
+      },
+      "passedCases": [
+        "CONTROL L4 replay binding: an actually derived SCIP relation survives fresh replay and a second boot",
+        "L4 real replay binding: key",
+        "L4 real replay binding: family",
+        "L4 real replay binding: claim-empty",
+        "L4 real replay binding: claim-add",
+        "L4 real replay binding: claim-replace",
+        "L4 real replay binding: scope",
+        "L4 real replay binding: tier",
+        "L4 real replay binding: anchor",
+        "L4 real replay binding: endpointA",
+        "L4 real replay binding: endpointB",
+        "L4 real replay binding: relationKind",
+        "L4 real replay binding: provenance",
+        "L4 real replay binding: sameAs",
+        "L4 real replay binding: sameAsRetracted",
+        "L4 real replay binding: answerRef",
+        "L4 real replay binding: unknown-carrier",
+        "L4 real replay binding: scope-fact",
+        "L4 real replay binding: same-hash",
+        "L4 real replay binding: derivedAt",
+        "L4 actual admitted advisory replay: single-legacy",
+        "L4 actual admitted advisory replay: history",
+        "L4 actual admitted advisory replay: history-missing-blob",
+        "L4 actual admitted advisory replay: history-missing-support",
+        "L4 actual admitted advisory replay: history-scope",
+        "L4 actual admitted advisory replay: history-key",
+        "L4 actual admitted advisory replay: current-missing",
+        "L4 actual admitted advisory replay: witness-slot",
+        "L4 actual admitted advisory replay: duplicate-claims",
+        "L4 actual admitted advisory replay: supersededBy",
+        "L4 actual admitted advisory replay: structural-invalid",
+        "L4 actual admitted advisory replay: local-noop",
+        "CONTROL L4 negation: actual promoted-input seal-preservation replays without a row seal",
+        "L4 producer-derived test-vacuity fresh replay: positive",
+        "L4 producer-derived test-vacuity fresh replay: testName",
+        "L4 producer-derived test-vacuity fresh replay: shape",
+        "L5 independent writers: late G1 log preserves G2 with inverted clocks",
+        "L5 independent writers: late G1 log preserves G2 with equal clocks"
+      ],
+      "omni": "omni positive control [cbd781f585f505193f41383cced4a460]: pass (declared: 38 test(s) in test/knowledge-replay-binding.test.ts, test/knowledge-replay-advisory.test.ts, test/knowledge-replay-negation.test.ts, test/knowledge-replay-vacuity.test.ts, test/knowledge-writer-order.test.ts); 40 omni spawn(s), 0 delegated.",
+      "rawLog": {
+        "path": "/tmp/audit-l4-l6-linux-union.raw.log",
+        "sha256": "287697e34261ec24f891edd13907e385dfd55946c382f6731bb4e609651050c4",
+        "bytes": 142169
+      }
+    },
+    "qualification": "This Linux job is green, although its BOTH workflow is failed because the accompanying old Windows setup failed."
+  },
+  "windows34": {
+    "snapshot": {
+      "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43389219992",
+      "snapshot": "feed75e1369b788cc8ee5c4bf69e12c769d7f93d",
+      "headBranch": "ci-run-windows-mweom6en-feed75e",
+      "runConclusion": "failure",
+      "runStatus": "completed",
+      "request": {
+        "package": "core",
+        "packageSelector": "packages/core",
+        "directory": "packages/core",
+        "runner": "bun",
+        "args": [
+          "./test/knowledge-replay-binding.test.ts",
+          "./test/knowledge-replay-advisory.test.ts",
+          "./test/knowledge-replay-negation.test.ts",
+          "./test/knowledge-replay-vacuity.test.ts",
+          "./test/knowledge-writer-order.test.ts",
+          "--timeout",
+          "120000"
+        ],
+        "env": {}
+      },
+      "cleanupJobs": [
+        {
+          "job": 131767220546,
+          "conclusion": "success"
+        }
+      ],
+      "runtimeSourceBinding": {
+        "scope": "All tracked modules/atlas/packages/*/src blobs, including source assets",
+        "files": 350,
+        "snapshotVectorSHA256": "6632ab55b0acacd61c549b48485a7f8515c5dc854a0a7971d144ae22bb8d4d10",
+        "referenceVectorSHA256": "6632ab55b0acacd61c549b48485a7f8515c5dc854a0a7971d144ae22bb8d4d10",
+        "exactFiles": 350,
+        "differentPaths": [],
+        "allRuntimeSourceBytesExact": true
+      },
+      "testAndSetupBindings": [
+        {
+          "path": "packages/core/test/knowledge-replay-binding.test.ts",
+          "snapshotGitBlob": "827b99bbcc153855b6279c8ab3c19e2e94bb8415",
+          "referenceGitBlob": "827b99bbcc153855b6279c8ab3c19e2e94bb8415",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/knowledge-replay-advisory.test.ts",
+          "snapshotGitBlob": "ddcf3745752210331889c905726c6973c145637c",
+          "referenceGitBlob": "ddcf3745752210331889c905726c6973c145637c",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/knowledge-replay-negation.test.ts",
+          "snapshotGitBlob": "373b1942349919358b38c75be368f3ffb94f83d2",
+          "referenceGitBlob": "373b1942349919358b38c75be368f3ffb94f83d2",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/knowledge-replay-vacuity.test.ts",
+          "snapshotGitBlob": "5e41b1523a5880c2c3f6eb64baf4a356b930ec4c",
+          "referenceGitBlob": "5e41b1523a5880c2c3f6eb64baf4a356b930ec4c",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/knowledge-writer-order.test.ts",
+          "snapshotGitBlob": "38afa0a8d232290907e58fa3683b31287bc350c8",
+          "referenceGitBlob": "38afa0a8d232290907e58fa3683b31287bc350c8",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/fixture/knowledge-replay-binding.ts",
+          "snapshotGitBlob": "e72028cd53a552f3810521995a5eb1fcea98b019",
+          "referenceGitBlob": "3f36195547f6fcf88123028b5ebac3103f43aad9",
+          "exact": false,
+          "actorsByteExact": true,
+          "differenceScope": "Test setup loader/physical parser or grammar resolution; actor strings and parent oracle files unchanged."
+        },
+        {
+          "path": "packages/core/test/fixture/knowledge-replay-advisory.ts",
+          "snapshotGitBlob": "cba253dd301f696c73f981c0a9b2d8af537a524b",
+          "referenceGitBlob": "6a9ae85ec5e79c9627253772ded6876b7fe6bb78",
+          "exact": false,
+          "actorsByteExact": true,
+          "differenceScope": "Test setup loader/physical parser or grammar resolution; actor strings and parent oracle files unchanged."
+        },
+        {
+          "path": "packages/core/test/fixture/knowledge-replay-negation.ts",
+          "snapshotGitBlob": "bf24b29fd9df83d640c798747bf12c745cf48415",
+          "referenceGitBlob": "119159dfadc876d613779e4e4a8ebe9dbbfa2380",
+          "exact": false,
+          "actorsByteExact": true,
+          "differenceScope": "Test setup loader/physical parser or grammar resolution; actor strings and parent oracle files unchanged."
+        },
+        {
+          "path": "packages/core/test/fixture/knowledge-replay-vacuity.ts",
+          "snapshotGitBlob": "5186db5796113f999f40dcac26ebff5f578ba720",
+          "referenceGitBlob": "d1ec4adc4d1057a2cf389f81d89a0b540b5f42e2",
+          "exact": false,
+          "actorsByteExact": true,
+          "differenceScope": "Test setup loader/physical parser or grammar resolution; actor strings and parent oracle files unchanged."
+        },
+        {
+          "path": "packages/core/test/fixture/knowledge-writer-order.ts",
+          "snapshotGitBlob": "ee80a2a84ae0aa2beaf2ca19a967e24ac5e45c08",
+          "referenceGitBlob": "ee80a2a84ae0aa2beaf2ca19a967e24ac5e45c08",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/fixture/atlas-parser.ts",
+          "snapshotGitBlob": "d429cbf45b4d4fb5f4d17d41eb2dbaea012abda5",
+          "referenceGitBlob": "f2227ed3755ce9ad25603337e9197f0d436e9f32",
+          "exact": false,
+          "differenceScope": "Test setup loader/physical parser or grammar resolution; actor strings and parent oracle files unchanged."
+        }
+      ],
+      "criticalSourceBindings": [
+        {
+          "path": "modules/atlas/packages/adapter-io/src/knowledge-replay.ts",
+          "snapshotGitBlob": "089dacaba519cd6011423192ce3955707c040ef4",
+          "referenceGitBlob": "089dacaba519cd6011423192ce3955707c040ef4",
+          "snapshotSHA256": "16b0cdf73f3ce6d5652ae82a171e1198fc8f31cdd92a22962175cf908406d0dc",
+          "referenceSHA256": "16b0cdf73f3ce6d5652ae82a171e1198fc8f31cdd92a22962175cf908406d0dc",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/knowledge-replay-binding.ts",
+          "snapshotGitBlob": "ab07b3d13df582ffb3bd07ef7a69beb82caa8e22",
+          "referenceGitBlob": "ab07b3d13df582ffb3bd07ef7a69beb82caa8e22",
+          "snapshotSHA256": "a5943502f0fc2638bf06d5374a4b6b03bd24d5900b3c7435db075cfbf40c1990",
+          "referenceSHA256": "a5943502f0fc2638bf06d5374a4b6b03bd24d5900b3c7435db075cfbf40c1990",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/knowledge-log.ts",
+          "snapshotGitBlob": "2c660fd0db5a29e80c8b12fcf2cf908861747c41",
+          "referenceGitBlob": "2c660fd0db5a29e80c8b12fcf2cf908861747c41",
+          "snapshotSHA256": "408cca55c73d30c035227fb746e1c5e0cb5bbfcd041c3def7e24a4ffadf566c8",
+          "referenceSHA256": "408cca55c73d30c035227fb746e1c5e0cb5bbfcd041c3def7e24a4ffadf566c8",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/store.ts",
+          "snapshotGitBlob": "34da16bee8210982b205045361a9f0e3e6aa7c78",
+          "referenceGitBlob": "34da16bee8210982b205045361a9f0e3e6aa7c78",
+          "snapshotSHA256": "bd41b2b9326706eff5189bbaff76b171015ac5b4660a62f8a773377fa6d8b66b",
+          "referenceSHA256": "bd41b2b9326706eff5189bbaff76b171015ac5b4660a62f8a773377fa6d8b66b",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/sidecar-commit.ts",
+          "snapshotGitBlob": "37049c8ebd8dba2c8b387ef4f459f66bf446fe64",
+          "referenceGitBlob": "37049c8ebd8dba2c8b387ef4f459f66bf446fe64",
+          "snapshotSHA256": "89042790cf9b6065af58205887a565f1aa1208e977831ee1745d04118c815d9b",
+          "referenceSHA256": "89042790cf9b6065af58205887a565f1aa1208e977831ee1745d04118c815d9b",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/policy.ts",
+          "snapshotGitBlob": "62a8c9d0179afea50fdb63ea46c7ef1b773a4e66",
+          "referenceGitBlob": "62a8c9d0179afea50fdb63ea46c7ef1b773a4e66",
+          "snapshotSHA256": "9f78c90f8a0b1ef89e0b5369487fa76ec1ffbd4644a5c889158c68f32b154000",
+          "referenceSHA256": "9f78c90f8a0b1ef89e0b5369487fa76ec1ffbd4644a5c889158c68f32b154000",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+          "snapshotGitBlob": "8c51bd1e667dd97978c33e0b687b6f94287e61f3",
+          "referenceGitBlob": "8c51bd1e667dd97978c33e0b687b6f94287e61f3",
+          "snapshotSHA256": "7b2b2542e620be48678373f653068d79f5411a20ec3d1fe8be37241da0e17a80",
+          "referenceSHA256": "7b2b2542e620be48678373f653068d79f5411a20ec3d1fe8be37241da0e17a80",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/ast.ts",
+          "snapshotGitBlob": "47eb8647dbd6477c3c33b15c5a2c61787839f3d3",
+          "referenceGitBlob": "47eb8647dbd6477c3c33b15c5a2c61787839f3d3",
+          "snapshotSHA256": "ab892f779fbc79e0249b2a65d525d35d466ff38ab9fd4cd8df44d6959bb78803",
+          "referenceSHA256": "ab892f779fbc79e0249b2a65d525d35d466ff38ab9fd4cd8df44d6959bb78803",
+          "exact": true
+        }
+      ]
+    },
+    "job": {
+      "job": 131764860301,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43389219992/job/131764860301",
+      "name": "test (windows-latest)",
+      "conclusion": "failure",
+      "completedAt": "2026-11-13T08:01:18Z",
+      "stats": {
+        "pass": 34,
+        "fail": 5,
+        "expect() calls": 983
+      },
+      "passedCases": [
+        "CONTROL L4 replay binding: an actually derived SCIP relation survives fresh replay and a second boot",
+        "L4 real replay binding: key",
+        "L4 real replay binding: family",
+        "L4 real replay binding: claim-empty",
+        "L4 real replay binding: claim-add",
+        "L4 real replay binding: claim-replace",
+        "L4 real replay binding: scope",
+        "L4 real replay binding: tier",
+        "L4 real replay binding: anchor",
+        "L4 real replay binding: endpointA",
+        "L4 real replay binding: endpointB",
+        "L4 real replay binding: relationKind",
+        "L4 real replay binding: provenance",
+        "L4 real replay binding: sameAs",
+        "L4 real replay binding: sameAsRetracted",
+        "L4 real replay binding: answerRef",
+        "L4 real replay binding: unknown-carrier",
+        "L4 real replay binding: scope-fact",
+        "L4 real replay binding: same-hash",
+        "L4 real replay binding: derivedAt",
+        "L4 actual admitted advisory replay: single-legacy",
+        "L4 actual admitted advisory replay: history",
+        "L4 actual admitted advisory replay: history-missing-blob",
+        "L4 actual admitted advisory replay: history-missing-support",
+        "L4 actual admitted advisory replay: history-scope",
+        "L4 actual admitted advisory replay: history-key",
+        "L4 actual admitted advisory replay: current-missing",
+        "L4 actual admitted advisory replay: witness-slot",
+        "L4 actual admitted advisory replay: duplicate-claims",
+        "L4 actual admitted advisory replay: supersededBy",
+        "L4 actual admitted advisory replay: structural-invalid",
+        "L4 actual admitted advisory replay: local-noop",
+        "L5 independent writers: late G1 log preserves G2 with inverted clocks",
+        "L5 independent writers: late G1 log preserves G2 with equal clocks"
+      ],
+      "omni": "error: omni positive control [451bbd23b59dac9d60c4477bc39ba2fa]: FAIL (declared: 38 test(s) in test/knowledge-replay-binding.test.ts, test/knowledge-replay-advisory.test.ts, test/knowledge-replay-negation.test.ts, test/knowledge-replay-vacuity.test.ts, test/knowledge-writer-order.test.ts). test/knowledge-replay-negation.test.ts: 1 of 1 declaring test(s) made no omni spawn of their own; test/knowledge-replay-vacuity.test.ts: 3 of 3 declaring test(s) made no omni spawn of their own.",
+      "rawLog": {
+        "path": "/tmp/audit-l4-l6-windows-partial.raw.log",
+        "sha256": "f99d4da2b1b5704393fb2224a84c157a0107c89ce08231b8fc836b61122227ac",
+        "bytes": 194711
+      }
+    },
+    "qualification": "34 named cases passed; four grammar setup cases failed before their actors, plus the aggregate Omni control reported one additional unnamed failure. This job/run is NOT green. The local launcher also had a TLS monitoring error; the independently retrieved hosted verdict is failure.",
+    "failureBoundary": "ENOENT at packages/core/node_modules/tree-sitter-typescript before actor spawn; no product RED inferred for these four setup failures."
+  },
+  "windowsPhysicalGrammar4": {
+    "snapshot": {
+      "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43394966905",
+      "snapshot": "6237db1933d5c6d94291d9298511c5fc1cf2fa39",
+      "headBranch": "ci-run-windows-mweq7ccv-6237db1",
+      "runConclusion": "success",
+      "runStatus": "completed",
+      "request": {
+        "package": "core",
+        "packageSelector": "packages/core",
+        "directory": "packages/core",
+        "runner": "bun",
+        "args": [
+          "./test/knowledge-replay-negation.test.ts",
+          "./test/knowledge-replay-vacuity.test.ts",
+          "--timeout",
+          "120000"
+        ],
+        "env": {}
+      },
+      "cleanupJobs": [
+        {
+          "job": 131785464926,
+          "conclusion": "success"
+        }
+      ],
+      "runtimeSourceBinding": {
+        "scope": "All tracked modules/atlas/packages/*/src blobs, including source assets",
+        "files": 350,
+        "snapshotVectorSHA256": "6632ab55b0acacd61c549b48485a7f8515c5dc854a0a7971d144ae22bb8d4d10",
+        "referenceVectorSHA256": "6632ab55b0acacd61c549b48485a7f8515c5dc854a0a7971d144ae22bb8d4d10",
+        "exactFiles": 350,
+        "differentPaths": [],
+        "allRuntimeSourceBytesExact": true
+      },
+      "testAndSetupBindings": [
+        {
+          "path": "packages/core/test/knowledge-replay-binding.test.ts",
+          "snapshotGitBlob": "827b99bbcc153855b6279c8ab3c19e2e94bb8415",
+          "referenceGitBlob": "827b99bbcc153855b6279c8ab3c19e2e94bb8415",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/knowledge-replay-advisory.test.ts",
+          "snapshotGitBlob": "ddcf3745752210331889c905726c6973c145637c",
+          "referenceGitBlob": "ddcf3745752210331889c905726c6973c145637c",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/knowledge-replay-negation.test.ts",
+          "snapshotGitBlob": "373b1942349919358b38c75be368f3ffb94f83d2",
+          "referenceGitBlob": "373b1942349919358b38c75be368f3ffb94f83d2",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/knowledge-replay-vacuity.test.ts",
+          "snapshotGitBlob": "5e41b1523a5880c2c3f6eb64baf4a356b930ec4c",
+          "referenceGitBlob": "5e41b1523a5880c2c3f6eb64baf4a356b930ec4c",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/knowledge-writer-order.test.ts",
+          "snapshotGitBlob": "38afa0a8d232290907e58fa3683b31287bc350c8",
+          "referenceGitBlob": "38afa0a8d232290907e58fa3683b31287bc350c8",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/fixture/knowledge-replay-binding.ts",
+          "snapshotGitBlob": "3f36195547f6fcf88123028b5ebac3103f43aad9",
+          "referenceGitBlob": "3f36195547f6fcf88123028b5ebac3103f43aad9",
+          "exact": true,
+          "actorsByteExact": true
+        },
+        {
+          "path": "packages/core/test/fixture/knowledge-replay-advisory.ts",
+          "snapshotGitBlob": "6a9ae85ec5e79c9627253772ded6876b7fe6bb78",
+          "referenceGitBlob": "6a9ae85ec5e79c9627253772ded6876b7fe6bb78",
+          "exact": true,
+          "actorsByteExact": true
+        },
+        {
+          "path": "packages/core/test/fixture/knowledge-replay-negation.ts",
+          "snapshotGitBlob": "119159dfadc876d613779e4e4a8ebe9dbbfa2380",
+          "referenceGitBlob": "119159dfadc876d613779e4e4a8ebe9dbbfa2380",
+          "exact": true,
+          "actorsByteExact": true
+        },
+        {
+          "path": "packages/core/test/fixture/knowledge-replay-vacuity.ts",
+          "snapshotGitBlob": "d1ec4adc4d1057a2cf389f81d89a0b540b5f42e2",
+          "referenceGitBlob": "d1ec4adc4d1057a2cf389f81d89a0b540b5f42e2",
+          "exact": true,
+          "actorsByteExact": true
+        },
+        {
+          "path": "packages/core/test/fixture/knowledge-writer-order.ts",
+          "snapshotGitBlob": "ee80a2a84ae0aa2beaf2ca19a967e24ac5e45c08",
+          "referenceGitBlob": "ee80a2a84ae0aa2beaf2ca19a967e24ac5e45c08",
+          "exact": true
+        },
+        {
+          "path": "packages/core/test/fixture/atlas-parser.ts",
+          "snapshotGitBlob": "f2227ed3755ce9ad25603337e9197f0d436e9f32",
+          "referenceGitBlob": "f2227ed3755ce9ad25603337e9197f0d436e9f32",
+          "exact": true
+        }
+      ],
+      "criticalSourceBindings": [
+        {
+          "path": "modules/atlas/packages/adapter-io/src/knowledge-replay.ts",
+          "snapshotGitBlob": "089dacaba519cd6011423192ce3955707c040ef4",
+          "referenceGitBlob": "089dacaba519cd6011423192ce3955707c040ef4",
+          "snapshotSHA256": "16b0cdf73f3ce6d5652ae82a171e1198fc8f31cdd92a22962175cf908406d0dc",
+          "referenceSHA256": "16b0cdf73f3ce6d5652ae82a171e1198fc8f31cdd92a22962175cf908406d0dc",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/knowledge-replay-binding.ts",
+          "snapshotGitBlob": "ab07b3d13df582ffb3bd07ef7a69beb82caa8e22",
+          "referenceGitBlob": "ab07b3d13df582ffb3bd07ef7a69beb82caa8e22",
+          "snapshotSHA256": "a5943502f0fc2638bf06d5374a4b6b03bd24d5900b3c7435db075cfbf40c1990",
+          "referenceSHA256": "a5943502f0fc2638bf06d5374a4b6b03bd24d5900b3c7435db075cfbf40c1990",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/knowledge-log.ts",
+          "snapshotGitBlob": "2c660fd0db5a29e80c8b12fcf2cf908861747c41",
+          "referenceGitBlob": "2c660fd0db5a29e80c8b12fcf2cf908861747c41",
+          "snapshotSHA256": "408cca55c73d30c035227fb746e1c5e0cb5bbfcd041c3def7e24a4ffadf566c8",
+          "referenceSHA256": "408cca55c73d30c035227fb746e1c5e0cb5bbfcd041c3def7e24a4ffadf566c8",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/store.ts",
+          "snapshotGitBlob": "34da16bee8210982b205045361a9f0e3e6aa7c78",
+          "referenceGitBlob": "34da16bee8210982b205045361a9f0e3e6aa7c78",
+          "snapshotSHA256": "bd41b2b9326706eff5189bbaff76b171015ac5b4660a62f8a773377fa6d8b66b",
+          "referenceSHA256": "bd41b2b9326706eff5189bbaff76b171015ac5b4660a62f8a773377fa6d8b66b",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/sidecar-commit.ts",
+          "snapshotGitBlob": "37049c8ebd8dba2c8b387ef4f459f66bf446fe64",
+          "referenceGitBlob": "37049c8ebd8dba2c8b387ef4f459f66bf446fe64",
+          "snapshotSHA256": "89042790cf9b6065af58205887a565f1aa1208e977831ee1745d04118c815d9b",
+          "referenceSHA256": "89042790cf9b6065af58205887a565f1aa1208e977831ee1745d04118c815d9b",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/policy.ts",
+          "snapshotGitBlob": "62a8c9d0179afea50fdb63ea46c7ef1b773a4e66",
+          "referenceGitBlob": "62a8c9d0179afea50fdb63ea46c7ef1b773a4e66",
+          "snapshotSHA256": "9f78c90f8a0b1ef89e0b5369487fa76ec1ffbd4644a5c889158c68f32b154000",
+          "referenceSHA256": "9f78c90f8a0b1ef89e0b5369487fa76ec1ffbd4644a5c889158c68f32b154000",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+          "snapshotGitBlob": "8c51bd1e667dd97978c33e0b687b6f94287e61f3",
+          "referenceGitBlob": "8c51bd1e667dd97978c33e0b687b6f94287e61f3",
+          "snapshotSHA256": "7b2b2542e620be48678373f653068d79f5411a20ec3d1fe8be37241da0e17a80",
+          "referenceSHA256": "7b2b2542e620be48678373f653068d79f5411a20ec3d1fe8be37241da0e17a80",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/ast.ts",
+          "snapshotGitBlob": "47eb8647dbd6477c3c33b15c5a2c61787839f3d3",
+          "referenceGitBlob": "47eb8647dbd6477c3c33b15c5a2c61787839f3d3",
+          "snapshotSHA256": "ab892f779fbc79e0249b2a65d525d35d466ff38ab9fd4cd8df44d6959bb78803",
+          "referenceSHA256": "ab892f779fbc79e0249b2a65d525d35d466ff38ab9fd4cd8df44d6959bb78803",
+          "exact": true
+        }
+      ]
+    },
+    "job": {
+      "job": 131783568062,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43394966905/job/131783568062",
+      "name": "test (windows-latest)",
+      "conclusion": "success",
+      "completedAt": "2026-11-13T08:44:12Z",
+      "stats": {
+        "pass": 4,
+        "fail": 0,
+        "expect() calls": 139
+      },
+      "passedCases": [
+        "CONTROL L4 negation: actual promoted-input seal-preservation replays without a row seal",
+        "L4 producer-derived test-vacuity fresh replay: positive",
+        "L4 producer-derived test-vacuity fresh replay: testName",
+        "L4 producer-derived test-vacuity fresh replay: shape"
+      ],
+      "omni": "omni positive control [6daa9701c32e87f5ad1840e45ecb0682]: pass (declared: 4 test(s) in test/knowledge-replay-negation.test.ts, test/knowledge-replay-vacuity.test.ts); 4 omni spawn(s), 0 delegated.",
+      "rawLog": {
+        "path": "/tmp/audit-l4-l6-windows-focused.raw.log",
+        "sha256": "dfa442e4824bc6a417c63a64b4a806f7358c68d3a948dbed1f61ad014f06b14d",
+        "bytes": 104901
+      }
+    },
+    "qualification": "Final focused job and cleanup green. All selected parent tests/setup files and all 350 Atlas runtime source blobs match reference Root exactly.",
+    "loggedVacuitySetup": {
+      "parser": {
+        "resolved": "D:\\a\\hugr-orchestra\\hugr-orchestra\\node_modules\\web-tree-sitter\\tree-sitter.js",
+        "version": "0.23.2",
+        "package": "D:\\a\\hugr-orchestra\\hugr-orchestra\\node_modules\\web-tree-sitter\\package.json",
+        "packageSha256": "4ff8f9de4ca51902364b6e63bf93014da02c5e2fb7fb8969f78d4613d00c15da",
+        "entrySha256": "4e80bf2b79a6e6623d809708ee65f105d8930a03793df964386f36b159615888"
+      },
+      "astWarmup": true,
+      "scip": "actual serialized SCIP fixture; vacuity oracle is the real AST scan",
+      "grammars": [
+        {
+          "name": "tree-sitter-typescript.wasm",
+          "resolved": "D:\\a\\hugr-orchestra\\hugr-orchestra\\node_modules\\tree-sitter-typescript\\tree-sitter-typescript.wasm",
+          "sha256": "778025db5a8be0e70f8ccc3671e486dfeddd048c25d9e8a70c26de2e1bf6f97d"
+        },
+        {
+          "name": "tree-sitter-tsx.wasm",
+          "resolved": "D:\\a\\hugr-orchestra\\hugr-orchestra\\node_modules\\tree-sitter-typescript\\tree-sitter-tsx.wasm",
+          "sha256": "79e5da75ea62855a0cd67177685f0164eac87d5f630b3cbe1e0a099751ad30f8"
+        }
+      ],
+      "emitted": {
+        "parserURL": "file:///D:/a/hugr-orchestra/hugr-orchestra/node_modules/web-tree-sitter/tree-sitter.js",
+        "outputSha256": "8650b164002d9da12b551e42aec5076db978d47721163a2aeb5456fbfcbb933d",
+        "imports": [
+          "import Parser from \"file:///D:/a/hugr-orchestra/hugr-orchestra/node_modules/web-tree-sitter/tree-sitter.js\";"
+        ]
+      }
+    },
+    "negationEvidence": "The negation parent requires installed Parser0.23.2, the pinned shared physical grammar resolver, successful real initAst/astWarmed in the actor, promoted-input seal preservation, absent row seal, actual source/fresh replay/second boot reproof counts [1,1,1], public negations [1,1,1], and cleanup. Passing source-bound parent assertions establish those outcomes; negation does not print its own full grammar manifest. Do not call its supplied input seal a production seal-minter proof."
+  },
+  "boundary7Both": {
+    "snapshot": {
+      "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43397106568",
+      "snapshot": "2315d8fa495af17c3d614d437f64a8691613b3fd",
+      "headBranch": "ci-run-both-mweqs2ov-2315d8f",
+      "runConclusion": "success",
+      "runStatus": "completed",
+      "request": {
+        "package": "atlas-boundary",
+        "packageSelector": "packages/atlas-boundary",
+        "directory": "modules/atlas/boundary",
+        "runner": "bun",
+        "args": [
+          "./test/cas-repair.test.ts",
+          "--timeout",
+          "120000"
+        ],
+        "env": {}
+      },
+      "cleanupJobs": [
+        {
+          "job": 131793300883,
+          "conclusion": "success"
+        }
+      ],
+      "runtimeSourceBinding": {
+        "scope": "All tracked modules/atlas/packages/*/src blobs, including source assets",
+        "files": 350,
+        "snapshotVectorSHA256": "cada06f3139a958ed7a593ccd8f8a15b30a0f682307233de31befea18a8aaba2",
+        "referenceVectorSHA256": "6632ab55b0acacd61c549b48485a7f8515c5dc854a0a7971d144ae22bb8d4d10",
+        "exactFiles": 349,
+        "differentPaths": [
+          "modules/atlas/packages/adapter-io/src/knowledge-replay-binding.ts"
+        ],
+        "allRuntimeSourceBytesExact": false,
+        "difference": "Only three TypeScript assertions: as GroundedFact/Candidate versus as unknown as GroundedFact/Candidate. Exact explicit textual reversal verified; no runtime condition or data-flow statement differs. This evidence did not run a transpiler and does not label the source bytes identical."
+      },
+      "testAndSetupBindings": [
+        {
+          "path": "modules/atlas/boundary/test/cas-repair.test.ts",
+          "snapshotGitBlob": "ad8e059885b8b9cd0c493ab6f935de572b11b24d",
+          "referenceGitBlob": "ad8e059885b8b9cd0c493ab6f935de572b11b24d",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/boundary/test/fixture/atlas-cas.ts",
+          "snapshotGitBlob": "0f965dfe3519f8c497f7e371f939d0c14973a0b3",
+          "referenceGitBlob": "0f965dfe3519f8c497f7e371f939d0c14973a0b3",
+          "exact": true
+        }
+      ],
+      "criticalSourceBindings": [
+        {
+          "path": "modules/atlas/packages/adapter-io/src/knowledge-replay.ts",
+          "snapshotGitBlob": "089dacaba519cd6011423192ce3955707c040ef4",
+          "referenceGitBlob": "089dacaba519cd6011423192ce3955707c040ef4",
+          "snapshotSHA256": "16b0cdf73f3ce6d5652ae82a171e1198fc8f31cdd92a22962175cf908406d0dc",
+          "referenceSHA256": "16b0cdf73f3ce6d5652ae82a171e1198fc8f31cdd92a22962175cf908406d0dc",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/knowledge-replay-binding.ts",
+          "snapshotGitBlob": "793030eb763f80ca09d27eb27bfa458e200676ef",
+          "referenceGitBlob": "ab07b3d13df582ffb3bd07ef7a69beb82caa8e22",
+          "snapshotSHA256": "edb6730d4749322437e1a7228febce90c2f5eb509c52b2de4109144580e84038",
+          "referenceSHA256": "a5943502f0fc2638bf06d5374a4b6b03bd24d5900b3c7435db075cfbf40c1990",
+          "exact": false
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/knowledge-log.ts",
+          "snapshotGitBlob": "2c660fd0db5a29e80c8b12fcf2cf908861747c41",
+          "referenceGitBlob": "2c660fd0db5a29e80c8b12fcf2cf908861747c41",
+          "snapshotSHA256": "408cca55c73d30c035227fb746e1c5e0cb5bbfcd041c3def7e24a4ffadf566c8",
+          "referenceSHA256": "408cca55c73d30c035227fb746e1c5e0cb5bbfcd041c3def7e24a4ffadf566c8",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/store.ts",
+          "snapshotGitBlob": "34da16bee8210982b205045361a9f0e3e6aa7c78",
+          "referenceGitBlob": "34da16bee8210982b205045361a9f0e3e6aa7c78",
+          "snapshotSHA256": "bd41b2b9326706eff5189bbaff76b171015ac5b4660a62f8a773377fa6d8b66b",
+          "referenceSHA256": "bd41b2b9326706eff5189bbaff76b171015ac5b4660a62f8a773377fa6d8b66b",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/sidecar-commit.ts",
+          "snapshotGitBlob": "37049c8ebd8dba2c8b387ef4f459f66bf446fe64",
+          "referenceGitBlob": "37049c8ebd8dba2c8b387ef4f459f66bf446fe64",
+          "snapshotSHA256": "89042790cf9b6065af58205887a565f1aa1208e977831ee1745d04118c815d9b",
+          "referenceSHA256": "89042790cf9b6065af58205887a565f1aa1208e977831ee1745d04118c815d9b",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/policy.ts",
+          "snapshotGitBlob": "62a8c9d0179afea50fdb63ea46c7ef1b773a4e66",
+          "referenceGitBlob": "62a8c9d0179afea50fdb63ea46c7ef1b773a4e66",
+          "snapshotSHA256": "9f78c90f8a0b1ef89e0b5369487fa76ec1ffbd4644a5c889158c68f32b154000",
+          "referenceSHA256": "9f78c90f8a0b1ef89e0b5369487fa76ec1ffbd4644a5c889158c68f32b154000",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+          "snapshotGitBlob": "8c51bd1e667dd97978c33e0b687b6f94287e61f3",
+          "referenceGitBlob": "8c51bd1e667dd97978c33e0b687b6f94287e61f3",
+          "snapshotSHA256": "7b2b2542e620be48678373f653068d79f5411a20ec3d1fe8be37241da0e17a80",
+          "referenceSHA256": "7b2b2542e620be48678373f653068d79f5411a20ec3d1fe8be37241da0e17a80",
+          "exact": true
+        },
+        {
+          "path": "modules/atlas/packages/adapter-io/src/ast.ts",
+          "snapshotGitBlob": "47eb8647dbd6477c3c33b15c5a2c61787839f3d3",
+          "referenceGitBlob": "47eb8647dbd6477c3c33b15c5a2c61787839f3d3",
+          "snapshotSHA256": "ab892f779fbc79e0249b2a65d525d35d466ff38ab9fd4cd8df44d6959bb78803",
+          "referenceSHA256": "ab892f779fbc79e0249b2a65d525d35d466ff38ab9fd4cd8df44d6959bb78803",
+          "exact": true
+        }
+      ]
+    },
+    "linux": {
+      "job": 131790600558,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43397106568/job/131790600558",
+      "name": "test (ubuntu-24.04)",
+      "conclusion": "success",
+      "completedAt": "2026-11-13T08:58:09Z",
+      "stats": {
+        "pass": 7,
+        "fail": 0,
+        "expect() calls": 144
+      },
+      "passedCases": [
+        "CONTROL L6: actual bundled exports support fresh writes and valid canonical-ID dedup",
+        "CONTROL L6: real knowledge logs replay under existing seal, scope and reproof decisions",
+        "L6: retry repairs real truncated and hash-invalid addressed files and leaves no publication debris",
+        "L6: non-file publication destinations refuse without publishing a projection or leaking a temp",
+        "L6: an escaping shard symlink refuses before touching an external sentinel or allocating external temps",
+        "L6: replay with a real valid log/blob and corrupt local CAS repairs it or safely counts it missing",
+        "L6: actual absence observed during restore or selection never enters proven or staging"
+      ],
+      "omni": "No Omni verdict in this boundary job log; these are in-process source-bundle/CAS controls, not subprocess proof.",
+      "rawLog": {
+        "path": "/tmp/audit-l4-l6-boundary-linux.raw.log",
+        "sha256": "f860b774709ee6c3fd0402780b2bc4771b5e59736ab5a177e7a6508c980e5e48",
+        "bytes": 100447
+      }
+    },
+    "windows": {
+      "job": 131790600931,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43397106568/job/131790600931",
+      "name": "test (windows-latest)",
+      "conclusion": "success",
+      "completedAt": "2026-11-13T09:01:55Z",
+      "stats": {
+        "pass": 7,
+        "fail": 0,
+        "expect() calls": 144
+      },
+      "passedCases": [
+        "CONTROL L6: actual bundled exports support fresh writes and valid canonical-ID dedup",
+        "CONTROL L6: real knowledge logs replay under existing seal, scope and reproof decisions",
+        "L6: retry repairs real truncated and hash-invalid addressed files and leaves no publication debris",
+        "L6: non-file publication destinations refuse without publishing a projection or leaking a temp",
+        "L6: an escaping shard symlink refuses before touching an external sentinel or allocating external temps",
+        "L6: replay with a real valid log/blob and corrupt local CAS repairs it or safely counts it missing",
+        "L6: actual absence observed during restore or selection never enters proven or staging"
+      ],
+      "omni": "No Omni verdict in this boundary job log; these are in-process source-bundle/CAS controls, not subprocess proof.",
+      "rawLog": {
+        "path": "/tmp/audit-l4-l6-boundary-windows.raw.log",
+        "sha256": "575c5aa4ce1d1c27cbcaaeb2b13854557110618343c89a7d249b9cfd71d499bd",
+        "bytes": 104395
+      }
+    },
+    "qualification": "Seven exact CAS/replay tests passed on both OS, 144 assertions each. Boundary fixture and parent are byte-exact to reference; one runtime file differs only in three explicitly verified erased type assertions.",
+    "scope": "Four generic raw-CAS blocks remain separate from canonical-shaped replay seeds. Reproof callbacks in this lane are controlled unit boundaries. Real four-family production-oracle coverage belongs to the Core suite."
+  },
+  "composedCoverage": {
+    "uniqueCoreCases": 38,
+    "linuxSingleGreenJobCases": 38,
+    "windowsPassedCasesAcrossTwoSnapshots": 38,
+    "windowsPartialPassedCases": 34,
+    "windowsFocusedPassedCases": 4,
+    "windowsCompositeAssertionArithmetic": {
+      "earlier": 983,
+      "focused": 139,
+      "sum": 1122,
+      "singleRunClaim": false
+    },
+    "allLinuxPassedCaseNamesCoveredByWindowsPassUnion": true,
+    "coreParentOracleFilesExactAcrossSnapshots": true,
+    "fourReplayActorStringsByteExactAcrossSnapshots": true,
+    "singleFinalWindows38GreenRun": false
+  },
+  "limits": [
+    "This is composed Windows coverage across snapshots, not a single final38-case Windows green run; the earlier Windows workflow and aggregate Omni verdict remain failed evidence.",
+    "The current physical resolver/setup bytes are not runtime-qualified for the relation/advisory cases by this focused4-case rerun; their actor strings and parent oracles are unchanged and their earlier34 cases passed.",
+    "Boundary source-byte identity differs for knowledge-replay-binding.ts in erased TypeScript assertions only; no stronger exact-byte claim is made.",
+    "No new tests were run in this evidence task. These scoped results do not replace the pending full Atlas quality/type/guard/Vitest lane, final epic, or required official generated-boundary recovery after subsequent source changes.",
+    "No authentication of public knowledge event hashes, seat folders, historical human acts or input seals is inferred.",
+    "Evidence binds the recorded reference commit. Later Atlas source edits require their own qualification and official generation; this JSON does not automatically qualify them."
+  ],
+  "ledgerChanged": false
+}

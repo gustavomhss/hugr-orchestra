@@ -48,7 +48,7 @@ function Idle(props: { flight: Flight; openSettings: () => void }) {
             <h2 id="fe-idle-title">{t("orchestra.flightEngineer.idle.title")}</h2>
             <p>{t("orchestra.flightEngineer.idle.body")}</p>
             <div class="fe-start">
-              <button type="button" class="mx-btn primary" disabled={props.flight.store.starting} onClick={() => props.flight.requestStart()}>
+              <button type="button" class="mx-btn primary" disabled={props.flight.store.starting || !props.flight.canStart()} onClick={() => props.flight.requestStart()}>
                 {t("orchestra.flightEngineer.start")}
               </button>
               <span class="fe-or">

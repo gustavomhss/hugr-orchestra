@@ -27,7 +27,7 @@ function host(script, args, ms = 30_000) {
     proc.stderr.on("data", (d) => (err += d));
     const timer = setTimeout(() => {
       proc.kill("SIGKILL");
-      reject(new Error(`${script} ${args.join(" ")} did not end within ${ms} ms: ${err.trim().split("\n").at(-1)}`));
+      reject(new Error(`${script} ${args.join(" ")} did not end within ${ms} ms: ${err.trim().split("\n").at(-1)}; stdout=${JSON.stringify(out)}`));
     }, ms);
     proc.on("close", (code, signal) => {
       clearTimeout(timer);
@@ -48,6 +48,26 @@ for (const [mode, what] of [["live", "with a live tree"], ["idle", "with nothing
     assert.match(end.out, /^HOST-STATES dead dead$/m, `the terminated Worker's tree outlived it: ${end.out}`);
   });
 }
+
+test("N1: terminating a Worker with a pending run stops only its resistant tree before the main host exits", async () => {
+  // An anti-hang watchdog for the whole host, not a claim that Node's whole termination takes at most 5 s.
+  const end = await host("worker-host.mjs", ["pending-run"], 10_000);
+  assert.doesNotMatch(end.err, /panicked|fatal runtime error|Abort/i, `${end.err}\n${end.out}`);
+  assert.deepEqual([end.code, end.signal], [0, null], `the host ended as ${JSON.stringify([end.code, end.signal])}: ${end.err}\n${end.out}`);
+  const workerPids = parseMarker(end.out, "RUN-PENDING", 2);
+  const mainPids = parseMarker(end.out, "MAIN-PENDING", 2);
+  assert.ok(Array.isArray(workerPids), `no two actual worker fixture pids: ${end.out}`);
+  assert.ok(Array.isArray(mainPids), `no two actual main fixture pids: ${end.out}`);
+  assert.equal(new Set([...workerPids, ...mainPids]).size, 4, `the Envs must own different fixture trees: ${end.out}`);
+  assert.match(end.out, /^HOST-WORKER-BEFORE alive alive$/m, end.out);
+  assert.match(end.out, /^HOST-MAIN-BEFORE alive alive$/m, end.out);
+  assert.deepEqual(parseMarker(end.out, "TERMINATED", 2), workerPids, end.out);
+  assert.match(end.out, /^HOST-STATES dead dead$/m, `pending run tree survived worker teardown: ${end.out}`);
+  assert.match(end.out, /^HOST-MAIN-STATES alive alive$/m, `worker teardown cancelled another Env: ${end.out}`);
+  assert.match(end.out, /^HOST-PENDING true true$/m, end.out);
+  assert.match(end.out, /^HOST-MAIN-CLEANUP dead dead$/m, end.out);
+  assert.match(end.out, /^HOST-WORKER-TERMINATE-MS \d+$/m, end.out);
+});
 
 /** The JSON line of `configure-host.mjs <which>`. */
 async function configured(which) {

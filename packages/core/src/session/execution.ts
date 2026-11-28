@@ -1,6 +1,6 @@
 export * as SessionExecution from "./execution"
 
-import { Context, Effect, Layer, type Option } from "effect"
+import { Context, Effect, Layer, Schema, type Option } from "effect"
 import { LayerNode } from "../effect/layer-node"
 import { Node } from "../effect/app-node"
 import { SessionRunner } from "./runner/index"
@@ -9,11 +9,19 @@ import type { SessionRunCoordinator } from "./run-coordinator"
 
 export type ResumeOptions = SessionRunCoordinator.RunOptions
 
+export class MissingSessionError extends Schema.TaggedErrorClass<MissingSessionError>()(
+  "SessionExecution.MissingSessionError",
+  { sessionID: SessionSchema.ID },
+) {}
+
 export interface Interface {
   /** Snapshots active execution owned by this process. */
   readonly active: Effect.Effect<ReadonlySet<SessionSchema.ID>>
   /** Starts execution while idle or joins independently. Opt-in cancellation belongs only to the starter. */
-  readonly resume: (sessionID: SessionSchema.ID, options?: ResumeOptions) => Effect.Effect<void, SessionRunner.RunError>
+  readonly resume: (
+    sessionID: SessionSchema.ID,
+    options?: ResumeOptions,
+  ) => Effect.Effect<void, SessionRunner.RunError | MissingSessionError>
   /** Registers newly recorded work. Repeated wakeups may coalesce. */
   readonly wake: (sessionID: SessionSchema.ID) => Effect.Effect<void>
   /**

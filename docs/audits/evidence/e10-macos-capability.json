@@ -1,0 +1,643 @@
+{
+  "qualification": "source and compile-field-equivalent helper capability; not release CLI/interpreter/Electron",
+  "integrated": "753406a957",
+  "source": "39c30457fcfabf585fd1df668f62814aa749f706",
+  "runs": [
+    {
+      "run": 43354169059,
+      "snapshot": "81fadc842f9e6314b5ec6e88a3252ccc1bfa2d68",
+      "job": 131652088723,
+      "cleanup": 131652961879,
+      "pass_count": 5,
+      "fail_count": 0,
+      "assertions": 177,
+      "log_sha256": "d28e6797790e21340000a9d14834b3fb2320dcf7bbeedcef621a7ccaa00a8db5",
+      "records": {
+        "BUILD": [
+          {
+            "fixtureVersionInput": "1.18.27",
+            "sourcePackageBlob": {
+              "path": "apps/cli/package.json",
+              "sha256": "6253dec9633f94e46d109db42ac556dad373faf9752cf1c8cb06702887f8d5a6"
+            },
+            "compile": {
+              "autoloadBunfig": false,
+              "autoloadDotenv": false,
+              "autoloadTsconfig": true,
+              "autoloadPackageJson": true,
+              "target": "bun-darwin-arm64",
+              "outfile": "/private/var/folders/2s/vty41l455yv698g4xkgfv7z00000gn/T/e10-native-build-95Eu7p/native-fixture",
+              "execArgv": [
+                "--user-agent=orchestra/1.18.27",
+                "--use-system-ca",
+                "--"
+              ],
+              "windows": {}
+            },
+            "executableSha256": "1c0f3f83e93a6f84727ac32364f4704368cb2fc99ed4f1599b710d5f01881655"
+          }
+        ],
+        "SETUP": [
+          {
+            "scenario": "CONTROL hardened: source Bun constant eval",
+            "plantedDirectories": 2,
+            "canaries": {
+              "env": 2,
+              "config": 2,
+              "preload": 2
+            },
+            "emptyConfig": true,
+            "envKeys": [
+              "BUN_BE_BUN"
+            ],
+            "fixtureVersionInput": "1.18.27"
+          },
+          {
+            "scenario": "CONTROL hardened: compiled normal entry identity",
+            "plantedDirectories": 2,
+            "canaries": {
+              "env": 2,
+              "config": 2,
+              "preload": 2
+            },
+            "emptyConfig": true,
+            "envKeys": [],
+            "fixtureVersionInput": "1.18.27"
+          },
+          {
+            "scenario": "CONTROL hardened: compiled Bun constant eval",
+            "plantedDirectories": 2,
+            "canaries": {
+              "env": 2,
+              "config": 2,
+              "preload": 2
+            },
+            "emptyConfig": true,
+            "envKeys": [
+              "BUN_BE_BUN"
+            ],
+            "fixtureVersionInput": "1.18.27"
+          },
+          {
+            "scenario": "CPU capability: source Bun native regex owned exit",
+            "plantedDirectories": 2,
+            "canaries": {
+              "env": 2,
+              "config": 2,
+              "preload": 2
+            },
+            "emptyConfig": true,
+            "envKeys": [
+              "BUN_BE_BUN"
+            ],
+            "fixtureVersionInput": "1.18.27"
+          },
+          {
+            "scenario": "CPU capability: compiled Bun native regex owned exit",
+            "plantedDirectories": 2,
+            "canaries": {
+              "env": 2,
+              "config": 2,
+              "preload": 2
+            },
+            "emptyConfig": true,
+            "envKeys": [
+              "BUN_BE_BUN"
+            ],
+            "fixtureVersionInput": "1.18.27"
+          }
+        ],
+        "WITNESS": [
+          {
+            "scenario": "CONTROL hardened: source Bun constant eval",
+            "pid": 4839,
+            "records": [
+              {
+                "type": "EVAL_OK",
+                "pid": 4839,
+                "bun": "1.3.14",
+                "execPath": "/Users/runner/.bun/bin/bun",
+                "realExecPath": "/Users/runner/.bun/bin/bun",
+                "hostileEnv": false
+              }
+            ],
+            "bytes": 148,
+            "pending": 0,
+            "invalidOutput": false,
+            "overflow": false,
+            "exitMs": 78.52012500000001,
+            "outerWatchdog": false,
+            "heartbeats": 0,
+            "lastHeartbeat": 2151.514084,
+            "maxGapMs": 0,
+            "exitCode": 0,
+            "observedSignal": null,
+            "requestedSignal": null,
+            "terminalKind": null,
+            "joinedMs": 78.60037499999999,
+            "runningAfter": false,
+            "osAliveAfterExit": true,
+            "readersJoinedMs": 78.55862500000012,
+            "fullScopeEndMs": 82.51274999999987,
+            "osAliveAfterScope": false,
+            "finalOSAlive": false,
+            "finalOSDeadTimeMs": 82.56454100000019,
+            "pidPolls": 0,
+            "finalObservationMs": 83.324791,
+            "stderrBytes": 0,
+            "stderrTruncated": false
+          },
+          {
+            "scenario": "CONTROL hardened: compiled normal entry identity",
+            "pid": 4840,
+            "records": [
+              {
+                "type": "COMPILED_ENTRY",
+                "pid": 4840,
+                "bun": "1.3.14",
+                "execPath": "/private/var/folders/2s/vty41l455yv698g4xkgfv7z00000gn/T/e10-native-build-95Eu7p/native-fixture",
+                "realExecPath": "/private/var/folders/2s/vty41l455yv698g4xkgfv7z00000gn/T/e10-native-build-95Eu7p/native-fixture",
+                "hostileEnv": false
+              }
+            ],
+            "bytes": 293,
+            "pending": 0,
+            "invalidOutput": false,
+            "overflow": false,
+            "exitMs": 45.86908399999993,
+            "outerWatchdog": false,
+            "heartbeats": 0,
+            "lastHeartbeat": 2239.978375,
+            "maxGapMs": 0,
+            "exitCode": 0,
+            "observedSignal": null,
+            "requestedSignal": null,
+            "terminalKind": null,
+            "joinedMs": 45.924291999999696,
+            "runningAfter": false,
+            "osAliveAfterExit": true,
+            "readersJoinedMs": 45.891583999999966,
+            "fullScopeEndMs": 47.78387500000008,
+            "osAliveAfterScope": false,
+            "finalOSAlive": false,
+            "finalOSDeadTimeMs": 47.82099999999991,
+            "pidPolls": 0,
+            "finalObservationMs": 48.0017499999999,
+            "stderrBytes": 0,
+            "stderrTruncated": false
+          },
+          {
+            "scenario": "CONTROL hardened: compiled Bun constant eval",
+            "pid": 4841,
+            "records": [
+              {
+                "type": "EVAL_OK",
+                "pid": 4841,
+                "bun": "1.3.14",
+                "execPath": "/private/var/folders/2s/vty41l455yv698g4xkgfv7z00000gn/T/e10-native-build-95Eu7p/native-fixture",
+                "realExecPath": "/private/var/folders/2s/vty41l455yv698g4xkgfv7z00000gn/T/e10-native-build-95Eu7p/native-fixture",
+                "hostileEnv": false
+              }
+            ],
+            "bytes": 286,
+            "pending": 0,
+            "invalidOutput": false,
+            "overflow": false,
+            "exitMs": 37.13262500000019,
+            "outerWatchdog": false,
+            "heartbeats": 0,
+            "lastHeartbeat": 2292.2675,
+            "maxGapMs": 0,
+            "exitCode": 0,
+            "observedSignal": null,
+            "requestedSignal": null,
+            "terminalKind": null,
+            "joinedMs": 37.15533400000004,
+            "runningAfter": false,
+            "osAliveAfterExit": true,
+            "readersJoinedMs": 37.142875000000004,
+            "fullScopeEndMs": 38.038750000000164,
+            "osAliveAfterScope": false,
+            "finalOSAlive": false,
+            "finalOSDeadTimeMs": 38.052791999999954,
+            "pidPolls": 0,
+            "finalObservationMs": 38.13558400000011,
+            "stderrBytes": 0,
+            "stderrTruncated": false
+          },
+          {
+            "scenario": "CPU capability: source Bun native regex owned exit",
+            "pid": 4842,
+            "records": [
+              {
+                "type": "CPU_ENTER",
+                "pid": 4842,
+                "bun": "1.3.14",
+                "execPath": "/Users/runner/.bun/bin/bun",
+                "realExecPath": "/Users/runner/.bun/bin/bun",
+                "hostileEnv": false,
+                "patternBytes": 14340,
+                "subjectBytes": 8388608
+              }
+            ],
+            "bytes": 194,
+            "pending": 0,
+            "invalidOutput": false,
+            "overflow": false,
+            "enterMs": 30.465833000000202,
+            "killMs": 1506.697917,
+            "killJoinedMs": 1523.1702500000001,
+            "exitMs": 1510.5292920000002,
+            "liveBeforeKill": true,
+            "osAliveBeforeKill": true,
+            "outerWatchdog": false,
+            "heartbeats": 27,
+            "lastHeartbeat": 3841.416667,
+            "maxGapMs": 67.47037499999988,
+            "exitCode": null,
+            "observedSignal": null,
+            "requestedSignal": "SIGKILL",
+            "terminalKind": "PlatformError",
+            "joinedMs": 1523.1937500000004,
+            "runningAfter": false,
+            "osAliveAfterExit": true,
+            "readersJoinedMs": 1510.627625,
+            "fullScopeEndMs": 1524.2299170000001,
+            "osAliveAfterScope": false,
+            "finalOSAlive": false,
+            "finalOSDeadTimeMs": 1524.27475,
+            "pidPolls": 0,
+            "finalObservationMs": 1524.426833,
+            "stderrBytes": 0,
+            "stderrTruncated": false
+          },
+          {
+            "scenario": "CPU capability: compiled Bun native regex owned exit",
+            "pid": 4847,
+            "records": [
+              {
+                "type": "CPU_ENTER",
+                "pid": 4847,
+                "bun": "1.3.14",
+                "execPath": "/private/var/folders/2s/vty41l455yv698g4xkgfv7z00000gn/T/e10-native-build-95Eu7p/native-fixture",
+                "realExecPath": "/private/var/folders/2s/vty41l455yv698g4xkgfv7z00000gn/T/e10-native-build-95Eu7p/native-fixture",
+                "hostileEnv": false,
+                "patternBytes": 14340,
+                "subjectBytes": 8388608
+              }
+            ],
+            "bytes": 332,
+            "pending": 0,
+            "invalidOutput": false,
+            "overflow": false,
+            "enterMs": 36.33204099999966,
+            "killMs": 1501.7179999999994,
+            "killJoinedMs": 1517.3534999999997,
+            "exitMs": 1505.8302499999995,
+            "liveBeforeKill": true,
+            "osAliveBeforeKill": true,
+            "outerWatchdog": false,
+            "heartbeats": 27,
+            "lastHeartbeat": 5333.443375,
+            "maxGapMs": 59.08054099999981,
+            "exitCode": null,
+            "observedSignal": null,
+            "requestedSignal": "SIGKILL",
+            "terminalKind": "PlatformError",
+            "joinedMs": 1517.3709159999994,
+            "runningAfter": false,
+            "osAliveAfterExit": true,
+            "readersJoinedMs": 1505.8804999999998,
+            "fullScopeEndMs": 1518.278041,
+            "osAliveAfterScope": false,
+            "finalOSAlive": false,
+            "finalOSDeadTimeMs": 1518.299208,
+            "pidPolls": 0,
+            "finalObservationMs": 1518.3993329999998,
+            "stderrBytes": 0,
+            "stderrTruncated": false
+          }
+        ]
+      }
+    },
+    {
+      "run": 43353582278,
+      "snapshot": "fd87bae09e51a27ceb542ddb0a4a488473c3a606",
+      "job": 131650175626,
+      "cleanup": 131653065300,
+      "pass_count": 5,
+      "fail_count": 0,
+      "assertions": 177,
+      "log_sha256": "ab41bc1fdaffea54bc29bd9545fdf6104bcb926a5faa07ccfc0d7f60645c984e",
+      "records": {
+        "BUILD": [
+          {
+            "fixtureVersionInput": "1.18.27",
+            "sourcePackageBlob": {
+              "path": "apps/cli/package.json",
+              "sha256": "6253dec9633f94e46d109db42ac556dad373faf9752cf1c8cb06702887f8d5a6"
+            },
+            "compile": {
+              "autoloadBunfig": false,
+              "autoloadDotenv": false,
+              "autoloadTsconfig": true,
+              "autoloadPackageJson": true,
+              "target": "bun-darwin-x64",
+              "outfile": "/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/e10-native-build-TdL3ho/native-fixture",
+              "execArgv": [
+                "--user-agent=orchestra/1.18.27",
+                "--use-system-ca",
+                "--"
+              ],
+              "windows": {}
+            },
+            "executableSha256": "200258d36672614f234cf9ce57989c5569235d26315b9971337a0f09706572e6"
+          }
+        ],
+        "SETUP": [
+          {
+            "scenario": "CONTROL hardened: source Bun constant eval",
+            "plantedDirectories": 2,
+            "canaries": {
+              "env": 2,
+              "config": 2,
+              "preload": 2
+            },
+            "emptyConfig": true,
+            "envKeys": [
+              "BUN_BE_BUN"
+            ],
+            "fixtureVersionInput": "1.18.27"
+          },
+          {
+            "scenario": "CONTROL hardened: compiled normal entry identity",
+            "plantedDirectories": 2,
+            "canaries": {
+              "env": 2,
+              "config": 2,
+              "preload": 2
+            },
+            "emptyConfig": true,
+            "envKeys": [],
+            "fixtureVersionInput": "1.18.27"
+          },
+          {
+            "scenario": "CONTROL hardened: compiled Bun constant eval",
+            "plantedDirectories": 2,
+            "canaries": {
+              "env": 2,
+              "config": 2,
+              "preload": 2
+            },
+            "emptyConfig": true,
+            "envKeys": [
+              "BUN_BE_BUN"
+            ],
+            "fixtureVersionInput": "1.18.27"
+          },
+          {
+            "scenario": "CPU capability: source Bun native regex owned exit",
+            "plantedDirectories": 2,
+            "canaries": {
+              "env": 2,
+              "config": 2,
+              "preload": 2
+            },
+            "emptyConfig": true,
+            "envKeys": [
+              "BUN_BE_BUN"
+            ],
+            "fixtureVersionInput": "1.18.27"
+          },
+          {
+            "scenario": "CPU capability: compiled Bun native regex owned exit",
+            "plantedDirectories": 2,
+            "canaries": {
+              "env": 2,
+              "config": 2,
+              "preload": 2
+            },
+            "emptyConfig": true,
+            "envKeys": [
+              "BUN_BE_BUN"
+            ],
+            "fixtureVersionInput": "1.18.27"
+          }
+        ],
+        "WITNESS": [
+          {
+            "scenario": "CONTROL hardened: source Bun constant eval",
+            "pid": 8752,
+            "records": [
+              {
+                "type": "EVAL_OK",
+                "pid": 8752,
+                "bun": "1.3.14",
+                "execPath": "/Users/runner/.bun/bin/bun",
+                "realExecPath": "/Users/runner/.bun/bin/bun",
+                "hostileEnv": false
+              }
+            ],
+            "bytes": 148,
+            "pending": 0,
+            "invalidOutput": false,
+            "overflow": false,
+            "exitMs": 111.39029100000062,
+            "outerWatchdog": false,
+            "heartbeats": 0,
+            "lastHeartbeat": 5280.038258,
+            "maxGapMs": 0,
+            "exitCode": 0,
+            "observedSignal": null,
+            "requestedSignal": null,
+            "terminalKind": null,
+            "joinedMs": 111.60530100000051,
+            "runningAfter": false,
+            "osAliveAfterExit": true,
+            "readersJoinedMs": 111.47716300000047,
+            "fullScopeEndMs": 121.60562400000072,
+            "osAliveAfterScope": false,
+            "finalOSAlive": false,
+            "finalOSDeadTimeMs": 121.82054700000026,
+            "pidPolls": 0,
+            "finalObservationMs": 123.20626300000004,
+            "stderrBytes": 0,
+            "stderrTruncated": false
+          },
+          {
+            "scenario": "CONTROL hardened: compiled normal entry identity",
+            "pid": 8753,
+            "records": [
+              {
+                "type": "COMPILED_ENTRY",
+                "pid": 8753,
+                "bun": "1.3.14",
+                "execPath": "/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/e10-native-build-TdL3ho/native-fixture",
+                "realExecPath": "/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/e10-native-build-TdL3ho/native-fixture",
+                "hostileEnv": false
+              }
+            ],
+            "bytes": 293,
+            "pending": 0,
+            "invalidOutput": false,
+            "overflow": false,
+            "exitMs": 240.6335590000008,
+            "outerWatchdog": false,
+            "heartbeats": 0,
+            "lastHeartbeat": 5413.702823,
+            "maxGapMs": 0,
+            "exitCode": 0,
+            "observedSignal": null,
+            "requestedSignal": null,
+            "terminalKind": null,
+            "joinedMs": 240.69174199999998,
+            "runningAfter": false,
+            "osAliveAfterExit": true,
+            "readersJoinedMs": 240.65750200000002,
+            "fullScopeEndMs": 243.52386900000056,
+            "osAliveAfterScope": false,
+            "finalOSAlive": false,
+            "finalOSDeadTimeMs": 243.56714200000079,
+            "pidPolls": 0,
+            "finalObservationMs": 243.76812800000062,
+            "stderrBytes": 0,
+            "stderrTruncated": false
+          },
+          {
+            "scenario": "CONTROL hardened: compiled Bun constant eval",
+            "pid": 8754,
+            "records": [
+              {
+                "type": "EVAL_OK",
+                "pid": 8754,
+                "bun": "1.3.14",
+                "execPath": "/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/e10-native-build-TdL3ho/native-fixture",
+                "realExecPath": "/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/e10-native-build-TdL3ho/native-fixture",
+                "hostileEnv": false
+              }
+            ],
+            "bytes": 286,
+            "pending": 0,
+            "invalidOutput": false,
+            "overflow": false,
+            "exitMs": 138.07852400000047,
+            "outerWatchdog": false,
+            "heartbeats": 0,
+            "lastHeartbeat": 5668.868379,
+            "maxGapMs": 0,
+            "exitCode": 0,
+            "observedSignal": null,
+            "requestedSignal": null,
+            "terminalKind": null,
+            "joinedMs": 138.17452200000025,
+            "runningAfter": false,
+            "osAliveAfterExit": true,
+            "readersJoinedMs": 138.14785500000016,
+            "fullScopeEndMs": 155.21894000000066,
+            "osAliveAfterScope": false,
+            "finalOSAlive": false,
+            "finalOSDeadTimeMs": 155.26874100000077,
+            "pidPolls": 0,
+            "finalObservationMs": 155.6396820000009,
+            "stderrBytes": 0,
+            "stderrTruncated": false
+          },
+          {
+            "scenario": "CPU capability: source Bun native regex owned exit",
+            "pid": 8755,
+            "records": [
+              {
+                "type": "CPU_ENTER",
+                "pid": 8755,
+                "bun": "1.3.14",
+                "execPath": "/Users/runner/.bun/bin/bun",
+                "realExecPath": "/Users/runner/.bun/bin/bun",
+                "hostileEnv": false,
+                "patternBytes": 14340,
+                "subjectBytes": 8388608
+              }
+            ],
+            "bytes": 194,
+            "pending": 0,
+            "invalidOutput": false,
+            "overflow": false,
+            "enterMs": 74.47212299999956,
+            "killMs": 1501.753165,
+            "killJoinedMs": 1531.705172,
+            "exitMs": 1509.8901580000002,
+            "liveBeforeKill": true,
+            "osAliveBeforeKill": true,
+            "outerWatchdog": false,
+            "heartbeats": 27,
+            "lastHeartbeat": 7325.477154,
+            "maxGapMs": 74.47212299999956,
+            "exitCode": null,
+            "observedSignal": null,
+            "requestedSignal": "SIGKILL",
+            "terminalKind": "PlatformError",
+            "joinedMs": 1531.740183,
+            "runningAfter": false,
+            "osAliveAfterExit": true,
+            "readersJoinedMs": 1509.9378049999996,
+            "fullScopeEndMs": 1533.8175019999999,
+            "osAliveAfterScope": false,
+            "finalOSAlive": false,
+            "finalOSDeadTimeMs": 1533.8660479999999,
+            "pidPolls": 0,
+            "finalObservationMs": 1534.0994609999998,
+            "stderrBytes": 0,
+            "stderrTruncated": false
+          },
+          {
+            "scenario": "CPU capability: compiled Bun native regex owned exit",
+            "pid": 8766,
+            "records": [
+              {
+                "type": "CPU_ENTER",
+                "pid": 8766,
+                "bun": "1.3.14",
+                "execPath": "/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/e10-native-build-TdL3ho/native-fixture",
+                "realExecPath": "/private/var/folders/20/jp1_0n3n7kndh6rnbqb5344m0000gn/T/e10-native-build-TdL3ho/native-fixture",
+                "hostileEnv": false,
+                "patternBytes": 14340,
+                "subjectBytes": 8388608
+              }
+            ],
+            "bytes": 332,
+            "pending": 0,
+            "invalidOutput": false,
+            "overflow": false,
+            "enterMs": 124.19762099999934,
+            "killMs": 1500.9936369999996,
+            "killJoinedMs": 1520.7670240000007,
+            "exitMs": 1508.9269349999995,
+            "liveBeforeKill": true,
+            "osAliveBeforeKill": true,
+            "outerWatchdog": false,
+            "heartbeats": 26,
+            "lastHeartbeat": 8863.810747,
+            "maxGapMs": 124.19762099999934,
+            "exitCode": null,
+            "observedSignal": null,
+            "requestedSignal": "SIGKILL",
+            "terminalKind": "PlatformError",
+            "joinedMs": 1520.7974529999992,
+            "runningAfter": false,
+            "osAliveAfterExit": true,
+            "readersJoinedMs": 1508.9695269999993,
+            "fullScopeEndMs": 1522.3977610000002,
+            "osAliveAfterScope": false,
+            "finalOSAlive": false,
+            "finalOSDeadTimeMs": 1522.4415200000003,
+            "pidPolls": 0,
+            "finalObservationMs": 1522.6708550000003,
+            "stderrBytes": 0,
+            "stderrTruncated": false
+          }
+        ]
+      }
+    }
+  ],
+  "architecture": "ARM runner CPU assertion passes and executed compileTarget manifest is bun-darwin-arm64. Intel branch can return bun-darwin-x64 only when actual Bun process platform is darwin and arch x64. This is a code-bound behavioral witness; request.json direct platform/arch echo was not uploaded by ordinary Core jobs.",
+  "failed_original_arm": "/tmp/audit-e10-regex-macos-arm-unsupported.json"
+}

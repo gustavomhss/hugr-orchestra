@@ -101,10 +101,12 @@ These follow from Claude Code running the model. None of them changes what you s
 - Built-in file tools and Glob/Grep search roots use the physical Location for permission checks. An absolute path
   outside it requires `external_directory` approval and permission for the read, edit or search. Relative paths
   that leave the Location and internal aliases that point outside are refused. Internal aliases use the target's
-  permissions and safety restrictions. Claude Code still receives the original arguments.
+  permissions and safety restrictions. Claude Code still receives the original arguments. These checks do not
+  guarantee safety against another process replacing a symlink between approval and the filesystem operation.
 - Installed Orchestra hooks run around authorized Claude Code tool calls. After a successful call, a Relay Verify
   check can read the tool response as JSON using `"$RELAY_HOOK_RESULT"`. Orchestra provides up to 16 KiB after checking
-  the response for credential-like data. Hook notes appear alongside the original result. Seats run as Orchestra Sessions.
+  the response for credential-like data. Hook notes appear alongside the original result. Claude Code's own subagent
+  tool is not used. Seats run as Orchestra Sessions.
 
 ## Known limits
 

@@ -137,6 +137,8 @@ test("legacy rollback checks nothing and says so", async () => {
 const scopeVariable = /ORCHESTRA_OMNI_CONTROL(?![A-Z0-9_])/g
 const mentions: Record<string, string> = {
   "script/test-omni-control.ts": "the control reads its scope",
+  "packages/core/script/test-browser.ts": "aggregates declared VM receipts while preserving the parent suite scope",
+  "packages/core/test/browser-suite-control.test.ts": "qualifies the isolated browser aggregate with real positive and negative child runs",
   ".github/workflows/test-ci.yml": "the Run tests step sets the scope from the request (pinned below)",
   ".github/workflows/test.yml": "the focused hosted sandbox and process-query proofs run single files outside the lanes' suite scope, so they declare",
   "turbo.json": "globalEnv keys cached turbo results by the scope (pinned below)",
@@ -145,6 +147,8 @@ const mentions: Record<string, string> = {
   "packages/core/test/distribution-bundle-workflow.test.ts": "pins the native workflow's positive suite value and declared steps",
   "packages/core/test/fixture/distribution-bundle.ts": "records the scope a bundle run saw in its evidence",
   "packages/core/test/test-omni-control.test.ts": "this guard and its fixtures",
+  "packages/core/test/fixture/omni-control-isolate.ts": "actual negative and positive isolated child preload controls use declared scope",
+  "packages/script/test/test-plan.test.ts": "asserts Desktop shards do not override suite scope with declared",
   "native/omni/campaign/package.json": "the campaign package's test script declares the control, as its tests spawn through omni",
   "AGENTS.md": "documents the control",
 }
