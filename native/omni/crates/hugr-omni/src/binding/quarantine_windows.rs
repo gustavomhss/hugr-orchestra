@@ -322,3 +322,32 @@ pub fn inspect(source: &str) -> Result<Option<String>, String> {
     };
     identity(source.0).map(Some)
 }
+
+/// Deletes only the pinned object identified by a trusted host, never its children.
+pub fn dispose(source: &str, expected: &str) -> Result<(), String> {
+    let (drive, parts) = parse(source)?;
+    let root = acquire_root(&drive, 0)?;
+    let ancestors = parents(&root, &parts[..parts.len() - 1], 0)?;
+    let parent = ancestors.last().map_or(root.0, |h| h.0);
+    let source = open(parent, &parts[parts.len() - 1], false, true)?;
+    if identity(source.0)? != expected {
+        return Err("source identity changed".into());
+    }
+    let mut info = [0u8; 8];
+    query(source.0, 35, &mut info)?;
+    let attributes = u32::from_le_bytes([info[0], info[1], info[2], info[3]]);
+    if attributes & (0x400 | 0x40) != 0 {
+        return Err("reparse point or device".into());
+    }
+    let disposition = 1u8;
+    let mut io = IoStatus {
+        status: 0,
+        information: 0,
+    };
+    // FileDispositionInformation acts on the pinned handle. The filesystem rejects
+    // nonempty directories; no child is traversed or removed.
+    // SAFETY: the information buffer and owned handle remain live during this synchronous call.
+    status(unsafe { NtSetInformationFile(source.0, &mut io, (&disposition as *const u8).cast(), 1, 13) })?;
+    drop(source);
+    Ok(())
+}
