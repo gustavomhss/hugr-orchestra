@@ -1,0 +1,16 @@
+{
+  "schema": "kubeconform-p0a-provenance-v1",
+  "upstream": {
+    "repo": "yannh/kubeconform",
+    "tag": "v0.8.0",
+    "commit": "02374e583d700721f57300fae78e11acd27ee539",
+    "tree": "1c4f6d5b7d8f8f020df501fcbae79483b38794d0"
+  },
+  "baseline": "66371f666132cfa78006b50fc98cdc7800c2e044",
+  "workflowSHA": "a82102da6f1e531821ab6d5ac31f0b6eacc51633",
+  "runID": "46103282827",
+  "attempt": "1",
+  "platform": "linux",
+  "arch": "x64",
+  "analysisQualified": false
+}

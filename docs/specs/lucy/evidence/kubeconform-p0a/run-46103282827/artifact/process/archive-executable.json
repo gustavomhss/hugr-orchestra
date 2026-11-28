@@ -1,0 +1,25 @@
+{
+  "command": "tar",
+  "args": [
+    "-xOf",
+    "/tmp/orchestra-core-test-TC7ALm/release-archive/release.tar.gz",
+    "kubeconform"
+  ],
+  "exitCode": 0,
+  "durationMs": 84,
+  "timedOut": false,
+  "overflow": false,
+  "memoryExceeded": false,
+  "stdout": {
+    "bytes": 13944911,
+    "retainedBytes": 13944911,
+    "truncated": false,
+    "sha256": "457722b36e98d7bdbc91525e594951ef5d7ea3a29da2d13b9b28a2fb8a5097b7"
+  },
+  "stderr": {
+    "bytes": 0,
+    "retainedBytes": 0,
+    "truncated": false,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

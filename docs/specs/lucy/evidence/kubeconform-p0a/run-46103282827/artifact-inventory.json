@@ -1,0 +1,222 @@
+[
+  {
+    "path": "build-info.json",
+    "bytes": 1469,
+    "sha256": "86e5cf17d9900e3573f2cf23eced205c753f61b8b83d54380745c261196fc1f4"
+  },
+  {
+    "path": "build-info.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "compiler-notices/LICENSE",
+    "bytes": 1453,
+    "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+  },
+  {
+    "path": "compiler-notices/PATENTS",
+    "bytes": 1303,
+    "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+  },
+  {
+    "path": "compiler-source-pin.json",
+    "bytes": 1056,
+    "sha256": "fe48722fe13b59c6559e7035b0b650f81d4fec877b83c06f2ef32aaf828c67a7"
+  },
+  {
+    "path": "executable.json",
+    "bytes": 647,
+    "sha256": "c502d9b9fb0ced35212e1779d7b29dab6fd802b6910b2643a030a8dce7a4044e"
+  },
+  {
+    "path": "kubeconform-version.stderr",
+    "bytes": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  {
+    "path": "kubeconform-version.stdout",
+    "bytes": 7,
+    "sha256": "7dfe51344c2f4d648ce2c54465c531fdc19f823c3aaf0ce9e8d4393416436ce2"
+  },
+  {
+    "path": "measurement.json",
+    "bytes": 17047,
+    "sha256": "ad3de846ab6ac883e81aeb868597b00ebd7d5dfc00087c57f56ef7d2f10c9f7b"
+  },
+  {
+    "path": "process/archive-executable.json",
+    "bytes": 588,
+    "sha256": "92743ebe86402e2c97e126f5c2d405cf0bf55dd50f5d459d2d72d6596f3b6167"
+  },
+  {
+    "path": "process/archive-members.json",
+    "bytes": 557,
+    "sha256": "00ab04b49422f1443166c52278036d58fbcf1f7f3d6967cb5bfdec65e6448208"
+  },
+  {
+    "path": "process/build-info.json",
+    "bytes": 656,
+    "sha256": "6792a9b11cad08559efe3b8913a73374287adc54607d90ac861578a4546fd977"
+  },
+  {
+    "path": "process/go-reader-version.json",
+    "bytes": 534,
+    "sha256": "974f3367a69c705af98529c64d80f890bee5ad08922d75240680cabfa6a42163"
+  },
+  {
+    "path": "process/kubeconform-version.json",
+    "bytes": 566,
+    "sha256": "cc1694672e9a3e82fe67665096da2161c7933eb3c28e72185a2a89af51d34351"
+  },
+  {
+    "path": "process/release-notice-0.json",
+    "bytes": 578,
+    "sha256": "ccfbb56435a5b1d907e6ebcb67b6186697257d190c39980e5623ffd921db6409"
+  },
+  {
+    "path": "provenance.json",
+    "bytes": 469,
+    "sha256": "49e67de63066beeb02306e39ddd09776bef81ebb42673e419f17071372293840"
+  },
+  {
+    "path": "reader-notices/LICENSE",
+    "bytes": 1453,
+    "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+  },
+  {
+    "path": "reader-notices/PATENTS",
+    "bytes": 1303,
+    "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+  },
+  {
+    "path": "reader-version.stdout",
+    "bytes": 33,
+    "sha256": "72fbd1d67ca459621672bbf30387af1e39868899b7092da85d764dc5708a3702"
+  },
+  {
+    "path": "release-members.txt",
+    "bytes": 20,
+    "sha256": "f26453519753c57a4ba39a3c47a66f61a4aacdc59f5829ac829d8a64f4ba8fd5"
+  },
+  {
+    "path": "release-notices/0.txt",
+    "bytes": 11346,
+    "sha256": "1294f9be73faeda3987cb554c1597f599641eebdcd4d4fa88f97bdb6241be275"
+  },
+  {
+    "path": "release-notices.json",
+    "bytes": 179,
+    "sha256": "81c3c3893d683c65f6d8d9b2b7ee84a297ff2739007a2b9f9f131e6207e48b64"
+  },
+  {
+    "path": "source/.goreleaser.yml",
+    "bytes": 3454,
+    "sha256": "fb89dd635ffa5d22feb73b6394d15a3bff636d986d2f750cd4e7ab6f7c0472ff"
+  },
+  {
+    "path": "source/LICENSE",
+    "bytes": 11346,
+    "sha256": "1294f9be73faeda3987cb554c1597f599641eebdcd4d4fa88f97bdb6241be275"
+  },
+  {
+    "path": "source/go.mod",
+    "bytes": 428,
+    "sha256": "ecd996383ac8a1dac6cdbcfa9005157cc837bf44ae20d65581a4516a2bc00121"
+  },
+  {
+    "path": "source/go.sum",
+    "bytes": 3629,
+    "sha256": "03d940bb45f9afe3611cd7d75f29d3b923534df29726de36d27644c9214e0d53"
+  },
+  {
+    "path": "source/vendor/github.com/hashicorp/go-cleanhttp/LICENSE",
+    "bytes": 15922,
+    "sha256": "60222c28c1a7f6a92c7df98e5c5f4459e624e6e285e0b9b94467af5f6ab3343d"
+  },
+  {
+    "path": "source/vendor/github.com/hashicorp/go-retryablehttp/LICENSE",
+    "bytes": 15958,
+    "sha256": "d6b1a865f1c8c697d343bd4e0ce61025f91898486a1f00d727f32e8644af77d3"
+  },
+  {
+    "path": "source/vendor/github.com/santhosh-tekuri/jsonschema/v6/LICENSE",
+    "bytes": 10141,
+    "sha256": "c8858a5a76440bbca484e134cf7df46385d090dd18b2c58e650f939258802e5b"
+  },
+  {
+    "path": "source/vendor/go.yaml.in/yaml/v2/LICENSE",
+    "bytes": 11357,
+    "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+  },
+  {
+    "path": "source/vendor/go.yaml.in/yaml/v2/LICENSE.libyaml",
+    "bytes": 1313,
+    "sha256": "a94710b55e03b5285f77d048c5ba61bb9d6ee04a06c0eb90e68821e11b0c707a"
+  },
+  {
+    "path": "source/vendor/go.yaml.in/yaml/v2/NOTICE",
+    "bytes": 560,
+    "sha256": "f6c2dd3a67b576eafb89b80200b8b1627230bf3821a0c14cb99a22ac19107d00"
+  },
+  {
+    "path": "source/vendor/golang.org/x/text/LICENSE",
+    "bytes": 1453,
+    "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+  },
+  {
+    "path": "source/vendor/golang.org/x/text/PATENTS",
+    "bytes": 1303,
+    "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+  },
+  {
+    "path": "source/vendor/k8s.io/kube-openapi/LICENSE",
+    "bytes": 11358,
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+  },
+  {
+    "path": "source/vendor/k8s.io/kube-openapi/pkg/internal/third_party/govalidator/LICENSE",
+    "bytes": 1080,
+    "sha256": "012d0f6caf604aedba723982c0d8a28f664ecd957de5131bc22c87a0d36b7115"
+  },
+  {
+    "path": "source/vendor/k8s.io/kube-openapi/pkg/validation/errors/LICENSE",
+    "bytes": 11358,
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+  },
+  {
+    "path": "source/vendor/k8s.io/kube-openapi/pkg/validation/strfmt/LICENSE",
+    "bytes": 11358,
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+  },
+  {
+    "path": "source/vendor/k8s.io/utils/LICENSE",
+    "bytes": 11358,
+    "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+  },
+  {
+    "path": "source/vendor/k8s.io/utils/internal/third_party/forked/golang/LICENSE",
+    "bytes": 1479,
+    "sha256": "dd26a7abddd02e2d0aba97805b31f248ef7835d9e10da289b22e3b8ab78b324d"
+  },
+  {
+    "path": "source/vendor/k8s.io/utils/internal/third_party/forked/golang/PATENTS",
+    "bytes": 1303,
+    "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+  },
+  {
+    "path": "source/vendor/modules.txt",
+    "bytes": 1350,
+    "sha256": "619b03559f053862556f0433f11d5343da78072d7ea933ec1d70e91c36bfeb35"
+  },
+  {
+    "path": "source/vendor/sigs.k8s.io/yaml/LICENSE",
+    "bytes": 16189,
+    "sha256": "5dc79da695aea39a47245008a168e3f7d461b686da8bec299fd55fee0393cbcc"
+  },
+  {
+    "path": "sources.json",
+    "bytes": 13786,
+    "sha256": "ac95aee24abed6c146dad1593f428dfa1d7d0b0d51a11daad480bbc30a7f7049"
+  }
+]

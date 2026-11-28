@@ -1,0 +1,314 @@
+{
+  "schema": "kubeconform-p0a-sources-v1",
+  "status": "source-inventory-only; native build/link and distribution closure pending",
+  "baseline": "66371f666132cfa78006b50fc98cdc7800c2e044",
+  "upstream": {
+    "repo": "yannh/kubeconform",
+    "tag": "v0.8.0",
+    "commit": "02374e583d700721f57300fae78e11acd27ee539",
+    "tree": "1c4f6d5b7d8f8f020df501fcbae79483b38794d0"
+  },
+  "release": {
+    "target": "linux-x64",
+    "url": "https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-amd64.tar.gz",
+    "bytes": 7534236,
+    "sha256": "9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883",
+    "integrity": "sha256-m8K/+/cfJhEoUz7a+RIVOUi3/yOPmlMa5tNEZuwoeIM=",
+    "member": "kubeconform"
+  },
+  "reader": {
+    "kind": "inspection-only",
+    "version": "1.25.14",
+    "sourceCommit": "08118a942518cc18db507ec182acffe7364a92a3",
+    "url": "https://go.dev/dl/go1.25.14.linux-amd64.tar.gz",
+    "integrity": "sha256-ohrlYzomm81+kM92fkgiVjN5XpnYMXQsvzOXBk/udxI=",
+    "files": [
+      {
+        "path": "LICENSE",
+        "gitBlob": "2a7cf70da6e498df9c11ab6a5eaa2ddd7af34da4",
+        "bytes": 1453,
+        "url": "https://raw.githubusercontent.com/golang/go/08118a942518cc18db507ec182acffe7364a92a3/LICENSE",
+        "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+      },
+      {
+        "path": "PATENTS",
+        "gitBlob": "733099041f84fa1e58611ab2e11af51c1f26d1d2",
+        "bytes": 1303,
+        "url": "https://raw.githubusercontent.com/golang/go/08118a942518cc18db507ec182acffe7364a92a3/PATENTS",
+        "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+      }
+    ]
+  },
+  "compiler": {
+    "kind": "observed-binary-compiler",
+    "version": "go1.26.3",
+    "sourceCommit": "2dc996f71b0ebafb77e64433e58333e049488a3c",
+    "sourceRef": "refs/tags/go1.26.3",
+    "sourceRefURL": "https://api.github.com/repos/golang/go/git/ref/tags/go1.26.3",
+    "observedBuildInfo": {
+      "runID": 46101713306,
+      "artifactID": 15245686332,
+      "sha256": "86e5cf17d9900e3573f2cf23eced205c753f61b8b83d54380745c261196fc1f4"
+    },
+    "files": [
+      {
+        "path": "LICENSE",
+        "gitBlob": "2a7cf70da6e498df9c11ab6a5eaa2ddd7af34da4",
+        "bytes": 1453,
+        "url": "https://raw.githubusercontent.com/golang/go/2dc996f71b0ebafb77e64433e58333e049488a3c/LICENSE",
+        "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+      },
+      {
+        "path": "PATENTS",
+        "gitBlob": "733099041f84fa1e58611ab2e11af51c1f26d1d2",
+        "bytes": 1303,
+        "url": "https://raw.githubusercontent.com/golang/go/2dc996f71b0ebafb77e64433e58333e049488a3c/PATENTS",
+        "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+      }
+    ]
+  },
+  "files": [
+    {
+      "kind": "notice",
+      "path": "LICENSE",
+      "gitBlob": "f444b3dfec69522ae0d303ee44e7ab62c7bd84f3",
+      "bytes": 11346,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/LICENSE",
+      "sha256": "1294f9be73faeda3987cb554c1597f599641eebdcd4d4fa88f97bdb6241be275"
+    },
+    {
+      "kind": "notice",
+      "path": "vendor/github.com/hashicorp/go-cleanhttp/LICENSE",
+      "gitBlob": "e87a115e462e1f5fee7905ea914c72e24d2eee42",
+      "bytes": 15922,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/github.com/hashicorp/go-cleanhttp/LICENSE",
+      "sha256": "60222c28c1a7f6a92c7df98e5c5f4459e624e6e285e0b9b94467af5f6ab3343d"
+    },
+    {
+      "kind": "notice",
+      "path": "vendor/github.com/hashicorp/go-retryablehttp/LICENSE",
+      "gitBlob": "f4f97ee5853a2b2ba9121ea21589c706edf7a1cc",
+      "bytes": 15958,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/github.com/hashicorp/go-retryablehttp/LICENSE",
+      "sha256": "d6b1a865f1c8c697d343bd4e0ce61025f91898486a1f00d727f32e8644af77d3"
+    },
+    {
+      "kind": "notice",
+      "path": "vendor/github.com/santhosh-tekuri/jsonschema/v6/LICENSE",
+      "gitBlob": "19dc35b2433851a0e8fd866a5d323b2ba18c12ed",
+      "bytes": 10141,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/github.com/santhosh-tekuri/jsonschema/v6/LICENSE",
+      "sha256": "c8858a5a76440bbca484e134cf7df46385d090dd18b2c58e650f939258802e5b"
+    },
+    {
+      "kind": "notice",
+      "path": "vendor/go.yaml.in/yaml/v2/LICENSE",
+      "gitBlob": "8dada3edaf50dbc082c9a125058f25def75e625a",
+      "bytes": 11357,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/go.yaml.in/yaml/v2/LICENSE",
+      "sha256": "b40930bbcf80744c86c46a12bc9da056641d722716c378f5659b9e555ef833e1"
+    },
+    {
+      "kind": "notice",
+      "path": "vendor/go.yaml.in/yaml/v2/LICENSE.libyaml",
+      "gitBlob": "8da58fbf6f84a9280f8351ed3c8bfb47c9d787c2",
+      "bytes": 1313,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/go.yaml.in/yaml/v2/LICENSE.libyaml",
+      "sha256": "a94710b55e03b5285f77d048c5ba61bb9d6ee04a06c0eb90e68821e11b0c707a"
+    },
+    {
+      "kind": "notice",
+      "path": "vendor/go.yaml.in/yaml/v2/NOTICE",
+      "gitBlob": "866d74a7ad79165312a2ce3904b4bdb53e6aedf7",
+      "bytes": 560,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/go.yaml.in/yaml/v2/NOTICE",
+      "sha256": "f6c2dd3a67b576eafb89b80200b8b1627230bf3821a0c14cb99a22ac19107d00"
+    },
+    {
+      "kind": "notice",
+      "path": "vendor/golang.org/x/text/LICENSE",
+      "gitBlob": "2a7cf70da6e498df9c11ab6a5eaa2ddd7af34da4",
+      "bytes": 1453,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/golang.org/x/text/LICENSE",
+      "sha256": "911f8f5782931320f5b8d1160a76365b83aea6447ee6c04fa6d5591467db9dad"
+    },
+    {
+      "kind": "notice",
+      "path": "vendor/golang.org/x/text/PATENTS",
+      "gitBlob": "733099041f84fa1e58611ab2e11af51c1f26d1d2",
+      "bytes": 1303,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/golang.org/x/text/PATENTS",
+      "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+    },
+    {
+      "kind": "notice",
+      "path": "vendor/k8s.io/kube-openapi/LICENSE",
+      "gitBlob": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "bytes": 11358,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/k8s.io/kube-openapi/LICENSE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "kind": "notice",
+      "path": "vendor/k8s.io/kube-openapi/pkg/internal/third_party/govalidator/LICENSE",
+      "gitBlob": "2f9a31fadf6787886e6e686d1ade0d60140650f4",
+      "bytes": 1080,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/k8s.io/kube-openapi/pkg/internal/third_party/govalidator/LICENSE",
+      "sha256": "012d0f6caf604aedba723982c0d8a28f664ecd957de5131bc22c87a0d36b7115"
+    },
+    {
+      "kind": "notice",
+      "path": "vendor/k8s.io/kube-openapi/pkg/validation/errors/LICENSE",
+      "gitBlob": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "bytes": 11358,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/k8s.io/kube-openapi/pkg/validation/errors/LICENSE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "kind": "notice",
+      "path": "vendor/k8s.io/kube-openapi/pkg/validation/strfmt/LICENSE",
+      "gitBlob": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "bytes": 11358,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/k8s.io/kube-openapi/pkg/validation/strfmt/LICENSE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "kind": "notice",
+      "path": "vendor/k8s.io/utils/LICENSE",
+      "gitBlob": "d645695673349e3947e8e5ae42332d0ac3164cd7",
+      "bytes": 11358,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/k8s.io/utils/LICENSE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30"
+    },
+    {
+      "kind": "notice",
+      "path": "vendor/k8s.io/utils/internal/third_party/forked/golang/LICENSE",
+      "gitBlob": "74487567632c8f137ef3971b0f5912ca50bebcda",
+      "bytes": 1479,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/k8s.io/utils/internal/third_party/forked/golang/LICENSE",
+      "sha256": "dd26a7abddd02e2d0aba97805b31f248ef7835d9e10da289b22e3b8ab78b324d"
+    },
+    {
+      "kind": "notice",
+      "path": "vendor/k8s.io/utils/internal/third_party/forked/golang/PATENTS",
+      "gitBlob": "733099041f84fa1e58611ab2e11af51c1f26d1d2",
+      "bytes": 1303,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/k8s.io/utils/internal/third_party/forked/golang/PATENTS",
+      "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc"
+    },
+    {
+      "kind": "notice",
+      "path": "vendor/sigs.k8s.io/yaml/LICENSE",
+      "gitBlob": "093d6d3edf3d5e5125ddce41aa270e90f2bdbb7b",
+      "bytes": 16189,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/sigs.k8s.io/yaml/LICENSE",
+      "sha256": "5dc79da695aea39a47245008a168e3f7d461b686da8bec299fd55fee0393cbcc"
+    },
+    {
+      "kind": "source-lock",
+      "path": "go.mod",
+      "gitBlob": "99c7f117b2e48aeafa61c90ac4b89a05498e2a67",
+      "bytes": 428,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/go.mod",
+      "sha256": "ecd996383ac8a1dac6cdbcfa9005157cc837bf44ae20d65581a4516a2bc00121"
+    },
+    {
+      "kind": "source-lock",
+      "path": "go.sum",
+      "gitBlob": "155554fd1e9693d88bdff70c6686792889e441cb",
+      "bytes": 3629,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/go.sum",
+      "sha256": "03d940bb45f9afe3611cd7d75f29d3b923534df29726de36d27644c9214e0d53"
+    },
+    {
+      "kind": "source-lock",
+      "path": "vendor/modules.txt",
+      "gitBlob": "ceff1d43d1d32a9f30e8c7afe281c62557d0008a",
+      "bytes": 1350,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/modules.txt",
+      "sha256": "619b03559f053862556f0433f11d5343da78072d7ea933ec1d70e91c36bfeb35"
+    },
+    {
+      "kind": "release-config",
+      "path": ".goreleaser.yml",
+      "gitBlob": "6b57ad99800ac0a0887cfaee4e1187fa24c71617",
+      "bytes": 3454,
+      "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/.goreleaser.yml",
+      "sha256": "fb89dd635ffa5d22feb73b6394d15a3bff636d986d2f750cd4e7ab6f7c0472ff"
+    }
+  ],
+  "modules": [
+    {
+      "path": "github.com/hashicorp/go-cleanhttp",
+      "version": "v0.5.2",
+      "sourceSum": "h1:035FKYIWjmULyFRBKPs8TBQoi0x6d9G4xc9neXJWAZQ=",
+      "noticePaths": [
+        "vendor/github.com/hashicorp/go-cleanhttp/LICENSE"
+      ]
+    },
+    {
+      "path": "github.com/hashicorp/go-retryablehttp",
+      "version": "v0.7.8",
+      "sourceSum": "h1:ylXZWnqa7Lhqpk0L1P1LzDtGcCR0rPVUrx/c8Unxc48=",
+      "noticePaths": [
+        "vendor/github.com/hashicorp/go-retryablehttp/LICENSE"
+      ]
+    },
+    {
+      "path": "github.com/santhosh-tekuri/jsonschema/v6",
+      "version": "v6.0.2",
+      "sourceSum": "h1:KRzFb2m7YtdldCEkzs6KqmJw4nqEVZGK7IN2kJkjTuQ=",
+      "noticePaths": [
+        "vendor/github.com/santhosh-tekuri/jsonschema/v6/LICENSE"
+      ]
+    },
+    {
+      "path": "go.yaml.in/yaml/v2",
+      "version": "v2.4.4",
+      "sourceSum": "h1:tuyd0P+2Ont/d6e2rl3be67goVK4R6deVxCUX5vyPaQ=",
+      "noticePaths": [
+        "vendor/go.yaml.in/yaml/v2/LICENSE",
+        "vendor/go.yaml.in/yaml/v2/LICENSE.libyaml",
+        "vendor/go.yaml.in/yaml/v2/NOTICE"
+      ]
+    },
+    {
+      "path": "golang.org/x/text",
+      "version": "v0.37.0",
+      "sourceSum": "h1:Cqjiwd9eSg8e0QAkyCaQTNHFIIzWtidPahFWR83rTrc=",
+      "noticePaths": [
+        "vendor/golang.org/x/text/LICENSE",
+        "vendor/golang.org/x/text/PATENTS"
+      ]
+    },
+    {
+      "path": "k8s.io/kube-openapi",
+      "version": "v0.0.0-20260603220949-865597e52e25",
+      "sourceSum": "h1:mPMaPMpBij2V1Wv/fR+HW124vVGXXvOSS9ver/9yjWs=",
+      "noticePaths": [
+        "vendor/k8s.io/kube-openapi/LICENSE",
+        "vendor/k8s.io/kube-openapi/pkg/internal/third_party/govalidator/LICENSE",
+        "vendor/k8s.io/kube-openapi/pkg/validation/errors/LICENSE",
+        "vendor/k8s.io/kube-openapi/pkg/validation/strfmt/LICENSE"
+      ]
+    },
+    {
+      "path": "k8s.io/utils",
+      "version": "v0.0.0-20260210185600-b8788abfbbc2",
+      "sourceSum": "h1:AZYQSJemyQB5eRxqcPky+/7EdBj0xi3g0ZcxxJ7vbWU=",
+      "noticePaths": [
+        "vendor/k8s.io/utils/LICENSE",
+        "vendor/k8s.io/utils/internal/third_party/forked/golang/LICENSE",
+        "vendor/k8s.io/utils/internal/third_party/forked/golang/PATENTS"
+      ]
+    },
+    {
+      "path": "sigs.k8s.io/yaml",
+      "version": "v1.6.0",
+      "sourceSum": "h1:G8fkbMSAFqgEFgh4b1wmtzDnioxFCUgTZhlbj5P9QYs=",
+      "noticePaths": [
+        "vendor/sigs.k8s.io/yaml/LICENSE"
+      ]
+    }
+  ]
+}
