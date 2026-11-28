@@ -9,6 +9,16 @@ const Target = Schema.Struct({
   ...ActivityArm.Target.fields,
   originalPath: Schema.String.check(Schema.isMinLength(1), Schema.isMaxLength(1024)),
 })
+const Row = Schema.Struct({
+  ...Target.fields,
+  phase: Schema.Literals(["moving", "ready", "emptying", "unknown"]),
+})
+export const Snapshot = Schema.Struct({
+  rows: Schema.Array(Row).check(Schema.isMaxLength(ActivityArm.maxTargets)),
+  canEmpty: Schema.Boolean,
+  partial: Schema.Boolean,
+})
+export type Snapshot = typeof Snapshot.Type
 export type Request = Readonly<Record<string, never>>
 export const Confirm = Schema.Struct({ previewID })
 export type Confirm = typeof Confirm.Type
@@ -34,6 +44,7 @@ export function decodeRequest(input: unknown): Option.Option<Request> {
     : Option.none()
 }
 export const decodeTarget = Schema.decodeUnknownOption(Target, { onExcessProperty: "error" })
+export const decodeSnapshot = Schema.decodeUnknownOption(Snapshot, { onExcessProperty: "error" })
 export const decodeConfirm = Schema.decodeUnknownOption(Confirm, { onExcessProperty: "error" })
 export const decodePreview = Schema.decodeUnknownOption(Preview, { onExcessProperty: "error" })
 export const decodeReceipt = Schema.decodeUnknownOption(Receipt, { onExcessProperty: "error" })

@@ -22,6 +22,7 @@ export interface Interface {
     target: ActivityQuarantineExecutor.Target & { readonly label: string; readonly owner: string },
     acquire: ActivityQuarantineNative.Acquire,
   ) => Effect.Effect<ActivityEmpty.Outcome, unknown>
+  readonly state: () => Effect.Effect<ActivityEmpty.Snapshot | undefined, unknown>
   readonly preview: () => Effect.Effect<ActivityEmpty.Preview | undefined, unknown>
   readonly confirm: (input: ActivityEmpty.Confirm) => Effect.Effect<ActivityEmpty.Receipt | undefined, unknown>
 }
@@ -55,6 +56,7 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
               originalPath: lease.originalPath,
             }))) return "Refused"
 
+            // A failed admission has not called the native move and does not require preserving the source.
             const inserted = await Effect.runPromise(database.db.transaction((tx) => Effect.gen(function* () {
               const active = yield* tx.select({ phase: ActivityQuarantineCustodyTable.phase })
                 .from(ActivityQuarantineCustodyTable)
@@ -73,21 +75,21 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
                 phase: "moving",
                 reservation_id: null,
               }).onConflictDoNothing().returning({ targetID: ActivityQuarantineCustodyTable.target_id }).get()
-            }), { behavior: "immediate" }))
+            }), { behavior: "immediate" })).catch(() => undefined)
             if (!inserted) return "Refused"
 
+            // Keep the producer reservation until the native result is durably recorded.
+            const outcome = await ActivityQuarantineNative.execute(async () => ({
+              ...lease,
+              release: async () => {},
+            }), target, "apply").catch(() => "Unknown" as const)
+            if (outcome === "Refused") {
+              await removeMoving(database, target).catch(() => undefined)
+              return outcome
+            }
             try {
-              // Keep the producer reservation until the native result is durably recorded.
-              const outcome = await ActivityQuarantineNative.execute(async () => ({
-                ...lease,
-                release: async () => {},
-              }), target, "apply")
-              if (outcome === "Verified") {
-                await setPhase(database, target, "moving", "ready")
-                verifiedMoves.set(target.id, { generation: target.generation, identity: target.identity })
-              }
-              if (outcome === "Unknown") await setPhase(database, target, "moving", "unknown")
-              if (outcome === "Refused") await removeMoving(database, target)
+              await setPhase(database, target, "moving", outcome === "Verified" ? "ready" : "unknown")
+              if (outcome === "Verified") verifiedMoves.set(target.id, { generation: target.generation, identity: target.identity })
               return outcome
             } catch {
               await setPhase(database, target, "moving", "unknown").catch(() => undefined)
@@ -100,11 +102,22 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
         catch: (error) => error,
       })
     },
+    state() {
+      return Effect.gen(function* () {
+        const dispose = yield* Effect.promise(() => Omni.quarantineBatch().catch(() => undefined))
+        if (!dispose) return undefined
+        const rows = yield* activeRows(database.db)
+        const records = rows.slice(0, ActivityArm.maxTargets).flatMap((row) => {
+          const target = ActivityEmpty.decodeTarget(visibleTarget(row))
+          return Option.isSome(target) && row.phase !== "finished" ? [{ ...target.value, phase: row.phase }] : []
+        })
+        const partial = records.length !== rows.length
+        return { rows: records, partial, canEmpty: !partial && records.length > 0 && rows.every(canEmptyRow) }
+      })
+    },
     preview() {
       const snapshot = database.db.transaction((tx) => Effect.gen(function* () {
-        const rows = yield* tx.select().from(ActivityQuarantineCustodyTable)
-          .where(ne(ActivityQuarantineCustodyTable.phase, "finished"))
-          .orderBy(asc(ActivityQuarantineCustodyTable.target_id)).limit(ActivityArm.maxTargets + 1).all()
+        const rows = yield* activeRows(tx)
         if (!rows.length || rows.length > ActivityArm.maxTargets || !rows.every(canEmptyRow)) return undefined
 
         const time = now()
@@ -114,13 +127,7 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
           previewID: crypto.randomUUID(),
           action: "empty-quarantine" as const,
           expiresAt: time + 60_000,
-          targets: rows.map((row) => ({
-            targetID: row.target_id,
-            generation: row.generation,
-            label: row.label,
-            owner: row.owner,
-            originalPath: row.original_path,
-          })),
+          targets: rows.map(visibleTarget),
         }
         if (Option.isNone(ActivityEmpty.decodePreview(preview))) return undefined
         previews.set(preview.previewID, { expiresAt: preview.expiresAt, rows: structuredClone(rows), preview })
@@ -139,9 +146,7 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
         if (!entry || entry.expiresAt <= now()) return Effect.succeed(undefined)
         return database.db.transaction((tx) => Effect.gen(function* () {
           if (entry.expiresAt <= now()) return undefined
-          const rows = yield* tx.select().from(ActivityQuarantineCustodyTable)
-            .where(ne(ActivityQuarantineCustodyTable.phase, "finished"))
-            .orderBy(asc(ActivityQuarantineCustodyTable.target_id)).limit(ActivityArm.maxTargets + 1).all()
+          const rows = yield* activeRows(tx)
           if (rows.length !== entry.rows.length || rows.some((row, index) =>
             !canEmptyRow(row) || !sameRow(row, entry.rows[index]))) return undefined
 
@@ -155,7 +160,7 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
           return { reservationID, rows }
         }), { behavior: "immediate" }).pipe(Effect.flatMap((reserved) => {
           if (!reserved) return Effect.succeed(undefined)
-          return Effect.uninterruptible(Effect.tryPromise({
+          return Effect.tryPromise({
             try: async () => {
               const emptyReceipt = (outcome: ActivityEmpty.Outcome): ActivityEmpty.Receipt => ({
                 previewID: entry.preview.previewID,
@@ -195,10 +200,26 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
               }
             },
             catch: (error) => error,
-          }))
-        }))
+          })
+        }), Effect.uninterruptible)
       })
     },
+  }
+}
+
+function activeRows(database: Pick<Database.Interface["db"], "select">) {
+  return database.select().from(ActivityQuarantineCustodyTable)
+    .where(ne(ActivityQuarantineCustodyTable.phase, "finished"))
+    .orderBy(asc(ActivityQuarantineCustodyTable.target_id)).limit(ActivityArm.maxTargets + 1).all()
+}
+
+function visibleTarget(row: CustodyRow) {
+  return {
+    targetID: row.target_id,
+    generation: row.generation,
+    label: row.label,
+    owner: row.owner,
+    originalPath: row.original_path,
   }
 }
 
