@@ -69,6 +69,7 @@ export function make() {
     observed: [] as string[],
     safetyArgs: [] as unknown[],
     effects: 0,
+    scenarioCompleted: false,
     profile: undefined as ToolSafety.Profile | undefined,
     controller: new AbortController(),
     controllers: new Set<AbortController>(),
@@ -92,6 +93,7 @@ export function make() {
         const messages = (async function* () {
           const first = await scripted.next()
           await state.during(options)
+          state.scenarioCompleted = true
           if (!first.done) yield first.value
           yield* scripted
         })()
@@ -191,6 +193,7 @@ export function make() {
       state.observed.length = 0
       state.safetyArgs.length = 0
       state.effects = 0
+      state.scenarioCompleted = false
       state.profile = profile
       state.controllers.clear()
       state.controller = controller()
@@ -253,6 +256,7 @@ export function make() {
       resume: false,
     })
     yield* sessions.resume(Harness.sessionID)
+    expect(state.scenarioCompleted).toBe(true)
     expect(state.options).toHaveLength(1)
     expect(state.options[0].settingSources).toEqual(["project"])
     expect(state.options[0].permissionMode).toBe("default")
@@ -303,8 +307,8 @@ export function make() {
       decodeSdk(result.sdk).behavior === "allow"
     state.results.push({ ...result, allow: allowed })
     if (allowed) {
-      state.effects++
       await input.effect?.()
+      state.effects++
     }
     return result
   }
