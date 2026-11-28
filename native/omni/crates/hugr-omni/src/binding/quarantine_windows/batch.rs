@@ -1,4 +1,6 @@
-use super::{acquire_root, identity, open_with_share, parents, parse, query, status, IoStatus, NtSetInformationFile, Owned};
+use super::{
+    IoStatus, NtSetInformationFile, Owned, acquire_root, identity, open_with_share, parents, parse, query, status,
+};
 
 struct ReservedFile {
     source: Owned,
@@ -22,8 +24,8 @@ pub fn dispose_batch(items: &[(String, String)]) -> &'static str {
             let root = acquire_root(&drive, 0)?;
             let ancestors = parents(&root, &parts[..parts.len() - 1], 0)?;
             let parent = ancestors.last().map_or(root.0, |h| h.0);
-            let source = open_with_share(parent, &parts[parts.len() - 1], false, true, false, 0, 0)?
-                .ok_or("missing source")?;
+            let source =
+                open_with_share(parent, &parts[parts.len() - 1], false, true, false, 0, 0)?.ok_or("missing source")?;
             if identity(source.0)? != *expected {
                 return Err("source identity changed".into());
             }
@@ -39,16 +41,27 @@ pub fn dispose_batch(items: &[(String, String)]) -> &'static str {
             if u32::from_le_bytes(standard[16..20].try_into().map_err(|_| "invalid link count data")?) != 1 {
                 return Err("hard links are not supported".into());
             }
-            reserved.push(ReservedFile { source, _ancestors: ancestors, _root: root });
+            reserved.push(ReservedFile {
+                source,
+                _ancestors: ancestors,
+                _root: root,
+            });
         }
         Ok(reserved)
     }
-    let Ok(reserved) = reserve(items) else { return "refused"; };
+    let Ok(reserved) = reserve(items) else {
+        return "refused";
+    };
     let disposition = 1u8;
     for item in &reserved {
-        let mut io = IoStatus { status: 0, information: 0 };
+        let mut io = IoStatus {
+            status: 0,
+            information: 0,
+        };
         // SAFETY: the admission retains every handle and the synchronous buffer is live.
-        if status(unsafe { NtSetInformationFile(item.source.0, &mut io, (&disposition as *const u8).cast(), 1, 13) }).is_err() {
+        if status(unsafe { NtSetInformationFile(item.source.0, &mut io, (&disposition as *const u8).cast(), 1, 13) })
+            .is_err()
+        {
             return "unknown";
         }
     }

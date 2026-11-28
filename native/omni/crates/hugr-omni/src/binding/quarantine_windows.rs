@@ -116,8 +116,13 @@ fn open_optional(
 }
 
 fn open_with_share(
-    parent: Handle, name: &str, directory: bool, removable: bool, missing_ok: bool,
-    additional_access: u32, share: u32,
+    parent: Handle,
+    name: &str,
+    directory: bool,
+    removable: bool,
+    missing_ok: bool,
+    additional_access: u32,
+    share: u32,
 ) -> Result<Option<Owned>, String> {
     let text: Vec<u16> = std::ffi::OsStr::new(name).encode_wide().collect();
     if text.is_empty() || text.len() > 32767 || text.contains(&0) {
