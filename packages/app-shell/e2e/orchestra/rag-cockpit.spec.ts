@@ -193,4 +193,4 @@ test("failed operations clear earlier claims and keep maintenance controls withi
   await maintain.getByRole("button", { name: /supplier-onboarding.txt.*Not yet read$/ }).click()
   await maintain.getByRole("button", { name: "Cut again", exact: true }).click()
   await expect(maintain.getByRole("alert")).toHaveText("That did not finish.")
-}
+})

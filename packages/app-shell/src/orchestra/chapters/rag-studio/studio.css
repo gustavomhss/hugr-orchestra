@@ -118,7 +118,7 @@
 }
 
 .rag-maintenance {
-  grid-template-columns: minmax(0, 53fr) minmax(0, 47fr);
+  grid-template-columns: minmax(0, 47fr) minmax(0, 53fr);
 }
 
 .rag-evidence {
@@ -386,6 +386,10 @@
   color: var(--mx-strong);
   box-decoration-break: clone;
   -webkit-box-decoration-break: clone;
+}
+
+.rag-library .rag-source mark {
+  outline-color: var(--mx-line);
 }
 
 .rag-studio .mx-row[data-selected="true"],
