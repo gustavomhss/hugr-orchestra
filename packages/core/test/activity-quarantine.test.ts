@@ -13,6 +13,7 @@ describe("quarantine postconditions", () => {
     expect(ActivityQuarantine.verify("apply", "expected", { original: unavailable, quarantine: expected })).toBe("unknown")
     expect(ActivityQuarantine.verify("apply", "expected", { original: absent, quarantine: other })).toBe("unknown")
     expect(ActivityQuarantine.verify("apply", "expected", { original: absent, quarantine: absent })).toBe("unknown")
+    expect(ActivityQuarantine.verify("apply", "", { original: absent, quarantine: { state: "present", identity: "" } })).toBe("unknown")
   })
 
   test("restore requires expected identity at original and quarantine absence", () => {
@@ -49,6 +50,7 @@ describe("quarantine postconditions", () => {
     expect(ActivityQuarantine.emptyTargets([ready, { ...ready, state: "refused" }])).toBeUndefined()
     expect(ActivityQuarantine.emptyTargets([ready, { ...ready, id: "two", state: "unknown" }])).toBeUndefined()
     expect(ActivityQuarantine.emptyTargets([ready, ready])).toBeUndefined()
+    expect(ActivityQuarantine.emptyTargets([{ ...ready, id: "" }])).toBeUndefined()
     expect(ActivityQuarantine.emptyTargets([ready, { ...ready, state: "finished" }])).toEqual(["one"])
   })
 })

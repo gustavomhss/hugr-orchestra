@@ -6,6 +6,7 @@ export type Transition = "apply" | "restore" | "empty"
 type Facts = { original: Reading; quarantine: Reading }
 
 export function verify(transition: Transition, expectedIdentity: string, facts: Facts): "verified" | "unknown" {
+  if (!expectedIdentity.trim()) return "unknown"
   if (transition === "empty") return facts.quarantine.state === "absent" ? "verified" : "unknown"
   if (transition === "apply") {
     return facts.original.state === "absent" &&
@@ -27,10 +28,10 @@ export function restoreState(
   previouslyVerified: boolean,
   facts: Facts,
 ): "Restorable" | "Occupied" | "Unknown" {
-  if (!originalPath) return "Unknown"
+  if (!originalPath?.trim()) return "Unknown"
   if (facts.original.state === "present") return "Occupied"
   if (
-    previouslyVerified &&
+    previouslyVerified && expectedIdentity.trim() &&
     facts.original.state === "absent" &&
     facts.quarantine.state === "present" &&
     facts.quarantine.identity === expectedIdentity
@@ -44,6 +45,6 @@ export function emptyTargets(
   const active = rows.filter((row) => row.kind === "quarantine" && row.state !== "finished")
   if (!active.length || active.some((row) => row.state !== "ready")) return undefined
   const ids = active.map((row) => row.id)
-  if (new Set(ids).size !== ids.length) return undefined
+  if (ids.some((id) => !id.trim()) || new Set(ids).size !== ids.length) return undefined
   return ids
 }
