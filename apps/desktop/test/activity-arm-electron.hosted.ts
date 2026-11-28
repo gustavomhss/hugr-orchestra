@@ -5,6 +5,8 @@ import { createRequire } from "node:module"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { setTimeout as delay } from "node:timers/promises"
+import type { ActivityArm } from "@orchestra/schema/activity-arm"
+import type { MessageBoxOptions } from "electron"
 
 const desktop = process.cwd()
 
@@ -61,6 +63,8 @@ async function child() {
   const { DatabaseSync } = await import("node:sqlite")
   const { startOwnedServe } = await import("../src/main/owned-serve")
   const { registerActivityArmIpc } = await import("../src/main/activity-arm-ipc")
+  const { setNativeTranslations } = await import("../src/main/native-translations")
+  const { DESKTOP_NATIVE_ENGLISH } = await import("@orchestra/app/i18n/desktop-native")
   assert.ok(process.versions.electron)
   const root = process.env.ACTIVITY_ARM_ROOT!
   const main = join(root, "repository")
@@ -96,25 +100,37 @@ async function child() {
     const plan = async () => {
       const response = await fetch(`${owned.url}/api/activity/plan`, { headers: { authorization } })
       assert.equal(response.status, 200)
-      return await response.json() as { ready: Array<{ targetID: string; generation: string; label: string }>; approvals: unknown[] }
+      return await response.json() as ActivityArm.PlanSnapshot
     }
     const unsigned = await fetch(`${owned.url}/_orchestra-activity/v1/arm-inspect`, { method: "POST", headers: { authorization, "content-type": "application/json" }, body: "{}" })
     assert.equal(unsigned.status, 403)
     assert.equal((await plan()).ready.length, 0, "passive GET must not discover the target")
+    const messages = {
+      ...DESKTOP_NATIVE_ENGLISH,
+      "desktop.activity.arm.title": "Renderer-supplied title",
+      "desktop.activity.arm.message": "Renderer-supplied message",
+      "desktop.activity.arm.cancel": "Renderer-supplied cancel",
+      "desktop.activity.arm.confirm": "Renderer-supplied confirm",
+    }
+    setNativeTranslations({ locale: "en", messages })
+    const nativeResponses: { options: MessageBoxOptions; response: number }[] = []
     const nativeDialog = {
       ...dialog,
-      showMessageBox: (async (parent: InstanceType<typeof BrowserWindow>, options: Parameters<typeof dialog.showMessageBox>[1]) => {
+      showMessageBox: (async (parent: InstanceType<typeof BrowserWindow>, options: MessageBoxOptions) => {
+        const shown = { ...options, buttons: options.buttons?.slice() }
         await rename(join(root, "next-dialog.json"), join(root, "dialog.json"))
         process.stderr.write("Native arm dialog opened\n")
-        return dialog.showMessageBox(parent, options)
+        const result = await dialog.showMessageBox(parent, options)
+        nativeResponses.push({ options: shown, response: result.response })
+        return result
       }) as typeof dialog.showMessageBox,
     }
     registerActivityArmIpc({ ipcMain, BrowserWindow, dialog: nativeDialog, rendererDevURL: rendererURL, getOwned: () => owned })
     window = new BrowserWindow({ show: true, webPreferences: { preload: process.env.ACTIVITY_ARM_PRELOAD!, sandbox: true, nodeIntegration: false, contextIsolation: true } })
     await window.loadURL(rendererURL)
-    const inspect = async () => await window!.webContents.executeJavaScript(`window.api.inspectActivityArm(${JSON.stringify(owned.url)})`) as { ready: Array<{ targetID: string; generation: string; label: string }> }
+    const inspect = async () => await window!.webContents.executeJavaScript(`window.api.inspectActivityArm(${JSON.stringify(owned.url)})`) as ActivityArm.PlanSnapshot
     const inspected = await inspect()
-    const target = inspected.ready.find((item) => item.label.includes(".turbo"))
+    const target = inspected.ready.find((item) => item.label === source)
     assert.ok(target, `registered worktree did not produce a ready target: ${JSON.stringify(inspected)}`)
     process.stderr.write("Live object qualified\n")
     assert.equal((await plan()).ready.some((item) => item.targetID === target.targetID), true)
@@ -127,21 +143,31 @@ async function child() {
     const idle = (await inspect()).ready.find((item) => item.targetID === target.targetID)
     assert.ok(idle && idle.generation !== target.generation, "verified idleness must acquire a new generation")
     process.stderr.write("Open file refused and new generation qualified\n")
-    const request = { targets: [{ targetID: idle.targetID, generation: idle.generation }] }
     let step = 0
-    const arm = async (mode: "cancel" | "change" | "confirm") => {
+    const arm = async (mode: "cancel" | "change" | "confirm", target: ActivityArm.Target) => {
+      const request = { targets: [{ targetID: target.targetID, generation: target.generation }] }
       await writeFile(join(root, "next-dialog.json"), JSON.stringify({ step: ++step, mode, source }))
-      return await window!.webContents.executeJavaScript(`window.api.armActivityQuarantine(${JSON.stringify(owned.url)}, ${JSON.stringify(request)})`)
+      const receipt = await window!.webContents.executeJavaScript(`window.api.armActivityQuarantine(${JSON.stringify(owned.url)}, ${JSON.stringify(request)})`) as ActivityArm.Receipt | undefined
+      assert.equal(nativeResponses.length, step, `native dialog did not return for ${mode}`)
+      const shown = nativeResponses[step - 1]!
+      assert.equal(shown.response, mode === "cancel" ? 0 : 1, `unexpected native response for ${mode}`)
+      assert.equal(shown.options.title, "Arm quarantine")
+      assert.equal(shown.options.message, "Arm quarantine for these targets?")
+      assert.deepEqual(shown.options.buttons, ["Cancel", "Arm quarantine"])
+      assert.equal(shown.options.defaultId, 0)
+      assert.equal(shown.options.cancelId, 0)
+      assert.equal(shown.options.detail, `${source} — activity-fixture\nID: ${target.targetID}\nGeneration: ${target.generation}`)
+      return receipt
     }
-    assert.equal(await arm("cancel"), undefined)
+    assert.equal(await arm("cancel", idle), undefined)
     assert.equal(receipts().length, 0, "cancellation cannot persist approval")
     process.stderr.write("Native cancellation left no receipt\n")
     assert.equal(await readFile(join(source, "payload"), "utf8"), "untouched fixture\n")
     const client = owned.openActivityArm()
     assert.ok(client)
-    const stale = await client.preview(request)
+    const stale = await client.preview({ targets: [{ targetID: idle.targetID, generation: idle.generation }] })
     assert.ok(stale)
-    assert.equal(await arm("change"), undefined, "changed target must fail confirmation")
+    assert.equal(await arm("change", idle), undefined, "changed target must fail confirmation")
     assert.equal(receipts().length, 0, "identity mismatch cannot persist approval")
     assert.equal(await client.confirm({ previewID: stale.previewID }), undefined, "stale signed preview cannot arm")
     process.stderr.write("Replacement and stale preview refused\n")
@@ -150,9 +176,7 @@ async function child() {
     const refreshed = await inspect()
     const current = refreshed.ready.find((item) => item.targetID === target.targetID)
     assert.ok(current)
-    const currentRequest = { targets: [{ targetID: current.targetID, generation: current.generation }] }
-    await writeFile(join(root, "next-dialog.json"), JSON.stringify({ step: ++step, mode: "confirm", source }))
-    const receipt = await window.webContents.executeJavaScript(`window.api.armActivityQuarantine(${JSON.stringify(owned.url)}, ${JSON.stringify(currentRequest)})`) as { approvalID: string; targets: unknown[] } | undefined
+    const receipt = await arm("confirm", current)
     assert.ok(receipt?.approvalID, "native confirmation must return an authenticated receipt")
     assert.equal(receipts().length, 1)
     assert.deepEqual(JSON.parse(String(receipts()[0]!.receipt)), receipt)

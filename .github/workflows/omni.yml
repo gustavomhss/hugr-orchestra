@@ -198,6 +198,6 @@ jobs:
       - name: Exercise native approval with a complete Linux process view
         working-directory: apps/desktop
         run: |
+          # Run on the disposable VM's initial PID namespace so process visibility can be verified.
           timeout -k 10s 2m sudo --preserve-env=CI,HUGR_OMNI_ADDON,HUGR_OMNI_SUPERVISOR \
-            unshare --mount --pid --fork --kill-child --mount-proc \
             dbus-run-session -- xvfb-run -a "$(command -v bun)" run ./test/activity-arm-electron.hosted.ts
