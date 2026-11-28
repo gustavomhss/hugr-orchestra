@@ -6,8 +6,9 @@ import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionSchema } from "@orchestra/core/session"
 import { SessionTable } from "@orchestra/core/session/sql"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
-import { run } from "./fixture/lucy-engagement"
-import { codeStream, decoded, request } from "./fixture/lucy-engagement-artifacts"
+import { reply, run, text } from "./fixture/lucy-engagement"
+import { decoded, request } from "./fixture/lucy-engagement-artifacts"
+import { variantAdapter } from "./fixture/lucy-engagement-variant-adapter"
 
 const fixRequest = (reportID: string, findingID: string) => ({
   ...request("fix-review-admission"), fixReview: { reportID, findingIDs: [findingID] },
@@ -23,7 +24,7 @@ test("fix review rejects an unknown report without admitting a Session or provid
     expect(result.text).toContain("engagement-evidence-not-found")
     expect(root.requests.length).toBe(requests)
     expect(yield* host.db.select().from(SessionTable).all().pipe(Effect.orDie)).toEqual(before)
-  }), { stream: codeStream().stream })))
+  }))))
 })
 
 test("fix review requires the retained report to belong to the invoking parent and location", () => {
@@ -48,7 +49,7 @@ test("fix review requires the retained report to belong to the invoking parent a
       expect(root.requests.length).toBe(requests)
       expect(yield* host.db.select().from(SessionTable).all().pipe(Effect.orDie)).toEqual(before)
     }
-  }), { stream: codeStream().stream })))
+  }), variantAdapter((log, modelRequest) => text(reply(log, modelRequest, { quote: true }))))))
 })
 
 test("a retained quote-only finding has no fix recipe and starts no work", () => {
@@ -65,7 +66,7 @@ test("a retained quote-only finding has no fix recipe and starts no work", () =>
     expect(result.text).toContain("engagement-fix-review-no-recipe")
     expect(root.requests.length).toBe(requests)
     expect(yield* host.db.select().from(SessionTable).all().pipe(Effect.orDie)).toEqual(before)
-  }), { stream: codeStream().stream })))
+  }), variantAdapter((log, modelRequest) => text(reply(log, modelRequest, { quote: true }))))))
 })
 
 test("fix review rejects command, install, and fetch controls before any work", () => {
