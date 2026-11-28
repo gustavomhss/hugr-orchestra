@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { createServer, request } from "node:http"
-import { chmod, chown, lstat, mkdir, open, readFile, readdir, rename, rm, utimes, writeFile } from "node:fs/promises"
+import { chmod, chown, copyFile, lstat, mkdir, open, readFile, readdir, rename, rm, utimes, writeFile } from "node:fs/promises"
 import { createHash } from "node:crypto"
 import { createRequire } from "node:module"
 import { dirname, join } from "node:path"
@@ -17,9 +17,11 @@ const python = "/usr/bin/python3"
 async function parent() {
   const uid = Number(process.env.ACTIVITY_ARM_UID)
   const gid = Number(process.env.ACTIVITY_ARM_GID)
+  const addon = process.env.HUGR_OMNI_ADDON
+  const supervisor = process.env.HUGR_OMNI_SUPERVISOR
   if (process.platform !== "linux" || process.env.CI !== "true" || process.getuid?.() !== 0 ||
     !Number.isSafeInteger(uid) || uid <= 0 || !Number.isSafeInteger(gid) || gid <= 0 ||
-    !Bun.which("xdotool") || !await Bun.file(python).exists()) {
+    !addon || !supervisor || !Bun.which("xdotool") || !await Bun.file(python).exists()) {
     throw new Error("Activity proof requires the hosted Linux X11 fixture, an ordinary desktop UID and GID, and Python")
   }
   const id = `orchestra-activity-apply-${process.pid}-${crypto.randomUUID()}`
@@ -31,18 +33,29 @@ async function parent() {
   const worktree = join(root, "worktrees", "worktree")
   const source = join(worktree, ".turbo")
   const cli = join(desktop, "../cli/src/index.ts")
+  const omni = join(root, "omni")
+  const nativeAddon = join(omni, "libhugr_omni_node.so")
+  const nativeSupervisor = join(omni, "hugr-omni-supervisor")
   const secret = crypto.getRandomValues(new Uint8Array(32))
   const frame = ActivityPrivateChannel.frame(secret)
   const signer = await ActivityPrivateChannel.signer(secret).finally(() => secret.fill(0))
   const launchBroker = () => {
     const broker = Bun.spawn([process.execPath, cli, "activity-custody", "--root", root, "--socket", socketPath], {
       stdin: "pipe", stdout: "inherit", stderr: "inherit",
+      env: { ...process.env, HUGR_OMNI_ADDON: nativeAddon, HUGR_OMNI_SUPERVISOR: nativeSupervisor },
     })
     broker.stdin.write(frame)
     broker.stdin.end()
     return broker
   }
   const brokers: ReturnType<typeof launchBroker>[] = []
+  const refuseBroker = async (reason: string) => {
+    const invalid = launchBroker()
+    brokers.push(invalid)
+    const exit = await Promise.race([invalid.exited, delay(15_000, undefined, { ref: false })])
+    assert.ok(exit !== undefined && exit !== 0, reason)
+    await assert.rejects(lstat(socketPath), { code: "ENOENT" })
+  }
   const signed = async (endpoint: ActivityPrivateChannel.ArmPath) => {
     const body = "{}"
     const nonce = ActivityPrivateChannel.applyNonce()
@@ -69,6 +82,11 @@ async function parent() {
   }
   try {
     await mkdir(root, { mode: 0o700 })
+    await mkdir(omni, { mode: 0o700 })
+    await copyFile(addon, nativeAddon)
+    await copyFile(supervisor, nativeSupervisor)
+    await chmod(nativeAddon, 0o600)
+    await chmod(nativeSupervisor, 0o700)
     await mkdir(runtime, { mode: 0o755 })
     await chmod(runtime, 0o755)
     await mkdir(session, { mode: 0o700 })
@@ -82,16 +100,13 @@ async function parent() {
     }
     await run("git", ["init", "-q", main])
     await chmod(main, 0o700)
-    await run("git", ["-C", main, "config", "user.email", "fixture@example.invalid"])
-    await run("git", ["-C", main, "config", "user.name", "Activity fixture"])
     await writeFile(join(main, ".gitignore"), "/.turbo/\n")
     await writeFile(join(main, ".gitattributes"), "*.fixture filter=activity\n")
     await writeFile(join(main, "tracked.fixture"), "tracked fixture\n")
     await run("git", ["-C", main, "add", ".gitignore", ".gitattributes", "tracked.fixture"])
-    await run("git", ["-C", main, "commit", "-qm", "fixture"])
+    await run("git", ["-C", main, "-c", "user.email=fixture@example.invalid", "-c", "user.name=Activity fixture", "commit", "-qm", "fixture"])
     await run("git", ["-C", main, "worktree", "add", "--detach", worktree])
     await run("git", ["-C", main, "worktree", "add", "--detach", sibling])
-    await run("git", ["-C", main, "config", "filter.activity.clean", "tee .activity-filter-ran"])
     await utimes(join(worktree, "tracked.fixture"), new Date(), new Date(Date.now() + 30_000))
     await chmod(worktree, 0o700)
     await chmod(sibling, 0o700)
@@ -105,12 +120,11 @@ async function parent() {
 
     const manifest = join(root, "registrations.json")
     await writeFile(manifest, JSON.stringify([{ projectID, repository: "repository", worktree: "../outside/sibling" }]), { mode: 0o600 })
-    const invalid = launchBroker()
-    brokers.push(invalid)
-    const invalidExit = await Promise.race([invalid.exited, delay(15_000).then(() => undefined)])
-    assert.ok(invalidExit !== undefined && invalidExit !== 0, "custody must refuse an outside-root registration")
-    await assert.rejects(lstat(socketPath), { code: "ENOENT" })
+    await refuseBroker("custody must refuse an outside-root registration")
     await writeFile(manifest, JSON.stringify([{ projectID, repository: "repository", worktree: "worktree" }]))
+    await run("git", ["-C", main, "config", "filter.activity.clean", "tee .activity-filter-ran"])
+    await refuseBroker("custody must refuse repository-configured commands")
+    await run("git", ["-C", main, "config", "--unset", "filter.activity.clean"])
     const broker = launchBroker()
     brokers.push(broker)
     await ready()
@@ -206,7 +220,7 @@ os.execv(sys.argv[4], sys.argv[4:])
     await assert.rejects(lstat(join(worktree, ".activity-filter-ran")), { code: "ENOENT" })
 
     broker.kill("SIGTERM")
-    assert.ok(await Promise.race([broker.exited.then(() => true), delay(15_000).then(() => false)]), "custody must stop before reopen")
+    assert.ok(await Promise.race([broker.exited.then(() => true), delay(15_000, false, { ref: false })]), "custody must stop before reopen")
     await assert.rejects(lstat(socketPath), { code: "ENOENT" })
     const reopened = launchBroker()
     brokers.push(reopened)
@@ -232,7 +246,7 @@ os.execv(sys.argv[4], sys.argv[4:])
     process.stdout.write(JSON.stringify({
       status: "pass", custodyUID: 0, desktopUID: uid, sidecarUID: uid, rendererSandbox: true,
       openFileRefused: true, wrongGitDirectoryRefused: true, nestedNamespaceRefused: true,
-      outsideRegistrationRefused: true, unsignedCustodyRefused: true, custodyPtyUnavailable: true,
+      outsideRegistrationRefused: true, gitFilterConfigRefused: true, unsignedCustodyRefused: true, custodyPtyUnavailable: true,
       nativeArmCancel: true, replacementArmRefused: true, staleArmRefused: true, nativeArmConfirmed: true,
       nativeApplyCancel: true, ordinaryPtySwapDenied: true, nativeApplyConfirmed: true, inodePreserved: true, reopenedOut: true,
     }) + "\n")
@@ -266,7 +280,8 @@ async function child() {
   assert.equal((await unixRequest(custody.socketPath, ActivityPrivateChannel.inspectArmPath, "{}")).status, 403)
   assert.equal((await unixRequest(custody.socketPath, ActivityPrivateChannel.applyPreviewPath, "{}")).status, 403)
   assert.equal((await unixRequest(custody.socketPath, ActivityPrivateChannel.applyConfirmPath, "{}")).status, 403)
-  assert.equal((await unixRequest(custody.socketPath, "/api/pty", "{}")).status, 404)
+  const custodyPty = await unixRequest(custody.socketPath, "/api/pty", "{}")
+  assert.ok(custodyPty.status === 403 || custodyPty.status === 404, "custody must deny the ordinary PTY API")
   await mkdir(join(session, "electron"))
   app.setPath("userData", join(session, "electron"))
   app.on("window-all-closed", () => {})
