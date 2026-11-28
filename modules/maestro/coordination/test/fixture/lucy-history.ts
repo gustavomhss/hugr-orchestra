@@ -68,13 +68,16 @@ export const History = Schema.Struct({
 export type History = typeof History.Type
 
 export const history = (host: Ctx, report: Report, id: string) => Effect.gen(function* () {
+  const source = report.source
+  expect(source, "history report must carry the captured source").toBeDefined()
+  if (!source) throw new Error("history report has no captured source")
   const event = yield* completed(host, report.sessionID, id)
   const value = Schema.decodeUnknownSync(History)(JSON.parse(event.text), { onExcessProperty: "error" })
   expect(event.text).toBe(canonical(value))
   expect(Buffer.byteLength(event.text)).toBeLessThanOrEqual(32768)
   expect(value.historyID).toMatch(/^[0-9a-f]{64}$/)
-  expect(value.sourceSha256).toBe(report.source?.sha256)
-  expect(value.anchorCommit).toBe(report.source?.commit)
+  expect(value.sourceSha256).toBe(source.sha256)
+  expect(value.anchorCommit).toBe(source.commit)
   const identity = { schema: "review-engagement-history-operation-v1", inputHash: report.inputHash,
     sourceSha256: value.sourceSha256, sessionID: event.sessionID,
     assistantMessageID: event.assistantMessageID, toolCallID: event.toolCallID, name: "review_history" }
@@ -103,6 +106,9 @@ const Proof = Schema.Struct({
 
 /** Independent reader: never import a future production history schema or manufacture producer receipts. */
 export const retained = (host: Ctx, report: Report) => Effect.gen(function* () {
+  const source = report.source
+  expect(source, "history report must carry the captured source").toBeDefined()
+  if (!source) throw new Error("history report has no captured source")
   const index = (yield* manifest(host, report.reportID)).value
   const body = yield* readAll(host, index, index.manifest)
   const raw: unknown = JSON.parse(body.bytes.toString("utf8"))
@@ -112,7 +118,7 @@ export const retained = (host: Ctx, report: Report) => Effect.gen(function* () {
   expect(new Set(value.history.map((item) => item.historyID)).size).toBe(value.history.length)
   expect(value.reportID).toBe(report.reportID)
   expect(value.inputHash).toBe(report.inputHash)
-  expect(value.sourceSha256).toBe(report.source?.sha256)
+  expect(value.sourceSha256).toBe(source.sha256)
   expect(index.counts.operations).toBe(value.operations.length + value.history.length)
   expect(index.counts.artifacts).toBe(value.artifacts.length)
   expect(index.counts.hostProofs).toBe(value.hostProofs.length)
@@ -130,8 +136,8 @@ export const retained = (host: Ctx, report: Report) => Effect.gen(function* () {
     expect(proof.historyID).toBe(reference.historyID)
     expect(proof.result.historyID).toBe(reference.historyID)
     expect(proof.inputHash).toBe(report.inputHash)
-    expect(proof.sourceSha256).toBe(report.source?.sha256)
-    expect(proof.anchorCommit).toBe(report.source?.commit)
+    expect(proof.sourceSha256).toBe(source.sha256)
+    expect(proof.anchorCommit).toBe(source.commit)
     expect(proof.budget).toEqual(report.budget)
     expect(proof.sessionID).toBe(report.sessionID)
     const event = yield* completed(host, proof.sessionID, proof.toolCallID)
@@ -140,17 +146,17 @@ export const retained = (host: Ctx, report: Report) => Effect.gen(function* () {
     expect(proof.nativeSettlement.messageID).toBe(event.assistantMessageID)
     expect(proof.input).toEqual(event.input)
     expect(proof.historyID).toBe(digest(canonical({ schema: "review-engagement-history-operation-v1",
-      inputHash: report.inputHash, sourceSha256: report.source?.sha256, sessionID: event.sessionID,
+      inputHash: report.inputHash, sourceSha256: source.sha256, sessionID: event.sessionID,
       assistantMessageID: event.assistantMessageID, toolCallID: event.toolCallID, name: "review_history" })))
-    const input = Schema.decodeUnknownSync(Schema.Struct({ op: Schema.String, path: Schema.String,
+    const input = Schema.decodeUnknownSync(Schema.Struct({ op: Schema.Literals(["show", "log", "pickaxe", "blame"]), path: Schema.String,
       rev: Schema.optional(Schema.String), range: Schema.optional(Schema.String) }))(event.input)
-    expect(proof.result.sourceSha256).toBe(report.source?.sha256)
-    expect(proof.result.anchorCommit).toBe(report.source?.commit)
+    expect(proof.result.sourceSha256).toBe(source.sha256)
+    expect(proof.result.anchorCommit).toBe(source.commit)
     expect(proof.result.op).toBe(input.op)
     expect(proof.result.path).toBe(input.path)
-    expect(report.source?.files.some((file) => file.path === input.path)).toBe(true)
+    expect(source.files.some((file) => file.path === input.path)).toBe(true)
     expect(proof.result.selection).toEqual(input.range === undefined
-      ? { endCommit: input.rev === undefined || input.rev === "HEAD" ? report.source?.commit : input.rev }
+      ? { endCommit: input.rev === undefined || input.rev === "HEAD" ? source.commit : input.rev }
       : { startCommit: input.range.split("..")[0], endCommit: input.range.split("..")[1] })
     const model = Schema.decodeUnknownSync(History)(JSON.parse(event.text), { onExcessProperty: "error" })
     expect(model.historyID).toBe(proof.historyID)

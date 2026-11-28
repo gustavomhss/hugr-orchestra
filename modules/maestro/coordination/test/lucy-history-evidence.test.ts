@@ -4,7 +4,7 @@ import path from "node:path"
 import { Effect, Schema, Tracer } from "effect"
 import { eq } from "drizzle-orm"
 import { SessionTable } from "@orchestra/core/session/sql"
-import { ResearchProcess } from "@orchestra/core/research-toolkit/process"
+import { ReviewHistory } from "@orchestra/core/review-toolkit/history"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { run, sourcePath } from "./fixture/lucy-engagement"
 import { blobRoot, cache, canonical, decoded, digest, reader, refused } from "./fixture/lucy-engagement-artifacts"
@@ -44,15 +44,14 @@ test("H06 retained history replays byte-for-byte after graph close, live mutatio
       return new Tracer.NativeSpan(options)
     } })
     yield* root.open((host) => Effect.gen(function* () {
-      // This real process proves the observer works in the reopened graph before replay is measured.
+      // The public legacy history API runs a real Git metadata read through ResearchProcess.run.
+      // It proves the observer works without importing an unexported internal process module.
       const controls = processes.started
-      const control = yield* ResearchProcess.run({ command: "git", args: ["--version"], cwd: root.directory,
-        env: ResearchProcess.environment(), timeoutMs: 5_000, maxBytes: 4096, maxRssBytes: 128 * 1024 * 1024 })
-      expect(control.exitCode).toBe(0)
-      expect(control.failure).toBeUndefined()
-      expect(control.timedOut || control.overflow || control.memoryExceeded || control.stdout.truncated || control.stderr.truncated).toBe(false)
-      expect(control.stdout.data.toString("utf8")).toMatch(/^git version /)
-      expect(control.stderr.bytes).toBe(0)
+      const control = yield* ReviewHistory.run({ op: "log", rev: root.head },
+        { repository: root.directory, executionSessionID: original.report.sessionID })
+      expect(control.argv[0]).toBe("git")
+      expect(control.raw).toContain(root.head)
+      expect(control.truncated).toBe(false)
       expect(processes.started).toBe(controls + 1)
       const before = gitCalls.length
       const beforeProcesses = processes.started

@@ -1,10 +1,10 @@
 # A05 — confined history and profile skill contract
 
-Status: **frozen contract and tests, awaiting hosted typecheck and causal RED**. No production implementation has been changed. Source review does not qualify runtime. API reading baseline: `c3ed848aef3c0883097eb8611bbd8eb1090f41f1` (2026-11-28). This contract supersedes only the first-slice history refusal in [engagement-access-contract.md](https://github.com/gustavomhss/hugr-orchestra/blob/c3ed848aef3c0883097eb8611bbd8eb1090f41f1/docs/specs/lucy/engagement-access-contract.md). The original request, durable identity, exact file authority, time box, cancellation and permission contract still applies.
+Status: **tests-only refreeze after an invalid typecheck baseline; awaiting hosted typecheck and causal RED**. No production implementation has been changed. Source review does not qualify runtime. API reading baseline: `c3ed848aef3c0883097eb8611bbd8eb1090f41f1` (2026-11-28). This contract supersedes only the first-slice history refusal in [engagement-access-contract.md](https://github.com/gustavomhss/hugr-orchestra/blob/c3ed848aef3c0883097eb8611bbd8eb1090f41f1/docs/specs/lucy/engagement-access-contract.md). The original request, durable identity, exact file authority, time box, cancellation and permission contract still applies.
 
 The user supplied the remaining scope explicitly in the latest message: A05/forensics, compliance, Kubeconform/83 tools and integrated acceptance. The complete old chat was not available. This packet is a concrete subset of A05, not a claim that the entire inherited ToDo or A05 has already passed.
 
-Remote acceptance base: `a959b3fffcbb9d1d2a36c0557f1de1b94c8a91a4`, including the preserved Activity/Omni work, TOML override, R8 probe fix and Kubeconform P1. Root and independent reviewers accepted the source packet after correcting dangling-object, metadata, proof binding, promisor control and replay-observation weaknesses. The close/rebind case is a controlled binding-lifetime test; expiry/cancellation cases exercise real completed history and later refusal, not a separately suspended native Git call. H01–H10 and final A05 closure still require the observations specified below, including preservation gates.
+Original remote acceptance base: `a959b3fffcbb9d1d2a36c0557f1de1b94c8a91a4`, including the preserved Activity/Omni work, TOML override, R8 probe fix and Kubeconform P1. Root and independent reviewers accepted the source packet after correcting dangling-object, metadata, proof binding, promisor control and replay-observation weaknesses. The close/rebind case is a controlled binding-lifetime test; expiry/cancellation cases exercise real completed history and later refusal, not a separately suspended native Git call. H01–H10 and final A05 closure still require the observations specified below, including preservation gates.
 
 ## 1. Behavior and ownership
 
@@ -147,3 +147,25 @@ Use isolated `lucy-scope-history` (three words). Do not touch the concurrent Kub
 
 Evidence for the gap: [current history](https://github.com/gustavomhss/hugr-orchestra/blob/c3ed848aef3c0883097eb8611bbd8eb1090f41f1/packages/core/src/review-toolkit/history.ts), [binding and tool](https://github.com/gustavomhss/hugr-orchestra/blob/c3ed848aef3c0883097eb8611bbd8eb1090f41f1/packages/core/src/review/tools.ts), [report filter](https://github.com/gustavomhss/hugr-orchestra/blob/c3ed848aef3c0883097eb8611bbd8eb1090f41f1/modules/maestro/coordination/src/v2/workflow/review-fanout-support.ts), [collector](https://github.com/gustavomhss/hugr-orchestra/blob/c3ed848aef3c0883097eb8611bbd8eb1090f41f1/modules/maestro/coordination/src/v2/workflow/review-engagement-artifact-collector.ts), [forensics leaf](https://github.com/gustavomhss/hugr-orchestra/blob/c3ed848aef3c0883097eb8611bbd8eb1090f41f1/packages/lucy-specialist/skills/lucy-audit/forensics/SKILL.md).
 
+
+## Typecheck repair and full-body integrity supplement
+
+The original tests-only source was `1c9b5fca6d54c3d40468b7b1ea1852a463d9a864`. [Baseline 46168033618](https://github.com/gustavomhss/hugr-orchestra/actions/runs/46168033618) failed package typecheck on all three hosts before any test executed. Optional captured-source expectations and the operation enum required explicit narrowing; two files imported a Core process subpath which is not exported. This is **invalid preparation, not causal RED**. Cleanup succeeded.
+
+The reviewed repair changes only four TypeScript test files. It uses explicit captured-source guards and the already-public `AppProcess`/`ReviewHistory` APIs for real controls, without exporting internal modules or changing production. The H06 observer still proves a real `ResearchProcess.run` span before requiring zero new Git/process/provider work during exact replay. The four other previously frozen TypeScript files remain byte-identical.
+
+A separate H06 supplement adds one real history operation larger than the model-visible prefix. It changes only unseen tail text, preserves its length, operation/source/input/selection and native event, recalculates artifact/descriptor/receipt hashes, and requires manifest, read and replay to reject it. Restoring the original evidence must restore byte-identical public reads without provider work. Therefore the **complete normalized safe result**, including text not shown to the model, must be bound to the original persisted native completed settlement. Self-consistent artifact hashes or the visible prefix alone are insufficient. The history URI remains operation-stable; rejection cannot rely on a content-derived URI mismatch.
+
+This refreeze integrates `f469755b33bb478693d2d1dae022c010c2e47ebc` as the current base. The two post-Kube commits changed only a Script test and the capability-assets pytest dependency; no Lucy production paths changed. The packet now inventories **50 cases across eight suites plus one fixture**, not yet qualified by execution. Typecheck and assertion RED remain prerequisites for implementation.
+
+| TypeScript fixture/suite | SHA-256 |
+| --- | --- |
+| `fixture/lucy-history.ts` | `55a453d32d0039d49a974988895ca9c0d77ebc9566ad7b8d92aef53ce06d6f25` |
+| `lucy-history-boundaries.test.ts` | `28a0cbf9dea0aa1793cc7307d69d093e3b20a299d2cde77aad5c9e5bf242d576` |
+| `lucy-history-bounds.test.ts` | `443fd7dc6b07733ef555a3ef660566432efaca680e4573ee306757b5443a067e` |
+| `lucy-history-evidence.test.ts` | `d3656fa736bceeb7abd09893301b8a684c4ed6457b26d9a3301dab18067a92dd` |
+| `lucy-history-lifetime.test.ts` | `3c3fdbbdc2e3945960ca27271441cd19a2627f222417e48cc801dabaedb85427` |
+| `lucy-history-public.test.ts` | `8d10e27d67507598ae31c4ac4cd2aedb4ea7b86eca5540841cd7bccdf67a65a7` |
+| `lucy-history-quota.test.ts` | `2ca7aab0030e9e2521129764e141a8cc15fb4bb4e7e58a68d16f4b16ee4c6f8c` |
+| `lucy-history-scopes.test.ts` | `840fa81d009a87f7ad71e9f03e45c71bc6e909aaa171786ba6a7f591fea32284` |
+| `lucy-history-tail-proof.test.ts` | `56d8a4f6fb361d5a0f4833e65ffd54153c56adcd7488cbb791155734c9c5680e` |

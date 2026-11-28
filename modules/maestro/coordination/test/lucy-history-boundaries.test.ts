@@ -2,8 +2,9 @@ import { expect, test } from "bun:test"
 import fs from "node:fs/promises"
 import path from "node:path"
 import { Effect } from "effect"
+import { ChildProcess } from "effect/unstable/process"
 import { GitCli } from "@orchestra/core/git-cli"
-import { ResearchProcess } from "@orchestra/core/research-toolkit/process"
+import { AppProcess } from "@orchestra/core/process"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { run, sourcePath, sourceText } from "./fixture/lucy-engagement"
 import { decoded } from "./fixture/lucy-engagement-artifacts"
@@ -185,9 +186,12 @@ test("H05 repository config cannot execute fsmonitor/textconv/diff helpers or le
       const report = decoded(output)
       yield* completed(host, report.sessionID, code.id)
       expect((yield* history(host, report, "show")).value.text).toBe(sourceText)
-      const control = yield* ResearchProcess.run({ command: process.execPath, args: [helper, marker],
-        cwd: root.global.tmp, env: ResearchProcess.environment(), timeoutMs: 5000, maxBytes: 4096 })
+      const processes = yield* AppProcess.Service
+      const control = yield* processes.run(ChildProcess.make(process.execPath, [helper, marker],
+        { cwd: root.global.tmp, stdin: "ignore" }), { timeout: "5 seconds", maxOutputBytes: 4096, maxErrorBytes: 4096 })
       expect(control.exitCode).toBe(0)
+      expect(control.stdoutTruncated || control.stderrTruncated).toBe(false)
+      expect(control.stdout.toString("utf8").trim()).toBe("HISTORY-HELPER-SECRET")
       expect(yield* Effect.promise(() => fs.readFile(marker, "utf8"))).toBe("HISTORY-HELPER-EXECUTED")
       yield* Effect.promise(() => fs.unlink(marker))
     }), variantAdapter(ordinary.stream))

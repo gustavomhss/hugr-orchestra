@@ -94,6 +94,9 @@ test("H09 the real ancestry walk retains at most 200 commits and labels the rema
     expect(made.exitCode, made.stderr.toString("utf8")).toBe(0)
     const input = request("history-commit-bound", "diligence")
     const report = decoded(yield* host.invoke(input))
+    const source = report.source
+    expect(source, "history report must carry the captured source").toBeDefined()
+    if (!source) throw new Error("history report has no captured source")
     const model = (yield* history(host, report, "log")).value
     expect(model.complete).toBe(false)
     expect(model.notExamined.length).toBeGreaterThan(0)
@@ -104,7 +107,7 @@ test("H09 the real ancestry walk retains at most 200 commits and labels the rema
     }))(JSON.parse(line), { onExcessProperty: "error" }))
     expect(entries).toHaveLength(200)
     expect(new Set(entries.map((entry) => entry.commit)).size).toBe(200)
-    expect(entries[0].commit).toBe(report.source?.commit)
+    expect(entries[0].commit).toBe(source.commit)
     expect(raw.complete).toBe(false)
     expect(raw.notExamined.length).toBeGreaterThan(0)
     expect(evidence.proofs[0].artifact.complete).toBe(false)
