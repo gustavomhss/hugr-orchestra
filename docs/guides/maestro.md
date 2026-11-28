@@ -83,6 +83,14 @@ you can see what was agreed and what was checked. Large changes can use its repo
 Reviews of plans and returned work go to the code review seat, `lucy`. See [Code review](review.md) for its card,
 verdicts and tiers.
 
+You can also ask Maestro for an independent audit, diligence or artifact report over committed files. The report
+identifies its captured source and original time limit, lists supported findings and unexamined work, and carries
+no approval verdict. In the campaign build, Maestro can read a newly completed report's retained evidence from the
+same parent Session with `maestro_read_review_evidence`. Exact retries verify those bytes before replaying the
+report. Missing or corrupt evidence is reported without rerunning the review; older reports explicitly distinguish
+unavailable evidence. The [engagement guide](review.md#independent-engagement-reports) explains scope, limits and
+the remaining unsupported work. This does not update an already installed app.
+
 ## Asking Maestro about Orchestra
 
 Maestro carries a guide to every part of Orchestra: the apps, the agents and their skills, engines and Claude mode,

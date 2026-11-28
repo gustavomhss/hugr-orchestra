@@ -2,7 +2,7 @@
 name: maestro-orchestra-agents-team
 description: The native seats, their roles, which are staffed, how Maestro learns the team, how a seat's display name is resolved, and what a dispatch gives a seat.
 internal: true
-when: The owner asks who is on the team, what a seat does, why a seat cannot be dispatched, how a seat is renamed, or how areas and worktrees route code work.
+when: The owner asks who is on the team, what a seat does, how independent review evidence works, why a seat cannot be dispatched, how a seat is renamed, or how areas and worktrees route code work.
 not-when: The question is about adding a custom agent or a skill; open custom or skills.
 covers: [modules/maestro/coordination, modules/specialists/archie, modules/specialists/backend, modules/specialists/team, packages/jimmy-specialist]
 ---
@@ -20,7 +20,7 @@ The catalog is the `seats/` directory of `modules/maestro/coordination/src` (one
 | `backend` | backend execution; writes code in its areas | staffed |
 | `archie` | product, architecture, specification, planning | staffed, the planner |
 | `jimmy` | codebase exploration and research | staffed, the research seat |
-| `lucy` | cold code review; records governed reviews | staffed, the approver; no skill tree yet |
+| `lucy` | cold review and independent repository reports; records governed reviews | staffed, the approver; scoped review skills |
 | `patty` | frontend | not staffed |
 | `billy` | security review | not staffed |
 | `rosie` | documentation | not staffed |
@@ -69,6 +69,33 @@ and dispatchable; `patty`, `billy`, `rosie` and `frankie` are `staffed: false`.
 Maestro's coordination package (`@orchestra/maestro`). It holds the seat catalog and roster, the generated team list,
 the governed run records (approval, authorization, verification plan, work contract), the Arsenal native safety
 contribution, and the Maestro playbooks in `playbooks/`.
+
+### Independent reports and evidence
+
+`maestro_request_review` accepts `kind: "engagement"`, a stable `requestID`, profile `audit`, `diligence` or `artifact`,
+a `brief`, `timeBoxMinutes` from 1 to 120, and optional committed `revision` and literal repository-relative `paths`.
+It captures one commit and exact files, then returns a report without an approval verdict. Changing live files does
+not change its source or quotations. Retry with the identical input in the same parent Session.
+
+For a newly completed report, call `maestro_read_review_evidence` with `op: "manifest"` and `reportID`. Read the
+returned manifest artifact with `op: "read"`, then read the artifact IDs listed inside it. Each page holds at most
+4,096 original bytes as base64; pass `next` unchanged until it is absent. Decode and join bytes before interpreting
+text. The receipt binds source, original budget, CODE captures and native settlements, every actual analysis, source
+citations and available native proofs. Knowing an ID or URI does not grant access outside the parent/project/Location.
+
+Completed retry verifies all required bytes before exact replay. Legacy reports explicitly lack retained evidence;
+missing or corrupt newer evidence fails without a model rerun. Cancelled, expired or failed requests have no public
+receipt and keep their stopped result. Original capture and publication share one deadline; later reads have 60 seconds.
+
+Retention limits are 16 MiB per body, 64 MiB across distinct descriptors, 256 descriptors, 128 CODE operations and
+1 MiB per receipt. Exceeding a bound fails publication. Truncated native output remains incomplete. These are logical
+receipt bounds, not a physical disk quota.
+
+Only the preprepared oxlint 1.91.0 path on Linux x64 currently produces native engagement proofs. Other routed
+producers and eligible Deep/LSP readers refuse as `engagement-evidence-scope-unqualified`; other oxlint platforms
+report `native-runtime-unqualified`. No runtime is acquired during engagement. Native file reads, Atlas, history,
+executable verifier probes, audit variants and fix review are unavailable here; compliance refuses before capture.
+Artifact behavioral evaluation remains `owner-permission`. Read checks and `notExamined` before stating coverage.
 
 ## `modules/specialists/archie`
 

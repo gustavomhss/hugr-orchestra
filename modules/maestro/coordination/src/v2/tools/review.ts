@@ -11,6 +11,7 @@ import { BoardProjectTable } from "@orchestra/core/board/sql"
 import { BoardThread } from "@orchestra/core/board/thread"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
+import type { Global } from "@orchestra/core/global"
 import { ReviewCatalog } from "@orchestra/core/review/catalog"
 import { ReviewPrecisionCatalog } from "@orchestra/core/review/precision-catalog"
 import { ReviewPrecisionStore } from "@orchestra/core/review/precision-store"
@@ -131,6 +132,7 @@ export type Analyze = (
     readonly head: string
     readonly sessionID: SessionSchema.ID
     readonly catalog: ReviewCatalog.Catalog
+    readonly evidence?: ReviewAnalyze.Evidence
     readonly changes?: ReadonlyArray<{ readonly path: string; readonly added: ReadonlyArray<{ readonly line: number }> }>
   },
 ) => Effect.Effect<ReviewFanoutV2.Analysis, Tool.Failure>
@@ -156,6 +158,7 @@ const analyzeStep = (processes: AppProcess.Interface): Analyze => (input) => {
     tier: input.executionTier ?? ReviewRouting.tier(input.routing),
     profile: input.routing.profile.id,
     ...(input.release === undefined ? {} : { release: input.release }),
+    ...(input.evidence === undefined ? {} : { evidence: input.evidence }),
     store: ReviewBindingV2.analysisStore(input.cache),
     changed,
     trusted,
@@ -167,7 +170,8 @@ const analyzeStep = (processes: AppProcess.Interface): Analyze => (input) => {
     ...(input.repositoryFiles === undefined ? {} : { repositoryFiles: input.repositoryFiles }),
   }).pipe(
     Effect.provideService(AppProcess.Service, processes),
-    Effect.mapError((error) => new Tool.Failure({ message: `ReviewAnalyzeFailed: ${String(error)}` })),
+    Effect.mapError((error) => new Tool.Failure({ message: `ReviewAnalyzeFailed: ${error.reason}`,
+      ...(error.reason.startsWith("engagement-") ? { metadata: { reason: error.reason } } : {}) })),
   )
 }
 
@@ -185,6 +189,7 @@ export function tools(input: {
   readonly sessions: Option.Option<SessionV2.Interface>
   readonly execution: Option.Option<SessionExecution.Interface>
   readonly database?: Database.Interface
+  readonly global?: Global.Interface
   // Seams over the review toolkit and the seat's stage tool sets; the defaults are the running build's.
   readonly analyze?: Analyze
   readonly stages?: ReviewFanoutV2.Stages
@@ -268,6 +273,7 @@ export function tools(input: {
               return yield* ReviewEngagementRequestV2.run(params, {
                 sessionID: context.sessionID, services, sessions: input.sessions, execution: input.execution,
                 database: input.database ?? { db: services.db }, analyze, stages, processes: input.processes,
+                ...(input.global ? { global: input.global } : {}),
                 settings: (projectID) => reviewSettings(services.db, projectID),
               }).pipe(Effect.scoped)
             }
