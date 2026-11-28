@@ -47,6 +47,7 @@ test.each(["solid", "browser"])("prompt submit with isolated module mocks (%s)",
       "dispatched shell settles through the wire after binding change",
       "admitted draft shell keeps its wire acknowledgement through reactive model and draft policy changes",
       "draft receipt consumes unchanged admitted comments and preserves edited and new comments for the next send",
+      "a refused prompt merges its consumed comments with context edited during preflight and POST",
     ].forEach((name) => expect(stdout + stderr).toContain(`(pass) ${name}`))
   }
 }, 35_000)

@@ -823,6 +823,40 @@ test("App follows variant-only Session switches and keeps a new variant bound to
   } finally { owner.dispose() }
 })
 
+test("App records a remote Session model that matches the implicit candidate before defaults change", async () => {
+  const owner = firstSendOwner({ variant: "high" })
+  try {
+    await wait(() => owner.source.local.model.execution.ready(), "implicit candidate ready before external switch")
+    expect(owner.source.local.model.intent()).toEqual({ model: undefined, variant: undefined })
+    expect(owner.source.local.model.execution.input().model).toEqual({ ...ref, variant: "high" })
+    owner.follower.setRemote({ ...ref, variant: "high" })
+    await wait(() => owner.source.local.model.intent().variant === "high", "external switch persisted exact intent")
+    owner.source.setMetadata("agent", (agents) => agents.map((agent) => agent.id === "maestro"
+      ? { ...agent, model: { providerID: ref.providerID, modelID: "blocked" }, variant: "default" } : agent))
+    expect(owner.source.local.model.execution.input().model).toEqual({ ...ref, variant: "high" })
+    expect(owner.calls.admissions()).toHaveLength(0)
+  } finally { owner.dispose() }
+})
+
+test("App preserves an implicit choice when the known command's selector echoes before its POST", async () => {
+  commands.push({ name: "fixture-known" })
+  const owner = firstSendOwner({ value: "/fixture-known raw", variant: "high" })
+  try {
+    await wait(() => owner.source.local.model.execution.ready(), "implicit command choice ready")
+    let selectorEchoed = false
+    owner.calls.control.after = async (path) => {
+      if (path !== "/api/session/session-1/model") return
+      owner.follower.setRemote({ ...ref, variant: "high" })
+      await Promise.resolve()
+      expect(owner.source.local.model.intent()).toEqual({ model: undefined, variant: undefined })
+      selectorEchoed = true
+    }
+    expect(await send(owner.editor)).toBe(true)
+    expect(selectorEchoed).toBe(true)
+    expect(owner.calls.calls.filter((call) => call.path.endsWith("/command"))).toHaveLength(1)
+  } finally { owner.dispose() }
+})
+
 test("App preserves the intentional model and its inherited variant when its selector echoes during Send", async () => {
   const owner = firstSendOwner({ loading: true, variant: "high" })
   try {

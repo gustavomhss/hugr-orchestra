@@ -78,7 +78,7 @@ export function createServerSession(
       return (this.session_status[id]?.type ?? "idle") !== "idle"
     },
   })
-  const statusReads = new Set<{ touched: Set<string>; removed: Set<string> }>()
+  const statusReads = new Set<{ touched: Set<string>; removed: Set<string>; optimistic: Set<string> }>()
   const statusChanged = (sessionID: string, removed = false) => statusReads.forEach((read) => {
     read.touched.add(sessionID)
     if (removed) read.removed.add(sessionID)
@@ -95,7 +95,7 @@ export function createServerSession(
     const owner = Symbol()
     owners.add(owner)
     busyOwners.set(sessionID, owners)
-    statusChanged(sessionID)
+    statusReads.forEach((read) => read.optimistic.add(sessionID))
     if (!pending) setData("session_status", sessionID, { type: "busy" })
     return () => {
       if (busyOwners.get(sessionID) !== owners || !owners.delete(owner) || owners.size > 0) return
@@ -825,6 +825,8 @@ export function createServerSession(
     }
 
     const info = data.info[sessionID]
+    if (event.type === "session.agent.selected" || event.type === "session.model.selected" || event.type === "session.moved")
+      recovery.supersede(sessionID)
     if (event.type === "session.moved" && info)
       remember({
         ...info,
@@ -983,9 +985,16 @@ export function createServerSession(
     setStatus,
     optimisticBusy,
     captureStatusChanges() {
-      const read = { touched: new Set<string>(), removed: new Set<string>() }
+      const read = { touched: new Set<string>(), removed: new Set<string>(), optimistic: new Set<string>() }
       if (!lifetime.disposed) statusReads.add(read)
-      return { ...read, release: () => { statusReads.delete(read) } }
+      return {
+        get touched() {
+          // A refused optimistic send releases its lease before the snapshot arrives.
+          return new Set([...read.touched, ...Array.from(read.optimistic).filter((id) => busyOwners.has(id))])
+        },
+        removed: read.removed,
+        release: () => { statusReads.delete(read) },
+      }
     },
     get: (sessionID: string) => data.info[sessionID],
     peek: (sessionID: string) => data.info[sessionID],

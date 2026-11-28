@@ -121,9 +121,17 @@ test("Janitor uses the adopted Session model and policy while a draft tab is ope
   await setupTimeline(page, { settings: { janitorEnabled: true }, sessions: [session(), janitor], variants: ["default"] })
 
   const writes: unknown[] = []
+  const history = Promise.withResolvers<void>()
+  let metadataUnavailable = true
+  let firstHistory = true
+  let creates = 0
+  page.on("request", (request) => {
+    if (request.method() === "POST" && new URL(request.url()).pathname === "/api/session") creates++
+  })
   let policy: { mode: "allowlist"; models: unknown[] } | { mode: "inherit" } = { mode: "allowlist", models: [] }
   await page.route((url) => url.pathname === `/api/session/${janitorSessionID}`, (route) => {
     if (route.request().method() !== "GET") return route.fallback()
+    if (metadataUnavailable) return route.fulfill({ status: 503, headers: { "access-control-allow-origin": "*" } })
     return route.fulfill({
       json: { data: { ...currentSession(janitor), subagentModels: policy } },
       headers: { "access-control-allow-origin": "*" },
@@ -137,6 +145,13 @@ test("Janitor uses the adopted Session model and policy while a draft tab is ope
     return route.fulfill({ json: { data: policy }, headers: { "access-control-allow-origin": "*" } })
   })
 
+  await page.route((url) => url.pathname === `/api/session/${janitorSessionID}/message`, async (route) => {
+    if (route.request().method() !== "GET" || !firstHistory) return route.fallback()
+    firstHistory = false
+    await history.promise
+    return route.fulfill({ status: 503, headers: { "access-control-allow-origin": "*" } })
+  })
+
   await page.goto(`/new-session?draftId=${draftID}`)
   const draft = page.locator('[data-session-kind="new"] [data-component="prompt-input-v2"]')
   const draftInput = draft.getByRole("textbox", { name: "Prompt" })
@@ -145,20 +160,41 @@ test("Janitor uses the adopted Session model and policy while a draft tab is ope
   await expect(draftChip).toHaveText("Subagents · Default")
   await draftChip.click()
   const dialog = page.getByRole("dialog", { name: "Subagent models" })
-  await dialog.getByRole("switch", { name: "Claude Opus 4.6" }).click()
+  const draftModel = dialog.getByRole("switch", { name: "Claude Opus 4.6" })
+  await expect(draftModel).toBeEnabled()
+  await dialog.locator('[data-slot="list-item"][data-key="opencode:claude-opus-4-6"]').click()
+  await expect(draftModel).toBeChecked()
   await page.keyboard.press("Escape")
   await expect(dialog).toHaveCount(0)
   await expect(draftChip).toHaveText("Subagents · 1")
 
+  const pocket = page.getByRole("complementary", { name: "Janitor report" })
+  await page.getByRole("button", { name: "Open janitor report" }).click()
+  await expect(pocket.getByText("Composer unavailable here.")).toBeVisible()
+  await expect.poll(() => page.evaluate((key) => localStorage.getItem(key),
+    `orchestra.janitor.session.local.${base64Encode(directory)}`)).toBe(janitorSessionID)
+  expect(creates).toBe(0)
+
+  metadataUnavailable = false
   const modelRequest = page.waitForRequest((request) => request.method() === "POST" &&
     new URL(request.url()).pathname === "/api/model/execution" && request.postDataJSON().context.sessionID === janitorSessionID)
-  await page.getByRole("button", { name: "Open janitor report" }).click()
-  expect((await modelRequest).postDataJSON()).toMatchObject({
-    context: { type: "session", sessionID: janitorSessionID }, model: storedModel,
-  })
-  const pocket = page.getByRole("complementary", { name: "Janitor report" })
   const chip = pocket.locator('[data-action="prompt-subagent-models"]')
-  await expect(chip).toHaveText("Subagents · 0")
+  try {
+    await pocket.getByRole("button", { name: "Retry" }).click()
+    expect((await modelRequest).postDataJSON()).toMatchObject({
+      context: { type: "session", sessionID: janitorSessionID }, model: storedModel,
+    })
+    await expect(pocket.getByRole("textbox", { name: "Prompt" })).toBeEditable()
+    await expect(chip).toHaveText("Subagents · 0")
+  } finally {
+    history.resolve()
+  }
+  const retryHistory = pocket.getByRole("button", { name: "Retry" })
+  await expect(retryHistory).toBeVisible()
+  await expect(pocket.getByRole("textbox", { name: "Prompt" })).toBeEditable()
+  await retryHistory.click()
+  await expect(retryHistory).toHaveCount(0)
+  expect(creates).toBe(0)
   await chip.click()
   await expect(dialog.locator('[data-status="none-allowed"]')).toBeVisible()
   await dialog.getByRole("button", { name: "Inherit", exact: true }).click()

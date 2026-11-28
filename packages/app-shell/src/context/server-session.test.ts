@@ -37,6 +37,53 @@ test("an active-session response captured before admission preserves its busy ow
   expect(store.data.session_status[sessionID]?.type).toBe("idle")
 })
 
+test("a refused admission does not suppress a still-running active-session response", () => {
+  const store = create(messageClient())
+  const sessionID = "ses_busy"
+  const changes = store.captureStatusChanges()
+  const release = store.optimisticBusy(sessionID)!
+  release()
+  reconcileActiveSessionStatuses(store, { [sessionID]: { type: "running" } }, changes.touched)
+  changes.release()
+  expect(store.data.session_status[sessionID]?.type).toBe("busy")
+})
+
+test("a delayed Session GET cannot undo a variant-only live selection", async () => {
+  const sessionID = "ses_child"
+  const info = (variant: string, updated: number) => ({
+    ...session(sessionID),
+    location: { directory: "/repo" },
+    model: { providerID: "provider", id: "model", variant },
+    time: { created: 1, updated },
+    cost: 0,
+    tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+  })
+  const held = Promise.withResolvers<ReturnType<typeof info>>()
+  const base = messageClient()
+  let reads = 0
+  const store = createServerSession({
+    ...base.sessionApi,
+    get: async () => ++reads === 1 ? held.promise : info("", 2),
+  }, base.messageApi, { todo: async () => [] })
+  store.remember({
+    ...session(sessionID),
+    model: info("high", 1).model,
+  })
+  const load = store.resolve(sessionID, { force: true })
+  store.applyV2({
+    id: "evt_variant",
+    type: "session.model.selected",
+    created: 2,
+    location: { directory: "/repo" },
+    data: { sessionID, model: info("", 2).model },
+  })
+  expect(store.get(sessionID)?.model?.variant).toBe("")
+  held.resolve(info("high", 1))
+  expect((await load).model?.variant).toBe("")
+  expect(store.get(sessionID)?.model?.variant).toBe("")
+  expect(reads).toBe(2)
+})
+
 describe("server session", () => {
   test("projects V2 session events into current and wire message state", () => {
     const ctx = setup({ ses_child: session("ses_child") })

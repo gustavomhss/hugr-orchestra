@@ -156,6 +156,45 @@ test("a prompt a hook refused returns to the composer with the hook named, and t
   expect(statusWrites.at(-1)).toEqual({ sessionID: "session-1", type: "idle" })
 })
 
+test.skipIf(isServer)("a refused prompt merges its consumed comments with context edited during preflight and POST", async () => {
+  state.params.id = "session-1"
+  const preflight = deferred()
+  const releasePreflight = deferred()
+  const posted = deferred()
+  const refuse = deferred()
+  state.policyWait = async () => { preflight.resolve(); await releasePreflight.promise }
+  state.sendHook = async () => { posted.resolve(); await refuse.promise; throw new Error("prompt refused") }
+  const real = createPromptState({ prompt: "send with comments" })
+  const original = { type: "file" as const, path: "first.ts", comment: "first submitted comment" }
+  const replaced = { type: "file" as const, path: "replaced.ts", comment: "old submitted comment", commentID: "comment-1" }
+  real.context.add(original)
+  real.context.add(replaced)
+  const submit = createPromptSubmit({ ...submitInput(), prompt: real })
+  const sending = submit.handleSubmit(new Event("submit"))
+  try {
+    await Promise.race([preflight.promise, sending])
+    expect(promptInputs).toEqual([])
+    real.context.add({ type: "file", path: "preflight.ts", comment: "added before POST" })
+    releasePreflight.resolve()
+    await Promise.race([posted.promise, sending])
+    expect(promptInputs).toHaveLength(1)
+    const postedText = (promptInputs[0] as { text: string }).text
+    expect(postedText).toContain(original.comment)
+    expect(postedText).toContain(replaced.comment)
+    expect(postedText).not.toContain("added before POST")
+    expect(real.context.items().map((item) => item.comment)).toEqual(["added before POST"])
+    real.context.add({ type: "file", path: "later.ts", comment: "added after POST" })
+    real.context.add({ ...replaced, comment: "replacement after POST" })
+    refuse.resolve()
+    expect(await sending).toBe(false)
+    expect(real.current()[0]).toMatchObject({ content: "send with comments" })
+    expect(real.context.items().map((item) => item.comment)).toEqual([
+      "added before POST", "added after POST", "replacement after POST", original.comment,
+    ])
+    expect(toasts.at(-1)).toMatchObject({ title: "prompt.toast.promptSendFailed.title", description: "prompt refused" })
+  } finally { releasePreflight.resolve(); refuse.resolve(); await sending }
+})
+
 test("leaving the Session while a send waits returns the cleared prompt to the composer it came from", async () => {
   state.params.id = "session-1"
   // Hold the send at the policy barrier. A worktree barrier would leave /repo/main ready for the rest of the

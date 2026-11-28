@@ -2,6 +2,7 @@ import { createEffect, untrack } from "solid-js"
 import type { ModelKey, useLocal } from "@/context/local"
 import type { PromptSession } from "@/context/prompt-state"
 import type { UserMessage } from "@/v2-wire"
+import type { SessionModelRef } from "@/utils/session-model-execution"
 
 type Local = {
   session: {
@@ -18,7 +19,6 @@ type Restore = {
     restoreModel(model: ModelKey, variant: string | null | undefined, inherited?: true): void
   }
 }
-type SessionModel = { providerID: string; id: string; variant?: string }
 type PromptState = Pick<PromptSession, "model">
 
 export const resetSessionModel = (local: Local) => {
@@ -29,22 +29,21 @@ export const syncSessionModel = (local: Local, msg: UserMessage) => {
   local.session.restore(msg, true)
 }
 
-const sameSessionModel = (left: SessionModel | undefined, right: SessionModel) =>
+const sameSessionModel = (left: SessionModelRef | undefined, right: SessionModelRef) =>
   left?.providerID === right.providerID && left.id === right.id && left.variant === right.variant
 
 export const followSessionModel = (
   local: Local & Restore & Intent & {
-    model: Pick<LocalModel, "execution">
-    session: { ready(): boolean }
+    session: Pick<ReturnType<typeof useLocal>["session"], "ready" | "selectingModel">
   },
   session: {
     lastUserMessage: () => UserMessage | undefined
-    info: () => { model?: SessionModel } | undefined
+    info: () => { model?: SessionModelRef } | undefined
     editor: () => PromptState | undefined
     sessionID: () => string | undefined
   },
 ) => {
-  let previous: { id: string; editor: PromptState; model?: SessionModel } | undefined
+  let previous: { id: string; editor: PromptState; model?: SessionModelRef } | undefined
   createEffect(() => {
     const id = session.sessionID()
     const editor = session.editor()
@@ -62,9 +61,10 @@ export const followSessionModel = (
         restoreStoredSessionModel(local, model)
         return
       }
-      // A selector sent by this composer can emit an event before the prompt POST.
-      // The wire ref can match while the raw intent still uses inherited or model-default reasoning.
-      if (model && !sameSessionModel(lastModel, model) && !sameSessionModel(local.model.execution.input().model, model)) {
+      if (model && !sameSessionModel(lastModel, model) && !local.session.selectingModel(id, model)) {
+        const intent = local.model.intent()
+        if (intent.model?.providerID === model.providerID && intent.model.modelID === model.id &&
+          intent.variant !== undefined && (intent.variant ?? undefined) === model.variant) return
         local.session.restoreModel({ providerID: model.providerID, modelID: model.id }, model.variant ?? null, true)
         if (editor.model.current()) editor.model.set(undefined)
       }
@@ -76,7 +76,7 @@ export const followSessionModel = (
 
 export function restoreStoredSessionModel(
   local: { model: Pick<LocalModel, "intent"> } & Restore,
-  model: SessionModel | undefined,
+  model: SessionModelRef | undefined,
 ) {
   if (!model) return
   const intent = local.model.intent()

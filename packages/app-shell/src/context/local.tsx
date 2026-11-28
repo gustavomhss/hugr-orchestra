@@ -16,6 +16,7 @@ import { ScopedKey, type ServerScope } from "@/utils/server-scope"
 import { agentKey } from "./agent-identity"
 import { modelSupportsExecution } from "@/hooks/model-execution"
 import { pathKey } from "@/utils/path-key"
+import { sessionModelSelectionPending, type SessionModelRef } from "@/utils/session-model-execution"
 import { normalizeCatalogModel } from "./global-sync/utils"
 
 export type ModelKey = { providerID: string; modelID: string; variant?: string }
@@ -349,6 +350,8 @@ export function createLocal(deps: LocalDeps) {
         setStore("draft", undefined)
       },
       inherited: () => scope()?.inherited === true,
+      selectingModel: (sessionID: string, model: SessionModelRef) =>
+        sessionModelSelectionPending(serverSDK().currentApi.session, sessionID, model),
       restoreModel(model: ModelKey, variant: string | null | undefined, inherited?: true) {
         write({ model, variant, inherited })
       },

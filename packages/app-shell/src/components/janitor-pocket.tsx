@@ -18,6 +18,7 @@ import { createPromptModelSelection } from "@/pages/session/composer/prompt-mode
 import type { ServerConnection } from "@/context/server"
 import { SessionRouteKey, SessionStateKey } from "@/utils/server-scope"
 import { normalizeSessionInfo } from "@/utils/session"
+import { isSessionNotFoundError } from "@/utils/server-errors"
 import type { JanitorReport } from "@/utils/janitor-report"
 import { agentKey } from "@/context/agent-identity"
 
@@ -137,18 +138,13 @@ function PocketComposer(props: {
           stored = null
         }
         if (stored) {
-          try {
-            await serverSync().session.sync(stored)
-            if (isCurrent() && serverSync().session.get(stored)?.directory === directory) {
-              props.onSessionID(stored)
-              return
-            }
-          } catch {
-            try {
-              localStorage.removeItem(key)
-            } catch {
-              // Storage may be unavailable; continue with a new session.
-            }
+          const existing = await serverSync().session.resolve(stored, { force: true }).catch((error: unknown) => {
+            if (!isSessionNotFoundError(error, stored)) throw error
+          })
+          if (!isCurrent()) return
+          if (existing?.directory === directory) {
+            props.onSessionID(stored)
+            return
           }
         }
         if (isCurrent()) setCheckedKey(key)
@@ -164,9 +160,8 @@ function PocketComposer(props: {
           location: { directory },
         })
         .then((result) => normalizeSessionInfo(result))
-      currentSync.session.remember(created)
-      await currentSync.session.sync(created.id)
       if (!isCurrent()) return
+      currentSync.session.remember(created)
       try {
         localStorage.setItem(key, created.id)
       } catch {
@@ -237,25 +232,48 @@ function PocketComposer(props: {
 
 function PocketTimeline(props: { sessionID: () => string | undefined }) {
   const sync = useServerSync()
+  const language = useLanguage()
+  const [failed, setFailed] = createSignal(false)
+  const [retry, setRetry] = createSignal(0)
+  createEffect(() => {
+    retry()
+    const id = props.sessionID()
+    if (!id) return
+    let active = true
+    onCleanup(() => { active = false })
+    setFailed(false)
+    void sync().session.sync(id).catch((error: unknown) => {
+      if (!active) return
+      setFailed(true)
+      console.error("[janitor-pocket] history", error)
+    })
+  })
   const messages = createMemo(() => {
     const id = props.sessionID()
     return id ? (sync().session.data.message[id] ?? []) : []
   })
 
   return (
-    <Show when={messages().length > 0}>
-      <div class="min-h-0 max-h-[38dvh] overflow-y-auto px-1 py-2">
-        <For each={messages()}>
-          {(message) => (
-            <Message
-              message={message}
-              parts={sync().session.data.part[message.id] ?? []}
-              showReasoningSummaries
-              useV2Actions
-            />
-          )}
-        </For>
-      </div>
-    </Show>
+    <>
+      <Show when={failed()}>
+        <button type="button" class="self-start px-4 py-2 text-[13px] underline" onClick={() => setRetry((value) => value + 1)}>
+          {language.t("janitor.pocket.retry")}
+        </button>
+      </Show>
+      <Show when={messages().length > 0}>
+        <div class="min-h-0 max-h-[38dvh] overflow-y-auto px-1 py-2">
+          <For each={messages()}>
+            {(message) => (
+              <Message
+                message={message}
+                parts={sync().session.data.part[message.id] ?? []}
+                showReasoningSummaries
+                useV2Actions
+              />
+            )}
+          </For>
+        </div>
+      </Show>
+    </>
   )
 }

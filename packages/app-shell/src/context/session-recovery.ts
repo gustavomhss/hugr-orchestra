@@ -19,7 +19,7 @@ export function createSessionRecovery(input: {
   busy: (sessionID: string) => boolean
 }) {
   const fences = new Map<string, SessionManagementInfo>()
-  const reads = new Map<string, { policyGeneration: object; policy?: SessionManagementInfo }>()
+  const reads = new Map<string, { revision: object; policy?: SessionManagementInfo }>()
   const local = { receipt: 0 }
   const policySnapshot = (info: SessionManagementInfo): SessionManagementInfo => ({
     id: info.id,
@@ -42,12 +42,12 @@ export function createSessionRecovery(input: {
     const pending = input.requests.get(sessionID)
     if (pending) return pending
     const active = generation(sessionID)
-    const state = { policyGeneration: {}, policy: floor ?? fences.get(sessionID) ?? cached }
+    const state = { revision: {}, policy: floor ?? fences.get(sessionID) ?? cached }
     const request = (): Promise<AppSession> => {
-      const policyGeneration = state.policyGeneration
+      const revision = state.revision
       return input.request(sessionID).then((result) => {
         if (input.generations.get(sessionID) !== active) throw new DOMException("Session recovery superseded", "AbortError")
-        if (state.policyGeneration !== policyGeneration) return request()
+        if (state.revision !== revision) return request()
         const observed = mergeSessionManagementInfo(state.policy,
           mergeSessionManagementInfo(fences.get(sessionID), input.read(sessionID) ?? result))
         // Compatibility SDK snapshots carry no canonical V2 policy provenance.
@@ -60,7 +60,7 @@ export function createSessionRecovery(input: {
           subagentModelsReadReceipt: local.receipt,
         })
       }, (error: unknown) => {
-        if (input.generations.get(sessionID) === active && state.policyGeneration !== policyGeneration) return request()
+        if (input.generations.get(sessionID) === active && state.revision !== revision) return request()
         throw error
       })
     }
@@ -84,6 +84,11 @@ export function createSessionRecovery(input: {
   return {
     generation,
     resolve,
+    supersede(sessionID: string) {
+      // Retry the shared read after the event's durable update so it cannot undo the live selection or placement.
+      const pending = reads.get(sessionID)
+      if (pending) pending.revision = {}
+    },
     forget(sessionID: string) {
       fences.delete(sessionID)
       reads.delete(sessionID)
@@ -107,7 +112,7 @@ export function createSessionRecovery(input: {
       if (!next) return
       const canonical = current.subagentModelsReadReceipt !== undefined && next.subagentModels === current.subagentModels
       if (pending) {
-        pending.policyGeneration = {}
+        pending.revision = {}
         pending.policy = policySnapshot(next)
       }
       fences.delete(sessionID)
@@ -116,7 +121,7 @@ export function createSessionRecovery(input: {
       const floor = oldest === undefined ? undefined : fences.get(oldest)
       const protectedRead = oldest === undefined || !input.requests.has(oldest) ? undefined : reads.get(oldest)
       if (protectedRead && floor) {
-        protectedRead.policyGeneration = {}
+        protectedRead.revision = {}
         protectedRead.policy = mergeSessionManagementInfo(floor, protectedRead.policy ?? floor)
       }
       // Copy the floor into request ownership before eviction; even a rejected protected GET must retry.
