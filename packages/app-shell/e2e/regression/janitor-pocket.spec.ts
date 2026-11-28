@@ -162,7 +162,7 @@ test("Janitor uses the adopted Session model and policy while a draft tab is ope
   const dialog = page.getByRole("dialog", { name: "Subagent models" })
   const draftModel = dialog.getByRole("switch", { name: "Claude Opus 4.6" })
   await expect(draftModel).toBeEnabled()
-  await dialog.locator('[data-slot="list-item"][data-key="opencode:claude-opus-4-6"]').click()
+  await dialog.locator(`[data-slot="list-item"][data-key="${storedModel.providerID}:${storedModel.id}"]`).click()
   await expect(draftModel).toBeChecked()
   await page.keyboard.press("Escape")
   await expect(dialog).toHaveCount(0)
