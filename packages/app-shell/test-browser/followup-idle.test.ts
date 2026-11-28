@@ -117,7 +117,7 @@ async function mountQueue(options: { foreign?: boolean; prepare?: Promise<void> 
     await control.afterAdmission()
   } } as unknown as FollowupSendInput["api"]
   registerSessionModelExecution(api, (input, options) => control.execution(input, options))
-  const directorySync = { session: { get: () => undefined, optimistic: { add() {}, remove() {} } } } as unknown as FollowupSendInput["sync"]
+  const directorySync = { data: { command: [] }, session: { get: () => undefined, optimistic: { add() {}, remove() {} } } } as unknown as FollowupSendInput["sync"]
   const serverState = { data: { project: [] }, session: { set() {} } } as unknown as FollowupSendInput["serverSync"]
   const server = { connectionEpoch: () => status.reconnectEpoch, modelExecutionPolicyEpoch: () => state.policyVersion, server: { http: { url: "https://queue.invalid", get password() { return status.password } } }, ready: Promise.resolve(),
     sessionManagement: { waitSubagentModels: async () => {}, subagentModelsWriteVersion: () => state.policyVersion } }

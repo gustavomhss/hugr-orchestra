@@ -28,6 +28,7 @@ export function JanitorPocketChat(props: {
   onSessionID?: (sessionID: string) => void
 }) {
   const language = useLanguage()
+  const [sessionID, setSessionID] = createSignal<string>()
   return (
     <ErrorBoundary
       fallback={(error) => {
@@ -46,12 +47,16 @@ export function JanitorPocketChat(props: {
               <SDKProvider directory={props.directory}>
                 <DirectoryDataProvider directory={props.directory} server={props.server}>
                   <FileProvider>
-                    <PromptProvider>
+                    <PromptProvider sessionID={sessionID}>
                       <CommentsProvider>
                         <PocketComposer
                           directory={props.directory}
                           report={props.report}
-                          onSessionID={props.onSessionID}
+                          sessionID={sessionID}
+                          onSessionID={(id) => {
+                            setSessionID(id)
+                            props.onSessionID?.(id)
+                          }}
                         />
                       </CommentsProvider>
                     </PromptProvider>
@@ -69,7 +74,8 @@ export function JanitorPocketChat(props: {
 function PocketComposer(props: {
   directory: () => string
   report: JanitorReport
-  onSessionID?: (sessionID: string) => void
+  sessionID: () => string | undefined
+  onSessionID: (sessionID: string) => void
 }) {
   const language = useLanguage()
   const prompt = usePrompt()
@@ -78,7 +84,7 @@ function PocketComposer(props: {
   const serverSync = useServerSync()
   const comments = useComments()
   const local = useLocal()
-  const [sessionID, setSessionID] = createSignal<string>()
+  const sessionID = props.sessionID
   const model = createPromptModelSelection({
     agent: local.agent.current,
     session: {
@@ -101,10 +107,6 @@ function PocketComposer(props: {
   const sessionKey = createMemo(() =>
     SessionStateKey.from(serverSDK().scope, SessionRouteKey.fromRoute(base64Encode(props.directory()), sessionID())),
   )
-  const adoptSession = (id: string) => {
-    setSessionID(id)
-    props.onSessionID?.(id)
-  }
 
   createEffect(() => {
     retryNonce()
@@ -130,7 +132,7 @@ function PocketComposer(props: {
         try {
           await serverSync().session.sync(stored)
           if (isCurrent() && serverSync().session.get(stored)?.directory === directory) {
-            adoptSession(stored)
+            props.onSessionID(stored)
             return
           }
         } catch {
@@ -159,7 +161,7 @@ function PocketComposer(props: {
       } catch {
         // Session remains usable for this mount even if persistence is unavailable.
       }
-      adoptSession(created.id)
+      props.onSessionID(created.id)
     })()
       .catch((error) => {
         if (isCurrent()) setFailedKey(key)
@@ -183,6 +185,7 @@ function PocketComposer(props: {
     model,
   })
   const input = usePromptInputV2Controller({
+    sessionID,
     get controls() {
       return controls()
     },

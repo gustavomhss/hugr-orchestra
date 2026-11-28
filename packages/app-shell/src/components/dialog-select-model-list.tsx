@@ -79,6 +79,11 @@ export function ModelList(props: {
     },
     onSelect: select,
   })
+  const activeRefusal = () => {
+    const item = list.flat().find((model) => modelKey(model) === list.active())
+    const reason = item && refusal(item)
+    return item && reason ? `${item.name}. ${reason}` : ""
+  }
   const rows = createGroupedVirtualizer({
     groups: () => list.grouped.latest ?? [],
     key: modelKey,
@@ -182,6 +187,7 @@ export function ModelList(props: {
         </div>
         {props.action}
       </div>
+      <div class="sr-only" role="status" aria-atomic="true" data-slot="model-picker-status">{activeRefusal()}</div>
       <div ref={(el) => setStore("scroll", el)} data-slot="list-scroll">
         <Show
           when={list.flat().length > 0}

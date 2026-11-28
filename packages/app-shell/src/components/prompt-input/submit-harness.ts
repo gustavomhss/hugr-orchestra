@@ -139,6 +139,7 @@ export const state = {
   promoteStarted: Promise.withResolvers<void>(),
   promoteProbe: undefined as VoidFunction | undefined,
   promoteDraftHook: () => {},
+  beforeAdmissionHook: undefined as (() => Promise<void>) | undefined,
   sendHook: async (_input: unknown) => {},
   statusObserved: (_args: unknown[]) => {},
   modelID: "model",
@@ -214,6 +215,7 @@ export const clientFor = (directory: string) => {
         }
       },
       prompt: async (input: unknown, options?: AdmissionOptions) => {
+        if (state.beforeAdmissionHook) await state.beforeAdmissionHook()
         options?.beforeAdmission?.()
         sentPrompts.push(directory)
         promptInputs.push(input)
@@ -221,6 +223,7 @@ export const clientFor = (directory: string) => {
         return { data: undefined }
       },
       command: async (input: unknown, options?: AdmissionOptions) => {
+        if (state.beforeAdmissionHook) await state.beforeAdmissionHook()
         options?.beforeAdmission?.()
         sentCommands.push(input)
         await state.sendHook(input)
@@ -590,6 +593,7 @@ function resetSubmitHarness() {
   state.promoteStarted = Promise.withResolvers<void>()
   state.promoteProbe = undefined
   state.promoteDraftHook = () => {}
+  state.beforeAdmissionHook = undefined
   state.sendHook = async () => {}
   state.statusObserved = () => {}
   state.modelID = "model"

@@ -194,6 +194,27 @@ test("failed exact retry reuses wire preparation, attachment bytes and optimisti
   expect(createdSessions).toHaveLength(1)
 })
 
+test.each(["added", "removed"] as const)("a draft retry reclassifies a command %s after a selector failed before POST", async (change) => {
+  if (change === "removed") commands.push({ name: "action" })
+  const real = createPromptState({ prompt: "/action details" })
+  const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined })
+  state.beforeAdmissionHook = async () => { throw new Error("model selection failed before admission") }
+  expect(await submit.handleSubmit(new Event("submit"))).toBe(false)
+  expect(modelExecutionInputs.at(-1)?.command).toBe(change === "removed" ? "action" : undefined)
+  expect(promptInputs).toEqual([])
+  expect(sentCommands).toEqual([])
+  expect(real.current()[0]).toMatchObject({ content: "/action details" })
+
+  commands.length = 0
+  if (change === "added") commands.push({ name: "action" })
+  state.beforeAdmissionHook = undefined
+  expect(await submit.handleSubmit(new Event("submit"))).toBe(true)
+  expect(modelExecutionInputs.at(-1)?.command).toBe(change === "added" ? "action" : undefined)
+  expect(sentCommands).toHaveLength(change === "added" ? 1 : 0)
+  expect(promptInputs).toHaveLength(change === "removed" ? 1 : 0)
+  expect(createdSessions).toEqual(["/repo/main"])
+})
+
 test("a draft retry retains the attempted payload when only the inferred model changes", async () => {
   const inferred = { id: "model" }
   const model = {

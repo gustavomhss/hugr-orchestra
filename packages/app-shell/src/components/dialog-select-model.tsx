@@ -27,6 +27,7 @@ import { modelExecutionReasonKey } from "@/i18n/frontend-recovery"
 
 type ModelState = ReturnType<typeof useLocal>["model"]
 type ModelItem = ReturnType<ModelState["list"]>[number]
+type MissingModel = { label: string; reason: ReturnType<typeof modelExecutionReasonKey> }
 
 const connectKey = "action:connect"
 const manageKey = "action:manage"
@@ -231,7 +232,7 @@ function createModelSelectorController(input: {
     },
     available: (item: ModelItem) => model.execution.allows({ modelID: item.id, providerID: item.provider.id }),
     unavailable: (item: ModelItem) => modelExecutionReasonKey(model.execution.reason({ modelID: item.id, providerID: item.provider.id })),
-    missing: () => {
+    missing: (): MissingModel | undefined => {
       const key = model.intent().model
       if (model.current() || !key) return
       return { label: `${key.providerID}/${key.modelID}`, reason: modelExecutionReasonKey(model.execution.reason(key)) }
@@ -247,7 +248,7 @@ function ModelSelectorPopoverV2View(props: {
   select: (item: ModelItem) => void
   available: (item: ModelItem) => boolean
   unavailable: (item: ModelItem) => ReturnType<typeof modelExecutionReasonKey>
-  missing: () => { label: string; reason: ReturnType<typeof modelExecutionReasonKey> } | undefined
+  missing: () => MissingModel | undefined
   onConnect: () => void
   onManage: () => void
   onClose: () => void
@@ -262,6 +263,10 @@ function ModelSelectorPopoverV2View(props: {
   const models = createMemo(() => props.models(store.search))
   const groups = createMemo(() => props.groups(models()))
   const navigation = createModelSelectorNavigation(groups, modelKey, connectKey, manageKey)
+  const activeRefusal = () => {
+    const item = navigation.find(store.active)
+    return item && !props.available(item) ? `${item.name}. ${language.t(props.unavailable(item))}` : ""
+  }
   const initialActive = () => {
     const selected = props.current()
     const options = navigation.keys()
@@ -398,6 +403,7 @@ function ModelSelectorPopoverV2View(props: {
             </div>
           </div>
           <div class="h-px bg-v2-border-border-muted" />
+          <div class="sr-only" role="status" aria-atomic="true" data-slot="model-picker-status">{activeRefusal()}</div>
           <ScrollView data-slot="model-selector-scroll" class="max-h-[220px] min-h-0">
             <div class="flex flex-col p-0.5 pt-0">
               <Show

@@ -76,6 +76,7 @@ export function createFollowupSender(sources = queuedPromptSources) {
 type PromptSubmitInput = {
   prompt: ReturnType<typeof usePrompt>
   info: Accessor<Pick<Session, "id"> & Partial<Pick<Session, "directory" | "workspaceID">> | undefined>
+  sessionID?: Accessor<string | undefined>
   imageAttachments: Accessor<ImageAttachmentPart[]>
   commentCount: Accessor<number>
   autoAccept: Accessor<boolean>
@@ -113,19 +114,21 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   const language = sessionRecoveryLanguage(useLanguage())
   const params = useParams()
   const [search] = useSearchParams<{ draftId?: string }>()
+  const readSessionID = input.sessionID ?? (() => params.id)
+  const readDraftID = () => input.sessionID ? undefined : search.draftId
   const tabs = useTabs()
   const queueOwner = {}
   const existingOwner = {}
   onCleanup(() => queuedPromptSources.releaseOwner(queueOwner))
   const ownership = createSubmissionOwner(() => {
     const source = sdk()
-    const draftID = search.draftId
-    const placement = params.id ? input.info() : undefined
+    const draftID = readDraftID()
+    const placement = readSessionID() ? input.info() : undefined
     const tab = tabs.store.find((tab) => tab.type === "draft" && tab.draftID === draftID)
     return {
       server: serverSDK(), credentials: JSON.stringify(serverSDK().server?.http), scope: source.scope, directory: source.directory,
       client: source.orchestra, api: source.api,
-      sessionID: params.id, draftID, target: prompt.capture(),
+      sessionID: readSessionID(), draftID, target: prompt.capture(),
       sessionDirectory: placement?.directory, workspaceID: placement?.workspaceID,
       draftServer: tab?.type === "draft" ? tab.server : undefined,
       draftDirectory: tab?.type === "draft" ? tab.directory : undefined, draftExists: tab !== undefined,
@@ -133,17 +136,20 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   })
 
   const [activity, setActivity] = createStore({ existing: 0 })
-  const choiceOwner = createSubmissionOwner(() => ({
-    intent: JSON.stringify((input.model ?? local.model).intent()), agent: local.agent.current()?.id,
-    model: JSON.stringify((input.model ?? local.model).execution.input().model),
-    policyEpoch: params.id ? serverSDK().modelExecutionPolicyEpoch?.() : undefined,
-    worktree: params.id ? undefined : input.newSessionWorktree?.(),
-    epoch: serverSDK().connectionEpoch?.() ?? 0,
-    context: (input.model ?? local.model).execution.context(),
-    policyVersion: params.id ? serverSDK().sessionManagement.subagentModelsWriteVersion?.(params.id) ?? 0 : 0,
-  }))
+  const choiceOwner = createSubmissionOwner(() => {
+    const sessionID = readSessionID()
+    return {
+      intent: JSON.stringify((input.model ?? local.model).intent()), agent: local.agent.current()?.id,
+      model: JSON.stringify((input.model ?? local.model).execution.input().model),
+      policyEpoch: sessionID ? serverSDK().modelExecutionPolicyEpoch?.() : undefined,
+      worktree: sessionID ? undefined : input.newSessionWorktree?.(),
+      epoch: serverSDK().connectionEpoch?.() ?? 0,
+      context: (input.model ?? local.model).execution.context(),
+      policyVersion: sessionID ? serverSDK().sessionManagement.subagentModelsWriteVersion?.(sessionID) ?? 0 : 0,
+    }
+  })
   const admissionSource = () => sourceAdmission(prompt.capture(),
-    input.pendingKey?.() ?? draftSessionKey(sdk().scope, sdk().directory, search.draftId))
+    input.pendingKey?.() ?? draftSessionKey(sdk().scope, sdk().directory, readDraftID()))
   // Create the store before the composer reads busy, untracked: a caller inside a tracked scope (such as a provider's
   // children) would otherwise re-run on a route or server change and permanently dispose this submitter's owner.
   untrack(admissionSource)
@@ -163,10 +169,10 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   }
 
   const abort = async () => {
-    const sessionID = params.id
+    const sessionID = readSessionID()
     const source = sdk()
     const serverState = serverSync()
-    const key = sessionID ? undefined : input.pendingKey?.() ?? draftSessionKey(source.scope, source.directory, search.draftId)
+    const key = sessionID ? undefined : input.pendingKey?.() ?? draftSessionKey(source.scope, source.directory, readDraftID())
     const target = sessionID ? undefined : prompt.capture()
     const creating = target && key ? sourceAdmission(target, key).source : undefined
     const failed = (error: unknown) => showToast({
@@ -222,7 +228,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       return selected.value
     }
     const server = serverSDK()
-    const sessionID = params.id
+    const sessionID = readSessionID()
     const mode = input.mode()
     const placement = input.info()
     const submission = createPromptSubmissionState({ target, prompt: target.current(), context: target.context.items().slice() })
@@ -252,7 +258,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   }
 
   const submit = createSubmissionExecutor({
-    input, navigate, sdk, sync, serverSync, serverSDK, local, permission, prompt, layout, language, params, search, tabs, queueOwner, errorMessage, abort, seed, capture, sendFollowupDraft,
+    input, navigate, sdk, sync, serverSync, serverSDK, local, permission, prompt, layout, language, readSessionID, readDraftID, tabs, queueOwner, errorMessage, abort, seed, capture, sendFollowupDraft,
   })
 
   return {
@@ -263,7 +269,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       return activity.existing > 0 || admissionSource().source.state.busy
     },
     canRecoverHandoff: () => {
-      if (params.id) return false
+      if (readSessionID()) return false
       const source = admissionSource().source
       return !source.state.busy && pendingHandoff(source) !== undefined
     },
@@ -271,7 +277,8 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       event.preventDefault()
       if (ownership.disposed()) return Promise.resolve(false)
       const target = prompt.capture()
-      if (params.id) {
+      const sessionID = readSessionID()
+      if (sessionID) {
         const text = target.current().map((part) => "content" in part ? part.content : "").join("")
         const command = knownSlashCommand(text, sync().data.command)
         const selection = input.model ?? local.model
@@ -280,7 +287,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
           const model = selection.execution.input().model
           const agent = local.agent.key?.() ?? local.agent.current()?.id
           // Commit the Send's choice before ownership: its first optimistic row must not restore a new intent mid-send.
-          if (model && agent) local.session.restore({ sessionID: params.id, agent,
+          if (model && agent) local.session.restore({ sessionID, agent,
             model: { providerID: model.providerID, modelID: model.id, variant: model.variant } })
         }
         const captured = capture(target, command ?? null)

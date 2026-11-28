@@ -64,6 +64,16 @@ export const followSessionModel = (
   )
 }
 
+export function restoreStoredSessionModel(
+  local: { model: Pick<LocalModel, "intent"> } & Restore,
+  model: { providerID: string; id: string; variant?: string } | undefined,
+) {
+  const intent = local.model.intent()
+  if (!model || intent.model || intent.variant !== undefined) return
+  // A missing wire variant must stay omitted instead of acquiring an agent or saved override.
+  local.session.restoreModel({ providerID: model.providerID, modelID: model.id }, model.variant ?? null)
+}
+
 export const syncPromptModel = (local: Intent, prompt: PromptState) => {
   const intent = local.model.intent()
   const current = prompt.model.current()

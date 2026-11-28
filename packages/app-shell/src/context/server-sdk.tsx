@@ -371,9 +371,11 @@ function createServerSdkContextBase(
               })
             const payload = readEvent(event)
             if (!payload) continue
-            if (payload.type === "server.connected") setConnectionEpoch((value) => value + 1)
-            // An ancestor can move to another Location and still constrain its children on this server.
-            if (event.type === SessionEvent.SubagentModelsChanged.type) setModelExecutionPolicyEpoch((value) => value + 1)
+            const type: string = payload.type
+            if (type === "server.connected") setConnectionEpoch((value) => value + 1)
+            // Native policy events pass through the legacy adapter without a matching compatibility type.
+            // A moved ancestor can still constrain its children on this server.
+            if (type === SessionEvent.SubagentModelsChanged.type) setModelExecutionPolicyEpoch((value) => value + 1)
             queue.push({ directory, payload })
             schedule()
 

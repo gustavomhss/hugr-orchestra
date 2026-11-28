@@ -1,7 +1,7 @@
 import type { Session } from "@/v2-wire"
 import { showToast } from "@/utils/toast"
 import { base64Encode } from "@orchestra/core/util/encode"
-import { useNavigate, useParams } from "@solidjs/router"
+import type { useNavigate } from "@solidjs/router"
 import { batch, createRoot, startTransition } from "solid-js"
 import { useTabs } from "@/context/tabs"
 import { useServerSync, type ServerSync } from "@/context/server-sync"
@@ -81,8 +81,8 @@ type Environment = {
   prompt: ReturnType<typeof usePrompt>
   layout: ReturnType<typeof useLayout>
   language: ReturnType<typeof sessionRecoveryLanguage>
-  params: ReturnType<typeof useParams>
-  search: { draftId?: string }
+  readSessionID: () => string | undefined
+  readDraftID: () => string | undefined
   tabs: ReturnType<typeof useTabs>
   queueOwner: object
   errorMessage: (error: unknown) => string
@@ -104,8 +104,8 @@ export function createSubmissionExecutor(environment: Environment) {
   const prompt = environment.prompt
   const layout = environment.layout
   const language = environment.language
-  const params = environment.params
-  const search = environment.search
+  const readSessionID = environment.readSessionID
+  const readDraftID = environment.readDraftID
   const tabs = environment.tabs
   const queueOwner = environment.queueOwner
   const errorMessage = environment.errorMessage
@@ -134,13 +134,16 @@ export function createSubmissionExecutor(environment: Environment) {
     }
 
     const modelSelection = captured.modelSelection
-    const rulesKey = input.pendingKey?.() ?? draftSessionKey(captured.directorySDK.scope, captured.directorySDK.directory, search.draftId)
+    const rulesKey = input.pendingKey?.() ?? draftSessionKey(captured.directorySDK.scope, captured.directorySDK.directory, readDraftID())
     const draftIntentKey = !captured.sessionID && mode === "normal" ? JSON.stringify({
       prompt: currentPrompt, context, images, agent: captured.agentID, intent: captured.intent, worktree: admission.selection,
     }) : undefined
-    if (!captured.sessionID && admission.request?.admissionAttempted) admission.attempted = true
-    if (!captured.sessionID && !confirmed && admission.request?.kind === "prompt" && admission.request.admissionAttempted &&
-      (admission.request.intentKey !== draftIntentKey || admission.request.revision !== pendingSnapshot(rulesKey).revision))
+    const previousRequest = admission.request
+    if (!captured.sessionID && previousRequest?.admissionAttempted) admission.attempted = true
+    // Preparation and adapter selectors can fail before POST. Only a POST owns a prior classification.
+    if (!captured.sessionID && !confirmed && previousRequest?.kind &&
+      (!previousRequest.admissionAttempted || previousRequest.kind === "prompt" &&
+        (previousRequest.intentKey !== draftIntentKey || previousRequest.revision !== pendingSnapshot(rulesKey).revision)))
       admission.request = undefined
     const retained = captured.sessionID || confirmed || admission.request?.admissionAttempted ? admission.request?.selection : undefined
     const currentModel = retained ? { id: retained.model.modelID, provider: { id: retained.model.providerID } } : captured.currentModel
@@ -181,7 +184,7 @@ export function createSubmissionExecutor(environment: Environment) {
     const permissionState = permission.currentServerState()
     const isNewSession = !captured.sessionID
     const sessionID = captured.sessionID
-    const draftID = search.draftId
+    const draftID = readDraftID()
     const draftServer = draftID ? tabs.draft(draftID).server : undefined
     const ownsBinding = () => {
       if (!owner.current()) return false
@@ -189,7 +192,7 @@ export function createSubmissionExecutor(environment: Environment) {
       const source = sdk()
       if (serverSDK() !== server || source.scope !== directorySDK.scope || JSON.stringify(server.server?.http) !== credentials) return false
       if (source.orchestra !== captured.client || source.api !== captured.api) return false
-      if (source.directory !== projectDirectory || params.id !== sessionID || prompt.capture() !== target || search.draftId !== draftID) return false
+      if (source.directory !== projectDirectory || readSessionID() !== sessionID || prompt.capture() !== target || readDraftID() !== draftID) return false
       const placement = sessionID ? input.info() : undefined
       if (sessionID && (placement?.directory !== captured.placement?.directory || placement?.workspaceID !== captured.placement?.workspaceID)) return false
       return !draftID || tabs.store.some((tab) =>

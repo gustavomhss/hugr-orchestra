@@ -72,7 +72,7 @@ export const createTabPromptState = (
 export const { use: usePrompt, provider: PromptProvider } = createSimpleContext({
   name: "Prompt",
   gate: false,
-  init: () => {
+  init: (props: { sessionID?: () => string | undefined }) => {
     const params = useParams<{ serverKey?: string; id?: string }>()
     const sdk = useSDK()
     const [search] = useSearchParams<{ draftId?: string }>()
@@ -99,9 +99,11 @@ export const { use: usePrompt, provider: PromptProvider } = createSimpleContext(
 
     const owner = getOwner()
     const serverKey = () =>
-      params.serverKey ? requireServerKey(params.serverKey) : ServerConnection.key(serverSDK().server)
-    const scope = (): PromptScope =>
-      search.draftId ? { draftID: search.draftId } : { dir: base64Encode(sdk().directory), id: params.id }
+      !props.sessionID && params.serverKey ? requireServerKey(params.serverKey) : ServerConnection.key(serverSDK().server)
+    const scope = (): PromptScope => {
+      if (props.sessionID) return { dir: base64Encode(sdk().directory), id: props.sessionID() }
+      return search.draftId ? { draftID: search.draftId } : { dir: base64Encode(sdk().directory), id: params.id }
+    }
     const load = (scope: PromptScope) => {
       const current = selectPromptTab(tabs.store, scope, serverKey())
       if (current) return createTabPromptState(tabs, current, serverSDK().scope, scope)

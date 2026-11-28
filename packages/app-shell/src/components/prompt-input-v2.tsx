@@ -47,7 +47,9 @@ export type PromptInputV2ComposerProps = {
   sessionID?: string
 }
 
-export type PromptInputV2ControllerProps = Omit<PromptInputProps, "class" | "submission">
+export type PromptInputV2ControllerProps = Omit<PromptInputProps, "class" | "submission"> & {
+  sessionID?: () => string | undefined
+}
 export type PromptInputV2ComposerController = PromptInputV2Interaction & {
   readonly model: PromptInputProps["controls"]["model"]
   readonly pendingKey: () => string
@@ -250,6 +252,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
   const submission = createPromptSubmit({
     prompt,
     info,
+    sessionID: props.sessionID,
     pendingKey,
     imageAttachments: attachments,
     commentCount,

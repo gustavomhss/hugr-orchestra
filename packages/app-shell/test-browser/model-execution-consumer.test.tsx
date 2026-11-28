@@ -263,6 +263,24 @@ test("E6 App final check uses the moved Session’s directory and workspace and 
   } finally { owner.dispose() }
 })
 
+test("E6 App embedded composer assesses and sends only to its explicit Session", async () => {
+  state.params.id = "outer-session"
+  state.search.draftId = "outer-draft"
+  const calls = transport()
+  bind(calls)
+  const owner = composer("embedded Session prompt", {
+    sessionID: () => "pocket-session",
+    info: () => ({ id: "pocket-session", directory: calls.directory }),
+  })
+  try {
+    expect(await send(owner)).toBe(true)
+    expect(calls.queries().at(-1)?.body).toMatchObject({
+      context: { type: "session", sessionID: "pocket-session", agentID: "backend" }, model: ref,
+    })
+    expect(calls.admissions().map((call) => call.path)).toEqual(["/api/session/pocket-session/prompt"])
+  } finally { owner.dispose() }
+})
+
 test("E6 App unavailable known command requires a fresh canonical query before any command or selection RPC", async () => {
   const calls = transport()
   bind(calls)
@@ -359,6 +377,17 @@ test("E6 App one canonical context query disables an unsupported rendered row wi
     expect(row?.getAttribute("aria-disabled")).toBe("true")
     expect(row?.getAttribute("aria-description")).toBe("Model is not allowed for this session")
     expect(row?.textContent).toContain("Model is not allowed for this session")
+    const search = document.querySelector<HTMLInputElement>('[role="menu"] input')!
+    const status = document.querySelector('[data-slot="model-picker-status"]')
+    expect(status?.getAttribute("role")).toBe("status")
+    search.focus()
+    const refusal = "Blocked model. Model is not allowed for this session"
+    for (let step = 0; step < 4; step++) {
+      search.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }))
+      if (status?.textContent === refusal) break
+    }
+    expect(document.activeElement).toBe(search)
+    expect(status?.textContent).toBe(refusal)
     row?.click()
     await new Promise<void>((resolve) => setTimeout(resolve, 0))
     expect(owner.local.model.current()?.id).not.toBe("blocked")

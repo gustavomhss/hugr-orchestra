@@ -362,7 +362,10 @@ export function initializeModelExecutionConsumers(): Promise<void> {
       build.onResolve({ filter: /^consumer-draft:/ }, (args) => ({ path: args.path.slice("consumer-draft:".length), namespace: "consumer-draft" }))
       build.onLoad({ filter: /.*/, namespace: "consumer-draft" }, (args) => ({
         loader: "object",
-        exports: args.path === "local" ? { createModelExecutionView: localModule.createModelExecutionView }
+        exports: args.path === "local" ? {
+          createModelExecutionView: localModule.createModelExecutionView,
+          createModelSelectionDisplay: localModule.createModelSelectionDisplay,
+        }
           : draftHooks[args.path as keyof typeof draftHooks],
       }))
       build.onLoad({ filter: /prompt-model-selection\.ts\?consumer-draft$/ }, async (args) => ({ loader: "ts",
