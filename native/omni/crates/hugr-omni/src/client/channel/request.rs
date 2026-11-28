@@ -29,14 +29,26 @@ impl Gen {
     }
 
     /// A request whose reply is awaited without blocking any thread (its deadline is watched).
-    pub(in crate::client) async fn ask(&self, want: Want, id: u64, class: Class, msg: impl FnOnce(u64) -> Msg) -> Reply {
+    pub(in crate::client) async fn ask(
+        &self,
+        want: Want,
+        id: u64,
+        class: Class,
+        msg: impl FnOnce(u64) -> Msg,
+    ) -> Reply {
         let (tx, rx) = oneshot::channel();
         self.request(want, id, class, Waiter::Async(tx), msg, Vec::new())?;
         rx.await.unwrap_or_else(|_| Err(self.gone()))
     }
 
     /// A request whose reply is matched, validated and dropped (its deadline is watched).
-    pub(in crate::client) fn tell(&self, want: Want, id: u64, class: Class, msg: impl FnOnce(u64) -> Msg) -> Result<(), Error> {
+    pub(in crate::client) fn tell(
+        &self,
+        want: Want,
+        id: u64,
+        class: Class,
+        msg: impl FnOnce(u64) -> Msg,
+    ) -> Result<(), Error> {
         self.request(want, id, class, Waiter::Ignore, msg, Vec::new())
     }
 
@@ -125,5 +137,4 @@ impl Gen {
         self.wake.notify_one();
         Ok(())
     }
-
 }

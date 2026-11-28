@@ -2,9 +2,9 @@
 
 use omni_proto::{Ack, Msg};
 
-use super::{Answer, Class, Error, InventoryFailure, ProcEntry, Tree, Want};
 #[cfg(all(test, target_os = "linux"))]
 use super::inventory_probe;
+use super::{Answer, Class, Error, InventoryFailure, ProcEntry, Tree, Want};
 
 impl Tree {
     /// The live processes `stop` would end now; `[]` once gone; `Io` if the inventory is incomplete.
@@ -114,5 +114,4 @@ impl Tree {
         self.sup.home()?;
         Ok(self.probe.attach())
     }
-
 }

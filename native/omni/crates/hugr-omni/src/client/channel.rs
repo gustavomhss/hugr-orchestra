@@ -11,8 +11,8 @@
 //! deadline on a control request ends the generation. An observation timeout settles only its waiter,
 //! holding one slot for validation of the late reply.
 
-mod route;
 mod request;
+mod route;
 
 use std::collections::{BTreeSet, HashMap, VecDeque};
 use std::io;
