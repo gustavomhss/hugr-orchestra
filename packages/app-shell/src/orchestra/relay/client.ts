@@ -52,7 +52,7 @@ export type RelayPreview = {
   refusal: { code: string; message: string } | null
   skillBindings: ReadonlyArray<Omit<RelayAuthoring.SkillBinding, "content">>
   findings: ReadonlyArray<{ category: string; severity: "error" | "warn"; wp: string | null; detail: string }>
-  judge: "stub" | "api"
+  judge: "stub" | "api" | "orchestra"
 }
 
 /** The check commands the project's manifests declare (protocol `RelayProjectCommands`). */

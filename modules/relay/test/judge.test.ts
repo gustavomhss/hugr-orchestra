@@ -138,6 +138,33 @@ describe("goldens", () => {
 })
 
 describe("beyond the goldens", () => {
+  test("an explicitly bound native judge applies the same evidence cuts and verdict validation", async () => {
+    const settings = { ...JudgeConfig.defaults, backend: "orchestra" as const, model: "openai/gpt-6.2-sol@xhigh", maxContext: 3 }
+    const ballot = (native?: JudgeConfig.NativeCall) =>
+      Effect.runPromise(
+        JudgeConfig.Service.use((service) =>
+          service.judge({ criterion: "includes a", files: [{ name: "/work/artifact.txt", text: "abcd" }] }),
+        ).pipe(Effect.provide(JudgeConfig.layer(settings, native))),
+      )
+    const outcome = await ballot((request) =>
+      Effect.sync(() => {
+        expect(request.system).toContain("INDEPENDENT")
+        expect(request.prompt).toContain("includes a")
+        expect(request.prompt).toContain("abc\n\n[TRUNCATED")
+        expect(request.tool.name).toBe("submit_verdict")
+        return { verdict: "pass", reason: "The excerpt includes a." }
+      }),
+    )
+    expect(outcome).toEqual({
+      verdict: "pass",
+      available: true,
+      reason: "The excerpt includes a.",
+      backend: "llm:openai/gpt-6.2-sol@xhigh(truncated:artifact.txt)",
+    })
+    expect(await ballot(() => Effect.succeed({ verdict: "pass" }))).toMatchObject({ verdict: "fail", available: false })
+    expect(await ballot()).toMatchObject({ verdict: "fail", available: false })
+  })
+
   test("the cut counts characters, not UTF-16 units", async () => {
     const fake = endpoint([tool("pass")])
     const astral = String.fromCodePoint(0x1f600)

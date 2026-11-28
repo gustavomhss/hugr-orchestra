@@ -102,7 +102,7 @@ export const RelayPreview = Schema.Struct({
       detail: Schema.String,
     }),
   ),
-  judge: Schema.Literals(["stub", "api"]),
+  judge: Schema.Literals(["stub", "api", "orchestra"]),
 }).annotate({ identifier: "RelayPreview" })
 export type RelayPreview = typeof RelayPreview.Type
 

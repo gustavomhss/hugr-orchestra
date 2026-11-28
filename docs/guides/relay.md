@@ -60,8 +60,14 @@ A run is bound to a session. Each turn, the runner injects the current step into
 | Check | Behavior |
 | --- | --- |
 | `cmd` | Runs a command with a stripped environment; passes on exit 0; killed after 15 minutes |
-| `judge` | Asks a model. The built-in judge is a stub that does not evaluate the criterion; set `relay.judge.backend: "api"` for real judging |
+| `judge` | Asks a model. Set `relay.judge.backend` to `api` for the Messages API or `orchestra` for a managed ChatGPT plan connection |
 | Host checks | Package verification and cold review, run by the host rather than a command |
+
+For the Orchestra judge, set `backend: "orchestra"`, `projectID`, `credentialID`, `model` and `variant` in your user
+`orchestra.json`. Use the exact project ID, the active OpenAI ChatGPT plan connection ID, the OpenAI model slug such as
+`gpt-6.2-sol`, and an explicit reasoning variant such as `xhigh`. Each sample is a fresh native model call with one verdict
+tool and the bound criterion and artifact. Project settings cannot opt into or change this binding. An unavailable
+connection, model, variant or verdict fails the check. The Messages API backend uses its separately configured key.
 
 Package verification runs Bun in the authority Session's directory. On a GitHub Actions Linux runner, the subprocess receives the runner's CI marker for repository test guards without inheriting the host's credentials.
 

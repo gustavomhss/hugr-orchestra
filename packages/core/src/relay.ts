@@ -20,7 +20,6 @@ import { JudgeConfig } from "@orchestra/relay/judge/config"
 import { LedgerChain } from "@orchestra/relay/ledger/chain"
 import { LedgerRead } from "@orchestra/relay/ledger/read"
 import { Config } from "./config"
-import { ConfigRelay } from "./config/relay"
 import { ConfigTrust } from "./config/trust"
 import { makeLocationNode } from "./effect/app-node"
 import { FSUtil } from "./fs-util"
@@ -34,6 +33,7 @@ import { RelayWorkflowBinding } from "./relay-workflow-binding"
 import { RelayWorkflowCurrentStep } from "./relay-workflow-currentstep"
 import { RelayWorkflowTransition } from "./relay-workflow-transition"
 import { RelayWorkflowEvaluator } from "./relay-workflow-evaluator"
+import { RelayJudge } from "./relay-judge"
 
 // The Relay engine as one Location node (relay-exec-spec §1, port plan §5). It binds the engine's ports: checks run
 // through AppProcess and the ToolSafety sandbox, git through a sandboxed helper, the judge from Orchestra config, and
@@ -189,8 +189,9 @@ const layer = Layer.effect(
       hooks: path.join(root, "hooks"),
       key: path.join(root, "ledger.key"),
     }
-    const judge = settings(yield* config.entries())
-    const judging = yield* JudgeConfig.Service.pipe(Effect.provide(JudgeConfig.layer(judge)))
+    const relayJudge = yield* RelayJudge.Service
+    const judge = relayJudge.config
+    const judging = relayJudge.service
     const verifies = yield* Semaphore.make(1)
     // Nothing touches the disk until an operation needs it, so a Location never fails to open over Relay.
     const cache: { key?: Redacted.Redacted<string> } = {}
@@ -535,7 +536,7 @@ const layer = Layer.effect(
 export const node = makeLocationNode({
   service: Service,
   layer,
-  deps: [Global.node, Location.node, Config.node, AppProcess.node, FSUtil.node],
+  deps: [Global.node, Location.node, Config.node, AppProcess.node, FSUtil.node, RelayJudge.node],
 })
 
 // The completion HOLD code of an arm evaluation and the parked text after it, as the evaluator defines them (§9).
@@ -548,22 +549,6 @@ const KEY = /^[0-9a-f]{64}$/
 const STARTUP = new Set(["BASH_ENV", "ENV", "SHELLOPTS", "BASHOPTS"])
 const GIT_TIMEOUT = Duration.seconds(60)
 const GIT_OUTPUT_BYTES = 16 * 1024 * 1024
-
-/** `relay.judge.*`, later documents overriding earlier ones key by key; defaults fill the rest. */
-function settings(entries: ReadonlyArray<Config.Entry>): JudgeConfig.Config {
-  const configured = entries
-    .flatMap((entry) => (entry.type === "document" && entry.info.relay?.judge ? [entry.info.relay.judge] : []))
-    .reduce<Partial<ConfigRelay.Judge>>((result, current) => ({ ...result, ...current }), {})
-  return {
-    backend: configured.backend ?? JudgeConfig.defaults.backend,
-    model: configured.model ?? JudgeConfig.defaults.model,
-    baseURL: configured.baseURL,
-    apiKey: configured.apiKey === undefined ? undefined : Redacted.make(configured.apiKey),
-    votes: configured.votes ?? JudgeConfig.defaults.votes,
-    maxContext: configured.maxContext ?? JudgeConfig.defaults.maxContext,
-    maxTokens: configured.maxTokens ?? JudgeConfig.defaults.maxTokens,
-  }
-}
 
 /**
  * ledger.key: 32 random bytes as hex, owner-only, created once and never rewritten, since ledgers chained with it would

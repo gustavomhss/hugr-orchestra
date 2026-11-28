@@ -386,8 +386,11 @@ export type ConfigV2Relay = {
   judge?: ConfigV2RelayJudge
 }
 export type ConfigV2RelayJudge = {
-  backend?: "stub" | "api"
+  backend?: "stub" | "api" | "orchestra"
   model?: string
+  projectID?: string
+  credentialID?: string
+  variant?: string
   baseURL?: string
   apiKey?: string
   votes?: number

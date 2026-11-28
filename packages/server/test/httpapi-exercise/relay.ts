@@ -84,7 +84,7 @@ export const relayScenarios: Scenario[] = [
       locationData((value) => {
         object(value)
         array(value.findings)
-        check(value.judge === "stub" || value.judge === "api", "the preview should name the judge backend")
+        check(["stub", "api", "orchestra"].includes(value.judge), "the preview should name the judge backend")
       }),
     ),
   http.protected.get("/api/relay/commands", "v2.relay.document.commands").json(

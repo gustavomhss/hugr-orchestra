@@ -24,6 +24,7 @@ import { Global } from "../src/global"
 import { Location } from "../src/location"
 import { Project } from "../src/project"
 import { Relay } from "../src/relay"
+import { RelayJudge } from "../src/relay-judge"
 import { AbsolutePath } from "../src/schema"
 import { ConfigUpgradeSource } from "../src/config/upgrade/source"
 import { ConfigUpgrade } from "../src/config/upgrade/upgrade"
@@ -616,6 +617,32 @@ describe("Relay.Service", () => {
         { key: "relay-judge-key", model: "relay-model" },
         { key: "", model: "claude-sonnet-4-6" },
       ])
+    }),
+  )
+
+  it.effect("binds the Orchestra judge only through the user's config for this project", () =>
+    Effect.sync(() => {
+      const judge = { backend: "orchestra", credentialID: "owner-connection", model: "gpt-6.2-sol", variant: "xhigh", projectID }
+      const global = path.resolve("user-config")
+      const document = (filepath: string, value: unknown) =>
+        new Config.Document({
+          type: "document",
+          path: filepath,
+          info: Schema.decodeUnknownSync(Config.Info)({ relay: { judge: value } }),
+        })
+      const owner = document(path.join(global, "orchestra.json"), judge)
+      const repository = document(path.resolve("repository", "orchestra.json"), { ...judge, credentialID: "other-connection" })
+      const downgrade = document(path.resolve("repository", ".orchestra", "orchestra.json"), {
+        backend: "api", baseURL: "https://project.example", apiKey: "example",
+      })
+
+      expect(RelayJudge.settings([repository], global, projectID).binding).toBeUndefined()
+      expect(RelayJudge.settings([owner], global, "other-project").binding).toBeUndefined()
+      expect(RelayJudge.settings([owner, repository, downgrade], global, projectID)).toMatchObject({
+        binding: { credentialID: "owner-connection", model: "gpt-6.2-sol", variant: "xhigh" },
+        config: { backend: "orchestra", model: "openai/gpt-6.2-sol@xhigh", baseURL: undefined, apiKey: undefined },
+      })
+      expect(RelayJudge.settings([owner, downgrade], global, "other-project").config.backend).toBe("api")
     }),
   )
 

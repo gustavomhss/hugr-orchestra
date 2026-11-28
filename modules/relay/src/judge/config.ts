@@ -5,11 +5,10 @@ import { JudgeApi } from "./api"
 import type { JudgeBallot } from "./ballot"
 import { JudgeStub } from "./stub"
 
-// The judge as the gate core sees it. Its settings come from Orchestra config `relay.judge.*`, never from provider
-// auth or the process environment (WP4). There is no CLI backend: it spawned a third-party CLI.
+// The host explicitly binds the Orchestra model call. The Messages backend uses its own key.
 
 export interface Config {
-  readonly backend: "stub" | "api"
+  readonly backend: "stub" | "api" | "orchestra"
   readonly model: string
   readonly baseURL?: string
   readonly apiKey?: Redacted.Redacted<string>
@@ -46,15 +45,28 @@ export interface Interface {
   readonly judge: (input: Input) => Effect.Effect<JudgeBallot.Response>
 }
 
+export type NativeCall = JudgeApi.NativeCall
+
 export class Service extends Context.Service<Service, Interface>()("@orchestra/relay/Judge") {}
 
 // Replaces `pick_backend`: the backend comes from config alone, so a provider key in the environment can neither turn
 // the stub into an API call nor become the API's key.
-export const layer = (config: Config) =>
+export const layer = (config: Config, native?: JudgeApi.NativeCall) =>
   Layer.succeed(
     Service,
     Service.of({
-      judge: (input) => (config.backend === "api" ? JudgeApi.judge(config, input) : unconfigured(config, input)),
+      judge: (input) => {
+        if (config.backend === "api") return JudgeApi.judge(config, input)
+        if (config.backend === "orchestra" && native) return JudgeApi.judge(config, input, native)
+        if (config.backend === "orchestra")
+          return Effect.succeed({
+            verdict: "fail",
+            available: false,
+            backend: `api-error:${config.model}`,
+            reason: "the Orchestra judge requires a user-configured OAuth connection bound to this project",
+          } as const)
+        return unconfigured(config, input)
+      },
     }),
   )
 
