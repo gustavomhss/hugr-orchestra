@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test"
+import { createSignal } from "solid-js"
+import { isServer } from "solid-js/web"
 import { createPromptState } from "@/context/prompt-state"
 import { Worktree } from "@/utils/worktree"
 import { ServerScope } from "@/utils/server-scope"
@@ -17,7 +19,9 @@ import {
   promptInputs,
   sendFollowupDraft,
   holdSendAfterClear,
+  holdShellWire,
   sdkReads,
+  setReactiveOwner,
   state,
   statusWrites,
   storedSessions,
@@ -110,6 +114,25 @@ test("failed Stop toasts and reads the Session status back instead of keeping th
   expect(promptInputs).toEqual([])
 })
 
+test("a delayed Stop readback preserves a newer optimistic busy lease", async () => {
+  state.params.id = "session-1"
+  state.active = {}
+  const reading = deferred()
+  const releaseRead = deferred()
+  state.beforeActiveRead = async () => { reading.resolve(); await releaseRead.promise }
+  const submit = createPromptSubmit({ ...submitInput(), prompt: createPromptState({ prompt: "new turn" }) })
+  const stopping = submit.abort()
+  try {
+    await Promise.race([reading.promise, stopping])
+    expect(interrupts).toEqual(["session-1"])
+    expect(await submit.handleSubmit(new Event("submit"))).toBe(true)
+    expect(promptInputs).toHaveLength(1)
+    releaseRead.resolve()
+    await stopping
+    expect(statusWrites).toEqual([{ sessionID: "session-1", type: "busy" }])
+  } finally { releaseRead.resolve(); await stopping }
+})
+
 test("a prompt a hook refused returns to the composer with the hook named, and the Session is not left busy", async () => {
   state.params.id = "session-1"
   const refusal = {
@@ -172,6 +195,72 @@ test.each(["prompt", "command", "shell", "handoff"])("existing Session %s fences
   expect(sentShell).toEqual([])
   expect(queued).toEqual([])
 })
+
+test.skipIf(isServer).each(["policy", "model"] as const)("shell fences a %s change during editor clear before POST", async (change) => {
+  state.params.id = "session-1"
+  const wire = holdShellWire()
+  const real = createPromptState({ prompt: "pwd" })
+  const [modelID, setModelID] = createSignal("model")
+  state.readModelID = modelID
+  const [mode, setMode] = createSignal<"normal" | "shell">("shell")
+  const submit = createPromptSubmit({
+    ...submitInput(), prompt: real, mode,
+    setMode(next) {
+      setMode(next)
+      if (next !== "normal") return
+      if (change === "model") setModelID("new-model")
+      if (change === "policy") void policyFixture.server.sessionManagement.setSubagentModels("session-1", { mode: "inherit" })
+    },
+  })
+  wire.release(204)
+  expect(await submit.handleSubmit(new Event("submit"))).toBe(false)
+  expect(wire.requests).toEqual([])
+  expect(real.current()[0]).toMatchObject({ content: "pwd" })
+  expect(mode()).toBe("shell")
+})
+
+test.skipIf(isServer).each(["policy acknowledgement", "model refusal", "Stop", "binding change"] as const)(
+  "dispatched shell settles through the wire after %s",
+  async (outcome) => {
+    state.params.id = "session-1"
+    state.active = {}
+    const [policyEpoch, setPolicyEpoch] = createSignal(0)
+    Object.assign(policyFixture.server, { modelExecutionPolicyEpoch: policyEpoch })
+    const [modelID, setModelID] = createSignal("model")
+    state.readModelID = modelID
+    const wire = holdShellWire()
+    const real = createPromptState({ prompt: "pwd" })
+    const [mode, setMode] = createSignal<"normal" | "shell">("shell")
+    const submit = createPromptSubmit({ ...submitInput(), prompt: real, mode, setMode })
+    const sending = submit.handleSubmit(new Event("submit"))
+    try {
+      const request = await Promise.race([wire.entered, sending.then(() => undefined)])
+      expect(request?.url).toEndWith("/api/session/session-1/shell")
+      expect(await request?.clone().json()).toMatchObject({ command: "pwd" })
+      expect(real.current()[0]).toMatchObject({ content: "" })
+      expect(mode()).toBe("normal")
+      if (outcome === "policy acknowledgement") {
+        await policyFixture.server.sessionManagement.setSubagentModels("session-1", { mode: "inherit" })
+        setPolicyEpoch(1)
+      }
+      if (outcome === "model refusal") setModelID("new-model")
+      if (outcome === "Stop") await submit.abort()
+      if (outcome === "binding change") setReactiveOwner("read", () => () => ({
+        server: policyFixture.server, sdk: { ...policyFixture.sdk, directory: "/repo/other" },
+      }))
+      const cancelled = outcome === "Stop" || outcome === "binding change"
+      expect(request?.signal.aborted).toBe(cancelled)
+      if (!cancelled) wire.release(outcome === "model refusal" ? 404 : 204)
+      expect(await sending).toBe(outcome === "policy acknowledgement" ? undefined : false)
+      expect(real.current()[0]).toMatchObject({ content: outcome === "model refusal" || outcome === "Stop" ? "pwd" : "" })
+      expect(mode()).toBe(outcome === "model refusal" || outcome === "Stop" ? "shell" : "normal")
+      expect(toasts).toEqual(outcome === "model refusal"
+        ? [expect.objectContaining({ title: "prompt.toast.shellSendFailed.title", description: "shell refused" })] : [])
+      expect(wire.requests).toHaveLength(1)
+      expect(interrupts).toEqual(outcome === "Stop" ? ["session-1"] : [])
+    } finally { wire.release(204); await sending }
+  },
+)
 
 describe("prompt dispatch and cancellation", () => {
 

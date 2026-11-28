@@ -395,16 +395,17 @@ export function createSubmissionExecutor(environment: Environment) {
 
     // Leaving the Session abandons a send that has not reached the server, so the text goes back to the composer it
     // came from; the checks below only touch the editor when that composer is still on screen.
+    const ownsEditor = mode === "shell" ? ownsBinding : ownsSource
     const restoreInput = () => {
       if (!consumed.input) return false
       const restored = submission.restore()
       if (!restored) return false
       restored.target.set(restored.prompt, input.promptLength(restored.prompt))
-      if (!ownsSource() || !submission.current(prompt.capture())) return true
+      if (!ownsEditor() || !submission.current(prompt.capture())) return true
       input.setMode(mode)
       input.setPopover(null)
       requestAnimationFrame(() => {
-        if (!ownsSource() || !submission.current(prompt.capture())) return
+        if (!ownsEditor() || !submission.current(prompt.capture())) return
         const editor = input.editor()
         if (!editor) return
         editor.focus()
@@ -468,8 +469,11 @@ export function createSubmissionExecutor(environment: Environment) {
       await settleEmptySession(false)
       return false as const
     }
-    const receipt = { revision: undefined as number | undefined }
-    const policyCurrent = () => !admission.request?.selection || captured.policyVersion === captured.readPolicyVersion()
+    const receipt = { revision: undefined as number | undefined, shellPolicyVersion: undefined as number | undefined }
+    const existingShell = mode === "shell" && !isNewSession
+    const readSessionPolicyVersion = () => server.sessionManagement.subagentModelsWriteVersion?.(session.id) ?? 0
+    const policyCurrent = () => (!existingShell && !admission.request?.selection) ||
+      captured.policyVersion === captured.readPolicyVersion()
     const ensurePolicyPhase = async () => {
       if (!isNewSession || mode === "shell") return ownsSource()
       if (phase.value) return phase.value.current() && phase.value.ready
@@ -505,6 +509,7 @@ export function createSubmissionExecutor(environment: Environment) {
           if (!acknowledged || !ownsSource()) return false
           receipt.revision = acknowledged.revision
         }
+        const shellPolicyVersion = mode === "shell" && isNewSession ? readSessionPolicyVersion() : undefined
         if (!(await policy.wait(signal).catch(policyError)) || !policyCurrent()) return false
         if (!isNewSession) return ownsSource()
         if (pendingSnapshot(rulesKey).revision !== receipt.revision) continue
@@ -513,7 +518,11 @@ export function createSubmissionExecutor(environment: Environment) {
           if (pendingSnapshot(rulesKey).revision !== receipt.revision) continue
           return false
         }
-        if (pendingSnapshot(rulesKey).revision === receipt.revision) return ownsSource()
+        if (shellPolicyVersion !== undefined && shellPolicyVersion !== readSessionPolicyVersion()) continue
+        if (pendingSnapshot(rulesKey).revision === receipt.revision) {
+          receipt.shellPolicyVersion = shellPolicyVersion
+          return ownsSource()
+        }
       }
       return false
     }
@@ -522,7 +531,7 @@ export function createSubmissionExecutor(environment: Environment) {
       api, sync: syncState, serverSync: serverState,
       current: () => shouldQueue ? ownsBinding() : ownsSource() && captured.policyVersion === captured.readPolicyVersion() &&
         (!isNewSession || mode === "shell" || phase.value?.current() === true),
-      readPolicyVersion: () => server.sessionManagement.subagentModelsWriteVersion?.(session.id) ?? 0,
+      readPolicyVersion: readSessionPolicyVersion,
       before: (active = signal) => shouldQueue ? waitForSubagentPolicy({
         sessionID: session.id, management: server.sessionManagement, current: ownsBinding, signal: active })
         : isNewSession || admission.request?.kind === "prompt" ? waitPolicy() : policy.wait(active),
@@ -566,7 +575,8 @@ export function createSubmissionExecutor(environment: Environment) {
           request.revision = receipt.revision
           // Store observers can change ownership or policy; validate again after those mutations, at the API call.
           const sent = await send(request, () => ownsSource() && !signal.aborted && pendingSnapshot(rulesKey).revision === receipt.revision &&
-            (mode === "shell" || phase.value?.current() === true && phase.value.ready)).catch((error: unknown) => {
+            (mode === "shell" ? receipt.shellPolicyVersion === readSessionPolicyVersion()
+              : phase.value?.current() === true && phase.value.ready)).catch((error: unknown) => {
             if (!request.admissionAttempted && ownsSource() && phase.value?.current() &&
               pendingSnapshot(rulesKey).revision !== receipt.revision) return false
             throw error
@@ -618,7 +628,7 @@ export function createSubmissionExecutor(environment: Environment) {
         batch(() => {
           admission.promoted = true
           submission.retarget(next)
-          submission.clear("comments")
+          submission.clear(request.kind === "prompt" ? "comments" : "none")
           input.setMode("normal")
           input.setPopover(null)
           input.onNewSessionWorktreeReset?.()
@@ -650,6 +660,7 @@ export function createSubmissionExecutor(environment: Environment) {
     if (!(await waitPolicy()) || !ownsSource()) return false
 
     if (mode === "shell") {
+      const current = () => ownsSource() && policyCurrent()
       const sent = await submitShellCommand({
         api,
         sessionID: session.id,
@@ -657,24 +668,27 @@ export function createSubmissionExecutor(environment: Environment) {
         agent,
         model,
         signal,
-        current: ownsSource,
+        // Shell has no selector RPCs. Choice and policy fence the POST, then only the binding and Stop own the wire.
+        admissionSignal: baseSignal,
+        current,
         request: isNewSession ? selectRequest() : undefined,
         dispatch: isNewSession ? dispatch : undefined,
         before: async () => {
-          if (!(await waitPolicy()) || !ownsSource()) return false
+          if (!(await waitPolicy()) || !current()) return false
           clearInput()
-          return !signal.aborted && ownsSource()
+          return !signal.aborted && current()
         },
       }).catch(async (err) => {
-        if (signal.aborted) return false
-        if (ownsSource()) showToast({
+        if (baseSignal.aborted || !ownsBinding()) return false
+        console.error(err)
+        showToast({
           title: language.t("prompt.toast.shellSendFailed.title"),
           description: errorMessage(err),
         })
-        restoreInput()
         await settleEmptySession(true)
         return false
       })
+      if (sent === false && ownsBinding() && !baseSignal.aborted) restoreInput()
       if (sent !== false) await promote()
       return sent
     }

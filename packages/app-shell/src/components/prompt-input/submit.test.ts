@@ -39,6 +39,14 @@ test.each(["solid", "browser"])("prompt submit with isolated module mocks (%s)",
       "real writers join SET during canonical GET: changed-policy",
       "real writers join SET during canonical GET: failed",
       "pre-route abort still cancels its captured draft after owner ABA",
+      "shell fences a policy change during editor clear before POST",
+      "shell fences a model change during editor clear before POST",
+      "dispatched shell settles through the wire after policy acknowledgement",
+      "dispatched shell settles through the wire after model refusal",
+      "dispatched shell settles through the wire after Stop",
+      "dispatched shell settles through the wire after binding change",
+      "admitted draft shell keeps its wire acknowledgement through reactive model and draft policy changes",
+      "draft receipt consumes unchanged admitted comments and preserves edited and new comments for the next send",
     ].forEach((name) => expect(stdout + stderr).toContain(`(pass) ${name}`))
   }
 }, 35_000)

@@ -366,6 +366,7 @@ export function initializeModelExecutionConsumers(): Promise<void> {
         exports: args.path === "local" ? {
           createModelExecutionView: localModule.createModelExecutionView,
           createModelSelectionDisplay: localModule.createModelSelectionDisplay,
+          sameModelKey: localModule.sameModelKey,
         }
           : draftHooks[args.path as keyof typeof draftHooks],
       }))

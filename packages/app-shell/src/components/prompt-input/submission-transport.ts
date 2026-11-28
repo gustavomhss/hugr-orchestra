@@ -11,6 +11,7 @@ export async function submitShellCommand(input: {
   agent: string
   model: { providerID: string; modelID: string }
   signal?: AbortSignal
+  admissionSignal?: AbortSignal
   before?: () => Promise<boolean> | boolean
   current?: () => boolean
   request?: AdmissionRequest
@@ -27,8 +28,10 @@ export async function submitShellCommand(input: {
       model: input.model,
     }
     if (request) request.shell = shell
-    if (!current()) return Promise.resolve(false)
-    return input.api.shell(shell, { signal: input.signal })
+    const signal = input.admissionSignal ?? input.signal
+    if (!current() || signal?.aborted) return Promise.resolve(false)
+    if (request) request.admissionAttempted = true
+    return input.api.shell(shell, { signal })
   }
   if (input.dispatch) return input.dispatch(send)
   if (input.request?.admitted) return true

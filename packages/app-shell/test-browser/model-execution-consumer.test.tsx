@@ -676,7 +676,7 @@ test("E6 App rendered selector keeps NEW A after A to B to A and a late old A re
 function firstUser(id: string, model: UserMessage["model"] = { providerID: ref.providerID, modelID: ref.id }): UserMessage {
   return { id, sessionID: "session-1", role: "user", agent: "maestro", model, time: { created: 1 } }
 }
-function firstSendOwner(options: { variant?: string; value?: string;
+function firstSendOwner(options: { variant?: string; value?: string; loading?: boolean;
   input?: (source: ReturnType<typeof selection>) => NonNullable<Parameters<typeof composer>[1]> } = {}) {
   state.params.id = "session-1"
   const calls = transport({ reply: async (request) => {
@@ -687,14 +687,22 @@ function firstSendOwner(options: { variant?: string; value?: string;
   if (options.variant !== undefined) source.setMetadata("agent", (agents) => agents.map((agent) => agent.id === "maestro"
     ? { ...agent, model: { providerID: ref.providerID, modelID: ref.id }, variant: options.variant } : agent))
   state.localOverride = source.local
-  const follower = createRoot((dispose) => {
-    const [history, setHistory] = createStore<{ last?: UserMessage; remote?: { providerID: string; id: string } }>({})
-    const last = () => history.last
-    followSessionModel(source.local, { lastUserMessage: last, model: () => history.remote, sessionID: () => "session-1" })
-    return { dispose, last, setLast: (value: UserMessage) => setHistory("last", reconcile(value)),
-      setRemote: (value: { providerID: string; id: string }) => setHistory("remote", reconcile(value)) }
-  })
   const editor = composer(options.value ?? "first Send", options.input?.(source))
+  const follower = createRoot((dispose) => {
+    type StoredModel = { providerID: string; id: string; variant?: string }
+    const [history, setHistory] = createStore<{ last?: UserMessage; remote?: StoredModel; loaded: boolean }>({
+      loaded: options.loading !== true,
+    })
+    const last = () => history.last
+    followSessionModel(source.local, {
+      lastUserMessage: last,
+      info: () => history.loaded ? { model: history.remote } : undefined,
+      editor: () => editor.prompt,
+      sessionID: () => "session-1",
+    })
+    return { dispose, last, setLast: (value: UserMessage) => setHistory("last", reconcile(value)),
+      setRemote: (value: StoredModel) => setHistory({ remote: { ...value, variant: value.variant }, loaded: true }) }
+  })
   return { calls, source, follower, editor,
     observe(value: (typeof optimistic)[number]) {
       expect(optimistic.at(-1)).toBe(value)
@@ -785,6 +793,56 @@ test("E1 real Session follower still restores loaded history and follows a remot
     owner.follower.setRemote({ ...ref, id: "blocked" })
     await wait(() => owner.source.local.model.intent().model?.modelID === "blocked", "actual follower applied remote Session model")
     expect(owner.calls.admissions()).toEqual([])
+  } finally { owner.dispose() }
+})
+
+test.each([undefined, "", "default"])("App hydrates stored Session variant %p before cached message history", async (variant) => {
+  const owner = firstSendOwner({ loading: true, variant: "high" })
+  try {
+    owner.follower.setLast(firstUser("cached-user", { providerID: ref.providerID, modelID: "blocked", variant: "high" }))
+    expect(owner.source.local.model.intent().model).toBeUndefined()
+    owner.follower.setRemote({ ...ref, variant })
+    await wait(() => owner.source.local.model.intent().variant === (variant ?? null), "stored Session intent")
+    expect(owner.source.local.model.execution.input().model).toEqual({ ...ref, variant })
+    expect(owner.editor.prompt.model.current()).toBeUndefined()
+  } finally { owner.dispose() }
+})
+
+test("App follows variant-only Session switches and keeps a new variant bound to its model", async () => {
+  const owner = firstSendOwner({ loading: true })
+  try {
+    owner.follower.setRemote({ ...ref, variant: "default" })
+    await wait(() => owner.source.local.model.intent().variant === "default", "initial stored default")
+    owner.follower.setRemote({ ...ref, variant: "" })
+    await wait(() => owner.source.local.model.intent().variant === "", "variant-only switch")
+    owner.source.local.model.variant.set("high")
+    await wait(() => owner.source.local.model.intent().variant === "high", "explicit reasoning change")
+    owner.source.local.model.set({ providerID: ref.providerID, modelID: "blocked" })
+    await wait(() => owner.source.local.model.intent().model?.modelID === "blocked", "explicit model switch")
+    expect(owner.source.local.model.intent().variant).toBeUndefined()
+  } finally { owner.dispose() }
+})
+
+test("App preserves the intentional model and its inherited variant when its selector echoes during Send", async () => {
+  const owner = firstSendOwner({ loading: true, variant: "high" })
+  try {
+    owner.source.local.model.set({ providerID: ref.providerID, modelID: ref.id })
+    await wait(() => owner.source.local.model.intent().model?.modelID === ref.id, "explicit model pinned")
+    owner.follower.setRemote({ ...ref, id: "blocked", variant: "default" })
+    await wait(() => owner.editor.prompt.model.current()?.modelID === ref.id, "explicit choice preserved at hydrate")
+    expect(owner.source.local.model.intent().variant).toBeUndefined()
+    expect(owner.source.local.model.execution.input().model).toEqual({ ...ref, variant: "high" })
+    const observed = { echo: false }
+    owner.calls.control.after = async (path) => {
+      if (path !== "/api/session/session-1/model") return
+      owner.follower.setRemote({ ...ref, variant: "high" })
+      await Promise.resolve()
+      expect(owner.source.local.model.intent().variant).toBeUndefined()
+      observed.echo = true
+    }
+    expect(await send(owner.editor)).toBe(true)
+    expect(observed.echo).toBe(true)
+    expect(owner.calls.admissions()).toHaveLength(1)
   } finally { owner.dispose() }
 })
 

@@ -44,17 +44,19 @@ export function interruptPendingSession(
   const jobs = pending.get(key)
   if (jobs) {
     pending.delete(key)
-    state.session.set("session_status", sessionID, { type: "idle" })
-    ;[...jobs].reverse().forEach((job) => { job.abort.abort(); job.cleanup() })
+    state.session.setStatus(sessionID, { type: "idle" })
   }
+  const changes = state.session.captureStatusChanges()
+  if (jobs) [...jobs].reverse().forEach((job) => { job.abort.abort(); job.cleanup() })
   // The run may have ended or kept going while events were missed: read its status back instead of keeping a stale spinner.
   const readBack = (report: boolean) =>
     readBackStatus(
       Promise.resolve()
         .then(() => api.active())
-        .then((active) =>
-          state.session.set("session_status", sessionID, active[sessionID] ? { type: "busy" } : { type: "idle" }),
-        ),
+        .then((active) => {
+          if (changes.touched.has(sessionID)) return
+          state.session.setStatus(sessionID, active[sessionID] ? { type: "busy" } : { type: "idle" })
+        }),
       (error) => {
         console.error(error)
         if (report) failed(error)
@@ -66,7 +68,7 @@ export function interruptPendingSession(
       failed(error)
       return readBack(false)
     },
-  )
+  ).finally(changes.release)
 }
 
 /** The status read after stop. Failure is reported and does not reject, so a stop that landed is not lost. */

@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import type { retry } from "@orchestra/core/util/retry"
 import type { ClientEvent } from "@/session-types"
 import { createServerSession } from "./server-session"
+import { reconcileActiveSessionStatuses } from "./server-resync"
 import { session, v2User, v2Assistant, userMessage, projectedUser, textPart, page, deferredPage, ids, messageClient, create, retryImmediately, setup, type AssistantMessage, type SessionApi, type MessageApi } from "./server-session-test.fixture"
 test("releasing an optimistic busy owner preserves newer local and canonical work", () => {
   const store = create(messageClient())
@@ -16,6 +17,24 @@ test("releasing an optimistic busy owner preserves newer local and canonical wor
   store.setStatus(sessionID, { type: "busy" })
   stale()
   expect(store.data.session_status[sessionID]?.type).toBe("busy")
+})
+
+test("an active-session response captured before admission preserves its busy owner", async () => {
+  const store = create(messageClient())
+  const sessionID = "ses_busy"
+  store.setStatus("ses_stale", { type: "busy" })
+  const changes = store.captureStatusChanges()
+  const response = Promise.withResolvers<Record<string, never>>()
+  const reconnect = response.promise.then((active) => reconcileActiveSessionStatuses(store, active, changes.touched))
+  const release = store.optimisticBusy(sessionID)!
+  response.resolve({})
+  await reconnect
+  changes.release()
+
+  expect(store.data.session_status.ses_stale?.type).toBe("idle")
+  expect(store.data.session_status[sessionID]?.type).toBe("busy")
+  release()
+  expect(store.data.session_status[sessionID]?.type).toBe("idle")
 })
 
 describe("server session", () => {

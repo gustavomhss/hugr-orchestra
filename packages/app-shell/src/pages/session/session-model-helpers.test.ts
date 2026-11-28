@@ -80,10 +80,10 @@ describe("first stored Session model", () => {
     const writes: unknown[][] = []
     const local = {
       model: { intent: () => ({ model: undefined, variant: undefined }) },
-      session: { restoreModel(...args: unknown[]) { writes.push(args) } },
+      session: { inherited: () => false, restoreModel(...args: unknown[]) { writes.push(args) } },
     }
     restoreStoredSessionModel(local, { ...ref, variant })
-    expect(writes).toEqual([[{ providerID: ref.providerID, modelID: ref.id }, variant ?? null]])
+    expect(writes).toEqual([[{ providerID: ref.providerID, modelID: ref.id }, variant ?? null, true]])
   })
 
   test("keeps an explicit local model or variant instead of the stored Session model", () => {
@@ -93,7 +93,7 @@ describe("first stored Session model", () => {
     ]) {
       const local = {
         model: { intent: () => intent },
-        session: { restoreModel() { throw new Error("Would overwrite the local choice") } },
+        session: { inherited: () => false, restoreModel() { throw new Error("Would overwrite the local choice") } },
       }
       restoreStoredSessionModel(local, ref)
     }

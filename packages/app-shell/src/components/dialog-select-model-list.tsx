@@ -79,10 +79,11 @@ export function ModelList(props: {
     },
     onSelect: select,
   })
-  const activeRefusal = () => {
+  const activeLabel = () => {
     const item = list.flat().find((model) => modelKey(model) === list.active())
-    const reason = item && refusal(item)
-    return item && reason ? `${item.name}. ${reason}` : ""
+    if (!item) return ""
+    const reason = refusal(item)
+    return reason ? `${item.name}. ${reason}` : item.name
   }
   const rows = createGroupedVirtualizer({
     groups: () => list.grouped.latest ?? [],
@@ -187,7 +188,7 @@ export function ModelList(props: {
         </div>
         {props.action}
       </div>
-      <div class="sr-only" role="status" aria-atomic="true" data-slot="model-picker-status">{activeRefusal()}</div>
+      <div class="sr-only" role="status" aria-atomic="true" data-slot="model-picker-status">{activeLabel()}</div>
       <div ref={(el) => setStore("scroll", el)} data-slot="list-scroll">
         <Show
           when={list.flat().length > 0}
@@ -232,11 +233,13 @@ export function ModelList(props: {
                                     gutter={12}
                                     openDelay={0}
                                     value={
-                                      <ModelTooltip
-                                        model={item()}
-                                        latest={item().latest}
-                                        free={isFree(item().provider.id, item().cost)}
-                                      />
+                                      refusal(item()) ?? (
+                                        <ModelTooltip
+                                          model={item()}
+                                          latest={item().latest}
+                                          free={isFree(item().provider.id, item().cost)}
+                                        />
+                                      )
                                     }
                                   >
                                     <button

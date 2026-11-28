@@ -1,4 +1,4 @@
-import { createEffect, on } from "solid-js"
+import { createEffect, untrack } from "solid-js"
 import type { ModelKey, useLocal } from "@/context/local"
 import type { PromptSession } from "@/context/prompt-state"
 import type { UserMessage } from "@/v2-wire"
@@ -6,13 +6,19 @@ import type { UserMessage } from "@/v2-wire"
 type Local = {
   session: {
     reset(): void
-    restore(msg: UserMessage): void
+    restore(msg: UserMessage, inherited?: true): void
   }
 }
 
 type LocalModel = ReturnType<typeof useLocal>["model"]
 type Intent = { model: Pick<LocalModel, "current" | "intent"> }
-type Restore = { session: { restoreModel(model: ModelKey, variant: string | null | undefined): void } }
+type Restore = {
+  session: {
+    inherited(): boolean
+    restoreModel(model: ModelKey, variant: string | null | undefined, inherited?: true): void
+  }
+}
+type SessionModel = { providerID: string; id: string; variant?: string }
 type PromptState = Pick<PromptSession, "model">
 
 export const resetSessionModel = (local: Local) => {
@@ -20,58 +26,65 @@ export const resetSessionModel = (local: Local) => {
 }
 
 export const syncSessionModel = (local: Local, msg: UserMessage) => {
-  local.session.restore(msg)
+  local.session.restore(msg, true)
 }
 
-/**
- * The composer follows the Session: the model of its last user message when it has no choice of its own, and a model
- * the server switched the Session to (a command's own model, another client). Only a change of the Session's recorded
- * model moves it, never a pick in the composer.
- */
+const sameSessionModel = (left: SessionModel | undefined, right: SessionModel) =>
+  left?.providerID === right.providerID && left.id === right.id && left.variant === right.variant
+
 export const followSessionModel = (
-  local: Local & { model: Pick<LocalModel, "current" | "set"> },
+  local: Local & Restore & Intent & {
+    model: Pick<LocalModel, "execution">
+    session: { ready(): boolean }
+  },
   session: {
     lastUserMessage: () => UserMessage | undefined
-    model: () => { providerID: string; id: string } | undefined
+    info: () => { model?: SessionModel } | undefined
+    editor: () => PromptState | undefined
     sessionID: () => string | undefined
   },
 ) => {
-  createEffect(
-    on(
-      () => session.lastUserMessage()?.id,
-      () => {
-        const msg = session.lastUserMessage()
-        if (!msg) return
-        syncSessionModel(local, msg)
-      },
-    ),
-  )
-  createEffect(
-    on(
-      () => {
-        const model = session.model()
-        return model ? { sessionID: session.sessionID(), providerID: model.providerID, id: model.id } : undefined
-      },
-      (next, previous) => {
-        if (!next || !previous || next.sessionID !== previous.sessionID) return
-        if (next.providerID === previous.providerID && next.id === previous.id) return
-        const current = local.model.current()
-        if (current?.provider.id === next.providerID && current.id === next.id) return
-        local.model.set({ providerID: next.providerID, modelID: next.id })
-      },
-      { defer: true },
-    ),
-  )
+  let previous: { id: string; editor: PromptState; model?: SessionModel } | undefined
+  createEffect(() => {
+    const id = session.sessionID()
+    const editor = session.editor()
+    const info = session.info()
+    if (previous?.id !== id) previous = undefined
+    if (!id || !editor || !info || !local.session.ready()) return
+    const model = info.model && { providerID: info.model.providerID, id: info.model.id, variant: info.model.variant }
+    const message = model ? undefined : session.lastUserMessage()
+    const initial = previous?.id !== id || previous.editor !== editor
+    const lastModel = previous?.model
+    previous = { id, editor, model }
+    untrack(() => {
+      if (initial) restorePromptModel(local, editor)
+      if (model && initial) {
+        restoreStoredSessionModel(local, model)
+        return
+      }
+      // A selector sent by this composer can emit an event before the prompt POST.
+      // The wire ref can match while the raw intent still uses inherited or model-default reasoning.
+      if (model && !sameSessionModel(lastModel, model) && !sameSessionModel(local.model.execution.input().model, model)) {
+        local.session.restoreModel({ providerID: model.providerID, modelID: model.id }, model.variant ?? null, true)
+        if (editor.model.current()) editor.model.set(undefined)
+      }
+      if (message) syncSessionModel(local, message)
+    })
+    if (!local.session.inherited()) syncPromptModel(local, editor)
+  })
 }
 
 export function restoreStoredSessionModel(
   local: { model: Pick<LocalModel, "intent"> } & Restore,
-  model: { providerID: string; id: string; variant?: string } | undefined,
+  model: SessionModel | undefined,
 ) {
+  if (!model) return
   const intent = local.model.intent()
-  if (!model || intent.model || intent.variant !== undefined) return
-  // A missing wire variant must stay omitted instead of acquiring an agent or saved override.
-  local.session.restoreModel({ providerID: model.providerID, modelID: model.id }, model.variant ?? null)
+  if (!local.session.inherited() && (intent.model || intent.variant !== undefined)) return
+  // Omission on an exact stored ref must bypass the agent and saved default variant.
+  if (intent.model?.providerID === model.providerID && intent.model.modelID === model.id && intent.variant === (model.variant ?? null))
+    return
+  local.session.restoreModel({ providerID: model.providerID, modelID: model.id }, model.variant ?? null, true)
 }
 
 export const syncPromptModel = (local: Intent, prompt: PromptState) => {
@@ -94,14 +107,18 @@ export const syncPromptModel = (local: Intent, prompt: PromptState) => {
   prompt.model.set(next)
 }
 
-export const restorePromptModel = (local: { model: Pick<LocalModel, "intent"> } & Restore, prompt: PromptState) => {
+export const restorePromptModel = (
+  local: { model: Pick<LocalModel, "intent">; session: Pick<Restore["session"], "restoreModel"> & Partial<Pick<Restore["session"], "inherited">> },
+  prompt: PromptState,
+) => {
   const model = prompt.model.current()
   if (!model) return false
   const current = local.model.intent()
   if (
     current.model?.providerID === model.providerID &&
     current.model.modelID === model.modelID &&
-    current.variant === model.variant
+    current.variant === model.variant &&
+    !local.session.inherited?.()
   )
     return true
   local.session.restoreModel({ providerID: model.providerID, modelID: model.modelID }, model.variant)

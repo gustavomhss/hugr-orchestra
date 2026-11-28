@@ -55,7 +55,7 @@ import { createExecutionEvidenceRenderer } from "@/pages/session/orchestra-evide
 import { createTimelineModel } from "@/pages/session/timeline/model"
 import { type DiffStyle, SessionReviewTab, type SessionReviewTabProps } from "@/pages/session/review-tab"
 import { useSessionLayout } from "@/pages/session/session-layout"
-import { followSessionModel, restorePromptModel, restoreStoredSessionModel, syncPromptModel } from "@/pages/session/session-model-helpers"
+import { followSessionModel } from "@/pages/session/session-model-helpers"
 import { SESSION_PANEL_WIDTH_MIN } from "@/pages/session/session-panel-width"
 import { SessionSidePanel } from "@/pages/session/session-side-panel"
 import { sessionPanelLayout } from "@/pages/session/session-panel-layout"
@@ -385,19 +385,11 @@ export default function Page() {
     if (path) void file.load(path)
   })
 
-  followSessionModel(local, { lastUserMessage, model: () => info()?.model, sessionID: () => params.id })
-
-  let restoredModel: { sessionID: string; editor: ReturnType<typeof prompt.capture> } | undefined
-  createEffect(() => {
-    const sessionID = params.id
-    if (!sessionID || !prompt.ready() || !local.session.ready()) return
-    const editor = prompt.capture()
-    if (restoredModel?.sessionID !== sessionID || restoredModel.editor !== editor) {
-      restoredModel = { sessionID, editor }
-      if (restorePromptModel(local, editor)) return
-    }
-    if (messagesReady() && !historyMore() && userMessages().length === 0) restoreStoredSessionModel(local, info()?.model)
-    syncPromptModel(local, editor)
+  followSessionModel(local, {
+    lastUserMessage,
+    info,
+    editor: () => prompt.ready() ? prompt.capture() : undefined,
+    sessionID: () => params.id,
   })
 
   createEffect(

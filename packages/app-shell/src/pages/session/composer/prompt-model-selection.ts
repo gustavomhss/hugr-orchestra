@@ -3,7 +3,7 @@ import { createStore } from "solid-js/store"
 import { useSearchParams } from "@solidjs/router"
 import { useTabs } from "@/context/tabs"
 import { useModels } from "@/context/models"
-import { createModelExecutionView, createModelSelectionDisplay, type ModelKey, type ModelSelection } from "@/context/local"
+import { createModelExecutionView, createModelSelectionDisplay, sameModelKey, type ModelKey, type ModelSelection } from "@/context/local"
 import { cycleModelVariant, getConfiguredAgentVariant } from "@/context/model-variant"
 import { usePrompt } from "@/context/prompt"
 import { useSDK } from "@/context/sdk"
@@ -41,23 +41,26 @@ export function createPromptModelSelection(input: {
   session?: {
     server: ReturnType<typeof useServerSDK>
     id: () => string | undefined
-    placement: () => { directory: string; workspaceID?: string } | undefined
+    info: () => { directory: string; workspaceID?: string; model?: { providerID: string; id: string; variant?: string } } | undefined
+    ready: () => boolean
   }
 }) {
   const sdk = useSDK()
   const sync = useSync()
   const models = useModels()
   const prompt = usePrompt()
-  const tabs = useTabs()
-  const [search] = useSearchParams<{ draftId?: string }>()
-  createEffect(() => {
-    const tab = tabs.store.find((item) => item.type === "draft" && item.draftID === search.draftId)
-    if (tab)
-      tabs.state(tab, "prompt-model-context", createPromptModelContext)[1]({
-        agent: input.agent()?.model,
-        recent: models.recent.list(),
-      })
-  })
+  if (!input.session) {
+    const tabs = useTabs()
+    const [search] = useSearchParams<{ draftId?: string }>()
+    createEffect(() => {
+      const tab = tabs.store.find((item) => item.type === "draft" && item.draftID === search.draftId)
+      if (tab)
+        tabs.state(tab, "prompt-model-context", createPromptModelContext)[1]({
+          agent: input.agent()?.model,
+          recent: models.recent.list(),
+        })
+    })
+  }
   const providers = useProviders(() => sdk().directory)
   const connected = createMemo(() => new Set(providers.connected().map((item) => item.id)))
   const engine = () => input.agent()?.engine ?? sync().data.config.agent?.maestro?.engine
@@ -85,12 +88,18 @@ export function createPromptModelSelection(input: {
 
   const intent = () => {
     const value = prompt.model.current()
-    return { model: value ? { providerID: value.providerID, modelID: value.modelID } : undefined, variant: value?.variant }
+    if (value) return { model: { providerID: value.providerID, modelID: value.modelID }, variant: value.variant }
+    const stored = input.session?.info()?.model
+    return {
+      model: stored ? { providerID: stored.providerID, modelID: stored.id } : undefined,
+      variant: stored ? stored.variant ?? null : undefined,
+    }
   }
   const candidate = () => intent().model ?? input.agent()?.model ?? configured() ?? models.recent.list()[0] ?? fallback()
+  const ready = () => models.ready() && prompt.ready() && input.session?.ready() !== false
   const execution = createModelExecutionView({ sdk, server: input.session?.server,
-    sessionID: () => input.session?.id(), placement: input.session?.placement,
-    ready: () => models.ready() && prompt.ready(),
+    sessionID: () => input.session?.id(), placement: input.session?.info,
+    ready,
     metadata: () => ({ agents: sync().data.agent, config: sync().data.config, providers: [...providers.all()],
       connected: providers.connected().map((provider) => provider.id), semanticEpoch: sdk().modelExecutionEpoch() }),
     agentID: () => input.agent()?.id ?? "maestro", agent: input.agent, intent, candidate,
@@ -109,7 +118,7 @@ export function createPromptModelSelection(input: {
   const selection = {
     intent,
     execution,
-    ready: Object.assign(() => models.ready() && prompt.ready(), { promise: models.ready.promise }),
+    ready: Object.assign(ready, { promise: models.ready.promise }),
     current,
     recent: recentModels,
     list: display.list,
@@ -126,7 +135,8 @@ export function createPromptModelSelection(input: {
     set(item: ModelKey | undefined, options?: { recent?: boolean }) {
       startTransition(() =>
         batch(() => {
-          prompt.model.set(item ? { ...item, variant: prompt.model.current()?.variant } : undefined)
+          const variant = sameModelKey(item, candidate()) ? intent().variant : undefined
+          prompt.model.set(item ? { ...item, variant } : undefined)
           if (!item) return
           models.setVisibility(item, true)
           if (options?.recent) models.recent.push(item)
@@ -146,7 +156,7 @@ export function createPromptModelSelection(input: {
         })
       },
       selected() {
-        return prompt.model.current()?.variant
+        return intent().variant
       },
       current() {
         return execution.input().model?.variant
@@ -157,10 +167,11 @@ export function createPromptModelSelection(input: {
       set(value: string | undefined) {
         startTransition(() =>
           batch(() => {
-            const model = current()
-            if (!model) return
-            prompt.model.set({ providerID: model.provider.id, modelID: model.id, variant: value ?? null })
-            models.variant.set({ providerID: model.provider.id, modelID: model.id }, value)
+            const item = candidate()
+            if (!item) return
+            const model = { providerID: item.providerID, modelID: item.modelID }
+            prompt.model.set({ ...model, variant: value ?? null })
+            models.variant.set(model, value)
           }),
         )
       },

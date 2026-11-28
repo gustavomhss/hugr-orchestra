@@ -263,9 +263,12 @@ function ModelSelectorPopoverV2View(props: {
   const models = createMemo(() => props.models(store.search))
   const groups = createMemo(() => props.groups(models()))
   const navigation = createModelSelectorNavigation(groups, modelKey, connectKey, manageKey)
-  const activeRefusal = () => {
+  const activeLabel = () => {
+    if (store.active === connectKey) return language.t("command.provider.connect")
+    if (store.active === manageKey) return language.t("dialog.model.manage")
     const item = navigation.find(store.active)
-    return item && !props.available(item) ? `${item.name}. ${language.t(props.unavailable(item))}` : ""
+    if (!item) return ""
+    return props.available(item) ? item.name : `${item.name}. ${language.t(props.unavailable(item))}`
   }
   const initialActive = () => {
     const selected = props.current()
@@ -403,7 +406,7 @@ function ModelSelectorPopoverV2View(props: {
             </div>
           </div>
           <div class="h-px bg-v2-border-border-muted" />
-          <div class="sr-only" role="status" aria-atomic="true" data-slot="model-picker-status">{activeRefusal()}</div>
+          <div class="sr-only" role="status" aria-atomic="true" data-slot="model-picker-status">{activeLabel()}</div>
           <ScrollView data-slot="model-selector-scroll" class="max-h-[220px] min-h-0">
             <div class="flex flex-col p-0.5 pt-0">
               <Show
@@ -508,6 +511,7 @@ function ModelSelectorRowsV2(props: {
                           <div
                             class="absolute inset-x-0"
                             style={{ top: `${(rows.row(key)?.start ?? 0) - group().start}px` }}
+                            onMouseEnter={() => props.onActive(key)}
                           >
                             <TooltipV2
                               class="w-full"
@@ -515,12 +519,14 @@ function ModelSelectorRowsV2(props: {
                               gutter={6}
                               openDelay={0}
                               value={
-                                <ModelTooltip
-                                  model={item()}
-                                  latest={item().latest}
-                                  free={isFree(item().provider.id, item().cost)}
-                                  v2
-                                />
+                                <Show when={props.available(item())} fallback={language.t(props.unavailable(item()))}>
+                                  <ModelTooltip
+                                    model={item()}
+                                    latest={item().latest}
+                                    free={isFree(item().provider.id, item().cost)}
+                                    v2
+                                  />
+                                </Show>
                               }
                             >
                               <MenuV2.RadioItem
@@ -531,7 +537,6 @@ function ModelSelectorRowsV2(props: {
                                 data-selected-model={props.current === key ? true : undefined}
                                 class="scroll-my-6 w-full"
                                 classList={{ "!bg-v2-overlay-simple-overlay-hover": props.active === key }}
-                                onMouseEnter={() => props.onActive(key)}
                                 onSelect={() => props.onSelect(item())}
                               >
                                 <span class="min-w-0 truncate leading-5">{item().name}</span>

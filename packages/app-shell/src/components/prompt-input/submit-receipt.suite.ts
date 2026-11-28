@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
-import { createRoot } from "solid-js"
+import { createRoot, createSignal } from "solid-js"
 import { isServer } from "solid-js/web"
-import { createPromptState } from "@/context/prompt-state"
+import { createPromptState, type PromptScope } from "@/context/prompt-state"
 import { ServerConnection } from "@/context/server"
 import { ServerScope } from "@/utils/server-scope"
 import { pendingSnapshot, togglePending } from "../draft-subagent-models"
@@ -9,7 +9,7 @@ import { draftSessionKey } from "./draft-session"
 import {
   commands, createPromptSubmit, createdSessions, optimistic, policyFixture, promoted, promptInputs,
   savedPolicies, sdkFor, sentCommands, sentShell, serverFor, setReactiveOwner, state, statusUpdates, submitInput,
-  canonicalPolicies, modelExecutionInputs, promotedSelections,
+  canonicalPolicies, holdShellWire, modelExecutionInputs, promotedSelections,
 } from "./submit-harness"
 
 test.each(["prompt", "command", "shell"])("admitted %s promotes to its placement after a worktree change; a second Send posts nothing", async (pathway) => {
@@ -39,6 +39,40 @@ test.each(["prompt", "command", "shell"])("admitted %s promotes to its placement
   expect(statusUpdates).toEqual(statuses)
   expect(createdSessions).toEqual(["/repo/main"])
   expect(promoted).toHaveLength(1)
+})
+
+test.skipIf(isServer)("admitted draft shell keeps its wire acknowledgement through reactive model and draft policy changes", async () => {
+  const key = draftSessionKey(ServerScope.local, "/repo/main")
+  const [modelID, setModelID] = createSignal("model")
+  state.readModelID = modelID
+  const wire = holdShellWire()
+  const draft = createPromptState({ prompt: "pwd" })
+  const submit = createPromptSubmit({
+    ...submitInput(), prompt: draft, mode: () => "shell", pendingKey: () => key,
+    info: () => state.params.id ? { id: state.params.id } : undefined,
+  })
+  const sending = submit.handleSubmit(new Event("submit"))
+  try {
+    const request = await Promise.race([wire.entered, sending.then(() => undefined)])
+    expect(request?.url).toEndWith("/api/session/session-1/shell")
+    expect(await request?.clone().json()).toMatchObject({ command: "pwd" })
+    expect(draft.current()[0]).toMatchObject({ content: "pwd" })
+    expect(promoted).toEqual([])
+    setModelID("new-model")
+    togglePending(key, "provider", "new-model", true)
+    expect(request?.signal.aborted).toBe(false)
+    wire.release(204)
+    expect(await sending).toBe(true)
+    expect(promoted).toEqual([{ directory: "/repo/main", sessionID: "session-1" }])
+    expect(promotedSelections[0]?.model).toEqual({ providerID: "provider", modelID: "new-model" })
+    expect(savedPolicies.at(-1)).toMatchObject({
+      sessionID: "session-1", policy: { mode: "allowlist", models: [{ providerID: "provider", id: "new-model" }] },
+    })
+    expect(draft.current()[0]).toMatchObject({ content: "" })
+    await submit.handleSubmit(new Event("submit"))
+    expect(wire.requests).toHaveLength(1)
+    expect(createdSessions).toEqual(["/repo/main"])
+  } finally { wire.release(204); await sending }
 })
 
 test.each(["prompt", "policy", "model"])("%s edit during a draft send still promotes and never posts the admitted prompt again", async (edit) => {
@@ -261,25 +295,51 @@ test.each(["unchanged", "edited", "blank"] as const)("a confirmed %s draft retri
   } finally { gate.resolve(); retryRelease.resolve(); await Promise.allSettled(tasks) }
 })
 
-// Server Solid snapshots createMemo. Positive control proves the context accessor sees this edit.
-test.skipIf(isServer)("context edit during a draft send still promotes and keeps the new context unsent", async () => {
-  expect(isServer).toBe(false)
+test.skipIf(isServer)("draft receipt consumes unchanged admitted comments and preserves edited and new comments for the next send", async () => {
   const entered = Promise.withResolvers<void>()
   const gate = Promise.withResolvers<void>()
   state.sendHook = async () => { entered.resolve(); await gate.promise }
-  const real = createPromptState({ prompt: "admitted turn" })
-  const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined })
+  const draft = createPromptState({ prompt: "admitted turn" })
+  const session = createPromptState()
+  draft.context.add({ type: "file", path: "/repo/main/unchanged", comment: "unchanged comment" })
+  draft.context.add({ type: "file", path: "/repo/main/edited", comment: "old text", commentID: "edited" })
+  draft.context.add({ type: "file", path: "/repo/main/removed", comment: "removed comment" })
+  session.context.add({ type: "file", path: "/repo/main/session-only", comment: "session comment" })
+  const prompt = {
+    ...draft,
+    capture: (scope?: PromptScope) => scope || state.params.id ? session : draft,
+  }
+  const submit = createPromptSubmit({
+    ...submitInput(), prompt, commentCount: () => prompt.capture().context.items().length,
+    info: () => state.params.id ? { id: state.params.id } : undefined,
+  })
   const sending = submit.handleSubmit(new Event("submit"))
-  await entered.promise
-  real.context.add({ type: "file", path: "/repo/main/new", comment: "newer context" })
-  expect(real.context.items()).toEqual([expect.objectContaining({ path: "/repo/main/new", comment: "newer context" })])
-  gate.resolve()
-  await sending
-  expect(promoted).toEqual([{ directory: "/repo/main", sessionID: "session-1" }])
-  expect(promptInputs).toHaveLength(1)
-  expect(real.current()[0]).toMatchObject({ content: "" })
-  expect(real.context.items()).toEqual([expect.objectContaining({ path: "/repo/main/new", comment: "newer context" })])
-  expect(createdSessions).toHaveLength(1)
+  try {
+    await Promise.race([entered.promise, sending])
+    expect(promptInputs).toHaveLength(1)
+    expect((promptInputs[0] as { text: string }).text).toContain("unchanged comment")
+    expect((promptInputs[0] as { text: string }).text).toContain("old text")
+    expect((promptInputs[0] as { text: string }).text).toContain("removed comment")
+    draft.context.updateComment("/repo/main/edited", "edited", { comment: "edited text" })
+    draft.context.remove(draft.context.items().find((item) => item.path === "/repo/main/removed")!.key)
+    draft.context.add({ type: "file", path: "/repo/main/new", comment: "new comment" })
+    gate.resolve()
+    expect(await sending).toBe(true)
+    expect(promoted).toEqual([{ directory: "/repo/main", sessionID: "session-1" }])
+    expect(session.current()[0]).toMatchObject({ content: "" })
+    expect(draft.context.items().map((item) => item.comment)).toEqual(["edited text", "new comment"])
+    expect(session.context.items().map((item) => item.comment)).toEqual(["session comment", "edited text", "new comment"])
+    expect(await submit.handleSubmit(new Event("submit"))).toBe(true)
+    const next = (promptInputs[1] as { text: string }).text
+    expect(next).toContain("session comment")
+    expect(next).toContain("edited text")
+    expect(next).toContain("new comment")
+    expect(next).not.toContain("unchanged comment")
+    expect(next).not.toContain("old text")
+    expect(next).not.toContain("removed comment")
+    expect(promptInputs).toHaveLength(2)
+    expect(createdSessions).toHaveLength(1)
+  } finally { gate.resolve(); await sending }
 })
 
 test.each(["failed", "admitted"])("selection changed during %s request shares the source busy lock; a failed one stays separate", async (outcome) => {

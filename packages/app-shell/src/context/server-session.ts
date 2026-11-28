@@ -78,6 +78,11 @@ export function createServerSession(
       return (this.session_status[id]?.type ?? "idle") !== "idle"
     },
   })
+  const statusReads = new Set<{ touched: Set<string>; removed: Set<string> }>()
+  const statusChanged = (sessionID: string, removed = false) => statusReads.forEach((read) => {
+    read.touched.add(sessionID)
+    if (removed) read.removed.add(sessionID)
+  })
   const busyOwners = new Map<string, Set<symbol>>()
   const setStatus = (sessionID: string, status: SessionStatus) => {
     busyOwners.delete(sessionID)
@@ -90,6 +95,7 @@ export function createServerSession(
     const owner = Symbol()
     owners.add(owner)
     busyOwners.set(sessionID, owners)
+    statusChanged(sessionID)
     if (!pending) setData("session_status", sessionID, { type: "busy" })
     return () => {
       if (busyOwners.get(sessionID) !== owners || !owners.delete(owner) || owners.size > 0) return
@@ -100,7 +106,6 @@ export function createServerSession(
   const requests = new Map<string, Promise<AppSession>>()
   const inflight = new Map<string, Promise<void>>()
   const trailing = new Map<string, { predecessor: Promise<void>; task: Promise<void> }>()
-  const statusReads = new Set<{ touched: Set<string>; removed: Set<string> }>()
   const lifetime = { disposed: false }
   const inflightTodo = new Map<string, Promise<void>>()
   const optimistic = new Map<string, Map<string, OptimisticItem>>()
@@ -122,10 +127,6 @@ export function createServerSession(
     trailing.clear()
     statusReads.clear()
     busyOwners.clear()
-  })
-  const statusChanged = (sessionID: string, removed = false) => statusReads.forEach((read) => {
-    read.touched.add(sessionID)
-    if (removed) read.removed.add(sessionID)
   })
   const [meta, setMeta] = createStore({
     limit: {} as Record<string, number | undefined>,

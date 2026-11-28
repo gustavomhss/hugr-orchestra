@@ -19,11 +19,15 @@ import { pathKey } from "@/utils/path-key"
 import { normalizeCatalogModel } from "./global-sync/utils"
 
 export type ModelKey = { providerID: string; modelID: string; variant?: string }
+export const sameModelKey = (left: ModelKey | undefined, right: ModelKey | undefined) =>
+  left?.providerID === right?.providerID && left?.modelID === right?.modelID
+
 
 type State = {
   agent?: string
   model?: ModelKey
   variant?: string | null
+  inherited?: true
 }
 
 export type Saved = {
@@ -259,13 +263,14 @@ export function createLocal(deps: LocalDeps) {
     set(item: ModelKey | undefined, options?: { recent?: boolean }) {
       startTransition(() =>
         batch(() => {
+          const variant = item && sameModelKey(item, candidate()) ? selected() : undefined
           setStore("last", {
             type: "model",
             agent: agent.key(),
             model: item ?? null,
-            variant: selected(),
+            variant,
           })
-          write({ model: item })
+          write({ model: item, variant, inherited: undefined })
           if (!item) return
           models.setVisibility(item, true)
           if (!options?.recent) return
@@ -293,17 +298,17 @@ export function createLocal(deps: LocalDeps) {
       set(value: string | undefined) {
         startTransition(() =>
           batch(() => {
-            const model = current()
+            const item = candidate()
+            if (!item) return
+            const model = { providerID: item.providerID, modelID: item.modelID }
             setStore("last", {
               type: "variant",
               agent: agent.key(),
-              model: model ? { providerID: model.provider.id, modelID: model.id } : null,
+              model,
               variant: value ?? null,
             })
-            write({ variant: value ?? null })
-            if (model) {
-              models.variant.set({ providerID: model.provider.id, modelID: model.id }, value ?? undefined)
-            }
+            write({ model, variant: value ?? null, inherited: undefined })
+            models.variant.set(model, value)
           }),
         )
       },
@@ -343,10 +348,11 @@ export function createLocal(deps: LocalDeps) {
         setStore("promoting", next)
         setStore("draft", undefined)
       },
-      restoreModel(model: ModelKey, variant: string | null | undefined) {
-        write({ model, variant })
+      inherited: () => scope()?.inherited === true,
+      restoreModel(model: ModelKey, variant: string | null | undefined, inherited?: true) {
+        write({ model, variant, inherited })
       },
-      restore(msg: { sessionID: string; agent: string; model: ModelKey }) {
+      restore(msg: { sessionID: string; agent: string; model: ModelKey }, inherited?: true) {
         const session = id()
         if (!session) return
         if (msg.sessionID !== session) return
@@ -356,7 +362,8 @@ export function createLocal(deps: LocalDeps) {
         setSaved("session", session, {
           agent: msg.agent,
           model: msg.model,
-          variant: msg.model?.variant ?? null,
+          variant: msg.model.variant ?? null,
+          inherited,
         })
       },
     },

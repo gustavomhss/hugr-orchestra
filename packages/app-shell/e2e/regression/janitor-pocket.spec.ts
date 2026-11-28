@@ -1,6 +1,7 @@
 import { expect, test, type Locator } from "@playwright/test"
 import { base64Encode } from "@orchestra/core/util/encode"
 import type {} from "../../../../apps/desktop/src/renderer/env"
+import { currentSession } from "../utils/mock-server"
 import {
   directory,
   sessionID as routeSessionID,
@@ -92,6 +93,81 @@ test("keeps Janitor chat session, sends prompt, and opens it in session view", a
   await page.reload()
   await expect(page).toHaveURL(new RegExp(`/session/${janitorSessionID}$`))
   await expect(page.getByRole("heading", { name: "Janitor chat", exact: true })).toBeVisible()
+})
+
+test("Janitor uses the adopted Session model and policy while a draft tab is open", async ({ page }) => {
+  const draftID = "draft_janitor_policy"
+  const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
+  const storedModel = { providerID: "opencode", id: "claude-opus-4-6", variant: "default" }
+  const janitor = session({ id: janitorSessionID, title: "Janitor chat", model: storedModel })
+  await page.addInitScript(({ directory, draftID, report, server, sessionID, slug }) => {
+    Object.assign(window, {
+      api: {
+        janitor: {
+          getReport: async () => ({ report, source: null }),
+          publish: async () => true,
+          snooze: async () => true,
+          dismiss: async () => true,
+          onReport: () => () => {},
+        },
+      } satisfies Pick<Window["api"], "janitor">,
+    })
+    localStorage.setItem(`orchestra.janitor.session.local.${slug}`, sessionID)
+    localStorage.setItem("orchestra.window.browser.dat:tabs", JSON.stringify([{ type: "draft", draftID, server, directory }]))
+    localStorage.setItem("orchestra.global.dat:server", JSON.stringify({
+      projects: { local: [{ worktree: directory, expanded: true }] }, lastProject: { local: directory },
+    }))
+  }, { directory, draftID, report, server, sessionID: janitorSessionID, slug: base64Encode(directory) })
+  await setupTimeline(page, { settings: { janitorEnabled: true }, sessions: [session(), janitor], variants: ["default"] })
+
+  const writes: unknown[] = []
+  let policy: { mode: "allowlist"; models: unknown[] } | { mode: "inherit" } = { mode: "allowlist", models: [] }
+  await page.route((url) => url.pathname === `/api/session/${janitorSessionID}`, (route) => {
+    if (route.request().method() !== "GET") return route.fallback()
+    return route.fulfill({
+      json: { data: { ...currentSession(janitor), subagentModels: policy } },
+      headers: { "access-control-allow-origin": "*" },
+    })
+  })
+  await page.route((url) => url.pathname === `/api/session/${janitorSessionID}/subagent-models`, (route) => {
+    if (route.request().method() !== "POST") return route.fallback()
+    const body = route.request().postDataJSON()
+    writes.push(body)
+    policy = body.policy
+    return route.fulfill({ json: { data: policy }, headers: { "access-control-allow-origin": "*" } })
+  })
+
+  await page.goto(`/new-session?draftId=${draftID}`)
+  const draft = page.locator('[data-session-kind="new"] [data-component="prompt-input-v2"]')
+  const draftInput = draft.getByRole("textbox", { name: "Prompt" })
+  const draftChip = draft.locator('[data-action="prompt-subagent-models"]')
+  await draftInput.fill("Unsent draft text")
+  await expect(draftChip).toHaveText("Subagents · Default")
+  await draftChip.click()
+  const dialog = page.getByRole("dialog", { name: "Subagent models" })
+  await dialog.getByRole("switch", { name: "Claude Opus 4.6" }).click()
+  await page.keyboard.press("Escape")
+  await expect(dialog).toHaveCount(0)
+  await expect(draftChip).toHaveText("Subagents · 1")
+
+  const modelRequest = page.waitForRequest((request) => request.method() === "POST" &&
+    new URL(request.url()).pathname === "/api/model/execution" && request.postDataJSON().context.sessionID === janitorSessionID)
+  await page.getByRole("button", { name: "Open janitor report" }).click()
+  expect((await modelRequest).postDataJSON()).toMatchObject({
+    context: { type: "session", sessionID: janitorSessionID }, model: storedModel,
+  })
+  const pocket = page.getByRole("complementary", { name: "Janitor report" })
+  const chip = pocket.locator('[data-action="prompt-subagent-models"]')
+  await expect(chip).toHaveText("Subagents · 0")
+  await chip.click()
+  await expect(dialog.locator('[data-status="none-allowed"]')).toBeVisible()
+  await dialog.getByRole("button", { name: "Inherit", exact: true }).click()
+  await expect.poll(() => writes).toEqual([{ policy: { mode: "inherit" } }])
+  await page.keyboard.press("Escape")
+  await expect(dialog).toHaveCount(0)
+  await expect(draftChip).toHaveText("Subagents · 1")
+  await expect(draftInput).toHaveText("Unsent draft text")
+  await expect(page).toHaveURL(`/new-session?draftId=${draftID}`)
 })
 
 for (const viewport of [

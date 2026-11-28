@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, ErrorBoundary, For, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, ErrorBoundary, For, onCleanup, Show } from "solid-js"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { Message } from "@orchestra/session-ui/message-part"
 import { PromptInputV2Composer, usePromptInputV2Controller } from "@/components/prompt-input-v2"
@@ -85,22 +85,13 @@ function PocketComposer(props: {
   const comments = useComments()
   const local = useLocal()
   const sessionID = props.sessionID
-  const model = createPromptModelSelection({
-    agent: local.agent.current,
-    session: {
-      server: serverSDK,
-      id: sessionID,
-      placement: () => {
-        const id = sessionID()
-        return id ? serverSync().session.get(id) : undefined
-      },
-    },
-  })
   const [creating, setCreating] = createSignal(false)
+  const [checkedKey, setCheckedKey] = createSignal<string>()
   const [attemptedKey, setAttemptedKey] = createSignal<string>()
   const [failedKey, setFailedKey] = createSignal<string>()
   const [retryNonce, setRetryNonce] = createSignal(0)
   let generation = 0
+  onCleanup(() => { generation++ })
   const storageKey = createMemo(
     () => `orchestra.janitor.session.${serverSDK().scope}.${base64Encode(props.directory())}`,
   )
@@ -108,49 +99,69 @@ function PocketComposer(props: {
     SessionStateKey.from(serverSDK().scope, SessionRouteKey.fromRoute(base64Encode(props.directory()), sessionID())),
   )
 
+  const sessionInfo = () => {
+    const id = sessionID()
+    return id ? serverSync().session.get(id) : undefined
+  }
+  const model = createPromptModelSelection({
+    agent: local.agent.current,
+    session: {
+      server: serverSDK,
+      id: sessionID,
+      info: sessionInfo,
+      ready: () => sessionID() ? !!sessionInfo() : checkedKey() === storageKey(),
+    },
+  })
+
   createEffect(() => {
     retryNonce()
-    const agent = local.agent.current()
-    const selected = model.current()
     const key = storageKey()
-    if (!agent || !selected || sessionID() || creating() || attemptedKey() === key || failedKey() === key) return
+    if (sessionID() || creating() || attemptedKey() === key || failedKey() === key) return
+    const checked = checkedKey() === key
+    const agent = local.agent.current()
+    const selected = model.execution.input().model
+    if (checked && (!agent || !selected || !model.execution.ready())) return
     const directory = props.directory()
     const scope = serverSDK().scope
     const runID = ++generation
     setCreating(true)
-    setAttemptedKey(key)
+    if (checked) setAttemptedKey(key)
     const isCurrent = () =>
       runID === generation && storageKey() === key && props.directory() === directory && serverSDK().scope === scope
     void (async () => {
-      let stored: string | null = null
-      try {
-        stored = localStorage.getItem(key)
-      } catch {
-        stored = null
-      }
-      if (stored) {
+      if (!checked) {
+        let stored: string | null = null
         try {
-          await serverSync().session.sync(stored)
-          if (isCurrent() && serverSync().session.get(stored)?.directory === directory) {
-            props.onSessionID(stored)
-            return
-          }
+          stored = localStorage.getItem(key)
         } catch {
+          stored = null
+        }
+        if (stored) {
           try {
-            localStorage.removeItem(key)
+            await serverSync().session.sync(stored)
+            if (isCurrent() && serverSync().session.get(stored)?.directory === directory) {
+              props.onSessionID(stored)
+              return
+            }
           } catch {
-            // Storage may be unavailable; continue with a new session.
+            try {
+              localStorage.removeItem(key)
+            } catch {
+              // Storage may be unavailable; continue with a new session.
+            }
           }
         }
+        if (isCurrent()) setCheckedKey(key)
+        return
       }
 
-      if (!isCurrent()) return
+      if (!isCurrent() || !agent || !selected) return
       const currentSync = serverSync().ensureDirSyncContext(directory)
       const created = await sdk()
         .api.session.create({
           agent: agentKey(agent),
-          model: { id: selected.id, providerID: selected.provider.id },
-          location: { directory: props.directory() },
+          model: selected,
+          location: { directory },
         })
         .then((result) => normalizeSessionInfo(result))
       currentSync.session.remember(created)
@@ -186,6 +197,7 @@ function PocketComposer(props: {
   })
   const input = usePromptInputV2Controller({
     sessionID,
+    pendingKey: sessionKey,
     get controls() {
       return controls()
     },
