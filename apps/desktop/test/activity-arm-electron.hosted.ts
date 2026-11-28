@@ -19,12 +19,11 @@ async function parent() {
   const gid = Number(process.env.ACTIVITY_ARM_GID)
   const addon = process.env.HUGR_OMNI_ADDON
   const supervisor = process.env.HUGR_OMNI_SUPERVISOR
-  const compiledCli = process.env.ACTIVITY_CUSTODY_CLI
   const outerDisplay = process.env.DISPLAY
   const outerAuthority = process.env.XAUTHORITY
   if (process.platform !== "linux" || process.env.CI !== "true" || process.getuid?.() !== 0 ||
     !Number.isSafeInteger(uid) || uid <= 0 || !Number.isSafeInteger(gid) || gid <= 0 ||
-    !addon || !supervisor || !compiledCli || !outerDisplay || !outerAuthority || !Bun.which("xdotool") || !Bun.which("xwd") ||
+    !addon || !supervisor || !outerDisplay || !outerAuthority || !Bun.which("xdotool") || !Bun.which("xwd") ||
     !Bun.which("weston") || !await Bun.file(python).exists()) {
     throw new Error("Activity proof requires the hosted Weston fixture, an ordinary Desktop UID and GID, and Python")
   }
@@ -43,14 +42,13 @@ async function parent() {
   const source = join(worktree, ".turbo")
   const cli = join(desktop, "../cli/src/index.ts")
   const omni = join(root, "omni")
-  const custodyCli = join(omni, "orchestra-activity-custody")
   const nativeAddon = join(omni, "libhugr_omni_node.so")
   const nativeSupervisor = join(omni, "hugr-omni-supervisor")
   const secret = crypto.getRandomValues(new Uint8Array(32))
   const frame = ActivityPrivateChannel.frame(secret)
   const signer = await ActivityPrivateChannel.signer(secret).finally(() => secret.fill(0))
   const launchBroker = (credentialFrame: Uint8Array) => {
-    const broker = Bun.spawn([custodyCli, "--root", root, "--socket", socketPath], {
+    const broker = Bun.spawn([process.execPath, join(desktop, "../cli/src/activity-custody-entry.ts"), "--root", root, "--socket", socketPath], {
       stdin: "pipe", stdout: "inherit", stderr: "inherit",
       env: { PATH: process.env.PATH, HOME: root, HUGR_OMNI_ADDON: nativeAddon, HUGR_OMNI_SUPERVISOR: nativeSupervisor },
     })
@@ -107,10 +105,8 @@ async function parent() {
     await mkdir(omni, { mode: 0o700 })
     await copyFile(addon, nativeAddon)
     await copyFile(supervisor, nativeSupervisor)
-    await copyFile(compiledCli, custodyCli)
     await chmod(nativeAddon, 0o600)
     await chmod(nativeSupervisor, 0o700)
-    await chmod(custodyCli, 0o700)
     await mkdir(runtime, { mode: 0o755 })
     await chmod(runtime, 0o755)
     await mkdir(session, { mode: 0o700 })
