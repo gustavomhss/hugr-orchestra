@@ -16,6 +16,7 @@ export interface Interface {
 
 type Options = {
   readonly now?: () => number
+  readonly maxSelection?: number
   readonly inspect?: () => Effect.Effect<ActivityArm.PlanSnapshot, unknown>
   /** Checks current identity and eligibility through the authority for this exact object. */
   readonly verify?: (target: ActivityActionLedger.Target) => Effect.Effect<boolean, unknown>
@@ -33,7 +34,8 @@ export function make(database: Database.Interface, options?: Options): Interface
       return Effect.gen(function* () {
         if (!verify) return undefined
         const decoded = ActivityArm.decodeRequest(request)
-        if (Option.isNone(decoded) || new Set(decoded.value.targets.map((target) => target.targetID)).size !== decoded.value.targets.length)
+        if (Option.isNone(decoded) || decoded.value.targets.length > (options?.maxSelection ?? ActivityArm.maxTargets) ||
+          new Set(decoded.value.targets.map((target) => target.targetID)).size !== decoded.value.targets.length)
           return undefined
         const targets = yield* database.db.transaction((tx) => Effect.gen(function* () {
           const rows = yield* Effect.forEach(decoded.value.targets, (target) => tx.select().from(ActivityActionLedgerTable)

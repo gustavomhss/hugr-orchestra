@@ -105,7 +105,7 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
       const { AppProcess } = yield* Effect.promise(() => import("@orchestra/core/process"))
       const processScope = yield* Layer.build(AppNodeBuilder.build(AppProcess.node))
       const processService = Context.get(processScope, AppProcess.Service)
-      return ActivityArmLedger.make(database, ActivityArmObjects.make(database, processService))
+      return ActivityArmLedger.make(database, { ...ActivityArmObjects.make(database, processService), maxSelection: 1 })
     }) : ActivityArmLedger.make(database)
     const stop = process.platform === "win32" ? ActivityStopService.make(database) : undefined
     const custody = process.platform === "win32" ? ActivityQuarantineCustody.make(database) : undefined
