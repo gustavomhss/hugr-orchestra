@@ -293,7 +293,7 @@ async function child() {
     const attack = JSON.parse(await readFile(join(root, "attack-result.json"), "utf8")) as { uid: number; errno?: string; renamed: boolean; sentinel: boolean }
     assert.equal(attack.uid, 65_534, "the replacement attempt must run as the ordinary nobody UID")
     assert.ok(attack.errno === "EACCES" || attack.errno === "EPERM", `kernel must deny source substitution: ${JSON.stringify(attack)}`)
-    assert.equal(attack.renamed, false, "the ordinary same-UID process must not rename the protected source")
+    assert.equal(attack.renamed, false, "the unprivileged nobody process must not rename the protected source")
     assert.equal(attack.sentinel, false, "the ordinary same-UID process must not plant a replacement sentinel")
     const reread = await window!.webContents.executeJavaScript(`window.api.readActivityApply(${JSON.stringify(owned.url)})`) as ActivityApply.State
     assert.equal(reread.results.find((item) => item.targetID === request.targetID && item.generation === request.generation)?.outcome, "Out", "the genuine production reread must report Out")
@@ -304,7 +304,7 @@ async function child() {
     assert.equal(`${moved.dev}:${moved.ino}`, `${original.dev}:${original.ino}`, "quarantine must contain the exact inode captured before confirmation")
     assert.equal(await readFile(join(expectedDestination, "payload"), "utf8"), "untouched fixture\n")
     const saved = db.prepare("SELECT identity, outcome, source, destination FROM activity_apply WHERE target_id = ? AND generation = ?").get(request.targetID, request.generation) as { identity: string; outcome: string; source: string; destination: string } | undefined
-    assert.deepEqual(saved, { identity: `${original.dev}:${original.ino}`, outcome: "Out", source, destination: expectedDestination }, "SQLite must persist the pinned native identity and verified Out receipt")
+    assert.deepEqual({ ...saved }, { identity: `${original.dev}:${original.ino}`, outcome: "Out", source, destination: expectedDestination }, "SQLite must persist the pinned native identity and verified Out receipt")
     const outsideSource = join(root, "outside", "sibling", ".turbo")
     db.prepare("INSERT INTO project_directory (project_id, directory, registration_id, type, strategy, time_created) VALUES (?, ?, ?, 'git_worktree', 'git_worktree', ?)").run("activity-fixture", join(root, "outside", "sibling"), "outside-registration", now)
     const outsideTarget = (await inspect()).ready.find((item) => item.label === outsideSource)
