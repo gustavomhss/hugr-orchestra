@@ -66,6 +66,9 @@ const steps = [
   { name: "TS hardening (bun)", cmd: npx("bun@1", "bindings/node/test/hardening.mjs") },
   { name: "tree identity (bun)", cmd: npx("bun@1", "test", "bindings/node/test/tree-identity.test.ts") },
 
+  { name: "quarantine (bun Windows)", on: ["windows"], cmd: npx("bun@1", "test", "bindings/node/test/quarantine-windows.test.ts") },
+  { name: "selective stop (bun Windows)", on: ["windows"], cmd: npx("bun@1", "test", "bindings/node/test/selective-stop-windows.test.ts") },
+
   // Release only.
   { name: "musl supervisor", on: ["linux"], release: true, cmd: ["cargo", "build", "--release", "-p", "omni-supervisor", "--target", "x86_64-unknown-linux-musl"] },
   { name: "musl supervisor is static", on: ["linux"], release: true, run: () => {
