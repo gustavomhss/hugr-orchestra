@@ -6,8 +6,8 @@ import { AgentV2 } from "@orchestra/core/agent"
 import { BackendToolkit } from "@orchestra/core/backend-toolkit"
 import { Location } from "@orchestra/core/location"
 import { AbsolutePath } from "@orchestra/core/schema"
-import { ReviewOxlintInput } from "@orchestra/core/review-toolkit/packs/oxlint-input"
-import { ReviewPackOxlint } from "@orchestra/core/review-toolkit/packs/oxlint"
+import { ReviewOxlintInput } from "../../../../packages/core/src/review-toolkit/packs/oxlint-input"
+import { ReviewPackOxlint } from "../../../../packages/core/src/review-toolkit/packs/oxlint"
 import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import { ToolSafetySandboxRuntime } from "@orchestra/core/tool-safety-sandbox-runtime"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
@@ -213,8 +213,11 @@ test("qualified oxlint retains both real analyses and native recipes; other host
       }
       const report = decoded(yield* host.invoke(input))
       expect(report.status).toBe("completed")
-      expect(report.report?.findings).toHaveLength(1)
-      const oxlint = report.report?.checks.find((check) => check.pack === "oxlint")
+      const card = report.report
+      const source = report.source
+      if (!card || !source) return yield* Effect.die("completed native report or captured source missing")
+      expect(card.findings).toHaveLength(1)
+      const oxlint = card.checks.find((check) => check.pack === "oxlint")
       const raw = yield* Effect.promise(async () => {
         const directories = await fs.readdir(cache(host, input))
         const files: { name: string; bytes: Buffer }[] = []
@@ -252,8 +255,8 @@ test("qualified oxlint retains both real analyses and native recipes; other host
       expect(analyses[0].routingDigest).not.toBe(analyses[1].routingDigest)
       const finalBody = Schema.decodeUnknownSync(Schema.Struct({ routing: Schema.Struct({ packs: Schema.Array(Schema.Unknown) }) }))(
         JSON.parse(required(evidence.bodies, analyses[1].resultArtifactID).toString("utf8")))
-      expect(finalBody.routing.packs).toEqual(report.report?.routing.packs)
-      expect(report.report?.checks.some((check) => check.pack === "squawk")).toBe(true)
+      expect(finalBody.routing.packs).toEqual(card.routing.packs)
+      expect(card.checks.some((check) => check.pack === "squawk")).toBe(true)
       for (const analysis of analyses) for (const check of analysis.checks.filter((check) => check.pack !== "oxlint")) {
         expect(check).toMatchObject({ status: "not-run", workspaceExecuted: false, reason: "engagement-evidence-scope-unqualified", artifactIDs: [], proofIDs: [] })
         expect(report.notExamined).toContainEqual({ item: `analyze:${check.id}`, reason: "engagement-evidence-scope-unqualified" })
@@ -291,14 +294,16 @@ test("qualified oxlint retains both real analyses and native recipes; other host
             files: Schema.Array(Schema.Struct({ path: Schema.String, oid: Schema.String, sha256: Schema.String,
               bytes: Schema.Number, encoding: Schema.Literal("base64"), data: Schema.String })),
           }))(JSON.parse(required(evidence.bodies, proof.inputsArtifactID).toString("utf8")), { onExcessProperty: "error" })
-          expect(inputs.sourceSha256).toBe(report.source?.sha256)
+          expect(inputs.sourceSha256).toBe(source.sha256)
           expect(inputs.files.map((file) => file.path)).toEqual([sourcePath, broken].sort())
           for (const file of inputs.files) {
             const bytes = Buffer.from(file.data, "base64")
             expect(bytes.toString("utf8")).toBe(file.path === sourcePath ? sourceText : "debugger;\n")
             expect(file.sha256).toBe(digest(bytes))
             expect(file.bytes).toBe(bytes.length)
-            expect(file.oid).toBe(report.source?.files.find((source) => source.path === file.path)?.oid)
+            const captured = source.files.find((source) => source.path === file.path)
+            if (!captured) return yield* Effect.die("producer input absent from the captured source manifest")
+            expect(file.oid).toBe(captured.oid)
           }
           const config = required(evidence.bodies, proof.configArtifactID)
           expect(JSON.parse(config.toString("utf8"))).toEqual({ plugins: ["eslint", "typescript"],
@@ -313,7 +318,7 @@ test("qualified oxlint retains both real analyses and native recipes; other host
             limits: Schema.Struct({ timeoutMs: Schema.Number, maxBytes: Schema.Number, maxRssBytes: Schema.Number }),
           }))(JSON.parse(required(evidence.bodies, proof.recipeArtifactID).toString("utf8")), { onExcessProperty: "error" })
           expect(recipe).toMatchObject({ analysisOperationID: analysis.operationID, invocationID: proof.invocationID,
-            sourceSha256: report.source?.sha256, side: proof.side, pack: "oxlint", template: "oxlint-host-sarif",
+            sourceSha256: source.sha256, side: proof.side, pack: "oxlint", template: "oxlint-host-sarif",
             runtime: proof.runtime, config: { sha256: digest(config), bytes: config.length },
             invocation: { cwd: "projection", environment: "oxlint-host-sanitized-v1", network: false, repositoryExecution: false, write: [] } })
           expect(recipe.files).toEqual(inputs.files.map(({ path, oid, sha256, bytes }) => ({ path, oid, sha256, bytes })))

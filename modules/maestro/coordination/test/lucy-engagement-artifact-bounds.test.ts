@@ -69,7 +69,7 @@ test("128 actual completed CODE queries fit; the 129th cannot publish a partial 
         expect(calls.every((call) => call.body.includes("sharedValue"))).toBe(true)
         expect(calls.every((call) => !call.body.includes("ENGAGEMENT-OUTSIDE"))).toBe(true)
         observed = true
-      })
+      }).pipe(Effect.orDie)
       const input = request("real-operation-bound")
       expect(input.timeBoxMinutes).toBe(5)
       const output = yield* host.invoke(input)
