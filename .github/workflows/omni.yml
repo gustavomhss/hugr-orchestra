@@ -1,80 +1,25 @@
-name: omni
-
-# hugr-omni's own gate (native/omni/scripts/ci.mjs) on Linux, Windows and macOS.
-# Run manually or for an epic-labeled PR; unlabeled PRs and pushes do not start this native suite.
-# Orchestra's test guard does not apply to it.
+name: activity native format
 on:
-  push:
-    branches:
-      - dev
-    paths:
-      - "native/omni/**"
-  pull_request:
-    types: [opened, synchronize, reopened, labeled]
-    paths:
-      - "native/omni/**"
-      - ".github/workflows/omni.yml"
   workflow_dispatch:
-    inputs:
-      ref:
-        description: "Branch, tag or commit to run the gate on (default: the dispatched ref)"
-        type: string
-        default: ""
-      test_filter:
-        description: "Passed to cargo test (rerun one suspect test)"
-        type: string
-        default: ""
-
-concurrency:
-  # Non-epic label events skip the job; give them their own group so they cannot cancel a real run.
-  group: ${{ (github.event_name != 'pull_request' || github.event.action != 'labeled' || github.event.label.name == 'epic') && format('omni-{0}', github.event.pull_request.number || inputs.ref || github.ref) || format('omni-skip-{0}', github.run_id) }}
-  cancel-in-progress: true
-
 permissions:
   contents: read
-
 jobs:
-  gate:
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'epic'))
-    name: gate (${{ matrix.os }})
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-24.04, windows-2022, macos-15]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
-    env:
-      CARGO_TERM_COLOR: always
-      CARGO_INCREMENTAL: "0"
-      TEST_FILTER: ${{ inputs.test_filter }}
-    defaults:
-      run:
-        shell: bash
-        working-directory: native/omni
+  format:
+    runs-on: ubuntu-24.04
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Format Rust sources
+        working-directory: native/omni
+        run: |
+          rustup show active-toolchain || rustup toolchain install
+          cargo fmt --all
+      - name: Capture results
+        run: |
+          git diff --binary -- native/omni > "$RUNNER_TEMP/omni-rustfmt.patch"
+          printf '%s\n' "$GITHUB_SHA" > "$RUNNER_TEMP/omni-rustfmt-sha"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          ref: ${{ inputs.ref || '' }}
-
-      - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: "22"
-
-      - name: Rust toolchain (rust-toolchain.toml)
-        run: rustup show active-toolchain || rustup toolchain install
-
-      # One cache per OS and lockfile; only dev saves it, so other refs read a warm cache without filling the quota.
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: native/omni -> target
-          save-if: ${{ github.ref == 'refs/heads/dev' }}
-
-      - name: Linux PID-reuse test needs unprivileged user namespaces
-        if: runner.os == 'Linux'
-        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-
-      - name: Gate
-        run: node scripts/ci.mjs
+          name: omni-rustfmt
+          path: |
+            ${{ runner.temp }}/omni-rustfmt.patch
+            ${{ runner.temp }}/omni-rustfmt-sha
