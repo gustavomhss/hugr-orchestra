@@ -7,7 +7,7 @@ import { Flag } from "@orchestra/core/flag/flag"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { PermissionSaved } from "@orchestra/core/permission/saved"
 import { SessionV2 } from "@orchestra/core/session"
-import { Context, Effect, Layer, Option } from "effect"
+import { Context, Effect, Layer, Option, Scope } from "effect"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
 import { createServer } from "node:http"
 import { writeSync } from "node:fs"
@@ -39,8 +39,8 @@ export type ServeInput = {
   readonly register: boolean
   readonly cors?: ReadonlyArray<string>
   readonly allowedHosts?: ReadonlyArray<string>
-  /** Runs once the server answers, with the address it bound. */
-  readonly onListening?: (address: HttpServer.Address, webRoot: string | undefined) => Effect.Effect<void, unknown, ChildProcessSpawner>
+  /** Runs once the server answers, within the serving scope. */
+  readonly onListening?: (address: HttpServer.Address, webRoot: string | undefined) => Effect.Effect<void, unknown, ChildProcessSpawner | Scope.Scope>
 }
 
 /** The directory of the built web UI, when this install has one. */

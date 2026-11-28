@@ -114,6 +114,7 @@ jobs:
         run: |
           set -euo pipefail
           uid=$(id -u)
+          test "$uid" -ne 0
           unit="orchestra-activity-fixture-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
           cg="/sys/fs/cgroup/$unit"
           bin="/run/orchestra/$unit"
@@ -156,7 +157,7 @@ jobs:
         run: bun test ./test/activity-isolated-supervisor.hosted.ts
       - name: Exercise the Desktop confirmation and member controls
         working-directory: apps/desktop
-        run: xvfb-run -a bun test ./test/activity-freeze-sidecar-e2e.hosted.ts
+        run: xvfb-run -a bun run ./test/activity-freeze-sidecar-e2e.hosted.ts
       - name: Collect supervisor diagnostics and remove the fixture
         if: always() && env.ACTIVITY_OMNI_UNIT != ''
         shell: bash
