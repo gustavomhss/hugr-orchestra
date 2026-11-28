@@ -1,0 +1,666 @@
+{
+  "schema": "genesis-omni-review-evidence-matrix/v1",
+  "baseline_ref": "origin/genesis-external-omni-393",
+  "baseline_commit": "bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20",
+  "review_refs": [
+    "origin/genesis-omni-review-1-20261114",
+    "origin/genesis-omni-review-2-20261114",
+    "origin/genesis-omni-review-3-20261114",
+    "origin/genesis-omni-review-4-20261114",
+    "origin/genesis-omni-review-5-20261114"
+  ],
+  "formal_pair_count": 9,
+  "formal_pair_source_record_count": 84,
+  "formal_pair_ids": [
+    "C01",
+    "C02",
+    "C03",
+    "C04",
+    "C05",
+    "C06",
+    "C07",
+    "C08",
+    "C09"
+  ],
+  "scope_note": "Public Git evidence only; consultative notes are not J1/J2 votes. C11 private activity is unknown. No source bodies authored or modified.",
+  "criteria": [
+    {
+      "id": "C01",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-01.v2.json",
+      "body_version": "v2",
+      "body_git_blob_sha": "0122ab915cfda56ef67ddaf76de6479f416bf673",
+      "formal_receipts": [
+        {
+          "judge": "J1",
+          "ref": "reviews/C01v2-J1-summary.json",
+          "verdict": "PASS",
+          "packet": "C01v2",
+          "artifact_sha256": "88d3b68a0f9744b2351d7930c5e4cdfe0b7db86d6c8a2d7a2597a0f8c18aac34"
+        },
+        {
+          "judge": "J2",
+          "ref": "reviews/C01v2-J2-summary.json",
+          "verdict": "PASS",
+          "packet": "C01v2",
+          "artifact_sha256": "88d3b68a0f9744b2351d7930c5e4cdfe0b7db86d6c8a2d7a2597a0f8c18aac34"
+        }
+      ],
+      "consultative_only": null,
+      "gap_reason": "None for dual L1 review; whole-L1 acceptance remains open."
+    },
+    {
+      "id": "C02",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-02.v3.json",
+      "body_version": "v3",
+      "body_git_blob_sha": "c8da2fcc9c99dbe8adc4609bb685ff87e4cfaf38",
+      "formal_receipts": [
+        {
+          "judge": "J1",
+          "ref": "reviews/C02v3-J1-summary.json",
+          "verdict": "PASS",
+          "packet": "C02v3",
+          "artifact_sha256": "8c6515b455eba0637b66a6999c83c7c80b2a0624720680034e62d5b450c2f913"
+        },
+        {
+          "judge": "J2",
+          "ref": "reviews/C02v3-J2-summary.json",
+          "verdict": "PASS",
+          "packet": "C02v3",
+          "artifact_sha256": "8c6515b455eba0637b66a6999c83c7c80b2a0624720680034e62d5b450c2f913"
+        }
+      ],
+      "consultative_only": null,
+      "gap_reason": "None for dual L1 review; whole-L1 acceptance remains open."
+    },
+    {
+      "id": "C03",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-03.v2.json",
+      "body_version": "v2",
+      "body_git_blob_sha": "8bf575994c7ae93eca1efa17c3ef78de619636be",
+      "formal_receipts": [
+        {
+          "judge": "J1",
+          "ref": "reviews/C03v2-J1-summary.json",
+          "verdict": "PASS",
+          "packet": "C03v2",
+          "artifact_sha256": "8ab72d5a47eeac42eaca7bfc0b2a43af3d4a466c07f90fd35c71048f299f6b4e"
+        },
+        {
+          "judge": "J2",
+          "ref": "reviews/C03v2-J2-summary.json",
+          "verdict": "PASS",
+          "packet": "C03v2",
+          "artifact_sha256": "8ab72d5a47eeac42eaca7bfc0b2a43af3d4a466c07f90fd35c71048f299f6b4e"
+        }
+      ],
+      "consultative_only": null,
+      "gap_reason": "None for dual L1 review; whole-L1 acceptance remains open."
+    },
+    {
+      "id": "C04",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-04.v2.json",
+      "body_version": "v2",
+      "body_git_blob_sha": "8929e71b0295dbb83c14ee3debb327ad29183e5a",
+      "formal_receipts": [
+        {
+          "judge": "J1",
+          "ref": "reviews/C04v2-J1-summary.json",
+          "verdict": "PASS",
+          "packet": "C04v2",
+          "artifact_sha256": "755803f84794922bcbeab91ab1fc9535b78eac04c4b0ab86bcf277b96114e819"
+        },
+        {
+          "judge": "J2",
+          "ref": "reviews/C04v2-J2-summary.json",
+          "verdict": "PASS",
+          "packet": "C04v2",
+          "artifact_sha256": "755803f84794922bcbeab91ab1fc9535b78eac04c4b0ab86bcf277b96114e819"
+        }
+      ],
+      "consultative_only": null,
+      "gap_reason": "None for dual L1 review; whole-L1 acceptance remains open."
+    },
+    {
+      "id": "C05",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-05.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "21c5e594cd6c3f2efceaab1acfe597ca5bca9c29",
+      "formal_receipts": [
+        {
+          "judge": "J1",
+          "ref": "reviews/C05-J1-summary.json",
+          "verdict": "PASS",
+          "packet": "C05",
+          "artifact_sha256": "2e1caa9eab8be2675a8090c14bf4ebf37443d63bdb957c56ece2ffacdcd2a0d4"
+        },
+        {
+          "judge": "J2",
+          "ref": "reviews/C05-J2-summary.json",
+          "verdict": "PASS",
+          "packet": "C05",
+          "artifact_sha256": "2e1caa9eab8be2675a8090c14bf4ebf37443d63bdb957c56ece2ffacdcd2a0d4"
+        }
+      ],
+      "consultative_only": null,
+      "gap_reason": "None for dual L1 review; whole-L1 acceptance remains open."
+    },
+    {
+      "id": "C06",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-06.v2.json",
+      "body_version": "v2",
+      "body_git_blob_sha": "fc14d319b2c441509a981e565a071d1326693c8b",
+      "formal_receipts": [
+        {
+          "judge": "J1",
+          "ref": "reviews/C06v2-J1-summary.json",
+          "verdict": "PASS",
+          "packet": "C06v2",
+          "artifact_sha256": "875f5ca4644377acdfa957bd48562d58fbdcd1020b73966f423fb4fc67204752"
+        },
+        {
+          "judge": "J2",
+          "ref": "reviews/C06v2-J2-summary.json",
+          "verdict": "PASS",
+          "packet": "C06v2",
+          "artifact_sha256": "875f5ca4644377acdfa957bd48562d58fbdcd1020b73966f423fb4fc67204752"
+        }
+      ],
+      "consultative_only": null,
+      "gap_reason": "None for dual L1 review; whole-L1 acceptance remains open."
+    },
+    {
+      "id": "C07",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-07.v2.json",
+      "body_version": "v2",
+      "body_git_blob_sha": "207070210a4ae3fe0e1bf59683962ccab00f6b33",
+      "formal_receipts": [
+        {
+          "judge": "J1",
+          "ref": "reviews/C07v2-J1-summary.json",
+          "verdict": "PASS",
+          "packet": "C07v2",
+          "artifact_sha256": "1ea62bd5a74a8e5230ac3c1d0ac7478c03f8bb22bdf0d7f11dbc5e3be2e94c25"
+        },
+        {
+          "judge": "J2",
+          "ref": "reviews/C07v2-J2-summary.json",
+          "verdict": "PASS",
+          "packet": "C07v2",
+          "artifact_sha256": "1ea62bd5a74a8e5230ac3c1d0ac7478c03f8bb22bdf0d7f11dbc5e3be2e94c25"
+        }
+      ],
+      "consultative_only": null,
+      "gap_reason": "None for dual L1 review; whole-L1 acceptance remains open."
+    },
+    {
+      "id": "C08",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-08.v2.json",
+      "body_version": "v2",
+      "body_git_blob_sha": "855d209638ff88b7bbfd111b327b9ea175ce648e",
+      "formal_receipts": [
+        {
+          "judge": "J1",
+          "ref": "reviews/C08v2-J1-summary.json",
+          "verdict": "PASS",
+          "packet": "C08v2",
+          "artifact_sha256": "71a5233928ea5aa4eadd749a55b40510e83c881629eb004edcee24034b0b940c"
+        },
+        {
+          "judge": "J2",
+          "ref": "reviews/C08v2-J2-summary.json",
+          "verdict": "PASS",
+          "packet": "C08v2",
+          "artifact_sha256": "71a5233928ea5aa4eadd749a55b40510e83c881629eb004edcee24034b0b940c"
+        }
+      ],
+      "consultative_only": null,
+      "gap_reason": "None for dual L1 review; whole-L1 acceptance remains open."
+    },
+    {
+      "id": "C09",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-09.v3.json",
+      "body_version": "v3",
+      "body_git_blob_sha": "94d6fe7c929abc3400784d388b8a71f15fbe7ebe",
+      "formal_receipts": [
+        {
+          "judge": "J1",
+          "ref": "reviews/C09v3-J1-summary.json",
+          "verdict": "PASS",
+          "packet": "C09v3",
+          "artifact_sha256": "53e546b5c1a628577bbaa136a4c2349f084668afd371318138cc4f0f0bd7fdc6"
+        },
+        {
+          "judge": "J2",
+          "ref": "reviews/C09v3-J2-summary.json",
+          "verdict": "PASS",
+          "packet": "C09v3",
+          "artifact_sha256": "53e546b5c1a628577bbaa136a4c2349f084668afd371318138cc4f0f0bd7fdc6"
+        }
+      ],
+      "consultative_only": null,
+      "gap_reason": "None for dual L1 review; whole-L1 acceptance remains open."
+    },
+    {
+      "id": "C10",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-10.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "027f88b11f595df8310f54ee3585f433b5b1d761",
+      "formal_receipts": [
+        {
+          "judge": "J1",
+          "ref": "reviews/C10-v1-interim-summary.json",
+          "verdict": "FIX-FIRST",
+          "packet": "C10-v1"
+        },
+        {
+          "judge": "J2",
+          "ref": "reviews/C10-v1-interim-summary.json",
+          "verdict": "FIX-FIRST",
+          "packet": "C10-v1"
+        }
+      ],
+      "consultative_only": null,
+      "gap_reason": "Same persistent pair requires author correction and re-review; no accepted corrected body."
+    },
+    {
+      "id": "C11",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-11.v2.json",
+      "body_version": "v2",
+      "body_git_blob_sha": "c19e0b52fed66445bb73c2863da9ac69c483bac2",
+      "formal_receipts": [],
+      "consultative_only": null,
+      "gap_reason": "No public final J1/J2 summary found; transport/order reconciliation is not a verdict."
+    },
+    {
+      "id": "C12",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-12.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "ec43b75b622c84d33b9354ca283ea55cdf7ad2b1",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-2-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-2/REVIEW.md",
+          "kind": "consultative"
+        }
+      },
+      "gap_reason": "Consultative material is not formal same-pair J1/J2 judgment; exact body still awaits formal verdicts."
+    },
+    {
+      "id": "C13",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-13.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "2076e16cf2860ef3c124227cc1da70b992777ae9",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-2-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-2/ROUND-2-positions-13-14.md",
+          "kind": "consultative"
+        }
+      },
+      "gap_reason": "Consultative material is not formal same-pair J1/J2 judgment; exact body still awaits formal verdicts."
+    },
+    {
+      "id": "C14",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-14.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "9c2d4f517056a50ff3971b0713bc83d7eca38f6e",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-2-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-2/ROUND-2-positions-13-14.md",
+          "kind": "consultative"
+        }
+      },
+      "gap_reason": "Consultative material is not formal same-pair J1/J2 judgment; exact body still awaits formal verdicts."
+    },
+    {
+      "id": "C15",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-15.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "5e5ddae28f144af083e2c30695812bed9b9d35c7",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-unit-c15-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-unit-c15/HANDOFF.md",
+          "kind": "consultative"
+        },
+        "commit": "4a660969000b83622693f83d183bca44c03c3951"
+      },
+      "gap_reason": "Consultative material is not formal same-pair J1/J2 judgment; exact body still awaits formal verdicts."
+    },
+    {
+      "id": "C16",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-16.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "6fe4ee6c82cd0db448ec239c0bb365c9cfa7f9b8",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-unit-c16-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-unit-c16/HANDOFF.md",
+          "kind": "consultative"
+        },
+        "commit": "df88612b919816e37323ce07cdb46133107024c0"
+      },
+      "gap_reason": "Consultative material is not formal same-pair J1/J2 judgment; exact body still awaits formal verdicts."
+    },
+    {
+      "id": "C17",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-17.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "68297d120d8c4b3a63afe2382bb5b259d52dd707",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-3-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-3-20261114/REVIEW.md",
+          "kind": "consultative"
+        }
+      },
+      "gap_reason": "Consultative material is not formal same-pair J1/J2 judgment; exact body still awaits formal verdicts."
+    },
+    {
+      "id": "C18",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-18.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "a514896bf2883f7a8a667d7b61e2ea2fa5278645",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-3-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-3-20261114/REVIEW.md",
+          "kind": "consultative"
+        }
+      },
+      "gap_reason": "Consultative material is not formal same-pair J1/J2 judgment; exact body still awaits formal verdicts."
+    },
+    {
+      "id": "C19",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/surface/records-01.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "9b55a9f873eb6fc10e59a25588bd8b9c8742a77d",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-3-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-3-20261114/REVIEW.md",
+          "kind": "consultative"
+        }
+      },
+      "gap_reason": "Consultative material is not formal same-pair J1/J2 judgment; exact body still awaits formal verdicts."
+    },
+    {
+      "id": "C20",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/surface/records-02.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "b404cca79f3c5676f45e8b3d931066ad03dbf678",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-3-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-3-20261114/REVIEW.md",
+          "kind": "consultative"
+        }
+      },
+      "gap_reason": "Consultative material is not formal same-pair J1/J2 judgment; exact body still awaits formal verdicts."
+    },
+    {
+      "id": "C21",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/surface/records-03.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "8d3b61c0691ee6b0d584a400360a7e2f3c92f0c0",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-3-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-3-20261114/REVIEW.md",
+          "kind": "consultative"
+        },
+        "commit": "b3fe7f8e46791ed7cbcd841e2bf3ae99b7c4b62d"
+      },
+      "gap_reason": "Review-3 contains consultative review; dedicated Surface-03 unit branch is BLOCKED to avoid duplicate work. No formal J1/J2 verdict."
+    },
+    {
+      "id": "C22",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/surface/records-04.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "f6190bb5f3607edf22101e5e995d13d9f4cf1b7d",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-3-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-3-20261114/REVIEW.md",
+          "kind": "consultative"
+        }
+      },
+      "gap_reason": "Consultative material is not formal same-pair J1/J2 judgment; exact body still awaits formal verdicts."
+    },
+    {
+      "id": "C23",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/surface/records-05.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "36144e88d1d7230fb7754c68a10b09007d092abb",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-3-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-3-20261114/REVIEW.md",
+          "kind": "consultative"
+        }
+      },
+      "gap_reason": "Consultative material is not formal same-pair J1/J2 judgment; exact body still awaits formal verdicts."
+    },
+    {
+      "id": "C24",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/surface/records-06.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "5fbc746c327eb8c1b3d0d3c5f264679c56f6c9bc",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-3-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-3-20261114/REVIEW.md",
+          "kind": "consultative"
+        }
+      },
+      "gap_reason": "Consultative material is not formal same-pair J1/J2 judgment; exact body still awaits formal verdicts."
+    },
+    {
+      "id": "C25",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/surface/records-07.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "2f9d2091897b8dc0395f8a0da1c7bc4a1c3de2ea",
+      "formal_receipts": [],
+      "consultative_only": null,
+      "gap_reason": "Reserved in review-4 range 25\u201331; handoff marks this body pending, with no consultative verdict or formal J1/J2 receipt. Reconcile current ownership before dispatch."
+    },
+    {
+      "id": "C26",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/surface/records-08.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "bb5bc816c5032236d5aa5dd84b86090293cd4b07",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-4-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-4/position-26-review.md",
+          "kind": "consultative"
+        }
+      },
+      "gap_reason": "Consultative material is not formal same-pair J1/J2 judgment; exact body still awaits formal verdicts."
+    },
+    {
+      "id": "C27",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/surface/records-09.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "71b262fc679abdfb76fa3d5a2ab35bd1a670992b",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-4-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-4/position-27-review.md",
+          "kind": "consultative"
+        }
+      },
+      "gap_reason": "Consultative material is not formal same-pair J1/J2 judgment; exact body still awaits formal verdicts."
+    },
+    {
+      "id": "C28",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/surface/records-10.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "3473f6001beb1eadf305cd940e9c320f3459c69d",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-4-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-4/position-28-review.md",
+          "kind": "consultative"
+        }
+      },
+      "gap_reason": "Consultative material is not formal same-pair J1/J2 judgment; exact body still awaits formal verdicts."
+    },
+    {
+      "id": "C29",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/validation/records-01.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "d7ec3e7209ca0fd2c02d376e51aa8433547cb355",
+      "formal_receipts": [],
+      "consultative_only": null,
+      "gap_reason": "Reserved in review-4 range 25\u201331; handoff marks this body pending, with no consultative verdict or formal J1/J2 receipt. Reconcile current ownership before dispatch."
+    },
+    {
+      "id": "C30",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/validation/records-02.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "9b9ebf58ffac1a2fb9f883c7a1d5a534fe274c0a",
+      "formal_receipts": [],
+      "consultative_only": null,
+      "gap_reason": "Reserved in review-4 range 25\u201331; handoff marks this body pending, with no consultative verdict or formal J1/J2 receipt. Reconcile current ownership before dispatch."
+    },
+    {
+      "id": "C31",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/validation/records-03.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "9ec104e5456c259d75aefba471097e510b05aaab",
+      "formal_receipts": [],
+      "consultative_only": null,
+      "gap_reason": "Reserved in review-4 range 25\u201331; handoff marks this body pending, with no consultative verdict or formal J1/J2 receipt. Reconcile current ownership before dispatch."
+    },
+    {
+      "id": "C32",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/validation/records-04.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "b15d2bfa7202d3e7e605fd864270828e440751c5",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-5-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-5/HANDOFF.md",
+          "kind": "consultative"
+        },
+        "commit": "9ad9f016d7d0817e62c99196874db943574f92ea"
+      },
+      "gap_reason": "Consultative material is not formal same-pair J1/J2 judgment; exact body still awaits formal verdicts."
+    },
+    {
+      "id": "C33",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/validation/records-05.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "1721d3231b59a2943e678d060325bafa8ea142bf",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-5-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-5/HANDOFF.md",
+          "kind": "consultative"
+        },
+        "commit": "9ad9f016d7d0817e62c99196874db943574f92ea"
+      },
+      "gap_reason": "Consultative material is not formal same-pair J1/J2 judgment; exact body still awaits formal verdicts."
+    },
+    {
+      "id": "C34",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/validation/records-06.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "70d6713a9a7fc9673de17c4e2e3d970f1244c090",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-5-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-5/HANDOFF-RODADA-2-20261114.md",
+          "kind": "consultative"
+        },
+        "commit": "9ad9f016d7d0817e62c99196874db943574f92ea"
+      },
+      "gap_reason": "Consultative material is not formal same-pair J1/J2 judgment; exact body still awaits formal verdicts."
+    },
+    {
+      "id": "C35",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/validation/records-07.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "f74a1245a8eda3fc68e9293e8b935769d8634874",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-5-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-5/HANDOFF-RODADA-2-20261114.md",
+          "kind": "consultative"
+        },
+        "commit": "9ad9f016d7d0817e62c99196874db943574f92ea"
+      },
+      "gap_reason": "Consultative material is not formal same-pair J1/J2 judgment; exact body still awaits formal verdicts."
+    },
+    {
+      "id": "C36",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/validation/records-08.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "d422f6bf225d51d3dc586ea2f500ed703aed7082",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-5-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-5/REVIEW-36-37-20261114.md",
+          "kind": "consultative"
+        },
+        "commit": "9ad9f016d7d0817e62c99196874db943574f92ea"
+      },
+      "gap_reason": "Review-5 has consultative review; dedicated unit branches explicitly say BLOCKED under S5 ownership. No formal J1/J2 verdict."
+    },
+    {
+      "id": "C37",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/validation/records-09.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "5bf6119417203cf834955494207b4db955232d4f",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-review-5-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-review-5/REVIEW-36-37-20261114.md",
+          "kind": "consultative"
+        },
+        "commit": "9ad9f016d7d0817e62c99196874db943574f92ea"
+      },
+      "gap_reason": "Review-5 has consultative review; dedicated unit branches explicitly say BLOCKED under S5 ownership. No formal J1/J2 verdict."
+    },
+    {
+      "id": "C38",
+      "body_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/validation/records-10.json",
+      "body_version": "v1",
+      "body_git_blob_sha": "8000364589af4cb55c73fc8de693771ffd065549",
+      "formal_receipts": [],
+      "consultative_only": {
+        "branch": "origin/genesis-omni-unit-38-20261114",
+        "ref": {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261114-omni-unit-38-20261114/REVIEW.md",
+          "kind": "consultative"
+        },
+        "commit": "0f01a6a70d7b033662afec359a1e39bd8e39c6c7"
+      },
+      "gap_reason": "Review-5 unit-38 branch has consultative review only; formal dual J1/J2 remains pending."
+    }
+  ]
+}

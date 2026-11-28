@@ -1,0 +1,110 @@
+{
+  "schema": "genesis-omni-c10-correction-delta/v1",
+  "status": "AUTHOR_CORRECTION_DRAFT_READY_FOR_FORMAL_REVIEW",
+  "authorship": {
+    "new_authorship": "Codex agent Luna prepared this v2 correction for the bounded recovery task; this is not represented as work by the original CORE producer.",
+    "original_author": "CORE producer, as stated in the public correction request.",
+    "original_author_call_exists": "No original-author call/reply artifact or delivered v2 is present in the examined public Git refs; the public correction request exists.",
+    "judge_receipt_delivery": "No claim that this artifact was delivered to, or received by, the persistent J1/J2 pair."
+  },
+  "source_refs": {
+    "checkpoint_ref": "origin/genesis-external-omni-393",
+    "checkpoint_commit": "bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20",
+    "correction_request_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/history/core/C10-author-corrections-v2.md",
+    "correction_request_blob": "7e0e021e3a23ce90faa45afcd93d0842850d70a8",
+    "correction_request_sha256": "e8388a7f37ec2600c9154ace0a496b6441d42063095674c25871218999d6e324"
+  },
+  "original_body": {
+    "version": "v1",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261113-external-omni-393/bodies/core/records-10.json",
+    "commit": "bdfebdb9fe6b5f2a921aef207cebe33b65cd6d20",
+    "git_blob_sha": "027f88b11f595df8310f54ee3585f433b5b1d761",
+    "sha256": "8f776990fc5d8bb5141ffa034d5fae8d5707d8e72077ee4bb2d4fde7c3805e63",
+    "bytes": 14688
+  },
+  "corrected_body": {
+    "version": "v2",
+    "path": "authors/core/records-10.v2.json",
+    "output_file": "omni-c10-records-10.v2.json",
+    "git_blob_sha": "70bc4b3bbe5eb65735f12721b60306fe95eb277a",
+    "sha256": "157da6ead616fa296c846bf9c5c482fee7bcbbfb80ec9e0897b431d409aa4cc1",
+    "bytes": 14814
+  },
+  "change": {
+    "pointer": "/1/behavior/2",
+    "record_path": "native/omni/crates/hugr-omni/tests/runner/suite.rs",
+    "before": "Tracks passed, pending, executed, filtered and file counts and adds ledger errors for unknown or stale waivers.",
+    "after": "Tracks passed and pending counts; the `ran` count covers every nonfiltered case, including read/load/validation failures before scenario execution; also tracks filtered and file counts and adds ledger errors for unknown or stale waivers.",
+    "replacement_count": 1,
+    "only_changed_json_pointer": "/1/behavior/2",
+    "description": "States that ran counts every nonfiltered case, including read/load/validation failures before scenario execution; no other JSON value or byte changed."
+  },
+  "source_evidence": [
+    {
+      "path": "native/omni/crates/hugr-omni/tests/runner/suite.rs",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "decc807cac6e2f0554130b636d2f36a514a61e96",
+      "sha256": "34f5dc73b80294c02802f4829d356bf59334df4b55bef447090bb9d5f1c23b50",
+      "bytes": 2983,
+      "line_range": [
+        52,
+        65
+      ],
+      "quote": "52:         let result = match loaded {\n53:             Ok(s) if !s.applies() => {\n54:                 sum.other += 1;\n55:                 continue;\n56:             }\n57:             Ok(s) => {\n58:                 tokio::task::LocalSet::new()\n59:                     .run_until(super::run(&s, fixture, sum.ran + 1))\n60:                     .await\n61:             }\n62:             Err(e) => Err(Fail::Harness(format!(\"bad scenario: {e}\"))),\n63:         };\n64:         sum.ran += 1;\n65:         *items.entry(item.clone()).or_insert(true) &= result.is_ok();"
+    },
+    {
+      "path": "native/omni/crates/hugr-omni/tests/teeth.rs",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "git_blob_sha": "ff5019d5d2a142a4fdbdaaf5ec9d9b9a69363be7",
+      "sha256": "c60f4c582fe6fed3f5fdd1934dacafe38eb5431e0d02ae46017e8b8dc3aec7d3",
+      "bytes": 5922,
+      "line_ranges": [
+        [
+          47,
+          48
+        ],
+        [
+          92,
+          98
+        ]
+      ],
+      "quote": "47:     let cases: [(&str, String); 11] = [\n48:         (\"broken-json\", \"{\".into()),\n92:     assert_eq!(\n93:         (sum.passed, sum.pending, sum.ran, sum.files),\n94:         (0, 1, 11, 11),\n95:         \"{:?}\",\n96:         sum.errors\n97:     );\n98:     assert_eq!(sum.errors.len(), 10, \"{:?}\", sum.errors);"
+    }
+  ],
+  "body_source_fingerprints_verified_against_baseline": [
+    {
+      "index": 0,
+      "path": "native/omni/crates/hugr-omni/tests/runner/schema.rs",
+      "git_blob_sha": "c7d04d4eee962ad694a43b93379b2a7bff14a223",
+      "source_sha256": "ffe402bd83ae36c8aea613a6c18e06c1aaa972f89a14b805fd1b56524738dca3",
+      "source_bytes": 9358,
+      "line_count": 255
+    },
+    {
+      "index": 1,
+      "path": "native/omni/crates/hugr-omni/tests/runner/suite.rs",
+      "git_blob_sha": "decc807cac6e2f0554130b636d2f36a514a61e96",
+      "source_sha256": "34f5dc73b80294c02802f4829d356bf59334df4b55bef447090bb9d5f1c23b50",
+      "source_bytes": 2983,
+      "line_count": 84
+    },
+    {
+      "index": 2,
+      "path": "native/omni/crates/hugr-omni/tests/teeth.rs",
+      "git_blob_sha": "ff5019d5d2a142a4fdbdaaf5ec9d9b9a69363be7",
+      "source_sha256": "c60f4c582fe6fed3f5fdd1934dacafe38eb5431e0d02ae46017e8b8dc3aec7d3",
+      "source_bytes": 5922,
+      "line_count": 134
+    }
+  ],
+  "invariants": {
+    "all_source_fingerprints_match_baseline": true,
+    "all_source_fingerprints_unchanged_in_v2": true,
+    "records_0_and_2_byte_values_unchanged": true,
+    "all_fields_other_than_target_string_unchanged": true,
+    "no_optional_fields_changed": true,
+    "no_oracle_read": true,
+    "no_product_source_or_test_execution": true,
+    "no_verdict_issued": true
+  }
+}
