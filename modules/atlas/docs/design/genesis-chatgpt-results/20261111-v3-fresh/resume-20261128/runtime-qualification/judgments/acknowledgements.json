@@ -1,0 +1,35 @@
+{
+  "purpose": "Original non-evaluative acknowledgements; not counted as votes",
+  "j1": [
+    {
+      "channel": "collaboration.send_message",
+      "content": "J1 pronto. Aguardarei os corpos exatos, evidências, critérios Q01–Q07 e o marcador FIM_DO_PACOTE antes de emitir parecer independente."
+    },
+    {
+      "channel": "final",
+      "content": "J1 pronto. Aguardarei o pacote completo e o marcador **FIM_DO_PACOTE** antes de emitir o parecer independente sobre todos os critérios Q01–Q07."
+    },
+    {
+      "channel": "final",
+      "content": "Parte 1/3 recebida: manifesto `runtime-release.json`, SHA256 `6ee7a63a9f913e5882e8e1182cc5eb27a0a9364f361e9a7a3d25f857aea7c854`. Aguardarei o restante do pacote e **FIM_DO_PACOTE**."
+    },
+    {
+      "channel": "final",
+      "content": "Parte 2/3 recebida: `README.md`, SHA256 `959fdbbdd8f78a5aadc63eb4117bd7722f5670ec6d940d46dbff476ae451cfb6`. Aguardarei os critérios, as evidências fixadas e **FIM_DO_PACOTE**."
+    }
+  ],
+  "j2": [
+    {
+      "channel": "final",
+      "content": "Pronto. Aguardarei o marcador **FIM_DO_PACOTE** antes de avaliar Q01–Q07 e emitir o parecer independente, sem usar ferramentas, navegar, delegar, editar ou executar testes."
+    },
+    {
+      "channel": "final",
+      "content": "Parte 1/3 recebida. Aguardo as demais partes e o marcador **FIM_DO_PACOTE** antes de emitir o parecer."
+    },
+    {
+      "channel": "final",
+      "content": "Parte 2/3 recebida. Aguardo o pacote de evidências e critérios com o marcador **FIM_DO_PACOTE**."
+    }
+  ]
+}

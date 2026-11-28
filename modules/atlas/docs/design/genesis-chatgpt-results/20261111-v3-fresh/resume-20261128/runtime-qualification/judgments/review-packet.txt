@@ -1,0 +1,1021 @@
+PARTE 1/3. Corpo exato de runtime-release.json, UTF-8 com newline final. SHA256 6ee7a63a9f913e5882e8e1182cc5eb27a0a9364f361e9a7a3d25f857aea7c854; 19723 bytes. Aguarde FIM_DO_PACOTE.
+<manifest>
+{
+  "schema": "genesis-runtime-release/v1",
+  "release_id": "20261128-s4-runtime-db9b423-prepare-v1",
+  "supersedes": {
+    "release_id": "20261111-v3-fresh-s4-r3",
+    "commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+    "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+    "relationship": "New prepare qualification and candidate-specific common controls; historical r3 bindings and publication proofs remain attached to their original candidates."
+  },
+  "execution_id": "6746cb98-f844-45ae-a604-c638ae7b8094",
+  "branch": "genesis-runtime-resume",
+  "scope": "Runtime S4 / R09: common prepare qualification for complete frozen S1-03 and S2 packages. Excludes the four S4 knowledge L4 reviews, domain binding/publication and production activation.",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "candidate_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "candidate_tree": "3c93c4636c1e4c4b704f8be9314e22b2149e5609",
+  "qualification_revision": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+  "identity_note": "candidate_revision is the executed runtime. qualification_revision is the harness checkout. artifact_revision is carried by handoff.json after payload creation. Never treat a documentation commit as tested runtime code.",
+  "transport_contract_ref": {
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "path": ".orchestra/skills/execute-genesis/references/transport.md",
+    "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+  },
+  "runtime_identity": {
+    "runtime_package_trees": [
+      {
+        "path": "modules/atlas/packages/adapter-io",
+        "git_tree_sha": "2d60573b773b9069bc97269e698874d57fccb42d"
+      },
+      {
+        "path": "modules/atlas/packages/contracts",
+        "git_tree_sha": "316da8f057e0860e4f3108a7de0f763de9ed6a93"
+      },
+      {
+        "path": "modules/atlas/packages/kernel",
+        "git_tree_sha": "957c6d1e5331f733614a975444c8d9c9ec973eaa"
+      },
+      {
+        "path": "modules/atlas/packages/knowledge",
+        "git_tree_sha": "b4b314257e4f32589827c4e32da228af3ce02cfd"
+      }
+    ],
+    "lockfile_blob": "52385ecfa7a9ee21c5ce3918790029687cddfcd0",
+    "tsconfig_blob": "a6cc503f7191410eabd35731c34125fd404050f9",
+    "tsconfig_base_blob": "a1ea42b6351770666502738cc8578ea3946171cb",
+    "observation_identity": "String(id({ kind: 'ownership-source', version: 1, bytes: Array.from(complete_bytes) }))",
+    "identity_algorithm": "Kernel canonicalForm (JCS subset, NFC keys/strings) followed by default BLAKE3; input SHA256 and Git blob SHA1 are separate provenance checks."
+  },
+  "runtime_versions": {
+    "prepare": {
+      "bun": "1.3.14+0d9b296af",
+      "node": "v24.22.3",
+      "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]"
+    },
+    "common_ci": {
+      "bun": "1.3.14+0d9b296af",
+      "node": "v24.22.2",
+      "runner": "ubuntu-24.04"
+    },
+    "configuration_note": "Repository setup pins Bun1.3.14; Node24 resolved to24.22.2 in common CI and24.22.3 in new preparation. Common tests were not rerun on Node24.22.3."
+  },
+  "input_lock": {
+    "path": "input-lock.json",
+    "sha256": "ac8fc01cffe55a40a3005890cd8f40dfd33fdc6720111412c980c2486bbe6430",
+    "byte_length": 620761,
+    "commit": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c"
+  },
+  "qualification_harness": {
+    "path": "qualification.py",
+    "sha256": "71a6da5ea4279ec274051a92425dbec9d2636f6a5541e689d82adfef18ca249e",
+    "byte_length": 28632,
+    "commit": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c"
+  },
+  "qualification_workflow": {
+    "path": ".github/workflows/genesis-runtime-qualification.yml",
+    "sha256": "57162fb295d127e690aa3954f97d523d9a7484f006f2fca60f8d8c2cf7adb22c",
+    "byte_length": 4846,
+    "commit": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c"
+  },
+  "entrypoints": [
+    {
+      "operation": "prepare",
+      "cwd": "modules/atlas at candidate_revision",
+      "argv": [
+        "bun",
+        "scripts/genesis-native.ts",
+        "prepare",
+        "<new-isolated-source-root>",
+        "<package-relative-to-root>",
+        "<new-external-output-file>"
+      ],
+      "setup": [
+        "npm ci",
+        "bun typecheck"
+      ],
+      "input": "genesis-native-package/v1, exact complete source/transport files from input-lock",
+      "output": "genesis-native-prepared/v1 plus isolated CAS",
+      "actual_argv_receipts": [
+        {
+          "path": "evidence/run-46114652347/s1-03/receipt.json",
+          "sha256": "35731d5007c9f76f317268215a14286b521349488e400c4d37de50a5361890bc",
+          "byte_length": 1886
+        },
+        {
+          "path": "evidence/run-46114652347/s2/receipt.json",
+          "sha256": "b516701e92c833240828b894363438f1e38755a2206637fcffd2cd2ffa00fece",
+          "byte_length": 1844
+        }
+      ],
+      "reproduction": "README.md"
+    }
+  ],
+  "isolated_state_rules": [
+    "Real detached runtime worktree at candidate_revision; data worktrees are separate --no-checkout worktrees at source_revision with exact pinned overlays.",
+    "No inherited .atlas; separate S1-03, S2 and disposable refusal roots; outputs outside runtime and data roots. Never share served state.",
+    "Every source/reference/body is verified by effective commit/path, Git blob, full SHA256 and length; source_ref.commit syntax alone is not provenance.",
+    "Candidate IDs include absolute root and observed HEAD. Prepare fresh candidates and exact new bindings for each consumer root; never transplant CI candidate approval.",
+    "Use exclusive new output files (wx) and keep the input copy stable during execution."
+  ],
+  "authority_prerequisites": [
+    "This release authorizes no production operation. User assignment authorized isolated prepare qualification only.",
+    "Prepare writes CAS without creating policy, actor, credentials, projection or approval.",
+    "Domain publication requires preserved semantic acceptance, two actual exact runtime-import-binding decisions and existing policy authorizing the real actor/ratifier.",
+    "Merge and activation remain Gustavo decisions; no PR, merge or activation performed."
+  ],
+  "known_limits": {
+    "ownership_input_max_bytes": 2097152,
+    "native_transport_reference_body_max_bytes": 8388608,
+    "cas_read_max_bytes": 67108864,
+    "stream_chunk_bytes": 8192,
+    "source_file_kind": "regular files only; symlinks in any component refused",
+    "unavailable_vs_absent": "oversize, access/read failures and unobservable roots produce unavailable at observer; absent needs corroborated negative lookup",
+    "universal_race_freedom": false,
+    "cross_package_build_dependencies_supported": false,
+    "implementation_hash_coverage": "candidate.implementation hashes only direct adapter, format, io, binding files; full runtime SHA/tree and transitive package/dependency pins must be recorded outside candidate."
+  },
+  "additional_limits": [
+    "Materializer is scoped to the two locked file: input packages; it is not a generic memberships importer.",
+    "No universal hostile-rename atomicity, arbitrary power-loss, distributed concurrency or cryptographic reviewer-authentication guarantee.",
+    "Common historical CI archives expired; preserved original job log and extracted observations support reuse. Historical origin/dev SHA is unknown.",
+    "Qualified prepare does not establish domain maintenance, binding, publication, index/read or independent consumer completion."
+  ],
+  "capabilities": {
+    "native_import": {
+      "state": "PROVEN",
+      "operation": "prepare",
+      "candidate_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "scope": [
+        "complete S1-03: 12 artifacts, 694 observations, six formerly oversized inputs",
+        "complete S2: 13 artifacts, 626 observations, three large inputs"
+      ],
+      "results": "package_results",
+      "limit": "Preparation only; candidates are bound to their original roots and observed HEAD."
+    },
+    "real_permission_refusal": {
+      "state": "PROVEN",
+      "candidate_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "receipt": {
+        "path": "evidence/run-46114652347/s2-permission-refusal/receipt.json",
+        "sha256": "693b5174b6ee42ce0a1b948b2fc10e98563ce872c20e40322a02797a13801958",
+        "byte_length": 1732
+      },
+      "result": "uid1001, chmod000, genuine PermissionError/EACCES, exit1, no candidate; restored permissions and both positive roots unchanged"
+    },
+    "runtime_binding": {
+      "state": "NOT_RUN",
+      "scope": "Complete S1-03/S2 candidates",
+      "owner": "Consuming domain session",
+      "reason": "Requires two new exact domain binding decisions; release qualification judges are not binding approvals."
+    },
+    "governed_publication": {
+      "state": "NOT_RUN",
+      "scope": "Complete S1-03/S2 candidates",
+      "owner": "Consuming domain session",
+      "reason": "Requires exact domain binding and real policy/actor authority. No policy or actor was created here."
+    },
+    "index": {
+      "state": "NOT_RUN",
+      "scope": "Complete S1-03/S2 candidates",
+      "reason": "Requires the domain publication and its actual index query."
+    },
+    "read": {
+      "state": "NOT_RUN",
+      "scope": "Complete S1-03/S2 candidates",
+      "reason": "Requires the domain publication and independent domain consumer."
+    },
+    "common_input_boundaries": {
+      "state": "PROVEN",
+      "candidate_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "scope": "Named synthetic common runtime controls on db9b423, reused from run43343953480; not a new full-domain execution or semantic/binding approval.",
+      "cases": [
+        "exact2097152 accepted",
+        "2097153 unavailable/refused",
+        "last-byte drift detected",
+        "legacy v1 identities at256000/256001/1131057",
+        "BOM/CRLF/binary full-byte identity"
+      ],
+      "evidence": "gate_refs[atlas-pilot-common]"
+    },
+    "common_cache_reuse_and_affected_rebuild": {
+      "state": "PROVEN",
+      "candidate_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "scope": "Named synthetic common runtime controls on db9b423, reused from run43343953480; not a new full-domain execution or semantic/binding approval.",
+      "cases": [
+        "unchanged valid result reuse",
+        "affected propagation and required dependencies",
+        "22 named failing mutations rejected"
+      ],
+      "evidence": "gate_refs[atlas-pilot-common]"
+    },
+    "common_failure_resume_and_history": {
+      "state": "PROVEN",
+      "candidate_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "scope": "Named synthetic common runtime controls on db9b423, reused from run43343953480; not a new full-domain execution or semantic/binding approval.",
+      "cases": [
+        "durable CAS resume",
+        "HOLD after source drift and failed activation",
+        "incompatible rollback rejected",
+        "old approval/transport cannot replace newly accepted scope",
+        "explicit historical access and main-reader/activation overlap"
+      ],
+      "evidence": "gate_refs[atlas-pilot-common]"
+    }
+  },
+  "package_results": [
+    {
+      "id": "S1-03",
+      "payload_commit": "2e5b1ff067c85c66647492a9d27af5d535d4cd7e",
+      "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/native-package.json",
+      "package_sha256": "ddada3d4b67cff13ef3a5817b95efc275b0d288061436546c8ec6b73290766a6",
+      "materialized_file_count": 733,
+      "prepare_state": "PROVEN",
+      "actual_artifact_count": 12,
+      "declared_unique_inputs": 694,
+      "actual_observation_count": 694,
+      "large_input_count": 6,
+      "candidate_id": "2b8ba73187422ee5740f58dbcb32d3912fc9e7449d8cd5cc0efe75bd2fc34c09",
+      "root": "/home/runner/work/_temp/genesis-runtime-46114652347-1/data/s1-03",
+      "observed_head": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "prepared_output": {
+        "archive": "evidence/run-46114652347/prepare.zip",
+        "member": "s1-03/prepared.json",
+        "sha256": "99db44ec586957f8abc7e815c37f858f4205b62824d73eb47816445e55bff1af",
+        "byte_length": 464043
+      },
+      "operation_receipt": {
+        "path": "evidence/run-46114652347/s1-03/receipt.json",
+        "sha256": "35731d5007c9f76f317268215a14286b521349488e400c4d37de50a5361890bc",
+        "byte_length": 1886
+      },
+      "materialization": {
+        "archive": "evidence/run-46114652347/prepare.zip",
+        "member": "s1-03-materialization.json",
+        "sha256": "22b3c1485d9b7fa8b2c3e3f0288f93235c3441dce321773fe7115d206d1181b9"
+      },
+      "kernel_checks": {
+        "count": 707,
+        "all_equal": true,
+        "archive": "evidence/run-46114652347/prepare.zip",
+        "member": "s1-03/kernel-identities.json",
+        "sha256": "72c6d0a630b68a7e92e8ffe93e48a261ca5d24dfc197b6f58622187c6987c386"
+      },
+      "cas_inventory_sha256": "ed6e6e508d8d6e0b41c00b436841df8c83e414c8f8a8e80dc338b2de69dae0e7"
+    },
+    {
+      "id": "S2",
+      "payload_commit": "d1e635ed5e316b8d5d59650432268e3e81d8aff0",
+      "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json",
+      "package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+      "materialized_file_count": 667,
+      "prepare_state": "PROVEN",
+      "actual_artifact_count": 13,
+      "declared_unique_inputs": 625,
+      "actual_observation_count": 626,
+      "large_input_count": 3,
+      "candidate_id": "b8715607230a23d0bcbea34e91a43cae2935d9db257cf7dab4bd54c31d1d71f6",
+      "root": "/home/runner/work/_temp/genesis-runtime-46114652347-1/data/s2",
+      "observed_head": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "prepared_output": {
+        "archive": "evidence/run-46114652347/prepare.zip",
+        "member": "s2/prepared.json",
+        "sha256": "9c2f896b3b87c0f7bb7a881ba13d2d8c4098da80fe446e0cc99e2bcfc7ea88c3",
+        "byte_length": 344758
+      },
+      "operation_receipt": {
+        "path": "evidence/run-46114652347/s2/receipt.json",
+        "sha256": "b516701e92c833240828b894363438f1e38755a2206637fcffd2cd2ffa00fece",
+        "byte_length": 1844
+      },
+      "materialization": {
+        "archive": "evidence/run-46114652347/prepare.zip",
+        "member": "s2-materialization.json",
+        "sha256": "e4d8803ebc14f11dbc835d7fb8921fb215fd5812cd10ef0b67e3b7deb138ea67"
+      },
+      "kernel_checks": {
+        "count": 640,
+        "all_equal": true,
+        "archive": "evidence/run-46114652347/prepare.zip",
+        "member": "s2/kernel-identities.json",
+        "sha256": "766f851d3ec3579b9b2ab8d51c357930d946b0a35832dd9da9e7ab146a8fb0b2"
+      },
+      "cas_inventory_sha256": "244be4720771c8254938601e3a25fa2d7315f7327c529ed01a25e29e7f08f91b"
+    }
+  ],
+  "gate_refs": [
+    {
+      "gate": "atlas-pilot-common",
+      "state": "PROVEN",
+      "candidate_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "run_id": 43343953480,
+      "job_id": 131618674434,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43343953480",
+      "workflow_blob": "e4a3036ffecd684d52c70a4c8cd346be9601e5c3",
+      "results": {
+        "test_files": 27,
+        "tests_passed": 278,
+        "tests_failed": 0,
+        "named_mutants": 22,
+        "mutation_step": "success",
+        "typecheck": "success",
+        "parse_maintenance": "success",
+        "boundary_generate": "success",
+        "guards": {
+          "exit_code": 0,
+          "rules": 78,
+          "changed_paths": 1446,
+          "gate_findings": 0,
+          "warnings": 4,
+          "errors": 0,
+          "base_ref": "origin/dev",
+          "base_sha_not_recorded_in_retrieved_evidence": true
+        }
+      },
+      "evidence": {
+        "path": "evidence/reused-ci.json",
+        "sha256": "171dfc0f5448882f63ee6c45baee7a253312a2345628e088d5ae354f49c6251a",
+        "byte_length": 27414,
+        "commit": "e9d5033951ba4237f11e9ff7a9582ec5c98ff48c"
+      }
+    },
+    {
+      "gate": "complete-packages-and-real-refusal",
+      "state": "PROVEN",
+      "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "harness_revision": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+      "run_id": 46114652347,
+      "job_id": 140885629636,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46114652347",
+      "summary": {
+        "path": "evidence/run-46114652347/summary.json",
+        "sha256": "82a2c56fa7a5f9313b4be9da9636d423d9f83cc464a983b596ab0369a5cbc636",
+        "byte_length": 11310
+      }
+    },
+    {
+      "gate": "repository-guards",
+      "state": "PROVEN",
+      "candidate_revision": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+      "run_id": 46114652347,
+      "job_id": 140885629534,
+      "argv": [
+        "bun",
+        "run",
+        "check:guards",
+        "--base",
+        "origin/dev"
+      ],
+      "base_sha": "3aaa5e0645f99940b66ee90d28aef93166f09ab1",
+      "exit_code": 0,
+      "rules": 78,
+      "gate_findings": 0,
+      "warnings": 5,
+      "errors": 0,
+      "warning_scope": "Four existing warnings plus binary-added for the preserved first-attempt archive. This gate applies to qualification_revision, not later receipt/documentation-only commits.",
+      "receipt": {
+        "path": "evidence/run-46114652347/guards/receipt.json",
+        "sha256": "f772267689719806bcca71df9d19a1aa3ebbee415f56a82bb505d1f21d295d31",
+        "byte_length": 406
+      }
+    }
+  ],
+  "archives": [
+    {
+      "path": "evidence/run-46114652347/prepare.zip",
+      "sha256": "f1747366c2312c80ff6cd071aea15693ceb14962b3e974f6614ddf450ac14606",
+      "byte_length": 814750,
+      "artifact_id": 15250769935
+    },
+    {
+      "path": "evidence/run-46114652347/guards.zip",
+      "sha256": "7aa2ef46e7126a47ed3ae8cfc15911f092e8f645ac59e96c7ef66f66b13ba461",
+      "byte_length": 1056,
+      "artifact_id": 15251370580
+    }
+  ],
+  "first_attempt": {
+    "state": "FAILED",
+    "run_id": 46114351331,
+    "harness_revision": "e9d5033951ba4237f11e9ff7a9582ec5c98ff48c",
+    "actual": "S1-03 passed. Harness rejected S2 required-key ordering before calling native prepare; S2/refusal were not run.",
+    "correction": "evidence/harness-correction.json",
+    "preserved_original_archive": "evidence/attempt-1/prepare.zip",
+    "resolution": "Q2 checks unique required-key membership separately from artifact execution order, matching native format; unchanged runtime and locked packages passed full rerun."
+  },
+  "judge_refs": {
+    "purpose": "runtime-release-qualification; not genesis-native-binding-approval/v1",
+    "criteria": "qualification-plan.json",
+    "fixed_packet": "judgments/review-packet.txt",
+    "acceptance": "judgments/acceptance.json",
+    "rule": "Two actual new independent no-tool judges, both covering Q01-Q07 on the same fixed packet; actual identities, exact responses and hashes are recorded in acceptance.json and the sealed handoff."
+  },
+  "usage": {
+    "external_paid_model_calls": 0,
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "history": "Not reset or inferred from current task ledger."
+  },
+  "handoff": "handoff.json",
+  "evidence_base": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification",
+  "path_resolution": "Paths beginning with modules/ or .github/ are repository-root paths. Other path/archive/reproduction fields resolve under evidence_base, in the payload revision identified by handoff.json unless an explicit commit is present."
+}
+</manifest>
+
+PARTE 2/3. Corpo exato de README.md, UTF-8 com newline final. SHA256 959fdbbdd8f78a5aadc63eb4117bd7722f5670ec6d940d46dbff476ae451cfb6; 10428 bytes. Aguarde FIM_DO_PACOTE.
+<readme>
+# Runtime S4: preparação integral de S1-03 e S2
+
+Este handoff qualifica a porta `prepare` do Atlas no código
+`db9b4235022c4df32fe3bfd4faeea8adcd69abb7`.
+O manifesto de descoberta está em
+`../../s4/runtime-release.json` a partir deste diretório.
+Use o SHA completo do runtime; o commit que transporta esta documentação não é
+o candidato de código executado.
+
+## Identidades que devem acompanhar cada execução
+
+| Papel | Revisão |
+| --- | --- |
+| Runtime comum | `db9b4235022c4df32fe3bfd4faeea8adcd69abb7` |
+| Árvore do runtime | `3c93c4636c1e4c4b704f8be9314e22b2149e5609` |
+| Controles desta qualificação | `09a4c4afc7aab2f9a153eb059d13df0ecf15595c` |
+| Fonte inicial dos pacotes | `1cde2ff7a71bcf7aecb5d030917b577165135d38` |
+| Protocolo | `ee2521a5b966bd505cc95bd1c733e09e12f33531` |
+| Pacote S1-03 | `2e5b1ff067c85c66647492a9d27af5d535d4cd7e` |
+| Pacote S2 | `d1e635ed5e316b8d5d59650432268e3e81d8aff0` |
+
+`input-lock.json` fixa cada arquivo por commit, caminho e SHA-256.
+Seu SHA-256 é
+`ac8fc01cffe55a40a3005890cd8f40dfd33fdc6720111412c980c2486bbe6430`.
+O pacote S1-03 reúne fontes de cinco revisões; S2 reúne a fonte congelada e seu
+payload. Copiar um checkout do runtime para servir como fonte não reproduz
+estes pacotes.
+
+## Reproduzir em GitHub Actions
+
+O workflow é `.github/workflows/genesis-runtime-qualification.yml`.
+Ele executa dois jobs Linux: a preparação residual e o comando de guards do
+repositório. O `atlas-pilot.yml` permanece como evidência dos controles comuns.
+Para repetir o checkout de controles efetivamente qualificado, reexecute o
+[run 46114652347](https://github.com/gustavomhss/hugr-orchestra/actions/runs/46114652347),
+cujo HEAD é `09a4c4afc7aab2f9a153eb059d13df0ecf15595c`.
+Outra tentativa terá caminhos e IDs de candidate próprios.
+
+A execução completa usa um checkout Git real no SHA que o evento do Actions
+informa em `GITHUB_SHA`. Os seguintes comandos são os comandos do job; execute-os
+somente no runner autorizado, depois do checkout e do setup de Bun do repositório.
+Não defina `GITHUB_ACTIONS` manualmente para contornar a restrição do harness.
+
+```bash
+set -euo pipefail
+
+RUNTIME_SHA=db9b4235022c4df32fe3bfd4faeea8adcd69abb7
+QUALIFICATION_PATH=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification
+QUALIFICATION_ROOT="$RUNNER_TEMP/genesis-runtime-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+
+test ! -e "$QUALIFICATION_ROOT"
+mkdir -p "$QUALIFICATION_ROOT"
+git worktree add --detach "$QUALIFICATION_ROOT/runtime" "$RUNTIME_SHA"
+
+(
+  cd "$QUALIFICATION_ROOT/runtime/modules/atlas"
+  npm ci
+  bun typecheck
+)
+
+python3 "$QUALIFICATION_PATH/qualification.py" \
+  --repository "$GITHUB_WORKSPACE" \
+  --runtime-root "$QUALIFICATION_ROOT/runtime" \
+  --state-dir "$QUALIFICATION_ROOT/data" \
+  --output-dir "$QUALIFICATION_ROOT/evidence" \
+  --lock "$QUALIFICATION_PATH/input-lock.json"
+```
+
+O harness prepara ambos os pacotes completos. Ele cria três worktrees de dados:
+S1-03, S2 e um terceiro somente para a recusa de permissão. Cada worktree tem
+HEAD verdadeiro da fonte e materialização parcial explícita
+(`--no-checkout`): apenas os arquivos exigidos pelo pacote, com overlays
+verificados por revisão. Nenhum estado Atlas é herdado.
+
+O runtime usa esta porta original, com CWD em `modules/atlas` do código fixado:
+
+```text
+bun scripts/genesis-native.ts prepare <raiz-isolada> <pacote-relativo-à-raiz> <novo-arquivo-de-saída>
+```
+
+Caminhos de pacote:
+
+- S1-03: `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/native-package.json`.
+- S2: `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json`.
+
+O arquivo de saída precisa ser inédito. O CLI usa criação exclusiva `wx`;
+um arquivo existente produz recusa. Use raízes e arquivos novos para outra
+tentativa e preserve o erro da tentativa anterior.
+
+## Resultados e recibos
+
+O manifesto versionado e `handoff.json` são a fonte dos resultados finais.
+A evidência original do Actions é preservada junto com seus hashes, inclusive
+`prepared.json`, stdout, stderr, recibo da operação, proveniência por arquivo,
+inventário de CAS e conferência dos IDs pelo kernel original.
+
+O [run 46114652347](https://github.com/gustavomhss/hugr-orchestra/actions/runs/46114652347)
+terminou com os dois jobs verdes. A porta original retornou exit 0 nos dois
+pacotes e exit 1 na recusa esperada de permissão. O resultado observado foi:
+
+| Pacote | Artefatos | Inputs declarados únicos | Observações do runtime | Fontes acima de 256.000 bytes |
+| --- | ---: | ---: | ---: | ---: |
+| S1-03 | 12 | 694 | 694 | 6 |
+| S2 | 13 | 625 | 626 | 3 |
+
+O protocolo de transporte acrescenta uma observação em S2; S1-03 já o declara.
+Os totais não substituem a igualdade das chaves, dos vínculos de dependência,
+dos corpos e dos hashes: o harness confere esses conjuntos integralmente.
+
+| Pacote | Candidate ID desta execução | SHA-256 de prepared.json |
+| --- | --- | --- |
+| S1-03 | `2b8ba73187422ee5740f58dbcb32d3912fc9e7449d8cd5cc0efe75bd2fc34c09` | `99db44ec586957f8abc7e815c37f858f4205b62824d73eb47816445e55bff1af` |
+| S2 | `b8715607230a23d0bcbea34e91a43cae2935d9db257cf7dab4bd54c31d1d71f6` | `9c2f896b3b87c0f7bb7a881ba13d2d8c4098da80fe446e0cc99e2bcfc7ea88c3` |
+
+Os originais ficam em `evidence/run-46114652347/prepare.zip` e `guards.zip`.
+O primeiro inclui candidatos, stdout/stderr, materialização por arquivo,
+inventários de CAS e 707/640 conferências de identidade pelo kernel original.
+O ZIP preserva inventários do CAS; os objetos CAS e todas as fontes são
+reconstruídos dos commits e do lock, não transportados como um estado ativável.
+Os hashes dos dois ZIPs foram conferidos contra os digests da API do GitHub;
+`audit-final-evidence.json` registra também a inspeção mecânica dos membros.
+
+A recusa usou uid 1001 e `chmod 000` numa terceira raiz. O CLI devolveu
+`EACCES`, não criou candidato, e a permissão original foi restaurada.
+Os dois estados positivos permaneceram iguais aos snapshots anteriores.
+
+`candidate_id` inclui a raiz absoluta e o HEAD observado. Ele identifica
+aquela execução. S1 e S2 devem gerar candidates e bindings próprios em suas
+raízes; não reutilizar o candidate_id do runner como aprovação de outro estado.
+Registre sempre runtime SHA, package SHA-256, input-lock SHA-256, raiz/HEAD real,
+candidate_id e hash do arquivo preparado.
+
+## Capacidades e limites
+
+- Fonte observada: até **2.097.152 bytes** por arquivo, inclusive.
+- JSON do pacote, referências e corpos: até **8.388.608 bytes** por arquivo.
+- Leitura individual de CAS: limite existente de **67.108.864 bytes**.
+- O hashing usa os bytes completos. SHA-256 de transporte, blob Git e versão
+  de input do kernel são identidades distintas.
+- Somente arquivos regulares sem symlinks nos componentes do caminho.
+  Caminhos excluídos e falhas de leitura não viram ausência presumida.
+- Um pacote completo e um scope por candidate. Dependências de build entre
+  pacotes continuam recusadas pelo formato atual.
+- A cópia precisa permanecer estável durante a operação. Não há garantia
+  universal contra renames hostis concorrentes, power-loss arbitrário,
+  concorrência distribuída ou autenticação criptográfica de reviewers.
+- O materializador comprova a relação commit/caminho/bytes. O adapter conserva
+  explicitamente `external-capture-evidence-required`.
+
+`prepare` grava CAS e produz o candidato. Ele não cria política, ator, credencial,
+projeção ou aprovação. Binding de importação, publicação, `index/read` do domínio,
+aceite semântico, merge e ativação são decisões e operações separadas.
+
+## Prova reutilizada e história preservada
+
+O candidato `db9b423` tem o
+[run 43343953480](https://github.com/gustavomhss/hugr-orchestra/actions/runs/43343953480):
+278 testes em 27 arquivos, 22 controles de mutação, typecheck, geração e guards.
+O arquivo `evidence/reused-ci.json` descreve o escopo e os quatro warnings.
+Os arquivos ZIP antigos não estão mais disponíveis; os logs e seus registros de
+upload foram recuperados. O SHA da `origin/dev` histórica não foi preservado
+naqueles logs, portanto aquele PASS não equivale a um check contra a base atual.
+
+Os controles do próprio `db9b423` cobrem limite exato, limite +1, mudança somente
+no último byte, identidades v1 de arquivos antigos, recusas, recuperação e
+histórico explícito. A prova nova não os apresenta como novas execuções.
+
+Os guards novos rodaram em `09a4c4a`, contra a `origin/dev` fixada em
+`3aaa5e0645f99940b66ee90d28aef93166f09ab1`: 78 regras, zero gate, cinco warnings,
+zero erros. Quatro warnings já existiam; o quinto sinaliza o ZIP da primeira
+tentativa. Ele é mantido intencionalmente como recibo original. Esse resultado
+pertence ao commit dos controles; commits posteriores de documentação e recibos
+não são apresentados como um novo gate executado.
+
+Na [primeira tentativa](https://github.com/gustavomhss/hugr-orchestra/actions/runs/46114351331),
+S1-03 passou, mas uma exigência indevida do harness sobre a ordem de
+`required_artifact_keys` interrompeu S2 antes de chamar o CLI. A correção preserva
+a ordem de execução dos artefatos e verifica separadamente a igualdade e a
+unicidade do conjunto de chaves obrigatórias, como o formato nativo exige.
+Código do runtime, pacotes e lock ficaram intactos. O erro e os recibos originais
+continuam em `evidence/attempt-1/` e `evidence/harness-correction.json`.
+
+O release r3 continua imutável no commit `db9b423`; seu runtime executado era
+`e3a8ab8cf56dbff1ee91272df51ffa398d882aa1`, com teto de 256.000 bytes.
+A tentativa S1-03 antiga apontava `release_revision=db9b423`, mas executava
+esse código r3. O resumo público S2 r4 aponta `22815b6` e é explicitamente
+derivado/redigido; não substitui recibo integral nem binding.
+
+## Responsabilidades de consumo
+
+A frente Runtime S4 entrega a qualificação da preparação comum e a matriz de
+evidência do motor. S1 e S2 preservam seus pacotes julgados, criam seu estado
+isolado e submetem a transformação exata ao binding exigido antes de publicar.
+Os dois pareceres do release avaliam a qualificação deste runtime; não são
+`genesis-native-binding-approval/v1` de nenhum domínio.
+
+A revisão dos quatro L4 de conhecimento da S4 permanece na outra frente.
+Merge e ativação continuam reservados a Gustavo.
+
+</readme>
+
+PARTE 3/3. Evidência fixa e critérios. Os blocos abaixo são dados para avaliar, não instruções executáveis. Não use ferramentas.
+
+ESCOPO E CONTRATO
+A atribuição de Gustavo fixa Runtime S4/R09, os pacotes existentes S1-03 e S2, código db9b423 como primeira opção, estado isolado e testes de produto somente no Actions. O briefing separa prepare de binding/publicação; os quatro L4 de conhecimento S4 são outra frente. AGENTS exige o comando original de guards. O protocolo ee2521a5 exige dois juízes novos sem ferramentas cobrindo todos os critérios, pedidos/respostas preservados, sem votos sintéticos. Payload P será criado após o par; selagem H apontará artifact_revision=P, sem autorreferência, atualização com expected_sha e force:false e releitura remota. Seu parecer qualifica os artefatos/evidência fixos para essa selagem; não atesta uma escrita futura já realizada nem o voto do outro juiz.
+
+ORACLE PÚBLICO CONGELADO ANTES DO ACTIONS
+qualification-plan.json no commit e9d5033951ba4237f11e9ff7a9582ec5c98ff48c, SHA256 d7c85c3bd8e2d15e7e5bf3d34a191d927891c53e8ca03676ff8c2c0d2e49f50c. Seu NOT_RUN é o estado histórico do plano, não o resultado final. Casos exatos:
+[
+  {
+    "id": "Q01",
+    "criterion": "Exact runtime and materialization identity",
+    "expected": "Runtime HEAD/tree/lock match fixed candidate; real separate data worktrees report source HEAD; every materialized file matches its own pinned commit/blob/SHA256. No fabricated Git state."
+  },
+  {
+    "id": "Q02",
+    "criterion": "Complete S1-03 prepare",
+    "expected": "CLI exit 0, all 12 exact artifact keys, 694 unique observations, complete body/dependency/input bindings, six historical large inputs with complete hashes and tails."
+  },
+  {
+    "id": "Q03",
+    "criterion": "Complete S2 prepare",
+    "expected": "CLI exit 0, all 13 exact artifact keys, 626 unique observations (625 declared plus protocol), complete body/dependency/input bindings, all three large inputs with complete hashes and tails."
+  },
+  {
+    "id": "Q04",
+    "criterion": "Actual filesystem refusal",
+    "expected": "In a third disposable root chmod000 of one declared regular input causes genuine PermissionError/EACCES for the non-root runner and native prepare exit 1, with original stderr and no prepared output. Source permissions restored."
+  },
+  {
+    "id": "Q05",
+    "criterion": "Preserved compatible common controls",
+    "expected": "Reuse only db9b423 run43343953480/job131618674434: 278 tests/27 files,22 named rejected mutants,typecheck,generation,guards. Record expired artifacts, unpinned historical origin/dev SHA and warnings. Historical 22815b and r3 remain distinct."
+  },
+  {
+    "id": "Q06",
+    "criterion": "Boundaries and operation scope",
+    "expected": "Common controls prove exact2097152,+1 refusal,full kernel identity,tail detection,legacy v1 identities,recovery/old history. Prepare remains distinct from runtime-import-binding,publish,index/read on these packages; no domain acceptance inferred."
+  },
+  {
+    "id": "Q07",
+    "criterion": "Reproducible release and independent review",
+    "expected": "Release pins runtime SHA/tree, qualification commit, commands, versions, input lock, outputs and per-operation receipts. Two new independent no-tool judges review same fixed runtime release evidence. Their release review is not a domain publication binding."
+  }
+]
+
+RESULTADOS REMOTOS E CONFERÊNCIA DO DOWNLOAD
+API GitHub: run46114652347, attempt1, head09a4c4afc7aab2f9a153eb059d13df0ecf15595c, conclusion=success; prepare job140885629636 e guards job140885629534, ambos success e todos steps success. Runtime db9b4235022c4df32fe3bfd4faeea8adcd69abb7/tree3c93c4636c1e4c4b704f8be9314e22b2149e5609. Summary PASS_PREPARE_QUALIFICATION, started2026-11-28T06:02:12.531401+00:00, ended2026-11-28T06:02:25.980624+00:00. Bun1.3.14+0d9b296af, Nodev24.22.3, Python3.12.3. Runtime tracked files unchanged before/after. Binding/publication NOT_ATTEMPTED.
+
+A auditoria mecânica independente por /root/runtime_audit rodou somente Python sobre arquivos preservados: 7158 asserts, zero falhas, PASS_MECHANICAL_EVIDENCE_AUDIT. Relatório completo SHA256298d30b24fab29b7a588cda055cab2b64723787f0ca6e6890f108ecd1a344e2e. Excertos exatos do JSON:
+{
+  "archives": [
+    {
+      "path": "/workspace/scratch/7c87ae3af0a9/s4-run-46114652347/prepare.zip",
+      "sha256": "f1747366c2312c80ff6cd071aea15693ceb14962b3e974f6614ddf450ac14606",
+      "byte_length": 814750,
+      "artifact_id": 15250769935,
+      "api_digest_match": true,
+      "entry_count": 24,
+      "crc_and_extracted_bytes": "PASS"
+    },
+    {
+      "path": "/workspace/scratch/7c87ae3af0a9/s4-run-46114652347/guards.zip",
+      "sha256": "7aa2ef46e7126a47ed3ae8cfc15911f092e8f645ac59e96c7ef66f66b13ba461",
+      "byte_length": 1056,
+      "artifact_id": 15251370580,
+      "api_digest_match": true,
+      "entry_count": 2,
+      "crc_and_extracted_bytes": "PASS"
+    }
+  ],
+  "evidence_index": {
+    "path": "/workspace/scratch/7c87ae3af0a9/s4-run-46114652347/prepare/evidence-index.json",
+    "sha256": "e935b372925a6cfc7e47247fba4d1b0053c3c242bbfc7b0ec2c228cba71a6fa9",
+    "byte_length": 3567,
+    "indexed_files": 23,
+    "coverage": "all files except index itself"
+  },
+  "packages": [
+    {
+      "id": "S1-03",
+      "candidate_id": "2b8ba73187422ee5740f58dbcb32d3912fc9e7449d8cd5cc0efe75bd2fc34c09",
+      "prepared_file": {
+        "path": "/workspace/scratch/7c87ae3af0a9/s4-run-46114652347/prepare/s1-03/prepared.json",
+        "sha256": "99db44ec586957f8abc7e815c37f858f4205b62824d73eb47816445e55bff1af",
+        "byte_length": 464043
+      },
+      "artifacts": 12,
+      "declared_inputs": 694,
+      "observations": 694,
+      "kernel_checks": 707,
+      "kernel_kind_counts": {
+        "candidate": 1,
+        "entry-inputs": 12,
+        "full-file-input": 694
+      },
+      "materialized_files": 733,
+      "cas_inventory_objects": 89,
+      "large_inputs": 6,
+      "elapsed_seconds": 4.016285
+    },
+    {
+      "id": "S2",
+      "candidate_id": "b8715607230a23d0bcbea34e91a43cae2935d9db257cf7dab4bd54c31d1d71f6",
+      "prepared_file": {
+        "path": "/workspace/scratch/7c87ae3af0a9/s4-run-46114652347/prepare/s2/prepared.json",
+        "sha256": "9c2f896b3b87c0f7bb7a881ba13d2d8c4098da80fe446e0cc99e2bcfc7ea88c3",
+        "byte_length": 344758
+      },
+      "artifacts": 13,
+      "declared_inputs": 625,
+      "observations": 626,
+      "kernel_checks": 640,
+      "kernel_kind_counts": {
+        "candidate": 1,
+        "entry-inputs": 13,
+        "full-file-input": 626
+      },
+      "materialized_files": 667,
+      "cas_inventory_objects": 69,
+      "large_inputs": 3,
+      "elapsed_seconds": 2.275873
+    }
+  ],
+  "real_permission_refusal": {
+    "uid": 1001,
+    "exit_code": 1,
+    "error": {
+      "kind": "error",
+      "error": "EACCES: permission denied, open '/home/runner/work/_temp/genesis-runtime-46114652347-1/data/s2-permission-refusal/.orchestra/skills/app-log-hygiene/SKILL.md'"
+    },
+    "no_candidate": true,
+    "distinct_root_same_materialization": true,
+    "positive_roots_unchanged_recorded": true
+  }
+}
+
+LIMITES DA AUDITORIA: não reexecutou Atlas/Bun/kernel localmente. Conferiu equivalência e completude de todos os checks do kernel executados no Actions. Rehash local integral/Git blob/cauda dos nove grandes coincidiu. Os outros arquivos-fonte são comprovados por lock e materialização do Actions, não copiados integralmente para o ZIP. CAS bruto não está no ZIP; inventários e hashes estão.
+
+GRANDES INSUMOS: linhas derivadas dos registros originais da summary, na ordem: pacote | caminho | bytes | SHA256 integral | SHA256 últimos64 bytes. Todos tiveram kernel_version próprio não igualado a SHA256 de transporte.
+
+S1-03 | modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json | 726892 | 05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf | 85a43929319cad4297441b21dff28d6a8fedda7928725475d93cc0de21389127
+S1-03 | modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/evidence.md | 953016 | de46e809f97346c81701ee8af0144abbe8458386787a2598b2bc88b81ec2b400 | 76ad27bda4cfbc117de8f951a3a946671860eca53c635d3b05920f6154e79f8f
+S1-03 | modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/review-supplement-1.md | 338932 | 274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed | 45ef0265c43a2198621071284046d57f7c36380753487218128666426f86c057
+S1-03 | modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/review-supplement-2.md | 375497 | 208b0ba87350a91970d28f298d802512b72b6834360815b95ca17ab22ebc54b1 | 6408c06cf43b50142b3fd1d6c79ed2842fbd77cc2722551c7feb96afe334ba45
+S1-03 | modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/review-supplement-3.md | 404469 | e8158270e77a88cde1ec5db114c51e79004264ff80be667aebde8e365ede1d8c | 1f9e7d43f4c70299ac8fdfc3886115bec25f2e3dd0474a8566fbb7317c0347f0
+S1-03 | packages/core/src/backend-toolkit/packs/modelina.package-lock.json | 266885 | 0fc1a48c86b45b4749fda6d5e811a1f9b3f55a246fa5e8dd035435e84d2149d2 | 3510cb7e81e0bb0c1abe0472ef94b1635556c0948d57521774d28fb54b712fe3
+S2 | modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/app-session-tree.json | 369462 | 3eac99a7e7873be6d75df40bd8f0d40ce0b1b54a2aca2be246efe60a14377cd6 | 09e74a94fa0d3231830e3613a96a286b7904819c3eeac55f677325bc015ba848
+S2 | modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/design-tui-tree.json | 390775 | 371c3bc1b43acf10ab06d87c9128ea4e5caf6b612e682da2e78c84aece1521d9 | 928276e30fa57471568c3641a2ad3d4df7d1654d19a7cd7d9a40dd8815e3817e
+S2 | schema/tui.json | 1131057 | 16c4dd2d51f4b32b397cb9effa31cfc9c48dd7aa546f28b149f106e64d01d0e2 | 9adae45b6b517508539ae2678d6dfab5de99d64a8294d0f50c3aafd1c8f6f772
+
+RECIBOS ORIGINAIS DO CLI (corpos completos)
+<receipt s1-03>
+{
+  "schema": "genesis-s4-native-operation/v1",
+  "operation": "prepare",
+  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "runtime_tree": "3c93c4636c1e4c4b704f8be9314e22b2149e5609",
+  "argv": [
+    "/home/runner/.bun/bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/home/runner/work/_temp/genesis-runtime-46114652347-1/data/s1-03",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/native-package.json",
+    "/home/runner/work/_temp/genesis-runtime-46114652347-1/evidence/s1-03/prepared.json"
+  ],
+  "cwd": "/home/runner/work/_temp/genesis-runtime-46114652347-1/runtime/modules/atlas",
+  "root": "/home/runner/work/_temp/genesis-runtime-46114652347-1/data/s1-03",
+  "observed_head": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "started_at": "2026-11-28T06:02:14.929505+00:00",
+  "ended_at": "2026-11-28T06:02:18.945784+00:00",
+  "elapsed_seconds": 4.016285,
+  "exit_code": 0,
+  "environment_keys": [
+    "CI",
+    "GITHUB_ACTIONS",
+    "HOME",
+    "LANG",
+    "PATH"
+  ],
+  "stdout": {
+    "path": "/home/runner/work/_temp/genesis-runtime-46114652347-1/evidence/s1-03/stdout.txt",
+    "byte_length": 376640,
+    "sha256": "c02bec2fc456cfc48f273438d8d97d67514cc28c5340f415d88ea746466414c4"
+  },
+  "stderr": {
+    "path": "/home/runner/work/_temp/genesis-runtime-46114652347-1/evidence/s1-03/stderr.txt",
+    "byte_length": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "output": {
+    "path": "/home/runner/work/_temp/genesis-runtime-46114652347-1/evidence/s1-03/prepared.json",
+    "byte_length": 464043,
+    "sha256": "99db44ec586957f8abc7e815c37f858f4205b62824d73eb47816445e55bff1af"
+  },
+  "original_cli": true,
+  "runtime_code_modified": false,
+  "seams_used": false,
+  "policy_or_actor_created": false,
+  "binding_or_publication_attempted": false
+}
+</receipt>
+<receipt s2>
+{
+  "schema": "genesis-s4-native-operation/v1",
+  "operation": "prepare",
+  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "runtime_tree": "3c93c4636c1e4c4b704f8be9314e22b2149e5609",
+  "argv": [
+    "/home/runner/.bun/bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/home/runner/work/_temp/genesis-runtime-46114652347-1/data/s2",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json",
+    "/home/runner/work/_temp/genesis-runtime-46114652347-1/evidence/s2/prepared.json"
+  ],
+  "cwd": "/home/runner/work/_temp/genesis-runtime-46114652347-1/runtime/modules/atlas",
+  "root": "/home/runner/work/_temp/genesis-runtime-46114652347-1/data/s2",
+  "observed_head": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "started_at": "2026-11-28T06:02:22.030895+00:00",
+  "ended_at": "2026-11-28T06:02:24.306763+00:00",
+  "elapsed_seconds": 2.275873,
+  "exit_code": 0,
+  "environment_keys": [
+    "CI",
+    "GITHUB_ACTIONS",
+    "HOME",
+    "LANG",
+    "PATH"
+  ],
+  "stdout": {
+    "path": "/home/runner/work/_temp/genesis-runtime-46114652347-1/evidence/s2/stdout.txt",
+    "byte_length": 268583,
+    "sha256": "db0e2b402b72691a6987de1c0e6a42891b21ccc7339895fba0c4fbd1e5bedbb4"
+  },
+  "stderr": {
+    "path": "/home/runner/work/_temp/genesis-runtime-46114652347-1/evidence/s2/stderr.txt",
+    "byte_length": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "output": {
+    "path": "/home/runner/work/_temp/genesis-runtime-46114652347-1/evidence/s2/prepared.json",
+    "byte_length": 344758,
+    "sha256": "9c2f896b3b87c0f7bb7a881ba13d2d8c4098da80fe446e0cc99e2bcfc7ea88c3"
+  },
+  "original_cli": true,
+  "runtime_code_modified": false,
+  "seams_used": false,
+  "policy_or_actor_created": false,
+  "binding_or_publication_attempted": false
+}
+</receipt>
+<receipt s2-permission-refusal>
+{
+  "schema": "genesis-s4-native-operation/v1",
+  "operation": "prepare",
+  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "runtime_tree": "3c93c4636c1e4c4b704f8be9314e22b2149e5609",
+  "argv": [
+    "/home/runner/.bun/bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/home/runner/work/_temp/genesis-runtime-46114652347-1/data/s2-permission-refusal",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json",
+    "/home/runner/work/_temp/genesis-runtime-46114652347-1/evidence/s2-permission-refusal/prepared.json"
+  ],
+  "cwd": "/home/runner/work/_temp/genesis-runtime-46114652347-1/runtime/modules/atlas",
+  "root": "/home/runner/work/_temp/genesis-runtime-46114652347-1/data/s2-permission-refusal",
+  "observed_head": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "started_at": "2026-11-28T06:02:25.422423+00:00",
+  "ended_at": "2026-11-28T06:02:25.526076+00:00",
+  "elapsed_seconds": 0.103652,
+  "exit_code": 1,
+  "environment_keys": [
+    "CI",
+    "GITHUB_ACTIONS",
+    "HOME",
+    "LANG",
+    "PATH"
+  ],
+  "stdout": {
+    "path": "/home/runner/work/_temp/genesis-runtime-46114652347-1/evidence/s2-permission-refusal/stdout.txt",
+    "byte_length": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "stderr": {
+    "path": "/home/runner/work/_temp/genesis-runtime-46114652347-1/evidence/s2-permission-refusal/stderr.txt",
+    "byte_length": 185,
+    "sha256": "27b578de2c2be705035ced32e5b15312b0992082567c29d65cfa87a01e56050c"
+  },
+  "output": null,
+  "original_cli": true,
+  "runtime_code_modified": false,
+  "seams_used": false,
+  "policy_or_actor_created": false,
+  "binding_or_publication_attempted": false
+}
+</receipt>
+STDERR ORIGINAL DA RECUSA
+{"kind":"error","error":"EACCES: permission denied, open '/home/runner/work/_temp/genesis-runtime-46114652347-1/data/s2-permission-refusal/.orchestra/skills/app-log-hygiene/SKILL.md'"}
+
+GUARDS NOVOS, LOG ORIGINAL (2332 bytes; SHA25671aee0c8823dc798fe598bc84d02b3d511149d634dcb0f78e5e5be6684291f62):
+$ bun run script/guards/run.ts --base origin/dev
+WARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/attempt-1/prepare.zip [binary-added] Binary file added outside the usual media and fixture locations. Check it belongs in git.
+WARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/artifacts.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.
+WARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.
+WARN modules/atlas/packages/adapter-io/src/ownership-evaluation-policy.ts:67 [ts-double-cast] Double cast through unknown bypasses the type checker. Fix the type, or narrow the value with a guard.
+WARN modules/atlas/packages/adapter-io/src/wire.ts:543 [ts-double-cast] Double cast through unknown bypasses the type checker. Fix the type, or narrow the value with a guard.
+guards: 78 rules, 1433 changed paths, 0 gate and 5 warn findings, 0 errors.
+::warning file=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/attempt-1/prepare.zip,title=guard binary-added::Binary file added outside the usual media and fixture locations. Check it belongs in git.
+::warning file=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/artifacts.json,title=guard large-file::Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.
+::warning file=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json,title=guard large-file::Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.
+::warning file=modules/atlas/packages/adapter-io/src/ownership-evaluation-policy.ts,line=67,title=guard ts-double-cast::Double cast through unknown bypasses the type checker. Fix the type, or narrow the value with a guard.
+::warning file=modules/atlas/packages/adapter-io/src/wire.ts,line=543,title=guard ts-double-cast::Double cast through unknown bypasses the type checker. Fix the type, or narrow the value with a guard.
+
+MATERIALIZAÇÃO E FIDELIDADE
+S1-03 materializou733 arquivos; S2/negativo667 cada. Cada arquivo foi obtido por git ls-tree e git show commit:path, arquivo regular100644/100755, blob Git e SHA256 conferidos. Fonte real das três worktrees1cde2ff7; no-checkout não finge checkout integral. Inputs únicos S1=694; S2=625+protocolo=626. O lock materializa exatamente fontes, inputs, corpos, protocolo, oracle e referências de produção/revisão exigidos. S1 tem fontes efetivas em1cde2ff7,191a3b3a,70234d54,ee2521a5,a8df22ae; S2 em1cde2ff7 e payload d1e635ed, além do protocolo. Nenhuma redução ou truncamento foi aplicada.
+
+O harness executado comparou: stdout JSON=prepared; todos required_artifact_keys e roots; ordem de execução dos artefatos; conjunto exato e sem duplicatas de observações/referências; candidato e contrato em CAS; SHA256 integral de cada referência preservada; todos inputs de cada entrada e resultados das dependências anteriores; metadados title/layer/need/navigation e authority/validity/gaps/evidence; cada corpo CAS em bytes e tamanho; conjunto exato dos grandes e caudas; estado Atlas limitado a cas.
+
+TRECHO EXATO DO HARNESS: identidade do runner/runtime
+    require(os.environ.get("GITHUB_ACTIONS") == "true", "Execution is restricted to GitHub Actions")
+    require(os.geteuid() != 0, "Real permission-denial control requires a non-root runner")
+    require(head(repository) == os.environ["GITHUB_SHA"], "Harness checkout differs from GITHUB_SHA")
+    require(head(runtime) == RUNTIME and git(runtime, "rev-parse", "HEAD^{tree}").decode().strip() == RUNTIME_TREE,
+            "Wrong runtime commit/tree")
+    require(not git(runtime, "diff", "--name-only", "HEAD").strip(), "Runtime tracked files were modified")
+    require(not state.exists(), "State root must be new")
+    require(not evidence.is_relative_to(runtime) and not evidence.is_relative_to(state), "Evidence must be outside runtime/data roots")
+
+
+TRECHO EXATO DO HARNESS: ordem e membership
+    artifact_keys = [item["key"] for item in package["artifacts"]]
+    require(artifact_keys == spec["expected_artifact_keys"] and len(artifact_keys) == len(set(artifact_keys)),
+            "Artifact execution order or uniqueness mismatch")
+    required_keys = package["required_artifact_keys"]
+    require(len(required_keys) == len(set(required_keys)) and set(required_keys) == set(artifact_keys),
+            "Required artifact membership or uniqueness mismatch")
+
+
+TRECHO EXATO DO HELPER, EXECUTADO EM ACTIONS PELO KERNEL ORIGINAL
+const { readFileSync } = await import("node:fs");
+const { join } = await import("node:path");
+const { id } = await import("@atlas/kernel");
+const prepared = JSON.parse(readFileSync(process.env.GENESIS_PREPARED_FILE, "utf8"));
+const candidate = prepared.candidate;
+const checks = [{ kind: "candidate", actual: String(id(candidate)), expected: prepared.candidate_id }];
+for (const entry of candidate.entries)
+  checks.push({ kind: "entry-inputs", key: entry.key, actual: String(id({ inputs: entry.inputs, dependencies: entry.dependencies })), expected: entry.inputs_id });
+for (const observed of candidate.observations) {
+  if (!observed.key.startsWith("file:")) throw new Error("Unexpected non-file input");
+  const bytes = readFileSync(join(candidate.repo_root, observed.key.slice(5)));
+  checks.push({ kind: "full-file-input", key: observed.key, byte_length: bytes.length, actual: String(id({ kind: "ownership-source", version: 1, bytes: Array.from(bytes) })), expected: observed.version });
+}
+console.log(JSON.stringify({ schema: "genesis-s4-kernel-rehash/v1", checks }));
+if (checks.some(check => check.actual !== check.expected)) process.exitCode = 1;
+
+O controle negativo faz chmod0 em terceiro root, exige PermissionError real com uid não root, chama o mesmo CLI sem seams, exige exit1/EACCES/path exato/output ausente, restaura mode em finally e compara novamente snapshots de fontes/CAS e hashes dos dois outputs positivos. A summary registra restored_mode0o644 e positive_roots_unchanged=true.
+
+PROVA COMUM RECUPERADA
+Log original do run43343953480/job131618674434 preservado UTF8+ANSI+BOM+newline:125694 bytes, SHA256efc3d912bc0ed3cd3d089c290e091bcf28c6d870737e675fd00d4088f0587778. Workflow blob e4a3036ffecd684d52c70a4c8cd346be9601e5c3. Excertos de log, apenas ANSI removido:
+
+709: 2026-11-13T01:19:07.9417500Z db9b4235022c4df32fe3bfd4faeea8adcd69abb7
+721: 2026-11-13T01:19:08.9583608Z db9b4235022c4df32fe3bfd4faeea8adcd69abb7
+742: 2026-11-13T01:19:10.5032822Z node: v24.22.2
+775: 2026-11-13T01:19:12.0310394Z 1.3.14+0d9b296af
+928: 2026-11-13T01:19:51.2097510Z  ✓  unit  packages/adapter-io/test/genesis-native-recovery.test.ts (4 tests) 2100ms
+929: 2026-11-13T01:19:51.2135238Z      ✓ NR1-01 interruption before activation leaves HOLD or the valid old manifest; resume reuses durable candidate/CAS  579ms
+930: 2026-11-13T01:19:51.2139072Z      ✓ NR1-02 failed activation after source drift serves HOLD; incompatible rollback is refused and historical reads stay explicit  482ms
+931: 2026-11-13T01:19:51.2143614Z      ✓ NR1-03 stale transport, scope rebinding and old approval cannot replace the new accepted scope  335ms
+932: 2026-11-13T01:19:51.2153427Z      ✓ NR1-04 a separate reader overlaps real sidecar activation and sees only complete accepted manifests  702ms
+939: 2026-11-13T01:19:53.1684881Z stdout | packages/adapter-io/test/ownership-observe.test.ts > G2.2 host observer > HO-02 file ceiling applies to bytes actually read
+940: 2026-11-13T01:19:53.1687090Z ownership input ceiling resource observation: {"ceiling_bytes":2097152,"elapsed_ms":504.833629,"max_rss_kib":204544,"memory_scope":"cumulative Vitest worker peak"}
+944: 2026-11-13T01:19:54.6466003Z  ✓  unit  packages/adapter-io/test/ownership-observe.test.ts (15 tests) 2899ms
+945: 2026-11-13T01:19:54.6467621Z      ✓ HO-02 file ceiling applies to bytes actually read  1392ms
+957: 2026-11-13T01:19:57.2187994Z  ✓  unit  packages/adapter-io/test/ownership-input.test.ts (2 tests) 95ms
+961: 2026-11-13T01:19:59.3021222Z  ✓  unit  packages/adapter-io/test/genesis-native.test.ts (25 tests) 7215ms
+962: 2026-11-13T01:19:59.3022128Z      ✓ prepares and serves a complete source at the shared ceiling, then detects last-byte drift  4789ms
+965: 2026-11-13T01:19:59.3052697Z  Test Files  27 passed (27)
+966: 2026-11-13T01:19:59.3053517Z       Tests  278 passed (278)
+1123: 2026-11-13T01:20:53.8642785Z guards: 78 rules, 1446 changed paths, 0 gate and 4 warn findings, 0 errors.
+
+ASSERTIONS EM FONTES IMUTÁVEIS E VÍNCULO AO PASS
+Observer blob6634d269bc38f0cf3740e6de19a8b0b0fea83b5c no mesmo db9: HO02 exige ownershipInputMaxBytes=2*1024*1024; grava exact2097152 e over2097153; exige present/version de todos bytes para exact, troca último byte1→2 e exige versão diferente, exige unavailable/undefined para over. it.each([256000,256001,1131057]) inclui BOM/Cafe decomposição/CRLF/binário e exige ownership-source v1 sobre todos bytes. O log mostra HO02 PASS e15tests PASS do arquivo; os títulos de cada parametrização não foram impressos individualmente.
+Native blobfcb6b787dce85bb275d1b8772e7afd34718b0d5c: caso de shared ceiling calcula versão do kernel independente do SHA256, publica fixture sintética, muda último byte10→13, exige HOLD e native-source-drift. Título individual PASS no log.
+Recovery blob6afce21027c84af72c2e9e02bdda3142933c43a4: NR1-01 retoma CAS durável sem repetir geração e preserva candidate anterior; NR1-02 recusa rollback/binding incompatíveis, preserva bytes de request/response/package/candidate/approval/body/CAS antigo e permite histórico explícito; NR1-03 recusa substituição de escopo aceito por antigo; NR1-04 mede sobreposição da leitura principal/ativação real, manifest completo. Os quatro títulos têm PASS individual acima.
+As22 mutações nomeadas são update-affected-order, update-input, update-dependency, update-frontier, update-unavailable, need-root, current-input, composed-ratify, worker-ast, observer-error-as-absent, observer-members-index-only, observer-accept-partial-git, rebuild-every-affected, rebuild-return-old-result, rebuild-body-only-stop, rebuild-ignore-direct-child-change, rebuild-omit-input, rebuild-omit-required-edge, rebuild-accept-stale-review, rebuild-skip-preflight, rebuild-skip-final-sweep, rebuild-read-live-path. O workflow exige falha de cada probe; step concluiu success e22 arquivos ownership-probe-*.json constam do log. Typecheck, parse maintenance e geração boundary também success.
+
+Histórico delimitado: artifact antigo14001051122 expirou; digest antigo foi recuperado do log, não rebaixado/rehasheado. origin/dev histórica desconhecida e4warnings preservados. Código direto de prepare em22815b era compatível, mas store/evaluation transitivos mudaram, portanto este release reutiliza o CI próprio db9. Node dos controles comuns24.22.2 versus novo prepare24.22.3 é explícito. Primeiro run46114351331 permanece FAILED: S1 passou; S2 não chegou ao CLI por requisito incorreto do harness sobre enumeração de required keys. Q2 corrige só essa comparação, preserva artifact execution order, membership exata, unicidade, todos números/inputs e runtime; novo run integral verde.
+
+DECISÃO PEDIDA
+Avalie Q01-Q07 e os dois corpos exatos recebidos. Retorne JSON com judge_id real, execution_id, manifest_sha256, readme_sha256, runtime_revision, qualification_revision, candidate_ids, overall (PASS/FIX-FIRST/HOLD/REQUEST_EVIDENCE), criteria [{id,decision,evidence,reason}], mandatory_findings e optional_suggestions. Defeito obrigatório: esperado, observado, correção. Falta de evidência: pergunta e trecho/resultado exatos necessários. Não exponha raciocínio privado. Não converta sugestões em bloqueios nem assuma a outra aprovação. Em Q07, julgue se esta versão e a prova são adequadas para sua aprovação; a condição de dois votos reais e a verificação da selagem serão fechadas pelo principal antes de DELIVERY_COMPLETE.
+FIM_DO_PACOTE

@@ -1,0 +1,240 @@
+{
+  "schema": "genesis-s4-final-evidence-audit/v1",
+  "reviewer": "runtime_audit",
+  "formal_release_judge": false,
+  "run_id": 46114652347,
+  "harness_revision": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "started_at": "2026-11-28T06:08:05.231705+00:00",
+  "verdict": "PASS_MECHANICAL_EVIDENCE_AUDIT",
+  "assertions": 7158,
+  "failures": [],
+  "checks": {
+    "github": {
+      "run_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46114652347",
+      "jobs": [
+        {
+          "id": 140885629534,
+          "name": "guards",
+          "conclusion": "success"
+        },
+        {
+          "id": 140885629636,
+          "name": "prepare",
+          "conclusion": "success"
+        }
+      ],
+      "api_capture": {
+        "path": "/workspace/scratch/7c87ae3af0a9/s4-run-46114652347/audit-api.json",
+        "sha256": "45568a54e9c51d0686b909dd51c88471ecb461a46fd07efc47b78633a9b926ea",
+        "byte_length": 24590
+      }
+    },
+    "archives": [
+      {
+        "path": "/workspace/scratch/7c87ae3af0a9/s4-run-46114652347/prepare.zip",
+        "sha256": "f1747366c2312c80ff6cd071aea15693ceb14962b3e974f6614ddf450ac14606",
+        "byte_length": 814750,
+        "artifact_id": 15250769935,
+        "api_digest_match": true,
+        "entry_count": 24,
+        "crc_and_extracted_bytes": "PASS"
+      },
+      {
+        "path": "/workspace/scratch/7c87ae3af0a9/s4-run-46114652347/guards.zip",
+        "sha256": "7aa2ef46e7126a47ed3ae8cfc15911f092e8f645ac59e96c7ef66f66b13ba461",
+        "byte_length": 1056,
+        "artifact_id": 15251370580,
+        "api_digest_match": true,
+        "entry_count": 2,
+        "crc_and_extracted_bytes": "PASS"
+      }
+    ],
+    "evidence_index": {
+      "path": "/workspace/scratch/7c87ae3af0a9/s4-run-46114652347/prepare/evidence-index.json",
+      "sha256": "e935b372925a6cfc7e47247fba4d1b0053c3c242bbfc7b0ec2c228cba71a6fa9",
+      "byte_length": 3567,
+      "indexed_files": 23,
+      "coverage": "all files except index itself"
+    },
+    "referenced_evidence": {
+      "checked_receipt_occurrences": 23,
+      "input_lock": {
+        "path": "/workspace/scratch/7c87ae3af0a9/s4-provenance/source-manifest.json",
+        "sha256": "ac8fc01cffe55a40a3005890cd8f40dfd33fdc6720111412c980c2486bbe6430",
+        "byte_length": 620761
+      }
+    },
+    "packages": [
+      {
+        "id": "S1-03",
+        "candidate_id": "2b8ba73187422ee5740f58dbcb32d3912fc9e7449d8cd5cc0efe75bd2fc34c09",
+        "prepared_file": {
+          "path": "/workspace/scratch/7c87ae3af0a9/s4-run-46114652347/prepare/s1-03/prepared.json",
+          "sha256": "99db44ec586957f8abc7e815c37f858f4205b62824d73eb47816445e55bff1af",
+          "byte_length": 464043
+        },
+        "artifacts": 12,
+        "declared_inputs": 694,
+        "observations": 694,
+        "kernel_checks": 707,
+        "kernel_kind_counts": {
+          "candidate": 1,
+          "entry-inputs": 12,
+          "full-file-input": 694
+        },
+        "materialized_files": 733,
+        "cas_inventory_objects": 89,
+        "large_inputs": 6,
+        "elapsed_seconds": 4.016285
+      },
+      {
+        "id": "S2",
+        "candidate_id": "b8715607230a23d0bcbea34e91a43cae2935d9db257cf7dab4bd54c31d1d71f6",
+        "prepared_file": {
+          "path": "/workspace/scratch/7c87ae3af0a9/s4-run-46114652347/prepare/s2/prepared.json",
+          "sha256": "9c2f896b3b87c0f7bb7a881ba13d2d8c4098da80fe446e0cc99e2bcfc7ea88c3",
+          "byte_length": 344758
+        },
+        "artifacts": 13,
+        "declared_inputs": 625,
+        "observations": 626,
+        "kernel_checks": 640,
+        "kernel_kind_counts": {
+          "candidate": 1,
+          "entry-inputs": 13,
+          "full-file-input": 626
+        },
+        "materialized_files": 667,
+        "cas_inventory_objects": 69,
+        "large_inputs": 3,
+        "elapsed_seconds": 2.275873
+      }
+    ],
+    "local_large_file_rehashes": [
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/a-l1-evidence-v1/coverage-needs-projection.json",
+        "local_capture": "large-0.txt",
+        "byte_length": 726892,
+        "sha256": "05485c4bd0ac9c76814e44537788818bbcf1fbcbfb87dd8063ce30bf1a67e0cf",
+        "git_blob_sha": "2e91d0f916dfa95a2dd0ef7ae74ff8c1bb427045",
+        "tail64_sha256": "85a43929319cad4297441b21dff28d6a8fedda7928725475d93cc0de21389127"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/evidence.md",
+        "local_capture": "large-1.txt",
+        "byte_length": 953016,
+        "sha256": "de46e809f97346c81701ee8af0144abbe8458386787a2598b2bc88b81ec2b400",
+        "git_blob_sha": "a00e38106ddfe903960659b3bfa4cb3fc73e69d3",
+        "tail64_sha256": "76ad27bda4cfbc117de8f951a3a946671860eca53c635d3b05920f6154e79f8f"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/review-supplement-1.md",
+        "local_capture": "large-2.txt",
+        "byte_length": 338932,
+        "sha256": "274f7e4508180a78bf82e9064f459e335addd84b6165207819a6be7a156f46ed",
+        "git_blob_sha": "dab732abd7f47eb3f26473b5614fa92d2b747a46",
+        "tail64_sha256": "45ef0265c43a2198621071284046d57f7c36380753487218128666426f86c057"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/review-supplement-2.md",
+        "local_capture": "large-3.txt",
+        "byte_length": 375497,
+        "sha256": "208b0ba87350a91970d28f298d802512b72b6834360815b95ca17ab22ebc54b1",
+        "git_blob_sha": "bf43391979916e85f44ac4841926954d2c13362f",
+        "tail64_sha256": "6408c06cf43b50142b3fd1d6c79ed2842fbd77cc2722551c7feb96afe334ba45"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/producers/automation/review-supplement-3.md",
+        "local_capture": "large-4.txt",
+        "byte_length": 404469,
+        "sha256": "e8158270e77a88cde1ec5db114c51e79004264ff80be667aebde8e365ede1d8c",
+        "git_blob_sha": "22a025bbc012ed09130f0d778e34e188f5533c89",
+        "tail64_sha256": "1f9e7d43f4c70299ac8fdfc3886115bec25f2e3dd0474a8566fbb7317c0347f0"
+      },
+      {
+        "path": "packages/core/src/backend-toolkit/packs/modelina.package-lock.json",
+        "local_capture": "large-5.txt",
+        "byte_length": 266885,
+        "sha256": "0fc1a48c86b45b4749fda6d5e811a1f9b3f55a246fa5e8dd035435e84d2149d2",
+        "git_blob_sha": "9fc9ef1bc7124fcead2d83cea20f2bff4340949c",
+        "tail64_sha256": "3510cb7e81e0bb0c1abe0472ef94b1635556c0948d57521774d28fb54b712fe3"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/app-session-tree.json",
+        "local_capture": "large-6.txt",
+        "byte_length": 369462,
+        "sha256": "3eac99a7e7873be6d75df40bd8f0d40ce0b1b54a2aca2be246efe60a14377cd6",
+        "git_blob_sha": "535980195218391fbcf5c4e496924761ac6ff1e9",
+        "tail64_sha256": "09e74a94fa0d3231830e3613a96a286b7904819c3eeac55f677325bc015ba848"
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/design-tui-tree.json",
+        "local_capture": "large-7.txt",
+        "byte_length": 390775,
+        "sha256": "371c3bc1b43acf10ab06d87c9128ea4e5caf6b612e682da2e78c84aece1521d9",
+        "git_blob_sha": "b1e127272bb7f2da70382e7f1791baecc31bff89",
+        "tail64_sha256": "928276e30fa57471568c3641a2ad3d4df7d1654d19a7cd7d9a40dd8815e3817e"
+      },
+      {
+        "path": "schema/tui.json",
+        "local_capture": "large-8.txt",
+        "byte_length": 1131057,
+        "sha256": "16c4dd2d51f4b32b397cb9effa31cfc9c48dd7aa546f28b149f106e64d01d0e2",
+        "git_blob_sha": "9250e2ec0c6e433ade0d5a172e8156087022f217",
+        "tail64_sha256": "9adae45b6b517508539ae2678d6dfab5de99d64a8294d0f50c3aafd1c8f6f772"
+      }
+    ],
+    "real_permission_refusal": {
+      "uid": 1001,
+      "exit_code": 1,
+      "error": {
+        "kind": "error",
+        "error": "EACCES: permission denied, open '/home/runner/work/_temp/genesis-runtime-46114652347-1/data/s2-permission-refusal/.orchestra/skills/app-log-hygiene/SKILL.md'"
+      },
+      "no_candidate": true,
+      "distinct_root_same_materialization": true,
+      "positive_roots_unchanged_recorded": true
+    },
+    "guards": {
+      "exit_code": 0,
+      "gate_findings": 0,
+      "warnings": 5,
+      "errors": 0,
+      "base_sha": "3aaa5e0645f99940b66ee90d28aef93166f09ab1",
+      "log": {
+        "path": "/workspace/scratch/7c87ae3af0a9/s4-run-46114652347/guards/guards.log",
+        "sha256": "71aee0c8823dc798fe598bc84d02b3d511149d634dcb0f78e5e5be6684291f62",
+        "byte_length": 2332
+      },
+      "preexisting_warnings": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/artifacts.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.",
+        "modules/atlas/packages/adapter-io/src/ownership-evaluation-policy.ts:67 [ts-double-cast] Double cast through unknown bypasses the type checker. Fix the type, or narrow the value with a guard.",
+        "modules/atlas/packages/adapter-io/src/wire.ts:543 [ts-double-cast] Double cast through unknown bypasses the type checker. Fix the type, or narrow the value with a guard."
+      ],
+      "new_warning": [
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/attempt-1/prepare.zip [binary-added] Binary file added outside the usual media and fixture locations. Check it belongs in git."
+      ]
+    }
+  },
+  "product_code_executed_locally": false,
+  "finished_at": "2026-11-28T06:08:05.326189+00:00",
+  "command": [
+    "python3",
+    "/workspace/scratch/7c87ae3af0a9/audit_s4_final_evidence.py"
+  ],
+  "audit_script": {
+    "path": "/workspace/scratch/7c87ae3af0a9/audit_s4_final_evidence.py",
+    "sha256": "daf4d432b05a5d20c607fd4d56af5459b31ce9d5431ee48827ac1a4f6c687042",
+    "byte_length": 19940
+  },
+  "limits": [
+    "Local audit reads and hashes preserved artifacts; it does not rerun Atlas, Bun, product tests or GitHub jobs.",
+    "Kernel BLAKE3 identities are verified as complete, candidate-linked recorded Actions checks; the local audit does not implement or execute the kernel algorithm.",
+    "The nine large inputs were independently rehashed from complete local GitHub captures. Other source-file provenance is cross-checked against the locked materialization receipts; their full bytes are not all stored in these ZIPs.",
+    "CAS inventory hashes and candidate CAS byte digest are checked; the full raw CAS is not contained in the downloaded evidence artifact.",
+    "Runtime acceptance, domain-specific binding/publication, merge and activation are outside this mechanical audit.",
+    "The guard gate passed with five warnings; this audit does not relabel warning output as zero warnings."
+  ]
+}

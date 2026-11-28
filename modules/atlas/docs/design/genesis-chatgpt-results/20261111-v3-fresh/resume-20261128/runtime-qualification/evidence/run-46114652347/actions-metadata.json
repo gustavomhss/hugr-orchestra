@@ -1,0 +1,238 @@
+{
+  "schema": "genesis-s4-actions-observation/v1",
+  "run": {
+    "id": 46114652347,
+    "head_branch": "genesis-runtime-resume",
+    "head_sha": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+    "path": ".github/workflows/genesis-runtime-qualification.yml",
+    "run_number": 2,
+    "event": "push",
+    "status": "completed",
+    "conclusion": "success",
+    "run_attempt": 1,
+    "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46114652347",
+    "created_at": "2026-11-28T06:00:58Z",
+    "updated_at": "2026-11-28T06:02:40Z"
+  },
+  "jobs": [
+    {
+      "id": 140885629534,
+      "name": "guards",
+      "head_sha": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46114652347/job/140885629534",
+      "started_at": "2026-11-28T06:01:01Z",
+      "completed_at": "2026-11-28T06:02:40Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-28T06:01:01Z",
+          "completed_at": "2026-11-28T06:01:03Z"
+        },
+        {
+          "name": "Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-28T06:01:03Z",
+          "completed_at": "2026-11-28T06:01:35Z"
+        },
+        {
+          "name": "Run ./.github/actions/setup-bun",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-28T06:01:35Z",
+          "completed_at": "2026-11-28T06:02:30Z"
+        },
+        {
+          "name": "Check the current branch against dev",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-28T06:02:30Z",
+          "completed_at": "2026-11-28T06:02:35Z"
+        },
+        {
+          "name": "Preserve actual guard result",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-28T06:02:35Z",
+          "completed_at": "2026-11-28T06:02:37Z"
+        },
+        {
+          "name": "Post Run ./.github/actions/setup-bun",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9,
+          "started_at": "2026-11-28T06:02:37Z",
+          "completed_at": "2026-11-28T06:02:37Z"
+        },
+        {
+          "name": "Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10,
+          "started_at": "2026-11-28T06:02:37Z",
+          "completed_at": "2026-11-28T06:02:37Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11,
+          "started_at": "2026-11-28T06:02:37Z",
+          "completed_at": "2026-11-28T06:02:37Z"
+        }
+      ]
+    },
+    {
+      "id": 140885629636,
+      "name": "prepare",
+      "head_sha": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+      "run_attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "html_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46114652347/job/140885629636",
+      "started_at": "2026-11-28T06:01:00Z",
+      "completed_at": "2026-11-28T06:02:28Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1,
+          "started_at": "2026-11-28T06:01:00Z",
+          "completed_at": "2026-11-28T06:01:01Z"
+        },
+        {
+          "name": "Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2,
+          "started_at": "2026-11-28T06:01:01Z",
+          "completed_at": "2026-11-28T06:01:19Z"
+        },
+        {
+          "name": "Run ./.github/actions/setup-bun",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3,
+          "started_at": "2026-11-28T06:01:19Z",
+          "completed_at": "2026-11-28T06:01:57Z"
+        },
+        {
+          "name": "Pin runtime in its own worktree",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4,
+          "started_at": "2026-11-28T06:01:57Z",
+          "completed_at": "2026-11-28T06:01:58Z"
+        },
+        {
+          "name": "Install exact Atlas dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5,
+          "started_at": "2026-11-28T06:01:58Z",
+          "completed_at": "2026-11-28T06:02:01Z"
+        },
+        {
+          "name": "Build and typecheck the pinned runtime",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6,
+          "started_at": "2026-11-28T06:02:01Z",
+          "completed_at": "2026-11-28T06:02:12Z"
+        },
+        {
+          "name": "Qualify the complete packages through the original CLI",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7,
+          "started_at": "2026-11-28T06:02:12Z",
+          "completed_at": "2026-11-28T06:02:25Z"
+        },
+        {
+          "name": "Preserve package and execution receipts",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8,
+          "started_at": "2026-11-28T06:02:25Z",
+          "completed_at": "2026-11-28T06:02:26Z"
+        },
+        {
+          "name": "Post Run ./.github/actions/setup-bun",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 15,
+          "started_at": "2026-11-28T06:02:26Z",
+          "completed_at": "2026-11-28T06:02:27Z"
+        },
+        {
+          "name": "Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 16,
+          "started_at": "2026-11-28T06:02:27Z",
+          "completed_at": "2026-11-28T06:02:27Z"
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 17,
+          "started_at": "2026-11-28T06:02:27Z",
+          "completed_at": "2026-11-28T06:02:27Z"
+        }
+      ]
+    }
+  ],
+  "artifacts": [
+    {
+      "id": 15251370580,
+      "name": "genesis-runtime-guards-09a4c4afc7aab2f9a153eb059d13df0ecf15595c-1",
+      "size_in_bytes": 1056,
+      "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/artifacts/15251370580",
+      "archive_download_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/artifacts/15251370580/zip",
+      "expired": false,
+      "created_at": "2026-11-28T06:02:36Z",
+      "expires_at": "2026-12-28T06:02:35Z",
+      "updated_at": "2026-11-28T06:02:36Z",
+      "digest": "sha256:7aa2ef46e7126a47ed3ae8cfc15911f092e8f645ac59e96c7ef66f66b13ba461",
+      "workflow_run": {
+        "id": 46114652347,
+        "repository_id": 1405035578,
+        "head_repository_id": 1405035578,
+        "head_branch": "genesis-runtime-resume",
+        "head_sha": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c"
+      }
+    },
+    {
+      "id": 15250769935,
+      "name": "genesis-runtime-prepare-09a4c4afc7aab2f9a153eb059d13df0ecf15595c-1",
+      "size_in_bytes": 814750,
+      "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/artifacts/15250769935",
+      "archive_download_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/artifacts/15250769935/zip",
+      "expired": false,
+      "created_at": "2026-11-28T06:02:26Z",
+      "expires_at": "2026-12-28T06:02:26Z",
+      "updated_at": "2026-11-28T06:02:26Z",
+      "digest": "sha256:f1747366c2312c80ff6cd071aea15693ceb14962b3e974f6614ddf450ac14606",
+      "workflow_run": {
+        "id": 46114652347,
+        "repository_id": 1405035578,
+        "head_repository_id": 1405035578,
+        "head_branch": "genesis-runtime-resume",
+        "head_sha": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c"
+      }
+    }
+  ],
+  "artifact_verification": "Downloaded original archives, checked exact byte length and SHA256 against GitHub API digest, and extracted only safe relative paths. Durable originals included in this payload."
+}

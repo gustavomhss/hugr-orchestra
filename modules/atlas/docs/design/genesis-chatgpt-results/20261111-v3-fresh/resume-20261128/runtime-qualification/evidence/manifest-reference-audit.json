@@ -1,0 +1,165 @@
+{
+  "schema": "genesis-s4-manifest-reference-audit/v1",
+  "recorded_at": "2026-11-28T06:21:58.510825+00:00",
+  "auditor": "/root/package_provenance",
+  "formal_judgment": false,
+  "scope": "Read-only reference resolution, immutable identities, byte/hash comparisons, package-lock/materialization cross-checks and contradictory limits. No product execution.",
+  "manifest": {
+    "path": "/workspace/scratch/7c87ae3af0a9/s4-release-draft/payload/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+    "sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1",
+    "byte_length": 19736
+  },
+  "previous_manifest_sha256": "6ee7a63a9f913e5882e8e1182cc5eb27a0a9364f361e9a7a3d25f857aea7c854",
+  "status": "PASS_MECHANICAL_REFERENCE_AUDIT",
+  "check_count": 4325,
+  "hashed_reference_count": 21,
+  "packages": [
+    {
+      "id": "S1-03",
+      "files": 733,
+      "inputs": 694,
+      "artifacts": 12,
+      "candidate_id": "2b8ba73187422ee5740f58dbcb32d3912fc9e7449d8cd5cc0efe75bd2fc34c09",
+      "kernel_checks": 707
+    },
+    {
+      "id": "S2",
+      "files": 667,
+      "inputs": 626,
+      "artifacts": 13,
+      "candidate_id": "b8715607230a23d0bcbea34e91a43cae2935d9db257cf7dab4bd54c31d1d71f6",
+      "kernel_checks": 640
+    }
+  ],
+  "findings": [
+    {
+      "id": "MRA-01",
+      "status": "CORRECTED_BY_ROOT",
+      "finding": "The original path_resolution omitted .orchestra/ although transport_contract_ref is repository-root.",
+      "correction": "Only path_resolution changed; replacing it with the original rule reconstructs the old manifest SHA256. Revised rule explicitly covers .orchestra/.",
+      "formal_reassessment": "Required separately by the same formal pair; this mechanical audit does not stand in for it."
+    }
+  ],
+  "open_findings": [],
+  "planned_references_excluded": [
+    "judgments/acceptance.json",
+    "handoff.json"
+  ],
+  "hash_references": [
+    {
+      "reference": "$.supersedes",
+      "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+      "byte_length": 28282
+    },
+    {
+      "reference": "$.transport_contract_ref",
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "byte_length": 8478
+    },
+    {
+      "reference": "$.input_lock",
+      "sha256": "ac8fc01cffe55a40a3005890cd8f40dfd33fdc6720111412c980c2486bbe6430",
+      "byte_length": 620761
+    },
+    {
+      "reference": "$.qualification_harness",
+      "sha256": "71a6da5ea4279ec274051a92425dbec9d2636f6a5541e689d82adfef18ca249e",
+      "byte_length": 28632
+    },
+    {
+      "reference": "$.qualification_workflow",
+      "sha256": "57162fb295d127e690aa3954f97d523d9a7484f006f2fca60f8d8c2cf7adb22c",
+      "byte_length": 4846
+    },
+    {
+      "reference": "$.entrypoints[0].actual_argv_receipts[0]",
+      "sha256": "35731d5007c9f76f317268215a14286b521349488e400c4d37de50a5361890bc",
+      "byte_length": 1886
+    },
+    {
+      "reference": "$.entrypoints[0].actual_argv_receipts[1]",
+      "sha256": "b516701e92c833240828b894363438f1e38755a2206637fcffd2cd2ffa00fece",
+      "byte_length": 1844
+    },
+    {
+      "reference": "$.capabilities.real_permission_refusal.receipt",
+      "sha256": "693b5174b6ee42ce0a1b948b2fc10e98563ce872c20e40322a02797a13801958",
+      "byte_length": 1732
+    },
+    {
+      "reference": "$.package_results[0].prepared_output",
+      "sha256": "99db44ec586957f8abc7e815c37f858f4205b62824d73eb47816445e55bff1af",
+      "byte_length": 464043
+    },
+    {
+      "reference": "$.package_results[0].operation_receipt",
+      "sha256": "35731d5007c9f76f317268215a14286b521349488e400c4d37de50a5361890bc",
+      "byte_length": 1886
+    },
+    {
+      "reference": "$.package_results[0].materialization",
+      "sha256": "22b3c1485d9b7fa8b2c3e3f0288f93235c3441dce321773fe7115d206d1181b9",
+      "byte_length": 566189
+    },
+    {
+      "reference": "$.package_results[0].kernel_checks",
+      "sha256": "72c6d0a630b68a7e92e8ffe93e48a261ca5d24dfc197b6f58622187c6987c386",
+      "byte_length": 204748
+    },
+    {
+      "reference": "$.package_results[1].prepared_output",
+      "sha256": "9c2f896b3b87c0f7bb7a881ba13d2d8c4098da80fe446e0cc99e2bcfc7ea88c3",
+      "byte_length": 344758
+    },
+    {
+      "reference": "$.package_results[1].operation_receipt",
+      "sha256": "b516701e92c833240828b894363438f1e38755a2206637fcffd2cd2ffa00fece",
+      "byte_length": 1844
+    },
+    {
+      "reference": "$.package_results[1].materialization",
+      "sha256": "e4d8803ebc14f11dbc835d7fb8921fb215fd5812cd10ef0b67e3b7deb138ea67",
+      "byte_length": 453030
+    },
+    {
+      "reference": "$.package_results[1].kernel_checks",
+      "sha256": "766f851d3ec3579b9b2ab8d51c357930d946b0a35832dd9da9e7ab146a8fb0b2",
+      "byte_length": 165131
+    },
+    {
+      "reference": "$.gate_refs[0].evidence",
+      "sha256": "171dfc0f5448882f63ee6c45baee7a253312a2345628e088d5ae354f49c6251a",
+      "byte_length": 27414
+    },
+    {
+      "reference": "$.gate_refs[1].summary",
+      "sha256": "82a2c56fa7a5f9313b4be9da9636d423d9f83cc464a983b596ab0369a5cbc636",
+      "byte_length": 11310
+    },
+    {
+      "reference": "$.gate_refs[2].receipt",
+      "sha256": "f772267689719806bcca71df9d19a1aa3ebbee415f56a82bb505d1f21d295d31",
+      "byte_length": 406
+    },
+    {
+      "reference": "$.archives[0]",
+      "sha256": "f1747366c2312c80ff6cd071aea15693ceb14962b3e974f6614ddf450ac14606",
+      "byte_length": 814750
+    },
+    {
+      "reference": "$.archives[1]",
+      "sha256": "7aa2ef46e7126a47ed3ae8cfc15911f092e8f645ac59e96c7ef66f66b13ba461",
+      "byte_length": 1056
+    }
+  ],
+  "limits": [
+    "No Atlas/Bun/kernel product code or tests were rerun locally; all runtime results come from preserved Actions receipts.",
+    "Kernel identities are checked for recorded equality and candidate linkage, not recomputed locally.",
+    "The full raw CAS and all source payload bytes are not included in prepare.zip; their recorded inventories are checked against the locked materialization.",
+    "Q2 inherited files and reused-ci were retrieved by read-only GitHub calls only to verify their exact reference/hash; no remote writes occurred.",
+    "handoff.json and judgments/acceptance.json are intentionally pending by the parent task and were not treated as missing evidence in this audit."
+  ],
+  "product_execution_performed": false,
+  "remote_writes_performed": false,
+  "frozen_body_modified": false
+}

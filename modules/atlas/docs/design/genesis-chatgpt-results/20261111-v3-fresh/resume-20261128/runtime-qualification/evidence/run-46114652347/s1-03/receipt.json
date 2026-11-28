@@ -1,0 +1,48 @@
+{
+  "schema": "genesis-s4-native-operation/v1",
+  "operation": "prepare",
+  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "runtime_tree": "3c93c4636c1e4c4b704f8be9314e22b2149e5609",
+  "argv": [
+    "/home/runner/.bun/bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/home/runner/work/_temp/genesis-runtime-46114652347-1/data/s1-03",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/native-package.json",
+    "/home/runner/work/_temp/genesis-runtime-46114652347-1/evidence/s1-03/prepared.json"
+  ],
+  "cwd": "/home/runner/work/_temp/genesis-runtime-46114652347-1/runtime/modules/atlas",
+  "root": "/home/runner/work/_temp/genesis-runtime-46114652347-1/data/s1-03",
+  "observed_head": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "started_at": "2026-11-28T06:02:14.929505+00:00",
+  "ended_at": "2026-11-28T06:02:18.945784+00:00",
+  "elapsed_seconds": 4.016285,
+  "exit_code": 0,
+  "environment_keys": [
+    "CI",
+    "GITHUB_ACTIONS",
+    "HOME",
+    "LANG",
+    "PATH"
+  ],
+  "stdout": {
+    "path": "/home/runner/work/_temp/genesis-runtime-46114652347-1/evidence/s1-03/stdout.txt",
+    "byte_length": 376640,
+    "sha256": "c02bec2fc456cfc48f273438d8d97d67514cc28c5340f415d88ea746466414c4"
+  },
+  "stderr": {
+    "path": "/home/runner/work/_temp/genesis-runtime-46114652347-1/evidence/s1-03/stderr.txt",
+    "byte_length": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "output": {
+    "path": "/home/runner/work/_temp/genesis-runtime-46114652347-1/evidence/s1-03/prepared.json",
+    "byte_length": 464043,
+    "sha256": "99db44ec586957f8abc7e815c37f858f4205b62824d73eb47816445e55bff1af"
+  },
+  "original_cli": true,
+  "runtime_code_modified": false,
+  "seams_used": false,
+  "policy_or_actor_created": false,
+  "binding_or_publication_attempted": false
+}

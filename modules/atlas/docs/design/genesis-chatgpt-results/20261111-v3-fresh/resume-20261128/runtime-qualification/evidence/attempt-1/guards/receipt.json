@@ -1,0 +1,16 @@
+{
+  "schema": "genesis-s4-guards/v1",
+  "candidate_revision": "e9d5033951ba4237f11e9ff7a9582ec5c98ff48c",
+  "base_ref": "origin/dev",
+  "base_sha": "3aaa5e0645f99940b66ee90d28aef93166f09ab1",
+  "argv": [
+    "bun",
+    "run",
+    "check:guards",
+    "--base",
+    "origin/dev"
+  ],
+  "exit_code": 0,
+  "log_sha256": "c8899d691cca78d9a44bce40d2d6fbd7c1499cc4377668ff0a25e1dab06f91a1",
+  "log_bytes": 1817
+}

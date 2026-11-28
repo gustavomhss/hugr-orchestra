@@ -1,0 +1,202 @@
+PARTE 2/3. Corpo exato de README.md, UTF-8 com newline final. SHA256 959fdbbdd8f78a5aadc63eb4117bd7722f5670ec6d940d46dbff476ae451cfb6; 10428 bytes. Aguarde FIM_DO_PACOTE.
+<readme>
+# Runtime S4: preparação integral de S1-03 e S2
+
+Este handoff qualifica a porta `prepare` do Atlas no código
+`db9b4235022c4df32fe3bfd4faeea8adcd69abb7`.
+O manifesto de descoberta está em
+`../../s4/runtime-release.json` a partir deste diretório.
+Use o SHA completo do runtime; o commit que transporta esta documentação não é
+o candidato de código executado.
+
+## Identidades que devem acompanhar cada execução
+
+| Papel | Revisão |
+| --- | --- |
+| Runtime comum | `db9b4235022c4df32fe3bfd4faeea8adcd69abb7` |
+| Árvore do runtime | `3c93c4636c1e4c4b704f8be9314e22b2149e5609` |
+| Controles desta qualificação | `09a4c4afc7aab2f9a153eb059d13df0ecf15595c` |
+| Fonte inicial dos pacotes | `1cde2ff7a71bcf7aecb5d030917b577165135d38` |
+| Protocolo | `ee2521a5b966bd505cc95bd1c733e09e12f33531` |
+| Pacote S1-03 | `2e5b1ff067c85c66647492a9d27af5d535d4cd7e` |
+| Pacote S2 | `d1e635ed5e316b8d5d59650432268e3e81d8aff0` |
+
+`input-lock.json` fixa cada arquivo por commit, caminho e SHA-256.
+Seu SHA-256 é
+`ac8fc01cffe55a40a3005890cd8f40dfd33fdc6720111412c980c2486bbe6430`.
+O pacote S1-03 reúne fontes de cinco revisões; S2 reúne a fonte congelada e seu
+payload. Copiar um checkout do runtime para servir como fonte não reproduz
+estes pacotes.
+
+## Reproduzir em GitHub Actions
+
+O workflow é `.github/workflows/genesis-runtime-qualification.yml`.
+Ele executa dois jobs Linux: a preparação residual e o comando de guards do
+repositório. O `atlas-pilot.yml` permanece como evidência dos controles comuns.
+Para repetir o checkout de controles efetivamente qualificado, reexecute o
+[run 46114652347](https://github.com/gustavomhss/hugr-orchestra/actions/runs/46114652347),
+cujo HEAD é `09a4c4afc7aab2f9a153eb059d13df0ecf15595c`.
+Outra tentativa terá caminhos e IDs de candidate próprios.
+
+A execução completa usa um checkout Git real no SHA que o evento do Actions
+informa em `GITHUB_SHA`. Os seguintes comandos são os comandos do job; execute-os
+somente no runner autorizado, depois do checkout e do setup de Bun do repositório.
+Não defina `GITHUB_ACTIONS` manualmente para contornar a restrição do harness.
+
+```bash
+set -euo pipefail
+
+RUNTIME_SHA=db9b4235022c4df32fe3bfd4faeea8adcd69abb7
+QUALIFICATION_PATH=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification
+QUALIFICATION_ROOT="$RUNNER_TEMP/genesis-runtime-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+
+test ! -e "$QUALIFICATION_ROOT"
+mkdir -p "$QUALIFICATION_ROOT"
+git worktree add --detach "$QUALIFICATION_ROOT/runtime" "$RUNTIME_SHA"
+
+(
+  cd "$QUALIFICATION_ROOT/runtime/modules/atlas"
+  npm ci
+  bun typecheck
+)
+
+python3 "$QUALIFICATION_PATH/qualification.py" \
+  --repository "$GITHUB_WORKSPACE" \
+  --runtime-root "$QUALIFICATION_ROOT/runtime" \
+  --state-dir "$QUALIFICATION_ROOT/data" \
+  --output-dir "$QUALIFICATION_ROOT/evidence" \
+  --lock "$QUALIFICATION_PATH/input-lock.json"
+```
+
+O harness prepara ambos os pacotes completos. Ele cria três worktrees de dados:
+S1-03, S2 e um terceiro somente para a recusa de permissão. Cada worktree tem
+HEAD verdadeiro da fonte e materialização parcial explícita
+(`--no-checkout`): apenas os arquivos exigidos pelo pacote, com overlays
+verificados por revisão. Nenhum estado Atlas é herdado.
+
+O runtime usa esta porta original, com CWD em `modules/atlas` do código fixado:
+
+```text
+bun scripts/genesis-native.ts prepare <raiz-isolada> <pacote-relativo-à-raiz> <novo-arquivo-de-saída>
+```
+
+Caminhos de pacote:
+
+- S1-03: `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/native-package.json`.
+- S2: `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json`.
+
+O arquivo de saída precisa ser inédito. O CLI usa criação exclusiva `wx`;
+um arquivo existente produz recusa. Use raízes e arquivos novos para outra
+tentativa e preserve o erro da tentativa anterior.
+
+## Resultados e recibos
+
+O manifesto versionado e `handoff.json` são a fonte dos resultados finais.
+A evidência original do Actions é preservada junto com seus hashes, inclusive
+`prepared.json`, stdout, stderr, recibo da operação, proveniência por arquivo,
+inventário de CAS e conferência dos IDs pelo kernel original.
+
+O [run 46114652347](https://github.com/gustavomhss/hugr-orchestra/actions/runs/46114652347)
+terminou com os dois jobs verdes. A porta original retornou exit 0 nos dois
+pacotes e exit 1 na recusa esperada de permissão. O resultado observado foi:
+
+| Pacote | Artefatos | Inputs declarados únicos | Observações do runtime | Fontes acima de 256.000 bytes |
+| --- | ---: | ---: | ---: | ---: |
+| S1-03 | 12 | 694 | 694 | 6 |
+| S2 | 13 | 625 | 626 | 3 |
+
+O protocolo de transporte acrescenta uma observação em S2; S1-03 já o declara.
+Os totais não substituem a igualdade das chaves, dos vínculos de dependência,
+dos corpos e dos hashes: o harness confere esses conjuntos integralmente.
+
+| Pacote | Candidate ID desta execução | SHA-256 de prepared.json |
+| --- | --- | --- |
+| S1-03 | `2b8ba73187422ee5740f58dbcb32d3912fc9e7449d8cd5cc0efe75bd2fc34c09` | `99db44ec586957f8abc7e815c37f858f4205b62824d73eb47816445e55bff1af` |
+| S2 | `b8715607230a23d0bcbea34e91a43cae2935d9db257cf7dab4bd54c31d1d71f6` | `9c2f896b3b87c0f7bb7a881ba13d2d8c4098da80fe446e0cc99e2bcfc7ea88c3` |
+
+Os originais ficam em `evidence/run-46114652347/prepare.zip` e `guards.zip`.
+O primeiro inclui candidatos, stdout/stderr, materialização por arquivo,
+inventários de CAS e 707/640 conferências de identidade pelo kernel original.
+O ZIP preserva inventários do CAS; os objetos CAS e todas as fontes são
+reconstruídos dos commits e do lock, não transportados como um estado ativável.
+Os hashes dos dois ZIPs foram conferidos contra os digests da API do GitHub;
+`audit-final-evidence.json` registra também a inspeção mecânica dos membros.
+
+A recusa usou uid 1001 e `chmod 000` numa terceira raiz. O CLI devolveu
+`EACCES`, não criou candidato, e a permissão original foi restaurada.
+Os dois estados positivos permaneceram iguais aos snapshots anteriores.
+
+`candidate_id` inclui a raiz absoluta e o HEAD observado. Ele identifica
+aquela execução. S1 e S2 devem gerar candidates e bindings próprios em suas
+raízes; não reutilizar o candidate_id do runner como aprovação de outro estado.
+Registre sempre runtime SHA, package SHA-256, input-lock SHA-256, raiz/HEAD real,
+candidate_id e hash do arquivo preparado.
+
+## Capacidades e limites
+
+- Fonte observada: até **2.097.152 bytes** por arquivo, inclusive.
+- JSON do pacote, referências e corpos: até **8.388.608 bytes** por arquivo.
+- Leitura individual de CAS: limite existente de **67.108.864 bytes**.
+- O hashing usa os bytes completos. SHA-256 de transporte, blob Git e versão
+  de input do kernel são identidades distintas.
+- Somente arquivos regulares sem symlinks nos componentes do caminho.
+  Caminhos excluídos e falhas de leitura não viram ausência presumida.
+- Um pacote completo e um scope por candidate. Dependências de build entre
+  pacotes continuam recusadas pelo formato atual.
+- A cópia precisa permanecer estável durante a operação. Não há garantia
+  universal contra renames hostis concorrentes, power-loss arbitrário,
+  concorrência distribuída ou autenticação criptográfica de reviewers.
+- O materializador comprova a relação commit/caminho/bytes. O adapter conserva
+  explicitamente `external-capture-evidence-required`.
+
+`prepare` grava CAS e produz o candidato. Ele não cria política, ator, credencial,
+projeção ou aprovação. Binding de importação, publicação, `index/read` do domínio,
+aceite semântico, merge e ativação são decisões e operações separadas.
+
+## Prova reutilizada e história preservada
+
+O candidato `db9b423` tem o
+[run 43343953480](https://github.com/gustavomhss/hugr-orchestra/actions/runs/43343953480):
+278 testes em 27 arquivos, 22 controles de mutação, typecheck, geração e guards.
+O arquivo `evidence/reused-ci.json` descreve o escopo e os quatro warnings.
+Os arquivos ZIP antigos não estão mais disponíveis; os logs e seus registros de
+upload foram recuperados. O SHA da `origin/dev` histórica não foi preservado
+naqueles logs, portanto aquele PASS não equivale a um check contra a base atual.
+
+Os controles do próprio `db9b423` cobrem limite exato, limite +1, mudança somente
+no último byte, identidades v1 de arquivos antigos, recusas, recuperação e
+histórico explícito. A prova nova não os apresenta como novas execuções.
+
+Os guards novos rodaram em `09a4c4a`, contra a `origin/dev` fixada em
+`3aaa5e0645f99940b66ee90d28aef93166f09ab1`: 78 regras, zero gate, cinco warnings,
+zero erros. Quatro warnings já existiam; o quinto sinaliza o ZIP da primeira
+tentativa. Ele é mantido intencionalmente como recibo original. Esse resultado
+pertence ao commit dos controles; commits posteriores de documentação e recibos
+não são apresentados como um novo gate executado.
+
+Na [primeira tentativa](https://github.com/gustavomhss/hugr-orchestra/actions/runs/46114351331),
+S1-03 passou, mas uma exigência indevida do harness sobre a ordem de
+`required_artifact_keys` interrompeu S2 antes de chamar o CLI. A correção preserva
+a ordem de execução dos artefatos e verifica separadamente a igualdade e a
+unicidade do conjunto de chaves obrigatórias, como o formato nativo exige.
+Código do runtime, pacotes e lock ficaram intactos. O erro e os recibos originais
+continuam em `evidence/attempt-1/` e `evidence/harness-correction.json`.
+
+O release r3 continua imutável no commit `db9b423`; seu runtime executado era
+`e3a8ab8cf56dbff1ee91272df51ffa398d882aa1`, com teto de 256.000 bytes.
+A tentativa S1-03 antiga apontava `release_revision=db9b423`, mas executava
+esse código r3. O resumo público S2 r4 aponta `22815b6` e é explicitamente
+derivado/redigido; não substitui recibo integral nem binding.
+
+## Responsabilidades de consumo
+
+A frente Runtime S4 entrega a qualificação da preparação comum e a matriz de
+evidência do motor. S1 e S2 preservam seus pacotes julgados, criam seu estado
+isolado e submetem a transformação exata ao binding exigido antes de publicar.
+Os dois pareceres do release avaliam a qualificação deste runtime; não são
+`genesis-native-binding-approval/v1` de nenhum domínio.
+
+A revisão dos quatro L4 de conhecimento da S4 permanece na outra frente.
+Merge e ativação continuam reservados a Gustavo.
+
+</readme>

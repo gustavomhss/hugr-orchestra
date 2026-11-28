@@ -1,0 +1,115 @@
+{
+  "judge_id": "/root/s4_release_j2",
+  "execution_id": "6746cb98-f844-45ae-a604-c638ae7b8094",
+  "manifest_sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1",
+  "readme_sha256": "959fdbbdd8f78a5aadc63eb4117bd7722f5670ec6d940d46dbff476ae451cfb6",
+  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "qualification_revision": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+  "candidate_ids": {
+    "S1-03": "2b8ba73187422ee5740f58dbcb32d3912fc9e7449d8cd5cc0efe75bd2fc34c09",
+    "S2": "b8715607230a23d0bcbea34e91a43cae2935d9db257cf7dab4bd54c31d1d71f6"
+  },
+  "overall": "PASS",
+  "review_basis": {
+    "previous_manifest_sha256": "6ee7a63a9f913e5882e8e1182cc5eb27a0a9364f361e9a7a3d25f857aea7c854",
+    "base_packet_sha256": "784e116a34df1792662e4ea81bd2059fc46e369ae60a4e8824165b122273d3ed",
+    "base_packet_byte_length": 58889,
+    "final_manifest_byte_length": 19736,
+    "changed_field": "path_resolution",
+    "delta": "Inclusão de .orchestra/ entre os prefixos que identificam caminhos relativos à raiz do repositório.",
+    "relationship_to_previous_review": "Este parecer complementa o parecer anterior com a avaliação do delta documental e confirma a cobertura Q01-Q07 para o novo hash. O parecer anterior e o corpo anterior devem permanecer preservados.",
+    "limits": "Avaliei o corpo integral anterior, o pacote fixo anteriormente recebido e a alteração exata agora apresentada. A comparação mecânica de campo único, o tamanho e o hash final são evidências fornecidas pelo principal; não os recalculei. Não realizei nova inspeção remota nem nova execução de produto."
+  },
+  "criteria": [
+    {
+      "id": "Q01",
+      "decision": "PASS",
+      "evidence": [
+        "Runtime, árvore, revisões de fontes, input-lock, árvores dos pacotes, recibos e registros de materialização permanecem os mesmos do pacote base.",
+        "transport_contract_ref.path é .orchestra/skills/execute-genesis/references/transport.md, fixado no commit ee2521a5b966bd505cc95bd1c733e09e12f33531 com SHA256 02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c.",
+        "A regra corrigida reconhece explicitamente .orchestra/ como prefixo relativo à raiz do repositório."
+      ],
+      "reason": "A alteração resolve a inconsistência textual entre a localização real do contrato e a regra de resolução do manifesto. Não muda a identidade do contrato nem a proveniência dos arquivos materializados. A evidência anterior de runtime fixado e worktrees reais, separadas e verificadas continua sustentando Q01."
+    },
+    {
+      "id": "Q02",
+      "decision": "PASS",
+      "evidence": [
+        "A preparação S1-03 permanece vinculada ao recibo original com exit 0, aos 12 artefatos exatos e às 694 observações únicas.",
+        "Permanecem os 707 checks do kernel original e as verificações de corpos, inputs, dependências e hashes integrais e de cauda dos seis grandes inputs.",
+        "Candidate ID e prepared.json de SHA256 99db44ec586957f8abc7e815c37f858f4205b62824d73eb47816445e55bff1af não mudaram."
+      ],
+      "reason": "O delta é uma correção de resolução de referência documental. Não altera o pacote S1-03, suas chaves, seus bytes, seus vínculos ou o resultado executado. Mantenho a aprovação da preparação integral com base na mesma evidência, sem alegar nova execução."
+    },
+    {
+      "id": "Q03",
+      "decision": "PASS",
+      "evidence": [
+        "A preparação S2 permanece vinculada ao recibo original com exit 0, aos 13 artefatos exatos e às 626 observações, correspondentes a 625 inputs declarados mais o protocolo.",
+        "Permanecem os 640 checks do kernel original e as verificações dos corpos, dependências, inputs e três fontes grandes.",
+        "Candidate ID e prepared.json de SHA256 9c2f896b3b87c0f7bb7a881ba13d2d8c4098da80fe446e0cc99e2bcfc7ea88c3 não mudaram."
+      ],
+      "reason": "A correção não altera a observação adicional do protocolo, seu conteúdo ou a execução S2. Ela torna sua localização documental coerente com o caminho já fixado. A primeira tentativa e a correção anterior do harness continuam preservadas com seus estados e limites originais."
+    },
+    {
+      "id": "Q04",
+      "decision": "PASS",
+      "evidence": [
+        "O controle negativo permanece o mesmo: terceira raiz isolada, uid 1001, chmod 000, PermissionError/EACCES real, CLI original com exit 1 e ausência de output preparado.",
+        "Permanecem o stderr original, a restauração do modo 0o644 e a verificação de que as duas raízes positivas ficaram inalteradas.",
+        "O delta não modifica o controle, seus recibos ou suas conclusões."
+      ],
+      "reason": "A evidência de recusa real e isolamento continua suficiente. A correção documental não introduz dependência de uma nova execução desse controle e não é apresentada como tal."
+    },
+    {
+      "id": "Q05",
+      "decision": "PASS",
+      "evidence": [
+        "A prova comum continua restrita ao run 43343953480/job 131618674434 do runtime db9b423, com 278 testes em 27 arquivos, 22 mutações nomeadas, typecheck, geração e guards.",
+        "Permanecem explícitos os arquivos históricos expirados, a ausência do SHA histórico de origin/dev, os quatro warnings comuns e a diferença de versão Node entre os controles comuns e a nova preparação.",
+        "Os históricos r3 e 22815b continuam separados, assim como o gate novo de guards no commit de qualificação 09a4c4a."
+      ],
+      "reason": "A mudança não amplia nem reatribui a prova comum. Seus vínculos de identidade, resultados e limitações continuam iguais aos avaliados anteriormente. Nenhum PASS é transferido para código, base ou execução diferentes."
+    },
+    {
+      "id": "Q06",
+      "decision": "PASS",
+      "evidence": [
+        "Permanecem os controles comuns de limite exato, limite mais um, identidade integral do kernel, alteração de cauda, identidades v1 e recuperação e acesso histórico.",
+        "Permanecem NOT_RUN as capacidades de binding, publicação, index e read dos pacotes completos.",
+        "Os limites de estabilidade da cópia, regularidade dos arquivos, concorrência e dependências entre pacotes não foram alterados."
+      ],
+      "reason": "A inclusão do prefixo .orchestra/ não concede capacidade operacional nem autoridade. O escopo continua sendo a qualificação de prepare para os pacotes congelados S1-03 e S2. Não há inferência de aceite semântico, binding, publicação, merge ou ativação, e os candidates continuam vinculados às raízes e ao HEAD de suas execuções."
+    },
+    {
+      "id": "Q07",
+      "decision": "PASS",
+      "evidence": [
+        "A versão final identificada pelo SHA256 2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1 preserva os pins, comandos, versões, input-lock, outputs e recibos do manifesto anteriormente avaliado.",
+        "O README permanece exatamente o mesmo, com SHA256 959fdbbdd8f78a5aadc63eb4117bd7722f5670ec6d940d46dbff476ae451cfb6.",
+        "A regra final elimina a resolução incorreta possível do contrato sob evidence_base e o aponta inequivocamente para a raiz do repositório.",
+        "Este parecer registra meu voto individual sobre a versão final por composição do corpo anterior com o delta declarado, mantendo o parecer anterior preservado."
+      ],
+      "reason": "A versão corrigida é adequada para minha aprovação. A correção melhora a reprodução e a descoberta do contrato sem modificar as evidências executadas. Não atesto o voto do outro juiz nem atualização remota ou selagem futuras. Cabe ao principal reunir os dois pareceres reais sobre esta mesma versão final, preservar os registros e verificar a selagem antes de declarar DELIVERY_COMPLETE. Este voto não é uma aprovação de binding de domínio."
+    }
+  ],
+  "mandatory_findings": [],
+  "optional_suggestions": [
+    {
+      "id": "SUG-01",
+      "suggestion": "Em uma revisão futura do schema, usar qualification_revision ou acrescentar um papel explícito ao campo candidate_revision do gate repository-guards.",
+      "reason": "Mantenho a sugestão anterior: nesse gate o campo identifica o commit de qualificação, enquanto no nível principal identifica o runtime. O escopo atual está explícito, portanto isso não bloqueia a versão final.",
+      "blocking": false
+    },
+    {
+      "id": "SUG-02",
+      "suggestion": "Na montagem da selagem, incluir uma referência explícita ao caminho e SHA256 do relatório audit-final-evidence.json, se isso já não estiver previsto no índice de evidências do handoff.",
+      "reason": "Mantenho a sugestão anterior para facilitar a localização da auditoria fixada pelo SHA256 298d30b24fab29b7a588cda055cab2b64723787f0ca6e6890f108ecd1a344e2e, sem exigir alteração dos corpos aprovados.",
+      "blocking": false
+    }
+  ],
+  "tools_declaration": {
+    "tools_used": false,
+    "statement": "Não utilizei qualquer ferramenta nesta reavaliação, inclusive ferramentas de comunicação. Não naveguei, não deleguei, não editei arquivos, não executei testes e não recalculei hashes. A avaliação foi feita exclusivamente sobre os textos e evidências recebidos."
+  }
+}

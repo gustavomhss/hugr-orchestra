@@ -1,0 +1,13 @@
+REAVALIAÇÃO DE DELTA DOCUMENTAL PELO MESMO PAR. Responda somente com texto final; não use nenhuma ferramenta, inclusive comunicação. Preserve todos os pareceres anteriores. O manifesto recebeu uma única correção de resolução de paths, detectada pela conferência independente de referências: transport_contract_ref.path aponta para .orchestra/skills/execute-genesis/references/transport.md, na raiz do repositório, mas a regra textual anterior só reconhecia modules/ e .github/ como prefixes da raiz.
+
+Campo exato anterior:
+"path_resolution": "Paths beginning with modules/ or .github/ are repository-root paths. Other path/archive/reproduction fields resolve under evidence_base, in the payload revision identified by handoff.json unless an explicit commit is present."
+
+Campo exato corrigido:
+"path_resolution": "Paths beginning with modules/, .github/ or .orchestra/ are repository-root paths. Other path/archive/reproduction fields resolve under evidence_base, in the payload revision identified by handoff.json unless an explicit commit is present."
+
+A comparação mecânica dos JSONs confirmou que somente path_resolution mudou; não houve mudança em nenhum outro campo ou chave. Bytes do manifesto: 19723 → 19736. SHA256 anterior 6ee7a63a9f913e5882e8e1182cc5eb27a0a9364f361e9a7a3d25f857aea7c854; SHA256 final 2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1. O corpo completo anterior permanece preservado, assim como o pacote base de 58889 bytes, SHA256 784e116a34df1792662e4ea81bd2059fc46e369ae60a4e8824165b122273d3ed. Este delta e os pareceres serão preservados separadamente.
+
+README permanece exatamente 10428 bytes, SHA256 959fdbbdd8f78a5aadc63eb4117bd7722f5670ec6d940d46dbff476ae451cfb6. Runtime db9b4235022c4df32fe3bfd4faeea8adcd69abb7, qualification 09a4c4afc7aab2f9a153eb059d13df0ecf15595c, fontes, pacotes, input-lock, candidates, recibos e runs não mudaram. Nenhum novo teste foi executado ou alegado por esta correção documental.
+
+Reavalie o delta e confirme a cobertura final Q01-Q07 contra o novo hash; mantenha explícitos os limites de sua avaliação e a separação de binding/publicação. Retorne JSON com judge_id, execution_id, manifest_sha256 final, readme_sha256, runtime_revision, qualification_revision, candidate_ids, overall, criteria com decisão por Q01-Q07, mandatory_findings, optional_suggestions e declaração sobre ferramentas nesta avaliação. Se o delta não satisfizer algum critério, registre o achado sem presumir aprovação. Seu voto é individual; atualização remota e selagem permanecem atos posteriores do principal.

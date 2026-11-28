@@ -1,0 +1,175 @@
+{
+  "schema": "genesis-runtime-release-acceptance/v1",
+  "purpose": "runtime-release-qualification; not genesis-native-binding-approval/v1",
+  "execution_id": "6746cb98-f844-45ae-a604-c638ae7b8094",
+  "decision": "PASS",
+  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "qualification_revision": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+  "manifest": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+    "sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1",
+    "byte_length": 19736
+  },
+  "readme": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/README.md",
+    "sha256": "959fdbbdd8f78a5aadc63eb4117bd7722f5670ec6d940d46dbff476ae451cfb6",
+    "byte_length": 10428
+  },
+  "candidate_ids": {
+    "S1-03": "2b8ba73187422ee5740f58dbcb32d3912fc9e7449d8cd5cc0efe75bd2fc34c09",
+    "S2": "b8715607230a23d0bcbea34e91a43cae2935d9db257cf7dab4bd54c31d1d71f6"
+  },
+  "base_review_packet": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/review-packet.txt",
+    "sha256": "784e116a34df1792662e4ea81bd2059fc46e369ae60a4e8824165b122273d3ed",
+    "byte_length": 58889
+  },
+  "path_correction_request": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/path-correction-request.txt",
+    "sha256": "d5b29cfb05e0736240958736ce9e5d1b82bc6a17db4c3bbff23e43f907b83aaa",
+    "byte_length": 2611
+  },
+  "final_review_packet": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/review-packet-final.txt",
+    "sha256": "087e9769c502d8a453db99f2ce417628cab7fe2a676835dd7b5fc35cdab4e6fa",
+    "byte_length": 61502
+  },
+  "packet_construction": "Base packet is request-part-1 + two LF + request-part-2 + two LF + request-part-3. Final packet appends two LF and the shared path-correction request. Message files do not add terminal newlines; artifact bodies inside them retain their original newlines.",
+  "bootstrap_requests": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j1-bootstrap-request.txt",
+      "sha256": "fcbc73600b94464ef0559b1c551977fb4be170f2dc2cadec3c2998b1c537e4fa",
+      "byte_length": 760
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j2-bootstrap-request.txt",
+      "sha256": "3058b9aa7b5c0875ed5d89eb56cd12f9044f4e491f06b629db6ed76e0c31d584",
+      "byte_length": 759
+    }
+  ],
+  "shared_requests": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/request-part-1.txt",
+      "sha256": "9eac1831f8311d564a8d3ab96e9d02a6d0af50e24204273f34e04e172e69c0d4",
+      "byte_length": 19927
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/request-part-2.txt",
+      "sha256": "9f691714ae3816a4d8ef09bcefef401bc770be0fe813cd7a358a8f5da3fe8ec9",
+      "byte_length": 10617
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/request-part-3.txt",
+      "sha256": "6755643169b41fd3df56bce8db7cacc366d4192a13a80bd5a1f6ec58e9ebd441",
+      "byte_length": 28341
+    }
+  ],
+  "decisions": [
+    {
+      "agent_id": "/root/s4_release_j1",
+      "review_attempt": 3,
+      "decision": "PASS",
+      "coverage": [
+        "Q01",
+        "Q02",
+        "Q03",
+        "Q04",
+        "Q05",
+        "Q06",
+        "Q07"
+      ],
+      "response": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j1-response-3.json",
+        "sha256": "4d07f38e25d7143c9fa19fc26339bd70d119d94f9cac6e46d0a95e78b990e245",
+        "byte_length": 8356
+      },
+      "host_message_id": "UNKNOWN",
+      "identity_note": "Canonical native agent ID actually returned by collaboration.spawn_agent; response bytes are preserved. No cryptographic reviewer authentication claimed."
+    },
+    {
+      "agent_id": "/root/s4_release_j2",
+      "review_attempt": 2,
+      "decision": "PASS",
+      "coverage": [
+        "Q01",
+        "Q02",
+        "Q03",
+        "Q04",
+        "Q05",
+        "Q06",
+        "Q07"
+      ],
+      "response": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j2-response-2.json",
+        "sha256": "92d9894019ded32e9c23a9d8b8268bb4c2c525f042b387af7664a81d3c0bd187",
+        "byte_length": 9286
+      },
+      "host_message_id": "UNKNOWN",
+      "identity_note": "Canonical native agent ID actually returned by collaboration.spawn_agent; response bytes are preserved. No cryptographic reviewer authentication claimed."
+    }
+  ],
+  "mandatory_findings_open": [],
+  "procedure": {
+    "fresh_contexts": true,
+    "fork_turns": "none",
+    "model_overrides": false,
+    "third_vote": false,
+    "same_pair_retained": true,
+    "actual_author_support_agents": [
+      "/root/runtime_audit",
+      "/root/package_provenance",
+      "/root/ci_evidence"
+    ],
+    "instructional_isolation_only": "No-tool review was instructed; tool capabilities were not technically disabled. No external evidence retrieval, authorship, tests or delegation by either judge is claimed.",
+    "deviation": {
+      "id": "J1-NO-TOOLS-01",
+      "original_state": "HOLD",
+      "occurrence": "J1 called collaboration.send_message only to acknowledge readiness before receiving evidence. Original judgment recorded the literal no-tools violation.",
+      "initial_response": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j1-response-1.json",
+        "sha256": "4e2c3d9c80d2bb16ac4d0b6a33fa6ca963a363cd00f22add32da76bfe4f29ae4",
+        "byte_length": 10465
+      },
+      "corrective_request": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j1-reassessment-request.txt",
+        "sha256": "394360d1590ecf650a12561c4f5e423d98a05dbfa83bbdd2ff98071326b745f6",
+        "byte_length": 1824
+      },
+      "resolution_response": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j1-response-2.json",
+        "sha256": "07d83e8a02937d166907ff224fe6a12c266858210f3030362eb88310557ab6e5",
+        "byte_length": 11895
+      },
+      "resolution": "Same J1 fully reassessed Q01-Q07 in a new turn without tools, preserved the original HOLD and corrected its own proposed judge replacement because the protocol requires the same pair. Final delta assessment also used no tools.",
+      "not_relabelled": "The first attempt remains nonconforming; only subsequent no-tool assessments count toward the final pair."
+    },
+    "document_correction": {
+      "id": "MRA-01",
+      "old_manifest": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/manifest-before-path-correction.json",
+        "sha256": "6ee7a63a9f913e5882e8e1182cc5eb27a0a9364f361e9a7a3d25f857aea7c854",
+        "byte_length": 19723
+      },
+      "new_manifest": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+        "sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1",
+        "byte_length": 19736
+      },
+      "only_changed_key": "path_resolution",
+      "finding": "Add .orchestra/ to explicit repository-root prefixes.",
+      "both_judges_reassessed_final_version": true
+    },
+    "prior_j2_response": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j2-response-1.json",
+      "sha256": "9eabeda66824d74f0418db3a8b721c1cfdb812b8ce05047005dd4223fb074a04",
+      "byte_length": 13770
+    }
+  },
+  "limits": [
+    "Not domain binding or semantic acceptance.",
+    "Does not attest future Git writes or owner merge/activation decisions.",
+    "Two independent contexts are not a claim of model diversity."
+  ],
+  "verified_by": "/root: parsed both final original replies and mechanically compared all identity bindings, criteria and mandatory findings to delivered bytes.",
+  "recorded_at_utc": "2026-11-28T06:24:20.738155+00:00"
+}

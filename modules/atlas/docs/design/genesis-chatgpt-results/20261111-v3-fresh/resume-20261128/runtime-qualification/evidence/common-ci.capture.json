@@ -1,0 +1,40 @@
+{
+  "schema": "genesis-s4-common-ci-log-capture/v1",
+  "captured_at_utc": "2026-11-28T06:07:05Z",
+  "repository": "gustavomhss/hugr-orchestra",
+  "run_id": 43343953480,
+  "job_id": 131618674434,
+  "attempt": 1,
+  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "runtime_tree": "3c93c4636c1e4c4b704f8be9314e22b2149e5609",
+  "retrieval": "GitHub connector fetch_workflow_job_logs; original decoded UTF-8 text preserved, not a ZIP archive",
+  "file": {
+    "path": "common-ci.log",
+    "byte_length": 125694,
+    "sha256": "efc3d912bc0ed3cd3d089c290e091bcf28c6d870737e675fd00d4088f0587778",
+    "bom_preserved": true,
+    "final_newline_preserved": true,
+    "ansi_preserved": true,
+    "carriage_return_count": 0
+  },
+  "excerpt": {
+    "path": "common-controls-excerpts.md",
+    "transformation": "Selected original log/source lines with one-based line labels; ANSI removed in log excerpt only; accompanying interpretation is explicitly separated"
+  },
+  "source_blobs": [
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-observe.test.ts",
+      "git_blob_sha": "6634d269bc38f0cf3740e6de19a8b0b0fea83b5c"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+      "git_blob_sha": "fcb6b787dce85bb275d1b8772e7afd34718b0d5c"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+      "git_blob_sha": "6afce21027c84af72c2e9e02bdda3142933c43a4"
+    }
+  ],
+  "product_execution_in_this_capture": false,
+  "formal_judgment": false
+}

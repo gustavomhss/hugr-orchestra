@@ -1,0 +1,118 @@
+{
+  "judge_id": "/root/s4_release_j2",
+  "execution_id": "6746cb98-f844-45ae-a604-c638ae7b8094",
+  "manifest_sha256": "6ee7a63a9f913e5882e8e1182cc5eb27a0a9364f361e9a7a3d25f857aea7c854",
+  "readme_sha256": "959fdbbdd8f78a5aadc63eb4117bd7722f5670ec6d940d46dbff476ae451cfb6",
+  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "qualification_revision": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+  "candidate_ids": {
+    "S1-03": "2b8ba73187422ee5740f58dbcb32d3912fc9e7449d8cd5cc0efe75bd2fc34c09",
+    "S2": "b8715607230a23d0bcbea34e91a43cae2935d9db257cf7dab4bd54c31d1d71f6"
+  },
+  "overall": "PASS",
+  "criteria": [
+    {
+      "id": "Q01",
+      "decision": "PASS",
+      "evidence": [
+        "O manifesto, os três recibos originais e o resultado remoto apresentado fixam o runtime db9b4235022c4df32fe3bfd4faeea8adcd69abb7 e a árvore 3c93c4636c1e4c4b704f8be9314e22b2149e5609. O manifesto também fixa as árvores dos quatro pacotes de implementação, lockfile e configurações TypeScript.",
+        "O trecho do harness exige HEAD do checkout igual a GITHUB_SHA, HEAD e árvore exatos do runtime, ausência de alterações nos arquivos rastreados e raízes novas de estado, com evidência fora das raízes de runtime e dados.",
+        "As três worktrees de dados têm HEAD real 1cde2ff7a71bcf7aecb5d030917b577165135d38. A materialização parcial por --no-checkout e os overlays são declarados explicitamente.",
+        "O input-lock de SHA256 ac8fc01cffe55a40a3005890cd8f40dfd33fdc6720111412c980c2486bbe6430 e os registros de materialização vinculam cada arquivo a commit, caminho, blob Git, tamanho e SHA256: 733 arquivos em S1-03 e 667 em cada raiz S2.",
+        "A auditoria mecânica apresentada registra 7158 asserts sem falhas, confere os arquivos preservados e informa os limites de sua verificação."
+      ],
+      "reason": "A identidade do código executado permanece separada da identidade do harness, das fontes e do futuro commit de transporte. A proveniência não depende apenas de um source_ref declarado: há materialização a partir dos commits fixados e conferência dos bytes. As raízes reais, o HEAD observado e o caráter parcial das worktrees são suficientemente explícitos para evitar tratar a fonte composta como um checkout integral. O pacote de evidências sustenta Q01 sem exigir que este parecer represente uma nova execução ou verificação remota."
+    },
+    {
+      "id": "Q02",
+      "decision": "PASS",
+      "evidence": [
+        "O recibo original S1-03 registra o CLI bun scripts/genesis-native.ts prepare, no runtime fixado, exit_code 0, stderr vazio, ausência de seams e ausência de alteração do runtime.",
+        "O prepared.json tem 464043 bytes e SHA256 99db44ec586957f8abc7e815c37f858f4205b62824d73eb47816445e55bff1af, coincidente no manifesto, README, recibo e auditoria apresentados.",
+        "A execução registra 12 artefatos e 694 observações únicas. O harness compara as chaves exatas, ordem de execução, unicidade, roots, referências, inputs, dependências, metadados e bytes dos corpos em CAS.",
+        "Os 707 checks pelo kernel original correspondem a um candidato, 12 identidades de entradas e 694 identidades de arquivos completos, todos com igualdade registrada.",
+        "As seis fontes historicamente grandes estão identificadas por caminho, tamanho, SHA256 integral e SHA256 dos últimos 64 bytes. O pacote informa que o rehash integral, o blob Git e as caudas dessas fontes coincidiram na auditoria."
+      ],
+      "reason": "A prova de completude ultrapassa a contagem de artefatos e observações: inclui igualdade de conjuntos, execução das entradas na ordem esperada, vínculos de dependência e conteúdo dos corpos. Os seis inputs acima do teto histórico foram processados com identidades dos bytes completos, sem redução do pacote. O resultado qualifica a preparação integral deste S1-03 no estado registrado; não transfere seu candidate_id para outra raiz."
+    },
+    {
+      "id": "Q03",
+      "decision": "PASS",
+      "evidence": [
+        "O recibo original S2 registra o mesmo CLI e runtime, exit_code 0, stderr vazio, ausência de seams e ausência de alteração do runtime.",
+        "O prepared.json tem 344758 bytes e SHA256 9c2f896b3b87c0f7bb7a881ba13d2d8c4098da80fe446e0cc99e2bcfc7ea88c3, consistente entre os documentos e registros apresentados.",
+        "Foram preparados 13 artefatos e 626 observações únicas: 625 inputs declarados mais a observação do protocolo de transporte. Essa diferença é explicada no README e nos resultados.",
+        "Os 640 checks pelo kernel original correspondem a um candidato, 13 identidades de entradas e 626 identidades de arquivos completos, todos com igualdade registrada.",
+        "As três fontes grandes, incluindo schema/tui.json com 1131057 bytes, têm hashes integrais e de cauda registrados e conferidos.",
+        "A primeira tentativa permaneceu FAILED. A correção do harness separou membership e unicidade de required_artifact_keys da ordem de execução dos artefatos, mantendo esta última e repetindo a execução completa sem alterar runtime, pacotes ou lock."
+      ],
+      "reason": "O pacote apresenta preparação integral de S2 e explica a observação adicional sem mascarar diferença de contagem. A correção do harness é compatível com o contrato descrito: a ordem efetiva dos artefatos continua verificada e o conjunto obrigatório continua exato e sem duplicatas. A tentativa anterior não foi promovida a sucesso nem usada como substituta da execução final. Os resultados e vínculos completos sustentam Q03."
+    },
+    {
+      "id": "Q04",
+      "decision": "PASS",
+      "evidence": [
+        "O controle ocorreu em uma terceira raiz descartável, s2-permission-refusal, com a mesma materialização de S2 e uid 1001.",
+        "O pacote descreve chmod 000 em um input declarado regular e a exigência de PermissionError real antes da chamada do CLI, sem seams.",
+        "O recibo original registra exit_code 1, stdout vazio, output null e stderr de 185 bytes com SHA256 27b578de2c2be705035ced32e5b15312b0992082567c29d65cfa87a01e56050c.",
+        "O stderr original identifica EACCES ao abrir o caminho exato .orchestra/skills/app-log-hygiene/SKILL.md na raiz negativa.",
+        "A summary registra restauração do modo 0o644 e positive_roots_unchanged=true, com nova comparação dos snapshots de fontes e CAS e dos hashes dos dois outputs positivos."
+      ],
+      "reason": "Há evidência de recusa real do sistema de arquivos por um processo não root e de propagação dessa falha pela porta original do produto. A saída preparada ausente e o caminho exato no erro atendem ao comportamento esperado. A restauração em finally e a verificação posterior dos estados positivos demonstram que o controle negativo foi isolado e não contaminou as duas preparações aprovadas."
+    },
+    {
+      "id": "Q05",
+      "decision": "PASS",
+      "evidence": [
+        "A prova comum é atribuída especificamente ao run 43343953480, job 131618674434, no runtime db9b4235022c4df32fe3bfd4faeea8adcd69abb7; o log contém esse SHA e as versões Bun 1.3.14+0d9b296af e Node v24.22.2.",
+        "O log preservado tem 125694 bytes e SHA256 efc3d912bc0ed3cd3d089c290e091bcf28c6d870737e675fd00d4088f0587778. O workflow é identificado pelo blob e4a3036ffecd684d52c70a4c8cd346be9601e5c3.",
+        "Os resultados apresentados registram 278 testes em 27 arquivos, 22 mutações nomeadas rejeitadas conforme a exigência do workflow, typecheck, parse maintenance, geração boundary e guards.",
+        "Os guards comuns registram 78 regras, zero gate, quatro warnings e zero erros. A expiração dos ZIPs antigos e a ausência do SHA histórico de origin/dev estão declaradas.",
+        "A documentação distingue o runtime histórico e3a8ab8 do release r3, o resumo S2 associado a 22815b e o runtime efetivamente qualificado db9b423.",
+        "Os guards novos pertencem a 09a4c4a, contra a base 3aaa5e0645f99940b66ee90d28aef93166f09ab1, com 78 regras, zero gate, cinco warnings e zero erros; sua validade não é estendida aos commits futuros."
+      ],
+      "reason": "A reutilização tem identidade de código, workflow e execução suficientes e preserva suas limitações documentais. O release não utiliza a compatibilidade aparente de arquivos diretos de 22815b para ignorar mudanças transitivas, nem apresenta arquivos expirados como rebaixados e revalidados. A diferença entre Node v24.22.2 nos controles comuns e v24.22.3 na nova preparação permanece visível. Esses limites são compatíveis com o critério congelado e não anulam a prova comum do próprio db9b423."
+    },
+    {
+      "id": "Q06",
+      "decision": "PASS",
+      "evidence": [
+        "As assertions das fontes imutáveis de ownership-observe e seus resultados vinculados ao PASS cobrem 2097152 bytes aceitos, 2097153 classificados como unavailable, mudança no último byte e identidades v1 completas nos tamanhos 256000, 256001 e 1131057.",
+        "Os casos incluem BOM, CRLF, bytes binários e strings com decomposição, mantendo a identidade do kernel distinta de SHA256 de transporte e blob Git.",
+        "O teste nativo do limite compartilhado e os quatro casos NR1 possuem resultados PASS associados às fontes fixadas, cobrindo drift, HOLD, retomada de CAS, rollback incompatível, preservação histórica e sobreposição entre leitura e ativação.",
+        "O manifesto delimita essas provas como controles sintéticos comuns reutilizados, sem apresentá-las como nova publicação dos pacotes completos.",
+        "runtime_binding, governed_publication, index e read dos pacotes completos estão explicitamente NOT_RUN. Os recibos registram binding_or_publication_attempted=false e policy_or_actor_created=false.",
+        "Os limites operacionais incluem arquivos regulares sem symlinks, estabilidade da cópia, dependências entre pacotes não suportadas e ausência de garantia universal contra races, power-loss e concorrência distribuída."
+      ],
+      "reason": "As capacidades declaradas são proporcionais às evidências: os controles comuns sustentam limites e comportamentos do motor, enquanto a execução nova sustenta a preparação dos dois pacotes. O manifesto e o README preservam a separação entre preparação, aceite semântico, binding, publicação, consulta e ativação. Os candidates permanecem associados às raízes e ao HEAD de suas execuções. Não identifiquei inferência indevida de aceitação ou publicação de domínio."
+    },
+    {
+      "id": "Q07",
+      "decision": "PASS",
+      "evidence": [
+        "Os corpos integrais do manifesto e README recebidos fixam runtime SHA/tree, revisões de fonte, protocolo, payloads e harness, input-lock, workflow, comandos, versões, outputs e recibos por operação.",
+        "O README fornece a reprodução no Actions autorizado, criação de raízes novas, checkout real do runtime, npm ci, bun typecheck e chamada original de prepare, além de explicitar que não se deve simular GITHUB_ACTIONS.",
+        "Os dois ZIPs preservados têm hashes e tamanhos coincidentes com os registros de download apresentados, incluindo api_digest_match=true e inspeção dos membros.",
+        "O plano de critérios foi congelado em e9d5033951ba4237f11e9ff7a9582ec5c98ff48c, com SHA256 d7c85c3bd8e2d15e7e5bf3d34a191d927891c53e8ca03676ff8c2c0d2e49f50c, antes da execução.",
+        "Este parecer foi produzido por /root/s4_release_j2 em contexto independente da autoria, sobre as três partes recebidas, sem ferramentas, navegação, delegação, edição ou execução de testes.",
+        "O protocolo de fechamento apresentado exige dois pareceres reais da mesma versão, preservação dos pedidos e respostas e selagem posterior apontando artifact_revision=P, com atualização protegida e releitura remota."
+      ],
+      "reason": "A versão recebida e sua prova são completas e utilizáveis para meu voto de aprovação da qualificação prepare. Minha avaliação utiliza os corpos e resultados fornecidos no pacote fixo; não constitui rehash independente dos arquivos, nova execução de produto ou verificação remota. Este PASS é somente o meu voto: não atesta o parecer do outro juiz, a existência de payload ou selagem ainda futuros, nem DELIVERY_COMPLETE. O principal deverá verificar o segundo voto real sobre a mesma versão e concluir a selagem conforme o contrato antes de declarar a entrega completa. A revisão do release não serve como binding de publicação de S1 ou S2."
+    }
+  ],
+  "mandatory_findings": [],
+  "optional_suggestions": [
+    {
+      "id": "SUG-01",
+      "suggestion": "Em uma revisão futura do schema, usar qualification_revision ou acrescentar um papel explícito ao campo candidate_revision do gate repository-guards.",
+      "reason": "Nesse gate o campo identifica 09a4c4a, enquanto no nível principal candidate_revision identifica o runtime db9b423. O warning_scope já elimina a ambiguidade para esta versão; uma nomenclatura uniforme facilitaria o consumo automatizado.",
+      "blocking": false
+    },
+    {
+      "id": "SUG-02",
+      "suggestion": "Na montagem da selagem, incluir uma referência explícita ao caminho e SHA256 do relatório audit-final-evidence.json, se isso já não estiver previsto no índice de evidências do handoff.",
+      "reason": "O pacote fixa o relatório por SHA256 298d30b24fab29b7a588cda055cab2b64723787f0ca6e6890f108ecd1a344e2e, e o README o menciona. Uma referência estruturada tornaria essa auditoria mais fácil de localizar sem alterar os corpos aprovados. Sua ausência no manifesto atual não bloqueia a qualificação.",
+      "blocking": false
+    }
+  ]
+}

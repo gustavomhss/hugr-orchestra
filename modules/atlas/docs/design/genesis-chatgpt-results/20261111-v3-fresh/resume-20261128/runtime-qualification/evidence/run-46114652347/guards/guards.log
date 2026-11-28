@@ -1,0 +1,12 @@
+$ bun run script/guards/run.ts --base origin/dev
+WARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/attempt-1/prepare.zip [binary-added] Binary file added outside the usual media and fixture locations. Check it belongs in git.
+WARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/artifacts.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.
+WARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.
+WARN modules/atlas/packages/adapter-io/src/ownership-evaluation-policy.ts:67 [ts-double-cast] Double cast through unknown bypasses the type checker. Fix the type, or narrow the value with a guard.
+WARN modules/atlas/packages/adapter-io/src/wire.ts:543 [ts-double-cast] Double cast through unknown bypasses the type checker. Fix the type, or narrow the value with a guard.
+guards: 78 rules, 1433 changed paths, 0 gate and 5 warn findings, 0 errors.
+::warning file=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/attempt-1/prepare.zip,title=guard binary-added::Binary file added outside the usual media and fixture locations. Check it belongs in git.
+::warning file=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/artifacts.json,title=guard large-file::Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.
+::warning file=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json,title=guard large-file::Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.
+::warning file=modules/atlas/packages/adapter-io/src/ownership-evaluation-policy.ts,line=67,title=guard ts-double-cast::Double cast through unknown bypasses the type checker. Fix the type, or narrow the value with a guard.
+::warning file=modules/atlas/packages/adapter-io/src/wire.ts,line=543,title=guard ts-double-cast::Double cast through unknown bypasses the type checker. Fix the type, or narrow the value with a guard.

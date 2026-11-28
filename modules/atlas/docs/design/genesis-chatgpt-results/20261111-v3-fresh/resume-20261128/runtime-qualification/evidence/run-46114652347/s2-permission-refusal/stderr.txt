@@ -1,0 +1,1 @@
+{"kind":"error","error":"EACCES: permission denied, open '/home/runner/work/_temp/genesis-runtime-46114652347-1/data/s2-permission-refusal/.orchestra/skills/app-log-hygiene/SKILL.md'"}
