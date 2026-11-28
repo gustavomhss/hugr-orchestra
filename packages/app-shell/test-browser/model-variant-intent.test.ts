@@ -72,16 +72,17 @@ async function menu(model: ModelSelection, locale: Locale = "en", session = true
   const platform: typeof import("../src/context/platform") = await import(solidDom("../src/context/platform.tsx", import.meta.dir))
   const host = document.createElement("div")
   document.body.append(host)
-  const state: { control?: PromptInputV2SelectControl } = {}
+  const state: { control?: PromptInputV2SelectControl; language?: ReturnType<typeof useLanguage> } = {}
   function Probe() {
-    state.control = actual.mount(model, language.useLanguage(), createStore({ prompt: [], context: { items: [] } }), session)
+    state.language = language.useLanguage()
+    state.control = actual.mount(model, state.language, createStore({ prompt: [], context: { items: [] } }), session)
     return createComponent(select.PromptInputV2Select, { title: "Variant choice", get options() { return state.control!.options() },
       get current() { return state.control!.current() }, onSelect: (id) => state.control!.onSelect(id) })
   }
   const dispose = render(() => createComponent(platform.PlatformProvider, { value: { platform: "web", openExternal() {}, restart: async () => {}, notify: async () => {} },
     get children() { return createComponent(language.LanguageProvider, { locale, get children() { return createComponent(Probe, {}) } }) } }), host)
-  if (!state.control) { dispose(); host.remove(); throw new Error("Actual variant consumer did not mount") }
-  return { host, control: state.control, dispose: () => { dispose(); host.remove() }, async open() {
+  if (!state.control || !state.language) { dispose(); host.remove(); throw new Error("Actual variant consumer did not mount") }
+  return { host, control: state.control, language: state.language, dispose: () => { dispose(); host.remove() }, async open() {
     const button = host.querySelector("button")
     if (!button) throw new Error("Actual variant trigger missing")
     button.focus()
@@ -212,6 +213,9 @@ test.each([
     for (const session of [false, true]) {
       const mounted = await menu(owner.local.model, locale, session)
       try {
+        await wait(() => mounted.language.ready(), "locale preferences hydrated")
+        mounted.language.setLocale(locale)
+        await wait(() => mounted.language.t("model.variant.empty") === label, "requested locale dictionary loaded")
         const id = JSON.stringify(["variant", ""])
         const row = (await mounted.open()).find((item) => item.textContent?.includes(label))
         expect(row).toBeDefined()

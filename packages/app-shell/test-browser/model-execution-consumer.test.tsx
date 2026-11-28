@@ -264,20 +264,22 @@ test("E6 App final check uses the moved Session’s directory and workspace and 
 })
 
 test("E6 App embedded composer assesses and sends only to its explicit Session", async () => {
-  state.params.id = "outer-session"
+  const sessionID = "ses_pocket"
+  state.params.id = "ses_outer"
   state.search.draftId = "outer-draft"
   const calls = transport()
   bind(calls)
   const owner = composer("embedded Session prompt", {
-    sessionID: () => "pocket-session",
-    info: () => ({ id: "pocket-session", directory: calls.directory }),
+    sessionID: () => sessionID,
+    info: () => ({ id: sessionID, directory: calls.directory }),
   })
   try {
-    expect(await send(owner)).toBe(true)
+    const sent = await send(owner)
     expect(calls.queries().at(-1)?.body).toMatchObject({
-      context: { type: "session", sessionID: "pocket-session", agentID: "backend" }, model: ref,
+      context: { type: "session", sessionID, agentID: "backend" }, model: ref,
     })
-    expect(calls.admissions().map((call) => call.path)).toEqual(["/api/session/pocket-session/prompt"])
+    expect(calls.admissions().map((call) => call.path)).toEqual([`/api/session/${sessionID}/prompt`])
+    expect(sent).toBe(true)
   } finally { owner.dispose() }
 })
 
@@ -345,7 +347,7 @@ test("CONTROL E6 App real model popover renders catalog rows through its product
   const owner = selection(calls, "session-1")
   const view = await selectorDOM(owner)
   try {
-    expect(view.rows().map((row) => row.textContent)).toContain("Consumer model")
+    expect(view.rows().some((row) => row.textContent?.includes("Consumer model"))).toBe(true)
     expect(view.rows().some((row) => row.textContent?.includes("Blocked model"))).toBe(true)
   } finally { view.dispose(); owner.dispose() }
 })

@@ -74,6 +74,7 @@ export function transport(options: { native?: NativeServer; reply?: (request: Re
       body: request.method === "GET" ? undefined : await request.clone().json(), url, signal: request.signal })
     await control.before(url.pathname)
     if (url.pathname === "/api/health") return json({ pid: 123 })
+    if (!options.native && url.pathname === "/api/session/active") return json({ data: {} })
     if (!options.native && url.pathname.endsWith("/subagent-models")) return json({ data: { mode: "inherit" } })
     if (url.pathname === "/api/event") return new Response(new ReadableStream<Uint8Array>({
       start(controller) {
