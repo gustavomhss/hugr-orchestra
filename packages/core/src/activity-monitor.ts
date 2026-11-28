@@ -194,6 +194,40 @@ export function make(now: () => number = Date.now) {
         entry.workFinishedAt = input.finishedAt
       })
     },
+    async control(recordID: string) {
+      const entry = entries.get(recordID)
+      const child = entry?.child.deref()
+      const identity = entry?.record.supervisorID
+      if (!entry || !child || !identity || entry.rootSettled || child.treeId !== identity) return
+      const native = child as Child & {
+        controlMembers?: () => Promise<readonly string[]>
+        stopSelected?: (members: readonly string[]) => Promise<readonly ("exited" | "unknown")[]>
+      }
+      if (!native.controlMembers || !native.stopSelected) return
+      try {
+        const members = await native.controlMembers()
+        if (entries.get(recordID) !== entry || entry.child.deref() !== child || entry.rootSettled || child.treeId !== identity ||
+          !Array.isArray(members) || !members.length || members.length > 256 ||
+          members.some((member) => typeof member !== "string" || !/^[1-9][0-9]{0,9}:[1-9][0-9]{0,19}$/.test(member)) ||
+          new Set(members).size !== members.length) return
+        return {
+          identity,
+          label: entry.record.executable,
+          owner: entry.record.owner,
+          members,
+          stop: async (selected: readonly string[]) => {
+            if (entries.get(recordID) !== entry || entry.child.deref() !== child || entry.rootSettled || child.treeId !== identity)
+              return selected.map(() => "unknown" as const)
+            const result = await native.stopSelected!(selected)
+            if (entries.get(recordID) !== entry || entry.child.deref() !== child || entry.rootSettled || child.treeId !== identity)
+              return selected.map(() => "unknown" as const)
+            return result
+          },
+        }
+      } catch {
+        return
+      }
+    },
     async inspect(recordID: string) {
       const entry = entries.get(recordID)
       if (!entry) return
@@ -215,3 +249,4 @@ export const observe = monitor.observe
 export const snapshot = monitor.snapshot
 export const inspect = monitor.inspect
 export const complete = monitor.complete
+export const control = monitor.control
