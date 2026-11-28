@@ -141,8 +141,12 @@ def materialize(repository, root, spec, cache):
     package = json.loads(raw)
     require(package["source_revision"] == SOURCE and package["protocol_ref"]["commit"] == PROTOCOL, "Package epochs differ")
     require(not package["missing_required_artifact_keys"], "Package has missing required artifacts")
-    require([item["key"] for item in package["artifacts"]] == spec["expected_artifact_keys"] == package["required_artifact_keys"],
-            "Artifact membership/order mismatch")
+    artifact_keys = [item["key"] for item in package["artifacts"]]
+    require(artifact_keys == spec["expected_artifact_keys"] and len(artifact_keys) == len(set(artifact_keys)),
+            "Artifact execution order or uniqueness mismatch")
+    required_keys = package["required_artifact_keys"]
+    require(len(required_keys) == len(set(required_keys)) and set(required_keys) == set(artifact_keys),
+            "Required artifact membership or uniqueness mismatch")
     require(len(package["artifacts"]) == expected[1] == spec["expected_artifact_count"], "Artifact count mismatch")
     references, sources, bodies, inputs, observed, paths = package_requirements(spec, package)
     require(set(files) == paths, "Lock must materialize exactly the paths required by the package")
@@ -278,7 +282,8 @@ def verify_prepared(root, spec, package, files, output, stdout, large_inputs):
     references, _, bodies, _, expected_keys, _ = package_requirements(spec, package)
     observations = {row["key"]: row for row in candidate["observations"]}
     require(len(observations) == len(candidate["observations"]) and set(observations) == expected_keys, "Observed input set differs")
-    require([entry["key"] for entry in candidate["entries"]] == package["required_artifact_keys"], "Prepared artifact order differs")
+    require([entry["key"] for entry in candidate["entries"]] == [item["key"] for item in package["artifacts"]],
+            "Prepared artifact execution order differs")
     actual_refs = {json.dumps(row["reference"], sort_keys=True) for row in candidate["references"]}
     require(actual_refs == {json.dumps(ref, sort_keys=True) for ref in references}
             and len(actual_refs) == len(candidate["references"]), "Prepared reference set differs or duplicates occur")

@@ -1,0 +1,32 @@
+{
+  "schema": "genesis-runtime-harness-correction/v1",
+  "previous_qualification_revision": "e9d5033951ba4237f11e9ff7a9582ec5c98ff48c",
+  "run_id": 46114351331,
+  "job_id": 140884692566,
+  "run_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46114351331",
+  "observed_error": "Artifact membership/order mismatch",
+  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "diagnosis": "S2 artifacts and required_artifact_keys contain the same 13 unique keys but list two L4 keys in different orders. The native contract requires membership and topological artifact execution order; it does not require required-key enumeration order to equal artifact execution order.",
+  "correction": "Keep exact artifact order from the immutable input lock, require unique exact required-key membership, preserve the original required-key vector in the candidate, and compare prepared entry order with package.artifacts. No input, runtime, protocol, test, guard or count changed.",
+  "positive_evidence_retained": {
+    "package": "S1-03",
+    "artifacts": 12,
+    "observations": 694,
+    "large_inputs": 6,
+    "candidate_id": "4761343d4137438b5c898f10869e98932676021d6515b4968310ea1a0241630f",
+    "prepared_sha256": "f6da0fcef4ea7b9d570720d1c9f32e756882048274a2e6fa48d4d1d429a80b96"
+  },
+  "archive": {
+    "artifact_id": 15250268404,
+    "sha256": "a89678bdc76b28fe0cd303d3fadf48927b1a2f72408b7bb27a269677f2fa5610",
+    "bytes": 377109
+  },
+  "common_guards": {
+    "job_id": 140884692756,
+    "exit_code": 0,
+    "base_sha": "3aaa5e0645f99940b66ee90d28aef93166f09ab1",
+    "gate_findings": 0,
+    "warn_findings": 4
+  },
+  "boundary": "This records a failed qualification harness attempt. S2 prepare and negative control were NOT_RUN in that attempt; S1 prepare succeeded. The whole run is not represented as green."
+}
