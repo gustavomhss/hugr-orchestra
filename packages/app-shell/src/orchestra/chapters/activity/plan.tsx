@@ -84,24 +84,25 @@ export function ActivityPlan(props: { query: string }) {
     const request = new AbortController()
     pending = request
     const id = ++requestID
-    const applyRead = platform.readActivityApply
+    const applyRead = ownedScope() === serverURL ? platform.readActivityApply : undefined
     const ownedURL = ownedScope()
-    setState("applyFailed", false)
-    if (applyRead && ownedURL === serverURL) {
-      void applyRead(serverURL).then((applyState) => {
-        if (applyState && requestID === id && scope() === serverURL && ownedScope() === serverURL && sdk() === currentSDK) {
-          setState({ applyState, applyScope: serverURL })
-        }
-      }).catch(() => {})
-    }
+    const canReadApply = Boolean(applyRead)
     setState({ scope: serverURL, busy: true, failed: false, verified: undefined, verifiedScope: undefined,
-      inspecting: false, inspectFailed: false })
+      inspecting: false, inspectFailed: false, applyState: undefined, applyScope: undefined, applyFailed: false })
     try {
       await currentSDK.ready
       request.signal.throwIfAborted()
-      const snapshot = await currentSDK.orchestra.activity.plan({ signal: request.signal })
-      if (request.signal.aborted || requestID !== id || scope() !== serverURL || sdk() !== currentSDK) return
-      setState("snapshot", snapshot)
+      const planRead = currentSDK.orchestra.activity.plan({ signal: request.signal }).then((snapshot) => {
+        if (!request.signal.aborted && requestID === id && scope() === serverURL && sdk() === currentSDK) setState("snapshot", snapshot)
+        return true
+      }).catch(() => false)
+      const applyReadResult = applyRead
+        ? Promise.resolve().then(() => applyRead(serverURL)).then((applyState) => ({ applyState, failed: !applyState }), () => ({ applyState: undefined, failed: true }))
+        : Promise.resolve({ applyState: undefined, failed: false })
+      const [planSucceeded, { applyState, failed: applyFailed }] = await Promise.all([planRead, applyReadResult])
+      if (request.signal.aborted || requestID !== id || scope() !== serverURL || ownedScope() !== ownedURL || sdk() !== currentSDK) return
+      setState({ applyState, applyScope: applyState ? serverURL : undefined, applyFailed: Boolean(canReadApply && applyFailed) })
+      if (!planSucceeded) setState("failed", true)
     } catch {
       if (!request.signal.aborted && requestID === id && scope() === serverURL && sdk() === currentSDK) setState("failed", true)
     } finally {
@@ -156,6 +157,11 @@ export function ActivityPlan(props: { query: string }) {
         server.current.variant !== "base" || sdk() !== client) return
       if (snapshot) setState({ verified: snapshot, verifiedScope: serverURL })
       else setState("inspectFailed", true)
+      const applyRead = platform.readActivityApply
+      setState({ applyState: undefined, applyScope: undefined, applyFailed: false })
+      const applyState = applyRead ? await Promise.resolve().then(() => applyRead(serverURL)).catch(() => undefined) : undefined
+      if (inspectID !== id || scope() !== serverURL || ownedScope() !== serverURL || sdk() !== client) return
+      setState({ applyState, applyScope: applyState ? serverURL : undefined, applyFailed: Boolean(platform.readActivityApply && !applyState) })
     } catch {
       if (!request.signal.aborted && inspectID === id && scope() === serverURL && ownedScope() === serverURL && sdk() === client) {
         setState("inspectFailed", true)
@@ -182,16 +188,20 @@ export function ActivityPlan(props: { query: string }) {
         approvalID: binding.approvalID, targetID: binding.targetID, generation: binding.generation,
       })
       if (!isCurrent()) return
+      if (!receipt) return
       if (receipt && (receipt.targetID !== binding.targetID || receipt.generation !== binding.generation || receipt.approvalID !== binding.approvalID)) {
-        setState("applyFailed", true)
+        setState({ applyState: undefined, applyScope: undefined, applyFailed: true })
         return
       }
-      const persisted = await platform.readActivityApply?.(serverURL)
+      const read = platform.readActivityApply
+      const persisted = read ? await Promise.resolve().then(() => read(serverURL)).catch(() => undefined) : undefined
       if (!isCurrent()) return
-      if (persisted) setState({ applyState: persisted, applyScope: serverURL })
-      else setState("applyFailed", true)
+      const result = persisted?.results.find((item) => item.approvalID === binding.approvalID && item.targetID === binding.targetID &&
+        item.generation === binding.generation && item.outcome === receipt.outcome)
+      if (persisted && result) setState({ applyState: persisted, applyScope: serverURL, applyFailed: false })
+      else setState({ applyState: undefined, applyScope: undefined, applyFailed: true })
     } catch {
-      if (isCurrent()) setState("applyFailed", true)
+      if (isCurrent()) setState({ applyState: undefined, applyScope: undefined, applyFailed: true })
     } finally {
       if (isCurrent()) setState("applyingTarget", undefined)
     }
@@ -235,12 +245,13 @@ export function ActivityPlan(props: { query: string }) {
     const current = server.current
     return platform.platform === "desktop" && platform.os === "linux" && current?.type === "sidecar" && current.variant === "base" &&
       state.verifiedScope === current.http.url && Boolean(platform.armActivityQuarantine) &&
-      !state.busy && !state.failed && !state.armTarget && !state.applyingTarget &&
+      !state.busy && !state.failed && !state.inspecting && !state.armTarget && !state.applyingTarget &&
       state.verified?.ready.some((ready) => ready.targetID === target.targetID && ready.generation === target.generation)
   }
   function applyBinding(row: PlanRow) {
     if (row.state !== "Armed" || state.busy || state.failed || state.inspecting || state.armTarget ||
-      !ownedScope() || state.applyScope !== ownedScope() || !state.applyState?.available || !platform.applyActivityQuarantine) return undefined
+      !ownedScope() || state.applyScope !== ownedScope() || !state.applyState?.available || state.applyState.partial ||
+      !platform.applyActivityQuarantine) return undefined
     return state.applyState.eligible.find((item) => item.approvalID === row.approvalID &&
       item.targetID === row.target.targetID && item.generation === row.target.generation)
   }
@@ -249,7 +260,7 @@ export function ActivityPlan(props: { query: string }) {
     <section aria-busy={state.busy}>
       <div class="activity-section-heading">
         <p class="mx-note">{language.t(state.verified ? "orchestra.monitor.planVerifiedSource" : "orchestra.monitor.planSource")}</p>
-        <button type="button" class="mx-btn" disabled={state.busy || Boolean(state.applyingTarget)} onClick={() => void refresh()}>
+        <button type="button" class="mx-btn" disabled={state.busy || state.inspecting || Boolean(state.applyingTarget)} onClick={() => void refresh()}>
           {language.t("orchestra.monitor.refresh")}
         </button>
         <Show when={platform.platform === "desktop" && platform.os === "linux" && Boolean(ownedScope() && platform.inspectActivityArm)}>
