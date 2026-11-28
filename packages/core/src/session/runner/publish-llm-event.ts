@@ -6,6 +6,7 @@ import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionMessage } from "@orchestra/core/session/message"
 import { SessionSchema } from "@orchestra/core/session/schema"
 import { LeanOutput } from "@orchestra/core/tool/lean-output"
+import { ActivityMonitor } from "@orchestra/core/activity-monitor"
 
 type Input = {
   readonly sessionID: SessionSchema.ID
@@ -432,10 +433,11 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
         }
         // Host metadata of this call: Lean measurements of an Orchestra settlement, or the child a hosted subagent ran in.
         const metadata = LeanOutput.take({ sessionID: input.sessionID, callID: event.id })
+        const finishedAt = yield* timestamp
         if ("error" in result) {
           yield* events.publish(SessionEvent.Tool.Failed, {
             sessionID: input.sessionID,
-            timestamp: yield* timestamp,
+            timestamp: finishedAt,
             assistantMessageID: tool.assistantMessageID,
             callID: event.id,
             error: result.error,
@@ -443,11 +445,12 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
             ...(metadata ? { metadata } : {}),
             provider,
           })
+          ActivityMonitor.complete({ sessionID: input.sessionID, assistantMessageID: tool.assistantMessageID, tool: tool.name, callID: event.id, finishedAt: DateTime.toEpochMillis(finishedAt) })
           return
         }
         yield* events.publish(SessionEvent.Tool.Success, {
           sessionID: input.sessionID,
-          timestamp: yield* timestamp,
+          timestamp: finishedAt,
           assistantMessageID: tool.assistantMessageID,
           callID: event.id,
           ...result,
@@ -456,6 +459,7 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
           ...(provider.executed ? { result: event.result } : {}),
           provider,
         })
+        ActivityMonitor.complete({ sessionID: input.sessionID, assistantMessageID: tool.assistantMessageID, tool: tool.name, callID: event.id, finishedAt: DateTime.toEpochMillis(finishedAt) })
         return
       }
       case "tool-error": {
@@ -465,9 +469,10 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
           return yield* Effect.die(`Tool error name changed for ${event.id}: ${tool.name} -> ${event.name}`)
         if (tool.settled) return yield* Effect.die(`Duplicate tool error: ${event.id}`)
         tool.settled = true
+        const finishedAt = yield* timestamp
         yield* events.publish(SessionEvent.Tool.Failed, {
           sessionID: input.sessionID,
-          timestamp: yield* timestamp,
+          timestamp: finishedAt,
           assistantMessageID: tool.assistantMessageID,
           callID: event.id,
           error: { type: "unknown", message: event.message },
@@ -476,6 +481,7 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
             ...(event.providerMetadata === undefined ? {} : { metadata: event.providerMetadata }),
           },
         })
+        ActivityMonitor.complete({ sessionID: input.sessionID, assistantMessageID: tool.assistantMessageID, tool: tool.name, callID: event.id, finishedAt: DateTime.toEpochMillis(finishedAt) })
         return
       }
       case "step-finish":

@@ -62,7 +62,7 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("activity ob
     // Only hide the additive getter; all process lifecycle and membership calls go to the real child.
     const legacy = new Proxy(child, {
       get(target, key) {
-        if (key === "treeId") return undefined
+        if (key === "treeId" || key === "observeTree") return undefined
         const value: unknown = Reflect.get(target, key, target)
         return typeof value === "function" ? value.bind(target) : value
       },
@@ -115,6 +115,7 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("activity ob
     const counts = { inspections: 0 }
     const observed = new Proxy(child, {
       get(target, key) {
+        if (key === "observeTree") return undefined
         if (key === "observeProcesses")
           return () => {
             counts.inspections++
@@ -171,6 +172,9 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical fo
     expect(row()?.footprint).toBeUndefined()
     await monitor.inspect(id)
     expect(row()?.footprint?.hypothesis).toBe("insufficient")
+    monitor.complete({ ...identity, sessionID: "other", finishedAt: Date.now() })
+    monitor.complete({ ...identity, assistantMessageID: "other", finishedAt: Date.now() })
+    monitor.complete({ ...identity, tool: "other", finishedAt: Date.now() })
     monitor.complete({ ...identity, callID: "other", finishedAt: Date.now() })
     await Bun.sleep(2)
     sample.bytes = 200

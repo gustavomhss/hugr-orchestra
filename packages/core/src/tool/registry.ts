@@ -145,6 +145,7 @@ const registryLayer = Layer.effect(
           }).pipe(
             Effect.provideService(ProcessProvenance.Current, {
               sessionID: input.sessionID,
+              assistantMessageID: input.assistantMessageID,
               agentID: input.agent,
               tool: input.call.name,
               callID: input.call.id,

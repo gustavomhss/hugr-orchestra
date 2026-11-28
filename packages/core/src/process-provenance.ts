@@ -4,6 +4,7 @@ import { Context, Effect } from "effect"
 
 export type Info = {
   readonly sessionID: string
+  readonly assistantMessageID?: string
   readonly agentID: string
   readonly tool: string
   readonly callID: string
