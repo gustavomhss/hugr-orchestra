@@ -49,6 +49,33 @@ test.each([false, true])("E6 TUI legacy default pins once from the actual known 
   } finally { await fixture.dispose() }
 })
 
+test("E6 TUI legacy default uses the Session checkout assessment instead of the global catalog", async () => {
+  const checkout = "/project/session-copy"
+  const release = Promise.withResolvers<void>()
+  const fixture = await mount({
+    session: { location: { directory: checkout, workspaceID: "wrk_session_copy" } },
+    preferences: { variant: { [key]: "default" } },
+    catalogModel: namedDefault,
+    reply: async (request) => {
+      await release.promise
+      return readyReply(model)(request)
+    },
+  })
+  try {
+    await wait(() => fixture.queries().length > 0, "held canonical checkout assessment")
+    expect(fixture.queries()[0]?.url.searchParams.get("location[directory]")).toBe(checkout)
+    const legacy = await Bun.file(fixture.preferenceFile).json()
+    expect(legacy.variantIntent).toBeUndefined()
+    release.resolve()
+    expect((await preferences(fixture.preferenceFile, (value) => value.variantIntent?.[key] === null))
+      .variantIntent?.[key]).toBeNull()
+    expect(fixture.context.local.model.intent().variant).toBeNull()
+  } finally {
+    release.resolve()
+    await fixture.dispose()
+  }
+})
+
 test("E6 TUI pinned named default stays literal after catalog removal and reload", async () => {
   const fixture = await mount({ preferences: { variant: { [key]: "default" } }, catalogModel: namedDefault, reply: readyReply(namedDefault) })
   try {

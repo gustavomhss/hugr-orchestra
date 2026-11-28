@@ -18,6 +18,7 @@ import { useTuiPaths, useTuiTerminalEnvironment } from "../../context/runtime"
 import { useClipboard } from "../../context/clipboard"
 import { Spinner } from "../spinner"
 import { useSDK } from "../../context/sdk"
+import type { SessionAdmissionStep } from "../../context/session-actions"
 import { makeModelExecutionQuery } from "@orchestra/client"
 import { useRoute } from "../../context/route"
 import { useProject } from "../../context/project"
@@ -64,6 +65,10 @@ registerOrchestraSpinner()
 export type { PromptProps, PromptRef } from "./support"
 
 let stashed: { prompt: PromptInfo; cursor: number } | undefined
+
+function modelRefKey(model: { providerID: string; id: string; variant?: string } | undefined) {
+  return model && JSON.stringify([model.providerID, model.id, model.variant])
+}
 
 export function Prompt(props: PromptProps) {
   let input: TextareaRenderable
@@ -826,17 +831,37 @@ export function Prompt(props: PromptProps) {
     const binding = sdk.binding()
     const placement = local.model.execution.location(props.sessionID)
     const destination = props.sessionID ? undefined : move.destination()
-    return { key: JSON.stringify({ sessionID: props.sessionID, route: route.data,
-      context: local.model.execution.context(placement),
+    return { key: JSON.stringify({ sessionID: props.sessionID, route: route.data, placement,
       epoch: sdk.connectionEpoch(), directory: binding.directory, url: binding.url,
       headers: [...new Headers(binding.headers).entries()] }), fetch: binding.fetch, placement, destination }
   }, undefined, { equals: (a, b) => !!a && a.key === b.key && a.fetch === b.fetch && a.destination === b.destination })
-  const admissionOwner = createMemo(() => ({
+  const draft = createMemo(() => ({ key: JSON.stringify(store.prompt), mode: store.mode, text: store.prompt.input }),
+    undefined, { equals: (a, b) => !!a && a.key === b.key && a.mode === b.mode })
+  const admissionContext = createMemo(() => ({
     prompt: promptOwner(),
-    selection: JSON.stringify([local.model.execution.choiceRevision(), local.agent.id(), local.model.execution.input().model]),
-  }), undefined, { equals: (a, b) => !!a && a.prompt === b.prompt && a.selection === b.selection })
+    ready: !props.sessionID || sync.session.selectionReady(props.sessionID),
+    key: local.model.execution.context(promptOwner().placement),
+  }), undefined, { equals: (a, b) => !!a && a.prompt === b.prompt && a.ready === b.ready && a.key === b.key })
+  const admissionOwner = createMemo(() => {
+    const session = props.sessionID ? sync.session.get(props.sessionID) : undefined
+    const selection = props.sessionID ? sync.session.selection(props.sessionID) : undefined
+    const value = {
+      choice: local.model.execution.choiceRevision(),
+      agent: local.agent.id(),
+      model: modelRefKey(local.model.execution.input().model),
+      persistedAgent: session?.agent,
+      persistedModel: modelRefKey(session?.model),
+      agentEvent: selection?.agent?.id,
+      modelEvent: selection?.model?.id,
+      agentEcho: selection?.agent?.value,
+      modelEcho: modelRefKey(selection?.model?.value),
+    }
+    return { context: admissionContext(), selection: value, key: JSON.stringify(value) }
+  }, undefined, { equals: (a, b) => !!a && a.context === b.context && a.key === b.key })
+  let observeSelection: ((owner: ReturnType<typeof admissionOwner>) => void) | undefined
   createComputed(() => {
-    admissionOwner()
+    const owner = admissionOwner()
+    observeSelection?.(owner)
     // A genuine owner departure cancels this Prompt's admission work, independently of visual queries.
     const previous = [...admissionQueries]
     admissionQueries.clear()
@@ -859,6 +884,7 @@ export function Prompt(props: PromptProps) {
       return submitted
     } finally {
       if (destination?.type === "new" && move.creating()) move.finishSubmit(destination, false)
+      observeSelection = undefined
       submitting = false
     }
   }
@@ -877,6 +903,11 @@ export function Prompt(props: PromptProps) {
     if (!store.prompt.input) return false
     const agent = local.agent.id()
     if (!agent) return false
+    if (store.mode !== "shell" && !admissionContext().ready) {
+      if (props.sessionID) void sync.session.refreshSelection(props.sessionID).catch(() => undefined)
+      toast.show({ message: "Refreshing session selection. Try sending again.", variant: "warning" })
+      return false
+    }
     if (store.mode !== "shell" && !local.model.ready) return false
     const trimmed = store.prompt.input.trim()
     if (trimmed === "exit" || trimmed === "quit" || trimmed === ":q") {
@@ -892,7 +923,7 @@ export function Prompt(props: PromptProps) {
     }
 
     const variant = effective?.variant
-    const promptVersion = JSON.stringify(store.prompt)
+    const capturedDraft = draft()
     const inputText = expandTrackedPastedText(
       store.prompt.input,
       input.extmarks.getAllForTypeId(promptPartTypeId).flatMap((extmark) => {
@@ -908,14 +939,44 @@ export function Prompt(props: PromptProps) {
       ? inputText.split("\n")[0].split(" ")[0].slice(1)
       : undefined
     const captured = admissionOwner()
-    const placement = captured.prompt.placement
-    const ownerCurrent = () => !admissionLifetime.disposed && sdk.binding().active && promptOwner() === captured.prompt
+    const owner = captured.context.prompt
+    const placement = owner.placement
+    const ownerCurrent = () => !admissionLifetime.disposed && sdk.binding().active && promptOwner() === owner
     let targetContext: { placement: NonNullable<typeof placement>; context: string } | undefined
     const sameDraft = () => ownerCurrent() &&
-      JSON.stringify(store.prompt) === promptVersion && store.mode === currentMode &&
+      draft() === capturedDraft && !input.isDestroyed && input.plainText === capturedDraft.text
+    const sameContext = () => sameDraft() && admissionContext() === captured.context &&
       (!targetContext || targetContext.context === local.model.execution.context(targetContext.placement))
-    const current = () => sameDraft() && admissionOwner() === captured
-    const guard = () => { if (!current()) throw new DOMException("", "AbortError") }
+    const current = () => sameContext() && admissionOwner() === captured
+    const model = { providerID: selectedModel.providerID, modelID: selectedModel.modelID, variant }
+    const modelKey = modelRefKey({ providerID: model.providerID, id: model.modelID, variant })
+    const awaitingEcho = { agent: false, model: false }
+    let previous = captured.selection
+    let selectionChanged = false
+    const guard = (step: SessionAdmissionStep) => {
+      if (!sameContext() || (step === "agent" && !current())) throw new DOMException("", "AbortError")
+      // The first write's echo rekeys Local's choices. Only echoes of writes we started can
+      // cross that boundary, and the second write still uses the model checked in preflight.
+      observeSelection ??= (owner) => {
+        const next = owner.selection
+        const ownAgent = awaitingEcho.agent && next.agentEvent !== previous.agentEvent &&
+          next.agentEcho === agent && next.persistedAgent === agent
+        const ownModel = awaitingEcho.model && next.modelEvent !== previous.modelEvent &&
+          next.modelEcho === modelKey && next.persistedModel === modelKey
+        selectionChanged ||= owner.context !== captured.context || next.choice !== previous.choice ||
+          next.agent !== previous.agent ||
+          (!ownAgent && (next.agentEvent !== previous.agentEvent || next.persistedAgent !== previous.persistedAgent)) ||
+          (!ownModel && (next.modelEvent !== previous.modelEvent || next.persistedModel !== previous.persistedModel)) ||
+          (!ownAgent && !ownModel && next.model !== previous.model)
+        if (ownAgent) awaitingEcho.agent = false
+        if (ownModel) awaitingEcho.model = false
+        previous = next
+      }
+      observeSelection(admissionOwner())
+      if (selectionChanged) throw new DOMException("", "AbortError")
+      if (step === "agent" || step === "model") awaitingEcho[step] = true
+      if (step === "admit") observeSelection = undefined
+    }
     let sessionID = props.sessionID
     let command: string | undefined
 
@@ -951,8 +1012,9 @@ export function Prompt(props: PromptProps) {
     }
 
     if (currentMode !== "shell" && !placement) return false
-    const destination = captured.prompt.destination
-    if (destination?.type === "new" && currentMode !== "shell" && placement && !await preflight(placement)) return false
+    const destination = owner.destination
+    if (destination?.type === "new" && currentMode !== "shell" && placement &&
+      !move.preparedDirectory(destination, placement) && !await preflight(placement)) return false
     const directory = sessionID ? placement?.directory : await move.getDirectory({
       destination,
       context: store.prompt.input,
@@ -965,10 +1027,11 @@ export function Prompt(props: PromptProps) {
     if (currentMode !== "shell" && (!target || !await preflight(target))) return false
 
     if (sessionID == null) {
+      if (!current()) return false
       const created = await sdk.actions
         .create({
           agent,
-          model: { providerID: selectedModel.providerID, modelID: selectedModel.modelID, variant },
+          model,
           directory: target?.directory,
           workspaceID: target?.workspace,
         })
@@ -1025,7 +1088,7 @@ export function Prompt(props: PromptProps) {
           command,
           arguments: args,
           agent,
-          model: { providerID: selectedModel.providerID, modelID: selectedModel.modelID, variant },
+          model,
           files: nonTextParts.filter((x) => x.type === "file"),
         }, guard)
         .then(() => true)
@@ -1044,13 +1107,13 @@ export function Prompt(props: PromptProps) {
           text: inputText,
           context: editorText,
           agent,
-          model: { providerID: selectedModel.providerID, modelID: selectedModel.modelID, variant },
+          model,
           files: nonTextParts.filter((part) => part.type === "file"),
           agents: nonTextParts.filter((part) => part.type === "agent"),
         }, guard)
         .then(() => true)
         .catch((error) => {
-          if (!current()) return false
+          if (!sameDraft() || (error instanceof DOMException && error.name === "AbortError")) return false
           toast.show({
             title: "Failed to send prompt",
             message: errorMessage(error),
@@ -1058,7 +1121,7 @@ export function Prompt(props: PromptProps) {
           })
           return false
         })
-      if (!sent || !current()) return false
+      if (!sent || !sameDraft()) return false
       if (editorText) editor.markSelectionSent()
     }
     history.append({

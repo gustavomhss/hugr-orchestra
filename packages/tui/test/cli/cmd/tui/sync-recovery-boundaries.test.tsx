@@ -131,6 +131,132 @@ test("a reconnect forces a Session whose first history hydration is still pendin
   }
 }, 15_000)
 
+test("reconnect replaces exact Session selection before held history and survives a failed todo read", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const oldMetadata = Promise.withResolvers<Response>()
+  const freshMetadata = Promise.withResolvers<Response>()
+  const oldHistory = Promise.withResolvers<Response>()
+  const state = { metadataReads: 0, historyReads: 0, todoReads: 0 }
+  const original = { ...v2Session({ id: sessionID, directory }), agent: "maestro" }
+  const fresh = {
+    ...original, agent: "backend", model: { providerID: "provider", id: "new-model", variant: "high" },
+    location: { directory: "/tmp/new-placement", workspaceID: "wrk_new" },
+  }
+  const mounted = await mount(routes((url) => {
+    if (url.pathname === `/api/session/${sessionID}`) {
+      state.metadataReads++
+      if (state.metadataReads === 2) return oldMetadata.promise
+      if (state.metadataReads === 3) return freshMetadata.promise
+      return json({ data: original })
+    }
+    if (url.pathname === `/api/session/${sessionID}/message` && ++state.historyReads === 2) return oldHistory.promise
+    if (url.pathname === `/api/session/${sessionID}/todo` && ++state.todoReads === 3)
+      return Promise.reject(new Error("Reconnect todo failed"))
+  }), tmp.path)
+  const sync = mounted.sync.session
+  const started = observe(sync.sync(sessionID))
+  let pending: ReturnType<typeof observe> | undefined
+  try {
+    await started
+    expect(sync.selectionReady(sessionID)).toBe(true)
+    await emit(mounted, connected(1))
+    pending = observe(sync.sync(sessionID, { force: true }))
+    await wait(() => state.historyReads === 2 && state.metadataReads === 2)
+    await emit(mounted, connected(2))
+    await wait(() => state.metadataReads === 3)
+    expect(sync.selectionReady(sessionID)).toBe(false)
+    expect(sync.get(sessionID)?.agent).toBe("maestro")
+    expect(state.historyReads).toBe(2)
+    const recovered = observe(sync.sync(sessionID, { force: true }))
+
+    freshMetadata.resolve(json({ data: fresh }))
+    await wait(() => sync.selectionReady(sessionID))
+    expect(sync.get(sessionID)).toMatchObject({ agent: fresh.agent, model: fresh.model, location: fresh.location })
+    expect(state.historyReads).toBe(2)
+
+    oldMetadata.resolve(json({ data: original }))
+    oldHistory.resolve(messages("old held history"))
+    await pending
+    expect(await recovered).toMatchObject({ reason: "Transport" })
+    expect(state.todoReads).toBe(3)
+    expect(sync.selectionReady(sessionID)).toBe(true)
+    expect(sync.get(sessionID)).toMatchObject({ agent: fresh.agent, model: fresh.model, location: fresh.location })
+  } finally {
+    oldMetadata.resolve(json({ data: original }))
+    freshMetadata.resolve(json({ data: fresh }))
+    oldHistory.resolve(messages("cleanup"))
+    await Promise.allSettled([started, pending])
+    mounted.app.renderer.destroy()
+  }
+}, 15_000)
+
+test("move confirmation fences held Session metadata and durable sequence orders live placement and selection", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const stale = Promise.withResolvers<Response>()
+  const late = Promise.withResolvers<Response>()
+  const arrival = { metadataReads: 0 }
+  const original = { ...v2Session({ id: sessionID, directory }), agent: "maestro", time: { created: 0, updated: 100 } }
+  const moved = { ...original, location: { directory: "/tmp/moved-placement", workspaceID: "wrk_moved" } }
+  const mounted = await mount(routes((url) => {
+    if (url.pathname !== `/api/session/${sessionID}`) return
+    arrival.metadataReads++
+    if (arrival.metadataReads === 2) return stale.promise
+    if (arrival.metadataReads === 4) return late.promise
+    return json({ data: arrival.metadataReads === 1 ? original : moved })
+  }), tmp.path)
+  const sync = mounted.sync.session
+  try {
+    await sync.refreshSelection(sessionID)
+    const beforeMove = sync.refreshSelection(sessionID)
+    await wait(() => arrival.metadataReads === 2)
+    const finish = sync.beginMove(sessionID)
+    expect(sync.selectionReady(sessionID)).toBe(false)
+    expect(await sync.refreshSelection(sessionID)).toBeUndefined()
+    expect(sync.get(sessionID)?.location.directory).toBe(directory)
+    await finish()
+    expect(sync.selectionReady(sessionID)).toBe(true)
+    expect(sync.get(sessionID)?.location).toMatchObject(moved.location)
+    stale.resolve(json({ data: original }))
+    await beforeMove
+    expect(sync.get(sessionID)?.location).toMatchObject(moved.location)
+
+    const beforeEvents = sync.refreshSelection(sessionID)
+    await wait(() => arrival.metadataReads === 4)
+    const location = { directory: "/tmp/live-placement", workspaceID: "wrk_live" }
+    await emit(mounted, {
+      ...event({ id: "evt_latest_move", type: "session.next.moved", data: { sessionID, timestamp: 50, location } }),
+      durable: { aggregateID: sessionID, seq: 5 },
+    })
+    await emit(mounted, {
+      ...event({ id: "evt_latest_agent", type: "session.next.agent.switched", data: {
+        sessionID, timestamp: 49, agent: "backend", messageID: "msg_latest_agent",
+      } }),
+      durable: { aggregateID: sessionID, seq: 7 },
+    })
+    await emit(mounted, {
+      ...event({ id: "evt_earlier_move", type: "session.next.moved", data: {
+        sessionID, timestamp: 95, location: original.location,
+      } }),
+      durable: { aggregateID: sessionID, seq: 4 },
+    })
+    await emit(mounted, {
+      ...event({ id: "evt_earlier_agent", type: "session.next.agent.switched", data: {
+        sessionID, timestamp: 96, agent: "maestro", messageID: "msg_earlier_agent",
+      } }),
+      durable: { aggregateID: sessionID, seq: 6 },
+    })
+    late.resolve(json({ data: moved }))
+    await beforeEvents
+    expect(sync.get(sessionID)).toMatchObject({ agent: "backend", location })
+  } finally {
+    stale.resolve(json({ data: original }))
+    late.resolve(json({ data: moved }))
+    mounted.app.renderer.destroy()
+  }
+}, 15_000)
+
 test("an ordinary sync retries a failed forced history while retaining cached and live messages", async () => {
   await using tmp = await tmpdir()
   await Bun.write(`${tmp.path}/kv.json`, "{}")

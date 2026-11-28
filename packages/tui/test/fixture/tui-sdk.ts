@@ -29,23 +29,29 @@ export function createEventSource() {
       },
     } satisfies EventSource,
     emit(event: GlobalEvent) {
-      if (!fn) throw new Error("event source not ready")
-      fn(event)
+      if (!fn && !stream) throw new Error("event source not ready")
+      fn?.(event)
       const chunk = new TextEncoder().encode(
         `data: ${JSON.stringify({
           ...event.payload,
+          durable: event.durable && { ...event.durable, version: 1 },
           location: { directory: event.directory, workspaceID: event.workspace },
         })}\n\n`,
       )
       if (stream) return stream.enqueue(chunk)
       pending.push(chunk)
     },
-    response() {
+    response(signal?: AbortSignal) {
       return new Response(
         new ReadableStream<Uint8Array>({
           start(controller) {
             stream = controller
             for (const chunk of pending.splice(0)) controller.enqueue(chunk)
+            signal?.addEventListener("abort", () => {
+              if (stream !== controller) return
+              stream = undefined
+              controller.close()
+            }, { once: true })
           },
           cancel() {
             stream = undefined

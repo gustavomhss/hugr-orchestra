@@ -15,6 +15,8 @@ function moveReminderText(directory: string) {
   return `<system-reminder>The user has changed the current working directory to "${directory}". This is still the same project but at a possibly new location; take this into account when working with any files from now on.</system-reminder>`
 }
 
+type CopySource = { directory?: string; workspace?: string }
+
 export function usePromptMove(input: { projectID: () => string | undefined; sessionID: () => string | undefined }) {
   const dialog = useDialog()
   const sdk = useSDK()
@@ -26,11 +28,18 @@ export function usePromptMove(input: { projectID: () => string | undefined; sess
   const [creating, setCreating] = createSignal(false)
   const [creatingDots, setCreatingDots] = createSignal(3)
   const [progress, setProgress] = createSignal<string>()
-  let preparedCopy: { destination: HomeSessionDestination; directory: string } | undefined
+  let preparedCopy: { destination: HomeSessionDestination; projectID: string; source: CopySource; directory: string } | undefined
+
+  function preparedDirectory(destination: HomeSessionDestination | undefined, source: CopySource) {
+    if (destination && preparedCopy?.destination === destination && preparedCopy.projectID === input.projectID() &&
+      preparedCopy.source.directory === source.directory && preparedCopy.source.workspace === source.workspace) {
+      return preparedCopy.directory
+    }
+  }
 
   async function create(request: {
     context?: string
-    location: { directory?: string; workspace?: string }
+    location: CopySource
     destination?: HomeSessionDestination
     current?: () => boolean
   }) {
@@ -39,7 +48,7 @@ export function usePromptMove(input: { projectID: () => string | undefined; sess
     setCreating(true)
     setProgress("Creating copy")
     try {
-      let directory = preparedCopy?.destination === request.destination ? preparedCopy?.directory : undefined
+      let directory = preparedDirectory(request.destination, request.location)
       if (!directory) {
         const generated = await sdk.api.projectCopies.generateName({
           projectID,
@@ -55,7 +64,8 @@ export function usePromptMove(input: { projectID: () => string | undefined; sess
           name: generated.name,
         })
         directory = copy.directory
-        if (request.destination) preparedCopy = { destination: request.destination, directory }
+        if (request.destination)
+          preparedCopy = { destination: request.destination, projectID, source: request.location, directory }
       }
       if (request.current && !request.current()) return
 
@@ -145,7 +155,9 @@ export function usePromptMove(input: { projectID: () => string | undefined; sess
     }
     setProgress("Moving session")
     try {
+      const finishMove = sync.session.beginMove(sessionID)
       await sdk.api.sessions.move({ sessionID, location: { directory }, moveChanges: choice === "yes" })
+        .finally(() => finishMove().catch(() => undefined))
       await sdk.api.sessions
         .synthetic({ sessionID, text: moveReminderText(directory), resume: false })
         .catch(() => undefined)
@@ -165,7 +177,7 @@ export function usePromptMove(input: { projectID: () => string | undefined; sess
   function getDirectory(input: {
     destination?: HomeSessionDestination
     context: string
-    location: { directory?: string; workspace?: string }
+    location: CopySource
     current: () => boolean
   }) {
     if (input.destination?.type === "new") return create(input)
@@ -202,6 +214,7 @@ export function usePromptMove(input: { projectID: () => string | undefined; sess
     getDirectory,
     open,
     pendingNew,
+    preparedDirectory,
     progress,
     startSubmit,
   }

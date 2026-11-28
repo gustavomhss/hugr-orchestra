@@ -382,16 +382,18 @@ test("E6 TUI releases a denied copy preflight and retries the prepared checkout"
     expect(fixture.context.home?.destination()).toEqual({ type: "new" })
     expect(fixture.prompt.current.input).toBe("continue on the new copy")
 
-    fixture.control.reply = (request) => json({ location: {
-      directory: new URL(request.url).searchParams.get("location[directory]"),
-    }, data: decision() })
-    const beforeRetry = fixture.queries().length
+    fixture.control.reply = (request) => {
+      const directory = new URL(request.url).searchParams.get("location[directory]")
+      return json({ location: { directory }, data: decision(directory === fixture.copyDirectory ? "ready" : "unavailable") })
+    }
+    const beforeRetry = fixture.calls.length
     submit()
     await wait(() => fixture.admissions().length === 1 && fixture.prompt.current.input === "", "retry admitted on the prepared copy")
     expect(writes(copyPath)).toHaveLength(1)
     expect(writes("/api/session").map((call) => call.body)).toEqual([{ agent: "maestro", model: ref, location: { directory: fixture.copyDirectory } }])
-    expect(fixture.queries().slice(beforeRetry, beforeRetry + 2).map((call) => call.url.searchParams.get("location[directory]")))
-      .toEqual([fixture.root, fixture.copyDirectory])
+    const beforeAdmission = fixture.calls.slice(beforeRetry, fixture.calls.indexOf(fixture.admissions()[0]!))
+    expect(beforeAdmission.filter((call) => call.path === "/api/model/execution")
+      .map((call) => call.url.searchParams.get("location[directory]"))).toEqual([fixture.copyDirectory])
   } finally { await fixture.dispose() }
 })
 
@@ -441,6 +443,11 @@ test("E6 TUI can select a canonical model missing from the legacy catalog after 
     await fixture.app.renderOnce()
     await fixture.app.mockInput.pressEnter()
     await wait(() => fixture.context.local.model.current()?.modelID === fresh.id, "fresh canonical row was selectable")
+    await wait(() => {
+      void fixture.app.renderOnce()
+      const frame = fixture.app.captureCharFrame()
+      return frame.includes("Select variant") && frame.includes("high")
+    }, "canonical model selection opened its variant picker")
   } finally { await fixture.dispose() }
 })
 
@@ -468,6 +475,91 @@ test("E6 TUI stops before the model write when placement changes during the agen
     expect(fixture.admissions()).toEqual([])
     expect(fixture.prompt.current.input).toBe("keep after move")
   } finally { release.resolve(); await fixture.dispose() }
+})
+
+test.each([false, true])("E6 TUI reconciles its own selection SSE before RPC receipts; concurrent model event=%s", async (external) => {
+  const stale = { ...ref, id: "blocked" }
+  const selected = { ...ref, variant: "high" }
+  const fixture = await mount({ sse: true, session: { agent: "maestro", model: stale } })
+  const releaseAgent = Promise.withResolvers<void>()
+  const send = spyOn(fixture.context.sdk.actions, "prompt")
+  try {
+    await fixture.context.sync.session.refreshSelection("session-1")
+    await wait(() => fixture.context.local.model.ready, "model preferences loaded")
+    fixture.control.reply = async (request) => {
+      const input = Schema.decodeUnknownSync(ModelExecution.Input)(await request.clone().json())
+      return json({ location: { directory: fixture.root }, data: { ...decision(),
+        selection: { status: "ready", engine: "orchestra", ref: input.model ?? ref },
+      } })
+    }
+    fixture.context.local.agent.set("backend")
+    fixture.context.local.model.set({ providerID: selected.providerID, modelID: selected.id })
+    fixture.context.local.model.variant.set(selected.variant)
+    expect(fixture.context.local.model.execution.input().model).toEqual(selected)
+    const emit = (payload: Parameters<typeof fixture.events.emit>[0]["payload"], seq: number) => {
+      fixture.events.emit({ directory: fixture.root, durable: { aggregateID: "session-1", seq }, payload })
+    }
+    fixture.control.before = async (path) => {
+      if (path === "/api/session/session-1/agent") {
+        emit({ id: "evt_own_agent", type: "session.next.agent.switched", data: {
+          sessionID: "session-1", timestamp: 1, messageID: "msg_own_agent", agent: "backend",
+        } }, 1)
+        await releaseAgent.promise
+      }
+      if (path === "/api/session/session-1/model") {
+        emit({ id: "evt_own_model", type: "session.next.model.switched", data: {
+          sessionID: "session-1", timestamp: 2, messageID: "msg_own_model", model: selected,
+        } }, 2)
+        await wait(() => fixture.context.sync.session.selection("session-1")?.model?.id === "evt_own_model", "own model SSE applied before its receipt")
+      }
+    }
+    fixture.prompt.set({ input: "send with the preflight selection", parts: [], mode: "normal" })
+    fixture.prompt.submit()
+    await wait(() => fixture.context.sync.session.selection("session-1")?.agent?.id === "evt_own_agent", "own agent SSE applied while its receipt is held")
+    if (external) {
+      emit({ id: "evt_external_model", type: "session.next.model.switched", data: {
+        sessionID: "session-1", timestamp: 2, messageID: "msg_external_model", model: selected,
+      } }, 2)
+      await wait(() => fixture.context.sync.session.selection("session-1")?.model?.id === "evt_external_model", "unrelated model event before any model write")
+    }
+    releaseAgent.resolve()
+    if (!external) await wait(() => fixture.prompt.current.input === "", "own selection acknowledged and the prompt admitted")
+    if (external) await expect(send.mock.results[0]?.value).rejects.toMatchObject({ name: "AbortError" })
+    const writes = fixture.calls.filter((call) => call.method === "POST" && call.path.startsWith("/api/session/session-1/"))
+    expect(writes.map((call) => call.path.split("/").at(-1))).toEqual(external ? ["agent"] : ["agent", "model", "prompt"])
+    if (!external) expect(writes[1]?.body).toEqual({ model: selected })
+    if (external) expect(fixture.prompt.current.input).toBe("send with the preflight selection")
+  } finally { releaseAgent.resolve(); send.mockRestore(); await fixture.dispose() }
+})
+
+test.each([false, true])("E6 TUI consumes the admitted draft after a model SSE during the prompt ACK; edited=%s", async (edited) => {
+  const fixture = await ready({ sse: true, session: { agent: "maestro", model: ref } })
+  const entered = Promise.withResolvers<void>()
+  const release = Promise.withResolvers<void>()
+  const send = spyOn(fixture.context.sdk.actions, "prompt")
+  try {
+    fixture.control.before = async (path) => {
+      if (path !== "/api/session/session-1/prompt") return
+      entered.resolve()
+      await release.promise
+    }
+    fixture.prompt.set({ input: "admitted text", parts: [], mode: "normal" })
+    fixture.prompt.submit()
+    await entered.promise
+    const nextModel = { ...ref, id: "blocked" }
+    fixture.events.emit({ directory: fixture.root, durable: { aggregateID: "session-1", seq: 1 },
+      payload: { id: "evt_model_during_ack", type: "session.next.model.switched", data: {
+        sessionID: "session-1", timestamp: 1, messageID: "msg_model_during_ack", model: nextModel,
+      } },
+    })
+    await wait(() => fixture.context.local.model.execution.input().model?.id === nextModel.id, "new model visible while the admitted prompt receipt is held")
+    if (edited) fixture.prompt.set({ input: "draft edited during ACK", parts: [], mode: "normal" })
+    release.resolve()
+    expect(await send.mock.results[0]?.value).toMatchObject({ prompt: { text: "admitted text" } })
+    await Bun.sleep(0)
+    expect(fixture.prompt.current.input).toBe(edited ? "draft edited during ACK" : "")
+    expect(fixture.admissions()).toHaveLength(1)
+  } finally { release.resolve(); send.mockRestore(); await fixture.dispose() }
 })
 
 test("E6 TUI rendered selector keeps NEW A after A to B to A and a late old A response", async () => {

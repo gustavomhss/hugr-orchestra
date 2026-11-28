@@ -58,7 +58,7 @@ export function DialogModel(props: { providerID?: string }) {
             footer: !allowed ? unavailable(item.providerID, item.modelID) :
               model.cost?.input === 0 && item.providerID === "opencode" ? "Free" : undefined,
             onSelect: () => {
-              onSelect(item.providerID, item.modelID)
+              onSelect(item.providerID, item.modelID, Object.keys(model.variants ?? {}))
             },
           },
         ]
@@ -89,7 +89,7 @@ export function DialogModel(props: { providerID?: string }) {
           category: connected() ? providerName(id) : undefined,
           disabled: !allowed,
           footer: !allowed ? unavailable(id, model.id) : model.cost?.input === 0 && id === "opencode" ? "Free" : undefined,
-          onSelect: () => onSelect(id, model.id),
+          onSelect: () => onSelect(id, model.id, Object.keys(model.variants ?? {})),
         }]
       }), props.providerID !== undefined))
     const selected = local.model.intent().model
@@ -135,16 +135,16 @@ export function DialogModel(props: { providerID?: string }) {
     return value.name
   })
 
-  function onSelect(providerID: string, modelID: string) {
+  function onSelect(providerID: string, modelID: string, variants: string[]) {
     if (!local.model.execution.allows({ providerID, modelID })) return
     local.model.set({ providerID, modelID }, { recent: true })
-    const list = local.model.variant.list()
+    // Selecting changes the assessment owner. Use the variants from the row just validated.
     const cur = local.model.variant.selected()
-    if (cur === null || (typeof cur === "string" && list.includes(cur))) {
+    if (cur === null || (typeof cur === "string" && variants.includes(cur))) {
       dialog.clear()
       return
     }
-    if (list.length > 0) {
+    if (variants.length > 0) {
       dialog.replace(() => <DialogVariant />)
       return
     }
@@ -175,6 +175,7 @@ export function DialogModel(props: { providerID?: string }) {
       flat={true}
       skipFilter={true}
       showDisabled={true}
+      preserveSelection={true}
       title={title()}
       current={local.model.current()}
     />

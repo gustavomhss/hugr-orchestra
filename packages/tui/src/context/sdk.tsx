@@ -80,6 +80,13 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
       // Recovery owners may mount after this greeting, and all observers must see its new epoch.
       if (event.payload.type === "server.connected") setConnectionEpoch((value) => value + 1)
       queue.push(event)
+      // Selection and placement changes immediately affect whether a pending Send can write.
+      if (event.payload.type === "session.next.agent.switched" || event.payload.type === "session.next.model.switched" ||
+          event.payload.type === "session.next.moved" || event.payload.type === "session.next.deleted") {
+        if (timer) clearTimeout(timer)
+        flush()
+        return
+      }
       const elapsed = Date.now() - last
 
       if (timer) return
@@ -105,12 +112,15 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
           await (async () => {
             for await (const event of v2.events.subscribe({ signal: ctrl.signal })) {
               if (ctrl.signal.aborted) break
-              setOffline(false)
-              handleEvent({
-                directory: event.location?.directory ?? props.directory ?? "",
-                workspace: event.location?.workspaceID,
-                payload: { id: event.id, type: event.type, data: event.data } as GlobalEvent["payload"],
-              }, event.location !== undefined)
+              batch(() => {
+                setOffline(false)
+                handleEvent({
+                  directory: event.location?.directory ?? props.directory ?? "",
+                  workspace: event.location?.workspaceID,
+                  durable: event.durable,
+                  payload: { id: event.id, type: event.type, data: event.data } as GlobalEvent["payload"],
+                }, event.location !== undefined)
+              })
             }
           })().catch(() => {})
           if (!abort.signal.aborted && !ctrl.signal.aborted) setOffline(true)

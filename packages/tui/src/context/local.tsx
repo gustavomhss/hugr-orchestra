@@ -1,6 +1,6 @@
 import { createStore } from "solid-js/store"
 import { createSimpleContext } from "./helper"
-import { batch, createComputed, createEffect, createMemo, createSignal, onCleanup, untrack } from "solid-js"
+import { batch, createComputed, createEffect, createMemo, createSignal, on, onCleanup, untrack } from "solid-js"
 import { makeModelExecutionQuery, type ModelExecutionState } from "@orchestra/client"
 import { useSync } from "./sync"
 import { useEvent } from "./event"
@@ -85,6 +85,9 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
     const event = useEvent()
     const permission = usePermission()
     const sessionID = () => route.data.type === "session" ? route.data.sessionID : undefined
+    createEffect(on([sessionID, sdk.connectionEpoch], ([id]) => {
+      if (id && !sync.session.selectionReady(id)) void sync.session.refreshSelection(id).catch(() => undefined)
+    }))
     const sessionInfo = createMemo(() => {
       const id = sessionID()
       return id ? sync.session.get(id) : undefined
@@ -372,9 +375,9 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         const key = `${selected.providerID}/${selected.modelID}`
         if (key in modelStore.variantIntent || modelStore.variant[key] !== "default") return
         const assessed = assessedModel(selected)
-        const metadata = sync.data.provider.find((provider) => provider.id === selected.providerID)?.models[selected.modelID]
-        if (!assessed && !metadata) return
-        const named = assessed ? assessed.variants.some((variant) => variant.id === "default") : !!metadata?.variants && "default" in metadata.variants
+        const id = sessionID()
+        if (!assessed || (id && !sync.session.selectionReady(id))) return
+        const named = assessed.variants.some((variant) => variant.id === "default")
         setModelStore("variantIntent", key, named ? "default" : null)
         save()
       })
@@ -389,7 +392,9 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         changed: (value) => { readyOwner = value.status === "ready" ? owner() : undefined; setView("value", value) } })
       createComputed(() => {
         const captured = owner()
-        const ready = modelStore.ready && (captured.request.model !== undefined || sync.data.catalogRevision > 0)
+        const id = sessionID()
+        const ready = (!id || sync.session.selectionReady(id)) &&
+          modelStore.ready && (captured.request.model !== undefined || sync.data.catalogRevision > 0)
         untrack(() => {
           if (!ready || !captured.request.location) { executionQuery.invalidate(); return }
           void executionQuery.load(captured, captured.request)

@@ -75,7 +75,7 @@ export async function wait(predicate: () => boolean, label: string, milliseconds
 
 // One injected transport preserves the actual generated SDK, catalog adapter, providers and Prompt.
 // This is contract-consumption evidence, not a substitute for the backend describe HTTP gate.
-export async function mount(options: { draft?: boolean; initial?: ModelExecution.Response; reply?: (request: Request) => Response | Promise<Response>;
+export async function mount(options: { draft?: boolean; sse?: boolean; initial?: ModelExecution.Response; reply?: (request: Request) => Response | Promise<Response>;
   preferences?: { variant?: Record<string, string>; variantIntent?: Record<string, unknown> };
   catalogModel?: Model.Info; backendModel?: Model.Ref; args?: Args; session?: Partial<Pick<Session, "agent" | "model" | "location">> } = {}) {
   const root = await mkdtemp(path.join(tmpdir(), "orchestra-model-consumer-"))
@@ -94,6 +94,7 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
       Agent.Info.make({ ...Agent.Info.empty(Agent.ID.make("backend")), engine: "orchestra", model: options.backendModel })],
   }
   const events = createEventSource()
+  const sseReady = Promise.withResolvers<void>()
   const fallback = createFetch()
   const session = (id: string) => id === "session-1"
     ? { ...v2Session({ id, directory: root }), ...options.session }
@@ -104,6 +105,11 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
     calls.push({ path: url.pathname, method: request.method, body: request.method === "GET" ? undefined : await request.clone().json(),
       authorization: request.headers.get("authorization"), url, signal: request.signal })
     await control.before(url.pathname)
+    if (url.pathname === "/api/event" && options.sse) {
+      const response = events.response(request.signal)
+      sseReady.resolve()
+      return response
+    }
     if (url.pathname === "/api/model/execution") return control.reply(request)
     const envelope = (data: unknown) => json({ location: { directory: root }, data })
     if (["/api/integration", "/api/skill", "/api/reference"].includes(url.pathname)) return envelope([])
@@ -170,7 +176,7 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
         <OrchestraKeymapProvider keymap={keymap}><ArgsProvider {...options.args}><KVProvider><ToastProvider>
           <RouteProvider initialRoute={options.draft ? { type: "home" } : { type: "session", sessionID: "session-1" }}>
             <TuiConfigProvider config={config}><PluginRuntimeProvider value={createPluginRuntime()}>
-              <Show when={owner.generation} keyed>{(_generation) => <SDKProvider url={owner.url} directory={owner.directory} fetch={fetch} headers={{ authorization: owner.authorization }} events={events.source}>
+              <Show when={owner.generation} keyed>{(_generation) => <SDKProvider url={owner.url} directory={owner.directory} fetch={fetch} headers={{ authorization: owner.authorization }} events={options.sse ? undefined : events.source}>
                 <GreetingGate><PermissionProvider><ProjectProvider><SyncProvider><DataProvider>
                   <ThemeProvider mode="dark" source={{ discover: async () => ({}), subscribeRefresh: () => () => {} }}>
                     <HomeSessionDestinationProvider><LocalProvider><PromptStashProvider><DialogProvider><FrecencyProvider><PromptHistoryProvider>
@@ -191,6 +197,7 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
   const app = await testRender(() => <Harness />, { width: 120, height: 40, kittyKeyboard: true })
   try {
     await gateReady.promise
+    if (options.sse) await sseReady.promise
     events.emit({ directory: root, workspace: undefined, payload: { id: `e6-greeting-${owner.generation}`, type: "server.connected", data: {} } })
     await sdkReady.promise
     await wait(() => context.sync.status === "complete" && prompt !== undefined, "real Sync bootstrap and Prompt ref")
@@ -260,6 +267,7 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
 export async function ready(options?: Parameters<typeof mount>[0]) {
   const fixture = await mount(options)
   try {
+    if (fixture.owner.sessionID) await fixture.context.sync.session.refreshSelection(fixture.owner.sessionID)
     await wait(() => fixture.context.local.model.current()?.modelID === ref.id, "READY real model choice")
     fixture.context.local.model.set({ providerID: ref.providerID, modelID: ref.id })
     await wait(() => fixture.context.local.model.current()?.modelID === ref.id, "explicit real selected model")
