@@ -1,4 +1,5 @@
 import { InvalidRequestError } from "@orchestra/protocol/errors"
+import { ActivityArm } from "@orchestra/schema/activity-arm"
 import { ActivityMonitor } from "@orchestra/schema/activity-monitor"
 import { Schema } from "effect"
 import { check } from "./assertions"
@@ -11,6 +12,10 @@ const invalidDiskRead = { path: route(diskReadPath, { rootID: "httpapi-missing" 
 const decodeDiskSnapshot = Schema.decodeUnknownSync(ActivityMonitor.DiskSnapshot)
 
 export const activityScenarios: Scenario[] = [
+  http.protected
+    .get("/api/activity/plan", "activity.plan")
+    .global()
+    .json(200, (body) => Schema.decodeUnknownSync(ActivityArm.PlanSnapshot)(body), "status"),
   http.protected
     .get("/api/activity", "activity.snapshot")
     .global()

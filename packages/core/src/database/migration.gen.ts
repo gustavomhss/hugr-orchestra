@@ -84,5 +84,6 @@ export const migrations = (
     import("./migration/20261127213249_activity_registration_identity"),
     import("./migration/20261128000004_board_issue_workspace"),
     import("./migration/20261128044106_activity_action_ledger"),
+    import("./migration/20261128050947_activity_arm"),
   ])
 ).map((module) => module.default) satisfies DatabaseMigration.Migration[]

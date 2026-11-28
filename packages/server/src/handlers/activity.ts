@@ -1,4 +1,6 @@
 import { ActivityMonitor } from "@orchestra/core/activity-monitor"
+import { ActivityArmLedger } from "@orchestra/core/activity-arm"
+import { Database } from "@orchestra/core/database/database"
 import { ActivityDisk } from "@orchestra/core/activity-disk"
 import { ActivityDocker } from "@orchestra/core/activity-docker"
 import { ActivityExternalCache } from "@orchestra/core/activity-external-cache"
@@ -25,6 +27,7 @@ const disk = ActivityDisk.make([
 
 export const ActivityHandler = HttpApiBuilder.group(Api, "server.activity", (handlers) =>
   Effect.gen(function* () {
+    const database = yield* Database.Service
     const worktrees = yield* ActivityWorktreeRegistry.Service
     const docker = ActivityDocker.make()
     const externalCaches = (yield* ExternalCacheInventory) ??
@@ -33,6 +36,12 @@ export const ActivityHandler = HttpApiBuilder.group(Api, "server.activity", (han
       Effect.map(Context.pick(AppProcess.Service)),
     )
     return handlers
+      .handle("activity.plan", () => ActivityArmLedger.plan(database).pipe(
+        Effect.mapError(() => new ServiceUnavailableError({
+          message: "Activity plan is temporarily unavailable",
+          service: "activity.plan",
+        })),
+      ))
       .handle("activity.worktrees", () =>
         Effect.tryPromise({
           try: () => worktrees.inventory(),
