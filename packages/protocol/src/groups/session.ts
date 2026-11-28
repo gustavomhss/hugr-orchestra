@@ -423,7 +423,7 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
             identifier: "v2.session.move",
             summary: "Move session",
             description:
-              "Move the Session to another directory or workspace of its project. With `moveChanges`, the source's uncommitted changes are applied at the destination and discarded at the source.",
+              "Move the Session to another directory or workspace of its project. With `moveChanges`, copy the captured patch of uncommitted changes to the destination while retaining the source files and index.",
           }),
         ),
     )

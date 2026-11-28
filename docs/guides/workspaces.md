@@ -10,6 +10,8 @@ Open **Workspaces** in the sidebar's Advanced group. It needs a project whose fo
 
 Choose **Use workspace** on a row to make it the active one. New chat drafts then start in that workspace. The button reads **Open Chat** on the workspace that is already active. Placement follows the active workspace even when the quick picker is hidden. Before creating a Session, Orchestra checks that the saved workspace still belongs to this repository. If it was removed or cannot be verified, submission stops with an error and keeps your draft; choose a valid workspace and try again.
 
+When moving a Session, carrying file changes copies the captured uncommitted changes to the destination. The original files, changes and staged index stay in the source workspace, including edits made after capture. Both workspaces may have uncommitted changes afterward. Clean up the original files manually when you are ready. Choosing **No** moves only the Session.
+
 ## Create a workspace
 
 1. Choose **New workspace**.
