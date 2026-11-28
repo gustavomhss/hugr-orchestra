@@ -1,3 +1,4 @@
+export { ActivityMonitor } from "./activity-monitor"
 export { Agent } from "./agent"
 export { Actions } from "./actions"
 export { AgentFile } from "./agent-file"

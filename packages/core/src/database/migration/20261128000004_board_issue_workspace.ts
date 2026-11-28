@@ -2,7 +2,7 @@ import { Effect } from "effect"
 import type { DatabaseMigration } from "../migration"
 
 export default {
-  id: "20261127234428_board_issue_workspace",
+  id: "20261128000004_board_issue_workspace",
   up(tx) {
     return Effect.gen(function* () {
       yield* tx.run(`ALTER TABLE \`board_ci_run\` ADD \`billing_known\` integer DEFAULT false NOT NULL;`)

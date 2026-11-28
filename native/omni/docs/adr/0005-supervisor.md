@@ -26,8 +26,8 @@ running **inside the host** (Node/Bun/Deno/Python) cannot be made safe:
    depend on the host's libc.
 2. **The supervisor creates every managed process; the host never forks.**
    - Unix pipe children: `posix_spawn` with `POSIX_SPAWN_SETSID`, explicit fd actions (only the stdio ends are
-     inherited), default signal dispositions and an empty mask. Unix PTY roots: `fork` in the single-threaded
-     supervisor, then `setsid`, `TIOCSCTTY`, `dup2`, close everything else, `exec`; the PTY root is held before exec
+     inherited), default signal dispositions and an empty mask. Unix PTY roots: the supervisor's control
+     thread uses `fork`. The child makes only async-signal-safe calls, then `setsid`, `TIOCSCTTY`, `dup2`, close everything else, `exec`; the PTY root is held before exec
      until the host confirms its reader is running (`Go`), so a fast-exiting program loses no output on macOS.
      Exec failure is reported through a CLOEXEC pipe watched asynchronously.
    - Windows: `CreateProcessW` + `PROC_THREAD_ATTRIBUTE_JOB_LIST` (+ `PSEUDOCONSOLE`), std-equivalent argument
@@ -159,7 +159,7 @@ fds in order (MSG_CMSG_CLOEXEC on Linux). For a PTY the supervisor opens `/dev/p
 `handles[]`; for a PTY the supervisor returns the ConPTY output-read / input-write values and the host pulls them out
 with `DUPLICATE_CLOSE_SOURCE`. I/O never crosses the supervisor.
 
-Child creation: Unix — fork (the supervisor is single-threaded) → child: empty mask, every signal SIG_DFL, `setsid`,
+Child creation: Unix — the supervisor's control thread forks → child: empty mask, every signal SIG_DFL, `setsid`,
 `TIOCSCTTY` (PTY), `dup2` ×3, `chdir`, everything ≥ 3 marked CLOEXEC (`close_range(…, CLOSE_RANGE_CLOEXEC)` /
 `proc_pidinfo(PROC_PIDLISTFDS)` on a stack buffer), `execve` of the program resolved against the child's own PATH;
 failures come back as (stage, errno) on a CLOEXEC pipe. A PTY root additionally blocks on a CLOEXEC "go" pipe after

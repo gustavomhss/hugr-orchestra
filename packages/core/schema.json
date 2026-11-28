@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "f34d86c2-e8c5-4be3-994f-1b84a2152fa7",
+  "id": "b5adafd5-2ef0-4f00-a0ce-e82e4dd9f02c",
   "prevIds": [
-    "06438ff3-666f-4a77-a0ea-2ca8c9dbd4ab"
+    "eb698716-65f1-46e5-be8b-5472d66abc68"
   ],
   "ddl": [
     {
@@ -5204,6 +5204,16 @@
     },
     {
       "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "registration_id",
+      "entityType": "columns",
+      "table": "project_directory"
+    },
+    {
+      "type": "text",
       "notNull": false,
       "autoincrement": false,
       "default": null,
@@ -9419,10 +9429,25 @@
       "table": "capability_request"
     },
     {
+      "columns": [
+        "registration_id"
+      ],
+      "nameExplicit": false,
+      "name": "project_directory_registration_id_unique",
+      "entityType": "uniques",
+      "table": "project_directory"
+    },
+    {
       "value": "\"attempt\" in (0, 1)",
       "name": "project_checkpoint_attempt_check",
       "entityType": "checks",
       "table": "project_checkpoint"
+    },
+    {
+      "value": "length(\"registration_id\") > 0",
+      "name": "project_directory_registration_id_nonempty",
+      "entityType": "checks",
+      "table": "project_directory"
     }
   ],
   "renames": []

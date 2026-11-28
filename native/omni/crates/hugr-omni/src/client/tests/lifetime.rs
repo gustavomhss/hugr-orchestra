@@ -7,7 +7,7 @@ use std::time::{Duration, Instant};
 use omni_proto::{Exit, Msg};
 use tokio::task::JoinSet;
 
-use super::{BOUND, READY, assert_io, block, connect, pair, spec, with_tree};
+use super::{BOUND, READY, assert_io, block, connect, pair, spec, tree_within, with_tree};
 use crate::client::start::{Registry, spawn_on};
 
 /// Bounded state: a burst of unsolicited exits for trees nobody holds stores nothing and never blocks
@@ -61,6 +61,92 @@ fn a_stalled_peer_fails_the_spawn_and_ends_the_generation() {
     assert!(took >= bound && took < bound + Duration::from_secs(5), "took {took:?}");
     assert!(!sup.alive());
     assert!(peer.next().is_none(), "the channel must be closed");
+}
+
+/// A late observational reply is matched and dropped; it cannot close a healthy control channel.
+#[test]
+fn a_stalled_observation_preserves_the_generation_and_validates_its_late_reply() {
+    let (sup, mut peer, spawned) = tree_within(Duration::from_millis(1000));
+    let tree = Arc::new(spawned.tree);
+    let observer = {
+        let tree = tree.clone();
+        std::thread::spawn(move || block(tree.observe_processes()))
+    };
+    let Msg::Observe { req, id: 1 } = peer.recv() else {
+        panic!("expected Observe");
+    };
+    assert_io(observer.join().unwrap(), "process observation timed out");
+    assert!(sup.alive());
+    assert_io(
+        block(tree.observe_processes()),
+        "a process observation is already waiting",
+    );
+    peer.send(&Msg::Processes {
+        req,
+        id: 1,
+        list: Vec::new(),
+    });
+
+    let lister = {
+        let tree = tree.clone();
+        std::thread::spawn(move || block(tree.processes()))
+    };
+    let Msg::List { req, id: 1 } = peer.recv() else {
+        panic!("expected a regular List");
+    };
+    peer.send(&Msg::Processes {
+        req,
+        id: 1,
+        list: Vec::new(),
+    });
+    assert!(lister.join().unwrap().unwrap().is_empty());
+    assert!(sup.alive());
+
+    let observer = {
+        let tree = tree.clone();
+        std::thread::spawn(move || block(tree.observe_processes()))
+    };
+    let Msg::Observe { req, id: 1 } = peer.recv() else {
+        panic!("expected a new observation");
+    };
+    peer.send(&Msg::Processes {
+        req,
+        id: 1,
+        list: Vec::new(),
+    });
+    assert!(observer.join().unwrap().unwrap().is_empty());
+}
+
+#[test]
+fn observation_refuses_an_older_supervisor_without_sending_a_request() {
+    let ready = Msg::Ready {
+        version: omni_proto::VERSION,
+        pid: 4242,
+        info: 0,
+    };
+    let (sup, mut peer) = connect(1, BOUND, &ready);
+    let sup = sup.expect("start");
+    let caller = {
+        let sup = sup.clone();
+        std::thread::spawn(move || spawn_on(&sup, &spec(false)))
+    };
+    peer.spawned(1);
+    let spawned = caller.join().unwrap().unwrap();
+    assert_io(
+        block(spawned.tree.observe_processes()),
+        "does not support independent process observations",
+    );
+    assert!(sup.alive());
+    let lister = std::thread::spawn(move || block(spawned.tree.processes()));
+    let Msg::List { req, id: 1 } = peer.recv() else {
+        panic!("unsupported observation must not send an Observe frame");
+    };
+    peer.send(&Msg::Processes {
+        req,
+        id: 1,
+        list: Vec::new(),
+    });
+    assert!(lister.join().unwrap().unwrap().is_empty());
 }
 
 /// R2: several waiters of one `Stop` (and of `exited`) all get the answer; a later `stop` is answered

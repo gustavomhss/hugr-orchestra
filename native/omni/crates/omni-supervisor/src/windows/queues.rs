@@ -3,21 +3,21 @@
 //! - Inbox: requests, at most `MAX_REQUESTS` (the reader blocks when it is full, so a flooding host is held
 //!   back by its own pipe), and events, which never block and are always taken first. Events are bounded by
 //!   construction: `HostGone` is kept once, and each tree record (at most `MAX_TREES`) yields one `Exited`
-//!   and at most two `Settle`.
+//!   and at most two `Settle`. One observation yields at most one `Observed`.
 //! - Outbox: encoded frames for the writer thread, counted until written. A request is admitted only while
-//!   fewer than `MAX_REPLIES` frames and `Stop` waiters are owed, and each tree adds at most one unsolicited
-//!   `Exited`; `CAPACITY` reserves that room for cleanup, so it is never reached. Reaching it anyway ends
-//!   the channel (host death); a send never blocks.
+//!   its queued frames and owed `Stop` and `Observe` replies total fewer than `MAX_REPLIES`. Each tree adds
+//!   at most one unsolicited `Exited`; `CAPACITY` reserves that room for cleanup. Reaching it ends the
+//!   channel (host death); a send never blocks.
 
 use std::collections::VecDeque;
 use std::sync::{Condvar, Mutex, MutexGuard, PoisonError};
 use std::time::Instant;
 
-use omni_proto::Msg;
+use omni_proto::{Msg, ProcEntry};
 
 /// Decoded requests waiting for the owner thread.
 const MAX_REQUESTS: usize = 64;
-/// Replies owed (frames not yet written + `Stop` waiters) at or above which no request is admitted.
+/// Admission limit for frames not yet written, `Stop` waiters, and the pending observation.
 pub(super) const MAX_REPLIES: usize = 1024;
 /// Tree records (alive, or gone but not released); a `Spawn` beyond it is refused (`docs/protocol.md`).
 pub(super) const MAX_TREES: usize = 4096;
@@ -33,6 +33,8 @@ pub(super) enum Event {
     Exited { id: u64, code: u32 },
     /// A tree's Job emptied, or its flush marker came back: try to prove it gone now.
     Settle { id: u64 },
+    /// The observation worker finished and dropped its process handles.
+    Observed(std::io::Result<Vec<ProcEntry>>),
 }
 
 #[derive(Debug)]

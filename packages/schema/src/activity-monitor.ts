@@ -1,0 +1,215 @@
+export * as ActivityMonitor from "./activity-monitor"
+
+import { Schema } from "effect"
+import { NonNegativeInt, PositiveInt, optional } from "./schema"
+
+export const Member = Schema.Struct({
+  pid: PositiveInt,
+  parentPid: Schema.NullOr(PositiveInt),
+  name: Schema.NullOr(Schema.String),
+}).annotate({ identifier: "ActivityMonitor.Member" })
+export interface Member extends Schema.Schema.Type<typeof Member> {}
+
+export const Record = Schema.Struct({
+  // A monitor record is not a supervisor address and never authorizes an action.
+  recordID: Schema.String,
+  supervisorID: optional(Schema.NonEmptyString),
+  pid: PositiveInt,
+  executable: Schema.String,
+  owner: Schema.String,
+  sessionID: optional(Schema.String),
+  agentID: optional(Schema.String),
+  tool: optional(Schema.String),
+  callID: optional(Schema.String),
+  startedAt: NonNegativeInt,
+  state: Schema.Literals(["alive", "gone", "unknown"]),
+  inspectionFailed: Schema.Boolean,
+  source: optional(Schema.Literal("omni.processes")),
+  sampledAt: optional(NonNegativeInt),
+  members: optional(Schema.Array(Member)),
+}).annotate({ identifier: "ActivityMonitor.Record" })
+export interface Record extends Schema.Schema.Type<typeof Record> {}
+
+export const CPU = Schema.Struct({
+  source: Schema.Literal("node.os.cpus"),
+  percent: Schema.Finite.check(Schema.isBetween({ minimum: 0, maximum: 100 })),
+  windowMs: PositiveInt,
+  sampledAt: NonNegativeInt,
+}).annotate({ identifier: "ActivityMonitor.CPU" })
+export interface CPU extends Schema.Schema.Type<typeof CPU> {}
+
+export const Snapshot = Schema.Struct({
+  instanceID: Schema.NonEmptyString,
+  readAt: NonNegativeInt,
+  cpu: optional(CPU),
+  source: Schema.Literal("orchestra.omni.ledger"),
+  // Coverage is explicit: this is not a machine-wide inventory or the native RSS sampler.
+  coverage: Schema.Literal("server-pipe-spawns"),
+  retired: NonNegativeInt,
+  records: Schema.Array(Record),
+}).annotate({ identifier: "ActivityMonitor.Snapshot" })
+export interface Snapshot extends Schema.Schema.Type<typeof Snapshot> {}
+
+export const DiskRootID = Schema.Literals(["cache", "logs", "temporary"]).annotate({
+  identifier: "ActivityMonitor.DiskRootID",
+})
+export type DiskRootID = typeof DiskRootID.Type
+
+export const DiskIssue = Schema.Struct({
+  path: Schema.String,
+  reason: Schema.Literals(["unavailable", "symlink", "unsupported", "changed", "limit", "overflow"]),
+}).annotate({ identifier: "ActivityMonitor.DiskIssue" })
+export interface DiskIssue extends Schema.Schema.Type<typeof DiskIssue> {}
+
+export const DiskAttempt = Schema.Struct({
+  startedAt: NonNegativeInt,
+  sampledAt: NonNegativeInt,
+  state: Schema.Literals(["complete", "partial"]),
+  observedBytes: NonNegativeInt,
+  entries: NonNegativeInt,
+  issueCount: NonNegativeInt,
+  issues: Schema.Array(DiskIssue),
+}).annotate({ identifier: "ActivityMonitor.DiskAttempt" })
+export interface DiskAttempt extends Schema.Schema.Type<typeof DiskAttempt> {}
+
+export const DiskRoot = Schema.Struct({
+  id: DiskRootID,
+  path: Schema.String,
+  attempt: optional(DiskAttempt),
+  // Only a closed walk replaces this reading; partial retries retain its original timestamp.
+  logical: optional(Schema.Struct({ bytes: NonNegativeInt, sampledAt: NonNegativeInt })),
+}).annotate({ identifier: "ActivityMonitor.DiskRoot" })
+export interface DiskRoot extends Schema.Schema.Type<typeof DiskRoot> {}
+
+export const DiskSnapshot = Schema.Struct({
+  instanceID: Schema.NonEmptyString,
+  readAt: NonNegativeInt,
+  source: Schema.Literal("node.fs.lstat"),
+  roots: Schema.Array(DiskRoot),
+}).annotate({ identifier: "ActivityMonitor.DiskSnapshot" })
+export interface DiskSnapshot extends Schema.Schema.Type<typeof DiskSnapshot> {}
+
+const decimalRevision = Schema.isPattern(/^(0|[1-9][0-9]*)(?![\s\S])/)
+
+export const WorktreeRevision = Schema.String.annotate({ identifier: "ActivityMonitor.WorktreeRevision" }).check(
+  decimalRevision,
+)
+export type WorktreeRevision = typeof WorktreeRevision.Type
+
+export const WorktreeRecord = Schema.Struct({
+  recordID: Schema.NonEmptyString,
+  projectID: Schema.NonEmptyString,
+  registrationID: Schema.NonEmptyString,
+  directory: Schema.NonEmptyString,
+  owner: Schema.String,
+  attempt: optional(DiskAttempt),
+  logical: optional(Schema.Struct({ bytes: NonNegativeInt, sampledAt: NonNegativeInt })),
+}).annotate({ identifier: "ActivityMonitor.WorktreeRecord" })
+export interface WorktreeRecord extends Schema.Schema.Type<typeof WorktreeRecord> {}
+
+export const WorktreeSnapshot = Schema.Struct({
+  instanceID: Schema.NonEmptyString,
+  snapshotRevision: WorktreeRevision,
+  readAt: NonNegativeInt,
+  inventoryAt: optional(NonNegativeInt),
+  source: Schema.Literal("node.fs.lstat"),
+  coverage: Schema.Literal("registered-git-worktrees"),
+  records: Schema.Array(WorktreeRecord),
+}).annotate({ identifier: "ActivityMonitor.WorktreeSnapshot" })
+export interface WorktreeSnapshot extends Schema.Schema.Type<typeof WorktreeSnapshot> {}
+
+export const dockerSource = "docker container ls --all --no-trunc --size --format json"
+export const dockerRowLimit = 1000
+
+export const DockerRevision = Schema.String.annotate({ identifier: "ActivityMonitor.DockerRevision" }).check(
+  decimalRevision,
+)
+export type DockerRevision = typeof DockerRevision.Type
+
+const DockerPublishedRevision = DockerRevision.check(Schema.isPattern(/^[1-9]/)).annotate({
+  identifier: "ActivityMonitor.DockerPublishedRevision",
+})
+
+export const DockerContainer = Schema.Struct({
+  containerID: Schema.NonEmptyString,
+  name: optional(Schema.String),
+  sizeText: optional(Schema.String),
+  owner: Schema.Literal(""),
+  logical: Schema.Null,
+  unique: Schema.Literal("não colapsei"),
+  useProof: Schema.Literal("unproved"),
+}).annotate({ identifier: "ActivityMonitor.DockerContainer" })
+export interface DockerContainer extends Schema.Schema.Type<typeof DockerContainer> {}
+
+export const DockerInventory = Schema.Struct({
+  sampledAt: NonNegativeInt,
+  containers: Schema.Array(DockerContainer).check(Schema.isMaxLength(dockerRowLimit)),
+}).annotate({ identifier: "ActivityMonitor.DockerInventory" })
+export interface DockerInventory extends Schema.Schema.Type<typeof DockerInventory> {}
+
+export const DockerGap = Schema.Literals([
+  "executable-missing",
+  "process-unavailable",
+  "timeout",
+  "nonzero-exit",
+  "execution-failed",
+  "stdout-truncated",
+  "stderr-truncated",
+  "output-truncated",
+  "row-limit",
+  "invalid-record",
+  "missing-id",
+  "duplicate-id",
+]).annotate({ identifier: "ActivityMonitor.DockerGap" })
+export type DockerGap = typeof DockerGap.Type
+
+const dockerAttemptTimes = {
+  startedAt: NonNegativeInt,
+  sampledAt: NonNegativeInt,
+}
+
+const DockerCompleteAttempt = Schema.Struct({
+  ...dockerAttemptTimes,
+  state: Schema.Literal("complete"),
+  gaps: Schema.Tuple([]),
+}).annotate({ identifier: "ActivityMonitor.DockerCompleteAttempt" })
+
+const DockerIncompleteAttempt = Schema.Struct({
+  ...dockerAttemptTimes,
+  state: Schema.Literals(["partial", "failed", "unavailable"]),
+  gaps: Schema.Array(DockerGap).check(Schema.isMinLength(1)),
+}).annotate({ identifier: "ActivityMonitor.DockerIncompleteAttempt" })
+
+export const DockerAttempt = Schema.Union([DockerCompleteAttempt, DockerIncompleteAttempt]).annotate({
+  identifier: "ActivityMonitor.DockerAttempt",
+})
+export type DockerAttempt = typeof DockerAttempt.Type
+
+const dockerSnapshotHeader = {
+  instanceID: Schema.NonEmptyString,
+  readAt: NonNegativeInt,
+  source: Schema.Literal(dockerSource),
+  coverage: Schema.Literal("containers"),
+}
+
+export const DockerSnapshot = Schema.Union([
+  Schema.Struct({
+    ...dockerSnapshotHeader,
+    snapshotRevision: DockerPublishedRevision,
+    inventory: DockerInventory,
+    attempt: DockerCompleteAttempt,
+  }),
+  Schema.Struct({
+    ...dockerSnapshotHeader,
+    snapshotRevision: DockerPublishedRevision,
+    inventory: optional(DockerInventory),
+    attempt: DockerIncompleteAttempt,
+  }),
+  Schema.Struct({
+    ...dockerSnapshotHeader,
+    snapshotRevision: Schema.Literal("0"),
+    inventory: Schema.optionalKey(Schema.Never),
+    attempt: Schema.optionalKey(Schema.Never),
+  }),
+]).annotate({ identifier: "ActivityMonitor.DockerSnapshot" })
+export type DockerSnapshot = typeof DockerSnapshot.Type

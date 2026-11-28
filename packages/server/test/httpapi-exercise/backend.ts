@@ -1,6 +1,9 @@
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { AppProcess } from "@orchestra/core/process"
 import { createRoutes } from "@orchestra/server/routes"
 import { Context, Effect, Layer } from "effect"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
+import { dockerResult } from "../activity-docker-process-fixture"
 import { parse } from "./assertions"
 import { exerciseProbeDirectory } from "./environment"
 import type { ActiveScenario, BackendApp, CallResult, CaptureMode, RequestSpec } from "./types"
@@ -8,6 +11,25 @@ import type { ActiveScenario, BackendApp, CallResult, CaptureMode, RequestSpec }
 export type ExerciseApp = BackendApp & { readonly dispose: () => Promise<void>; ready?: Promise<void> }
 
 const credentials = { username: "orchestra", password: "secret" }
+const dockerArgs = ["container", "ls", "--all", "--no-trunc", "--size", "--format", "json"]
+
+const exerciseProcess = Layer.effect(
+  AppProcess.Service,
+  Effect.gen(function* () {
+    const live = yield* AppProcess.Service
+    return AppProcess.Service.of({
+      ...live,
+      omniEnabled: true,
+      run: (command, options) =>
+        command._tag === "StandardCommand" &&
+        command.command === "docker" &&
+        command.args.length === dockerArgs.length &&
+        dockerArgs.every((arg, index) => command.args[index] === arg)
+          ? Effect.succeed(dockerResult('{"ID":"exercise-container"}'))
+          : live.run(command, options),
+    })
+  }),
+).pipe(Layer.provide(LayerNode.compile(AppProcess.node)))
 
 // Deadlines, not waits: a response that arrives returns at once and never sleeps on these.
 // The auth layer answers 401 before any handler runs, so a probe that passes auth and then enters a handler that
@@ -23,7 +45,10 @@ const STREAM_CHUNK_DEADLINE_MS = 10_000
  */
 export function makeApp(options: { auth: boolean }): ExerciseApp {
   const web = HttpRouter.toWebHandler(
-    createRoutes(options.auth ? { password: credentials.password } : {}).pipe(Layer.provide(HttpServer.layerServices)),
+    createRoutes({
+      password: options.auth ? credentials.password : undefined,
+      host: [{ id: "docker-http-fixture", replacements: [[AppProcess.node, exerciseProcess]] }],
+    }).pipe(Layer.provide(HttpServer.layerServices)),
     { disableLogger: true, memoMap: Layer.makeMemoMapUnsafe() },
   )
   return {

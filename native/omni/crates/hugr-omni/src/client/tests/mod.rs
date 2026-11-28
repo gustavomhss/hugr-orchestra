@@ -13,6 +13,7 @@ mod identity;
 mod ledger;
 mod lifetime;
 mod lookup;
+mod tree_id;
 #[cfg(unix)]
 mod unix;
 #[cfg(windows)]
@@ -39,7 +40,7 @@ const LIMIT: Duration = Duration::from_secs(20);
 const READY: Msg = Msg::Ready {
     version: VERSION,
     pid: 4242,
-    info: 0,
+    info: omni_proto::INFO_OBSERVE,
 };
 
 fn rt() -> &'static tokio::runtime::Runtime {

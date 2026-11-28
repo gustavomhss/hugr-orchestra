@@ -15,6 +15,7 @@ import { BehaviorHandler } from "./handlers/behavior"
 import { EventHandler } from "./handlers/event"
 import { AgentHandler } from "./handlers/agent"
 import { HealthHandler } from "./handlers/health"
+import { ActivityHandler } from "./handlers/activity"
 import { InstallationHandler } from "./handlers/installation"
 import { PtyHandler } from "./handlers/pty"
 import { QuestionHandler } from "./handlers/question"
@@ -55,6 +56,7 @@ import { CapabilitySchedulesHandler } from "./handlers/capability-schedules"
 
 export const handlers = Layer.mergeAll(
   HealthHandler,
+  ActivityHandler,
   InstallationHandler,
   LocationHandler,
   AgentHandler,

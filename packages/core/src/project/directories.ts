@@ -14,6 +14,10 @@ export interface Directory {
   readonly strategy?: string
 }
 
+export interface Registration extends Directory {
+  readonly registrationID: string
+}
+
 export const CreateInput = Schema.Struct({
   projectID: ProjectSchema.ID,
   directory: AbsolutePath,
@@ -45,6 +49,11 @@ export const ListOutput = Schema.Array(
 export type ListOutput = typeof ListOutput.Type
 
 export interface Interface {
+  readonly listRegistrations: (projectID: ProjectSchema.ID) => Effect.Effect<ReadonlyArray<Registration>>
+  readonly getRegistration: (input: {
+    projectID: ProjectSchema.ID
+    directory: AbsolutePath
+  }) => Effect.Effect<Registration | undefined>
   readonly list: (projectID: ProjectSchema.ID) => Effect.Effect<ReadonlyArray<Directory>>
   readonly get: (input: {
     projectID: ProjectSchema.ID
@@ -63,17 +72,22 @@ const layer = Layer.effect(
     const db = (yield* Database.Service).db
 
     const create = Effect.fn("ProjectDirectories.create")(function* (input: CreateInput, tx?: Transaction) {
-      const insert = (tx ?? db)
-        .insert(ProjectDirectoryTable)
-        .values({ project_id: input.projectID, directory: input.directory, strategy: input.strategy })
+      const registrationID = crypto.randomUUID()
+      const insert = (tx ?? db).insert(ProjectDirectoryTable).values({
+        project_id: input.projectID,
+        directory: input.directory,
+        strategy: input.strategy,
+        registration_id: registrationID,
+      })
       const query =
         input.behavior === "replace"
           ? insert.onConflictDoUpdate({
               target: [ProjectDirectoryTable.project_id, ProjectDirectoryTable.directory],
-              set: { strategy: input.strategy ?? null },
-              setWhere: input.strategy
-                ? or(isNull(ProjectDirectoryTable.strategy), ne(ProjectDirectoryTable.strategy, input.strategy))
-                : isNotNull(ProjectDirectoryTable.strategy),
+              set: { strategy: input.strategy ?? null, registration_id: registrationID },
+              setWhere:
+                input.strategy !== undefined
+                  ? or(isNull(ProjectDirectoryTable.strategy), ne(ProjectDirectoryTable.strategy, input.strategy))
+                  : isNotNull(ProjectDirectoryTable.strategy),
             })
           : insert.onConflictDoNothing()
       return (
@@ -145,7 +159,48 @@ const layer = Layer.effect(
       return row ? { directory: row.directory, strategy: row.strategy ?? undefined } : undefined
     })
 
+    const listRegistrations = Effect.fn("ProjectDirectories.listRegistrations")(function* (
+      projectID: ProjectSchema.ID,
+    ) {
+      const rows = yield* db
+        .select({
+          directory: ProjectDirectoryTable.directory,
+          strategy: ProjectDirectoryTable.strategy,
+          registrationID: ProjectDirectoryTable.registration_id,
+        })
+        .from(ProjectDirectoryTable)
+        .where(eq(ProjectDirectoryTable.project_id, projectID))
+        .orderBy(desc(ProjectDirectoryTable.time_created), asc(ProjectDirectoryTable.directory))
+        .all()
+        .pipe(Effect.orDie)
+      return rows.map((row) => ({ ...row, strategy: row.strategy ?? undefined }))
+    })
+
+    const getRegistration = Effect.fn("ProjectDirectories.getRegistration")(function* (input: {
+      projectID: ProjectSchema.ID
+      directory: AbsolutePath
+    }) {
+      const row = yield* db
+        .select({
+          directory: ProjectDirectoryTable.directory,
+          strategy: ProjectDirectoryTable.strategy,
+          registrationID: ProjectDirectoryTable.registration_id,
+        })
+        .from(ProjectDirectoryTable)
+        .where(
+          and(
+            eq(ProjectDirectoryTable.project_id, input.projectID),
+            eq(ProjectDirectoryTable.directory, input.directory),
+          ),
+        )
+        .get()
+        .pipe(Effect.orDie)
+      return row ? { ...row, strategy: row.strategy ?? undefined } : undefined
+    })
+
     return Service.of({
+      listRegistrations,
+      getRegistration,
       list,
       get,
       contains,

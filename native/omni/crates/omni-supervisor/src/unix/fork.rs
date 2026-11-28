@@ -45,8 +45,8 @@ pub(super) fn spawn_pty(p: &Prepared, cols: u16, rows: u16) -> Result<(i32, Owne
         argv: argv.as_ptr(),
         envp: envp.as_ptr(),
     };
-    // SAFETY: the child runs only `child`, which makes async-signal-safe calls and never returns, so the fork
-    // is sound whatever other thread exists (the diagnostics thread exists only after host death anyway).
+    // SAFETY: the child runs only `child`, which makes async-signal-safe calls and never returns,
+    // so the fork remains sound while a read-only observation is running.
     let pid = unsafe { libc::fork() };
     if pid == 0 {
         // SAFETY: we are the child of that fork; every pointer in `plan` is valid in this copy.

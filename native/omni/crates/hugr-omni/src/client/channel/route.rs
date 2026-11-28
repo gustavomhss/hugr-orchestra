@@ -4,14 +4,16 @@
 use std::collections::VecDeque;
 use std::convert::Infallible;
 use std::io;
+use std::mem;
 use std::sync::Arc;
 use std::time::Instant;
 
-use omni_proto::{Exit, Msg, VERSION, decode};
+use omni_proto::{Exit, INFO_OBSERVE, Msg, VERSION, decode};
 use tokio::sync::watch;
 
 use super::{Answer, Gen, Life, LifeTx, State, Waiter, Want, deliver};
 use crate::client::{Pipe, lock};
+use crate::error::Error;
 
 const READ_CHUNK: usize = 64 * 1024;
 
@@ -131,8 +133,11 @@ impl Gen {
     fn route(&self, st: &mut State, msg: Msg, fds: &mut VecDeque<Pipe>) -> Result<Routed, String> {
         if !st.ready {
             return match msg {
-                Msg::Ready { version: VERSION, .. } => {
+                Msg::Ready {
+                    version: VERSION, info, ..
+                } => {
                     st.ready = true;
+                    st.observes = info & INFO_OBSERVE != 0;
                     if let Some(hello) = st.hello.take() {
                         let _ = hello.try_send(());
                     }
@@ -178,7 +183,7 @@ impl Gen {
                 (req, Answer::Stopped, st.trees.get(&id).map(|l| Event::Gone(l.clone())))
             }
             Msg::Processes { req, id, list } => {
-                check(st, req, |w| w == Want::List, Some(id))?;
+                check(st, req, |w| matches!(w, Want::List | Want::ObserveList), Some(id))?;
                 (req, Answer::Processes(list), None)
             }
             Msg::Ready { .. } => return Err("it sent Ready twice".into()),
@@ -192,7 +197,7 @@ impl Gen {
         Ok((p.map(|p| (p.to, answer)), event))
     }
 
-    /// Watches the deadlines of non-blocking requests: the first one missed ends the generation. With none
+    /// Watches deadlines of non-blocking requests. A missed control deadline ends the generation. With none
     /// pending it still wakes every `bound`: every new deadline is at least `bound` away, so adding one
     /// never needs to wake this task (only an earlier one than it sleeps until does).
     pub(super) async fn watch_loop(self: Arc<Self>) {
@@ -214,9 +219,18 @@ impl Gen {
             let missed = {
                 let mut st = lock(&self.st);
                 st.dues.remove(&(at, req));
-                st.pending.get(&req).and_then(|p| Some((p.want, p.due?.1)))
+                st.pending.get_mut(&req).and_then(|pending| {
+                    let (_, budget) = pending.due.take()?;
+                    let waiter =
+                        (pending.want == Want::ObserveList).then(|| mem::replace(&mut pending.to, Waiter::Ignore));
+                    Some((pending.want, budget, waiter))
+                })
             };
-            if let Some((want, budget)) = missed {
+            if let Some((_, budget, Some(waiter))) = missed {
+                deliver(waiter, Err(Error::observation_timed_out(budget)));
+                continue;
+            }
+            if let Some((want, budget, None)) = missed {
                 let ms = budget.as_millis();
                 self.die(format!("it did not answer a {} request within {ms} ms", want.name()));
                 return;
@@ -248,6 +262,7 @@ fn kind(msg: &Msg) -> &'static str {
         Msg::Stop { .. } => "Stop",
         Msg::Resize { .. } => "Resize",
         Msg::List { .. } => "List",
+        Msg::Observe { .. } => "Observe",
         Msg::Release { .. } => "Release",
         Msg::Ready { .. } => "Ready",
         Msg::Spawned { .. } => "Spawned",
