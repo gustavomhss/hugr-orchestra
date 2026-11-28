@@ -6,10 +6,13 @@ import { CapabilityArtifacts } from "@orchestra/core/capability/artifact/index"
 import { Database } from "@orchestra/core/database/database"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Global } from "@orchestra/core/global"
+import type { SessionStore } from "@orchestra/core/session"
+import { SessionMessage } from "@orchestra/core/session/message"
 import { Tool } from "@orchestra/core/tool/tool"
 import { ReviewEvidenceSchemaV2 } from "./review-engagement-artifact-schema"
 import { ReviewEvidenceValidationV2 } from "./review-engagement-artifact-validation"
 import { ReviewEvidenceCollectorV2 } from "./review-engagement-artifact-collector"
+import { ReviewHistoryEvidenceV2 } from "./review-history-evidence"
 import type { ReviewEngagementReportV2 } from "./review-engagement-report"
 import { ReviewVariantSchemaV2 } from "./review-variant-schema"
 import { ReviewVariantValidationV2 } from "./review-variant-validation"
@@ -70,7 +73,8 @@ function authority(view: Terminal, receipt: ReviewEvidenceSchemaV2.Receipt): Rev
     input: view.input, budget: view.budget, source: view.source, journal: view.variants }
 }
 
-export function make(input: { readonly database: Database.Interface; readonly fs: FSUtil.Interface; readonly global?: Global.Interface }): Effect.Effect<Repository> {
+export function make(input: { readonly database: Database.Interface; readonly fs: FSUtil.Interface; readonly global?: Global.Interface;
+  readonly readMessage?: SessionStore.Interface["message"] }): Effect.Effect<Repository> {
   return Effect.gen(function* () {
     // Legacy replay needs neither an artifact directory nor a synthetic persistent storage identity.
     const settings = yield* Effect.cached(Effect.suspend(() => {
@@ -121,6 +125,20 @@ export function make(input: { readonly database: Database.Interface; readonly fs
       }).pipe(Effect.mapError((error) => receipt.schema === "review-engagement-evidence-v2" &&
         error.metadata?.reason === "engagement-report-invalid"
         ? ReviewEvidenceSchemaV2.failure("corrupt", error.message) : error))
+      if (context.history.length) {
+        const readMessage = input.readMessage
+        if (!readMessage) return yield* ReviewEvidenceSchemaV2.failure("corrupt", "history native message reader is unavailable")
+        // Point reads include original messages hidden by compaction. Reuse only within this fresh public read.
+        const messages = new Map<string, { readonly sessionID: string; readonly message: SessionMessage.Message }>()
+        for (const history of context.history) {
+          const id = history.proof.assistantMessageID
+          const messageID = yield* parse(() => SessionMessage.ID.make(id))
+          const row = messages.get(id) ?? (yield* readMessage(messageID))
+          if (!row) return yield* ReviewEvidenceSchemaV2.failure("corrupt", "history native completed message is unavailable")
+          yield* parse(() => ReviewHistoryEvidenceV2.settled(history, row.sessionID, row.message))
+          messages.set(id, row)
+        }
+      }
       return { bodies, context }
     })
     const bounded = <A>(effect: Effect.Effect<A, Tool.Failure>) => effect.pipe(Effect.timeoutOrElse({ duration: "60 seconds",
@@ -208,6 +226,7 @@ export function resolveEvidence(request: Input, held: {
   readonly receiptID: string
   readonly receipt: Pick<ReviewEvidenceSchemaV2.ReceiptV1, "operations" | "hostProofs"> & {
     readonly artifacts: readonly { readonly artifactID: string; readonly sha256: string; readonly bytes: number; readonly mime: string }[]
+    readonly history?: readonly ReviewHistoryEvidenceV2.Reference[]
   }
   readonly bodies: Effect.Effect<ReviewEvidenceSchemaV2.Bodies, Tool.Failure>
 }) {
@@ -216,7 +235,7 @@ export function resolveEvidence(request: Input, held: {
     if (request.op === "manifest") {
       yield* held.bodies
       return ReviewEvidenceSchemaV2.canonical({ schema: "review-engagement-evidence-index-v1", reportID: request.reportID,
-        receiptID: held.receiptID, manifest, counts: { operations: held.receipt.operations.length,
+        receiptID: held.receiptID, manifest, counts: { operations: held.receipt.operations.length + (held.receipt.history?.length ?? 0),
           artifacts: held.receipt.artifacts.length, hostProofs: held.receipt.hostProofs.length } })
     }
     // Membership precedes every producer-body read. A digest or URI is not an authority.

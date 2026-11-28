@@ -56,6 +56,7 @@ export const run = Effect.fn("ReviewFixRequestV2.run")(function* (params: Reques
   const id = ReviewEngagementStoreV2.identity(parent, params)
   const store = ReviewEngagementStoreV2.make(input.database)
   const repository = yield* ReviewEngagementArtifactsV2.make({ database: input.database, fs: input.services.atlas.fs,
+    readMessage: input.services.store.message,
     ...(input.global ? { global: input.global } : {}) })
   const replay = (view: ReviewEngagementStoreV2.FixTerminal) => ReviewFixArtifactsV2.replay(repository, view).pipe(
     Effect.timeoutOrElse({ duration: "60 seconds", orElse: () => Effect.fail(
@@ -243,3 +244,4 @@ function cleanup(execution: SessionExecution.Interface, children: Set<SessionSch
   return Effect.forEach([...children], (child) => execution.interrupt(child, { discardPending: true }),
     { concurrency: "unbounded", discard: true }).pipe(Effect.tap(() => Effect.sync(() => children.clear())))
 }
+

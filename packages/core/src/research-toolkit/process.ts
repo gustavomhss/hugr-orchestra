@@ -52,13 +52,20 @@ export const run = Effect.fn("ResearchProcess.run")(function* (input: {
   readonly timeoutMs: number
   readonly maxBytes: number
   readonly tailBytes?: number
+  /** Opt-in bounded prefix capture. Omission preserves the existing tail window. */
+  readonly capture?: "head" | "tail"
   /** Resident bytes of the whole tree; omni kills it above (J4.7). */
   readonly maxRssBytes?: number
 }) {
   const processes = yield* AppProcess.Service
   const started = Date.now()
-  const stdout = sink(input.tailBytes ?? input.maxBytes)
-  const stderr = sink(input.tailBytes ?? input.maxBytes)
+  if (input.capture === "head" && (!Number.isSafeInteger(input.maxBytes) || input.maxBytes <= 0 ||
+    input.maxBytes > 256 * 1024 * 1024 || input.tailBytes !== undefined))
+    return { exitCode: null, durationMs: 0, timedOut: false, overflow: false, memoryExceeded: false,
+      failure: "invalid head capture limits", stdout: { data: Buffer.alloc(0), bytes: 0, truncated: false },
+      stderr: { data: Buffer.alloc(0), bytes: 0, truncated: false } } satisfies Outcome
+  const stdout = sink(input.tailBytes ?? input.maxBytes, input.capture)
+  const stderr = sink(input.tailBytes ?? input.maxBytes, input.capture)
   const settled = yield* Effect.scoped(Effect.gen(function* () {
     const handle = yield* processes.spawn(ChildProcess.make(input.command, [...input.args], {
       cwd: input.cwd, env: input.env, extendEnv: false, stdin: "ignore",
@@ -95,11 +102,20 @@ function memory(error: unknown): boolean {
   return error instanceof Error && error.cause !== undefined && memory(error.cause)
 }
 
-function sink(keep: number) {
+function sink(keep: number, capture: "head" | "tail" = "tail") {
   const state = { chunks: [] as Uint8Array[], kept: 0, bytes: 0 }
   return {
     push(chunk: Uint8Array) {
       state.bytes += chunk.length
+      if (capture === "head") {
+        const remaining = keep - state.kept
+        if (remaining > 0) {
+          const part = chunk.subarray(0, remaining)
+          state.chunks.push(part)
+          state.kept += part.length
+        }
+        return
+      }
       state.chunks.push(chunk)
       state.kept += chunk.length
       // Trim only when twice over, so a chatty child does not pay a copy per chunk.

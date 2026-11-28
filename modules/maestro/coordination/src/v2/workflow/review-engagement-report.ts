@@ -50,6 +50,8 @@ export type Context = {
   readonly source?: ReviewEngagementEvidenceV2.Prepared
   readonly notExamined?: Result["notExamined"]
   readonly variantCoverage?: "host"
+  /** Fresh audit/diligence reports use collector acknowledgements for historical coverage. */
+  readonly historyCoverage?: "host"
 }
 export type Stopped = "cancelled" | "expired" | "failed"
 
@@ -151,10 +153,14 @@ const scope = (source: ReviewEngagementEvidenceV2.Prepared) => ({
 })
 
 function gaps(context: Context, existing: Result["notExamined"]) {
-  const values = [...(context.variantCoverage === "host" ? existing.filter((entry) => !entry.item.startsWith("audit:variants")) : existing),
+  const values = [...existing.filter((entry) =>
+    !(context.variantCoverage === "host" && entry.item.startsWith("audit:variants")) &&
+    !((context.historyCoverage === "host" || context.input.profile === "artifact") &&
+      entry.item === "engagement:history" && entry.reason === "not-built")),
     ...(context.notExamined ?? []),
     ...(context.source?.notExamined.map((entry) => ({ item: entry.path, reason: entry.reason })) ?? []),
-    { item: "engagement:history", reason: "not-built" },
+    ...(context.input.profile === "artifact" ? [{ item: "engagement:history", reason: "profile-not-applicable" }]
+      : context.historyCoverage === "host" ? [] : [{ item: "engagement:history", reason: "not-built" }]),
     { item: "engagement:probe", reason: "not-built" },
     ...(context.input.profile === "audit" && context.variantCoverage !== "host" ? [{ item: "audit:variants", reason: "not-built" }] : []),
     ...(context.input.profile === "artifact" ? [{ item: "artifact:behavioral-eval", reason: "owner-permission" }] : []),
@@ -236,3 +242,4 @@ function canonicalPath(value: string) {
   return value.length > 0 && !value.includes("\\") && !value.includes("\0") && !value.startsWith("/") &&
     !/^[A-Za-z]:/.test(value) && value.split("/").every((part) => part !== "" && part !== "." && part !== "..")
 }
+

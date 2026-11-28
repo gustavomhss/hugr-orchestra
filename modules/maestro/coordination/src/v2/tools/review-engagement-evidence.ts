@@ -46,7 +46,8 @@ export function tools(input: {
         if (!parent) return yield* failure("engagement-evidence-not-found", "no authorized terminal report")
         const store = ReviewEngagementStoreV2.make(input.database)
         const terminal = yield* store.lookup(parent, params.reportID)
-        const artifacts = yield* ReviewEngagementArtifactsV2.make({ database: input.database, fs: input.fs, global: input.global })
+        const artifacts = yield* ReviewEngagementArtifactsV2.make({ database: input.database, fs: input.fs,
+          global: input.global, readMessage: input.store.message })
         if (terminal) return yield* artifacts.resolve(terminal, params)
         const fix = yield* store.lookupFix(parent, params.reportID)
         if (!fix) return yield* failure("engagement-evidence-not-found", "no authorized terminal report")
@@ -57,3 +58,4 @@ export function tools(input: {
     }),
   }
 }
+

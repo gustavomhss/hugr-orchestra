@@ -5,14 +5,12 @@ import { Tool } from "@orchestra/core/tool/tool"
 import { ReviewEngagementStoreV2 } from "../tools/review-engagement-store"
 import type { ReviewEvidenceCollectorV2 } from "./review-engagement-artifact-collector"
 import { ReviewEvidenceSchemaV2 } from "./review-engagement-artifact-schema"
-import { ReviewEvidenceValidationV2 } from "./review-engagement-artifact-validation"
 import type { ReviewEngagementArtifactsV2 } from "./review-engagement-artifacts"
 import { ReviewEngagementReportV2 } from "./review-engagement-report"
 import { ReviewFixAuthorityV2 } from "./review-fix-authority"
 import { ReviewFixPriorV2 } from "./review-fix-prior"
 import { ReviewFixSchemaV2 } from "./review-fix-schema"
 import { ReviewFixValidationV2 } from "./review-fix-validation"
-import { ReviewVariantValidationV2 } from "./review-variant-validation"
 
 const ensure: typeof ReviewEvidenceSchemaV2.require = ReviewEvidenceSchemaV2.require
 const { failure, same, hash } = ReviewEvidenceSchemaV2
@@ -39,7 +37,7 @@ export function load(repository: ReviewEngagementArtifactsV2.Repository,
       ensure(same(value.artifacts, ReviewFixPriorV2.mergeArtifacts(value.artifacts, [])), "fix artifacts are not unique and ordered")
       return value
     })
-    return { receipt, bytes, receiptID: id, bodies: loadBodies(repository.storage, receipt, view.terminal, view) }
+    return { receipt, bytes, receiptID: id, bodies: loadBodies(repository, receipt, view.terminal, view) }
   })
 }
 
@@ -88,9 +86,10 @@ export function publish(repository: ReviewEngagementArtifactsV2.Repository, inpu
   })
 }
 
-function loadBodies(storage: ReviewEvidenceCollectorV2.Storage, receipt: ReviewFixSchemaV2.FixReceipt,
+function loadBodies(repository: ReviewEngagementArtifactsV2.Repository, receipt: ReviewFixSchemaV2.FixReceipt,
   report: ReviewFixSchemaV2.Stored, authority: ReviewFixAuthorityV2.FixAuthority) {
   return Effect.gen(function* () {
+    const storage = repository.storage
     const value = report.value
     const source = value.source
     if (!source || !value.prior || receipt.reportID !== value.reportID || receipt.inputHash !== value.inputHash ||
@@ -117,7 +116,7 @@ function loadBodies(storage: ReviewEvidenceCollectorV2.Storage, receipt: ReviewF
       Effect.mapError((error) => failure("corrupt", error.message)))
     const findings = yield* ReviewFixPriorV2.preflight(view, value.profile, authority.input.fixReview?.findingIDs ?? [])
       .pipe(Effect.mapError((error) => failure("corrupt", error.message)))
-    yield* checked(() => {
+    const imported = yield* checked(() => {
       ensure(view.identity.parentID === authority.identity.parentID && view.identity.projectID === authority.identity.projectID &&
         same(view.identity.location, authority.identity.location) &&
         view.terminal.value.reportID === authority.input.fixReview?.reportID, "imported predecessor authority differs")
@@ -127,16 +126,14 @@ function loadBodies(storage: ReviewEvidenceCollectorV2.Storage, receipt: ReviewF
       const receiptID = hash(bytes)
       ensure(view.schema !== "review-engagement-state-v1" && view.evidence?.receiptID === receiptID &&
         view.evidence.bytes === bytes.length, "imported predecessor receipt bytes differ")
-      const oldReceipt = ReviewEvidenceValidationV2.read(bytes, view.terminal)
-      const context = ReviewEvidenceValidationV2.validate(oldReceipt, view.terminal, bodies)
-      if (oldReceipt.schema === "review-engagement-evidence-v2") {
-        ensure(view.schema === "review-engagement-state-v3" && view.source, "imported v2 receipt has no v3 authority")
-        ReviewVariantValidationV2.validate(oldReceipt, view.terminal, bodies, {
-          namespace: view.identity.key, leadID: view.identity.leadID, children: view.children,
-          input: view.input, budget: view.budget, source: view.source, journal: view.variants,
-        })
-      } else ensure(view.schema === "review-engagement-state-v2", "imported v1 receipt has no v2 authority")
-      const previous = ReviewFixPriorV2.prepare(view, value.inputHash, findings, { bytes, receipt: oldReceipt, receiptID, context })
+      return { bytes, receiptID }
+    })
+    // Imported predecessor evidence crosses the same full native-settlement boundary as ordinary replay.
+    const data = yield* repository.priorData(view)
+    yield* checked(() => {
+      ensure(data.receiptID === imported.receiptID && Buffer.from(data.bytes).equals(Buffer.from(imported.bytes)),
+        "validated predecessor receipt differs from imported bytes")
+      const previous = ReviewFixPriorV2.prepare(view, value.inputHash, findings, data)
       ensure(same(previous.reference, receipt.prior) && previous.artifacts.every((item) => same(descriptors.get(item.artifactID) ?? null, item)),
         "imported predecessor closure differs")
       ReviewFixValidationV2.validate(receipt, value, source, authority, previous, body)

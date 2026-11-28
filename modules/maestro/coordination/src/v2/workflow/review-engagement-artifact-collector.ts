@@ -5,11 +5,13 @@ import { ReviewCatalog } from "@orchestra/core/review/catalog"
 import { ReviewRouting } from "@orchestra/core/review/routing"
 import type { ReviewTools } from "@orchestra/core/review/tools"
 import { ReviewAnalyze } from "@orchestra/core/review-toolkit/analyze"
+import { ReviewScopedHistory } from "@orchestra/core/review-toolkit/index"
 import type { SessionMessage } from "@orchestra/core/session/message"
 import { Tool } from "@orchestra/core/tool/tool"
 import { ReviewEvidenceSchemaV2 } from "./review-engagement-artifact-schema"
 import { ReviewEvidenceValidationV2 } from "./review-engagement-artifact-validation"
 import { ReviewScopedProbeEvidenceV2 } from "./review-scoped-probe-evidence"
+import { ReviewHistoryEvidenceV2 } from "./review-history-evidence"
 import { ReviewChecksV2 } from "./review-checks"
 import type { ReviewEngagementEvidenceV2 } from "./review-engagement-evidence"
 import type { ReviewEngagementReportV2 } from "./review-engagement-report"
@@ -27,6 +29,7 @@ type CollectionContext = {
   readonly budget: ReviewEngagementReportV2.Budget
   readonly source: ReviewEngagementEvidenceV2.Prepared
   readonly active: Effect.Effect<void, Tool.Failure>
+  readonly historyCoverage?: "host"
 }
 type EngagementAuthority = {
   readonly authority: Effect.Effect<ReviewVariantValidationV2.Authority, Tool.Failure>
@@ -37,6 +40,7 @@ export type FixContext = CollectionContext & { readonly imported: ReadonlyMap<st
 export type Snapshot = Pick<ReviewEvidenceSchemaV2.ReceiptV1, "finalAnalysisOperationID" | "operations" | "artifacts" | "hostProofs"> & {
   readonly bodies: ReviewEvidenceSchemaV2.Bodies
   readonly scopedProbes: readonly ReviewScopedProbeEvidenceV2.Reference[]
+  readonly history?: readonly ReviewHistoryEvidenceV2.Reference[]
 }
 export type ReadRegion = (path: string, startLine: number, endLine: number) => Effect.Effect<ReviewVariantSchemaV2.CapturedRegion, Tool.Failure>
 export type SeedBundle = {
@@ -66,6 +70,7 @@ export type Collector = {
   readonly scopedProbe: (proof: ReviewScopedProbeEvidenceV2.Proof) => Effect.Effect<void, Tool.Failure>
   readonly analysis: (input: { readonly routing: ReviewRouting.Record; readonly catalog: ReviewCatalog.Catalog }) => Effect.Effect<ReviewAnalyze.Evidence, Tool.Failure>
   readonly code: (capture: ReviewTools.CodeCapture) => Effect.Effect<void, Tool.Failure>
+  readonly history: (capture: ReviewHistoryEvidenceV2.Capture) => Effect.Effect<void, Tool.Failure>
   readonly acknowledge: (sessionID: string, messages: readonly SessionMessage.Message[], turn?: Turn) => Effect.Effect<void, Tool.Failure>
   readonly variantTurn: (sessionID: string, promptMessageID: string) => Effect.Effect<TurnFacts, Tool.Failure>
   readonly validateVariantSeeds: (confirmations: readonly ReviewFanoutVerificationV2.InitialConfirmation[], readRegion: ReadRegion) => Effect.Effect<SeedBundle, Tool.Failure>
@@ -106,6 +111,13 @@ export function make(context: Context | FixContext, storage: Storage): Effect.Ef
     const proofs: ReviewEvidenceSchemaV2.Proof[] = []
     const scoped = new Map<string, { readonly reference: ReviewScopedProbeEvidenceV2.Reference; readonly proof: ReviewScopedProbeEvidenceV2.Proof }>()
     const codeInputs = new Map<string, string>()
+    const history = new Map<string, {
+      readonly validated: ReviewHistoryEvidenceV2.Validated
+      readonly artifact: ReviewEvidenceSchemaV2.Artifact
+      readonly signature: string
+      readonly active: Effect.Effect<void, Tool.Failure>
+      settled: boolean
+    }>()
     const settlements = new Set<string>()
     const gaps: ReviewEngagementReportV2.Result["notExamined"][number][] = []
     const turns = new Map<string, Omit<TurnFacts, "captures">>()
@@ -145,7 +157,8 @@ export function make(context: Context | FixContext, storage: Storage): Effect.Ef
     const currentBodies = () => Effect.map(Effect.forEach([...artifacts.values()], (artifact) =>
       storage.read(artifact.sha256, artifact.bytes, artifact.mime).pipe(Effect.map((body) => [artifact.artifactID, body] as const))),
     (entries) => new Map(entries))
-    const add = (kind: ReviewEvidenceSchemaV2.Artifact["kind"], raw: Uint8Array, mime: string, uri?: string, complete = true) => Effect.gen(function* () {
+    const add = (kind: ReviewEvidenceSchemaV2.Artifact["kind"], raw: Uint8Array, mime: string, uri?: string, complete = true,
+      pending?: { readonly active: Effect.Effect<void, Tool.Failure> }) => Effect.gen(function* () {
       const bytes = Uint8Array.from(raw)
       if (bytes.byteLength > ReviewEvidenceSchemaV2.limits.body) return yield* ReviewEvidenceSchemaV2.failure("bound-exceeded", "body")
       const descriptor = { kind, sha256: ReviewEvidenceSchemaV2.hash(bytes), bytes: bytes.byteLength, mime, complete, ...(uri === undefined ? {} : { uri }) }
@@ -155,10 +168,15 @@ export function make(context: Context | FixContext, storage: Storage): Effect.Ef
       if (!accounted.has(artifactID) && (accounted.size >= ReviewEvidenceSchemaV2.limits.artifacts ||
         total + bytes.byteLength > ReviewEvidenceSchemaV2.limits.total))
         return yield* ReviewEvidenceSchemaV2.failure("bound-exceeded", accounted.size >= ReviewEvidenceSchemaV2.limits.artifacts ? "artifacts" : "total")
+      yield* context.active
+      if (pending) yield* pending.active
       const hash = yield* storage.publish(bytes, mime)
       if (hash !== descriptor.sha256) return yield* ReviewEvidenceSchemaV2.failure("corrupt", "publication digest differs")
+      // A late CAS write may leave an unreferenced blob; it never admits a capture after its owner closes.
+      yield* context.active
+      if (pending) yield* pending.active
       const artifact: ReviewEvidenceSchemaV2.Artifact = { artifactID, ...descriptor }
-      artifacts.set(artifactID, artifact)
+      if (!pending) artifacts.set(artifactID, artifact)
       if (!accounted.has(artifactID)) {
         accounted.set(artifactID, bytes.byteLength)
         total += bytes.byteLength
@@ -168,6 +186,41 @@ export function make(context: Context | FixContext, storage: Storage): Effect.Ef
     const addJSON = (kind: ReviewEvidenceSchemaV2.Artifact["kind"], value: unknown, uri?: string) => Effect.gen(function* () {
       const text = yield* attempt(() => ReviewEvidenceSchemaV2.canonical(value))
       return yield* add(kind, Buffer.from(text), "application/json", uri)
+    })
+    const historyReferences = () => [...history.values()].filter((value) => value.settled)
+      .map((value) => ({ historyID: value.validated.proof.historyID, artifactID: value.artifact.artifactID }))
+      .sort((left, right) => left.historyID < right.historyID ? -1 : left.historyID > right.historyID ? 1 : 0)
+    const requireHistorySettled = () => ReviewEvidenceSchemaV2.require([...history.values()].every((value) => value.settled),
+      "history capture has no native completed settlement")
+    const acknowledgeHistory = (sessionID: string, messages: readonly SessionMessage.Message[]) => Effect.gen(function* () {
+      if (context.historyCoverage !== "host") return
+      for (const message of messages) {
+        if (message.type !== "assistant") continue
+        for (const part of message.content) {
+          if (part.type !== "tool" || part.name !== "review_history") continue
+          const identity = ReviewScopedHistory.identity(context.inputHash, context.source.sha256, {
+            sessionID, assistantMessageID: message.id, toolCallID: part.id,
+          })
+          const captured = history.get(identity)
+          if (!captured) {
+            if (part.state.status === "completed" && part.provider?.executed !== true)
+              return yield* ReviewEvidenceSchemaV2.failure("corrupt", "native history completed without an admitted capture")
+            const gap = { item: "engagement:history", reason: "tool-not-completed" }
+            if (!gaps.some((entry) => ReviewEvidenceSchemaV2.same(entry, gap))) gaps.push(gap)
+            continue
+          }
+          yield* captured.active
+          yield* context.active
+          yield* attempt(() => ReviewHistoryEvidenceV2.settled(captured.validated, sessionID, message))
+          yield* captured.active
+          yield* context.active
+          if (captured.settled) continue
+          artifacts.set(captured.artifact.artifactID, captured.artifact)
+          captured.settled = true
+          for (const gap of ReviewHistoryEvidenceV2.gaps(captured.validated))
+            if (!gaps.some((entry) => ReviewEvidenceSchemaV2.same(entry, gap))) gaps.push(gap)
+        }
+      }
     })
     const capture = (kind: "code-result" | "code-snapshot", value: ReviewTools.CodeCapture["evidence"]) => Effect.gen(function* () {
       if (ReviewEvidenceSchemaV2.hash(value.text) !== value.sha256) return yield* ReviewEvidenceSchemaV2.failure("corrupt", "CODE capture digest differs")
@@ -241,6 +294,7 @@ export function make(context: Context | FixContext, storage: Storage): Effect.Ef
       typeof error.metadata?.reason === "string" ? error.metadata.reason : error.message })))
     const collector: Collector = {
       snapshot: () => checked(Effect.gen(function* () {
+        yield* attempt(requireHistorySettled)
         const final = analyses.at(-1)
         if (!final?.result || analyses.some((analysis) => !analysis.result))
           return yield* ReviewEvidenceSchemaV2.failure("corrupt", "analysis did not complete")
@@ -250,7 +304,8 @@ export function make(context: Context | FixContext, storage: Storage): Effect.Ef
         })
         if (captured.length !== order.length) return yield* ReviewEvidenceSchemaV2.failure("corrupt", "operation did not complete")
         return { finalAnalysisOperationID: final.id, operations: captured, artifacts: [...artifacts.values()],
-          hostProofs: [...proofs], scopedProbes: [...scoped.values()].map((item) => item.reference), bodies: yield* currentBodies() }
+          hostProofs: [...proofs], scopedProbes: [...scoped.values()].map((item) => item.reference), bodies: yield* currentBodies(),
+          ...(history.size ? { history: historyReferences() } : {}) }
       })),
       scopedProbe: (proof) => checked(Effect.gen(function* () {
         if (scoped.has(proof.proofID)) return
@@ -279,7 +334,8 @@ export function make(context: Context | FixContext, storage: Storage): Effect.Ef
           if (previous !== signature) return yield* ReviewEvidenceSchemaV2.failure("corrupt", "CODE identity was reused with different bytes")
           return
         }
-        if (codeInputs.size >= ReviewEvidenceSchemaV2.limits.code) return yield* ReviewEvidenceSchemaV2.failure("bound-exceeded", "code-operations")
+        if (codeInputs.size + history.size >= ReviewEvidenceSchemaV2.limits.code)
+          return yield* ReviewEvidenceSchemaV2.failure("bound-exceeded", "code-operations")
         const evidence = yield* capture("code-result", value.evidence)
         const snapshots = yield* Effect.forEach(value.snapshots, (snapshot) => capture("code-snapshot", snapshot))
         const operation = yield* attempt(() => Schema.decodeUnknownSync(ReviewEvidenceSchemaV2.CodeOperation)({ operationID: identity, kind: "code", status: "captured",
@@ -290,7 +346,40 @@ export function make(context: Context | FixContext, storage: Storage): Effect.Ef
         operations.set(identity, operation)
         order.push(identity)
       })),
-      acknowledge: (sessionID, messages, turn) => checked(attempt(() => {
+      history: (value) => checked(Effect.gen(function* () {
+        if (context.historyCoverage !== "host" || !engagement)
+          return yield* ReviewEvidenceSchemaV2.failure("unavailable", "history capability is not admitted")
+        yield* value.active
+        const bound = yield* engagement.authority
+        yield* value.active
+        yield* context.active
+        yield* attempt(() => ReviewEvidenceSchemaV2.require(bound.namespace === context.namespace &&
+          bound.leadID === context.sessionID && value.sessionID === context.sessionID &&
+          ReviewEvidenceSchemaV2.digest(bound.input) === context.inputHash &&
+          ReviewEvidenceSchemaV2.same(bound.source, context.source) && ReviewEvidenceSchemaV2.same(bound.budget, context.budget) &&
+          (bound.input.profile === "audit" || bound.input.profile === "diligence"), "history caller differs from the original lead authority"))
+        const prepared = yield* attempt(() => ReviewHistoryEvidenceV2.prepare(value, {
+          inputHash: context.inputHash, sessionID: context.sessionID, source: context.source,
+          budget: context.budget, profile: bound.input.profile,
+        }))
+        const identity = prepared.validated.proof.historyID
+        const signature = prepared.bytes.toString("utf8")
+        const previous = history.get(identity)
+        if (previous) {
+          yield* previous.active
+          if (previous.signature !== signature)
+            return yield* ReviewEvidenceSchemaV2.failure("corrupt", "history identity was reused with different bytes")
+          return
+        }
+        if (codeInputs.size + history.size >= ReviewEvidenceSchemaV2.limits.code)
+          return yield* ReviewEvidenceSchemaV2.failure("bound-exceeded", "code-operations")
+        const artifact = yield* add("history", prepared.bytes, "application/json", prepared.validated.uri,
+          prepared.validated.proof.result.complete, { active: value.active })
+        yield* value.active
+        yield* context.active
+        history.set(identity, { validated: prepared.validated, artifact, signature, active: value.active, settled: false })
+      })),
+      acknowledge: (sessionID, messages, turn) => checked(acknowledgeHistory(sessionID, messages).pipe(Effect.andThen(attempt(() => {
         for (const message of messages) {
           if (message.type !== "assistant") continue
           for (const part of message.content) {
@@ -336,7 +425,7 @@ export function make(context: Context | FixContext, storage: Storage): Effect.Ef
         const previous = turns.get(key)
         if (previous?.reply) ReviewEvidenceSchemaV2.require(ReviewEvidenceSchemaV2.same(previous.reply, value), "completed native reply changed")
         turns.set(key, { ...(value ? { reply: value } : {}), attempts: [...attempts.values()] })
-      })),
+      })))),
       variantTurn: (sessionID, promptMessageID) => checked(readTurn(sessionID, promptMessageID)),
       validateVariantSeeds: (confirmations, readRegion) => checked(Effect.gen(function* () {
         const final = analyses.at(-1)
@@ -384,8 +473,11 @@ export function make(context: Context | FixContext, storage: Storage): Effect.Ef
         if (variants) ReviewEvidenceSchemaV2.require(ReviewEvidenceSchemaV2.same(variants, captured), "variant section changed after settlement")
         variants = captured
       })),
-      gaps: () => checked(attempt(() => [...gaps, ...variantGaps(variants)])),
+      gaps: () => checked(attempt(() => [...gaps, ...variantGaps(variants),
+        ...(context.historyCoverage === "host" && ![...history.values()].some((value) => value.settled)
+          ? [{ item: "engagement:history", reason: "not-examined" }] : [])])),
       seal: (report, host) => checked(Effect.gen(function* () {
+        yield* attempt(requireHistorySettled)
         const final = analyses.at(-1)
         if (!final?.result || analyses.some((analysis) => !analysis.result)) return yield* ReviewEvidenceSchemaV2.failure("corrupt", "analysis did not complete")
         yield* attempt(() => {
@@ -417,6 +509,7 @@ export function make(context: Context | FixContext, storage: Storage): Effect.Ef
           operations: order.map((id) => { const operation = operations.get(id); if (!operation) throw ReviewEvidenceSchemaV2.failure("corrupt", "operation did not complete"); return operation }),
           artifacts: [...artifacts.values()].sort((a, b) => a.artifactID < b.artifactID ? -1 : a.artifactID > b.artifactID ? 1 : 0),
           citations, hostProofs: [...proofs], notExamined: report.value.notExamined,
+          ...(history.size ? { history: historyReferences() } : {}),
           ...(scoped.size ? { scopedProbes: [...scoped.values()].map((item) => item.reference).sort((a, b) => a.proofID < b.proofID ? -1 : 1) } : {}) }
         const bytes = yield* attempt(() => Buffer.from(ReviewEvidenceSchemaV2.canonical(receipt)))
         if (bytes.byteLength > ReviewEvidenceSchemaV2.limits.receipt) return yield* ReviewEvidenceSchemaV2.failure("bound-exceeded", "receipt")

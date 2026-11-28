@@ -6,6 +6,7 @@ import type { PermissionV2 } from "../permission"
 import { AppProcess } from "../process"
 import type { CodeIndex } from "../research-toolkit/code-index/types"
 import { ReviewHistory } from "../review-toolkit/history"
+import { ReviewScopedHistory } from "../review-toolkit/scoped-history"
 import type { ReviewItem } from "../review-toolkit/item"
 import { ReviewProbe } from "../review-toolkit/probe"
 import { Tool } from "../tool/tool"
@@ -72,6 +73,9 @@ export type CodeCapture = {
 export type Binding = {
   /** The repository `review_history` reads. */
   readonly repository: string
+  /** Host-owned scoped history; admission carries the exact binding instance across every await. */
+  readonly history?: (input: ReviewHistory.Input, context: Tool.Context, active: Effect.Effect<void, Tool.Failure>) =>
+    Effect.Effect<ReviewHistory.Result, Tool.Failure>
   readonly codeSource?: Effect.Effect<CodeSource, Tool.Failure, Scope.Scope>
   /** Lens children: the Session's lens and `ReviewAnalyze.page` (review-toolkit/analyze.ts) over the review's retained run. */
   readonly analyze?: {
@@ -212,7 +216,22 @@ export function tools(services: Services) {
       toModelOutput: ({ output }) => [{ type: "text", text: output.output }],
       execute: (input, context) =>
         Effect.gen(function* () {
+          // Capture before permission/gate awaits: a replacement Session binding never revives this invocation.
+          const lifetime = bindings.get(context.sessionID)
+          const active = Effect.suspend(() => lifetime && bindings.get(context.sessionID) === lifetime
+            ? Effect.void : Effect.fail(new Tool.Failure({ message: "engagement-history-binding-closed",
+                metadata: { reason: "engagement-history-binding-closed" } })))
           const binding = yield* bound(names.history, context)
+          yield* active
+          if (binding.history) {
+            const read = yield* binding.history(input, context, active)
+            yield* active
+            if (binding.retain) {
+              yield* binding.retain({ uri: read.uri, text: read.raw })
+              yield* active
+            }
+            return { title: `git ${input.op}`, output: read.text, review: ReviewScopedHistory.settlement(read) }
+          }
           const read = yield* ReviewHistory.run(input, { repository: binding.repository, executionSessionID: context.sessionID }).pipe(
             Effect.provideService(AppProcess.Service, services.processes),
             Effect.mapError((error) => new Tool.Failure({ message: `review_history ${error.code}: ${error.reason}`, error })),
