@@ -1,0 +1,42 @@
+{
+  "completion_state": "INCOMPLETE_BLOCKED",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "population": {
+    "total": 927,
+    "cli": 162,
+    "omni": 426,
+    "platform": 339
+  },
+  "preserved": {
+    "source_map": {
+      "path": "source-map.json",
+      "sha256": "ffb441271b9962cb578c763f68ee8c2126ea12ce5a1cd354e43996866031eda3",
+      "byte_length": 222371
+    },
+    "exported_files": {
+      "path": "preserved-object-identities.json",
+      "sha256": "f8c6b99f53ad9e9f01592ae174b5e71e9b59db47750873b7af240f89625d5184",
+      "byte_length": 19865
+    },
+    "platform200": {
+      "commit": "0af4bcc4bcfcd4d58c5e45a21c319fe10d47b9f3",
+      "documentary_sources": 200
+    },
+    "s5": {
+      "commit": "df6d83b011b7cc2b4d6edef3c796b001dea71837",
+      "prepared_state": "HOLD"
+    }
+  },
+  "cli": {
+    "original_body_bytes": 12877,
+    "custody": "Original body and private transport records unavailable in checked Git objects. Existing descriptions are retained as references.",
+    "next": "Recover original bytes or produce a fresh exact candidate on the frozen baseline with independent review."
+  },
+  "platform": {
+    "outstanding": "Resolve exact caller capture and remaining platform coverage by source mapping. Platform200 acceptance remains tied to original bindings."
+  },
+  "omni": {
+    "branch": "genesis-omni-resume",
+    "integration": "Consumes accepted Omni package once the remaining review and operation gates are closed."
+  }
+}
