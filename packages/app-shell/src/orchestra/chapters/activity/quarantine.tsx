@@ -102,15 +102,17 @@ export function ActivityQuarantine(props: { query: string }) {
     <section aria-busy={state.busy || state.emptying}>
       <div class="activity-section-heading">
         <p class="mx-note">{language.t("orchestra.monitor.quarantineSource")}</p>
-        <div>
-          <button type="button" class="mx-btn" disabled={state.busy || !supported() || !scope()} onClick={() => void refresh()}>
-            {language.t("orchestra.monitor.refresh")}
-          </button>
-          <button type="button" class="mx-btn" disabled={!state.snapshot?.canEmpty || state.snapshot.rows.length === 0 ||
-            state.scope !== scope() || state.busy || state.failed || state.emptying || !supported()} onClick={() => void empty()}>
-            {language.t(state.emptying ? "orchestra.monitor.quarantineEmptying" : "orchestra.monitor.quarantineEmptyAction")}
-          </button>
-        </div>
+        <Show when={supported()}>
+          <div>
+            <button type="button" class="mx-btn" disabled={state.busy || !supported() || !scope()} onClick={() => void refresh()}>
+              {language.t("orchestra.monitor.refresh")}
+            </button>
+            <button type="button" class="mx-btn" disabled={!state.snapshot?.canEmpty || state.snapshot.rows.length === 0 ||
+              state.scope !== scope() || state.busy || state.failed || state.emptying || !supported()} onClick={() => void empty()}>
+              {language.t(state.emptying ? "orchestra.monitor.quarantineEmptying" : "orchestra.monitor.quarantineEmptyAction")}
+            </button>
+          </div>
+        </Show>
       </div>
       <Show when={!supported()}>
         <div class="mx-empty" role="status"><strong>{language.t("orchestra.monitor.quarantineUnsupported")}</strong></div>

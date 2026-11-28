@@ -424,7 +424,9 @@ export async function startOwnedServe(options: {
     if (!child || !activity || state.stopping) return undefined
     const current = () => state.child === child && state.activity === activity && !state.stopping
     const post = async (endpoint: ActivityPrivateChannel.ArmPath, body: string, signal?: AbortSignal) => {
-      const deadline = AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(3000)])
+      // Confirmation can make three Omni requests, each with a 10-second reply deadline.
+      const timeout = endpoint === ActivityPrivateChannel.freezeConfirmPath ? 35_000 : 12_000
+      const deadline = AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(timeout)])
       const valid = () => current() && !deadline.aborted
       return (async () => {
         const signer = await activity

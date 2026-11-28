@@ -10,6 +10,7 @@ import { ReviewBindingV2 } from "../../src/v2/tools/review-binding"
 import { ReviewEngagementStoreV2 } from "../../src/v2/tools/review-engagement-store"
 import { ReviewEngagementPolicyV2 } from "../../src/v2/workflow/review-engagement-policy"
 import { reply, stage, text, type Controls, type Ctx, type Fixture } from "./lucy-engagement"
+import { Variants } from "./lucy-variant-schema"
 
 export const reader = "maestro_read_review_evidence"
 export const pageBytes = 4096
@@ -244,15 +245,25 @@ const Proof = Schema.Struct({
 const Artifact = Schema.Struct({
   ...Descriptor.fields, kind: Schema.Literals(["code-result", "code-snapshot", "citation", "analysis-result",
     "analysis-retained", "analysis-debt", "analyzer-stdout", "analyzer-stderr", "analyzer-path-map",
-    "analyzer-inputs", "analyzer-config", "analyzer-recipe"]), complete: Schema.Boolean, uri: Schema.optional(Schema.String),
+    "analyzer-inputs", "analyzer-config", "analyzer-recipe", "scoped-probe"]), complete: Schema.Boolean, uri: Schema.optional(Schema.String),
 })
-export const Receipt = Schema.Struct({
+export const ReceiptV1 = Schema.Struct({
   schema: Schema.Literal("review-engagement-evidence-v1"), reportID: Schema.String, inputHash: Schema.String,
   sessionID: Schema.String, sourceSha256: Schema.String, budget: Schema.Struct({ startedAt: Schema.Number, deadlineAt: Schema.Number }),
   finalAnalysisOperationID: Schema.String, operations: Schema.Array(Schema.Union([CodeOperation, AnalysisOperation])),
   artifacts: Schema.Array(Artifact), citations: Schema.Array(Schema.Struct({ uri: Schema.String, artifactID: Schema.String })),
   hostProofs: Schema.Array(Proof), notExamined: Schema.Array(Schema.Struct({ item: Schema.String, reason: Schema.String })),
 })
+export type ReceiptV1 = typeof ReceiptV1.Type
+export const ScopedProbeReference = Schema.Struct({ proofID: Schema.String, artifactID: Schema.String })
+export const ReceiptV2 = Schema.Struct({
+  ...ReceiptV1.fields,
+  schema: Schema.Literal("review-engagement-evidence-v2"),
+  variants: Variants,
+  scopedProbes: Schema.optional(Schema.Array(ScopedProbeReference)),
+})
+export type ReceiptV2 = typeof ReceiptV2.Type
+export const Receipt = Schema.Union([ReceiptV1, ReceiptV2])
 export type Receipt = typeof Receipt.Type
 
 export const receipt = (host: Ctx, report: Report) => Effect.gen(function* () {

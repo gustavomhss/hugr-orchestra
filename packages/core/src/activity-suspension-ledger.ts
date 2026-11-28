@@ -107,10 +107,11 @@ export function make(database: Database.Interface, ownerIncarnation: string): In
         const abandoned = row.pending
         if (!abandoned || row.owner_incarnation === ownerIncarnation) return project(row)
         // Persist the fence before treating this attempt as abandoned so a late receipt cannot settle it.
+        const suspended = row.suspended.filter((member) => !abandoned.members.includes(member))
         const settled = {
           ...row,
-          phase: "unknown" as const,
-          suspended: row.suspended.filter((member) => !abandoned.members.includes(member)),
+          phase: suspended.length ? "partial" as const : "unknown" as const,
+          suspended,
           uncertain: [...row.uncertain, ...abandoned.members],
           pending: null,
           owner_incarnation: null,

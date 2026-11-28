@@ -8,6 +8,7 @@ import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { reply, run, stage, text, type Controls } from "./fixture/lucy-engagement"
 import { cache, canonical, decoded, nativeCode, receipt, request } from "./fixture/lucy-engagement-artifacts"
 import { calls, commit, failed, retained } from "./fixture/lucy-engagement-artifact-limits"
+import { knownVariant, variantAdapter } from "./fixture/lucy-engagement-variant-adapter"
 
 test("distinct locate snapshots exceed256 descriptors before the128-CODE-operation limit", () => {
   expectSpawn(import.meta.path)
@@ -117,17 +118,24 @@ test("distinct locate snapshots exceed256 descriptors before the128-CODE-operati
       //127 operations stay below128. The next distinct result crosses252 +3 analysis +2 =257 descriptors before final citation.
       yield* failed(host, root, input, output)
       const evidence = yield* receipt(host, mini)
-      expect(evidence.value.operations).toHaveLength(1)
-      expect(evidence.value.operations[0].kind).toBe("analysis")
+      const variant = yield* knownVariant(host, control, evidence)
+      const analysis = evidence.value.operations.filter((operation) => operation.kind === "analysis")
+      expect(evidence.value.operations).toHaveLength(2)
+      expect(analysis).toHaveLength(1)
+      expect(analysis[0].kind).toBe("analysis")
       expect(evidence.value.hostProofs).toEqual([])
       expect(evidence.value.citations).toHaveLength(1)
-      expect(evidence.value.artifacts.map((artifact) => artifact.kind).sort()).toEqual([
+      const originalArtifacts = evidence.value.artifacts.filter((artifact) => artifact.artifactID !== variant.operation.evidence.artifactID)
+      expect(originalArtifacts.map((artifact) => artifact.kind).sort()).toEqual([
         "analysis-debt", "analysis-result", "analysis-retained", "citation",
       ])
-      expect(evidence.value.artifacts).toHaveLength(4)
-      expect(evidence.value.operations[0].kind === "analysis" && evidence.value.operations[0].checks.every((check) =>
+      expect(originalArtifacts).toHaveLength(4)
+      expect(evidence.value.artifacts).toHaveLength(5)
+      expect(evidence.value.artifacts.find((artifact) => artifact.artifactID === variant.operation.evidence.artifactID)?.kind).toBe("code-result")
+      expect(variant.operation.snapshots).toEqual([])
+      expect(analysis[0].kind === "analysis" && analysis[0].checks.every((check) =>
         check.artifactIDs.length === 0 && check.proofIDs.length === 0)).toBe(true)
-    }), { stream }).pipe(
+    }), variantAdapter(stream)).pipe(
       Effect.provideService(BackendToolkit.Root, path.join(root.global.cache, "descriptor-empty-toolkit")),
       Effect.provideService(ReviewAnalyze.ObserveCatalog, () => { analyses++ }),
     )

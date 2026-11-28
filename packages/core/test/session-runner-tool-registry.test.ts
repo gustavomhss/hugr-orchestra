@@ -108,6 +108,7 @@ describe("ToolRegistry", () => {
         owner: "test",
         sessionID: runnerSessionID,
         agentID: identity.agent,
+        assistantMessageID: identity.assistantMessageID,
         tool: "observe_provenance",
         callID: "call-provenance",
       })

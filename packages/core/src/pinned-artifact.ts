@@ -40,6 +40,13 @@ export class Failed extends Schema.TaggedErrorClass<Failed>()("PinnedArtifactFai
 const DOWNLOAD_MS = 10 * 60_000
 const EXTRACT_MS = 10 * 60_000
 
+type PendingArchive = {
+  captured: NonNullable<Awaited<ReturnType<typeof ActivityQuarantineArchive.capture>>>
+  directory: string
+  label: string
+  preserve: boolean
+}
+
 /**
  * Download, verify and lay out every artifact in a staging dir, run `populate` over it, then move it into `directory`
  * in one rename.
@@ -53,17 +60,28 @@ export const install = Effect.fn("PinnedArtifact.install")(function* (
   const parent = path.dirname(directory)
   yield* step("filesystem", () => mkdir(parent, { recursive: true }))
   const staging = yield* step("filesystem", () => mkdtemp(path.join(parent, ".staging-")))
+  const archives: PendingArchive[] = []
   yield* Effect.gen(function* () {
-    yield* Effect.forEach(artifacts, (artifact) => unpack(staging, artifact), { discard: true })
+    yield* Effect.forEach(artifacts, (artifact) => unpack(staging, artifact, archives), { discard: true })
     if (populate) yield* populate(staging)
     yield* step("filesystem", () => writeFile(path.join(staging, ".complete"), ""))
     // A concurrent install may have renamed its staging dir first; its complete install wins.
-    yield* step("filesystem", () => rename(staging, directory)).pipe(
+    const published = yield* step("filesystem", () => rename(staging, directory)).pipe(
+      Effect.as(true),
       Effect.catch((error) =>
-        installed(directory).pipe(Effect.flatMap((done) => (done ? Effect.void : Effect.fail(error)))),
+        installed(directory).pipe(Effect.flatMap((done) => (done ? Effect.succeed(false) : Effect.fail(error)))),
       ),
     )
-  }).pipe(Effect.ensuring(Effect.promise(() => rm(staging, { recursive: true, force: true }))))
+    if (!published) return
+    yield* Effect.forEach(archives, (archive) => Effect.uninterruptible(Effect.promise(async () => {
+      // Handoff reports any uncertainty once it calls custody. Earlier failures leave the archive disposable.
+      const outcome = await ActivityQuarantineArchive.handoff(archive.captured, parent, archive.label).catch(() => "Refused")
+      archive.preserve = outcome === "Unknown"
+    })), { discard: true })
+  }).pipe(Effect.ensuring(Effect.promise(async () => {
+    await Promise.all([staging, ...archives.flatMap((archive) => archive.preserve ? [] : [archive.directory])]
+      .map((directory) => rm(directory, { recursive: true, force: true })))
+  })))
   return directory
 })
 
@@ -75,7 +93,7 @@ export const installed = (directory: string) =>
     ),
   )
 
-const unpack = Effect.fnUntraced(function* (staging: string, artifact: Artifact) {
+const unpack = Effect.fnUntraced(function* (staging: string, artifact: Artifact, archives: PendingArchive[]) {
   const separator = artifact.integrity.indexOf("-")
   const algorithm = artifact.integrity.slice(0, separator)
   if (algorithm !== "sha256" && algorithm !== "sha512") return yield* new Failed({ cause: "integrity-unsupported" })
@@ -97,7 +115,7 @@ const unpack = Effect.fnUntraced(function* (staging: string, artifact: Artifact)
 
   const allowCustody = !!extractor && ActivityQuarantineArchive.eligible(bytes.length)
   const directory = yield* step("filesystem", () => mkdtemp(path.join(allowCustody ? path.dirname(staging) : staging, ".unpack-")))
-  const preservation = { required: false }
+  let handoffPending = false
   yield* Effect.gen(function* () {
     const out = path.join(directory, "out")
     yield* step("filesystem", () => mkdir(out))
@@ -144,14 +162,10 @@ const unpack = Effect.fnUntraced(function* (staging: string, artifact: Artifact)
     )
     if (archive) {
       yield* step("filesystem", () => rm(out, { recursive: true, force: true }))
-      const label = path.posix.basename(new URL(artifact.url).pathname)
-      const outcome = yield* Effect.uninterruptible(Effect.promise(() =>
-        ActivityQuarantineArchive.handoff(archive, staging, label).catch(() => "Unknown" as const)))
-      if (outcome === "Unknown") {
-        preservation.required = true
-      }
+      archives.push({ captured: archive, directory, label: path.posix.basename(new URL(artifact.url).pathname), preserve: false })
+      handoffPending = true
     }
-  }).pipe(Effect.ensuring(Effect.promise(() => preservation.required ? Promise.resolve() : rm(directory, { recursive: true, force: true }))))
+  }).pipe(Effect.ensuring(Effect.promise(() => handoffPending ? Promise.resolve() : rm(directory, { recursive: true, force: true }))))
 })
 
 /** The extractor argv, run in the unpack dir with the download saved as `archive.<format>`, writing into `out`. */

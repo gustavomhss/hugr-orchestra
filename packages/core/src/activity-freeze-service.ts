@@ -75,12 +75,13 @@ export function make(database: Database.Interface, options?: { now?: () => numbe
           const actions = yield* ledger
           if (!(yield* actions.capture(preview.action, [preview.target])) || now() >= preview.expiresAt) return
           const scope = { treeID: preview.target.targetID, generation: preview.target.generation }
+          // Keep the durable intent and bounded native operation together if the client disconnects.
           const result = yield* ActivitySuspensionExecutor.execute(suspension, async (_scope, attempt) => {
             const outcome = await current.control.apply(attempt.action)
             return [{ memberID: preview.member, effect: outcome === "refused" ? "unchanged" : outcome }]
           }, preview.action === "resume"
             ? { action: "resume", scope, members: [preview.member], markID: current.mark!.markID }
-            : { action: "suspend", scope, members: [preview.member] })
+            : { action: "suspend", scope, members: [preview.member] }).pipe(Effect.uninterruptible)
           if (!result || result.phase === "suspending" || result.phase === "resuming") return
           return { previewID: preview.previewID, target: { targetID: preview.target.targetID, generation: preview.target.generation },
             treeID: preview.treeID, member: preview.member, action: preview.action, markID: result.markID, phase: result.phase }
