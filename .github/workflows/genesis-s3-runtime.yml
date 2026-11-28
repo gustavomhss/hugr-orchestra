@@ -6,7 +6,7 @@ on:
     branches: ["genesis-s3-resume"]
     paths:
       - ".github/workflows/genesis-s3-runtime.yml"
-      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/s3-runtime/run-plan.json"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/selected-v5r2-proposal/run-plan-v5r2.json"
       - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/s3-runtime/runner.py"
 
 permissions:
@@ -18,6 +18,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  S3_PLAN_PATH: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/selected-v5r2-proposal/run-plan-v5r2.json
   S3_RUNNER_PATH: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/s3-runtime
 
 jobs:
@@ -30,7 +31,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Require the immutable selected inputs
-        run: python3 "$S3_RUNNER_PATH/runner.py" plan --repository "$GITHUB_WORKSPACE" --plan "$S3_RUNNER_PATH/run-plan.json"
+        run: python3 "$S3_RUNNER_PATH/runner.py" plan --repository "$GITHUB_WORKSPACE" --plan "$S3_PLAN_PATH"
       - uses: ./.github/actions/setup-bun
       - name: Restore the exact prior operational archive
         if: env.S3_MODE != 'prepare'
@@ -58,7 +59,7 @@ jobs:
         run: |
           python3 "$S3_RUNNER_PATH/runner.py" run \
             --repository "$GITHUB_WORKSPACE" \
-            --plan "$S3_RUNNER_PATH/run-plan.json" \
+            --plan "$S3_PLAN_PATH" \
             --runtime "$RUNNER_TEMP/s3-runtime" \
             --restore "$RUNNER_TEMP/s3-restored" \
             --output "$RUNNER_TEMP/s3-evidence"
@@ -85,7 +86,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir "$RUNNER_TEMP/genesis-s3-guards"
-          export GUARD_BASE_SHA="$(git rev-parse origin/dev)"
+          GUARD_BASE_SHA="$(git rev-parse origin/dev)"
+          export GUARD_BASE_SHA
           set +e
           bun run check:guards --base origin/dev > "$RUNNER_TEMP/genesis-s3-guards/guards.log" 2>&1
           GUARD_EXIT="$?"
