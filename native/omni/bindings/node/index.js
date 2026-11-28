@@ -371,4 +371,11 @@ function quarantineDispose(source, expectedIdentity) {
   });
 }
 
-module.exports = { run, spawn, configure, OmniError, quarantineIdentity, quarantineInspect, quarantineRename, quarantineDispose };
+function quarantineDisposeAvailable() {
+  return typeof load().quarantineDispose === "function";
+}
+
+module.exports = {
+  run, spawn, configure, OmniError, quarantineIdentity, quarantineInspect, quarantineRename,
+  quarantineDispose, quarantineDisposeAvailable,
+};
