@@ -85,7 +85,7 @@ for (const mode of ["zero", "nonzero"] as const) {
         expect(nativeRows(oldRaw).map((row) => row.ruleId)).toEqual(["eslint(no-debugger)"])
         // Read real producer output only as a compare oracle. It never supplies a URI to the scripted verifier.
         const raw = yield* rawControl(host, input)
-        expect(raw).toEqual(oldRaw)
+        expect(raw).toEqual(Buffer.from(oldRaw))
         expect(oldHead.runtime.executableSha256).toBe(executableSha256)
         expect(oldHead.outcome).toMatchObject({ exitCode: 1, timedOut: false, overflow: false, memoryExceeded: false })
         expect(oldHead.outcome.stdout.truncated).toBe(false)

@@ -516,3 +516,24 @@ typed recipe/outcome/raw observation and equivalent retest. It must use an
 existing closed runner, separate mutable scratch from immutable CODE, retain
 real old failure/new pass and prove timeout/cancellation. A synthetic prior
 probe receipt would fabricate the missing qualification and is forbidden.
+
+## 12. Hosted preparation record
+
+Source `245e49c091e413656d665198231d552d82fe80d6` was submitted as the
+tests-only predecessor. [Run 46115848887](https://github.com/gustavomhss/hugr-orchestra/actions/runs/46115848887),
+snapshot `89dcb8a`, failed Maestro typecheck on all three hosts before any test
+executed. Both errors were TS2769 in byte-equality assertions:
+`lucy-fix-review-evidence.test.ts:159` and `lucy-fix-review-native.test.ts:88`.
+The expected `Buffer<ArrayBufferLike>` was incompatible with the matcher's
+`Buffer<ArrayBuffer>` type. This is a preparation failure, not assertion RED.
+
+The same-tree trigger `24d62a` also registered
+[run 46116004673](https://github.com/gustavomhss/hugr-orchestra/actions/runs/46116004673)
+after the Actions event delay. It is recorded separately and provides no
+additional qualifying RED evidence at this point.
+
+The lead-authorized correction wraps only the two expected buffers in
+`Buffer.from(...)`. It preserves exact byte-for-byte equality, all 27 cases,
+positive controls, fixtures and production bytes. No tests or typecheck were
+run locally; implementation remains blocked until a compiling hosted baseline
+reaches the intended assertions.
