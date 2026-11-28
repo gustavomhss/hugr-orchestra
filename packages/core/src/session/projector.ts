@@ -7,6 +7,7 @@ import { Database } from "../database/database"
 import { EventV2 } from "../event"
 import { makeGlobalNode } from "../effect/app-node"
 import { SessionEvent } from "./event"
+import { SessionContextEpoch } from "./context-epoch"
 import { SessionLegacyTranscript } from "./legacy-transcript"
 import { WorkspaceTable } from "../control-plane/workspace.sql"
 import { ProjectTable } from "../project/sql"
@@ -15,7 +16,7 @@ import { SessionMessageUpdater } from "./message-updater"
 import { fromRow } from "./info"
 import { SessionInput } from "./input"
 import { WorkspaceV2 } from "../workspace"
-import { MessageTable, PartTable, SessionInputTable, SessionMessageTable, SessionContextEpochTable, SessionTable } from "./sql"
+import { MessageTable, PartTable, SessionInputTable, SessionMessageTable, SessionTable } from "./sql"
 
 type DatabaseService = Database.Interface["db"]
 
@@ -370,6 +371,8 @@ const layer = Layer.effectDiscard(
           .get()
           .pipe(Effect.orDie)
         if (!boundary) return yield* Effect.die(`Revert boundary message not found: ${event.data.messageID}`)
+        if (!event.durable) return yield* Effect.die("Revert commit is missing its durable sequence")
+        yield* SessionContextEpoch.rebaseForRevert(db, event.data.sessionID, event.durable.seq)
         yield* db
           .delete(SessionMessageTable)
           .where(
@@ -387,10 +390,6 @@ const layer = Layer.effectDiscard(
           )
           .run()
           .pipe(Effect.orDie)
-        // The prior baseline/snapshot can encode context observed after the reverted turn. Rebuild it against the
-        // restored filesystem on the next run instead of reusing a generation whose messages were just removed.
-        yield* db.delete(SessionContextEpochTable).where(eq(SessionContextEpochTable.session_id, event.data.sessionID))
-          .run().pipe(Effect.orDie)
         yield* db
           .update(SessionTable)
           .set({ revert: null, time_updated: DateTime.toEpochMillis(event.data.timestamp) })
