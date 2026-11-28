@@ -6,7 +6,9 @@ import { Duration, Effect, Layer } from "effect"
 import { GitCli } from "@orchestra/core/git-cli"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { AppProcess } from "@orchestra/core/process"
+import { Vcs } from "@orchestra/core/vcs"
 import { git } from "./fixture/git"
+import { expectSpawn } from "./fixture/omni-expect"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
 
@@ -57,6 +59,31 @@ const numstat = (dir: string, file: string) =>
   })
 
 describe("GitCli", () => {
+  it.live("the workspace status preview leaves the index bytes unchanged", () =>
+    Effect.gen(function* () {
+      expectSpawn(import.meta.path)
+      const dir = yield* repository
+      yield* Effect.promise(async () => {
+        await git(dir.path, "config", "core.fsmonitor", "false")
+        await git(dir.path, "config", "diff.autoRefreshIndex", "true")
+        await fs.writeFile(path.join(dir.path, "stat-only.txt"), "unchanged\n")
+        await fs.writeFile(path.join(dir.path, "changed.txt"), "before\n")
+        await git(dir.path, "add", ".")
+        await git(dir.path, "-c", "user.name=Test", "-c", "user.email=test@orchestra.test", "-c", "commit.gpgsign=false", "commit", "-m", "baseline")
+        await fs.utimes(path.join(dir.path, "stat-only.txt"), 1, 1)
+        await fs.writeFile(path.join(dir.path, "changed.txt"), "before\nafter\n")
+      })
+      const index = path.join(dir.path, ".git", "index")
+      const before = yield* Effect.promise(() => fs.readFile(index))
+      const gitService = yield* GitCli.Service.pipe(Effect.provide(counted(GitCli.CACHE_WINDOW).layer))
+      expect(yield* Vcs.status(gitService, dir.path, dir.path)).toMatchObject([
+        { file: "changed.txt", additions: 1, deletions: 0 },
+      ])
+      expect(yield* Effect.promise(() => fs.readFile(index))).toEqual(before)
+    }),
+    30_000,
+  )
+
   it.live(
     "counts untracked files in-process as git does, without starting a process",
     () =>

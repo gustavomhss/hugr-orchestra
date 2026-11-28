@@ -731,7 +731,7 @@ const layer = Layer.effect(
       const tracked = yield* execute(
         input.repository.worktree,
         proc,
-      )(["diff", "--binary", "HEAD", "--", scope]).pipe(
+      )(["-c", "diff.autoRefreshIndex=false", "diff", "--binary", "HEAD", "--", scope]).pipe(
         Effect.mapError(
           (cause) => new PatchError({ operation: "capture", directory: input.path, message: cause.message, cause }),
         ),
