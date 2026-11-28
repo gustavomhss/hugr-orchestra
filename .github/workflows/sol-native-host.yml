@@ -1,0 +1,138 @@
+name: SOL native Linux campaign host
+on:
+  push:
+    branches: [sol-host-probe]
+    paths: [.github/workflows/sol-native-host.yml]
+permissions:
+  contents: read
+jobs:
+  campaign:
+    if: github.repository == 'gustavomhss/hugr-orchestra' && github.actor == 'gustavomhss' && github.triggering_actor == 'gustavomhss'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 885905c5bcfe77593d074ae10e64d6efa9d3c410
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - uses: ./.github/actions/omni-binaries
+      - name: Prepare Linux sandbox dependencies
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get -o Acquire::Retries=3 update -qq
+          sudo apt-get -o Acquire::Retries=3 install -y -qq bubblewrap socat
+          sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Start native runtime with an isolated durable state
+        shell: bash
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: strict
+        run: |
+          set -euo pipefail
+          umask 077
+          session="$RUNNER_TEMP/sol-native"
+          mkdir -p "$session"/{config,data,state,cache,route}
+          [[ -n "$OPENROUTER_API_KEY" ]] || { echo 'Provider configuration is missing'; exit 1; }
+          mkdir "$session/config/orchestra"
+          cat > "$session/config/orchestra/orchestra.json" <<'CONFIG'
+          {
+            "permissions": [
+              {"action": "bash", "resource": "*", "effect": "deny"},
+              {"action": "edit", "resource": "*", "effect": "deny"},
+              {"action": "external_directory", "resource": "*", "effect": "deny"},
+              {"action": "webfetch", "resource": "*", "effect": "deny"},
+              {"action": "websearch", "resource": "*", "effect": "deny"}
+            ]
+          }
+          CONFIG
+          openssl rand -hex 32 > "$session/server-password"
+          export ORCHESTRA_SERVER_PASSWORD
+          ORCHESTRA_SERVER_PASSWORD=$(cat "$session/server-password")
+          export XDG_CONFIG_HOME="$session/config" XDG_DATA_HOME="$session/data"
+          export XDG_STATE_HOME="$session/state" XDG_CACHE_HOME="$session/cache"
+          nohup bun run apps/cli/src/index.ts serve --hostname 127.0.0.1 --port 4850 > "$session/orchestra.log" 2>&1 &
+          echo "$!" > "$session/orchestra.pid"
+          for _ in $(seq 1 120); do
+            if bun -e 'const r = await fetch("http://127.0.0.1:4850/api/health", {headers: {Authorization: "Basic " + btoa("orchestra:" + process.env.ORCHESTRA_SERVER_PASSWORD)}}); if (!r.ok) process.exit(1)' 2>/dev/null; then
+              printf '%s\n' 'Native Orchestra health reached on Linux; state is private to this job.'
+              exit 0
+            fi
+            kill -0 "$(cat "$session/orchestra.pid")" 2>/dev/null || { echo 'Native process exited during startup; diagnostics retained within the runner'; exit 1; }
+            sleep 1
+          done
+          echo 'Native health was unavailable within the bootstrap window.'
+          exit 1
+      - name: Start owner-key attachment
+        shell: bash
+        run: |
+          set -euo pipefail
+          probe="$RUNNER_TEMP/sol-host"
+          mkdir -m 700 "$probe"
+          mkdir -m 700 "$probe/route"
+          curl -fsSL --retry 2 -o "$probe/cloudflared" https://github.com/cloudflare/cloudflared/releases/download/2026.11.2/cloudflared-linux-amd64
+          (cd "$probe" && echo '56f13335143ec0e22772963290683a84a04114a35ec64cbc794a4d39ff9bb8cf  cloudflared' | sha256sum -c -)
+          chmod 700 "$probe/cloudflared"
+          curl -fsSL --retry 2 https://api.github.com/users/gustavomhss/keys |
+            jq -er '.[] | select(.id == 131896369) | .key' > "$probe/authorized_keys"
+          chmod 600 "$probe/authorized_keys"
+          ssh-keygen -lf "$probe/authorized_keys" | grep -F 'SHA256:grBP7UAeYUlzeyv9oe6TDk1OMADK0QrMOVfaIm9Zbwo'
+          ssh-keygen -q -t ed25519 -N '' -f "$probe/host"
+          cat > "$probe/sshd_config" <<CONFIG
+          Port 22231
+          ListenAddress 127.0.0.1
+          HostKey $probe/host
+          PidFile $probe/sshd.pid
+          AuthorizedKeysFile $probe/authorized_keys
+          AuthenticationMethods publickey
+          PasswordAuthentication no
+          KbdInteractiveAuthentication no
+          PermitRootLogin no
+          AllowUsers $(id -un)
+          AllowTcpForwarding local
+          PermitOpen 127.0.0.1:4850
+          AllowStreamLocalForwarding no
+          AllowAgentForwarding no
+          X11Forwarding no
+          PermitTunnel no
+          PermitUserRC no
+          UsePAM yes
+          CONFIG
+          sudo install -d -m 755 /run/sshd
+          sudo /usr/sbin/sshd -t -f "$probe/sshd_config"
+          sudo /usr/sbin/sshd -f "$probe/sshd_config"
+          nohup "$probe/cloudflared" tunnel --no-autoupdate --protocol http2 --url ssh://127.0.0.1:22231 > "$probe/tunnel.log" 2>&1 &
+          echo "$!" > "$probe/tunnel.pid"
+          for _ in $(seq 1 30); do
+            host=$(grep -Eo '[a-z0-9-]+\.trycloudflare\.com' "$probe/tunnel.log" | head -1 || true)
+            if [[ -n "$host" ]]; then break; fi
+            sleep 1
+          done
+          if [[ -z "$host" ]]; then sed -n '1,40p' "$probe/tunnel.log"; exit 1; fi
+          printf '%s ' "$host" > "$probe/route/known_hosts"
+          cat "$probe/host.pub" >> "$probe/route/known_hosts"
+          printf '%s\n' "$host" > "$probe/route/hostname"
+          printf '%s\n' "$(id -un)" > "$probe/route/username"
+          git rev-parse HEAD > "$probe/route/source-revision"
+          printf '%s\n' "$GITHUB_WORKSPACE" > "$probe/route/work-directory"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: sol-native-public-route
+          path: ${{ runner.temp }}/sol-host/route/
+          retention-days: 1
+          if-no-files-found: error
+      - name: Keep the native Session available for owner attachment
+        shell: bash
+        run: |
+          set -euo pipefail
+          probe="$RUNNER_TEMP/sol-host"
+          session="$RUNNER_TEMP/sol-native"
+          trap 'kill "$(cat "$probe/tunnel.pid")" "$(cat "$session/orchestra.pid")" 2>/dev/null || true; sudo kill "$(cat "$probe/sshd.pid")" 2>/dev/null || true' EXIT
+          for _ in $(seq 1 1360); do
+            if [[ -f "$session/finish" ]]; then exit 0; fi
+            kill -0 "$(cat "$session/orchestra.pid")" "$(cat "$probe/tunnel.pid")"
+            sleep 5
+          done
+          echo 'Campaign host reached its retention limit.'
