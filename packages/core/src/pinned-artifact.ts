@@ -95,59 +95,62 @@ const unpack = Effect.fnUntraced(function* (staging: string, artifact: Artifact)
   if (createHash(algorithm).update(bytes).digest("base64") !== artifact.integrity.slice(separator + 1))
     return yield* new Failed({ cause: "integrity-mismatch" })
 
-  const directory = yield* step("filesystem", () => mkdtemp(path.join(extractor ? path.dirname(staging) : staging, ".unpack-")))
+  const allowCustody = !!extractor && ActivityQuarantineArchive.eligible(bytes.length)
+  const directory = yield* step("filesystem", () => mkdtemp(path.join(allowCustody ? path.dirname(staging) : staging, ".unpack-")))
   const preservation = { required: false }
   yield* Effect.gen(function* () {
-  const out = path.join(directory, "out")
-  yield* step("filesystem", () => mkdir(out))
-  yield* step("filesystem", () =>
-    writeFile(
-      extractor
-        ? path.join(directory, `archive.${artifact.format}`)
-        : path.join(out, path.posix.basename(new URL(artifact.url).pathname)),
-      bytes,
-      { flag: "wx" },
-    ),
-  )
-  const archive = extractor
-    ? yield* Effect.promise(() => ActivityQuarantineArchive.capture(path.join(directory, `archive.${artifact.format}`)).catch(() => undefined))
-    : undefined
-  if (extractor)
-    yield* Effect.gen(function* () {
-      const processService = yield* AppProcess.Service
-      const result = yield* processService
-        .run(
-          ChildProcess.make(extractor[0], extractor.slice(1), {
-            cwd: directory,
-            env: process.env,
-            forceKillAfter: "5 seconds",
-          }),
-          { timeout: EXTRACT_MS, maxOutputBytes: 64 * 1024 * 1024, maxErrorBytes: 64 * 1024 * 1024 },
-        )
-        .pipe(Effect.flatMap(AppProcess.requireSuccess))
-      if (result.stdoutTruncated || result.stderrTruncated) return yield* new Failed({ cause: "extract" })
-    }).pipe(
-      Effect.provide(LayerNode.compile(AppProcess.node)),
-      Effect.mapError(() => new Failed({ cause: "extract" })),
+    const out = path.join(directory, "out")
+    yield* step("filesystem", () => mkdir(out))
+    yield* step("filesystem", () =>
+      writeFile(
+        extractor
+          ? path.join(directory, `archive.${artifact.format}`)
+          : path.join(out, path.posix.basename(new URL(artifact.url).pathname)),
+        bytes,
+        { flag: "wx" },
+      ),
     )
-  yield* Effect.forEach(
-    artifact.entries,
-    (entry) =>
-      Effect.gen(function* () {
-        const target = path.join(staging, entry.to)
-        yield* step("filesystem", () => mkdir(path.dirname(target), { recursive: true }))
-        yield* step("layout", () => rename(path.join(out, entry.from), target))
-        if (entry.executable) yield* step("filesystem", () => chmod(target, 0o755))
-      }),
-    { discard: true },
-  )
-  if (archive) {
-    yield* step("filesystem", () => rm(out, { recursive: true, force: true }))
-    const outcome = yield* Effect.uninterruptible(Effect.promise(() => ActivityQuarantineArchive.handoff(archive, staging).catch(() => "Unknown" as const)))
-    if (outcome === "Unknown") {
-      preservation.required = true
+    const archive = allowCustody
+      ? yield* Effect.promise(() => ActivityQuarantineArchive.capture(path.join(directory, `archive.${artifact.format}`)).catch(() => undefined))
+      : undefined
+    if (extractor)
+      yield* Effect.gen(function* () {
+        const processService = yield* AppProcess.Service
+        const result = yield* processService
+          .run(
+            ChildProcess.make(extractor[0], extractor.slice(1), {
+              cwd: directory,
+              env: process.env,
+              forceKillAfter: "5 seconds",
+            }),
+            { timeout: EXTRACT_MS, maxOutputBytes: 64 * 1024 * 1024, maxErrorBytes: 64 * 1024 * 1024 },
+          )
+          .pipe(Effect.flatMap(AppProcess.requireSuccess))
+        if (result.stdoutTruncated || result.stderrTruncated) return yield* new Failed({ cause: "extract" })
+      }).pipe(
+        Effect.provide(LayerNode.compile(AppProcess.node)),
+        Effect.mapError(() => new Failed({ cause: "extract" })),
+      )
+    yield* Effect.forEach(
+      artifact.entries,
+      (entry) =>
+        Effect.gen(function* () {
+          const target = path.join(staging, entry.to)
+          yield* step("filesystem", () => mkdir(path.dirname(target), { recursive: true }))
+          yield* step("layout", () => rename(path.join(out, entry.from), target))
+          if (entry.executable) yield* step("filesystem", () => chmod(target, 0o755))
+        }),
+      { discard: true },
+    )
+    if (archive) {
+      yield* step("filesystem", () => rm(out, { recursive: true, force: true }))
+      const label = path.posix.basename(new URL(artifact.url).pathname)
+      const outcome = yield* Effect.uninterruptible(Effect.promise(() =>
+        ActivityQuarantineArchive.handoff(archive, staging, label).catch(() => "Unknown" as const)))
+      if (outcome === "Unknown") {
+        preservation.required = true
+      }
     }
-  }
   }).pipe(Effect.ensuring(Effect.promise(() => preservation.required ? Promise.resolve() : rm(directory, { recursive: true, force: true }))))
 })
 
