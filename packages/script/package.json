@@ -24,6 +24,7 @@
     "./workspace-paths": "./src/workspace-paths.ts",
     "./spawn-imports": "./src/spawn-imports.ts",
     "./omni": "./src/omni.ts",
+    "./desktop-feed": "./src/desktop-feed.ts",
     "./tree-sitter-prebuilds": "./src/tree-sitter-prebuilds.ts"
   }
 }
