@@ -612,14 +612,35 @@
           "type": "string",
           "enum": [
             "stub",
-            "api"
+            "api",
+            "orchestra"
           ],
-          "description": "Judge backend for Relay judge controls: the marker stub (default) or the Messages API"
+          "description": "Judge backend: the marker stub (default), Messages API, or Orchestra's ChatGPT plan OAuth"
         },
         "model": {
           "type": "string",
-          "description": "Model the API judge asks",
+          "description": "Model ID the judge asks",
           "$ref": "https://models.dev/model-schema.json#/$defs/Model"
+        },
+        "projectID": {
+          "minLength": 1,
+          "type": "string",
+          "description": "Exact project ID authorized to use the Orchestra judge, in user configuration only"
+        },
+        "projectDirectory": {
+          "minLength": 1,
+          "type": "string",
+          "description": "Canonical absolute path of the worktree authorized to use the Orchestra judge, in user configuration only"
+        },
+        "credentialID": {
+          "minLength": 1,
+          "type": "string",
+          "description": "ID of the active ChatGPT plan OAuth connection selected by the user for the Orchestra judge"
+        },
+        "variant": {
+          "minLength": 1,
+          "type": "string",
+          "description": "Explicit OpenAI reasoning variant for the Orchestra judge, such as xhigh"
         },
         "baseURL": {
           "type": "string",
