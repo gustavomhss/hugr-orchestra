@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
-import { mkdir, readFile, rename, writeFile } from "node:fs/promises"
+import { cp, mkdir, readFile, rename, writeFile } from "node:fs/promises"
 import { Effect } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { ActivityActionLedger } from "../src/activity-action-ledger"
@@ -62,7 +62,7 @@ test("confirmed apply reserves once and survives service restart", async () => {
   }).pipe(Effect.provide(Database.layerFromPath(path.join(directory.path, "activity.sqlite"))), Effect.scoped))
 })
 
-test.each(["second-read", "revalidation"] as const)("%s settles safely and survives restart", async (scenario) => {
+test.each(["second-read", "origin-remains", "revalidation"] as const)("%s settles safely and survives restart", async (scenario) => {
   await using directory = await tmpdir()
   const source = path.join(directory.path, "source")
   const destination = path.join(directory.path, "destination")
@@ -92,10 +92,13 @@ test.each(["second-read", "revalidation"] as const)("%s settles safely and survi
           prepare: async () => ({ facts: { original: { state: "present" as const, identity: "native-fixture" },
             quarantine: { state: "absent" as const } }, claimant: "absent" as const, mutation: async () => {
               mutations++
-              await rename(source, destination)
+              if (scenario === "origin-remains") await cp(source, destination, { recursive: true })
+              else await rename(source, destination)
               return "accepted" as const
             } }),
-          reread: async () => ({ original: { state: "unavailable" as const }, quarantine: { state: "unavailable" as const } }),
+          reread: async () => scenario === "origin-remains"
+            ? { original: { state: "present" as const, identity: "native-fixture" }, quarantine: { state: "present" as const, identity: "native-fixture" } }
+            : { original: { state: "unavailable" as const }, quarantine: { state: "unavailable" as const } },
         } }
       }),
     }
@@ -114,7 +117,7 @@ test.each(["second-read", "revalidation"] as const)("%s settles safely and survi
     expect((yield* restarted.state()).results[0]?.outcome).toBe(result?.outcome)
     expect((yield* restarted.confirm({ previewID: first.previewID }))?.outcome).toBe(result?.outcome)
     expect(yield* restarted.preview(request)).toBeUndefined()
-    if (scenario === "second-read") {
+    if (scenario !== "revalidation") {
       const changed = yield* record("fixture", source + "/changed")
       const changedPreview = yield* arms.preview({ targets: [{ targetID: changed.targetID, generation: changed.generation }] })
       if (!changedPreview) throw new Error("missing new generation preview")
