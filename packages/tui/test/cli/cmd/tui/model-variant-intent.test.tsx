@@ -158,6 +158,21 @@ test("E6 TUI invalid new preference entries do not erase a valid explicit defaul
   } finally { await fixture.dispose() }
 })
 
+test("E6 TUI evaluates a newly selected agent with that agent's configured model", async () => {
+  const fallback = Model.Ref.make({ providerID: model.providerID, id: Model.ID.make("backend-choice") })
+  const fixture = await mount({
+    session: { agent: "maestro", model: ref },
+    backendModel: fallback,
+    reply: readyReply(model),
+  })
+  try {
+    await wait(() => fixture.context.local.model.current()?.modelID === ref.id, "persisted model is loaded")
+    fixture.context.local.agent.set("backend")
+    await wait(() => fixture.context.local.model.current()?.modelID === fallback.id, "selected agent model replaces the old preference")
+    expect(fixture.context.local.model.current()?.providerID).toBe(fallback.providerID)
+  } finally { await fixture.dispose() }
+})
+
 test("E6 TUI can clear a historical empty-name variant when the model has no variants", async () => {
   const metadata = Model.Info.make({ ...model, variants: [] })
   const fixture = await mount({ session: { agent: "maestro", model: { ...ref, variant: "" } },

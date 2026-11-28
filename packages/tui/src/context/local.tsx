@@ -304,7 +304,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
 
       const retained = () => {
         const session = sessionInfo()
-        if (session?.model) return session.model
+        if (session?.model && (!session.agent || session.agent === agent.id())) return session.model
         const message = previousTurn()
         if (!session?.model && message?.agent === agent.id()) return message?.model
       }

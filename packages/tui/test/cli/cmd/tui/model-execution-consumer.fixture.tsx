@@ -77,7 +77,7 @@ export async function wait(predicate: () => boolean, label: string, milliseconds
 // This is contract-consumption evidence, not a substitute for the backend describe HTTP gate.
 export async function mount(options: { draft?: boolean; initial?: ModelExecution.Response; reply?: (request: Request) => Response | Promise<Response>;
   preferences?: { variant?: Record<string, string>; variantIntent?: Record<string, unknown> };
-  catalogModel?: Model.Info; args?: Args; session?: Partial<Pick<Session, "agent" | "model" | "location">> } = {}) {
+  catalogModel?: Model.Info; backendModel?: Model.Ref; args?: Args; session?: Partial<Pick<Session, "agent" | "model" | "location">> } = {}) {
   const root = await mkdtemp(path.join(tmpdir(), "orchestra-model-consumer-"))
   const copyDirectory = path.join(root, "fixture-copy")
   const state = path.join(root, "state")
@@ -91,7 +91,7 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
     commands: (_url: URL) => [Command.Info.make({ name: "known", template: "fixture command" })],
     catalogProviders: [Provider.Info.empty(Provider.ID.make(ref.providerID))],
     catalogAgents: [Agent.Info.make({ ...Agent.Info.empty(Agent.ID.make("maestro")), engine: "orchestra" }),
-      Agent.Info.make({ ...Agent.Info.empty(Agent.ID.make("backend")), engine: "orchestra" })],
+      Agent.Info.make({ ...Agent.Info.empty(Agent.ID.make("backend")), engine: "orchestra", model: options.backendModel })],
   }
   const events = createEventSource()
   const fallback = createFetch()
