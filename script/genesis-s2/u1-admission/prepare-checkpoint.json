@@ -1,0 +1,64 @@
+{
+  "run": 46167183807,
+  "workflow_head": "39e61af47e7b4cc91dd34afddefb63cde9b3fc49",
+  "artifact_id": 15271259380,
+  "zip_sha256": "6c0a4a52a5b647239b563c72366c23bb89d477b3805a8f0d61a3b8d7cb66220d",
+  "observed": {
+    "candidate_id": "d23f1d789f8b71ca2e1c9ac409da22d553f4f3baae11f655c6cb4bcd3265ae3b",
+    "prepared_sha256": "b3b061c4e62905c65903459a596b2091a352b9a28d63895a5605b6804334daed",
+    "evaluation": {
+      "phase": "evaluation",
+      "evaluationPlan": "619dfe60a6a6afd99fb115cb5d48bda061ca5f05995407b950965411eb8d3114",
+      "obligationSet": "4c76c66cedd2f82c650e6aaee4d486cbd530091f98c90d137fbff11693900059"
+    },
+    "gate_sha256": "f87114bbec2cbbc2795deb63882cc2b678e5d7f434d27c341c6df5012d1c6ff2",
+    "root": "/home/runner/work/_temp/genesis-s2-u1-v1/evidence/run/corpus",
+    "contract": "3b4c439cdb84803873d3fa1a5da3ac753f1941e68daa0b8977ab7e44b81fb1e5",
+    "vector_sha256": "ce05322789a50273f093d19cd65ef7755958ef77aac9fabd68e9458877f80fee",
+    "changed_candidate_fields": [
+      "repo_root",
+      "observations",
+      "entries",
+      "evaluation"
+    ],
+    "obs_before_after": [
+      690,
+      697
+    ],
+    "source_sha256": "0970f4ddb99c1c004e200443abc54ed5ea38cec098e19ef9aa748b771238dfb5",
+    "entry_keys": [
+      "s2.l1.desktop-web",
+      "s2.l1.app-session",
+      "s2.l1.design-tui",
+      "s2.l2.desktop-web",
+      "s2.l2.app-session",
+      "s2.l2.design-tui",
+      "s2.l3.desktop-web",
+      "s2.l3.app-session",
+      "s2.l3.design-tui",
+      "s2.l4.desktop-web",
+      "s2.l4.design-tui",
+      "s2.l4.app-session",
+      "s2.l4.entry"
+    ]
+  },
+  "fresh_reviews": {
+    "J1": {
+      "actor": "/root/s2_admission_j1",
+      "event_id": "amsg_01a22312-7006-7be1-baa2-f44edd2db78c",
+      "response": {
+        "payload_path": "s2-binding/j1-response.json",
+        "sha256": "0777fc039f10a77519cbe483ef699d8029f40ecabca5f76ecfa7d329581ab0a1"
+      }
+    },
+    "J2": {
+      "actor": "/root/s2_admission_j2",
+      "event_id": "amsg_01a22312-b7eb-78d1-944d-ec4cec704838",
+      "response": {
+        "payload_path": "s2-binding/j2-response.json",
+        "sha256": "70bd39c974b30aee4675d33e73fd9cf37a79be4d6609d173be354b6e8d1d3cbf"
+      }
+    }
+  },
+  "state": "M0_PREPARED_AND_REVIEWED_AWAITING_ADMISSION"
+}

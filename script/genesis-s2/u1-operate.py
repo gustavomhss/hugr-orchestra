@@ -47,7 +47,7 @@ def main():
     require(subprocess.check_output(['git', '-C', str(repo), 'rev-parse', 'HEAD'], text=True).strip() == os.environ['GITHUB_SHA'], 'checkout revision mismatch')
     out.mkdir(parents=True)
     ledger = {'schema': 's2-u1-operation/v1', 'status': 'HOLD', 'baseline_root': str(root), 'changed_root': str(changed_root),
-              'production_promotion': 'NOT_RUN', 'current_read_drift_probe': 'NOT_RUN_NO_MUTATION_OF_ADMITTED_ROOT'}
+              'production_promotion': 'NOT_RUN', 'current_read_drift_probe': 'NOT_RUN'}
     try:
         summary = json.loads(summary_path.read_bytes())
         baseline = json.loads(prepared_path.read_bytes())
@@ -117,6 +117,38 @@ def main():
         require(projection == {p.name: sha(p.read_bytes()) for p in sorted((root / '.atlas').glob('projection*.json'))}, 'reuse mutated projection')
         ledger.update({'reuse': 'OBSERVED_SAME_MANIFEST_ZERO_CALLS', 'manifest': manifest, 'candidate_id': baseline['candidate_id'],
                        'plan_sha256': sha(plan_raw), 'driver_sha256': sha(driver_bytes), 'gate_sha256': summary['gate_sha256']})
+        # M0 is a disposable hosted corpus. Restore its exact input and policy even on refusal.
+        live_source = root / source_rel
+        reader_policy = {**policy, 'operations': ['read'], 'consumer': {'id': 'S2-U1-M0-current', 'mode': 'routine'}}
+        probe_query = out / 'm0-current-read.query.json'
+        probe_query.write_bytes(encoded({'scope': baseline['candidate']['scope'],
+            'key': 's2.l1.desktop-web', 'section': '1. Startup, readiness and shutdown', 'maxBytes': 5000}))
+        def read_current(tag):
+            argv = ['bun', 'scripts/genesis-evaluation.ts', 'read', str(root), str(probe_query)]
+            result = subprocess.run(argv, cwd=runtime / 'modules/atlas', env=env, stdin=subprocess.DEVNULL,
+                                    capture_output=True, check=False)
+            (out / (tag + '.stdout.json')).write_bytes(result.stdout)
+            (out / (tag + '.stderr.txt')).write_bytes(result.stderr)
+            (out / (tag + '.receipt.json')).write_bytes(encoded({'argv': argv, 'exit_code': result.returncode,
+                'stdout_sha256': sha(result.stdout), 'stderr_sha256': sha(result.stderr)}))
+            return result, json.loads(result.stdout)
+        try:
+            (root / '.atlas/evaluation-policy.json').write_bytes(encoded(reader_policy))
+            (out / 'm0-current-read.policy.json').write_bytes(encoded(reader_policy))
+            live_source.write_bytes(updated)
+            refusal_result, refusal = read_current('m0-drift-current')
+            require(refusal_result.returncode == 2 and refusal['kind'] == 'hold'
+                    and any('evaluation-input-drift' in x for x in refusal['evidence']), 'current reader did not refuse changed mandatory input')
+            live_source.write_bytes(original)
+            require(sha(live_source.read_bytes()) == BASE_SHA, 'restored source bytes differ')
+            restored_result, restored = read_current('m0-restored-current')
+            require(restored_result.returncode == 0 and restored['kind'] == 'ready' and not restored['historical']
+                    and restored['manifest'] == manifest and restored['evaluation']['generation'] == summary['generation'], 'original current reader did not recover after exact restoration')
+            ledger['current_read_drift_probe'] = {'drift': 'HOLD_EVALUATION_INPUT_DRIFT', 'exact_restore': 'READY_SAME_M0_MANIFEST'}
+        finally:
+            live_source.write_bytes(original)
+            (root / '.atlas/evaluation-policy.json').write_bytes(policy_raw)
+        require(sha(live_source.read_bytes()) == BASE_SHA and sha((root / '.atlas/evaluation-policy.json').read_bytes()) == summary['policy_sha256'], 'failed to restore M0 snapshot')
         def ignore(directory, names):
             return {name for name in names if Path(directory) == root and name in ('.atlas', '.git')}
         for p in root.rglob('*'):

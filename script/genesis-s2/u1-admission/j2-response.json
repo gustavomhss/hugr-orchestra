@@ -1,0 +1,26 @@
+{
+  "reviewer": "J2",
+  "purpose": "isolated-evaluation-admission",
+  "candidate_id": "d23f1d789f8b71ca2e1c9ac409da22d553f4f3baae11f655c6cb4bcd3265ae3b",
+  "entry_vector_sha256": "ce05322789a50273f093d19cd65ef7755958ef77aac9fabd68e9458877f80fee",
+  "verdict": "PASS",
+  "criteria": {
+    "ADMIT-EXACT-TRANSFORM": {
+      "decision": "PASS",
+      "rationale": "The supplied comparison reports all 13 body/result/input arrays, input digests, semantic evidence, graph order and required keys preserved byte-for-byte from the earlier admitted candidate, with only the entry contract changed."
+    },
+    "ADMIT-SOURCE-BINDINGS": {
+      "decision": "PASS",
+      "rationale": "Hosted prepare run 46167183807 pins the runtime, prepared digest, candidate, contract, plan and unchanged obligation set. The packet reports an unchanged source inventory after prepare and pins the observed owned-serve.ts bytes and digest."
+    },
+    "ADMIT-SEMANTIC-SCOPE": {
+      "decision": "PASS",
+      "rationale": "This decision covers the M0 baseline only. The plan preserves the 14 prior cases and records their existing outcomes, including the four holds; changed results and exact targets require separate fresh independent reviews and admissions."
+    },
+    "ADMIT-ISOLATED-PLAN": {
+      "decision": "PASS",
+      "rationale": "The plan uses a distinct disposable CAS-only root, bounded read probes, an isolated marker and a locally restricted actor. It provides separate target provenance and no promotion or operational publication."
+    }
+  },
+  "scope": "This is one fresh independent M0 admission disposition, not evidence that the required approval pair exists or admission occurred. It does not approve target recipes, consumer outcomes, U1 execution or production publication. The earlier S2 consumer HOLDs for C1, C2, C4 and I2U remain separate and unchanged. This review relied only on the supplied packet; I did not use tools, read bytes, compute hashes or contact the other reviewer."
+}

@@ -1,0 +1,13 @@
+{
+  "schema": "genesis-s2-u1-m0-seal/v1",
+  "candidate_id": "d23f1d789f8b71ca2e1c9ac409da22d553f4f3baae11f655c6cb4bcd3265ae3b",
+  "prepared_sha256": "b3b061c4e62905c65903459a596b2091a352b9a28d63895a5605b6804334daed",
+  "approval_sha256": "2142af456c70e8540f4b627931b4d3c2eaa8511e2a3fa89d9b7264a0bd90db12",
+  "generation": "92befe47245fb016c19723198b10d515f062ad8c45c2db85fa0fd3669b0e1bc9",
+  "evaluation": {
+    "phase": "evaluation",
+    "evaluationPlan": "619dfe60a6a6afd99fb115cb5d48bda061ca5f05995407b950965411eb8d3114",
+    "obligationSet": "4c76c66cedd2f82c650e6aaee4d486cbd530091f98c90d137fbff11693900059"
+  },
+  "gate_sha256": "f87114bbec2cbbc2795deb63882cc2b678e5d7f434d27c341c6df5012d1c6ff2"
+}
