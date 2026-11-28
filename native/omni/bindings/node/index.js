@@ -352,10 +352,17 @@ function run(command, args, options) {
 function quarantineOperation(name) {
   return (...args) => later(() => {
     const native = load();
-    if (typeof native[name] !== "function") throw new Error("Windows quarantine primitive unavailable: " + name);
+    if (typeof native[name] !== "function") throw new Error("Quarantine primitive unavailable: " + name);
     return native[name](...args);
   });
 }
+
+const quarantineProtectedAvailable = (root) => later(() => {
+  const native = load();
+  return typeof native.quarantineProtectedAvailable === "function" ? native.quarantineProtectedAvailable(root) : false;
+});
+const quarantineProtectedInspect = quarantineOperation("quarantineProtectedInspect");
+const quarantineProtectedRename = quarantineOperation("quarantineProtectedRename");
 
 const quarantineIdentity = quarantineOperation("quarantineIdentity");
 const quarantineInspect = quarantineOperation("quarantineInspect");
@@ -369,6 +376,7 @@ const quarantineDisposeAvailable = () => typeof load().quarantineDispose === "fu
 const quarantineDisposeBatchAvailable = () => typeof load().quarantineDisposeBatch === "function";
 
 module.exports = {
+  quarantineProtectedAvailable, quarantineProtectedInspect, quarantineProtectedRename,
   quarantineDisposeBatch, quarantineDisposeBatchAvailable,
   run, spawn, configure, OmniError, quarantineIdentity, quarantineInspect, quarantineRename,
   quarantineDispose, quarantineDisposeAvailable, quarantineRenameExclusive, quarantineRenameExclusiveAvailable,
