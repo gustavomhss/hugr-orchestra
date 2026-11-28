@@ -202,7 +202,7 @@ jobs:
           cp "$HUGR_OMNI_ADDON" "$artifacts/linux-x64-gnu/hugr_omni.node"
           cp "$HUGR_OMNI_SUPERVISOR" "$artifacts/linux-x64-gnu/"
           OMNI_ARTIFACTS="$artifacts" bun script/build.ts --single --skip-install
-          binary="$(find "$PWD/dist" -type f -path '*/bin/orchestra')"
+          binary="$(find "$PWD/dist" -type f -path '*/bin/orchestra-activity-custody')"
           test -x "$binary"
           echo "ACTIVITY_CUSTODY_CLI=$binary" >> "$GITHUB_ENV"
       - name: Install Electron and the nested Wayland fixture

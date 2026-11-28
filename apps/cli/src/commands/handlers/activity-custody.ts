@@ -4,7 +4,7 @@ import { createServer, type IncomingMessage, type ServerResponse } from "node:ht
 import type { Socket } from "node:net"
 import path from "node:path"
 
-const usage = "orchestra activity-custody --root <absolute path> --socket </run/.../custody.sock>"
+const usage = "orchestra-activity-custody --root <absolute path> --socket </run/.../custody.sock>"
 const diskFilesystems = new Set([0xef53, 0x58465342, 0x9123683e]) // ext, XFS, Btrfs
 
 export async function launch(args: readonly string[]) {

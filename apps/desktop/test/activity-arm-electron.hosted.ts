@@ -43,14 +43,14 @@ async function parent() {
   const source = join(worktree, ".turbo")
   const cli = join(desktop, "../cli/src/index.ts")
   const omni = join(root, "omni")
-  const custodyCli = join(omni, "orchestra")
+  const custodyCli = join(omni, "orchestra-activity-custody")
   const nativeAddon = join(omni, "libhugr_omni_node.so")
   const nativeSupervisor = join(omni, "hugr-omni-supervisor")
   const secret = crypto.getRandomValues(new Uint8Array(32))
   const frame = ActivityPrivateChannel.frame(secret)
   const signer = await ActivityPrivateChannel.signer(secret).finally(() => secret.fill(0))
   const launchBroker = (credentialFrame: Uint8Array) => {
-    const broker = Bun.spawn([custodyCli, "activity-custody", "--root", root, "--socket", socketPath], {
+    const broker = Bun.spawn([custodyCli, "--root", root, "--socket", socketPath], {
       stdin: "pipe", stdout: "inherit", stderr: "inherit",
       env: { PATH: process.env.PATH, HOME: root, HUGR_OMNI_ADDON: nativeAddon, HUGR_OMNI_SUPERVISOR: nativeSupervisor },
     })
@@ -95,8 +95,9 @@ async function parent() {
   }
   const ready = async (key = signer) => {
     await waitFor("signed custody probe", async () => {
+      if (!(await lstat(socketPath).catch(() => undefined))?.isSocket()) return undefined
       return probe(key).catch((error: NodeJS.ErrnoException) => {
-        if (error.code !== "ENOENT" && error.code !== "ECONNREFUSED") throw error
+        if (error.code !== "ENOENT" && error.code !== "ECONNREFUSED" && error.code !== "FailedToOpenSocket") throw error
         return undefined
       })
     })
