@@ -184,8 +184,14 @@ const main = Effect.gen(function* () {
   logger = initLogging()
   OmniBoot.setup()
   const custodyRequired = activityCustodyConfigured()
-  const custody = yield* Effect.promise(() => loadActivityCustody(app.isPackaged && SIDECAR_MODE === "owned"))
+  const custody = yield* Effect.promise(() => loadActivityCustody(app.isPackaged && SIDECAR_MODE === "owned" &&
+    !app.commandLine.hasSwitch("no-sandbox") && process.env.ELECTRON_DISABLE_SANDBOX !== "1" &&
+    (!app.commandLine.hasSwitch("ozone-platform") || app.commandLine.getSwitchValue("ozone-platform") === "wayland")))
   if (custodyRequired && !custody) logger.warn("activity custody unavailable")
+  if (custody) {
+    app.commandLine.appendSwitch("ozone-platform", "wayland")
+    process.env.GDK_BACKEND = "wayland"
+  }
   // Crashpad can capture this process's memory when an Activity custody key is present.
   if (!custody) initCrashReporter()
 

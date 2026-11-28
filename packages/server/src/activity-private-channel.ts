@@ -15,6 +15,8 @@ import { ActivityPrivateChannel } from "@orchestra/schema/activity-private-chann
 import type { Readable } from "node:stream"
 import type { HttpExtension } from "./http-extensions"
 
+export const maxBodyBytes = ActivityPrivateChannel.maxBodyBytes
+
 function decodeInspect(body: unknown) {
   return body !== null && typeof body === "object" && !Array.isArray(body) && Object.keys(body).length === 0
     ? Option.some({})
@@ -30,6 +32,7 @@ export async function acquire(
   custody?: ActivityQuarantineCustody.Interface,
   freeze?: ActivityFreezeService.Interface,
   apply?: ActivityApplyService.Interface,
+  claimCredential?: (fingerprint: string) => Promise<void>,
 ): Promise<HttpExtension> {
   const frame = new Uint8Array(ActivityPrivateChannel.frameBytes)
   const key = await new Promise<Uint8Array>((resolve, reject) => {
@@ -75,7 +78,10 @@ export async function acquire(
     signal.addEventListener("abort", fail, { once: true })
     if (signal.aborted || input.destroyed) fail()
   })
-  const signer = await ActivityPrivateChannel.signer(key).finally(() => key.fill(0))
+  const signer = await (async () => {
+    if (claimCredential) await claimCredential(Buffer.from(await crypto.subtle.digest("SHA-256", key)).toString("hex"))
+    return ActivityPrivateChannel.signer(key)
+  })().finally(() => key.fill(0))
   const applyNonces = new Map<string, number>()
   let latestTime = 0
   return {

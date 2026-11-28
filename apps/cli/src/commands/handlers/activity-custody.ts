@@ -3,7 +3,6 @@ import { chmod, lstat, mkdir, open, statfs } from "node:fs/promises"
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http"
 import type { Socket } from "node:net"
 import path from "node:path"
-import { Readable } from "node:stream"
 
 const usage = "orchestra activity-custody --root <absolute path> --socket </run/.../custody.sock>"
 const diskFilesystems = new Set([0xef53, 0x58465342, 0x9123683e]) // ext, XFS, Btrfs
@@ -75,7 +74,6 @@ export async function launch(args: readonly string[]) {
   const { AppNodeBuilder } = await import("@orchestra/core/effect/app-node-builder")
   const { AppProcess } = await import("@orchestra/core/process")
   const { Database } = await import("@orchestra/core/database/database")
-  const { ActivityPrivateChannel } = await import("@orchestra/schema/activity-private-channel")
 
   Effect.gen(function* () {
     const protection = yield* Effect.promise(() => ActivityApplyLinux.open(root))
@@ -101,6 +99,7 @@ export async function launch(args: readonly string[]) {
           return { ...state, custodyPlan: yield* ActivityArmLedger.plan(database) }
         }),
       },
+      (fingerprint) => claimCredential(root, fingerprint),
     ))
     const connections = new Set<Socket>()
     const requests = new Set<Promise<void>>()
@@ -110,7 +109,7 @@ export async function launch(args: readonly string[]) {
       connectionsCheckingInterval: 1_000,
       maxHeaderSize: 8_192,
     }, (input, output) => {
-      const task = respond(input, output, extension.handler, ActivityPrivateChannel.maxBodyBytes).finally(() => requests.delete(task))
+      const task = respond(input, output, extension.handler, ActivityPrivateChannelServer.maxBodyBytes).finally(() => requests.delete(task))
       requests.add(task)
     })
     server.maxConnections = 32
@@ -159,10 +158,18 @@ async function respond(
       if (value === undefined) continue
       for (const item of Array.isArray(value) ? value : [value]) headers.append(name, item)
     }
-    const options: RequestInit & { duplex?: "half" } = { method: "POST", headers, signal: abort.signal }
+    const options: RequestInit = { method: "POST", headers, signal: abort.signal }
     if (Number(size) > 0) {
-      options.body = Readable.toWeb(input) as ReadableStream<Uint8Array>
-      options.duplex = "half"
+      const data = new Uint8Array(Number(size))
+      let offset = 0
+      for await (const value of input) {
+        const bytes = Buffer.isBuffer(value) ? value : Buffer.from(value)
+        if (offset + bytes.length > data.length) throw new Error("Invalid activity custody request size")
+        data.set(bytes, offset)
+        offset += bytes.length
+      }
+      if (offset !== data.length) throw new Error("Incomplete activity custody request")
+      options.body = data
     }
     const response = await handler(new Request("http://localhost" + input.url, options))
     if (abort.signal.aborted) return
@@ -195,6 +202,32 @@ async function databaseFile(root: string) {
     await directory.close()
   }
   return file
+}
+
+async function claimCredential(root: string, fingerprint: string) {
+  const directoryPath = path.join(root, "activity-credentials")
+  await mkdir(directoryPath, { mode: 0o700 }).catch((error: NodeJS.ErrnoException) => {
+    if (error.code !== "EEXIST") throw error
+  })
+  const info = await lstat(directoryPath)
+  if (!info.isDirectory() || info.uid !== 0 || (info.mode & 0o077) !== 0 || info.dev !== (await lstat(root)).dev)
+    throw new Error("Unprotected activity custody credential directory")
+  const claimed = await open(path.join(directoryPath, fingerprint), "wx", 0o600).catch(() => {
+    throw new Error("Activity custody requires a fresh credential each time it starts")
+  })
+  try {
+    await claimed.sync()
+  } finally {
+    await claimed.close()
+  }
+  for (const location of [directoryPath, root]) {
+    const directory = await open(location, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW)
+    try {
+      await directory.sync()
+    } finally {
+      await directory.close()
+    }
+  }
 }
 
 function isCanonical(file: string) {

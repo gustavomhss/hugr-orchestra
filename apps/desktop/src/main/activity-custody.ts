@@ -20,6 +20,11 @@ export function clearActivityCustodyEnvironment(env: NodeJS.ProcessEnv) {
   delete env[FD]
 }
 
+export function activityCustodyWayland() {
+  return process.platform === "linux" && process.env.XDG_SESSION_TYPE === "wayland" &&
+    Boolean(process.env.WAYLAND_DISPLAY) && !process.env.DISPLAY
+}
+
 /** Consume the inherited admin credential before starting the Desktop's renderer or sidecar. */
 export async function loadActivityCustody(enabled = true): Promise<ActivityCustody | undefined> {
   const socketPath = process.env[SOCKET]
@@ -29,7 +34,8 @@ export async function loadActivityCustody(enabled = true): Promise<ActivityCusto
   const fd = Number(descriptor)
   if (!Number.isInteger(fd) || fd < 3 || fd > 0x7fffffff) return undefined
 
-  const secret = await readCredential(fd, enabled && !!socketPath && isAbsolute(socketPath) && !socketPath.includes("\0"))
+  const secret = await readCredential(fd, enabled && activityCustodyWayland() &&
+    !!socketPath && isAbsolute(socketPath) && !socketPath.includes("\0"))
   if (!socketPath || !secret) return undefined
   return ActivityPrivateChannel.signer(secret)
     .then((signer) => ({ socketPath, signer }), () => undefined)
