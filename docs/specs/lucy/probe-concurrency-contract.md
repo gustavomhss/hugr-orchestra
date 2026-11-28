@@ -46,8 +46,8 @@ and the native Session semaphore are not substitutes for this shared permit.
 
 File: `packages/core/test/review-toolkit/scoped-typecheck-concurrency.test.ts`.
 
-Two Linux x64 cases use real prepared TypeScript, real registered review-probe
-execution, real Git snapshots, the existing sandbox and actual AppProcess
+Two Linux x64 cases use real prepared TypeScript, the real existing review-probe
+API, real Git snapshots, the existing sandbox and actual AppProcess
 spawns. Both first run successful compiler and script controls. The first
 holds the existing runner's actual cleanup; the second holds the return of an
 already-started scoped compiler's native handle. Neither fixture substitutes
