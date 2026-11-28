@@ -1,0 +1,180 @@
+{
+  "schema": "s4-l1b-courier-measurements/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "measured_files": {
+    "atlas-engine.md": {
+      "byte_length": 17987,
+      "sha256": "c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e"
+    },
+    "atlas-host-genesis.md": {
+      "byte_length": 17595,
+      "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+    },
+    "continuity-rag.md": {
+      "byte_length": 17429,
+      "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38"
+    },
+    "coverage-governance.md": {
+      "byte_length": 17988,
+      "sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381"
+    },
+    "artifacts.json": {
+      "byte_length": 1283519,
+      "sha256": "85e6c4697791dc476ea0d64ae3d4ee34b992294d471090fd558054445a78c859"
+    },
+    "coverage.json": {
+      "byte_length": 1729414,
+      "sha256": "9d0473edc9de818e36111cd741928d5ab5be05ac063439aeac11719ac0fc9759"
+    },
+    "coverage-summary.md": {
+      "byte_length": 4550,
+      "sha256": "159c005b7b8fae9d3d8fa3069ff736b8252b51521088fe7ac25befc67745b9a8"
+    },
+    "delivery-receipt.json": {
+      "byte_length": 1760,
+      "sha256": "ac2ecdfd035ddc168ae5a2b4221a9c380121230f942c86584bf82c5788506818"
+    },
+    "citation-register.json": {
+      "byte_length": 36151,
+      "sha256": "30f92e2af246d7a05ba955ab87a75d5d3eb0dabaa322b2d305533f09f6a633f3"
+    }
+  },
+  "coverage_measurement": {
+    "rows": 2220,
+    "unique_paths": 2220,
+    "raw_byte_length_sha256_git_blob_matches": 2220,
+    "path_set_sha256": "0b99735199c8a9a4db61bf506dafe92acb76909dd9f9c48d8f521fb920c6cd1d",
+    "classification_counts": {
+      "build-or-policy-config": 46,
+      "ci-workflow": 6,
+      "contributor-skill": 18,
+      "dependency-lock": 1,
+      "design-contract": 1,
+      "design-data": 2,
+      "design-document": 433,
+      "executable-component": 383,
+      "generated-ownership-artifact": 3,
+      "generated-runtime-bundle": 18,
+      "generated-ui-data": 2,
+      "generator-script": 2,
+      "historical-consultation": 2,
+      "historical-evaluation-data": 8,
+      "historical-evidence": 368,
+      "historical-probe-data": 20,
+      "historical-prompt": 13,
+      "license": 2,
+      "operational-script": 55,
+      "package-documentation": 21,
+      "prompt-template": 20,
+      "repository-event-data": 3,
+      "repository-placeholder": 1,
+      "test-fixture": 25,
+      "test-harness": 7,
+      "test-probe": 33,
+      "test-source": 687,
+      "ui-prototype": 14,
+      "validation-support": 12,
+      "validation-tool": 14
+    },
+    "depth_counts": {
+      "generator-and-integrity": 21,
+      "group-context-and-integrity": 355,
+      "origin-and-integrity": 487,
+      "preserved-by-origin": 411,
+      "source-excerpts-inspected": 158,
+      "structure-and-integrity": 3,
+      "support-role-and-integrity": 43,
+      "test-role-and-integrity": 742
+    }
+  },
+  "citation_range_measurement": {
+    "register_entries": 208,
+    "ranges_checked": 320,
+    "out_of_bounds": 0,
+    "producer_citation_receipt": "ABSENT"
+  },
+  "artifact_metadata_projection": [
+    {
+      "key": "S4:L1:atlas-engine",
+      "scope": "atlas-continuity-rag-genesis",
+      "layer": 1,
+      "need": "evidence",
+      "validity": "supported",
+      "build_dependencies": [],
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": [],
+      "input_key_count": 332,
+      "source_ref_count": 329,
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+        "sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/response.md",
+        "sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228"
+      }
+    },
+    {
+      "key": "S4:L1:atlas-host-genesis",
+      "scope": "atlas-continuity-rag-genesis",
+      "layer": 1,
+      "need": "evidence",
+      "validity": "supported",
+      "build_dependencies": [],
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": [],
+      "input_key_count": 677,
+      "source_ref_count": 674,
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+        "sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/response.md",
+        "sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228"
+      }
+    },
+    {
+      "key": "S4:L1:continuity-rag",
+      "scope": "atlas-continuity-rag-genesis",
+      "layer": 1,
+      "need": "evidence",
+      "validity": "supported",
+      "build_dependencies": [],
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": [],
+      "input_key_count": 76,
+      "source_ref_count": 73,
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+        "sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/response.md",
+        "sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228"
+      }
+    },
+    {
+      "key": "S4:L1:coverage-governance",
+      "scope": "atlas-continuity-rag-genesis",
+      "layer": 1,
+      "need": "evidence",
+      "validity": "supported",
+      "build_dependencies": [],
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": [],
+      "input_key_count": 2229,
+      "source_ref_count": 2226,
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+        "sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/response.md",
+        "sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228"
+      }
+    }
+  ],
+  "limitations": "Measurements concern bytes, declared rows and line bounds only; no product execution, semantic verdict or new authority."
+}

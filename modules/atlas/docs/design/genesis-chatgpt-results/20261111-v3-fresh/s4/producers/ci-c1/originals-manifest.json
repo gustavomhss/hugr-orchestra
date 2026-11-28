@@ -1,0 +1,217 @@
+{
+  "schema": "s4-ci-originals/v1",
+  "copies": 26,
+  "total_bytes": 282208,
+  "raw_log_copied": false,
+  "zip_copied": false,
+  "files": [
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/jobs.json",
+      "copy": "originals/jobs.json",
+      "bytes": 2617,
+      "sha256": "6ffcda66462e37e17a5ba62a5e4e02fe621a700833d7d3480c111cb625702a00",
+      "byte_equal": true,
+      "in_artifact_zip": false
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-runtime-results.json",
+      "copy": "originals/ownership-runtime-results.json",
+      "bytes": 92772,
+      "sha256": "433e5b58026b909f08f4d8afabe3c907aa8ffe01619430321e5dedbea83955a7",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-mutation-receipts.json",
+      "copy": "originals/ownership-mutation-receipts.json",
+      "bytes": 4506,
+      "sha256": "18495897d604f91c47eb6edfd0c3b024042b1ec528fa3883c6c10cdc79f2a536",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-guards.json",
+      "copy": "originals/ownership-guards.json",
+      "bytes": 121,
+      "sha256": "00564a9ca02141ecd543e88ed6e625e8a2250a6c899eb32a6be42cd5ec97b9aa",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-composed-ratify.json",
+      "copy": "originals/ownership-probe-composed-ratify.json",
+      "bytes": 5180,
+      "sha256": "5b60ba2f228ec6ddc188fbe46c6fce7dfea1405d639a073647fff6877f5c7855",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-current-input.json",
+      "copy": "originals/ownership-probe-current-input.json",
+      "bytes": 8107,
+      "sha256": "43988e6031aff6948d06be33b3ece6505116123cf90ff8810e28a09a95f663d4",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-need-root.json",
+      "copy": "originals/ownership-probe-need-root.json",
+      "bytes": 8108,
+      "sha256": "c3ac232c33f58b810c1c189720357d86993fc8036d3b177fb4489809432c769c",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-observer-accept-partial-git.json",
+      "copy": "originals/ownership-probe-observer-accept-partial-git.json",
+      "bytes": 4978,
+      "sha256": "fc322a1708153611a9b4584414fcbba9b7e8252cd25bea3ffdb90963ee88175d",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-observer-error-as-absent.json",
+      "copy": "originals/ownership-probe-observer-error-as-absent.json",
+      "bytes": 4969,
+      "sha256": "00eacd26d04e0af90bc37b9970d090b2fc4ecbc3ff5f64f8e3fb0d38af90e82e",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-observer-members-index-only.json",
+      "copy": "originals/ownership-probe-observer-members-index-only.json",
+      "bytes": 4991,
+      "sha256": "2662bab4dbe00b8a3777d67fd4fa65e75070d64e14d0e2f3b37a6d6c9d34237d",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-accept-stale-review.json",
+      "copy": "originals/ownership-probe-rebuild-accept-stale-review.json",
+      "bytes": 8659,
+      "sha256": "078b950f33fc4a6256d6cb3cfe3971005bbf13bac54bc4a94928528dc75be50f",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-body-only-stop.json",
+      "copy": "originals/ownership-probe-rebuild-body-only-stop.json",
+      "bytes": 8861,
+      "sha256": "7d5ffcc01e04649e64de4afb25da1914ccf2bf67a625bc98813bebd69197f67d",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-every-affected.json",
+      "copy": "originals/ownership-probe-rebuild-every-affected.json",
+      "bytes": 8864,
+      "sha256": "3efec4c0ad83c0fadc2b04dd1ca1b68375907493fedcc23e4a267763fd2b43ba",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-ignore-direct-child-change.json",
+      "copy": "originals/ownership-probe-rebuild-ignore-direct-child-change.json",
+      "bytes": 8861,
+      "sha256": "a5269b4ce44b1ec3b327f623037cc2550013be9a4f8fbe45df6a8815f8eeb003",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-omit-input.json",
+      "copy": "originals/ownership-probe-rebuild-omit-input.json",
+      "bytes": 8861,
+      "sha256": "c5d284adc1b83a189552ea9306a8cd348582b01cd29cf8067ea4b1fc5bf70ca8",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-omit-required-edge.json",
+      "copy": "originals/ownership-probe-rebuild-omit-required-edge.json",
+      "bytes": 8860,
+      "sha256": "842ff4724c253cdbcf4425fed2e49e13e5982ad515ee4c1b37335c154a0e8150",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-read-live-path.json",
+      "copy": "originals/ownership-probe-rebuild-read-live-path.json",
+      "bytes": 8719,
+      "sha256": "9d2e19c15ad0865dcd94db8a48069fe1f23cc9a80503bc948f760b356efcb51d",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-return-old-result.json",
+      "copy": "originals/ownership-probe-rebuild-return-old-result.json",
+      "bytes": 8860,
+      "sha256": "caa76d9116a694f2e3851d160339a2a6ede106b9ae945eef88542bbe156aa498",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-skip-final-sweep.json",
+      "copy": "originals/ownership-probe-rebuild-skip-final-sweep.json",
+      "bytes": 8861,
+      "sha256": "9e43193d1968cd26e2ba1580c386f00693caeef49eb4bfc2c16537ef2087520f",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-skip-preflight.json",
+      "copy": "originals/ownership-probe-rebuild-skip-preflight.json",
+      "bytes": 8852,
+      "sha256": "354e6c38745570e77f1fafdf0e726192bbd78a02a5181914d16bcfb98aa8d408",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-update-affected-order.json",
+      "copy": "originals/ownership-probe-update-affected-order.json",
+      "bytes": 10850,
+      "sha256": "e0cafd5d442f7ef709b78376c016282458002e58c99c56477e57b58239e007f5",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-update-dependency.json",
+      "copy": "originals/ownership-probe-update-dependency.json",
+      "bytes": 10849,
+      "sha256": "642c5ea6a0f9092c6a999996608a594168603bd7f07c33c7498af5e67a7eb527",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-update-frontier.json",
+      "copy": "originals/ownership-probe-update-frontier.json",
+      "bytes": 10849,
+      "sha256": "8606db6d31021844e7ce199100edc4a6c4d93308ba16bff07de0270c8309697e",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-update-input.json",
+      "copy": "originals/ownership-probe-update-input.json",
+      "bytes": 10849,
+      "sha256": "953eb98bb3b2cc9d6efc73b4beb8e76966c92b4f5ff62f61c855a436203bba32",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-update-unavailable.json",
+      "copy": "originals/ownership-probe-update-unavailable.json",
+      "bytes": 10832,
+      "sha256": "7d31acdf380bdbe4b3640fe6b4e4ff0db87b92366167d466f7d98ffd1dce7f74",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    },
+    {
+      "source": "/workspace/scratch/aff930d22ec7/s4/ci/c1/extracted/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-worker-ast.json",
+      "copy": "originals/ownership-probe-worker-ast.json",
+      "bytes": 3372,
+      "sha256": "b12e320c40f887663aa4060b740077a82b11a3683a8b0fdaa3d1c7e48791624f",
+      "byte_equal": true,
+      "in_artifact_zip": true
+    }
+  ]
+}

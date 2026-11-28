@@ -1,0 +1,18 @@
+{
+  "sender": "/root",
+  "recipient": "/root/producer_runtime",
+  "host_message_id": "UNKNOWN",
+  "captured_at_utc": "2026-11-11T18:44:10.163092+00:00",
+  "request": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/request.md",
+    "bytes": 3856,
+    "sha256": "3e490e1d8172da5337f276f07af2e9bede28c82b2ad834cd795c5af844b303f4"
+  },
+  "manifest": {
+    "source_path": "/workspace/scratch/aff930d22ec7/s4/dispatches/l2-input-manifest.json",
+    "copy_path": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/input-manifest.json",
+    "bytes": 12610,
+    "sha256": "00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca",
+    "copy_equal": true
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "execution_id": "0a451b91-c4e7-4573-9958-fed60817f299",
+  "unit": "S4-R4-large-source-inputs",
+  "original_oracle_sha256": "64eaee79884dc1d30e42e78674ab8ec58ec8b5dab737f9b028d055cbf307592c",
+  "recorded_at": "2026-11-12 04:02:13 UTC",
+  "ceiling_bytes": 2097152,
+  "status": "FROZEN_BEFORE_IMPLEMENTATION",
+  "analysis_agent": "/root/runtime_large_inputs",
+  "public_analysis": "2MiB: <=2MiB retained chunks +2MiB concat +8KiB probe; Array.from up to2097152 numbers; canonical map/join<=4N+constant ASCII plus O(N) temporary arrays/strings. RSS/time UNKNOWN pending actual remote evidence. Keep ownership-source v1 kernel identity unchanged. Source references and live file re-read share ceiling; generic8MiB reader unchanged.",
+  "decision": "Proceed with two production-file delta and scoped tests; no approval/binding/policy changes. ROOT will run exact Actions gate and capture resources.",
+  "source_size_conference": {
+    "s2_all_file_inputs_available": true,
+    "largest_required_file": {
+      "path": "schema/tui.json",
+      "bytes": 1131057
+    },
+    "s1_generated_types_bytes": 462732
+  },
+  "product_tests_local": false
+}

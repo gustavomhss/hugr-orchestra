@@ -1,0 +1,100 @@
+{
+  "schema": "s4-maintenance-driver-delivery-receipt/v1",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "producer": "/root/review_courier",
+  "role": "native operational composition producer",
+  "state": "AUTHORED_STATIC_ONLY",
+  "runtime_state": "NOT_RUN",
+  "created_at_utc": "2026-11-11T19:08:02.650387+00:00",
+  "files": [
+    {
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/maintenance-operation.mjs",
+      "bytes": 22051,
+      "sha256": "a6a579e6a3978daa9a67f01bce06fda56172334b0e34323e787cba4d5ab9f27f",
+      "lines": 317
+    },
+    {
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/usage.md",
+      "bytes": 12073,
+      "sha256": "6213c40fd0abdaba119390dd84249c81d0cb69a6343f8fc141c3c6126570ecf4",
+      "lines": 88
+    },
+    {
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/source-observations.json",
+      "bytes": 24611,
+      "sha256": "8a386c942bbca7ce284458b331565122bcefaf2668cd806bf5fef782fe3f4a52",
+      "lines": 589
+    },
+    {
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/request.md",
+      "bytes": 4349,
+      "sha256": "06d85c21ef782416bf8ceca46a690af83cb826f4fd1f044519637708e7569fb4",
+      "lines": 13
+    },
+    {
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/request-addendum.md",
+      "bytes": 497,
+      "sha256": "266044586ddaecd8a0907d97fed471f4460e71cd17284d8a75e34d6866134a19",
+      "lines": 1
+    },
+    {
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/request-addendum-2.md",
+      "bytes": 574,
+      "sha256": "2a1761b79cf10c073f70ccff56068301fef4d57ce00c2d48d6cb818e0e290a84",
+      "lines": 1
+    },
+    {
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/static-review.md",
+      "bytes": 4018,
+      "sha256": "f5cc64122713a933a122792201aacb0a91291527f2ec97c6e077722ed4cb9766",
+      "lines": 23
+    },
+    {
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/response.md",
+      "bytes": 3288,
+      "sha256": "30a092b6951b201de0b61c83122e2a450f0a926d26265491355b9c8388076184",
+      "lines": 18
+    }
+  ],
+  "static_validation": {
+    "kind": "parse-only",
+    "command": "node --check /workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/maintenance-operation.mjs",
+    "script_sha256": "a6a579e6a3978daa9a67f01bce06fda56172334b0e34323e787cba4d5ab9f27f",
+    "exit_code": 0,
+    "stdout": "",
+    "stderr": "",
+    "observed_tool_chunk_id": "99f4e7",
+    "product_imports_evaluated": false,
+    "script_body_executed": false
+  },
+  "not_run": [
+    "Bun runtime",
+    "product tests",
+    "synthetic controls",
+    "build",
+    "typecheck",
+    "product guards",
+    "prepare/rebuild/publish/read operation"
+  ],
+  "not_read": [
+    "production L2 bodies",
+    "reserved oracle contents",
+    "judge responses for this WP"
+  ],
+  "write_scope": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver",
+  "product_sources_edited": false,
+  "remote_writes": false,
+  "judge_messages_sent": 0,
+  "runtime_revision_declared_by_principal": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "runtime_revision_verification": "external; not performed by this producer",
+  "model": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "semantic_verdict": "NOT_ISSUED",
+  "binding_or_publication_claim": "NONE",
+  "review_packets": {
+    "directory": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/review-packets",
+    "manifest": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-driver/review-packets/manifest.json",
+    "dispatch_state": "NOT_SENT_TO_JUDGES",
+    "self_reference_note": "Packet manifest measures this receipt; this receipt does not recursively hash the manifest or itself."
+  }
+}

@@ -1,0 +1,226 @@
+{
+  "agent_id": "/root/local_j1",
+  "purpose": "semantic-layer4-review",
+  "review_execution_id": "0a451b91-c4e7-4573-9958-fed60817f299",
+  "original_production_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "record": "Decisão sobre o pedido canônico em quatro partes, preservando o REQUEST_EVIDENCE anterior como histórico.",
+  "verdict": "REQUEST_EVIDENCE",
+  "summary": "J1-E01 e J1-E03 estão resolvidos. J1-E02 está substancialmente resolvido, com uma pendência literal delimitada: a chamada que efetivamente lê o binding do driver relativamente ao corpus. O código recebido valida bindingArg como caminho relativo e a usage declara essa base, mas não mostra a leitura correspondente. Não identifiquei erro de conteúdo demonstrado; falta essa ligação para concluir a conferência da rota sem inferência.",
+  "identities": {
+    "runtime_pin": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+    "driver_and_predecessors_pin": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+    "oracle_sha256": "ff39d9608b31a0d74abac2c66482a5c8489547efd0147d4801043efb93c9e6ce",
+    "bodies": [
+      {
+        "key": "S4:L4:entry",
+        "bytes": 4921,
+        "sha256": "ebcb68aba0c3ae5d5f7581c6b3ad7e0c6a6769af1bee1d425cadf4ecae4969c8"
+      },
+      {
+        "key": "S4:L4:ownership",
+        "bytes": 9489,
+        "sha256": "fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73"
+      },
+      {
+        "key": "S4:L4:maintenance",
+        "bytes": 9478,
+        "sha256": "5d9da13538cfc032b61947395d1aa7aa44dafed50327adaf1deafc64856505be"
+      },
+      {
+        "key": "S4:L4:operational",
+        "bytes": 9481,
+        "sha256": "d61c8697ecfe193a4caa9334dc80410952805b68140e20d734c34b7576cf6ee7"
+      }
+    ],
+    "metadata": [
+      {
+        "path": "producers/l4a/artifacts.json",
+        "bytes": 15342,
+        "sha256": "cd82ecc75c046243ae93343ee393bcfe71b17edc4b379e38337f1eb6fbc3ae1d",
+        "received_scope": "Identidade e projeção decisiva recebidas; arquivo bruto integral não recebido."
+      },
+      {
+        "path": "producers/l4b/artifacts.json",
+        "bytes": 18836,
+        "sha256": "6dd07f3e90aa93123a3b60495f547d4fd72ddd7f5f194a8e453e0f7e59bdfdd5",
+        "received_scope": "Identidade e projeção decisiva recebidas; arquivo bruto integral não recebido."
+      }
+    ],
+    "verification_scope": "Identidades declaradas pelo courier, sem recálculo por J1. Os quatro corpos foram recebidos integralmente no pedido canônico."
+  },
+  "criteria": [
+    {
+      "id": "AC-01",
+      "verdict": "PASS",
+      "reason": "Os quatro needs cobrem entrada, contratos e impactos, manutenção e operação, com ações, recusas e condições de parada úteis.",
+      "evidence": "Quatro corpos integrais; entry oferece rota opcional e os demais desenvolvem suas finalidades."
+    },
+    {
+      "id": "AC-03",
+      "verdict": "REQUEST_EVIDENCE",
+      "reason": "Queries, CWD da CLI, prepare/publish nativos, seis argumentos do driver, target, teto histórico e saídas estão corroborados. Resta confirmar a chamada que lê o binding do driver sob a raiz do corpus.",
+      "evidence": "CLI integral; native-format; native-io; publishNativePackage; driver linhas 1–118 e 194–317.",
+      "finding_refs": ["J1-E02"]
+    },
+    {
+      "id": "CC-2",
+      "verdict": "PASS",
+      "reason": "A camada usa L3/L2/L1 como fontes e dependências declaradas e conserva sete L1, três L2 e um L3 em navegação. Outro L4 não vira dependência de build.",
+      "evidence": "Projeções dos metadados; tabela de entry; referências efetivas nos demais corpos."
+    },
+    {
+      "id": "CC-3",
+      "verdict": "REQUEST_EVIDENCE",
+      "reason": "Propósito, comportamento, contratos, decisões, impacto, origens e manutenção estão desenvolvidos. A conferência integral da rota de manutenção ainda depende da ligação literal residual de J1-E02.",
+      "evidence": "ownership e maintenance integrais; usage histórico; driver recebido.",
+      "finding_refs": ["J1-E02"]
+    },
+    {
+      "id": "CC-7",
+      "verdict": "PASS",
+      "reason": "As fronteiras do host são encaminhadas aos donos; gerados remetem às origens e ao gerador. Compartilhar host não une identidades ou hooks. Mudanças estruturais exigem outro procedimento.",
+      "evidence": "ownership, Delimite a mudança antes de agir; maintenance, fontes e gerador; guardas estruturais do driver."
+    },
+    {
+      "id": "QS-1",
+      "verdict": "REQUEST_EVIDENCE",
+      "reason": "O suporte adicional confirma a porta nativa, o teto de 256000 bytes, guardas de arquivo, reconstrução privada, saídas, readback e contagens históricas da CI. A fidelidade da resolução efetiva do binding do driver permanece pendente.",
+      "evidence": "Suporte literal das partes 3 e 4; projeção identificada do recibo CI; suporte anterior dos predecessores.",
+      "finding_refs": ["J1-E02"]
+    },
+    {
+      "id": "QS-2",
+      "verdict": "PASS",
+      "reason": "A documentação fornece ações, localizadores, critérios de escolha, diagnósticos e recusas utilizáveis. Essa utilidade não é confundida com execução comprovada.",
+      "evidence": "Rotas de entry; ações de ownership; sequência de maintenance; consultas e saídas de operational."
+    },
+    {
+      "id": "QS-3",
+      "verdict": "PASS",
+      "reason": "A entrada admite parada rasa e aprofundamento seletivo. Tabelas condensam escolhas concretas; os quatro needs mantêm funções distintas.",
+      "evidence": "entry, Orçamento público e rota profunda opcional; tabelas de origem e de saídas."
+    },
+    {
+      "id": "QS-6",
+      "verdict": "PASS",
+      "reason": "A rota pública soma 55831 + 4921 = 60752 bytes e 12 reads; respeita os demais limites declarados. Os corpos também cabem nos limites autorais de 5000/9500 bytes. Substituições exigem recontagem; IO, tokens e dinheiro permanecem distintos.",
+      "evidence": "Tabela e orçamento de entry; limites de operational; declarações UNKNOWN nos quatro corpos."
+    },
+    {
+      "id": "GO-I2",
+      "verdict": "PASS",
+      "reason": "Observação, ausência corroborada, indisponibilidade e inferência são distinguidas. Gaps de trace, hidratação, integração e recuperação permanecem explícitos.",
+      "evidence": "ownership, identidade e RAG; maintenance, affected; L3 literal sobre propagação."
+    },
+    {
+      "id": "GO-I3",
+      "verdict": "PASS",
+      "reason": "Corrente e histórico são separados; historical exige true explícito. Histórico não restaura validade corrente, e stale não pode ser servido como corrente após drift.",
+      "evidence": "validateNativeReadQuery recebido anteriormente; entry; operational, Drift, retomada e histórico."
+    },
+    {
+      "id": "GO-I4",
+      "verdict": "PASS",
+      "reason": "Reúso exige resultado completo e vínculos válidos, não igualdade de prosa. Fontes compartilhadas continuam relevantes; novos receipts, bindings e gates pertinentes não são dispensados.",
+      "evidence": "L3 literal; ownership, Propague pelo resultado; maintenance, Interpretar affected."
+    },
+    {
+      "id": "GO-I5",
+      "verdict": "PASS",
+      "reason": "Indisponibilidade preserva HOLD/incerteza; falha não demonstra perda do CAS. Retomada e rollback dependem de seleção, inputs e autoridade compatíveis. Erro posterior à tentativa não exclui efeitos.",
+      "evidence": "operational, Drift e saídas; driver mantém activation_attempted no report também em erro."
+    },
+    {
+      "id": "GO-I7",
+      "verdict": "PASS",
+      "reason": "Política, ator, ratificação, binding e autenticação são separados. As seis ferramentas protegidas, cauda e evidência de erro são preservadas. Não há orientação para contornar recusa por CAS bruto.",
+      "evidence": "N literal sobre autoridade; masking-rules.ts; ownership; operational; nativePath e readNativeFile."
+    },
+    {
+      "id": "GO-I8",
+      "verdict": "PASS",
+      "reason": "Tipos, parsing, CI, semântica, binding, operação e consumo permanecem evidências distintas. O recibo confirma que node --check não executou imports/corpo e que a operação era NOT_RUN.",
+      "evidence": "Fechos de maintenance e operational; projeção CI, maintenance_driver.evidence_scope e operational_execution."
+    }
+  ],
+  "oracle_cases": [
+    {
+      "id": "L4-entry",
+      "verdict": "PASS",
+      "reason": "Scope, need, CWD, comandos e queries são compatíveis com a CLI literal; há parada rasa e rotas úteis sem exigir fonte bruta."
+    },
+    {
+      "id": "L4-ownership",
+      "verdict": "PASS",
+      "reason": "Contratos, decisões, impactos e limites dos quatro domínios estão presentes; proteção de recall e gaps de host, trace e hidratação são preservados."
+    },
+    {
+      "id": "L4-maintenance",
+      "verdict": "REQUEST_EVIDENCE",
+      "reason": "Release, inputs, gerador, affected/reuse e separação de produção, revisão, binding e ativação estão sustentados. Resta apenas a ligação operacional delimitada em J1-E02."
+    },
+    {
+      "id": "L4-operational",
+      "verdict": "REQUEST_EVIDENCE",
+      "reason": "HOLD, histórico, preservação de candidato/CAS, rollback, isolamento, teto e saídas estão corroborados. A base efetiva da leitura do binding do driver ainda não aparece no recorte."
+    },
+    {
+      "id": "L4-economy",
+      "verdict": "PASS",
+      "reason": "A rota pública documentada respeita o orçamento; não há promessa universal de economia nem transformação de callbacks ou bytes em custos."
+    },
+    {
+      "id": "L4-cumulative",
+      "verdict": "PASS",
+      "reason": "Os onze intermediários permanecem alcançáveis e são usados cumulativamente; pins, autoridade e gaps são preservados sem transferir aceites históricos."
+    }
+  ],
+  "primary_corrections": [
+    {
+      "id": "J1-E01",
+      "status": "RESOLVED",
+      "resolution": "A CLI integral demonstra resolve para candidato/query, verificação do diretório e writeFileSync com wx. publishNativePackage re-prepara, compara candidato e identidade e lê approval por readNativeFile(root, nativePath(approvalPath)).",
+      "evidence": "Parte 3: CLI integral e genesis-native.ts linhas 111–130 no runtime fixado.",
+      "body_change_required": false
+    },
+    {
+      "id": "J1-E02",
+      "status": "PARTIALLY_RESOLVED",
+      "resolution": "Confirmados seis argumentos, target absoluto ou relativo ao corpus, limite de 256000 bytes, file obrigatório, recusas de caminhos/symlinks, captura, rebuild privado, códigos de saída, tentativa de ativação e readback do manifesto candidato.",
+      "remaining": "O recorte mostra bindingPath = nativePath(bindingArg), mas omite a chamada que lê esses bytes e estabelece sua base efetiva. A usage declara a intenção de relatividade ao corpus; não substitui a chamada ausente.",
+      "evidence": "Parte 4: driver linhas 1–118 e 194–317; parte 3: nativePath/readNativeFile.",
+      "body_change_required": false
+    },
+    {
+      "id": "J1-E03",
+      "status": "RESOLVED",
+      "resolution": "A projeção confirma 220 casos, 22 controles mutantes rejeitados, 18 arquivos em paridade e dois WARN, vinculados ao candidato indicado. Confirma parsing do driver e operação NOT_RUN. O status da CI não foi usado para inferir as contagens ou uma operação.",
+      "evidence": "Projeção de ci-c1/receipt.json, SHA256 0e5ab3de3e3eff58fda61020dc4f3ec6b2c67007ecc3b42c7d81a7e97654ca0c.",
+      "received_scope": "Projeção JSON declarada com valores exatos; não arquivo bruto integral.",
+      "body_change_required": false
+    }
+  ],
+  "mandatory_findings": [
+    {
+      "id": "J1-E02",
+      "type": "blocking_evidence",
+      "confirmed_content_error": false,
+      "expected": "O approval fornecido em S4_BINDING deve ser lido relativamente a corpusRoot, conforme operational.md.",
+      "observed": "O parser valida bindingArg como caminho relativo e nomeia essa intenção na usage. A leitura efetiva e sua base não estão nos intervalos recebidos.",
+      "exact_question": "No driver c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c, forneça somente o trecho que lê bindingPath/bindingArg e encaminha os bytes a validateNativeBinding, incluindo qualquer helper necessário para determinar a raiz da leitura.",
+      "required_evidence": "Chamada literal identificada por arquivo e pin. Se estiver no intervalo omitido 119–193, basta o pequeno trecho pertinente.",
+      "correction": "Nenhuma correção de corpo é exigida sem divergência demonstrada. Não solicito execução, arquivo completo ou alteração do limite histórico."
+    }
+  ],
+  "optional_suggestions": [],
+  "limits": [
+    "Somente semântica dos quatro corpos históricos e adequação do procedimento sob os pins declarados.",
+    "A alteração de 2 MiB em desenvolvimento está fora do alvo e não herda esta decisão.",
+    "Nenhuma ferramenta, acesso ao filesystem, delegação, autoria ou consulta a outro juiz foi usada por J1.",
+    "Aceites anteriores dos predecessores são históricos; não conferem aceite automático a L4.",
+    "Esta decisão não é binding e não afirma autenticação, autorização, execução, publicação, consumo ou DoD.",
+    "A conferência do orçamento refere-se à rota pública documentada; não certifica contagens de uma operação de manutenção não executada.",
+    "UNKNOWN, NOT_RUN e limites de concorrência, atomicidade e recuperação permanecem preservados."
+  ],
+  "next_decision_rule": "Recebida a chamada residual, revisar J1-E02 e somente os critérios/casos dependentes. Se confirmar a base corpus sem divergência material, não resta achado obrigatório identificado nesta revisão."
+}

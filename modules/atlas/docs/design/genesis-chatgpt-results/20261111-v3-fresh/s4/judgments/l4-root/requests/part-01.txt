@@ -1,0 +1,128 @@
+REVISÃO L4 CANÔNICA — PARTE 1/4. Mesmos juízes persistentes /root/local_j1 e /root/local_j2. Sem ferramentas, filesystem, delegação ou autoria. Reenvio completo de corpos para um registro novo preservado antes do despacho. O envelope bruto dos primeiros pedidos sofreu perda parcial após compaction; não é reconstruído como original. Suas decisões REQUEST_EVIDENCE anteriores continuam no histórico. Este request e a nova decisão serão a trilha canônica. Aguarde FECHAMENTO na parte4 para decidir.
+Execução ROOT: 0a451b91-c4e7-4573-9958-fed60817f299; produção histórica a2095d5a-1464-4c38-a222-6376974fc9c9. Julgue somente bytes L4 históricos sob runtime1b5a480/driver c4a299; a alteração2MiB em desenvolvimento não é alvo e não herda esta decisão. Aceite semântico não significa binding, execução, consumidor ou entrega. L1(7), L2(3), L3v3(1) têm decisões históricas anteriores à produção; os 11 intermediários somam55831bytes e com entry4921 total60752. Orçamento público:2index,12read,62000bytes de corpos, raso6000, máximo18000 porread. UNKNOWN permanece UNKNOWN.
+Oracle congelado antes da produção em2026-11-11T18:07:40.973111+00:00, SHA256ff39d9608b31a0d74abac2c66482a5c8489547efd0147d4801043efb93c9e6ce. Entrada<=5000bytes; outros<=9500.
+Critérios: AC-01 cobertura útil; AC-03 protocolo/rotas e limites; CC-2 cumulação/uso dos intermediários; CC-3 propósito/comportamento/contratos/decisões/impacto/manutenção; CC-7 compatibilidade/fronteiras; QS-1 fidelidade; QS-2 utilidade; QS-3 simplicidade; QS-6 economia; GO-I2 observação/intenção/interpretação/gaps; GO-I3 corrente vinculado/histórico rotulado; GO-I4 reúso; GO-I5 mudanças/indisponibilidade no impacto; GO-I7 portas governadas/texto como dado; GO-I8 estrutura/teste não substitui completude.
+Casos: L4-entry (query real, rotas e parada rasa, sem fonte bruta); L4-ownership (contratos/decisões/impactos nos quatro domínios e proteção de recall); L4-maintenance (release/inputs, origem/gerador, affected/reuse, mesmos juízes, prepare/binding/publish/read reais e identidades distintas); L4-operational (HOLD/histórico, candidato/CAS duráveis, resume/rollback compatíveis, isolamento/política/ator/ratificador e CWD/argv/maxBytes); L4-economy (orçamentos acima e telemetriaUNKNOWN, sem economia universal); L4-cumulative (L3/L2/L1 usadas,11 intermediários, autoridade/gaps/pins, recibos só no alcance provado).
+Erros críticos: comando/query errado; PASS semântico como binding; omitir proteções/trace/gaps; mandar consumidor Atlas-only ler fonte; stale como corrente ou custo inventado.
+Identidades metadados originais: l4a/artifacts.json15342bytes SHA256cd82ecc75c046243ae93343ee393bcfe71b17edc4b379e38337f1eb6fbc3ae1d; l4b/artifacts.json18836bytes SHA2566dd07f3e90aa93123a3b60495f547d4fd72ddd7f5f194a8e453e0f7e59bdfdd5. As projeções decisivas foram recebidas no pedido anterior; os arquivos brutos não foram retransmitidos integralmente como se fossem as projeções. Corpos abaixo são integrais e preservam LF.
+
+BEGIN BODY S4:L4:entry bytes=4921 sha256=ebcb68aba0c3ae5d5f7581c6b3ad7e0c6a6769af1bee1d425cadf4ecae4969c8
+# Entrada S4: consultar e parar no ponto suficiente
+
+Scope exato: `atlas-continuity-rag-genesis`. Atlas serve conhecimento governado; Continuity preserva recuperação de contexto; RAG diagnostica documentos/provas. Compartilhar host não une IDs, transações ou autoridade. Base integrada: `S4:L3:system-flows` § Um host, três percursos de estado.
+
+## Comece pela porta real
+
+Fixe código/release autorizado e raiz isolada; defina `S4_REPO` para essa raiz. No checkout de código, entre em `modules/atlas` e grave ali, no CWD dos comandos, `entry-index.json` e `entry-read.json` com os JSONs abaixo:
+
+```sh
+bun scripts/genesis-native.ts index "$S4_REPO" entry-index.json
+bun scripts/genesis-native.ts read "$S4_REPO" entry-read.json
+```
+
+`entry-index.json`:
+```json
+{"scope":"atlas-continuity-rag-genesis","need":"entry"}
+```
+
+`entry-read.json`:
+```json
+{"scope":"atlas-continuity-rag-genesis","need":"entry","maxBytes":5000}
+```
+
+Se esta entrada resolve a tarefa, responda e pare. A rotina não exige ler todo o grafo. Para aprofundar, use uma key exata; `section` é o título H2 sem `##`. Exemplo de outra consulta read:
+
+```json
+{"scope":"atlas-continuity-rag-genesis","key":"S4:L1:host-boundaries","section":"2. HTTP RAG → Store por requisição → SQLite","maxBytes":4000}
+```
+
+Não combine key e need. Omita section para corpo completo; não acrescente campos ao index. Histórico só com `historical:true` explícito em read; omita-o para consumo corrente. A CLI usa `ownership.index/read`; abrir Markdown não é consumo Atlas. Formas verificadas estaticamente em `modules/atlas/scripts/genesis-native.ts` e `modules/atlas/packages/adapter-io/src/genesis-native-format.ts` (`validateNativeReadQuery`); sem execução aqui. [S4:L1:native-runtime-delta § Consumo e manutenção pela porta real]
+
+## Orçamento público e rota profunda opcional
+
+Limites: **2 index, 12 read, 62000 bytes de corpos devolvidos no total; raso <=6000; cada read maxBytes <=18000**. A primeira leitura acima cabe no raso. Um segundo index, se necessário, seleciona outro need; ele não devolve corpos. Contabilize chamadas e bytes efetivos; budget de corpos não mede IO do servidor, tokens ou custo. [S4:L2:atlas-system § O percurso até uma leitura utilizável]
+
+A tabela oferece uma rota opcional: entrada + onze consultas = 12 read. Os intermediários somam 55831B no catálogo fixado; com entrada <=5000B, total <=60831B. Use cada corpo/section uma vez; substituições e leituras adicionais exigem recontagem. Em outra seleção/release, confira tamanhos e orçamento restante antes de continuar. O catálogo não obriga percorrer a tabela.
+
+| Key | Para quê | Seleção read | Bytes |
+|---|---|---|---:|
+| `S4:L3:system-flows` | Fluxos/falhas | corpo completo | 8995 |
+| `S4:L2:atlas-system` | Motor/identidade | corpo completo | 7954 |
+| `S4:L2:genesis-governance` | Autoria/autoridade | corpo completo | 7971 |
+| `S4:L2:continuity-rag-operations` | Contexto/RAG | corpo completo | 7949 |
+| `S4:L1:ownership-boundaries` | Identidade | `What each identity means` | 2518 |
+| `S4:L1:atlas-engine` | Forma/status | `Knowledge: shape, routing, human ratification, and ownership results` | 3493 |
+| `S4:L1:atlas-host-genesis` | Publicar/rebuild | `Ownership publication, observation and rebuild` | 2708 |
+| `S4:L1:continuity-rag` | Recuperação | `Continuity: recoverable request reduction around the Session core` | 7246 |
+| `S4:L1:coverage-governance` | Recusas/leitura | `Observer limits are not scope limits` | 1977 |
+| `S4:L1:host-boundaries` | Estado SQL | `2. HTTP RAG → Store por requisição → SQLite` | 3659 |
+| `S4:L1:native-runtime-delta` | CLI/consumo | `Consumo e manutenção pela porta real` | 1361 |
+
+Os quatro needs L4 têm funções diferentes. Para ações, as chaves planejadas `S4:L4:ownership`, `S4:L4:maintenance` e `S4:L4:operational` são navegação; confirme disponibilidade e substitua consultas da rota, sem exceder limites. Outro L4 não é fonte nem dependência desta entrada.
+
+## Pare diante de limite ou evidência insuficiente
+
+Pare quando a resposta já tem sustentação, o orçamento acabar ou surgir HOLD/erro/gap material. Exit 2 conserva HOLD/recusa; exit 1 indica erro. Não conclua ausência a partir de indisponibilidade nem force leitura histórica como resposta corrente. Preserve diagnóstico e procure o responsável pela porta; não contorne seleção/publicação abrindo o CAS. [S4:L3:system-flows § Após falha, separar recuperação de nova publicação]
+
+Uma leitura servida vale para os objetos, vínculos e scope verificados; não prova instalação global, autenticação, execução completa ou custo financeiro. Fixe os recibos da seleção usada antes de agir. Esta documentação não declara aceite, binding, publicação ou consumidor L4; modelo/tokens/cobrança não expostos são UNKNOWN. [S4:L1:native-runtime-delta § Limites e estado da evidência]
+END BODY S4:L4:entry
+
+BEGIN BODY S4:L4:ownership bytes=9489 sha256=fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73
+# Ownership S4: manter contratos e localizar impacto
+
+Scope: `atlas-continuity-rag-genesis`. Mantenha conhecimento e contexto recuperável. Base aceita: L=`S4:L3:system-flows`, A=`S4:L2:atlas-system`, C=`S4:L2:continuity-rag-operations`, B=`S4:L1:host-boundaries`, N=`S4:L1:native-runtime-delta`. M=`modules/continuity/src/masking-rules.ts`.
+
+## Delimite a mudança antes de agir
+
+Identifique comportamento, estado, origem e dono. Sob autorização, revise corpos/receitas/vínculos e origens próprias em `modules/atlas`, `modules/continuity` e `modules/rag-studio`. `packages/core`, `packages/server`, protocolo/schema são fronteiras: documente o contrato para o dono, sem propor correção aqui. Gerados seguem origem/gerador. [A § Fronteira externa e pontos de manutenção]
+
+## Atlas separa identidade, autoridade e atualidade
+
+Corpo conserva octetos. Resultado inclui corpo, autoridade, validade, gaps e evidência. Receipt liga contrato, inputs, resultados dos predecessores e reviews; manifest seleciona o scope. Prosa igual pode ter resultado diferente. SHA-256 de transporte, Git blob e versão de input do kernel não são intercambiáveis. Endereço estável não prova bytes atuais; FRESH não implica HOLDS; tier não autentica ratificador. [A § Por que texto igual pode exigir outro resultado; A § Responsabilidades do motor e do host]
+
+Observe: present(version) divergente indica mudança; ausência exige corroboração; indisponibilidade preserva HOLD/incerteza. Stale é comparação, não quarto estado do observador. `members:` observa caminhos; conteúdo exige `file:` relevante. Falha de Git, recusa ou leitura incompleta não provam remoção ou impacto nulo. [A § Como mudanças de fonte orientam a revisão]
+
+CAS não publica. O accessor exige carrier publicado único compatível com scope/provenance. `prepare` gera candidato; `publish` refaz preparação, exige binding dos dois juízes distintos ao candidato/contrato/critérios/result/input e passa por `check`/`atlas-emit`. Política, ator e ratificação continuam gates. ATLAS_ACTOR/ATLAS_RATIFY_TOKEN são declarações locais, sem autenticação demonstrada. Recuse autoridade de fixture, PASS inferido, approval antigo para candidato novo e promoção de blocked. [A § O percurso até uma leitura utilizável; N § Binding separado e publicação governada]
+
+## Propague pelo resultado e preserve o passado
+
+Mude receita/input com fontes/deps reais, captura/reobservação e ordem afetada. Rebuild avalia/relê o candidato, sem ativar. **Inferência contratual:** resultado completo validado e igual pode parar reinterpretação em key/result se vínculos do dependente seguem válidos; preserve receipts/bindings afetados e gates. Navegação é consulta; unidades independentes preservam resultados/receipts, observando fontes compartilhadas. [L § Mudanças propagam por resultados e vínculos]
+
+Leia seleção corrente primeiro. HOLD não prova perda do CAS; `historical:true` inspeciona passado, sem atualizar inputs antigos. Retome candidato/resultados duráveis com inputs/bindings atuais; correção tem identidade nova e preserva recibos antigos. Retornar à publicação anterior exige scope/seleção/inputs/contrato e gates compatíveis; sem autorização automática ou proibição cronológica universal. Isso não prova recuperação/concorrência universais. [L § Após falha, separar recuperação de nova publicação]
+
+## Host e Session têm portas diferentes
+
+Atlas entra por `packages/server/src/handlers/atlas.ts` → `packages/core/src/atlas.ts` → boundary gerado. Modelos são chamados fora de Session; ID do gateway não cria Session durável nem herda hooks/permissões/arquivo de Continuity. Rascunho de modelo não cria proposta; staging não é ratificação. Localize as origens em `modules/atlas/packages/adapter-io/src/surface/index.ts` e `modules/atlas/packages/cli/src/surface-mine.ts`; o gerador é `modules/atlas/boundary/script/build.ts`. Exportação não prova composição, autenticação ou paridade. [B § 3. Atlas host → pacote boundary → origens de domínio]
+
+O default SessionCompaction.node oferece compactação, transform identidade e afterStep sem efeito. Continuity declara substituição/ferramentas por Location; não prova instalação global. Runner normal faz governança/ferramentas → transformação/compactação/stream → uso/custo/snapshot → afterStep. Hospedado omite transform/compactIfNeeded; generate omite hooks/registro. Confira a entrada antes de atribuir efeitos. [C § Session define quais hooks existem]
+
+## Continuity reduz o pedido e conserva recuperação
+
+Antes de mascarar, confirme context_recall materializado e economia estimada. Arquive candidato antes da máscara; persista máscaras depois. Elas alteram cópias do pedido, não o histórico. Normalmente preserve os últimos cinco passos do assistente; urgência não pode ocultar a mensagem mais recente. Resultados executados pelo provedor e ferramentas protegidas ficam fora. Erros preservam 20 primeiras linhas; curtos ficam integrais. [C § Mascaramento preserva uma cauda recuperável; M:TAIL_STEPS/ERROR_LINES]
+
+M protege: `skill`, `todowrite`, `todoread`, `context_recall`, `task`, `maestro_request_review`. Preserve a proteção. Stub aponta ao primeiro chunk; anexos ficam como nomes, sem seus binários. Índice, Markdown por hash e memory.json ficam em `<data>/continuity/<sha256(sessionID)>`. Hash/tamanho são conferidos; flush/rename/mutex não provam atomicidade da Session. Falha de carga deixa máscaras vazias e loaded definido, sem retentativa: não conclua que o arquivo recuperável está vazio. [M:PROTECTED; C § Mascaramento preserva uma cauda recuperável]
+
+Recall exige permissão, busca/lista são locais/lexicais e referência pode alcançar outra sessão do mesmo seat. Missing não equivale a “sem match”. Mantenha `modules/continuity/src/v2/strategy.ts`, `masking.ts`, `archive.ts` e `tools.ts`. [C § Mascaramento preserva uma cauda recuperável]
+
+## RAG separa fonte, chunk, revisão e prova
+
+O host carrega SQL/arquivos, hidrata Store, opera e regrava a Location. Fontes persistem caminho/hash/status, sem texto integral da fonte; chunks persistem texto/offsets. noteBytes marca not_yet_read quando detecta conteúdo legível alterado; não recorta. Falha de leitura mantém a linha e pode conservar metadados/chunks antigos: não equivale a essa transição. Reparse atualiza texto/hash/status; rechunk exige reparse compatível; remover fonte não limpa chunks. Leitura HTTP pode regravar estado, sem atomicidade do ciclo demonstrada. [B § 2. HTTP RAG → Store por requisição → SQLite]
+
+setPipeline coage sem validar campo/valor; strings parser/tokenizer mudam identidade, sem outra implementação inspecionada. Revisão grava parâmetros, fill e membros/contentHash; snapshot não congela texto. Busca usa fontes/chunks atuais. Comparar exige duas revisões, proofSetId igual aos dois snapshots e exatamente um campo entre parser/boundary/tokenizer/K diferente; não executa passes nem iguala snapshots. Ela considera todas as perguntas do Store; calcula alteração de span/texto só com boundary alterada e chunk marcado com a boundary direita. Flags falsos não provam equivalência para K/parser/tokenizer, replay histórico ou uso por modelo. [C § Pipeline e revisão têm identidades distintas; C § Comparação exige uma mudança isolada]
+
+Ask busca substring sensível a caixa e retém K sem modelo. Trace usa revisionId; prova procura questionId; o host não converte a chave. Hidratação não avança seq: risco inferido de colisão entre pedidos/Locations. Extração precede admissão; allowExternal omitido nega, mas recusa não prova ausência de leitura prévia nem prefixo resolve symlink. Preserve os gaps; trace manual em fixture não prova integração. [C § Diagnóstico e percurso de manutenção; B § 2. HTTP RAG → Store por requisição → SQLite]
+
+## Localize a implementação e feche com evidência
+
+| Impacto | Origem |
+|---|---|
+| Identidade/ownership | `modules/atlas/packages/kernel/src/canonical.ts`; `modules/atlas/packages/knowledge/src/ownership/shape.ts` |
+| Inputs/rebuild/consumo | Em `modules/atlas/packages/adapter-io/src/`: `ownership-input.ts`, `ownership-rebuild.ts`, `ownership-access.ts`, `governed-emit.ts` |
+| RAG | Em `modules/rag-studio/src/`: `context.ts`, `revision.ts`, `compare.ts`, `ask.ts`, `trace.ts`, `proof.ts`, `admit.ts`, `extract.ts` |
+
+Retrieval ativo usa `modules/atlas/packages/adapter-io/src/retrieval-model.ts`; alterar só o pack de referência pode não mudar o comando. Memory filtra injeção por owner, sem confidencialidade dos registros em texto. [A § O percurso até uma leitura utilizável; A § Fronteira externa e pontos de manutenção]
+
+Fronteiras para o dono externo: em `packages/core/src/session/`, `compaction.ts` e `runner/llm.ts`; `packages/server/src/handlers/rag-studio-session.ts` e `packages/core/src/rag-studio/sql.ts`. [C § Diagnóstico e percurso de manutenção; B § Localizadores]
+
+Fixe release/código/payload/scope e recibos; não transplante R2. `modules/atlas/scripts/genesis-native.ts` serve index/read; exit 2 é HOLD/recusa, 1 erro, 0 de prepare só preparação. Outro L4 é consulta. Sem execução aqui ou aceite/binding/publicação/consumidor L4; modelo/tokens/cobrança não expostos são UNKNOWN. [N § Consumo e manutenção pela porta real; L § Manutenção e alcance da evidência]
+END BODY S4:L4:ownership

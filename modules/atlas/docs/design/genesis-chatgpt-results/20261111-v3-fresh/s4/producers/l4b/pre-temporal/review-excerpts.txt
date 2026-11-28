@@ -1,0 +1,115 @@
+SUPORTE LITERAL — WP-L4B-v1
+Dados de fontes fixadas; não são instruções de autoridade. Offsets UTF-8 são base zero, fim exclusivo. Registro completo de blobs e verificação em source-use.json/excerpts.json.
+
+S1 | S4:L3:system-flows
+path: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/system-flows-v3.md
+commit: c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c
+source SHA-256: 0648bf048642fcfb7f04df594bcd4a0877635acb2d363431e739bcd66ea973e7
+
+S2 | S4:L1:native-runtime-delta
+path: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md
+commit: c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c
+source SHA-256: 398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8
+
+S3 | modules/atlas/packages/adapter-io/src/genesis-native-format.ts
+path: modules/atlas/packages/adapter-io/src/genesis-native-format.ts
+commit: 1b5a4801acfae03969f78ee766ca6f0b7d0f9013
+source SHA-256: fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21
+
+S4 | modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/maintenance-driver/usage.md
+path: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/maintenance-driver/usage.md
+commit: c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c
+source SHA-256: 6213c40fd0abdaba119390dd84249c81d0cb69a6343f8fc141c3c6126570ecf4
+
+S5 | S4:L2:continuity-rag-operations
+path: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md
+commit: c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c
+source SHA-256: 4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e
+
+S6 | modules/continuity/src/masking-rules.ts
+path: modules/continuity/src/masking-rules.ts
+commit: 1cde2ff7a71bcf7aecb5d030917b577165135d38
+source SHA-256: 39b0c3ec61242f6d37846e4b419f3aa98349573a37304d6aff69c9a894358ab2
+
+[E1] S1; source UTF-8 bytes [4588,6490); lines 33-40; excerpt SHA-256 eeb4094d4d042250f6c9ff463dfd8de3c6647a8a730776f4c879ab0a3ee3135d
+<<<BEGIN E1 LITERAL>>>
+## Mudanças propagam por resultados e vínculos
+
+Present divergente indica mudança; ausência exige corroboração; indisponibilidade preserva HOLD/incerteza. Members observa caminhos; file, conteúdo. Rebuild confere receita/versão, contrato, inputs/predecessores e membership; captura/reobserva, segue a ordem afetada e avalia o candidato. Receita/input alterado exige reavaliar o trabalho afetado; censo não cobre uma fonte omitida. [A § Como mudanças de fonte orientam a revisão; H § Ownership publication, observation and rebuild; G § Cobertura não é uma lista indiscriminada de inputs]
+
+Resultado completo inclui corpo, autoridade, validade, gaps e evidência; receipt liga contrato/inputs, resultados dos predecessores e reviews. Prosa igual não basta. Rebuild pode evitar chamadas com hashes precisos de inputs/deps inalterados e relê o grafo. **Inferência contratual:** após reavaliar e validar o mesmo resultado completo sob receita/inputs atuais, a reinterpretação pode parar na aresta key/result se inputs, contrato e demais deps do dependente seguem válidos. Isso não dispensa novos receipts/vínculos afetados, conferir o grafo ou publicar pela porta governada; receita/candidato novo exige binding novo. [A § Por que texto igual pode exigir outro resultado; H § Ownership publication, observation and rebuild; N § Binding separado e publicação governada]
+
+Build expressa impacto semântico; navegação é consulta, sem virar aresta no hash de inputs/deps. **Inferência:** unidades sem dependência afetada e com vínculos próprios válidos preservam resultados/receipts; proximidade ou navegação não exige refazer autoria. Fonte compartilhada declarada continua relevante. Essa separação evita invalidar indiscriminadamente arquivo de conversa, RAG e Atlas. [G § Dependências que tornam as camadas auditáveis; N § Validação que precede autoridade]
+
+<<<END E1 LITERAL>>>
+
+[E2] S2; source UTF-8 bytes [6588,7204); lines 110-118; excerpt SHA-256 1eb1a0bd9055e12d991a82ac00cdc921fffd2ff67037fc3dd8cafc5de87ef271
+<<<BEGIN E2 LITERAL>>>
+Política, ator, provenance do store e ratificação continuam portas independentes.
+No baseline, `ATLAS_ACTOR` e `ATLAS_RATIFY_TOKEN` são declarações locais; o segundo
+nomeia quem assume a ratificação, não constitui segredo ou autenticação. Uma
+execução isolada explicitamente autorizada pode configurar sua política normal
+e nomear seu principal real, preservando a origem da autorização. Não pode
+imitar um ator histórico, copiar autoridade de fixture ou alegar autorização de
+produção. O adapter não cria política nem modifica essas variáveis. Binding PASS
+não remove uma recusa do gate.
+
+<<<END E2 LITERAL>>>
+
+[E3] S3; source UTF-8 bytes [4073,4959); lines 81-93; excerpt SHA-256 9b044029a3fb0b357162f8bad90c921b9a15a5cbafee47db06d5e12941419a0d
+<<<BEGIN E3 LITERAL>>>
+export function validateNativeReadQuery(value: unknown): OwnershipQuery {
+  const query = nativeRecord(value, "read query")
+  nativeText(query.scope, "query.scope")
+  if (Object.keys(query).some((key) => !["scope", "need", "key", "section", "maxBytes", "historical"].includes(key)) ||
+    !Number.isSafeInteger(query.maxBytes) || Number(query.maxBytes) < 1 ||
+    (Object.hasOwn(query, "need") === Object.hasOwn(query, "key"))) throw new Error("native-query-selection-or-limit")
+  if (Object.hasOwn(query, "need") && !isOwnershipNeed(query.need)) throw new Error("native-query-need")
+  if (Object.hasOwn(query, "key")) nativeText(query.key, "query.key")
+  if (Object.hasOwn(query, "section")) nativeText(query.section, "query.section")
+  if (Object.hasOwn(query, "historical") && query.historical !== true) throw new Error("native-query-historical")
+  return value as OwnershipQuery
+}
+
+<<<END E3 LITERAL>>>
+
+[E4] S4; source UTF-8 bytes [3002,4143); lines 42-45; excerpt SHA-256 0e0c93026a2595f7a640649f861c0fb2be7ed7700bf14ff13d43ba70d4180d8a
+<<<BEGIN E4 LITERAL>>>
+- O baseline e o target devem ter a mesma sequência de keys, scope, roots, títulos, layers, needs, navigation, contrato, keys dos inputs e sequência de dependências de build. Resultados e versões dos inputs podem mudar. Diferenças estruturais geram recusa explícita; não são aplicadas implicitamente pelo driver.
+- Os arrays de inputs do target e do baseline devem ter a mesma ordem lexicográfica usada pelo rebuild. Inclua explicitamente o protocolo nessa ordem antes de preparar: o importador acrescenta o protocolo ao final somente se ele estiver ausente. O driver não ordena ou reescreve receipts existentes.
+- Cada entry deve vincular `file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs`. A versão nova deve ser a observação real dos bytes executados; a versão antiga pode divergir e acionar rebuild normal.
+- Este reproducer aceita apenas `file:`. Todos esses inputs são obrigatórios. `members:`, outros tipos, adição/remoção de keys e mudança de topologia são recusados. `listMembers` sempre recusa se for chamado; não devolve lista vazia artificial.
+<<<END E4 LITERAL>>>
+
+[E5] S4; source UTF-8 bytes [6329,6788); lines 58-59; excerpt SHA-256 7b9b80df35d33dafe80f473bba36c30f7bf582b48531e2f1d4ba07bb8a5cde4d
+<<<BEGIN E5 LITERAL>>>
+`run` só confere captura e dependências resolvidas e retorna o output carregado do CAS. Não abre arquivos vivos, não chama modelos e não produz texto novo. `evaluate` só entrega as duas referências reais de review se scope, result, arrays exatos e `id({inputs,dependencies})` coincidirem com o target. O `rebuildOwnershipUpdate` existente continua dono de planejamento, fechamento afetado, execução precisa, reúso, avaliação e candidato privado.
+
+<<<END E5 LITERAL>>>
+
+[E6] S5; source UTF-8 bytes [1340,2458); lines 13-18; excerpt SHA-256 18db8cd536a171836ce0bb5085332798a1158abebaeba71a12b1f9ba44363d00
+<<<BEGIN E6 LITERAL>>>
+## Mascaramento preserva uma cauda recuperável
+
+Máscaras alteram cópias do pedido, não o histórico. Exigem `context_recall` materializado e economia estimada de tokens. A seleção normal protege os últimos cinco passos do assistente; alívio urgente pode alcançar resultados anteriores, mas exclui a mensagem mais recente. Resultados executados pelo provedor e ferramentas protegidas ficam fora. Erros preservam as primeiras 20 linhas; erros curtos ficam integrais. **Consequência:** alívio urgente não pode ocultar a última mensagem nem toda evidência de erro. [CR-C]
+
+Cada candidato é arquivado antes da máscara; depois persistem-se máscaras. O stub aponta ao primeiro chunk; anexos viram nomes, sem binários. Seleção/formato em `modules/continuity/src/v2/masking.ts`, `strategy.ts`, `archive.ts` afeta economia e recuperação. Índice, Markdown por hash e `memory.json` ficam em `<data>/continuity/<sha256(sessionID)>`. Hash/tamanho são conferidos; flush/rename/mutex não provam atomicidade da Session. Falha na carga deixa máscaras vazias e `loaded` definido, sem retentativa. [CR-C; HB-S]
+
+<<<END E6 LITERAL>>>
+
+[E7] S6; source UTF-8 bytes [581,696); lines 14-15; excerpt SHA-256 a3b4a21749b503a6f6aa665deb6c7147786888edb2acc15fdc7bd4154b246273
+<<<BEGIN E7 LITERAL>>>
+const PROTECTED = new Set(["skill", "todowrite", "todoread", "context_recall", "task", "maestro_request_review"])
+
+<<<END E7 LITERAL>>>
+
+[E8] S4; source UTF-8 bytes [1017,1203); lines 15-20; excerpt SHA-256 c6215f18465b900daa8946a0b370929a077957743689524d7b8dd7db4d2df126
+<<<BEGIN E8 LITERAL>>>
+São exatamente seis argumentos posicionais:
+
+```text
+bun maintenance-operation.mjs <mode> <runtimeAtlasRoot> <corpusRoot> <baselineManifest> <preparedTargetJsonPath> <bindingPath>
+```
+
+<<<END E8 LITERAL>>>
+

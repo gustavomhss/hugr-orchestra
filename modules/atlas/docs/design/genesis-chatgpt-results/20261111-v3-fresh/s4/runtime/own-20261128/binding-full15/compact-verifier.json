@@ -1,0 +1,225 @@
+{
+  "schema": "s4-binding-compact-verifier/v1",
+  "candidate_id": "10171ee9769ac7ce7013e8e16fbc5064e79a458a9cc65b80a503164e00306253",
+  "contract": "e4a13883dcfc3ca2e8eacef3d36ca69ac2c46e010ce886a4bf3df19ed54a07d2",
+  "runtime_sha": "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10",
+  "prepare_run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46157343932",
+  "prepared_sha256": "e6831efca8f63c3e0aeac092d7f4c14ffd0882b5e7d101683c3cf4773f8ba257",
+  "semantic_package_sha256": "443caac944c273a6066927caddc7b275ef66c037b3125e42c0fe5b620aa6d69b",
+  "transport_sha256": "38abeb0ea1b1fa0bd5470535214dbb9fd6e2d41e02eab7509ee56fc60568c638",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "criteria_definitions": {
+    "QS-1": "- **QS-1 Fidelity:** preserve evidence and disagreements; use correct epistemic labels; no unsupported product rationale.",
+    "QS-2": "- **QS-2 Operational utility:** concise skills prescribe actions; index entries state what a deeper artifact answers; explanations/procedures are readable, scoped and non-redundant.",
+    "QS-3": "- **QS-3 Simplicity:** every new mechanism names an acceptance need existing code cannot satisfy; no speculative framework, per-layer agent, vector store, bespoke database or mandatory deepening loop.",
+    "QS-5": "- **QS-5 Evidence:** actual implementation/reader controls, anti-vacuity mutations where relevant, bounded semantic review and explicit scope of proof; review a fixed bar, not endless optional improvements.",
+    "CC-3": "| CC-3 | Product purpose, behavior, contracts, decisions, impact and safe maintenance are supported, not merely titled. | AC-02 |",
+    "GO-I2": "| GO-I2 | Observed behavior, authorized intent, interpretation and gaps remain distinguishable; a structural freshness check cannot promote semantic certainty. | AC-02, AC-04 |",
+    "GO-I3": "| GO-I3 | Current reads bind exact artifact versions to an accepted scope/dependency manifest valid for current inputs/contracts; prior acceptance or rollback cannot make stale knowledge current. Historical reads are labelled. | AC-06, AC-07, AC-09 |",
+    "GO-I5": "| GO-I5 | Source additions, changes, removals and relevant non-code changes enter impact analysis; unavailable impact is HOLD, not an empty successful worklist. | AC-06 |",
+    "GO-I7": "| GO-I7 | Governed doors, secret handling, project boundaries and Knowledge/Memory separation remain intact. Imported source/docs/tool text is data, not execution authority. | AC-04, AC-09, AC-10 |",
+    "GO-I8": "| GO-I8 | A scope, generation or artifact is not declared semantically complete just because its graph, source hashes, required sections or tests are complete. | AC-01, AC-02, AC-03 |",
+    "runtime-import-binding": "Exact candidate, contract, each result and input identity plus all criteria separately reviewed by each of two independent judges; original semantic decisions do not substitute."
+  },
+  "acceptances": [
+    {
+      "layer": 1,
+      "sha256": "d9b84707462391759ef6b3471fd48f3d9a19845df4bcc8465f24d9d6fb1cdafa",
+      "git_blob": "a0108c2f68c7af36a08c7ecc24cbcd510432f4cb",
+      "first_record_commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+      "commit_time": "2026-11-11T15:41:11-03:00",
+      "body_count": 7,
+      "historical_reviewer_evidence_only": true
+    },
+    {
+      "layer": 2,
+      "sha256": "f4d0dfc01bf4a3c8a4ec43c9012522c3debe92417b96d227c650f0337b2751b5",
+      "git_blob": "94d0ffa518c6755c316205401f3cf240d5aa6896",
+      "first_record_commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+      "commit_time": "2026-11-11T16:33:39-03:00",
+      "body_count": 3,
+      "historical_reviewer_evidence_only": true
+    },
+    {
+      "layer": 3,
+      "sha256": "1b01e671de1d9ba728795204afcd4a2a55a941c7b4a9c770836a7bf0ede97e30",
+      "git_blob": "6b0bdbda17fcc56c059e80cb92d3cc35f4b17e36",
+      "first_record_commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+      "commit_time": "2026-11-11T17:27:21-03:00",
+      "body_count": 1,
+      "historical_reviewer_evidence_only": true
+    },
+    {
+      "layer": 4,
+      "sha256": "1190a86e852c1f7c301b7cc0ada8cee6ba71240c677a089fad4edff1f15cf2c8",
+      "git_blob": "61aa0f6451a7d76562da357d29fa9a94c537b790",
+      "first_record_commit": "234df168e1191ec134941a4a2b490eb6e60cc32a",
+      "commit_time": "2026-11-28T03:12:49-03:00",
+      "body_count": 4,
+      "historical_reviewer_evidence_only": true
+    }
+  ],
+  "git_ancestry": "L1 acceptance commit ancestor of L2 acceptance, L2 ancestor of L3 acceptance, L3 ancestor of L4 recovered acceptance. This establishes Git order; does not prove model dispatch timing. L4 bodies committed 6f643bc052 after L3 acceptance; original J1 post-part-05 recovered on 2026-11-28.",
+  "roots": {
+    "evidence": "S4:L1:ownership-boundaries",
+    "component": "S4:L2:atlas-system",
+    "flow": "S4:L3:system-flows",
+    "entry": "S4:L4:entry",
+    "ownership": "S4:L4:ownership",
+    "maintenance": "S4:L4:maintenance",
+    "operational": "S4:L4:operational"
+  },
+  "vectors": [
+    {
+      "key": "S4:L1:ownership-boundaries",
+      "result": "8c63bee07cdf75682c646bb2d524e09dd66308a56be2e32ae7dbbb5b9354759f",
+      "inputs": "8b1de2e5bd3e244c32e58ec3454c0df4826a229496877ce9239520a0f5d4eee2",
+      "body_kernel_id": "df059187e3dac1099e76d4d137a27d89f6ef6354e67dd46c47dca5b82401f81b",
+      "body_sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c",
+      "body_bytes": 17959,
+      "dependencies": 0
+    },
+    {
+      "key": "S4:L1:atlas-engine",
+      "result": "6706df3be2177f1ff8af7d2f98abfe83420d0146af85bd5f997c789c21ab43a4",
+      "inputs": "4b55f3f8ec80106e5e25c6646adafdd369c4b504682237d436340635aef6d5e3",
+      "body_kernel_id": "5ac3bb7d27fecea996618f85ed7c18c3128e926c115ebf147b4de6175b39b8bb",
+      "body_sha256": "c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e",
+      "body_bytes": 17987,
+      "dependencies": 0
+    },
+    {
+      "key": "S4:L1:atlas-host-genesis",
+      "result": "e76cc552cd44e6156be266764f1b9a44a5059fe1341a0057dda2207a978e9ee1",
+      "inputs": "824d3b50d8d615013e28deb7eff8f2542b7560f345ac4363b3447d41dc8b81ab",
+      "body_kernel_id": "6e2769ae820155ee1b2839b98d5ac8f8b9d5da4f886ba7ae3f685a02b04435fa",
+      "body_sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d",
+      "body_bytes": 17595,
+      "dependencies": 0
+    },
+    {
+      "key": "S4:L1:continuity-rag",
+      "result": "e1f4cafd1b57ce658b3c1c237671831b5146b6e4fb30ae34813eabf10f62f0b0",
+      "inputs": "9b9cc656635520af315f7091cf3696c457dc2667496f9d12aaaa4872ef708b0b",
+      "body_kernel_id": "4268fc0d04f523233a25ad46f110d77c9efb3bff7fadaa17074ee1d4cebf81b1",
+      "body_sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38",
+      "body_bytes": 17429,
+      "dependencies": 0
+    },
+    {
+      "key": "S4:L1:coverage-governance",
+      "result": "a806334e956ebdd1f5c3310d975fad27fe7792b0122c1fff73694a1782362247",
+      "inputs": "f97934be30300922ad77fa291075b07caccaeb544a90ad91a89be211737e2beb",
+      "body_kernel_id": "9abcecde5a9507abed02c4098bb3ae258aa0cc19ad4397a71ad058a6cbc80555",
+      "body_sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381",
+      "body_bytes": 17988,
+      "dependencies": 0
+    },
+    {
+      "key": "S4:L1:host-boundaries",
+      "result": "bee0cd0f266dc452ac7fb72706f153d133f420bec51011e809d0ff55dc34a98d",
+      "inputs": "bf318aa046cf1b45c71d5498233450641269a6d606e66b25a59b71d03847e4bf",
+      "body_kernel_id": "685b1023098f1ea6854c25d97f9294ee2b1024608b1bba28df29b781355378de",
+      "body_sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a",
+      "body_bytes": 11972,
+      "dependencies": 0
+    },
+    {
+      "key": "S4:L1:native-runtime-delta",
+      "result": "77faafdd5c8f2d5916c1d6f2634e7821d3970b280af8777347be87bf83d71348",
+      "inputs": "347394b8966e70c1bf18a5baacc08c4b9efd9061df28689887fa3cec6c41387f",
+      "body_kernel_id": "146810cf4b52d5a3707845c6eb20cb89a90e269701fc40e0700440df41a61c04",
+      "body_sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8",
+      "body_bytes": 11980,
+      "dependencies": 0
+    },
+    {
+      "key": "S4:L2:atlas-system",
+      "result": "2758d338d9e2dcb7b5122b85e893da3f106946590b63788d471e564430c2aadb",
+      "inputs": "ebeb86b812994eb451f45d6cbdcb4e1ac1ba94e120eb0a58bef7c78e26cf943b",
+      "body_kernel_id": "5a2d367bdbdb7cdd0c13e7c2687bbc8d17b5d85615e2db3ad18d1f391f94cc30",
+      "body_sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc",
+      "body_bytes": 7954,
+      "dependencies": 5
+    },
+    {
+      "key": "S4:L2:genesis-governance",
+      "result": "bd364adcec8898357da6690b60d3268a5ef24a72a864edc6d73b011bdfb7fbd6",
+      "inputs": "c5eb19bcd44329264d40c9a6b67b65ca4dd79bbf293b7086e6a57d4b9dbfe04e",
+      "body_kernel_id": "57b15638bdc8723ffa7e8a671dc519fc46865a625fc7709c94bfe9184c632009",
+      "body_sha256": "87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01",
+      "body_bytes": 7971,
+      "dependencies": 4
+    },
+    {
+      "key": "S4:L2:continuity-rag-operations",
+      "result": "ebd80e0394229795b82134ef776695baa0168254541d95f5a8c2bc9b4afe9888",
+      "inputs": "fc9fcaeb4b291c3ad5dfb2183b8e2ac65828e91ee0645779aa6399358ccb7b55",
+      "body_kernel_id": "afd3e0efe647da9dea6ded937397bf88e93e40926ea58adb022aefa6d8886fe0",
+      "body_sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e",
+      "body_bytes": 7949,
+      "dependencies": 2
+    },
+    {
+      "key": "S4:L3:system-flows",
+      "result": "de1845931c3a437b5186952e620d420fb3f3c965859a25db84da6f1d11143b11",
+      "inputs": "937cc824ffa60037d531c003b7647d71ab1dc3f549a49ca26265347d8dff158d",
+      "body_kernel_id": "3437cd3add737f8c8132795b9b71f6b7499b75b55785d901ac7f15bb78f547ed",
+      "body_sha256": "0648bf048642fcfb7f04df594bcd4a0877635acb2d363431e739bcd66ea973e7",
+      "body_bytes": 8995,
+      "dependencies": 6
+    },
+    {
+      "key": "S4:L4:entry",
+      "result": "bed07f339fc621a676bd662154397af94bd66d1190784ecdad0a91ffebc89d78",
+      "inputs": "01e6eca2870b9cf2dcbac76e351debcc68a2cb742f4aad8e4917e6b4f675fe8d",
+      "body_kernel_id": "e176b01aba3ca94687f32a5e902aea39dbd7faf60dc44866660a4a895afcfc4e",
+      "body_sha256": "ebcb68aba0c3ae5d5f7581c6b3ad7e0c6a6769af1bee1d425cadf4ecae4969c8",
+      "body_bytes": 4921,
+      "dependencies": 3
+    },
+    {
+      "key": "S4:L4:ownership",
+      "result": "394be315ee5831db6481d9a1ce23f5b87ba6b9cb24bfab86c84753115eed0be0",
+      "inputs": "f21985ad084609e9ece867de330bdff2b99b5c70604215c76321df61a75d1b30",
+      "body_kernel_id": "68c3a894d305686eb9f8b07b62809ded9741ac7ecfdc0738ef4cce140c4273bc",
+      "body_sha256": "fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73",
+      "body_bytes": 9489,
+      "dependencies": 5
+    },
+    {
+      "key": "S4:L4:maintenance",
+      "result": "f4199bbe37e39637b0dc29ef76519486fc7d79d54563d60a48f44535ecce45a7",
+      "inputs": "30ce3cddd4b0e5c6a51d4511901549a090601c76b1282748f165a4369ba3d125",
+      "body_kernel_id": "468e3d7996cf427ae31863650d5537af39ec3bb6bd33a66dddb176656581a74c",
+      "body_sha256": "5d9da13538cfc032b61947395d1aa7aa44dafed50327adaf1deafc64856505be",
+      "body_bytes": 9478,
+      "dependencies": 6
+    },
+    {
+      "key": "S4:L4:operational",
+      "result": "c02b64b5c187eea90a57dcf9df50bd8ebd4169ae215a065cb63131955c37e131",
+      "inputs": "94e8f690bd6c65824ab19fe4cd4724b828217793e925498d52363a9fa9d35aad",
+      "body_kernel_id": "fb8e638e4a079bd93bd6651d2f7542a1c242337848053bf7f50943879f51860f",
+      "body_sha256": "d61c8697ecfe193a4caa9334dc80410952805b68140e20d734c34b7576cf6ee7",
+      "body_bytes": 9481,
+      "dependencies": 6
+    }
+  ],
+  "checks": {
+    "PB-complete": "15 unique accepted keys in 7/3/1/4 layers, 7 roots, 37 ordered existing build edges; previous packet independently checked original bytes, CAS body bytes and reference SHA256; all 15 keys reachable from roots via build or navigation links.",
+    "PB-bytes": "All 15 saved CAS body bytes match accepted body digests and lengths; all authority/validity/gaps/evidence match semantic package. 283-file corpus readback checked against saved receipt; original provenance association is external evidence. Kernel IDs are recorded, not independently recomputed by this verifier.",
+    "PB-contract": "11 criteria and contract recorded; independent binding verdicts pending. The historical acceptance matches bodies, not automatic approval of transformed candidate.",
+    "PB-inputs": "All 15 input keys are sorted unique semantic keys plus exact protocol and historical driver; all input versions match the 251 candidate observations; all 251 observed SHA256 values match reconstructed files; all 37 dependencies resolve to earlier candidate results. Navigation is preserved in metadata, not treated as build dependency.",
+    "PB-limits": "Prepare only; no binding, governed publication, read/index, consumer or maintenance. Local identity claims are unauthenticated. Runtime release compatibility and policy remain separate gates. Tokens, billing and provider physical attempts UNKNOWN."
+  },
+  "limits": [
+    "CAS file SHA-256 differs from kernel BLAKE3 identity; no independent kernel rehash claimed",
+    "Saved 283-file corpus verified but hosted artifact retained CAS only; composite has no Git HEAD",
+    "Exact repo_root and implementation identity are bound to candidate: publish reprepare can require new candidate and fresh judgments",
+    "Chronology proves recorded Git ordering, not real-world production or judge-call timestamps",
+    "This is mechanical evidence for judges, not a verdict or a replacement for original source and decisions"
+  ],
+  "supporting_evidence_manifest": "/private/tmp/orchestra-genesis-close-gmJ7bX/evidence/s4-binding-packet/manifest.json"
+}

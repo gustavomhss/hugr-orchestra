@@ -1,0 +1,125 @@
+{
+  "agent_id": "/root/judge_j1",
+  "identity_role": "parallel-v3-fresh/S4/J1",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "purpose": "static-maintenance-operation-review",
+  "implementation": "maintenance-operation.mjs",
+  "implementation_bytes": 22051,
+  "implementation_sha256": "a6a579e6a3978daa9a67f01bce06fda56172334b0e34323e787cba4d5ab9f27f",
+  "runtime_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "oracle_sha256": "c1d2f2b8b9f4be95b0a3087124f11b3e3a63b7128e82da2e8ead5ef3b4d544dc",
+  "verdict": "PASS",
+  "verdict_scope": "Suficiência estática da composição finita entregue. As obrigações de demonstração operacional permanecem abertas.",
+  "execution_status": "NOT_RUN",
+  "criteria": [
+    {
+      "id": "AC-04",
+      "verdict": "PASS",
+      "location": "prepare-exact-target; validate-binding-and-preserve-decisions",
+      "reason": "Reprepara pelas portas existentes e exige igualdade integral do candidato, kernel ID, contrato e envelopes. Preserva binding e pedidos/respostas antes de adaptar reviews."
+    },
+    {
+      "id": "AC-05",
+      "verdict": "PASS",
+      "location": "rebuild; validate-complete-reconstruction; ownership-rebuild.ts:213",
+      "reason": "Conserva o caminho do executor que retorna o manifesto anterior com affected/calls vazios. A comparação completa posterior também cobre esse caminho e recusa output novo sem invalidação observável."
+    },
+    {
+      "id": "AC-06",
+      "verdict": "PASS",
+      "location": "baseline-structure; recipes; evaluate",
+      "reason": "Registry completo, estrutura e arestas fixas, inputs obrigatórios e resultado esperado exato permitem reconstrução pelo planner existente. Entradas não executadas conservam seus artifacts; mudanças incompatíveis são recusadas."
+    },
+    {
+      "id": "CC-4",
+      "verdict": "PASS",
+      "location": "rebuildOwnershipUpdate; governed-publication; published-readback",
+      "reason": "Compõe preparação, reconstrução, check, handler e consumo reais. Não implementa um planner alternativo nem ativa diretamente a projeção."
+    },
+    {
+      "id": "QS-3",
+      "verdict": "PASS",
+      "location": "report; usage.md; provenance dos OwnershipReview",
+      "reason": "Identifica versões, capturas, resultados e origem da adaptação; distingue candidato privado, tentativa de emissão e leitura posterior. Callbacks não são apresentados como telemetria de modelo."
+    },
+    {
+      "id": "QS-4",
+      "verdict": "PASS",
+      "location": "guard; validateEveryEntry; fontes literais do executor e handler",
+      "reason": "A inspeção permite conferir as verificações determinantes contra suas portas efetivas. node --check é corretamente limitado a sintaxe; comportamento operacional não foi declarado provado."
+    },
+    {
+      "id": "QS-5",
+      "verdict": "PASS",
+      "location": "evaluate; refusals; condição de emissão; catch final",
+      "reason": "Drift, envelope divergente, leitura HOLD e emissão recusada permanecem falhas explícitas. Erro posterior à tentativa conserva activation_attempted e o retorno obtido."
+    },
+    {
+      "id": "GO-I3",
+      "verdict": "PASS",
+      "location": "observe; sourceID; readCapturedBytes; recipes.run",
+      "reason": "Bytes retidos são conferidos pela identidade kernel e não substituídos; reobservações continuam reais. Receitas recebem cópias da captura e dependências resolvidas."
+    },
+    {
+      "id": "GO-I4",
+      "verdict": "PASS",
+      "location": "MD-reuse; MD-maintenance; static-review.md",
+      "reason": "A implementação oferece os caminhos necessários à futura prova de reúso e mudança própria, sem alegar que essas provas ocorreram ou converter parsing em teste operacional."
+    },
+    {
+      "id": "GO-I5",
+      "verdict": "PASS",
+      "location": "baseline-structure; outputs; validate-complete-reconstruction",
+      "reason": "Preserva contrato, grafo e campos completos do resultado, incluindo autoridade, validade, gaps e evidência. Não recorre aos defaults de fixture do executor."
+    },
+    {
+      "id": "GO-I7",
+      "verdict": "PASS",
+      "location": "validateNativeBinding; reviews; composeRuntime; handler.handle",
+      "reason": "Binding separado precede a adaptação declarada. Política, ator, ratificação e trust permanecem na composição normal; strings de reviewers não são tratadas como autenticação."
+    }
+  ],
+  "oracle_cases": [
+    {
+      "id": "MD-identity",
+      "verdict": "PASS",
+      "reason": "Candidato rederivado integralmente, contrato e critérios conferidos; decisões estruturadas distintas exigidas pela porta nativa. Requests/responses não vazios têm hashes conferidos e bytes preservados. A correspondência com decisões humanas reais continua obrigação do operador autorizado."
+    },
+    {
+      "id": "MD-capture",
+      "verdict": "PASS",
+      "reason": "Primeira captura retém bytes compatíveis com observações antes/depois; chamadas posteriores observam o host. run confere captura/deps e devolve output CAS previamente carregado aceito. Inputs não file e membership são recusados explicitamente."
+    },
+    {
+      "id": "MD-registry",
+      "verdict": "PASS",
+      "reason": "Todas as entries têm receita; layout igual exige que o baseline já vincule o driver. O executor valida o baseline completo historicamente. publish ainda exige que o manifesto informado seja o selecionado pela porta publicada; rebuild privado não afirma publicação."
+    },
+    {
+      "id": "MD-reuse",
+      "verdict": "PASS",
+      "reason": "O retorno sem afetados conserva manifesto e receipts anteriores, sem forçar novas reviews no grafo reutilizado. O driver valida sua equivalência ao target e sua atualidade. A ocorrência real de zero calls/affected ainda precisa de execução."
+    },
+    {
+      "id": "MD-maintenance",
+      "verdict": "PASS",
+      "reason": "A composição aceita outputs e decisões exatos fornecidos para uma mudança observável e usa o executor existente para selecionar trabalho. Não escolhe nem fabrica o caso. Congelamento prévio, execução e preservação observada de independentes permanecem pendentes."
+    },
+    {
+      "id": "MD-activation",
+      "verdict": "PASS",
+      "reason": "rebuild termina privado. publish verifica baseline publicado, grounding e atualidade de todas as entries, passa por check/atlas-emit e exige ok:true com data.emitted:true. Reabre index/read para conferir o manifesto; readback não converte recusa em sucesso. Não chama publishNativePackage para obter reviews."
+    }
+  ],
+  "mandatory_findings": [],
+  "optional_suggestions": [],
+  "limits": [
+    "Parecer baseado no código e trechos literais recebidos; não executei comandos nem recomputei hashes.",
+    "PASS estático não comprova resolução Bun/TS, execução, reúso, rebuild afetado, publicação ou consumidor. node --check prova apenas parsing.",
+    "A operação futura exige baseline apropriado, driver vinculado desde a publicação inicial, target preparado exato e decisões reais com seus registros preservados.",
+    "Somente inputs file obrigatórios, ordenação exigida e estrutura/grafo fixos. Não aprova mudanças de roots, keys, título, layer, need, navigation ou topologia.",
+    "Raiz e revisão do runtime dependem do pin externo. Os guards não estabelecem snapshot global, lock ou compare-and-swap adicional sobre o baseline publicado.",
+    "Contadores de callbacks e bytes não medem chamadas de provedor, tokens ou dinheiro; valores não expostos continuam UNKNOWN.",
+    "Este parecer não emite runtime-import-binding, autorização operacional, aceite de L2 ou conclusão de S4."
+  ]
+}

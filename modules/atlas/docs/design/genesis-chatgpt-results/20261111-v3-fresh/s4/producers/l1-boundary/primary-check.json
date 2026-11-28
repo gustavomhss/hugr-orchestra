@@ -1,0 +1,13 @@
+{
+  "schema": "s4-primary-source-check/v1",
+  "unit": "S4:L1:host-boundaries",
+  "body_bytes": 11955,
+  "body_sha256": "c282b8edc6383dc3af07ed43fbcb75318bde5b581868eefdf606f40e245f6ef6",
+  "artifact_sha256": "cb312e867b96458a7e2e1c2d89e2287b223d25f4d33cbf69ae957759470ed6c8",
+  "source_refs": 37,
+  "all_source_bytes_and_git_blobs_match": true,
+  "source_ref_file_input_correspondence": true,
+  "max_source_bytes": 39006,
+  "errors": [],
+  "population_scope_unchanged": 2220
+}

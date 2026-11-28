@@ -1,0 +1,40 @@
+{
+  "schema": "s4-primary-source-reconciliation/v1",
+  "artifact": "S4:L1:native-runtime-delta",
+  "body_unchanged": true,
+  "source_count": 20,
+  "corrections": [
+    {
+      "before": {
+        "commit": "9a2be7fa2d0d54b0000657a0060cb0a200e04bb0",
+        "path": "modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+        "git_blob_sha": "0270eef6bd8f5b8c0a02ac6d08fda2a302bb3df3",
+        "sha256": "79872860b0734aa1add07519cce558a0314014b5d472d3816857690f296dc387"
+      },
+      "after": {
+        "commit": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+        "path": "modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+        "git_blob_sha": "0270eef6bd8f5b8c0a02ac6d08fda2a302bb3df3",
+        "sha256": "79872860b0734aa1add07519cce558a0314014b5d472d3816857690f296dc387"
+      }
+    },
+    {
+      "before": {
+        "commit": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "path": "modules/atlas/docs/design/genesis-native-runtime.md",
+        "git_blob_sha": "2ae90e461dfe3f431e1706c65e35d41768b34e25",
+        "sha256": "ea76e98f776fa755f42596c22ac96feb3da385fd6c3ebafd3e189ac279c23398"
+      },
+      "after": {
+        "commit": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+        "path": "modules/atlas/docs/design/genesis-native-runtime.md",
+        "git_blob_sha": "18eee085d4afc46e0c2179a5cc60a1e8f90b5127",
+        "sha256": "b8a59c5e23e21137e6b3eb74144dd7bf273ddce683e7e2b2eb5d8db56d4132ec"
+      }
+    }
+  ],
+  "frozen_R0_oracle_sha256": "82fb83f85025e3fafeb02359914ebd758efdce27f5deddfa83f53867baeac8cb",
+  "artifact_sha256": "6d5d60a4be902b4a831a136c7ca8c4d5b5edf520774349b0f5a10ce07a666394",
+  "recipe_sha256": "adda9e7901dfdc2752aa1beac0dff5e1cd81e4a1a44c686a07269fa4b3b5a54a",
+  "unresolved_semantic_review": true
+}

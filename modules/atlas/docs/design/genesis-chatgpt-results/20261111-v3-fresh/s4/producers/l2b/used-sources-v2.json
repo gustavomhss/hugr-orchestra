@@ -1,0 +1,102 @@
+{
+  "schema": "s4-cumulative-used-sources/v1",
+  "unit": "l2b",
+  "revision": "v2",
+  "input_manifest_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/input-manifest-v2.json",
+    "sha256": "180b65db793511e814e939c0c4b52c3f883ac57c21cd1e39dbb88dcf46bce51a"
+  },
+  "input_freeze_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/input-manifest-v2.freeze.json",
+    "sha256": "141e4886e8d1bcaaf247c1a6fb36836bb67c5a67ca947d4964511dceeb487aea"
+  },
+  "accepted_predecessors": [
+    {
+      "key": "S4:L1:continuity-rag",
+      "source_ref": {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/continuity-rag.md",
+        "git_blob_sha": "3ad6a26291bcec638cc0ae4458ee467b889243f6",
+        "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38"
+      },
+      "original_local_read_path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/continuity-rag.md",
+      "preserved_copy": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/sources/continuity-rag.l1.md",
+      "bytes": 17429,
+      "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38",
+      "git_blob_sha": "3ad6a26291bcec638cc0ae4458ee467b889243f6",
+      "accepted_as_declared_in_manifest": true,
+      "acceptance_reference_metadata": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md",
+          "sha256": "779cc784f066f637436868aabdd164f58a709b028b0d9843a30e81a92088e807"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md",
+          "sha256": "9bcfa61514f5edc728f17f4a3331efcd36d257e98fa1eab736db1b9914ce237d"
+        }
+      ],
+      "acceptance_reference_bodies_read": false
+    },
+    {
+      "key": "S4:L1:host-boundaries",
+      "source_ref": {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+        "git_blob_sha": "b73f8975a72ccaf0955f136581fbdefc276a7640",
+        "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+      },
+      "original_local_read_path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+      "preserved_copy": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/sources/host-boundaries.l1.md",
+      "bytes": 11972,
+      "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a",
+      "git_blob_sha": "b73f8975a72ccaf0955f136581fbdefc276a7640",
+      "accepted_as_declared_in_manifest": true,
+      "acceptance_reference_metadata": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/j1-response-v2.json",
+          "sha256": "424c8d13ce680b1522e5970ea99f4a049c975899ddf9fcbd48bea397009a0d49"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/j2-response-v2.json",
+          "sha256": "33e8b837a0cda76bda59a4f972e62c3ec7beefad98c53db1c913e39ff6c36845"
+        }
+      ],
+      "acceptance_reference_bodies_read": false
+    }
+  ],
+  "progressive_direct_sources": [
+    {
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/rag-studio/src/revision.ts",
+        "git_blob_sha": "e7354836a52a5c3f2c4bc76655268a9077d745d1",
+        "sha256": "7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0"
+      },
+      "byte_length": 2701,
+      "local_read_path": "/workspace/scratch/aff930d22ec7/s4/source/modules/rag-studio/src/revision.ts",
+      "progressive_read_reason": "WP-L2B-P1-01: nomes e assinaturas exatos das portas de configuração de pipeline, snapshot e abertura de revisão; exceção estreita autorizada pelo principal.",
+      "preserved_copy": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/sources-v2/revision.ts",
+      "observed_bytes": 2701,
+      "observed_sha256": "7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0",
+      "observed_git_blob_sha": "e7354836a52a5c3f2c4bc76655268a9077d745d1"
+    },
+    {
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/rag-studio/src/compare.ts",
+        "git_blob_sha": "dc11b1ef55693955335c61b386dcca88410fd1e8",
+        "sha256": "e4e1cbaa7e3174a72baf06a762dc591d63789047b7a5a9b3639bc23d6ce34825"
+      },
+      "byte_length": 2337,
+      "local_read_path": "/workspace/scratch/aff930d22ec7/s4/source/modules/rag-studio/src/compare.ts",
+      "progressive_read_reason": "WP-L2B-P1-01: nome e assinatura exatos da comparação e condições/limites de parâmetros, snapshot, questões e traces; exceção estreita autorizada pelo principal.",
+      "preserved_copy": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/sources-v2/compare.ts",
+      "observed_bytes": 2337,
+      "observed_sha256": "e4e1cbaa7e3174a72baf06a762dc591d63789047b7a5a9b3639bc23d6ce34825",
+      "observed_git_blob_sha": "dc11b1ef55693955335c61b386dcca88410fd1e8"
+    }
+  ],
+  "other_raw_sources_read": false,
+  "additional_judge_responses_read": false,
+  "maintenance_ports_memo_used": false
+}

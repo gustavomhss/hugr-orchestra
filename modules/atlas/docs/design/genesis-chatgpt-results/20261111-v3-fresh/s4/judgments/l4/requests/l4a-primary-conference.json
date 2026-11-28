@@ -1,0 +1,119 @@
+{
+  "schema": "s4-l4-primary-conference/v1",
+  "unit": "L4A",
+  "recorded_utc": "2026-11-11T21:09:21.364005+00:00",
+  "metadata_sha256": "cd82ecc75c046243ae93343ee393bcfe71b17edc4b379e38337f1eb6fbc3ae1d",
+  "input_manifest_sha256": "51925d0f2fc6dfd99b65bfc95be09c9ba488fe7b8126137160e591fa0ce69dd0",
+  "mechanical_checks": "PASS",
+  "artifacts": [
+    {
+      "key": "S4:L4:entry",
+      "body": {
+        "path": "producers/l4a/entry.md",
+        "encoding": "utf-8",
+        "byte_length": 4921,
+        "sha256": "ebcb68aba0c3ae5d5f7581c6b3ad7e0c6a6769af1bee1d425cadf4ecae4969c8"
+      },
+      "unique_H2": 3,
+      "source_refs": 5,
+      "file_inputs": 11,
+      "build_dependencies": [
+        "S4:L1:native-runtime-delta",
+        "S4:L2:atlas-system",
+        "S4:L3:system-flows"
+      ]
+    },
+    {
+      "key": "S4:L4:ownership",
+      "body": {
+        "path": "producers/l4a/ownership.md",
+        "encoding": "utf-8",
+        "byte_length": 9489,
+        "sha256": "fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73"
+      },
+      "unique_H2": 7,
+      "source_refs": 6,
+      "file_inputs": 12,
+      "build_dependencies": [
+        "S4:L1:host-boundaries",
+        "S4:L1:native-runtime-delta",
+        "S4:L2:atlas-system",
+        "S4:L2:continuity-rag-operations",
+        "S4:L3:system-flows"
+      ]
+    }
+  ],
+  "literal_source_excerpts": 10,
+  "packets": [
+    {
+      "file": "review-packet-01.txt",
+      "byte_length": 21424,
+      "sha256": "ba88ffb6481ca7aeb1e44353c23bf6eaa20b6007aac49f86478691e233341d24"
+    },
+    {
+      "file": "review-packet-02.txt",
+      "byte_length": 18377,
+      "sha256": "bdaa4565436b0039eacd43f0aaa4ee14269984ce07d7bead0447a21a81d1453c"
+    }
+  ],
+  "route": [
+    {
+      "key": "S4:L3:system-flows",
+      "selection": "corpo completo",
+      "body_bytes": 8995
+    },
+    {
+      "key": "S4:L2:atlas-system",
+      "selection": "corpo completo",
+      "body_bytes": 7954
+    },
+    {
+      "key": "S4:L2:genesis-governance",
+      "selection": "corpo completo",
+      "body_bytes": 7971
+    },
+    {
+      "key": "S4:L2:continuity-rag-operations",
+      "selection": "corpo completo",
+      "body_bytes": 7949
+    },
+    {
+      "key": "S4:L1:ownership-boundaries",
+      "selection": "What each identity means",
+      "body_bytes": 2518
+    },
+    {
+      "key": "S4:L1:atlas-engine",
+      "selection": "Knowledge: shape, routing, human ratification, and ownership results",
+      "body_bytes": 3493
+    },
+    {
+      "key": "S4:L1:atlas-host-genesis",
+      "selection": "Ownership publication, observation and rebuild",
+      "body_bytes": 2708
+    },
+    {
+      "key": "S4:L1:continuity-rag",
+      "selection": "Continuity: recoverable request reduction around the Session core",
+      "body_bytes": 7246
+    },
+    {
+      "key": "S4:L1:coverage-governance",
+      "selection": "Observer limits are not scope limits",
+      "body_bytes": 1977
+    },
+    {
+      "key": "S4:L1:host-boundaries",
+      "selection": "2. HTTP RAG → Store por requisição → SQLite",
+      "body_bytes": 3659
+    },
+    {
+      "key": "S4:L1:native-runtime-delta",
+      "selection": "Consumo e manutenção pela porta real",
+      "body_bytes": 1361
+    }
+  ],
+  "route_total_including_actual_entry": 60752,
+  "primary_semantic_check": "Read final bodies against accepted predecessor/CLI/parser/masking material. CWD, purpose labels and narrow route balance corrections completed before semantic review; no open primary mandatory finding. No product execution.",
+  "product_execution": false
+}

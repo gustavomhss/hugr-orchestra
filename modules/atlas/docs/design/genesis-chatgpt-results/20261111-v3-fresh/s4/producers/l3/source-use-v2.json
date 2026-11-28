@@ -1,0 +1,220 @@
+{
+  "schema": "genesis-cumulative-source-use/v1",
+  "version": "l3-v2-p1",
+  "artifact_key": "S4:L3:system-flows",
+  "manifest_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/input-manifest.json",
+    "sha256": "4f64db85549e79f4aa79f88751a86bfbcd99395afb99343a25d1f1acc9699e54",
+    "byte_length": 10698
+  },
+  "correction_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/request-p1.md",
+    "sha256": "9f1db6d26fe17f850209cb6b26fb08bbde76dcf8220196b8d5dd51920f4ce506",
+    "byte_length": 2366
+  },
+  "source_payload_commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+  "body_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/system-flows-v2.md",
+    "sha256": "9df212b46f057c9e8369df6ed30e2e931a8fa9bc7f72ef51afba9eb4ea79d642",
+    "byte_length": 8952
+  },
+  "body_sections": [
+    "Um host, três percursos de estado",
+    "Do turno à redução recuperável do pedido",
+    "Da requisição RAG à evidência de seleção",
+    "Da autoria à leitura de conhecimento governado",
+    "Mudanças propagam por resultados e vínculos",
+    "Após falha, separar recuperação de nova publicação",
+    "Manutenção e alcance da evidência"
+  ],
+  "sources": [
+    {
+      "alias": "A",
+      "key": "S4:L2:atlas-system",
+      "source_ref": {
+        "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+        "git_blob_sha": "9e0320056c12bba1ff8b2b26a90f797c92fe5f3f",
+        "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+      },
+      "byte_length": 7954,
+      "local_exact_copy": "inputs/atlas-system.md",
+      "sections_used": [
+        "Por que texto igual pode exigir outro resultado",
+        "Como mudanças de fonte orientam a revisão",
+        "O percurso até uma leitura utilizável",
+        "Fronteira externa e pontos de manutenção",
+        "Recibos e limites desta síntese"
+      ],
+      "semantic_dependency_reason": "Responsabilidades Atlas, identidade completa de resultado/receipt, observação e fronteira de consumo; distingue payload e execução reportada.",
+      "mandatory_in_manifest": true,
+      "accepted_in_frozen_manifest": true,
+      "acceptance_refs_as_named_in_manifest": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j1-response.json",
+          "sha256": "3cf6f33d590f8a09420f721cd23f74e037061ecd20b20acbb3474a96a602da87"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j2-response.json",
+          "sha256": "ae03f6d7bbcf1949ce54f3e19dd405b051dfee90e4d8ec310e852fcb758ff5c6"
+        }
+      ]
+    },
+    {
+      "alias": "C",
+      "key": "S4:L2:continuity-rag-operations",
+      "source_ref": {
+        "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+        "git_blob_sha": "ced7ae43342f5461a52666f455cb74d348e3270b",
+        "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+      },
+      "byte_length": 7949,
+      "local_exact_copy": "inputs/continuity-rag-operations.md",
+      "sections_used": [
+        "Session define quais hooks existem",
+        "Mascaramento preserva uma cauda recuperável",
+        "RAG cruza leitura e persistência por requisição",
+        "Pipeline e revisão têm identidades distintas",
+        "Comparação exige uma mudança isolada",
+        "Diagnóstico e percurso de manutenção"
+      ],
+      "semantic_dependency_reason": "Sequência Session/Continuity, recuperação da máscara e fluxo RAG por requisição, identidades de revisão/prova e diagnóstico de fronteiras.",
+      "mandatory_in_manifest": true,
+      "accepted_in_frozen_manifest": true,
+      "acceptance_refs_as_named_in_manifest": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j1-response.json",
+          "sha256": "3cf6f33d590f8a09420f721cd23f74e037061ecd20b20acbb3474a96a602da87"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j2-response.json",
+          "sha256": "ae03f6d7bbcf1949ce54f3e19dd405b051dfee90e4d8ec310e852fcb758ff5c6"
+        }
+      ]
+    },
+    {
+      "alias": "G",
+      "key": "S4:L2:genesis-governance",
+      "source_ref": {
+        "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2.md",
+        "git_blob_sha": "dd0a52ada6bbeec778721bf948e9a613573d2f64",
+        "sha256": "87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01"
+      },
+      "byte_length": 7971,
+      "local_exact_copy": "inputs/genesis-governance.md",
+      "sections_used": [
+        "Cobertura não é uma lista indiscriminada de inputs",
+        "Dependências que tornam as camadas auditáveis",
+        "Da produção nativa à porta de consumo",
+        "Rotas históricas têm outra finalidade",
+        "Uso, tentativas e economia honesta",
+        "Ler recibos sem transportar autoridade entre revisões"
+      ],
+      "semantic_dependency_reason": "Dependências cumulativas, cobertura/inputs, publicação separada da autoria, autoridade histórica e economia honesta.",
+      "mandatory_in_manifest": true,
+      "accepted_in_frozen_manifest": true,
+      "acceptance_refs_as_named_in_manifest": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j1-response.json",
+          "sha256": "3cf6f33d590f8a09420f721cd23f74e037061ecd20b20acbb3474a96a602da87"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j2-response.json",
+          "sha256": "ae03f6d7bbcf1949ce54f3e19dd405b051dfee90e4d8ec310e852fcb758ff5c6"
+        }
+      ]
+    },
+    {
+      "alias": "H",
+      "key": "S4:L1:atlas-host-genesis",
+      "source_ref": {
+        "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+        "git_blob_sha": "00d6c33271a0b92bf1fd9de86a3fdfb19fa82311",
+        "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+      },
+      "byte_length": 17595,
+      "local_exact_copy": "inputs/atlas-host-genesis.md",
+      "sections_used": [
+        "Ownership publication, observation and rebuild"
+      ],
+      "semantic_dependency_reason": "Aprofundamento P1-01: receita/versão, declarações, captura/reobservação, ordem afetada, hashes precisos e releitura do grafo candidato. Sustenta a inferência condicional de parada por resultado completo igual.",
+      "mandatory_in_manifest": false,
+      "accepted_in_frozen_manifest": true,
+      "acceptance_refs_as_named_in_manifest": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md",
+          "sha256": "779cc784f066f637436868aabdd164f58a709b028b0d9843a30e81a92088e807"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md",
+          "sha256": "9bcfa61514f5edc728f17f4a3331efcd36d257e98fa1eab736db1b9914ce237d"
+        }
+      ]
+    },
+    {
+      "alias": "N",
+      "key": "S4:L1:native-runtime-delta",
+      "source_ref": {
+        "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+        "git_blob_sha": "22f9844d4b8ef46c338d191a6b13e68d0f59bab3",
+        "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8"
+      },
+      "byte_length": 11980,
+      "local_exact_copy": "inputs/native-runtime-delta.md",
+      "sections_used": [
+        "Validação que precede autoridade",
+        "Binding separado e publicação governada",
+        "Consumo e manutenção pela porta real",
+        "Delta R1 e controles de recuperação",
+        "Limites e estado da evidência"
+      ],
+      "semantic_dependency_reason": "Aprofundamento P1-01/P1-02: navegação/build, binding exato atual, consumo corrente/histórico, retomada durável e rollback delimitado por controles sintéticos.",
+      "mandatory_in_manifest": false,
+      "accepted_in_frozen_manifest": true,
+      "acceptance_refs_as_named_in_manifest": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j1-response.json",
+          "sha256": "41bb6d10d26f188ca1fd55d28f45b0a765f82053ffa6ee4827968fb7edd876a5"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j2-response.json",
+          "sha256": "61bdecc5a0793bedc8d135481133dd9f49bf4491b7ac17ce5c7e54eefc56e440"
+        }
+      ]
+    }
+  ],
+  "optional_l1_used": [
+    "S4:L1:atlas-host-genesis",
+    "S4:L1:native-runtime-delta"
+  ],
+  "raw_source_reads": [],
+  "correction_mapping": [
+    {
+      "finding": "P1-01",
+      "body_section": "Mudanças propagam por resultados e vínculos",
+      "source_aliases": [
+        "A",
+        "G",
+        "H",
+        "N"
+      ],
+      "documented": "Resultado completo/receipt, rebuild por receita/declarações e observações, dispensa de chamadas com hashes precisos inalterados, navegação sem aresta inventada e binding renovado quando candidato muda.",
+      "inference": "Depois de reavaliar e validar resultado completo igual, a reinterpretação pode parar na aresta key/result somente enquanto vínculos próprios do dependente permanecem válidos; unidades independentes preservam resultados/receipts. Não dispensa grafo, receipts/bindings afetados ou gates."
+    },
+    {
+      "finding": "P1-02",
+      "body_section": "Após falha, separar recuperação de nova publicação",
+      "source_aliases": [
+        "N"
+      ],
+      "documented": "Consumo corrente e historical:true; CAS durável antes de ativação; retomada do candidato preservado sem repetir callback sintético; recusas de rollback incompatível e scope independente preservado nos controles descritos.",
+      "limit": "Controles de fronteira sintéticos/um Worker-writer; sem prova universal, autenticação, autorização nova ou execução nesta entrega."
+    }
+  ],
+  "added_explanation": "Conecta mudança de receita/input a resultado completo, recibo e dependente; conecta falha de ativação a consumo corrente/histórico, resultado durável e compatibilidade da publicação anterior. Integração Session/RAG/Atlas preservada de modo conciso.",
+  "preservation": "Todos os 13 arquivos enumerados pelo recibo v1 e o próprio recibo foram conferidos inalterados antes desta escrita."
+}

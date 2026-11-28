@@ -1,0 +1,46 @@
+{
+  "run_id": 46160857852,
+  "job_revision": "75a2b330c9f63104d83103407cd2d48469003ff7",
+  "artifact_id": 15268694661,
+  "artifact_sha256": "504b7f0fc0c17efdea0ff5e755b6b4625217d705d897f4102ddcb01c9b80bbcb",
+  "receipt": {
+    "argv": [
+      "bun",
+      "scripts/genesis-native.ts",
+      "publish",
+      "/home/runner/work/_temp/s4-source",
+      "/home/runner/work/_temp/s4-evidence/prepared.json",
+      "s4-binding/approval.json"
+    ],
+    "exit_code": 2,
+    "stdout_sha256": "4313b48e1715926399139354fbb9a000cd40b578fbe358eaf6656235a724042e",
+    "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "response": {
+    "kind": "hold",
+    "stage": "governed-check",
+    "candidate_id": "10171ee9769ac7ce7013e8e16fbc5064e79a458a9cc65b80a503164e00306253",
+    "ownership": "df2dae9de5931cb86f7572bb6c093fe3fdaef6a274ad8f4985db5c3c63a21afe",
+    "check": {
+      "wouldEmit": false,
+      "gates": [
+        {
+          "gate": "shape",
+          "pass": true
+        },
+        {
+          "gate": "truth",
+          "pass": true
+        },
+        {
+          "gate": "authz",
+          "pass": false,
+          "reason": "unauthorized: actor not in fact scope (KNOW-11)",
+          "remedy": "declare a `scope` the acting identity is granted in `.atlas/policy.json` (`authz.scopes`)"
+        }
+      ]
+    }
+  },
+  "response_sha256": "4313b48e1715926399139354fbb9a000cd40b578fbe358eaf6656235a724042e",
+  "diagnosis": "Missing mandatory t0Heuristic invalidated the whole temporary policy. The runtime rejected the actor through the default deny policy before emit. The retry uses the complete policy shape and the same approved inputs."
+}

@@ -1,0 +1,129 @@
+{
+  "schema": "genesis-literal-source-excerpts/v1",
+  "unit": "WP-L3",
+  "artifact_key": "S4:L3:system-flows",
+  "support_bytes_including_identities_and_locators": 5362,
+  "raw_excerpt_bytes": 3314,
+  "records": [
+    {
+      "source_key": "S4:L2:continuity-rag-operations",
+      "source_ref": {
+        "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+        "git_blob_sha": "ced7ae43342f5461a52666f455cb74d348e3270b",
+        "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+      },
+      "local_exact_copy": "inputs/continuity-rag-operations.md",
+      "section": "Session define quais hooks existem",
+      "line_start": 9,
+      "line_end": 9,
+      "byte_start": 413,
+      "byte_end_exclusive": 954,
+      "byte_length": 541,
+      "sha256": "0092417a82d1b689bcca6bacb87720958a9d7b29d9feeba2eddd40ae4c295c0e"
+    },
+    {
+      "source_key": "S4:L2:continuity-rag-operations",
+      "source_ref": {
+        "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+        "git_blob_sha": "ced7ae43342f5461a52666f455cb74d348e3270b",
+        "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+      },
+      "local_exact_copy": "inputs/continuity-rag-operations.md",
+      "section": "Mascaramento preserva uma cauda recuperável",
+      "line_start": 17,
+      "line_end": 17,
+      "byte_start": 1923,
+      "byte_end_exclusive": 2457,
+      "byte_length": 534,
+      "sha256": "57215dd9cbd8f603e7fe60efac110c9988a9117e7b547f36a427f1f85192a41a"
+    },
+    {
+      "source_key": "S4:L2:continuity-rag-operations",
+      "source_ref": {
+        "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+        "git_blob_sha": "ced7ae43342f5461a52666f455cb74d348e3270b",
+        "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+      },
+      "local_exact_copy": "inputs/continuity-rag-operations.md",
+      "section": "RAG cruza leitura e persistência por requisição",
+      "line_start": 23,
+      "line_end": 23,
+      "byte_start": 2882,
+      "byte_end_exclusive": 3345,
+      "byte_length": 463,
+      "sha256": "aaa84b864d2227072195fffcedc2233c2a8519f0adf38f85ea0bb3acf99c3644"
+    },
+    {
+      "source_key": "S4:L2:continuity-rag-operations",
+      "source_ref": {
+        "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+        "git_blob_sha": "ced7ae43342f5461a52666f455cb74d348e3270b",
+        "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+      },
+      "local_exact_copy": "inputs/continuity-rag-operations.md",
+      "section": "Pipeline e revisão têm identidades distintas",
+      "line_start": 38,
+      "line_end": 38,
+      "byte_start": 4047,
+      "byte_end_exclusive": 4493,
+      "byte_length": 446,
+      "sha256": "f8ca80c696c4c3c3f5ce7e0b5e430a5eb1dfbf9c2a055415e49aaa532628eeb3"
+    },
+    {
+      "source_key": "S4:L2:atlas-system",
+      "source_ref": {
+        "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+        "git_blob_sha": "9e0320056c12bba1ff8b2b26a90f797c92fe5f3f",
+        "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+      },
+      "local_exact_copy": "inputs/atlas-system.md",
+      "section": "O percurso até uma leitura utilizável",
+      "line_start": 27,
+      "line_end": 27,
+      "byte_start": 3906,
+      "byte_end_exclusive": 4434,
+      "byte_length": 528,
+      "sha256": "dfda35c77d10748f2c9fe0d85c2511b45397625ece59ab81be2d9e838177355b"
+    },
+    {
+      "source_key": "S4:L2:atlas-system",
+      "source_ref": {
+        "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+        "git_blob_sha": "9e0320056c12bba1ff8b2b26a90f797c92fe5f3f",
+        "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+      },
+      "local_exact_copy": "inputs/atlas-system.md",
+      "section": "Fronteira externa e pontos de manutenção",
+      "line_start": 35,
+      "line_end": 35,
+      "byte_start": 5761,
+      "byte_end_exclusive": 6177,
+      "byte_length": 416,
+      "sha256": "9bbb43b960194a063914c7a0bdfe28fd943f93a69c7c09b32e03b0b42c65c772"
+    },
+    {
+      "source_key": "S4:L2:genesis-governance",
+      "source_ref": {
+        "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2.md",
+        "git_blob_sha": "dd0a52ada6bbeec778721bf948e9a613573d2f64",
+        "sha256": "87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01"
+      },
+      "local_exact_copy": "inputs/genesis-governance.md",
+      "section": "Da produção nativa à porta de consumo",
+      "line_start": 29,
+      "line_end": 29,
+      "byte_start": 3448,
+      "byte_end_exclusive": 3834,
+      "byte_length": 386,
+      "sha256": "9e4598b3684cb9d1af30d54fd43af17d846b84edd920c3cd9346f83dd7992dc8"
+    }
+  ],
+  "not_semantic_judgment": true
+}

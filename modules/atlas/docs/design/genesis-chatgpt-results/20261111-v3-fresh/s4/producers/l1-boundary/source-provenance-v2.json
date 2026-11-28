@@ -1,0 +1,1175 @@
+{
+  "schema": "genesis-static-source-provenance-v1",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "artifact_key": "S4:L1:host-boundaries",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "observed_head": null,
+  "method": "Inspeção estática e conferência de tamanho, SHA-256 e identidade Git blob sobre bytes capturados. Sem execução de código de produto, teste, build, importador ou integração.",
+  "capture_origins": [
+    {
+      "origin_path": "boundary-capture-receipt.json",
+      "sha256": "f814e8c99304ee3edd19bc56bde8283e2958752a3608f0eda7e560d14227c27d",
+      "byte_length": 3482,
+      "role": "Origem da captura dos 12 externos",
+      "native_file_input": false,
+      "reason": "Apenas proveniência da captura. Inputs são as fontes semânticas individuais e este registro compacto, não o recibo bruto."
+    },
+    {
+      "origin_path": "source-capture-receipt.json",
+      "sha256": "a41b96c8633c7f4381eb8c1c21e4db42651bdca4925e0222a0e0a2340cc5d00b",
+      "byte_length": 594072,
+      "role": "Origem da captura do domínio atribuído",
+      "native_file_input": false,
+      "reason": "Apenas proveniência da captura. Inputs são as fontes semânticas individuais e este registro compacto, não o recibo bruto."
+    }
+  ],
+  "population": {
+    "assigned_count": 2220,
+    "changed": false,
+    "external_read_only_references": 12,
+    "semantic_domain_files_used": 19,
+    "limit": "Não recenseia o host nem transforma referências externas em nova população atribuída. Não afirma compreensão de todos os ramos dos módulos."
+  },
+  "counts": {
+    "body_semantic_sources": 31,
+    "instruction_sources": 6,
+    "source_refs": 37,
+    "body_locators": 57
+  },
+  "materialization": {
+    "source_paths": "Cada source_ref deve ser materializado no path original com bytes exatamente iguais à captura; file:<path> é o mesmo path.",
+    "multi_pin": "Código e AGENTS no baseline; contratos de protocolo no pin do protocolo, em seus paths originais. observed_head=null: não é declaração de checkout Git de um só commit.",
+    "payloads": "Arquivos novos deste produtor usam payload_path no prefixo declarado; não têm commit inventado.",
+    "refused_origins": "Nenhum input de dados .atlas, bundle gigante, censo bruto ou recibo de captura gigante. Os limites preservados de L1B não foram removidos nem reclassificados.",
+    "pending": "Materialização, prepare/refresh, aceitação semântica e publicação não foram executados por este produtor. Runtime deve reobservar os mesmos paths/bytes."
+  },
+  "sources": [
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "byte_length": 8143,
+      "line_count": 125,
+      "captured_file": "producers/l1a/protocol-source/SKILL.md",
+      "role": "protocol-contract",
+      "semantic_reason": "Contrato efetivo da produção L1, qualidade, autoridade, transporte e separação de observação/runtime; pin próprio, sem alegar checkout único.",
+      "body_locators": [],
+      "body_line_ranges": [],
+      "inspected_line_ranges": [],
+      "inspection_basis": "Instruções lidas no trabalho L1 anterior e aplicadas nesta unidade; bytes novamente conferidos"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/fatia-4.md",
+      "git_blob_sha": "ec4698de9d693688a280d729d29b10cea02ef4ee",
+      "sha256": "227c4c6067232d3cf0511a539a418e9a1b5ffd3c7f55fd089c5974fbe3a975da",
+      "byte_length": 4911,
+      "line_count": 76,
+      "captured_file": "producers/l1a/protocol-source/fatia-4.md",
+      "role": "protocol-contract",
+      "semantic_reason": "Contrato efetivo da produção L1, qualidade, autoridade, transporte e separação de observação/runtime; pin próprio, sem alegar checkout único.",
+      "body_locators": [],
+      "body_line_ranges": [],
+      "inspected_line_ranges": [],
+      "inspection_basis": "Instruções lidas no trabalho L1 anterior e aplicadas nesta unidade; bytes novamente conferidos"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/principles.md",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230",
+      "byte_length": 6010,
+      "line_count": 72,
+      "captured_file": "producers/l1a/protocol-source/principles.md",
+      "role": "protocol-contract",
+      "semantic_reason": "Contrato efetivo da produção L1, qualidade, autoridade, transporte e separação de observação/runtime; pin próprio, sem alegar checkout único.",
+      "body_locators": [],
+      "body_line_ranges": [],
+      "inspected_line_ranges": [],
+      "inspection_basis": "Instruções lidas no trabalho L1 anterior e aplicadas nesta unidade; bytes novamente conferidos"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+      "byte_length": 10217,
+      "line_count": 150,
+      "captured_file": "producers/l1a/protocol-source/runtime.md",
+      "role": "protocol-contract",
+      "semantic_reason": "Contrato efetivo da produção L1, qualidade, autoridade, transporte e separação de observação/runtime; pin próprio, sem alegar checkout único.",
+      "body_locators": [],
+      "body_line_ranges": [],
+      "inspected_line_ranges": [],
+      "inspection_basis": "Instruções lidas no trabalho L1 anterior e aplicadas nesta unidade; bytes novamente conferidos"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/transport.md",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "byte_length": 8478,
+      "line_count": 149,
+      "captured_file": "producers/l1a/protocol-source/transport.md",
+      "role": "protocol-contract",
+      "semantic_reason": "Contrato efetivo da produção L1, qualidade, autoridade, transporte e separação de observação/runtime; pin próprio, sem alegar checkout único.",
+      "body_locators": [],
+      "body_line_ranges": [],
+      "inspected_line_ranges": [],
+      "inspection_basis": "Instruções lidas no trabalho L1 anterior e aplicadas nesta unidade; bytes novamente conferidos"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "AGENTS.md",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "byte_length": 16501,
+      "line_count": 223,
+      "captured_file": "source/AGENTS.md",
+      "role": "repository-instructions",
+      "semantic_reason": "Instruções aplicáveis da raiz do repositório; não ampliam a população S4 atribuída.",
+      "body_locators": [],
+      "body_line_ranges": [],
+      "inspected_line_ranges": [],
+      "inspection_basis": "Instruções lidas no trabalho L1 anterior e aplicadas nesta unidade; bytes novamente conferidos"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/boundary/package.json",
+      "git_blob_sha": "055b46b9d32d765c3c2dc54468137d031bb3de90",
+      "sha256": "66850f72af7afc962e030c3c5585a13c635507748cb43b9bbd4e2fe488d0f6bb",
+      "byte_length": 1773,
+      "line_count": 63,
+      "captured_file": "source/modules/atlas/boundary/package.json",
+      "role": "assigned-domain-link",
+      "semantic_reason": "Destino gerado dos subpaths efetivamente importados pelo host.",
+      "body_locators": [
+        "B/package.json:23–29"
+      ],
+      "body_line_ranges": [
+        [
+          23,
+          29
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          63
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/boundary/script/build.ts",
+      "git_blob_sha": "df0a875e47e98e8803e00818d178166d0b1cb8dd",
+      "sha256": "fd887babca14bcc1dc42d34238b299ebb01dad54a9e8a84d5a9617481e3ae53c",
+      "byte_length": 4743,
+      "line_count": 85,
+      "captured_file": "source/modules/atlas/boundary/script/build.ts",
+      "role": "assigned-domain-link",
+      "semantic_reason": "Mapeamento das origens para bundles e verificação --check disponível; não executada.",
+      "body_locators": [
+        "B/script/build.ts:16–19,29–81"
+      ],
+      "body_line_ranges": [
+        [
+          16,
+          19
+        ],
+        [
+          29,
+          81
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          85
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/review-answer.ts",
+      "git_blob_sha": "cbfe58cd0d65307d91cb5171981f330a97ffd89b",
+      "sha256": "d9f6d00a5abf557c3861ba24ed03c46961de8c1466588dc9c297584a59acade5",
+      "byte_length": 4148,
+      "line_count": 98,
+      "captured_file": "source/modules/atlas/packages/adapter-io/src/review-answer.ts",
+      "role": "assigned-domain-link",
+      "semantic_reason": "Bloqueio de proposta automática quando answer é drafted.",
+      "body_locators": [
+        "A/review-answer.ts:61–86"
+      ],
+      "body_line_ranges": [
+        [
+          61,
+          86
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          98
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/surface/index.ts",
+      "git_blob_sha": "cf531a1cba71737a453ef43a4d8b0af9c5914189",
+      "sha256": "8560562009ce02522725630941c9fbd05dadceea64d09728ec32398641e8885f",
+      "byte_length": 11614,
+      "line_count": 276,
+      "captured_file": "source/modules/atlas/packages/adapter-io/src/surface/index.ts",
+      "role": "assigned-domain-link",
+      "semantic_reason": "Origem declarada da surface externa e distinção empty/instalação; sem equiparar origem a bundle verificado.",
+      "body_locators": [
+        "A/surface/index.ts:136–159",
+        "A/surface/index.ts:3–6"
+      ],
+      "body_line_ranges": [
+        [
+          3,
+          6
+        ],
+        [
+          136,
+          159
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          178
+        ],
+        [
+          240,
+          276
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/adapter-io/src/surface/review.ts",
+      "git_blob_sha": "7767aba8e29f78962c25dae5934328c24548de99",
+      "sha256": "b7e922af1b3df0613ef997539157067dbf9ed45e2581ae1a821bd7490e212fe9",
+      "byte_length": 12988,
+      "line_count": 280,
+      "captured_file": "source/modules/atlas/packages/adapter-io/src/surface/review.ts",
+      "role": "assigned-domain-link",
+      "semantic_reason": "Roteamento de resposta/decisão, ator declarado e token de território; não autenticação HTTP.",
+      "body_locators": [
+        "A/surface/review.ts:134–174",
+        "A/surface/review.ts:200–254"
+      ],
+      "body_line_ranges": [
+        [
+          134,
+          174
+        ],
+        [
+          200,
+          254
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          280
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/packages/cli/src/surface-mine.ts",
+      "git_blob_sha": "634b50b31754c9597865557ede58ad63c8b7d254",
+      "sha256": "03e7a1007a0858a4023bc715b3b74191686b7d6bc2af6f45fbb050da17deace1",
+      "byte_length": 3131,
+      "line_count": 88,
+      "captured_file": "source/modules/atlas/packages/cli/src/surface-mine.ts",
+      "role": "assigned-domain-link",
+      "semantic_reason": "Origem declarada de mineSites/mineWith, dois passes advisory sobre HEAD e admissão de resposta.",
+      "body_locators": [
+        "M:1–7,43–86"
+      ],
+      "body_line_ranges": [
+        [
+          1,
+          7
+        ],
+        [
+          43,
+          86
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          88
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/continuity/src/v2/archive.ts",
+      "git_blob_sha": "138ccd42749b0fa259b4fb8b1b81c08fdeddb608",
+      "sha256": "c447789707162fff3876c2d04bbc202e7c147f0aa58be53126361a5f92d39c9e",
+      "byte_length": 10672,
+      "line_count": 253,
+      "captured_file": "source/modules/continuity/src/v2/archive.ts",
+      "role": "assigned-domain-link",
+      "semantic_reason": "Layout e persistência de arquivo/máscaras e exportação separada; não é input de dados .atlas.",
+      "body_locators": [
+        "V/archive.ts:76–177"
+      ],
+      "body_line_ranges": [
+        [
+          76,
+          177
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          185
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/continuity/src/v2/index.ts",
+      "git_blob_sha": "89e51c378a048c9b48e70da78c6e2479ebb0f96d",
+      "sha256": "8389f6d19d977e4403d2acc9c5e74c37b56ea3eb405bc03ae0a48751a6a53430",
+      "byte_length": 682,
+      "line_count": 17,
+      "captured_file": "source/modules/continuity/src/v2/index.ts",
+      "role": "assigned-domain-link",
+      "semantic_reason": "Declaração da contribuição que substitui SessionCompaction e acrescenta ferramentas; instalação global não inferida.",
+      "body_locators": [
+        "V/index.ts:3–17"
+      ],
+      "body_line_ranges": [
+        [
+          3,
+          17
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          17
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/continuity/src/v2/strategy.ts",
+      "git_blob_sha": "95a8648eb828779cfcedbc32868fb178bcf03876",
+      "sha256": "94ca1f1c82a0238132654d04f368a461d379c469253ad7be93ab41dd1c095121",
+      "byte_length": 14666,
+      "line_count": 324,
+      "captured_file": "source/modules/continuity/src/v2/strategy.ts",
+      "role": "assigned-domain-link",
+      "semantic_reason": "Ligação dos hooks ao modelo/última entrada, arquivo antes de máscara, proteção de contexto obsoleto e falhas.",
+      "body_locators": [
+        "V/strategy.ts:122–180,183–300",
+        "V/strategy.ts:257–300"
+      ],
+      "body_line_ranges": [
+        [
+          122,
+          180
+        ],
+        [
+          183,
+          300
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          324
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/continuity/src/v2/tools.ts",
+      "git_blob_sha": "eca80f15d3c970659a0138cc0e82ad3914186429",
+      "sha256": "86e9f6677a2e3fa088cefeb85150e7b98befbd5a781a83da57a906985af086df",
+      "byte_length": 16928,
+      "line_count": 349,
+      "captured_file": "source/modules/continuity/src/v2/tools.ts",
+      "role": "assigned-domain-link",
+      "semantic_reason": "Autorização e sessão da ferramenta, loadAll, paginação e distinção de ausência/indisponibilidade.",
+      "body_locators": [
+        "V/tools.ts:22–55,77–152,154–219,248–286"
+      ],
+      "body_line_ranges": [
+        [
+          22,
+          55
+        ],
+        [
+          77,
+          152
+        ],
+        [
+          154,
+          219
+        ],
+        [
+          248,
+          286
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          219
+        ],
+        [
+          248,
+          340
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/admit.ts",
+      "git_blob_sha": "30d3beb66b79c99a18acb949ac2436d3458855ed",
+      "sha256": "1ea61a8352cc98d7fb6c2d51b6d20f1e59d7b99e37a06b453a8f1f5265661b06",
+      "byte_length": 1518,
+      "line_count": 38,
+      "captured_file": "source/modules/rag-studio/src/admit.ts",
+      "role": "assigned-domain-link",
+      "semantic_reason": "Ordem do gate, leitura do Store e identidade de fonte vinculada a Location/caminho.",
+      "body_locators": [
+        "R/admit.ts:4–28"
+      ],
+      "body_line_ranges": [
+        [
+          4,
+          28
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          38
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/ask.ts",
+      "git_blob_sha": "629f9ae2cda44f9a936e864d9f8f3148a362cc3c",
+      "sha256": "73abef79077e73cbfbe9679d3e4662178c06ab94b67d7e1454f31bc1f20fe7f7",
+      "byte_length": 1872,
+      "line_count": 41,
+      "captured_file": "source/modules/rag-studio/src/ask.ts",
+      "role": "assigned-domain-link",
+      "semantic_reason": "Trace gravado sob revisionId, ligado à persistência por questionId do servidor.",
+      "body_locators": [
+        "R/ask.ts:9–29"
+      ],
+      "body_line_ranges": [
+        [
+          9,
+          29
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          41
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/context.ts",
+      "git_blob_sha": "0fdf7227c4118e336c60ebabf8f0c509f04e5a9c",
+      "sha256": "f6d07d8da485a0e8119ec982b9a39b1ddfcf908673888c74f48ad69120fd17b6",
+      "byte_length": 7467,
+      "line_count": 256,
+      "captured_file": "source/modules/rag-studio/src/context.ts",
+      "role": "assigned-domain-link",
+      "semantic_reason": "Gate, Store, contador reiniciado e Maps, AsyncLocalStorage e permissão externa padrão.",
+      "body_locators": [
+        "R/context.ts:17–44,150–183",
+        "R/context.ts:150–165,197–199,228–243"
+      ],
+      "body_line_ranges": [
+        [
+          17,
+          44
+        ],
+        [
+          150,
+          183
+        ],
+        [
+          197,
+          199
+        ],
+        [
+          228,
+          243
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          256
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/extract.ts",
+      "git_blob_sha": "f1eaafe9993154469b5c0fae4697424ceabdc297",
+      "sha256": "b45b137f1a23432385312a6f5132a0622e68a31a83652c4a3efb69043f98a8d8",
+      "byte_length": 750,
+      "line_count": 16,
+      "captured_file": "source/modules/rag-studio/src/extract.ts",
+      "role": "assigned-domain-link",
+      "semantic_reason": "Leitura real Bun.file/PDF que precede o gate no handler.",
+      "body_locators": [
+        "R/extract.ts:3–16"
+      ],
+      "body_line_ranges": [
+        [
+          3,
+          16
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/proof.ts",
+      "git_blob_sha": "c5f37d7d6d096378146f7e32c82512399d21b8ec",
+      "sha256": "f1d6f9b4d3407b19e80fc1705c4d4b829a4af79fe24b26ec65b6bd9cb9dbf622",
+      "byte_length": 1464,
+      "line_count": 33,
+      "captured_file": "source/modules/rag-studio/src/proof.ts",
+      "role": "assigned-domain-link",
+      "semantic_reason": "Alocação de pergunta e exigência de trace por questionId para prova.",
+      "body_locators": [
+        "R/proof.ts:4–25"
+      ],
+      "body_line_ranges": [
+        [
+          4,
+          25
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/reparse.ts",
+      "git_blob_sha": "353768de7b40ffcd835a9eaea101771962d00421",
+      "sha256": "3b378c3cad88e9916449cd99672be4259a5926fe6c8c2b197f39bffba709a6cc",
+      "byte_length": 1275,
+      "line_count": 38,
+      "captured_file": "source/modules/rag-studio/src/reparse.ts",
+      "role": "assigned-domain-link",
+      "semantic_reason": "Tratamento distinto de bytes alterados e falha de leitura, ligado à hidratação do servidor.",
+      "body_locators": [
+        "R/reparse.ts:4–14"
+      ],
+      "body_line_ranges": [
+        [
+          4,
+          14
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          38
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/revision.ts",
+      "git_blob_sha": "e7354836a52a5c3f2c4bc76655268a9077d745d1",
+      "sha256": "7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0",
+      "byte_length": 2701,
+      "line_count": 79,
+      "captured_file": "source/modules/rag-studio/src/revision.ts",
+      "role": "assigned-domain-link",
+      "semantic_reason": "Conversão de pipeline, alocação de revisão e snapshot de membros; liga a inferência de reutilização de IDs.",
+      "body_locators": [
+        "R/revision.ts:9–17",
+        "R/revision.ts:42–63",
+        "R/revision.ts:42–63"
+      ],
+      "body_line_ranges": [
+        [
+          9,
+          17
+        ],
+        [
+          42,
+          63
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          79
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/search.ts",
+      "git_blob_sha": "8fa79755fcaeb8d16f3099e1265ab868cb70aaec",
+      "sha256": "d0021c6ef9f5747ea9f61664cfa2f0c0ad8a77373582b0195393b9bbfe395843",
+      "byte_length": 984,
+      "line_count": 26,
+      "captured_file": "source/modules/rag-studio/src/search.ts",
+      "role": "assigned-domain-link",
+      "semantic_reason": "Filtros sobre fonte/chunks atuais; ausência de consulta a revision.members.",
+      "body_locators": [
+        "R/search.ts:4–26",
+        "R/search.ts:4–26"
+      ],
+      "body_line_ranges": [
+        [
+          4,
+          26
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/trace.ts",
+      "git_blob_sha": "39c42039f59f3b0b947b45afbcb8cb9844ebe4ff",
+      "sha256": "4f5f20b9522b900a3170cf8258c163074816dc5042c7d5db7ed0cd32d28f0c33",
+      "byte_length": 296,
+      "line_count": 6,
+      "captured_file": "source/modules/rag-studio/src/trace.ts",
+      "role": "assigned-domain-link",
+      "semantic_reason": "Parâmetro questionId efetivamente usado como chave no Store.",
+      "body_locators": [
+        "R/trace.ts:3–6"
+      ],
+      "body_line_ranges": [
+        [
+          3,
+          6
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          6
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/package.json",
+      "git_blob_sha": "8ee8ebb666051c9b5ee0fcd4a54bceb3a2cb3c43",
+      "sha256": "1c58faa263c2bb931b9789722342645e94cb30f0b91613b9093aa2ed422c8385",
+      "byte_length": 31912,
+      "line_count": 587,
+      "captured_file": "boundary-source/packages/core/package.json",
+      "role": "external-read-only-boundary",
+      "semantic_reason": "Exports públicos de Session/compaction/runner/Atlas e dependência de atlas-boundary; demais exports lidos sem virarem alegações de domínio.",
+      "body_locators": [
+        "P:340–357",
+        "P:28,530"
+      ],
+      "body_line_ranges": [
+        [
+          28,
+          28
+        ],
+        [
+          340,
+          357
+        ],
+        [
+          530,
+          530
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          587
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/atlas.ts",
+      "git_blob_sha": "f6718654785fb155e1bb1b2acb7e9985478b983b",
+      "sha256": "4a80f71532a9766f0cfaa67e4a4474ae4d49dbe30a811033ce57a1fb9c58bec4",
+      "byte_length": 16892,
+      "line_count": 347,
+      "captured_file": "boundary-source/packages/core/src/atlas.ts",
+      "role": "external-read-only-boundary",
+      "semantic_reason": "Imports boundary, adaptador síncrono, projectId do host, modelos, indexação e dois passes de mineração.",
+      "body_locators": [
+        "AC:103–147",
+        "AC:5–34",
+        "AC:248–279",
+        "AC:318–341",
+        "AC:152–196"
+      ],
+      "body_line_ranges": [
+        [
+          5,
+          34
+        ],
+        [
+          103,
+          147
+        ],
+        [
+          152,
+          196
+        ],
+        [
+          248,
+          279
+        ],
+        [
+          318,
+          341
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          347
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/rag-studio/sql.ts",
+      "git_blob_sha": "214ab3375acc34072ee74c3123501c80615bf488",
+      "sha256": "e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9",
+      "byte_length": 2519,
+      "line_count": 81,
+      "captured_file": "boundary-source/packages/core/src/rag-studio/sql.ts",
+      "role": "external-read-only-boundary",
+      "semantic_reason": "Forma persistida, chaves primárias e campos por tabela, inclusive pipeline/blocked.",
+      "body_locators": [
+        "D:6–81",
+        "D:34–70"
+      ],
+      "body_line_ranges": [
+        [
+          6,
+          81
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          81
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/session.ts",
+      "git_blob_sha": "402a192a69bcad6a4b08c695657e24ff5e335f93",
+      "sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58",
+      "byte_length": 34126,
+      "line_count": 764,
+      "captured_file": "boundary-source/packages/core/src/session.ts",
+      "role": "external-read-only-boundary",
+      "semantic_reason": "Admissão, exclusividade, consultas persistidas, contexto e delegação ao runner; não demonstra o interior do projetor/Store.",
+      "body_locators": [
+        "S:290–355,491–518,667–687",
+        "S:435–489,749–764"
+      ],
+      "body_line_ranges": [
+        [
+          290,
+          355
+        ],
+        [
+          435,
+          489
+        ],
+        [
+          491,
+          518
+        ],
+        [
+          667,
+          687
+        ],
+        [
+          749,
+          764
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          764
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/session/compaction.ts",
+      "git_blob_sha": "26f09bdbf2f5908199270ad5e4d24f520dee548f",
+      "sha256": "d6becda5c14c0679b6d5bf509a04631309518bd0ca0ba35d1b6f7e8296266d84",
+      "byte_length": 14270,
+      "line_count": 330,
+      "captured_file": "boundary-source/packages/core/src/session/compaction.ts",
+      "role": "external-read-only-boundary",
+      "semantic_reason": "Serialização, orçamento, eventos e hooks do compactador padrão; intenção do prompt separada de fidelidade demonstrada. A correção explicita a implementação padrão do node: make fornece compact/compactIfNeeded/compactAfterOverflow, transform preserva input.messages e afterStep não tem efeito; substituição instalada é distinção separada.",
+      "body_locators": [
+        "C:17–60,108–179,197–275",
+        "C:277–329"
+      ],
+      "body_line_ranges": [
+        [
+          17,
+          60
+        ],
+        [
+          108,
+          179
+        ],
+        [
+          197,
+          275
+        ],
+        [
+          277,
+          329
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          330
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade",
+      "correction_reread_line_ranges": [
+        [
+          258,
+          330
+        ]
+      ]
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/session/runner/index.ts",
+      "git_blob_sha": "6da5d89f1fb9528d1d1bb53ac4a72d3aa3506845",
+      "sha256": "08188f1e93d6b49e27f1b02d227516f6b2cd61f8ebc2f831ab8e6903685af109",
+      "byte_length": 2428,
+      "line_count": 53,
+      "captured_file": "boundary-source/packages/core/src/session/runner/index.ts",
+      "role": "external-read-only-boundary",
+      "semantic_reason": "Contrato público do runner para drenagem, compactação e generate sem registros.",
+      "body_locators": [
+        "I:24–47",
+        "I:33–39"
+      ],
+      "body_line_ranges": [
+        [
+          24,
+          47
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          53
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/core/src/session/runner/llm.ts",
+      "git_blob_sha": "c3ad8d87a58923d40797d38a77ff65367bbe66b6",
+      "sha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+      "byte_length": 39006,
+      "line_count": 767,
+      "captured_file": "boundary-source/packages/core/src/session/runner/llm.ts",
+      "role": "external-read-only-boundary",
+      "semantic_reason": "Ordem de governança, promoção, hooks, ferramentas, publicação de etapa, recuperação e caminhos hospedado/generate.",
+      "body_locators": [
+        "L:185–272,289–357,449–564,588–642",
+        "L:231–272,358–383,427–448,559–564,684–717",
+        "L:67–115",
+        "L:588–613"
+      ],
+      "body_line_ranges": [
+        [
+          67,
+          115
+        ],
+        [
+          185,
+          272
+        ],
+        [
+          289,
+          383
+        ],
+        [
+          427,
+          564
+        ],
+        [
+          588,
+          642
+        ],
+        [
+          684,
+          717
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          767
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/protocol/src/groups/rag-studio.ts",
+      "git_blob_sha": "d0abf2ac581e1e560e6cc3769bdf6b5afd51ea36",
+      "sha256": "765710e476d9aad6c06abcd7b9b610e34e57a57b0e1ede116a33b64b7151da10",
+      "byte_length": 6080,
+      "line_count": 155,
+      "captured_file": "boundary-source/packages/protocol/src/groups/rag-studio.ts",
+      "role": "external-read-only-boundary",
+      "semantic_reason": "Declaração das rotas e exigência de Location; não prova instalação/middleware global.",
+      "body_locators": [
+        "RP:9–155"
+      ],
+      "body_line_ranges": [
+        [
+          9,
+          155
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          155
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/schema/src/rag-studio.ts",
+      "git_blob_sha": "b553ee9dc72cbb7d87ff01eba7cb7608a5ab89df",
+      "sha256": "948d52ca2c846da8059bb297a8e564aa82e5cec5dc1edf97906eb010f71b9918",
+      "byte_length": 6596,
+      "line_count": 182,
+      "captured_file": "boundary-source/packages/schema/src/rag-studio.ts",
+      "role": "external-read-only-boundary",
+      "semantic_reason": "Payloads HTTP, literais lexical/embedding e limites numéricos ausentes nas formas observadas.",
+      "body_locators": [
+        "RT:48–70,178–182"
+      ],
+      "body_line_ranges": [
+        [
+          48,
+          70
+        ],
+        [
+          178,
+          182
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          182
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/server/src/handlers/atlas.ts",
+      "git_blob_sha": "692afb828dc5c896339adfebbb5e33ef39876347",
+      "sha256": "5eacbbeeea4ae154b77523f0f3bb14bd6921816ad4ebbb7ee5145050ab874267",
+      "byte_length": 5875,
+      "line_count": 117,
+      "captured_file": "boundary-source/packages/server/src/handlers/atlas.ts",
+      "role": "external-read-only-boundary",
+      "semantic_reason": "Location/raiz, conversão de falhas, operações e resolução de modelos fora de Session.",
+      "body_locators": [
+        "AH:19–37",
+        "AH:40–71",
+        "AH:19–37,73–114"
+      ],
+      "body_line_ranges": [
+        [
+          19,
+          37
+        ],
+        [
+          40,
+          71
+        ],
+        [
+          73,
+          114
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          117
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/server/src/handlers/rag-studio-session.ts",
+      "git_blob_sha": "42a0cb7a6250df1edc566fa0409dde0463f29639",
+      "sha256": "bd3250e5604650f6f80133d3f4e5c86653eaf1f42eddb40799f40afe22aab94b",
+      "byte_length": 9807,
+      "line_count": 282,
+      "captured_file": "boundary-source/packages/server/src/handlers/rag-studio-session.ts",
+      "role": "external-read-only-boundary",
+      "semantic_reason": "Hidratação por Location, extração, noteBytes, execução em Store e ciclo delete/insert; seleção de traces por perguntas.",
+      "body_locators": [
+        "RS:18–134",
+        "RS:139–275",
+        "RS:52–65",
+        "RS:77–99",
+        "RS:22–51,100–130,239–275"
+      ],
+      "body_line_ranges": [
+        [
+          18,
+          134
+        ],
+        [
+          139,
+          275
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          282
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "packages/server/src/handlers/rag-studio.ts",
+      "git_blob_sha": "b91a9e061bb8f818a34756ea7e26e9f27dace4a7",
+      "sha256": "3a3143d5b3243ac78bc87bd5f9dbb56ae9ab080730dd9ac7060700809de4ef0e",
+      "byte_length": 4883,
+      "line_count": 123,
+      "captured_file": "boundary-source/packages/server/src/handlers/rag-studio.ts",
+      "role": "external-read-only-boundary",
+      "semantic_reason": "Fronteira HTTP concreta, adaptação de erros, extração anterior à admissão e encaminhamento das operações.",
+      "body_locators": [
+        "RH:32–47",
+        "RH:55–63"
+      ],
+      "body_line_ranges": [
+        [
+          32,
+          47
+        ],
+        [
+          55,
+          63
+        ]
+      ],
+      "inspected_line_ranges": [
+        [
+          1,
+          123
+        ]
+      ],
+      "inspection_basis": "Leitura estática nesta unidade"
+    }
+  ],
+  "correction": {
+    "request_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/correction-request.md",
+      "sha256": "d1468e3c97c39606882268cfd68a64b625fa0e24ef4d022074af62db96c45c0c",
+      "byte_length": 1082
+    },
+    "scope": "Explicitar default SessionCompaction antes da substituição, sem nova fonte nem expansão do domínio.",
+    "source_refs_unchanged": true,
+    "source_reread": {
+      "path": "packages/core/src/session/compaction.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "lines": [
+        258,
+        330
+      ]
+    },
+    "new_body_locator": "C:277–329",
+    "remaining_limits": "Instalação global e garantias operacionais continuam não demonstradas; nenhum novo estado de execução ou revisão independente."
+  }
+}

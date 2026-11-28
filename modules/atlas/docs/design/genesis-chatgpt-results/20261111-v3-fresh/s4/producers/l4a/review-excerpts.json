@@ -1,0 +1,288 @@
+{
+  "schema": "genesis-review-excerpts/v1",
+  "unit": "WP-L4A",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "offset_convention": "UTF-8 bytes, zero-based start inclusive/end exclusive; one-based source lines",
+  "source_identity_basis": "Pins do manifesto e artifacts.json, sem novas fontes",
+  "packets": [
+    {
+      "file": "review-packet-01.txt",
+      "byte_length": 21424,
+      "sha256": "ba88ffb6481ca7aeb1e44353c23bf6eaa20b6007aac49f86478691e233341d24"
+    },
+    {
+      "file": "review-packet-02.txt",
+      "byte_length": 18377,
+      "sha256": "bdaa4565436b0039eacd43f0aaa4ee14269984ce07d7bead0447a21a81d1453c"
+    }
+  ],
+  "integral_payload_ranges": [
+    {
+      "packet": "review-packet-01.txt",
+      "file": "entry.md",
+      "byte_start": 1010,
+      "byte_end": 5931,
+      "byte_length": 4921,
+      "sha256": "ebcb68aba0c3ae5d5f7581c6b3ad7e0c6a6769af1bee1d425cadf4ecae4969c8"
+    },
+    {
+      "packet": "review-packet-01.txt",
+      "file": "artifacts.json",
+      "byte_start": 6073,
+      "byte_end": 21415,
+      "byte_length": 15342,
+      "sha256": "cd82ecc75c046243ae93343ee393bcfe71b17edc4b379e38337f1eb6fbc3ae1d"
+    },
+    {
+      "packet": "review-packet-02.txt",
+      "file": "ownership.md",
+      "byte_start": 779,
+      "byte_end": 10268,
+      "byte_length": 9489,
+      "sha256": "fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73"
+    }
+  ],
+  "literal_support": {
+    "packet": "review-packet-02.txt",
+    "byte_start": 10417,
+    "byte_end": 18377,
+    "byte_length": 7960,
+    "sha256": "42a239bd58a5725401ca4147ee5a4de6c7dda5fb7987c4542b6f0410e335fbe0",
+    "literal_text_bytes": 6365,
+    "limit_with_locators": 8000
+  },
+  "excerpts": [
+    {
+      "id": "CLI-1",
+      "source_key": null,
+      "source_ref": {
+        "commit": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+        "path": "modules/atlas/scripts/genesis-native.ts",
+        "git_blob_sha": "70ae6794086c73e8178e574c61fbe95739d45a6c",
+        "sha256": "18dc473b79c9bf986f07677bdba728d38490e0df36e6a39763f3765f422af3ce"
+      },
+      "local_copy": "inputs/genesis-native.ts",
+      "locator": "uso e CWD",
+      "line_start": 9,
+      "line_end": 19,
+      "source_byte_start": 611,
+      "source_byte_end": 1368,
+      "byte_length": 757,
+      "sha256": "d5b18ba27df66f787b691cef8d72dae3fb85eb3e3d88ca92c690ffcfb5d1aeda",
+      "support_byte_start": 403,
+      "support_byte_end": 1160,
+      "packet": "review-packet-02.txt",
+      "packet_byte_start": 10820,
+      "packet_byte_end": 11577
+    },
+    {
+      "id": "CLI-2",
+      "source_key": null,
+      "source_ref": {
+        "commit": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+        "path": "modules/atlas/scripts/genesis-native.ts",
+        "git_blob_sha": "70ae6794086c73e8178e574c61fbe95739d45a6c",
+        "sha256": "18dc473b79c9bf986f07677bdba728d38490e0df36e6a39763f3765f422af3ce"
+      },
+      "local_copy": "inputs/genesis-native.ts",
+      "locator": "index/read",
+      "line_start": 37,
+      "line_end": 50,
+      "source_byte_start": 2096,
+      "source_byte_end": 2820,
+      "byte_length": 724,
+      "sha256": "4201c27f452feee7b921616d3c75570f2ebffecaf139be42c2f7536ec2357a68",
+      "support_byte_start": 1276,
+      "support_byte_end": 2000,
+      "packet": "review-packet-02.txt",
+      "packet_byte_start": 11693,
+      "packet_byte_end": 12417
+    },
+    {
+      "id": "FMT",
+      "source_key": null,
+      "source_ref": {
+        "commit": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+        "path": "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+        "git_blob_sha": "b12538b8da1aaf75f5f25784704a07b700513c3b",
+        "sha256": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21"
+      },
+      "local_copy": "inputs/genesis-native-format.ts",
+      "locator": "validateNativeReadQuery",
+      "line_start": 81,
+      "line_end": 92,
+      "source_byte_start": 4073,
+      "source_byte_end": 4958,
+      "byte_length": 885,
+      "sha256": "b32098909e0279f914b8c394fd3a3755e71bbae1ab791597fad2c860dbe4256a",
+      "support_byte_start": 2150,
+      "support_byte_end": 3035,
+      "packet": "review-packet-02.txt",
+      "packet_byte_start": 12567,
+      "packet_byte_end": 13452
+    },
+    {
+      "id": "M",
+      "source_key": null,
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "modules/continuity/src/masking-rules.ts",
+        "git_blob_sha": "9b79f34f071c3748dca0b1eed1d9173fe05bc97f",
+        "sha256": "39b0c3ec61242f6d37846e4b419f3aa98349573a37304d6aff69c9a894358ab2"
+      },
+      "local_copy": "inputs/masking-rules.ts",
+      "locator": "TAIL_STEPS/ERROR_LINES/PROTECTED",
+      "line_start": 7,
+      "line_end": 14,
+      "source_byte_start": 221,
+      "source_byte_end": 695,
+      "byte_length": 474,
+      "sha256": "7d4c658076d274559870ae097f81e8d1cbf7cfac4bf1553099f4c3d7a68e52ad",
+      "support_byte_start": 3166,
+      "support_byte_end": 3640,
+      "packet": "review-packet-02.txt",
+      "packet_byte_start": 13583,
+      "packet_byte_end": 14057
+    },
+    {
+      "id": "B",
+      "source_key": "S4:L1:host-boundaries",
+      "source_ref": {
+        "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+        "git_blob_sha": "b73f8975a72ccaf0955f136581fbdefc276a7640",
+        "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+      },
+      "local_copy": "inputs/host-boundaries.md",
+      "locator": "2. HTTP RAG → Store por requisição → SQLite",
+      "line_start": 51,
+      "line_end": 51,
+      "source_byte_start": 5614,
+      "source_byte_end": 6210,
+      "byte_length": 596,
+      "sha256": "93c6fcd002c384872290e14ab43684a4433c698b6f7e06e4906a2b560fd6843f",
+      "support_byte_start": 3773,
+      "support_byte_end": 4369,
+      "packet": "review-packet-02.txt",
+      "packet_byte_start": 14190,
+      "packet_byte_end": 14786
+    },
+    {
+      "id": "C-1",
+      "source_key": "S4:L2:continuity-rag-operations",
+      "source_ref": {
+        "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+        "git_blob_sha": "ced7ae43342f5461a52666f455cb74d348e3270b",
+        "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+      },
+      "local_copy": "inputs/continuity-rag-operations.md",
+      "locator": "Session define quais hooks existem",
+      "line_start": 9,
+      "line_end": 9,
+      "source_byte_start": 413,
+      "source_byte_end": 954,
+      "byte_length": 541,
+      "sha256": "0092417a82d1b689bcca6bacb87720958a9d7b29d9feeba2eddd40ae4c295c0e",
+      "support_byte_start": 4495,
+      "support_byte_end": 5036,
+      "packet": "review-packet-02.txt",
+      "packet_byte_start": 14912,
+      "packet_byte_end": 15453
+    },
+    {
+      "id": "C-2",
+      "source_key": "S4:L2:continuity-rag-operations",
+      "source_ref": {
+        "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+        "git_blob_sha": "ced7ae43342f5461a52666f455cb74d348e3270b",
+        "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+      },
+      "local_copy": "inputs/continuity-rag-operations.md",
+      "locator": "Comparação exige uma mudança isolada",
+      "line_start": 49,
+      "line_end": 51,
+      "source_byte_start": 5217,
+      "source_byte_end": 6109,
+      "byte_length": 892,
+      "sha256": "459dd78aa293c9bd67a0cc4369e202e1c0d1dabdea10c1fe185704620f6300d1",
+      "support_byte_start": 5171,
+      "support_byte_end": 6063,
+      "packet": "review-packet-02.txt",
+      "packet_byte_start": 15588,
+      "packet_byte_end": 16480
+    },
+    {
+      "id": "L-1",
+      "source_key": "S4:L3:system-flows",
+      "source_ref": {
+        "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/system-flows-v3.md",
+        "git_blob_sha": "b6201604037118ff8cc69a010db73709b284ffa0",
+        "sha256": "0648bf048642fcfb7f04df594bcd4a0877635acb2d363431e739bcd66ea973e7"
+      },
+      "local_copy": "inputs/system-flows.md",
+      "locator": "Da requisição RAG à evidência de seleção",
+      "line_start": 25,
+      "line_end": 25,
+      "source_byte_start": 2746,
+      "source_byte_end": 2894,
+      "byte_length": 148,
+      "sha256": "e626cf0b6b3f4cbe8b3124399b7db5dd08aa9a978e7fd662f40df66950603c50",
+      "support_byte_start": 6192,
+      "support_byte_end": 6340,
+      "packet": "review-packet-02.txt",
+      "packet_byte_start": 16609,
+      "packet_byte_end": 16757
+    },
+    {
+      "id": "L-2",
+      "source_key": "S4:L3:system-flows",
+      "source_ref": {
+        "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/system-flows-v3.md",
+        "git_blob_sha": "b6201604037118ff8cc69a010db73709b284ffa0",
+        "sha256": "0648bf048642fcfb7f04df594bcd4a0877635acb2d363431e739bcd66ea973e7"
+      },
+      "local_copy": "inputs/system-flows.md",
+      "locator": "Mudanças propagam por resultados e vínculos",
+      "line_start": 37,
+      "line_end": 37,
+      "source_byte_start": 5192,
+      "source_byte_end": 5982,
+      "byte_length": 790,
+      "sha256": "68f63b7e8d2194a6c82a7a2c981b63db70fb630dc9b4c1c5dbeaf7c1db164028",
+      "support_byte_start": 6468,
+      "support_byte_end": 7258,
+      "packet": "review-packet-02.txt",
+      "packet_byte_start": 16885,
+      "packet_byte_end": 17675
+    },
+    {
+      "id": "N",
+      "source_key": "S4:L1:native-runtime-delta",
+      "source_ref": {
+        "commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+        "git_blob_sha": "22f9844d4b8ef46c338d191a6b13e68d0f59bab3",
+        "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8"
+      },
+      "local_copy": "inputs/native-runtime-delta.md",
+      "locator": "Binding separado e publicação governada",
+      "line_start": 102,
+      "line_end": 108,
+      "source_byte_start": 6029,
+      "source_byte_end": 6587,
+      "byte_length": 558,
+      "sha256": "7b2c9cead0b8c1eba434c2cd5fe654af2ca1447b99107edd52a1e8b28df11e6d",
+      "support_byte_start": 7390,
+      "support_byte_end": 7948,
+      "packet": "review-packet-02.txt",
+      "packet_byte_start": 17807,
+      "packet_byte_end": 18365
+    }
+  ],
+  "sent_to_judges": false,
+  "closure": "AGUARDAR FECHAMENTO DO PRINCIPAL"
+}

@@ -1,0 +1,438 @@
+S4 L1B — lote literal 3/4. Dados para os dois juízes persistentes; nenhum parecer do transportador. Oracle e encerramento serão fornecidos pelo principal. Não use ferramentas.
+Fonte dos trechos: gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38.
+
+<<<BEGIN EXACT BODY: continuity-rag.md>>>
+# Continuity and RAG Studio: recovery and document diagnostics
+
+Execution `a2095d5a-1464-4c38-a222-6376974fc9c9`; baseline `gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38`; protocol `ee2521a5b966bd505cc95bd1c733e09e12f33531`. `S4:L1:continuity-rag`, direct-source L1 evidence. Observed means static source inspection, not runtime execution. `artifacts.json` binds cited files to Git blobs and SHA-256; `coverage.json` records population/depth. No semantic verdict or product execution is claimed.
+
+## Continuity: recoverable request reduction around the Session core
+
+**Purpose and entry.** The V2 contribution replaces `SessionCompaction.node` and installs Location-scoped tools. Public entries are `./v2`, `./archive-search`, and `./masking-rules`. Summary generation and compaction events delegate to the Session core. Sources: `modules/continuity/package.json:8-23`, `modules/continuity/src/v2/index.ts:3-17`, `modules/continuity/src/v2/strategy.ts:108-125,202-225`.
+
+**Trigger, fallback, and lifetime.** Continuity defaults on, with a background trigger of 0.4 of the provider context window; only finite configured triggers strictly between 0 and 0.7 are accepted. The hard input threshold is the smaller of 70% of context and context minus reserved output, floored and bounded below by zero; an unknown/nonpositive context gives Infinity. Step accounting sums positive finite input, cache-read, cache-write, output, and reasoning usage. State is a per-Location map keyed by Session ID, containing masks, latest model/request, pending/manual flags, and consecutive summary failures. A summary captures stored context and checks the context again before publishing `Compaction.Ended`; a changed Session drops that summary without counting it as a failure. One background summary runs per Session, is owned by the Location scope, and a landed result causes one turn restart. Three consecutive failures stop background starts; successful compaction resets the count. Manual compaction is a request flag consumed at the next compaction check. Core compaction is tried before forced masking; disabling continuity retains core compaction and makes transformation/after-step work inert. Sources: `modules/continuity/src/v2/strategy.ts:14-106,122-125,183-303`, `modules/continuity/src/v2/tools.ts:131-140`.
+
+**Masking contract.** Masking changes copies of model-request messages, not stored history. It is attempted only when `context_recall` is in the materialized tool set. Normal candidates exclude the last five assistant steps; urgent relief may include earlier results up to, but not including, the latest message. Provider-executed results and protected planning/skill/recall/delegation/review tools are excluded. Failed output keeps its first 20 lines; short errors remain verbatim. Candidates must actually save estimated tokens. Attachments become names in the archive rather than preserved binary payloads; the estimator budgets 1,600 tokens per media attachment. Every candidate is archived before its mask is added, then masks are persisted. The stub points to the first chunk of a possibly multi-chunk archived result. Sources: `modules/continuity/src/v2/masking.ts:22-104,124-138`, `modules/continuity/src/masking-rules.ts:7-54`, `modules/continuity/src/v2/strategy.ts:128-180,282-293`.
+
+**Persistence, identity, and privacy.** Contrary to the README's “None of its own” persistence description, `archive.ts` writes `<Global.Path.data>/continuity/<sha256(sessionID)>/{index.json,memory.json,<hash>.md}`. Archive text passes through the Atlas boundary's `scrubText` before UTF-8 chunking (32 KiB payload limit) and hashing. Markdown identity includes its framing and Session/source metadata. Directories are requested with mode 0700; temporary files with 0600 are flushed and renamed. A keyed mutex serializes writes within this process. Version-1 manifests/memory are decoded with excess properties rejected; local reads verify markdown hash and byte length. Missing index means empty; malformed/wrong-Session metadata and corrupt content raise distinct archive errors. Mask writes preserve a legacy `entry` value. `exportTo` delegates to the Atlas boundary, with comments specifying host-only export and payload blobs only for `commit: true` private repositories. A hash lookup absent locally can read any committed archive of the same seat under the selected repository root. Sources: `modules/continuity/README.md:23-25`, `modules/continuity/src/v2/archive.ts:7-49,53-116,123-178,184-253`.
+
+The imported boundary implementation **is present** in Atlas: the build maps `./context` to `adapter-io/src/context-log.ts`. Its scrubber covers four credential-shape families, not all secrets. `exportContext` rejects markdown whose SHA-256 differs from its ID, always appends new reference/mask events, and writes blobs only when the caller sets `commit`. The flag controls file emission, not a Git commit; export neither chooses repository visibility nor removes previously written blobs. Committed lookup searches the selected seat’s Session logs and verifies blob hash and UTF-8 byte length; missing/unreadable/unreferenced/mismatched blobs return undefined. Export writes events before blobs, so an event alone does not prove complete blob availability. Sources: `modules/atlas/boundary/script/build.ts:20-21,29-47`, `modules/atlas/packages/adapter-io/src/context-log.ts:55-115,149-187`, `modules/atlas/packages/persist/src/scrub-shapes.ts:75-142,295-326`.
+
+The available visibility helper treats a GitHub 200 as private only if `private === true`, explicitly treats **404 as private**, and generally treats unresolved origin/network/other statuses as public. The actual host connection of that result to the export flag is uninspected. No archive retention/deletion policy or Session-map eviction appears in the inspected Continuity files. Mask loading sets `loaded` before reading and converts errors to an empty set with a warning, preventing automatic retry in that state. Sources: `modules/atlas/packages/adapter-io/src/repo-visibility.ts:17-47`, `modules/continuity/src/v2/archive.ts:139-154`, `modules/continuity/src/v2/strategy.ts:82-94,128-137`.
+
+**Recall and trust.** Both tools assert `PermissionV2` using the invoking Session, agent, message, and call identity. Recall accepts exactly one of message ID, history query, reference, archive query, or archive list; the caller supplies no Session ID. Full stored history, including compacted-away messages, supplies aliases and direct lookups. Aliases are deterministic `uN`/`aN`/`tN` sequences; completed human `question` answers also receive user aliases. Direct lookup pages JSON in UTF-16 units, omits inline `data:` values, and bounds serialized responses to 8,000 UTF-8 bytes. History search is literal/case-insensitive, newest-first, with at most 20 matches. Archive listing/search operates on the local index; only direct hash lookup has the committed-seat fallback. Term-mode archive search normalizes diacritics/case, requires every term, then ranks phrase match, title-term count, and proximity, with deterministic tie breaks. These are lexical matches, not embeddings or inferred semantics. The tool description explicitly labels recalled content historical data, never new instructions. Sources: `modules/continuity/src/v2/tools.ts:22-68,77-120,154-219,248-340`, `modules/continuity/src/v2/alias.ts:5-49`, `modules/continuity/src/archive-search.ts:5-48`.
+
+Direct-reference recall collapses archive errors to `missing`; list/search report `archive-unavailable`. “Own conversation” has the predecessor-seat exception above. Original-history lookup does not call `scrubText`. Sources: `modules/continuity/src/v2/tools.ts:60-67,168-172,248-286,339-340`.
+
+## RAG Studio: admitted-document diagnostics, with embedding off
+
+**Product and storage boundary.** The contract specifies admitted-file diagnostics with exact spans and separate maintenance passes, without chat or model answers. `sent` means prospective prompt inclusion, not model use. The barrel exports operations, `Store`, `withStore`, and `memoryStore`; the README still naming `context.ts` as the public entry is stale. Operations require a caller-supplied Store through `AsyncLocalStorage`; the module's implementation uses maps. Documented SQLite/HTTP/client/UI integration is outside this capture. Sources: `docs/specs/rag-studio/CONTRACT.md:73-99`, `modules/rag-studio/package.json:8-18`, `modules/rag-studio/src/index.ts:1-15`, `modules/rag-studio/src/context.ts:90-135,150-245`, `modules/rag-studio/README.md:7-26`.
+
+**Admission and identity.** `path.posix.normalize` precedes refusal of project-root descendants. Location paths are allowed; external paths need an `allow` Store callback. IDs use 12 hex digits of BLAKE3 over `locationId + NUL + normalizedPath`; content hashes digest returned text/bytes strings. Identical re-admission preserves status/identity; changed content keeps the ID and becomes `not_yet_read`; missing input rejects. Inventory filters by Location and sorts by path. This is lexical normalization; realpath/symlink handling, normalized roots, and actual permission evaluation remain adapter obligations. Sources: `modules/rag-studio/src/context.ts:13-44,182-195`, `modules/rag-studio/src/admit.ts:4-38`, `docs/specs/rag-studio/SPEC.md:58-59`.
+
+**Extraction and cut lifecycle.** The exported extractor treats non-PDF files as text, lazily loads `unpdf`, joins page strings with LF, and marks a PDF with any blank page (or no pages) `no_text_layer`. That failure returns an empty `bytes` string; successful extraction returns extracted text rather than raw PDF bytes. Consequently raw-file-byte identity must not be inferred from this adapter. `parseSource` reads again, marks no-text-layer failures `failed` and drops their chunks; success stores current text/hash, marks `read`, records `reparsedHash`, deletes old chunks, and creates one document-wide chunk with UTF-16 offsets. It tags that chunk with the current boundary string. `rechunk` actually implements `line` splitting; every other boundary acts as a whole document. Parser/tokenizer strings affect revision metadata/hash, but these captured functions do not select alternate parser/tokenizer implementations from those strings. Chunk-text replacement always refuses. Sources: `modules/rag-studio/src/extract.ts:3-16`, `modules/rag-studio/src/parse.ts:4-49`, `modules/rag-studio/src/rechunk.ts:5-43`, `modules/rag-studio/src/span.ts:1-3`, `modules/rag-studio/src/revision.ts:31-60`, `docs/specs/rag-studio/SPEC.md:25-30`.
+
+**Revision and retrieval semantics.** Defaults are plain/document/utf16, lexical true, embedding false, K=4. A revision snapshots sorted source IDs and content hashes, hashes the four configurable pipeline fields, and records its Location, parameters, and fill. Fill is failed for a Location failure flag, orphan chunk, missing member, or source/chunk hash mismatch. `setPipeline` converts K with `Number` and other fields with `String`; its field union is a TypeScript contract, with no runtime field/value validation in this function. Search requires an existing revision but uses its Location to filter current sources/chunks; it excludes missing, unread, failed, wrong-Location, and hash-stale sources, then performs case-sensitive substring matching and orders by source path/start. It does not consult the revision's stored membership/hash list. Thus snapshot metadata is observable, but replay of historical corpus contents is not established by this implementation. Sources: `modules/rag-studio/src/context.ts:46-55,76-88`, `modules/rag-studio/src/revision.ts:5-78`, `modules/rag-studio/src/search.ts:4-25`.
+
+**Question, trace, and proof contracts.** `ask` rejects missing/failed revisions, Location failure, and any live stale chunk in that Location; it then filters search results to the revision boundary, retains the first K, concatenates their exact stored text, and records hits/dropped/K. Diagnosis distinguishes no admitted owner, only unread/failed owners, a read owner missing from hits, a dropped hit, and a retained hit. Results contain all four reason keys, status/span, hits, dropped IDs, prompt text/IDs, and `retrievalOptional = matches.length <= K`; there is no model call. `saveQuestion` stores text/span/revision after checking revision existence. Retrieval proof requires exact chunk span equality, saved revision equality, a trace, matching K when both values exist, and inclusion after dropped IDs are removed. Citation proof slices a containing current chunk at the saved coordinates and checks the sentence, rather than merely checking an ID. Sources: `modules/rag-studio/src/ask.ts:9-40`, `modules/rag-studio/src/lights.ts:4-30`, `modules/rag-studio/src/prompt.ts:3-12`, `modules/rag-studio/src/report.ts:3-33`, `modules/rag-studio/src/proof.ts:4-33`, `modules/rag-studio/src/context.ts:137-148`.
+
+An unresolved linkage is directly visible: `ask` calls `record(revisionId, ...)`, while retrieval proof requests `store.trace(questionId)`. `record` stores exactly the supplied key. Tests that assert successful retrieval proof manually insert traces keyed by the saved question ID. A complete public ask/save/proof linkage cannot be claimed from these files. Comparison additionally treats the proof-set ID as the snapshot string, requires equal snapshots and exactly one changed pipeline field, and iterates all questions returned by the Store; the module does not filter that list by revision or Location. It resolves changed spans against current chunks/source text. These observations identify caller/Store obligations and historical-proof uncertainty, not an observed runtime failure. Sources: `modules/rag-studio/src/ask.ts:29`, `modules/rag-studio/src/trace.ts:3-6`, `modules/rag-studio/src/proof.ts:12-25`, `modules/rag-studio/src/compare.ts:5-50`, `modules/rag-studio/test/acceptance.test.ts:245-266`, `modules/rag-studio/test/proof.test.ts:57-71`.
+
+**Maintenance and exclusions.** `noteBytes` detects changed readable text, makes the source unread, and clears its reparse marker without cutting. Reparse changes source text/hash/status only; failed reads set a Location failure flag. Rechunk requires `reparsedHash === contentHash`, replaces only that source's chunks, and sets their cut policy. Removal deletes a source row, leaving chunks until explicit orphan deletion; orphan deletion scans the Store and removes chunks lacking sources. `runPass` dispatches exactly one operation; redo-numbers returns `not_applicable` without work. `runPasses` refuses multiple/zero passes and throws on a singleton; callers execute via `runPass`. `enableEmbedding` always returns `embedding_off`. No embedding-model invocation or vector representation is present in the inspected production module. Multirow replacement has no transaction API in the Store contract, so durable rollback/partial-write behavior is unverified. Sources: `modules/rag-studio/src/reparse.ts:4-38`, `modules/rag-studio/src/rechunk.ts:18-43`, `modules/rag-studio/src/orphan.ts:4-15`, `modules/rag-studio/src/passes.ts:7-17`, `modules/rag-studio/src/guard.ts:3-6`, `modules/rag-studio/src/embed-off.ts:1-3`, `modules/rag-studio/src/context.ts:92-123`.
+
+## Maintenance impact and evidence limits
+
+- Continuity changes to permissions, message shape, masking, or framing affect recovery and persisted masks together. Declared regression cases cover restored masks, recall denial, stale summaries, circuit breaking, predecessor lookup, and scrubbing. Sources: `modules/continuity/test/v2-strategy.test.ts:65-157`, `modules/continuity/test/v2-maintenance.test.ts:83-168`, `modules/continuity/test/v2-tools.test.ts:154-193`.
+- RAG extraction/cut/hash/K/span changes affect comparability and proofs together. Tests use memory stores and synthetic inputs, including manually seeded proof traces; none was run. They do not establish durable adapter or real-PDF behavior. Sources: `modules/rag-studio/test/acceptance.test.ts:23-34,245-266`, `modules/rag-studio/test/parse.test.ts:39-54`.
+- Preserve documentation drift: the frozen contract supersedes `7c2ae7a5` with `fb61d451`, while WAVE/REQUIREMENTS and a work-package completion rule retain the old hash. SPEC/ACCEPTANCE's “not started/red” is historical text, not an observed test result. DESIGN is explicitly not implementation authorization. Sources: `docs/specs/rag-studio/CONTRACT.md:3`, `docs/specs/rag-studio/WAVE.md:3-20`, `docs/specs/rag-studio/REQUIREMENTS.md:5`, `docs/specs/rag-studio/work-packages.md:3-7`, `docs/specs/rag-studio/SPEC.md:3`, `docs/specs/rag-studio/ACCEPTANCE.md:3`, `docs/specs/rag-studio/DESIGN.md:3`.
+- External unknowns remain: CLI/core wiring and its archive privacy/export flag, durable Store/transactions, transport validation, per-request Location and revoked-permission enforcement, filesystem canonicalization, and UI claims/J01–J10. Sources: `modules/continuity/README.md:10-13`, `docs/specs/rag-studio/SPEC.md:15-21,50,93-99`, `docs/specs/rag-studio/ACCEPTANCE.md:80-89`, `docs/guides/rag-studio.md:5-15`.
+
+This unit covers all assigned Continuity/RAG groups with source-based contracts and explicit external gaps. Imported Atlas source was reconciled above; generated parity and host invocation remain unexecuted. Build dependencies are empty. It neither grants semantic acceptance nor supplies an L2 predecessor or runtime/publication receipt.
+<<<END EXACT BODY: continuity-rag.md>>>
+
+TRECHOS LITERAIS DA FONTE
+
+<<<SOURCE modules/continuity/src/v2/strategy.ts:L20-L44>>>
+
+// After this many consecutive failed background summaries, stop starting them for the Session.
+export const MAX_FAILURES = 3
+
+export type Settings = { readonly enabled: boolean; readonly trigger: number }
+
+/** Resolve `continuity` settings; an invalid trigger falls back to the default. */
+export function settings(entries: readonly Config.Entry[]): Settings {
+  const value = Config.latest(entries, "continuity")
+  const trigger = value?.trigger
+  return {
+    enabled: value?.enabled !== false,
+    trigger:
+      trigger !== undefined && Number.isFinite(trigger) && trigger > 0 && trigger < HARD_LIMIT
+        ? trigger
+        : DEFAULT_TRIGGER,
+  }
+}
+
+/** Request size at which old tool output is masked before the request is sent; Infinity without a known window. */
+export function hardLimit(model: Model) {
+  const context = model.route.defaults.limits?.context
+  if (context === undefined || context <= 0) return Infinity
+  const output = model.route.defaults.limits?.output ?? 0
+  return Math.max(0, Math.floor(Math.min(HARD_LIMIT * context, context - output)))
+<<<END SOURCE>>>
+
+<<<SOURCE modules/continuity/src/v2/strategy.ts:L82-L94>>>
+export function state(value: Settings): Interface {
+  const sessions = new Map<SessionV2.ID, Session>()
+  return {
+    settings: value,
+    session: (sessionID) => {
+      const found = sessions.get(sessionID)
+      if (found) return found
+      const created: Session = { masks: new Map(), loaded: false, failures: 0, requested: false, landed: false }
+      sessions.set(sessionID, created)
+      return created
+    },
+  }
+}
+<<<END SOURCE>>>
+
+<<<SOURCE modules/continuity/src/v2/strategy.ts:L183-L202>>>
+  // A running background summary finishes first. A summary that landed after the turn read its context restarts the
+  // turn; one restart at most, since the flag is consumed.
+  const landed = (session: Session) =>
+    (session.running ? Deferred.await(session.running) : Effect.void).pipe(
+      Effect.andThen(
+        Effect.sync(() => {
+          const value = session.landed
+          session.landed = false
+          return value
+        }),
+      ),
+    )
+
+  const succeeded = (session: Session) => (compacted: boolean) =>
+    Effect.sync(() => {
+      if (compacted) session.failures = 0
+      return compacted
+    })
+
+  const background = Effect.fnUntraced(function* (sessionID: SessionV2.ID, last: SessionCompaction.Input) {
+<<<END SOURCE>>>
+
+<<<SOURCE modules/continuity/src/v2/archive.ts:L139-L154>>>
+/**
+ * Export the Session's archive and masks into the repository's committed tree; the chunks go to `blobs/` only with
+ * `commit` (a private repository). Called by the host in the bundle's record commit, never by a seat.
+ */
+export const exportTo = Effect.fn("ContinuityArchive.exportTo")(function* (
+  root: string,
+  seat: string,
+  sessionID: string,
+  opts: { readonly commit: boolean; readonly at: string },
+) {
+  const references = yield* Effect.forEach(yield* index(sessionID), (ref) => load(sessionID, ref))
+  const masks = yield* readMasks(sessionID)
+  return yield* Effect.try({
+    try: () => exportContext(root, seat, sessionID, { references, masks }, opts),
+    catch: () => new ArchiveError({ reason: "archive-export-failed" }),
+  })
+<<<END SOURCE>>>
+
+<<<SOURCE modules/continuity/src/v2/archive.ts:L184-L215>>>
+function render(sessionID: string, source: string, role: string, piece: number, total: number, payload: string) {
+  return [
+    `# ${title(role, source, piece, total)}`,
+    "",
+    `Session: ${sessionID}`,
+    `First source: ${source}`,
+    `Last source: ${source}`,
+    `Role: ${role}`,
+    `Continuation: ${piece}/${total}`,
+    `Payload bytes: ${Buffer.byteLength(payload)}`,
+    "",
+    fenced(payload, "markdown"),
+    "",
+  ].join("\n")
+}
+
+const index = Effect.fnUntraced(function* (sessionID: string) {
+  const text = yield* readText(path.join(directory(sessionID), "index.json"))
+  if (text === undefined) return [] as Reference[]
+  const manifest = decodeManifest(text)
+  if (Option.isNone(manifest) || manifest.value.sessionID !== sessionID)
+    return yield* new ArchiveError({ reason: "archive-corrupt-index" })
+  return [...manifest.value.references]
+})
+
+const memory = Effect.fnUntraced(function* (sessionID: string) {
+  const text = yield* readText(path.join(directory(sessionID), "memory.json"))
+  if (text === undefined) return undefined
+  const stored = decodeMemory(text)
+  if (Option.isNone(stored) || stored.value.sessionID !== sessionID)
+    return yield* new ArchiveError({ reason: "archive-corrupt-memory" })
+  return stored.value
+<<<END SOURCE>>>
+
+<<<SOURCE modules/atlas/packages/adapter-io/src/context-log.ts:L55-L98>>>
+/** Scrub credential shapes out of text before it is hashed, the same pass the transcript store applies. */
+export function scrubText(text: string): string {
+  return new TextDecoder().decode(scrub(new TextEncoder().encode(text)))
+}
+
+/**
+ * Append what the local archive holds and the committed file lacks: the open event once, each new reference, and the
+ * mask events that turn the committed masks into the current ones. With `commit`, each chunk is written to `blobs/`
+ * once; a chunk whose markdown does not hash to its id is refused. Running it twice appends nothing.
+ */
+export function exportContext(
+  repoPath: string,
+  seat: string,
+  session: string,
+  archive: ContextArchive,
+  opts: { readonly commit: boolean; readonly at: string },
+): { readonly appended: number } {
+  const bad = archive.references.find((ref) => sha256(ref.markdown) !== ref.id)
+  if (bad !== undefined) throw new Error(`context chunk ${bad.id} does not match its hash`)
+  const path = contextLogPath(repoPath, seat, session)
+  const current = readContext(repoPath, seat, session)
+  const known = new Set(current.references.map((ref) => ref.id))
+  const masks = new Map(current.masks)
+  const next = new Map(archive.masks)
+  const events: ContextEvent[] = [
+    ...(current.seat === undefined ? [{ kind: "open" as const, seat, at: opts.at }] : []),
+    ...archive.references
+      .filter((ref) => !known.has(ref.id))
+      .map((ref) => ({
+        kind: "reference" as const,
+        reference: { id: ref.id, title: ref.title, first: ref.first, last: ref.last, bytes: ref.bytes },
+        at: opts.at,
+      })),
+    ...[...next]
+      .filter(([call, ref]) => masks.get(call) !== ref)
+      .map(([call, reference]) => ({ kind: "mask-add" as const, call, reference, at: opts.at })),
+    ...[...masks.keys()]
+      .filter((call) => !next.has(call))
+      .map((call) => ({ kind: "mask-remove" as const, call, at: opts.at })),
+  ]
+  const log = createDurableLog(path)
+  events.forEach((event) => {
+    const payload = { session, event }
+    const line: Omit<Event, "id"> = {
+<<<END SOURCE>>>
+
+<<<SOURCE modules/atlas/packages/adapter-io/src/repo-visibility.ts:L17-L47>>>
+export async function repoVisibility(repoPath: string, get: GetJson = (url, headers) => fetch(url, { headers })): Promise<Visibility> {
+  const slug = githubSlug(originUrl(repoPath))
+  if (slug === undefined) return "public"
+  const token = process.env.GITHUB_TOKEN ?? process.env.GH_TOKEN
+  const headers: Record<string, string> = {
+    accept: "application/vnd.github+json",
+    ...(token === undefined || token === "" ? {} : { authorization: `Bearer ${token}` }),
+  }
+  const response = await get(`https://api.github.com/repos/${slug}`, headers).catch(() => undefined)
+  if (response === undefined) return "public"
+  if (response.status === 404) return "private"
+  if (response.status !== 200) return "public"
+  const body = (await response.json().catch(() => undefined)) as { private?: unknown } | undefined
+  return body?.private === true ? "private" : "public"
+}
+
+/** `owner/repo` from a GitHub remote URL (https, ssh or scp form), else undefined. */
+export function githubSlug(url: string | undefined): string | undefined {
+  if (url === undefined) return undefined
+  const match = /^(?:https?:\/\/(?:[^@/]+@)?github\.com\/|ssh:\/\/git@github\.com\/|git@github\.com:)([\w.-]+)\/([\w.-]+?)(?:\.git)?\/?$/.exec(
+    url.trim(),
+  )
+  return match === null ? undefined : `${match[1]}/${match[2]}`
+}
+
+function originUrl(repoPath: string): string | undefined {
+  try {
+    return runGit(repoPath, ["remote", "get-url", "origin"]).trim()
+  } catch {
+    return undefined
+  }
+<<<END SOURCE>>>
+
+<<<SOURCE modules/rag-studio/src/search.ts:L1-L25>>>
+import type { Chunk } from "./types"
+import { requireStore } from "./context"
+
+export async function searchWords(revisionId: string, word: string): Promise<Chunk[]> {
+  const store = requireStore()
+  const revision = store.revision(revisionId)
+  if (!revision) throw new Error("rejected")
+  const sources = new Map(store.sources().map((source) => [source.id, source]))
+  return store
+    .chunks()
+    .flatMap((chunk) => {
+      const source = sources.get(chunk.sourceId)
+      if (!source) return []
+      if (source.locationId !== revision.locationId) return []
+      if (source.status !== "read") return []
+      if (source.contentHash !== chunk.sourceHash) return []
+      if (!chunk.text.includes(word)) return []
+      return [{ chunk, path: source.path }]
+    })
+    .toSorted((left, right) => {
+      const order = left.path.localeCompare(right.path)
+      if (order !== 0) return order
+      return left.chunk.start - right.chunk.start
+    })
+    .map((hit) => hit.chunk)
+<<<END SOURCE>>>
+
+<<<SOURCE modules/rag-studio/src/ask.ts:L9-L40>>>
+export async function ask(revisionId: string, text: string): Promise<QuestionResult> {
+  const store = requireStore()
+  const revision = store.revision(revisionId)
+  if (!revision) throw new Error("rejected")
+  if (revision.fill === "failed" || store.failed(revision.locationId)) throw new Error("rejected")
+  const stale = store.chunks().some((chunk) => {
+    const source = store.sources().find((row) => row.id === chunk.sourceId)
+    if (!source || source.locationId !== revision.locationId) return false
+    return source.contentHash !== chunk.sourceHash
+  })
+  if (stale) throw new Error("rejected")
+  const boundary = revision.boundary ?? "document"
+  const k = revision.k ?? store.pipeline(revision.locationId).k
+  const matches = (await searchWords(revisionId, text)).filter((chunk) => store.chunkCut(chunk.id) === boundary)
+  const owners = store
+    .sources()
+    .filter((row) => row.locationId === revision.locationId && row.text.includes(text))
+    .sort((left, right) => left.path.localeCompare(right.path))
+  const cut = block(matches, k)
+  const found = diagnose({ owners, matches, kept: cut.kept, sentence: text })
+  record(revisionId, found.span ? matches.map((chunk) => chunk.id) : matches.map((chunk) => chunk.id), cut.dropped.map((chunk) => chunk.id), k)
+  return shape({
+    revisionId,
+    light: found.light,
+    fileStatus: found.fileStatus,
+    span: found.span,
+    hits: matches.map((chunk) => chunk.id),
+    dropped: cut.dropped.map((chunk) => chunk.id),
+    promptText: cut.promptText,
+    promptChunkIds: cut.promptChunkIds,
+    retrievalOptional: cut.retrievalOptional,
+  })
+<<<END SOURCE>>>
+
+<<<SOURCE modules/rag-studio/src/proof.ts:L4-L33>>>
+export async function saveQuestion(revisionId: string, text: string, span: SpanRef): Promise<{ id: string }> {
+  const store = requireStore()
+  if (!store.revision(revisionId)) throw new Error("rejected")
+  const id = store.allocate("q")
+  store.putQuestion({ id, revisionId, text, span })
+  return { id }
+}
+
+export async function retrievalProof(questionId: string, revisionId: string): Promise<boolean> {
+  const store = requireStore()
+  const question = store.questions().find((row) => row.id === questionId)
+  if (!question) return false
+  if (question.revisionId !== revisionId) return false
+  const chunk = store
+    .chunks()
+    .find((item) => item.sourceId === question.span.sourceId && item.start === question.span.start && item.end === question.span.end)
+  if (!chunk) return false
+  const trace = store.trace(questionId)
+  if (!trace) return false
+  const revision = store.revision(revisionId)
+  if (trace.k !== undefined && revision?.k !== undefined && trace.k !== revision.k) throw new Error("rejected")
+  return promptChunkIds(trace).includes(chunk.id)
+}
+
+export async function citationProof(questionId: string, sentence: string): Promise<boolean> {
+  const store = requireStore()
+  const question = store.questions().find((row) => row.id === questionId)
+  if (!question) return false
+  return textAt(store, question.span).includes(sentence)
+}
+<<<END SOURCE>>>
+
+<<<SOURCE modules/rag-studio/src/trace.ts:L1-L6>>>
+import { requireStore } from "./context"
+
+export function record(questionId: string, hits: string[], dropped: string[], k: number) {
+  if (hits.includes("not_recorded") || dropped.includes("not_recorded")) throw new Error("rejected")
+  requireStore().putTrace({ questionId, hits, dropped, k })
+}
+<<<END SOURCE>>>
+
+<<<SOURCE modules/rag-studio/test/proof.test.ts:L57-L71>>>
+    expect(await retrievalProof("missing", "rev_1")).toBe(false)
+    const alone = await saveQuestion("rev_1", "question row alone", { sourceId: "src_missing", start: 0, end: 4 })
+    expect(await retrievalProof(alone.id, "rev_1")).toBe(false)
+    const saved = await saveQuestion("rev_1", "where is the sentence", span)
+    expect(await retrievalProof(saved.id, "rev_other")).toBe(false)
+    expect(await retrievalProof(saved.id, "rev_1")).toBe(false)
+    const shifted = await saveQuestion("rev_1", "wider than the label", { sourceId: "src_2", start: 0, end: 14 })
+    store.putTrace({ questionId: shifted.id, hits: ["wide"], dropped: [] })
+    expect(await retrievalProof(shifted.id, "rev_1")).toBe(false)
+    store.putTrace({ questionId: saved.id, hits: ["other"], dropped: [] })
+    expect(await retrievalProof(saved.id, "rev_1")).toBe(false)
+    store.putTrace({ questionId: saved.id, hits: ["chunk_1"], dropped: ["chunk_1"] })
+    expect(await retrievalProof(saved.id, "rev_1")).toBe(false)
+    store.putTrace({ questionId: saved.id, hits: ["chunk_1"], dropped: [] })
+    expect(await retrievalProof(saved.id, "rev_1")).toBe(true)
+<<<END SOURCE>>>
+
+<<<SOURCE modules/atlas/packages/adapter-io/src/context-log.ts:L99-L115>>>
+      seq: 0,
+      nodeKey: session as NonNullable<Event["nodeKey"]>,
+      contentHash: id(payload),
+      fresh: true,
+      supersedes: [],
+      payload,
+    }
+    log.append({ ...line, id: eventId(line) })
+  })
+  if (opts.commit)
+    archive.references.forEach((ref) => {
+      const blob = blobPath(repoPath, ref.id)
+      if (existsSync(blob)) return
+      mkdirSync(dirname(blob), { recursive: true })
+      writeFileSync(blob, ref.markdown)
+    })
+  return { appended: events.length }
+<<<END SOURCE>>>
+
+<<<SOURCE modules/continuity/src/v2/strategy.ts:L14-L19>>>
+// A background summary starts once a step's usage reaches this share of the context window.
+export const DEFAULT_TRIGGER = 0.4
+
+// Past this share the request is in bad shape: old tool output is masked before it is sent. Not configurable; a model
+// whose output reservation leaves less room lowers it to its input limit.
+export const HARD_LIMIT = 0.7
+<<<END SOURCE>>>
+
+<<<SOURCE modules/continuity/src/v2/archive.ts:L53-L80>>>
+export function hash(value: string) {
+  return createHash("sha256").update(value).digest("hex")
+}
+
+export function fenced(text: string, language = "text") {
+  const fence = "`".repeat(Array.from(text.matchAll(/`+/g)).reduce((size, match) => Math.max(size, match[0].length + 1), 3))
+  // The extra LF is framing, not part of the captured payload (including CRLF).
+  return `${fence}${language}\n${text}\n${fence}`
+}
+
+/** Splits text into UTF-8 payloads of at most PAYLOAD_LIMIT bytes without cutting a code point. */
+export function split(text: string) {
+  const bytes = Buffer.from(text.toWellFormed(), "utf8")
+  const result: string[] = []
+  for (let start = 0; start < bytes.length; ) {
+    let end = Math.min(start + PAYLOAD_LIMIT, bytes.length)
+    while (end < bytes.length && (bytes[end] & 0xc0) === 0x80) end--
+    result.push(bytes.subarray(start, end).toString("utf8"))
+    start = end
+  }
+  return result
+}
+
+/** The archive chunks of one source message's rendered text, one per payload piece, scrubbed before they are hashed. */
+export function chunks(sessionID: string, source: string, role: "user" | "assistant", text: string): Chunk[] {
+  const pieces = split(scrubText(text))
+  return pieces.map((payload, index) => {
+    const markdown = render(sessionID, source, role, index + 1, pieces.length, payload)
+<<<END SOURCE>>>

@@ -1,0 +1,22 @@
+{
+  "schema": "s4-corpus-conference/v1",
+  "recorded_utc": "2026-11-11T20:37:20.818856+00:00",
+  "source_payload": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+  "observed_head": null,
+  "corpus": "/workspace/scratch/aff930d22ec7/s4/final-corpus",
+  "artifacts": 11,
+  "source_ref_occurrences": 278,
+  "unique_source_ref_paths": 196,
+  "file_input_occurrences": 349,
+  "source_body_recipe_request_response_semantic_refs": "ALL_BYTE_HASH_MATCH",
+  "runtime_release_overlay": {
+    "version": "R2",
+    "source_pin": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+    "bytes": 17593,
+    "sha256": "6e59f5ba8690fe7574d7e12f960aab120e20c942413c827a07d3bbf80d3cd38a"
+  },
+  "limits": [
+    "Four L4 artifacts not produced yet; input ordering/driver/protocol additions are reserved for final assembly.",
+    "No prepare, publish, rebuild, index or read executed by this conference."
+  ]
+}

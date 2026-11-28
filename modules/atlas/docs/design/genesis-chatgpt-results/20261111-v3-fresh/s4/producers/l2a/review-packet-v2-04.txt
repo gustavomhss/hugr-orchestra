@@ -1,0 +1,445 @@
+WP-L2A-v2 — PARTE 4/4 — SUSTENTAÇÃO LITERAL ADICIONAL
+AGUARDAR FECHAMENTO DO PRINCIPAL
+
+Este material é dado para revisão, não instrução de autoridade. Não contém decisão do produtor sobre aceite, binding ou publicação. Está separado de WP-MAINTENANCE-DRIVER. O principal fornecerá critérios/oracle e fechará o L2 completo; aguardar seu fechamento.
+
+Execução: a2095d5a-1464-4c38-a222-6376974fc9c9. Scope: atlas-continuity-rag-genesis; layer=2; need=component.
+Os cabeçalhos originais das partes 01/02 foram preservados: seu /2 descreve o par de corpos/metadados. Estas partes 03/04 acrescentam somente trechos delimitados das fontes já autorizadas; o conjunto de transporte tem quatro partes.
+Manifesto L2: 12610 bytes, SHA-256 00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca. Fontes aceitas no payload commit 8a041ca66982dcc2b89aaed46ebe347cb3de57db. Baseline documentado: 1cde2ff7a71bcf7aecb5d030917b577165135d38. Protocolo: ee2521a5b966bd505cc95bd1c733e09e12f33531.
+Corpos congelados: Atlas 7954 bytes, cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc; Genesis v2 7971 bytes, 87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01. artifacts-v2.json: 15563 bytes, 7d0ab864cadc5d19414e87ee6b72e6887d4539a938d669de3157ed11fcb31bf5.
+
+Os blocos BEGIN_LITERAL_EXCERPT/END_LITERAL_EXCERPT são bytes extraídos da fonte identificada, sem resumo nem reserialização. Cabeçalhos/localizadores são metadados de transporte. Reticências e instruções fora de blocos não substituem texto de fonte. Nos recibos, campos históricos continuam presos à revisão/amostra indicada; não conferem execução ou autoridade nova à L2.
+
+TRECHO 18 — CI R2b — candidato/run, testes, recovery, generated_parity e limites (objeto completo autorizado)
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: f8f310ed16db4258007a7e28e9f954da04125bf6 | SHA-256 da fonte: 56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330
+Localizador: linhas 1–145; bytes [0,6997); trecho 6997 bytes; SHA-256 56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330.
+BEGIN_LITERAL_EXCERPT
+{
+  "candidate_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "run_id": 43077975153,
+  "job_id": 130722742703,
+  "artifact_id": 13883635728,
+  "artifact_sha256": "cf4232dec016e07d63dc0b40497892e1f87dec7af812d6cd3fbc542f8816c7cd",
+  "conclusion": "success",
+  "tests": {
+    "numTotalTests": 220,
+    "numPassedTests": 220,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "success": true
+  },
+  "mutation_controls": 22,
+  "guards": {
+    "command": "bun run check:guards --base origin/dev",
+    "exitCode": 0,
+    "candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553"
+  },
+  "guard_output": "$ bun run script/guards/run.ts --base origin/dev\nWARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/artifacts.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.\nWARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.\nguards: 78 rules, 869 changed paths, 0 gate and 2 warn findings, 0 errors.\n::warning file=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/artifacts.json,title=guard large-file::Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.\n::warning file=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json,title=guard large-file::Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.\n",
+  "recovery": [
+    {
+      "name": "Genesis native durable recovery and preservation NR1-01 interruption before activation leaves HOLD or the valid old manifest; resume reuses durable candidate/CAS",
+      "status": "passed",
+      "duration_ms": 1005.5743710000002
+    },
+    {
+      "name": "Genesis native durable recovery and preservation NR1-02 failed activation after source drift serves HOLD; incompatible rollback is refused and historical reads stay explicit",
+      "status": "passed",
+      "duration_ms": 425.9772079999998
+    },
+    {
+      "name": "Genesis native durable recovery and preservation NR1-03 stale transport, scope rebinding and old approval cannot replace the new accepted scope",
+      "status": "passed",
+      "duration_ms": 266.337661
+    },
+    {
+      "name": "Genesis native durable recovery and preservation NR1-04 a separate reader overlaps real sidecar activation and sees only complete accepted manifests",
+      "status": "passed",
+      "duration_ms": 598.7736210000003
+    }
+  ],
+  "test_file_sha256": "8e33b9721ef0ea7b8979a696c9493c53d069483d727f64e327c4165341e7bcb4",
+  "test_source_commit": "a3f224843321f2c18fb9532ef275411c6a0f617e",
+  "generated_parity": [
+    {
+      "path": "modules/atlas/boundary/src/generated/record.d.ts",
+      "sha256": "8e5af0b61864596acdc0a2d0ceb4b920e515f7dd370147545204722e7590e17c",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/materialize.d.ts",
+      "sha256": "2b7c7c7f3e7ff95444b36b5d74153093fd9cc985ea4587dc0fabb92adfaba2d6",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/record.js",
+      "sha256": "7feadf685edef770f135cdef7cc1a10781647c123859ad4c61965e0647a9edba",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/surface.d.ts",
+      "sha256": "370ad667237cb1363477b00d25050763d6bc49f21715eb4488d211119a164a31",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/materialize.js",
+      "sha256": "c6fd7805709908c6ff16cd783e8ae49795c2f4f40d4f5e3e1b89a9230fc2f941",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/context.d.ts",
+      "sha256": "c3e29df2f450d9765a8226d6bb07d04c4ff9ce2a8a340b99d00ceaae6f342033",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/boundary.d.ts",
+      "sha256": "01441722ea7a0dcbb90f5f404f8566d8abb933597d20330bcbe7d98a85691db7",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/record-log.js",
+      "sha256": "9f04b337f01986217ecbaee14c0ef216b5b51eaff4c72967adeeec275a2d4e0d",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/mine.js",
+      "sha256": "baaf70640cd293a0dd1d299348bbbb1093c91c6bfd383439336b1d105bf8c010",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/boundary.js",
+      "sha256": "434f6ed8c9270e7aaa28ccd0dc1a52211c07d6aa90b994474747f6c779166892",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-memory.d.ts",
+      "sha256": "2403745211401bd33ca2be2d3a90280328b121d5d574567722a22c1e70cf285c",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/mine.d.ts",
+      "sha256": "cba581e8fdac262c36211b6bd8b89abc4bd2c1e6a51fc1a9fe11c950957976c0",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/record-log.d.ts",
+      "sha256": "7574d436eccbac6541bf1a54faef865588730eb9a863d41fd8454ff22391cd30",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-header.d.ts",
+      "sha256": "398c4a17cd5bc8a321f774b766e5ec0582b86d97e1966f886741f662fe4e30e7",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-memory.js",
+      "sha256": "69d7250076425f6c8530d0122469b8678ffc24bd5ad6ec277648bc47fcfd5a59",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-header.js",
+      "sha256": "40d34b651f88affdde4ba592c00ae31ef10b93ae92cba6b66d875f3021575dc1",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/surface.js",
+      "sha256": "ca8a653fe7fd5dd0d157a272c481fd18dc6b7def97716d2a2d551416c366e204",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/context.js",
+      "sha256": "957b9a5a77a8a4069aeacec94f8259e2ffb1d13d1949faade9724ed936047950",
+      "matches_candidate": true
+    }
+  ],
+  "limits": [
+    "Synthetic fixtures in controls are not campaign semantic or runtime binding authority.",
+    "NR1-04 requires a main read invocation itself to overlap the post-barrier activation interval; one bounded Worker/writer execution only.",
+    "Exception seam is not arbitrary power-loss evidence.",
+    "The earlier green 673b90 control used a combined two-read envelope and did not prove the required main-read overlap; original receipts are preserved as superseded evidence.",
+    "Two large-file warnings are acknowledged mandatory archival/census evidence, not hidden or suppressed."
+  ]
+}
+END_LITERAL_EXCERPT
+
+TRECHO 19 — Release R2 — identidade, revisões e versões registradas
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: 9344e06b86a1913178e101a640bae3c7f8252e11 | SHA-256 da fonte: 6e59f5ba8690fe7574d7e12f960aab120e20c942413c827a07d3bbf80d3cd38a
+Localizador: linhas 2–22; bytes [2,939); trecho 937 bytes; SHA-256 31e8e8ca7d467b18f05a3d0adec00e5dcc4636d7d3b08e0f8312e441502e6bdb.
+BEGIN_LITERAL_EXCERPT
+  "schema": "genesis-runtime-release/v1",
+  "release_id": "20261111-v3-fresh-s4-r2",
+  "supersedes": {
+    "release_id": "20261111-v3-fresh-s4-r1",
+    "commit": "b42d14978c8b727310369920d4bfaf86145a2b80",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+    "sha256": "47deabb52ee93e18de06c68c1c27a0ff810a4e779a5087581080e87d6756979f"
+  },
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "transport_contract_ref": {
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "path": ".orchestra/skills/execute-genesis/references/transport.md",
+    "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+  },
+  "runtime_versions": {
+    "bun": "1.3.14",
+    "node": "v24.22.1",
+    "typescript": "5.9.3"
+  },
+END_LITERAL_EXCERPT
+
+TRECHO 20 — Release R2 — entrypoints
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: 9344e06b86a1913178e101a640bae3c7f8252e11 | SHA-256 da fonte: 6e59f5ba8690fe7574d7e12f960aab120e20c942413c827a07d3bbf80d3cd38a
+Localizador: linhas 23–123; bytes [939,5506); trecho 4567 bytes; SHA-256 b16ff899b8f0dc344d46d4dcde4302680212f07c3d4aefa3d10da9cb9d3ed43e.
+BEGIN_LITERAL_EXCERPT
+  "entrypoints": [
+    {
+      "operation": "prepare",
+      "cwd": "modules/atlas",
+      "argv": [
+        "bun",
+        "scripts/genesis-native.ts",
+        "prepare",
+        "<isolated-source-root>",
+        "<native-package-path-relative-to-source-root>",
+        "<new-output-path>"
+      ],
+      "actual_execution_ref": {
+        "commit": "283b6e5efeadfef99f202f18eab72435ef7d9771",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/prepare-receipt-v1.json",
+        "sha256": "c2fc43a3051ed3999d63fa5fb6d95e4b7d8a3e150123f5ca090c5e7661cc09c3"
+      },
+      "input": "genesis-native-package/v1 with complete selected required keys and two preserved semantic decisions per artifact",
+      "output": "genesis-native-prepared/v1; exact kernel candidate_id and CAS objects",
+      "variables_to_fill": [
+        "isolated-source-root",
+        "native-package-path-relative-to-source-root",
+        "new-output-path"
+      ]
+    },
+    {
+      "operation": "publish",
+      "cwd": "modules/atlas at candidate_revision",
+      "argv": [
+        "bun",
+        "scripts/genesis-native.ts",
+        "publish",
+        "<isolated-source-root>",
+        "<prepared-candidate-file>",
+        "<approval-path-relative-to-source-root>"
+      ],
+      "actual_execution_ref": {
+        "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-publish-v1.receipt.json",
+        "sha256": "f696c5774ea2d1d88a108cae5a4a1f8f3a04958530ea097f472e4741e7ca2d02"
+      },
+      "actual_stdout_ref": {
+        "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-publish-v1.stdout.json",
+        "sha256": "f856953521dfd766accef8b4f909ff4326c201ed4d8666d9dd8aadd68f98a5e1"
+      },
+      "environment": "ATLAS_ACTOR and ATLAS_RATIFY_TOKEN must name the real authorized responsible actor; actual isolated S4 declaration was /root. See isolated policy provenance."
+    },
+    {
+      "operation": "index",
+      "cwd": "modules/atlas at candidate_revision",
+      "argv": [
+        "bun",
+        "scripts/genesis-native.ts",
+        "index",
+        "<isolated-source-root>",
+        "<query-json-file>"
+      ],
+      "actual_execution_ref": {
+        "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-index-v1.receipt.json",
+        "sha256": "d8fbfd4722f6dbdd78916cda600b295af45554046ead97a08ae315b72b9b024e"
+      },
+      "actual_stdout_ref": {
+        "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-index-v1.stdout.json",
+        "sha256": "fa0ea100eadc0531ba1c5c5a7186be75d7086437319092a47161ac3080ad58c7"
+      },
+      "query_ref": {
+        "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-index-query.json",
+        "sha256": "85ed8183f73a14bc22892fd9dc0d5ef66c97f54ae68118aa9ee4e9d64e954c0c"
+      }
+    },
+    {
+      "operation": "read",
+      "cwd": "modules/atlas at candidate_revision",
+      "argv": [
+        "bun",
+        "scripts/genesis-native.ts",
+        "read",
+        "<isolated-source-root>",
+        "<query-json-file>"
+      ],
+      "actual_execution_ref": {
+        "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-read-v1.receipt.json",
+        "sha256": "90a9478a6965bea7bc4c4eb0246c0c50d14d2b0198d1c1a8815b9e09ccf2cd15"
+      },
+      "actual_stdout_ref": {
+        "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-read-v1.stdout.json",
+        "sha256": "3f1abcadc080e358677a0e37308006adf99563c1cc8e8726c23220737f159d01"
+      },
+      "query_ref": {
+        "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-read-query.json",
+        "sha256": "9fde6faaf18411b03a1a352228bd3907328ed6f06911480b7276d327521dc79e"
+      }
+    }
+  ],
+END_LITERAL_EXCERPT
+
+TRECHO 21 — Release R2 — capabilities.native_import e runtime_binding
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: 9344e06b86a1913178e101a640bae3c7f8252e11 | SHA-256 da fonte: 6e59f5ba8690fe7574d7e12f960aab120e20c942413c827a07d3bbf80d3cd38a
+Localizador: linhas 138–183; bytes [7279,9536); trecho 2257 bytes; SHA-256 19b03d2d76c34b8ea2c499d1adbe58318e3325399d591ac70c1691acc6787c82.
+BEGIN_LITERAL_EXCERPT
+  "capabilities": {
+    "native_import": {
+      "state": "PROVEN",
+      "receipts": [
+        {
+          "commit": "283b6e5efeadfef99f202f18eab72435ef7d9771",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/prepare-receipt-v1.json",
+          "sha256": "c2fc43a3051ed3999d63fa5fb6d95e4b7d8a3e150123f5ca090c5e7661cc09c3"
+        },
+        {
+          "commit": "283b6e5efeadfef99f202f18eab72435ef7d9771",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/l1a-prepared-v1.json",
+          "sha256": "5e20bd84f016f2a40560cdaaa1834cc00a0b4a98f25f0c139a04816975cddd22"
+        }
+      ],
+      "cases": [
+        "Exact real native L1A production body, ten captured source files and recipe observed; eleven kernel input versions; original two semantic decisions preserved."
+      ],
+      "limits": [
+        "Bounded one-artifact sample. Main S4 package remains incomplete."
+      ]
+    },
+    "runtime_binding": {
+      "state": "PROVEN",
+      "candidate_id": "e4e5c8b0566bf1760707b45848d69b2f07aac61868c9bb0a496b473ac1d91284",
+      "receipts": [
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-sample/binding-v1.json",
+          "sha256": "3eb4ba8b88a6d5af465e3c9497e59be6f2dc809d27af956ff1e8a3fb940120f8"
+        },
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j1-response.json",
+          "sha256": "e65e76d921f605f502dfb0a8d92957e133939763ddba2374bcf3d07c600ea3a7"
+        },
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j2-response.json",
+          "sha256": "436f7dc5a388cc1f096860e31c346bfd3a86e04bd65c51dd61b1bfcf85ed6076"
+        }
+      ],
+      "limits": [
+        "Two actual independent new decisions for this exact candidate only. Other roots, inputs, source directories or candidate revisions require their own bindings."
+      ]
+    },
+END_LITERAL_EXCERPT
+
+TRECHO 22 — Release R2 — capabilities.governed_publication e início de index
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: 9344e06b86a1913178e101a640bae3c7f8252e11 | SHA-256 da fonte: 6e59f5ba8690fe7574d7e12f960aab120e20c942413c827a07d3bbf80d3cd38a
+Localizador: linhas 184–209; bytes [9536,10866); trecho 1330 bytes; SHA-256 e32c51d96af635fe59327d94d392bc6ab59fb7065951377d4adf9a453a04ab05.
+BEGIN_LITERAL_EXCERPT
+    "governed_publication": {
+      "state": "PROVEN",
+      "receipts": [
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-publish-v1.receipt.json",
+          "sha256": "f696c5774ea2d1d88a108cae5a4a1f8f3a04958530ea097f472e4741e7ca2d02"
+        },
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-publish-v1.stdout.json",
+          "sha256": "f856953521dfd766accef8b4f909ff4326c201ed4d8666d9dd8aadd68f98a5e1"
+        },
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/verification.json",
+          "sha256": "61e7497e3de01f63b211ec1e5641270621610ef1f35314731ae0b19b22d3ea4a"
+        }
+      ],
+      "manifest": "4d1a9e51f97fe7c78c9ae9fa56779705ea425eb193aaaed01ea2adc88d607a02",
+      "limits": [
+        "One actual native L1A artifact, in the isolated authorized state. This is not the complete S4 package or the independent ownership consumer."
+      ]
+    },
+    "index": {
+      "state": "PROVEN",
+END_LITERAL_EXCERPT
+
+TRECHO 23 — Release R2 — limite de index e estado de read
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: 9344e06b86a1913178e101a640bae3c7f8252e11 | SHA-256 da fonte: 6e59f5ba8690fe7574d7e12f960aab120e20c942413c827a07d3bbf80d3cd38a
+Localizador: linhas 228–233; bytes [11913,12136); trecho 223 bytes; SHA-256 a609c4eeede4b2b5cbdb40d9a9dbe2941b3d0327b39f093c16ec69062fb0b49b.
+BEGIN_LITERAL_EXCERPT
+      "limits": [
+        "One actual native L1A artifact, in the isolated authorized state. This is not the complete S4 package or the independent ownership consumer."
+      ]
+    },
+    "read": {
+      "state": "PROVEN",
+END_LITERAL_EXCERPT
+
+TRECHO 24 — Release R2 — limites de read, NOT_RUN e known_limits
+Source: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json
+Commit: 8a041ca66982dcc2b89aaed46ebe347cb3de57db | Git blob: 9344e06b86a1913178e101a640bae3c7f8252e11 | SHA-256 da fonte: 6e59f5ba8690fe7574d7e12f960aab120e20c942413c827a07d3bbf80d3cd38a
+Localizador: linhas 251–288; bytes [13095,15498); trecho 2403 bytes; SHA-256 9991e3eddb10ebb8330eecd63d128bd79b6bedabdc7542459c82fca3308b22dd.
+BEGIN_LITERAL_EXCERPT
+      "manifest": "4d1a9e51f97fe7c78c9ae9fa56779705ea425eb193aaaed01ea2adc88d607a02",
+      "limits": [
+        "One actual native L1A artifact, in the isolated authorized state. This is not the complete S4 package or the independent ownership consumer."
+      ]
+    },
+    "cache_reuse": {
+      "state": "NOT_RUN",
+      "receipts": []
+    },
+    "affected_rebuild": {
+      "state": "NOT_RUN",
+      "receipts": []
+    },
+    "failure_resume": {
+      "state": "NOT_RUN",
+      "receipts": []
+    },
+    "rollback": {
+      "state": "NOT_RUN",
+      "receipts": []
+    },
+    "migration": {
+      "state": "NOT_RUN",
+      "receipts": []
+    }
+  },
+  "known_limits": [
+    "Cross-package dependencies are explicitly refused; same-package dependency and navigation target resolution only.",
+    "File observer retains 256000-byte limit and refuses .atlas/.git/symlink paths; all excluded and large population entries remain in coverage.",
+    "Transport SHA256/Git blobs are distinct from observer kernel input identities.",
+    "Local source copy is reconstructed from verified connector captures, not a Git checkout; historical commit membership and Git trust are not inferred.",
+    "Only source hashes listed in prepare receipt were executed. Workflow-only candidate delta e3a8ab8 enables the assigned branch gate without changing runtime code.",
+    "Binding records are operator supplied and reference actual independent decisions; adapter does not authenticate reviewers or infer verdicts from prose.",
+    "Main S4 package currently has five accepted L1 artifacts and ten required artifacts still absent, including two added L1 units; L2-L4 and independent consumer remain open.",
+    "V1 run43065851373 passed216 tests and22mutations but FAILED the aggregate guard because a workflow log was inside the checkout and had3 cast warnings. This release is capability-scoped, not an aggregate CI PASS.",
+    "Corrected code/control candidate673b90d82b8b888d5d0184d2e17dec6d5d1b05f1 passed run43070538154:220 tests,22mutations,guards0/0 and generated parity. Its evidence is separate; this release does not transfer V1 binding decisions to that revision.",
+    "Initial L1A judge requests were not exported. This release preserves a new canonical full-body submission and fresh semantic reconfirmation plus distinct binding decisions; original responses remain history and are not rewritten."
+  ],
+END_LITERAL_EXCERPT
+
+AGUARDAR FECHAMENTO DO PRINCIPAL

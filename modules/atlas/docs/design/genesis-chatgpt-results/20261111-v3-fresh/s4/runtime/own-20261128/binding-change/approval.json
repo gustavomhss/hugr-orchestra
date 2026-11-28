@@ -1,0 +1,292 @@
+{
+  "schema": "genesis-native-binding-approval/v1",
+  "purpose": "runtime-import-binding",
+  "candidate_id": "fcb16e410853afa4c36f2c250800d3312d50db95d87d9ab49bc169f6e1cd226d",
+  "contract": "e4a13883dcfc3ca2e8eacef3d36ca69ac2c46e010ce886a4bf3df19ed54a07d2",
+  "reviewers": [
+    "/root/s4_bind_j1",
+    "/root/s4_bind_j2"
+  ],
+  "decisions": [
+    {
+      "reviewer": "/root/s4_bind_j1",
+      "decision_id": "amsg_01a222f0-1747-7153-afe5-79ef98798940",
+      "decision_id_kind": "host-message",
+      "purpose": "runtime-import-binding",
+      "verdict": "PASS",
+      "candidate_id": "fcb16e410853afa4c36f2c250800d3312d50db95d87d9ab49bc169f6e1cd226d",
+      "contract": "e4a13883dcfc3ca2e8eacef3d36ca69ac2c46e010ce886a4bf3df19ed54a07d2",
+      "criteria": [
+        {
+          "id": "QS-1",
+          "verdict": "PASS"
+        },
+        {
+          "id": "QS-2",
+          "verdict": "PASS"
+        },
+        {
+          "id": "QS-3",
+          "verdict": "PASS"
+        },
+        {
+          "id": "QS-5",
+          "verdict": "PASS"
+        },
+        {
+          "id": "CC-3",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I2",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I3",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I5",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I7",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I8",
+          "verdict": "PASS"
+        },
+        {
+          "id": "runtime-import-binding",
+          "verdict": "PASS"
+        }
+      ],
+      "entries": [
+        {
+          "key": "S4:L1:ownership-boundaries",
+          "result": "8c63bee07cdf75682c646bb2d524e09dd66308a56be2e32ae7dbbb5b9354759f",
+          "inputs": "8b1de2e5bd3e244c32e58ec3454c0df4826a229496877ce9239520a0f5d4eee2"
+        },
+        {
+          "key": "S4:L1:atlas-engine",
+          "result": "6706df3be2177f1ff8af7d2f98abfe83420d0146af85bd5f997c789c21ab43a4",
+          "inputs": "4b55f3f8ec80106e5e25c6646adafdd369c4b504682237d436340635aef6d5e3"
+        },
+        {
+          "key": "S4:L1:atlas-host-genesis",
+          "result": "e76cc552cd44e6156be266764f1b9a44a5059fe1341a0057dda2207a978e9ee1",
+          "inputs": "824d3b50d8d615013e28deb7eff8f2542b7560f345ac4363b3447d41dc8b81ab"
+        },
+        {
+          "key": "S4:L1:continuity-rag",
+          "result": "e1f4cafd1b57ce658b3c1c237671831b5146b6e4fb30ae34813eabf10f62f0b0",
+          "inputs": "9b9cc656635520af315f7091cf3696c457dc2667496f9d12aaaa4872ef708b0b"
+        },
+        {
+          "key": "S4:L1:coverage-governance",
+          "result": "a806334e956ebdd1f5c3310d975fad27fe7792b0122c1fff73694a1782362247",
+          "inputs": "f97934be30300922ad77fa291075b07caccaeb544a90ad91a89be211737e2beb"
+        },
+        {
+          "key": "S4:L1:host-boundaries",
+          "result": "bee0cd0f266dc452ac7fb72706f153d133f420bec51011e809d0ff55dc34a98d",
+          "inputs": "aaa2761d784f248809b641933144db4f97015b451ddbc4ca8dc6565cce4f4dc9"
+        },
+        {
+          "key": "S4:L1:native-runtime-delta",
+          "result": "77faafdd5c8f2d5916c1d6f2634e7821d3970b280af8777347be87bf83d71348",
+          "inputs": "347394b8966e70c1bf18a5baacc08c4b9efd9061df28689887fa3cec6c41387f"
+        },
+        {
+          "key": "S4:L2:atlas-system",
+          "result": "2758d338d9e2dcb7b5122b85e893da3f106946590b63788d471e564430c2aadb",
+          "inputs": "ebeb86b812994eb451f45d6cbdcb4e1ac1ba94e120eb0a58bef7c78e26cf943b"
+        },
+        {
+          "key": "S4:L2:genesis-governance",
+          "result": "bd364adcec8898357da6690b60d3268a5ef24a72a864edc6d73b011bdfb7fbd6",
+          "inputs": "c5eb19bcd44329264d40c9a6b67b65ca4dd79bbf293b7086e6a57d4b9dbfe04e"
+        },
+        {
+          "key": "S4:L2:continuity-rag-operations",
+          "result": "ebd80e0394229795b82134ef776695baa0168254541d95f5a8c2bc9b4afe9888",
+          "inputs": "fc9fcaeb4b291c3ad5dfb2183b8e2ac65828e91ee0645779aa6399358ccb7b55"
+        },
+        {
+          "key": "S4:L3:system-flows",
+          "result": "de1845931c3a437b5186952e620d420fb3f3c965859a25db84da6f1d11143b11",
+          "inputs": "937cc824ffa60037d531c003b7647d71ab1dc3f549a49ca26265347d8dff158d"
+        },
+        {
+          "key": "S4:L4:entry",
+          "result": "bed07f339fc621a676bd662154397af94bd66d1190784ecdad0a91ffebc89d78",
+          "inputs": "01e6eca2870b9cf2dcbac76e351debcc68a2cb742f4aad8e4917e6b4f675fe8d"
+        },
+        {
+          "key": "S4:L4:ownership",
+          "result": "394be315ee5831db6481d9a1ce23f5b87ba6b9cb24bfab86c84753115eed0be0",
+          "inputs": "f21985ad084609e9ece867de330bdff2b99b5c70604215c76321df61a75d1b30"
+        },
+        {
+          "key": "S4:L4:maintenance",
+          "result": "f4199bbe37e39637b0dc29ef76519486fc7d79d54563d60a48f44535ecce45a7",
+          "inputs": "30ce3cddd4b0e5c6a51d4511901549a090601c76b1282748f165a4369ba3d125"
+        },
+        {
+          "key": "S4:L4:operational",
+          "result": "c02b64b5c187eea90a57dcf9df50bd8ebd4169ae215a065cb63131955c37e131",
+          "inputs": "94e8f690bd6c65824ab19fe4cd4724b828217793e925498d52363a9fa9d35aad"
+        }
+      ],
+      "request_ref": {
+        "payload_path": "s4-change-binding/j1-request.json",
+        "sha256": "4084230a0ba2d7e9a929fd69b85d36cd7f464d4c5097ce4aa519cadf5b0c211e"
+      },
+      "response_ref": {
+        "payload_path": "s4-change-binding/j1-response.json",
+        "sha256": "f81bdb141bbd4a8e23548153f363b5e22d5fc1db84450910a3e9fd1209503fd7"
+      }
+    },
+    {
+      "reviewer": "/root/s4_bind_j2",
+      "decision_id": "amsg_01a222f0-6792-71c1-ad49-5dac34e52b83",
+      "decision_id_kind": "host-message",
+      "purpose": "runtime-import-binding",
+      "verdict": "PASS",
+      "candidate_id": "fcb16e410853afa4c36f2c250800d3312d50db95d87d9ab49bc169f6e1cd226d",
+      "contract": "e4a13883dcfc3ca2e8eacef3d36ca69ac2c46e010ce886a4bf3df19ed54a07d2",
+      "criteria": [
+        {
+          "id": "QS-1",
+          "verdict": "PASS"
+        },
+        {
+          "id": "QS-2",
+          "verdict": "PASS"
+        },
+        {
+          "id": "QS-3",
+          "verdict": "PASS"
+        },
+        {
+          "id": "QS-5",
+          "verdict": "PASS"
+        },
+        {
+          "id": "CC-3",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I2",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I3",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I5",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I7",
+          "verdict": "PASS"
+        },
+        {
+          "id": "GO-I8",
+          "verdict": "PASS"
+        },
+        {
+          "id": "runtime-import-binding",
+          "verdict": "PASS"
+        }
+      ],
+      "entries": [
+        {
+          "key": "S4:L1:ownership-boundaries",
+          "result": "8c63bee07cdf75682c646bb2d524e09dd66308a56be2e32ae7dbbb5b9354759f",
+          "inputs": "8b1de2e5bd3e244c32e58ec3454c0df4826a229496877ce9239520a0f5d4eee2"
+        },
+        {
+          "key": "S4:L1:atlas-engine",
+          "result": "6706df3be2177f1ff8af7d2f98abfe83420d0146af85bd5f997c789c21ab43a4",
+          "inputs": "4b55f3f8ec80106e5e25c6646adafdd369c4b504682237d436340635aef6d5e3"
+        },
+        {
+          "key": "S4:L1:atlas-host-genesis",
+          "result": "e76cc552cd44e6156be266764f1b9a44a5059fe1341a0057dda2207a978e9ee1",
+          "inputs": "824d3b50d8d615013e28deb7eff8f2542b7560f345ac4363b3447d41dc8b81ab"
+        },
+        {
+          "key": "S4:L1:continuity-rag",
+          "result": "e1f4cafd1b57ce658b3c1c237671831b5146b6e4fb30ae34813eabf10f62f0b0",
+          "inputs": "9b9cc656635520af315f7091cf3696c457dc2667496f9d12aaaa4872ef708b0b"
+        },
+        {
+          "key": "S4:L1:coverage-governance",
+          "result": "a806334e956ebdd1f5c3310d975fad27fe7792b0122c1fff73694a1782362247",
+          "inputs": "f97934be30300922ad77fa291075b07caccaeb544a90ad91a89be211737e2beb"
+        },
+        {
+          "key": "S4:L1:host-boundaries",
+          "result": "bee0cd0f266dc452ac7fb72706f153d133f420bec51011e809d0ff55dc34a98d",
+          "inputs": "aaa2761d784f248809b641933144db4f97015b451ddbc4ca8dc6565cce4f4dc9"
+        },
+        {
+          "key": "S4:L1:native-runtime-delta",
+          "result": "77faafdd5c8f2d5916c1d6f2634e7821d3970b280af8777347be87bf83d71348",
+          "inputs": "347394b8966e70c1bf18a5baacc08c4b9efd9061df28689887fa3cec6c41387f"
+        },
+        {
+          "key": "S4:L2:atlas-system",
+          "result": "2758d338d9e2dcb7b5122b85e893da3f106946590b63788d471e564430c2aadb",
+          "inputs": "ebeb86b812994eb451f45d6cbdcb4e1ac1ba94e120eb0a58bef7c78e26cf943b"
+        },
+        {
+          "key": "S4:L2:genesis-governance",
+          "result": "bd364adcec8898357da6690b60d3268a5ef24a72a864edc6d73b011bdfb7fbd6",
+          "inputs": "c5eb19bcd44329264d40c9a6b67b65ca4dd79bbf293b7086e6a57d4b9dbfe04e"
+        },
+        {
+          "key": "S4:L2:continuity-rag-operations",
+          "result": "ebd80e0394229795b82134ef776695baa0168254541d95f5a8c2bc9b4afe9888",
+          "inputs": "fc9fcaeb4b291c3ad5dfb2183b8e2ac65828e91ee0645779aa6399358ccb7b55"
+        },
+        {
+          "key": "S4:L3:system-flows",
+          "result": "de1845931c3a437b5186952e620d420fb3f3c965859a25db84da6f1d11143b11",
+          "inputs": "937cc824ffa60037d531c003b7647d71ab1dc3f549a49ca26265347d8dff158d"
+        },
+        {
+          "key": "S4:L4:entry",
+          "result": "bed07f339fc621a676bd662154397af94bd66d1190784ecdad0a91ffebc89d78",
+          "inputs": "01e6eca2870b9cf2dcbac76e351debcc68a2cb742f4aad8e4917e6b4f675fe8d"
+        },
+        {
+          "key": "S4:L4:ownership",
+          "result": "394be315ee5831db6481d9a1ce23f5b87ba6b9cb24bfab86c84753115eed0be0",
+          "inputs": "f21985ad084609e9ece867de330bdff2b99b5c70604215c76321df61a75d1b30"
+        },
+        {
+          "key": "S4:L4:maintenance",
+          "result": "f4199bbe37e39637b0dc29ef76519486fc7d79d54563d60a48f44535ecce45a7",
+          "inputs": "30ce3cddd4b0e5c6a51d4511901549a090601c76b1282748f165a4369ba3d125"
+        },
+        {
+          "key": "S4:L4:operational",
+          "result": "c02b64b5c187eea90a57dcf9df50bd8ebd4169ae215a065cb63131955c37e131",
+          "inputs": "94e8f690bd6c65824ab19fe4cd4724b828217793e925498d52363a9fa9d35aad"
+        }
+      ],
+      "request_ref": {
+        "payload_path": "s4-change-binding/j2-request.json",
+        "sha256": "277fd2d2a2ad0a7391c0869067a86d66f4b176c1c6cad82f7cc1fe081e89e182"
+      },
+      "response_ref": {
+        "payload_path": "s4-change-binding/j2-response.json",
+        "sha256": "5be1a65da57d7575f02a9b8b94cb124cb68b1a0dc53e1d3582f0abfa0a899af9"
+      }
+    }
+  ]
+}

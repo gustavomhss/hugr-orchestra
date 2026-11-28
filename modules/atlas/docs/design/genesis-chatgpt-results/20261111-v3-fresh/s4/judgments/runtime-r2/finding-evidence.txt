@@ -1,0 +1,12 @@
+Complemento delimitado à reavaliação runtime R1 — mesmo código, corpo, metadata-v3 e CI do pedido bf0166bef928e799dd688501628b7e4f3d714ac9edcf7fa19d9648a76459a0ec. Não usar ferramentas. Segue o trecho original solicitado de J2-R1-01, extraído do parecer preservado em runtime-r1-j2-response-v1.json (SHA 194815e3b9c4033a007f8372537e983de85946131921963acf0a38d9a00a0c37). Nenhum critério, teste ou versão mudou. Ao incorporar este registro, conclua a decisão semântica e de controles pelos critérios já fornecidos, com disposições dos findings.
+
+--- BEGIN ORIGINAL FINDING ---
+    {
+      "id": "J2-R1-01",
+      "criteria": ["AC-07", "QS-1", "QS-4", "QS-5", "GO-I4", "GO-I8"],
+      "location": "genesis-native-recovery.test.ts: concurrentReader.sample e NR1-04; native-runtime-delta.md: descrição de NR1-04",
+      "expected": "O controle deve exigir que uma invocação da leitura principal do manifesto em transição se sobreponha ao intervalo de ativação posterior à liberação da barreira.",
+      "observed": "started é capturado antes de main, mas finished somente depois de independent. A asserção usa esse intervalo agregado. main pode terminar antes da ativação, e o intervalo ainda intersectá-la por causa da leitura independente ou do espaço entre as duas chamadas. Os resultados completos antes/depois e a leitura durante o callback pausado não resolvem essa possibilidade.",
+      "correction": "Capture timestamps imediatamente em torno de runtime.ownership.read(query), separadamente da leitura independent, e exija a interseção desse intervalo principal com activation.start/end. Preserve as verificações de respostas completas, dos dois manifestos e do scope independente. Execute o controle corrigido na rota remota autorizada e forneça novo commit, hash e recibo. Atualize as referências da metadata preservando as versões anteriores; o corpo pode permanecer igual se a correção passar a sustentar sua afirmação."
+    }
+--- END ORIGINAL FINDING ---

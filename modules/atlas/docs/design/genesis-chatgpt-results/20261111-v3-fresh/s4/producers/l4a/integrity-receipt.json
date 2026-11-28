@@ -1,0 +1,354 @@
+{
+  "schema": "genesis-integrity-receipt/v1",
+  "unit": "WP-L4A",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "producer": "/root/producer_l1a",
+  "stage": "frozen_for_primary_review_not_sent",
+  "method": "Conferência estática por bytes/JSON/regex/hashlib, sem importar ou executar produto, testes, build, runtime ou Git. Commit membership é o pin autorizado do manifesto; SHA-256 e Git blob calculados sobre bytes locais.",
+  "manifest_byte_exact": true,
+  "manifest_sha256": "51925d0f2fc6dfd99b65bfc95be09c9ba488fe7b8126137160e591fa0ce69dd0",
+  "artifact_checks": [
+    {
+      "key": "S4:L4:entry",
+      "body": {
+        "path": "producers/l4a/entry.md",
+        "encoding": "utf-8",
+        "byte_length": 4921,
+        "sha256": "ebcb68aba0c3ae5d5f7581c6b3ad7e0c6a6769af1bee1d425cadf4ecae4969c8"
+      },
+      "h2": [
+        "Comece pela porta real",
+        "Orçamento público e rota profunda opcional",
+        "Pare diante de limite ou evidência insuficiente"
+      ],
+      "h2_unique": true,
+      "body_limit": 5000,
+      "source_refs_count": 5,
+      "file_inputs_count": 11,
+      "build_dependencies": [
+        {
+          "key": "S4:L1:native-runtime-delta",
+          "same_package": true
+        },
+        {
+          "key": "S4:L2:atlas-system",
+          "same_package": true
+        },
+        {
+          "key": "S4:L3:system-flows",
+          "same_package": true
+        }
+      ],
+      "refs_and_same_path_file_inputs_match": true,
+      "pending_review_and_runtime_refs_empty": true
+    },
+    {
+      "key": "S4:L4:ownership",
+      "body": {
+        "path": "producers/l4a/ownership.md",
+        "encoding": "utf-8",
+        "byte_length": 9489,
+        "sha256": "fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73"
+      },
+      "h2": [
+        "Delimite a mudança antes de agir",
+        "Atlas separa identidade, autoridade e atualidade",
+        "Propague pelo resultado e preserve o passado",
+        "Host e Session têm portas diferentes",
+        "Continuity reduz o pedido e conserva recuperação",
+        "RAG separa fonte, chunk, revisão e prova",
+        "Localize a implementação e feche com evidência"
+      ],
+      "h2_unique": true,
+      "body_limit": 9500,
+      "source_refs_count": 6,
+      "file_inputs_count": 12,
+      "build_dependencies": [
+        {
+          "key": "S4:L1:host-boundaries",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:native-runtime-delta",
+          "same_package": true
+        },
+        {
+          "key": "S4:L2:atlas-system",
+          "same_package": true
+        },
+        {
+          "key": "S4:L2:continuity-rag-operations",
+          "same_package": true
+        },
+        {
+          "key": "S4:L3:system-flows",
+          "same_package": true
+        }
+      ],
+      "refs_and_same_path_file_inputs_match": true,
+      "pending_review_and_runtime_refs_empty": true
+    }
+  ],
+  "source_capture_checks": [
+    {
+      "local_copy": "inputs/host-boundaries.md",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+      "byte_length": 11972,
+      "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a",
+      "git_blob_sha": "b73f8975a72ccaf0955f136581fbdefc276a7640",
+      "matches_manifest": true
+    },
+    {
+      "local_copy": "inputs/native-runtime-delta.md",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+      "byte_length": 11980,
+      "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8",
+      "git_blob_sha": "22f9844d4b8ef46c338d191a6b13e68d0f59bab3",
+      "matches_manifest": true
+    },
+    {
+      "local_copy": "inputs/atlas-system.md",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+      "byte_length": 7954,
+      "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc",
+      "git_blob_sha": "9e0320056c12bba1ff8b2b26a90f797c92fe5f3f",
+      "matches_manifest": true
+    },
+    {
+      "local_copy": "inputs/continuity-rag-operations.md",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+      "byte_length": 7949,
+      "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e",
+      "git_blob_sha": "ced7ae43342f5461a52666f455cb74d348e3270b",
+      "matches_manifest": true
+    },
+    {
+      "local_copy": "inputs/system-flows.md",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/system-flows-v3.md",
+      "byte_length": 8995,
+      "sha256": "0648bf048642fcfb7f04df594bcd4a0877635acb2d363431e739bcd66ea973e7",
+      "git_blob_sha": "b6201604037118ff8cc69a010db73709b284ffa0",
+      "matches_manifest": true
+    },
+    {
+      "local_copy": "inputs/genesis-native.ts",
+      "path": "modules/atlas/scripts/genesis-native.ts",
+      "byte_length": 3004,
+      "sha256": "18dc473b79c9bf986f07677bdba728d38490e0df36e6a39763f3765f422af3ce",
+      "git_blob_sha": "70ae6794086c73e8178e574c61fbe95739d45a6c",
+      "matches_manifest": true
+    },
+    {
+      "local_copy": "inputs/genesis-native-format.ts",
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "byte_length": 13356,
+      "sha256": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21",
+      "git_blob_sha": "b12538b8da1aaf75f5f25784704a07b700513c3b",
+      "matches_manifest": true
+    },
+    {
+      "local_copy": "inputs/masking-rules.ts",
+      "path": "modules/continuity/src/masking-rules.ts",
+      "byte_length": 4423,
+      "sha256": "39b0c3ec61242f6d37846e4b419f3aa98349573a37304d6aff69c9a894358ab2",
+      "git_blob_sha": "9b79f34f071c3748dca0b1eed1d9173fe05bc97f",
+      "matches_manifest": true
+    }
+  ],
+  "route_checks": {
+    "all_eleven_intermediates_in_catalog": true,
+    "h2_and_sizes_match_manifest": true,
+    "index_calls_max": 2,
+    "reads_including_entry": 12,
+    "intermediate_body_bytes": 55831,
+    "entry_body_bytes": 4921,
+    "total_actual_catalog_route_bytes": 60752,
+    "worst_case_entry_5000_bytes": 60831,
+    "total_limit": 62000,
+    "shallow_limit": 6000,
+    "single_read_maxBytes_limit": 18000,
+    "query_json_shape_checked_statically_only": true,
+    "query_executed": false
+  },
+  "route_correction": {
+    "preserved_original_entry_sha256": "415a5c31d006fea281ad650f4774dffeab5d913b667976f0ff4977f10a2fdacd",
+    "ownership_unchanged_sha256": "fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73",
+    "literal_diff": "--- entry-v1.md\n+++ entry.md\n@@ -33,7 +33,7 @@\n \n Limites: **2 index, 12 read, 62000 bytes de corpos devolvidos no total; raso <=6000; cada read maxBytes <=18000**. A primeira leitura acima cabe no raso. Um segundo index, se necessário, seleciona outro need; ele não devolve corpos. Contabilize chamadas e bytes efetivos; budget de corpos não mede IO do servidor, tokens ou custo. [S4:L2:atlas-system § O percurso até uma leitura utilizável]\n \n-A tabela oferece uma rota opcional: entrada + onze consultas = 12 read. Os intermediários somam 52252B no catálogo fixado; com entrada <=5000B, total <=57252B. Use cada corpo/section uma vez; substituições e leituras adicionais exigem recontagem. Em outra seleção/release, confira tamanhos e orçamento restante antes de continuar. O catálogo não obriga percorrer a tabela.\n+A tabela oferece uma rota opcional: entrada + onze consultas = 12 read. Os intermediários somam 55831B no catálogo fixado; com entrada <=5000B, total <=60831B. Use cada corpo/section uma vez; substituições e leituras adicionais exigem recontagem. Em outra seleção/release, confira tamanhos e orçamento restante antes de continuar. O catálogo não obriga percorrer a tabela.\n \n | Key | Para quê | Seleção read | Bytes |\n |---|---|---|---:|\n@@ -41,10 +41,10 @@\n | `S4:L2:atlas-system` | Motor/identidade | corpo completo | 7954 |\n | `S4:L2:genesis-governance` | Autoria/autoridade | corpo completo | 7971 |\n | `S4:L2:continuity-rag-operations` | Contexto/RAG | corpo completo | 7949 |\n-| `S4:L1:ownership-boundaries` | Observar inputs | `How current inputs are observed` | 4001 |\n+| `S4:L1:ownership-boundaries` | Identidade | `What each identity means` | 2518 |\n | `S4:L1:atlas-engine` | Forma/status | `Knowledge: shape, routing, human ratification, and ownership results` | 3493 |\n | `S4:L1:atlas-host-genesis` | Publicar/rebuild | `Ownership publication, observation and rebuild` | 2708 |\n-| `S4:L1:continuity-rag` | Impacto/limites | `Maintenance impact and evidence limits` | 2184 |\n+| `S4:L1:continuity-rag` | Recuperação | `Continuity: recoverable request reduction around the Session core` | 7246 |\n | `S4:L1:coverage-governance` | Recusas/leitura | `Observer limits are not scope limits` | 1977 |\n | `S4:L1:host-boundaries` | Estado SQL | `2. HTTP RAG → Store por requisição → SQLite` | 3659 |\n | `S4:L1:native-runtime-delta` | CLI/consumo | `Consumo e manutenção pela porta real` | 1361 |\n",
+    "note": "Somente tabela O/CR e total de entry foram alterados; demais mudanças são proveniência/vínculos mecânicos comuns."
+  },
+  "review_packet_checks": {
+    "packets": [
+      {
+        "file": "review-packet-01.txt",
+        "byte_length": 21424,
+        "sha256": "ba88ffb6481ca7aeb1e44353c23bf6eaa20b6007aac49f86478691e233341d24"
+      },
+      {
+        "file": "review-packet-02.txt",
+        "byte_length": 18377,
+        "sha256": "bdaa4565436b0039eacd43f0aaa4ee14269984ce07d7bead0447a21a81d1453c"
+      }
+    ],
+    "total_bytes": 39801,
+    "total_desired_limit": 55000,
+    "per_packet_limit": 32000,
+    "literal_support_with_locators_bytes": 7960,
+    "literal_support_limit": 8000,
+    "literal_text_bytes": 6365,
+    "excerpts_count": 10,
+    "excerpt_map": {
+      "file": "review-excerpts.json",
+      "byte_length": 10936,
+      "sha256": "8559b3243b2500ff291a01c2b9112e19355a66ea5cec9a385bc8df6f250de221"
+    },
+    "integral_bodies_and_metadata_once": true,
+    "source_and_packet_offsets_verified": true,
+    "sent_to_judges": false,
+    "closure": "AGUARDAR FECHAMENTO DO PRINCIPAL"
+  },
+  "files": [
+    {
+      "file": "artifacts-v1.json",
+      "byte_length": 15010,
+      "sha256": "5bbfb993d3fbf24106c0b82d5d79cb5ba60f2b37c52359f0d1833ca33b99ae7b"
+    },
+    {
+      "file": "artifacts.json",
+      "byte_length": 15342,
+      "sha256": "cd82ecc75c046243ae93343ee393bcfe71b17edc4b379e38337f1eb6fbc3ae1d"
+    },
+    {
+      "file": "entry-v1.md",
+      "byte_length": 4908,
+      "sha256": "415a5c31d006fea281ad650f4774dffeab5d913b667976f0ff4977f10a2fdacd"
+    },
+    {
+      "file": "entry.md",
+      "byte_length": 4921,
+      "sha256": "ebcb68aba0c3ae5d5f7581c6b3ad7e0c6a6769af1bee1d425cadf4ecae4969c8"
+    },
+    {
+      "file": "input-manifest.json",
+      "byte_length": 26169,
+      "sha256": "51925d0f2fc6dfd99b65bfc95be09c9ba488fe7b8126137160e591fa0ce69dd0"
+    },
+    {
+      "file": "ownership.md",
+      "byte_length": 9489,
+      "sha256": "fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73"
+    },
+    {
+      "file": "recipe-v1.json",
+      "byte_length": 12546,
+      "sha256": "f49887fa41d3f73c1121a56181e3e65eb27583718950710e5ddccf1b15437068"
+    },
+    {
+      "file": "recipe.json",
+      "byte_length": 15510,
+      "sha256": "e6f40725281b1414869851cbf511978908d2f7e906ffc9017ca495e942d480f2"
+    },
+    {
+      "file": "request.md",
+      "byte_length": 4200,
+      "sha256": "319d30c61bb84e70322e16a1135ad05085966f96cfa795c9c3476a3f5fe8d1ff"
+    },
+    {
+      "file": "response-v1.md",
+      "byte_length": 3493,
+      "sha256": "26fae678e6258d31319c11e39ce65ae7a4dbec793303caba3f4179e72db484dd"
+    },
+    {
+      "file": "response.md",
+      "byte_length": 3770,
+      "sha256": "5b755b9814aad982fea66ac6df257032ccc591bbdc3e57fa9a10620dd05be81d"
+    },
+    {
+      "file": "review-excerpts.json",
+      "byte_length": 10936,
+      "sha256": "8559b3243b2500ff291a01c2b9112e19355a66ea5cec9a385bc8df6f250de221"
+    },
+    {
+      "file": "review-packet-01.txt",
+      "byte_length": 21424,
+      "sha256": "ba88ffb6481ca7aeb1e44353c23bf6eaa20b6007aac49f86478691e233341d24"
+    },
+    {
+      "file": "review-packet-02.txt",
+      "byte_length": 18377,
+      "sha256": "bdaa4565436b0039eacd43f0aaa4ee14269984ce07d7bead0447a21a81d1453c"
+    },
+    {
+      "file": "source-captures.json",
+      "byte_length": 4523,
+      "sha256": "bf272507cb31af1bbe952fcfbdc537ad9d32f334f58d9140664f0a4dc49c2b6c"
+    },
+    {
+      "file": "source-use-v1.json",
+      "byte_length": 23818,
+      "sha256": "7d6e982825a5ac0ca6722a3022dd2726e6024b7caa2193f5f67c00c500cb91c9"
+    },
+    {
+      "file": "source-use.json",
+      "byte_length": 26266,
+      "sha256": "23fcc2ff5e9122d279bb3e8f387622d514c5fd1d833b19e1a743f26fd378ef85"
+    },
+    {
+      "file": "steering-route.md",
+      "byte_length": 769,
+      "sha256": "a006549f9c2dd36e2e09b0d6c4da0a22bcbb2ff63551794cdf473589e478ff26"
+    },
+    {
+      "file": "steering.md",
+      "byte_length": 457,
+      "sha256": "9b871239cd15f09b80a786c15a2456586f9ccf28fcb544caef5a756a92476407"
+    },
+    {
+      "file": "inputs/atlas-system.md",
+      "byte_length": 7954,
+      "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+    },
+    {
+      "file": "inputs/continuity-rag-operations.md",
+      "byte_length": 7949,
+      "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+    },
+    {
+      "file": "inputs/genesis-native-format.ts",
+      "byte_length": 13356,
+      "sha256": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21"
+    },
+    {
+      "file": "inputs/genesis-native.ts",
+      "byte_length": 3004,
+      "sha256": "18dc473b79c9bf986f07677bdba728d38490e0df36e6a39763f3765f422af3ce"
+    },
+    {
+      "file": "inputs/host-boundaries.md",
+      "byte_length": 11972,
+      "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+    },
+    {
+      "file": "inputs/masking-rules.ts",
+      "byte_length": 4423,
+      "sha256": "39b0c3ec61242f6d37846e4b419f3aa98349573a37304d6aff69c9a894358ab2"
+    },
+    {
+      "file": "inputs/native-runtime-delta.md",
+      "byte_length": 11980,
+      "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8"
+    },
+    {
+      "file": "inputs/system-flows.md",
+      "byte_length": 8995,
+      "sha256": "0648bf048642fcfb7f04df594bcd4a0877635acb2d363431e739bcd66ea973e7"
+    }
+  ],
+  "self_hash_omitted_to_avoid_cycle": true,
+  "limitations": [
+    "Sem veredicto semântico próprio, aceite, binding, publicação ou consumidor L4.",
+    "semantic_review_refs e runtime_receipt_refs vazios; gate nativo de reviews ainda pendente.",
+    "Somente manifesto e fontes ali autorizadas/área própria; nenhum oracle, consumer, parecer ou produção concorrente consultado.",
+    "Nenhum teste/build/runtime/Git ou escrita remota; nenhuma nova observação de instalação/autenticação/atomicidade/recuperação geral.",
+    "Modelo/tokens/tentativas físicas/cobrança não expostos: UNKNOWN."
+  ]
+}

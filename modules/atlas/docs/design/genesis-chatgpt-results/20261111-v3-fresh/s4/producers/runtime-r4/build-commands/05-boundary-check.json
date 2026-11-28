@@ -1,0 +1,22 @@
+{
+  "schema": "runtime-large-inputs-build-command/v1",
+  "logs": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/evidence/runtime-build-commands",
+  "path_prepend": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/tools/runtime/node_modules/@oven/bun-linux-x64/bin",
+  "id": "05-boundary-check",
+  "cwd": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/runtime/candidate/modules/atlas/boundary",
+  "command": [
+    "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/tools/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+    "run",
+    "check:generated"
+  ],
+  "started_at": "2026-11-12T04:17:08.340Z",
+  "finished_at": "2026-11-12T04:17:32.808Z",
+  "duration_ms": 24467.832775,
+  "exit_code": 0,
+  "signal": null,
+  "stdout_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/evidence/runtime-build-commands/05-boundary-check.stdout.txt",
+  "stderr_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/evidence/runtime-build-commands/05-boundary-check.stderr.txt",
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "8040b8b602fe9bb0035e66ee567e05648e496a8edfd36495e4d79c65e84892fb",
+  "product_tests_executed": false
+}

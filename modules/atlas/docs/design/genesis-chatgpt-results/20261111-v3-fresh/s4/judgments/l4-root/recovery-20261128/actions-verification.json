@@ -1,0 +1,177 @@
+{
+  "schema": "s4-knowledge-actions-verification/v1",
+  "recorded_utc": "2026-11-28T06:20:29.768482+00:00",
+  "run_id": 46115613440,
+  "job_id": 140888649640,
+  "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46115613440",
+  "candidate_revision": "70610957d0d3d2fef2fde3c5a9a23dcaa51ad8c4",
+  "payload_revision": "234df168e1191ec134941a4a2b490eb6e60cc32a",
+  "status": "completed",
+  "conclusion": "success",
+  "runner": "ubuntu-24.04",
+  "scope": "Exact recovered knowledge bytes, review references, package structure and required repository guards; no Atlas prepare, binding or runtime execution.",
+  "integrity_record": {
+    "artifact_count": 15,
+    "artifacts": [
+      {
+        "byte_length": 17959,
+        "key": "S4:L1:ownership-boundaries",
+        "sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c"
+      },
+      {
+        "byte_length": 17987,
+        "key": "S4:L1:atlas-engine",
+        "sha256": "c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e"
+      },
+      {
+        "byte_length": 17595,
+        "key": "S4:L1:atlas-host-genesis",
+        "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+      },
+      {
+        "byte_length": 17429,
+        "key": "S4:L1:continuity-rag",
+        "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38"
+      },
+      {
+        "byte_length": 17988,
+        "key": "S4:L1:coverage-governance",
+        "sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381"
+      },
+      {
+        "byte_length": 11972,
+        "key": "S4:L1:host-boundaries",
+        "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+      },
+      {
+        "byte_length": 11980,
+        "key": "S4:L1:native-runtime-delta",
+        "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8"
+      },
+      {
+        "byte_length": 7954,
+        "key": "S4:L2:atlas-system",
+        "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+      },
+      {
+        "byte_length": 7971,
+        "key": "S4:L2:genesis-governance",
+        "sha256": "87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01"
+      },
+      {
+        "byte_length": 7949,
+        "key": "S4:L2:continuity-rag-operations",
+        "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+      },
+      {
+        "byte_length": 8995,
+        "key": "S4:L3:system-flows",
+        "sha256": "0648bf048642fcfb7f04df594bcd4a0877635acb2d363431e739bcd66ea973e7"
+      },
+      {
+        "byte_length": 4921,
+        "key": "S4:L4:entry",
+        "sha256": "ebcb68aba0c3ae5d5f7581c6b3ad7e0c6a6769af1bee1d425cadf4ecae4969c8"
+      },
+      {
+        "byte_length": 9489,
+        "key": "S4:L4:ownership",
+        "sha256": "fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73"
+      },
+      {
+        "byte_length": 9478,
+        "key": "S4:L4:maintenance",
+        "sha256": "5d9da13538cfc032b61947395d1aa7aa44dafed50327adaf1deafc64856505be"
+      },
+      {
+        "byte_length": 9481,
+        "key": "S4:L4:operational",
+        "sha256": "d61c8697ecfe193a4caa9334dc80410952805b68140e20d734c34b7576cf6ee7"
+      }
+    ],
+    "build_edges": 37,
+    "historical_j1": "PASS",
+    "historical_j2": "PASS_REUSED_EXACT_BYTES",
+    "native_host_message_envelope": "NOT_LOCATED",
+    "package_bytes": 214050,
+    "package_sha256": "443caac944c273a6066927caddc7b275ef66c037b3125e42c0fe5b620aa6d69b",
+    "review_files": 15,
+    "roots": 7,
+    "runtime_execution": "NOT_RUN_BY_THIS_VERIFIER",
+    "schema": "s4-knowledge-integrity/v1",
+    "state": "PASS",
+    "supplement_driver_literal": "MATCH",
+    "unchanged_predecessor_objects": 11
+  },
+  "integrity_record_original_log_line": "2026-11-28T06:14:44.6141528Z GENESIS_KNOWLEDGE_INTEGRITY_JSON={\"artifact_count\": 15, \"artifacts\": [{\"byte_length\": 17959, \"key\": \"S4:L1:ownership-boundaries\", \"sha256\": \"242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c\"}, {\"byte_length\": 17987, \"key\": \"S4:L1:atlas-engine\", \"sha256\": \"c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e\"}, {\"byte_length\": 17595, \"key\": \"S4:L1:atlas-host-genesis\", \"sha256\": \"97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d\"}, {\"byte_length\": 17429, \"key\": \"S4:L1:continuity-rag\", \"sha256\": \"2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38\"}, {\"byte_length\": 17988, \"key\": \"S4:L1:coverage-governance\", \"sha256\": \"201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381\"}, {\"byte_length\": 11972, \"key\": \"S4:L1:host-boundaries\", \"sha256\": \"53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a\"}, {\"byte_length\": 11980, \"key\": \"S4:L1:native-runtime-delta\", \"sha256\": \"398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8\"}, {\"byte_length\": 7954, \"key\": \"S4:L2:atlas-system\", \"sha256\": \"cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc\"}, {\"byte_length\": 7971, \"key\": \"S4:L2:genesis-governance\", \"sha256\": \"87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01\"}, {\"byte_length\": 7949, \"key\": \"S4:L2:continuity-rag-operations\", \"sha256\": \"4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e\"}, {\"byte_length\": 8995, \"key\": \"S4:L3:system-flows\", \"sha256\": \"0648bf048642fcfb7f04df594bcd4a0877635acb2d363431e739bcd66ea973e7\"}, {\"byte_length\": 4921, \"key\": \"S4:L4:entry\", \"sha256\": \"ebcb68aba0c3ae5d5f7581c6b3ad7e0c6a6769af1bee1d425cadf4ecae4969c8\"}, {\"byte_length\": 9489, \"key\": \"S4:L4:ownership\", \"sha256\": \"fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73\"}, {\"byte_length\": 9478, \"key\": \"S4:L4:maintenance\", \"sha256\": \"5d9da13538cfc032b61947395d1aa7aa44dafed50327adaf1deafc64856505be\"}, {\"byte_length\": 9481, \"key\": \"S4:L4:operational\", \"sha256\": \"d61c8697ecfe193a4caa9334dc80410952805b68140e20d734c34b7576cf6ee7\"}], \"build_edges\": 37, \"historical_j1\": \"PASS\", \"historical_j2\": \"PASS_REUSED_EXACT_BYTES\", \"native_host_message_envelope\": \"NOT_LOCATED\", \"package_bytes\": 214050, \"package_sha256\": \"443caac944c273a6066927caddc7b275ef66c037b3125e42c0fe5b620aa6d69b\", \"review_files\": 15, \"roots\": 7, \"runtime_execution\": \"NOT_RUN_BY_THIS_VERIFIER\", \"schema\": \"s4-knowledge-integrity/v1\", \"state\": \"PASS\", \"supplement_driver_literal\": \"MATCH\", \"unchanged_predecessor_objects\": 11}",
+  "decoded_full_job_log_sha256": "5e82a88c218bab1951bd2dd38f8af9945829f7be5c1172beb1a4be5f56330fad",
+  "decoded_full_job_log_bytes": 124106,
+  "guard_command": [
+    "bun",
+    "run",
+    "check:guards",
+    "--base",
+    "origin/dev"
+  ],
+  "guard_summary_original_line": "2026-11-28T06:14:49.6315535Z guards: 78 rules, 1434 changed paths, 0 gate and 4 warn findings, 0 errors.",
+  "guards": {
+    "rules": 78,
+    "changed_paths_against_dev": 1434,
+    "gate_findings": 0,
+    "warn_findings": 4,
+    "errors": 0
+  },
+  "warnings_original_lines": [
+    "2026-11-28T06:14:49.6310923Z WARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/artifacts.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.",
+    "2026-11-28T06:14:49.6312443Z WARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.",
+    "2026-11-28T06:14:49.6313982Z WARN modules/atlas/packages/adapter-io/src/ownership-evaluation-policy.ts:67 [ts-double-cast] Double cast through unknown bypasses the type checker. Fix the type, or narrow the value with a guard.",
+    "2026-11-28T06:14:49.6314921Z WARN modules/atlas/packages/adapter-io/src/wire.ts:543 [ts-double-cast] Double cast through unknown bypasses the type checker. Fix the type, or narrow the value with a guard."
+  ],
+  "warning_disposition": {
+    "state": "PREEXISTING_PATHS_OUTSIDE_THIS_RECOVERY_DIFF",
+    "paths": [
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/artifacts.json",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json",
+      "modules/atlas/packages/adapter-io/src/ownership-evaluation-policy.ts",
+      "modules/atlas/packages/adapter-io/src/wire.ts"
+    ],
+    "recovery_changed_paths": [
+      ".github/workflows/genesis-knowledge-recovery.yml",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/execution-ledger.jsonl",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/recovery-20261128/package-verification.json",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/recovery-20261128/preserver-decision-links.json",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/recovery-20261128/preserver-manifest.json",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/recovery-20261128/preserver-verification.json",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/recovery-20261128/provenance.json",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j1-canonical-r2.json",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/l4-acceptance.json",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package.json",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/verify-knowledge.py",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/work.md",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/handoff.json"
+    ],
+    "no_guard_suppression_or_rule_change": true
+  },
+  "uploaded_artifacts": [
+    {
+      "id": 15250954230,
+      "name": "genesis-knowledge-integrity-70610957d0d3d2fef2fde3c5a9a23dcaa51ad8c4",
+      "size_in_bytes": 1378,
+      "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/artifacts/15250954230",
+      "archive_download_url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/artifacts/15250954230/zip",
+      "expired": false,
+      "created_at": "2026-11-28T06:14:50Z",
+      "expires_at": "2026-12-28T06:14:49Z",
+      "updated_at": "2026-11-28T06:14:50Z",
+      "digest": "sha256:f584b01754dec9560e876a564c7769cc91dcd0b67f410ce5fb56a0ace41f468a",
+      "workflow_run": {
+        "id": 46115613440,
+        "repository_id": 1405035578,
+        "head_repository_id": 1405035578,
+        "head_branch": "genesis-knowledge-resume",
+        "head_sha": "70610957d0d3d2fef2fde3c5a9a23dcaa51ad8c4"
+      }
+    }
+  ],
+  "gate_reuse_for_final_checkpoint": "Final checkpoint adds evidence and work/ledger/handoff only; verified package, body bytes, recovered review, verifier and workflow stay byte-identical. No new code or knowledge claim is inferred."
+}

@@ -1,0 +1,263 @@
+{
+  "schema": "genesis-runtime-release/v1",
+  "release_id": "20261128-s4-runtime-noble-binding-v2",
+  "branch": "genesis-runtime-resume",
+  "scope": "Native prepare qualification for S1-03 and S2, plus isolated evaluation dependency-identity regression. Separate use by the exact S4 package is recorded on the Knowledge branch.",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "candidate_revision": "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10",
+  "candidate_tree": "77b84e9358c80ae14b98be329ebf2407dfd83fa4",
+  "qualification_revision": "e7972ee6075cd839327c4b559ba0f5ca03b418f0",
+  "supersedes": {
+    "release_id": "20261128-s4-runtime-db9b423-prepare-v1",
+    "commit": "e171783482d0a44974d6056cd9e144a7e33406a7",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+    "sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1"
+  },
+  "transport_contract_ref": {
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "path": ".orchestra/skills/execute-genesis/references/transport.md",
+    "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+  },
+  "runtime_versions": {
+    "prepare": {
+      "bun": "1.3.14+0d9b296af",
+      "node": "v24.22.3",
+      "python": "3.12.3 (main, Aug 31 2026, 10:18:26) [GCC 13.3.0]"
+    },
+    "installed_regression": {
+      "node": "24.22.3",
+      "acorn": "8.18.0",
+      "ada": "4.0.0",
+      "amaro": "1.1.11",
+      "ares": "1.34.9",
+      "brotli": "1.2.1",
+      "cldr": "48.0",
+      "icu": "78.3",
+      "llhttp": "9.4.4",
+      "merve": "1.2.2",
+      "modules": "137",
+      "napi": "10",
+      "nbytes": "0.1.4",
+      "ncrypto": "0.0.1",
+      "nghttp2": "1.70.0",
+      "nghttp3": "",
+      "ngtcp2": "",
+      "openssl": "3.5.9",
+      "simdjson": "4.6.11",
+      "simdutf": "6.4.0",
+      "sqlite": "3.54.1",
+      "tz": "2026e",
+      "undici": "7.30.2",
+      "unicode": "17.0",
+      "uv": "1.52.1",
+      "uvwasi": "0.0.23",
+      "v8": "13.6.233.17-node.63",
+      "zlib": "1.3.2.1-motley-285e94b",
+      "zstd": "1.5.7"
+    }
+  },
+  "runtime_identity": {
+    "kernel_manifest_blob": "609b08d12b83a2650b8c6da022abfc8e19194619",
+    "npm_lockfile_blob": "5b6ace2c70146eea7d7cc64a861034ab9484bb20",
+    "noble_version": "1.8.0",
+    "noble_member_count_in_fixture": 247,
+    "algorithm": "Kernel canonicalForm (JCS subset, NFC keys/strings) followed by default BLAKE3; input SHA256 and Git blob SHA1 are separate provenance checks."
+  },
+  "entrypoints": [
+    {
+      "operation": "prepare",
+      "cwd": "modules/atlas at candidate_revision",
+      "argv": [
+        "bun",
+        "scripts/genesis-native.ts",
+        "prepare",
+        "<new-isolated-source-root>",
+        "<package-relative-to-root>",
+        "<new-external-output-file>"
+      ],
+      "setup": [
+        "npm ci",
+        "bun typecheck"
+      ],
+      "input": "genesis-native-package/v1, exact complete source/transport files from input-lock",
+      "output": "genesis-native-prepared/v1 plus isolated CAS",
+      "actual_argv_receipts": [
+        {
+          "path": "evidence/run-46114652347/s1-03/receipt.json",
+          "sha256": "35731d5007c9f76f317268215a14286b521349488e400c4d37de50a5361890bc",
+          "byte_length": 1886
+        },
+        {
+          "path": "evidence/run-46114652347/s2/receipt.json",
+          "sha256": "b516701e92c833240828b894363438f1e38755a2206637fcffd2cd2ffa00fece",
+          "byte_length": 1844
+        }
+      ],
+      "reproduction": "README.md"
+    }
+  ],
+  "isolated_state_rules": [
+    "Real detached runtime worktree at candidate_revision; data worktrees are separate --no-checkout worktrees at source_revision with exact pinned overlays.",
+    "No inherited .atlas; separate S1-03, S2 and disposable refusal roots; outputs outside runtime and data roots. Never share served state.",
+    "Every source/reference/body is verified by effective commit/path, Git blob, full SHA256 and length; source_ref.commit syntax alone is not provenance.",
+    "Candidate IDs include absolute root and observed HEAD. Prepare fresh candidates and exact new bindings for each consumer root; never transplant CI candidate approval.",
+    "Use exclusive new output files (wx) and keep the input copy stable during execution."
+  ],
+  "known_limits": {
+    "ownership_input_max_bytes": 2097152,
+    "native_transport_reference_body_max_bytes": 8388608,
+    "cas_read_max_bytes": 67108864,
+    "stream_chunk_bytes": 8192,
+    "source_file_kind": "regular files only; symlinks in any component refused",
+    "unavailable_vs_absent": "oversize, access/read failures and unobservable roots produce unavailable at observer; absent needs corroborated negative lookup",
+    "universal_race_freedom": false,
+    "cross_package_build_dependencies_supported": false,
+    "implementation_hash_coverage": "candidate.implementation hashes only direct adapter, format, io, binding files; full runtime SHA/tree and transitive package/dependency pins must be recorded outside candidate."
+  },
+  "authority_prerequisites": [
+    "This release authorizes no production operation. User assignment authorized isolated prepare qualification only.",
+    "Prepare writes CAS without creating policy, actor, credentials, projection or approval.",
+    "Domain publication requires preserved semantic acceptance, two actual exact runtime-import-binding decisions and existing policy authorizing the real actor/ratifier.",
+    "Merge and activation remain Gustavo decisions; no PR, merge or activation performed."
+  ],
+  "evidence_base": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification",
+  "handoff": "handoff-noble.json",
+  "capabilities": {
+    "native_import": {
+      "state": "PROVEN",
+      "operation": "prepare",
+      "scope": [
+        "S1-03 full",
+        "S2 native full"
+      ],
+      "receipt": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46157365177/prepare-summary.json",
+        "sha256": "6bce657a6d4e36358dfe830f4d01b4926e46ab6820554faf7da7067240fa6277",
+        "byte_length": 11366
+      }
+    },
+    "real_permission_refusal": {
+      "state": "PROVEN",
+      "receipt": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46157365177/prepare-summary.json",
+        "sha256": "6bce657a6d4e36358dfe830f4d01b4926e46ab6820554faf7da7067240fa6277",
+        "byte_length": 11366
+      }
+    },
+    "evaluation_dependency_identity": {
+      "state": "PROVEN",
+      "scope": "Installed Noble file identity and stale candidate refusal in the isolated regression fixture",
+      "receipt": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46157365177/noble-control.json",
+        "sha256": "13830c5fe4781010581c2ce3446f013ddbae190f3c62176d1845ffda64d91071",
+        "byte_length": 395965
+      }
+    },
+    "runtime_binding": {
+      "state": "NOT_RUN",
+      "scope": "Complete S1-03/S2 candidates",
+      "owner": "Consuming domain session",
+      "reason": "Requires two new exact domain binding decisions; release qualification judges are not binding approvals."
+    },
+    "governed_publication": {
+      "state": "NOT_RUN",
+      "scope": "Complete S1-03/S2 candidates",
+      "owner": "Consuming domain session",
+      "reason": "Requires exact domain binding and real policy/actor authority. No policy or actor was created here."
+    },
+    "index": {
+      "state": "NOT_RUN",
+      "scope": "Complete S1-03/S2 candidates",
+      "reason": "Requires the domain publication and its actual index query."
+    },
+    "read": {
+      "state": "NOT_RUN",
+      "scope": "Complete S1-03/S2 candidates",
+      "reason": "Requires the domain publication and independent domain consumer."
+    },
+    "common_input_boundaries": {
+      "state": "NOT_RUN",
+      "historical_release_commit": "e171783482d0a44974d6056cd9e144a7e33406a7"
+    },
+    "common_cache_reuse_and_affected_rebuild": {
+      "state": "NOT_RUN",
+      "historical_release_commit": "e171783482d0a44974d6056cd9e144a7e33406a7"
+    },
+    "common_failure_resume_and_history": {
+      "state": "NOT_RUN",
+      "historical_release_commit": "e171783482d0a44974d6056cd9e144a7e33406a7"
+    }
+  },
+  "package_results": [
+    {
+      "id": "S1-03",
+      "candidate_id": "11cf8b0608eb9455967e45bc2bce6c8522caeef4db9f90e43d6f191ac214d271",
+      "verdict": "PASS",
+      "artifact_count": 12,
+      "observation_count": 694,
+      "operation_receipt": {
+        "path": "/home/runner/work/_temp/genesis-runtime-46157365177-1/evidence/s1-03/receipt.json",
+        "byte_length": 1886,
+        "sha256": "ff47ce01581f92d2e27b070666180e71ad78ffad7aed57a67ec91426506238bc"
+      }
+    },
+    {
+      "id": "S2",
+      "candidate_id": "3c0ff60a407975de2a12cedce528894e3d3fde866ed6b75e863146e22254f6a6",
+      "verdict": "PASS",
+      "artifact_count": 13,
+      "observation_count": 626,
+      "operation_receipt": {
+        "path": "/home/runner/work/_temp/genesis-runtime-46157365177-1/evidence/s2/receipt.json",
+        "byte_length": 1844,
+        "sha256": "552e9e61e7e37a04a2e3a8fe7cb646fa0a2fda22c6c40c2f2337361623ac9ac8"
+      }
+    }
+  ],
+  "gate_refs": [
+    {
+      "run_id": 46157365177,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46157365177",
+      "harness_revision": "e7972ee6075cd839327c4b559ba0f5ca03b418f0",
+      "conclusion": "success",
+      "guards": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46157365177/guards-receipt.json",
+        "sha256": "f14af408ea33879e6b22b1a22ef417571688d298e8f1c15865e24d9448f10dfb",
+        "byte_length": 406
+      },
+      "prepare": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46157365177/prepare-summary.json",
+        "sha256": "6bce657a6d4e36358dfe830f4d01b4926e46ab6820554faf7da7067240fa6277",
+        "byte_length": 11366
+      },
+      "baseline_control": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46157365177/baseline-control.json",
+        "sha256": "70ae8bd0ba06219caa52fe1c728e29989fba3d9594dd371f3249ecc575e06dd9",
+        "byte_length": 2604
+      },
+      "corrected_control": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46157365177/corrected-control.json",
+        "sha256": "05a19bfd41ee2421a4e6570b14487272432297d91796a849956ad2a00c58861e",
+        "byte_length": 1148
+      }
+    }
+  ],
+  "judge_refs": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46157365177/release-reviews.json",
+    "sha256": "599fadd37698d7f661117ee7a74f808c547b59ff293a0736b49802030b3e3fe7",
+    "byte_length": 1931
+  },
+  "archives": [
+    {
+      "artifact_id": 15268201348,
+      "sha256": "0ac19a8d75be8a72f00727a95c527cb0623e9639fd6f7ffb6261525714e195b8",
+      "byte_length": 958330
+    },
+    {
+      "artifact_id": 15268620392,
+      "sha256": "efc0fa4a5f7fd59aea073d224e26279043e25bde5729eda4744adbac5da889c1",
+      "byte_length": 1216
+    }
+  ]
+}

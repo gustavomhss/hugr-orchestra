@@ -1,0 +1,162 @@
+{
+  "refs_attached_to_each_of_four_l4_artifacts": [
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j1-canonical-r2.json",
+      "sha256": "5090541410eee055861100506801e8229ca6a91068fc47596d75f4a0a34b02ba"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j2-canonical-r1.json",
+      "sha256": "ceb6f47245ff6736c60fcb822b82bc4def418db8d4bf86358235427fb1a3cd4d"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j2-canonical-addendum.json",
+      "sha256": "321eec139f52ccfa82c422e1656220d334929c63b2a4027fb4c97d864c1b7f1f"
+    }
+  ],
+  "preserved_response_records": [
+    {
+      "source": {
+        "path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/review/l4-canonical/j1-canonical-r1.json",
+        "bytes": 13756,
+        "sha256": "7a2d078b07543b48b8129322a410bfda3dc2bf84cada1ca1dc522953ada8ed4a"
+      },
+      "repo_payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j1-canonical-r1.json",
+      "recorded_author": "/root/local_j1",
+      "recorded_purpose": "semantic-layer4-review",
+      "recorded_verdict": "REQUEST_EVIDENCE",
+      "recorded_review_execution_id": "0a451b91-c4e7-4573-9958-fed60817f299",
+      "linked_to_four_l4_entries": false,
+      "declared_body_identity_checks": [
+        {
+          "key": "S4:L4:entry",
+          "present_in_index": true,
+          "sha256_matches_body_index": true,
+          "bytes_match_body_index": true
+        },
+        {
+          "key": "S4:L4:ownership",
+          "present_in_index": true,
+          "sha256_matches_body_index": true,
+          "bytes_match_body_index": true
+        },
+        {
+          "key": "S4:L4:maintenance",
+          "present_in_index": true,
+          "sha256_matches_body_index": true,
+          "bytes_match_body_index": true
+        },
+        {
+          "key": "S4:L4:operational",
+          "present_in_index": true,
+          "sha256_matches_body_index": true,
+          "bytes_match_body_index": true
+        }
+      ],
+      "identities_text_if_not_object": null,
+      "preserved_without_reserialization": true,
+      "no_new_acceptance_inferred": true
+    },
+    {
+      "source": {
+        "path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/review/l4-canonical/j1-canonical-r2.json",
+        "bytes": 13503,
+        "sha256": "5090541410eee055861100506801e8229ca6a91068fc47596d75f4a0a34b02ba"
+      },
+      "repo_payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j1-canonical-r2.json",
+      "recorded_author": "/root/local_j1",
+      "recorded_purpose": "semantic-layer4-review",
+      "recorded_verdict": "PASS",
+      "recorded_review_execution_id": "0a451b91-c4e7-4573-9958-fed60817f299",
+      "linked_to_four_l4_entries": true,
+      "declared_body_identity_checks": [
+        {
+          "key": "S4:L4:entry",
+          "present_in_index": true,
+          "sha256_matches_body_index": true,
+          "bytes_match_body_index": true
+        },
+        {
+          "key": "S4:L4:ownership",
+          "present_in_index": true,
+          "sha256_matches_body_index": true,
+          "bytes_match_body_index": true
+        },
+        {
+          "key": "S4:L4:maintenance",
+          "present_in_index": true,
+          "sha256_matches_body_index": true,
+          "bytes_match_body_index": true
+        },
+        {
+          "key": "S4:L4:operational",
+          "present_in_index": true,
+          "sha256_matches_body_index": true,
+          "bytes_match_body_index": true
+        }
+      ],
+      "identities_text_if_not_object": null,
+      "preserved_without_reserialization": true,
+      "no_new_acceptance_inferred": true
+    },
+    {
+      "source": {
+        "path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/review/l4-canonical/j2-canonical-addendum.json",
+        "bytes": 2051,
+        "sha256": "321eec139f52ccfa82c422e1656220d334929c63b2a4027fb4c97d864c1b7f1f"
+      },
+      "repo_payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j2-canonical-addendum.json",
+      "recorded_author": "/root/local_j2",
+      "recorded_purpose": "semantic-layer4-review",
+      "recorded_verdict": "PASS",
+      "recorded_review_execution_id": "0a451b91-c4e7-4573-9958-fed60817f299",
+      "linked_to_four_l4_entries": true,
+      "declared_body_identity_checks": [],
+      "identities_text_if_not_object": "Permanecem exatamente as quatro identidades de corpos e as duas identidades de metadados registradas no parecer canônico anterior; nenhuma edição foi apresentada.",
+      "preserved_without_reserialization": true,
+      "no_new_acceptance_inferred": true
+    },
+    {
+      "source": {
+        "path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/review/l4-canonical/j2-canonical-r1.json",
+        "bytes": 13099,
+        "sha256": "ceb6f47245ff6736c60fcb822b82bc4def418db8d4bf86358235427fb1a3cd4d"
+      },
+      "repo_payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j2-canonical-r1.json",
+      "recorded_author": "/root/local_j2",
+      "recorded_purpose": "semantic-layer4-review",
+      "recorded_verdict": "PASS",
+      "recorded_review_execution_id": "0a451b91-c4e7-4573-9958-fed60817f299",
+      "linked_to_four_l4_entries": true,
+      "declared_body_identity_checks": [
+        {
+          "key": "S4:L4:entry",
+          "present_in_index": true,
+          "sha256_matches_body_index": true,
+          "bytes_match_body_index": true
+        },
+        {
+          "key": "S4:L4:ownership",
+          "present_in_index": true,
+          "sha256_matches_body_index": true,
+          "bytes_match_body_index": true
+        },
+        {
+          "key": "S4:L4:maintenance",
+          "present_in_index": true,
+          "sha256_matches_body_index": true,
+          "bytes_match_body_index": true
+        },
+        {
+          "key": "S4:L4:operational",
+          "present_in_index": true,
+          "sha256_matches_body_index": true,
+          "bytes_match_body_index": true
+        }
+      ],
+      "identities_text_if_not_object": null,
+      "preserved_without_reserialization": true,
+      "no_new_acceptance_inferred": true
+    }
+  ],
+  "limit": "These are byte references to existing authored decisions, including one J2 addendum. Three refs represent two authors, not three judges. No new verdict or binding is produced."
+}

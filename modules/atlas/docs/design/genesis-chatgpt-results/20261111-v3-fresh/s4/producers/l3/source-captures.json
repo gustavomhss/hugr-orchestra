@@ -1,0 +1,96 @@
+[
+  {
+    "key": "S4:L2:atlas-system",
+    "source_ref": {
+      "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+      "git_blob_sha": "9e0320056c12bba1ff8b2b26a90f797c92fe5f3f",
+      "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+    },
+    "byte_length": 7954,
+    "local_exact_copy": "inputs/atlas-system.md",
+    "accepted_in_frozen_manifest": true,
+    "acceptance_refs": [
+      {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j1-response.json",
+        "sha256": "3cf6f33d590f8a09420f721cd23f74e037061ecd20b20acbb3474a96a602da87"
+      },
+      {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j2-response.json",
+        "sha256": "ae03f6d7bbcf1949ce54f3e19dd405b051dfee90e4d8ec310e852fcb758ff5c6"
+      }
+    ],
+    "sections": [
+      "Responsabilidades do motor e do host",
+      "Por que texto igual pode exigir outro resultado",
+      "Como mudanças de fonte orientam a revisão",
+      "O percurso até uma leitura utilizável",
+      "Fronteira externa e pontos de manutenção",
+      "Recibos e limites desta síntese"
+    ]
+  },
+  {
+    "key": "S4:L2:continuity-rag-operations",
+    "source_ref": {
+      "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+      "git_blob_sha": "ced7ae43342f5461a52666f455cb74d348e3270b",
+      "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+    },
+    "byte_length": 7949,
+    "local_exact_copy": "inputs/continuity-rag-operations.md",
+    "accepted_in_frozen_manifest": true,
+    "acceptance_refs": [
+      {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j1-response.json",
+        "sha256": "3cf6f33d590f8a09420f721cd23f74e037061ecd20b20acbb3474a96a602da87"
+      },
+      {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j2-response.json",
+        "sha256": "ae03f6d7bbcf1949ce54f3e19dd405b051dfee90e4d8ec310e852fcb758ff5c6"
+      }
+    ],
+    "sections": [
+      "Responsabilidades e base",
+      "Session define quais hooks existem",
+      "Mascaramento preserva uma cauda recuperável",
+      "RAG cruza leitura e persistência por requisição",
+      "Pipeline e revisão têm identidades distintas",
+      "Comparação exige uma mudança isolada",
+      "Diagnóstico e percurso de manutenção",
+      "Localizadores"
+    ]
+  },
+  {
+    "key": "S4:L2:genesis-governance",
+    "source_ref": {
+      "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2.md",
+      "git_blob_sha": "dd0a52ada6bbeec778721bf948e9a613573d2f64",
+      "sha256": "87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01"
+    },
+    "byte_length": 7971,
+    "local_exact_copy": "inputs/genesis-governance.md",
+    "accepted_in_frozen_manifest": true,
+    "acceptance_refs": [
+      {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j1-response.json",
+        "sha256": "3cf6f33d590f8a09420f721cd23f74e037061ecd20b20acbb3474a96a602da87"
+      },
+      {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j2-response.json",
+        "sha256": "ae03f6d7bbcf1949ce54f3e19dd405b051dfee90e4d8ec310e852fcb758ff5c6"
+      }
+    ],
+    "sections": [
+      "Finalidade e compromissos separados",
+      "Cobertura não é uma lista indiscriminada de inputs",
+      "Dependências que tornam as camadas auditáveis",
+      "Da produção nativa à porta de consumo",
+      "Rotas históricas têm outra finalidade",
+      "Uso, tentativas e economia honesta",
+      "Ler recibos sem transportar autoridade entre revisões",
+      "Manutenção e limites da explicação"
+    ]
+  }
+]

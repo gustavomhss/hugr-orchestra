@@ -1,0 +1,117 @@
+{
+  "agent_id": "/root/judge_j1",
+  "identity_role": "parallel-v3-fresh/S4/J1",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "purpose": "semantic-review",
+  "verdict": "PASS",
+  "target": {
+    "key": "S4:L1:host-boundaries",
+    "version": "v2",
+    "scope": "atlas-continuity-rag-genesis",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "body_bytes": 11972,
+    "body_limit": 12000,
+    "body_sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a",
+    "metadata_sha256": "a972bc6f6558191ac06d9b7c307e57bb571bf385b04fe4d15352965ff9203051",
+    "oracle_sha256": "7ce135a366945c132b56d0415a807d8bc838f412390bc6c78b6ca70f89a34708",
+    "packet_manifest": "f68675c49f1f348ba68e630c680cca06953a58c04217eee67baaa4c8c0c28032"
+  },
+  "criteria": [
+    {
+      "id": "QS-1",
+      "verdict": "PASS",
+      "evidence": "Corpo v2; compaction.ts:277–329; runner/llm.ts:231–272,427–448,536–564; rag-studio-session.ts:18–134,239–275; AtlasHandler:19–71.",
+      "reason": "As distinções principais correspondem aos trechos fornecidos. O default de compaction agora está explícito. Os conflitos de trace e alocação RAG são descritos sem reparo inventado, e a ligação Atlas não é apresentada como execução ou integração integral comprovada."
+    },
+    {
+      "id": "QS-2",
+      "verdict": "PASS",
+      "evidence": "Localizadores e seções de manutenção das três fronteiras.",
+      "reason": "O texto permite localizar responsabilidades e efeitos de mudança: admissão e hooks de Session, persistência/identidade RAG, rotas/modelos Atlas e geração dos bundles."
+    },
+    {
+      "id": "CC-3",
+      "verdict": "PASS",
+      "evidence": "Seções 1–3 e respectivas consequências de manutenção.",
+      "reason": "O conteúdo explica mecanismos e consequências concretas. Destacam-se a releitura e regravação por requisição, a perda do trace por divergência de chave e a distinção entre chamada direta de modelo e execução pelo runner."
+    },
+    {
+      "id": "CC-7",
+      "verdict": "PASS",
+      "evidence": "Caminhos provider/hosted; ciclo Store/SQL; imports boundary e mapeamento do gerador.",
+      "reason": "Fronteiras, compatibilidade e gerados têm tratamento explícito. Origem declarada dos bundles não é confundida com paridade; contribuição de Continuity não é confundida com instalação global."
+    },
+    {
+      "id": "GO-I2",
+      "verdict": "PASS",
+      "evidence": "Definição inicial de evidência; default versus contribuição; conflitos de documentação, trace e contador.",
+      "reason": "Constatação, inferência e intenção permanecem distinguíveis. O checklist desatualizado não prevalece sobre a implementação, e possibilidades de colisão ou leitura de chunks antigos são apresentadas como inferências estáticas."
+    },
+    {
+      "id": "GO-I5",
+      "verdict": "PASS",
+      "evidence": "Recall; tratamento de arquivos RAG indisponíveis; estado empty versus Unavailable da superfície Atlas.",
+      "reason": "O corpo não equipara resultado vazio, ausência, indisponibilidade e alteração de hash. Também não presume que uma recusa de admissão implica ausência de leitura anterior."
+    },
+    {
+      "id": "GO-I7",
+      "verdict": "PASS",
+      "evidence": "Extração anterior ao gate; allowExternal omitido; modelos fora de Session; seção Modelos e autoridade.",
+      "reason": "Permissão de domínio, validação, identidade nominal e autenticação HTTP permanecem separadas. O texto não atribui aos modelos os hooks de Continuity nem concede autoridade de publicação ou ratificação."
+    },
+    {
+      "id": "GO-I8",
+      "verdict": "PASS",
+      "evidence": "Limites de integração, transação externa, paridade e execução; metadados e recibos mecânicos.",
+      "reason": "Hashes, schemas, exports e presença de tabelas sustentam identidades e contratos limitados. Não são usados como prova de atomicidade, integração executada ou completude do domínio."
+    }
+  ],
+  "oracle_cases": [
+    {
+      "id": "B-1",
+      "verdict": "PASS",
+      "evidence": "C:277–329; L:231–272,427–448,536–564; V/strategy.ts:257–300.",
+      "reason": "Distingue interface, default com transform identidade e afterStep sem efeito, chamadas efetivas do runner, contribuição substitutiva e instalação global não demonstrada. O caminho hosted permanece separado."
+    },
+    {
+      "id": "B-2",
+      "verdict": "PASS",
+      "evidence": "RS:18–134,139–169,239–275; D:34–70; R/context.ts:150–183,228–243.",
+      "reason": "Explica reconstrução e hidratação do memoryStore por Location, noteBytes, operação e regravação SQL, com embedding desligado. A ausência de transação explícita nesse adaptador não é convertida em prova sobre uma transação exterior."
+    },
+    {
+      "id": "B-3",
+      "verdict": "PASS",
+      "evidence": "R/ask.ts:9–29; R/trace.ts:3–6; R/proof.ts:4–25; RS:239–275.",
+      "reason": "Preserva o conflito revisionId versus questionId e mostra que o adaptador persiste traces por IDs de perguntas, sem converter a chave produzida por ask. Não afirma que o problema foi corrigido."
+    },
+    {
+      "id": "B-4",
+      "verdict": "PASS",
+      "evidence": "RH:55–63; R/extract.ts:3–16; R/admit.ts:4–28; R/context.ts:150–183; RS:52–65.",
+      "reason": "A extração antecede admit no servidor, e o Store reconstruído omite o callback externo, cujo default nega. O achado fica limitado ao fluxo estático, sem alegação de exploração ou execução."
+    },
+    {
+      "id": "B-5",
+      "verdict": "PASS",
+      "evidence": "AH:19–71; AC:5–34,103–147,248–279; B/package.json:23–29; B/script/build.ts:16–19.",
+      "reason": "A ligação Location/storeRoot → core Atlas → boundary está demonstrada no código fornecido. A seleção de modelo usa catálogo e integração fora de uma Session durável. A descrição preserva a lacuna de composição global e não alega chamada paga ou ativação em produção."
+    }
+  ],
+  "metadata_assessment": {
+    "verdict": "PASS",
+    "reason": "A revisão v2 conserva as 37 fontes, registra a correção pontual e mantém origem e pedido anteriores. Os 12 externos são consultas de fronteira; a população atribuída continua em 2.220 caminhos. Os 46 inputs e seu máximo de 39.006 bytes foram conferidos pelo principal, sem fabricação de versões runtime. Build dependencies permanecem vazias e navegação é declarada separadamente."
+  },
+  "mandatory_findings": [],
+  "optional_suggestions": [],
+  "limits": [
+    "Este é o primeiro parecer de J1 sobre o alvo v2; nenhuma aprovação de v1 foi presumida ou transferida.",
+    "Foram considerados os corpos e trechos visíveis. Medições e verificações de hashes são evidência fornecida pelo principal/courier, não execuções deste juiz.",
+    "Instalação global, middleware HTTP, implementação interna de Store/projetor, transação exterior, paridade dos bundles e integração executada continuam sem demonstração neste pacote.",
+    "Os problemas de produto descritos no corpo não exigem reparo fora da fatia para aceitar uma descrição estática fiel.",
+    "Não emito runtime-import-binding, aprovação de publicação, conclusão de L1, L2 ou S4.",
+    "Este parecer não fecha nem reavalia os findings de concorrência do pacote runtime.",
+    "Nenhuma ferramenta, delegação, edição ou execução foi realizada por este juiz."
+  ]
+}

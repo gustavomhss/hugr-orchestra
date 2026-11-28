@@ -1,0 +1,12 @@
+{
+  "argv": [
+    "bun",
+    "scripts/genesis-native.ts",
+    "index",
+    "/home/runner/work/_temp/s4-source",
+    "/home/runner/work/_temp/s4-publication/index-operational.query.json"
+  ],
+  "exit_code": 0,
+  "stdout_sha256": "74564a5e0fa20d9396b616070afe6f641df4b48236d774186c4fd026d995b580",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+}

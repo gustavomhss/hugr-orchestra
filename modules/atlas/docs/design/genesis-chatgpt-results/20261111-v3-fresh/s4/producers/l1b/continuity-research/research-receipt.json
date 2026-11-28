@@ -1,0 +1,56 @@
+{
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "work_package": "WP-L1B",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "researcher": "/root/producer_l1a/continuity_research",
+  "semantic_judgment": false,
+  "product_execution": false,
+  "scope": "continuity and rag-studio modules and owned docs",
+  "inspected_file_count": 73,
+  "group_count": 16,
+  "note_citations_checked": 68,
+  "artifacts": [
+    {
+      "path": "evidence-note.md",
+      "byte_length": 15991,
+      "sha256": "23df78b34fd5fdef6085942728124fd9e2cf4e3a81f948dd9e1acb84d75a955a"
+    },
+    {
+      "path": "correction-addendum.md",
+      "byte_length": 4530,
+      "sha256": "588a4cbc85889e2c9de007dc876ecda65e025cd4ff8c54302db0b48742e846e3"
+    },
+    {
+      "path": "inspected-files.json",
+      "byte_length": 56704,
+      "sha256": "392d76c11221ca8e7415d3e074babf3733f3b98267d38661fb5c04235be6fc3a"
+    },
+    {
+      "path": "source-groups.json",
+      "byte_length": 6114,
+      "sha256": "606f4da4e588bfe107dd973751af6fd6a002f4e8429ad1e55113d9ea69b75703"
+    }
+  ],
+  "primary_module_production_ts_file_count": 33,
+  "full_file_read_count": 70,
+  "partial_file_read_count": 3,
+  "followup": {
+    "purpose": "Correct archive-boundary source availability and describe observed privacy/integrity responsibilities",
+    "added_files": [
+      "modules/atlas/boundary/package.json",
+      "modules/atlas/boundary/script/build.ts",
+      "modules/atlas/boundary/src/generated/context.d.ts",
+      "modules/atlas/boundary/src/generated/context.js",
+      "modules/atlas/packages/adapter-io/src/context-log.ts",
+      "modules/atlas/packages/adapter-io/src/durable-log.ts",
+      "modules/atlas/packages/adapter-io/src/layout.ts",
+      "modules/atlas/packages/adapter-io/src/repo-visibility.ts",
+      "modules/atlas/packages/persist/src/scrub-scan.ts",
+      "modules/atlas/packages/persist/src/scrub-shapes.ts",
+      "modules/atlas/packages/persist/src/scrub.ts"
+    ],
+    "original_evidence_note_unchanged": true,
+    "addendum_citations_checked": 15
+  }
+}

@@ -1,0 +1,96 @@
+{
+  "schema": "s4-knowledge-landing/v1",
+  "recorded_by": "/root",
+  "state": "PREPARED_FOR_CURRENT_PR_GATES",
+  "authorization": {
+    "user": "Gustavo",
+    "instruction": "pode ir ate o merge",
+    "date": "2026-11-28"
+  },
+  "source": {
+    "branch": "genesis-knowledge-resume",
+    "commit": "1ac89da7b1c30ca4c36f803c0ea8bc65011aa9db",
+    "s4_tree": "918f2f84ceb28120bf7e82fba36293f36b0fa64a",
+    "s4_files": 937,
+    "historical_delivery_commit": "a606856942ed2b0cf201b9701a82c491d9f8a76f"
+  },
+  "target": {
+    "branch": "dev",
+    "observed_base_commit": "d18c47fce2c578e9ccc8f9c80c69fed54151586a",
+    "landing_branch": "genesis-knowledge-merge"
+  },
+  "scope": {
+    "included": [
+      "Complete unchanged S4 subtree from source commit, plus this landing record",
+      "Specific S4 workflow with PR and landing triggers, scope guard and durable custody verification"
+    ],
+    "product_code_changes": 0,
+    "semantic_body_changes": 0,
+    "runtime_code_changes": 0,
+    "production_activation": false,
+    "global_multi_domain_campaign_acceptance": false
+  },
+  "semantic_package": {
+    "sha256": "443caac944c273a6066927caddc7b275ef66c037b3125e42c0fe5b620aa6d69b",
+    "artifacts": 15,
+    "roots": 7,
+    "build_edges": 37
+  },
+  "runtime_candidate": "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10",
+  "readback": {
+    "commit": "1ac89da7b1c30ca4c36f803c0ea8bc65011aa9db",
+    "s4_tree": "918f2f84ceb28120bf7e82fba36293f36b0fa64a",
+    "readback_files": 137,
+    "total_s4_files": 937,
+    "state": "EXACT_GIT_BLOB_READBACK_PASS"
+  },
+  "engineering_review_summary": {
+    "record_type": "Root-authored summary of actual independent read-only agent reviews; not a new semantic or runtime-binding vote",
+    "reviewers": [
+      {
+        "agent": "/root/audit_s4_delivery",
+        "scope": "Operational judgments, Actions runs, exact original replies and current metadata",
+        "decision": "PASS_WITH_FINDINGS_RECONCILED",
+        "dispositions": [
+          "130 original Actions files retained with custody manifest",
+          "Runtime dependency and merge authorization reconciled while preserving previous checkpoint fields",
+          "Reconciliation timestamp generated after custody verification"
+        ]
+      },
+      {
+        "agent": "/root/plan_s4_merge",
+        "scope": "Branch ancestry, delivery scope and repository gates",
+        "decision": "SCOPED_LANDING_RECOMMENDED",
+        "dispositions": [
+          "Landing based on current dev",
+          "No historical product code or other campaigns imported",
+          "Original knowledge and runtime branches preserved"
+        ]
+      },
+      {
+        "agent": "/root/audit_s4_gate",
+        "scope": "Workflow portability and custody verifier",
+        "decision": "STATIC_PASS_PENDING_CURRENT_CI",
+        "dispositions": [
+          "Fixed exact custody list sizes 130 and 11 and pinned audited manifest SHA256",
+          "Added new verifier and custody discovery files to push triggers",
+          "PR scope guard and pinned separate runtime retained"
+        ]
+      }
+    ]
+  },
+  "required_gates": [
+    "S4 integrity and durable custody on landing and PR merge ref",
+    "Full15 prepare using pinned separate runtime",
+    "Repository guards from current dev base",
+    "Atlas Own snapshot guard scope assessment"
+  ],
+  "gate_results": "Recorded on the GitHub PR and Actions; this pre-merge record makes no claim that pending checks or the merge have completed.",
+  "reproduction": "Keep genesis-knowledge-resume and genesis-runtime-resume refs. The workflow fetches full history and reconstructs the isolated corpus by pinned Git blob and commit/path; current dev product bytes are not substituted.",
+  "limitations": [
+    "Original historical J1 host-message envelope was not recovered; authored response and preserved custody records are retained.",
+    "Consumer host-visible wrapper messages are represented by preserved checkpoint hashes/IDs; exact Atlas replies are retained.",
+    "Changed maintenance emits readback hashes and lengths, not literal body strings.",
+    "Provider tokens, hidden provider attempts and billing remain UNKNOWN."
+  ]
+}

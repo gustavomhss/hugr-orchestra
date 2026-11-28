@@ -1,0 +1,58 @@
+{
+  "schema": "s4-layer-oracle/v1",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "frozen_utc": "2026-11-11T18:07:40.973111+00:00",
+  "frozen_before_any_upper_layer_production": true,
+  "answers_reserved_from_producers": true,
+  "input_binding": "Exact complete accepted predecessor-layer inputs are bound in the dispatch manifest before producer starts; this oracle fixes cases in advance.",
+  "unit": "WP-L2",
+  "required_keys": [
+    "S4:L2:atlas-system",
+    "S4:L2:continuity-rag-operations",
+    "S4:L2:genesis-governance"
+  ],
+  "body_limit_each": 8000,
+  "criteria": [
+    "AC-01",
+    "CC-2",
+    "CC-3",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "GO-I2",
+    "GO-I3",
+    "GO-I5",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "cases": [
+    {
+      "id": "L2-system",
+      "expected": "Explain CAS identity and observer versions separately; grounded data plus current sources are not policy/ratification. Existing index/read are the consumption boundary; source unavailable or binding mismatch must HOLD. Full result includes authority/validity/gaps, build deps differ from navigation."
+    },
+    {
+      "id": "L2-context",
+      "expected": "Continuity module replacement requires actual host composition; default transform identity/afterStep noop distinct from installed strategy. Archive before mask with recall available, protected tools, bounded retained tail, stale async summary discarded. Hosted model path and direct Atlas host model calls do not inherit normal Session compaction automatically."
+    },
+    {
+      "id": "L2-rag",
+      "expected": "Describe withStore/Store, admission and content hash/status, pipeline revision/snapshot, comparison on same corpus and one setting. K changes pipelineHash; lexical true embedding false. Preserve revisionId/questionId trace mismatch and per-request seq/atomicity/extract-before-admit limits; do not turn storage schema or source inspection into executed proof/model answer."
+    },
+    {
+      "id": "L2-genesis",
+      "expected": "Differentiate legacy mine staging from native prepare→two exact bindings→normal check/emit→index/read; code/baseline/protocol/payload pins distinct. Reusing semantic knowledge is not transferring approval to modified candidate. Finite native queue usage UNKNOWN, no financial guarantee or external paid call."
+    },
+    {
+      "id": "L2-cumulative",
+      "expected": "Each interpretation declares all actual semantic predecessors as build dependencies, optional consultation links as navigation; cites accepted L1 bodies at exact immutable payload commit. No dependence on another incomplete session or required blocked artifact. Names relevant maintenance and verification entrypoints."
+    }
+  ],
+  "critical_errors": [
+    "Invent enabled integration/authentication",
+    "Drop a required L1 concern",
+    "Treat source hash as kernel input version",
+    "Claim complete S4 or consumer execution"
+  ]
+}
