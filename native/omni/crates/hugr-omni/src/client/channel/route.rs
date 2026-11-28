@@ -203,7 +203,12 @@ impl Gen {
                 (req, Answer::ControlMembers(members), None)
             }
             Msg::ControlResults { req, id, outcomes } => {
-                check(st, req, |w| matches!(w, Want::ControlStop { count } if count == outcomes.len()), Some(id))?;
+                check(
+                    st,
+                    req,
+                    |w| matches!(w, Want::ControlStop { count } if count == outcomes.len()),
+                    Some(id),
+                )?;
                 (req, Answer::ControlResults(outcomes), None)
             }
             Msg::Ready { .. } => return Err("it sent Ready twice".into()),
@@ -241,8 +246,11 @@ impl Gen {
                 st.dues.remove(&(at, req));
                 st.pending.get_mut(&req).and_then(|pending| {
                     let (_, budget) = pending.due.take()?;
-                    let waiter = matches!(pending.want, Want::ObserveList | Want::ObserveFootprint | Want::ControlList | Want::ControlStop { .. })
-                        .then(|| mem::replace(&mut pending.to, Waiter::Ignore));
+                    let waiter = matches!(
+                        pending.want,
+                        Want::ObserveList | Want::ObserveFootprint | Want::ControlList | Want::ControlStop { .. }
+                    )
+                    .then(|| mem::replace(&mut pending.to, Waiter::Ignore));
                     Some((pending.want, budget, waiter))
                 })
             };

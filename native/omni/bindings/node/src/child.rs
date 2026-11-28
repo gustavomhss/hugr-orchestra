@@ -177,7 +177,10 @@ impl NativeChild {
     pub fn control_members<'env>(&self, env: &'env Env) -> napi::Result<Object<'env>> {
         let kid = Arc::clone(&self.kid);
         exec::promise(env, async move { kid.control_members().await }, |members| {
-            members.into_iter().map(|member| format!("{}:{}", member.pid, member.birth)).collect::<Vec<_>>()
+            members
+                .into_iter()
+                .map(|member| format!("{}:{}", member.pid, member.birth))
+                .collect::<Vec<_>>()
         })
     }
 
@@ -185,20 +188,30 @@ impl NativeChild {
     #[napi(js_name = "stopSelected")]
     pub fn stop_selected<'env>(&self, env: &'env Env, tokens: Vec<String>) -> napi::Result<Object<'env>> {
         if tokens.is_empty() || tokens.len() > 256 {
-            return Err(napi::Error::new(napi::Status::InvalidArg, "expected 1 to 256 control members"));
+            return Err(napi::Error::new(
+                napi::Status::InvalidArg,
+                "expected 1 to 256 control members",
+            ));
         }
-        let members = tokens.into_iter().map(|token| {
-            let (pid, birth) = token.split_once(':')?;
-            let pid = pid.parse::<u32>().ok()?;
-            let birth = birth.parse::<u64>().ok()?;
-            (token == format!("{pid}:{birth}")).then_some(hugr_omni::ControlMember { pid, birth })
-        }).collect::<Option<Vec<_>>>().ok_or_else(|| napi::Error::new(napi::Status::InvalidArg, "invalid control member token"))?;
+        let members = tokens
+            .into_iter()
+            .map(|token| {
+                let (pid, birth) = token.split_once(':')?;
+                let pid = pid.parse::<u32>().ok()?;
+                let birth = birth.parse::<u64>().ok()?;
+                (token == format!("{pid}:{birth}")).then_some(hugr_omni::ControlMember { pid, birth })
+            })
+            .collect::<Option<Vec<_>>>()
+            .ok_or_else(|| napi::Error::new(napi::Status::InvalidArg, "invalid control member token"))?;
         let kid = Arc::clone(&self.kid);
         exec::promise(env, async move { kid.stop_selected(members).await }, |outcomes| {
-            outcomes.into_iter().map(|outcome| match outcome {
-                hugr_omni::SelectiveStopOutcome::Exited => "exited".to_string(),
-                hugr_omni::SelectiveStopOutcome::Unknown => "unknown".to_string(),
-            }).collect::<Vec<_>>()
+            outcomes
+                .into_iter()
+                .map(|outcome| match outcome {
+                    hugr_omni::SelectiveStopOutcome::Exited => "exited".to_string(),
+                    hugr_omni::SelectiveStopOutcome::Unknown => "unknown".to_string(),
+                })
+                .collect::<Vec<_>>()
         })
     }
 

@@ -5,7 +5,9 @@ mod wire;
 #[cfg(test)]
 mod tests;
 
-use crate::{Ack, ControlMember, Exit, FailCode, MAX_FRAME, Msg, ProcEntry, ProtoError, SelectiveStopOutcome, Slot, Spawn};
+use crate::{
+    Ack, ControlMember, Exit, FailCode, MAX_FRAME, Msg, ProcEntry, ProtoError, SelectiveStopOutcome, Slot, Spawn,
+};
 use wire::{Reader, Writer};
 
 const SPAWN: u8 = 0x01;
@@ -75,7 +77,9 @@ pub fn encode(msg: &Msg, out: &mut Vec<u8>) -> Result<(), ProtoError> {
         Msg::ControlStop { req, id, members } => {
             validate_members(members.len())?;
             w.u8(CONTROL_STOP).u64(*req).u64(*id).u32(len(members.len())?);
-            for member in members { w.u32(member.pid).u64(member.birth); }
+            for member in members {
+                w.u32(member.pid).u64(member.birth);
+            }
         }
         Msg::Release { req, id } => _ = w.u8(RELEASE).u64(*req).u64(*id),
         Msg::Ready { version, pid, info } => _ = w.u8(READY).u32(*version).u32(*pid).u32(*info),
@@ -135,14 +139,20 @@ pub fn encode(msg: &Msg, out: &mut Vec<u8>) -> Result<(), ProtoError> {
             }
         }
         Msg::ControlMembers { req, id, members } => {
-            if members.len() > MAX_CONTROL_MEMBERS { return Err(ProtoError("too many control members".into())); }
+            if members.len() > MAX_CONTROL_MEMBERS {
+                return Err(ProtoError("too many control members".into()));
+            }
             w.u8(CONTROL_MEMBERS).u64(*req).u64(*id).u32(len(members.len())?);
-            for member in members { w.u32(member.pid).u64(member.birth); }
+            for member in members {
+                w.u32(member.pid).u64(member.birth);
+            }
         }
         Msg::ControlResults { req, id, outcomes } => {
             validate_members(outcomes.len())?;
             w.u8(CONTROL_RESULTS).u64(*req).u64(*id).u32(len(outcomes.len())?);
-            for result in outcomes { w.bool(*result == SelectiveStopOutcome::Exited); }
+            for result in outcomes {
+                w.bool(*result == SelectiveStopOutcome::Exited);
+            }
         }
         Msg::Ack { req, id, result } => _ = w.u8(ACK).u64(*req).u64(*id).u8(ack(*result)),
     }
@@ -194,12 +204,20 @@ pub fn decode(buf: &[u8]) -> Result<Option<(Msg, usize)>, ProtoError> {
             req: r.u64()?,
             id: r.u64()?,
         },
-        CONTROL_LIST => Msg::ControlList { req: r.u64()?, id: r.u64()? },
+        CONTROL_LIST => Msg::ControlList {
+            req: r.u64()?,
+            id: r.u64()?,
+        },
         CONTROL_STOP => {
             let (req, id) = (r.u64()?, r.u64()?);
             let count = control_count(&mut r, true, 12)?;
             let mut members = Vec::with_capacity(count);
-            for _ in 0..count { members.push(ControlMember { pid: r.u32()?, birth: r.u64()? }); }
+            for _ in 0..count {
+                members.push(ControlMember {
+                    pid: r.u32()?,
+                    birth: r.u64()?,
+                });
+            }
             Msg::ControlStop { req, id, members }
         }
         LIST => Msg::List {
@@ -292,7 +310,12 @@ pub fn decode(buf: &[u8]) -> Result<Option<(Msg, usize)>, ProtoError> {
             let (req, id) = (r.u64()?, r.u64()?);
             let count = control_count(&mut r, false, 12)?;
             let mut members = Vec::with_capacity(count);
-            for _ in 0..count { members.push(ControlMember { pid: r.u32()?, birth: r.u64()? }); }
+            for _ in 0..count {
+                members.push(ControlMember {
+                    pid: r.u32()?,
+                    birth: r.u64()?,
+                });
+            }
             Msg::ControlMembers { req, id, members }
         }
         CONTROL_RESULTS => {
@@ -300,7 +323,11 @@ pub fn decode(buf: &[u8]) -> Result<Option<(Msg, usize)>, ProtoError> {
             let count = control_count(&mut r, true, 1)?;
             let mut outcomes = Vec::with_capacity(count);
             for _ in 0..count {
-                outcomes.push(if r.bool()? { SelectiveStopOutcome::Exited } else { SelectiveStopOutcome::Unknown });
+                outcomes.push(if r.bool()? {
+                    SelectiveStopOutcome::Exited
+                } else {
+                    SelectiveStopOutcome::Unknown
+                });
             }
             Msg::ControlResults { req, id, outcomes }
         }
@@ -371,7 +398,9 @@ fn spawn(r: &mut Reader<'_>) -> Result<Spawn, ProtoError> {
 
 fn validate_members(count: usize) -> Result<(), ProtoError> {
     if count == 0 || count > MAX_CONTROL_MEMBERS {
-        return Err(ProtoError(format!("control member count {count} outside 1..={MAX_CONTROL_MEMBERS}")));
+        return Err(ProtoError(format!(
+            "control member count {count} outside 1..={MAX_CONTROL_MEMBERS}"
+        )));
     }
     Ok(())
 }

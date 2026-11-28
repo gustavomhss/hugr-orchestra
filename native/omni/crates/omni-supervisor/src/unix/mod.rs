@@ -234,7 +234,11 @@ impl Sup {
             Msg::Stop { req, id, grace_ms } => trees.stop(Some(req), id, grace_ms, Instant::now(), out),
             Msg::Resize { req, id, cols, rows } => trees.resize(req, id, (cols, rows), out),
             Msg::ControlList { req, id } | Msg::ControlStop { req, id, .. } => {
-                out.push(Msg::Ack { req, id, result: Ack::Error });
+                out.push(Msg::Ack {
+                    req,
+                    id,
+                    result: Ack::Error,
+                });
             }
             Msg::List { req, id } => trees.list(req, id, out),
             Msg::Observe { req, id } => out.extend(self.observation.start(req, id, trees)),

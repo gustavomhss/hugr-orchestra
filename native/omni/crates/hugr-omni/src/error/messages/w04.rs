@@ -102,7 +102,10 @@ impl Error {
     }
 
     pub(crate) fn selective_timed_out(budget: std::time::Duration) -> Error {
-        io_error(format!("selective process control timed out after {} ms; its effect is unknown", budget.as_millis()))
+        io_error(format!(
+            "selective process control timed out after {} ms; its effect is unknown",
+            budget.as_millis()
+        ))
     }
 
     pub(crate) fn request_too_big(err: &dyn Display) -> Error {

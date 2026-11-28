@@ -10,7 +10,10 @@ impl Tree {
     pub(crate) async fn control_members(&self) -> Result<Vec<ControlMember>, Error> {
         self.sup.home()?;
         let id = self.id;
-        let answer = self.sup.ask(Want::ControlList, id, Class::Normal, |req| Msg::ControlList { req, id }).await?;
+        let answer = self
+            .sup
+            .ask(Want::ControlList, id, Class::Normal, |req| Msg::ControlList { req, id })
+            .await?;
         self.sup.home()?;
         match answer {
             Answer::ControlMembers(members) => Ok(members),
@@ -18,11 +21,17 @@ impl Tree {
         }
     }
 
-    pub(crate) async fn stop_selected(&self, members: Vec<ControlMember>) -> Result<Vec<crate::SelectiveStopOutcome>, Error> {
+    pub(crate) async fn stop_selected(
+        &self,
+        members: Vec<ControlMember>,
+    ) -> Result<Vec<crate::SelectiveStopOutcome>, Error> {
         self.sup.home()?;
         let id = self.id;
         let want = Want::ControlStop { count: members.len() };
-        let answer = self.sup.ask(want, id, Class::Normal, |req| Msg::ControlStop { req, id, members }).await?;
+        let answer = self
+            .sup
+            .ask(want, id, Class::Normal, |req| Msg::ControlStop { req, id, members })
+            .await?;
         self.sup.home()?;
         match answer {
             Answer::ControlResults(exited) => Ok(exited),

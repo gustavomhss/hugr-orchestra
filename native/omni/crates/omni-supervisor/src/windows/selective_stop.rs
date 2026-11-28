@@ -32,10 +32,14 @@ pub(super) fn list(job: &OwnedHandle) -> io::Result<Vec<Member>> {
                 return Err(io::Error::other("Job member changed during control snapshot"));
             };
             // SAFETY: the process handle is valid and has synchronize access.
-            if unsafe { WaitForSingleObject(handle.as_raw_handle(), 0) } != windows_sys::Win32::Foundation::WAIT_TIMEOUT {
+            if unsafe { WaitForSingleObject(handle.as_raw_handle(), 0) } != windows_sys::Win32::Foundation::WAIT_TIMEOUT
+            {
                 return Err(io::Error::other("Job member is not known live"));
             }
-            Ok(Member { pid, birth: inventory::created(&handle)? })
+            Ok(Member {
+                pid,
+                birth: inventory::created(&handle)?,
+            })
         })
         .collect()
 }
@@ -50,21 +54,31 @@ pub(super) fn stop(job: &OwnedHandle, selected: &[Member]) -> io::Result<Vec<Sel
     if selected.iter().any(|member| !seen.insert(member.pid)) {
         return Err(io::Error::other("duplicate selective stop member"));
     }
-    let held = selected.iter().map(|member| pin(job, member)).collect::<io::Result<Vec<_>>>()?;
+    let held = selected
+        .iter()
+        .map(|member| pin(job, member))
+        .collect::<io::Result<Vec<_>>>()?;
     // Issue the entire batch before observing any process. Waiting zero keeps the supervisor responsive;
     // an unsignalled handle or a failed termination has an unknown outcome and must be reconciled.
-    let requested: Vec<_> = held.iter().map(|process| {
-        // SAFETY: every handle has PROCESS_TERMINATE and stays open through observation.
-        unsafe { TerminateProcess(process.as_raw_handle(), 1) != 0 }
-    }).collect();
-    Ok(held.iter().zip(requested).map(|(process, requested)| {
-        // SAFETY: the pinned handle has synchronize access and remains open.
-        if requested && unsafe { WaitForSingleObject(process.as_raw_handle(), 0) } == WAIT_OBJECT_0 {
-            SelectiveStopOutcome::Exited
-        } else {
-            SelectiveStopOutcome::Unknown
-        }
-    }).collect())
+    let requested: Vec<_> = held
+        .iter()
+        .map(|process| {
+            // SAFETY: every handle has PROCESS_TERMINATE and stays open through observation.
+            unsafe { TerminateProcess(process.as_raw_handle(), 1) != 0 }
+        })
+        .collect();
+    Ok(held
+        .iter()
+        .zip(requested)
+        .map(|(process, requested)| {
+            // SAFETY: the pinned handle has synchronize access and remains open.
+            if requested && unsafe { WaitForSingleObject(process.as_raw_handle(), 0) } == WAIT_OBJECT_0 {
+                SelectiveStopOutcome::Exited
+            } else {
+                SelectiveStopOutcome::Unknown
+            }
+        })
+        .collect())
 }
 
 fn pin(job: &OwnedHandle, member: &Member) -> io::Result<OwnedHandle> {

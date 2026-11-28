@@ -324,15 +324,23 @@ fn selective_stop_preserves_explicit_outcomes() {
         omni_proto::ControlMember { pid: 2, birth: 20 },
     ];
     let caller = std::thread::spawn(move || block(spawned.tree.stop_selected(members)));
-    let Msg::ControlStop { req, id, .. } = peer.recv() else { panic!("expected ControlStop") };
+    let Msg::ControlStop { req, id, .. } = peer.recv() else {
+        panic!("expected ControlStop")
+    };
     peer.send(&Msg::ControlResults {
         req,
         id,
-        outcomes: vec![omni_proto::SelectiveStopOutcome::Exited, omni_proto::SelectiveStopOutcome::Unknown],
+        outcomes: vec![
+            omni_proto::SelectiveStopOutcome::Exited,
+            omni_proto::SelectiveStopOutcome::Unknown,
+        ],
     });
-    assert_eq!(caller.join().unwrap().unwrap(), vec![
-        omni_proto::SelectiveStopOutcome::Exited,
-        omni_proto::SelectiveStopOutcome::Unknown,
-    ]);
+    assert_eq!(
+        caller.join().unwrap().unwrap(),
+        vec![
+            omni_proto::SelectiveStopOutcome::Exited,
+            omni_proto::SelectiveStopOutcome::Unknown,
+        ]
+    );
     assert!(sup.alive());
 }

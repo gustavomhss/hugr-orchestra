@@ -94,7 +94,11 @@ impl Gen {
                 if !st.selective_stop {
                     return Err(Error::selective_unavailable());
                 }
-                if st.pending.values().any(|p| matches!(p.want, Want::ControlList | Want::ControlStop { .. })) {
+                if st
+                    .pending
+                    .values()
+                    .any(|p| matches!(p.want, Want::ControlList | Want::ControlStop { .. }))
+                {
                     return Err(Error::selective_pending());
                 }
             }

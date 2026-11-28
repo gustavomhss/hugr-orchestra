@@ -187,7 +187,11 @@ pub enum Msg {
     /// host → supervisor: list verified process identities for selective stop.
     ControlList { req: u64, id: u64 },
     /// host → supervisor: stop exactly the supplied process identities.
-    ControlStop { req: u64, id: u64, members: Vec<ControlMember> },
+    ControlStop {
+        req: u64,
+        id: u64,
+        members: Vec<ControlMember>,
+    },
     /// host → supervisor: the host dropped its handle; cleanup duty stays. Reply: `Ack`.
     Release {
         /// Request id.
@@ -264,9 +268,17 @@ pub enum Msg {
         identity: Option<String>,
     },
     /// supervisor → host: process identities eligible for selective stop.
-    ControlMembers { req: u64, id: u64, members: Vec<ControlMember> },
+    ControlMembers {
+        req: u64,
+        id: u64,
+        members: Vec<ControlMember>,
+    },
     /// supervisor → host: per-member termination outcome.
-    ControlResults { req: u64, id: u64, outcomes: Vec<SelectiveStopOutcome> },
+    ControlResults {
+        req: u64,
+        id: u64,
+        outcomes: Vec<SelectiveStopOutcome>,
+    },
     /// supervisor → host: reply without data.
     Ack {
         /// Request id.

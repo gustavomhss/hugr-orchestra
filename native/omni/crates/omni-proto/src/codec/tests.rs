@@ -53,7 +53,14 @@ fn all() -> Vec<Msg> {
         Msg::Observe { req: 91, id: u64::MAX },
         Msg::ObserveFootprint { req: 92, id: u64::MAX },
         Msg::ControlList { req: 94, id: 7 },
-        Msg::ControlStop { req: 95, id: 7, members: vec![ControlMember { pid: 42, birth: u64::MAX }] },
+        Msg::ControlStop {
+            req: 95,
+            id: 7,
+            members: vec![ControlMember {
+                pid: 42,
+                birth: u64::MAX,
+            }],
+        },
         Msg::ObservedTree {
             req: 92,
             id: u64::MAX,
@@ -115,9 +122,24 @@ fn all() -> Vec<Msg> {
                 },
             ],
         },
-        Msg::ControlMembers { req: 96, id: 7, members: vec![] },
-        Msg::ControlMembers { req: 97, id: 7, members: vec![ControlMember { pid: 42, birth: 123456789 }] },
-        Msg::ControlResults { req: 98, id: 7, outcomes: vec![SelectiveStopOutcome::Exited, SelectiveStopOutcome::Unknown] },
+        Msg::ControlMembers {
+            req: 96,
+            id: 7,
+            members: vec![],
+        },
+        Msg::ControlMembers {
+            req: 97,
+            id: 7,
+            members: vec![ControlMember {
+                pid: 42,
+                birth: 123456789,
+            }],
+        },
+        Msg::ControlResults {
+            req: 98,
+            id: 7,
+            outcomes: vec![SelectiveStopOutcome::Exited, SelectiveStopOutcome::Unknown],
+        },
         Msg::Processes {
             req: 1,
             id: 2,
@@ -268,13 +290,69 @@ fn encode_refuses_what_decode_would_refuse() {
 #[test]
 fn selective_control_counts_are_bounded_and_nonempty_where_required() {
     let mut out = Vec::new();
-    assert!(encode(&Msg::ControlStop { req: 1, id: 2, members: vec![] }, &mut out).is_err());
-    assert!(encode(&Msg::ControlResults { req: 1, id: 2, outcomes: vec![] }, &mut out).is_err());
-    assert!(encode(&Msg::ControlStop { req: 1, id: 2, members: vec![ControlMember { pid: 1, birth: 1 }; 257] }, &mut out).is_err());
-    assert!(encode(&Msg::ControlMembers { req: 1, id: 2, members: vec![ControlMember { pid: 1, birth: 1 }; 257] }, &mut out).is_err());
-    assert!(encode(&Msg::ControlResults { req: 1, id: 2, outcomes: vec![SelectiveStopOutcome::Exited; 257] }, &mut out).is_err());
+    assert!(
+        encode(
+            &Msg::ControlStop {
+                req: 1,
+                id: 2,
+                members: vec![]
+            },
+            &mut out
+        )
+        .is_err()
+    );
+    assert!(
+        encode(
+            &Msg::ControlResults {
+                req: 1,
+                id: 2,
+                outcomes: vec![]
+            },
+            &mut out
+        )
+        .is_err()
+    );
+    assert!(
+        encode(
+            &Msg::ControlStop {
+                req: 1,
+                id: 2,
+                members: vec![ControlMember { pid: 1, birth: 1 }; 257]
+            },
+            &mut out
+        )
+        .is_err()
+    );
+    assert!(
+        encode(
+            &Msg::ControlMembers {
+                req: 1,
+                id: 2,
+                members: vec![ControlMember { pid: 1, birth: 1 }; 257]
+            },
+            &mut out
+        )
+        .is_err()
+    );
+    assert!(
+        encode(
+            &Msg::ControlResults {
+                req: 1,
+                id: 2,
+                outcomes: vec![SelectiveStopOutcome::Exited; 257]
+            },
+            &mut out
+        )
+        .is_err()
+    );
     for (kind, count) in [(0x0a, 0u32), (0x0a, 257), (0x89, 257), (0x8a, 0), (0x8a, 257)] {
-        let body = [&[kind][..], &1u64.to_le_bytes(), &2u64.to_le_bytes(), &count.to_le_bytes()].concat();
+        let body = [
+            &[kind][..],
+            &1u64.to_le_bytes(),
+            &2u64.to_le_bytes(),
+            &count.to_le_bytes(),
+        ]
+        .concat();
         assert!(decode(&framed(&body)).is_err(), "kind {kind:#x} count {count}");
     }
 }
@@ -282,12 +360,20 @@ fn selective_control_counts_are_bounded_and_nonempty_where_required() {
 #[test]
 fn selective_results_round_trip_at_large_counts() {
     for count in [22, 256] {
-        let outcomes: Vec<_> = (0..count).map(|i| if i % 2 == 0 {
-            SelectiveStopOutcome::Exited
-        } else {
-            SelectiveStopOutcome::Unknown
-        }).collect();
-        let msg = Msg::ControlResults { req: 1, id: 2, outcomes };
+        let outcomes: Vec<_> = (0..count)
+            .map(|i| {
+                if i % 2 == 0 {
+                    SelectiveStopOutcome::Exited
+                } else {
+                    SelectiveStopOutcome::Unknown
+                }
+            })
+            .collect();
+        let msg = Msg::ControlResults {
+            req: 1,
+            id: 2,
+            outcomes,
+        };
         let mut bytes = Vec::new();
         encode(&msg, &mut bytes).unwrap();
         let (decoded, used) = decode(&bytes).unwrap().unwrap();

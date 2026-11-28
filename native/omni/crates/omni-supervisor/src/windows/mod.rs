@@ -259,13 +259,26 @@ impl Supervisor {
                     selective_stop::list(tree.inventory_job()?)
                 });
                 match result {
-                    None => Msg::Ack { req, id, result: Ack::Unknown },
-                    Some(Err(_)) => Msg::Ack { req, id, result: Ack::Error },
+                    None => Msg::Ack {
+                        req,
+                        id,
+                        result: Ack::Unknown,
+                    },
+                    Some(Err(_)) => Msg::Ack {
+                        req,
+                        id,
+                        result: Ack::Error,
+                    },
                     Some(Ok(members)) => Msg::ControlMembers {
-                        req, id,
-                        members: members.into_iter().map(|member| omni_proto::ControlMember {
-                            pid: member.pid, birth: member.birth,
-                        }).collect(),
+                        req,
+                        id,
+                        members: members
+                            .into_iter()
+                            .map(|member| omni_proto::ControlMember {
+                                pid: member.pid,
+                                birth: member.birth,
+                            })
+                            .collect(),
                     },
                 }
             }
@@ -274,18 +287,27 @@ impl Supervisor {
                     if tree.gone || tree.stop.is_some() {
                         return Err(std::io::Error::other("tree is not available for control"));
                     }
-                    let selected: Vec<_> = members.into_iter().map(|member| selective_stop::Member {
-                        pid: member.pid, birth: member.birth,
-                    }).collect();
+                    let selected: Vec<_> = members
+                        .into_iter()
+                        .map(|member| selective_stop::Member {
+                            pid: member.pid,
+                            birth: member.birth,
+                        })
+                        .collect();
                     selective_stop::stop(tree.inventory_job()?, &selected)
                 });
                 match result {
-                    None => Msg::Ack { req, id, result: Ack::Unknown },
-                    Some(Err(_)) => Msg::Ack { req, id, result: Ack::Error },
-                    Some(Ok(outcomes)) => Msg::ControlResults {
-                        req, id,
-                        outcomes,
+                    None => Msg::Ack {
+                        req,
+                        id,
+                        result: Ack::Unknown,
                     },
+                    Some(Err(_)) => Msg::Ack {
+                        req,
+                        id,
+                        result: Ack::Error,
+                    },
+                    Some(Ok(outcomes)) => Msg::ControlResults { req, id, outcomes },
                 }
             }
             Msg::List { req, id } => match self.live(id).map(|t| t.list()) {
