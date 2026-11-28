@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { mkdtemp, realpath, writeFile } from "node:fs/promises"
+import { mkdtemp, realpath, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
@@ -9,7 +9,7 @@ import { startOwnedServe } from "./owned-serve"
 import { until } from "./omni-process.fixture"
 
 const on = DesktopOmni.enabled()
-const channelModule = new URL("../../../../packages/schema/src/activity-private-channel.ts", import.meta.url).pathname
+const channelModule = new URL("../../../../packages/schema/src/activity-private-channel.ts", import.meta.url).href
 
 // The child reads only the framed stdin channel. The protocol implementation stays shared with the parent.
 const privateServe = `
@@ -17,6 +17,8 @@ const channel = await import(${JSON.stringify(channelModule)})
 const input = new Uint8Array(await new Response(Bun.stdin.stream()).arrayBuffer())
 const key = channel.keyFromFrame(input)
 if (!key) process.exit(20)
+const publicInput = JSON.stringify([process.argv, process.env])
+if (publicInput.includes(Buffer.from(key).toString("hex")) || publicInput.includes(Buffer.from(key).toString("base64"))) process.exit(21)
 const signer = await channel.signer(key)
 const port = Number(process.argv[process.argv.indexOf("--port") + 1])
 const password = process.env.ORCHESTRA_SERVER_PASSWORD
@@ -28,13 +30,15 @@ Bun.serve({
   fetch: async (request) => {
     if (new URL(request.url).pathname === "/api/health") return new Response("ok", { status: request.headers.get("authorization") === expected ? 200 : 401 })
     if (new URL(request.url).pathname !== channel.path || request.method !== "POST") return new Response("missing", { status: 404 })
-    if (mode === "hold") return new Promise(() => {})
+    if (mode === "hold") {
+      console.log("probe waiting")
+      return new Promise(() => {})
+    }
     if (mode === "exit") setTimeout(() => process.exit(7), 100)
     const nonce = request.headers.get(channel.nonceHeader)
     if (!await signer.verify("probe-request", nonce, request.headers.get(channel.macHeader))) return new Response("bad request signature", { status: 401 })
-    const responseNonce = mode === "reflect" ? nonce : nonce
-    const mac = mode === "bad-mac" ? "0".repeat(64) : await signer.sign(mode === "reflect" ? "probe-request" : "probe-response", responseNonce)
-    return new Response(null, { status: 200, headers: { [channel.nonceHeader]: responseNonce, [channel.macHeader]: mac } })
+    const mac = mode === "bad-mac" ? "0".repeat(64) : await signer.sign(mode === "reflect" ? "probe-request" : "probe-response", nonce)
+    return new Response(null, { status: 204, headers: { [channel.macHeader]: mac } })
   },
 })
 `
@@ -52,7 +56,13 @@ async function startProbe(mode?: string) {
     write: (_stream, message) => output.push(message),
     privateActivityApproval: true,
   })
-  return { owned, logs, output }
+  return {
+    owned, logs, output,
+    async close() {
+      await owned.listener.stop()
+      await rm(dir, { recursive: true, force: true })
+    },
+  }
 }
 
 test.skipIf(!on)("owned serve: private approval uses a signed stdin channel and exposes no secret", async () => {
@@ -68,7 +78,7 @@ test.skipIf(!on)("owned serve: private approval uses a signed stdin channel and 
     expect(probe.output.join("\n")).not.toContain(ActivityPrivateChannel.option)
     expect(probe.output.join("\n")).not.toContain(ActivityPrivateChannel.path)
   } finally {
-    await probe.owned.listener.stop()
+    await probe.close()
   }
 }, 30_000)
 
@@ -92,7 +102,7 @@ test.skipIf(!on)("owned serve: approval defaults false and rejects invalid signa
       await probe.owned.health.wait
       expect(await probe.owned.probeActivityApproval()).toBe(false)
     } finally {
-      await probe.owned.listener.stop()
+      await probe.close()
     }
   }
 }, 60_000)
@@ -104,10 +114,11 @@ test.skipIf(!on)("owned serve: approval probe cancellation and child exit invali
     await held.owned.health.wait
     const controller = new AbortController()
     const pending = held.owned.probeActivityApproval(controller.signal)
+    await until(() => held.output.includes("probe waiting"))
     controller.abort()
     expect(await pending).toBe(false)
   } finally {
-    await held.owned.listener.stop()
+    await held.close()
   }
 
   const exiting = await startProbe("exit")
@@ -117,6 +128,6 @@ test.skipIf(!on)("owned serve: approval probe cancellation and child exit invali
     await until(() => exiting.logs.some((line) => line.includes('"code":7')))
     expect(await exiting.owned.probeActivityApproval()).toBe(false)
   } finally {
-    await exiting.owned.listener.stop()
+    await exiting.close()
   }
 }, 60_000)
