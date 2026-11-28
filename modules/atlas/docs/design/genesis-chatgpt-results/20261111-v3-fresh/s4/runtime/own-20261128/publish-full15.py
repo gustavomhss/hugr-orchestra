@@ -121,6 +121,47 @@ def main():
         served = observed['body'].encode('utf-8')
         insist(observed['kind'] == 'ready' and observed['manifest'] == ownership and observed['result'] == results[artifact['key']]
                and len(served) == body['byte_length'] and sha(served) == body['sha256'], 'served artifact differs from the accepted version')
+    # Forward only the frozen consumer route through the public reader. Full-body calls already
+    # verified above can be reused byte-for-byte without adding them to the consumer's budget twice.
+    route = {
+        'S4:L3:system-flows': None,
+        'S4:L2:atlas-system': None,
+        'S4:L2:genesis-governance': None,
+        'S4:L2:continuity-rag-operations': None,
+        'S4:L1:ownership-boundaries': 'What each identity means',
+        'S4:L1:atlas-engine': 'Knowledge: shape, routing, human ratification, and ownership results',
+        'S4:L1:atlas-host-genesis': 'Ownership publication, observation and rebuild',
+        'S4:L1:continuity-rag': 'Continuity: recoverable request reduction around the Session core',
+        'S4:L1:coverage-governance': 'Observer limits are not scope limits',
+        'S4:L1:host-boundaries': '2. HTTP RAG → Store por requisição → SQLite',
+        'S4:L1:native-runtime-delta': 'Consumo e manutenção pela porta real',
+    }
+    read_tags = {artifact['key']: f'read-{number:02d}' for number, artifact in enumerate(package['artifacts'], 1)}
+    shallow = json.loads((out / (read_tags['S4:L4:entry'] + '.stdout.json')).read_bytes())
+    shallow_bytes = len(shallow['body'].encode('utf-8'))
+    insist(shallow_bytes <= 6000, 'shallow consumer body exceeds the frozen limit')
+    trace, total_bytes = [], shallow_bytes
+    for number, (key, section) in enumerate(route.items(), 1):
+        tag = read_tags[key]
+        if section is not None:
+            tag = f'consumer-section-{number:02d}'
+            query = out / (tag + '.query.json')
+            write_json(query, {'scope': SCOPE, 'key': key, 'section': section, 'maxBytes': 18000})
+            cli(runtime, root, out, tag, 'read', query)
+        reply = out / (tag + '.stdout.json')
+        raw = reply.read_bytes()
+        observed = json.loads(raw)
+        size = len(observed['body'].encode('utf-8'))
+        insist(observed['kind'] == 'ready' and observed['manifest'] == ownership and observed['result'] == results[key], 'consumer read escaped the approved selection')
+        insist(size <= 18000, 'consumer body exceeds the per-read limit')
+        trace.append({'key': key, 'section': section, 'body_bytes': size, 'response': reply.name, 'response_sha256': sha(raw)})
+        total_bytes += size
+    insist(len(trace) + 1 == 12 and total_bytes <= 62000, 'consumer route exceeds frozen budget')
+    write_json(out / 'consumer-trace.json', {
+        'status': 'ATLAS_REPLIES_READY_FOR_INDEPENDENT_CONSUMER',
+        'manifest': ownership, 'index_responses': 1, 'read_responses': len(trace) + 1,
+        'shallow_body_bytes': shallow_bytes, 'returned_body_bytes': total_bytes, 'deep_responses': trace,
+    })
     write_json(out / 'summary.json', {
         'status': 'PUBLISHED_AND_READ_BACK', 'candidate_id': CANDIDATE, 'manifest': ownership,
         'runtime': RUNTIME, 'indexes': len(candidate['roots']), 'body_reads': len(package['artifacts']),
