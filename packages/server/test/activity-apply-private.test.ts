@@ -31,9 +31,9 @@ test("Apply uses separately signed endpoints and never accepts a renderer-suppli
     },
   )
   secret.fill(0)
-  const post = async (route: string, body: unknown, signedFor = route, origin?: string) => {
+  const post = async (route: string, body: unknown, signedFor = route, origin?: string, fixedNonce?: string) => {
     const endpoint = (ActivityPrivateChannel.mount + route) as ActivityPrivateChannel.ArmPath
-    const nonce = ActivityPrivateChannel.nonce()
+    const nonce = fixedNonce ?? ActivityPrivateChannel.applyNonce()
     const text = JSON.stringify(body)
     const headers = new Headers({
       [ActivityPrivateChannel.nonceHeader]: nonce,
@@ -64,4 +64,11 @@ test("Apply uses separately signed endpoints and never accepts a renderer-suppli
     status: 200, value: { ...binding, previewID: "apply-1", outcome: "Out" },
   })
   expect(confirms).toBe(1)
+  const replay = ActivityPrivateChannel.applyNonce()
+  expect(await post("/apply-confirm", { previewID: "apply-1" }, "/apply-confirm", undefined, replay)).toMatchObject({ status: 200 })
+  expect(await post("/apply-confirm", { previewID: "apply-1" }, "/apply-confirm", undefined, replay)).toEqual({ status: 403 })
+  expect(confirms).toBe(2)
+  const expired = (Date.now() - 60_001).toString(16).padStart(12, "0") + ActivityPrivateChannel.nonce().slice(12)
+  expect(await post("/apply-confirm", { previewID: "apply-1" }, "/apply-confirm", undefined, expired)).toEqual({ status: 403 })
+  expect(confirms).toBe(2)
 })

@@ -76,6 +76,8 @@ export async function acquire(
     if (signal.aborted || input.destroyed) fail()
   })
   const signer = await ActivityPrivateChannel.signer(key).finally(() => key.fill(0))
+  const applyNonces = new Map<string, number>()
+  let latestTime = 0
   return {
     mount: ActivityPrivateChannel.mount,
     async handler(request) {
@@ -107,6 +109,17 @@ export async function acquire(
         (emptyPath && !custody) || (freezePath && !freeze)) return forbidden()
       const body = await readBody(request)
       if (body === undefined || !nonce || !await signer.verifyArm("arm-request", endpoint, nonce, mac, body)) return forbidden()
+      if (applyPath) {
+        // Keep the high-water clock even if the wall clock moves backwards, so expired nonces cannot reopen.
+        latestTime = Math.max(latestTime, Date.now())
+        const issued = Number.parseInt(nonce.slice(0, 12), 16)
+        if (issued > latestTime + 60_000 || issued < latestTime - 60_000) return forbidden()
+        for (const [seen, time] of applyNonces) {
+          if (time < latestTime - 60_000) applyNonces.delete(seen)
+        }
+        if (applyNonces.has(nonce) || applyNonces.size >= 4096) return forbidden()
+        applyNonces.set(nonce, issued)
+      }
       const decoded = parseBody(body)
       if (request.signal.aborted) return forbidden()
       const operation = armPath && arm ? (

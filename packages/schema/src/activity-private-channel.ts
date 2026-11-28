@@ -44,6 +44,10 @@ export function nonce() {
   return hex(crypto.getRandomValues(new Uint8Array(keyBytes)))
 }
 
+export function applyNonce() {
+  return Date.now().toString(16).padStart(12, "0") + nonce().slice(12)
+}
+
 type Direction = "probe-request" | "probe-response"
 export type ArmDirection = "arm-request" | "arm-response"
 export type ArmPath = typeof inspectArmPath | typeof previewPath | typeof confirmPath | typeof stopPreviewPath | typeof stopConfirmPath |
