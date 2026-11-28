@@ -1,0 +1,116 @@
+name: genesis-runtime-qualification
+
+# Residual qualification only; original atlas-pilot remains the shared gate evidence.
+on:
+  workflow_dispatch:
+  push:
+    branches: ["genesis-runtime-resume"]
+    paths:
+      - ".github/workflows/genesis-runtime-qualification.yml"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/qualification.py"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/input-lock.json"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: genesis-runtime-qualification-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  RUNTIME_SHA: db9b4235022c4df32fe3bfd4faeea8adcd69abb7
+  QUALIFICATION_PATH: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Pin runtime in its own worktree
+        shell: bash
+        run: |
+          set -euo pipefail
+          QUALIFICATION_ROOT="$RUNNER_TEMP/genesis-runtime-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          echo "QUALIFICATION_ROOT=$QUALIFICATION_ROOT" >> "$GITHUB_ENV"
+          test ! -e "$QUALIFICATION_ROOT"
+          mkdir -p "$QUALIFICATION_ROOT"
+          git cat-file -e "$RUNTIME_SHA^{commit}"
+          git worktree add --detach "$QUALIFICATION_ROOT/runtime" "$RUNTIME_SHA"
+          test "$(git -C "$QUALIFICATION_ROOT/runtime" rev-parse HEAD)" = "$RUNTIME_SHA"
+      - name: Install exact Atlas dependencies
+        working-directory: ${{ env.QUALIFICATION_ROOT }}/runtime/modules/atlas
+        run: npm ci
+      - name: Build and typecheck the pinned runtime
+        working-directory: ${{ env.QUALIFICATION_ROOT }}/runtime/modules/atlas
+        run: bun typecheck
+      - name: Qualify the complete packages through the original CLI
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 "$QUALIFICATION_PATH/qualification.py" \
+            --repository "$GITHUB_WORKSPACE" \
+            --runtime-root "$QUALIFICATION_ROOT/runtime" \
+            --state-dir "$QUALIFICATION_ROOT/data" \
+            --output-dir "$QUALIFICATION_ROOT/evidence" \
+            --lock "$QUALIFICATION_PATH/input-lock.json"
+      - name: Preserve package and execution receipts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: genesis-runtime-prepare-${{ github.sha }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          path: ${{ env.QUALIFICATION_ROOT }}/evidence
+          retention-days: 30
+
+  guards:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Check the current branch against dev
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir "$RUNNER_TEMP/genesis-runtime-guards"
+          export GUARD_BASE_SHA="$(git rev-parse origin/dev)"
+          set +e
+          bun run check:guards --base origin/dev > "$RUNNER_TEMP/genesis-runtime-guards/guards.log" 2>&1
+          GUARD_EXIT="$?"
+          set -e
+          export GUARD_EXIT
+          cat "$RUNNER_TEMP/genesis-runtime-guards/guards.log"
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "genesis-runtime-guards"
+          raw = (root / "guards.log").read_bytes()
+          receipt = {
+              "schema": "genesis-s4-guards/v1",
+              "candidate_revision": os.environ["GITHUB_SHA"],
+              "base_ref": "origin/dev",
+              "base_sha": os.environ["GUARD_BASE_SHA"],
+              "argv": ["bun", "run", "check:guards", "--base", "origin/dev"],
+              "exit_code": int(os.environ["GUARD_EXIT"]),
+              "log_sha256": hashlib.sha256(raw).hexdigest(),
+              "log_bytes": len(raw),
+          }
+          (root / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
+          print("GENESIS_RUNTIME_GUARDS_JSON=" + json.dumps(receipt, sort_keys=True))
+          PY
+          exit "$GUARD_EXIT"
+      - name: Preserve actual guard result
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: genesis-runtime-guards-${{ github.sha }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          path: ${{ runner.temp }}/genesis-runtime-guards
+          retention-days: 30

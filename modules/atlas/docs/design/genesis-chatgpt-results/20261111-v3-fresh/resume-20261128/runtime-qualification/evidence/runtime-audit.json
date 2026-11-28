@@ -1,0 +1,240 @@
+{
+  "schema": "genesis-runtime-static-audit/v1",
+  "candidate_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "comparison_revision": "22815b6821dce26562624b4711c705c7cd786268",
+  "method": "Read-only GitHub connector file retrieval and compare API; no product tests executed by this reviewer.",
+  "inspected_blobs": [
+    {
+      "path": "modules/atlas/scripts/genesis-native.ts",
+      "git_blob_sha": "70ae6794086c73e8178e574c61fbe95739d45a6c"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native.ts",
+      "git_blob_sha": "187610f59758e185a8889412b9058b75eb6e62ca"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+      "git_blob_sha": "01a218ede3f71ef585fd280bc183e545f2a94321"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "git_blob_sha": "b12538b8da1aaf75f5f25784704a07b700513c3b"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+      "git_blob_sha": "64d29d3e67dea3bb826be5960a5b9bbf6719edc0"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "git_blob_sha": "ef317aab980f42601ce78269fcfba10649f06735"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/store.ts",
+      "git_blob_sha": "2679bc965f9a7e1724177b25e76fcddfa8509a10"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/store-evaluation-identity.ts",
+      "git_blob_sha": "cf7458a5007070bed2dc38be50f8d92df12f8cd2"
+    },
+    {
+      "path": "modules/atlas/packages/kernel/src/canonical.ts",
+      "git_blob_sha": "fefcf3b44c6bbebe4c23b47001fd25510f5a6fde"
+    },
+    {
+      "path": "modules/atlas/packages/kernel/src/encoder.ts",
+      "git_blob_sha": "e6ab4f03ab3cc4c658a1455d555e1d868280cb67"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+      "git_blob_sha": "fcb6b787dce85bb275d1b8772e7afd34718b0d5c"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+      "git_blob_sha": "6afce21027c84af72c2e9e02bdda3142933c43a4"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-input.test.ts",
+      "git_blob_sha": "6ecb4614c35f5029d349040386521a5060b04b7d"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-observe.test.ts",
+      "git_blob_sha": "6634d269bc38f0cf3740e6de19a8b0b0fea83b5c"
+    },
+    {
+      "path": "modules/atlas/vitest.config.ts",
+      "git_blob_sha": "e59214d9ce2afa286449d3858226df4c101e3d1b"
+    },
+    {
+      "path": "modules/atlas/package.json",
+      "git_blob_sha": "49cf8584beca5e4c4a4a79e7f5e5468c506817d4"
+    },
+    {
+      "path": ".github/workflows/atlas-pilot.yml",
+      "git_blob_sha": "e4a3036ffecd684d52c70a4c8cd346be9601e5c3"
+    }
+  ],
+  "identity": {
+    "runtime_package_trees": [
+      {
+        "path": "modules/atlas/packages/adapter-io",
+        "git_tree_sha": "2d60573b773b9069bc97269e698874d57fccb42d"
+      },
+      {
+        "path": "modules/atlas/packages/contracts",
+        "git_tree_sha": "316da8f057e0860e4f3108a7de0f763de9ed6a93"
+      },
+      {
+        "path": "modules/atlas/packages/kernel",
+        "git_tree_sha": "957c6d1e5331f733614a975444c8d9c9ec973eaa"
+      },
+      {
+        "path": "modules/atlas/packages/knowledge",
+        "git_tree_sha": "b4b314257e4f32589827c4e32da228af3ce02cfd"
+      }
+    ],
+    "lockfile_blob": "52385ecfa7a9ee21c5ce3918790029687cddfcd0",
+    "tsconfig_blob": "a6cc503f7191410eabd35731c34125fd404050f9",
+    "tsconfig_base_blob": "a1ea42b6351770666502738cc8578ea3946171cb",
+    "canonical_encoder_lockfile_and_tsconfigs_equal_at": [
+      "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+      "22815b6821dce26562624b4711c705c7cd786268",
+      "db9b4235022c4df32fe3bfd4faeea8adcd69abb7"
+    ],
+    "observation_identity": "String(id({ kind: 'ownership-source', version: 1, bytes: Array.from(complete_bytes) }))",
+    "identity_algorithm": "Kernel canonicalForm (JCS subset, NFC keys/strings) followed by default BLAKE3; input SHA256 and Git blob SHA1 are separate provenance checks."
+  },
+  "limits": {
+    "ownership_input_max_bytes": 2097152,
+    "native_transport_reference_body_max_bytes": 8388608,
+    "cas_read_max_bytes": 67108864,
+    "stream_chunk_bytes": 8192,
+    "source_file_kind": "regular files only; symlinks in any component refused",
+    "unavailable_vs_absent": "oversize, access/read failures and unobservable roots produce unavailable at observer; absent needs corroborated negative lookup",
+    "universal_race_freedom": false,
+    "cross_package_build_dependencies_supported": false,
+    "implementation_hash_coverage": "candidate.implementation hashes only direct adapter, format, io, binding files; full runtime SHA/tree and transitive package/dependency pins must be recorded outside candidate."
+  },
+  "comparison": {
+    "status": "ahead",
+    "ahead_by": 3,
+    "changed_file_count": 58,
+    "unchanged_prepare_files": [
+      "modules/atlas/scripts/genesis-native.ts",
+      "modules/atlas/packages/adapter-io/src/genesis-native.ts",
+      "modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+      "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+      "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "modules/atlas/packages/kernel/src/canonical.ts",
+      "modules/atlas/packages/kernel/src/encoder.ts",
+      "modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+      "modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+      "modules/atlas/packages/adapter-io/test/ownership-input.test.ts",
+      "modules/atlas/packages/adapter-io/test/ownership-observe.test.ts",
+      "modules/atlas/vitest.config.ts",
+      "modules/atlas/package.json"
+    ],
+    "changed_areas": [
+      "evaluation policy/runtime/store identity",
+      "governed emit/link/promote and composed access",
+      "knowledge ownership read/update/evaluation",
+      "evaluation rebuild",
+      "generated boundary",
+      "four evaluation test files in atlas-pilot"
+    ],
+    "scope": "Use db9b423's own CI for composed runtime. 22815b proof remains historical; direct prepare files are blob-compatible but transitive store changed."
+  },
+  "coverage": [
+    {
+      "case": "Exact 2 MiB and complete input/kernel identity",
+      "file": "modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+      "test": "prepares and serves a complete source at the shared ceiling, then detects last-byte drift",
+      "covers": [
+        "complete SHA256 and git blob source reference",
+        "kernel id differs from transport SHA256",
+        "prepare + synthetic binding + publish + index/read",
+        "last-byte change invalidates read and publish"
+      ]
+    },
+    {
+      "case": "Observer bounds, tail and old identity",
+      "file": "modules/atlas/packages/adapter-io/test/ownership-observe.test.ts",
+      "test": "HO-02 + keeps the v1 identity over all %i bytes",
+      "covers": [
+        "exact 2097152 accepted",
+        "+1 unavailable, not absent",
+        "last-byte change alters version",
+        "old 256000 / first expanded 256001 / 1131057 sizes",
+        "BOM, composed/decomposed text bytes, CRLF and binary",
+        "resource log is cumulative Vitest worker peak, not a per-file heap guarantee"
+      ]
+    },
+    {
+      "case": "IO and path refusal",
+      "file": "modules/atlas/packages/adapter-io/test/ownership-observe.test.ts",
+      "test": "HO-03/04/05/09/10",
+      "covers": [
+        "corroborated absent",
+        "EACCES/EPERM/EIO/ENOENT read failure via narrow injected seams",
+        "non-regular paths and escapes",
+        "unobservable membership",
+        "partial Git output refused"
+      ]
+    },
+    {
+      "case": "Native refusal",
+      "file": "modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+      "test": "rejects final and ancestor symlinks, unavailable membership and oversized observed source files",
+      "covers": [
+        "symlinks",
+        "missing membership",
+        "oversized source_ref native-file-limit",
+        "oversized additional input native-input-unavailable"
+      ]
+    },
+    {
+      "case": "Exact new binding and authority separation",
+      "file": "modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+      "test": "requires two exact new binding decisions, all criteria and every input/result pair",
+      "covers": [
+        "2 distinct reviewers",
+        "runtime-import-binding purpose",
+        "same candidate_id and contract",
+        "each input/result and criterion",
+        "semantic PASS is insufficient"
+      ]
+    },
+    {
+      "case": "Recovery and old state",
+      "file": "modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+      "test": "NR1-01/02/03/04",
+      "covers": [
+        "durable CAS resume",
+        "HOLD on failed activation after source drift",
+        "incompatible rollback refused",
+        "historical reads explicit",
+        "old approval/transport cannot replace newly accepted scope",
+        "actual main-reader overlap of sidecar activation"
+      ]
+    }
+  ],
+  "minimum_residual": [
+    "Freeze code db9b423, source1cde2ff7, protocol ee2521a5, package commits and exact package SHA256s.",
+    "Materialize complete source and transport references by their effective commit/path; fail on conflicts and preserve provenance outside input root. No summaries or truncation.",
+    "On authorized GitHub Actions runner run native prepare CLI once per complete S1-03 (12 artifacts) and S2 (13 artifacts), outputting new unique external files.",
+    "Verify complete candidate entries/required keys and every declared input, all six S1-03 large files with whole bytes/Git blob/SHA256, exact kernel input versions, no missing artifacts.",
+    "Reuse exact candidate CI for generic boundary/tail/refusal/recovery controls. Record what these synthetic controls prove and keep real package execution separate.",
+    "If literal real inaccessible/full-package negative controls are desired, perform them in separate cloned disposable roots and capture exact stderr/exit; do not reduce input declarations.",
+    "Record root path/observed_head/source hashes, runtime engine versions, candidate_id, CAS inventory hash, stdout/stderr/exit and workflow/job identity.",
+    "No production publication or existing binding transfer. Consumers prepare new root-bound candidates and obtain domain bindings separately."
+  ],
+  "operational_details": [
+    "Run npm ci then bun typecheck in modules/atlas before CLI: package exports target dist, while CLI loads adapter TS sources.",
+    "prepare writes CAS only; neither projection nor policy/reviewer approval is created.",
+    "prepare new-candidate-file uses wx and must not exist. Output should be external to served root.",
+    "candidate_id includes absolute repo_root and observed_head, so it is execution-specific. Release SHA and input digests are reusable identifiers.",
+    "source_ref.commit is syntactically validated only; candidate states external-capture-evidence-required, so materialization must separately verify Git provenance."
+  ],
+  "outstanding": "Real full S1-03/S2 execution and release evidence required; this audit does not claim those operations occurred."
+}
+

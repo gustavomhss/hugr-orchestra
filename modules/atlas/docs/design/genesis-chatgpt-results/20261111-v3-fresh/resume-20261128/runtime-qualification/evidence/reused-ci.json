@@ -1,0 +1,454 @@
+{
+  "schema": "genesis-s4-ci-evidence-audit/v1",
+  "observed_on": "2026-11-28",
+  "repository": "gustavomhss/hugr-orchestra",
+  "auditor_scope": "Read-only retrieval via GitHub MCP; no tests, workflow dispatches, repository writes, authority changes or activation executed.",
+  "runs": [
+    {
+      "run_id": 43343953480,
+      "job_id": 131618674434,
+      "attempt": 1,
+      "head_sha": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "tree_sha": "3c93c4636c1e4c4b704f8be9314e22b2149e5609",
+      "branch": "genesis-fresh-s4",
+      "event": "push",
+      "conclusion": "success",
+      "started_at": "2026-11-13T01:18:46Z",
+      "updated_at": "2026-11-13T01:20:59Z",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43343953480",
+      "workflow": {
+        "path": ".github/workflows/atlas-pilot.yml",
+        "blob": "e4a3036ffecd684d52c70a4c8cd346be9601e5c3"
+      },
+      "runtime": {
+        "bun": "1.3.14+0d9b296af",
+        "node": "v24.22.2",
+        "runner": "ubuntu-24.04"
+      },
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run ./.github/actions/setup-bun",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Install Atlas dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Typecheck Atlas",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Parse the native maintenance operation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Grouped ownership and existing door regressions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Probe the new guards against named failing controls",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Generate Atlas boundary from the checked sources",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Check repository guards on the candidate",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Preserve exact gate and generated-boundary evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Post Run ./.github/actions/setup-bun",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21
+        },
+        {
+          "name": "Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23
+        }
+      ],
+      "observed_gates": {
+        "test_files": 27,
+        "tests_passed": 278,
+        "tests_failed": 0,
+        "named_mutants": 22,
+        "mutation_step": "success",
+        "typecheck": "success",
+        "parse_maintenance": "success",
+        "boundary_generate": "success",
+        "guards": {
+          "exit_code": 0,
+          "rules": 78,
+          "changed_paths": 1446,
+          "gate_findings": 0,
+          "warnings": 4,
+          "errors": 0,
+          "base_ref": "origin/dev",
+          "base_sha_not_recorded_in_retrieved_evidence": true
+        }
+      },
+      "artifact": {
+        "current_list": [],
+        "retention_days": 7,
+        "archive_currently_available": false,
+        "id": 14001051122,
+        "original_zip_sha256": "c6df13373d71e091cf842a603e1d25b241ffca7652ea73775419ee3f01da0871",
+        "original_zip_bytes": 447327,
+        "evidence": "The original upload is confirmed in retrieved job logs; current artifact list returns zero. No archive bytes were re-downloaded or rehashed."
+      },
+      "evidence_excerpt": [
+        "2026-11-13T01:19:10.5032822Z node: v24.22.2",
+        "2026-11-13T01:19:12.0310394Z 1.3.14+0d9b296af",
+        "2026-11-13T01:19:59.3052697Z  Test Files  27 passed (27)",
+        "2026-11-13T01:19:59.3053517Z       Tests  278 passed (278)",
+        "2026-11-13T01:20:00.2480518Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-update-affected-order.json",
+        "2026-11-13T01:20:01.0515071Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-update-input.json",
+        "2026-11-13T01:20:01.8515660Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-update-dependency.json",
+        "2026-11-13T01:20:02.6563322Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-update-frontier.json",
+        "2026-11-13T01:20:03.4503123Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-update-unavailable.json",
+        "2026-11-13T01:20:04.2387348Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-need-root.json",
+        "2026-11-13T01:20:05.0207000Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-current-input.json",
+        "2026-11-13T01:20:05.8919130Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-composed-ratify.json",
+        "2026-11-13T01:20:09.6404406Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-worker-ast.json",
+        "2026-11-13T01:20:11.9365165Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-observer-error-as-absent.json",
+        "2026-11-13T01:20:12.7405306Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-observer-members-index-only.json",
+        "2026-11-13T01:20:13.5269385Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-observer-accept-partial-git.json",
+        "2026-11-13T01:20:14.4577528Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-every-affected.json",
+        "2026-11-13T01:20:15.3734818Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-return-old-result.json",
+        "2026-11-13T01:20:16.2883896Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-body-only-stop.json",
+        "2026-11-13T01:20:17.1988959Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-ignore-direct-child-change.json",
+        "2026-11-13T01:20:18.1177856Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-omit-input.json",
+        "2026-11-13T01:20:19.0436266Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-omit-required-edge.json",
+        "2026-11-13T01:20:19.9642090Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-accept-stale-review.json",
+        "2026-11-13T01:20:20.8897043Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-skip-preflight.json",
+        "2026-11-13T01:20:21.8183590Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-skip-final-sweep.json",
+        "2026-11-13T01:20:22.7317268Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-read-live-path.json",
+        "2026-11-13T01:20:53.8637971Z WARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/artifacts.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.",
+        "2026-11-13T01:20:53.8639221Z WARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.",
+        "2026-11-13T01:20:53.8640446Z WARN modules/atlas/packages/adapter-io/src/ownership-evaluation-policy.ts:67 [ts-double-cast] Double cast through unknown bypasses the type checker. Fix the type, or narrow the value with a guard.",
+        "2026-11-13T01:20:53.8642100Z WARN modules/atlas/packages/adapter-io/src/wire.ts:543 [ts-double-cast] Double cast through unknown bypasses the type checker. Fix the type, or narrow the value with a guard.",
+        "2026-11-13T01:20:53.8642785Z guards: 78 rules, 1446 changed paths, 0 gate and 4 warn findings, 0 errors.",
+        "2026-11-13T01:20:55.0854988Z SHA256 digest of uploaded artifact zip is c6df13373d71e091cf842a603e1d25b241ffca7652ea73775419ee3f01da0871",
+        "2026-11-13T01:20:55.5906961Z Artifact ownership-runtime-db9b4235022c4df32fe3bfd4faeea8adcd69abb7.zip successfully finalized. Artifact ID 14001051122"
+      ]
+    },
+    {
+      "run_id": 43154719978,
+      "job_id": 130971863434,
+      "attempt": 1,
+      "head_sha": "22815b6821dce26562624b4711c705c7cd786268",
+      "tree_sha": "a367f512c6eebf58efae85fa3c7104de97e68ff1",
+      "branch": "genesis-fresh-s4",
+      "event": "push",
+      "conclusion": "success",
+      "started_at": "2026-11-12T04:25:36Z",
+      "updated_at": "2026-11-12T04:27:46Z",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43154719978",
+      "workflow": {
+        "path": ".github/workflows/atlas-pilot.yml",
+        "blob": "7a22f7213e99f1daf1c8be0efa9b351138b0204b"
+      },
+      "runtime": {
+        "bun": "1.3.14+0d9b296af",
+        "node": "v24.22.2",
+        "runner": "ubuntu-24.04"
+      },
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        },
+        {
+          "name": "Run ./.github/actions/setup-bun",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Install Atlas dependencies",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 4
+        },
+        {
+          "name": "Typecheck Atlas",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 5
+        },
+        {
+          "name": "Parse the native maintenance operation",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 6
+        },
+        {
+          "name": "Grouped ownership and existing door regressions",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 7
+        },
+        {
+          "name": "Probe the new guards against named failing controls",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 8
+        },
+        {
+          "name": "Generate Atlas boundary from the checked sources",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 9
+        },
+        {
+          "name": "Check repository guards on the candidate",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 10
+        },
+        {
+          "name": "Preserve exact gate and generated-boundary evidence",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 11
+        },
+        {
+          "name": "Post Run ./.github/actions/setup-bun",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 21
+        },
+        {
+          "name": "Post Run actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 22
+        },
+        {
+          "name": "Complete job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 23
+        }
+      ],
+      "observed_gates": {
+        "test_files": 23,
+        "tests_passed": 224,
+        "tests_failed": 0,
+        "named_mutants": 22,
+        "mutation_step": "success",
+        "typecheck": "success",
+        "parse_maintenance": "success",
+        "boundary_generate": "success",
+        "guards": {
+          "exit_code": 0,
+          "rules": 78,
+          "changed_paths": 1407,
+          "gate_findings": 0,
+          "warnings": 2,
+          "errors": 0,
+          "base_ref": "origin/dev",
+          "base_sha_not_recorded_in_retrieved_evidence": true
+        }
+      },
+      "artifact": {
+        "current_list": [],
+        "retention_days": 7,
+        "archive_currently_available": false,
+        "id": 13915012528,
+        "original_zip_sha256": "44a4b2b8fa833c1117f4498d1be71283f054200c63aacdb5ddb67ee4fdc91d9a",
+        "original_zip_bytes": 431898,
+        "evidence": "The original upload is confirmed in retrieved job logs; current artifact list returns zero. No archive bytes were re-downloaded or rehashed."
+      },
+      "evidence_excerpt": [
+        "2026-11-12T04:26:00.4154707Z node: v24.22.2",
+        "2026-11-12T04:26:01.5937712Z 1.3.14+0d9b296af",
+        "2026-11-12T04:26:50.4559362Z  Test Files  23 passed (23)",
+        "2026-11-12T04:26:50.4560012Z       Tests  224 passed (224)",
+        "2026-11-12T04:26:51.2846401Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-update-affected-order.json",
+        "2026-11-12T04:26:52.0188497Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-update-input.json",
+        "2026-11-12T04:26:52.7775871Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-update-dependency.json",
+        "2026-11-12T04:26:53.5113995Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-update-frontier.json",
+        "2026-11-12T04:26:54.2494654Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-update-unavailable.json",
+        "2026-11-12T04:26:54.9765004Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-need-root.json",
+        "2026-11-12T04:26:55.7148613Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-current-input.json",
+        "2026-11-12T04:26:56.5795831Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-composed-ratify.json",
+        "2026-11-12T04:27:00.0756096Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-worker-ast.json",
+        "2026-11-12T04:27:02.7834180Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-observer-error-as-absent.json",
+        "2026-11-12T04:27:03.6406405Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-observer-members-index-only.json",
+        "2026-11-12T04:27:04.3906264Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-observer-accept-partial-git.json",
+        "2026-11-12T04:27:05.2503187Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-every-affected.json",
+        "2026-11-12T04:27:06.1008805Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-return-old-result.json",
+        "2026-11-12T04:27:06.9554537Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-body-only-stop.json",
+        "2026-11-12T04:27:07.8078880Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-ignore-direct-child-change.json",
+        "2026-11-12T04:27:08.6616454Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-omit-input.json",
+        "2026-11-12T04:27:09.5219619Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-omit-required-edge.json",
+        "2026-11-12T04:27:10.3772611Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-accept-stale-review.json",
+        "2026-11-12T04:27:11.2216266Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-skip-preflight.json",
+        "2026-11-12T04:27:12.0769255Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-skip-final-sweep.json",
+        "2026-11-12T04:27:12.9396124Z JSON report written to /home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/ownership-probe-rebuild-read-live-path.json",
+        "2026-11-12T04:27:40.3681198Z WARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/artifacts.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.",
+        "2026-11-12T04:27:40.3682924Z WARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.",
+        "2026-11-12T04:27:40.3683769Z guards: 78 rules, 1407 changed paths, 0 gate and 2 warn findings, 0 errors.",
+        "2026-11-12T04:27:41.6373630Z SHA256 digest of uploaded artifact zip is 44a4b2b8fa833c1117f4498d1be71283f054200c63aacdb5ddb67ee4fdc91d9a",
+        "2026-11-12T04:27:42.0101620Z Artifact ownership-runtime-22815b6821dce26562624b4711c705c7cd786268.zip successfully finalized. Artifact ID 13915012528"
+      ]
+    }
+  ],
+  "s1_api_diagnostic": {
+    "source_commit": "d81a973d98ebe9b1f6db779bfc78af5152f14041",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/receipts/atlas-diagnostic/prepare-db9b423-final.receipt.json",
+    "blob": "861da18e3f1b9a7a2e40899d23db917f918619ea",
+    "receipt": {
+      "schema": "s1-04-original-native-cli-operation/v1",
+      "operation": "prepare",
+      "tag": "prepare-db9b423-final",
+      "started_at_utc": "2026-11-15T00:47:30.262318+00:00",
+      "ended_at_utc": "2026-11-15T00:47:33.422259+00:00",
+      "command_argv": [
+        "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-tools/node_modules/.bin/bun",
+        "scripts/genesis-native.ts",
+        "prepare",
+        "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/diagnostic-source-root",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/native-package.json",
+        "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-attempts/prepare-db9b423-final-candidate.json"
+      ],
+      "cwd": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/code-db9b423-diagnostic/modules/atlas",
+      "isolated_root": "/workspace/scratch/8833f71e3e94/s1-04-runtime-scout/diagnostic-source-root",
+      "observed_head": "8835faf6329cc3d5f5de1097872882d57472b793",
+      "runtime_release": "UNPROMOTED_SOURCE_DIAGNOSTIC_ONLY",
+      "runtime_code_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "exit_code": 0,
+      "original_cli": true,
+      "runtime_code_modified": false,
+      "seams_used": false,
+      "policy_or_actor_created": false,
+      "stdout": {
+        "path": "receipts/atlas-diagnostic/prepare-db9b423-final.stdout.txt",
+        "byte_length": 222201,
+        "sha256": "76e86d03a3e2fb256e2e117ef2e0cd45cf0e11b98ed2e2b5545247009e385df8"
+      },
+      "stderr": {
+        "path": "receipts/atlas-diagnostic/prepare-db9b423-final.stderr.txt",
+        "byte_length": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "package": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/native-package.json",
+        "byte_length": 389819,
+        "sha256": "71bc1102fd5e2c6be166b2df790e8ee8fe4ecd053ab2d7fed5bbc46130349442"
+      },
+      "candidate_file": {
+        "path": "/workspace/scratch/8833f71e3e94/s1-04-94f1e157-8c44-4e6e-a4af-7690a8845ecf/runtime-attempts/prepare-db9b423-final-candidate.json",
+        "exists": true,
+        "byte_length": 292042,
+        "sha256": "be267a8e2db79343731eba856d84ff914f1d43f8849b0072f05b1d0bbff794a6"
+      }
+    },
+    "scope_limit": "Existing diagnostic prepare exit 0 proves API package bytes hash 71bc...49442 on unmodified db9b423; it does not prove S1-03 automation or S2 complete packages, does not promote runtime, and grants no binding/publication authority."
+  },
+  "previous_release": {
+    "file_at_db9b423": "7513fcca63664ca02094e9ed9b8fab090c20295d",
+    "release_id": "20261111-v3-fresh-s4-r3",
+    "native_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "common_controls_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+    "input_limit_bytes": 256000,
+    "binding_portable_to_db9b423": false,
+    "limits": [
+      "Cross-package dependencies are explicitly refused; same-package dependency and navigation target resolution only.",
+      "File observer retains 256000-byte limit and refuses .atlas/.git/symlink paths; all excluded and large population entries remain in coverage.",
+      "Transport SHA256/Git blobs are distinct from observer kernel input identities.",
+      "Local source copy is reconstructed from verified connector captures, not a Git checkout; historical commit membership and Git trust are not inferred.",
+      "Only source hashes listed in prepare receipt were executed. Workflow-only candidate delta e3a8ab8 enables the assigned branch gate without changing runtime code.",
+      "Binding records are operator supplied and reference actual independent decisions; adapter does not authenticate reviewers or infer verdicts from prose.",
+      "V1 run43065851373 passed216 tests and22mutations but FAILED the aggregate guard because a workflow log was inside the checkout and had3 cast warnings. This release is capability-scoped, not an aggregate CI PASS.",
+      "Initial L1A judge requests were not exported. This release preserves a new canonical full-body submission and fresh semantic reconfirmation plus distinct binding decisions; original responses remain history and are not rewritten.",
+      "Seven required L1 units are accepted by both persistent judges at 8a041ca; L2 production is active. Full S4 package, independent consumer and own maintenance operation remain unfinished.",
+      "Earlier R1 concurrency finding R1-J1-01/J2-R1-01 was corrected, remotely executed and accepted by the same two judges. Historical failed and insufficient controls are preserved, not relabelled.",
+      "The root candidate_revision and existing native entrypoints still identify the demonstrated e3a8ab8 sample. Shared control evidence identifies 7102f2e per capability; this multi-candidate release does not transfer any native binding."
+    ],
+    "advice": "Preserve this historical manifest; add a candidate-specific handoff instead of overwriting history as if old judgments bound the new candidate."
+  },
+  "reusable_for_exact_db9b423": [
+    "278-test/27-file pilot result, typecheck, native maintenance syntax, 22 named mutation probes, generation step, and repository guards at their historical base are directly linked to db9b423 run metadata, immutable workflow, successful steps and logs.",
+    "Related 22815b6 results support historical comparison only. Its CLI/native IO/observer/native test blobs remain equal on db9b423 per runtime audit; db9b423 owns its independent newer pilot.",
+    "Historical native recovery/CAS/history controls support runtime behavior on fixture scope; fresh independent domain binding remains a separate gate.",
+    "Retain whole run URL, job ID, head SHA, tree SHA, workflow blob and fetched log excerpt as exact evidence. Do not say a later docs commit itself ran."
+  ],
+  "not_proven": [
+    "No full S2 package prepare execution appears in either pilot workflow.",
+    "No full S1-03 package prepare execution, all-six-large-file receipt or package-specific materialization hashing appears in either pilot workflow.",
+    "No native domain binding/publish/index/read for these complete packages on db9b423 follows from pilot or API diagnostic success.",
+    "No new independent runtime judges are attached to db9b423 by the r3 manifest.",
+    "Raw generated output hashes and individual JSON test/mutation reports are not newly inspected because the artifacts are no longer listed.",
+    "No fresh guard result against current dev; historical workflow used origin/dev without a preserved base SHA in the retrieved evidence."
+  ],
+  "workflow_surface": {
+    "workflow_dispatch_present": true,
+    "push_branches": [
+      "pilot-check-*",
+      "genesis-fresh-s4"
+    ],
+    "genesis_runtime_resume_push_triggers": false,
+    "consequence": "A docs-only commit on genesis-runtime-resume does not trigger this pilot. Use a genuinely available authorized workflow dispatch surface for the residual scoped job, or submit the exact execution request. Do not infer execution from write access."
+  },
+  "minimum_delta_request": [
+    "Pin runtime code/tree db9b423 and source revision 1cde2ff7a71bcf7aecb5d030917b577165135d38 separately from package preservation commits.",
+    "Materialize exact S1-03 and S2 package inputs, all referenced bytes and effective provenance into independent data roots.",
+    "Execute original CLI prepare for full S1-03 (12 artifacts) and S2 (13 artifacts), record every command, exit/stdout/stderr hashes and candidate hash/kernel identity.",
+    "Assert full-byte read and CAS identity for all six S1-03 large inputs and all full S2 inputs, plus exact ceiling, one over, tail mutation/restoration, IO refusal and preservation of accepted historic versions where not already sufficiently tied by existing gate evidence.",
+    "Persist machine-readable receipts and human handoff. Qualification cannot be promoted while requested executions or exact-candidate independent acceptance are missing."
+  ]
+}

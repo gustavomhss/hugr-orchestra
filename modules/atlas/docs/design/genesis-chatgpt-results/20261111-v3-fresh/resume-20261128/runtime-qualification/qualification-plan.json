@@ -1,0 +1,127 @@
+{
+  "schema": "genesis-runtime-qualification-plan/v1",
+  "execution_id": "6746cb98-f844-45ae-a604-c638ae7b8094",
+  "status": "NOT_RUN",
+  "authority": "Gustavo's Runtime S4 assignment, 2026-11-28; isolated preparation and change-scoped GitHub Actions only. Merge and activation remain with Gustavo.",
+  "branch": "genesis-runtime-resume",
+  "initial_head": "af0ed426b8caf0d95772e1fb174d34bab86399c4",
+  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "runtime_tree": "3c93c4636c1e4c4b704f8be9314e22b2149e5609",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "input_lock": {
+    "path": "input-lock.json",
+    "sha256": "ac8fc01cffe55a40a3005890cd8f40dfd33fdc6720111412c980c2486bbe6430"
+  },
+  "packages": [
+    {
+      "id": "S1-03",
+      "payload_commit": "2e5b1ff067c85c66647492a9d27af5d535d4cd7e",
+      "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/native-package.json",
+      "package_sha256": "ddada3d4b67cff13ef3a5817b95efc275b0d288061436546c8ec6b73290766a6",
+      "expected_artifact_count": 12,
+      "expected_artifact_keys": [
+        "s1.core.automation",
+        "s1.core.research",
+        "s1.core.boundaries",
+        "s1.subslice03.support",
+        "s1.subslice03.automation-flow",
+        "s1.subslice03.research-flow",
+        "s1.subslice03.boundary-flow",
+        "s1.subslice03.automation-impact",
+        "s1.subslice03.research-impact",
+        "s1.subslice03.automation-maintenance",
+        "s1.subslice03.research-maintenance",
+        "s1.subslice03.entry"
+      ],
+      "expected_observation_count": 694,
+      "materialized_file_count": 733
+    },
+    {
+      "id": "S2",
+      "payload_commit": "d1e635ed5e316b8d5d59650432268e3e81d8aff0",
+      "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json",
+      "package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+      "expected_artifact_count": 13,
+      "expected_artifact_keys": [
+        "s2.l1.desktop-web",
+        "s2.l1.app-session",
+        "s2.l1.design-tui",
+        "s2.l2.desktop-web",
+        "s2.l2.app-session",
+        "s2.l2.design-tui",
+        "s2.l3.desktop-web",
+        "s2.l3.app-session",
+        "s2.l3.design-tui",
+        "s2.l4.desktop-web",
+        "s2.l4.design-tui",
+        "s2.l4.app-session",
+        "s2.l4.entry"
+      ],
+      "expected_observation_count": 626,
+      "materialized_file_count": 667
+    }
+  ],
+  "cases": [
+    {
+      "id": "Q01",
+      "criterion": "Exact runtime and materialization identity",
+      "expected": "Runtime HEAD/tree/lock match fixed candidate; real separate data worktrees report source HEAD; every materialized file matches its own pinned commit/blob/SHA256. No fabricated Git state."
+    },
+    {
+      "id": "Q02",
+      "criterion": "Complete S1-03 prepare",
+      "expected": "CLI exit 0, all 12 exact artifact keys, 694 unique observations, complete body/dependency/input bindings, six historical large inputs with complete hashes and tails."
+    },
+    {
+      "id": "Q03",
+      "criterion": "Complete S2 prepare",
+      "expected": "CLI exit 0, all 13 exact artifact keys, 626 unique observations (625 declared plus protocol), complete body/dependency/input bindings, all three large inputs with complete hashes and tails."
+    },
+    {
+      "id": "Q04",
+      "criterion": "Actual filesystem refusal",
+      "expected": "In a third disposable root chmod000 of one declared regular input causes genuine PermissionError/EACCES for the non-root runner and native prepare exit 1, with original stderr and no prepared output. Source permissions restored."
+    },
+    {
+      "id": "Q05",
+      "criterion": "Preserved compatible common controls",
+      "expected": "Reuse only db9b423 run43343953480/job131618674434: 278 tests/27 files,22 named rejected mutants,typecheck,generation,guards. Record expired artifacts, unpinned historical origin/dev SHA and warnings. Historical 22815b and r3 remain distinct."
+    },
+    {
+      "id": "Q06",
+      "criterion": "Boundaries and operation scope",
+      "expected": "Common controls prove exact2097152,+1 refusal,full kernel identity,tail detection,legacy v1 identities,recovery/old history. Prepare remains distinct from runtime-import-binding,publish,index/read on these packages; no domain acceptance inferred."
+    },
+    {
+      "id": "Q07",
+      "criterion": "Reproducible release and independent review",
+      "expected": "Release pins runtime SHA/tree, qualification commit, commands, versions, input lock, outputs and per-operation receipts. Two new independent no-tool judges review same fixed runtime release evidence. Their release review is not a domain publication binding."
+    }
+  ],
+  "reused_common_gate": {
+    "run_id": 43343953480,
+    "job_id": 131618674434,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43343953480",
+    "code_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "workflow_blob": "e4a3036ffecd684d52c70a4c8cd346be9601e5c3"
+  },
+  "out_of_scope": [
+    "Four S4 knowledge L4 reviews",
+    "Domain-specific semantic acceptance and bindings",
+    "Production publication/activation",
+    "Merge or PR creation",
+    "External paid model calls"
+  ],
+  "fallback": "If authorized Actions execution cannot be obtained, persist one execution request with these exact pins, input lock, workflow scope, commands, expected outputs and original blocker. Completion remains INCOMPLETE_BLOCKED.",
+  "usage": {
+    "native_agents_dispatched": [
+      "/root/runtime_audit",
+      "/root/package_provenance",
+      "/root/ci_evidence"
+    ],
+    "tokens": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "external_paid_calls": 0
+  }
+}

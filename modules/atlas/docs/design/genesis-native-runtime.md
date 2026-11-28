@@ -138,7 +138,7 @@ Missing authority yields the original governed refusal; a binding PASS does not
 override it. After an actual successful emit, use the real `index` and `read`
 commands and preserve their outputs as independent operational evidence.
 
-## Initial capability limits
+## Capability limits
 
 - One complete selected package and one ownership scope per candidate. External
   `package_ref` build dependencies are explicitly refused because the current
@@ -148,12 +148,16 @@ commands and preserve their outputs as independent operational evidence.
   or navigation links. Navigation targets in this release must be in the same
   package. Build predecessors must be earlier and supported, with preserved
   semantic review references. References themselves do not prove semantic PASS.
-- Source/recipe/protocol file observations retain the existing 256,000-byte
-  limit and exclusions for `.git`, `.atlas`, symlinks and unsupported input
-  formats. Larger sources and excluded domains remain open coverage work; they
-  are not omitted from the domain inventory to pass this importer.
-- Transport/reference/body files are bounded to 8 MiB; file inputs retain the
-  smaller observer bound. Non-NFC metadata is refused to match existing ownership
+- Source/recipe/protocol file observations accept at most 2,097,152 bytes
+  (2 MiB), inclusive, in runtime `db9b4235022c4df32fe3bfd4faeea8adcd69abb7`.
+  The earlier r3 runtime `e3a8ab8cf56dbff1ee91272df51ffa398d882aa1` used
+  256,000 bytes; the frozen campaign transport describes that historical limit.
+  The exclusions for `.git`, `.atlas`, symlinks and unsupported input formats
+  remain. Larger or inaccessible files are refused, never silently truncated
+  or omitted. File versions cover the complete bytes, including the tail.
+- Transport/reference/body files are bounded to 8,388,608 bytes (8 MiB);
+  file inputs retain the smaller observer bound. Non-NFC metadata is refused
+  to match existing ownership
   shapes, while the UTF-8 body is kept byte-exact.
 - Use an isolated, stable working directory. The bounded descriptor read checks
   path components before and after reading, but does not promise an adversarially
@@ -169,3 +173,4 @@ existing explicitly synthetic fixture authority. Run product tests only in the
 repository's authorized GitHub Actions route. Package typechecking remains the
 ordinary `bun typecheck` from `modules/atlas`. Passing fixtures does not supply
 the real campaign's judge decisions or publication authority.
+
