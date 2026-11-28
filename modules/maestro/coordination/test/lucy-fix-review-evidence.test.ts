@@ -11,7 +11,7 @@ import { blobRoot, cache, canonical, decoded, digest, nativeCode, reader, receip
 import { calls, commit } from "./fixture/lucy-engagement-artifact-limits"
 import { completedPrior, decodedFix, fixedText, fixRequest, fixScript } from "./fixture/lucy-fix-review"
 import { fixReceipt, historical, publish, saved, stateV4, stoppedFix } from "./fixture/lucy-fix-review-evidence"
-import { FixReceipt, FixResult, StateV4 } from "./fixture/lucy-fix-review-schema"
+import { FixReceipt, FixResult, StateV4, limits } from "./fixture/lucy-fix-review-schema"
 import { strict } from "./fixture/lucy-variant-schema"
 import { variantScript } from "./fixture/lucy-variants"
 
@@ -117,14 +117,18 @@ test("F6 importing real predecessor bodies shares the 256-descriptor quota inste
       expect(evidence.value.artifacts.filter((artifact) => artifact.kind === "code-snapshot")).toHaveLength(125)
       expect(evidence.value.artifacts).toHaveLength(254)
       expect(evidence.value.hostProofs).toEqual([])
-      expect(evidence.value.artifacts.every((artifact) => artifact.bytes < 16 * 1024)).toBe(true)
-      expect(evidence.value.artifacts.reduce((sum, artifact) => sum + artifact.bytes, 0)).toBeLessThan(1024 * 1024)
-      //254 actual old descriptors +3 required wrapper descriptors =257, before any new native CODE or analysis body.
-      expect(evidence.value.artifacts.length + 3).toBe(257)
+      const wrapperSizes = [Buffer.byteLength(output.text), evidence.bytes.byteLength,
+        Buffer.byteLength(canonical((yield* saved(host, prior.sessionID)).raw))]
+      const sizes = [...evidence.value.artifacts.map((artifact) => artifact.bytes), ...wrapperSizes]
+      expect(Math.max(...sizes)).toBeLessThan(limits.body)
+      expect(sizes.reduce((sum, bytes) => sum + bytes, 0)).toBeLessThan(limits.total)
+      expect(sizes).toHaveLength(limits.artifacts + 1)
       const changed = yield* commit(root, { [sourcePath]: fixedText })
       const fix = fixRequest(prior, "quota-fix", changed)
       const before = root.requests.length
-      yield* stoppedFix(root, host, fix, yield* host.invoke(fix), "engagement-evidence-bound-exceeded")
+      const refusedFix = yield* host.invoke(fix)
+      expect(refusedFix.text).toContain("engagement-evidence-bound-exceeded: artifacts")
+      yield* stoppedFix(root, host, fix, refusedFix, "engagement-evidence-bound-exceeded")
       expect(root.requests.length).toBe(before)
       expect(provider.turns).toEqual([])
       expect((yield* host.invoke(input)).text).toBe(output.text)
