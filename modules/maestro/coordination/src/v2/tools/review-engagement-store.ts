@@ -79,7 +79,7 @@ export type Interface = {
 }
 type Sql = Pick<Database.Interface["db"], "select" | "update">
 type Row = typeof SessionTable.$inferSelect
-type Placement = Pick<Row, "project_id" | "directory"> & { readonly workspace_id: string | null }
+type Placement = { readonly project_id: string; readonly directory: string; readonly workspace_id: string | null }
 type AdmissionRow = Placement & Pick<Row, "id" | "parent_id" | "agent" | "model" | "metadata">
 
 const same = (left: unknown, right: unknown) => ReviewEngagementReportV2.canonical(left) === ReviewEngagementReportV2.canonical(right)
@@ -87,7 +87,7 @@ const failure = (reason: string, detail: string) => new Tool.Failure({ message: 
 const invalid = (detail: string) => failure("engagement-record-invalid", detail)
 const corrupt = (detail: string) => failure("engagement-evidence-corrupt", detail)
 
-export function identity(parent: SessionSchema.Info, input: ReviewEngagementPolicyV2.Input): Identity {
+export function identity(parent: Pick<Identity, "projectID" | "location"> & { readonly id: SessionSchema.ID }, input: ReviewEngagementPolicyV2.Input): Identity {
   const location = { directory: parent.location.directory,
     ...(parent.location.workspaceID === undefined ? {} : { workspaceID: parent.location.workspaceID }) }
   const namespace = { domain: "review-engagement-namespace-v1", parentID: parent.id,
@@ -107,7 +107,7 @@ export function readPriorAuthority(value: unknown): Effect.Effect<Terminal, Tool
     const data = yield* Effect.try({ try: () => Schema.decodeUnknownSync(Schema.Union([StateV2, StateV3]))(value, strict),
       catch: (error) => invalid(String(error)) })
     const expected = identity({ id: data.identity.parentID, projectID: data.identity.projectID,
-      location: data.identity.location } as SessionSchema.Info, data.input)
+      location: data.identity.location }, data.input)
     if (!same(expected, data.identity)) return yield* invalid("prior authority namespace is inconsistent")
     const row: AdmissionRow = { id: data.identity.leadID, parent_id: data.identity.parentID, agent: "lucy",
       project_id: data.identity.projectID, directory: data.identity.location.directory,
@@ -250,7 +250,7 @@ export function make(database: Database.Interface): Interface {
         fix: { policy: "fix-review-v1" }, identity: id, input, owner, ...(model ? { model } : {}),
         budget: { startedAt: budget.startedAt, deadlineAt: budget.deadlineAt },
         children: [{ id: id.leadID, key: "lead", role: "lead" }], state: "running" }
-      yield* writeFix(tx, record)
+      yield* write(tx, record)
       return record
     })),
     capture: (ticket, source) => atomic((tx) => Effect.gen(function* () {
@@ -413,7 +413,7 @@ export function make(database: Database.Interface): Interface {
         return record
       }
       const next: FixRunning = { ...record, fix: { ...record.fix, prior } }
-      yield* writeFix(tx, next, record)
+      yield* write(tx, next, record)
       return next
     })),
     captureFix: (ticket, source) => atomic((tx) => Effect.gen(function* () {
@@ -433,7 +433,7 @@ export function make(database: Database.Interface): Interface {
         return record
       }
       const next: FixRunning = { ...record, source }
-      yield* writeFix(tx, next, record)
+      yield* write(tx, next, record)
       return next
     })),
     ownFix: (ticket, child) => atomic((tx) => Effect.gen(function* () {
@@ -452,7 +452,7 @@ export function make(database: Database.Interface): Interface {
       if (previous) return record
       yield* pristine(tx, row)
       const next: FixRunning = { ...record, children: [...record.children, child] }
-      yield* writeFix(tx, next, record)
+      yield* write(tx, next, record)
       return next
     })),
     finishFix: (ticket, outcome) => atomic((tx) => Effect.gen(function* () {
@@ -471,7 +471,7 @@ export function make(database: Database.Interface): Interface {
         catch: (error) => error instanceof Tool.Failure ? error : invalid(String(error)) })
       if ((yield* Clock.currentTimeMillis) >= record.budget.deadlineAt) return yield* stopFix(tx, record, "expired")
       const terminal: FixTerminal = { ...record, evidence, state: "terminal", terminal: result }
-      yield* writeFix(tx, terminal, record)
+      yield* write(tx, terminal, record)
       return terminal
     })),
   }
@@ -587,7 +587,7 @@ function stopFix(tx: Sql, record: FixRunning, status: ReviewEngagementReportV2.S
   reason?: string, notExamined?: ReviewFixSchemaV2.FixResult["notExamined"]): Effect.Effect<FixTerminal, Tool.Failure> {
   const authority = { ...record, fix: record.fix }
   const terminal: FixTerminal = { ...record, state: "terminal", terminal: ReviewFixAuthorityV2.stopped(authority, status, reason, notExamined) }
-  return writeFix(tx, terminal, record).pipe(Effect.as(terminal))
+  return write(tx, terminal, record).pipe(Effect.as(terminal))
 }
 
 function lookupRows(db: Pick<Sql, "select">, parent: SessionSchema.Info) {
@@ -677,26 +677,7 @@ function pristine(db: Sql, row: Row) {
   })
 }
 
-function write(db: Sql, record: Record, previous?: Running) {
-  return Effect.gen(function* () {
-    const { state, ...rest } = record
-    const data = state === "terminal"
-      ? { ...common(record), state, output: record.terminal.text }
-      : { ...rest, state }
-    const changed = yield* db.update(SessionTable).set({
-      metadata: sql`json_set(coalesce(${SessionTable.metadata}, '{}'), ${`$.${KEY}`}, json(${JSON.stringify(data)}))`,
-      time_updated: sql`${SessionTable.time_updated}`,
-    }).where(and(eq(SessionTable.id, record.identity.leadID),
-      sql`(${SessionTable.metadata} IS NULL OR json_type(${SessionTable.metadata}) = 'object')`, previous
-      ? and(sql`json_extract(${SessionTable.metadata}, ${`$.${KEY}.owner`}) = ${previous.owner}`,
-        sql`json_extract(${SessionTable.metadata}, ${`$.${KEY}.state`}) = 'running'`)
-      : sql`json_type(${SessionTable.metadata}, ${`$.${KEY}`}) IS NULL`))
-      .returning({ id: SessionTable.id }).all().pipe(Effect.orDie)
-    if (changed.length !== 1) return yield* failure("engagement-owner-lost", "durable compare-and-set refused")
-  })
-}
-
-function writeFix(db: Sql, record: FixRecord, previous?: FixRunning) {
+function write(db: Sql, record: Record | FixRecord, previous?: Running | FixRunning) {
   return Effect.gen(function* () {
     const data = record.state === "terminal" ? (() => {
       const { terminal, ...value } = record
@@ -709,10 +690,12 @@ function writeFix(db: Sql, record: FixRecord, previous?: FixRunning) {
       sql`(${SessionTable.metadata} IS NULL OR json_type(${SessionTable.metadata}) = 'object')`, previous
       ? and(sql`json_extract(${SessionTable.metadata}, ${`$.${KEY}.owner`}) = ${previous.owner}`,
         sql`json_extract(${SessionTable.metadata}, ${`$.${KEY}.state`}) = 'running'`,
-        sql`json_extract(${SessionTable.metadata}, ${`$.${KEY}.schema`}) = 'review-engagement-state-v4'`)
+        previous.schema === "review-engagement-state-v4"
+          ? sql`json_extract(${SessionTable.metadata}, ${`$.${KEY}.schema`}) = 'review-engagement-state-v4'`
+          : undefined)
       : sql`json_type(${SessionTable.metadata}, ${`$.${KEY}`}) IS NULL`))
       .returning({ id: SessionTable.id }).all().pipe(Effect.orDie)
-    if (changed.length !== 1) return yield* failure("engagement-owner-lost", "durable fix compare-and-set refused")
+    if (changed.length !== 1) return yield* failure("engagement-owner-lost", "durable compare-and-set refused")
   })
 }
 
