@@ -127,7 +127,7 @@ const OpenAIResponsesTool = Schema.Union([
 
 const OpenAIResponsesToolChoice = Schema.Union([
   Schema.Literals(["auto", "none", "required"]),
-  Schema.Struct({ type: Schema.tag("function"), name: Schema.String, namespace: Schema.optional(Schema.String) }),
+  Schema.Struct({ type: Schema.tag("function"), name: Schema.String }),
 ])
 
 // Fields shared between the HTTP body and the WebSocket `response.create`
@@ -274,12 +274,12 @@ const lowerTool = (tool: ToolDefinition, inputSchema: JsonSchema): typeof OpenAI
   strict: false,
 })
 
-const lowerToolChoice = (toolChoice: NonNullable<LLMRequest["toolChoice"]>, namespace?: string) =>
+const lowerToolChoice = (toolChoice: NonNullable<LLMRequest["toolChoice"]>) =>
   ProviderShared.matchToolChoice("OpenAI Responses", toolChoice, {
     auto: () => "auto" as const,
     none: () => "none" as const,
     required: () => "required" as const,
-    tool: (name) => ({ type: "function" as const, name, ...(namespace ? { namespace } : {}) }),
+    tool: (name) => ({ type: "function" as const, name }),
   })
 
 const lowerToolCall = (part: ToolCallPart, namespace?: string): OpenAIResponsesInputItem => ({
@@ -496,7 +496,10 @@ const fromRequest = Effect.fn("OpenAIResponses.fromRequest")(function* (request:
   const generation = plan ? undefined : request.generation
   const options = yield* lowerOptions(request)
   const toolSchemaCompatibility = request.model.compatibility?.toolSchema
-  const tools = request.tools.map((tool) =>
+  const selected = plan && request.toolChoice?.type === "tool" ? request.toolChoice : undefined
+  const definitions = selected ? request.tools.filter((tool) => tool.name === selected.name) : request.tools
+  if (selected && definitions.length !== 1) return yield* invalid("Selected ChatGPT plan tool is unavailable")
+  const tools = definitions.map((tool) =>
     lowerTool(tool, ToolSchemaProjection.modelCompatibility(tool.inputSchema, toolSchemaCompatibility)),
   )
   return {
@@ -508,9 +511,7 @@ const fromRequest = Effect.fn("OpenAIResponses.fromRequest")(function* (request:
         : plan
           ? [{ type: "namespace" as const, name: PLAN_TOOL_NAMESPACE, description: "Orchestra tools", tools }]
           : tools,
-    tool_choice: request.toolChoice
-      ? yield* lowerToolChoice(request.toolChoice, plan ? PLAN_TOOL_NAMESPACE : undefined)
-      : undefined,
+    tool_choice: selected ? "required" as const : request.toolChoice ? yield* lowerToolChoice(request.toolChoice) : undefined,
     stream: true as const,
     max_output_tokens: generation?.maxTokens,
     temperature: generation?.temperature,

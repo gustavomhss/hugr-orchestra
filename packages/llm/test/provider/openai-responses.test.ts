@@ -81,7 +81,10 @@ describe("OpenAI Responses route", () => {
         ],
         generation: { maxTokens: 20, temperature: 0, topP: 0.5 },
         providerOptions: { openai: { chatGPTPlan: true, store: false, reasoningEffort: "xhigh", serviceTier: "priority" } },
-        tools: [{ name: "read", description: "Read a file", inputSchema: { type: "object" } }],
+        tools: [
+          { name: "read", description: "Read a file", inputSchema: { type: "object" } },
+          { name: "list", description: "List files", inputSchema: { type: "object" } },
+        ],
         toolChoice: "read",
       })
       const prepared = yield* LLMClient.prepare<OpenAIResponses.OpenAIResponsesBody>(input)
@@ -91,7 +94,7 @@ describe("OpenAI Responses route", () => {
         stream: true,
         reasoning: { effort: "xhigh" },
         tools: [{ type: "namespace", name: "orchestra", tools: [{ type: "function", name: "read" }] }],
-        tool_choice: { type: "function", namespace: "orchestra", name: "read" },
+        tool_choice: "required",
         input: [
           { role: "user" },
           { type: "function_call", namespace: "orchestra", name: "read", call_id: "call_1" },
