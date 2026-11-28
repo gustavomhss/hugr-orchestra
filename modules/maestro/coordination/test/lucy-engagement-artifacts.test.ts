@@ -346,6 +346,6 @@ test("qualified oxlint retains both real analyses and native recipes; other host
         expect(await fs.readdir(file.root)).not.toContain(".oxlintrc.json")
         expect(await fs.readdir(path.join(file.root, "src"))).not.toContain(".oxlintrc.json")
       })),
-    ))
+    )
   })))
 }, 600_000)
