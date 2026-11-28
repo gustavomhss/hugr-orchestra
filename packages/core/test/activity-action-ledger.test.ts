@@ -5,11 +5,6 @@ import { Database } from "@orchestra/core/database/database"
 import { ActivityActionLedger } from "../src/activity-action-ledger"
 import { tmpdir } from "./fixture/tmpdir"
 
-const temporary = Effect.acquireRelease(
-  Effect.promise(() => tmpdir()),
-  (directory) => Effect.promise(() => directory[Symbol.asyncDispose]()),
-)
-
 const observation = (targetID: string, overrides: Partial<ActivityActionLedger.Observation> = {}) => ({
   targetID,
   kind: "tree" as const,
@@ -44,17 +39,19 @@ test("persists generations across reconnects and changes them only when the reco
   )
   expect(equivalent.generation).toBe(first.generation)
 
-  const changedFacts = [
-    observation("tree-a", { members: ["tree-a-root", "tree-a-child", "tree-a-extra"] }),
-    observation("tree-a", { members: ["tree-a-root"] }),
-    observation("tree-a", { identity: "native:replacement" }),
-    observation("tree-a", { dirty: true }),
-    observation("tree-a", { eligible: [] }),
+  const changes: Partial<ActivityActionLedger.Observation>[] = [
+    { members: ["tree-a-root", "tree-a-child", "tree-a-extra"] },
+    { members: ["tree-a-root"] },
+    { identity: "native:replacement" },
+    { dirty: true },
+    { eligible: [] },
   ]
   let previous = equivalent
-  for (const facts of changedFacts) {
-    const next = await Effect.runPromise(withLedger(filename, (ledger) => ledger.record(facts)))
-    expect(next.generation).not.toBe(previous.generation)
+  for (const change of changes) {
+    const next = await Effect.runPromise(
+      withLedger(filename, (ledger) => ledger.record(observation("tree-a", { ...previous, ...change }))),
+    )
+    expect(BigInt(next.generation)).toBeGreaterThan(BigInt(previous.generation))
     previous = next
   }
 
@@ -111,6 +108,12 @@ test("captures exact eligible bindings in request order and refuses the whole in
           ]),
         ).toBeUndefined()
         expect(yield* ledger.capture("suspend", [{ targetID: first.targetID, generation: first.generation }])).toBeUndefined()
+        expect(yield* ledger.capture("stop-tree", [])).toBeUndefined()
+        const invalid = yield* ledger.record(observation("tree-a", { identity: null }))
+        expect(yield* ledger.capture("stop-tree", [invalid])).toBeUndefined()
+        expect(yield* ledger.capture("stop-tree", [first])).toBeUndefined()
+        const duplicate = yield* ledger.record(observation("tree-b", { members: ["member", "member"] }))
+        expect(yield* ledger.capture("stop-tree", [duplicate])).toBeUndefined()
       }),
     ),
   )

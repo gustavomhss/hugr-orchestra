@@ -36,24 +36,25 @@ export type Binding = Pick<Target, "targetID" | "generation">
 export const make = Effect.gen(function* () {
   const database = yield* Database.Service
   return {
-    record(observation: Observation): Effect.Effect<Target, unknown> {
+    record(observation: Observation) {
+      const members = [...new Set(observation.members)].sort()
       const normalized: Observation = {
         targetID: observation.targetID,
         kind: observation.kind,
         label: observation.label,
         owner: observation.owner,
         identity: observation.identity,
-        members: [...new Set(observation.members)].sort(),
+        members,
         dirty: observation.dirty,
-        eligible: [...new Set(observation.eligible)].sort(),
+        eligible: members.length === observation.members.length ? [...new Set(observation.eligible)].sort() : [],
       }
       return database.db.transaction((tx) => Effect.gen(function* () {
         const previous = yield* tx.select().from(ActivityActionLedgerTable)
           .where(eq(ActivityActionLedgerTable.target_id, normalized.targetID)).get()
+        if (previous && JSON.stringify(previous.observation) === JSON.stringify(normalized))
+          return { ...normalized, generation: previous.generation }
         const generation = previous
-          ? JSON.stringify(previous.observation) === JSON.stringify(normalized)
-            ? previous.generation
-            : String(BigInt(previous.generation) + 1n)
+          ? String(BigInt(previous.generation) + 1n)
           : "1"
         yield* tx.insert(ActivityActionLedgerTable).values({
           target_id: normalized.targetID,
@@ -66,14 +67,15 @@ export const make = Effect.gen(function* () {
         return { ...normalized, generation }
       }), { behavior: "immediate" })
     },
-    capture(action: Action, bindings: readonly Binding[]): Effect.Effect<readonly Target[] | undefined, unknown> {
-      if (!bindings.length || new Set(bindings.map((binding) => binding.targetID)).size !== bindings.length)
+    capture(action: Action, bindings: readonly Binding[]) {
+      const requested = bindings.map(({ targetID, generation }) => ({ targetID, generation }))
+      if (!requested.length || new Set(requested.map((binding) => binding.targetID)).size !== requested.length)
         return Effect.succeed(undefined)
       return database.db.transaction((tx) => Effect.gen(function* () {
-        const rows = yield* Effect.forEach(bindings, (binding) => tx.select().from(ActivityActionLedgerTable)
+        const rows = yield* Effect.forEach(requested, (binding) => tx.select().from(ActivityActionLedgerTable)
           .where(eq(ActivityActionLedgerTable.target_id, binding.targetID)).get())
-        if (rows.some((row, index) => !row || row.generation !== bindings[index].generation ||
-          !row.observation.identity || !row.observation.eligible.includes(action))) return undefined
+        if (rows.some((row, index) => !row || row.generation !== requested[index].generation ||
+          !row.observation.identity?.trim() || !row.observation.eligible.includes(action))) return undefined
         return rows.flatMap((row) => row ? [{ ...row.observation, generation: row.generation }] : [])
       }), { behavior: "immediate" })
     },
