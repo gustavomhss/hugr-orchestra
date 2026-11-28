@@ -55,7 +55,7 @@ export function Question(props: ChapterPageProps) {
   onCleanup(() => { askRead += 1 })
   const reportSource = (error: unknown) => {
     console.error(error)
-    setState({ error: true, sourceFailed: true, sourceKnown: false })
+    setState("sourceFailed", true)
   }
 
   return (
@@ -266,7 +266,7 @@ export function Question(props: ChapterPageProps) {
                     <pre class="mx-log rag-source" dir="ltr" tabindex="0">{state.prompt}</pre>
                   </details>
                 </Show>
-                <Show when={state.dropped.length > 0 && sourcePane() !== "failed"}>
+                <Show when={state.dropped.length > 0}>
                   <details class="rag-trace-detail">
                     <summary>{language.t("orchestra.ragStudio.leftOut")}</summary>
                     <ul>

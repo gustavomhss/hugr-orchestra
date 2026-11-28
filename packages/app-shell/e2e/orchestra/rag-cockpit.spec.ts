@@ -6,6 +6,7 @@ const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${pr
 const directory = "/repo/purchasing"
 const projectId = "purchasing"
 const sentence = "Orders above $10,000 require written approval from the category lead."
+const outdatedSentence = "Supplier records expire after ten years."
 const text = `Purchasing policy\n\n${sentence}\n\nAttach the approval record to the purchase order before sending it to the supplier.`
 const sources = [
   { id: "policy", locationId: projectId, path: "/library/procurement/purchasing-policy.txt", contentHash: "policy-hash", status: "read" },
@@ -79,7 +80,9 @@ async function setup(page: Page, scheme: "light" | "dark") {
     if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers })
     const ask = request.method() === "POST" && path === "ask" ? request.postDataJSON() as RagStudio.AskInput : undefined
     if (ask?.text === "This request fails") return route.fulfill({ status: 500, headers })
-    const data = responses.get(`${request.method()} ${path}`)
+    const data = ask?.text === outdatedSentence
+      ? { ...result, light: "dropped_before_model", dropped: ["policy-1"], promptText: "", promptChunkIds: [] } satisfies RagStudio.QuestionResult
+      : responses.get(`${request.method()} ${path}`)
     if (data === undefined) return route.fulfill({ status: 404, headers })
     return route.fulfill({ headers, json: { location: { directory, project: { id: projectId, directory } }, data } })
   })
@@ -145,8 +148,9 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(question.getByRole("status")).toHaveText("Question saved.")
       await maintainTab.click()
       await expect(maintain.getByRole("button", { name: "Whole document", exact: true })).toHaveAttribute("aria-pressed", "true")
+      await maintain.getByRole("button", { name: /purchasing-policy.txt.*Read$/ }).click()
       for (const name of ["Read again", "Cut again", "Redo numbers", "Remove pieces"]) {
-        await expect(maintain.getByRole("button", { name, exact: true })).toBeVisible()
+        await expect(maintain.getByRole("button", { name, exact: true })).toBeEnabled()
       }
       await capture(page, testInfo, `${scheme}-${layout.name}-maintain`)
 
@@ -177,7 +181,18 @@ test("failed operations clear earlier claims and keep maintenance controls withi
   await ask.click()
   await expect(panel.getByRole("alert")).toHaveText("That did not finish.")
   await expect(activeLight).toHaveCount(0)
-  await expect(panel.getByRole("region", { name: "Source passage" })).toBeHidden()
+  const source = panel.getByRole("region", { name: "Source passage" })
+  await expect(source).toBeHidden()
+
+  await input.fill(outdatedSentence)
+  await ask.click()
+  await expect(activeLight).toHaveText("Dropped before the model")
+  await expect(source).toContainText("Could not open the source passage.")
+  await expect(source.locator("mark")).toHaveCount(0)
+  await expect(panel.getByRole("button", { name: "Save this question" })).toBeHidden()
+  const trace = panel.getByRole("region", { name: "Retrieval trace" })
+  await trace.getByText("Some matches were left out of the block.", { exact: true }).click()
+  await expect(trace.getByText("policy-1", { exact: true })).toBeVisible()
 
   await tabs.getByRole("tab", { name: "Maintain", exact: true }).click()
   const maintain = page.getByRole("tabpanel", { name: "Maintain", exact: true })
