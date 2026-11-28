@@ -77,6 +77,12 @@ pub(super) fn in_session(pid: i32, sid: i32) -> io::Result<bool> {
     Ok(stat(pid)?.is_some_and(|st| st.sid == sid && live(&st)))
 }
 
+/// Birth of a live member of the given session, from the same stat as its membership.
+#[cfg(target_os = "linux")]
+pub(super) fn member_birth(pid: i32, sid: i32) -> io::Result<Option<u64>> {
+    Ok(stat(pid)?.filter(|st| st.sid == sid && live(st)).map(|st| st.start))
+}
+
 /// Whether `pid` is, right now, a live member of session `sid` (the re-check before a signal).
 #[cfg(target_os = "macos")]
 pub(super) fn in_session(pid: i32, sid: i32) -> io::Result<bool> {
