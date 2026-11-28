@@ -75,6 +75,27 @@ fn relevant_exiting(sid: i32, known: &[(i32, i32)], members: &[Member], exiting:
     })
 }
 
+#[cfg(target_os = "macos")]
+fn usage(pid: i32) -> Option<(u64, u64)> {
+    #[repr(C)]
+    struct Usage {
+        uuid: [u8; 16],
+        fields: [u64; 10],
+    }
+    unsafe extern "C" {
+        fn proc_pid_rusage(pid: libc::c_int, flavor: libc::c_int, buffer: *mut std::ffi::c_void) -> libc::c_int;
+    }
+    let mut info = Usage {
+        uuid: [0; 16],
+        fields: [0; 10],
+    };
+    // SAFETY: RUSAGE_INFO_V0 writes its fixed-size struct into this valid writable buffer.
+    if unsafe { proc_pid_rusage(pid, 0, (&raw mut info).cast()) } != 0 {
+        return None;
+    }
+    Some((info.fields[7], info.fields[8]))
+}
+
 #[cfg(test)]
 mod tests {
     use super::{Exiting, Member, relevant_exiting};
@@ -105,25 +126,4 @@ mod tests {
             assert!(relevant_exiting(100, &known, &members, &[e]));
         }
     }
-}
-
-#[cfg(target_os = "macos")]
-fn usage(pid: i32) -> Option<(u64, u64)> {
-    #[repr(C)]
-    struct Usage {
-        uuid: [u8; 16],
-        fields: [u64; 10],
-    }
-    unsafe extern "C" {
-        fn proc_pid_rusage(pid: libc::c_int, flavor: libc::c_int, buffer: *mut std::ffi::c_void) -> libc::c_int;
-    }
-    let mut info = Usage {
-        uuid: [0; 16],
-        fields: [0; 10],
-    };
-    // SAFETY: RUSAGE_INFO_V0 writes its fixed-size struct into this valid writable buffer.
-    if unsafe { proc_pid_rusage(pid, 0, (&raw mut info).cast()) } != 0 {
-        return None;
-    }
-    Some((info.fields[7], info.fields[8]))
 }

@@ -58,7 +58,11 @@ impl Observation {
         if self.pending() {
             return Some(ack(req, id, Ack::Error));
         }
-        let (pid, known) = (t.pid, footprint.then(|| t.known.clone()).unwrap_or_default());
+        let pid = t.pid;
+        let known = match footprint {
+            true => t.known.clone(),
+            false => Vec::new(),
+        };
         let (send, result) = sync_channel(1);
         let worker = Builder::new().name("omni-observe".into()).spawn(move || {
             let _ = send.try_send(scan(pid, footprint, &known));
