@@ -29,12 +29,15 @@ export function run(input: { readonly analyze: ReviewAnalysisV2.Analyze; readonl
 }
 
 export function observe(input: { readonly inputHash: string; readonly findingID: string; readonly priorProof: ReviewEvidenceSchemaV2.Proof; readonly priorRecipe: typeof ReviewEvidenceSchemaV2.Recipe.Type; readonly analysis: ReviewEvidenceSchemaV2.AnalysisOperation; readonly hostProofs: readonly ReviewEvidenceSchemaV2.Proof[]; readonly bodies: ReadonlyMap<string, Uint8Array> }): ReviewFixSchemaV2.ToolObservation | "native-runtime-unqualified" | "runtime-unavailable" | "recipe-incompatible" {
-  const check = input.analysis.checks.find((item) => item.pack === "oxlint")
+  const checks = input.analysis.checks.filter((item) => item.pack === "oxlint")
+  if (checks.length > 1) throw new Tool.Failure({ message: "engagement-evidence-corrupt: ambiguous analyzer check", metadata: { reason: "engagement-evidence-corrupt" } })
+  const check = checks[0]
   if (!check || check.status === "not-run" || check.status === "acquisition-error") return process.platform !== "linux" || process.arch !== "x64" ? "native-runtime-unqualified" : "runtime-unavailable"
   const proofs = input.hostProofs.filter((proof) => proof.analysisOperationID === input.analysis.operationID && check.proofIDs.includes(proof.proofID))
   const head = proofs.filter((proof) => proof.side === "head")
   const base = proofs.filter((proof) => proof.side === "base")
   if (head.length !== 1 || base.length !== 1) return "runtime-unavailable"
+  if (proofs.length !== 2 || proofs.some((proof) => proof.sourceSha256 !== input.analysis.sourceSha256 || !check.artifactIDs.includes(proof.stdoutArtifactID))) throw new Tool.Failure({ message: "engagement-evidence-corrupt: inconsistent analyzer proof", metadata: { reason: "engagement-evidence-corrupt" } })
   const projection = (recipe: typeof ReviewEvidenceSchemaV2.Recipe.Type) => ({ pack: recipe.pack, template: recipe.template, runtime: recipe.runtime, files: recipe.files.map((file) => file.path), rules: recipe.rules, config: recipe.config, invocation: recipe.invocation, limits: recipe.limits })
   const recipeSha256 = ReviewEvidenceSchemaV2.digest(projection(input.priorRecipe))
   const inspect = (proof: ReviewEvidenceSchemaV2.Proof) => {
@@ -52,15 +55,35 @@ export function observe(input: { readonly inputHash: string; readonly findingID:
     const stdout = body(proof.stdoutArtifactID)
     const stderr = body(proof.stderrArtifactID)
     const outcome = proof.outcome
-    if (outcome.timedOut || outcome.overflow || outcome.memoryExceeded || outcome.failure || outcome.stdout.truncated || outcome.stderr.truncated || outcome.stdout.bytes !== stdout.byteLength || outcome.stdout.retainedBytes !== stdout.byteLength || outcome.stderr.bytes !== stderr.byteLength || outcome.stderr.retainedBytes !== stderr.byteLength || stderr.byteLength || ![0, 1].includes(outcome.exitCode ?? -1)) return "runtime-unavailable" as const
-    const parsed = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(new TextDecoder().decode(stdout))
-    if (Option.isNone(parsed) || typeof parsed.value !== "object" || parsed.value === null) throw new Tool.Failure({ message: "engagement-evidence-corrupt: invalid SARIF", metadata: { reason: "engagement-evidence-corrupt" } })
-    const data = parsed.value as { version?: unknown; runs?: unknown }
-    if (data.version !== "2.1.0" || !Array.isArray(data.runs) || data.runs.length !== 1) throw new Tool.Failure({ message: "engagement-evidence-corrupt: invalid SARIF envelope", metadata: { reason: "engagement-evidence-corrupt" } })
-    const run = data.runs[0] as { tool?: { driver?: { name?: unknown; version?: unknown; semanticVersion?: unknown } }; results?: unknown; invocations?: unknown }
-    if (run?.tool?.driver?.name !== "oxlint" || run.tool.driver.version !== recipe.runtime.pinnedVersion || (run.tool.driver.semanticVersion !== undefined && run.tool.driver.semanticVersion !== recipe.runtime.pinnedVersion) || !Array.isArray(run.results) || (run.invocations !== undefined && (!Array.isArray(run.invocations) || run.invocations.some((entry: unknown) => typeof entry !== "object" || entry === null || (entry as { executionSuccessful?: unknown }).executionSuccessful === false)))) throw new Tool.Failure({ message: "engagement-evidence-corrupt: invalid SARIF driver or invocation", metadata: { reason: "engagement-evidence-corrupt" } })
-    if (run.results.length === 0 && outcome.exitCode !== 0) return "runtime-unavailable" as const
-    return run.results.length ? "nonzero" as const : "zero" as const
+    if (outcome.timedOut || outcome.overflow || outcome.memoryExceeded || outcome.failure || outcome.stdout.truncated || outcome.stderr.truncated || outcome.stdout.bytes !== stdout.byteLength || outcome.stdout.retainedBytes !== stdout.byteLength || outcome.stderr.bytes !== stderr.byteLength || outcome.stderr.retainedBytes !== stderr.byteLength || new TextDecoder().decode(stderr).trim() !== "" || ![0, 1].includes(outcome.exitCode ?? -1)) return "runtime-unavailable" as const
+    const text = decode(stdout)
+    if (text === undefined || decode(stderr) === undefined) throw new Tool.Failure({ message: "engagement-evidence-corrupt: invalid analyzer UTF-8", metadata: { reason: "engagement-evidence-corrupt" } })
+    const parsed = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(text)
+    const record = (value: unknown): value is Record<string, unknown> => value !== null && typeof value === "object" && !Array.isArray(value)
+    const corrupt = () => { throw new Tool.Failure({ message: "engagement-evidence-corrupt: invalid native SARIF", metadata: { reason: "engagement-evidence-corrupt" } }) }
+    if (Option.isNone(parsed) || !record(parsed.value)) return corrupt()
+    const data = parsed.value
+    if (data.version !== "2.1.0" || !Array.isArray(data.runs) || data.runs.length !== 1 || !record(data.runs[0])) return corrupt()
+    const run = data.runs[0]
+    if (!record(run.tool) || !record(run.tool.driver) || run.tool.driver.name !== recipe.pack || run.tool.driver.version !== recipe.runtime.pinnedVersion || (run.tool.driver.semanticVersion !== undefined && run.tool.driver.semanticVersion !== recipe.runtime.pinnedVersion) || !Array.isArray(run.results)) return corrupt()
+    if (run.invocations !== undefined && (!Array.isArray(run.invocations) || run.invocations.some((invocation) =>
+      !record(invocation) || (invocation.executionSuccessful !== undefined && typeof invocation.executionSuccessful !== "boolean") || invocation.executionSuccessful === false ||
+      [invocation.toolExecutionNotifications, invocation.toolConfigurationNotifications].some((notifications) => notifications !== undefined &&
+        (!Array.isArray(notifications) || notifications.some((notification) => !record(notification) ||
+          (notification.level !== undefined && (typeof notification.level !== "string" || !["none", "note", "warning", "error"].includes(notification.level))) || notification.level === "error")))))) return corrupt()
+    const rows = run.results
+    if (rows.some((row) => {
+      if (!record(row) || (row.kind !== undefined && row.kind !== "fail" && !(row.kind === "review" && row.level === "note")) || typeof row.ruleId !== "string" || !recipe.rules.includes(row.ruleId) || !record(row.message) || typeof row.message.text !== "string" || !Array.isArray(row.locations) || row.locations.length !== 1 || (row.level !== undefined && (typeof row.level !== "string" || !["error", "warning", "note"].includes(row.level)))) return true
+      const location = row.locations[0]
+      if (!record(location) || !record(location.physicalLocation) || !record(location.physicalLocation.artifactLocation) || typeof location.physicalLocation.artifactLocation.uri !== "string" || !location.physicalLocation.artifactLocation.uri || !record(location.physicalLocation.region)) return true
+      const region = location.physicalLocation.region
+      if (typeof region.startLine !== "number" || !Number.isSafeInteger(region.startLine) || region.startLine < 1 || (region.endLine !== undefined && (typeof region.endLine !== "number" || !Number.isSafeInteger(region.endLine) || region.endLine < region.startLine))) return true
+      if ([region.startColumn, region.endColumn].some((column) => column !== undefined && (typeof column !== "number" || !Number.isSafeInteger(column) || column < 1))) return true
+      return typeof region.startColumn === "number" && typeof region.endColumn === "number" && (region.endLine ?? region.startLine) === region.startLine && region.endColumn < region.startColumn
+    })) return corrupt()
+    const errors = rows.filter((row) => record(row) && row.level === "error").length
+    if (!((outcome.exitCode === 0 && errors === 0) || (outcome.exitCode === 1 && errors > 0))) return "runtime-unavailable" as const
+    return rows.length ? "nonzero" as const : "zero" as const
   }
   const a = inspect(head[0])
   const b = inspect(base[0])
@@ -68,4 +91,12 @@ export function observe(input: { readonly inputHash: string; readonly findingID:
   if (a === "runtime-unavailable" || b === "runtime-unavailable" || (a === "zero" && b === "zero" && check.status !== "pass")) return "runtime-unavailable"
   const value = { findingID: input.findingID, priorProofID: input.priorProof.proofID, analysisOperationID: input.analysis.operationID, headProofID: head[0].proofID, baseProofID: base[0].proofID, recipeSha256, result: a === "zero" && b === "zero" ? "zero" as const : "nonzero" as const }
   return { observationID: ReviewEvidenceSchemaV2.digest({ schema: "review-fix-observation-v1", inputHash: input.inputHash, ...value }), ...value }
+}
+
+function decode(bytes: Uint8Array) {
+  try {
+    return new TextDecoder("utf-8", { fatal: true }).decode(bytes)
+  } catch {
+    return undefined
+  }
 }
