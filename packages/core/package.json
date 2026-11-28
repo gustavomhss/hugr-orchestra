@@ -18,6 +18,7 @@
     "./activity-quarantine-archive": "./src/activity-quarantine-archive.ts",
     "./activity-quarantine-custody": "./src/activity-quarantine-custody.ts",
     "./activity-stop-service": "./src/activity-stop-service.ts",
+    "./activity-freeze-service": "./src/activity-freeze-service.ts",
     "./activity-action-ledger": "./src/activity-action-ledger.ts",
     "./activity-disk": "./src/activity-disk.ts",
     "./activity-docker": "./src/activity-docker.ts",
