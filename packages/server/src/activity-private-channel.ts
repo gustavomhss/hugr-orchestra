@@ -80,7 +80,8 @@ export async function acquire(
       const endpoint = url.pathname
       const armPath = endpoint === ActivityPrivateChannel.previewPath || endpoint === ActivityPrivateChannel.confirmPath
       const stopPath = endpoint === ActivityPrivateChannel.stopPreviewPath || endpoint === ActivityPrivateChannel.stopConfirmPath
-      if ((!armPath || !arm) && (!stopPath || !stop)) return forbidden()
+      if (!armPath && !stopPath) return forbidden()
+      if ((armPath && !arm) || (stopPath && !stop)) return forbidden()
       const body = await readBody(request)
       if (body === undefined || !nonce || !await signer.verifyArm("arm-request", endpoint, nonce, mac, body)) return forbidden()
       const decoded = parseBody(body)

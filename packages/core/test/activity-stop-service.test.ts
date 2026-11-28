@@ -34,6 +34,7 @@ test("refuses changed membership and replay, and fences parallel and uncertain d
     expect(yield* service.confirm({ previewID: second!.previewID })).toBeUndefined()
     state.release()
     expect((yield* Effect.promise(() => pending))?.outcomes.every((outcome) => outcome.state === "unknown")).toBe(true)
+    state.members.push("4:4")
     const retry = yield* service.preview({ recordID })
     expect(yield* service.confirm({ previewID: retry!.previewID })).toBeUndefined()
     expect(state.calls).toBe(1)

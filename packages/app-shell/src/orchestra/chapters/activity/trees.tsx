@@ -65,7 +65,7 @@ export function ActivityTrees(props: { query: string }) {
     const client = sdk()
     setState({ stopping: true, stopResult: undefined })
     try {
-      const receipt = await request(scope, { recordID })
+      const receipt = await request(scope, { recordID }).catch(() => undefined)
       if (receipt && !controller.signal.aborted && stopScope() === scope && sdk() === client) {
         setState("stopResult", { scope, uncertain: receipt.outcomes.some((outcome) => outcome.state === "unknown") })
         await refresh(recordID)
