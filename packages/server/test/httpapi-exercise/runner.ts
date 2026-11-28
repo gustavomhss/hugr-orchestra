@@ -7,10 +7,11 @@ import { basic, call, callAuthProbe, capture, locate, makeApp, type ExerciseApp 
 import { isRecord } from "./assertions"
 import type { ActiveScenario, Options, ProjectOptions, Result, Scenario, ScenarioContext, SeededContext } from "./types"
 
-export function runScenario(options: Options, shared: { auth: ExerciseApp | undefined }) {
+export function runScenario(options: Options, shared: Map<boolean, ExerciseApp>) {
   return (scenario: Scenario) => {
     if (scenario.kind === "todo") return Effect.succeed({ status: "skip", scenario } as Result)
-    return (options.mode === "auth" ? runAuth(scenario, shared) : runActive(options, scenario)).pipe(
+    const docker = scenario.path === "/api/activity/docker/read"
+    return (options.mode === "auth" ? runAuth(scenario, shared, docker) : runActive(options, scenario, docker)).pipe(
       Effect.timeoutOrElse({
         duration: options.scenarioTimeout,
         orElse: () => Effect.die(new Error(`scenario timed out after ${Duration.format(options.scenarioTimeout)}`)),
@@ -22,10 +23,11 @@ export function runScenario(options: Options, shared: { auth: ExerciseApp | unde
   }
 }
 
-function runAuth(scenario: ActiveScenario, shared: { auth: ExerciseApp | undefined }) {
+function runAuth(scenario: ActiveScenario, shared: Map<boolean, ExerciseApp>, docker: boolean) {
   return Effect.gen(function* () {
-    // One authenticated app serves every probe: the probes only read the auth layer's verdict.
-    const app = (shared.auth ??= makeApp({ auth: true }))
+    // Only the explicit Docker read probe needs the daemon-free process fixture.
+    const app = shared.get(docker) ?? makeApp({ auth: true, docker })
+    shared.set(docker, app)
     const result = yield* callAuthProbe(app, scenario, "missing")
     if (scenario.auth === "protected") {
       if (result.status !== 401) throw new Error(`auth expected 401, got ${result.status}`)
@@ -46,14 +48,14 @@ function runAuth(scenario: ActiveScenario, shared: { auth: ExerciseApp | undefin
   })
 }
 
-function runActive(options: Options, scenario: ActiveScenario) {
+function runActive(options: Options, scenario: ActiveScenario, docker: boolean) {
   return Effect.acquireRelease(
     Effect.gen(function* () {
       yield* trace(options, scenario, "context acquire")
       const dir = scenario.project
         ? yield* Effect.promise(() => projectDirectory(scenario.project ?? {}))
         : undefined
-      return { dir, app: makeApp({ auth: scenario.basicAuth }) }
+      return { dir, app: makeApp({ auth: scenario.basicAuth, docker }) }
     }),
     (context) =>
       Effect.promise(async () => {
