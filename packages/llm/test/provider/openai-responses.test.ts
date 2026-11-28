@@ -97,8 +97,18 @@ describe("OpenAI Responses route", () => {
         ],
         toolChoice: "read",
       })
-      const prepared = yield* LLMClient.prepare<OpenAIResponses.OpenAIResponsesBody>(input)
-      expect(prepared.body).toMatchObject({
+      const bodies: string[] = []
+      yield* LLMClient.generate(input).pipe(
+        Effect.provide(dynamicResponse((wire) => Effect.sync(() => {
+          bodies.push(wire.text)
+          return wire.respond(sseEvents({ type: "response.completed", response: {} }), {
+            headers: { "content-type": "text/event-stream" },
+          })
+        }))),
+      )
+      expect(bodies).toHaveLength(1)
+      const body: unknown = JSON.parse(bodies[0])
+      expect(body).toMatchObject({
         instructions: "Keep the existing permissions.",
         store: false,
         stream: true,
@@ -120,8 +130,8 @@ describe("OpenAI Responses route", () => {
         ],
       })
       for (const key of ["max_output_tokens", "temperature", "top_p", "service_tier"])
-        expect(prepared.body).not.toHaveProperty(key)
-      expect(prepared.body).not.toHaveProperty("tools.0.tools.0.parameters.$ref")
+        expect(body).not.toHaveProperty(key)
+      expect(body).not.toHaveProperty("tools.0.tools.0.parameters.$ref")
     }),
   )
 
