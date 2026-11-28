@@ -2,7 +2,7 @@ import { expect } from "bun:test"
 import fs from "fs/promises"
 import path from "path"
 import { asc, sql } from "drizzle-orm"
-import { Effect, Layer } from "effect"
+import { Cause, Effect, Exit, Layer } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -276,5 +276,40 @@ it.live("retains current-source Session state in a committed WAL snapshot and ac
       }))
       expect(yield* Effect.promise(() => Bun.file(`${filename}-wal`).exists())).toBe(false)
     }), { concurrency: 1 })
+  }),
+)
+
+
+it.live("a Session commit check rolls back creation and admission while preserving exact retries", () =>
+  Effect.gen(function* () {
+    const tmp = yield* Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    )
+    yield* openDatabase(":memory:", tmp.path, Effect.gen(function* () {
+      const sessions = yield* SessionV2.Service
+      const store = yield* SessionStore.Service
+      const { db } = yield* Database.Service
+      const sessionID = SessionV2.ID.create()
+      const create = { id: sessionID, location: { directory: AbsolutePath.make(tmp.path) } }
+      const refuse = new Error("Schedule authority expired")
+      const options = { beforeCommit: Effect.die(refuse) }
+      const refusedCreate = yield* sessions.create(create, options).pipe(Effect.exit)
+      expect(Exit.isFailure(refusedCreate) && Cause.squash(refusedCreate.cause)).toBe(refuse)
+      expect(yield* store.get(sessionID)).toBeUndefined()
+
+      const created = yield* sessions.create(create)
+      expect(yield* sessions.create(create, options)).toEqual(created)
+      const id = SessionMessage.ID.create()
+      const input = { id, sessionID, prompt: Prompt.make({ text: "Scheduled work" }), resume: false }
+      const history = yield* sessions.history({ sessionID, limit: 20 })
+      const refusedPrompt = yield* sessions.prompt(input, options).pipe(Effect.exit)
+      expect(Exit.isFailure(refusedPrompt) && Cause.squash(refusedPrompt.cause)).toBe(refuse)
+      expect(yield* SessionInput.find(db, id)).toBeUndefined()
+      expect(yield* sessions.history({ sessionID, limit: 20 })).toEqual(history)
+
+      const admitted = yield* sessions.prompt(input)
+      expect(yield* sessions.prompt(input, options)).toEqual(admitted)
+    }))
   }),
 )
