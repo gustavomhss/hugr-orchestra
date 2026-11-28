@@ -25,6 +25,7 @@ SPECS = {
         "sha256": "ddada3d4b67cff13ef3a5817b95efc275b0d288061436546c8ec6b73290766a6",
         "artifacts": 12,
         "inputs": 694,
+        "expected_candidate_id": "0ff5e4144f7ec153a51ca9615b233219a3ec0bf83b4ee62593921646e64bcb56",
     },
     "api": {
         "commit": "d81a973d98ebe9b1f6db779bfc78af5152f14041",
@@ -32,6 +33,7 @@ SPECS = {
         "sha256": "71bc1102fd5e2c6be166b2df790e8ee8fe4ecd053ab2d7fed5bbc46130349442",
         "artifacts": 16,
         "inputs": 354,
+        "expected_candidate_id": "efb8558f751e8e4c4926eec2b736eadc3948230ad368023f5e5d19130b6faac8",
     },
 }
 
@@ -210,6 +212,7 @@ def main():
     prepared_path = args.output / "prepared.json"
     if prepared_path.exists():
         prepared = json.loads(prepared_path.read_bytes())
+        require(prepared["candidate_id"] == SPECS[args.selection]["expected_candidate_id"], "Previously observed candidate identity changed")
         require(prepared["candidate"]["repo_root"] == str(args.root), "Prepared root mismatch")
         require(prepared["candidate"]["observed_head"] == SOURCE, "Prepared observed HEAD mismatch")
         require(prepared["candidate"]["transport"]["sha256"] == SPECS[args.selection]["sha256"], "Prepared transport mismatch")
@@ -217,10 +220,104 @@ def main():
                         "prepared_sha256": sha(prepared_path.read_bytes()), "entries": len(prepared["candidate"]["entries"]),
                         "observations": len(prepared["candidate"]["observations"])})
     save(args.output / "prepare-receipt.json", receipt)
+    if result.returncode == 0:
+        preserve_prepared_objects(args, package, prepared)
     print("GENESIS_S1_NATIVE_RECEIPT=" + json.dumps(receipt, sort_keys=True))
     if result.returncode:
         print(result.stderr.decode(errors="replace"))
     raise SystemExit(result.returncode)
+
+
+def preserve_prepared_objects(args, package, prepared):
+    """Export immutable evidence, then ask the released kernel/observer to verify IDs.
+
+    This is an operator evidence check in Actions, not a replacement implementation
+    of prepare, binding, publication or the qualified common runtime controls.
+    """
+    cas = args.root / ".atlas/cas"
+    require(sorted(item.name for item in cas.parent.iterdir()) == ["cas"], "Prepare wrote state outside CAS")
+    target = args.output / "cas"
+    target.mkdir()
+    inventory = []
+    for item in sorted(cas.rglob("*")):
+        require(not item.is_symlink(), "CAS export encountered symlink")
+        if item.is_dir():
+            continue
+        require(item.is_file() and re.fullmatch(r"[0-9a-f]{64}", item.name), "Unexpected CAS entry")
+        relative_path = item.relative_to(cas)
+        require(relative_path.as_posix() == item.name[:2] + "/" + item.name, "Unexpected CAS shard")
+        raw = item.read_bytes()
+        destination = target / relative_path
+        destination.parent.mkdir(exist_ok=True)
+        with destination.open("xb") as stream:
+            stream.write(raw)
+        inventory.append({"id": item.name, "path": "cas/" + relative_path.as_posix(),
+                          "byte_length": len(raw), "sha256": sha(raw)})
+    save(args.output / "cas-inventory.json", {"schema": "genesis-s1-cas-export/v1", "objects": inventory})
+    def obj(identity):
+        return json.loads((cas / identity[:2] / identity).read_bytes())
+    candidate = prepared["candidate"]
+    require(obj(prepared["candidate_id"]) == candidate, "Candidate CAS differs from prepared")
+    require(obj(candidate["contract"]) == {"kind": "ownership-contract", "version": 1, "criteria": candidate["criteria"]},
+            "Contract CAS differs from declared criteria")
+    require(prepared == json.loads((args.output / "prepare.stdout").read_bytes()), "CLI output differs from prepared file")
+    by_key = {artifact["key"]: artifact for artifact in package["artifacts"]}
+    for entry in candidate["entries"]:
+        artifact = by_key[entry["key"]]
+        result = obj(entry["artifact"]["result"])
+        body = obj(result["body"])
+        raw = bytes(body["bytes"])
+        require(body["kind"] == "ownership-body" and body["version"] == 1 and
+                sha(raw) == artifact["body"]["sha256"] and len(raw) == artifact["body"]["byte_length"], "Artifact body CAS mismatch")
+        for field in ("authority", "validity", "gaps", "evidence"):
+            require(result[field] == artifact[field], "Artifact result metadata mismatch")
+    for reference in candidate["references"]:
+        body = obj(reference["body"])
+        require(body["kind"] == "ownership-body" and body["version"] == 1 and
+                sha(bytes(body["bytes"])) == reference["reference"]["sha256"], "Reference CAS mismatch")
+    program = r'''
+const { readFileSync } = await import("node:fs");
+const { join } = await import("node:path");
+const { id } = await import("@atlas/kernel");
+const { observeOwnershipInput } = await import("./packages/adapter-io/src/ownership-input.ts");
+const prepared = JSON.parse(readFileSync(process.env.GENESIS_PREPARED_FILE, "utf8"));
+const candidate = prepared.candidate;
+const inventory = JSON.parse(readFileSync(process.env.GENESIS_CAS_INVENTORY, "utf8"));
+const checks = [{kind:"candidate",actual:String(id(candidate)),expected:prepared.candidate_id}];
+for (const entry of candidate.entries)
+  checks.push({kind:"entry-inputs",key:entry.key,actual:String(id({inputs:entry.inputs,dependencies:entry.dependencies})),expected:entry.inputs_id});
+for (const observed of candidate.observations) {
+  const reobserved = observeOwnershipInput(candidate.repo_root, observed.key);
+  checks.push({kind:"original-observer",key:observed.key,state:reobserved.kind,actual:reobserved.kind === "present" ? reobserved.version : null,expected:observed.version});
+}
+for (const object of inventory.objects) {
+  const value = JSON.parse(readFileSync(join(process.env.GENESIS_EVIDENCE_ROOT, object.path), "utf8"));
+  checks.push({kind:"cas-object",key:object.id,actual:String(id(value)),expected:object.id});
+}
+console.log(JSON.stringify({schema:"genesis-s1-original-kernel-verification/v1",checks}));
+if (checks.some(check => check.actual !== check.expected)) process.exitCode=1;
+'''
+    argv = ["bun", "--eval", program]
+    env = {**os.environ, "GENESIS_PREPARED_FILE": str(args.output / "prepared.json"),
+           "GENESIS_CAS_INVENTORY": str(args.output / "cas-inventory.json"), "GENESIS_EVIDENCE_ROOT": str(args.output)}
+    result = subprocess.run(argv, cwd=args.runtime / "modules/atlas", env=env, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    (args.output / "kernel-identities.json").write_bytes(result.stdout)
+    (args.output / "kernel-identities.stderr").write_bytes(result.stderr)
+    receipt = {"schema": "genesis-s1-cas-verification/v1", "runtime_revision": args.runtime_revision,
+               "runtime_tree": git(args.runtime, "rev-parse", "HEAD^{tree}").stdout.decode().strip(),
+               "runtime_tracked_diff": git(args.runtime, "diff", "--no-ext-diff", "HEAD").stdout.decode(),
+               "candidate_id": prepared["candidate_id"], "argv": argv, "exit_code": result.returncode,
+               "stdout_sha256": sha(result.stdout), "stderr_sha256": sha(result.stderr),
+               "cas_inventory_sha256": sha((args.output / "cas-inventory.json").read_bytes()),
+               "cas_objects": len(inventory), "observer_checks": len(candidate["observations"]),
+               "membership_checks": sum(row["key"].startswith("members:") for row in candidate["observations"]),
+               "body_and_reference_bytes_verified": True, "authority_or_projection_created": False}
+    save(args.output / "cas-verification-receipt.json", receipt)
+    require(result.returncode == 0, "Original kernel or observer verification failed")
+    checks = json.loads(result.stdout)["checks"]
+    require(len(checks) == 1 + len(candidate["entries"]) + len(candidate["observations"]) + len(inventory), "Incomplete verification")
+    require(all(check["actual"] == check["expected"] for check in checks), "Kernel identities changed")
+    require(receipt["runtime_tracked_diff"] == "", "Runtime tracked code changed")
 
 
 if __name__ == "__main__":
