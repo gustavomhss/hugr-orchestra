@@ -188,9 +188,7 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical fo
       sample.bytes = bytes
       await monitor.inspect(id)
     }
-    const current = row()
-    if (current?.footprint?.hypothesis !== "compatible-with-logical-leak")
-      throw new Error(`footprint ${JSON.stringify({ footprint: current?.footprint, state: current?.state })}`)
+    expect(row()?.footprint?.hypothesis).toBe("compatible-with-logical-leak")
     const previous = row()?.footprint
     if (!previous) throw new Error("Missing complete footprint before the invalid sample")
     sample.bytes = NaN
@@ -215,6 +213,9 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical fo
     await waitForClock()
     await monitor.inspect(id)
     expect(row()?.footprint?.hypothesis).toBe("insufficient")
+    // The monitor keeps only a weak handle. The last use has to be after the samples,
+    // or a collector drops the proxy and later readings stay on the first sample.
+    void observed
   }, 30_000)
 })
 

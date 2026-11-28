@@ -79,6 +79,7 @@ it.live.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")(
     const records = ActivityMonitor.snapshot().records
     expect(records.find((record) => record.recordID === matched)?.footprint?.hypothesis).toBe("compatible-with-logical-leak")
     expect(records.find((record) => record.recordID === unmatched)?.footprint?.hypothesis).toBe("insufficient")
+    void observed
   }),
   30_000,
 )
