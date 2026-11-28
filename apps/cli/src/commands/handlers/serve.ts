@@ -3,6 +3,7 @@ import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
 import { Credential } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { Flag } from "@orchestra/core/flag/flag"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { PermissionSaved } from "@orchestra/core/permission/saved"
 import { SessionV2 } from "@orchestra/core/session"
@@ -81,6 +82,8 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
   )
   // Capture the per-launch credentials before an installation can start subprocesses.
   const launchPassword = process.env.ORCHESTRA_SERVER_PASSWORD
+  const isolation = Flag.ORCHESTRA_ACTIVITY_ISOLATED_EXECUTABLES
+  delete process.env.ORCHESTRA_ACTIVITY_ISOLATED_EXECUTABLES
   delete process.env.ORCHESTRA_SERVER_PASSWORD
   delete process.env.ORCHESTRA_SERVER_USERNAME
   const privateExtension = input.activityApprovalStdin ? yield* Effect.gen(function* () {
@@ -109,10 +112,19 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
       const { ActivityFreezeService } = yield* Effect.promise(() => import("@orchestra/core/activity-freeze-service"))
       return ActivityFreezeService.make(database)
     }) : undefined
-    return yield* Effect.tryPromise({
+    const extension = yield* Effect.tryPromise({
       try: (signal) => ActivityPrivateChannelServer.acquire(process.stdin, signal, arm, stop, custody, freeze),
       catch: () => new Error("Activity private channel startup failed"),
     })
+    if (process.platform === "linux" && isolation !== undefined) {
+      const { OmniSpawner } = yield* Effect.promise(() => import("@orchestra/core/omni-spawner"))
+      const unbind = yield* Effect.try({
+        try: () => OmniSpawner.bindActivityIsolation(isolation),
+        catch: () => new Error("Invalid ORCHESTRA_ACTIVITY_ISOLATED_EXECUTABLES configuration"),
+      })
+      yield* Effect.addFinalizer(() => Effect.sync(unbind))
+    }
+    return extension
   }) : undefined
   const start = (wait: Effect.Effect<void>) =>
     withInstallation(input, (httpExtensions) => Effect.gen(function* () {
