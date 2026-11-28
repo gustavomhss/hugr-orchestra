@@ -107,7 +107,7 @@ test("engagement admission rejects other seats, validation fields, unavailable c
     expect(compliance.text).toContain("engagement-profile-unavailable")
     const fix = yield* host.invoke({ ...request("premature-fix"), fixReview: { reportID: "a".repeat(64), findingIDs: ["C1"] } })
     expect(fix.type).toBe("error")
-    expect(fix.text).toContain("engagement-fix-review-unavailable")
+    expect(fix.text).toContain("engagement-fix-prior-not-found")
     expect(root.requests.length).toBe(requests)
     expect(yield* host.db.select().from(SessionTable).all().pipe(Effect.orDie)).toEqual(before)
   }))))

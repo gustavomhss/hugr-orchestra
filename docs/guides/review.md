@@ -218,9 +218,24 @@ outcome. If the process ended before publishing one, the first retry fails close
 
 The engagement route exposes captured CODE and scoped analyzer pages. Native file reads, Atlas context,
 history and executable verifier probes are unavailable here. Reports explicitly retain unexamined history and
-probes. Fix review is not built in this slice; compliance requests and `fixReview`
-requests refuse before source capture. Artifact behavioral evaluation remains unexamined without owner permission.
-Those limits remain open even when an individual report completes successfully.
+probes. Compliance requests refuse before source capture. Artifact behavioral evaluation remains unexamined
+without owner permission. Those limits remain open even when an individual report completes successfully.
+
+### Retesting findings after a fix
+
+Use a new request ID in the original Maestro Session. Keep the profile of the original report, choose a local
+Git revision, and set `fixReview` to the original `reportID` and the selected open `findingIDs`. Lucy captures
+only the files required by those findings and their retained evidence. Removed or renamed required files
+stop the request with a source error.
+
+The retest keeps the original review tier and returns a disposition for each selected finding. An independent
+verifier evaluates the current source and any matching analyzer observation. The native oxlint route requires
+a prepared Linux x64 runtime and equivalent execution settings. Unchanged source or unavailable evidence
+cannot establish resolution. Examine the result's questions and coverage gaps before relying on it.
+
+Keep the exact same input for a retry. A completed result has its own report ID and includes the original
+evidence closure in its receipt. Use the retained evidence reader below to inspect it after the review ends.
+The original report and finding status remain available separately.
 
 ### Audit variants
 
@@ -299,7 +314,7 @@ publication use the original review deadline. Cancelled, expired and failed repo
 name the evidence-publication gap. Their retries retain the same stopped result.
 
 Reports saved before durable evidence retain exact report replay and return explicit `legacy-record` evidence
-unavailability. Historical state-v2 / receipt-v1 records retain exact report and evidence replay. New admissions
+unavailability. Historical state-v2 / receipt-v1 records retain exact report and evidence replay. New ordinary admissions
 use state-v3 / receipt-v2, including an explicit zero-generation section for diligence and artifact reports.
 A newer completed report with a missing reference, missing body or corrupt bytes fails by name.
 The reader and retry preserve that terminal record and do not rebuild a receipt from model messages or temporary

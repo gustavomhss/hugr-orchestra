@@ -40,6 +40,10 @@ export const TAGS = { entry: "review-entry", lens: "review-lens", verify: "revie
 export const LIMITS = { sessions: 2 } as const
 const RUNNING = Semaphore.makeUnsafe(LIMITS.sessions)
 
+export function withSessionPermit<A, E, R>(effect: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> {
+  return RUNNING.withPermit(effect)
+}
+
 // No scope ever carries a delegation tool, whatever the stage sets list.
 const ENTRY_NODE = "lucy-review"
 const QUOTE_NODE = "lucy-review-prove-quote"
@@ -201,7 +205,7 @@ type Counts = {
 
 export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port: Port) {
   if (input.firstRound && input.firstRound.reviewed === input.reviewed) return { status: "unaddressed" } as Result
-  const runStage: Port["run"] = (sessionID, brief, turn) => RUNNING.withPermit(port.run(sessionID, brief, turn))
+  const runStage: Port["run"] = (sessionID, brief, turn) => withSessionPermit(port.run(sessionID, brief, turn))
   const cardOnly = input.completion === "card-only"
   const report = input.completion === "report"
   if (report && input.repositoryFiles === undefined)
@@ -329,7 +333,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     for (const item of items) observed.push(item)
   }
   const verify = (request: ReviewFanoutVerificationV2.Request, routing: ReviewRouting.Record, intent: ReviewFanoutVerificationV2.Intent) =>
-    ReviewFanoutVerificationV2.run({ catalog, routing, tier, intent, report, verifierModel: input.verifierModel,
+    ReviewFanoutVerificationV2.run({ catalog, routing, tier, intent, report, analysis, verifierModel: input.verifierModel,
       reviewed: input.reviewed, teamStack, auditNodes, allowedNodes: (nodes) => allowedNodes(nodes, routing),
       tools: stageTools(input.stages.verifier), create: port.create, run: runStage, region: port.region,
       bind: (child, offered) => bind(child, "verifier", { offered, cap: tier.probeAttempts, observeProbes }),

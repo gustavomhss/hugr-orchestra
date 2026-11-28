@@ -32,6 +32,7 @@ export type AnalysisContext = {
   readonly retained: typeof Retained.Type
   readonly artifacts: ReadonlyArray<ReviewEvidenceSchemaV2.Artifact>
   readonly proofs: ReadonlyArray<ReviewEvidenceSchemaV2.Proof>
+  readonly recipes: ReadonlyMap<string, typeof ReviewEvidenceSchemaV2.Recipe.Type>
 }
 
 export function read(bytes: Uint8Array, report: ReviewEngagementReportV2.Stored): ReviewEvidenceSchemaV2.Receipt {
@@ -142,13 +143,29 @@ export function validate(receipt: ReviewEvidenceSchemaV2.Receipt, report: Review
   const source = report.value.source
   const card = report.value.report
   ReviewEvidenceSchemaV2.require(source && card, "completed source report is absent")
-  const allowed = new Map(source.files.map((file) => [file.path, file]))
   const body = bodyReader(receipt.artifacts, bodies)
   for (const descriptor of receipt.artifacts) body(descriptor.artifactID)
+  const context = analysisContext({ ...receipt, source }, bodies)
+  validateCode(receipt.operations, source, body)
+  const final = context.final
+  ReviewEvidenceSchemaV2.require(ReviewEvidenceSchemaV2.same(final.routing.packs, card.routing.packs), "final analysis differs from report routing")
+  for (const check of final.result.checks) {
+    const actual = card.checks.find((item) => item.id === check.id && item.pack === check.pack && item.lane === check.lane)
+    ReviewEvidenceSchemaV2.require(actual && actual.version === check.version && actual.workspaceExecuted === check.workspaceExecuted && actual.reason === check.reason &&
+      (actual.status === check.status || check.status === "not-run" && actual.status === "check-unavailable"), "final report check differs from host analysis")
+  }
+  for (const [index, citation] of receipt.citations.entries())
+    ReviewEvidenceSchemaV2.require(Buffer.from(body(citation.artifactID)).equals(Buffer.from(report.value.citations[index].text)), "citation bytes differ")
+  for (const finding of card.findings) if (finding.evidence.kind === "tool") qualifiedTool(context, finding)
+  return context
+}
+
+export function validateCode(operations: ReviewEvidenceSchemaV2.ReceiptV1["operations"],
+  source: ReviewEngagementReportV2.Source, body: (id: string) => Uint8Array) {
+  const allowed = new Map(source.files.map((file) => [file.path, file]))
   const captured = (value: typeof Source.Type) => ReviewEvidenceSchemaV2.require(value.commit === source.commit && value.scope.sha256 === source.sha256 &&
     ReviewEvidenceSchemaV2.same(value.scope.files, source.files.map((file) => file.path)), "CODE captured source scope differs")
-  const context = analysisContext({ ...receipt, source }, bodies)
-  for (const operation of receipt.operations) {
+  for (const operation of operations) {
     if (operation.kind === "code") {
       const result = Schema.decodeUnknownSync(CodeBody)(ReviewEvidenceSchemaV2.json(body(operation.evidence.artifactID)), ReviewEvidenceSchemaV2.strict)
       captured(result.source)
@@ -160,16 +177,6 @@ export function validate(receipt: ReviewEvidenceSchemaV2.Receipt, report: Review
       }
     }
   }
-  const final = context.final
-  ReviewEvidenceSchemaV2.require(ReviewEvidenceSchemaV2.same(final.routing.packs, card.routing.packs), "final analysis differs from report routing")
-  for (const check of final.result.checks) {
-    const actual = card.checks.find((item) => item.id === check.id && item.pack === check.pack && item.lane === check.lane)
-    ReviewEvidenceSchemaV2.require(actual && actual.version === check.version && actual.workspaceExecuted === check.workspaceExecuted && actual.reason === check.reason &&
-      (actual.status === check.status || check.status === "not-run" && actual.status === "check-unavailable"), "final report check differs from host analysis")
-  }
-  for (const [index, citation] of receipt.citations.entries())
-    ReviewEvidenceSchemaV2.require(Buffer.from(body(citation.artifactID)).equals(Buffer.from(report.value.citations[index].text)), "citation bytes differ")
-  for (const finding of card.findings) if (finding.evidence.kind === "tool") qualifiedTool(context, finding)
 }
 
 /** The same immutable analysis/proof boundary is available before a final card exists. */
@@ -204,6 +211,7 @@ export function analysisContext(input: AnalysisInput, bodies: ReviewEvidenceSche
   ReviewEvidenceSchemaV2.require(final && [...analyses.keys()].at(-1) === input.finalAnalysisOperationID, "final analysis binding differs")
   const seen = new Set<string>()
   const invocations = new Set<string>()
+  const recipes = new Map<string, typeof ReviewEvidenceSchemaV2.Recipe.Type>()
   for (const proof of input.hostProofs) {
     const { proofID, ...payload } = proof
     const analysis = analyses.get(proof.analysisOperationID)
@@ -222,13 +230,13 @@ export function analysisContext(input: AnalysisInput, bodies: ReviewEvidenceSche
         capture.truncated === (capture.bytes > capture.retainedBytes) && descriptor.complete === (!capture.truncated && !proof.outcome.overflow),
       "native output byte accounting differs")
     }
-    validateProof(proof, body, allowed, analysis.result.catalog)
+    recipes.set(proof.proofID, validateProof(proof, body, allowed, analysis.result.catalog))
     if (proof.outcome.timedOut || proof.outcome.overflow || proof.outcome.memoryExceeded || proof.outcome.failure)
       ReviewEvidenceSchemaV2.require(analysis.result.result.checks.every((check) => check.pack !== "oxlint" || check.status !== "pass"),
         "native failure was represented as a passing check")
   }
   return { source: input.source, final: final.result, operation: final.operation, retained: final.retained,
-    artifacts: input.artifacts, proofs: input.hostProofs }
+    artifacts: input.artifacts, proofs: input.hostProofs, recipes }
 }
 
 /** A model URI qualifies only through the observed final analysis, item and native invocation. */
@@ -296,6 +304,7 @@ function validateProof(proof: ReviewEvidenceSchemaV2.Proof, body: (id: string) =
   ReviewEvidenceSchemaV2.require(ReviewEvidenceSchemaV2.same(recipe.invocation.argv, expected), "native argv differs from the qualified recipe")
   ReviewEvidenceSchemaV2.require(proof.outcome.stdout.retainedBytes <= recipe.limits.maxBytes &&
     proof.outcome.stderr.retainedBytes <= recipe.limits.maxBytes, "native capture exceeded its recipe bound")
+  return recipe
 }
 
 function validatePaths(value: unknown, allowed: ReadonlyMap<string, unknown>) {
