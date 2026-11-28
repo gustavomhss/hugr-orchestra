@@ -3,7 +3,7 @@ export * as ActivityArmProof from "./activity-arm-proof"
 import { createHash } from "node:crypto"
 import { constants } from "node:fs"
 import type { BigIntStats } from "node:fs"
-import { lstat, open, opendir, readFile, readlink, realpath, stat } from "node:fs/promises"
+import { lstat, open, opendir, readlink, realpath, stat } from "node:fs/promises"
 import path from "node:path"
 import { ActivityObjectProof } from "./activity-object-proof"
 
@@ -13,7 +13,8 @@ const kernelThread = 0x00200000
 // This observation expires at the boundary of the caller's decision. It does not reserve the object.
 export async function inspect(input: { worktree: string; name: ".turbo" | "node_modules" }, signal?: AbortSignal) {
   const uid = process.geteuid?.()
-  if (process.platform !== "linux" || uid === undefined || !path.isAbsolute(input.worktree)) return undefined
+  if (process.platform !== "linux" || uid === undefined || !path.isAbsolute(input.worktree) ||
+    (input.name !== ".turbo" && input.name !== "node_modules")) return undefined
   try {
     signal?.throwIfAborted()
     const worktree = await realpath(input.worktree)
@@ -53,7 +54,7 @@ export async function inspect(input: { worktree: string; name: ".turbo" | "node_
 
 async function captureTree(object: string, root: BigIntStats, uid: bigint, signal?: AbortSignal) {
   if (!root.isDirectory() || root.uid !== uid) return undefined
-  const mountInfo = await readFile("/proc/self/mountinfo", "utf8")
+  const mountInfo = await readProc("/proc/self/mountinfo", 512 * 1024, signal)
   if (mountInfo.split("\n").some((line) => {
     const point = line.split(" ")[4]?.replace(/\\([0-7]{3})/g, (_match, octal: string) => String.fromCharCode(parseInt(octal, 8)))
     return point && within(object, point)
@@ -107,7 +108,7 @@ async function lockPID(file: string, entry: BigIntStats) {
 }
 
 async function captureUse(worktree: string, object: string, inodes: ReadonlySet<string>, lockPids: ReadonlySet<string>, signal?: AbortSignal) {
-  const proc = (await readFile("/proc/self/mountinfo", "utf8")).split("\n")
+  const proc = (await readProc("/proc/self/mountinfo", 512 * 1024, signal)).split("\n")
     .find((line) => line.split(" ")[4] === "/proc")
   if (!proc || !proc.includes(" - proc ") || /\b(hidepid=[^0,\s]|subset=pid)/.test(proc)) return undefined
   const usage = { cwd: false, git: false, open: false, lock: false, claimant: false }
@@ -118,15 +119,17 @@ async function captureUse(worktree: string, object: string, inodes: ReadonlySet<
   for (const pid of pids) {
     signal?.throwIfAborted()
     const base = `/proc/${pid}`
-    const first = await processStat(base)
+    const first = await processStat(base, signal)
     if (first.state === "Z" || first.state === "X" || (first.flags & kernelThread) !== 0) continue
     usage.lock ||= lockPids.has(pid)
     const threads = await numbers(`${base}/task`)
     tasks += threads.length
     if (!threads.length || tasks > 4096) return undefined
-    const [args, env, maps] = await Promise.all(["cmdline", "environ", "maps"].map((entry) =>
-      readFile(`${base}/${entry}`, "utf8"),
-    ))
+    const [args, env, maps] = await Promise.all([
+      readProc(`${base}/cmdline`, 256 * 1024, signal),
+      readProc(`${base}/environ`, 256 * 1024, signal),
+      readProc(`${base}/maps`, 1024 * 1024, signal),
+    ])
     usage.claimant ||= env.split("\0").some((entry) => entry.includes(object))
     usage.open ||= maps.split("\n").filter(Boolean).some((line) => {
       const match = line.match(/^\S+\s+\S+\s+\S+\s+([0-9a-f]+):([0-9a-f]+)\s+(\d+)/i)
@@ -137,7 +140,7 @@ async function captureUse(worktree: string, object: string, inodes: ReadonlySet<
       signal?.throwIfAborted()
       const task = `${base}/task/${thread}`
       const cwd = await readlink(`${task}/cwd`)
-      usage.cwd ||= within(worktree, cwd)
+      usage.cwd ||= within(worktree, cwd) || inodes.has(inode(await stat(`${task}/cwd`, { bigint: true })))
       usage.git ||= gitDirectory(args, cwd, worktree)
       const fds = await numbers(`${task}/fd`)
       descriptors += fds.length
@@ -155,10 +158,10 @@ async function captureUse(worktree: string, object: string, inodes: ReadonlySet<
         if (inodes.has(inode(await stat(reference, { bigint: true })))) usage.open = true
       }
     }
-    if ((await processStat(base)).birth !== first.birth || !sameIDs(threads, await numbers(`${base}/task`))) return undefined
+    if ((await processStat(base, signal)).birth !== first.birth || !sameIDs(threads, await numbers(`${base}/task`))) return undefined
   }
   if (!sameIDs(pids, await numbers("/proc"))) return undefined
-  const locks = await readFile("/proc/locks", "utf8")
+  const locks = await readProc("/proc/locks", 512 * 1024, signal)
   usage.lock ||= locks.split("\n").filter(Boolean).some((line) => {
     const match = line.match(/\b([0-9a-f]+):([0-9a-f]+):(\d+)\b/i)
     if (!match) throw new Error("Unrecognized kernel lock")
@@ -167,8 +170,27 @@ async function captureUse(worktree: string, object: string, inodes: ReadonlySet<
   return usage
 }
 
-async function processStat(directory: string) {
-  const content = await readFile(`${directory}/stat`, "utf8")
+async function readProc(file: string, limit: number, signal?: AbortSignal) {
+  const handle = await open(file, constants.O_RDONLY)
+  const buffer = Buffer.allocUnsafe(16 * 1024)
+  const chunks: Buffer[] = []
+  let length = 0
+  try {
+    while (true) {
+      signal?.throwIfAborted()
+      const { bytesRead } = await handle.read(buffer)
+      if (!bytesRead) return Buffer.concat(chunks, length).toString("utf8")
+      length += bytesRead
+      if (length > limit) throw new Error("Linux process reading is too large")
+      chunks.push(Buffer.from(buffer.subarray(0, bytesRead)))
+    }
+  } finally {
+    await handle.close()
+  }
+}
+
+async function processStat(directory: string, signal?: AbortSignal) {
+  const content = await readProc(`${directory}/stat`, 4096, signal)
   const end = content.lastIndexOf(")")
   const fields = content.slice(end + 2).split(" ")
   if (end < 0 || !/^\d+$/.test(fields[6] ?? "") || !/^\d+$/.test(fields[19] ?? "")) throw new Error("Invalid process identity")
