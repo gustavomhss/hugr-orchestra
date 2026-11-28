@@ -67,10 +67,9 @@ export const run = Effect.fn("ReviewFixRequestV2.run")(function* (params: Reques
     if (existing?.state === "terminal") return yield* replay(existing)
     if (!held.owner) return yield* failure("engagement-interrupted", "prior admission did not publish a terminal result")
     if (existing?.state === "running") {
-      const stopped = yield* store.finishFix({ identity: id, owner: existing.owner },
-        { status: "failed", reason: "engagement-interrupted" })
-      if (stopped.terminal.value.status === "expired") return stopped.terminal.text
-      return yield* failure("engagement-interrupted", "unfinished fix review has no live process owner")
+      const current = yield* store.expireFix(id)
+      if (current?.state === "terminal") return yield* replay(current)
+      return yield* failure("engagement-interrupted", "unfinished fix review may still be active in its original process")
     }
     const view = yield* store.lookup(parent, fix.reportID)
     if (!view) {
