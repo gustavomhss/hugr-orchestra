@@ -15,6 +15,7 @@ import { ProviderV2 } from "@orchestra/core/provider"
 import { SessionV2 } from "@orchestra/core/session"
 import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionExecution } from "@orchestra/core/session/execution"
+import { SessionInput } from "@orchestra/core/session/input"
 import { Prompt } from "@orchestra/core/session/prompt"
 import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
 import { SessionInputTable, SessionTable } from "@orchestra/core/session/sql"
@@ -91,10 +92,33 @@ for (const provider of ["google", "anthropic#credential"]) {
 }
 
 it.live("BEHAVIOR E6: signed-out host cannot execute an admitted SDK-default prompt after advisory wake", () => Effect.gen(function* () {
-  yield* setup
+  const session = yield* setup
   EligibilityFixture.state.signedIn = false
-  yield* admitOnly()
+  const admitted = yield* admitOnly()
   yield* expectFailedBeforeExecution("wake")
+  const database = yield* Database.Service
+  expect(yield* SessionInput.find(database.db, admitted.id)).toEqual(admitted)
+  expect((yield* session.messages({ sessionID: Harness.sessionID })).filter((message) => message.type === "user")).toEqual([])
+
+  EligibilityFixture.state.signedIn = true
+  const retried = yield* session.prompt({
+    sessionID: Harness.sessionID,
+    id: admitted.id,
+    prompt: admitted.prompt,
+    delivery: admitted.delivery,
+  })
+  expect(retried.admittedSeq).toBe(admitted.admittedSeq)
+  yield* session.wait(Harness.sessionID)
+
+  expect(EligibilityFixture.state.options).toHaveLength(1)
+  const promoted = yield* SessionInput.find(database.db, admitted.id)
+  expect(promoted?.promotedSeq).toEqual(expect.any(Number))
+  const events = yield* database.db.select().from(EventTable).where(eq(EventTable.aggregate_id, Harness.sessionID))
+    .all().pipe(Effect.orDie)
+  expect(events.filter((event) =>
+    event.type === EventV2.versionedType(SessionEvent.Prompted.type, SessionEvent.Prompted.durable!.version) &&
+    event.data.messageID === admitted.id,
+  )).toHaveLength(1)
 }))
 
 it.live("BEHAVIOR E6: canonical variant generation is refused instead of ignored by Claude", () => Effect.gen(function* () {
@@ -168,6 +192,18 @@ it.live("BEHAVIOR E6: agent.model is not promoted into Session.model while decid
   yield* admitOnly()
   yield* expectFailedBeforeExecution()
 }))
+
+it.live("BEHAVIOR E6: a cyclic inherited engine fails durably before execution", () => Effect.gen(function* () {
+  const session = yield* setup
+  yield* session.switchAgent({ sessionID: Harness.sessionID, agent: "inherit-seat" })
+  yield* admitOnly()
+  const database = yield* Database.Service
+  yield* database.db.update(SessionTable).set({ parent_id: Harness.sessionID })
+    .where(eq(SessionTable.id, Harness.sessionID)).run().pipe(Effect.orDie)
+  const exit = yield* expectFailedBeforeExecution()
+  expect(Exit.isFailure(exit)).toBe(true)
+  if (Exit.isFailure(exit)) expect(Cause.hasDies(exit.cause)).toBe(false)
+}).pipe(Effect.timeout("5 seconds")))
 
 it.live("CONTROL E6: existing exact Anthropic model and effort remain executable", () => Effect.gen(function* () {
   const session = yield* setup

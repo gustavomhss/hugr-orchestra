@@ -613,11 +613,16 @@ type Endpoint6_2Input = {
   readonly location?: Endpoint6_2Request["query"]["location"]
   readonly context: Endpoint6_2Request["payload"]["context"]
   readonly model?: Endpoint6_2Request["payload"]["model"]
+  readonly command?: Endpoint6_2Request["payload"]["command"]
 }
 const Endpoint6_2 = (raw: RawClient["server.model"]) => (input: Endpoint6_2Input) =>
   raw["model.execution"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { context: input["context"], ...(input["model"] === undefined ? {} : { model: input["model"] }) },
+    payload: {
+      context: input["context"],
+      ...(input["model"] === undefined ? {} : { model: input["model"] }),
+      ...(input["command"] === undefined ? {} : { command: input["command"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 const adaptGroup6 = (raw: RawClient["server.model"]) => ({

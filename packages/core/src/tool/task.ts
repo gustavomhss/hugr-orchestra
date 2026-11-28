@@ -132,7 +132,9 @@ const layer = Layer.effectDiscard(
           if (input.task_id && !existing)
             return yield* new ToolFailure({ message: `Task child not found: ${input.task_id}` })
           // As the runner decides: a seat that names no engine runs a Claude model on its lead's execution host.
-          const hosted = target.engine ? target.engine !== "orchestra" : (yield* engineOf(parent)) !== undefined
+          const hosted = target.engine
+            ? target.engine !== "orchestra"
+            : (yield* engineOf(parent).pipe(Effect.mapError((error) => new ToolFailure({ message: error.message })))) !== undefined
           const model = yield* resolveModel(catalog, policy, context, target, input.model, existing, hosted)
           const revalidateTarget = Effect.fnUntraced(function* (child: SessionSchema.Info | undefined) {
             const current = yield* requireTarget(agents, input.subagent_type)
