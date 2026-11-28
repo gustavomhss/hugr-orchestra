@@ -31,6 +31,8 @@ packages/app-shell/src/orchestra/palette/generated/** text eol=lf
 # Keep that byte contract deterministic on Windows checkouts without relaxing fixture comparisons.
 packages/httpapi-codegen/test/generated/** text eol=lf
 tooling/httpapi-codegen/test/generated/** text eol=lf
+tooling/httpapi-codegen/test/default-headers-imported/** text eol=lf
+tooling/httpapi-codegen/test/default-headers-portable/** text eol=lf
 # Generated Protocol client: the Lean SDK proof compares its bytes before and after regeneration, and the generator
 # writes LF. Keep Windows checkouts LF so that byte contract holds there too.
 packages/client/src/generated/** text eol=lf
