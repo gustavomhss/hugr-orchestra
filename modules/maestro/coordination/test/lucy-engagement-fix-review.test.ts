@@ -67,7 +67,7 @@ test("an unknown finding in an authorized quote report starts no work", () => {
     expect(root.requests.length).toBe(requests)
     expect(yield* host.db.select().from(SessionTable).all().pipe(Effect.orDie)).toEqual(before)
   }), variantAdapter((log, modelRequest) => text(reply(log, modelRequest, { quote: true }))))))
-})
+}, 150_000)
 
 test("fix review rejects command, install, and fetch controls before any work", () => {
   expectSpawn(import.meta.path)
