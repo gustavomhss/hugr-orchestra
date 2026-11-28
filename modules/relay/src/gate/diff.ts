@@ -27,20 +27,41 @@ export const compute = (input: {
     const pathspec = words(input.pathspec)
     if ((yield* run(["rev-parse", "--git-dir"])).exitCode !== 0) return Option.none()
     if ((yield* run(["cat-file", "-e", `${baseRef}^{commit}`])).exitCode !== 0) return Option.none()
+    if (input.worktreeEvidence) {
+      // Even built-in git diff can run a clean/process filter while converting worktree bytes.
+      // Git config status 1 with empty output means no matching key.
+      const filters = yield* run(["config", "--includes", "--name-only", "--get-regexp", "^filter\\..*\\.(clean|smudge|process)$"])
+      if (filters.exitCode !== 1 || filters.stdout.length !== 0) return Option.none()
+    }
     const diffOptions = input.worktreeEvidence ? ["--no-ext-diff", "--no-textconv"] : []
     const tracked = yield* run(["diff", ...diffOptions, baseRef, "--", ...pathspec])
     if (tracked.exitCode !== 0) return Option.none()
-    // `git diff` shows tracked changes only, and a new file is the most common shape of new work. Each `ls-files` line
-    // is passed back verbatim, so a name git had to quote fails its no-index diff and is skipped, exactly as in bash.
-    const others = yield* run(["ls-files", "--others", "--exclude-standard", "--", ...pathspec])
-    const untracked = yield* Effect.forEach(
-      decoder.decode(others.stdout).split("\n").slice(0, -1).filter(Boolean),
+    // Legacy preserves bash's text splitting. Managed evidence needs the actual names and a successful listing.
+    const others = yield* run([
+      "ls-files", ...(input.worktreeEvidence ? ["-z"] : []), "--others", "--exclude-standard", "--", ...pathspec,
+    ])
+    const names = input.worktreeEvidence
+      ? untrackedNames(others.exitCode, others.stdout)
+      : decoder.decode(others.stdout).split("\n").slice(0, -1).filter(Boolean)
+    if (!names) return Option.none()
+    const untracked: Uint8Array[] = []
+    for (const file of names) {
       // --no-index exits 1 when the files differ, which is the normal case here.
-      (file) => run(["diff", "--no-index", ...diffOptions, "--", "/dev/null", file])
-        .pipe(Effect.map((result) => result.stdout)),
-    )
+      const patch = yield* run(["diff", "--no-index", ...diffOptions, "--", "/dev/null", file])
+      if (input.worktreeEvidence && patch.exitCode !== 0 && patch.exitCode !== 1) return Option.none()
+      untracked.push(patch.stdout)
+    }
     return utf8(Buffer.concat([tracked.stdout, ...untracked]))
   }).pipe(Effect.catchTag("GateShell.Unavailable", () => Effect.succeed(Option.none<string>())))
+
+function untrackedNames(exitCode: number, stdout: Uint8Array) {
+  if (exitCode !== 0) return undefined
+  if (!stdout.length) return []
+  const decoded = utf8(stdout)
+  if (Option.isNone(decoded) || !decoded.value.endsWith("\0")) return undefined
+  const names = decoded.value.slice(0, -1).split("\0")
+  return names.some((name) => !name || name.startsWith("/") || name.split("/").includes("..")) ? undefined : names
+}
 
 // The label the judge sees for the computed diff.
 export const NAME = "computed.diff"

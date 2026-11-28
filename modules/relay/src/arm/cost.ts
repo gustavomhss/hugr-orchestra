@@ -65,7 +65,7 @@ export const corroborate = (
     }).pipe(Effect.provideService(GateShell.Git, git))
     const diff = judge.requiresWorktreeEvidence ? undefined : yield* computeDiff
     if (diff && Option.isNone(diff)) return { text, sha, corroborated: "unavailable", graded_by: "judge:unavailable" }
-    const response: Readonly<Record<string, unknown>> = yield* judge.judge({
+    const response = yield* judge.judge({
       criterion: `The agent claims it cannot complete this state for the following reason: '${text}'. Judge ONLY whether the artifact supports that claim. FAIL if the artifact shows the work was simply not attempted, or shows no trace of the obstacle described.`,
       files: diff ? [{ name: GateDiff.NAME, text: diff.value.replace(/\r\n?/g, "\n") }] : [],
       ...(judge.requiresWorktreeEvidence ? { worktree: { directory: workdir, paths: [], gitDiff: computeDiff } } : {}),

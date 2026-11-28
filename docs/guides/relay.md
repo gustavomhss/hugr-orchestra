@@ -68,6 +68,7 @@ in your user `orchestra.json`. Use the exact project ID, the canonical absolute 
 ChatGPT plan connection ID, an OpenAI model slug such as `gpt-6.2-sol`, and a reasoning variant such as `xhigh`.
 Each sample uses a fresh native call against the artifact from that exact worktree. Give the workflow regular
 files by relative path. Relay refuses missing files, symlinks, and paths outside the authorized worktree.
+Computed diffs require a complete Git result and a checkout without configured clean, smudge or process filters.
 The workflow editor reports the configured backend. Each ballot verifies the connection, model, variant, and evidence
 before requesting a verdict. The Messages API backend uses its separately configured key.
 

@@ -735,6 +735,48 @@ describe("parity exceptions", () => {
     expect(patch).not.toContain("external-helper-output")
   })
 
+  test.each(["clean", "smudge", "process"])("managed judge refuses an effective %s filter before computing the diff", async (kind) => {
+    const env = await scratch()
+    const [baseRef] = await repo(env, [{ ".gitattributes": "artifact.txt filter=proof\n", "artifact.txt": "before\n" }])
+    await write(env.work, { "artifact.txt": "after\n" })
+    const included = path.join(env.dir, "filters.config")
+    expect((await git(
+      env.work, env.home, "config", "--file", included, `filter.proof.${kind}`, "touch filter-executed; cat",
+    )).exitCode).toBe(0)
+    expect((await git(env.work, env.home, "config", "include.path", included)).exitCode).toBe(0)
+    const result = await Effect.runPromise(
+      GateDiff.compute({
+        workdir: env.work, baseRef, pathspec: "artifact.txt", worktreeEvidence: true,
+      }).pipe(Effect.provide(ports(env.home))),
+    )
+    expect(result).toEqual(Option.none())
+    expect(existsSync(path.join(env.work, "filter-executed"))).toBe(false)
+  })
+
+  test("managed judge refuses partial Git output and accepts NUL-delimited untracked paths", async () => {
+    const env = await scratch()
+    const [baseRef] = await repo(env, [{ "artifact.txt": "before\n" }])
+    await write(env.work, { "artifact.txt": "after\n", "new\tfile.txt": "new bytes\n" })
+    const compute = GateDiff.compute({ workdir: env.work, baseRef, pathspec: "", worktreeEvidence: true })
+    const complete = await Effect.runPromise(compute.pipe(Effect.provide(ports(env.home))))
+    expect(Option.getOrElse(complete, () => "")).toContain("+new bytes")
+    expect(Option.getOrElse(complete, () => "")).toContain("+after")
+
+    const failAt = (subcommand: "config" | "ls-files" | "--no-index", exitCode: number, stdout: string) =>
+      compute.pipe(
+        Effect.provideService(GateShell.Git, GateShell.Git.of({
+          run: (directory, args) =>
+            args.includes(subcommand)
+              ? Effect.succeed({ exitCode, stdout: new TextEncoder().encode(stdout) })
+              : Effect.promise(() => git(directory, env.home, ...args)),
+        })),
+      )
+    expect(await Effect.runPromise(failAt("config", 2, ""))).toEqual(Option.none())
+    expect(await Effect.runPromise(failAt("ls-files", 2, "new\tfile.txt\0"))).toEqual(Option.none())
+    expect(await Effect.runPromise(failAt("ls-files", 0, "new\tfile.txt"))).toEqual(Option.none())
+    expect(await Effect.runPromise(failAt("--no-index", 2, "+partial patch"))).toEqual(Option.none())
+  })
+
   test("WP3-1: a check sees PATH, HOME and params, never the hook's variables", async () => {
     const env = await scratch()
     const hook = ["RUN_DIR", "SPRINT", "LEDGER", "i", "wp_id"]
