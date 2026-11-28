@@ -13,6 +13,8 @@ import { Tool } from "@orchestra/core/tool/tool"
 import { run, sourcePath } from "./fixture/lucy-engagement"
 import { blobRoot, blobs, cache, codeStream, decoded, digest, manifest, nativeCode,
   reader, receipt, refused, request } from "./fixture/lucy-engagement-artifacts"
+import { variantAdapter } from "./fixture/lucy-engagement-variant-adapter"
+import { StateV1 } from "./fixture/lucy-variant-schema"
 
 test("completed evidence survives deletion of review temporaries, live HEAD changes and real SQLite graph reopening", () => {
   expectSpawn(import.meta.path)
@@ -28,7 +30,7 @@ test("completed evidence survives deletion of review temporaries, live HEAD chan
       const temporary = cache(host, input)
       expect((yield* Effect.promise(() => fs.readdir(temporary))).length).toBeGreaterThan(0)
       return { output, report, evidence, temporary, requests: root.requests.length }
-    }), { stream: provider.stream })
+    }), variantAdapter(provider.stream))
     yield* Effect.promise(async () => {
       await fs.rm(original.temporary, { recursive: true, force: true })
       await fs.writeFile(path.join(root.directory, sourcePath), 'export const sharedValue = "LATER-LIVE-HEAD"\n')
@@ -128,11 +130,11 @@ test("missing or corrupt required bodies and receipt fail reads and exact retry 
         }
       }
       expect(root.requests.length).toBe(calls)
-    }), { stream: provider.stream })
+    }), variantAdapter(provider.stream))
   }))
 }, 150_000)
 
-test("a real legacy v1 record replays its bytes while v2 cannot downgrade a missing required receipt", () => {
+test("a constructed strict legacy v1 record replays its bytes while v3 cannot downgrade a missing required receipt", () => {
   expectSpawn(import.meta.path)
   return Effect.runPromise(run((root) => {
     const provider = codeStream()
@@ -146,15 +148,18 @@ test("a real legacy v1 record replays its bytes while v2 cannot downgrade a miss
       const stored = row?.metadata?.lucyEngagementV1
       if (!row || !stored || typeof stored !== "object" || Array.isArray(stored)) return yield* Effect.die("owned durable record missing")
       const record = Object.fromEntries(Object.entries(stored))
-      expect(record.schema).toBe("review-engagement-state-v2")
+      expect(record.schema).toBe("review-engagement-state-v3")
       expect(record.evidence).toEqual({ policy: "required-completed-v1", receiptID: original.index.receiptID, bytes: original.index.manifest.bytes })
       const metadata = { ...row.metadata, unrelatedEvidenceFixture: { keep: true } }
       const calls = root.requests.length
-      const { evidence, ...legacy } = record
+      const { evidence, variants, ...legacy } = record
       expect(evidence).toBeDefined()
+      expect(variants).toBeDefined()
+      const legacyState = Schema.decodeUnknownSync(StateV1)({ ...legacy, schema: "review-engagement-state-v1" },
+        { onExcessProperty: "error" })
       yield* Effect.gen(function* () {
         yield* host.db.update(SessionTable).set({ metadata: { ...metadata,
-          lucyEngagementV1: { ...legacy, schema: "review-engagement-state-v1" } } }).where(eq(SessionTable.id, report.sessionID)).run().pipe(Effect.orDie)
+          lucyEngagementV1: legacyState } }).where(eq(SessionTable.id, report.sessionID)).run().pipe(Effect.orDie)
         expect((yield* host.invoke(input)).text).toBe(output.text)
         const unavailable = yield* host.call(reader, { op: "manifest", reportID: report.reportID })
         refused(unavailable, "engagement-evidence-unavailable")
@@ -168,7 +173,7 @@ test("a real legacy v1 record replays its bytes while v2 cannot downgrade a miss
       }).pipe(Effect.ensuring(host.db.update(SessionTable).set({ metadata: { ...metadata, lucyEngagementV1: record } })
         .where(eq(SessionTable.id, report.sessionID)).run().pipe(Effect.orDie)))
       expect((yield* receipt(host, decoded(yield* host.invoke(input)))).index).toEqual(original.index)
-    }), { stream: provider.stream })
+    }), variantAdapter(provider.stream))
   }))
 }, 150_000)
 
@@ -206,7 +211,7 @@ test("deleting an actually captured required CODE body before the final card pre
         refused(unavailable, "engagement-evidence-unavailable")
         expect(unavailable.text).toContain("terminal-status")
       }).pipe(Effect.ensuring(Deferred.succeed(release, undefined)))
-    }), { stream: provider.stream })
+    }), variantAdapter(provider.stream))
   })))
 }, 150_000)
 
@@ -246,7 +251,7 @@ test("original expiry after real CODE capture cancels a later provider, survives
       expect(report.notExamined).toContainEqual({ item: "engagement:evidence-publication", reason: "time-box" })
       expect((yield* host.execution.active).size).toBe(0)
       return { output, report, requests: root.requests.length }
-    }), { stream: provider.stream })
+    }), variantAdapter(provider.stream))
     yield* TestClock.adjust("120 seconds")
     yield* root.open((host) => Effect.gen(function* () {
       const admitted = yield* host.db.select().from(SessionInputTable).all().pipe(Effect.orDie)
@@ -289,7 +294,7 @@ test("owner interruption after actual CODE capture remains interrupted and leave
       expect(report.source?.commit).toBe(root.head)
       expect(report.notExamined).toContainEqual({ item: "engagement:evidence-publication", reason: "cancelled" })
       return { output, report, requests: root.requests.length }
-    }), { stream: provider.stream })
+    }), variantAdapter(provider.stream))
     yield* TestClock.adjust("600 seconds")
     yield* root.open((host) => Effect.gen(function* () {
       expect((yield* host.invoke(input)).text).toBe(original.output.text)

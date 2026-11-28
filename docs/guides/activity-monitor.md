@@ -87,9 +87,9 @@ The category names stay in English in both supported languages. Tab through the 
 
 **IN/OUT** reads the plan ledger. It displays qualified objects, arm receipts, and any receipts whose recorded evidence has changed. An empty ledger describes what the server has recorded. A partial read leaves the total open.
 
-When an owned Desktop sidecar has a **Ready** object, **Arm quarantine** opens a system dialog with the selected object, its recorded owner, ID and generation. Confirming records **Armed** in the ledger. Cancel leaves the ledger unchanged. Arming leaves the object in its original location.
+**IN/OUT** is read-only. **Ready** reflects the recorded observation. The view also shows saved approvals and flags changed records as **Refused**. Arming requires live verification of the object's identity and eligibility, which is pending.
 
-**Quarantine** in the owned Windows Desktop shows archives the server kept after installing pinned tools. The tool's verified archive enters custody after extraction and the final use of the download. The list shows its owner, original path, and status. Refresh and filtering read the custody ledger. **Empty quarantine** opens a native confirmation for the entire recorded batch, including entries hidden by the filter.
+**Quarantine** in the owned Windows Desktop shows archives the server kept after installing pinned tools. A verified archive enters custody after the installation publishes the completed tool directory. The list shows its owner, original path, and status. Refresh and filtering read the custody ledger. **Empty quarantine** opens a native confirmation for the entire batch, including entries hidden by the filter, once the running sidecar has verified custody of every archive. Entries retained from another sidecar instance remain visible for inspection.
 
 The installer keeps eligible compressed archives up to 16 MiB each while the ledger has capacity for up to 16 objects. It leaves other tool installation cleanup unchanged. If any object cannot be reserved, the batch is refused before removal. Exit or loss of a receipt after a possible effect leaves an unresolved record for inspection.
 

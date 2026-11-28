@@ -155,7 +155,9 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical fo
   test("requires durable matching completion and a continuous complete tree series", async () => {
     expectSpawn(import.meta.path)
     const binding = await Omni.load()
-    await using child = binding.spawn(process.execPath, ["-e", "process.stdin.resume()"], { stdin: "pipe" })
+    // Root exit clears the series, so the process has to outlive the samples. A timer keeps the
+    // event loop up if the stdin pipe closes.
+    await using child = binding.spawn(process.execPath, ["-e", "setInterval(() => {}, 1 << 30)"], { stdin: "pipe" })
     Omni.count("spawns")
     const sample = { identity: "tree-a", bytes: 100, members: [{ pid: child.pid, parentPid: null, name: "runtime" }] }
     const observed = new Proxy(child, {
@@ -167,7 +169,9 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical fo
     })
     const monitor = make()
     const identity = { sessionID: "ses_a", assistantMessageID: "msg_a", tool: "bash", callID: "call_a" }
-    const id = monitor.observe(observed, "runtime", "", { ...identity, agentID: "backend" })
+    // The monitor keeps a weak handle. The array is the test's reference until the last read.
+    const held = [observed]
+    const id = monitor.observe(held[0], "runtime", "", { ...identity, agentID: "backend" })
     const row = () => monitor.snapshot().records.find((record) => record.recordID === id)
     expect(row()?.footprint).toBeUndefined()
     await monitor.inspect(id)
@@ -176,13 +180,13 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical fo
     monitor.complete({ ...identity, assistantMessageID: "other", finishedAt: Date.now() })
     monitor.complete({ ...identity, tool: "other", finishedAt: Date.now() })
     monitor.complete({ ...identity, callID: "other", finishedAt: Date.now() })
-    await Bun.sleep(2)
+    await waitForClock()
     sample.bytes = 200
     await monitor.inspect(id)
     expect(row()?.footprint?.hypothesis).toBe("insufficient")
     monitor.complete({ ...identity, finishedAt: Date.now() })
     for (const bytes of [300, 400, 500]) {
-      await Bun.sleep(2)
+      await waitForClock()
       sample.bytes = bytes
       await monitor.inspect(id)
     }
@@ -192,24 +196,73 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical fo
     sample.bytes = NaN
     await monitor.inspect(id)
     expect(row()?.footprint).toEqual({ ...previous, hypothesis: "insufficient" })
-    await Bun.sleep(2)
+    await waitForClock()
     sample.bytes = 600
     await monitor.inspect(id)
     expect(row()?.footprint?.hypothesis).toBe("insufficient")
     sample.identity = ""
     for (const bytes of [700, 800, 900]) {
-      await Bun.sleep(2)
+      await waitForClock()
       sample.bytes = bytes
       await monitor.inspect(id)
     }
     expect(row()?.footprint?.hypothesis).toBe("insufficient")
     sample.identity = "tree-b"
-    await Bun.sleep(2)
+    await waitForClock()
     await monitor.inspect(id)
     expect(row()?.footprint?.hypothesis).toBe("insufficient")
     sample.members = [{ pid: child.pid + 1, parentPid: null, name: "other" }]
-    await Bun.sleep(2)
+    await waitForClock()
     await monitor.inspect(id)
     expect(row()?.footprint?.hypothesis).toBe("insufficient")
+    expect(await readTree(held[0])).toBe(sample.identity)
+  }, 30_000)
+
+  test("a same-millisecond reading keeps the pre-completion baseline", async () => {
+    expectSpawn(import.meta.path)
+    const binding = await Omni.load()
+    await using child = binding.spawn(process.execPath, ["-e", "setInterval(() => {}, 1 << 30)"], { stdin: "pipe" })
+    Omni.count("spawns")
+    let now = 1_000
+    const sample = { identity: "tree-a", bytes: 100, members: [{ pid: child.pid, parentPid: null, name: "runtime" }] }
+    const observed = new Proxy(child, {
+      get(target, key) {
+        if (key === "observeTree") return async () => ({ members: sample.members, physicalFootprintBytes: sample.bytes, footprintIdentity: sample.identity })
+        const value: unknown = Reflect.get(target, key, target)
+        return typeof value === "function" ? value.bind(target) : value
+      },
+    })
+    const held = [observed]
+    const monitor = make(() => now)
+    const identity = { sessionID: "ses_a", assistantMessageID: "msg_a", tool: "bash", callID: "call_a" }
+    const id = monitor.observe(held[0], "runtime", "", { ...identity, agentID: "backend" })
+    const row = () => monitor.snapshot().records.find((record) => record.recordID === id)
+    await monitor.inspect(id)
+    now = 2_000
+    sample.bytes = 200
+    await monitor.inspect(id)
+    monitor.complete({ ...identity, finishedAt: now })
+    sample.bytes = 300
+    await monitor.inspect(id)
+    expect(row()?.footprint?.bytes).toBe(200)
+    for (const bytes of [400, 500, 600]) {
+      now += 1
+      sample.bytes = bytes
+      await monitor.inspect(id)
+    }
+    expect(row()?.footprint?.hypothesis).toBe("compatible-with-logical-leak")
+    expect(await readTree(held[0])).toBe(sample.identity)
   }, 30_000)
 })
+
+async function readTree(handle: object) {
+  const read = Reflect.get(handle, "observeTree") as () => Promise<{ footprintIdentity?: string }>
+  return (await read()).footprintIdentity
+}
+
+// Date.now() on a runner can stay on the same millisecond across a 2ms sleep. The ledger
+// only accepts a strictly later sample, so the test waits until the clock actually moves.
+async function waitForClock() {
+  const seen = Date.now()
+  while (Date.now() <= seen) await Bun.sleep(5)
+}
