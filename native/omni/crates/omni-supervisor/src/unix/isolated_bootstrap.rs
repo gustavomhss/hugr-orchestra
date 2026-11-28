@@ -115,13 +115,6 @@ impl Sup {
 }
 
 fn report_result(report: &mut File, deadline: Instant, now: Instant) -> Option<Result<(), Fail>> {
-    if now >= deadline {
-        return Some(Err(Fail::new(
-            FailCode::Io,
-            libc::ETIMEDOUT,
-            "isolated child bootstrap timed out".into(),
-        )));
-    }
     let mut buf = [0u8; 5];
     // The child writes at most one atomic five-byte report. EOF also covers a successful fast exit.
     let outcome = match (report.read(&mut buf), buf) {
@@ -137,7 +130,16 @@ fn report_result(report: &mut File, deadline: Instant, now: Instant) -> Option<R
             Err(Fail::new(code, errno, format!("isolated child stage {stage}: {os}")))
         }
         (Ok(n), _) => Err(Fail::new(FailCode::Io, 0, format!("incomplete isolated child report ({n} bytes)"))),
-        (Err(e), _) if matches!(e.kind(), io::ErrorKind::WouldBlock | io::ErrorKind::Interrupted) => return None,
+        (Err(e), _) if matches!(e.kind(), io::ErrorKind::WouldBlock | io::ErrorKind::Interrupted) => {
+            if now < deadline {
+                return None;
+            }
+            Err(Fail::new(
+                FailCode::Io,
+                libc::ETIMEDOUT,
+                "isolated child bootstrap timed out".into(),
+            ))
+        }
         (Err(e), _) => Err(Fail::new(
             FailCode::Io,
             e.raw_os_error().unwrap_or(0),
@@ -156,7 +158,7 @@ mod tests {
 
     #[test]
     fn open_isolated_report_pipe_is_pending_until_bootstrap_deadline() -> io::Result<()> {
-        let (read, write) = sys::pipe()?;
+        let (read, _write) = sys::pipe()?;
         sys::set_nonblock(read.as_fd())?;
         let mut report = File::from(read);
         let now = Instant::now();
@@ -170,8 +172,19 @@ mod tests {
                 ..
             }))
         ));
+        Ok(())
+    }
+
+    #[test]
+    fn ready_isolated_report_eof_is_success_at_bootstrap_deadline() -> io::Result<()> {
+        let (read, write) = sys::pipe()?;
+        sys::set_nonblock(read.as_fd())?;
         drop(write);
-        assert!(matches!(report_result(&mut report, deadline, now), Some(Ok(()))));
+        let deadline = Instant::now();
+        assert!(matches!(
+            report_result(&mut File::from(read), deadline, deadline),
+            Some(Ok(()))
+        ));
         Ok(())
     }
 }
