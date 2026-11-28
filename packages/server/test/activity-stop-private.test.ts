@@ -42,6 +42,7 @@ test.skipIf(process.platform !== "win32")("the private stop consumes one approva
         [ActivityPrivateChannel.macHeader]: signed ? await signer.signArm("arm-request", endpoint, nonce, body) : "",
       }
       const response = await channel.handler(new Request("http://127.0.0.1" + endpoint, { method: "POST", headers, body }))
+      if (!response) throw new Error("private channel did not handle the request")
       if (response.status !== 200) return { status: response.status }
       const text = await response.text()
       expect(await signer.verifyArm("arm-response", endpoint, nonce, response.headers.get(ActivityPrivateChannel.macHeader), text)).toBe(true)
@@ -61,7 +62,7 @@ test.skipIf(process.platform !== "win32")("the private stop consumes one approva
       expect((await post(ActivityPrivateChannel.stopConfirmPath, request, false)).status).toBe(403)
       const receipt = ActivityStop.decodeReceipt((await post(ActivityPrivateChannel.stopConfirmPath, request)).value)
       expect(receipt._tag).toBe("Some")
-      if (receipt._tag === "Some") expect(receipt.value.outcomes.map((outcome) => outcome.member)).toEqual(preview.value.members)
+      if (receipt._tag === "Some") expect(receipt.value.outcomes.map((outcome) => outcome.member)).toEqual([...preview.value.members])
       await child.wait()
       expect(await ActivityMonitor.control(otherID)).toBeDefined()
       expect((await post(ActivityPrivateChannel.stopConfirmPath, request)).status).toBe(409)
