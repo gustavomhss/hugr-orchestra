@@ -322,9 +322,10 @@ async function waitFor<A>(read: () => Promise<A | undefined> | A | undefined, na
 }
 
 if (process.argv.includes("--activity-freeze-sidecar-e2e-child"))
-  void child().catch((error) => {
+  void child().catch(async (error) => {
     console.error(error)
-    process.exitCode = 1
+    const { app } = await import("electron")
+    app.exit(1)
   })
 else
   void parent().catch((error) => {
