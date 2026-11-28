@@ -41,7 +41,7 @@ export function decision(status: "ready" | "unsupported" | "unavailable" = "read
     variant: variant === undefined ? undefined : Model.VariantID.make(variant) }), engine: "orchestra" }
   return ModelExecution.Response.make({
     models: [{ model, engine: "orchestra", status: "ready" }, {
-      model: { ...model, id: Model.ID.make("blocked") }, engine: "orchestra", status: "unsupported", reason: "model-denied",
+      model: { ...model, id: Model.ID.make("blocked"), name: "Blocked model" }, engine: "orchestra", status: "unsupported", reason: "model-denied",
     }],
     selection: status === "ready" ? { ...selection, status } : { ...selection, status, reason: "variant-unavailable" },
   })
@@ -170,11 +170,12 @@ export async function nativeServer(run: (server: NativeServer) => Promise<void>)
 
 // createLocal receives context-boundary values, but its selection, explicit state and fallback rules are production code.
 // The SDK uses the generated serializer above; no decision algorithm is reproduced in this fixture.
-export function selection(calls: ReturnType<typeof transport>, sessionID?: string, actual?: ReturnType<typeof liveSDK>) {
+export function selection(calls: ReturnType<typeof transport>, sessionID?: string, actual?: ReturnType<typeof liveSDK>, bootstrap = true) {
   const localModule = initialized().localModule
   const normalized = () => normalizeProviderList(
-    [Provider.Info.empty(Provider.ID.make(ref.providerID))], [model, { ...model, id: Model.ID.make("blocked"), name: "Blocked model" }],
-    { providerID: Provider.ID.make(ref.providerID), id: Model.ID.make(ref.id) },
+    [Provider.Info.empty(Provider.ID.make(ref.providerID))],
+    bootstrap ? [model, { ...model, id: Model.ID.make("blocked"), name: "Blocked model" }] : [],
+    bootstrap ? { providerID: Provider.ID.make(ref.providerID), id: Model.ID.make(ref.id) } : null,
   )
   const [view, setView] = createStore({ catalog: normalized(), sessionID, ready: true })
   const [saved, setSaved] = createStore<import("../src/context/local").Saved>({ session: {} })
@@ -274,9 +275,9 @@ const draftHooks = {
   router: { useSearchParams: () => [{ draftId: "draft-1" }] },
   providers: { useProviders: () => draftBoundary.current!.source.providers },
 }
-export function draftSelection(calls: ReturnType<typeof transport>) {
+export function draftSelection(calls: ReturnType<typeof transport>, bootstrap = true) {
   const draftModule = initialized().draftModule
-  const source = selection(calls)
+  const source = selection(calls, undefined, undefined, bootstrap)
   return createRoot((dispose) => {
     const prompt = createPromptState({ prompt: "draft choice" })
     draftBoundary.current = { source, calls, prompt }

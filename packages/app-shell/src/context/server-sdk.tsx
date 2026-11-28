@@ -171,8 +171,9 @@ type ServerSDKBase = {
   ready: Promise<void>
   isReady: Accessor<boolean>
   connectionEpoch?: Accessor<number>
+  modelExecutionPolicyEpoch?: Accessor<number>
   transportCurrent?: Accessor<boolean>
-  onModelExecutionChange: (directory: string, onChange: () => void) => () => void
+  onModelExecutionChange: (directory: string, onChange: () => void, workspaceID?: string) => () => void
   url: string
   api: CompatibleApi
   currentApi: ServerApi
@@ -274,10 +275,11 @@ function createServerSdkContextBase(
   })
   const [isReady, setReady] = createSignal(false)
   const [connectionEpoch, setConnectionEpoch] = createSignal(0)
-  const modelExecutionObservers = new Set<{ directory: string; onChange: () => void }>()
-  const onModelExecutionChange = (directory: string, onChange: () => void) => {
+  const [modelExecutionPolicyEpoch, setModelExecutionPolicyEpoch] = createSignal(0)
+  const modelExecutionObservers = new Set<{ directory: string; workspaceID?: string; onChange: () => void }>()
+  const onModelExecutionChange = (directory: string, onChange: () => void, workspaceID?: string) => {
     if (abort.signal.aborted) return () => {}
-    const observer = { directory, onChange }
+    const observer = { directory, onChange, workspaceID }
     modelExecutionObservers.add(observer)
     return () => { modelExecutionObservers.delete(observer) }
   }
@@ -362,14 +364,16 @@ function createServerSdkContextBase(
             streamErrorLogged = false
             failures = 0
             const directory = event.location?.directory ?? "global"
-            if ((event.type === "catalog.updated" || event.type === "integration.connection.updated") &&
-              event.location?.workspaceID === undefined)
+            if (event.type === "catalog.updated" || event.type === "integration.connection.updated")
               [...modelExecutionObservers].forEach((observer) => {
-                if (modelExecutionObservers.has(observer) && (directory === "global" || observer.directory === directory)) observer.onChange()
+                if (modelExecutionObservers.has(observer) && (directory === "global" ||
+                  observer.directory === directory && observer.workspaceID === event.location?.workspaceID)) observer.onChange()
               })
             const payload = readEvent(event)
             if (!payload) continue
             if (payload.type === "server.connected") setConnectionEpoch((value) => value + 1)
+            // An ancestor can move to another Location and still constrain its children on this server.
+            if (event.type === SessionEvent.SubagentModelsChanged.type) setModelExecutionPolicyEpoch((value) => value + 1)
             queue.push({ directory, payload })
             schedule()
 
@@ -456,6 +460,7 @@ function createServerSdkContextBase(
     ready,
     isReady,
     connectionEpoch,
+    modelExecutionPolicyEpoch,
     transportCurrent,
     onModelExecutionChange,
     url: server.http.url,

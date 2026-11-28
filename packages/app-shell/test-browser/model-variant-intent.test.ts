@@ -8,7 +8,8 @@ import { createSourceFile, isCallExpression, isFunctionDeclaration, isIdentifier
 import type { ModelSelection } from "@/context/local"
 import type { PromptInputV2SelectControl } from "@orchestra/session-ui/v2/prompt-input/interaction"
 import type { PromptInputV2StoreInput } from "@orchestra/session-ui/v2/prompt-input/store"
-import type { useLanguage } from "@/context/language"
+import type { Locale, useLanguage } from "@/context/language"
+import { Model } from "@orchestra/schema/model"
 import { solidDom } from "./solid-dom"
 import { composer, decision, json, model, ref, selection, send, transport, wait, initializeModelExecutionConsumers } from "./model-execution-consumer.fixture"
 
@@ -46,12 +47,12 @@ beforeAll(() => {
         import { createMemo } from "solid-js"
         import { createPromptInputV2Controller } from "@orchestra/session-ui/v2/prompt-input/interaction"
         ${variable(source, "modelDefaultVariantID").getFullText(source)}
-        export function mount(selection, language, store) {
+        export function mount(selection, language, store, session) {
           const props = { controls: { model: { selection } } }
           ${variable(component("usePromptInputV2Controller"), "variants").getFullText(source)}
           const controller = createPromptInputV2Controller({ store, commands: () => [], context: () => [], searchContextFiles: () => [],
             view: { variant: ${variant.getText(source)}, submit: { stopping: () => false, onSubmit() {}, onStop() {} } } })
-          return wrap(controller, language)
+          return session ? wrap(controller, language) : controller.view.variant
         }
         function wrap(controller, language) {
           const props = { controller }
@@ -64,8 +65,8 @@ beforeAll(() => {
   } })
 })
 
-async function menu(model: ModelSelection) {
-  const actual: { mount(model: ModelSelection, language: ReturnType<typeof useLanguage>, store: PromptInputV2StoreInput): PromptInputV2SelectControl } = await import(`${consumer}?variant-intent-acceptance`)
+async function menu(model: ModelSelection, locale: Locale = "en", session = true) {
+  const actual: { mount(model: ModelSelection, language: ReturnType<typeof useLanguage>, store: PromptInputV2StoreInput, session: boolean): PromptInputV2SelectControl } = await import(`${consumer}?variant-intent-acceptance`)
   const select: typeof import("@orchestra/session-ui/v2/prompt-input") = await import(solidDom("@orchestra/session-ui/v2/prompt-input", import.meta.dir))
   const language: typeof import("../src/context/language") = await import(solidDom("../src/context/language.tsx", import.meta.dir))
   const platform: typeof import("../src/context/platform") = await import(solidDom("../src/context/platform.tsx", import.meta.dir))
@@ -73,12 +74,12 @@ async function menu(model: ModelSelection) {
   document.body.append(host)
   const state: { control?: PromptInputV2SelectControl } = {}
   function Probe() {
-    state.control = actual.mount(model, language.useLanguage(), createStore({ prompt: [], context: { items: [] } }))
+    state.control = actual.mount(model, language.useLanguage(), createStore({ prompt: [], context: { items: [] } }), session)
     return createComponent(select.PromptInputV2Select, { title: "Variant choice", get options() { return state.control!.options() },
       get current() { return state.control!.current() }, onSelect: (id) => state.control!.onSelect(id) })
   }
   const dispose = render(() => createComponent(platform.PlatformProvider, { value: { platform: "web", openExternal() {}, restart: async () => {}, notify: async () => {} },
-    get children() { return createComponent(language.LanguageProvider, { locale: "en", get children() { return createComponent(Probe, {}) } }) } }), host)
+    get children() { return createComponent(language.LanguageProvider, { locale, get children() { return createComponent(Probe, {}) } }) } }), host)
   if (!state.control) { dispose(); host.remove(); throw new Error("Actual variant consumer did not mount") }
   return { host, control: state.control, dispose: () => { dispose(); host.remove() }, async open() {
     const button = host.querySelector("button")
@@ -106,15 +107,15 @@ function variantSnapshot(model: ModelSelection, control: PromptInputV2SelectCont
 async function knownDefault() {
   const calls = transport({ reply: async (request) => {
     const input = Schema.decodeUnknownSync(ModelExecution.Input)(await request.clone().json())
-    return json({ location: { directory: calls.directory }, data: decision("ready", input.model?.variant) })
+    const result = decision("ready", input.model?.variant)
+    const variants = [...model.variants, ...["default", ""].map((id) => ({ id: Model.VariantID.make(id), headers: {}, body: {} }))]
+    return json({ location: { directory: calls.directory }, data: {
+      ...result, models: result.models.map((entry) => entry.model.id === ref.id
+        ? { ...entry, model: { ...entry.model, variants } } : entry),
+    } })
   } })
   const owner = selection(calls, "session-1")
   owner.local.model.set({ providerID: ref.providerID, modelID: ref.id })
-  owner.setView("catalog", "all", (catalog) => {
-    const provider = catalog.get(ref.providerID)!
-    return new Map(catalog).set(ref.providerID, { ...provider, models: { ...provider.models,
-      [ref.id]: { ...provider.models[ref.id]!, variants: { ...provider.models[ref.id]!.variants, default: {} } } } })
-  })
   await wait(() => owner.local.model.execution.ready(), "real Local canonical view ready")
   return { calls, owner }
 }
@@ -199,4 +200,29 @@ test("E6 App actual variant menu retains a removed literal as disabled and refus
     console.error("E6 App removed variant failure snapshot", JSON.stringify({ before, failed: variantSnapshot(owner.local.model, mounted.control, selecting.mock.calls) }).slice(0, 4096))
     throw error
   } finally { selecting.mockRestore(); mounted.dispose(); owner.dispose() }
+})
+
+
+test.each([
+  ["en", "Empty variant"],
+  ["br", "Variante vazia"],
+] as const)("E6 App %s exposes a localized empty-string variant in both menus", async (locale, label) => {
+  const { calls, owner } = await knownDefault()
+  try {
+    for (const session of [false, true]) {
+      const mounted = await menu(owner.local.model, locale, session)
+      try {
+        const id = JSON.stringify(["variant", ""])
+        const row = (await mounted.open()).find((item) => item.textContent?.includes(label))
+        expect(row).toBeDefined()
+        expect(mounted.control.options().find((option) => option.id === id)?.label).toContain(label)
+        row!.focus()
+        row!.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }))
+        await wait(() => owner.local.model.intent().variant === "" && owner.local.model.execution.ready(), "keyboard selects the literal empty variant")
+        expect(calls.queries().at(-1)?.body).toMatchObject({ model: { ...ref, variant: "" } })
+      } finally { mounted.dispose() }
+      owner.local.model.variant.set(undefined)
+      await wait(() => owner.local.model.intent().variant === null, "reset before remount")
+    }
+  } finally { owner.dispose() }
 })

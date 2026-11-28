@@ -384,7 +384,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     return [
       { id: modelDefaultVariantID, label: language.t("model.variant.default"), value: undefined,
         disabled: false },
-      ...values.map((value) => ({ id: JSON.stringify(["variant", value]), label: value, value,
+      ...values.map((value) => ({ id: JSON.stringify(["variant", value]), label: value === "" ? language.t("model.variant.empty") : value, value,
         disabled: !known.includes(value) })),
     ]
   })
@@ -472,6 +472,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
       submit: {
         stopping,
         working: () => working() || admitting(),
+        allowEmpty: submission.canRecoverHandoff,
         onSubmit: () => void submission.handleSubmit(new Event("submit")),
         onStop: () => void submission.abort(),
       },

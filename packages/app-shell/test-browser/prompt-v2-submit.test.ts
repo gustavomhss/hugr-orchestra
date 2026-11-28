@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { createRoot } from "solid-js"
+import { createRoot, createSignal } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createPromptInputV2Controller } from "@orchestra/session-ui/v2/prompt-input/interaction"
 import type { PromptInputV2PersistedState } from "@orchestra/session-ui/v2/prompt-input/types"
@@ -35,6 +35,29 @@ test("empty V2 submission never reaches the submit-or-abort callback; explicit s
     store[1]("context", "items", [{ key: "comment", type: "file", path: "a.ts", comment: "review this" }])
     controller.submit()
     expect(actions).toEqual(["stop", "submit", "submit"])
+    dispose()
+  })
+})
+
+test("a pending draft handoff can use Send from an empty V2 composer", () => {
+  createRoot((dispose) => {
+    const store = createStore<PromptInputV2PersistedState>({ prompt: [], context: { items: [] } })
+    const [allowEmpty, setAllowEmpty] = createSignal(false)
+    let submissions = 0
+    const controller = createPromptInputV2Controller({
+      store,
+      commands: () => [],
+      context: () => [],
+      searchContextFiles: () => [],
+      view: { submit: { stopping: () => false, allowEmpty, onSubmit: () => { submissions++ }, onStop: () => {} } },
+    })
+    expect(controller.canSubmit()).toBe(false)
+    setAllowEmpty(true)
+    expect(controller.canSubmit()).toBe(true)
+    controller.submit()
+    setAllowEmpty(false)
+    controller.submit()
+    expect(submissions).toBe(1)
     dispose()
   })
 })

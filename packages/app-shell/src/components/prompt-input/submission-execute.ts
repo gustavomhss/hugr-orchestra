@@ -45,6 +45,11 @@ type SubmissionCapture = {
   intentKey: string
   epoch: number
   submission: ReturnType<typeof createPromptSubmissionState>
+  text: string
+  command?: string
+  effectiveKey?: string
+  policyEpoch?: number
+  placement?: Pick<Session, "id"> & Partial<Pick<Session, "directory" | "workspaceID">>
   images: ImageAttachmentPart[]
   mode: "normal" | "shell"
   modelSelection: ModelSelection
@@ -115,21 +120,29 @@ export function createSubmissionExecutor(environment: Environment) {
     admission.abort = controller
     const baseSignal = AbortSignal.any([controller.signal, captured.owner.signal])
     const signal = AbortSignal.any([baseSignal, captured.choiceOwner.signal])
-    const submission = captured.submission
+    const confirmed = !captured.sessionID && admission.request?.admitted === true
+    const submission = admission.admittedSubmission ?? captured.submission
     const currentPrompt = submission.prompt
     const context = submission.context
-    const text = currentPrompt.map((part) => ("content" in part ? part.content : "")).join("")
+    const text = captured.text
     const images = captured.images
     const mode = captured.mode
 
-    if (text.trim().length === 0 && images.length === 0 && captured.commentCount === 0) {
+    if (!confirmed && text.trim().length === 0 && images.length === 0 && captured.commentCount === 0) {
       if (input.working()) void abort()
       return
     }
 
     const modelSelection = captured.modelSelection
-    const confirmed = !captured.sessionID && admission.request?.admitted === true
-    const retained = admission.request?.selection
+    const rulesKey = input.pendingKey?.() ?? draftSessionKey(captured.directorySDK.scope, captured.directorySDK.directory, search.draftId)
+    const draftIntentKey = !captured.sessionID && mode === "normal" ? JSON.stringify({
+      prompt: currentPrompt, context, images, agent: captured.agentID, intent: captured.intent, worktree: admission.selection,
+    }) : undefined
+    if (!captured.sessionID && admission.request?.admissionAttempted) admission.attempted = true
+    if (!captured.sessionID && !confirmed && admission.request?.kind === "prompt" && admission.request.admissionAttempted &&
+      (admission.request.intentKey !== draftIntentKey || admission.request.revision !== pendingSnapshot(rulesKey).revision))
+      admission.request = undefined
+    const retained = captured.sessionID || confirmed || admission.request?.admissionAttempted ? admission.request?.selection : undefined
     const currentModel = retained ? { id: retained.model.modelID, provider: { id: retained.model.providerID } } : captured.currentModel
     const currentAgent = retained ? { id: retained.agent, name: retained.agent } : captured.currentAgent
     const variant = retained ? retained.variant : captured.variant
@@ -154,8 +167,10 @@ export function createSubmissionExecutor(environment: Environment) {
       return
     }
 
-    input.addToHistory(currentPrompt, mode)
-    input.resetHistoryNavigation()
+    if (!confirmed) {
+      input.addToHistory(currentPrompt, mode)
+      input.resetHistoryNavigation()
+    }
 
     const directorySDK = captured.directorySDK
     const server = captured.server
@@ -175,11 +190,16 @@ export function createSubmissionExecutor(environment: Environment) {
       if (serverSDK() !== server || source.scope !== directorySDK.scope || JSON.stringify(server.server?.http) !== credentials) return false
       if (source.orchestra !== captured.client || source.api !== captured.api) return false
       if (source.directory !== projectDirectory || params.id !== sessionID || prompt.capture() !== target || search.draftId !== draftID) return false
+      const placement = sessionID ? input.info() : undefined
+      if (sessionID && (placement?.directory !== captured.placement?.directory || placement?.workspaceID !== captured.placement?.workspaceID)) return false
       return !draftID || tabs.store.some((tab) =>
         tab.type === "draft" && tab.draftID === draftID && tab.server === draftServer && tab.directory === projectDirectory,
       )
     }
     const ownsSource = () => ownsBinding() && captured.choiceOwner.current() &&
+      (!sessionID || server.modelExecutionPolicyEpoch?.() === captured.policyEpoch) &&
+      JSON.stringify(modelSelection.execution?.input().model) === captured.effectiveKey &&
+      (!isNewSession || (input.newSessionWorktree?.() || "main") === admission.selection) &&
       (server.connectionEpoch?.() ?? 0) === captured.epoch &&
       JSON.stringify(modelSelection.intent()) === captured.intentKey &&
       (local.agent.current()?.id ?? local.agent.key?.()) === captured.currentAgent?.id
@@ -194,22 +214,22 @@ export function createSubmissionExecutor(environment: Environment) {
         description: sessionManagementUnsupported(err) ? language.t("session.subagentModels.unsupported") : errorMessage(err),
       })
     }
-    const rulesKey = input.pendingKey?.() ?? draftSessionKey(directorySDK.scope, projectDirectory, draftID)
     const shouldAutoAccept = isNewSession && input.autoAccept()
     const delivery = captured.delivery
     const shouldQueue = captured.shouldQueue
     const queued = delivery === "queue" && input.working()
     const worktreeSelection = admission.selection
     const actionKey = JSON.stringify({ currentPrompt, context, images, mode, agent: agentKey(currentAgent),
-      model: { modelID: currentModel.id, providerID: currentModel.provider.id }, variant, worktreeSelection })
+      model: { modelID: currentModel.id, providerID: currentModel.provider.id }, variant, intent: captured.intent, worktreeSelection })
     if (isNewSession && admission.request && !admission.request.admitted &&
       (admission.request.key !== actionKey || admission.request.revision !== pendingSnapshot(rulesKey).revision))
       admission.request = undefined
-    const kind = admission.request?.kind ?? (text.startsWith("/") &&
-      syncState.data.command.some((command) => command.name === text.split(" ")[0].slice(1)) ? "command" : "prompt")
+    const command = admission.request?.kind === "prompt" ? undefined
+      : admission.request?.commandName ?? captured.command
+    const kind = admission.request?.kind ?? (command ? "command" : "prompt")
 
-    let sessionDirectory = admission.directory ?? projectDirectory
-    let session = admission.session ?? input.info()
+    let session = admission.session ?? captured.placement
+    let sessionDirectory = session?.directory ?? admission.directory ?? projectDirectory
 
     if (isNewSession) {
       if (!admission.directory && worktreeSelection === "create") {
@@ -299,7 +319,7 @@ export function createSubmissionExecutor(environment: Environment) {
       const draftPhase = isNewSession ? createRoot((dispose) => ({ dispose,
         ...createSubmissionOwner(() => ({ revision: pendingSnapshot(rulesKey).revision })).capture(),
       })) : undefined
-      const ready = await assessModelExecution({ api, directory: sessionDirectory, sessionID,
+      const ready = await assessModelExecution({ api, directory: sessionDirectory, workspaceID: session?.workspaceID, sessionID, command,
         agent: agentKey(currentAgent), model: { providerID: currentModel.provider.id, modelID: currentModel.id }, variant,
         signal: draftPhase ? AbortSignal.any([signal, draftPhase.signal]) : signal,
         current: () => ownsSource() && draftPhase?.current() !== false && captured.policyVersion === captured.readPolicyVersion(),
@@ -330,8 +350,9 @@ export function createSubmissionExecutor(environment: Environment) {
         })
       if (created) {
         admission.session = created
-        admission.directory = sessionDirectory
+        admission.directory = created.directory
         session = created
+        sessionDirectory = created.directory
       }
     }
     if (confirmed ? !ownsBinding() || baseSignal.aborted : !ownsSource() || signal.aborted) return false
@@ -351,6 +372,7 @@ export function createSubmissionExecutor(environment: Environment) {
     const draft: FollowupDraft = {
       sessionID: session.id,
       sessionDirectory,
+      ...(session.workspaceID === undefined ? {} : { workspaceID: session.workspaceID }),
       prompt: currentPrompt,
       context,
       agent,
@@ -419,7 +441,7 @@ export function createSubmissionExecutor(environment: Environment) {
       if (!isNewSession || !created || admission.request?.admitted) return
       const empty = await sessionHasNoMessages(server, created.id, sessionDirectory).catch(() => undefined)
       if (empty === false) return
-      const removed = !dispatched && empty === true &&
+      const removed = !dispatched && !admission.attempted && empty === true &&
         (await api.remove({ sessionID: created.id, directory: sessionDirectory }).then(() => true, () => false))
       if (!removed) return seed(serverState, sessionDirectory, { ...created, title: language.t("orchestra.chat.send.emptySession") })
       const [, setStore] = serverState.child(sessionDirectory)
@@ -462,7 +484,7 @@ export function createSubmissionExecutor(environment: Environment) {
       signal.addEventListener("abort", onAbort, { once: true })
       if (signal.aborted || !ownsSource()) { disposePhase(); return false }
       if (admission.request?.kind === "prompt" && admission.request.admissionAttempted) { capturedPhase.ready = true; return capturedPhase.current() }
-      const ready = await assessModelExecution({ api, directory: sessionDirectory, sessionID: session.id,
+      const ready = await assessModelExecution({ api, directory: sessionDirectory, workspaceID: session.workspaceID, sessionID: session.id, command,
         agent, model, variant, signal: AbortSignal.any([signal, capturedPhase.signal]),
         current: () => ownsSource() && capturedPhase.current() && pendingSnapshot(rulesKey).revision === receipt.revision,
         onUnavailable: (reason) => showToast({ title: language.t(modelExecutionReasonKey(reason)) }),
@@ -493,7 +515,7 @@ export function createSubmissionExecutor(environment: Environment) {
       return false
     }
     const runtime = {
-      serverScopeKey: directorySDK.scope, directory: sessionDirectory, sessionID: session.id,
+      serverScopeKey: directorySDK.scope, directory: sessionDirectory, workspaceID: session.workspaceID, sessionID: session.id,
       api, sync: syncState, serverSync: serverState,
       current: () => shouldQueue ? ownsBinding() : ownsSource() && captured.policyVersion === captured.readPolicyVersion() &&
         (!isNewSession || mode === "shell" || phase.value?.current() === true),
@@ -511,6 +533,9 @@ export function createSubmissionExecutor(environment: Environment) {
           id: mode === "shell" ? Event.ID.create() : Identifier.ascending("message"),
           admitted: false,
           kind: mode === "normal" ? kind : undefined,
+          intentKey: draftIntentKey,
+          selection: mode === "normal" && kind === "prompt" ? { agent, model, variant, delivery, policyVersion: captured.policyVersion } : undefined,
+          commandName: command,
           revision: receipt.revision,
         }
       }
@@ -545,7 +570,8 @@ export function createSubmissionExecutor(environment: Environment) {
           })
           if (sent === false) continue
           request.admitted = true
-          // Save the original admitted selection only after a positive ACK; it can recover handoff, not eligibility.
+          // The receipt owns the original editor snapshot until the draft hands off to its Session.
+          admission.admittedSubmission = submission
           request.selection = { agent, model, variant, delivery, policyVersion: captured.policyVersion }
         }
         return true
@@ -651,8 +677,7 @@ export function createSubmissionExecutor(environment: Environment) {
     }
 
     const request = isNewSession ? selectRequest() : admission.request
-    const isCommand = request?.kind ? request.kind === "command" : !request?.preparation && !!(request?.command ||
-      text.startsWith("/") && syncState.data.command.some((command) => command.name === text.split(" ")[0].slice(1)))
+    const isCommand = command !== undefined
     clearInput(isCommand ? "none" : "comments")
 
     function waitForWorktree() {
@@ -671,6 +696,7 @@ export function createSubmissionExecutor(environment: Environment) {
       sync: syncState,
       serverSync: serverState,
       draft,
+      command: command ?? null,
       messageID,
       optimisticBusy: isCommand || sessionDirectory === projectDirectory,
       pending: queued,
@@ -682,7 +708,7 @@ export function createSubmissionExecutor(environment: Environment) {
       preflight: () => ownsSource() && captured.policyVersion === captured.readPolicyVersion() &&
         (!isNewSession || phase.value?.current() === true && phase.value.ready && pendingSnapshot(rulesKey).revision === receipt.revision),
       signalForAdmission: () => phase.value ? AbortSignal.any([signal, phase.value.signal]) : signal,
-      admissionSignal: isNewSession ? baseSignal : undefined,
+      admissionSignal: baseSignal,
     })
       .then(async (sent) => {
         if (!sent) restoreInput()
@@ -695,9 +721,6 @@ export function createSubmissionExecutor(environment: Environment) {
           removeOptimisticMessage()
           restoreInput()
           return false
-        }
-        if (ownsSource() && (isCommand || sessionDirectory === projectDirectory) && !queued) {
-          syncState.set("session_status", session.id, { type: "idle" })
         }
         if (ownsSource()) showToast({
           title: language.t(isCommand ? "prompt.toast.commandSendFailed.title" : "prompt.toast.promptSendFailed.title"),

@@ -1,6 +1,11 @@
 import { describe, expect, test } from "bun:test"
+import { createRoot } from "solid-js"
+import { createStore } from "solid-js/store"
+import { createLocal, type Saved } from "@/context/local"
+import type { Platform } from "@/context/platform"
+import { createPromptSession, createPromptState } from "@/context/prompt-state"
+import { ServerScope } from "@/utils/server-scope"
 import type { UserMessage } from "@/v2-wire"
-
 
 import { resetSessionModel, restorePromptModel, syncPromptModel, syncSessionModel } from "./session-model-helpers"
 
@@ -53,131 +58,104 @@ describe("resetSessionModel", () => {
   })
 })
 
-describe("syncPromptModel", () => {
-  test("stores the effective session model in prompt state", () => {
-    const calls: unknown[] = []
+describe("persisted prompt model recovery", () => {
+  const scope = { dir: "L3JlcG8", id: "session" }
+  const removed = { providerID: "anthropic", modelID: "removed-model" }
 
-    syncPromptModel(
-      {
-        model: {
-          current: () => ({ id: "claude-sonnet-4", provider: { id: "anthropic" } }),
-          set() {},
-          variant: { current: () => "high", set() {} },
-        },
-      },
-      {
-        model: {
-          current: () => undefined,
-          set: (model) => calls.push(model),
-        },
-      },
-    )
-
-    expect(calls).toEqual([{ providerID: "anthropic", modelID: "claude-sonnet-4", variant: "high" }])
-  })
-
-  test("does not rewrite an unchanged prompt model", () => {
-    const calls: unknown[] = []
-    const model = { providerID: "anthropic", modelID: "claude-sonnet-4", variant: "high" }
-
-    syncPromptModel(
-      {
-        model: {
-          current: () => ({ id: model.modelID, provider: { id: model.providerID } }),
-          set() {},
-          variant: { current: () => model.variant, set() {} },
-        },
-      },
-      {
-        model: {
-          current: () => model,
-          set: (value) => calls.push(value),
-        },
-      },
-    )
-
-    expect(calls).toEqual([])
-  })
-})
-
-describe("restorePromptModel", () => {
-  test("an engine-filtered saved model cannot change the fallback model's variant", () => {
-    const calls: unknown[] = []
-    const api = { id: "gpt-api", provider: { id: "openai" } }
-    const local = {
-      model: {
-        current: () => api,
-        list: () => [api],
-        set: (model: unknown) => calls.push(model),
-        variant: { current: () => undefined, set: (variant: unknown) => calls.push(variant) },
-      },
+  test.each([undefined, null, "", "default"])("round-trips an unavailable model with variant %p", async (variant) => {
+    const values = new Map<string, string>()
+    const platform: Platform = {
+      platform: "desktop",
+      openExternal() {},
+      async openDirectoryPickerDialog() { return null },
+      async restart() {},
+      async notify() {},
+      storage: () => ({
+        getItem: (key) => values.get(key) ?? null,
+        setItem(key, value) { values.set(key, value) },
+        removeItem(key) { values.delete(key) },
+      }),
     }
-    expect(
-      restorePromptModel(local, {
-        model: {
-          current: () => ({ providerID: "anthropic", modelID: "claude-host", variant: "high" }),
-          set() {},
-        },
-      }),
-    ).toBe(false)
-    expect(calls).toEqual([])
-    expect(
-      restorePromptModel(local, {
-        model: {
-          current: () => ({ providerID: "openai", modelID: "gpt-api", variant: "high" }),
-          set() {},
-        },
-      }),
-    ).toBe(true)
-    expect(calls).toEqual([{ providerID: "openai", modelID: "gpt-api" }, "high"])
-  })
-  test("restores the persisted prompt model into session selection", () => {
-    const calls: unknown[] = []
-    const restored = restorePromptModel(
-      {
-        model: {
-          current: () => ({ id: "gpt", provider: { id: "openai" } }),
-          set: (model) => calls.push(model),
-          variant: {
-            current: () => undefined,
-            set: (variant) => calls.push(variant),
-          },
-        },
-      },
-      {
-        model: {
-          current: () => ({ providerID: "anthropic", modelID: "claude", variant: "high" }),
-          set() {},
-        },
-      },
-    )
+    const initial = createRoot((dispose) => ({
+      dispose,
+      prompt: createPromptSession(ServerScope.local, scope, { prompt: "pending response" }, platform),
+    }))
+    const selected = variant === undefined ? removed : { ...removed, variant }
+    try {
+      await initial.prompt.ready.promise
+      initial.prompt.model.set(selected)
+    } finally {
+      initial.dispose()
+    }
 
-    expect(restored).toBe(true)
-    expect(calls).toEqual([{ providerID: "anthropic", modelID: "claude" }, "high"])
+    const reopened = createRoot((dispose) => ({
+      dispose,
+      prompt: createPromptSession(ServerScope.local, scope, undefined, platform),
+      local: localSelection(scope.id),
+    }))
+    try {
+      await reopened.prompt.ready.promise
+      const editor = reopened.prompt.capture()
+      expect(editor.model.current()).toEqual(selected)
+      expect(reopened.local.model.intent().model).toBeUndefined()
+      expect(reopened.local.model.list()).toEqual([])
+      expect(restorePromptModel(reopened.local, editor)).toBe(true)
+      expect(reopened.local.model.intent()).toEqual({ model: removed, variant })
+      const stored = editor.model.current()
+      syncPromptModel(reopened.local, editor)
+      expect(editor.model.current()).toBe(stored)
+
+      editor.model.set(undefined)
+      syncPromptModel(reopened.local, editor)
+      expect(editor.model.current()?.variant).toBe(variant)
+      expect(JSON.parse(Array.from(values.values())[0]!).model).toEqual(selected)
+      expect(editor.current()[0]).toMatchObject({ content: "pending response" })
+    } finally {
+      reopened.dispose()
+    }
   })
 
-  test("does nothing without a persisted prompt model", () => {
-    const calls: unknown[] = []
-    const restored = restorePromptModel(
-      {
-        model: {
-          current: () => ({ id: "gpt", provider: { id: "openai" } }),
-          set: (model) => calls.push(model),
-          variant: {
-            current: () => undefined,
-            set: (variant) => calls.push(variant),
-          },
-        },
-      },
-      {
-        model: {
-          current: () => undefined,
-          set() {},
-        },
-      },
-    )
-
-    expect(restored).toBe(false)
-    expect(calls).toEqual([])
+  test("keeps starter text and leaves an implicit model choice absent", () => {
+    createRoot((dispose) => {
+      try {
+        const prompt = createPromptState({ prompt: "starter text" })
+        const local = localSelection(scope.id)
+        expect(restorePromptModel(local, prompt)).toBe(false)
+        syncPromptModel(local, prompt)
+        expect(prompt.model.current()).toBeUndefined()
+        expect(prompt.current()[0]).toMatchObject({ content: "starter text" })
+      } finally {
+        dispose()
+      }
+    })
   })
 })
+
+function localSelection(sessionID: string) {
+  type Deps = Parameters<typeof createLocal>[0]
+  const [saved, setSaved] = createStore<Saved>({ session: {} })
+  const sdk = { directory: "/repo", modelExecutionEpoch: () => 0 }
+  const serverSDK = { scope: ServerScope.local, sessionManagement: {} }
+  return createLocal({
+    params: { id: sessionID },
+    sdk: (() => sdk) as unknown as Deps["sdk"],
+    sync: (() => ({ data: { agent: [], config: {} } })) as unknown as Deps["sync"],
+    serverSDK: (() => serverSDK) as unknown as Deps["serverSDK"],
+    providers: {
+      all: () => new Map(),
+      connected: () => [],
+      default: () => ({}),
+      defaultModel: () => undefined,
+    } as unknown as Deps["providers"],
+    models: {
+      ready: Object.assign(() => false, { promise: undefined }),
+      recent: { list: () => [] },
+      variant: { get: () => undefined },
+      list: () => [],
+      find: () => undefined,
+    } as unknown as Deps["models"],
+    saved,
+    setSaved,
+    savedReady: () => true,
+  })
+}

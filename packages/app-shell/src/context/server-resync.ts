@@ -1,4 +1,3 @@
-import { reconcile } from "solid-js/store"
 import type { SessionActiveOutput, SessionStatus } from "@/v2-wire"
 import { notifySessionTabsRemoved } from "@/components/titlebar-session-events"
 import type { createHomeSessionIndexCache } from "./global-sync/home-session-index"
@@ -10,19 +9,18 @@ import type { ServerSession } from "./server-session"
  * not name is no longer running, whatever the missed events would have said.
  */
 export function reconcileActiveSessionStatuses(
-  session: Pick<ServerSession, "data" | "set">,
+  session: Pick<ServerSession, "data" | "setStatus">,
   active: SessionActiveOutput | Record<string, SessionStatus>,
   touched?: ReadonlySet<string>,
 ) {
   Object.keys(session.data.session_status)
     .filter((sessionID) => !touched?.has(sessionID) && active[sessionID] === undefined && session.data.session_status[sessionID]?.type !== "idle")
-    .forEach((sessionID) => session.set("session_status", sessionID, reconcile({ type: "idle" })))
+    .forEach((sessionID) => session.setStatus(sessionID, { type: "idle" }))
   for (const sessionID of Object.keys(active)) {
     if (touched?.has(sessionID)) continue
     const status = active[sessionID]
     if (!status) continue
-    // reconcile replaces the entry; a plain set would merge and keep a retry's attempt/message/next.
-    session.set("session_status", sessionID, reconcile(status.type === "running" ? { type: "busy" } : status))
+    session.setStatus(sessionID, status.type === "running" ? { type: "busy" } : status)
   }
 }
 
@@ -32,7 +30,7 @@ export function reconcileActiveSessionStatuses(
  * server's current list; without it (the read failed) statuses stay as they are.
  */
 export function resyncAfterReconnect(
-  session: Pick<ServerSession, "data" | "set" | "sync" | "open">,
+  session: Pick<ServerSession, "data" | "setStatus" | "sync" | "open">,
   active?: SessionActiveOutput,
   touched?: ReadonlySet<string>,
   removed?: ReadonlySet<string>,

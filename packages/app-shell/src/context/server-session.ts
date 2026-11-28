@@ -78,6 +78,25 @@ export function createServerSession(
       return (this.session_status[id]?.type ?? "idle") !== "idle"
     },
   })
+  const busyOwners = new Map<string, Set<symbol>>()
+  const setStatus = (sessionID: string, status: SessionStatus) => {
+    busyOwners.delete(sessionID)
+    setData("session_status", sessionID, reconcile(status))
+  }
+  const optimisticBusy = (sessionID: string) => {
+    const pending = busyOwners.get(sessionID)
+    if (!pending && (data.session_status[sessionID]?.type ?? "idle") !== "idle") return
+    const owners = pending ?? new Set<symbol>()
+    const owner = Symbol()
+    owners.add(owner)
+    busyOwners.set(sessionID, owners)
+    if (!pending) setData("session_status", sessionID, { type: "busy" })
+    return () => {
+      if (busyOwners.get(sessionID) !== owners || !owners.delete(owner) || owners.size > 0) return
+      busyOwners.delete(sessionID)
+      if (data.session_status[sessionID]?.type === "busy") setData("session_status", sessionID, { type: "idle" })
+    }
+  }
   const requests = new Map<string, Promise<AppSession>>()
   const inflight = new Map<string, Promise<void>>()
   const trailing = new Map<string, { predecessor: Promise<void>; task: Promise<void> }>()
@@ -102,6 +121,7 @@ export function createServerSession(
     inflight.clear()
     trailing.clear()
     statusReads.clear()
+    busyOwners.clear()
   })
   const statusChanged = (sessionID: string, removed = false) => statusReads.forEach((read) => {
     read.touched.add(sessionID)
@@ -302,6 +322,7 @@ export function createServerSession(
     if (sessionIDs.length === 0) return
     sessionIDs.forEach((sessionID) => {
       statusChanged(sessionID, true)
+      busyOwners.delete(sessionID)
       dropped.add(sessionID)
       generations.delete(sessionID)
       clearOptimistic(sessionID)
@@ -815,9 +836,9 @@ export function createServerSession(
     const usage = info && (sessionSelection(info, event) ?? sessionUsage(info, event))
     if (usage) remember(usage)
     if (status || event.type === "session.retry.scheduled") statusChanged(sessionID)
-    if (status) setData("session_status", sessionID, reconcile({ type: status }))
+    if (status) setStatus(sessionID, { type: status })
     if (event.type === "session.retry.scheduled")
-      setData("session_status", sessionID, {
+      setStatus(sessionID, {
         type: "retry",
         attempt: event.data.attempt,
         message: event.data.error.message,
@@ -958,6 +979,8 @@ export function createServerSession(
   return {
     data,
     set: setData,
+    setStatus,
+    optimisticBusy,
     captureStatusChanges() {
       const read = { touched: new Set<string>(), removed: new Set<string>() }
       if (!lifetime.disposed) statusReads.add(read)

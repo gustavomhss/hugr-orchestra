@@ -36,6 +36,7 @@ export type PromptInputV2ViewConfig = {
   submit: {
     stopping: Accessor<boolean>
     working?: Accessor<boolean>
+    allowEmpty?: Accessor<boolean>
     onSubmit: () => void
     onStop: () => void
   }
@@ -297,6 +298,7 @@ export function createPromptInputV2Controller(input: {
   }
 
   const canSubmit = () => {
+    if (input.view.submit.allowEmpty?.()) return true
     const persisted = draft.state
     if (persisted.prompt.some((part) => part.type === "image")) return true
     if (persisted.context.items.some((item) => !!item.comment?.trim())) return true

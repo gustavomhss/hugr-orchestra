@@ -458,6 +458,10 @@ beforeAll(async () => {
       data: { project: profileProjects },
       session: {
         remember: () => undefined,
+        optimisticBusy(sessionID: string) {
+          this.set("session_status", sessionID, { type: "busy" })
+          return () => this.set("session_status", sessionID, { type: "idle" })
+        },
         set: (field: string, sessionID: string, status: { type: string }) => {
           if (field === "session_status") statusWrites.push({ sessionID, type: status.type })
           if (field === "session_status") statusUpdates.push([field, sessionID, status])

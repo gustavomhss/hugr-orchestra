@@ -1,6 +1,7 @@
 import type { PermissionRequest, PermissionV2Request, Project } from "@/v2-types"
-import type { Agent, CurrentProject, Provider, ProviderListResponse } from "@/v2-wire"
+import type { Agent, CurrentProject, Model, Provider, ProviderListResponse } from "@/v2-wire"
 import type { ServerApi } from "@/utils/server"
+import type { ModelsExecutionOutput } from "@orchestra/client"
 
 type AgentListData = Awaited<ReturnType<ServerApi["agent"]["list"]>>["data"]
 type ProviderListData = Awaited<ReturnType<ServerApi["provider"]["list"]>>["data"]
@@ -101,55 +102,7 @@ export function normalizeProviderList(
   for (const model of models ?? []) {
     const provider = all.get(model.providerID)
     if (!provider || model.status === "deprecated") continue
-    const cost = model.cost.find((item) => item.tier === undefined) ?? model.cost[0]
-    provider.models[model.id] = {
-      id: model.id,
-      providerID: model.providerID,
-      api: {
-        id: model.modelID,
-        url: "",
-        npm: model.package ?? provider.id,
-      },
-      name: model.name,
-      family: model.family,
-      capabilities: {
-        temperature: false,
-        reasoning: false,
-        attachment: model.capabilities.input.some((item) => item !== "text"),
-        toolcall: model.capabilities.tools,
-        input: {
-          text: model.capabilities.input.includes("text"),
-          audio: model.capabilities.input.includes("audio"),
-          image: model.capabilities.input.includes("image"),
-          video: model.capabilities.input.includes("video"),
-          pdf: model.capabilities.input.includes("pdf"),
-        },
-        output: {
-          text: model.capabilities.output.includes("text"),
-          audio: model.capabilities.output.includes("audio"),
-          image: model.capabilities.output.includes("image"),
-          video: model.capabilities.output.includes("video"),
-          pdf: model.capabilities.output.includes("pdf"),
-        },
-        interleaved: false,
-      },
-      cost: {
-        input: cost?.input ?? 0,
-        output: cost?.output ?? 0,
-        cache: {
-          read: cost?.cache.read ?? 0,
-          write: cost?.cache.write ?? 0,
-        },
-      },
-      // Keep missing pricing distinguishable from explicit free pricing in Context metrics.
-      ...{ costAvailable: cost !== undefined },
-      limit: model.limit,
-      status: model.status,
-      options: catalogOptions(model),
-      headers: model.headers ?? {},
-      release_date: new Date(model.time.released).toISOString().slice(0, 10),
-      variants: Object.fromEntries(model.variants.map((variant) => [variant.id, variant.settings ?? {}])),
-    }
+    provider.models[model.id] = normalizeCatalogModel(model, provider.id)
   }
 
   return {
@@ -168,9 +121,65 @@ export function normalizeProviderList(
   }
 }
 
+type ExecutionModel = ModelsExecutionOutput["data"]["models"][number]["model"]
+
+export function normalizeCatalogModel(model: ModelListData[number] | ExecutionModel, providerID: string): Model & { costAvailable: boolean } {
+  const cost = model.cost.find((item) => item.tier === undefined) ?? model.cost[0]
+  return {
+    id: model.id,
+    providerID: model.providerID,
+    api: {
+      id: "modelID" in model ? model.modelID : model.api?.id ?? model.id,
+      url: "",
+      npm: ("modelID" in model ? model.package : model.api?.type === "aisdk" ? model.api.package : undefined) ?? providerID,
+    },
+    name: model.name,
+    family: model.family,
+    capabilities: {
+      temperature: false,
+      reasoning: false,
+      attachment: model.capabilities.input.some((item) => item !== "text"),
+      toolcall: model.capabilities.tools,
+      input: {
+        text: model.capabilities.input.includes("text"),
+        audio: model.capabilities.input.includes("audio"),
+        image: model.capabilities.input.includes("image"),
+        video: model.capabilities.input.includes("video"),
+        pdf: model.capabilities.input.includes("pdf"),
+      },
+      output: {
+        text: model.capabilities.output.includes("text"),
+        audio: model.capabilities.output.includes("audio"),
+        image: model.capabilities.output.includes("image"),
+        video: model.capabilities.output.includes("video"),
+        pdf: model.capabilities.output.includes("pdf"),
+      },
+      interleaved: false,
+    },
+    cost: {
+      input: cost?.input ?? 0,
+      output: cost?.output ?? 0,
+      cache: {
+        read: cost?.cache.read ?? 0,
+        write: cost?.cache.write ?? 0,
+      },
+    },
+    // Keep missing pricing distinguishable from explicit free pricing in Context metrics.
+    costAvailable: cost !== undefined,
+    limit: model.limit,
+    status: model.status,
+    options: catalogOptions(model),
+    headers: "headers" in model ? model.headers ?? {} : {},
+    release_date: new Date(model.time.released).toISOString().slice(0, 10),
+    variants: "modelID" in model
+      ? Object.fromEntries(model.variants.map((variant) => [variant.id, variant.settings ?? {}]))
+      : Object.fromEntries(model.variants.map((variant) => [variant.id, {}])),
+  }
+}
+
 // The vendored client used top-level settings; current Protocol puts transport settings in api.
 // Preserve host-only markers and every other option without inventing a connection or engine.
-function catalogOptions(item: { readonly settings?: Record<string, unknown> }) {
+function catalogOptions(item: { readonly settings?: Record<string, unknown>; readonly api?: object }) {
   const api = "api" in item && item.api && typeof item.api === "object" ? item.api : undefined
   const options =
     api && "settings" in api && api.settings && typeof api.settings === "object" ? api.settings : undefined

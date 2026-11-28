@@ -387,15 +387,16 @@ export default function Page() {
 
   followSessionModel(local, { lastUserMessage, model: () => info()?.model, sessionID: () => params.id })
 
-  let restoredModelSession: string | undefined
+  let restoredModel: { sessionID: string; editor: ReturnType<typeof prompt.capture> } | undefined
   createEffect(() => {
-    const id = params.id
-    if (!id || !prompt.ready() || !local.session.ready()) return
-    if (restoredModelSession !== id) {
-      restoredModelSession = id
-      if (restorePromptModel(local, prompt)) return
+    const sessionID = params.id
+    if (!sessionID || !prompt.ready() || !local.session.ready()) return
+    const editor = prompt.capture()
+    if (restoredModel?.sessionID !== sessionID || restoredModel.editor !== editor) {
+      restoredModel = { sessionID, editor }
+      if (restorePromptModel(local, editor)) return
     }
-    syncPromptModel(local, prompt)
+    syncPromptModel(local, editor)
   })
 
   createEffect(
@@ -423,12 +424,15 @@ export default function Page() {
   const followupBaseOwnership = createSubmissionOwner(() => ({
     server: serverSDK(), sdk: sdk(), credentials: JSON.stringify(serverSDK().server.http),
     scope: sdk().scope, directory: sdk().directory, sessionID: params.id, client: sdk().orchestra, api: sdk().api,
+    sessionDirectory: info()?.directory, workspaceID: info()?.workspaceID,
     active: serverSDK().transportCurrent?.() !== false && sdk().transportCurrent?.() !== false,
   }))
   const followupOwnership = createSubmissionOwner(() => ({
     server: serverSDK(), sdk: sdk(), credentials: JSON.stringify(serverSDK().server.http),
     scope: sdk().scope, directory: sdk().directory, sessionID: params.id, client: sdk().orchestra, api: sdk().api,
+    sessionDirectory: info()?.directory, workspaceID: info()?.workspaceID,
     epoch: serverSDK().connectionEpoch?.() ?? 0,
+    policyEpoch: serverSDK().modelExecutionPolicyEpoch?.(),
     context: local.model.execution.context(),
     policyVersion: params.id ? serverSDK().sessionManagement.subagentModelsWriteVersion?.(params.id) ?? 0 : 0,
   }))
@@ -1531,6 +1535,8 @@ export default function Page() {
       const directorySync = sync()
       const state = serverSync()
       const sessionID = params.id
+      const directory = info()?.directory ?? directorySDK.directory
+      const workspaceID = info()?.workspaceID
       const credentials = JSON.stringify(server.server.http)
       const item = (followup.items[input.sessionID] ?? []).find((entry) => entry.id === input.id)
       if (!item) return
@@ -1543,6 +1549,7 @@ export default function Page() {
       const baseCurrent = () => owner.current() && base.current() &&
         serverSDK() === server && sdk().scope === directorySDK.scope && server.transportCurrent?.() !== false &&
         directorySDK.transportCurrent?.() !== false && sdk().directory === directorySDK.directory && params.id === sessionID &&
+        (info()?.directory ?? directorySDK.directory) === directory && info()?.workspaceID === workspaceID &&
         sdk().orchestra === directorySDK.orchestra && sdk().api === directorySDK.api &&
         JSON.stringify(server.server.http) === credentials
       const itemCurrent = () => queuedItemOwner().get(identity)?.token === itemOwner
@@ -1557,12 +1564,13 @@ export default function Page() {
         sync: directorySync,
         serverSync: state,
         draft,
-        signal: AbortSignal.any([binding.signal, itemOwner.signal]),
+        signal: AbortSignal.any([base.signal, binding.signal, itemOwner.signal]),
+        admissionSignal: AbortSignal.any([base.signal, itemOwner.signal]),
         onUnavailable: (reason) => showToast({ title: language.t(modelExecutionReasonKey(reason)) }),
         optimisticBusy: item.sessionDirectory === directorySDK.directory,
         deliberate: input.manual === true,
         currentSource: {
-          serverScopeKey: directorySDK.scope, directory: directorySDK.directory, sessionID,
+          serverScopeKey: directorySDK.scope, directory, workspaceID, sessionID,
           management: server.sessionManagement,
           current,
         },

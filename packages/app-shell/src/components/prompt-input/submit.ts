@@ -25,7 +25,7 @@ import { ScopedKey } from "@/utils/server-scope"
 import { createPromptSubmissionState } from "./submission-state"
 import { Event } from "@orchestra/schema/event"
 import { draftSessionKey } from "./draft-session"
-import { createSubmissionOwner, sendFollowupRequest, waitForSubagentPolicy } from "./submission-policy"
+import { createSubmissionOwner, knownSlashCommand, sendFollowupRequest, waitForSubagentPolicy } from "./submission-policy"
 import { sourceAdmission, type Admission, type ExistingAdmission } from "./submission-admission"
 import { queuedPromptSources } from "./queued-prompt"
 import type { AdmissionRequest, FollowupDraft, FollowupSendInput } from "./submission-types"
@@ -42,7 +42,7 @@ export function createFollowupSender(sources = queuedPromptSources) {
     const signal = controller && input.signal ? AbortSignal.any([controller.signal, input.signal]) : input.signal ?? controller?.signal
     const current = input.currentSource
     const rebound = current?.sessionID ? {
-      serverScopeKey: current.serverScopeKey, directory: current.directory, sessionID: current.sessionID,
+      serverScopeKey: current.serverScopeKey, directory: current.directory, workspaceID: current.workspaceID, sessionID: current.sessionID,
       api: input.api, sync: input.sync, serverSync: input.serverSync, current: current.current,
       before: (active = signal!) => waitForSubagentPolicy({ ...current, sessionID: current.sessionID!, signal: active }),
       readPolicyVersion: () => current.management.subagentModelsWriteVersion?.(current.sessionID!) ?? 0,
@@ -63,6 +63,8 @@ export function createFollowupSender(sources = queuedPromptSources) {
         sync: source?.sync ?? input.sync,
         serverSync: source?.serverSync ?? input.serverSync,
         signal,
+        admissionSignal: controller && input.admissionSignal
+          ? AbortSignal.any([controller.signal, input.admissionSignal]) : input.admissionSignal,
         runtime,
       })
     } finally {
@@ -73,7 +75,7 @@ export function createFollowupSender(sources = queuedPromptSources) {
 
 type PromptSubmitInput = {
   prompt: ReturnType<typeof usePrompt>
-  info: Accessor<{ id: string } | undefined>
+  info: Accessor<Pick<Session, "id"> & Partial<Pick<Session, "directory" | "workspaceID">> | undefined>
   imageAttachments: Accessor<ImageAttachmentPart[]>
   commentCount: Accessor<number>
   autoAccept: Accessor<boolean>
@@ -118,11 +120,13 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   const ownership = createSubmissionOwner(() => {
     const source = sdk()
     const draftID = search.draftId
+    const placement = params.id ? input.info() : undefined
     const tab = tabs.store.find((tab) => tab.type === "draft" && tab.draftID === draftID)
     return {
       server: serverSDK(), credentials: JSON.stringify(serverSDK().server?.http), scope: source.scope, directory: source.directory,
-      client: source.orchestra, api: source.api, worktree: input.newSessionWorktree?.(),
+      client: source.orchestra, api: source.api,
       sessionID: params.id, draftID, target: prompt.capture(),
+      sessionDirectory: placement?.directory, workspaceID: placement?.workspaceID,
       draftServer: tab?.type === "draft" ? tab.server : undefined,
       draftDirectory: tab?.type === "draft" ? tab.directory : undefined, draftExists: tab !== undefined,
     }
@@ -131,6 +135,9 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   const [activity, setActivity] = createStore({ existing: 0 })
   const choiceOwner = createSubmissionOwner(() => ({
     intent: JSON.stringify((input.model ?? local.model).intent()), agent: local.agent.current()?.id,
+    model: JSON.stringify((input.model ?? local.model).execution.input().model),
+    policyEpoch: params.id ? serverSDK().modelExecutionPolicyEpoch?.() : undefined,
+    worktree: params.id ? undefined : input.newSessionWorktree?.(),
     epoch: serverSDK().connectionEpoch?.() ?? 0,
     context: (input.model ?? local.model).execution.context(),
     policyVersion: params.id ? serverSDK().sessionManagement.subagentModelsWriteVersion?.(params.id) ?? 0 : 0,
@@ -140,6 +147,8 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   // Create the store before the composer reads busy, untracked: a caller inside a tracked scope (such as a provider's
   // children) would otherwise re-run on a route or server change and permanently dispose this submitter's owner.
   untrack(admissionSource)
+  const pendingHandoff = (source: ReturnType<typeof admissionSource>["source"]) =>
+    [...source.selections.values()].find((admission) => admission.request?.admitted && !admission.promoted)
 
   const errorMessage = (err: unknown) => {
     const refusal = hookRefusal(err)
@@ -192,17 +201,17 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     })
   }
 
-  const capture = (target: PromptTarget) => {
+  const capture = (target: PromptTarget, capturedCommand?: string | null) => {
     const modelSelection = input.model ?? local.model
     const intent = modelSelection.intent()
     const agentID = local.agent.key?.() ?? local.agent.current()?.id
+    const provisional = modelSelection.execution?.input().model
     const selected: { value?: { model: { id: string; provider: { id: string } } | undefined;
       agent: { id: string; name: string } | undefined; variant: string | undefined } } = {}
     const selection = () => {
       if (selected.value) return selected.value
       const model = modelSelection.current()
       const agent = local.agent.current()
-      const provisional = modelSelection.execution?.input().model
       const candidate = intent.model ?? (provisional && { providerID: provisional.providerID, modelID: provisional.id }) ??
         (model && { providerID: model.provider.id, modelID: model.id })
       const variant = typeof intent.variant === "string" ? intent.variant : intent.variant === null ? undefined
@@ -215,15 +224,22 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     const server = serverSDK()
     const sessionID = params.id
     const mode = input.mode()
+    const placement = input.info()
+    const submission = createPromptSubmissionState({ target, prompt: target.current(), context: target.context.items().slice() })
+    const text = submission.prompt.map((part) => "content" in part ? part.content : "").join("")
+    const command = mode === "normal" ? (capturedCommand === undefined
+      ? knownSlashCommand(text, sync().data.command) : capturedCommand ?? undefined) : undefined
     const readPolicyVersion = () => sessionID && server.sessionManagement.subagentModelsWriteVersion
       ? server.sessionManagement.subagentModelsWriteVersion(sessionID) : 0
     return {
       owner: ownership.capture(),
       choiceOwner: choiceOwner.capture(), intent, intentKey: JSON.stringify(intent),
       epoch: server.connectionEpoch?.() ?? 0,
-      submission: createPromptSubmissionState({ target, prompt: target.current(), context: target.context.items().slice() }),
+      submission, text, command, effectiveKey: JSON.stringify(provisional),
+      policyEpoch: sessionID ? server.modelExecutionPolicyEpoch?.() : undefined,
       images: input.imageAttachments().map((image) => ({ ...image, blob: { ...image.blob } })),
       mode, modelSelection, sessionID, agentID,
+      placement: placement && { id: placement.id, directory: placement.directory, workspaceID: placement.workspaceID },
       commentCount: input.commentCount(),
       get currentModel() { return selection().model },
       get currentAgent() { return selection().agent },
@@ -246,13 +262,18 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     submitting: () => {
       return activity.existing > 0 || admissionSource().source.state.busy
     },
+    canRecoverHandoff: () => {
+      if (params.id) return false
+      const source = admissionSource().source
+      return !source.state.busy && pendingHandoff(source) !== undefined
+    },
     handleSubmit(event: Event) {
       event.preventDefault()
-      if (ownership.disposed() || (!params.id && input.newSessionWorkspaceReady?.() === false)) return Promise.resolve(false)
+      if (ownership.disposed()) return Promise.resolve(false)
       const target = prompt.capture()
       if (params.id) {
         const text = target.current().map((part) => "content" in part ? part.content : "").join("")
-        const command = text.startsWith("/") && sync().data.command.some((command) => command.name === text.split(" ")[0].slice(1))
+        const command = knownSlashCommand(text, sync().data.command)
         const selection = input.model ?? local.model
         if (selection === local.model && selection.ready?.() === true && input.mode() === "normal" &&
           !input.shouldQueue?.() && !command && (text.trim().length || input.imageAttachments().length || input.commentCount())) {
@@ -262,7 +283,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
           if (model && agent) local.session.restore({ sessionID: params.id, agent,
             model: { providerID: model.providerID, modelID: model.id, variant: model.variant } })
         }
-        const captured = capture(target)
+        const captured = capture(target, command ?? null)
         const owners = admissionSource().source.existing
         const actions = owners.get(existingOwner) ?? new Map<string, ExistingAdmission>()
         owners.set(existingOwner, actions)
@@ -286,7 +307,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
           mode: captured.mode, agent, model, variant: captured.variant, delivery: captured.delivery, policyVersion: captured.policyVersion,
         })
         const request: AdmissionRequest | undefined = intentKey && (previous || captured.modelSelection.ready?.() !== false && model) ? previous?.request ?? {
-          key, intentKey, id: Identifier.ascending("message"), admitted: false, kind,
+          key, intentKey, id: Identifier.ascending("message"), admitted: false, kind, commandName: captured.command,
           selection: kind === "prompt" && agent && model ? {
             agent, model, variant: captured.variant, delivery: captured.delivery, policyVersion: captured.policyVersion,
           } : undefined,
@@ -308,7 +329,8 @@ export function createPromptSubmit(input: PromptSubmitInput) {
             console.error(new Error(description))
             showToast({ variant: "error", title: language.t("common.requestFailed"), description })
           }
-          if ((sent || action?.request.admitted) && intentKey && actions.get(intentKey) === action) actions.delete(intentKey)
+          if (action && (sent || action.request.admitted || !action.request.admissionAttempted) &&
+            intentKey && actions.get(intentKey) === action) actions.delete(intentKey)
           return typeof sent === "boolean" ? sent : undefined
         }).finally(() => {
           setActivity("existing", (count) => count - 1)
@@ -319,8 +341,10 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       }
       const current = admissionSource()
       if (current.source.state.busy) return Promise.resolve()
-      const selection = input.newSessionWorktree?.() || "main"
-      const admission = current.source.selections.get(selection) ?? { selection }
+      const receipt = pendingHandoff(current.source)
+      if (!receipt && input.newSessionWorkspaceReady?.() === false) return Promise.resolve(false)
+      const selection = receipt?.selection ?? (input.newSessionWorktree?.() || "main")
+      const admission = receipt ?? current.source.selections.get(selection) ?? { selection }
       current.source.selections.set(selection, admission)
       current.source.setBusy(true)
       return submit(target, admission).finally(() => {

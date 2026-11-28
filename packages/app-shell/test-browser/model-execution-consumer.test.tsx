@@ -7,7 +7,7 @@ import { followSessionModel } from "@/pages/session/session-model-helpers"
 import { createStore, reconcile, unwrap } from "solid-js/store"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { ModelExecution } from "@orchestra/schema/model-execution"
-import { createFollowupSender, followupInput, commands, state, toasts, optimistic, optimisticRemovals, promptInputs, sentCommands, sentShell, sdkFor, serverFor, setReactiveOwner } from "@/components/prompt-input/submit-harness"
+import { createFollowupSender, followupInput, commands, state, toasts, optimistic, optimisticRemovals, statusWrites, promptInputs, sentCommands, sentShell, sdkFor, serverFor, setReactiveOwner } from "@/components/prompt-input/submit-harness"
 import { createPromptState } from "@/context/prompt-state"
 import { ServerScope } from "@/utils/server-scope"
 import { ServerConnection } from "@/context/server"
@@ -225,15 +225,41 @@ test("CONTROL E6 App shell keeps its semantics without a fresh model preflight",
   } finally { owner.dispose() }
 })
 
-test("CONTROL E6 App ready known command preserves actual adapter order", async () => {
-  const calls = transport()
+test("CONTROL E6 App known command uses the server’s effective model and preserves actual adapter order", async () => {
+  const target = { ...ref, id: "command-model", variant: "default" }
+  const calls = transport({ reply: () => json({ location: { directory: "/repo/main" }, data:
+    Schema.decodeUnknownSync(ModelExecution.Response)({ ...decision(), selection: { status: "ready", ref: target, engine: "orchestra" } }),
+  }) })
   bind(calls)
   commands.push({ name: "known" })
-  const owner = composer("/known value")
+  const owner = composer("/known value", { onSubmit: () => { commands.length = 0 } })
   try {
     expect(await send(owner)).toBe(true)
+    expect(calls.queries().at(-1)?.body).toMatchObject({
+      context: { type: "session", sessionID: "session-1", agentID: "backend" }, model: ref, command: "known",
+    })
     expect(calls.calls.filter((call) => call.path !== "/api/model/execution").map((call) => call.path.split("/").at(-1))).toEqual(["agent", "model", "command"])
     expect(sentCommands).toEqual([])
+  } finally { owner.dispose() }
+})
+
+test("E6 App final check uses the moved Session’s directory and workspace and rejects a mismatched reply", async () => {
+  const placement = { id: "session-1", directory: "/repo/moved", workspaceID: "workspace-1" }
+  const calls = transport()
+  bind(calls)
+  const owner = composer("prompt for moved session", { info: () => placement })
+  try {
+    calls.control.reply = () => json({ location: { directory: placement.directory, workspaceID: "other" }, data: decision() })
+    expect(await send(owner)).toBe(false)
+    expect(calls.admissions()).toEqual([])
+    expect(owner.prompt.current()).toEqual(text("prompt for moved session"))
+    const query = calls.queries().at(-1)
+    expect(query?.url.searchParams.get("location[directory]")).toBe(placement.directory)
+    expect(query?.url.searchParams.get("location[workspace]")).toBe(placement.workspaceID)
+
+    calls.control.reply = () => json({ location: { directory: placement.directory, workspaceID: placement.workspaceID }, data: decision() })
+    expect(await send(owner)).toBe(true)
+    expect(calls.admissions()).toHaveLength(1)
   } finally { owner.dispose() }
 })
 
@@ -248,7 +274,7 @@ test("E6 App unavailable known command requires a fresh canonical query before a
   try {
     expect(await send(owner)).toBe(false)
     expect(calls.queries().length).toBeGreaterThan(queries)
-    expect(calls.queries().at(-1)?.body).toMatchObject({ context: { type: "session", sessionID: "session-1", agentID: "backend" }, model: ref })
+    expect(calls.queries().at(-1)?.body).toMatchObject({ context: { type: "session", sessionID: "session-1", agentID: "backend" }, model: ref, command: "known" })
     expect(calls.calls.slice(checkpoint).filter((call) => call.method === "POST" && /\/(agent|model|command|prompt)$/.test(call.path))).toEqual([])
     expect(owner.prompt.current()).toEqual(text("/known value"))
   } finally { owner.dispose() }
@@ -331,6 +357,8 @@ test("E6 App one canonical context query disables an unsupported rendered row wi
     expect(row, "real selector must retain the catalog entry").toBeDefined()
     expect(calls.queries()).toHaveLength(1)
     expect(row?.getAttribute("aria-disabled")).toBe("true")
+    expect(row?.getAttribute("aria-description")).toBe("Model is not allowed for this session")
+    expect(row?.textContent).toContain("Model is not allowed for this session")
     row?.click()
     await new Promise<void>((resolve) => setTimeout(resolve, 0))
     expect(owner.local.model.current()?.id).not.toBe("blocked")
@@ -518,9 +546,12 @@ test.each(["Session", "raw model", "policy", "credentials"])("E6 App rechecks %s
     expect(calls.admissions()).toEqual([])
     expect(calls.queries()).toHaveLength(1)
     expect(owner.prompt.current()).toEqual(text("canonical prompt"))
-    if (change === "raw model" || change === "policy") expect(optimisticRemovals).toContainEqual({
-      directory: calls.directory, sessionID: "session-1", messageID: capturedOptimistic!.message.id,
-    })
+    if (change === "raw model" || change === "policy") {
+      expect(optimisticRemovals).toContainEqual({
+        directory: calls.directory, sessionID: "session-1", messageID: capturedOptimistic!.message.id,
+      })
+      expect(statusWrites.at(-1)).toEqual({ sessionID: "session-1", type: "idle" })
+    }
   } finally { release.resolve(); await pending; owner.dispose() }
 })
 

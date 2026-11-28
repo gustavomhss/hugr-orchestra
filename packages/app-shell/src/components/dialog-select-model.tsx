@@ -176,7 +176,7 @@ export function ModelSelectorPopoverV2(props: {
       select={controller.select}
       available={controller.available}
       unavailable={controller.unavailable}
-      missingLabel={controller.missingLabel}
+      missing={controller.missing}
       onConnect={() => {
         void import("./dialog-connect-provider").then((module) => {
           void dialog.show(() => <module.DialogConnectProvider directory={() => decode64(local.slug())} />)
@@ -231,7 +231,11 @@ function createModelSelectorController(input: {
     },
     available: (item: ModelItem) => model.execution.allows({ modelID: item.id, providerID: item.provider.id }),
     unavailable: (item: ModelItem) => modelExecutionReasonKey(model.execution.reason({ modelID: item.id, providerID: item.provider.id })),
-    missingLabel: () => !model.current() ? model.intent().model?.modelID : undefined,
+    missing: () => {
+      const key = model.intent().model
+      if (model.current() || !key) return
+      return { label: `${key.providerID}/${key.modelID}`, reason: modelExecutionReasonKey(model.execution.reason(key)) }
+    },
   }
 }
 
@@ -243,7 +247,7 @@ function ModelSelectorPopoverV2View(props: {
   select: (item: ModelItem) => void
   available: (item: ModelItem) => boolean
   unavailable: (item: ModelItem) => ReturnType<typeof modelExecutionReasonKey>
-  missingLabel: () => string | undefined
+  missing: () => { label: string; reason: ReturnType<typeof modelExecutionReasonKey> } | undefined
   onConnect: () => void
   onManage: () => void
   onClose: () => void
@@ -334,8 +338,11 @@ function ModelSelectorPopoverV2View(props: {
           onFocusOutside={dismiss.preventTriggerRestore}
           onCloseAutoFocus={dismiss.onCloseAutoFocus}
         >
-          <Show when={props.missingLabel()}>{(label) =>
-            <div class="px-3 py-2 text-v2-text-text-faint" title={language.t("model.execution.unavailable")}>{label()}</div>
+          <Show when={props.missing()}>{(item) =>
+            <div class="px-3 py-2 text-v2-text-text-faint">
+              <div class="break-all">{item().label}</div>
+              <div class="text-xs">{language.t(item().reason)}</div>
+            </div>
           }</Show>
           <div class="flex flex-col p-0.5">
             <div class="flex h-7 items-center gap-2 rounded-sm pl-3 pr-2.5 text-v2-icon-icon-muted">
@@ -512,7 +519,7 @@ function ModelSelectorRowsV2(props: {
                             >
                               <MenuV2.RadioItem
                                 disabled={!props.available(item())}
-                                title={!props.available(item()) ? language.t(props.unavailable(item())) : undefined}
+                                aria-description={!props.available(item()) ? language.t(props.unavailable(item())) : undefined}
                                 value={key}
                                 data-option-key={key}
                                 data-selected-model={props.current === key ? true : undefined}
@@ -522,6 +529,9 @@ function ModelSelectorRowsV2(props: {
                                 onSelect={() => props.onSelect(item())}
                               >
                                 <span class="min-w-0 truncate leading-5">{item().name}</span>
+                                <Show when={!props.available(item())}>
+                                  <span class="ml-auto min-w-0 max-w-[55%] truncate text-xs" aria-hidden="true">{language.t(props.unavailable(item()))}</span>
+                                </Show>
                                 <Show when={isFree(item().provider.id, item().cost)}>
                                   <TagV2 class="shrink-0">{language.t("model.tag.free")}</TagV2>
                                 </Show>

@@ -1,6 +1,7 @@
 import { createEffect, on } from "solid-js"
+import type { ModelKey, useLocal } from "@/context/local"
+import type { PromptSession } from "@/context/prompt-state"
 import type { UserMessage } from "@/v2-wire"
-
 
 type Local = {
   session: {
@@ -9,24 +10,10 @@ type Local = {
   }
 }
 
-type ModelSelection = {
-  model: {
-    current(): { id: string; provider: { id: string } } | undefined
-    list?(): readonly { id: string; provider: { id: string } }[]
-    set(model: { providerID: string; modelID: string }): void
-    variant: {
-      current(): string | undefined
-      set(variant: string | undefined): void
-    }
-  }
-}
-
-type PromptState = {
-  model: {
-    current(): { providerID: string; modelID: string; variant?: string | null } | undefined
-    set(model: { providerID: string; modelID: string; variant?: string | null }): void
-  }
-}
+type LocalModel = ReturnType<typeof useLocal>["model"]
+type Intent = { model: Pick<LocalModel, "current" | "intent"> }
+type Restore = { session: { restoreModel(model: ModelKey, variant: string | null | undefined): void } }
+type PromptState = Pick<PromptSession, "model">
 
 export const resetSessionModel = (local: Local) => {
   local.session.reset()
@@ -42,7 +29,7 @@ export const syncSessionModel = (local: Local, msg: UserMessage) => {
  * model moves it, never a pick in the composer.
  */
 export const followSessionModel = (
-  local: Local & ModelSelection,
+  local: Local & { model: Pick<LocalModel, "current" | "set"> },
   session: {
     lastUserMessage: () => UserMessage | undefined
     model: () => { providerID: string; id: string } | undefined
@@ -77,34 +64,36 @@ export const followSessionModel = (
   )
 }
 
-export const syncPromptModel = (local: ModelSelection, prompt: PromptState) => {
-  const model = local.model.current()
+export const syncPromptModel = (local: Intent, prompt: PromptState) => {
+  const intent = local.model.intent()
+  const current = prompt.model.current()
+  if (!intent.model && intent.variant === undefined) {
+    if (current) prompt.model.set(undefined)
+    return
+  }
+  const displayed = intent.model ? undefined : local.model.current()
+  const model = intent.model ?? (displayed && { providerID: displayed.provider.id, modelID: displayed.id })
   if (!model) return
   const next = {
-    providerID: model.provider.id,
-    modelID: model.id,
-    variant: local.model.variant.current(),
+    providerID: model.providerID,
+    modelID: model.modelID,
+    variant: intent.variant,
   }
-  const current = prompt.model.current()
   if (current?.providerID === next.providerID && current.modelID === next.modelID && current.variant === next.variant)
     return
   prompt.model.set(next)
 }
 
-export const restorePromptModel = (local: ModelSelection, prompt: PromptState) => {
+export const restorePromptModel = (local: { model: Pick<LocalModel, "intent"> } & Restore, prompt: PromptState) => {
   const model = prompt.model.current()
   if (!model) return false
-  const choices = local.model.list?.()
-  if (choices && !choices.some((item) => item.provider.id === model.providerID && item.id === model.modelID))
-    return false
-  const current = local.model.current()
+  const current = local.model.intent()
   if (
-    current?.provider.id === model.providerID &&
-    current.id === model.modelID &&
-    local.model.variant.current() === (model.variant ?? undefined)
+    current.model?.providerID === model.providerID &&
+    current.model.modelID === model.modelID &&
+    current.variant === model.variant
   )
     return true
-  local.model.set({ providerID: model.providerID, modelID: model.modelID })
-  local.model.variant.set(model.variant ?? undefined)
+  local.session.restoreModel({ providerID: model.providerID, modelID: model.modelID }, model.variant)
   return true
 }

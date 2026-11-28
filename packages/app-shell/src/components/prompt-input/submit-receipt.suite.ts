@@ -165,7 +165,7 @@ test.each([undefined, null, "default"] as const)("a removed raw model edited dur
   } finally { gate.resolve(); await sending }
 })
 
-test("a confirmed draft receipt survives post-ACK policy refusal and retries only its handoff with a removed raw choice", async () => {
+test.each(["unchanged", "edited", "blank"] as const)("a confirmed %s draft retries only its handoff after a post-ACK policy refusal", async (editor) => {
   const key = draftSessionKey(ServerScope.local, "/repo/main")
   const entered = Promise.withResolvers<void>()
   const gate = Promise.withResolvers<void>()
@@ -179,8 +179,13 @@ test("a confirmed draft receipt survives post-ACK policy refusal and retries onl
     atPromotion.version = policyFixture.server.sessionManagement.subagentModelsWriteVersion("session-1")
   }
   const real = createPromptState({ prompt: "one confirmed admission" })
+  const history: string[] = []
+  const workspace = { selection: "main", ready: true }
   const submit = createPromptSubmit({ ...submitInput(), prompt: real, pendingKey: () => key,
+    newSessionWorktree: () => workspace.selection, newSessionWorkspaceReady: () => workspace.ready,
+    addToHistory: (parts) => history.push(parts.map((part) => "content" in part ? part.content : "").join("")),
     info: () => state.params.id ? { id: state.params.id } : undefined })
+  expect(submit.canRecoverHandoff()).toBe(false)
   const sending = submit.handleSubmit(new Event("submit"))
   const tasks: Promise<unknown>[] = [sending]
   try {
@@ -209,11 +214,22 @@ test("a confirmed draft receipt survives post-ACK policy refusal and retries onl
     expect(state.modelID).toBe("removed-model")
     expect(state.variant).toBeNull()
 
+    const newerText = "unsent draft after the receipt"
+    if (editor === "edited") {
+      real.set([{ type: "text", content: newerText, start: 0, end: newerText.length }])
+      if (!isServer) real.context.add({ type: "file", path: "/repo/main/new", comment: "unsent comment" })
+    }
+    if (editor === "blank") {
+      real.reset()
+      workspace.selection = "/repo/next"
+      workspace.ready = false
+    }
+    expect(submit.canRecoverHandoff()).toBe(true)
     state.policyWrite = async () => {}
     state.policyWait = async () => { retryEntered.resolve(); await retryRelease.promise }
     const retry = submit.handleSubmit(new Event("submit"))
     tasks.push(retry)
-    await retryEntered.promise
+    expect(await Promise.race([retryEntered.promise.then(() => "policy"), retry.then(() => "finished")])).toBe("policy")
     expect(promoted).toEqual([])
     expect(promptInputs).toEqual([original])
     expect(createdSessions).toHaveLength(1)
@@ -230,10 +246,15 @@ test("a confirmed draft receipt survives post-ACK policy refusal and retries onl
     expect(promoted).toEqual([{ directory: "/repo/main", sessionID: "session-1" }])
     expect(promotedSelections).toEqual([{ agent: "backend", model: { providerID: "provider", modelID: "removed-model" }, variant: null }])
     expect(state.params.id).toBe("session-1")
-    expect(real.current()[0]).toMatchObject({ content: "" })
+    expect(submit.canRecoverHandoff()).toBe(false)
+    expect(history).toEqual(["one confirmed admission"])
+    expect(real.current()[0]).toMatchObject({ content: editor === "edited" ? newerText : "" })
+    if (editor === "edited" && !isServer) {
+      expect(real.context.items()).toEqual([expect.objectContaining({ path: "/repo/main/new", comment: "unsent comment" })])
+    }
     expect(state.modelID).toBe("removed-model")
     expect(state.variant).toBeNull()
-    await submit.handleSubmit(new Event("submit"))
+    if (editor !== "edited") await submit.handleSubmit(new Event("submit"))
     expect(promptInputs).toEqual([original])
     expect(createdSessions).toHaveLength(1)
     expect(promoted).toHaveLength(1)

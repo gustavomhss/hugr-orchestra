@@ -16,6 +16,7 @@ export type AdmissionRequest = {
   admissionAttempted?: boolean
   intentKey?: string
   kind?: "prompt" | "command"
+  commandName?: string
   selection?: Pick<FollowupDraft, "agent" | "model" | "variant" | "delivery"> & { policyVersion: number }
   revision?: number
   preparation?: ReturnType<typeof buildRequestParts>
@@ -28,6 +29,7 @@ export type PromptDispatch = (send: (request: AdmissionRequest, current: () => b
 export type FollowupDraft = {
   sessionID: string
   sessionDirectory: string
+  workspaceID?: string
   prompt: Prompt
   context: (ContextItem & { key: string })[]
   agent: string
@@ -42,6 +44,7 @@ export type FollowupSendInput = {
   serverSync: ServerSync
   sync: DirectorySync
   draft: FollowupDraft
+  command?: string | null
   messageID?: string
   optimisticBusy?: boolean
   pending?: boolean
@@ -58,6 +61,7 @@ export type FollowupSendInput = {
   currentSource?: {
     serverScopeKey: ServerScope
     directory: string
+    workspaceID?: string
     sessionID: string | undefined
     management: Parameters<typeof createSubmissionPolicy>[0]["management"]
     current: () => boolean

@@ -3,10 +3,11 @@ import { createStore } from "solid-js/store"
 import { useSearchParams } from "@solidjs/router"
 import { useTabs } from "@/context/tabs"
 import { useModels } from "@/context/models"
-import { createModelExecutionView, type ModelKey, type ModelSelection } from "@/context/local"
+import { createModelExecutionView, createModelSelectionDisplay, type ModelKey, type ModelSelection } from "@/context/local"
 import { cycleModelVariant, getConfiguredAgentVariant } from "@/context/model-variant"
 import { usePrompt } from "@/context/prompt"
 import { useSDK } from "@/context/sdk"
+import type { useServerSDK } from "@/context/server-sdk"
 import { useSync } from "@/context/sync"
 import { useProviders } from "@/hooks/use-providers"
 import { resolveDefaultModel } from "@/hooks/provider-catalog"
@@ -37,6 +38,11 @@ export function selectPromptModel(
 
 export function createPromptModelSelection(input: {
   agent: () => { id?: string; model?: ModelKey; variant?: string; engine?: string } | undefined
+  session?: {
+    server: ReturnType<typeof useServerSDK>
+    id: () => string | undefined
+    placement: () => { directory: string; workspaceID?: string } | undefined
+  }
 }) {
   const sdk = useSDK()
   const sync = useSync()
@@ -82,25 +88,16 @@ export function createPromptModelSelection(input: {
     return { model: value ? { providerID: value.providerID, modelID: value.modelID } : undefined, variant: value?.variant }
   }
   const candidate = () => intent().model ?? input.agent()?.model ?? configured() ?? models.recent.list()[0] ?? fallback()
-  const execution = createModelExecutionView({ sdk, sessionID: () => undefined, ready: () => models.ready() && prompt.ready(),
+  const execution = createModelExecutionView({ sdk, server: input.session?.server,
+    sessionID: () => input.session?.id(), placement: input.session?.placement,
+    ready: () => models.ready() && prompt.ready(),
     metadata: () => ({ agents: sync().data.agent, config: sync().data.config, providers: [...providers.all()],
       connected: providers.connected().map((provider) => provider.id), semanticEpoch: sdk().modelExecutionEpoch() }),
     agentID: () => input.agent()?.id ?? "maestro", agent: input.agent, intent, candidate,
     savedVariant: (key) => models.variant.get(key),
   })
-  const known = new Map<string, NonNullable<ReturnType<typeof models.find>>>()
-  const display = (key: ModelKey | undefined) => {
-    if (!key) return
-    const provider = providers.all().get(key.providerID)
-    const metadata = provider?.models[key.modelID]
-    const item = models.find(key) ?? (provider && metadata ? { ...metadata, provider,
-      name: metadata.name.replace("(latest)", "").trim(), latest: metadata.name.includes("(latest)") } : undefined)
-    const token = JSON.stringify([key.providerID, key.modelID])
-    const selected = intent().model ?? candidate()
-    if (item && selected?.providerID === key.providerID && selected.modelID === key.modelID) known.set(token, item)
-    return item ?? known.get(token)
-  }
-  const current = () => display(intent().model ?? (execution.ready() ? candidate() : undefined))
+  const display = createModelSelectionDisplay({ execution, providers, models, intent, candidate })
+  const current = display.current
   const recentModels = createMemo(() =>
     models.recent
       .list()
@@ -115,16 +112,7 @@ export function createPromptModelSelection(input: {
     ready: Object.assign(() => models.ready() && prompt.ready(), { promise: models.ready.promise }),
     current,
     recent: recentModels,
-    list: () => {
-      const response = execution.read()
-      const items = response.status === "ready" ? response.response.data.models.flatMap((entry) => {
-        const item = display({ providerID: entry.model.providerID, modelID: entry.model.id })
-        return item ? [item] : []
-      }) : models.list()
-      const selected = display(intent().model)
-      return selected && !items.some((item) => item.id === selected.id && item.provider.id === selected.provider.id)
-        ? [...items, selected] : items
-    },
+    list: display.list,
     cycle(direction: 1 | -1) {
       const items = recentModels()
       const item = current()

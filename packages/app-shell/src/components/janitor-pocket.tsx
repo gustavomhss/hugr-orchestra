@@ -78,8 +78,18 @@ function PocketComposer(props: {
   const serverSync = useServerSync()
   const comments = useComments()
   const local = useLocal()
-  const model = createPromptModelSelection({ agent: () => local.agent.current() })
   const [sessionID, setSessionID] = createSignal<string>()
+  const model = createPromptModelSelection({
+    agent: local.agent.current,
+    session: {
+      server: serverSDK,
+      id: sessionID,
+      placement: () => {
+        const id = sessionID()
+        return id ? serverSync().session.get(id) : undefined
+      },
+    },
+  })
   const [creating, setCreating] = createSignal(false)
   const [attemptedKey, setAttemptedKey] = createSignal<string>()
   const [failedKey, setFailedKey] = createSignal<string>()

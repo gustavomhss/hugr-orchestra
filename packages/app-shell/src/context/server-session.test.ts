@@ -3,6 +3,21 @@ import type { retry } from "@orchestra/core/util/retry"
 import type { ClientEvent } from "@/session-types"
 import { createServerSession } from "./server-session"
 import { session, v2User, v2Assistant, userMessage, projectedUser, textPart, page, deferredPage, ids, messageClient, create, retryImmediately, setup, type AssistantMessage, type SessionApi, type MessageApi } from "./server-session-test.fixture"
+test("releasing an optimistic busy owner preserves newer local and canonical work", () => {
+  const store = create(messageClient())
+  const sessionID = "ses_busy"
+  const first = store.optimisticBusy(sessionID)!
+  const later = store.optimisticBusy(sessionID)!
+  first()
+  expect(store.data.session_status[sessionID]?.type).toBe("busy")
+  later()
+  expect(store.data.session_status[sessionID]?.type).toBe("idle")
+  const stale = store.optimisticBusy(sessionID)!
+  store.setStatus(sessionID, { type: "busy" })
+  stale()
+  expect(store.data.session_status[sessionID]?.type).toBe("busy")
+})
+
 describe("server session", () => {
   test("projects V2 session events into current and wire message state", () => {
     const ctx = setup({ ses_child: session("ses_child") })

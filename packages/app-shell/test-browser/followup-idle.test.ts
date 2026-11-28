@@ -20,7 +20,7 @@ beforeAll(() => {
       const source = createSourceFile(page, await Bun.file(page).text(), ScriptTarget.Latest, true, ScriptKind.TSX)
       const component = source.statements.find((node) => isFunctionDeclaration(node) && node.name?.text === "Page")
       if (!component || !isFunctionDeclaration(component) || !component.body) throw new Error("Page body missing")
-      const names = ["followupBaseOwnership", "followupOwnership", "queuedItemOwner", "queuedFollowups", "followupMutation", "followupBusy", "sendFollowup"]
+      const names = ["info", "followupBaseOwnership", "followupOwnership", "queuedItemOwner", "queuedFollowups", "followupMutation", "followupBusy", "sendFollowup"]
       const selected = component.body.statements.filter((statement) => isVariableStatement(statement) &&
         statement.declarationList.declarations.some((declaration) => isIdentifier(declaration.name) && names.includes(declaration.name.text)))
       if (selected.length !== names.length) throw new Error("Page followup declarations changed")
@@ -119,7 +119,7 @@ async function mountQueue(options: { foreign?: boolean; prepare?: Promise<void> 
   registerSessionModelExecution(api, (input, options) => control.execution(input, options))
   const directorySync = { session: { get: () => undefined, optimistic: { add() {}, remove() {} } } } as unknown as FollowupSendInput["sync"]
   const serverState = { data: { project: [] }, session: { set() {} } } as unknown as FollowupSendInput["serverSync"]
-  const server = { connectionEpoch: () => status.reconnectEpoch, server: { http: { url: "https://queue.invalid", get password() { return status.password } } }, ready: Promise.resolve(),
+  const server = { connectionEpoch: () => status.reconnectEpoch, modelExecutionPolicyEpoch: () => state.policyVersion, server: { http: { url: "https://queue.invalid", get password() { return status.password } } }, ready: Promise.resolve(),
     sessionManagement: { waitSubagentModels: async () => {}, subagentModelsWriteVersion: () => state.policyVersion } }
   const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
   const sdk = { get scope() { return status.scope }, directory: "/repo/main", api: { session: api } }
