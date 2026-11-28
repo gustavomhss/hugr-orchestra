@@ -304,12 +304,16 @@
   ],
   "update": {
     "case": "S2-U1",
-    "state": "M0_M1_M2_CURRENT_READ_AND_REUSE_OBSERVED_CONTROL_REPLAY_PENDING",
+    "state": "PASS_ISOLATED_FROZEN_CONTROL_PLAN",
     "expectation": "PASS_DECLARED_GRAPH_EXPECTATION_ONLY_BOTH_JUDGES",
     "frozen_specification_binding": {
       "path": "evidence/u1-final-binding/receipt.json",
       "byte_length": 23481,
       "sha256": "52d68d6aa2eb4b7bcfcf55f860e73de4d85a72271e502a97f5ce5d415b94a8fb"
+    },
+    "executed_evidence": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/u1-run-46173202455/checkpoint.json",
+      "sha256": "068d9abd02eaf961f04676bd184e27bbf38538a73e7d05efb56a8815a4fdeae8"
     }
   },
   "local_obligations_open": [
@@ -625,8 +629,8 @@
     },
     "ordinary_publication": "NOT_RUN_IN_EVALUATION_SCOPE",
     "u1_latest_recipe_progress": {
-      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/u1-run-46172588014/checkpoint.json",
-      "sha256": "1c09c2992745f203311cd634d02625fe53233b251e8705ed4282bc299bd92da4"
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/u1-run-46173202455/checkpoint.json",
+      "sha256": "068d9abd02eaf961f04676bd184e27bbf38538a73e7d05efb56a8815a4fdeae8"
     },
     "u1_producer_manifest": {
       "path": "script/genesis-s2/u1-producers/manifest.json",
@@ -635,6 +639,28 @@
     "consumer_recheck": {
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumer-recheck-46170096399/checkpoint.json",
       "sha256": "c97c7c2c373fd4accb32e8915a663ac78e47e551ec2dd2113f5780c9d07d54b0"
+    },
+    "u1_scope_state": "PASS_ISOLATED_FROZEN_CONTROL_PLAN",
+    "consumer_remaining": {
+      "next_required_state": "REVIEWED_AMENDED_CANDIDATE",
+      "affected_results": [
+        "s2.l2.app-session",
+        "s2.l2.desktop-web",
+        "s2.l2.design-tui"
+      ],
+      "required_cases": [
+        "S2-C1",
+        "S2-C2",
+        "S2-C4",
+        "S2-I2U"
+      ],
+      "prior_dual_pass_cases": 10,
+      "material_gaps": {
+        "S2-C1": "Policy-write failure before dispatch as the specific empty-Session cleanup trigger.",
+        "S2-C2": "Different rejection behavior for untrusted wrapped IPC invoke and event.",
+        "S2-C4": "Preferred HTTP(S) remote first, stored order thereafter, and historical unsigned macOS scan context.",
+        "S2-I2U": "Explicit connection between selected Session model and the V2 prompt. A same-manifest retry received split judgments."
+      }
     }
   }
 }

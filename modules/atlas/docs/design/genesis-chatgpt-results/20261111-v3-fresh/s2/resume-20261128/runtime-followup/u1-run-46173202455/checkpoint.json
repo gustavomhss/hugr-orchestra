@@ -1,0 +1,148 @@
+{
+  "schema": "genesis-s2-u1-isolated-maintenance-execution/v1",
+  "state": "PASS_ISOLATED_FROZEN_CONTROL_PLAN",
+  "run_id": 46173202455,
+  "run_head": "e3ac69ad64a0a429df4fd431f54ff3a9aa22e082",
+  "artifact_id": 15274842746,
+  "artifact_zip_sha256": "c60607bf657c812b0ea142d3db0cc6a9c32e518460dd75ee5c22cf1150e584b1",
+  "m0": {
+    "candidate_id": "d23f1d789f8b71ca2e1c9ac409da22d553f4f3baae11f655c6cb4bcd3265ae3b",
+    "manifest": "e13906119b19c912c2615d728f3a8363152de7f83a0ace63c6f9ba2c0a8618a3",
+    "reuse_callbacks": 0,
+    "drift_probe": {
+      "drift": "HOLD_EVALUATION_INPUT_DRIFT",
+      "exact_restore": "READY_SAME_M0_MANIFEST"
+    }
+  },
+  "m1": {
+    "status": "TARGET_ADMITTED_AND_CURRENT_READ",
+    "target": "M1",
+    "candidate_id": "3584357f51e8941e448201dc85fc1e419de76a4b89f84798716751b5ca5858b5",
+    "generation": "178e09746ca0e6b5781ea452cf35109976011b135e23020a0482391bf258c3b0",
+    "private_manifest": "c682bfc1c6ff7fd42c789c6cf8d66355b45e306e18871881829ba3ead0d5cddf",
+    "admitted_manifest": "9d5782de00c8d97590231596073646c535f0e66dd82cb719dce9b6e278838859",
+    "reviewed_result": "052303821736745ec55800b537f3de5f37ff3c7c27734dc6e2ab808abb9b59d8",
+    "section": "1. Startup, readiness and shutdown",
+    "callback_state_unchanged": true,
+    "seal_sha256": "7d86c878d5b05191fd69f178ac7a6efb1125d9cf3644f23b37ab91e2e9410879",
+    "current_read_timeout_seconds": 150,
+    "recipe_callbacks": [
+      "s2.l1.desktop-web",
+      "s2.l2.desktop-web",
+      "s2.l3.app-session",
+      "s2.l3.design-tui",
+      "s2.l3.desktop-web",
+      "s2.l4.app-session",
+      "s2.l4.design-tui",
+      "s2.l4.desktop-web",
+      "s2.l4.entry"
+    ],
+    "outside_closure": [
+      "s2.l1.app-session",
+      "s2.l1.design-tui",
+      "s2.l2.app-session",
+      "s2.l2.design-tui"
+    ]
+  },
+  "m2": {
+    "status": "TARGET_ADMITTED_AND_CURRENT_READ",
+    "target": "M2",
+    "candidate_id": "5ec27ad30e271c7da130a0cb355d71a17322c0fb97b83c9a0593b061e8db0d88",
+    "generation": "bdc3e4b2a9be3e76a9ca3d0324d39a40f66f6f16ef8d390707249b864cd8f050",
+    "private_manifest": "0ae8bd4bcfdc6adbec7c9f442b17cf63694fae102fdf662e05db09aab3089551",
+    "admitted_manifest": "ec540efee6f4e23199665ec01dfbedd85c90e8b5bc399d5b4e1554b0d5a2cfc9",
+    "reviewed_result": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58",
+    "section": "1. Startup, readiness and shutdown",
+    "callback_state_unchanged": true,
+    "seal_sha256": "3659aec05a0f6c21435c1c00eea7d12e37fb79357e50eee638123a9fda1da1e4",
+    "current_read_timeout_seconds": 120,
+    "restored_original_results": 13,
+    "recipe_callbacks": [
+      "s2.l1.desktop-web",
+      "s2.l2.desktop-web",
+      "s2.l3.app-session",
+      "s2.l3.design-tui",
+      "s2.l3.desktop-web",
+      "s2.l4.app-session",
+      "s2.l4.design-tui",
+      "s2.l4.desktop-web",
+      "s2.l4.entry"
+    ],
+    "reuse_callbacks": 0
+  },
+  "negative_controls": [
+    {
+      "id": "missing-source",
+      "reason": "ownership-input-unavailable",
+      "evidence": [
+        "s2.l1.desktop-web",
+        "file:apps/desktop/src/main/owned-serve.ts"
+      ],
+      "callbacks": 0
+    },
+    {
+      "id": "missing-required-edge",
+      "reason": "ownership-dependency-changed",
+      "evidence": [
+        "s2.l2.desktop-web"
+      ],
+      "callbacks": 0
+    },
+    {
+      "id": "old-recipe-version",
+      "reason": "ownership-input-changed",
+      "evidence": [
+        "s2.l2.desktop-web",
+        "recipe"
+      ],
+      "callbacks": 0
+    },
+    {
+      "id": "declared-recipe-result-variation",
+      "reason": "ownership-review",
+      "evidence": [
+        "s2.l2.desktop-web",
+        "new-semantic-evidence-required"
+      ],
+      "callbacks": 1
+    },
+    {
+      "id": "blocked-result",
+      "reason": "ownership-blocked",
+      "evidence": [
+        "s2.l2.desktop-web",
+        "s2-u1-intentional-blocked-result"
+      ],
+      "callbacks": 1
+    }
+  ],
+  "guardrail": {
+    "gate": 0,
+    "warnings": 224,
+    "errors": 0,
+    "command": "bun run check:guards --base origin/dev",
+    "log_sha256": "5f2dfeae447a867d110dc4b2fc677703d0f06232ac6ea1ca06ef0ff9ca0d2be3"
+  },
+  "file_sha256": {
+    "u1-operation/ledger.json": "13bf27906ff587a110376fdf746f6b7573b023da731e4316444efe6299fbab76",
+    "u1-operation/reuse.stdout.txt": "422285c2d2dea7bd03c48ec411b0cdb12a1fad01ad1e0112a6486744d3996578",
+    "u1-operation/m0-drift-current.stdout.json": "56667d26459544c92e1e329d6a3cd6f50a76c93a424d9f888476c85f7344c55b",
+    "u1-operation/m0-restored-current.stdout.json": "3eb6c02c5a2036c12232ac7e7acd170c4ffbb4c0af63b15f1bdcd66ef2252299",
+    "u1-operation/verified-producers/summary.json": "caacabf9c908719d89231bfc8a0f148b99a03bef050e7c747a1cadae3669ecf9",
+    "u1-m1-admission/summary.json": "48a443d40dc6a7346f9f4a651da9f509df6b7d184964587cdce880ecc5e66341",
+    "u1-m1-admission/read-current.stdout": "7be9933162037e1c5f3fc8f9000686846f71651a9a2d51a46e163af1a8efb0d3",
+    "u1-m1-admission/resume-lock.json": "550a4175f95ded00612620a9f64c5dd1fbe89bb6a3aceb0bbd9a7b7137f326ac",
+    "u1-m1-admission/restoration-prepare-summary.json": "a72691af0a8cdea27685ba5e62465b1d4774e2e94a72eda4c9f29e1d84eeb59e",
+    "u1-m1-admission/restoration-verified/summary.json": "225b0716f3c67909f4620699c1f9906308bd91806f9da433bfc76d4b5a477232",
+    "u1-m2-admission/summary.json": "144559583288e8d5daa37b7099d998d30550b5b499cfa5858cbb3b58dffde5f1",
+    "u1-m2-admission/read-current.stdout": "b455444af2d05e7cda58ee5fbda22f4d30ce0060b43e4d091696ca93c3e696c7",
+    "u1-m2-admission/resume-lock.json": "baeae1d04926b62892aa062f23e7dd0ae4d3e13d1b2dc768545557fa3021398d",
+    "u1-m2-admission/restored-identical-summary.json": "6611c407beeae54ee8451bbe26e4a19f82f0742b86637eaf84cde27ae0700047",
+    "u1-m2-admission/negative-controls-summary.json": "f1c1d7b9ca91825c9bd3fc3da3702838dc4f05ea2642ae8edad726c915cbfefc"
+  },
+  "scope_limits": [
+    "This records the frozen isolated S2-U1 maintenance controls only.",
+    "G-CONSUMERS still has four HOLDs.",
+    "Ordinary publication and global integration are outside this evaluation."
+  ]
+}
