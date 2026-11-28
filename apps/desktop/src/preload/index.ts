@@ -22,7 +22,6 @@ ipcRenderer.on("before-unload", (_: unknown, id: string) => {
 })
 
 const api: ElectronAPI = {
-  armActivityQuarantine: (serverURL, request) => ipcRenderer.invoke("activity-arm-quarantine", serverURL, request),
   stopActivityTree: (serverURL, request) => ipcRenderer.invoke("activity-stop-tree", serverURL, request),
   emptyActivityQuarantine: (serverURL) => ipcRenderer.invoke("activity-empty-quarantine", serverURL),
   readActivityQuarantine: (serverURL) => ipcRenderer.invoke("activity-read-quarantine", serverURL),
