@@ -4,6 +4,7 @@ import { ReviewItem } from "@orchestra/core/review-toolkit/item"
 import { ReviewResultV2 } from "../../src/v2/governance/review-result"
 import { ReviewEvidenceSchemaV2 } from "../../src/v2/workflow/review-engagement-artifact-schema"
 import { ReviewEngagementReportV2 } from "../../src/v2/workflow/review-engagement-report"
+import { ScopedProbeReference } from "./lucy-engagement-artifacts"
 import { CapturedRegion, Count, Digest, NativeReply, Positive, StateV2, strict } from "./lucy-variant-schema"
 
 // Test-only frozen wire contract. No new production symbol is needed by the compiling RED packet.
@@ -77,6 +78,12 @@ export const ToolObservation = Schema.Struct({
   result: Schema.Literals(["zero", "nonzero"]),
 }).annotate({ parseOptions: strict })
 export type ToolObservation = typeof ToolObservation.Type
+export const ScopedProbeObservation = Schema.Struct({
+  kind: Schema.Literal("scoped-typecheck"), observationID: Digest, findingID: Text, priorProofID: Digest, proofID: Digest,
+  result: Schema.Literals(["zero", "nonzero"]),
+})
+export const Observation = Schema.Union([ScopedProbeObservation, ToolObservation])
+export type Observation = typeof Observation.Type
 export const Examination = Schema.Struct({
   examinationID: Digest, findingID: Text, priorFindingSha256: Digest, verifierSessionID: SessionSchema.ID,
   replyID: Digest, offeredObservationIDs: Schema.Array(Digest), currentRegionIDs: Schema.Array(Digest),
@@ -98,7 +105,8 @@ export const FixReceipt = Schema.Struct({
   finalAnalysisOperationID: Digest,
   operations: Schema.Array(Schema.Union([ReviewEvidenceSchemaV2.CodeOperation, ReviewEvidenceSchemaV2.AnalysisOperation])),
   artifacts: Schema.Array(FixArtifact), citations: Schema.Array(Schema.Struct({ uri: Text, artifactID: Digest })),
-  hostProofs: Schema.Array(ReviewEvidenceSchemaV2.Proof), observations: Schema.Array(ToolObservation),
+  hostProofs: Schema.Array(ReviewEvidenceSchemaV2.Proof), observations: Schema.Array(Observation),
+  scopedProbes: Schema.optional(Schema.Array(ScopedProbeReference)),
   examinations: Schema.Array(Examination), regions: Schema.Array(CapturedRegion), replies: Schema.Array(NativeReply),
   notExamined: Schema.Array(Gap),
 }).annotate({ parseOptions: strict })

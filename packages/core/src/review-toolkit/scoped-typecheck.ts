@@ -56,7 +56,7 @@ export const run = Effect.fn("ReviewScopedTypecheck.run")(function* (input: { re
   // This deliberately rejects more than module syntax, including escaped identifiers and all reference directives.
   if (/@ts-(?:no(?:check)?|ignore|expect-error)\b/i.test(source) || /\\|\b(?:import|require|declare|module|namespace)\b|\/\/\//.test(source)) return refused("external-syntax")
   const state = (yield* ResearchToolkit.status("typescript"))[0]
-  if (!state || state.status !== "ready" || state.version !== "6.0.3" || state.target !== "linux-x64") return refused("typescript-not-ready")
+  if (!state || state.status !== "ready" || state.version !== "6.0.3") return refused("typescript-not-ready")
   const root = yield* ResearchToolkit.Root
   const runtimes = yield* BackendToolkit.Runtimes
   if (runtimes.node.version !== "22.23.2" || runtimes.node.targets["linux-x64"].executable !== "bin/node") return refused("node-version")
