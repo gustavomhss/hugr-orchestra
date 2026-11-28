@@ -1,0 +1,83 @@
+{
+  "schema": "genesis-s3-operation-plan/v1",
+  "state": "READY",
+  "operation": "prepare",
+  "execution_id": "s3-v5r2-prepare-20261128",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "scope": "orchestra.s3.agents",
+  "runtime": {
+    "revision": "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10",
+    "tree": "77b84e9358c80ae14b98be329ebf2407dfd83fa4",
+    "release": {
+      "commit": "2aa1c37af4d8db56ca6a814462d931e00cca55c8",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+      "sha256": "4b37d56c2beaa3c5e728cc16776ba30971d78db4d54207d698145e862841080a",
+      "git_blob_sha": "a3adbc8929cef34ecbfb5f7cbde6525e546019a0",
+      "byte_length": 11619
+    }
+  },
+  "package": {
+    "commit": "666832e52850e816678c4f95232c2a64c2878f2d",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/selected-v5r2-proposal/native-package.v5r2-proposal.json",
+    "sha256": "c34179440f0640330f755f9d7b95f9a1d781e76eca9b5dbb2e94bf9cadfeddca",
+    "git_blob_sha": "6fc1632936b310121040e6edd9433a3aa5b61cc3",
+    "byte_length": 1167539,
+    "artifact_keys": [
+      "s3-l1-maestro",
+      "s3-l1-relay",
+      "s3-l1-integrations",
+      "s3-l2-maestro",
+      "s3-l2-relay",
+      "s3-l2-integrations",
+      "s3-l3-flows",
+      "s3-l4-entry",
+      "s3-l4-ownership",
+      "s3-l4-maintenance",
+      "s3-l4-operational"
+    ]
+  },
+  "input_lock": {
+    "commit": "127202778ff0f846674b70207322bdf35fd9bfd9",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/selected-v5r2-proposal/runtime-input-lock-v5r2.json",
+    "sha256": "1c69a5824ac5c593f61795ac9ea51e4b3bcbc1f32fda714f472b2ef12cefa7e5",
+    "git_blob_sha": "a2adc6d2c0ff22b06cf31c09924c3f57c0c136cf",
+    "byte_length": 1673635
+  },
+  "restore": {
+    "run_id": null,
+    "artifact_id": null,
+    "archive_sha256": null,
+    "candidate_id": null,
+    "ownership_manifest": null
+  },
+  "binding": {
+    "commit": null,
+    "path": null,
+    "sha256": null,
+    "files": []
+  },
+  "authority": {
+    "actor": "/root",
+    "ratifier": "/root",
+    "authorization": {
+      "commit": "f266bc060a1fb42296edd6bfb683729dd33490d3",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/s3-runtime/authorization.md",
+      "sha256": "dcb87bcee2e4d806ca13e915d2d63255f2aa450abb0ad641e41a0680f996d954",
+      "git_blob_sha": "4f675cf88690a3f4eeb11c6ba433ee1f5bf72a47",
+      "byte_length": 2660
+    },
+    "policy": {
+      "commit": "e2cf5356d8093acf563c75d50bb186d2e8599b95",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/s3-runtime/policy.json",
+      "sha256": "3d8aa4ac48f64b09a9ede9717e32f2adb7d97741443c4fa04308cc7d6c66a3a2",
+      "git_blob_sha": "5d9c75cf775255f649d62e70bf8bd521ab229d3d",
+      "byte_length": 207
+    }
+  },
+  "queries": [],
+  "diagnostic_only": true,
+  "diagnostic_scope": "prepare only; no binding, publication, or queries; no candidate semantic approval is asserted",
+  "semantic_review_status": "PENDING_FOR_EXACT_V5R2_BODY",
+  "historical_review_note": "The package preserves exact v4 J1/J2 review references as historical provenance only; those reviews name v4 entry SHA a5e1bf88aa6c17470c2832c99049dba76867615279689db85d25e2fe8b39e9ef, not this v5r2 body. They are not approval for this candidate."
+}
