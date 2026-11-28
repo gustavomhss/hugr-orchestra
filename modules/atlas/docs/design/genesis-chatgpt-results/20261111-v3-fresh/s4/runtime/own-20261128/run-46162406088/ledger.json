@@ -1,0 +1,33 @@
+{
+  "schema": "s4-maintenance-reuse/v1",
+  "status": "MD_REUSE_OBSERVED",
+  "candidate_id": "10171ee9769ac7ce7013e8e16fbc5064e79a458a9cc65b80a503164e00306253",
+  "baseline_manifest": "df2dae9de5931cb86f7572bb6c093fe3fdaef6a274ad8f4985db5c3c63a21afe",
+  "runtime": "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10",
+  "driver_sha256": "a6a579e6a3978daa9a67f01bce06fda56172334b0e34323e787cba4d5ab9f27f",
+  "started_utc": "2026-11-28T15:57:53.754664+00:00",
+  "driver_invocations": 1,
+  "activation_attempted": false,
+  "projection_before": {
+    "projection.1.json": "ed64528f969aa881f31c38f20e5a8f47e6f226f5c0d39edbc775f1556a3218f8",
+    "projection.json": "ed64528f969aa881f31c38f20e5a8f47e6f226f5c0d39edbc775f1556a3218f8"
+  },
+  "argv": [
+    "bun",
+    "/home/runner/work/_temp/s4-source/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+    "rebuild",
+    "/home/runner/work/_temp/s4-runtime/modules/atlas",
+    "/home/runner/work/_temp/s4-source",
+    "df2dae9de5931cb86f7572bb6c093fe3fdaef6a274ad8f4985db5c3c63a21afe",
+    "/home/runner/work/_temp/s4-evidence/prepared.json",
+    "s4-binding/approval.json"
+  ],
+  "exit_code": 0,
+  "stdout_sha256": "2412d13f5eeaac65451114affc2fa4ceb7490c87494ce2c6a83f4a0274799faa",
+  "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "projection_after": {
+    "projection.1.json": "ed64528f969aa881f31c38f20e5a8f47e6f226f5c0d39edbc775f1556a3218f8",
+    "projection.json": "ed64528f969aa881f31c38f20e5a8f47e6f226f5c0d39edbc775f1556a3218f8"
+  },
+  "ended_utc": "2026-11-28T15:58:04.819764+00:00"
+}

@@ -14,7 +14,7 @@
   "observed_branch_head": "70610957d0d3d2fef2fde3c5a9a23dcaa51ad8c4",
   "artifact_revision": "88f1ce893b933fb5e7370b5dc248644e45def68e",
   "candidate_revision": "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10",
-  "candidate_status": "NO_RUNTIME_CONSUMED_BY_THIS_KNOWLEDGE_RESUMPTION",
+  "candidate_status": "PUBLISHED_AND_READ_BACK_IN_ISOLATED_ACTIONS",
   "package": {
     "commit": "88f1ce893b933fb5e7370b5dc248644e45def68e",
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package.json",
@@ -118,32 +118,23 @@
     "Compose all 15 artifact bodies, seven roots and 37 ordered acyclic build edges",
     "Execute required repository guards and deterministic knowledge integrity in Actions on exact seal",
     "Materialize and readback all 278 references plus sealed package and four layer acceptances in isolated composite corpus",
-    "Independent cold audit of the recovery diff, original votes and scope boundaries"
+    "Independent cold audit of the recovery diff, original votes and scope boundaries",
+    "Exact full15 runtime binding approved by two independent reviewers",
+    "Isolated governed publication verified by seven Atlas indexes and byte-exact readback of 15 bodies",
+    "Execute accepted maintenance driver on the unchanged baseline: same private manifest, zero affected entries, zero recipe calls"
   ],
   "local_obligations_open": [
     {
-      "id": "S4-K-BINDING",
-      "state": "PENDING_INDEPENDENT_RUNTIME_BINDING",
-      "owner": "Knowledge S4",
-      "operation": "Obtain two exact runtime-import-binding decisions for the prepared full15 candidate and contract; no publication before the pair and governing authority are verified."
-    },
-    {
-      "id": "S4-K-PUBLISH",
-      "state": "NOT_RUN",
-      "owner": "Knowledge S4",
-      "operation": "Isolated governed publication with index/read receipts after exact binding"
-    },
-    {
       "id": "S4-K-CONSUMERS",
-      "state": "NOT_RUN",
+      "state": "HOLD_AFTER_TWO_INDEPENDENT_ATTEMPTS",
       "owner": "Knowledge S4",
-      "operation": "Five frozen independent cases, shallow/deep limits and direct use of eleven intermediates"
+      "operation": "Keep both HOLD decisions and verified reader trace. Resolve omitted frozen criteria in a future fresh, Atlas-only consumer proof."
     },
     {
       "id": "S4-K-MAINTENANCE",
-      "state": "NOT_RUN",
+      "state": "UNCHANGED_REUSE_PROVEN_CHANGED_CASE_PENDING",
       "owner": "Knowledge S4",
-      "operation": "Freeze concrete maintenance-change oracle before corresponding production; execute own reuse/rebuild/change/publication cases"
+      "operation": "Freeze a concrete domain change and expected affected keys before corresponding production, then execute changed rebuild and separate governed publication."
     }
   ],
   "runtime_dependency": {
@@ -374,5 +365,20 @@
       "sha256": "c2126123d3a651f1c00415b03681491181024fd62da2b70fdc1665c3a0fa3a7e",
       "byte_length": 18065
     }
+  },
+  "isolated_execution_followup": {
+    "binding_approval": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/binding-full15/approval.json",
+    "publication": {
+      "run_id": 46161676698,
+      "workflow_head": "582235cede98a22c3a0021eaffe150d827625064",
+      "manifest": "df2dae9de5931cb86f7572bb6c093fe3fdaef6a274ad8f4985db5c3c63a21afe",
+      "index_roots": 7,
+      "read_bodies": 15
+    },
+    "consumer_attempts": [
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/consumer-attempt-01/checkpoint.json",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/consumer-attempt-02/checkpoint.json"
+    ],
+    "maintenance_reuse": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46162406088/checkpoint.json"
   }
 }
