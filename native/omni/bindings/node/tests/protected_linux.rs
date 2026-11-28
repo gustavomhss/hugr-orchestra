@@ -28,7 +28,15 @@ fn protected_quarantine() {
     assert_eq!(protected_linux::rename(&root, &source, &uppercase, &id), "refused");
     assert_eq!(protected_linux::rename(&root, &source, &destination, "0:0"), "refused");
     std::fs::create_dir(&destination).unwrap();
+    std::fs::set_permissions(&destination, std::fs::Permissions::from_mode(0o700)).unwrap();
+    let occupied_id = protected_linux::inspect(&root, &destination).unwrap().unwrap();
+    assert_ne!(occupied_id, id);
     assert_eq!(protected_linux::rename(&root, &source, &destination, &id), "refused");
+    assert_eq!(protected_linux::inspect(&root, &source).unwrap(), Some(id.clone()));
+    assert_eq!(
+        protected_linux::inspect(&root, &destination).unwrap(),
+        Some(occupied_id)
+    );
     std::fs::remove_dir(&destination).unwrap();
     std::fs::set_permissions(&source, std::fs::Permissions::from_mode(0o777)).unwrap();
     assert!(protected_linux::inspect(&root, &source).is_err());
@@ -36,17 +44,21 @@ fn protected_quarantine() {
     std::fs::set_permissions(&source, std::fs::Permissions::from_mode(0o700)).unwrap();
     assert_eq!(protected_linux::rename(&root, &source, &destination, &id), "accepted");
     assert_eq!(protected_linux::inspect(&root, &source).unwrap(), None);
-    assert_eq!(protected_linux::inspect(&root, &destination).unwrap(), Some(id));
+    assert_eq!(protected_linux::inspect(&root, &destination).unwrap(), Some(id.clone()));
     symlink(&destination, &source).unwrap();
+    let symlink_destination = format!("{root}/quarantine/q-{}", "b".repeat(64));
     assert!(protected_linux::inspect(&root, &source).is_err());
     assert_eq!(
         protected_linux::rename(
             &root,
             &source,
-            &format!("{root}/quarantine/q-{}", "b".repeat(64)),
-            "0:0"
+            &symlink_destination,
+            &id
         ),
         "refused"
     );
+    assert_eq!(protected_linux::inspect(&root, &destination).unwrap(), Some(id));
+    assert!(std::fs::symlink_metadata(&source).unwrap().file_type().is_symlink());
+    assert_eq!(protected_linux::inspect(&root, &symlink_destination).unwrap(), None);
     std::fs::remove_dir_all(base).unwrap();
 }

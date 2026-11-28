@@ -186,10 +186,18 @@ pub fn rename(root_path: &str, source: &str, destination: &str, expected: &str) 
                         | libc::EACCES
                         | libc::EPERM
                         | libc::ENOTEMPTY
-                        | libc::ENOSYS,
+                        | libc::ENOSYS
+                        | libc::EROFS,
                     ) => "refused",
                     _ => "unknown",
                 };
+            }
+            // SAFETY: both descriptors refer to pinned, open parent directories.
+            let source_synced = unsafe { libc::fsync(pin.source_parent.as_raw_fd()) } == 0;
+            // SAFETY: the destination parent descriptor remains open after rename.
+            let destination_synced = unsafe { libc::fsync(pin.destination_parent.as_raw_fd()) } == 0;
+            if !source_synced || !destination_synced {
+                return "unknown";
             }
             let verified = open(
                 pin.destination_parent.as_raw_fd(),
