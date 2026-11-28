@@ -1,0 +1,7 @@
+{
+  "schema": "genesis-s2-amendment-admission/v1",
+  "candidate_id": "0cad6d1d7972db8e1b1579ed1d3b696eb84ea84f301c86698e411ad800fdf2e9",
+  "target_sha256": "8b8f2c85d51cada34374a8fe59e7cbfac0292dc54a8cb85f86187b0af81f12c4",
+  "generation": "2793c20851941e47464478f77a039de3ff886f2d6be0475438f7625b8fe366e7",
+  "approval_sha256": "c5e85b759b0310c6d1b874caf81e9df9b90020db47bb6d51ecb6aaafd051b080"
+}

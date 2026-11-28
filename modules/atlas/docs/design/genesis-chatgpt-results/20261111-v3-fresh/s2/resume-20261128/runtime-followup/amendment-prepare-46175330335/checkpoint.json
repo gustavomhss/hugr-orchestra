@@ -1,0 +1,75 @@
+{
+  "schema": "genesis-s2-amendment-prepare-checkpoint/v1",
+  "run_id": 46175330335,
+  "run_head": "9cc2d0eeb64a4dfefe92143a89670c19a135c351",
+  "artifact_id": 15275825097,
+  "artifact_zip_sha256": "9fa065bb86da45625558e77da370e94c6b3c2cdd7655a949170065fefdf1fc9b",
+  "prepared": {
+    "status": "AMENDED_PREPARED_REQUIRES_ADMIT",
+    "candidate_id": "0cad6d1d7972db8e1b1579ed1d3b696eb84ea84f301c86698e411ad800fdf2e9",
+    "target_sha256": "8b8f2c85d51cada34374a8fe59e7cbfac0292dc54a8cb85f86187b0af81f12c4",
+    "generation": "2793c20851941e47464478f77a039de3ff886f2d6be0475438f7625b8fe366e7",
+    "prior_manifest": "5cbb56e97ad62901f5ec673d6bbf2559201cc54bc6f7faa33af92c4f825c7bbf",
+    "affected": [
+      "s2.l2.app-session",
+      "s2.l2.design-tui",
+      "s2.l2.desktop-web",
+      "s2.l3.app-session",
+      "s2.l3.design-tui",
+      "s2.l3.desktop-web",
+      "s2.l4.app-session",
+      "s2.l4.design-tui",
+      "s2.l4.desktop-web",
+      "s2.l4.entry"
+    ],
+    "calls": [
+      "s2.l2.app-session",
+      "s2.l2.design-tui",
+      "s2.l2.desktop-web",
+      "s2.l3.app-session",
+      "s2.l3.design-tui",
+      "s2.l3.desktop-web",
+      "s2.l4.app-session",
+      "s2.l4.entry"
+    ],
+    "changed_results": [
+      "s2.l2.app-session",
+      "s2.l2.design-tui",
+      "s2.l2.desktop-web"
+    ],
+    "retained_results": [
+      "s2.l1.app-session",
+      "s2.l1.design-tui",
+      "s2.l1.desktop-web",
+      "s2.l3.app-session",
+      "s2.l3.design-tui",
+      "s2.l3.desktop-web",
+      "s2.l4.app-session",
+      "s2.l4.design-tui",
+      "s2.l4.desktop-web",
+      "s2.l4.entry"
+    ]
+  },
+  "file_sha256": {
+    "prepare-summary.json": "3f95fe03ef42a9c9364bc45c2b1af9e88d859d5c636f5468f74d88ce381608a7",
+    "target/result.json": "8b8f2c85d51cada34374a8fe59e7cbfac0292dc54a8cb85f86187b0af81f12c4",
+    "target/callbacks.jsonl": "3e3f768a2f0ed91bdca99a5d3ad585c840ee6aefd1b9975b5ce162a2ec2f3b28",
+    "verified/summary.json": "1dd39315b0c3eb4ffc3531f3d401772e373119f71d0f97b92487e80e4aa79aac",
+    "first-capture.receipt.json": "1a361b3d45d93b6f4c23ade7f87341ffb046d0e774f47afdb06028487fe5ed17"
+  },
+  "fresh_admission_review": {
+    "vector": {
+      "path": "script/genesis-s2/amendment-binding/review-vector.json",
+      "sha256": "4d975a1b14225760eef860d1df696233767fbeff4fc9a5e285db998dfebe7552"
+    },
+    "approval": {
+      "path": "script/genesis-s2/amendment-binding/approval.json",
+      "sha256": "c5e85b759b0310c6d1b874caf81e9df9b90020db47bb6d51ecb6aaafd051b080"
+    },
+    "seal": {
+      "path": "script/genesis-s2/amendment-binding/seal.json",
+      "sha256": "4fa21ae2d764953a98a694443eb6b780d4522670efd00f50bec050394c115a09"
+    }
+  },
+  "admitted_in_this_run": false
+}

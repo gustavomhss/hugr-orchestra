@@ -1,0 +1,27 @@
+{
+  "reviewer": "J1",
+  "purpose": "isolated-evaluation-admission",
+  "candidate_id": "0cad6d1d7972db8e1b1579ed1d3b696eb84ea84f301c86698e411ad800fdf2e9",
+  "target_sha256": "8b8f2c85d51cada34374a8fe59e7cbfac0292dc54a8cb85f86187b0af81f12c4",
+  "vector_sha256": "4d975a1b14225760eef860d1df696233767fbeff4fc9a5e285db998dfebe7552",
+  "verdict": "PASS",
+  "criteria": {
+    "ADMIT-EXACT-TRANSFORM": {
+      "decision": "PASS",
+      "reason": "The vector covers all 13 entries under one contract, with two evidence references each. Three L2 results are changed and ten results retained; the prepared summary and verified producer summary agree on those identities. I verified the vector SHA and these counts."
+    },
+    "ADMIT-SOURCE-BINDINGS": {
+      "decision": "PASS",
+      "reason": "The prepared candidate binds to the corrected corpus root, pinned source revision, orchestra.interfaces scope, transport and implementation inputs, evaluation plan, and obligation set. The target and candidate identities match the supplied values. The CI summary reports callback/result matching."
+    },
+    "ADMIT-SEMANTIC-SCOPE": {
+      "decision": "PASS",
+      "reason": "The vector preserves ten prior dual-PASS results and records 14 of 14 served bodies for those cases as identical. The four previously held cases are the intended re-execution scope; no prior vote is transferred to changed bodies. This does not independently establish consumer acceptance."
+    },
+    "ADMIT-ISOLATED-PLAN": {
+      "decision": "PASS",
+      "reason": "The candidate remains evaluation phase on the isolated corrected corpus, and the prepare summary says admission is still required. No admission or publication is claimed."
+    }
+  },
+  "limits": "I checked the local vector SHA and reviewed the prepare, verified-producer, and target summaries. I did not independently verify every referenced artifact or execute admission."
+}

@@ -1,0 +1,27 @@
+{
+  "reviewer": "/root/s2_admission_j2",
+  "purpose": "isolated-evaluation-admission",
+  "candidate_id": "0cad6d1d7972db8e1b1579ed1d3b696eb84ea84f301c86698e411ad800fdf2e9",
+  "target_sha256": "8b8f2c85d51cada34374a8fe59e7cbfac0292dc54a8cb85f86187b0af81f12c4",
+  "vector_sha256": "4d975a1b14225760eef860d1df696233767fbeff4fc9a5e285db998dfebe7552",
+  "verdict": "PASS",
+  "criteria": {
+    "ADMIT-EXACT-TRANSFORM": {
+      "decision": "PASS",
+      "rationale": "O vetor cobre 13 entradas, com três resultados alterados e dez retidos. O resumo hospedado registra correspondência dos callbacks e resultados observados; duas entradas afetadas foram puladas por inputs e resultados inalterados."
+    },
+    "ADMIT-SOURCE-BINDINGS": {
+      "decision": "PASS",
+      "rationale": "O candidato preparado vincula revisão de origem, implementação, referências, escopo e raiz; os resumos identificam o candidato e alvo exatos. O hash do vetor foi conferido."
+    },
+    "ADMIT-SEMANTIC-SCOPE": {
+      "decision": "PASS",
+      "rationale": "Os três resultados alterados têm decisões semânticas específicas e os descendentes retidos têm revisão de retenção indicada. A compatibilidade dos corpos servidos anteriormente é evidência estática, sem transferência automática de votos ou prova de acessibilidade atual."
+    },
+    "ADMIT-ISOLATED-PLAN": {
+      "decision": "PASS",
+      "rationale": "O vetor identifica fase de avaliação, plano, obrigação, raiz corrigida e escopo orchestra.interfaces; a finalidade informada é a avaliação isolada das quatro novas tentativas."
+    }
+  },
+  "reason": "Esta é uma decisão individual sobre os pré-requisitos para o candidato exato; não afirma que a dupla necessária exista nem que ADMIT ocorreu. Não recalculei o hash do checkpoint nem refiz todas as comparações de bytes. Os quatro retries e suas decisões permanecem pendentes; não há aceite de produto, publicação operacional ou fechamento S2."
+}
