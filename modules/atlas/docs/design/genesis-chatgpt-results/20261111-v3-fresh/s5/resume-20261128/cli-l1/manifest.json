@@ -1,0 +1,35 @@
+{
+  "schema": "cli-l1-candidate/v1",
+  "status": "NEW_UNEVALUATED",
+  "baseline_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "baseline_tree": "a522a53e5f046f1758151b0f558531bbded04592",
+  "source_population": 162,
+  "body_provenance": "new candidate, no claim of recovered original or earlier judgment",
+  "review": "requires independent assessment of exact files and criteria",
+  "source_receipt": "source observations only, no execution or acceptance",
+  "files": [
+    {
+      "path": "body.md",
+      "byte_length": 13901,
+      "sha256": "373d2b7d9d11d9bd23b76dbf28bb98d885b7088fcec6b44b2f3876c74dd9b10c"
+    },
+    {
+      "path": "inventory.json",
+      "byte_length": 73904,
+      "sha256": "4f76af7a6bfa576c5663a526e4e98dbdc7948954a6282b10bd35da3185a61d21"
+    },
+    {
+      "path": "source-receipt.json",
+      "byte_length": 91869,
+      "sha256": "d4b20d923c17ab7b286a8733381950b842cfe30cb88d054c171cf7f96bed3561"
+    }
+  ],
+  "oracle": {
+    "path": "oracle.json",
+    "sha256": "31c21f38a3c6f9f66228ab0f68cb15373d79a99f7afc50b24b74895a9cc01f0f",
+    "byte_length": 1211,
+    "frozen_before_this_draft": true
+  },
+  "author_model": "gpt-6.1-terra",
+  "author_agent": "/root/platform_cli_terra"
+}

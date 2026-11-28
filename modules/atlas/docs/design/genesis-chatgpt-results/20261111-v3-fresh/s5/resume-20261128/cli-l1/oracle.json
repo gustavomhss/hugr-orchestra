@@ -1,0 +1,19 @@
+{
+  "id": "S5-CLI-L1-recovery-new-candidate",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "population": 162,
+  "scope": "baseline CLI group in 927-entry S5 partition",
+  "required": [
+    "Connect installed bin wrapper, runtime command registry and handlers from exact sources, with install/runtime/build clearly distinguished.",
+    "Explain platform and libc selection including fail-closed ambiguous Linux selection, distinguish installer accepted versus published platforms.",
+    "Trace configuration and process boundaries through actual source owned by CLI; preserve dependency witnesses without claiming environment-specific observations.",
+    "Map all original 162 sources to explicit justified ownership/disposition and present decisive source ranges and hashes.",
+    "Label source-only evidence, historic documentation, fixture/test outcomes and unexecuted build or release cases separately."
+  ],
+  "critical_errors": [
+    "fabricated original-body recovery or prior acceptance",
+    "claim of platform delivery from permitted installer selector",
+    "omitted path or fabricated live result",
+    "vendor/config source invoked without an explicit observed contract"
+  ]
+}

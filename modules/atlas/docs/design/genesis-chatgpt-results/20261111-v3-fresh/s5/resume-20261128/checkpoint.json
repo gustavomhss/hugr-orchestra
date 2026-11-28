@@ -30,7 +30,13 @@
   "cli": {
     "original_body_bytes": 12877,
     "custody": "Original body and private transport records unavailable in checked Git objects. Existing descriptions are retained as references.",
-    "next": "Recover original bytes or produce a fresh exact candidate on the frozen baseline with independent review."
+    "next": "Review the new exact CLI L1 candidate with two independent judges; retain the original unlocated body as a separate custody gap.",
+    "new_candidate": {
+      "path": "cli-l1/manifest.json",
+      "state": "NEW_UNEVALUATED",
+      "source_population": 162,
+      "body_sha256": "373d2b7d9d11d9bd23b76dbf28bb98d885b7088fcec6b44b2f3876c74dd9b10c"
+    }
   },
   "platform": {
     "outstanding": "Resolve exact caller capture and remaining platform coverage by source mapping. Platform200 acceptance remains tied to original bindings."
