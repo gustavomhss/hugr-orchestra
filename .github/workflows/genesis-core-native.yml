@@ -47,6 +47,8 @@ jobs:
           test ! -e "$RUNTIME_ROOT"
           git worktree add --detach "$RUNTIME_ROOT" "$RUNTIME_REVISION"
           npm ci --prefix "$RUNTIME_ROOT/modules/atlas"
+          cd "$RUNTIME_ROOT/modules/atlas"
+          bun typecheck
       - name: Execute original prepare with complete accepted package
         shell: bash
         env:
