@@ -82,8 +82,9 @@ async function parent() {
     assert.deepEqual(JSON.parse(report), {
       status: "pass", openFileRefused: true, nativeCancel: true, identityMismatch: true, staleRefused: true,
       signedReceipt: true, durableReceipt: true, sourceUntouched: true, nestedNamespaceRefused: true,
-      wrongGitDirectoryRefused: true, cleanFilterNotRun: true, productionApplyRefused: true,
-      applyCancel: true, applyConfirm: true,
+      wrongGitDirectoryRefused: true, cleanFilterNotRun: true, unsignedApplyRefused: true, unsignedApplyPreviewRefused: true,
+      applyCancel: true, protectedSourceDenied: true, applyConfirm: true, inodePreserved: true, rereadOut: true,
+      outsideRootArmed: true, outsideRootApplyRefused: true,
     })
     process.stdout.write(report + "\n")
   } finally {
@@ -162,9 +163,9 @@ async function child() {
         return result
       }) as typeof dialog.showMessageBox,
     }
-    let applyClient = owned.openActivityApply()
-    const ownedFixture = { ...owned, openActivityApply: () => applyClient }
-    registerActivityArmIpc({ ipcMain, BrowserWindow, dialog: nativeDialog, rendererDevURL: rendererURL, getOwned: () => ownedFixture })
+    const applyClient = owned.openActivityApply()
+    assert.ok(applyClient, "the production signed Apply client must be available")
+    registerActivityArmIpc({ ipcMain, BrowserWindow, dialog: nativeDialog, rendererDevURL: rendererURL, getOwned: () => owned })
     window = new BrowserWindow({ show: true, webPreferences: { preload: process.env.ACTIVITY_ARM_PRELOAD!, sandbox: true, nodeIntegration: false, contextIsolation: true } })
     await window.loadURL(rendererURL)
     const inspect = async () => await window!.webContents.executeJavaScript(`window.api.inspectActivityArm(${JSON.stringify(owned.url)})`) as ActivityArm.PlanSnapshot
@@ -235,11 +236,11 @@ async function child() {
     const state = await window!.webContents.executeJavaScript(`window.api.readActivityApply(${JSON.stringify(owned.url)})`) as ActivityApply.State
     assert.equal(state.available, true, "the configured root-owned profile must enable production Apply")
     assert.ok(state.eligible.some((item) => item.approvalID === request.approvalID && item.targetID === request.targetID && item.generation === request.generation))
-    const unsigned = await fetch(`${owned.url}/_orchestra-activity/v1/apply-confirm`, {
+    const unsignedConfirm = await fetch(`${owned.url}/_orchestra-activity/v1/apply-confirm`, {
       method: "POST", headers: { authorization, "content-type": "application/json" },
       body: JSON.stringify({ previewID: crypto.randomUUID() }),
     })
-    assert.equal(unsigned.status, 403, "an ordinary authenticated caller cannot submit private Apply confirmation")
+    assert.equal(unsignedConfirm.status, 403, "an ordinary authenticated caller cannot submit private Apply confirmation")
     const unsignedPreview = await fetch(`${owned.url}/_orchestra-activity/v1/apply-preview`, {
       method: "POST", headers: { authorization, "content-type": "application/json" }, body: JSON.stringify(request),
     })
@@ -284,7 +285,11 @@ async function child() {
     await assert.rejects(lstat(expectedDestination), { code: "ENOENT" })
     const applied = await apply("confirm")
     assert.ok(applied)
-    assert.deepEqual(applied, { previewID: preview.previewID, ...request, outcome: "Out" })
+    assert.equal(applied.approvalID, request.approvalID)
+    assert.equal(applied.targetID, request.targetID)
+    assert.equal(applied.generation, request.generation)
+    assert.equal(applied.outcome, "Out")
+    assert.notEqual(applied.previewID, preview.previewID, "the native confirmation flow must consume its own one-use preview")
     const attack = JSON.parse(await readFile(join(root, "attack-result.json"), "utf8")) as { uid: number; errno?: string; renamed: boolean; sentinel: boolean }
     assert.equal(attack.uid, 65_534, "the replacement attempt must run as the ordinary nobody UID")
     assert.ok(attack.errno === "EACCES" || attack.errno === "EPERM", `kernel must deny source substitution: ${JSON.stringify(attack)}`)
