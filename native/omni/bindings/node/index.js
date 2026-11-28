@@ -325,4 +325,20 @@ function run(command, args, options) {
   });
 }
 
-module.exports = { run, spawn, configure, OmniError };
+function quarantineIdentity(source) {
+  return later(() => {
+    const native = load();
+    if (typeof native.quarantineIdentity !== "function") throw new Error("Windows quarantine primitive unavailable");
+    return native.quarantineIdentity(source);
+  });
+}
+
+function quarantineRename(source, destination, expectedIdentity) {
+  return later(() => {
+    const native = load();
+    if (typeof native.quarantineRename !== "function") throw new Error("Windows quarantine primitive unavailable");
+    return native.quarantineRename(source, destination, expectedIdentity);
+  });
+}
+
+module.exports = { run, spawn, configure, OmniError, quarantineIdentity, quarantineRename };
