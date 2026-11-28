@@ -1,0 +1,4 @@
+- **Custo já cobrado pelos subagentes nativos:** desconhecido; não há medição financeira visível. Não é possível afirmar R$ 0 nem outro valor exato.
+- **Tentativas físicas ocultas do provedor:** desconhecidas; não há contagem visível. Não é possível afirmar zero nem outro número exato.
+- **O que é observável:** o índice informa 4.921 bytes de corpo e identifica a seleção verificada. O orçamento de corpos mede bytes retornados, não tokens, custo ou tentativas do provedor. A leitura servida sustenta os objetos, vínculos e escopo verificados, mas não prova cobrança nem execução completa.
+- **Decisão e fundamento Atlas:** parar esta fase por evidência insuficiente, sem abrir novas ações. `S4:L4:entry`, seções “Orçamento público e rota profunda opcional” e “Pare diante de limite ou evidência insuficiente”.

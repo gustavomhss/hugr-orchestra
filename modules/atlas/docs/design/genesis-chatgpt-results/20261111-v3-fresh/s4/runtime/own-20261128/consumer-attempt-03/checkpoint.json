@@ -1,0 +1,235 @@
+{
+  "source_run": 46163475556,
+  "manifest": "df2dae9de5931cb86f7572bb6c093fe3fdaef6a274ad8f4985db5c3c63a21afe",
+  "limits": {
+    "indexes": 1,
+    "reads": 12,
+    "shallow_bytes": 4921,
+    "body_bytes": 58282
+  },
+  "index_response_sha256": "c812fcdc7a03ab17a909a8babeea09e41bd6c8db25e26db3a0963dd78af1b521",
+  "entry_response_sha256": "e79daa91299aef9d6a16c7aad67c6887ba038ae4df60b96774c8660a0af93923",
+  "verified_deep": {
+    "S4:L3:system-flows": {
+      "bytes": 1902,
+      "result": "de1845931c3a437b5186952e620d420fb3f3c965859a25db84da6f1d11143b11",
+      "query": {
+        "scope": "atlas-continuity-rag-genesis",
+        "key": "S4:L3:system-flows",
+        "section": "Mudanças propagam por resultados e vínculos",
+        "maxBytes": 18000
+      },
+      "response_sha256": "13114419f94eb2e55331c4fdf7d66b81607d829140b40b4babcdef76cdcf1065"
+    },
+    "S4:L2:atlas-system": {
+      "bytes": 1011,
+      "result": "2758d338d9e2dcb7b5122b85e893da3f106946590b63788d471e564430c2aadb",
+      "query": {
+        "scope": "atlas-continuity-rag-genesis",
+        "key": "S4:L2:atlas-system",
+        "section": "Por que texto igual pode exigir outro resultado",
+        "maxBytes": 18000
+      },
+      "response_sha256": "890e9b4de1befd31ab2b58970307d6e2ef828f1a7fe36b03aa1655199b3bf690"
+    },
+    "S4:L2:genesis-governance": {
+      "bytes": 1041,
+      "result": "bd364adcec8898357da6690b60d3268a5ef24a72a864edc6d73b011bdfb7fbd6",
+      "query": {
+        "scope": "atlas-continuity-rag-genesis",
+        "key": "S4:L2:genesis-governance",
+        "section": "Da produção nativa à porta de consumo",
+        "maxBytes": 18000
+      },
+      "response_sha256": "1257ad8ebe126d62401875a7ef8c421df5774fa1a42260612636e598d145af74"
+    },
+    "S4:L2:continuity-rag-operations": {
+      "bytes": 7949,
+      "result": "ebd80e0394229795b82134ef776695baa0168254541d95f5a8c2bc9b4afe9888",
+      "query": {
+        "scope": "atlas-continuity-rag-genesis",
+        "key": "S4:L2:continuity-rag-operations",
+        "maxBytes": 7949
+      },
+      "response_sha256": "2e00bdce6a5c92195c502371d2bddbadfa3c0d8cb1da8f7f67ecc6c0d4a4cf8c"
+    },
+    "S4:L1:ownership-boundaries": {
+      "bytes": 2518,
+      "result": "8c63bee07cdf75682c646bb2d524e09dd66308a56be2e32ae7dbbb5b9354759f",
+      "query": {
+        "scope": "atlas-continuity-rag-genesis",
+        "key": "S4:L1:ownership-boundaries",
+        "section": "What each identity means",
+        "maxBytes": 18000
+      },
+      "response_sha256": "4fd84873da856669b83c6bb90e299b14bbca9e452012ef09d4c928506b734298"
+    },
+    "S4:L1:atlas-engine": {
+      "bytes": 3493,
+      "result": "6706df3be2177f1ff8af7d2f98abfe83420d0146af85bd5f997c789c21ab43a4",
+      "query": {
+        "scope": "atlas-continuity-rag-genesis",
+        "key": "S4:L1:atlas-engine",
+        "section": "Knowledge: shape, routing, human ratification, and ownership results",
+        "maxBytes": 18000
+      },
+      "response_sha256": "3e0861fb48bc1f85ebdc8887bbf75164955d982c94d18bf3238d827a000932d6"
+    },
+    "S4:L1:atlas-host-genesis": {
+      "bytes": 2708,
+      "result": "e76cc552cd44e6156be266764f1b9a44a5059fe1341a0057dda2207a978e9ee1",
+      "query": {
+        "scope": "atlas-continuity-rag-genesis",
+        "key": "S4:L1:atlas-host-genesis",
+        "section": "Ownership publication, observation and rebuild",
+        "maxBytes": 18000
+      },
+      "response_sha256": "4ab8a41d78d36047b9da50ea77c633a42d20b2c1a901b96b03b2a6237e38e1e5"
+    },
+    "S4:L1:continuity-rag": {
+      "bytes": 17429,
+      "result": "e1f4cafd1b57ce658b3c1c237671831b5146b6e4fb30ae34813eabf10f62f0b0",
+      "query": {
+        "scope": "atlas-continuity-rag-genesis",
+        "key": "S4:L1:continuity-rag",
+        "maxBytes": 17429
+      },
+      "response_sha256": "8a9a883c396e321ccb3a493551bb655df77c8b6cdeb924ee090a0af4508c8864"
+    },
+    "S4:L1:coverage-governance": {
+      "bytes": 1977,
+      "result": "a806334e956ebdd1f5c3310d975fad27fe7792b0122c1fff73694a1782362247",
+      "query": {
+        "scope": "atlas-continuity-rag-genesis",
+        "key": "S4:L1:coverage-governance",
+        "section": "Observer limits are not scope limits",
+        "maxBytes": 18000
+      },
+      "response_sha256": "9867ba253edd796030dd20bcd9b29e8ec4e7019550e90a8b4f7f0be303b58b87"
+    },
+    "S4:L1:host-boundaries": {
+      "bytes": 11972,
+      "result": "bee0cd0f266dc452ac7fb72706f153d133f420bec51011e809d0ff55dc34a98d",
+      "query": {
+        "scope": "atlas-continuity-rag-genesis",
+        "key": "S4:L1:host-boundaries",
+        "maxBytes": 11972
+      },
+      "response_sha256": "f4983838ad6f66eee0f591b7aab5ff7405dd2380f4aa532431e467bab2be3139"
+    },
+    "S4:L1:native-runtime-delta": {
+      "bytes": 1361,
+      "result": "77faafdd5c8f2d5916c1d6f2634e7821d3970b280af8777347be87bf83d71348",
+      "query": {
+        "scope": "atlas-continuity-rag-genesis",
+        "key": "S4:L1:native-runtime-delta",
+        "section": "Consumo e manutenção pela porta real",
+        "maxBytes": 18000
+      },
+      "response_sha256": "c4c5e8e6f70998b11777d322576f30b01546acade4fb84625ef4983b6f07beda"
+    }
+  },
+  "transport": {
+    "s4-corrected-consumer-part-1.txt": {
+      "sha256": "ea33ca249c383d68e8cf036ce85b06c3e1990036dfc689cceed589e285d21464",
+      "bytes": 22011
+    },
+    "s4-corrected-consumer-part-2.txt": {
+      "sha256": "b82bf4d9337f4bec309e6bd2c09bb1d85c47d4e412151dd4ebe40710fd47560c",
+      "bytes": 19743
+    },
+    "s4-corrected-consumer-part-3.txt": {
+      "sha256": "8e8b313f66dd6b8b3a93346cd578b954d0994a2b95f37857d8dd425f43a82c79",
+      "bytes": 13674
+    }
+  },
+  "verified_transport_as_seen_by_model": {
+    "s4-consumer-shallow-atlas-only.txt": {
+      "file_sha256": "49cbb326341507a362be35fe97048575dc6b4ce1edf6d6e97730c1eb7bed31ee",
+      "model_visible_sha256": "49cbb326341507a362be35fe97048575dc6b4ce1edf6d6e97730c1eb7bed31ee",
+      "body_text_equal": true,
+      "visible_bytes": 6644
+    },
+    "s4-corrected-consumer-part-1.txt": {
+      "file_sha256": "ea33ca249c383d68e8cf036ce85b06c3e1990036dfc689cceed589e285d21464",
+      "model_visible_sha256": "ea33ca249c383d68e8cf036ce85b06c3e1990036dfc689cceed589e285d21464",
+      "body_text_equal": true,
+      "visible_bytes": 22011
+    },
+    "s4-corrected-consumer-part-2.txt": {
+      "file_sha256": "b82bf4d9337f4bec309e6bd2c09bb1d85c47d4e412151dd4ebe40710fd47560c",
+      "model_visible_sha256": "b82bf4d9337f4bec309e6bd2c09bb1d85c47d4e412151dd4ebe40710fd47560c",
+      "body_text_equal": true,
+      "visible_bytes": 19743
+    },
+    "s4-corrected-consumer-part-3.txt": {
+      "file_sha256": "8e8b313f66dd6b8b3a93346cd578b954d0994a2b95f37857d8dd425f43a82c79",
+      "model_visible_sha256": "8e8b313f66dd6b8b3a93346cd578b954d0994a2b95f37857d8dd425f43a82c79",
+      "body_text_equal": true,
+      "visible_bytes": 13674
+    }
+  },
+  "responses": [
+    {
+      "path": "shallow.md",
+      "event_id": "amsg_01a222ea-0a99-76d1-8c50-0f2b54ff64c1",
+      "sha256": "0fffd3e6d4f839fd4d48c1124f749a8d5d6eee097c00eeec7302f801e2f7c41b",
+      "bytes": 858
+    },
+    {
+      "path": "deep.md",
+      "event_id": "amsg_01a222ed-193a-7f63-afe5-989dd62cc1fa",
+      "sha256": "a2ed19cc5997f9475105bdd9dfeba6e39b34c5a1e0abd24892ba309ef7c8ec6c",
+      "bytes": 10370
+    },
+    {
+      "path": "precision-addendum.md",
+      "event_id": "amsg_01a222ed-e22e-7743-9dca-c6462b0040fa",
+      "sha256": "941e9838e9faaadcfe61ef89c7bbe89aecc8a46982ec21724dd0a81eef026a94",
+      "bytes": 3410
+    },
+    {
+      "path": "final-addendum.md",
+      "event_id": "amsg_01a222f0-9a47-7a51-9a04-2a691436ccd1",
+      "sha256": "eb17aaa3db7793f900759ae364e82013ef760cf58a5cea9195399f7b9f2d40b0",
+      "bytes": 2281
+    }
+  ],
+  "reviews": {
+    "J1": {
+      "event_id": "amsg_01a222f2-6a7b-7cf2-a9fc-54995d888834",
+      "path": "j1-disposition.json",
+      "sha256": "11eef052d889bd0dc090672c5ca687ebe5c18dffda897ce553891211a6605772",
+      "cases": {
+        "C-change": "PASS",
+        "C-violation": "PASS",
+        "C-impact": "PASS",
+        "C-failure": "HOLD",
+        "C-abstain": "PASS"
+      },
+      "verdict": "HOLD"
+    },
+    "J2": {
+      "event_id": "amsg_01a222f2-be67-76c2-b4f7-330c0d9e54dd",
+      "path": "j2-disposition.json",
+      "sha256": "96d9feceb00f34f20b528ab402951a5d18bd4e1cb6587393864172a5f9c7d6b0",
+      "cases": {
+        "C-change": "PASS",
+        "C-violation": "PASS",
+        "C-impact": "HOLD",
+        "C-failure": "HOLD",
+        "C-abstain": "HOLD"
+      },
+      "verdict": "HOLD"
+    }
+  },
+  "run_artifact": {
+    "id": 15270905737,
+    "zip_sha256": "aa1ca85d3268f722f75e1405f613d182cbf46fff074f79accda8e05c1ae2b906"
+  },
+  "state": "HOLD",
+  "dual_pass_cases": [
+    "C-change",
+    "C-violation"
+  ]
+}

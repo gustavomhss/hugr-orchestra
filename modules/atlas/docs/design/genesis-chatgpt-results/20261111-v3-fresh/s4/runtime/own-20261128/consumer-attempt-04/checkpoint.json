@@ -1,0 +1,160 @@
+{
+  "manifest": "df2dae9de5931cb86f7572bb6c093fe3fdaef6a274ad8f4985db5c3c63a21afe",
+  "source_reads": [
+    {
+      "key": "S4:L3:system-flows",
+      "section": null,
+      "body_bytes": 8995,
+      "response": "read-11.stdout.json",
+      "response_sha256": "99b01727b0ba324170eedcef251b948886db392934161ed76d68c5ee5489af43",
+      "source_run": 46161676698
+    },
+    {
+      "key": "S4:L2:atlas-system",
+      "section": "Por que texto igual pode exigir outro resultado",
+      "body_bytes": 1011,
+      "response": "consumer-section-02.stdout.json",
+      "response_sha256": "890e9b4de1befd31ab2b58970307d6e2ef828f1a7fe36b03aa1655199b3bf690",
+      "source_run": 46163475556
+    },
+    {
+      "key": "S4:L2:genesis-governance",
+      "section": null,
+      "body_bytes": 7971,
+      "response": "read-09.stdout.json",
+      "response_sha256": "2caba54d66126ee0d726c2f47d2a4968cafe64a2267fcf530fc4a4b1684ee53c",
+      "source_run": 46161676698
+    },
+    {
+      "key": "S4:L1:ownership-boundaries",
+      "section": "What each identity means",
+      "body_bytes": 2518,
+      "response": "consumer-section-05.stdout.json",
+      "response_sha256": "4fd84873da856669b83c6bb90e299b14bbca9e452012ef09d4c928506b734298",
+      "source_run": 46161676698
+    },
+    {
+      "key": "S4:L1:atlas-engine",
+      "section": "Knowledge: shape, routing, human ratification, and ownership results",
+      "body_bytes": 3493,
+      "response": "consumer-section-06.stdout.json",
+      "response_sha256": "3e0861fb48bc1f85ebdc8887bbf75164955d982c94d18bf3238d827a000932d6",
+      "source_run": 46161676698
+    },
+    {
+      "key": "S4:L1:atlas-host-genesis",
+      "section": "Ownership publication, observation and rebuild",
+      "body_bytes": 2708,
+      "response": "consumer-section-07.stdout.json",
+      "response_sha256": "4ab8a41d78d36047b9da50ea77c633a42d20b2c1a901b96b03b2a6237e38e1e5",
+      "source_run": 46161676698
+    },
+    {
+      "key": "S4:L1:coverage-governance",
+      "section": "Observer limits are not scope limits",
+      "body_bytes": 1977,
+      "response": "consumer-section-09.stdout.json",
+      "response_sha256": "9867ba253edd796030dd20bcd9b29e8ec4e7019550e90a8b4f7f0be303b58b87",
+      "source_run": 46161676698
+    },
+    {
+      "key": "S4:L1:native-runtime-delta",
+      "section": "Consumo e manutenção pela porta real",
+      "body_bytes": 1361,
+      "response": "consumer-section-11.stdout.json",
+      "response_sha256": "c4c5e8e6f70998b11777d322576f30b01546acade4fb84625ef4983b6f07beda",
+      "source_run": 46161676698
+    }
+  ],
+  "body_bytes": 34955,
+  "indexes": 1,
+  "read_calls": 9,
+  "shallow_body_bytes": 4921,
+  "case_scope": [
+    "C-abstain",
+    "C-impact",
+    "C-failure"
+  ],
+  "mode": "fresh case-specific response using previously captured real reads of the same manifest; no new Atlas calls and no aggregation of attempt budgets",
+  "chunks": [
+    {
+      "filename": "s4-focused-cases-part-1.txt",
+      "bytes": 21206,
+      "sha256": "a04a0e4c7bccac705d8d0b8fa4dfa476f7a5bb233045049ec1dbdc3c508055b2"
+    },
+    {
+      "filename": "s4-focused-cases-part-2.txt",
+      "bytes": 10292,
+      "sha256": "85d61463e6cbc380d45325ec2c42d29205a02bf4e4d3fd35b28baffe41d34b30"
+    }
+  ],
+  "visible_transport": {
+    "s4-consumer-shallow-atlas-only.txt": {
+      "sha256": "49cbb326341507a362be35fe97048575dc6b4ce1edf6d6e97730c1eb7bed31ee",
+      "bytes": 6644,
+      "model_visible_unchanged": true
+    },
+    "s4-focused-cases-part-1.txt": {
+      "sha256": "a04a0e4c7bccac705d8d0b8fa4dfa476f7a5bb233045049ec1dbdc3c508055b2",
+      "bytes": 21206,
+      "model_visible_unchanged": true
+    },
+    "s4-focused-cases-part-2.txt": {
+      "sha256": "85d61463e6cbc380d45325ec2c42d29205a02bf4e4d3fd35b28baffe41d34b30",
+      "bytes": 10292,
+      "model_visible_unchanged": true
+    }
+  },
+  "responses": [
+    {
+      "path": "shallow.md",
+      "event_id": "amsg_01a222f3-b127-7042-bdfb-d6dc2ce7331c",
+      "sha256": "ac4a3783628868091b5e3469b872d7668dbc14ec53f5a4f58ac0463da4f96e73",
+      "bytes": 916
+    },
+    {
+      "path": "deep.md",
+      "event_id": "amsg_01a222f4-7032-7020-9a9b-87cf37e8357d",
+      "sha256": "062f00fe51af1cb168a2a2b60ea3d41e8b920cebaf98252da8bdce20d76a74b7",
+      "bytes": 4971
+    },
+    {
+      "path": "precision-addendum.md",
+      "event_id": "amsg_01a222f4-c3ae-7783-95bd-c95886f3adde",
+      "sha256": "ce226f7ee502ef76a3e0695b7d9b81ce5c779bea62db220de96c2243f961f20a",
+      "bytes": 1572
+    }
+  ],
+  "reviews": {
+    "J1": {
+      "path": "j1-pass.json",
+      "event_id": "amsg_01a222f5-a0ca-7f90-842c-bcf7f3783b99",
+      "sha256": "3aff42e951126629330578378c9fe97668544a89c9887635808ac8a052142f76",
+      "case_verdicts": {
+        "C-abstain": "PASS",
+        "C-impact": "PASS",
+        "C-failure": "PASS"
+      },
+      "suite_reuse": "PASS"
+    },
+    "J2": {
+      "path": "j2-pass.json",
+      "event_id": "amsg_01a222f5-f3f6-7c11-8964-ee84d7e1b059",
+      "sha256": "d563a20dd940be88fe017c1f78db30ead1cfe56ca1e7f97bea4204384f50e857",
+      "case_verdicts": {
+        "C-abstain": "PASS",
+        "C-impact": "PASS",
+        "C-failure": "PASS"
+      },
+      "suite_reuse": "PASS"
+    }
+  },
+  "state": "PASS_FOCUSED_CASES",
+  "unchanged_prior_dual_pass": {
+    "case_ids": [
+      "C-change",
+      "C-violation"
+    ],
+    "checkpoint": "../consumer-attempt-03/checkpoint.json"
+  }
+}

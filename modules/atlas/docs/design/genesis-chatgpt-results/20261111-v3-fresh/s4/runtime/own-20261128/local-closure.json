@@ -1,0 +1,32 @@
+{
+  "schema": "s4-local-delivery-closure/v1",
+  "state": "DELIVERY_COMPLETE",
+  "scope": "S4 local knowledge, Atlas use and own maintenance",
+  "runtime": "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10",
+  "base_manifest": "df2dae9de5931cb86f7572bb6c093fe3fdaef6a274ad8f4985db5c3c63a21afe",
+  "consumer": {
+    "state": "DUAL_PASS_BY_CASE",
+    "first_accepted_cases": [
+      "C-change",
+      "C-violation"
+    ],
+    "first_accepted_trace": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/consumer-attempt-03/checkpoint.json",
+    "remaining_accepted_cases": [
+      "C-abstain",
+      "C-impact",
+      "C-failure"
+    ],
+    "focused_trace": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/consumer-attempt-04/checkpoint.json",
+    "previous_whole_attempt_holds_preserved": true
+  },
+  "maintenance": {
+    "no_change": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46162406088/checkpoint.json",
+    "source_change": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46164268380/checkpoint.json"
+  },
+  "global_integration": "NOT_REVIEWED",
+  "usage": {
+    "provider_tokens": "UNKNOWN",
+    "physical_provider_attempts": "UNKNOWN",
+    "billed_cost": "UNKNOWN"
+  }
+}
