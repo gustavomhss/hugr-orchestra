@@ -172,6 +172,7 @@ test("Verify reloads signed Apply eligibility after object verification", async 
     await until("initial unavailable apply state is read", () => app.applyStates.length === 1)
     await until("armed row arrives without Apply", () => app.panel().querySelector("tbody")?.textContent?.includes("Armed") === true)
     expect([...app.panel().querySelectorAll("button")].map(text)).not.toContain("Apply…")
+    await until("Verify waits for the initial signed read", () => !button(app, "Verify objects").disabled)
     button(app, "Verify objects").click()
     await until("verification begins", () => app.inspections.length === 1)
     app.inspections[0]!.respond(snapshot({ ready: [], approvals: [approved] }))
