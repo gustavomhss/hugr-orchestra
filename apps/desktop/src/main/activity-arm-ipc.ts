@@ -297,7 +297,8 @@ export function registerActivityArmIpc(deps: {
       const receipt = await client.confirm({ previewID: preview.previewID }, controller.signal)
       if (!current() || !receipt || receipt.phase === "unknown" || receipt.phase === "refused" ||
         receipt.previewID !== preview.previewID || receipt.action !== preview.action || receipt.treeID !== preview.treeID ||
-        receipt.member !== preview.member || JSON.stringify(receipt.target) !== JSON.stringify(preview.target)) return undefined
+        receipt.member !== preview.member || receipt.target.targetID !== preview.target.targetID ||
+        receipt.target.generation !== preview.target.generation) return undefined
       return receipt
     } catch {
       return undefined
