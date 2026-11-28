@@ -116,10 +116,10 @@ function install(dirs: Dirs, snapshot: { readonly name: string }) {
 type Host = (request: ToolSafety.Approval) => Effect.Effect<void, ToolSafety.Denied>
 
 // The registry as the native host composes it: the project's profile loader, which reads hooks.json.
-const profiled = {
-  ...ToolRegistry.nativeNode,
+const profiled = <A, E, T extends LayerNode.Tag | undefined>(node: LayerNode.Node<A, E, T>) => ({
+  ...node,
   implementation: Layer.provide(
-    ToolRegistry.nativeNode.implementation as Layer.Layer<ToolRegistry.Service>,
+    node.implementation as Layer.Layer<A>,
     Layer.effect(
       ToolSafety.RuntimeProfileLoader,
       Effect.gen(function* () {
@@ -134,8 +134,8 @@ const profiled = {
       }),
     ),
   ),
-  dependencies: [...ToolRegistry.nativeNode.dependencies, FSUtil.node, Global.node, Location.node],
-}
+  dependencies: [...node.dependencies, FSUtil.node, Global.node, Location.node],
+})
 
 // ToolSafety with the native approval host bound to Session events, as the server binds it.
 const hosted = (host: Host) => ({
@@ -222,7 +222,8 @@ function sessions<A, E>(
       [Global.node, Global.layerWith({ data: dirs.data, home: dirs.home })],
       [Config.node, config],
       [Snapshot.node, Snapshot.noopLayer],
-      [ToolRegistry.node, profiled],
+      [ToolRegistry.node, profiled(ToolRegistry.nativeNode)],
+      [ToolRegistry.toolsNode, profiled(ToolRegistry.nativeToolsNode)],
       [ToolSafety.node, hosted(host)],
     ],
   )
@@ -448,7 +449,8 @@ function runner<A, E>(
       [PermissionV2.node, PermissionFixture.normalLayer],
       [ToolOutputStore.node, ToolOutputStore.nodeWithoutConfig],
       [Global.node, Global.layerWith({ data: dirs.data, home: dirs.home })],
-      [ToolRegistry.node, profiled],
+      [ToolRegistry.node, profiled(ToolRegistry.nativeNode)],
+      [ToolRegistry.toolsNode, profiled(ToolRegistry.nativeToolsNode)],
     ],
   )
   return body.pipe(Effect.provide(layer))
