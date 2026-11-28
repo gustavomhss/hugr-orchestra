@@ -90,6 +90,14 @@ impl Gen {
                     return Err(Error::observation_pending());
                 }
             }
+            if matches!(want, Want::ControlList | Want::ControlStop { .. }) {
+                if !st.selective_stop {
+                    return Err(Error::selective_unavailable());
+                }
+                if st.pending.values().any(|p| matches!(p.want, Want::ControlList | Want::ControlStop { .. })) {
+                    return Err(Error::selective_pending());
+                }
+            }
             let n = st.pending.len();
             if class == Class::Normal && n >= ADMIT_NORMAL {
                 return Err(Error::supervisor_saturated(n, ADMIT_NORMAL));

@@ -259,6 +259,7 @@ impl Tree {
     fn refused(&self, op: &str, answer: &Answer) -> Error {
         let why = match answer {
             Answer::Ack(Ack::Unknown) => "it does not know this tree",
+            Answer::Ack(Ack::Error) if op == "ControlStop" => "the selective stop could not be completed; its effect may be partial",
             Answer::Ack(Ack::Error) => "the operating system's process inventory was incomplete; retry",
             Answer::Ack(Ack::Closed) => "the terminal is closed",
             _ => "it sent an unexpected reply",

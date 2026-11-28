@@ -93,6 +93,18 @@ impl Error {
         io_error(format!("process observation timed out after {} ms", budget.as_millis()))
     }
 
+    pub(crate) fn selective_unavailable() -> Error {
+        io_error("the hugr-omni supervisor does not support selective process control".into())
+    }
+
+    pub(crate) fn selective_pending() -> Error {
+        io_error("a selective process control request is already awaiting a supervisor reply".into())
+    }
+
+    pub(crate) fn selective_timed_out(budget: std::time::Duration) -> Error {
+        io_error(format!("selective process control timed out after {} ms; its effect is unknown", budget.as_millis()))
+    }
+
     pub(crate) fn request_too_big(err: &dyn Display) -> Error {
         io_error(format!(
             "cannot send this request to the hugr-omni supervisor: {err}. Pass a smaller environment or fewer \

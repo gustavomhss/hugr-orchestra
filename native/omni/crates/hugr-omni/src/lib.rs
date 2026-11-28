@@ -41,4 +41,5 @@ mod spawn;
 mod types;
 
 pub use api::*;
+pub use omni_proto::ControlMember;
 pub use error::{Error, ErrorCode};

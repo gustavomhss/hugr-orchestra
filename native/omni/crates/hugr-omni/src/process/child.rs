@@ -110,6 +110,16 @@ impl Child {
         self.inner.life.processes().await
     }
 
+    /// Lists the identity-checked members eligible for selective control when supported.
+    pub async fn control_members(&self) -> Result<Vec<crate::ControlMember>, Error> {
+        self.inner.life.control_members().await
+    }
+
+    /// Stops selected members. A timeout means the effect is unknown; do not automatically retry.
+    pub async fn stop_selected(&self, members: Vec<crate::ControlMember>) -> Result<Vec<bool>, Error> {
+        self.inner.life.stop_selected(members).await
+    }
+
     /// A best-effort membership sample. A missed observation deadline leaves the supervisor running.
     pub async fn observe_processes(&self) -> Result<Vec<ProcessInfo>, Error> {
         self.inner.life.observe_processes().await
