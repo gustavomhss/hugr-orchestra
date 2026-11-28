@@ -65,11 +65,15 @@ function mount(locale: Locale) {
   const cookie = document.cookie.split("; ").find((value) => value.startsWith("oc_locale="))
   const host = document.body.appendChild(document.createElement("div"))
   const calls: { request: Request; respond: (value: ActivityMonitor.Snapshot) => void }[] = []
+  const polling = { startedAt: 0 }
   const transport = Object.assign(
     (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) => {
       const request = new Request(input, init)
       const response = Promise.withResolvers<Response>()
       calls.push({ request, respond: (value) => response.resolve(Response.json(value)) })
+      if (polling.startedAt && request.method === "GET" && new URL(request.url).pathname === "/api/activity") {
+        response.resolve(Response.json({ ...inspected, readAt: 3_000 + Date.now() - polling.startedAt }))
+      }
       return response.promise
     },
     { preconnect: fetch.preconnect },
@@ -96,6 +100,7 @@ function mount(locale: Locale) {
   return {
     host,
     calls,
+    startPolling() { polling.startedAt = Date.now() },
     async call(index: number, path: string) {
       await until("request " + path, () => calls.length > index)
       const call = calls[index]!
@@ -181,7 +186,15 @@ for (const labels of cases) {
       expect(text(details[0]!)).toContain("omni.processes")
       const ageColumn = [...app.host.querySelectorAll("thead th")].map(text).indexOf(labels.age)
       expect(ageColumn).toBeGreaterThanOrEqual(0)
-      expect(text(rows()[0]!.querySelectorAll("td")[ageColumn]!)).toBe("2 s")
+      const age = () => text(rows()[0]!.querySelectorAll("td")[ageColumn]!)
+      expect(age()).toBe("2 s")
+      const afterInspection = app.calls.length
+      app.startPolling()
+      await until("member sample age advances", () => Number.parseInt(age(), 10) > 2)
+      expect(app.calls.slice(afterInspection).every((call) =>
+        call.request.method === "GET" && new URL(call.request.url).pathname === "/api/activity",
+      )).toBe(true)
+      expect(text(details[0]!)).toContain("fixture-member")
       expect(footprint()).toBe(labels.unread)
       expect(text(app.host)).toContain(labels.pressure)
       expect(text(details[0]!)).toContain(labels.hypothesis)
