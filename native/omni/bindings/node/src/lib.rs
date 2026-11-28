@@ -25,3 +25,9 @@ mod teardown;
 
 #[cfg(windows)]
 mod quarantine_windows;
+
+#[cfg(target_os = "linux")]
+mod protect_process_memory;
+
+#[cfg(target_os = "linux")]
+mod quarantine_protected;

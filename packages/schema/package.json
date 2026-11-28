@@ -9,6 +9,7 @@
     "./activity-freeze": "./src/activity-freeze.ts",
     "./activity-empty": "./src/activity-empty.ts",
     "./activity-arm": "./src/activity-arm.ts",
+    "./activity-apply": "./src/activity-apply.ts",
     "./activity-stop": "./src/activity-stop.ts",
     "./activity-private-channel": "./src/activity-private-channel.ts",
     ".": "./src/index.ts",

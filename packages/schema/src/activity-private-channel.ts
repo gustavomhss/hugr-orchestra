@@ -6,6 +6,9 @@ export const mount = "/_orchestra-activity/v1"
 export const inspectArmPath = `${mount}/arm-inspect`
 export const previewPath = `${mount}/arm-preview`
 export const confirmPath = `${mount}/arm-confirm`
+export const applyStatePath = `${mount}/apply-state`
+export const applyPreviewPath = `${mount}/apply-preview`
+export const applyConfirmPath = `${mount}/apply-confirm`
 export const stopPreviewPath = `${mount}/stop-preview`
 export const stopConfirmPath = `${mount}/stop-confirm`
 export const emptyPreviewPath = `${mount}/empty-preview`
@@ -41,9 +44,14 @@ export function nonce() {
   return hex(crypto.getRandomValues(new Uint8Array(keyBytes)))
 }
 
+export function applyNonce() {
+  return Date.now().toString(16).padStart(12, "0") + nonce().slice(12)
+}
+
 type Direction = "probe-request" | "probe-response"
 export type ArmDirection = "arm-request" | "arm-response"
 export type ArmPath = typeof inspectArmPath | typeof previewPath | typeof confirmPath | typeof stopPreviewPath | typeof stopConfirmPath |
+  typeof applyStatePath | typeof applyPreviewPath | typeof applyConfirmPath |
   typeof emptyPreviewPath | typeof emptyConfirmPath | typeof emptyStatePath |
   typeof freezeStatePath | typeof freezePreviewPath | typeof freezeConfirmPath
 

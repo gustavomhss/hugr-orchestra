@@ -15,6 +15,8 @@ pub(crate) mod inventory_probe;
 mod isolation;
 #[cfg(unix)]
 mod keeper;
+#[cfg(target_os = "linux")]
+pub(crate) mod protect_process_memory;
 mod start;
 #[cfg(test)]
 mod tests;

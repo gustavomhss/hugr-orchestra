@@ -1,10 +1,13 @@
 export * as ActivityPrivateChannelServer from "./activity-private-channel"
 
+import { createHash } from "node:crypto"
 import type { ActivityArmLedger } from "@orchestra/core/activity-arm"
+import type { ActivityApplyService } from "@orchestra/core/activity-apply"
 import type { ActivityFreezeService } from "@orchestra/core/activity-freeze-service"
 import type { ActivityStopService } from "@orchestra/core/activity-stop-service"
 import type { ActivityQuarantineCustody } from "@orchestra/core/activity-quarantine-custody"
 import { ActivityArm } from "@orchestra/schema/activity-arm"
+import { ActivityApply } from "@orchestra/schema/activity-apply"
 import { ActivityFreeze } from "@orchestra/schema/activity-freeze"
 import { ActivityStop } from "@orchestra/schema/activity-stop"
 import { ActivityEmpty } from "@orchestra/schema/activity-empty"
@@ -12,6 +15,8 @@ import { Effect, Option } from "effect"
 import { ActivityPrivateChannel } from "@orchestra/schema/activity-private-channel"
 import type { Readable } from "node:stream"
 import type { HttpExtension } from "./http-extensions"
+
+export const maxBodyBytes = ActivityPrivateChannel.maxBodyBytes
 
 function decodeInspect(body: unknown) {
   return body !== null && typeof body === "object" && !Array.isArray(body) && Object.keys(body).length === 0
@@ -27,6 +32,8 @@ export async function acquire(
   stop?: ActivityStopService.Interface,
   custody?: ActivityQuarantineCustody.Interface,
   freeze?: ActivityFreezeService.Interface,
+  apply?: ActivityApplyService.Interface,
+  claimCredential?: (fingerprint: string) => Promise<void>,
 ): Promise<HttpExtension> {
   const frame = new Uint8Array(ActivityPrivateChannel.frameBytes)
   const key = await new Promise<Uint8Array>((resolve, reject) => {
@@ -72,7 +79,12 @@ export async function acquire(
     signal.addEventListener("abort", fail, { once: true })
     if (signal.aborted || input.destroyed) fail()
   })
-  const signer = await ActivityPrivateChannel.signer(key).finally(() => key.fill(0))
+  const signer = await (async () => {
+    if (claimCredential) await claimCredential(createHash("sha256").update(key).digest("hex"))
+    return ActivityPrivateChannel.signer(key)
+  })().finally(() => key.fill(0))
+  const applyNonces = new Map<string, number>()
+  let latestTime = 0
   return {
     mount: ActivityPrivateChannel.mount,
     async handler(request) {
@@ -92,15 +104,29 @@ export async function acquire(
       const endpoint = url.pathname
       const armPath = endpoint === ActivityPrivateChannel.inspectArmPath ||
         endpoint === ActivityPrivateChannel.previewPath || endpoint === ActivityPrivateChannel.confirmPath
+      const applyPath = endpoint === ActivityPrivateChannel.applyStatePath ||
+        endpoint === ActivityPrivateChannel.applyPreviewPath || endpoint === ActivityPrivateChannel.applyConfirmPath
       const stopPath = endpoint === ActivityPrivateChannel.stopPreviewPath || endpoint === ActivityPrivateChannel.stopConfirmPath
       const emptyPath = endpoint === ActivityPrivateChannel.emptyPreviewPath || endpoint === ActivityPrivateChannel.emptyConfirmPath ||
         endpoint === ActivityPrivateChannel.emptyStatePath
       const freezePath = endpoint === ActivityPrivateChannel.freezeStatePath || endpoint === ActivityPrivateChannel.freezePreviewPath ||
         endpoint === ActivityPrivateChannel.freezeConfirmPath
-      if (!armPath && !stopPath && !emptyPath && !freezePath) return forbidden()
-      if ((armPath && !arm) || (stopPath && !stop) || (emptyPath && !custody) || (freezePath && !freeze)) return forbidden()
+      if (!armPath && !applyPath && !stopPath && !emptyPath && !freezePath) return forbidden()
+      if ((armPath && !arm) || (applyPath && !apply) || (stopPath && !stop) ||
+        (emptyPath && !custody) || (freezePath && !freeze)) return forbidden()
       const body = await readBody(request)
       if (body === undefined || !nonce || !await signer.verifyArm("arm-request", endpoint, nonce, mac, body)) return forbidden()
+      if (applyPath) {
+        // Keep the high-water clock even if the wall clock moves backwards, so expired nonces cannot reopen.
+        latestTime = Math.max(latestTime, Date.now())
+        const issued = Number.parseInt(nonce.slice(0, 12), 16)
+        if (issued > latestTime + 60_000 || issued < latestTime - 60_000) return forbidden()
+        for (const [seen, time] of applyNonces) {
+          if (time < latestTime - 60_000) applyNonces.delete(seen)
+        }
+        if (applyNonces.has(nonce) || applyNonces.size >= 4096) return forbidden()
+        applyNonces.set(nonce, issued)
+      }
       const decoded = parseBody(body)
       if (request.signal.aborted) return forbidden()
       const operation = armPath && arm ? (
@@ -109,6 +135,12 @@ export async function acquire(
           : endpoint === ActivityPrivateChannel.previewPath
             ? run(decoded, ActivityArm.decodeRequest, arm.preview, ActivityArm.decodePreview)
             : run(decoded, ActivityArm.decodeConfirm, arm.confirm, ActivityArm.decodeReceipt)
+      ) : applyPath && apply ? (
+        endpoint === ActivityPrivateChannel.applyStatePath
+          ? run(decoded, decodeInspect, apply.state, ActivityApply.decodeState, encodeApplyState)
+          : endpoint === ActivityPrivateChannel.applyPreviewPath
+            ? run(decoded, ActivityApply.decodeRequest, apply.preview, ActivityApply.decodePreview)
+            : run(decoded, ActivityApply.decodeConfirm, apply.confirm, ActivityApply.decodeReceipt)
       ) : stopPath && stop ? (
         endpoint === ActivityPrivateChannel.stopPreviewPath
           ? run(decoded, ActivityStop.decodeRequest, stop.preview, ActivityStop.decodePreview)
@@ -162,21 +194,31 @@ function run<Input, Result>(
 }
 
 function encodeInspection(snapshot: ActivityArm.PlanSnapshot) {
-  const full = JSON.stringify(snapshot)
+  return encodePlan(snapshot, JSON.stringify)
+}
+
+function encodeApplyState(state: ActivityApply.State) {
+  if (!state.custodyPlan) return JSON.stringify(state)
+  return encodePlan(state.custodyPlan, (custodyPlan) =>
+    JSON.stringify({ ...state, custodyPlan, partial: state.partial || custodyPlan.partial }))
+}
+
+function encodePlan(snapshot: ActivityArm.PlanSnapshot, encode: (plan: ActivityArm.PlanSnapshot) => string) {
+  const full = encode(snapshot)
   const limit = ActivityPrivateChannel.maxBodyBytes
   if (Buffer.byteLength(full) <= limit) return full
 
   // Keep the verified targets and a prefix of whole receipts. Count JSON bytes, including array commas.
   const approvals: ActivityArm.PlanSnapshot["approvals"][number][] = []
-  const bounded = { ...snapshot, approvals }
-  let bytes = Buffer.byteLength(JSON.stringify(bounded))
+  const bounded = { ...snapshot, approvals, partial: true }
+  let bytes = Buffer.byteLength(encode(bounded))
   if (bytes > limit) return undefined
   for (const approval of snapshot.approvals) {
     bytes += Buffer.byteLength(JSON.stringify(approval)) + (approvals.length === 0 ? 0 : 1)
     if (bytes > limit) break
     approvals.push(approval)
   }
-  return JSON.stringify({ ...bounded, partial: true })
+  return encode(bounded)
 }
 
 async function readBody(request: Request): Promise<string | undefined> {

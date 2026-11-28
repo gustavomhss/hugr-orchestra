@@ -200,6 +200,30 @@ for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
     }, null, 2))
   }
 
+  if (item.os === "linux" && omni.enabled) {
+    const custody = await Bun.build({
+      ...options,
+      entrypoints: ["./src/activity-custody-entry.ts"],
+      metafile: false,
+      minify: false,
+      sourcemap: "none",
+      splitting: false,
+      compile: {
+        autoloadBunfig: false,
+        autoloadDotenv: false,
+        autoloadTsconfig: false,
+        autoloadPackageJson: false,
+        target: `bun-${item.target}` as Bun.Build.CompileTarget,
+        outfile: `./dist/${name}/bin/orchestra-activity-custody`,
+        execArgv: ["--use-system-ca", "--"],
+      },
+    })
+    if (!custody.success) {
+      for (const log of custody.logs) console.error(log)
+      process.exit(1)
+    }
+  }
+
   copyOmni(omniFiles, `dist/${name}/bin`)
   copyTreeSitter(treeSitter, `dist/${name}/bin/tree-sitter`, item)
   const key = RipgrepBundle.key(item)

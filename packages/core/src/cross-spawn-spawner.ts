@@ -1,5 +1,5 @@
-import { NodeFileSystem, NodeSink, NodeStream } from "@effect/platform-node"
-import * as NodePath from "@effect/platform-node/NodePath"
+import { fromWritable } from "@effect/platform-node/NodeSink"
+import { fromReadable } from "@effect/platform-node/NodeStream"
 import * as Deferred from "effect/Deferred"
 import * as Effect from "effect/Effect"
 import * as Exit from "effect/Exit"
@@ -26,7 +26,7 @@ import launch from "cross-spawn"
 import { toError, toPlatformError } from "./child-process-common"
 import { fds, pipeline, stdin, stdio } from "./cross-spawn-command"
 import { makeGlobalNode } from "./effect/app-node"
-import { filesystem, path } from "./effect/app-node-platform"
+import { filesystem, path } from "./effect/app-node-files"
 import { Flag } from "./flag/flag"
 import { OmniSpawner } from "./omni-spawner"
 
@@ -93,7 +93,7 @@ const legacy = (options?: { windowsHide?: boolean }) => Effect.gen(function* () 
         case "input": {
           let sink: Sink.Sink<void, Uint8Array, never, PlatformError.PlatformError> = Sink.drain
           if (node && "write" in node) {
-            sink = NodeSink.fromWritable({
+            sink = fromWritable({
               evaluate: () => node,
               onError: (err) => toPlatformError(`fromWritable(fd${x.fd})`, toError(err), command),
               endOnDone: true,
@@ -109,7 +109,7 @@ const legacy = (options?: { windowsHide?: boolean }) => Effect.gen(function* () 
             const tap = new PassThrough()
             node.on("error", (err) => tap.destroy(toError(err)))
             node.pipe(tap)
-            stream = NodeStream.fromReadable({
+            stream = fromReadable({
               evaluate: () => tap,
               onError: (err) => toPlatformError(`fromReadable(fd${x.fd})`, toError(err), command),
             })
@@ -135,7 +135,7 @@ const legacy = (options?: { windowsHide?: boolean }) => Effect.gen(function* () 
     Effect.suspend(() => {
       let sink: Sink.Sink<void, unknown, never, PlatformError.PlatformError> = Sink.drain
       if (Predicate.isNotNull(proc.stdin)) {
-        sink = NodeSink.fromWritable({
+        sink = fromWritable({
           evaluate: () => proc.stdin!,
           onError: (err) => toPlatformError("fromWritable(stdin)", toError(err), command),
           endOnDone: cfg.endOnDone,
@@ -153,13 +153,13 @@ const legacy = (options?: { windowsHide?: boolean }) => Effect.gen(function* () 
     err: ChildProcess.StderrConfig,
   ) => {
     let stdout = proc.stdout
-      ? NodeStream.fromReadable({
+      ? fromReadable({
           evaluate: () => proc.stdout!,
           onError: (cause) => toPlatformError("fromReadable(stdout)", toError(cause), command),
         })
       : Stream.empty
     let stderr = proc.stderr
-      ? NodeStream.fromReadable({
+      ? fromReadable({
           evaluate: () => proc.stderr!,
           onError: (cause) => toPlatformError("fromReadable(stderr)", toError(cause), command),
         })
