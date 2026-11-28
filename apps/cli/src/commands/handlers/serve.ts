@@ -100,7 +100,13 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
     const { ActivityQuarantineCustody } = yield* Effect.promise(() => import("@orchestra/core/activity-quarantine-custody"))
     const scope = yield* Layer.build(AppNodeBuilder.build(Database.node))
     const database = Context.get(scope, Database.Service)
-    const arm = ActivityArmLedger.make(database)
+    const arm = process.platform === "linux" ? yield* Effect.gen(function* () {
+      const { ActivityArmObjects } = yield* Effect.promise(() => import("@orchestra/core/activity-arm-objects"))
+      const { AppProcess } = yield* Effect.promise(() => import("@orchestra/core/process"))
+      const processScope = yield* Layer.build(AppNodeBuilder.build(AppProcess.node))
+      const processService = Context.get(processScope, AppProcess.Service)
+      return ActivityArmLedger.make(database, { ...ActivityArmObjects.make(database, processService), maxSelection: 1 })
+    }) : ActivityArmLedger.make(database)
     const stop = process.platform === "win32" ? ActivityStopService.make(database) : undefined
     const custody = process.platform === "win32" ? ActivityQuarantineCustody.make(database) : undefined
     if (custody) {

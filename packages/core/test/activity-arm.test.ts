@@ -1,8 +1,10 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
+import { eq } from "drizzle-orm"
 import { Effect } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { ActivityActionLedger } from "../src/activity-action-ledger"
+import { ActivityActionLedgerTable } from "../src/activity-action-ledger.sql"
 import { ActivityArmLedger } from "../src/activity-arm"
 import { tmpdir } from "./fixture/tmpdir"
 
@@ -32,6 +34,24 @@ const withLedgers = <A, E>(
     const actions = yield* ActivityActionLedger.make
     return yield* run({ database, actions, arms: ActivityArmLedger.make(database, { verify: () => Effect.succeed(true), ...options }) })
   }).pipe(Effect.provide(Database.layerFromPath(filename)), Effect.scoped)
+
+test("rechecks receipt authority after live verification in the commit transaction", async () => {
+  await using directory = await tmpdir()
+  await Effect.runPromise(withLedgers(path.join(directory.path, "activity.sqlite"), ({ actions, arms, database }) =>
+    Effect.gen(function* () {
+      const selected = yield* actions.record(observation("selected"))
+      yield* actions.record(observation("registration-marker"))
+      const preview = yield* arms.preview({ targets: [{ targetID: selected.targetID, generation: selected.generation }] })
+      if (!preview) throw new Error("expected preview")
+      yield* database.db.delete(ActivityActionLedgerTable).where(eq(ActivityActionLedgerTable.target_id, "registration-marker")).run()
+      expect(yield* arms.confirm({ previewID: preview.previewID })).toBeUndefined()
+      expect(yield* ActivityArmLedger.list(database)).toEqual([])
+    }), {
+      authorize: (tx) => tx.select().from(ActivityActionLedgerTable)
+        .where(eq(ActivityActionLedgerTable.target_id, "registration-marker")).get().pipe(Effect.map(Boolean)),
+    },
+  ))
+})
 
 test("previews exact eligible object targets in request order and confirms one durable receipt", async () => {
   await using directory = await tmpdir()
@@ -78,20 +98,23 @@ test("refuses the whole selection when any generation changed after preview", as
 test("consumes a preview and refuses every receipt when live verification fails for one object", async () => {
   await using directory = await tmpdir()
   const verified: ActivityActionLedger.Target[] = []
+  const unavailable = new Set<string>()
   await Effect.runPromise(withLedgers(path.join(directory.path, "activity.sqlite"), ({ actions, arms, database }) =>
     Effect.gen(function* () {
       const first = yield* actions.record(observation("object-a"))
       const second = yield* actions.record(observation("object-b"))
       const preview = yield* arms.preview({ targets: [first, second].map(({ targetID, generation }) => ({ targetID, generation })) })
       if (!preview) throw new Error("expected preview")
+      unavailable.add(second.targetID)
       expect(yield* arms.confirm({ previewID: preview.previewID })).toBeUndefined()
       expect(yield* arms.confirm({ previewID: preview.previewID })).toBeUndefined()
-      expect(verified).toEqual([first, second])
+      expect(yield* arms.preview({ targets: [{ targetID: second.targetID, generation: second.generation }] })).toBeUndefined()
+      expect(verified).toEqual([first, second, first, second, second])
       expect(yield* ActivityArmLedger.list(database)).toEqual([])
     }), {
       verify: (target) => Effect.sync(() => {
         verified.push(target)
-        return target.targetID === "object-a"
+        return !unavailable.has(target.targetID)
       }),
     },
   ))
