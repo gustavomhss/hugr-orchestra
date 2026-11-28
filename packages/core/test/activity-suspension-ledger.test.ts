@@ -180,7 +180,7 @@ test("serializes overlapping suspend admissions so only one caller owns the pend
       const scope = yield* recordScope(actions)
       return yield* Effect.all([
         marks.beginSuspend({ scope, members: ["member-a", "member-b"] }),
-        marks.beginSuspend({ scope, members: ["member-b", "member-c"] }),
+        marks.beginSuspend({ scope, members: ["member-b"] }),
       ], { concurrency: "unbounded" })
     }),
   ))
