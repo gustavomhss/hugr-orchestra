@@ -416,7 +416,6 @@ test("a reconnect repairs an unopened Session title without replacing selection 
     model: { providerID: "test", id: "listed-model", variant: "low" },
     location: { directory: "/tmp/listed-placement", workspaceID: "wrk_listed" },
     subpath: "listed-subpath",
-    time: { created: 0, updated: 20 },
   }
   const heldList = Promise.withResolvers<Response>()
   const streams: ReadableStreamDefaultController<Uint8Array>[] = []
@@ -467,7 +466,7 @@ test("a reconnect repairs an unopened Session title without replacing selection 
     await wait(() => mounted.sdk.offline())
     state.listed = changedListRow
     await wait(() => streams.length === 2, 5_000)
-    // The rename was lost in the disconnect. Only the catalog list can reveal it.
+    // The rename was lost in the disconnect and has the same timestamp as the previous exact snapshot.
     send(streams[1], connected(2).payload)
     await wait(() => state.listReads === 2 && row()?.title === changedListRow.title)
     for (const projected of [row(), sync.get(sessionID)]) expect(projected).toMatchObject({
@@ -497,6 +496,38 @@ test("a reconnect repairs an unopened Session title without replacing selection 
     heldList.resolve(list(original))
     mounted.app.renderer.destroy()
     server.stop(true)
+  }
+}, 15_000)
+
+test.each([false, true])("bootstrap retries a Session list superseded by reconnect (continue: %s)", async (continuing) => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const old = Promise.withResolvers<Response>()
+  const current = Promise.withResolvers<Response>()
+  const staleSession = v2Session({ id: otherID, directory })
+  const currentSession = v2Session({ id: sessionID, directory })
+  let listReads = 0
+  const mounted = await mount(routes((url) => {
+    if (url.pathname !== "/api/session") return
+    return ++listReads === 1 ? old.promise : current.promise
+  }), tmp.path, { continue: continuing }, undefined, { waitComplete: false })
+  try {
+    await wait(() => listReads === 1)
+    await emit(mounted, connected(1))
+    await emit(mounted, connected(2))
+    old.resolve(json({ data: [staleSession], cursor: {} }))
+    await wait(() => listReads === 2 && mounted.sync.status === (continuing ? "loading" : "partial"))
+    expect(mounted.sync.data.session).toEqual([])
+    expect(mounted.sync.ready).toBe(!continuing)
+    current.resolve(json({ data: [currentSession], cursor: {} }))
+    await wait(() => mounted.sync.status === "complete")
+    expect(mounted.sync.data.session.map((row) => row.id)).toEqual([sessionID])
+    expect(mounted.sync.ready).toBe(true)
+    expect(listReads).toBe(2)
+  } finally {
+    old.resolve(json({ data: [staleSession], cursor: {} }))
+    current.resolve(json({ data: [currentSession], cursor: {} }))
+    mounted.app.renderer.destroy()
   }
 }, 15_000)
 

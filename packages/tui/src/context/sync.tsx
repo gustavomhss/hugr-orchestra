@@ -282,13 +282,15 @@ export const {
         project: project.data.project.id,
         subpath: sessionListQuery().path || undefined,
       }
-      const epoch = statusEpoch()
+      const epoch = sdk.connectionEpoch()
+      const status = statusEpoch()
       const renames = new Map(titles)
       const sessions = await sdk.catalog.sessions(input)
       return {
         sessions,
+        epoch,
         renames,
-        current: () => !lifetime.disposed && sdk.binding().active && statusEpoch() === epoch &&
+        current: () => !lifetime.disposed && sdk.binding().active && statusEpoch() === status &&
           project.workspace.current() === input.workspace && project.data.project.id === input.project &&
           (sessionListQuery().path || undefined) === input.subpath,
       }
@@ -323,12 +325,21 @@ export const {
     function replaceSessionList(read: Awaited<ReturnType<typeof listSessions>>, retained?: ReadonlySet<string>) {
       if (!read.current()) return
       const merge = (listed: Session) => {
-        const cached = store.session_metadata[listed.id]?.snapshot
-        if (!cached) return withLiveMetadata(listed)
+        const metadata = store.session_metadata[listed.id]
+        if (!metadata) return withLiveMetadata(listed)
+        const cached = metadata.snapshot
         // The list can repair a missed title only. Leave the exact selection, placement and authority epoch intact.
         if (titles.get(listed.id) !== read.renames.get(listed.id) || metadataReads.has(listed.id) ||
-            listed.time.updated <= cached.time.updated || listed.title === cached.title) return cached
-        const snapshot = { ...cached, title: listed.title, time: { ...cached.time, updated: listed.time.updated } }
+            listed.title === cached.title) return cached
+        // Across a reconnect the current list can be newer than an exact read with the same or higher wall-clock time.
+        // If the Session got another exact read in the meantime, its title already had a current source.
+        if (retained ? metadata.epoch === undefined || metadata.epoch >= read.epoch
+          : listed.time.updated <= cached.time.updated) return cached
+        const snapshot = {
+          ...cached,
+          title: listed.title,
+          time: { ...cached.time, updated: Math.max(cached.time.updated, listed.time.updated) },
+        }
         setStore("session_metadata", listed.id, "snapshot", reconcile(snapshot))
         return snapshot
       }
@@ -344,6 +355,15 @@ export const {
           if (match.found) setStore("session", match.index, reconcile(merge(session)))
         }
       })
+    }
+
+    async function applyInitialSessionList(pending: ReturnType<typeof listSessions>) {
+      let read = await pending
+      while (!read.current()) {
+        if (lifetime.disposed || !sdk.binding().active) return
+        read = await listSessions()
+      }
+      replaceSessionList(read)
     }
 
     function getSession(sessionID: string) {
@@ -722,7 +742,8 @@ export const {
         .then(async () => {
           if (lifetime.disposed) return
           const catalog = await catalogPromise
-          const sessions = args.continue ? await sessionListPromise : undefined
+          if (args.continue) await applyInitialSessionList(sessionListPromise)
+          if (lifetime.disposed) return
           batch(() => {
             setStore("provider", reconcile(catalog.provider))
             setStore("provider_default", reconcile(catalog.default))
@@ -732,7 +753,6 @@ export const {
             setStore("agent", reconcile(catalog.agent))
             setStore("config", reconcile(catalog.config))
             setStore("catalogRevision", (value) => value + 1)
-            if (sessions !== undefined) replaceSessionList(sessions)
           })
         })
         .then(() => {
@@ -740,7 +760,7 @@ export const {
           if (store.status !== "complete") setStore("status", "partial")
           // non-blocking
           void Promise.all([
-            ...(args.continue ? [] : [sessionListPromise.then(replaceSessionList)]),
+            ...(args.continue ? [] : [applyInitialSessionList(sessionListPromise)]),
             hydrateRequests({ directory: sdk.directory ?? project.data.instance.path.directory, workspaceID: workspace }),
             sdk.catalog.commands(location).then((x) => setStore("command", reconcile(x))),
             sdk.catalog.lsp(location).then((x) => setStore("lsp", reconcile(x))),
