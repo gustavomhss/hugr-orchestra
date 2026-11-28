@@ -155,9 +155,14 @@ export interface CommitOptions {
   readonly beforeCommit?: Effect.Effect<void>
 }
 
+/** Host-only placement for a new child at its parent's exact Location. */
+export interface CreateOptions extends CommitOptions {
+  readonly inheritParentPlacement?: boolean
+}
+
 export interface Interface {
   readonly list: (input?: ListInput) => Effect.Effect<SessionSchema.Info[]>
-  readonly create: (input: CreateInput, options?: CommitOptions) => Effect.Effect<SessionSchema.Info, NotFoundError>
+  readonly create: (input: CreateInput, options?: CreateOptions) => Effect.Effect<SessionSchema.Info, NotFoundError>
   readonly get: (sessionID: SessionSchema.ID) => Effect.Effect<SessionSchema.Info, NotFoundError>
   readonly archive: (input: { sessionID: SessionSchema.ID; archived: boolean }) => Effect.Effect<void, NotFoundError>
   readonly rename: (input: { sessionID: SessionSchema.ID; title: string }) => Effect.Effect<void, NotFoundError>
@@ -384,33 +389,65 @@ const layer = Layer.effect(
         Effect.asVoid,
       )
 
+    // Info.subpath normalizes both null and an empty stored path to undefined. Admission keeps that distinction.
+    const readPlacement = (sessionID: SessionSchema.ID) => db.select({
+      projectID: SessionTable.project_id,
+      directory: SessionTable.directory,
+      workspaceID: SessionTable.workspace_id,
+      path: SessionTable.path,
+    }).from(SessionTable).where(eq(SessionTable.id, sessionID)).get().pipe(Effect.orDie)
+
     const result = Service.of({
       create: Effect.fn("V2Session.create")(function* (input, options) {
         const beforeCommit = options?.beforeCommit
+        const inheritParentPlacement = options?.inheritParentPlacement === true
         const sessionID = input.id ?? SessionSchema.ID.create()
-        const recorded = yield* topology.withPermit(
+        const admitted = yield* topology.withPermit(
           Effect.gen(function* () {
             if (closing.has(sessionID)) return yield* new NotFoundError({ sessionID })
             const recorded = yield* store.get(sessionID)
-            if (recorded) return recorded
-            if (input.parentID) {
-              if (closing.has(input.parentID)) return yield* new NotFoundError({ sessionID: input.parentID })
-              yield* result.get(input.parentID)
+            if (recorded) return { type: "existing", session: recorded } as const
+            const parentID = input.parentID
+            if (parentID) {
+              if (closing.has(parentID)) return yield* new NotFoundError({ sessionID: parentID })
+              yield* result.get(parentID)
             }
+            if (!inheritParentPlacement) return { type: "resolved" } as const
+            if (!parentID) return yield* new NotFoundError({ sessionID })
+            const placement = yield* readPlacement(parentID)
+            if (!placement || placement.directory !== input.location.directory ||
+              (placement.workspaceID ?? undefined) !== input.location.workspaceID)
+              return yield* new NotFoundError({ sessionID: parentID })
+            return { type: "inherited", parentID, placement } as const
           }),
         )
-        if (recorded) return recorded
-        const project = yield* projects.resolve(input.location.directory)
-        yield* ProjectV2.record(db, events, project)
+        if (admitted.type === "existing") return admitted.session
+        const target = admitted.type === "inherited" ? admitted : {
+          type: "resolved" as const,
+          project: yield* projects.resolve(input.location.directory),
+        }
+        if (target.type === "resolved") yield* ProjectV2.record(db, events, target.project)
+        const parentID = target.type === "inherited" ? target.parentID : input.parentID
+        const location = target.type === "inherited" ? Location.Ref.make({
+          directory: AbsolutePath.make(target.placement.directory),
+          ...(target.placement.workspaceID === null ? {} : { workspaceID: target.placement.workspaceID }),
+        }) : input.location
         const timestamp = yield* DateTime.now
         const projected = yield* events.transact(
           Effect.gen(function* () {
                 if (closing.has(sessionID)) return yield* new NotFoundError({ sessionID })
                 const recorded = yield* store.get(sessionID)
                 if (recorded) return { type: "existing", session: recorded } as const
-                if (input.parentID) {
-                  if (closing.has(input.parentID)) return yield* new NotFoundError({ sessionID: input.parentID })
-                  yield* result.get(input.parentID)
+                if (parentID) {
+                  if (closing.has(parentID)) return yield* new NotFoundError({ sessionID: parentID })
+                  yield* result.get(parentID)
+                  if (target.type === "inherited") {
+                    const current = yield* readPlacement(parentID)
+                    const captured = target.placement
+                    if (!current || current.projectID !== captured.projectID || current.directory !== captured.directory ||
+                      current.workspaceID !== captured.workspaceID || current.path !== captured.path)
+                      return yield* new NotFoundError({ sessionID: parentID })
+                  }
                 }
                 return yield* events
                   .publish(
@@ -418,14 +455,16 @@ const layer = Layer.effect(
                     {
                       sessionID,
                       timestamp,
-                      projectID: project.id,
-                      location: input.location,
-                      subdirectory: RelativePath.make(
-                        path.relative(project.directory, input.location.directory).replaceAll("\\", "/"),
-                      ),
+                      projectID: target.type === "inherited" ? target.placement.projectID : target.project.id,
+                      location,
+                      ...(target.type === "inherited"
+                        ? target.placement.path === null ? {} : { subdirectory: RelativePath.make(target.placement.path) }
+                        : { subdirectory: RelativePath.make(
+                          path.relative(target.project.directory, input.location.directory).replaceAll("\\", "/"),
+                        ) }),
                       title: `New session - ${DateTime.formatIso(timestamp)}`,
                       // Optional event keys must be absent, not undefined, to encode.
-                      ...(input.parentID ? { parentID: input.parentID } : {}),
+                      ...(parentID ? { parentID } : {}),
                       ...(input.agent ? { agent: input.agent } : {}),
                       ...(input.model
                         ? {
@@ -437,7 +476,7 @@ const layer = Layer.effect(
                           }
                         : {}),
                     },
-                    { location: input.location, ...(beforeCommit ? { commit: () => beforeCommit } : {}) },
+                    { location, ...(beforeCommit ? { commit: () => beforeCommit } : {}) },
                   )
                   .pipe(
                     Effect.as({ type: "created" } as const),
@@ -457,8 +496,8 @@ const layer = Layer.effect(
                     }),
                   )
           }),
-          (transaction) => input.parentID
-            ? SessionLifecycle.withParent(input.parentID, topology.withPermit(transaction))
+          (transaction) => parentID
+            ? SessionLifecycle.withParent(parentID, topology.withPermit(transaction))
             : topology.withPermit(transaction),
         )
         if (projected.type === "existing") return projected.session

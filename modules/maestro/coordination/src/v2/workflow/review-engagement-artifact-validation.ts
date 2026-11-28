@@ -8,6 +8,7 @@ import { Tool } from "@orchestra/core/tool/tool"
 import { ReviewEvidenceSchemaV2 } from "./review-engagement-artifact-schema"
 import type { ReviewEngagementEvidenceV2 } from "./review-engagement-evidence"
 import { ReviewScopedProbeEvidenceV2 } from "./review-scoped-probe-evidence"
+import { ReviewHistoryEvidenceV2 } from "./review-history-evidence"
 import type { ReviewEngagementReportV2 } from "./review-engagement-report"
 
 const Retained = Schema.Struct({ total: ReviewEvidenceSchemaV2.Count, unread: Schema.Record(Schema.String, ReviewEvidenceSchemaV2.Count), items: Schema.Array(ReviewItem.ToolItem) })
@@ -45,8 +46,9 @@ export function read(bytes: Uint8Array, report: ReviewEngagementReportV2.Stored)
   ReviewEvidenceSchemaV2.require(receipt.reportID === value.reportID && receipt.inputHash === value.inputHash && receipt.sessionID === value.sessionID &&
     receipt.sourceSha256 === value.source.sha256 && ReviewEvidenceSchemaV2.same(receipt.budget, value.budget) && ReviewEvidenceSchemaV2.same(receipt.notExamined, value.notExamined),
   "receipt differs from its durable report")
+  const history = receipt.schema === "review-engagement-evidence-v2" ? receipt.history ?? [] : []
   ReviewEvidenceSchemaV2.require(receipt.artifacts.length <= ReviewEvidenceSchemaV2.limits.artifacts && receipt.artifacts.reduce((sum, item) => sum + item.bytes, 0) <= ReviewEvidenceSchemaV2.limits.total &&
-    receipt.operations.filter((operation) => operation.kind === "code").length <= ReviewEvidenceSchemaV2.limits.code, "receipt exceeds aggregate bounds")
+    receipt.operations.filter((operation) => operation.kind === "code").length + history.length <= ReviewEvidenceSchemaV2.limits.code, "receipt exceeds aggregate bounds")
   const sorted = receipt.artifacts.map((item) => item.artifactID)
   ReviewEvidenceSchemaV2.require(ReviewEvidenceSchemaV2.same(sorted, [...new Set(sorted)].sort()), "artifact identities are not unique and sorted")
   ReviewEvidenceSchemaV2.require(new Set(receipt.operations.map((item) => item.operationID)).size === receipt.operations.length, "duplicate operation identity")
@@ -64,7 +66,8 @@ export function read(bytes: Uint8Array, report: ReviewEngagementReportV2.Stored)
     ReviewEvidenceSchemaV2.require(artifactID === ReviewEvidenceSchemaV2.digest(descriptor), "artifact descriptor digest differs")
     ReviewEvidenceSchemaV2.require(item.mime === (item.kind === "analyzer-stdout" || item.kind === "analyzer-stderr" ? "application/octet-stream"
       : item.kind === "citation" ? "text/plain" : "application/json"), "artifact MIME differs from its kind")
-    if (item.kind !== "analyzer-stdout" && item.kind !== "analyzer-stderr") ReviewEvidenceSchemaV2.require(item.complete, "required producer body is incomplete")
+    if (item.kind !== "analyzer-stdout" && item.kind !== "analyzer-stderr" && item.kind !== "history")
+      ReviewEvidenceSchemaV2.require(item.complete, "required producer body is incomplete")
   }
   let ordinal = 0
   const proofReferences = new Set<string>()
@@ -139,6 +142,11 @@ export function read(bytes: Uint8Array, report: ReviewEngagementReportV2.Stored)
   if (receipt.schema === "review-engagement-evidence-v2" && receipt.scopedProbes) {
     for (const probe of receipt.scopedProbes) artifact(probe.artifactID, "scoped-probe")
   }
+  const historyIDs = history.map((reference) => reference.historyID)
+  ReviewEvidenceSchemaV2.require(ReviewEvidenceSchemaV2.same(historyIDs, [...new Set(historyIDs)].sort()) &&
+    new Set(history.map((reference) => reference.artifactID)).size === history.length,
+  "history references are not unique and sorted")
+  for (const reference of history) artifact(reference.artifactID, "history")
   ReviewEvidenceSchemaV2.require(used.size === receipt.artifacts.length, "receipt has unused artifacts")
   return receipt
 }
@@ -162,11 +170,23 @@ export function validate(receipt: ReviewEvidenceSchemaV2.Receipt, report: Review
     ReviewEvidenceSchemaV2.require(Buffer.from(body(citation.artifactID)).equals(Buffer.from(report.value.citations[index].text)), "citation bytes differ")
   const probes = scopedProofs(receipt.schema === "review-engagement-evidence-v2" ? receipt.scopedProbes : undefined,
     source, receipt.artifacts, body)
+  const history = (receipt.schema === "review-engagement-evidence-v2" ? receipt.history ?? [] : []).map((reference) => {
+    const descriptor = receipt.artifacts.find((artifact) => artifact.artifactID === reference.artifactID)
+    const validated = ReviewHistoryEvidenceV2.read(body(reference.artifactID, "history"), {
+      inputHash: report.value.inputHash, sessionID: report.value.sessionID, source,
+      budget: report.value.budget, profile: card.profile,
+    }, reference.historyID)
+    ReviewEvidenceSchemaV2.require(descriptor && descriptor.uri === validated.uri && descriptor.complete === validated.proof.result.complete,
+      "history descriptor differs from its complete safe result")
+    ReviewEvidenceSchemaV2.require(ReviewHistoryEvidenceV2.gaps(validated).every((expected) =>
+      receipt.notExamined.some((gap) => ReviewEvidenceSchemaV2.same(gap, expected))), "history limitation is missing from host coverage")
+    return validated
+  })
   for (const finding of card.findings) {
     if (finding.evidence.kind === "tool") qualifiedTool(context, finding)
     if (finding.evidence.kind === "probe") ReviewScopedProbeEvidenceV2.qualify(probes, finding)
   }
-  return { ...context, probes }
+  return { ...context, probes, history }
 }
 
 export function scopedProofs(references: readonly ReviewScopedProbeEvidenceV2.Reference[] | undefined,
@@ -279,11 +299,15 @@ export function qualifiedTool(context: AnalysisContext, finding: Pick<NonNullabl
 }
 
 function bodyReader(artifacts: ReadonlyArray<ReviewEvidenceSchemaV2.Artifact>, bodies: ReviewEvidenceSchemaV2.Bodies) {
+  // This memo is confined to one synchronous validation of freshly loaded immutable bytes.
+  const verified = new Set<string>()
+  const descriptors = new Map(artifacts.map((artifact) => [artifact.artifactID, artifact]))
   return (id: string, kind?: ReviewEvidenceSchemaV2.Artifact["kind"]) => {
     const bytes = bodies.get(id)
-    const descriptor = artifacts.find((item) => item.artifactID === id)
+    const descriptor = descriptors.get(id)
     ReviewEvidenceSchemaV2.require(bytes && descriptor && (kind === undefined || descriptor.kind === kind) &&
-      bytes.byteLength === descriptor.bytes && ReviewEvidenceSchemaV2.hash(bytes) === descriptor.sha256, "required body is unavailable or corrupt")
+      bytes.byteLength === descriptor.bytes && (verified.has(id) || ReviewEvidenceSchemaV2.hash(bytes) === descriptor.sha256), "required body is unavailable or corrupt")
+    verified.add(id)
     return bytes
   }
 }

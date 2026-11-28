@@ -12,6 +12,7 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNodePlatform } from "@orchestra/core/effect/app-node-platform"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventV2 } from "@orchestra/core/event"
+import { FSUtil } from "@orchestra/core/fs-util"
 import { GitCli } from "@orchestra/core/git-cli"
 import { Global } from "@orchestra/core/global"
 import { Location } from "@orchestra/core/location"
@@ -63,6 +64,8 @@ export type Controls = {
   /** Observes real Git; a suspended callback pauses the call before it is forwarded. */
   readonly onGit?: (args: readonly string[]) => void | Effect.Effect<void>
   readonly onConfig?: () => void | Effect.Effect<void>
+  /** Observes a completed real filesystem link; suspension delays its return without replacing the write. */
+  readonly afterFsLink?: (from: string, to: string) => Effect.Effect<void>
 }
 
 type State = {
@@ -76,10 +79,11 @@ type State = {
   readonly requests: RequestLog[]
   readonly skills: ReadonlyArray<SkillV2.Info>
   readonly cli: GitCli.Interface
+  readonly fs: FSUtil.Interface
   readonly git: (...args: string[]) => Effect.Effect<string>
 }
 
-export type Fixture = Omit<State, "cli"> & { readonly open: ReturnType<typeof opener> }
+export type Fixture = Omit<State, "cli" | "fs"> & { readonly open: ReturnType<typeof opener> }
 export type Ctx = {
   readonly parent: SessionSchema.Info
   readonly registry: ToolRegistry.Interface
@@ -111,6 +115,7 @@ export function run<A, E, R>(body: (ctx: Fixture) => Effect.Effect<A, E, R>) {
     yield* Effect.forEach([directory, ...Object.values(global), path.join(directory, "src"), path.join(directory, "outside")],
       (value) => Effect.promise(() => fs.mkdir(value, { recursive: true })), { discard: true })
     const cli = yield* GitCli.Service
+    const filesystem = yield* FSUtil.Service
     const git = (...args: string[]) => cli.run([
       "-c", "user.email=engagement@example.com", "-c", "user.name=Engagement", "-c", "commit.gpgsign=false",
       "-c", "core.autocrlf=false", ...args,
@@ -129,10 +134,10 @@ export function run<A, E, R>(body: (ctx: Fixture) => Effect.Effect<A, E, R>) {
     const state: State = {
       directory, base, head: yield* git("rev-parse", "HEAD"), filename: path.join(global.data, "engagement.sqlite"),
       global, storeRoot: path.join(global.cache, "research-toolkit"), parentID: SessionSchema.ID.create(), requests: [],
-      skills: yield* Effect.promise(() => authoredSkills()), cli, git,
+      skills: yield* Effect.promise(() => authoredSkills()), cli, fs: filesystem, git,
     }
     return yield* body({ ...state, open: opener(state) })
-  }).pipe(Effect.provide(AppNodeBuilder.build(GitCli.node))))
+  }).pipe(Effect.provide(AppNodeBuilder.build(LayerNode.group([GitCli.node, FSUtil.node])))))
 }
 
 function opener(state: State) {
@@ -201,6 +206,12 @@ function graph(state: State, controls: Controls) {
       if (observed) yield* observed
       return yield* state.cli.run(args, options)
     }) }))],
+    [FSUtil.node, Layer.succeed(FSUtil.Service, controls.afterFsLink ? FSUtil.Service.of({
+      ...state.fs,
+      link: (from, to) => state.fs.link(from, to).pipe(
+        Effect.tap(() => controls.afterFsLink?.(from, to) ?? Effect.void),
+      ),
+    }) : state.fs)],
     [Global.node, Global.layerWith(state.global)],
   ], [MaestroToolsV2.node])
   // Lazy Locations must reuse the memo map that built the real Event projectors.

@@ -84,7 +84,8 @@ for (const profile of ["audit", "diligence", "artifact"]) {
       const messages = yield* host.db.select().from(SessionMessageTable).all().pipe(Effect.orDie)
       expect(messages.some((row) => row.session_id === value.sessionID && row.type === "assistant")).toBe(true)
       expect(yield* reviewRows().pipe(Effect.provideService(Database.Service, host.database))).toEqual(before)
-      expect(value.report.coverage.notExamined).toContainEqual({ item: "engagement:history", reason: "not-built" })
+      expect(value.report.coverage.notExamined).toContainEqual({ item: "engagement:history",
+        reason: profile === "artifact" ? "profile-not-applicable" : "not-examined" })
       if (profile === "artifact")
         expect(value.report.coverage.notExamined).toContainEqual({ item: "artifact:behavioral-eval", reason: "owner-permission" })
       if (profile === "audit") {

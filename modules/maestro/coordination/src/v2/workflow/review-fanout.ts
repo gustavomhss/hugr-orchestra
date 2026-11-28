@@ -214,7 +214,6 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
     return yield* new Tool.Failure({ message: "ReviewRequestRejected: engagement-source-unavailable. A report requires captured file authority." })
   const standalone = cardOnly || report
   const authority = input.repositoryFiles === undefined ? undefined : new Set(input.repositoryFiles)
-  const stageTools = (ids: ReadonlyArray<string>) => ReviewFanoutSupportV2.tools(standalone ? ids.filter((id) => id !== ReviewSeatTools.RECORD) : ids, report)
   const catalog = input.catalog
   // Fail before analysis. A retained execution tier is that exact built id; do not reinterpret it through runTier.
   const retainedTier = input.firstRound
@@ -228,6 +227,9 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
 
   // 1. Route (host, no model).
   const routed = yield* ReviewFanoutSupportV2.routeOf(input)
+  const stageTools = (ids: ReadonlyArray<string>, role: Role) => ReviewFanoutSupportV2.tools(
+    standalone ? ids.filter((id) => id !== ReviewSeatTools.RECORD) : ids, report,
+    { profile: routed.record.profile.id, role })
   const open = (input.firstRound?.findings ?? []).filter((finding) => finding.status === "open")
 
   // 2. Analyze (host).
@@ -284,7 +286,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
       allow: unique([...profileSkills, ...(quick ? [...routed.record.lenses.flatMap((lens) => lens.node === "lucy-audit-compliance-privacy" ? [lens.node] : allowedNodes(ReviewFanoutSupportV2.below(input.skills, lens.node), routed.record)), ...teamStack] : [])]),
     },
     // K4 writes a scope once, so the lead holds its final turn's set; the record tool refuses outside that turn.
-    tools: stageTools(quick ? [...input.stages.lead, ...input.stages.lens, ...input.stages.final] : [...input.stages.lead, ...input.stages.final]),
+    tools: stageTools(quick ? [...input.stages.lead, ...input.stages.lens, ...input.stages.final] : [...input.stages.lead, ...input.stages.final], "lead"),
     budgets: { loads: routedTier.budget.loadsPerSession, toolCalls: routedTier.budget.toolCallsPerSession },
   }
   yield* ReviewFanoutSupportV2.narrow(input.store, lead, leadScope)
@@ -337,7 +339,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
   const verify = (request: ReviewFanoutVerificationV2.Request, routing: ReviewRouting.Record, intent: ReviewFanoutVerificationV2.Intent) =>
     ReviewFanoutVerificationV2.run({ catalog, routing, tier, intent, report, analysis, verifierModel: input.verifierModel,
       reviewed: input.reviewed, ...(port.scopedProbe ? { scopedProbe: port.scopedProbe } : {}), teamStack, auditNodes, allowedNodes: (nodes) => allowedNodes(nodes, routing),
-      tools: stageTools(input.stages.verifier), create: port.create, run: runStage, region: port.region,
+      tools: stageTools(input.stages.verifier, "verifier"), create: port.create, run: runStage, region: port.region,
       bind: (child, offered) => bind(child, "verifier", { offered, cap: tier.probeAttempts, observeProbes }),
       narrow: (child, scope) => ReviewFanoutSupportV2.narrow(input.store, child, scope),
       deliver: (scope, node) => ReviewFanoutSupportV2.deliver(input, scope, node),
@@ -349,7 +351,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
       create: port.create, run: runStage, bind,
       narrow: (child, scope) => ReviewFanoutSupportV2.narrow(input.store, child, scope),
       deliver: (scope, node) => ReviewFanoutSupportV2.deliver(input, scope, node),
-      tools: stageTools(input.stages.lens).filter((id) => id === "skill" || ReviewSeatTools.CODE.some((tool) => tool === id)),
+      tools: stageTools(input.stages.lens, "lens").filter((id) => id === "skill" || ReviewSeatTools.CODE.some((tool) => tool === id)),
       verify: (request) => context.intent ? verify(request, context.routing, context.intent)
         : Effect.fail(new Tool.Failure({ message: "engagement-report-invalid: variant verification has no admitted intent", metadata: { reason: "engagement-report-invalid" } })),
     })
@@ -518,7 +520,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
         yield* bind(child, "lens", { lens: job.lens.id, cap: tier.probeAttempts, observeItems: observeFor(child) })
         const scope: SessionScope.Scope = {
           skills: { entry: job.lens.node, allow: unique([...allowedNodes(ReviewFanoutSupportV2.below(input.skills, job.lens.node), afterEntry), ...teamStack]) },
-          tools: stageTools(input.stages.lens),
+          tools: stageTools(input.stages.lens, "lens"),
           budgets: { loads: tier.budget.loadsPerSession, toolCalls: tier.budget.toolCallsPerSession },
         }
         yield* ReviewFanoutSupportV2.narrow(input.store, child, scope)
@@ -738,3 +740,4 @@ function probeIdentity(item: ReviewProbe.Observed) {
 function unique<T>(items: ReadonlyArray<T>) {
   return Array.from(new Set(items))
 }
+

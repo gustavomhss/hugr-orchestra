@@ -7,6 +7,7 @@ import { ReviewRouting } from "@orchestra/core/review/routing"
 import { ReviewItem } from "@orchestra/core/review-toolkit/item"
 import { Tool } from "@orchestra/core/tool/tool"
 import { ReviewScopedProbeEvidenceV2 } from "./review-scoped-probe-evidence"
+import { ReviewHistoryEvidenceV2 } from "./review-history-evidence"
 import { ReviewEngagementReportV2 } from "./review-engagement-report"
 import { ReviewVariantSchemaV2 } from "./review-variant-schema"
 
@@ -35,7 +36,7 @@ export const Cursor = Schema.Struct({ schema: Schema.Literal("review-engagement-
 export const Artifact = Schema.Struct({
   artifactID: Digest, kind: Schema.Literals(["code-result", "code-snapshot", "citation", "analysis-result",
     "analysis-retained", "analysis-debt", "analyzer-stdout", "analyzer-stderr", "analyzer-path-map",
-    "analyzer-inputs", "analyzer-config", "analyzer-recipe", "scoped-probe"]),
+    "analyzer-inputs", "analyzer-config", "analyzer-recipe", "scoped-probe", "history"]),
   sha256: Digest, bytes: Count.check(Schema.isLessThanOrEqualTo(limits.body)), mime: Text,
   complete: Schema.Boolean, uri: Schema.optional(Text),
 })
@@ -110,6 +111,7 @@ export const ReceiptV1 = Schema.Struct({
 export type ReceiptV1 = typeof ReceiptV1.Type
 export const ReceiptV2 = Schema.Struct({ ...ReceiptV1.fields,
   scopedProbes: Schema.optional(Schema.Array(ReviewScopedProbeEvidenceV2.Reference)),
+  history: Schema.optional(Schema.Array(ReviewHistoryEvidenceV2.Reference)),
   schema: Schema.Literal("review-engagement-evidence-v2"), variants: ReviewVariantSchemaV2.Variants,
 })
 export type ReceiptV2 = typeof ReceiptV2.Type

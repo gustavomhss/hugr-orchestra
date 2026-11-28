@@ -10,6 +10,8 @@ import { ReviewPrecisionCatalog } from "@orchestra/core/review/precision-catalog
 import { ReviewPrecisionStore } from "@orchestra/core/review/precision-store"
 import type { ReviewRoute } from "@orchestra/core/review/route"
 import { ReviewRouting } from "@orchestra/core/review/routing"
+import type { ReviewTools } from "@orchestra/core/review/tools"
+import { ReviewScopedHistory } from "@orchestra/core/review-toolkit/index"
 import { ReviewProbe } from "@orchestra/core/review-toolkit/probe"
 import { ReviewScratch } from "@orchestra/core/review-toolkit/scratch-copy"
 import { SessionSchema, type SessionV2 } from "@orchestra/core/session"
@@ -58,6 +60,7 @@ export const run = Effect.fn("ReviewEngagementRequestV2.run")(function* (params:
   const identity = ReviewEngagementStoreV2.identity(parent, params)
   const store = ReviewEngagementStoreV2.make(input.database)
   const artifacts = yield* ReviewEngagementArtifactsV2.make({ database: input.database, fs: input.services.atlas.fs,
+    readMessage: input.services.store.message,
     ...(input.global ? { global: input.global } : {}) })
   // Durable terminal bytes precede source acquisition, settings, catalog, skills and Session creation.
   const retained = yield* store.read(identity)
@@ -79,7 +82,7 @@ export const run = Effect.fn("ReviewEngagementRequestV2.run")(function* (params:
     }
     // Native create is interruptible pre-admission setup. The store verifies an adopted ID is pristine before claim.
     yield* sessions.create({ id: identity.leadID, parentID: parent.id, agent: AgentV2.ID.make("lucy"),
-      ...(parent.model ? { model: parent.model } : {}), location: parent.location }).pipe(
+      ...(parent.model ? { model: parent.model } : {}), location: parent.location }, { inheritParentPlacement: true }).pipe(
       Effect.mapError(() => failure("engagement-session-unavailable", "lead Session is unavailable")),
     )
     return yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
@@ -146,7 +149,9 @@ function perform(params: ReviewEngagementPolicyV2.Input, input: Input, parent: S
         input: current.input, budget: current.budget, source: current.source, journal: current.variants }
     })
     let variantPolicy: ReviewVariantsV2.Context | undefined
+    const historyCoverage = params.profile === "audit" || params.profile === "diligence" ? "host" as const : undefined
     const collector = yield* artifacts.collect({ namespace: identity.key, inputHash: identity.inputHash, sessionID: identity.leadID,
+      ...(historyCoverage ? { historyCoverage } : {}),
       budget: admitted.budget, source, active, authority, policy: Effect.suspend(() => variantPolicy ? Effect.succeed(variantPolicy)
         : Effect.fail(failure("engagement-evidence-corrupt", "variant policy has not been pinned by the host"))) })
     const files = source.files.map((file) => file.path)
@@ -181,7 +186,7 @@ function perform(params: ReviewEngagementPolicyV2.Input, input: Input, parent: S
         if (child.role === "lead" || child.key === "lead") return yield* failure("engagement-child-invalid", "child role conflicts with lead")
         const id = SessionSchema.ID.make(`ses_lucy_engagement_${ReviewEngagementReportV2.digest({ namespace: identity.key, key: child.key, role: child.role })}`)
         yield* sessions.create({ id, parentID: lead, agent: AgentV2.ID.make("lucy"),
-          ...(parent.model ? { model: parent.model } : {}), location: parent.location }).pipe(
+          ...(parent.model ? { model: parent.model } : {}), location: parent.location }, { inheritParentPlacement: true }).pipe(
           Effect.mapError(() => failure("engagement-session-unavailable", "child Session is unavailable")))
         const claimed = yield* store.own(ticket, { ...child, id })
         if (claimed.state === "terminal") return yield* failure("engagement-expired", "child admission is closed")
@@ -204,8 +209,45 @@ function perform(params: ReviewEngagementPolicyV2.Input, input: Input, parent: S
           sessionID: lead, evidence })
       }),
       region: (path, startLine, endLine) => read(path, startLine, endLine).pipe(Effect.map((quote) => quote.text)),
-      // The first report route offers captured CODE and analyzer pages; scoped executable probes are not built.
-      binding: (bound) => binding({ ...bound, offered: {} }),
+      binding: (bound) => Effect.gen(function* () {
+        const granted = yield* binding({ ...bound, offered: {} })
+        if (!historyCoverage || bound.role !== "lead" || bound.sessionID !== lead) return granted
+        const retain = granted.retain
+        return {
+          ...granted,
+          // History is already retained under the collector's shared quotas; CODE keeps its existing retention.
+          ...(retain ? { retain: (artifact: { readonly uri: string; readonly text: string }) =>
+            artifact.uri.startsWith(`history:${lead}/`) ? Effect.void : retain(artifact) } : {}),
+          history: (historyInput, context, bindingActive) => Effect.gen(function* () {
+            if (context.sessionID !== lead)
+              return yield* failure("engagement-history-owner", "history is bound to the original lead")
+            const started = yield* Clock.currentTimeMillis
+            const deadline = Math.min(admitted.budget.deadlineAt, started + 30_000)
+            const expired = () => failure("engagement-history-deadline", "the original history call deadline elapsed")
+            const fence = Effect.gen(function* () {
+              yield* active
+              yield* bindingActive
+              if ((yield* Clock.currentTimeMillis) >= deadline) return yield* expired()
+            })
+            return yield* Effect.gen(function* () {
+              yield* fence
+              const read = yield* ReviewScopedHistory.run(historyInput, {
+                repository: worktree, inputHash: identity.inputHash,
+                source: { sha256: source.sha256, commit: source.commit, files }, budget: admitted.budget,
+                call: { sessionID: context.sessionID, assistantMessageID: context.assistantMessageID,
+                  toolCallID: context.toolCallID }, active: fence,
+              }).pipe(Effect.provideService(AppProcess.Service, input.processes))
+              yield* fence
+              yield* collector.history({ input: historyInput, result: read.result,
+                sessionID: context.sessionID, assistantMessageID: context.assistantMessageID,
+                toolCallID: context.toolCallID, active: bindingActive, admissionActive: fence })
+              yield* fence
+              return read
+            }).pipe(Effect.timeoutOrElse({ duration: Duration.millis(Math.max(1, deadline - started)),
+              orElse: () => Effect.fail(expired()) }))
+          }),
+        } satisfies ReviewTools.Binding
+      }),
       allow: (ids) => Effect.sync(() => { for (const id of ids) if (!lenses.includes(id)) lenses.push(id) }),
     }
     const scope = { base: source.commit, head: source.commit, files: files.length, changedLines: 0 }
@@ -224,7 +266,8 @@ function perform(params: ReviewEngagementPolicyV2.Input, input: Input, parent: S
     }, port)
     if (ran.status !== "ran") return yield* failure("engagement-unaddressed", "unexpected first-round state")
     const report = yield* ReviewEngagementReportV2.completed({ input: params, inputHash: identity.inputHash,
-      sessionID: lead, budget: admitted.budget, source, variantCoverage: "host", notExamined: yield* collector.gaps() }, {
+      sessionID: lead, budget: admitted.budget, source, variantCoverage: "host",
+      ...(historyCoverage ? { historyCoverage } : {}), notExamined: yield* collector.gaps() }, {
       reply: ran.reply, expected: { routing: ran.routing, scope, checkFacts: ran.checkFacts,
         ...(ReviewRouting.tier(ran.routing) === "quick" ? {} : { confirmed: ran.confirmed }) }, read,
     })
@@ -234,3 +277,4 @@ function perform(params: ReviewEngagementPolicyV2.Input, input: Input, parent: S
     return yield* artifacts.replay(yield* store.finish(ticket, { status: "completed", result: report, evidence }))
   })
 }
+

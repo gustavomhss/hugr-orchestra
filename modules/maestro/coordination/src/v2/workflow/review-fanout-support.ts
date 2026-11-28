@@ -138,10 +138,10 @@ export function below(skills: ReadonlyArray<SkillV2.Info>, name: string): string
   return node ? SkillV2.children(skills, node).flatMap((child) => [child.name, ...below(skills, child.name)]) : []
 }
 
-/** Explicit first-slice techniques; ancestry must not grant variants, forensics or compliance. */
+/** Exact lead techniques; skill ancestry never grants another profile or a variant role. */
 export function reportSkills(profile: string): string[] {
-  if (profile === "audit") return ["lucy-audit", ...REPORT_TECHNIQUES]
-  if (profile === "diligence") return ["lucy-audit-diligence", ...REPORT_TECHNIQUES]
+  if (profile === "audit") return ["lucy-audit", ...REPORT_TECHNIQUES, "lucy-audit-forensics"]
+  if (profile === "diligence") return ["lucy-audit-diligence", ...REPORT_TECHNIQUES, "lucy-audit-forensics"]
   if (profile === "artifact") return ["lucy-review-artifact"]
   return []
 }
@@ -229,10 +229,14 @@ export function routable(packs: ReadonlyArray<ReviewRouting.Pack>) {
   return packs.filter((pack) => pack.status === "routed")
 }
 
-export function tools(ids: ReadonlyArray<string>, report = false) {
-  return unique(ids).filter((id) => !DELEGATION.includes(id) && (!report || REPORT_TOOLS.has(id)))
+export function tools(ids: ReadonlyArray<string>, report = false,
+  scope?: { readonly profile: string; readonly role: ReviewFanoutV2.Role }) {
+  const history = scope?.role === "lead" && (scope.profile === "audit" || scope.profile === "diligence")
+  return unique(ids).filter((id) => !DELEGATION.includes(id) &&
+    (!report || REPORT_TOOLS.has(id) || history && id === "review_history"))
 }
 
 function unique<T>(items: ReadonlyArray<T>) {
   return Array.from(new Set(items))
 }
+
