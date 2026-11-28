@@ -1,0 +1,72 @@
+{
+  "schema": "genesis-s2-isolated-evaluation-closure/v1",
+  "state": "PASS_IN_ISOLATED_EVALUATION",
+  "scope": "Corrected and admitted S2 evaluation candidate, frozen consumer deck and preserved S2-U1 maintenance proof.",
+  "final_admission": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46179008149/checkpoint.json",
+    "sha256": "eee88c093edb61721db219d3a1b9943168839e8fa484fb7489f7c2e924a62777"
+  },
+  "candidate_id": "158157183989b67a7a9f90e9a5b6b0dba87780c690178ca0adf4d19b73720294",
+  "manifest": "4d0259e852fe237d1f6e56680d08771fff21a1a3b6fddbad64bca8b3b6269763",
+  "total_consumer_cases": 14,
+  "dual_pass_cases": 14,
+  "consumer_holds": [],
+  "consumer_acceptance_run_by_case": {
+    "S2-C3": 46165708773,
+    "S2-C5": 46165708773,
+    "S2-I1A": 46165708773,
+    "S2-I1D": 46165708773,
+    "S2-I1U": 46165708773,
+    "S2-I2A": 46165708773,
+    "S2-I2D": 46165708773,
+    "S2-I3A": 46165708773,
+    "S2-I3D": 46165708773,
+    "S2-I3U": 46165708773,
+    "S2-C2": 46175962646,
+    "S2-I2U": 46175962646,
+    "S2-C4": 46177698221,
+    "S2-C1": 46179008149
+  },
+  "original_ten": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/checkpoint.json",
+    "sha256": "8012a3d506cd45477caa0e48571cfc965d6fbeac72f52bd596dbbb92cf5b6ae1"
+  },
+  "amendment_runs": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/checkpoint.json",
+      "sha256": "f914c69926f49d50a30a26859ef2bb1cc818a9d02a7637aef65489c39ab91682"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46177698221/checkpoint.json",
+      "sha256": "447fc96307b1f7194443640e78ab3c45da180c2e100756cd11d4d9ef52328be5"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46179008149/checkpoint.json",
+      "sha256": "eee88c093edb61721db219d3a1b9943168839e8fa484fb7489f7c2e924a62777"
+    }
+  ],
+  "final_compatibility": {
+    "path": "script/genesis-s2/amendment/compatibility.json",
+    "sha256": "48c637acafb3649ba4381bccb04d489f5b5dbe6259566522aefb424cca48e6db"
+  },
+  "retained_retry_compatibility": {
+    "path": "script/genesis-s2/amendment/retained-retry-cases.json",
+    "sha256": "cf5120cdd1b5a11f1e186821fe1324b0d55b38a50ef5c3a9dec1aa5947791d02"
+  },
+  "prior_served_bodies_compared_identical": 20,
+  "s2_u1": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/u1-run-46173202455/checkpoint.json",
+    "sha256": "068d9abd02eaf961f04676bd184e27bbf38538a73e7d05efb56a8815a4fdeae8"
+  },
+  "s2_u1_run": 46173202455,
+  "guardrail": {
+    "checked_change_sha": "a55049e9f4c404c1b0558f245596526213a9b84e",
+    "gate": 0,
+    "warnings": 224,
+    "errors": 0,
+    "log_sha256": "1fa7c56b896b58b7376dcd1bafadebe254325ba7b4c3c6e200951cca3667ed89"
+  },
+  "branch": "genesis-interfaces-resume",
+  "merge_performed": false,
+  "evidence_boundary": "Ten cases retain the original admitted manifest, three retain their earlier corrected manifests, and C1 is accepted on the final admitted manifest. Retention compares the served body bytes, with separate admission evidence for each corrected candidate. Broad archive publication, union integration and production are outside this evaluation."
+}

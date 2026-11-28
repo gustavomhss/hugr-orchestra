@@ -1,0 +1,79 @@
+{
+  "schema": "genesis-s2-amended-consumers/v1",
+  "run_id": 46179008149,
+  "run_head": "90204b143e964bb45c3ab25b2d2ae690e5262a98",
+  "artifact_id": 15277155315,
+  "artifact_zip_sha256": "a435dd4c61ae0f6e4fac6488759c2acf8591803ec498dc8c05f25bda6780a447",
+  "candidate_id": "158157183989b67a7a9f90e9a5b6b0dba87780c690178ca0adf4d19b73720294",
+  "manifest": "4d0259e852fe237d1f6e56680d08771fff21a1a3b6fddbad64bca8b3b6269763",
+  "generation": "2793c20851941e47464478f77a039de3ff886f2d6be0475438f7625b8fe366e7",
+  "target_sha256": "f22ff9245bb22b57b0d09f3e63c43173c312050a0432d41fd1339c093b79876a",
+  "emission": {
+    "ok": true,
+    "data": {
+      "emitted": true,
+      "id": "e5268c972afb8e141f7c8af97464df165c50d76faaa798ca887ddfe0ddcf8bbc",
+      "nodeKey": "eaa787d42a89d3d145951a0b1b84299067d2229528c0894ecdcce9f4c7da8a86"
+    },
+    "guidance": {
+      "next": "a rejected write did not re-derive at source@sha — fix the citation and re-emit",
+      "invariant": "TOOLS-1/7: atlas-emit is a governed fail-closed write door (WRITE_PATHS: atlas-emit, atlas-link — ADR-0003)"
+    }
+  },
+  "prepare_and_admission_sha256": "49d72341ee1a898aa1882f33267510b66446c428d6524516dfa3b3fe31df6169",
+  "judgments": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46179008149/j1-review.json",
+      "sha256": "84e8666d06a5ebc47293447d02293d52458bd7214ba45677421a7fcdf181e31d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46179008149/j2-review.json",
+      "sha256": "01bb34a2cf5efbdb97036760dd160b0af3032762148f417743ed8069294243fb"
+    }
+  ],
+  "cases": {
+    "S2-C1": {
+      "consumer": "/root/s2_close_c1_terra",
+      "status": "PASS",
+      "answer": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46179008149/S2-C1.md",
+        "sha256": "f1bbe447c73ed919faefa9b2af4559202b500d7fb708283f85b5bd00a07ceaaa"
+      },
+      "reads": [
+        {
+          "key": "s2.l2.app-session",
+          "result": "2ed52ec5baba4777c763e17aedf3460a8ea6df4c3717d94a05852c6da0482a25",
+          "section": "First-send cleanup after policy-write failure",
+          "bytes": 1893,
+          "read_sha256": "fd2bbaed7bd1c88491a5385f8ce8fb3beb56c0dd1aba94c05c8e7aff968603d8",
+          "body_sha256": "6991a18f1ba29150854994f83a7eb6726f7b81f3b301903a46853f8fe7cde4a9"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "result": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384",
+          "section": "Prompt admission and draft ownership",
+          "bytes": 4394,
+          "read_sha256": "610cc4df5df16b1ddad0c8a1916055dd612405575c782586a54dacc885d65823",
+          "body_sha256": "70eaeb43054b38233dfe94386a3cc6a83ecdd789c06ca913e46cf595d6b321d1"
+        }
+      ],
+      "budget": {
+        "schema": "evaluation-read-budget/v1",
+        "candidate": "158157183989b67a7a9f90e9a5b6b0dba87780c690178ca0adf4d19b73720294",
+        "generation": "2793c20851941e47464478f77a039de3ff886f2d6be0475438f7625b8fe366e7",
+        "consumer": "S2-C1",
+        "mode": "deep",
+        "index_calls": 0,
+        "read_calls": 2,
+        "body_bytes_total": 6287
+      },
+      "budget_sha256": "947594e6ef83b36e9bd8e3859ead3c4e3730af762bec778cb662b09c483ffce3"
+    }
+  },
+  "prior_passes_preserved": 13,
+  "prior_u1_run": 46173202455,
+  "new_dual_pass": [
+    "S2-C1"
+  ],
+  "remaining_holds": []
+}

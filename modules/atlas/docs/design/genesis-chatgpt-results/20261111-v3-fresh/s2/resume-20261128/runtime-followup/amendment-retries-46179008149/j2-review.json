@@ -1,0 +1,11 @@
+{
+  "reviewer": "/root/s2_admission_j2",
+  "run_id": 46179008149,
+  "manifest": "4d0259e852fe237d1f6e56680d08771fff21a1a3b6fddbad64bca8b3b6269763",
+  "case_verdicts": {
+    "S2-C1": {
+      "verdict": "PASS",
+      "reason": "A resposta cobre retry exato após despacho ambíguo, limpeza limitada à falha de policy write antes do despacho com confirmação de Session vazia, promoção e preservação das edições, i18n e verificações exigidas. Vincula servidor, credenciais, escopo e diretório ao predicado na chamada à API, conforme o corpo efetivamente servido. O hash da resposta confere e os limites de evidência estática são explícitos."
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "reviewer": "J1",
+  "run_id": 46179008149,
+  "manifest": "4d0259e852fe237d1f6e56680d08771fff21a1a3b6fddbad64bca8b3b6269763",
+  "case_verdicts": {
+    "S2-C1": {
+      "verdict": "PASS",
+      "reason": "The answer preserves Session, stable request ID and payload for exact retry after ambiguous dispatch; limits deletion to a never-dispatched policy-write failure with server-confirmed emptiness; and covers admitted draft promotion with later edits unsent. It now explicitly lists the API-call predicate and rechecks for active attempt, acknowledged policy revision, owner, selected server, serialized credentials, scope, directory, Session/draft identity, and prompt. It also prescribes i18n, focused hosted regressions, and before/after production benchmarks, without claiming they ran."
+    }
+  }
+}

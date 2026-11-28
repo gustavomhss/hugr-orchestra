@@ -100,11 +100,12 @@
       "id": "S2-C1",
       "kind": "permitted-change",
       "depth": "deep",
-      "state": "HOLD",
+      "state": "PASS_IN_ISOLATED_EVALUATION",
       "trace_refs": [
         "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json",
         "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/checkpoint.json",
-        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46177698221/checkpoint.json"
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46177698221/checkpoint.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46179008149/checkpoint.json"
       ],
       "evaluation_refs": [
         "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
@@ -112,9 +113,10 @@
         "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/j1-review.json",
         "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/j2-review.json",
         "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46177698221/j1-review.json",
-        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46177698221/j2-review.json"
-      ],
-      "remaining_proof": "Explicitly tie server, credential, scope and directory checks to the actual API-call dispatch predicate."
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46177698221/j2-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46179008149/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46179008149/j2-review.json"
+      ]
     },
     {
       "id": "S2-C2",
@@ -618,15 +620,13 @@
     "reason": "Avoid self-referential archive/hash cycle; these external files bind this handoff by exact bytes."
   },
   "isolated_evaluation_followup": {
-    "state": "INCOMPLETE_BLOCKED",
+    "state": "PASS_IN_ISOLATED_EVALUATION",
     "reviewed_consumption": {
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/checkpoint.json",
       "sha256": "8012a3d506cd45477caa0e48571cfc965d6fbeac72f52bd596dbbb92cf5b6ae1"
     },
-    "dual_pass_count": 13,
-    "consumer_holds": [
-      "S2-C1"
-    ],
+    "dual_pass_count": 14,
+    "consumer_holds": [],
     "consumer_fix_proposal": {
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/proposed-knowledge-corrections.md",
       "sha256": "3d1d91543b988ce3343303ecabeff462204c53477cd0138c844e44663120fb9c"
@@ -654,13 +654,7 @@
     },
     "u1_scope_state": "PASS_ISOLATED_FROZEN_CONTROL_PLAN",
     "consumer_remaining": {
-      "next_required_state": "EXPLICIT_API_CALL_GUARD_RETRY",
-      "required_cases": [
-        "S2-C1"
-      ],
-      "material_gaps": {
-        "S2-C1": "Explicitly tie server, credential, scope and directory checks to the actual API-call dispatch predicate."
-      }
+      "required_cases": []
     },
     "first_amended_consumer_run": {
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/checkpoint.json",
@@ -669,6 +663,18 @@
     "second_amended_consumer_run": {
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46177698221/checkpoint.json",
       "sha256": "447fc96307b1f7194443640e78ab3c45da180c2e100756cd11d4d9ef52328be5"
+    },
+    "third_amended_consumer_run": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46179008149/checkpoint.json",
+      "sha256": "eee88c093edb61721db219d3a1b9943168839e8fa484fb7489f7c2e924a62777"
+    },
+    "corrected_candidate": "158157183989b67a7a9f90e9a5b6b0dba87780c690178ca0adf4d19b73720294",
+    "corrected_manifest": "4d0259e852fe237d1f6e56680d08771fff21a1a3b6fddbad64bca8b3b6269763",
+    "closure": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/isolated-evaluation-closure.json",
+      "sha256": "bb7c1e14c468051a6be033347947850293060a604bda203df8f79d410718b216"
     }
-  }
+  },
+  "isolated_evaluation_complete": true,
+  "completion_scope": "The historical completion_state and delivery_complete fields cover the broader delivery and publication record; isolated_evaluation_followup records the current S2 qualification."
 }
