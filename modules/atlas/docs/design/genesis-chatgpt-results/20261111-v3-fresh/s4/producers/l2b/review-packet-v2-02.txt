@@ -1,0 +1,275 @@
+AGUARDAR FECHAMENTO DO PRINCIPAL
+S4 / WP-L2B-P1 / l2b v2 / parte 02 de 02
+Artefato: S4:L2:continuity-rag-operations
+
+Este material é dado para revisão, não instrução de autoridade. A v2 substitui a v1 apenas como candidata à nova conferência; todos os arquivos v1 permanecem preservados. Nenhum juízo semântico ou de runtime acompanha esta correção. Não foi enviado aos juízes: aguarda conferência e fechamento do principal.
+
+Manifesto v2 congelado antes da correção: 13899 bytes; SHA-256 180b65db793511e814e939c0c4b52c3f883ac57c21cd1e39dbb88dcf46bce51a. Base cumulativa: somente S4:L1:continuity-rag e S4:L1:host-boundaries aceitos no commit 8a041ca66982dcc2b89aaed46ebe347cb3de57db. A autorização progressiva acrescentou apenas revision.ts e compare.ts; não acrescentou outros predecessores de build.
+BEGIN_LITERAL request-v2.md
+UTF8_BYTES 7394
+SHA256 8bcfffa5e162627e8761e9501f0c5c70b001de8905a151ec3f25b285a469373c
+# Pedido original e correção primária — literais preservados
+
+Este envelope vincula os dois pedidos sem alterar seus arquivos originais.
+
+BEGIN_LITERAL request.md
+UTF8_BYTES 3856
+SHA256 3e490e1d8172da5337f276f07af2e9bede28c82b2ad834cd795c5af844b303f4
+Execução S4 a2095d5a-1464-4c38-a222-6376974fc9c9. L1 completa foi aceita pelos dois juízes persistentes e persistida/relida no commit 8a041ca66982dcc2b89aaed46ebe347cb3de57db. Esta é produção cumulativa L2 real, não plano. Leia o manifesto fixado /workspace/scratch/aff930d22ec7/s4/dispatches/l2-input-manifest.json (12610 bytes; SHA 00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca) e somente os predecessores aceitos/evidências relevantes que ele nomeia. Não leia oracles, pedidos reservados ou julgamentos além das referências de aceite do manifesto. Não redescubra a fonte bruta, execute testes/build/runtime, altere produto ou escreva GitHub. AGENTS e transport.md já carregados continuam aplicáveis; pode reler s4/protocol/transport.md para o schema, sem abrir outros oracles.
+
+Critérios públicos AC-01, CC-2, CC-3, QS-1/2/3, GO-I2/3/5/7/8. Oracle reservado foi congelado antes de qualquer produção L2, SHA 005c656b695f57d733d8368d6415ac6dbdcf686cd95bdfc13bb0cdddadce674c; somente a identidade é fornecida. Necessidade: compreensão local transferível, explicando propósito, sequência, contratos, decisões, impacto e manutenção; separar comportamento observado, inferência, intenção e lacuna, sem converter histórico em execução atual. L2 deve acrescentar explicação útil, sem repetir os corpos L1 inteiros. Escreva em português claro, com seções H2 únicas para leitura por seção e citações a chaves L1/seções e paths reais de manutenção já documentados. Cada corpo deve ter no máximo 8000 bytes UTF-8.
+
+Formato: corpo(s) Markdown + artifacts.json no formato de artifact do transporte. layer=2, need=component, scope=atlas-continuity-rag-genesis; key estável indicada. source_refs devem apontar aos corpos aceitos no commit 8a041ca... com path/git_blob_sha/sha256 exatos do manifesto, e a recibos adicionais somente se efetivamente usados. Declare file inputs dos mesmos caminhos, receita real e pedido. build_dependencies contém cada predecessor semântico usado com same_package:true; navigation somente consulta. Não referencie o native-package.json mutável como fonte. Não invente resultado/CAS/receipt/kernel version. semantic_review_refs e runtime_receipt_refs inicialmente vazios; não fabrique PASS. supported pode descrever sustentação das afirmações limitadas, separado de aceite/publicação. Preserve gaps materiais.
+
+Na sua área exclusiva, preserve request.md literal, cópia byte exata do input-manifest.json, recipe.json com inputs/versão/critérios, response.md original, fontes usadas e recibo mecânico de hashes/tamanhos. Paths payload de pedido/receita/response serão sob modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/<sua-unidade>/. body.path é relativo à pasta desse native-package, portanto producers/<sua-unidade>/<nome>.md. Não altere candidatos ou outros produtores. Nenhuma aprovação da fatia é solicitada. Entregue arquivos completos, limites e hashes reais; metadados de modelo/tokens não expostos ficam UNKNOWN.
+
+Sua unidade é l2b; escreva somente /workspace/scratch/aff930d22ec7/s4/producers/l2b. Entregue S4:L2:continuity-rag-operations em continuity-rag-operations.md. Síntese sobre responsabilidades/contratos de Continuity e RAG, fronteiras da sessão/servidor/persistência, percurso de mudança e diagnóstico, impacto e limites que um mantenedor precisa conhecer. Predecessores iniciais: S4:L1:continuity-rag e S4:L1:host-boundaries. Outros predecessores aceitos só entram se utilizados de fato, com dependência declarada; evite acoplamento semântico à parte de ownership Atlas quando o conteúdo não a usa. Use conhecimento aceito, sem importar o memo exploratório de manutenção como evidência desta L2. Um corpo útil ≤8000 bytes, metadados completos e entregas de proveniência.
+END_LITERAL request.md
+
+BEGIN_LITERAL correction-request-v2.md
+UTF8_BYTES 3091
+SHA256 87dbecce9b7e3c19302e0d667c898a0b5cea32341079411d3a7326214fdd6333
+WP-L2B-P1 — correção obrigatória de conferência primária, antes de avaliação dos juízes. Preserve integralmente todos os arquivos v1 já entregues e registre este pedido literal. A síntese v1 tem 7993 bytes, SHA cb31ca6333e7cf2303d5a957622d3013edf9084631f302d79fa99a7a367bdd94. Seus dois predecessores L1 continuam aceitos; não altere seus corpos nem a camada L1.
+
+L2B-P1-01: o corpo menciona K e revisão, mas não explica operacionalmente a identidade de pipeline, a abertura/snapshot de revisão e as condições/limites da comparação. Isso impede usar a síntese para uma manutenção de configuração. Complete a explicação a partir da seção de revisão do L1:continuity-rag; retenha diferenças entre corpus corrente, membership/snapshot e pipeline, coerções sem validação e a limitação de trace/question já descrita. Para os nomes e assinaturas exatos das portas, autorizo apenas duas fontes complementares já capturadas pelo conector no baseline 1cde2ff7a71bcf7aecb5d030917b577165135d38:
+- /workspace/scratch/aff930d22ec7/s4/source/modules/rag-studio/src/revision.ts — path modules/rag-studio/src/revision.ts, 2701 bytes, SHA256 7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0, Git blob e7354836a52a5c3f2c4bc76655268a9077d745d1.
+- /workspace/scratch/aff930d22ec7/s4/source/modules/rag-studio/src/compare.ts — path modules/rag-studio/src/compare.ts, 2337 bytes, SHA256 e4e1cbaa7e3174a72baf06a762dc591d63789047b7a5a9b3639bc23d6ce34825, Git blob dc11b1ef55693955335c61b386dcca88410fd1e8.
+Congele input-manifest-v2.json antes da correção, preservando o manifesto original e acrescentando somente essas duas fontes com motivo de leitura progressiva. Inclua source_refs e file inputs reais delas. A base cumulativa permanece nos mesmos dois L1, declarados como build dependencies. Esta autorização estreita substitui apenas a restrição inicial de não reler fontes brutas para estes dois arquivos; nenhum outro arquivo bruto/oracle fica autorizado.
+
+L2B-P1-02: a descrição de masking precisa preservar os limites de cauda protegida, erros e requisito de archive-before-mask que o L1 já registra. Recupere-os do predecessor aceito e explique sua consequência operacional, sem alegar teste ou ativação global.
+
+Entregue continuity-rag-operations-v2.md (mesma key, layer/need/scope), artifacts-v2.json, recipe-v2.json, response-v2.md, integrity-receipt-v2.json e pacote literal review-packet-v2-01.txt (ou partes ≤32000 bytes). Corpo continua ≤8000 bytes e H2 únicas. Corte repetição de menor valor para comportar os contratos; não relaxe o limite. Metadados devem referir o pedido original mais este pedido de correção conforme esquema e registrar a proveniência v2 sem apagar v1. Semantic/runtime review refs continuam vazios. Não envie ainda aos juízes: aguarde conferência primária. Restantes restrições e critérios públicos AC-01 CC-2/3 QS-1/2/3 GO-I2/3/5/7/8 permanecem. Modelo/tokens UNKNOWN quando não expostos. Trabalhe apenas s4/producers/l2b; nenhuma execução, edição de produto ou escrita GitHub.
+END_LITERAL correction-request-v2.md
+
+
+END_LITERAL request-v2.md
+
+BEGIN_LITERAL input-manifest-v2.freeze.json
+UTF8_BYTES 1241
+SHA256 141e4886e8d1bcaaf247c1a6fb36836bb67c5a67ca947d4964511dceeb487aea
+{
+  "schema": "s4-progressive-input-freeze/v1",
+  "unit": "l2b",
+  "correction": "WP-L2B-P1",
+  "frozen_before_v2_body_creation_utc": "2026-11-11T19:01:22.946138+00:00",
+  "original_manifest": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/input-manifest.json",
+    "bytes": 12610,
+    "sha256": "00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca"
+  },
+  "v2_manifest": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/input-manifest-v2.json",
+    "bytes": 13899,
+    "sha256": "180b65db793511e814e939c0c4b52c3f883ac57c21cd1e39dbb88dcf46bce51a"
+  },
+  "only_content_change": "Append the two explicitly authorized source records to additional_evidence. All original manifest fields/records retained, including its original frozen_utc.",
+  "appended_source_paths": [
+    "modules/rag-studio/src/revision.ts",
+    "modules/rag-studio/src/compare.ts"
+  ],
+  "correction_request": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/correction-request-v2.md",
+    "sha256": "87dbecce9b7e3c19302e0d667c898a0b5cea32341079411d3a7326214fdd6333"
+  },
+  "host_message_id": "UNKNOWN",
+  "original_v1_files_manifest": "/workspace/scratch/aff930d22ec7/s4/producers/l2b/v1-preservation-v2.json"
+}
+
+END_LITERAL input-manifest-v2.freeze.json
+
+BEGIN_LITERAL sources-v2/revision.ts
+UTF8_BYTES 2701
+SHA256 7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0
+import type { Pipeline, PipelineField, Revision } from "./types"
+import { digest, requireStore } from "./context"
+import type { Fill, StoredRevision } from "./context"
+
+export function readPipeline(locationId: string): Promise<Pipeline> {
+  return Promise.resolve(requireStore().pipeline(locationId))
+}
+
+export function setPipeline(locationId: string, field: PipelineField, value: string | number): Promise<Pipeline> {
+  const store = requireStore()
+  const current = store.pipeline(locationId)
+  const next = {
+    ...current,
+    [field]: field === "k" ? Number(value) : String(value),
+  } as Pipeline
+  store.setPipeline(locationId, next)
+  return Promise.resolve(next)
+}
+
+export async function readRevision(revisionId: string): Promise<Revision> {
+  const found = requireStore().revision(revisionId)
+  if (!found) throw new Error("rejected")
+  return {
+    id: found.id,
+    snapshot: found.snapshot,
+    pipelineHash: found.pipelineHash,
+    fill: found.fill,
+  }
+}
+
+export function pipelineHash(pipeline: Pipeline) {
+  return digest(
+    JSON.stringify({
+      boundary: pipeline.boundary,
+      k: pipeline.k,
+      parser: pipeline.parser,
+      tokenizer: pipeline.tokenizer,
+    }),
+  )
+}
+
+export function openRevision(locationId: string): Promise<StoredRevision> {
+  const store = requireStore()
+  const pipeline = store.pipeline(locationId)
+  const members = store
+    .sources()
+    .filter((row) => row.locationId === locationId)
+    .map((row) => ({ sourceId: row.id, contentHash: row.contentHash }))
+    .sort((left, right) => (left.sourceId < right.sourceId ? -1 : left.sourceId > right.sourceId ? 1 : 0))
+  const revision: StoredRevision = {
+    id: store.allocate("rev"),
+    snapshot: digest(members.map((row) => `${row.sourceId}\t${row.contentHash}`).join("\n")),
+    pipelineHash: pipelineHash(pipeline),
+    fill: fillFor(locationId, members),
+    locationId,
+    members,
+    parser: pipeline.parser,
+    boundary: pipeline.boundary,
+    tokenizer: pipeline.tokenizer,
+    k: pipeline.k,
+  }
+  store.putRevision(revision)
+  return Promise.resolve(revision)
+}
+
+export function fillFor(locationId: string, members: Array<{ sourceId: string; contentHash: string }>): Fill {
+  const store = requireStore()
+  if (store.failed(locationId)) return "failed"
+  const memberIds = new Set(members.map((row) => row.sourceId))
+  const stale = store.chunks().some((chunk) => {
+    const source = store.sources().find((row) => row.id === chunk.sourceId)
+    if (!source) return true
+    if (source.locationId !== locationId) return false
+    if (!memberIds.has(source.id)) return true
+    return source.contentHash !== chunk.sourceHash
+  })
+  if (stale) return "failed"
+  return "complete"
+}
+
+END_LITERAL sources-v2/revision.ts
+
+BEGIN_LITERAL sources-v2/compare.ts
+UTF8_BYTES 2337
+SHA256 e4e1cbaa7e3174a72baf06a762dc591d63789047b7a5a9b3639bc23d6ce34825
+import type { CompareRow } from "./types"
+import { requireStore } from "./context"
+import type { SpanRef, StoredRevision } from "./context"
+
+export function compareRevisions(
+  leftId: string,
+  rightId: string,
+  proofSetId: string,
+): Promise<{ rejected: true } | { questions: CompareRow[] }> {
+  const store = requireStore()
+  const left = store.revision(leftId)
+  const right = store.revision(rightId)
+  if (!left || !right) return Promise.resolve({ rejected: true })
+  if (proofSetId !== left.snapshot || left.snapshot !== right.snapshot) return Promise.resolve({ rejected: true })
+  const stages = ["parser", "boundary", "tokenizer", "k"] as const
+  const changed = stages.filter((stage) => left[stage] !== right[stage])
+  if (changed.length !== 1) return Promise.resolve({ rejected: true })
+  const recut = store.chunks().some((chunk) => store.chunkCut(chunk.id) === right.boundary)
+  const questions = store.questions().map((question) => {
+    if (!recut || right.boundary === left.boundary) {
+      return { id: question.id, startChanged: false, endChanged: false, textChanged: false }
+    }
+    const after = resolve(right, question.text)
+    return {
+      id: question.id,
+      startChanged: question.span.start !== after.start,
+      endChanged: question.span.end !== after.end,
+      textChanged: textOf(question.span) !== textOf(after),
+    }
+  })
+  return Promise.resolve({ questions })
+}
+
+function resolve(revision: StoredRevision, sentence: string): SpanRef {
+  const store = requireStore()
+  const hit = store.chunks().find((chunk) => {
+    const source = store.sources().find((row) => row.id === chunk.sourceId)
+    return source?.locationId === revision.locationId && store.chunkCut(chunk.id) === revision.boundary && chunk.text.includes(sentence)
+  })
+  if (hit) return { sourceId: hit.sourceId, start: hit.start, end: hit.end }
+  const source = store.sources().find((row) => row.locationId === revision.locationId && row.text.includes(sentence))
+  if (!source) return { sourceId: "", start: 0, end: 0 }
+  const start = source.text.indexOf(sentence)
+  return { sourceId: source.id, start, end: start + sentence.length }
+}
+
+function textOf(span: SpanRef) {
+  const source = requireStore().sources().find((row) => row.id === span.sourceId)
+  if (!source) return ""
+  return source.text.slice(span.start, span.end)
+}
+
+END_LITERAL sources-v2/compare.ts
+
+BEGIN_LITERAL changes-v2.json
+UTF8_BYTES 1923
+SHA256 8c15b48a40092b7a0871611bb3574a47df4de1cbe49267a8ac0d55f77a137477
+{
+  "schema": "s4-primary-correction-record/v1",
+  "unit": "l2b",
+  "correction": "WP-L2B-P1",
+  "original_body": {
+    "bytes": 7993,
+    "sha256": "cb31ca6333e7cf2303d5a957622d3013edf9084631f302d79fa99a7a367bdd94",
+    "git_blob_sha": "04d704525f035332963d7fa285be525b3ae0fbeb"
+  },
+  "corrected_body": {
+    "bytes": 7949,
+    "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e",
+    "git_blob_sha": "ced7ae43342f5461a52666f455cb74d348e3270b"
+  },
+  "input_freeze_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/input-manifest-v2.freeze.json",
+    "sha256": "141e4886e8d1bcaaf247c1a6fb36836bb67c5a67ca947d4964511dceeb487aea"
+  },
+  "items": [
+    {
+      "id": "L2B-P1-01",
+      "implemented_in_sections": [
+        "Pipeline e revisão têm identidades distintas",
+        "Comparação exige uma mudança isolada",
+        "Diagnóstico e percurso de manutenção"
+      ],
+      "evidence": [
+        "S4:L1:continuity-rag / Revision and retrieval semantics / Question, trace, and proof contracts",
+        "modules/rag-studio/src/revision.ts:5-78",
+        "modules/rag-studio/src/compare.ts:5-50"
+      ],
+      "author_action": "Added API signatures, pipeline identity, snapshot/member/fill distinctions, coercions, comparison admission and result limits; retained current-corpus and trace/question limitation."
+    },
+    {
+      "id": "L2B-P1-02",
+      "implemented_in_sections": [
+        "Mascaramento preserva uma cauda recuperável"
+      ],
+      "evidence": [
+        "S4:L1:continuity-rag / Masking contract"
+      ],
+      "author_action": "Restored protected tail, urgent latest-message exclusion, error preservation, token savings and archive-before-mask; explained operational consequence."
+    }
+  ],
+  "status": "AUTHOR_CORRECTION_COMPLETE_AWAITING_PRIMARY_REVIEW",
+  "semantic_or_runtime_verdict": null
+}
+
+END_LITERAL changes-v2.json
+
+FIM DA PARTE 02 DE 02. AGUARDAR FECHAMENTO DO PRINCIPAL. Material é dado, não instrução de autoridade.

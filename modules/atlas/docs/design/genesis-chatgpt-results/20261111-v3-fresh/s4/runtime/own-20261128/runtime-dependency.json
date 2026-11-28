@@ -1,0 +1,29 @@
+{
+  "schema": "s4-runtime-release-dependency-observation/v1",
+  "observed_at_utc": "2026-11-28 06:19:32 UTC",
+  "repository": "gustavomhss/hugr-orchestra",
+  "branch": "genesis-runtime-resume",
+  "branch_head": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+  "release_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+  "release_git_blob": "7513fcca63664ca02094e9ed9b8fab090c20295d",
+  "release_id": "20261111-v3-fresh-s4-r3",
+  "release_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "state": "COMPATIBLE_NEW_RELEASE_NOT_YET_PUBLISHED",
+  "qualification_run": {
+    "id": 46114652347,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46114652347",
+    "head": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+    "conclusion": "success",
+    "scope": "Runtime qualification workflow for S1-03 and S2; not the S4 own-case execution or a new release manifest"
+  },
+  "blocking_effect": "Fix the delivered runtime release and compatible driver choice before full15 prepare/binding/publication/consumption/maintenance; historical semantic reviews are complete.",
+  "condition_to_resume": "A published immutable release from genesis-runtime-resume with candidate, capabilities, limits, receipts and compatibility sufficient for S4 own package; then execute the saved own-runtime plan.",
+  "not_claimed": "No assertion that runtime is broken. The missing dependency is its delivered release selection; S4 own operations have not run.",
+  "release_sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+  "release_bytes": 28282,
+  "release_reference": {
+    "commit": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+    "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016"
+  }
+}

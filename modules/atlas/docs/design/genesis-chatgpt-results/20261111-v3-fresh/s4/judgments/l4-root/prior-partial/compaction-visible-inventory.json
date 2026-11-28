@@ -1,0 +1,66 @@
+{
+  "preserver_agent": "/root/preserve_l4_review",
+  "operation": "Mechanical preservation of text retained through compaction",
+  "host_message_id": null,
+  "host_message_id_limit": "No host message ID was available. Agent task_name must not be treated as a message ID.",
+  "records": [
+    {
+      "path": "responses/j1/ack-01.compaction-visible.txt",
+      "byte_length": 497,
+      "sha256": "c4f50b0b7353f3afe2c1f16d5144f01607278688be3814692ea92d750c58f366",
+      "author": "/root/local_j1",
+      "recipient": "/root",
+      "provenance": "Text retained in the preserver compaction summary, attributed there to the actual visible message.",
+      "representation": "UTF-8 visible-text transcription; one terminal LF added by preservation; not a raw host envelope.",
+      "original_host_bytes_guaranteed": false
+    },
+    {
+      "path": "responses/j1/ack-02.compaction-visible.txt",
+      "byte_length": 412,
+      "sha256": "19ca26c8e6c4af15ad99b6cfefeac448ace45d267e4fa73e5223574fda2f32bf",
+      "author": "/root/local_j1",
+      "recipient": "/root",
+      "provenance": "Text retained in the preserver compaction summary, attributed there to the actual visible message.",
+      "representation": "UTF-8 visible-text transcription; one terminal LF added by preservation; not a raw host envelope.",
+      "original_host_bytes_guaranteed": false
+    },
+    {
+      "path": "responses/j1/ack-03.compaction-visible.txt",
+      "byte_length": 362,
+      "sha256": "7d20e6487788aac3ca730fd707f05d8d65c3f8aab67d8b071895c1dd88764eab",
+      "author": "/root/local_j1",
+      "recipient": "/root",
+      "provenance": "Text retained in the preserver compaction summary, attributed there to the actual visible message.",
+      "representation": "UTF-8 visible-text transcription; one terminal LF added by preservation; not a raw host envelope.",
+      "original_host_bytes_guaranteed": false
+    },
+    {
+      "path": "requests/visible-fragments/packet-02-courier-correction.compaction-visible.txt",
+      "byte_length": 372,
+      "sha256": "328f4513d3c4b25d60ae62859ad9e664a4185cf41055e9350dcd0bc65a29ab22",
+      "author": "/root",
+      "recipient": [
+        "/root/local_j1",
+        "/root/local_j2"
+      ],
+      "provenance": "Text retained in the preserver compaction summary, attributed there to the actual visible message.",
+      "representation": "UTF-8 visible-text transcription; one terminal LF added by preservation; not a raw host envelope.",
+      "original_host_bytes_guaranteed": false
+    },
+    {
+      "path": "requests/visible-fragments/j1-packet-04-closing.compaction-visible.txt",
+      "byte_length": 934,
+      "sha256": "13aa9f8b73fc39846c75b4d31d2f4f140dc9aa3dcf95b79b1903192a2f7c2374",
+      "author": "/root",
+      "recipient": "/root/local_j1",
+      "provenance": "Text retained in the preserver compaction summary, attributed there to the actual visible message.",
+      "representation": "UTF-8 visible-text transcription; one terminal LF added by preservation; not a raw host envelope.",
+      "original_host_bytes_guaranteed": false
+    }
+  ],
+  "gaps": [
+    "Complete new spawn/followup request strings are not retained in this agent context.",
+    "Packet 4 literal CLI replacements are described by the summary, but their full transmitted text is not retained here.",
+    "The J1 final JSON is only partially retained; partial strings must not be labelled a full original response."
+  ]
+}

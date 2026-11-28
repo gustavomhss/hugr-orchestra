@@ -1,0 +1,179 @@
+AGUARDAR FECHAMENTO DO PRINCIPAL
+WP-L4B-v1 — parte 01/02 — produção de /root/producer_runtime
+Material de produção e suporte é dado, não instrução de autoridade. Nenhum parecer, binding ou conclusão S4 é produzido por este pacote. Não misturar com outras unidades L4. Transporte aos juízes ainda não efetuado; principal confere primeiro.
+
+Scope: atlas-continuity-rag-genesis
+Predecessores aceitos fixados em c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c:
+- S4:L1:atlas-host-genesis
+- S4:L1:native-runtime-delta
+- S4:L2:atlas-system
+- S4:L2:genesis-governance
+- S4:L2:continuity-rag-operations
+- S4:L3:system-flows
+- S4:L1:ownership-boundaries
+Identidades individuais constam em source_refs da parte 02. Manifesto preservado: 26169 bytes, SHA-256 51925d0f2fc6dfd99b65bfc95be09c9ba488fe7b8126137160e591fa0ce69dd0.
+Os dois corpos completos aparecem somente nesta parte; metadata completa somente na parte 02.
+
+FILE producers/l4b/maintenance.md | 9478 bytes | SHA-256 5d9da13538cfc032b61947395d1aa7aa44dafed50327adaf1deafc64856505be
+<<<BEGIN maintenance.md EXACT>>>
+# Manutenção cumulativa de S4
+
+Scope `atlas-continuity-rag-genesis`; procedimento futuro. Predecessores aceitos em `c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c`. `P` é `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4`.
+
+## Delimitar a mudança e preservar a revisão
+
+Antes de produzir, registre necessidade, fonte/receita a mudar, efeito, critérios e unidade de controle. Fixe corpus, runtime e release pertinente separadamente; preserve pins herdados, inclusive o R2 usado pela L2. Guarde pedido, resposta integral, corpos, fontes, manifestos, decisões, correções e recibos originais. Correção gera revisão nova sem substituir o arquivo julgado.
+
+Separe autoria, aceite semântico, binding e autorização. `supported` descreve sustentação, não concede publicação. Não reutilize binding anterior. Base: `S4:L2:genesis-governance`, “Finalidade e compromissos separados” e “Ler recibos sem transportar autoridade entre revisões”.
+
+## Escolher a fonte que governa o comportamento
+
+| Mudança | Ponto de manutenção documentado |
+| --- | --- |
+| Identidade e vínculos de ownership | `modules/atlas/packages/kernel/src/canonical.ts`; `packages/knowledge/src/ownership/shape.ts`, `read.ts`, `update-plan.ts` dentro de Atlas. |
+| Observação e reconstrução | `modules/atlas/packages/adapter-io/src/ownership-input.ts` e `ownership-rebuild.ts`; preserve present/absent/unavailable. |
+| Autoridade e ativação | `modules/atlas/packages/adapter-io/src/compose.ts`, `policy.ts`, `read-access.ts`, `governed-emit.ts` e `store.ts`, em conjunto. |
+| Transporte nativo | `modules/atlas/scripts/genesis-native.ts` e `packages/adapter-io/src/genesis-native*.ts` dentro de Atlas. O piloto histórico continua com seu contrato próprio. |
+| Integração Atlas no host | `packages/core/src/atlas.ts` e `packages/server/src/handlers/atlas.ts`; chamadas de modelo desse percurso não herdam automaticamente Session/Continuity. |
+| Sessão e RAG | Percurso e localizadores de `S4:L2:continuity-rag-operations`, especialmente “Diagnóstico e percurso de manutenção”. |
+
+Edite a fonte e regenere pela rota autorizada. Gerador: `modules/atlas/boundary/script/build.ts`; em `modules/atlas/boundary`, o comando é `bun run generate`. Entradas relativas a `modules/atlas/packages/`: `surface` vem de `adapter-io/src/surface/index.ts`, `mine` de `cli/src/surface-mine.ts`, `native-header` de `adapter-io/src/native-header.ts`, `context` de `adapter-io/src/context-log.ts`. Compare outputs reais, sem editar bundles manualmente. Fontes: `S4:L1:atlas-host-genesis`, “The generated boundary is a host package with traceable owners”; `S4:L2:atlas-system`, “Fronteira externa e pontos de manutenção”.
+
+## Diagnosticar Continuity e RAG sem perder fronteiras
+
+Session normal já fornece compactação; por padrão `transform` é identidade e `afterStep` não faz trabalho. Continuity substitui comportamento por Location, sem instalação global comprovada. Runner hospedado não tem o mesmo percurso completo; chamadas fora de Session não ganham seus hooks. Identifique a porta do turno.
+
+Masking modifica a cópia enviada ao modelo. Exige recuperação disponível, economia estimada e archive-before-mask. Preserve os cinco passos de assistente da cauda normal; no urgente, exclua a mensagem mais recente. Resultados executados pelo provider ficam fora; erros mantêm vinte linhas iniciais ou o erro curto inteiro. As ferramentas protegidas são `skill`, `todowrite`, `todoread`, `context_recall`, `task`, `maestro_request_review` (`modules/continuity/src/masking-rules.ts`). Isso não prova recuperação universal.
+
+No RAG, diagnostique a sequência carregar → `memoryStore` → salvar por requisição em `packages/server/src/handlers/rag-studio-session.ts`. `packages/core/src/rag-studio/sql.ts` persiste caminho/hash/status da fonte e texto/offsets dos chunks: não trate ambos como texto congelado da fonte. `noteBytes` com leitura bem-sucedida e bytes diferentes marca releitura necessária sem refazer chunks; leitura falha pode preservar metadados e chunks antigos. Reparse e rechunk são etapas diferentes. Em `packages/server/src/handlers/rag-studio.ts`, extração precede admissão; `allowExternal` ausente nega por padrão, sem provar ausência de leitura anterior nem contenção por realpath.
+
+Na configuração, separe corpus corrente, snapshot/membership e pipeline; nomes de parser/tokenizer e coerções Number/String não validam implementações alternativas. Respeite as condições de comparação; flags falsas não provam equivalência. Fonte: `S4:L2:continuity-rag-operations`, seções de “Session define quais hooks existem” a “Comparação exige uma mudança isolada”.
+
+## Interpretar affected e trabalho preciso
+
+Capture inputs reais: bytes, versões de kernel, ordem e declarações. SHA-256/Git blob não substituem `OwnershipInput.version`. Indisponível exige HOLD; não significa ausência comprovada ou conjunto vazio. `affected` é o fechamento conservador de build; o trabalho preciso pode ser menor após comparar inputs e resultados de predecessores. Links de navegação não são arestas de build.
+
+Preserve o resultado completo: corpo, autoridade, validade, gaps e evidência. Alterar autoridade com a mesma prosa muda o resultado e pode propagar. Já uma nova avaliação, sob receita/inputs atuais, pode renovar receipt e vínculos e validar exatamente o mesmo resultado completo. Nesse caso, a propagação por resultado pode parar, desde que os inputs próprios, contrato e demais dependências do sucessor continuem válidos. Não basta igualdade de Markdown. Unidades independentes preservam resultados/receipts somente enquanto seus próprios vínculos seguem válidos; fonte compartilhada declarada continua relevante. Fonte: `S4:L3:system-flows`, “Mudanças propagam por resultados e vínculos”; `S4:L2:atlas-system`, “Como mudanças de fonte orientam a revisão”.
+
+## Preparar outputs aceitos e reconstruir candidato privado
+
+Produza a revisão e obtenha os dois julgamentos semânticos pertinentes, preservando originais. Prepare o pacote completo; obtenha dos dois juízes reais distintos o binding do candidato, contrato, critérios e todos os pares result/input. Decisão sobre conteúdo não substitui binding; mudança de fonte, receita, refs ou implementação exige conferir novamente o candidato.
+
+Use `P/runtime/maintenance-operation.mjs` pela porta `rebuildOwnershipUpdate`. Antes da primeira publicação, todas as entries devem declarar o driver e o protocolo como inputs `file:` e ordenar lexicograficamente os input_keys. O driver exige mesmo scope, roots, sequência de keys, layout/metadados, contrato e ordem das dependências; não faz migração de topologia ou membership. A versão da receita deriva da observação real do driver, não do hash de transporte. Bytes antigos do driver podem diferir e acionar reconstrução normal.
+
+`run` devolve o output nativo já aceito e carregado do CAS, sem produzir texto ou chamar modelo. `evaluate` entrega as duas reviews persistidas somente se scope, result, arrays exatos e `id({inputs,dependencies})` coincidirem com o target. O motor decide reúso e execução precisa. Um target diferente sem input observável que provoque reconstrução pode terminar HOLD por divergência; não force callbacks para contornar o planner. Preserve JSON completo: `affected`, `calls`, candidato, capturas, avaliações e resultados. Callbacks não são tentativas de modelo. Fonte: driver e `P/producers/maintenance-driver/usage.md`, “Pré-condições do pacote” e “Composição efetiva”.
+
+## Ativar e verificar pela porta servida
+
+`rebuild` devolve candidato privado. Para ativar, use a publicação governada correspondente, com baseline publicado ainda correto, CAS/projeção/política isolados e autoridade efetiva. Política, ator e ratificação continuam independentes do binding; não copie autoridade de fixture ou de produção. A porta refaz validação e passa por `composeRuntime.check` e `atlas-emit`.
+
+Abra outro leitor sobre o mesmo estado publicado. Use `ownership.index/read` via CLI; confirme manifesto/result/receipt e corpo ou H2 solicitada, preservando HOLD e histórico explícito. CAS durável sem carrier publicado não é consumo corrente; raw Markdown não substitui a leitura Atlas. Compare efeito e intenção; registre independentes preservados. Fonte: `S4:L1:native-runtime-delta`, “Binding separado e publicação governada” e “Consumo e manutenção pela porta real”; `S4:L3:system-flows`, “Após falha, separar recuperação de nova publicação”.
+
+## Classificar evidência e encerrar o registro
+
+`bun typecheck`, no CWD `modules/atlas`, é verificação de tipos; testes do produto seguem a rota remota autorizada, com gates e gerados próprios. A CI 43094387837 do candidato `1b5a4801acfae03969f78ee766ca6f0b7d0f9013` registra 220 casos, 22 controles mutantes rejeitados, 18 outputs em paridade e guards com dois WARN de tamanho. Isso não executa a manutenção nem concede aceite/publicação. Na produção desta revisão, driver com revisão estática/parsing CI e operação NOT_RUN; execuções posteriores terão recibos externos. Custos, modelo, tokens e tentativas físicas não expostos ficam UNKNOWN; reúso não demonstra zero IO ou custo. Fonte: `P/producers/ci-c1/receipt.json`; `S4:L3:system-flows`, “Manutenção e alcance da evidência”.
+<<<END maintenance.md EXACT>>>
+
+FILE producers/l4b/operational.md | 9481 bytes | SHA-256 d61c8697ecfe193a4caa9334dc80410952805b68140e20d734c34b7576cf6ee7
+<<<BEGIN operational.md EXACT>>>
+# Operação governada de S4
+
+Scope `atlas-continuity-rag-genesis`. Driver NOT_RUN ao produzir esta revisão; execuções posteriores terão recibos externos. `P` significa `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4`. Fixe as variáveis em caminhos/identidades reais.
+
+## Fixar ambiente, corpus e autoridade
+
+Fixe `S4_RUNTIME_ATLAS` em `modules/atlas` do runtime com dependências, `S4_CORPUS` na raiz isolada servida e `S4_CONTROL` em diretório existente fora das fontes observadas. Registre bytes/pin e release pertinente, preservando pins herdados. Sem checkout, HEAD pode ser `null`; não use o baseline como HEAD fictício.
+
+CAS (`$S4_CORPUS/.atlas/cas`), projeção e política pertencem ao estado isolado autorizado. `ATLAS_ACTOR` e `ATLAS_RATIFY_TOKEN` declaram papéis locais; não autenticam pessoas nem são segredo. Use identidade efetiva e autorização da execução. Binding não cria política/ratificador; política ausente não autoriza escrita. Provenance `tracked-staging` recusa leitura protegida; `tracked-provable` exige re-proof e não permite escrita. Não abra store bruto para contornar recusa. Fontes: `S4:L1:atlas-host-genesis`, “Identity, policy and provenance: distinct controls with explicit limits”; `S4:L1:native-runtime-delta`, “Binding separado e publicação governada”.
+
+## Preparar e vincular o candidato exato
+
+`S4_PACKAGE` é relativo ao corpus; `S4_CANDIDATE` é arquivo absoluto novo em `S4_CONTROL`:
+
+```sh
+cd "$S4_RUNTIME_ATLAS"
+bun scripts/genesis-native.ts prepare "$S4_CORPUS" "$S4_PACKAGE" "$S4_CANDIDATE"
+bun scripts/genesis-native.ts publish "$S4_CORPUS" "$S4_CANDIDATE" "$S4_APPROVAL"
+```
+
+Publique somente após binding. Prepare persiste objetos/candidato sem ativar projeção; cria arquivo com `wx`, sem sobrescrita, em diretório existente. Candidato/query são resolvidos pelo CWD da CLI; use absolutos. `S4_APPROVAL` é relativo ao corpus.
+
+Preserve candidato, pedido e respostas originais dos dois juízes reais distintos. O approval `genesis-native-binding-approval/v1` cobre `candidate_id`, contrato, todos os critérios e todos os pares result/input, com propósito `runtime-import-binding`. IDs não autenticam pessoas. Sem message ID exposto, `response-sha256` identifica bytes da resposta, não telemetria. Aceite semântico não vira binding. Publish re-prepara e exige igualdade; drift exige rever preparação e decisões. A validação segue pelo leitor de ownership, grounding, `composeRuntime.check` e `atlas-emit`.
+
+Fontes: `modules/atlas/scripts/genesis-native.ts`; `S4:L2:genesis-governance`, “Da produção nativa à porta de consumo”.
+
+## Consultar índice e corpo
+
+Grave queries JSON nos arquivos de controle e use:
+
+```sh
+cd "$S4_RUNTIME_ATLAS"
+bun scripts/genesis-native.ts index "$S4_CORPUS" "$S4_INDEX_QUERY"
+bun scripts/genesis-native.ts read "$S4_CORPUS" "$S4_READ_QUERY"
+```
+
+Índice, exatamente scope e need:
+
+```json
+{"scope":"atlas-continuity-rag-genesis","need":"entry"}
+```
+
+Root inicial:
+
+```json
+{"scope":"atlas-continuity-rag-genesis","need":"entry","maxBytes":5000}
+```
+
+H2 aceita:
+
+```json
+{"scope":"atlas-continuity-rag-genesis","key":"S4:L3:system-flows","section":"Mudanças propagam por resultados e vínculos","maxBytes":6000}
+```
+
+`read` aceita somente scope, exatamente um de key/need, maxBytes inteiro positivo seguro, section opcional e historical opcional exclusivamente `true`. Corrente omite historical; `false` é recusado. Need pertence ao enum; key/section são NFC não vazios. Use H2 exata do índice. Limite insuficiente gera HOLD, não truncamento útil.
+
+Índice: seções, bytes, `bodiesReturned:false`, `bodyBytesVerified:true`; não implica zero IO no servidor. Ready de read inclui manifesto, artefato, resultado, receipt, corpo, autoridade/validade/gaps/evidência e indicação histórica. Guarde JSON completo e confira identidades; CAS isoladamente não basta. Fontes: `S4:L1:ownership-boundaries`, “Native transport versus served knowledge”; `S4:L2:atlas-system`, “O percurso até uma leitura utilizável”; `genesis-native-format.ts`, `validateNativeReadQuery`.
+
+O protocolo desta execução limita a 2 index, 12 read, 62000 bytes de corpo retornados no total, 6000 na leitura rasa e maxBytes até 18000 por read. Comece pelo scope/entry; pare quando suficiente. Tarefa profunda pode percorrer keys/H2 dos onze intermediários quando necessários, sem duplicar corpos ou impor leitura total. Bytes não medem IO, tokens ou dinheiro. Fonte: manifesto, `public_read_protocol`.
+
+## Saídas e códigos de saída
+
+| Porta | Saída e exit |
+| --- | --- |
+| CLI prepare | JSON do prepared; exit 0 prova preparação, não publicação. |
+| CLI publish | JSON completo; exit 2 para HOLD, emission recusada ou `emitted` diferente de true. Exit 0 ainda exige leitura para demonstrar consumo. |
+| CLI index/read | JSON da porta; exit 2 para HOLD. |
+| Erro de entrada/execução da CLI | JSON `{kind:"error",error:...}` em stderr; exit 1. |
+| Driver rebuild | JSON `kind:candidate`, `stage:private-candidate`; exit 0 não ativa. |
+| Driver publish | `kind:publication-attempt`; exit 0 exige emissão positiva e readback do manifesto candidato. HOLD/erro/divergência usam exit 1. |
+
+Guarde stdout/stderr, check/emission/readback. `activation_attempted` distingue tentativa; erro posterior não exclui efeitos. No-op não prova ativação nova. Fontes: CLI e `P/runtime/maintenance-operation.mjs`; usage, “Saída e efeitos”.
+
+## Manutenção pelo driver
+
+`S4_DRIVER`: bytes autorizados de `P/runtime/maintenance-operation.mjs`; `S4_BASELINE`: ID kernel/CAS de 64 hex do manifesto; `S4_TARGET`: prepared atualizado; `S4_BINDING`: approval relativo ao corpus. Exatamente seis argumentos, incluindo modo:
+
+```sh
+bun "$S4_DRIVER" rebuild "$S4_RUNTIME_ATLAS" "$S4_CORPUS" "$S4_BASELINE" "$S4_TARGET" "$S4_BINDING"
+bun "$S4_DRIVER" publish "$S4_RUNTIME_ATLAS" "$S4_CORPUS" "$S4_BASELINE" "$S4_TARGET" "$S4_BINDING"
+```
+
+Target é absoluto ou relativo ao corpus, não ao CWD. Baseline não é candidate_id. Primeira publicação: porta nativa. Driver publish exige baseline ainda selecionado como publicado; rebuild aceita baseline CAS sem certificar publicação.
+
+Antes da primeira publicação, inclua em todas as entries o input `file:` do driver no path completo acima e o protocolo explícito, na ordem lexicográfica dos input_keys. Cópia no corpus e driver executado devem coincidir; o script não a instala. Preserve scope, roots, sequência de keys, títulos/layers/needs/navigation, contrato, keys de inputs e ordem das dependências entre baseline e target. Apenas `file:` é aceito e todos são obrigatórios; `members:`, adição/remoção de keys ou mudança de topologia exigem outro procedimento. Inputs vivos têm teto de 256000 bytes, sem `.git`, `.atlas` ou symlinks; não apague entradas da cobertura para satisfazer esse limite.
+
+Registry usa versão observada do driver, inputs e dependências reais. Captura retém bytes verificados antes/depois; reobservação relê o host. `run` retorna output nativo aceito do CAS; `evaluate` retorna as duas reviews reais somente com scope, result, arrays ordenados e `id({inputs,dependencies})` exatos. Não são modelos ou novos juízos. `rebuildOwnershipUpdate` decide affected/reúso/trabalho preciso; o driver compara candidato e target, valida todas as entries e recusa divergência. Publish reconstrói novamente, revalida baseline e usa check/emit governados; após emissão positiva reabre runtime e faz index/read correntes. Preserve os recibos completos. Fontes: driver e usage, “Pré-condições do pacote” e “Composição efetiva”.
+
+## Drift, retomada e histórico
+
+Indisponível é incerteza, não ausência; corrija acesso/estabilidade. Após drift, current pode ficar HOLD com objetos antigos íntegros. Consulta ao passado exige `"historical":true` preservado na resposta, sem restaurar validade corrente. Markdown direto não substitui consumo recusado.
+
+CAS/candidato duráveis permitem retomar sem repetir autoria; prepare/binding/guards atuais seguem necessários. Se a ativação falhar, um leitor separado deve observar HOLD ou a seleção antiga ainda válida; após drift, não sirva stale como corrente. Confira manifesto selecionado antes de repetir publish; transporte/approval antigos não substituem candidato novo. Rollback compatível é nova decisão governada com inputs e autoridade válidos; não há banimento cronológico universal de produtor nem transferência de aprovação anterior.
+
+Atomicidade/retries são os existentes. Driver não cria lock global, transação de todo filesystem, fence de época ou compare-and-swap adicional sobre baseline. Leitor sobreposto nos testes não prova recuperação universal. Fonte: `S4:L3:system-flows`, “Após falha, separar recuperação de nova publicação”; `S4:L1:native-runtime-delta`, “Delta R1 e controles de recuperação”.
+
+## Registrar o alcance da prova
+
+CI 43094387837, candidato `1b5a4801acfae03969f78ee766ca6f0b7d0f9013`: 220 casos, 22 mutações rejeitadas, 18 paridades e guards com dois WARN de tamanho. Parsing `node --check` não executou imports/corpo; operação NOT_RUN nessa data. Tipos, testes, gates, aceite, binding e operação têm evidências distintas. `calls` conta callbacks; modelo/tokens/custos/tentativas físicas não expostos: UNKNOWN. Fonte: `P/producers/ci-c1/receipt.json`; L3, “Manutenção e alcance da evidência”.
+<<<END operational.md EXACT>>>
+

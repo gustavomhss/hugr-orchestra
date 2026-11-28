@@ -1,0 +1,204 @@
+{
+  "schema": "genesis-cumulative-source-use/v1",
+  "artifact_key": "S4:L2:genesis-governance",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "manifest_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/input-manifest.json",
+    "sha256": "00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca",
+    "byte_length": 12610
+  },
+  "source_payload_commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+  "body_sections": [
+    "Finalidade e compromissos separados",
+    "Cobertura não é uma lista indiscriminada de inputs",
+    "Dependências que tornam as camadas auditáveis",
+    "Da produção nativa à porta de consumo",
+    "Rotas históricas têm outra finalidade",
+    "Uso, tentativas e economia honesta",
+    "Ler recibos sem transportar autoridade entre revisões",
+    "Manutenção e limites da explicação"
+  ],
+  "added_explanation": "Explica cobertura/profundidade nas receitas, dependências cumulativas, autoridade e leitura temporal dos recibos; acrescenta a distinção operacional entre fila/tentativas visíveis, telemetria não exposta e garantia financeira, sem converter bytes ou callbacks em cobrança.",
+  "sources": [
+    {
+      "key": "S4:L1:ownership-boundaries",
+      "role": "semantic-build-predecessor",
+      "source_ref": {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/body.md",
+        "git_blob_sha": "9a1c62e3f709832d7c45357e15e0bd5c4255c613",
+        "sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c"
+      },
+      "byte_length": 17959,
+      "local_exact_copy": "inputs/ownership-boundaries.md",
+      "sections_used": [
+        "Scope and purpose",
+        "What each identity means",
+        "How current inputs are observed",
+        "Historical pilot: useful precedent, bounded entry point",
+        "Native transport versus served knowledge"
+      ],
+      "reason": "Transporte versus conhecimento servido, identidade completa, observação e limites do piloto histórico.",
+      "accepted_in_frozen_manifest": true,
+      "predecessor_acceptance_refs_as_named_by_manifest": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j1-response.json",
+          "sha256": "e65e76d921f605f502dfb0a8d92957e133939763ddba2374bcf3d07c600ea3a7"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j2-response.json",
+          "sha256": "436f7dc5a388cc1f096860e31c346bfd3a86e04bd65c51dd61b1bfcf85ed6076"
+        }
+      ]
+    },
+    {
+      "key": "S4:L1:atlas-host-genesis",
+      "role": "semantic-build-predecessor",
+      "source_ref": {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+        "git_blob_sha": "00d6c33271a0b92bf1fd9de86a3fdfb19fa82311",
+        "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+      },
+      "byte_length": 17595,
+      "local_exact_copy": "inputs/atlas-host-genesis.md",
+      "sections_used": [
+        "Ownership publication, observation and rebuild",
+        "Candidate Genesis: bounded extraction is not publication or semantic understanding",
+        "Maintenance and remaining uncertainty"
+      ],
+      "reason": "Rebuild por receita, candidatos, staging/mineração, portas governadas e pontos reais de manutenção.",
+      "accepted_in_frozen_manifest": true,
+      "predecessor_acceptance_refs_as_named_by_manifest": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md",
+          "sha256": "779cc784f066f637436868aabdd164f58a709b028b0d9843a30e81a92088e807"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md",
+          "sha256": "9bcfa61514f5edc728f17f4a3331efcd36d257e98fa1eab736db1b9914ce237d"
+        }
+      ]
+    },
+    {
+      "key": "S4:L1:coverage-governance",
+      "role": "semantic-build-predecessor",
+      "source_ref": {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage-governance.md",
+        "git_blob_sha": "cc92e66bd9036d099e9b227496a0503674fd61d2",
+        "sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381"
+      },
+      "byte_length": 17988,
+      "local_exact_copy": "inputs/coverage-governance.md",
+      "sections_used": [
+        "Population is complete; semantic depth is deliberately explicit",
+        "Observer limits are not scope limits",
+        "Legacy Genesis automation: fixed inputs, bounded continuation, sampled judgment",
+        "Workflow publication is a separate operation with a concrete output",
+        "Generated UI, design, skills and archives have different authority",
+        "What a maintainer can safely conclude"
+      ],
+      "reason": "População de 2220, profundidade por papel/origem, limites do observador, histórico, checkpoints e saída do workflow. Economia: regras históricas de pool/auth, paralelismo e repetição são configurações visíveis, sem medição desta execução ou garantia de custo.",
+      "accepted_in_frozen_manifest": true,
+      "predecessor_acceptance_refs_as_named_by_manifest": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md",
+          "sha256": "779cc784f066f637436868aabdd164f58a709b028b0d9843a30e81a92088e807"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md",
+          "sha256": "9bcfa61514f5edc728f17f4a3331efcd36d257e98fa1eab736db1b9914ce237d"
+        }
+      ]
+    },
+    {
+      "key": "S4:L1:native-runtime-delta",
+      "role": "semantic-build-predecessor",
+      "source_ref": {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+        "git_blob_sha": "22f9844d4b8ef46c338d191a6b13e68d0f59bab3",
+        "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8"
+      },
+      "byte_length": 11980,
+      "local_exact_copy": "inputs/native-runtime-delta.md",
+      "sections_used": [
+        "Necessidade e responsabilidade",
+        "Transformação e identidades",
+        "Validação que precede autoridade",
+        "Binding separado e publicação governada",
+        "Consumo e manutenção pela porta real",
+        "Delta R1 e controles de recuperação",
+        "Limites e estado da evidência"
+      ],
+      "reason": "Contrato do adapter, validação, dependências, binding, publicação/leitura e semântica dos controles de recuperação. Economia: a contagem de callbacks sintéticos e o digest de resposta são explicitamente distintos de telemetria de modelo/mensagem; inferência limitada de que não medem tokens, modelo, tentativas físicas ou cobrança.",
+      "accepted_in_frozen_manifest": true,
+      "predecessor_acceptance_refs_as_named_by_manifest": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j1-response.json",
+          "sha256": "41bb6d10d26f188ca1fd55d28f45b0a765f82053ffa6ee4827968fb7edd876a5"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j2-response.json",
+          "sha256": "61bdecc5a0793bedc8d135481133dd9f49bf4491b7ac17ce5c7e54eefc56e440"
+        }
+      ]
+    },
+    {
+      "role": "historical-execution-evidence",
+      "source_ref": {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+        "git_blob_sha": "f8f310ed16db4258007a7e28e9f954da04125bf6",
+        "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+      },
+      "byte_length": 6997,
+      "local_exact_copy": "inputs/ci-r2b-receipt.json",
+      "fields_used": [
+        "candidate_revision",
+        "run_id",
+        "tests",
+        "mutation_controls",
+        "guards",
+        "generated_parity",
+        "limits"
+      ],
+      "reason": "Recibo do candidato 7102f2e3 e run 43077975153: resultados e limites daquele controle, sem transferir autoridade à L2.",
+      "not_a_runtime_receipt_for_this_l2": true
+    },
+    {
+      "role": "historical-execution-evidence",
+      "source_ref": {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+        "git_blob_sha": "9344e06b86a1913178e101a640bae3c7f8252e11",
+        "sha256": "6e59f5ba8690fe7574d7e12f960aab120e20c942413c827a07d3bbf80d3cd38a"
+      },
+      "byte_length": 17593,
+      "local_exact_copy": "inputs/runtime-release.json",
+      "fields_used": [
+        "entrypoints",
+        "capabilities",
+        "known_limits",
+        "candidate_revision"
+      ],
+      "reason": "Amostra anterior de um L1A e seus pins/limites; andamento antigo explicitamente separado do manifesto L2 e do CI posterior.",
+      "not_a_runtime_receipt_for_this_l2": true
+    }
+  ],
+  "source_rule": "Somente corpos aceitos e evidências adicionais nomeadas no manifesto. Paths de manutenção aparecem como informação herdada de L1; não foram reabertos como fonte bruta.",
+  "navigation_rule": "A outra síntese L2 é somente consulta. Não existe dependência de build entre os dois corpos L2.",
+  "correction_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/primary-correction-request.md",
+    "sha256": "d8952808b1db8ca5ff65b88e78f6fcb2e632d443376df09947d7d2ec1b8454d9",
+    "byte_length": 1445
+  },
+  "version": "l2a-v2",
+  "correction_scope": {
+    "body_section": "Uso, tentativas e economia honesta",
+    "new_semantic_predecessors": [],
+    "source_rule": "A adição usa apenas coverage-governance e native-runtime-delta já aceitos; nenhum recibo adicional foi introduzido.",
+    "operational_inference": "Preservar eventos lógicos expostos e UNKNOWN para dados não expostos; não prometer valores de cobrança ou economia financeira a partir de bytes/reuso/callbacks."
+  }
+}

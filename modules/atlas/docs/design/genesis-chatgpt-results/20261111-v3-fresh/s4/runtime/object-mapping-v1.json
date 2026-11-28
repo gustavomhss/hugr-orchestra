@@ -1,0 +1,106 @@
+{
+  "schema": "s4-mapping-evidence/v1",
+  "candidate_id": "e4e5c8b0566bf1760707b45848d69b2f07aac61868c9bb0a496b473ac1d91284",
+  "contract_id": "e4a13883dcfc3ca2e8eacef3d36ca69ac2c46e010ce886a4bf3df19ed54a07d2",
+  "contract_object": {
+    "kind": "ownership-contract",
+    "version": 1,
+    "criteria": [
+      "QS-1",
+      "QS-2",
+      "QS-3",
+      "QS-5",
+      "CC-3",
+      "GO-I2",
+      "GO-I3",
+      "GO-I5",
+      "GO-I7",
+      "GO-I8",
+      "runtime-import-binding"
+    ]
+  },
+  "entry_key": "S4:L1:ownership-boundaries",
+  "result_id": "8c63bee07cdf75682c646bb2d524e09dd66308a56be2e32ae7dbbb5b9354759f",
+  "result_object": {
+    "kind": "ownership-result",
+    "version": 1,
+    "body": "df059187e3dac1099e76d4d137a27d89f6ef6354e67dd46c47dca5b82401f81b",
+    "authority": {
+      "scope": "atlas-continuity-rag-genesis",
+      "basis": "WP-L1A source-derived evidence authored by /root/producer_l1a for execution a2095d5a-1464-4c38-a222-6376974fc9c9; code pin 1cde2ff7a71bcf7aecb5d030917b577165135d38; protocol pin ee2521a5b966bd505cc95bd1c733e09e12f33531. Observed means static source inspection; intended, inferred, and unknown are explicit. No semantic approval, runtime binding, publication, or operational authority is asserted."
+    },
+    "validity": "supported",
+    "gaps": [
+      "Evidence scope is the five inspected code/instruction files and the pinned protocol; this is not whole-Atlas, continuity, RAG, or whole-slice coverage.",
+      "Downstream validator, trust/policy, CAS canonicalizer, persistence, coherent-read, rebuild, rollback, and recovery implementations were not inspected in this unit; only referenced contracts and call sites are described.",
+      "No live runtime input versions, generic importer execution, publication/index/read receipt, product test, CI gate, or independent consumer evidence was produced here.",
+      "Independent semantic judgments and any later runtime transformation/binding judgments are pending; absence of those judgments does not turn source-backed claims into claims of acceptance."
+    ],
+    "evidence": [
+      "body.md Exact source register: source paths, line citations, Git blobs, and SHA-256 values at fixed pins.",
+      "Source evidence: ownership types T:3-152; host observer I:21-190; historical pilot H:1-158; package K:2-33; repository instructions A:156-205.",
+      "Protocol evidence: transport P:16-39,105-149; runtime R:30-65,74-127; principles C:18,24-35,52-68."
+    ]
+  },
+  "body_id": "df059187e3dac1099e76d4d137a27d89f6ef6354e67dd46c47dca5b82401f81b",
+  "body_byte_length": 17959,
+  "body_sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c",
+  "body_equal_to_reviewed_native_bytes": true,
+  "body_kind_version": {
+    "kind": "ownership-body",
+    "version": 1
+  },
+  "transport_equal_to_preserved_payload": true,
+  "input_identity_source": "Actual prepareNativePackage/observeOwnershipInput execution; kernel IDs from prepared record, distinct from SHA256 below",
+  "input_count": 11,
+  "dependencies": [],
+  "navigation": [],
+  "roots": {
+    "evidence": "S4:L1:ownership-boundaries"
+  },
+  "reference_equality": [
+    {
+      "path": ".orchestra/skills/execute-genesis/references/transport.md",
+      "body": "3585498d51ea14a376935dd52ca7f09466052f673fbb7824849edccf333d4112",
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "equal_original": true,
+      "matches_reference": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/l1a.json",
+      "body": "a31636dd81965a8ff1baf94a007b1df9fdcb152bbbdd1f563604c9f0bce4e7ec",
+      "sha256": "daddfd2171c59d210af9d39b9e489ea2e0e884bd6770c46e882290f12a9fd6cd",
+      "equal_original": true,
+      "matches_reference": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/request.txt",
+      "body": "004357aeb332e76c3e32822d4f7426c7201cf11f6145c5a1abb5a0401070f63a",
+      "sha256": "3278e09366e6ba83a87ec94fddba23b0c6c516ef670847affecd23c76ebf7ca5",
+      "equal_original": true,
+      "matches_reference": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/response.md",
+      "body": "6d14dc09e5e7f9586894ef2b32142e46c609904face6a2c927702100cef42816",
+      "sha256": "589317e9e30c9192f1edb208d7e298f9fbcb87ca5a2b660e8adacbc3cc9c7819",
+      "equal_original": true,
+      "matches_reference": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1a/j1-response.md",
+      "body": "77710db31c59242b0a06001132ca0cf8e95e5a91392ff986eb258aa9090f23fe",
+      "sha256": "0c52867a7be59f93735b52c7a422b6a43329fac42a2128c251238d4e024b1e01",
+      "equal_original": true,
+      "matches_reference": true
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1a/j2-response.md",
+      "body": "9b7a3e9ac418022242e454f60d4a6be414b6d00fdeb5b3545fe373f66b19cc41",
+      "sha256": "b572b66e0d6172c4d67919918cda59dce6864972610fcbdf4da76a2c0f6a2319",
+      "equal_original": true,
+      "matches_reference": true
+    }
+  ],
+  "source_capture_integrity": "All2220 source bytes matched captured Git blob +SHA256; original10 sample source_refs independently matched by producer and principal. Protocol source files captured at explicit ee252 pin."
+}

@@ -1,0 +1,193 @@
+{
+  "schema": "genesis-cumulative-source-use/v1",
+  "artifact_key": "S4:L2:atlas-system",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "manifest_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/input-manifest.json",
+    "sha256": "00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca",
+    "byte_length": 12610
+  },
+  "source_payload_commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+  "body_sections": [
+    "Responsabilidades do motor e do host",
+    "Por que texto igual pode exigir outro resultado",
+    "Como mudanças de fonte orientam a revisão",
+    "O percurso até uma leitura utilizável",
+    "Fronteira externa e pontos de manutenção",
+    "Recibos e limites desta síntese"
+  ],
+  "added_explanation": "Relaciona responsabilidades do motor/host, identidades e observações com consequências para revisão, consumo e manutenção. Explica por que igualdade da prosa, presença em CAS, atualidade, autoridade e leitura publicada não se substituem.",
+  "sources": [
+    {
+      "key": "S4:L1:ownership-boundaries",
+      "role": "semantic-build-predecessor",
+      "source_ref": {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/body.md",
+        "git_blob_sha": "9a1c62e3f709832d7c45357e15e0bd5c4255c613",
+        "sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c"
+      },
+      "byte_length": 17959,
+      "local_exact_copy": "inputs/ownership-boundaries.md",
+      "sections_used": [
+        "What each identity means",
+        "How current inputs are observed"
+      ],
+      "reason": "Identidades de ownership, autoridade no resultado e observação tri-state/membership, usados para explicar invalidação e correspondência.",
+      "accepted_in_frozen_manifest": true,
+      "predecessor_acceptance_refs_as_named_by_manifest": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j1-response.json",
+          "sha256": "e65e76d921f605f502dfb0a8d92957e133939763ddba2374bcf3d07c600ea3a7"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-v1/j2-response.json",
+          "sha256": "436f7dc5a388cc1f096860e31c346bfd3a86e04bd65c51dd61b1bfcf85ed6076"
+        }
+      ]
+    },
+    {
+      "key": "S4:L1:atlas-engine",
+      "role": "semantic-build-predecessor",
+      "source_ref": {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-engine.md",
+        "git_blob_sha": "43b593c9806daead7a6ed28d6cefac56d21387b7",
+        "sha256": "c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e"
+      },
+      "byte_length": 17987,
+      "local_exact_copy": "inputs/atlas-engine.md",
+      "sections_used": [
+        "What the engine is for, and which kind of evidence this is",
+        "Contracts and kernel: canonical identity is deliberately narrower than arbitrary JavaScript",
+        "Knowledge: shape, routing, human ratification, and ownership results",
+        "Retrieval: reference pack policy, live Own, and reproducible host artifacts",
+        "Memory: owner filtering and recoverable history, without a confidentiality claim",
+        "Maintenance starting points and bounded gaps"
+      ],
+      "reason": "Responsabilidades de índice/grounding/knowledge/kernel, leitor, retrieval/Own/memory e caminhos de manutenção.",
+      "accepted_in_frozen_manifest": true,
+      "predecessor_acceptance_refs_as_named_by_manifest": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md",
+          "sha256": "779cc784f066f637436868aabdd164f58a709b028b0d9843a30e81a92088e807"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md",
+          "sha256": "9bcfa61514f5edc728f17f4a3331efcd36d257e98fa1eab736db1b9914ce237d"
+        }
+      ]
+    },
+    {
+      "key": "S4:L1:atlas-host-genesis",
+      "role": "semantic-build-predecessor",
+      "source_ref": {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+        "git_blob_sha": "00d6c33271a0b92bf1fd9de86a3fdfb19fa82311",
+        "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+      },
+      "byte_length": 17595,
+      "local_exact_copy": "inputs/atlas-host-genesis.md",
+      "sections_used": [
+        "Purpose: bind a real repository to the pure engine without handing it authority",
+        "Storage, governed emission and committed replay",
+        "Ownership publication, observation and rebuild",
+        "Maintenance and remaining uncertainty"
+      ],
+      "reason": "Composição, persistência, provenance, publicação governada, accessor e rebuild candidatos.",
+      "accepted_in_frozen_manifest": true,
+      "predecessor_acceptance_refs_as_named_by_manifest": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j1-response.md",
+          "sha256": "779cc784f066f637436868aabdd164f58a709b028b0d9843a30e81a92088e807"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1b/j2-response.md",
+          "sha256": "9bcfa61514f5edc728f17f4a3331efcd36d257e98fa1eab736db1b9914ce237d"
+        }
+      ]
+    },
+    {
+      "key": "S4:L1:native-runtime-delta",
+      "role": "semantic-build-predecessor",
+      "source_ref": {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+        "git_blob_sha": "22f9844d4b8ef46c338d191a6b13e68d0f59bab3",
+        "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8"
+      },
+      "byte_length": 11980,
+      "local_exact_copy": "inputs/native-runtime-delta.md",
+      "sections_used": [
+        "Transformação e identidades",
+        "Binding separado e publicação governada",
+        "Consumo e manutenção pela porta real",
+        "Limites e estado da evidência"
+      ],
+      "reason": "Transformação nativa, binding exato, portas reais de consumo e limites da execução documentada.",
+      "accepted_in_frozen_manifest": true,
+      "predecessor_acceptance_refs_as_named_by_manifest": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j1-response.json",
+          "sha256": "41bb6d10d26f188ca1fd55d28f45b0a765f82053ffa6ee4827968fb7edd876a5"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/runtime-r2/j2-response.json",
+          "sha256": "61bdecc5a0793bedc8d135481133dd9f49bf4491b7ac17ce5c7e54eefc56e440"
+        }
+      ]
+    },
+    {
+      "key": "S4:L1:host-boundaries",
+      "role": "semantic-build-predecessor",
+      "source_ref": {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+        "git_blob_sha": "b73f8975a72ccaf0955f136581fbdefc276a7640",
+        "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+      },
+      "byte_length": 11972,
+      "local_exact_copy": "inputs/host-boundaries.md",
+      "sections_used": [
+        "3. Atlas host → pacote boundary → origens de domínio"
+      ],
+      "reason": "Seção Atlas externa: chamada real do host, boundary gerado, modelo fora de Session e limite de autenticação/ratificação.",
+      "accepted_in_frozen_manifest": true,
+      "predecessor_acceptance_refs_as_named_by_manifest": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/j1-response-v2.json",
+          "sha256": "424c8d13ce680b1522e5970ea99f4a049c975899ddf9fcbd48bea397009a0d49"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l1-boundary/j2-response-v2.json",
+          "sha256": "33e8b837a0cda76bda59a4f972e62c3ec7beefad98c53db1c913e39ff6c36845"
+        }
+      ]
+    },
+    {
+      "role": "historical-execution-evidence",
+      "source_ref": {
+        "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+        "git_blob_sha": "f8f310ed16db4258007a7e28e9f954da04125bf6",
+        "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+      },
+      "byte_length": 6997,
+      "local_exact_copy": "inputs/ci-r2b-receipt.json",
+      "fields_used": [
+        "candidate_revision",
+        "run_id",
+        "tests",
+        "mutation_controls",
+        "guards",
+        "generated_parity",
+        "limits"
+      ],
+      "reason": "Recibo do candidato 7102f2e3 e run 43077975153: resultados e limites daquele controle, sem transferir autoridade à L2.",
+      "not_a_runtime_receipt_for_this_l2": true
+    }
+  ],
+  "source_rule": "Somente corpos aceitos e evidências adicionais nomeadas no manifesto. Paths de manutenção aparecem como informação herdada de L1; não foram reabertos como fonte bruta.",
+  "navigation_rule": "A outra síntese L2 é somente consulta. Não existe dependência de build entre os dois corpos L2."
+}

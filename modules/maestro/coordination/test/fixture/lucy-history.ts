@@ -42,8 +42,11 @@ export const native = (host: Ctx, sessionID: string) => host.sessions.context(Se
     message.content.flatMap((part) => part.type !== "tool" ? [] : [{
       sessionID, assistantMessageID: message.id, toolCallID: part.id, name: part.name, providerExecuted: part.provider?.executed,
       input: part.state.input, state: part.state,
-      text: "content" in part.state ? part.state.content.flatMap((content) =>
-        content.type === "text" ? [content.text] : []).join("\n") : "",
+      text: [
+        ...("content" in part.state ? part.state.content.flatMap((content) =>
+          content.type === "text" ? [content.text] : []) : []),
+        ...(part.state.status === "error" ? [part.state.error.message] : []),
+      ].join("\n"),
     }]))),
 )
 

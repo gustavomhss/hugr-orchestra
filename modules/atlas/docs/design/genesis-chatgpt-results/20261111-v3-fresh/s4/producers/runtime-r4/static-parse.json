@@ -1,0 +1,39 @@
+{
+  "schema": "runtime-large-inputs-static-parse/v1",
+  "node": "v24.22.1",
+  "method": "node:module.stripTypeScriptTypes for TypeScript then unlinked, unevaluated vm.SourceTextModule",
+  "rows": [
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "syntax": "PASS",
+      "evaluated": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native.ts",
+      "syntax": "PASS",
+      "evaluated": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-input.test.ts",
+      "syntax": "PASS",
+      "evaluated": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/ownership-observe.test.ts",
+      "syntax": "PASS",
+      "evaluated": false
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+      "syntax": "PASS",
+      "evaluated": false
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+      "syntax": "PASS",
+      "evaluated": false
+    }
+  ],
+  "typecheck": "NOT_RUN by producer; ROOT preparing runtime",
+  "product_tests": "NOT_RUN"
+}

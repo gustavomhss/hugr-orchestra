@@ -1,0 +1,13 @@
+{
+  "argv": [
+    "bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/home/runner/work/_temp/s4-source",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package-full15-maintenance.json",
+    "/home/runner/work/_temp/s4-change/control-new.json"
+  ],
+  "exit_code": 1,
+  "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+  "stderr_sha256": "a1f0e5531de8e1575445f55b097311161cd76b10093ecd5f3bb8a1587131e2c0"
+}

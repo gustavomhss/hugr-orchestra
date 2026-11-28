@@ -1,0 +1,112 @@
+{
+  "schema": "genesis-producer-recipe-v1",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "work_package": "WP-L1-BOUNDARY correction-v2",
+  "producer": "/root/producer_l1a",
+  "artifact_key": "S4:L1:host-boundaries",
+  "scope": "atlas-continuity-rag-genesis",
+  "layer": 1,
+  "need": "evidence",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "observed_head": null,
+  "original_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/request.md",
+    "sha256": "222d944f611edfe9627164437d8c4909898bd20ce315173fea4e9129037cbbc7",
+    "byte_length": 2831
+  },
+  "correction_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/correction-request.md",
+    "sha256": "d1468e3c97c39606882268cfd68a64b625fa0e24ef4d022074af62db96c45c0c",
+    "byte_length": 1082
+  },
+  "source_provenance_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/source-provenance-v2.json",
+    "sha256": "844642de83937264f6078c24d864ed301974b63ec4b5b633e0418ff399b7dc0d",
+    "byte_length": 38309
+  },
+  "prior_inspection_register_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/inspection-register.json",
+    "sha256": "375f93761e02e5d5d95e44aff8a0ca02599ddfd2629d8f6f06ec8d64c04dc822",
+    "byte_length": 7778
+  },
+  "prior_integrity_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/integrity-receipt.json",
+    "sha256": "094211ad9152bb78adae123832c403cf990a9049171b41e8fed37cf089fff232",
+    "byte_length": 3335
+  },
+  "diff_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.diff",
+    "sha256": "35817e9cd6541bd3541e8f5b733ab7e26cab287d370c36c8b01c321dfb3ef6d8",
+    "byte_length": 4843
+  },
+  "metadata_builder_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/build_delivery_v2.py",
+    "sha256": "1f6f832e359d60a2ffe610e7e73b691bc8c094d6c75d97956263fa0b347e42a2",
+    "byte_length": 12715
+  },
+  "protocol_refs": [
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/transport.md",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/principles.md",
+      "git_blob_sha": "3b4122705ef4ae4bda66fe7b5be4c93d55d32765",
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/fatia-4.md",
+      "git_blob_sha": "ec4698de9d693688a280d729d29b10cea02ef4ee",
+      "sha256": "227c4c6067232d3cf0511a539a418e9a1b5ffd3c7f55fd089c5974fbe3a975da"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+    }
+  ],
+  "public_criteria": [
+    "QS-1",
+    "QS-2",
+    "CC-3",
+    "CC-7",
+    "GO-I2",
+    "GO-I5",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "steps": [
+    "Preservar o pedido de correção literalmente e conferir todos os hashes v1 antes de produzir a revisão.",
+    "Reler compaction.ts:258–330 da captura fixa; verificar os retornos de make, a interface e o node padrão.",
+    "Acrescentar default com três métodos de make, transform que retorna input.messages e afterStep sem efeito; manter declaração de contribuição separada da instalação global não demonstrada.",
+    "Aparar somente redundância local, ajustar nomes dos arquivos v2 e manter o corpo até 12000 bytes UTF-8.",
+    "Manter source_refs exatamente iguais; atualizar localizadores da fonte já usada e trocar apenas payloads de receita/proveniência necessários.",
+    "Conferir bytes finais, same-path file inputs e preservação v1; deixar build_dependencies, semantic_review_refs e runtime_receipt_refs vazios."
+  ],
+  "semantic_bound": "Correção pontual de evidência estática direta. supported não é aceite independente, integração comprovada, paridade de bundles, instalação de contribuição ou autorização HTTP.",
+  "input_selection": "As mesmas 37 fontes commitadas continuam efetivas. Payloads desta revisão registram os pedidos, proveniência, receita, resposta, diff e procedimento. Registro de leitura e recibo v1 são evidências estáticas de origem/preservação, não observação runtime de todos os arquivos neles citados.",
+  "build_dependencies": [],
+  "navigation_only": [
+    "S4:L1:ownership-boundaries",
+    "S4:L1:atlas-host-genesis",
+    "S4:L1:continuity-rag",
+    "S4:L1:coverage-governance"
+  ],
+  "limits": [
+    "Nenhum teste de produto, build, chamada externa/modelo, CI, importador nativo, Git remoto, oracle ou nova delegação.",
+    "Nenhuma expansão do censo de 2220 ou mudança dos hashes v1.",
+    "Nenhum parecer independente ou recibo runtime foi acrescentado."
+  ]
+}

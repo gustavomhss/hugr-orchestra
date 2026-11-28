@@ -1,0 +1,2561 @@
+{
+  "schema": "s4-maintenance-operation/v1",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "stage": "private-candidate",
+  "activation_attempted": false,
+  "recipe_returns": [
+    {
+      "key": "S4:L1:host-boundaries",
+      "result": "bee0cd0f266dc452ac7fb72706f153d133f420bec51011e809d0ff55dc34a98d",
+      "inputs_id": "aaa2761d784f248809b641933144db4f97015b451ddbc4ca8dc6565cce4f4dc9",
+      "kind": "native-CAS-import"
+    }
+  ],
+  "evaluations": [
+    {
+      "key": "S4:L1:host-boundaries",
+      "result": "bee0cd0f266dc452ac7fb72706f153d133f420bec51011e809d0ff55dc34a98d",
+      "inputs_id": "aaa2761d784f248809b641933144db4f97015b451ddbc4ca8dc6565cce4f4dc9",
+      "matched_target": true
+    }
+  ],
+  "model": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "mode": "rebuild",
+  "runtimeAtlasRoot": "/home/runner/work/_temp/s4-runtime/modules/atlas",
+  "corpusRoot": "/home/runner/work/_temp/s4-source",
+  "baseline_manifest": "df2dae9de5931cb86f7572bb6c093fe3fdaef6a274ad8f4985db5c3c63a21afe",
+  "executed_driver": "/home/runner/work/_temp/s4-source/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+  "recipe_input": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+  "recipe_version": "1dd822edf31a310087a344e0cda56d10df16b478ff4447cc5ae522539ea47224",
+  "target_candidate_id": "fcb16e410853afa4c36f2c250800d3312d50db95d87d9ab49bc169f6e1cd226d",
+  "contract": "e4a13883dcfc3ca2e8eacef3d36ca69ac2c46e010ce886a4bf3df19ed54a07d2",
+  "before": {
+    "S4:L1:ownership-boundaries": {
+      "artifact": "c3281a7a6e0e2fb33db7540f0ee7ecdefd442fb52dedd9aa28562502d54387ad",
+      "receipt": "1386a2e0b6edc698d593d904546cc7e2f8c89086dfa4874fd15de8f7f845f13e",
+      "result": "8c63bee07cdf75682c646bb2d524e09dd66308a56be2e32ae7dbbb5b9354759f",
+      "body": "df059187e3dac1099e76d4d137a27d89f6ef6354e67dd46c47dca5b82401f81b",
+      "inputs_id": "8b1de2e5bd3e244c32e58ec3454c0df4826a229496877ce9239520a0f5d4eee2"
+    },
+    "S4:L1:atlas-engine": {
+      "artifact": "1f9f9e700cca2b2a8db5ee6fc687e85e37d579916985b8b7ca77b9fdb110f39c",
+      "receipt": "dcb86bfbe8e4c29fd23339ef432b3f9e3a0c4242682892d866a57f2261ee78c2",
+      "result": "6706df3be2177f1ff8af7d2f98abfe83420d0146af85bd5f997c789c21ab43a4",
+      "body": "5ac3bb7d27fecea996618f85ed7c18c3128e926c115ebf147b4de6175b39b8bb",
+      "inputs_id": "4b55f3f8ec80106e5e25c6646adafdd369c4b504682237d436340635aef6d5e3"
+    },
+    "S4:L1:atlas-host-genesis": {
+      "artifact": "131ac9a8b07746d9d1ab1a9d761887ef69967f1133425f19519bfa349b25e293",
+      "receipt": "ae514e1c84b85af4b6c4a7db6647238c707550140cad7da7cd5a992b8157b822",
+      "result": "e76cc552cd44e6156be266764f1b9a44a5059fe1341a0057dda2207a978e9ee1",
+      "body": "6e2769ae820155ee1b2839b98d5ac8f8b9d5da4f886ba7ae3f685a02b04435fa",
+      "inputs_id": "824d3b50d8d615013e28deb7eff8f2542b7560f345ac4363b3447d41dc8b81ab"
+    },
+    "S4:L1:continuity-rag": {
+      "artifact": "9b209899fb522aadf4f8d4833240c7fbb1207ba87ca18bd753bccbf2a0910ed8",
+      "receipt": "47b558ef9c4cda3218de8639f2f5baa67ad8a5165c82806a82a51e4ae2a82c16",
+      "result": "e1f4cafd1b57ce658b3c1c237671831b5146b6e4fb30ae34813eabf10f62f0b0",
+      "body": "4268fc0d04f523233a25ad46f110d77c9efb3bff7fadaa17074ee1d4cebf81b1",
+      "inputs_id": "9b9cc656635520af315f7091cf3696c457dc2667496f9d12aaaa4872ef708b0b"
+    },
+    "S4:L1:coverage-governance": {
+      "artifact": "107aba03a617888d6d35c439aa551e81b202ca808357c5220388ad0ee2113961",
+      "receipt": "dcb3620711b3dbf7e5be5662ca00195b31411155d8a5cd6d2de85c1c5139ac94",
+      "result": "a806334e956ebdd1f5c3310d975fad27fe7792b0122c1fff73694a1782362247",
+      "body": "9abcecde5a9507abed02c4098bb3ae258aa0cc19ad4397a71ad058a6cbc80555",
+      "inputs_id": "f97934be30300922ad77fa291075b07caccaeb544a90ad91a89be211737e2beb"
+    },
+    "S4:L1:host-boundaries": {
+      "artifact": "87dc90cfb38306789ead43f46d1d6d66090cbdc16f0bd51e4efa3b2294184b81",
+      "receipt": "7b654e39533df9ad876f91f9099555864b14c55629941a0a3f218d24739628ba",
+      "result": "bee0cd0f266dc452ac7fb72706f153d133f420bec51011e809d0ff55dc34a98d",
+      "body": "685b1023098f1ea6854c25d97f9294ee2b1024608b1bba28df29b781355378de",
+      "inputs_id": "bf318aa046cf1b45c71d5498233450641269a6d606e66b25a59b71d03847e4bf"
+    },
+    "S4:L1:native-runtime-delta": {
+      "artifact": "e7b898bc3c6ea63201cb7a8bdd2d88d97aea7353afea7a8ae34c425ee8b59386",
+      "receipt": "803fb472eb137e7481fc300472447efb0337187694de061c4a73c1bdf5e36e3e",
+      "result": "77faafdd5c8f2d5916c1d6f2634e7821d3970b280af8777347be87bf83d71348",
+      "body": "146810cf4b52d5a3707845c6eb20cb89a90e269701fc40e0700440df41a61c04",
+      "inputs_id": "347394b8966e70c1bf18a5baacc08c4b9efd9061df28689887fa3cec6c41387f"
+    },
+    "S4:L2:atlas-system": {
+      "artifact": "88f2ac1f9036ada2605429915ef632ddab9aba95d474bf6ec7c4f4ea5741a74f",
+      "receipt": "de2a390cc637fb5bf76b5bcd57e0cf1c1c02b00d47d0a7b714d776ce278fab66",
+      "result": "2758d338d9e2dcb7b5122b85e893da3f106946590b63788d471e564430c2aadb",
+      "body": "5a2d367bdbdb7cdd0c13e7c2687bbc8d17b5d85615e2db3ad18d1f391f94cc30",
+      "inputs_id": "ebeb86b812994eb451f45d6cbdcb4e1ac1ba94e120eb0a58bef7c78e26cf943b"
+    },
+    "S4:L2:genesis-governance": {
+      "artifact": "ccad4497462299931dd069c82a7592e0239ec3f2abba555c233152cdd43f9493",
+      "receipt": "006fb584b3ef2602254496892eb3dfa816d71a2dc75a49388be612b0399b6793",
+      "result": "bd364adcec8898357da6690b60d3268a5ef24a72a864edc6d73b011bdfb7fbd6",
+      "body": "57b15638bdc8723ffa7e8a671dc519fc46865a625fc7709c94bfe9184c632009",
+      "inputs_id": "c5eb19bcd44329264d40c9a6b67b65ca4dd79bbf293b7086e6a57d4b9dbfe04e"
+    },
+    "S4:L2:continuity-rag-operations": {
+      "artifact": "2a4c0953424a3d7a185dd2fbf59f4aa802fa42e24c9eb14653edd4dfb669b8cf",
+      "receipt": "46a36d762ca5bd8c5b293e056bfa982c53c33ccad957ed1cec34faa2d24a32fe",
+      "result": "ebd80e0394229795b82134ef776695baa0168254541d95f5a8c2bc9b4afe9888",
+      "body": "afd3e0efe647da9dea6ded937397bf88e93e40926ea58adb022aefa6d8886fe0",
+      "inputs_id": "fc9fcaeb4b291c3ad5dfb2183b8e2ac65828e91ee0645779aa6399358ccb7b55"
+    },
+    "S4:L3:system-flows": {
+      "artifact": "8be31712b6b54561b0d02bedc4295b02db1357ff7c5cc0d1ea3b426e05f3c402",
+      "receipt": "af46b2e446348b4b2cf4e989fdaab947cefce9bf2a74873fe6a215de3da3f240",
+      "result": "de1845931c3a437b5186952e620d420fb3f3c965859a25db84da6f1d11143b11",
+      "body": "3437cd3add737f8c8132795b9b71f6b7499b75b55785d901ac7f15bb78f547ed",
+      "inputs_id": "937cc824ffa60037d531c003b7647d71ab1dc3f549a49ca26265347d8dff158d"
+    },
+    "S4:L4:entry": {
+      "artifact": "547bd95eeba01e680d312886cd662d7f7068f0872e60e54d2ee89c6d9c7beb18",
+      "receipt": "bd0a94624fd8eedfb68bf61072f98a602c1974203c0b1d098af7b4ec9ecf1109",
+      "result": "bed07f339fc621a676bd662154397af94bd66d1190784ecdad0a91ffebc89d78",
+      "body": "e176b01aba3ca94687f32a5e902aea39dbd7faf60dc44866660a4a895afcfc4e",
+      "inputs_id": "01e6eca2870b9cf2dcbac76e351debcc68a2cb742f4aad8e4917e6b4f675fe8d"
+    },
+    "S4:L4:ownership": {
+      "artifact": "4b94000e65ccaf917fbb289942c18b1dc167194f0d45fb73ba23d91285052652",
+      "receipt": "a4c49ff18a74c87eaf247314b6caee4606af75bc68653c233a8eb09063beae39",
+      "result": "394be315ee5831db6481d9a1ce23f5b87ba6b9cb24bfab86c84753115eed0be0",
+      "body": "68c3a894d305686eb9f8b07b62809ded9741ac7ecfdc0738ef4cce140c4273bc",
+      "inputs_id": "f21985ad084609e9ece867de330bdff2b99b5c70604215c76321df61a75d1b30"
+    },
+    "S4:L4:maintenance": {
+      "artifact": "e6026a28560322241f78144f0731288cc591afb324475353c31a59028fa0809a",
+      "receipt": "df5143c898a4282301eb45ce9063071ca2366610ed225fd112cfbb2fbd5fa8ac",
+      "result": "f4199bbe37e39637b0dc29ef76519486fc7d79d54563d60a48f44535ecce45a7",
+      "body": "468e3d7996cf427ae31863650d5537af39ec3bb6bd33a66dddb176656581a74c",
+      "inputs_id": "30ce3cddd4b0e5c6a51d4511901549a090601c76b1282748f165a4369ba3d125"
+    },
+    "S4:L4:operational": {
+      "artifact": "35acd989c8ef62f0bb6f390b25caf0efbaa6f7ccf47f0dcfbf64204f053adfcb",
+      "receipt": "6356fa6c8f54a6b3b30336a8fe9d35f11c5deed574923654fdc38fab59565ece",
+      "result": "c02b64b5c187eea90a57dcf9df50bd8ebd4169ae215a065cb63131955c37e131",
+      "body": "fb8e638e4a079bd93bd6651d2f7542a1c242337848053bf7f50943879f51860f",
+      "inputs_id": "94e8f690bd6c65824ab19fe4cd4724b828217793e925498d52363a9fa9d35aad"
+    }
+  },
+  "binding_evidence": {
+    "approval": "dbbb45a84299b9ac0ff8a1ffc9f38318b4096a2735bd6e602d95727a2095d8be",
+    "prepared_document": "4c4a1aedb0135ac4141cc097029a34c88218eeb8107f27e5bcff0837c42da742",
+    "decisions": [
+      {
+        "reviewer": "/root/s4_bind_j1",
+        "decision_id": "amsg_01a222f0-1747-7153-afe5-79ef98798940",
+        "decision_id_kind": "host-message",
+        "request": "d2a022f0d5673e0f44990cf8fa2cb2984a0bdafef096142ac9f5dc9d1dcca96f",
+        "response": "2f2869afd180835ab00c69a6d003afc61c0c412e1c4eb84bbe8bc29a6793611e"
+      },
+      {
+        "reviewer": "/root/s4_bind_j2",
+        "decision_id": "amsg_01a222f0-6792-71c1-ad49-5dac34e52b83",
+        "decision_id_kind": "host-message",
+        "request": "d3fb3b93829a28b996e6b558def87905a973c71b0f5740e36257d320f13396a9",
+        "response": "1cc0bd053d241bb4e1f9bc52e8bbfbcf349f8e79483ecf2e166cf78cc97c97bd"
+      }
+    ]
+  },
+  "rebuild": {
+    "kind": "candidate",
+    "manifest": "9675e3feda6d07375e17537d66da499ad81b5eb1075dc779738bbb9c498108bb",
+    "affected": [
+      "S4:L1:host-boundaries",
+      "S4:L2:atlas-system",
+      "S4:L2:continuity-rag-operations",
+      "S4:L3:system-flows",
+      "S4:L4:entry",
+      "S4:L4:maintenance",
+      "S4:L4:operational",
+      "S4:L4:ownership"
+    ],
+    "calls": [
+      "S4:L1:host-boundaries"
+    ]
+  },
+  "captures": [
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+      "observation": {
+        "kind": "present",
+        "version": "1dd822edf31a310087a344e0cda56d10df16b478ff4447cc5ae522539ea47224"
+      },
+      "byte_length": 22051,
+      "sha256": "a6a579e6a3978daa9a67f01bce06fda56172334b0e34323e787cba4d5ab9f27f"
+    },
+    {
+      "key": "file:.orchestra/skills/execute-genesis/SKILL.md",
+      "observation": {
+        "kind": "present",
+        "version": "5e09e56ed6c0076ac8f8de2904e62ff64ab7190dbeb4a122572c8daf559964e9"
+      },
+      "byte_length": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+    },
+    {
+      "key": "file:.orchestra/skills/execute-genesis/references/fatia-4.md",
+      "observation": {
+        "kind": "present",
+        "version": "2513f03af02bc0a717e67563db00e206aec7c452340e404ebe1d7a82a02773af"
+      },
+      "byte_length": 4911,
+      "sha256": "227c4c6067232d3cf0511a539a418e9a1b5ffd3c7f55fd089c5974fbe3a975da"
+    },
+    {
+      "key": "file:.orchestra/skills/execute-genesis/references/principles.md",
+      "observation": {
+        "kind": "present",
+        "version": "91e430da6f4c64e9f2f85852da85914bff8af70eb9406650a7ea2ce137deaed0"
+      },
+      "byte_length": 6010,
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230"
+    },
+    {
+      "key": "file:.orchestra/skills/execute-genesis/references/runtime.md",
+      "observation": {
+        "kind": "present",
+        "version": "d0f2bdc405bdb6f58fc01ffae4f3d04b6e5021dc3367a8b6e824e2ac2bd70b11"
+      },
+      "byte_length": 10217,
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237"
+    },
+    {
+      "key": "file:.orchestra/skills/execute-genesis/references/transport.md",
+      "observation": {
+        "kind": "present",
+        "version": "92abbdae0d28c3b36afa049006e959a23347687de3f94c08896d74ea9af376f0"
+      },
+      "byte_length": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+    },
+    {
+      "key": "file:AGENTS.md",
+      "observation": {
+        "kind": "present",
+        "version": "88fbdf4ea1897668484cd69a121a381ce55547eaab8e7dc3dc2a40551434240a"
+      },
+      "byte_length": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/build_coverage.py",
+      "observation": {
+        "kind": "present",
+        "version": "40161c52f0820132b234590e2511397e646f0567b0bc6a9e768de4dc25009ec3"
+      },
+      "byte_length": 11405,
+      "sha256": "c39cbfa5c2c82e03c70d26788b0c33c25d18ef104d3d7af3d88e86f04baa161f"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/correction-request.txt",
+      "observation": {
+        "kind": "present",
+        "version": "59ae916c0b7836ab8149c12d79fe306f2a7c8203495413d2385ba119182e032e"
+      },
+      "byte_length": 1692,
+      "sha256": "671cece49048054a22836db0c89114c32b885e8de3a1ba961d604c6752c079d5"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/build_metadata_v2.py",
+      "observation": {
+        "kind": "present",
+        "version": "83d845c699dd32c1b0701f056687e00f79282c3feefad84114dbb44e01a928ac"
+      },
+      "byte_length": 32078,
+      "sha256": "34a2b627345b776d8fbdc5cc3b23950818fb44530c651e03c19dbb78c7c88d6f"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/population-evidence.json",
+      "observation": {
+        "kind": "present",
+        "version": "ef7741026eaa46f526a37a396f8c441d9f9d39e28bad63ee3adbed253e81b8fd"
+      },
+      "byte_length": 15568,
+      "sha256": "de3889c64a35cfb1e658387c4528736e67b99dc9a625f4523e230673c8677aac"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+      "observation": {
+        "kind": "present",
+        "version": "9f40bdbc5c8e324f76ebb7a4fc6256a5f8f8baf45cd9ef4a19e0e5e4c17b0787"
+      },
+      "byte_length": 4137,
+      "sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/schema-constraint.txt",
+      "observation": {
+        "kind": "present",
+        "version": "6f127d37bd8a1a163a373e2da1fc8020e091b0de6edf6c8e64c165b009f73b68"
+      },
+      "byte_length": 714,
+      "sha256": "9b0ee9f3c138878a07c347378174432b51a7336293e1b9d75b2c7d9334d2a986"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/source-selection.json",
+      "observation": {
+        "kind": "present",
+        "version": "530a444bc7b892ff7821127a4252ac85a2b402b9436a5054938914be6d004c74"
+      },
+      "byte_length": 177641,
+      "sha256": "f886a982678a214ddeeb795e9695356503643c96b10f04b008f11ab5c1eb1717"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/observation-plan.md",
+      "observation": {
+        "kind": "present",
+        "version": "f9b9279b15d4cbac4c0943937defb2a6d6f450138553587c9716e753548d9ec3"
+      },
+      "byte_length": 16817,
+      "sha256": "5d524469aaca067c456fa2cb09edd4bbcb652818f388993e08bab701bd57536b"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+      "observation": {
+        "kind": "present",
+        "version": "5123eeb686fb31339328a698d101fe555e1605c0005a9d7b2aea43524bf55461"
+      },
+      "byte_length": 2464,
+      "sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef"
+    },
+    {
+      "key": "file:modules/atlas/harness/gates/reference-model-guard.mjs",
+      "observation": {
+        "kind": "present",
+        "version": "0f4fdf17a0bd4e84c3350a70f3f446a6209f5bd79d05a4d589a4d94e0cdca003"
+      },
+      "byte_length": 34725,
+      "sha256": "0e462c37c74813979e46237ac7ecf8ee5c2260f73c554c5c30400964fc2c69b4"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/knowledge-log.ts",
+      "observation": {
+        "kind": "present",
+        "version": "4ee6ab6da584bde72ed8b5f045455848a919d432ea67b871e735c0df4da7912c"
+      },
+      "byte_length": 7275,
+      "sha256": "3ea8b76fa10fd4d067d422bd182f9d4cd8af0dfad7c65e41cb87f2e0ce2d4b07"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/memory-store.ts",
+      "observation": {
+        "kind": "present",
+        "version": "95532b2211cc695fcfe8e6b4c9844055a00c434ba0603995bcd309b5130e308f"
+      },
+      "byte_length": 4551,
+      "sha256": "f2d811206fb05f70d8900780a03c62662f330608e3573840957eb237139d4cde"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/orientation-store.ts",
+      "observation": {
+        "kind": "present",
+        "version": "a2b72be8011dab655ca1d676144ee59ecc238bbfea63f62ab0d83d1bc761228b"
+      },
+      "byte_length": 5384,
+      "sha256": "27f97414f37bcb64e14170db03e9c5992c1a5b9a8f45d330679bcdd2a7bde51c"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "observation": {
+        "kind": "present",
+        "version": "3de096d5ba9f081797a86acc03fe75cc5eda2a3e3ab39035a67dbf64fdcc7111"
+      },
+      "byte_length": 2682,
+      "sha256": "722070af827077f75f438d81747174037671aabc7128ddc869e538f290f99271"
+    },
+    {
+      "key": "file:modules/atlas/packages/contracts/src/index.ts",
+      "observation": {
+        "kind": "present",
+        "version": "31572a89a1458c617d761ea923dc9d4d2cb45ba4df3397c454d4a35dc3946b83"
+      },
+      "byte_length": 409,
+      "sha256": "b7e712dfc1d4d923913dcc230a395d897a11562a92b62929bbcdcac2eb3e19c1"
+    },
+    {
+      "key": "file:modules/atlas/packages/contracts/src/status.ts",
+      "observation": {
+        "kind": "present",
+        "version": "8e8f9ba522549cacce914199a8b64847c258703732e3a3bee4279c60b08787e3"
+      },
+      "byte_length": 512,
+      "sha256": "d8ff443c2fb8dd6497177e1584d6597505a1986191b3d9370acdfbdb7b2dc1c8"
+    },
+    {
+      "key": "file:modules/atlas/packages/contracts/src/tier.ts",
+      "observation": {
+        "kind": "present",
+        "version": "111275b37f5b9402e622440a64f9dd90f1e7b0bd1712111e0c5725019ac3bf84"
+      },
+      "byte_length": 255,
+      "sha256": "36a932254863157061ffdb6991d33416c0c98973f82a92ea3727417f78740232"
+    },
+    {
+      "key": "file:modules/atlas/packages/grounding/src/drift.ts",
+      "observation": {
+        "kind": "present",
+        "version": "16ceeedde26484834b72df4012be3430e784e783e9b582990d6d4dbd5c9ed2e9"
+      },
+      "byte_length": 8244,
+      "sha256": "cd8266bf9d23f6f026f66268cc521682a84e14135f56178599c47a17d6314ca4"
+    },
+    {
+      "key": "file:modules/atlas/packages/grounding/src/freshness.ts",
+      "observation": {
+        "kind": "present",
+        "version": "9dae5ac9a18146a2bfca6a317f0e77c344fba545d4e3eab3066de5e1e6f656b6"
+      },
+      "byte_length": 6898,
+      "sha256": "bfbfd207b741265c3a65224435ed19394e4fd251023d6ae8140d5f9e82074c8b"
+    },
+    {
+      "key": "file:modules/atlas/packages/grounding/src/gate.ts",
+      "observation": {
+        "kind": "present",
+        "version": "0e53dc02b2259629b45f2c6cf7b54f464acefd35d0c3f929a5cf13cedfbec8d8"
+      },
+      "byte_length": 4822,
+      "sha256": "248dd37330af32de5352636a119f9b868cd63b168f231de88d997f196e8ffaa9"
+    },
+    {
+      "key": "file:modules/atlas/packages/index/src/build.ts",
+      "observation": {
+        "kind": "present",
+        "version": "c6e1c0fb0a9ede7cc7b386f2c193821539d6d1a49543b077ade14f05c3e35759"
+      },
+      "byte_length": 18883,
+      "sha256": "aa62bef2e9c4714ef122ce7f8ad6d844a50c6a995d4174425bbc3109a59dca9c"
+    },
+    {
+      "key": "file:modules/atlas/packages/index/src/coverage.ts",
+      "observation": {
+        "kind": "present",
+        "version": "dc9aa65592d2c081b0f22fdb30933284ffcc42a9909343ff5eaa256f13515cd2"
+      },
+      "byte_length": 2865,
+      "sha256": "3616426904eb724ae41723c99b20d8371c9ea407f09bd287aadeeb58d40a58a9"
+    },
+    {
+      "key": "file:modules/atlas/packages/index/src/depgraph.ts",
+      "observation": {
+        "kind": "present",
+        "version": "b3d16e5a89f9549aaea6f3010336abb7310425f60e73b1df8f055ac520b01362"
+      },
+      "byte_length": 4476,
+      "sha256": "1fdfc8ababd686e47fe70cf028e1f7b9950d080c014825e046bc4eb10e49fb45"
+    },
+    {
+      "key": "file:modules/atlas/packages/kernel/src/canonical.ts",
+      "observation": {
+        "kind": "present",
+        "version": "1fa5da8e9cf3ee434f69a0c8aedc5a97fab9a2fce20193d06f4b78bd35516caa"
+      },
+      "byte_length": 6776,
+      "sha256": "53239bdd1a7ccf81cae476d1d12d456215ec1f94b66f980e12f7c28d0574ef5f"
+    },
+    {
+      "key": "file:modules/atlas/packages/kernel/src/encoder.ts",
+      "observation": {
+        "kind": "present",
+        "version": "d229ed5992048126b6ae350ddf1d60f01874fad49a9d9f0fdc9a621ed544da58"
+      },
+      "byte_length": 1642,
+      "sha256": "9fe7d781f1d2e70614419483e4abb51ebf036fd0420baef332b77dce5e4c07ad"
+    },
+    {
+      "key": "file:modules/atlas/packages/kernel/src/fold.ts",
+      "observation": {
+        "kind": "present",
+        "version": "3cfc9a356c6b10eda8bc144e4f003dc96431dc433016e5ff8adc3bad8666a401"
+      },
+      "byte_length": 11982,
+      "sha256": "edf68f876386e6208c240ea908a8e716e33966f1bba2a06ba17841090e60dee8"
+    },
+    {
+      "key": "file:modules/atlas/packages/kernel/src/log.ts",
+      "observation": {
+        "kind": "present",
+        "version": "c78cd9feff21532f6afaae1dea2db628a49af849775e9f7c68bd2200f487718a"
+      },
+      "byte_length": 5320,
+      "sha256": "82d97746a125a5edfbe23687fff981c96d6b8e2f92fec871816a681594551651"
+    },
+    {
+      "key": "file:modules/atlas/packages/kernel/src/store.ts",
+      "observation": {
+        "kind": "present",
+        "version": "b87d0fa3c43ffcb8770f45014161d9b9ae33bf4680e437a8b97dfb85198bd9e4"
+      },
+      "byte_length": 2204,
+      "sha256": "7d07bc7c2cc3c2dab7b4af61956a3d9e693f039be9fa4a70e300c8a805c5dc9f"
+    },
+    {
+      "key": "file:modules/atlas/packages/knowledge/src/lifecycle/emit.ts",
+      "observation": {
+        "kind": "present",
+        "version": "621eaa4e183834f47839f262422bd89fb934576e1d040b3761aa431b6d048812"
+      },
+      "byte_length": 4716,
+      "sha256": "7a4fb331460b8015a5dc230427c42b9777626dc698264335d3c6099203717990"
+    },
+    {
+      "key": "file:modules/atlas/packages/knowledge/src/lifecycle/status.ts",
+      "observation": {
+        "kind": "present",
+        "version": "b1338ad496df43262113ec5901e02b59ebcabbb603613721f9df88b2daeeb82b"
+      },
+      "byte_length": 5220,
+      "sha256": "44a7eb3ef16839138356f6f3a448752f55bca5050d9ce8b42a705420cf6423c1"
+    },
+    {
+      "key": "file:modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "observation": {
+        "kind": "present",
+        "version": "4c1f9051612a52597ac33b4341fe2857c964340cbc631da62cc1bbaecae5b36f"
+      },
+      "byte_length": 9229,
+      "sha256": "2f0183c0e9e7c57eee19cbae881bf9463aecdd7686d3c12d5c3542f76825cb15"
+    },
+    {
+      "key": "file:modules/atlas/packages/knowledge/src/ownership/shape.ts",
+      "observation": {
+        "kind": "present",
+        "version": "72b7c04a558efa21694144baf701ed3360c99454557781048c1b2b354ee352ee"
+      },
+      "byte_length": 5098,
+      "sha256": "d70930329d856cfa6dec54e8678e4a6200a388203c7a81c86aa1a3bcf453c338"
+    },
+    {
+      "key": "file:modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "observation": {
+        "kind": "present",
+        "version": "92829b73c1b1b3c4f1f793c083051de4796f1ec71b0c98f7ba8b81ae7e19c4c2"
+      },
+      "byte_length": 5323,
+      "sha256": "4b181d2720a002dbb65891a27e2c9769d0f8b3bd5d32458efd9c6edc517ac4bb"
+    },
+    {
+      "key": "file:modules/atlas/packages/knowledge/src/ratify/ratify.ts",
+      "observation": {
+        "kind": "present",
+        "version": "69e16d41a8d5d88ccc662edc8c2f753dcab997a48d355b0659a24a84df144075"
+      },
+      "byte_length": 10325,
+      "sha256": "c0afa0bed3f21548d6b99a10183d2cffa6161cb5fcbdf4aa6f6c7cee41dbc6a1"
+    },
+    {
+      "key": "file:modules/atlas/packages/knowledge/src/write/authz.ts",
+      "observation": {
+        "kind": "present",
+        "version": "9908d84806ef0c68b4ae3aeb2d24e848b54a54ec95d7231997a992cfb3780ae5"
+      },
+      "byte_length": 4815,
+      "sha256": "4a42cf1042f0a05b348c6c25962e5c0c14c113caf6461bb0e0d29e7ee20b99cf"
+    },
+    {
+      "key": "file:modules/atlas/packages/knowledge/src/write/router.ts",
+      "observation": {
+        "kind": "present",
+        "version": "a6bcaa7e09dae4c7566a7b8506478396346d425f29ae7779bbfdc0a53aeb7a91"
+      },
+      "byte_length": 30611,
+      "sha256": "0e6274c74bf48923b16da816b4bc2b6544c6c4da0a94c317a40011b55e06a77c"
+    },
+    {
+      "key": "file:modules/atlas/packages/memory/src/awareness.ts",
+      "observation": {
+        "kind": "present",
+        "version": "7b4bee7872dccd09a5b76e2bd022a88810a4b61e5d9a62a8ce4f8e67f4387e28"
+      },
+      "byte_length": 13499,
+      "sha256": "b0a58bf1d576c80c00970849c1a523bec5bff121c5931cc7411a640a75c331bc"
+    },
+    {
+      "key": "file:modules/atlas/packages/memory/src/inject.ts",
+      "observation": {
+        "kind": "present",
+        "version": "8dd59e5fd6dc8c50b05d2c211f4155a74e3e04b8225f3e4d0af5392ed7c97717"
+      },
+      "byte_length": 10476,
+      "sha256": "1e79629a5837e8eee26f9efb1c49cdcffdc2af2fd80b215809885a8749b01c18"
+    },
+    {
+      "key": "file:modules/atlas/packages/memory/src/kinds.ts",
+      "observation": {
+        "kind": "present",
+        "version": "4aa8b06ee8d88be4fa18d70fcd47e7f5318674aa1ce638f40401c2ef51901d02"
+      },
+      "byte_length": 6843,
+      "sha256": "8bcef2724e6813e5e4a0a89a0fe1e7a2a96ffcea75805d41b88285b075b6bcef"
+    },
+    {
+      "key": "file:modules/atlas/packages/memory/src/orient.ts",
+      "observation": {
+        "kind": "present",
+        "version": "cc187e49ccd2c41e09c6a0bc7c48df04335122e733e9d438da50e45359b4d8e6"
+      },
+      "byte_length": 10186,
+      "sha256": "22332ab867cf4729d6000a9db454080a8b99d04ddd0fd4f0e4fa7c7c5664a7e5"
+    },
+    {
+      "key": "file:modules/atlas/packages/memory/src/portable.ts",
+      "observation": {
+        "kind": "present",
+        "version": "efbe742acac632551a05f75fbb18bc5ba635142d1de0bf4711e6f964a18860d4"
+      },
+      "byte_length": 6295,
+      "sha256": "c6eb18f310cfb2f24e18ad9c8215bf33c655c21055b1ac3f7760f9adbd78c1a9"
+    },
+    {
+      "key": "file:modules/atlas/packages/memory/src/rules.ts",
+      "observation": {
+        "kind": "present",
+        "version": "41f0dc0406ee4009520c713c9018e458727a7d60dda9a191dacf307baf58cad6"
+      },
+      "byte_length": 18093,
+      "sha256": "5be8ba64c7bf51ecf8436e7c6605da909691904fd329feebdfd8a43dbd25433f"
+    },
+    {
+      "key": "file:modules/atlas/packages/persist/src/reconstruct.ts",
+      "observation": {
+        "kind": "present",
+        "version": "73f6974c140c3cd950f71e0fe6422885429fe601eb35edbf3b86db04fc7ea101"
+      },
+      "byte_length": 8637,
+      "sha256": "30c0d67e808618c13163db1fe6f90c86c506792991da8a63ca6c42b860181626"
+    },
+    {
+      "key": "file:modules/atlas/packages/persist/src/scrub.ts",
+      "observation": {
+        "kind": "present",
+        "version": "814deace5b403e43713dc13e0cb8ab732b3020e43e61efe4ab513304504dad66"
+      },
+      "byte_length": 13393,
+      "sha256": "7b0546b71d861c65d205610be53a921ef37a3b0eff592b5c525efc577994de7b"
+    },
+    {
+      "key": "file:modules/atlas/packages/persist/src/source.ts",
+      "observation": {
+        "kind": "present",
+        "version": "c14ecbcb4ee6ffe672fbe8ac77677388ac977bba3d8c8bc84a09d7cb3b5382fd"
+      },
+      "byte_length": 4555,
+      "sha256": "6d67ec2847f685a739b2f0766bf6b10d02f80164466325e075635fc2efd46a4d"
+    },
+    {
+      "key": "file:modules/atlas/packages/persist/src/transcript-store.ts",
+      "observation": {
+        "kind": "present",
+        "version": "6e0710862d7d66e654e5bb1cd930ccc6b40bc366f7b6341b756b2ca3263dd949"
+      },
+      "byte_length": 6964,
+      "sha256": "92adb94687e72f76c9270cf65d2a68132eae305ccff7e60df876f3ccba2a350a"
+    },
+    {
+      "key": "file:modules/atlas/packages/retrieval/src/drop.ts",
+      "observation": {
+        "kind": "present",
+        "version": "3a98e8913f5cb7a44ee2cd43ec08cd375bbfdf16f8795b0c6521b902958a14a2"
+      },
+      "byte_length": 11253,
+      "sha256": "8652ec197040884563108f0478961642e592fdfdc5d7e9f5a1c7a44edd73f850"
+    },
+    {
+      "key": "file:modules/atlas/packages/retrieval/src/host-context.ts",
+      "observation": {
+        "kind": "present",
+        "version": "68d9db44f7c238622484098b96afa2fbb89e60902e07481d013d612e20b07385"
+      },
+      "byte_length": 7677,
+      "sha256": "c2a119e47de728839d10167cc8fd45bb74eb5502415f5b5162f56cae8d0c72ff"
+    },
+    {
+      "key": "file:modules/atlas/packages/retrieval/src/offatlas.ts",
+      "observation": {
+        "kind": "present",
+        "version": "ec2e2b7ef66c011a4fbdcd8f585b74744f0138ebc05c2e58d453498c23f300a1"
+      },
+      "byte_length": 4642,
+      "sha256": "452b892ebc55a2ba961d321ab2eafc8c64017d678ccfa550810c1077f432b1f0"
+    },
+    {
+      "key": "file:modules/atlas/packages/retrieval/src/own-artifact.ts",
+      "observation": {
+        "kind": "present",
+        "version": "369dd2a4eec53c8759430db2ce7d57e011c526700fe73ad7d957209c87529509"
+      },
+      "byte_length": 15549,
+      "sha256": "af8160ca92f9d467bd3340dbfd2c9fec3bd18fdf54315794f2e50414b7b72e0e"
+    },
+    {
+      "key": "file:modules/atlas/packages/retrieval/src/own-snapshot.ts",
+      "observation": {
+        "kind": "present",
+        "version": "883e3594610e1080af1804199c31e91461b66f340e68c04ff22f33d9e1a41865"
+      },
+      "byte_length": 10231,
+      "sha256": "07c9256761297aa36cf99317b04899776875ec020e12c6410842e1f03cc3d4b3"
+    },
+    {
+      "key": "file:modules/atlas/packages/retrieval/src/own.ts",
+      "observation": {
+        "kind": "present",
+        "version": "436db0c90075f47e2195656ea64220fe8845b16cb9f99047440c2939572c136e"
+      },
+      "byte_length": 17742,
+      "sha256": "8847c04f67b4d453f352223e51467ef13abd8fa2191b36ebee8d4bbb6e12627d"
+    },
+    {
+      "key": "file:modules/atlas/packages/retrieval/src/pack.ts",
+      "observation": {
+        "kind": "present",
+        "version": "be94a987a66206d29766ecb7ba4c326af68995c6c571cfbc83e64f8021505f5c"
+      },
+      "byte_length": 12650,
+      "sha256": "00e934967065ed6702c51f7969a27d375280aeef20346b0176471897f8b5a76c"
+    },
+    {
+      "key": "file:.github/workflows/atlas-genesis.yml",
+      "observation": {
+        "kind": "present",
+        "version": "80e53fa49592175a3fc390bfcd4b4730556aa05d13406d1f566727bc58f4ce56"
+      },
+      "byte_length": 84400,
+      "sha256": "92e55662c5c89c1536ab0b15e088b0234e28c96da3fb254359b1ef04f2f8cb85"
+    },
+    {
+      "key": "file:.orchestra/skills/atlas-ownership/SKILL.md",
+      "observation": {
+        "kind": "present",
+        "version": "c954e94c5e33080f0437bcc5a150e9c234e03e30fe71cd205e325339ed05384d"
+      },
+      "byte_length": 8668,
+      "sha256": "f1b8a43bb73b45727a7d36cf6c46cf6d02cd2019f8ce73ff4ef15b6030fd303e"
+    },
+    {
+      "key": "file:.orchestra/skills/atlas-usage/SKILL.md",
+      "observation": {
+        "kind": "present",
+        "version": "41d31bd8771b8e7f6cd41713babf9d10636f1fc1b9596ad02919522f08831014"
+      },
+      "byte_length": 4986,
+      "sha256": "5d010ffd2fb910dddfd7685820963ca310bd72d603d718c16f28ed1a090556d0"
+    },
+    {
+      "key": "file:modules/atlas/boundary/package.json",
+      "observation": {
+        "kind": "present",
+        "version": "b3ac7c911022a08bcaf2899d350428fdc9cd38622f4e95055819a659fe2defa9"
+      },
+      "byte_length": 1773,
+      "sha256": "66850f72af7afc962e030c3c5585a13c635507748cb43b9bbd4e2fe488d0f6bb"
+    },
+    {
+      "key": "file:modules/atlas/boundary/script/build.ts",
+      "observation": {
+        "kind": "present",
+        "version": "0160354aed841c0cd99dd4434479f3c956e9652f9d39dc6650485e9290ce4232"
+      },
+      "byte_length": 4743,
+      "sha256": "fd887babca14bcc1dc42d34238b299ebb01dad54a9e8a84d5a9617481e3ae53c"
+    },
+    {
+      "key": "file:modules/atlas/docs/adr/ADR-0008-mining-writes-to-staging-not-to-knowledge.md",
+      "observation": {
+        "kind": "present",
+        "version": "7d5357f01cdbebfe6c21988d11270b2a38ec44fffe3d28205e820a1587af0d77"
+      },
+      "byte_length": 7825,
+      "sha256": "9190f0b7b3b25cfb75a4e2221408d8b472f8787c6de49cc0093d1658c87c2178"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/compose.ts",
+      "observation": {
+        "kind": "present",
+        "version": "4e8447003fddd46a2bd66655b5ce53f25c2d4f0efcbeadab271dff14f7f4fb7c"
+      },
+      "byte_length": 43706,
+      "sha256": "2791adce99eaab0cfb605780c7ead93d18e8dafc19bc520c2a79cd66900a3c3f"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "observation": {
+        "kind": "present",
+        "version": "c6914402f92a3a032a16c9457ea3c1d91f65514f5da6725cf7ec3cf5040f1243"
+      },
+      "byte_length": 31947,
+      "sha256": "100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/knowledge-replay.ts",
+      "observation": {
+        "kind": "present",
+        "version": "b3ac2b5f4b42ae38ffa28a4df57753a84350399135fb9503e7aeddee5e447f7c"
+      },
+      "byte_length": 5511,
+      "sha256": "11831d4ccca67ded07159ae048fc9680d7f76660e6547bd32b9d2e9df61a78a6"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/model-config.ts",
+      "observation": {
+        "kind": "present",
+        "version": "17c3945e478836a632acc0f3b4599ed6da20e775733c1ed8516882e91806a122"
+      },
+      "byte_length": 15027,
+      "sha256": "04fb3a30c01f4029cad39abcdb02854a31874b40b0badfc38db2b68dcb596ec9"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "observation": {
+        "kind": "present",
+        "version": "cbd74fe1dbd8ba78b503ef1c8231187292d7a0f60b9aac214dccc0d55cab41ef"
+      },
+      "byte_length": 10101,
+      "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "observation": {
+        "kind": "present",
+        "version": "ed2eb0e8d2b1f22a73cd5e9788ef2b1443e3908d74708004ad19bacc94642944"
+      },
+      "byte_length": 20859,
+      "sha256": "83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/policy.ts",
+      "observation": {
+        "kind": "present",
+        "version": "6916d978151f3852bb2374e9d897b041c3d0afe3f6a22a386a7f073deb74f69b"
+      },
+      "byte_length": 18081,
+      "sha256": "9f78c90f8a0b1ef89e0b5369487fa76ec1ffbd4644a5c889158c68f32b154000"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/read-access.ts",
+      "observation": {
+        "kind": "present",
+        "version": "ce777a4955ce6041cad7c59812d6bb1a49eb6dd06d2737e618c8752fc3de3fb1"
+      },
+      "byte_length": 13823,
+      "sha256": "d02628dc0f7217cbb20da1d0c0b6e86bea9a90284f550702b0e987cfde011daa"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/retrieval-model.ts",
+      "observation": {
+        "kind": "present",
+        "version": "78b975b892d18c9735d434697299eb359b3db2bdde628225d8f837405b06d115"
+      },
+      "byte_length": 8966,
+      "sha256": "03f766ca2212717c99ef4c9bc7e0d25b6c61938a86653914271c235546d92f30"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/store-provenance.ts",
+      "observation": {
+        "kind": "present",
+        "version": "739af487def90e1d8191019ae5f37939fd0be897bc46a211006370e1e31aee1a"
+      },
+      "byte_length": 13404,
+      "sha256": "2641a60a83e8fba0a0e8e92efcd6c33eaf8cd6670fc28f954096f475f8bc2fbe"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/store.ts",
+      "observation": {
+        "kind": "present",
+        "version": "eff626d50ebc74facb33c04f7ec09805ea17c9268405becd6da8735047192b57"
+      },
+      "byte_length": 22233,
+      "sha256": "839d474f68d471436ed9b4a20189f8fcedc815edac148d49559161a4ceff2c3c"
+    },
+    {
+      "key": "file:modules/atlas/packages/cli/src/bin.ts",
+      "observation": {
+        "kind": "present",
+        "version": "a6e02a6f008e4737e3a8a3109f884895a04d40bb489709d3bfe8bf2539dca6ba"
+      },
+      "byte_length": 8192,
+      "sha256": "ef793b0a76b40abaa8cd1a8abcd6976e58762b6d748f002bd7a143012277f5c0"
+    },
+    {
+      "key": "file:modules/atlas/packages/cli/src/cli.ts",
+      "observation": {
+        "kind": "present",
+        "version": "fd8d421d6893fd30ba0c06016b432789bfe82542b7cb18ffa8c0f4ccebe12705"
+      },
+      "byte_length": 41204,
+      "sha256": "cc2315114a071cfd20830c0e29d1530d8674b1a93c96085df31f7ab68ddd2ef9"
+    },
+    {
+      "key": "file:modules/atlas/packages/cli/src/mine-proposer.ts",
+      "observation": {
+        "kind": "present",
+        "version": "45c485a4447e2a946ddbd2c902409f0f48fe48367655f847065ccc3ed74a6234"
+      },
+      "byte_length": 22857,
+      "sha256": "f530bfaeff0b0035bab63f94ff868becd417165dd4d0cce006bd9cd9864e0a9a"
+    },
+    {
+      "key": "file:modules/atlas/packages/cli/src/mine-staging.ts",
+      "observation": {
+        "kind": "present",
+        "version": "14be1c42a87e235db4c0540da769645dac54e5f049aef59b4527d5a0f6356290"
+      },
+      "byte_length": 3476,
+      "sha256": "dd4fd24a16a4ac784fac235a95ea8489c45198711ded031da0680c38d8ec1c13"
+    },
+    {
+      "key": "file:modules/atlas/packages/genesis/src/admit-harness.ts",
+      "observation": {
+        "kind": "present",
+        "version": "79fb03af85f7eb0cde58bc72805517379101b24c839c30a08da6f17f76db18f1"
+      },
+      "byte_length": 39829,
+      "sha256": "31a10ea9a5d69c6d1747ed5400401c1b0e21f7580de314f6e4b94813dd8a5dc5"
+    },
+    {
+      "key": "file:modules/atlas/packages/genesis/src/extract.ts",
+      "observation": {
+        "kind": "present",
+        "version": "f99ca74bd6d5dd44c63c8c0ba62c6cb49dbea719ca52d88d744d885f7bc3bbe2"
+      },
+      "byte_length": 12603,
+      "sha256": "4cfd8f06e0603a82bed4e9886f7efee685dd463ed09d53e6ee1deeda36bbaf3e"
+    },
+    {
+      "key": "file:modules/atlas/packages/genesis/src/run-controller.ts",
+      "observation": {
+        "kind": "present",
+        "version": "3a70ef598a80da62adef356971601c7fa948730d5eb2eb52b82488f1e2936e0a"
+      },
+      "byte_length": 20283,
+      "sha256": "4ffa9a6daac128d430be98885e5f733a0fe576e87d02165f792ee5fb9bb5c098"
+    },
+    {
+      "key": "file:modules/atlas/packages/genesis/src/seed.ts",
+      "observation": {
+        "kind": "present",
+        "version": "a256320d2c77c5a0d07b634f12eae5a70f23c649c426fe2cd594097cf3620774"
+      },
+      "byte_length": 8428,
+      "sha256": "ce5c6484e24e4f026a2363fcd811f90c45d5ea301fa26faa0f82ff3add18c66c"
+    },
+    {
+      "key": "file:modules/atlas/packages/mcp-server/README.md",
+      "observation": {
+        "kind": "present",
+        "version": "fd9092003f476a26febb04286ba9288fa4aa5bf1f8ce676da96f6de75eeed234"
+      },
+      "byte_length": 1056,
+      "sha256": "4523c1fa7736b4ebff148993cf225b07fe9e043995202784bcbb66e43fa09475"
+    },
+    {
+      "key": "file:modules/atlas/packages/mcp-server/src/server.ts",
+      "observation": {
+        "kind": "present",
+        "version": "02467425215487fc6a05aef194965daba7ff349054324078a3b1bc7e15a13e22"
+      },
+      "byte_length": 19481,
+      "sha256": "ca068371df248bb7a08eee8ecef9fc302a71af62aeefc85ed31021a6f131812c"
+    },
+    {
+      "key": "file:modules/atlas/packages/tools/src/bands.ts",
+      "observation": {
+        "kind": "present",
+        "version": "7911df2442c3e01dabf6bf6e77920fc3e286158d620b1b4cf657b61dae77f9f8"
+      },
+      "byte_length": 6335,
+      "sha256": "4c391b8b8aa2c6b0217b1b67929ab02dc46321b4c1159104b32c8fd82a588c45"
+    },
+    {
+      "key": "file:modules/atlas/packages/tools/src/handler.ts",
+      "observation": {
+        "kind": "present",
+        "version": "dc49f1ceec3917b5147537d0d75d671956abe884cabd391bf644cf01259defbe"
+      },
+      "byte_length": 29307,
+      "sha256": "6cd8a7a9b60af4af8e1456e2e5340f6ff383daf707bc35fc6730dcfaa75d65bc"
+    },
+    {
+      "key": "file:modules/atlas/scripts/ownership-pilot.ts",
+      "observation": {
+        "kind": "present",
+        "version": "4910d16ccf8efc7a2ecf6d1cb44e4e9a8f2c6ffda0f0258cd3aafb0ab3f5b40b"
+      },
+      "byte_length": 12563,
+      "sha256": "3a6b64409f63129e271c098b5aaedc14fa8f6ed6dfc32d7b261e37d14d90c100"
+    },
+    {
+      "key": "file:modules/continuity/src/v2/archive.ts",
+      "observation": {
+        "kind": "present",
+        "version": "07dd999ce45592faa8d56886cee5b1b42b0fc08566fbc000460164eeb8d0b4fe"
+      },
+      "byte_length": 10672,
+      "sha256": "c447789707162fff3876c2d04bbc202e7c147f0aa58be53126361a5f92d39c9e"
+    },
+    {
+      "key": "file:docs/guides/rag-studio.md",
+      "observation": {
+        "kind": "present",
+        "version": "94d15e8071cfa6a377b099e4dcb8992943e1156ab384bb1ea538557305311f59"
+      },
+      "byte_length": 1014,
+      "sha256": "acc567aeab0397965cc7ef048a666ffd07631b830ad44cb2b7ec2974a0713cfa"
+    },
+    {
+      "key": "file:docs/specs/rag-studio/ACCEPTANCE.md",
+      "observation": {
+        "kind": "present",
+        "version": "b823aa6219c1dad241d57fa6a704b96442461d0495e60bce42cb95331b5f356e"
+      },
+      "byte_length": 14425,
+      "sha256": "4d1e01abb25b8b0ddbab0c5cda9384aae0b470d8fb06637ec7b11ee1e0a05315"
+    },
+    {
+      "key": "file:docs/specs/rag-studio/CONTRACT.md",
+      "observation": {
+        "kind": "present",
+        "version": "f310f832520410a64a9cee58c4166fe6152549f9ba7d65c4ac0d9213a8ffc4c6"
+      },
+      "byte_length": 3519,
+      "sha256": "c88ddcb1a00d27e6a29b92afb20b428b7dca29350eea7312fd6aa2eb67d4f52e"
+    },
+    {
+      "key": "file:docs/specs/rag-studio/DESIGN.md",
+      "observation": {
+        "kind": "present",
+        "version": "0df599f554899152c6da0ddf3744fe857422ae4ec2eb314a2bfa08430b59ff17"
+      },
+      "byte_length": 14019,
+      "sha256": "38e058e302732aa65daaa31a20f2e0723b10278cba7a7907951d67a99c21bead"
+    },
+    {
+      "key": "file:docs/specs/rag-studio/REQUIREMENTS.md",
+      "observation": {
+        "kind": "present",
+        "version": "ffd81cc0d3036aa769020198255cde74f33c6cdfdf28a3481b9963ba5e81f28e"
+      },
+      "byte_length": 3544,
+      "sha256": "566eb3d7935b139b4422e569aa3494d87311d4b4b0b67f4018545ae467094a45"
+    },
+    {
+      "key": "file:docs/specs/rag-studio/SPEC.md",
+      "observation": {
+        "kind": "present",
+        "version": "a1c7352a0da7d2c6f5942e1c6bba902a49711dd0949f8d9845da4c8338783d90"
+      },
+      "byte_length": 7162,
+      "sha256": "58d6ee79e20bcc10bdc8d312571dcd48b1aef49594a6302ff9983448e22fdadc"
+    },
+    {
+      "key": "file:docs/specs/rag-studio/WAVE.md",
+      "observation": {
+        "kind": "present",
+        "version": "d9390aa898f9147929072ac40635cc028a90c5588c3cfcfd424cb146705aaec1"
+      },
+      "byte_length": 3025,
+      "sha256": "0534955e3f32bf588eaa6fc1a8085e8e263967af367dccc2db56e23013b15577"
+    },
+    {
+      "key": "file:docs/specs/rag-studio/work-packages.md",
+      "observation": {
+        "kind": "present",
+        "version": "c1a3c9ed7c55b480f379436246408e2769ad2f4b29b2a06699dbc6317221e159"
+      },
+      "byte_length": 2690,
+      "sha256": "76cfc21a34cc785ab0b41c9f00bcce71f5226de87957e1ccdf0860fbf148ba0e"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/context-log.ts",
+      "observation": {
+        "kind": "present",
+        "version": "87bd6a144c3c8589e4f5522c81f48bdd4454a5eccbd91a3fde61b55c7337115a"
+      },
+      "byte_length": 8798,
+      "sha256": "b1960b9f9230f8bf44a594a37e64900ded64ad0accf94ce9f4cd63d4d736cc9c"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/durable-log.ts",
+      "observation": {
+        "kind": "present",
+        "version": "892d1cf1ff3f13a3c94f76443329b3a946fd3b2cecee315a4ad131c661fe8dcd"
+      },
+      "byte_length": 12078,
+      "sha256": "8eddcd47971e4d5e717f03d2753edd45f0feba9400dd922e51e737162b7f34b5"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/layout.ts",
+      "observation": {
+        "kind": "present",
+        "version": "06352a48df6e0ff31def1f6adecad1dcfb5d28c13eaa32b6c74c0bcee3f6f86d"
+      },
+      "byte_length": 4753,
+      "sha256": "686c591c2a19c391d35cea5857dc773dfa57c4cc3ce6509f3a02f2ec9fa99d72"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/repo-visibility.ts",
+      "observation": {
+        "kind": "present",
+        "version": "66bf05c462b553dfad0bf6a590dc96709d0921073110f39abe7788506c045394"
+      },
+      "byte_length": 2419,
+      "sha256": "f513da7f05ac4b65805aa200b8d0963b389faeb5769a91c73b95d58ea50d9e31"
+    },
+    {
+      "key": "file:modules/atlas/packages/persist/src/scrub-scan.ts",
+      "observation": {
+        "kind": "present",
+        "version": "2e36ffd1241e084df908bc378ad3bd972ffee50b3ed97c288336a49719f930a0"
+      },
+      "byte_length": 10152,
+      "sha256": "ba3db37c8924196e5f128c4fe53c5df24fb0e0bdd6e4ca6f6bdf3dd6ce1d4a5c"
+    },
+    {
+      "key": "file:modules/atlas/packages/persist/src/scrub-shapes.ts",
+      "observation": {
+        "kind": "present",
+        "version": "6ea936d14315360b9d0ca4b7098a3df457159c08eb6548bfc5af20a864009bcd"
+      },
+      "byte_length": 20447,
+      "sha256": "bcd776dceda68d391a8d98902fa628cbbc3b706bf2e692042b4d0aed8c0a047f"
+    },
+    {
+      "key": "file:modules/continuity/README.md",
+      "observation": {
+        "kind": "present",
+        "version": "5315ad706d0ac38c956cba1d28054cc200a3d073fc10ed6a75a3acfda461b4fe"
+      },
+      "byte_length": 2182,
+      "sha256": "b1d1b9e3ddd3c7e4f521ed1fcfe88865b9030da4f7c32c3a2d94f1f333774ba2"
+    },
+    {
+      "key": "file:modules/continuity/package.json",
+      "observation": {
+        "kind": "present",
+        "version": "79b15aaeb17701e99505a36d1ce8008949940568a04a5397e439533b1448305e"
+      },
+      "byte_length": 800,
+      "sha256": "f81d4c7950311726334b06e1726d97da3b92749bcbcb3a94748fd023c626efbe"
+    },
+    {
+      "key": "file:modules/continuity/src/archive-search.ts",
+      "observation": {
+        "kind": "present",
+        "version": "1761bfe331fdec243f3fcc65134a29b8a090c5475de35c164eb9b8710892090c"
+      },
+      "byte_length": 3009,
+      "sha256": "8d85fe6fda2c47a243307f25d279120bf473d81393194864d8fd5d94f2b610f8"
+    },
+    {
+      "key": "file:modules/continuity/src/masking-rules.ts",
+      "observation": {
+        "kind": "present",
+        "version": "49e0a6bea0287f6b3b4e87ce81dbc61a767119520a54cb5f9f18cc70a79da1e9"
+      },
+      "byte_length": 4423,
+      "sha256": "39b0c3ec61242f6d37846e4b419f3aa98349573a37304d6aff69c9a894358ab2"
+    },
+    {
+      "key": "file:modules/continuity/src/v2/alias.ts",
+      "observation": {
+        "kind": "present",
+        "version": "de80bfc60ae4e0fb81bff63f2ac19f62c32e35fa9ab64412dd71f75cf0bd4246"
+      },
+      "byte_length": 1994,
+      "sha256": "b687eba96722bcfddb01d381865d82c477e960a6564691a823f1c7488990bde3"
+    },
+    {
+      "key": "file:modules/continuity/src/v2/index.ts",
+      "observation": {
+        "kind": "present",
+        "version": "b2a22c633934984fab21c0d6901fe888063f730fcdc831e6bda2e1bfc7fc32eb"
+      },
+      "byte_length": 682,
+      "sha256": "8389f6d19d977e4403d2acc9c5e74c37b56ea3eb405bc03ae0a48751a6a53430"
+    },
+    {
+      "key": "file:modules/continuity/src/v2/masking.ts",
+      "observation": {
+        "kind": "present",
+        "version": "ab423ea8b80a5ca3ca30299624b110862e0e1fdf810d8721fd9af69575b5fde4"
+      },
+      "byte_length": 6580,
+      "sha256": "661fede4e33ded28f660993632f6b99cde26b5678cb0eb6079c989e14692acc3"
+    },
+    {
+      "key": "file:modules/continuity/src/v2/strategy.ts",
+      "observation": {
+        "kind": "present",
+        "version": "89e518187e645e17da251e31b1ea33c9314e0da838f075c528fabf5e77162a19"
+      },
+      "byte_length": 14666,
+      "sha256": "94ca1f1c82a0238132654d04f368a461d379c469253ad7be93ab41dd1c095121"
+    },
+    {
+      "key": "file:modules/continuity/src/v2/tools.ts",
+      "observation": {
+        "kind": "present",
+        "version": "ef9564ac5d67420f5f71d83c6c68686977b1f453836165f552917ecfd7bf09a2"
+      },
+      "byte_length": 16928,
+      "sha256": "86e9f6677a2e3fa088cefeb85150e7b98befbd5a781a83da57a906985af086df"
+    },
+    {
+      "key": "file:modules/continuity/test/v2-maintenance.test.ts",
+      "observation": {
+        "kind": "present",
+        "version": "8e6766fb654e399ecad0cfc885117798d186c10be2abda952ad2e1042357de9f"
+      },
+      "byte_length": 7463,
+      "sha256": "779520c5718f4db703b845d509be3c57bcf42c1a5e9b17b3ffe2ae6e3e1e6dd7"
+    },
+    {
+      "key": "file:modules/continuity/test/v2-strategy.test.ts",
+      "observation": {
+        "kind": "present",
+        "version": "3d38617fc856a7b6ec1970bcc502799e9acaff2af95e02deebb3a300b6437613"
+      },
+      "byte_length": 8366,
+      "sha256": "294bcfcc0129ad05a7dbc6d72cae7c42fd58664d0f055bf510525e7555b9e3c9"
+    },
+    {
+      "key": "file:modules/continuity/test/v2-tools.test.ts",
+      "observation": {
+        "kind": "present",
+        "version": "5693843a3ab708b972fc72a6fcdf0cb78f23437208b6d4273d18951c6e0055b3"
+      },
+      "byte_length": 9870,
+      "sha256": "6fefe07d8706cefd75e62223d8df668c512009c02fa00e4a7de8d6d36f03c3f3"
+    },
+    {
+      "key": "file:modules/rag-studio/README.md",
+      "observation": {
+        "kind": "present",
+        "version": "b222f6114da96c7dbc3aa87232cee11faa8f5748e052da00907c702c1f839227"
+      },
+      "byte_length": 2270,
+      "sha256": "216bbf5ec6ebb921fb56bbe6b348f26a78655f735c4aa0600c9033971c9f863d"
+    },
+    {
+      "key": "file:modules/rag-studio/package.json",
+      "observation": {
+        "kind": "present",
+        "version": "632fff3429a7e94edf84bb47e507b1ac9fb395e31583a919d501e124f12c4670"
+      },
+      "byte_length": 525,
+      "sha256": "07b99e3ef5b6d04707491e14185797902d0c1f6e34c773b2ca2d5fc52458d0f7"
+    },
+    {
+      "key": "file:modules/rag-studio/src/admit.ts",
+      "observation": {
+        "kind": "present",
+        "version": "d776702978b2c0be7fca9d30ef0db2c7c33c627b3d34941a1d0a6ac489a4f585"
+      },
+      "byte_length": 1518,
+      "sha256": "1ea61a8352cc98d7fb6c2d51b6d20f1e59d7b99e37a06b453a8f1f5265661b06"
+    },
+    {
+      "key": "file:modules/rag-studio/src/ask.ts",
+      "observation": {
+        "kind": "present",
+        "version": "fa9f717b7e8b33f1bab64069a7f6a4d765657c09a73f79647abd1edeaf1b0022"
+      },
+      "byte_length": 1872,
+      "sha256": "73abef79077e73cbfbe9679d3e4662178c06ab94b67d7e1454f31bc1f20fe7f7"
+    },
+    {
+      "key": "file:modules/rag-studio/src/compare.ts",
+      "observation": {
+        "kind": "present",
+        "version": "36f4a0536ac580e427ce7e9926cb5a9f6c2f24622ddced7b7f58df76411d1c03"
+      },
+      "byte_length": 2337,
+      "sha256": "e4e1cbaa7e3174a72baf06a762dc591d63789047b7a5a9b3639bc23d6ce34825"
+    },
+    {
+      "key": "file:modules/rag-studio/src/context.ts",
+      "observation": {
+        "kind": "present",
+        "version": "dc44957b806d0b46c63a536bef1f98c2afd242763af97346db8199a19411b651"
+      },
+      "byte_length": 7467,
+      "sha256": "f6d07d8da485a0e8119ec982b9a39b1ddfcf908673888c74f48ad69120fd17b6"
+    },
+    {
+      "key": "file:modules/rag-studio/src/embed-off.ts",
+      "observation": {
+        "kind": "present",
+        "version": "a32e1044504bca85ce9e28f59a4ef7e9082df480c5275079d4c661a345472ef6"
+      },
+      "byte_length": 132,
+      "sha256": "4b1ee32e29cd713ecf13ef7905a770f045530b05ba7f7bdcc1fbb1e9ed3715ba"
+    },
+    {
+      "key": "file:modules/rag-studio/src/extract.ts",
+      "observation": {
+        "kind": "present",
+        "version": "16fd5eb0bc7878d420f0da8a089f9d7f586ea7e069bde858865ef1f26f5826ed"
+      },
+      "byte_length": 750,
+      "sha256": "b45b137f1a23432385312a6f5132a0622e68a31a83652c4a3efb69043f98a8d8"
+    },
+    {
+      "key": "file:modules/rag-studio/src/guard.ts",
+      "observation": {
+        "kind": "present",
+        "version": "38f48c16b51190683bf0c51403f40bcef173dfa687d29f355020b87288a032c2"
+      },
+      "byte_length": 230,
+      "sha256": "c1276e7628a49457ff8fb4343a6ae2c6d7bbf75e3082a2f9c50a9e3fc9f7660a"
+    },
+    {
+      "key": "file:modules/rag-studio/src/index.ts",
+      "observation": {
+        "kind": "present",
+        "version": "dec95b89018da05aee4a041efb4ffbc57861b6324e83462eff6af0800e87d7bb"
+      },
+      "byte_length": 689,
+      "sha256": "703788df0a8690f4adc75ec4543cf0849d0a187687ed47fc60c7a1cec552066a"
+    },
+    {
+      "key": "file:modules/rag-studio/src/lights.ts",
+      "observation": {
+        "kind": "present",
+        "version": "d83ac0cb77821a4a36651154ad4e49e413836f94439dbafbd0697f2967fdc7b3"
+      },
+      "byte_length": 1324,
+      "sha256": "6b17d707c5f89f9510bd43f50d5b85dd4a4eac929769d208ca98feb5f6530b01"
+    },
+    {
+      "key": "file:modules/rag-studio/src/orphan.ts",
+      "observation": {
+        "kind": "present",
+        "version": "9f15c40a646fbbc885a465a91c191da65a96c6d5b1848c10963a26718bbba48e"
+      },
+      "byte_length": 488,
+      "sha256": "3f42247b482a9802ca6e3b0c1dfab2d7cd8266bb8a15bc23eaa3a18df31bd563"
+    },
+    {
+      "key": "file:modules/rag-studio/src/parse.ts",
+      "observation": {
+        "kind": "present",
+        "version": "c0acacbc00bbd32f2896af1ccf69328d94114789925487d5cd001cdb49e9d7a8"
+      },
+      "byte_length": 1332,
+      "sha256": "dce01779f55bf89d58999ec3089c50f0205cdc3629668f9c7553dc9228237109"
+    },
+    {
+      "key": "file:modules/rag-studio/src/passes.ts",
+      "observation": {
+        "kind": "present",
+        "version": "b86046b40d493c20ab50fdbc71afc29a52a34aeb2d191b5efb90ad8334c1e82e"
+      },
+      "byte_length": 685,
+      "sha256": "1537a96d6089a1ba52e5fc1584b9222536ea0a103efa887e82f689cd4d8ec589"
+    },
+    {
+      "key": "file:modules/rag-studio/src/prompt.ts",
+      "observation": {
+        "kind": "present",
+        "version": "996a0fd4e15720ace44dfe896ffca5bd499249a7c65747b7b3d98c89e83b0ae4"
+      },
+      "byte_length": 380,
+      "sha256": "f2da0aa3b213596d59872fb75ade9c7abc517666f48e17d74665ed55ad5b73ad"
+    },
+    {
+      "key": "file:modules/rag-studio/src/proof.ts",
+      "observation": {
+        "kind": "present",
+        "version": "0d3929ed7e287828fed4781dfafe1d3d79f66c5ebffda4d042c3ea02267f6b57"
+      },
+      "byte_length": 1464,
+      "sha256": "f1d6f9b4d3407b19e80fc1705c4d4b829a4af79fe24b26ec65b6bd9cb9dbf622"
+    },
+    {
+      "key": "file:modules/rag-studio/src/rechunk.ts",
+      "observation": {
+        "kind": "present",
+        "version": "8fb1b7a543775977b471fc3aafbb8450e1721c158aa69ae4457ca145c45cd91c"
+      },
+      "byte_length": 1578,
+      "sha256": "63fac5e3c275b44df9b30625340a5b0d2bc3df30cf874f7109fb953a4313cb66"
+    },
+    {
+      "key": "file:modules/rag-studio/src/reparse.ts",
+      "observation": {
+        "kind": "present",
+        "version": "f419a95967e816e289bcbf2596fa674b1b99d79ef10225e86e4d0827b7032d2a"
+      },
+      "byte_length": 1275,
+      "sha256": "3b378c3cad88e9916449cd99672be4259a5926fe6c8c2b197f39bffba709a6cc"
+    },
+    {
+      "key": "file:modules/rag-studio/src/report.ts",
+      "observation": {
+        "kind": "present",
+        "version": "d86902f9d8ce9f3b8866b960fcda07ca49cda500ecfeecb10f1cc7f53ddb6795"
+      },
+      "byte_length": 1043,
+      "sha256": "4e9f7605c1cd4edd7796c823d4ff514323fb2cf336979fbd8bdbf3d2749a4291"
+    },
+    {
+      "key": "file:modules/rag-studio/src/revision.ts",
+      "observation": {
+        "kind": "present",
+        "version": "5f94b940131303cac7866817a478b130934cf452ddb3a8d7368d03fca7cc406d"
+      },
+      "byte_length": 2701,
+      "sha256": "7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0"
+    },
+    {
+      "key": "file:modules/rag-studio/src/search.ts",
+      "observation": {
+        "kind": "present",
+        "version": "68935e99ac0f29266b7a457dbdc0729703c67e21b33a842c46470e05b04e06b1"
+      },
+      "byte_length": 984,
+      "sha256": "d0021c6ef9f5747ea9f61664cfa2f0c0ad8a77373582b0195393b9bbfe395843"
+    },
+    {
+      "key": "file:modules/rag-studio/src/span.ts",
+      "observation": {
+        "kind": "present",
+        "version": "0a81e0e1dc56971896de064a1c213a61107f675fd0a0020bde58099e2702d48c"
+      },
+      "byte_length": 168,
+      "sha256": "55db2c7eccc86b5440e7a6098e9779beeff82b3197b69dbb49fa67c9685ec464"
+    },
+    {
+      "key": "file:modules/rag-studio/src/trace.ts",
+      "observation": {
+        "kind": "present",
+        "version": "32373744cb58669c69e75fab4f0f961e6aaa490b8ca0f82e1f97ca6e06b7cc27"
+      },
+      "byte_length": 296,
+      "sha256": "4f5f20b9522b900a3170cf8258c163074816dc5042c7d5db7ed0cd32d28f0c33"
+    },
+    {
+      "key": "file:modules/rag-studio/test/acceptance.test.ts",
+      "observation": {
+        "kind": "present",
+        "version": "cb9b48667ecf5a885fdc1c558bf31f1cc5d1fc2cb617ef4405ae12e3234c9c86"
+      },
+      "byte_length": 13315,
+      "sha256": "03538a53af035fdf50a3100a86a2f8ef5370db0c93b05e6d002866350618a719"
+    },
+    {
+      "key": "file:modules/rag-studio/test/parse.test.ts",
+      "observation": {
+        "kind": "present",
+        "version": "97a915f566219f66944ed9888ba3bc04e75faa0bff080aa219126f81fe3e18a4"
+      },
+      "byte_length": 2945,
+      "sha256": "b1565329f132f7944737efae026a98b33251f40abdd5e5eecd750397be2151e8"
+    },
+    {
+      "key": "file:modules/rag-studio/test/proof.test.ts",
+      "observation": {
+        "kind": "present",
+        "version": "2be76a93e4f5894912d1aed0198a85105bd9c96d2c46516064d961101e163e42"
+      },
+      "byte_length": 5147,
+      "sha256": "3a764006d0b4acd5d12cfd3f1d9d7a8ab9099fe5a4f7c88f93f6a867b1029196"
+    },
+    {
+      "key": "file:.github/workflows/atlas-guard.yml",
+      "observation": {
+        "kind": "present",
+        "version": "8fd6996585c9657aa1b2833365c783829ba496263b7fc7f93e15fdaea9bf809b"
+      },
+      "byte_length": 3512,
+      "sha256": "4c3c46ece2975bee6301f8865353edaf70f2dcf75df2a543b8fd8b733659dfd8"
+    },
+    {
+      "key": "file:.github/workflows/atlas-pilot.yml",
+      "observation": {
+        "kind": "present",
+        "version": "2e3c92ef10271961e8ace59fcac676459b132838951cbc05175fa1e02b18b25a"
+      },
+      "byte_length": 12288,
+      "sha256": "4933b81381b91a6732a6be5fc243c98f93ea0da74c6a9fe0645a990fb7fbaba0"
+    },
+    {
+      "key": "file:.github/workflows/atlas-worklist.yml",
+      "observation": {
+        "kind": "present",
+        "version": "c52288fdc5fa3e791de769906ea684190d69444b74a58ace15fe2b10e175ca3a"
+      },
+      "byte_length": 2909,
+      "sha256": "166939f3ae43d5275da41c520c840d5d577ba65f99ba963818f1e41b1d834ea7"
+    },
+    {
+      "key": "file:.orchestra/skills/atlas-maintenance/SKILL.md",
+      "observation": {
+        "kind": "present",
+        "version": "ac0955088c8e24023586b7f9962aa60890041204b7c4ba34987957127701f9f6"
+      },
+      "byte_length": 24282,
+      "sha256": "947c9a4b4756c62a9c26bc413dabb8444af3d9462439099b2f2e29c47fc8bde5"
+    },
+    {
+      "key": "file:modules/atlas/.github/workflows/ci.yml",
+      "observation": {
+        "kind": "present",
+        "version": "52ac4fc20ce1ad96458bfab9f3ef93cd90c5b6198d282c3870b7c24b70e801d0"
+      },
+      "byte_length": 5588,
+      "sha256": "d46ff5f0c0231496dfd3d906aa64dd4a1a78885ee30437e49bec00cbb8663ece"
+    },
+    {
+      "key": "file:modules/atlas/.github/workflows/release.yml",
+      "observation": {
+        "kind": "present",
+        "version": "0edc223e057bd02a9cecaeeaff343fc950ade05c9af77eb302aafca0a830d154"
+      },
+      "byte_length": 1767,
+      "sha256": "6ca6f52f522178e50836f41978e59ac2f00ade2d0f78a40d49dbd00cba47acfc"
+    },
+    {
+      "key": "file:modules/atlas/docs/adr/ADR-0011-the-model-is-an-operator-supplied-command.md",
+      "observation": {
+        "kind": "present",
+        "version": "eace4970c1a936fca9c81a9e263b51b1a6637bf38944a2b169193b5a48b77cb7"
+      },
+      "byte_length": 31403,
+      "sha256": "541f8322bfd05b0d4516ec58455008774004da6179d8a6654569b7b436f54677"
+    },
+    {
+      "key": "file:modules/atlas/docs/governance/policy-lock.md",
+      "observation": {
+        "kind": "present",
+        "version": "e83d096122dc6eae1851782aa587b68b9771412b77fab29c81dab30295ab9793"
+      },
+      "byte_length": 19982,
+      "sha256": "8e134498dc3d042f9637ac390d423111c01e770b4011fea0eafd7ecd91abbfc8"
+    },
+    {
+      "key": "file:modules/atlas/harness/README.md",
+      "observation": {
+        "kind": "present",
+        "version": "3bb334691fe67e48a021a732bf95e831403ab369d5d1f9fa96ee6f49e0a99292"
+      },
+      "byte_length": 4464,
+      "sha256": "5c55b34c8880aa2e6dabf1da13c9e0b9981824c54a8478366c89d2e287cb9fda"
+    },
+    {
+      "key": "file:script/atlas-baseline.mjs",
+      "observation": {
+        "kind": "present",
+        "version": "f3ae6324fbdceb80ec0c85612a70c27c30a403275c937ba04f2adabbaa3c7024"
+      },
+      "byte_length": 1439,
+      "sha256": "4031c509579d9136a15331da96fd1834e9d976592771ffdcc83b36011637053e"
+    },
+    {
+      "key": "file:script/atlas-genesis/checkpoint-continuation-policy.mjs",
+      "observation": {
+        "kind": "present",
+        "version": "f3d724958da49f119cbd37d7f3599754fd81c40db714bb15acf7aeb148765bde"
+      },
+      "byte_length": 5025,
+      "sha256": "0aecf95170acd5daaf86ff94a1eb21651e7d2bcc9f6e528725b82daa223375b6"
+    },
+    {
+      "key": "file:script/atlas-genesis/checkpoint.mjs",
+      "observation": {
+        "kind": "present",
+        "version": "2306960ee95f358deddcc1feab959daa9428192506f44ee9d860d36ea62e6fc1"
+      },
+      "byte_length": 16276,
+      "sha256": "5c30d134060915b32c0ae467b7ee5e6c7234202efe8e9aeac8979bef2ae257f7"
+    },
+    {
+      "key": "file:script/atlas-genesis/index-reuse.mjs",
+      "observation": {
+        "kind": "present",
+        "version": "6338e5a174607f9d84a2c3eca63ff33e0360f6c109f74bc8fc57715432f06d0a"
+      },
+      "byte_length": 5958,
+      "sha256": "7d7fb629e4ccecd44e90be9283a64fd188a33aa1abdb6d8ccec1f0914163130a"
+    },
+    {
+      "key": "file:script/atlas-genesis/judge.mjs",
+      "observation": {
+        "kind": "present",
+        "version": "83ea946ec6c71eb649916a72e6bf4a447fd2135431ea5d238dc1492ce6aae57e"
+      },
+      "byte_length": 18909,
+      "sha256": "3390b2ecf00d1cfb4f78337c4f41d53892d4d0caf0c11b1bead0b6f2dcc0e577"
+    },
+    {
+      "key": "file:script/atlas-genesis/publish-plan.mjs",
+      "observation": {
+        "kind": "present",
+        "version": "bdc3aac54290adec5c614701ad70bf12e136b8c98f6463153912561dddbd6ff1"
+      },
+      "byte_length": 12248,
+      "sha256": "e6fa446268c2351024f308708e0c6ee6ce3f25617ff06e6879a63149e67108c7"
+    },
+    {
+      "key": "file:script/atlas-genesis/realdata-evaluate.mjs",
+      "observation": {
+        "kind": "present",
+        "version": "fbfe286f0340c69fe354590cc3e59649cc6d1e0de4cfae8cd0ee5311109dacca"
+      },
+      "byte_length": 17831,
+      "sha256": "b838625fcf6eb1c050b01f76d37caed9b3e76eabfefb1aa95a087688f6da12ac"
+    },
+    {
+      "key": "file:script/atlas-genesis/secret-scan.mjs",
+      "observation": {
+        "kind": "present",
+        "version": "90d0a8cda92aaa971bfc00d22491373a4bb1b3dc95474d291a787a6b4ce15d95"
+      },
+      "byte_length": 3054,
+      "sha256": "b4a598b8bc458a6c0d4b895d56cb6d23504407eb059a1e682440d21a57ad6d33"
+    },
+    {
+      "key": "file:specs/atlas-ui/mock/README.md",
+      "observation": {
+        "kind": "present",
+        "version": "15449ae3608e4a2fa02c583074b2bbaa42ef5584ae17e19dccdd8cd284a72428"
+      },
+      "byte_length": 4694,
+      "sha256": "0fd2333efe409ce83e4907a54257c7907ce6e7224710c2c378395e075856b29b"
+    },
+    {
+      "key": "file:specs/atlas-ui/mock/extract.py",
+      "observation": {
+        "kind": "present",
+        "version": "1c416d61b692d8e048b0018298c8bb93b4c080616ffb384b1d8d677636b24713"
+      },
+      "byte_length": 7618,
+      "sha256": "48fce6c1d5f7a45b52be286095116c46ef198b814903868d9297674a337b27b3"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.diff",
+      "observation": {
+        "kind": "present",
+        "version": "a91d52e64908a00463ca5b9952bd0ad95187293d860f3b2afc0a4ba8efed0091"
+      },
+      "byte_length": 4843,
+      "sha256": "35817e9cd6541bd3541e8f5b733ab7e26cab287d370c36c8b01c321dfb3ef6d8"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/build_delivery_v2.py",
+      "observation": {
+        "kind": "present",
+        "version": "e8453b4ffb821bcf7d60798da30d8c0cbe29ddbfa0a7a3c216f58d96c42d98bb"
+      },
+      "byte_length": 12715,
+      "sha256": "1f6f832e359d60a2ffe610e7e73b691bc8c094d6c75d97956263fa0b347e42a2"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/correction-request.md",
+      "observation": {
+        "kind": "present",
+        "version": "dcf6f7b1de6677405c95990435195e03ad83078c31bcf4bcef132772694ba725"
+      },
+      "byte_length": 1082,
+      "sha256": "d1468e3c97c39606882268cfd68a64b625fa0e24ef4d022074af62db96c45c0c"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/correction-response.md",
+      "observation": {
+        "kind": "present",
+        "version": "cc4b49c896a9b49356665762e6598404824671f467bc9701b66b13414f18ec4a"
+      },
+      "byte_length": 2344,
+      "sha256": "da170a0a301ad8bf4d70f3bf3b04a89f09fdb6d8a2292ae035d87fee598da411"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/inspection-register.json",
+      "observation": {
+        "kind": "present",
+        "version": "74160d9f7f275e528abcb885120c42247438a1e094328caae1ad21dfb0eff5c4"
+      },
+      "byte_length": 7778,
+      "sha256": "375f93761e02e5d5d95e44aff8a0ca02599ddfd2629d8f6f06ec8d64c04dc822"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/integrity-receipt.json",
+      "observation": {
+        "kind": "present",
+        "version": "c8ae5dfe7af325c1a75e30d691a22c0be79d501a632e403274919b5d01b5c511"
+      },
+      "byte_length": 3335,
+      "sha256": "094211ad9152bb78adae123832c403cf990a9049171b41e8fed37cf089fff232"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/recipe-v2.json",
+      "observation": {
+        "kind": "present",
+        "version": "7706160f3e21a5b5e0c841254db2da9a7bd06d0cf8810efb939b74c4013724de"
+      },
+      "byte_length": 5878,
+      "sha256": "fa525df5574cd2953f1b6d5fb1a8ba9e71ad0b12f74bafc4283419bf9dfaf712"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/request.md",
+      "observation": {
+        "kind": "present",
+        "version": "914aadfebb3cbb5ab3fa89c36c0f17b1f3a44a227fe539dd9943bfa6cc5b7760"
+      },
+      "byte_length": 2831,
+      "sha256": "222d944f611edfe9627164437d8c4909898bd20ce315173fea4e9129037cbbc7"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/source-provenance-v2.json",
+      "observation": {
+        "kind": "present",
+        "version": "618357027eeb86d024dee429ea4183dc0c7785863100ee8c41766af1dba7583e"
+      },
+      "byte_length": 38309,
+      "sha256": "844642de83937264f6078c24d864ed301974b63ec4b5b633e0418ff399b7dc0d"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/review-answer.ts",
+      "observation": {
+        "kind": "present",
+        "version": "32312980a58872e5bcd6df1996f77448604ed4f117e0773b8213f5bbbdb01407"
+      },
+      "byte_length": 4148,
+      "sha256": "d9f6d00a5abf557c3861ba24ed03c46961de8c1466588dc9c297584a59acade5"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/surface/index.ts",
+      "observation": {
+        "kind": "present",
+        "version": "8d1489b4d5ae9efa055f019ccb4dbd6760b1f9b6a9f1ad126a8e7d90fa5e9a77"
+      },
+      "byte_length": 11614,
+      "sha256": "8560562009ce02522725630941c9fbd05dadceea64d09728ec32398641e8885f"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/surface/review.ts",
+      "observation": {
+        "kind": "present",
+        "version": "e3f1bf89a756b8175f88f2021abfe33643b1991f1a95fea94c3cbf3345cd4642"
+      },
+      "byte_length": 12988,
+      "sha256": "b7e922af1b3df0613ef997539157067dbf9ed45e2581ae1a821bd7490e212fe9"
+    },
+    {
+      "key": "file:modules/atlas/packages/cli/src/surface-mine.ts",
+      "observation": {
+        "kind": "present",
+        "version": "5bb56dcd9a1e0d45e4efc14994dde9ba1fd1c389c6cad4f308cc97841cec18d2"
+      },
+      "byte_length": 3131,
+      "sha256": "03e7a1007a0858a4023bc715b3b74191686b7d6bc2af6f45fbb050da17deace1"
+    },
+    {
+      "key": "file:packages/core/package.json",
+      "observation": {
+        "kind": "present",
+        "version": "79f8646cb9fa050d11db3837b81ac801227cc05891fbc6dc0786ecf0ed39904f"
+      },
+      "byte_length": 31912,
+      "sha256": "1c58faa263c2bb931b9789722342645e94cb30f0b91613b9093aa2ed422c8385"
+    },
+    {
+      "key": "file:packages/core/src/atlas.ts",
+      "observation": {
+        "kind": "present",
+        "version": "8df4cceca73836c6cfee9bf97d1826cb1cbd0b8422fd00969929e9c033c27ba3"
+      },
+      "byte_length": 16892,
+      "sha256": "4a80f71532a9766f0cfaa67e4a4474ae4d49dbe30a811033ce57a1fb9c58bec4"
+    },
+    {
+      "key": "file:packages/core/src/rag-studio/sql.ts",
+      "observation": {
+        "kind": "present",
+        "version": "e217b339ffcbf1aeab6dd9bb6f9b587077ec747056e72d04fdd60145d9d149f9"
+      },
+      "byte_length": 2519,
+      "sha256": "e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9"
+    },
+    {
+      "key": "file:packages/core/src/session.ts",
+      "observation": {
+        "kind": "present",
+        "version": "f6c0588f92bfa69cab126fdd15dc354559454933d38d1c4d0613b5cd942442f2"
+      },
+      "byte_length": 34126,
+      "sha256": "d8c38d46bc6b78ec23d7dae7525fa2ad4c4f07f3f6b5963248e0a0e96d1fbe58"
+    },
+    {
+      "key": "file:packages/core/src/session/compaction.ts",
+      "observation": {
+        "kind": "present",
+        "version": "78e3fc74a8bbcc1a639f1edf96ae7bfcd28f5dbe85b97797e865b356ce72462a"
+      },
+      "byte_length": 14270,
+      "sha256": "d6becda5c14c0679b6d5bf509a04631309518bd0ca0ba35d1b6f7e8296266d84"
+    },
+    {
+      "key": "file:packages/core/src/session/runner/index.ts",
+      "observation": {
+        "kind": "present",
+        "version": "5aa56944612b4fd3f145949e7f09b287b4ad3a3bd11d1fed1d7efb8b628c9781"
+      },
+      "byte_length": 2428,
+      "sha256": "08188f1e93d6b49e27f1b02d227516f6b2cd61f8ebc2f831ab8e6903685af109"
+    },
+    {
+      "key": "file:packages/core/src/session/runner/llm.ts",
+      "observation": {
+        "kind": "present",
+        "version": "e7622676d0b01e6a25c8e97603c4df8240b659031c1db20e864d50ed98023f55"
+      },
+      "byte_length": 39006,
+      "sha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7"
+    },
+    {
+      "key": "file:packages/protocol/src/groups/rag-studio.ts",
+      "observation": {
+        "kind": "present",
+        "version": "ddd6a9d7c95415636fef9332fef50a116e39fece8a0aa3f6fe2c43d916cb65a2"
+      },
+      "byte_length": 6103,
+      "sha256": "3c5aca47c708827142435492a520cced0d83a3cd0a86761929754ceb7509a2b8"
+    },
+    {
+      "key": "file:packages/schema/src/rag-studio.ts",
+      "observation": {
+        "kind": "present",
+        "version": "1160f2cff9c68d1538362dace6ac10a0564cb9bde4f599a5e2b6f36baee92e35"
+      },
+      "byte_length": 6596,
+      "sha256": "948d52ca2c846da8059bb297a8e564aa82e5cec5dc1edf97906eb010f71b9918"
+    },
+    {
+      "key": "file:packages/server/src/handlers/atlas.ts",
+      "observation": {
+        "kind": "present",
+        "version": "c01498be5e13875d284809adf2670b6e8cfa5f5949dc7f29ca7f6f8244694acd"
+      },
+      "byte_length": 5875,
+      "sha256": "5eacbbeeea4ae154b77523f0f3bb14bd6921816ad4ebbb7ee5145050ab874267"
+    },
+    {
+      "key": "file:packages/server/src/handlers/rag-studio-session.ts",
+      "observation": {
+        "kind": "present",
+        "version": "8fdcefbc04b72e2eee0eb7b8bdc4e1c707856cfd87d2369763e2190e9f645f77"
+      },
+      "byte_length": 9807,
+      "sha256": "bd3250e5604650f6f80133d3f4e5c86653eaf1f42eddb40799f40afe22aab94b"
+    },
+    {
+      "key": "file:packages/server/src/handlers/rag-studio.ts",
+      "observation": {
+        "kind": "present",
+        "version": "d45ee4d48f955b0f51d012b28a7474e204bbf5610325ab381d8080fabc269db0"
+      },
+      "byte_length": 4883,
+      "sha256": "3a3143d5b3243ac78bc87bd5f9dbb56ae9ab080730dd9ac7060700809de4ef0e"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/producer-request.md",
+      "observation": {
+        "kind": "present",
+        "version": "8ef7f90f92334bf64ed5a011bbccdbc986e8db8c284d85f6894c781cd8b34110"
+      },
+      "byte_length": 4563,
+      "sha256": "89ecb99272363b0ec6c23b5ae945e477afbfcb66992775055ccdf9888d0d0035"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-r1/recipe-v3.json",
+      "observation": {
+        "kind": "present",
+        "version": "53a969965516bc82b2e6a7202f89187ed5c89785cb6d85e728d60d7b7e4c531e"
+      },
+      "byte_length": 3033,
+      "sha256": "39e8c03c32e1cd862836118cd3e51028e4c2ff88fbed5fb615c7032e8f24fb96"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-g3-recovery-contract.md",
+      "observation": {
+        "kind": "present",
+        "version": "328406d47aa7655be03e8d3c28df3c8d0aa5754a6d0bbcfc1edb207a5e061116"
+      },
+      "byte_length": 3541,
+      "sha256": "dc230ac5d0cdeaa5e4434b79f13ab6e849fbc6b9270b2b47316d30d4e957f9c4"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-native-runtime.md",
+      "observation": {
+        "kind": "present",
+        "version": "8a0ee930564337380a4c4abff7b430cf3b3391a6fce9198106275a9c9259a300"
+      },
+      "byte_length": 10249,
+      "sha256": "b8a59c5e23e21137e6b3eb74144dd7bf273ddce683e7e2b2eb5d8db56d4132ec"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-ownership-plan.md",
+      "observation": {
+        "kind": "present",
+        "version": "290d25f90059b46a21a03b75a3aa231a431c7881b052832f6e147909f12169b9"
+      },
+      "byte_length": 28267,
+      "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/compose-runtime.ts",
+      "observation": {
+        "kind": "present",
+        "version": "646e2b26acbc9170bfc65583a352fca1401c2c456ea22a5a94232175fc43ed48"
+      },
+      "byte_length": 16735,
+      "sha256": "a838d4205ff1999627fbb14b8a1de25b91c897255332bd50a95e12799e6fb6c1"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+      "observation": {
+        "kind": "present",
+        "version": "b077df18fbd2d9f3a6e5a0a7432943bea06645d68ea16c1e50f0795899a16273"
+      },
+      "byte_length": 5198,
+      "sha256": "ef424a0b5bdb9590f48b8b21b418de1aa033189578790c0bb93a92e1c1d38021"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "observation": {
+        "kind": "present",
+        "version": "952167985639eca9a38e66f8a9fa3dd07830570dfe1ed0a39e96a1aa6fb43e28"
+      },
+      "byte_length": 13356,
+      "sha256": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+      "observation": {
+        "kind": "present",
+        "version": "9d349110efb93c810147dcdeaf5e2149e98d323821d687de3a5f0f8e998bd0c1"
+      },
+      "byte_length": 4162,
+      "sha256": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/genesis-native.ts",
+      "observation": {
+        "kind": "present",
+        "version": "4ad3fea2cda1560337fab3634b9e0ca119c6ac51dc4be7bd97e16e61b107469d"
+      },
+      "byte_length": 12376,
+      "sha256": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/governed-emit-incumbent.ts",
+      "observation": {
+        "kind": "present",
+        "version": "5e8a304121bacbc8005192f4f51c28ec658ebb3f220a76fe716ca9166cf3413b"
+      },
+      "byte_length": 15148,
+      "sha256": "c7b4d446e79a64c01f3d871b6b8f6f96579293e9ed593921524b8eed0d5e506e"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/src/sidecar-commit.ts",
+      "observation": {
+        "kind": "present",
+        "version": "4bb850250dcc58acd8c9ffb8b14c53432d9ff91eed84774265907d1f08aa0a2a"
+      },
+      "byte_length": 29968,
+      "sha256": "89042790cf9b6065af58205887a565f1aa1208e977831ee1745d04118c815d9b"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+      "observation": {
+        "kind": "present",
+        "version": "057b9bedd0af22877ba9700df32c7080e7e3dc038acb4c6ac51d461dd3a97c93"
+      },
+      "byte_length": 23178,
+      "sha256": "8e33b9721ef0ea7b8979a696c9493c53d069483d727f64e327c4165341e7bcb4"
+    },
+    {
+      "key": "file:modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+      "observation": {
+        "kind": "present",
+        "version": "f577cda2e02f8587704eaab46e4d34535caebc0ca08a4f66f98e01efcbdb6061"
+      },
+      "byte_length": 15139,
+      "sha256": "d0997dd5d07cd178eedb912af64623456f01fcfc7b467fa5f8c324db7018e665"
+    },
+    {
+      "key": "file:modules/atlas/packages/knowledge/src/index.ts",
+      "observation": {
+        "kind": "present",
+        "version": "01a50232701242ea9112ebb536b42436597826693e04c7188636fba9056a4876"
+      },
+      "byte_length": 5567,
+      "sha256": "fdb95e936dc86471ccf565ae0da870921e8e09574e8ca151adee7f4a4132fb26"
+    },
+    {
+      "key": "file:modules/atlas/packages/knowledge/src/ownership/types.ts",
+      "observation": {
+        "kind": "present",
+        "version": "6673451b3f05cedd70b8be2f8c2a6d9b3afd4ca236a06f77683811a7342be8c5"
+      },
+      "byte_length": 4438,
+      "sha256": "ae9928471713857e5a07b11df1090db7bb16a65f9f9e0b045a4ff4760c8f2302"
+    },
+    {
+      "key": "file:modules/atlas/scripts/genesis-native.ts",
+      "observation": {
+        "kind": "present",
+        "version": "424a684b07494d2aff29d8eb7f7afc1f833da64dddca7f6ce080cb7d098e5e75"
+      },
+      "byte_length": 3004,
+      "sha256": "18dc473b79c9bf986f07677bdba728d38490e0df36e6a39763f3765f422af3ce"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/request.txt",
+      "observation": {
+        "kind": "present",
+        "version": "216bd2360b335451573511f9c0e349a9d16f3ff3016412a97d8a16eab20ba2aa"
+      },
+      "byte_length": 1969,
+      "sha256": "3278e09366e6ba83a87ec94fddba23b0c6c516ef670847affecd23c76ebf7ca5"
+    },
+    {
+      "key": "file:modules/atlas/package.json",
+      "observation": {
+        "kind": "present",
+        "version": "21cb37ec36f7b3f9fa7e502e7fb3721de3e14c09f5f7225b02ab432dbef0d78b"
+      },
+      "byte_length": 1670,
+      "sha256": "168380cb630bd0aba6a2504d6b207b449153e084c01785c6f76eb84fd667c605"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+      "observation": {
+        "kind": "present",
+        "version": "db253357d5b7571bde255a9632411bf1a91b9c5cdb857bd7daf1d23cb52630c0"
+      },
+      "byte_length": 11980,
+      "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+      "observation": {
+        "kind": "present",
+        "version": "1230e644b0e72a4b9cea4279ffd8c065a2e1a36b98ff7118382be8b8b7f1f9e2"
+      },
+      "byte_length": 11972,
+      "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/body.md",
+      "observation": {
+        "kind": "present",
+        "version": "af0acbc2fba13e150c4f30ec5b50b697240582b389108e9e6b4edd73cfa7546c"
+      },
+      "byte_length": 17959,
+      "sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-engine.md",
+      "observation": {
+        "kind": "present",
+        "version": "c66a5fb065a629cf2ad207a3b7192940392f2f44ac6962cc10d1240e7e028a07"
+      },
+      "byte_length": 17987,
+      "sha256": "c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+      "observation": {
+        "kind": "present",
+        "version": "ac51e4a143bf990f151f492a784e098aaa5cd47df5a6f5b76639e5ac4205fbf3"
+      },
+      "byte_length": 17595,
+      "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system-sources.json",
+      "observation": {
+        "kind": "present",
+        "version": "ac782e30e572f858f3bf2da6ea8ea996a7e50647c99de5a6ec9f475acdd2260c"
+      },
+      "byte_length": 9923,
+      "sha256": "b03797e41c6112f3d8a6c73acf92a88684f6a8efe3b3507339df26737e065c0f"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/input-manifest.json",
+      "observation": {
+        "kind": "present",
+        "version": "44637cc94a50e86351929cda19676bc57b46d1d159b217a62db0f94a5541f344"
+      },
+      "byte_length": 12610,
+      "sha256": "00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/primary-correction-request.md",
+      "observation": {
+        "kind": "present",
+        "version": "212b557275fe4ddbcef653901b8e9e548d101c6dc117fd41c870396fc6af20b7"
+      },
+      "byte_length": 1445,
+      "sha256": "d8952808b1db8ca5ff65b88e78f6fcb2e632d443376df09947d7d2ec1b8454d9"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/recipe-v2.json",
+      "observation": {
+        "kind": "present",
+        "version": "22daf50ef1827033d6a53709bd9b6b8e26d3475637e99f4b02c253c3870b9c39"
+      },
+      "byte_length": 11215,
+      "sha256": "f500cab918b048126c54925eee82f4b9982b47ae295a203bd8ce4e708e816141"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/request.md",
+      "observation": {
+        "kind": "present",
+        "version": "250d91d8d86a4ea56d3b837e5617077cb138b9cfafe7f512a4c726d36ddcc0ae"
+      },
+      "byte_length": 3906,
+      "sha256": "e0532412b833ecbe33d5d7de1fe75a1568000877f8495b6b7c486cc637e10cba"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+      "observation": {
+        "kind": "present",
+        "version": "72c30ea7e6d3a08fa77136d09603b47afac79ae99c0683c40fd2cef8d7277e76"
+      },
+      "byte_length": 6997,
+      "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/continuity-rag.md",
+      "observation": {
+        "kind": "present",
+        "version": "623af0625c83db290abcce3a6f682c8226796daf55e692cb35a7c806b5ccc987"
+      },
+      "byte_length": 17429,
+      "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/correction-request-v2.md",
+      "observation": {
+        "kind": "present",
+        "version": "e0c6ee834437234bd3065b46cb7b4293392ba10d61c84b0bef08435b76c94c21"
+      },
+      "byte_length": 3091,
+      "sha256": "87dbecce9b7e3c19302e0d667c898a0b5cea32341079411d3a7326214fdd6333"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/input-manifest-v2.json",
+      "observation": {
+        "kind": "present",
+        "version": "eccfce61233a3111147af0212f052f9688bc3c5142753c9b539cdad1603aa2de"
+      },
+      "byte_length": 13899,
+      "sha256": "180b65db793511e814e939c0c4b52c3f883ac57c21cd1e39dbb88dcf46bce51a"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/recipe-v2.json",
+      "observation": {
+        "kind": "present",
+        "version": "fd4fafcb1e6e743ca5a9eed86d59223b984f1d53f961874dc4101b8b0f439d51"
+      },
+      "byte_length": 8374,
+      "sha256": "445628cf49563d13ebb022d6d8a29d2f37fca09e0e5f91fa9f7478a3913b6199"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request-v2.md",
+      "observation": {
+        "kind": "present",
+        "version": "071746d0f317488eff3b2873708d7c3701a6f8e842b638b761f394edc850a97a"
+      },
+      "byte_length": 7394,
+      "sha256": "8bcfffa5e162627e8761e9501f0c5c70b001de8905a151ec3f25b285a469373c"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request.md",
+      "observation": {
+        "kind": "present",
+        "version": "3189f4071d10bc12746560b8f5d1d98122626d34d1c3c079044714830e90e5f7"
+      },
+      "byte_length": 3856,
+      "sha256": "3e490e1d8172da5337f276f07af2e9bede28c82b2ad834cd795c5af844b303f4"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/transport-contract.md",
+      "observation": {
+        "kind": "present",
+        "version": "198938481792fe8658082061c8ac4801edafaf8f186c7b3ae5c0e9eb7a5bd642"
+      },
+      "byte_length": 8479,
+      "sha256": "deaa88e625f4f0bd856e235e9df9616f12fa3d86384e69338c98daac90c70c6f"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage-governance.md",
+      "observation": {
+        "kind": "present",
+        "version": "28686d0e08de4825b075930fee2acb8ddfac221a9c8089e6f30084c709320a82"
+      },
+      "byte_length": 17988,
+      "sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2-sources.json",
+      "observation": {
+        "kind": "present",
+        "version": "18d7669728fea9d15303acf6d6286bd12f68c5344f1e653937ebc7f7d353b8b0"
+      },
+      "byte_length": 10822,
+      "sha256": "0af4a4fa55285b22c7d2e4a26d427ffb648992a970782bd6cab1b56d58ec8129"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+      "observation": {
+        "kind": "present",
+        "version": "38fcea9bd8492e1c3cbbebf76294780b91bd0b20021a618617dc47b73ff1143b"
+      },
+      "byte_length": 17593,
+      "sha256": "6e59f5ba8690fe7574d7e12f960aab120e20c942413c827a07d3bbf80d3cd38a"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+      "observation": {
+        "kind": "present",
+        "version": "331531cee0554b1e8e65cd7edbe68971f821b3a639fcca6d5b29d5e0fbaff752"
+      },
+      "byte_length": 7954,
+      "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2.md",
+      "observation": {
+        "kind": "present",
+        "version": "2d31e2509260defda64f21cddcd74784ae84d77183ea205596ae9d7f159db7d0"
+      },
+      "byte_length": 7971,
+      "sha256": "87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+      "observation": {
+        "kind": "present",
+        "version": "f6526bbdaaa2dea18f1d1159d7748456831f4fc7c4fd5d5fb7a8098edecdfce4"
+      },
+      "byte_length": 7949,
+      "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/input-addendum-j1.json",
+      "observation": {
+        "kind": "present",
+        "version": "23e16ccb3ea41e6899cc81e391658d1b3d046258e724a29e2a32aaa500f7421a"
+      },
+      "byte_length": 1084,
+      "sha256": "e6006c8b5ee34212b5bca4daf567b9f9c4f54260f67c29e91ed0971020f98bab"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/input-manifest.json",
+      "observation": {
+        "kind": "present",
+        "version": "5342e8176d8f2ce3e0ff224bf65247f16b55ecd4045915f3a20bc0658eb097f3"
+      },
+      "byte_length": 10698,
+      "sha256": "4f64db85549e79f4aa79f88751a86bfbcd99395afb99343a25d1f1acc9699e54"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/recipe-v3.json",
+      "observation": {
+        "kind": "present",
+        "version": "7d3a3a0218bd53a697a6eaa3836a5dd7671ba46eae3db27dfcaa644375395f70"
+      },
+      "byte_length": 9983,
+      "sha256": "89ff009dc4cf735637aa03d7bff37b7a80765bdcb50802fe036d718b7880d2a9"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/request-j1.md",
+      "observation": {
+        "kind": "present",
+        "version": "c87616a8a7d031a08c032da583f595def2ee729aef01b4a190ff5502ba93f817"
+      },
+      "byte_length": 2957,
+      "sha256": "f418c93ee9fb43758fd6204c89dbcd884e6dc8b480bf333f960e009ee554baa7"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/request-p1.md",
+      "observation": {
+        "kind": "present",
+        "version": "0f22e0d8331e1e03768953aeccd6812d4e2afaa2c23f51cd528608c5d7b6f224"
+      },
+      "byte_length": 2366,
+      "sha256": "9f1db6d26fe17f850209cb6b26fb08bbde76dcf8220196b8d5dd51920f4ce506"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/request.md",
+      "observation": {
+        "kind": "present",
+        "version": "ffeaeab4e9285b95765b3352d931407a9d1ea589fcf2ebfd791426350989dc0d"
+      },
+      "byte_length": 3551,
+      "sha256": "eba02e64faf142ca0bf3334ec52a69dc2772df35f9b475a75aa89107d22a1a48"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/source-use-v3.json",
+      "observation": {
+        "kind": "present",
+        "version": "526f522a34b35aeefa28ea6a78248116cf221898322ece31266eefd740d528d1"
+      },
+      "byte_length": 13632,
+      "sha256": "ce43c13f6710fe73039110da96b31012fb15aaaacf5eba36d7da37264c54e066"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l3/system-flows-v3.md",
+      "observation": {
+        "kind": "present",
+        "version": "88459930069157766ecc691eb96722c4503cadf3a4653b1efb6ab73aedac6293"
+      },
+      "byte_length": 8995,
+      "sha256": "0648bf048642fcfb7f04df594bcd4a0877635acb2d363431e739bcd66ea973e7"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/input-manifest.json",
+      "observation": {
+        "kind": "present",
+        "version": "ee6bfcc1db8f9c6801a50491a748f592a04462717ceda1c9def0e906e4d74c1a"
+      },
+      "byte_length": 26169,
+      "sha256": "51925d0f2fc6dfd99b65bfc95be09c9ba488fe7b8126137160e591fa0ce69dd0"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/recipe.json",
+      "observation": {
+        "kind": "present",
+        "version": "a1f98c87e4ce53df9358cdb32f05685783c7f56a06485a353c9537fd1517fd57"
+      },
+      "byte_length": 15510,
+      "sha256": "e6f40725281b1414869851cbf511978908d2f7e906ffc9017ca495e942d480f2"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/request.md",
+      "observation": {
+        "kind": "present",
+        "version": "207d405a0588c4d225caa615336bf48b29ce8152f9b6686326241ebf28446b77"
+      },
+      "byte_length": 4200,
+      "sha256": "319d30c61bb84e70322e16a1135ad05085966f96cfa795c9c3476a3f5fe8d1ff"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/source-use.json",
+      "observation": {
+        "kind": "present",
+        "version": "f53348943a9eb1eefdd31f13c59524d084747de722c88ad73575838a18bdcfb3"
+      },
+      "byte_length": 26266,
+      "sha256": "23fcc2ff5e9122d279bb3e8f387622d514c5fd1d833b19e1a743f26fd378ef85"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/steering-route.md",
+      "observation": {
+        "kind": "present",
+        "version": "7f3c3e66fb870e045e11c5acf964f63d81b322db3d137fdbf53ac7be9eb1903f"
+      },
+      "byte_length": 769,
+      "sha256": "a006549f9c2dd36e2e09b0d6c4da0a22bcbb2ff63551794cdf473589e478ff26"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4a/steering.md",
+      "observation": {
+        "kind": "present",
+        "version": "92f50f0e7c2d56143f9d75a229bfdbf78859ee38e3baaad848b067e574870c3a"
+      },
+      "byte_length": 457,
+      "sha256": "9b871239cd15f09b80a786c15a2456586f9ccf28fcb544caef5a756a92476407"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/ci-c1/receipt.json",
+      "observation": {
+        "kind": "present",
+        "version": "cc9cd21d48603235c614184a7788b4f3c68efbb594dce8f5bb9dcdf74934a78c"
+      },
+      "byte_length": 14193,
+      "sha256": "0e5ab3de3e3eff58fda61020dc4f3ec6b2c67007ecc3b42c7d81a7e97654ca0c"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4b/input-manifest.json",
+      "observation": {
+        "kind": "present",
+        "version": "ee6bfcc1db8f9c6801a50491a748f592a04462717ceda1c9def0e906e4d74c1a"
+      },
+      "byte_length": 26169,
+      "sha256": "51925d0f2fc6dfd99b65bfc95be09c9ba488fe7b8126137160e591fa0ce69dd0"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4b/recipe.json",
+      "observation": {
+        "kind": "present",
+        "version": "bd9051722ed894dc225b031e813fed268950ea1332752e2a4eb9277481bda4ef"
+      },
+      "byte_length": 16539,
+      "sha256": "da23e2e6dfec8d99055cf2b90460051d505f50f12c82b093af1436232682b303"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4b/request.md",
+      "observation": {
+        "kind": "present",
+        "version": "287d874748a160af4fa2be0711f45bd6e28481dde20d59b5dba63baa5ae18e6f"
+      },
+      "byte_length": 4555,
+      "sha256": "f208ee5a88e948c5fa450f1e6e8326778ecdcceef3e8e1ccc89c586f56a8e63e"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4b/response.md",
+      "observation": {
+        "kind": "present",
+        "version": "135d889bce78b73a54cb4b03de403b6429c0a179601cf4f11f81e1875fb65963"
+      },
+      "byte_length": 3586,
+      "sha256": "e84f585cf9f56510a36e3b93afc3b045da437b8d1d20fd21f09a895f25c7908b"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l4b/steering-temporal.md",
+      "observation": {
+        "kind": "present",
+        "version": "f8ab336fee524217b972973eef99a7c30153977fcfb9375919931bd7bc9dfa10"
+      },
+      "byte_length": 481,
+      "sha256": "f21abb785f7d90be858d3fe75931d2c29dc11235acfc72e8f0d1b51784d11fe3"
+    },
+    {
+      "key": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/maintenance-driver/usage.md",
+      "observation": {
+        "kind": "present",
+        "version": "526de1caaba671d6eac20a33ddc7e43f7117c2da6d4e69d432ddd65eb48c1d36"
+      },
+      "byte_length": 12073,
+      "sha256": "6213c40fd0abdaba119390dd84249c81d0cb69a6343f8fc141c3c6126570ecf4"
+    }
+  ],
+  "affected": [
+    "S4:L1:host-boundaries",
+    "S4:L2:atlas-system",
+    "S4:L2:continuity-rag-operations",
+    "S4:L3:system-flows",
+    "S4:L4:entry",
+    "S4:L4:maintenance",
+    "S4:L4:operational",
+    "S4:L4:ownership"
+  ],
+  "calls": [
+    "S4:L1:host-boundaries"
+  ],
+  "private_manifest": "9675e3feda6d07375e17537d66da499ad81b5eb1075dc779738bbb9c498108bb",
+  "manifest_changed": true,
+  "after": {
+    "S4:L1:ownership-boundaries": {
+      "artifact": "c3281a7a6e0e2fb33db7540f0ee7ecdefd442fb52dedd9aa28562502d54387ad",
+      "receipt": "1386a2e0b6edc698d593d904546cc7e2f8c89086dfa4874fd15de8f7f845f13e",
+      "result": "8c63bee07cdf75682c646bb2d524e09dd66308a56be2e32ae7dbbb5b9354759f",
+      "body": "df059187e3dac1099e76d4d137a27d89f6ef6354e67dd46c47dca5b82401f81b",
+      "inputs_id": "8b1de2e5bd3e244c32e58ec3454c0df4826a229496877ce9239520a0f5d4eee2"
+    },
+    "S4:L1:atlas-engine": {
+      "artifact": "1f9f9e700cca2b2a8db5ee6fc687e85e37d579916985b8b7ca77b9fdb110f39c",
+      "receipt": "dcb86bfbe8e4c29fd23339ef432b3f9e3a0c4242682892d866a57f2261ee78c2",
+      "result": "6706df3be2177f1ff8af7d2f98abfe83420d0146af85bd5f997c789c21ab43a4",
+      "body": "5ac3bb7d27fecea996618f85ed7c18c3128e926c115ebf147b4de6175b39b8bb",
+      "inputs_id": "4b55f3f8ec80106e5e25c6646adafdd369c4b504682237d436340635aef6d5e3"
+    },
+    "S4:L1:atlas-host-genesis": {
+      "artifact": "131ac9a8b07746d9d1ab1a9d761887ef69967f1133425f19519bfa349b25e293",
+      "receipt": "ae514e1c84b85af4b6c4a7db6647238c707550140cad7da7cd5a992b8157b822",
+      "result": "e76cc552cd44e6156be266764f1b9a44a5059fe1341a0057dda2207a978e9ee1",
+      "body": "6e2769ae820155ee1b2839b98d5ac8f8b9d5da4f886ba7ae3f685a02b04435fa",
+      "inputs_id": "824d3b50d8d615013e28deb7eff8f2542b7560f345ac4363b3447d41dc8b81ab"
+    },
+    "S4:L1:continuity-rag": {
+      "artifact": "9b209899fb522aadf4f8d4833240c7fbb1207ba87ca18bd753bccbf2a0910ed8",
+      "receipt": "47b558ef9c4cda3218de8639f2f5baa67ad8a5165c82806a82a51e4ae2a82c16",
+      "result": "e1f4cafd1b57ce658b3c1c237671831b5146b6e4fb30ae34813eabf10f62f0b0",
+      "body": "4268fc0d04f523233a25ad46f110d77c9efb3bff7fadaa17074ee1d4cebf81b1",
+      "inputs_id": "9b9cc656635520af315f7091cf3696c457dc2667496f9d12aaaa4872ef708b0b"
+    },
+    "S4:L1:coverage-governance": {
+      "artifact": "107aba03a617888d6d35c439aa551e81b202ca808357c5220388ad0ee2113961",
+      "receipt": "dcb3620711b3dbf7e5be5662ca00195b31411155d8a5cd6d2de85c1c5139ac94",
+      "result": "a806334e956ebdd1f5c3310d975fad27fe7792b0122c1fff73694a1782362247",
+      "body": "9abcecde5a9507abed02c4098bb3ae258aa0cc19ad4397a71ad058a6cbc80555",
+      "inputs_id": "f97934be30300922ad77fa291075b07caccaeb544a90ad91a89be211737e2beb"
+    },
+    "S4:L1:host-boundaries": {
+      "artifact": "1bbf3408a07ecf61cb7fc76eb32fe8a8b3488ed6def25b4f75b49734f61c4ae0",
+      "receipt": "44563c6bb6bc0d5bb70547d52ca18ec2c0bffc9aed9147f6be39abc7c0eb97f0",
+      "result": "bee0cd0f266dc452ac7fb72706f153d133f420bec51011e809d0ff55dc34a98d",
+      "body": "685b1023098f1ea6854c25d97f9294ee2b1024608b1bba28df29b781355378de",
+      "inputs_id": "aaa2761d784f248809b641933144db4f97015b451ddbc4ca8dc6565cce4f4dc9"
+    },
+    "S4:L1:native-runtime-delta": {
+      "artifact": "e7b898bc3c6ea63201cb7a8bdd2d88d97aea7353afea7a8ae34c425ee8b59386",
+      "receipt": "803fb472eb137e7481fc300472447efb0337187694de061c4a73c1bdf5e36e3e",
+      "result": "77faafdd5c8f2d5916c1d6f2634e7821d3970b280af8777347be87bf83d71348",
+      "body": "146810cf4b52d5a3707845c6eb20cb89a90e269701fc40e0700440df41a61c04",
+      "inputs_id": "347394b8966e70c1bf18a5baacc08c4b9efd9061df28689887fa3cec6c41387f"
+    },
+    "S4:L2:atlas-system": {
+      "artifact": "88f2ac1f9036ada2605429915ef632ddab9aba95d474bf6ec7c4f4ea5741a74f",
+      "receipt": "de2a390cc637fb5bf76b5bcd57e0cf1c1c02b00d47d0a7b714d776ce278fab66",
+      "result": "2758d338d9e2dcb7b5122b85e893da3f106946590b63788d471e564430c2aadb",
+      "body": "5a2d367bdbdb7cdd0c13e7c2687bbc8d17b5d85615e2db3ad18d1f391f94cc30",
+      "inputs_id": "ebeb86b812994eb451f45d6cbdcb4e1ac1ba94e120eb0a58bef7c78e26cf943b"
+    },
+    "S4:L2:genesis-governance": {
+      "artifact": "ccad4497462299931dd069c82a7592e0239ec3f2abba555c233152cdd43f9493",
+      "receipt": "006fb584b3ef2602254496892eb3dfa816d71a2dc75a49388be612b0399b6793",
+      "result": "bd364adcec8898357da6690b60d3268a5ef24a72a864edc6d73b011bdfb7fbd6",
+      "body": "57b15638bdc8723ffa7e8a671dc519fc46865a625fc7709c94bfe9184c632009",
+      "inputs_id": "c5eb19bcd44329264d40c9a6b67b65ca4dd79bbf293b7086e6a57d4b9dbfe04e"
+    },
+    "S4:L2:continuity-rag-operations": {
+      "artifact": "2a4c0953424a3d7a185dd2fbf59f4aa802fa42e24c9eb14653edd4dfb669b8cf",
+      "receipt": "46a36d762ca5bd8c5b293e056bfa982c53c33ccad957ed1cec34faa2d24a32fe",
+      "result": "ebd80e0394229795b82134ef776695baa0168254541d95f5a8c2bc9b4afe9888",
+      "body": "afd3e0efe647da9dea6ded937397bf88e93e40926ea58adb022aefa6d8886fe0",
+      "inputs_id": "fc9fcaeb4b291c3ad5dfb2183b8e2ac65828e91ee0645779aa6399358ccb7b55"
+    },
+    "S4:L3:system-flows": {
+      "artifact": "8be31712b6b54561b0d02bedc4295b02db1357ff7c5cc0d1ea3b426e05f3c402",
+      "receipt": "af46b2e446348b4b2cf4e989fdaab947cefce9bf2a74873fe6a215de3da3f240",
+      "result": "de1845931c3a437b5186952e620d420fb3f3c965859a25db84da6f1d11143b11",
+      "body": "3437cd3add737f8c8132795b9b71f6b7499b75b55785d901ac7f15bb78f547ed",
+      "inputs_id": "937cc824ffa60037d531c003b7647d71ab1dc3f549a49ca26265347d8dff158d"
+    },
+    "S4:L4:entry": {
+      "artifact": "547bd95eeba01e680d312886cd662d7f7068f0872e60e54d2ee89c6d9c7beb18",
+      "receipt": "bd0a94624fd8eedfb68bf61072f98a602c1974203c0b1d098af7b4ec9ecf1109",
+      "result": "bed07f339fc621a676bd662154397af94bd66d1190784ecdad0a91ffebc89d78",
+      "body": "e176b01aba3ca94687f32a5e902aea39dbd7faf60dc44866660a4a895afcfc4e",
+      "inputs_id": "01e6eca2870b9cf2dcbac76e351debcc68a2cb742f4aad8e4917e6b4f675fe8d"
+    },
+    "S4:L4:ownership": {
+      "artifact": "4b94000e65ccaf917fbb289942c18b1dc167194f0d45fb73ba23d91285052652",
+      "receipt": "a4c49ff18a74c87eaf247314b6caee4606af75bc68653c233a8eb09063beae39",
+      "result": "394be315ee5831db6481d9a1ce23f5b87ba6b9cb24bfab86c84753115eed0be0",
+      "body": "68c3a894d305686eb9f8b07b62809ded9741ac7ecfdc0738ef4cce140c4273bc",
+      "inputs_id": "f21985ad084609e9ece867de330bdff2b99b5c70604215c76321df61a75d1b30"
+    },
+    "S4:L4:maintenance": {
+      "artifact": "e6026a28560322241f78144f0731288cc591afb324475353c31a59028fa0809a",
+      "receipt": "df5143c898a4282301eb45ce9063071ca2366610ed225fd112cfbb2fbd5fa8ac",
+      "result": "f4199bbe37e39637b0dc29ef76519486fc7d79d54563d60a48f44535ecce45a7",
+      "body": "468e3d7996cf427ae31863650d5537af39ec3bb6bd33a66dddb176656581a74c",
+      "inputs_id": "30ce3cddd4b0e5c6a51d4511901549a090601c76b1282748f165a4369ba3d125"
+    },
+    "S4:L4:operational": {
+      "artifact": "35acd989c8ef62f0bb6f390b25caf0efbaa6f7ccf47f0dcfbf64204f053adfcb",
+      "receipt": "6356fa6c8f54a6b3b30336a8fe9d35f11c5deed574923654fdc38fab59565ece",
+      "result": "c02b64b5c187eea90a57dcf9df50bd8ebd4169ae215a065cb63131955c37e131",
+      "body": "fb8e638e4a079bd93bd6651d2f7542a1c242337848053bf7f50943879f51860f",
+      "inputs_id": "94e8f690bd6c65824ab19fe4cd4724b828217793e925498d52363a9fa9d35aad"
+    }
+  },
+  "kind": "candidate"
+}

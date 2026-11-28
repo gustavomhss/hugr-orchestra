@@ -1,0 +1,88 @@
+{
+  "artifact_type": "mechanical_response_preservation_manifest",
+  "preserver": "/root/preserve_l4_review/save_j2_response",
+  "source_author": "/root/local_j2",
+  "authorized_directory": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/preserve-l4-review/responses/j2",
+  "logical_labels_are_not_host_message_ids": true,
+  "source_chain": [
+    "Mensagens de resposta atribuídas a /root/local_j2 no contexto herdado da tarefa de preservação.",
+    "O contexto deste preservador foi compactado antes da gravação do JSON final. A compactação reteve os três ACKs e o bloco JSON integral, não apenas uma descrição semântica.",
+    "Os três ACKs já estavam em arquivos quando a compactação ocorreu. Os arquivos foram comparados aos textos literais integrais retidos. O JSON foi copiado do bloco integral retido."
+  ],
+  "limits": [
+    "O envelope original de host e seus bytes brutos não estão disponíveis para comparação independente.",
+    "Não foram expostos IDs de mensagem host; nenhum ID foi inventado.",
+    "Os hashes neste manifest identificam exclusivamente os bytes dos arquivos preservados, não os bytes de transporte das mensagens originais.",
+    "Whitespace, cercas de apresentação e terminador da mensagem original não são garantidos. Os arquivos usam LF e terminam com LF; esse terminador é uma escolha de armazenamento.",
+    "O conteúdo do JSON é atribuído ao autor /root/local_j2. Este preservador não proferiu nem reavaliou qualquer julgamento.",
+    "Nenhum request, fonte externa, candidato, oracle ou estado remoto foi consultado ou alterado por esta subtarefa."
+  ],
+  "mechanical_checks": {
+    "ack_texts_match_full_literals_retained_in_context": {
+      "ack-01.txt": true,
+      "ack-02.txt": true,
+      "ack-03.txt": true
+    },
+    "json_parses": true,
+    "agent_id": "/root/local_j2",
+    "verdict_field": "REQUEST_EVIDENCE",
+    "counts": {
+      "criteria": 15,
+      "cases": 6,
+      "required_findings": 2,
+      "bodies": 4,
+      "metadata": 2
+    },
+    "checks_are_not_semantic_review": true
+  },
+  "files": [
+    {
+      "filename": "ack-01.txt",
+      "author": "/root/local_j2",
+      "host_message_id": null,
+      "utf8_bytes": 369,
+      "sha256": "6edcebc3c61e0023c301a960b642b88a0c86ceae18ccc6eaeef7cbb2f5794865",
+      "encoding": "UTF-8",
+      "bom": false,
+      "contains_cr": false,
+      "ends_with_lf": true,
+      "representation": "Texto integral do ACK, salvo antes da compactação local e comparado ao texto literal integral retido nela."
+    },
+    {
+      "filename": "ack-02.txt",
+      "author": "/root/local_j2",
+      "host_message_id": null,
+      "utf8_bytes": 312,
+      "sha256": "10f4ef1173a4f7d1a1399e231861baf2b8a6466d0be68af692d386a20dcb8770",
+      "encoding": "UTF-8",
+      "bom": false,
+      "contains_cr": false,
+      "ends_with_lf": true,
+      "representation": "Texto integral do ACK, salvo antes da compactação local e comparado ao texto literal integral retido nela."
+    },
+    {
+      "filename": "ack-03.txt",
+      "author": "/root/local_j2",
+      "host_message_id": null,
+      "utf8_bytes": 359,
+      "sha256": "f279c21d582b6bf76d34f9bda1dee00ef7249f5df253323c422a050ccdc1082d",
+      "encoding": "UTF-8",
+      "bom": false,
+      "contains_cr": false,
+      "ends_with_lf": true,
+      "representation": "Texto integral do ACK, salvo antes da compactação local e comparado ao texto literal integral retido nela."
+    },
+    {
+      "filename": "request-evidence.json",
+      "author": "/root/local_j2",
+      "host_message_id": null,
+      "utf8_bytes": 23578,
+      "sha256": "5df76ebc286ca41a3c7db9a1e07ef75f6d3ead09df234ce3fe3c0c83c4982b67",
+      "encoding": "UTF-8",
+      "bom": false,
+      "contains_cr": false,
+      "ends_with_lf": true,
+      "representation": "Bloco textual integral do JSON retido na compactação local e copiado em arquivo novo; não foi produzido por resumo dos campos nem reserialização parseada."
+    }
+  ]
+}

@@ -1,0 +1,59 @@
+{
+  "schema": "s4-consumer-direct-use/v1",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "frozen_utc": "2026-11-11T19:01:46.504741+00:00",
+  "base_oracle_sha256": "9c079b67f586108539ca151247c27ea648b8af47069e1d2bf40442c8d7b630ec",
+  "before_consumer_and_L3_L4_production": true,
+  "purpose": "Make existing AC-03 direct-use requirement explicit for every required intermediate; no change to five questions, answers, scoring or original budgets.",
+  "limits_unchanged": {
+    "index_responses": 2,
+    "read_calls": 12,
+    "total_returned_body_bytes": 62000,
+    "shallow_max_returned_body_bytes": 6000,
+    "per_read_maxBytes": 18000
+  },
+  "phase_1": "Shallow out-of-scope cost question after entry/index; record returned bytes and answer before deepening.",
+  "phase_2": "Other four cases with direct use of all eleven required intermediates, section reads when sufficient. One entry read plus eleven intermediate reads fits existing twelve-call budget.",
+  "required_intermediate_cases": {
+    "S4:L1:ownership-boundaries": [
+      "C-impact"
+    ],
+    "S4:L1:atlas-engine": [
+      "C-impact",
+      "C-failure"
+    ],
+    "S4:L1:atlas-host-genesis": [
+      "C-failure"
+    ],
+    "S4:L1:continuity-rag": [
+      "C-change",
+      "C-violation"
+    ],
+    "S4:L1:coverage-governance": [
+      "C-failure"
+    ],
+    "S4:L1:native-runtime-delta": [
+      "C-failure"
+    ],
+    "S4:L1:host-boundaries": [
+      "C-change",
+      "C-violation"
+    ],
+    "S4:L2:atlas-system": [
+      "C-impact"
+    ],
+    "S4:L2:continuity-rag-operations": [
+      "C-change",
+      "C-violation"
+    ],
+    "S4:L2:genesis-governance": [
+      "C-failure"
+    ],
+    "S4:L3:system-flows": [
+      "C-impact",
+      "C-failure"
+    ]
+  },
+  "acceptance": "Actual Atlas ready responses, references and substantive use in answer; a title-only index or merely listing a key does not prove direct use. Same persistent J1 and J2 evaluate actual trace and answer.",
+  "isolation": "Fresh fork_turns:none, textual source restriction and faithful primary bridge only. No OS sandbox assertion."
+}

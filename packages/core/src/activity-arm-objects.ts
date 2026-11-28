@@ -21,9 +21,17 @@ type Name = (typeof names)[number]
 type Registration = { registrationID: string; directory: string; root: string; projectID: string }
 type Candidate = Registration & { name: Name }
 
-export function make(database: Database.Interface, processService: AppProcess.Interface) {
+export function make(database: Database.Interface, processService: AppProcess.Interface, options?: {
+  readonly inspectProtectedSource?: (source: string) => Promise<string | undefined>
+}) {
   const lock = Semaphore.makeUnsafe(1)
-  const verified = new Map<string, { candidate: Candidate; generation: string }>()
+  const inspectProtectedSource = options?.inspectProtectedSource
+  const verified = new Map<string, {
+    candidate: Candidate
+    generation: string
+    identity: string | null
+    protectedIdentity?: string
+  }>()
   const actions = ActivityActionLedger.make.pipe(Effect.provideService(Database.Service, database))
   const registrations = (source: Pick<ActivityArmLedger.Transaction, "select"> = database.db) => source.select({
     registrationID: ProjectDirectoryTable.registration_id,
@@ -49,6 +57,9 @@ export function make(database: Database.Interface, processService: AppProcess.In
     if (status === "missing") return { observation, partial: false }
     if (!status?.isDirectory() || label.length > 384 || candidate.projectID.length > 384 || candidate.root === candidate.directory)
       return { observation, partial: true }
+    const protectedIdentity = inspectProtectedSource
+      ? yield* Effect.promise(() => inspectProtectedSource(label))
+      : undefined
     const checkout = yield* git(candidate)
     if (!checkout) return { observation, partial: true }
     if (checkout.state === "refused") return { observation, partial: false }
@@ -62,15 +73,18 @@ export function make(database: Database.Interface, processService: AppProcess.In
     const evidence = proof.value
     if (!matchesRegistration(yield* registered(candidate.registrationID), candidate) ||
       !(yield* Effect.promise((signal) => evidence.isCurrent(signal)))) return { observation, partial: true }
-    return {
-      observation: {
-        ...observation,
-        identity: digest([checkout.fingerprint, evidence.fingerprint]),
-        dirty: false,
-        eligible: evidence.idle ? ["arm"] as const : [],
-      },
-      partial: false,
+    if (inspectProtectedSource && protectedIdentity &&
+      (yield* Effect.promise(() => inspectProtectedSource(label))) !== protectedIdentity)
+      return { observation, partial: true }
+    const observed: ActivityActionLedger.Observation = {
+      ...observation,
+      identity: digest(protectedIdentity
+        ? [checkout.fingerprint, evidence.fingerprint, protectedIdentity]
+        : [checkout.fingerprint, evidence.fingerprint]),
+      dirty: false,
+      eligible: evidence.idle ? ["arm"] : [],
     }
+    return { observation: observed, protectedIdentity, partial: false }
   })
 
   return {
@@ -105,7 +119,9 @@ export function make(database: Database.Interface, processService: AppProcess.In
           recorded.add(target.targetID)
           verified.delete(target.targetID)
           if (stored.eligible.includes("arm"))
-            verified.set(stored.targetID, { candidate, generation: stored.generation })
+            verified.set(stored.targetID, {
+              candidate, generation: stored.generation, identity: stored.identity, protectedIdentity: result.protectedIdentity,
+            })
         }
       }
       for (const item of previous) {
@@ -130,6 +146,10 @@ export function make(database: Database.Interface, processService: AppProcess.In
       yield* ledger.record({ ...observation, eligible: [] })
       return false
     })),
+    protectedIdentity(target: ActivityActionLedger.Target) {
+      const captured = verified.get(target.targetID)
+      return captured?.generation === target.generation && captured.identity === target.identity ? captured.protectedIdentity : undefined
+    },
     authorize: (tx: ActivityArmLedger.Transaction, targets: readonly ActivityActionLedger.Target[]) => Effect.gen(function* () {
       for (const target of targets) {
         const captured = verified.get(target.targetID)

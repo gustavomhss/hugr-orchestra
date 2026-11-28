@@ -349,9 +349,11 @@ export function make(context: Context | FixContext, storage: Storage): Effect.Ef
       history: (value) => checked(Effect.gen(function* () {
         if (context.historyCoverage !== "host" || !engagement)
           return yield* ReviewEvidenceSchemaV2.failure("unavailable", "history capability is not admitted")
-        yield* value.active
+        const admission = value.admissionActive ? value.active.pipe(Effect.andThen(value.admissionActive)) : value.active
+        // checked() already owns the permit: queued calls must recheck their original local deadline here.
+        yield* admission
         const bound = yield* engagement.authority
-        yield* value.active
+        yield* admission
         yield* context.active
         yield* attempt(() => ReviewEvidenceSchemaV2.require(bound.namespace === context.namespace &&
           bound.leadID === context.sessionID && value.sessionID === context.sessionID &&
@@ -369,14 +371,15 @@ export function make(context: Context | FixContext, storage: Storage): Effect.Ef
           yield* previous.active
           if (previous.signature !== signature)
             return yield* ReviewEvidenceSchemaV2.failure("corrupt", "history identity was reused with different bytes")
+          yield* admission
           return
         }
         if (codeInputs.size + history.size >= ReviewEvidenceSchemaV2.limits.code)
           return yield* ReviewEvidenceSchemaV2.failure("bound-exceeded", "code-operations")
         const artifact = yield* add("history", prepared.bytes, "application/json", prepared.validated.uri,
-          prepared.validated.proof.result.complete, { active: value.active })
-        yield* value.active
+          prepared.validated.proof.result.complete, { active: admission })
         yield* context.active
+        yield* admission
         history.set(identity, { validated: prepared.validated, artifact, signature, active: value.active, settled: false })
       })),
       acknowledge: (sessionID, messages, turn) => checked(acknowledgeHistory(sessionID, messages).pipe(Effect.andThen(attempt(() => {

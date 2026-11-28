@@ -1,0 +1,133 @@
+{
+  "schema": "s4-recovery-github-readback/v1",
+  "recorded_utc": "2026-11-28T06:20:29.768482+00:00",
+  "branch": "genesis-knowledge-resume",
+  "payload_revision": "234df168e1191ec134941a4a2b490eb6e60cc32a",
+  "seal_revision": "70610957d0d3d2fef2fde3c5a9a23dcaa51ad8c4",
+  "state": "ALL_FILES_MATCH",
+  "files": [
+    {
+      "path": ".github/workflows/genesis-knowledge-recovery.yml",
+      "commit": "234df168e1191ec134941a4a2b490eb6e60cc32a",
+      "expected_sha256": "248fd0e2b66d7cc9386a84f9930f020f669a2b52013b2b13d68c74d42c98c692",
+      "byte_length": 2342,
+      "git_blob_sha": "51a2e6e95bc6baeb8e777d7ba667451a7cc56f86",
+      "git_blob_match": true,
+      "exact_text_equal": true,
+      "isError": false
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/execution-ledger.jsonl",
+      "commit": "234df168e1191ec134941a4a2b490eb6e60cc32a",
+      "expected_sha256": "3478832ed977d13284024548f5fb6b0dcf2d54c3b08248594dfbc45afa9efdcf",
+      "byte_length": 14716,
+      "git_blob_sha": "c2f35485363002860ec7a3070f0fdcb48e1ce447",
+      "git_blob_match": true,
+      "exact_text_equal": true,
+      "isError": false
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/recovery-20261128/package-verification.json",
+      "commit": "234df168e1191ec134941a4a2b490eb6e60cc32a",
+      "expected_sha256": "655304d9960314dc06c6fb7de71a7cc223d0b7eefb20b729b88e59614096ef69",
+      "byte_length": 28571,
+      "git_blob_sha": "a44266c3cae91a5e8e02a97a965c3bfee0d6cc46",
+      "git_blob_match": true,
+      "exact_text_equal": true,
+      "isError": false
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/recovery-20261128/preserver-decision-links.json",
+      "commit": "234df168e1191ec134941a4a2b490eb6e60cc32a",
+      "expected_sha256": "6569e4a6b3687735f4604662ad3372caca9df54f2d028014d68b5cd3467c9394",
+      "byte_length": 6755,
+      "git_blob_sha": "87a67ea9d2598792dadb9cfdad2fffbc513198fc",
+      "git_blob_match": true,
+      "exact_text_equal": true,
+      "isError": false
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/recovery-20261128/preserver-manifest.json",
+      "commit": "234df168e1191ec134941a4a2b490eb6e60cc32a",
+      "expected_sha256": "f4943caf992b69ce16dc6c635ba3e31ad03ea8be2cec73dd2e219e220b95747b",
+      "byte_length": 15687,
+      "git_blob_sha": "1aeb60de074e443ee5d0b60d26321fe5e67b8cc3",
+      "git_blob_match": true,
+      "exact_text_equal": true,
+      "isError": false
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/recovery-20261128/preserver-verification.json",
+      "commit": "234df168e1191ec134941a4a2b490eb6e60cc32a",
+      "expected_sha256": "7c9586a92394020422ca2b15a771625840eef35c8c28fdc7dce5abc26119d70c",
+      "byte_length": 48070,
+      "git_blob_sha": "48f7be55db10601f9ffbc3bfc2348744c887af73",
+      "git_blob_match": true,
+      "exact_text_equal": true,
+      "isError": false
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/recovery-20261128/provenance.json",
+      "commit": "234df168e1191ec134941a4a2b490eb6e60cc32a",
+      "expected_sha256": "c6fee3b700583abfc5c20d2246c32a8126599fedb82b7474db096fe2bbdd1f81",
+      "byte_length": 11855,
+      "git_blob_sha": "5786d5f96de0c336871105d178cd83ca9e0879a8",
+      "git_blob_match": true,
+      "exact_text_equal": true,
+      "isError": false
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j1-canonical-r2.json",
+      "commit": "234df168e1191ec134941a4a2b490eb6e60cc32a",
+      "expected_sha256": "5090541410eee055861100506801e8229ca6a91068fc47596d75f4a0a34b02ba",
+      "byte_length": 13503,
+      "git_blob_sha": "8d8478623fe4edc5770bdcd371bbae2e69ef7911",
+      "git_blob_match": true,
+      "exact_text_equal": true,
+      "isError": false
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/l4-acceptance.json",
+      "commit": "234df168e1191ec134941a4a2b490eb6e60cc32a",
+      "expected_sha256": "1190a86e852c1f7c301b7cc0ada8cee6ba71240c677a089fad4edff1f15cf2c8",
+      "byte_length": 8162,
+      "git_blob_sha": "61aa0f6451a7d76562da357d29fa9a94c537b790",
+      "git_blob_match": true,
+      "exact_text_equal": true,
+      "isError": false
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package.json",
+      "commit": "234df168e1191ec134941a4a2b490eb6e60cc32a",
+      "expected_sha256": "443caac944c273a6066927caddc7b275ef66c037b3125e42c0fe5b620aa6d69b",
+      "byte_length": 214050,
+      "git_blob_sha": "2eea97b78066ff4f535e588cb9248286bb38fe38",
+      "git_blob_match": true,
+      "exact_text_equal": true,
+      "isError": false
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/verify-knowledge.py",
+      "commit": "234df168e1191ec134941a4a2b490eb6e60cc32a",
+      "expected_sha256": "e79a85a68707606253032340153ba3090dba11ec163bd31b8e15511854b2014b",
+      "byte_length": 7826,
+      "git_blob_sha": "b059fed37f31f0fb60d42897ff8d9a37b5ed11ce",
+      "git_blob_match": true,
+      "exact_text_equal": true,
+      "isError": false
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/work.md",
+      "commit": "234df168e1191ec134941a4a2b490eb6e60cc32a",
+      "expected_sha256": "74c600ed97e34e712ae20d424214354b5880c4fc176d5eb67fca4dd0cf5c2aa4",
+      "byte_length": 17243,
+      "git_blob_sha": "cce49981e59139880cff1730273e177d0a5d6cc6",
+      "git_blob_match": true,
+      "exact_text_equal": true,
+      "isError": false
+    }
+  ],
+  "handoff_exact_text_equal": true,
+  "handoff_artifact_revision_matches_payload": true,
+  "comparison": "Connector full-file text and Git blob identity against preserved local UTF-8 bytes; no normalization."
+}

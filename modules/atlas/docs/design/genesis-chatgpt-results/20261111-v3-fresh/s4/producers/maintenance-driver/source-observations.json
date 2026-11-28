@@ -1,0 +1,589 @@
+{
+  "schema": "s4-maintenance-driver-static-source-observations/v1",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "producer": "/root/review_courier",
+  "role_this_wp": "native operational composition producer; not judge",
+  "created_at_utc": "2026-11-11T19:04:47.108682+00:00",
+  "method": "Static local source reading, text search, byte comparisons and standard-library hashing. node --check parses the standalone script without evaluating imports or executing its body. No Bun/product/test/build/typecheck/guard execution.",
+  "runtime_commit_declared_by_principal": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "runtime_commit_verification": "External principal assertion; no Git HEAD or remote commit verification performed by this producer. Exact local bytes below.",
+  "public_criteria": [
+    "AC-04",
+    "AC-05",
+    "AC-06",
+    "CC-4",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "GO-I3",
+    "GO-I4",
+    "GO-I5",
+    "GO-I7"
+  ],
+  "memo_inputs": [
+    {
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-ports/maintenance-ports.md",
+      "bytes": 4999,
+      "sha256": "72bc34b3ee52f20386a723051404328bfd9cd3697ebd2c14f13dda7a4daa77ee",
+      "git_blob_sha1": "b9b5d9a8ade9737528e3416728ccc117c6e19662",
+      "lines": 39
+    },
+    {
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-ports/operation-outline.md",
+      "bytes": 6468,
+      "sha256": "ba9629bce9be8c9202468a1910af1881cd4ca0bf4227bdd1bc9d611b4e38eca8",
+      "git_blob_sha1": "4ff39bbda7a8ce5bd09697a9ac813af6f7dd90cf",
+      "lines": 80
+    },
+    {
+      "path": "/workspace/scratch/aff930d22ec7/s4/producers/maintenance-ports/source-observations.json",
+      "bytes": 13514,
+      "sha256": "7b6ba57db823c22e626f2741145b0d17e2ba219948318772fd9552e6799071d7",
+      "git_blob_sha1": "b0e599dcfc7e9521408e7cedbc2f3797be9cfd06",
+      "lines": 315
+    }
+  ],
+  "sources": [
+    {
+      "alias": "AG",
+      "capture_root": "source",
+      "repo_relative_path": "AGENTS.md",
+      "path": "/workspace/scratch/aff930d22ec7/s4/source/AGENTS.md",
+      "bytes": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "git_blob_sha1": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "lines": 223,
+      "read_locations": [
+        "1-223"
+      ],
+      "purpose": "Repository instructions; product execution prohibited by the explicit WP override.",
+      "candidate_r1_comparison": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/AGENTS.md",
+        "bytes": 16501,
+        "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+        "git_blob_sha1": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+        "lines": 223,
+        "byte_equal": true
+      }
+    },
+    {
+      "alias": "R",
+      "capture_root": "source",
+      "repo_relative_path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "bytes": 20859,
+      "sha256": "83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa",
+      "git_blob_sha1": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+      "lines": 358,
+      "read_locations": [
+        "1-358"
+      ],
+      "purpose": "Existing rebuild, capture/read callbacks, recipe/evaluate contracts, array order, private candidate and no-op behavior.",
+      "candidate_r1_comparison": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+        "bytes": 20859,
+        "sha256": "83d3228e62d4f1ecbb027971a5263d39a0fa7fb78424f818e4d0cf07879583fa",
+        "git_blob_sha1": "233c007b97aa32a7714712a6ddcf05bf9d04b029",
+        "lines": 358,
+        "byte_equal": true
+      }
+    },
+    {
+      "alias": "I",
+      "capture_root": "source",
+      "repo_relative_path": "modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/ownership-input.ts",
+      "bytes": 10101,
+      "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+      "git_blob_sha1": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+      "lines": 190,
+      "read_locations": [
+        "1-190"
+      ],
+      "purpose": "Real host tri-state observation, kernel ownership-source identity, limit and no injected seams.",
+      "candidate_r1_comparison": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/ownership-input.ts",
+        "bytes": 10101,
+        "sha256": "71c14819e60f81482c34f3fd84b47a08a972bcba5b19914e3b95d5a78161bc78",
+        "git_blob_sha1": "c6afd6a35071a2487a1168cea5ed1ad26379c376",
+        "lines": 190,
+        "byte_equal": true
+      }
+    },
+    {
+      "alias": "P",
+      "capture_root": "source",
+      "repo_relative_path": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "bytes": 5323,
+      "sha256": "4b181d2720a002dbb65891a27e2c9769d0f8b3bd5d32458efd9c6edc517ac4bb",
+      "git_blob_sha1": "a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+      "lines": 107,
+      "read_locations": [
+        "1-107"
+      ],
+      "purpose": "Actual update planner and historical baseline validation, invoked inside rebuild.",
+      "candidate_r1_comparison": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+        "bytes": 5323,
+        "sha256": "4b181d2720a002dbb65891a27e2c9769d0f8b3bd5d32458efd9c6edc517ac4bb",
+        "git_blob_sha1": "a0aeefe85adf859ac7dbcaddbacf33b8e99878d7",
+        "lines": 107,
+        "byte_equal": true
+      }
+    },
+    {
+      "alias": "KT",
+      "capture_root": "source",
+      "repo_relative_path": "modules/atlas/packages/knowledge/src/ownership/types.ts",
+      "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/knowledge/src/ownership/types.ts",
+      "bytes": 4438,
+      "sha256": "ae9928471713857e5a07b11df1090db7bb16a65f9f9e0b045a4ff4760c8f2302",
+      "git_blob_sha1": "05cb2ae05d296764ce2e786d07b28b36d7428cb7",
+      "lines": 152,
+      "read_locations": [
+        "1-152"
+      ],
+      "purpose": "Existing shapes and precise refusal/read fields.",
+      "candidate_r1_comparison": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/knowledge/src/ownership/types.ts",
+        "bytes": 4438,
+        "sha256": "ae9928471713857e5a07b11df1090db7bb16a65f9f9e0b045a4ff4760c8f2302",
+        "git_blob_sha1": "05cb2ae05d296764ce2e786d07b28b36d7428cb7",
+        "lines": 152,
+        "byte_equal": true
+      }
+    },
+    {
+      "alias": "K",
+      "capture_root": "source",
+      "repo_relative_path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/knowledge/src/ownership/read.ts",
+      "bytes": 9229,
+      "sha256": "2f0183c0e9e7c57eee19cbae881bf9463aecdd7686d3c12d5c3542f76825cb15",
+      "git_blob_sha1": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+      "lines": 179,
+      "read_locations": [
+        "1-179"
+      ],
+      "purpose": "CAS identity, exact review binds, currentness, body and dependency validation.",
+      "candidate_r1_comparison": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/knowledge/src/ownership/read.ts",
+        "bytes": 9229,
+        "sha256": "2f0183c0e9e7c57eee19cbae881bf9463aecdd7686d3c12d5c3542f76825cb15",
+        "git_blob_sha1": "952593d8371224614bfac7c1bca7c3f3808ddcb3",
+        "lines": 179,
+        "byte_equal": true
+      }
+    },
+    {
+      "alias": "S",
+      "capture_root": "source",
+      "repo_relative_path": "modules/atlas/packages/knowledge/src/ownership/shape.ts",
+      "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/knowledge/src/ownership/shape.ts",
+      "bytes": 5098,
+      "sha256": "d70930329d856cfa6dec54e8678e4a6200a388203c7a81c86aa1a3bcf453c338",
+      "git_blob_sha1": "5be28ef3965192347e07deccbc79e7d7b1d1f24a",
+      "lines": 76,
+      "read_locations": [
+        "1-76"
+      ],
+      "purpose": "Existing runtime shape predicates used by the driver.",
+      "candidate_r1_comparison": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/knowledge/src/ownership/shape.ts",
+        "bytes": 5098,
+        "sha256": "d70930329d856cfa6dec54e8678e4a6200a388203c7a81c86aa1a3bcf453c338",
+        "git_blob_sha1": "5be28ef3965192347e07deccbc79e7d7b1d1f24a",
+        "lines": 76,
+        "byte_equal": true
+      }
+    },
+    {
+      "alias": "A",
+      "capture_root": "source",
+      "repo_relative_path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "bytes": 2682,
+      "sha256": "722070af827077f75f438d81747174037671aabc7128ddc869e538f290f99271",
+      "git_blob_sha1": "90c2f289b15916acf4764b67fa4c3903ec440c4e",
+      "lines": 51,
+      "read_locations": [
+        "1-51"
+      ],
+      "purpose": "Governed published selection and ownershipClaim.",
+      "candidate_r1_comparison": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/ownership-access.ts",
+        "bytes": 2682,
+        "sha256": "722070af827077f75f438d81747174037671aabc7128ddc869e538f290f99271",
+        "git_blob_sha1": "90c2f289b15916acf4764b67fa4c3903ec440c4e",
+        "lines": 51,
+        "byte_equal": true
+      }
+    },
+    {
+      "alias": "ST",
+      "capture_root": "source",
+      "repo_relative_path": "modules/atlas/packages/adapter-io/src/store.ts",
+      "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/store.ts",
+      "bytes": 22233,
+      "sha256": "839d474f68d471436ed9b4a20189f8fcedc815edac148d49559161a4ceff2c3c",
+      "git_blob_sha1": "8c71e53e0ff26165bed2cf3f147f913c05889d8a",
+      "lines": 336,
+      "read_locations": [
+        "1-45",
+        "150-240"
+      ],
+      "purpose": "Existing CAS opening and refusal/readback contract; no alternate store.",
+      "candidate_r1_comparison": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/store.ts",
+        "bytes": 22233,
+        "sha256": "839d474f68d471436ed9b4a20189f8fcedc815edac148d49559161a4ceff2c3c",
+        "git_blob_sha1": "8c71e53e0ff26165bed2cf3f147f913c05889d8a",
+        "lines": 336,
+        "byte_equal": true
+      }
+    },
+    {
+      "alias": "C",
+      "capture_root": "source",
+      "repo_relative_path": "modules/atlas/packages/adapter-io/src/compose.ts",
+      "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/compose.ts",
+      "bytes": 43706,
+      "sha256": "2791adce99eaab0cfb605780c7ead93d18e8dafc19bc520c2a79cd66900a3c3f",
+      "git_blob_sha1": "6a8dacf0b8956979a49665c415f803b911c53138",
+      "lines": 585,
+      "read_locations": [
+        "1-100",
+        "145-250",
+        "397-585"
+      ],
+      "purpose": "Composition, actor/ratify/policy/trust, native knowledge-log wrapping, check and access.",
+      "candidate_r1_comparison": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/compose.ts",
+        "bytes": 43706,
+        "sha256": "2791adce99eaab0cfb605780c7ead93d18e8dafc19bc520c2a79cd66900a3c3f",
+        "git_blob_sha1": "6a8dacf0b8956979a49665c415f803b911c53138",
+        "lines": 585,
+        "byte_equal": true
+      }
+    },
+    {
+      "alias": "N",
+      "capture_root": "candidate-r1",
+      "repo_relative_path": "modules/atlas/packages/adapter-io/src/genesis-native.ts",
+      "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/genesis-native.ts",
+      "bytes": 12376,
+      "sha256": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312",
+      "git_blob_sha1": "f89413ad102fba2d2d56fbf65da14c4d7e5b6c90",
+      "lines": 171,
+      "read_locations": [
+        "1-171"
+      ],
+      "purpose": "Exact prepare; declaration of review adaptation and activation call sites. publishNativePackage is not called."
+    },
+    {
+      "alias": "NF",
+      "capture_root": "candidate-r1",
+      "repo_relative_path": "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "bytes": 13356,
+      "sha256": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21",
+      "git_blob_sha1": "b12538b8da1aaf75f5f25784704a07b700513c3b",
+      "lines": 218,
+      "read_locations": [
+        "1-218"
+      ],
+      "purpose": "Native paths, schemas, reference keys, input/link/contract validation."
+    },
+    {
+      "alias": "NB",
+      "capture_root": "candidate-r1",
+      "repo_relative_path": "modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+      "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+      "bytes": 5198,
+      "sha256": "ef424a0b5bdb9590f48b8b21b418de1aa033189578790c0bb93a92e1c1d38021",
+      "git_blob_sha1": "64d29d3e67dea3bb826be5960a5b9bbf6719edc0",
+      "lines": 75,
+      "read_locations": [
+        "1-75"
+      ],
+      "purpose": "Operator-supplied exact two decisions, purpose, criteria, result/input identities and limits of author authentication."
+    },
+    {
+      "alias": "NIO",
+      "capture_root": "candidate-r1",
+      "repo_relative_path": "modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+      "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+      "bytes": 4162,
+      "sha256": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+      "git_blob_sha1": "01a218ede3f71ef585fd280bc183e545f2a94321",
+      "lines": 88,
+      "read_locations": [
+        "1-88"
+      ],
+      "purpose": "Descriptor reads, UTF-8, CAS preservation, digest and root helpers."
+    },
+    {
+      "alias": "CAN",
+      "capture_root": "source",
+      "repo_relative_path": "modules/atlas/packages/kernel/src/canonical.ts",
+      "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/kernel/src/canonical.ts",
+      "bytes": 6776,
+      "sha256": "53239bdd1a7ccf81cae476d1d12d456215ec1f94b66f980e12f7c28d0574ef5f",
+      "git_blob_sha1": "fefcf3b44c6bbebe4c23b47001fd25510f5a6fde",
+      "lines": 115,
+      "read_locations": [
+        "1-115"
+      ],
+      "purpose": "Use real kernel id; arrays retain order, body bytes avoid Unicode equivalence collapse.",
+      "candidate_r1_comparison": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/kernel/src/canonical.ts",
+        "bytes": 6776,
+        "sha256": "53239bdd1a7ccf81cae476d1d12d456215ec1f94b66f980e12f7c28d0574ef5f",
+        "git_blob_sha1": "fefcf3b44c6bbebe4c23b47001fd25510f5a6fde",
+        "lines": 115,
+        "byte_equal": true
+      }
+    },
+    {
+      "alias": "KI",
+      "capture_root": "candidate-r1",
+      "repo_relative_path": "modules/atlas/packages/knowledge/src/index.ts",
+      "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/knowledge/src/index.ts",
+      "bytes": 5567,
+      "sha256": "fdb95e936dc86471ccf565ae0da870921e8e09574e8ca151adee7f4a4132fb26",
+      "git_blob_sha1": "275102267ac1d26b1562772d1f20659a78d430e9",
+      "lines": 53,
+      "read_locations": [
+        "1-53"
+      ],
+      "purpose": "Current barrel exports read/update-plan/shape; differs from source snapshot."
+    },
+    {
+      "alias": "U",
+      "capture_root": "source",
+      "repo_relative_path": "modules/atlas/packages/adapter-io/test/ownership-update.test.ts",
+      "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/test/ownership-update.test.ts",
+      "bytes": 6082,
+      "sha256": "2e04205a3fd17dbf85d8e15b4b77ed3180e6bd8d204df7fd672ba7562892993c",
+      "git_blob_sha1": "13409745771a7c6e674c88ebae8de5b7e5e305a3",
+      "lines": 87,
+      "read_locations": [
+        "15-60"
+      ],
+      "purpose": "Static call-site evidence for handler emission.data.emitted; synthetic fixture not executed or reused.",
+      "candidate_r1_comparison": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/test/ownership-update.test.ts",
+        "bytes": 6082,
+        "sha256": "2e04205a3fd17dbf85d8e15b4b77ed3180e6bd8d204df7fd672ba7562892993c",
+        "git_blob_sha1": "13409745771a7c6e674c88ebae8de5b7e5e305a3",
+        "lines": 87,
+        "byte_equal": true
+      }
+    },
+    {
+      "alias": "H",
+      "capture_root": "candidate-r1",
+      "repo_relative_path": "modules/atlas/packages/tools/src/handler.ts",
+      "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/tools/src/handler.ts",
+      "bytes": 29307,
+      "sha256": "6cd8a7a9b60af4af8e1456e2e5340f6ff383daf707bc35fc6730dcfaa75d65bc",
+      "git_blob_sha1": "9b2f67a3e18dd0177074e3f18da4bc10d199c961",
+      "lines": 486,
+      "read_locations": [
+        "190-200",
+        "372-428"
+      ],
+      "purpose": "Supplementary authorization: actual handler maps emitted:false to ok:false and preserves data/refusal."
+    },
+    {
+      "alias": "TE",
+      "capture_root": "candidate-r1",
+      "repo_relative_path": "modules/atlas/packages/tools/src/emit.ts",
+      "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/tools/src/emit.ts",
+      "bytes": 5299,
+      "sha256": "a1db5da0e113b7cac51e7d9b1c054a0cf16b9248142965624b616d485e1a8a12",
+      "git_blob_sha1": "df9c68311fae974d9f7c9885b06e2727588ff812",
+      "lines": 87,
+      "read_locations": [
+        "1-87"
+      ],
+      "purpose": "Supplementary authorization: reference-model warning and live type contract. Its createEmit is not used."
+    },
+    {
+      "alias": "GE",
+      "capture_root": "candidate-r1",
+      "repo_relative_path": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "bytes": 31947,
+      "sha256": "100195cd37c3c245df2f9a2a5690293c61dc8c8ac6893042a752751a5cba7165",
+      "git_blob_sha1": "33030a006e33d2b970b27c7d0b344b2f24bcb842",
+      "lines": 405,
+      "read_locations": [
+        "169-218",
+        "255-313",
+        "366-405"
+      ],
+      "purpose": "Supplementary authorization: real emitted/refusal fields, ownership checks and incumbent retry in governed commit."
+    }
+  ],
+  "auxiliary_comparisons": [
+    {
+      "source": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/knowledge/src/index.ts",
+        "bytes": 5549,
+        "sha256": "783af31127c5192e5d38f3f875b1c4bb2181335466eaa387355c50b5aec8f1b5",
+        "git_blob_sha1": "87a1495bfbc208880c4c4236735a242788975049",
+        "lines": 52
+      },
+      "candidate_r1": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/knowledge/src/index.ts",
+        "bytes": 5567,
+        "sha256": "fdb95e936dc86471ccf565ae0da870921e8e09574e8ca151adee7f4a4132fb26",
+        "git_blob_sha1": "275102267ac1d26b1562772d1f20659a78d430e9",
+        "lines": 53
+      },
+      "byte_equal": false,
+      "method": "Byte comparison; barrel symbol search where applicable. No implementation inferred from unprinted code."
+    },
+    {
+      "source": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/index.ts",
+        "bytes": 24538,
+        "sha256": "48007a15351581ac0eb7d70c032c5615d78aafeec3c1809d773e25c367bc4e35",
+        "git_blob_sha1": "f3d724fb81062d3d1c726fb8863a9d2ea8744231",
+        "lines": 391
+      },
+      "candidate_r1": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/index.ts",
+        "bytes": 24538,
+        "sha256": "48007a15351581ac0eb7d70c032c5615d78aafeec3c1809d773e25c367bc4e35",
+        "git_blob_sha1": "f3d724fb81062d3d1c726fb8863a9d2ea8744231",
+        "lines": 391
+      },
+      "byte_equal": true,
+      "method": "Byte comparison; barrel symbol search where applicable. No implementation inferred from unprinted code."
+    },
+    {
+      "source": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/packages/adapter-io/src/okf-store.ts",
+        "bytes": 4264,
+        "sha256": "49e4f420773e6a196f77c8893dcf33770133f68dba16e313ffd0c39d4f16e7c9",
+        "git_blob_sha1": "d86105c0bb2d3e4f042130148ae6b6a5860ab047",
+        "lines": 93
+      },
+      "candidate_r1": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/okf-store.ts",
+        "bytes": 4264,
+        "sha256": "49e4f420773e6a196f77c8893dcf33770133f68dba16e313ffd0c39d4f16e7c9",
+        "git_blob_sha1": "d86105c0bb2d3e4f042130148ae6b6a5860ab047",
+        "lines": 93
+      },
+      "byte_equal": true,
+      "method": "Byte comparison; barrel symbol search where applicable. No implementation inferred from unprinted code."
+    }
+  ],
+  "callsite_only_ports": [
+    {
+      "runtime_relative_path": "packages/adapter-io/src/grounding-computer.ts",
+      "evidence": "N:154-158 and C:27-33,191-200",
+      "contents_read": false,
+      "usage": "Existing real grounding composition; no injected fixtures."
+    },
+    {
+      "runtime_relative_path": "packages/adapter-io/src/fs.ts",
+      "evidence": "N:154-158 and C:27-33,191-200",
+      "contents_read": false,
+      "usage": "Existing real grounding composition; no injected fixtures."
+    },
+    {
+      "runtime_relative_path": "packages/adapter-io/src/scip.ts",
+      "evidence": "N:154-158 and C:27-33,191-200",
+      "contents_read": false,
+      "usage": "Existing real grounding composition; no injected fixtures."
+    }
+  ],
+  "implementation_mapping": [
+    {
+      "behavior": "Reprepare exact candidate before accepting real binding and again at phase boundaries",
+      "source_locations": [
+        "N:112-132",
+        "N:93-109",
+        "NB:20-74"
+      ]
+    },
+    {
+      "behavior": "CAS-only declared adaptation of validated real decisions to OwnershipReview; preserve all original decision bytes",
+      "source_locations": [
+        "N:123-145",
+        "NB:18-19",
+        "KT:38-57",
+        "NIO:60-74"
+      ]
+    },
+    {
+      "behavior": "File-only capture retains descriptor bytes while subsequent observation calls still read host",
+      "source_locations": [
+        "I:35-39",
+        "I:143-182",
+        "NIO:22-58",
+        "R:102-115",
+        "R:180-197",
+        "R:237-253",
+        "R:281-288"
+      ]
+    },
+    {
+      "behavior": "Every entry has registry, real recipe version, ordered build dependencies, explicit output metadata and exact evaluate envelope",
+      "source_locations": [
+        "R:36-88",
+        "R:128-148",
+        "R:233-298",
+        "R:318-343",
+        "N:63-91",
+        "K:50-59"
+      ]
+    },
+    {
+      "behavior": "Reject input layout or structural change and refuse target mismatch even on no-op",
+      "source_locations": [
+        "R:213-236",
+        "R:270-298",
+        "KT:59-78",
+        "CAN:56-60"
+      ]
+    },
+    {
+      "behavior": "Validate every candidate entry; real grounding, published baseline selection, check, emit and reopened reads",
+      "source_locations": [
+        "N:148-170",
+        "A:13-49",
+        "C:162-176",
+        "C:233-236",
+        "C:491-521"
+      ]
+    },
+    {
+      "behavior": "Preserve full emission and require ok:true plus data.emitted:true; never infer acceptance from no-op/readback",
+      "source_locations": [
+        "H:190-200",
+        "H:372-428",
+        "GE:255-308",
+        "GE:374-402"
+      ]
+    }
+  ],
+  "not_observed_or_performed": [
+    "Reserved oracle contents or judgments",
+    "Production L2 bodies",
+    "Real prepared target/baseline/binding for this operation",
+    "Domain-change choice",
+    "Product imports/execution",
+    "Synthetic controls",
+    "Runtime/build/test/typecheck/guards",
+    "Remote writes",
+    "Product source edits"
+  ],
+  "model": "UNKNOWN",
+  "tokens": "UNKNOWN"
+}

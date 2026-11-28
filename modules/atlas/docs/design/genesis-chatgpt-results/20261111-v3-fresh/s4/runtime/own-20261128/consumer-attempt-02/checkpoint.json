@@ -1,0 +1,36 @@
+{
+  "state": "HOLD",
+  "native_trace_reused_exactly_from": 46161676698,
+  "context": "new independent native consumer; same exact saved native responses; deep transport partitioned to avoid clipping",
+  "initial_answers": [
+    {
+      "event_id": "amsg_01a222df-5e49-72b0-83f0-09d9b6cb19c3",
+      "sha256": "ca68dec2678ff06b77ed02266cd72b72b39a3a984b0cfd50b72e1e9ed471107b"
+    },
+    {
+      "event_id": "amsg_01a222e0-8cb0-7293-ab0e-d3e4c6cb22d6",
+      "sha256": "0c60f98cc0e65d745ec337bc3b7b089718cf0e61e36a2c20dc4730e847a6f0d1"
+    }
+  ],
+  "verbatim_model_visible_deep_transports": {
+    "s4-consumer-deep-atlas-only-1.txt": "d5e1df94db43233b2e5935645b3aa93d1fec60629dcc0d2063c1d5f7376e2d75",
+    "s4-consumer-deep-atlas-only-2.txt": "a5c5497641954b3dfc47ba54ab0f803dec2301035ec283ea6237a3b083482411"
+  },
+  "index_responses": 1,
+  "read_responses": 12,
+  "shallow_body_bytes": 4921,
+  "returned_body_bytes": 60752,
+  "manifest": "df2dae9de5931cb86f7572bb6c093fe3fdaef6a274ad8f4985db5c3c63a21afe",
+  "verdicts": {
+    "J2": {
+      "path": "j2-hold.json",
+      "event_id": "amsg_01a222e1-7554-7720-bfce-55252769135c",
+      "sha256": "aec5e97a6f4fe03203fdba4f33e5b5bbb69507cf5f8a4b0e99c06516c7ca75eb"
+    },
+    "J1": {
+      "path": "j1-hold.json",
+      "event_id": "amsg_01a222e1-756a-7040-8f2d-e66f8261a11b",
+      "sha256": "c324974a14c9de656211878c26854c9fae04e9855cfe2b832924b7a4267c567e"
+    }
+  }
+}

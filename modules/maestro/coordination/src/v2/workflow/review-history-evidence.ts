@@ -32,6 +32,8 @@ export type Capture = {
   readonly input: ReviewHistory.Input
   readonly result: ReviewScopedHistory.Envelope
   readonly active: Effect.Effect<void, Tool.Failure>
+  /** Call-local admission deadline; completed native ACK uses only the original binding lifetime. */
+  readonly admissionActive?: Effect.Effect<void, Tool.Failure>
 }
 export type Authority = {
   readonly inputHash: string

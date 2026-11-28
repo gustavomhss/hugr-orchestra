@@ -1,0 +1,467 @@
+{
+  "schema": "s4-native-usage/v1",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "status": "IN_PROGRESS",
+  "host_conversation_id": "UNKNOWN",
+  "role_ids": {
+    "principal": "/root",
+    "producer_l1": "/root/producer_l1a",
+    "producer_runtime": "/root/producer_runtime",
+    "judge_j1": "/root/judge_j1",
+    "judge_j2": "/root/judge_j2",
+    "review_packet_courier": "/root/review_courier",
+    "continuity_subproducer": "/root/producer_l1a/continuity_research"
+  },
+  "stages": [
+    {
+      "stage": "WP-L1A",
+      "status": "produced-and-two-semantic-PASS"
+    },
+    {
+      "stage": "WP-R0",
+      "status": "implemented;actual-prepare;two-new-binding-PASS;governed-publish-index-read-PROVEN-for-sample"
+    },
+    {
+      "stage": "WP-L1B",
+      "status": "produced-metadata-v2-accepted-by-J1-and-J2"
+    },
+    {
+      "stage": "WP-R1",
+      "status": "accepted-by-both;R1-J1-01-and-J2-R1-01-resolved;CI7102f2e-PASS"
+    },
+    {
+      "stage": "WP-L1-BOUNDARY",
+      "status": "v2-produced-and-accepted-by-both-persistent-judges",
+      "purpose": "Read-only neighboring Session/Store/server boundary knowledge at baseline, not population expansion"
+    },
+    {
+      "stage": "WP-L2",
+      "status": "complete, both judges PASS, no mandatory findings"
+    },
+    {
+      "stage": "WP-L3",
+      "status": "complete, v3 both persistent judges PASS, L3-J1-01 and primary P1 corrections resolved"
+    },
+    {
+      "stage": "WP-L4",
+      "status": "all four native bodies frozen and primary checked; literal transport and same-judge evaluation pending"
+    },
+    {
+      "stage": "consumers",
+      "status": "reserved-fresh-context;requires-governed-reader"
+    },
+    {
+      "stage": "final-two-judge-review",
+      "status": "reserved;same-persistent-IDs"
+    },
+    {
+      "stage": "WP-SOURCE-PINS",
+      "status": "completed: 199 exact commit/path/blob associations and byte comparisons; L4 excluded",
+      "agent": "/root/review_courier"
+    }
+  ],
+  "observable_attempts": [
+    {
+      "operation": "candidate typecheck",
+      "results": [
+        "initial incremental export issue",
+        "branded-hash cast failure",
+        "final force build PASS"
+      ]
+    },
+    {
+      "operation": "native prepare",
+      "results": [
+        "missing output directory error",
+        "successful actual candidate"
+      ]
+    },
+    {
+      "operation": "remoteCI",
+      "runs": [
+        43065851373,
+        43066241607
+      ],
+      "status": "first216tests+22mutationsPASS,overallguardfailure;secondsame-codeattemptobservedfailure,detailsnotyetinspected"
+    },
+    {
+      "operation": "continuity_subproducer",
+      "status": "interrupted after parent completed its accepted delivery of research input; no lost result silently redispatched"
+    },
+    {
+      "operation": "runtimeR1-remoteCI",
+      "runs": [
+        43069951327,
+        43070538154
+      ],
+      "status": "both-success;first uses weaker paused-barrier test;second uses final post-barrier overlap assertion;220 tests+22mutations+guards passed",
+      "source_mismatch_correction": "new exact test committed before second run, original receipts retained"
+    },
+    {
+      "operation": "runtimeR1-local-typecheck",
+      "results": [
+        {
+          "session": 45697,
+          "completion": "f5b70f",
+          "exit_code": 0
+        },
+        {
+          "session": 95208,
+          "completion": "8badb4",
+          "exit_code": 0
+        }
+      ],
+      "setup_failure": "first earlier command started before copy/dependencies finished; exit127 preserved in principal record, not a product test"
+    },
+    {
+      "operation": "review-transport",
+      "native_courier": "/root/review_courier",
+      "corrections": [
+        "L1B J2 part4 duplicate body passage replaced for both judges",
+        "R0 J2 part3 duplicate GO-I8 corrected for both judges",
+        "L1A original requests not exported: new literal full-body submission, no reconstructed history"
+      ],
+      "tokens": "UNKNOWN"
+    },
+    {
+      "operation": "actual-isolated-native-publication-and-read",
+      "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+      "publish": {
+        "exit_code": 0,
+        "emitted": true
+      },
+      "index": {
+        "exit_code": 0,
+        "kind": "index"
+      },
+      "read": {
+        "exit_code": 0,
+        "kind": "ready",
+        "historical": false,
+        "body_bytes": 17959
+      },
+      "native_model_calls_issued_by_adapter": false,
+      "native_tokens": "UNKNOWN"
+    },
+    {
+      "operation": "runtimeR2-correction-and-CI",
+      "producer": "/root/producer_l1a",
+      "mandatory_findings": [
+        "R1-J1-01",
+        "J2-R1-01"
+      ],
+      "code_commit": "a3f224843321f2c18fb9532ef275411c6a0f617e",
+      "runs": [
+        {
+          "id": 43077167418,
+          "test_count": 220,
+          "mutations": 22,
+          "product_result": "PASS",
+          "overall": "FAIL",
+          "reason": "two committed raw logs violate agent-scratch"
+        },
+        {
+          "id": 43077975153,
+          "head": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+          "test_count": 220,
+          "mutations": 22,
+          "guards_exit": 0,
+          "overall": "PASS",
+          "large_file_warnings": 2
+        }
+      ],
+      "supersedes_interpretation": "The earlier run 673b90 passed its assertions but the combined main+independent interval did not prove main-read overlap. Original record retained; same-judge fix required."
+    },
+    {
+      "operation": "runtimeR2-artifact-download",
+      "visible_results": [
+        "HTTP503",
+        "fresh connector download successful;SHA verified"
+      ],
+      "native_tokens": "UNKNOWN"
+    },
+    {
+      "operation": "boundary-v2-review-transport",
+      "courier": "/root/producer_runtime",
+      "payload_sends": 8,
+      "criteria_sends": 2,
+      "close_sends": 2,
+      "message_ids": "UNKNOWN",
+      "judgments": "both PASS v2",
+      "original_v1_payload_retained": true
+    },
+    {
+      "operation": "maintenance-port-inspection",
+      "agent": "/root/producer_runtime",
+      "status": "completed read-only memo; not operational proof"
+    },
+    {
+      "operation": "runtimeR2-reassessment",
+      "request_sha256": "bf0166bef928e799dd688501628b7e4f3d714ac9edcf7fa19d9648a76459a0ec",
+      "j1_intermediate": "REQUEST_EVIDENCE for original J2 finding; provided exact original fragment",
+      "finding_fragment_sha256": "d51c0cec655401fb6e4752c1f23930599264f638c2a5189fb47f6cc4ae8592b3",
+      "final": "Both persistent judges PASS semantic L1 and named runtime controls",
+      "no_new_product_execution_for_evidence_request": true
+    },
+    {
+      "operation": "WP-L2-production",
+      "agents": [
+        "/root/producer_l1a",
+        "/root/producer_runtime"
+      ],
+      "bodies": 3,
+      "primary_corrections": [
+        "L2A-P1",
+        "L2B-P1-01",
+        "L2B-P1-02"
+      ],
+      "status": "corrected v2 in semantic evaluation",
+      "input_manifest_sha256": "00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca",
+      "l2b_progressive_manifest_sha256": "180b65db793511e814e939c0c4b52c3f883ac57c21cd1e39dbb88dcf46bce51a"
+    },
+    {
+      "operation": "maintenance-driver-static-review",
+      "producer": "/root/review_courier",
+      "parse_exit": 0,
+      "product_execution": "NOT_RUN",
+      "decisions": [
+        {
+          "agent_id": "/root/judge_j1",
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/maintenance-driver/j1-response.json",
+          "sha256": "af169fb0afb2e25358df8c8d72c4112cf4045be366d2091a846366103429498f"
+        },
+        {
+          "agent_id": "/root/judge_j2",
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/maintenance-driver/j2-response.json",
+          "sha256": "4b1e530fb29a40303af1f307cfbf808161946bd66f0813935951acef14b1a49e"
+        }
+      ],
+      "judge_dispatch_events": [
+        "J1 accepted",
+        "J2 thread-limit rejection before start",
+        "same J2 accepted after producer completed"
+      ]
+    },
+    {
+      "operation": "L2-review-transport",
+      "l2a_tool_calls_to_judges": 8,
+      "l2b_canonical_content_sends": 6,
+      "l2b_superseded_content_sends": 1,
+      "l2b_correction_notices": 2,
+      "message_ids": "UNKNOWN",
+      "receipt": "producer courier ledgers; receiver-side digest not exposed"
+    },
+    {
+      "operation": "maintenance-driver-review-transport",
+      "tool_calls_to_judges": 8,
+      "message_ids": "UNKNOWN",
+      "truncation_warning": "part3/J2 tool response context truncated; J2 explicitly confirmed decisive part3 evidence available in its PASS"
+    },
+    {
+      "operation": "L2-semantic-evaluation",
+      "judges": [
+        "/root/judge_j1",
+        "/root/judge_j2"
+      ],
+      "verdicts": [
+        "PASS",
+        "PASS"
+      ],
+      "decisions": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j1-response.json",
+          "sha256": "3cf6f33d590f8a09420f721cd23f74e037061ecd20b20acbb3474a96a602da87"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l2/j2-response.json",
+          "sha256": "ae03f6d7bbcf1949ce54f3e19dd405b051dfee90e4d8ec310e852fcb758ff5c6"
+        }
+      ],
+      "mandatory_findings_open": []
+    },
+    {
+      "operation": "WP-L3",
+      "producer": "/root/producer_l1a",
+      "versions": [
+        "v1 produced",
+        "v2 primary P1-01/P1-02 corrections produced"
+      ],
+      "review_v2": [
+        {
+          "agent_id": "/root/judge_j1",
+          "verdict": "FIX-FIRST",
+          "finding": "L3-J1-01",
+          "response_sha256": "19aea33cf89af81e5948891903f07380eb56825366ba1d7c00cba3c6699f02b0"
+        },
+        {
+          "agent_id": "/root/judge_j2",
+          "verdict": "PASS",
+          "response_sha256": "c9a3069eeee23285a4c56e302889a0d1ddedcc9091129d09de32938715241b99"
+        }
+      ],
+      "next": "v3 and same-judge reassessment; no L4 production authorized yet"
+    },
+    {
+      "operation": "corpus-preflight",
+      "agent": "/root/producer_runtime",
+      "required_paths_current_ten": 244,
+      "materialization_actions_executed_by_principal": 21,
+      "runtime_execution": false
+    },
+    {
+      "operation": "accounting-preflight",
+      "agent": "/root/producer_runtime",
+      "criterion_ids": 50,
+      "new_pass_assigned": false,
+      "tokens_physical_attempts_billing": "UNKNOWN"
+    },
+    {
+      "operation": "late-old-CI-metadata-read",
+      "run": 43066241607,
+      "head": "b42d14978c8b727310369920d4bfaf86145a2b80",
+      "conclusion": "failure",
+      "failed_step": "Check repository guards on the candidate",
+      "rerun": false,
+      "detailed_findings": "not inspected"
+    },
+    {
+      "operation": "WP-L3-v3-reassessment",
+      "producer": "/root/producer_l1a",
+      "body_sha256": "0648bf048642fcfb7f04df594bcd4a0877635acb2d363431e739bcd66ea973e7",
+      "judgments": [
+        {
+          "agent_id": "/root/judge_j1",
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l3/j1-v3-response.json",
+          "sha256": "b8693d60a3ab93d1c03683d64732fad319f44c1ba1cb2df557b26e87c4056950"
+        },
+        {
+          "agent_id": "/root/judge_j2",
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l3/j2-v3-response.json",
+          "sha256": "022e77caacb0353e5d34aacf9cc316dcdaa62963f4ab5e42e7b259b581d26d49"
+        }
+      ],
+      "mandatory_findings_open": []
+    },
+    {
+      "operation": "CI-C1",
+      "candidate": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+      "run": 43094387837,
+      "job": 130779354662,
+      "tests_passed": 220,
+      "named_mutants_rejected": 22,
+      "generated_parity": 18,
+      "guards": {
+        "exit": 0,
+        "warnings": 2
+      },
+      "driver_parse": "PASS",
+      "own_driver_execution": "NOT_RUN",
+      "receipt_sha256": "0e5ab3de3e3eff58fda61020dc4f3ec6b2c67007ecc3b42c7d81a7e97654ca0c"
+    },
+    {
+      "operation": "local-typecheck-for-operation",
+      "candidate": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+      "exit_code": 0,
+      "product_test": false,
+      "receipt_sha256": "121a3c41f960246968fe81ed07f48fd0b50483df33bf6740e7ecf0e74db33b7a"
+    },
+    {
+      "operation": "WP-L4-production",
+      "agents": [
+        "/root/producer_l1a",
+        "/root/producer_runtime"
+      ],
+      "input_manifest_sha256": "51925d0f2fc6dfd99b65bfc95be09c9ba488fe7b8126137160e591fa0ce69dd0",
+      "requests": [
+        {
+          "path": "dispatches/l4a.txt",
+          "sha256": "319d30c61bb84e70322e16a1135ad05085966f96cfa795c9c3476a3f5fe8d1ff"
+        },
+        {
+          "path": "dispatches/l4b.txt",
+          "sha256": "f208ee5a88e948c5fa450f1e6e8326778ecdcceef3e8e1ccc89c586f56a8e63e"
+        },
+        {
+          "path": "dispatches/l4a-steering.txt",
+          "sha256": "9b871239cd15f09b80a786c15a2456586f9ccf28fcb544caef5a756a92476407"
+        },
+        {
+          "path": "dispatches/l4b-steering.txt",
+          "sha256": "f21abb785f7d90be858d3fe75931d2c29dc11235acfc72e8f0d1b51784d11fe3"
+        }
+      ],
+      "status": "active; bounded pre-freeze steering on command CWD and temporal evidence",
+      "host_message_ids": "UNKNOWN",
+      "recorded_utc": "2026-11-11T20:52:13.785196+00:00"
+    },
+    {
+      "operation": "source-pin-reconciliation",
+      "agent": "/root/review_courier",
+      "snapshot_payload": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+      "status": "active; read-only connector/captured-byte association",
+      "product_execution": false,
+      "host_message_id": "UNKNOWN",
+      "recorded_utc": "2026-11-11T20:52:13.785196+00:00"
+    },
+    {
+      "operation": "L4B-frozen-and-literal-transport",
+      "producer": "/root/producer_runtime",
+      "metadata_sha256": "6dd07f3e90aa93123a3b60495f547d4fd72ddd7f5f194a8e453e0f7e59bdfdd5",
+      "body_bytes": [
+        9478,
+        9481
+      ],
+      "transport_sends": 4,
+      "courier_ledger_sha256": "fc12ef91e63ffd992f960251c6feabcf727c39cc9ec6743328fa4f17cbab6c50",
+      "host_message_ids": "UNKNOWN",
+      "status": "awaiting L4A and principal close; no semantic decision yet",
+      "recorded_utc": "2026-11-11T21:02:01.688382+00:00"
+    },
+    {
+      "operation": "source-pin-reconciliation-completed",
+      "agent": "/root/review_courier",
+      "pins": 199,
+      "exact_connector_fetches": 19,
+      "unproven_associations": 0,
+      "pins_sha256": "af7d2de7e57e9451b8ced56e856c3039fb16fcdd6267a35d75e9fa668ccf0dd0",
+      "product_execution": false,
+      "recorded_utc": "2026-11-11T21:02:01.688382+00:00"
+    },
+    {
+      "operation": "L4A-frozen",
+      "producer": "/root/producer_l1a",
+      "bodies": {
+        "entry": {
+          "bytes": 4921,
+          "sha256": "ebcb68aba0c3ae5d5f7581c6b3ad7e0c6a6769af1bee1d425cadf4ecae4969c8"
+        },
+        "ownership": {
+          "bytes": 9489,
+          "sha256": "fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73"
+        }
+      },
+      "metadata_sha256": "cd82ecc75c046243ae93343ee393bcfe71b17edc4b379e38337f1eb6fbc3ae1d",
+      "primary_steering": "CWD/purpose; bounded route balance; originals preserved",
+      "route_body_bytes_including_entry": 60752,
+      "recorded_utc": "2026-11-11T21:12:00.218857+00:00"
+    }
+  ],
+  "native_input_tokens": "UNKNOWN",
+  "native_output_tokens": "UNKNOWN",
+  "physical_provider_attempts": "UNKNOWN",
+  "billing": "UNKNOWN",
+  "provider_internal_retries": "UNKNOWN",
+  "model_diversity": "NOT_CLAIMED",
+  "external_paid_model_calls_issued": false,
+  "historical_campaign_usage": "GLOBAL_UNRECONCILED_BY_ROOT;not_reset",
+  "guarantee": "Finite visible native task queue and preserved outputs/decisions. No monetary cap, physical-attempt reservation enforcement or invisible retry telemetry claimed.",
+  "pending_reservations": [
+    "L4 same-pair semantic review after four bodies frozen; original native producers completed",
+    "Full native package exact binding by same two judges and actual governed publication",
+    "One domain maintenance author, same two semantic and exact binding decisions; actual existing rebuild/reuse operations",
+    "One fresh Atlas-only consumer; same two case evaluations",
+    "Final two-judge evidence/matrix review; final payload and sealed handoff"
+  ],
+  "uncertain_work_policy": "Inspect existing result before redispatch; preserve failure/unknown rather than recording zero.",
+  "last_reconciled_utc": "2026-11-11T21:12:00.218857+00:00"
+}

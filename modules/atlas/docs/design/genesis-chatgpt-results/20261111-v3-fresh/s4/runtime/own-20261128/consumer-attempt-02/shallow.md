@@ -1,0 +1,3 @@
+Não é possível dar valores exatos: o custo em reais e o número de tentativas físicas ocultas do provedor são **UNKNOWN**. A leitura S4:L4:entry diz que modelo, tokens e cobrança não expostos são desconhecidos; seus limites de chamadas e bytes não medem custo financeiro. (S4:L4:entry, “Orçamento público e rota profunda opcional”; “Pare diante de limite ou evidência insuficiente”.)
+
+A evidência observável é apenas o índice e a leitura fornecidos, não a execução nem a cobrança dos subagentes. Para obter os valores, é necessária telemetria do provedor que exponha tentativas físicas e cobrança, além dos recibos correspondentes.

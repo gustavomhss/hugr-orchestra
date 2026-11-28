@@ -1,0 +1,28 @@
+{
+  "schema": "s4-isolated-policy-provisioning/v1",
+  "recorded_utc": "2026-11-11T20:57:07.815703+00:00",
+  "corpus_root": "/workspace/scratch/aff930d22ec7/s4/final-corpus",
+  "target": "/workspace/scratch/aff930d22ec7/s4/final-corpus/.atlas/policy.json",
+  "prior_state": "absent",
+  "source": "Previously exercised isolated V1 policy, copied byte-exact. No production policy or credentials.",
+  "policy_bytes": 216,
+  "policy_sha256": "686be455d8e63ecd904ecde9a33a8f92ad45f2eaddad38dc7b4e6b238db51099",
+  "policy": {
+    "t0Heuristic": {
+      "keywords": []
+    },
+    "authz": {
+      "scopes": {
+        "atlas-continuity-rag-genesis": [
+          "/root"
+        ]
+      },
+      "anchors": {
+        ".": "atlas-continuity-rag-genesis"
+      }
+    }
+  },
+  "principal": "/root",
+  "authorization": "User authorized complete S4 real import/governed publication/read and own maintenance in isolated state; role string is not identity authentication.",
+  "actual_publication": "NOT_RUN; provisioning only"
+}

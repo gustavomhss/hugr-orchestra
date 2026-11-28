@@ -1,0 +1,227 @@
+{
+  "schema": "runtime-large-inputs-preparation-dossier/v1",
+  "status": "CI_OVERLAY_READY_GENERATED_BYTES_VERIFIED",
+  "parent_source_dossier": {
+    "path": "evidence/dossier.json",
+    "byte_length": 35946,
+    "sha256": "e214d7ff2dc10c3d8a66e6a15dc5d8105ce19f5306383935bee584aa3b3c0027",
+    "git_blob_sha": "4a82fac6c0b0464bbacbd5ccbbb1a09b5557aabc"
+  },
+  "base_revision": "6f643bc05245ebe912d52cbdd8347ce1e5b0046e",
+  "runtime_candidate": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/runtime/candidate",
+  "clean_overlay_root": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/ci-candidate",
+  "commands": [
+    {
+      "id": "01-bun-version",
+      "cwd": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/runtime/candidate",
+      "command": [
+        "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/tools/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+        "--version"
+      ],
+      "path_prepend": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/tools/runtime/node_modules/@oven/bun-linux-x64/bin",
+      "started_at": "2026-11-12T04:14:42.387Z",
+      "finished_at": "2026-11-12T04:14:42.426Z",
+      "duration_ms": 38.485373,
+      "exit_code": 0,
+      "stdout_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/evidence/runtime-build-commands/01-bun-version.stdout.txt",
+      "stderr_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/evidence/runtime-build-commands/01-bun-version.stderr.txt",
+      "stdout_sha256": "56b0485099b6c5427d3b68c042fd05b632d5e52e924c5064473389812227164c",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "id": "02-atlas-npm-ci",
+      "cwd": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/runtime/candidate/modules/atlas",
+      "command": [
+        "npm",
+        "ci",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "path_prepend": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/tools/runtime/node_modules/@oven/bun-linux-x64/bin",
+      "started_at": "2026-11-12T04:14:42.399Z",
+      "finished_at": "2026-11-12T04:14:44.866Z",
+      "duration_ms": 2466.468762,
+      "exit_code": 0,
+      "stdout_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/evidence/runtime-build-commands/02-atlas-npm-ci.stdout.txt",
+      "stderr_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/evidence/runtime-build-commands/02-atlas-npm-ci.stderr.txt",
+      "stdout_sha256": "34cc1af10796b2f4c9e6a39ef86fe0d791f7eb90e08e18c749262b58f8e49516",
+      "stderr_sha256": "7125f194612fcff2f454c05d848e7cb71facc1967b4d5017e25b34fdee3ba74f"
+    },
+    {
+      "id": "03-boundary-dependencies",
+      "cwd": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs",
+      "command": [
+        "npm",
+        "install",
+        "--prefix",
+        "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/runtime-boundary-deps",
+        "--no-save",
+        "--package-lock=false",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund",
+        "dts-bundle-generator@9.5.1",
+        "typescript@5.8.2",
+        "@types/node@24.12.2",
+        "@noble/hashes@1.8.0",
+        "@bufbuild/protobuf@2.12.0",
+        "@c4312/scip@0.1.0",
+        "web-tree-sitter@0.23.2"
+      ],
+      "path_prepend": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/tools/runtime/node_modules/@oven/bun-linux-x64/bin",
+      "started_at": "2026-11-12T04:14:42.387Z",
+      "finished_at": "2026-11-12T04:15:08.493Z",
+      "duration_ms": 26105.903164,
+      "exit_code": 0,
+      "stdout_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/evidence/runtime-build-commands/03-boundary-dependencies.stdout.txt",
+      "stderr_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/evidence/runtime-build-commands/03-boundary-dependencies.stderr.txt",
+      "stdout_sha256": "4076f2c215b170883880a2e7e09daac803c5a449efad08962d1ddca4d712176a",
+      "stderr_sha256": "7125f194612fcff2f454c05d848e7cb71facc1967b4d5017e25b34fdee3ba74f"
+    },
+    {
+      "id": "04-boundary-generate",
+      "cwd": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/runtime/candidate/modules/atlas/boundary",
+      "command": [
+        "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/tools/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+        "run",
+        "generate"
+      ],
+      "path_prepend": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/tools/runtime/node_modules/@oven/bun-linux-x64/bin",
+      "started_at": "2026-11-12T04:15:50.354Z",
+      "finished_at": "2026-11-12T04:16:14.312Z",
+      "duration_ms": 23957.483953000003,
+      "exit_code": 0,
+      "stdout_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/evidence/runtime-build-commands/04-boundary-generate.stdout.txt",
+      "stderr_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/evidence/runtime-build-commands/04-boundary-generate.stderr.txt",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "0279c8a6959392e6cbdc8daf40011385f56fd4a7cbe09b5af76072e401a2b44f"
+    },
+    {
+      "id": "05-boundary-check",
+      "cwd": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/runtime/candidate/modules/atlas/boundary",
+      "command": [
+        "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/tools/runtime/node_modules/@oven/bun-linux-x64/bin/bun",
+        "run",
+        "check:generated"
+      ],
+      "path_prepend": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/tools/runtime/node_modules/@oven/bun-linux-x64/bin",
+      "started_at": "2026-11-12T04:17:08.340Z",
+      "finished_at": "2026-11-12T04:17:32.808Z",
+      "duration_ms": 24467.832775,
+      "exit_code": 0,
+      "stdout_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/evidence/runtime-build-commands/05-boundary-check.stdout.txt",
+      "stderr_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/evidence/runtime-build-commands/05-boundary-check.stderr.txt",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stderr_sha256": "8040b8b602fe9bb0035e66ee567e05648e496a8edfd36495e4d79c65e84892fb"
+    }
+  ],
+  "dependency_versions": {
+    "schema": "runtime-large-inputs-build-dependencies/v1",
+    "node": "v24.22.1",
+    "bun": "1.3.14",
+    "boundary_dependency_link": {
+      "path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/runtime/candidate/modules/atlas/boundary/node_modules",
+      "target": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/runtime-boundary-deps/node_modules"
+    },
+    "boundary_pins": [
+      {
+        "name": "dts-bundle-generator",
+        "version": "9.5.1"
+      },
+      {
+        "name": "typescript",
+        "version": "5.8.2"
+      },
+      {
+        "name": "@types/node",
+        "version": "24.12.2"
+      },
+      {
+        "name": "@noble/hashes",
+        "version": "1.8.0"
+      },
+      {
+        "name": "@bufbuild/protobuf",
+        "version": "2.12.0"
+      },
+      {
+        "name": "@c4312/scip",
+        "version": "0.1.0"
+      },
+      {
+        "name": "web-tree-sitter",
+        "version": "0.23.2"
+      }
+    ],
+    "product_manifests_unchanged": 18,
+    "product_tests_executed": false
+  },
+  "generation": {
+    "outputs": 18,
+    "changed": [
+      {
+        "path": "modules/atlas/boundary/src/generated/surface.js",
+        "base": {
+          "byte_length": 562296,
+          "sha256": "ca8a653fe7fd5dd0d157a272c481fd18dc6b7def97716d2a2d551416c366e204",
+          "git_blob_sha": "7fa268ec81d2412e73fb63ea436181624eaa4a0b"
+        },
+        "candidate": {
+          "byte_length": 562363,
+          "sha256": "fc3056dc584746afb3b1fc9f5904a360d74b543a0c7b8101e0c2aa766918a696",
+          "git_blob_sha": "648e3ca5cd4fe21e43c6cb94c94a3e369c82e0ae"
+        },
+        "changed": true
+      }
+    ],
+    "unchanged_count": 17,
+    "check_generated": "PASS",
+    "unchanged_after_check": true,
+    "contexts": [
+      {
+        "path": "modules/atlas/boundary/src/generated/surface.js",
+        "before_limit_occurrences": 2,
+        "after_limit_occurrences": 0,
+        "shared_cap_contexts": [
+          "ev&&id2.ino===rootId.ino)return!0;let up=dirname2(here);if(up===here)return!1;cur=up}}var ownershipInputMaxBytes=2097152;function ownershipInput(repoPath,key){try{return ownershipInputFromObservation(observeOwnershipInput(repoPath",
+          "92);for(;;){let n=readSync(fd,probe,0,probe.length,null);if(n===0)break;if(total+=n,total>ownershipInputMaxBytes)return{kind:\"unavailable\"};chunks.push(Buffer.from(probe.subarray(0,n)))}bytes=Buffer.concat(chunks,total)}finally{cl",
+          "ter.ino!==before.ino||after.size!==before.size)return{kind:\"unavailable\"};if(bytes.length>ownershipInputMaxBytes)return{kind:\"unavailable\"};return{kind:\"present\",version:String(id({kind:\"ownership-source\",version:1,bytes:Array.fro"
+        ]
+      }
+    ]
+  },
+  "candidate_integrity": {
+    "files_excluding_dependencies": 462,
+    "changes_after_initial_six_file_overlay": [
+      {
+        "path": "modules/atlas/boundary/src/generated/surface.js",
+        "byte_length": 562363,
+        "sha256": "fc3056dc584746afb3b1fc9f5904a360d74b543a0c7b8101e0c2aa766918a696",
+        "git_blob_sha": "648e3ca5cd4fe21e43c6cb94c94a3e369c82e0ae"
+      }
+    ],
+    "removed_after_overlay": [],
+    "product_manifests_unchanged": true
+  },
+  "delivery_manifest": "evidence/ci-change-manifest.json",
+  "limits": {
+    "materialization": "Partial repository: Atlas source/build inputs plus boundary and changed tests; not a Git checkout or complete test corpus.",
+    "test_inventory_from_root": "620 relevant files;617 were unavailable locally at scope update. ROOT deferred fetching them.",
+    "full_typecheck": "NOT_RUN",
+    "partial_typecheck": "NOT_RUN separately; successful declaration generation checks the generator entrypoint graph only.",
+    "product_tests": "NOT_RUN locally; Actions owns the real test and full typecheck gates.",
+    "performance_telemetry": "HO-02 product elapsed_ms/maxRSS remain UNKNOWN; build command durations above describe compilation only.",
+    "runtime_binding": "New exact implementation/driver bytes still require their own candidate, recipe and binding.",
+    "historical_driver": "producers/maintenance-driver copy unmodified.",
+    "remote_writes": false,
+    "oracle_access": false
+  },
+  "preserved_reports": [
+    "evidence/runtime-preparation-dispatch.json",
+    "evidence/runtime-copy-manifest.json",
+    "evidence/build-dependencies.json",
+    "evidence/boundary-generation-manifest.json",
+    "evidence/runtime-build-commands"
+  ],
+  "additional_functional_source_changes": false
+}

@@ -1,0 +1,93 @@
+{
+  "schema": "s4-preserved-generation/v1",
+  "unit": "l2b",
+  "preserved_generation": "v1",
+  "captured_before_v2_utc": "2026-11-11T19:01:22.945181+00:00",
+  "files": [
+    {
+      "relative_path": "artifacts.json",
+      "bytes": 5875,
+      "sha256": "042d59823ea1ecf3a823f410688c1ec30e3a088b94554c3214d76d1053e81d15"
+    },
+    {
+      "relative_path": "continuity-rag-operations.md",
+      "bytes": 7993,
+      "sha256": "cb31ca6333e7cf2303d5a957622d3013edf9084631f302d79fa99a7a367bdd94"
+    },
+    {
+      "relative_path": "input-manifest.json",
+      "bytes": 12610,
+      "sha256": "00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca"
+    },
+    {
+      "relative_path": "integrity-receipt.json",
+      "bytes": 5663,
+      "sha256": "09506a74e14f537a38d1f46fc8b2546bcbf295d6eb6467782b937ab321405bfc"
+    },
+    {
+      "relative_path": "provenance.json",
+      "bytes": 4099,
+      "sha256": "c8c1ab6cb59ad91e01bd663fb41e67ce4552107e5285cfd0b51506f44b4db49b"
+    },
+    {
+      "relative_path": "recipe.json",
+      "bytes": 5353,
+      "sha256": "7574858d2403bb05df856c753421345007cce1884dd9cdf3ed9f16b8e14db666"
+    },
+    {
+      "relative_path": "request-record.json",
+      "bytes": 675,
+      "sha256": "7218157317eedb61d42e96370857176067c7af78b8fe5f527750f898dfd0ccb5"
+    },
+    {
+      "relative_path": "request.md",
+      "bytes": 3856,
+      "sha256": "3e490e1d8172da5337f276f07af2e9bede28c82b2ad834cd795c5af844b303f4"
+    },
+    {
+      "relative_path": "response.md",
+      "bytes": 2292,
+      "sha256": "41a21515ac6e2e057623e74b3fa67cf1fea90bf4ee5fb7096a3fd5637764799c"
+    },
+    {
+      "relative_path": "review-packet-01.txt",
+      "bytes": 28113,
+      "sha256": "ba5040479293550c250d89e4f67d4613b90c5b7ff1bd9a67e701a0eff0bc31f7"
+    },
+    {
+      "relative_path": "review-packet-manifest.json",
+      "bytes": 1460,
+      "sha256": "c880118b5d863f596912b6b9ec67d9e95c8376cc2678ff599a558e3799e85804"
+    },
+    {
+      "relative_path": "section-source-map.json",
+      "bytes": 3132,
+      "sha256": "08028ed650bbf3c6b6e1591395f0e918729eefe3b1a45772a64a5287b463af49"
+    },
+    {
+      "relative_path": "sources/continuity-rag.l1.md",
+      "bytes": 17429,
+      "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38"
+    },
+    {
+      "relative_path": "sources/host-boundaries.l1.md",
+      "bytes": 11972,
+      "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+    },
+    {
+      "relative_path": "steering-transport.md",
+      "bytes": 734,
+      "sha256": "add609d0046aacbb45471dd87eeee1ca035c63b3e18cf8a4d379b413d371bf9a"
+    },
+    {
+      "relative_path": "transport-contract.md",
+      "bytes": 8479,
+      "sha256": "deaa88e625f4f0bd856e235e9df9616f12fa3d86384e69338c98daac90c70c6f"
+    },
+    {
+      "relative_path": "used-sources.json",
+      "bytes": 3318,
+      "sha256": "64c851dfc7e9c09c151cd999c63766e9ee9d9a12f377849ace14f89b15666cde"
+    }
+  ]
+}

@@ -96,6 +96,7 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
       () => import("@orchestra/server/activity-private-channel"),
     )
     const { ActivityArmLedger } = yield* Effect.promise(() => import("@orchestra/core/activity-arm"))
+    const { ActivityApplyService } = yield* Effect.promise(() => import("@orchestra/core/activity-apply"))
     const { ActivityStopService } = yield* Effect.promise(() => import("@orchestra/core/activity-stop-service"))
     const { ActivityQuarantineCustody } = yield* Effect.promise(() => import("@orchestra/core/activity-quarantine-custody"))
     const scope = yield* Layer.build(AppNodeBuilder.build(Database.node))
@@ -107,6 +108,7 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
       const processService = Context.get(processScope, AppProcess.Service)
       return ActivityArmLedger.make(database, { ...ActivityArmObjects.make(database, processService), maxSelection: 1 })
     }) : ActivityArmLedger.make(database)
+    const apply = ActivityApplyService.make(database)
     const stop = process.platform === "win32" ? ActivityStopService.make(database) : undefined
     const custody = process.platform === "win32" ? ActivityQuarantineCustody.make(database) : undefined
     if (custody) {
@@ -119,7 +121,7 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
       return ActivityFreezeService.make(database)
     }) : undefined
     const extension = yield* Effect.tryPromise({
-      try: (signal) => ActivityPrivateChannelServer.acquire(process.stdin, signal, arm, stop, custody, freeze),
+      try: (signal) => ActivityPrivateChannelServer.acquire(process.stdin, signal, arm, stop, custody, freeze, apply),
       catch: () => new Error("Activity private channel startup failed"),
     })
     if (process.platform === "linux" && isolation !== undefined) {

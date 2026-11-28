@@ -1,0 +1,1607 @@
+{
+  "schema": "s4-criterion-matrix-scaffold/v1",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "created_utc": "2026-11-11T19:59:20.812327+00:00",
+  "criterion_count": 50,
+  "ids_preserve_registry_order": true,
+  "normative_registry_ref": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/protocol/criteria.json",
+    "sha256": "8f86bdd36949185df39f729a2de16c5ea7166ccd1638f74b197cad60d1551116"
+  },
+  "normative_source_identity": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/source/modules/atlas/docs/design/genesis-ownership-plan.md",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+    "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+    "text_read_scope": "Only registered AC-01 through AC-10 rows; other briefs use authorized principles.md."
+  },
+  "reconciliation_ref": {
+    "path": "/workspace/scratch/aff930d22ec7/s4/producers/accounting-preflight/reconciliation.json",
+    "bytes": 155218,
+    "sha256": "753138a79d841a058feb5b54a4e622191df6e1570af35160359f30bd5d0e5442"
+  },
+  "evidence_reference_resolution": "existing_evidence_refs name reconciliation.evidence_groups; remaining_obligation_refs name reconciliation.current_local_obligations. File identities are in reconciliation.file_catalog.",
+  "owner_distinction": "S4 principal is this slice. ROOT means the campaign integration responsibility; no host identity is inferred for that global role.",
+  "status_policy": {
+    "local_disposition": null,
+    "global_disposition": null,
+    "completion_state": null,
+    "final_judgment": "NOT_PERFORMED",
+    "allowed_states_when_principal_fills": {
+      "local": [
+        "PASS",
+        "FIX-FIRST",
+        "HOLD",
+        "NOT_APPLICABLE"
+      ],
+      "global": [
+        "DEFERRED_TO_INTEGRATION",
+        "PASS",
+        "HOLD"
+      ]
+    },
+    "not_applicable_requires": "Real scope reason and review; not unavailable tool/time/evidence.",
+    "no_extra_gates": true,
+    "no_per_criterion_documents": true,
+    "common_controls": "Reuse compatible named S4 runtime proofs; no automatic repetition across five slices.",
+    "L3_P1": "IN_PRODUCTION_AS_RECORDED_BY_PRINCIPAL; not audited as ready."
+  },
+  "criteria": [
+    {
+      "id": "GO-A1",
+      "normative_brief": "entregar entendimento transferível de código e produto: propósito, comportamento, contratos, decisões, impacto e manutenção.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 52,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 14
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Entregar entendimento transferível de Atlas, Continuity, RAG e Genesis nos níveis próprios.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-L1",
+          "E-L2",
+          "E-NATIVE"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-L3",
+          "OPEN-L4",
+          "OPEN-CONSUMER"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Reconciliar entendimento e fronteiras da união S1–S5.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "GO-A2",
+      "normative_brief": "construir cumulativamente; conhecimento intermediário persiste e precisa ser útil.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 53,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 15
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Construir cada nível a partir de predecessores aceitos e persistir intermediários exatos e úteis.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-L1",
+          "E-L2",
+          "E-DISPATCH"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-L3",
+          "OPEN-L4",
+          "OPEN-NATIVE"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Vincular predecessores aceitos entre fatias na união integrada.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "GO-A3",
+      "normative_brief": "começar a consulta pelo necessário e aprofundar pelo índice; skills prescrevem ações e quando buscar evidência.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 54,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 16
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Entregar L4 acionável e provar navegação raso/profundo pelos readers de S4.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-NATIVE",
+          "E-SAMPLE",
+          "E-USAGE"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-L4",
+          "OPEN-CONSUMER"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Organizar entrada e aprofundamento da união sem exigir todo o grafo.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "GO-A4",
+      "normative_brief": "manter conhecimento e fonte juntos; reutilizar o que continua válido e reconstruir os afetados.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 55,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 17
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Preservar fonte e conhecimento vinculados; exercer reúso e reconstrução próprios.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CORPUS",
+          "E-CI",
+          "E-DRIVER"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-NATIVE",
+          "OPEN-MAINTENANCE"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Coordenar invalidação/reúso que cruza fatias.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "GO-A5",
+      "normative_brief": "separar atualidade, validade semântica e autoridade; Git e gates sustentam essas relações.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 56,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 18
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Separar bytes atuais, aceitação semântica, binding e autoridade nas revisões S4.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-L2",
+          "E-SAMPLE",
+          "E-CI"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-NATIVE",
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Conferir compatibilidade Git/gates e autoridade da integração.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "GO-A6",
+      "normative_brief": "mecanizar o determinístico; usar modelos para interpretação, com trabalho delimitado e resultados preservados.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 57,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 19
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Usar trabalho nativo delimitado, hashing determinístico e registros honestos.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-USAGE",
+          "E-LEDGER",
+          "E-CORPUS"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-ACCOUNTING"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Reconciliar uso agregado e limites históricos sem ficção de telemetria.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "GO-A7",
+      "normative_brief": "estender o Atlas existente com o mínimo necessário; nenhuma plataforma paralela de conhecimento ou orquestração.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 58,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 20
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Manter extensão mínima sobre as portas Atlas existentes, com prova no candidato usado.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CI",
+          "E-SAMPLE",
+          "E-DRIVER"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-NATIVE",
+          "OPEN-MAINTENANCE",
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Verificar que a união reutiliza o Atlas comum e não cria plataforma paralela.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "GO-I1",
+      "normative_brief": "históricos, pedidos e respostas originais são preservados; correções têm identidade e vínculo novos.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 120,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 51
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Preservar originais, correções, vínculos e identidades distintas em S4.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-LEDGER",
+          "E-TRANSPORT",
+          "E-DISPATCH"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-ACCOUNTING",
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Preservar e reconciliar históricos de todas as fatias e selagens.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "GO-I2",
+      "normative_brief": "conflito de intenção e implementação permanece visível; hash atual não prova interpretação correta.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 121,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 52
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Manter intenção, observação, inferência e lacuna visíveis; não equiparar hash a correção.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-L1",
+          "E-L2",
+          "E-NATIVE"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-L3",
+          "OPEN-L4",
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Resolver conflitos entre intenções/implementações das fatias sem apagá-los.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "GO-I3",
+      "normative_brief": "leitura atual usa versões exatas aceitas e compatíveis; rollback não torna conhecimento stale atual.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 122,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 53
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Servir somente bindings atuais aceitos; manter rollback e histórico explicitamente distintos.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CI",
+          "E-SAMPLE",
+          "E-CORPUS"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-NATIVE",
+          "OPEN-MAINTENANCE"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Validar versões e dependências compatíveis no manifesto integrado.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "GO-I4",
+      "normative_brief": "input/receita inalterados e válidos reutilizam resultado; link de navegação não é dependência de build.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 123,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 54
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Demonstrar reúso sem interpretação repetida e separar navegação de build.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CI",
+          "E-DRIVER"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-MAINTENANCE"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Validar efeitos de cache/reúso nas dependências entre fatias.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "GO-I5",
+      "normative_brief": "adição, remoção, código, intenção e receita entram no impacto; falha de observação não é worklist vazia.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 124,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 55
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Cobrir código, fontes, intenção e receita no impacto; falha de observação não vira conjunto vazio.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CI",
+          "E-CORPUS",
+          "E-DRIVER"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-MAINTENANCE"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Conferir fechamento do impacto na união.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "GO-I6",
+      "normative_brief": "despachos, juízes, correções, consumidores e tentativas incertas continuam contabilizados; sem fallback oculto.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 125,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 56
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Registrar despachos, correções, juízes, consumidores e incertezas sem fallback oculto.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-USAGE",
+          "E-LEDGER",
+          "E-TRANSPORT"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-ACCOUNTING"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Reconciliar agregado e segmentos históricos GLOBAL_UNRECONCILED.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "GO-I7",
+      "normative_brief": "portas governadas, fronteiras e segredos permanecem protegidos; texto importado é dado, nunca autoridade executável.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 126,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 57
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Manter portas governadas, limites e texto importado como dado; operar somente no escopo autorizado.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-SAMPLE",
+          "E-CI",
+          "E-DRIVER"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-NATIVE",
+          "OPEN-MAINTENANCE",
+          "OPEN-CONSUMER"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Conferir autoridade e fronteiras da integração/ativação global.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "GO-I8",
+      "normative_brief": "estrutura, hashes, seções e testes completos não bastam para alegar suficiência semântica.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 127,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 58
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Exigir juízo de suficiência e consumidor; estrutura/hash/CI não substituem semântica.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-L1",
+          "E-L2",
+          "E-USAGE"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-CONSUMER",
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Julgar suficiência da união, além de conformidade de arquivos.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "AC-01",
+      "normative_brief": "Congelar população finita, necessidades, artefatos, fontes e casos; sustentar cada necessidade obrigatória, declarar desconhecidos e separar completude mecânica de suficiência semântica.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 138,
+        "brief_source": "source/modules/atlas/docs/design/genesis-ownership-plan.md",
+        "brief_source_line": 138
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Reconciliar 2220 entradas, necessidades obrigatórias e todos os artefatos S4 sem exclusão silenciosa.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CENSUS",
+          "E-NATIVE",
+          "E-L1",
+          "E-L2"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-L3",
+          "OPEN-L4",
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Conferir cobertura e necessidades entre S1–S5.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "AC-02",
+      "normative_brief": "Consumidor independente usando só Atlas resolve mudança permitida, violação, impacto entre componentes e falha operacional; abstém-se no caso fora de escopo. Expectativas e erros críticos são fixados antes da produção.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 139,
+        "brief_source": "source/modules/atlas/docs/design/genesis-ownership-plan.md",
+        "brief_source_line": 139
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Exercitar consumidor Atlas-only independente nos cinco casos fixados, inclusive abstenção.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-USAGE",
+          "E-WORK"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-CONSUMER"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Provar ownership cruzado e integração da união sem absorver o consumidor S4.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "AC-03",
+      "normative_brief": "Skill e índice orientam consumo real raso/profundo dentro de limites fixos; cada artefato intermediário tem uso direto. Links Markdown sozinhos não demonstram leitura.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 140,
+        "brief_source": "source/modules/atlas/docs/design/genesis-ownership-plan.md",
+        "brief_source_line": 140
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Exercitar índice/read reais com limites rasos/profundos e uso direto dos intermediários.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-SAMPLE",
+          "E-NATIVE",
+          "E-USAGE"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-L4",
+          "OPEN-NATIVE",
+          "OPEN-CONSUMER"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Exercitar entrada global e navegação entre domínios com limites próprios.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "AC-04",
+      "normative_brief": "Portas reais ingerem conhecimento e constroem entendimento faltante; casos stale, conflitantes, ausentes e maliciosos preservam intenção, lacunas e autoridade sem publicar conteúdo obrigatório sem suporte.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 141,
+        "brief_source": "source/modules/atlas/docs/design/genesis-ownership-plan.md",
+        "brief_source_line": 141
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Vincular controles comuns de construção ao candidato real e construir/importar o pacote completo.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CI",
+          "E-SAMPLE",
+          "E-DRIVER"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-NATIVE",
+          "OPEN-MAINTENANCE"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Consumir a prova comum compatível e provar composição da união.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "AC-05",
+      "normative_brief": "Inputs/receita idênticos reutilizam sem proposer; independentes preservam identidade/contagens. Autoridade, validade e gaps propagam; recibo isolado renova bindings; resultado validado inalterado interrompe rebuild; navegação não é dependência.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 142,
+        "brief_source": "source/modules/atlas/docs/design/genesis-ownership-plan.md",
+        "brief_source_line": 142
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Aplicar provas comuns pertinentes e observar reúso real e preservação dos independentes no próprio pacote.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CI",
+          "E-DRIVER"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-MAINTENANCE"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Conferir reúso e propagação de dependências que cruzam fatias.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "AC-06",
+      "normative_brief": "Mudanças de comportamento, fonte adicionada/removida, intenção e receita produzem o conjunto afetado esperado independentemente e restauração real; controles que omitem input/aresta falham. Detectar stale não basta.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 143,
+        "brief_source": "source/modules/atlas/docs/design/genesis-ownership-plan.md",
+        "brief_source_line": 143
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Executar mudança própria previamente delimitada e comparar afetados/rebuild com expectativa independente.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CI",
+          "E-DRIVER",
+          "E-USAGE"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-MAINTENANCE"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Conferir impacto entre fatias e restauração da união.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "AC-07",
+      "normative_brief": "Falha entre geração/ativação, interrupção/retomada e leitura concorrente mantêm leitor separado em manifesto completo válido ou HOLD; sem fallback stale, com reaproveitamento durável e rollback/histórico corretamente vinculados.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 144,
+        "brief_source": "source/modules/atlas/docs/design/genesis-ownership-plan.md",
+        "brief_source_line": 144
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Vincular os controles comuns corrigidos de recovery ao runtime usado e publicar/ler a closure real S4.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CI",
+          "E-SAMPLE",
+          "E-DRIVER"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-NATIVE",
+          "OPEN-MAINTENANCE"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Conferir recuperação e coerência da ativação integrada entre scopes.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "AC-08",
+      "normative_brief": "Ledger/reserva cobre produção, avaliação, retries e concorrência; conformance precede chamadas reais. Chamada paga, se necessária, exige autorização limitada. Reportar limites e incertezas sem inventar tokens ou custo.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 145,
+        "brief_source": "source/modules/atlas/docs/design/genesis-ownership-plan.md",
+        "brief_source_line": 145
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Reconciliar a fila nova, reservas, resultados e uso observável, mantendo física/billing UNKNOWN.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-USAGE",
+          "E-LEDGER",
+          "E-TRANSPORT"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-ACCOUNTING"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Reconciliar envelope agregado e incertezas antigas; autorizar gasto global se aplicável.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "AC-09",
+      "normative_brief": "Gates/readers reais recusam inputs/artefatos/referências/dependências/geração inválidos, isolam closure afetada e preservam scope independente. Controles válidos/inválidos e enforcement de branch são reportados separadamente.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 146,
+        "brief_source": "source/modules/atlas/docs/design/genesis-ownership-plan.md",
+        "brief_source_line": 146
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Fixar gates/readers e controles comuns no candidato entregue; registrar enforcement 403 como UNKNOWN.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CI",
+          "E-WORK",
+          "E-LEDGER"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-NATIVE",
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Executar gates da união e registrar enforcement real da branch integrada.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "AC-10",
+      "normative_brief": "Preservar inventário protegido, impedir produtor antigo de publicar no novo scope, preparar privadamente e ativar explicitamente; conservar rollback e scopes independentes, alterando gerados somente por seus geradores.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 147,
+        "brief_source": "source/modules/atlas/docs/design/genesis-ownership-plan.md",
+        "brief_source_line": 147
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Preservar objetos e scopes, staging privado, ativação explícita e gerados por gerador.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CENSUS",
+          "E-CI",
+          "E-SAMPLE",
+          "E-CORPUS"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-NATIVE",
+          "OPEN-MAINTENANCE",
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Conferir preservação/migração/rollback da união e activation authority global.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "CC-1",
+      "normative_brief": "população, necessidades, fontes, lacunas e artefatos exigidos da fatia completamente reconciliados.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 159,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 33
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Fechar reconciliação de população, necessidades, fontes, gaps e artefatos exigidos S4.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CENSUS",
+          "E-NATIVE",
+          "E-CORPUS"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-L3",
+          "OPEN-L4",
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Fechar população/necessidades da união sem lacunas entre responsáveis.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "CC-2",
+      "normative_brief": "todos os níveis L1–L4 necessários produzidos, persistidos, úteis e alcançáveis pelo caminho real.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 160,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 34
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Produzir, aceitar, persistir e tornar alcançáveis todos os níveis L1–L4 exigidos.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-L1",
+          "E-L2",
+          "E-NATIVE"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-L3",
+          "OPEN-L4",
+          "OPEN-NATIVE",
+          "OPEN-CONSUMER"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Conectar níveis e entradas globais sem suprir produção local faltante.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "CC-3",
+      "normative_brief": "propósito, comportamento, contratos, decisões, impacto e manutenção apoiados por conteúdo, não só títulos.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 161,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 35
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Sustentar propósito, comportamento, contratos, decisões, impacto e manutenção em conteúdo útil.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-L1",
+          "E-L2"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-L3",
+          "OPEN-L4",
+          "OPEN-CONSUMER",
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Reconciliar explicações/decisões que cruzam domínios.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "CC-4",
+      "normative_brief": "construção, invalidação, reúso e atualização pertinentes funcionam de ponta a ponta.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 162,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 36
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Demonstrar cadeia própria de construção, invalidação, reúso e atualização com portas existentes.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CI",
+          "E-SAMPLE",
+          "E-DRIVER"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-NATIVE",
+          "OPEN-MAINTENANCE"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Demonstrar composição incremental das fatias.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "CC-5",
+      "normative_brief": "publicação coerente, leitura, recuperação e compatibilidade têm provas no escopo devido.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 163,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 37
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Completar publicação/leitura própria e vincular recuperação/compatibilidade comuns aplicáveis.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CI",
+          "E-SAMPLE",
+          "E-DRIVER"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-NATIVE",
+          "OPEN-MAINTENANCE",
+          "OPEN-CONSUMER"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Provar coerência e compatibilidade da união publicada.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "CC-6",
+      "normative_brief": "execução nova e suas limitações econômicas estão reconciliadas; incertezas antigas continuam preservadas.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 164,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 38
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Reconciliar trabalho novo e limitações econômicas observáveis sem zerar histórico desconhecido.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-USAGE",
+          "E-LEDGER",
+          "E-TRANSPORT"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-ACCOUNTING"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Reconciliar uso histórico e agregado das cinco fatias.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "CC-7",
+      "normative_brief": "documentação, skills, gerados, compatibilidade e obrigações históricas têm disposição explícita.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 165,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 39
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Dar disposição explícita a docs, skills, gerados, compatibilidade e objetos históricos atribuídos.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CENSUS",
+          "E-L1",
+          "E-CI"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-L4",
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Conferir disposições globais de migração e documentação integrada.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "SC-1",
+      "normative_brief": "consumidor independente resolve todos os casos obrigatórios de ownership, sem erro crítico e sem redescobrir a fonte.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 169,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 43
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Consumidor independente deve resolver todos os casos obrigatórios sem redescobrir fonte.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-USAGE",
+          "E-WORK"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-CONSUMER"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Demonstrar ownership integrado nos casos da união.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "SC-2",
+      "normative_brief": "consumo raso e profundo respeita limites definidos para a tarefa; não exige carregar o grafo inteiro.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 170,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 44
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Observar consultas rasas/profundas reais dentro dos limites fixados de S4.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-SAMPLE",
+          "E-USAGE"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-L4",
+          "OPEN-CONSUMER"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Observar limites de consumo na navegação integrada.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "SC-3",
+      "normative_brief": "mudanças atingem o conjunto esperado, preservam independentes e não repetem interpretação sem necessidade.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 171,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 45
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Observar afetados esperados, independentes preservados e ausência de interpretação dispensável.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CI",
+          "E-DRIVER"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-MAINTENANCE"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Verificar impacto/reúso cruzado entre domínios.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "SC-4",
+      "normative_brief": "construção, avaliação, atualização e leitura têm uso separado; desconhecido não vira zero ou economia inventada.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 172,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 46
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Separar uso de produção, avaliação, atualização e leitura; manter números não expostos UNKNOWN.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-USAGE",
+          "E-LEDGER"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-ACCOUNTING",
+          "OPEN-MAINTENANCE",
+          "OPEN-CONSUMER"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Reconciliar as mesmas categorias no agregado global e no histórico.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "SC-5",
+      "normative_brief": "leituras coerentes e recusas dos estados inválidos exigidos são observadas nas portas reais.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 173,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 47
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Observar leituras coerentes e recusas exigidas nas portas reais com versão correta.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CI",
+          "E-SAMPLE"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-NATIVE",
+          "OPEN-MAINTENANCE",
+          "OPEN-CONSUMER"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Observar coerência/recusas da união no manifesto integrado.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "QS-1",
+      "normative_brief": "afirmações rastreáveis; intenção, observação, interpretação e lacuna identificadas.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 180,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 24
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Preservar rastreabilidade e distinguir intenção, observação, interpretação e lacunas nas entregas.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-L1",
+          "E-L2",
+          "E-NATIVE"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-L3",
+          "OPEN-L4",
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Conferir fidelidade de referências e interpretações entre fatias.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "QS-2",
+      "normative_brief": "um consumidor consegue agir; instruções claras, contexto suficiente, pouca repetição.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 181,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 25
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Entregar orientação clara que permita agir e verificar utilidade por consumidor próprio.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-L1",
+          "E-L2",
+          "E-USAGE"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-L4",
+          "OPEN-CONSUMER"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Validar utilidade do ponto de entrada e relações globais.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "QS-3",
+      "normative_brief": "cada mecanismo novo resolve uma necessidade concreta que o existente não atende.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 182,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 26
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Manter somente mecanismos necessários sobre Atlas; sem expansão opcional nesta conferência.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CI",
+          "E-DRIVER"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Evitar duplicação de mecanismos quando integrar as cinco entregas.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "QS-4",
+      "normative_brief": "respeitar arquitetura, geração, validação de entradas e persistência do repositório.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 183,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 27
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Manter arquitetura, geração, validação e persistência verificadas no candidato correto.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CI",
+          "E-SAMPLE",
+          "E-CORPUS"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-NATIVE",
+          "OPEN-MAINTENANCE",
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Verificar engenharia e geração da união integrada.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "QS-5",
+      "normative_brief": "verificar implementação e uso reais; os juízes avaliam uma barra fixa, não aperfeiçoamento infinito.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 184,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 28
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Usar provas reais e dois juízes com barra fixa; fechar os casos próprios ainda pendentes.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-L1",
+          "E-L2",
+          "E-CI",
+          "E-SAMPLE"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-CONSUMER",
+          "OPEN-MAINTENANCE",
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Julgar evidência real da integração com critérios fixos.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "QS-6",
+      "normative_brief": "fontes delimitadas, reúso, revisão de deltas e uso reportado honestamente.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 185,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 29
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Preservar fontes delimitadas, reúso, revisão de deltas e reporte honesto do uso.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-USAGE",
+          "E-TRANSPORT",
+          "E-LEDGER"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-ACCOUNTING"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Reconciliar economia global sem converter bytes/chamadas em custo fictício.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "DOD-1",
+      "normative_brief": "CC/SC têm evidência e decisão; critérios julgados têm os dois pareceres pertinentes.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 223,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 62
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Dispor cada CC/SC com evidência e os dois pareceres pertinentes sobre a versão final.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-L1",
+          "E-L2",
+          "E-NORM"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-CONSUMER",
+          "OPEN-MAINTENANCE",
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Dispor CC/SC e decisões da união.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "DOD-2",
+      "normative_brief": "invariants e QS aplicáveis foram conferidos; controles negativos necessários rejeitaram defeitos reais.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 224,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 63
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Conferir invariants/QS e vincular controles negativos que recusam defeitos reais.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CI",
+          "E-NORM"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-NATIVE",
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Conferir invariants/QS e controles da integração.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "DOD-3",
+      "normative_brief": "consumidor e cadeia operacional exigidos foram exercitados, com versões fixadas.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 225,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 64
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Exercitar cadeia operacional própria e consumidor com versões fixadas.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-SAMPLE",
+          "E-DRIVER",
+          "E-USAGE"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-NATIVE",
+          "OPEN-MAINTENANCE",
+          "OPEN-CONSUMER"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Exercitar cadeia/consumidores de integração sem substituir os locais.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "DOD-4",
+      "normative_brief": "gates atribuídos à fatia têm resultados reais no candidato correto; a integração final tem seus próprios gates.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 226,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 65
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Apresentar gates atribuídos com resultados reais no candidato correto.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-CI",
+          "E-WORK"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Executar gates específicos da integração final.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "DOD-5",
+      "normative_brief": "uso novo, reservas e pendências estão reconciliados sem apagar o histórico ou afirmar custo desconhecido como zero.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 227,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 66
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Reconciliar uso novo, reservas e pendências sem apagar história nem tratar desconhecido como zero.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-USAGE",
+          "E-LEDGER",
+          "E-TRANSPORT"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-ACCOUNTING"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Reconciliar agregado/histórico global e reservas da união.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "DOD-6",
+      "normative_brief": "orientação operacional, evidências, migração pertinente e revisão independente estão entregues e preservadas.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 228,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 67
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Entregar orientação operacional, evidências, migração pertinente e revisão independente preservada.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-NATIVE",
+          "E-CENSUS",
+          "E-L1",
+          "E-L2",
+          "E-NORM"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-L4",
+          "OPEN-CONSUMER",
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Entregar orientação e revisão da integração e migração global.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    },
+    {
+      "id": "DOD-7",
+      "normative_brief": "entrega local, aceite global, aceite humano, landing e ativação são distintos. ROOT cuida da integração e do aceite da união.",
+      "normative_locator": {
+        "registered_path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+        "registered_source_line": 229,
+        "brief_source": "protocol/principles.md",
+        "brief_source_line": 68
+      },
+      "local": {
+        "owner": "S4",
+        "obligation": "Fechar entrega S4 com payload/selagem/readback e distinguir estados globais.",
+        "disposition": null,
+        "existing_evidence_refs": [
+          "E-NORM",
+          "E-WORK",
+          "E-LEDGER"
+        ],
+        "remaining_obligation_refs": [
+          "OPEN-FINAL"
+        ]
+      },
+      "global": {
+        "owner": "ROOT",
+        "exclusive_complement": "Conduzir aceite da união, aceite humano, landing e ativação; não absorver trabalho local faltante.",
+        "disposition": null
+      },
+      "review_status": "UNASSIGNED_SCAFFOLD",
+      "new_pass_assigned": false
+    }
+  ],
+  "limits": [
+    "Existing evidence is a pointer, not a new sufficiency or acceptance decision.",
+    "No oracle or consumer answers read; no judge content reinterpreted.",
+    "ROOT complements cannot absorb missing S4 producer/reader/consumer/maintenance/gate work.",
+    "Global human acceptance, landing and activation are not artificial local prerequisites.",
+    "Usage/model/tokens not exposed remain UNKNOWN."
+  ]
+}

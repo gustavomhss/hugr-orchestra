@@ -1,0 +1,6 @@
+{
+  "scope": "atlas-continuity-rag-genesis",
+  "key": "S4:L2:atlas-system",
+  "section": "Por que texto igual pode exigir outro resultado",
+  "maxBytes": 18000
+}

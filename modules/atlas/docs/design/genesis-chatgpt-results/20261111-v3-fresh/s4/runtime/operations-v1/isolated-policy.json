@@ -1,0 +1,15 @@
+{
+  "t0Heuristic": {
+    "keywords": []
+  },
+  "authz": {
+    "scopes": {
+      "atlas-continuity-rag-genesis": [
+        "/root"
+      ]
+    },
+    "anchors": {
+      ".": "atlas-continuity-rag-genesis"
+    }
+  }
+}

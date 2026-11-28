@@ -25,7 +25,7 @@ on:
         type: boolean
         default: false
       desktop_activity_arm:
-        description: Run the Linux Desktop live object proof and native quarantine approval
+        description: Run unprivileged Linux Desktop native approval through the privileged file custody broker
         type: boolean
         default: false
       test_filter:
@@ -187,17 +187,41 @@ jobs:
           persist-credentials: false
       - uses: ./.github/actions/setup-bun
       - uses: ./.github/actions/omni-binaries
-      - name: Install Electron and X11 tools
+      - name: Prove native protected quarantine on the runner filesystem
+        working-directory: native/omni
+        run: |
+          cargo test --release -p hugr-omni-node --test protected_linux --no-run --message-format=json > "$RUNNER_TEMP/omni-protected-test.jsonl"
+          test_bin="$(jq -er 'select(.reason == "compiler-artifact" and .target.name == "protected_linux" and .profile.test) | .executable' "$RUNNER_TEMP/omni-protected-test.jsonl")"
+          test -x "$test_bin"
+          sudo "$test_bin" --exact protected_quarantine --ignored
+      - name: Build the installed custody CLI
+        working-directory: apps/cli
+        run: |
+          artifacts="$RUNNER_TEMP/custody-omni"
+          mkdir -p "$artifacts/linux-x64-gnu"
+          cp "$HUGR_OMNI_ADDON" "$artifacts/linux-x64-gnu/hugr_omni.node"
+          cp "$HUGR_OMNI_SUPERVISOR" "$artifacts/linux-x64-gnu/"
+          OMNI_ARTIFACTS="$artifacts" bun script/build.ts --single --skip-install
+          binary="$(find "$PWD/dist" -type f -path '*/bin/orchestra-activity-custody')"
+          test -x "$binary"
+          echo "ACTIVITY_CUSTODY_CLI=$binary" >> "$GITHUB_ENV"
+      - name: Install Electron and the nested Wayland fixture
         working-directory: apps/desktop
         run: |
           bun run install-electron
-          if ! command -v xdotool >/dev/null || ! command -v xvfb-run >/dev/null; then
+          if ! command -v weston >/dev/null || ! command -v xdotool >/dev/null || ! command -v xwd >/dev/null || ! command -v xvfb-run >/dev/null || ! command -v xauth >/dev/null; then
             sudo apt-get update -qq
-            sudo apt-get install -y -qq xdotool xvfb
+            sudo apt-get install -y -qq weston xdotool x11-apps xvfb xauth
           fi
-      - name: Exercise native approval with a complete Linux process view
+      - name: Enable the Chromium sandbox on the runner
+        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
+      - name: Exercise native approval from an ordinary Desktop and sidecar
         working-directory: apps/desktop
         run: |
-          # Run on the disposable VM's initial PID namespace so process visibility can be verified.
-          timeout -k 10s 2m sudo --preserve-env=CI,HUGR_OMNI_ADDON,HUGR_OMNI_SUPERVISOR \
-            dbus-run-session -- xvfb-run -a "$(command -v bun)" run ./test/activity-arm-electron.hosted.ts
+          export ACTIVITY_ARM_UID="$(id -u)" ACTIVITY_ARM_GID="$(id -g)"
+          test "$ACTIVITY_ARM_UID" -ne 0
+          # Only Weston and the fixture input driver receive the root-owned outer X11 credential.
+          # Electron receives only the nested Wayland display and runs as the runner account.
+          dbus-run-session -- timeout -k 10s 4m \
+            sudo --preserve-env=ACTIVITY_ARM_UID,ACTIVITY_ARM_GID,ACTIVITY_CUSTODY_CLI,CI,DBUS_SESSION_BUS_ADDRESS,HUGR_OMNI_ADDON,HUGR_OMNI_SUPERVISOR \
+            xvfb-run -a -s '-screen 0 1280x920x24 -nolisten tcp' "$(command -v bun)" run ./test/activity-arm-electron.hosted.ts

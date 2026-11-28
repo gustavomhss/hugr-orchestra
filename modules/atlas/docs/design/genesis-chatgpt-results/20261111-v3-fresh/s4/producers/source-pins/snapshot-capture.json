@@ -1,0 +1,12 @@
+{
+  "schema": "s4-source-pins-snapshot/v1",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "source": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package.json",
+  "snapshot": "/workspace/scratch/aff930d22ec7/s4/producers/source-pins/native-package.snapshot.json",
+  "bytes": 175960,
+  "sha256": "00e479d28eb3830c09722d4ad8629d751802d18ac84f9dfd85d93163c4952c92",
+  "captured_at_utc": "2026-11-11T20:52:06.146031+00:00",
+  "declared_payload_commit": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+  "commit_binding_state": "NOT_YET_CHECKED",
+  "scope": "Finite snapshot before any evidence reconciliation; L4 excluded by request."
+}

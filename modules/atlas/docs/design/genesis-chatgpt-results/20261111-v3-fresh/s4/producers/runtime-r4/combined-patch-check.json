@@ -1,0 +1,17 @@
+{
+  "schema": "runtime-large-inputs-combined-patch-check/v1",
+  "command": [
+    "git",
+    "apply",
+    "--check",
+    "--whitespace=error",
+    "--directory=ci-patch-base",
+    "evidence/runtime-large-inputs-with-boundary.patch"
+  ],
+  "cwd": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs",
+  "exit_code": 0,
+  "stdout": "",
+  "stderr": "",
+  "product_tests_executed": false,
+  "applied": false
+}

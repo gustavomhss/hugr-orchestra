@@ -1,0 +1,84 @@
+{
+  "schema": "genesis-takeover-large-input-oracle/v1",
+  "execution_id": "0a451b91-c4e7-4573-9958-fed60817f299",
+  "source_candidate": "6f643bc05245ebe912d52cbdd8347ce1e5b0046e",
+  "unit": "S4-R4-large-source-inputs",
+  "need": "Observe complete required S1/S2 source files while preserving bounded IO, exact kernel identity and refusal guarantees.",
+  "scope": "Shared ownership file observation and native source-reference verification; no authority or review weakening.",
+  "frozen_at": "2026-11-12 03:57:59 UTC",
+  "proposed_ceiling_bytes": 2097152,
+  "ceiling_state": "analysis required before implementation; any prospective revision must be frozen before authoring assessed code",
+  "known_regressions": [
+    {
+      "path": "s2/inputs/app-session-tree.json",
+      "bytes": 369462
+    },
+    {
+      "path": "s2/inputs/design-tui-tree.json",
+      "bytes": 390775
+    },
+    {
+      "path": "schema/tui.json",
+      "bytes": 1131057
+    },
+    {
+      "path": "packages/client/src/generated/types.ts",
+      "bytes": 462732
+    }
+  ],
+  "reserved_cases": [
+    {
+      "id": "LARGE-ID",
+      "case": "Required complete files produce present with kernel id of all actual bytes, not transport SHA or truncated prefix."
+    },
+    {
+      "id": "TAIL-SENTINEL",
+      "case": "Same first 256000 bytes with a single differing byte near the end produces different input versions; restored exact bytes reproduce exact version."
+    },
+    {
+      "id": "OLD-ID",
+      "case": "Previously accepted files at/below256000 retain identical ownership-source version1 kernel identity."
+    },
+    {
+      "id": "CEILING",
+      "case": "Exactly declared hard limit admitted; one byte over refused unavailable; never absent."
+    },
+    {
+      "id": "READ-REF",
+      "case": "Native source_ref Git blob/SHA checks use all bytes under identical ceiling; tail corruption fails hash."
+    },
+    {
+      "id": "IO-BOUND",
+      "case": "Streaming reads stop after at most bounded chunk overflow; pre-read size bound where applicable; no unlimited allocation; analysis quantifies live copies/canonical serialization."
+    },
+    {
+      "id": "PATHS",
+      "case": "Symlinks, forbidden .git/.atlas, traversal and non-files still refused."
+    },
+    {
+      "id": "UNAVAILABLE",
+      "case": "Read failure, incomplete/mutated file and oversize remain unavailable, distinct from corroborated absent."
+    },
+    {
+      "id": "SEMANTIC",
+      "case": "No discarded inputs/build deps/source_refs and no replacement of full source by summary to make prepare pass."
+    },
+    {
+      "id": "BINDING",
+      "case": "Implementation change creates a new candidate/binding; old PASS and sample CI not transplanted."
+    },
+    {
+      "id": "CI",
+      "case": "Scope tests execute via existing GitHub Actions at exact code commit; local product tests prohibited."
+    },
+    {
+      "id": "RESOURCE",
+      "case": "Actual remote max-size execution metrics and memory/CPU analysis support ceiling; generated test not standalone performance claim."
+    }
+  ],
+  "allowed_unknowns": [
+    "Universal race freedom outside existing observer contract",
+    "Unexposed model billing/attempts"
+  ],
+  "producer_oracle_access": false
+}

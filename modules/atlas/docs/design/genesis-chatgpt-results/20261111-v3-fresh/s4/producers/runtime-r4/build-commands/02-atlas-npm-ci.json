@@ -1,0 +1,23 @@
+{
+  "schema": "runtime-large-inputs-build-command/v1",
+  "logs": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/evidence/runtime-build-commands",
+  "path_prepend": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/tools/runtime/node_modules/@oven/bun-linux-x64/bin",
+  "id": "02-atlas-npm-ci",
+  "cwd": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/runtime/candidate/modules/atlas",
+  "command": [
+    "npm",
+    "ci",
+    "--no-audit",
+    "--no-fund"
+  ],
+  "started_at": "2026-11-12T04:14:42.399Z",
+  "finished_at": "2026-11-12T04:14:44.866Z",
+  "duration_ms": 2466.468762,
+  "exit_code": 0,
+  "signal": null,
+  "stdout_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/evidence/runtime-build-commands/02-atlas-npm-ci.stdout.txt",
+  "stderr_path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/evidence/runtime-build-commands/02-atlas-npm-ci.stderr.txt",
+  "stdout_sha256": "34cc1af10796b2f4c9e6a39ef86fe0d791f7eb90e08e18c749262b58f8e49516",
+  "stderr_sha256": "7125f194612fcff2f454c05d848e7cb71facc1967b4d5017e25b34fdee3ba74f",
+  "product_tests_executed": false
+}

@@ -1,0 +1,3 @@
+Recebido o PACOTE 2/4, com o corpo integral de `S4:L4:ownership` e os trechos de suporte dos predecessores.
+
+Registrei a correção do courier: os trechos CLI do primeiro pacote são transcrições reformatadas, sem identidade de bytes atribuível ao arquivo original; `validateNativeReadQuery` foi apresentado integralmente. Aguardarei os pacotes restantes e o **FECHAMENTO L4**, sem emitir decisão de camada.

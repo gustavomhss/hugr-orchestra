@@ -1,0 +1,380 @@
+S4 L1B — lote literal 4/4. Dados para os dois juízes persistentes; nenhum parecer do transportador. Oracle e encerramento serão fornecidos pelo principal. Não use ferramentas.
+Fonte dos trechos: gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38.
+
+<<<BEGIN EXACT BODY: coverage-governance.md>>>
+# S4 population, governance, automation, and historical evidence
+
+`S4:L1:coverage-governance` · execution `a2095d5a-1464-4c38-a222-6376974fc9c9`; source `gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38`; protocol `ee2521a5b966bd505cc95bd1c733e09e12f33531`. This L1 body distinguishes census, derived output and historical receipts from current acceptance. **Observed** means inspected source/static file structure. **Intended** is documented design. Historical claims stay attributed to their source. No code, local product test, workflow, model call, publication or deployment was executed.
+
+`coverage.json` contains one row per assigned path, including its Git blob, SHA-256, bytes, mode, classification, semantic group, inspection/depth reason, artifact keys and observer limits. `artifacts.json` contains the exact source register; every source line below is at the fixed source pin unless explicitly marked protocol. Prefixes: `AG/` = `script/atlas-genesis/`; `H/` = `modules/atlas/harness/`; `D/` = `modules/atlas/docs/`. 
+
+## Population is complete; semantic depth is deliberately explicit
+
+All **2,220** inventory paths have one matching row and one primary group. Their captured raw bytes were checked against byte length, SHA-256 and Git blob SHA-1 (`blob <length> NUL <bytes>`). This is an integrity/accounting check, not a product test or a claim that every file's behavior was understood. No symlink entries exist. Sorted repository paths, each with a final LF, hash to `0b99735199c8a9a4db61bf506dafe92acb76909dd9f9c48d8f521fb920c6cd1d`. Capture receipt SHA-256 is `a41b96c8633c7f4381eb8c1c21e4db42651bdca4925e0222a0e0a2340cc5d00b`; inventory SHA-256 is `3a24c33385bb1f302bf7136707461935378ce541f3fe15a0ff3a64c4be9c6877`. The generated coverage metadata records these computations and their encodings.
+
+| Primary body/group | Preserved path counts | What the body establishes |
+|---|---:|---|
+| `atlas-engine` | 318 | Contracts 11; kernel 32; persist 46; index 51; grounding 25; knowledge 100; retrieval 26; memory 27. Selected identity, grounding, lifecycle, retrieval and memory mechanisms. |
+| `atlas-host-genesis` | 658 | Adapter I/O 349; Genesis 64; CLI 160; tools 42; MCP 15; boundary 28. Selected composition, provenance, storage/ownership, mining and transport seams. |
+| `continuity-rag` | 63 | Continuity 19 and RAG Studio 44, including their assigned specs/guides. Request reduction/archive and document diagnostic contracts. |
+| This body, primary governance groups | 1,181 | Automation, harness/integration tests, generated UI design, docs, skills, historical records and repository support. |
+| **Union** | **2,220** | Every row also links to this population/governance artifact. Cross-body navigation does not add build dependencies. |
+
+Counts include tests/docs within each group. Classification separates executable components (383), test sources (687), fixtures (25), harness/probes, scripts/guards, generated outputs, design, instructions, historical evidence/data, config and event logs. No “non-code” category is omitted. Exact class totals are in the manifest and coverage summary.
+
+Depth is explicit: excerpts support claims; other executables retain group context; tests retain their validation role; generated outputs retain the generator route; archives retain their origin. Integrity is checked throughout. None of these dispositions grants every branch or caller semantic sufficiency.
+
+## Observer limits are not scope limits
+
+The ownership observer refuses `.atlas`/`.git` segments, symlinks and file bodies larger than 256,000 bytes. A fixed-baseline Git capture can preserve such files even when that runtime observer cannot version them. These are eight preserved paths, not eight absent source inputs. [modules/atlas/packages/adapter-io/src/ownership-input.ts:21-190]
+
+| Preserved path | Observer limitation |
+|---|---|
+| `.atlas/members/orch/memory/logbook.jsonl` | Refused path segment |
+| `.atlas/project/board.jsonl` | Refused path segment |
+| `.atlas/project/orientation.jsonl` | Refused path segment |
+| `modules/atlas/harness/probes/__fixtures__/bench-driver-corpus/pkg-a/.atlas/index.scip` | Refused path segment; test fixture |
+| `modules/atlas/harness/probes/__fixtures__/bench-driver-corpus/pkg-b/.atlas/index.scip` | Refused path segment; test fixture |
+| `modules/atlas/boundary/src/generated/mine.js` | 397,146 captured bytes, over limit |
+| `modules/atlas/boundary/src/generated/surface.js` | 557,017 captured bytes, over limit |
+| `specs/atlas-ui/mock/data-real.js` | 2,302,009 captured bytes, over limit |
+
+Structural inspection found four logbook records, 96 board records and nine orientation records, with event/hash/sequence/payload/supersession envelopes. These are historical committed data, not current session state, approval or publication. Their bytes/origins remain bound in coverage.
+
+For a future runtime binding, a refused observer input must remain unavailable or be handled through an explicitly authorized compatible observer. Silently narrowing membership to omit these files, replacing unavailable with absent, or substituting a transport SHA-256 for a runtime input version would invalidate the comparison. Accepted L1A supplies the precise input/object boundary; the current evidence does not claim such a runtime binding exists. [protocol `references/transport.md`:16-39,105-149; `references/runtime.md`:30-65,74-127]
+
+## Harness: useful guard intent, bounded measurement power
+
+The harness is development tooling outside the product dependency path. Its README distinguishes gates that can fail CI, libraries that gates delegate to, and manually invoked probes. Ledgers pin invariant text and requirement clauses. Gate-directory policy requires a gate to fail on missing input and asks for planted-defect tests; a file that succeeds without inspecting anything belongs in a library. These are declared maintenance obligations, not results of this execution. [H/README.md:3-23,31-59]
+
+The captured guards cover layer direction, reference models, specification and command drift, ID/ADR/requirement citation integrity, EARS co-amendment, documented transcripts, transport-service gates and exact Own snapshots. The nested Atlas CI file invokes them and names the reference-model/wiring distinction. Integration packages `e2e` and `e2e-blackbox` are preserved separately from production components; their tests are potential regression evidence, not live proof. [modules/atlas/.github/workflows/ci.yml:39-54; coverage.json groups `governance.harness` and `governance.integration-tests`]
+
+The reference-model guard is especially important for maintenance: it declares exported specification models with zero production value callers and names shipped counterparts. `tools/guard.ts` maps to adapter store, `tools/emit.ts` to governed emit, retrieval pack to host retrieval-model; pure persist reconstruction remains a reference. A change to an isolated helper can leave the actual command unchanged. The guard measures direct reachability and acknowledges that closed import rings and dead exports inside otherwise live files can escape that measure. Its historical commentary and declared module counts are not a substitute for rerunning it at a new revision. [H/gates/reference-model-guard.mjs:4-56,117-136,194-236]
+
+Probes include staleness/recall, concurrency, metered/fake model and adjudication instruments; captured JSON/JSONL/TSV reports preserve their original context. An old agreement score does not establish fresh independent semantic judgment. The harness README references `.github/workflows/test.yml`; that name is source documentation and was not verified as the currently effective outer CI route here. Likewise nested `modules/atlas/.github/workflows/ci.yml` is a preserved standalone contract; its location must not be confused with a root workflow execution receipt. [H/README.md:9-14,25-29; modules/atlas/.github/workflows/ci.yml:1-34]
+
+## Legacy Genesis automation: fixed inputs, bounded continuation, sampled judgment
+
+The 92 `script/atlas-genesis` paths cover indexing, model transport, checkpoint/continuation, retained candidates, frontier/summary, judgment, publication, scanning, calibration and tests/data. This specific operational pipeline is not a generic native Genesis importer; uninspected recovery variants retain depth limits.
+
+**Index and baseline identity.** `index-reuse.mjs` has a reviewed-change whitelist and checks a nonempty indexed document set, unchanged normalized paths, exact Git tree bytes and tracked link targets with cycle protection. It binds reuse to an immutable source revision rather than “the latest artifact.” `script/atlas-baseline.mjs` derives the module's historical source root and can create a synthetic comparison commit/tree for CI, including an empty-tree fallback. Such a comparison commit is machinery for a gate, not the original source revision or evidence that this producer ran Git reconstruction. [AG/index-reuse.mjs:15-100; script/atlas-baseline.mjs:1-23]
+
+**Checkpoint contract.** Checkpoint snapshots admit only named staging/CAS/per-arm plan/report/continuation paths, check files and symlinks, bind a revision/run/attempt/index/budget/arms/wrapper/profile identity, and validate canonical base64, file SHA-256, CAS identity, sequence and prior-envelope hash. Compression is bounded and credentials are scanned before packaging. These checks preserve a particular interrupted operation's state; they do not approve its knowledge. [AG/checkpoint.mjs:19-64,67-163,230-246]
+
+Continuation policy requires exact source identity, retry request, budget, arms, index/retained runs, wrapper/profile, settings and seed hashes; a separate completed successful proof receipt must match repository/workflow/event/branch/run/attempt/head and nonexpired artifact identity. It hardcodes pool width eight and subscription auth mode and freezes a clone of the accepted policy. That specificity matters: this function is not a general “resume any successful run” permission. How every HTTP/remote/compiled worker handles all failures remains a semantic gap outside the inspected core. [AG/checkpoint-continuation-policy.mjs:4-48,51-70]
+
+**Sampled judge.** `judge.mjs` samples all eligible candidates below 20, otherwise a bounded 10% sample clamped to 20–60. It accepts exactly one JSON verdict line (`true|false|unverifiable`, boolean non-obvious flag, bounded reason), counts failed calls, and passes only a nonempty sample meeting true-rate 0.88, true-and-non-obvious 0.4 and failed-share ≤0.1. Source fields include the cited excerpt and, for dependency/count, restored index evidence. These are declared pipeline thresholds; no measured accuracy is asserted here. [AG/judge.mjs:24-40,103-145,194-212]
+
+The workflow explicitly says this is not independent-model calibration. It prepares prompts, runs up to three request jobs in parallel, retries malformed answers once and makes the score binding only on publish runs. That sampled candidate judge is not the two independent reviewers of these fresh L1 artifacts, and its archived verdicts cannot be reused as current acceptance. [.github/workflows/atlas-genesis.yml:1323-1338]
+
+**Calibration evidence.** The real-data evaluator pins corpus/source Git blobs, evaluator/helper/prompt hashes and a fixed calibration/held-out partition; preparation excludes references and validates the corpus before writing prompts. Reference checking validates ID coverage and verbatim source spans, explicitly not semantic label correctness. Scoring requires distinct reference producer IDs, rechecks prompt reconstruction, maps missing/malformed calls to unverifiable and retains their denominators. Its report says the references are fallible, blinding is instructional rather than access-isolated, proposer/judge are not independently modeled, and one fixed corpus cannot establish general accuracy. Preserved freeze/reference/result JSON records remain historical data with those limits. [AG/realdata-evaluate.mjs:35-72,86-135,185-238]
+
+## Workflow publication is a separate operation with a concrete output
+
+The root `atlas-genesis` workflow is dispatch-only. Its publish job requires `publish` plus successful mining and successful binding judgment; a skipped judge does not publish. The publish actor and ratifier token are expressly self-asserted strings, not a secret identity. It plans eligible parent keys, holds judged false/unverifiable candidates, excludes quarantine, promotes planned keys and checks actual settled output instead of trusting an exit code alone. [.github/workflows/atlas-genesis.yml:13-27,1396-1410,1455-1480; AG/publish-plan.mjs:79-145]
+
+It then exports units, requires at least one exportable unit, materializes Own, checks that excluded fact identities do not leak into the snapshot/skills/catalog, and writes a binary patch for those paths. The configured output is an uploaded patch artifact; the header assigns opening a PR to Maestro. This evidence does not equate making a patch with merging or activating it. A known-credential scanner gates upload; it matches supplied credential values plus declared shapes, fails on unavailable scan inputs and reports only affected files. No scan or live credentials were used in this L1 work. [.github/workflows/atlas-genesis.yml:1-11,1495-1529,1552-1568; AG/publish-plan.mjs:120-145,193-208; AG/secret-scan.mjs:11-50,54-69]
+
+The other root workflows have separate jobs: `atlas-pilot` is a change-scoped ownership regression/mutation/boundary evidence lane; `atlas-guard` checks relevant PR changes against Own source anchors but being a required merge check is an external setting; `atlas-worklist` writes/upload stale-source worklists after dev pushes/dispatch and does not repair without a store. The nested release workflow declares itself draft, packs tarballs and has publishing explicitly disabled. No present branch-protection state, successful CI run or deployment is established by these YAML files. [.github/workflows/atlas-pilot.yml:1-38,146-164; .github/workflows/atlas-guard.yml:1-7,65-79; .github/workflows/atlas-worklist.yml:1-10,44-71; modules/atlas/.github/workflows/release.yml:1-44]
+
+## Generated UI, design, skills and archives have different authority
+
+The 162 UI-spec paths comprise 143 design/build materials and 19 prototype files. The mock README calls it an interactive design preview: default Illustrated mode adds marked examples, actions are simulated and never touch a store. Its “real” data is generated from a named older local Atlas store; import statements stand in for SCIP dependencies. `extract.py` hardcodes that local repository origin and writes static JS. A display of ratification, memory or health in this prototype is not a live product receipt. [specs/atlas-ui/mock/README.md:1-31,59-71; specs/atlas-ui/mock/extract.py:1-104]
+
+`data-real.js` and `data-spawns.js` are retained as generated datasets; the latter's stated origin is earlier continuity-run evidence. Bulk bytes are preserved by origin, not reread as current user instructions. The Atlas boundary's 18 generated JS/declaration files are different: executable consumer bundles with a source-entry mapping and a byte-parity generator. The three generated Own artifacts are another category: reviewable snapshots/skills whose source freshness and exact rendered membership have their own guard. No generation/parity/freshness run is claimed for any category. [specs/atlas-ui/mock/README.md:12-31,64-70; modules/atlas/boundary/script/build.ts:1-85; modules/atlas/packages/retrieval/src/own-snapshot.ts:192-262]
+
+Atlas's 673 documentation paths include 23 ADR files, 75 other design documents, 57 references, 85 requirement files, 17 method files and the historical results/prompts. They preserve decisions, amendments, old baselines and contradictory status text. ADR-0008 records why mining must use staging and later corrections to stale implementation statements. ADR-0011 is still headed Proposed and contains historical measurements plus a later note deleting unwired escalation code. Read a dated measurement as a dated claim; reconcile current behavior with the pinned implementation. Two files have the ADR-0016 prefix, so the full path matters. [D/adr/ADR-0008-mining-writes-to-staging-not-to-knowledge.md:3-25,50-71; D/adr/ADR-0011-the-model-is-an-operator-supplied-command.md:3-19,28-48; coverage.json]
+
+Root Atlas maintenance/ownership/usage skills coexist with older `.claude` methods and generated Own skills. The current skills state actor-env limits, raw memory replay, unauthenticated folders, pending host writers and design/code differences; historical commands are source data, not execution authority. The older policy-lock document discusses a different repository and historical team/protection measurements; it cannot establish today's access settings for `gustavomhss/hugr-orchestra`. [.orchestra/skills/atlas-ownership/SKILL.md:31-45,58-70; .orchestra/skills/atlas-maintenance/SKILL.md:125-141; D/governance/policy-lock.md:10-58]
+
+Prior campaign result/prompt directories, consultation transcripts and probe/evaluation records remain exact-origin evidence. Their bodies were not imported as new reviewer opinions, instructions or runtime receipts. Accepted L1A is navigation for identity/publication; its exact body remains unchanged. L1B's four bodies have empty build dependencies and fresh request/response references. No L2 result exists in this unit.
+
+## What a maintainer can safely conclude
+
+This finite population is preserved; companion bodies distinguish live paths, reference models, stale evidence, unavailable observation, proved absence, candidates and published carriers. Depth gaps remain for unread historical conversations, tests/recovery branches, generated parity and external host/CI enforcement. Independent review and later runtime binding/publication require their own evidence; this bounded L1 union is not whole-domain completion.
+<<<END EXACT BODY: coverage-governance.md>>>
+
+TRECHOS LITERAIS DA FONTE
+
+<<<SOURCE script/atlas-genesis/checkpoint-continuation-policy.mjs:L4-L22>>>
+const identityFields = ["sourceRun", "sourceRevision", "retryRequest", "budget", "arms", "indexRun", "retainedRuns", "wrapperSha256", "profileSha256"]
+const settings = ["grokVersion", "model", "maxTurns", "commandTimeoutMs", "poolWidth", "authMode"]
+const seedFields = ["initialEnvelopeSha256", "initialStagingSha256", "originalPlanSha256"]
+const proofFields = ["repository", "workflow", "event", "branch", "run", "attempt", "head"]
+const artifactFields = ["id", "name", "digest"]
+
+export function requireContinuationPolicy(observed, expectedSourceReceipt, expectedProofReceipt) {
+  shape(expectedSourceReceipt, ["identity", "inFlightRequest", "initialEnvelopeSha256", "initialStagingSha256", "planSha256",
+    "grokVersion", "model", "maxTurns", "commandTimeoutMs"], "expectedSourceReceipt", false)
+  shape(expectedSourceReceipt.identity, [], "expectedSourceReceipt.identity", false)
+  shape(expectedProofReceipt, [...proofFields, "artifact"], "expectedProofReceipt")
+  shape(expectedProofReceipt.artifact, artifactFields, "expectedProofReceipt.artifact")
+  shape(observed, [...identityFields, ...settings, ...seedFields, "orchestratorRevision", "proof"], "observed")
+  shape(observed.proof, [...proofFields, "status", "conclusion", "artifact"], "observed.proof")
+  shape(observed.proof.artifact, [...artifactFields, "expired"], "observed.proof.artifact")
+  for (const field of ["arms", "retainedRuns"]) if (!Array.isArray(observed[field])) refuse(`observed.${field} shape`)
+  for (const field of ["maxTurns", "commandTimeoutMs", "poolWidth"]) if (typeof observed[field] !== "number") refuse(`observed.${field} shape`)
+  for (const field of [...identityFields, ...settings, ...seedFields, "orchestratorRevision"].filter((field) => !["arms", "retainedRuns"].includes(field))) {
+    if (observed[field] === null || typeof observed[field] === "object") refuse(`observed.${field} shape`)
+<<<END SOURCE>>>
+
+<<<SOURCE script/atlas-genesis/judge.mjs:L24-L40>>>
+export const BAR = { trueRate: 0.88, trueNonObviousRate: 0.4, failedShare: 0.1 }
+const SOUND_ARMS = new Set(["dependency", "count", "definition"])
+
+// ── sampling ─────────────────────────────────────────────────────────────────────────────────────────────
+
+/** The arm a staged fact came from, read off the fact itself: a sound slot names its arm; any other slot is
+ *  the semantic arm; no slot is the advisory arm. */
+export function armOf(fact) {
+  const slot = fact.predicateSlot ?? fact.witness?.slot
+  if (slot === undefined) return "advisory"
+  return SOUND_ARMS.has(slot) ? slot : "semantic"
+}
+
+/** How many facts to judge out of `eligible`: all of them under 20, else 10% bounded to [20, 60]. */
+export function sampleSize(eligible) {
+  if (eligible < 20) return eligible
+  return Math.min(60, Math.max(20, Math.ceil(eligible * 0.1)))
+<<<END SOURCE>>>
+
+<<<SOURCE .github/workflows/atlas-genesis.yml:L1323-L1338>>>
+      # This is not independent-model calibration. judge.mjs
+      # never spawns (the spawn gate covers script/); this loop runs the model and judge.mjs prepares and scores.
+      # One retry on a malformed answer, then the fact counts as unverifiable and as a failed call. The bar is
+      # binding on a publishing run (`publish`), advisory otherwise.
+      - name: Judge sample
+        id: judge
+        if: steps.denylist.outputs.wired == 'true' && steps.mine.outcome == 'success' && steps.gate.outcome == 'success'
+        env:
+          PUBLISH: ${{ inputs.publish }}
+        run: |
+          set -o pipefail
+          node script/atlas-genesis/judge.mjs prepare "$OUT/judge" --repo . --seed "$GITHUB_RUN_ID"
+          find "$OUT/judge" -maxdepth 1 -name '*.prompt' -print0 | xargs -0 -r -n1 -P3 bash script/atlas-genesis/judge-request.sh
+          binding=()
+          [ "$PUBLISH" = true ] && binding=(--binding)
+          node script/atlas-genesis/judge.mjs score "$OUT/judge" --summary "$GITHUB_STEP_SUMMARY" "${binding[@]}"
+<<<END SOURCE>>>
+
+<<<SOURCE .github/workflows/atlas-genesis.yml:L1396-L1410>>>
+  publish:
+    name: atlas genesis publish
+    needs: mine
+    # Only a publishing run whose mine job passed everything, including the BINDING judge: `judged` is the judge
+    # step's outcome, so a run with no model (judge skipped) never publishes.
+    if: inputs.publish && needs.mine.result == 'success' && needs.mine.outputs.judged == 'success'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    env:
+      ATLAS_ACTOR: atlas-genesis
+      # Self-asserted ratifier name for this automated publish, NOT a secret: KNOW-8 needs a ratifier named, and
+      # the judge's binding verdict is what stands behind it. Granted `atlas:mined` in the policy written below.
+      ATLAS_RATIFY_TOKEN: atlas-genesis
+<<<END SOURCE>>>
+
+<<<SOURCE .github/workflows/atlas-genesis.yml:L1552-L1568>>>
+      - name: Secret scan
+        id: scan
+        if: always()
+        env:
+          ATLAS_SCAN_SECRETS: ${{ secrets.GROK_AUTH_JSON }}
+        run: |
+          mkdir -p "$OUT"
+          node script/atlas-genesis/secret-scan.mjs "$OUT"
+
+      - name: Upload the publish patch
+        if: always() && steps.scan.outcome == 'success'
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-genesis-publish
+          path: ${{ runner.temp }}/atlas-publish
+          if-no-files-found: warn
+          retention-days: 30
+<<<END SOURCE>>>
+
+<<<SOURCE specs/atlas-ui/mock/README.md:L1-L31>>>
+# Atlas — interactive design preview (v4)
+
+The screens follow [`../DESIGN.md`](../DESIGN.md): one job per screen, three layers (visible, one tap, Technical details), plain words with the Atlas term on hover. Every field comes from [`../INVENTORY.md`](../INVENTORY.md).
+
+- **Overview:** is Atlas fine, and what needs me; the Health section holds six checks and opens on its own when one fails.
+- **Knowledge:** units; a unit's briefing, facts by kind, proven structure, connections; a fact's history.
+- **Review:** changed code (with the merge check), mined suggestions (accept all, result per row), proposals to ratify.
+- **Activity:** what agents read, saved and were held on, from the session receipts.
+- **Settings:** connection, territories, permissions, store (with versions, archive, hot set and calibration).
+- **Memory:** per member: project memory and the memory log.
+
+The data is real. `data-real.js` is generated by `extract.py` from the Atlas store over its own code (`~/Documents/HuGR/atlas/.atlas`). Two parts are not read straight from the store:
+
+- **Drift and its diffs** come from git: the change to each fact's file between the commit it was derived at and HEAD.
+- **"Depends on this"** comes from import statements, standing in for the SCIP dependency axis.
+
+That store sits in the standalone Atlas repository, which commits its projection and content store. Current Atlas therefore treats it as tracked: it would serve none of these facts (none is sealed) and refuse every write. "Real store only" says so on the Overview and in Settings › Store; Illustrated mode assumes an untracked store so curation can be shown working.
+
+Memory is real too. `extract-spawns.py` turns the five live continuity runs in `specs/backend-specialist/evidence/continuity-live-2026-10-10` into `data-spawns.js`: Backend's task units with every invocation, the seat transcript, the checkpoints (refused ones too) and the checkpoints Atlas handed back on resume. The Awareness facets and the empty orientation reflect what the code produces today.
+
+**Illustrated mode** is the default, and "Data" in the top bar switches it off. It adds what a working Atlas would hold after some stewardship, marked `example` in `data-illustrate.js`:
+
+- slot types on the real facts;
+- T1 and T0 ratifications, and four proposals waiting;
+- seven territories with owners and tiers;
+- seeded Awareness (the `taste` and `constitution` top lines);
+- project-memory rules aged by their position in the shared log, PR entries, a plan that pins Own units, and task logs for Archie and Jimmy.
+
+"Real store only" shows the store exactly as it is.
+
+Actions are simulated. They update the screens and can be undone, and they never touch a store.
+<<<END SOURCE>>>
+
+<<<BEGIN EXACT FILE: coverage-summary.md>>>
+# S4 L1B coverage summary
+
+Execution `a2095d5a-1464-4c38-a222-6376974fc9c9`; source `1cde2ff7a71bcf7aecb5d030917b577165135d38`; protocol `ee2521a5b966bd505cc95bd1c733e09e12f33531`.
+
+**All 2,220 assigned paths are preserved, uniquely classified and bound to exact source hashes.** This is population integrity, not complete semantic understanding or executed product validation.
+
+- Sorted-path-set SHA-256: `0b99735199c8a9a4db61bf506dafe92acb76909dd9f9c48d8f521fb920c6cd1d` (UTF-8 paths sorted, each with LF).
+- Inventory SHA-256: `3a24c33385bb1f302bf7136707461935378ce541f3fe15a0ff3a64c4be9c6877`.
+- Source-capture receipt SHA-256: `a41b96c8633c7f4381eb8c1c21e4db42651bdca4925e0222a0e0a2340cc5d00b`.
+- Coverage JSON SHA-256: `9d0473edc9de818e36111cd741928d5ab5be05ac063439aeac11719ac0fc9759`.
+- No symlinks; all 2,220 raw bodies match their captured SHA-256, byte length and Git blob.
+
+## Bounded bodies
+
+| Key | UTF-8 bytes | SHA-256 |
+|---|---:|---|
+| `S4:L1:atlas-engine` | 17,987 | `c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e` |
+| `S4:L1:atlas-host-genesis` | 17,595 | `97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d` |
+| `S4:L1:continuity-rag` | 17,429 | `2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38` |
+| `S4:L1:coverage-governance` | 17,988 | `201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381` |
+
+Primary population: engine 318; host/Genesis 658; Continuity/RAG 63; governance 1,181. Each row also maps to coverage-governance. All build dependencies are empty; L1A is navigation only.
+
+## Classification
+
+| Classification | Paths |
+|---|---:|
+| build-or-policy-config | 46 |
+| ci-workflow | 6 |
+| contributor-skill | 18 |
+| dependency-lock | 1 |
+| design-contract | 1 |
+| design-data | 2 |
+| design-document | 433 |
+| executable-component | 383 |
+| generated-ownership-artifact | 3 |
+| generated-runtime-bundle | 18 |
+| generated-ui-data | 2 |
+| generator-script | 2 |
+| historical-consultation | 2 |
+| historical-evaluation-data | 8 |
+| historical-evidence | 368 |
+| historical-probe-data | 20 |
+| historical-prompt | 13 |
+| license | 2 |
+| operational-script | 55 |
+| package-documentation | 21 |
+| prompt-template | 20 |
+| repository-event-data | 3 |
+| repository-placeholder | 1 |
+| test-fixture | 25 |
+| test-harness | 7 |
+| test-probe | 33 |
+| test-source | 687 |
+| ui-prototype | 14 |
+| validation-support | 12 |
+| validation-tool | 14 |
+
+## Inspection depth
+
+| Disposition | Paths |
+|---|---:|
+| generator-and-integrity | 21 |
+| group-context-and-integrity | 355 |
+| origin-and-integrity | 487 |
+| preserved-by-origin | 411 |
+| source-excerpts-inspected | 158 |
+| structure-and-integrity | 3 |
+| support-role-and-integrity | 43 |
+| test-role-and-integrity | 742 |
+
+Excerpt inspection does not establish every branch/caller. Historical preservation does not import old authority. Fixtures/test files identify validation surfaces without a test result. Generated artifacts retain source/generator routes without a parity claim.
+
+## Observer-limited files retained
+
+- `.atlas/members/orch/memory/logbook.jsonl`.
+- `.atlas/project/board.jsonl`.
+- `.atlas/project/orientation.jsonl`.
+- `modules/atlas/boundary/src/generated/mine.js`.
+- `modules/atlas/boundary/src/generated/surface.js`.
+- `modules/atlas/harness/probes/__fixtures__/bench-driver-corpus/pkg-a/.atlas/index.scip`.
+- `modules/atlas/harness/probes/__fixtures__/bench-driver-corpus/pkg-b/.atlas/index.scip`.
+- `specs/atlas-ui/mock/data-real.js`.
+
+Five paths contain `.atlas`; three exceed 256,000 bytes. No observer was invoked. These are source-code-derived limits, not absence claims.
+
+## Material findings and limits
+
+- Pure engine models and actual host doors must be distinguished; actor/ratifier names are not authenticated identities.
+- Provenance, source freshness, truth, review and publication remain separate checks; a CAS object is not necessarily published ownership.
+- Continuity has a local persistent archive; its Atlas context adapter hashes/checks data but leaves the blob flag to its host caller.
+- RAG reads current corpus rows without enforcing saved revision membership and uses divergent ask/proof trace keys; docs/test setup do not close those links.
+- Legacy checkpoint/calibration/publish scripts and old receipts are specific evidence, not fresh native Genesis execution or acceptance.
+- Remaining depth gaps include uninspected branches/recovery variants, generated parity, current remote CI enforcement and external Session/Store/UI integration. No local product tests ran.
+<<<END EXACT FILE: coverage-summary.md>>>
+
+<<<BEGIN EXACT FILE: delivery-receipt.json>>>
+{
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "bodies": [
+    {
+      "key": "S4:L1:atlas-engine",
+      "path": "atlas-engine.md",
+      "byte_length": 17987,
+      "sha256": "c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e"
+    },
+    {
+      "key": "S4:L1:atlas-host-genesis",
+      "path": "atlas-host-genesis.md",
+      "byte_length": 17595,
+      "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+    },
+    {
+      "key": "S4:L1:continuity-rag",
+      "path": "continuity-rag.md",
+      "byte_length": 17429,
+      "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38"
+    },
+    {
+      "key": "S4:L1:coverage-governance",
+      "path": "coverage-governance.md",
+      "byte_length": 17988,
+      "sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381"
+    }
+  ],
+  "artifacts_sha256": "85e6c4697791dc476ea0d64ae3d4ee34b992294d471090fd558054445a78c859",
+  "coverage_sha256": "9d0473edc9de818e36111cd741928d5ab5be05ac063439aeac11719ac0fc9759",
+  "request_sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef",
+  "response_sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228",
+  "citation_path_range_count": 208,
+  "source_ref_counts": {
+    "S4:L1:atlas-engine": 329,
+    "S4:L1:atlas-host-genesis": 674,
+    "S4:L1:continuity-rag": 73,
+    "S4:L1:coverage-governance": 2226
+  },
+  "coverage_count": 2220,
+  "observer_limited_count": 8,
+  "l1a_unchanged": true,
+  "verification": "Evidence byte/hash/path/range integrity only; no product execution or semantic verdict."
+}
+<<<END EXACT FILE: delivery-receipt.json>>>
+
+<<<COURIER BYTE AND COVERAGE MEASUREMENTS>>>
+{"schema":"s4-l1b-courier-measurements/v1","source_revision":"1cde2ff7a71bcf7aecb5d030917b577165135d38","protocol_revision":"ee2521a5b966bd505cc95bd1c733e09e12f33531","measured_files":{"atlas-engine.md":{"byte_length":17987,"sha256":"c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e"},"atlas-host-genesis.md":{"byte_length":17595,"sha256":"97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"},"continuity-rag.md":{"byte_length":17429,"sha256":"2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38"},"coverage-governance.md":{"byte_length":17988,"sha256":"201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381"},"artifacts.json":{"byte_length":1283519,"sha256":"85e6c4697791dc476ea0d64ae3d4ee34b992294d471090fd558054445a78c859"},"coverage.json":{"byte_length":1729414,"sha256":"9d0473edc9de818e36111cd741928d5ab5be05ac063439aeac11719ac0fc9759"},"coverage-summary.md":{"byte_length":4550,"sha256":"159c005b7b8fae9d3d8fa3069ff736b8252b51521088fe7ac25befc67745b9a8"},"delivery-receipt.json":{"byte_length":1760,"sha256":"ac2ecdfd035ddc168ae5a2b4221a9c380121230f942c86584bf82c5788506818"},"citation-register.json":{"byte_length":36151,"sha256":"30f92e2af246d7a05ba955ab87a75d5d3eb0dabaa322b2d305533f09f6a633f3"}},"coverage_measurement":{"rows":2220,"unique_paths":2220,"raw_byte_length_sha256_git_blob_matches":2220,"path_set_sha256":"0b99735199c8a9a4db61bf506dafe92acb76909dd9f9c48d8f521fb920c6cd1d"},"citation_range_measurement":{"register_entries":208,"ranges_checked":320,"out_of_bounds":0,"producer_citation_receipt":"ABSENT"},"limitations":"Measurements concern bytes, declared rows and line bounds only; no product execution, semantic verdict or new authority.","artifact_metadata_projection":[{"key":"S4:L1:atlas-engine","build_dependencies":[],"semantic_review_refs":[],"runtime_receipt_refs":[],"input_key_count":332,"source_ref_count":329},{"key":"S4:L1:atlas-host-genesis","build_dependencies":[],"semantic_review_refs":[],"runtime_receipt_refs":[],"input_key_count":677,"source_ref_count":674},{"key":"S4:L1:continuity-rag","build_dependencies":[],"semantic_review_refs":[],"runtime_receipt_refs":[],"input_key_count":76,"source_ref_count":73},{"key":"S4:L1:coverage-governance","build_dependencies":[],"semantic_review_refs":[],"runtime_receipt_refs":[],"input_key_count":2229,"source_ref_count":2226}]}
+<<<END COURIER MEASUREMENTS>>>

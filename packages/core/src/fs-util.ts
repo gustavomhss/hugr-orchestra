@@ -1,4 +1,3 @@
-import { NodeFileSystem } from "@effect/platform-node"
 import { dirname, isAbsolute, join, relative, resolve as pathResolve, sep } from "path"
 import { realpathSync } from "fs"
 import * as NFS from "fs/promises"
@@ -9,7 +8,7 @@ import { Glob } from "./util/glob"
 import { PhysicalPath } from "./util/physical-path"
 import { serviceUse } from "./effect/service-use"
 import { makeGlobalNode } from "./effect/app-node"
-import { filesystem } from "./effect/app-node-platform"
+import { filesystem } from "./effect/app-node-files"
 
 export namespace FSUtil {
   export class FileSystemError extends Schema.TaggedErrorClass<FileSystemError>()("FileSystemError", {

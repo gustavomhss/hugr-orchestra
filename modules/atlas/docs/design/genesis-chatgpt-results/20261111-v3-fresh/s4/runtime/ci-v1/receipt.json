@@ -1,0 +1,54 @@
+{
+  "schema": "s4-remote-gate/v1",
+  "run_id": 43065851373,
+  "job_id": 130680453252,
+  "head_sha": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "conclusion": "failure",
+  "results": {
+    "typecheck": "PASS",
+    "product_tests": {
+      "status": "PASS",
+      "passed": 216,
+      "failed": 0,
+      "pending": 0
+    },
+    "mutation_controls": {
+      "status": "PASS",
+      "count": 22
+    },
+    "boundary_generate": "PASS",
+    "repository_guards": {
+      "status": "FAILED",
+      "error": "Agent scratch guard detected workflow-generated ownership-guards.log inside checkout; 3 double-cast warnings."
+    }
+  },
+  "artifact_id": 13875162617,
+  "artifact_zip_sha256": "15ccdf9c52f6b562b0331f16947e4f9340635d78a10f58077fb2304543be9775",
+  "artifact_extraction_hash_verified": true,
+  "limits": [
+    "Synthetic test fixtures do not substitute actual native semantic/binding decisions or consumer results.",
+    "Overall run is failure until required guard correction is rerun."
+  ],
+  "files": [
+    {
+      "path": "job-output.txt",
+      "sha256": "69e747376ccabb0842291cfe8c220fe0dfc842834338762593eff8832a2a5ff2",
+      "bytes": 101448
+    },
+    {
+      "path": "ownership-guards.json",
+      "sha256": "c637f25134ae31292a3672af9572783b9ae12e4eb5c476f5732902198040b7f3",
+      "bytes": 121
+    },
+    {
+      "path": "ownership-mutation-receipts.json",
+      "sha256": "18495897d604f91c47eb6edfd0c3b024042b1ec528fa3883c6c10cdc79f2a536",
+      "bytes": 4506
+    },
+    {
+      "path": "ownership-runtime-results.json",
+      "sha256": "45176d36acd332d1ca3593102f100ba04039830d6412d4430e9bdca28ec20a33",
+      "bytes": 90753
+    }
+  ]
+}

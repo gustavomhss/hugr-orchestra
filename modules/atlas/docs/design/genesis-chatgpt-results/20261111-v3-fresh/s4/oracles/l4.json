@@ -1,0 +1,71 @@
+{
+  "schema": "s4-layer-oracle/v1",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "frozen_utc": "2026-11-11T18:07:40.973111+00:00",
+  "frozen_before_any_upper_layer_production": true,
+  "answers_reserved_from_producers": true,
+  "input_binding": "Exact complete accepted predecessor-layer inputs are bound in the dispatch manifest before producer starts; this oracle fixes cases in advance.",
+  "unit": "WP-L4",
+  "required_keys": [
+    "S4:L4:entry",
+    "S4:L4:ownership",
+    "S4:L4:maintenance",
+    "S4:L4:operational"
+  ],
+  "body_limits": {
+    "S4:L4:entry": 5000,
+    "others": 9500
+  },
+  "criteria": [
+    "AC-01",
+    "AC-03",
+    "CC-2",
+    "CC-3",
+    "CC-7",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-6",
+    "GO-I2",
+    "GO-I3",
+    "GO-I4",
+    "GO-I5",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "cases": [
+    {
+      "id": "L4-entry",
+      "expected": "Compact working protocol starts at exact scope/root via actual index/read query shapes; route table says what each deeper key answers; shallow routine can stop without full graph. No raw Markdown fallback or unauthorized source access for Atlas-only consumer."
+    },
+    {
+      "id": "L4-ownership",
+      "expected": "Give actionable maintained purpose/contracts/decisions and change/violation/impact boundaries across Atlas, Continuity, RAG and Genesis. Preserve protected recall behavior, domain-specific limitations and exact maintenance paths."
+    },
+    {
+      "id": "L4-maintenance",
+      "expected": "Prescribe inspect release/candidate/input versions, edit proper source/generator, plan affected/reuse, produce/evaluate changes with same judges, exact prepare/binding/governed publish, reader verification; distinguish source static inspection, typecheck, remote tests and actual operations. Never bind transport digest as kernel ID."
+    },
+    {
+      "id": "L4-operational",
+      "expected": "Procedure for unavailable source/changed input/failed activation: HOLD current, labelled history only, durable candidate/CAS preservation, source-compatible resume/rollback, isolated state and policy actor/ratifier. Name real CLI cwd/argv and query maxBytes; no production activation or paid call."
+    },
+    {
+      "id": "L4-economy",
+      "expected": "Native usage/billing/physical attempts absent remain UNKNOWN, not zero or derived currency. Routine/deep read budgets are explicit public protocol, bounded interpretation and evidence reuse; no universal cost saving claim."
+    },
+    {
+      "id": "L4-cumulative",
+      "expected": "Depend on accepted L3/L2 and targeted direct L1 as actually used, route all required intermediates, preserve body/authority/gaps identity and source/payload/code pins. Claims of campaign execution cite exact receipts only; completion still awaits final consumer and checks."
+    }
+  ],
+  "critical_errors": [
+    "Misstate runtime command or query",
+    "Substitute semantic PASS for runtime binding",
+    "Ignore protected tools/trace/host gaps",
+    "Tell consumer to inspect raw source",
+    "Declare current with incompatible inputs or invent billing"
+  ]
+}

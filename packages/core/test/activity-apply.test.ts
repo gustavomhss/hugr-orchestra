@@ -1,0 +1,225 @@
+import { expect, test } from "bun:test"
+import path from "node:path"
+import { cp, mkdir, readFile, rename, stat, writeFile } from "node:fs/promises"
+import { Effect } from "effect"
+import { Database } from "@orchestra/core/database/database"
+import { ActivityActionLedger } from "../src/activity-action-ledger"
+import { ActivityArmLedger } from "../src/activity-arm"
+import { ActivityApplyService } from "../src/activity-apply"
+import { ActivityApplyTable } from "../src/activity-apply.sql"
+import { tmpdir } from "./fixture/tmpdir"
+
+test("confirmed apply reserves once and survives service restart", async () => {
+  await using directory = await tmpdir()
+  const origin = path.join(directory.path, "origin")
+  const destination = path.join(directory.path, "quarantine")
+  const filename = path.join(directory.path, "activity.sqlite")
+  const claims = new Set<string>()
+  await mkdir(origin)
+  await writeFile(path.join(origin, "fixture"), "owned")
+  const original = await stat(origin, { bigint: true })
+  const nativeIdentity = `${original.dev}:${original.ino}`
+  let mutations = 0
+  const confirmed = await Effect.runPromise(Effect.gen(function* () {
+    const database = yield* Database.Service
+    const actions = yield* ActivityActionLedger.make
+    const target = yield* actions.record({ targetID: "fixture", kind: "object", label: origin, owner: "test",
+      identity: "fixture-identity", members: ["fixture"], dirty: false, eligible: ["arm"] })
+    const arm = ActivityArmLedger.make(database, { verify: () => Effect.succeed(true) })
+    const armPreview = yield* arm.preview({ targets: [{ targetID: target.targetID, generation: target.generation }] })
+    if (!armPreview) throw new Error("missing arm preview")
+    const approval = yield* arm.confirm({ previewID: armPreview.previewID })
+    if (!approval) throw new Error("missing approval")
+    const reading = async (dir: string) => stat(dir, { bigint: true })
+      .then((info) => ({ state: "present" as const, identity: `${info.dev}:${info.ino}` }))
+      .catch((error: NodeJS.ErrnoException) => error.code === "ENOENT"
+        ? { state: "absent" as const }
+        : { state: "unavailable" as const })
+    const facts = async () => ({ original: await reading(origin), quarantine: await reading(destination) })
+    const authority: ActivityApplyService.Authority = {
+      describe: () => destination,
+      authorize: () => Effect.succeed(true),
+      prepare: () => Effect.sync(() => {
+        if (claims.has("fixture")) return undefined
+        claims.add("fixture")
+        return { identity: nativeIdentity, release: async () => { claims.delete("fixture") }, adapter: {
+          prepare: async () => ({ facts: await facts(), claimant: "absent" as const, mutation: async () => {
+            const reservation = await Effect.runPromise(database.db.select().from(ActivityApplyTable).get())
+            expect(reservation).toMatchObject({ identity: nativeIdentity, outcome: "Unknown", source: origin, destination })
+            mutations++
+            await rename(origin, destination)
+            return "accepted" as const
+          } }),
+          reread: facts,
+        } }
+      }),
+    }
+    const service = ActivityApplyService.make(database, { authority })
+    const request = { approvalID: approval.approvalID, targetID: target.targetID, generation: target.generation }
+    const preview = yield* service.preview(request)
+    if (!preview) throw new Error("missing apply preview")
+    expect(mutations).toBe(0)
+    yield* database.db.transaction(() => Effect.gen(function* () {
+      expect(yield* service.confirm({ previewID: preview.previewID })).toBeUndefined()
+      expect(mutations).toBe(0)
+    }))
+    expect((yield* service.confirm({ previewID: preview.previewID }))?.outcome).toBe("Out")
+    expect((yield* service.confirm({ previewID: preview.previewID }))?.outcome).toBe("Out")
+    const restarted = ActivityApplyService.make(database, { authority })
+    expect((yield* restarted.confirm({ previewID: preview.previewID }))?.outcome).toBe("Out")
+    expect(yield* restarted.preview(request)).toBeUndefined()
+    expect((yield* restarted.state()).results).toMatchObject([{ ...request, outcome: "Out" }])
+    expect(yield* Effect.promise(() => readFile(path.join(destination, "fixture"), "utf8"))).toBe("owned")
+    expect(yield* Effect.promise(() => reading(origin))).toEqual({ state: "absent" })
+    expect(mutations).toBe(1)
+    return request
+  }).pipe(Effect.provide(Database.layerFromPath(filename)), Effect.scoped))
+  await Effect.runPromise(Effect.gen(function* () {
+    const database = yield* Database.Service
+    expect((yield* ActivityApplyService.make(database).state()).results).toEqual([{ ...confirmed, outcome: "Out" }])
+  }).pipe(Effect.provide(Database.layerFromPath(filename)), Effect.scoped))
+})
+
+test.each(["second-read", "origin-remains", "unregistered", "changed-object"] as const)("%s settles safely and survives restart", async (scenario) => {
+  await using directory = await tmpdir()
+  const source = path.join(directory.path, "source")
+  const destination = path.join(directory.path, "destination")
+  await mkdir(source)
+  await writeFile(path.join(source, "fixture"), "owned")
+  let mutations = 0
+  let authorized = true
+  await Effect.runPromise(Effect.gen(function* () {
+    const database = yield* Database.Service
+    const actions = yield* ActivityActionLedger.make
+    const record = (targetID: string, label = source) => actions.record({ targetID, kind: "object", label, owner: "test",
+      identity: "observed-git", members: [targetID], dirty: false, eligible: ["arm"] })
+    const target = yield* record("fixture")
+    const arms = ActivityArmLedger.make(database, { verify: () => Effect.succeed(true) })
+    const armPreview = yield* arms.preview({ targets: [{ targetID: target.targetID, generation: target.generation }] })
+    if (!armPreview) throw new Error("missing arm preview")
+    const approval = yield* arms.confirm({ previewID: armPreview.previewID })
+    if (!approval) throw new Error("missing approval")
+    const claims = new Set<string>()
+    const authority: ActivityApplyService.Authority = {
+      describe: () => destination,
+      authorize: () => Effect.sync(() => authorized),
+      prepare: () => Effect.gen(function* () {
+        const live = yield* Effect.promise(() => readFile(path.join(source, "fixture"), "utf8"))
+        if (live !== "owned") return undefined
+        if (claims.has(source)) return undefined
+        claims.add(source)
+        return { identity: "native-fixture", release: async () => { claims.delete(source) }, adapter: {
+          prepare: async () => ({ facts: { original: { state: "present" as const, identity: "native-fixture" },
+            quarantine: { state: "absent" as const } }, claimant: "absent" as const, mutation: async () => {
+              mutations++
+              if (scenario === "origin-remains") await cp(source, destination, { recursive: true })
+              else await rename(source, destination)
+              return "accepted" as const
+            } }),
+          reread: async () => scenario === "origin-remains"
+            ? { original: { state: "present" as const, identity: "native-fixture" }, quarantine: { state: "present" as const, identity: "native-fixture" } }
+            : { original: { state: "unavailable" as const }, quarantine: { state: "unavailable" as const } },
+        } }
+      }),
+    }
+    const service = ActivityApplyService.make(database, { authority })
+    const request = { approvalID: approval.approvalID, targetID: target.targetID, generation: target.generation }
+    const first = yield* service.preview(request)
+    const second = yield* service.preview(request)
+    if (!first || !second) throw new Error("missing previews")
+    authorized = scenario !== "unregistered"
+    if (scenario === "changed-object") yield* Effect.promise(() => writeFile(path.join(source, "fixture"), "replacement"))
+    const expected = scenario === "unregistered" || scenario === "changed-object" ? "Refused" : "Unknown"
+    const results = yield* Effect.all([service.confirm({ previewID: first.previewID }),
+      service.confirm({ previewID: second.previewID })], { concurrency: "unbounded" })
+    const successful = results.filter((result) => result !== undefined)
+    expect(successful).toHaveLength(1)
+    const result = successful[0]
+    if (!result) throw new Error("result missing")
+    expect(result.outcome).toBe(expected)
+    expect(mutations).toBe(expected === "Refused" ? 0 : 1)
+    const restarted = ActivityApplyService.make(database, { authority })
+    expect((yield* restarted.state()).results[0]?.outcome).toBe(result.outcome)
+    expect((yield* restarted.confirm({ previewID: result.previewID }))?.outcome).toBe(result.outcome)
+    expect(yield* restarted.preview(request)).toBeUndefined()
+    if (expected === "Unknown") {
+      const changed = yield* record("fixture", source + "/changed")
+      const changedPreview = yield* arms.preview({ targets: [{ targetID: changed.targetID, generation: changed.generation }] })
+      if (!changedPreview) throw new Error("missing new generation preview")
+      const changedApproval = yield* arms.confirm({ previewID: changedPreview.previewID })
+      if (!changedApproval) throw new Error("missing new generation approval")
+      expect(yield* restarted.preview({ approvalID: changedApproval.approvalID, targetID: changed.targetID, generation: changed.generation })).toBeUndefined()
+      const replacement = yield* record("replacement")
+      const replacementPreview = yield* arms.preview({ targets: [{ targetID: replacement.targetID, generation: replacement.generation }] })
+      if (!replacementPreview) throw new Error("missing replacement preview")
+      const replacementApproval = yield* arms.confirm({ previewID: replacementPreview.previewID })
+      if (!replacementApproval) throw new Error("missing replacement approval")
+      expect(yield* restarted.preview({ approvalID: replacementApproval.approvalID, targetID: replacement.targetID, generation: replacement.generation })).toBeUndefined()
+      expect((yield* restarted.state()).eligible).toEqual([])
+    }
+  }).pipe(Effect.provide(Database.layerFromPath(path.join(directory.path, "activity.sqlite"))), Effect.scoped))
+})
+
+
+test("a reservation left Unknown by a stopped process blocks reuse after restart", async () => {
+  await using directory = await tmpdir()
+  await Effect.runPromise(Effect.gen(function* () {
+    const database = yield* Database.Service
+    yield* database.db.insert(ActivityApplyTable).values({ preview_id: "prior-preview", approval_id: "prior-approval",
+      target_id: "prior-target", generation: "1", confirmed_at: 1, source: directory.path, destination: path.join(directory.path, "out"),
+      identity: "native-identity", outcome: "Unknown" }).run()
+    const service = ActivityApplyService.make(database)
+    expect(yield* service.state()).toMatchObject({ available: false, results: [{ approvalID: "prior-approval",
+      targetID: "prior-target", generation: "1", outcome: "Unknown" }] })
+    expect(yield* service.confirm({ previewID: "prior-preview" })).toBeUndefined()
+  }).pipe(Effect.provide(Database.layerFromPath(path.join(directory.path, "activity.sqlite"))), Effect.scoped))
+})
+
+test("an unresolved native identity refuses a different source without mutation", async () => {
+  await using directory = await tmpdir()
+  const source = path.join(directory.path, "source")
+  const destination = path.join(directory.path, "destination")
+  await mkdir(source)
+  await writeFile(path.join(source, "fixture"), "owned")
+  const info = await stat(source, { bigint: true })
+  const identity = `${info.dev}:${info.ino}`
+  let mutations = 0
+  let releases = 0
+  await Effect.runPromise(Effect.gen(function* () {
+    const database = yield* Database.Service
+    const actions = yield* ActivityActionLedger.make
+    const target = yield* actions.record({ targetID: "current", kind: "object", label: source, owner: "test",
+      identity: "git-observation", members: ["current"], dirty: false, eligible: ["arm"] })
+    const arms = ActivityArmLedger.make(database, { verify: () => Effect.succeed(true) })
+    const armPreview = yield* arms.preview({ targets: [{ targetID: target.targetID, generation: target.generation }] })
+    if (!armPreview) throw new Error("missing arm preview")
+    const approval = yield* arms.confirm({ previewID: armPreview.previewID })
+    if (!approval) throw new Error("missing approval")
+    yield* database.db.insert(ActivityApplyTable).values({ preview_id: "old-preview", approval_id: "old-approval",
+      target_id: "old-target", generation: "1", confirmed_at: 1, source: path.join(directory.path, "old-source"),
+      destination: path.join(directory.path, "old-destination"), identity, outcome: "Unknown" }).run()
+    const service = ActivityApplyService.make(database, { authority: {
+      describe: () => destination,
+      authorize: () => Effect.succeed(true),
+      prepare: () => Effect.succeed({ identity, release: async () => { releases++ }, adapter: {
+        prepare: async () => ({ facts: { original: { state: "present" as const, identity },
+          quarantine: { state: "absent" as const } }, claimant: "absent" as const, mutation: async () => {
+            mutations++
+            await rename(source, destination)
+            return "accepted" as const
+          } }),
+        reread: async () => ({ original: { state: "absent" as const }, quarantine: { state: "present" as const, identity } }),
+      } }),
+    } })
+    const preview = yield* service.preview({ approvalID: approval.approvalID, targetID: target.targetID, generation: target.generation })
+    if (!preview) throw new Error("missing apply preview")
+    expect((yield* service.confirm({ previewID: preview.previewID }))?.outcome).toBe("Refused")
+    expect(mutations).toBe(0)
+    expect(releases).toBe(1)
+    expect(yield* Effect.promise(() => readFile(path.join(source, "fixture"), "utf8"))).toBe("owned")
+    expect((yield* ActivityApplyService.make(database).state()).results).toEqual(expect.arrayContaining([
+      expect.objectContaining({ targetID: "old-target", outcome: "Unknown" }),
+      expect.objectContaining({ targetID: "current", outcome: "Refused" }),
+    ]))
+  }).pipe(Effect.provide(Database.layerFromPath(path.join(directory.path, "activity.sqlite"))), Effect.scoped))
+})
