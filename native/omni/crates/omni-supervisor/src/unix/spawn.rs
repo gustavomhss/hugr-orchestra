@@ -63,6 +63,13 @@ impl Prepared {
         })
     }
 
+    /// Discard caller-controlled environment and argv[0] on the privileged socket path.
+    #[cfg(target_os = "linux")]
+    pub(super) fn restrict(&mut self) {
+        self.argv[0] = self.program.clone();
+        self.envp = vec![c"PATH=/usr/bin:/bin".to_owned(), c"LANG=C".to_owned()];
+    }
+
     /// NULL-terminated pointer arrays for `execve`/`posix_spawn`; valid while `self` lives.
     pub(super) fn ptrs(&self) -> (Vec<*mut libc::c_char>, Vec<*mut libc::c_char>) {
         let list = |v: &[CString]| {

@@ -171,10 +171,8 @@ impl Worker {
     fn spawn(cgroup_fd: Option<libc::c_int>) -> Self {
         let mut fds = [-1; 2];
         // SAFETY: `fds` points to two writable c_int slots for pipe2 to initialize.
-        assert_eq!(
-            unsafe { libc::pipe2(fds.as_mut_ptr(), libc::O_CLOEXEC | libc::O_NONBLOCK) },
-            0
-        );
+        let opened = unsafe { libc::pipe2(fds.as_mut_ptr(), libc::O_CLOEXEC | libc::O_NONBLOCK) };
+        assert_eq!(opened, 0);
         // SAFETY: pipe2 returned two owned descriptors; the child keeps the write side and parent owns the read side.
         let read = unsafe { OwnedFd::from_raw_fd(fds[0]) };
         // SAFETY: pipe2 returned two owned descriptors; this descriptor is intentionally inherited by the fork-like child.

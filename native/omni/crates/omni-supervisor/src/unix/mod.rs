@@ -11,13 +11,19 @@
 
 mod chan;
 mod diag;
+#[cfg(target_os = "linux")]
+mod executable_policy;
 mod exits;
 mod footprint;
 mod fork;
 #[cfg(target_os = "linux")]
 mod isolated;
+#[cfg(target_os = "linux")]
+mod isolated_bootstrap;
 mod member_control;
 mod observe;
+#[cfg(target_os = "linux")]
+mod peer;
 mod procs;
 mod replies;
 mod setup;
@@ -39,6 +45,7 @@ use chan::{Chan, Closed};
 use diag::Diag;
 use observe::Observation;
 use setup::{drain, signals, take_channel};
+use sys::pollfd;
 use trees::Trees;
 use watch::HostWatch;
 
@@ -47,8 +54,6 @@ const BATCH: usize = 64;
 /// After host death, how long past the last forced deadline the supervisor keeps sweeping (SIGKILL every
 /// 10 ms, inventory retried) before it gives up and exits 1, saying so on stderr.
 const EXIT_SLACK: Duration = Duration::from_secs(5);
-/// Reserved reply bytes per deferred request (a `Stopped` or the minimum observation reply).
-const RESERVE_PER_WAITER: usize = 32;
 
 /// Serves the host on fd 0 until the host is gone and every tree is gone.
 pub(crate) fn run(args: &Args) -> ExitCode {
@@ -76,6 +81,8 @@ struct Sup {
     trees: Trees,
     #[cfg(target_os = "linux")]
     isolation: Option<isolated::Isolation>,
+    #[cfg(target_os = "linux")]
+    executable_policy: Option<executable_policy::ExecutablePolicy>,
     observation: Observation,
     out: Vec<Msg>,
     /// Set at host death: exit by then even if a tree cannot be confirmed gone.
@@ -89,13 +96,20 @@ impl Sup {
     fn start(args: &Args) -> std::io::Result<Option<Sup>> {
         sys::fill_stdio()?;
         sys::close_inherited()?;
-        let chan = Chan::new(take_channel()?)?;
-        let (sigchld, sigchld_w) = signals()?;
-        let host = i32::try_from(args.host_pid).map_err(std::io::Error::other)?;
-        let watch = HostWatch::arm(host);
-        let pidfd = watch::pidfd_available();
         #[cfg(target_os = "linux")]
         let isolation = isolated::Isolation::load()?;
+        #[cfg(target_os = "linux")]
+        let watch = peer::host_watch(args, isolation.as_ref())?;
+        #[cfg(target_os = "linux")]
+        let executable_policy = args
+            .isolated_peer_uid
+            .map(|_| executable_policy::ExecutablePolicy::load())
+            .transpose()?;
+        #[cfg(not(target_os = "linux"))]
+        let watch = HostWatch::arm(i32::try_from(args.host_pid).map_err(std::io::Error::other)?);
+        let chan = Chan::new(take_channel()?)?;
+        let (sigchld, sigchld_w) = signals()?;
+        let pidfd = watch::pidfd_available();
         #[cfg(target_os = "linux")]
         if isolation.is_some() && !pidfd {
             return Err(std::io::Error::other("isolated member freeze requires pidfd"));
@@ -111,6 +125,8 @@ impl Sup {
             trees: Trees::new(pidfd),
             #[cfg(target_os = "linux")]
             isolation,
+            #[cfg(target_os = "linux")]
+            executable_policy,
             observation: Observation::default(),
             out: Vec::new(),
             exit_by: None,
@@ -159,6 +175,10 @@ impl Sup {
                 drain(&self.sigchld);
                 self.trees.observe_exits(&mut self.out);
             }
+            #[cfg(target_os = "linux")]
+            if let Err(closed) = self.advance_isolated(now) {
+                self.channel_closed(closed, now);
+            }
             self.trees.sweep(now, &mut self.out);
             if self.exit_by.is_none()
                 && !self.backlogged()
@@ -174,7 +194,7 @@ impl Sup {
     /// Exit once the host is gone and every tree is gone (0), or at the bound (1, reported on stderr).
     fn finished(&mut self) -> Option<ExitCode> {
         let bound = self.exit_by?;
-        if self.trees.all_gone() {
+        if self.trees.all_gone() && self.isolated_count() == 0 {
             return Some(if self.broken {
                 ExitCode::FAILURE
             } else {
@@ -188,7 +208,7 @@ impl Sup {
             } else {
                 "the process inventory is incomplete, so members outside the roots' groups may be missed"
             };
-            let left = self.trees.active();
+            let left = self.trees.active() + self.isolated_count();
             self.diag.report(format!(
                 "hugr-omni-supervisor: the host is gone; exiting with {left} tree(s) not confirmed gone ({why})"
             ));
@@ -219,15 +239,12 @@ impl Sup {
         self.chan.shut();
         self.out.clear();
         self.observation = Observation::default();
+        #[cfg(target_os = "linux")]
+        if let Some(isolation) = &mut self.isolation {
+            isolation.bootstraps.cancel();
+        }
         self.trees.host_death(now);
         self.exit_by = Some(self.trees.last_deadline().unwrap_or(now) + EXIT_SLACK);
-    }
-
-    /// Replies queued plus replies owed: past the mark no request is read (admission resumes when the
-    /// host drains; `wait` then polls for writability, so the loop always wakes).
-    fn backlogged(&self) -> bool {
-        let pending = self.trees.waiters() + usize::from(self.observation.pending());
-        self.chan.backlogged(RESERVE_PER_WAITER * pending)
     }
 
     /// Reads once (only when no complete frame is buffered, so the buffer stays bounded by one frame plus one
@@ -328,10 +345,22 @@ impl Sup {
         fds.extend(execs.iter().map(|&(_, fd)| pollfd(fd, libc::POLLIN)));
 
         let now = Instant::now();
-        let mut wake = [self.trees.next_wake(), self.exit_by, self.observation.next_wake(now)]
-            .into_iter()
-            .flatten()
-            .min();
+        #[cfg(target_os = "linux")]
+        let isolated = self
+            .isolation
+            .as_ref()
+            .and_then(|isolation| isolation.bootstraps.watch(&mut fds));
+        #[cfg(target_os = "macos")]
+        let isolated = None;
+        let mut wake = [
+            self.trees.next_wake(),
+            self.exit_by,
+            self.observation.next_wake(now),
+            isolated,
+        ]
+        .into_iter()
+        .flatten()
+        .min();
         if alive && !self.watch.evented() {
             wake = Some(wake.map_or(now + watch::PARENT_POLL, |w| w.min(now + watch::PARENT_POLL)));
         }
@@ -367,8 +396,4 @@ struct Ready {
     chan: bool,
     host: bool,
     execs: Vec<u64>,
-}
-
-fn pollfd(fd: libc::c_int, events: libc::c_short) -> libc::pollfd {
-    libc::pollfd { fd, events, revents: 0 }
 }

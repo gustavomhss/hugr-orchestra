@@ -181,3 +181,7 @@ impl Reserve {
         }
     }
 }
+
+pub(super) fn pollfd(fd: libc::c_int, events: libc::c_short) -> libc::pollfd {
+    libc::pollfd { fd, events, revents: 0 }
+}
