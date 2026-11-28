@@ -1,14 +1,21 @@
 export * as ActivityPrivateChannelServer from "./activity-private-channel"
 
 import type { ActivityArmLedger } from "@orchestra/core/activity-arm"
+import type { ActivityStopService } from "@orchestra/core/activity-stop-service"
 import { ActivityArm } from "@orchestra/schema/activity-arm"
+import { ActivityStop } from "@orchestra/schema/activity-stop"
 import { Effect, Option } from "effect"
 import { ActivityPrivateChannel } from "@orchestra/schema/activity-private-channel"
 import type { Readable } from "node:stream"
 import type { HttpExtension } from "./http-extensions"
 
 /** Acquired only by the desktop-owned server before any listener or installation starts. */
-export async function acquire(input: Readable, signal: AbortSignal, arm?: ActivityArmLedger.Interface): Promise<HttpExtension> {
+export async function acquire(
+  input: Readable,
+  signal: AbortSignal,
+  arm?: ActivityArmLedger.Interface,
+  stop?: ActivityStopService.Interface,
+): Promise<HttpExtension> {
   const frame = new Uint8Array(ActivityPrivateChannel.frameBytes)
   const key = await new Promise<Uint8Array>((resolve, reject) => {
     let size = 0
@@ -70,23 +77,26 @@ export async function acquire(input: Readable, signal: AbortSignal, arm?: Activi
           "cache-control": "no-store", [ActivityPrivateChannel.macHeader]: await signer.sign("probe-response", nonce),
         } })
       }
-      if (!arm || (url.pathname !== ActivityPrivateChannel.previewPath && url.pathname !== ActivityPrivateChannel.confirmPath)) {
-        return forbidden()
-      }
       const endpoint = url.pathname
+      const armPath = endpoint === ActivityPrivateChannel.previewPath || endpoint === ActivityPrivateChannel.confirmPath
+      const stopPath = endpoint === ActivityPrivateChannel.stopPreviewPath || endpoint === ActivityPrivateChannel.stopConfirmPath
+      if ((!armPath || !arm) && (!stopPath || !stop)) return forbidden()
       const body = await readBody(request)
       if (body === undefined || !nonce || !await signer.verifyArm("arm-request", endpoint, nonce, mac, body)) return forbidden()
-      const decoded = parseBody(body, endpoint)
-      if (!decoded || request.signal.aborted) return forbidden()
-      const result = await (decoded.kind === "preview"
-        ? Effect.runPromise(arm.preview(decoded.value), { signal: request.signal })
-        : Effect.runPromise(arm.confirm(decoded.value), { signal: request.signal })).catch(() => undefined)
-      if (!result) return new Response(null, { status: 409, headers: { "cache-control": "no-store" } })
-      const receipt: Option.Option<ActivityArm.Preview | ActivityArm.Receipt> = endpoint === ActivityPrivateChannel.previewPath
-        ? ActivityArm.decodePreview(result)
-        : ActivityArm.decodeReceipt(result)
-      if (receipt._tag === "None") return new Response(null, { status: 409, headers: { "cache-control": "no-store" } })
-      const json = JSON.stringify(receipt.value)
+      const decoded = parseBody(body)
+      if (request.signal.aborted) return forbidden()
+      const operation = armPath && arm ? (
+        endpoint === ActivityPrivateChannel.previewPath
+          ? run(decoded, ActivityArm.decodeRequest, arm.preview, ActivityArm.decodePreview)
+          : run(decoded, ActivityArm.decodeConfirm, arm.confirm, ActivityArm.decodeReceipt)
+      ) : stopPath && stop ? (
+        endpoint === ActivityPrivateChannel.stopPreviewPath
+          ? run(decoded, ActivityStop.decodeRequest, stop.preview, ActivityStop.decodePreview)
+          : run(decoded, ActivityStop.decodeConfirm, stop.confirm, ActivityStop.decodeReceipt)
+      ) : undefined
+      if (!operation) return forbidden()
+      const json = await Effect.runPromise(operation, { signal: request.signal }).catch(() => undefined)
+      if (json === undefined) return new Response(null, { status: 409, headers: { "cache-control": "no-store" } })
       return new Response(json, { status: 200, headers: {
         "cache-control": "no-store", "content-type": "application/json",
         [ActivityPrivateChannel.macHeader]: await signer.signArm("arm-response", endpoint, nonce, json),
@@ -96,18 +106,26 @@ export async function acquire(input: Readable, signal: AbortSignal, arm?: Activi
 }
 
 
-function parseBody(body: string, endpoint: ActivityPrivateChannel.ArmPath) {
+function parseBody(body: string): unknown {
   try {
-    const json: unknown = JSON.parse(body)
-    if (endpoint === ActivityPrivateChannel.previewPath) {
-      const request = ActivityArm.decodeRequest(json)
-      return Option.isSome(request) ? { kind: "preview" as const, value: request.value } : undefined
-    }
-    const confirm = ActivityArm.decodeConfirm(json)
-    return Option.isSome(confirm) ? { kind: "confirm" as const, value: confirm.value } : undefined
+    return JSON.parse(body)
   } catch {
     return undefined
   }
+}
+
+function run<Input, Result>(
+  body: unknown,
+  read: (body: unknown) => Option.Option<Input>,
+  evaluate: (input: Input) => Effect.Effect<unknown, unknown>,
+  reply: (result: unknown) => Option.Option<Result>,
+) {
+  const decoded = read(body)
+  if (Option.isNone(decoded)) return undefined
+  return Effect.map(evaluate(decoded.value), (result) => {
+    const response = reply(result)
+    return Option.isSome(response) ? JSON.stringify(response.value) : undefined
+  })
 }
 
 async function readBody(request: Request): Promise<string | undefined> {

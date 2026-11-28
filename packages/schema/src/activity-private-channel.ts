@@ -5,6 +5,8 @@ export const path = "/_orchestra-activity/v1/probe"
 export const mount = "/_orchestra-activity/v1"
 export const previewPath = `${mount}/arm-preview`
 export const confirmPath = `${mount}/arm-confirm`
+export const stopPreviewPath = `${mount}/stop-preview`
+export const stopConfirmPath = `${mount}/stop-confirm`
 export const maxBodyBytes = 96 * 1024
 export const nonceHeader = "x-orchestra-activity-nonce"
 export const macHeader = "x-orchestra-activity-mac"
@@ -34,7 +36,7 @@ export function nonce() {
 
 type Direction = "probe-request" | "probe-response"
 export type ArmDirection = "arm-request" | "arm-response"
-export type ArmPath = typeof previewPath | typeof confirmPath
+export type ArmPath = typeof previewPath | typeof confirmPath | typeof stopPreviewPath | typeof stopConfirmPath
 
 export async function signer(secret: Uint8Array) {
   if (secret.length !== keyBytes) throw new Error("Invalid activity channel key length")
