@@ -1,6 +1,7 @@
 import { afterEach, expect, test } from "bun:test"
 import type { ExecutionReport, Page } from "@/orchestra/chapters/board/model"
-import { createComponent, render } from "./lean-dom.test-helper"
+import { createComponent } from "solid-js"
+import { render } from "solid-js/web"
 import { solidDom } from "./solid-dom"
 
 const { ExecutionMetrics, ExecutionReceipt, IssueExecutions }: typeof import("@/orchestra/chapters/board/executions") = await import(solidDom("@/orchestra/chapters/board/executions", import.meta.dir))
