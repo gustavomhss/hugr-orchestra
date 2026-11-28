@@ -4,6 +4,10 @@ Rag Studio is for documents you admit. It is not a second chat, and it does not 
 
 ## What you can see
 
+Rag Studio opens on **Files**. Select a file to read its cuts alongside the inventory. The **Question** tab puts the
+source passage beside the retrieval trace and the revision it describes. **Maintain** groups the pipeline, the
+four maintenance passes and saved-question comparison. Switching tabs keeps the open file and question within the current folder.
+
 The Files section lists every admitted file as exactly one of read, failed, or not yet read. Open a file and the cut is painted on the source text.
 
 The Question section turns on exactly one of four lights: not in the documents, search missed it, dropped before the model, or sent. Sent means the span was in the block that would go to a model. It does not mean the model used it. When fewer matches than the limit, the screen says retrieval is unnecessary. The header says embedding is off until you name a model. After that, it names the model. It still does not claim the model used the span.
