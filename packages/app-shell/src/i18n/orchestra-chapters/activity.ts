@@ -54,6 +54,8 @@ export const ACTIVITY_COPY = {
   "orchestra.monitor.tabs": "Categories",
   "orchestra.monitor.processSource": "Source: orchestra.omni.ledger",
   "orchestra.monitor.inspect": "Read members",
+  "orchestra.monitor.hypothesisInsufficient": "Hypothesis: insufficient",
+  "orchestra.monitor.reachabilityUnread": "Reachability: unread",
   "orchestra.monitor.inspectFailed":
     "The member reading could not be retrieved. The previous reading, if available, is still shown.",
   "orchestra.monitor.inspectionHint": "Member lists are read on request. Expand a process and select Read members.",
@@ -172,6 +174,8 @@ export const ACTIVITY_COPY_BR: Record<keyof typeof ACTIVITY_COPY, string> = {
   "orchestra.monitor.tabs": "Categorias",
   "orchestra.monitor.processSource": "Fonte: orchestra.omni.ledger",
   "orchestra.monitor.inspect": "Ler membros",
+  "orchestra.monitor.hypothesisInsufficient": "Hipótese: insuficiente",
+  "orchestra.monitor.reachabilityUnread": "Alcançabilidade: não lido",
   "orchestra.monitor.inspectFailed":
     "Não foi possível obter a leitura de membros. A leitura anterior, se disponível, continua visível.",
   "orchestra.monitor.inspectionHint":
