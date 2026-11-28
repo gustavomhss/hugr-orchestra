@@ -1,5 +1,6 @@
 export * as ActivityPrivateChannelServer from "./activity-private-channel"
 
+import { createHash } from "node:crypto"
 import type { ActivityArmLedger } from "@orchestra/core/activity-arm"
 import type { ActivityApplyService } from "@orchestra/core/activity-apply"
 import type { ActivityFreezeService } from "@orchestra/core/activity-freeze-service"
@@ -79,7 +80,7 @@ export async function acquire(
     if (signal.aborted || input.destroyed) fail()
   })
   const signer = await (async () => {
-    if (claimCredential) await claimCredential(Buffer.from(await crypto.subtle.digest("SHA-256", key)).toString("hex"))
+    if (claimCredential) await claimCredential(createHash("sha256").update(key).digest("hex"))
     return ActivityPrivateChannel.signer(key)
   })().finally(() => key.fill(0))
   const applyNonces = new Map<string, number>()
