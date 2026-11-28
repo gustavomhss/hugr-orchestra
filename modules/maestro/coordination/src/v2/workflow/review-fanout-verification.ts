@@ -4,6 +4,8 @@ import { Effect, type Scope } from "effect"
 import type { ReviewCatalog } from "@orchestra/core/review/catalog"
 import type { ReviewRouting } from "@orchestra/core/review/routing"
 import type { ReviewTools } from "@orchestra/core/review/tools"
+import type { ReviewAnalyze } from "@orchestra/core/review-toolkit/analyze"
+import type { ReviewItem } from "@orchestra/core/review-toolkit/item"
 import { ReviewProbe } from "@orchestra/core/review-toolkit/probe"
 import type { SessionSchema } from "@orchestra/core/session"
 import type { SessionScope } from "@orchestra/core/session/scope"
@@ -62,6 +64,7 @@ export type Context = {
   readonly tier: Tier
   readonly intent: Intent
   readonly report: boolean
+  readonly analysis: ReviewFanoutV2.Analysis
   readonly verifierModel: "same" | "distinct"
   readonly reviewed: string
   readonly teamStack: readonly string[]
@@ -124,6 +127,13 @@ export function run(context: Context, request: Request): Effect.Effect<Batch, To
     }))
     const prefix = request.kind === "variant" ? `Stage: variant verify, generation ${request.ordinal}, class ${request.class}.`
       : `Stage: verify, class ${request.class}.`
+    const analyzerEvidence = context.report && request.kind === "ordinary" ? request.candidates.flatMap((candidate) => {
+      const sources = "sources" in candidate && Array.isArray(candidate.sources) ? candidate.sources : []
+      return Object.values(context.analysis.items).flat().flatMap((item: ReviewItem.ToolItem) => {
+        if (!sources.includes(item.fingerprint) || item.class !== candidate.class || item.path !== candidate.path || item.line > (candidate.endLine ?? candidate.line) || (item.endLine ?? item.line) < candidate.line) return []
+        return context.analysis.checks.flatMap((check: ReviewAnalyze.Check) => check.pack === item.pack && check.uri ? [{ candidate: candidate.id, item, check }] : [])
+      })
+    }) : []
     const brief = [
       `${prefix} Settle each candidate at the first rung that settles it: confirmed with the highest rung and its evidence, question with the reason, or dropped with the refutation. Take only the options offered for a candidate.`,
       ...(context.verifierModel === "same" ? ["Another Session raised these candidates. Try to refute each one before you confirm it; confirm only on evidence."] : []),
@@ -132,6 +142,7 @@ export function run(context: Context, request: Request): Effect.Effect<Batch, To
       ReviewFanoutSupportV2.data("intent and acceptance", JSON.stringify(context.intent)),
       ...(request.kind === "variant" ? [ReviewFanoutSupportV2.data("seed rule", JSON.stringify(request.rule))] : []),
       ReviewFanoutSupportV2.data("candidates", JSON.stringify(candidates)),
+      ...(context.report && request.kind === "ordinary" ? [ReviewFanoutSupportV2.data("analyzer evidence", JSON.stringify(analyzerEvidence))] : []),
       "Reply with exactly one ```review-verify block holding your verifier return as JSON.",
     ].join("\n\n")
     const reply = yield* context.run(child, brief, { key: turnKey, finish: false })
