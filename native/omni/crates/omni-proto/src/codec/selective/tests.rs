@@ -15,7 +15,14 @@ fn freeze_wire_round_trips_and_rejects_invalid_discriminants() {
         );
     }
     for outcome in [FreezeOutcome::Changed, FreezeOutcome::Refused, FreezeOutcome::Unknown] {
-        round_trip(Msg::ControlFreezeResult { req: 99, id: 7, outcome }, 0x8b);
+        round_trip(
+            Msg::ControlFreezeResult {
+                req: 99,
+                id: 7,
+                outcome,
+            },
+            0x8b,
+        );
     }
 }
 
