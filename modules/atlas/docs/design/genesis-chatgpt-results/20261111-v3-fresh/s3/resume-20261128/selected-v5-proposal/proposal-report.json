@@ -1,0 +1,33 @@
+{
+  "schema": "s3-v5-proposal-report/v1",
+  "state": "PROPOSAL_BLOCKED_BODY_UNAVAILABLE",
+  "source_package_sha256": "c200d87952c0500e925eb2adfa986849bf9bda3403f4bb8b73ae6ed34fe0297b",
+  "candidate_package_sha256": "af3e1b7b175767da325aed4c873c1dab53a7ee26fcaaea76abcec7c26572226e",
+  "entry_body_sha256": "a5e1bf88aa6c17470c2832c99049dba76867615279689db85d25e2fe8b39e9ef",
+  "entry_body_byte_length": 7764,
+  "declared_expected_body_sha256": "17786a03a9572ec4a96233ec0fafba40b2f0945f33361b8cf3c52fae87b748da",
+  "declared_expected_body_byte_length": 8040,
+  "entry_build_dependencies": [
+    {
+      "key": "s3-l3-flows",
+      "same_package": true
+    },
+    {
+      "key": "s3-l1-maestro",
+      "same_package": true
+    },
+    {
+      "key": "s3-l1-relay",
+      "same_package": true
+    },
+    {
+      "key": "s3-l1-integrations",
+      "same_package": true
+    }
+  ],
+  "only_artifact_changed": "s3-l4-entry",
+  "other_artifacts_preserved": true,
+  "semantic_reviews": "NOT_PERFORMED",
+  "runtime_prepare": "NOT_PERFORMED",
+  "binding": "NOT_PERFORMED"
+}
