@@ -42,9 +42,18 @@ fn freezer_is_exact_for_a_supervisor_owned_single_task_member() {
         .expect("the opt-in Linux isolation test needs a delegated ephemeral cgroup v2 root");
     let root = PathBuf::from(root);
     assert!(root.is_absolute(), "the delegated cgroup root must be an absolute path");
-    assert!(root.join("cgroup.controllers").is_file(), "the delegated root is not cgroup v2");
-    assert!(root.join("cgroup.freeze").is_file(), "the delegated root has no cgroup freezer");
-    assert!(root.join("pids.max").is_file(), "the delegated root has no enabled pids controller");
+    assert!(
+        root.join("cgroup.controllers").is_file(),
+        "the delegated root is not cgroup v2"
+    );
+    assert!(
+        root.join("cgroup.freeze").is_file(),
+        "the delegated root has no cgroup freezer"
+    );
+    assert!(
+        root.join("pids.max").is_file(),
+        "the delegated root has no enabled pids controller"
+    );
 
     let name = format!(
         "omni-member-isolation-{}-{}",
@@ -63,8 +72,14 @@ fn freezer_is_exact_for_a_supervisor_owned_single_task_member() {
 
     let cgroup = fs::File::open(&leaf).expect("open the owned cgroup directory");
     let mut member = Worker::spawn(Some(cgroup.as_raw_fd()));
-    assert!(has_progress(&mut member.pipe, WAIT), "the member must drop credentials and start before the freezer assertion");
-    assert_eq!(fs::read_to_string(leaf.join("cgroup.procs")).unwrap().trim(), member.pid.to_string());
+    assert!(
+        has_progress(&mut member.pipe, WAIT),
+        "the member must drop credentials and start before the freezer assertion"
+    );
+    assert_eq!(
+        fs::read_to_string(leaf.join("cgroup.procs")).unwrap().trim(),
+        member.pid.to_string()
+    );
     assert_eq!(fs::read_to_string(leaf.join("pids.current")).unwrap().trim(), "1");
     assert_eq!(
         fs::read_to_string(format!("/proc/{}/status", member.pid))
@@ -78,19 +93,31 @@ fn freezer_is_exact_for_a_supervisor_owned_single_task_member() {
     );
 
     let mut outsider = Worker::spawn(None);
-    assert!(has_progress(&mut outsider.pipe, WAIT), "the unrelated fixture must start outside the leaf");
+    assert!(
+        has_progress(&mut outsider.pipe, WAIT),
+        "the unrelated fixture must start outside the leaf"
+    );
 
     fs::write(leaf.join("cgroup.freeze"), "1").unwrap();
     wait_frozen(&leaf, true);
     drain(&mut member.pipe);
     drain(&mut outsider.pipe);
     std::thread::sleep(Duration::from_millis(200));
-    assert!(!has_progress(&mut member.pipe, Duration::from_millis(50)), "a confirmed-frozen member made progress");
-    assert!(has_progress(&mut outsider.pipe, WAIT), "freezing the member stopped an unrelated process");
+    assert!(
+        !has_progress(&mut member.pipe, Duration::from_millis(50)),
+        "a confirmed-frozen member made progress"
+    );
+    assert!(
+        has_progress(&mut outsider.pipe, WAIT),
+        "freezing the member stopped an unrelated process"
+    );
 
     fs::write(leaf.join("cgroup.freeze"), "0").unwrap();
     wait_frozen(&leaf, false);
-    assert!(has_progress(&mut member.pipe, WAIT), "the member did not resume after thaw");
+    assert!(
+        has_progress(&mut member.pipe, WAIT),
+        "the member did not resume after thaw"
+    );
 
     // A freezer thaw must not erase a pre-existing job-control stop. Only this fixture sends SIGCONT afterward.
     // SAFETY: this is the fixture-owned member pid, retained unreaped until cleanup.
@@ -103,11 +130,20 @@ fn freezer_is_exact_for_a_supervisor_owned_single_task_member() {
     drain(&mut member.pipe);
     drain(&mut outsider.pipe);
     std::thread::sleep(Duration::from_millis(200));
-    assert!(!has_progress(&mut member.pipe, Duration::from_millis(50)), "thaw incorrectly resumed an externally stopped member");
-    assert!(has_progress(&mut outsider.pipe, WAIT), "the unrelated fixture must keep running during both transitions");
+    assert!(
+        !has_progress(&mut member.pipe, Duration::from_millis(50)),
+        "thaw incorrectly resumed an externally stopped member"
+    );
+    assert!(
+        has_progress(&mut outsider.pipe, WAIT),
+        "the unrelated fixture must keep running during both transitions"
+    );
     // SAFETY: this is the fixture-owned member pid, retained unreaped until cleanup.
     assert_eq!(unsafe { libc::kill(member.pid, libc::SIGCONT) }, 0);
-    assert!(has_progress(&mut member.pipe, WAIT), "the fixture-owned explicit SIGCONT did not resume its member");
+    assert!(
+        has_progress(&mut member.pipe, WAIT),
+        "the fixture-owned explicit SIGCONT did not resume its member"
+    );
 
     member.stop();
     drop(fixture);
@@ -135,7 +171,10 @@ impl Worker {
     fn spawn(cgroup_fd: Option<libc::c_int>) -> Self {
         let mut fds = [-1; 2];
         // SAFETY: `fds` points to two writable c_int slots for pipe2 to initialize.
-        assert_eq!(unsafe { libc::pipe2(fds.as_mut_ptr(), libc::O_CLOEXEC | libc::O_NONBLOCK) }, 0);
+        assert_eq!(
+            unsafe { libc::pipe2(fds.as_mut_ptr(), libc::O_CLOEXEC | libc::O_NONBLOCK) },
+            0
+        );
         // SAFETY: pipe2 returned two owned descriptors; the child keeps the write side and parent owns the read side.
         let read = unsafe { OwnedFd::from_raw_fd(fds[0]) };
         // SAFETY: pipe2 returned two owned descriptors; this descriptor is intentionally inherited by the fork-like child.
@@ -161,7 +200,11 @@ impl Worker {
                 std::mem::size_of::<CloneArgs>(),
             ) as libc::pid_t
         };
-        assert!(pid >= 0, "clone3(CLONE_INTO_CGROUP) failed: {}", io::Error::last_os_error());
+        assert!(
+            pid >= 0,
+            "clone3(CLONE_INTO_CGROUP) failed: {}",
+            io::Error::last_os_error()
+        );
         if pid == 0 {
             drop(read);
             // SAFETY: the child changes only its own credentials before doing fixture work.
@@ -198,17 +241,26 @@ impl Worker {
                 let byte = [1_u8];
                 // SAFETY: the child owns this inherited pipe end and writes one byte at a time.
                 unsafe { libc::write(write.as_raw_fd(), byte.as_ptr().cast(), 1) };
-                let delay = libc::timespec { tv_sec: 0, tv_nsec: 20_000_000 };
+                let delay = libc::timespec {
+                    tv_sec: 0,
+                    tv_nsec: 20_000_000,
+                };
                 // SAFETY: delay is a valid constant timespec; no shared Rust state is touched after fork-like clone.
                 unsafe { libc::nanosleep(&delay, std::ptr::null_mut()) };
             }
         }
         drop(write);
-        Self { pid, pipe: fs::File::from(read), reaped: AtomicBool::new(false) }
+        Self {
+            pid,
+            pipe: fs::File::from(read),
+            reaped: AtomicBool::new(false),
+        }
     }
 
     fn stop(&self) {
-        if self.reaped.swap(true, Ordering::SeqCst) { return; }
+        if self.reaped.swap(true, Ordering::SeqCst) {
+            return;
+        }
         // SAFETY: pid belongs to this fixture and is never reused before waitpid reaps it.
         unsafe { libc::kill(self.pid, libc::SIGKILL) };
         let mut status = 0;
@@ -218,18 +270,28 @@ impl Worker {
 }
 
 impl Drop for Worker {
-    fn drop(&mut self) { self.stop(); }
+    fn drop(&mut self) {
+        self.stop();
+    }
 }
 
 fn has_progress(pipe: &mut fs::File, timeout: Duration) -> bool {
     let end = Instant::now() + timeout;
     loop {
         let remaining = end.saturating_duration_since(Instant::now());
-        if remaining.is_zero() { return false; }
-        let mut pollfd = libc::pollfd { fd: pipe.as_raw_fd(), events: libc::POLLIN, revents: 0 };
+        if remaining.is_zero() {
+            return false;
+        }
+        let mut pollfd = libc::pollfd {
+            fd: pipe.as_raw_fd(),
+            events: libc::POLLIN,
+            revents: 0,
+        };
         let ms = remaining.as_millis().min(i32::MAX as u128) as i32;
         // SAFETY: pollfd points to one initialized descriptor and timeout is bounded.
-        if unsafe { libc::poll(&mut pollfd, 1, ms) } <= 0 { return false; }
+        if unsafe { libc::poll(&mut pollfd, 1, ms) } <= 0 {
+            return false;
+        }
         let mut buf = [0_u8; 256];
         match pipe.read(&mut buf) {
             Ok(n) if n > 0 => return true,
@@ -248,9 +310,17 @@ fn wait_frozen(leaf: &Path, expected: bool) {
     let end = Instant::now() + WAIT;
     loop {
         let events = fs::read_to_string(leaf.join("cgroup.events")).unwrap();
-        let frozen = events.lines().any(|line| line == format!("frozen {}", u8::from(expected)));
-        if frozen { return; }
-        assert!(Instant::now() < end, "cgroup.events did not report frozen={}: {events}", u8::from(expected));
+        let frozen = events
+            .lines()
+            .any(|line| line == format!("frozen {}", u8::from(expected)));
+        if frozen {
+            return;
+        }
+        assert!(
+            Instant::now() < end,
+            "cgroup.events did not report frozen={}: {events}",
+            u8::from(expected)
+        );
         std::thread::sleep(Duration::from_millis(10));
     }
 }
@@ -259,7 +329,12 @@ fn wait_stopped(pid: libc::pid_t) {
     let end = Instant::now() + WAIT;
     loop {
         let status = fs::read_to_string(format!("/proc/{pid}/status")).unwrap();
-        if status.lines().any(|line| line.starts_with("State:") && line.contains("T (stopped)")) { return; }
+        if status
+            .lines()
+            .any(|line| line.starts_with("State:") && line.contains("T (stopped)"))
+        {
+            return;
+        }
         assert!(Instant::now() < end, "SIGSTOP did not stop fixture worker {pid}");
         std::thread::sleep(Duration::from_millis(10));
     }
