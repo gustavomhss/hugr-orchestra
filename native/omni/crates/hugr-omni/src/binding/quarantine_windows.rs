@@ -345,8 +345,8 @@ fn operate_inner(
         information: 0,
     };
     // ReplaceIfExists is zero. The pinned source and destination parent are kernel handles.
-    // SAFETY: the aligned information buffer and handles remain live throughout the synchronous call.
     *entered = true;
+    // SAFETY: the aligned information buffer and handles remain live throughout the synchronous call.
     status(unsafe { NtSetInformationFile(source_handle.0, &mut io, storage.as_ptr().cast(), length as u32, 10) })?;
     Ok(current)
 }
