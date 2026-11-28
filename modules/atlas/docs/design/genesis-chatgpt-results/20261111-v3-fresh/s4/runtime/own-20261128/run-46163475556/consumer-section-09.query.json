@@ -1,0 +1,6 @@
+{
+  "scope": "atlas-continuity-rag-genesis",
+  "key": "S4:L1:coverage-governance",
+  "section": "Observer limits are not scope limits",
+  "maxBytes": 18000
+}

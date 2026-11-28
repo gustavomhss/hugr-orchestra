@@ -1,0 +1,87 @@
+{
+  "status": "ATLAS_REPLIES_READY_FOR_INDEPENDENT_CONSUMER",
+  "manifest": "df2dae9de5931cb86f7572bb6c093fe3fdaef6a274ad8f4985db5c3c63a21afe",
+  "index_responses": 1,
+  "read_responses": 12,
+  "shallow_body_bytes": 4921,
+  "returned_body_bytes": 58282,
+  "deep_responses": [
+    {
+      "key": "S4:L3:system-flows",
+      "section": "Mudanças propagam por resultados e vínculos",
+      "body_bytes": 1902,
+      "response": "consumer-section-01.stdout.json",
+      "response_sha256": "13114419f94eb2e55331c4fdf7d66b81607d829140b40b4babcdef76cdcf1065"
+    },
+    {
+      "key": "S4:L2:atlas-system",
+      "section": "Por que texto igual pode exigir outro resultado",
+      "body_bytes": 1011,
+      "response": "consumer-section-02.stdout.json",
+      "response_sha256": "890e9b4de1befd31ab2b58970307d6e2ef828f1a7fe36b03aa1655199b3bf690"
+    },
+    {
+      "key": "S4:L2:genesis-governance",
+      "section": "Da produção nativa à porta de consumo",
+      "body_bytes": 1041,
+      "response": "consumer-section-03.stdout.json",
+      "response_sha256": "1257ad8ebe126d62401875a7ef8c421df5774fa1a42260612636e598d145af74"
+    },
+    {
+      "key": "S4:L2:continuity-rag-operations",
+      "section": null,
+      "body_bytes": 7949,
+      "response": "read-10.stdout.json",
+      "response_sha256": "2e00bdce6a5c92195c502371d2bddbadfa3c0d8cb1da8f7f67ecc6c0d4a4cf8c"
+    },
+    {
+      "key": "S4:L1:ownership-boundaries",
+      "section": "What each identity means",
+      "body_bytes": 2518,
+      "response": "consumer-section-05.stdout.json",
+      "response_sha256": "4fd84873da856669b83c6bb90e299b14bbca9e452012ef09d4c928506b734298"
+    },
+    {
+      "key": "S4:L1:atlas-engine",
+      "section": "Knowledge: shape, routing, human ratification, and ownership results",
+      "body_bytes": 3493,
+      "response": "consumer-section-06.stdout.json",
+      "response_sha256": "3e0861fb48bc1f85ebdc8887bbf75164955d982c94d18bf3238d827a000932d6"
+    },
+    {
+      "key": "S4:L1:atlas-host-genesis",
+      "section": "Ownership publication, observation and rebuild",
+      "body_bytes": 2708,
+      "response": "consumer-section-07.stdout.json",
+      "response_sha256": "4ab8a41d78d36047b9da50ea77c633a42d20b2c1a901b96b03b2a6237e38e1e5"
+    },
+    {
+      "key": "S4:L1:continuity-rag",
+      "section": null,
+      "body_bytes": 17429,
+      "response": "read-04.stdout.json",
+      "response_sha256": "8a9a883c396e321ccb3a493551bb655df77c8b6cdeb924ee090a0af4508c8864"
+    },
+    {
+      "key": "S4:L1:coverage-governance",
+      "section": "Observer limits are not scope limits",
+      "body_bytes": 1977,
+      "response": "consumer-section-09.stdout.json",
+      "response_sha256": "9867ba253edd796030dd20bcd9b29e8ec4e7019550e90a8b4f7f0be303b58b87"
+    },
+    {
+      "key": "S4:L1:host-boundaries",
+      "section": null,
+      "body_bytes": 11972,
+      "response": "read-06.stdout.json",
+      "response_sha256": "f4983838ad6f66eee0f591b7aab5ff7405dd2380f4aa532431e467bab2be3139"
+    },
+    {
+      "key": "S4:L1:native-runtime-delta",
+      "section": "Consumo e manutenção pela porta real",
+      "body_bytes": 1361,
+      "response": "consumer-section-11.stdout.json",
+      "response_sha256": "c4c5e8e6f70998b11777d322576f30b01546acade4fb84625ef4983b6f07beda"
+    }
+  ]
+}

@@ -1,0 +1,3013 @@
+{
+  "schema": "s4-operational-custody/v1",
+  "state": "ORIGINAL_ACTIONS_BYTES_RECOVERED_AND_CHECKED",
+  "auditor": "/root/audit_s4_delivery",
+  "verified_at_utc": "2026-11-28T18:51:27.015965+00:00",
+  "repository": "gustavomhss/hugr-orchestra",
+  "audited_head": "a606856942ed2b0cf201b9701a82c491d9f8a76f",
+  "scope": "Durable custody of original baseline publication/index/read responses, exact consumer reply bytes and changed-maintenance target evidence. Read-only extraction and deterministic verification; no product execution or new verdict.",
+  "archives": [
+    {
+      "id": 15269573268,
+      "run_id": 46161676698,
+      "job_id": 141030156871,
+      "workflow_head": "582235cede98a22c3a0021eaffe150d827625064",
+      "sha256": "dc6de14db5b6fa1356a3404ff964280024c8f1878b890561fe8f8270de471da7",
+      "bytes": 686483
+    },
+    {
+      "id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "workflow_head": "4e0b1d6d9fd2b7a40407d1dad4b00888791455ee",
+      "sha256": "aa1ca85d3268f722f75e1405f613d182cbf46fff074f79accda8e05c1ae2b906",
+      "bytes": 685786
+    },
+    {
+      "id": 15271540452,
+      "run_id": 46164268380,
+      "job_id": 141038211219,
+      "workflow_head": "cc023ae25847de4c234fde22bc681fd316d1345d",
+      "sha256": "fc71549e61cb9ccfcfd276191dd6b454912ff82412f531933a54e229896b42e8",
+      "bytes": 1112012
+    }
+  ],
+  "runtime_release": {
+    "release_id": "20261128-s4-runtime-noble-binding-v2",
+    "introduced_commit": "2aa1c37af4d8db56ca6a814462d931e00cca55c8",
+    "sealed_commit": "c4f1a608495fc26927bc16e5c5d5ea4ad8e5b324",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+    "sha256": "4b37d56c2beaa3c5e728cc16776ba30971d78db4d54207d698145e862841080a",
+    "byte_length": 11619,
+    "git_blob_sha": "a3adbc8929cef34ecbfb5f7cbde6525e546019a0",
+    "candidate_revision": "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10",
+    "temporal_limit": "Initial prepare run46157343932 preceded the release manifest. All three publication archives listed here postdate the release; runtime candidate equality is verified, historical reading of the release document is not inferred."
+  },
+  "verification": {
+    "baseline_manifest": "df2dae9de5931cb86f7572bb6c093fe3fdaef6a274ad8f4985db5c3c63a21afe",
+    "baseline_index_roots": 7,
+    "baseline_exact_full_body_reads": 15,
+    "consumer_attempt_03": {
+      "eleven_intermediate_replies_verified": true,
+      "body_bytes": 58282,
+      "reads": 12,
+      "indexes": 1,
+      "checkpoint_hashes_matched": true
+    },
+    "consumer_attempt_04": {
+      "focused_replies": [
+        {
+          "key": "S4:L3:system-flows",
+          "source_run": 46161676698,
+          "archive_path": "s4-publication/read-11.stdout.json",
+          "retained_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-11.stdout.json",
+          "sha256": "99b01727b0ba324170eedcef251b948886db392934161ed76d68c5ee5489af43"
+        },
+        {
+          "key": "S4:L2:atlas-system",
+          "source_run": 46163475556,
+          "archive_path": "s4-publication/consumer-section-02.stdout.json",
+          "retained_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-02.stdout.json",
+          "sha256": "890e9b4de1befd31ab2b58970307d6e2ef828f1a7fe36b03aa1655199b3bf690"
+        },
+        {
+          "key": "S4:L2:genesis-governance",
+          "source_run": 46161676698,
+          "archive_path": "s4-publication/read-09.stdout.json",
+          "retained_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-09.stdout.json",
+          "sha256": "2caba54d66126ee0d726c2f47d2a4968cafe64a2267fcf530fc4a4b1684ee53c"
+        },
+        {
+          "key": "S4:L1:ownership-boundaries",
+          "source_run": 46161676698,
+          "archive_path": "s4-publication/consumer-section-05.stdout.json",
+          "retained_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-05.stdout.json",
+          "sha256": "4fd84873da856669b83c6bb90e299b14bbca9e452012ef09d4c928506b734298"
+        },
+        {
+          "key": "S4:L1:atlas-engine",
+          "source_run": 46161676698,
+          "archive_path": "s4-publication/consumer-section-06.stdout.json",
+          "retained_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-06.stdout.json",
+          "sha256": "3e0861fb48bc1f85ebdc8887bbf75164955d982c94d18bf3238d827a000932d6"
+        },
+        {
+          "key": "S4:L1:atlas-host-genesis",
+          "source_run": 46161676698,
+          "archive_path": "s4-publication/consumer-section-07.stdout.json",
+          "retained_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-07.stdout.json",
+          "sha256": "4ab8a41d78d36047b9da50ea77c633a42d20b2c1a901b96b03b2a6237e38e1e5"
+        },
+        {
+          "key": "S4:L1:coverage-governance",
+          "source_run": 46161676698,
+          "archive_path": "s4-publication/consumer-section-09.stdout.json",
+          "retained_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-09.stdout.json",
+          "sha256": "9867ba253edd796030dd20bcd9b29e8ec4e7019550e90a8b4f7f0be303b58b87"
+        },
+        {
+          "key": "S4:L1:native-runtime-delta",
+          "source_run": 46161676698,
+          "archive_path": "s4-publication/consumer-section-11.stdout.json",
+          "retained_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-11.stdout.json",
+          "sha256": "c4c5e8e6f70998b11777d322576f30b01546acade4fb84625ef4983b6f07beda"
+        }
+      ],
+      "recorded_body_bytes": 34955,
+      "recorded_reads": 9,
+      "recorded_indexes": 1,
+      "all_original_reply_bytes_equal_to_retained_copy": true
+    },
+    "consumer_review_response_hashes": "MATCH_4_OF_4",
+    "runtime_binding_response_hashes": "MATCH_4_OF_4",
+    "changed_target_candidate": "fcb16e410853afa4c36f2c250800d3312d50db95d87d9ab49bc169f6e1cd226d",
+    "changed_manifest": "9675e3feda6d07375e17537d66da499ad81b5eb1075dc779738bbb9c498108bb",
+    "changed_two_binding_vectors": "MATCH_EXACT_PREPARED_ENTRIES",
+    "changed_index_roots": 7,
+    "changed_readbacks": 15,
+    "changed_readback_body_hashes_and_lengths": "MATCH_ALL_FIFTEEN_ACCEPTED_BODIES",
+    "changed_recipe_calls": [
+      "S4:L1:host-boundaries"
+    ],
+    "changed_existing_receipt_hashes": "MATCH_11_OF_11"
+  },
+  "files": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/authorization.json",
+      "archive_path": "s4-publication/authorization.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "b0f351d13eb91a1a5ea3ae96a309f190dfba2636f5361c072039ae0e2fdab0ed",
+      "byte_length": 483,
+      "git_blob_sha": "88b9c1d4c18d40b76b35c3c9f76539ff49177f59",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/authorization.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/authorization.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-01.query.json",
+      "archive_path": "s4-publication/consumer-section-01.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "cfc77a1e325f602b40a81442dee9f5b7c753ec898c4d1cdb0a33fb11d40849e6",
+      "byte_length": 160,
+      "git_blob_sha": "f7944f12a510eb70e1e5a5fe201c8a10d362900b",
+      "identical_archive_observations": [
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-01.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-01.receipt.json",
+      "archive_path": "s4-publication/consumer-section-01.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "cad72c2d832b1a9f3f3f681e58f7e5fd2c10f6b858bf578ce68896b6e2dd4e94",
+      "byte_length": 385,
+      "git_blob_sha": "6d613a118c13fdbe70ed75b573f1fe4aa7016436",
+      "identical_archive_observations": [
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-01.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-01.stderr.txt",
+      "archive_path": "s4-publication/consumer-section-01.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-01.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-01.stdout.json",
+      "archive_path": "s4-publication/consumer-section-01.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "13114419f94eb2e55331c4fdf7d66b81607d829140b40b4babcdef76cdcf1065",
+      "byte_length": 6172,
+      "git_blob_sha": "b97781dac2a34e19c3ff4268aedbeed01720ca9a",
+      "identical_archive_observations": [
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-01.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-02.query.json",
+      "archive_path": "s4-publication/consumer-section-02.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "45d46ba36a7b6fbbd090f80b08577dfca8a9a88b96cbb053dce46b695ad76492",
+      "byte_length": 162,
+      "git_blob_sha": "88849d7a216df2ea8d7d59ef8455af37320af2ae",
+      "identical_archive_observations": [
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-02.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-02.receipt.json",
+      "archive_path": "s4-publication/consumer-section-02.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "26984de241ece8246cd06542876ecee556a6b8c01697896b9e7706ec196a5a24",
+      "byte_length": 385,
+      "git_blob_sha": "86f065ac28cef1687e70957f4960e52bf487f20c",
+      "identical_archive_observations": [
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-02.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-02.stderr.txt",
+      "archive_path": "s4-publication/consumer-section-02.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-02.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-02.stdout.json",
+      "archive_path": "s4-publication/consumer-section-02.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "890e9b4de1befd31ab2b58970307d6e2ef828f1a7fe36b03aa1655199b3bf690",
+      "byte_length": 4299,
+      "git_blob_sha": "e0203236bc39b0b96df2f0f2461c399fabeb04fc",
+      "identical_archive_observations": [
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-02.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-03.query.json",
+      "archive_path": "s4-publication/consumer-section-03.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "ac1fd9c16935e50c9c979319fc858f9a8b545726a201ed79602df7a89680b5bd",
+      "byte_length": 161,
+      "git_blob_sha": "edf4d505465e61b59d8a68357f2c94365cab5679",
+      "identical_archive_observations": [
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-03.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-03.receipt.json",
+      "archive_path": "s4-publication/consumer-section-03.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "142a48149b2870694e578303822f19beac71658fb06ac1b630167563c96d0e27",
+      "byte_length": 385,
+      "git_blob_sha": "6605be1d01c4945a6c0145723f9df6ad8dcdeb0a",
+      "identical_archive_observations": [
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-03.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-03.stderr.txt",
+      "archive_path": "s4-publication/consumer-section-03.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-03.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-03.stdout.json",
+      "archive_path": "s4-publication/consumer-section-03.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "1257ad8ebe126d62401875a7ef8c421df5774fa1a42260612636e598d145af74",
+      "byte_length": 4539,
+      "git_blob_sha": "36b914b7d3db81ea5ec32e3fa68c317ca0766ed1",
+      "identical_archive_observations": [
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-03.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-05.query.json",
+      "archive_path": "s4-publication/consumer-section-05.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "067aa8e136b1c5810dc1bd2cfa811909cb1cea7ae4555396c5606151cade0b9e",
+      "byte_length": 147,
+      "git_blob_sha": "42a64c51a1f87b7faa0eaceae44122bbc7b3a4bc",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-05.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-05.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-05.receipt.json",
+      "archive_path": "s4-publication/consumer-section-05.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "89dad454d4289a0aa1a100407be2a2a92a417b88dfada8707f8884ace0d6167f",
+      "byte_length": 385,
+      "git_blob_sha": "6175e969d308bbf1b749673015a19451e1a539a2",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-05.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-05.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-05.stderr.txt",
+      "archive_path": "s4-publication/consumer-section-05.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-05.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-05.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-05.stdout.json",
+      "archive_path": "s4-publication/consumer-section-05.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "4fd84873da856669b83c6bb90e299b14bbca9e452012ef09d4c928506b734298",
+      "byte_length": 4755,
+      "git_blob_sha": "59fe635120dbf791fe487eca339c0c1a9f385ea2",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-05.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-05.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-06.query.json",
+      "archive_path": "s4-publication/consumer-section-06.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "44cff2f00c3ca48f724d7cde6ff380043d31396ff5f4a249f359c44b05d45dc4",
+      "byte_length": 183,
+      "git_blob_sha": "a9e83f87a7ea37a7b73533ef3b5992545bede0f0",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-06.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-06.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-06.receipt.json",
+      "archive_path": "s4-publication/consumer-section-06.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "020ae3c64ede20a41deece0bb10d33c35c00f09a1eb6e63dfbfe8353c0f9b1ae",
+      "byte_length": 385,
+      "git_blob_sha": "cb548c4a80dd929ea24d4fb48ba2bcc0723a7117",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-06.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-06.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-06.stderr.txt",
+      "archive_path": "s4-publication/consumer-section-06.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-06.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-06.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-06.stdout.json",
+      "archive_path": "s4-publication/consumer-section-06.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "3e0861fb48bc1f85ebdc8887bbf75164955d982c94d18bf3238d827a000932d6",
+      "byte_length": 8122,
+      "git_blob_sha": "43defa4917f6044471046501d7c94a30aead71ab",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-06.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-06.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-07.query.json",
+      "archive_path": "s4-publication/consumer-section-07.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "a592550c382031254e9aaaf66bc9d2dd41cf752c28be5cebf3eec4ea16af8d0a",
+      "byte_length": 167,
+      "git_blob_sha": "1c4d2fe551b30c78409c606d64f0f2d83056fc10",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-07.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-07.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-07.receipt.json",
+      "archive_path": "s4-publication/consumer-section-07.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "5fec11400a052e4a8e244329a60d161b0df9b1eb704cf384d8fc55635d1e493a",
+      "byte_length": 385,
+      "git_blob_sha": "4ce35ec186b5984b0464ec28533a247e65583839",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-07.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-07.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-07.stderr.txt",
+      "archive_path": "s4-publication/consumer-section-07.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-07.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-07.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-07.stdout.json",
+      "archive_path": "s4-publication/consumer-section-07.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "4ab8a41d78d36047b9da50ea77c633a42d20b2c1a901b96b03b2a6237e38e1e5",
+      "byte_length": 7313,
+      "git_blob_sha": "b3919e1156697aa03e934294631c98fb6c53bd7e",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-07.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-07.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-09.query.json",
+      "archive_path": "s4-publication/consumer-section-09.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "b7df296685d588825ba0c23e879560576d1386aa55e625eed3b944d92d0c9473",
+      "byte_length": 158,
+      "git_blob_sha": "5bf541a8efdbdcb56132614403d318980de2b3bc",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-09.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-09.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-09.receipt.json",
+      "archive_path": "s4-publication/consumer-section-09.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "33d0cec2aa3f77203c10747da1d5bd8772d76a80eafd189a08abedb6d5c19681",
+      "byte_length": 385,
+      "git_blob_sha": "37948cef46b1b91ec797114dc29e53a326f2b8a5",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-09.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-09.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-09.stderr.txt",
+      "archive_path": "s4-publication/consumer-section-09.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-09.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-09.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-09.stdout.json",
+      "archive_path": "s4-publication/consumer-section-09.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "9867ba253edd796030dd20bcd9b29e8ec4e7019550e90a8b4f7f0be303b58b87",
+      "byte_length": 6698,
+      "git_blob_sha": "e5ddf2dd42341b8c731ae86041664189347f65e1",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-09.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-09.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-11.query.json",
+      "archive_path": "s4-publication/consumer-section-11.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "dacd0d7866d42e189b3f0c6ea3194ad50ebe1103a7b15ea295fee68a5b274503",
+      "byte_length": 161,
+      "git_blob_sha": "18f6b42fd49bfb21fcaa7580a951499fa9fb80f9",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-11.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-11.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-11.receipt.json",
+      "archive_path": "s4-publication/consumer-section-11.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "28e17aee8d6ad8d53453280f0c3f2572911f36fbc1b467622898d7ee6046a702",
+      "byte_length": 385,
+      "git_blob_sha": "cc0f70a820452ca358554a3d77b2fc0ddd50f9f5",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-11.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-11.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-11.stderr.txt",
+      "archive_path": "s4-publication/consumer-section-11.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-11.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-11.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-section-11.stdout.json",
+      "archive_path": "s4-publication/consumer-section-11.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "c4c5e8e6f70998b11777d322576f30b01546acade4fb84625ef4983b6f07beda",
+      "byte_length": 4467,
+      "git_blob_sha": "6e505151fcb08fe7f7649edd45d32886a805b288",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/consumer-section-11.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-section-11.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/consumer-trace.json",
+      "archive_path": "s4-publication/consumer-trace.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "285961d359ae19de586089e414b2359fa901bda576b87b1db0cb1858ede06979",
+      "byte_length": 3290,
+      "git_blob_sha": "3058749b31d000863045353841c16cf55e4d9dfe",
+      "identical_archive_observations": [
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/consumer-trace.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-component.query.json",
+      "archive_path": "s4-publication/index-component.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "4833a4aca43cf2890045324d37a6e79b10990df57ae0ce4d56c0b6edfff3db14",
+      "byte_length": 69,
+      "git_blob_sha": "5b2292a6368587b16920d789539c9bee6ad3e56f",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-component.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-component.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-component.receipt.json",
+      "archive_path": "s4-publication/index-component.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "d7f6d145bb252b723075a53149b169b148c15cf37ca81abf27c3cc51ee8da8c1",
+      "byte_length": 382,
+      "git_blob_sha": "0b710001334557cdaae1ae7b182af55491a1bcb5",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-component.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-component.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-component.stderr.txt",
+      "archive_path": "s4-publication/index-component.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-component.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-component.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-component.stdout.json",
+      "archive_path": "s4-publication/index-component.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "58f411febd13a5311dc19acd42ee8fce602083fc2a648f40f82655192dcffce1",
+      "byte_length": 1163,
+      "git_blob_sha": "ff7c96425536ab53a217c863e130abc5b0b798a4",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-component.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-component.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-entry.query.json",
+      "archive_path": "s4-publication/index-entry.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "74122fc266e10610fd4c6cc917eba8bd1a299ad2f6575fff5e94b726766eb166",
+      "byte_length": 65,
+      "git_blob_sha": "a4f6e87cee49515624ff8f482479e623495717ef",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-entry.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-entry.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-entry.receipt.json",
+      "archive_path": "s4-publication/index-entry.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "0eaae1fea81c98d72bb24a0376a0025423417d67241daa9581682eca4377d0d7",
+      "byte_length": 378,
+      "git_blob_sha": "22e5150cac15c4323901b2767e8fc5fdaa5b9ebb",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-entry.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-entry.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-entry.stderr.txt",
+      "archive_path": "s4-publication/index-entry.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-entry.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-entry.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-entry.stdout.json",
+      "archive_path": "s4-publication/index-entry.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "c812fcdc7a03ab17a909a8babeea09e41bd6c8db25e26db3a0963dd78af1b521",
+      "byte_length": 1426,
+      "git_blob_sha": "7c0fae78009d9b775b7cfeda54a7a871196e565d",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-entry.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-entry.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-evidence.query.json",
+      "archive_path": "s4-publication/index-evidence.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "479d0c70e858fa4d359d62e0e2a87fc42e4466323a98e2a43d396e9aeba1e395",
+      "byte_length": 68,
+      "git_blob_sha": "727a2ac795a3fd9ab180f8b69c7b1000f66d433d",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-evidence.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-evidence.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-evidence.receipt.json",
+      "archive_path": "s4-publication/index-evidence.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "b9040173be7260a5dcbc52321f4e725269bbc430006e70d875e250bdd2be3646",
+      "byte_length": 381,
+      "git_blob_sha": "9f8590f65a41b36400e19c94ea29235aaa61b620",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-evidence.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-evidence.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-evidence.stderr.txt",
+      "archive_path": "s4-publication/index-evidence.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-evidence.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-evidence.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-evidence.stdout.json",
+      "archive_path": "s4-publication/index-evidence.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "bffcaf91ee6cf0921f9e6808801830e58d0c319a5aa6f6a9bebb442d423505f1",
+      "byte_length": 923,
+      "git_blob_sha": "d7487947d3f750a588367328c9355bc73cc9afb9",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-evidence.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-evidence.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-flow.query.json",
+      "archive_path": "s4-publication/index-flow.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "1e703dcdd0914d13e54aee1a7bf076f10ca4972bcdb779c1e88177505d661b03",
+      "byte_length": 64,
+      "git_blob_sha": "cf6e9795ccceed610ded92b19ad270507a694475",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-flow.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-flow.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-flow.receipt.json",
+      "archive_path": "s4-publication/index-flow.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "f12526022aa5e06642928fb120013ca35a4b8381c8d824e040bdfd25c911a7ec",
+      "byte_length": 377,
+      "git_blob_sha": "57a245288b9efef6d49ef4f1b9b8a33714f3896d",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-flow.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-flow.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-flow.stderr.txt",
+      "archive_path": "s4-publication/index-flow.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-flow.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-flow.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-flow.stdout.json",
+      "archive_path": "s4-publication/index-flow.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "9bd4d806e53ffc7d79ef836077347bab1c8caeda4e569f865a0c66a3dd0c85f7",
+      "byte_length": 1371,
+      "git_blob_sha": "126b0ebd1772f3e2c76c33ffe166831ef4fc6f7a",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-flow.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-flow.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-maintenance.query.json",
+      "archive_path": "s4-publication/index-maintenance.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "3f454e8a3318099c8773b7e44301aac230fe276ab5d0049a74fbb8e0b4404140",
+      "byte_length": 71,
+      "git_blob_sha": "50e2d0c0d6de5c20e2d3f9c46025c71702dc6507",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-maintenance.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-maintenance.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-maintenance.receipt.json",
+      "archive_path": "s4-publication/index-maintenance.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "707d518615bc47aa5e8ac403786a51412612347c749541848ca7d40f53858684",
+      "byte_length": 384,
+      "git_blob_sha": "91648df2e4bec9bd29d6b58ba5b8b05f21bd0749",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-maintenance.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-maintenance.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-maintenance.stderr.txt",
+      "archive_path": "s4-publication/index-maintenance.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-maintenance.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-maintenance.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-maintenance.stdout.json",
+      "archive_path": "s4-publication/index-maintenance.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "35992fea7a2a9b81b5f60a60f95fdbf5d717c20ea0ea9228dcae162971080c5c",
+      "byte_length": 1383,
+      "git_blob_sha": "feb88c76cd32cf18f78867c36306a48a64adf6ce",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-maintenance.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-maintenance.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-operational.query.json",
+      "archive_path": "s4-publication/index-operational.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "33390e008b806e7d2ff608c538830e05b1d98075aabbd23f2e95586844b85f8d",
+      "byte_length": 71,
+      "git_blob_sha": "a7ae2e31df4c3dd38fe52d97b7e36e07c80b521b",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-operational.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-operational.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-operational.receipt.json",
+      "archive_path": "s4-publication/index-operational.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "cb078d5e3010c0c2b1f9f971b05c4b4b48c7cb10667ff33115cfba36a49ee43b",
+      "byte_length": 384,
+      "git_blob_sha": "40472ce82499eef2b185487ea4ad94217b1c02ec",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-operational.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-operational.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-operational.stderr.txt",
+      "archive_path": "s4-publication/index-operational.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-operational.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-operational.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-operational.stdout.json",
+      "archive_path": "s4-publication/index-operational.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "74564a5e0fa20d9396b616070afe6f641df4b48236d774186c4fd026d995b580",
+      "byte_length": 1266,
+      "git_blob_sha": "86ee97351a9052a6cd81be09f593ca1db67821d5",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-operational.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-operational.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-ownership.query.json",
+      "archive_path": "s4-publication/index-ownership.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "7c6daeecb381b101e33d759bcf51e8b30385ada7d046a769460afd7fdd948166",
+      "byte_length": 69,
+      "git_blob_sha": "c27ef36b0fe4ef9c4062c1c034d89171334f7887",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-ownership.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-ownership.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-ownership.receipt.json",
+      "archive_path": "s4-publication/index-ownership.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "8dd29432216c9a3da629acc6b01d7e9b8a3ed7e35d86449fc929a948b5a65246",
+      "byte_length": 382,
+      "git_blob_sha": "c3667ec26f63b28f6ec120cd68716f81a52520eb",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-ownership.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-ownership.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-ownership.stderr.txt",
+      "archive_path": "s4-publication/index-ownership.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-ownership.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-ownership.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/index-ownership.stdout.json",
+      "archive_path": "s4-publication/index-ownership.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "de30f767ad5c4b29a156a7bc19f2a192223bc937afbd4ceb66207f843287017b",
+      "byte_length": 1484,
+      "git_blob_sha": "165929564d2bc286a3b01f5d5e4ba97361f4a6ab",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/index-ownership.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/index-ownership.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/publish.receipt.json",
+      "archive_path": "s4-publication/publish.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "1c6cd8e6a47b6fe3771d2d5c2bb3034890338d77dcc9cbe047a63ae437ef922b",
+      "byte_length": 400,
+      "git_blob_sha": "d44b4250dfe4d7515b1868c15977d0324c3ed5f9",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/publish.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/publish.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/publish.stderr.txt",
+      "archive_path": "s4-publication/publish.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/publish.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/publish.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/publish.stdout.json",
+      "archive_path": "s4-publication/publish.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "7dd469bb8f936ef31977d23b7bacc9878e290f0682f8ebf19a1849acafafc02c",
+      "byte_length": 842,
+      "git_blob_sha": "ad091b9c8da9f31e6cc37366e0af1882cc766d2f",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/publish.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/publish.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-01.query.json",
+      "archive_path": "s4-publication/read-01.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "d379b7289f89265a046880f71f02b573588be16520a8c1da358d3f8cba5ba6a0",
+      "byte_length": 106,
+      "git_blob_sha": "a199ccdfdc57c1b68d338ac5924d4cc412f761c8",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-01.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-01.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-01.receipt.json",
+      "archive_path": "s4-publication/read-01.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "6b1c1ab19e9607a1a7e2403da098588955bd4ab55e0a4b379fd379f48451fedf",
+      "byte_length": 373,
+      "git_blob_sha": "24ceca473cc2b4eb07b3b757601c10eec22378bc",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-01.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-01.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-01.stderr.txt",
+      "archive_path": "s4-publication/read-01.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-01.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-01.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-01.stdout.json",
+      "archive_path": "s4-publication/read-01.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "66b3a77d69d2d080813542c0b38d695e7b1de8de4270aa61765464054029a2ec",
+      "byte_length": 20293,
+      "git_blob_sha": "36cd4b599bbfaefa33c53d2077b83d54ed9732d4",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-01.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-01.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-02.query.json",
+      "archive_path": "s4-publication/read-02.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "24a7d41d2cc1b4479715ff016e18f850d8d1e0bb4bf2ed0753cc0979b7ef616f",
+      "byte_length": 98,
+      "git_blob_sha": "ef2bce2730fc2d35bd9fd040902365d805e8ad1b",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-02.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-02.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-02.receipt.json",
+      "archive_path": "s4-publication/read-02.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "51f6c8c5fddcb8a5f647207d83d3349073075ffaa3c9092c8f4e2c540b007ef6",
+      "byte_length": 373,
+      "git_blob_sha": "e970e98f3d02a6de7c9fff238ef58bb79c198ac3",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-02.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-02.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-02.stderr.txt",
+      "archive_path": "s4-publication/read-02.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-02.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-02.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-02.stdout.json",
+      "archive_path": "s4-publication/read-02.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "ac54fd90c4d774f9239782237bdb02e2a5752dc7a43bf3e72cef4d9dc3343b2e",
+      "byte_length": 22685,
+      "git_blob_sha": "4ec89497c4bb8b1241fae82a405b6938167c4113",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-02.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-02.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-03.query.json",
+      "archive_path": "s4-publication/read-03.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "d2c7e81b8d79b740b0a5b2306c9d26e3a6caac96e79803c5e80998cb5aba459e",
+      "byte_length": 104,
+      "git_blob_sha": "b3c55017a15ab25ade921203f029e40323ec17ae",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-03.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-03.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-03.receipt.json",
+      "archive_path": "s4-publication/read-03.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "ba2f858f6ef022762c2c726f15d9aa7b42723929b2d0cbeea2977d5cbb55f861",
+      "byte_length": 373,
+      "git_blob_sha": "0be9112a4469ccb7e83fe76bb2e639c81d9c5129",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-03.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-03.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-03.stderr.txt",
+      "archive_path": "s4-publication/read-03.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-03.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-03.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-03.stdout.json",
+      "archive_path": "s4-publication/read-03.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "dc99fa54b19856e9a774703434d2247b86f431db697235fb89801d6498e0dda5",
+      "byte_length": 22279,
+      "git_blob_sha": "90867b6cf6abad4f9c287f986bbfe9a02e8bad23",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-03.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-03.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-04.query.json",
+      "archive_path": "s4-publication/read-04.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "db00a23b7588c3f7b3fb110493aa1fe919ad48032b385a430b71f1c1ab9bbfb5",
+      "byte_length": 100,
+      "git_blob_sha": "06ae4db16b95a422548767a71562cadef2e2e00d",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-04.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-04.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-04.receipt.json",
+      "archive_path": "s4-publication/read-04.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "a13d897ded208784a70460d2a670afcc6bc1bbb8f64f10dae32589bab7ea1fc7",
+      "byte_length": 373,
+      "git_blob_sha": "f0d2adcc98d5f6139dbc3aefee1e4105c62c6b76",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-04.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-04.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-04.stderr.txt",
+      "archive_path": "s4-publication/read-04.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-04.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-04.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-04.stdout.json",
+      "archive_path": "s4-publication/read-04.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "8a9a883c396e321ccb3a493551bb655df77c8b6cdeb924ee090a0af4508c8864",
+      "byte_length": 22083,
+      "git_blob_sha": "a45ef3492c9b3d62f258cb158aac5ee0fd6b1ede",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-04.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-04.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-05.query.json",
+      "archive_path": "s4-publication/read-05.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "562ef7bcb341a28d01ffa59d011f3b5baab94a7c379f4bd52809e7ff8256813b",
+      "byte_length": 105,
+      "git_blob_sha": "e73d3fc93c3ff20bea985ddd239653d3a1634aab",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-05.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-05.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-05.receipt.json",
+      "archive_path": "s4-publication/read-05.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "c2ec7cc6e892171887b44e3afef9c170eb060f59ee98720671c853d69ae8d8f0",
+      "byte_length": 373,
+      "git_blob_sha": "d82330b33c0db131f9fe9d670dbfdd0e738a93f7",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-05.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-05.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-05.stderr.txt",
+      "archive_path": "s4-publication/read-05.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-05.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-05.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-05.stdout.json",
+      "archive_path": "s4-publication/read-05.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "acae7904cda71abfea27678b0875c913717afe95f82acb74471925c464d555f0",
+      "byte_length": 22780,
+      "git_blob_sha": "138ecc879f278a9a4d05f4f871a8523a7c2b368c",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-05.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-05.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-06.query.json",
+      "archive_path": "s4-publication/read-06.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "c276245a4c30568579f1cf08a2be195cadbb3e7e06ebc3654ce3c90e06586ab3",
+      "byte_length": 101,
+      "git_blob_sha": "bf95191326ce8061f350c845795a817c1ba9e87d",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-06.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-06.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-06.receipt.json",
+      "archive_path": "s4-publication/read-06.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "b4c9731a3c497f7204c60d152b97551457eb88a49eeb281c764142951c8221d0",
+      "byte_length": 373,
+      "git_blob_sha": "eed87fae8b4433f3134461fc2d41a1fd6c5378aa",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-06.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-06.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-06.stderr.txt",
+      "archive_path": "s4-publication/read-06.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-06.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-06.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-06.stdout.json",
+      "archive_path": "s4-publication/read-06.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "f4983838ad6f66eee0f591b7aab5ff7405dd2380f4aa532431e467bab2be3139",
+      "byte_length": 16188,
+      "git_blob_sha": "a8e04d545df5b8d7eac99461e7f4daa57bb44589",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-06.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-06.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-07.query.json",
+      "archive_path": "s4-publication/read-07.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "6398305992498c0a60e183cf8335104ce3f8324d0f3e96b0d28b35d5cbb39302",
+      "byte_length": 106,
+      "git_blob_sha": "4714e1aebc43d6a40cc2080671e92e7102816621",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-07.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-07.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-07.receipt.json",
+      "archive_path": "s4-publication/read-07.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "96bcc3d19b984f6d7667a7d342ac6074585e8427e3c2d1adb6fe8cfc23ed0e5e",
+      "byte_length": 373,
+      "git_blob_sha": "77e0db876a26449207696e24ce4d6c80893c8118",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-07.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-07.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-07.stderr.txt",
+      "archive_path": "s4-publication/read-07.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-07.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-07.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-07.stdout.json",
+      "archive_path": "s4-publication/read-07.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "38cba7b32f7af02f2dce5226f99b6b23eb117231be396664dd9a4a5994b8c6b2",
+      "byte_length": 15254,
+      "git_blob_sha": "ef2705c0726b7483963f382bbabc2d4ec99c68e0",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-07.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-07.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-08.query.json",
+      "archive_path": "s4-publication/read-08.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "3f1d9bffe406d65a8f2e24816dda5709456dbd0c1a98deba22ec94574e081469",
+      "byte_length": 97,
+      "git_blob_sha": "8bf327cd47bc0c4b5586bcb91a2187f5d72cfa40",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-08.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-08.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-08.receipt.json",
+      "archive_path": "s4-publication/read-08.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "82002ddafb4dfd665706d8bf20d728c3d79d21628cd51b465085121c14fbf041",
+      "byte_length": 373,
+      "git_blob_sha": "3cc177a9eb01796ace6712eb87933983a5a08945",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-08.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-08.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-08.stderr.txt",
+      "archive_path": "s4-publication/read-08.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-08.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-08.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-08.stdout.json",
+      "archive_path": "s4-publication/read-08.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e9d60b2d07c6e1c40cdf4d75c422816be940615c72c310d8260904397441afae",
+      "byte_length": 11286,
+      "git_blob_sha": "b8461c5f9c7910bbb90797dd07142f30e75abac9",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-08.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-08.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-09.query.json",
+      "archive_path": "s4-publication/read-09.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "09ff52600d468c1dbda1e5c2fd980a5179bf7111ba36018e3a4595bccecde454",
+      "byte_length": 103,
+      "git_blob_sha": "d509fcd6891c06e4bcfc8907ac92799820013132",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-09.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-09.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-09.receipt.json",
+      "archive_path": "s4-publication/read-09.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "93e97f4de6d45734ec2e462f7b4d076e3d972ea1012f52e3fd0764a8b8e19397",
+      "byte_length": 373,
+      "git_blob_sha": "5e16d15af32ea97bdb8fbc723a3d169ea7150c99",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-09.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-09.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-09.stderr.txt",
+      "archive_path": "s4-publication/read-09.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-09.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-09.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-09.stdout.json",
+      "archive_path": "s4-publication/read-09.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "2caba54d66126ee0d726c2f47d2a4968cafe64a2267fcf530fc4a4b1684ee53c",
+      "byte_length": 11522,
+      "git_blob_sha": "0204e705250fc580978ed187e14ddac97b9ae8a4",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-09.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-09.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-10.query.json",
+      "archive_path": "s4-publication/read-10.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "18fbfbab1b491e06d330d261675bf7698872d7f951e4a1452d39c90bd3610a38",
+      "byte_length": 110,
+      "git_blob_sha": "1e2c4a60a024ea061339266d9508fc1efdb1ef24",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-10.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-10.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-10.receipt.json",
+      "archive_path": "s4-publication/read-10.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "d98846090f0d88e883116f3ebda7c2be14d342f7a2fa91255d3f155a29bc4f4e",
+      "byte_length": 373,
+      "git_blob_sha": "5acc33f7e7f4242babdae6d792a197c8303fd28d",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-10.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-10.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-10.stderr.txt",
+      "archive_path": "s4-publication/read-10.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-10.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-10.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-10.stdout.json",
+      "archive_path": "s4-publication/read-10.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "2e00bdce6a5c92195c502371d2bddbadfa3c0d8cb1da8f7f67ecc6c0d4a4cf8c",
+      "byte_length": 12371,
+      "git_blob_sha": "2e3ff652fd8d3308148d7767f2e88274280ba849",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-10.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-10.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-11.query.json",
+      "archive_path": "s4-publication/read-11.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "226eda5994fa80f0f7871c77863db0db1f974ba62857b7aef83fc5aaa0a14b4f",
+      "byte_length": 97,
+      "git_blob_sha": "0476ea52f303ca0c50c021fa702acf3a797b4a42",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-11.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-11.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-11.receipt.json",
+      "archive_path": "s4-publication/read-11.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "756282b9c29b204a46c7262edbcc747f0bc389cac244ebdfe06216dd28b5e226",
+      "byte_length": 373,
+      "git_blob_sha": "6795660ad8322602de2788bc98199213c20f810e",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-11.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-11.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-11.stderr.txt",
+      "archive_path": "s4-publication/read-11.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-11.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-11.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-11.stdout.json",
+      "archive_path": "s4-publication/read-11.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "99b01727b0ba324170eedcef251b948886db392934161ed76d68c5ee5489af43",
+      "byte_length": 13310,
+      "git_blob_sha": "a6151e2003482a64c770f66531b789ca39aa6b30",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-11.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-11.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-12.query.json",
+      "archive_path": "s4-publication/read-12.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "8fc8f628960739751bbeafe71f0ca88a484ccba9af362b42290a4a8230593470",
+      "byte_length": 90,
+      "git_blob_sha": "e25ff4417de6d5a21022401dc993acbd9dce22cd",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-12.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-12.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-12.receipt.json",
+      "archive_path": "s4-publication/read-12.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "8e9d637fbee474ac18cdbe736c42ce266e316dee700bd6d9871db828340aed90",
+      "byte_length": 373,
+      "git_blob_sha": "f5f545cf9b0ab98c51ddd3c989740f41efdc7777",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-12.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-12.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-12.stderr.txt",
+      "archive_path": "s4-publication/read-12.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-12.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-12.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-12.stdout.json",
+      "archive_path": "s4-publication/read-12.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e79daa91299aef9d6a16c7aad67c6887ba038ae4df60b96774c8660a0af93923",
+      "byte_length": 8542,
+      "git_blob_sha": "1acdbe2789284fe56b2064cd4baa7eb6c327e565",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-12.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-12.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-13.query.json",
+      "archive_path": "s4-publication/read-13.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "072a5a935f7015c057cbccd874b99ebcbb84ad2373e6cb3476373af4ff0e9e7e",
+      "byte_length": 94,
+      "git_blob_sha": "b0b12ee8cf91c2d8768fd82be1ba64d611e7aafd",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-13.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-13.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-13.receipt.json",
+      "archive_path": "s4-publication/read-13.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "87a1f4d316f0d1d4ec0a4405987c7c8415dc93118f22e71b48141714e1992da9",
+      "byte_length": 373,
+      "git_blob_sha": "06e7a095fd90ba7e0aca1facb37c57fa5276e0ca",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-13.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-13.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-13.stderr.txt",
+      "archive_path": "s4-publication/read-13.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-13.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-13.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-13.stdout.json",
+      "archive_path": "s4-publication/read-13.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "3b52418dd26521c398a2d0c41ee257bf68312d6759d692d1f0e599b6c3f6eb3f",
+      "byte_length": 13176,
+      "git_blob_sha": "330ea8b1d07b74a83e828a85fa683a0b244b5e96",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-13.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-13.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-14.query.json",
+      "archive_path": "s4-publication/read-14.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "caab13a8966eecf6dd9f907e8f8e81edb74e6199685593c2e4ad82e74cca434a",
+      "byte_length": 96,
+      "git_blob_sha": "7877a68d3c516799a7167f70a4ae7e5ff0f8ebf8",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-14.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-14.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-14.receipt.json",
+      "archive_path": "s4-publication/read-14.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "4820884bb31d22b25466e9042c9c2079ed408af3b07f6f995d54a64bd303641d",
+      "byte_length": 373,
+      "git_blob_sha": "f4fb3b64cbc5fc6db2d90da63612de4ab491629f",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-14.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-14.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-14.stderr.txt",
+      "archive_path": "s4-publication/read-14.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-14.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-14.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-14.stdout.json",
+      "archive_path": "s4-publication/read-14.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "da3823f5bce97fe93ecd4c0d8c9ad62be18fbdb16adecdf539e19628cb159d62",
+      "byte_length": 12244,
+      "git_blob_sha": "95a56e616c8b6597f11716fb7297c0e3215ff4fa",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-14.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-14.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-15.query.json",
+      "archive_path": "s4-publication/read-15.query.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "34c903c31da3f49c16ac5ec1c68fd5497ec3f9eab35187a80cb73df8b0642c16",
+      "byte_length": 96,
+      "git_blob_sha": "f606a411468f4865317d8b9abd4258682067bb01",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-15.query.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-15.query.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-15.receipt.json",
+      "archive_path": "s4-publication/read-15.receipt.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "45ad091a2a62b7183270212a5e8618d171db579970e122f7e4b179a6b43bbf17",
+      "byte_length": 373,
+      "git_blob_sha": "958dbe14cf7fce199a8ab1044d617bc08166cffe",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-15.receipt.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-15.receipt.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-15.stderr.txt",
+      "archive_path": "s4-publication/read-15.stderr.txt",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "byte_length": 0,
+      "git_blob_sha": "e69de29bb2d1d6434b8b29ae775ad8c2e48c5391",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-15.stderr.txt"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-15.stderr.txt"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/read-15.stdout.json",
+      "archive_path": "s4-publication/read-15.stdout.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "97c772e3ec2502f9c687ecfe4d0deb25c97a515f8d80dbba6f18117a403a568c",
+      "byte_length": 12511,
+      "git_blob_sha": "24a040c1e304e9a8e8e082fbe5760f9d4b6a36ad",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/read-15.stdout.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/read-15.stdout.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46163475556/summary.json",
+      "archive_path": "s4-publication/summary.json",
+      "artifact_id": 15270905737,
+      "run_id": 46163475556,
+      "job_id": 141035747500,
+      "sha256": "273c632e108ec2b051565f8cd403458b9cd731f908f4292c3e912ce91f456bd0",
+      "byte_length": 368,
+      "git_blob_sha": "05756e92a09a07c72c7c89ecaf042b0c3df7bc90",
+      "identical_archive_observations": [
+        {
+          "run_id": 46161676698,
+          "artifact_id": 15269573268,
+          "archive_path": "s4-publication/summary.json"
+        },
+        {
+          "run_id": 46164268380,
+          "artifact_id": 15271540452,
+          "archive_path": "s4-publication/summary.json"
+        }
+      ]
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46164268380/baseline-source.txt",
+      "archive_path": "s4-change/baseline-source.txt",
+      "artifact_id": 15271540452,
+      "run_id": 46164268380,
+      "job_id": 141038211219,
+      "sha256": "765710e476d9aad6c06abcd7b9b610e34e57a57b0e1ede116a33b64b7151da10",
+      "byte_length": 6080,
+      "git_blob_sha": "d0abf2ac581e1e560e6cc3769bdf6b5afd51ea36"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46164268380/target-source.txt",
+      "archive_path": "s4-change/target-source.txt",
+      "artifact_id": 15271540452,
+      "run_id": 46164268380,
+      "job_id": 141038211219,
+      "sha256": "3c5aca47c708827142435492a520cced0d83a3cd0a86761929754ceb7509a2b8",
+      "byte_length": 6103,
+      "git_blob_sha": "c71a76fdce93e769a53e51477d4f08991ef4622a"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46164268380/target-transport.json",
+      "archive_path": "s4-change/target-transport.json",
+      "artifact_id": 15271540452,
+      "run_id": 46164268380,
+      "job_id": 141038211219,
+      "sha256": "f67a248912dd228cdad08ea7f1cfb1fa20c161b06347e3a7d2b932054046e961",
+      "byte_length": 216289,
+      "git_blob_sha": "4d2c831ffacfb37616936969eebc02413d7e82da"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46164268380/prepared.json",
+      "archive_path": "s4-change/prepared.json",
+      "artifact_id": 15271540452,
+      "run_id": 46164268380,
+      "job_id": 141038211219,
+      "sha256": "25c52690018194e6f49737a5a585befd8f3d503c321cb67625ecf156f4b3e51e",
+      "byte_length": 192283,
+      "git_blob_sha": "6d798ee7865245b22b7573695d4cf7dab5b883b0"
+    }
+  ],
+  "existing_files_verified": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46164268380/ledger.json",
+      "archive_path": "s4-change/ledger.json",
+      "artifact_id": 15271540452,
+      "run_id": 46164268380,
+      "job_id": 141038211219,
+      "sha256": "64bb4c322aa2ed77d794820fa38f9b97401a1871336eabf40642c5a063c03f70",
+      "byte_length": 1481,
+      "git_blob_sha": "fd1fd577706603c1f5577f56b5d518a13abd7c67",
+      "already_preserved_at": "a606856942ed2b0cf201b9701a82c491d9f8a76f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46164268380/source-diff.txt",
+      "archive_path": "s4-change/source-diff.txt",
+      "artifact_id": 15271540452,
+      "run_id": 46164268380,
+      "job_id": 141038211219,
+      "sha256": "a1b4f93990f8698561535b04314db6083948eee039b89ca99dc46c391878cbfd",
+      "byte_length": 897,
+      "git_blob_sha": "191346f6a081e654bdc2dfca3a23aed7ee819091",
+      "already_preserved_at": "a606856942ed2b0cf201b9701a82c491d9f8a76f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46164268380/control-old-ref-new-source.stderr.txt",
+      "archive_path": "s4-change/control-old-ref-new-source.stderr.txt",
+      "artifact_id": 15271540452,
+      "run_id": 46164268380,
+      "job_id": 141038211219,
+      "sha256": "a1f0e5531de8e1575445f55b097311161cd76b10093ecd5f3bb8a1587131e2c0",
+      "byte_length": 91,
+      "git_blob_sha": "321fa21dbca04c62f46c22b61d44b786e7a8fd1c",
+      "already_preserved_at": "a606856942ed2b0cf201b9701a82c491d9f8a76f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46164268380/control-old-ref-new-source.receipt.json",
+      "archive_path": "s4-change/control-old-ref-new-source.receipt.json",
+      "artifact_id": 15271540452,
+      "run_id": 46164268380,
+      "job_id": 141038211219,
+      "sha256": "e5b573f705151ba4094244791ca63005e2aa024f8d1dc37626955e1ccb7a1780",
+      "byte_length": 486,
+      "git_blob_sha": "6f15573fd658ea62869505f4a1cfc89564f5c095",
+      "already_preserved_at": "a606856942ed2b0cf201b9701a82c491d9f8a76f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46164268380/control-new-ref-old-source.stderr.txt",
+      "archive_path": "s4-change/control-new-ref-old-source.stderr.txt",
+      "artifact_id": 15271540452,
+      "run_id": 46164268380,
+      "job_id": 141038211219,
+      "sha256": "a1f0e5531de8e1575445f55b097311161cd76b10093ecd5f3bb8a1587131e2c0",
+      "byte_length": 91,
+      "git_blob_sha": "321fa21dbca04c62f46c22b61d44b786e7a8fd1c",
+      "already_preserved_at": "a606856942ed2b0cf201b9701a82c491d9f8a76f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46164268380/control-new-ref-old-source.receipt.json",
+      "archive_path": "s4-change/control-new-ref-old-source.receipt.json",
+      "artifact_id": 15271540452,
+      "run_id": 46164268380,
+      "job_id": 141038211219,
+      "sha256": "98a8d0d71295bcf2233bcc0e4977ba823c4391a20deed2731cc484d8d6385c87",
+      "byte_length": 486,
+      "git_blob_sha": "50d880f1a38e4edcf5a7079ec2d5e01a24baf4fd",
+      "already_preserved_at": "a606856942ed2b0cf201b9701a82c491d9f8a76f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46164268380/prepare-target.receipt.json",
+      "archive_path": "s4-change/prepare-target.receipt.json",
+      "artifact_id": 15271540452,
+      "run_id": 46164268380,
+      "job_id": 141038211219,
+      "sha256": "a5219bd370bf5224e3a0a322f2f2e0c828bee9fbdeb6adb464a880f9a90030cc",
+      "byte_length": 483,
+      "git_blob_sha": "3b95d2ab778b5319e1449104e6e55a6ae5d4f432",
+      "already_preserved_at": "a606856942ed2b0cf201b9701a82c491d9f8a76f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46164268380/private-rebuild.receipt.json",
+      "archive_path": "s4-change/private-rebuild.receipt.json",
+      "artifact_id": 15271540452,
+      "run_id": 46164268380,
+      "job_id": 141038211219,
+      "sha256": "dec5416e3bd057f06e446eaa2a59abbe87ce980405385dcfaf243746acdfd8b2",
+      "byte_length": 646,
+      "git_blob_sha": "90b409542da79642080cf88029aad81b805af4f0",
+      "already_preserved_at": "a606856942ed2b0cf201b9701a82c491d9f8a76f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46164268380/private-rebuild.stdout.txt",
+      "archive_path": "s4-change/private-rebuild.stdout.txt",
+      "artifact_id": 15271540452,
+      "run_id": 46164268380,
+      "job_id": 141038211219,
+      "sha256": "2b61c6f39bd9e8e4b342fb58afa18c200da7d6ac8d5260e4d117920cf79da4b7",
+      "byte_length": 104986,
+      "git_blob_sha": "8c0722a980d9b696dfbf863173196e52f9a90fdc",
+      "already_preserved_at": "a606856942ed2b0cf201b9701a82c491d9f8a76f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46164268380/governed-publish.receipt.json",
+      "archive_path": "s4-change/governed-publish.receipt.json",
+      "artifact_id": 15271540452,
+      "run_id": 46164268380,
+      "job_id": 141038211219,
+      "sha256": "aed29e72be671a40dcf0a3e080dc4c5cee2c47d4d0d4bbee1af9c1b9e1e380d6",
+      "byte_length": 646,
+      "git_blob_sha": "b7e5079475ca56b680f5da393c1bdb6aaad7582e",
+      "already_preserved_at": "a606856942ed2b0cf201b9701a82c491d9f8a76f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46164268380/governed-publish.stdout.txt",
+      "archive_path": "s4-change/governed-publish.stdout.txt",
+      "artifact_id": 15271540452,
+      "run_id": 46164268380,
+      "job_id": 141038211219,
+      "sha256": "8962d82e1e5953a68350992fad594833d1df9881867697c83d5d02fe351fa48a",
+      "byte_length": 127674,
+      "git_blob_sha": "b1a7e87eb2960d061ca63a2aa50d270c3efba1ed",
+      "already_preserved_at": "a606856942ed2b0cf201b9701a82c491d9f8a76f"
+    }
+  ],
+  "limits": [
+    "Original Actions artifact ZIP digests match GitHub API and job-log identities; archives remain temporary transport copies and are not added to Git.",
+    "No CAS tree, policy or active state is restored or activated.",
+    "The changed driver emits readback hashes and lengths, not literal body text; its original governed-publish.stdout.txt is preserved without inventing read responses.",
+    "Consumer host-visible wrapper chunks are not recovered here; checkpoints retain their hashes and message identifiers, while every corresponding original Atlas reply byte is preserved.",
+    "Previous whole-attempt HOLD decisions remain unchanged; suite reuse is supported only by the original same-reviewer case decisions."
+  ]
+}
