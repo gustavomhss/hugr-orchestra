@@ -75,6 +75,12 @@ The hypothesis is **insufficient** until there is a baseline for the same set of
 
 The **Tree id** column shows the native identity when the installed binding exposes it. A missing identity stays **unread**. Root PID, native tree ID and observation UUID remain separate. The API identifies the server observation lifetime with `instanceID`, so a host restart cannot reuse an old address unnoticed. An older binding without the observation request leaves membership unavailable. Inspection failure displays **unknown** and preserves previous members with their original reading age. Failed HTTP refreshes preserve the previous snapshot. The observer keeps the last 32 finished or unavailable observations and reports how many older records it retired.
 
+### Linux member suspension
+
+On a Linux installation with a provisioned Omni isolation supervisor, **Read members** can offer **Suspend member…** for an eligible process. The Desktop confirmation shows the tree, member identity, owner and generation. After confirmation, Omni freezes the selected member and the server records the suspension. **Resume member…** requires a new confirmation for the same member and matching suspension record. Other reasons a process is paused can still apply. An unresolved control attempt is blocked for inspection.
+
+This capability is opt-in and requires a trusted Linux host with a protected cgroup v2 subtree and a dedicated non-root workload identity. It supports new Omni pipe commands that can run as a single task. Existing processes, terminals and commands that need threads or subprocesses are outside this profile. A standard Desktop installation offers these controls only when its owned sidecar can reach a supervisor with this capability.
+
 The category names stay in English in both supported languages. Tab through the category strip once, then use Left/Right, Home or End to select a category.
 
 ## IN/OUT and Quarantine
