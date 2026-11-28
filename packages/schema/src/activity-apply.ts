@@ -36,6 +36,7 @@ export const State = Schema.Struct({
   eligible: Schema.Array(Request).check(Schema.isMaxLength(ActivityArm.maxTargets)),
   results: Schema.Array(Result).check(Schema.isMaxLength(maxResults)),
   partial: Schema.Boolean,
+  custodyPlan: Schema.optionalKey(ActivityArm.PlanSnapshot),
 })
 export type State = typeof State.Type
 

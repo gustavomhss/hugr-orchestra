@@ -83,9 +83,6 @@ export const Flag = {
   get ORCHESTRA_ACTIVITY_ISOLATED_EXECUTABLES() {
     return process.env["ORCHESTRA_ACTIVITY_ISOLATED_EXECUTABLES"]
   },
-  get ORCHESTRA_ACTIVITY_APPLY_ROOT() {
-    return process.env["ORCHESTRA_ACTIVITY_APPLY_ROOT"]
-  },
 
   // Evaluated at access time (not module load) because tests, the CLI, and
   // external tooling set these env vars at runtime.
