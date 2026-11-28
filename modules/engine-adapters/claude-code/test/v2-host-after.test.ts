@@ -1,4 +1,3 @@
-import { ClaudeCodeAccountFixture } from "./fixture/account"
 import { expect, test } from "bun:test"
 import type { HookInput, Options, SDKMessage, SDKUserMessage, query } from "@anthropic-ai/claude-agent-sdk"
 import { AgentV2 } from "@orchestra/core/agent"
@@ -9,6 +8,7 @@ import { ToolSafety } from "@orchestra/core/tool-safety"
 import { DateTime, Effect, Layer, Stream } from "effect"
 import { ClaudeCodeSDK } from "../src/sdk"
 import { ClaudeCodeHost } from "../src/v2/host"
+import { ClaudeCodeAccountFixture } from "./fixture/account"
 
 test("settles authorized built-ins exactly once with Claude Code's real callback response", async () => {
   const settled: { id: string; outcome: ToolSafety.HostedOutcome }[] = []
