@@ -11,6 +11,7 @@ import { ResearchProcess } from "../research-toolkit/process"
 import { ProbeTypecheck } from "../research-toolkit/probe/typecheck"
 import { Probe } from "../research-toolkit/probe/types"
 import { ToolSafetySandbox } from "../tool-safety-sandbox"
+import { ReviewProbe } from "./probe"
 
 export type Diagnostic = { readonly line: number; readonly column: number; readonly code: string }
 export type Observation = {
@@ -95,6 +96,7 @@ export const run = Effect.fn("ReviewScopedTypecheck.run")(function* (input: { re
   const scan = preProcessFile(source, true, true)
   if (scan.importedFiles.length || scan.referencedFiles.length || scan.typeReferenceDirectives.length || scan.libReferenceDirectives.length || scan.isLibFile) return refused("external-syntax")
   return yield* Effect.scoped(Effect.gen(function* () {
+    if (!(yield* ReviewProbe.acquireHostPermit(Probe.Limits.queueSeconds))) return refused("host-capacity")
     const scratch = yield* Effect.acquireRelease(
       Effect.promise(() => mkdtemp(path.join(os.tmpdir(), "lucy-typecheck-"))),
       (directory) => Effect.promise(() => rm(directory, { recursive: true, force: true })),
