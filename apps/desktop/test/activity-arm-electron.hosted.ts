@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { createServer } from "node:http"
-import { chmod, mkdir, mkdtemp, open, readFile, rename, rm, writeFile } from "node:fs/promises"
+import { chmod, mkdir, mkdtemp, open, readFile, rename, rm, utimes, writeFile } from "node:fs/promises"
 import { createRequire } from "node:module"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
@@ -17,17 +17,34 @@ async function parent() {
   try {
     const main = join(root, "repository")
     const worktree = join(root, "worktree")
+    const sibling = join(root, "sibling")
     await mkdir(main)
     await run("git", ["init", "-q", main])
     await run("git", ["-C", main, "config", "user.email", "fixture@example.invalid"])
     await run("git", ["-C", main, "config", "user.name", "Activity fixture"])
     await writeFile(join(main, ".gitignore"), "/.turbo/\n")
-    await run("git", ["-C", main, "add", ".gitignore"])
+    await writeFile(join(main, ".gitattributes"), "*.fixture filter=activity\n")
+    await writeFile(join(main, "tracked.fixture"), "tracked fixture\n")
+    await run("git", ["-C", main, "add", ".gitignore", ".gitattributes", "tracked.fixture"])
     await run("git", ["-C", main, "commit", "-qm", "fixture"])
     await run("git", ["-C", main, "worktree", "add", "--detach", worktree])
+    await run("git", ["-C", main, "worktree", "add", "--detach", sibling])
+    await run("git", ["-C", main, "config", "filter.activity.clean", "tee .activity-filter-ran"])
+    await utimes(join(worktree, "tracked.fixture"), new Date(), new Date(Date.now() + 30_000))
     await chmod(worktree, 0o700)
     await mkdir(join(worktree, ".turbo"))
     await writeFile(join(worktree, ".turbo", "payload"), "untouched fixture\n")
+    const handle = await open(join(worktree, ".turbo", "payload"), "r")
+    try {
+      const source = JSON.stringify(join(desktop, "../../packages/core/src/activity-arm-proof.ts"))
+      await run("unshare", ["--mount", "--pid", "--fork", "--kill-child", "--mount-proc", process.execPath, "-e", `
+        import { ActivityArmProof } from ${source}
+        const proof = await ActivityArmProof.inspect({ worktree: ${JSON.stringify(worktree)}, name: ".turbo" })
+        if (proof) throw new Error("A nested process view must refuse the object while the host holds it")
+      `])
+    } finally {
+      await handle.close()
+    }
     const preload = await Bun.build({ entrypoints: [join(desktop, "src/preload/index.ts")], outdir: root, naming: "preload.cjs", target: "node", format: "cjs", external: ["electron"] })
     const hosted = await Bun.build({ entrypoints: [join(desktop, "test/activity-arm-electron.hosted.ts")], outdir: root, naming: "main.cjs", target: "node", format: "cjs", external: ["electron", "node:sqlite"], define: { "import.meta.env.ORCHESTRA_CHANNEL": '"dev"', "import.meta.env.ORCHESTRA_MAC_SIGNED": '"false"' } })
     if (!preload.success || !hosted.success) throw new Error("Could not build Electron fixture")
@@ -50,7 +67,8 @@ async function parent() {
     const report = await readFile(join(root, "report.json"), "utf8")
     assert.deepEqual(JSON.parse(report), {
       status: "pass", openFileRefused: true, nativeCancel: true, identityMismatch: true, staleRefused: true,
-      signedReceipt: true, durableReceipt: true, sourceUntouched: true,
+      signedReceipt: true, durableReceipt: true, sourceUntouched: true, nestedNamespaceRefused: true,
+      wrongGitDirectoryRefused: true, cleanFilterNotRun: true,
     })
     process.stdout.write(report + "\n")
   } finally {
@@ -134,6 +152,15 @@ async function child() {
     assert.ok(target, `registered worktree did not produce a ready target: ${JSON.stringify(inspected)}`)
     process.stderr.write("Live object qualified\n")
     assert.equal((await plan()).ready.some((item) => item.targetID === target.targetID), true)
+    const marker = join(worktree, ".git")
+    const pointer = await readFile(marker)
+    await writeFile(marker, await readFile(join(root, "sibling", ".git")))
+    try {
+      assert.ok((await plan()).ready.some((item) => item.targetID === target.targetID), "passive GET retains its cached projection")
+      assert.equal((await inspect()).ready.length, 0, "a different Git admin directory cannot qualify the worktree")
+    } finally {
+      await writeFile(marker, pointer)
+    }
     const handle = await open(join(source, "payload"), "r")
     try {
       assert.equal((await inspect()).ready.length, 0, "an open file prevents qualification")
@@ -156,7 +183,7 @@ async function child() {
       assert.deepEqual(shown.options.buttons, ["Cancel", "Arm quarantine"])
       assert.equal(shown.options.defaultId, 0)
       assert.equal(shown.options.cancelId, 0)
-      assert.equal(shown.options.detail, `${source} — activity-fixture\nID: ${target.targetID}\nGeneration: ${target.generation}`)
+      assert.equal(shown.options.detail, `${JSON.stringify(source)} — "activity-fixture"\nID: ${JSON.stringify(target.targetID)}\nGeneration: ${JSON.stringify(target.generation)}`)
       return receipt
     }
     assert.equal(await arm("cancel", idle), undefined)
@@ -182,10 +209,12 @@ async function child() {
     assert.deepEqual(JSON.parse(String(receipts()[0]!.receipt)), receipt)
     assert.equal((await plan()).approvals.length, 1)
     assert.equal(await readFile(join(source, "payload"), "utf8"), "untouched fixture\n")
+    await assert.rejects(readFile(join(worktree, ".activity-filter-ran")), { code: "ENOENT" })
     db.close()
     await writeFile(join(root, "report.json"), JSON.stringify({
       status: "pass", openFileRefused: true, nativeCancel: true, identityMismatch: true, staleRefused: true,
-      signedReceipt: true, durableReceipt: true, sourceUntouched: true,
+      signedReceipt: true, durableReceipt: true, sourceUntouched: true, nestedNamespaceRefused: true,
+      wrongGitDirectoryRefused: true, cleanFilterNotRun: true,
     }))
   } finally {
     window?.destroy()
