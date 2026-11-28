@@ -36,7 +36,9 @@ pub enum SelectiveStopOutcome {
 /// A process identity used by selective stop.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct ControlMember {
+    /// Process number within the supervisor-owned tree.
     pub pid: u32,
+    /// Process creation identity used to reject a recycled process number.
     pub birth: u64,
 }
 
@@ -185,11 +187,19 @@ pub enum Msg {
         id: u64,
     },
     /// host → supervisor: list verified process identities for selective stop.
-    ControlList { req: u64, id: u64 },
+    ControlList {
+        /// Request id.
+        req: u64,
+        /// Tree id.
+        id: u64,
+    },
     /// host → supervisor: stop exactly the supplied process identities.
     ControlStop {
+        /// Request id.
         req: u64,
+        /// Tree id.
         id: u64,
+        /// Exact member identities selected for termination.
         members: Vec<ControlMember>,
     },
     /// host → supervisor: the host dropped its handle; cleanup duty stays. Reply: `Ack`.
@@ -269,14 +279,20 @@ pub enum Msg {
     },
     /// supervisor → host: process identities eligible for selective stop.
     ControlMembers {
+        /// Request id.
         req: u64,
+        /// Tree id.
         id: u64,
+        /// Verified members of the tree at the time of the inventory.
         members: Vec<ControlMember>,
     },
     /// supervisor → host: per-member termination outcome.
     ControlResults {
+        /// Request id.
         req: u64,
+        /// Tree id.
         id: u64,
+        /// One outcome per selected member, ordered as in the request.
         outcomes: Vec<SelectiveStopOutcome>,
     },
     /// supervisor → host: reply without data.
