@@ -1,0 +1,669 @@
+{
+  "schema": "genesis-evaluation-binding/v1",
+  "purpose": "isolated-evaluation-admission",
+  "candidate_id": "3584357f51e8941e448201dc85fc1e419de76a4b89f84798716751b5ca5858b5",
+  "reviewers": [
+    "/root/s2_admission_j1",
+    "/root/s2_admission_j2"
+  ],
+  "decisions": [
+    {
+      "reviewer": "/root/s2_admission_j1",
+      "decision_id": "sha256:d2b3057ac1d7263c5de74d6c7941391cedd829eab8d7ce8180e66bd510bf5424",
+      "purpose": "isolated-evaluation-admission",
+      "candidate_id": "3584357f51e8941e448201dc85fc1e419de76a4b89f84798716751b5ca5858b5",
+      "verdict": "PASS",
+      "entries": [
+        {
+          "key": "s2.l1.desktop-web",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "052303821736745ec55800b537f3de5f37ff3c7c27734dc6e2ab808abb9b59d8",
+          "inputs": "d2cf0a481114e9e16d392dd3a1577614545f97682de3072cdf6d9b01804765a7",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l1.app-session",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384",
+          "inputs": "d2340538beccaee1f20d74a5e5a5ca22ba053e54307af8ba9f74218ad9529053",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l1.design-tui",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "7baaa859ebb117874e48253430260b915f4a711a26764d694039de68fba7b031",
+          "inputs": "6ecb0462e50fc590111e063dbb13d6bbf42a0fcff0c61a2e4f0f01a4174d5778",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l2.desktop-web",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "6acaaa257b85ec42ced3e2ee88dfe57accd4839b5b73647739d203ace9e74aee",
+          "inputs": "623cee53cb06081fd1aa3b85e65dbedb07792688737b94a68722c2f373e30612",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l2.app-session",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5",
+          "inputs": "a536cac3cee463e780083cef85e1393a0bbb6a0b7dd6335ddd5b214b936514fd",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l2.design-tui",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664",
+          "inputs": "d8a7e9c1498969e5cd4a811372368fb7708b6b3bc638c55954b67095f3dff46d",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l3.desktop-web",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "f2885f6d9cf24702935080a454f2a780bea513e8517b19572df074e3f2d2f65c",
+          "inputs": "89f036d6f24ab5444d5734ca24587177fc3d26042a6706bf47562c758409671b",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l3.app-session",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0",
+          "inputs": "d8570d7f5d6b8ded5d72966cf7208a56814f47375cdf8f3ed3e8293b322e1adf",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l3.design-tui",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "3f77baa25cad0ef21847bff3f325478dba06f69c23dae9094c6ee02e83c2d509",
+          "inputs": "31126afd23454212b6fd56c0935b80d5f70173f59989e4392c26c0e8fc392317",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l4.desktop-web",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "26ba4e10f4ead5c9443b7d9804b7b7c8aa9d7166350e08f3453748e0695a3199",
+          "inputs": "1800e7a4cf463790991ec7983610e2290b38d4ef601aeab45436218a2f776b68",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l4.design-tui",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "7a0e27eedc2a116172417159aedfdddf428f2609db8b9104c55012a0926f6629",
+          "inputs": "1bead92c156ba3478fca041820a423b32349f96254a48cc3eeedb5e2be7af943",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l4.app-session",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "8e0368888768de4c6c1e134e47cdc60d12f544fe311152bfb9f4621a264dac0a",
+          "inputs": "0e502939fe65ae00eded03e5d2cbce6680054015f0b0febbe2d90af4be8d69d6",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l4.entry",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "060600df54eb14bab6b17a278bd952afdb1b6bb8999e0dbe2d889d97401a7ff1",
+          "inputs": "5a6c579054e6f18d7abddb5ab1f3789546c27bad371efcc6a75075e7f3351a13",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        }
+      ],
+      "request_ref": {
+        "payload_path": "u1-m1-binding/j1-request.json",
+        "sha256": "475fdc480202498f5ae207d80dee484e1362277fa20176aa1efe9cb0aeaa053f"
+      },
+      "response_ref": {
+        "payload_path": "u1-m1-binding/j1-response.json",
+        "sha256": "d2b3057ac1d7263c5de74d6c7941391cedd829eab8d7ce8180e66bd510bf5424"
+      }
+    },
+    {
+      "reviewer": "/root/s2_admission_j2",
+      "decision_id": "sha256:bb539bee63db57d6589544da9198a2fa9a4053b9f07b572e4d9d140256e557e8",
+      "purpose": "isolated-evaluation-admission",
+      "candidate_id": "3584357f51e8941e448201dc85fc1e419de76a4b89f84798716751b5ca5858b5",
+      "verdict": "PASS",
+      "entries": [
+        {
+          "key": "s2.l1.desktop-web",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "052303821736745ec55800b537f3de5f37ff3c7c27734dc6e2ab808abb9b59d8",
+          "inputs": "d2cf0a481114e9e16d392dd3a1577614545f97682de3072cdf6d9b01804765a7",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l1.app-session",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384",
+          "inputs": "d2340538beccaee1f20d74a5e5a5ca22ba053e54307af8ba9f74218ad9529053",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l1.design-tui",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "7baaa859ebb117874e48253430260b915f4a711a26764d694039de68fba7b031",
+          "inputs": "6ecb0462e50fc590111e063dbb13d6bbf42a0fcff0c61a2e4f0f01a4174d5778",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l2.desktop-web",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "6acaaa257b85ec42ced3e2ee88dfe57accd4839b5b73647739d203ace9e74aee",
+          "inputs": "623cee53cb06081fd1aa3b85e65dbedb07792688737b94a68722c2f373e30612",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l2.app-session",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5",
+          "inputs": "a536cac3cee463e780083cef85e1393a0bbb6a0b7dd6335ddd5b214b936514fd",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l2.design-tui",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664",
+          "inputs": "d8a7e9c1498969e5cd4a811372368fb7708b6b3bc638c55954b67095f3dff46d",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l3.desktop-web",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "f2885f6d9cf24702935080a454f2a780bea513e8517b19572df074e3f2d2f65c",
+          "inputs": "89f036d6f24ab5444d5734ca24587177fc3d26042a6706bf47562c758409671b",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l3.app-session",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0",
+          "inputs": "d8570d7f5d6b8ded5d72966cf7208a56814f47375cdf8f3ed3e8293b322e1adf",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l3.design-tui",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "3f77baa25cad0ef21847bff3f325478dba06f69c23dae9094c6ee02e83c2d509",
+          "inputs": "31126afd23454212b6fd56c0935b80d5f70173f59989e4392c26c0e8fc392317",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l4.desktop-web",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "26ba4e10f4ead5c9443b7d9804b7b7c8aa9d7166350e08f3453748e0695a3199",
+          "inputs": "1800e7a4cf463790991ec7983610e2290b38d4ef601aeab45436218a2f776b68",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l4.design-tui",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "7a0e27eedc2a116172417159aedfdddf428f2609db8b9104c55012a0926f6629",
+          "inputs": "1bead92c156ba3478fca041820a423b32349f96254a48cc3eeedb5e2be7af943",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l4.app-session",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "8e0368888768de4c6c1e134e47cdc60d12f544fe311152bfb9f4621a264dac0a",
+          "inputs": "0e502939fe65ae00eded03e5d2cbce6680054015f0b0febbe2d90af4be8d69d6",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        },
+        {
+          "key": "s2.l4.entry",
+          "contract": "ee1a953595016a100216cf6733eac1c4fc581807da108bae80f7971ae98b812a",
+          "result": "060600df54eb14bab6b17a278bd952afdb1b6bb8999e0dbe2d889d97401a7ff1",
+          "inputs": "5a6c579054e6f18d7abddb5ab1f3789546c27bad371efcc6a75075e7f3351a13",
+          "criteria": [
+            {
+              "id": "ADMIT-EXACT-TRANSFORM",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SOURCE-BINDINGS",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-SEMANTIC-SCOPE",
+              "verdict": "PASS"
+            },
+            {
+              "id": "ADMIT-ISOLATED-PLAN",
+              "verdict": "PASS"
+            }
+          ]
+        }
+      ],
+      "request_ref": {
+        "payload_path": "u1-m1-binding/j2-request.json",
+        "sha256": "5ec5a16eae8f1730a9c042ff37449f194effb5be130c17b084a94e111c2039bf"
+      },
+      "response_ref": {
+        "payload_path": "u1-m1-binding/j2-response.json",
+        "sha256": "bb539bee63db57d6589544da9198a2fa9a4053b9f07b572e4d9d140256e557e8"
+      }
+    }
+  ]
+}

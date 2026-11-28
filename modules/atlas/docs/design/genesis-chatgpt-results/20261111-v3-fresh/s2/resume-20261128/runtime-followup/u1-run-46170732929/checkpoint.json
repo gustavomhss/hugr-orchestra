@@ -1,0 +1,51 @@
+{
+  "schema": "genesis-s2-u1-observed-target-prepare/v1",
+  "run_id": 46170732929,
+  "run_head": "af162548614b562a77461cc96c682fde4ae1c48e",
+  "artifact_id": 15273224344,
+  "artifact_zip_sha256": "608db828533074d459fe54eff0ba9f0bb8300a2bdba103a233966e716c867ef8",
+  "observed_state": "TARGET_PREPARED_REQUIRES_FRESH_ADMIT_BINDING",
+  "m1_candidate": "3584357f51e8941e448201dc85fc1e419de76a4b89f84798716751b5ca5858b5",
+  "generation": "178e09746ca0e6b5781ea452cf35109976011b135e23020a0482391bf258c3b0",
+  "m0_manifest": "e13906119b19c912c2615d728f3a8363152de7f83a0ace63c6f9ba2c0a8618a3",
+  "callback_order": [
+    "s2.l1.desktop-web",
+    "s2.l2.desktop-web",
+    "s2.l3.app-session",
+    "s2.l3.design-tui",
+    "s2.l3.desktop-web",
+    "s2.l4.app-session",
+    "s2.l4.design-tui",
+    "s2.l4.desktop-web",
+    "s2.l4.entry"
+  ],
+  "unchanged_outside_closure": [
+    "s2.l1.app-session",
+    "s2.l1.design-tui",
+    "s2.l2.app-session",
+    "s2.l2.design-tui"
+  ],
+  "verification": "MATCHED_OBSERVED_CALLBACKS_AND_RESULTS",
+  "file_sha256": {
+    "ledger.json": "13bf27906ff587a110376fdf746f6b7573b023da731e4316444efe6299fbab76",
+    "target-checkpoint/result.json": "0d3143376cd481388fee8e9ea4a87a55cbb4a2491f9e1f186c8df81d5b6690f0",
+    "target-checkpoint/callbacks.jsonl": "efd85c0268b45e8e416b6e179e768193cd56c3cd1e49cf6631fb3e899beebf0e",
+    "verified-producers/summary.json": "caacabf9c908719d89231bfc8a0f148b99a03bef050e7c747a1cadae3669ecf9",
+    "verify-complete-prepare.receipt.json": "cfbeb4d1dfd9971f10be947e2b52ab628e24d421576cb4b4b70770cd89d16787"
+  },
+  "reviewed_after_run": {
+    "vector": {
+      "path": "script/genesis-s2/u1-target-binding/m1/review-vector.json",
+      "sha256": "90ec617b3494e76d4457b04cd93c74f5ddae0f6c94acae16d7c89d9f891e597c"
+    },
+    "approval": {
+      "path": "script/genesis-s2/u1-target-binding/m1/approval.json",
+      "sha256": "eb16115aea4f1d1b7452d7c3a5143b828bdf8a58fbfc7051e8ada9fa69fb084c"
+    },
+    "seal": {
+      "path": "script/genesis-s2/u1-target-binding/m1/seal.json",
+      "sha256": "7d86c878d5b05191fd69f178ac7a6efb1125d9cf3644f23b37ab91e2e9410879"
+    }
+  },
+  "admitted_in_this_run": false
+}

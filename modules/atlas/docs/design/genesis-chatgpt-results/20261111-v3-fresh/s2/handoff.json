@@ -304,7 +304,7 @@
   ],
   "update": {
     "case": "S2-U1",
-    "state": "PARTIAL_BASELINE_REUSE_DRIFT_AND_FOUR_CALLBACKS_OBSERVED",
+    "state": "PARTIAL_M1_PREPARED_AND_REVIEWED_AWAITING_ADMISSION",
     "expectation": "PASS_DECLARED_GRAPH_EXPECTATION_ONLY_BOTH_JUDGES",
     "frozen_specification_binding": {
       "path": "evidence/u1-final-binding/receipt.json",
@@ -625,8 +625,8 @@
     },
     "ordinary_publication": "NOT_RUN_IN_EVALUATION_SCOPE",
     "u1_latest_recipe_progress": {
-      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/u1-run-46170096399/checkpoint.json",
-      "sha256": "e51aeebb081ad7eb8417d26a5bb33f6f7f51b4e99301556cf24438af2a6f52bd"
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/u1-run-46170732929/checkpoint.json",
+      "sha256": "51d14b739daefdd6860156c3879578bce11bbe5a393837b513493262a746d967"
     },
     "u1_producer_manifest": {
       "path": "script/genesis-s2/u1-producers/manifest.json",

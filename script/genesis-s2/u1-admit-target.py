@@ -6,6 +6,7 @@ import json
 import os
 from pathlib import Path
 import re
+import shutil
 import subprocess
 
 RUNTIME = '9b0188b2be5ea69638dff8a44e3e931b4d6d8b10'
@@ -47,7 +48,7 @@ def inventory(root):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--phase', choices=['finalize', 'resume'], required=True)
+    parser.add_argument('--phase', choices=['finalize', 'resume', 'restore-capture'], required=True)
     parser.add_argument('--target', choices=['M1', 'M2'], required=True)
     parser.add_argument('--request', type=Path, required=True, help='Actual successful target prepare driver request')
     parser.add_argument('--target-file', type=Path, required=True, help='Complete prepared-evaluation-update result')
@@ -117,13 +118,56 @@ def main():
     driver_copy = root / PREFIX / 'u1-driver/u1-driver.ts'
     require(committed(driver) == driver_copy.read_bytes(), 'pinned driver drift')
     env = {**os.environ, 'ATLAS_ACTOR': '/root', 'ATLAS_RATIFY_TOKEN': '/root'}
-    def invoke(tag, argv):
+    def invoke(tag, argv, expected=0):
         result = subprocess.run(argv, cwd=runtime / 'modules/atlas', env=env, stdin=subprocess.DEVNULL, capture_output=True, check=False)
         write(out / (tag + '.stdout'), result.stdout)
         write(out / (tag + '.stderr'), result.stderr)
         write(out / (tag + '.receipt.json'), encoded({'argv': argv, 'exit_code': result.returncode, 'stdout_sha256': sha(result.stdout), 'stderr_sha256': sha(result.stderr)}))
-        require(result.returncode == 0, tag + ' failed; inspect receipt')
+        require(result.returncode == expected, tag + ' failed; inspect receipt')
         return json.loads(result.stdout)
+    if args.phase == 'restore-capture':
+        require(args.target == 'M1' and out.is_dir(), 'admitted M1 required to capture restoration')
+        summary = json.loads((out / 'summary.json').read_bytes())
+        require(summary['status'] == 'TARGET_ADMITTED_AND_CURRENT_READ' and summary['candidate_id'] == prepared['candidate_id']
+                and summary['generation'] == target['targetGeneration'] and summary['seal_sha256'] == sha(seal_raw), 'M1 admission checkpoint mismatch')
+        restored_root = root.parent / 'corpus-u1-restored'
+        require(not restored_root.exists() and not (out / 'restoration-capture').exists(), 'restoration root already exists')
+        source_before = inventory(root)
+        def only_cas(directory, names):
+            return set(names) - {'cas'} if Path(directory) == root / '.atlas' else ()
+        shutil.copytree(root, restored_root, ignore=only_cas)
+        restored_before = inventory(restored_root)
+        require(restored_before == [p for p in source_before if not p['path'].startswith('.atlas/') or p['path'].startswith('.atlas/cas/')],
+                'restoration clone drift')
+        require(sorted(p.name for p in (restored_root / '.atlas').iterdir()) == ['cas'], 'restored root inherited operational state')
+        source = restored_root / plan['source']['path']
+        variant = source.read_bytes()
+        after = plan['source']['after'].encode()
+        require(variant.count(after) == 1 and sha(variant) == SOURCES['M1'], 'changed source anchor drift')
+        original = variant.replace(after, plan['source']['before'].encode())
+        require(sha(original) == SOURCES['M2'], 'restored source bytes differ')
+        source.write_bytes(original)
+        restore = {k: v for k, v in request.items() if k not in ('outputs_file', 'outputs_sha256')}
+        restore.update({'corpus_root': str(restored_root), 'target_repo_root': str(restored_root), 'baseline_file': str(out / 'target-prepared.json'),
+            'manifest': summary['admitted_manifest'], 'target_generation': sha(('s2-u1-target:' + prepared['candidate_id'] + ':m2').encode()),
+            'context': {'evaluation': candidate['evaluation'], 'evaluationCandidate': prepared['candidate_id'], 'generation': target['targetGeneration']}})
+        restored_plan_request = out / 'restoration-plan-request.json'
+        write(restored_plan_request, encoded({**restore, 'mode': 'plan', 'checkpoint_dir': str(out / 'restoration-plan')}))
+        planned = invoke('restoration-plan', ['bun', str(driver), str(restored_plan_request)])
+        require(planned['kind'] == 'ownership-update-plan' and planned['affected'] == target['affected']
+                and set(planned['unaffected']) == set(plan['outside']), 'restoration planner differs from original closure')
+        capture_request = out / 'restoration-capture-request.json'
+        write(capture_request, encoded({**restore, 'mode': 'prepare', 'checkpoint_dir': str(out / 'restoration-capture')}))
+        hold = invoke('restoration-capture', ['bun', str(driver), str(capture_request)], expected=1)
+        require(hold['kind'] == 'hold' and any('sealed-producer-output-required:' in detail for detail in hold['evidence']), 'restoration did not reach the callback gate')
+        snapshots = list((out / 'restoration-capture').glob('snapshot-*.json'))
+        require(len(snapshots) == 1 and json.loads(snapshots[0].read_bytes())['key'] == planned['affected'][0]
+                and snapshots[0].name == 'snapshot-' + sha(snapshots[0].read_bytes()) + '.json', 'unexpected restoration snapshot')
+        require(inventory(root) == source_before, 'restoration changed the admitted M1 root')
+        write(out / 'restoration-summary.json', encoded({'status': 'RESTORED_SOURCE_CAPTURED_AWAITING_RECIPE_EVIDENCE',
+            'baseline_candidate': prepared['candidate_id'], 'baseline_manifest': summary['admitted_manifest'], 'generation': restore['target_generation'],
+            'source_sha256': sha(original), 'affected': planned['affected'], 'first_snapshot_sha256': sha(snapshots[0].read_bytes()), 'first_key': planned['affected'][0]}))
+        return
     if args.phase == 'finalize':
         require(not out.exists() and sorted(p.name for p in (root / '.atlas').iterdir()) == ['cas'], 'fresh target CAS required')
         out.mkdir(parents=True)
@@ -187,7 +231,8 @@ def main():
     read = invoke('read-current', cli + ['read', str(root), str(out / 'read-query.json')])
     require(read['kind'] == 'ready' and read['historical'] is False and read['manifest'] == manifest and read['result'] == seal['expected_result']
             and read['key'] == query['key'] and read['evaluation']['generation'] == target['targetGeneration'], 'current read identity mismatch')
-    pattern = r'\b(?:150\s*(?:seconds?|s)|150[ ,_]?000\s*(?:ms|milliseconds?))\b' if args.target == 'M1' else r'\b(?:120\s*(?:seconds?|s)|120[ ,_]?000\s*(?:ms|milliseconds?))\b'
+    seconds = '150' if args.target == 'M1' else '120'
+    pattern = rf'\b(?:{seconds}[ -]?(?:seconds?|s)|{seconds}[ ,_]?000\s*(?:ms|milliseconds?))\b'
     require(re.search(pattern, read['body'], re.IGNORECASE) is not None, 'current section does not report required timeout')
     require(lock['callbacks'] == inventory(callback_root), 'callback occurred after finalization')
     write(out / 'summary.json', encoded({'status': 'TARGET_ADMITTED_AND_CURRENT_READ', 'target': args.target, 'candidate_id': prepared['candidate_id'],

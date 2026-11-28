@@ -239,6 +239,16 @@ jobs:
             --request "$root/changed-prepare.request.json" --target-file "$root/target-checkpoint/result.json" \
             --callback-root "$root/target-checkpoint" --binding-directory script/genesis-s2/u1-target-binding/m1 \
             --output "$U1_ROOT/evidence/u1-m1-admission"
+      - name: Capture the original bytes again in the fresh M2 sibling
+        if: ${{ inputs.admit_exact_m1 == true }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          root="$U1_ROOT/evidence/u1-operation"
+          python3 script/genesis-s2/u1-admit-target.py --phase restore-capture --target M1 \
+            --request "$root/changed-prepare.request.json" --target-file "$root/target-checkpoint/result.json" \
+            --callback-root "$root/target-checkpoint" --binding-directory script/genesis-s2/u1-target-binding/m1 \
+            --output "$U1_ROOT/evidence/u1-m1-admission"
       - name: Preserve baseline evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
