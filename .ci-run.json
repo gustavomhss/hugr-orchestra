@@ -1,0 +1,1 @@
+{"package": "schema", "packageSelector": "packages/schema", "directory": "packages/schema", "runner": "bun", "args": ["./test/board-execution.test.ts", "--timeout", "120000"], "env": {}}
