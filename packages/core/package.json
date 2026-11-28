@@ -15,6 +15,7 @@
   "exports": {
     "./activity-worktree": "./src/activity-worktree.ts",
     "./activity-arm": "./src/activity-arm.ts",
+    "./activity-stop-service": "./src/activity-stop-service.ts",
     "./activity-action-ledger": "./src/activity-action-ledger.ts",
     "./activity-disk": "./src/activity-disk.ts",
     "./activity-docker": "./src/activity-docker.ts",

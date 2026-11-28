@@ -2,6 +2,8 @@ import type { ActivityMonitor } from "@orchestra/schema/activity-monitor"
 import { For, Show, createMemo, onCleanup, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
+import { usePlatform } from "@/context/platform"
+import { useServer } from "@/context/server"
 import { useServerSDK } from "@/context/server-sdk"
 import { bytes } from "@/orchestra/actions/format"
 import { readingAge } from "./reading"
@@ -12,10 +14,14 @@ const columns = ["process", "owner", "state", "pid", "supervisorID", "members", 
 export function ActivityTrees(props: { query: string }) {
   const language = useLanguage()
   const sdk = useServerSDK()
+  const platform = usePlatform()
+  const server = useServer()
   const [state, setState] = createStore({
     snapshot: undefined as ActivityMonitor.Snapshot | undefined,
     busy: false,
     failure: undefined as "snapshot" | "inspection" | undefined,
+    stopping: false,
+    stopResult: undefined as { scope: string; uncertain: boolean } | undefined,
     receivedAt: performance.now(),
     now: performance.now(),
   })
@@ -46,6 +52,28 @@ export function ActivityTrees(props: { query: string }) {
     gone: "orchestra.monitor.state.gone",
     unknown: "orchestra.monitor.state.unknown",
   } as const
+
+  const stopScope = () => {
+    const current = server.current
+    return current?.type === "sidecar" && current.variant === "base" ? current.http.url : undefined
+  }
+
+  async function stop(recordID: string) {
+    const scope = stopScope()
+    const request = platform.stopActivityTree
+    if (!scope || !request || state.stopping || state.busy) return
+    const client = sdk()
+    setState({ stopping: true, stopResult: undefined })
+    try {
+      const receipt = await request(scope, { recordID }).catch(() => undefined)
+      if (receipt && !controller.signal.aborted && stopScope() === scope && sdk() === client) {
+        setState("stopResult", { scope, uncertain: receipt.outcomes.some((outcome) => outcome.state === "unknown") })
+        await refresh(recordID)
+      }
+    } finally {
+      if (!controller.signal.aborted) setState("stopping", false)
+    }
+  }
 
   async function refresh(recordID?: string) {
     if (state.busy || controller.signal.aborted) return
@@ -99,6 +127,9 @@ export function ActivityTrees(props: { query: string }) {
             state.failure === "inspection" ? "orchestra.monitor.inspectFailed" : "orchestra.monitor.processFailed",
           )}
         </p>
+      </Show>
+      <Show when={state.stopResult?.scope === stopScope() && state.stopResult}>
+        {(result) => <p role="status">{language.t(result().uncertain ? "orchestra.monitor.stopUncertain" : "orchestra.monitor.stopConfirmed")}</p>}
       </Show>
       <div class="activity-cpu">
         <span>{language.t("orchestra.monitor.cpuLabel")}</span>
@@ -165,6 +196,12 @@ export function ActivityTrees(props: { query: string }) {
                           >
                             {language.t("orchestra.monitor.inspect")}
                           </button>
+                          <Show when={platform.stopActivityTree && stopScope() && row.supervisorID && row.members?.length &&
+                            row.state === "alive" && !row.inspectionFailed}>
+                            <button type="button" class="mx-btn" disabled={state.busy || state.stopping} onClick={() => void stop(row.recordID)}>
+                              {language.t("orchestra.monitor.stopMembers")}
+                            </button>
+                          </Show>
                           <p>
                             {language.t(
                               row.footprint?.hypothesis === "compatible-with-logical-leak"

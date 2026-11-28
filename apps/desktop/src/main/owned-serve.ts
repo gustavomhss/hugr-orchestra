@@ -3,7 +3,8 @@ import { createServer } from "node:net"
 import { request } from "node:http"
 import { Option } from "effect"
 import { ActivityArm } from "@orchestra/schema/activity-arm"
-import type { ActivityArmClient } from "./activity-arm-ipc"
+import { ActivityStop } from "@orchestra/schema/activity-stop"
+import type { ActivityArmClient, ActivityStopClient } from "./activity-arm-ipc"
 import type { Readable } from "node:stream"
 import { ActivityPrivateChannel } from "@orchestra/schema/activity-private-channel"
 import { DesktopOmni } from "./omni-process"
@@ -290,7 +291,65 @@ export async function startOwnedServe(options: {
     }
   }
 
-  return { url, username: "orchestra", password, listener: { stop }, health: { wait: health }, probeActivityApproval, openActivityArm }
+  const openActivityStop = (): ActivityStopClient | undefined => {
+    if (process.platform !== "win32") return undefined
+    const child = state.child
+    const activity = state.activity
+    if (!child || !activity || state.stopping) return undefined
+    const current = () => state.child === child && state.activity === activity && !state.stopping
+    const post = async (endpoint: ActivityPrivateChannel.ArmPath, body: string, signal?: AbortSignal) => {
+      const deadline = AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(3000)])
+      const valid = () => current() && !deadline.aborted
+      return (async () => {
+        const signer = await activity
+        if (!signer || !valid() || Buffer.byteLength(body) > ActivityPrivateChannel.maxBodyBytes) return undefined
+        const nonce = ActivityPrivateChannel.nonce()
+        const mac = await signer.signArm("arm-request", endpoint, nonce, body)
+        if (!valid()) return undefined
+        const reply = await new Promise<{ body: string; mac: string | undefined }>((resolve, reject) => {
+          const req = request({ hostname: HOSTNAME, port, path: endpoint, method: "POST", agent: false, signal: deadline, headers: {
+            "content-type": "application/json", "content-length": Buffer.byteLength(body),
+            [ActivityPrivateChannel.nonceHeader]: nonce, [ActivityPrivateChannel.macHeader]: mac,
+          } }, (response) => {
+            if (response.statusCode !== 200) { response.destroy(); reject(new Error("Invalid response")); return }
+            const chunks: Buffer[] = []
+            let size = 0
+            response.on("data", (chunk: Buffer) => {
+              size += chunk.length
+              if (size > ActivityPrivateChannel.maxBodyBytes) { response.destroy(new Error("Response too large")); return }
+              chunks.push(chunk)
+            })
+            response.on("error", reject)
+            response.on("end", () => {
+              try {
+                resolve({ body: new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(Buffer.concat(chunks)), mac: response.headers[ActivityPrivateChannel.macHeader] as string | undefined })
+              } catch (error) { reject(error) }
+            })
+          })
+          req.on("error", reject)
+          req.end(body)
+        })
+        if (!valid() || !await signer.verifyArm("arm-response", endpoint, nonce, reply.mac ?? null, reply.body) || !valid()) return undefined
+        return JSON.parse(reply.body) as unknown
+      })().catch(() => undefined)
+    }
+    return {
+      async preview(input, signal) {
+        const decoded = ActivityStop.decodeRequest(input)
+        if (Option.isNone(decoded)) return undefined
+        const result = ActivityStop.decodePreview(await post(ActivityPrivateChannel.stopPreviewPath, JSON.stringify(decoded.value), signal))
+        return Option.isSome(result) && current() ? result.value : undefined
+      },
+      async confirm(input, signal) {
+        const decoded = ActivityStop.decodeConfirm(input)
+        if (Option.isNone(decoded)) return undefined
+        const result = ActivityStop.decodeReceipt(await post(ActivityPrivateChannel.stopConfirmPath, JSON.stringify(decoded.value), signal))
+        return Option.isSome(result) && current() ? result.value : undefined
+      },
+    }
+  }
+
+  return { url, username: "orchestra", password, listener: { stop }, health: { wait: health }, probeActivityApproval, openActivityArm, openActivityStop }
 }
 
 /** The server a launch uses, from `ORCHESTRA_SIDECAR`: the desktop-owned child unless "shared" asks for the shared daemon. */
