@@ -105,7 +105,7 @@ export const run = Effect.fn("ReviewProbe.run")(function* (input: Input, context
   // Checked and recorded with no yield between, so two concurrent calls cannot both pass the repeat check.
   context.ledger.runs.add(key)
   context.ledger.attempts.set(input.candidate, (context.ledger.attempts.get(input.candidate) ?? 0) + 1)
-  if (!(yield* permit(context.queueSeconds ?? Probe.Limits.queueSeconds))) {
+  if (!(yield* acquireHostPermit(context.queueSeconds ?? Probe.Limits.queueSeconds))) {
     context.ledger.runs.delete(key)
     context.ledger.attempts.set(input.candidate, (context.ledger.attempts.get(input.candidate) ?? 1) - 1)
     return settle(input, context, { uri, started, steps: [], status: "not-run", reason: "busy" })
@@ -242,7 +242,8 @@ function tail(text: string, bytes: number) {
 // R8: review probes share one low host cap. The research probe's semaphore is private to its module (see Corrections).
 const HOST = Semaphore.makeUnsafe(1)
 
-const permit = Effect.fnUntraced(function* (seconds: number) {
+/** Acquire the shared review-probe slot until the caller's scope finishes, including cleanup. */
+export const acquireHostPermit = Effect.fnUntraced(function* (seconds: number) {
   const observe = yield* ObservePermit
   observe("waiting")
   const got = yield* Effect.acquireRelease(
