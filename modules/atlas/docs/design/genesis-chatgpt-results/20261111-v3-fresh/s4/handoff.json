@@ -11,8 +11,8 @@
   "remote_writer": "/root",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
-  "observed_branch_head": "70610957d0d3d2fef2fde3c5a9a23dcaa51ad8c4",
-  "artifact_revision": "88f1ce893b933fb5e7370b5dc248644e45def68e",
+  "observed_branch_head": "cc023ae25847de4c234fde22bc681fd316d1345d",
+  "artifact_revision": "68eeb1e9bbb40c5954a6af7e8b1409a198aa3840",
   "candidate_revision": "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10",
   "candidate_status": "PUBLISHED_AND_READ_BACK_IN_ISOLATED_ACTIONS",
   "package": {
@@ -25,14 +25,16 @@
     "runtime_state": "NOT_RUN_FOR_COMPOSED_PACKAGE"
   },
   "work": {
-    "commit": "88f1ce893b933fb5e7370b5dc248644e45def68e",
+    "commit": "68eeb1e9bbb40c5954a6af7e8b1409a198aa3840",
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/work.md",
-    "sha256": "22eed44e267aa941f9c7fdf2347d4ef85afbeddfeb510cd16caaf8ad19f789c8"
+    "sha256": "7d0775df285b0d534e4a9b89bd4abd7d7d508b10b139c3f867205132b971d90d",
+    "byte_length": 21372
   },
   "ledger": {
-    "commit": "88f1ce893b933fb5e7370b5dc248644e45def68e",
+    "commit": "68eeb1e9bbb40c5954a6af7e8b1409a198aa3840",
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/execution-ledger.jsonl",
-    "sha256": "a68411e5cba95a422fc2e1d3ed17ce2beab5765e49f5563f4511cdfcbcd67db8"
+    "sha256": "b4b5e8073ff7861c3ce61bbccd8621e213f8977c6aa18566eca84fc89aa740b6",
+    "byte_length": 18148
   },
   "layer_acceptance": [
     {
@@ -110,7 +112,7 @@
   "original_body_changes": 0,
   "previous_artifact_objects_preserved": 11,
   "coordination_status_strings_reconciled": 5,
-  "completion_state": "INCOMPLETE_BLOCKED",
+  "completion_state": "DELIVERY_COMPLETE",
   "local_obligations_closed": [
     "Recover preserved original J1 post-part-05 response and verify exact targets",
     "Close demonstrated J1-E02 semantic evidence request using original verdict",
@@ -121,22 +123,11 @@
     "Independent cold audit of the recovery diff, original votes and scope boundaries",
     "Exact full15 runtime binding approved by two independent reviewers",
     "Isolated governed publication verified by seven Atlas indexes and byte-exact readback of 15 bodies",
-    "Execute accepted maintenance driver on the unchanged baseline: same private manifest, zero affected entries, zero recipe calls"
+    "Execute accepted maintenance driver on the unchanged baseline: same private manifest, zero affected entries, zero recipe calls",
+    "Same independent J1 and J2 pass all five frozen consumer cases on the exact manifest, with compatible reuse by case and exact Atlas bridge records",
+    "Fresh exact semantic and binding decisions, two rejected stale-reference controls, one-recipe changed rebuild and separate governed publication with seven verified indexes and fifteen verified body reads in disposable CI"
   ],
-  "local_obligations_open": [
-    {
-      "id": "S4-K-CONSUMERS",
-      "state": "HOLD_AFTER_TWO_INDEPENDENT_ATTEMPTS",
-      "owner": "Knowledge S4",
-      "operation": "Keep both HOLD decisions and verified reader trace. Resolve omitted frozen criteria in a future fresh, Atlas-only consumer proof."
-    },
-    {
-      "id": "S4-K-MAINTENANCE",
-      "state": "UNCHANGED_REUSE_PROVEN_CHANGED_CASE_PENDING",
-      "owner": "Knowledge S4",
-      "operation": "Freeze a concrete domain change and expected affected keys before corresponding production, then execute changed rebuild and separate governed publication."
-    }
-  ],
+  "local_obligations_open": [],
   "runtime_dependency": {
     "branch": "genesis-runtime-resume",
     "observed_head": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
@@ -180,7 +171,7 @@
   },
   "consumed_dependencies": [],
   "supersedes": {
-    "commit": "70610957d0d3d2fef2fde3c5a9a23dcaa51ad8c4",
+    "commit": "cc023ae25847de4c234fde22bc681fd316d1345d",
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/handoff.json",
     "history_preserved": true
   },
@@ -288,7 +279,7 @@
       "git_blob_sha": "902df91920680e306d0edbeab11eef71c7d7ed1d"
     }
   ],
-  "recorded_utc": "2026-11-28 06:21:55 UTC",
+  "recorded_utc": "2026-11-28 16:23:19 UTC",
   "actions_verification": {
     "commit": "88f1ce893b933fb5e7370b5dc248644e45def68e",
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/recovery-20261128/actions-verification.json",
@@ -376,9 +367,72 @@
       "read_bodies": 15
     },
     "consumer_attempts": [
-      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/consumer-attempt-01/checkpoint.json",
-      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/consumer-attempt-02/checkpoint.json"
+      {
+        "commit": "68eeb1e9bbb40c5954a6af7e8b1409a198aa3840",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/consumer-attempt-01/checkpoint.json",
+        "sha256": "a55817d88c69ce804969c976afa5ecd8a6d97ced13c78c4cd7baf8f2b6fa9354",
+        "byte_length": 5053
+      },
+      {
+        "commit": "68eeb1e9bbb40c5954a6af7e8b1409a198aa3840",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/consumer-attempt-02/checkpoint.json",
+        "sha256": "fef828399d19428372f54e7db64b85a556c02d9c9a0f4fe291c8f2f6afab1480",
+        "byte_length": 1417
+      },
+      {
+        "commit": "68eeb1e9bbb40c5954a6af7e8b1409a198aa3840",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/consumer-attempt-03/checkpoint.json",
+        "sha256": "7c601b94769bf3415e444d4e93a34c205b4ff7434d06be1b4ef58e7ac74a0729",
+        "byte_length": 8749
+      },
+      {
+        "commit": "68eeb1e9bbb40c5954a6af7e8b1409a198aa3840",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/consumer-attempt-04/checkpoint.json",
+        "sha256": "710e069c0d4d1a735e350b307a68c7a97ccdb043dc8d40072c44ec6cc90ff98a",
+        "byte_length": 5386
+      }
     ],
-    "maintenance_reuse": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46162406088/checkpoint.json"
+    "maintenance_reuse": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46162406088/checkpoint.json",
+    "maintenance_change": {
+      "commit": "68eeb1e9bbb40c5954a6af7e8b1409a198aa3840",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/run-46164268380/checkpoint.json",
+      "sha256": "08c9d369512906df76f7f8f11868ec7fb0c1a3597ca13fbb820627ccd28720ba",
+      "byte_length": 3501
+    },
+    "prepared_change_binding": {
+      "commit": "68eeb1e9bbb40c5954a6af7e8b1409a198aa3840",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/binding-change/approval.json",
+      "sha256": "b4ba60e9fcd30503d918219067bcb84432443c3d54e8783b2982fec34662763f",
+      "byte_length": 10764
+    },
+    "consumer_hold_diagnosis": {
+      "commit": "68eeb1e9bbb40c5954a6af7e8b1409a198aa3840",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/consumer-hold-diagnosis.md",
+      "sha256": "1eb0d89bd53cc3cdfe9e11dbf046533953288c072f467fa2e786f8ad8e34aedf",
+      "byte_length": 3269
+    }
+  },
+  "completion_scope": "S4 local knowledge, Atlas consumer evidence and own maintenance. ROOT integration remains separate.",
+  "local_closure": {
+    "commit": "68eeb1e9bbb40c5954a6af7e8b1409a198aa3840",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/local-closure.json",
+    "sha256": "53be57bdbcfaaec5d1f2ca5a861c372e495387a68421c6b47ec9232eace4a3fb",
+    "byte_length": 1356
+  },
+  "closure_usage": {
+    "maintenance_implementation_agent": "/root/s4_knowledge_terra",
+    "native_consumers": [
+      "/root/s4_consumer_final",
+      "/root/s4_consumer_focused"
+    ],
+    "persistent_reviewers": [
+      "/root/s4_bind_j1",
+      "/root/s4_bind_j2"
+    ],
+    "new_semantic_and_binding_review_dispatches": 2,
+    "new_consumer_review_dispatches": 4,
+    "tokens": "UNKNOWN",
+    "physical_attempts": "UNKNOWN",
+    "billing": "UNKNOWN"
   }
 }
