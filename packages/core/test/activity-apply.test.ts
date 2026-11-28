@@ -22,7 +22,7 @@ test("confirmed apply reserves once and survives service restart", async () => {
     const target = yield* actions.record({ targetID: "fixture", kind: "object", label: "fixture", owner: "test",
       identity: "fixture-identity", members: ["fixture"], dirty: false, eligible: ["arm"] })
     const arm = ActivityArmLedger.make(database, { verify: () => Effect.succeed(true) })
-    const armPreview = yield* arm.preview({ targets: [target] })
+    const armPreview = yield* arm.preview({ targets: [{ targetID: target.targetID, generation: target.generation }] })
     if (!armPreview) throw new Error("missing arm preview")
     const approval = yield* arm.confirm({ previewID: armPreview.previewID })
     if (!approval) throw new Error("missing approval")
@@ -54,7 +54,7 @@ test("confirmed apply reserves once and survives service restart", async () => {
     expect((yield* service.confirm({ previewID: preview.previewID }))?.outcome).toBe("Out")
     expect((yield* service.confirm({ previewID: preview.previewID }))?.outcome).toBe("Out")
     const restarted = ActivityApplyService.make(database, { authority })
-    expect(yield* restarted.confirm({ previewID: preview.previewID })).toBeUndefined()
+    expect((yield* restarted.confirm({ previewID: preview.previewID }))?.outcome).toBe("Out")
     expect(yield* restarted.preview(request)).toBeUndefined()
     expect((yield* restarted.state()).results).toMatchObject([{ ...request, outcome: "Out" }])
     expect(mutations).toBe(1)

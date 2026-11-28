@@ -2,7 +2,7 @@ export * as ActivityApplyService from "./activity-apply"
 
 import { ActivityApply } from "@orchestra/schema/activity-apply"
 import { and, eq } from "drizzle-orm"
-import { Effect, Either, Option } from "effect"
+import { Effect, Option } from "effect"
 import type { Database } from "./database/database"
 import type { ActivityActionLedger } from "./activity-action-ledger"
 import type { ActivityArmLedger } from "./activity-arm"
@@ -86,12 +86,12 @@ export function make(database: Database.Interface, options?: { now?: () => numbe
         const decoded = ActivityApply.decodeConfirm(request)
         if (Option.isNone(decoded)) return undefined
         const entry = previews.get(decoded.value.previewID)
-        if (!entry || (!entry.started && entry.preview.expiresAt <= now())) return undefined
-        if (entry.started) {
+        if (!entry || entry.started) {
           const previous = yield* database.db.select().from(ActivityApplyTable).where(eq(ActivityApplyTable.preview_id, entry.preview.previewID)).get()
           return previous ? { previewID: previous.preview_id, approvalID: previous.approval_id, targetID: previous.target_id,
             generation: previous.generation, outcome: previous.outcome } : undefined
         }
+        if (entry.preview.expiresAt <= now()) { previews.delete(entry.preview.previewID); return undefined }
         entry.started = true
         const receipt = { previewID: entry.preview.previewID, approvalID: entry.preview.approvalID,
           targetID: entry.target.targetID, generation: entry.target.generation, outcome: "Unknown" as "Unknown" | "Refused" | "Out" }
@@ -109,32 +109,29 @@ export function make(database: Database.Interface, options?: { now?: () => numbe
             JSON.stringify(arm.snapshot) === JSON.stringify(entry.target) && !!current && current.generation === receipt.generation &&
             JSON.stringify({ ...current.observation, generation: current.generation }) === JSON.stringify(entry.target) &&
             authority.describe(entry.target) === entry.preview.destination && entry.preview.expiresAt > now()
-          const authorized = valid ? yield* Effect.either(authority.authorize(tx, structuredClone(entry.target))) : undefined
-          receipt.outcome = valid && authorized && Either.isRight(authorized) && authorized.right === true ? "Unknown" : "Refused"
+          const authorized = valid ? yield* authority.authorize(tx, structuredClone(entry.target)).pipe(Effect.catch(() => Effect.succeed(false))) : false
+          receipt.outcome = authorized ? "Unknown" : "Refused"
           yield* tx.insert(ActivityApplyTable).values({ preview_id: receipt.previewID, approval_id: receipt.approvalID,
-            target_id: receipt.targetID, generation: receipt.generation, outcome: receipt.outcome }).run()
+            target_id: receipt.targetID, generation: receipt.generation, source: entry.target.label, destination: entry.preview.destination, outcome: receipt.outcome }).run()
           return true
         }), { behavior: "immediate" })
+        previews.delete(entry.preview.previewID)
         if (!reserved) return undefined
         if (receipt.outcome === "Refused") return receipt
-        const prepared = yield* Effect.either(authority.prepare(structuredClone(entry.target), entry.preview.destination))
-        if (Either.isLeft(prepared) || !prepared.right) receipt.outcome = "Refused"
+        const item = yield* authority.prepare(structuredClone(entry.target), entry.preview.destination).pipe(Effect.catch(() => Effect.succeed(undefined)))
+        if (!item) receipt.outcome = "Refused"
         else {
-          const item = prepared.right
-          const result = yield* Effect.promise(async () => {
-            try {
-              if (item.identity !== entry.target.identity) return "Refused" as const
-              return await ActivityQuarantineExecutor.execute(item.adapter, { id: entry.target.targetID,
-                generation: entry.target.generation, identity: item.identity }, "apply")
-            } finally {
-              await item.release().catch(() => undefined)
-            }
-          })
-          receipt.outcome = result === "Verified" ? "Out" : result
+          receipt.outcome = yield* Effect.gen(function* () {
+            yield* database.db.update(ActivityApplyTable).set({ identity: item.identity }).where(eq(ActivityApplyTable.preview_id, receipt.previewID)).run()
+            if (!item.identity.trim()) return "Refused" as const
+            const result = yield* Effect.promise(() => ActivityQuarantineExecutor.execute(item.adapter, { id: entry.target.targetID,
+              generation: entry.target.generation, identity: item.identity }, "apply"))
+            return result === "Verified" ? "Out" as const : result
+          }).pipe(Effect.ensuring(Effect.promise(() => item.release().catch(() => undefined))))
         }
         yield* database.db.update(ActivityApplyTable).set({ outcome: receipt.outcome }).where(eq(ActivityApplyTable.preview_id, receipt.previewID)).run()
         return receipt
-      })
+      }).pipe(Effect.uninterruptible)
     },
   }
 }
