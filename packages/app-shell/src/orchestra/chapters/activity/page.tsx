@@ -11,6 +11,7 @@ import { ActivityTrees } from "./trees"
 import { ActivityDisk } from "./disk"
 import { ActivityDocker } from "./docker"
 import { ActivityExternalCaches } from "./external-caches"
+import { ActivityPlan } from "./plan"
 import "./activity.css"
 
 export default function ActivityPage(_props: ChapterPageProps) {
@@ -75,7 +76,14 @@ export default function ActivityPage(_props: ChapterPageProps) {
           <ActivityTrees query={state.query} />
         </Show>
         <Show
-          when={state.tab === "Worktrees" || state.tab === "Docker" || state.tab === "Trees" || diskRoot()}
+          when={
+            state.tab === "Worktrees" ||
+            state.tab === "Docker" ||
+            state.tab === "Trees" ||
+            state.tab === "IN/OUT" ||
+            state.tab === "Quarantine" ||
+            diskRoot()
+          }
           fallback={
             <div class="mx-empty" role="status">
               <strong>{language.t("orchestra.monitor.collectionUnavailable", { category: state.tab })}</strong>
@@ -88,6 +96,15 @@ export default function ActivityPage(_props: ChapterPageProps) {
           </Show>
           <Show when={state.tab === "Docker"}>
             <ActivityDocker query={state.query} />
+          </Show>
+          <Show when={state.tab === "IN/OUT"}>
+            <ActivityPlan query={state.query} />
+          </Show>
+          <Show when={state.tab === "Quarantine"}>
+            <div class="mx-empty" role="status">
+              <strong>{language.t("orchestra.monitor.quarantineUnavailable")}</strong>
+              <p>{language.t("orchestra.monitor.quarantinePending")}</p>
+            </div>
           </Show>
         </Show>
       </div>

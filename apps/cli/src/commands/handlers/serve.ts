@@ -92,8 +92,11 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
     const { ActivityPrivateChannelServer } = yield* Effect.promise(
       () => import("@orchestra/server/activity-private-channel"),
     )
+    const { ActivityArmLedger } = yield* Effect.promise(() => import("@orchestra/core/activity-arm"))
+    const scope = yield* Layer.build(AppNodeBuilder.build(Database.node))
+    const arm = ActivityArmLedger.make(Context.get(scope, Database.Service))
     return yield* Effect.tryPromise({
-      try: (signal) => ActivityPrivateChannelServer.acquire(process.stdin, signal),
+      try: (signal) => ActivityPrivateChannelServer.acquire(process.stdin, signal, arm),
       catch: () => new Error("Activity private channel startup failed"),
     })
   }) : undefined
