@@ -201,6 +201,7 @@ export const owners: readonly { readonly tools: readonly string[]; readonly agen
       "maestro_workflows",
       "maestro_record_context",
       "maestro_request_review",
+      "maestro_read_review_evidence",
       "maestro_record_validation",
       "maestro_prepare_review_checks",
       "maestro_grant_authorization",

@@ -10,6 +10,7 @@ import { Tool } from "@orchestra/core/tool/tool"
 import type { ReviewEngagementEvidenceV2 } from "../workflow/review-engagement-evidence"
 import { ReviewEngagementPolicyV2 } from "../workflow/review-engagement-policy"
 import { ReviewEngagementReportV2 } from "../workflow/review-engagement-report"
+import { ReviewEngagementArtifactsV2 } from "../workflow/review-engagement-artifacts"
 
 const KEY = "lucyEngagementV1"
 const strict = { onExcessProperty: "error" } as const
@@ -23,21 +24,27 @@ const IdentitySchema = Schema.Struct({
 export type Identity = typeof IdentitySchema.Type
 const ChildSchema = Schema.Struct({ id: SessionSchema.ID, key: Schema.NonEmptyString, role: Schema.Literals(["lead", "lens", "verifier"]) })
 export type Child = typeof ChildSchema.Type
-const StoredRecord = Schema.Struct({
-  schema: Schema.Literal("review-engagement-state-v1"), identity: IdentitySchema,
+const recordFields = {
+  identity: IdentitySchema,
   input: ReviewEngagementPolicyV2.Input, owner: Schema.NonEmptyString, model: Schema.optional(Model),
   budget: ReviewEngagementReportV2.Budget, source: Schema.optional(ReviewEngagementReportV2.Source),
   children: Schema.Array(ChildSchema), state: Schema.Literals(["running", "terminal"]), output: Schema.optional(Schema.String),
-})
-type Common = Omit<typeof StoredRecord.Type, "schema" | "state" | "output">
+}
+const StoredRecord = Schema.Union([
+  Schema.Struct({ schema: Schema.Literal("review-engagement-state-v1"), ...recordFields }),
+  Schema.Struct({ schema: Schema.Literal("review-engagement-state-v2"), ...recordFields,
+    evidence: Schema.optional(ReviewEngagementArtifactsV2.EvidenceState) }),
+])
+type Common = Omit<typeof StoredRecord.Type, "state" | "output"> & { readonly evidence?: ReviewEngagementArtifactsV2.EvidenceState }
 export type Running = Common & { readonly state: "running" }
 export type Terminal = Common & { readonly state: "terminal"; readonly terminal: ReviewEngagementReportV2.Stored }
 export type Record = Running | Terminal
 export type Ticket = { readonly identity: Identity; readonly owner: string }
-export type Outcome = { readonly status: "completed"; readonly result: ReviewEngagementReportV2.Stored } |
+export type Outcome = { readonly status: "completed"; readonly result: ReviewEngagementReportV2.Stored; readonly evidence: ReviewEngagementArtifactsV2.Sealed } |
   { readonly status: ReviewEngagementReportV2.Stopped; readonly reason?: string }
 export type Interface = {
   readonly read: (identity: Identity) => Effect.Effect<Record | undefined, Tool.Failure>
+  readonly lookup: (parent: SessionSchema.Info, reportID: string) => Effect.Effect<Terminal | undefined, Tool.Failure>
   readonly admit: (identity: Identity, input: ReviewEngagementPolicyV2.Input, owner: string,
     model?: SessionSchema.Info["model"]) => Effect.Effect<Record, Tool.Failure>
   readonly capture: (ticket: Ticket, source: ReviewEngagementEvidenceV2.Prepared) => Effect.Effect<Record, Tool.Failure>
@@ -77,13 +84,39 @@ export function make(database: Database.Interface): Interface {
     return record
   })
   const stop = (tx: Sql, record: Running, status: ReviewEngagementReportV2.Stopped, reason?: string) => {
-    const terminal: Terminal = { ...record, state: "terminal", terminal: ReviewEngagementReportV2.terminal(context(record), status, reason) }
+    const terminal: Terminal = { ...record, state: "terminal", terminal: ReviewEngagementReportV2.terminal({ ...context(record),
+      ...(record.schema === "review-engagement-state-v2" ? { notExamined: [{ item: "engagement:evidence-publication",
+        reason: status === "expired" ? "time-box" : status === "cancelled" ? "cancelled" : "failure" }] } : {}) }, status, reason) }
     return write(tx, terminal, record).pipe(Effect.as(terminal))
   }
   return {
     read: (id) => Effect.gen(function* () {
       const row = yield* load(database.db, id.leadID)
       return row ? yield* decode(row, id) : undefined
+    }),
+    lookup: (parent, reportID) => Effect.gen(function* () {
+      // SQL restricts the authoritative placement before any report ID or JSON record is inspected.
+      const rows = yield* database.db.select().from(SessionTable).where(and(eq(SessionTable.parent_id, parent.id),
+        eq(SessionTable.project_id, parent.projectID), eq(SessionTable.directory, parent.location.directory), eq(SessionTable.agent, "lucy"),
+        parent.location.workspaceID === undefined ? sql`${SessionTable.workspace_id} IS NULL` : eq(SessionTable.workspace_id, parent.location.workspaceID),
+      )).all().pipe(Effect.orDie)
+      let found: Terminal | undefined
+      for (const row of rows) {
+        if (!metadataObject(row.metadata)) continue
+        const value = row.metadata?.[KEY]
+        if (typeof value !== "object" || value === null || !("output" in value) || typeof value.output !== "string") continue
+        const output = value.output
+        const selected = yield* Effect.try({ try: () => Schema.decodeUnknownSync(Schema.Struct({ reportID: Digest }))(JSON.parse(output)),
+          catch: () => undefined }).pipe(Effect.catch(() => Effect.succeed(undefined)))
+        if (selected?.reportID !== reportID) continue
+        const data = yield* Effect.try({ try: () => Schema.decodeUnknownSync(StoredRecord)(value, strict),
+          catch: (error) => storedFailure(value, invalid(String(error))) })
+        const record = yield* decode(row, identity(parent, data.input))
+        if (!record || record.state !== "terminal" || record.terminal.value.reportID !== reportID || found)
+          return yield* invalid("report lookup identity differs")
+        found = record
+      }
+      return found
     }),
     admit: (id, input, owner, requestedModel) => atomic((tx) => Effect.gen(function* () {
       const parent = yield* load(tx, id.parentID)
@@ -102,7 +135,8 @@ export function make(database: Database.Interface): Interface {
       const now = yield* Clock.currentTimeMillis
       const budget = ReviewEngagementPolicyV2.createBudget(input, now)
       const model = normalizeModel(requestedModel)
-      const record: Running = { identity: id, input, owner, ...(model ? { model } : {}),
+      const record: Running = { schema: "review-engagement-state-v2", evidence: { policy: "required-completed-v1" },
+        identity: id, input, owner, ...(model ? { model } : {}),
         budget: { startedAt: budget.startedAt, deadlineAt: budget.deadlineAt },
         children: [{ id: id.leadID, key: "lead", role: "lead" }], state: "running" }
       yield* write(tx, record)
@@ -152,7 +186,11 @@ export function make(database: Database.Interface): Interface {
       const result = yield* ReviewEngagementReportV2.read(outcome.result.text)
       if (result.value.status !== "completed") return yield* invalid("completion contains no completed report")
       yield* matchesResult(record, result)
-      const terminal: Terminal = { ...record, state: "terminal", terminal: result }
+      const evidence = yield* Effect.try({ try: () => ReviewEngagementArtifactsV2.assertBinding(outcome.evidence, result),
+        catch: (error) => error instanceof Tool.Failure ? error : invalid(String(error)) })
+      // Validation can suspend; the original deadline is checked again immediately before publication under this lock.
+      if ((yield* Clock.currentTimeMillis) >= record.budget.deadlineAt) return yield* stop(tx, record, "expired")
+      const terminal: Terminal = { ...record, ...(record.schema === "review-engagement-state-v2" ? { evidence } : {}), state: "terminal", terminal: result }
       yield* write(tx, terminal, record)
       return terminal
     })),
@@ -181,9 +219,10 @@ function decode(row: Row, expected: Identity): Effect.Effect<Record | undefined,
     })
     if (data.identity.inputHash !== expected.inputHash)
       return yield* failure("engagement-request-conflict", "request ID already owns a different accepted input")
+    const legacy = data.schema === "review-engagement-state-v1"
     if (!same(data.identity, expected) || ReviewEngagementReportV2.digest(data.input) !== expected.inputHash ||
       data.input.requestID !== expected.requestID || data.input.profile === "compliance" || data.input.fixReview !== undefined ||
-      !same(normalizeModel(row.model), data.model ?? null) ||
+      !same(normalizeModel(row.model, legacy), normalizeModel(data.model, legacy)) ||
       data.budget.deadlineAt - data.budget.startedAt !== data.input.timeBoxMinutes * 60_000 ||
       !Number.isSafeInteger(data.budget.startedAt) || !Number.isSafeInteger(data.budget.deadlineAt) ||
       new Set(data.children.map((child) => child.id)).size !== data.children.length ||
@@ -192,16 +231,38 @@ function decode(row: Row, expected: Identity): Effect.Effect<Record | undefined,
       return yield* invalid("durable admission identity mismatch")
     const source = data.source
     if (source) yield* Effect.try({ try: () => validateCapture(data.input, source), catch: (error) => invalid(String(error)) })
-    const { schema, state, output, ...common } = data
+    const { state, output, ...common } = data
+    const evidence = data.schema === "review-engagement-state-v2" ? data.evidence : undefined
+    if (data.schema === "review-engagement-state-v2" && evidence === undefined)
+      return yield* failure("engagement-evidence-missing", "versioned record has no required evidence policy or reference")
+    if (evidence !== undefined &&
+      ((evidence.receiptID === undefined) !== (evidence.bytes === undefined)))
+      return yield* invalid("evidence reference is incomplete")
     if (state === "running") {
       if (output !== undefined) return yield* invalid("unfinished record has terminal bytes")
+      if (evidence !== undefined && evidence.receiptID !== undefined)
+        return yield* invalid("unfinished record has a published evidence receipt")
       return { ...common, state }
     }
     if (output === undefined) return yield* invalid("terminal bytes are missing")
     const terminal = yield* ReviewEngagementReportV2.read(output)
     yield* matchesResult(common, terminal)
+    if (data.schema === "review-engagement-state-v2" && terminal.value.status !== "completed") {
+      if (evidence !== undefined && evidence.receiptID !== undefined) return yield* invalid("stopped record has a published evidence receipt")
+      const reason = terminal.value.status === "expired" ? "time-box" : terminal.value.status === "cancelled" ? "cancelled" : "failure"
+      if (!terminal.value.notExamined.some((gap) => gap.item === "engagement:evidence-publication" && gap.reason === reason))
+        return yield* invalid("stopped evidence publication coverage is missing")
+    }
     return { ...common, state, terminal }
-  })
+  }).pipe(Effect.mapError((error) => storedFailure(row.metadata?.[KEY], error)))
+}
+
+/** New durable integrity failures have evidence semantics; legacy admission/conflict behavior is preserved. */
+function storedFailure(value: unknown, error: Tool.Failure): Tool.Failure {
+  if (typeof value === "object" && value !== null && "schema" in value && value.schema === "review-engagement-state-v2" &&
+    (error.metadata?.reason === "engagement-record-invalid" || error.metadata?.reason === "engagement-report-invalid"))
+    return failure("engagement-evidence-corrupt", "versioned evidence record is unavailable or corrupt")
+  return error
 }
 
 function context(record: Common): ReviewEngagementReportV2.Context {
@@ -217,9 +278,10 @@ function matchesResult(record: Common, result: ReviewEngagementReportV2.Stored) 
     ? Effect.void : Effect.fail(invalid("terminal result does not match durable admission"))
 }
 
-function normalizeModel(model: SessionSchema.Info["model"] | Row["model"]): typeof Model.Type | null {
+function normalizeModel(model: SessionSchema.Info["model"] | Row["model"], legacy = false): typeof Model.Type | null {
   if (!model) return null
-  return { id: model.id, providerID: model.providerID, variant: model.variant ?? "default" }
+  const variant = legacy ? model.variant ?? "default" : model.variant
+  return { id: model.id, providerID: model.providerID, ...(variant === undefined ? {} : { variant }) }
 }
 
 function validateCapture(input: ReviewEngagementPolicyV2.Input, source: ReviewEngagementEvidenceV2.Prepared) {
@@ -276,8 +338,8 @@ function write(db: Sql, record: Record, previous?: Running) {
   return Effect.gen(function* () {
     const { state, ...rest } = record
     const data = state === "terminal"
-      ? { schema: "review-engagement-state-v1", ...common(record), state, output: record.terminal.text }
-      : { schema: "review-engagement-state-v1", ...rest, state }
+      ? { ...common(record), state, output: record.terminal.text }
+      : { ...rest, state }
     const changed = yield* db.update(SessionTable).set({
       metadata: sql`json_set(coalesce(${SessionTable.metadata}, '{}'), ${`$.${KEY}`}, json(${JSON.stringify(data)}))`,
       time_updated: sql`${SessionTable.time_updated}`,

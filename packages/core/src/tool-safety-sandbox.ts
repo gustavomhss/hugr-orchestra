@@ -381,6 +381,8 @@ export const confine = Effect.fn("ToolSafetySandbox.confine")(function* (input: 
   readonly env: NodeJS.ProcessEnv
   /** Existing files inside `cwd` the program may rewrite in place. */
   readonly write?: ReadonlyArray<string>
+  /** Host-only read: a missing runtime is refused without starting or waiting for acquisition. */
+  readonly acquire?: boolean
 }) {
   if (process.platform !== "darwin" && process.platform !== "linux")
     return yield* new ToolSafety.Denied({ reason: `sandbox-platform-unsupported: ${process.platform}` })
@@ -388,7 +390,7 @@ export const confine = Effect.fn("ToolSafetySandbox.confine")(function* (input: 
     ? yield* available("/usr/bin/sandbox-exec").pipe(Effect.map((binary) => binary
         ? { kind: "seatbelt" as const, binary }
         : { kind: "none" as const, reason: "sandbox-seatbelt-unavailable" }))
-    : yield* pick(true, true).pipe(Effect.flatMap((picked) => picked.kind === "none" && picked.reason === "sandbox-runtime-acquiring"
+    : yield* pick(input.acquire !== false, true).pipe(Effect.flatMap((picked) => input.acquire !== false && picked.kind === "none" && picked.reason === "sandbox-runtime-acquiring"
         ? ToolSafetySandboxRuntime.settled().pipe(Effect.andThen(pick(false, true)))
         : Effect.succeed(picked)))
   if (sandbox.kind === "none") return yield* new ToolSafety.Denied({ reason: sandbox.reason })

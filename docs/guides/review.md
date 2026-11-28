@@ -199,8 +199,9 @@ Audit classifications are material weakness (P0), significant deficiency (P1), d
 and observation (P3). Artifact reports retain the P0–P3 labels. These labels classify supported findings; they do
 not establish a legal obligation or supply missing evidence.
 
-Keep the same `requestID` and exact input when retrying under the same parent Session. A terminal retry returns
-the same saved bytes, including after reopening the application or moving HEAD. Changing a supplied field,
+Keep the same `requestID` and exact input when retrying under the same parent Session. A completed retry verifies
+its required evidence before returning the same saved bytes, including after reopening the application or moving
+HEAD. It does not rerun a model, CODE query or analyzer to repair missing evidence. Changing a supplied field,
 including an optional default or path order, returns `engagement-request-conflict`. Use a new request ID for a
 deliberately new engagement. Another parent Session has its own request namespace.
 
@@ -215,6 +216,54 @@ history and executable verifier probes are unavailable here. Reports explicitly 
 probes. Audit variant search and fix review are not built in this slice; compliance requests and `fixReview`
 requests refuse before source capture. Artifact behavioral evaluation remains unexamined without owner permission.
 Those limits remain open even when an individual report completes successfully.
+
+### Reading retained engagement evidence
+
+A newly completed report has a durable evidence receipt in the same application's data storage. Ask Maestro to
+call `maestro_read_review_evidence` with `op: "manifest"` and the envelope's `reportID`. The response identifies the
+receipt body and gives counts of operations, artifacts and native proofs. Use `op: "read"`, that report ID and the
+returned manifest `artifactID` to read the receipt; then use its artifact descriptors to read the individual bodies.
+The receipt binds the captured source, original budget and exact report. It retains actual CODE captures, source
+quotations, every host analysis and the final analysis identity.
+
+Each read returns at most 4,096 original bytes encoded as base64, with a continuation `next` cursor when more bytes
+remain. Pass that cursor unchanged on the next read. Concatenate decoded bytes before interpreting UTF-8, since a
+page can end inside a character. An artifact's size and SHA-256 describe the complete body. A truncated process
+capture is explicitly incomplete and records both observed and retained byte counts; storing it cannot make its
+check pass.
+
+Only Maestro in the report's original parent Session, project and Location can read it. Knowing a report ID, body
+hash or evidence URI grants no access. The reader accepts report/artifact IDs and cursors; it does not accept a
+filesystem path or a command. It uses the ordinary permission and output-policy checks.
+
+Engagement analysis currently qualifies the prepared oxlint 1.91.0 host path on Linux x64. Its proof records the
+actual selected source and host config, runtime digest, invocation recipe and original stdout/stderr. Other routed
+producers, including eligible Deep impact and LSP readers, return `engagement-evidence-scope-unqualified` before
+execution. Other oxlint platforms report `oxlint unsupported: native-runtime-unqualified`. Missing runtimes stay
+unavailable; an engagement never installs one. Read the report's host `notExamined` entries for these limitations.
+
+| Retention or read bound | Limit |
+| --- | ---: |
+| One producer body | 16 MiB |
+| Sum of distinct artifact descriptor sizes | 64 MiB |
+| Artifact descriptors | 256 |
+| Captured CODE operations | 128 |
+| Receipt body | 1 MiB |
+| One byte page | 4,096 bytes |
+| One continuation cursor | 1,024 characters |
+| One later read or replay integrity operation | 60 seconds |
+
+These are logical limits per engagement and receipt, not a physical disk quota. Unpublished bodies may remain
+after a failed or interrupted request; they grant no read authority without a published receipt.
+
+Exceeding a publication bound fails the request; it does not silently drop evidence. Retention and final receipt
+publication use the original review deadline. Cancelled, expired and failed reports have no public receipt and
+name the evidence-publication gap. Their retries retain the same stopped result.
+
+Reports saved by the earlier format retain exact report replay and return explicit `legacy-record` evidence
+unavailability. A newer completed report with a missing reference, missing body or corrupt bytes fails by name.
+The reader and retry preserve that terminal record and do not rebuild a receipt from model messages or temporary
+files. The evidence receipt carries no governed approval or execution permission.
 
 ## Tiers
 
@@ -337,8 +386,10 @@ grant permission, and invented candidate IDs are refused. Probes run against a h
 commit or tree, not the current working directory. If entry adds an analyzer, paging and the final checks use the
 latest retained analysis rather than the earlier run.
 
-Raw CODE, probe and history output stays in the review's analysis cache after its Sessions and scratch copies close.
-That cache is OS-managed temporary storage, not a permanent evidence archive.
+Governed and PR review raw CODE, probe and history output stays in the review's OS-managed temporary analysis cache
+after its Sessions and scratch copies close. Newly completed independent engagements additionally retain their
+required CODE and analysis evidence in the durable receipt described above. History and executable verifier probes
+remain unavailable in independent engagements.
 
 A card states its limits; it never claims "no problems" for anything it did not look at.
 

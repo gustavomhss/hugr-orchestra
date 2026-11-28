@@ -38,6 +38,7 @@ import { ReviewGoVet } from "./govet"
 import { ReviewLspDiagnostics } from "./lsp-diagnostics"
 import { ReviewTypeAware } from "./type-aware"
 import { ReviewLocalChecksAnalyze } from "./local-checks-analyze"
+import { ReviewEngagementEvidence } from "./engagement-evidence"
 
 export const TYPECHECK_CI = ReviewBuildLane.TYPECHECK_CI
 export const LSP_ABSENT = ReviewLspDiagnostics.ABSENT
@@ -74,6 +75,8 @@ type PipelineInput = Parameters<Pipeline>[0]
 export type RunInput = {
   /** Host-only immutable repository scope; omission keeps the existing diff analysis. */
   readonly repositoryFiles?: ReadonlyArray<string>
+  /** Qualified producer observation for an independent engagement; never model supplied. */
+  readonly evidence?: Evidence
   readonly worktree: string
   /** The base revision: the new-only step's tree and the source of the repository's declared gates. */
   readonly base: string
@@ -98,6 +101,15 @@ export type RunInput = {
 }
 
 export class Failed extends Schema.TaggedErrorClass<Failed>()("ReviewAnalyze.Failed", { reason: Schema.String }) {}
+
+export type Evidence = ReviewEngagementEvidence.Evidence
+export type EvidenceEvent = ReviewEngagementEvidence.EvidenceEvent
+export type Result = {
+  readonly checks: Check[]
+  readonly items: ReviewNoise.Result["items"]
+  readonly retained: { readonly uri: string; readonly total: number; readonly unread: Record<string, number> }
+  readonly debt: { readonly uri: string; readonly total: number }
+}
 
 const LANES: ReadonlyArray<string> = ["no-build", "repo", "build"]
 const PAGE = 20
@@ -140,9 +152,10 @@ const baseCache = new Map<string, { results: ReadonlyArray<ReviewSarif.Raw>; uri
 
 /** Host only: runs the routed packs and the noise pipeline once, before any model turn. */
 export const run = Effect.fn("ReviewAnalyze.run")(function* (input: RunInput, pipeline: Pipeline = ReviewNoise.pipeline) {
-  if (input.repositoryFiles !== undefined && !repositoryAdmitted(input)) {
+  if (input.repositoryFiles !== undefined && !ReviewEngagementEvidence.repositoryAdmitted(input)) {
     return yield* new Failed({ reason: "repository-scope-invalid" })
   }
+  if (!ReviewEngagementEvidence.sourceAdmitted(input)) return yield* new Failed({ reason: ReviewEngagementEvidence.MISMATCH })
   const catalog = input.catalog ?? ReviewCatalog.current
   const observeCatalog = yield* ObserveCatalog
   observeCatalog(catalog)
@@ -165,7 +178,7 @@ export const run = Effect.fn("ReviewAnalyze.run")(function* (input: RunInput, pi
   const requested = catalog.route.tiers.find((entry) => entry.id === input.tier)
   const readImpact = yield* ReadImpact
   const impact = requested?.id === "deep" && requested.built && requested.runs === "deep"
-    ? yield* readImpact(context)
+    ? input.evidence ? ReviewEngagementEvidence.impactUnavailable() : yield* readImpact(context)
     : undefined
   // Candidate bytes were captured before the host selected the review identity, never from a mutable path here.
   const releaseChecks: Check[] = []
@@ -204,35 +217,12 @@ export const run = Effect.fn("ReviewAnalyze.run")(function* (input: RunInput, pi
     tier: input.tier,
     catalog,
   })
-  const retained = yield* context.write("retained.json", JSON.stringify(result.retained))
-  const debt = yield* context.write("debt.json", JSON.stringify(result.debt))
+  const written = yield* ReviewEngagementEvidence.retain(context, result)
   const readDiagnostics = yield* ReadDiagnostics
   const diagnostics = yield* ReviewLspDiagnostics.analyze(selected, context, readDiagnostics)
-  return {
-    checks: [...releaseChecks, ...outcomes.flatMap((outcome) => outcome.checks), ...diagnostics, ...(impact === undefined ? [] : [impact.check])],
-    items: result.items,
-    retained: { uri: retained, total: result.retained.total, unread: result.retained.unread },
-    debt: { uri: debt, total: result.debt.length },
-  }
+  return yield* ReviewEngagementEvidence.complete(context,
+    [...releaseChecks, ...outcomes.flatMap((outcome) => outcome.checks), ...diagnostics, ...(impact === undefined ? [] : [impact.check])], written)
 }, Effect.scoped)
-
-function repositoryAdmitted(input: RunInput) {
-  const listed = input.repositoryFiles
-  if (listed === undefined || listed.length === 0 || input.scope !== "files") return false
-  if (input.head === undefined || !/^[0-9a-f]{40}$|^[0-9a-f]{64}$/.test(input.head) || input.base !== input.head) return false
-  if (input.profile !== "audit" && input.profile !== "diligence" && input.profile !== "artifact" && input.profile !== "compliance") return false
-  if (!sameFileSet(input.files, listed) || !listed.every(canonicalFile)) return false
-  return Object.values(input.changed).every((ranges) => ranges.length === 0)
-}
-
-function sameFileSet(files: ReadonlyArray<string> | undefined, listed: ReadonlyArray<string>) {
-  return files !== undefined && files.length === listed.length && new Set(files).size === files.length && files.every((file) => listed.includes(file))
-}
-
-function canonicalFile(file: string) {
-  if (file.includes("\0") || file.includes("\\") || /^[A-Za-z]:/.test(file) || file.startsWith("/")) return false
-  return file.split("/").every((part) => part !== "" && part !== "." && part !== "..")
-}
 
 /** A lens child pages its own lens of the retained artifact; the host binds `lens` to the caller's routed lens. */
 export const page = Effect.fn("ReviewAnalyze.page")(function* (input: {
@@ -305,6 +295,8 @@ export type OxlintHooks = {
 const runPack = Effect.fnUntraced(function* (packID: string, pack: Pack | undefined, context: RunContext) {
   const lane = context.input.lane
   if (!pack) return only({ id: packID, pack: packID, version: "unknown", lane, status: "not-run", reason: "unknown pack", workspaceExecuted: false })
+  if (context.input.evidence && !ReviewEngagementEvidence.qualified(pack))
+    return only(ReviewEngagementEvidence.unavailable({ id: pack.id, pack: pack.id, version: pack.version, lane: pack.lane }))
   if (ReviewLocalChecksAnalyze.supports(pack.template)) return yield* ReviewLocalChecksAnalyze.run(pack, context)
   const refused = (reason: string) => only(check(pack, "not-run", reason))
   const files = context.input.files ?? []
@@ -790,14 +782,18 @@ const confined = Effect.fnUntraced(function* (input: {
   readonly timeoutMs: number
   readonly maxBytes: number
   readonly tailBytes?: number
+  readonly acquire?: boolean
+  readonly beforeLaunch?: Effect.Effect<boolean>
 }) {
   const launch = yield* ToolSafetySandbox.confine({
     command: input.argv[0], args: input.argv.slice(1), cwd: input.cwd, env: input.env, write: input.write,
+    acquire: input.acquire,
   }).pipe(
     Effect.map((value) => ({ value })),
     Effect.catch((error) => Effect.succeed({ denied: `sandbox: ${error.reason}` })),
   )
   if ("denied" in launch) return launch
+  if (input.beforeLaunch && !(yield* input.beforeLaunch)) return { denied: ReviewEngagementEvidence.MISMATCH }
   const outcome = yield* ResearchProcess.run({
     command: launch.value.command, args: launch.value.args, cwd: input.cwd,
     env: Object.fromEntries(Object.entries(launch.value.env).filter((entry): entry is [string, string] => entry[1] !== undefined)),

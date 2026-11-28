@@ -1,6 +1,7 @@
 export * as MaestroReviewTools from "./review"
 
 export { analysisStore, rawArtifactPath, reviewBinding } from "./review-binding"
+export { analyzeLane } from "./review-analysis"
 
 import { createHash } from "node:crypto"
 import { and, desc, eq } from "drizzle-orm"
@@ -11,15 +12,14 @@ import { BoardProjectTable } from "@orchestra/core/board/sql"
 import { BoardThread } from "@orchestra/core/board/thread"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
+import type { Global } from "@orchestra/core/global"
 import { ReviewCatalog } from "@orchestra/core/review/catalog"
 import { ReviewPrecisionCatalog } from "@orchestra/core/review/precision-catalog"
 import { ReviewPrecisionStore } from "@orchestra/core/review/precision-store"
-import { ReviewRouting } from "@orchestra/core/review/routing"
 import { ReviewSeatTools } from "@orchestra/core/review/seat-tools"
 import { ReviewSettings } from "@orchestra/core/review/settings"
 import { ReviewReleaseEvidence } from "@orchestra/core/review-toolkit/release-evidence"
 import { ReviewReleaseRequestV2 } from "./review-release"
-import { ReviewAnalyze } from "@orchestra/core/review-toolkit/analyze"
 import { ReviewProbe } from "@orchestra/core/review-toolkit/probe"
 import { ReviewScratch } from "@orchestra/core/review-toolkit/scratch-copy"
 import { AppProcess } from "@orchestra/core/process"
@@ -35,6 +35,7 @@ import { GovernanceRecordsV2 } from "../governance/records"
 import { MaestroChainTools } from "./chain"
 import { MaestroToolGate } from "./gate"
 import { ReviewArtifactsV2 } from "./review-artifacts"
+import { ReviewAnalysisV2 } from "./review-analysis"
 import { ReviewBindingV2 } from "./review-binding"
 import { MaestroReviewRecords } from "./review-records"
 import { ReviewPRRequestV2 } from "./review-pr"
@@ -122,54 +123,7 @@ const ReviewInput = Schema.Struct({
   stage: Schema.optional(Schema.Literals(["plan", "code"])),
 })
 
-/** The host's analyze step (fan-out step 2), at the reviewed revisions. */
-export type Analyze = (
-  input: ReviewFanoutV2.AnalyzeInput & {
-    readonly worktree: string
-    readonly release?: ReviewReleaseEvidence.Captured
-    readonly base: string
-    readonly head: string
-    readonly sessionID: SessionSchema.ID
-    readonly catalog: ReviewCatalog.Catalog
-    readonly changes?: ReadonlyArray<{ readonly path: string; readonly added: ReadonlyArray<{ readonly line: number }> }>
-  },
-) => Effect.Effect<ReviewFanoutV2.Analysis, Tool.Failure>
-
-/** D6 ceiling. The opened project may enter the build lane. An external target must pass false and stay at repo. */
-export function analyzeLane(trusted: boolean) {
-  return trusted ? "build" as const : "repo" as const
-}
-
-const analyzeStep = (processes: AppProcess.Interface): Analyze => (input) => {
-  const changed: Record<string, { start: number; end: number }[]> = {}
-  for (const change of input.changes ?? []) {
-    const lines = change.added.map((line) => line.line)
-    if (lines.length === 0) continue
-    changed[change.path] = [{ start: Math.min(...lines), end: Math.max(...lines) }]
-  }
-  // This call reviews the project the owner opened. An external target must not reuse it with trusted true.
-  const trusted = true
-  return ReviewAnalyze.run({
-    worktree: input.worktree,
-    base: input.base,
-    head: input.head,
-    tier: input.executionTier ?? ReviewRouting.tier(input.routing),
-    profile: input.routing.profile.id,
-    ...(input.release === undefined ? {} : { release: input.release }),
-    store: ReviewBindingV2.analysisStore(input.cache),
-    changed,
-    trusted,
-    catalog: input.catalog,
-    lane: analyzeLane(trusted),
-    packs: input.packs.map((pack) => pack.id),
-    scope: input.repositoryFiles === undefined ? "diff" : "files",
-    files: [...input.files],
-    ...(input.repositoryFiles === undefined ? {} : { repositoryFiles: input.repositoryFiles }),
-  }).pipe(
-    Effect.provideService(AppProcess.Service, processes),
-    Effect.mapError((error) => new Tool.Failure({ message: `ReviewAnalyzeFailed: ${String(error)}` })),
-  )
-}
+export type Analyze = ReviewAnalysisV2.Analyze
 
 const seatStages: ReviewFanoutV2.Stages = {
   lead: ReviewSeatTools.lead,
@@ -185,13 +139,14 @@ export function tools(input: {
   readonly sessions: Option.Option<SessionV2.Interface>
   readonly execution: Option.Option<SessionExecution.Interface>
   readonly database?: Database.Interface
+  readonly global?: Global.Interface
   // Seams over the review toolkit and the seat's stage tool sets; the defaults are the running build's.
   readonly analyze?: Analyze
   readonly stages?: ReviewFanoutV2.Stages
   readonly processes: AppProcess.Interface
 }) {
   const services = input.services
-  const analyze = input.analyze ?? analyzeStep(input.processes)
+  const analyze = input.analyze ?? ReviewAnalysisV2.step(input.processes)
   const stages = input.stages ?? seatStages
   // Lead Sessions in their final turn: the only place the record tool opens for a scoped review Session.
   const finishing = new Set<string>()
@@ -268,6 +223,7 @@ export function tools(input: {
               return yield* ReviewEngagementRequestV2.run(params, {
                 sessionID: context.sessionID, services, sessions: input.sessions, execution: input.execution,
                 database: input.database ?? { db: services.db }, analyze, stages, processes: input.processes,
+                ...(input.global ? { global: input.global } : {}),
                 settings: (projectID) => reviewSettings(services.db, projectID),
               }).pipe(Effect.scoped)
             }

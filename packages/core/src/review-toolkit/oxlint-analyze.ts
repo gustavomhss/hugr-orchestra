@@ -4,7 +4,8 @@ import { Effect } from "effect"
 import { Probe } from "../research-toolkit/probe/types"
 import { ReviewSarif } from "./sarif"
 import { ReviewPackOxlint } from "./packs/oxlint"
-import type { ReviewAnalyze } from "./analyze"
+import { ReviewAnalyze } from "./analyze"
+import { ReviewEngagementEvidence } from "./engagement-evidence"
 
 /** Native lint runs only against a host-owned projection, never the copied repository's project/config. */
 export const run = Effect.fnUntraced(function* (
@@ -39,15 +40,33 @@ export const run = Effect.fnUntraced(function* (
     if (projected.status !== "ok") return { status: "not-run" as const, reason: projected.reason }
     const built = ReviewPackOxlint.argv(located.executable, projected)
     if (built.status !== "ok") return { status: "not-run" as const, reason: built.reason }
-    const pathMap = yield* context.write(`raw/oxlint-${side}-paths.json`, JSON.stringify({
+    const evidence = context.input.evidence
+    const prepared = evidence ? yield* ReviewEngagementEvidence.prepare({
+      evidence, projected, executable: located.executable, argv: built.argv, side, timeoutMs: hooks.scanMs,
+    }) : undefined
+    if (prepared && prepared.status !== "ok") return prepared
+    if (evidence && prepared) {
+      yield* evidence.observe(prepared.event)
+      if (!(yield* ReviewEngagementEvidence.stable(prepared)))
+        return { status: "not-run" as const, reason: ReviewEngagementEvidence.MISMATCH }
+    }
+    const pathMap = yield* context.write(`raw/oxlint-${side}-paths.json`, prepared?.pathMap ?? JSON.stringify({
       version: "oxlint-projection-v1", paths: projected.paths,
     }))
     const ran = yield* hooks.confine({
       argv: built.argv, cwd: projected.root, write: [], env: ReviewPackOxlint.environment(projected.root),
       timeoutMs: hooks.scanMs, maxBytes: Probe.Limits.outputBytes,
+      ...(prepared ? { acquire: false, beforeLaunch: ReviewEngagementEvidence.stable(prepared) } : {}),
     })
     if ("denied" in ran) return { status: "not-run" as const, reason: ran.denied }
+    // A changed input/runtime around an actual child cannot be bound to the earlier preparation.
+    if (prepared && !(yield* ReviewEngagementEvidence.stable(prepared)))
+      return yield* new ReviewAnalyze.Failed({ reason: ReviewEngagementEvidence.MISMATCH })
     const uri = yield* context.write(`raw/oxlint-${side}.sarif`, ran.outcome.stdout.data)
+    if (evidence && prepared) yield* evidence.observe({
+      phase: "outcome", analysisID: evidence.analysisID, invocationID: prepared.event.invocationID,
+      side, outcome: ran.outcome, stdoutURI: uri, pathMapURI: pathMap,
+    })
     const settled = ReviewPackOxlint.settle(ran.outcome, { root: projected.root, paths: projected.paths, rules: projected.rules })
     if (settled.status !== "ok") return { status: settled.status, reason: `${settled.reason}; path map: ${pathMap}`, uri }
     return { status: "ok" as const, results: settled.results, uri, pathMap }

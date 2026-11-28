@@ -120,7 +120,7 @@ function sink(keep: number) {
 
 const drain = <E>(stream: Stream.Stream<Uint8Array, E>, into: ReturnType<typeof sink>, max: number) =>
   Stream.runForEach(stream, (chunk) => {
-    if (into.bytes + chunk.length > max) return Effect.fail(new Overflow())
     into.push(chunk)
+    if (into.bytes > max) return Effect.fail(new Overflow())
     return Effect.void
   })

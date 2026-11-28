@@ -46,6 +46,7 @@ export type Context = {
   readonly sessionID: SessionSchema.ID
   readonly budget: Budget
   readonly source?: ReviewEngagementEvidenceV2.Prepared
+  readonly notExamined?: Result["notExamined"]
 }
 export type Stopped = "cancelled" | "expired" | "failed"
 
@@ -147,7 +148,7 @@ const scope = (source: ReviewEngagementEvidenceV2.Prepared) => ({
 })
 
 function gaps(context: Context, existing: Result["notExamined"]) {
-  const values = [...existing,
+  const values = [...existing, ...(context.notExamined ?? []),
     ...(context.source?.notExamined.map((entry) => ({ item: entry.path, reason: entry.reason })) ?? []),
     { item: "engagement:history", reason: "not-built" },
     { item: "engagement:probe", reason: "not-built" },

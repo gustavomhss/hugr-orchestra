@@ -47,6 +47,7 @@ import { MaestroResearchTools } from "./tools/research"
 import { MaestroResultTools } from "./tools/result"
 import { MaestroReviewTools } from "./tools/review"
 import { MaestroReviewCheckTools } from "./tools/review-checks"
+import { MaestroReviewEvidenceTools } from "./tools/review-engagement-evidence"
 import { MaestroWorkflowDraftTools } from "./tools/workflow-draft"
 import { MaestroWorkflowTools } from "./tools/workflows"
 import { WorkflowArmV2 } from "./workflow/arm"
@@ -65,6 +66,7 @@ const layer = Layer.effectDiscard(
     const agents = yield* AgentV2.Service
     const seats = yield* MaestroSeats.Service
     const database = yield* Database.Service
+    const global = yield* Global.Service
     const events = yield* EventV2.Service
     const store = yield* SessionStore.Service
     const applications = yield* ApplicationTools.Service
@@ -115,12 +117,14 @@ const layer = Layer.effectDiscard(
         ...MaestroReviewTools.tools({
           services,
           database,
+          global,
           gate,
           sessions: yield* GovernanceBackgroundV2.Sessions,
           execution: yield* MaestroReviewTools.Execution,
           processes: yield* AppProcess.Service,
         }),
         ...MaestroReviewCheckTools.tools({ gate, permission, processes: yield* AppProcess.Service }),
+        ...MaestroReviewEvidenceTools.tools({ gate, permission, store, database, global, fs: services.atlas.fs }),
         ...MaestroResultTools.tools({ gate }),
         ...MaestroWorkflowTools.tools({ services, gate, publication }),
         ...MaestroWorkflowDraftTools.tools({ services, gate, relay, publication }),
