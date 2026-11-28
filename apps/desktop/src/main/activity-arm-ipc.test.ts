@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { EventEmitter } from "node:events"
+import type { ActivityFreeze } from "@orchestra/schema/activity-freeze"
 import type { ActivityStop } from "@orchestra/schema/activity-stop"
 import type { ActivityEmpty } from "@orchestra/schema/activity-empty"
 import { registerActivityArmIpc } from "./activity-arm-ipc"
@@ -114,4 +115,81 @@ test("empty quarantine defaults to Cancel and confirms only the fresh main-proce
   const receipt = await empty(event, url)
   expect(receipt).toMatchObject({ previewID: secondID, outcome: "Verified" })
   expect(state.confirmations).toEqual([secondID])
+})
+
+test.skipIf(process.platform !== "linux")("member suspension and resume each require current human confirmation", async () => {
+  const handlers = new Map<string, (...args: unknown[]) => Promise<unknown>>()
+  const url = "http://127.0.0.1:9999"
+  const frame = { url: "oc://renderer/index.html" }
+  const sender = Object.assign(new EventEmitter(), { id: 44, mainFrame: frame, isDestroyed: () => false })
+  const win = { webContents: sender, isDestroyed: () => false }
+  const event = { sender, senderFrame: frame }
+  const recordID = crypto.randomUUID()
+  const target = { targetID: recordID, label: "Fixture", owner: "Session", generation: "7" }
+  const treeID = "owned-tree"
+  const member = "42:387"
+  const markID = crypto.randomUUID()
+  const state = { decision: 0, navigate: false, mismatch: false, prompts: 0 }
+  const previews = new Map<string, ActivityFreeze.Preview>()
+  const confirmations: string[] = []
+  const owned = {
+    url,
+    openActivityArm: () => undefined,
+    openActivityStop: () => undefined,
+    openActivityEmpty: () => undefined,
+    openActivityFreeze: () => ({
+      isCurrent: () => true,
+      read: async () => ({ recordID, treeID, member, next: "suspend" }),
+      preview: async (request: ActivityFreeze.Request) => {
+        const preview = { previewID: crypto.randomUUID(), target, treeID, member, action: request.action, expiresAt: Date.now() + 60_000 }
+        previews.set(preview.previewID, preview)
+        return preview
+      },
+      confirm: async (request: ActivityFreeze.Confirm) => {
+        const preview = previews.get(request.previewID)!
+        confirmations.push(request.previewID)
+        return {
+          previewID: request.previewID,
+          target: { targetID: target.targetID, generation: target.generation },
+          treeID,
+          member: state.mismatch ? "42:388" : member,
+          markID,
+          action: preview.action,
+          phase: preview.action === "suspend" ? "suspended" : "resumed",
+        }
+      },
+    }),
+  }
+  registerActivityArmIpc({
+    ipcMain: { handle: (name: string, listener: (...args: unknown[]) => Promise<unknown>) => handlers.set(name, listener) },
+    BrowserWindow: { fromWebContents: () => win },
+    dialog: { showMessageBox: async (_window: unknown, prompt: { defaultId: number; cancelId: number; detail: string }) => {
+      state.prompts++
+      expect(prompt.defaultId).toBe(0)
+      expect(prompt.cancelId).toBe(0)
+      for (const identity of [treeID, member, target.owner, target.generation]) expect(prompt.detail).toContain(identity)
+      if (state.navigate) sender.emit("did-start-navigation")
+      return { response: state.decision }
+    } },
+    rendererDevURL: undefined,
+    getOwned: () => owned,
+  } as unknown as Parameters<typeof registerActivityArmIpc>[0])
+  const control = handlers.get("activity-freeze-member")!
+  const suspend = { recordID, action: "suspend" }
+  const resume = { recordID, action: "resume" }
+  expect(await control({ sender, senderFrame: { ...frame } }, url, suspend)).toBeUndefined()
+  expect(state.prompts).toBe(0)
+  expect(await control(event, url, suspend)).toBeUndefined()
+  expect(confirmations).toEqual([])
+  state.decision = 1
+  expect(await control(event, url, suspend)).toMatchObject({ member, markID, phase: "suspended" })
+  state.navigate = true
+  expect(await control(event, url, resume)).toBeUndefined()
+  expect(confirmations).toHaveLength(1)
+  state.navigate = false
+  state.mismatch = true
+  expect(await control(event, url, resume)).toBeUndefined()
+  state.mismatch = false
+  expect(await control(event, url, resume)).toMatchObject({ member, markID, phase: "resumed" })
+  expect(confirmations.map((id) => previews.get(id)?.action)).toEqual(["suspend", "resume", "resume"])
 })

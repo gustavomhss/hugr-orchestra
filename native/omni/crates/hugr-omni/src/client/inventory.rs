@@ -1,6 +1,6 @@
 //! Tree inventory and observational requests.
 
-use omni_proto::{Ack, ControlMember, Msg};
+use omni_proto::{Ack, ControlMember, FreezeOutcome, Msg};
 
 #[cfg(all(test, target_os = "linux"))]
 use super::inventory_probe;
@@ -36,6 +36,25 @@ impl Tree {
         match answer {
             Answer::ControlResults(exited) => Ok(exited),
             other => Err(self.refused("ControlStop", &other)),
+        }
+    }
+
+    pub(crate) async fn freeze_member(&self, member: ControlMember, paused: bool) -> Result<FreezeOutcome, Error> {
+        self.sup.home()?;
+        let id = self.id;
+        let answer = self
+            .sup
+            .ask(Want::ControlFreeze, id, Class::Normal, |req| Msg::ControlFreeze {
+                req,
+                id,
+                member,
+                paused,
+            })
+            .await?;
+        self.sup.home()?;
+        match answer {
+            Answer::ControlFreeze(outcome) => Ok(outcome),
+            other => Err(self.refused("ControlFreeze", &other)),
         }
     }
 

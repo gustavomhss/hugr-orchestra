@@ -36,9 +36,10 @@ it sends `Ready`. The host refuses another `version`, and a forked copy of the h
 | 0x06 | `Release` | req u64 · id u64 |
 | 0x07 | `Observe` | req u64 · id u64 (only when bit 2 of `Ready.info` is set) |
 | 0x08 | `ObserveFootprint` | req u64 · id u64 (only when bit 3 of `Ready.info` is set) |
-| 0x09 | `ControlList` | req u64 · id u64 (only when bit 4 of `Ready.info` is set) |
+| 0x09 | `ControlList` | req u64 · id u64 (only when bit 4 or 5 of `Ready.info` is set) |
 | 0x0a | `ControlStop` | req u64 · id u64 · members list<(pid u32 · birth u64)> (1..=256 entries) |
-| 0x81 | `Ready` | version u32 · pid u32 · info u32 (bit 0: event-based host watch — pidfd on Linux, kqueue on macOS, process handle on Windows; unset = `getppid` polling. bit 1: members signalled through pidfds. bit 2: independent membership observation; bit 3: macOS footprint observation) |
+| 0x0b | `ControlFreeze` | req u64 · id u64 · member (pid u32 · birth u64) · paused bool (only when bit 5 is set) |
+| 0x81 | `Ready` | version u32 · pid u32 · info u32 (bit 0: event-based host watch — pidfd on Linux, kqueue on macOS, process handle on Windows; unset = `getppid` polling. bit 1: members signalled through pidfds. bit 2: independent membership observation; bit 3: macOS footprint observation; bit 4: selective stop; bit 5: member freeze) |
 | 0x82 | `Spawned` | req u64 · id u64 · pid u32 · pty_ends 2×u64 |
 | 0x83 | `SpawnFailed` | req u64 · code u8 (1 not found, 2 not executable, 3 bad cwd, 4 invalid, 5 io) · errno i32 · msg bytes |
 | 0x84 | `Exited` | id u64 · kind u8 (0 code, 1 signal) · value u32 |
@@ -47,6 +48,7 @@ it sends `Ready`. The host refuses another `version`, and a forked copy of the h
 | 0x88 | `ObservedTree` | req u64 · id u64 · footprint present bool · footprint u64 (0 when absent) · identity bytes (empty when absent) · list<(pid u32 · ppid u32 · name bytes)> |
 | 0x89 | `ControlMembers` | req u64 · id u64 · members list<(pid u32 · birth u64)> (0..=256 entries) |
 | 0x8a | `ControlResults` | req u64 · id u64 · outcomes list<u8> (1..=256 entries; 0 unknown, 1 exited; aligned to requested members) |
+| 0x8b | `ControlFreezeResult` | req u64 · id u64 · outcome u8 (0 changed, 1 refused, 2 unknown) |
 | 0x87 | `Ack` | req u64 · id u64 · result u8 (0 ok, 2 unknown, 3 error, 4 closed; 1 is reserved) |
 
 **Verbatim command line (v2, Windows).** With `verbatim` = 1, `argv` holds `argv[0]` alone, and the root's command line
@@ -67,8 +69,9 @@ released `id` gets `Ack unknown` for every request.
 | `Stop` | `Stopped` only once the tree is gone (at once if it already is); overlapping `Stop`s share the earliest deadline |
 | `Resize` | `Ack ok` / `closed` |
 | `List` | `Processes` (empty once gone), or `Ack error` if the inventory is incomplete |
-| `ControlList` | `ControlMembers` (empty once gone), or `Ack error` if unavailable |
+| `ControlList` | `ControlMembers` (empty once gone), or `Ack error` if unavailable (bit 4 or 5) |
 | `ControlStop` | `ControlResults`, one result per submitted identity |
+| `ControlFreeze` | `ControlFreezeResult` |
 | `Observe` | `Processes`, or `Ack error` if a sample is occupied or unavailable |
 | `ObserveFootprint` | `ObservedTree`, or `Ack error` if a sample is occupied or unavailable |
 | `Release` | `Ack ok`; the supervisor keeps cleanup duty |

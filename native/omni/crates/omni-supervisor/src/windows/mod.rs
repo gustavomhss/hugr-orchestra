@@ -251,6 +251,11 @@ impl Supervisor {
                 let result = self.live(id).map_or(Ack::Unknown, |t| t.resize(cols, rows));
                 Msg::Ack { req, id, result }
             }
+            Msg::ControlFreeze { req, id, .. } => Msg::Ack {
+                req,
+                id,
+                result: Ack::Error,
+            },
             Msg::ControlList { req, id } => self.control_list(req, id),
             Msg::ControlStop { req, id, members } => self.control_stop(req, id, members),
             Msg::List { req, id } => match self.live(id).map(|t| t.list()) {
