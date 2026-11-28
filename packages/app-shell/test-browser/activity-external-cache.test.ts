@@ -29,7 +29,7 @@ const read = (line: Element) => {
 }
 
 test("Cache reports unavailable external cache inventory on entry", async () => {
-  const app = mount()
+  const app = await mount()
   try {
     app.select("Cache")
     ;(await app.call(0, "GET", cachePath)).respond(snapshot({ status: "unavailable", records: [] }))
@@ -42,7 +42,7 @@ test("Cache reports unavailable external cache inventory on entry", async () => 
 })
 
 test("external cache reads are row-scoped and preserve the last complete sample on a partial attempt", async () => {
-  const app = mount()
+  const app = await mount()
   try {
     app.select("Cache")
     ;(await app.call(0, "GET", cachePath)).respond(snapshot())
@@ -90,7 +90,7 @@ test("external cache reads are row-scoped and preserve the last complete sample 
 })
 
 test("Refresh retries a failed initial external cache request", async () => {
-  const app = mount()
+  const app = await mount()
   try {
     app.select("Cache")
     ;(await app.call(0, "GET", cachePath)).respond({ message: "Fixture unavailable" }, 503)
