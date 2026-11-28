@@ -10,6 +10,10 @@
 //! The control thread never writes to stderr (`diag`).
 
 mod chan;
+#[cfg(target_os = "linux")]
+mod isolated;
+mod member_control;
+mod start_child;
 mod diag;
 mod exits;
 mod footprint;
@@ -24,19 +28,18 @@ mod sys;
 mod trees;
 mod watch;
 
-use std::os::fd::{AsFd, AsRawFd, OwnedFd};
+use std::os::fd::{AsRawFd, OwnedFd};
 use std::process::ExitCode;
 use std::time::{Duration, Instant};
 
-use omni_proto::{Ack, FailCode, INFO_OBSERVE, INFO_PIDFD_HOST, INFO_PIDFD_MEMBERS, Msg, Slot, Spawn, VERSION};
+use omni_proto::{Ack, FailCode, INFO_OBSERVE, INFO_PIDFD_HOST, INFO_PIDFD_MEMBERS, Msg, VERSION};
 
 use crate::Args;
 use chan::{Chan, Closed};
 use diag::Diag;
 use observe::Observation;
 use setup::{drain, signals, take_channel};
-use spawn::{Fail, Prepared};
-use trees::{Exec, MAX_TREES, Trees};
+use trees::Trees;
 use watch::HostWatch;
 
 /// Requests handled per turn before host death, exits and deadlines are looked at again.
@@ -71,6 +74,8 @@ struct Sup {
     sigchld: OwnedFd,
     _sigchld_w: OwnedFd,
     trees: Trees,
+    #[cfg(target_os = "linux")]
+    isolation: Option<isolated::Isolation>,
     observation: Observation,
     out: Vec<Msg>,
     /// Set at host death: exit by then even if a tree cannot be confirmed gone.
@@ -89,6 +94,12 @@ impl Sup {
         let host = i32::try_from(args.host_pid).map_err(std::io::Error::other)?;
         let watch = HostWatch::arm(host);
         let pidfd = watch::pidfd_available();
+        #[cfg(target_os = "linux")]
+        let isolation = isolated::Isolation::load()?;
+        #[cfg(target_os = "linux")]
+        if isolation.is_some() && !pidfd {
+            return Err(std::io::Error::other("isolated member freeze requires pidfd"));
+        }
         if watch.gone(false) {
             return Ok(None);
         }
@@ -98,6 +109,8 @@ impl Sup {
             sigchld,
             _sigchld_w: sigchld_w,
             trees: Trees::new(pidfd),
+            #[cfg(target_os = "linux")]
+            isolation,
             observation: Observation::default(),
             out: Vec::new(),
             exit_by: None,
@@ -112,6 +125,8 @@ impl Sup {
             }
             | if sup.watch.evented() { INFO_PIDFD_HOST } else { 0 }
             | if pidfd { INFO_PIDFD_MEMBERS } else { 0 };
+        #[cfg(target_os = "linux")]
+        let info = info | if sup.isolation.is_some() { omni_proto::INFO_MEMBER_FREEZE } else { 0 };
         let pid = std::process::id();
         sup.out.push(Msg::Ready {
             version: VERSION,
@@ -234,7 +249,9 @@ impl Sup {
             // The grace starts when the request is handled, not when the loop last woke.
             Msg::Stop { req, id, grace_ms } => trees.stop(Some(req), id, grace_ms, Instant::now(), out),
             Msg::Resize { req, id, cols, rows } => trees.resize(req, id, (cols, rows), out),
-            Msg::ControlList { req, id } | Msg::ControlStop { req, id, .. } => {
+            Msg::ControlList { req, id } => member_control::list(trees, req, id, out),
+            Msg::ControlFreeze { req, id, member, paused } => member_control::freeze(trees, req, id, member, paused, out),
+            Msg::ControlStop { req, id, .. } => {
                 out.push(Msg::Ack {
                     req,
                     id,
@@ -248,57 +265,6 @@ impl Sup {
             other => return Err(Closed::Proto(format!("unexpected message from the host: {other:?}"))),
         }
         Ok(())
-    }
-
-    fn spawn(&mut self, s: Spawn) -> Result<(), Closed> {
-        let pipes = usize::from(s.stdin == Slot::Pipe) + 1 + usize::from(s.stderr == Slot::Pipe);
-        let fds = self.chan.take_fds(if s.pty.is_some() { 0 } else { pipes })?;
-        let req = s.req;
-        let started = if !self.trees.admits() {
-            let msg = format!("the supervisor already holds {MAX_TREES} trees (live or not yet released)");
-            Err(Fail::new(FailCode::Io, 0, msg))
-        } else {
-            Prepared::new(&s).and_then(|p| match s.pty {
-                None => {
-                    let mut it = fds.iter().map(AsFd::as_fd);
-                    let stdin = if s.stdin == Slot::Pipe { it.next() } else { None };
-                    let (stdout, stderr) = (it.next(), it.next());
-                    let stdout = stdout.ok_or_else(|| Fail::new(FailCode::Invalid, 0, "no stdout".into()))?;
-                    let pid = spawn::spawn_pipe(&p, stdin, stdout, stderr.unwrap_or(stdout))?;
-                    Ok((pid, None, Exec::Running))
-                }
-                Some((cols, rows)) => {
-                    let (pid, master, held) = fork::spawn_pty(&p, cols, rows)?;
-                    Ok((pid, Some(master), Exec::Held(held)))
-                }
-            })
-        };
-        drop(fds); // the child holds its own copies now
-        let (pid, master, exec) = match started {
-            Ok(child) => child,
-            Err(f) => return self.fail(req, f),
-        };
-        // Registered before anything that can notice host death, so the child always gets its stop.
-        let id = self.trees.insert(pid, master, s.grace_ms, exec);
-        let host_end = match self.trees.master(id).map(OwnedFd::try_clone).transpose() {
-            Ok(end) => end,
-            Err(e) => {
-                self.trees.stop(None, id, 0, Instant::now(), &mut Vec::new());
-                self.trees.release(0, id, &mut Vec::new());
-                let errno = e.raw_os_error().unwrap_or(0);
-                return self.fail(req, Fail::new(FailCode::Io, errno, format!("dup: {e}")));
-            }
-        };
-        // Replies to earlier requests go first: queued, not flushed (only the end of the turn flushes).
-        self.queue_out();
-        let pty_ends = [u64::from(host_end.is_some()), 0];
-        let msg = Msg::Spawned {
-            req,
-            id,
-            pid: pid.cast_unsigned(),
-            pty_ends,
-        };
-        self.chan.send(&msg, host_end).map_err(|e| Closed::Proto(e.0))
     }
 
     /// Queues pending messages and sends what fits.
