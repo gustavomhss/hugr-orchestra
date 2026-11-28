@@ -120,7 +120,7 @@ export function usePromptMove(input: { projectID: () => string | undefined; sess
     const choice = status?.data.length
       ? await DialogWorkspaceFileChanges.show(dialog, status.data, {
           message:
-            "Copy these file changes to the destination with the Session? The original files and changes will stay here.",
+            "Copy these file changes if the Session moves to a different checkout? The originals will stay here.",
         })
       : "no"
     if (!choice) return
