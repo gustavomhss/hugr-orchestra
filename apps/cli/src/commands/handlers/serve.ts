@@ -27,11 +27,12 @@ import { ServeShutdown } from "./serve-shutdown"
 const SHUTDOWN_GRACE_MS = 2_000
 
 export default Runtime.handler(Commands.commands.serve, (input) =>
-  serveForever({ ...input, allowedHosts: input["allowed-host"] }),
+  serveForever({ ...input, activityApprovalStdin: input["activity-approval-stdin"], allowedHosts: input["allowed-host"] }),
 )
 
 export type ServeInput = {
   readonly hostname: string
+  readonly activityApprovalStdin?: boolean
   readonly port: Option.Option<number>
   readonly installation?: Option.Option<string>
   readonly register: boolean
@@ -82,6 +83,18 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
   const launchPassword = process.env.ORCHESTRA_SERVER_PASSWORD
   delete process.env.ORCHESTRA_SERVER_PASSWORD
   delete process.env.ORCHESTRA_SERVER_USERNAME
+  const privateExtension = input.activityApprovalStdin ? yield* Effect.gen(function* () {
+    if (input.hostname !== "127.0.0.1" || Option.isNone(input.port) || !Number.isInteger(input.port.value) ||
+      input.port.value < 1 || input.port.value > 65_535 || input.register ||
+      (input.installation && Option.isSome(input.installation))) {
+      return yield* Effect.fail(new Error("Activity private channel requires an unregistered loopback server and explicit port"))
+    }
+    const { ActivityPrivateChannel } = yield* Effect.promise(() => import("@orchestra/server/activity-private-channel"))
+    return yield* Effect.tryPromise({
+      try: (signal) => ActivityPrivateChannel.acquire(process.stdin, signal),
+      catch: () => new Error("Activity private channel startup failed"),
+    })
+  }) : undefined
   const start = (wait: Effect.Effect<void>) =>
     withInstallation(input, (httpExtensions) => Effect.gen(function* () {
       const daemon = yield* Daemon.Service
@@ -99,7 +112,8 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
       )
       const allowedHosts = listenerHosts(input.hostname, input.allowedHosts)
       const bindHost = httpExtensions && input.hostname === "localhost" ? "127.0.0.1" : input.hostname
-      const listening = yield* listen(bindHost, input.port, password, hosts(), root, allowedHosts, input.cors, httpExtensions)
+      const listening = yield* listen(bindHost, input.port, password, hosts(), root, allowedHosts, input.cors,
+        privateExtension ? [...(httpExtensions ?? []), privateExtension] : httpExtensions, httpExtensions !== undefined)
       const address = listening.address
       // Closing the server waits for every open connection, and the event stream never ends on its own. Scope
       // finalizers run in reverse, so this drops the connections before the server closes.
@@ -155,10 +169,11 @@ function listen(
   allowedHosts: ReadonlyArray<string>,
   cors?: ReadonlyArray<string>,
   httpExtensions?: readonly HttpExtension[],
+  installation = false,
 ) {
-  if (Option.isSome(port)) return bind(hostname, port.value, password, host, root, allowedHosts, cors, httpExtensions)
+  if (Option.isSome(port)) return bind(hostname, port.value, password, host, root, allowedHosts, cors, httpExtensions, installation)
   const next = (port: number): ReturnType<typeof bind> =>
-    bind(hostname, port, password, host, root, allowedHosts, cors, httpExtensions).pipe(
+    bind(hostname, port, password, host, root, allowedHosts, cors, httpExtensions, installation).pipe(
       Effect.catch((error) => (port === 65_535 || !addressInUse(error) ? Effect.fail(error) : next(port + 1))),
     )
   return next(4096)
@@ -173,9 +188,10 @@ function bind(
   allowedHosts: ReadonlyArray<string>,
   cors?: ReadonlyArray<string>,
   httpExtensions?: readonly HttpExtension[],
+  installation = false,
 ) {
   return Effect.gen(function* () {
-    const server = yield* serveTransport(httpExtensions !== undefined)
+    const server = yield* serveTransport(installation)
     return yield* Layer.build(
       HttpRouter.serve(createRoutes({ password, host, webRoot: root, cors, allowedHosts, httpExtensions }), {
         disableListenLog: true,
