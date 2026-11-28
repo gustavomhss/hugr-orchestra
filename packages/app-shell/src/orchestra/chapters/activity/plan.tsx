@@ -20,6 +20,10 @@ export function ActivityPlan(props: { query: string }) {
   const [state, setState] = createStore({
     scope: undefined as string | undefined,
     snapshot: undefined as ActivityArm.PlanSnapshot | undefined,
+    verified: undefined as ActivityArm.PlanSnapshot | undefined,
+    verifiedScope: undefined as string | undefined,
+    inspecting: false,
+    inspectFailed: false,
     busy: false,
     failed: false,
     armTarget: undefined as string | undefined,
@@ -27,9 +31,16 @@ export function ActivityPlan(props: { query: string }) {
   })
   let requestID = 0
   let pending: AbortController | undefined
+  let inspectID = 0
+  let inspectController: AbortController | undefined
+  let armID = 0
   const scope = () => server.current?.http.url
+  const ownedScope = () => {
+    const current = server.current
+    return current?.type === "sidecar" && current.variant === "base" ? current.http.url : undefined
+  }
   const rows = createMemo<PlanRow[]>(() => {
-    const snapshot = state.snapshot
+    const snapshot = state.verified ?? state.snapshot
     if (!snapshot) return []
     return [
       ...snapshot.ready.map((target) => ({ target, state: "Ready" as const, armable: true })),
@@ -48,12 +59,16 @@ export function ActivityPlan(props: { query: string }) {
   async function refresh() {
     const serverURL = scope()
     if (!serverURL) return
+    inspectID++
+    inspectController?.abort()
+    inspectController = undefined
     const currentSDK = sdk()
     pending?.abort()
     const request = new AbortController()
     pending = request
     const id = ++requestID
-    setState({ scope: serverURL, busy: true, failed: false })
+    setState({ scope: serverURL, busy: true, failed: false, verified: undefined, verifiedScope: undefined,
+      inspecting: false, inspectFailed: false })
     try {
       await currentSDK.ready
       request.signal.throwIfAborted()
@@ -76,59 +91,109 @@ export function ActivityPlan(props: { query: string }) {
     const approve = platform.armActivityQuarantine
     if (
       !serverURL || current?.type !== "sidecar" || current.variant !== "base" ||
-      platform.platform !== "desktop" || !approve || state.armTarget || state.busy || state.failed || scope() !== serverURL
+      platform.platform !== "desktop" || platform.os !== "linux" || !approve || state.armTarget || state.busy || state.failed ||
+      scope() !== serverURL || ownedScope() !== serverURL || !armAvailable(target)
     ) return
     const currentSDK = sdk()
+    const id = ++armID
+    const armIsCurrent = () => armID === id && ownedScope() === serverURL && sdk() === currentSDK
     setState({ armTarget: target.targetID, armFailed: false })
     try {
       await approve(serverURL, {
         targets: [{ targetID: target.targetID, generation: target.generation }],
       })
-      if (scope() !== serverURL || sdk() !== currentSDK) return
+      if (!armIsCurrent()) return
       await refresh()
     } catch {
-      if (scope() === serverURL && sdk() === currentSDK) setState("armFailed", true)
+      if (armIsCurrent()) setState("armFailed", true)
     } finally {
-      if (scope() === serverURL && sdk() === currentSDK) setState("armTarget", undefined)
+      if (armIsCurrent()) setState("armTarget", undefined)
+    }
+  }
+
+  async function inspect() {
+    const serverURL = ownedScope()
+    const inspectObjects = platform.inspectActivityArm
+    if (!serverURL || platform.platform !== "desktop" || platform.os !== "linux" || !inspectObjects || state.inspecting || state.armTarget) return
+    const client = sdk()
+    const id = ++inspectID
+    inspectController?.abort()
+    const request = new AbortController()
+    inspectController = request
+    setState({ scope: serverURL, inspecting: true, inspectFailed: false, verified: undefined })
+    try {
+      await client.ready
+      request.signal.throwIfAborted()
+      const snapshot = await inspectObjects(serverURL)
+      if (request.signal.aborted || inspectID !== id || scope() !== serverURL || ownedScope() !== serverURL || server.current?.type !== "sidecar" ||
+        server.current.variant !== "base" || sdk() !== client) return
+      if (snapshot) setState({ verified: snapshot, verifiedScope: serverURL })
+      else setState("inspectFailed", true)
+    } catch {
+      if (!request.signal.aborted && inspectID === id && scope() === serverURL && ownedScope() === serverURL && sdk() === client) {
+        setState("inspectFailed", true)
+      }
+    } finally {
+      if (inspectController === request) {
+        inspectController = undefined
+        if (inspectID === id && scope() === serverURL && sdk() === client) setState("inspecting", false)
+      }
     }
   }
 
   createEffect(
     on(
-      () => ({ serverURL: scope(), client: sdk() }),
+      () => ({ serverURL: scope(), ownedURL: ownedScope(), client: sdk() }),
       ({ serverURL }) => {
+        armID++
         requestID++
         pending?.abort()
         pending = undefined
-        setState({ scope: serverURL, snapshot: undefined, busy: Boolean(serverURL), failed: false, armTarget: undefined, armFailed: false })
+        inspectID++
+        inspectController?.abort()
+        inspectController = undefined
+        setState({ scope: serverURL, snapshot: undefined, verified: undefined, verifiedScope: undefined, inspecting: false, inspectFailed: false,
+          busy: Boolean(serverURL), failed: false, armTarget: undefined, armFailed: false })
         if (serverURL) void refresh()
       },
       { defer: false },
     ),
   )
   onCleanup(() => {
+    armID++
     requestID++
     pending?.abort()
+    inspectID++
+    inspectController?.abort()
   })
 
-  const completeEmpty = () =>
-    !props.query.trim() && state.snapshot && !state.snapshot.partial && state.snapshot.ready.length === 0 && state.snapshot.approvals.length === 0
+  const completeEmpty = () => {
+    const plan = state.verified ?? state.snapshot
+    return !props.query.trim() && plan && !plan.partial && plan.ready.length === 0 && plan.approvals.length === 0
+  }
   const filterMiss = () => Boolean(props.query.trim()) && shown().length === 0
   const armAvailable = (target: ActivityArm.Target) => {
     const current = server.current
-    return platform.platform === "desktop" && current?.type === "sidecar" && current.variant === "base" &&
-      Boolean(platform.armActivityQuarantine) && !state.busy && !state.failed && !state.armTarget && target.targetID.length > 0
+    return platform.platform === "desktop" && platform.os === "linux" && current?.type === "sidecar" && current.variant === "base" &&
+      state.verifiedScope === current.http.url && Boolean(platform.armActivityQuarantine) &&
+      !state.busy && !state.failed && !state.armTarget &&
+      state.verified?.ready.some((ready) => ready.targetID === target.targetID && ready.generation === target.generation)
   }
 
   return (
     <section aria-busy={state.busy}>
       <div class="activity-section-heading">
-        <p class="mx-note">{language.t("orchestra.monitor.planSource")}</p>
+        <p class="mx-note">{language.t(state.verified ? "orchestra.monitor.planVerifiedSource" : "orchestra.monitor.planSource")}</p>
         <button type="button" class="mx-btn" disabled={state.busy} onClick={() => void refresh()}>
           {language.t("orchestra.monitor.refresh")}
         </button>
+        <Show when={platform.platform === "desktop" && platform.os === "linux" && Boolean(ownedScope() && platform.inspectActivityArm)}>
+          <button type="button" class="mx-btn" disabled={state.inspecting || state.busy || Boolean(state.armTarget)} onClick={() => void inspect()}>
+            {language.t(state.inspecting ? "orchestra.monitor.planVerifying" : "orchestra.monitor.planVerify")}
+          </button>
+        </Show>
       </div>
-      <Show when={state.snapshot?.partial}>
+      <Show when={(state.verified ?? state.snapshot)?.partial}>
         <p class="mx-note" role="status">{language.t("orchestra.monitor.planPartial")}</p>
       </Show>
       <Show when={state.failed}>
@@ -137,7 +202,10 @@ export function ActivityPlan(props: { query: string }) {
       <Show when={state.armFailed}>
         <p class="activity-error" role="alert">{language.t("orchestra.monitor.planArmFailed")}</p>
       </Show>
-      <Show when={state.snapshot} fallback={
+      <Show when={state.inspectFailed}>
+        <p class="activity-error" role="alert">{language.t("orchestra.monitor.planVerifyFailed")}</p>
+      </Show>
+      <Show when={state.verified ?? state.snapshot} fallback={
         <div class="mx-empty" role={state.failed ? "alert" : "status"}>
           <strong>{language.t(state.busy ? "orchestra.monitor.planLoading" : "orchestra.monitor.planUnread")}</strong>
         </div>

@@ -177,6 +177,8 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
     os,
     version: pkg.version,
     windowID: windowState.id,
+    inspectActivityArm: os === "linux" ? (serverURL) => window.api.inspectActivityArm(serverURL) : undefined,
+    armActivityQuarantine: os === "linux" ? (serverURL, request) => window.api.armActivityQuarantine(serverURL, request) : undefined,
     stopActivityTree: os === "windows" ? (serverURL, request) => window.api.stopActivityTree(serverURL, request) : undefined,
     readActivityQuarantine: os === "windows" ? (serverURL) => window.api.readActivityQuarantine(serverURL) : undefined,
     emptyActivityQuarantine: os === "windows" ? (serverURL) => window.api.emptyActivityQuarantine(serverURL) : undefined,

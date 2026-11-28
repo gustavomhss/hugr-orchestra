@@ -9,14 +9,18 @@ import { ActivityActionLedgerTable } from "./activity-action-ledger.sql"
 import { ActivityArmTable } from "./activity-arm.sql"
 
 export interface Interface {
+  readonly inspect?: () => Effect.Effect<ActivityArm.PlanSnapshot, unknown>
   readonly preview: (request: ActivityArm.Request) => Effect.Effect<ActivityArm.Preview | undefined, unknown>
   readonly confirm: (request: ActivityArm.Confirm) => Effect.Effect<ActivityArm.Receipt | undefined, unknown>
 }
 
 type Options = {
   readonly now?: () => number
+  readonly maxSelection?: number
+  readonly inspect?: () => Effect.Effect<ActivityArm.PlanSnapshot, unknown>
   /** Checks current identity and eligibility through the authority for this exact object. */
   readonly verify?: (target: ActivityActionLedger.Target) => Effect.Effect<boolean, unknown>
+  readonly authorize?: (tx: Transaction, targets: readonly ActivityActionLedger.Target[]) => Effect.Effect<boolean, unknown>
 }
 
 /** An owner is constructed once per private Desktop channel incarnation. */
@@ -25,11 +29,13 @@ export function make(database: Database.Interface, options?: Options): Interface
   const verify = options?.verify
   const previews = new Map<string, { expiresAt: number; targets: ActivityActionLedger.Target[]; preview: ActivityArm.Preview }>()
   return {
+    inspect: options?.inspect,
     preview(request) {
       return Effect.gen(function* () {
         if (!verify) return undefined
         const decoded = ActivityArm.decodeRequest(request)
-        if (Option.isNone(decoded) || new Set(decoded.value.targets.map((target) => target.targetID)).size !== decoded.value.targets.length)
+        if (Option.isNone(decoded) || decoded.value.targets.length > (options?.maxSelection ?? ActivityArm.maxTargets) ||
+          new Set(decoded.value.targets.map((target) => target.targetID)).size !== decoded.value.targets.length)
           return undefined
         const targets = yield* database.db.transaction((tx) => Effect.gen(function* () {
           const rows = yield* Effect.forEach(decoded.value.targets, (target) => tx.select().from(ActivityActionLedgerTable)
@@ -40,6 +46,8 @@ export function make(database: Database.Interface, options?: Options): Interface
           return rows.flatMap((row) => row ? [{ ...row.observation, generation: row.generation }] : [])
         }), { behavior: "immediate" })
         if (!targets) return undefined
+        const verified = yield* Effect.forEach(targets, (target) => verify(structuredClone(target)))
+        if (verified.some((result) => result !== true)) return undefined
         const time = now()
         for (const [id, preview] of previews) if (preview.expiresAt <= time) previews.delete(id)
         if (previews.size >= 64) return undefined
@@ -71,6 +79,8 @@ export function make(database: Database.Interface, options?: Options): Interface
           const existing = yield* Effect.forEach(entry.targets, (target) => tx.select().from(ActivityArmTable)
             .where(and(eq(ActivityArmTable.target_id, target.targetID), eq(ActivityArmTable.generation, target.generation))).get())
           if (existing.some(Boolean)) return undefined
+          if (options?.authorize && !(yield* options.authorize(tx, entry.targets))) return undefined
+          if (entry.expiresAt <= now()) return undefined
           const receipt = {
             approvalID: crypto.randomUUID(), action: "arm-quarantine" as const, approvedAt: now(),
             targets: structuredClone(entry.preview.targets),
@@ -122,7 +132,7 @@ export function plan(database: Database.Interface) {
   }))
 }
 
-type Transaction = Parameters<Parameters<Database.Interface["db"]["transaction"]>[0]>[0]
+export type Transaction = Parameters<Parameters<Database.Interface["db"]["transaction"]>[0]>[0]
 
 function approvalRows(database: Pick<Transaction, "select">) {
   return database.select({ arm: ActivityArmTable, current: ActivityActionLedgerTable }).from(ActivityArmTable)

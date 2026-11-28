@@ -1,0 +1,266 @@
+export * as ActivityArmProof from "./activity-arm-proof"
+
+import { createHash } from "node:crypto"
+import { constants } from "node:fs"
+import type { BigIntStats } from "node:fs"
+import { lstat, open, opendir, readlink, realpath, stat, statfs } from "node:fs/promises"
+import path from "node:path"
+import { ActivityObjectProof } from "./activity-object-proof"
+
+const maxEntries = 10_000
+const kernelThread = 0x00200000
+const initialPIDNamespace = "pid:[4026531836]" // Linux PID_NS_INIT_INO
+const localFilesystems = new Set([0xef53, 0x58465342, 0x9123683e, 0x01021994]) // ext, XFS, Btrfs, tmpfs
+
+// This observation expires at the boundary of the caller's decision. It does not reserve the object.
+export async function inspect(input: { worktree: string; name: ".turbo" | "node_modules" }, signal?: AbortSignal) {
+  const uid = process.geteuid?.()
+  if (process.platform !== "linux" || uid === undefined || !path.isAbsolute(input.worktree) ||
+    (input.name !== ".turbo" && input.name !== "node_modules")) return undefined
+  try {
+    signal?.throwIfAborted()
+    const worktree = await realpath(input.worktree)
+    if (worktree !== input.worktree) return undefined
+    const object = path.join(worktree, input.name)
+    const root = await lstat(worktree, { bigint: true })
+    const tree = await captureTree(object, root, BigInt(uid), signal)
+    if (!tree) return undefined
+    const scan = () => captureUse(worktree, object, tree.inodes, tree.lockPids, signal).catch((error: NodeJS.ErrnoException) => {
+      if (error.code !== "ENOENT" && error.code !== "ESRCH") throw error
+      return undefined
+    })
+    const use = await scan() ?? await scan() ?? await scan()
+    if (!use) return undefined
+    const isCurrent = async (currentSignal?: AbortSignal) => {
+      try {
+        currentSignal?.throwIfAborted()
+        if (!tree.matches(await lstat(worktree, { bigint: true }))) return false
+        for (const [file, signature] of tree.entries) {
+          currentSignal?.throwIfAborted()
+          if (identity(await lstat(file, { bigint: true })) !== signature) return false
+        }
+        return !currentSignal?.aborted
+      } catch {
+        return false
+      }
+    }
+    if (!await isCurrent(signal)) return undefined
+    const proof = ActivityObjectProof.evaluate({
+      objectID: object,
+      matched: true,
+      claimant: use.claimant ? "present" : "absent",
+      checks: [
+        { objectID: object, method: "cwd", outcome: use.cwd ? "holder" : "clear" },
+        { objectID: object, method: "git-c", outcome: use.git ? "holder" : "clear" },
+        { objectID: object, method: "open-file", outcome: use.open ? "holder" : "clear" },
+        { objectID: object, method: "live-lock", outcome: use.lock || tree.lock ? "holder" : "clear" },
+      ],
+    })
+    return { fingerprint: tree.fingerprint, idle: proof.state === "idle", isCurrent }
+  } catch {
+    return undefined
+  }
+}
+
+async function captureTree(object: string, root: BigIntStats, uid: bigint, signal?: AbortSignal) {
+  if (!root.isDirectory() || root.uid !== uid) return undefined
+  if (!localFilesystems.has((await statfs(object)).type)) return undefined
+  const mountInfo = await readProc("/proc/self/mountinfo", 512 * 1024, signal)
+  if (mountInfo.split("\n").some((line) => {
+    const point = line.split(" ")[4]?.replace(/\\([0-7]{3})/g, (_match, octal: string) => String.fromCharCode(parseInt(octal, 8)))
+    return point && within(object, point)
+  })) return undefined
+  const entries = new Map<string, string>()
+  const inodes = new Set<string>()
+  const directories = [object]
+  const lockPids = new Set<string>()
+  let lock = false
+  while (directories.length) {
+    signal?.throwIfAborted()
+    const file = directories.pop()!
+    const entry = await lstat(file, { bigint: true })
+    if (entries.size === maxEntries || entry.uid !== uid || entry.dev !== root.dev ||
+      (!entry.isDirectory() && !entry.isFile()) || (entry.isFile() && entry.nlink !== 1n) ||
+      (file === object && !entry.isDirectory())) return undefined
+    entries.set(file, identity(entry))
+    inodes.add(inode(entry))
+    if (entry.isDirectory()) {
+      const directory = await opendir(file)
+      for await (const item of directory) {
+        if (directories.length + entries.size === maxEntries || item.name.includes("\uFFFD")) return undefined
+        directories.push(path.join(file, item.name))
+      }
+    }
+    if (/(^|[.\-_])(lock|lck|pid)([.\-_]|$)/i.test(path.basename(file))) {
+      // A simple PID lock can be old. An opaque lock still needs review.
+      const pid = entry.isFile() && entry.size <= 32n ? await lockPID(file, entry) : undefined
+      if (pid) lockPids.add(pid)
+      else lock = true
+    }
+  }
+  const rootIdentity = identity(root)
+  const hash = createHash("sha256").update(rootIdentity)
+  for (const [file, signature] of [...entries].sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0))
+    hash.update(JSON.stringify([path.relative(object, file), signature]))
+  return { fingerprint: hash.digest("hex"), entries, inodes, lock, lockPids, matches: (current: BigIntStats) => identity(current) === rootIdentity }
+}
+
+async function lockPID(file: string, entry: BigIntStats) {
+  const handle = await open(file, constants.O_RDONLY | constants.O_NOFOLLOW | constants.O_NONBLOCK)
+  try {
+    if (identity(await handle.stat({ bigint: true })) !== identity(entry)) throw new Error("Lock identity changed")
+    const content = Buffer.alloc(32)
+    const { bytesRead } = await handle.read(content)
+    const pid = content.toString("utf8", 0, bytesRead).trim()
+    return BigInt(bytesRead) === entry.size && /^[1-9][0-9]{0,7}$/.test(pid) ? pid : undefined
+  } finally {
+    await handle.close()
+  }
+}
+
+async function captureUse(worktree: string, object: string, inodes: ReadonlySet<string>, lockPids: ReadonlySet<string>, signal?: AbortSignal) {
+  const mounts = (await readProc("/proc/self/mountinfo", 512 * 1024, signal)).split("\n")
+  const proc = mounts.find((line) => line.split(" ")[4] === "/proc")
+  if (!proc || !proc.includes(" - proc ") || /\b(hidepid=[^0,\s]|subset=pid)/.test(proc)) return undefined
+  // A nested procfs can omit live holders of the same filesystem objects.
+  if ((await statfs("/proc")).type !== 0x9fa0 || await readlink("/proc/1/ns/pid") !== initialPIDNamespace ||
+    await readlink("/proc/self/ns/pid") !== initialPIDNamespace ||
+    mounts.some((line) => /^\/proc\/(\d+|self|thread-self|locks)(\/|$)/.test(line.split(" ")[4] ?? ""))) return undefined
+  const usage = { cwd: false, git: false, open: false, lock: false, claimant: false }
+  const pids = await numbers("/proc")
+  if (!pids.length || pids.length > 1024) return undefined
+  let tasks = 0
+  let descriptors = 0
+  for (const pid of pids) {
+    signal?.throwIfAborted()
+    const base = `/proc/${pid}`
+    const first = await processStat(base, signal)
+    if ((first.flags & kernelThread) !== 0) continue
+    if (first.state === "Z" || first.state === "X") {
+      // A dead leader can still have live threads holding files. Proc may hide that group's handles.
+      if (first.threads !== 1) return undefined
+      continue
+    }
+    usage.lock ||= lockPids.has(pid)
+    const threads = await numbers(`${base}/task`)
+    tasks += threads.length
+    if (!threads.length || tasks > 4096) return undefined
+    const [args, env, maps] = await Promise.all([
+      readProc(`${base}/cmdline`, 256 * 1024, signal),
+      readProc(`${base}/environ`, 256 * 1024, signal),
+      readProc(`${base}/maps`, 1024 * 1024, signal),
+    ])
+    usage.claimant ||= env.split("\0").some((entry) => entry.includes(object))
+    usage.open ||= maps.split("\n").filter(Boolean).some((line) => {
+      const match = line.match(/^\S+\s+\S+\s+\S+\s+([0-9a-f]+):([0-9a-f]+)\s+(\d+)/i)
+      if (!match) throw new Error("Unrecognized process mapping")
+      return inodes.has(deviceInode(match))
+    })
+    for (const thread of threads) {
+      signal?.throwIfAborted()
+      const task = `${base}/task/${thread}`
+      const cwd = await readlink(`${task}/cwd`)
+      usage.cwd ||= within(worktree, cwd) || inodes.has(inode(await stat(`${task}/cwd`, { bigint: true })))
+      usage.git ||= gitDirectory(args, cwd, worktree)
+      const fds = await numbers(`${task}/fd`)
+      descriptors += fds.length
+      if (descriptors > 65_536) return undefined
+      for (const fd of fds) {
+        signal?.throwIfAborted()
+        const reference = `${task}/fd/${fd}`
+        const value = await readlink(reference).catch((error: NodeJS.ErrnoException) => {
+          // Enumerating our own FD directory briefly publishes the enumeration's closed handle.
+          if (Number(pid) === process.pid && error.code === "ENOENT") return undefined
+          throw error
+        })
+        if (!value?.startsWith("/")) continue
+        if (within(object, value.replace(/ \(deleted\)$/, ""))) usage.open = true
+        if (inodes.has(inode(await stat(reference, { bigint: true })))) usage.open = true
+      }
+    }
+    if ((await processStat(base, signal)).birth !== first.birth || !sameIDs(threads, await numbers(`${base}/task`))) return undefined
+  }
+  if (!sameIDs(pids, await numbers("/proc"))) return undefined
+  const locks = await readProc("/proc/locks", 512 * 1024, signal)
+  usage.lock ||= locks.split("\n").filter(Boolean).some((line) => {
+    const match = line.match(/\b([0-9a-f]+):([0-9a-f]+):(\d+)\b/i)
+    if (!match) throw new Error("Unrecognized kernel lock")
+    return inodes.has(deviceInode(match))
+  })
+  return usage
+}
+
+async function readProc(file: string, limit: number, signal?: AbortSignal) {
+  const handle = await open(file, constants.O_RDONLY)
+  const buffer = Buffer.allocUnsafe(16 * 1024)
+  const chunks: Buffer[] = []
+  let length = 0
+  try {
+    while (true) {
+      signal?.throwIfAborted()
+      const { bytesRead } = await handle.read(buffer)
+      if (!bytesRead) return Buffer.concat(chunks, length).toString("utf8")
+      length += bytesRead
+      if (length > limit) throw new Error("Linux process reading is too large")
+      chunks.push(Buffer.from(buffer.subarray(0, bytesRead)))
+    }
+  } finally {
+    await handle.close()
+  }
+}
+
+async function processStat(directory: string, signal?: AbortSignal) {
+  const content = await readProc(`${directory}/stat`, 4096, signal)
+  const end = content.lastIndexOf(")")
+  const fields = content.slice(end + 2).split(" ")
+  if (end < 0 || !/^\d+$/.test(fields[6] ?? "") || !/^\d+$/.test(fields[17] ?? "") || !/^\d+$/.test(fields[19] ?? ""))
+    throw new Error("Invalid process identity")
+  return { state: fields[0], flags: Number(fields[6]), threads: Number(fields[17]), birth: fields[19] }
+}
+
+async function numbers(directory: string) {
+  const result: string[] = []
+  const entries = await opendir(directory)
+  for await (const entry of entries) {
+    if (result.length >= 65_536) throw new Error("Linux process inventory is too large")
+    if (/^\d+$/.test(entry.name)) result.push(entry.name)
+  }
+  return result.sort()
+}
+
+function gitDirectory(cmdline: string, cwd: string, worktree: string) {
+  const args = cmdline.split("\0")
+  if (path.basename(args[0] ?? "") !== "git") return false
+  let directory = cwd
+  for (const [index, arg] of args.entries()) {
+    if (arg !== "-C") continue
+    const next = args[index + 1]
+    if (!next) continue
+    directory = path.resolve(directory, next)
+    if (within(worktree, directory)) return true
+  }
+  return false
+}
+
+function within(root: string, file: string) {
+  return file === root || file.startsWith(root + "/")
+}
+
+function sameIDs(left: readonly string[], right: readonly string[]) {
+  return left.length === right.length && left.every((item, index) => item === right[index])
+}
+
+function inode(entry: BigIntStats) {
+  return `${entry.dev}:${entry.ino}`
+}
+
+function identity(entry: BigIntStats) {
+  return [entry.dev, entry.ino, entry.mode, entry.uid, entry.gid, entry.nlink, entry.size, entry.mtimeNs, entry.ctimeNs].join(":")
+}
+
+function deviceInode(fields: RegExpMatchArray) {
+  const major = BigInt(`0x${fields[1]}`)
+  const minor = BigInt(`0x${fields[2]}`)
+  const device = ((major & 0xfffn) << 8n) | (minor & 0xffn) | ((minor & ~0xffn) << 12n) | ((major & ~0xfffn) << 32n)
+  return `${device}:${fields[3]}`
+}

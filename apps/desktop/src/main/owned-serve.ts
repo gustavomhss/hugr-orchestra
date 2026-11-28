@@ -242,7 +242,7 @@ export async function startOwnedServe(options: {
     if (!child || !activity || state.stopping) return undefined
     const current = () => state.child === child && state.activity === activity && !state.stopping
     const post = async (endpoint: ActivityPrivateChannel.ArmPath, body: string, signal?: AbortSignal) => {
-      const deadline = AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(3000)])
+      const deadline = AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(endpoint === ActivityPrivateChannel.inspectArmPath ? 25_000 : 12_000)])
       const valid = () => current() && !deadline.aborted
       return (async () => {
         const signer = await activity
@@ -278,6 +278,11 @@ export async function startOwnedServe(options: {
       })().catch(() => undefined)
     }
     return {
+      isCurrent: current,
+      async inspect(signal) {
+        const result = ActivityArm.decodePlanSnapshot(await post(ActivityPrivateChannel.inspectArmPath, "{}", signal))
+        return Option.isSome(result) && current() ? result.value : undefined
+      },
       async preview(input, signal) {
         const decoded = ActivityArm.decodeRequest(input)
         if (Option.isNone(decoded)) return undefined

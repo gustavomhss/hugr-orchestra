@@ -129,7 +129,9 @@ The category names stay in English in both supported languages. Tab through the 
 
 **IN/OUT** reads the plan ledger. It displays qualified objects, arm receipts, and any receipts whose recorded evidence has changed. An empty ledger describes what the server has recorded. A partial read leaves the total open.
 
-**IN/OUT** is read-only. **Ready** reflects the recorded observation. The view also shows saved approvals and flags changed records as **Refused**. Arming requires live verification of the object's identity and eligibility, which is pending.
+In the owned Linux Desktop, select **Verify objects** to check direct `.turbo` and `node_modules` directories in registered Git worktrees. A candidate needs a complete process reading, a clean tracked worktree, and an ignored copy on a supported local filesystem. Verification requires visibility from the host's initial Linux PID namespace. A standard Desktop account can receive only a partial result when Linux denies access to other processes. Links, active use and incomplete evidence keep the object out of **Ready**. Opening IN/OUT and selecting **Refresh** read the recorded plan.
+
+Select **Arm quarantine…** on a verified **Ready** row. The Desktop opens a native dialog with the exact object and generation. After you confirm, the sidecar checks the object again and records an **Armed** receipt if the evidence still matches. The object stays in its original location. If its evidence changes, verify it again before selecting **Arm quarantine…**.
 
 **Quarantine** in the owned Windows Desktop shows archives the server kept after installing pinned tools. A verified archive enters custody after the installation publishes the completed tool directory. The list shows its owner, original path, and status. Refresh and filtering read the custody ledger. **Empty quarantine** opens a native confirmation for the entire batch, including entries hidden by the filter, once the running sidecar has verified custody of every archive. Entries retained from another sidecar instance remain visible for inspection.
 

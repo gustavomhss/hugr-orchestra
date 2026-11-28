@@ -3,6 +3,7 @@ export * as ActivityPrivateChannel from "./activity-private-channel"
 export const option = "activity-approval-stdin"
 export const path = "/_orchestra-activity/v1/probe"
 export const mount = "/_orchestra-activity/v1"
+export const inspectArmPath = `${mount}/arm-inspect`
 export const previewPath = `${mount}/arm-preview`
 export const confirmPath = `${mount}/arm-confirm`
 export const stopPreviewPath = `${mount}/stop-preview`
@@ -42,7 +43,7 @@ export function nonce() {
 
 type Direction = "probe-request" | "probe-response"
 export type ArmDirection = "arm-request" | "arm-response"
-export type ArmPath = typeof previewPath | typeof confirmPath | typeof stopPreviewPath | typeof stopConfirmPath |
+export type ArmPath = typeof inspectArmPath | typeof previewPath | typeof confirmPath | typeof stopPreviewPath | typeof stopConfirmPath |
   typeof emptyPreviewPath | typeof emptyConfirmPath | typeof emptyStatePath |
   typeof freezeStatePath | typeof freezePreviewPath | typeof freezeConfirmPath
 
