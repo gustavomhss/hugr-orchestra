@@ -112,6 +112,18 @@ fn open_optional(
     missing_ok: bool,
     additional_access: u32,
 ) -> Result<Option<Owned>, String> {
+    open_with_share(parent, name, directory, removable, missing_ok, additional_access, 3)
+}
+
+fn open_with_share(
+    parent: Handle,
+    name: &str,
+    directory: bool,
+    removable: bool,
+    missing_ok: bool,
+    additional_access: u32,
+    share: u32,
+) -> Result<Option<Owned>, String> {
     let text: Vec<u16> = std::ffi::OsStr::new(name).encode_wide().collect();
     if text.is_empty() || text.len() > 32767 || text.contains(&0) {
         return Err("invalid component".into());
@@ -148,7 +160,7 @@ fn open_optional(
             &mut io,
             null(),
             0,
-            3,
+            share,
             1,
             0x20 | 0x200000 | if directory { 1 } else { 0 },
             null(),
@@ -244,6 +256,26 @@ fn parents(root: &Owned, parts: &[String], final_access: u32) -> Result<Vec<Owne
 
 /// Operates only on paths supplied by a trusted host; this primitive does not authorize paths.
 pub fn operate(source: &str, destination: Option<&str>, expected: Option<&str>) -> Result<String, String> {
+    operate_inner(source, destination, expected, false, &mut false)
+}
+
+/// Renames a single-link regular file while exclusively holding its source handle.
+pub fn rename_exclusive(source: &str, destination: &str, expected: &str) -> Result<Option<String>, String> {
+    let mut entered = false;
+    match operate_inner(source, Some(destination), Some(expected), true, &mut entered) {
+        Ok(identity) => Ok(Some(identity)),
+        Err(_) if !entered => Ok(None),
+        Err(error) => Err(error),
+    }
+}
+
+fn operate_inner(
+    source: &str,
+    destination: Option<&str>,
+    expected: Option<&str>,
+    exclusive: bool,
+    entered: &mut bool,
+) -> Result<String, String> {
     let (drive, source_parts) = parse(source)?;
     let (dest_drive, dest_parts) = match destination {
         Some(path) => {
@@ -258,12 +290,19 @@ pub fn operate(source: &str, destination: Option<&str>, expected: Option<&str>) 
     let root = acquire_root(&drive, 0)?;
     let source_parents = parents(&root, &source_parts[..source_parts.len() - 1], 0)?;
     let source_parent = source_parents.last().map_or(root.0, |h| h.0);
-    let source_handle = open(
+    let source_handle = open_with_share(
         source_parent,
         &source_parts[source_parts.len() - 1],
         false,
         destination.is_some(),
-    )?;
+        false,
+        0,
+        if exclusive { 0 } else { 3 },
+    )?
+    .ok_or("missing source")?;
+    if exclusive {
+        require_regular_single_link(source_handle.0)?;
+    }
     let current = identity(source_handle.0)?;
     if destination.is_none() {
         return Ok(current);
@@ -306,6 +345,7 @@ pub fn operate(source: &str, destination: Option<&str>, expected: Option<&str>) 
         information: 0,
     };
     // ReplaceIfExists is zero. The pinned source and destination parent are kernel handles.
+    *entered = true;
     // SAFETY: the aligned information buffer and handles remain live throughout the synchronous call.
     status(unsafe { NtSetInformationFile(source_handle.0, &mut io, storage.as_ptr().cast(), length as u32, 10) })?;
     Ok(current)
@@ -322,3 +362,38 @@ pub fn inspect(source: &str) -> Result<Option<String>, String> {
     };
     identity(source.0).map(Some)
 }
+
+/// Deletes only the pinned object identified by a trusted host, never its children.
+pub fn dispose(source: &str, expected: &str) -> Result<(), String> {
+    let (drive, parts) = parse(source)?;
+    let root = acquire_root(&drive, 0)?;
+    let ancestors = parents(&root, &parts[..parts.len() - 1], 0)?;
+    let parent = ancestors.last().map_or(root.0, |h| h.0);
+    let source = open(parent, &parts[parts.len() - 1], false, true)?;
+    if identity(source.0)? != expected {
+        return Err("source identity changed".into());
+    }
+    let mut info = [0u8; 8];
+    query(source.0, 35, &mut info)?;
+    let attributes = u32::from_le_bytes([info[0], info[1], info[2], info[3]]);
+    if attributes & (0x400 | 0x40) != 0 {
+        return Err("reparse point or device".into());
+    }
+    let disposition = 1u8;
+    let mut io = IoStatus {
+        status: 0,
+        information: 0,
+    };
+    // FileDispositionInformation acts on the pinned handle. The filesystem rejects
+    // nonempty directories; no child is traversed or removed.
+    // SAFETY: the information buffer and owned handle remain live during this synchronous call.
+    status(unsafe { NtSetInformationFile(source.0, &mut io, (&disposition as *const u8).cast(), 1, 13) })?;
+    drop(source);
+    Ok(())
+}
+
+mod regular;
+use regular::require_regular_single_link;
+
+mod batch;
+pub use batch::dispose_batch;

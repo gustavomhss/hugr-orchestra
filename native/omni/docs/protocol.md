@@ -36,9 +36,10 @@ it sends `Ready`. The host refuses another `version`, and a forked copy of the h
 | 0x06 | `Release` | req u64 · id u64 |
 | 0x07 | `Observe` | req u64 · id u64 (only when bit 2 of `Ready.info` is set) |
 | 0x08 | `ObserveFootprint` | req u64 · id u64 (only when bit 3 of `Ready.info` is set) |
-| 0x09 | `ControlList` | req u64 · id u64 (only when bit 4 of `Ready.info` is set) |
+| 0x09 | `ControlList` | req u64 · id u64 (only when bit 4 or 5 of `Ready.info` is set) |
 | 0x0a | `ControlStop` | req u64 · id u64 · members list<(pid u32 · birth u64)> (1..=256 entries) |
-| 0x81 | `Ready` | version u32 · pid u32 · info u32 (bit 0: event-based host watch — pidfd on Linux, kqueue on macOS, process handle on Windows; unset = `getppid` polling. bit 1: members signalled through pidfds. bit 2: independent membership observation; bit 3: macOS footprint observation) |
+| 0x0b | `ControlFreeze` | req u64 · id u64 · member (pid u32 · birth u64) · paused bool (only when bit 5 is set) |
+| 0x81 | `Ready` | version u32 · pid u32 · info u32 (bit 0: event-based host watch — pidfd on Linux, kqueue on macOS, process handle on Windows; unset = `getppid` polling. bit 1: members signalled through pidfds. bit 2: independent membership observation; bit 3: macOS footprint observation; bit 4: selective stop; bit 5: member freeze) |
 | 0x82 | `Spawned` | req u64 · id u64 · pid u32 · pty_ends 2×u64 |
 | 0x83 | `SpawnFailed` | req u64 · code u8 (1 not found, 2 not executable, 3 bad cwd, 4 invalid, 5 io) · errno i32 · msg bytes |
 | 0x84 | `Exited` | id u64 · kind u8 (0 code, 1 signal) · value u32 |
@@ -47,6 +48,7 @@ it sends `Ready`. The host refuses another `version`, and a forked copy of the h
 | 0x88 | `ObservedTree` | req u64 · id u64 · footprint present bool · footprint u64 (0 when absent) · identity bytes (empty when absent) · list<(pid u32 · ppid u32 · name bytes)> |
 | 0x89 | `ControlMembers` | req u64 · id u64 · members list<(pid u32 · birth u64)> (0..=256 entries) |
 | 0x8a | `ControlResults` | req u64 · id u64 · outcomes list<u8> (1..=256 entries; 0 unknown, 1 exited; aligned to requested members) |
+| 0x8b | `ControlFreezeResult` | req u64 · id u64 · outcome u8 (0 changed, 1 refused, 2 unknown) |
 | 0x87 | `Ack` | req u64 · id u64 · result u8 (0 ok, 2 unknown, 3 error, 4 closed; 1 is reserved) |
 
 **Verbatim command line (v2, Windows).** With `verbatim` = 1, `argv` holds `argv[0]` alone, and the root's command line
@@ -67,8 +69,9 @@ released `id` gets `Ack unknown` for every request.
 | `Stop` | `Stopped` only once the tree is gone (at once if it already is); overlapping `Stop`s share the earliest deadline |
 | `Resize` | `Ack ok` / `closed` |
 | `List` | `Processes` (empty once gone), or `Ack error` if the inventory is incomplete |
-| `ControlList` | `ControlMembers` (empty once gone), or `Ack error` if unavailable |
+| `ControlList` | `ControlMembers` (empty once gone), or `Ack error` if unavailable (bit 4 or 5) |
 | `ControlStop` | `ControlResults`, one result per submitted identity |
+| `ControlFreeze` | `ControlFreezeResult` |
 | `Observe` | `Processes`, or `Ack error` if a sample is occupied or unavailable |
 | `ObserveFootprint` | `ObservedTree`, or `Ack error` if a sample is occupied or unavailable |
 | `Release` | `Ack ok`; the supervisor keeps cleanup duty |
@@ -93,3 +96,9 @@ the parent is listed. On host death every tree gets a `Stop` with its own `grace
 The optional footprint is the sum of macOS `ri_phys_footprint` values for a verified, stable live session, not RSS or PSS. An incomplete aggregate carries neither a value nor an identity; membership remains available. The identity describes the sorted PID and native start identities and changes when membership changes. Old v2 peers omit bit 3 and never receive the new request.
 
 Selective control uses the native process birth identity alongside each PID so a PID reused between inventory and stop cannot target a different process. `ControlStop` and `ControlResults` must contain 1..=256 entries; `ControlMembers` may be empty. The codec rejects a count over 256 before allocating the list. `ControlResults.outcomes` is positional. Exited means the pinned process was observed exited; unknown means exit was not confirmed and the request may still take effect. Reconcile unknown outcomes by observation, never automatic retry.
+
+### Linux isolated supervisor channel
+
+The isolated channel is opt-in and separate from the local supervisor. A systemd `Accept=yes` socket owned by root accepts a stream at `/run/orchestra/omni/<desktop-uid>.sock` and invokes the root supervisor with exactly `--isolated-peer-uid <desktop-uid>`. The client verifies the listener peer has UID 0 using `SO_PEERCRED`; the supervisor checks the accepted socket peer against the configured non-root UID and obtains its pidfd with `SO_PEERPIDFD`. It watches that pidfd rather than its parent and refuses startup if it cannot pin the peer or validate the isolation provisioning. `SO_PEERPIDFD` requires Linux 6.5 or an equivalent backport. The workload UID and GID must differ from the peer effective UID and GID, and `SO_PEERGROUPS` must confirm that the peer has no supplementary membership in the workload group. Provisioning must ensure no unrelated principal shares the desktop UID.
+
+The normal Gen protocol and SCM_RIGHTS carry isolated pipe spawns; PTYs are refused. A client requires `INFO_MEMBER_FREEZE` before sending a spawn and never falls back to the local supervisor. Socket closure initiates the usual tree cleanup; the remote client cannot kill a stuck root supervisor, so service management must bound and clean up a failed service.

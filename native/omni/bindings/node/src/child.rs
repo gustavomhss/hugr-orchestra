@@ -63,6 +63,12 @@ pub fn spawn(
     Ok(NativeChild { kid })
 }
 
+/// Capability marker for the fail-closed isolated spawn option.
+#[napi]
+pub fn supports_member_isolation() -> bool {
+    true
+}
+
 /// The native half of a JS `Child`.
 #[napi]
 pub struct NativeChild {
@@ -163,6 +169,34 @@ impl NativeChild {
             kid.stop(grace).await
         };
         exec::promise(env, stop, convert::exit)
+    }
+
+    /// Suspends or resumes one exact `pid:birth` identity.
+    #[napi]
+    pub fn freeze_member<'env>(&self, env: &'env Env, member: String, action: String) -> napi::Result<Object<'env>> {
+        let (pid, birth) = member
+            .split_once(':')
+            .and_then(|(pid, birth)| {
+                let parsed = (pid.parse::<u32>().ok()?, birth.parse::<u64>().ok()?);
+                (parsed.0.to_string() == pid && parsed.1.to_string() == birth).then_some(parsed)
+            })
+            .filter(|(pid, birth)| *pid != 0 && *birth != 0)
+            .ok_or_else(|| napi::Error::from_reason("member must be a canonical pid:birth identity"))?;
+        let paused = match action.as_str() {
+            "suspend" => true,
+            "resume" => false,
+            _ => return Err(napi::Error::from_reason("action must be suspend or resume")),
+        };
+        let kid = Arc::clone(&self.kid);
+        exec::promise(
+            env,
+            async move { kid.freeze_member(hugr_omni::ControlMember { pid, birth }, paused).await },
+            |outcome| match outcome {
+                hugr_omni::FreezeOutcome::Changed => "changed",
+                hugr_omni::FreezeOutcome::Refused => "refused",
+                hugr_omni::FreezeOutcome::Unknown => "unknown",
+            },
+        )
     }
 
     /// The live processes `stop()` would end now.

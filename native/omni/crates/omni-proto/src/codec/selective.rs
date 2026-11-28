@@ -1,6 +1,6 @@
 //! Codec for Windows selective process control messages.
 
-use crate::{ControlMember, Msg, ProtoError, SelectiveStopOutcome};
+use crate::{ControlMember, FreezeOutcome, Msg, ProtoError, SelectiveStopOutcome};
 
 use super::len;
 use super::wire::{Reader, Writer};
@@ -9,6 +9,8 @@ pub(super) const CONTROL_LIST: u8 = 0x09;
 pub(super) const CONTROL_STOP: u8 = 0x0a;
 pub(super) const CONTROL_MEMBERS: u8 = 0x89;
 pub(super) const CONTROL_RESULTS: u8 = 0x8a;
+pub(super) const CONTROL_FREEZE: u8 = 0x0b;
+pub(super) const CONTROL_FREEZE_RESULT: u8 = 0x8b;
 const MAX_MEMBERS: usize = 256;
 
 pub(super) fn encode_list(w: &mut Writer, req: u64, id: u64) {
@@ -22,6 +24,46 @@ pub(super) fn encode_stop(w: &mut Writer, req: u64, id: u64, members: &[ControlM
         w.u32(member.pid).u64(member.birth);
     }
     Ok(())
+}
+
+pub(super) fn encode_freeze(w: &mut Writer, req: u64, id: u64, member: ControlMember, paused: bool) {
+    w.u8(CONTROL_FREEZE)
+        .u64(req)
+        .u64(id)
+        .u32(member.pid)
+        .u64(member.birth)
+        .bool(paused);
+}
+
+pub(super) fn encode_freeze_result(w: &mut Writer, req: u64, id: u64, outcome: FreezeOutcome) {
+    w.u8(CONTROL_FREEZE_RESULT).u64(req).u64(id).u8(match outcome {
+        FreezeOutcome::Changed => 0,
+        FreezeOutcome::Refused => 1,
+        FreezeOutcome::Unknown => 2,
+    });
+}
+
+pub(super) fn decode_freeze(r: &mut Reader<'_>) -> Result<Msg, ProtoError> {
+    Ok(Msg::ControlFreeze {
+        req: r.u64()?,
+        id: r.u64()?,
+        member: ControlMember {
+            pid: r.u32()?,
+            birth: r.u64()?,
+        },
+        paused: r.bool()?,
+    })
+}
+
+pub(super) fn decode_freeze_result(r: &mut Reader<'_>) -> Result<Msg, ProtoError> {
+    let (req, id, value) = (r.u64()?, r.u64()?, r.u8()?);
+    let outcome = match value {
+        0 => FreezeOutcome::Changed,
+        1 => FreezeOutcome::Refused,
+        2 => FreezeOutcome::Unknown,
+        n => return Err(ProtoError(format!("bad freeze outcome {n}"))),
+    };
+    Ok(Msg::ControlFreezeResult { req, id, outcome })
 }
 
 pub(super) fn encode_members(w: &mut Writer, req: u64, id: u64, members: &[ControlMember]) -> Result<(), ProtoError> {
@@ -112,3 +154,6 @@ fn member_count(r: &mut Reader<'_>, nonempty: bool, item_size: usize) -> Result<
     }
     Ok(count)
 }
+
+#[cfg(test)]
+mod tests;

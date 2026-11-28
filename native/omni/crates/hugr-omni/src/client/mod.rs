@@ -11,6 +11,8 @@ mod hold;
 mod inventory;
 #[cfg(all(test, target_os = "linux"))]
 pub(crate) mod inventory_probe;
+#[cfg(target_os = "linux")]
+mod isolation;
 #[cfg(unix)]
 mod keeper;
 mod start;
@@ -72,6 +74,8 @@ const REPLY_WITHIN: Duration = Duration::from_secs(10);
 /// The current generation of this host process. A caller waits at most this for a start another
 /// caller is running (a start takes at most `REPLY_WITHIN` once the binary is executed).
 static CURRENT: Registry = Registry::new(Duration::from_secs(20));
+#[cfg(target_os = "linux")]
+static ISOLATED: Registry = Registry::new(Duration::from_secs(20));
 
 /// The library's own tokio runtime (ADR-0004), started lazily and never the caller's: every background task
 /// of the library (channel reader, output pumps, deadlines) runs here, so it works under Node, Python, a
@@ -103,7 +107,33 @@ pub(crate) fn runtime() -> Result<&'static tokio::runtime::Runtime, Error> {
 /// output first, then calls `go`, so `spawn_pty()` still reports exec failures synchronously.
 pub(crate) fn spawn(spec: &Spec) -> Result<Spawned, Error> {
     let rt = runtime()?;
-    let sup = CURRENT.get(|num| sys::launch(rt, num))?;
+    let sup = if spec.member_isolation {
+        if !matches!(spec.mode, crate::spawn::Mode::Pipe) {
+            return Err(Error::supervisor_not_started(
+                "isolated PTY",
+                &std::io::Error::other("PTY is unsupported"),
+            ));
+        }
+        #[cfg(target_os = "linux")]
+        {
+            ISOLATED.get(|num| isolation::connect(rt, num))?
+        }
+        #[cfg(not(target_os = "linux"))]
+        {
+            return Err(Error::supervisor_not_started(
+                "isolated supervisor",
+                &std::io::Error::other("Linux only"),
+            ));
+        }
+    } else {
+        CURRENT.get(|num| sys::launch(rt, num))?
+    };
+    if spec.member_isolation && !sup.member_freeze() {
+        return Err(Error::supervisor_not_started(
+            "isolated supervisor",
+            &std::io::Error::other("member freeze capability missing"),
+        ));
+    }
     spawn_on(&sup, spec)
 }
 
@@ -144,6 +174,10 @@ impl InventoryFailure {
 impl Tree {
     /// Opaque host-local identity qualified by the supervisor generation and tree id.
     pub(crate) fn tree_id(&self) -> String {
+        #[cfg(target_os = "linux")]
+        if self.sup.isolated_channel() {
+            return format!("isolated:{}:{}", self.sup.num, self.id);
+        }
         format!("{}:{}", self.sup.num, self.id)
     }
 

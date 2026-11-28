@@ -63,6 +63,26 @@ export class MemoryExceeded extends Error {
   }
 }
 
+// Only the authenticated Desktop-owned sidecar binds this policy, for its lifetime.
+let isolatedExecutables: ReadonlySet<string> | undefined
+
+export function bindActivityIsolation(json: string) {
+  const files: unknown = JSON.parse(json)
+  if (!Array.isArray(files) || files.length > 32 || !files.every((file): file is string =>
+    typeof file === "string" && file.length <= 4096 && !file.includes("\0") &&
+    path.posix.isAbsolute(file) && path.posix.normalize(file) === file && file !== "/",
+  )) throw new Error("Activity isolation requires up to 32 exact absolute executable paths")
+  const current = new Set(files)
+  isolatedExecutables = current
+  return () => {
+    if (isolatedExecutables === current) isolatedExecutables = undefined
+  }
+}
+
+export function activityIsolationRequested(command: ChildProcess.Command) {
+  return command._tag === "StandardCommand" && !command.options.shell && isolatedExecutables?.has(command.command) === true
+}
+
 export type Binding = Awaited<ReturnType<typeof Omni.load>>
 type Spawn = (
   command: ChildProcess.Command,
@@ -79,9 +99,15 @@ export const make = Effect.fnUntraced(function* (input: {
 }) {
   const omni = yield* Effect.promise(() => Omni.load())
   const spawn: Spawn = Effect.fnUntraced(function* (command) {
+    const isolate = activityIsolationRequested(command)
     const reason = unsupported(command)
     if (reason === undefined && command._tag === "StandardCommand")
-      return yield* start(omni, command, yield* input.cwd(command.options))
+      return yield* start(omni, command, yield* input.cwd(command.options), isolate)
+    if (isolate) return yield* PlatformError.badArgument({
+      module: "ChildProcess",
+      method: "spawn",
+      description: `Isolated Activity Monitor commands require an Omni pipe command (${reason})`,
+    })
     if (input.mode === "strict")
       return yield* PlatformError.badArgument({
         module: "ChildProcess",
@@ -139,6 +165,7 @@ const start = Effect.fnUntraced(function* (
   omni: Binding,
   command: ChildProcess.StandardCommand,
   cwd: string | undefined,
+  isolate: boolean,
 ) {
   const opts = command.options
   const run = program(command)
@@ -173,6 +200,7 @@ const start = Effect.fnUntraced(function* (
       try: () => {
         const child = omni.spawn(run.file, run.args, {
           windowsVerbatimArgs: run.verbatim,
+          ...(isolate ? { memberIsolation: true } : {}),
           cwd,
           env: environment(opts),
           inheritEnv: false,

@@ -22,6 +22,7 @@ pub(super) struct HostWatch {
     host: i32,
     /// pidfd (Linux) or kqueue (macOS) that becomes readable when the host exits.
     event: Option<OwnedFd>,
+    remote: bool,
 }
 
 impl HostWatch {
@@ -30,7 +31,20 @@ impl HostWatch {
         HostWatch {
             host,
             event: arm_event(host),
+            remote: false,
         }
+    }
+
+    #[cfg(target_os = "linux")]
+    pub(super) fn remote(event: OwnedFd) -> io::Result<HostWatch> {
+        if pidfd_ready(&event)? {
+            return Err(io::Error::other("peer already exited"));
+        }
+        Ok(HostWatch {
+            host: 0,
+            event: Some(event),
+            remote: true,
+        })
     }
 
     pub(super) fn event_fd(&self) -> Option<RawFd> {
@@ -44,6 +58,12 @@ impl HostWatch {
 
     /// The host is gone: its event fired, or we were reparented.
     pub(super) fn gone(&self, event_fired: bool) -> bool {
+        if self.remote {
+            #[cfg(target_os = "linux")]
+            return event_fired || self.event.as_ref().is_none_or(|fd| pidfd_ready(fd).unwrap_or(true));
+            #[cfg(not(target_os = "linux"))]
+            return true;
+        }
         // SAFETY: getppid has no preconditions.
         event_fired || unsafe { libc::getppid() } != self.host
     }

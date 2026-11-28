@@ -43,6 +43,7 @@ pub(crate) enum Mode {
 /// What the user asked for, unchecked (built by `api::Command`).
 #[derive(Debug, Clone)]
 pub(crate) struct Request {
+    pub member_isolation: bool,
     pub program: OsString,
     pub args: Vec<OsString>,
     pub cwd: Option<PathBuf>,
@@ -65,6 +66,7 @@ impl Request {
     pub(crate) fn new(program: OsString) -> Request {
         Request {
             program,
+            member_isolation: false,
             args: Vec::new(),
             cwd: None,
             env: Vec::new(),
@@ -83,6 +85,7 @@ impl Request {
 /// A validated, resolved launch, ready for the supervisor.
 #[derive(Debug, Clone)]
 pub(crate) struct Spec {
+    pub member_isolation: bool,
     /// Absolute path of the file to execute (on Windows a `.cmd`/`.bat` stays as resolved; the supervisor
     /// runs it through `cmd.exe` with batch-safe quoting, C-SPAWN-02).
     pub program: PathBuf,
@@ -112,6 +115,7 @@ pub(crate) fn prepare(req: &Request) -> Result<Spec, Error> {
         validate::verbatim_program(&req.program, &program, HOST)?;
     }
     Ok(Spec {
+        member_isolation: req.member_isolation,
         program,
         argv: std::iter::once(req.program.clone())
             .chain(req.args.iter().cloned())

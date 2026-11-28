@@ -75,6 +75,54 @@ The hypothesis is **insufficient** until there is a baseline for the same set of
 
 The **Tree id** column shows the native identity when the installed binding exposes it. A missing identity stays **unread**. Root PID, native tree ID and observation UUID remain separate. The API identifies the server observation lifetime with `instanceID`, so a host restart cannot reuse an old address unnoticed. An older binding without the observation request leaves membership unavailable. Inspection failure displays **unknown** and preserves previous members with their original reading age. Failed HTTP refreshes preserve the previous snapshot. The observer keeps the last 32 finished or unavailable observations and reports how many older records it retired.
 
+### Linux member suspension
+
+On a Linux installation with a provisioned Omni isolation supervisor, **Read members** can offer **Suspend member…** for an eligible process. The Desktop confirmation shows the tree, member identity, owner and generation. After confirmation, Omni freezes the selected member and the server records the suspension. **Resume member…** requires a new confirmation for the same member and matching suspension record. Other reasons a process is paused can still apply. An unresolved control attempt is blocked for inspection.
+
+The Linux Desktop keeps its regular supervisor. An administrator can provision a separate systemd socket and an Omni supervisor for single-task commands. The desktop account keeps its normal permissions. The isolated commands run as a dedicated non-root identity and need access to their working directories under that identity. Existing processes, terminals, shell commands and commands that need threads or subprocesses use the regular profile or are outside the isolated profile.
+
+### Enable Linux member suspension on a provisioned host
+
+Use Linux with a unified cgroup v2 mount that has the `pids` controller and supports `SO_PEERPIDFD` (Linux 6.5 or later, or a distribution backport). The supervisor and addon must both support isolated socket activation. Choose a workload UID and GID dedicated to one desktop account. Keep the workload group out of the desktop account’s primary and supplementary groups. The workload identity must have no privileged group or other sensitive files.
+
+Install the matching `hugr-omni-supervisor` in a root-owned directory where desktop users cannot replace it. Provision an empty root-owned cgroup below `/sys/fs/cgroup` with `pids` enabled for its children. Keep all cgroup ancestors protected from non-root writes. Arrange for the host's service setup to recreate the empty cgroup at boot before any isolated processes are started.
+
+For example, for desktop UID `1000` and dedicated workload UID `62000` and GID `62001`, use an administrator-managed socket unit named `orchestra-omni-1000.socket` and its matching service template. Substitute the accounts, binary path and cgroup for your host.
+
+```ini
+[Socket]
+ListenStream=/run/orchestra/omni/1000.sock
+SocketUser=1000
+SocketMode=0600
+DirectoryMode=0755
+Accept=yes
+MaxConnections=4
+RemoveOnStop=yes
+
+[Install]
+WantedBy=sockets.target
+```
+
+```ini
+# orchestra-omni-1000@.service
+[Service]
+Type=exec
+User=root
+ExecStart=/usr/local/libexec/hugr-omni-supervisor --isolated-peer-uid 1000
+StandardInput=socket
+StandardOutput=journal
+StandardError=journal
+NoNewPrivileges=yes
+Environment=HUGR_OMNI_ISOLATION_ROOT=/sys/fs/cgroup/orchestra-omni-1000
+Environment=HUGR_OMNI_ISOLATION_UID=62000
+Environment=HUGR_OMNI_ISOLATION_GID=62001
+Environment=HUGR_OMNI_ISOLATION_EXECUTABLES=/usr/bin/cat
+```
+
+The supervisor accepts requests only from the configured desktop UID. Processes under that account can request these approved executables with arguments and a working directory. Authorize only commands safe to expose under the dedicated workload identity. The supervisor's list is colon-separated and accepts root-owned executable paths with protected directories and no symlinks. The supervisor starts commands with a fixed `PATH` and `LANG`.
+
+Use a root-owned `/run/orchestra/omni` directory with mode `0755`, then start the socket unit. Launch the packaged Desktop with `ORCHESTRA_ACTIVITY_ISOLATED_EXECUTABLES` set to a JSON array of exact absolute executable paths. Use the spelling passed in the command, for example `["/usr/bin/cat"]`. The setting applies to direct standard commands admitted by the owned sidecar's Omni spawner. The selected commands require the authenticated supervisor and fail if it is unavailable. An empty array leaves the profile unused.
+
 The category names stay in English in both supported languages. Tab through the category strip once, then use Left/Right, Home or End to select a category.
 
 ## IN/OUT and Quarantine
@@ -83,7 +131,9 @@ The category names stay in English in both supported languages. Tab through the 
 
 **IN/OUT** is read-only. **Ready** reflects the recorded observation. The view also shows saved approvals and flags changed records as **Refused**. Arming requires live verification of the object's identity and eligibility, which is pending.
 
-**Quarantine** shows **collection unavailable** while the filesystem capability is absent.
+**Quarantine** in the owned Windows Desktop shows archives the server kept after installing pinned tools. A verified archive enters custody after the installation publishes the completed tool directory. The list shows its owner, original path, and status. Refresh and filtering read the custody ledger. **Empty quarantine** opens a native confirmation for the entire batch, including entries hidden by the filter, once the running sidecar has verified custody of every archive. Entries retained from another sidecar instance remain visible for inspection.
+
+The installer keeps eligible compressed archives up to 16 MiB each while the ledger has capacity for up to 16 objects. It leaves other tool installation cleanup unchanged. If any object cannot be reserved, the batch is refused before removal. Exit or loss of a receipt after a possible effect leaves an unresolved record for inspection.
 
 In Trees on Windows, **Stop members…** on a row with a live member reading shows a native confirmation in the Desktop app. The owned sidecar rereads the supervisor's list and presents the exact member identities and generation. A changed list requires a fresh confirmation. After approval, the supervisor stops only those members. If the supervisor cannot confirm an exit, the outcome stays unconfirmed and you can read the members again.
 

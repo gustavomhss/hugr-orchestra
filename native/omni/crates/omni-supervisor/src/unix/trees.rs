@@ -43,6 +43,8 @@ pub(super) struct Stopping {
 
 pub(super) struct Tree {
     pub pid: i32,
+    #[cfg(target_os = "linux")]
+    pub member: Option<super::isolated::Member>,
     pub master: Option<OwnedFd>,
     pub grace_ms: u32,
     pub exec: Exec,
@@ -92,9 +94,9 @@ impl Trees {
         }
     }
 
-    /// Another tree may be admitted: every record held counts, a gone tree too until its `Release` drops it.
-    pub(super) fn admits(&self) -> bool {
-        self.map.len() < self.cap
+    /// Admission counts starting children and every registered record, even a gone tree until `Release`.
+    pub(super) fn admits(&self, starting: usize) -> bool {
+        self.map.len() + starting < self.cap
     }
 
     /// Trees not yet confirmed gone.
@@ -120,6 +122,8 @@ impl Trees {
         self.next_id += 1;
         let tree = Tree {
             pid,
+            #[cfg(target_os = "linux")]
+            member: None,
             master,
             grace_ms,
             exec,
@@ -369,13 +373,13 @@ mod tests {
         let ids: Vec<u64> = (0..3)
             .map(|i| trees.insert(i32::MAX - i, None, 0, Exec::Running))
             .collect();
-        assert!(!trees.admits());
+        assert!(!trees.admits(0));
         for t in trees.map.values_mut() {
             t.gone = true;
         }
         assert_eq!(trees.active(), 0);
-        assert!(!trees.admits(), "gone but not released still holds a slot");
+        assert!(!trees.admits(0), "gone but not released still holds a slot");
         trees.release(1, ids[0], &mut Vec::new());
-        assert!(trees.admits());
+        assert!(trees.admits(0));
     }
 }
