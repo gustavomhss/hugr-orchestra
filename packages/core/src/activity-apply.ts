@@ -1,7 +1,7 @@
 export * as ActivityApplyService from "./activity-apply"
 
 import { ActivityApply } from "@orchestra/schema/activity-apply"
-import { and, eq } from "drizzle-orm"
+import { and, eq, or } from "drizzle-orm"
 import { Effect, Option } from "effect"
 import type { Database } from "./database/database"
 import type { ActivityActionLedger } from "./activity-action-ledger"
@@ -39,7 +39,10 @@ export function make(database: Database.Interface, options?: { now?: () => numbe
         const candidates = authority ? yield* Effect.forEach(rows.slice(0, 128), (row) => Effect.gen(function* () {
           const observed = yield* database.db.select().from(ActivityActionLedgerTable).where(eq(ActivityActionLedgerTable.target_id, row.target_id)).get()
           const attempt = yield* database.db.select().from(ActivityApplyTable).where(and(eq(ActivityApplyTable.target_id, row.target_id), eq(ActivityApplyTable.generation, row.generation))).get()
-          if (row.receipt.targets.length !== 1 || !observed || observed.generation !== row.generation ||
+          const unresolved = yield* database.db.select().from(ActivityApplyTable).where(and(eq(ActivityApplyTable.outcome, "Unknown"), or(eq(ActivityApplyTable.target_id, row.target_id), eq(ActivityApplyTable.source, row.snapshot.label)))).get()
+          if (row.receipt.targets.length !== 1 || row.receipt.targets[0]?.targetID !== row.target_id ||
+            row.receipt.targets[0]?.generation !== row.generation || row.receipt.targets[0]?.label !== row.snapshot.label ||
+            row.receipt.targets[0]?.owner !== row.snapshot.owner || unresolved || !observed || observed.generation !== row.generation ||
             JSON.stringify({ ...observed.observation, generation: observed.generation }) !== JSON.stringify(row.snapshot) ||
             attempt || !authority.describe(row.snapshot)) return undefined
           return { approvalID: row.approval_id, targetID: row.target_id, generation: row.generation }
@@ -60,7 +63,8 @@ export function make(database: Database.Interface, options?: { now?: () => numbe
           eq(ActivityArmTable.generation, decoded.value.generation),
         )).get()
         if (!row || row.receipt.targets.length !== 1 || row.receipt.approvalID !== row.approval_id ||
-          row.receipt.targets[0]?.targetID !== row.target_id || row.receipt.targets[0]?.generation !== row.generation) return undefined
+          row.receipt.targets[0]?.targetID !== row.target_id || row.receipt.targets[0]?.generation !== row.generation ||
+          row.receipt.targets[0]?.label !== row.snapshot.label || row.receipt.targets[0]?.owner !== row.snapshot.owner) return undefined
         const current = yield* database.db.select().from(ActivityActionLedgerTable).where(eq(ActivityActionLedgerTable.target_id, row.target_id)).get()
         if (!current || current.generation !== row.generation ||
           JSON.stringify({ ...current.observation, generation: current.generation }) !== JSON.stringify(row.snapshot)) return undefined
@@ -68,6 +72,9 @@ export function make(database: Database.Interface, options?: { now?: () => numbe
           eq(ActivityApplyTable.target_id, row.target_id), eq(ActivityApplyTable.generation, row.generation),
         )).get()
         if (existing) return undefined
+        const unresolved = yield* database.db.select().from(ActivityApplyTable).where(and(eq(ActivityApplyTable.outcome, "Unknown"),
+          or(eq(ActivityApplyTable.target_id, row.target_id), eq(ActivityApplyTable.source, row.snapshot.label)))).get()
+        if (unresolved) return undefined
         const destination = authority.describe(row.snapshot)
         if (!destination) return undefined
         const time = now()
@@ -101,11 +108,15 @@ export function make(database: Database.Interface, options?: { now?: () => numbe
             eq(ActivityApplyTable.target_id, receipt.targetID), eq(ActivityApplyTable.generation, receipt.generation),
           )).get()
           if (existing) return false
+          const unresolved = yield* tx.select().from(ActivityApplyTable).where(and(eq(ActivityApplyTable.outcome, "Unknown"),
+            or(eq(ActivityApplyTable.target_id, receipt.targetID), eq(ActivityApplyTable.source, entry.target.label)))).get()
+          if (unresolved) return false
           const arm = yield* tx.select().from(ActivityArmTable).where(and(eq(ActivityArmTable.approval_id, receipt.approvalID),
             eq(ActivityArmTable.target_id, receipt.targetID), eq(ActivityArmTable.generation, receipt.generation))).get()
           const current = yield* tx.select().from(ActivityActionLedgerTable).where(eq(ActivityActionLedgerTable.target_id, receipt.targetID)).get()
           const valid = !!arm && arm.receipt.targets.length === 1 && arm.receipt.approvalID === receipt.approvalID &&
             arm.receipt.targets[0]?.targetID === receipt.targetID && arm.receipt.targets[0]?.generation === receipt.generation &&
+            arm.receipt.targets[0]?.label === entry.target.label && arm.receipt.targets[0]?.owner === entry.target.owner &&
             JSON.stringify(arm.snapshot) === JSON.stringify(entry.target) && !!current && current.generation === receipt.generation &&
             JSON.stringify({ ...current.observation, generation: current.generation }) === JSON.stringify(entry.target) &&
             authority.describe(entry.target) === entry.preview.destination && entry.preview.expiresAt > now()

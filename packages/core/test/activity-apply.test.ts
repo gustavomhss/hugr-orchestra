@@ -60,3 +60,72 @@ test("confirmed apply reserves once and survives service restart", async () => {
     expect(mutations).toBe(1)
   }).pipe(Effect.provide(Database.layerFromPath(path.join(directory.path, "activity.sqlite"))), Effect.scoped))
 })
+
+test.each(["second-read", "revalidation"] as const)("%s settles safely and survives restart", async (scenario) => {
+  await using directory = await tmpdir()
+  const source = path.join(directory.path, "source")
+  const destination = path.join(directory.path, "destination")
+  await mkdir(source)
+  await writeFile(path.join(source, "fixture"), "owned")
+  let mutations = 0
+  let authorized = true
+  await Effect.runPromise(Effect.gen(function* () {
+    const database = yield* Database.Service
+    const actions = yield* ActivityActionLedger.make
+    const record = (targetID: string, label = source) => actions.record({ targetID, kind: "object", label, owner: "test",
+      identity: "observed-git", members: [targetID], dirty: false, eligible: ["arm"] })
+    const target = yield* record("fixture")
+    const arms = ActivityArmLedger.make(database, { verify: () => Effect.succeed(true) })
+    const armPreview = yield* arms.preview({ targets: [{ targetID: target.targetID, generation: target.generation }] })
+    if (!armPreview) throw new Error("missing arm preview")
+    const approval = yield* arms.confirm({ previewID: armPreview.previewID })
+    if (!approval) throw new Error("missing approval")
+    const claims = new Set<string>()
+    const authority: ActivityApplyService.Authority = {
+      describe: () => destination,
+      authorize: () => Effect.sync(() => authorized),
+      prepare: () => Effect.sync(() => {
+        if (claims.has(source)) return undefined
+        claims.add(source)
+        return { identity: "native-fixture", release: async () => { claims.delete(source) }, adapter: {
+          prepare: async () => ({ facts: { original: { state: "present" as const, identity: "native-fixture" },
+            quarantine: { state: "absent" as const } }, claimant: "absent" as const, mutation: async () => {
+              mutations++
+              await rename(source, destination)
+              return "accepted" as const
+            } }),
+          reread: async () => ({ original: { state: "unavailable" as const }, quarantine: { state: "unavailable" as const } }),
+        } }
+      }),
+    }
+    const service = ActivityApplyService.make(database, { authority })
+    const request = { approvalID: approval.approvalID, targetID: target.targetID, generation: target.generation }
+    const first = yield* service.preview(request)
+    const second = yield* service.preview(request)
+    if (!first || !second) throw new Error("missing previews")
+    authorized = scenario !== "revalidation"
+    const result = yield* service.confirm({ previewID: first.previewID })
+    expect(result?.outcome).toBe(scenario === "revalidation" ? "Refused" : "Unknown")
+    expect(yield* service.confirm({ previewID: second.previewID })).toBeUndefined()
+    expect(mutations).toBe(scenario === "revalidation" ? 0 : 1)
+    const restarted = ActivityApplyService.make(database, { authority })
+    expect((yield* restarted.state()).results[0]?.outcome).toBe(result?.outcome)
+    expect((yield* restarted.confirm({ previewID: first.previewID }))?.outcome).toBe(result?.outcome)
+    expect(yield* restarted.preview(request)).toBeUndefined()
+    if (scenario === "second-read") {
+      const changed = yield* record("fixture", source + "/changed")
+      const changedPreview = yield* arms.preview({ targets: [{ targetID: changed.targetID, generation: changed.generation }] })
+      if (!changedPreview) throw new Error("missing new generation preview")
+      const changedApproval = yield* arms.confirm({ previewID: changedPreview.previewID })
+      if (!changedApproval) throw new Error("missing new generation approval")
+      expect(yield* restarted.preview({ approvalID: changedApproval.approvalID, targetID: changed.targetID, generation: changed.generation })).toBeUndefined()
+      const replacement = yield* record("replacement")
+      const replacementPreview = yield* arms.preview({ targets: [{ targetID: replacement.targetID, generation: replacement.generation }] })
+      if (!replacementPreview) throw new Error("missing replacement preview")
+      const replacementApproval = yield* arms.confirm({ previewID: replacementPreview.previewID })
+      if (!replacementApproval) throw new Error("missing replacement approval")
+      expect(yield* restarted.preview({ approvalID: replacementApproval.approvalID, targetID: replacement.targetID, generation: replacement.generation })).toBeUndefined()
+      expect((yield* restarted.state()).eligible).toEqual([])
+    }
+  }).pipe(Effect.provide(Database.layerFromPath(path.join(directory.path, "activity.sqlite"))), Effect.scoped))
+})
