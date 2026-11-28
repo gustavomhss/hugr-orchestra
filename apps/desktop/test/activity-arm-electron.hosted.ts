@@ -168,13 +168,14 @@ async function parent() {
     await writeFile(entry, (await readFile(entry, "utf8")).replaceAll(/import\.meta\??\.env/g, "({})"))
     const electron = createRequire(join(desktop, "package.json")).resolve("electron")
     const binary = join(dirname(electron), "dist", (await readFile(join(dirname(electron), "path.txt"), "utf8")).trim())
-    // Only the administrator opens the credential file. FD 3 survives the UID drop and exec.
+    // Only the administrator opens the credential file. A high FD survives the UID drop and exec.
     const launcher = `import os, sys
 fd = os.open(sys.argv[1], os.O_RDONLY | os.O_NOFOLLOW)
-if fd != 3:
-    os.dup2(fd, 3)
+descriptor = int(os.environ["ORCHESTRA_ACTIVITY_CUSTODY_FD"])
+if fd != descriptor:
+    os.dup2(fd, descriptor)
     os.close(fd)
-os.set_inheritable(3, True)
+os.set_inheritable(descriptor, True)
 os.setgroups([])
 os.setgid(int(sys.argv[3]))
 os.setuid(int(sys.argv[2]))
@@ -184,7 +185,7 @@ os.execv(sys.argv[4], sys.argv[4:])
       stdout: "inherit", stderr: "inherit", env: {
         ...process.env, HOME: session, ACTIVITY_ARM_SESSION: session, ACTIVITY_ARM_ROOT: root,
         ACTIVITY_ARM_PRELOAD: preload.outputs[0].path, ACTIVITY_ARM_BUN: process.execPath, ACTIVITY_ARM_CLI: cli,
-        ORCHESTRA_ACTIVITY_CUSTODY_SOCKET: socketPath, ORCHESTRA_ACTIVITY_CUSTODY_FD: "3",
+        ORCHESTRA_ACTIVITY_CUSTODY_SOCKET: socketPath, ORCHESTRA_ACTIVITY_CUSTODY_FD: "42",
       },
     })
     const controller = new AbortController()
@@ -402,7 +403,9 @@ async function child() {
       const attack = mode === "confirm" ? (async () => {
         await waitFor("visible native Apply dialog", () => lstat(join(session, "attack-request")).catch(() => undefined))
         const output = join(session, "pty-result.json")
-        const started = await api("/api/pty", "POST", { command: python, args: ["-c", sourceSwap, source, output, join(root, "desktop.credential")] })
+        const started = await api("/api/pty", "POST", {
+          command: python, args: ["-c", sourceSwap, source, output, join(root, "desktop.credential"), String(process.pid)],
+        })
         assert.equal(started.status, 200, "the regular sidecar must still serve its real PTY API")
         const created = await started.json() as { data: { id: string; pid: number } }
         assert.ok(created.data.id)
@@ -414,13 +417,18 @@ async function child() {
           assert.equal(pty.data.exitCode, 0)
           return true
         })
-        const attack = JSON.parse(await readFile(output, "utf8")) as { uid: number; pid: number; errno?: string; renamed: boolean; sentinel: boolean; credential: boolean; custodyEnvironment: string[] }
+        const attack = JSON.parse(await readFile(output, "utf8")) as {
+          uid: number; pid: number; errno?: string; renamed: boolean; sentinel: boolean
+          credential: boolean; inheritedCredential: boolean; desktopMemory: boolean; custodyEnvironment: string[]
+        }
         assert.equal(attack.pid, created.data.pid)
         assert.equal(attack.uid, desktopUID, "the real workload must have the ordinary Desktop UID")
         assert.ok(attack.errno === "EACCES" || attack.errno === "EPERM", "the kernel must deny replacement of the protected source")
         assert.equal(attack.renamed, false)
         assert.equal(attack.sentinel, false)
         assert.equal(attack.credential, false)
+        assert.equal(attack.inheritedCredential, false)
+        assert.equal(attack.desktopMemory, false)
         assert.deepEqual(attack.custodyEnvironment, [])
         await writeFile(join(session, "attack-complete"), "")
       })() : Promise.resolve()
@@ -495,7 +503,7 @@ async function handleDialogs(session: string, source: string, quarantine: string
 }
 
 const sourceSwap = `import errno, json, os, sys
-source, output, credential_file = sys.argv[1:]
+source, output, credential_file, desktop_pid = sys.argv[1:]
 moved = source + ".attacker"
 sentinel = os.path.join(source, "sentinel")
 result = {"uid": os.getuid(), "pid": os.getpid(), "custodyEnvironment": [key for key in os.environ if key.startswith("ORCHESTRA_ACTIVITY_CUSTODY_")]}
@@ -504,6 +512,17 @@ try:
         result["credential"] = True
 except PermissionError:
     result["credential"] = False
+result["inheritedCredential"] = False
+for name in os.listdir("/proc/self/fd"):
+    try:
+        result["inheritedCredential"] |= os.readlink("/proc/self/fd/" + name) == credential_file
+    except FileNotFoundError:
+        pass
+try:
+    with open("/proc/" + desktop_pid + "/mem", "rb"):
+        result["desktopMemory"] = True
+except PermissionError:
+    result["desktopMemory"] = False
 try:
     os.rename(source, moved)
     os.mkdir(source)
