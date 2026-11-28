@@ -34,7 +34,7 @@ async function parent() {
     const electron = createRequire(join(desktop, "package.json")).resolve("electron")
     const binary = join(dirname(electron), "dist", (await readFile(join(dirname(electron), "path.txt"), "utf8")).trim())
     const bun = process.execPath
-    const child = Bun.spawn([binary, "--no-sandbox", entry, "--activity-arm-child"], {
+    const child = Bun.spawn([binary, "--no-sandbox", "--disable-gpu", "--disable-software-rasterizer", entry, "--activity-arm-child"], {
       stdout: "pipe", stderr: "pipe", env: { ...process.env, ACTIVITY_ARM_ROOT: root, ACTIVITY_ARM_PRELOAD: preload.outputs[0]!.path, ACTIVITY_ARM_BUN: bun, ACTIVITY_ARM_CLI: join(desktop, "../cli/src/index.ts") },
     })
     const stdout = new Response(child.stdout).text()

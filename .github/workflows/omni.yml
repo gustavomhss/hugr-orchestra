@@ -197,4 +197,7 @@ jobs:
           fi
       - name: Exercise native approval with a complete Linux process view
         working-directory: apps/desktop
-        run: sudo --preserve-env=CI,HUGR_OMNI_ADDON,HUGR_OMNI_SUPERVISOR xvfb-run -a "$(command -v bun)" run ./test/activity-arm-electron.hosted.ts
+        run: |
+          sudo --preserve-env=CI,HUGR_OMNI_ADDON,HUGR_OMNI_SUPERVISOR \
+            unshare --mount --pid --fork --mount-proc \
+            xvfb-run -a "$(command -v bun)" run ./test/activity-arm-electron.hosted.ts
