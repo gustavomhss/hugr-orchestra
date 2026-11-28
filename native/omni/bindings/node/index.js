@@ -352,10 +352,29 @@ function run(command, args, options) {
 function quarantineOperation(name) {
   return (...args) => later(() => {
     const native = load();
-    if (typeof native[name] !== "function") throw new Error("Windows quarantine primitive unavailable: " + name);
+    if (typeof native[name] !== "function") throw new Error("Quarantine primitive unavailable: " + name);
     return native[name](...args);
   });
 }
+
+const quarantineProtectedAvailable = (root) => later(async () => {
+  const native = load();
+  if (typeof native.quarantineProtectedAvailable !== "function") return false;
+  return (await native.quarantineProtectedAvailable(root)) === true;
+});
+const quarantineProtectedInspect = (root, path) => later(async () => {
+  const native = load();
+  if (typeof native.quarantineProtectedInspect !== "function") throw new Error("Quarantine primitive unavailable: quarantineProtectedInspect");
+  const value = await native.quarantineProtectedInspect(root, path);
+  if (value === null || (typeof value === "string" && /^[0-9]+:[0-9]+$/.test(value))) return value;
+  throw new Error("Invalid protected quarantine inspection result");
+});
+const quarantineProtectedRename = (root, source, destination, expected) => later(async () => {
+  const native = load();
+  if (typeof native.quarantineProtectedRename !== "function") return "unknown";
+  const value = await native.quarantineProtectedRename(root, source, destination, expected);
+  return value === "accepted" || value === "refused" ? value : "unknown";
+});
 
 const quarantineIdentity = quarantineOperation("quarantineIdentity");
 const quarantineInspect = quarantineOperation("quarantineInspect");
@@ -367,8 +386,11 @@ const quarantineDisposeBatch = quarantineOperation("quarantineDisposeBatch");
 const quarantineRenameExclusiveAvailable = () => typeof load().quarantineRenameExclusive === "function";
 const quarantineDisposeAvailable = () => typeof load().quarantineDispose === "function";
 const quarantineDisposeBatchAvailable = () => typeof load().quarantineDisposeBatch === "function";
+const protectProcessMemory = () => load().protectProcessMemory?.() === true;
 
 module.exports = {
+  protectProcessMemory,
+  quarantineProtectedAvailable, quarantineProtectedInspect, quarantineProtectedRename,
   quarantineDisposeBatch, quarantineDisposeBatchAvailable,
   run, spawn, configure, OmniError, quarantineIdentity, quarantineInspect, quarantineRename,
   quarantineDispose, quarantineDisposeAvailable, quarantineRenameExclusive, quarantineRenameExclusiveAvailable,

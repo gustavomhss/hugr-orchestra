@@ -3,6 +3,7 @@ import { ActivityArm } from "@orchestra/schema/activity-arm"
 import { ActivityEmpty } from "@orchestra/schema/activity-empty"
 import { ActivityStop } from "@orchestra/schema/activity-stop"
 import { ActivityFreeze } from "@orchestra/schema/activity-freeze"
+import { ActivityApply } from "@orchestra/schema/activity-apply"
 import type { IpcMainInvokeEvent } from "electron"
 import { isRendererOrigin } from "./renderer-origin"
 import { nativeLocale } from "./native-translations"
@@ -33,6 +34,13 @@ export type ActivityFreezeClient = {
   confirm(request: ActivityFreeze.Confirm, signal?: AbortSignal): Promise<ActivityFreeze.Receipt | undefined>
 }
 
+export type ActivityApplyClient = {
+  isCurrent(): boolean
+  read(signal?: AbortSignal): Promise<ActivityApply.State | undefined>
+  preview(request: ActivityApply.Request, signal?: AbortSignal): Promise<ActivityApply.Preview | undefined>
+  confirm(request: ActivityApply.Confirm, signal?: AbortSignal): Promise<ActivityApply.Receipt | undefined>
+}
+
 export function registerActivityArmIpc(deps: {
   ipcMain: typeof import("electron").ipcMain
   BrowserWindow: typeof import("electron").BrowserWindow
@@ -44,9 +52,93 @@ export function registerActivityArmIpc(deps: {
     openActivityStop: () => ActivityStopClient | undefined
     openActivityEmpty: () => ActivityEmptyClient | undefined
     openActivityFreeze: () => ActivityFreezeClient | undefined
+    openActivityApply?: () => ActivityApplyClient | undefined
   } | undefined
 }) {
   const pending = new Set<number>()
+  deps.ipcMain.handle("activity-read-apply", async (event: IpcMainInvokeEvent, serverURL: unknown) => {
+    const owned = deps.getOwned()
+    const win = deps.BrowserWindow.fromWebContents(event.sender)
+    const frame = event.senderFrame
+    if (!owned || typeof serverURL !== "string" || serverURL !== owned.url || !win || win.isDestroyed() ||
+      win.webContents !== event.sender || !frame || frame !== event.sender.mainFrame ||
+      !isRendererOrigin(frame.url, deps.rendererDevURL) || pending.has(event.sender.id)) return undefined
+    const client = owned.openActivityApply?.()
+    if (!client) return undefined
+    pending.add(event.sender.id)
+    const controller = new AbortController()
+    const invalidate = () => controller.abort()
+    const frameURL = frame.url
+    event.sender.on("did-start-navigation", invalidate)
+    event.sender.on("destroyed", invalidate)
+    const current = () => !controller.signal.aborted && client.isCurrent() && !win.isDestroyed() && !event.sender.isDestroyed() &&
+      deps.BrowserWindow.fromWebContents(event.sender) === win && win.webContents === event.sender &&
+      event.sender.mainFrame === frame && frame.url === frameURL && isRendererOrigin(frame.url, deps.rendererDevURL) &&
+      deps.getOwned() === owned
+    try {
+      const state = await client.read(controller.signal)
+      return current() ? state : undefined
+    } catch {
+      return undefined
+    } finally {
+      event.sender.removeListener("did-start-navigation", invalidate)
+      event.sender.removeListener("destroyed", invalidate)
+      pending.delete(event.sender.id)
+    }
+  })
+  deps.ipcMain.handle("activity-apply-quarantine", async (event: IpcMainInvokeEvent, serverURL: unknown, request: unknown) => {
+    const owned = deps.getOwned()
+    const decoded = ActivityApply.decodeRequest(request)
+    const win = deps.BrowserWindow.fromWebContents(event.sender)
+    const frame = event.senderFrame
+    if (!owned || typeof serverURL !== "string" || serverURL !== owned.url || Option.isNone(decoded) || !win || win.isDestroyed() ||
+      win.webContents !== event.sender || !frame || frame !== event.sender.mainFrame ||
+      !isRendererOrigin(frame.url, deps.rendererDevURL) || pending.has(event.sender.id)) return undefined
+    const client = owned.openActivityApply?.()
+    if (!client) return undefined
+    pending.add(event.sender.id)
+    const controller = new AbortController()
+    const invalidate = () => controller.abort()
+    const frameURL = frame.url
+    event.sender.on("did-start-navigation", invalidate)
+    event.sender.on("destroyed", invalidate)
+    const current = () => !controller.signal.aborted && client.isCurrent() && !win.isDestroyed() && !event.sender.isDestroyed() &&
+      deps.BrowserWindow.fromWebContents(event.sender) === win && win.webContents === event.sender &&
+      event.sender.mainFrame === frame && frame.url === frameURL && isRendererOrigin(frame.url, deps.rendererDevURL) &&
+      deps.getOwned() === owned
+    try {
+      const state = await client.read(controller.signal)
+      if (!current() || !state?.available || !state.eligible.some((item) => item.approvalID === decoded.value.approvalID &&
+        item.targetID === decoded.value.targetID && item.generation === decoded.value.generation)) return undefined
+      const preview = await client.preview(decoded.value, controller.signal)
+      if (!current() || !preview || preview.expiresAt <= Date.now() || preview.approvalID !== decoded.value.approvalID ||
+        preview.target.targetID !== decoded.value.targetID || preview.target.generation !== decoded.value.generation) return undefined
+      const copy = nativeLocale() === "br"
+        ? { title: "Aplicar quarentena", message: "Aplicar quarentena a este objeto?", cancel: "Cancelar" }
+        : { title: "Apply quarantine", message: "Apply quarantine to this object?", cancel: "Cancel" }
+      const result = await deps.dialog.showMessageBox(win, {
+        type: "warning",
+        title: copy.title,
+        message: copy.message,
+        detail: `Approval: ${literal(preview.approvalID)}\nTarget: ${literal(preview.target.targetID)}\nPath: ${literal(preview.target.label)}\nGeneration: ${literal(preview.target.generation)}\nDestination: ${literal(preview.destination)}`,
+        buttons: [copy.cancel, copy.title],
+        defaultId: 0,
+        cancelId: 0,
+        noLink: true,
+      })
+      if (result.response !== 1 || !current() || preview.expiresAt <= Date.now()) return undefined
+      const receipt = await client.confirm({ previewID: preview.previewID }, controller.signal)
+      if (!current() || !receipt || receipt.previewID !== preview.previewID || receipt.approvalID !== preview.approvalID ||
+        receipt.targetID !== preview.target.targetID || receipt.generation !== preview.target.generation) return undefined
+      return receipt
+    } catch {
+      return undefined
+    } finally {
+      event.sender.removeListener("did-start-navigation", invalidate)
+      event.sender.removeListener("destroyed", invalidate)
+      pending.delete(event.sender.id)
+    }
+  })
   deps.ipcMain.handle("activity-inspect-arm", async (event: IpcMainInvokeEvent, serverURL: unknown) => {
     const owned = deps.getOwned()
     const win = deps.BrowserWindow.fromWebContents(event.sender)

@@ -11,6 +11,7 @@ import type { ActivityArm } from "@orchestra/schema/activity-arm"
 import type { ActivityStop } from "@orchestra/schema/activity-stop"
 import type { ActivityEmpty } from "@orchestra/schema/activity-empty"
 import type { ActivityFreeze } from "@orchestra/schema/activity-freeze"
+import type { ActivityApply } from "@orchestra/schema/activity-apply"
 import type {
   LiveHotkey,
   LiveHotkeyAction,
@@ -91,6 +92,8 @@ export type FatalRendererErrorLog = {
 }
 
 type PlatformBase = {
+  readActivityApply?(serverURL: string): Promise<ActivityApply.State | undefined>
+  applyActivityQuarantine?(serverURL: string, request: ActivityApply.Request): Promise<ActivityApply.Receipt | undefined>
   inspectActivityArm?(serverURL: string): Promise<ActivityArm.PlanSnapshot | undefined>
   armActivityQuarantine?(serverURL: string, request: ActivityArm.Request): Promise<ActivityArm.Receipt | undefined>
   stopActivityTree?(serverURL: string, request: ActivityStop.Request): Promise<ActivityStop.Receipt | undefined>
