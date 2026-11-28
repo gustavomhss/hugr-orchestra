@@ -41,7 +41,7 @@ test("quote findings, unknown IDs and duplicates cannot select a retained fix re
   }))
 }, 150_000)
 
-test("selects the final retained native oxlint proof for a matching finding", () => {
+test.skipIf(process.platform !== "linux" || process.arch !== "x64")("selects the final retained native oxlint proof for a matching finding", () => {
   expectSpawn(import.meta.path)
   return Effect.runPromise(run((root) => Effect.gen(function* () {
     yield* Effect.promise(() => fs.writeFile(path.join(root.directory, sourcePath), `${sourceText.trimEnd()}; debugger;\n`))
