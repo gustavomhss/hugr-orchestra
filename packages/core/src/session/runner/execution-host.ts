@@ -18,6 +18,7 @@ import type { SessionScope } from "../scope"
 import type { SessionTodo } from "../todo"
 import { SessionTable } from "../sql"
 import type { SessionStore } from "../store"
+import { SessionSubagentModels } from "../subagent-models"
 
 /**
  * What the runner hands an execution host for one provider turn. An agent whose `engine` names a registered host runs
@@ -188,19 +189,38 @@ export function engineOf(agents: AgentV2.Interface, store: SessionStore.Interfac
   return (session: SessionSchema.Info) => engineForSelection(agents, store, session)
 }
 
-export const engineForSelection: (
+export const engineForSelection = Effect.fn("ExecutionHost.engineForSelection")(function* (
   agents: AgentV2.Interface,
   store: SessionStore.Interface,
-  input: { readonly agent?: AgentV2.ID; readonly model?: ModelV2.Ref; readonly parentID?: SessionSchema.ID },
-) => Effect.Effect<string | undefined> = Effect.fn("ExecutionHost.engineForSelection")(
-  function* (agents, store, input) {
-    const own = (yield* agents.select(input.agent)).info?.engine
-    if (own) return own === "orchestra" ? undefined : own
-    if (input.model && input.model.providerID !== ProviderV2.ID.anthropic) return undefined
-    const parent = input.parentID ? yield* store.get(input.parentID) : undefined
-    return parent ? yield* engineForSelection(agents, store, parent) : undefined
+  input: {
+    readonly id?: SessionSchema.ID
+    readonly agent?: AgentV2.ID
+    readonly model?: ModelV2.Ref
+    readonly parentID?: SessionSchema.ID
   },
-)
+) {
+  const seen = new Set(input.id ? [input.id] : [])
+  let current = input
+  while (true) {
+    const own = (yield* agents.select(current.agent)).info?.engine
+    if (own) return own === "orchestra" ? undefined : own
+    if (current.model && current.model.providerID !== ProviderV2.ID.anthropic) return
+    const parentID = current.parentID
+    if (!parentID) return
+    const sessionID = input.id ?? input.parentID ?? parentID
+    if (seen.has(parentID))
+      return yield* new SessionSubagentModels.InvalidChainError({ sessionID, ancestorID: parentID, reason: "cycle" })
+    seen.add(parentID)
+    const parent = yield* store.get(parentID).pipe(
+      Effect.catchDefect((cause) =>
+        cause instanceof SessionSubagentModels.StorageError ? Effect.fail(cause) : Effect.die(cause),
+      ),
+    )
+    if (!parent)
+      return yield* new SessionSubagentModels.InvalidChainError({ sessionID, ancestorID: parentID, reason: "missing-parent" })
+    current = parent
+  }
+})
 
 /**
  * Read-modify-write of one `session.metadata` key. The Session's drain serializes this key's writers; the write

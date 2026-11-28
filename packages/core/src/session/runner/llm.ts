@@ -97,6 +97,7 @@ const layer = Layer.effect(
     const reader = yield* ReadToolFileSystem.Service
     const models = yield* SessionRunnerModel.Service
     const modelExecution = yield* ModelExecution.Service
+    const hosts = yield* ExecutionHost.Service
     const subagentModels = yield* SessionSubagentModels.Service
     const store = yield* SessionStore.Service
     const location = yield* Location.Service
@@ -173,15 +174,15 @@ const layer = Layer.effect(
         ...(yield* store.permissions(session.id)),
       ]
       const engine = yield* engineOf(session)
-      const host = engine ? hosts.get(engine) : undefined
-      const systemContextForTurn = loadSystemContext(session.id, agent, host?.id === "claude-code")
+      const contextHost = engine ? hosts.get(engine) : undefined
+      const systemContextForTurn = loadSystemContext(session.id, agent, contextHost?.id === "claude-code")
       const initialized = yield* SessionContextEpoch.initialize(db, systemContextForTurn, session.id)
       const toolFibers = yield* FiberSet.make<void, ToolOutputStore.Error>()
       let needsContinuation = false
       let currentStep = step
+      let promoted = 0
       if (promotion) {
         const cutoff = yield* EventV2.latestSequence(db, session.id)
-        let promoted = 0
         if (promotion === "steer") promoted = yield* SessionInput.promoteSteers(db, events, session.id, cutoff)
         if (promotion === "queue") {
           promoted += Number(yield* SessionInput.promoteNextQueued(db, events, session.id))
@@ -189,18 +190,19 @@ const layer = Layer.effect(
         }
         if (promoted > 0) {
           currentStep = 1
-          // Beside the turn, as the earlier runtime named a Session after its first prompt; a failed title leaves the default one.
-          yield* nameSession(session.id)
           // Attachments are read once, as they are promoted; the admitted prompt keeps its URIs.
           yield* SessionDirectCommands.readMentions({ events, reader, mcp, fs }, session.id, yield* SessionInput.promotedAfter(db, session.id, cutoff))
         }
       }
       const system =
         initialized ?? (yield* SessionContextEpoch.prepare(db, events, systemContextForTurn, session.id))
-      if (engine && !host)
-        return yield* Effect.die(new Error(`No execution host is registered for engine ${engine} (agent ${agent.id})`))
+      const hosted = engine ? yield* modelExecution.assertHost({ session, agent, engine }) : undefined
+      const host = hosted?.host
       const model = host ? undefined : yield* models.resolve(session)
       const modelRef = model ? SessionRunnerModel.reference(model) : hosted?.ref
+      yield* subagentModels.assert(session.id, modelRef)
+      // Title generation can send the admitted prompt to a provider, so schedule it only after eligibility passes.
+      if (promoted > 0) yield* nameSession(session.id)
       const entries = yield* SessionHistory.entriesForRunner(db, session.id, system.baselineSeq)
       const context = entries.map((entry) => entry.message)
       const workflow = yield* RelayWorkflowSession.current(session.id).pipe(Effect.provide(workflowContext), Effect.orDie)
@@ -273,7 +275,6 @@ const layer = Layer.effect(
       const publish = (event: LLMEvent, outputPaths: ReadonlyArray<string> = []) =>
         withPublication(publisher.publish(event, outputPaths))
       let overflowFailure: ProviderErrorEvent | undefined
-      yield* subagentModels.assert(session.id, modelRef)
       const invoke = (call: ToolCall, assistantMessageID: SessionMessage.ID, materialization: ToolRegistry.Materialization) =>
         CapabilityInvocation.withContext(
           {

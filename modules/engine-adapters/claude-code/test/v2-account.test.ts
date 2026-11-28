@@ -2,12 +2,12 @@ import { expect, test } from "bun:test"
 import fs from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
-import type { query } from "@anthropic-ai/claude-agent-sdk"
+import type { AccountInfo, query } from "@anthropic-ai/claude-agent-sdk"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
 import { AppProcess } from "@orchestra/core/process"
-import { Duration, Effect, Layer, Scope } from "effect"
+import { Cause, Duration, Effect, Exit, Fiber, Layer, Scope } from "effect"
 import { TestClock } from "effect/testing"
 import { ClaudeCodeSDK } from "../src/sdk"
 import { ClaudeCodeAccountV2 } from "../src/v2/account"
@@ -124,12 +124,13 @@ const sdk = Layer.succeed(
 const withAccount = <A, E>(
   env: Record<string, string | undefined>,
   use: (account: ClaudeCodeAccount.Interface) => Effect.Effect<A, E>,
+  sdkLayer = sdk,
 ) =>
   Effect.runPromise(
     Effect.scoped(Effect.gen(function* () {
       const context = yield* processes
       const account = yield* ClaudeCodeAccountV2.make.pipe(
-        Effect.provide(sdk),
+        Effect.provide(sdkLayer),
         Effect.provide(Layer.succeedContext(context)),
         Effect.provideService(ClaudeCodeSDK.Environment, env),
       )
@@ -255,4 +256,47 @@ test.skipIf(process.platform === "win32")("a failed status read keeps the last s
   )
   // Signed in, still signed in through the failed read, then signed out once the binary answers so.
   expect(seen).toEqual([true, true, false])
+})
+
+test("an interrupted status probe closes before a live caller retries and caches the result", async () => {
+  const firstStarted = Promise.withResolvers<void>()
+  const firstRead = Promise.withResolvers<AccountInfo>()
+  const signedIn = { email: "owner@example.com", subscriptionType: "max", apiProvider: "firstParty" } satisfies AccountInfo
+  const expected = { signedIn: true, email: signedIn.email, subscription: signedIn.subscriptionType }
+  const prompts: Promise<ReadonlyArray<unknown>>[] = []
+  const events: string[] = []
+  const status = Layer.succeed(ClaudeCodeSDK.Service, ClaudeCodeSDK.Service.of({
+    query: ((input: Parameters<typeof query>[0]) => {
+      const first = events.length === 0
+      events.push("open")
+      prompts.push(typeof input.prompt === "string" ? Promise.resolve([input.prompt]) : Array.fromAsync(input.prompt))
+      return {
+        accountInfo: () => {
+          if (!first) return Promise.resolve(signedIn)
+          firstStarted.resolve()
+          return firstRead.promise
+        },
+        close: () => {
+          expect(input.options?.abortController?.signal.aborted).toBe(true)
+          events.push("close")
+          if (first) firstRead.resolve(signedIn)
+        },
+      }
+    }) as unknown as typeof query,
+  }))
+
+  await withAccount({}, (account) => Effect.gen(function* () {
+    const initial = yield* account.account.pipe(Effect.forkChild)
+    yield* Effect.promise(() => firstStarted.promise)
+    const waiting = yield* account.account.pipe(Effect.forkChild)
+    yield* Effect.yieldNow
+    expect(events).toEqual(["open"])
+    yield* Fiber.interrupt(initial)
+    const interrupted = yield* Fiber.await(initial)
+    expect(Exit.isFailure(interrupted) && Cause.hasInterruptsOnly(interrupted.cause)).toBe(true)
+    expect(yield* Fiber.join(waiting)).toEqual(expected)
+    expect(yield* account.account).toEqual(expected)
+    expect(events).toEqual(["open", "close", "open", "close"])
+    expect(yield* Effect.promise(() => Promise.all(prompts))).toEqual([[], []])
+  }), status)
 })

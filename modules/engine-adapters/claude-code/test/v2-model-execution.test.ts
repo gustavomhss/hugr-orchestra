@@ -5,6 +5,7 @@ import { GenerationOptions, LLM } from "@orchestra/llm"
 import { LLMClient } from "@orchestra/llm/route"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Catalog } from "@orchestra/core/catalog"
+import { CommandV2 } from "@orchestra/core/command"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -28,7 +29,7 @@ const future = await import("@orchestra/core/model-execution")
 const it = testEffect(Layer.unwrap(Effect.suspend(() => {
   if (!future) return Effect.die("API RED E6: ModelExecution module is not implemented")
   return Effect.succeed(AppNodeBuilder.build(LayerNode.group([
-    future.ModelExecution.node, AgentV2.node, Catalog.node, Integration.node, Database.node,
+    future.ModelExecution.node, AgentV2.node, Catalog.node, CommandV2.node, Integration.node, Database.node,
     SessionStore.node, SessionSubagentModels.node,
   ]), [[Database.node, EligibilityFixture.database], [Location.node, Location.boundNode({ directory: AbsolutePath.make("/project") })], [ExecutionHost.node, EligibilityFixture.hosts]]))
 })))
@@ -36,6 +37,7 @@ const setup = Effect.gen(function* () { yield* Harness.setup; yield* Eligibility
 const describe = Effect.fn(function* (input: {
   context: { type: "session"; sessionID: SessionV2.ID; agentID?: string } | { type: "draft"; agentID?: string; parentID?: SessionV2.ID }
   model?: ModelV2.Ref
+  command?: string
 }) {
   if (!future) return yield* Effect.die("API RED E6: ModelExecution module is not implemented")
   const service = yield* future.ModelExecution.Service
@@ -181,6 +183,53 @@ for (const invalid of ["generation", "body"]) {
     expect(EligibilityFixture.state.options).toEqual([])
   }))
 }
+
+it.effect("API E6: command preflight applies the actual target without rendering the command", () => Effect.gen(function* () {
+  yield* setup
+  const commands = yield* CommandV2.Service
+  const agents = yield* AgentV2.Service
+  const caller = EligibilityFixture.ref("openai")
+  const configured = EligibilityFixture.ref("anthropic", "high")
+  yield* agents.transform((draft) => draft.update(AgentV2.ID.make("host-seat"), (agent) => { agent.model = configured }))
+  yield* commands.transform((draft) => {
+    draft.update("agent-model", (command) => { command.agent = "host-seat"; command.template = "!`echo unused`" })
+    draft.update("exact-model", (command) => { command.model = EligibilityFixture.ref("google") })
+    draft.update("delegated", (command) => {
+      command.agent = "host-seat"
+      command.model = EligibilityFixture.ref("google")
+      command.subtask = true
+    })
+  })
+  const assess = (command: string) => describe({ context: draft("maestro"), model: caller, command })
+  expect((yield* assess("agent-model")).selection).toMatchObject({ ref: configured, engine: "claude-code", status: "ready" })
+  expect((yield* assess("exact-model")).selection).toMatchObject({
+    ref: EligibilityFixture.ref("google"),
+    engine: "orchestra",
+    status: "unsupported",
+  })
+  expect((yield* assess("delegated")).selection).toMatchObject({ ref: caller, engine: "orchestra", status: "ready" })
+  expect(yield* assess("removed-command").pipe(Effect.flip)).toMatchObject({ reason: "command-missing" })
+  expect(EligibilityFixture.state.options).toEqual([])
+}))
+
+it.effect("API E6: disabled selection exposes display metadata without private request settings", () => Effect.gen(function* () {
+  yield* setup
+  const catalog = yield* Catalog.Service
+  yield* catalog.transform((draft) => {
+    draft.model.update(ProviderV2.ID.openai, ModelV2.ID.make("fixture"), (model) => {
+      model.enabled = false
+      model.request.headers.Authorization = "PRIVATE_HEADER"
+      model.request.body.apiKey = "PRIVATE_BODY"
+      model.api.settings = { secret: "PRIVATE_SETTINGS" }
+      model.variants[0].headers.Authorization = "PRIVATE_VARIANT"
+    })
+  })
+  const model = EligibilityFixture.ref("openai")
+  const response = yield* describe({ context: draft("maestro"), model })
+  expect(response.selection).toMatchObject({ ref: model, status: "unavailable", reason: "model-disabled" })
+  expect(response.models.some((row) => row.model.id === model.id && row.model.providerID === model.providerID)).toBe(true)
+  expect(JSON.stringify(response)).not.toContain("PRIVATE_")
+}))
 
 for (const reason of ["session-missing", "parent-missing", "location-mismatch", "parent-location-mismatch", "agent-missing", "agent-default-missing"] as const) {
   it.effect(`API E6: ${reason} rejects the whole context without fabricated model metadata`, () => Effect.gen(function* () {

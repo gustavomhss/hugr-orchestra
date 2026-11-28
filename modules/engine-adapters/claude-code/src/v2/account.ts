@@ -4,14 +4,15 @@ import type { AccountInfo, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk
 import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
 import { makeGlobalNode } from "@orchestra/core/effect/app-node"
 import { AppProcess } from "@orchestra/core/process"
-import { Clock, Duration, Effect, Exit, Layer, Scope } from "effect"
+import { Clock, Duration, Effect, Exit, Layer, Scope, Semaphore } from "effect"
 import { ClaudeCodeExecutable } from "../executable"
 import { ClaudeHostOptions } from "../host/options"
 import { ClaudeCodeSDK } from "../sdk"
 import { ClaudeCodeLogin } from "./login"
 
 /** How long a signed-in status is trusted before another Claude Code process is started to read it. */
-const SIGNED_IN_TTL = Duration.minutes(10)
+const SIGNED_IN_TTL = Duration.toMillis(Duration.minutes(10))
+const RETRY_TTL = Duration.toMillis(Duration.seconds(30))
 
 /**
  * Claude Code's own sign-in, behind the server's account routes. The status is read from the binary's documented
@@ -23,24 +24,24 @@ export const make = Effect.gen(function* () {
   const env = yield* ClaudeCodeSDK.Environment
   const processes = yield* AppProcess.Service
   const layerScope = yield* Scope.Scope
-  // Each read starts a Claude Code process, and the catalog reads the status on every provider listing. A signed-in
-  // status is kept for `SIGNED_IN_TTL`; a signed-out one is read again every 30 seconds, so a `claude auth login` run in
-  // a terminal shows up soon. A finished sign-in forgets both.
-  const known: { account?: ClaudeCodeAccount.Account; at: number } = { at: 0 }
-  const probe = Effect.gen(function* () {
-    const now = yield* Clock.currentTimeMillis
-    if (known.account && now - known.at < Duration.toMillis(SIGNED_IN_TTL)) return known.account
-    const account = yield* read(sdk, env)
-    // A read that failed or timed out (a busy machine, a slow start) says nothing about the sign-in. Reporting it as
-    // signed out would drop Anthropic from the catalog, and with it Maestro's model and reasoning levels, until the
-    // next read; the last signed-in status stands instead and the read is tried again on the next 30-second miss.
-    if (!account) return known.account ?? { signedIn: false }
-    known.account = account.signedIn ? account : undefined
-    known.at = yield* Clock.currentTimeMillis
-    return account
-  })
-  const [cached, invalidate] = yield* Effect.cachedInvalidateWithTTL(probe, "30 seconds")
-  const refresh = Effect.sync(() => void (known.account = undefined)).pipe(Effect.andThen(invalidate))
+  let cached: { status: ClaudeCodeAccount.Account; expiresAt: number } | undefined
+  let generation = 0
+  // Start one status process at a time. When its caller cancels, the next waiter can probe after cleanup.
+  const account = Semaphore.makeUnsafe(1).withPermit(Effect.gen(function* () {
+    while (true) {
+      const now = yield* Clock.currentTimeMillis
+      if (cached && now < cached.expiresAt) return cached.status
+      const started = generation
+      const observed = yield* read(sdk, env)
+      const checkedAt = yield* Clock.currentTimeMillis
+      // A login that completed during this read invalidated the observation.
+      if (started !== generation) continue
+      // Keep the last signed-in status on a failed read and probe again on the short interval.
+      const status = observed ?? cached?.status ?? { signedIn: false }
+      cached = { status, expiresAt: checkedAt + (observed?.signedIn ? SIGNED_IN_TTL : RETRY_TTL) }
+      return status
+    }
+  }))
   // One `claude auth login` per process: a new sign-in replaces an unfinished one.
   const login: { current?: ClaudeCodeLogin.Login } = {}
   yield* Effect.addFinalizer(() => Effect.suspend(() => login.current?.stop ?? Effect.void))
@@ -62,9 +63,10 @@ export const make = Effect.gen(function* () {
       Effect.andThen(
         Effect.sync(() => {
           if (login.current === started) login.current = undefined
+          cached = undefined
+          generation++
         }),
       ),
-      Effect.andThen(refresh),
       Effect.forkIn(layerScope),
     )
     const url = yield* started.url.pipe(
@@ -78,7 +80,7 @@ export const make = Effect.gen(function* () {
   })
 
   return ClaudeCodeAccount.Service.of({
-    account: cached,
+    account,
     startLogin,
     sendCode: (code) => Effect.suspend(() => login.current?.code(code) ?? Effect.succeed(false)),
   })
@@ -113,7 +115,8 @@ function read(sdk: ClaudeCodeSDK.Interface, env: Parameters<typeof ClaudeHostOpt
         sdk.query({
           options: lifetime.options,
           prompt: (async function* (): AsyncGenerator<SDKUserMessage> {
-            await new Promise<void>((resolve) => abort.signal.addEventListener("abort", () => resolve(), { once: true }))
+            if (!abort.signal.aborted)
+              await new Promise<void>((resolve) => abort.signal.addEventListener("abort", () => resolve(), { once: true }))
           })(),
         }),
       ),

@@ -70,7 +70,7 @@ export const render = Effect.fn("SlashCommand.render")(function* (name: string, 
       ...(configured.subtask === undefined ? {} : { subtask: configured.subtask }),
     } satisfies Rendered
   const mcp = yield* Mcp.Service
-  const prompt = (yield* mcp.prompts()).find((item) => promptName(item) === name)
+  const prompt = yield* findPrompt(name)
   if (!prompt) return yield* new NotFoundError({ name })
   // The prompt's arguments are rendered as `$1`…`$n` placeholders, which the invocation's arguments then fill.
   const template = yield* mcp.getPrompt(
@@ -79,6 +79,22 @@ export const render = Effect.fn("SlashCommand.render")(function* (name: string, 
     Object.fromEntries((prompt.arguments ?? []).map((argument, index) => [argument.name, `$${index + 1}`])),
   )
   return { text: expand(template, args) } satisfies Rendered
+})
+
+/** Resolves the execution target without expanding text, running shell commands, or resolving attachments. */
+export const target = Effect.fn("SlashCommand.target")(function* (
+  command: Pick<Rendered, "agent" | "model" | "subtask">,
+) {
+  const agents = yield* AgentV2.Service
+  const info = command.agent ? yield* agents.resolve(command.agent) : undefined
+  if (command.subtask === true || (info?.mode === "subagent" && command.subtask !== false))
+    return { subtask: true as const }
+  const model = command.model ?? info?.model
+  return {
+    subtask: false as const,
+    ...(command.agent ? { agent: command.agent } : {}),
+    ...(model === undefined ? {} : { model }),
+  }
 })
 
 /**
@@ -111,19 +127,18 @@ export const resolve = Effect.fn("SlashCommand.resolve")(function* (rendered: Re
       }),
     { concurrency: "unbounded" },
   )
-  const info = rendered.agent === undefined ? undefined : yield* agents.resolve(rendered.agent)
-  const subtask = rendered.subtask === true || (info?.mode === "subagent" && rendered.subtask !== false)
+  const execution = yield* target(rendered)
   const mentioned = attached.flatMap((item) => ("agent" in item && item.agent ? [item.agent] : []))
   const prompt = {
     text,
     files: attached.flatMap((item) => ("file" in item && item.file ? [item.file] : [])),
-    agents: subtask && rendered.agent ? [...mentioned, { name: rendered.agent }] : mentioned,
+    agents: execution.subtask && rendered.agent ? [...mentioned, { name: rendered.agent }] : mentioned,
   } satisfies PromptInput.Prompt
-  if (subtask) return { prompt }
+  if (execution.subtask) return { prompt }
   return {
     prompt,
-    ...(rendered.agent === undefined ? {} : { agent: rendered.agent }),
-    ...((rendered.model ?? info?.model) === undefined ? {} : { model: rendered.model ?? info?.model }),
+    ...(execution.agent === undefined ? {} : { agent: execution.agent }),
+    ...(execution.model === undefined ? {} : { model: execution.model }),
   }
 })
 
@@ -179,6 +194,13 @@ export function expand(template: string, args: string) {
   if (placeholders.length === 0 && !template.includes("$ARGUMENTS") && args.trim()) return `${filled}\n\n${args}`.trim()
   return filled.trim()
 }
+
+/** MCP slash commands have a server prefix. Inspect availability without requesting the prompt. */
+export const findPrompt = Effect.fn("SlashCommand.findPrompt")(function* (name: string) {
+  if (!name.includes(":")) return undefined
+  const mcp = yield* Mcp.Service
+  return (yield* mcp.prompts()).find((item) => promptName(item) === name)
+})
 
 function promptName(prompt: Mcp.Prompt) {
   return `${McpCatalog.sanitize(prompt.server)}:${McpCatalog.sanitize(prompt.name)}`

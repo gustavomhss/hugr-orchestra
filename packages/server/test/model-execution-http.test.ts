@@ -266,6 +266,29 @@ for (const failure of ["cycle", "missing-parent", "storage"] as const) {
   )
 }
 
+it.live("API E6 wire: corrupt direct Session and draft parent policy both return a typed 503", () =>
+  Effect.gen(function* () {
+    const fixture = yield* ModelExecutionFixture.setup
+    yield* fixture.database.db
+      .update(SessionTable)
+      .set({ subagent_models: '{"detail":"PRIVATE_DIRECT_POLICY"}' })
+      .where(eq(SessionTable.id, fixture.session.id))
+      .run()
+      .pipe(Effect.orDie)
+    for (const context of [
+      { type: "session", sessionID: fixture.session.id },
+      { type: "draft", parentID: fixture.session.id },
+    ]) {
+      const response = yield* fixture.request("/api/model/execution", { context })
+      expect(response.status).toBe(503)
+      const body = yield* json(response)
+      expect(body).toMatchObject({ _tag: "ServiceUnavailableError", service: "model-execution" })
+      expect(JSON.stringify(body)).not.toContain("PRIVATE_DIRECT_POLICY")
+    }
+    untouched()
+  }),
+)
+
 it.live("API E6 wire: malformed Input is declared400 before any admission", () =>
   Effect.gen(function* () {
     const fixture = yield* ModelExecutionFixture.setup
@@ -398,6 +421,29 @@ for (const failure of ["cycle", "storage"] as const) {
       }),
   )
 }
+
+it.live("API E6 wire: both generated clients send the command and decode its effective model", () =>
+  Effect.gen(function* () {
+    const fixture = yield* ModelExecutionFixture.setup
+    const input = {
+      location: { directory: fixture.directory },
+      context: { type: "draft" as const, agentID: "maestro" },
+      model: ref("openai"),
+      command: "model-command",
+    }
+    const client = Orchestra.make({ baseUrl: fixture.baseUrl })
+    const promise = yield* Effect.promise(() => client.models.execution(input))
+    const effect = yield* Effect.gen(function* () {
+      const { Orchestra } = yield* Effect.promise(() => import("@orchestra/client/effect"))
+      const client = yield* Orchestra.make({ baseUrl: fixture.baseUrl })
+      return yield* client.models.execution(input)
+    }).pipe(Effect.provide(FetchHttpClient.layer))
+    const expected = { status: "ready", engine: "claude-code", ref: ref("anthropic", "wire-model", "high") } as const
+    expect(promise.data.selection).toEqual(expected)
+    expect(effect.data.selection).toEqual(expected)
+    untouched()
+  }),
+)
 
 for (const mode of ["promise", "effect"] as const) {
   it.live(`API E6 wire: ${mode} cancellation interrupts in-flight Server descriptor without execution`, () =>

@@ -1,5 +1,5 @@
-import { Deferred, Effect } from "effect"
-import { HttpRouter, HttpServerRequest } from "effect/unstable/http"
+import { Cause, Deferred, Effect } from "effect"
+import { HttpRouter, HttpServerError, HttpServerRequest } from "effect/unstable/http"
 import { IncomingMessage } from "node:http"
 
 export const layer = HttpRouter.middleware(
@@ -10,9 +10,10 @@ export const layer = HttpRouter.middleware(
       const source = request.source
       const socket = source.socket
       const aborted = yield* Deferred.make<never>()
+      const interrupt = Effect.failCause(Cause.annotate(Cause.interrupt(), HttpServerError.ClientAbort.annotation))
       return yield* Effect.acquireUseRelease(
         Effect.sync(() => {
-          const onAbort = () => Deferred.doneUnsafe(aborted, Effect.interrupt)
+          const onAbort = () => Deferred.doneUnsafe(aborted, interrupt)
           source.on("aborted", onAbort)
           socket.on("close", onAbort)
           if (source.aborted || socket.destroyed) onAbort()
@@ -20,7 +21,7 @@ export const layer = HttpRouter.middleware(
         }),
         () =>
           Deferred.isDone(aborted).pipe(
-            Effect.flatMap((done) => (done ? Effect.interrupt : Effect.raceFirst(effect, Deferred.await(aborted)))),
+            Effect.flatMap((done) => (done ? interrupt : Effect.raceFirst(effect, Deferred.await(aborted)))),
           ),
         (onAbort) =>
           Effect.sync(() => {

@@ -3,6 +3,7 @@ export * as ModelExecutionFixture from "./model-execution-fixture"
 import { NodeHttpServer, NodeServices } from "@effect/platform-node"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Catalog } from "@orchestra/core/catalog"
+import { CommandV2 } from "@orchestra/core/command"
 import { Database } from "@orchestra/core/database/database"
 import { Credential } from "@orchestra/core/credential"
 import { Global } from "@orchestra/core/global"
@@ -139,6 +140,11 @@ const seed = makeLocationNode({
         }
         draft.model.default.set(ProviderV2.ID.openai, ModelV2.ID.make("wire-model"))
       })
+      const commands = yield* CommandV2.Service
+      yield* commands.transform((draft) => draft.update("model-command", (command) => {
+        command.agent = "host-seat"
+        command.model = ref("anthropic", "wire-model", "high")
+      }))
       const tools = yield* ToolRegistry.Service
       yield* tools
         .register({

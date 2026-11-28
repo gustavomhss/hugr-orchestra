@@ -169,6 +169,18 @@ it.live("BEHAVIOR E6: agent.model is not promoted into Session.model while decid
   yield* expectFailedBeforeExecution()
 }))
 
+it.live("BEHAVIOR E6: a cyclic inherited engine fails durably before execution", () => Effect.gen(function* () {
+  const session = yield* setup
+  yield* session.switchAgent({ sessionID: Harness.sessionID, agent: "inherit-seat" })
+  yield* admitOnly()
+  const database = yield* Database.Service
+  yield* database.db.update(SessionTable).set({ parent_id: Harness.sessionID })
+    .where(eq(SessionTable.id, Harness.sessionID)).run().pipe(Effect.orDie)
+  const exit = yield* expectFailedBeforeExecution()
+  expect(Exit.isFailure(exit)).toBe(true)
+  if (Exit.isFailure(exit)) expect(Cause.hasDies(exit.cause)).toBe(false)
+}).pipe(Effect.timeout("5 seconds")))
+
 it.live("CONTROL E6: existing exact Anthropic model and effort remain executable", () => Effect.gen(function* () {
   const session = yield* setup
   yield* session.switchModel({ sessionID: Harness.sessionID, model: EligibilityFixture.ref("anthropic", "high") })

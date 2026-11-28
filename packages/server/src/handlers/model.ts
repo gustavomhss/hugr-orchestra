@@ -61,6 +61,8 @@ export const ModelHandler = HttpApiBuilder.group(Api, "server.model", (handlers)
                   return new ServiceUnavailableError({ message, service: "model-execution" })
                 if (error.reason === "invalid-session-chain")
                   return new InvalidRequestError({ message, kind: "invalid-model-execution-context" })
+                if (error.reason === "command-missing")
+                  return new InvalidRequestError({ message: "Command is no longer available", field: "command" })
                 return new ModelExecutionContextNotFoundError({ reason: error.reason, message })
               }),
             ),
