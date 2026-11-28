@@ -1,5 +1,6 @@
 //! Frame codec: the byte layout of `docs/protocol.md`. A pure function pair; every malformed frame is an error.
 
+mod selective;
 mod wire;
 
 #[cfg(test)]
@@ -66,6 +67,8 @@ pub fn encode(msg: &Msg, out: &mut Vec<u8>) -> Result<(), ProtoError> {
         Msg::List { req, id } => _ = w.u8(LIST).u64(*req).u64(*id),
         Msg::Observe { req, id } => _ = w.u8(OBSERVE).u64(*req).u64(*id),
         Msg::ObserveFootprint { req, id } => _ = w.u8(OBSERVE_FOOTPRINT).u64(*req).u64(*id),
+        Msg::ControlList { req, id } => selective::encode_list(&mut w, *req, *id),
+        Msg::ControlStop { req, id, members } => selective::encode_stop(&mut w, *req, *id, members)?,
         Msg::Release { req, id } => _ = w.u8(RELEASE).u64(*req).u64(*id),
         Msg::Ready { version, pid, info } => _ = w.u8(READY).u32(*version).u32(*pid).u32(*info),
         Msg::Spawned { req, id, pid, pty_ends } => {
@@ -123,6 +126,8 @@ pub fn encode(msg: &Msg, out: &mut Vec<u8>) -> Result<(), ProtoError> {
                     .bytes(p.name.as_deref().unwrap_or("").as_bytes())?;
             }
         }
+        Msg::ControlMembers { req, id, members } => selective::encode_members(&mut w, *req, *id, members)?,
+        Msg::ControlResults { req, id, outcomes } => selective::encode_results(&mut w, *req, *id, outcomes)?,
         Msg::Ack { req, id, result } => _ = w.u8(ACK).u64(*req).u64(*id).u8(ack(*result)),
     }
     let body = w.finish();
@@ -173,6 +178,13 @@ pub fn decode(buf: &[u8]) -> Result<Option<(Msg, usize)>, ProtoError> {
             req: r.u64()?,
             id: r.u64()?,
         },
+        selective::CONTROL_LIST => Msg::ControlList {
+            req: r.u64()?,
+            id: r.u64()?,
+        },
+        selective::CONTROL_STOP => selective::decode_stop(&mut r)?,
+        selective::CONTROL_MEMBERS => selective::decode_members(&mut r)?,
+        selective::CONTROL_RESULTS => selective::decode_results(&mut r)?,
         LIST => Msg::List {
             req: r.u64()?,
             id: r.u64()?,

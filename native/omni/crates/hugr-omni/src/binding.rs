@@ -139,3 +139,7 @@ mod tests {
         refused(pty_side("pty.rows", f64::NAN), "pty.rows is NaN;");
     }
 }
+
+/// Internal host filesystem primitive; paths must already be authorized by the host.
+#[cfg(windows)]
+pub mod quarantine_windows;

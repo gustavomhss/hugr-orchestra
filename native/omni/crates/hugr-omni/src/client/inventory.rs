@@ -1,12 +1,44 @@
 //! Tree inventory and observational requests.
 
-use omni_proto::{Ack, Msg};
+use omni_proto::{Ack, ControlMember, Msg};
 
 #[cfg(all(test, target_os = "linux"))]
 use super::inventory_probe;
 use super::{Answer, Class, Error, InventoryFailure, ProcEntry, Tree, Want};
 
 impl Tree {
+    pub(crate) async fn control_members(&self) -> Result<Vec<ControlMember>, Error> {
+        self.sup.home()?;
+        let id = self.id;
+        let answer = self
+            .sup
+            .ask(Want::ControlList, id, Class::Normal, |req| Msg::ControlList { req, id })
+            .await?;
+        self.sup.home()?;
+        match answer {
+            Answer::ControlMembers(members) => Ok(members),
+            other => Err(self.refused("ControlList", &other)),
+        }
+    }
+
+    pub(crate) async fn stop_selected(
+        &self,
+        members: Vec<ControlMember>,
+    ) -> Result<Vec<crate::SelectiveStopOutcome>, Error> {
+        self.sup.home()?;
+        let id = self.id;
+        let want = Want::ControlStop { count: members.len() };
+        let answer = self
+            .sup
+            .ask(want, id, Class::Normal, |req| Msg::ControlStop { req, id, members })
+            .await?;
+        self.sup.home()?;
+        match answer {
+            Answer::ControlResults(exited) => Ok(exited),
+            other => Err(self.refused("ControlStop", &other)),
+        }
+    }
+
     /// The live processes `stop` would end now; `[]` once gone; `Io` if the inventory is incomplete.
     pub(crate) async fn processes(&self) -> Result<Vec<ProcEntry>, Error> {
         self.inventory().await.map_err(InventoryFailure::into_error)
