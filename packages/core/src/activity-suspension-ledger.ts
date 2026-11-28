@@ -16,6 +16,7 @@ export type Record = Readonly<{
   scope: Scope
   phase: Phase
   suspended: readonly string[]
+  uncertain: readonly string[]
   pending?: Attempt
 }>
 
@@ -58,6 +59,7 @@ export function make(database: Database.Interface, ownerIncarnation: string): In
         mark_id: action === "resume" && previous ? previous.mark_id : crypto.randomUUID(),
         phase: action === "suspend" ? "suspending" as const : "resuming" as const,
         suspended: action === "resume" && previous ? previous.suspended : [],
+        uncertain: action === "resume" && previous ? previous.uncertain : [],
         pending,
         owner_incarnation: ownerIncarnation,
       }
@@ -75,20 +77,23 @@ export function make(database: Database.Interface, ownerIncarnation: string): In
       return database.db.transaction((tx) => Effect.gen(function* () {
         const row = yield* tx.select().from(ActivitySuspensionLedgerTable)
           .where(eq(ActivitySuspensionLedgerTable.tree_id, input.scope.treeID)).get()
+        const pending = row?.pending
         if (!row || row.generation !== input.scope.generation || row.mark_id !== input.markID ||
-          row.owner_incarnation !== ownerIncarnation || !row.pending || row.pending.id !== input.attemptID ||
-          input.outcomes.length !== row.pending.members.length ||
+          row.owner_incarnation !== ownerIncarnation || !pending || pending.id !== input.attemptID ||
+          input.outcomes.length !== pending.members.length ||
           new Set(input.outcomes.map((outcome) => outcome.memberID)).size !== input.outcomes.length ||
-          input.outcomes.some((outcome) => !row.pending!.members.includes(outcome.memberID) ||
+          input.outcomes.some((outcome) => !pending.members.includes(outcome.memberID) ||
             !["changed", "unchanged", "unknown"].includes(outcome.effect))) return undefined
         const changed = input.outcomes.filter((outcome) => outcome.effect === "changed").map((outcome) => outcome.memberID)
-        const suspended = row.pending.action === "suspend"
+        const unconfirmed = input.outcomes.filter((outcome) => outcome.effect === "unknown").map((outcome) => outcome.memberID)
+        const suspended = pending.action === "suspend"
           ? changed
-          : row.suspended.filter((member) => !changed.includes(member))
-        const phase: Phase = input.outcomes.some((outcome) => outcome.effect === "unknown") ? "unknown"
-          : row.pending.action === "suspend" ? (suspended.length === row.pending.members.length ? "suspended" : suspended.length ? "partial" : "refused")
-          : suspended.length ? "partial" : "resumed"
-        const settled = { ...row, phase, suspended, pending: null, owner_incarnation: null }
+          : row.suspended.filter((member) => !changed.includes(member) && !unconfirmed.includes(member))
+        const uncertain = [...row.uncertain, ...unconfirmed]
+        const phase: Phase = suspended.length
+          ? pending.action === "suspend" && suspended.length === pending.members.length ? "suspended" : "partial"
+          : uncertain.length ? "unknown" : pending.action === "suspend" ? "refused" : "resumed"
+        const settled = { ...row, phase, suspended, uncertain, pending: null, owner_incarnation: null }
         yield* tx.update(ActivitySuspensionLedgerTable).set(settled)
           .where(eq(ActivitySuspensionLedgerTable.tree_id, input.scope.treeID)).run()
         return project(settled, ownerIncarnation)
@@ -110,7 +115,8 @@ function project(row: typeof ActivitySuspensionLedgerTable.$inferSelect, ownerIn
     markID: row.mark_id,
     scope: { treeID: row.tree_id, generation: row.generation },
     phase: abandoned ? "unknown" : row.phase,
-    suspended: row.suspended,
+    suspended: abandoned ? row.suspended.filter((member) => !row.pending?.members.includes(member)) : row.suspended,
+    uncertain: abandoned ? [...row.uncertain, ...(row.pending?.members ?? [])] : row.uncertain,
     ...(row.pending && !abandoned ? { pending: row.pending } : {}),
   }
 }

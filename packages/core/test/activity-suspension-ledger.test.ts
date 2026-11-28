@@ -14,7 +14,7 @@ const observation = (targetID: string) => ({
   identity: `native:${targetID}`,
   members: ["member-a", "member-b"],
   dirty: false,
-  eligible: ["suspend", "resume"],
+  eligible: ["suspend", "resume"] as const,
 })
 
 const withLedgers = <A, E>(
@@ -54,7 +54,7 @@ test("persists suspend intent before effects and settles only confirmed native m
       ],
     }),
   ))
-  expect(settled).toMatchObject({ phase: "partial", suspended: ["member-a"] })
+  expect(settled).toMatchObject({ phase: "partial", suspended: ["member-a"], uncertain: ["member-b"] })
 })
 
 test("admits only suspended members for the same generation and removes only confirmed resume outcomes", async () => {
@@ -93,7 +93,14 @@ test("admits only suspended members for the same generation and removes only con
       })
     }),
   ))
-  expect(outcome).toMatchObject({ phase: "partial", suspended: ["member-b"] })
+  expect(outcome).toMatchObject({ phase: "partial", suspended: ["member-a"], uncertain: ["member-b"] })
+  await Effect.runPromise(withLedgers(filename, "boot-a", (_actions, marks) =>
+    Effect.gen(function* () {
+      expect(yield* marks.beginResume({
+        scope: outcome!.scope, markID: outcome!.markID, members: ["member-b"],
+      })).toBeUndefined()
+    }),
+  ))
 })
 
 test("a restart with another owner incarnation returns unknown and cannot resume or recover pending intent", async () => {
@@ -109,7 +116,8 @@ test("a restart with another owner incarnation returns unknown and cannot resume
   const afterRestart = await Effect.runPromise(withLedgers(filename, "boot-b", (_actions, marks) =>
     Effect.gen(function* () {
       const read = yield* marks.read("tree-a")
-      expect(read).toMatchObject({ markID: pending.record!.markID, phase: "unknown", pending: undefined })
+      expect(read).toMatchObject({ markID: pending.record!.markID, phase: "unknown", uncertain: ["member-a"] })
+      expect(read?.pending).toBeUndefined()
       expect(yield* marks.beginResume({ scope: pending.scope, markID: pending.record!.markID, members: ["member-a"] })).toBeUndefined()
       expect(yield* marks.settle({
         scope: pending.scope,
@@ -146,7 +154,7 @@ test("rejects replayed, mismatched, incomplete, duplicate, or malformed native r
       scope: state.scope,
       markID: state.first!.markID,
       attemptID: state.first!.pending!.id,
-      outcomes: [{ memberID: "member-a", effect: "changed" }, { memberID: "member-b", effect: "changed", receipt: "forged" }] as unknown as readonly ActivitySuspensionLedger.Outcome[],
+      outcomes: [{ memberID: "member-a", effect: "changed" }, { memberID: "member-b", effect: "forged" }] as unknown as readonly ActivitySuspensionLedger.Outcome[],
     }),
   ))
   expect(malformed).toBeUndefined()

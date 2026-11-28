@@ -7,6 +7,7 @@ export const ActivitySuspensionLedgerTable = sqliteTable("activity_suspension_le
   mark_id: text().notNull(),
   phase: text().$type<Phase>().notNull(),
   suspended: text({ mode: "json" }).$type<string[]>().notNull(),
+  uncertain: text({ mode: "json" }).$type<string[]>().notNull(),
   pending: text({ mode: "json" }).$type<Attempt>(),
   owner_incarnation: text(),
 })
