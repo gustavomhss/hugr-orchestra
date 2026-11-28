@@ -216,11 +216,44 @@ persists `cancelled`; cancelling a concurrent waiter leaves the owner running. A
 outcome. If the process ended before publishing one, the first retry fails closed as `engagement-interrupted`
 (or records expiry if the original deadline passed); it does not resume a provider with a fresh budget.
 
-This first engagement route exposes captured CODE and scoped analyzer pages. Native file reads, Atlas context,
+The engagement route exposes captured CODE and scoped analyzer pages. Native file reads, Atlas context,
 history and executable verifier probes are unavailable here. Reports explicitly retain unexamined history and
-probes. Audit variant search and fix review are not built in this slice; compliance requests and `fixReview`
+probes. Fix review is not built in this slice; compliance requests and `fixReview`
 requests refuse before source capture. Artifact behavioral evaluation remains unexamined without owner permission.
 Those limits remain open even when an individual report completes successfully.
+
+### Audit variants
+
+Standard and Deep audit reports can expand independently confirmed findings through at most three generations.
+The host validates every initial seed against the captured source and actual verifier reply before admitting a
+proposal Session. It selects one seed by severity, path, line and finding ID. Other initial seeds remain explicitly
+unexpanded. Each continued generation uses a newly confirmed finding from the immediately preceding generation.
+Diligence and artifact reports have zero generations. Quick audit records independent verification as unavailable;
+a blocked entry or a review without a confirmed finding records that no confirmed seed was available.
+
+A proposal makes exactly one native `code_search` attempt over the complete captured authority, using
+`paths:["**"]`, `offset:0`, `limit:200` and `context:0`. That same generalized search must find the known seed at
+its primary path and line. Explicit paths can include admitted files excluded by repository ignore rules; they
+cannot expand the captured authority. Pagination, omitted files, binary files or another incomplete search stop
+the generation. A successful tool display alone is insufficient: the host requires the captured operation and
+its matching native completion.
+
+Every new distinct path-and-line match enters the denominator, including a location omitted from the proposal.
+The host excludes the selected seed, already confirmed findings of the same class and locations processed in
+earlier generations. It selects at most four proposed candidates within the pinned verifier budget, then reads
+their captured regions and creates a fresh independent verifier. An unreadable selected region does not free a
+slot for another candidate. Omitted, over-budget, unreadable and invalid-return candidates remain not examined;
+questions remain separate from confirmed findings.
+
+Variant expansion stops when verification is incomplete, no new matches remain, noise is at least half the new
+matches, or the third generation settles. Exactly half noise stops expansion. Counts come from native matches
+and verified dispositions. One original deadline and the existing two-Session running limit cover the whole
+engagement, including variants and final publication. Stopped requests publish no partial report or evidence receipt.
+
+The report's host-owned `audit:variants` coverage records the actual stop, unexpanded initial seeds and unexamined
+matches. Newly completed evidence receipts also retain the generation journal, native replies and captured regions.
+Replay checks their identities, accounting, lineage and decisions against retained bodies without rerunning Git,
+a model, a search or an analyzer. This evidence supports the report; it grants no execution or merge authority.
 
 ### Reading retained engagement evidence
 
@@ -265,8 +298,10 @@ Exceeding a publication bound fails the request; it does not silently drop evide
 publication use the original review deadline. Cancelled, expired and failed reports have no public receipt and
 name the evidence-publication gap. Their retries retain the same stopped result.
 
-Reports saved by the earlier format retain exact report replay and return explicit `legacy-record` evidence
-unavailability. A newer completed report with a missing reference, missing body or corrupt bytes fails by name.
+Reports saved before durable evidence retain exact report replay and return explicit `legacy-record` evidence
+unavailability. Historical state-v2 / receipt-v1 records retain exact report and evidence replay. New admissions
+use state-v3 / receipt-v2, including an explicit zero-generation section for diligence and artifact reports.
+A newer completed report with a missing reference, missing body or corrupt bytes fails by name.
 The reader and retry preserve that terminal record and do not rebuild a receipt from model messages or temporary
 files. The evidence receipt carries no governed approval or execution permission.
 

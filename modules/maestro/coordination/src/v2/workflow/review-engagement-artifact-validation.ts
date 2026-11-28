@@ -6,6 +6,7 @@ import { CodeIndex } from "@orchestra/core/research-toolkit/code-index/types"
 import { ReviewItem } from "@orchestra/core/review-toolkit/item"
 import { Tool } from "@orchestra/core/tool/tool"
 import { ReviewEvidenceSchemaV2 } from "./review-engagement-artifact-schema"
+import type { ReviewEngagementEvidenceV2 } from "./review-engagement-evidence"
 import type { ReviewEngagementReportV2 } from "./review-engagement-report"
 
 const Retained = Schema.Struct({ total: ReviewEvidenceSchemaV2.Count, unread: Schema.Record(Schema.String, ReviewEvidenceSchemaV2.Count), items: Schema.Array(ReviewItem.ToolItem) })
@@ -15,6 +16,23 @@ const Source = Schema.Struct({ worktree: Schema.NonEmptyString, tree: Schema.Non
   commit: Schema.NonEmptyString, scope: Schema.Struct({ sha256: ReviewEvidenceSchemaV2.Digest, files: Schema.Array(Schema.NonEmptyString) }) })
 const CodeBody = Schema.Struct({ source: Source, result: Schema.Unknown, snapshot: Schema.optional(Schema.String) })
 const Snapshot = Schema.Struct({ source: Source, snapshot: Schema.String })
+
+export type AnalysisInput = {
+  readonly inputHash: string
+  readonly source: ReviewEngagementEvidenceV2.Prepared
+  readonly finalAnalysisOperationID: string
+  readonly operations: ReadonlyArray<ReviewEvidenceSchemaV2.CodeOperation | ReviewEvidenceSchemaV2.AnalysisOperation>
+  readonly artifacts: ReadonlyArray<ReviewEvidenceSchemaV2.Artifact>
+  readonly hostProofs: ReadonlyArray<ReviewEvidenceSchemaV2.Proof>
+}
+export type AnalysisContext = {
+  readonly source: ReviewEngagementEvidenceV2.Prepared
+  readonly final: ReviewEvidenceSchemaV2.AnalysisResult
+  readonly operation: ReviewEvidenceSchemaV2.AnalysisOperation
+  readonly retained: typeof Retained.Type
+  readonly artifacts: ReadonlyArray<ReviewEvidenceSchemaV2.Artifact>
+  readonly proofs: ReadonlyArray<ReviewEvidenceSchemaV2.Proof>
+}
 
 export function read(bytes: Uint8Array, report: ReviewEngagementReportV2.Stored): ReviewEvidenceSchemaV2.Receipt {
   ReviewEvidenceSchemaV2.require(bytes.byteLength <= ReviewEvidenceSchemaV2.limits.receipt, "receipt exceeds byte bound")
@@ -125,16 +143,11 @@ export function validate(receipt: ReviewEvidenceSchemaV2.Receipt, report: Review
   const card = report.value.report
   ReviewEvidenceSchemaV2.require(source && card, "completed source report is absent")
   const allowed = new Map(source.files.map((file) => [file.path, file]))
-  const body = (id: string) => {
-    const bytes = bodies.get(id)
-    const descriptor = receipt.artifacts.find((item) => item.artifactID === id)
-    ReviewEvidenceSchemaV2.require(bytes && descriptor && bytes.byteLength === descriptor.bytes && ReviewEvidenceSchemaV2.hash(bytes) === descriptor.sha256, "required body is unavailable or corrupt")
-    return bytes
-  }
+  const body = bodyReader(receipt.artifacts, bodies)
   for (const descriptor of receipt.artifacts) body(descriptor.artifactID)
   const captured = (value: typeof Source.Type) => ReviewEvidenceSchemaV2.require(value.commit === source.commit && value.scope.sha256 === source.sha256 &&
     ReviewEvidenceSchemaV2.same(value.scope.files, source.files.map((file) => file.path)), "CODE captured source scope differs")
-  const analyses = new Map<string, ReviewEvidenceSchemaV2.AnalysisResult>()
+  const context = analysisContext({ ...receipt, source }, bodies)
   for (const operation of receipt.operations) {
     if (operation.kind === "code") {
       const result = Schema.decodeUnknownSync(CodeBody)(ReviewEvidenceSchemaV2.json(body(operation.evidence.artifactID)), ReviewEvidenceSchemaV2.strict)
@@ -145,53 +158,102 @@ export function validate(receipt: ReviewEvidenceSchemaV2.Receipt, report: Review
         captured(snapshot.source)
         ReviewEvidenceSchemaV2.require(snapshot.snapshot === result.snapshot, "locate snapshot differs from the enclosing capture")
       }
-    } else {
-      const resultBytes = body(operation.resultArtifactID)
-      const wrapped = Schema.decodeUnknownSync(ReviewEvidenceSchemaV2.AnalysisResult)(ReviewEvidenceSchemaV2.json(resultBytes), ReviewEvidenceSchemaV2.strict)
-      ReviewEvidenceSchemaV2.require(Buffer.from(ReviewEvidenceSchemaV2.canonical(wrapped)).equals(Buffer.from(resultBytes)) && wrapped.operationID === operation.operationID &&
-        ReviewEvidenceSchemaV2.digest(wrapped.routing) === operation.routingDigest && ReviewEvidenceSchemaV2.digest(wrapped.catalog) === operation.catalogDigest,
-      "analysis routing or catalog differs")
-      ReviewEvidenceSchemaV2.require(ReviewEvidenceSchemaV2.same(wrapped.result.checks, operation.checks.map(({ artifactIDs, proofIDs, ...check }) => check)), "analysis checks differ")
-      const retained = Schema.decodeUnknownSync(Retained)(ReviewEvidenceSchemaV2.json(body(operation.retainedArtifactID)), ReviewEvidenceSchemaV2.strict)
-      const debt = Schema.decodeUnknownSync(Schema.Array(ReviewItem.ToolItem))(ReviewEvidenceSchemaV2.json(body(operation.debtArtifactID)), ReviewEvidenceSchemaV2.strict)
-      ReviewEvidenceSchemaV2.require(retained.total === wrapped.result.retained.total && debt.length === wrapped.result.debt.total &&
-        ReviewEvidenceSchemaV2.same(retained.unread, wrapped.result.retained.unread), "analysis retention counts differ")
-      ReviewEvidenceSchemaV2.require(receipt.artifacts.find((item) => item.artifactID === operation.retainedArtifactID)?.uri === wrapped.result.retained.uri &&
-        receipt.artifacts.find((item) => item.artifactID === operation.debtArtifactID)?.uri === wrapped.result.debt.uri, "analysis retained reference differs")
-      for (const item of [...Object.values(wrapped.result.items).flat(), ...retained.items, ...debt])
-        ReviewEvidenceSchemaV2.require(allowed.has(item.path), "analysis item escapes captured files")
-      analyses.set(operation.operationID, wrapped)
     }
   }
-  const final = analyses.get(receipt.finalAnalysisOperationID)
-  ReviewEvidenceSchemaV2.require(final && ReviewEvidenceSchemaV2.same(final.routing.packs, card.routing.packs), "final analysis differs from report routing")
+  const final = context.final
+  ReviewEvidenceSchemaV2.require(ReviewEvidenceSchemaV2.same(final.routing.packs, card.routing.packs), "final analysis differs from report routing")
   for (const check of final.result.checks) {
     const actual = card.checks.find((item) => item.id === check.id && item.pack === check.pack && item.lane === check.lane)
     ReviewEvidenceSchemaV2.require(actual && actual.version === check.version && actual.workspaceExecuted === check.workspaceExecuted && actual.reason === check.reason &&
       (actual.status === check.status || check.status === "not-run" && actual.status === "check-unavailable"), "final report check differs from host analysis")
   }
-  for (const proof of receipt.hostProofs) {
-    const analysis = analyses.get(proof.analysisOperationID)
-    ReviewEvidenceSchemaV2.require(analysis, "native proof has no captured analysis")
-    validateProof(proof, body, allowed, analysis.catalog)
-    if (proof.outcome.timedOut || proof.outcome.overflow || proof.outcome.memoryExceeded || proof.outcome.failure)
-      ReviewEvidenceSchemaV2.require(analysis.result.checks.every((check) => check.pack !== "oxlint" || check.status !== "pass"),
-        "native failure was represented as a passing check")
-  }
   for (const [index, citation] of receipt.citations.entries())
     ReviewEvidenceSchemaV2.require(Buffer.from(body(citation.artifactID)).equals(Buffer.from(report.value.citations[index].text)), "citation bytes differ")
-  const retained = Schema.decodeUnknownSync(Retained)(ReviewEvidenceSchemaV2.json(body(receipt.operations.flatMap((operation) =>
-    operation.kind === "analysis" && operation.operationID === receipt.finalAnalysisOperationID ? [operation.retainedArtifactID] : [])[0])), ReviewEvidenceSchemaV2.strict)
-  for (const finding of card.findings) {
-    const evidence = finding.evidence
-    if (evidence.kind !== "tool") continue
-    const check = final.result.checks.find((item) => item.pack === evidence.pack && item.version === evidence.version && item.uri === evidence.uri)
-    const item = [...Object.values(final.result.items).flat(), ...retained.items].find((item) => item.pack === evidence.pack &&
-      item.rule === evidence.rule && item.path === finding.path && item.line === finding.line && item.class === finding.class)
-    if (!evidence.uri || !check || !item || !receipt.hostProofs.some((proof) => proof.analysisOperationID === receipt.finalAnalysisOperationID &&
-      receipt.artifacts.find((artifact) => artifact.artifactID === proof.stdoutArtifactID)?.uri === evidence.uri))
-      throw new Tool.Failure({ message: "engagement-report-invalid: tool evidence has no qualified host observation",
-        metadata: { reason: "engagement-report-invalid" } })
+  for (const finding of card.findings) if (finding.evidence.kind === "tool") qualifiedTool(context, finding)
+}
+
+/** The same immutable analysis/proof boundary is available before a final card exists. */
+export function analysisContext(input: AnalysisInput, bodies: ReviewEvidenceSchemaV2.Bodies): AnalysisContext {
+  const allowed = new Map(input.source.files.map((file) => [file.path, file]))
+  const body = bodyReader(input.artifacts, bodies)
+  const analyses = new Map<string, { operation: ReviewEvidenceSchemaV2.AnalysisOperation;
+    result: ReviewEvidenceSchemaV2.AnalysisResult; retained: typeof Retained.Type }>()
+  let ordinal = 0
+  for (const operation of input.operations) {
+    if (operation.kind !== "analysis") continue
+    ReviewEvidenceSchemaV2.require(operation.sourceSha256 === input.source.sha256 && operation.ordinal === ++ordinal &&
+      operation.operationID === ReviewEvidenceSchemaV2.analysisID(input.inputHash, operation) && !analyses.has(operation.operationID),
+    "analysis admission identity differs")
+    const resultBytes = body(operation.resultArtifactID, "analysis-result")
+    const wrapped = Schema.decodeUnknownSync(ReviewEvidenceSchemaV2.AnalysisResult)(ReviewEvidenceSchemaV2.json(resultBytes), ReviewEvidenceSchemaV2.strict)
+    ReviewEvidenceSchemaV2.require(Buffer.from(ReviewEvidenceSchemaV2.canonical(wrapped)).equals(Buffer.from(resultBytes)) && wrapped.operationID === operation.operationID &&
+      ReviewEvidenceSchemaV2.digest(wrapped.routing) === operation.routingDigest && ReviewEvidenceSchemaV2.digest(wrapped.catalog) === operation.catalogDigest,
+    "analysis routing or catalog differs")
+    ReviewEvidenceSchemaV2.require(ReviewEvidenceSchemaV2.same(wrapped.result.checks, operation.checks.map(({ artifactIDs, proofIDs, ...check }) => check)), "analysis checks differ")
+    const retained = Schema.decodeUnknownSync(Retained)(ReviewEvidenceSchemaV2.json(body(operation.retainedArtifactID, "analysis-retained")), ReviewEvidenceSchemaV2.strict)
+    const debt = Schema.decodeUnknownSync(Schema.Array(ReviewItem.ToolItem))(ReviewEvidenceSchemaV2.json(body(operation.debtArtifactID, "analysis-debt")), ReviewEvidenceSchemaV2.strict)
+    ReviewEvidenceSchemaV2.require(retained.total === wrapped.result.retained.total && debt.length === wrapped.result.debt.total &&
+      ReviewEvidenceSchemaV2.same(retained.unread, wrapped.result.retained.unread), "analysis retention counts differ")
+    ReviewEvidenceSchemaV2.require(input.artifacts.find((item) => item.artifactID === operation.retainedArtifactID)?.uri === wrapped.result.retained.uri &&
+      input.artifacts.find((item) => item.artifactID === operation.debtArtifactID)?.uri === wrapped.result.debt.uri, "analysis retained reference differs")
+    for (const item of [...Object.values(wrapped.result.items).flat(), ...retained.items, ...debt])
+      ReviewEvidenceSchemaV2.require(allowed.has(item.path), "analysis item escapes captured files")
+    analyses.set(operation.operationID, { operation, result: wrapped, retained })
+  }
+  const final = analyses.get(input.finalAnalysisOperationID)
+  ReviewEvidenceSchemaV2.require(final && [...analyses.keys()].at(-1) === input.finalAnalysisOperationID, "final analysis binding differs")
+  const seen = new Set<string>()
+  const invocations = new Set<string>()
+  for (const proof of input.hostProofs) {
+    const { proofID, ...payload } = proof
+    const analysis = analyses.get(proof.analysisOperationID)
+    ReviewEvidenceSchemaV2.require(analysis && proof.sourceSha256 === input.source.sha256 && proofID === ReviewEvidenceSchemaV2.digest(payload) &&
+      !seen.has(proofID) && !invocations.has(proof.invocationID), "native proof identity differs")
+    seen.add(proofID)
+    invocations.add(proof.invocationID)
+    ReviewEvidenceSchemaV2.require(analysis.operation.checks.some((check) => check.pack === "oxlint" && check.proofIDs.includes(proofID)), "native proof has no captured check")
+    for (const [id, kind] of [[proof.inputsArtifactID, "analyzer-inputs"], [proof.configArtifactID, "analyzer-config"],
+      [proof.recipeArtifactID, "analyzer-recipe"], [proof.pathMapArtifactID, "analyzer-path-map"],
+      [proof.stdoutArtifactID, "analyzer-stdout"], [proof.stderrArtifactID, "analyzer-stderr"]] as const) body(id, kind)
+    for (const stream of ["stdout", "stderr"] as const) {
+      const descriptor = input.artifacts.find((item) => item.artifactID === (stream === "stdout" ? proof.stdoutArtifactID : proof.stderrArtifactID))
+      const capture = proof.outcome[stream]
+      ReviewEvidenceSchemaV2.require(descriptor && capture.retainedBytes === descriptor.bytes && capture.bytes >= capture.retainedBytes &&
+        capture.truncated === (capture.bytes > capture.retainedBytes) && descriptor.complete === (!capture.truncated && !proof.outcome.overflow),
+      "native output byte accounting differs")
+    }
+    validateProof(proof, body, allowed, analysis.result.catalog)
+    if (proof.outcome.timedOut || proof.outcome.overflow || proof.outcome.memoryExceeded || proof.outcome.failure)
+      ReviewEvidenceSchemaV2.require(analysis.result.result.checks.every((check) => check.pack !== "oxlint" || check.status !== "pass"),
+        "native failure was represented as a passing check")
+  }
+  return { source: input.source, final: final.result, operation: final.operation, retained: final.retained,
+    artifacts: input.artifacts, proofs: input.hostProofs }
+}
+
+/** A model URI qualifies only through the observed final analysis, item and native invocation. */
+export function qualifiedTool(context: AnalysisContext, finding: Pick<NonNullable<ReviewEngagementReportV2.Result["report"]>["findings"][number],
+  "path" | "line" | "class" | "evidence">): ReviewEvidenceSchemaV2.Proof {
+  const evidence = finding.evidence
+  const check = evidence.kind === "tool" ? context.final.result.checks.find((item) =>
+    item.pack === evidence.pack && item.version === evidence.version && item.uri === evidence.uri) : undefined
+  const item = evidence.kind === "tool" ? [...Object.values(context.final.result.items).flat(), ...context.retained.items].find((item) =>
+    item.pack === evidence.pack && item.rule === evidence.rule && item.path === finding.path && item.line === finding.line && item.class === finding.class) : undefined
+  const proof = context.proofs.find((proof) => proof.analysisOperationID === context.operation.operationID && evidence.kind === "tool" &&
+    context.artifacts.find((artifact) => artifact.artifactID === proof.stdoutArtifactID)?.uri === evidence.uri)
+  if (evidence.kind !== "tool" || !evidence.uri || !check || !item || !proof)
+    throw new Tool.Failure({ message: "engagement-report-invalid: tool evidence has no qualified host observation",
+      metadata: { reason: "engagement-report-invalid" } })
+  return proof
+}
+
+function bodyReader(artifacts: ReadonlyArray<ReviewEvidenceSchemaV2.Artifact>, bodies: ReviewEvidenceSchemaV2.Bodies) {
+  return (id: string, kind?: ReviewEvidenceSchemaV2.Artifact["kind"]) => {
+    const bytes = bodies.get(id)
+    const descriptor = artifacts.find((item) => item.artifactID === id)
+    ReviewEvidenceSchemaV2.require(bytes && descriptor && (kind === undefined || descriptor.kind === kind) &&
+      bytes.byteLength === descriptor.bytes && ReviewEvidenceSchemaV2.hash(bytes) === descriptor.sha256, "required body is unavailable or corrupt")
+    return bytes
   }
 }
 

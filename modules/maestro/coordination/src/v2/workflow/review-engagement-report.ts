@@ -47,6 +47,7 @@ export type Context = {
   readonly budget: Budget
   readonly source?: ReviewEngagementEvidenceV2.Prepared
   readonly notExamined?: Result["notExamined"]
+  readonly variantCoverage?: "host"
 }
 export type Stopped = "cancelled" | "expired" | "failed"
 
@@ -148,11 +149,12 @@ const scope = (source: ReviewEngagementEvidenceV2.Prepared) => ({
 })
 
 function gaps(context: Context, existing: Result["notExamined"]) {
-  const values = [...existing, ...(context.notExamined ?? []),
+  const values = [...(context.variantCoverage === "host" ? existing.filter((entry) => !entry.item.startsWith("audit:variants")) : existing),
+    ...(context.notExamined ?? []),
     ...(context.source?.notExamined.map((entry) => ({ item: entry.path, reason: entry.reason })) ?? []),
     { item: "engagement:history", reason: "not-built" },
     { item: "engagement:probe", reason: "not-built" },
-    ...(context.input.profile === "audit" ? [{ item: "audit:variants", reason: "not-built" }] : []),
+    ...(context.input.profile === "audit" && context.variantCoverage !== "host" ? [{ item: "audit:variants", reason: "not-built" }] : []),
     ...(context.input.profile === "artifact" ? [{ item: "artifact:behavioral-eval", reason: "owner-permission" }] : []),
   ]
   return [...new Map(values.map((entry) => [canonical(entry), entry])).values()]

@@ -11,6 +11,7 @@ import { ReviewEngagementStoreV2 } from "../src/v2/tools/review-engagement-store
 import { ReviewEngagementPolicyV2 } from "../src/v2/workflow/review-engagement-policy"
 import { reply, run, sourcePath, sourceText, text, type Controls, type Ctx } from "./fixture/lucy-engagement"
 import { decoded, reader, receipt, refused, request } from "./fixture/lucy-engagement-artifacts"
+import { StateV1 } from "./fixture/lucy-variant-schema"
 
 const quoted: Controls = { stream: (log, modelRequest) => text(reply(log, modelRequest, { quote: true })) }
 const Admission = Schema.Struct({
@@ -29,7 +30,7 @@ const saved = (host: Ctx, sessionID: SessionSchema.ID) => Effect.gen(function* (
 
 const owned = (host: Ctx, sessionID: SessionSchema.ID, expected: ModelV2.Ref) => Effect.gen(function* () {
   const record = yield* saved(host, sessionID)
-  expect(record.value.schema).toBe("review-engagement-state-v2")
+  expect(record.value.schema).toBe("review-engagement-state-v3")
   expect(record.value.state).toBe("terminal")
   expect(record.value.children.map((child) => child.role)).toContain("lead")
   expect(record.value.children.map((child) => child.role)).toContain("lens")
@@ -203,13 +204,15 @@ test("historical state-v1 normalized default replays immutable bytes for an abse
       yield* receipt(host, report)
       const record = yield* saved(host, report.sessionID)
       expect(Object.hasOwn((yield* host.sessions.get(report.sessionID)).model ?? {}, "variant")).toBe(false)
-      const { evidence, ...legacy } = record.raw
+      const { evidence, variants, ...legacy } = record.raw
       expect(evidence).toBeDefined()
-      const metadata = { ...record.row.metadata, legacyModelFixture: { keep: true }, lucyEngagementV1: {
+      expect(variants).toBeDefined()
+      const legacyState = Schema.decodeUnknownSync(StateV1)({
         ...legacy, schema: "review-engagement-state-v1", model: {
           id: host.parent.model.id, providerID: host.parent.model.providerID, variant: "default",
         },
-      } }
+      }, { onExcessProperty: "error" })
+      const metadata = { ...record.row.metadata, legacyModelFixture: { keep: true }, lucyEngagementV1: legacyState }
       yield* host.db.update(SessionTable).set({ metadata }).where(eq(SessionTable.id, report.sessionID)).run().pipe(Effect.orDie)
       expect((yield* saved(host, report.sessionID)).value.output).toBe(output.text)
       return { output, report, metadata, calls: root.requests.length }

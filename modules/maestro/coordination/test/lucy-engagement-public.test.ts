@@ -11,6 +11,8 @@ import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { ReviewResultV2 } from "../src/v2/governance/review-result"
 import { reviewRows } from "./fixture/lucy-pr-entry"
 import { fence, outsidePath, reply, run, sourcePath, sourceText, stage, text } from "./fixture/lucy-engagement"
+import { decoded, receipt } from "./fixture/lucy-engagement-artifacts"
+import { knownVariant, variantAdapter } from "./fixture/lucy-engagement-variant-adapter"
 
 type Envelope = {
   schema: string
@@ -33,7 +35,7 @@ const request = (requestID: string, profile = "audit") => ({
   timeBoxMinutes: 5, paths: ["src"],
 })
 
-function decoded(result: { type: string; text: string }): Envelope {
+function envelope(result: { type: string; text: string }): Envelope {
   expect(result.type, result.text).toBe("text")
   const value = JSON.parse(result.text) as Envelope
   expect(value.schema).toBe("review-engagement-result-v1")
@@ -47,7 +49,9 @@ for (const profile of ["audit", "diligence", "artifact"]) {
     expectSpawn(import.meta.path)
     return Effect.runPromise(run((root) => root.open((host) => Effect.gen(function* () {
       const before = yield* reviewRows().pipe(Effect.provideService(Database.Service, host.database))
-      const value = decoded(yield* host.invoke(request("public-" + profile, profile)))
+      const input = request("public-" + profile, profile)
+      const output = yield* host.invoke(input)
+      const value = envelope(output)
       expect(value.status).toBe("completed")
       expect(value.requestID).toBe("public-" + profile)
       expect(value.source.commit).toBe(root.head)
@@ -83,9 +87,11 @@ for (const profile of ["audit", "diligence", "artifact"]) {
       expect(value.report.coverage.notExamined).toContainEqual({ item: "engagement:history", reason: "not-built" })
       if (profile === "artifact")
         expect(value.report.coverage.notExamined).toContainEqual({ item: "artifact:behavioral-eval", reason: "owner-permission" })
-      if (profile === "audit")
-        expect(value.report.coverage.notExamined).toContainEqual({ item: "audit:variants", reason: "not-built" })
-    }), { stream: (log, modelRequest) => text(reply(log, modelRequest, { quote: true })) })))
+      if (profile === "audit") {
+        expect(value.report.coverage.notExamined).toContainEqual({ item: "audit:variants", reason: "no-new-matches" })
+        yield* knownVariant(host, input, yield* receipt(host, decoded(output)))
+      }
+    }), variantAdapter((log, modelRequest) => text(reply(log, modelRequest, { quote: true }))))))
   }, 90_000)
 }
 
@@ -174,7 +180,7 @@ test("real engagement children confine immutable CODE and refuse native live-sou
           expect(result.text).toContain("reference_invalid")
         }
       }).pipe(Effect.ensuring(Deferred.succeed(release, undefined)))
-      const result = decoded(yield* Fiber.join(pending))
+      const result = envelope(yield* Fiber.join(pending))
       expect(result.source.commit).toBe(root.head)
       expect(result.source.files.map((file) => file.path)).toEqual([sourcePath])
       expect(JSON.stringify(result.citations)).not.toContain("ENGAGEMENT-OUTSIDE")

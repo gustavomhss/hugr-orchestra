@@ -164,7 +164,7 @@ export function merge(
 }
 
 // At most three options for the candidate's class and language, each on a rung its tier allows for its severity.
-export function options(catalog: ReviewCatalog.Catalog, tier: Tier, record: ReviewRouting.Record, candidate: Merged) {
+export function options(catalog: ReviewCatalog.Catalog, tier: Tier, record: ReviewRouting.Record, candidate: Pick<Merged, "class" | "severity">) {
   const entry = catalog.classes.find((item) => item.id === candidate.class)
   if (!entry) return []
   const language = record.languages.map((item) => item.id).find((id) => entry.options[id])
