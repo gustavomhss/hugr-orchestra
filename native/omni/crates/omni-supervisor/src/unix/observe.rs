@@ -23,6 +23,7 @@ struct Pending {
     req: u64,
     id: u64,
     pid: i32,
+    footprint: bool,
     worker: JoinHandle<()>,
     result: Receiver<Option<Sample>>,
 }
@@ -30,6 +31,7 @@ struct Pending {
 struct Sample {
     root_seen: bool,
     list: Vec<ProcEntry>,
+    footprint: Option<(u64, String)>,
 }
 
 impl Observation {
@@ -43,11 +45,15 @@ impl Observation {
 
     /// Starts one worker, or returns an immediate reply if an inventory cannot or need not be taken.
     pub(super) fn start(&mut self, req: u64, id: u64, trees: &Trees) -> Option<Msg> {
+        self.start_with(req, id, trees, false)
+    }
+
+    pub(super) fn start_with(&mut self, req: u64, id: u64, trees: &Trees, footprint: bool) -> Option<Msg> {
         let Some(t) = trees.map.get(&id).filter(|t| !t.released) else {
             return Some(ack(req, id, Ack::Unknown));
         };
         if t.gone {
-            return Some(empty(req, id));
+            return Some(empty_with(req, id, footprint));
         }
         if self.pending() {
             return Some(ack(req, id, Ack::Error));
@@ -55,7 +61,7 @@ impl Observation {
         let pid = t.pid;
         let (send, result) = sync_channel(1);
         let worker = Builder::new().name("omni-observe".into()).spawn(move || {
-            let _ = send.try_send(scan(pid));
+            let _ = send.try_send(scan(pid, footprint));
         });
         let Ok(worker) = worker else {
             return Some(ack(req, id, Ack::Error));
@@ -65,6 +71,7 @@ impl Observation {
             id,
             pid,
             worker,
+            footprint,
             result,
         });
         None
@@ -74,17 +81,21 @@ impl Observation {
         // Hold admission until the worker finishes. Neither the event loop nor shutdown joins it.
         let p = self.0.take_if(|p| p.worker.is_finished())?;
         let sample = p.result.try_recv().ok().flatten();
-        Some(complete(p.req, p.id, p.pid, trees, sample))
+        Some(complete_with(p.req, p.id, p.pid, trees, sample, p.footprint))
     }
 }
 
-fn scan(pid: i32) -> Option<Sample> {
+fn scan(pid: i32, footprint: bool) -> Option<Sample> {
     // Keep SIGCHLD on the control thread even if the scan stalls.
     if !block_sigchld() || !isolate_fds() {
         return None;
     }
     let inventory = procs::scan(&HashSet::from([pid]), true)?;
-    project(pid, &inventory)
+    let mut sample = project(pid, &inventory)?;
+    if footprint {
+        sample.footprint = super::footprint::sample(pid, &inventory);
+    }
+    Some(sample)
 }
 
 fn project(pid: i32, inventory: &Inventory) -> Option<Sample> {
@@ -100,18 +111,36 @@ fn project(pid: i32, inventory: &Inventory) -> Option<Sample> {
     Some(Sample {
         root_seen: root_seen(pid, members, &inventory.exiting),
         list: live_entries(members),
+        footprint: None,
     })
 }
 
+#[cfg(test)]
 fn complete(req: u64, id: u64, pid: i32, trees: &Trees, sample: Option<Sample>) -> Msg {
+    complete_with(req, id, pid, trees, sample, false)
+}
+
+fn complete_with(req: u64, id: u64, pid: i32, trees: &Trees, sample: Option<Sample>, footprint: bool) -> Msg {
     let Some(t) = trees.map.get(&id).filter(|t| !t.released && t.pid == pid) else {
         return ack(req, id, Ack::Unknown);
     };
     // Once gone the root may be reaped and its PID reused during the scan.
     if t.gone {
-        return empty(req, id);
+        return empty_with(req, id, footprint);
     }
     match sample {
+        Some(sample) if (sample.root_seen || t.exit.is_some()) && footprint => {
+            let (footprint, identity) = sample
+                .footprint
+                .map_or((None, None), |(bytes, id)| (Some(bytes), Some(id)));
+            Msg::ObservedTree {
+                req,
+                id,
+                list: sample.list,
+                footprint,
+                identity,
+            }
+        }
         Some(sample) if sample.root_seen || t.exit.is_some() => Msg::Processes {
             req,
             id,
@@ -131,6 +160,19 @@ fn empty(req: u64, id: u64) -> Msg {
         id,
         list: Vec::new(),
     }
+}
+
+fn empty_with(req: u64, id: u64, footprint: bool) -> Msg {
+    if footprint {
+        return Msg::ObservedTree {
+            req,
+            id,
+            list: Vec::new(),
+            footprint: None,
+            identity: None,
+        };
+    }
+    empty(req, id)
 }
 
 fn block_sigchld() -> bool {
@@ -191,6 +233,7 @@ mod tests {
             req: 1,
             id,
             pid: ROOT,
+            footprint: false,
             worker,
             result,
         }));

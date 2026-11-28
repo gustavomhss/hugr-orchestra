@@ -52,8 +52,24 @@ fn all() -> Vec<Msg> {
         Msg::List { req: 1, id: 2 },
         Msg::Observe { req: 91, id: u64::MAX },
         Msg::ObserveFootprint { req: 92, id: u64::MAX },
-        Msg::ObservedTree { req: 92, id: u64::MAX, list: vec![], footprint: None },
-        Msg::ObservedTree { req: 93, id: 4, list: vec![ProcEntry { pid: 3, ppid: None, name: Some("child".into()) }], footprint: Some(123456) },
+        Msg::ObservedTree {
+            req: 92,
+            id: u64::MAX,
+            list: vec![],
+            footprint: None,
+            identity: None,
+        },
+        Msg::ObservedTree {
+            req: 93,
+            id: 4,
+            list: vec![ProcEntry {
+                pid: 3,
+                ppid: None,
+                name: Some("child".into()),
+            }],
+            footprint: Some(123456),
+            identity: Some("3:123".into()),
+        },
         Msg::Release { req: 1, id: 2 },
         Msg::Ready {
             version: crate::VERSION,

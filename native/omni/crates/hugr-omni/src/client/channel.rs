@@ -44,6 +44,7 @@ pub(super) enum Want {
     Resize,
     List,
     ObserveList,
+    ObserveFootprint,
     Release,
 }
 
@@ -56,6 +57,7 @@ impl Want {
             Want::Resize => "Resize",
             Want::List => "List",
             Want::ObserveList => "Observe",
+            Want::ObserveFootprint => "ObserveFootprint",
             Want::Release => "Release",
         }
     }
@@ -95,6 +97,7 @@ pub(super) enum Answer {
     Ack(Ack),
     Stopped,
     Processes(Vec<ProcEntry>),
+    ObservedTree(Vec<ProcEntry>, Option<u64>, Option<String>),
 }
 
 type Reply = Result<Answer, Error>;
@@ -125,6 +128,7 @@ struct State {
     dead: Option<String>,
     ready: bool,
     observes: bool,
+    footprints: bool,
     hello: Option<mpsc::SyncSender<()>>,
     pending: HashMap<u64, Pending>,
     /// Deadlines of the pending non-blocking requests, earliest first.
@@ -200,6 +204,10 @@ impl Gen {
             sup.die(format!("it did not say Ready within {} ms", bound.as_millis()));
         }
         if sup.alive() { Ok(sup) } else { Err(sup.gone()) }
+    }
+
+    pub(super) fn footprints(&self) -> bool {
+        lock(&self.st).footprints
     }
 
     pub(super) fn alive(&self) -> bool {
@@ -293,11 +301,15 @@ impl Gen {
                 drop(st);
                 return Err(self.gone());
             }
-            if want == Want::ObserveList {
+            if matches!(want, Want::ObserveList | Want::ObserveFootprint) {
                 if !st.observes {
                     return Err(Error::observation_unavailable());
                 }
-                if st.pending.values().any(|pending| pending.want == Want::ObserveList) {
+                if st
+                    .pending
+                    .values()
+                    .any(|pending| matches!(pending.want, Want::ObserveList | Want::ObserveFootprint))
+                {
                     return Err(Error::observation_pending());
                 }
             }

@@ -228,6 +228,33 @@ impl Tree {
         self.list(Want::ObserveList).await
     }
 
+    pub(crate) async fn observe_tree(&self) -> Result<(Vec<ProcEntry>, Option<u64>, Option<String>), Error> {
+        self.sup.home()?;
+        if !self.sup.footprints() {
+            return Ok((self.observe_processes().await?, None, None));
+        }
+        let life = *self.life.borrow();
+        if life.gone {
+            return Ok((Vec::new(), None, None));
+        }
+        if life.lost {
+            return Err(self.lost());
+        }
+        let id = self.id;
+        let answer = self
+            .sup
+            .ask(Want::ObserveFootprint, id, Class::Normal, |req| Msg::ObserveFootprint {
+                req,
+                id,
+            })
+            .await?;
+        self.sup.home()?;
+        match answer {
+            Answer::ObservedTree(list, footprint, identity) => Ok((list, footprint, identity)),
+            other => Err(self.refused("ObserveFootprint", &other)),
+        }
+    }
+
     async fn list(&self, want: Want) -> Result<Vec<ProcEntry>, Error> {
         self.inventory_with(want).await.map_err(InventoryFailure::into_error)
     }

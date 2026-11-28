@@ -41,7 +41,7 @@ fn ready_reports_how_the_host_and_members_are_watched() {
     };
     // macOS: kqueue NOTE_EXIT for the host; no pidfd for members.
     #[cfg(target_os = "macos")]
-    let expected = INFO_PIDFD_HOST;
+    let expected = INFO_PIDFD_HOST | omni_proto::INFO_FOOTPRINT;
     assert_eq!(h.info, expected | omni_proto::INFO_OBSERVE);
 }
 

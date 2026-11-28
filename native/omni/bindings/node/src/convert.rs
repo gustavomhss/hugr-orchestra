@@ -233,6 +233,23 @@ pub struct ProcessInfoJs {
     pub name: Option<String>,
 }
 
+#[napi(object, object_from_js = false)]
+pub struct ObservedTreeJs {
+    pub members: Vec<ProcessInfoJs>,
+    pub physical_footprint_bytes: Option<f64>,
+    pub footprint_identity: Option<String>,
+}
+
+pub(crate) fn observed_tree(
+    (members, footprint, identity): (Vec<ProcessInfo>, Option<u64>, Option<String>),
+) -> ObservedTreeJs {
+    ObservedTreeJs {
+        members: processes(members),
+        physical_footprint_bytes: footprint.map(|n| n as f64),
+        footprint_identity: identity,
+    }
+}
+
 /// `Chunk`; `lostBefore` only after a gap (contract §4).
 #[napi(object, object_from_js = false)]
 pub struct ChunkJs {
