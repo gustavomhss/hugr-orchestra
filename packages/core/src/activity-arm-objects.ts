@@ -1,14 +1,14 @@
 export * as ActivityArmObjects from "./activity-arm-objects"
 
 import { createHash } from "node:crypto"
-import { lstat, realpath } from "node:fs/promises"
+import { lstat } from "node:fs/promises"
 import path from "node:path"
 import { and, eq, sql } from "drizzle-orm"
 import { Effect, Option, Semaphore } from "effect"
-import { ChildProcess } from "effect/unstable/process"
 import { ActivityActionLedger } from "./activity-action-ledger"
 import { ActivityActionLedgerTable } from "./activity-action-ledger.sql"
 import { ActivityArmLedger } from "./activity-arm"
+import { ActivityArmGit } from "./activity-arm-git"
 import { ActivityArmProof } from "./activity-arm-proof"
 import { Database } from "./database/database"
 import type { AppProcess } from "./process"
@@ -25,20 +25,16 @@ export function make(database: Database.Interface, processService: AppProcess.In
   const lock = Semaphore.makeUnsafe(1)
   const verified = new Map<string, { candidate: Candidate; generation: string }>()
   const actions = ActivityActionLedger.make.pipe(Effect.provideService(Database.Service, database))
-  const registrations = () => database.db.select({
+  const registrations = (source: Pick<ActivityArmLedger.Transaction, "select"> = database.db) => source.select({
     registrationID: ProjectDirectoryTable.registration_id,
     directory: ProjectDirectoryTable.directory,
     root: ProjectTable.worktree,
     projectID: ProjectDirectoryTable.project_id,
   }).from(ProjectDirectoryTable).innerJoin(ProjectTable, eq(ProjectTable.id, ProjectDirectoryTable.project_id))
   const gitWorktree = and(eq(ProjectTable.vcs, "git"), eq(ProjectDirectoryTable.strategy, "git_worktree"))
-  const gitEnvironment = Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^GIT_/i.test(key)))
-  const git = (cwd: string, args: readonly string[]) => processService.run(ChildProcess.make("git", [
-    "--no-optional-locks", "-c", "core.fsmonitor=false", "-c", "core.untrackedCache=false",
-    ...args,
-  ], { cwd, env: gitEnvironment, extendEnv: false, stdin: "ignore" }), {
-    timeout: "2 seconds", maxOutputBytes: 128 * 1024, maxErrorBytes: 4 * 1024,
-  }).pipe(Effect.map((result) => result.stdoutTruncated ? undefined : result), Effect.orElseSucceed(() => undefined))
+  const registered = (id: string, source?: Pick<ActivityArmLedger.Transaction, "select">) => registrations(source)
+    .where(and(gitWorktree, eq(ProjectDirectoryTable.registration_id, id))).get()
+  const git = ActivityArmGit.make(processService)
 
   const sample = Effect.fnUntraced(function* (candidate: Candidate) {
     const label = path.join(candidate.directory, candidate.name)
@@ -53,48 +49,25 @@ export function make(database: Database.Interface, processService: AppProcess.In
     if (status === "missing") return { observation, partial: false }
     if (!status?.isDirectory() || label.length > 384 || candidate.projectID.length > 384 || candidate.root === candidate.directory)
       return { observation, partial: true }
-    const canonical = yield* Effect.tryPromise(() => Promise.all([realpath(candidate.root), realpath(candidate.directory)]))
-      .pipe(Effect.orElseSucceed(() => undefined))
-    if (canonical?.[0] !== candidate.root || canonical[1] !== candidate.directory) return { observation, partial: true }
-
-    const registered = yield* git(candidate.root, ["worktree", "list", "--porcelain", "-z"])
-    const entry = registered?.exitCode === 0 ? worktreeEntry(registered.stdout, candidate.directory) : undefined
-    if (!entry) return { observation, partial: true }
-    const common = yield* git(candidate.root, ["rev-parse", "--path-format=absolute", "--git-common-dir"])
-    const placement = () => git(candidate.directory, ["rev-parse", "--path-format=absolute", "--show-toplevel", "--git-common-dir", "HEAD"])
-    const head = entry.split("\0").find((field) => field.startsWith("HEAD "))?.slice(5)
-    if (common?.exitCode !== 0 || !head) return { observation, partial: true }
-    const expected = candidate.directory + "\n" + common.stdout.toString("utf8") + head + "\n"
-    const placed = yield* placement()
-    if (placed?.exitCode !== 0 || placed.stdout.toString("utf8") !== expected) return { observation, partial: true }
-    const tracked = yield* git(candidate.directory, ["ls-files", "-v", "-z"])
-    if (tracked?.exitCode !== 0) return { observation, partial: true }
-    // A tracked file or a suppressed index entry cannot establish a clean, disposable copy.
-    if (tracked.stdout.toString("utf8").split("\0").some((line) => /^[a-zS] /.test(line) ||
-      line.slice(2) === candidate.name || line.slice(2).startsWith(candidate.name + "/"))) return { observation, partial: false }
-    const ignored = yield* git(candidate.directory, ["check-ignore", "--no-index", "--", candidate.name + "/"])
-    if (ignored?.exitCode !== 0) return { observation, partial: ignored?.exitCode !== 1 }
-    const dirt = () => git(candidate.directory, ["status", "--porcelain=v1", "-z", "--untracked-files=no", "--ignore-submodules=none"])
-    const before = yield* dirt()
-    if (before?.exitCode !== 0) return { observation, partial: true }
-    if (before.stdout.length) return { observation: { ...observation, dirty: true }, partial: false }
+    const checkout = yield* git(candidate)
+    if (!checkout) return { observation, partial: true }
+    if (checkout.state === "refused") return { observation, partial: false }
+    if (checkout.state === "dirty") return { observation: { ...observation, dirty: true }, partial: false }
 
     const proof = yield* Effect.promise((signal) => ActivityArmProof.inspect({
       worktree: candidate.directory, name: candidate.name,
     }, signal))
       .pipe(Effect.timeoutOption("4 seconds"))
-    const after = yield* dirt()
-    const final = yield* placement()
-    const current = yield* registrations().where(and(gitWorktree, eq(ProjectDirectoryTable.registration_id, candidate.registrationID))).get()
-    if (after?.exitCode !== 0 || final?.exitCode !== 0 || final.stdout.toString("utf8") !== expected ||
-      !current || current.directory !== candidate.directory || current.root !== candidate.root || current.projectID !== candidate.projectID ||
-      proof._tag === "None" || !proof.value) return { observation, partial: true }
+    if (Option.isNone(proof) || !proof.value || !(yield* checkout.isCurrent())) return { observation, partial: true }
+    const evidence = proof.value
+    if (!matchesRegistration(yield* registered(candidate.registrationID), candidate) ||
+      !(yield* Effect.promise((signal) => evidence.isCurrent(signal)))) return { observation, partial: true }
     return {
       observation: {
         ...observation,
-        identity: digest([entry, proof.value.fingerprint]),
-        dirty: after.stdout.length > 0,
-        eligible: proof.value.idle && after.stdout.length === 0 ? ["arm"] as const : [],
+        identity: digest([checkout.fingerprint, evidence.fingerprint]),
+        dirty: false,
+        eligible: evidence.idle ? ["arm"] as const : [],
       },
       partial: false,
     }
@@ -157,13 +130,20 @@ export function make(database: Database.Interface, processService: AppProcess.In
       yield* ledger.record({ ...observation, eligible: [] })
       return false
     })),
+    authorize: (tx: ActivityArmLedger.Transaction, targets: readonly ActivityActionLedger.Target[]) => Effect.gen(function* () {
+      for (const target of targets) {
+        const captured = verified.get(target.targetID)
+        if (!captured || captured.generation !== target.generation ||
+          !matchesRegistration(yield* registered(captured.candidate.registrationID, tx), captured.candidate)) return false
+      }
+      return true
+    }),
   }
 }
 
-function worktreeEntry(output: Buffer, directory: string) {
-  const entry = output.toString("utf8").split("\0\0").find((record) => record.startsWith(`worktree ${directory}\0`))
-  return entry?.split("\0").some((field) => /^HEAD [0-9a-f]{40,64}$/.test(field)) &&
-    !entry.split("\0").some((field) => /^prunable( |$)/.test(field)) ? entry : undefined
+function matchesRegistration(current: Registration | undefined, candidate: Candidate) {
+  return current?.registrationID === candidate.registrationID && current.directory === candidate.directory &&
+    current.root === candidate.root && current.projectID === candidate.projectID
 }
 
 function digest(fields: readonly string[]) {
