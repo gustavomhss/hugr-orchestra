@@ -3,6 +3,7 @@ export * as Catalog from "./catalog"
 import { makeLocationNode } from "./effect/app-node"
 import { Array, Context, Effect, Layer, Option, Order, pipe, Schema } from "effect"
 import { Catalog } from "@orchestra/schema/catalog"
+import { Siwc } from "./auth/siwc"
 import { Credential } from "./credential"
 import { ModelV2 } from "./model"
 import { ProviderV2 } from "./provider"
@@ -289,7 +290,17 @@ const layer = Layer.effect(
         available: Effect.fn("CatalogV2.model.available")(function* () {
           const virtuals = yield* virtualEntries()
           const providers = new Set((yield* availableProviders(virtuals)).map((provider) => provider.id))
-          return projectModels(virtuals).filter((model) => providers.has(model.providerID) && model.enabled)
+          const openai = providers.has(ProviderV2.ID.openai)
+            ? yield* integrations.connection.active(Integration.ID.make("openai"))
+            : undefined
+          const credential = openai?.type === "credential" ? (yield* credentials.get(openai.id))?.value : undefined
+          const planModels = credential?.type === "oauth" && credential.methodID === Siwc.methodID
+            ? Siwc.allowedModels(credential)
+            : undefined
+          return projectModels(virtuals).filter((model) =>
+            providers.has(model.providerID) && model.enabled &&
+            (model.providerID !== ProviderV2.ID.openai || !planModels || planModels.has(model.api.id)),
+          )
         }),
 
         default: Effect.fn("CatalogV2.model.default")(function* () {

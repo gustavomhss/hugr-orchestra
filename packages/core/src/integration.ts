@@ -16,6 +16,7 @@ import {
   Types,
 } from "effect"
 import { Integration } from "@orchestra/schema/integration"
+import { Siwc } from "./auth/siwc"
 import { Credential } from "./credential"
 import { State } from "./state"
 import { EventV2 } from "./event"
@@ -353,11 +354,15 @@ export const locationLayer = Layer.effect(
       if (!result) return
       if (Exit.isSuccess(exit)) {
         const implementation = state.get().integrations.get(result.integrationID)?.implementations.get(result.methodID)
-        yield* credentials.create({
-          integrationID: result.integrationID,
-          label: result.label ?? implementation?.label?.(exit.value),
-          value: exit.value,
-        })
+        const label = result.label ?? implementation?.label?.(exit.value)
+        const registered = result.integrationID === "openai" && result.methodID === Siwc.methodID
+          ? (yield* credentials.list(result.integrationID)).find((entry) => Siwc.sameRegistration(exit.value, entry.value))
+          : undefined
+        if (registered && !(yield* credentials.inheritedFrom(registered.id))) {
+          yield* credentials.update(registered.id, { value: exit.value, ...(label ? { label } : {}) }).pipe(Effect.orDie)
+        } else {
+          yield* credentials.create({ integrationID: result.integrationID, label, value: exit.value })
+        }
         yield* events.publish(Event.ConnectionUpdated, { integrationID: result.integrationID })
         yield* events.publish(Event.Updated, {})
       }

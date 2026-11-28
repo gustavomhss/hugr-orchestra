@@ -1,5 +1,7 @@
 # Stored credentials
 
+Use **ChatGPT plan (Orchestra)** in provider settings to authorize models through your ChatGPT plan. The browser displays the account and workspace authorization. Select **Reconnect the active ChatGPT plan account** when its access expires.
+
 Orchestra keeps three kinds of secrets on your machine: provider credentials (API keys and OAuth tokens for model
 providers), integration tokens (for example Slack or Discord connections), and OAuth tokens for MCP servers. This guide
 explains where they live and how they are protected.

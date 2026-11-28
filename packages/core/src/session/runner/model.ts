@@ -6,6 +6,7 @@ import { AnthropicMessages, OpenAICompatibleChat, OpenAIResponses } from "@orche
 import { Auth, type AnyRoute } from "@orchestra/llm/route"
 import { Context, Effect, Layer, Schema } from "effect"
 import { produce } from "immer"
+import { Siwc } from "../../auth/siwc"
 import { Catalog } from "../../catalog"
 import { Credential } from "../../credential"
 import { Integration } from "../../integration"
@@ -152,17 +153,33 @@ export const fromCatalogModel = (
 ): Effect.Effect<Model, UnsupportedApiError | ModelUnavailableError> =>
   Effect.gen(function* () {
     const options = yield* ModelExecutionOptions.options(model, variant)
+    const plan = credential?.type === "oauth" && credential.methodID === Siwc.methodID
+    if (plan && ((Catalog.parseVirtualID(model.providerID)?.base ?? model.providerID) !== ProviderV2.ID.openai ||
+      model.api.type !== "aisdk" || model.api.package !== "@ai-sdk/openai" || !Siwc.permits(credential, model.api.id)))
+      return yield* new ModelUnavailableError({
+        providerID: model.providerID,
+        modelID: model.id,
+        cause: "Model is unavailable through this ChatGPT plan connection. Sign in again if it expired.",
+      })
     const resolved =
-      credential?.type !== "key" || credential.metadata === undefined
-        ? model
-        : produce(model, (draft) => {
-            Object.assign(draft.request.body, credential.metadata)
+      plan
+        ? produce(model, (draft) => {
+            draft.api.url = Siwc.resource
+            draft.request.body.store = false
           })
+        : credential?.type === "key" && credential.metadata !== undefined
+          ? produce(model, (draft) => {
+              Object.assign(draft.request.body, credential.metadata)
+            })
+          : model
     yield* ModelExecutionOptions.validateBody(resolved)
     const key = apiKey(resolved, credential)
     if (resolved.api.type === "aisdk" && resolved.api.package === "@ai-sdk/openai") {
+      const providerOptions = plan
+        ? { ...options.providerOptions, openai: { ...options.providerOptions.openai, store: false } }
+        : options.providerOptions
       return yield* Effect.succeed(
-        withDefaults(resolved, OpenAIResponses.route, options.generation, options.providerOptions)
+        withDefaults(resolved, OpenAIResponses.route, options.generation, providerOptions)
           .with({ auth: key === undefined ? Auth.none : Auth.bearer(key) })
           .model({ id: resolved.api.id }),
       ).pipe(Effect.map((value) => withPrices(withReference(value, model), model)))

@@ -1,10 +1,14 @@
 import { createServer } from "node:http"
 import type { Socket } from "node:net"
+import { join } from "node:path"
 import type { IntegrationOAuthMethodRegistration } from "@orchestra/plugin/v2/effect/integration"
 import { define } from "@orchestra/plugin/v2/effect/plugin"
 import { Deferred, Effect } from "effect"
 import type { Scope } from "effect"
+import { Siwc } from "../../auth/siwc"
+import { SiwcListener } from "../../auth/siwc-listener"
 import { Credential } from "../../credential"
+import { Global } from "../../global"
 import { InstallationVersion } from "../../installation/version"
 import { Integration } from "../../integration"
 import { ModelV2 } from "../../model"
@@ -197,7 +201,35 @@ const headless = {
 export const OpenAIPlugin = define({
   id: "openai",
   effect: Effect.fn(function* (ctx) {
+    const chatGPTPlan = {
+      integrationID: Integration.ID.make("openai"),
+      method: {
+        id: Siwc.methodID,
+        type: "oauth",
+        label: "ChatGPT plan (Orchestra)",
+        prompts: [{
+          type: "select",
+          key: "account",
+          message: "ChatGPT account",
+          options: [
+            { label: "Connect a new account or workspace", value: "new" },
+            { label: "Reconnect the active ChatGPT plan account", value: "saved" },
+          ],
+        }],
+      },
+      authorize: (inputs) => Effect.gen(function* () {
+        const hostFile = join(Global.Path.state, "siwc", "host-id")
+        if (inputs.account !== "saved") return yield* SiwcListener.authorize({ hostFile, methodID: Siwc.methodID })
+        const connection = yield* ctx.integration.connection.active("openai")
+        const credential = connection ? yield* ctx.integration.connection.resolve(connection) : undefined
+        if (credential?.type !== "oauth" || credential.methodID !== Siwc.methodID)
+          return yield* Effect.fail(new Error("Connect a new ChatGPT plan account first"))
+        const registration = yield* Effect.try(() => Siwc.registration(credential.metadata))
+        return yield* SiwcListener.authorize({ hostFile, methodID: Siwc.methodID, registration })
+      }),
+    } satisfies IntegrationOAuthMethodRegistration
     yield* ctx.integration.transform((draft) => {
+      draft.method.update(chatGPTPlan)
       draft.method.update(browser)
       draft.method.update(headless)
     })

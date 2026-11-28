@@ -11,6 +11,7 @@ import { ProjectV2 } from "@orchestra/core/project"
 import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
 import { SessionV2 } from "@orchestra/core/session"
 import { AbsolutePath } from "@orchestra/core/schema"
+import { Siwc } from "../src/auth/siwc"
 import { it } from "./lib/effect"
 
 type Api =
@@ -42,6 +43,29 @@ const model = (api: Api, variants: ModelV2.Info["variants"] = []) =>
   })
 
 describe("SessionRunnerModel", () => {
+  it.effect("pins an entitled ChatGPT plan model to the public Responses API", () =>
+    Effect.gen(function* () {
+      const catalog = ModelV2.Info.make({
+        ...model({ type: "aisdk", package: "@ai-sdk/openai", url: "https://untrusted.example/v1" }),
+        providerID: ProviderV2.ID.openai,
+      })
+      const credential = Credential.OAuth.make({
+        type: "oauth", methodID: Siwc.methodID, access: "test-access", refresh: "test-refresh", expires: Date.now() + 60000,
+        metadata: {
+          clientId: "oaiapp_test_orchestra", hostId: "test-host", issuer: Siwc.issuer, subject: "test-owner",
+          idToken: "test-id-token", scopes: Siwc.scopes.split(" "), models: [catalog.api.id],
+        },
+      })
+      const resolved = yield* SessionRunnerModel.fromCatalogModel(catalog, credential)
+      expect(resolved.route.endpoint.baseURL).toBe(Siwc.resource)
+      const prepared = yield* LLMClient.prepare(LLM.request({ model: resolved, prompt: "Hello" }))
+      expect(prepared.body).toMatchObject({ model: catalog.api.id, store: false, stream: true })
+      const unavailable = ModelV2.Info.make({ ...catalog, api: { ...catalog.api, id: ModelV2.ID.make("other-model") } })
+      const refusal = yield* SessionRunnerModel.fromCatalogModel(unavailable, credential).pipe(Effect.flip)
+      expect(refusal).toBeInstanceOf(SessionRunnerModel.ModelUnavailableError)
+    }),
+  )
+
   it.live("lowers canonical generation temperature zero to real HTTP and preserves omitted defaults", () =>
     Effect.gen(function* () {
       const captured: Array<Record<string, unknown>> = []
