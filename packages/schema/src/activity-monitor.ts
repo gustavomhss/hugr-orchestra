@@ -91,6 +91,32 @@ export interface DiskSnapshot extends Schema.Schema.Type<typeof DiskSnapshot> {}
 
 const decimalRevision = Schema.isPattern(/^(0|[1-9][0-9]*)(?![\s\S])/)
 
+const ExternalCacheRow = Schema.Struct({
+  id: Schema.NonEmptyString,
+  name: Schema.NonEmptyString,
+  owner: Schema.Literal(""),
+  useProof: Schema.Literal("unproved"),
+  unique: Schema.Literal("not-collapsed"),
+  attempt: optional(Schema.Struct({
+    state: Schema.Literals(["complete", "partial"]),
+    startedAt: NonNegativeInt,
+    sampledAt: NonNegativeInt,
+    issueCount: NonNegativeInt,
+  })),
+  logical: optional(Schema.Struct({ bytes: NonNegativeInt, sampledAt: NonNegativeInt })),
+}).annotate({ identifier: "ActivityMonitor.ExternalCacheRow" })
+
+export const ExternalCacheSnapshot = Schema.Struct({
+  instanceID: Schema.NonEmptyString,
+  snapshotRevision: Schema.String.check(decimalRevision),
+  readAt: NonNegativeInt,
+  source: Schema.Literal("node.fs.lstat"),
+  coverage: Schema.Literal("operator-declared-external-caches"),
+  status: Schema.Literals(["unavailable", "ready"]),
+  records: Schema.Array(ExternalCacheRow).check(Schema.isMaxLength(16)),
+}).annotate({ identifier: "ActivityMonitor.ExternalCacheSnapshot" })
+export type ExternalCacheSnapshot = typeof ExternalCacheSnapshot.Type
+
 export const WorktreeRevision = Schema.String.annotate({ identifier: "ActivityMonitor.WorktreeRevision" }).check(
   decimalRevision,
 )

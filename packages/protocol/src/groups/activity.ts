@@ -35,6 +35,18 @@ export const ActivityGroup = HttpApiGroup.make("server.activity")
     }).annotateMerge(OpenApi.annotations({ summary: "Request a bounded Docker container inventory reading" })),
   )
   .add(
+    HttpApiEndpoint.get("activity.externalCaches", "/api/activity/external-caches", {
+      success: ActivityMonitor.ExternalCacheSnapshot,
+    }).annotateMerge(OpenApi.annotations({ summary: "Read the cached inventory of operator-declared external caches" })),
+  )
+  .add(
+    HttpApiEndpoint.post("activity.readExternalCache", "/api/activity/external-caches/:id/read", {
+      params: { id: Schema.NonEmptyString },
+      success: ActivityMonitor.ExternalCacheSnapshot,
+      error: [InvalidRequestError, ConflictError],
+    }).annotateMerge(OpenApi.annotations({ summary: "Measure one declared external cache by its opaque ID" })),
+  )
+  .add(
     HttpApiEndpoint.get("activity.disk", "/api/activity/disk", {
       success: ActivityMonitor.DiskSnapshot,
     }),
