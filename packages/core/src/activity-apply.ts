@@ -127,7 +127,7 @@ export function make(database: Database.Interface, options?: { now?: () => numbe
             JSON.stringify({ ...current.observation, generation: current.generation }) === JSON.stringify(entry.target) &&
             authority.describe(entry.target) === entry.preview.destination && entry.preview.expiresAt > now()
           const authorized = valid ? yield* authority.authorize(tx, structuredClone(entry.target)).pipe(Effect.catch(() => Effect.succeed(false))) : false
-          const outcome = authorized ? "Unknown" : "Refused"
+          const outcome = authorized ? "Unknown" as const : "Refused" as const
           yield* tx.insert(ActivityApplyTable).values({ preview_id: receipt.previewID, approval_id: receipt.approvalID,
             target_id: receipt.targetID, generation: receipt.generation, confirmed_at: now(),
             source: entry.target.label, destination: entry.preview.destination, outcome }).run()
