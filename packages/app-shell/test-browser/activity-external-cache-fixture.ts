@@ -9,12 +9,26 @@ import { render } from "solid-js/web"
 import { isolatedSolid } from "./orchestra/integrations-solid.fixture"
 
 const load = isolatedSolid("activity-external-cache")
-const sdkContext = createContext<Accessor<Pick<ServerSDK, "orchestra" | "ready">>>()
+const serverContext =
+  createContext<Accessor<Pick<ServerSDK, "orchestra" | "ready"> & { connection: ServerConnection.Any }>>()
+
+function useFixtureServer() {
+  const active = useContext(serverContext)
+  if (!active) throw new Error("Activity fixture server missing")
+  return active
+}
+
 mock.module(Bun.resolveSync("@/context/server-sdk", import.meta.dir) + "?activity-external-cache", () => ({
-  useServerSDK: () => {
-    const sdk = useContext(sdkContext)
-    if (!sdk) throw new Error("Activity fixture SDK missing")
-    return sdk
+  useServerSDK: useFixtureServer,
+}))
+mock.module(Bun.resolveSync("@/context/server", import.meta.dir) + "?activity-external-cache", () => ({
+  useServer: () => {
+    const active = useFixtureServer()
+    return {
+      get current() {
+        return active().connection
+      },
+    }
   },
 }))
 export const cachePath = "/api/activity/external-caches"
@@ -105,7 +119,7 @@ export async function mount(initialLocale: Locale = "en") {
             locale: initialLocale,
             get children() {
               useLanguage().setLocale(initialLocale)
-              return createComponent(sdkContext.Provider, {
+              return createComponent(serverContext.Provider, {
                 value: active,
                 get children() {
                   return createComponent(ActivityPage, {
