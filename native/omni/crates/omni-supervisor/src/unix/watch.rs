@@ -58,13 +58,13 @@ impl HostWatch {
 
     /// The host is gone: its event fired, or we were reparented.
     pub(super) fn gone(&self, event_fired: bool) -> bool {
-        // SAFETY: getppid has no preconditions.
         if self.remote {
             #[cfg(target_os = "linux")]
             return event_fired || self.event.as_ref().is_none_or(|fd| pidfd_ready(fd).unwrap_or(true));
             #[cfg(not(target_os = "linux"))]
             return true;
         }
+        // SAFETY: getppid has no preconditions.
         event_fired || unsafe { libc::getppid() } != self.host
     }
 }
