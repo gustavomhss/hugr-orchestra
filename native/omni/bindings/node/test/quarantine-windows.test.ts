@@ -1,10 +1,12 @@
 import { test, expect } from "bun:test"
-import { mkdtemp, mkdir, readFile, rm, symlink, writeFile } from "node:fs/promises"
+import { link, mkdtemp, mkdir, open, readFile, rm, symlink, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { createRequire } from "node:module"
 
 const quarantine: {
+  quarantineDisposeBatch(items: Array<{ path: string; identity: string }>): Promise<"accepted" | "refused" | "unknown">
+  quarantineDisposeBatchAvailable(): boolean
   quarantineDispose(path: string, identity: string): Promise<void>
   quarantineIdentity(path: string): Promise<string>
   quarantineInspect(path: string): Promise<string | null>
@@ -75,6 +77,48 @@ test.skipIf(process.platform !== "win32")("quarantine disposal pins identity and
     await expect(quarantine.quarantineDispose(link, directoryIdentity)).rejects.toThrow()
     await expect(quarantine.quarantineDispose(join(link, "child"), directoryIdentity)).rejects.toThrow()
     expect(await readFile(join(real, "child"), "utf8")).toBe("preserve target")
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+
+test.skipIf(process.platform !== "win32")("batch disposal reserves all identities before any deletion", async () => {
+  const root = await mkdtemp(join(tmpdir(), "omni-quarantine-batch-"))
+  try {
+    const first = join(root, "first")
+    const second = join(root, "second")
+    await writeFile(first, "first")
+    await writeFile(second, "second")
+    const firstIdentity = await quarantine.quarantineIdentity(first)
+    const secondIdentity = await quarantine.quarantineIdentity(second)
+    const items = [{ path: first, identity: firstIdentity }, { path: second, identity: secondIdentity }]
+    expect(quarantine.quarantineDisposeBatchAvailable()).toBe(true)
+
+    expect(await quarantine.quarantineDisposeBatch([items[0], { ...items[1], identity: "0".repeat(48) }])).toBe("refused")
+    expect(await readFile(first, "utf8")).toBe("first")
+    await rm(second)
+    await writeFile(second, "replacement")
+    expect(await quarantine.quarantineDisposeBatch(items)).toBe("refused")
+    expect(await readFile(first, "utf8")).toBe("first")
+    items[1].identity = await quarantine.quarantineIdentity(second)
+    const busy = await open(second, "r")
+    try {
+      expect(await quarantine.quarantineDisposeBatch(items)).toBe("refused")
+      expect(await readFile(first, "utf8")).toBe("first")
+    } finally {
+      await busy.close()
+    }
+    const alias = join(root, "alias")
+    await link(second, alias)
+    expect(await quarantine.quarantineDisposeBatch(items)).toBe("refused")
+    expect(await readFile(first, "utf8")).toBe("first")
+    await rm(alias)
+    expect(await quarantine.quarantineDisposeBatch([items[0], items[0]])).toBe("refused")
+    expect(await readFile(first, "utf8")).toBe("first")
+    expect(await quarantine.quarantineDisposeBatch(items)).toBe("accepted")
+    expect(await quarantine.quarantineInspect(first)).toBeNull()
+    expect(await quarantine.quarantineInspect(second)).toBeNull()
   } finally {
     await rm(root, { recursive: true, force: true })
   }

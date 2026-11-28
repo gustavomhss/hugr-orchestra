@@ -77,3 +77,30 @@ impl Task for QuarantineDisposeTask {
 pub fn quarantine_dispose(source: String, expected: String) -> AsyncTask<QuarantineDisposeTask> {
     AsyncTask::new(QuarantineDisposeTask { source, expected })
 }
+
+#[napi(object)]
+pub struct QuarantineBatchItem {
+    pub path: String,
+    pub identity: String,
+}
+
+pub struct QuarantineBatchTask {
+    items: Vec<(String, String)>,
+}
+impl Task for QuarantineBatchTask {
+    type Output = String;
+    type JsValue = String;
+    fn compute(&mut self) -> napi::Result<String> {
+        Ok(quarantine_windows::dispose_batch(&self.items).to_owned())
+    }
+    fn resolve(&mut self, _: Env, value: String) -> napi::Result<String> {
+        Ok(value)
+    }
+}
+
+#[napi]
+pub fn quarantine_dispose_batch(items: Vec<QuarantineBatchItem>) -> AsyncTask<QuarantineBatchTask> {
+    AsyncTask::new(QuarantineBatchTask {
+        items: items.into_iter().map(|item| (item.path, item.identity)).collect(),
+    })
+}

@@ -23,6 +23,19 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`activity_quarantine_custody\` (
+          \`target_id\` text PRIMARY KEY,
+          \`generation\` text NOT NULL,
+          \`identity\` text NOT NULL UNIQUE,
+          \`label\` text NOT NULL,
+          \`owner\` text NOT NULL,
+          \`original_path\` text NOT NULL,
+          \`quarantine_path\` text NOT NULL UNIQUE,
+          \`phase\` text NOT NULL,
+          \`reservation_id\` text
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`activity_suspension_ledger\` (
           \`tree_id\` text PRIMARY KEY,
           \`generation\` text NOT NULL,

@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "60bd86c4-4a29-4f4c-8dc6-39c090794cbf",
+  "id": "f30958d5-467d-4861-8210-0e5f073ffd72",
   "prevIds": [
-    "c7aada81-687e-40d5-84b4-e3c6d64028b4"
+    "60bd86c4-4a29-4f4c-8dc6-39c090794cbf"
   ],
   "ddl": [
     {
@@ -12,6 +12,10 @@
     },
     {
       "name": "activity_arm",
+      "entityType": "tables"
+    },
+    {
+      "name": "activity_quarantine_custody",
       "entityType": "tables"
     },
     {
@@ -383,6 +387,96 @@
       "name": "snapshot",
       "entityType": "columns",
       "table": "activity_arm"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "target_id",
+      "entityType": "columns",
+      "table": "activity_quarantine_custody"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "generation",
+      "entityType": "columns",
+      "table": "activity_quarantine_custody"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "identity",
+      "entityType": "columns",
+      "table": "activity_quarantine_custody"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "label",
+      "entityType": "columns",
+      "table": "activity_quarantine_custody"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "owner",
+      "entityType": "columns",
+      "table": "activity_quarantine_custody"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "original_path",
+      "entityType": "columns",
+      "table": "activity_quarantine_custody"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "quarantine_path",
+      "entityType": "columns",
+      "table": "activity_quarantine_custody"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "phase",
+      "entityType": "columns",
+      "table": "activity_quarantine_custody"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "reservation_id",
+      "entityType": "columns",
+      "table": "activity_quarantine_custody"
     },
     {
       "type": "text",
@@ -8244,6 +8338,15 @@
     },
     {
       "columns": [
+        "target_id"
+      ],
+      "nameExplicit": false,
+      "name": "activity_quarantine_custody_pk",
+      "table": "activity_quarantine_custody",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
         "tree_id"
       ],
       "nameExplicit": false,
@@ -9618,6 +9721,24 @@
       "name": "todo_session_idx",
       "entityType": "indexes",
       "table": "todo"
+    },
+    {
+      "columns": [
+        "identity"
+      ],
+      "nameExplicit": false,
+      "name": "activity_quarantine_custody_identity_unique",
+      "entityType": "uniques",
+      "table": "activity_quarantine_custody"
+    },
+    {
+      "columns": [
+        "quarantine_path"
+      ],
+      "nameExplicit": false,
+      "name": "activity_quarantine_custody_quarantine_path_unique",
+      "entityType": "uniques",
+      "table": "activity_quarantine_custody"
     },
     {
       "columns": [

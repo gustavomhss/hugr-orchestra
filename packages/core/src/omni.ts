@@ -59,6 +59,22 @@ export async function quarantine(): Promise<Quarantine | undefined> {
   }
 }
 
+type DisposeBatch = (items: readonly { path: string; identity: string }[]) => Promise<"accepted" | "refused" | "unknown">
+
+/** The supported native operation pins the whole batch before disposing any item. */
+export async function quarantineBatch(): Promise<DisposeBatch | undefined> {
+  if (process.platform !== "win32") return undefined
+  const binding = await load()
+  if (!("quarantineDisposeBatchAvailable" in binding) || typeof binding.quarantineDisposeBatchAvailable !== "function" ||
+      !binding.quarantineDisposeBatchAvailable() || !("quarantineDisposeBatch" in binding) ||
+      typeof binding.quarantineDisposeBatch !== "function") return undefined
+  const dispose = binding.quarantineDisposeBatch
+  return async (items) => {
+    const result: unknown = await dispose(items)
+    return result === "accepted" || result === "refused" ? result : "unknown"
+  }
+}
+
 async function open(): Promise<Binding> {
   const found = locate()
   const binding: Configurable = await import("hugr-omni").catch((cause: unknown) => {
