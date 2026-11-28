@@ -20,8 +20,10 @@ export function renderImportedEffectFiles(
       const request = (["params", "query", "headers", "payload"] as const)
         .flatMap((source) => {
           const fields = item.input.filter((field) => field.source === source)
-          // A declared empty query still needs its object; the raw client encodes the slot.
-          if (fields.length === 0 && (source !== "query" || item.query === undefined)) return []
+          // The raw client encodes declared queries and payloads even when they have no fields.
+          const declared =
+            source === "query" ? item.query !== undefined : source === "payload" && item.payloads.length > 0
+          if (fields.length === 0 && !declared) return []
           return [
             `${source}: { ${fields.map((field) => renderInputField(field, item.operation.inputMode)).join(", ")} }`,
           ]
