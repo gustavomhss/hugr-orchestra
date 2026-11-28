@@ -30,9 +30,17 @@ export interface Interface {
 export function make(database: Database.Interface, options?: { readonly now?: () => number }): Interface {
   const now = options?.now ?? Date.now
   const previews = new Map<string, Entry>()
+  // Persisted custody describes the archive. Only the producer that verified the move can authorize its disposal.
+  const verifiedMoves = new Map<string, Pick<ActivityQuarantineExecutor.Target, "generation" | "identity">>()
+  const canEmptyRow = (row: CustodyRow) => {
+    const binding = verifiedMoves.get(row.target_id)
+    return row.phase === "ready" && !!binding && row.generation === binding.generation &&
+      row.identity === binding.identity && !!row.original_path.trim()
+  }
 
   return {
-    move(target, acquire) {
+    move(request, acquire) {
+      const target = { ...request }
       return Effect.tryPromise({
         try: async () => {
           if (!/^[0-9a-f]{48}$/.test(target.identity) || !target.label.trim() || !target.owner.trim() ||
@@ -74,7 +82,10 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
                 ...lease,
                 release: async () => {},
               }), target, "apply")
-              if (outcome === "Verified") await setPhase(database, target, "moving", "ready")
+              if (outcome === "Verified") {
+                await setPhase(database, target, "moving", "ready")
+                verifiedMoves.set(target.id, { generation: target.generation, identity: target.identity })
+              }
               if (outcome === "Unknown") await setPhase(database, target, "moving", "unknown")
               if (outcome === "Refused") await removeMoving(database, target)
               return outcome
@@ -94,9 +105,7 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
         const rows = yield* tx.select().from(ActivityQuarantineCustodyTable)
           .where(ne(ActivityQuarantineCustodyTable.phase, "finished"))
           .orderBy(asc(ActivityQuarantineCustodyTable.target_id)).limit(ActivityArm.maxTargets + 1).all()
-        if (!rows.length || rows.length > ActivityArm.maxTargets || rows.some((row) =>
-          row.phase !== "ready" || !row.target_id.trim() || !row.generation.trim() || !row.identity.trim() ||
-          !row.original_path.trim())) return undefined
+        if (!rows.length || rows.length > ActivityArm.maxTargets || !rows.every(canEmptyRow)) return undefined
 
         const time = now()
         for (const [id, entry] of previews) if (entry.expiresAt <= time) previews.delete(id)
@@ -134,7 +143,7 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
             .where(ne(ActivityQuarantineCustodyTable.phase, "finished"))
             .orderBy(asc(ActivityQuarantineCustodyTable.target_id)).limit(ActivityArm.maxTargets + 1).all()
           if (rows.length !== entry.rows.length || rows.some((row, index) =>
-            row.phase !== "ready" || !sameRow(row, entry.rows[index]))) return undefined
+            !canEmptyRow(row) || !sameRow(row, entry.rows[index]))) return undefined
 
           const reservationID = crypto.randomUUID()
           yield* Effect.forEach(rows, (row) => tx.update(ActivityQuarantineCustodyTable)
@@ -153,11 +162,15 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
                 outcome,
                 targets: reserved.rows.map((row) => ({ targetID: row.target_id, generation: row.generation })),
               })
+              const settleBatch = (phase: "ready" | "finished" | "unknown") => {
+                if (phase !== "ready") reserved.rows.forEach((row) => verifiedMoves.delete(row.target_id))
+                return settle(database, reserved.rows, reserved.reservationID, phase)
+              }
               try {
                 const native = await Omni.quarantine().catch(() => undefined)
                 const quarantineBatch = await Omni.quarantineBatch().catch(() => undefined)
                 if (!native || !quarantineBatch) {
-                  await settle(database, reserved.rows, reserved.reservationID, "ready")
+                  await settleBatch("ready")
                   return emptyReceipt("Refused")
                 }
                 const batch = await quarantineBatch(reserved.rows.map((row) => ({
@@ -165,19 +178,19 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
                   identity: row.identity,
                 }))).catch(() => "unknown" as const)
                 if (batch === "refused") {
-                  await settle(database, reserved.rows, reserved.reservationID, "ready")
+                  await settleBatch("ready")
                   return emptyReceipt("Refused")
                 }
                 if (batch !== "accepted") {
-                  await settle(database, reserved.rows, reserved.reservationID, "unknown")
+                  await settleBatch("unknown")
                   return emptyReceipt("Unknown")
                 }
                 const after = await Promise.all(reserved.rows.map((row) => inspect(native, row.quarantine_path)))
                 const verified = after.every((reading) => reading.state === "absent")
-                await settle(database, reserved.rows, reserved.reservationID, verified ? "finished" : "unknown")
+                await settleBatch(verified ? "finished" : "unknown")
                 return emptyReceipt(verified ? "Verified" : "Unknown")
               } catch {
-                await settle(database, reserved.rows, reserved.reservationID, "unknown").catch(() => undefined)
+                await settleBatch("unknown").catch(() => undefined)
                 return emptyReceipt("Unknown")
               }
             },
