@@ -28,7 +28,7 @@ function invalidateFootprint(entry: Entry) {
 }
 
 /** An observer never owns a child or changes its I/O, stop policy, adoption or lifetime. */
-export function make() {
+export function make(now: () => number = Date.now) {
   const entries = new Map<string, Entry>()
   const cpu = ActivityCPU.make()
   const status = { instanceID: crypto.randomUUID(), retired: 0, closure: 0 }
@@ -76,7 +76,7 @@ export function make() {
     ])
       .then(
         (observation) => {
-          const sampledAt = Date.now()
+          const sampledAt = now()
           const members = observation.members
           const bytes = observation.physicalFootprintBytes
           const complete = entry.record.supervisorID && members.length > 0 &&
