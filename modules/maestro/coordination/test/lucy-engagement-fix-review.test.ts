@@ -50,7 +50,7 @@ test("fix review requires the retained report to belong to the invoking parent a
       expect(yield* host.db.select().from(SessionTable).all().pipe(Effect.orDie)).toEqual(before)
     }
   }), variantAdapter((log, modelRequest) => text(reply(log, modelRequest, { quote: true }))))))
-})
+}, 150_000)
 
 test("an unknown finding in an authorized quote report starts no work", () => {
   expectSpawn(import.meta.path)

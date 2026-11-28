@@ -7,7 +7,7 @@ import { BackendToolkit } from "@orchestra/core/backend-toolkit"
 import { SessionInputTable, SessionTable } from "@orchestra/core/session/sql"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { run, sourcePath, stage, type Controls } from "./fixture/lucy-engagement"
-import { blobRoot, cache, canonical, decoded, digest, nativeCode, reader, receipt, refused, required, request } from "./fixture/lucy-engagement-artifacts"
+import { blobRoot, cache, canonical, decoded, digest, manifest, nativeCode, readAll, reader, receipt, Receipt, refused, required, request } from "./fixture/lucy-engagement-artifacts"
 import { calls, commit } from "./fixture/lucy-engagement-artifact-limits"
 import { completedPrior, decodedFix, fixedText, fixRequest, fixScript } from "./fixture/lucy-fix-review"
 import { fixReceipt, historical, publish, saved, stateV4, stoppedFix } from "./fixture/lucy-fix-review-evidence"
@@ -110,16 +110,21 @@ test("F6 importing real predecessor bodies shares the 256-descriptor quota inste
       const native = (yield* Effect.forEach([lead, ...lenses], (id) => nativeCode(host, id))).flat()
       expect(native).toHaveLength(125)
       expect(native.every((call) => call.status === "completed" && call.name === "code_locate" && call.providerExecuted !== true)).toBe(true)
-      const evidence = yield* receipt(host, prior)
-      expect(evidence.value.operations.filter((operation) => operation.kind === "code")).toHaveLength(125)
-      expect(evidence.value.operations.filter((operation) => operation.kind === "analysis")).toHaveLength(1)
-      expect(evidence.value.artifacts.filter((artifact) => artifact.kind === "code-result")).toHaveLength(125)
-      expect(evidence.value.artifacts.filter((artifact) => artifact.kind === "code-snapshot")).toHaveLength(125)
-      expect(evidence.value.artifacts).toHaveLength(254)
-      expect(evidence.value.hostProofs).toEqual([])
+      // Manifest and each page already validate the entire retained closure.
+      // Only receipt bytes are needed for the count check and the post-refusal comparison.
+      const index = (yield* manifest(host, prior.reportID)).value
+      const evidence = yield* readAll(host, index, index.manifest)
+      const retained = Schema.decodeUnknownSync(Receipt)(JSON.parse(evidence.bytes.toString("utf8")), strict)
+      expect(evidence.bytes.toString("utf8")).toBe(canonical(retained))
+      expect(retained.operations.filter((operation) => operation.kind === "code")).toHaveLength(125)
+      expect(retained.operations.filter((operation) => operation.kind === "analysis")).toHaveLength(1)
+      expect(retained.artifacts.filter((artifact) => artifact.kind === "code-result")).toHaveLength(125)
+      expect(retained.artifacts.filter((artifact) => artifact.kind === "code-snapshot")).toHaveLength(125)
+      expect(retained.artifacts).toHaveLength(254)
+      expect(retained.hostProofs).toEqual([])
       const wrapperSizes = [Buffer.byteLength(output.text), evidence.bytes.byteLength,
         Buffer.byteLength(canonical((yield* saved(host, prior.sessionID)).raw))]
-      const sizes = [...evidence.value.artifacts.map((artifact) => artifact.bytes), ...wrapperSizes]
+      const sizes = [...retained.artifacts.map((artifact) => artifact.bytes), ...wrapperSizes]
       expect(Math.max(...sizes)).toBeLessThan(limits.body)
       expect(sizes.reduce((sum, bytes) => sum + bytes, 0)).toBeLessThan(limits.total)
       expect(sizes).toHaveLength(limits.artifacts + 1)
@@ -132,7 +137,9 @@ test("F6 importing real predecessor bodies shares the 256-descriptor quota inste
       expect(root.requests.length).toBe(before)
       expect(provider.turns).toEqual([])
       expect((yield* host.invoke(input)).text).toBe(output.text)
-      expect((yield* receipt(host, prior)).bytes).toEqual(evidence.bytes)
+      const replay = (yield* manifest(host, prior.reportID)).value
+      expect(replay).toEqual(index)
+      expect((yield* readAll(host, replay, replay.manifest)).bytes).toEqual(evidence.bytes)
     }), { stream: provider.stream }).pipe(
       Effect.provideService(BackendToolkit.Root, path.join(root.global.cache, "fix-prior-empty-toolkit")),
     )
