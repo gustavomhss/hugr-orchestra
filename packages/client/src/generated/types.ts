@@ -2341,13 +2341,22 @@ export type ModelsExecutionInput = {
       | { readonly type: "session"; readonly sessionID: string; readonly agentID?: string }
       | { readonly type: "draft"; readonly agentID?: string; readonly parentID?: string }
     readonly model?: { readonly id: string; readonly providerID: string; readonly variant?: string }
+    readonly command?: string
   }["context"]
   readonly model?: {
     readonly context:
       | { readonly type: "session"; readonly sessionID: string; readonly agentID?: string }
       | { readonly type: "draft"; readonly agentID?: string; readonly parentID?: string }
     readonly model?: { readonly id: string; readonly providerID: string; readonly variant?: string }
+    readonly command?: string
   }["model"]
+  readonly command?: {
+    readonly context:
+      | { readonly type: "session"; readonly sessionID: string; readonly agentID?: string }
+      | { readonly type: "draft"; readonly agentID?: string; readonly parentID?: string }
+    readonly model?: { readonly id: string; readonly providerID: string; readonly variant?: string }
+    readonly command?: string
+  }["command"]
 }
 
 export type ModelsExecutionOutput = {

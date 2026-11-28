@@ -3,6 +3,7 @@ export * as ModelExecutionFixture from "./model-execution-fixture"
 import { NodeHttpServer, NodeServices } from "@effect/platform-node"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Catalog } from "@orchestra/core/catalog"
+import { CommandV2 } from "@orchestra/core/command"
 import { Database } from "@orchestra/core/database/database"
 import { Credential } from "@orchestra/core/credential"
 import { Global } from "@orchestra/core/global"
@@ -14,6 +15,7 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { Integration } from "@orchestra/core/integration"
 import { Location } from "@orchestra/core/location"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
+import { McpProvided } from "@orchestra/core/mcp/provided"
 import { ModelV2 } from "@orchestra/core/model"
 import { AppProcess } from "@orchestra/core/process"
 import { Prompt } from "@orchestra/core/session/prompt"
@@ -50,6 +52,7 @@ export const state = {
   materializations: 0,
   tools: 0,
   provider: 0,
+  mcpServers: [] as McpProvided.Server[],
   wait: undefined as
     | { entered: Deferred.Deferred<void>; interrupted: Deferred.Deferred<void>; release: Deferred.Deferred<void> }
     | undefined,
@@ -139,6 +142,11 @@ const seed = makeLocationNode({
         }
         draft.model.default.set(ProviderV2.ID.openai, ModelV2.ID.make("wire-model"))
       })
+      const commands = yield* CommandV2.Service
+      yield* commands.transform((draft) => draft.update("model-command", (command) => {
+        command.agent = "host-seat"
+        command.model = ref("anthropic", "wire-model", "high")
+      }))
       const tools = yield* ToolRegistry.Service
       yield* tools
         .register({
@@ -198,6 +206,7 @@ const services = Layer.unwrap(
         [Global.node, Global.layerWith(paths)],
         [Credential.node, Credential.layerFrom(undefined)],
         [ExecutionHost.node, hosts],
+        [McpProvided.node, Layer.succeed(McpProvided.Service, { servers: () => Effect.sync(() => state.mcpServers) })],
         [SessionExecution.node, SessionExecution.noopLayer],
       ],
       [seed],
@@ -282,6 +291,7 @@ export const setup = Effect.gen(function* () {
   state.materializations = 0
   state.tools = 0
   state.provider = 0
+  state.mcpServers = []
   state.wait = undefined
   const tmp = yield* Effect.acquireRelease(
     Effect.promise(() => tmpdir()),
@@ -301,7 +311,8 @@ export const setup = Effect.gen(function* () {
     (server) => Effect.promise(() => server.stop(true)),
   )
   state.providerUrl = provider.url.origin
-  const location = Location.Ref.make({ directory })
+  // Match the middleware's cache key for a request without a workspace.
+  const location = Location.Ref.make({ directory, workspaceID: undefined })
   const locations = yield* LocationServiceMap.Service
   const context = yield* locations.contextEffect(location)
   const agents = Context.get(context, AgentV2.Service)

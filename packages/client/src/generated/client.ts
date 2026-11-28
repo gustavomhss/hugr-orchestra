@@ -1341,7 +1341,7 @@ export function make(options: ClientOptions) {
             method: "POST",
             path: `/api/model/execution`,
             query: { location: input["location"] },
-            body: { context: input["context"], model: input["model"] },
+            body: { context: input["context"], model: input["model"], command: input["command"] },
             successStatus: 200,
             declaredStatuses: [404, 400, 503, 401],
             empty: false,

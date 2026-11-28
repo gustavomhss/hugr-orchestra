@@ -166,6 +166,12 @@ const layer = Layer.effect(
         return yield* Effect.interrupt
       // Before agent selection and promotion: a refused turn leaves pending input pending.
       yield* governance.beforeTurn(session)
+      const workflow = yield* RelayWorkflowSession.current(session.id).pipe(Effect.provide(workflowContext), Effect.orDie)
+      if (workflow?.view.pending) {
+        const advances = yield* RelayWorkflowSession.reconcile(workflow).pipe(Effect.provide(workflowContext), Effect.orDie)
+        return { type: advances ? "workflow-reconciled" : "workflow-complete" } as const
+      }
+      if (workflow?.view.state === "complete") return { type: "workflow-complete" as const }
       const agent = yield* agents.select(session.agent)
       // A Session's own permission rules, after its agent's as the earlier runtime merged them, so a Session rule wins over the agent's.
       const effectiveRules = [
@@ -173,16 +179,17 @@ const layer = Layer.effect(
         ...(yield* store.permissions(session.id)),
       ]
       const engine = yield* engineOf(session)
-      const hostedTurn = engine ? yield* modelExecution.assertHost({ session, agent, engine }) : undefined
-      const host = hostedTurn?.host
+      // A hosted input stays in the inbox until this turn can run, so restoring access can wake the same input.
+      const hosted = engine ? yield* modelExecution.assertHost({ session, agent, engine }) : undefined
+      const host = hosted?.host
       const systemContextForTurn = loadSystemContext(session.id, agent, host?.id === "claude-code")
       const initialized = yield* SessionContextEpoch.initialize(db, systemContextForTurn, session.id)
       const toolFibers = yield* FiberSet.make<void, ToolOutputStore.Error>()
       let needsContinuation = false
       let currentStep = step
+      let promoted = 0
       if (promotion) {
         const cutoff = yield* EventV2.latestSequence(db, session.id)
-        let promoted = 0
         if (promotion === "steer") promoted = yield* SessionInput.promoteSteers(db, events, session.id, cutoff)
         if (promotion === "queue") {
           promoted += Number(yield* SessionInput.promoteNextQueued(db, events, session.id))
@@ -190,24 +197,17 @@ const layer = Layer.effect(
         }
         if (promoted > 0) {
           currentStep = 1
-          // Beside the turn, as the earlier runtime named a Session after its first prompt; a failed title leaves the default one.
-          yield* nameSession(session.id)
           // Attachments are read once, as they are promoted; the admitted prompt keeps its URIs.
           yield* SessionDirectCommands.readMentions({ events, reader, mcp, fs }, session.id, yield* SessionInput.promotedAfter(db, session.id, cutoff))
         }
       }
       const system =
         initialized ?? (yield* SessionContextEpoch.prepare(db, events, systemContextForTurn, session.id))
-      if (engine && !host)
-        return yield* Effect.die(new Error(`No execution host is registered for engine ${engine} (agent ${agent.id})`))
       const model = host ? undefined : yield* models.resolve(session)
-      const modelRef = model ? SessionRunnerModel.reference(model) : hostedTurn?.ref
+      const modelRef = model ? SessionRunnerModel.reference(model) : hosted?.ref
+      yield* subagentModels.assert(session.id, modelRef)
       const entries = yield* SessionHistory.entriesForRunner(db, session.id, system.baselineSeq)
       const context = entries.map((entry) => entry.message)
-      const workflow = yield* RelayWorkflowSession.current(session.id).pipe(Effect.provide(workflowContext), Effect.orDie)
-      if (workflow?.view.pending) return { needsContinuation: yield* RelayWorkflowSession.reconcile(workflow).pipe(
-        Effect.provide(workflowContext), Effect.map((next) => next === true), Effect.orDie), step: currentStep }
-      if (workflow?.view.state === "complete") return { needsContinuation: false, step: currentStep }
       // A scoped Session (SessionScope) whose tool call budget is spent gets this turn as its last.
       const scoped = yield* store.scope(session.id)
       const isLastStep =
@@ -274,7 +274,10 @@ const layer = Layer.effect(
       const publish = (event: LLMEvent, outputPaths: ReadonlyArray<string> = []) =>
         withPublication(publisher.publish(event, outputPaths))
       let overflowFailure: ProviderErrorEvent | undefined
+      // MCP preparation and snapshot capture may outlive a change to the ancestor's model policy.
       yield* subagentModels.assert(session.id, modelRef)
+      // Title generation can send the admitted prompt to a provider, so wait until the turn is eligible.
+      if (promoted > 0) yield* nameSession(session.id)
       const invoke = (call: ToolCall, assistantMessageID: SessionMessage.ID, materialization: ToolRegistry.Materialization) =>
         CapabilityInvocation.withContext(
           {
@@ -618,15 +621,22 @@ const layer = Layer.effect(
             succeeded: settled._tag === "Success" && !!stepSettlement && !publisher.hasProviderError() &&
               !["unknown", "error", "content-filter"].includes(stepSettlement.finish),
           }).pipe(Effect.provide(workflowContext), Effect.orDie) : false
-          return { needsContinuation: workflow ? workflowContinues : !publisher.hasProviderError() && needsContinuation, step: currentStep }
+          return {
+            type: "provider-turn" as const,
+            needsContinuation: workflow ? workflowContinues : !publisher.hasProviderError() && needsContinuation,
+            step: currentStep,
+          }
         }),
       )
     }, Effect.scoped)
+    type TurnResult =
+      | { readonly type: "workflow-reconciled" | "workflow-complete" }
+      | { readonly type: "provider-turn"; readonly needsContinuation: boolean; readonly step: number }
     type RunTurn = (
       sessionID: SessionSchema.ID,
       promotion: SessionInput.Delivery | undefined,
       step: number,
-    ) => Effect.Effect<{ readonly needsContinuation: boolean; readonly step: number }, RunError>
+    ) => Effect.Effect<TurnResult, RunError>
 
     const runAfterOverflowCompaction: RunTurn = Effect.fnUntraced(function* (sessionID, promotion, step) {
       return yield* runTurnAttempt(sessionID, promotion, step).pipe(
@@ -674,6 +684,9 @@ const layer = Layer.effect(
         let step = 1
         while (needsContinuation) {
           const result = yield* runTurn(input.sessionID, promotion, step)
+          if (result.type === "workflow-complete") return
+          // Reconciliation has not consumed a provider turn or carried out the requested promotion.
+          if (result.type !== "provider-turn") continue
           needsContinuation = result.needsContinuation
           step = result.step + 1
           promotion = "steer"
@@ -761,7 +774,6 @@ export const node = makeLocationNode({
     Database.node,
     RelayWorkflowSession.node,
     Relay.node,
-    ExecutionHost.node,
     TaskGovernance.node,
     SessionCompaction.node,
     PermissionV2.node,

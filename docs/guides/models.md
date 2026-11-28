@@ -88,6 +88,8 @@ Clients can request a contextual assessment with `models.execution({ location, c
 
 This request does not create a Session, admit a prompt, change its selected agent/model, or start provider/tool work. Invalid Session, parent, agent or Location context returns a declared 404; an invalid Session chain returns 400 and unavailable policy storage returns 503. An assessment can become stale and does not replace validation when executing. Existing model list/default methods keep their global catalog behavior; a secondary host's eligibility does not enable its models globally.
 
+Returned rows include display metadata and exact variant IDs. Orchestra keeps provider endpoints, request headers and bodies, and provider settings private. The command assessment uses the configured slash command's effective model and agent without rendering its template or running it.
+
 When an assessment is canceled, the server waits for the lookup's cleanup before ending request processing.
 
 ## Prompt estimate

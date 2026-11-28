@@ -35,6 +35,7 @@ export const Input = Schema.Struct({
     }),
   ]),
   model: Model.Ref.pipe(optional),
+  command: Schema.String.pipe(optional),
 }).annotate({ identifier: "ModelExecution.Input" })
 export interface Input extends Schema.Schema.Type<typeof Input> {}
 
