@@ -22,13 +22,13 @@ export async function inspect(input: { worktree: string; name: ".turbo" | "node_
     const object = path.join(worktree, input.name)
     const root = await lstat(worktree, { bigint: true })
     const tree = await captureTree(object, root, BigInt(uid), signal)
-    if (!tree) return undefined
+    if (!tree) { console.error("arm-diag tree"); return undefined }
     const scan = () => captureUse(worktree, object, tree.inodes, tree.lockPids, signal).catch((error: NodeJS.ErrnoException) => {
-      if (error.code !== "ENOENT" && error.code !== "ESRCH") throw error
+      console.error("arm-diag scan " + error.code + " " + error.name + " " + error.syscall); if (error.code !== "ENOENT" && error.code !== "ESRCH") throw error
       return undefined
     })
     const use = await scan() ?? await scan() ?? await scan()
-    if (!use) return undefined
+    if (!use) { console.error("arm-diag no scan result"); return undefined }
     if (!tree.matches(await lstat(worktree, { bigint: true }))) return undefined
     for (const [file, signature] of tree.entries) {
       signal?.throwIfAborted()
@@ -47,7 +47,8 @@ export async function inspect(input: { worktree: string; name: ".turbo" | "node_
       ],
     })
     return { fingerprint: tree.fingerprint, idle: proof.state === "idle" }
-  } catch {
+  } catch (error) {
+    console.error("arm-diag error " + (error as NodeJS.ErrnoException)?.code + " " + (error as Error)?.name);
     return undefined
   }
 }
@@ -113,18 +114,19 @@ async function captureUse(worktree: string, object: string, inodes: ReadonlySet<
   if (!proc || !proc.includes(" - proc ") || /\b(hidepid=[^0,\s]|subset=pid)/.test(proc)) return undefined
   const usage = { cwd: false, git: false, open: false, lock: false, claimant: false }
   const pids = await numbers("/proc")
-  if (!pids.length || pids.length > 1024) return undefined
+  console.error("arm-diag pids", pids.length)
+  if (!pids.length || pids.length > 1024) { console.error("arm-diag pid cap"); return undefined }
   let tasks = 0
   let descriptors = 0
   for (const pid of pids) {
     signal?.throwIfAborted()
     const base = `/proc/${pid}`
-    const first = await processStat(base, signal)
+    console.error("arm-diag pid", pid); const first = await processStat(base, signal)
     if (first.state === "Z" || first.state === "X" || (first.flags & kernelThread) !== 0) continue
     usage.lock ||= lockPids.has(pid)
     const threads = await numbers(`${base}/task`)
     tasks += threads.length
-    if (!threads.length || tasks > 4096) return undefined
+    if (!threads.length || tasks > 4096) { console.error("arm-diag task cap"); return undefined }
     const [args, env, maps] = await Promise.all([
       readProc(`${base}/cmdline`, 256 * 1024, signal),
       readProc(`${base}/environ`, 256 * 1024, signal),
@@ -144,7 +146,7 @@ async function captureUse(worktree: string, object: string, inodes: ReadonlySet<
       usage.git ||= gitDirectory(args, cwd, worktree)
       const fds = await numbers(`${task}/fd`)
       descriptors += fds.length
-      if (descriptors > 65_536) return undefined
+      if (descriptors > 65_536) { console.error("arm-diag fd cap"); return undefined }
       for (const fd of fds) {
         signal?.throwIfAborted()
         const reference = `${task}/fd/${fd}`
@@ -158,9 +160,9 @@ async function captureUse(worktree: string, object: string, inodes: ReadonlySet<
         if (inodes.has(inode(await stat(reference, { bigint: true })))) usage.open = true
       }
     }
-    if ((await processStat(base, signal)).birth !== first.birth || !sameIDs(threads, await numbers(`${base}/task`))) return undefined
+    if ((await processStat(base, signal)).birth !== first.birth || !sameIDs(threads, await numbers(`${base}/task`))) { console.error("arm-diag task race"); return undefined }
   }
-  if (!sameIDs(pids, await numbers("/proc"))) return undefined
+  if (!sameIDs(pids, await numbers("/proc"))) { console.error("arm-diag pid race"); return undefined }
   const locks = await readProc("/proc/locks", 512 * 1024, signal)
   usage.lock ||= locks.split("\n").filter(Boolean).some((line) => {
     const match = line.match(/\b([0-9a-f]+):([0-9a-f]+):(\d+)\b/i)

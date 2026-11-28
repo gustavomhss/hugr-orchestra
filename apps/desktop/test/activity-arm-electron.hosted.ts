@@ -81,7 +81,7 @@ async function child() {
   const owned = await startOwnedServe({
     command: [process.env.ACTIVITY_ARM_BUN!, process.env.ACTIVITY_ARM_CLI!], cwd: root,
     env: { PATH: process.env.PATH ?? "", HOME: join(root, "home"), ORCHESTRA_TEST_HOME: join(root, "home"), ORCHESTRA_DB: databasePath, ORCHESTRA_CONFIG_DIR: join(root, "config"), ORCHESTRA_DISABLE_MODELS_FETCH: "1", ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "true", ORCHESTRA_INHERIT_CREDENTIALS: "0", ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict", HUGR_OMNI_ADDON: process.env.HUGR_OMNI_ADDON ?? "", HUGR_OMNI_SUPERVISOR: process.env.HUGR_OMNI_SUPERVISOR ?? "" },
-    privateActivityApproval: true, logger: { log() {}, error() {} }, write() {},
+    privateActivityApproval: true, logger: { log() {}, error() {} }, write(_stream, line) { if (line.includes("arm-diag")) console.error(line) },
   })
   let window: InstanceType<typeof BrowserWindow> | undefined
   try {

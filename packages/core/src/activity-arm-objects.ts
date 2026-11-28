@@ -59,14 +59,14 @@ export function make(database: Database.Interface, processService: AppProcess.In
 
     const registered = yield* git(candidate.root, ["worktree", "list", "--porcelain", "-z"])
     const entry = registered?.exitCode === 0 ? worktreeEntry(registered.stdout, candidate.directory) : undefined
-    if (!entry) return { observation, partial: true }
+    if (!entry) { console.error("arm-diag worktree entry", registered?.exitCode); return { observation, partial: true } }
     const common = yield* git(candidate.root, ["rev-parse", "--path-format=absolute", "--git-common-dir"])
     const placement = () => git(candidate.directory, ["rev-parse", "--path-format=absolute", "--show-toplevel", "--git-common-dir", "HEAD"])
     const head = entry.split("\0").find((field) => field.startsWith("HEAD "))?.slice(5)
     if (common?.exitCode !== 0 || !head) return { observation, partial: true }
     const expected = candidate.directory + "\n" + common.stdout.toString("utf8") + head + "\n"
     const placed = yield* placement()
-    if (placed?.exitCode !== 0 || placed.stdout.toString("utf8") !== expected) return { observation, partial: true }
+    if (placed?.exitCode !== 0 || placed.stdout.toString("utf8") !== expected) { console.error("arm-diag checkout shape", placed?.exitCode); return { observation, partial: true } }
     const tracked = yield* git(candidate.directory, ["ls-files", "-v", "-z"])
     if (tracked?.exitCode !== 0) return { observation, partial: true }
     // A tracked file or a suppressed index entry cannot establish a clean, disposable copy.
@@ -83,6 +83,7 @@ export function make(database: Database.Interface, processService: AppProcess.In
       worktree: candidate.directory, name: candidate.name,
     }, signal))
       .pipe(Effect.timeoutOption("4 seconds"))
+    console.error("arm-diag proof", proof._tag, proof._tag === "Some" && proof.value?.idle);
     const after = yield* dirt()
     const final = yield* placement()
     const current = yield* registrations().where(and(gitWorktree, eq(ProjectDirectoryTable.registration_id, candidate.registrationID))).get()
