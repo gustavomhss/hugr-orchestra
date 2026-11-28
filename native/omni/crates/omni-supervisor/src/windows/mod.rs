@@ -20,6 +20,7 @@ mod job;
 mod members;
 mod observe;
 mod queues;
+mod selective_stop;
 mod spawn;
 mod tree;
 
