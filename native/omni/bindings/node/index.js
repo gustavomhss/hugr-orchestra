@@ -347,6 +347,14 @@ function quarantineIdentity(source) {
   });
 }
 
+function quarantineInspect(source) {
+  return later(() => {
+    const native = load();
+    if (typeof native.quarantineInspect !== "function") throw new Error("Windows quarantine primitive unavailable");
+    return native.quarantineInspect(source);
+  });
+}
+
 function quarantineRename(source, destination, expectedIdentity) {
   return later(() => {
     const native = load();
@@ -355,4 +363,4 @@ function quarantineRename(source, destination, expectedIdentity) {
   });
 }
 
-module.exports = { run, spawn, configure, OmniError, quarantineIdentity, quarantineRename };
+module.exports = { run, spawn, configure, OmniError, quarantineIdentity, quarantineInspect, quarantineRename };

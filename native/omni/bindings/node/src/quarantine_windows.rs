@@ -52,6 +52,10 @@ fn identity(handle: Handle) -> Result<String, String> {
 }
 
 fn open(parent: Handle, name: &str, directory: bool, removable: bool) -> Result<Owned, String> {
+    open_optional(parent, name, directory, removable, false)?.ok_or_else(|| "missing component".into())
+}
+
+fn open_optional(parent: Handle, name: &str, directory: bool, removable: bool, missing_ok: bool) -> Result<Option<Owned>, String> {
     let text: Vec<u16> = std::ffi::OsStr::new(name).encode_wide().collect();
     if text.is_empty() || text.len() > 32767 || text.contains(&0) { return Err("invalid component".into()); }
     let name = UnicodeString { length: (text.len() * 2) as u16, maximum_length: (text.len() * 2) as u16, buffer: text.as_ptr() };
@@ -60,13 +64,15 @@ fn open(parent: Handle, name: &str, directory: bool, removable: bool) -> Result<
     let mut io = IoStatus { status: 0, information: 0 };
     // No FILE_SHARE_DELETE: acquired ancestry and source cannot be renamed or removed by a competing opener.
     // SAFETY: all structures and buffers are correctly laid out and live for this synchronous NT call.
-    status(unsafe { NtCreateFile(&mut result, 0x100000 | 0x80 | if directory { 0x21 } else { 0 } | if removable { 0x10000 } else { 0 }, &attributes, &mut io, null(), 0, 3, 1, 0x20 | 0x200000 | if directory { 1 } else { 0 }, null(), 0) })?;
+    let code = unsafe { NtCreateFile(&mut result, 0x100000 | 0x80 | if directory { 0x21 } else { 0 } | if removable { 0x10000 } else { 0 }, &attributes, &mut io, null(), 0, 3, 1, 0x20 | 0x200000 | if directory { 1 } else { 0 }, null(), 0) };
+    if missing_ok && code as u32 == 0xc0000034 { return Ok(None); }
+    status(code)?;
     let result = Owned(result);
     let mut info = [0u8; 8];
     query(result.0, 35, &mut info)?;
     let flags = u32::from_le_bytes([info[0], info[1], info[2], info[3]]);
     if flags & 0x400 != 0 || (directory && flags & 0x10 == 0) { return Err("reparse point or non-directory".into()); }
-    Ok(result)
+    Ok(Some(result))
 }
 
 fn parse(path: &str) -> Result<(String, Vec<String>), String> {
@@ -143,4 +149,28 @@ pub fn quarantine_identity(source: String) -> AsyncTask<QuarantineTask> {
 #[napi]
 pub fn quarantine_rename(source: String, destination: String, expected: String) -> AsyncTask<QuarantineTask> {
     AsyncTask::new(QuarantineTask { source, destination: Some(destination), expected: Some(expected) })
+}
+
+/// Inspects only after every parent has been acquired without traversing a reparse point.
+pub struct QuarantineInspectTask { source: String }
+impl Task for QuarantineInspectTask {
+    type Output = Option<String>;
+    type JsValue = Option<String>;
+    fn compute(&mut self) -> napi::Result<Option<String>> {
+        let inspect = || -> Result<Option<String>, String> {
+            let (drive, parts) = parse(&self.source)?;
+            let root = root(&drive)?;
+            let ancestors = parents(&root, &parts[..parts.len()-1])?;
+            let parent = ancestors.last().map_or(root.0, |h| h.0);
+            let Some(source) = open_optional(parent, &parts[parts.len()-1], false, false, true)? else { return Ok(None); };
+            identity(source.0).map(Some)
+        };
+        inspect().map_err(napi::Error::from_reason)
+    }
+    fn resolve(&mut self, _: Env, value: Option<String>) -> napi::Result<Option<String>> { Ok(value) }
+}
+
+#[napi]
+pub fn quarantine_inspect(source: String) -> AsyncTask<QuarantineInspectTask> {
+    AsyncTask::new(QuarantineInspectTask { source })
 }

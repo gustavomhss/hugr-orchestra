@@ -173,5 +173,7 @@ export class OmniError extends Error {
 
 /** Windows-only: read a pinned object's 24-byte FileIdInformation as lowercase hex. */
 export function quarantineIdentity(source: string): Promise<string>;
+/** Windows-only: return the pinned File ID, or null only when the final component is absent. */
+export function quarantineInspect(source: string): Promise<string | null>;
 /** Windows-only: rename the pinned source with no replacement; rejects on uncertainty. */
 export function quarantineRename(source: string, destination: string, expectedIdentity: string): Promise<string>;
