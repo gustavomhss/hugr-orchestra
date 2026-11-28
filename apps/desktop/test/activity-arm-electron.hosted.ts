@@ -19,16 +19,24 @@ async function parent() {
   const gid = Number(process.env.ACTIVITY_ARM_GID)
   const addon = process.env.HUGR_OMNI_ADDON
   const supervisor = process.env.HUGR_OMNI_SUPERVISOR
+  const outerDisplay = process.env.DISPLAY
+  const outerAuthority = process.env.XAUTHORITY
   if (process.platform !== "linux" || process.env.CI !== "true" || process.getuid?.() !== 0 ||
     !Number.isSafeInteger(uid) || uid <= 0 || !Number.isSafeInteger(gid) || gid <= 0 ||
-    !addon || !supervisor || !Bun.which("xdotool") || !await Bun.file(python).exists()) {
-    throw new Error("Activity proof requires the hosted Linux X11 fixture, an ordinary desktop UID and GID, and Python")
+    !addon || !supervisor || !outerDisplay || !outerAuthority || !Bun.which("xdotool") || !Bun.which("xwd") ||
+    !Bun.which("weston") || !await Bun.file(python).exists()) {
+    throw new Error("Activity proof requires the hosted Weston fixture, an ordinary Desktop UID and GID, and Python")
   }
+  await chmod(outerAuthority, 0o600)
+  const authorityFile = await lstat(outerAuthority)
+  assert.ok(authorityFile.isFile() && authorityFile.uid === 0 && (authorityFile.mode & 0o077) === 0,
+    "the outer display credential must be private to root")
   const id = `orchestra-activity-apply-${process.pid}-${crypto.randomUUID()}`
   const root = join("/var/lib", id)
   const runtime = join("/run", id)
   const session = join(runtime, "session")
   const socketPath = join(runtime, "custody.sock")
+  const wayland = join(runtime, "wayland.sock")
   const credential = join(root, "desktop.credential")
   const worktree = join(root, "worktrees", "worktree")
   const source = join(worktree, ".turbo")
@@ -39,45 +47,56 @@ async function parent() {
   const secret = crypto.getRandomValues(new Uint8Array(32))
   const frame = ActivityPrivateChannel.frame(secret)
   const signer = await ActivityPrivateChannel.signer(secret).finally(() => secret.fill(0))
-  const launchBroker = () => {
+  const launchBroker = (credentialFrame: Uint8Array) => {
     const broker = Bun.spawn([process.execPath, cli, "activity-custody", "--root", root, "--socket", socketPath], {
       stdin: "pipe", stdout: "inherit", stderr: "inherit",
-      env: { ...process.env, HUGR_OMNI_ADDON: nativeAddon, HUGR_OMNI_SUPERVISOR: nativeSupervisor },
+      env: { PATH: process.env.PATH, HOME: root, HUGR_OMNI_ADDON: nativeAddon, HUGR_OMNI_SUPERVISOR: nativeSupervisor },
     })
-    broker.stdin.write(frame)
+    broker.stdin.write(credentialFrame)
     broker.stdin.end()
     return broker
   }
   const brokers: ReturnType<typeof launchBroker>[] = []
+  let weston: { kill(signal: NodeJS.Signals): void; exited: Promise<number> } | undefined
   const refuseBroker = async (reason: string) => {
-    const invalid = launchBroker()
+    const temporarySecret = crypto.getRandomValues(new Uint8Array(32))
+    const temporaryFrame = ActivityPrivateChannel.frame(temporarySecret)
+    temporarySecret.fill(0)
+    const invalid = launchBroker(temporaryFrame)
     brokers.push(invalid)
-    const exit = await Promise.race([invalid.exited, delay(15_000, undefined, { ref: false })])
-    assert.ok(exit !== undefined && exit !== 0, reason)
-    await assert.rejects(lstat(socketPath), { code: "ENOENT" })
+    try {
+      const exit = await Promise.race([invalid.exited, delay(15_000, undefined, { ref: false })])
+      assert.ok(exit !== undefined && exit !== 0, reason)
+      await assert.rejects(lstat(socketPath), { code: "ENOENT" })
+    } finally {
+      temporaryFrame.fill(0)
+    }
   }
-  const signed = async (endpoint: ActivityPrivateChannel.ArmPath) => {
+  const signed = async (endpoint: ActivityPrivateChannel.ArmPath, key = signer) => {
     const body = "{}"
     const nonce = ActivityPrivateChannel.applyNonce()
     const response = await unixRequest(socketPath, endpoint, body, {
       [ActivityPrivateChannel.nonceHeader]: nonce,
-      [ActivityPrivateChannel.macHeader]: await signer.signArm("arm-request", endpoint, nonce, body),
+      [ActivityPrivateChannel.macHeader]: await key.signArm("arm-request", endpoint, nonce, body),
     })
     assert.equal(response.status, 200, `custody request failed at ${endpoint}`)
-    assert.ok(await signer.verifyArm("arm-response", endpoint, nonce, response.mac, response.body))
+    assert.ok(await key.verifyArm("arm-response", endpoint, nonce, response.mac, response.body))
     return JSON.parse(response.body)
   }
-  const ready = async () => {
+  const probe = async (key: typeof signer) => {
+    const nonce = ActivityPrivateChannel.nonce()
+    const response = await unixRequest(socketPath, ActivityPrivateChannel.path, "", {
+      [ActivityPrivateChannel.nonceHeader]: nonce,
+      [ActivityPrivateChannel.macHeader]: await key.sign("probe-request", nonce),
+    })
+    return response.status === 204 && await key.verify("probe-response", nonce, response.mac)
+  }
+  const ready = async (key = signer) => {
     await waitFor("signed custody probe", async () => {
-      const nonce = ActivityPrivateChannel.nonce()
-      const response = await unixRequest(socketPath, ActivityPrivateChannel.path, "", {
-        [ActivityPrivateChannel.nonceHeader]: nonce,
-        [ActivityPrivateChannel.macHeader]: await signer.sign("probe-request", nonce),
-      }).catch((error: NodeJS.ErrnoException) => {
+      return probe(key).catch((error: NodeJS.ErrnoException) => {
         if (error.code !== "ENOENT" && error.code !== "ECONNREFUSED") throw error
         return undefined
       })
-      return response?.status === 204 && await signer.verify("probe-response", nonce, response.mac)
     })
   }
   try {
@@ -125,7 +144,7 @@ async function parent() {
     await run("git", ["-C", main, "config", "filter.activity.clean", "tee .activity-filter-ran"])
     await refuseBroker("custody must refuse repository-configured commands")
     await run("git", ["-C", main, "config", "--unset", "filter.activity.clean"])
-    const broker = launchBroker()
+    const broker = launchBroker(frame)
     brokers.push(broker)
     await ready()
     assert.equal(await processUID(broker.pid), 0, "the dedicated custody process must hold the root authority")
@@ -168,6 +187,21 @@ async function parent() {
     await writeFile(entry, (await readFile(entry, "utf8")).replaceAll(/import\.meta\??\.env/g, "({})"))
     const electron = createRequire(join(desktop, "package.json")).resolve("electron")
     const binary = join(dirname(electron), "dist", (await readFile(join(dirname(electron), "path.txt"), "utf8")).trim())
+    const westonRuntime = join(runtime, "weston")
+    await mkdir(westonRuntime, { mode: 0o700 })
+    weston = Bun.spawn(["weston", "--backend=x11", "--renderer=pixman", "--no-config", "--idle-time=0",
+      "--width=1280", "--height=900", `--socket=${wayland}`], {
+      stdout: "inherit", stderr: "inherit", env: { ...process.env, XDG_RUNTIME_DIR: westonRuntime, WAYLAND_DISPLAY: undefined },
+    })
+    await waitFor("Weston Wayland socket", () => lstat(wayland).catch(() => undefined))
+    await chmod(wayland, 0o666)
+    const westonWindow = await waitFor("outer Weston window", async () => {
+      const search = Bun.spawn(["xdotool", "search", "--onlyvisible", "--class", "^Weston Compositor$"], { stdout: "pipe", stderr: "ignore" })
+      const query = await new Response(search.stdout).text()
+      return await search.exited === 0 ? query.trim().split("\n").at(-1) : undefined
+    })
+    const outer = join(runtime, "outer-x11.json")
+    await writeFile(outer, JSON.stringify({ display: outerDisplay, authority: outerAuthority }), { mode: 0o644 })
     // Only the administrator opens the credential file. A high FD survives the UID drop and exec.
     const launcher = `import os, sys
 fd = os.open(sys.argv[1], os.O_RDONLY | os.O_NOFOLLOW)
@@ -181,15 +215,19 @@ os.setgid(int(sys.argv[3]))
 os.setuid(int(sys.argv[2]))
 os.execv(sys.argv[4], sys.argv[4:])
 `
-    const electronChild = Bun.spawn([python, "-c", launcher, credential, String(uid), String(gid), binary, "--disable-gpu", entry, "--activity-arm-child"], {
+    const electronChild = Bun.spawn([python, "-c", launcher, credential, String(uid), String(gid), binary, "--ozone-platform=wayland", "--disable-gpu", entry, "--activity-arm-child"], {
       stdout: "inherit", stderr: "inherit", env: {
-        ...process.env, HOME: session, ACTIVITY_ARM_SESSION: session, ACTIVITY_ARM_ROOT: root,
+        PATH: process.env.PATH, DBUS_SESSION_BUS_ADDRESS: process.env.DBUS_SESSION_BUS_ADDRESS,
+        HUGR_OMNI_ADDON: addon, HUGR_OMNI_SUPERVISOR: supervisor,
+        HOME: session, ACTIVITY_ARM_UID: String(uid), ACTIVITY_ARM_SESSION: session, ACTIVITY_ARM_ROOT: root,
         ACTIVITY_ARM_PRELOAD: preload.outputs[0].path, ACTIVITY_ARM_BUN: process.execPath, ACTIVITY_ARM_CLI: cli,
+        ACTIVITY_ARM_OUTER_X11: outer,
+        XDG_SESSION_TYPE: "wayland", WAYLAND_DISPLAY: wayland, GDK_BACKEND: "wayland", XDG_RUNTIME_DIR: session,
         ORCHESTRA_ACTIVITY_CUSTODY_SOCKET: socketPath, ORCHESTRA_ACTIVITY_CUSTODY_FD: "42",
       },
     })
     const controller = new AbortController()
-    const dialogs = handleDialogs(session, source, join(root, "quarantine"), original, electronChild.pid, uid, controller.signal)
+    const dialogs = handleDialogs(session, source, join(root, "quarantine"), original, electronChild.pid, uid, westonWindow, controller.signal)
     const timer = setTimeout(() => electronChild.kill("SIGKILL"), 125_000)
     try {
       const status = await Promise.race([electronChild.exited, dialogs])
@@ -223,10 +261,18 @@ os.execv(sys.argv[4], sys.argv[4:])
     broker.kill("SIGTERM")
     assert.ok(await Promise.race([broker.exited.then(() => true), delay(15_000, false, { ref: false })]), "custody must stop before reopen")
     await assert.rejects(lstat(socketPath), { code: "ENOENT" })
-    const reopened = launchBroker()
+    const reopenedSecret = crypto.getRandomValues(new Uint8Array(32))
+    const reopenedFrame = ActivityPrivateChannel.frame(reopenedSecret)
+    const reopenedSigner = await ActivityPrivateChannel.signer(reopenedSecret).finally(() => reopenedSecret.fill(0))
+    const reopened = launchBroker(reopenedFrame)
     brokers.push(reopened)
-    await ready()
-    const persisted = await signed(ActivityPrivateChannel.applyStatePath) as ActivityApply.State
+    try {
+      await ready(reopenedSigner)
+    } finally {
+      reopenedFrame.fill(0)
+    }
+    assert.equal(await probe(signer), false, "the previous broker key must fail after a new launch")
+    const persisted = await signed(ActivityPrivateChannel.applyStatePath, reopenedSigner) as ActivityApply.State
     assert.deepEqual(persisted.results.find((item) => item.targetID === report.apply.targetID &&
       item.generation === report.apply.generation), {
       approvalID: report.arm.approvalID, targetID: report.apply.targetID, generation: report.apply.generation, outcome: "Out",
@@ -246,7 +292,7 @@ os.execv(sys.argv[4], sys.argv[4:])
       db.close()
     }
     process.stdout.write(JSON.stringify({
-      status: "pass", custodyUID: 0, desktopUID: uid, sidecarUID: uid, rendererSandbox: true,
+      status: "pass", custodyUID: 0, desktopUID: uid, sidecarUID: uid, rendererSandbox: true, nativeWayland: true, outerX11Denied: true,
       openFileRefused: true, wrongGitDirectoryRefused: true, nestedNamespaceRefused: true,
       outsideRegistrationRefused: true, gitFilterConfigRefused: true, unsignedCustodyRefused: true, custodyPtyUnavailable: true,
       nativeArmCancel: true, replacementArmRefused: true, staleArmRefused: true, nativeArmConfirmed: true,
@@ -254,8 +300,10 @@ os.execv(sys.argv[4], sys.argv[4:])
     }) + "\n")
   } finally {
     frame.fill(0)
+    weston?.kill("SIGTERM")
     for (const broker of brokers) broker.kill("SIGKILL")
     await Promise.all(brokers.map((broker) => broker.exited))
+    await weston?.exited
     await rm(runtime, { recursive: true, force: true })
     await rm(root, { recursive: true, force: true })
   }
@@ -272,6 +320,11 @@ async function child() {
   const desktopUID = process.getuid?.()
   assert.ok(desktopUID && desktopUID === Number(process.env.ACTIVITY_ARM_UID))
   assert.equal(app.commandLine.hasSwitch("no-sandbox"), false)
+  assert.equal(app.commandLine.getSwitchValue("ozone-platform"), "wayland")
+  assert.equal(process.env.XDG_SESSION_TYPE, "wayland")
+  assert.equal(process.env.GDK_BACKEND, "wayland")
+  assert.equal(process.env.DISPLAY, undefined)
+  assert.equal(process.env.XAUTHORITY, undefined)
   const root = process.env.ACTIVITY_ARM_ROOT!
   const session = process.env.ACTIVITY_ARM_SESSION!
   const source = join(root, "worktrees", "worktree", ".turbo")
@@ -335,7 +388,9 @@ async function child() {
     const nativeDialog = {
       ...dialog,
       showMessageBox: (async (parent: InstanceType<typeof BrowserWindow>, options: MessageBoxOptions) => {
+        const next = JSON.parse(await readFile(join(session, "next-dialog.json"), "utf8")) as { step: number }
         await rename(join(session, "next-dialog.json"), join(session, "dialog.json"))
+        await waitFor("trusted compositor window capture", () => lstat(join(session, `dialog-ready-${next.step}`)).catch(() => undefined))
         const result = await dialog.showMessageBox(parent, options)
         nativeResponses.push({ options: { ...options, buttons: options.buttons?.slice() }, response: result.response })
         return result
@@ -404,8 +459,9 @@ async function child() {
       const attack = mode === "confirm" ? (async () => {
         await waitFor("visible native Apply dialog", () => lstat(join(session, "attack-request")).catch(() => undefined))
         const output = join(session, "pty-result.json")
+        const outer = JSON.parse(await readFile(process.env.ACTIVITY_ARM_OUTER_X11!, "utf8")) as { display: string; authority: string }
         const started = await api("/api/pty", "POST", {
-          command: python, args: ["-c", sourceSwap, source, output, join(root, "desktop.credential"), String(process.pid)],
+          command: python, args: ["-c", sourceSwap, source, output, join(root, "desktop.credential"), String(process.pid), outer.display, outer.authority],
         })
         assert.equal(started.status, 200, "the regular sidecar must still serve its real PTY API")
         const created = await started.json() as { data: { id: string; pid: number } }
@@ -421,6 +477,7 @@ async function child() {
         const attack = JSON.parse(await readFile(output, "utf8")) as {
           uid: number; pid: number; errno?: string; renamed: boolean; sentinel: boolean
           credential: boolean; inheritedCredential: boolean; desktopMemory: boolean; custodyEnvironment: string[]
+          x11Environment: string[]; outerAuthorization: boolean; outerConnection: boolean
         }
         assert.equal(attack.pid, created.data.pid)
         assert.equal(attack.uid, desktopUID, "the real workload must have the ordinary Desktop UID")
@@ -431,6 +488,9 @@ async function child() {
         assert.equal(attack.inheritedCredential, false)
         assert.equal(attack.desktopMemory, false)
         assert.deepEqual(attack.custodyEnvironment, [])
+        assert.deepEqual(attack.x11Environment, [])
+        assert.equal(attack.outerAuthorization, false, "the PTY cannot read the administrator's outer X11 credential")
+        assert.equal(attack.outerConnection, false, "the PTY cannot connect to the outer input server")
         await writeFile(join(session, "attack-complete"), "")
       })() : Promise.resolve()
       const [result] = await Promise.all([
@@ -460,7 +520,7 @@ async function child() {
   }
 }
 
-async function handleDialogs(session: string, source: string, quarantine: string, original: { dev: bigint; ino: bigint }, desktopPID: number, uid: number, signal: AbortSignal) {
+async function handleDialogs(session: string, source: string, quarantine: string, original: { dev: bigint; ino: bigint }, desktopPID: number, uid: number, window: string, signal: AbortSignal) {
   let handled = 0
   while (!signal.aborted) {
     if (await lstat(join(session, "restore-source")).catch(() => undefined)) {
@@ -474,37 +534,49 @@ async function handleDialogs(session: string, source: string, quarantine: string
       (error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error },
     )
     if (next && next.step > handled) {
-      const title = next.apply ? "Apply quarantine" : "Arm quarantine"
-      const search = Bun.spawn(["xdotool", "search", "--name", title], { stdout: "pipe", stderr: "ignore" })
-      const output = await new Response(search.stdout).text()
-      const id = await search.exited === 0 ? output.trim().split("\n").at(-1) : undefined
-      if (id) {
-        assert.equal(await processUID(desktopPID), uid, "the Electron main process must run as the ordinary user")
-        if (next.mode === "change") {
-          await rename(source, `${source}.original`)
-          await mkdir(source, { mode: 0o700 })
-          await writeFile(join(source, "payload"), "replacement\n")
-        }
-        if (next.mode === "confirm" && next.apply) {
-          const afterCancel = await lstat(source, { bigint: true })
-          assert.equal(`${afterCancel.dev}:${afterCancel.ino}`, `${original.dev}:${original.ino}`, "native cancellation must keep the source inode")
-          assert.deepEqual(await readdir(quarantine), [], "native cancellation must leave quarantine empty")
-          await writeFile(join(session, "attack-request"), "")
-          await waitFor("ordinary PTY source replacement attempt", () => lstat(join(session, "attack-complete")).catch(() => undefined))
-          const afterAttack = await lstat(source, { bigint: true })
-          assert.equal(`${afterAttack.dev}:${afterAttack.ino}`, `${original.dev}:${original.ino}`)
-        }
-        await run("xdotool", ["windowfocus", id])
-        await run("xdotool", next.mode === "cancel" ? ["key", "Return"] : ["key", "Tab", "Return"])
-        handled = next.step
+      assert.equal(await processUID(desktopPID), uid, "the Electron main process must run as the ordinary user")
+      await run("xdotool", ["windowfocus", "--sync", window])
+      const baseline = await westonFrame(window)
+      await writeFile(join(session, `dialog-ready-${next.step}`), "", { flag: "wx" })
+      // The outer window belongs to Weston. A real Wayland dialog changes the composed pixels inside it.
+      let previous = baseline
+      await waitFor("native Wayland dialog to paint", async () => {
+        const frame = await westonFrame(window)
+        const painted = frame !== baseline && frame === previous
+        previous = frame
+        return painted
+      })
+      if (next.mode === "change") {
+        await rename(source, `${source}.original`)
+        await mkdir(source, { mode: 0o700 })
+        await writeFile(join(source, "payload"), "replacement\n")
       }
+      if (next.mode === "confirm" && next.apply) {
+        const afterCancel = await lstat(source, { bigint: true })
+        assert.equal(`${afterCancel.dev}:${afterCancel.ino}`, `${original.dev}:${original.ino}`, "native cancellation must keep the source inode")
+        assert.deepEqual(await readdir(quarantine), [], "native cancellation must leave quarantine empty")
+        await writeFile(join(session, "attack-request"), "")
+        await waitFor("ordinary PTY source replacement attempt", () => lstat(join(session, "attack-complete")).catch(() => undefined))
+        const afterAttack = await lstat(source, { bigint: true })
+        assert.equal(`${afterAttack.dev}:${afterAttack.ino}`, `${original.dev}:${original.ino}`)
+      }
+      await run("xdotool", next.mode === "cancel" ? ["key", "Return"] : ["key", "Tab", "Return"])
+      handled = next.step
     }
     await delay(75)
   }
 }
 
-const sourceSwap = `import errno, json, os, sys
-source, output, credential_file, desktop_pid = sys.argv[1:]
+async function westonFrame(window: string) {
+  const capture = Bun.spawn(["xwd", "-silent", "-id", window], { stdout: "pipe", stderr: "inherit" })
+  const image = await new Response(capture.stdout).arrayBuffer()
+  assert.equal(await capture.exited, 0, "could not capture the outer Weston window")
+  assert.ok(image.byteLength > 100_000)
+  return createHash("sha256").update(new Uint8Array(image)).digest("hex")
+}
+
+const sourceSwap = `import errno, json, os, subprocess, sys
+source, output, credential_file, desktop_pid, outer_display, outer_authority = sys.argv[1:]
 moved = source + ".attacker"
 sentinel = os.path.join(source, "sentinel")
 result = {"uid": os.getuid(), "pid": os.getpid(), "custodyEnvironment": [key for key in os.environ if key.startswith("ORCHESTRA_ACTIVITY_CUSTODY_")]}
@@ -524,6 +596,15 @@ try:
         result["desktopMemory"] = True
 except PermissionError:
     result["desktopMemory"] = False
+result["x11Environment"] = [key for key in ("DISPLAY", "XAUTHORITY") if key in os.environ]
+try:
+    with open(outer_authority, "rb"):
+        result["outerAuthorization"] = True
+except PermissionError:
+    result["outerAuthorization"] = False
+outer = subprocess.run(["/usr/bin/xdotool", "getdisplaygeometry"],
+    env={"DISPLAY": outer_display, "XAUTHORITY": outer_authority}, capture_output=True, timeout=5)
+result["outerConnection"] = outer.returncode == 0
 try:
     os.rename(source, moved)
     os.mkdir(source)
