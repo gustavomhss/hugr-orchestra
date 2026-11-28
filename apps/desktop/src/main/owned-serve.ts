@@ -263,7 +263,7 @@ export async function startOwnedServe(options: {
             response.on("error", reject)
             response.on("end", () => {
               try {
-                resolve({ body: new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat(chunks)), mac: response.headers[ActivityPrivateChannel.macHeader] as string | undefined })
+                resolve({ body: new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(Buffer.concat(chunks)), mac: response.headers[ActivityPrivateChannel.macHeader] as string | undefined })
               } catch (error) { reject(error) }
             })
           })

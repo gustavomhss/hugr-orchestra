@@ -77,10 +77,10 @@ export async function acquire(input: Readable, signal: AbortSignal, arm?: Activi
       const body = await readBody(request)
       if (body === undefined || !nonce || !await signer.verifyArm("arm-request", endpoint, nonce, mac, body)) return forbidden()
       const decoded = parseBody(body, endpoint)
-      if (!decoded) return forbidden()
+      if (!decoded || request.signal.aborted) return forbidden()
       const result = await (decoded.kind === "preview"
-        ? Effect.runPromise(arm.preview(decoded.value))
-        : Effect.runPromise(arm.confirm(decoded.value))).catch(() => undefined)
+        ? Effect.runPromise(arm.preview(decoded.value), { signal: request.signal })
+        : Effect.runPromise(arm.confirm(decoded.value), { signal: request.signal })).catch(() => undefined)
       if (!result) return new Response(null, { status: 409, headers: { "cache-control": "no-store" } })
       const receipt = endpoint === ActivityPrivateChannel.previewPath
         ? ActivityArm.decodePreview(result)
@@ -115,7 +115,7 @@ async function readBody(request: Request): Promise<string | undefined> {
   const length = request.headers.get("content-length")
   if (length !== null && (!/^[0-9]+$/.test(length) || Number(length) > ActivityPrivateChannel.maxBodyBytes)) return undefined
   const reader = request.body.getReader()
-  const decoder = new TextDecoder("utf-8", { fatal: true })
+  const decoder = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true })
   const controller = new AbortController()
   const abort = () => controller.abort()
   request.signal.addEventListener("abort", abort, { once: true })

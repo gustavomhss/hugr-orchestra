@@ -45,7 +45,9 @@ export function registerActivityArmIpc(deps: {
         type: "warning",
         title: "Arm quarantine",
         message: "Arm quarantine for these targets?",
-        detail: preview.targets.map((target) => `${JSON.stringify(target.label)} — ${JSON.stringify(target.owner)}\nID: ${target.targetID}\nGeneration: ${target.generation}`).join("\n\n"),
+        detail: preview.targets.map((target) =>
+          `${literal(target.label)} — ${literal(target.owner)}\nID: ${literal(target.targetID)}\nGeneration: ${literal(target.generation)}`,
+        ).join("\n\n"),
         buttons: ["Cancel", "Arm quarantine"],
         defaultId: 0,
         cancelId: 0,
@@ -63,4 +65,11 @@ export function registerActivityArmIpc(deps: {
       pending.delete(event.sender.id)
     }
   })
+}
+
+function literal(value: string) {
+  // Format controls can otherwise disguise the order of the label and the immutable binding on screen.
+  return JSON.stringify(value).replace(/\p{Cf}/gu, (character) =>
+    `\\u{${character.codePointAt(0)?.toString(16)}}`,
+  )
 }

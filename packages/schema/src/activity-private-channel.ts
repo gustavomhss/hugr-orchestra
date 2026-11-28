@@ -5,7 +5,7 @@ export const path = "/_orchestra-activity/v1/probe"
 export const mount = "/_orchestra-activity/v1"
 export const previewPath = `${mount}/arm-preview`
 export const confirmPath = `${mount}/arm-confirm`
-export const maxBodyBytes = 32 * 1024
+export const maxBodyBytes = 96 * 1024
 export const nonceHeader = "x-orchestra-activity-nonce"
 export const macHeader = "x-orchestra-activity-mac"
 
