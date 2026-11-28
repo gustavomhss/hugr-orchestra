@@ -26,8 +26,9 @@ import {
   isOldLayoutEligible,
 } from "./onboarding"
 import {
+  applyDesktopEnv,
   getDefaultServerUrl,
-  preferAppEnv,
+  loadDesktopShellEnv,
   setDefaultServerUrl,
   sidecarLaunchEnv,
 } from "./server"
@@ -254,7 +255,8 @@ const main = Effect.gen(function* () {
     return
   }
 
-  const shellEnv = preferAppEnv(app.getPath("userData"))
+  applyDesktopEnv(app.getPath("userData"))
+  const shellEnvReady = loadDesktopShellEnv(app.getPath("userData"))
 
   app.on("second-instance", (_event: Event, argv: string[]) => {
     const urls = argv.filter((arg: string) => arg.startsWith("orchestra://"))
@@ -488,7 +490,7 @@ const main = Effect.gen(function* () {
     const cwd = join(app.getPath("userData"), "global")
     mkdirSync(cwd, { recursive: true })
     const owned = yield* Effect.promise(() =>
-      shutdown.startup.acquire((signal) => Promise.allSettled([resolveCliBinary(logger, shellEnv?.XDG_STATE_HOME, signal), sidecarLaunchEnv(app.getPath("userData"))]).then(
+      shutdown.startup.acquire((signal) => shellEnvReady.then((shellEnv) => Promise.allSettled([resolveCliBinary(logger, shellEnv?.XDG_STATE_HOME, signal), sidecarLaunchEnv(app.getPath("userData"))])).then(
         ([binary, env]) => {
           if (binary.status === "rejected") throw binary.reason
           if (env.status === "rejected") throw env.reason
@@ -521,7 +523,7 @@ const main = Effect.gen(function* () {
             },
           })
         },
-      ), (resource) => { server = { stop: () => resource.listener.stop() } }, (resource) => {
+      )), (resource) => { server = { stop: () => resource.listener.stop() } }, (resource) => {
         // A late acquisition skips the normal health await below. Observe before stop aborts that startup.
         const health = resource.health.wait.catch(() => undefined)
         return resource.listener.stop().finally(() => health)
@@ -593,6 +595,9 @@ Effect.runFork(main).addObserver((exit) => {
   if (Exit.isSuccess(exit)) return
   const reason = Cause.pretty(exit.cause)
   writeLog("main", "desktop startup failed", { reason }, "error")
+  // A window is already up: the initialization deferred carries the failure to the renderer.
+  // Quitting here races that screen and throws away a server the boot task can still restart.
+  if (BrowserWindow.getAllWindows().some(isMainWindow)) return
   const failure = startupFailureDialog(reason, join(app.getPath("userData"), "logs"))
   dialog.showErrorBox(failure.title, failure.message)
   app.exit(1)

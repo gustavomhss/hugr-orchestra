@@ -143,7 +143,8 @@ export const run = Effect.fn("ReviewScopedHistory.run")(function* (input: Review
   // Register cleanup before the post-await fence can fail, including a deadline crossed during open/mkdtemp.
   const acquire: Acquire = (read, release) => Effect.acquireRelease(
     active.pipe(Effect.andThen(Effect.tryPromise({ try: read, catch: () => failure("repository-unavailable") }))),
-    (value) => Effect.promise(() => release(value)),
+    // Bun 1.3.14 Dir.close returns void despite Node's Promise signature; await also preserves close failures.
+    (value) => Effect.promise(async () => { await release(value) }),
   ).pipe(Effect.tap(() => active))
   yield* active
   return yield* Effect.scoped(Effect.gen(function* () {

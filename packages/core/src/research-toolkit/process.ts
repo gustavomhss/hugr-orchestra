@@ -56,7 +56,7 @@ export const run = Effect.fn("ResearchProcess.run")(function* (input: {
   readonly capture?: "head" | "tail"
   /** Resident bytes of the whole tree; omni kills it above (J4.7). */
   readonly maxRssBytes?: number
-}) {
+}): Effect.fn.Return<Outcome, never, AppProcess.Service> {
   const processes = yield* AppProcess.Service
   const started = Date.now()
   if (input.capture === "head" && (!Number.isSafeInteger(input.maxBytes) || input.maxBytes <= 0 ||

@@ -56,11 +56,18 @@ enum Seen {
 /// Members of each session in `sids` (keyed by session id) and the exiting processes; `None` when the
 /// inventory is incomplete.
 pub(super) fn scan(sids: &HashSet<i32>, names: bool) -> Option<Inventory> {
+    scan_until(sids, names, None)
+}
+
+pub(super) fn scan_until(sids: &HashSet<i32>, names: bool, deadline: Option<std::time::Instant>) -> Option<Inventory> {
     let mut inv = Inventory::default();
     if sids.is_empty() {
         return Some(inv);
     }
     for pid in all_pids()? {
+        if deadline.is_some_and(|deadline| std::time::Instant::now() >= deadline) {
+            return None;
+        }
         match inspect(pid, sids, names).ok()? {
             Seen::Member(sid, member) => inv.members.entry(sid).or_default().push(member),
             #[cfg(target_os = "macos")]

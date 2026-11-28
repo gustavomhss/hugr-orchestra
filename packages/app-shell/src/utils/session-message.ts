@@ -387,7 +387,8 @@ function toolPart(sessionID: string, messageID: string, tool: SessionMessageAssi
   const start = tool.time.ran ?? tool.time.created
   const state = (() => {
     if (tool.state.status === "streaming") {
-      const value = Option.getOrUndefined(decodeToolInput(tool.state.input))
+      const end = tool.state.input.trimEnd().at(-1)
+      const value = end === "}" || end === "]" ? Option.getOrUndefined(decodeToolInput(tool.state.input)) : undefined
       const input = normalizeToolInput(tool.name, record(value) ? value : {})
       return { status: "pending" as const, input, raw: tool.state.input }
     }
