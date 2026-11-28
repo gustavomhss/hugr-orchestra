@@ -141,8 +141,8 @@ export async function mount(options: {
     filter(value: string) {
       setQuery(value)
     },
-    switchServer(name: string) {
-      setCurrent({ type: "http", http: { url: `http://${name}.test` } })
+    switchServer(connection: string | ServerConnection.Any) {
+      setCurrent(typeof connection === "string" ? { type: "http", http: { url: `http://${connection}.test` } } : connection)
     },
     dispose() {
       dispose()

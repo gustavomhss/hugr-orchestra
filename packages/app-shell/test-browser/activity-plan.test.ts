@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import type { ActivityArm } from "@orchestra/schema/activity-arm"
 import type { Platform } from "@/context/platform"
 import type { ServerConnection } from "@/context/server"
 import { mount, receipt, snapshot, target, until } from "./activity-plan-fixture"
@@ -149,6 +150,52 @@ test("live verification is explicit and stale results from a previous server are
     app.calls[1]!.respond(snapshot({ ready: [target("new-ledger")] }))
     await until("new ledger appears", () => text(app.panel()).includes("new-ledger"))
     expect(text(app.panel())).not.toContain("stale-verified")
+  } finally {
+    app.dispose()
+  }
+})
+
+test("a delayed Arm completion cannot refresh or clear a newer Arm after revisiting the same server", async () => {
+  const connection: ServerConnection.Any = { type: "sidecar", variant: "base", http: { url: "http://127.0.0.1:4777" } }
+  const approvals = Array.from({ length: 2 }, () => Promise.withResolvers<ActivityArm.Receipt>())
+  let nextApproval = 0
+  const app = await mount({
+    connection,
+    platform: { platform: "desktop", os: "linux", async openDirectoryPickerDialog() { return null } } as unknown as Platform,
+    arm: () => approvals[nextApproval++]!.promise,
+  })
+  const beginArm = async (verified: ActivityArm.Target, count: number) => {
+    await until("ledger arrives", () => !button(app, "Verify objects").disabled)
+    button(app, "Verify objects").click()
+    await until("verification starts", () => app.inspections.length === count)
+    app.inspections[count - 1]!.respond(snapshot({ ready: [verified] }))
+    await until("verification arrives", () => text(app.panel()).includes("Verified objects"))
+    button(app, "Arm quarantine…").click()
+    await until("Arm starts", () => app.arms.length === count)
+  }
+  try {
+    const first = target("cache")
+    await until("initial ledger starts", () => app.calls.length === 1)
+    app.calls[0]!.respond(snapshot({ ready: [first] }))
+    await beginArm(first, 1)
+
+    app.switchServer("other")
+    await until("other ledger starts", () => app.calls.length === 2)
+    app.switchServer(connection)
+    await until("revisited ledger starts", () => app.calls.length === 3)
+    const second = target("cache", { generation: "2" })
+    app.calls[2]!.respond(snapshot({ ready: [second] }))
+    await beginArm(second, 2)
+
+    approvals[0]!.resolve(receipt(first))
+    await Bun.sleep(0)
+    expect(app.calls).toHaveLength(3)
+    expect(button(app, "Verify objects").disabled).toBe(true)
+
+    approvals[1]!.resolve(receipt(second))
+    await until("current Arm refreshes the ledger", () => app.calls.length === 4)
+    app.calls[3]!.respond(snapshot({ ready: [], approvals: [{ changed: false, receipt: receipt(second) }] }))
+    await until("current receipt appears", () => text(app.panel()).includes("Armed: 1"))
   } finally {
     app.dispose()
   }

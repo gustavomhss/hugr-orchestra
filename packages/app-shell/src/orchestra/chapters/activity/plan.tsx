@@ -33,6 +33,7 @@ export function ActivityPlan(props: { query: string }) {
   let pending: AbortController | undefined
   let inspectID = 0
   let inspectController: AbortController | undefined
+  let armID = 0
   const scope = () => server.current?.http.url
   const ownedScope = () => {
     const current = server.current
@@ -94,17 +95,19 @@ export function ActivityPlan(props: { query: string }) {
       scope() !== serverURL || ownedScope() !== serverURL || !armAvailable(target)
     ) return
     const currentSDK = sdk()
+    const id = ++armID
+    const armIsCurrent = () => armID === id && ownedScope() === serverURL && sdk() === currentSDK
     setState({ armTarget: target.targetID, armFailed: false })
     try {
       await approve(serverURL, {
         targets: [{ targetID: target.targetID, generation: target.generation }],
       })
-      if (scope() !== serverURL || sdk() !== currentSDK) return
+      if (!armIsCurrent()) return
       await refresh()
     } catch {
-      if (scope() === serverURL && sdk() === currentSDK) setState("armFailed", true)
+      if (armIsCurrent()) setState("armFailed", true)
     } finally {
-      if (scope() === serverURL && sdk() === currentSDK) setState("armTarget", undefined)
+      if (armIsCurrent()) setState("armTarget", undefined)
     }
   }
 
@@ -142,6 +145,7 @@ export function ActivityPlan(props: { query: string }) {
     on(
       () => ({ serverURL: scope(), ownedURL: ownedScope(), client: sdk() }),
       ({ serverURL }) => {
+        armID++
         requestID++
         pending?.abort()
         pending = undefined
@@ -156,6 +160,7 @@ export function ActivityPlan(props: { query: string }) {
     ),
   )
   onCleanup(() => {
+    armID++
     requestID++
     pending?.abort()
     inspectID++
