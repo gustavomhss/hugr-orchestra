@@ -3,6 +3,7 @@ import path from "node:path"
 import { Effect } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { ActivityActionLedger } from "../src/activity-action-ledger"
+import { ActivitySuspensionExecutor } from "../src/activity-suspension-executor"
 import { ActivitySuspensionLedger } from "../src/activity-suspension-ledger"
 import { tmpdir } from "./fixture/tmpdir"
 
@@ -174,4 +175,28 @@ test("serializes overlapping suspend admissions so only one caller owns the pend
   ))
   expect(results.filter(Boolean)).toHaveLength(1)
   expect(results.filter((value) => value === undefined)).toHaveLength(1)
+})
+
+test("commits the intent before native dispatch and blocks retry when the receipt is lost", async () => {
+  await using directory = await tmpdir()
+  const filename = path.join(directory.path, "activity.sqlite")
+  const scope = await Effect.runPromise(withLedgers(filename, "boot-a", (actions) => recordScope(actions)))
+  const request = { action: "suspend" as const, scope, members: ["member-a"] }
+  const seen: Array<ActivitySuspensionLedger.Record | undefined> = []
+  const result = await Effect.runPromise(withLedgers(filename, "boot-a", (_actions, marks) =>
+    ActivitySuspensionExecutor.execute(marks, async (_scope, _attempt) => {
+      seen.push(await Effect.runPromise(withLedgers(filename, "boot-a", (_actions, reader) => reader.read(scope.treeID))))
+      throw new Error("fixture lost the native receipt")
+    }, request),
+  ))
+  expect(seen).toMatchObject([{ phase: "suspending", pending: { members: ["member-a"] } }])
+  expect(result).toMatchObject({ phase: "unknown", suspended: [], uncertain: ["member-a"] })
+  const replay = await Effect.runPromise(withLedgers(filename, "boot-b", (_actions, marks) =>
+    ActivitySuspensionExecutor.execute(marks, async () => {
+      seen.push(undefined)
+      return [{ memberID: "member-a", effect: "changed" }]
+    }, request),
+  ))
+  expect(replay).toBeUndefined()
+  expect(seen).toHaveLength(1)
 })
