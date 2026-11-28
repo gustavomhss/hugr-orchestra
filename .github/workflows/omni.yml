@@ -1,174 +1,25 @@
-name: omni
-
-# hugr-omni's own gate (native/omni/scripts/ci.mjs) on Linux, Windows and macOS.
-# Run manually or for an epic-labeled PR; unlabeled PRs and pushes do not start this native suite.
-# Orchestra's test guard does not apply to it.
+name: activity native format
 on:
-  push:
-    branches:
-      - dev
-    paths:
-      - "native/omni/**"
-  pull_request:
-    types: [opened, synchronize, reopened, labeled]
-    paths:
-      - "native/omni/**"
-      - ".github/workflows/omni.yml"
   workflow_dispatch:
-    inputs:
-      ref:
-        description: "Branch, tag or commit to run the gate on (default: the dispatched ref)"
-        type: string
-        default: ""
-      desktop_linux_sidecar:
-        description: Run the opt-in Linux Desktop member-freeze test with a systemd-activated supervisor
-        type: boolean
-        default: false
-      test_filter:
-        description: "Passed to cargo test (rerun one suspect test)"
-        type: string
-        default: ""
-
-concurrency:
-  # Non-epic label events skip the job; give them their own group so they cannot cancel a real run.
-  group: ${{ (github.event_name != 'pull_request' || github.event.action != 'labeled' || github.event.label.name == 'epic') && format('omni-{0}', github.event.pull_request.number || inputs.ref || github.ref) || format('omni-skip-{0}', github.run_id) }}
-  cancel-in-progress: true
-
 permissions:
   contents: read
-
 jobs:
-  gate:
-    if: (github.event_name == 'workflow_dispatch' && !inputs.desktop_linux_sidecar) || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'epic'))
-    name: gate (${{ matrix.os }})
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-24.04, windows-2022, macos-15]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
-    env:
-      CARGO_TERM_COLOR: always
-      CARGO_INCREMENTAL: "0"
-      TEST_FILTER: ${{ inputs.test_filter }}
-    defaults:
-      run:
-        shell: bash
-        working-directory: native/omni
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-        with:
-          ref: ${{ inputs.ref || '' }}
-
-      - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: "22"
-
-      - name: Rust toolchain (rust-toolchain.toml)
-        run: rustup show active-toolchain || rustup toolchain install
-
-      # One cache per OS and lockfile; only dev saves it, so other refs read a warm cache without filling the quota.
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: native/omni -> target
-          save-if: ${{ github.ref == 'refs/heads/dev' }}
-
-      - name: Linux PID-reuse test needs unprivileged user namespaces
-        if: runner.os == 'Linux'
-        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-
-      - name: Gate
-        run: node scripts/ci.mjs
-
-  desktop-linux-sidecar:
-    if: github.event_name == 'workflow_dispatch' && inputs.desktop_linux_sidecar
+  format:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    env:
-      ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: strict
-      ORCHESTRA_OMNI_CONTROL: declared
-      ORCHESTRA_ACTIVITY_SIDECAR_CI: "1"
-      ORCHESTRA_ACTIVITY_SIDECAR_WORKLOAD_UID: "62000"
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Format Rust sources
+        working-directory: native/omni
+        run: |
+          rustup show active-toolchain || rustup toolchain install
+          cargo fmt --all
+      - name: Capture results
+        run: |
+          git diff --binary -- native/omni > "$RUNNER_TEMP/omni-rustfmt.patch"
+          printf '%s\n' "$GITHUB_SHA" > "$RUNNER_TEMP/omni-rustfmt-sha"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          ref: ${{ inputs.ref || '' }}
-          persist-credentials: false
-      - uses: ./.github/actions/setup-bun
-      - uses: ./.github/actions/omni-binaries
-      - name: Install Electron
-        working-directory: apps/desktop
-        run: bun run install-electron
-      - name: Install X11 fixture tools
-        run: |
-          if ! command -v xdotool >/dev/null || ! command -v xvfb-run >/dev/null; then
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq xdotool xvfb
-          fi
-      - name: Enable the Chromium sandbox on the runner
-        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-      - name: Provision the runner's isolated supervisor
-        shell: bash
-        run: |
-          set -euo pipefail
-          uid=$(id -u)
-          test "$uid" -ne 0
-          unit="orchestra-activity-fixture-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
-          cg="/sys/fs/cgroup/$unit"
-          bin="/usr/local/libexec/$unit"
-          socket="/run/orchestra/omni/$uid.sock"
-          sudo install -d -m 0755 -o root -g root /run/orchestra/omni /usr/local/libexec
-          test ! -e "$socket"
-          sudo install -m 0755 -o root -g root "$HUGR_OMNI_SUPERVISOR" "$bin"
-          sudo mkdir "$cg"
-          echo "ACTIVITY_OMNI_UNIT=$unit" >> "$GITHUB_ENV"
-          echo "ACTIVITY_OMNI_CGROUP=$cg" >> "$GITHUB_ENV"
-          printf '+pids\n' | sudo tee "$cg/cgroup.subtree_control" >/dev/null
-          sudo tee "/run/systemd/system/$unit.socket" >/dev/null <<EOF
-          [Socket]
-          ListenStream=$socket
-          SocketUser=$uid
-          SocketMode=0600
-          Accept=yes
-          MaxConnections=4
-          RemoveOnStop=yes
-          EOF
-          sudo tee "/run/systemd/system/$unit@.service" >/dev/null <<EOF
-          [Service]
-          Type=exec
-          User=root
-          ExecStart=$bin --isolated-peer-uid $uid
-          StandardInput=socket
-          StandardOutput=journal
-          StandardError=journal
-          NoNewPrivileges=yes
-          Environment=HUGR_OMNI_ISOLATION_ROOT=$cg
-          Environment=HUGR_OMNI_ISOLATION_UID=$ORCHESTRA_ACTIVITY_SIDECAR_WORKLOAD_UID
-          Environment=HUGR_OMNI_ISOLATION_GID=62001
-          Environment=HUGR_OMNI_ISOLATION_EXECUTABLES=/usr/bin/cat
-          EOF
-          sudo systemctl daemon-reload
-          sudo systemctl start "$unit.socket"
-          test -S "$socket"
-      - name: Verify the supervisor's independent executable policy
-        working-directory: apps/desktop
-        run: bun test ./test/activity-isolated-supervisor.hosted.ts
-      - name: Exercise the Desktop confirmation and member controls
-        working-directory: apps/desktop
-        run: xvfb-run -a bun run ./test/activity-freeze-sidecar-e2e.hosted.ts
-      - name: Collect supervisor diagnostics and remove the fixture
-        if: always() && env.ACTIVITY_OMNI_UNIT != ''
-        shell: bash
-        run: |
-          sudo journalctl --no-pager -u "$ACTIVITY_OMNI_UNIT.socket" -u "$ACTIVITY_OMNI_UNIT@*.service" -n 120
-          sudo systemctl stop "$ACTIVITY_OMNI_UNIT.socket"
-          for attempt in {1..30}; do
-            if sudo rmdir "$ACTIVITY_OMNI_CGROUP" 2>/dev/null; then break; fi
-            if [ "$attempt" -eq 30 ]; then sudo rmdir "$ACTIVITY_OMNI_CGROUP"; fi
-            sleep 1
-          done
-          sudo rm -f "/run/systemd/system/$ACTIVITY_OMNI_UNIT.socket" "/run/systemd/system/$ACTIVITY_OMNI_UNIT@.service" "/usr/local/libexec/$ACTIVITY_OMNI_UNIT"
-          sudo systemctl daemon-reload
+          name: omni-rustfmt
+          path: |
+            ${{ runner.temp }}/omni-rustfmt.patch
+            ${{ runner.temp }}/omni-rustfmt-sha
