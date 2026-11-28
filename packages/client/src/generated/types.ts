@@ -14460,6 +14460,54 @@ export type ActivityReadDockerOutput =
       readonly attempt?: never
     }
 
+export type ActivityExternalCachesOutput = {
+  readonly instanceID: string
+  readonly snapshotRevision: string
+  readonly readAt: number
+  readonly source: "node.fs.lstat"
+  readonly coverage: "operator-declared-external-caches"
+  readonly status: "unavailable" | "ready"
+  readonly records: ReadonlyArray<{
+    readonly id: string
+    readonly name: string
+    readonly owner: ""
+    readonly useProof: "unproved"
+    readonly unique: "not-collapsed"
+    readonly attempt?: {
+      readonly state: "complete" | "partial"
+      readonly startedAt: number
+      readonly sampledAt: number
+      readonly issueCount: number
+    }
+    readonly logical?: { readonly bytes: number; readonly sampledAt: number }
+  }>
+}
+
+export type ActivityReadExternalCacheInput = { readonly id: { readonly id: string }["id"] }
+
+export type ActivityReadExternalCacheOutput = {
+  readonly instanceID: string
+  readonly snapshotRevision: string
+  readonly readAt: number
+  readonly source: "node.fs.lstat"
+  readonly coverage: "operator-declared-external-caches"
+  readonly status: "unavailable" | "ready"
+  readonly records: ReadonlyArray<{
+    readonly id: string
+    readonly name: string
+    readonly owner: ""
+    readonly useProof: "unproved"
+    readonly unique: "not-collapsed"
+    readonly attempt?: {
+      readonly state: "complete" | "partial"
+      readonly startedAt: number
+      readonly sampledAt: number
+      readonly issueCount: number
+    }
+    readonly logical?: { readonly bytes: number; readonly sampledAt: number }
+  }>
+}
+
 export type ActivityDiskOutput = {
   readonly instanceID: string
   readonly readAt: number
