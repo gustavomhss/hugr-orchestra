@@ -149,3 +149,51 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("activity ob
     expect(observed.pid).toBe(child.pid)
   }, 30_000)
 })
+
+describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical footprint ledger", () => {
+  test("requires durable matching completion and a continuous complete tree series", async () => {
+    expectSpawn(import.meta.path)
+    const binding = await Omni.load()
+    await using child = binding.spawn(process.execPath, ["-e", "process.stdin.resume()"], { stdin: "pipe" })
+    Omni.count("spawns")
+    const sample = { bytes: 100, members: [{ pid: child.pid, parentPid: null, name: "runtime" }] }
+    const observed = new Proxy(child, {
+      get(target, key) {
+        if (key === "observeTree") return async () => ({ members: sample.members, physicalFootprintBytes: sample.bytes })
+        const value: unknown = Reflect.get(target, key, target)
+        return typeof value === "function" ? value.bind(target) : value
+      },
+    })
+    const monitor = make()
+    const identity = { sessionID: "ses_a", assistantMessageID: "msg_a", tool: "bash", callID: "call_a" }
+    const id = monitor.observe(observed, "runtime", "", { ...identity, agentID: "backend" })
+    const row = () => monitor.snapshot().records.find((record) => record.recordID === id)
+    expect(row()?.footprint).toBeUndefined()
+    await monitor.inspect(id)
+    expect(row()?.footprint?.hypothesis).toBe("insufficient")
+    monitor.complete({ ...identity, callID: "other", finishedAt: Date.now() })
+    await Bun.sleep(2)
+    sample.bytes = 200
+    await monitor.inspect(id)
+    expect(row()?.footprint?.hypothesis).toBe("insufficient")
+    monitor.complete({ ...identity, finishedAt: Date.now() })
+    for (const bytes of [300, 400, 500]) {
+      await Bun.sleep(2)
+      sample.bytes = bytes
+      await monitor.inspect(id)
+    }
+    expect(row()?.footprint?.hypothesis).toBe("compatible-with-logical-leak")
+    const previous = row()?.footprint
+    sample.bytes = NaN
+    await monitor.inspect(id)
+    expect(row()?.footprint).toEqual(previous)
+    await Bun.sleep(2)
+    sample.bytes = 600
+    await monitor.inspect(id)
+    expect(row()?.footprint?.hypothesis).toBe("insufficient")
+    sample.members = [{ pid: child.pid + 1, parentPid: null, name: "other" }]
+    await Bun.sleep(2)
+    await monitor.inspect(id)
+    expect(row()?.footprint?.hypothesis).toBe("insufficient")
+  }, 30_000)
+})
