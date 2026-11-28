@@ -15,8 +15,21 @@ export async function measure(
   const seen = new Set<string>()
   // A terminal slash or "." makes lstat follow a symlink. Keep the declared spelling for reports.
   const volume = path.parse(directory).root
-  const terminal = process.platform === "win32" ? /(?:[\\/]+\.)+[\\/]*$|[\\/]+$/ : /(?:\/+\.)+\/*$|\/+$/
-  const root = volume + directory.slice(volume.length).replace(terminal, "")
+  const isSeparator = process.platform === "win32"
+    ? (value: string) => value === "/" || value === "\\"
+    : (value: string) => value === "/"
+  let end = directory.length
+  while (end > volume.length && isSeparator(directory[end - 1]!)) end--
+  while (
+    end - volume.length >= 2 &&
+    directory[end - 1] === "." &&
+    end - 2 >= volume.length &&
+    isSeparator(directory[end - 2]!)
+  ) {
+    end -= 2
+    while (end > volume.length && isSeparator(directory[end - 1]!)) end--
+  }
+  const root = volume + directory.slice(volume.length, end)
   const initial = await fs.lstat(root, { bigint: true }).catch(() => undefined)
   const pending: { path: string; depth: number }[] = []
   let issueCount = 0
