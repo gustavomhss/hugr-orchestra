@@ -16,6 +16,7 @@ export const Request = Schema.Struct({ targets: selected(Binding) })
 export type Request = typeof Request.Type
 
 export const Target = Schema.Struct({ targetID: token, generation, label, owner: label })
+  .annotate({ identifier: "ActivityArm.Target" })
 export type Target = typeof Target.Type
 export const Preview = Schema.Struct({
   previewID: token,
@@ -32,8 +33,15 @@ export const Receipt = Schema.Struct({
   action: Schema.Literal("arm-quarantine"),
   approvedAt: NonNegativeInt,
   targets: selected(Target),
-})
+}).annotate({ identifier: "ActivityArm.Receipt" })
 export type Receipt = typeof Receipt.Type
+
+export const PlanSnapshot = Schema.Struct({
+  ready: Schema.Array(Target),
+  approvals: Schema.Array(Schema.Struct({ receipt: Receipt, changed: Schema.Boolean })),
+  partial: Schema.Boolean,
+}).annotate({ identifier: "ActivityArm.PlanSnapshot" })
+export type PlanSnapshot = typeof PlanSnapshot.Type
 
 export const decodeRequest = Schema.decodeUnknownOption(Request, { onExcessProperty: "error" })
 export const decodeConfirm = Schema.decodeUnknownOption(Confirm, { onExcessProperty: "error" })
