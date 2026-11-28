@@ -8,6 +8,7 @@ import { makeGlobalNode } from "@orchestra/core/effect/app-node"
 import { EventV2 } from "@orchestra/core/event"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { GitCli } from "@orchestra/core/git-cli"
+import { Location } from "@orchestra/core/location"
 import { LocationServiceMap } from "@orchestra/core/location-services"
 import { PermissionV2 } from "@orchestra/core/permission"
 import { AppProcess } from "@orchestra/core/process"
@@ -98,6 +99,7 @@ const layer = Layer.effect(
           const permission = yield* PermissionV2.Service
           const config = yield* Config.Service
           const skills = yield* SkillV2.Service
+          const location = yield* Location.Service
           // A contributed Location node: present in every Maestro Location, though the map's type names only core services.
           const seats = Option.getOrElse(yield* Effect.serviceOption(MaestroSeats.Service), () => MaestroSeats.make([]))
           const port = yield* WorkflowRelayV2.publication(relay, authority, {
@@ -137,13 +139,19 @@ const layer = Layer.effect(
               ],
               [
                 "package-verification",
-                WorkflowSettlementV2.verification(directory, (command) =>
-                  permission.authorize({
-                    sessionID: authority.id,
-                    action: "bash",
-                    resources: [command],
-                    metadata: { completionCheck: true },
-                  }),
+                WorkflowSettlementV2.verification(
+                  directory,
+                  (command) =>
+                    permission.authorize({
+                      sessionID: authority.id,
+                      action: "bash",
+                      resources: [command],
+                      metadata: { completionCheck: true },
+                    }),
+                  {
+                    worktree: location.project.directory === "/" ? location.directory : location.project.directory,
+                    writePaths: bound.binding.definition.writePaths,
+                  },
                 ).pipe(
                   Effect.map((verified) => verified.outcome),
                   Effect.provideService(FSUtil.Service, fs),

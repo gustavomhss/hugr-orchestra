@@ -290,22 +290,36 @@ export const coldReview = Effect.fn("WorkflowSettlementV2.coldReview")(function*
 /**
  * The global package-verification check: the fixed native Bun test runner in the placement, sandboxed, with a JUnit
  * report whose counts must agree with its cases; a zero exit alone is not execution evidence. `authorize` asks for the
- * exact command line before anything runs.
+ * exact command line before anything runs. Named tests in the approved worktree-relative paths run in their package.
  */
 export const verification = Effect.fn("WorkflowSettlementV2.verification")(
-  function* (directory: string, authorize: (command: string) => Effect.Effect<void, unknown>) {
+  function* (
+    directory: string,
+    authorize: (command: string) => Effect.Effect<void, unknown>,
+    scope?: { readonly worktree: string; readonly writePaths: readonly string[] },
+  ) {
     const fs = yield* FSUtil.Service
     const processes = yield* AppProcess.Service
-    const temporary = yield* fs.makeTempDirectoryScoped({ directory, prefix: ".arsenal-verification-" })
+    const refused = (status: "missing" | "acquisition-error", reason: string) => ({ outcome: { status }, reason })
+    const files = [...new Set(
+      scope?.writePaths.filter((entry) => /[._](?:test|spec)\.(?:[jt]sx?|[cm][jt]s)\/*$/.test(entry)),
+    )]
+    const selection = scope && files.length ? verificationSelection(fs, scope.worktree, files) : undefined
+    const focused = selection ? yield* selection : undefined
+    if (selection && !focused) return refused("acquisition-error", "RUNNER_TEST_SELECTION_INVALID")
+    const cwd = focused?.cwd ?? directory
+    const temporary = yield* fs.makeTempDirectoryScoped({ directory: cwd, prefix: ".arsenal-verification-" })
     const file = path.join(temporary, "junit.xml")
-    const args = ["test", "--timeout", "30000", "--reporter=junit", `--reporter-outfile=${file}`]
-    yield* authorize([process.execPath, ...args].map((item) => JSON.stringify(item)).join(" "))
+    const args = ["test", ...(focused?.args ?? []), "--timeout", "30000", "--reporter=junit", `--reporter-outfile=${file}`]
+    const commandLine = [process.execPath, ...args].map((item) => JSON.stringify(item)).join(" ")
+    yield* authorize(focused ? `cd ${JSON.stringify(cwd)} && ${commandLine}` : commandLine)
+    if (selection && !isDeepStrictEqual(yield* selection, focused))
+      return refused("acquisition-error", "RUNNER_TEST_SELECTION_CHANGED")
     // The compiled Orchestra CLI must invoke Bun, and the package guard needs GitHub's CI marker on Linux.
     const actionsLinux = process.platform === "linux" && process.env.RUNNER_OS === "Linux" && process.env.GITHUB_RUN_ID
     const env = { BUN_BE_BUN: "1", ...(actionsLinux && process.env.CI === "true" ? { CI: "true" } : {}) }
-    const command = yield* ToolSafetySandbox.wrap(ChildProcess.make(process.execPath, args, { cwd: directory, env, extendEnv: false }))
+    const command = yield* ToolSafetySandbox.wrap(ChildProcess.make(process.execPath, args, { cwd, env, extendEnv: false }))
     const result = yield* processes.run(command, { timeout: "55 seconds", maxOutputBytes: 1024, maxErrorBytes: 1024 })
-    const refused = (status: "missing" | "acquisition-error", reason: string) => ({ outcome: { status }, reason })
     if (result.stdoutTruncated || result.stderrTruncated) return refused("acquisition-error", "RUNNER_OUTPUT_OVERFLOW")
     const info = yield* fs.stat(file).pipe(Effect.orElseSucceed(() => undefined))
     if (!info) return refused("missing", "RUNNER_REPORT_MISSING")
@@ -368,6 +382,29 @@ export const verification = Effect.fn("WorkflowSettlementV2.verification")(
   },
   Effect.scoped,
 )
+
+function verificationSelection(fs: FSUtil.Interface, worktree: string, files: readonly string[]) {
+  return Effect.gen(function* () {
+    const root = yield* fs.realPath(worktree)
+    const selected = yield* Effect.forEach(files, (entry) =>
+      Effect.gen(function* () {
+        const parts = entry.split("/")
+        if (/[\x00-\x1f\x7f:\\*?\[\]{}]/.test(entry) || parts.some((part) => !part || part === "." || part === ".."))
+          return
+        const file = path.join(root, ...parts)
+        if ((yield* fs.realPath(file)) !== file || !(yield* fs.isFile(file))) return
+        const [manifest] = yield* fs.findUp("package.json", path.dirname(file), root)
+        if (!manifest || (yield* fs.realPath(manifest)) !== manifest || !(yield* fs.isFile(manifest))) return
+        const cwd = path.dirname(manifest)
+        // Bun treats ./ arguments as exact paths and bare names as substring filters.
+        return { cwd, arg: `./${path.relative(cwd, file).replaceAll(path.sep, "/")}` }
+      }),
+    )
+    const cwd = selected[0]?.cwd
+    if (!cwd || !selected.every((item) => item?.cwd === cwd)) return
+    return { cwd, args: selected.flatMap((item) => item ? [item.arg] : []) }
+  }).pipe(Effect.orElseSucceed(() => undefined))
+}
 
 /**
  * Maestro may request the release of a parked arm, but only the owner's answer to the approval releases it. Approving
