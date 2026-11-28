@@ -1,8 +1,8 @@
 export * as ActivityArmLedger from "./activity-arm"
 
 import { ActivityArm } from "@orchestra/schema/activity-arm"
-import { eq, and } from "drizzle-orm"
-import { Effect, Option } from "effect"
+import { and, desc, eq, sql } from "drizzle-orm"
+import { Effect, Option, Schema } from "effect"
 import type { Database } from "./database/database"
 import type { ActivityActionLedger } from "./activity-action-ledger"
 import { ActivityActionLedgerTable } from "./activity-action-ledger.sql"
@@ -78,17 +78,56 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
 
 /** Read durable approvals and flag selections whose observed facts have changed. */
 export function list(database: Database.Interface) {
+  return approvalRows(database.db).all().pipe(Effect.map(groupApprovals))
+}
+
+/** Reads only the ledger. A cap is surfaced explicitly, and never splits an approval. */
+export function plan(database: Database.Interface) {
+  const limit = 256
+  const decodeTarget = Schema.decodeUnknownOption(ActivityArm.Target, { onExcessProperty: "error" })
   return database.db.transaction((tx) => Effect.gen(function* () {
-    const rows = yield* tx.select().from(ActivityArmTable).all()
-    const result = new Map<string, { receipt: ActivityArm.Receipt; changed: boolean }>()
-    for (const row of rows) {
-      const current = yield* tx.select().from(ActivityActionLedgerTable)
-        .where(eq(ActivityActionLedgerTable.target_id, row.target_id)).get()
-      const changed = !current || current.generation !== row.generation ||
-        JSON.stringify({ ...current.observation, generation: current.generation }) !== JSON.stringify(row.snapshot)
-      const existing = result.get(row.approval_id)
-      result.set(row.approval_id, { receipt: structuredClone(row.receipt), changed: changed || !!existing?.changed })
-    }
-    return [...result.values()]
-  }), { behavior: "immediate" })
+    const targets = yield* tx.select().from(ActivityActionLedgerTable).where(sql`
+      json_extract(${ActivityActionLedgerTable.observation}, '$.kind') = 'object'
+      AND length(trim(json_extract(${ActivityActionLedgerTable.observation}, '$.identity'))) > 0
+      AND EXISTS (
+        SELECT 1 FROM json_each(${ActivityActionLedgerTable.observation}, '$.eligible') WHERE value = 'arm'
+      )
+      AND NOT EXISTS (
+        SELECT 1 FROM activity_arm WHERE target_id = ${ActivityActionLedgerTable.target_id}
+          AND generation = ${ActivityActionLedgerTable.generation}
+      )
+    `).orderBy(ActivityActionLedgerTable.target_id).limit(limit + 1).all()
+    const rows = yield* approvalRows(tx).orderBy(desc(ActivityArmTable.approved_at), ActivityArmTable.approval_id)
+      .limit(limit + 1).all()
+    const overflow = rows[limit]?.arm.approval_id
+    const approvals = groupApprovals(rows.filter(({ arm }) => arm.approval_id !== overflow))
+    const ready = targets.slice(0, limit).flatMap((row) => {
+      const target = decodeTarget({
+        targetID: row.target_id, generation: row.generation, label: row.observation.label, owner: row.observation.owner,
+      })
+      return Option.isSome(target) ? [target.value] : []
+    })
+    return { ready, approvals, partial: !!overflow || targets.length > limit || ready.length !== targets.length }
+  }))
+}
+
+type Transaction = Parameters<Parameters<Database.Interface["db"]["transaction"]>[0]>[0]
+
+function approvalRows(database: Pick<Transaction, "select">) {
+  return database.select({ arm: ActivityArmTable, current: ActivityActionLedgerTable }).from(ActivityArmTable)
+    .leftJoin(ActivityActionLedgerTable, eq(ActivityActionLedgerTable.target_id, ActivityArmTable.target_id))
+}
+
+function groupApprovals(rows: readonly {
+  arm: typeof ActivityArmTable.$inferSelect
+  current: typeof ActivityActionLedgerTable.$inferSelect | null
+}[]) {
+  const result = new Map<string, { receipt: ActivityArm.Receipt; changed: boolean }>()
+  for (const { arm, current } of rows) {
+    const changed = !current || current.generation !== arm.generation ||
+      JSON.stringify({ ...current.observation, generation: current.generation }) !== JSON.stringify(arm.snapshot)
+    const previous = result.get(arm.approval_id)
+    result.set(arm.approval_id, { receipt: arm.receipt, changed: changed || !!previous?.changed })
+  }
+  return [...result.values()]
 }
