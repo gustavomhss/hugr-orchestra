@@ -37,6 +37,8 @@ import { openDesktopPath } from "./apps"
 import { absoluteTargetPath, defaultServerKey, rendererStoreName } from "./ipc-validate"
 import { registerLiveIpc } from "./live-ipc"
 import type { LiveLoop } from "./live-loop"
+import type { LiveRecoveryPort } from "@orchestra/app/live"
+import { requireTrustedSender } from "./ipc-trusted-sender"
 
 const pickerFilters = (ext?: string[]) => {
   if (!ext || ext.length === 0) return undefined
@@ -47,6 +49,7 @@ const pickedFiles = createPickedFileAuthorizations()
 
 type Deps = {
   liveLoop: LiveLoop
+  liveRecovery: LiveRecoveryPort
   killSidecar: () => Promise<void> | void
   relaunch: () => void
   awaitInitialization: () => Promise<ServerReadyData>
@@ -75,7 +78,7 @@ export function registerIpcHandlers(deps: Deps) {
     isRendererOrigin(event.senderFrame?.url, rendererDevUrl(app.isPackaged, process.env.ELECTRON_RENDERER_URL))
   const handle = (channel: string, listener: Parameters<typeof ipcMain.handle>[1]) =>
     ipcMain.handle(channel, (event, ...args) => {
-      if (!trusted(event)) throw new Error(`Untrusted IPC sender: ${channel}`)
+      requireTrustedSender(event, rendererDevUrl(app.isPackaged, process.env.ELECTRON_RENDERER_URL), channel)
       return listener(event, ...args)
     })
   const on = (channel: string, listener: Parameters<typeof ipcMain.on>[1]) =>
@@ -343,7 +346,7 @@ export function registerIpcHandlers(deps: Deps) {
     if (!win || win.webContents !== event.sender) return
     setWindowZoom(win, factor, () => updateTitlebar(win))
   })
-  registerLiveIpc(deps.liveLoop)
+  registerLiveIpc(deps.liveLoop, { handle, recovery: deps.liveRecovery })
   handle("get-caffeinate", () => getCaffeinate())
   handle("set-caffeinate", (_event: IpcMainInvokeEvent, enabled: boolean) => {
     setCaffeinate(enabled)

@@ -1,6 +1,5 @@
 import {
   BoxRenderable,
-  RGBA,
   TextareaRenderable,
   MouseEvent,
   PasteEvent,
@@ -9,22 +8,22 @@ import {
   type Renderable,
 } from "@opentui/core"
 import type { CommandContext } from "@opentui/keymap"
-import { createEffect, createMemo, onMount, createSignal, onCleanup, on, Show, Switch, Match } from "solid-js"
+import { createComputed, createEffect, createMemo, onMount, createSignal, onCleanup, on, Show, Switch, Match } from "solid-js"
 import { registerOrchestraSpinner } from "../register-spinner"
 import path from "path"
-import { fileURLToPath } from "url"
-import { useLocal } from "../../context/local"
+import { modelExecutionReason, useLocal } from "../../context/local"
 import { tint, useTheme } from "../../context/theme"
 import { EmptyBorder, SplitBorder } from "../../ui/border"
 import { useTuiPaths, useTuiTerminalEnvironment } from "../../context/runtime"
 import { useClipboard } from "../../context/clipboard"
 import { Spinner } from "../spinner"
 import { useSDK } from "../../context/sdk"
+import { makeModelExecutionQuery } from "@orchestra/client"
 import { useRoute } from "../../context/route"
 import { useProject } from "../../context/project"
 import { useSync } from "../../context/sync"
 import { useEvent } from "../../context/event"
-import { editorSelectionKey, useEditorContext, type EditorSelection } from "../../context/editor"
+import { editorSelectionKey, useEditorContext } from "../../context/editor"
 import { normalizePromptContent, openEditor } from "../../editor"
 import { useExit } from "../../context/exit"
 import { promptOffsetWidth } from "../../prompt/display"
@@ -35,7 +34,7 @@ import { expandPastedTextPlaceholders, expandTrackedPastedText } from "../../pro
 import { usePromptStash } from "../../prompt/stash"
 import { DialogStash } from "../dialog-stash"
 import { type AutocompleteRef, Autocomplete } from "./autocomplete"
-import { useRenderer, useTerminalDimensions, type JSX } from "@opentui/solid"
+import { useRenderer, useTerminalDimensions } from "@opentui/solid"
 import type { SessionMessageAssistant } from "../../types"
 import type { TuiPromptFilePart } from "@orchestra/plugin/tui"
 import { Locale } from "../../util/locale"
@@ -57,86 +56,12 @@ import { usePromptMove } from "./move"
 import { readLocalAttachment } from "./local-attachment"
 import { useLocation } from "../../context/location"
 import { agentKey, findAgent } from "../../util/agent"
+import { PromptSupport } from "./support"
+import type { PromptProps, PromptRef } from "./support"
 
 registerOrchestraSpinner()
 
-export type PromptProps = {
-  sessionID?: string
-  visible?: boolean
-  disabled?: boolean
-  onSubmit?: () => void
-  ref?: (ref: PromptRef | undefined) => void
-  hint?: JSX.Element
-  right?: JSX.Element
-  showPlaceholder?: boolean
-  placeholders?: {
-    normal?: string[]
-    shell?: string[]
-  }
-}
-
-function pastedFilepath(value: string, platform: string) {
-  const raw = value.replace(/^['"]+|['"]+$/g, "")
-  if (raw.startsWith("file://")) {
-    try {
-      return fileURLToPath(raw)
-    } catch {}
-  }
-  if (platform === "win32") return raw
-  return raw.replace(/\\(.)/g, "$1")
-}
-
-export type PromptRef = {
-  focused: boolean
-  current: PromptInfo
-  set(prompt: PromptInfo): void
-  reset(): void
-  blur(): void
-  focus(): void
-  submit(): void
-}
-
-const money = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-})
-
-const DRAFT_RETENTION_MIN_CHARS = 20
-
-function randomIndex(count: number) {
-  if (count <= 0) return 0
-  return Math.floor(Math.random() * count)
-}
-
-function fadeColor(color: RGBA, alpha: number) {
-  return RGBA.fromValues(color.r, color.g, color.b, color.a * alpha)
-}
-
-function hasEditorRangeSelection(selection: EditorSelection["ranges"][number]) {
-  return (
-    selection.selection.start.line !== selection.selection.end.line ||
-    selection.selection.start.character !== selection.selection.end.character
-  )
-}
-
-function getEditorRangeLabel(selection: EditorSelection["ranges"][number]) {
-  if (!hasEditorRangeSelection(selection)) return
-  if (selection.selection.start.line === selection.selection.end.line) return `#${selection.selection.start.line}`
-  return `#${selection.selection.start.line}-${selection.selection.end.line}`
-}
-
-function formatEditorContext(selection: EditorSelection) {
-  const selected = selection.ranges.filter(hasEditorRangeSelection)
-  if (selected.length === 0)
-    return `<system-reminder>Note: The user opened the file "${selection.filePath}". This may or may not be relevant to the current task.</system-reminder>\n`
-
-  const ranges = selected.map((range, index) => {
-    const prefix = selected.length > 1 ? `Selection ${index + 1}: ` : ""
-    return `Note: The user selected ${prefix}${getEditorRangeLabel(range)} from "${selection.filePath}". \`\`\`${range.text}\`\`\`\n\n`
-  })
-
-  return `<system-reminder>${ranges.join("\n")} This may or may not be relevant to the current task.</system-reminder>\n`
-}
+export type { PromptProps, PromptRef } from "./support"
 
 let stashed: { prompt: PromptInfo; cursor: number } | undefined
 
@@ -185,9 +110,9 @@ export function Prompt(props: PromptProps) {
   const editorSelectionLabel = createMemo(() => {
     const ranges = editorContext()?.ranges
     if (!ranges) return
-    const first = ranges.find(hasEditorRangeSelection) ?? ranges[0]
+    const first = ranges.find(PromptSupport.hasEditorRangeSelection) ?? ranges[0]
     if (!first) return
-    return [getEditorRangeLabel(first), ranges.length > 1 ? `+${ranges.length - 1}` : undefined]
+    return [PromptSupport.getEditorRangeLabel(first), ranges.length > 1 ? `+${ranges.length - 1}` : undefined]
       .filter(Boolean)
       .join(" ")
   })
@@ -280,7 +205,7 @@ export function Prompt(props: PromptProps) {
     const cost = session?.cost ?? 0
     return {
       context: pct ? `${Locale.number(tokens)} (${pct})` : Locale.number(tokens),
-      cost: cost > 0 ? money.format(cost) : undefined,
+      cost: cost > 0 ? PromptSupport.money.format(cost) : undefined,
     }
   })
 
@@ -291,7 +216,7 @@ export function Prompt(props: PromptProps) {
     interrupt: number
     placeholder: number
   }>({
-    placeholder: randomIndex(list().length),
+    placeholder: PromptSupport.randomIndex(list().length),
     prompt: {
       input: "",
       parts: [],
@@ -305,7 +230,7 @@ export function Prompt(props: PromptProps) {
     on(
       () => props.sessionID,
       () => {
-        setStore("placeholder", randomIndex(list().length))
+        setStore("placeholder", PromptSupport.randomIndex(list().length))
       },
       { defer: true },
     ),
@@ -821,7 +746,7 @@ export function Prompt(props: PromptProps) {
           desc: "Shell mode",
           group: "Prompt",
           cmd: () => {
-            setStore("placeholder", randomIndex(shell().length))
+            setStore("placeholder", PromptSupport.randomIndex(shell().length))
             setStore("mode", "shell")
           },
         },
@@ -916,6 +841,24 @@ export function Prompt(props: PromptProps) {
     }
   })
 
+  const admissionLifetime = { disposed: false }
+  const admissionQueries = new Set<ReturnType<typeof makeModelExecutionQuery>>()
+  onCleanup(() => { admissionLifetime.disposed = true; admissionQueries.forEach((query) => query.dispose()); admissionQueries.clear() })
+  const admissionOwner = createMemo(() => {
+    const binding = sdk.binding()
+    return { key: JSON.stringify({ sessionID: props.sessionID, route: route.data,
+      intent: local.model.intent(), agent: local.agent.current()?.id,
+      context: local.model.execution.context(),
+      epoch: sdk.connectionEpoch(), directory: binding.directory, url: binding.url,
+      headers: [...new Headers(binding.headers).entries()] }), fetch: binding.fetch }
+  }, undefined, { equals: (a, b) => !!a && a.key === b.key && a.fetch === b.fetch })
+  createComputed(() => {
+    admissionOwner()
+    // A genuine owner departure cancels this Prompt's admission work, independently of visual queries.
+    const previous = [...admissionQueries]
+    admissionQueries.clear()
+    previous.forEach((query) => query.dispose())
+  })
   let submitting = false
   async function submit() {
     // Prevent overlapping invocations (e.g. a double-pressed Enter, or the
@@ -947,23 +890,68 @@ export function Prompt(props: PromptProps) {
     if (!store.prompt.input) return false
     const agent = local.agent.current()
     if (!agent) return false
+    if (store.mode !== "shell" && !local.model.ready) return false
     const trimmed = store.prompt.input.trim()
     if (trimmed === "exit" || trimmed === "quit" || trimmed === ":q") {
       void exit()
       return true
     }
-    const selectedModel = local.model.current()
+    const effective = local.model.execution.input().model
+    const selectedModel = local.model.intent().model ?? local.model.current() ??
+      (effective && { providerID: effective.providerID, modelID: effective.id })
     if (!selectedModel) {
       void promptModelWarning()
       return false
     }
 
-    const variant = local.model.variant.current()
+    const variant = effective?.variant
+    const promptVersion = JSON.stringify(store.prompt)
+    const inputText = expandTrackedPastedText(
+      store.prompt.input,
+      input.extmarks.getAllForTypeId(promptPartTypeId).flatMap((extmark) => {
+        const partIndex = store.extmarkToPartIndex.get(extmark.id)
+        const part = partIndex === undefined ? undefined : store.prompt.parts[partIndex]
+        if (part?.type !== "text") return []
+        return [{ start: extmark.start, end: extmark.end, text: part.text }]
+      }),
+    )
+    const nonTextParts = store.prompt.parts.filter((part) => part.type !== "text")
+    const currentMode = store.mode
+    const knownCommand = currentMode === "normal" && inputText.startsWith("/") &&
+      sync.data.command.some((command) => command.name === inputText.split("\n")[0].split(" ")[0].slice(1))
+    const captured = admissionOwner()
+    const ownerCurrent = () => !admissionLifetime.disposed && sdk.binding().active && admissionOwner() === captured
+    const current = () => ownerCurrent() &&
+      JSON.stringify(store.prompt) === promptVersion && store.mode === currentMode
+    const guard = () => { if (!current()) throw new DOMException("", "AbortError") }
     let sessionID = props.sessionID
     let finishMoveProgress = false
+    const directory = sessionID == null ? await move.getDirectory(store.prompt.input) : sdk.directory
+    if (!current() || (sessionID == null && move.pending() && !directory)) return false
+    if (store.mode !== "shell") {
+      const query = makeModelExecutionQuery({ execute: sdk.api.models.execution })
+      admissionQueries.add(query)
+      const response = await query.load(captured, {
+        location: { directory: directory ?? sdk.directory },
+        context: sessionID ? { type: "session", sessionID, agentID: agentKey(agent) }
+          : { type: "draft", agentID: agentKey(agent) },
+        model: { providerID: selectedModel.providerID, id: selectedModel.modelID, variant },
+      })
+      query.dispose()
+      admissionQueries.delete(query)
+      const selection = response?.data.selection
+      if (!current()) return false
+      if (selection?.status !== "ready" || selection.ref.providerID !== selectedModel.providerID ||
+        selection.ref.id !== selectedModel.modelID || selection.ref.variant !== variant) {
+        const entry = response?.data.models.find((item) => item.model.providerID === selectedModel.providerID && item.model.id === selectedModel.modelID)
+        const reason = selection?.ref.providerID === selectedModel.providerID && selection.ref.id === selectedModel.modelID &&
+          selection.ref.variant === variant && selection.status !== "ready" ? selection.reason
+          : entry && entry.status !== "ready" ? entry.reason : undefined
+        toast.show({ message: modelExecutionReason(reason), variant: "warning" })
+        return false
+      }
+    }
     if (sessionID == null) {
-      const directory = await move.getDirectory(store.prompt.input)
-      if (move.pending() && !directory) return false
       finishMoveProgress = Boolean(move.progress())
 
       const created = await sdk.actions
@@ -973,6 +961,7 @@ export function Prompt(props: PromptProps) {
           directory,
         })
         .catch((error: unknown) => {
+          if (!current()) return undefined
           if (finishMoveProgress) move.finishSubmit()
           console.log("Creating a session failed:", error)
 
@@ -983,28 +972,14 @@ export function Prompt(props: PromptProps) {
           return undefined
         })
       if (!created) return true
+      if (!current()) return false
 
       sessionID = created.id
     }
 
-    const inputText = expandTrackedPastedText(
-      store.prompt.input,
-      input.extmarks.getAllForTypeId(promptPartTypeId).flatMap((extmark) => {
-        const partIndex = store.extmarkToPartIndex.get(extmark.id)
-        const part = partIndex === undefined ? undefined : store.prompt.parts[partIndex]
-        if (part?.type !== "text") return []
-        return [{ start: extmark.start, end: extmark.end, text: part.text }]
-      }),
-    )
-
-    // Filter out text parts (pasted content) since they're now expanded inline
-    const nonTextParts = store.prompt.parts.filter((part) => part.type !== "text")
-
-    // Capture mode before it gets reset
-    const currentMode = store.mode
     const editorSelection = editorContext()
     const editorText =
-      editorSelection && editor.labelState() === "pending" ? formatEditorContext(editorSelection) : undefined
+      editorSelection && editor.labelState() === "pending" ? PromptSupport.formatEditorContext(editorSelection) : undefined
 
     const demoCommand = args.mini && args.demo ? Demo.parse(inputText) : undefined
     if (demoCommand) {
@@ -1020,13 +995,11 @@ export function Prompt(props: PromptProps) {
     } else if (store.mode === "shell") {
       move.startSubmit()
       void sdk.actions.shell({ sessionID, command: inputText }).catch((error) => {
+        if (!ownerCurrent()) return
         toast.show({ title: "Failed to run shell command", message: errorMessage(error), variant: "error" })
       })
       setStore("mode", "normal")
-    } else if (
-      inputText.startsWith("/") &&
-      sync.data.command.some((x) => x.name === inputText.split("\n")[0].split(" ")[0].slice(1))
-    ) {
+    } else if (knownCommand) {
       move.startSubmit()
       // Parse command from first line, preserve multi-line content in arguments
       const firstLineEnd = inputText.indexOf("\n")
@@ -1035,7 +1008,7 @@ export function Prompt(props: PromptProps) {
       const restOfInput = firstLineEnd === -1 ? "" : inputText.slice(firstLineEnd + 1)
       const args = firstLineArgs.join(" ") + (restOfInput ? "\n" + restOfInput : "")
 
-      void sdk.actions
+      const sent = await sdk.actions
         .command({
           sessionID,
           command: command.slice(1),
@@ -1043,13 +1016,17 @@ export function Prompt(props: PromptProps) {
           agent: agentKey(agent),
           model: { providerID: selectedModel.providerID, modelID: selectedModel.modelID, variant },
           files: nonTextParts.filter((x) => x.type === "file"),
-        })
+        }, guard)
+        .then(() => true)
         .catch((error) => {
+          if (!current()) return false
           toast.show({ title: "Failed to run command", message: errorMessage(error), variant: "error" })
+          return false
         })
+      if (!sent || !current()) return false
     } else {
       move.startSubmit()
-      sdk.actions
+      const sent = await sdk.actions
         .prompt({
           sessionID,
           text: inputText,
@@ -1058,14 +1035,18 @@ export function Prompt(props: PromptProps) {
           model: { providerID: selectedModel.providerID, modelID: selectedModel.modelID, variant },
           files: nonTextParts.filter((part) => part.type === "file"),
           agents: nonTextParts.filter((part) => part.type === "agent"),
-        })
+        }, guard)
+        .then(() => true)
         .catch((error) => {
+          if (!current()) return false
           toast.show({
             title: "Failed to send prompt",
             message: errorMessage(error),
             variant: "error",
           })
+          return false
         })
+      if (!sent || !current()) return false
       if (editorText) editor.markSelectionSent()
     }
     history.append({
@@ -1132,7 +1113,7 @@ export function Prompt(props: PromptProps) {
   async function pasteInputText(text: string) {
     const normalizedText = text.replace(/\r\n/g, "\n").replace(/\r/g, "\n")
     const pastedContent = normalizedText.trim()
-    const filepath = pastedFilepath(pastedContent, terminalEnvironment.platform)
+    const filepath = PromptSupport.pastedFilepath(pastedContent, terminalEnvironment.platform)
     const isUrl = /^(https?):\/\//.test(filepath)
     if (!isUrl) {
       const attachment = await readLocalAttachment(filepath)
@@ -1219,7 +1200,7 @@ export function Prompt(props: PromptProps) {
   }
 
   function clearPrompt() {
-    if (store.prompt.input.trim().length >= DRAFT_RETENTION_MIN_CHARS || store.prompt.parts.length > 0) {
+    if (store.prompt.input.trim().length >= PromptSupport.DRAFT_RETENTION_MIN_CHARS || store.prompt.parts.length > 0) {
       history.append({
         ...store.prompt,
         mode: store.mode,
@@ -1393,26 +1374,26 @@ export function Prompt(props: PromptProps) {
                 <Show when={local.agent.current()} fallback={<box height={1} />}>
                   {(agent) => (
                     <>
-                      <text fg={fadeColor(highlight(), agentMetaAlpha())}>
+                      <text fg={PromptSupport.fadeColor(highlight(), agentMetaAlpha())}>
                         {store.mode === "shell" ? "Shell" : Locale.titlecase(agent().name)}
                       </text>
                       <Show when={store.mode === "normal" && local.permission.mode === "auto"}>
-                        <text fg={fadeColor(theme.textMuted, agentMetaAlpha())}>auto</text>
+                        <text fg={PromptSupport.fadeColor(theme.textMuted, agentMetaAlpha())}>auto</text>
                       </Show>
                       <Show when={store.mode === "normal"}>
                         <box flexDirection="row" gap={1}>
-                          <text fg={fadeColor(theme.textMuted, modelMetaAlpha())}>·</text>
+                          <text fg={PromptSupport.fadeColor(theme.textMuted, modelMetaAlpha())}>·</text>
                           <text
                             flexShrink={0}
-                            fg={fadeColor(leader() ? theme.textMuted : theme.text, modelMetaAlpha())}
+                            fg={PromptSupport.fadeColor(leader() ? theme.textMuted : theme.text, modelMetaAlpha())}
                           >
                             {local.model.parsed().model}
                           </text>
-                          <text fg={fadeColor(theme.textMuted, modelMetaAlpha())}>{currentProviderLabel()}</text>
+                          <text fg={PromptSupport.fadeColor(theme.textMuted, modelMetaAlpha())}>{currentProviderLabel()}</text>
                           <Show when={showVariant()}>
-                            <text fg={fadeColor(theme.textMuted, variantMetaAlpha())}>·</text>
+                            <text fg={PromptSupport.fadeColor(theme.textMuted, variantMetaAlpha())}>·</text>
                             <text>
-                              <span style={{ fg: fadeColor(theme.warning, variantMetaAlpha()), bold: true }}>
+                              <span style={{ fg: PromptSupport.fadeColor(theme.warning, variantMetaAlpha()), bold: true }}>
                                 {local.model.variant.current()}
                               </span>
                             </text>

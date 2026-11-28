@@ -96,6 +96,8 @@ function graph(directory: string, skills: ReadonlyArray<SkillV2.Info>, requests:
     GovernanceBackgroundV2.sessionsNode,
     MaestroReviewTools.executionNode,
   ]), [
+    // Database.node captures its default filename before Global.layerWith; bind this fixture's real SQLite file explicitly.
+    [Database.node, Database.layerFromPath(path.join(directory, ".data", "orchestra.db"))],
     [SessionExecution.node, SessionExecutionLocal.node],
     [LayerNodePlatform.llmClient, client(requests)],
     [SessionRunnerModel.node, SessionRunnerModel.layerWith(() => Effect.succeed(model))],

@@ -13,6 +13,7 @@ The package is private while its API is explored. Its tests are the executable s
 - Generate a zero-Effect Promise client with structural wire-oriented values, direct `fetch`, and syntax parsing without runtime structural validation.
 - Keep the Promise surface domain-oriented rather than Hey API compatible: methods return unwrapped values and reject with tagged declared errors or `ClientError`.
 - Return Promise streams as lazy `AsyncIterable` values and Effect streams as `Stream` values. Neither runtime reconnects automatically.
+- Promise SSE parsing has no fixed frame-size ceiling, matching the absence of a ceiling in the current Effect decoder and Promise JSON transport. Incremental parsing does not guarantee bounded memory. Request cancellation or ending iteration cancels the reader and releases its lock.
 
 - Flatten path, query, header, and payload fields into one input object.
 - Reject duplicate field names across input channels.

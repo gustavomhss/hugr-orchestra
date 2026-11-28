@@ -10,23 +10,28 @@ export function createRefCountMap<T>(
 
   return (key: string) => {
     const id = identity(key)
+    const lease = { acquired: false }
     onCleanup(() => {
+      if (!lease.acquired) return
+      lease.acquired = false
       refCounts.set(id, (refCounts.get(id) ?? 0) - 1)
       if (refCounts.get(id) === 0) {
-        remove?.(id)
         items.delete(id)
         refCounts.delete(id)
+        remove?.(id)
       }
     })
 
     const cached = items.get(id)
     if (cached) {
       refCounts.set(id, (refCounts.get(id) ?? 0) + 1)
+      lease.acquired = true
       return cached
     }
     const item = create(key)
     items.set(id, item)
     refCounts.set(id, 1)
+    lease.acquired = true
     return item
   }
 }

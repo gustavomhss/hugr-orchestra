@@ -1,3 +1,4 @@
+import { ClaudeCodeAccountFixture } from "./fixture/account"
 import { beforeEach, expect, test } from "bun:test"
 import type { HookInput, McpSdkServerConfigWithInstance, Options, SDKMessage, SDKUserMessage, query } from "@anthropic-ai/claude-agent-sdk"
 import { Client } from "@modelcontextprotocol/sdk/client/index.js"
@@ -59,7 +60,7 @@ const turnOf = (input: Partial<ExecutionHost.Turn> = {}): ExecutionHost.Turn => 
   ...input,
 })
 const provided = <A, E>(use: (host: ExecutionHost.Interface) => Effect.Effect<A, E>) =>
-  Effect.runPromise(ClaudeCodeHost.make.pipe(Effect.flatMap(use), Effect.provide(sdk), Effect.provideService(ClaudeCodeSDK.Environment, {})))
+  Effect.runPromise(ClaudeCodeHost.make.pipe(Effect.provide(ClaudeCodeAccountFixture.layer), Effect.flatMap(use), Effect.provide(sdk), Effect.provideService(ClaudeCodeSDK.Environment, {})))
 const collect = (turn: ExecutionHost.Turn) => provided((host) => Stream.runCollect(host.stream(turn)))
 
 const hookInput = (tool: string, input: Record<string, unknown>, id: string) =>

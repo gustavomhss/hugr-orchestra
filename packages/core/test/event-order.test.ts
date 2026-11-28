@@ -1,5 +1,5 @@
 import { describe, expect } from "bun:test"
-import { Cause, Deferred, Effect, Exit, Fiber, Layer, Option, Schema, Scope, Stream } from "effect"
+import { Cause, Deferred, Effect, Exit, Fiber, Layer, Option, Queue, Schema, Scope, Stream } from "effect"
 import { EventV2 } from "@orchestra/core/event"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -379,3 +379,92 @@ describe("EventV2 notify order equals commit order", () => {
     }),
   )
 })
+
+// The new scoped helper is deliberately referenced only in these bodies: its absence is API-red,
+// while all pre-existing ordinary/reentrant EventV2 controls remain loadable and independently runnable.
+it.live("scoped deferred notifications retain commit order while ordinary publication still awaits delivery", () =>
+  Effect.gen(function* () {
+    const events = yield* EventV2.Service
+    const database = yield* Database.Service
+    const aggregateID = EventV2.ID.create()
+    const ordinaryID = EventV2.ID.create()
+    const entered = yield* Deferred.make<void>()
+    const release = yield* Deferred.make<void>()
+    const ordinaryEntered = yield* Deferred.make<void>()
+    const ordinaryRelease = yield* Deferred.make<void>()
+    const seen = yield* Queue.unbounded<number>()
+    const unsubscribe = yield* events.listen((event) => {
+      if (!Schema.is(OrderedMessage)(event)) return Effect.void
+      if (event.data.id === ordinaryID)
+        return Deferred.succeed(ordinaryEntered, undefined).pipe(Effect.andThen(Deferred.await(ordinaryRelease)))
+      if (event.data.id !== aggregateID) return Effect.void
+      return Effect.gen(function* () {
+        if (event.data.text === "first") {
+          yield* Deferred.succeed(entered, undefined)
+          yield* Deferred.await(release)
+        }
+        yield* Queue.offer(seen, event.durable?.seq ?? -1)
+      })
+    })
+    yield* Effect.gen(function* () {
+      const committed = yield* EventV2.deferNotifications(
+        Effect.gen(function* () {
+          yield* events.publish(OrderedMessage, { id: aggregateID, text: "first" })
+          yield* events.publish(OrderedMessage, { id: aggregateID, text: "second" })
+        }),
+      ).pipe(Effect.timeoutOption("2 seconds"))
+      expect(Option.isSome(committed)).toBe(true)
+      expect(yield* Deferred.await(entered).pipe(Effect.as(true), Effect.timeoutOption("2 seconds"))).toEqual(Option.some(true))
+      expect(yield* database.db.select().from(EventTable).where(eq(EventTable.aggregate_id, aggregateID)).all()).toHaveLength(2)
+      expect(yield* Queue.size(seen)).toBe(0)
+      yield* Deferred.succeed(release, undefined)
+      expect(yield* Queue.take(seen).pipe(Effect.timeoutOption("2 seconds"))).toEqual(Option.some(0))
+      expect(yield* Queue.take(seen).pipe(Effect.timeoutOption("2 seconds"))).toEqual(Option.some(1))
+      const ordinary = yield* events.publish(OrderedMessage, { id: ordinaryID, text: "ordinary" }).pipe(Effect.forkChild)
+      expect(yield* Deferred.await(ordinaryEntered).pipe(Effect.as(true), Effect.timeoutOption("2 seconds"))).toEqual(Option.some(true))
+      const beforeRelease = yield* Fiber.await(ordinary).pipe(Effect.timeoutOption("20 millis"))
+      yield* Deferred.succeed(ordinaryRelease, undefined)
+      yield* Fiber.join(ordinary)
+      expect(Option.isNone(beforeRelease)).toBe(true)
+    }).pipe(
+      Effect.ensuring(Deferred.succeed(release, undefined)),
+      Effect.ensuring(Deferred.succeed(ordinaryRelease, undefined)),
+      Effect.ensuring(unsubscribe),
+    )
+  }),
+)
+
+it.live("deferred delivery workers reset the scope before a listener publishes to another aggregate", () =>
+  Effect.gen(function* () {
+    const events = yield* EventV2.Service
+    const outerID = EventV2.ID.create()
+    const innerID = EventV2.ID.create()
+    const innerEntered = yield* Deferred.make<void>()
+    const innerRelease = yield* Deferred.make<void>()
+    const outerDone = yield* Deferred.make<void>()
+    const unsubscribe = yield* events.listen((event) => {
+      if (!Schema.is(OrderedMessage)(event)) return Effect.void
+      if (event.data.id === innerID)
+        return Deferred.succeed(innerEntered, undefined).pipe(Effect.andThen(Deferred.await(innerRelease)))
+      if (event.data.id !== outerID) return Effect.void
+      return events.publish(OrderedMessage, { id: innerID, text: "nested ordinary" }).pipe(
+        Effect.andThen(Deferred.succeed(outerDone, undefined)),
+        Effect.asVoid,
+      )
+    })
+    yield* Effect.gen(function* () {
+      const committed = yield* EventV2.deferNotifications(
+        events.publish(OrderedMessage, { id: outerID, text: "deferred outer" }),
+      ).pipe(Effect.timeoutOption("2 seconds"))
+      expect(Option.isSome(committed)).toBe(true)
+      expect(yield* Deferred.await(innerEntered).pipe(Effect.as(true), Effect.timeoutOption("2 seconds"))).toEqual(Option.some(true))
+      const prematurelyDone = yield* Deferred.await(outerDone).pipe(
+        Effect.as(true),
+        Effect.timeoutOption("100 millis"),
+      )
+      yield* Deferred.succeed(innerRelease, undefined)
+      expect(yield* Deferred.await(outerDone).pipe(Effect.as(true), Effect.timeoutOption("2 seconds"))).toEqual(Option.some(true))
+      expect(Option.isNone(prematurelyDone)).toBe(true)
+    }).pipe(Effect.ensuring(Deferred.succeed(innerRelease, undefined)), Effect.ensuring(unsubscribe))
+  }),
+)

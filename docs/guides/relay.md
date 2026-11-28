@@ -94,3 +94,7 @@ The ledger holds every outcome in order, including the failed repair, so a revie
 | --- | --- |
 | Bug fix, feature launch, safe refactor, test-driven feature, work-package execution | Run |
 | Design, planning, research, spec decomposition | Exist; refused (HTTP 409) until they can run |
+
+### Python LangGraph gates
+
+The separately packaged `orchestra-relay` Python library rejects an approval gate reached by an incoming join or conditional route. Join or route at a separate node, then add one static edge to the protected node. Incoming joins still work for check-only gates. Invalid gate topology is rejected before changing the graph or `.gitignore`; this library's approval contract is separate from Orchestra's native workflow controls.

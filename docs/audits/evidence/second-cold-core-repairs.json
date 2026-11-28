@@ -1,0 +1,87 @@
+{
+  "version": 1,
+  "scope": "Change-scoped Core release/lane-vector and Desktop owned-serve import repair qualification; no full-suite closure.",
+  "secondCold": {
+    "runID": "43453802489",
+    "source": "9ab7680cc512bfc6f4e44a77f7056eb723e2b74e",
+    "conclusion": "failure",
+    "jobs": {
+      "success": 49,
+      "failure": 11,
+      "cancelled": 3
+    },
+    "preserved": "This failed cold run remains failed; focused repairs do not establish a green complete repository gate."
+  },
+  "releaseAndLaneVectors": {
+    "runID": "43460102826",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43460102826",
+    "snapshot": "26161fe4597d1c44fd29ce7d5ae90b8083de1b19",
+    "conclusion": "success",
+    "requestFiles": [
+      "packages/core/test/release-promotion.test.ts",
+      "packages/core/test/test-ci-app-lanes.test.ts"
+    ],
+    "explicitPerTestTimeoutMs": 30000,
+    "linux": {"jobID": 132004404685, "pass": 53, "fail": 0, "releasePass": 38, "argvPass": 15, "assertions": 431, "omniDeclared": 51, "omniSpawns": 263, "delegated": 0},
+    "windows": {"jobID": 132004405377, "pass": 2, "skip": 51, "fail": 0, "assertions": 24, "omniVerdict": "not applicable", "omniSpawns": 0, "delegated": 0, "limit": "Linux-only release and argv bodies were skipped; Windows success does not qualify those cases."},
+    "retryProtocol": {
+      "firstSuccessfulPromotionBackoffs": 0,
+      "eachOfThreeConflictCases": {
+        "metadataReads": 10,
+        "recordedBackoffs": 9,
+        "backoffArgs": [
+          "3"
+        ],
+        "backoffMutation": false,
+        "terminalReason": "RELEASE_ASSET_DIGEST_MISMATCH"
+      },
+      "qualification": "Counts/order are exact assertions in the passed actual promotion-shell tests; full release-state equality and absence of uploads remain asserted.",
+      "refusalCasesElapsedMs": [
+        4644.07,
+        4810.3,
+        4617.24
+      ],
+      "prior": "Second cold failed these three cases at the unchanged 30s limit. Frozen remediation-release-backoff-plan.md records prior old-scope durations 31.003s, 30.754s, 31.228s.",
+      "adapter": "Only the fixture-private sleep command records exact argument 3 without wall-clock waiting; unsupported invocations fail closed.",
+      "productionLimit": "Actual workflow retry count and nine 3-second waits remain unchanged; this controlled transport does not qualify the production 27-second eventual-consistency allowance."
+    }
+  },
+  "ownedServeImport": {
+    "runID": "43460102667",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43460102667",
+    "snapshot": "0b3c681c607f96c2d6c164fc54de8af67a8267c2",
+    "conclusion": "success",
+    "file": "apps/desktop/src/main/owned-serve-omni.test.ts",
+    "linux": {"jobID": 132004403888, "pass": 11, "fail": 0, "assertions": 38, "omniDeclared": 10, "omniSpawns": 21, "delegated": 0},
+    "windows": {"jobID": 132004403491, "pass": 11, "fail": 0, "assertions": 38, "omniDeclared": 10, "omniSpawns": 21, "delegated": 0},
+    "limit": "Only this file, not full Desktop/Main lifecycle or E2E qualification."
+  },
+  "sourceIdentity": {
+    "comparedRoot": "05c2cd785982f8c0c2da56235362b5b2048701bc",
+    "selectedPathsOnly": true,
+    "allSelectedBytesEqual": true,
+    "vectors": [
+      {"path": "packages/core/test/fixture/release-promotion.ts", "snapshotBlob": "05476537206ab02ae986286858b6ed14159c7078", "rootBlob": "05476537206ab02ae986286858b6ed14159c7078", "equal": true},
+      {"path": "packages/core/test/fixture/release-command.ts", "snapshotBlob": "0a6fc557481b96ce701834bd76f7879a5b8279e7", "rootBlob": "0a6fc557481b96ce701834bd76f7879a5b8279e7", "equal": true},
+      {"path": "packages/core/test/release-promotion.test.ts", "snapshotBlob": "0214848812f873fc64d342bf479b6499ca9a1d2b", "rootBlob": "0214848812f873fc64d342bf479b6499ca9a1d2b", "equal": true},
+      {"path": "packages/core/test/test-ci-app-lanes.test.ts", "snapshotBlob": "084f67840b8487339c84a8f1f52a8bb40ca981ff", "rootBlob": "084f67840b8487339c84a8f1f52a8bb40ca981ff", "equal": true},
+      {"path": "apps/desktop/src/main/owned-serve-omni.test.ts", "snapshotBlob": "9e1213aa66bf18fa983bc9ec20685b66155c596b", "rootBlob": "9e1213aa66bf18fa983bc9ec20685b66155c596b", "equal": true}
+    ]
+  },
+  "rawJobLogSHA256": {
+    "132004404685": "31fda78011f749777af6a0d23e9ebe398c37e62c0743b7304c89f909ea514b6c",
+    "132004405377": "2094f512661b3926c02c22401a30ab27dc8e614cbcb32146b24df4468ad20c95",
+    "132004403491": "0f0e7c53039894a06aa8e4c4fa1d9b03d8e71572768436304db322bdfae77dea",
+    "132004403888": "7dece54a0e279738db62259b2706a5d2b1069a98ef67bc5e94df0c30162ca1b6"
+  },
+  "ownerReportedTypechecks": {
+    "e2eExit": 0,
+    "corePlacedExit": 0,
+    "limit": "Root-reported gates; this evidence task ran no compiler."
+  },
+  "limits": [
+    "No new tests, types, build, generation or CI dispatch.",
+    "Selected file identity does not claim whole-tree equality across later Root changes.",
+    "Ledger closure remains Root-owned and pending acceptance of the entire run."
+  ]
+}

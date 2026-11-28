@@ -32,7 +32,7 @@ export const coerceToString = (value: unknown): string => {
   if (value === undefined) return "undefined"
   if (value instanceof SandboxDate)
     return Number.isFinite(value.time) ? new Date(value.time).toISOString() : "Invalid Date"
-  if (value instanceof SandboxRegExp) return `/${value.regex.source}/${value.regex.flags}`
+  if (value instanceof SandboxRegExp) return `/${value.source}/${value.flags}`
   if (value instanceof SandboxMap) return "[object Map]"
   if (value instanceof SandboxSet) return "[object Set]"
   if (value instanceof SandboxURL) return value.url.href

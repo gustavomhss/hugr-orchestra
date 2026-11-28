@@ -1,12 +1,21 @@
 //! For the language bindings only (hidden from the docs): the contract §3 rules for numbers that only TS and Python
 //! can express wrongly (NaN, infinities, negatives, fractions), with the same error texts as every other check.
-//! Rust callers never need it: `Duration`, `usize` and `u16` cannot hold those values. W03.
+//! Rust callers never need these number conversions: `Duration`, `usize` and `u16` cannot hold those values. W03.
+//! The Env custody port observes the core's actual run child without owning it or replacing its state machine (N1).
 //!
 //! SEAM (frozen in W00): `millis`, `byte_limit`, `pty_side`. Bodies belong to W03.
 
 use std::time::Duration;
 
+use crate::api::Command;
 use crate::error::Error;
+pub use crate::process::RunHandle;
+use crate::types::RunOutput;
+
+/// Runs the unchanged core machine, registering non-owning Env custody immediately after actual child acquisition.
+pub async fn run_owned(command: &Command, on_spawn: impl FnOnce(RunHandle) + Send) -> Result<RunOutput, Error> {
+    command.run_owned(on_spawn).await
+}
 
 /// The supervisor binary a binding was configured with (`configure({ supervisor })`, WP-H). It wins over
 /// `HUGR_OMNI_SUPERVISOR` and over the lookup next to the module and the executable. `InvalidArgument` for an empty

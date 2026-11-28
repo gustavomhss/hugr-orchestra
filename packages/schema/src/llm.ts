@@ -3,6 +3,27 @@ export * as LLM from "./llm"
 import { Schema } from "effect"
 import { optional } from "./schema"
 
+export class GenerationOptions extends Schema.Class<GenerationOptions>("LLM.GenerationOptions")({
+  maxTokens: Schema.optional(Schema.Number),
+  temperature: Schema.optional(Schema.Number),
+  topP: Schema.optional(Schema.Number),
+  topK: Schema.optional(Schema.Number),
+  frequencyPenalty: Schema.optional(Schema.Number),
+  presencePenalty: Schema.optional(Schema.Number),
+  seed: Schema.optional(Schema.Number),
+  stop: Schema.optional(Schema.Array(Schema.String)),
+}) {}
+
+export namespace GenerationOptions {
+  export type Input = GenerationOptions | ConstructorParameters<typeof GenerationOptions>[0]
+
+  /** Normalize generation option input into the canonical `GenerationOptions` class. */
+  export const make = (input: Input = {}) => (input instanceof GenerationOptions ? input : new GenerationOptions(input))
+}
+
+export const ProviderOptions = Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.Unknown))
+export type ProviderOptions = Schema.Schema.Type<typeof ProviderOptions>
+
 export const ProviderMetadata = Schema.Record(Schema.String, Schema.Record(Schema.String, Schema.Unknown)).annotate({
   identifier: "LLM.ProviderMetadata",
 })

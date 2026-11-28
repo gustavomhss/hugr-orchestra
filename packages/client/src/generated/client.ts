@@ -89,6 +89,8 @@ import type {
   ModelsListOutput,
   ModelsDefaultInput,
   ModelsDefaultOutput,
+  ModelsExecutionInput,
+  ModelsExecutionOutput,
   ProvidersListInput,
   ProvidersListOutput,
   ProvidersGetInput,
@@ -664,7 +666,9 @@ export function make(options: ClientOptions) {
     if (descriptor.declaredStatuses.includes(response.status)) throw await json(response)
     try {
       await response.body?.cancel()
-    } catch {}
+    } catch {
+      /* Cancellation may race a closed response; keep the request outcome. */
+    }
     throw new ClientError("UnexpectedStatus", { cause: { status: response.status } })
   }
 
@@ -674,7 +678,9 @@ export function make(options: ClientOptions) {
     if (descriptor.empty) {
       try {
         await response.body?.cancel()
-      } catch {}
+      } catch {
+        /* Cancellation may race a closed response; keep the request outcome. */
+      }
       return undefined as A
     }
     if (descriptor.binary) {
@@ -690,7 +696,9 @@ export function make(options: ClientOptions) {
       if (!isContentType(response, "text/event-stream")) {
         try {
           await response.body?.cancel()
-        } catch {}
+        } catch {
+          /* Cancellation may race a closed response; keep the request outcome. */
+        }
         throw new ClientError("UnsupportedContentType")
       }
       if (response.body === null) throw new ClientError("MalformedResponse")
@@ -715,7 +723,6 @@ export function make(options: ClientOptions) {
           while (boundary >= 0) {
             const block = buffer.slice(0, boundary)
             buffer = buffer.slice(boundary + 2)
-            if (block.length > 134_217_728) throw new ClientError("MalformedResponse")
             const data = block
               .split("\n")
               .flatMap((line) => (line.startsWith("data:") ? [line.slice(5).trimStart()] : []))
@@ -729,14 +736,14 @@ export function make(options: ClientOptions) {
             }
             boundary = buffer.indexOf("\n\n")
           }
-          const pendingDelimiter = buffer.endsWith("\n\r") ? 2 : buffer.endsWith("\n") || buffer.endsWith("\r") ? 1 : 0
-          if (buffer.length - pendingDelimiter > 134_217_728) throw new ClientError("MalformedResponse")
           if (next.done) return
         }
       } finally {
         try {
           await reader.cancel()
-        } catch {}
+        } catch {
+          /* Cancellation may race a closed response; keep the request outcome. */
+        }
         reader.releaseLock()
       }
     },
@@ -1314,6 +1321,19 @@ export function make(options: ClientOptions) {
             query: { location: input?.["location"] },
             successStatus: 200,
             declaredStatuses: [503, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      execution: (input: ModelsExecutionInput, requestOptions?: RequestOptions) =>
+        request<ModelsExecutionOutput>(
+          {
+            method: "POST",
+            path: `/api/model/execution`,
+            query: { location: input["location"] },
+            body: { context: input["context"], model: input["model"] },
+            successStatus: 200,
+            declaredStatuses: [404, 400, 503, 401],
             empty: false,
           },
           requestOptions,
@@ -4754,7 +4774,9 @@ async function json(response: Response): Promise<unknown> {
   if (!isContentType(response, "application/json") && !response.headers.get("content-type")?.includes("+json")) {
     try {
       await response.body?.cancel()
-    } catch {}
+    } catch {
+      /* Cancellation may race a closed response; keep the request outcome. */
+    }
     throw new ClientError("UnsupportedContentType")
   }
   let text: string

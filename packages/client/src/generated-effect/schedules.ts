@@ -30,15 +30,15 @@ const Endpoint35_1 = (raw: RawClient["server.schedule"]) => (input: Endpoint35_1
   raw["schedule.create"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     payload: {
-      id: input["id"],
+      ...(input["id"] === undefined ? {} : { id: input["id"] }),
       name: input["name"],
       prompt: input["prompt"],
       cadence: input["cadence"],
       next: input["next"],
       timezone: input["timezone"],
-      minute: input["minute"],
-      enabled: input["enabled"],
-      history: input["history"],
+      ...(input["minute"] === undefined ? {} : { minute: input["minute"] }),
+      ...(input["enabled"] === undefined ? {} : { enabled: input["enabled"] }),
+      ...(input["history"] === undefined ? {} : { history: input["history"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -58,12 +58,12 @@ const Endpoint35_2 = (raw: RawClient["server.schedule"]) => (input: Endpoint35_2
     params: { scheduleID: input["scheduleID"] },
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     payload: {
-      name: input["name"],
-      prompt: input["prompt"],
-      cadence: input["cadence"],
-      next: input["next"],
-      timezone: input["timezone"],
-      enabled: input["enabled"],
+      ...(input["name"] === undefined ? {} : { name: input["name"] }),
+      ...(input["prompt"] === undefined ? {} : { prompt: input["prompt"] }),
+      ...(input["cadence"] === undefined ? {} : { cadence: input["cadence"] }),
+      ...(input["next"] === undefined ? {} : { next: input["next"] }),
+      ...(input["timezone"] === undefined ? {} : { timezone: input["timezone"] }),
+      ...(input["enabled"] === undefined ? {} : { enabled: input["enabled"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 

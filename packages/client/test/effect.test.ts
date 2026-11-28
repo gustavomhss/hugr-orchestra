@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { DateTime, Effect, Stream } from "effect"
 import { HttpClient, HttpClientResponse } from "effect/unstable/http"
+import { ConflictError } from "@orchestra/protocol/errors"
 import { AbsolutePath, Agent, Location, Model, Orchestra, Prompt, Session, SessionMessage } from "../src/effect"
 
 test("sessions.get returns the decoded Effect projection", async () => {
@@ -247,3 +248,27 @@ const modelSwitchedEvent = {
     model: { id: "claude", providerID: "anthropic" },
   },
 }
+
+test.each(["stage", "clear", "commit"] as const)(
+  "sessions.%s decodes the declared Effect busy conflict",
+  async (operation) => {
+    const declared = { _tag: "ConflictError", message: "Session is busy", resource: "session" }
+    const httpClient = HttpClient.make((request) =>
+      Effect.succeed(HttpClientResponse.fromWeb(request, Response.json(declared, { status: 409 }))),
+    )
+    const error = await Effect.gen(function* () {
+      const client = yield* Orchestra.make({ baseUrl: "http://localhost:3000" })
+      const sessionID = Session.ID.make("ses_test")
+      if (operation === "stage")
+        return yield* client.sessions
+          .stage({
+            sessionID,
+            messageID: SessionMessage.ID.make("msg_test"),
+          })
+          .pipe(Effect.flip)
+      return yield* client.sessions[operation]({ sessionID }).pipe(Effect.flip)
+    }).pipe(Effect.provideService(HttpClient.HttpClient, httpClient), Effect.runPromise)
+    expect(error).toBeInstanceOf(ConflictError)
+    expect(error).toMatchObject(declared)
+  },
+)

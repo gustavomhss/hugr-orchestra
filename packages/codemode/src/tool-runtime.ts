@@ -225,7 +225,7 @@ const copyBounded = (
     // Host instances cannot normally reach an intra-sandbox checkpoint (tool results cross
     // the boundary first), but wrap them defensively rather than degrading to JSON forms.
     if (value instanceof Date) return new SandboxDate(value.getTime())
-    if (value instanceof RegExp) return new SandboxRegExp(value.source, value.flags)
+    if (value instanceof RegExp) return SandboxRegExp.fromState({ source: value.source, flags: value.flags, lastIndex: 0 })
     if (value instanceof Map) {
       const wrapped = new SandboxMap()
       for (const [key, item] of value.entries()) {
@@ -711,6 +711,7 @@ export const make = <R>(
   maxToolCalls: number | undefined,
   searchIndex: ReadonlyArray<SearchEntry>,
   hooks?: ToolCallHooks<R>,
+  guard: Effect.Effect<void> = Effect.void,
 ): ToolRuntime<R> => {
   const calls: Array<ToolCall> = []
   const callableTools = {
@@ -758,6 +759,7 @@ export const make = <R>(
     keys: (path) => namespaceKeys(callableTools, path),
     invoke: (path, args) =>
       Effect.gen(function* () {
+        yield* guard
         const name = path.join(".")
         const externalArgs = args.map((arg) => copyOut(copyIn(arg, `Arguments for tool '${name}'`)))
         const call = { name }
@@ -779,6 +781,7 @@ export const make = <R>(
         }
         const input = isDefinition(tool) ? describedInput : externalArgs
         const index = yield* recordAndObserve(input)
+        yield* guard
         const currentCall = { index, name, input }
         if (isDefinition(tool)) {
           return yield* observeEnd(

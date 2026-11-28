@@ -75,4 +75,3 @@ export function verdict(outcome: ResearchProcess.Outcome, text: string): { statu
 export function notRun(reason: string, label: Step["label"] = "head"): Step {
   return { label, status: "not-run", reason, argv: [], stdout: "", stderr: "" }
 }
-

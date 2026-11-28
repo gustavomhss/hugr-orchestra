@@ -24,6 +24,10 @@ yield* client.sessions.create({
 yield* client.sessions.prompt({ sessionID, prompt: Prompt.make({ text: "Hello" }) })
 ```
 
+## Event streams
+
+Promise event streams parse incrementally and preserve valid event payloads without a fixed frame-size ceiling, like the current Effect event decoder and Promise JSON transport. This is not a bounded-memory guarantee: an incomplete frame or a large payload can retain substantial memory. Cancel the request with its `AbortSignal`, or end iteration, to close the reader. Neither client reconnects automatically.
+
 ## Generation
 
 `script/build.ts` compiles `ClientApi` from `src/contract.ts`, which composes Protocol with client-local middleware tags, group and method names, and an omission set. Raw file reads and PTY WebSocket operations are omitted; their transports are separate. Tests compare the projection with Server's concrete API.

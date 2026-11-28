@@ -178,7 +178,7 @@ function assistant(
     type: "assistant",
     id: info.id,
     agent: info.agent,
-    model: { id: info.modelID, providerID: info.providerID, ...(info.variant ? { variant: info.variant } : {}) },
+    model: { id: info.modelID, providerID: info.providerID, ...(info.variant !== undefined ? { variant: info.variant } : {}) },
     content: parts.flatMap((part): unknown[] => {
       if (part.type === "text") return [{ type: "text", id: part.id, text: part.text }]
       if (part.type === "reasoning")

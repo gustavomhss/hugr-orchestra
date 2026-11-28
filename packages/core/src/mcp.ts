@@ -14,7 +14,6 @@ import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/
 import type { Transport } from "@modelcontextprotocol/sdk/shared/transport.js"
 import {
   CallToolResultSchema,
-  LATEST_PROTOCOL_VERSION,
   ToolListChangedNotificationSchema,
   type ListToolsResult,
   type ReadResourceResult,
@@ -29,9 +28,10 @@ import { makeLocationNode } from "./effect/app-node"
 import { FSUtil } from "./fs-util"
 import { Global } from "./global"
 import { Location } from "./location"
-import { InstallationVersion } from "./installation/version"
 import { McpAuth } from "./mcp/auth"
+import type { McpIdentity } from "./mcp/identity"
 import { McpCatalog } from "./mcp/catalog"
+import { inspect } from "./mcp/debug"
 import { McpClient } from "./mcp/client"
 import { McpOAuthCallback } from "./mcp/oauth-callback"
 import {
@@ -96,6 +96,8 @@ export interface Interface {
   readonly entries: () => Effect.Effect<Record<string, Mcp.Entry>, ConfigError>
   /** The tool names of each connected server that lists tools. */
   readonly tools: () => Effect.Effect<Record<string, string[]>>
+  /** Effective registered IDs for internal workflow narrowing; tools() retains human-readable raw names. */
+  readonly toolIds: () => Effect.Effect<Record<string, string[]>>
   /** The resources and resource templates of the connected servers. */
   readonly resources: () => Effect.Effect<Mcp.ResourceCatalog>
   /** Reads a resource by URI from the connected server that lists it; undefined when no connected server lists it. */
@@ -131,6 +133,7 @@ type Entry = {
   tools?: Scope.Closeable
   // The names of the tools the server listed, while it is connected.
   toolNames?: string[]
+  toolIds?: string[]
   // Bumped by every connect and disconnect; an attempt that finishes under a newer generation is stale.
   generation: number
 }
@@ -148,24 +151,20 @@ const layer = Layer.effect(
     const global = yield* Global.Service
     const auth = yield* McpAuth.Service
     const layerScope = yield* Scope.Scope
+    const runPromise = Effect.runPromiseWith(yield* Effect.context())
     const entries = new Map<string, Entry>()
-    // Multiple scopes may claim the same actual pair during list-changed refresh. Distinct pairs must never
-    // share execution or authorization, including tools captured before another server connected.
-    const claims = new Map<string, Map<string, Set<object>>>()
-    const identityError = (server: string, tool: string) => {
-      const name = McpCatalog.toolName(server, tool)
-      const owners = claims.get(name)
-      if (!owners?.has(JSON.stringify([server, tool]))) return new Error(`Inactive MCP tool identity: ${name}`)
-      if (owners.size === 1) return
-      return new Error(
-        `Ambiguous MCP tool identity ${name}: ${Array.from(owners.keys()).sort().join(", ")}. ` +
-        "Rename the server or tool to remove the collision, then reconnect.",
-      )
-    }
     // Sign-ins waiting for their authorization code, by server.
-    const pending = new Map<string, { transport: StreamableHTTPClientTransport; provider: McpOAuthPendingProvider }>()
+    type AuthFlow = {
+      transport: StreamableHTTPClientTransport
+      provider: McpOAuthPendingProvider
+      binding: McpAuth.Binding
+      state: string
+      generation: number
+      finishing: boolean
+    }
+    const pending = new Map<string, AuthFlow>()
     // Project config documents are read once per Location open; servers added or removed here overlay them.
-    const added = new Map<string, ConfigMCP.Local | ConfigMCP.Remote>()
+    const added = new Map<string, { server: ConfigMCP.Local | ConfigMCP.Remote; source: string }>()
     const removed = new Set<string>()
     // Local servers the last connect refused because the project was not approved; applyTrust retries them.
     const blocked = new Set<string>()
@@ -175,6 +174,26 @@ const layer = Layer.effect(
       const documents = (yield* config.entries()).filter((entry): entry is Config.Document => entry.type === "document")
       const servers = new Map<string, ConfigMCP.Local | ConfigMCP.Remote | Provided>(
         documents.flatMap((document) => Object.entries(document.info.mcp?.servers ?? {})),
+      )
+      const authorities = new Map<string, McpIdentity.Authority>(
+        documents.flatMap((document) =>
+          Object.entries(document.info.mcp?.servers ?? {}).map(
+            ([name, server]) =>
+              [
+                name,
+                {
+                  kind: "configured" as const,
+                  source:
+                    document.path === undefined
+                      ? JSON.stringify(["user-global", path.resolve(global.config)])
+                      : path.resolve(document.path),
+                  name,
+                  directory: location.directory,
+                  server,
+                },
+              ] as const,
+          ),
+        ),
       )
       // A repository's own config is not the user's: its local servers are commands the repository chose to run.
       // Only the user's global config can approve a project, and the document that wins a name decides its origin.
@@ -192,14 +211,29 @@ const layer = Layer.effect(
               ),
             ).flatMap(([name, fromProject]) => (fromProject ? [name] : [])),
       )
-      for (const [name, server] of added) {
-        servers.set(name, server)
+      for (const [name, overlay] of added) {
+        servers.set(name, overlay.server)
+        authorities.set(name, {
+          kind: "configured",
+          source: overlay.source,
+          name,
+          directory: location.directory,
+          server: overlay.server,
+        })
         unapproved.delete(name)
       }
-      for (const name of removed) servers.delete(name)
-      for (const [name, server] of provided.current) if (!servers.has(name)) servers.set(name, { type: "provided", server })
+      for (const name of removed) {
+        servers.delete(name)
+        authorities.delete(name)
+      }
+      for (const [name, server] of provided.current) {
+        if (servers.has(name)) continue
+        servers.set(name, { type: "provided", server })
+        authorities.set(name, { kind: "provided", name, key: server.key })
+      }
       return {
         servers,
+        authorities,
         unapproved,
         // `timeout` resolves on its own: a project that only lists servers must not hide the global timeout.
         timeout: Config.mcpTimeout(documents),
@@ -220,6 +254,7 @@ const layer = Layer.effect(
       current.client = undefined
       current.tools = undefined
       current.toolNames = undefined
+      current.toolIds = undefined
       return Effect.all([
         scope ? Scope.close(scope, Exit.void) : Effect.void,
         client ? Effect.promise(() => client.close().catch(() => undefined)) : Effect.void,
@@ -227,63 +262,46 @@ const layer = Layer.effect(
     }
 
     const register = Effect.fnUntraced(function* (
-      current: Entry,
       name: string,
+      authority: McpIdentity.Authority,
       client: Client,
       defs: ListToolsResult["tools"],
       timeout: number,
+      publish: (registered: { scope: Scope.Closeable; names: string[]; ids: string[] }) => Effect.Effect<boolean>,
     ) {
       return yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
         const scope = yield* Scope.make()
-        const token = {}
-        for (const def of defs) {
-          const canonical = McpCatalog.toolName(name, def.name)
-          const pair = JSON.stringify([name, def.name])
-          const owners = claims.get(canonical) ?? new Map<string, Set<object>>()
-          const tokens = owners.get(pair) ?? new Set<object>()
-          tokens.add(token)
-          owners.set(pair, tokens)
-          claims.set(canonical, owners)
-        }
-        yield* Scope.addFinalizer(scope, Effect.sync(() => {
-          for (const def of defs) {
-            const canonical = McpCatalog.toolName(name, def.name)
-            const pair = JSON.stringify([name, def.name])
-            const owners = claims.get(canonical)
-            const tokens = owners?.get(pair)
-            tokens?.delete(token)
-            if (tokens?.size === 0) owners?.delete(pair)
-            if (owners?.size === 0) claims.delete(canonical)
-          }
-        }))
-        // One registration per tool, so a tool whose name the registry refuses leaves the others available.
-        yield* restore(Effect.forEach(
-          defs,
-          (def) =>
-            tools
-              .register({ [McpCatalog.toolName(name, def.name)]: mcpTool(name, client, def, timeout) })
-              .pipe(Effect.ignore),
-          { discard: true },
-        ).pipe(Scope.provide(scope))).pipe(
-          Effect.onExit((exit) => Exit.isFailure(exit) ? Scope.close(scope, exit) : Effect.void),
-        )
-        // Transfer ownership before restoring interruption; no private claims may escape a cancelled connect.
-        const previous = current.tools
-        current.tools = scope
-        if (previous) yield* Scope.close(previous, Exit.void)
+        return yield* Effect.gen(function* () {
+          const accepted = (yield* restore(Effect.forEach(defs, (def) =>
+            tools.registerMcp(authority, def.name, (id) => mcpTool(name, id, client, def, timeout)).pipe(
+              Effect.map((id) => ({ id, name: def.name })),
+              Effect.orElseSucceed(() => undefined),
+            ),
+          ).pipe(Scope.provide(scope)))).filter((entry) => entry !== undefined)
+          const refused = defs.length - accepted.length
+          if (refused) yield* Effect.logWarning("MCP tool registration refused", { server: name.slice(0, 128), refused })
+          // Transfer the completed registration while interruption remains masked.
+          const published = yield* publish({ scope, names: accepted.map((entry) => entry.name), ids: accepted.map((entry) => entry.id) })
+          if (!published) yield* Scope.close(scope, Exit.void)
+          return published
+        }).pipe(Effect.onExit((exit) => Exit.isFailure(exit) ? Scope.close(scope, exit) : Effect.void))
       }))
     })
 
-    const mcpTool = (server: string, client: Client, def: ListToolsResult["tools"][number], timeout: number) =>
+    const mcpTool = (
+      server: string,
+      id: string,
+      client: Client,
+      def: ListToolsResult["tools"][number],
+      timeout: number,
+    ) =>
       Tool.dynamic({
-        description: def.description ?? "",
+        description: `MCP server ${JSON.stringify(server.slice(0, 128))}${server.length > 128 ? " (truncated)" : ""}, tool ${JSON.stringify(def.name.slice(0, 128))}${def.name.length > 128 ? " (truncated)" : ""}.\n${def.description ?? ""}`,
         inputSchema: { ...def.inputSchema, type: "object", properties: def.inputSchema.properties ?? {} },
         execute: (input, context) =>
           Effect.gen(function* () {
-            const error = identityError(server, def.name)
-            if (error) return yield* Effect.fail(error)
             yield* permission.assert({
-              action: McpCatalog.toolName(server, def.name),
+              action: id,
               resources: ["*"],
               save: ["*"],
               metadata: { server, tool: def.name },
@@ -291,31 +309,27 @@ const layer = Layer.effect(
               agent: context.agent,
               source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
             })
-            const result = yield* Effect.tryPromise({
-              try: (signal) => {
-                // Permission may wait while another server connects. Check in the same synchronous step as
-                // callTool so a newly ambiguous identity cannot send a request between checking and calling.
-                const error = identityError(server, def.name)
-                if (error) throw error
-                return client.callTool(
-                  { name: def.name, arguments: isObject(input) ? input : {} },
-                  CallToolResultSchema,
-                  // The MCP SDK only sends a progress token when `onprogress` is set, which enables timeout resets.
-                  { signal, timeout, resetTimeoutOnProgress: true, onprogress: () => {} },
-                )
-              },
-              catch: (error) => error instanceof Error ? error : new Error(String(error)),
-            })
+            const result = yield* Effect.tryPromise((signal) =>
+              client.callTool(
+                { name: def.name, arguments: isObject(input) ? input : {} },
+                CallToolResultSchema,
+                // The MCP SDK only sends a progress token when `onprogress` is set, which enables timeout resets.
+                { signal, timeout, resetTimeoutOnProgress: true, onprogress: () => {} },
+              ),
+            )
             if ("toolResult" in result) return yield* Effect.fail(new Error("MCP tool returned no content"))
-            if (result.isError) return yield* Effect.fail(new Error(McpCatalog.resultText(result) || "MCP tool returned an error"))
+            if (result.isError)
+              return yield* Effect.fail(new Error(McpCatalog.resultText(result) || "MCP tool returned an error"))
             return { structured: result.structuredContent ?? {}, content: McpCatalog.resultContent(result) }
           }).pipe(Effect.mapError((error) => new ToolFailure({ message: error.message }))),
       })
 
     const connect = Effect.fn("Mcp.connect")(function* (name: string) {
       const found = yield* configured()
-      const server = found.servers.get(name)
-      if (!server) return yield* new NotFoundError({ name })
+      const configuredServer = found.servers.get(name)
+      if (!configuredServer) return yield* new NotFoundError({ name })
+      const server = configuredServer.type === "provided" ? configuredServer : structuredClone(configuredServer)
+      const authority = structuredClone(found.authorities.get(name)!)
       const current = entry(name)
       const generation = ++current.generation
       yield* release(current)
@@ -357,31 +371,48 @@ const layer = Layer.effect(
       }
       const defs = listed?.success ?? []
       // Connected is reported only once the server's tools are in the registry.
-      current.client = client
-      yield* register(current, name, client, defs, request)
-      current.toolNames = defs.map((def) => def.name)
-      current.status = opened.status
-      client.onclose = () => {
-        if (current.client !== client) return
-        const scope = current.tools
-        current.client = undefined
-        current.tools = undefined
-        current.toolNames = undefined
-        current.status = failed(McpStdio.failure(opened.transport, new Error("Connection closed")))
-        if (scope) Effect.runFork(Scope.close(scope, Exit.void))
-      }
-      if (!client.getServerCapabilities()?.tools) return
-      client.setNotificationHandler(ToolListChangedNotificationSchema, () =>
-        Effect.runPromise(
-          Effect.gen(function* () {
+      yield* register(name, authority, client, defs, request, (registered) => Effect.gen(function* () {
+        if (current.generation !== generation) return false
+        const previous = current.tools
+        current.client = client
+        current.tools = registered.scope
+        current.toolNames = registered.names
+        current.toolIds = registered.ids
+        current.status = opened.status
+        client.onclose = () => {
+          if (current.client !== client) return
+          current.client = undefined
+          current.toolNames = undefined
+          current.toolIds = undefined
+          current.status = failed(McpStdio.failure(opened.transport, new Error("Connection closed")))
+          const owned = current.tools
+          current.tools = undefined
+          if (owned) Effect.runFork(Scope.close(owned, Exit.void))
+        }
+        client.setNotificationHandler(ToolListChangedNotificationSchema, () =>
+          runPromise(Effect.gen(function* () {
             if (current.client !== client) return
             const defs = yield* McpCatalog.defs(client, request)
             if (!defs || current.client !== client) return
-            yield* register(current, name, client, defs, request)
-            current.toolNames = defs.map((def) => def.name)
-          }),
-        ),
-      )
+            yield* register(name, authority, client, defs, request, (updated) => Effect.gen(function* () {
+              if (current.client !== client || current.generation !== generation) return false
+              const previous = current.tools
+              current.tools = updated.scope
+              current.toolNames = updated.names
+              current.toolIds = updated.ids
+              if (previous) yield* Scope.close(previous, Exit.void)
+              return true
+            }))
+          })),
+        )
+        if (previous) yield* Scope.close(previous, Exit.void)
+        return true
+      })).pipe(Effect.onExit((exit) => Effect.gen(function* () {
+        if (current.client === client) return
+        if (Exit.isFailure(exit) && current.generation === generation)
+          current.status = failed("Tool registration did not complete")
+        yield* Effect.promise(() => client.close().catch(() => undefined))
+      })))
     })
 
     const open = Effect.fnUntraced(function* (
@@ -392,7 +423,9 @@ const layer = Layer.effect(
       if (server.type === "provided")
         return yield* attach(server.server.connect(), startup).pipe(
           Effect.map((client) => ({ client, transport: undefined, status: { status: "connected" } as Mcp.Status })),
-          Effect.catch((error) => Effect.succeed({ client: undefined, transport: undefined, status: failed(error.message) })),
+          Effect.catch((error) =>
+            Effect.succeed({ client: undefined, transport: undefined, status: failed(error.message) }),
+          ),
         )
       if (server.type === "local") {
         const transport = new McpStdio.OmniStdioTransport({
@@ -412,13 +445,16 @@ const layer = Layer.effect(
       if (!URL.canParse(server.url))
         return { client: undefined, transport: undefined, status: failed(`Invalid MCP URL for "${name}"`) }
       const url = new URL(server.url)
-      // Stored tokens authorize the connection; a server without them fails unauthorized instead of redirecting.
+      const checked = server.oauth === false ? undefined : yield* auth.checkout(name, server.url).pipe(Effect.result)
+      if (checked?._tag === "Failure")
+        return { client: undefined, transport: undefined, status: { status: "needs_auth" } as Mcp.Status }
+      // Capture a lease before a transport can ask for credentials, including its first Bearer request.
+      const provider =
+        checked?._tag === "Success"
+          ? new McpOAuthProvider(name, server.url, oauthConfig(server), { onRedirect: () => {} }, auth, checked.success)
+          : undefined
       const init = {
-        ...(server.oauth === false
-          ? {}
-          : {
-              authProvider: new McpOAuthProvider(name, server.url, oauthConfig(server), { onRedirect: () => {} }, auth),
-            }),
+        ...(provider ? { authProvider: provider } : {}),
         ...(server.headers ? { requestInit: { headers: server.headers } } : {}),
       }
       const oauth = server.oauth !== false
@@ -475,12 +511,18 @@ const layer = Layer.effect(
     const add = Effect.fn("Mcp.add")(function* (name: string, server: ConfigMCP.Local | ConfigMCP.Remote) {
       if (!McpProjectConfig.validName(name))
         return yield* new ConfigError({ message: `Invalid MCP server name: ${name}` })
-      yield* McpProjectConfig.write(location.directory, name, McpProjectConfig.written(server)).pipe(
+      const file = yield* McpProjectConfig.write(location.directory, name, McpProjectConfig.written(server)).pipe(
         Effect.provideService(FSUtil.Service, fs),
         Effect.mapError((error) => new ConfigError({ message: error.message })),
       )
+      const loaded = yield* Config.readDocument(file).pipe(
+        Effect.provideService(FSUtil.Service, fs),
+        Effect.mapError(() => new ConfigError({ message: "MCP configuration could not be read" })),
+      )
+      const stored = loaded?.info.mcp?.servers?.[name]
+      if (!stored) return yield* new ConfigError({ message: "MCP configuration could not be read" })
       // Adding a local command is an explicit user action, so the project is approved for restarts too.
-      if (server.type === "local") {
+      if (stored.type === "local") {
         const trusted = (yield* Config.readGlobal().pipe(
           Effect.provideService(FSUtil.Service, fs),
           Effect.provideService(Global.Service, global),
@@ -491,7 +533,7 @@ const layer = Layer.effect(
             Effect.provideService(Global.Service, global),
           )
       }
-      added.set(name, server)
+      added.set(name, { server: stored, source: path.resolve(file) })
       removed.delete(name)
       yield* connect(name).pipe(Effect.ignore)
     })
@@ -535,6 +577,15 @@ const layer = Layer.effect(
       return Object.fromEntries(
         Array.from(entries).flatMap(([name, current]) =>
           current.client && current.toolNames ? [[name, current.toolNames] as const] : [],
+        ),
+      )
+    })
+
+    const toolIds = Effect.fn("Mcp.toolIds")(function* () {
+      yield* ready()
+      return Object.fromEntries(
+        Array.from(entries).flatMap(([name, current]) =>
+          current.client && current.toolIds ? [[name, current.toolIds.slice()] as const] : [],
         ),
       )
     })
@@ -618,13 +669,45 @@ const layer = Layer.effect(
       return result.messages.map((message) => (message.content.type === "text" ? message.content.text : "")).join("\n")
     })
 
-    const abandon = (name: string) =>
-      Effect.suspend(() => {
-        McpOAuthCallback.cancelPending(name)
-        const flow = pending.get(name)
-        pending.delete(name)
-        return flow ? Effect.promise(() => flow.transport.close().catch(() => undefined)) : Effect.void
+    const owns = (name: string, flow: AuthFlow) =>
+      pending.get(name) === flow && entry(name).generation === flow.generation
+    const authFailure = () => new AuthError({ message: "MCP authentication must be renewed" })
+    const checkFlow = (name: string, flow: AuthFlow) =>
+      Effect.gen(function* () {
+        if (!owns(name, flow)) return yield* authFailure()
+        yield* auth.readBinding(flow.binding).pipe(Effect.mapError(authFailure))
       })
+    const abandon = (name: string, flow: AuthFlow | undefined) =>
+      Effect.suspend(() => {
+        if (!flow) return Effect.void
+        if (pending.get(name) === flow) pending.delete(name)
+        McpOAuthCallback.cancelPending(name, flow.state)
+        return Effect.promise(() => flow.transport.close().catch(() => undefined))
+      })
+    const complete = Effect.fnUntraced(function* (name: string, flow: AuthFlow, code: string) {
+      if (flow.finishing) return yield* authFailure()
+      flow.finishing = true
+      return yield* Effect.gen(function* () {
+        yield* checkFlow(name, flow)
+        // Claim the captured state before exchanging any code; PKCE remains available to this lease only.
+        yield* auth.consumeState(flow.binding, flow.state).pipe(Effect.mapError(authFailure))
+        McpOAuthCallback.cancelPending(name, flow.state)
+        const finished = yield* Effect.tryPromise({
+          try: () => flow.transport.finishAuth(code),
+          catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+        }).pipe(Effect.result)
+        yield* checkFlow(name, flow)
+        if (finished._tag === "Failure") {
+          yield* abandon(name, flow)
+          return authStatus(finished.failure, true) ?? failed(`OAuth completion failed: ${messageOf(finished.failure)}`)
+        }
+        yield* Effect.tryPromise({ try: () => flow.provider.commit(), catch: authFailure })
+        yield* abandon(name, flow)
+        if (entry(name).generation !== flow.generation) return { status: "needs_auth" } as Mcp.Status
+        yield* connect(name)
+        return entries.get(name)?.status ?? ({ status: "disabled" } as Mcp.Status)
+      }).pipe(Effect.tapError(() => abandon(name, flow)))
+    })
 
     const startAuth = Effect.fn("Mcp.startAuth")(function* (name: string) {
       const server = (yield* configured()).servers.get(name)
@@ -632,20 +715,23 @@ const layer = Layer.effect(
       if (server.type !== "remote" || server.oauth === false)
         return yield* new AuthError({ message: `MCP server ${name} does not support OAuth` })
       if (!URL.canParse(server.url)) return yield* new AuthError({ message: `Invalid MCP URL for "${name}"` })
-      // A newer sign-in replaces an unfinished one; cancel before the callback server starts, since an idle one stops.
-      yield* abandon(name)
+      const previous = pending.get(name)
+      const current = entry(name)
+      const generation = ++current.generation
+      const begun = yield* auth.begin(name, server.url).pipe(Effect.mapError(authFailure))
+      if (current.generation !== generation) return yield* authFailure()
+      current.status = { status: "needs_auth" }
+      yield* release(current)
+      if (current.generation !== generation) return yield* authFailure()
+      const state = Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) =>
+        byte.toString(16).padStart(2, "0"),
+      ).join("")
+      yield* auth.updateBinding(begun.binding, { oauthState: state }).pipe(Effect.mapError(authFailure))
+      if (current.generation !== generation) return yield* authFailure()
       const config = oauthConfig(server)
       const redirectUri =
         config.redirectUri ??
         (config.callbackPort ? `http://127.0.0.1:${config.callbackPort}${OAUTH_CALLBACK_PATH}` : undefined)
-      yield* Effect.tryPromise({
-        try: () => McpOAuthCallback.ensureRunning(redirectUri),
-        catch: (error) => new AuthError({ message: `OAuth callback server failed: ${messageOf(error)}` }),
-      })
-      const oauthState = Array.from(crypto.getRandomValues(new Uint8Array(32)), (byte) =>
-        byte.toString(16).padStart(2, "0"),
-      ).join("")
-      yield* auth.updateOAuthState(name, oauthState)
       const redirect: { url?: URL } = {}
       const provider = new McpOAuthPendingProvider(
         name,
@@ -653,73 +739,72 @@ const layer = Layer.effect(
         { ...config, redirectUri },
         { onRedirect: (url) => void (redirect.url = url) },
         auth,
+        begun.binding,
       )
       const transport = new StreamableHTTPClientTransport(new URL(server.url), {
         authProvider: provider,
         ...(server.headers ? { requestInit: { headers: server.headers } } : {}),
       })
-      const client = McpClient.createClient(location.directory)
-      const attempt = yield* Effect.tryPromise({ try: () => client.connect(transport), catch: (error) => error }).pipe(
-        Effect.result,
-      )
-      if (attempt._tag === "Success") {
-        yield* Effect.promise(() => provider.commit())
-        yield* Effect.promise(() => client.close().catch(() => undefined))
-        yield* auth.clearOAuthState(name)
-        yield* connect(name).pipe(Effect.ignore)
-        return { authorizationUrl: "", oauthState }
-      }
-      if (!(attempt.failure instanceof UnauthorizedError) || !redirect.url) {
-        yield* Effect.promise(() => transport.close().catch(() => undefined))
-        return yield* new AuthError({ message: messageOf(attempt.failure) })
-      }
-      pending.set(name, { transport, provider })
-      // The browser's redirect reaches the local callback server; completion runs in the Location's scope, so the
-      // request that started the sign-in may end first.
-      yield* Effect.tryPromise(() => McpOAuthCallback.waitForCallback(oauthState, name)).pipe(
-        Effect.flatMap((code) =>
-          Effect.gen(function* () {
-            const stored = yield* auth.getOAuthState(name)
-            yield* auth.clearOAuthState(name)
-            if (stored !== oauthState) return yield* new AuthError({ message: "OAuth state mismatch" })
-            return yield* finishAuth(name, code)
-          }),
-        ),
-        Effect.ignore,
-        Effect.forkIn(layerScope),
-      )
-      return { authorizationUrl: redirect.url.toString(), oauthState }
+      const flow: AuthFlow = { transport, provider, binding: begun.binding, state, generation, finishing: false }
+      pending.set(name, flow)
+      return yield* Effect.gen(function* () {
+        if (begun.previousState) McpOAuthCallback.cancelPending(name, begun.previousState)
+        yield* abandon(name, previous)
+        yield* checkFlow(name, flow)
+        yield* Effect.tryPromise({
+          try: () => McpOAuthCallback.ensureRunning(redirectUri),
+          catch: (error) => new AuthError({ message: `OAuth callback server failed: ${messageOf(error)}` }),
+        })
+        yield* checkFlow(name, flow)
+        const client = McpClient.createClient(location.directory)
+        const attempt = yield* Effect.tryPromise({
+          try: () => client.connect(transport),
+          catch: (error) => error,
+        }).pipe(Effect.result)
+        yield* checkFlow(name, flow)
+        if (attempt._tag === "Success") {
+          const tokens = yield* Effect.tryPromise({ try: () => provider.tokens(), catch: authFailure })
+          if (tokens) yield* Effect.tryPromise({ try: () => provider.commit(), catch: authFailure })
+          if (!tokens) yield* auth.consumeState(flow.binding, state).pipe(Effect.mapError(authFailure))
+          yield* abandon(name, flow)
+          if (current.generation === generation) yield* connect(name).pipe(Effect.ignore)
+          return { authorizationUrl: "", oauthState: state }
+        }
+        if (!(attempt.failure instanceof UnauthorizedError) || !redirect.url)
+          return yield* new AuthError({
+            message:
+              attempt.failure instanceof McpAuth.ReauthRequired ? attempt.failure.message : messageOf(attempt.failure),
+          })
+        // Registration and completion retain this exact flow. No cleanup discovers a replacement by name.
+        yield* Effect.tryPromise(() => McpOAuthCallback.waitForCallback(state, name)).pipe(
+          Effect.flatMap((code) => complete(name, flow, code)),
+          Effect.catch(() => (flow.finishing ? Effect.void : abandon(name, flow))),
+          Effect.forkIn(layerScope),
+        )
+        return { authorizationUrl: redirect.url.toString(), oauthState: state }
+      }).pipe(Effect.tapError(() => abandon(name, flow)))
     })
 
     const finishAuth = Effect.fn("Mcp.finishAuth")(function* (name: string, code: string) {
       if (!(yield* configured()).servers.has(name)) return yield* new NotFoundError({ name })
       const flow = pending.get(name)
       if (!flow) return yield* new AuthError({ message: `No pending OAuth flow for MCP server: ${name}` })
-      pending.delete(name)
-      McpOAuthCallback.cancelPending(name)
-      const finished = yield* Effect.tryPromise({
-        try: () => flow.transport.finishAuth(code),
-        catch: (error) => error,
-      }).pipe(Effect.result)
-      yield* Effect.promise(() => flow.transport.close().catch(() => undefined))
-      if (finished._tag === "Failure") return failed(`OAuth completion failed: ${messageOf(finished.failure)}`)
-      yield* Effect.promise(() => flow.provider.commit())
-      yield* auth.clearCodeVerifier(name)
-      yield* connect(name)
-      return entries.get(name)?.status ?? ({ status: "disabled" } as Mcp.Status)
+      return yield* complete(name, flow, code)
     })
 
     const removeAuth = Effect.fn("Mcp.removeAuth")(function* (name: string) {
-      if (!(yield* configured()).servers.has(name)) return yield* new NotFoundError({ name })
-      yield* abandon(name)
-      yield* auth.remove(name)
-      // The stored tokens are gone: drop the live connection and ask for a new sign-in (only OAuth servers have one).
       const server = (yield* configured()).servers.get(name)
-      if (server?.type !== "remote" || server.oauth === false) return
+      if (!server) return yield* new NotFoundError({ name })
+      const flow = pending.get(name)
       const current = entry(name)
-      current.generation++
-      yield* release(current)
+      const generation = ++current.generation
+      const removed = yield* auth.remove(name)
+      if (removed.previousState) McpOAuthCallback.cancelPending(name, removed.previousState)
+      yield* abandon(name, flow)
+      if (server.type !== "remote" || server.oauth === false || current.generation !== generation) return
       current.status = { status: "needs_auth" }
+      yield* release(current)
+      if (current.generation === generation) current.status = { status: "needs_auth" }
     })
 
     const debug = Effect.fn("Mcp.debug")(function* (name: string) {
@@ -727,92 +812,12 @@ const layer = Layer.effect(
       if (!server) return yield* new NotFoundError({ name })
       if (server.type !== "remote")
         return yield* new ConfigError({ message: `MCP server ${name} is not a remote server` })
-      const oauth = server.oauth !== false
-      const stored = oauth ? yield* auth.get(name) : undefined
-      const base = {
-        name,
-        url: server.url,
-        oauth,
-        ...(stored?.tokens
-          ? {
-              tokens: {
-                access:
-                  stored.tokens.accessToken.length > 8
-                    ? `${stored.tokens.accessToken.slice(0, 4)}***${stored.tokens.accessToken.slice(-4)}`
-                    : "***",
-                expiresAt: stored.tokens.expiresAt,
-                refreshToken: stored.tokens.refreshToken !== undefined,
-              },
-            }
-          : {}),
-        ...(stored?.clientInfo
-          ? { client: { id: stored.clientInfo.clientId, secretExpiresAt: stored.clientInfo.clientSecretExpiresAt } }
-          : {}),
-      } satisfies Mcp.Debug
-      // OAuth explicitly disabled: there is no sign-in to debug.
-      if (!oauth) return base
-      const response = yield* Effect.tryPromise({
-        try: () =>
-          fetch(server.url, {
-            method: "POST",
-            headers: {
-              ...server.headers,
-              "Content-Type": "application/json",
-              Accept: "application/json, text/event-stream",
-            },
-            body: JSON.stringify({
-              jsonrpc: "2.0",
-              method: "initialize",
-              params: {
-                protocolVersion: LATEST_PROTOCOL_VERSION,
-                capabilities: {},
-                clientInfo: { name: "orchestra-debug", version: InstallationVersion },
-              },
-              id: 1,
-            }),
-            signal: AbortSignal.timeout(DEFAULT_TIMEOUT),
-          }),
-        catch: messageOf,
-      }).pipe(Effect.result)
-      if (response._tag === "Failure") return { ...base, error: response.failure }
-      const answer = response.success
-      const wwwAuthenticate = answer.headers.get("www-authenticate") ?? undefined
-      const body = yield* Effect.promise(() => answer.text().catch(() => ""))
-      const http = {
-        status: answer.status,
-        statusText: answer.statusText,
-        wwwAuthenticate,
-        ...(answer.ok ? { serverInfo: serverInfo(body) } : { body: body.slice(0, 500) || undefined }),
-      }
-      if (answer.status !== 401 || !oauth) return { ...base, http }
-      const provider = new McpOAuthProvider(name, server.url, oauthConfig(server), { onRedirect: () => {} }, auth)
-      const attempt = yield* Effect.tryPromise({
-        try: async () => {
-          const client = McpClient.createClient(location.directory)
-          await client.connect(
-            new StreamableHTTPClientTransport(new URL(server.url), {
-              authProvider: provider,
-              ...(server.headers ? { requestInit: { headers: server.headers } } : {}),
-            }),
-          )
-          await client.close()
-        },
-        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
-      }).pipe(Effect.result)
-      if (attempt._tag === "Success") return { ...base, http, flow: { result: "authenticated" as const } }
-      const registered = (yield* Effect.promise(() => provider.clientInformation())) !== undefined
-      return {
-        ...base,
-        http,
-        flow: unauthorized(attempt.failure)
-          ? { result: "unauthorized" as const, message: attempt.failure.message, clientRegistered: registered }
-          : { result: "error" as const, message: attempt.failure.message },
-      }
+      return yield* inspect(name, server, auth, location.directory, DEFAULT_TIMEOUT)
     })
 
     yield* Effect.addFinalizer(() =>
       Effect.all([
-        Effect.forEach(Array.from(pending.keys()), abandon, { discard: true }),
+        Effect.forEach(Array.from(pending.entries()), ([name, flow]) => abandon(name, flow), { discard: true }),
         Effect.forEach(entries.values(), (current) => release(current), { concurrency: "unbounded", discard: true }),
       ]).pipe(Effect.asVoid),
     )
@@ -842,10 +847,7 @@ const layer = Layer.effect(
     const syncing = Semaphore.makeUnsafe(1)
     // Runs in the Location's scope like the first start, so an interrupted turn never abandons a half connect.
     const refresh = () =>
-      syncing.withPermit(sync()).pipe(
-        Effect.forkIn(layerScope, { startImmediately: true }),
-        Effect.flatMap(Fiber.join),
-      )
+      syncing.withPermit(sync()).pipe(Effect.forkIn(layerScope, { startImmediately: true }), Effect.flatMap(Fiber.join))
 
     const started = yield* Deferred.make<void>()
     let starting = false
@@ -891,6 +893,7 @@ const layer = Layer.effect(
       config: resolved,
       entries: profile,
       tools: inventory,
+      toolIds,
       resources,
       readResource,
       prompts,
@@ -917,15 +920,6 @@ export const node = makeLocationNode({
     McpProvided.node,
   ],
 })
-
-function serverInfo(body: string) {
-  try {
-    const info = JSON.parse(body)?.result?.serverInfo
-    return info ? JSON.stringify(info) : undefined
-  } catch {
-    return undefined
-  }
-}
 
 function failed(error: string): Mcp.Status {
   return { status: "failed", error }

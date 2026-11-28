@@ -3,6 +3,7 @@ export * as Model from "./model"
 import { Schema } from "effect"
 import { optional } from "./schema"
 import { Provider } from "./provider"
+import { GenerationOptions, ProviderOptions } from "./llm"
 import { statics } from "./schema"
 
 export const ID = Schema.String.pipe(Schema.brand("ModelV2.ID"))
@@ -71,6 +72,8 @@ export const Info = Schema.Struct({
   variants: Schema.Struct({
     id: VariantID,
     ...Provider.Request.fields,
+    generation: GenerationOptions.annotate({ parseOptions: { onExcessProperty: "error" } }).pipe(optional),
+    providerOptions: ProviderOptions.pipe(optional),
   }).pipe(Schema.Array),
   time: Schema.Struct({
     released: Schema.Finite,

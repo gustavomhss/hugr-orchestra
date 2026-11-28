@@ -226,11 +226,12 @@ export function hoist<A, E, T extends Tag, const Items extends Replacements = re
         return { ...node, dependencies: node.dependencies.map(context.visit) }
       }
       if (node.tag === tag) {
+        const candidate = rewriteReplacementDependencies(node, replacementMap)
         const existing = hoisted.get(node.name)
-        if (existing && existing !== node) {
+        if (existing && !equivalent(existing, candidate)) {
           throw new Error(`Tag ${tag} has conflicting implementations for ${node.name}`)
         }
-        hoisted.set(node.name, rewriteReplacementDependencies(node, replacementMap))
+        if (!existing) hoisted.set(node.name, candidate)
         return group([])
       }
       if (node.kind === "unbound") {
@@ -285,8 +286,44 @@ function replacementMapFrom(replacements?: Replacements) {
   )
 }
 
+function equivalent(
+  first: AnyNode,
+  second: AnyNode,
+  completed = new Map<AnyNode, Set<AnyNode>>(),
+  visiting = new Map<AnyNode, Set<AnyNode>>(),
+): boolean {
+  if (first === second) return true
+  if (
+    first.kind !== second.kind ||
+    first.name !== second.name ||
+    first.tag !== second.tag ||
+    first.service !== second.service ||
+    first.implementation !== second.implementation ||
+    first.dependencies.length !== second.dependencies.length
+  )
+    return false
+  if (completed.get(first)?.has(second)) return true
+  if (visiting.get(first)?.has(second)) throw new Error(`Cycle detected in layer tree: ${first.name}`)
+  const active = visiting.get(first) ?? new Set<AnyNode>()
+  active.add(second)
+  visiting.set(first, active)
+  try {
+    const matches = first.dependencies.every((dependency, index) =>
+      equivalent(dependency, second.dependencies[index], completed, visiting),
+    )
+    if (matches) {
+      const pairs = completed.get(first) ?? new Set<AnyNode>()
+      pairs.add(second)
+      completed.set(first, pairs)
+    }
+    return matches
+  } finally {
+    active.delete(second)
+    if (active.size === 0) visiting.delete(first)
+  }
+}
+
 function rewriteReplacementDependencies(root: AnyNode, replacements: ReadonlyMap<string, AnyNode>) {
-  if (replacements.size === 0) return root
   const cache = new Map<AnyNode, AnyNode>()
   const visiting = new Set<AnyNode>()
   const stack: AnyNode[] = []

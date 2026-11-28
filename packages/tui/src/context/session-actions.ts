@@ -34,10 +34,12 @@ export function createSessionActions(client: Client) {
       model: Model
       files: ReadonlyArray<Pick<TuiPromptFilePart, "url" | "filename" | "source">>
       agents: ReadonlyArray<Pick<TuiPromptAgentPart, "name" | "source">>
-    }) {
+    }, beforeAdmission?: () => void) {
       await select(input)
+      beforeAdmission?.()
       if (input.context)
         await client.sessions.synthetic({ sessionID: input.sessionID, text: input.context, resume: false })
+      beforeAdmission?.()
       return client.sessions.prompt({
         sessionID: input.sessionID,
         prompt: {
@@ -69,8 +71,9 @@ export function createSessionActions(client: Client) {
       agent: string
       model: Model
       files: ReadonlyArray<Pick<TuiPromptFilePart, "url" | "filename" | "source">>
-    }) {
+    }, beforeAdmission?: () => void) {
       await select(input)
+      beforeAdmission?.()
       return client.sessions.command({
         sessionID: input.sessionID,
         command: input.command,
