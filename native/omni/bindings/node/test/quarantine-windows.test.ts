@@ -10,6 +10,8 @@ const quarantine: {
   quarantineDispose(path: string, identity: string): Promise<void>
   quarantineIdentity(path: string): Promise<string>
   quarantineInspect(path: string): Promise<string | null>
+  quarantineRenameExclusiveAvailable(): boolean
+  quarantineRenameExclusive(source: string, destination: string, identity: string): Promise<string | null>
   quarantineRename(source: string, destination: string, identity: string): Promise<string>
 } = createRequire(import.meta.url)("../index.js")
 
@@ -119,6 +121,33 @@ test.skipIf(process.platform !== "win32")("batch disposal reserves all identitie
     expect(await quarantine.quarantineDisposeBatch(items)).toBe("accepted")
     expect(await quarantine.quarantineInspect(first)).toBeNull()
     expect(await quarantine.quarantineInspect(second)).toBeNull()
+  } finally {
+    await rm(root, { recursive: true, force: true })
+  }
+})
+
+
+test.skipIf(process.platform !== "win32")("exclusive rename refuses busy sources and moves an eligible file", async () => {
+  const root = await mkdtemp(join(tmpdir(), "omni-quarantine-exclusive-"))
+  try {
+    const source = join(root, "source")
+    const target = join(root, "target")
+    await writeFile(source, "preserve")
+    const identity = await quarantine.quarantineIdentity(source)
+    expect(quarantine.quarantineRenameExclusiveAvailable()).toBe(true)
+    const busy = await open(source, "r")
+    try {
+      expect(await quarantine.quarantineRenameExclusive(source, target, identity)).toBeNull()
+    } finally {
+      await busy.close()
+    }
+    expect(await readFile(source, "utf8")).toBe("preserve")
+    const alias = join(root, "alias")
+    await link(source, alias)
+    expect(await quarantine.quarantineRenameExclusive(source, target, identity)).toBeNull()
+    await rm(alias)
+    expect(await quarantine.quarantineRenameExclusive(source, target, identity)).toBe(identity)
+    expect(await readFile(target, "utf8")).toBe("preserve")
   } finally {
     await rm(root, { recursive: true, force: true })
   }

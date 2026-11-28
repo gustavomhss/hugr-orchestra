@@ -8,9 +8,13 @@ import { BackendToolkit } from "../src/backend-toolkit"
 import { BackendToolkitManifest } from "../src/backend-toolkit/manifest"
 import { BackendToolkitTarget } from "../src/backend-toolkit/target"
 import { PinnedArtifact } from "../src/pinned-artifact"
+import { ActivityQuarantineArchive } from "../src/activity-quarantine-archive"
+import { ActivityQuarantineCustody } from "../src/activity-quarantine-custody"
+import { Database } from "../src/database/database"
 import { ToolkitInstall } from "../src/toolkit/install"
 import { ToolkitRuntime } from "../src/toolkit/runtime"
 import { it } from "./lib/effect"
+import { expectSpawn } from "./fixture/omni-expect"
 
 const windows = process.platform === "win32"
 const NAME = windows ? "interpreter.cmd" : "interpreter"
@@ -123,6 +127,56 @@ it.live("existing tiny archive fixture passes through authentic PinnedArtifact e
     const ready = yield* f.ensure({ ...spec, targets: { [host()]: archive } })
     expect(yield* Effect.promise(() => readFile(ready.executable, "utf8"))).toBe("#!/bin/sh\necho zipped\n")
     expect(f.hits).toEqual({ "/tool.zip": 1 })
+  }), 120_000,
+)
+
+it.live.skipIf(!windows)("retains only the verified installer archive in real quarantine custody", () =>
+  Effect.gen(function* () {
+    expectSpawn(import.meta.path)
+    const f = yield* fixture
+    yield* Effect.gen(function* () {
+      const database = yield* Database.Service
+      const custody = ActivityQuarantineCustody.make(database)
+      yield* Effect.acquireRelease(Effect.sync(() => ActivityQuarantineArchive.bind(custody)), (unbind) => Effect.sync(unbind))
+      const artifacts = [{
+        url: `http://127.0.0.1:${f.server.port}/tool.zip`, integrity: sri(f.zip), format: "zip",
+        entries: [{ from: "bin/tool", to: "bin/tool" }],
+      }] as const satisfies ReadonlyArray<PinnedArtifact.Artifact>
+      const directory = f.directory()
+      const unpackDirs = () => Effect.promise(async () => (await readdir(path.dirname(directory)))
+        .filter((name) => name.startsWith(".unpack-")))
+      expect(yield* failure(PinnedArtifact.install(directory, artifacts,
+        () => Effect.fail(new PinnedArtifact.Failed({ cause: "layout" }))))).toMatchObject({ cause: "layout" })
+      expect(yield* PinnedArtifact.installed(directory)).toBe(false)
+      expect(yield* custody.state()).toMatchObject({ canEmpty: false, rows: [] })
+      expect(yield* unpackDirs()).toEqual([])
+
+      // The nested install publishes while the outer install still owns its private staging directory.
+      yield* PinnedArtifact.install(directory, artifacts, () => PinnedArtifact.install(directory, artifacts).pipe(Effect.asVoid))
+      const snapshot = yield* custody.state()
+      expect(snapshot?.rows).toHaveLength(1)
+      expect(snapshot).toMatchObject({ canEmpty: true, partial: false, rows: [
+        { label: "tool.zip", owner: "Pinned artifact installer", phase: "ready", generation: "1" },
+      ] })
+      expect(snapshot?.rows[0].originalPath.endsWith("archive.zip")).toBe(true)
+      const preview = yield* custody.preview()
+      if (!preview) throw new Error("the installed archive was not in custody")
+      expect(yield* custody.confirm({ previewID: preview.previewID })).toMatchObject({ outcome: "Verified" })
+      expect(yield* custody.state()).toMatchObject({ canEmpty: false, rows: [] })
+      expect(yield* Effect.promise(() => readFile(path.join(directory, "bin", "tool"), "utf8")))
+        .toBe("#!/bin/sh\necho zipped\n")
+      expect(yield* unpackDirs()).toEqual([])
+
+      // Reject the next reservation inside the real SQLite transaction.
+      yield* database.db.run(`CREATE TRIGGER refuse_custody_insert BEFORE INSERT ON activity_quarantine_custody
+        BEGIN SELECT RAISE(ABORT, 'fixture refuses custody reservation'); END`)
+      const second = path.join(path.dirname(directory), "second-install")
+      expect(yield* PinnedArtifact.install(second, artifacts)).toBe(second)
+      expect(yield* PinnedArtifact.installed(second)).toBe(true)
+      expect(yield* custody.state()).toMatchObject({ canEmpty: false, rows: [] })
+      expect(yield* unpackDirs()).toEqual([])
+      expect(f.hits).toEqual({ "/tool.zip": 4 })
+    }).pipe(Effect.provide(Database.layerFromPath(path.join(f.root, "custody.sqlite"))))
   }), 120_000,
 )
 

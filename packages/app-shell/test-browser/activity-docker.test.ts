@@ -19,7 +19,7 @@ function age(panel: HTMLElement, line: Element) {
   return Number.parseInt(seconds ?? "", 10)
 }
 
-test("A161/S16 uses the eight English tabs, reads IN/OUT, and keeps Quarantine unavailable", async () => {
+test("A161/S16 uses the eight English tabs, reads IN/OUT, and keeps Quarantine unavailable on the web", async () => {
   const app = await mount()
   try {
     expect(app.tabs().map(text)).toEqual(labels)
@@ -31,7 +31,7 @@ test("A161/S16 uses the eight English tabs, reads IN/OUT, and keeps Quarantine u
     expect(app.button("Refresh").disabled).toBe(false)
     expect(app.panel().querySelectorAll("form, meter, progress")).toHaveLength(0)
     app.select("Quarantine")
-    expect(text(app.panel())).toContain("Quarantine: storage capability unavailable")
+    expect(text(app.panel())).toContain("Quarantine reading and emptying are supported on Windows desktop only.")
     expect(app.panel().querySelectorAll("button, form, meter, progress")).toHaveLength(0)
     expect(app.calls).toHaveLength(1)
   } finally {
@@ -284,7 +284,7 @@ test("A09–A13/A153–A154 category and server changes abort old work and keep 
     expect([...app.panel().querySelectorAll<HTMLButtonElement>("button")].map(text)).toEqual(["Refresh"])
     expect(app.panel().querySelectorAll("a[href], form, [role='button']")).toHaveLength(0)
     app.select("Quarantine")
-    expect(text(app.panel())).toContain("Quarantine: storage capability unavailable")
+    expect(text(app.panel())).toContain("Quarantine reading and emptying are supported on Windows desktop only.")
     app.select("Docker")
     category.respond(complete("2", [alpha]))
     await Bun.sleep(20)

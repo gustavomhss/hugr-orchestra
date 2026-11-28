@@ -39,6 +39,36 @@ pub fn quarantine_rename(source: String, destination: String, expected: String) 
     })
 }
 
+pub struct QuarantineExclusiveTask {
+    source: String,
+    destination: String,
+    expected: String,
+}
+impl Task for QuarantineExclusiveTask {
+    type Output = Option<String>;
+    type JsValue = Option<String>;
+    fn compute(&mut self) -> napi::Result<Option<String>> {
+        quarantine_windows::rename_exclusive(&self.source, &self.destination, &self.expected)
+            .map_err(napi::Error::from_reason)
+    }
+    fn resolve(&mut self, _: Env, value: Option<String>) -> napi::Result<Option<String>> {
+        Ok(value)
+    }
+}
+
+#[napi]
+pub fn quarantine_rename_exclusive(
+    source: String,
+    destination: String,
+    expected: String,
+) -> AsyncTask<QuarantineExclusiveTask> {
+    AsyncTask::new(QuarantineExclusiveTask {
+        source,
+        destination,
+        expected,
+    })
+}
+
 pub struct QuarantineInspectTask {
     source: String,
 }

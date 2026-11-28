@@ -394,6 +394,13 @@ export async function startOwnedServe(options: {
     }
     return {
       isCurrent: current,
+      async read(input, signal) {
+        const decoded = ActivityEmpty.decodeRequest(input)
+        if (Option.isNone(decoded)) return undefined
+        const reply = await post(ActivityPrivateChannel.emptyStatePath, JSON.stringify(decoded.value), signal)
+        const result = ActivityEmpty.decodeSnapshot(reply)
+        return Option.isSome(result) && current() ? result.value : undefined
+      },
       async preview(input, signal) {
         const decoded = ActivityEmpty.decodeRequest(input)
         if (Option.isNone(decoded)) return undefined

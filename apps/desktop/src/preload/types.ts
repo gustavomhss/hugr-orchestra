@@ -130,6 +130,7 @@ export type ElectronAPI = import("@orchestra/app/app-dock-linux").AppDockLinuxAP
   armActivityQuarantine: (serverURL: string, request: ActivityArm.Request) => Promise<ActivityArm.Receipt | undefined>
   stopActivityTree: (serverURL: string, request: ActivityStop.Request) => Promise<ActivityStop.Receipt | undefined>
   emptyActivityQuarantine: (serverURL: string) => Promise<ActivityEmpty.Receipt | undefined>
+  readActivityQuarantine: (serverURL: string) => Promise<ActivityEmpty.Snapshot | undefined>
   appDockOpen: (
     url: string,
     bounds: { x: number; y: number; width: number; height: number },

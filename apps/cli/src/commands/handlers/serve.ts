@@ -100,6 +100,11 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
     const arm = ActivityArmLedger.make(database)
     const stop = process.platform === "win32" ? ActivityStopService.make(database) : undefined
     const custody = process.platform === "win32" ? ActivityQuarantineCustody.make(database) : undefined
+    if (custody) {
+      const { ActivityQuarantineArchive } = yield* Effect.promise(() => import("@orchestra/core/activity-quarantine-archive"))
+      const unbind = ActivityQuarantineArchive.bind(custody)
+      yield* Effect.addFinalizer(() => Effect.sync(unbind))
+    }
     return yield* Effect.tryPromise({
       try: (signal) => ActivityPrivateChannelServer.acquire(process.stdin, signal, arm, stop, custody),
       catch: () => new Error("Activity private channel startup failed"),

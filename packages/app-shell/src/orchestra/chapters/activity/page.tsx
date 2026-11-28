@@ -12,6 +12,7 @@ import { ActivityDisk } from "./disk"
 import { ActivityDocker } from "./docker"
 import { ActivityExternalCaches } from "./external-caches"
 import { ActivityPlan } from "./plan"
+import { ActivityQuarantine } from "./quarantine"
 import "./activity.css"
 
 export default function ActivityPage(_props: ChapterPageProps) {
@@ -101,10 +102,7 @@ export default function ActivityPage(_props: ChapterPageProps) {
             <ActivityPlan query={state.query} />
           </Show>
           <Show when={state.tab === "Quarantine"}>
-            <div class="mx-empty" role="status">
-              <strong>{language.t("orchestra.monitor.quarantineUnavailable")}</strong>
-              <p>{language.t("orchestra.monitor.quarantinePending")}</p>
-            </div>
+            <ActivityQuarantine query={state.query} />
           </Show>
         </Show>
       </div>
