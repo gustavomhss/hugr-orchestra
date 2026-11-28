@@ -9,17 +9,52 @@ import type { SessionMessage } from "@orchestra/core/session/message"
 import { Tool } from "@orchestra/core/tool/tool"
 import { ReviewEvidenceSchemaV2 } from "./review-engagement-artifact-schema"
 import { ReviewEvidenceValidationV2 } from "./review-engagement-artifact-validation"
+import { ReviewScopedProbeEvidenceV2 } from "./review-scoped-probe-evidence"
 import { ReviewChecksV2 } from "./review-checks"
 import type { ReviewEngagementEvidenceV2 } from "./review-engagement-evidence"
 import type { ReviewEngagementReportV2 } from "./review-engagement-report"
 import type { ReviewFanoutV2 } from "./review-fanout"
+import type { ReviewFanoutVerificationV2 } from "./review-fanout-verification"
+import { ReviewVariantSchemaV2 } from "./review-variant-schema"
+import { ReviewVariantExaminationV2 } from "./review-variant-examination"
+import { ReviewVariantValidationV2 } from "./review-variant-validation"
+import type { ReviewVariantsV2 } from "./review-variants"
 
-export type Context = {
+type CollectionContext = {
+  readonly namespace: string
   readonly inputHash: string
   readonly sessionID: string
   readonly budget: ReviewEngagementReportV2.Budget
   readonly source: ReviewEngagementEvidenceV2.Prepared
   readonly active: Effect.Effect<void, Tool.Failure>
+}
+type EngagementAuthority = {
+  readonly authority: Effect.Effect<ReviewVariantValidationV2.Authority, Tool.Failure>
+  readonly policy: Effect.Effect<ReviewVariantsV2.Context, Tool.Failure>
+}
+export type Context = CollectionContext & EngagementAuthority
+export type FixContext = CollectionContext & { readonly imported: ReadonlyMap<string, number> }
+export type Snapshot = Pick<ReviewEvidenceSchemaV2.ReceiptV1, "finalAnalysisOperationID" | "operations" | "artifacts" | "hostProofs"> & {
+  readonly bodies: ReviewEvidenceSchemaV2.Bodies
+  readonly scopedProbes: readonly ReviewScopedProbeEvidenceV2.Reference[]
+}
+export type ReadRegion = (path: string, startLine: number, endLine: number) => Effect.Effect<ReviewVariantSchemaV2.CapturedRegion, Tool.Failure>
+export type SeedBundle = {
+  readonly seeds: readonly ReviewVariantSchemaV2.Seed[]
+  readonly regions: readonly ReviewVariantSchemaV2.CapturedRegion[]
+  readonly replies: readonly ReviewVariantSchemaV2.NativeReply[]
+}
+export type TurnFacts = {
+  readonly reply?: ReviewVariantSchemaV2.NativeReply
+  readonly attempts: readonly ReviewVariantSchemaV2.NativeSearchAttempt[]
+  readonly captures: readonly { readonly operation: ReviewEvidenceSchemaV2.CodeOperation; readonly body: Uint8Array }[]
+}
+export type Turn = {
+  readonly promptMessageID: string
+  readonly childKey: string
+  readonly role: ReviewFanoutV2.Role
+  readonly turnKey: string
+  readonly reply?: { readonly assistantMessageID: string; readonly textPartID: string; readonly text: string }
 }
 export type Storage = {
   readonly publish: (bytes: Uint8Array, mime: string) => Effect.Effect<string, Tool.Failure>
@@ -27,9 +62,14 @@ export type Storage = {
 }
 export type Host = Pick<Extract<ReviewFanoutV2.Result, { readonly status: "ran" }>, "routing" | "checkFacts" | "outcomes">
 export type Collector = {
+  readonly snapshot: () => Effect.Effect<Snapshot, Tool.Failure>
+  readonly scopedProbe: (proof: ReviewScopedProbeEvidenceV2.Proof) => Effect.Effect<void, Tool.Failure>
   readonly analysis: (input: { readonly routing: ReviewRouting.Record; readonly catalog: ReviewCatalog.Catalog }) => Effect.Effect<ReviewAnalyze.Evidence, Tool.Failure>
   readonly code: (capture: ReviewTools.CodeCapture) => Effect.Effect<void, Tool.Failure>
-  readonly acknowledge: (sessionID: string, messages: readonly SessionMessage.Message[]) => Effect.Effect<void, Tool.Failure>
+  readonly acknowledge: (sessionID: string, messages: readonly SessionMessage.Message[], turn?: Turn) => Effect.Effect<void, Tool.Failure>
+  readonly variantTurn: (sessionID: string, promptMessageID: string) => Effect.Effect<TurnFacts, Tool.Failure>
+  readonly validateVariantSeeds: (confirmations: readonly ReviewFanoutVerificationV2.InitialConfirmation[], readRegion: ReadRegion) => Effect.Effect<SeedBundle, Tool.Failure>
+  readonly recordVariants: (variants: ReviewVariantSchemaV2.Variants) => Effect.Effect<void, Tool.Failure>
   readonly gaps: () => Effect.Effect<ReviewEngagementReportV2.Result["notExamined"], Tool.Failure>
   readonly seal: (report: ReviewEngagementReportV2.Stored, host: Host) => Effect.Effect<ReviewEvidenceSchemaV2.Receipt, Tool.Failure>
 }
@@ -47,21 +87,29 @@ type Analysis = {
 }
 
 /** A single permit serializes receipt admission and aggregate quotas across concurrent real lens Sessions. */
-export function make(context: Context, storage: Storage): Effect.Effect<Collector, never, Scope.Scope> {
+export function make(context: Context | FixContext, storage: Storage): Effect.Effect<Collector, never, Scope.Scope> {
   return Effect.gen(function* () {
     const permit = yield* Semaphore.make(1)
     let open = true
     let sealed = false
     let failed: Tool.Failure | undefined
-    let total = 0
+    const accounted = new Map("imported" in context ? context.imported : undefined)
+    let total = [...accounted.values()].reduce((sum, bytes) => sum + bytes, 0)
+    const engagement = "authority" in context ? context : undefined
+    const requireEngagement = () => engagement ?? (() => {
+      throw ReviewEvidenceSchemaV2.failure("corrupt", "ordinary evidence policy is unavailable")
+    })()
     const artifacts = new Map<string, ReviewEvidenceSchemaV2.Artifact>()
     const operations = new Map<string, ReviewEvidenceSchemaV2.CodeOperation | ReviewEvidenceSchemaV2.AnalysisOperation>()
     const order: string[] = []
     const analyses: Analysis[] = []
     const proofs: ReviewEvidenceSchemaV2.Proof[] = []
+    const scoped = new Map<string, { readonly reference: ReviewScopedProbeEvidenceV2.Reference; readonly proof: ReviewScopedProbeEvidenceV2.Proof }>()
     const codeInputs = new Map<string, string>()
     const settlements = new Set<string>()
     const gaps: ReviewEngagementReportV2.Result["notExamined"][number][] = []
+    const turns = new Map<string, Omit<TurnFacts, "captures">>()
+    let variants: ReviewVariantSchemaV2.Variants | undefined
     yield* Effect.addFinalizer(() => Effect.sync(() => { open = false }))
     const checked = <A>(body: Effect.Effect<A, Tool.Failure>) => permit.withPermit(Effect.gen(function* () {
       if (failed) return yield* failed
@@ -73,6 +121,30 @@ export function make(context: Context, storage: Storage): Effect.Effect<Collecto
     }).pipe(Effect.tapError((error) => Effect.sync(() => { failed ??= error }))))
     const attempt = <A>(body: () => A) => Effect.try({ try: body,
       catch: (error) => error instanceof Tool.Failure ? error : ReviewEvidenceSchemaV2.failure("corrupt", String(error)) })
+    // This helper does not acquire the collector permit again: callers already hold checked().
+    const readTurn = (sessionID: string, promptMessageID: string) => Effect.gen(function* () {
+      const held = turns.get(`${sessionID}\0${promptMessageID}`)
+      if (!held) return yield* ReviewEvidenceSchemaV2.failure("corrupt", "native turn was not observed")
+      const captures = yield* Effect.forEach(held.attempts, (native) => Effect.gen(function* () {
+        if (!native.operationID) return []
+        const operation = operations.get(native.operationID)
+        if (!operation || operation.kind !== "code" || operation.operationID !== native.attemptID ||
+          operation.sessionID !== native.sessionID || operation.assistantMessageID !== native.assistantMessageID ||
+          operation.toolCallID !== native.toolCallID || operation.name !== native.name || operation.sourceSha256 !== native.sourceSha256)
+          return yield* ReviewEvidenceSchemaV2.failure("corrupt", "native search capture identity differs")
+        const descriptor = artifacts.get(operation.evidence.artifactID)
+        if (!descriptor || descriptor.sha256 !== operation.evidence.sha256)
+          return yield* ReviewEvidenceSchemaV2.failure("corrupt", "native search has no retained body")
+        const body = yield* storage.read(descriptor.sha256, descriptor.bytes, descriptor.mime)
+        const value = yield* attempt(() => Schema.decodeUnknownSync(ReviewEvidenceSchemaV2.CodeOperation)(
+          JSON.parse(JSON.stringify(operation)), ReviewEvidenceSchemaV2.strict))
+        return [{ operation: value, body }]
+      }))
+      return { ...held, captures: captures.flat() }
+    })
+    const currentBodies = () => Effect.map(Effect.forEach([...artifacts.values()], (artifact) =>
+      storage.read(artifact.sha256, artifact.bytes, artifact.mime).pipe(Effect.map((body) => [artifact.artifactID, body] as const))),
+    (entries) => new Map(entries))
     const add = (kind: ReviewEvidenceSchemaV2.Artifact["kind"], raw: Uint8Array, mime: string, uri?: string, complete = true) => Effect.gen(function* () {
       const bytes = Uint8Array.from(raw)
       if (bytes.byteLength > ReviewEvidenceSchemaV2.limits.body) return yield* ReviewEvidenceSchemaV2.failure("bound-exceeded", "body")
@@ -80,13 +152,17 @@ export function make(context: Context, storage: Storage): Effect.Effect<Collecto
       const artifactID = ReviewEvidenceSchemaV2.digest(descriptor)
       const existing = artifacts.get(artifactID)
       if (existing) return existing
-      if (artifacts.size >= ReviewEvidenceSchemaV2.limits.artifacts || total + bytes.byteLength > ReviewEvidenceSchemaV2.limits.total)
-        return yield* ReviewEvidenceSchemaV2.failure("bound-exceeded", artifacts.size >= ReviewEvidenceSchemaV2.limits.artifacts ? "artifacts" : "total")
+      if (!accounted.has(artifactID) && (accounted.size >= ReviewEvidenceSchemaV2.limits.artifacts ||
+        total + bytes.byteLength > ReviewEvidenceSchemaV2.limits.total))
+        return yield* ReviewEvidenceSchemaV2.failure("bound-exceeded", accounted.size >= ReviewEvidenceSchemaV2.limits.artifacts ? "artifacts" : "total")
       const hash = yield* storage.publish(bytes, mime)
       if (hash !== descriptor.sha256) return yield* ReviewEvidenceSchemaV2.failure("corrupt", "publication digest differs")
       const artifact: ReviewEvidenceSchemaV2.Artifact = { artifactID, ...descriptor }
       artifacts.set(artifactID, artifact)
-      total += bytes.byteLength
+      if (!accounted.has(artifactID)) {
+        accounted.set(artifactID, bytes.byteLength)
+        total += bytes.byteLength
+      }
       return artifact
     })
     const addJSON = (kind: ReviewEvidenceSchemaV2.Artifact["kind"], value: unknown, uri?: string) => Effect.gen(function* () {
@@ -164,6 +240,25 @@ export function make(context: Context, storage: Storage): Effect.Effect<Collecto
     })).pipe(Effect.mapError((error) => new ReviewAnalyze.Failed({ reason:
       typeof error.metadata?.reason === "string" ? error.metadata.reason : error.message })))
     const collector: Collector = {
+      snapshot: () => checked(Effect.gen(function* () {
+        const final = analyses.at(-1)
+        if (!final?.result || analyses.some((analysis) => !analysis.result))
+          return yield* ReviewEvidenceSchemaV2.failure("corrupt", "analysis did not complete")
+        const captured = order.flatMap((id) => {
+          const operation = operations.get(id)
+          return operation ? [operation] : []
+        })
+        if (captured.length !== order.length) return yield* ReviewEvidenceSchemaV2.failure("corrupt", "operation did not complete")
+        return { finalAnalysisOperationID: final.id, operations: captured, artifacts: [...artifacts.values()],
+          hostProofs: [...proofs], scopedProbes: [...scoped.values()].map((item) => item.reference), bodies: yield* currentBodies() }
+      })),
+      scopedProbe: (proof) => checked(Effect.gen(function* () {
+        if (scoped.has(proof.proofID)) return
+        if (proof.sourceSha256 !== context.source.sha256 || scoped.size >= 64)
+          return yield* ReviewEvidenceSchemaV2.failure("bound-exceeded", "scoped-probe")
+        const artifact = yield* addJSON("scoped-probe", proof, ReviewScopedProbeEvidenceV2.uri(proof.proofID))
+        scoped.set(proof.proofID, { proof, reference: { proofID: proof.proofID, artifactID: artifact.artifactID } })
+      })),
       analysis: (input) => checked(Effect.gen(function* () {
         const routing = yield* attempt(() => Schema.decodeUnknownSync(ReviewRouting.Record)(JSON.parse(JSON.stringify(input.routing)), ReviewEvidenceSchemaV2.strict))
         const catalog = yield* attempt(() => Schema.decodeUnknownSync(ReviewCatalog.Catalog)(JSON.parse(JSON.stringify(input.catalog)), ReviewEvidenceSchemaV2.strict))
@@ -195,7 +290,7 @@ export function make(context: Context, storage: Storage): Effect.Effect<Collecto
         operations.set(identity, operation)
         order.push(identity)
       })),
-      acknowledge: (sessionID, messages) => checked(Effect.sync(() => {
+      acknowledge: (sessionID, messages, turn) => checked(attempt(() => {
         for (const message of messages) {
           if (message.type !== "assistant") continue
           for (const part of message.content) {
@@ -209,8 +304,87 @@ export function make(context: Context, storage: Storage): Effect.Effect<Collecto
               nativeSettlement: { status: "completed", messageID: message.id } })
           }
         }
+        if (!turn || turn.role === "lead") return
+        ReviewEvidenceSchemaV2.require(sessionID === ReviewVariantSchemaV2.childID(context.namespace, turn.childKey, turn.role) &&
+          turn.promptMessageID === ReviewVariantSchemaV2.promptID(context.namespace, sessionID, turn.turnKey), "observed native turn identity differs")
+        const attempts = new Map<string, ReviewVariantSchemaV2.NativeSearchAttempt>()
+        for (const message of messages) {
+          if (message.type !== "assistant") continue
+          for (const part of message.content) {
+            if (part.type !== "tool" || part.name !== "code_search") continue
+            const identity = { sessionID, assistantMessageID: message.id, toolCallID: part.id,
+              name: "code_search" as const, sourceSha256: context.source.sha256 }
+            const attemptID = ReviewEvidenceSchemaV2.codeID(context.inputHash, identity)
+            const captured = operations.get(attemptID)
+            attempts.set(attemptID, Schema.decodeUnknownSync(ReviewVariantSchemaV2.NativeSearchAttempt)({
+              attemptID, ...identity, status: part.state.status, providerExecuted: part.provider?.executed === true,
+              ...(captured?.kind === "code" ? { operationID: captured.operationID } : {}),
+            }, ReviewVariantSchemaV2.strict))
+          }
+        }
+        const observed = turn.reply
+        const assistant = observed ? messages.find((message) => message.type === "assistant" && message.id === observed.assistantMessageID) : undefined
+        const part = assistant?.type === "assistant" ? assistant.content.findLast((part) => part.type === "text") : undefined
+        if (observed) ReviewEvidenceSchemaV2.require(assistant?.type === "assistant" && assistant.time.completed !== undefined &&
+          part?.type === "text" && part.id === observed.textPartID && part.text === observed.text, "completed native reply differs from observed messages")
+        const reply = observed ? { sessionID, childKey: turn.childKey, role: turn.role, turnKey: turn.turnKey,
+          promptMessageID: turn.promptMessageID, ...observed, textSha256: ReviewEvidenceSchemaV2.hash(observed.text) } : undefined
+        const value = reply ? Schema.decodeUnknownSync(ReviewVariantSchemaV2.NativeReply)({
+          replyID: ReviewVariantSchemaV2.replyID(context.inputHash, reply), ...reply,
+        }, ReviewVariantSchemaV2.strict) : undefined
+        const key = `${sessionID}\0${turn.promptMessageID}`
+        const previous = turns.get(key)
+        if (previous?.reply) ReviewEvidenceSchemaV2.require(ReviewEvidenceSchemaV2.same(previous.reply, value), "completed native reply changed")
+        turns.set(key, { ...(value ? { reply: value } : {}), attempts: [...attempts.values()] })
       })),
-      gaps: () => checked(Effect.sync(() => [...gaps])),
+      variantTurn: (sessionID, promptMessageID) => checked(readTurn(sessionID, promptMessageID)),
+      validateVariantSeeds: (confirmations, readRegion) => checked(Effect.gen(function* () {
+        const final = analyses.at(-1)
+        if (!final?.result) return yield* ReviewEvidenceSchemaV2.failure("corrupt", "seed validation has no completed analysis")
+        const bodies = yield* currentBodies()
+        const analysis = yield* attempt(() => ReviewEvidenceValidationV2.analysisContext({ inputHash: context.inputHash,
+          source: context.source, finalAnalysisOperationID: final.id, operations: [...operations.values()],
+          artifacts: [...artifacts.values()], hostProofs: proofs }, bodies))
+        const authority = yield* requireEngagement().authority
+        const policy = yield* requireEngagement().policy
+        const regions = new Map<string, ReviewVariantSchemaV2.CapturedRegion>()
+        const replies = new Map<string, ReviewVariantSchemaV2.NativeReply>()
+        const seeds = yield* Effect.forEach(confirmations, (confirmation) => Effect.gen(function* () {
+          const finding = yield* attempt(() => Schema.decodeUnknownSync(ReviewVariantSchemaV2.SeedFinding)(confirmation.finding, ReviewVariantSchemaV2.strict))
+          if (confirmation.verdict.state !== "confirmed") return yield* invalidSeed("confirmation has no settled verdict")
+          const candidate = confirmation.candidate
+          if (finding.id !== candidate.id || finding.path !== candidate.path || finding.line !== candidate.line ||
+            finding.endLine !== candidate.endLine || finding.severity !== candidate.severity || finding.class !== candidate.class ||
+            finding.node !== candidate.node || finding.trigger !== candidate.trigger)
+            return yield* invalidSeed("confirmed finding differs from its admitted verifier candidate")
+          const native = yield* readTurn(confirmation.verifierSessionID,
+            ReviewVariantSchemaV2.promptID(context.namespace, confirmation.verifierSessionID, confirmation.turnKey))
+          if (!native.reply || native.reply.role !== "verifier" || native.reply.childKey !== confirmation.childKey ||
+            native.reply.turnKey !== confirmation.turnKey) return yield* invalidSeed("confirmation has no matching native verifier reply")
+          const region = yield* readRegion(finding.path, finding.line, finding.endLine ?? finding.line)
+          regions.set(region.regionID, region)
+          const evidence = confirmation.verdict.evidence
+          const quote = evidence.kind === "quote" ? yield* readRegion(evidence.path, evidence.startLine, evidence.endLine) : undefined
+          if (quote) regions.set(quote.regionID, quote)
+          replies.set(native.reply.replyID, native.reply)
+          const examination: ReviewVariantSchemaV2.Examination = { verifierSessionID: confirmation.verifierSessionID,
+            replyID: native.reply.replyID, regionID: region.regionID, ...(quote ? { quoteRegionID: quote.regionID } : {}),
+            offered: confirmation.offered, verdictIndex: confirmation.verdictIndex, candidateCap: confirmation.candidateCap,
+            rawVerdict: confirmation.rawVerdict, verdict: confirmation.verdict }
+          return yield* attempt(() => ReviewVariantExaminationV2.qualifySeed({ namespace: context.namespace,
+            inputHash: context.inputHash, source: context.source, children: authority.children,
+            catalog: policy.catalog, routing: policy.routing, tier: policy.tier, analysis,
+            regions: [...regions.values()], replies: [...replies.values()] }, finding, examination))
+        }))
+        return { seeds, regions: [...regions.values()], replies: [...replies.values()] }
+      })),
+      recordVariants: (value) => checked(attempt(() => {
+        const captured = Schema.decodeUnknownSync(ReviewVariantSchemaV2.Variants)(JSON.parse(JSON.stringify(value)), ReviewVariantSchemaV2.strict)
+        ReviewEvidenceSchemaV2.require(captured.namespace === context.namespace, "variant namespace differs from admission")
+        if (variants) ReviewEvidenceSchemaV2.require(ReviewEvidenceSchemaV2.same(variants, captured), "variant section changed after settlement")
+        variants = captured
+      })),
+      gaps: () => checked(attempt(() => [...gaps, ...variantGaps(variants)])),
       seal: (report, host) => checked(Effect.gen(function* () {
         const final = analyses.at(-1)
         if (!final?.result || analyses.some((analysis) => !analysis.result)) return yield* ReviewEvidenceSchemaV2.failure("corrupt", "analysis did not complete")
@@ -221,18 +395,29 @@ export function make(context: Context, storage: Storage): Effect.Effect<Collecto
           // to its executed pack selection and final host facts, while retaining its original routing bytes.
           ReviewEvidenceSchemaV2.require(ReviewEvidenceSchemaV2.same(final.result?.routing.packs, JSON.parse(JSON.stringify(host.routing.packs))), "final host packs differ from observed analysis")
           if (!report.value.report) throw ReviewEvidenceSchemaV2.failure("corrupt", "completed card missing")
+          const observed = [...scoped.values()].map((item) => item.proof)
+          for (const finding of report.value.report.findings) if (finding.evidence.kind === "probe") {
+            try {
+              ReviewScopedProbeEvidenceV2.qualify(observed, finding)
+            } catch {
+              throw new Tool.Failure({ message: "engagement-report-invalid: finding has no matching scoped probe outcome",
+                metadata: { reason: "engagement-report-invalid" } })
+            }
+          }
           ReviewChecksV2.validate(report.value.report, host.checkFacts)
         })
         const citations = yield* Effect.forEach(report.value.citations, (citation) => Effect.gen(function* () {
           const artifact = yield* add("citation", Buffer.from(citation.text), "text/plain", citation.uri)
           return { uri: citation.uri, artifactID: artifact.artifactID }
         }))
-        const receipt: ReviewEvidenceSchemaV2.Receipt = { schema: "review-engagement-evidence-v1", reportID: report.value.reportID,
+        if (!variants) return yield* ReviewEvidenceSchemaV2.failure("corrupt", "completed engagement has no closed variant policy")
+        const receipt: ReviewEvidenceSchemaV2.ReceiptV2 = { schema: "review-engagement-evidence-v2", variants, reportID: report.value.reportID,
           inputHash: context.inputHash, sessionID: context.sessionID, sourceSha256: context.source.sha256,
           budget: context.budget, finalAnalysisOperationID: final.id,
           operations: order.map((id) => { const operation = operations.get(id); if (!operation) throw ReviewEvidenceSchemaV2.failure("corrupt", "operation did not complete"); return operation }),
           artifacts: [...artifacts.values()].sort((a, b) => a.artifactID < b.artifactID ? -1 : a.artifactID > b.artifactID ? 1 : 0),
-          citations, hostProofs: [...proofs], notExamined: report.value.notExamined }
+          citations, hostProofs: [...proofs], notExamined: report.value.notExamined,
+          ...(scoped.size ? { scopedProbes: [...scoped.values()].map((item) => item.reference).sort((a, b) => a.proofID < b.proofID ? -1 : 1) } : {}) }
         const bytes = yield* attempt(() => Buffer.from(ReviewEvidenceSchemaV2.canonical(receipt)))
         if (bytes.byteLength > ReviewEvidenceSchemaV2.limits.receipt) return yield* ReviewEvidenceSchemaV2.failure("bound-exceeded", "receipt")
         const validated = yield* attempt(() => ReviewEvidenceValidationV2.read(bytes, report))
@@ -240,10 +425,31 @@ export function make(context: Context, storage: Storage): Effect.Effect<Collecto
         const bodies = new Map(yield* Effect.forEach(receipt.artifacts, (artifact) => storage.read(artifact.sha256, artifact.bytes, artifact.mime)
           .pipe(Effect.map((body) => [artifact.artifactID, body] as const))))
         yield* attempt(() => ReviewEvidenceValidationV2.validate(validated, report, bodies))
+        const authority = yield* requireEngagement().authority
+        if (validated.schema !== "review-engagement-evidence-v2") return yield* ReviewEvidenceSchemaV2.failure("corrupt", "new receipt lost its variant policy")
+        yield* attempt(() => ReviewVariantValidationV2.validate(validated, report, bodies, authority))
         sealed = true
         return validated
       })),
     }
     return collector
   })
+}
+
+function invalidSeed(detail: string) {
+  return new Tool.Failure({ message: `engagement-report-invalid: ${detail}`, metadata: { reason: "engagement-report-invalid" } })
+}
+
+function variantGaps(variants: ReviewVariantSchemaV2.Variants | undefined): ReviewEngagementReportV2.Result["notExamined"] {
+  if (!variants || variants.limit === 0) return []
+  return [
+    { item: "audit:variants", reason: variants.stop },
+    ...variants.unexpandedInitialSeedIDs.map((id) => {
+      const seed = variants.seeds.find((seed) => seed.seedID === id)
+      ReviewEvidenceSchemaV2.require(seed, "unexpanded seed has no captured proof")
+      return { item: `audit:variants:seed:${seed.finding.id}`, reason: "not-selected" }
+    }),
+    ...variants.generations.flatMap((generation) => generation.search.status !== "accepted" ? [] : generation.search.matches.flatMap((match) =>
+      match.state === "not-examined" ? [{ item: `audit:variants:match:${match.matchID}`, reason: match.reason }] : [])),
+  ]
 }

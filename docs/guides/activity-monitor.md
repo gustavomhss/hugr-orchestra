@@ -81,7 +81,7 @@ The category names stay in English in both supported languages. Tab through the 
 
 **IN/OUT** reads the plan ledger. It displays qualified objects, arm receipts, and any receipts whose recorded evidence has changed. An empty ledger describes what the server has recorded. A partial read leaves the total open.
 
-When an owned Desktop sidecar has a **Ready** object, **Arm quarantine** opens a system dialog with the selected object, its recorded owner, ID and generation. Confirming records **Armed** in the ledger. Cancel leaves the ledger unchanged. Arming leaves the object in its original location.
+**IN/OUT** is read-only. **Ready** reflects the recorded observation. The view also shows saved approvals and flags changed records as **Refused**. Arming requires live verification of the object's identity and eligibility, which is pending.
 
 **Quarantine** shows **collection unavailable** while the filesystem capability is absent.
 

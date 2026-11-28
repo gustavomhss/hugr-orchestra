@@ -20,6 +20,7 @@ describe("test shard planner", () => {
 
   test("package filters cover each package once or its complete App, Desktop, Boundary or Maestro partition and keep future packages in libs", () => {
     const packages = [...registry.modules.filter((entry) => entry.kind === "bun" && entry.scope === ".").map((entry) => entry.name), "@orchestra/future-package"]
+    const maestroWindows = packageShards(JSON.parse(readFileSync(new URL("../src/test-timings.json", import.meta.url), "utf8")) as Timings, "modules/maestro/coordination", "windows")
     for (const [platform, host] of [["linux", "ubuntu-24.04"], ["windows", "windows-latest"]] as const) {
       const lanes = [
         { part: "core", filters: "--filter=@orchestra/core" },
@@ -32,11 +33,11 @@ describe("test shard planner", () => {
           const included = filters.filter((filter) => !filter.startsWith("!"))
           return (included.length === 0 || included.includes(name)) && !filters.includes(`!${name}`)
         }).map((lane) => lane.part)
-        expect(selected).toHaveLength(name === "@orchestra/desktop" || platform === "windows" && name === "@orchestra/app" ? 4 : platform === "windows" && ["@orchestra/atlas-boundary", "@orchestra/maestro"].includes(name) ? 2 : platform === "windows" && name === "@orchestra/httpapi-codegen" ? 0 : 1)
+        expect(selected).toHaveLength(name === "@orchestra/desktop" || platform === "windows" && name === "@orchestra/app" ? 4 : platform === "windows" && name === "@orchestra/atlas-boundary" ? 2 : platform === "windows" && name === "@orchestra/maestro" ? maestroWindows : platform === "windows" && name === "@orchestra/httpapi-codegen" ? 0 : 1)
         if (name === "@orchestra/script")
           expect(selected).toEqual([platform === "linux" ? "packages-libs" : `windows-${name.slice("@orchestra/".length)}`])
         if (name === "@orchestra/maestro")
-          expect(selected).toEqual(platform === "linux" ? ["packages-libs"] : ["windows-maestro-1", "windows-maestro-2"])
+          expect(selected).toEqual(platform === "linux" ? ["packages-libs"] : Array.from({ length: maestroWindows }, (_, index) => `windows-maestro-${index + 1}`))
         if (name === "@orchestra/future-package") expect(selected).toEqual([platform === "linux" ? "packages-libs" : "windows-libs"])
       }
     }
@@ -190,7 +191,9 @@ describe("test shard planner", () => {
 
   test("Windows CLI, Server and clients have disjoint owners without changing package wrappers", () => {
     const lanes = packageLanes("windows", "fixture-host") as { part: string; filters?: string; turbo?: boolean; budget?: number }[]
-    expect(lanes).toHaveLength(19)
+    const maestroWindows = packageShards(JSON.parse(readFileSync(new URL("../src/test-timings.json", import.meta.url), "utf8")) as Timings, "modules/maestro/coordination", "windows")
+    // Seventeen lanes besides Maestro. Maestro's own count follows the measured complement.
+    expect(lanes).toHaveLength(17 + maestroWindows)
     const expected = [
       { name: "windows", host: "fixture-host", part: "windows-cli", label: "cli", turbo: true, filters: "--filter=@orchestra/cli" },
       { name: "windows", host: "fixture-host", part: "windows-server", label: "server", turbo: true, filters: "--filter=@orchestra/server" },
@@ -254,22 +257,40 @@ describe("test shard planner", () => {
       .map((file) => `test/${file.replaceAll("\\", "/")}`).toSorted()
     const currency = "test/v2-reservation-currency.test.ts"
     const bins = plannedBins(timings, directory, "windows")
-    expect(packageShards(timings, directory, "windows")).toBe(2)
+    expect(packageShards(timings, directory, "windows")).toBe(bins.length)
+    expect(bins.length).toBeGreaterThan(2)
     expect(packageShards(timings, directory, "linux")).toBe(1)
-    expect(bins.map((bin) => bin.names.toSorted())).toEqual([[currency], files.filter((file) => file !== currency)])
-    expect(bins[1]!.names.length).toBeGreaterThan(0)
+    expect(bins[0]?.names).toEqual([currency])
+    expect(bins.slice(1).every((bin) => bin.names.length > 0)).toBe(true)
     expect(bins.flatMap((bin) => bin.names).toSorted()).toEqual(files)
     expect(new Set(bins.flatMap((bin) => bin.names)).size).toBe(files.length)
     expect(plannedBins(timings, directory, "windows")).toEqual(bins)
     // A later timing refresh must not fill the singleton, even if currency becomes the lightest file.
     const changed = { ...timings, files: { ...timings.files, [`${directory}:windows`]: Object.fromEntries(files.map((file) => [file, file === currency ? 1 : 1000])) } }
-    expect(plannedBins(changed, directory, "windows").map((bin) => bin.names)).toEqual(bins.map((bin) => bin.names))
+    const heavy = plannedBins(changed, directory, "windows")
+    expect(heavy[0]?.names).toEqual([currency])
+    expect(heavy.length).toBeGreaterThan(2)
+    expect(heavy.flatMap((bin) => bin.names).toSorted()).toEqual(files)
+    expect(heavy.slice(1).every((bin) => bin.names.length > 0)).toBe(true)
+    expect(fitsWindowsTarget(timings, bins.slice(1))).toBe(true)
+    expect(bins[0]?.seconds).toBeGreaterThanOrEqual(180)
+    const heavyNames = files.filter((file) => file !== currency).slice(0, 4)
+    const crowded = {
+      ...timings,
+      files: { ...timings.files, [`${directory}:windows`]: Object.fromEntries(files.map((file) => [file, heavyNames.includes(file) ? 120 : file === currency ? 1 : 0.05])) },
+      reserves: { ...timings.reserves, [`${directory}:windows`]: {} },
+      totals: { ...timings.totals, [directory]: { windows: 0 } },
+    }
+    const packed = plannedBins(crowded, directory, "windows")
+    expect(fitsWindowsTarget(crowded, packed.slice(1))).toBe(true)
+    for (const name of heavyNames) expect(packed.find((bin) => bin.names.includes(name))?.names.filter((file) => heavyNames.includes(file))).toEqual([name])
   })
 
   test("Windows Maestro lanes keep the package command, exact paths and unchanged execution budgets", () => {
     const lanes = packageLanes("windows", "fixture-host") as { part: string; filters?: string; maestroShard?: string; shard?: string; turbo?: boolean; budget?: number }[]
     const shards = lanes.filter((lane) => lane.maestroShard)
-    expect(shards.map((lane) => [lane.part, lane.maestroShard])).toEqual([["windows-maestro-1", "1/2"], ["windows-maestro-2", "2/2"]])
+    const maestroWindows = packageShards(JSON.parse(readFileSync(new URL("../src/test-timings.json", import.meta.url), "utf8")) as Timings, "modules/maestro/coordination", "windows")
+    expect(shards.map((lane) => [lane.part, lane.maestroShard])).toEqual(Array.from({ length: maestroWindows }, (_, index) => [`windows-maestro-${index + 1}`, `${index + 1}/${maestroWindows}`]))
     expect(shards.every((lane) => lane.filters === "--filter=@orchestra/maestro" && lane.turbo && lane.budget === undefined && lane.shard === undefined)).toBe(true)
     const pkg = JSON.parse(readFileSync(new URL("../../../modules/maestro/coordination/package.json", import.meta.url), "utf8"))
     expect(pkg.scripts.test).toBe("bun test --timeout 30000")
@@ -489,3 +510,7 @@ describe("test shard planner", () => {
     expect(suiteTimes(`<testsuite name="C:\\repo\\apps\\desktop\\src\\main\\owned-serve.test.ts" time="65.5"/><testsuite name="apps/desktop/scripts/stage-claude.test.ts" time="2"/><testsuite name="electron-builder.config.test.ts" time="0.2"/>`)).toEqual([["src/main/owned-serve.test.ts", 65.5], ["scripts/stage-claude.test.ts", 2], ["electron-builder.config.test.ts", 0.2]])
   })
 })
+
+function fitsWindowsTarget(timings: Timings, bins: { seconds: number; names: string[] }[]) {
+  return bins.every((bin) => bin.names.length <= 1 || bin.seconds * timings.overhead.windows * timings.margin <= timings.target.windows)
+}

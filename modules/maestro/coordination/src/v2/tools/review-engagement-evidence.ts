@@ -9,6 +9,7 @@ import type { PermissionV2 } from "@orchestra/core/permission"
 import type { SessionStore } from "@orchestra/core/session"
 import { Tool } from "@orchestra/core/tool/tool"
 import { ReviewEngagementArtifactsV2 } from "../workflow/review-engagement-artifacts"
+import { ReviewFixArtifactsV2 } from "../workflow/review-fix-artifacts"
 import type { MaestroToolGate } from "./gate"
 import { ReviewEngagementStoreV2 } from "./review-engagement-store"
 
@@ -43,10 +44,14 @@ export function tools(input: {
         }).pipe(Effect.mapError((error) => new Tool.Failure({ message: "Engagement evidence was not permitted", error })))
         const parent = yield* input.store.get(context.sessionID)
         if (!parent) return yield* failure("engagement-evidence-not-found", "no authorized terminal report")
-        const terminal = yield* ReviewEngagementStoreV2.make(input.database).lookup(parent, params.reportID)
-        if (!terminal) return yield* failure("engagement-evidence-not-found", "no authorized terminal report")
+        const store = ReviewEngagementStoreV2.make(input.database)
+        const terminal = yield* store.lookup(parent, params.reportID)
         const artifacts = yield* ReviewEngagementArtifactsV2.make({ database: input.database, fs: input.fs, global: input.global })
-        return yield* artifacts.resolve(terminal, params)
+        if (terminal) return yield* artifacts.resolve(terminal, params)
+        const fix = yield* store.lookupFix(parent, params.reportID)
+        if (!fix) return yield* failure("engagement-evidence-not-found", "no authorized terminal report")
+        const evidence = yield* ReviewFixArtifactsV2.load(artifacts, fix)
+        return yield* ReviewEngagementArtifactsV2.resolveEvidence(params, evidence)
       }).pipe(Effect.timeoutOrElse({ duration: "60 seconds", orElse: () =>
         Effect.fail(failure("engagement-evidence-timeout", "bounded evidence read elapsed")) })),
     }),

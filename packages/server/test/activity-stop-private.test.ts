@@ -26,6 +26,15 @@ test.skipIf(process.platform !== "win32")("the private stop consumes one approva
     ])).pipe(Effect.asVoid))
     const recordID = ActivityMonitor.observe(child, "fixture process", "fixture session")
     const otherID = ActivityMonitor.observe(untouched, "untouched process", "fixture session")
+    const nativeStop = child.stopSelected.bind(child)
+    child.stopSelected = async (members) => {
+      expect(members).toHaveLength(1)
+      expect(members[0].startsWith(`${child.pid}:`)).toBe(true)
+      await nativeStop(members)
+      // The immediate native receipt can be uncertain. Observe this exact root's exit before delivering its receipt.
+      expect((await child.wait()).exitCode).toBe(1)
+      return ["exited"]
+    }
     const stop = ActivityStopService.make(database)
     const secret = crypto.getRandomValues(new Uint8Array(32))
     const signer = yield* Effect.promise(() => ActivityPrivateChannel.signer(secret))
@@ -62,8 +71,7 @@ test.skipIf(process.platform !== "win32")("the private stop consumes one approva
       expect((await post(ActivityPrivateChannel.stopConfirmPath, request, false)).status).toBe(403)
       const receipt = ActivityStop.decodeReceipt((await post(ActivityPrivateChannel.stopConfirmPath, request)).value)
       expect(receipt._tag).toBe("Some")
-      if (receipt._tag === "Some") expect(receipt.value.outcomes.map((outcome) => outcome.member)).toEqual([...preview.value.members])
-      await child.wait()
+      if (receipt._tag === "Some") expect(receipt.value.outcomes).toEqual([{ member: preview.value.members[0], state: "exited" }])
       expect(await ActivityMonitor.control(otherID)).toBeDefined()
       expect((await post(ActivityPrivateChannel.stopConfirmPath, request)).status).toBe(409)
     })

@@ -28,7 +28,7 @@ function invalidateFootprint(entry: Entry) {
 }
 
 /** An observer never owns a child or changes its I/O, stop policy, adoption or lifetime. */
-export function make() {
+export function make(now: () => number = Date.now) {
   const entries = new Map<string, Entry>()
   const cpu = ActivityCPU.make()
   const status = { instanceID: crypto.randomUUID(), retired: 0, closure: 0 }
@@ -76,7 +76,7 @@ export function make() {
     ])
       .then(
         (observation) => {
-          const sampledAt = Date.now()
+          const sampledAt = now()
           const members = observation.members
           const bytes = observation.physicalFootprintBytes
           const complete = entry.record.supervisorID && members.length > 0 &&
@@ -88,13 +88,17 @@ export function make() {
             const identity = observation.footprintIdentity
               ? JSON.stringify([observation.footprintIdentity, members.map((member) => [member.pid, member.parentPid]).sort((a, b) => (a[0] ?? 0) - (b[0] ?? 0))])
               : undefined
-            if (!identity || entry.footprintMembers !== identity || (entry.footprintSamples.at(-1)?.sampledAt ?? -1) >= sampledAt)
-              entry.footprintSamples = []
+            if (!identity || entry.footprintMembers !== identity) entry.footprintSamples = []
+            const previousAt = entry.footprintSamples.at(-1)?.sampledAt ?? -1
             entry.footprintMembers = identity
-            entry.footprintSamples.push({ source: "footprint", bytes, sampledAt })
-            entry.footprintSamples = entry.footprintSamples.slice(-64)
-            entry.record = { ...entry.record, footprint: { source: "omni.darwin.phys-footprint", bytes, sampledAt,
-              hypothesis: ActivityFootprintHypothesis.evaluate({ samples: entry.footprintSamples, workFinishedAt: entry.workFinishedAt }) } }
+            // A second reading in the same millisecond is not a new point. Wiping the series
+            // drops the pre-completion baseline, and every later sample stays "insufficient".
+            if (sampledAt > previousAt) {
+              entry.footprintSamples.push({ source: "footprint", bytes, sampledAt })
+              entry.footprintSamples = entry.footprintSamples.slice(-64)
+              entry.record = { ...entry.record, footprint: { source: "omni.darwin.phys-footprint", bytes, sampledAt,
+                hypothesis: ActivityFootprintHypothesis.evaluate({ samples: entry.footprintSamples, workFinishedAt: entry.workFinishedAt }) } }
+            }
           } else invalidateFootprint(entry)
           entry.record = {
             ...entry.record,
@@ -215,7 +219,8 @@ export function make() {
             if (entries.get(recordID) !== entry || entry.child.deref() !== child || entry.rootSettled || child.treeId !== identity)
               return selected.map(() => "unknown" as const)
             const result = await native.stopSelected!(selected)
-            if (entries.get(recordID) !== entry || entry.child.deref() !== child || entry.rootSettled || child.treeId !== identity)
+            // The approved stop can settle the root before its native receipt reaches us.
+            if (entries.get(recordID) !== entry || entry.child.deref() !== child || child.treeId !== identity)
               return selected.map(() => "unknown" as const)
             return result
           },

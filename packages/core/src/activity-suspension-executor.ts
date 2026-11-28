@@ -8,7 +8,7 @@ type Request = Readonly<{
   members: readonly string[]
 }> & (Readonly<{ action: "suspend" }> | Readonly<{ action: "resume"; markID: string }>)
 
-/** A native authority must verify the live tree and its selected members at admission. */
+/** A native authority must verify the live tree and its selected members at admission and settle within its deadline. */
 export type Control = (
   scope: ActivitySuspensionLedger.Scope,
   attempt: ActivitySuspensionLedger.Attempt,
@@ -16,6 +16,7 @@ export type Control = (
 
 /** The caller owns human authorization. A restart or interruption never retries a recorded attempt. */
 export function execute(ledger: ActivitySuspensionLedger.Interface, control: Control, request: Request) {
+  // A disconnected caller can no longer cancel the receipt once the effect is admitted.
   return Effect.gen(function* () {
     const mark = yield* (request.action === "suspend" ? ledger.beginSuspend(request) : ledger.beginResume(request))
     if (!mark?.pending) return undefined
@@ -29,5 +30,5 @@ export function execute(ledger: ActivitySuspensionLedger.Interface, control: Con
       if (settled) return settled
     }
     return yield* settle(attempt.members.map((memberID) => ({ memberID, effect: "unknown" })))
-  })
+  }).pipe(Effect.uninterruptible)
 }
