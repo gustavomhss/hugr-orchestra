@@ -13,13 +13,21 @@ export interface Interface {
   readonly confirm: (request: ActivityArm.Confirm) => Effect.Effect<ActivityArm.Receipt | undefined, unknown>
 }
 
+type Options = {
+  readonly now?: () => number
+  /** Checks current identity and eligibility through the authority for this exact object. */
+  readonly verify?: (target: ActivityActionLedger.Target) => Effect.Effect<boolean, unknown>
+}
+
 /** An owner is constructed once per private Desktop channel incarnation. */
-export function make(database: Database.Interface, options?: { readonly now?: () => number }): Interface {
+export function make(database: Database.Interface, options?: Options): Interface {
   const now = options?.now ?? Date.now
+  const verify = options?.verify
   const previews = new Map<string, { expiresAt: number; targets: ActivityActionLedger.Target[]; preview: ActivityArm.Preview }>()
   return {
     preview(request) {
       return Effect.gen(function* () {
+        if (!verify) return undefined
         const decoded = ActivityArm.decodeRequest(request)
         if (Option.isNone(decoded) || new Set(decoded.value.targets.map((target) => target.targetID)).size !== decoded.value.targets.length)
           return undefined
@@ -45,13 +53,16 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
       })
     },
     confirm(request) {
-      return Effect.suspend(() => {
+      return Effect.gen(function* () {
+        if (!verify) return undefined
         const decoded = ActivityArm.decodeConfirm(request)
-        if (Option.isNone(decoded)) return Effect.succeed(undefined)
+        if (Option.isNone(decoded)) return undefined
         const entry = previews.get(decoded.value.previewID)
         previews.delete(decoded.value.previewID)
-        if (!entry || entry.expiresAt <= now()) return Effect.succeed(undefined)
-        return database.db.transaction((tx) => Effect.gen(function* () {
+        if (!entry || entry.expiresAt <= now()) return undefined
+        const verified = yield* Effect.forEach(entry.targets, (target) => verify(structuredClone(target)))
+        if (verified.some((result) => result !== true)) return undefined
+        return yield* database.db.transaction((tx) => Effect.gen(function* () {
           if (entry.expiresAt <= now()) return undefined
           const rows = yield* Effect.forEach(entry.targets, (target) => tx.select().from(ActivityActionLedgerTable)
             .where(eq(ActivityActionLedgerTable.target_id, target.targetID)).get())

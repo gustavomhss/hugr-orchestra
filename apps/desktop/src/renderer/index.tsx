@@ -177,7 +177,6 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
     os,
     version: pkg.version,
     windowID: windowState.id,
-    armActivityQuarantine: (serverURL, request) => window.api.armActivityQuarantine(serverURL, request),
 
     async openDirectoryPickerDialog(opts) {
       return window.api.openDirectoryPicker({
