@@ -124,16 +124,16 @@ def main():
     # Forward only the frozen consumer route through the public reader. Full-body calls already
     # verified above can be reused byte-for-byte without adding them to the consumer's budget twice.
     route = {
-        'S4:L3:system-flows': None,
-        'S4:L2:atlas-system': None,
-        'S4:L2:genesis-governance': None,
+        'S4:L3:system-flows': 'Mudanças propagam por resultados e vínculos',
+        'S4:L2:atlas-system': 'Por que texto igual pode exigir outro resultado',
+        'S4:L2:genesis-governance': 'Da produção nativa à porta de consumo',
         'S4:L2:continuity-rag-operations': None,
         'S4:L1:ownership-boundaries': 'What each identity means',
         'S4:L1:atlas-engine': 'Knowledge: shape, routing, human ratification, and ownership results',
         'S4:L1:atlas-host-genesis': 'Ownership publication, observation and rebuild',
-        'S4:L1:continuity-rag': 'Continuity: recoverable request reduction around the Session core',
+        'S4:L1:continuity-rag': None,
         'S4:L1:coverage-governance': 'Observer limits are not scope limits',
-        'S4:L1:host-boundaries': '2. HTTP RAG → Store por requisição → SQLite',
+        'S4:L1:host-boundaries': None,
         'S4:L1:native-runtime-delta': 'Consumo e manutenção pela porta real',
     }
     read_tags = {artifact['key']: f'read-{number:02d}' for number, artifact in enumerate(package['artifacts'], 1)}
