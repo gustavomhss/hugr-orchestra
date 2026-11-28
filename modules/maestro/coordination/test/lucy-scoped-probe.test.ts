@@ -32,8 +32,8 @@ test(qualified
         const lens = /Stage: hunt, lens ([^,]+),/.exec(turn.log.text)?.[1]
         if (!lens) throw new Error("real candidate lens missing")
         return text(fence(ReviewFanoutV2.TAGS.lens, { lens, candidates: lens === "correctness-logic" ? [{
-          path: sourcePath, line: 1, endLine: 1, severity: "P1", confidence: "high", class: "logic.contract",
-          lens, node: "lucy-lens-correctness-logic-invariants", rule: "logic.contract",
+          path: sourcePath, line: 1, endLine: 1, severity: "P1", class: "logic.contract",
+          node: "lucy-lens-correctness-logic-invariants",
           quote: brokenSource.trimEnd(),
           trigger: "The exported string contract accepts a numeric value.",
         }] : [], observations: [], hunks: [], items: [] }))
@@ -90,6 +90,7 @@ test(qualified
         expect(original.value).not.toHaveProperty("scopedProbes")
         return undefined
       }
+      expect(finding.evidence.kind, "public-scoped-probe-unavailable").toBe("probe")
       expect(finding).toMatchObject({ path: sourcePath, line: 1, class: "logic.contract", rule: "logic.contract",
         evidence: { kind: "probe" } })
       const probeRows = (original.value as typeof original.value & { scopedProbes?: ReadonlyArray<{ proofID: string; artifactID: string }> }).scopedProbes
