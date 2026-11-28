@@ -1,0 +1,253 @@
+{
+  "schema": "genesis-s2-consumer-routing/v1",
+  "candidate_id": "ade18f60d8b143fc90fae24bc5c6cd1c14d1e56756800f14b65d19f7eacdf542",
+  "cases": [
+    {
+      "id": "S2-C1",
+      "mode": "deep",
+      "calls": [
+        {
+          "operation": "index",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "need": "entry"
+          }
+        }
+      ]
+    },
+    {
+      "id": "S2-C2",
+      "mode": "deep",
+      "calls": [
+        {
+          "operation": "index",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "need": "entry"
+          }
+        }
+      ]
+    },
+    {
+      "id": "S2-C3",
+      "mode": "deep",
+      "calls": [
+        {
+          "operation": "index",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "need": "entry"
+          }
+        }
+      ]
+    },
+    {
+      "id": "S2-C4",
+      "mode": "deep",
+      "calls": [
+        {
+          "operation": "index",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "need": "entry"
+          }
+        }
+      ]
+    },
+    {
+      "id": "S2-C5",
+      "mode": "routine",
+      "calls": [
+        {
+          "operation": "index",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "need": "entry"
+          }
+        }
+      ]
+    },
+    {
+      "id": "S2-I1D",
+      "mode": "routine",
+      "calls": [
+        {
+          "operation": "index",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "need": "entry"
+          }
+        },
+        {
+          "operation": "read",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "key": "s2.l1.desktop-web",
+            "maxBytes": 16000
+          }
+        }
+      ]
+    },
+    {
+      "id": "S2-I1A",
+      "mode": "routine",
+      "calls": [
+        {
+          "operation": "read",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "key": "s2.l1.app-session",
+            "maxBytes": 16000
+          }
+        }
+      ]
+    },
+    {
+      "id": "S2-I1U",
+      "mode": "routine",
+      "calls": [
+        {
+          "operation": "index",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "need": "entry"
+          }
+        },
+        {
+          "operation": "read",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "key": "s2.l1.design-tui",
+            "maxBytes": 16000
+          }
+        }
+      ]
+    },
+    {
+      "id": "S2-I2D",
+      "mode": "routine",
+      "calls": [
+        {
+          "operation": "index",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "need": "entry"
+          }
+        },
+        {
+          "operation": "read",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "key": "s2.l2.desktop-web",
+            "maxBytes": 16000
+          }
+        }
+      ]
+    },
+    {
+      "id": "S2-I2A",
+      "mode": "routine",
+      "calls": [
+        {
+          "operation": "index",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "need": "entry"
+          }
+        },
+        {
+          "operation": "read",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "key": "s2.l2.app-session",
+            "maxBytes": 16000
+          }
+        }
+      ]
+    },
+    {
+      "id": "S2-I2U",
+      "mode": "routine",
+      "calls": [
+        {
+          "operation": "index",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "need": "entry"
+          }
+        },
+        {
+          "operation": "read",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "key": "s2.l2.design-tui",
+            "maxBytes": 16000
+          }
+        }
+      ]
+    },
+    {
+      "id": "S2-I3D",
+      "mode": "routine",
+      "calls": [
+        {
+          "operation": "index",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "need": "entry"
+          }
+        },
+        {
+          "operation": "read",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "key": "s2.l3.desktop-web",
+            "maxBytes": 16000
+          }
+        }
+      ]
+    },
+    {
+      "id": "S2-I3A",
+      "mode": "deep",
+      "calls": [
+        {
+          "operation": "index",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "need": "entry"
+          }
+        },
+        {
+          "operation": "read",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "key": "s2.l3.app-session",
+            "maxBytes": 16000
+          }
+        }
+      ]
+    },
+    {
+      "id": "S2-I3U",
+      "mode": "routine",
+      "calls": [
+        {
+          "operation": "index",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "need": "entry"
+          }
+        },
+        {
+          "operation": "read",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "key": "s2.l3.design-tui",
+            "maxBytes": 16000
+          }
+        }
+      ]
+    }
+  ]
+}

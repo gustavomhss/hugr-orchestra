@@ -8,6 +8,16 @@ on:
         required: true
         type: boolean
         default: false
+      run_consumer_routes:
+        description: Run the frozen initial consumer route after exact admission
+        required: true
+        type: boolean
+        default: false
+      await_consumer_followup:
+        description: Wait up to seven minutes for run-bound follow-up routes
+        required: true
+        type: boolean
+        default: false
   push:
     branches: ["genesis-interfaces-resume"]
     paths:
@@ -59,9 +69,9 @@ jobs:
           jq -e --arg candidate ade18f60d8b143fc90fae24bc5c6cd1c14d1e56756800f14b65d19f7eacdf542 \
             '.candidate_id == $candidate and .state == "PREPARED_NOT_ADMITTED"' "$S2_ROOT/evidence/run/verification.json"
       - name: Admit the exact reviewed candidate in isolated state
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.admit_exact_candidate == true }}
+        if: ${{ github.event_name == 'workflow_dispatch' && (inputs.admit_exact_candidate == true || inputs.run_consumer_routes == true) }}
         env:
-          ADMIT_EXACT_CANDIDATE: ${{ inputs.admit_exact_candidate }}
+          ADMIT_EXACT_CANDIDATE: ${{ inputs.admit_exact_candidate || inputs.run_consumer_routes }}
         shell: bash
         run: |
           set -euo pipefail
@@ -71,6 +81,51 @@ jobs:
             --prepared "$S2_ROOT/evidence/run/prepared.json" \
             --binding-directory "$GITHUB_WORKSPACE/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/admission-ade18f60" \
             --output "$S2_ROOT/evidence/admission"
+      - name: Run the initial routed reader calls
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_consumer_routes == true }}
+        env:
+          RUN_CONSUMER_ROUTES: 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 script/genesis-s2/consume.py \
+            --runtime "$S2_ROOT/runtime" --source "$S2_ROOT/evidence/run/corpus" \
+            --prepared "$S2_ROOT/evidence/run/prepared.json" --admission "$S2_ROOT/evidence/admission" \
+            --routing "$GITHUB_WORKSPACE/script/genesis-s2/consumer-routing.json" \
+            --output "$S2_ROOT/evidence/consumer-routes" --phase initial
+      - name: Upload initial traces for follow-up selection
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_consumer_routes == true }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: genesis-s2-initial-routes-${{ github.run_id }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          path: ${{ env.S2_ROOT }}/evidence/consumer-routes/initial
+          retention-days: 30
+      - name: Await a run-bound follow-up on the same runner
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_consumer_routes == true && inputs.await_consumer_followup == true }}
+        env:
+          RUN_CONSUMER_ROUTES: 'true'
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 script/genesis-s2/consume.py \
+            --runtime "$S2_ROOT/runtime" --source "$S2_ROOT/evidence/run/corpus" \
+            --prepared "$S2_ROOT/evidence/run/prepared.json" --admission "$S2_ROOT/evidence/admission" \
+            --routing "$GITHUB_WORKSPACE/script/genesis-s2/consumer-routing.json" \
+            --output "$S2_ROOT/evidence/consumer-routes" --phase followup --wait-followup
+      - name: Run accepted follow-up without resetting budgets
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_consumer_routes == true && inputs.await_consumer_followup == true }}
+        env:
+          RUN_CONSUMER_ROUTES: 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 script/genesis-s2/consume.py \
+            --runtime "$S2_ROOT/runtime" --source "$S2_ROOT/evidence/run/corpus" \
+            --prepared "$S2_ROOT/evidence/run/prepared.json" --admission "$S2_ROOT/evidence/admission" \
+            --routing "$GITHUB_WORKSPACE/script/genesis-s2/consumer-routing.json" \
+            --output "$S2_ROOT/evidence/consumer-routes" --phase followup
       - name: Preserve evidence even on failure
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
