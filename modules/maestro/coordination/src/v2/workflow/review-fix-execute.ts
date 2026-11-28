@@ -38,7 +38,8 @@ export function run(input: Input): Effect.Effect<Output, Tool.Failure> {
   const selected = ReviewFixJudgmentV2.sort(input.previous.selected)
   const cap = input.previous.tier.budget.verifiers
   const admitted = selected.slice(0, cap)
-  const deferred = new Map(selected.slice(cap).map((item) => [item.finding.id, "verification-budget" as const]))
+  const deferred = new Map<string, NotExaminedReason>(selected.slice(cap).map((item) =>
+    [item.finding.id, cap === 0 ? "independent-verification-unavailable" : "verification-budget"]))
   const results = new Map<string, { readonly examination: ReviewFixSchemaV2.Examination; readonly regions: readonly ReviewVariantSchemaV2.CapturedRegion[]; readonly reply: ReviewVariantSchemaV2.NativeReply }>()
   const observations: ReviewFixSchemaV2.ToolObservation[] = []
   return Effect.gen(function* () {
@@ -57,42 +58,40 @@ export function run(input: Input): Effect.Effect<Output, Tool.Failure> {
       observationByFinding.set(retest.item.finding.id, retest.observed)
       observations.push(retest.observed)
     }
-    const outcomes = yield* Effect.forEach(admitted, (item) => Effect.either(Effect.gen(function* () {
-      if (deferred.has(item.finding.id)) return { skipped: true as const, findingID: item.finding.id }
-      const initial = yield* Effect.forEach(ReviewFixJudgmentV2.regions(item), (range) => input.read(range.path, range.startLine, range.endLine), { concurrency: 2 })
-      const regions = [...new Map(initial.map((region) => [region.regionID, region])).values()]
-      const findingObservations = observationByFinding.has(item.finding.id) ? [observationByFinding.get(item.finding.id)!] : []
-      const reply = yield* input.verifier(item, regions, findingObservations)
-      const currentRegions = [...regions]
-      for (const support of extractSupports(reply)) {
+    const outcomes = yield* Effect.forEach(admitted, (item) => Effect.gen(function* () {
+      const id = item.finding.id
+      if (deferred.has(id)) return undefined
+      const initial = yield* Effect.forEach(ReviewFixJudgmentV2.regions(item), (range) => input.read(range.path, range.startLine, range.endLine),
+        { concurrency: 2 }).pipe(Effect.catch((error) => regionUnavailable(error) ? Effect.succeed(undefined) : Effect.fail(error)))
+      if (!initial) {
+        deferred.set(id, "region-unavailable")
+        return undefined
+      }
+      const currentRegions = [...new Map(initial.map((region) => [region.regionID, region])).values()]
+      const observation = observationByFinding.get(id)
+      const findingObservations = observation ? [observation] : []
+      const reply = yield* input.verifier(item, currentRegions, findingObservations)
+      const parsed = yield* judge(() => ReviewFixJudgmentV2.parse(reply.text))
+      for (const support of parsed.supporting) {
         if (support.kind !== "quote" || currentRegions.some((region) => region.path === support.path &&
           region.startLine === support.startLine && region.endLine === support.endLine)) continue
-        const extra = yield* input.read(support.path, support.startLine, support.endLine)
+        if (!item.files.includes(support.path)) return yield* invalid("fix verifier supplied a foreign quote")
+        const extra = yield* input.read(support.path, support.startLine, support.endLine).pipe(
+          Effect.catch((error) => regionUnavailable(error) ? Effect.fail(invalid("fix verifier supplied an unavailable quote")) : Effect.fail(error)))
         currentRegions.push(extra)
       }
-      const relatedFiles = item.files
-      const examination = ReviewFixJudgmentV2.examine({ inputHash: input.inputHash, source: input.source,
-        priorSource: input.previous.source, finding: item, relatedFiles, regions: currentRegions,
-        observations: findingObservations, reply })
-      return { item, examination, regions: currentRegions, reply }
-    })).pipe(Effect.map((result) => ({ item, result }))), { concurrency: 2 })
-    for (const outcome of outcomes) {
-      if (outcome.result._tag === "Left") {
-        if (regionUnavailable(outcome.result.left)) {
-          deferred.set(outcome.item.finding.id, "region-unavailable")
-          continue
-        }
-        return yield* outcome.result.left
-      }
-      if ("skipped" in outcome.result.right) continue
-      results.set(outcome.result.right.item.finding.id, outcome.result.right)
-    }
+      const examination = yield* judge(() => ReviewFixJudgmentV2.examine({ inputHash: input.inputHash, source: input.source,
+        priorSource: input.previous.source, finding: item, relatedFiles: item.files, regions: currentRegions,
+        observations: findingObservations, reply }))
+      return { id, examination, regions: currentRegions, reply }
+    }), { concurrency: 2 })
+    for (const outcome of outcomes) if (outcome) results.set(outcome.id, outcome)
     const final = buildOutput(input, results, deferred, observations)
     return final
   })
 }
 
-function buildOutput(input: Input, results: ReadonlyMap<string, { readonly item: ReviewFixJudgmentV2.Finding; readonly examination: ReviewFixSchemaV2.Examination; readonly regions: readonly ReviewVariantSchemaV2.CapturedRegion[]; readonly reply: ReviewVariantSchemaV2.NativeReply }>, deferred: ReadonlyMap<string, NotExaminedReason>, observations: readonly ReviewFixSchemaV2.ToolObservation[]): Output {
+function buildOutput(input: Input, results: ReadonlyMap<string, { readonly examination: ReviewFixSchemaV2.Examination; readonly regions: readonly ReviewVariantSchemaV2.CapturedRegion[]; readonly reply: ReviewVariantSchemaV2.NativeReply }>, deferred: ReadonlyMap<string, NotExaminedReason>, observations: readonly ReviewFixSchemaV2.ToolObservation[]): Output {
   const examinations = [...results.values()].map((item) => item.examination)
   const usedObservationIDs = new Set(examinations.flatMap((item) => item.offeredObservationIDs))
   const replies = [...results.values()].map((item) => item.reply)
@@ -113,7 +112,7 @@ function buildOutput(input: Input, results: ReadonlyMap<string, { readonly item:
     return [[ReviewEngagementReportV2.canonical(citation), { ...citation,
       uri: `review-engagement://${input.sessionID}/citation/${ReviewEngagementReportV2.digest(citation)}` }]]
   })).values()]
-  const questions = examinations.flatMap((item) => item.disposition === "question"
+  const questions = dispositions.flatMap((item) => item.disposition === "question"
     ? [{ findingID: item.findingID, question: item.reason }] : [])
   const notExamined = dispositions.flatMap((item) => item.disposition === "not-examined"
     ? [{ item: item.findingID, reason: item.reason }] : [])
@@ -122,12 +121,12 @@ function buildOutput(input: Input, results: ReadonlyMap<string, { readonly item:
     observations: observations.filter((item) => usedObservationIDs.has(item.observationID)), examinations, regions, replies }
 }
 
-function extractSupports(reply: ReviewVariantSchemaV2.NativeReply) {
-  const marker = "```review-fix-verify"
-  const body = new RegExp("```review-fix-verify[ \\t]*\\r?\\n([\\s\\S]*?)\\r?\\n```").exec(reply.text)?.[1]
-  if (!body || reply.text.split(marker).length !== 2) return []
-  const parsed = ReviewFixJudgmentV2.parse(reply.text)
-  return parsed.supporting
+function invalid(detail: string) {
+  return new Tool.Failure({ message: `engagement-report-invalid: ${detail}`, metadata: { reason: "engagement-report-invalid" } })
+}
+
+function judge<A>(read: () => A) {
+  return Effect.try({ try: read, catch: (error) => error instanceof Tool.Failure ? error : invalid(String(error)) })
 }
 
 function regionUnavailable(error: Tool.Failure) {
@@ -142,11 +141,11 @@ function reason(value: string): NotExaminedReason {
   return "runtime-unavailable"
 }
 
-function observe(_input: Input, _item: ReviewFixPriorV2.Selected): Effect.Effect<ReviewFixSchemaV2.ToolObservation | string, Tool.Failure> {
-  const analysis = _input.snapshot.operations.find((operation) => operation.kind === "analysis" &&
-    operation.operationID === _input.snapshot.finalAnalysisOperationID)
-  if (!analysis || !_item.native) return Effect.succeed("runtime-unavailable")
-  return Effect.try({ try: () => ReviewFixRetestV2.observe({ inputHash: _input.inputHash, findingID: _item.finding.id,
-    priorProof: _item.native.proof, priorRecipe: _item.native.recipe, analysis, hostProofs: _input.snapshot.hostProofs,
-    bodies: _input.snapshot.bodies }), catch: (error) => error instanceof Tool.Failure ? error : ReviewEvidenceSchemaV2.failure("corrupt", String(error)) })
+function observe(input: Input, item: ReviewFixPriorV2.Selected): Effect.Effect<ReviewFixSchemaV2.ToolObservation | string, Tool.Failure> {
+  const analysis = input.snapshot.operations.find((operation) => operation.kind === "analysis" &&
+    operation.operationID === input.snapshot.finalAnalysisOperationID)
+  if (!analysis || !item.native) return Effect.succeed("runtime-unavailable")
+  return Effect.try({ try: () => ReviewFixRetestV2.observe({ inputHash: input.inputHash, findingID: item.finding.id,
+    priorProof: item.native.proof, priorRecipe: item.native.recipe, analysis, hostProofs: input.snapshot.hostProofs,
+    bodies: input.snapshot.bodies }), catch: (error) => error instanceof Tool.Failure ? error : ReviewEvidenceSchemaV2.failure("corrupt", String(error)) })
 }

@@ -99,8 +99,7 @@ export const run = Effect.fn("ReviewFixRequestV2.run")(function* (params: Reques
         return yield* perform(input, parent, sessions, execution, store, ticket, admitted.budget, repository, view, findings, children)
       }).pipe(Effect.scoped, Effect.timeoutOption(Duration.millis(remaining)))
       const result = yield* (remaining > 0 ? restore(work) : Effect.succeed(Option.none<Performed>())).pipe(Effect.exit)
-      const cleaned = yield* Effect.forEach([...children], (child) => execution.interrupt(child, { discardPending: true }),
-        { concurrency: "unbounded", discard: true }).pipe(Effect.exit)
+      const cleaned = yield* cleanup(execution, children).pipe(Effect.exit)
       if (Exit.isFailure(result) || Exit.isFailure(cleaned)) {
         const cause = Exit.isFailure(result) && Exit.isFailure(cleaned) ? Cause.combine(result.cause, cleaned.cause)
           : Exit.isFailure(result) ? result.cause : Exit.isFailure(cleaned) ? cleaned.cause : Cause.empty
@@ -214,6 +213,7 @@ function perform(input: Input, parent: SessionSchema.Info, sessions: SessionV2.I
       dispositions: facts.dispositions, citations: facts.citations, questions: facts.questions,
       notExamined: [...gaps, ...facts.notExamined],
     }), catch: (error) => failure("engagement-report-invalid", String(error)) })
+    yield* cleanup(execution, children)
     const evidence = yield* ReviewFixArtifactsV2.publish(repository, { authority: current, report, previous,
       snapshot: yield* collector.snapshot(), ...facts })
     return { result: report, evidence }
@@ -227,4 +227,9 @@ function running(store: ReviewEngagementStoreV2.Interface, ticket: ReviewEngagem
       return yield* failure("engagement-owner-lost", "fix review is no longer active")
     return current
   })
+}
+
+function cleanup(execution: SessionExecution.Interface, children: Set<SessionSchema.ID>) {
+  return Effect.forEach([...children], (child) => execution.interrupt(child, { discardPending: true }),
+    { concurrency: "unbounded", discard: true }).pipe(Effect.tap(() => Effect.sync(() => children.clear())))
 }

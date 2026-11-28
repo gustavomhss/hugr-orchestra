@@ -100,17 +100,20 @@ export function examine(input: Evidence & { readonly inputHash: string; readonly
   const hasTool = rawReturn.supporting.some((support) => support.kind === "tool")
   let disposition = rawReturn.disposition
   let reason = rawReturn.reason
-  if (disposition === "resolved" && unchanged) { disposition = "open"; reason = "unchanged-inputs" }
-  else if (disposition === "resolved" && finding.evidence.kind === "quote" && !hasQuote) disposition = "question"
-  else if (disposition === "resolved" && finding.evidence.kind === "tool" &&
-    (!hasTool || !input.observations.some((item) => offeredObservationIDs.includes(item.observationID) && item.result === "zero"))) disposition = "question"
-  else if (disposition === "dismissed" && (!rawReturn.refutation || !supportingIDs.length ||
-    finding.evidence.kind === "tool" && (!hasTool || !hasQuote ||
-      !input.observations.some((item) => offeredObservationIDs.includes(item.observationID) && item.result === "zero")))) disposition = "question"
-  else if (disposition !== "dismissed" && rawReturn.supporting.length === 0) disposition = "question"
-  else if (disposition === "resolved" && finding.evidence.kind === "tool" &&
+  if (disposition === "resolved" && unchanged) {
+    disposition = "open"
+    reason = "unchanged-inputs"
+  } else if (disposition === "resolved" && finding.evidence.kind === "tool" &&
     input.observations.some((item) => offeredObservationIDs.includes(item.observationID) && item.result === "nonzero")) {
-    disposition = "question"; reason = "native-results-remain"
+    disposition = "question"
+    reason = "native-results-remain"
+  } else if (disposition === "resolved" && (finding.evidence.kind === "quote" ? !hasQuote : !hasTool)) {
+    disposition = "question"
+  } else if (disposition === "dismissed" && (!rawReturn.refutation || !hasQuote ||
+    (finding.evidence.kind === "tool" && !hasTool))) {
+    disposition = "question"
+  } else if (rawReturn.supporting.length === 0) {
+    disposition = "question"
   }
   const withoutID = { findingID: finding.id, priorFindingSha256: prior.priorFindingSha256,
     verifierSessionID: reply.sessionID, replyID: reply.replyID, offeredObservationIDs, currentRegionIDs,
@@ -118,7 +121,7 @@ export function examine(input: Evidence & { readonly inputHash: string; readonly
   return { ...withoutID, examinationID: ReviewEngagementReportV2.digest({ schema: "review-fix-examination-v1", inputHash: input.inputHash, ...withoutID }) }
 }
 
-export function sort(findings: readonly Finding[]): Finding[] {
+export function sort<T extends Finding>(findings: readonly T[]): T[] {
   const rank = { P0: 0, P1: 1, P2: 2, P3: 3 } as const
   return [...findings].sort((left, right) => rank[left.finding.severity] - rank[right.finding.severity] ||
     (left.finding.id < right.finding.id ? -1 : left.finding.id > right.finding.id ? 1 : 0))
