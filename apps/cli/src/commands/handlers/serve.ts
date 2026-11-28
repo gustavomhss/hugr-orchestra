@@ -105,8 +105,12 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
       const unbind = ActivityQuarantineArchive.bind(custody)
       yield* Effect.addFinalizer(() => Effect.sync(unbind))
     }
+    const freeze = process.platform === "linux" ? yield* Effect.gen(function* () {
+      const { ActivityFreezeService } = yield* Effect.promise(() => import("@orchestra/core/activity-freeze-service"))
+      return ActivityFreezeService.make(database)
+    }) : undefined
     return yield* Effect.tryPromise({
-      try: (signal) => ActivityPrivateChannelServer.acquire(process.stdin, signal, arm, stop, custody),
+      try: (signal) => ActivityPrivateChannelServer.acquire(process.stdin, signal, arm, stop, custody, freeze),
       catch: () => new Error("Activity private channel startup failed"),
     })
   }) : undefined
