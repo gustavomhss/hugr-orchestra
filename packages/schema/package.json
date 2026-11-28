@@ -6,6 +6,7 @@
   "license": "MIT",
   "exports": {
     "./activity-monitor": "./src/activity-monitor.ts",
+    "./activity-empty": "./src/activity-empty.ts",
     "./activity-arm": "./src/activity-arm.ts",
     "./activity-stop": "./src/activity-stop.ts",
     "./activity-private-channel": "./src/activity-private-channel.ts",
