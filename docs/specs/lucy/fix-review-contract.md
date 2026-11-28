@@ -1,20 +1,10 @@
-# Lucy fix-review — partial A04 contract
+# Lucy fix-review (A04)
 
-**Status: frozen contract and tests-only predecessor, source review approved.**
-Production work remains gated on hosted package types and the intended baseline
-assertion failures. Source review alone does not authorize implementation or
-qualify runtime behavior.
-
-Baseline: qualified integrated source `2ec8b95d499b6bca3b25094ff388b04b659f557e`,
-tree `ca30822f4e55b47262807374886003cc6e53ac53`. Merge
-`2a9a60c0695e6bae5aaccf02000179307632faec` has identical source bytes.
-The public entry already accepts the `fixReview` input shape; the controller and
-Store currently refuse it. This contract gives that existing route a bounded,
-persisted retest. Implementation requires a compiling hosted assertion RED.
-
-This is a partial A04 delivery. Scoped engagement probes remain unqualified and
-require a separate real predecessor/execution/retention gate. This phase neither
-closes that obligation nor declares the wider Lucy go-live complete.
+The public `fixReview` route persists a bounded retest for retained findings.
+The first delivery, merged in #1670, covers captured source evidence and the
+qualified analyzer retest. Section 13 defines the scoped TypeScript extension
+and its Linux x64 runtime boundary. Sections 11 and 12 preserve the original
+qualification criteria and baseline record.
 
 ## 1. Public route and authority
 
@@ -509,8 +499,8 @@ The baseline files fixing these boundaries are:
 - docs/specs/lucy/go-live-plan.md, build-plan.md, go-live-coverage.md and Lucy maintenance/
   review skills: A04, preservation, R20 and source/evidence requirements.
 
-Engagement probe remains explicitly probe-unqualified/not-built. A later packet
-must first produce a real permitted predecessor through the public route, then
+At the #1670 baseline, engagement probes were explicitly unqualified. A scoped
+producer must first produce a real permitted predecessor through the public route, then
 qualify exact admitted dependencies/config, no-acquire runtime/sandbox, actual
 typed recipe/outcome/raw observation and equivalent retest. It must use an
 existing closed runner, separate mutable scratch from immutable CODE, retain
@@ -537,3 +527,32 @@ The lead-authorized correction wraps only the two expected buffers in
 positive controls, fixtures and production bytes. No tests or typecheck were
 run locally; implementation remains blocked until a compiling hosted baseline
 reaches the intended assertions.
+
+## 13. Scoped TypeScript probe
+
+The bounded engagement producer covers diligence contract findings eligible for
+`probe:typecheck` on Linux x64. The verifier gets a host witness only when the
+compiler reports a diagnostic at the admitted finding's range. It can cite the
+witness but cannot select the compiler, command, configuration or executable.
+The producer invokes the existing closed TypeScript probe arguments on one
+captured regular file of at most 64 KiB. The isolated copy has a host-written
+configuration. Repository configuration, imports, reference directives and
+diagnostic-suppression directives are outside this scope.
+
+The runtime uses the prepared TypeScript research pack and pinned Node. It
+checks compiler and library identities before and after the confined execution.
+Runtime and sandbox acquisition are explicit preparation steps. Probe work
+leaves the captured CODE source available through the immutable Git reader.
+
+The ordinary and fix receipts can retain `scopedProbes` references. Their bodies
+contain the exact input bytes, source identity, compiler identity, diagnostics
+and process result. Their descriptors use the existing artifact quotas. Fix
+review checks the original finding and raw proof, compiles the matching new file
+with the same recipe, then gives the result to the independent verifier. The
+ordinary report stays available separately. Retained fix results replay from
+their own closed evidence after reopening, including when the original report's
+metadata is unavailable.
+
+Other probe runners and platforms require separate qualification. A missing
+runtime or sandbox is an unavailable probe. Timeout and cancellation release
+the execution scope and never publish a successful proof.

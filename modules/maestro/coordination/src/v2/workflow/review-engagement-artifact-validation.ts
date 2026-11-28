@@ -7,6 +7,7 @@ import { ReviewItem } from "@orchestra/core/review-toolkit/item"
 import { Tool } from "@orchestra/core/tool/tool"
 import { ReviewEvidenceSchemaV2 } from "./review-engagement-artifact-schema"
 import type { ReviewEngagementEvidenceV2 } from "./review-engagement-evidence"
+import { ReviewScopedProbeEvidenceV2 } from "./review-scoped-probe-evidence"
 import type { ReviewEngagementReportV2 } from "./review-engagement-report"
 
 const Retained = Schema.Struct({ total: ReviewEvidenceSchemaV2.Count, unread: Schema.Record(Schema.String, ReviewEvidenceSchemaV2.Count), items: Schema.Array(ReviewItem.ToolItem) })
@@ -135,6 +136,9 @@ export function read(bytes: Uint8Array, report: ReviewEngagementReportV2.Stored)
     ReviewEvidenceSchemaV2.require(citation.uri === expected.uri && descriptor.uri === expected.uri && descriptor.sha256 === expected.sha256 &&
       descriptor.bytes === Buffer.byteLength(expected.text), "citation reference differs")
   }
+  if (receipt.schema === "review-engagement-evidence-v2" && receipt.scopedProbes) {
+    for (const probe of receipt.scopedProbes) artifact(probe.artifactID, "scoped-probe")
+  }
   ReviewEvidenceSchemaV2.require(used.size === receipt.artifacts.length, "receipt has unused artifacts")
   return receipt
 }
@@ -156,8 +160,27 @@ export function validate(receipt: ReviewEvidenceSchemaV2.Receipt, report: Review
   }
   for (const [index, citation] of receipt.citations.entries())
     ReviewEvidenceSchemaV2.require(Buffer.from(body(citation.artifactID)).equals(Buffer.from(report.value.citations[index].text)), "citation bytes differ")
-  for (const finding of card.findings) if (finding.evidence.kind === "tool") qualifiedTool(context, finding)
-  return context
+  const probes = scopedProofs(receipt.schema === "review-engagement-evidence-v2" ? receipt.scopedProbes : undefined,
+    source, receipt.artifacts, body)
+  for (const finding of card.findings) {
+    if (finding.evidence.kind === "tool") qualifiedTool(context, finding)
+    if (finding.evidence.kind === "probe") ReviewScopedProbeEvidenceV2.qualify(probes, finding)
+  }
+  return { ...context, probes }
+}
+
+export function scopedProofs(references: readonly ReviewScopedProbeEvidenceV2.Reference[] | undefined,
+  source: ReviewEngagementReportV2.Source, artifacts: readonly Pick<ReviewEvidenceSchemaV2.Artifact, "artifactID" | "kind" | "uri">[],
+  bytes: (id: string) => Uint8Array) {
+  const refs = references ?? []
+  ReviewEvidenceSchemaV2.require(refs.length <= 64 && new Set(refs.map((ref) => ref.proofID)).size === refs.length &&
+    new Set(refs.map((ref) => ref.artifactID)).size === refs.length, "scoped probe references are not unique or bounded")
+  return refs.map((ref) => {
+    const artifact = artifacts.find((item) => item.artifactID === ref.artifactID)
+    ReviewEvidenceSchemaV2.require(artifact?.kind === "scoped-probe" &&
+      artifact.uri === ReviewScopedProbeEvidenceV2.uri(ref.proofID), "scoped probe body has no matching reference")
+    return ReviewScopedProbeEvidenceV2.read(bytes(ref.artifactID), source, ref.proofID)
+  })
 }
 
 export function validateCode(operations: ReviewEvidenceSchemaV2.ReceiptV1["operations"],

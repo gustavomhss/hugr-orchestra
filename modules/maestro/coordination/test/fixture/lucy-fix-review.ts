@@ -4,7 +4,7 @@ import type { LLMRequest } from "@orchestra/llm"
 import { SessionSchema } from "@orchestra/core/session"
 import { fence, text, type Controls, type Ctx, type RequestLog } from "./lucy-engagement"
 import { canonical, decoded, digest, receipt, request, type Report } from "./lucy-engagement-artifacts"
-import { FixFinding, FixResult, FixSource, FixVerifierReturn, ToolObservation } from "./lucy-fix-review-schema"
+import { FixFinding, FixResult, FixSource, FixVerifierReturn, Observation } from "./lucy-fix-review-schema"
 import { data, nativeCalls, variantScript } from "./lucy-variants"
 import { strict } from "./lucy-variant-schema"
 
@@ -20,7 +20,7 @@ export type FixTurn = {
 export type FixBasis = {
   readonly finding: FixFinding
   readonly current: typeof FixSource.Type
-  readonly observations: readonly ToolObservation[]
+  readonly observations: readonly Observation[]
 }
 export type FixOptions = {
   readonly prior?: NonNullable<Controls["stream"]>
@@ -61,7 +61,7 @@ export function fixScript(options: FixOptions = {}) {
 export function fixBasis(turn: FixTurn): FixBasis {
   const finding = Schema.decodeUnknownSync(FixFinding)(data(turn.log.text, "fix finding"), strict)
   const current = Schema.decodeUnknownSync(FixSource)(data(turn.log.text, "fix source"), strict)
-  const observations = Schema.decodeUnknownSync(Schema.Array(ToolObservation))(
+  const observations = Schema.decodeUnknownSync(Schema.Array(Observation))(
     data(turn.log.text, "fix observations"), strict,
   )
   expect(finding.finding.id).toBe(turn.findingID)

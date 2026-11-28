@@ -20,6 +20,7 @@ import { ReviewEngagementEvidenceV2 } from "../workflow/review-engagement-eviden
 import { ReviewEngagementArtifactsV2 } from "../workflow/review-engagement-artifacts"
 import { ReviewEngagementPolicyV2 } from "../workflow/review-engagement-policy"
 import { ReviewEngagementReportV2 } from "../workflow/review-engagement-report"
+import { ReviewScopedProbeV2 } from "../workflow/review-scoped-probe"
 import { ReviewEngagementSourceV2 } from "../workflow/review-engagement-source"
 import { ReviewFanoutV2 } from "../workflow/review-fanout"
 import type { ReviewVariantValidationV2 } from "../workflow/review-variant-validation"
@@ -172,7 +173,9 @@ function perform(params: ReviewEngagementPolicyV2.Input, input: Input, parent: S
       ReviewEngagementSourceV2.read(git, { worktree, prepared: source, path, startLine, endLine })
     const variants = ReviewEngagementVariantsV2.make({ ticket, store, collector, source, read })
     const children = new Map<SessionSchema.ID, ReviewEngagementStoreV2.Child>([[lead, { id: lead, key: "lead", role: "lead" }]])
+    const runProbe = ReviewScopedProbeV2.make({ git, worktree, source, collector, processes: input.processes })
     const port: ReviewFanoutV2.Port = {
+      ...(params.profile !== "diligence" ? {} : { scopedProbe: runProbe.initial }),
       create: (child) => Effect.gen(function* () {
         if (child.role === "lead" && child.key === "lead") return lead
         if (child.role === "lead" || child.key === "lead") return yield* failure("engagement-child-invalid", "child role conflicts with lead")

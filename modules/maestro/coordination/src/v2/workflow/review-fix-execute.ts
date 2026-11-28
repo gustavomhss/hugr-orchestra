@@ -10,6 +10,7 @@ import { ReviewFixJudgmentV2 } from "./review-fix-judgment"
 import { ReviewFixPriorV2 } from "./review-fix-prior"
 import { ReviewFixRetestV2 } from "./review-fix-retest"
 import { ReviewFixSchemaV2 } from "./review-fix-schema"
+import type { ReviewScopedProbeEvidenceV2 } from "./review-scoped-probe-evidence"
 import { ReviewVariantSchemaV2 } from "./review-variant-schema"
 
 export type Input = {
@@ -19,7 +20,8 @@ export type Input = {
   readonly previous: ReviewFixPriorV2.Loaded
   readonly snapshot: ReviewEvidenceCollectorV2.Snapshot
   readonly read: (path: string, startLine: number, endLine: number) => Effect.Effect<ReturnType<typeof ReviewFixJudgmentV2.region>, Tool.Failure>
-  readonly verifier: (finding: ReviewFixJudgmentV2.Finding, regions: readonly ReviewVariantSchemaV2.CapturedRegion[], observations: readonly ReviewFixSchemaV2.ToolObservation[]) => Effect.Effect<ReviewVariantSchemaV2.NativeReply, Tool.Failure>
+  readonly scopedProbe: (prior: ReviewScopedProbeEvidenceV2.Proof, findingID: string) => Effect.Effect<ReviewFixSchemaV2.ScopeProbeObservation | undefined, Tool.Failure>
+  readonly verifier: (finding: ReviewFixJudgmentV2.Finding, regions: readonly ReviewVariantSchemaV2.CapturedRegion[], observations: readonly ReviewFixSchemaV2.Observation[]) => Effect.Effect<ReviewVariantSchemaV2.NativeReply, Tool.Failure>
 }
 
 export type Output = {
@@ -41,7 +43,7 @@ export function run(input: Input): Effect.Effect<Output, Tool.Failure> {
   const deferred = new Map<string, NotExaminedReason>(selected.slice(cap).map((item) =>
     [item.finding.id, cap === 0 ? "independent-verification-unavailable" : "verification-budget"]))
   const results = new Map<string, { readonly examination: ReviewFixSchemaV2.Examination; readonly regions: readonly ReviewVariantSchemaV2.CapturedRegion[]; readonly reply: ReviewVariantSchemaV2.NativeReply }>()
-  const observations: ReviewFixSchemaV2.ToolObservation[] = []
+  const observations: ReviewFixSchemaV2.Observation[] = []
   return Effect.gen(function* () {
     const retests = yield* Effect.forEach(admitted, (item) => {
       if (item.finding.evidence.kind !== "tool" || !item.native)
@@ -68,7 +70,13 @@ export function run(input: Input): Effect.Effect<Output, Tool.Failure> {
         return undefined
       }
       const currentRegions = [...new Map(initial.map((region) => [region.regionID, region])).values()]
-      const observation = observationByFinding.get(id)
+      const scoped = item.probe ? yield* input.scopedProbe(item.probe, id) : undefined
+      if (item.probe && !scoped) {
+        deferred.set(id, "probe-unqualified")
+        return undefined
+      }
+      if (scoped) observations.push(scoped)
+      const observation = scoped ?? observationByFinding.get(id)
       const findingObservations = observation ? [observation] : []
       const reply = yield* input.verifier(item, currentRegions, findingObservations)
       const parsed = yield* judge(() => ReviewFixJudgmentV2.parse(reply.text))
@@ -91,9 +99,8 @@ export function run(input: Input): Effect.Effect<Output, Tool.Failure> {
   })
 }
 
-function buildOutput(input: Input, results: ReadonlyMap<string, { readonly examination: ReviewFixSchemaV2.Examination; readonly regions: readonly ReviewVariantSchemaV2.CapturedRegion[]; readonly reply: ReviewVariantSchemaV2.NativeReply }>, deferred: ReadonlyMap<string, NotExaminedReason>, observations: readonly ReviewFixSchemaV2.ToolObservation[]): Output {
+function buildOutput(input: Input, results: ReadonlyMap<string, { readonly examination: ReviewFixSchemaV2.Examination; readonly regions: readonly ReviewVariantSchemaV2.CapturedRegion[]; readonly reply: ReviewVariantSchemaV2.NativeReply }>, deferred: ReadonlyMap<string, NotExaminedReason>, observations: readonly ReviewFixSchemaV2.Observation[]): Output {
   const examinations = [...results.values()].map((item) => item.examination)
-  const usedObservationIDs = new Set(examinations.flatMap((item) => item.offeredObservationIDs))
   const replies = [...results.values()].map((item) => item.reply)
   const regions = [...new Map([...results.values()].flatMap((item) => item.regions).map((item) => [item.regionID, item])).values()]
   const dispositions = input.previous.selected.map((item) => {
@@ -120,7 +127,7 @@ function buildOutput(input: Input, results: ReadonlyMap<string, { readonly exami
     ? [{ item: item.findingID, reason: item.reason }] : [])
   if (input.previous.binding.profile === "artifact") notExamined.push({ item: "artifact:behavioral-eval", reason: "owner-permission" })
   return { dispositions, citations: [...citations.values()], questions, notExamined,
-    observations: observations.filter((item) => usedObservationIDs.has(item.observationID)), examinations, regions, replies }
+    observations: examinations.flatMap((exam) => exam.offeredObservationIDs.flatMap((id) => observations.filter((item) => item.observationID === id))), examinations, regions, replies }
 }
 
 function invalid(detail: string) {

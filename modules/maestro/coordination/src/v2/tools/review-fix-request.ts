@@ -28,6 +28,8 @@ import { ReviewFixJudgmentV2 } from "../workflow/review-fix-judgment"
 import { ReviewFixPriorV2 } from "../workflow/review-fix-prior"
 import type { ReviewFixSchemaV2 } from "../workflow/review-fix-schema"
 import { ReviewFixRetestV2 } from "../workflow/review-fix-retest"
+import { ReviewScopedProbeV2 } from "../workflow/review-scoped-probe"
+import { ReviewScopedProbeEvidenceV2 } from "../workflow/review-scoped-probe-evidence"
 import { ReviewVariantSchemaV2 } from "../workflow/review-variant-schema"
 import { ReviewBindingV2 } from "./review-binding"
 import { ReviewEngagementRuntimeV2 } from "./review-engagement-runtime"
@@ -165,8 +167,17 @@ function perform(input: Input, parent: SessionSchema.Info, sessions: SessionV2.I
       copies, headCommit: source.commit, scope: { sha256: source.sha256, files: source.files.map((item) => item.path) },
       processes: input.processes, observeCode: collector.code })
     const snapshot = yield* collector.snapshot()
+    const probes = ReviewScopedProbeV2.make({ git, worktree, source, collector, processes: input.processes })
     const facts = yield* ReviewFixExecuteV2.run({ source, previous, snapshot, inputHash: identity.inputHash,
       sessionID: identity.leadID,
+      scopedProbe: (prior, findingID) => Effect.gen(function* () {
+        const proof = yield* probes.run(prior.candidate, prior.path)
+        if (!proof) return undefined
+        const observation = ReviewScopedProbeEvidenceV2.observe(identity.inputHash, findingID, prior, proof)
+        if (!observation) return undefined
+        yield* collector.scopedProbe(proof)
+        return observation
+      }),
       read: (path, startLine, endLine) => ReviewEngagementSourceV2.read(git, { worktree, prepared: source, path, startLine, endLine }).pipe(
         Effect.map((quote) => ReviewFixJudgmentV2.region(source, quote))),
       verifier: (finding, regions, observations) => ReviewFanoutV2.withSessionPermit(Effect.gen(function* () {
@@ -197,7 +208,7 @@ function perform(input: Input, parent: SessionSchema.Info, sessions: SessionV2.I
           data("prior evidence", JSON.stringify({ sourceSha256: previous.source.sha256, citations: priorCitations })),
           data("fix source", JSON.stringify({ source, regions })),
           data("fix observations", JSON.stringify(observations)),
-          "Return one fenced review-fix-verify JSON block with findingID, priorFindingSha256, disposition, reason and supporting. Use open, resolved, dismissed or question. A dismissal requires a refutation. Cite only a current captured quote range or a supplied observation ID. A native finding needs a matching successful zero observation to resolve.",
+          "Return one fenced review-fix-verify JSON block with findingID, priorFindingSha256, disposition, reason and supporting. Use open, resolved, dismissed or question. A dismissal requires a refutation. Cite only a current captured quote range or a supplied observation ID. A finding backed by a tool or probe needs a matching successful zero observation to resolve.",
         ].join("\n\n")
         const native = yield* ReviewEngagementRuntimeV2.turn(sessions, execution, identity, child, brief, "fix:verify")
         if (!native.reply) return yield* failure("engagement-report-invalid", "independent fix verifier did not return a completed reply")

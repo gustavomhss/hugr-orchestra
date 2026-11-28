@@ -530,6 +530,8 @@ function decode(row: AdmissionRow, expected: Identity): Effect.Effect<Record | u
     }
     if (output === undefined) return yield* invalid("terminal bytes are missing")
     const terminal = yield* ReviewEngagementReportV2.read(output)
+    if (legacy && terminal.value.report?.findings.some((finding) => finding.evidence.kind === "probe"))
+      return yield* invalid("legacy report cannot retain scoped probe evidence")
     yield* matchesResult(common, terminal)
     if (data.schema === "review-engagement-state-v3" && terminal.value.status === "completed")
       yield* Effect.try({ try: () => validateJournal(data, true), catch: (error) => error instanceof Tool.Failure ? error : invalid(String(error)) })

@@ -245,7 +245,7 @@ const Proof = Schema.Struct({
 const Artifact = Schema.Struct({
   ...Descriptor.fields, kind: Schema.Literals(["code-result", "code-snapshot", "citation", "analysis-result",
     "analysis-retained", "analysis-debt", "analyzer-stdout", "analyzer-stderr", "analyzer-path-map",
-    "analyzer-inputs", "analyzer-config", "analyzer-recipe"]), complete: Schema.Boolean, uri: Schema.optional(Schema.String),
+    "analyzer-inputs", "analyzer-config", "analyzer-recipe", "scoped-probe"]), complete: Schema.Boolean, uri: Schema.optional(Schema.String),
 })
 export const ReceiptV1 = Schema.Struct({
   schema: Schema.Literal("review-engagement-evidence-v1"), reportID: Schema.String, inputHash: Schema.String,
@@ -255,10 +255,12 @@ export const ReceiptV1 = Schema.Struct({
   hostProofs: Schema.Array(Proof), notExamined: Schema.Array(Schema.Struct({ item: Schema.String, reason: Schema.String })),
 })
 export type ReceiptV1 = typeof ReceiptV1.Type
+export const ScopedProbeReference = Schema.Struct({ proofID: Schema.String, artifactID: Schema.String })
 export const ReceiptV2 = Schema.Struct({
   ...ReceiptV1.fields,
   schema: Schema.Literal("review-engagement-evidence-v2"),
   variants: Variants,
+  scopedProbes: Schema.optional(Schema.Array(ScopedProbeReference)),
 })
 export type ReceiptV2 = typeof ReceiptV2.Type
 export const Receipt = Schema.Union([ReceiptV1, ReceiptV2])

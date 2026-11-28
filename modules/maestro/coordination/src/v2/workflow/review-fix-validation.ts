@@ -10,6 +10,7 @@ import { ReviewFixJudgmentV2 } from "./review-fix-judgment"
 import type { ReviewFixPriorV2 } from "./review-fix-prior"
 import { ReviewFixRetestV2 } from "./review-fix-retest"
 import type { ReviewFixSchemaV2 } from "./review-fix-schema"
+import { ReviewScopedProbeEvidenceV2 } from "./review-scoped-probe-evidence"
 import { ReviewVariantSchemaV2 } from "./review-variant-schema"
 
 export type Body = (id: string, kind?: (typeof ReviewFixSchemaV2.FixArtifact.Type)["kind"]) => Uint8Array
@@ -99,6 +100,8 @@ export function validate(receipt: ReviewFixSchemaV2.FixReceipt, value: ReviewFix
     if (start <= end) ensure(same(left.text.split("\n").slice(start - left.startLine, end - left.startLine + 1), right.text.split("\n").slice(start - right.startLine, end - right.startLine + 1)), "overlapping fix regions differ")
   }
   for (const citation of value.citations) ensure(receipt.regions.some((region) => citation.path === region.path && citation.oid === region.oid && citation.startLine === region.startLine && citation.endLine === region.endLine && citation.text === region.text && citation.sha256 === region.textSha256), "fix citation has no captured region")
+  const scoped = ReviewEvidenceValidationV2.scopedProofs(receipt.scopedProbes, source, artifacts, body)
+  const usedScoped = new Set<string>()
   const selected = ReviewFixJudgmentV2.sort(previous.selected)
   const cap = previous.tier.budget.verifiers
   const usedRegions = new Set<string>()
@@ -115,8 +118,17 @@ export function validate(receipt: ReviewFixSchemaV2.FixReceipt, value: ReviewFix
       continue
     }
     if (disposition.disposition === "not-examined" && disposition.reason === "region-unavailable") continue
-    const observation = item.native ? ReviewFixRetestV2.observe({ inputHash: receipt.inputHash, findingID, priorProof: item.native.proof,
-      priorRecipe: item.native.recipe, analysis: analysis.operation, hostProofs: receipt.hostProofs, bodies }) : undefined
+    const probe = item.probe
+    const current = probe ? scoped.find((result) => result.candidate === probe.candidate && result.path === probe.path) : undefined
+    if (probe && !current) {
+      ensure(disposition.disposition === "not-examined" && disposition.reason === "probe-unqualified", "scoped probe qualified no retest")
+      continue
+    }
+    if (current) usedScoped.add(current.proofID)
+    const observation = probe && current ? ReviewScopedProbeEvidenceV2.observe(receipt.inputHash, findingID, probe, current)
+      : item.native ? ReviewFixRetestV2.observe({ inputHash: receipt.inputHash, findingID, priorProof: item.native.proof,
+        priorRecipe: item.native.recipe, analysis: analysis.operation, hostProofs: receipt.hostProofs, bodies }) : undefined
+    if (probe) ensure(observation, "retained scoped probe recipe is incompatible")
     if (typeof observation === "string") {
       ensure(disposition.disposition === "not-examined" && disposition.reason === observation, "native availability disposition differs")
       continue
@@ -157,5 +169,7 @@ export function validate(receipt: ReviewFixSchemaV2.FixReceipt, value: ReviewFix
   ensure(usedRegions.size === receipt.regions.length && usedReplies.size === receipt.replies.length &&
     usedExaminations.size === receipt.examinations.length && usedObservations.size === receipt.observations.length, "fix receipt contains unused judgment facts")
   ensure(authority.children.filter((child) => child.role !== "lead").every((child) => verifierChildren.has(child.id)), "fix receipt contains an unrelated child")
+  ensure(usedScoped.size === scoped.length, "fix receipt retains an unused scoped probe")
+  for (const reference of receipt.scopedProbes ?? []) artifact(reference.artifactID, "scoped-probe")
   ensure(used.size === receipt.artifacts.length && receipt.artifacts.every((item) => used.has(item.artifactID)), "fix receipt contains unused artifacts")
 }

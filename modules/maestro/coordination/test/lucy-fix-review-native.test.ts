@@ -114,6 +114,7 @@ for (const mode of ["zero", "nonzero"] as const) {
         expect(evidence.value.hostProofs).toHaveLength(2)
         expect(evidence.value.observations).toHaveLength(1)
         const observation = evidence.value.observations[0]
+        if (observation && "kind" in observation) return yield* Effect.die("expected an oxlint observation")
         expect(observation).toMatchObject({ findingID: finding.id, priorProofID: oldHead.proofID, result: mode })
         const oldRecipe = recipe(oldEvidence.bodies, oldHead)
         for (const proof of evidence.value.hostProofs) {

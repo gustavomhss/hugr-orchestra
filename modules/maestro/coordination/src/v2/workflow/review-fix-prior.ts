@@ -8,11 +8,13 @@ import { ReviewEvidenceSchemaV2 } from "./review-engagement-artifact-schema"
 import { ReviewEvidenceValidationV2 } from "./review-engagement-artifact-validation"
 import { ReviewEngagementReportV2 } from "./review-engagement-report"
 import { ReviewFixAuthorityV2 } from "./review-fix-authority"
+import { ReviewScopedProbeEvidenceV2 } from "./review-scoped-probe-evidence"
 import { ReviewFixSchemaV2 } from "./review-fix-schema"
 
 type Finding = ReviewFixSchemaV2.FixFinding["finding"]
 export type Selected = ReviewFixSchemaV2.FixFinding & {
   readonly files: readonly string[]
+  readonly probe?: ReviewScopedProbeEvidenceV2.Proof
   readonly native?: {
     readonly proof: ReviewEvidenceSchemaV2.Proof
     readonly recipe: typeof ReviewEvidenceSchemaV2.Recipe.Type
@@ -68,6 +70,7 @@ export function prepare(view: ReviewEngagementStoreV2.Terminal, inputHash: strin
     throw ReviewEvidenceSchemaV2.failure("corrupt", "predecessor tier or evidence is unavailable")
   const selected = findings.map((finding): Selected => {
     const evidence = finding.evidence
+    const probe = evidence.kind === "probe" ? ReviewScopedProbeEvidenceV2.qualify(data.context.probes, finding) : undefined
     const proof = evidence.kind === "tool" ? ReviewEvidenceValidationV2.qualifiedTool(data.context, finding) : undefined
     const recipe = proof ? data.context.recipes.get(proof.proofID) : undefined
     if (proof && (!recipe || proof.side !== "head" || proof.sourceSha256 !== source.sha256 ||
@@ -77,7 +80,7 @@ export function prepare(view: ReviewEngagementStoreV2.Terminal, inputHash: strin
       ...(recipe?.files.map((file) => file.path) ?? [])])].sort()
     if (files.some((path) => !source.files.some((file) => file.path === path)))
       throw ReviewEvidenceSchemaV2.failure("corrupt", "predecessor finding is outside captured files")
-    return { finding, priorFindingSha256: digest(finding), files, ...(proof && recipe ? { native: { proof, recipe } } : {}) }
+    return { finding, priorFindingSha256: digest(finding), files, ...(probe ? { probe } : {}), ...(proof && recipe ? { native: { proof, recipe } } : {}) }
   })
   const priorReport = wrapper("fix-prior-report", Buffer.from(view.terminal.text))
   const priorReceipt = wrapper("fix-prior-receipt", data.bytes)
