@@ -492,6 +492,7 @@ export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHE
     Spec.make("serve", {
       description: "Start the API server for scripts and headless use",
       params: {
+        "activity-approval-stdin": Flag.boolean("activity-approval-stdin").pipe(Flag.withDefault(false)),
         hostname: Flag.string("hostname").pipe(Flag.withDefault("127.0.0.1")),
         port: Flag.integer("port").pipe(Flag.optional),
         installation: Flag.string("installation").pipe(

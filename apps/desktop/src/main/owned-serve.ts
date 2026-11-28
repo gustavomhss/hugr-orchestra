@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { createServer } from "node:net"
 import type { Readable } from "node:stream"
+import { ActivityPrivateChannel } from "@orchestra/schema/activity-private-channel"
 import { DesktopOmni } from "./omni-process"
 
 // The desktop-owned V2 server: the bundled CLI as `orchestra serve`, a child of this app and its default server. It is
@@ -30,6 +31,7 @@ const OUTPUT_SEGMENT = 4096
 
 export async function startOwnedServe(options: {
   logger: Logger
+  privateActivityApproval?: boolean
   /** The CLI executable, then any arguments before `serve`. */
   command: [string, ...string[]]
   env: Record<string, string | undefined>
@@ -51,6 +53,7 @@ export async function startOwnedServe(options: {
   }
   const state = {
     child: undefined as DesktopOmni.Spawned | undefined,
+    activity: undefined as Promise<Awaited<ReturnType<typeof ActivityPrivateChannel.signer>> | undefined> | undefined,
     stopping: false,
     killed: false,
     failures: 0,
@@ -67,8 +70,20 @@ export async function startOwnedServe(options: {
   const launch = () => {
     const startedAt = Date.now()
     const args = [...options.command.slice(1), "serve", "--hostname", HOSTNAME, "--port", String(port)]
-    const child = DesktopOmni.spawn(options.command[0], args, { env, cwd: options.cwd, stdin: "closed", graceMs: TREE_GRACE })
+    if (options.privateActivityApproval) args.push(`--${ActivityPrivateChannel.option}`)
+    const child = DesktopOmni.spawn(options.command[0], args, {
+      env, cwd: options.cwd, stdin: options.privateActivityApproval ? "pipe" : "closed", graceMs: TREE_GRACE,
+    })
     state.child = child
+    state.activity = undefined
+    if (options.privateActivityApproval) {
+      const secret = crypto.getRandomValues(new Uint8Array(32))
+      const frame = ActivityPrivateChannel.frame(secret)
+      state.activity = ActivityPrivateChannel.signer(secret).catch(() => undefined).finally(() => {
+        secret.fill(0)
+      })
+      child.stdin.end(frame, () => { frame.fill(0) })
+    }
     // Created at launch so a stop that lands between "exit" and "close" still waits for the drain.
     state.closed = new Promise<void>((resolve) => child.once("close", () => resolve()))
     // An omni child learns its pid asynchronously, so the witness waits for the spawn event.
@@ -89,6 +104,7 @@ export async function startOwnedServe(options: {
     // and the renderer never sees why the process did not start.
     const failed = new Promise<never>((_, reject) => {
       child.once("error", (error) => {
+        if (state.child === child) state.activity = undefined
         options.logger.error("owned serve error", { message: error.message })
         reject(error instanceof Error ? error : new Error(String(error)))
       })
@@ -97,7 +113,10 @@ export async function startOwnedServe(options: {
     const exited = new Promise<void>((resolve) =>
       child.once("exit", (code, signal) => {
         resolve()
-        if (state.child === child) state.child = undefined
+        if (state.child === child) {
+          state.child = undefined
+          state.activity = undefined
+        }
         // The server answers the SIGTERM it was asked to stop on with the signal's exit status (143); that is an orderly
         // stop. A server that had to be killed, or that failed on its own, keeps its real status.
         const requested = state.stopping && !state.killed && (code === 143 || signal === "SIGTERM" || process.platform === "win32")
@@ -160,6 +179,7 @@ export async function startOwnedServe(options: {
 
   const stop = async () => {
     state.stopping = true
+    state.activity = undefined
     startup.abort()
     clearTimeout(state.restart)
     const child = state.child
@@ -182,7 +202,34 @@ export async function startOwnedServe(options: {
     child.kill("SIGKILL")
   }
 
-  return { url, username: "orchestra", password, listener: { stop }, health: { wait: health } }
+  const probeActivityApproval = async (signal?: AbortSignal) => {
+    const child = state.child
+    const activity = state.activity
+    if (!child || !activity || state.stopping) return false
+    const deadline = AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(3000)])
+    const current = () => state.child === child && state.activity === activity && !state.stopping && !deadline.aborted
+    return (async () => {
+      const signer = await activity
+      if (!signer || !current()) return false
+      const nonce = ActivityPrivateChannel.nonce()
+      const mac = await signer.sign("probe-request", nonce)
+      if (!current()) return false
+      const response = await fetch(new URL(ActivityPrivateChannel.path, url), {
+        method: "POST",
+        headers: {
+          [ActivityPrivateChannel.nonceHeader]: nonce,
+          [ActivityPrivateChannel.macHeader]: mac,
+        },
+        redirect: "error",
+        signal: deadline,
+      })
+      if (!current() || response.status !== 204) return false
+      const valid = await signer.verify("probe-response", nonce, response.headers.get(ActivityPrivateChannel.macHeader))
+      return current() && valid
+    })().catch(() => false)
+  }
+
+  return { url, username: "orchestra", password, listener: { stop }, health: { wait: health }, probeActivityApproval }
 }
 
 /** The server a launch uses, from `ORCHESTRA_SIDECAR`: the desktop-owned child unless "shared" asks for the shared daemon. */
