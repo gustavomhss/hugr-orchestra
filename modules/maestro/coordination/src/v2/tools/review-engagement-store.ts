@@ -231,14 +231,15 @@ function decode(row: Row, expected: Identity): Effect.Effect<Record | undefined,
     const source = data.source
     if (source) yield* Effect.try({ try: () => validateCapture(data.input, source), catch: (error) => invalid(String(error)) })
     const { state, output, ...common } = data
-    if (data.schema === "review-engagement-state-v2" && data.evidence === undefined)
+    const evidence = data.schema === "review-engagement-state-v2" ? data.evidence : undefined
+    if (data.schema === "review-engagement-state-v2" && evidence === undefined)
       return yield* failure("engagement-evidence-missing", "versioned record has no required evidence policy or reference")
-    if (data.schema === "review-engagement-state-v2" &&
-      ((data.evidence.receiptID === undefined) !== (data.evidence.bytes === undefined)))
+    if (evidence !== undefined &&
+      ((evidence.receiptID === undefined) !== (evidence.bytes === undefined)))
       return yield* invalid("evidence reference is incomplete")
     if (state === "running") {
       if (output !== undefined) return yield* invalid("unfinished record has terminal bytes")
-      if (data.schema === "review-engagement-state-v2" && data.evidence.receiptID !== undefined)
+      if (evidence !== undefined && evidence.receiptID !== undefined)
         return yield* invalid("unfinished record has a published evidence receipt")
       return { ...common, state }
     }
@@ -246,7 +247,7 @@ function decode(row: Row, expected: Identity): Effect.Effect<Record | undefined,
     const terminal = yield* ReviewEngagementReportV2.read(output)
     yield* matchesResult(common, terminal)
     if (data.schema === "review-engagement-state-v2" && terminal.value.status !== "completed") {
-      if (data.evidence.receiptID !== undefined) return yield* invalid("stopped record has a published evidence receipt")
+      if (evidence !== undefined && evidence.receiptID !== undefined) return yield* invalid("stopped record has a published evidence receipt")
       const reason = terminal.value.status === "expired" ? "time-box" : terminal.value.status === "cancelled" ? "cancelled" : "failure"
       if (!terminal.value.notExamined.some((gap) => gap.item === "engagement:evidence-publication" && gap.reason === reason))
         return yield* invalid("stopped evidence publication coverage is missing")

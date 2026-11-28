@@ -36,7 +36,6 @@ import { nativeProfiles } from "../src/roster"
 import { MaestroSeatsV2 } from "../src/v2/seats"
 import { MaestroToolsV2 } from "../src/v2/tools"
 
-// The Maestro tools V2 registers: the governance tools, the Arsenal, the cold reviewer's receipt, and the seats' Atlas Memory.
 const governance = [
   "maestro_record_admission",
   "maestro_present_approval",

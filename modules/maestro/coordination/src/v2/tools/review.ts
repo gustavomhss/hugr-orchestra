@@ -170,8 +170,11 @@ const analyzeStep = (processes: AppProcess.Interface): Analyze => (input) => {
     ...(input.repositoryFiles === undefined ? {} : { repositoryFiles: input.repositoryFiles }),
   }).pipe(
     Effect.provideService(AppProcess.Service, processes),
-    Effect.mapError((error) => new Tool.Failure({ message: `ReviewAnalyzeFailed: ${error.reason}`,
-      ...(error.reason.startsWith("engagement-") ? { metadata: { reason: error.reason } } : {}) })),
+    Effect.mapError((error) => {
+      const reason = error instanceof ReviewAnalyze.Failed ? error.reason : String(error)
+      return new Tool.Failure({ message: `ReviewAnalyzeFailed: ${reason}`,
+        ...(reason.startsWith("engagement-") ? { metadata: { reason } } : {}) })
+    }),
   )
 }
 
