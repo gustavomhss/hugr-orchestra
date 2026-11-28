@@ -121,6 +121,10 @@ fn unified_path(path: &Path) -> io::Result<()> {
     Ok(())
 }
 impl Isolation {
+    pub(super) fn distinct_from(&self, uid: u32, gid: u32) -> io::Result<bool> {
+        Ok(self.uid != uid && self.gid != gid && super::peer::excludes_group(self.gid)?)
+    }
+
     pub(super) fn load() -> io::Result<Option<Self>> {
         let root = std::env::var_os("HUGR_OMNI_ISOLATION_ROOT");
         let uid = std::env::var("HUGR_OMNI_ISOLATION_UID");
@@ -306,7 +310,12 @@ impl Isolation {
                 match other {
                     Ok(5) => {
                         let errno = i32::from_le_bytes([report[1], report[2], report[3], report[4]]);
-                        Err(p.exec_fail(errno, "isolated child"))
+                        let code = match report[0] {
+                            5 => omni_proto::FailCode::BadCwd,
+                            7 => super::spawn::exec_code(errno),
+                            _ => omni_proto::FailCode::Io,
+                        };
+                        Err(super::spawn::Fail::new(code, errno, format!("isolated child stage {}: {}", report[0], io::Error::from_raw_os_error(errno))))
                     }
                     Ok(_) => Err(fail(
                         "isolated child report",

@@ -63,6 +63,10 @@ pub fn spawn(
     Ok(NativeChild { kid })
 }
 
+/// Capability marker for the fail-closed isolated spawn option.
+#[napi]
+pub fn supports_member_isolation() -> bool { true }
+
 /// The native half of a JS `Child`.
 #[napi]
 pub struct NativeChild {

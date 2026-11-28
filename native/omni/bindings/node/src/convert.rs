@@ -137,6 +137,9 @@ pub(crate) fn command(
             }
         }
     }
+    if let Some(isolated) = field::<bool>(env, &o, "memberIsolation", "true or false")? {
+        cmd.member_isolation(isolated);
+    }
     if let Some(inherit) = field::<bool>(env, &o, "inheritEnv", "true or false")? {
         cmd.inherit_env(inherit);
     }

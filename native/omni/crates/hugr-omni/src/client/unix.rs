@@ -43,6 +43,7 @@ pub(super) struct Chan {
     sock: UnixStream,
     sup: Option<Watch>,
     rt: Handle,
+    remote: bool,
 }
 
 impl Chan {
@@ -56,7 +57,7 @@ impl Chan {
             Ok((UnixStream::from_std(host)?, rt))
         })();
         match setup {
-            Ok((sock, rt)) => Ok(Chan { sock, sup, rt }),
+            Ok((sock, rt)) => Ok(Chan { sock, sup, rt, remote: false }),
             Err(e) => {
                 // It never served: do not leave it running (its keeper then reaps it).
                 if let Some(sup) = &sup {
@@ -110,7 +111,7 @@ impl Chan {
 
     /// Whether a supervisor stuck after `close` can be ended (false: no pidfd or no start time).
     pub(super) fn can_end(&self) -> bool {
-        self.sup.as_ref().is_none_or(Watch::can_end)
+        !self.remote && self.sup.as_ref().is_none_or(Watch::can_end)
     }
 
     /// Validates `Spawned.pty_ends` and takes the master that travelled with the frame.
@@ -336,4 +337,31 @@ pub(super) fn recv(sock: BorrowedFd<'_>, buf: &mut [u8], fds: &mut VecDeque<Owne
         return Err(io::Error::other("more descriptors arrived than a frame may carry"));
     }
     Ok(n)
+}
+
+#[cfg(target_os = "linux")]
+pub(super) fn connect_isolated(rt: &Runtime, num: u64) -> Result<Arc<Gen>, Error> {
+    // SAFETY: geteuid has no preconditions.
+    let uid = unsafe { libc::geteuid() };
+    if uid == 0 { return Err(Error::supervisor_not_started("isolated supervisor", &io::Error::other("desktop peer must not be root"))); }
+    let host = StdStream::connect(format!("/run/orchestra/omni/{uid}.sock"))
+        .map_err(|e| Error::supervisor_not_started("isolated supervisor socket", &e))?;
+    // SAFETY: getsockopt writes to the initialized credential buffer for this connected socket.
+    let peer = unsafe {
+        let mut peer: libc::ucred = std::mem::zeroed();
+        let mut len = std::mem::size_of::<libc::ucred>() as libc::socklen_t;
+        if libc::getsockopt(host.as_raw_fd(), libc::SOL_SOCKET, libc::SO_PEERCRED, (&raw mut peer).cast(), &raw mut len) != 0 {
+            return Err(Error::supervisor_not_started("isolated supervisor identity", &io::Error::last_os_error()));
+        }
+        if len as usize != std::mem::size_of::<libc::ucred>() || peer.uid != 0 {
+            return Err(Error::supervisor_not_started("isolated supervisor identity", &io::Error::other("peer is not root")));
+        }
+        peer
+    };
+    let _ = peer;
+    Gen::start(rt, num | (1 << 63), REPLY_WITHIN, move || {
+        let mut chan = Chan::new(host, None)?;
+        chan.remote = true;
+        Ok(chan)
+    })
 }
