@@ -43,6 +43,8 @@ pub(super) struct Stopping {
 
 pub(super) struct Tree {
     pub pid: i32,
+    #[cfg(target_os = "linux")]
+    pub member: Option<super::isolated::Member>,
     pub master: Option<OwnedFd>,
     pub grace_ms: u32,
     pub exec: Exec,
@@ -120,6 +122,8 @@ impl Trees {
         self.next_id += 1;
         let tree = Tree {
             pid,
+            #[cfg(target_os = "linux")]
+            member: None,
             master,
             grace_ms,
             exec,

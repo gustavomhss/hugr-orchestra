@@ -10,6 +10,9 @@ export const stopConfirmPath = `${mount}/stop-confirm`
 export const emptyPreviewPath = `${mount}/empty-preview`
 export const emptyConfirmPath = `${mount}/empty-confirm`
 export const emptyStatePath = `${mount}/empty-state`
+export const freezeStatePath = `${mount}/freeze-state`
+export const freezePreviewPath = `${mount}/freeze-preview`
+export const freezeConfirmPath = `${mount}/freeze-confirm`
 export const maxBodyBytes = 96 * 1024
 export const nonceHeader = "x-orchestra-activity-nonce"
 export const macHeader = "x-orchestra-activity-mac"
@@ -40,7 +43,8 @@ export function nonce() {
 type Direction = "probe-request" | "probe-response"
 export type ArmDirection = "arm-request" | "arm-response"
 export type ArmPath = typeof previewPath | typeof confirmPath | typeof stopPreviewPath | typeof stopConfirmPath |
-  typeof emptyPreviewPath | typeof emptyConfirmPath | typeof emptyStatePath
+  typeof emptyPreviewPath | typeof emptyConfirmPath | typeof emptyStatePath |
+  typeof freezeStatePath | typeof freezePreviewPath | typeof freezeConfirmPath
 
 export async function signer(secret: Uint8Array) {
   if (secret.length !== keyBytes) throw new Error("Invalid activity channel key length")

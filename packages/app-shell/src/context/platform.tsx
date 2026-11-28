@@ -10,6 +10,7 @@ import type { NativeTitlebarFrame } from "../native-titlebar"
 import type { ActivityArm } from "@orchestra/schema/activity-arm"
 import type { ActivityStop } from "@orchestra/schema/activity-stop"
 import type { ActivityEmpty } from "@orchestra/schema/activity-empty"
+import type { ActivityFreeze } from "@orchestra/schema/activity-freeze"
 import type {
   LiveHotkey,
   LiveHotkeyAction,
@@ -94,6 +95,8 @@ type PlatformBase = {
   stopActivityTree?(serverURL: string, request: ActivityStop.Request): Promise<ActivityStop.Receipt | undefined>
   readActivityQuarantine?(serverURL: string): Promise<ActivityEmpty.Snapshot | undefined>
   emptyActivityQuarantine?(serverURL: string): Promise<ActivityEmpty.Receipt | undefined>
+  readActivityFreeze?(serverURL: string, request: ActivityFreeze.Read): Promise<ActivityFreeze.State | undefined>
+  freezeActivityMember?(serverURL: string, request: ActivityFreeze.Request): Promise<ActivityFreeze.Receipt | undefined>
   /** Native caption area in CSS viewport coordinates; omitted geometry restores default placement. */
   setTitlebarFrame?(frame?: NativeTitlebarFrame): Promise<void>
   /** App version */

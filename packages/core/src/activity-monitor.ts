@@ -229,6 +229,36 @@ export function make(now: () => number = Date.now) {
         return
       }
     },
+    async freeze(recordID: string) {
+      const entry = entries.get(recordID)
+      const child = entry?.child.deref()
+      const identity = entry?.record.supervisorID
+      if (!entry || !child || !identity || entry.rootSettled || child.treeId !== identity) return
+      const native = child as Child & {
+        controlMembers?: () => Promise<readonly string[]>
+        freezeMember?: (member: string, action: "suspend" | "resume") => Promise<"changed" | "refused" | "unknown">
+      }
+      if (!native.controlMembers || !native.freezeMember) return
+      const live = () => entries.get(recordID) === entry && entry.child.deref() === child && !entry.rootSettled && child.treeId === identity
+      try {
+        const members = await native.controlMembers()
+        if (!live() || !Array.isArray(members) || members.length !== 1 ||
+          typeof members[0] !== "string" || !/^[1-9][0-9]{0,9}:[1-9][0-9]{0,19}$/.test(members[0])) return
+        const member = members[0]
+        return {
+          identity, label: entry.record.executable, owner: entry.record.owner, member,
+          apply: async (action: "suspend" | "resume") => {
+            if (!live()) return "unknown" as const
+            const current = await native.controlMembers!()
+            if (!live() || !Array.isArray(current) || current.length !== 1 || current[0] !== member) return "unknown" as const
+            const result = await native.freezeMember!(member, action)
+            return live() && (result === "changed" || result === "refused") ? result : "unknown" as const
+          },
+        }
+      } catch {
+        return
+      }
+    },
     async inspect(recordID: string) {
       const entry = entries.get(recordID)
       if (!entry) return
@@ -251,3 +281,5 @@ export const snapshot = monitor.snapshot
 export const inspect = monitor.inspect
 export const complete = monitor.complete
 export const control = monitor.control
+
+export const freeze = monitor.freeze

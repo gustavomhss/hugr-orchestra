@@ -42,4 +42,4 @@ mod types;
 
 pub use api::*;
 pub use error::{Error, ErrorCode};
-pub use omni_proto::{ControlMember, SelectiveStopOutcome};
+pub use omni_proto::{ControlMember, FreezeOutcome, SelectiveStopOutcome};

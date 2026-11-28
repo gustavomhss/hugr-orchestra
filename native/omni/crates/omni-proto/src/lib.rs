@@ -23,6 +23,19 @@ pub const INFO_OBSERVE: u32 = 4;
 pub const INFO_FOOTPRINT: u32 = 8;
 /// `Ready.info` bit: selective stop by verified process birth identity is supported.
 pub const INFO_SELECTIVE_STOP: u32 = 16;
+/// `Ready.info` bit: verified member suspension and resumption are supported.
+pub const INFO_MEMBER_FREEZE: u32 = 32;
+
+/// Result of freezing or resuming a verified member.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum FreezeOutcome {
+    /// The requested state was confirmed for the isolated member.
+    Changed,
+    /// No change was attempted.
+    Refused,
+    /// The supervisor could not confirm the result.
+    Unknown,
+}
 
 /// Observed state after a selective termination request.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -202,6 +215,17 @@ pub enum Msg {
         /// Exact member identities selected for termination.
         members: Vec<ControlMember>,
     },
+    /// host → supervisor: suspend or resume exactly one process identity.
+    ControlFreeze {
+        /// Correlates the result with this request.
+        req: u64,
+        /// The supervisor-owned tree identifier.
+        id: u64,
+        /// The selected live member and its birth token.
+        member: ControlMember,
+        /// True adds the supervisor pause. False removes its own pause.
+        paused: bool,
+    },
     /// host → supervisor: the host dropped its handle; cleanup duty stays. Reply: `Ack`.
     Release {
         /// Request id.
@@ -294,6 +318,15 @@ pub enum Msg {
         id: u64,
         /// One outcome per selected member, ordered as in the request.
         outcomes: Vec<SelectiveStopOutcome>,
+    },
+    /// supervisor → host: outcome of a member freeze request.
+    ControlFreezeResult {
+        /// The corresponding request identifier.
+        req: u64,
+        /// The supervisor-owned tree identifier.
+        id: u64,
+        /// The native result for the selected member.
+        outcome: FreezeOutcome,
     },
     /// supervisor → host: reply without data.
     Ack {
