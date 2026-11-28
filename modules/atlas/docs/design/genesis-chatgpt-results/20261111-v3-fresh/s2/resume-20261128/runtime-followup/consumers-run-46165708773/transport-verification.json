@@ -1,0 +1,116 @@
+{
+  "byte_equal_model_visible": {
+    "s2-S2-I3U-initial-atlas-only.txt": {
+      "sha256": "bcade5dcf91f1c85c9e52c8b2cd2d5116eef4db663cfae0f9547de4d894e8067",
+      "bytes": 21110,
+      "session_log": "rollout-2026-11-28T13-31-06-01a222fe-ff95-7763-af67-9bab0cb02db0"
+    },
+    "s2-S2-I2U-final-atlas-1.txt": {
+      "sha256": "56167401a4c6e2705325ef8855f284c4f395b774ac1d15abb623da825bf6bfcd",
+      "bytes": 8835,
+      "session_log": "rollout-2026-11-28T13-30-43-01a222fe-a557-72d1-82c8-bcdb4f8b42b8"
+    },
+    "s2-S2-I2D-final-atlas-1.txt": {
+      "sha256": "f1eb7253d4eee1e185372efe689d6f66d0e624da1f4beffce21e4133348ba53d",
+      "bytes": 7447,
+      "session_log": "rollout-2026-11-28T13-30-11-01a222fe-288e-7800-8032-faf0713bcfb8"
+    },
+    "s2-S2-C4-final-atlas-1.txt": {
+      "sha256": "795cc6bef27220e62aa04c40bccaf22324fcd2be5f186eb2459e0261bc7e4ebf",
+      "bytes": 18064,
+      "session_log": "rollout-2026-11-28T13-29-29-01a222fd-819d-7743-8601-15073c679435"
+    },
+    "s2-S2-C4-final-atlas-2.txt": {
+      "sha256": "04e34ca6eb92c61a44d4b4ba2b756ae2837eee6accd81677c44fa65c020d38f9",
+      "bytes": 16036,
+      "session_log": "rollout-2026-11-28T13-29-29-01a222fd-819d-7743-8601-15073c679435"
+    },
+    "s2-S2-I1U-final-atlas-1.txt": {
+      "sha256": "dbe0fb9757f593561f275b0abd1c458cba4db88304c446cd4a398f1df1bc4245",
+      "bytes": 11295,
+      "session_log": "rollout-2026-11-28T13-29-59-01a222fd-f84a-7960-9a17-2f667ed35272"
+    },
+    "s2-S2-I3D-initial-atlas-only.txt": {
+      "sha256": "60f0595ff2ed7cc2e0c4e0c61153fe3bb5a54f1c612ca1e1f71854f276ad2c4b",
+      "bytes": 19578,
+      "session_log": "rollout-2026-11-28T13-30-50-01a222fe-bf56-7fd3-9dab-f657f32b765f"
+    },
+    "s2-S2-C3-final-atlas-1.txt": {
+      "sha256": "58392810e206700d205b9a1b8a4ec5c9823237181fbf234245dc44a1d2ccc1b2",
+      "bytes": 20107,
+      "session_log": "rollout-2026-11-28T13-29-21-01a222fd-632b-77e0-bd1a-cb0d3467fba0"
+    },
+    "s2-S2-C3-final-atlas-2.txt": {
+      "sha256": "e5e954a3c0282c4c793daec03b661085d759c188468f9f75a2d540f269f388df",
+      "bytes": 4384,
+      "session_log": "rollout-2026-11-28T13-29-21-01a222fd-632b-77e0-bd1a-cb0d3467fba0"
+    },
+    "s2-S2-I2A-final-atlas-1.txt": {
+      "sha256": "80c9406de9a71a1b4d438ac117a5632c8723b2c72922d43bd1eb61997fc96c35",
+      "bytes": 8247,
+      "session_log": "rollout-2026-11-28T13-30-36-01a222fe-89b6-7e13-9656-3474032afc9c"
+    },
+    "s2-S2-I3A-initial-atlas-only.txt": {
+      "sha256": "c3520ac46151ac00e101cc69f7916762a230c71b236ae8a4a12bbcea26f2f40a",
+      "bytes": 19252,
+      "session_log": "rollout-2026-11-28T13-30-59-01a222fe-e230-7973-b924-c8ad9a6b7070"
+    },
+    "s2-S2-I1D-final-atlas-1.txt": {
+      "sha256": "a8d5be2f10cd3f48dfc20358ba6469ab6c8fff486d407dbffa7b3323d3bab681",
+      "bytes": 9707,
+      "session_log": "rollout-2026-11-28T13-29-44-01a222fd-bcdd-76b3-a0bf-243da3c82c61"
+    },
+    "s2-S2-C2-final-atlas-1.txt": {
+      "sha256": "a2600f5d155ca3f2b7a7ccb9642a29d6018994716f32a3bd2aa9ed5284749b9d",
+      "bytes": 17771,
+      "session_log": "rollout-2026-11-28T13-29-14-01a222fd-48f5-7bf1-b661-168ba54d744a"
+    },
+    "s2-S2-C2-final-atlas-2.txt": {
+      "sha256": "10e0fcb47220b83d8144497fd21c52ad01cb636511626a3b201a1548f9ee643e",
+      "bytes": 11265,
+      "session_log": "rollout-2026-11-28T13-29-14-01a222fd-48f5-7bf1-b661-168ba54d744a"
+    },
+    "s2-S2-C2-final-atlas-3.txt": {
+      "sha256": "a0ad323a776a547d9d1992df9506d7260e9ade133fcb7965f3f477fd94d65300",
+      "bytes": 14235,
+      "session_log": "rollout-2026-11-28T13-29-14-01a222fd-48f5-7bf1-b661-168ba54d744a"
+    },
+    "s2-S2-I1A-final-atlas-1.txt": {
+      "sha256": "5f4c8705bb3c0ba52cec6c2bd9a482a0b6165327f255c2f80d4fe87832a0e246",
+      "bytes": 9865,
+      "session_log": "rollout-2026-11-28T13-29-52-01a222fd-db22-7f60-a953-06b3acea1026"
+    },
+    "s2-S2-C1-final-atlas-1.txt": {
+      "sha256": "b3afbe7eb5edb9185147c2849f8e699b8fc124c7fe79863fc70720a58aaf018d",
+      "bytes": 17445,
+      "session_log": "rollout-2026-11-28T13-29-07-01a222fd-2ca1-7de2-aad9-dc9c9af56458"
+    },
+    "s2-S2-C1-final-atlas-2.txt": {
+      "sha256": "74885efb56581cdd8ff35dccb8947e0d51bfd1cf2449bc0a9b206f5b5f22822f",
+      "bytes": 18387,
+      "session_log": "rollout-2026-11-28T13-29-07-01a222fd-2ca1-7de2-aad9-dc9c9af56458"
+    },
+    "s2-S2-C1-final-atlas-3.txt": {
+      "sha256": "49058267278e00115c00a231e5b494f8ed5eb42e82cbf7d0c509473f3490d87e",
+      "bytes": 14341,
+      "session_log": "rollout-2026-11-28T13-29-07-01a222fd-2ca1-7de2-aad9-dc9c9af56458"
+    },
+    "s2-S2-C5-initial-atlas-only.txt": {
+      "sha256": "549048f9e00767c1c48b83e0efe4601ac86464a98647a7f3aaabdca1f30aed81",
+      "bytes": 1816,
+      "session_log": "rollout-2026-11-28T13-29-37-01a222fd-a0f0-7bd1-ae86-f5cc3ca7f9c3"
+    },
+    "s2-S2-C5-final-atlas-1.txt": {
+      "sha256": "4a5d84234781e20f093e4268d4b83905c9ca3a2af834ae3de06caf6df5ee751e",
+      "bytes": 14718,
+      "session_log": "rollout-2026-11-28T13-29-37-01a222fd-a0f0-7bd1-ae86-f5cc3ca7f9c3"
+    }
+  },
+  "four_indexes_captured_not_model_read": [
+    "s2-S2-C1-initial-atlas-only.txt",
+    "s2-S2-C2-initial-atlas-only.txt",
+    "s2-S2-C3-initial-atlas-only.txt",
+    "s2-S2-C4-initial-atlas-only.txt"
+  ],
+  "limits": "text instruction plus exact file transport; no source or judge access was granted"
+}

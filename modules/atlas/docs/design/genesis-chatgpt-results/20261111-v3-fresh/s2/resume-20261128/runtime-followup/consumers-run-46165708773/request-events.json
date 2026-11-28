@@ -1,0 +1,452 @@
+{
+  "initial": {
+    "S2-C1": {
+      "actor": "/root/s2_case_c1",
+      "event_id": "amsg_01a222fd-4034-7570-a778-8480fad5e723",
+      "payload": "{\"id\":\"S2-C1\",\"mode\":\"deep\",\"calls\":[{\"operation\":\"index\",\"query\":{\"scope\":\"orchestra.interfaces\",\"need\":\"entry\"}}]}"
+    },
+    "S2-C2": {
+      "actor": "/root/s2_case_c2",
+      "event_id": "amsg_01a222fd-6179-7403-880d-18af156d3f8b",
+      "payload": "{\"id\":\"S2-C2\",\"mode\":\"deep\",\"calls\":[{\"operation\":\"index\",\"query\":{\"scope\":\"orchestra.interfaces\",\"need\":\"entry\"}}]}"
+    },
+    "S2-C4": {
+      "actor": "/root/s2_case_c4",
+      "event_id": "amsg_01a222fd-9eae-7930-842f-aceaa1e644ae",
+      "payload": "{\"id\":\"S2-C4\",\"mode\":\"deep\",\"calls\":[{\"operation\":\"index\",\"query\":{\"scope\":\"orchestra.interfaces\",\"need\":\"entry\"}}]}"
+    },
+    "S2-C5": {
+      "actor": "/root/s2_case_c5",
+      "event_id": "amsg_01a222fd-bd34-71a1-802b-c5ceab48fe53",
+      "payload": "{\"id\":\"S2-C5\",\"mode\":\"routine\",\"calls\":[{\"operation\":\"index\",\"query\":{\"scope\":\"orchestra.interfaces\",\"need\":\"entry\"}}]}"
+    },
+    "S2-I2D": {
+      "actor": "/root/s2_case_i2d",
+      "event_id": "amsg_01a222fe-5248-7233-a079-bd6441005e73",
+      "payload": "{\"id\":\"S2-I2D\",\"mode\":\"routine\",\"calls\":[{\"operation\":\"index\",\"query\":{\"scope\":\"orchestra.interfaces\",\"need\":\"entry\"}},{\"operation\":\"read\",\"query\":{\"scope\":\"orchestra.interfaces\",\"key\":\"s2.l2.desktop-web\",\"maxBytes\":16000}}]}"
+    },
+    "S2-I1D": {
+      "actor": "/root/s2_case_i1d",
+      "event_id": "amsg_01a222fe-5286-7e11-a541-e47824fafc7c",
+      "payload": "{\"id\":\"S2-I1D\",\"mode\":\"routine\",\"calls\":[{\"operation\":\"index\",\"query\":{\"scope\":\"orchestra.interfaces\",\"need\":\"entry\"}},{\"operation\":\"read\",\"query\":{\"scope\":\"orchestra.interfaces\",\"key\":\"s2.l1.desktop-web\",\"maxBytes\":16000}}]}"
+    },
+    "S2-I1A": {
+      "actor": "/root/s2_case_i1a",
+      "event_id": "amsg_01a222fe-6bc3-7233-83a0-5c22cca9757a",
+      "payload": "{\"id\":\"S2-I1A\",\"mode\":\"routine\",\"calls\":[{\"operation\":\"read\",\"query\":{\"scope\":\"orchestra.interfaces\",\"key\":\"s2.l1.app-session\",\"maxBytes\":16000}}]}"
+    },
+    "S2-I1U": {
+      "actor": "/root/s2_case_i1u",
+      "event_id": "amsg_01a222fe-7b5e-7143-9174-c202374eb94b",
+      "payload": "{\"id\":\"S2-I1U\",\"mode\":\"routine\",\"calls\":[{\"operation\":\"index\",\"query\":{\"scope\":\"orchestra.interfaces\",\"need\":\"entry\"}},{\"operation\":\"read\",\"query\":{\"scope\":\"orchestra.interfaces\",\"key\":\"s2.l1.design-tui\",\"maxBytes\":16000}}]}"
+    },
+    "S2-I2A": {
+      "actor": "/root/s2_case_i2a",
+      "event_id": "amsg_01a222fe-ab88-7c01-b802-3fe3f810b0f8",
+      "payload": "{\"id\":\"S2-I2A\",\"mode\":\"routine\",\"calls\":[{\"operation\":\"index\",\"query\":{\"scope\":\"orchestra.interfaces\",\"need\":\"entry\"}},{\"operation\":\"read\",\"query\":{\"scope\":\"orchestra.interfaces\",\"key\":\"s2.l2.app-session\",\"maxBytes\":16000}}]}"
+    },
+    "S2-I2U": {
+      "actor": "/root/s2_case_i2u",
+      "event_id": "amsg_01a222fe-ca70-7880-9a75-b18b40d8a475",
+      "payload": "{\"id\":\"S2-I2U\",\"mode\":\"routine\",\"calls\":[{\"operation\":\"index\",\"query\":{\"scope\":\"orchestra.interfaces\",\"need\":\"entry\"}},{\"operation\":\"read\",\"query\":{\"scope\":\"orchestra.interfaces\",\"key\":\"s2.l2.design-tui\",\"maxBytes\":16000}}]}"
+    },
+    "S2-I3D": {
+      "actor": "/root/s2_case_i3d",
+      "event_id": "amsg_01a222fe-df49-7833-910f-e899f68c3322",
+      "payload": "{\"id\":\"S2-I3D\",\"mode\":\"routine\",\"calls\":[{\"operation\":\"index\",\"query\":{\"scope\":\"orchestra.interfaces\",\"need\":\"entry\"}},{\"operation\":\"read\",\"query\":{\"scope\":\"orchestra.interfaces\",\"key\":\"s2.l3.desktop-web\",\"maxBytes\":16000}}]}"
+    },
+    "S2-I3U": {
+      "actor": "/root/s2_case_i3u",
+      "event_id": "amsg_01a222ff-22ef-7021-a231-4093e5c25f3a",
+      "payload": "{\"id\":\"S2-I3U\",\"mode\":\"routine\",\"calls\":[{\"operation\":\"index\",\"query\":{\"scope\":\"orchestra.interfaces\",\"need\":\"entry\"}},{\"operation\":\"read\",\"query\":{\"scope\":\"orchestra.interfaces\",\"key\":\"s2.l3.design-tui\",\"maxBytes\":16000}}]}"
+    },
+    "S2-I3A": {
+      "actor": "/root/s2_case_i3a",
+      "event_id": "amsg_01a222ff-2ef9-7421-a91f-8803ebc929a2",
+      "payload": "{\"id\":\"S2-I3A\",\"mode\":\"deep\",\"calls\":[{\"operation\":\"index\",\"query\":{\"scope\":\"orchestra.interfaces\",\"need\":\"entry\"}},{\"operation\":\"read\",\"query\":{\"scope\":\"orchestra.interfaces\",\"key\":\"s2.l3.app-session\",\"maxBytes\":16000}}]}"
+    },
+    "S2-C3": {
+      "actor": "/root/s2_case_c3",
+      "event_id": "amsg_01a222ff-b70b-72d1-a4b2-44e2938d0e4a",
+      "payload": "{\"id\":\"S2-C3\",\"mode\":\"deep\",\"calls\":[{\"operation\":\"index\",\"query\":{\"scope\":\"orchestra.interfaces\",\"need\":\"entry\"}}]}"
+    }
+  },
+  "followup": {
+    "S2-I1D": [
+      "amsg_01a22302-f978-75a3-9acb-ebcb2ec07159",
+      {
+        "id": "S2-I1D",
+        "mode": "routine",
+        "calls": [
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l1.desktop-web",
+              "section": "1. Startup, readiness and shutdown",
+              "maxBytes": 4227
+            }
+          }
+        ]
+      },
+      [
+        4227
+      ]
+    ],
+    "S2-I1A": [
+      "amsg_01a22303-132e-7af3-bb99-3c4283bb756f",
+      {
+        "id": "S2-I1A",
+        "mode": "routine",
+        "calls": [
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l1.app-session",
+              "section": "Skills catalog, editing and ownership",
+              "maxBytes": 5976
+            }
+          }
+        ]
+      },
+      [
+        5976
+      ]
+    ],
+    "S2-I2D": [
+      "amsg_01a22303-4142-7363-910b-8200a6f128f5",
+      {
+        "id": "S2-I2D",
+        "mode": "routine",
+        "calls": [
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l2.desktop-web",
+              "section": "Persistence and recovery have several owners",
+              "maxBytes": 1916
+            }
+          }
+        ]
+      },
+      [
+        1916
+      ]
+    ],
+    "S2-I2A": [
+      "amsg_01a22303-5268-7613-b67f-d770c307dd0c",
+      {
+        "id": "S2-I2A",
+        "mode": "routine",
+        "calls": [
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l2.app-session",
+              "section": "Durable admission, optimistic state and draft storage",
+              "maxBytes": 2705
+            }
+          }
+        ]
+      },
+      [
+        2705
+      ]
+    ],
+    "S2-I2U": [
+      "amsg_01a22303-69cf-7f62-8edd-6a2ba608884c",
+      {
+        "id": "S2-I2U",
+        "mode": "routine",
+        "calls": [
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l2.design-tui",
+              "section": "V2 actions and prompt admission",
+              "maxBytes": 3319
+            }
+          }
+        ]
+      },
+      [
+        3319
+      ]
+    ],
+    "S2-I1U": [
+      "amsg_01a22303-7a69-73f1-b611-164b459a3f64",
+      {
+        "id": "S2-I1U",
+        "mode": "routine",
+        "calls": [
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l1.design-tui",
+              "section": "V2 session action boundary",
+              "maxBytes": 5817
+            }
+          }
+        ]
+      },
+      [
+        5817
+      ]
+    ],
+    "S2-C1": [
+      "amsg_01a22304-17c0-7402-b3ea-e82d9e69fa1c",
+      {
+        "id": "S2-C1",
+        "mode": "deep",
+        "calls": [
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l3.app-session",
+              "maxBytes": 16000
+            }
+          },
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l2.app-session",
+              "section": "Durable admission, optimistic state and draft storage",
+              "maxBytes": 4000
+            }
+          },
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l2.app-session",
+              "section": "Composition, identity and asynchronous ownership",
+              "maxBytes": 3000
+            }
+          },
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l1.app-session",
+              "section": "Prompt admission and draft ownership",
+              "maxBytes": 6000
+            }
+          },
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l4.app-session",
+              "maxBytes": 13000
+            }
+          }
+        ]
+      },
+      [
+        14334,
+        2705,
+        1936,
+        4394,
+        11220
+      ]
+    ],
+    "S2-C2": [
+      "amsg_01a22304-2f50-7413-96f0-4d27059482ee",
+      {
+        "id": "S2-C2",
+        "mode": "deep",
+        "calls": [
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l3.desktop-web",
+              "maxBytes": 14715
+            }
+          },
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l1.desktop-web",
+              "section": "2. Windows, persistence and IPC authority",
+              "maxBytes": 3309
+            }
+          },
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l2.desktop-web",
+              "section": "Privilege is checked at each request boundary",
+              "maxBytes": 1901
+            }
+          },
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l4.desktop-web",
+              "maxBytes": 11183
+            }
+          }
+        ]
+      },
+      [
+        14715,
+        3309,
+        1901,
+        11183
+      ]
+    ],
+    "S2-C3": [
+      "amsg_01a22304-4e8d-7c71-92c5-cb6e1b1f38c4",
+      {
+        "id": "S2-C3",
+        "mode": "deep",
+        "calls": [
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l1.app-session",
+              "section": "Skills catalog, editing and ownership",
+              "maxBytes": 7000
+            }
+          },
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l2.app-session",
+              "section": "Skills catalog, content and editing ownership",
+              "maxBytes": 4000
+            }
+          },
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l3.app-session",
+              "section": "Change settings and Skills under the original owner",
+              "maxBytes": 3000
+            }
+          },
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l3.app-session",
+              "section": "Route a change through its affected contracts",
+              "maxBytes": 2000
+            }
+          }
+        ]
+      },
+      [
+        5976,
+        2700,
+        2031,
+        1283
+      ]
+    ],
+    "S2-C4": [
+      "amsg_01a22304-6a46-7c41-95ad-ac5e016349d1",
+      {
+        "id": "S2-C4",
+        "mode": "deep",
+        "calls": [
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l1.desktop-web",
+              "section": "1. Startup, readiness and shutdown",
+              "maxBytes": 5000
+            }
+          },
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l2.desktop-web",
+              "section": "Startup publishes readiness before the renderer proceeds",
+              "maxBytes": 3000
+            }
+          },
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l3.desktop-web",
+              "section": "Launch, choose a server and identify the health decision",
+              "maxBytes": 3500
+            }
+          },
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l4.desktop-web",
+              "section": "Maintenance protocol",
+              "maxBytes": 7500
+            }
+          },
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l4.desktop-web",
+              "section": "Verification and boundaries",
+              "maxBytes": 3500
+            }
+          }
+        ]
+      },
+      [
+        4227,
+        2067,
+        2644,
+        6847,
+        3062
+      ]
+    ],
+    "S2-C5": [
+      "amsg_01a22304-aa5a-7352-8674-7de4775aba91",
+      {
+        "id": "S2-C5",
+        "mode": "routine",
+        "calls": [
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "need": "entry",
+              "maxBytes": 6000
+            }
+          },
+          {
+            "operation": "read",
+            "query": {
+              "scope": "orchestra.interfaces",
+              "key": "s2.l3.app-session",
+              "section": "Recover the projection without inventing execution recovery",
+              "maxBytes": 2200
+            }
+          }
+        ]
+      },
+      [
+        5849,
+        1998
+      ]
+    ]
+  }
+}

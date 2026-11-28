@@ -18,6 +18,18 @@ on:
         required: true
         type: boolean
         default: false
+      prepare_s2_u1:
+        description: Prepare the distinct isolated S2-U1 maintenance baseline
+        type: boolean
+        default: false
+      admit_exact_m0:
+        description: Admit the separately reviewed exact S2-U1 baseline
+        type: boolean
+        default: false
+      run_reuse_and_drift:
+        description: Run real reuse and isolated drift planning after M0 admission
+        type: boolean
+        default: false
   push:
     branches: ["genesis-interfaces-resume"]
     paths:
@@ -33,6 +45,7 @@ concurrency:
 
 jobs:
   prepare:
+    if: github.event_name != 'workflow_dispatch' || inputs.prepare_s2_u1 != true
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -133,4 +146,57 @@ jobs:
           name: genesis-s2-prepare-${{ github.sha }}-${{ github.run_attempt }}
           if-no-files-found: error
           path: ${{ env.S2_ROOT }}/evidence
+          retention-days: 30
+
+  u1-baseline:
+    if: github.event_name == 'workflow_dispatch' && inputs.prepare_s2_u1 == true
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Validate selected phases
+        if: ${{ inputs.run_reuse_and_drift == true && inputs.admit_exact_m0 != true }}
+        run: |
+          echo 'Reuse and drift require exact M0 admission in the same run.' >&2
+          exit 1
+      - name: Create fixed runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          ROOT="$RUNNER_TEMP/genesis-s2-u1-v1"
+          echo "U1_ROOT=$ROOT" >> "$GITHUB_ENV"
+          mkdir -p "$ROOT/evidence"
+          git worktree add --detach "$ROOT/runtime" 9b0188b2be5ea69638dff8a44e3e931b4d6d8b10
+      - name: Install Atlas dependencies
+        working-directory: ${{ env.U1_ROOT }}/runtime/modules/atlas
+        run: npm ci
+      - name: Typecheck runtime
+        working-directory: ${{ env.U1_ROOT }}/runtime/modules/atlas
+        run: bun typecheck
+      - name: Prepare M0 after the recorded consumer run
+        run: python3 script/genesis-s2/u1-baseline.py
+      - name: Admit independently reviewed exact M0
+        if: ${{ inputs.admit_exact_m0 == true }}
+        env:
+          ADMIT_U1_M0: 'true'
+        run: |
+          python3 script/genesis-s2/u1-admit.py \
+            --runtime "$U1_ROOT/runtime" --source "$U1_ROOT/evidence/run/corpus" \
+            --prepared "$U1_ROOT/evidence/run/u1-prepared.json" \
+            --binding-directory "$GITHUB_WORKSPACE/script/genesis-s2/u1-admission" \
+            --output "$U1_ROOT/evidence/admission"
+      - name: Run actual reuse and isolated drift planning
+        if: ${{ inputs.admit_exact_m0 == true && inputs.run_reuse_and_drift == true }}
+        run: python3 script/genesis-s2/u1-operate.py --summary "$U1_ROOT/evidence/admission/summary.json"
+      - name: Preserve baseline evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: genesis-s2-u1-baseline-${{ github.sha }}-${{ github.run_attempt }}
+          if-no-files-found: warn
+          path: ${{ env.U1_ROOT }}/evidence
           retention-days: 30

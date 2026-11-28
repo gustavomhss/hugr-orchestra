@@ -1,0 +1,109 @@
+{
+  "schema": "genesis-s2-u1-maintenance-plan/v1",
+  "status": "PROPOSED_REQUIRES_EXACT_GATE_AND_REVIEW",
+  "order": "After the initial traversal and all 14 frozen consumer cases, with exact evidence independently accepted.",
+  "baseline": "M0 separate isolated evaluation baseline; original package and obligations remain intact",
+  "source": {
+    "path": "apps/desktop/src/main/owned-serve.ts",
+    "baseline_sha256": "0970f4ddb99c1c004e200443abc54ed5ea38cec098e19ef9aa748b771238dfb5",
+    "baseline_bytes": 8511,
+    "before": "const READY_TIMEOUT = 120_000",
+    "after": "const READY_TIMEOUT = 150_000",
+    "changed_sha256": "9e1d1a2b77d329251082352b6e66d7f8e9cccd0d339a534999714b9f2f6dcb08"
+  },
+  "oracle_sha256": "716f9f06506a34556ec8b56978048f5e31b401d43aae1bdeb0fdd2de476c954f",
+  "direct": [
+    "s2.l1.desktop-web",
+    "s2.l2.desktop-web"
+  ],
+  "closure": [
+    "s2.l1.desktop-web",
+    "s2.l2.desktop-web",
+    "s2.l3.app-session",
+    "s2.l3.design-tui",
+    "s2.l3.desktop-web",
+    "s2.l4.app-session",
+    "s2.l4.design-tui",
+    "s2.l4.desktop-web",
+    "s2.l4.entry"
+  ],
+  "outside": [
+    "s2.l1.app-session",
+    "s2.l1.design-tui",
+    "s2.l2.app-session",
+    "s2.l2.design-tui"
+  ],
+  "frontier": [
+    "s2.l1.desktop-web"
+  ],
+  "controls": [
+    {
+      "id": "U1-01",
+      "operation": "baseline-identical-reuse",
+      "maximum_invocations": 1
+    },
+    {
+      "id": "U1-02",
+      "operation": "changed-source-plan-and-drift",
+      "maximum_invocations": 1
+    },
+    {
+      "id": "U1-03",
+      "operation": "changed-target-and-resume",
+      "maximum_invocations": 1
+    },
+    {
+      "id": "U1-04",
+      "operation": "restore-target-and-read",
+      "maximum_invocations": 1
+    },
+    {
+      "id": "U1-05",
+      "operation": "missing-source",
+      "maximum_invocations": 1
+    },
+    {
+      "id": "U1-06",
+      "operation": "missing-required-edge",
+      "maximum_invocations": 1
+    },
+    {
+      "id": "U1-07",
+      "operation": "old-recipe-version",
+      "maximum_invocations": 1
+    },
+    {
+      "id": "U1-08",
+      "operation": "declared-recipe-result-variation",
+      "maximum_invocations": 1
+    },
+    {
+      "id": "U1-09",
+      "operation": "blocked-result",
+      "maximum_invocations": 1
+    },
+    {
+      "id": "U1-10",
+      "operation": "restored-identical-reuse",
+      "maximum_invocations": 1
+    }
+  ],
+  "production": "Native producers and result-specific semantic reviews are separate; callbacks replay only sealed exact snapshot outputs. No production or callback is authorized by this plan alone.",
+  "admission": "Fresh independent paired exact decisions on all 13 entries required for each candidate. No old PASS is transferred.",
+  "targets": "M1 and M2 each use fresh sibling roots and fixed generation before prepare; admission uses the returned manifest.",
+  "resume": "Persist candidate, CAS, decisions and private finalization before stop; verify on restart without production or recipe callback.",
+  "read_probes": {
+    "mode": "routine",
+    "limits": {
+      "index_calls": 2,
+      "read_calls": 2,
+      "body_bytes_total": 16000
+    },
+    "ids": [
+      "S2-U1-M0-current",
+      "S2-U1-M1-current",
+      "S2-U1-M2-current"
+    ],
+    "scope": "Exact isolated maintenance lineage only, separate from 14 consumer cases"
+  }
+}

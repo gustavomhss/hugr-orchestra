@@ -1,0 +1,155 @@
+{
+  "S2-C1": [
+    {
+      "event_id": "amsg_01a22308-979d-7433-a587-13704a91205d",
+      "actor": "/root/s2_case_c1",
+      "response": "The disconnect leaves admission **unknown**: the server may have accepted the prompt even though the response never arrived. Preserve the dispatched Session and request ID, the encoded prompt and delivery mode, along with the captured owner and policy revision. An exact retry must use the same Session, encoded prompt and delivery; conflicting reuse fails. Prompt context has a separate projection-equivalence check. Do not create a fresh request merely because the response failed.\n\nAn empty Session may be removed only when the attempt was **never dispatched** and the server confirms it is empty. Unknown dispatch or unknown emptiness does not satisfy that prerequisite. Optimistic content may be removed and consumed input restored, but restoration must not overwrite newer edits.\n\nAfter admission succeeds, acknowledge any policy edits made in flight, then promote the draft tab to the destination Session. Carry later composer edits into that Session **unsent**; do not replace them with the submitted snapshot or resubmit the admitted input from the old draft. Admission itself does not prove a visible user turn or completed assistant work.\n\nThe change belongs at the app-shell submission and ownership boundary: preserve credential, server/directory, tab and generation ownership, serialized policy acknowledgment, and the dispatch-time owner/policy checks. An expired callback stays expired even after navigation returns to the same Session. Localize new copy through the prescribed language APIs and preserve existing English text and keys.\n\nVerify the failure and exact retry, policy barriers, duplicate submission, delayed acknowledgment, edits during send, and stale ownership using the focused admission suite, owner/transport browser suites, and draft-handoff regression. Run the prescribed hosted change-scoped tests, package typecheck and guard checks; session/timeline changes also require before/after production benchmarks. Atlas reports these as verification routes, **not executed results**.\n\nDecisive Atlas reads:\n\n- `s2.l1.app-session`, “Prompt admission and draft ownership”: result `bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384`.\n- `s2.l2.app-session`, “Durable admission, optimistic state and draft storage”: result `387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5`.\n- `s2.l4.app-session`, “Maintenance protocol” and “Verification and boundaries”: result `8e0368888768de4c6c1e134e47cdc60d12f544fe311152bfb9f4621a264dac0a`."
+    },
+    {
+      "event_id": "amsg_01a2230a-713c-74a3-8ae3-29d073a738ad",
+      "actor": "/root/s2_case_c1",
+      "response": "Cleanup is limited to a **never-dispatched attempt** after the server confirms that its retained Session is empty; a dispatched attempt or unknown server state cannot be cleaned up on that basis. The captured generation owner and acknowledged policy revision must be rechecked around asynchronous attachment work and again immediately at dispatch."
+    }
+  ],
+  "S2-C2": [
+    {
+      "event_id": "amsg_01a22308-aa1d-7442-bcdb-159302d4184a",
+      "actor": "/root/s2_case_c2",
+      "response": "**No.** Trusting an arbitrary support page as the packaged renderer gives remote content access to privileged desktop capabilities. Packaged builds should continue to ignore `ELECTRON_RENDERER_URL` and trust `oc://renderer`; the configured development origin is for development. Navigation must preserve that distinction. [Atlas `s2.l1.desktop-web`, §2, result `75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58`]\n\nThe enforcement boundary is in **main**, at each request, not merely in the preload. The preload exposes named `window.api` capabilities; isolation, sandboxing and disabled Node integration help, but do not authorize callers. The general IPC wrapper checks `senderFrame.url`; Dock separately checks the owning window’s main frame, while the inspected Live and WSL registrations bypass that wrapper. Their actual reachability depends on preload and navigation, so that difference alone proves neither an exploit nor safety. Review every exposed handler and reject unauthorized senders and frames at its own admission boundary. [Atlas `s2.l2.desktop-web`, “Privilege is checked at each request boundary,” result `ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c`]\n\nA safe fix must retain scoped file authority: sender-bound, one-use attachment tokens and their budget; response-save handles bound to the originating main frame; bounded, sequenced writes; exclusive temporary-file ownership; and committed output after rename. Validate packaged versus development origins, navigation, foreign senders, handler reachability, sequence gaps, partial writes, collisions and cancellation on both sides of rename. [Atlas `s2.l4.desktop-web`, “Maintenance protocol,” result `26ba4e10f4ead5c9443b7d9804b7b7c8aa9d7166350e08f3453748e0695a3199`]\n\nCSP does not close this gap: only `object-src 'none'; base-uri 'self'` is enforced; the broader policy is report-only. These are static observations at the captured revision, not proof of effective packaged runtime behavior or executed tests. [Atlas `s2.l3.desktop-web`, “Cross renderer, preload and main with a scoped capability,” result `ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1`]"
+    },
+    {
+      "event_id": "amsg_01a2230a-878f-77b1-88c1-3b4d0fad8c29",
+      "actor": "/root/s2_case_c2",
+      "response": "The captured body identifies `oc://renderer` and the configured development origin as allowed, with packaged builds ignoring the development URL. It says the general wrapper checks `senderFrame.url`, but does **not** specify whether a rejected invoke returns or throws. Dock checks the owning window’s main frame; inspected Live and WSL handlers register directly without that wrapper. Do not generalize those checks across channels. [Atlas `s2.l1.desktop-web`, §2, result `75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58`]"
+    }
+  ],
+  "S2-C3": [
+    {
+      "event_id": "amsg_01a222fd-8380-7c12-881c-0cdf4b7c3fb7",
+      "actor": "/root/s2_case_c3",
+      "response": ""
+    },
+    {
+      "event_id": "amsg_01a22308-b6fa-73a1-871f-b4b2b11098fb",
+      "actor": "/root/s2_case_c3",
+      "response": "**Current UI failure.** `readSkills` requires `content` on every entry and decodes the entire `.data` array before filtering, sorting or caching. A nonempty slim response therefore throws “Skills response is malformed”; refresh enters the error state with Retry, rather than showing an empty catalog. A warm cache may paint first but is not replaced by the failed response. The dialog also needs content to display and submit instructions. Removing `internal` would additionally change visibility, and removing `mtime` would lose the edit’s concurrency token. [s2.l1.app-session §Skills catalog, editing and ownership, result `bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384`]\n\n**Conditional coordinated change.** Define a slim list contract that retains the metadata needed for visibility and ownership, and a detail-loading contract for content and edit metadata. Update the service/API, client decoder and dialog together so opening an entry loads its details before display or editing; retain location as mutation identity and forward the fetched mtime. Preserve whole-response validation, cache/error distinctions, dialog identity, busy and disposal behavior, and reload after writes. This is a proposed design, not an executed change. [s2.l2.app-session §Skills catalog, content and editing ownership, result `387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5`]\n\n**Boundaries.** After public Protocol or Server `HttpApi` changes, run `bun run generate` from `packages/client`; do not hand-edit `src/generated` or `src/generated-effect`. Runtime dependencies flow Schema → Core and Protocol → Server; Client may depend on Schema and Protocol, never Core or Server; `sdk-next` composes Client, Core and Server. [s2.l3.app-session §Route a change through its affected contracts, result `95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0`]\n\n**Ownership.** Preserve location-based classification: builtin and global are read-only; project `.orchestra/skills/own/` is governed; only lowercase `.md` files in the declared project skill roots are editable. New files belong under project `.orchestra/skills`. These UI rules are lexical, not proof of server filesystem enforcement. No product checks were executed. [s2.l1.app-session §Skills catalog, editing and ownership, result `bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384`]"
+    }
+  ],
+  "S2-C4": [
+    {
+      "event_id": "amsg_01a22308-ca7a-7743-b272-3822a0057e0b",
+      "actor": "/root/s2_case_c4",
+      "response": "At **35 seconds**, the alive child is still within the **120-second** readiness ceiling; it has not yet failed merely because health has not answered. An immediate first-child exit is a distinct failure that wins the readiness race. The local check uses authenticated `/api/health` and accepts HTTP success; the URL and credentials are published only after it succeeds. Inspect the retained last **15 output lines**, with the password redacted. [Atlas `s2.l1.desktop-web`, “Startup, readiness and shutdown,” result `75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58`; sources `main/owned-serve.ts`, `main/index.ts`]\n\nA **healthy stored remote** can recover renderer server selection after local failure. Its presence alone does not establish health, and selecting it does not mean the owned child recovered. The retrieved sections do not establish a more specific remote-selection order, so that remains unverified. Shared-daemon mode has separate lifetime ownership. [Atlas `s2.l3.desktop-web`, “Launch, choose a server and identify the health decision,” result `ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1`]\n\nWithout restarting the existing app or server, inspect run-scoped main, server and renderer logs; launch-stage timestamps; cold versus warm behavior; build, channel, OS, server mode and selected server identity. Verify that CLI and environment were resolved together and that the owned server’s working directory is `userData/global`. Historical startup timings are not current measurements. [Atlas `s2.l4.desktop-web`, “Maintenance protocol,” result `26ba4e10f4ead5c9443b7d9804b7b7c8aa9d7166350e08f3453748e0695a3199`; `s2.l2.desktop-web`, result `ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c`]\n\nEarly main-process failure is logged, shown in a native error box and exits with status 1. Its hardcoded English conflicts with the desktop localization instruction. A separate static backoff indexing discrepancy is unproven at runtime; the existing test covers mode selection only. Preserve these as findings and ask the owner if a restart becomes necessary. [Atlas `s2.l1.desktop-web`, §1; `s2.l4.desktop-web`, “Verification and boundaries,” results above]"
+    },
+    {
+      "event_id": "amsg_01a2230a-967b-7da2-8b0e-dd21ece95a3d",
+      "actor": "/root/s2_case_c4",
+      "response": "The returned bodies attribute historical startup cost to watching home and scanning unsigned binaries, but **do not identify the platform or build context** for that scan. They say those timings were not measured in this work.\n\nThey also say a healthy stored remote can recover renderer selection after local failure, but **do not state the exact order in which stored remotes are probed**. That ordering remains unverified from these replies."
+    }
+  ],
+  "S2-C5": [
+    {
+      "event_id": "amsg_01a22308-bf4c-7fd2-905a-1113f160bcb9",
+      "actor": "/root/s2_case_c5",
+      "response": "No. The interfaces knowledge supports UI and projection recovery: SSE reconnects do not guarantee every event arrived, and canonical reconciliation refetches state while keeping pending admission distinct from transcript promotion. Durable inbox retention or a successful projection read does not prove clustered ownership or authorize retrying a crashed provider turn.\n\nThe evidence owner is the S1/backend session-execution owner, who must provide current coordination, continuation, retry design, and failure-recovery evidence. Unknown here: whether two servers share durable execution ownership, resume a crashed turn, or ensure exactly-once provider execution.\n\nSources: `s2.l4.entry` and `s2.l3.app-session` § “Recover the projection without inventing execution recovery”; manifest `5cbb56e97ad62901f5ec673d6bbf2559201cc54bc6f7faa33af92c4f825c7bbf`, results `060600df54eb14bab6b17a278bd952afdb1b6bb8999e0dbe2d889d97401a7ff1` and `95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0`."
+    },
+    {
+      "event_id": "amsg_01a2230a-bab7-73f3-9a1f-b3b2987da255",
+      "actor": "/root/s2_case_c5",
+      "response": "The baseline keeps local Session drains process-local; post-crash provider continuation requires a separate explicit design. Durable inbox admission and UI projection recovery do not establish provider execution recovery."
+    }
+  ],
+  "S2-I1D": [
+    {
+      "event_id": "amsg_01a22308-d399-7db1-9880-ed99b822f8c7",
+      "actor": "/root/s2_case_i1d",
+      "response": "The readiness cap is **120,000 ms**. The primary source is `M/owned-serve.ts:15–68,94–102,130–141`: readiness races authenticated `/api/health` against the child’s exit and the 120-second ceiling, distinguishing early exit from timeout. Atlas evidence: key `s2.l1.desktop-web`; manifest `5cbb56e97ad62901f5ec673d6bbf2559201cc54bc6f7faa33af92c4f825c7bbf`; result `75c3347283b89766e28058b6618ea5cec5588e9d1b011e2b2b3b8bade9ab58`."
+    },
+    {
+      "event_id": "amsg_01a2230a-dd0a-7312-9f72-437b8e16f34c",
+      "actor": "/root/s2_case_i1d",
+      "response": "`75c3347283b89766e28058b6618ea5cec5588e9d1b011e2b2b3b8bade9ab58` — `M/owned-serve.ts:15–68,94–102,130–141`; race among authenticated health, child exit, and 120-second timeout."
+    }
+  ],
+  "S2-I1A": [
+    {
+      "event_id": "amsg_01a22308-e26c-7d80-b434-84160bb8be45",
+      "actor": "/root/s2_case_i1a",
+      "response": "`readSkills(value: unknown)` decodes the list response’s `.data` as the complete array before filtering, sorting, or caching. Each entry requires string `name`, `location`, and `content`; optional fields are `description: string | null`, `mtime: number | null`, and `internal: boolean | null`. An envelope or JSON string is invalid. `Schema.decodeUnknownOption` plus `Option.getOrThrowWith` makes malformed input throw `Error(\"Skills response is malformed\")`; it does not produce an empty catalog or keep only valid entries. Source: `s2.l1.app-session`, “Skills catalog, editing and ownership”; manifest `5cbb56e9…c825c7bbf`, result `bd941c74…27b9384`."
+    },
+    {
+      "event_id": "amsg_01a2230b-8b3b-7b41-aad0-20a9b697471a",
+      "actor": "/root/s2_case_i1a",
+      "response": "The validator is `A/src/orchestra/chapters/skills-data.ts`; the admitted result ID is `bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384` (the earlier `bd941c74…27b9384` was only an abbreviated transcription)."
+    }
+  ],
+  "S2-I1U": [
+    {
+      "event_id": "amsg_01a22308-f6c2-7aa3-b9d4-d396424a0139",
+      "actor": "/root/s2_case_i1u",
+      "response": "The TUI adapts V2 session actions in `createSessionActions(client)`: it calls `/api/session/:id/interrupt` for interrupt and `/api/session/:id/shell` for shell. The inspected source says legacy `/session/:id/*` abort and shell routes are not served by the V2 server; this adapter has no legacy-route fallback. The source describes request selection and payloads, but does not establish live server execution. Evidence: `s2.l1.design-tui`, “V2 session action boundary”; manifest `5cbb56e97ad62901f5ec673d6bbf2559201cc54bc6f7faa33af92c4f825c7bbf`, result `7baaa859ebb117874e48253430260b915f4a711a26764d694039de68fba7b031`."
+    },
+    {
+      "event_id": "amsg_01a2230a-e538-74a2-a533-6b2432c1a8ae",
+      "actor": "/root/s2_case_i1u",
+      "response": "In `packages/tui/src/context/session-actions.ts`, `createSessionActions(client)` adapts V2 interrupt and shell calls to `/api/session/:id/interrupt` and `/api/session/:id/shell`; the inspected source says legacy `/session/:id/*` abort and shell routes are not served by the V2 server, and the adapter has no legacy-route fallback. It documents request selection and payloads, but does not establish live server execution. Evidence: `s2.l1.design-tui`, “V2 session action boundary”; manifest `5cbb56e97ad62901f5ec673d6bbf2559201cc54bc6f7faa33af92c4f825c7bbf`, result `7baaa859ebb117874e48253430260b915f4a711a26764d694039de68fba7b031`."
+    }
+  ],
+  "S2-I2D": [
+    {
+      "event_id": "amsg_01a22309-2c37-7391-82bd-c3f46cc7175a",
+      "actor": "/root/s2_case_i2d",
+      "response": "Owned-server readiness and configured-remote recovery are separate checks because they have different owners and prove different things. The main process owns startup readiness; renderer initialization may recover using a healthy stored remote server after local startup fails. Passing one check does not establish the other. The cited section documents those paths but says no real recovery was exercised; runtime binding and actual consumers also need separate evidence.\n\nEvidence: `s2.l2.desktop-web`, “Persistence and recovery have several owners.” The component read returned ready; the full-body read returned an ownership-limit hold. Manifest `5cbb56e97ad62901f5ec673d6bbf2559201cc54bc6f7faa33af92c4f825c7bbf`; result `ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c`."
+    }
+  ],
+  "S2-I2A": [
+    {
+      "event_id": "amsg_01a22309-416c-7a52-b170-8440f30d334b",
+      "actor": "/root/s2_case_i2a",
+      "response": "An empty visible timeline is only a projection; it does not prove that durable admission failed. A failed response may arrive after the request was admitted, so the client may remove the optimistic message while the server still retains the session/request. Delete the session only for a never-dispatched attempt confirmed empty. Preserve request identity for an exact retry; clearing the busy indicator does not settle the server outcome.\n\nSource: `s2.l2.app-session`, “Durable admission, optimistic state and draft storage.” The direct body read was held by the ownership limit; the section read returned ready. Index result: `060600df…`; section result: `387d7f73…`; manifest: `5cbb56e9…`."
+    }
+  ],
+  "S2-I2U": [
+    {
+      "event_id": "amsg_01a22309-5c92-79e1-96c7-bb9d2d6179dd",
+      "actor": "/root/s2_case_i2u",
+      "response": "In TUI V2 actions, prompt and command first await agent selection, then model selection. A truthy editor context triggers an awaited synthetic request with `resume: false` before the final prompt; that request admits input without resuming execution. The final prompt’s success means durable input admission, not completed model execution. These awaits order one invocation but do not provide a transaction or cross-caller lock.\n\nAt the prompt, IME handling, autocomplete ownership, agent/model selection, and new-session directory resolution precede dispatch. Extmarks provide text, file, and agent context. The selected session model and agent are distinct inputs; prompt context does not itself establish that the provider turn completed. UI history or navigation may advance before action acceptance, and integration-level failure recovery remains unverified.\n\nSource: `s2.l2.design-tui`, “V2 actions and prompt admission.” Manifest `5cbb56e9…c7bbf`; result `1f89cc85…9db664`."
+    },
+    {
+      "event_id": "amsg_01a2230b-974e-72b2-af16-4ca5afdd7a09",
+      "actor": "/root/s2_case_i2u",
+      "response": "The evidence names no exact agent/model operation identifiers; it says the TUI awaits agent selection then model selection, and identifies the session model for compaction, but does not establish that a selected Session controls provider or model."
+    }
+  ],
+  "S2-I3D": [
+    {
+      "event_id": "amsg_01a22305-62dc-7312-a944-d8f09e8b00bd",
+      "actor": "/root/s2_case_i3d",
+      "response": "Manifest `5cbb56e97ad62901f5ec673d6bbf2559201cc54bc6f7faa33af92c4f825c7bbf`; result `ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1`; artifact `3bcff3a59105c5a870618647b6d4a097e5ab52b374d03c2c5e789783d0a04922`, key `s2.l3.desktop-web`.\n\nIn “Cross renderer, preload and main with a scoped capability,” the static inspection says isolation, sandboxing, disabled Node integration, packaged-origin handling, and enforced `object-src 'none'; base-uri 'self'` CSP provide partial protections. The general IPC wrapper checks renderer origin, while inspected live/WSL registrations bypass that wrapper; this difference alone does not prove exploitability. Attachment transfers use sender-bound one-use tokens or a main-frame save handle, with byte/sequence bounds and exclusive temporary-file ownership; rename commits output, so later cancellation must preserve it.\n\nSource observed: `s2.l2.desktop-web`, “Privilege is checked at each request boundary”; `apps/desktop/AGENTS.md:3–4`. These are inspection findings and proposed verification routes. No runtime, browser, or CI evidence was produced."
+    },
+    {
+      "event_id": "amsg_01a22305-fd9c-7803-91fd-e69208212074",
+      "actor": "/root/s2_case_i3d",
+      "response": "Correction: the body explicitly names the preload surface as `window.api`. It says packaged origin handling ignores the development URL, and the general IPC wrapper checks renderer origin; inspected live/WSL registrations bypass that wrapper. Attachment-path tokens are sender-bound, while the save handle is bound to the originating main frame. These are observations reported in `s2.l3.desktop-web`, “Cross renderer, preload and main with a scoped capability”; its citation to `s2.l2.desktop-web`, “Privilege is checked at each request boundary,” points to the deeper unit. The body does not name the specific live/WSL channels or provide their handler code, so it does not establish their individual admission checks."
+    }
+  ],
+  "S2-I3A": [
+    {
+      "event_id": "amsg_01a222ff-18eb-7442-87e1-cdb654c361ad",
+      "actor": "/root/s2_case_i3a",
+      "response": ""
+    },
+    {
+      "event_id": "amsg_01a22305-80e5-7db0-a527-a3cdac3af0b7",
+      "actor": "/root/s2_case_i3a",
+      "response": "A safe first send crosses four ownership boundaries:\n\n1. **Capture:** The shared editor owns interaction; app submission owns policy, attachments and admission. Capture credentials, server scope, directory, draft and tab identity, prompt snapshot and session-owner generation. Navigation expires that generation, including A → B → A.\n2. **Policy:** Establish or retain the session/worktree, serialize the policy write and obtain a canonical read receipt. A failed predecessor blocks sending. Recheck ownership and policy revision after asynchronous work and at dispatch.\n3. **Dispatch:** For the unchanged action and acknowledged policy revision, retain the request ID. An exact retry requires the same session, encoded prompt and delivery mode; conflicting reuse fails. A new admission requires a durable sequence and projected record. Admission is distinct from transcript promotion and provider completion; `resume: false` admits without waking execution.\n4. **Handoff:** After acknowledgment, associate the draft with the destination session and original tab. Preserve edits made after submission as unsent; do not overwrite them with the submitted snapshot or resubmit the admitted input.\n\nAn ambiguous or failed response can remove optimistic content and restore the snapshot while retaining the dispatched session and request. Delete only a never-dispatched session confirmed empty by the server. Browser IndexedDB and desktop SQLite/WAL do not establish identical crash durability.\n\nSource: `s2.l3.app-session`, §§ “Enter the intended server and workspace” and “Submit once, then hand the draft to its session”; underlying source `s2.l2.app-session`, § “Durable admission, optimistic state and draft storage.” Observed Atlas manifest `5cbb56e97ad62901f5ec673d6bbf2559201cc54bc6f7faa33af92c4f825c7bbf`, read result `95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0`. These are static captured-baseline observations, not an executed send or CI proof."
+    }
+  ],
+  "S2-I3U": [
+    {
+      "event_id": "amsg_01a22305-8a9c-7850-8992-2ea1ba18e375",
+      "actor": "/root/s2_case_i3u",
+      "response": "For shared app UI, call `language.t(...)` for ordinary copy and `language.plural(...)` for counts. For native desktop main-process copy, consume the shared typed translation bundles through `nativeT(...)`. Locale selection, plural resolution, fallback, and interpolation belong to the shared language/UI modules. Feature and native callsites must not branch on locale, choose plural categories, or assemble grammatical fragments. Preserve existing English keys and text byte-for-byte; extend the shared bundle/API for richer grammar. The documented startup-failure copy exception remains.\n\nSource: `s2.l3.design-tui`, “Language and appearance cross app and host contracts”; `packages/app-shell/AGENTS.md:23–28` and `apps/desktop/AGENTS.md:5–9`.\n\nObserved Atlas manifest: `5cbb56e97ad62901f5ec673d6bbf2559201cc54bc6f7faa33af92c4f825c7bbf`. The index returned `s2.l4.entry`; the direct read returned `s2.l3.design-tui` as `ready`, result `3f77baa25cad0ef21847bff3f325478dba06f69c23dae9094c6ee02e83c2d509`."
+    }
+  ]
+}

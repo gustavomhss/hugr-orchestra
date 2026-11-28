@@ -1,0 +1,227 @@
+{
+  "schema": "genesis-s2-consumers-checkpoint/v1",
+  "recorded_utc": "2026-11-28T16:48:45.680075+00:00",
+  "execution_state": "FOURTEEN_EXECUTED_AND_JUDGED",
+  "qualification_state": "HOLD",
+  "admission_run": 46162067144,
+  "hosted_reader_run": 46165708773,
+  "hosted_reader_artifact": {
+    "id": 15271583545,
+    "zip_sha256": "440b17f5baf22eb13a9fffef08b0b52c37d75261d158073d36d6eae51244d72b"
+  },
+  "candidate_id": "ade18f60d8b143fc90fae24bc5c6cd1c14d1e56756800f14b65d19f7eacdf542",
+  "manifest": "5cbb56e97ad62901f5ec673d6bbf2559201cc54bc6f7faa33af92c4f825c7bbf",
+  "recorded_cases": {
+    "S2-C1": {
+      "J1": "HOLD",
+      "J2": "HOLD"
+    },
+    "S2-C2": {
+      "J1": "PASS",
+      "J2": "HOLD"
+    },
+    "S2-C3": {
+      "J1": "PASS",
+      "J2": "PASS"
+    },
+    "S2-C4": {
+      "J1": "HOLD",
+      "J2": "HOLD"
+    },
+    "S2-C5": {
+      "J1": "PASS",
+      "J2": "PASS"
+    },
+    "S2-I1D": {
+      "J1": "PASS",
+      "J2": "PASS"
+    },
+    "S2-I1A": {
+      "J1": "PASS",
+      "J2": "PASS"
+    },
+    "S2-I1U": {
+      "J1": "PASS",
+      "J2": "PASS"
+    },
+    "S2-I2D": {
+      "J1": "PASS",
+      "J2": "PASS"
+    },
+    "S2-I2A": {
+      "J1": "PASS",
+      "J2": "PASS"
+    },
+    "S2-I2U": {
+      "J1": "PASS",
+      "J2": "HOLD"
+    },
+    "S2-I3D": {
+      "J1": "PASS",
+      "J2": "PASS"
+    },
+    "S2-I3A": {
+      "J1": "PASS",
+      "J2": "PASS"
+    },
+    "S2-I3U": {
+      "J1": "PASS",
+      "J2": "PASS"
+    }
+  },
+  "dual_pass": [
+    "S2-C3",
+    "S2-C5",
+    "S2-I1D",
+    "S2-I1A",
+    "S2-I1U",
+    "S2-I2D",
+    "S2-I2A",
+    "S2-I3D",
+    "S2-I3A",
+    "S2-I3U"
+  ],
+  "hold": [
+    "S2-C1",
+    "S2-C2",
+    "S2-C4",
+    "S2-I2U"
+  ],
+  "reviewers": {
+    "J1": {
+      "event_id": "amsg_01a2230d-795e-79f3-a8c6-b025d1c7178c",
+      "path": "j1-review.json",
+      "sha256": "b8cb4832cf17af8ac9278a909b388f0386ba3e1dff4320df88b012a3d6283617",
+      "cases": {
+        "C1": {
+          "verdict": "HOLD",
+          "reason": "The body preserves the dispatched Session/request and encoded prompt, handles transport uncertainty, limits deletion to never-dispatched attempts with confirmed emptiness, rechecks around attachments and dispatch, preserves admitted handoff with later edits unsent, and covers localization, focused hosted regression, and benchmarks. It does not explicitly narrow policy-write failure to never-dispatched attempts, a mandatory expected detail."
+        },
+        "C2": {
+          "verdict": "PASS",
+          "reason": "Covers packaged dev URL handling, oc://renderer and dev-only configured origin, named window.api capabilities, senderFrame URL checks, Dock main-frame ownership, Live/WSL wrapper exceptions, partial enforced CSP and report-only remainder. It rejects arbitrary page privilege and makes no runtime or exploit claim."
+        },
+        "C3": {
+          "verdict": "PASS",
+          "reason": "Requires string content, rejects malformed whole responses with Retry and no empty fallback, requires edit body, calls for detail before slimming, specifies client generation and dependency boundaries, and preserves governed project skill and read-only builtin/global rules."
+        },
+        "C4": {
+          "verdict": "HOLD",
+          "reason": "Covers the 120-second readiness race, exit precedence, authenticated health, logs and configuration diagnosis, no restart, and English hardcoded error handling. It explicitly leaves the unsigned-scan ordering and platform/build unresolved; the operator's code finding was not in the served bodies. The frozen expected clauses therefore are not all established by consumer evidence."
+        },
+        "C5": {
+          "verdict": "PASS",
+          "reason": "Distinguishes canonical recovery and durable admission from provider execution, states process-local drains and no clustered proof, requires separate post-crash provider design, and preserves S1/backend coordination."
+        },
+        "I1D": {
+          "verdict": "PASS",
+          "reason": "Provides the expected 120000 ms readiness race and owned-serve.ts location. The digest fragment is mistyped; operator-verified receipt differs, so I treat this as a clerical provenance limitation as specified, with no evidence of a different served result."
+        },
+        "I1A": {
+          "verdict": "PASS",
+          "reason": "Identifies readSkills in the skills-data.ts path, requires string content, and rejects a malformed array as a whole; direct L1 app-session coverage."
+        },
+        "I1U": {
+          "verdict": "PASS",
+          "reason": "Identifies the TUI session-actions path and distinguishes V2 interrupt/shell routes from unsupported legacy routes; direct L1 design-tui coverage."
+        },
+        "I2D": {
+          "verdict": "PASS",
+          "reason": "Separates main-owned readiness from renderer remote probing, requires a healthy stored remote after local failure, and states stored config alone is insufficient; direct L2 desktop-web coverage."
+        },
+        "I2A": {
+          "verdict": "PASS",
+          "reason": "States that empty projection does not disprove durable admission, preserves exact retry identity for dispatched work, and limits cleanup to never-dispatched attempts with confirmed emptiness; direct L2 app-session coverage."
+        },
+        "I2U": {
+          "verdict": "PASS",
+          "reason": "Specifies agent-before-model ordering, synthetic context with resume:false before the real prompt, and distinct selection. It explicitly does not claim the selected Session controls provider/model; direct L2 design-tui coverage."
+        },
+        "I3D": {
+          "verdict": "PASS",
+          "reason": "Original and addendum cover packaged dev URL handling, preload isolation, main sender guard, per-handler validation, scheme/dev scope, and Live/WSL exceptions; direct L3 desktop-web coverage."
+        },
+        "I3A": {
+          "verdict": "PASS",
+          "reason": "Covers owner and credential capture, acknowledged policy at dispatch, durable admission versus projected transcript/execution, exact retry, one-time promotion, and preserving later edits unsent under the destination Session; direct L3 app-session coverage."
+        },
+        "I3U": {
+          "verdict": "PASS",
+          "reason": "Specifies typed language.t/plural and nativeT, avoids locale branches and fragments, preserves English keys, and notes the known startup exception; direct L3 design-tui coverage."
+        }
+      }
+    },
+    "J2": {
+      "event_id": "amsg_01a2230e-0483-7ff2-8353-157a09bb7bf7",
+      "path": "j2-review.json",
+      "sha256": "79f7856dd5b1871cfb32ed9768bcb73ed7ac7bdf45b1a9815c6fdd1917804d03",
+      "cases": {
+        "C1": {
+          "verdict": "HOLD",
+          "reason": "The deletion condition covers never-dispatched attempts and confirmed emptiness, but does not explicitly restrict deletion to the required policy-write failure."
+        },
+        "C2": {
+          "verdict": "HOLD",
+          "reason": "The answer explicitly leaves unresolved whether a rejected invocation throws, which is a required clause."
+        },
+        "C3": {
+          "verdict": "PASS",
+          "reason": "The supplied answer covers required content validation, whole-response failure and Retry, detail loading, generation, dependency boundaries and governed skill rules."
+        },
+        "C4": {
+          "verdict": "HOLD",
+          "reason": "The answer does not establish the required configured HTTP(S) priority and remaining-address ordering or the platform/build context for the historical unsigned macOS observation. The operator's separate code finding was not served to the consumer."
+        },
+        "C5": {
+          "verdict": "PASS",
+          "reason": "The answer distinguishes process-local drains and durable admission from clustered execution and post-crash provider recovery, with the S1 coordination route."
+        },
+        "I1D": {
+          "verdict": "PASS",
+          "reason": "The answer identifies the 120000 ms readiness race and owned-serve.ts. Its digest fragment is mistyped; the operator verified the actual ready receipt, and no different result was served."
+        },
+        "I1A": {
+          "verdict": "PASS",
+          "reason": "The answer identifies skills-data.ts, readSkills and required string content, including rejection of a malformed array."
+        },
+        "I1U": {
+          "verdict": "PASS",
+          "reason": "The answer identifies the session-actions.ts V2 interrupt and shell paths and distinguishes unsupported legacy paths."
+        },
+        "I2D": {
+          "verdict": "PASS",
+          "reason": "The answer separates main-owned readiness from the renderer's healthy stored-remote probe and does not treat stored configuration alone as sufficient."
+        },
+        "I2A": {
+          "verdict": "PASS",
+          "reason": "The answer distinguishes durable admission from visible projection and retains dispatched identity for exact retry."
+        },
+        "I2U": {
+          "verdict": "HOLD",
+          "reason": "The answer covers agent/model switching and synthetic context with resume:false but explicitly lacks the required claim that the selected Session controls the provider/model."
+        },
+        "I3D": {
+          "verdict": "PASS",
+          "reason": "The original answer and addendum cover packaged and development origins, preload API, sender guard, handler validation and wrapper exceptions."
+        },
+        "I3A": {
+          "verdict": "PASS",
+          "reason": "The answer covers captured ownership and credentials, policy receipt and dispatch recheck, durable admission, exact retry and preservation of later unsent edits."
+        },
+        "I3U": {
+          "verdict": "PASS",
+          "reason": "The answer covers typed language.t/plural and nativeT, English keys and avoidance of locale branches and fragments."
+        }
+      }
+    }
+  },
+  "records": {
+    "answers.json": "cdfdecb17f325e6d77e8fa86f981846d968f177d7324afd8139a0981d90f8c08",
+    "j1-review.json": "b8cb4832cf17af8ac9278a909b388f0386ba3e1dff4320df88b012a3d6283617",
+    "j2-review.json": "79f7856dd5b1871cfb32ed9768bcb73ed7ac7bdf45b1a9815c6fdd1917804d03",
+    "request-events.json": "21250e305b4b260f02355cbd3d1608f9d4b874813d61c0fe1a20b9240f53dba8",
+    "tool-traces.json": "c6f3f4f5ee573b1eadcc6ec1b0b4bd977dcc3b50b14b15e85446f374b00d3a29",
+    "transport-verification.json": "5a9290dca023bce0adfb76cd3cee68f8de5a19fd326513cba75db30179c04667"
+  },
+  "u1": "Independent M0 preparation can proceed after all frozen cases have been executed and judged. The unresolved four are still mandatory for S2 delivery."
+}
