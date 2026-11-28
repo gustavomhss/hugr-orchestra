@@ -3,7 +3,7 @@ import { expect, test } from "bun:test"
 import type { GlobalEvent } from "../../../../src/types"
 import { tmpdir } from "../../../fixture/fixture"
 import { v2Session, type FetchHandler } from "../../../fixture/tui-sdk"
-import { directory, json, mount, wait } from "./sync-fixture"
+import { createFetch, directory, json, mount, wait } from "./sync-fixture"
 
 const sessionID = "ses_recovery_boundary"
 const otherID = "ses_recovery_independent"
@@ -131,7 +131,7 @@ test("a reconnect forces a Session whose first history hydration is still pendin
   }
 }, 15_000)
 
-test("the first greeting fences cached and in-flight pre-subscription Session metadata", async () => {
+test("native SSE requires the first greeting and then fresh exact Session metadata", async () => {
   await using tmp = await tmpdir()
   await Bun.write(`${tmp.path}/kv.json`, "{}")
   const previous = Promise.withResolvers<Response>()
@@ -139,22 +139,41 @@ test("the first greeting fences cached and in-flight pre-subscription Session me
   const state = { metadataReads: 0, historyReads: 0 }
   const original = { ...v2Session({ id: sessionID, directory }), agent: "maestro" }
   const fresh = { ...original, agent: "backend", model: { providerID: "provider", id: "current-model" } }
-  const mounted = await mount(routes((url) => {
+  const stream = Promise.withResolvers<ReadableStreamDefaultController<Uint8Array>>()
+  const transport = createFetch(routes((url) => {
+    if (url.pathname === "/api/permission/request" || url.pathname === "/api/question/request") return json({ data: [] })
     if (url.pathname === `/api/session/${sessionID}/message`) state.historyReads++
     if (url.pathname !== `/api/session/${sessionID}`) return
     state.metadataReads++
     if (state.metadataReads === 2) return previous.promise
     if (state.metadataReads === 3) return current.promise
     return json({ data: original })
-  }), tmp.path)
+  }))
+  const server = Bun.serve({
+    port: 0,
+    hostname: "127.0.0.1",
+    fetch(request) {
+      if (new URL(request.url).pathname === "/api/event")
+        return new Response(new ReadableStream<Uint8Array>({ start: stream.resolve }), {
+          headers: { "content-type": "text/event-stream" },
+        })
+      return transport.fetch(request)
+    },
+  })
+  const mounted = await mount(undefined, tmp.path, undefined, { url: server.url.origin }).catch((error) => {
+    server.stop(true)
+    throw error
+  })
   const sync = mounted.sync.session
   try {
     await sync.refreshSelection(sessionID)
     expect(mounted.sdk.connectionEpoch()).toBe(0)
-    expect(sync.selectionReady(sessionID)).toBe(true)
+    expect(sync.get(sessionID)?.agent).toBe("maestro")
+    expect(sync.selectionReady(sessionID)).toBe(false)
     const priorRead = sync.refreshSelection(sessionID)
     await wait(() => state.metadataReads === 2)
-    await emit(mounted, connected(1))
+    const controller = await stream.promise
+    controller.enqueue(new TextEncoder().encode(`data: ${JSON.stringify(connected(1).payload)}\n\n`))
     await wait(() => state.metadataReads === 3)
     expect(sync.selectionReady(sessionID)).toBe(false)
     expect(sync.get(sessionID)?.agent).toBe("maestro")
@@ -172,6 +191,7 @@ test("the first greeting fences cached and in-flight pre-subscription Session me
     previous.resolve(json({ data: original }))
     current.resolve(json({ data: fresh }))
     mounted.app.renderer.destroy()
+    server.stop(true)
   }
 }, 15_000)
 
@@ -303,6 +323,27 @@ test("move confirmation fences held Session metadata and durable sequence orders
     expect(arrival.metadataReads).toBe(5)
     expect(sync.selectionReady(sessionID)).toBe(true)
     expect(sync.get(sessionID)).toMatchObject({ agent: current.agent, location: current.location, title: current.title })
+    await emit(mounted, {
+      ...event({ id: "evt_pre_snapshot_agent", type: "session.next.agent.switched", data: {
+        sessionID, timestamp: 99, agent: "maestro", messageID: "msg_pre_snapshot_agent",
+      } }),
+      durable: { aggregateID: sessionID, seq: 9 },
+    })
+    expect(sync.get(sessionID)?.agent).toBe(current.agent)
+    await emit(mounted, {
+      ...event({ id: "evt_placement_clock", type: "session.next.moved", data: {
+        sessionID, timestamp: 500, location: current.location,
+      } }),
+      durable: { aggregateID: sessionID, seq: 10 },
+    })
+    const model = { providerID: "provider", id: "new-live-model" }
+    await emit(mounted, {
+      ...event({ id: "evt_after_snapshot_model", type: "session.next.model.switched", data: {
+        sessionID, timestamp: 101, model, messageID: "msg_after_snapshot_model",
+      } }),
+      durable: { aggregateID: sessionID, seq: 11 },
+    })
+    expect(sync.get(sessionID)?.model).toMatchObject(model)
   } finally {
     stale.resolve(json({ data: original }))
     late.resolve(json({ data: moved }))

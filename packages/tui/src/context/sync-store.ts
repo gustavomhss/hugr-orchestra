@@ -41,7 +41,7 @@ export function createSyncStore() {
     }
     config: Config
     session: Session[]
-    session_metadata: Record<string, { epoch?: number; snapshot: Session }>
+    session_metadata: Record<string, { epoch?: number; httpUpdated?: number; snapshot: Session }>
     session_selection: Record<string, {
       agent?: SessionRevision & { value: string }
       model?: SessionRevision & { value: NonNullable<Session["model"]> }

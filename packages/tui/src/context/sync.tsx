@@ -324,11 +324,14 @@ export const {
       if (match.found) return store.session[match.index]
     }
 
-    function publishSession(session: Session, epoch?: number) {
+    function publishSession(session: Session, http?: { epoch: number; updated: number }) {
       batch(() => {
         const metadata = store.session_metadata[session.id]
-        if (epoch !== undefined || metadata)
-          setStore("session_metadata", session.id, reconcile({ epoch: epoch ?? metadata?.epoch, snapshot: session }))
+        if (http || metadata) setStore("session_metadata", session.id, reconcile({
+          epoch: http?.epoch ?? metadata?.epoch,
+          httpUpdated: http?.updated ?? metadata?.httpUpdated,
+          snapshot: session,
+        }))
         const match = search(store.session, session.id, (candidate) => candidate.id)
         if (match.found) setStore("session", match.index, reconcile(session))
         if (!match.found) setStore("session", produce((draft) => { draft.splice(match.index, 0, session) }))
@@ -336,7 +339,7 @@ export const {
     }
 
     function selectionReady(sessionID: string) {
-      return !lifetime.disposed && !sdk.offline() && sdk.binding().active &&
+      return !lifetime.disposed && sdk.eventStreamReady() && sdk.binding().active &&
         store.session_metadata[sessionID]?.epoch === sdk.connectionEpoch()
     }
 
@@ -362,21 +365,23 @@ export const {
         }
         const snapshot = await sdk.catalog.session(sessionID)
         if (!current()) return
+        const http = { epoch, updated: snapshot.time.updated }
         const live = withLiveMetadata(snapshot, baseline)
         const sameContext = sameSelectionContext(live, snapshot)
         // Commit and event publication can straddle the read. A fresh read after the conflicting event
         // verifies the result without treating either the arrival order or the wall clock as a snapshot cursor.
         if (!sameContext || live.title !== snapshot.title) {
-          if (sameContext) publishSession(live, epoch)
+          if (sameContext) publishSession(live, http)
           if (!sameContext) invalidateSelection(sessionID)
           if (confirmConflict) return read(false)
           return sameContext ? live : undefined
         }
-        publishSession(snapshot, epoch)
+        publishSession(snapshot, http)
         return snapshot
       }
       const task = read(true).catch((error) => {
         if (current()) throw error
+        return undefined
       }).finally(() => {
         if (metadataReads.get(sessionID)?.task === task) metadataReads.delete(sessionID)
       })
@@ -583,6 +588,10 @@ export const {
           const revision = { id: event.id, timestamp: event.data.timestamp,
             seq: durable?.aggregateID === sessionID ? durable.seq : undefined }
           const previous = store.session_selection[sessionID]
+          const reading = metadataReads.get(sessionID)?.epoch === sdk.connectionEpoch()
+          const metadata = store.session_metadata[sessionID]
+          if (!reading && metadata?.epoch === sdk.connectionEpoch() &&
+              metadata.httpUpdated !== undefined && revision.timestamp < metadata.httpUpdated) break
           const session = getSession(sessionID)
           const fields = event.type === "session.next.agent.switched"
             ? { agent: event.data.agent }
@@ -595,7 +604,7 @@ export const {
               if (!isNewer(revision, previous?.model)) return
               setStore("session_selection", sessionID, { ...previous, model: { ...revision, value: event.data.model } })
             }
-            if (metadataReads.get(sessionID)?.epoch === sdk.connectionEpoch()) invalidateSelection(sessionID)
+            if (reading) invalidateSelection(sessionID)
             if (session) publishSession({
               ...session, ...fields, time: { ...session.time, updated: Math.max(session.time.updated, revision.timestamp) },
             })

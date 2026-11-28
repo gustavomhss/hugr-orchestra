@@ -113,7 +113,7 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
             for await (const event of v2.events.subscribe({ signal: ctrl.signal })) {
               if (ctrl.signal.aborted) break
               batch(() => {
-                setOffline(false)
+                if (event.type === "server.connected") setOffline(false)
                 handleEvent({
                   directory: event.location?.directory ?? props.directory ?? "",
                   workspace: event.location?.workspaceID,
@@ -211,6 +211,7 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
       catalog,
       offline,
       connectionEpoch,
+      eventStreamReady: () => !offline() && (props.events !== undefined || connectionEpoch() > 0),
       modelExecutionEpoch(location: { directory?: string; workspace?: string } = { directory: props.directory }) {
         return globalModelEpoch() + (modelEpochs[JSON.stringify([location.directory, location.workspace])] ?? 0)
       },
