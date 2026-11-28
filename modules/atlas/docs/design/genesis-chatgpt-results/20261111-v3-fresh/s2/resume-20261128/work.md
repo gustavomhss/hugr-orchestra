@@ -33,8 +33,8 @@ Esta execução é `NEW_EXECUTION_NOT_RECOVERED_R4`. O candidato histórico `f31
 | Primeira travessia index/read/consumidor | NOT_RUN | Exige candidato publicado governadamente |
 | 14 casos S2-C/S2-I | 0/14 executados | frozen-cases-status.json; perguntas e limites intactos |
 | S2-U1 | NOT_RUN | Oracle intacto; nove alcançáveis são expectativa de grafo, não nove interpretações |
-| Revisão desta unidade | PENDING | Par novo em contexto limpo; escopo de custódia/diagnóstico, não binding nem conclusão S2 |
-| Gates S2 e fechamento | Abertos | Typecheck local do código passou; CI existente S4 não é CI novo S2 |
+| Revisão desta unidade | PASS dos dois juízes | /root/s2_j1 e /root/s2_j2; custódia/diagnóstico em 8858e56, sem binding nem conclusão S2 |
+| Gates S2 e fechamento | Parcial | Guards locais no payload 8858e56: exit 0, 0 gates/erros, 204 avisos; CI de qualificação S4 separado; fechamento operacional aberto |
 
 Os três inputs acima do teto liberado histórico são `schema/tui.json` (1.131.057 bytes), `s2/inputs/app-session-tree.json` (369.462) e `s2/inputs/design-tui-tree.json` (390.775). O novo prepare observou os inputs completos sob o teto de 2 MiB do código db9. O release encontrado ainda anuncia r3/256.000 bytes e a amostra nativa de uma unidade.
 
@@ -52,3 +52,15 @@ Comandos reais e análise da rota Actions: `runtime-readiness.md`. Para reproduz
 Sem testes de produto locais, alteração do runtime, modificação dos artefatos aceitos ou dos casos congelados. O prepare escreveu apenas CAS na raiz isolada e saídas fora dela. A conferência pós-execução encontrou 780 comparações coincidentes: candidato/stdout, 69 endereços CAS, 13 corpos/resultados, 626 observações e 40 referências preservadas. Não houve política, binding, publicação, index/read, consumidor ou manutenção.
 
 Uso do provedor, tentativas físicas e cobrança: UNKNOWN; histórico: GLOBAL_UNRECONCILED. As tarefas `/root/s2_custody_search`, `/root/s4_compatibility` e `/root/s2_byte_audit` produziram buscas/verificações; nenhuma conta como consumidor ou juiz. Integração global e ativação permanecem com ROOT/Gustavo.
+
+## Atualização de qualificação e auditoria
+
+A S4 publicou a campanha de qualificação `genesis-runtime-qualification` em `09a4c4afc7aab2f9a153eb059d13df0ecf15595c`. O run `46114652347` terminou com sucesso executando o runtime `db9b423` em checkout separado. O artifact de prepare foi conferido integralmente: ZIP SHA-256 `f1747366c2312c80ff6cd071aea15693ceb14962b3e974f6614ddf450ac14606`, 23/23 membros do índice. O candidato S2 remoto difere do local somente em `repo_root` e `observed_head`; essas diferenças permanecem no ID de cada execução. Todos os demais campos são idênticos. O manifesto S4 lido nesse HEAD ainda é o r3, blob `7513fcca63664ca02094e9ed9b8fab090c20295d`. Ver `runtime-followup/`.
+
+A conferência independente `binding-preflight/independent-mapping-check.json` encontrou 4.752 comparações coincidentes: 13 entries completas, 818 vínculos de input, 626 observações, 40 referências de 67 usos, 32 dependências, 30 navegações e 69 objetos CAS. Ela não é voto de binding nem leitor Atlas. A projeção explícita preserva metadata e relações sem inventar novas interpretações.
+
+O par persistente está examinando a aplicabilidade do contrato de binding. O contrato herdado contém AC-01..AC-10; consumo e manutenção continuam não executados. Nenhuma interpretação do formato será usada para fabricar cumprimento dessas obrigações.
+
+O executor comum de manutenção exige sua própria receita nos inputs e ordem definida dos inputs. A manutenção S2-U1 exigirá uma preparação adicional identificada, sem alterar o pacote congelado ou atribuir sua execução ao candidato 4a36. O oracle continua intacto.
+
+Os guards foram executados também sobre o payload Git já publicado, incluindo o ZIP. Os 204 avisos se dividem em 203 fora desta retomada e um `binary-added` do arquivo de evidência intencional; nenhuma regra foi relaxada. O recibo em `gates/receipt.json` delimita esse resultado local.

@@ -44,5 +44,14 @@
   "binding": "NOT_RUN",
   "publication": "NOT_RUN",
   "index_read": "NOT_RUN",
-  "consumer": "NOT_RUN"
+  "consumer": "NOT_RUN",
+  "latest_followup": {
+    "recorded_at": "2026-11-28T06:15:48.729495+00:00",
+    "genesis_runtime_resume": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+    "genesis_fresh_s4": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "release_blob": "7513fcca63664ca02094e9ed9b8fab090c20295d",
+    "qualification_run": 46114652347,
+    "state": "PREPARE_COMPATIBLE_RELEASE_DISCOVERY_PENDING",
+    "details": "runtime-followup/release-followup.json"
+  }
 }

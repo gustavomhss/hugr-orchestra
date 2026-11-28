@@ -1,0 +1,122 @@
+{
+  "judge_id": "J2",
+  "judge_role": "completude_e_utilidade",
+  "execution_id": "846d4f9c-fb77-4e21-aff6-1fffccc3132b",
+  "review_round": "R1",
+  "evidence_commit": "8858e56a0a8e7824798a593e893ac56a46dac4a3",
+  "overall_scoped_verdict": "PASS",
+  "verdict_scope": "Exclusivamente a exatidão, a completude e a utilidade do checkpoint documental de custódia e da nova operação de prepare apresentados neste pedido.",
+  "evidence_basis": "Avaliação independente do material fornecido e dos excertos normativos citados. Este juiz não usou ferramentas, não inspecionou os arquivos diretamente e não reexecutou as verificações de bytes.",
+  "summary": "O registro distingue adequadamente a recuperação histórica incompleta da nova execução autorizada, identifica os insumos e resultados desta operação e preserva os limites de suas verificações. As pendências operacionais são explícitas e não foram convertidas em aprovação. Não identifiquei correção obrigatória para este checkpoint no escopo solicitado. Este PASS não autoriza declarar S2 concluído nem encerrar o trabalho ainda executável.",
+  "criterion_decisions": [
+    {
+      "criterion": "R1",
+      "decision": "PASS",
+      "evidence": [
+        "O único arquivo apresentado no diretório histórico r4 é public-summary.json, blob 72a104c694c78fdfecd5c5a552c05dc992669abf, explicitamente classificado como DERIVED_REDACTED_SUMMARY_NOT_VERBATIM_EXECUTION_RECEIPT.",
+        "Os identificadores históricos f310ec9b3844d6833ea5a867f9ed14ce099669492c66d8b133116642310310dd e os hashes de prepared/stdout são rotulados como reportados e não recuperados independentemente.",
+        "A nova operação usa operation_id s2-prepare-db9b423-20261128-01 e relationship_to_r4 NEW_EXECUTION_NOT_RECOVERED_R4.",
+        "A busca registra superfícies e limites concretos: três branches consultadas, artifacts=[], download 404, ausência dos três identificadores no log retido, 3072 conteúdos únicos examinados e indisponibilidade da busca de personal-context."
+      ],
+      "rationale": "A conclusão de busca concluída está delimitada às superfícies inspecionadas. O registro não confunde resumo derivado, recibo original histórico e recibo original de uma operação nova. A retenção de sete dias permanece hipótese, e a possibilidade de existir outro original não é excluída."
+    },
+    {
+      "criterion": "R2",
+      "decision": "PASS",
+      "evidence": [
+        "O recibo identifica argv e cwd completos, código db9b4235022c4df32fe3bfd4faeea8adcd69abb7, corpus e observed_head bb2a931301d541692b11e5a7f1eab234cd9ed2fd e runtime_code_modified false.",
+        "O pacote tem 332594 bytes, SHA256 9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b e Git blob b869729c4a4e8bd817e8f987264ae2c579c9e992; 13/13 corpos correspondem ao pacote e aos manifests aceitos.",
+        "O preflight registra 667 arquivos consumidos, verificação das identidades Git nos pins de fonte/protocolo/payload e ausência de drift ou itens faltantes.",
+        "O resultado original identifica candidate_id 4a36e1210acf6a4bb460846b717d446e6c259f80a78fd73cfce8b5a6e445f522, prepared de 344738 bytes, stdout de 268563 bytes, stderr vazio e hashes individuais."
+      ],
+      "rationale": "Há uma cadeia de identidades suficiente, no registro fornecido, entre código executado, checkout real, pacote exato, corpus observado e resultados originais da nova operação. Trata-se de associação documental e de integridade, sem emissão de runtime-import-binding."
+    },
+    {
+      "criterion": "R3",
+      "decision": "PASS",
+      "evidence": [
+        "As 35 capturas base64 do GitHub MCP tiveram seus Git blob IDs recomputados; o registro não amplia esse número para uma verificação direta por MCP de todos os arquivos.",
+        "O preflight completo declara verificações de hashes, blobs, tamanhos, caminhos/symlinks e identidade das árvores, com zero drift/missing e inventários before/after idênticos.",
+        "A verificação posterior é denominada PASS_PREPARED_INTEGRITY_ONLY: 780 comparações, zero falhas, incluindo 69 objetos CAS, 13 corpos, 13 inputs_id, 626 observações e 40 referências preservadas.",
+        "A preservação distingue o hash SHA256 do ZIP, seu Git blob e o readback dos 17 arquivos esperados."
+      ],
+      "rationale": "As alegações têm objetos e limites identificáveis. Igualdade de bytes e consistência do candidato não são apresentadas como julgamento semântico, teste de produto, aprovação de publicação ou prova de execução histórica recuperada. Não encontrei extrapolação material no texto fornecido."
+    },
+    {
+      "criterion": "R4",
+      "decision": "PASS",
+      "evidence": [
+        "prepare-01-evidence.zip tem 939917 bytes e SHA256 696ae8de4c6a0fe9270099701007f5c9b3a88472a124d4c46a85ec4bccfbea2a; contém 90 membros, incluindo manifest, com releitura e hash dos 89 membros de payload.",
+        "O conteúdo declarado inclui os resultados exatos da operação, recibo, inventários, 69 objetos CAS, scripts executados de gravação e checksum, auditorias completas e logs de setup.",
+        "O recibo conserva timestamps, duração, argv, cwd, versões e package-lock de 93193 bytes com SHA256 b3c505a0227808e04acf49138a1acccfd3e1a0e9b5476a5f9748fccd84e1a06f.",
+        "As instruções de reprodução fixam checkouts de código e corpus e reconhecem expressamente que outro root ou identidade pode gerar outro candidate_id."
+      ],
+      "rationale": "O conjunto descrito permite inspecionar a operação e preparar uma repetição com identidades explicitadas. Não promete reproduzir o candidato histórico nem manter o candidato novo após mudança de root, HEAD, código ou bytes. A preservação de CAS também não é confundida com publicação confiável."
+    },
+    {
+      "criterion": "R5",
+      "decision": "PASS",
+      "evidence": [
+        "O contrato fornecido autoriza shell no sandbox e instalação conforme manifests/lockfiles; o registro afirma uso efetivo desse executor e execução de npm ci.",
+        "O wrapper executou a CLI original por subprocess.run, exigiu saída nova e ausência inicial de .atlas/cas, e não injetou seam no runtime.",
+        "A .atlas preexistente é descrita como contendo três arquivos rastreados de memória/log, sem policy, CAS ou served projection; as alterações rastreadas posteriores de código e corpus são vazias.",
+        "npm ci e bun typecheck terminaram com código zero; product_tests_executed_locally é false, e o texto distingue typecheck/checksum de testes de produto no GitHub Actions."
+      ],
+      "rationale": "A execução e sua autoridade são afirmadas de maneira concreta, sem alegação de ambiente indisponível. Os limites entre preparação, integridade, build/typecheck e CI de produto estão preservados. O primeiro erro 127 é registrado, não apagado da narrativa."
+    },
+    {
+      "criterion": "R6",
+      "decision": "PASS",
+      "evidence": [
+        "A nova execução permanece UNPROMOTED_SOURCE_DIAGNOSTIC_ONLY; binding, publicação, index/read, consumidores e manutenção estão explicitamente false ou NOT_RUN.",
+        "O snapshot das 05:54:21Z identifica o runtime-release.json r3, blob 7513fcca63664ca02094e9ed9b8fab090c20295d e SHA256 6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016, com teto de 256000 bytes.",
+        "Os arquivos schema/tui.json, app-session-tree.json e design-tui-tree.json excedem esse teto, embora caibam no limite de 2097152 do código executado.",
+        "O registro exige releitura da dependência S4 antes do fechamento, mantém os gates específicos de S2 abertos e informa que o guard do payload final já commitado ainda deve rodar."
+      ],
+      "rationale": "O bloqueio operacional é fundamentado no release conhecido e datado, sem negar a existência do executor local nem transformar sucesso do código db9 ou da CI 43343953480 em promoção de release. As tarefas pendentes estão reconhecidas. O PASS deste registro não dispensa sua execução nem uma nova leitura do estado S4."
+    },
+    {
+      "criterion": "R7",
+      "decision": "PASS",
+      "evidence": [
+        "O deck congelado conserva SHA256 51dacb110d80dd3e3f0fcf6cb3aa87ebb8a4c8d47e18abf76891d8bef430b356 e os 14 casos enumerados permanecem 0/14 NOT_RUN.",
+        "Os limites routine/deep são preservados, assim como a proibição de raw-source/oracle fallback para o consumidor novo; nenhum consumidor foi iniciado.",
+        "O oracle S2-U1 conserva SHA256 716f9f06506a34556ec8b56978048f5e31b401d43aae1bdeb0fdd2de476c954f, e os números 2 artefatos diretos, fechamento potencial de 9 e 4 externos não são convertidos em interpretações ou economias comprovadas.",
+        "Os 26 links históricos são contabilizados como 14 arquivos originais distintos; os PASS históricos são tratados como custódia, sem novo julgamento semântico.",
+        "Provider tokens, physical attempts e billing permanecem UNKNOWN, e a campanha anterior permanece GLOBAL_UNRECONCILED."
+      ],
+      "rationale": "O registro conserva os critérios congelados, as aceitações históricas e as incertezas contábeis. A ausência de execução dos casos e a necessidade de definir concretamente a mutação e os observáveis de S2-U1 permanecem visíveis."
+    }
+  ],
+  "mandatory_findings": [],
+  "optional_observations": [],
+  "preserved_open_requirements": [
+    {
+      "requirement": "Reconsultar a dependência S4 antes de selar o estado final.",
+      "current_evidence": "O último snapshot fornecido é das 05:54:21Z e ainda aponta para r3.",
+      "required_follow_through": "Se houver release compatível, continuar a cadeia operacional autorizada. Se não houver, preservar a evidência atualizada do bloqueio."
+    },
+    {
+      "requirement": "Executar o guard aplicável ao payload final commitado.",
+      "current_evidence": "O guard preliminar não cobria o ZIP então untracked; o próprio registro mantém o guard final pendente.",
+      "required_follow_through": "Registrar o resultado contra o payload efetivamente commitado, sem reutilizar o resultado preliminar como cobertura desse ZIP."
+    },
+    {
+      "requirement": "Executar e demonstrar as etapas operacionais ainda ausentes.",
+      "current_evidence": "Binding, publicação governada isolada, index/read, consumidor independente, 14 casos, S2-U1/local recovery e gates remotos específicos permanecem NOT_RUN ou abertos.",
+      "required_follow_through": "Produzir a evidência de cada etapa dentro das condições normativas aplicáveis; definir a mutação e os observáveis concretos de S2-U1 antes de sua execução."
+    }
+  ],
+  "scope_exclusions": [
+    "Nenhuma recuperação ou autenticação independente do recibo original r4.",
+    "Nenhum novo julgamento semântico dos 13 corpos.",
+    "Nenhum runtime-import-binding ou aceitação de bindings.",
+    "Nenhuma qualificação, promoção ou aprovação de release S4.",
+    "Nenhuma aprovação de publicação governada, index/read ou consumidor independente.",
+    "Nenhum PASS dos 14 casos congelados ou de S2-U1.",
+    "Nenhum resultado novo de testes de produto ou aprovação de gates remotos.",
+    "Nenhuma reconciliação de tokens, tentativas físicas, custos ou contabilidade global.",
+    "Nenhuma autorização de integração ou ativação global.",
+    "Nenhum fechamento S2 ou declaração DELIVERY_COMPLETE."
+  ]
+}

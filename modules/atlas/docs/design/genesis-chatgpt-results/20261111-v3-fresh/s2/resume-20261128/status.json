@@ -14,7 +14,11 @@
     "public-byte-custody-verification",
     "real-source-preflight",
     "new-isolated-original-cli-prepare",
-    "prepared-cas-integrity-verification"
+    "prepared-cas-integrity-verification",
+    "independent-complete-mapping-check",
+    "record-review-two-new-judges",
+    "local-guards-on-committed-payload",
+    "remote-local-full-S2-prepare-comparison"
   ],
   "historical_r4_recovered": false,
   "new_prepare": {
@@ -28,10 +32,33 @@
     "executed": 0
   },
   "S2-U1": "NOT_RUN",
-  "review": "PENDING_NEW_PAIR_RECORD_REVIEW",
-  "binding_review": "NOT_RUN",
+  "review": {
+    "purpose": "custody-and-diagnostic-record-only",
+    "reviewed_payload": "8858e56a0a8e7824798a593e893ac56a46dac4a3",
+    "judges": [
+      "/root/s2_j1",
+      "/root/s2_j2"
+    ],
+    "verdicts": [
+      "PASS",
+      "PASS"
+    ],
+    "binding": false,
+    "responses": [
+      "judgments/record-r1/j1-response.json",
+      "judgments/record-r1/j2-response.json"
+    ]
+  },
+  "binding_review": "PRECONDITIONS_AND_CONTRACT_SCOPE_UNDER_REVIEW",
   "own_ci": "NOT_RUN",
-  "local_guards": "PENDING",
+  "local_guards": {
+    "state": "PASS_WITH_WARNINGS",
+    "tested_payload": "8858e56a0a8e7824798a593e893ac56a46dac4a3",
+    "receipt": "gates/receipt.json",
+    "warnings": 204,
+    "gates": 0,
+    "errors": 0
+  },
   "open": [
     "S4 compatible release",
     "Exact independent binding",
@@ -52,5 +79,14 @@
     "physical_attempts": "UNKNOWN",
     "billing": "UNKNOWN",
     "historical_accounting": "GLOBAL_UNRECONCILED"
+  },
+  "updated_at": "2026-11-28T06:15:48.729495+00:00",
+  "common_runtime_qualification": {
+    "run_id": 46114652347,
+    "harness_revision": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+    "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "conclusion": "success",
+    "details": "runtime-followup/release-followup.json",
+    "release_manifest": "STILL_R3_AT_OBSERVED_HEAD"
   }
 }

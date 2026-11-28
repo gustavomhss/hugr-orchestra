@@ -1,0 +1,1220 @@
+{
+  "schema": "genesis-s2-binding-projection/v1",
+  "candidate_id": "4a36e1210acf6a4bb460846b717d446e6c259f80a78fd73cfce8b5a6e445f522",
+  "prepared_sha256": "476891f3bf1edf24f7d2c486a1218bab5b0cd5b2b36b8295c3892917724c2b4a",
+  "candidate_header": {
+    "kind": "genesis-native-candidate",
+    "version": 1,
+    "repo_root": "/workspace/scratch/5cfbb6c803f1/s2-corpus",
+    "observed_head": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "scope": "orchestra.interfaces",
+    "session": "S2",
+    "reference_commit_verification": "external-capture-evidence-required",
+    "transport": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json",
+      "sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+      "body": "b925bffd856b56f9086fc762e9593a3bbc8ba7a6dc39131b86cd1b544f3d42e6"
+    },
+    "implementation": {
+      "adapter": "07c8103ef3809ff6d91e8678fa4193e397706a93f7705fc990aaa29d32d44a84",
+      "format": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21",
+      "io": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+      "binding": "ef424a0b5bdb9590f48b8b21b418de1aa033189578790c0bb93a92e1c1d38021"
+    },
+    "contract": "9f3829c9ebdd70aa303b9eb1f167bda77adf2f3b1988e98a973205d712ddfce2",
+    "criteria": [
+      "AC-01",
+      "AC-02",
+      "AC-03",
+      "AC-04",
+      "AC-05",
+      "AC-06",
+      "AC-07",
+      "AC-08",
+      "AC-09",
+      "AC-10",
+      "runtime-import-binding"
+    ],
+    "roots": {
+      "entry": "s2.l4.entry"
+    },
+    "required_artifact_keys": [
+      "s2.l1.desktop-web",
+      "s2.l1.app-session",
+      "s2.l1.design-tui",
+      "s2.l2.desktop-web",
+      "s2.l2.app-session",
+      "s2.l2.design-tui",
+      "s2.l3.desktop-web",
+      "s2.l3.app-session",
+      "s2.l3.design-tui",
+      "s2.l4.desktop-web",
+      "s2.l4.app-session",
+      "s2.l4.design-tui",
+      "s2.l4.entry"
+    ]
+  },
+  "entries": [
+    {
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s2.l1.desktop-web",
+        "scope": "orchestra.interfaces",
+        "title": "Desktop and web evidence base",
+        "layer": 1,
+        "need": "evidence",
+        "result": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58",
+        "navigation": []
+      },
+      "result_object": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "40bd4973ae445c868b853e539845e205fc0f3253c2738ad10722ca7e1c413aa6",
+        "authority": {
+          "scope": "orchestra.interfaces",
+          "basis": "User-assigned S2 partition; observed baseline implementation, current AGENTS/maintenance instructions, and attributed historical intent. This body explicitly separates source observations, inference, tests and gaps."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts."
+        ],
+        "evidence": [
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l1/desktop-web/decisive-evidence.md\",\"sha256\":\"05f2ae3305948cbe4dbaeabb06496b70b33e07cb868417673c53be37ec1bf290\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l1/desktop-web/coverage.json\",\"sha256\":\"4f7b276a97fb51fdb65b68d516ab1683d70f8b33da3d5a538e682ca713815bf9\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/l1-principal-verification.json\",\"sha256\":\"c66487e308988efb8706c22ad761d39b42fbb470064273d81676d94e594a3385\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/corrections/l1-r2/verification.json\",\"sha256\":\"148866cce066a68bebd08577b79e0f34c835c147dd83b7bbf652f14d321d1a40\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/desktop-web-tree.json\",\"sha256\":\"ea0257a78d1940515ec5baa4632e906e5a2f3e019263c8f39c90fbf973c363f5\"}"
+        ]
+      },
+      "body_transport": {
+        "path": "layers/l1/desktop-web/l1.md",
+        "encoding": "utf-8",
+        "byte_length": 29075,
+        "sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338"
+      },
+      "inputs_id": "cc244398ac5cd6d52f1a17272a565d8fb9ecf2c0acbc1d41a70c9327951d57da",
+      "input_count": 153,
+      "dependencies": [],
+      "source_ref_count": 148,
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/resume-l1/desktop-design-r2-j1.json",
+          "sha256": "af77c091d0ce15342402991674d041a77507843ae455780c4cbc49d5818b93a8"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/resume-l1/desktop-design-r2-j2.md",
+          "sha256": "44a86cb5541cb7d56bb949a09e42314bc8a61c311608cefda0d47bd416c9e7f0"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s2.l1.app-session",
+        "scope": "orchestra.interfaces",
+        "title": "Application and session evidence base",
+        "layer": 1,
+        "need": "evidence",
+        "result": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384",
+        "navigation": []
+      },
+      "result_object": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "75e429ca440d2114950b86cfd9c8ade3eee211d26cd664aa7e2eb64b028aa6d2",
+        "authority": {
+          "scope": "orchestra.interfaces",
+          "basis": "User-assigned S2 partition; observed baseline implementation, current AGENTS/maintenance instructions, and attributed historical intent. This body explicitly separates source observations, inference, tests and gaps."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts."
+        ],
+        "evidence": [
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l1/app-session/decisive-evidence.md\",\"sha256\":\"79b232c0d02812ed4bec68093a5e4243636e37702644e2824cff78bce6adb8de\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l1/app-session/coverage.json\",\"sha256\":\"c93eff70f252f2e7c4cb6f4676a0a193b2b64eccc7a836001033ce3656c34759\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/l1-principal-verification.json\",\"sha256\":\"c66487e308988efb8706c22ad761d39b42fbb470064273d81676d94e594a3385\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/corrections/l1-r2/verification.json\",\"sha256\":\"148866cce066a68bebd08577b79e0f34c835c147dd83b7bbf652f14d321d1a40\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/app-session-tree.json\",\"sha256\":\"3eac99a7e7873be6d75df40bd8f0d40ce0b1b54a2aca2be246efe60a14377cd6\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/corrections/l1-r3-app/verification.json\",\"sha256\":\"d88a839f573e69ccde27e2f36ed1bd53cb0aa16454be46e3a3ae6e9be8a176a4\"}"
+        ]
+      },
+      "body_transport": {
+        "path": "layers/l1/app-session/l1.md",
+        "encoding": "utf-8",
+        "byte_length": 42047,
+        "sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e"
+      },
+      "inputs_id": "d2340538beccaee1f20d74a5e5a5ca22ba053e54307af8ba9f74218ad9529053",
+      "input_count": 262,
+      "dependencies": [],
+      "source_ref_count": 255,
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/resume-l1/app-session-r3-j1.json",
+          "sha256": "7507d5d7b5a893750f7a341e930bfae5af9be4d1d08482d8bfdf41a0f3321e2e"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/resume-l1/app-session-r3-j2.json",
+          "sha256": "89e853a37f7001fd37cc612217d330db8e8a18a3497de48ccb56b2c178f3c0f4"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s2.l1.design-tui",
+        "scope": "orchestra.interfaces",
+        "title": "UI, terminal and design evidence base",
+        "layer": 1,
+        "need": "evidence",
+        "result": "7baaa859ebb117874e48253430260b915f4a711a26764d694039de68fba7b031",
+        "navigation": []
+      },
+      "result_object": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "5e3259b8adccf0c846316a6c019f83a5aa42834acd66277606f26c7429706fe5",
+        "authority": {
+          "scope": "orchestra.interfaces",
+          "basis": "User-assigned S2 partition; observed baseline implementation, current AGENTS/maintenance instructions, and attributed historical intent. This body explicitly separates source observations, inference, tests and gaps."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts."
+        ],
+        "evidence": [
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l1/design-tui/decisive-evidence.md\",\"sha256\":\"0e8581ab0e610f19d500803a7a601101d2038c52916c2953252bb205afa09d92\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l1/design-tui/coverage.json\",\"sha256\":\"d7048239a9907676dee0ee6819ade51a3b06152f9e366c308a2efe7aaea63744\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/l1-principal-verification.json\",\"sha256\":\"c66487e308988efb8706c22ad761d39b42fbb470064273d81676d94e594a3385\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/corrections/l1-r2/verification.json\",\"sha256\":\"148866cce066a68bebd08577b79e0f34c835c147dd83b7bbf652f14d321d1a40\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/design-tui-tree.json\",\"sha256\":\"371c3bc1b43acf10ab06d87c9128ea4e5caf6b612e682da2e78c84aece1521d9\"}"
+        ]
+      },
+      "body_transport": {
+        "path": "layers/l1/design-tui/l1.md",
+        "encoding": "utf-8",
+        "byte_length": 36964,
+        "sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da"
+      },
+      "inputs_id": "6ecb0462e50fc590111e063dbb13d6bbf42a0fcff0c61a2e4f0f01a4174d5778",
+      "input_count": 203,
+      "dependencies": [],
+      "source_ref_count": 198,
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/resume-l1/desktop-design-r2-j1.json",
+          "sha256": "af77c091d0ce15342402991674d041a77507843ae455780c4cbc49d5818b93a8"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/resume-l1/desktop-design-r2-j2.md",
+          "sha256": "44a86cb5541cb7d56bb949a09e42314bc8a61c311608cefda0d47bd416c9e7f0"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s2.l2.desktop-web",
+        "scope": "orchestra.interfaces",
+        "title": "L2 desktop-web component",
+        "layer": 2,
+        "need": "component",
+        "result": "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c",
+        "navigation": [
+          "s2.l2.app-session",
+          "s2.l2.design-tui"
+        ]
+      },
+      "result_object": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "f5736222ce1ab2c9a50f2a4f0230987887e5ed27f07b9578e3d2cdb6a06cf031",
+        "authority": {
+          "scope": "orchestra.interfaces",
+          "basis": "User-assigned S2 partition; actual native output at later-producers/desktop-web/l2; exact dispatch and canonical source captures preserved. Mechanical integration does not assert semantic acceptance."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts."
+        ],
+        "evidence": [
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l2/desktop-web/sources.json\",\"sha256\":\"c37f7f5d7ec70dbf533d71d95473a457199cf2cb4365763e86a0b20ef358b6d7\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l2/desktop-web/dependencies.json\",\"sha256\":\"ea59714511cefc9e65493841edec216c32b6e3f777a5a7dae77eec56fd6ccd03\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l2/desktop-web/decisive-evidence.md\",\"sha256\":\"a8845c781ecf752a755eca55a8f0dc76658fa5928bc3c8c71cbb2f28e8acc15d\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l2/desktop-web/response.md\",\"sha256\":\"10813dae33cab38a1a6c97e6e9795b813701aa3f8ff6dd65c07c055196074dbc\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l2/desktop-web/mechanical-receipt.json\",\"sha256\":\"4da26f33a3a202b76c41c3f6b1888fe06c164a4bb7555689507341d8834d4514\"}"
+        ]
+      },
+      "body_transport": {
+        "path": "layers/l2/desktop-web/body.md",
+        "encoding": "utf-8",
+        "byte_length": 18440,
+        "sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457"
+      },
+      "inputs_id": "b1d7bc1e201e7ae4db16cd34520d505b5823dcf707755bab22ea482b91283fdb",
+      "input_count": 17,
+      "dependencies": [
+        {
+          "key": "s2.l1.desktop-web",
+          "result": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58"
+        }
+      ],
+      "source_ref_count": 14,
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l2-r1/j1.json",
+          "sha256": "f4731133e7ca3bbfcb07dfdd995e15ebfcdaf116d13a7a37d6cb72f804a6b850"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l2-r1/j2.json",
+          "sha256": "bcd5a21c804ba5b572de28b645c60fcf23adc9ea63f2ca46684c48897d86bdfd"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s2.l2.app-session",
+        "scope": "orchestra.interfaces",
+        "title": "L2 app-session component",
+        "layer": 2,
+        "need": "component",
+        "result": "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5",
+        "navigation": [
+          "s2.l2.desktop-web",
+          "s2.l2.design-tui"
+        ]
+      },
+      "result_object": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "049d593aef19d0dc9da1642cfa35c3ef936222085b760f58c74f6a3ff22aa953",
+        "authority": {
+          "scope": "orchestra.interfaces",
+          "basis": "User-assigned S2 partition; actual native output at later-producers/app-session/l2; exact dispatch and canonical source captures preserved. Mechanical integration does not assert semantic acceptance."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts."
+        ],
+        "evidence": [
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l2/app-session/sources.json\",\"sha256\":\"852bd8483abb09e825405ea16acd668793491aa44ebad164eb8f473e5d7c61b0\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l2/app-session/dependencies.json\",\"sha256\":\"e464e32f4d62ffdafcece335ede5fad8557f6dc856a5b143064e9aa47b930e61\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l2/app-session/decisive-evidence.md\",\"sha256\":\"b9613f49ded8e990814cd0e4ee0825bd6bd4888c53070939a8beb5b7fc3f4efa\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l2/app-session/response.md\",\"sha256\":\"647f82048ce49bb811acbc15f5077e97a1dba307ddb1a0345db79e577eddd253\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l2/app-session/mechanical-receipt.json\",\"sha256\":\"92f43acafbd51f6f1317232f444e22f61add796e56b7a70a60507775121278ad\"}"
+        ]
+      },
+      "body_transport": {
+        "path": "layers/l2/app-session/body.md",
+        "encoding": "utf-8",
+        "byte_length": 24434,
+        "sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7"
+      },
+      "inputs_id": "a536cac3cee463e780083cef85e1393a0bbb6a0b7dd6335ddd5b214b936514fd",
+      "input_count": 34,
+      "dependencies": [
+        {
+          "key": "s2.l1.app-session",
+          "result": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384"
+        }
+      ],
+      "source_ref_count": 31,
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l2-r1/j1.json",
+          "sha256": "f4731133e7ca3bbfcb07dfdd995e15ebfcdaf116d13a7a37d6cb72f804a6b850"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l2-r1/j2.json",
+          "sha256": "bcd5a21c804ba5b572de28b645c60fcf23adc9ea63f2ca46684c48897d86bdfd"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s2.l2.design-tui",
+        "scope": "orchestra.interfaces",
+        "title": "L2 design-tui component",
+        "layer": 2,
+        "need": "component",
+        "result": "1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664",
+        "navigation": [
+          "s2.l2.app-session",
+          "s2.l2.desktop-web"
+        ]
+      },
+      "result_object": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "89ded95b4f603151b7e3c8c61e0b101992455f20dde715fd9aac759d6cc97e65",
+        "authority": {
+          "scope": "orchestra.interfaces",
+          "basis": "User-assigned S2 partition; actual native output at later-producers/design-tui/l2; exact dispatch and canonical source captures preserved. Mechanical integration does not assert semantic acceptance."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts."
+        ],
+        "evidence": [
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l2/design-tui/sources.json\",\"sha256\":\"f79315087069efc9d88acf629f8cfb7a744f768b968a90602b2e51dee287e262\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l2/design-tui/dependencies.json\",\"sha256\":\"587f33ed309b185def4977a4818895be123b108ac2101bcb09a8b21ca28df49c\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l2/design-tui/decisive-evidence.md\",\"sha256\":\"8d2e149e8afda625cb3deef7a7b6b53c95014853fb637358f118021561a97071\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l2/design-tui/response.md\",\"sha256\":\"486bec496eb2e8e83e90f931d319ae82469891ddc43c82c26aebc8b60b20f745\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l2/design-tui/mechanical-receipt.json\",\"sha256\":\"d4766006a28cd88e29e9d814835ba01878e29bc21659b0ccdc8cdab047afa896\"}"
+        ]
+      },
+      "body_transport": {
+        "path": "layers/l2/design-tui/body.md",
+        "encoding": "utf-8",
+        "byte_length": 21535,
+        "sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1"
+      },
+      "inputs_id": "d8a7e9c1498969e5cd4a811372368fb7708b6b3bc638c55954b67095f3dff46d",
+      "input_count": 39,
+      "dependencies": [
+        {
+          "key": "s2.l1.design-tui",
+          "result": "7baaa859ebb117874e48253430260b915f4a711a26764d694039de68fba7b031"
+        }
+      ],
+      "source_ref_count": 36,
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l2-r1/j1.json",
+          "sha256": "f4731133e7ca3bbfcb07dfdd995e15ebfcdaf116d13a7a37d6cb72f804a6b850"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l2-r1/j2.json",
+          "sha256": "bcd5a21c804ba5b572de28b645c60fcf23adc9ea63f2ca46684c48897d86bdfd"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s2.l3.desktop-web",
+        "scope": "orchestra.interfaces",
+        "title": "L3 desktop-web flow",
+        "layer": 3,
+        "need": "flow",
+        "result": "ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1",
+        "navigation": []
+      },
+      "result_object": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "21221f99742db11c2a8bf52684855a7be9804c824274bc16e854e0b76e1e5dbb",
+        "authority": {
+          "scope": "orchestra.interfaces",
+          "basis": "User-assigned S2 partition; actual native output at later-producers/desktop-web/l3; exact dispatch and canonical source captures preserved. Mechanical integration does not assert semantic acceptance."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts."
+        ],
+        "evidence": [
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/desktop-web/sources.json\",\"sha256\":\"cf9b4f4c94b9a33e19a28cee70c26aaf16eaf7d6ccb152c73a0a7d080788a5f9\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/desktop-web/dependencies.json\",\"sha256\":\"224a337c15eafaf43fb0699839090d7b609dd28772e0a2b34e2acc16210d110d\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/desktop-web/decisive-evidence.md\",\"sha256\":\"b37d2a894fb2087b3a984981962807060eb3c5a72ccf337b6594660b0eb6b8ae\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/desktop-web/response.md\",\"sha256\":\"5478e9b7a069cbc9cf2a1d2870d11aa00b79b4d9ce4b9b3674df42a261bcb70f\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/desktop-web/mechanical-receipt.json\",\"sha256\":\"d2726754f6be0f3948eb116847e7d02f89a34b277556f3c6e934116eb80bafdc\"}"
+        ]
+      },
+      "body_transport": {
+        "path": "layers/l3/desktop-web/body.md",
+        "encoding": "utf-8",
+        "byte_length": 14715,
+        "sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e"
+      },
+      "inputs_id": "cd18c6f0d1de3b328bba07d9b2085a79ccf80ab74c48de948ce3367470e154a8",
+      "input_count": 10,
+      "dependencies": [
+        {
+          "key": "s2.l2.desktop-web",
+          "result": "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c"
+        },
+        {
+          "key": "s2.l2.app-session",
+          "result": "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5"
+        },
+        {
+          "key": "s2.l2.design-tui",
+          "result": "1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664"
+        }
+      ],
+      "source_ref_count": 6,
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l3-r1/j1.json",
+          "sha256": "fdf53d507ac57bbb4b41529164a43a01dd657e65cf838f59fd200d99aef6ce9a"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l3-r1/j2.json",
+          "sha256": "ba1d64e8d2ec61f481ecabb82e62005933f9b55a50fbbac20acc8bd3f184b46c"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s2.l3.app-session",
+        "scope": "orchestra.interfaces",
+        "title": "L3 app-session flow",
+        "layer": 3,
+        "need": "flow",
+        "result": "95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0",
+        "navigation": [
+          "s2.l3.desktop-web",
+          "s2.l3.design-tui"
+        ]
+      },
+      "result_object": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "51a882eb1a964ed18497d5aed6f784a2a9fcae180c8391214df756cb857aa689",
+        "authority": {
+          "scope": "orchestra.interfaces",
+          "basis": "User-assigned S2 partition; actual native output at later-producers/app-session/l3; exact dispatch and canonical source captures preserved. Mechanical integration does not assert semantic acceptance."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts."
+        ],
+        "evidence": [
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/app-session/sources.json\",\"sha256\":\"2cf73d730ff5103c68bcc58f4bd1f573f6f3dcae7c614c3b578069e73343c930\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/app-session/dependencies.json\",\"sha256\":\"04a27fdd24bd3806abc83332e39bc8e84ca6d0567b969c100e7b4f7fdb7116ea\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/app-session/decisive-evidence.md\",\"sha256\":\"c085725c05b12cd5933624bb424038c4c9bfc8b5a41f6e75a2662a4317529678\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/app-session/response.md\",\"sha256\":\"f5826614974d14622d22bcbaac20ef27e5a47ecbe6b16492cce804626d752572\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/app-session/mechanical-receipt.json\",\"sha256\":\"8b7044af72e0032104ee46e7b6f16fab86a80ce04d51aa518beffcf290712b4c\"}"
+        ]
+      },
+      "body_transport": {
+        "path": "layers/l3/app-session/body.md",
+        "encoding": "utf-8",
+        "byte_length": 14334,
+        "sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7"
+      },
+      "inputs_id": "c6680c649a4a1caa6d5ee70ab00b389d339de1ef35c2134aaa3b2196f9446b96",
+      "input_count": 17,
+      "dependencies": [
+        {
+          "key": "s2.l2.app-session",
+          "result": "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5"
+        },
+        {
+          "key": "s2.l2.desktop-web",
+          "result": "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c"
+        },
+        {
+          "key": "s2.l2.design-tui",
+          "result": "1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "result": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384"
+        }
+      ],
+      "source_ref_count": 13,
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l3-r1/j1.json",
+          "sha256": "fdf53d507ac57bbb4b41529164a43a01dd657e65cf838f59fd200d99aef6ce9a"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l3-r1/j2.json",
+          "sha256": "ba1d64e8d2ec61f481ecabb82e62005933f9b55a50fbbac20acc8bd3f184b46c"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s2.l3.design-tui",
+        "scope": "orchestra.interfaces",
+        "title": "L3 design-tui flow",
+        "layer": 3,
+        "need": "flow",
+        "result": "3f77baa25cad0ef21847bff3f325478dba06f69c23dae9094c6ee02e83c2d509",
+        "navigation": [
+          "s2.l3.app-session",
+          "s2.l3.desktop-web"
+        ]
+      },
+      "result_object": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "c5c1c4a4e1158394e4ebb5321e08f4c4226e7b8140b877f77ecb6319819349f0",
+        "authority": {
+          "scope": "orchestra.interfaces",
+          "basis": "User-assigned S2 partition; actual native bounded correction at later-producers/design-tui/l3-r2; original request, r1 body, primary captures and correction request preserved. Mechanical integration is not semantic acceptance."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts."
+        ],
+        "evidence": [
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/design-tui/sources.json\",\"sha256\":\"ee0e73885d07113e2584a3038d8f6f553b5ee5d9b29585af6a04c8918cee237e\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/design-tui/dependencies.json\",\"sha256\":\"850c3b451415725dafd626c8d0f4292e7394764b7c75acdb2ac01c7d9dd8583c\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/design-tui/decisive-evidence.md\",\"sha256\":\"f8ef1ff97ec928cfe03191abeeb6d64006979d98fc18f26368cd56ba20b0e9ef\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/design-tui/response.md\",\"sha256\":\"558380c87adac3037418135a8fd439fbef86db51f9ad880d5177bf568d761efa\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/design-tui/body.diff\",\"sha256\":\"71bcc6df1e428d213cc6c9670bd690faf16b89286eded0c8764d279a493a8190\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/design-tui/delta.md\",\"sha256\":\"ba149179b4fa1e510a25ad6b8e5ecf572ab34ad6664a38b259ba56aa4bad8b51\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/design-tui/mechanical-receipt.json\",\"sha256\":\"2b10d2a553aafef840df51ed173faa7ef7aaafaaa6522f2d61fa280997471a5a\"}"
+        ]
+      },
+      "body_transport": {
+        "path": "layers/l3/design-tui/body.md",
+        "encoding": "utf-8",
+        "byte_length": 15780,
+        "sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730"
+      },
+      "inputs_id": "eab1aa549bb255d19fe6dee6fec301c67998c65523c2987043b324e1a0e76ac4",
+      "input_count": 29,
+      "dependencies": [
+        {
+          "key": "s2.l2.design-tui",
+          "result": "1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664"
+        },
+        {
+          "key": "s2.l2.app-session",
+          "result": "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5"
+        },
+        {
+          "key": "s2.l2.desktop-web",
+          "result": "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c"
+        }
+      ],
+      "source_ref_count": 23,
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l3-r2/j1.json",
+          "sha256": "2a5102a2be7dc1acd065c75c75df6d558985a25ef15720221c792ec9b12f6741"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l3-r2/j2.json",
+          "sha256": "fc9edf21cf505d0b0e4fc535e68269e39e540ab2246d67e47bbdc376974f43e0"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s2.l4.desktop-web",
+        "scope": "orchestra.interfaces",
+        "title": "L4 desktop-web ownership",
+        "layer": 4,
+        "need": "ownership",
+        "result": "26ba4e10f4ead5c9443b7d9804b7b7c8aa9d7166350e08f3453748e0695a3199",
+        "navigation": [
+          "s2.l4.app-session",
+          "s2.l4.design-tui"
+        ]
+      },
+      "result_object": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "b476473de110524282c0c1aa7471f639a12c76840b488397d3acf7db0ae7c225",
+        "authority": {
+          "scope": "orchestra.interfaces",
+          "basis": "User-assigned S2 partition; actual native output at later-producers/desktop-web/l4; exact dispatch and canonical source captures preserved. Mechanical integration does not assert semantic acceptance."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts."
+        ],
+        "evidence": [
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/desktop-web/sources.json\",\"sha256\":\"2e9c3927b535238d2f57771944c9a05c3b1b567975f45301476bffb2e0715722\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/desktop-web/dependencies.json\",\"sha256\":\"d137fed6ca83c2c4db77718eaf90f3aa27d7e852cfcae95001bb7e099612f574\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/desktop-web/decisive-evidence.md\",\"sha256\":\"12d553a1969a35b2780334cd390b7bc3a12e2238ec3d2f84f0235d0db5d576b8\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/desktop-web/response.md\",\"sha256\":\"159b3e6ef857280dec41309d958455c190f3c2e03f55b8a218adfa957263aef2\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/desktop-web/mechanical-receipt.json\",\"sha256\":\"82a7a5f8c060cc5cc42de003ae73d225ead1f20f431562c27c7b3974ac64621a\"}"
+        ]
+      },
+      "body_transport": {
+        "path": "layers/l4/desktop-web/body.md",
+        "encoding": "utf-8",
+        "byte_length": 11183,
+        "sha256": "108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa"
+      },
+      "inputs_id": "23a6829e9fa51658580b4238afdb295d627617b5eacbfc3c003b81044c9f025a",
+      "input_count": 15,
+      "dependencies": [
+        {
+          "key": "s2.l1.desktop-web",
+          "result": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58"
+        },
+        {
+          "key": "s2.l3.desktop-web",
+          "result": "ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1"
+        }
+      ],
+      "source_ref_count": 10,
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r1/j1.json",
+          "sha256": "f7ace34ba0721f1b3e24f7a54e9c7dc5f725676e32ea8a4fef3a735997bb1458"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r1/j2.json",
+          "sha256": "14f52c0d412b4f9a7136aea25b4096e2a271ad7bb6458f9bfada2fa9adb42299"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s2.l4.design-tui",
+        "scope": "orchestra.interfaces",
+        "title": "L4 design-tui ownership",
+        "layer": 4,
+        "need": "ownership",
+        "result": "7a0e27eedc2a116172417159aedfdddf428f2609db8b9104c55012a0926f6629",
+        "navigation": [
+          "s2.l4.app-session",
+          "s2.l4.desktop-web",
+          "s2.l4.entry"
+        ]
+      },
+      "result_object": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "75569537ae275e63ce83fa6c11525c9aa9f0dfb833e89a8ff7b6c6a2d03d36cb",
+        "authority": {
+          "scope": "orchestra.interfaces",
+          "basis": "User-assigned S2 partition; actual native output at later-producers/design-tui/l4; exact dispatch and canonical source captures preserved. Mechanical integration does not assert semantic acceptance."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts."
+        ],
+        "evidence": [
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/design-tui/sources.json\",\"sha256\":\"16582ee7bae87983ed0fc3fca82fa7f2d6c1f773191c37b70ff0667810f98c2c\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/design-tui/dependencies.json\",\"sha256\":\"d2bbd4bcc1ec24d483d46e3eec314e1efc5f127b347624c7a61dd4ab27406053\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/design-tui/decisive-evidence.md\",\"sha256\":\"ffa5cd0b4f8d028228fc5ffa5f7f3c03c24ffeb15ed7d1479d87a18c3bfcd677\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/design-tui/response.md\",\"sha256\":\"5b170b0f55a024f8a5573aa83c54dde3e7559a87966263b0438022b373559b3f\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/design-tui/mechanical-receipt.json\",\"sha256\":\"38a29ddb33dd1472a608845e374c284c037fa2793f22f8b00cad22529bc1d68a\"}"
+        ]
+      },
+      "body_transport": {
+        "path": "layers/l4/design-tui/body.md",
+        "encoding": "utf-8",
+        "byte_length": 11783,
+        "sha256": "95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c"
+      },
+      "inputs_id": "fda86129d6a69aa98cbcebeac647168cb21509e112a643e0b08d7ec361a378cd",
+      "input_count": 17,
+      "dependencies": [
+        {
+          "key": "s2.l3.design-tui",
+          "result": "3f77baa25cad0ef21847bff3f325478dba06f69c23dae9094c6ee02e83c2d509"
+        },
+        {
+          "key": "s2.l3.app-session",
+          "result": "95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0"
+        },
+        {
+          "key": "s2.l3.desktop-web",
+          "result": "ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1"
+        }
+      ],
+      "source_ref_count": 12,
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r1/j1.json",
+          "sha256": "f7ace34ba0721f1b3e24f7a54e9c7dc5f725676e32ea8a4fef3a735997bb1458"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r1/j2.json",
+          "sha256": "14f52c0d412b4f9a7136aea25b4096e2a271ad7bb6458f9bfada2fa9adb42299"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s2.l4.app-session",
+        "scope": "orchestra.interfaces",
+        "title": "L4 app-session ownership",
+        "layer": 4,
+        "need": "ownership",
+        "result": "8e0368888768de4c6c1e134e47cdc60d12f544fe311152bfb9f4621a264dac0a",
+        "navigation": [
+          "s2.l4.desktop-web",
+          "s2.l4.design-tui",
+          "s2.l4.entry"
+        ]
+      },
+      "result_object": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "323eb67423fcc4679d72ac70805351a17fb1a21a8d3e8b9f1ac4d12e975d4ea8",
+        "authority": {
+          "scope": "orchestra.interfaces",
+          "basis": "User-assigned S2 partition; actual native output at later-producers/app-session/l4; exact dispatch and canonical source captures preserved. Mechanical integration does not assert semantic acceptance."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts."
+        ],
+        "evidence": [
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/app-session/sources.json\",\"sha256\":\"decc7ca998568cf868e48d5099a19163dc8bc482d011fd7df897934619e1ead6\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/app-session/dependencies.json\",\"sha256\":\"42810b379057a96e86a914b626bcbd6fa1288720857fc0b84b33bd0641097a74\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/app-session/decisive-evidence.md\",\"sha256\":\"0d1c8100dd15c2030e26da124c8c6a7ee3b2c31a55608efffa4df50d9ea94551\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/app-session/response.md\",\"sha256\":\"343226f46bd885afa3c0773adf679e529f6ed7107ba0fbdf851e5646b7a6d293\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/app-session/mechanical-receipt.json\",\"sha256\":\"2069faf0b1a5251feb83407771ea813d4ca9ca966b0c82197426f00eccf5492b\"}"
+        ]
+      },
+      "body_transport": {
+        "path": "layers/l4/app-session/body.md",
+        "encoding": "utf-8",
+        "byte_length": 11220,
+        "sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3"
+      },
+      "inputs_id": "276c5511b37bbd0c908d930c25c37d945b23f98ce46c067c8e626b40c304832d",
+      "input_count": 14,
+      "dependencies": [
+        {
+          "key": "s2.l3.app-session",
+          "result": "95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0"
+        },
+        {
+          "key": "s2.l3.desktop-web",
+          "result": "ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1"
+        },
+        {
+          "key": "s2.l3.design-tui",
+          "result": "3f77baa25cad0ef21847bff3f325478dba06f69c23dae9094c6ee02e83c2d509"
+        },
+        {
+          "key": "s2.l2.app-session",
+          "result": "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "result": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384"
+        }
+      ],
+      "source_ref_count": 9,
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r1/j1.json",
+          "sha256": "f7ace34ba0721f1b3e24f7a54e9c7dc5f725676e32ea8a4fef3a735997bb1458"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r1/j2.json",
+          "sha256": "14f52c0d412b4f9a7136aea25b4096e2a271ad7bb6458f9bfada2fa9adb42299"
+        }
+      ]
+    },
+    {
+      "artifact": {
+        "kind": "ownership-artifact",
+        "version": 1,
+        "key": "s2.l4.entry",
+        "scope": "orchestra.interfaces",
+        "title": "L4 entry entry",
+        "layer": 4,
+        "need": "entry",
+        "result": "060600df54eb14bab6b17a278bd952afdb1b6bb8999e0dbe2d889d97401a7ff1",
+        "navigation": [
+          "s2.l1.desktop-web",
+          "s2.l1.app-session",
+          "s2.l1.design-tui",
+          "s2.l2.desktop-web",
+          "s2.l2.app-session",
+          "s2.l2.design-tui",
+          "s2.l3.desktop-web",
+          "s2.l3.app-session",
+          "s2.l3.design-tui",
+          "s2.l4.desktop-web",
+          "s2.l4.app-session",
+          "s2.l4.design-tui"
+        ]
+      },
+      "result_object": {
+        "kind": "ownership-result",
+        "version": 1,
+        "body": "6c61d1048239a97f2ad79cc3d38ff2888d11a8b779c3baaf775c1f23fb071b41",
+        "authority": {
+          "scope": "orchestra.interfaces",
+          "basis": "User-assigned S2 partition; actual native bounded correction at later-producers/app-session/l4-entry-r2; original request, r1 body, primary captures and correction request preserved. Mechanical integration is not semantic acceptance."
+        },
+        "validity": "supported",
+        "gaps": [
+          "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts."
+        ],
+        "evidence": [
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/entry/sources.json\",\"sha256\":\"443b8e94919fb4bcbdef2380d1414f8c3e3d964961b3eda3933e76b9c301f41d\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/entry/dependencies.json\",\"sha256\":\"f87550c141a6592d1cbdafbb63c9c06e963bcd1fd5e8f198081911177911c425\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/entry/decisive-evidence.md\",\"sha256\":\"40b990eefa4e9630be200bd1f2907871d78f95175949025fd09330584a66e35e\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/entry/response.md\",\"sha256\":\"a6bdb557360ba300cdcb1a09eaba1159f3c674caabd6bf84319dedfd4516f702\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/entry/body.diff\",\"sha256\":\"e1d924481eab0d78599570d1a8ea7c171a3dd51bce2270636f5c262b5256cfd6\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/entry/delta.md\",\"sha256\":\"d49527f10e07503cfe2f5e4925bd6cae86839243f87001f05fea595ea7600744\"}",
+          "{\"payload_path\":\"modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/entry/mechanical-receipt.json\",\"sha256\":\"189995b80365f3ec55263c0f191ddc55cb240c307fd2c98fb50da729fc00aa62\"}"
+        ]
+      },
+      "body_transport": {
+        "path": "layers/l4/entry/body.md",
+        "encoding": "utf-8",
+        "byte_length": 5849,
+        "sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1"
+      },
+      "inputs_id": "16c85ef8321f4ea64b9670e6335d7272ae708397d37e7f990af1915342d8518f",
+      "input_count": 8,
+      "dependencies": [
+        {
+          "key": "s2.l1.desktop-web",
+          "result": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "result": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384"
+        },
+        {
+          "key": "s2.l1.design-tui",
+          "result": "7baaa859ebb117874e48253430260b915f4a711a26764d694039de68fba7b031"
+        },
+        {
+          "key": "s2.l2.desktop-web",
+          "result": "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c"
+        },
+        {
+          "key": "s2.l2.app-session",
+          "result": "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5"
+        },
+        {
+          "key": "s2.l2.design-tui",
+          "result": "1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664"
+        },
+        {
+          "key": "s2.l3.desktop-web",
+          "result": "ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1"
+        },
+        {
+          "key": "s2.l3.app-session",
+          "result": "95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0"
+        },
+        {
+          "key": "s2.l3.design-tui",
+          "result": "3f77baa25cad0ef21847bff3f325478dba06f69c23dae9094c6ee02e83c2d509"
+        }
+      ],
+      "source_ref_count": 1,
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r2/j1.json",
+          "sha256": "81e9685a5fdd63170aa8a5dfafe40bdfe9d8ad2ef36e2580b06ce68f45f7d817"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r2/j2.json",
+          "sha256": "5fb4008812cbe7e5f384aaed31ad4fb8bbbd99b738754b2759c9cd2f7e5cdf7d"
+        }
+      ]
+    }
+  ],
+  "references": [
+    {
+      "reference": {
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "path": ".orchestra/skills/execute-genesis/references/transport.md",
+        "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+      },
+      "body": "3585498d51ea14a376935dd52ca7f09466052f673fbb7824849edccf333d4112"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/oracles/ownership-v1.json",
+        "sha256": "87a571d85c09dbcc02df7c5360bde9cdca933768fe8bd81e00f044f33eed5ff1"
+      },
+      "body": "ab1bdc7d41e499cdaef978e88325e7a3f5430a8c038149d0ac443379f434431c"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/corrections/l1-r2/producer-request.md",
+        "sha256": "96c5504f18d269435b60a34e625cd6b40194eabc3be97dc38b20b0eeca2e5a36"
+      },
+      "body": "6ec34371be6c265f23cadf50932ceba7692af6d6dd51f70a946721dd2fda867e"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/corrections/l1-r2/producer-response.md",
+        "sha256": "3abcc717515572a75bb61fcfd5e6f85d541292159e11d52707b99dc017705765"
+      },
+      "body": "ff63396615c8407c1b045231cdb2c5d1b6bae5d2886a90d89d38e694c0cbe817"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/resume-l1/desktop-design-r2-j1.json",
+        "sha256": "af77c091d0ce15342402991674d041a77507843ae455780c4cbc49d5818b93a8"
+      },
+      "body": "2f3c2464a482eb4089e33c6d4586ac805422642a8797fc4e2ab488a50117ffe6"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/resume-l1/desktop-design-r2-j2.md",
+        "sha256": "44a86cb5541cb7d56bb949a09e42314bc8a61c311608cefda0d47bd416c9e7f0"
+      },
+      "body": "aaa42fa8834cdfefb1710a56a668a07cfc52c9145a98594546f494d5122c0c43"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/corrections/l1-r3-app/producer-request.md",
+        "sha256": "d21728c386a707bc7d9147f4f74617912032c2bda4e58e1d73e52d7084cd10dd"
+      },
+      "body": "490fd74ea9400d9adfdeec902deb406327fbc4568855bce59fc1873284a5c4da"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/corrections/l1-r3-app/producer-response.md",
+        "sha256": "4d30893548b1b9eb018dcee0e1fd408fdad5152e39eb064acf28389a97e0c2ea"
+      },
+      "body": "d6448ec59847ae824fc828ff01f5d3de1040d6c9b86d1da7fa9d5eb264574b2d"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/resume-l1/app-session-r3-j1.json",
+        "sha256": "7507d5d7b5a893750f7a341e930bfae5af9be4d1d08482d8bfdf41a0f3321e2e"
+      },
+      "body": "a81c82b0a82cff391776d152b327d0810b7d38a1cf10006716367b7765da0835"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/resume-l1/app-session-r3-j2.json",
+        "sha256": "89e853a37f7001fd37cc612217d330db8e8a18a3497de48ccb56b2c178f3c0f4"
+      },
+      "body": "c89a9fc74876fba54d153f690fe35dcb32338721a1dd2b6dd7fc0a3ceddcce9e"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-desktop-web-dispatch.md",
+        "sha256": "35ac19160905bd95fddede62be0e9e1d569e20425eb8e15493421ed7a53c8f5c"
+      },
+      "body": "15fafcb41a43bc67e108d6badfdeeeaeb841d5960beee22d0ce2f69364951ed4"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l2/desktop-web/response.md",
+        "sha256": "10813dae33cab38a1a6c97e6e9795b813701aa3f8ff6dd65c07c055196074dbc"
+      },
+      "body": "2d197a0a1f12d4987964f1c921ecaf8f382f4350f65726145be7518a900183c9"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l2-r1/j1.json",
+        "sha256": "f4731133e7ca3bbfcb07dfdd995e15ebfcdaf116d13a7a37d6cb72f804a6b850"
+      },
+      "body": "e2a6ee84c790d60cafa6c6566ef652b3a27408b10331e3b82d3e5fb74a3cac58"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l2-r1/j2.json",
+        "sha256": "bcd5a21c804ba5b572de28b645c60fcf23adc9ea63f2ca46684c48897d86bdfd"
+      },
+      "body": "b588e7634a6f88aebe573a282cab0f513d886fe3bdb6f2d6f942be7a5928e513"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-app-session-dispatch.md",
+        "sha256": "0cd465cb782425a419f6c52e7056e6d775c28aaae7e7b45e4c94ae7d1f785e60"
+      },
+      "body": "4d366e868d7400171eb135c5c5b51cf8d904eb3fd14b7d12e30e1a55ead4d662"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l2/app-session/response.md",
+        "sha256": "647f82048ce49bb811acbc15f5077e97a1dba307ddb1a0345db79e577eddd253"
+      },
+      "body": "8205707d7379dc1199acb74a5c0bac091e21e32c8a882be633fa7c41d40d3b6b"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-design-tui-dispatch.md",
+        "sha256": "bb772f04a0dafd521e20531c31865ce7dc9e999d36ba0b8026e8b63b8fc1af40"
+      },
+      "body": "8f096207dfc1ef2710141e195e8934943db081b30e90ca7788231f9765f18a99"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l2/design-tui/response.md",
+        "sha256": "486bec496eb2e8e83e90f931d319ae82469891ddc43c82c26aebc8b60b20f745"
+      },
+      "body": "20676f4fd59395befa2546224d5f7bbb450e1397bbc84d41908ecf986836266e"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-desktop-web-dispatch.md",
+        "sha256": "ff214eb6c55241300affe3932ca99403ad9913302804bffc04c64f367e7a1f7e"
+      },
+      "body": "ec174896f4650f418819796cdc4f148c39c6d51e462443c8e2f23f5a8e18c40b"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/desktop-web/response.md",
+        "sha256": "5478e9b7a069cbc9cf2a1d2870d11aa00b79b4d9ce4b9b3674df42a261bcb70f"
+      },
+      "body": "4b9120e4409e4134fa6e11fd1278e3327c41b27cf4f3fb537d6c4fab8d8997b7"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l3-r1/j1.json",
+        "sha256": "fdf53d507ac57bbb4b41529164a43a01dd657e65cf838f59fd200d99aef6ce9a"
+      },
+      "body": "2cc784af6c94a2db9ba85d70c28cb5854cc57c0e321505dfd99e908f6909db87"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l3-r1/j2.json",
+        "sha256": "ba1d64e8d2ec61f481ecabb82e62005933f9b55a50fbbac20acc8bd3f184b46c"
+      },
+      "body": "24d65f483646dd2af6659021a55456a447f3eb4d0d3250e7fd8527164a3dcc28"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-app-session-dispatch.md",
+        "sha256": "125f7a8c157d2dfc76f0f118babba54aa4a1896416efa2d307d51be683964f20"
+      },
+      "body": "88dd4593775eefb0d699ab0241f70e9344dc11ab68e112d4922375c2a78adfe4"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/app-session/response.md",
+        "sha256": "f5826614974d14622d22bcbaac20ef27e5a47ecbe6b16492cce804626d752572"
+      },
+      "body": "bd11c51a41c88c7acb1fe474366f82d13bb8d8cb7e16de58ebfdfe0c14f9ced7"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-design-tui-r2-correction.md",
+        "sha256": "15d91eb9a18a571488e912a56970783de61eb7d28fef8fce6e138a840d299274"
+      },
+      "body": "d6bc80bf0a531329ca0382a7e58a77a6fb46a66fdb154be1645690c05b7944eb"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l3/design-tui/response.md",
+        "sha256": "558380c87adac3037418135a8fd439fbef86db51f9ad880d5177bf568d761efa"
+      },
+      "body": "e3c3c4d7b8fac6ce32a47a2f5e4d2588f6c6d2581fa5c497f6abbee80d56656f"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l3-r2/j1.json",
+        "sha256": "2a5102a2be7dc1acd065c75c75df6d558985a25ef15720221c792ec9b12f6741"
+      },
+      "body": "3ce1496bde0c6ba698d55b0bdd34b07322605bcadb24b4ccbb65a501413f1799"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l3-r2/j2.json",
+        "sha256": "fc9edf21cf505d0b0e4fc535e68269e39e540ab2246d67e47bbdc376974f43e0"
+      },
+      "body": "93b4c2e9f6f8ae7e90694ba4bdd061ddbc2b7c24b85327bae24a0f6ffd22b75b"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-desktop-web-dispatch.md",
+        "sha256": "2dd13862d3ede895dabea2269bc8d4ec3254e05350042a2ba52c535feb4a3c38"
+      },
+      "body": "f75fdc066c33faf2bd477858c705618bc7d629b5145d19b430f838c0c675fa0b"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/desktop-web/response.md",
+        "sha256": "159b3e6ef857280dec41309d958455c190f3c2e03f55b8a218adfa957263aef2"
+      },
+      "body": "c630ec12981c52b5b3a15578debca44208f028862aa4c1a430f476e82c40435e"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r1/j1.json",
+        "sha256": "f7ace34ba0721f1b3e24f7a54e9c7dc5f725676e32ea8a4fef3a735997bb1458"
+      },
+      "body": "2af302432fbe7dee74403c3c67dde43d58adb67e923c22041b691479e0ebc3cd"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r1/j2.json",
+        "sha256": "14f52c0d412b4f9a7136aea25b4096e2a271ad7bb6458f9bfada2fa9adb42299"
+      },
+      "body": "99fc8d86993f883ceb9ef936da2050e9fcbbeaa79ff6a36ef2fbf2d35d24a8d9"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-design-tui-dispatch.md",
+        "sha256": "8aa7d8c7838111adb949ed2612d6beb44e4e2fd37fb91931c7f7d3aeeb958aec"
+      },
+      "body": "f18808ca12fcab8181df2286eb55924b514e3afff8fa6f05737675b428c0454f"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/design-tui/response.md",
+        "sha256": "5b170b0f55a024f8a5573aa83c54dde3e7559a87966263b0438022b373559b3f"
+      },
+      "body": "9c18a1297291e14f347a7442221ff656d116f7801bbd7a57bf0fe52aa2faa815"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-app-session-dispatch.md",
+        "sha256": "0d0932d214322396b93b998dc7665718be7d0e880a87253a5f918f258bdaef4f"
+      },
+      "body": "5d27384d12275b11f3fe224b8f25c9eb8bc0d28d4bf556c1ee9bc5a56da92b62"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/app-session/response.md",
+        "sha256": "343226f46bd885afa3c0773adf679e529f6ed7107ba0fbdf851e5646b7a6d293"
+      },
+      "body": "f65e06d4608aa9e6f298a18f24b8e1d68415577650ff72ceb7a7789fa6cb913a"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-entry-r2-correction.md",
+        "sha256": "0dff7a29abe4560a5e4a6eb222cc97d56314a72ed0fc8050b3671d05ca3bfc53"
+      },
+      "body": "b2a1b4d9ff4dc868659e0336f9d9912c528c2cd0134a57966bc41bf8c974d12e"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/layers/l4/entry/response.md",
+        "sha256": "a6bdb557360ba300cdcb1a09eaba1159f3c674caabd6bf84319dedfd4516f702"
+      },
+      "body": "e7623fa4f8b140c0ac944e6f224e45711b65ebdc818139a7b27a6da109fd2794"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r2/j1.json",
+        "sha256": "81e9685a5fdd63170aa8a5dfafe40bdfe9d8ad2ef36e2580b06ce68f45f7d817"
+      },
+      "body": "dc88b62807dd6ae483369855dad46a90195f45533ccff25ff04bd68c2da0fb99"
+    },
+    {
+      "reference": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r2/j2.json",
+        "sha256": "5fb4008812cbe7e5f384aaed31ad4fb8bbbd99b738754b2759c9cd2f7e5cdf7d"
+      },
+      "body": "e6f355b79799fb135c7c4995416384f9167d8c9ad2bfbdc15d2db465cd549f52"
+    }
+  ],
+  "observations_summary": {
+    "count": 626,
+    "all_present": true,
+    "no_missing_or_unavailable": true,
+    "details_in_exact_prepared_json": true
+  }
+}

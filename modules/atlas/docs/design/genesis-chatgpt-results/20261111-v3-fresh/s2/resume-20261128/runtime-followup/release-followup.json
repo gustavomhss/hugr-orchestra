@@ -1,0 +1,186 @@
+{
+  "schema": "genesis-s2-runtime-release-followup/v1",
+  "recorded_at_utc": "2026-11-28T06:11:29.706Z",
+  "reviewer": "/root/s4_compatibility",
+  "mode": "READ_ONLY_ONE_ROUND",
+  "repository": "gustavomhss/hugr-orchestra",
+  "verdict": "PREPARE_COMPATIBLE_RELEASE_DISCOVERY_PENDING",
+  "branch": {
+    "name": "genesis-runtime-resume",
+    "observed_head": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c"
+  },
+  "release_discovery": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+    "read_at_ref": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+    "git_blob": "7513fcca63664ca02094e9ed9b8fab090c20295d",
+    "release_id": "20261111-v3-fresh-s4-r3",
+    "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "new_full_s2_release_published": false,
+    "limits": "Observed immutable manifest remains r3. This is a time-scoped observation; root owns the final recheck."
+  },
+  "qualification": {
+    "run_id": 46114652347,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46114652347",
+    "status": "completed",
+    "conclusion": "success",
+    "harness_revision": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+    "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "runtime_tree": "3c93c4636c1e4c4b704f8be9314e22b2149e5609",
+    "jobs": {
+      "prepare": 140885629636,
+      "guards": 140885629534
+    },
+    "summary_state": "PASS_PREPARE_QUALIFICATION",
+    "s2": {
+      "artifact_count": 13,
+      "observations": 626,
+      "package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+      "candidate_id": "b8715607230a23d0bcbea34e91a43cae2935d9db257cf7dab4bd54c31d1d71f6",
+      "prepared_sha256": "9c2f896b3b87c0f7bb7a881ba13d2d8c4098da80fe446e0cc99e2bcfc7ea88c3"
+    },
+    "s1_03": {
+      "artifact_count": 12,
+      "observations": 694,
+      "large_inputs": 6
+    },
+    "real_eacces_refusal": {
+      "verdict": "PASS",
+      "exit_code": 1,
+      "candidate_created": false,
+      "positive_roots_unchanged": true
+    },
+    "binding": "NOT_ATTEMPTED",
+    "publication": "NOT_ATTEMPTED",
+    "independent_runtime_acceptance": "SEPARATE"
+  },
+  "artifacts": {
+    "prepare": {
+      "artifact_id": 15250769935,
+      "bytes": 814750,
+      "sha256": "f1747366c2312c80ff6cd071aea15693ceb14962b3e974f6614ddf450ac14606",
+      "sha256_verified": true,
+      "local_file": "/workspace/scratch/5cfbb6c803f1/s2-investigation/runtime/followup-prepare.zip",
+      "extracted_directory": "/workspace/scratch/5cfbb6c803f1/s2-investigation/runtime/followup-artifact",
+      "indexed_files_verified": 23,
+      "index_failures": []
+    },
+    "guards": {
+      "artifact_id": 15251370580,
+      "bytes": 1056,
+      "api_digest": "sha256:7aa2ef46e7126a47ed3ae8cfc15911f092e8f645ac59e96c7ef66f66b13ba461",
+      "downloaded": false,
+      "job_log_read": true
+    }
+  },
+  "code_comparison": {
+    "base": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "head": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+    "status": "ahead",
+    "ahead_by": 3,
+    "changed_files": [
+      ".github/workflows/genesis-runtime-qualification.yml",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/S4-RUNTIME.md",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/attempt-1/prepare.zip",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/attempt-1/summary.json",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/harness-correction.json",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/input-capture.json",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/reused-ci.json",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/runtime-audit.json",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/input-lock.json",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/qualification-plan.json",
+      "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/qualification.py",
+      "modules/atlas/docs/design/genesis-native-runtime.md"
+    ],
+    "runtime_source_delta": false,
+    "interpretation": "Harness, workflow, docs and evidence changes only. Hosted workflow pins and runs db9b423 in a separate worktree."
+  },
+  "exact_prepared_comparison": {
+    "evidence_file": "/workspace/scratch/5cfbb6c803f1/s2-investigation/runtime/followup-byte-comparison.json",
+    "local": {
+      "candidate_id": "4a36e1210acf6a4bb460846b717d446e6c259f80a78fd73cfce8b5a6e445f522",
+      "prepared_sha256": "476891f3bf1edf24f7d2c486a1218bab5b0cd5b2b36b8295c3892917724c2b4a",
+      "prepared_file": "/workspace/scratch/5cfbb6c803f1/s2-execution/prepare-01/prepared.json",
+      "root": "/workspace/scratch/5cfbb6c803f1/s2-corpus",
+      "observed_head": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "runtime_head_rechecked": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "corpus_head_rechecked": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "runtime_tracked_diff": [],
+      "corpus_tracked_diff": []
+    },
+    "hosted": {
+      "root": "/home/runner/work/_temp/genesis-runtime-46114652347-1/data/s2",
+      "observed_head": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+    },
+    "differing_candidate_fields": [
+      "repo_root",
+      "observed_head"
+    ],
+    "all_other_fields_deep_equal": true,
+    "same_implementation": true,
+    "same_entries": true,
+    "same_observations": true,
+    "same_references_contract_roots_transport_and_criteria": true
+  },
+  "reuse_opinion": {
+    "decision": "YES_CONDITIONALLY_NO_REPREPARE_REQUIRED_FOR_RELEASE_DOCUMENTATION_ONLY",
+    "conditions": [
+      "Actual new release pins runtime db9b4235022c4df32fe3bfd4faeea8adcd69abb7 and covers the exact S2 package/13 artifacts.",
+      "Keep the original local prepared bytes, source root, observed HEAD, runtime code/dependencies and all observed input bytes intact.",
+      "Preserve local candidate 4a36... and its own execution receipt; do not substitute hosted b871... or historical f310... identities.",
+      "Obtain two actual new exact S2 runtime binding decisions and the authorized isolated policy before publish.",
+      "Let the original publish operation re-derive and refuse any drift; do not bypass the comparison."
+    ],
+    "incompatible_prepare_findings": [],
+    "limits": [
+      "Hosted qualification supports compatibility of code and exact package; it is not a domain binding.",
+      "New release discovery is still pending in the observed manifest.",
+      "Root/HEAD differences are expected identity inputs and are not to be normalized in stored candidates."
+    ]
+  },
+  "binding_preconditions": {
+    "purpose": "runtime-import-binding",
+    "reviewers": 2,
+    "criteria": "Every exact prepared criterion including AC-01 through AC-10 and runtime-import-binding must be present; binding review is explicitly about preservation/transformation under this purpose.",
+    "entries": "Each of all 13 key/result/inputs_id tuples must match the prepared candidate.",
+    "provenance": "Preserve actual new request/response bytes and hashes; no synthetic or recycled semantic-only votes.",
+    "campaign_scope": "Do not equate binding PASS to global AC completion or completed consumer/maintenance. Historical semantic decisions remain separate evidence."
+  },
+  "policy_analysis": {
+    "source_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "sources": [
+      "modules/atlas/packages/adapter-io/src/policy.ts",
+      "modules/atlas/packages/adapter-io/src/compose.ts",
+      "modules/atlas/packages/adapter-io/src/store-provenance.ts",
+      "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+      "modules/atlas/packages/knowledge/src/ratify/fastpath.ts"
+    ],
+    "findings": [
+      "Missing/malformed .atlas/policy.json denies writes; valid policy requires t0Heuristic.keywords string[] and authz.scopes mapping scope to declared actors.",
+      "ATLAS_ACTOR wins over local Git email; this is named responsibility, not identity authentication.",
+      "An ownership attachment is composed and routes through full-ratify; the runtime consumes ATLAS_RATIFY_TOKEN from environment.",
+      "Durable .atlas/cas and projection must be locally produced state, not staged/tracked artifacts. Policy is a separate admin-owned config.",
+      "No policy was created or altered and no publication attempted by this review."
+    ]
+  },
+  "guards": {
+    "argv": [
+      "bun",
+      "run",
+      "check:guards",
+      "--base",
+      "origin/dev"
+    ],
+    "base_ref": "origin/dev",
+    "base_sha": "3aaa5e0645f99940b66ee90d28aef93166f09ab1",
+    "candidate_revision": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+    "exit_code": 0,
+    "log_bytes": 2332,
+    "log_sha256": "71aee0c8823dc798fe598bc84d02b3d511149d634dcb0f78e5e5be6684291f62",
+    "schema": "genesis-s4-guards/v1"
+  },
+  "limits": [
+    "No local product test, prepare, binding, policy mutation, publish, consumer or maintenance operation was run in this subtask.",
+    "Actions results and bytes were read and compared; no S4 branch/workflow/comment mutation.",
+    "This is one completed observation round, not continuous polling."
+  ]
+}

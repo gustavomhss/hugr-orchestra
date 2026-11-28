@@ -1,0 +1,30 @@
+{
+  "schema": "s2-remote-local-prepared-comparison/v1",
+  "method": "Node deep comparison and byte digests only; no runtime operation",
+  "archive": {
+    "sha256": "f1747366c2312c80ff6cd071aea15693ceb14962b3e974f6614ddf450ac14606",
+    "expected_sha256": "f1747366c2312c80ff6cd071aea15693ceb14962b3e974f6614ddf450ac14606"
+  },
+  "remote": {
+    "candidate_id": "b8715607230a23d0bcbea34e91a43cae2935d9db257cf7dab4bd54c31d1d71f6",
+    "prepared_sha256": "9c2f896b3b87c0f7bb7a881ba13d2d8c4098da80fe446e0cc99e2bcfc7ea88c3",
+    "repo_root": "/home/runner/work/_temp/genesis-runtime-46114652347-1/data/s2",
+    "observed_head": "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+  },
+  "local": {
+    "candidate_id": "4a36e1210acf6a4bb460846b717d446e6c259f80a78fd73cfce8b5a6e445f522",
+    "prepared_sha256": "476891f3bf1edf24f7d2c486a1218bab5b0cd5b2b36b8295c3892917724c2b4a",
+    "repo_root": "/workspace/scratch/5cfbb6c803f1/s2-corpus",
+    "observed_head": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd"
+  },
+  "differing_candidate_fields": [
+    "repo_root",
+    "observed_head"
+  ],
+  "all_other_fields_equal": true,
+  "same_implementation": true,
+  "same_observations": true,
+  "same_entries": true,
+  "index_verified": 23,
+  "index_failures": []
+}

@@ -1,0 +1,3 @@
+$ bun run script/guards/run.ts --base origin/dev --json
+/usr/bin/bash: line 1: bun: command not found
+error: script "check:guards" exited with code 127
