@@ -496,7 +496,7 @@ export function Maintain(props: ChapterPageProps) {
                                 setState({ busy: false, notice: "na" })
                                 return
                               }
-                              setState({ busy: false, notice: "done" })
+                              setState({ busy: false, notice: result.data.fill === "complete" ? "done" : "error" })
                             })
                             .catch(() => setState({ busy: false, notice: "error" }))
                         }}

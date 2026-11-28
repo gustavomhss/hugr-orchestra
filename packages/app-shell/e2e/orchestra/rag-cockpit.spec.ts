@@ -2,7 +2,7 @@ import type { RagStudio } from "@orchestra/schema/rag-studio"
 import { expect, test, type Page, type TestInfo } from "@playwright/test"
 import { mockOrchestraServer } from "../utils/mock-server"
 
-const server = "http://127.0.0.1:4096"
+const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
 const directory = "/repo/purchasing"
 const projectId = "purchasing"
 const sentence = "Orders above $10,000 require written approval from the category lead."
@@ -66,6 +66,7 @@ async function setup(page: Page, scheme: "light" | "dark") {
     ["POST revisions", revision],
     ["POST ask", result],
     ["POST questions", { id: "question-1" }],
+    ["POST passes", { pass: "rechunk", fill: "failed" } satisfies RagStudio.PassResult],
   ])
   await page.route("**/api/rag-studio/**", async (route) => {
     const headers = {
@@ -76,6 +77,8 @@ async function setup(page: Page, scheme: "light" | "dark") {
     const request = route.request()
     const path = new URL(request.url()).pathname.replace("/api/rag-studio/", "")
     if (request.method() === "OPTIONS") return route.fulfill({ status: 204, headers })
+    const ask = request.method() === "POST" && path === "ask" ? request.postDataJSON() as RagStudio.AskInput : undefined
+    if (ask?.text === "This request fails") return route.fulfill({ status: 500, headers })
     const data = responses.get(`${request.method()} ${path}`)
     if (data === undefined) return route.fulfill({ status: 404, headers })
     return route.fulfill({ headers, json: { location: { directory, project: { id: projectId, directory } }, data } })
@@ -134,10 +137,14 @@ for (const scheme of ["light", "dark"] as const) {
         .toBeLessThanOrEqual(1)
       await capture(page, testInfo, `${scheme}-${layout.name}-question`)
 
+      const saved = page.waitForRequest((request) =>
+        request.method() === "POST" && new URL(request.url()).pathname === "/api/rag-studio/questions",
+      )
       await question.getByRole("button", { name: "Save this question" }).click()
+      expect((await saved).postDataJSON()).toEqual({ text: sentence, revisionId: revision.id, span: result.span })
       await expect(question.getByRole("status")).toHaveText("Question saved.")
       await maintainTab.click()
-      await expect(maintain.getByRole("heading", { name: "Pipeline", exact: true })).toBeVisible()
+      await expect(maintain.getByRole("button", { name: "Whole document", exact: true })).toHaveAttribute("aria-pressed", "true")
       for (const name of ["Read again", "Cut again", "Redo numbers", "Remove pieces"]) {
         await expect(maintain.getByRole("button", { name, exact: true })).toBeVisible()
       }
@@ -150,4 +157,40 @@ for (const scheme of ["light", "dark"] as const) {
       await expect(passage.locator("mark")).toHaveText(sentence)
     })
   }
+}
+
+test("failed operations clear earlier claims and keep maintenance controls within a phone viewport", async ({ page }) => {
+  await page.setViewportSize({ width: 360, height: 900 })
+  await setup(page, "light")
+  await page.goto("/orchestra/rag-studio")
+  const tabs = page.getByRole("tablist", { name: "Rag Studio" })
+  await tabs.getByRole("tab", { name: "Question", exact: true }).click()
+  const panel = page.getByRole("tabpanel", { name: "Question", exact: true })
+  const input = panel.getByRole("textbox", { name: "Sentence" })
+  const ask = panel.getByRole("button", { name: "Ask", exact: true })
+  await input.fill(sentence)
+  await ask.click()
+  const activeLight = panel.locator(".rag-lights [aria-current=true]")
+  await expect(activeLight).toHaveText("Sent")
+
+  await input.fill("This request fails")
+  await ask.click()
+  await expect(panel.getByRole("alert")).toHaveText("That did not finish.")
+  await expect(activeLight).toHaveCount(0)
+  await expect(panel.getByRole("region", { name: "Source passage" })).toBeHidden()
+
+  await tabs.getByRole("tab", { name: "Maintain", exact: true }).click()
+  const maintain = page.getByRole("tabpanel", { name: "Maintain", exact: true })
+  const metric = maintain.getByRole("group", { name: "Metric", exact: true })
+  await expect(metric.getByRole("button", { name: "Cosine", exact: true })).toHaveAttribute("aria-pressed", "true")
+  await expect.poll(() => metric.evaluate((group) => {
+    const bounds = group.getBoundingClientRect()
+    return Array.from(group.querySelectorAll("button")).every((button) => {
+      const rect = button.getBoundingClientRect()
+      return rect.left >= bounds.left && rect.right <= bounds.right
+    })
+  })).toBe(true)
+  await maintain.getByRole("button", { name: /supplier-onboarding.txt.*Not yet read$/ }).click()
+  await maintain.getByRole("button", { name: "Cut again", exact: true }).click()
+  await expect(maintain.getByRole("alert")).toHaveText("That did not finish.")
 }

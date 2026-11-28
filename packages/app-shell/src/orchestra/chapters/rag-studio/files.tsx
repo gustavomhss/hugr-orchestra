@@ -1,5 +1,5 @@
-import { createEffect, For, onCleanup, Show } from "solid-js"
-import { createStore } from "solid-js/store"
+import { batch, createEffect, For, onCleanup, Show } from "solid-js"
+import { createStore, reconcile } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
 import type { ChapterPageProps } from "@/orchestra/chapter-route"
@@ -22,6 +22,7 @@ export function Files(props: ChapterPageProps) {
   })
   const location = { directory: props.directory }
   const selected = () => roster.sources.find((source) => source.id === roster.openId)
+  let selection = 0
   let sourceRead = 0
   let listRead = 0
   let active = true
@@ -29,8 +30,10 @@ export function Files(props: ChapterPageProps) {
 
   const openSource = (sourceId: string) => {
     const started = ++sourceRead
-    setRoster("openId", sourceId)
-    setState({ reader: "loading", text: "", cuts: [] })
+    batch(() => {
+      setRoster("openId", sourceId)
+      setState({ reader: "loading", text: "", cuts: [] })
+    })
     return sdk().orchestra.ragStudio.source({ location, sourceId }).then(
       (result) => {
         if (!active || started !== sourceRead) return
@@ -48,26 +51,28 @@ export function Files(props: ChapterPageProps) {
     )
   }
 
-  const load = (quiet: boolean) => {
+  const load = (quiet: boolean, admitted?: { id: string; selection: number }) => {
     const started = ++listRead
     if (!quiet) setRoster("status", "loading")
     return sdk().orchestra.ragStudio.sources({ location }).then(
       (result) => {
         if (!active || started !== listRead) return
-        setRoster({
-          status: "ready",
-          sources: result.data.map((row) => ({ id: row.id, path: row.path, status: row.status })),
+        return batch(() => {
+          setRoster("sources", reconcile(result.data.map((row) => ({ id: row.id, path: row.path, status: row.status }))))
+          setRoster("status", "ready")
+          const admittedId = admitted?.selection === selection ? admitted.id : undefined
+          const nextId = roster.sources.some((source) => source.id === admittedId) ? admittedId : roster.openId
+          if (!nextId) return
+          if (roster.sources.some((source) => source.id === nextId)) return openSource(nextId)
+          sourceRead += 1
+          setRoster("openId", "")
+          setState({ reader: "idle", text: "", cuts: [] })
         })
-        if (!roster.openId) return
-        if (selected()) return openSource(roster.openId)
-        sourceRead += 1
-        setRoster("openId", "")
-        setState({ reader: "idle", text: "", cuts: [] })
       },
       (error: unknown) => {
         if (!active || started !== listRead) return
         console.error(error)
-        setRoster({ status: "error", sources: [] })
+        setRoster("status", "error")
       },
     )
   }
@@ -83,19 +88,17 @@ export function Files(props: ChapterPageProps) {
           const path = state.path.trim()
           if (!path || state.busy) return
           setState({ busy: true, refusal: "", writeFailed: false })
-          const selection = sourceRead
+          const selectedAtSubmit = selection
           const api = sdk().orchestra.ragStudio
           void api.admit({ location, path }).then(async (result) => {
-            if (!active) return
             if ("refused" in result.data) {
-              setState({ busy: false, refusal: result.data.refused })
+              if (active) setState({ busy: false, refusal: result.data.refused })
               return
             }
             await api.parse({ location, sourceId: result.data.id })
             if (!active) return
             setState({ path: state.path.trim() === path ? "" : state.path, busy: false, refusal: "" })
-            if (sourceRead === selection) setRoster("openId", result.data.id)
-            await load(true)
+            await load(true, { id: result.data.id, selection: selectedAtSubmit })
           }).catch((error: unknown) => {
             if (!active) return
             console.error(error)
@@ -143,7 +146,15 @@ export function Files(props: ChapterPageProps) {
             <For each={roster.sources}>
               {(source) => (
                 <div class="mx-row rag-file" role="listitem" data-selected={roster.openId === source.id ? "true" : undefined}>
-                  <button class="rag-file-open" type="button" aria-pressed={roster.openId === source.id} onClick={() => void openSource(source.id)}>
+                  <button
+                    class="rag-file-open"
+                    type="button"
+                    aria-pressed={roster.openId === source.id}
+                    onClick={() => {
+                      selection += 1
+                      void openSource(source.id)
+                    }}
+                  >
                     <span class="mx-grow">
                       <strong><bdi>{pathName(source.path)}</bdi></strong>
                       <Show when={pathDir(source.path)}>
@@ -158,7 +169,17 @@ export function Files(props: ChapterPageProps) {
                     onClick={() => {
                       setState("writeFailed", false)
                       void sdk().orchestra.ragStudio.remove({ location, sourceId: source.id }).then(
-                        () => active ? load(true) : undefined,
+                        () => {
+                          if (!active) return
+                          batch(() => {
+                            setRoster("sources", reconcile(roster.sources.filter((row) => row.id !== source.id)))
+                            if (roster.openId !== source.id) return
+                            sourceRead += 1
+                            setRoster("openId", "")
+                            setState({ reader: "idle", text: "", cuts: [] })
+                          })
+                          return load(true)
+                        },
                         (error: unknown) => {
                           if (!active) return
                           console.error(error)

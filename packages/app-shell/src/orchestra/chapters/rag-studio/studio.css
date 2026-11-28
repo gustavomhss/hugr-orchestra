@@ -435,6 +435,8 @@ button.rag-pick:focus-visible,
 
 .rag-segment {
   display: inline-flex;
+  flex-wrap: wrap;
+  max-inline-size: 100%;
   gap: 2px;
   padding: 3px;
   border: 1px solid var(--mx-line);
@@ -482,7 +484,6 @@ button.rag-pick:focus-visible,
   .rag-inventory {
     max-block-size: 15rem;
   }
-
 
   .rag-lights {
     grid-template-columns: 1fr 1fr;

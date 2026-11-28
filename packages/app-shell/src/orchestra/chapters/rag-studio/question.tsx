@@ -101,97 +101,71 @@ export function Question(props: ChapterPageProps) {
           if (!text || state.busy) return
           const directory = props.directory
           const started = ++askRead
-          setState({ busy: true, saved: false, error: false })
+          setState({
+            busy: true,
+            asked: false,
+            light: null,
+            saved: false,
+            error: false,
+            sourceKnown: false,
+            sourceFailed: false,
+            sourcePath: "",
+            source: "",
+          })
           const current = () => started === askRead && props.directory === directory
-          const abandon = () => {
-            if (started !== askRead) return true
-            if (props.directory === directory) return false
-            setState({ busy: false })
-            return true
-          }
-          void sdk()
-            .orchestra.ragStudio.revision({ location: { directory } })
-            .then((opened) =>
-              sdk().orchestra.ragStudio.ask({ location: { directory }, revisionId: opened.data.id, text }),
-            )
-            .then(async (result) => {
-              if (abandon()) return
-              const span = result.data.span
-              const loaded = await settleSourceRead({
-                read: span
-                  ? sdk().orchestra.ragStudio.source({ location: { directory }, sourceId: span.sourceId })
-                  : undefined,
+          const api = sdk().orchestra.ragStudio
+          void api.revision({ location: { directory } })
+            .then((opened) => {
+              if (!current()) return
+              return api.ask({ location: { directory }, revisionId: opened.data.id, text })
+            })
+            .then(async (response) => {
+              if (!response || !current()) return
+              const result = response.data
+              const span = result.span
+              setState("dropped", result.dropped.slice())
+              await settleSourceRead({
+                read: span ? api.source({ location: { directory }, sourceId: span.sourceId }) : undefined,
                 current,
                 apply: (opened) => {
-                  const chunks = opened.data.chunks
+                  const detail = opened.data
+                  // Source detail is live. Only display a span that still matches the diagnosis.
+                  if (
+                    !span ||
+                    detail.source.id !== span.sourceId ||
+                    detail.source.status !== "read" ||
+                    span.start < 0 ||
+                    span.end > detail.text.length ||
+                    !detail.text.slice(span.start, span.end).includes(text)
+                  ) {
+                    setState("sourceFailed", true)
+                    return
+                  }
                   setState({
-                    sourcePath: opened.data.source.path,
-                    source: opened.data.text,
-                    dropped: result.data.dropped.map((id) => chunks.find((chunk) => chunk.id === id)?.text ?? ""),
+                    sourcePath: detail.source.path,
+                    source: detail.text,
+                    dropped: result.dropped.map((id) => detail.chunks.find((chunk) => chunk.id === id)?.text || id),
                     sourceKnown: true,
-                    sourceFailed: false,
                   })
                 },
                 report: reportSource,
               })
-              if (abandon()) return
-              if (span && !loaded) {
-                setState({
-                  busy: false,
-                  asked: true,
-                  askedText: text,
-                  revisionId: result.data.revisionId,
-                  light: result.data.light,
-                  status: result.data.fileStatus ?? "",
-                  optional: result.data.retrievalOptional,
-                  span,
-                  prompt: result.data.promptText,
-                  sense: result.data.sense,
-                })
-                return
-              }
-              if (!span) {
-                setState({
-                  busy: false,
-                  asked: true,
-                  askedText: text,
-                  revisionId: result.data.revisionId,
-                  light: result.data.light,
-                  status: result.data.fileStatus ?? "",
-                  optional: result.data.retrievalOptional,
-                  span,
-                  prompt: result.data.promptText,
-                  sense: result.data.sense,
-                  sourcePath: "",
-                  source: "",
-                  dropped: result.data.dropped.map(() => ""),
-                  sourceKnown: false,
-                  sourceFailed: false,
-                  error: false,
-                })
-                return
-              }
+              if (!current()) return
               setState({
                 busy: false,
                 asked: true,
                 askedText: text,
-                revisionId: result.data.revisionId,
-                light: result.data.light,
-                status: result.data.fileStatus ?? "",
-                optional: result.data.retrievalOptional,
+                revisionId: result.revisionId,
+                light: result.light,
+                status: result.fileStatus ?? "",
+                optional: result.retrievalOptional,
                 span,
-                prompt: result.data.promptText,
-                sense: result.data.sense,
-                error: false,
-                sourceFailed: false,
+                prompt: result.promptText,
+                sense: result.sense,
               })
             })
             .catch((error: unknown) => {
-              if (started !== askRead) return
-              if (props.directory !== directory) {
-                setState({ busy: false })
-                return
-              }
+              if (!current()) return
               console.error(error)
               setState({ busy: false, error: true })
             })
@@ -216,7 +190,7 @@ export function Question(props: ChapterPageProps) {
         <div class="rag-result">
           <div class="rag-result-head">
             <bdi>{state.askedText}</bdi>
-            <Show when={state.span}>
+            <Show when={state.span && sourcePane() === "recorded"}>
               <button
                 class="mx-btn"
                 type="button"
@@ -297,7 +271,7 @@ export function Question(props: ChapterPageProps) {
                     <summary>{language.t("orchestra.ragStudio.leftOut")}</summary>
                     <ul>
                       <For each={state.dropped}>
-                        {(text) => <li class="rag-passage">{text || language.t("orchestra.ragStudio.notRecorded")}</li>}
+                        {(text) => <li class="rag-passage">{text}</li>}
                       </For>
                     </ul>
                   </details>
