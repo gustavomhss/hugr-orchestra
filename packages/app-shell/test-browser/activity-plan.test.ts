@@ -33,7 +33,7 @@ test("partial and failed reads stay explicit and a same-scope failure retains th
     connection: { type: "sidecar", variant: "base", http: { url: "http://127.0.0.1:4777" } },
     platform: {
       platform: "desktop",
-      os: "macos",
+      os: "linux",
       async openDirectoryPickerDialog() { return null },
     } as unknown as Platform,
   })
@@ -43,7 +43,7 @@ test("partial and failed reads stay explicit and a same-scope failure retains th
     await until("partial plan row", () => text(app.panel()).includes("ready-a"))
     expect(text(app.panel())).toContain("reading is partial")
     expect(text(app.panel())).not.toContain("Ready: 1")
-    expect([...app.panel().querySelectorAll("button")].map(text)).toContain("Arm")
+    expect([...app.panel().querySelectorAll("button")].map(text)).not.toContain("Arm")
 
     button(app, "Refresh").click()
     await until("same-scope refresh starts", () => app.calls.length === 2)
@@ -88,7 +88,7 @@ test("only a Ready target on the desktop base sidecar reaches the native arm bri
   const server: ServerConnection.Any = { type: "sidecar", variant: "base", http: { url: "http://127.0.0.1:4777" } }
   const platform = {
     platform: "desktop",
-    os: "macos",
+    os: "linux",
     async openDirectoryPickerDialog() { return null },
   } as unknown as Platform
   const approved = target("ready-a")
@@ -105,6 +105,11 @@ test("only a Ready target on the desktop base sidecar reaches the native arm bri
     await until("initial plan read", () => app.calls.length === 1)
     app.calls[0]!.respond(snapshot({ ready: [approved] }))
     await until("eligible target appears", () => text(app.panel()).includes("ready-a"))
+    button(app, "Verify objects").click()
+    await until("signed verification is requested separately", () => app.inspections.length === 1)
+    expect(app.calls.length).toBe(1)
+    app.inspections[0]!.respond(snapshot({ ready: [approved] }))
+    await until("verified target becomes armable", () => text(app.panel()).includes("Verified objects"))
     const armButton = button(app, "Arm")
     expect(armButton.classList.contains("primary")).toBe(false)
     armButton.click()
@@ -120,6 +125,30 @@ test("only a Ready target on the desktop base sidecar reaches the native arm bri
     await until("changed receipt is shown as refused", () => text(app.panel()).includes("Refused"))
     expect(text(app.panel())).toContain("recorded session")
     expect([...app.panel().querySelectorAll("button")].map(text)).not.toContain("Confirm")
+  } finally {
+    app.dispose()
+  }
+})
+
+test("live verification is explicit and stale results from a previous server are discarded", async () => {
+  const app = await mount({
+    connection: { type: "sidecar", variant: "base", http: { url: "http://127.0.0.1:4777" } },
+    platform: { platform: "desktop", os: "linux", async openDirectoryPickerDialog() { return null } } as unknown as Platform,
+  })
+  try {
+    await until("ledger read starts on entry", () => app.calls.length === 1)
+    app.calls[0]!.respond(snapshot({ ready: [target("ledger-only")] }))
+    await until("ledger target appears", () => text(app.panel()).includes("ledger-only"))
+    expect(app.inspections).toHaveLength(0)
+    button(app, "Verify objects").click()
+    await until("explicit verification starts", () => app.inspections.length === 1)
+    expect(app.calls).toHaveLength(1)
+    app.switchServer("verification-second")
+    await until("new ledger scope starts", () => app.calls.length === 2)
+    app.inspections[0]!.respond(snapshot({ ready: [target("stale-verified")] }))
+    app.calls[1]!.respond(snapshot({ ready: [target("new-ledger")] }))
+    await until("new ledger appears", () => text(app.panel()).includes("new-ledger"))
+    expect(text(app.panel())).not.toContain("stale-verified")
   } finally {
     app.dispose()
   }

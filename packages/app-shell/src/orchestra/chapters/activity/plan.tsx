@@ -20,6 +20,10 @@ export function ActivityPlan(props: { query: string }) {
   const [state, setState] = createStore({
     scope: undefined as string | undefined,
     snapshot: undefined as ActivityArm.PlanSnapshot | undefined,
+    verified: undefined as ActivityArm.PlanSnapshot | undefined,
+    verifiedScope: undefined as string | undefined,
+    inspecting: false,
+    inspectFailed: false,
     busy: false,
     failed: false,
     armTarget: undefined as string | undefined,
@@ -27,9 +31,15 @@ export function ActivityPlan(props: { query: string }) {
   })
   let requestID = 0
   let pending: AbortController | undefined
+  let inspectID = 0
+  let inspectController: AbortController | undefined
   const scope = () => server.current?.http.url
+  const ownedScope = () => {
+    const current = server.current
+    return current?.type === "sidecar" && current.variant === "base" ? current.http.url : undefined
+  }
   const rows = createMemo<PlanRow[]>(() => {
-    const snapshot = state.snapshot
+    const snapshot = state.verified ?? state.snapshot
     if (!snapshot) return []
     return [
       ...snapshot.ready.map((target) => ({ target, state: "Ready" as const, armable: true })),
@@ -48,12 +58,16 @@ export function ActivityPlan(props: { query: string }) {
   async function refresh() {
     const serverURL = scope()
     if (!serverURL) return
+    inspectID++
+    inspectController?.abort()
+    inspectController = undefined
     const currentSDK = sdk()
     pending?.abort()
     const request = new AbortController()
     pending = request
     const id = ++requestID
-    setState({ scope: serverURL, busy: true, failed: false })
+    setState({ scope: serverURL, busy: true, failed: false, verified: undefined, verifiedScope: undefined,
+      inspecting: false, inspectFailed: false })
     try {
       await currentSDK.ready
       request.signal.throwIfAborted()
@@ -76,7 +90,8 @@ export function ActivityPlan(props: { query: string }) {
     const approve = platform.armActivityQuarantine
     if (
       !serverURL || current?.type !== "sidecar" || current.variant !== "base" ||
-      platform.platform !== "desktop" || !approve || state.armTarget || state.busy || state.failed || scope() !== serverURL
+      platform.platform !== "desktop" || platform.os !== "linux" || !approve || state.armTarget || state.busy || state.failed ||
+      scope() !== serverURL || ownedScope() !== serverURL || state.verifiedScope !== serverURL || !state.verified || state.verified.partial
     ) return
     const currentSDK = sdk()
     setState({ armTarget: target.targetID, armFailed: false })
@@ -93,14 +108,48 @@ export function ActivityPlan(props: { query: string }) {
     }
   }
 
+  async function inspect() {
+    const serverURL = ownedScope()
+    const inspectObjects = platform.inspectActivityArm
+    if (!serverURL || platform.platform !== "desktop" || platform.os !== "linux" || !inspectObjects || state.inspecting) return
+    const client = sdk()
+    const id = ++inspectID
+    inspectController?.abort()
+    const request = new AbortController()
+    inspectController = request
+    setState({ scope: serverURL, inspecting: true, inspectFailed: false, verified: undefined })
+    try {
+      await client.ready
+      request.signal.throwIfAborted()
+      const snapshot = await inspectObjects(serverURL)
+      if (request.signal.aborted || inspectID !== id || scope() !== serverURL || ownedScope() !== serverURL || server.current?.type !== "sidecar" ||
+        server.current.variant !== "base" || sdk() !== client) return
+      if (snapshot) setState({ verified: snapshot, verifiedScope: serverURL })
+      else setState("inspectFailed", true)
+    } catch {
+      if (!request.signal.aborted && inspectID === id && scope() === serverURL && ownedScope() === serverURL && sdk() === client) {
+        setState("inspectFailed", true)
+      }
+    } finally {
+      if (inspectController === request) {
+        inspectController = undefined
+        if (inspectID === id && scope() === serverURL && sdk() === client) setState("inspecting", false)
+      }
+    }
+  }
+
   createEffect(
     on(
-      () => ({ serverURL: scope(), client: sdk() }),
+      () => ({ serverURL: scope(), ownedURL: ownedScope(), client: sdk() }),
       ({ serverURL }) => {
         requestID++
         pending?.abort()
         pending = undefined
-        setState({ scope: serverURL, snapshot: undefined, busy: Boolean(serverURL), failed: false, armTarget: undefined, armFailed: false })
+        inspectID++
+        inspectController?.abort()
+        inspectController = undefined
+        setState({ scope: serverURL, snapshot: undefined, verified: undefined, verifiedScope: undefined, inspecting: false, inspectFailed: false,
+          busy: Boolean(serverURL), failed: false, armTarget: undefined, armFailed: false })
         if (serverURL) void refresh()
       },
       { defer: false },
@@ -109,26 +158,35 @@ export function ActivityPlan(props: { query: string }) {
   onCleanup(() => {
     requestID++
     pending?.abort()
+    inspectID++
+    inspectController?.abort()
   })
 
   const completeEmpty = () =>
-    !props.query.trim() && state.snapshot && !state.snapshot.partial && state.snapshot.ready.length === 0 && state.snapshot.approvals.length === 0
+    !props.query.trim() && (state.verified ?? state.snapshot) && !(state.verified ?? state.snapshot)!.partial &&
+    (state.verified ?? state.snapshot)!.ready.length === 0 && (state.verified ?? state.snapshot)!.approvals.length === 0
   const filterMiss = () => Boolean(props.query.trim()) && shown().length === 0
   const armAvailable = (target: ActivityArm.Target) => {
     const current = server.current
-    return platform.platform === "desktop" && current?.type === "sidecar" && current.variant === "base" &&
-      Boolean(platform.armActivityQuarantine) && !state.busy && !state.failed && !state.armTarget && target.targetID.length > 0
+    return platform.platform === "desktop" && platform.os === "linux" && current?.type === "sidecar" && current.variant === "base" &&
+      Boolean(state.verified && state.verifiedScope === current.http.url && platform.armActivityQuarantine) &&
+      !state.verified?.partial && !state.busy && !state.failed && !state.armTarget && target.targetID.length > 0
   }
 
   return (
     <section aria-busy={state.busy}>
       <div class="activity-section-heading">
-        <p class="mx-note">{language.t("orchestra.monitor.planSource")}</p>
+        <p class="mx-note">{language.t(state.verified ? "orchestra.monitor.planVerifiedSource" : "orchestra.monitor.planSource")}</p>
         <button type="button" class="mx-btn" disabled={state.busy} onClick={() => void refresh()}>
           {language.t("orchestra.monitor.refresh")}
         </button>
+        <Show when={platform.platform === "desktop" && platform.os === "linux" && Boolean(ownedScope() && platform.inspectActivityArm)}>
+          <button type="button" class="mx-btn" disabled={state.inspecting || state.busy} onClick={() => void inspect()}>
+            {language.t(state.inspecting ? "orchestra.monitor.planVerifying" : "orchestra.monitor.planVerify")}
+          </button>
+        </Show>
       </div>
-      <Show when={state.snapshot?.partial}>
+      <Show when={(state.verified ?? state.snapshot)?.partial}>
         <p class="mx-note" role="status">{language.t("orchestra.monitor.planPartial")}</p>
       </Show>
       <Show when={state.failed}>
@@ -137,7 +195,17 @@ export function ActivityPlan(props: { query: string }) {
       <Show when={state.armFailed}>
         <p class="activity-error" role="alert">{language.t("orchestra.monitor.planArmFailed")}</p>
       </Show>
-      <Show when={state.snapshot} fallback={
+      <Show when={state.inspectFailed}>
+        <p class="activity-error" role="alert">{language.t("orchestra.monitor.planVerifyFailed")}</p>
+      </Show>
+      <Show when={state.verified}>
+        {(snapshot) => <p class="mx-note" role="status">{language.t("orchestra.monitor.planVerified", {
+          ready: snapshot().ready.length,
+          armed: snapshot().approvals.reduce((count, item) => count + (item.changed ? 0 : item.receipt.targets.length), 0),
+          refused: snapshot().approvals.reduce((count, item) => count + (item.changed ? item.receipt.targets.length : 0), 0),
+        })}</p>}
+      </Show>
+      <Show when={state.verified ?? state.snapshot} fallback={
         <div class="mx-empty" role={state.failed ? "alert" : "status"}>
           <strong>{language.t(state.busy ? "orchestra.monitor.planLoading" : "orchestra.monitor.planUnread")}</strong>
         </div>

@@ -5,8 +5,11 @@ import { ActivityStop } from "@orchestra/schema/activity-stop"
 import { ActivityFreeze } from "@orchestra/schema/activity-freeze"
 import type { IpcMainInvokeEvent } from "electron"
 import { isRendererOrigin } from "./renderer-origin"
+import { nativeT } from "./native-translations"
 
 export type ActivityArmClient = {
+  isCurrent(): boolean
+  inspect(signal?: AbortSignal): Promise<ActivityArm.PlanSnapshot | undefined>
   preview(request: ActivityArm.Request, signal?: AbortSignal): Promise<ActivityArm.Preview | undefined>
   confirm(request: ActivityArm.Confirm, signal?: AbortSignal): Promise<ActivityArm.Receipt | undefined>
 }
@@ -44,12 +47,42 @@ export function registerActivityArmIpc(deps: {
   } | undefined
 }) {
   const pending = new Set<number>()
+  deps.ipcMain.handle("activity-inspect-arm", async (event: IpcMainInvokeEvent, serverURL: unknown) => {
+    const owned = deps.getOwned()
+    const win = deps.BrowserWindow.fromWebContents(event.sender)
+    const frame = event.senderFrame
+    if (process.platform !== "linux" || !owned || typeof serverURL !== "string" || serverURL !== owned.url || !win || win.isDestroyed() ||
+      win.webContents !== event.sender || !frame || frame !== event.sender.mainFrame ||
+      !isRendererOrigin(frame.url, deps.rendererDevURL) || pending.has(event.sender.id)) return undefined
+    const client = owned.openActivityArm()
+    if (!client) return undefined
+    pending.add(event.sender.id)
+    const controller = new AbortController()
+    const invalidate = () => controller.abort()
+    const frameURL = frame.url
+    event.sender.on("did-start-navigation", invalidate)
+    event.sender.on("destroyed", invalidate)
+    const current = () => !controller.signal.aborted && client.isCurrent() && !win.isDestroyed() && !event.sender.isDestroyed() &&
+      deps.BrowserWindow.fromWebContents(event.sender) === win && win.webContents === event.sender &&
+      event.sender.mainFrame === frame && frame.url === frameURL && isRendererOrigin(frame.url, deps.rendererDevURL) &&
+      deps.getOwned() === owned
+    try {
+      const snapshot = await client.inspect(controller.signal)
+      return current() ? snapshot : undefined
+    } catch {
+      return undefined
+    } finally {
+      event.sender.removeListener("did-start-navigation", invalidate)
+      event.sender.removeListener("destroyed", invalidate)
+      pending.delete(event.sender.id)
+    }
+  })
   deps.ipcMain.handle("activity-arm-quarantine", async (event: IpcMainInvokeEvent, serverURL: unknown, request: unknown) => {
     const owned = deps.getOwned()
     const decoded = ActivityArm.decodeRequest(request)
     const win = deps.BrowserWindow.fromWebContents(event.sender)
     const frame = event.senderFrame
-    if (!owned || typeof serverURL !== "string" || serverURL !== owned.url || Option.isNone(decoded) ||
+    if (process.platform !== "linux" || !owned || typeof serverURL !== "string" || serverURL !== owned.url || Option.isNone(decoded) ||
       !win || win.isDestroyed() || win.webContents !== event.sender || !frame || frame !== event.sender.mainFrame ||
       !isRendererOrigin(frame.url, deps.rendererDevURL) || pending.has(event.sender.id)) return undefined
     const client = owned.openActivityArm()
@@ -60,10 +93,10 @@ export function registerActivityArmIpc(deps: {
     const frameURL = frame.url
     event.sender.on("did-start-navigation", invalidate)
     event.sender.on("destroyed", invalidate)
-    const current = () => !controller.signal.aborted && !win.isDestroyed() && !event.sender.isDestroyed() &&
+    const current = () => !controller.signal.aborted && client.isCurrent() && !win.isDestroyed() && !event.sender.isDestroyed() &&
       deps.BrowserWindow.fromWebContents(event.sender) === win && win.webContents === event.sender &&
       event.sender.mainFrame === frame && frame.url === frameURL && isRendererOrigin(frame.url, deps.rendererDevURL) &&
-      deps.getOwned()?.url === owned.url
+      deps.getOwned() === owned
     try {
       const preview = await client.preview(decoded.value, controller.signal)
       if (!current() || !preview || preview.expiresAt <= Date.now() || preview.targets.length !== decoded.value.targets.length ||
@@ -71,12 +104,12 @@ export function registerActivityArmIpc(deps: {
           target.generation !== decoded.value.targets[index]?.generation)) return undefined
       const result = await deps.dialog.showMessageBox(win, {
         type: "warning",
-        title: "Arm quarantine",
-        message: "Arm quarantine for these targets?",
+        title: nativeT("desktop.activity.arm.title"),
+        message: nativeT("desktop.activity.arm.message"),
         detail: preview.targets.map((target) =>
           `${literal(target.label)} — ${literal(target.owner)}\nID: ${literal(target.targetID)}\nGeneration: ${literal(target.generation)}`,
         ).join("\n\n"),
-        buttons: ["Cancel", "Arm quarantine"],
+        buttons: [nativeT("desktop.activity.arm.cancel"), nativeT("desktop.activity.arm.confirm")],
         defaultId: 0,
         cancelId: 0,
         noLink: true,

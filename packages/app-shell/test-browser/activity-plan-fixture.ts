@@ -33,6 +33,13 @@ type PlanCall = {
   fail(error: unknown): void
 }
 
+type InspectCall = {
+  serverURL: string
+  promise: Promise<ActivityArm.PlanSnapshot>
+  respond(value: ActivityArm.PlanSnapshot): void
+  fail(error: unknown): void
+}
+
 function planCall(options?: { signal?: AbortSignal }): PlanCall {
   const result = Promise.withResolvers<ActivityArm.PlanSnapshot>()
   return {
@@ -48,6 +55,7 @@ export async function mount(options: {
   platform?: Platform
   connection?: ServerConnection.Any
   arm?: (serverURL: string, request: ActivityArm.Request) => Promise<ActivityArm.Receipt | undefined>
+  inspect?: (serverURL: string) => Promise<ActivityArm.PlanSnapshot | undefined>
 } = {}) {
   const { ActivityPlan }: typeof import("@/orchestra/chapters/activity/plan") = await load(
     "@/orchestra/chapters/activity/plan",
@@ -55,6 +63,7 @@ export async function mount(options: {
   const { LanguageProvider, useLanguage }: typeof import("@/context/language") = await load("@/context/language")
   const { PlatformProvider }: typeof import("@/context/platform") = await load("@/context/platform")
   const calls: PlanCall[] = []
+  const inspections: InspectCall[] = []
   const arms: { serverURL: string; request: ActivityArm.Request }[] = []
   const host = document.body.appendChild(document.createElement("div"))
   const [query, setQuery] = createSignal("")
@@ -76,12 +85,19 @@ export async function mount(options: {
     arms.push({ serverURL, request })
     return options.arm?.(serverURL, request)
   }
+  const inspectActivityArm = (serverURL: string) => {
+    const result = Promise.withResolvers<ActivityArm.PlanSnapshot>()
+    const call: InspectCall = { serverURL, promise: result.promise, respond: result.resolve, fail: result.reject }
+    inspections.push(call)
+    return options.inspect ? options.inspect(serverURL) : result.promise
+  }
   const platform = {
     platform: "web" as const,
     openExternal() {},
     async restart() {},
     async notify() {},
     ...options.platform,
+    inspectActivityArm,
     armActivityQuarantine: arm,
   } as unknown as Platform
   const dispose = render(
@@ -118,6 +134,7 @@ export async function mount(options: {
   return {
     host,
     calls,
+    inspections,
     arms,
     panel,
     button,
@@ -131,6 +148,7 @@ export async function mount(options: {
       dispose()
       host.remove()
       calls.forEach((call) => call.fail(new DOMException("Fixture disposed", "AbortError")))
+      inspections.forEach((call) => call.fail(new DOMException("Fixture disposed", "AbortError")))
       expect(host.isConnected).toBe(false)
     },
   }

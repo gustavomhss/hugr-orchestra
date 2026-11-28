@@ -79,6 +79,10 @@ export const dict = {
   "desktop.dialog.saveFile": "Salvar arquivo",
   "desktop.dialog.files": "Arquivos",
   "desktop.server.local": "Servidor local",
+  "desktop.activity.arm.title": "Armar quarentena",
+  "desktop.activity.arm.message": "Armar quarentena para estes alvos?",
+  "desktop.activity.arm.cancel": "Cancelar",
+  "desktop.activity.arm.confirm": "Armar quarentena",
 
   "desktop.wsl.error.windowsOnly": "O WSL está disponível somente no Windows",
   "desktop.wsl.error.unavailable": "O WSL está indisponível",

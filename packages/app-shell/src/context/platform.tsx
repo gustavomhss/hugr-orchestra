@@ -91,6 +91,7 @@ export type FatalRendererErrorLog = {
 }
 
 type PlatformBase = {
+  inspectActivityArm?(serverURL: string): Promise<ActivityArm.PlanSnapshot | undefined>
   armActivityQuarantine?(serverURL: string, request: ActivityArm.Request): Promise<ActivityArm.Receipt | undefined>
   stopActivityTree?(serverURL: string, request: ActivityStop.Request): Promise<ActivityStop.Receipt | undefined>
   readActivityQuarantine?(serverURL: string): Promise<ActivityEmpty.Snapshot | undefined>
