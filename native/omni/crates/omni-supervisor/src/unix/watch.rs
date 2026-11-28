@@ -101,7 +101,9 @@ pub(super) fn pidfd_available() -> bool {
 pub(super) fn signal_member(pid: i32, sid: i32, sig: i32, pidfd: bool) -> io::Result<()> {
     #[cfg(target_os = "linux")]
     if pidfd {
-        let Some(fd) = pin_session_member(pid, sid, None)? else { return Ok(()) };
+        let Some(fd) = pin_session_member(pid, sid, None)? else {
+            return Ok(());
+        };
         return gone_is_ok(pidfd_send_signal(&fd, sig));
     }
     let _ = pidfd;
@@ -134,7 +136,11 @@ pub(super) fn pin_session_member(pid: i32, sid: i32, expected_start: Option<u64>
 /// A readable pidfd names an exited process; other poll events are inspection failures.
 #[cfg(target_os = "linux")]
 fn pidfd_ready(fd: &OwnedFd) -> io::Result<bool> {
-    let mut pollfd = libc::pollfd { fd: fd.as_raw_fd(), events: libc::POLLIN, revents: 0 };
+    let mut pollfd = libc::pollfd {
+        fd: fd.as_raw_fd(),
+        events: libc::POLLIN,
+        revents: 0,
+    };
     // SAFETY: pollfd points to one initialized descriptor and the timeout is nonblocking.
     let result = unsafe { libc::poll(&raw mut pollfd, 1, 0) };
     if result < 0 {
@@ -205,7 +211,11 @@ mod tests {
         let birth = procs::member_birth(pid, sid).unwrap().unwrap();
         let fd = pin_session_member(pid, sid, Some(birth)).unwrap().unwrap();
         assert!(!pidfd_ready(&fd).unwrap());
-        assert!(pin_session_member(pid, sid, Some(birth.wrapping_add(1))).unwrap().is_none());
+        assert!(
+            pin_session_member(pid, sid, Some(birth.wrapping_add(1)))
+                .unwrap()
+                .is_none()
+        );
         assert!(pin_session_member(pid, -1, Some(birth)).unwrap().is_none());
         child.kill().unwrap();
         child.wait().unwrap();
