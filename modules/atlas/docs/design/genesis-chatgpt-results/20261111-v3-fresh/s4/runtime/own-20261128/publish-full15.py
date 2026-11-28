@@ -92,7 +92,10 @@ def main():
     approval = copied / 'approval.json'
     approval.write_bytes(binding_bytes)
     out.mkdir()
-    policy = {'authz': {'scopes': {SCOPE: [ACTOR]}, 'anchors': {'.': SCOPE}}}
+    policy = {
+        't0Heuristic': {'keywords': ['auth', 'payments', 'secrets', 'kms', 'crypto', 'billing']},
+        'authz': {'scopes': {SCOPE: [ACTOR]}, 'anchors': {'.': SCOPE}},
+    }
     write_json(root / '.atlas/policy.json', policy)
     write_json(out / 'authorization.json', {'root': str(root), 'actor': ACTOR, 'scope': SCOPE, 'policy': policy})
     publication = cli(runtime, root, out, 'publish', 'publish', prepared_path, f'{APPROVAL_DIR}/approval.json')
