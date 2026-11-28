@@ -5,10 +5,11 @@ so a change here is a change to both and goes through this file first.
 
 ## 1. Rules the contract enforces
 
-1. **Only Maestro plans.** Maestro alone creates and edits projects, epics, issues and steps, and moves stages. It writes only
-   through the board tools (section 4). Every one of those writes needs a non-empty `reason`.
-2. **The human never edits the plan.** The owner answers, comments, attaches context to a card, undoes Maestro actions,
-   pauses and resumes, accepts or declines intake, and sets hold before merge (section 5).
+1. **Maestro owns the plan.** Maestro creates and edits projects, epics and steps, updates existing issues, and moves
+   stages. Writes through the Board tools require a non-empty `reason`. A non-review seat can propose an issue and request
+   a stage change. A movement request records the proposed stage and reason in activity.
+2. **The owner contributes to issues.** The owner can propose a Backlog issue, answer questions, comment, attach context,
+   undo actions, pause and resume, accept or decline intake, and set hold before merge (section 5).
 3. **Every change is logged.** Each write appends one `board_activity` row with actor, reason, `before` and `after`.
    Current-state tables are written in the same transaction. Nothing changes the board without a row.
 4. **Undo is an inverse entry.** Undo applies the row's `before` and appends a new row that points at the one it undoes.
@@ -241,6 +242,7 @@ Reads:
 | `GET /api/board` | Projects with counts per stage, open question count, health, GitHub state |
 | `GET /api/board/:key` | Board snapshot: project, epics, issues (card fields, steps, open questions) |
 | `GET /api/board/:key/issue/:number` | Issue page: everything on the card plus notes, attachments, activity, dependencies, git trail |
+| `GET /api/board/:key/issue/:number/execution` | Attempt history, attributable provider usage and receipts recorded at Shipped or Cut |
 | `GET /api/board/:key/activity?since=` | Activity rows after `since`, newest last (replay, "since you looked") |
 
 The git trail (branch, commits with hash, message and seat, PR state, review state, CI checks, merge commit) is read live
@@ -251,6 +253,7 @@ Owner writes (actor `owner`, `reason` optional):
 
 | Route | Does |
 |---|---|
+| `POST /api/board/:key/issue` | Creates an owner-authored Backlog issue from `{ title, body?, type?, epic?, estimate? }` |
 | `POST /api/board/:key/question/:id/answer` | `{ option, text? }`. Unblocks the issue if the question was blocking |
 | `POST /api/board/:key/issue/:number/note` | `{ body }` |
 | `POST /api/board/:key/issue/:number/attachment` | JSON `{ kind, name, mime?, data?, value? }`: a file carries base64 `data`; a secret carries `value` and `name` is its label. The value goes straight to `CredentialTable` and is never echoed |

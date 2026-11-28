@@ -35,16 +35,22 @@ A card shows its seat, step progress ("Step 2 of 5"), an estimate, the CI result
 
 ## An issue
 
-Choose a card to peek at it. **Open full page** opens it in full, and **Back to the board** returns. In the peek or page, `J` and `K` step through issues and `Esc` goes back to the board.
+Open an issue for a peek. **Open full page** shows the same issue with more room. Both views have four tabs.
 
-An issue has **Open questions**, **Steps**, **Git trail** (the branch and pull request, or "No branch yet."), **Context**, **Notes**, **Activity** and **Properties** (**Stage**, **Epic**, **Seat**, **Type**, **Estimate**, **In stage**, **Blocked by**, **Blocks**). The Git trail needs GitHub synced; otherwise it says **GitHub not synced**.
+- **Overview** shows open questions, the description, steps, Git trail and attachments. Expand a question to see its choices and add an optional reply.
+- **Conversation** shows comments and the composer. Open a long comment to read it in full.
+- **Executions** shows recorded attempts, documents and available usage. Events with unknown attribution stay visible separately. Shipped and Cut transitions record a receipt at the time of closure.
+- **History** shows issue changes, movement requests, actual moves and their reasons.
+
+**Properties** groups the issue type, stage age, dependency references and provenance. Expand **Branch** to read the full value. In a narrow window, Properties appears below the issue content. A question reply stays with its question as you switch between the issue and Needs you while the Board remains open.
 
 ### What you can do
 
-- **Answer** a question. Maestro's recommendation is always first. You can **Add a note to your answer (optional)**.
-- **Add note**: "Tell Maestro something about this issue". If a note looks like a key or token, the board offers **Store as secret**, because notes are plain text.
+- **New issue** creates an owner-authored proposal in Backlog.
+- **Answer** a question in Overview or Needs you. An optional reply stays with its question while the Board remains open.
+- **Add note** in Conversation. If a note looks like a key or token, the board offers **Store as secret**, because notes are plain text.
 - **Add files** (up to 25 MB each, or drop them on the area) and **Add secret**. A secret has a **Label** and a **Value** and goes straight to the vault; only the label shows on the board (**Sealed**).
-- **Pause issue** / **Resume issue**, and **Hold before merge**. A held card waits for you at the merge.
+- Open **Actions** to pause or resume an issue or change its merge hold. A held card waits for you at the merge.
 - **Pause project** / **Resume project**. While paused, Maestro starts nothing new.
 - **Undo** a change you made. The board says **Undone**.
 

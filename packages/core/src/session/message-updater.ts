@@ -335,6 +335,8 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
           draft.finish = event.data.finish
           draft.cost = event.data.cost
           draft.tokens = event.data.tokens
+          if (event.data.costSource !== undefined) draft.costSource = event.data.costSource
+          if (event.data.usageKnown !== undefined) draft.usageKnown = event.data.usageKnown
           if (event.data.snapshot || event.data.files)
             draft.snapshot = {
               ...draft.snapshot,

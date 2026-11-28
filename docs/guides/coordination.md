@@ -6,10 +6,12 @@ How work moves from a request to a merge: the project board Maestro keeps, the c
 
 One board per project: epics, issues, steps, questions, decisions.
 
-- Only Maestro writes to it; every write carries a reason and an activity row. Undo is a new inverse row, so history is never rewritten.
+- The owner and non-review seats can propose issues. Maestro updates the plan and moves issues. Non-review seats can request a move and give a reason. Undo adds an inverse activity row and preserves the earlier history.
 - Facts move cards: dispatch to Building, an opened pull request to Review, a merge to Shipped. A pull request closed without merge flags the card as out of date instead of moving it.
 - Delivery forecasts: seeded Monte Carlo over the board's real throughput (1,000 trials).
 - Rebuilt from a record committed to the repository (`.atlas/project/board.jsonl`), so it travels with the code.
+
+See [Reading an issue](project-board.md#an-issue) for the peek, full page, and owner actions.
 
 ## Checks and merge queue
 
