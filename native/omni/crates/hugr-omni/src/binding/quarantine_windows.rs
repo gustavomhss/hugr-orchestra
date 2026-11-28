@@ -256,6 +256,26 @@ fn parents(root: &Owned, parts: &[String], final_access: u32) -> Result<Vec<Owne
 
 /// Operates only on paths supplied by a trusted host; this primitive does not authorize paths.
 pub fn operate(source: &str, destination: Option<&str>, expected: Option<&str>) -> Result<String, String> {
+    operate_inner(source, destination, expected, false, &mut false)
+}
+
+/// Renames a single-link regular file while exclusively holding its source handle.
+pub fn rename_exclusive(source: &str, destination: &str, expected: &str) -> Result<Option<String>, String> {
+    let mut entered = false;
+    match operate_inner(source, Some(destination), Some(expected), true, &mut entered) {
+        Ok(identity) => Ok(Some(identity)),
+        Err(_) if !entered => Ok(None),
+        Err(error) => Err(error),
+    }
+}
+
+fn operate_inner(
+    source: &str,
+    destination: Option<&str>,
+    expected: Option<&str>,
+    exclusive: bool,
+    entered: &mut bool,
+) -> Result<String, String> {
     let (drive, source_parts) = parse(source)?;
     let (dest_drive, dest_parts) = match destination {
         Some(path) => {
@@ -270,12 +290,19 @@ pub fn operate(source: &str, destination: Option<&str>, expected: Option<&str>) 
     let root = acquire_root(&drive, 0)?;
     let source_parents = parents(&root, &source_parts[..source_parts.len() - 1], 0)?;
     let source_parent = source_parents.last().map_or(root.0, |h| h.0);
-    let source_handle = open(
+    let source_handle = open_with_share(
         source_parent,
         &source_parts[source_parts.len() - 1],
         false,
         destination.is_some(),
-    )?;
+        false,
+        0,
+        if exclusive { 0 } else { 3 },
+    )?
+    .ok_or("missing source")?;
+    if exclusive {
+        require_regular_single_link(source_handle.0)?;
+    }
     let current = identity(source_handle.0)?;
     if destination.is_none() {
         return Ok(current);
@@ -319,6 +346,7 @@ pub fn operate(source: &str, destination: Option<&str>, expected: Option<&str>) 
     };
     // ReplaceIfExists is zero. The pinned source and destination parent are kernel handles.
     // SAFETY: the aligned information buffer and handles remain live throughout the synchronous call.
+    *entered = true;
     status(unsafe { NtSetInformationFile(source_handle.0, &mut io, storage.as_ptr().cast(), length as u32, 10) })?;
     Ok(current)
 }
@@ -363,6 +391,9 @@ pub fn dispose(source: &str, expected: &str) -> Result<(), String> {
     drop(source);
     Ok(())
 }
+
+mod regular;
+use regular::require_regular_single_link;
 
 mod batch;
 pub use batch::dispose_batch;
