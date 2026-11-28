@@ -88,7 +88,7 @@ export function make() {
             const identity = observation.footprintIdentity
               ? JSON.stringify([observation.footprintIdentity, members.map((member) => [member.pid, member.parentPid]).sort((a, b) => (a[0] ?? 0) - (b[0] ?? 0))])
               : undefined
-            if (!identity || entry.footprintMembers !== identity || (entry.footprintSamples.at(-1)?.sampledAt ?? -1) >= sampledAt
+            if (!identity || entry.footprintMembers !== identity || (entry.footprintSamples.at(-1)?.sampledAt ?? -1) >= sampledAt)
               entry.footprintSamples = []
             entry.footprintMembers = identity
             entry.footprintSamples.push({ source: "footprint", bytes, sampledAt })
@@ -176,6 +176,7 @@ export function make() {
       // Root exit is not tree exit. Membership remains an explicitly requested reading.
       const rootExited = () => {
         entry.rootSettled = true
+        invalidateFootprint(entry)
         entry.record = { ...entry.record, state: "unknown" }
       }
       void child.wait().then(rootExited, rootExited)
