@@ -117,7 +117,7 @@ export function make(declaration: readonly Declaration[] | undefined, measure?: 
         ) return partial()
         return ActivityDisk.measure(canonical, { expectedRoot: { canonical, device: terminal.dev, inode: terminal.ino } })
       }
-      const result: Promise<ReadResult> = walk().catch(partial).then((attempt) => {
+      const result = walk().catch(partial).then<ReadResult>((attempt) => {
         record.row = {
           ...record.row,
           attempt: { state: attempt.state, startedAt: attempt.startedAt, sampledAt: attempt.sampledAt, issueCount: attempt.issueCount },
