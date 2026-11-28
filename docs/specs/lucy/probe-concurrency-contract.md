@@ -1,7 +1,7 @@
 # Scoped TypeScript probe: shared R8 permit
 
-Status: tests-only contract, awaiting hosted typecheck and causal RED. No
-production change is authorized by this document alone.
+Status: focused R8 correction qualified by hosted causal RED, GREEN and
+preservation tests. This is not the final Lucy campaign acceptance.
 
 Discovery: PR #1676 merged as `c585d7ae79e676f2aca89bf86aa8770cf03a1468`;
 its reviewed source is `3c584c7eae4cf6e3e0d60976db88c17a0e977213`.
@@ -12,9 +12,9 @@ run against the integrated current source, including native Omni updates.
 
 ## Problem
 
-`ReviewProbe.run` acquires one process-global review-probe permit before its
-closed runner and retains it through cleanup. `ReviewScopedTypecheck.run`
-currently calls `ResearchProcess.run` directly. The native Session permit is
+At the baseline, `ReviewProbe.run` acquires one process-global review-probe permit
+before its closed runner and retains it through cleanup. `ReviewScopedTypecheck.run`
+calls `ResearchProcess.run` directly. The native Session permit is
 acquired later, so neither it nor the per-engagement four-attempt counter
 limits concurrent scoped compilers across requests.
 
@@ -76,3 +76,30 @@ implement the shared permit and require both cases GREEN plus the existing
 `scoped-typecheck`, `probe-cancellation`, and `probe-dispatch` regressions.
 Retain run IDs, exact source/snapshot comparisons, results, Omni control and
 cleanup evidence. No tests, runtime probes or package typechecks run locally.
+
+## Observed qualification
+
+The frozen test file SHA-256 is
+`c4d748585c15962ccf8017d4885f297d9bfe7d4dfb4e86120fe17e4b5063f609`.
+It is unchanged across the following runs.
+
+- RED source `52c90031870f9b141f175498e0eefd2e484f4677`, snapshot
+  `ef8306bc01fc4d499d14bd5ab7a4e3c0a4330c73`,
+  [run 46164127662](https://github.com/gustavomhss/hugr-orchestra/actions/runs/46164127662):
+  Core types passed; both tests failed at Expected `waiting` / Received `spawned`
+  after real positive controls. Zero passes, two causal failures, 13 assertions,
+  24 Omni spawns and zero delegated spawns. No skipped tests or setup failure.
+- GREEN source `41fc96544ba25ecd37e51101879b32992edb06a1`, snapshot
+  `91a08f3a08fbe467b047d7164ee0ef4da744b7b3`,
+  [run 46164792753](https://github.com/gustavomhss/hugr-orchestra/actions/runs/46164792753):
+  Core types and all 15 tests passed, with 195 assertions, 193 Omni spawns,
+  zero delegated spawns and no skipped tests. This includes both frozen cases
+  and the existing scoped-typecheck, probe-cancellation and probe-dispatch files.
+
+Both snapshots differ from their source only in the CI request and an additive
+package typecheck step. Both cleanup jobs passed. GREEN includes current dev
+`8bd743bdb0ace333a700d010c4ad61022bbc03fb`, preserving concurrent Activity/Omni
+changes. Guards and the Atlas own-snapshot guard passed on the GREEN source.
+Root and independent source review confirmed one unchanged semaphore, finite
+interruptible acquisition and cleanup before permit release. Linux x64 was
+executed; this correction does not add or qualify another platform.
