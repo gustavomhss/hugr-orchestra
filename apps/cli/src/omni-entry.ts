@@ -5,9 +5,7 @@ import { needsOmni } from "./omni-preflight"
 
 declare const OMNI_ENABLED: boolean | undefined
 
-// The privileged custody command validates the native files before loading them.
 if (
-  process.argv[2] !== "activity-custody" &&
   typeof OMNI_ENABLED !== "undefined" &&
   OMNI_ENABLED &&
   needsOmni(process.argv.slice(2)) &&
