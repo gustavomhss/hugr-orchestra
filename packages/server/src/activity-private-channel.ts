@@ -105,7 +105,7 @@ export async function acquire(
       if (request.signal.aborted) return forbidden()
       const operation = armPath && arm ? (
         endpoint === ActivityPrivateChannel.inspectArmPath
-          ? arm.inspect && run(decoded, decodeInspect, arm.inspect, ActivityArm.decodePlanSnapshot)
+          ? arm.inspect && run(decoded, decodeInspect, arm.inspect, ActivityArm.decodePlanSnapshot, encodeInspection)
           : endpoint === ActivityPrivateChannel.previewPath
             ? run(decoded, ActivityArm.decodeRequest, arm.preview, ActivityArm.decodePreview)
             : run(decoded, ActivityArm.decodeConfirm, arm.confirm, ActivityArm.decodeReceipt)
@@ -151,13 +151,32 @@ function run<Input, Result>(
   read: (body: unknown) => Option.Option<Input>,
   evaluate: (input: Input) => Effect.Effect<unknown, unknown>,
   reply: (result: unknown) => Option.Option<Result>,
+  encode: (result: Result) => string | undefined = JSON.stringify,
 ) {
   const decoded = read(body)
   if (Option.isNone(decoded)) return undefined
   return Effect.map(evaluate(decoded.value), (result) => {
     const response = reply(result)
-    return Option.isSome(response) ? JSON.stringify(response.value) : undefined
+    return Option.isSome(response) ? encode(response.value) : undefined
   })
+}
+
+function encodeInspection(snapshot: ActivityArm.PlanSnapshot) {
+  const full = JSON.stringify(snapshot)
+  const limit = ActivityPrivateChannel.maxBodyBytes
+  if (Buffer.byteLength(full) <= limit) return full
+
+  // Keep the verified targets and a prefix of whole receipts. Count JSON bytes, including array commas.
+  const approvals: ActivityArm.PlanSnapshot["approvals"][number][] = []
+  const bounded = { ...snapshot, approvals }
+  let bytes = Buffer.byteLength(JSON.stringify(bounded))
+  if (bytes > limit) return undefined
+  for (const approval of snapshot.approvals) {
+    bytes += Buffer.byteLength(JSON.stringify(approval)) + (approvals.length === 0 ? 0 : 1)
+    if (bytes > limit) break
+    approvals.push(approval)
+  }
+  return JSON.stringify({ ...bounded, partial: true })
 }
 
 async function readBody(request: Request): Promise<string | undefined> {
