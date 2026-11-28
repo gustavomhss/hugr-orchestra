@@ -1,7 +1,7 @@
 export * as ActivityApplyService from "./activity-apply"
 
 import { ActivityApply } from "@orchestra/schema/activity-apply"
-import { and, desc, eq, or } from "drizzle-orm"
+import { and, desc, eq, ne, or } from "drizzle-orm"
 import { Effect, Option } from "effect"
 import path from "node:path"
 import { ActivityArm } from "@orchestra/schema/activity-arm"
@@ -97,6 +97,7 @@ export function make(database: Database.Interface, options?: { now?: () => numbe
         if (!authority) return undefined
         const decoded = ActivityApply.decodeConfirm(request)
         if (Option.isNone(decoded)) return undefined
+        if (database.inTransaction && (yield* database.inTransaction)) return undefined
         const entry = previews.get(decoded.value.previewID)
         if (!entry) {
           const previous = yield* database.db.select().from(ActivityApplyTable)
@@ -143,9 +144,23 @@ export function make(database: Database.Interface, options?: { now?: () => numbe
         if (!item) return yield* settle("Refused")
         return yield* Effect.gen(function* () {
           if (!item.identity.trim() || entry.preview.expiresAt <= now()) return yield* settle("Refused")
-          const pinned = yield* database.db.update(ActivityApplyTable).set({ identity: item.identity })
-            .where(and(eq(ActivityApplyTable.preview_id, receipt.previewID), eq(ActivityApplyTable.outcome, "Unknown")))
-            .returning({ previewID: ActivityApplyTable.preview_id }).get()
+          const pinned = yield* database.db.transaction((tx) => Effect.gen(function* () {
+            const duplicate = yield* tx.select().from(ActivityApplyTable).where(and(
+              eq(ActivityApplyTable.identity, item.identity), eq(ActivityApplyTable.outcome, "Unknown"),
+              ne(ActivityApplyTable.preview_id, receipt.previewID),
+            )).get()
+            if (duplicate) {
+              const refused = yield* tx.update(ActivityApplyTable).set({ outcome: "Refused", identity: item.identity })
+                .where(and(eq(ActivityApplyTable.preview_id, receipt.previewID), eq(ActivityApplyTable.outcome, "Unknown")))
+                .returning({ previewID: ActivityApplyTable.preview_id }).get()
+              return refused ? "Refused" as const : undefined
+            }
+            const updated = yield* tx.update(ActivityApplyTable).set({ identity: item.identity })
+              .where(and(eq(ActivityApplyTable.preview_id, receipt.previewID), eq(ActivityApplyTable.outcome, "Unknown")))
+              .returning({ previewID: ActivityApplyTable.preview_id }).get()
+            return updated ? "Pinned" as const : undefined
+          }), { behavior: "immediate" })
+          if (pinned === "Refused") return { ...receipt, outcome: "Refused" as const }
           if (!pinned) return receipt
           const result = yield* Effect.promise(() => ActivityQuarantineExecutor.execute(item.adapter, {
             id: entry.target.targetID, generation: entry.target.generation, identity: item.identity,
