@@ -1,0 +1,14 @@
+{
+  "schema": "genesis-s2-evaluation-archive-verification/v1",
+  "archive": "evaluation-prepare-02-evidence.zip",
+  "byte_length": 5654997,
+  "sha256": "3afd80a4f6b48aba51b7df90d4837a446b53346b58cca2084f121a5dc492ead1",
+  "git_blob_sha": "5dd4788e06eaa1d2428e511166eaa389f5865588",
+  "payload_members": 1113,
+  "total_members": 1114,
+  "payload_bytes": 28048371,
+  "all_members_verified": true,
+  "manifest_sha256": "c5afa2267c5eafd69bb3fb3ddc1fd561bac50d30e4a76c596c06393fc1997c3d",
+  "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "served_state": false
+}

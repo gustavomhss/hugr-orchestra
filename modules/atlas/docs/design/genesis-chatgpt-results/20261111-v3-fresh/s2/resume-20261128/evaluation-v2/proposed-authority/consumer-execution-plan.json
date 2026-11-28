@@ -1,0 +1,38 @@
+{
+  "schema": "genesis-s2-independent-consumer-execution-plan/v1",
+  "created_at": "2026-11-28T06:37:04.106340+00:00",
+  "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "generation": "694110e9b70b62ca59fe3a0edf91157066f991bb79fcaab27a1b005320bc3488",
+  "state": "PLANNED_NOT_DISPATCHED",
+  "case_order": [
+    "S2-C1",
+    "S2-C2",
+    "S2-C3",
+    "S2-C4",
+    "S2-C5",
+    "S2-I1D",
+    "S2-I1A",
+    "S2-I1U",
+    "S2-I2D",
+    "S2-I2A",
+    "S2-I2U",
+    "S2-I3D",
+    "S2-I3A",
+    "S2-I3U"
+  ],
+  "context_policy": "One new fork:none native consumer per frozen case; no prior conversation, source tree, producer context, reserved answers or judge responses. Every actual agent ID will be recorded after creation.",
+  "access_policy": "Consumer uses a literal request/response bridge to original genesis-evaluation.ts index/read. No direct filesystem, browser, network, tools, memory or source access. Isolation is instruction-based, not an OS capability sandbox.",
+  "bridge_rules": [
+    "Only the exact frozen question, optional frozen target, finite limits and port schema are supplied at dispatch.",
+    "The consumer chooses actual query objects. Root records the literal request and runs the unmodified CLI with the corresponding immutable candidate/generation/case policy.",
+    "Root forwards the complete original JSON stdout, stderr and exit status without editorial body changes or semantic hints.",
+    "Every attempt, including refusal, is retained. Durable per-case budget state is never reset or transplanted.",
+    "Root cannot supply a section title, answer or provenance from raw sources unless returned by the authorized reader.",
+    "The final response cites the versions/receipts actually returned and records abstentions.",
+    "The persistent independent pair evaluates C1 and its trace first; the remaining 13 cases then proceed with all original questions/oracles unchanged."
+  ],
+  "not_evidence": [
+    "No consumer has run.",
+    "This plan does not constitute ADMIT, AC PASS, proof of read success or final acceptance."
+  ]
+}

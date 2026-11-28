@@ -1,0 +1,8 @@
+{
+  "schema": "genesis-s2-generation-record/v1",
+  "generation": "694110e9b70b62ca59fe3a0edf91157066f991bb79fcaab27a1b005320bc3488",
+  "algorithm": "SHA-256 of exact generation-seed.json bytes; opaque generation label, not an Atlas CAS object",
+  "created_at": "2026-11-28T06:35:07.864135+00:00",
+  "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "acyclic_order": "Candidate and plan existed before generation; no decisions, reviews, receipts, artifacts, manifest or served state existed when generation was fixed."
+}

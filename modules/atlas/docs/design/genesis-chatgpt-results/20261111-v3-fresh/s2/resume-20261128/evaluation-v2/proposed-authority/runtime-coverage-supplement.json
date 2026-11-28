@@ -1,0 +1,38 @@
+{
+  "schema": "genesis-s2-runtime-coverage-supplement/v1",
+  "state": "PROPOSED_GUARD_NOT_YET_USED_FOR_RUNTIME",
+  "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "intrinsic_identity": {
+    "keys": 925,
+    "physical_files": 922,
+    "absent_optional_markers": 2,
+    "engine": 1,
+    "audit_exact_match": true,
+    "known_gap": "@noble/hashes is declared at workspace root, omitted by traversal beginning at adapter and mandatory Atlas package manifests."
+  },
+  "independent_observation": {
+    "package": "@noble/hashes",
+    "version": "1.8.0",
+    "files": 247,
+    "bytes": 1145416,
+    "installed_matches_locked_tarball": true,
+    "observed_after_prepare": true,
+    "temporal_limit": "The original prepare receipt did not separately snapshot the omitted package. Current locked-tarball reconciliation and recomputation of the complete candidate and all CAS IDs support consistency; they do not retroactively add intrinsic coverage or a historical pre/post snapshot."
+  },
+  "external_lock": {
+    "file": "runtime-byte-lock.json",
+    "sha256": "fe5e317cf140c805554910d20d7a7c8964f76df12217aeb6a5280483c6c12df8",
+    "physical_files": 1170,
+    "byte_length": 143387254
+  },
+  "future_invocation_guard": {
+    "recorder_file": "record-operation.py",
+    "recorder_sha256": "0185ccf143d7a5d1112b573fd0405da899b27d112cb4c7b431e1cbb1da629b30",
+    "before": "Compare every locked byte length/hash before invoking original CLI; any mismatch means NOT_RUN_INPUT_LOCK_MISMATCH and no runtime exit code.",
+    "after": "Record every same input before/after alongside CAS, state and original stdout/stderr. Any post mismatch prevents claiming traversal success.",
+    "environment": "Explicit nominal ATLAS_ACTOR; inherited ATLAS_RATIFY_TOKEN removed. No human credential or authentication asserted.",
+    "intrinsic_runtime_identity_modified": false
+  },
+  "decision_status": "No ADMIT criterion is asserted. The two original independent reviewers must judge adequacy against the exact plan and disclosed limits; otherwise preserve HOLD and follow required correction."
+}

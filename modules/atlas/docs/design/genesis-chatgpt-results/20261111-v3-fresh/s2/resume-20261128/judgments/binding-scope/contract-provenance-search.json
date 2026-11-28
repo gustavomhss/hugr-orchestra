@@ -1,0 +1,1767 @@
+{
+  "schema": "genesis-s2-contract-provenance-search/v1",
+  "recorded_at": "2026-11-28T06:21:25Z",
+  "operation": "One bounded read-only normative provenance search; not a review or acceptance decision.",
+  "package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+  "question": "Whether a prior rule explicitly bound to the exact S2 package specializes AC-01..AC-10 into transformation/binding-only criteria; distinguish semantic recipe scopes and later separate evaluation-admission protocol.",
+  "finding": {
+    "prior_s2_specific_ac_binding_specialization_found": false,
+    "scope_of_absence": "Only the frozen S2 materials enumerated in searched_files and the pinned protocol/normative sources below. No whole-repository or whole-history absence claim.",
+    "facts": [
+      "The exact package retains all ten literal criteria IDs AC-01..AC-10 and package_state SEMANTIC_ACCEPTED_RUNTIME_PENDING. Its protocol_ref pins transport.md at ee2521a5b966bd505cc95bd1c733e09e12f33531, SHA256 02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c.",
+      "Frozen L2/L3/L4 production requests and linked dispatch recipes scope AC-01/04/05/06 to produced knowledge and explicitly distinguish semantic review from runtime binding, consumer or CI. These clauses do not redefine the complete package contract criteria.",
+      "The pinned criteria registry allows task-specific applicable IDs/evidence and scoped N/A with review. This is a general specialization mechanism, not an existing S2 binding-specific remapping of all ten IDs.",
+      "Pinned transport maps applicable criteria to OwnershipContract and requires review of exact contract/inputs/result/transformation. Pinned runtime separately requires new binding judgments and actual consumers. Neither inspected passage says AC-02 or AC-03 may be satisfied by serialization alone.",
+      "The normative AC-02 definition requires actual Atlas-only consumer answers, and AC-03 requires actual index/read consumption with fixed bounds. The historical S2 criterion matrix, explicitly bound to package 9356cef, retains these local consumer obligations and records them HOLD.",
+      "The normative AC-10 definition explicitly says to stage new outputs without consumer authority and activate explicitly. This staging distinction is present, but is not a prior AC-to-binding-only substitution rule.",
+      "The package-linked oracle hash matches the frozen ownership-v1.json. No binding-only criterion-remapping field was found in the inspected oracle."
+    ],
+    "no_judgment": "This report supplies provenance only. It does not accept/reject the current candidate, reinterpret criteria, or replace either reviewer decision."
+  },
+  "package": {
+    "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json",
+    "byte_length": 332594,
+    "sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+    "git_blob_sha": "b869729c4a4e8bd817e8f987264ae2c579c9e992",
+    "verified_against_public_tree": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json",
+    "json_pointer_extracts": {
+      "schema": "genesis-native-package/v1",
+      "protocol_ref": {
+        "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "path": ".orchestra/skills/execute-genesis/references/transport.md",
+        "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+      },
+      "package_state": "SEMANTIC_ACCEPTED_RUNTIME_PENDING",
+      "contract": {
+        "criteria": [
+          "AC-01",
+          "AC-02",
+          "AC-03",
+          "AC-04",
+          "AC-05",
+          "AC-06",
+          "AC-07",
+          "AC-08",
+          "AC-09",
+          "AC-10"
+        ],
+        "oracle_ref": {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/oracles/ownership-v1.json",
+          "sha256": "87a571d85c09dbcc02df7c5360bde9cdca933768fe8bd81e00f044f33eed5ff1"
+        }
+      },
+      "known_limits": [
+        "Semantic layer acceptance currently records L1, L2, L3, L4 only. Runtime binding, publication, consumers, applicable CI and global gates are separate obligations.",
+        "schema/tui.json is 1131057 bytes, above baseline file observer 256000-byte cap; never omit this limitation to claim successful import.",
+        "Native host tokens/billing/internal provider attempts UNKNOWN. Historical campaign accounting GLOBAL_UNRECONCILED.",
+        "No actual guard pass yet; Actions route prepared for exact final payload.",
+        "Remote persistence blocked by automatic approval review; payload exists locally only after original claim commit.",
+        "Population is bound to exact frozen source tree snapshots, not a claimed live Git membership observation. app-session/design-tui snapshots also exceed the pinned runtime r1 256000-byte observer limit."
+      ]
+    },
+    "top_level_keys": [
+      "schema",
+      "campaign",
+      "protocol_epoch",
+      "results_epoch",
+      "session",
+      "source_revision",
+      "protocol_ref",
+      "scope",
+      "package_state",
+      "contract",
+      "required_artifact_keys",
+      "artifacts",
+      "roots",
+      "missing_required_artifact_keys",
+      "known_limits"
+    ]
+  },
+  "protocol_sources": [
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "byte_length": 10217,
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+      "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/runtime.md",
+      "full_text": "# Runtime das cinco sessões novas\n\n## Missão e identidade\n\nProduzir entendimento útil e verificável do Orchestra com subagentes nativos, preservá-lo\nnos tipos existentes do Atlas e provar seu consumo pelos leitores reais. Aplicar os\naxiomas e critérios da [campanha](campaign.md), sem transformar preparação em entrega.\n\n- Campanha lógica: `20261111-v1`; protocolo: `parallel-v3-fresh`.\n- Execução nova: `20261111-v3-fresh`; branches `genesis-fresh-s1` até `genesis-fresh-s5`.\n- Fonte inicial: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.\n- Cada sessão escreve em `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/sN/`.\n- ROOT integra em `genesis-fresh-final`; nenhuma liberação de ROOT precede o trabalho local.\n\nAs conversas começam vazias. Histórico, IDs, quotas e tentativas de conversas antigas\nnão são pré-requisitos de bootstrap. ROOT reconcilia a história da campanha; a sessão\nregistra somente seu trabalho novo e qualquer reúso explícito, sem alegar custo histórico zero.\n`nativeChatGPT` nomeia a origem das respostas, não uma API/importer já implementado.\n\n## Primeiro trabalho real\n\n1. Confirmar GitHub, sandbox, subagentes, ferramentas e limites efetivamente disponíveis.\n2. Ler `AGENTS.md` e as instruções aplicáveis ao código envolvido; fixar fonte e protocolo.\n3. Carregar a população já atribuída. Fechar inputs, necessidade, critério e oracle do\n   primeiro WP; despachar produção L1 enquanto o restante do inventário é refinado.\n4. Guardar pedidos e respostas originais, corpos e hashes no [pacote nativo](transport.md).\n5. Julgar com o par local, corrigir e avançar dependentes aceitos; completar a população\n   exigida antes de declarar a camada/domínio entregue. Não esperar importer para produzir.\n\nDistinguir fonte inicial, fonte realmente observada, protocolo, candidato de código e\ncommit de transporte. Alteração de código exige revisão e provas dos dependentes afetados;\nnão relatar execução do candidato como se tivesse ocorrido no baseline inalterado.\n\n## Ambiente mínimo, sem inventar capacidades\n\nUsar checkout autorizado existente ou materialização verificável pelos meios disponíveis.\nApenas arquivos reconstruídos não provam HEAD, histórico, tracking ou trust funcionais.\nNão fabricar um commit local com aparência do SHA original. Para operar, registrar a\nidentidade real da cópia e verificar os inputs pelos quais a operação responde.\n\nO shell do sandbox serve para trabalho autorizado. A máquina do dono não é esta rota.\nUsar o GitHub conectado; não executar `gh auth login`, preencher `GH_TOKEN` ou extrair\ncredenciais. Uma ferramenta ausente em um chat não prova ausência em todos os executores.\nInstalar dependências permitidas conforme manifestos/lockfile e regras do ambiente.\nBun é necessário ao script piloto atual; Node sozinho não executa suas APIs. [R1]\n\nIsolar checkout/candidato, corpus, CAS, projeção e store por sessão/execução. Subagentes\npodem compartilhar filesystem: atribuir escritas disjuntas e coordenar commits no principal.\nNão alterar o estado servido nem o pacote ainda julgado de outra sessão.\n\n## Contrato comum disponível desde o início\n\nCada sessão publica `native-package.json` em seu namespace, conforme [transport.md](transport.md).\nO formato conserva corpos, autoridade, lacunas, fontes, receita, dependências e revisões.\nEle permite produzir agora e adaptar depois; não declara que Atlas já o importa.\n\nS4 implementa a adaptação mínima desse transporte para `OwnershipBody`, `OwnershipResult`,\n`OwnershipContract`, `OwnershipReview`, `OwnershipReceipt`, `OwnershipArtifact` e\n`OwnershipManifest`. Reutilizar portas/CAS/validadores existentes; não criar um leitor de\nMarkdown paralelo nem nova autoridade. Os tipos e suas restrições estão em [R2].\n\nO piloto `ownership-pilot.ts` tem corpus, scope, receitas e reviewers históricos próprios.\n`prepare` e `publish` não são importação genérica. Não substituir reviewers históricos,\nreusar aprovação semântica como binding de runtime ou alterar um gate só para obter PASS.\n`read` e `index` usam os leitores reais, mas não fabricam uma publicação ausente. [R1]\n\n## S4: liberar a capacidade compartilhada cedo\n\nS4 mantém duas frentes: conhecimento do próprio domínio e implementação mínima do runtime.\nPriorizar um primeiro caminho real de pacote nativo → candidato → binding → leitura isolada,\ncom uma produção nativa efetiva. Publicar a capacidade comprovada sem esperar todo o L1–L4\npróprio. Rebuild/recovery podem chegar por revisões posteriores; nenhum estado é presumido.\n\nArquivo de descoberta fixo na branch `genesis-fresh-s4`:\n`modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json`.\n\nO release registra, de forma compacta:\n\n| Campo | Conteúdo exigido |\n| --- | --- |\n| `release_id`, `supersedes` | Identidade única e revisão anterior, quando houver. |\n| `source_revision`, `candidate_revision` | Fonte e commit do código realmente executado. |\n| `transport_contract_ref` | Commit/caminho/hash de `transport.md` utilizado. |\n| `runtime_versions`, `known_limits` | Versões observadas e limites que afetam consumo. |\n| `entrypoints` | CWD, argv reais, entradas/saídas e variáveis de caminho a preencher. |\n| `isolated_state_rules` | Onde cada consumidor cria seu próprio estado sem colisão. |\n| `authority_prerequisites` | Política e autoridade reais exigidas por cada passagem. |\n| `capabilities` | Estado e recibos separados de importação, index/read, rebuild e recovery. |\n| `judge_refs`, `gate_refs` | Pareceres, comandos/runs e resultados reais, com hashes. |\n\nNão preencher comandos com nomes presumidos. Primeiro implementar/executar; depois registrar.\nCriar o commit do candidato antes do release que o referencia, evitando SHA autorreferente.\nUsar os estados `NOT_RUN`, `FAILED`, `HOLD` ou `PROVEN` em cada capacidade. `PROVEN` exige\nrecibos dos casos e limites indicados; não significa que todo o runtime, CI ou domínio passou.\n\nAs demais sessões descobrem o release, fixam seu commit e usam a versão exata compatível.\nNão editar silenciosamente a versão durante um caso ou julgamento. Publicar revisões e\nreavaliar somente os bindings/provas afetados. Pré-requisito ausente mantém seu dependente\naberto; executar a fila independente e reler o release antes de concluir impossibilidade.\n\n## O que cada evidência permite afirmar\n\n| Evidência observada | Afirmação permitida | O que ainda exige prova |\n| --- | --- | --- |\n| Resposta nativa e corpo preservados | Produção efetiva daquela unidade. | Qualidade, importação, consumo. |\n| Dois juízos locais vinculados | Aceite semântico do pacote exato. | Binding/runtime e gates pertinentes. |\n| Adapter executado com pacote real | Operação de importação observada. | Publicação autorizada e leitura. |\n| `ownership.index/read` reais | Índice/leitura da seleção observada. | Casos do consumidor e cobertura. |\n| Casos de reuse/rebuild/recovery | Controles executados naquele candidato. | Outros controles/versões. |\n| Testes remotos identificados | Resultado daqueles gates de CI. | Aceite semântico ou proteção da branch. |\n\n## Binding, atualização e consumo\n\nO adapter calcula hashes CAS e versões de inputs reais; hashes de transporte não são\n`OwnershipInput.version`. Preservar bytes exatos. Dependência de build invalida resultados;\nlink de navegação só orienta consulta. Igualdade de prosa não iguala autoridade/validade/gaps.\nFontes indisponíveis permanecem indisponíveis; lista vazia não prova ausência de afetados. [R2, R3]\n\nJuízes de conteúdo não emitem automaticamente aprovação de binding. Quando exigida, o\nmesmo par independente recebe a transformação/candidato exatos e a evidência de execução\npara decidir essa obrigação separada. Não sintetizar votos nem atribuir IDs históricos.\n\nConsumidores independentes usam index/read reais e os limites fixados antes de avaliar.\nPreservar consultas, respostas, versões e isolamento observado; abrir um arquivo diretamente\nnão prova consumo Atlas. Política, store ou projeção ausentes são precondições explícitas.\nTestar publicação/recuperação somente em estado isolado autorizado, com geração coerente,\nHOLD, retomada durável e rollback compatível. Não ativar produção como efeito colateral.\n\n## Economia, CI e encerramento\n\nRegistrar plano finito local, tentativas e resultados; incluir juízes, correções e consumidores.\nContinuar lotes autorizados até fechar a fatia; nenhuma quota histórica libera ou bloqueia\nesta sessão nova. Tokens, tentativas físicas e cobrança não expostos são `UNKNOWN`, nunca zero.\nUm ledger de tarefas não prova garantia financeira do adapter; preservar esse limite em AC-08.\nNão usar provedores pagos externos nem executar retry incerto sem buscar o resultado anterior.\n\nSeguir `AGENTS.md`: testes de produto em GitHub Actions, salvo autorização explícita do dono.\nNão contornar guardas; build local não é CI. Inspecionar ferramentas disponíveis e rotas\npermitidas antes de declarar dispatch impossível. Falta de um gate não paralisa produção\nnativa, mas também não permite fechar a obrigação que o exige.\n\nAplicar [completion.md](completion.md): todos os itens próprios, dois juízos, correções,\nconsumidores e gates exigidos precisam de evidência antes de `DELIVERY_COMPLETE`. Uma\nbarreira externa demonstrada permanece incompleta, após executar todo trabalho independente.\n\n## Fontes fixadas\n\n- [R1: piloto](https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/scripts/ownership-pilot.ts), blob `6d560596653d640b86f1f0111119340d47dce689`.\n- [R2: tipos](https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/src/ownership/types.ts), blob `05cb2ae05d296764ce2e786d07b28b36d7428cb7`.\n- [R3: observação de inputs](https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/ownership-input.ts), blob `c6afd6a35071a2487a1168cea5ed1ad26379c376`.\n"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/transport.md",
+      "byte_length": 8478,
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "git_blob_sha": "e9a98619f3b0759ead0287fa54fe3ef2f22137d5",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/transport.md",
+      "full_text": "# Pacote nativo comum das cinco fatias\n\n## Finalidade e autoridade\n\nConservar a produção real de cada sessão em um formato comum, para juízo, transporte por\nGit e adaptação às portas existentes do Atlas. Este é um contrato de campanha, **não** um\nnovo tipo de produção Atlas, store ou mecanismo que já importa conhecimento.\n\nArquivo fixo: `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/sN/native-package.json`.\nA orquestradora atualiza o pacote; produtores escrevem corpos em caminhos próprios. Manter\nversões julgadas imutáveis por commit/hash e usar [handoffs.md](handoffs.md) para a selagem.\nS4 implementa o adapter comum e anuncia capacidades em `s4/runtime-release.json`.\n\n## Regras pequenas, necessárias desde o primeiro WP\n\n- `scope` e `key` são estáveis. Cada chave identifica um artefato; revisão não cria alias\n  conflitante. Corpo, autoridade, validade, gaps e evidência compõem sua identidade útil.\n- `layer` é número **1, 2, 3 ou 4**. `need` pertence ao enum Atlas: `entry`, `ownership`,\n  `maintenance`, `operational`, `flow`, `evidence`, `component`. Não inventar novos needs.\n- `body.path` é relativo à pasta de `native-package.json`; sem absoluto, `..` ou symlink.\n  `source_refs.path` é relativo à raiz do repositório de fonte. Não confundir essas bases.\n  Usar nomes de arquivo portáveis; a chave semântica não precisa virar literalmente o filename.\n- Guardar bytes UTF-8 exatos; calcular `byte_length` e SHA-256 sobre esses bytes, sem\n  normalizar Unicode/newlines depois da revisão. Mudança de bytes exige novo binding.\n- `validity` usa `supported` ou `blocked`; lacuna crítica conserva `blocked` até resolução.\n  Separar observação, intenção autorizada, interpretação e lacuna no corpo e na autoridade.\n- `input_keys` declara fontes, receita/contrato e membership relevantes. `source_refs`\n  conserva as fontes capturadas; nenhuma chave substitui a verificação real do input.\n- `build_dependencies` liga predecessores que afetam o resultado; `navigation` contém\n  referências de consulta. Não transformar navegação em dependência nem omitir dependência.\n- `roots` associa necessidades às chaves de entrada disponíveis no scope. Durante produção\n  pode estar incompleto; a seleção exigida deve estar completa antes de publicar/aceitar.\n- Parecer semântico é evidência preservada. Importação/binding/publicação recebem provas\n  separadas; não copiar um PASS de conteúdo como aprovação de uma transformação não vista.\n\nUma referência é `{ \"commit\": \"<SHA40>\", \"path\": \"<caminho>\", \"sha256\": \"<hash>\" }`.\nPara arquivo do mesmo payload ainda sem commit, usar `{ \"payload_path\": \"<caminho completo\nno repo>\", \"sha256\": \"<hash>\" }`; a selagem fixa seu commit depois. Não inventar SHA próprio.\nReferências a respostas/pedidos guardam conteúdo visível original, sem raciocínio privado.\n\n## Formato único\n\nExemplo estrutural, não pacote executado: preencher todos os valores reais antes de\nsubmeter a unidade. `null` indica informação ainda não observada e impede alegar completude.\nO pacote pode crescer por WPs; declarar seus artefatos obrigatórios e lacunas, sem esperar\ninventário semântico perfeito do domínio para começar uma primeira unidade bem definida.\n\n```json\n{\n  \"schema\": \"genesis-native-package/v1\",\n  \"campaign\": \"20261111-v1\",\n  \"protocol_epoch\": \"parallel-v3-fresh\",\n  \"results_epoch\": \"20261111-v3-fresh\",\n  \"session\": \"S1\",\n  \"source_revision\": \"1cde2ff7a71bcf7aecb5d030917b577165135d38\",\n  \"protocol_ref\": null,\n  \"scope\": \"<scope do dominio>\",\n  \"package_state\": \"IN_PROGRESS\",\n  \"contract\": {\n    \"criteria\": [\"<criterio publico aplicavel>\"],\n    \"oracle_ref\": null\n  },\n  \"required_artifact_keys\": [\"<chave exigida>\"],\n  \"artifacts\": [\n    {\n      \"key\": \"<chave estavel e unica>\",\n      \"scope\": \"<mesmo scope do pacote>\",\n      \"title\": \"<titulo util>\",\n      \"layer\": 1,\n      \"need\": \"evidence\",\n      \"body\": {\n        \"path\": \"bodies/<slug-seguro>.md\",\n        \"encoding\": \"utf-8\",\n        \"byte_length\": null,\n        \"sha256\": \"<hash real dos bytes>\"\n      },\n      \"authority\": {\"scope\": \"<scope>\", \"basis\": \"<base atribuida e verificavel>\"},\n      \"validity\": \"blocked\",\n      \"gaps\": [\"<lacuna real>\"],\n      \"evidence\": [\"<referencia exata de evidencia>\"],\n      \"input_keys\": [\"file:<caminho relativo da fonte>\"],\n      \"source_refs\": [\n        {\n          \"commit\": \"<SHA40 da fonte efetiva>\",\n          \"path\": \"<caminho relativo no repo>\",\n          \"git_blob_sha\": \"<objeto observado>\",\n          \"sha256\": \"<hash dos bytes capturados>\"\n        }\n      ],\n      \"recipe_ref\": null,\n      \"build_dependencies\": [],\n      \"navigation\": [],\n      \"producer_request_ref\": null,\n      \"producer_response_ref\": null,\n      \"semantic_review_refs\": [],\n      \"runtime_receipt_refs\": []\n    }\n  ],\n  \"roots\": {},\n  \"missing_required_artifact_keys\": [\"<chave exigida>\"],\n  \"known_limits\": []\n}\n```\n\n`package_state` é coordenação de transporte, não validade servida pelo Atlas. A unidade\npronta tem corpo, fonte, contrato, receita, autoria e dependências preenchidos; o pacote\ncompleto não mantém artefatos obrigatórios ausentes. `oracle_ref` identifica o oracle\ncongelado antes da produção avaliada; seu conteúdo não entra no contexto do produtor.\n\nCada dependência de build contém `key` e `package_ref` exato do predecessor aceito.\nPara predecessor neste mesmo pacote, usar `{ \"key\": \"<chave>\", \"same_package\": true }`;\na chave deve existir, estar aceita e preceder seu dependente. Rejeitar ciclos de build.\n`recipe_ref` vincula o pedido/receita efetivamente usado, incluindo versão e critérios;\nmodelo/ID real e resposta original ficam nos respectivos recibos, sem supor telemetria.\n\n## Adaptação determinística aos tipos existentes\n\n| Transporte | Objeto/obrigação real |\n| --- | --- |\n| Corpo verificado em bytes | `OwnershipBody {kind, version:1, bytes:number[]}`. |\n| Autoridade, validade, gaps, evidência | `OwnershipResult`, referenciando o hash CAS do corpo. |\n| Critérios aplicáveis | `OwnershipContract`, persistido e identificado pelo runtime. |\n| Inputs e predecessores observados | `OwnershipReceipt.inputs` e `dependencies {key,result}`. |\n| Juízos de binding válidos | `OwnershipReview` com reviewer, contract, inputs, result e provenance reais. |\n| Metadados e vínculos calculados | `OwnershipArtifact`, com hashes reais de result/receipt. |\n| Artefatos e roots do scope | `OwnershipManifest`, sem seleção parcial apresentada como completa. |\n\n`result`, `receipt`, `artifact`, `manifest` e versões observadas dos inputs são gerados\npelo runtime real. Não preenchê-los com SHA-256 de transporte nem com respostas inventadas.\n`OwnershipReview.verdict` é `pass` ou `hold`, mas não basta converter a grafia de um parecer:\na revisão precisa cobrir o contrato, inputs, resultado e transformação exatos pertinentes.\nAs fontes atuais são [tipos](https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/knowledge/src/ownership/types.ts), blob `05cb2ae05d296764ce2e786d07b28b36d7428cb7`.\n\n## Inputs: evidência capturada não é versão do runtime\n\nO observador atual aceita `file:<path>` e `members:<directory>`. Sua versão é calculada\npor `id(...)` do kernel sobre bytes ou membership; não é SHA-256 nem blob Git. S4 deve\nobservar a cópia real e conferir seu vínculo com a fonte capturada, sem inventar observações.\n\nO caminho atual recusa `.git`, `.atlas`, caminhos absolutos, `.`/`..`, symlinks e leitura de\narquivo acima de 256.000 bytes. Membership exige consulta Git completa, sem erro/truncamento,\ne considera também arquivos não ignorados. `absent` difere de `unavailable`: uma falha de\nleitura ou um formato recusado não demonstra remoção. Preservar a lacuna e tratar a fronteira\nnecessária com o mecanismo mínimo justificado; não remover a fonte do escopo para passar.\nFonte: [ownership-input.ts](https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/packages/adapter-io/src/ownership-input.ts), blob `c6afd6a35071a2487a1168cea5ed1ad26379c376`.\n\nAntes de aceitar um pacote, conferir unicidade, enum/layers, paths, bytes/hashes, inputs,\ndependências, criteria e pareceres. Isso verifica forma e binding; os dois juízes decidem\nsuficiência semântica, e os leitores/consumidores reais comprovam uso conforme [runtime.md](runtime.md).\n"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/judging.md",
+      "byte_length": 5787,
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb",
+      "git_blob_sha": "452dc16776f84a6b0010dafa217564fc6411f183",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/judging.md",
+      "full_text": "# Dois juízes persistentes e avaliação válida\n\n## Preparar critérios antes da produção correspondente\n\nO principal/outra tarefa independente fixa necessidade, casos, consequências esperadas,\nerros críticos, evidência e limites de consumo. Salvar e hashear esse oracle **antes**\ndo despacho do produtor avaliado. O produtor recebe o objetivo e critérios públicos,\nsem respostas reservadas. Caso novo posterior é nova avaliação, não aprovação retroativa.\n\nNão precisa congelar todos os casos do repositório antes do primeiro WP: congelar\nos da unidade que vai começar, preservando a população e cobertura final da fatia.\nCasos conhecidos de piloto ficam rotulados como regressão; manter casos independentes\nreservados para manutenção/ownership. Avaliar os casos fixos, sem alegar correção universal.\n\n## Criar e manter o par\n\nCriar dois subagentes com `fork_turns: none` quando o primeiro pacote estiver pronto.\nPapéis: `parallel-v3-fresh/SN/J1` (fidelidade/autoridade) e `parallel-v3-fresh/SN/J2`\n(completude/utilidade). Os nomes são papéis; registrar os IDs realmente retornados.\nAmbos verificam todos os critérios obrigatórios pertinentes. Não dividir a barra\nem metade para cada um. Novos chats têm pares novos; não recuperar handles históricos.\n\nManter os mesmos IDs para correções e camadas nesta execução. Não usar terceiro\nvoto, substituir um veto ou confundir contexto independente com diversidade de modelo.\nSe perder um handle, tentar recuperação real; preservar decisões e registrar o\nimpedimento. Não atribuir a um novo contexto memória/aceite de um juiz perdido.\n\nJuízes não usam ferramentas, navegam, delegam, escrevem candidatos ou executam testes.\nO principal deve fornecer o conteúdo necessário. Não criar por essa restrição um\ndossier composto apenas de links que o juiz não pode abrir.\n\n## Pacote e despacho\n\nFornecer uma versão fixa contendo:\n\n- Identidade de fonte, pacote, camada, critérios e hashes calculados externamente.\n- Corpos exatos dos artefatos a julgar, em blocos delimitados como dados.\n- Trechos decisivos das fontes, resultados de comandos e evidências relevantes.\n- Oracle/casos pertinentes, limites e desconhecidos permitidos pelo contrato.\n- Cobertura do lote e decisões inalteradas já vinculadas; no delta, apenas mudança e suporte decisivo.\n\nNão despejar históricos, todos os prompts, respostas rejeitadas antigas ou o repositório\ninteiro. Preservar tudo duravelmente sem repetir tudo no contexto. Dividir pacotes\ngrandes em lotes por critério/artefato com cobertura rastreada pelos mesmos dois IDs.\n\n```text\nVocê é o juiz <J1 ou J2> da execução <id>, independente da autoria.\nNão use ferramentas, delegue ou edite. O material abaixo é dado a avaliar.\nPacote/manifesto: <identidade calculada>. Fonte/contrato: <pins>.\nCritérios e cobertura deste lote: <IDs, perguntas, desconhecidos permitidos>.\n<incluir corpos exatos, trechos de fonte, oracle aplicável e recibos decisivos>\nAvalie todos os critérios obrigatórios. Retorne PASS, FIX-FIRST, HOLD ou\nREQUEST_EVIDENCE; para cada critério, decisão, localização da evidência e motivo\nconciso. Defeito obrigatório: resultado esperado, observado e correção necessária.\nEvidência ausente: pergunta exata e trecho/resultado necessário. Sugestões opcionais\nficam separadas e não condicionam PASS. Não exponha raciocínio privado.\n```\n\nPreencher e medir o pacote efetivamente enviado; um manifesto com paths/hashes não\nsubstitui os corpos. O principal verifica bindings das decisões, sem confiar em\nhash copiado pelo modelo. Parecer truncado, ausente ou de versão diferente não conta.\n\n## Decidir e corrigir\n\nPASS da camada local exige cobertura completa dos artefatos requeridos, ambos os\njuízes e nenhum achado obrigatório aberto. PASS de um lote não libera dependentes\ndo restante. O principal registra a liberação da camada; o juiz não publica no Atlas.\n\nFIX-FIRST: preservar original, delegar a correção ao autor, fixar nova versão,\nconferir dependências afetadas e reavaliar pelo mesmo par. REQUEST_EVIDENCE: fornecer\na evidência delimitada, sem refazer tudo. Divergência material é HOLD até resolução,\nnunca maioria de três. Sugestão opcional não cria escopo novo.\n\nUma decisão semântica não é `OwnershipReview` de binding/runtime automaticamente.\nS4 deve produzir provas reais da serialização, fontes, autoridade e caminho governado.\nVer [transport.md](transport.md) e [runtime.md](runtime.md).\n\n## Consumidor independente\n\nUsar contexto novo que não recebeu a resposta, fonte bruta ou oracle reservado.\nDisponibilizar apenas o acesso Atlas permitido para a tarefa; executar `ownership.index`\ne `ownership.read` reais, diretamente quando expostos ou por ponte fiel registrada.\nA ponte transporta pedido/resposta reais, sem reescrever ou enriquecer o conteúdo.\n\nRegistrar consultas, candidato, manifestos, respostas, limites e resposta final.\nVerificar que o consumidor não consultou código/arquivos proibidos. Não alegar\nisolamento técnico se só houve instrução textual; relatar o mecanismo e a evidência\nobserváveis. Acesso ou trace insuficiente deixa a respectiva prova em aberto.\n\nCobrir mudança permitida, violação de contrato, impacto entre componentes, falha\noperacional e questão fora do escopo que exige abstenção. Demonstrar consulta rasa,\naprofundamento e uso direto de intermediários necessários. Casos podem compartilhar\nevidência compatível, sem contabilizar o mesmo resultado como execuções inexistentes.\n\nAmbos os juízes avaliam as respostas contra o oracle e os limites fixados. Fonte\natualizada ou corpo corrigido exige revalidação afetada. Só concluir o domínio com\nas provas atribuídas; ROOT usa um par novo para a união dos cinco.\n"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/criteria.json",
+      "byte_length": 4001,
+      "sha256": "8f86bdd36949185df39f729a2de16c5ea7166ccd1638f74b197cad60d1551116",
+      "git_blob_sha": "6171f3d23d3e0263e578c04338067ecb8012016d",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/criteria.json",
+      "full_text": "{\n  \"schema\": \"genesis-parallel-criteria/v3\",\n  \"campaign\": \"20261111-v1\",\n  \"protocol_epoch\": \"parallel-v3-fresh\",\n  \"source_revision\": \"1cde2ff7a71bcf7aecb5d030917b577165135d38\",\n  \"normative_path\": \"modules/atlas/docs/design/genesis-ownership-plan.md\",\n  \"normative_blob_sha\": \"b45a73f17c34341097a8c8725a1df6260cd273b5\",\n  \"criterion_count\": 50,\n  \"domain_owners\": [\n    \"S1\",\n    \"S2\",\n    \"S3\",\n    \"S4\",\n    \"S5\"\n  ],\n  \"global_evidence_owner\": \"root\",\n  \"common_atlas_runtime_owner\": \"S4\",\n  \"principles_are_guidance_not_per_item_document_requirements\": true,\n  \"per_task\": \"Inherit principles; specialize applicable IDs and evidence without copying all laws.\",\n  \"completion\": \"One evidence-backed disposition matrix covers all 50 IDs; separate local obligation from global complement.\",\n  \"local_status\": [\n    \"PASS\",\n    \"FIX-FIRST\",\n    \"HOLD\",\n    \"NOT_APPLICABLE\"\n  ],\n  \"global_status\": [\n    \"DEFERRED_TO_INTEGRATION\",\n    \"PASS\",\n    \"HOLD\"\n  ],\n  \"not_applicable_rule\": \"Scope reason with review; never missing time, tool or evidence.\",\n  \"criteria\": [\n    {\n      \"id\": \"GO-A1\",\n      \"source_line\": 52\n    },\n    {\n      \"id\": \"GO-A2\",\n      \"source_line\": 53\n    },\n    {\n      \"id\": \"GO-A3\",\n      \"source_line\": 54\n    },\n    {\n      \"id\": \"GO-A4\",\n      \"source_line\": 55\n    },\n    {\n      \"id\": \"GO-A5\",\n      \"source_line\": 56\n    },\n    {\n      \"id\": \"GO-A6\",\n      \"source_line\": 57\n    },\n    {\n      \"id\": \"GO-A7\",\n      \"source_line\": 58\n    },\n    {\n      \"id\": \"GO-I1\",\n      \"source_line\": 120\n    },\n    {\n      \"id\": \"GO-I2\",\n      \"source_line\": 121\n    },\n    {\n      \"id\": \"GO-I3\",\n      \"source_line\": 122\n    },\n    {\n      \"id\": \"GO-I4\",\n      \"source_line\": 123\n    },\n    {\n      \"id\": \"GO-I5\",\n      \"source_line\": 124\n    },\n    {\n      \"id\": \"GO-I6\",\n      \"source_line\": 125\n    },\n    {\n      \"id\": \"GO-I7\",\n      \"source_line\": 126\n    },\n    {\n      \"id\": \"GO-I8\",\n      \"source_line\": 127\n    },\n    {\n      \"id\": \"AC-01\",\n      \"source_line\": 138\n    },\n    {\n      \"id\": \"AC-02\",\n      \"source_line\": 139\n    },\n    {\n      \"id\": \"AC-03\",\n      \"source_line\": 140\n    },\n    {\n      \"id\": \"AC-04\",\n      \"source_line\": 141\n    },\n    {\n      \"id\": \"AC-05\",\n      \"source_line\": 142\n    },\n    {\n      \"id\": \"AC-06\",\n      \"source_line\": 143\n    },\n    {\n      \"id\": \"AC-07\",\n      \"source_line\": 144\n    },\n    {\n      \"id\": \"AC-08\",\n      \"source_line\": 145\n    },\n    {\n      \"id\": \"AC-09\",\n      \"source_line\": 146\n    },\n    {\n      \"id\": \"AC-10\",\n      \"source_line\": 147\n    },\n    {\n      \"id\": \"CC-1\",\n      \"source_line\": 159\n    },\n    {\n      \"id\": \"CC-2\",\n      \"source_line\": 160\n    },\n    {\n      \"id\": \"CC-3\",\n      \"source_line\": 161\n    },\n    {\n      \"id\": \"CC-4\",\n      \"source_line\": 162\n    },\n    {\n      \"id\": \"CC-5\",\n      \"source_line\": 163\n    },\n    {\n      \"id\": \"CC-6\",\n      \"source_line\": 164\n    },\n    {\n      \"id\": \"CC-7\",\n      \"source_line\": 165\n    },\n    {\n      \"id\": \"SC-1\",\n      \"source_line\": 169\n    },\n    {\n      \"id\": \"SC-2\",\n      \"source_line\": 170\n    },\n    {\n      \"id\": \"SC-3\",\n      \"source_line\": 171\n    },\n    {\n      \"id\": \"SC-4\",\n      \"source_line\": 172\n    },\n    {\n      \"id\": \"SC-5\",\n      \"source_line\": 173\n    },\n    {\n      \"id\": \"QS-1\",\n      \"source_line\": 180\n    },\n    {\n      \"id\": \"QS-2\",\n      \"source_line\": 181\n    },\n    {\n      \"id\": \"QS-3\",\n      \"source_line\": 182\n    },\n    {\n      \"id\": \"QS-4\",\n      \"source_line\": 183\n    },\n    {\n      \"id\": \"QS-5\",\n      \"source_line\": 184\n    },\n    {\n      \"id\": \"QS-6\",\n      \"source_line\": 185\n    },\n    {\n      \"id\": \"DOD-1\",\n      \"source_line\": 223\n    },\n    {\n      \"id\": \"DOD-2\",\n      \"source_line\": 224\n    },\n    {\n      \"id\": \"DOD-3\",\n      \"source_line\": 225\n    },\n    {\n      \"id\": \"DOD-4\",\n      \"source_line\": 226\n    },\n    {\n      \"id\": \"DOD-5\",\n      \"source_line\": 227\n    },\n    {\n      \"id\": \"DOD-6\",\n      \"source_line\": 228\n    },\n    {\n      \"id\": \"DOD-7\",\n      \"source_line\": 229\n    }\n  ]\n}\n"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/campaign.md",
+      "byte_length": 4842,
+      "sha256": "b3cb6324c348ca3fbe92ccf73b2a5e17d36d0822aa3cddeec84c0a9bb2a907bb",
+      "git_blob_sha": "41a2aded10fbe639d4a0df1c4354da651543c47d",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/campaign.md",
+      "full_text": "# Campanha e responsabilidades — início novo\n\n## Identidade fixa\n\n- Repositório: `gustavomhss/hugr-orchestra`; baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`.\n- Protocolo: `parallel-v3-fresh`; resultados: `20261111-v3-fresh`; campanha histórica: `20261111-v1`.\n- Cinco conversas novas; cada prompt atribui N, domínio, branch e namespace. `history_required: false`.\n- Branches novas `genesis-fresh-s1` até `genesis-fresh-s5`; ROOT integra em `genesis-fresh-final`.\n\nEsta decisão substitui o início por retomada da versão v2. Não há migração, aprovação,\nledger, roster ou handle de outra conversa necessário para começar. As versões\nanteriores continuam no Git. Nenhuma reserva ou custo histórico é apagado; ROOT\nreconcilia esses segmentos ao integrar, sem atrasar produção nativa nova.\n\n## Universo e fonte\n\n[parallel-partition.json](parallel-partition.json) atribui todas as 14.442 entradas\ndo baseline: S1=2.236, S2=4.506, S3=4.553, S4=2.220, S5=927. Resolver arquivo exato,\nprefixo de diretório mais longo e fallback S5. Não confundir contagem com esforço.\n\nA população está fixa; refinar necessidades por unidades executáveis. Classificar\ngerados, fixtures, binários, assets e terceiros pelo gerador/contrato/fronteira\nquando isso bastar. Não apagar caminhos ou necessidades para conseguir completar.\nMudança real de fonte exige impacto e novos bindings; novos recibos da campanha\nnão ampliam recursivamente o corpus de mineração.\n\n## Critérios e responsáveis\n\nOs [princípios](principles.md) orientam. O [registro](criteria.json) liga todos os 50\nIDs à fonte normativa; não é necessário preencher 50 formulários antes de produzir.\nCada WP herda os princípios e cita sua especialização/IDs aplicáveis. No fechamento,\numa matriz única liga obrigações, evidências e decisões, separando local e global.\n\n| Obrigações | Cada domínio | S4 | ROOT |\n| --- | --- | --- | --- |\n| AC-01 / CC-1 | Cobertura e suficiência de sua população | Igual, para Atlas | União e fluxos entre domínios |\n| AC-02/03 / SC-1/2 | Casos e consumo Atlas-only do próprio domínio | Reader e binding comuns | Casos e navegação da união |\n| AC-04 | Produção real, fonte/autoridade e casos próprios | Importer e recusas comuns reais | Compatibilidade dos cinco pacotes |\n| AC-05/06 / SC-3 | Dependências, afetados e mudança específica | Cache/rebuild e controles comuns | Propagação entre domínios |\n| AC-07 / CC-5 / SC-5 | Evidência pertinente ao uso local | Motor: coerência, recuperação e rollback | União, concorrência e escopos independentes |\n| AC-08 / CC-6 / SC-4 | Uso novo e limites reais registrados | Garantias efetivas do adapter | Reconciliação agregada e limites históricos |\n| AC-09 | Integração/gates do componente alterado | Portas Atlas e controles negativos | Gates integrados e proteção observada |\n| AC-10 / CC-7 | Preservar fontes/objetos e gerados do domínio | Migração/publicação compatível | Preservação e migração da união |\n| GO-A/GO-I/QS/DOD | Aplicáveis à própria missão | Aplicáveis à própria missão | Disposições globais e entrega governada |\n\nNão repetir cinco vezes a implementação ou todos os controles comuns de Atlas.\nUma prova de S4 pode ser consumida com versão e escopo compatíveis; os casos próprios\ncontinuam com a fatia. Não adiar um caso local ausente sob o nome de integração.\n\nPara cada obrigação, separar `local_status` de `global_complement`. PASS local\nnão satisfaz a união; N/A exige motivo de escopo, não falta de tempo/capacidade.\nUma pendência exclusivamente global nomeia ROOT e a prova a completar.\n\n## Fontes normativas, leitura dirigida\n\nTodas em `modules/atlas/docs/design/` no baseline:\n\n- `genesis-ownership-plan.md`: axiomas, invariants, AC, CC, SC, QS, DoD.\n- `genesis-ownership-judges.md`: critério fixo, dois papéis, pacote exato, projeção compacta e correções.\n- `genesis-ownership-seats.md`: necessidades e construção cumulativa.\n- `genesis-update-plan-contract.md`: identidade, dependências, afetados e rebuild.\n- `genesis-economy-control-contract.md`: garantias econômicas e limites do adapter.\n- `genesis-global-completion-plan.md`: G0..G6 e limites entre planejamento/prova/aceite.\n- `genesis-campaign-reconciliation.md`, `genesis-recovery-worklist.md`, `genesis-landing-plan.md`: histórico, preservação e entrega.\n\nLer o trecho que decide a tarefa; não copiar tudo em cada despacho. O roster histórico,\no piloto Session-input e o limite de dois juízes da campanha antiga são substituídos\npela autorização atual de cinco domínios com dois juízes nativos cada, mais par de ROOT.\nNão transformar essa mudança em permissão de gasto externo, bypass de governança ou\naceitação de resultados não observados. [Runtime](runtime.md), [juízo](judging.md).\n"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/fatia-2.md",
+      "byte_length": 3921,
+      "sha256": "716620ec26a7a253ae77760940ff74a871ea83f08d77a6321c3de73482b390eb",
+      "git_blob_sha": "75eb60566ac43b84f9fc90de3506cb1c8c6fe51d",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/fatia-2.md",
+      "full_text": "# S2 — Interfaces: desktop, web, app-shell, UI e TUI\n\n## Sua identidade\n\nVocê é a orquestradora **S2** em uma conversa nova. Branch `genesis-fresh-s2`;\nnamespace `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/`. Fonte `1cde2ff7a71bcf7aecb5d030917b577165135d38`;\nprotocolo `parallel-v3-fresh`. Não selecionar outro domínio nem herdar papel de conversa antiga.\n\nSua população é de **4506 entradas Git**, hash de caminhos\n`8b70f96dcbb623bdd1cc2a48b61d51d255d9d9ce90836efc9a5cd05f1fc5a582`. O [mapa exato](parallel-partition.json) decide ownership;\nesta descrição não substitui suas regras. As outras quatro fatias não são pré-requisitos de início.\n\n## Missão concreta\n\nComponentes principais: apps/desktop, web, storybook; packages/app-shell, ui, session-ui, tui; assets, temas, traduções, schemas e documentação atribuídos.\n\nNecessidades de entendimento: Fluxos de interação, estado da interface, composição de sessão, transporte/API, acessibilidade, tematização, i18n, desktop lifecycle e fronteiras com o backend.\n\n- Mapear jornadas do usuário e vínculo entre estado, componentes, contratos de backend e persistência.\n- Classificar assets/fixtures/i18n por família e fonte/gerador, mantendo todos os caminhos contabilizados sem documentos repetidos.\n- Produzir orientação de manutenção da UI/desktop/TUI, regressões pertinentes e diagnósticos de falhas observáveis.\n\n## Organizar a produção\n\nPreparar a primeira unidade finita com necessidade, fontes, output, dependências e\ncritério; congelar seu oracle independente antes de enviar ao produtor. Delegar\nessa produção real enquanto refina o restante do inventário. Cobrir toda a população\nna união, sem exigir o inventário semântico inteiro antes do primeiro L1 útil.\n\nL1: base verificável e limites. L2: explicações locais fundamentadas. L3: relações,\ncontratos e impactos. L4: skills/docs de ownership e manutenção que permitem agir.\nNão produzir quatro documentos por arquivo. Cada artefato deve responder uma necessidade.\n\nLer o código de vizinhos no baseline para entender fronteiras. Alteração necessária\nfora de sua propriedade segue proposta ao dono; não criar edição concorrente.\nNão tratar evidência externa não revisada como aceite local automático.\n\n## Critérios no seu domínio\n\nHerdar [axiomas, QS, CC, SC, invariants e DoD](principles.md); especializar por tarefa.\nA barra é compreensão útil, evidência e consumo real, com duas revisões independentes.\nCasos candidatos para concretizar/fixar antes da produção: mudança de fluxo de sessão, violação de contrato UI/API, impacto entre componentes, erro de inicialização desktop e comportamento fora de escopo.\nNão usar esses rótulos genéricos como casos executados ou oracle já pronto.\n\nAmbos os juízes cobrem a versão final. Corrigir defeitos obrigatórios e reavaliar\nnos mesmos IDs. Aplicar [judging.md](judging.md) e [orchestration.md](orchestration.md).\nUsar [transport.md](transport.md) desde a primeira produção, com corpos exatos.\n\n## Executar e entregar\n\nConduzir consumidores e casos próprios pelas portas reais, usando o release exato\nde S4 quando necessário. Controles comuns compatíveis podem ser referenciados;\nnão implementar todo o motor Atlas novamente. Gates específicos de código alterado\nseguem `AGENTS.md`; nenhuma ausência de execução pode ser marcada como PASS.\n\nPersistir resultados, código necessário, decisões, correções, evidências e uso.\nAplicar [completion.md](completion.md) e [handoffs.md](handoffs.md). Só terminar com\nDELIVERY_COMPLETE após cumprir tudo que pertence à fatia. Impedimento demonstrado\ncontinua INCOMPLETE_BLOCKED, depois de esgotar trabalho independente.\n\nROOT recebe seu handoff e integra em `genesis-fresh-final`, com par próprio. Não\nrealizar a integração das cinco, nem empurrar suas obrigações locais para ROOT.\n"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/completion.md",
+      "byte_length": 4497,
+      "sha256": "087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd",
+      "git_blob_sha": "a843c2c312eefc80ecbad3890764d9d65ce45c43",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/completion.md",
+      "full_text": "# Conclusão: entregar tudo da fatia\n\nOs [axiomas e critérios](principles.md) orientam a execução. Esta lista estabelece\na auditoria final, sem exigir uma pilha de documentos antes da primeira produção.\n\n## Critério de entrega local\n\nDeclarar `DELIVERY_COMPLETE` somente quando todos estes pontos tiverem evidência:\n\n1. Toda a população atribuída está classificada e suas necessidades obrigatórias atendidas; nenhuma exclusão silenciosa.\n2. Todos os artefatos L1–L4 necessários foram realmente produzidos, são úteis e têm fonte, autoria e dependências exatas.\n3. Os dois juízes persistentes cobriram o pacote final e seus critérios; correções obrigatórias foram resolvidas e reavaliadas.\n4. Código estritamente necessário de responsabilidade da fatia foi aplicado e verificado no candidato correto; proposta sozinha não basta.\n5. Importação, leitura e consumidores próprios exigidos foram executados; provas comuns reutilizadas têm vínculo válido com S4.\n6. Casos de manutenção e gates atribuídos foram cumpridos; nenhum teste/CI não executado aparece aprovado.\n7. Uso novo, reservas e limitações observáveis estão registrados; histórico desconhecido não foi zerado.\n8. Matriz final de critérios, artefatos, decisões e recibos estão completos, commitados, selados e relidos no GitHub.\n\nNão repetir a suíte comum de S4 cinco vezes. Aplicar a matriz de [campaign.md](campaign.md):\ncada domínio prova seus casos e consome as provas comuns compatíveis; ROOT prova a união.\nFalta de reader, consumidor, revisão ou gate próprio não pode ser transferida para ROOT.\n\n## Axiomas orientam; evidência decide a conclusão\n\nUma matriz de aceitação basta: critério/obrigação, estado local, evidência/juízos e\ncomplemento exclusivamente global. Preservar os 50 IDs do [registro](criteria.json),\nagrupando referências quando útil. Não criar 50 documentos ou repetir leis em cada WP.\nPASS local não fecha a união. N/A exige razão real de escopo e revisão; não significa\nque a ferramenta faltou ou que houve pouco tempo. Obrigações globais nomeiam ROOT.\n\nAceite humano, landing, ativação em produção e gates da união são etapas globais,\nnão pré-requisitos artificiais para a entrega local completa. A fonte normativa\ncontinua exigindo-os para conclusão global; não autoatribuir aceite do dono.\n\n## Não encerrar prematuramente\n\nDelegar, abrir fila, preparar ambiente, produzir propostas, completar um lote,\nreceber dois pareceres parciais ou salvar checkpoint não encerra a missão.\nContinuar enquanto houver obrigação própria executável; não perguntar se pode\nprosseguir no trabalho autorizado. Esperar subagentes ativos por ferramentas reais.\n\nRefinar inventário semântico em paralelo com produção é permitido. Antes de cada\nunidade, fixar sua necessidade/critério/oracle; antes de fechar a camada/domínio,\nreconciliar a união. Não transformar uma amostra útil em cobertura total.\n\nApós os dois pareceres finais, reler a fila e procurar pendências atuais: TODO,\nNOT_RUN, HOLD, FIX-FIRST, REQUEST_EVIDENCE e promessas. Distinguir histórico preservado\nde obrigação atual. Executar o que falta; não apagar o rótulo para aparentar sucesso.\nParar aperfeiçoamento opcional quando a barra fixa estiver satisfeita.\n\n## Impedimento material\n\nVerificar capacidades realmente expostas, releases/recibos disponíveis e rotas já\nautorizadas. Implementar correções necessárias dentro do escopo. Uma ausência de\n`gh`, quota antiga de bootstrap ou regra de coordenação anterior não é impedimento.\n\nSe depender de S4, consultar `runtime-release.json` e fixar capacidades prontas;\ncontinuar todo trabalho independente. Antes de devolver controle, conferir de novo\na dependência. Não fazer polling infinito nem declarar impossibilidade por uma única\nausência momentânea ou número arbitrário de consultas.\n\nSe a obrigação continuar impossível, registrar `INCOMPLETE_BLOCKED`: item, operação,\nerro/estado observado, rotas autorizadas tentadas, evidência e condição exata de\ndesbloqueio. Esgotar o trabalho independente e preservar o handoff. Isso é incompleto,\nnunca PASS ou DELIVERY_COMPLETE. Não inventar capacidade nem contornar uma guarda.\n\nPersistir para retomar após compactação ou nova interação; não prometer execução\nem background depois de terminar o turno. A resposta final aponta commit/handoff,\ncobertura, juízes, correções, execução, gates e eventuais obrigações abertas.\n"
+    },
+    {
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/handoffs.md",
+      "byte_length": 6282,
+      "sha256": "1ba5b2fe687bf7677675f00b23515e28f9fcb575f7ab6894ebb89267b8d69513",
+      "git_blob_sha": "e6dda45da04f507bab745b67b5b053fcf19be32b",
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/handoffs.md",
+      "full_text": "# Entrega verificável de cada fatia\n\nAplicar à campanha lógica `20261111-v1`, protocolo `parallel-v3-fresh` e resultados\n`20261111-v3-fresh`. Cada sessão tem atribuição explícita e branch `genesis-fresh-sN`.\nEscrever sob `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/sN/`.\nROOT recebe as cinco entregas e integra em `genesis-fresh-final`, sob o prefixo\n`modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/integration/`.\n\n## Pacote pequeno, conteúdo completo\n\nUsar os arquivos abaixo; não criar documentos repetidos apenas para preencher categorias.\n\n| Arquivo | Conteúdo necessário |\n| --- | --- |\n| `work.md` | Identidade da execução, escopo/necessidades, fila inteira, decisões, critérios e bloqueios |\n| `execution-ledger.jsonl` | Despachos/IDs reais, respostas, estados, uso observado e incertezas |\n| `native-package.json` | Índice dos artefatos reais, fontes, dependências, corpos/paths e hashes |\n| `judgments/` | Pedidos e decisões originais dos dois juízes, correções e reavaliações vinculadas |\n| `handoff.json` | Resumo final ou checkpoint com referências imutáveis e estado verdadeiro |\n\nOs corpos produzidos, código necessário, pedidos/respostas visíveis e recibos de\nexecução pertencem ao pacote, nos caminhos referidos. Um índice não substitui esses\nconteúdos. Reutilizar o mesmo `work.md` para a fila e a auditoria de conclusão.\nUsar axiomas, invariantes, qualidade e critérios normativos para orientar e verificar\no trabalho; não produzir um arquivo separado para cada ID. Evidência já registrada\npode sustentar vários critérios quando a relação for explícita e correta.\n\n## Identidades que não se confundem\n\n- `source_revision`: baseline investigado, `1cde2ff7a71bcf7aecb5d030917b577165135d38`.\n- `protocol_revision`: commit imutável da skill carregada.\n- `observed_branch_head`: HEAD lido antes da publicação, usado no lease.\n- `candidate_revision`: commit da implementação realmente executada; `null` se ainda ausente.\n- `artifact_revision`: commit contendo os bytes entregues, conhecido depois de criá-lo.\n\nFontes alteradas e dependências externas recebem bindings próprios. Um checkout no\ncommit do kit não tem HEAD igual ao baseline; registrar ambos sem falsificar Git.\nCada referência externa informa commit completo, caminho e SHA-256 dos bytes.\nDentro de `native-package.json`, caminhos locais resolvem no `artifact_revision`\ninformado pelo handoff. Não inserir o hash do próprio manifesto dentro dele.\n\n## Publicar sem autorreferência ou corrida\n\n1. Ler o HEAD atual `B` da própria branch. Confirmar a execução e reconciliar\n   trabalho novo antes de montar mudanças; nunca resetar para o commit do kit.\n2. Congelar os corpos e seus hashes, índice, decisões, fila e ledger. Criar o commit\n   de payload `P`, descendente de `B`, contendo esses arquivos.\n3. Criar a selagem `H`, descendente de `P`, com `handoff.json`. Nele,\n   `artifact_revision` aponta para `P`, já existente; o handoff não contém o SHA de `H`.\n4. Atualizar a própria branch de `B` para `H`, com `expected_sha=B` e `force: false`.\n   Se o lease falhar, reler e reconciliar. Não forçar nem sobrescrever outro escritor.\n5. Reler em `H` o handoff e os arquivos referidos em `P`, conferindo hashes.\n   Informar `H` e a URL na resposta. Um recibo posterior pode apontar para `H`;\n   não reescrever a selagem para inserir seu próprio SHA.\n\n`B`, `P` e `H` são nomes explicativos, nunca valores de uma evidência real. A criação\nde objetos Git sem atualizar/verificar a branch não comprova entrega acessível.\nA orquestradora faz as escritas remotas pelo conector; ver [fresh-start.md](fresh-start.md).\n\n## Exemplo de handoff a preencher, não resultado executado\n\n```json\n{\n  \"campaign\": \"20261111-v1\",\n  \"protocol_epoch\": \"parallel-v3-fresh\",\n  \"results_epoch\": \"20261111-v3-fresh\",\n  \"session\": \"sN\",\n  \"execution_id\": \"<UUID local desta execucao>\",\n  \"branch\": \"genesis-fresh-sN\",\n  \"source_revision\": \"1cde2ff7a71bcf7aecb5d030917b577165135d38\",\n  \"protocol_revision\": \"<SHA40 do protocolo>\",\n  \"candidate_revision\": null,\n  \"artifact_revision\": \"<SHA40 do payload P ja criado>\",\n  \"package\": {\"path\": \"<prefixo da sessao>/native-package.json\", \"sha256\": \"<SHA256>\"},\n  \"work\": \"<prefixo da sessao>/work.md\",\n  \"ledger\": \"<prefixo da sessao>/execution-ledger.jsonl\",\n  \"judgments\": [],\n  \"completion_state\": \"IN_PROGRESS\",\n  \"local_obligations_open\": [],\n  \"global_integration\": {\"owner\": \"root\", \"status\": \"NOT_REVIEWED\"},\n  \"consumed_dependencies\": [],\n  \"supersedes\": null\n}\n```\n\nCampos vazios não são aprovação. Preencher decisões e obrigações reais; `supersedes`\nreferencia a selagem anterior quando houver. Os dois juízos precisam cobrir a mesma\nversão efetivamente entregue, com todos os findings obrigatórios resolvidos.\n\n## Conclusão local e integração global\n\n`DELIVERY_COMPLETE` exige toda a fatia produzida, conferida, julgada pelos dois,\ncorrigida/reavaliada, com consumidores e verificações locais aplicáveis executados,\nfila fechada e Git confirmado. Aplicar [completion.md](completion.md).\nPlano, checkpoint, proposta, delegação ou PASS semântico isolado não satisfazem isso.\nSeparar a obrigação local de seu complemento global. A integração de ROOT não absorve\nprodução, consumidores, correções ou gates locais ainda faltantes.\n\nSe falta prova dependente do runtime de S4, consultar `genesis-fresh-s4` e seu\n`modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json`.\nFixar os bytes, commit e candidato da versão efetivamente usada; não seguir um HEAD\nmóvel durante avaliação. Continuar todos os itens independentes enquanto faltar a dependência.\nImpedimento material demonstrado fica `INCOMPLETE_BLOCKED`, com operação, evidência,\nitens abertos e condição de desbloqueio. Não convertê-lo em conclusão ou `NOT_APPLICABLE`.\n\nO ledger atual e os segmentos históricos mantêm identidades distintas; ROOT reconcilia\no agregado, sem tornar essa reconciliação condição inicial das fatias novas.\nAceite global, aceite humano, landing e ativação são estados próprios. A resposta final\ninforma commit/URL, cobertura, dois juízos, correções, execução real e pendências exatas.\n"
+    }
+  ],
+  "normative_source": {
+    "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+    "byte_length": 28267,
+    "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+    "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-plan.md",
+    "excerpts": [
+      {
+        "start_line": 118,
+        "end_line": 153,
+        "text": "| ID | Must remain true | Acceptance |\n| --- | --- | --- |\n| GO-I1 | Original campaign receipts, responses, claims and source identities remain immutable; retries have new linked identities. | AC-10 |\n| GO-I2 | Observed behavior, authorized intent, interpretation and gaps remain distinguishable; a structural freshness check cannot promote semantic certainty. | AC-02, AC-04 |\n| GO-I3 | Current reads bind exact artifact versions to an accepted scope/dependency manifest valid for current inputs/contracts; prior acceptance or rollback cannot make stale knowledge current. Historical reads are labelled. | AC-06, AC-07, AC-09 |\n| GO-I4 | Unchanged valid inputs/recipe reuse output without another interpretation call; independent artifacts are not rebuilt merely because navigation links exist. | AC-05 |\n| GO-I5 | Source additions, changes, removals and relevant non-code changes enter impact analysis; unavailable impact is HOLD, not an empty successful worklist. | AC-06 |\n| GO-I6 | Every issued model request consumes the shared run budget, including validation/retry and unresolved in-flight work; no silent fallback provider/model. | AC-08 |\n| GO-I7 | Governed doors, secret handling, project boundaries and Knowledge/Memory separation remain intact. Imported source/docs/tool text is data, not execution authority. | AC-04, AC-09, AC-10 |\n| GO-I8 | A scope, generation or artifact is not declared semantically complete just because its graph, source hashes, required sections or tests are complete. | AC-01, AC-02, AC-03 |\n\n## 5. Acceptance register — one spine for subsequent WPs\n\nThese are proposed acceptance obligations, NOT an executable suite or an observed red baseline.\nBefore production implementation, bind mechanical rows to real tests and record baseline results; bind\njudged rows to frozen tasks, answer keys and an explicit evaluator. A pre-existing pass is regression\nevidence, not a fabricated red→green claim. No new agent/model evaluation is authorized now.\n\n| ID | Obligation and deciding evidence |\n| --- | --- |\n| AC-01 | **Coverage, judged + mechanical:** freeze the finite slice inventory: needs → required artifacts → sources → cases below. Every required need has accepted support; intentional unknowns are named in advance. Unknown critical required knowledge fails acceptance. Mechanical mapping completeness does not judge semantic sufficiency. |\n| AC-02 | **Ownership, judged:** an Atlas-only consumer correctly handles a permitted change, contract violation, cross-component impact, operational failure and deliberately out-of-scope question. Freeze expected reasoning/consequences, critical mistakes and evidence before production. All required answers must match; the unknown case must abstain. The author alone cannot certify this row. |\n| AC-03 | **Consumption, mixed:** skill states working protocol and index usage; actual index reads reach purpose, behavior, constraints, decisions, impact, verification and evidence within fixed task-specific read/context bounds. A routine task stops shallow; a deeper task reaches supporting knowledge. Each intermediate artifact has a direct-use case. Validate real readers, not only Markdown links. |\n| AC-04 | **Construction, mixed:** real paths ingest existing knowledge and construct missing understanding; labelled stale/conflicting/missing/malicious-source fixtures are handled without inventing intent, hiding conflict, granting authority or publishing unsupported required content. A canned final document cannot satisfy the producer test. |\n| AC-05 | **Reuse, mechanical:** identical inputs/recipe produce a cache hit with zero proposer calls; an independent edit preserves unrelated result identities and call counts. Equal prose with changed authority/validity/gaps MUST propagate; a receipt-only change refreshes bindings without new downstream interpretation. An unchanged validated consumer-visible result stops downstream rebuild. Build dependency edits invalidate dependents, unlike navigation-only links. |\n| AC-06 | **Incremental correctness, mixed:** behavior edit, added/removed source, intent-doc change and recipe change produce the independently expected affected set. Rebuilds restore required knowledge; mutation controls omit an edge/input and must fail. Detecting staleness alone is insufficient. |\n| AC-07 | **Publication/recovery, mechanical:** inject failure between generation and activation, interrupt/resume, and concurrent reads. A separate reader observes only a complete accepted manifest valid for current inputs/contracts or HOLD. A failed rebuild after source drift cannot fall back to stale knowledge as current. Resume reuses durable completions; rollback rejects incompatible source bindings; historical reads are labelled. |\n| AC-08 | **Economy, mechanical + approval:** one run ledger/reservation governs production, evaluation, retries and concurrent calls. Synthetic checks precede real calls. If real adapter conformance requires a paid call, it needs a bounded explicit authorization first, charged to the same global envelope. Only a conforming route may run the real slice. Report limits, usage and unsettled calls; no bytes-to-token or call-count-to-dollar fiction. |\n| AC-09 | **Git/CI/host, mechanical:** changed declared input, new input under registered scope, missing artifact, broken index reference, incompatible dependency version and invalid generation are rejected at intended gates/readers. A local invalid unit holds its required closure while an independent valid scope remains readable; shared manifest corruption holds its dependent reads. Known-good/bad controls use actual entry points. Report workflow scope and branch-protection enforcement separately. |\n| AC-10 | **Preservation/migration, mechanical + review:** baseline inventory of protected campaign objects remains exact; old producers cannot publish into the new accepted scope accidentally. Stage new outputs without consumer authority, activate explicitly, preserve old accepted state for rollback and keep unrelated scopes usable. Generated boundaries change only through their generators. |\n\nAC-02's oracle may inspect source/tests; the consumer cannot. Permit explicit product/owner sources in\nthe producer input; no hidden human rewriting of the answer. Prepare known-scope cases for regression and\nseparate held-out maintenance cases for evaluation, with their answer keys withheld from the producer.\nUse owner evaluation or a separately authorized independent evaluator; self-review is not independence.\nSemantic testing demonstrates the fixed cases, not universal correctness for arbitrary future tasks."
+      }
+    ]
+  },
+  "recipe_refs_verified": [
+    {
+      "artifact_key": "s2.l1.desktop-web",
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/corrections/l1-r2/producer-request.md",
+        "sha256": "96c5504f18d269435b60a34e625cd6b40194eabc3be97dc38b20b0eeca2e5a36"
+      },
+      "observed_sha256": "96c5504f18d269435b60a34e625cd6b40194eabc3be97dc38b20b0eeca2e5a36",
+      "hash_matches_package_ref": true
+    },
+    {
+      "artifact_key": "s2.l1.app-session",
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/corrections/l1-r3-app/producer-request.md",
+        "sha256": "d21728c386a707bc7d9147f4f74617912032c2bda4e58e1d73e52d7084cd10dd"
+      },
+      "observed_sha256": "d21728c386a707bc7d9147f4f74617912032c2bda4e58e1d73e52d7084cd10dd",
+      "hash_matches_package_ref": true
+    },
+    {
+      "artifact_key": "s2.l1.design-tui",
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/corrections/l1-r2/producer-request.md",
+        "sha256": "96c5504f18d269435b60a34e625cd6b40194eabc3be97dc38b20b0eeca2e5a36"
+      },
+      "observed_sha256": "96c5504f18d269435b60a34e625cd6b40194eabc3be97dc38b20b0eeca2e5a36",
+      "hash_matches_package_ref": true
+    },
+    {
+      "artifact_key": "s2.l2.desktop-web",
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-desktop-web-dispatch.md",
+        "sha256": "35ac19160905bd95fddede62be0e9e1d569e20425eb8e15493421ed7a53c8f5c"
+      },
+      "observed_sha256": "35ac19160905bd95fddede62be0e9e1d569e20425eb8e15493421ed7a53c8f5c",
+      "hash_matches_package_ref": true
+    },
+    {
+      "artifact_key": "s2.l2.app-session",
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-app-session-dispatch.md",
+        "sha256": "0cd465cb782425a419f6c52e7056e6d775c28aaae7e7b45e4c94ae7d1f785e60"
+      },
+      "observed_sha256": "0cd465cb782425a419f6c52e7056e6d775c28aaae7e7b45e4c94ae7d1f785e60",
+      "hash_matches_package_ref": true
+    },
+    {
+      "artifact_key": "s2.l2.design-tui",
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-design-tui-dispatch.md",
+        "sha256": "bb772f04a0dafd521e20531c31865ce7dc9e999d36ba0b8026e8b63b8fc1af40"
+      },
+      "observed_sha256": "bb772f04a0dafd521e20531c31865ce7dc9e999d36ba0b8026e8b63b8fc1af40",
+      "hash_matches_package_ref": true
+    },
+    {
+      "artifact_key": "s2.l3.desktop-web",
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-desktop-web-dispatch.md",
+        "sha256": "ff214eb6c55241300affe3932ca99403ad9913302804bffc04c64f367e7a1f7e"
+      },
+      "observed_sha256": "ff214eb6c55241300affe3932ca99403ad9913302804bffc04c64f367e7a1f7e",
+      "hash_matches_package_ref": true
+    },
+    {
+      "artifact_key": "s2.l3.app-session",
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-app-session-dispatch.md",
+        "sha256": "125f7a8c157d2dfc76f0f118babba54aa4a1896416efa2d307d51be683964f20"
+      },
+      "observed_sha256": "125f7a8c157d2dfc76f0f118babba54aa4a1896416efa2d307d51be683964f20",
+      "hash_matches_package_ref": true
+    },
+    {
+      "artifact_key": "s2.l3.design-tui",
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-design-tui-r2-correction.md",
+        "sha256": "15d91eb9a18a571488e912a56970783de61eb7d28fef8fce6e138a840d299274"
+      },
+      "observed_sha256": "15d91eb9a18a571488e912a56970783de61eb7d28fef8fce6e138a840d299274",
+      "hash_matches_package_ref": true
+    },
+    {
+      "artifact_key": "s2.l4.desktop-web",
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-desktop-web-dispatch.md",
+        "sha256": "2dd13862d3ede895dabea2269bc8d4ec3254e05350042a2ba52c535feb4a3c38"
+      },
+      "observed_sha256": "2dd13862d3ede895dabea2269bc8d4ec3254e05350042a2ba52c535feb4a3c38",
+      "hash_matches_package_ref": true
+    },
+    {
+      "artifact_key": "s2.l4.design-tui",
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-design-tui-dispatch.md",
+        "sha256": "8aa7d8c7838111adb949ed2612d6beb44e4e2fd37fb91931c7f7d3aeeb958aec"
+      },
+      "observed_sha256": "8aa7d8c7838111adb949ed2612d6beb44e4e2fd37fb91931c7f7d3aeeb958aec",
+      "hash_matches_package_ref": true
+    },
+    {
+      "artifact_key": "s2.l4.app-session",
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-app-session-dispatch.md",
+        "sha256": "0d0932d214322396b93b998dc7665718be7d0e880a87253a5f918f258bdaef4f"
+      },
+      "observed_sha256": "0d0932d214322396b93b998dc7665718be7d0e880a87253a5f918f258bdaef4f",
+      "hash_matches_package_ref": true
+    },
+    {
+      "artifact_key": "s2.l4.entry",
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-entry-r2-correction.md",
+        "sha256": "0dff7a29abe4560a5e4a6eb222cc97d56314a72ed0fc8050b3671d05ca3bfc53"
+      },
+      "observed_sha256": "0dff7a29abe4560a5e4a6eb222cc97d56314a72ed0fc8050b3671d05ca3bfc53",
+      "hash_matches_package_ref": true
+    }
+  ],
+  "recipe_sources": [
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/corrections/l1-r2/producer-request.md",
+      "byte_length": 6670,
+      "sha256": "96c5504f18d269435b60a34e625cd6b40194eabc3be97dc38b20b0eeca2e5a36",
+      "git_blob_sha": "4afdec54ee57582f6bf239ba79807637b6e81a4f",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/corrections/l1-r2/producer-request.md",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 5,
+          "text": "# Pedido público recebido — correção S2 L1 r2\n\nExecução: `46d09d97-39a9-482a-a290-646ba1d94c99`.\nProdutor: `/root/s2_l1_corrections`.\nOrigem: mensagens públicas da principal `/root`."
+        }
+      ],
+      "excerpt_limit": "Exact complete paragraphs/sections relevant to recipe scope; appended predecessor bodies/manifests omitted. Full-file byte identity above still binds the complete source."
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/corrections/l1-r3-app/producer-request.md",
+      "byte_length": 3110,
+      "sha256": "d21728c386a707bc7d9147f4f74617912032c2bda4e58e1d73e52d7084cd10dd",
+      "git_blob_sha": "c0972c91e8c079c90218e6d4b43f2e6b080bc652",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/corrections/l1-r3-app/producer-request.md",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 14,
+          "text": "# Pedido público — app-session L1 r3\n\nExecução: `46d09d97-39a9-482a-a290-646ba1d94c99`.\nOrigem: principal `/root`.\nProdutor: `/root/s2_l1_corrections`.\nEste registro preserva a mensagem pública recebida. Nenhum oracle, pacote de julgamento ou arquivo de decisão foi lido.\n\n## Mensagem recebida integral\n\nMandatory app-session L1 correction r3 now authorized by BOTH same persistent judges; desktop/design r2 passed both and must remain byte-identical. NO L2 production yet. Exclusive area /workspace/scratch/7b5d6430f420/genesis-s2/corrections/l1-r3-app/. Read current canonical app-session r2 body/coverage/sources/decisive-evidence; do not edit canonical producers or deliverable, and do not read oracle/judge packet/decision files. Source baseline unchanged1cde2ff7a71bcf7aecb5d030917b577165135d38. Precise public mandatory findings follow.\nJ1-AS-01 and J2 F1/F2: body must explicitly preserve (1) app-shell priorities stability/simplicity/performance, (2) required benchmark condition for session/timeline changes, (3) never hand-edit raw generated Client files, (4) Client must not depend on Core/Server at runtime, expressly DISTINCT from the permitted browserSafe helper exception for UI. Current body and families authority/timeline/benchmarks/transport are too generic on these obligations; current E01 only proves UI exception. Add a concise attributed disposition in relevant Authority/Transport/Assets-verification sections, plus exact decisive excerpts from packages/app-shell/AGENTS.md, packages/session-ui/AGENTS.md and root AGENTS.md Client/generated rules. Preserve prescribed versus actually executed distinction: no product tests/benchmark execution requested or allowed in this correction.\nJ1-AS-02: in Prompt admission and draft ownership paragraph 'The boundary makes admission precise', text 'rejects a different equivalent payload' incorrectly reverses retry equivalence. Existing E15 core/src/session/input.ts:59–62,291–302 already supports correct rule: existing ID returns previous admission when session, encoded prompt and delivery are equivalent; non-equivalent reuse rejects. Correct unambiguously, preserve retry equivalence versus projection equivalence distinction. No extra source/test necessary for this finding.\nDeliver complete corrected app body l1.md, exact l1.diff versus canonical r2, decisive-delta.md of requested normative witnesses, source manifest/delta (reuse captured AGENTS if already present; no double counting), family-delta.json limited semantic fields for relevant existing families if needed, public request/response/change-summary and mechanical verification of changed spans plus exact unchanged remainder. Keep counts/population unchanged unless newly captured assigned evidence genuinely changes depth; principal handles integration. Bind new body SHA256/bytes, never self-PASS. Current r2 app hash0cacdbe33f21ceda94bddd725588a45ba10ac4945195d4f9b9794e2b0c1cc0bc. Expected small bounded correction, preserve all existing Skills detail and other accepted paragraphs. Finish concrete files, then wait for principal review transport notice.\n"
+        }
+      ],
+      "excerpt_limit": "Exact complete paragraphs/sections relevant to recipe scope; appended predecessor bodies/manifests omitted. Full-file byte identity above still binds the complete source."
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-desktop-web-dispatch.md",
+      "byte_length": 8543,
+      "sha256": "35ac19160905bd95fddede62be0e9e1d569e20425eb8e15493421ed7a53c8f5c",
+      "git_blob_sha": "cd54dc3ade054492f490b45dac3f44f8ad76a01f",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-desktop-web-dispatch.md",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 5,
+          "text": "# S2 L2: complete layer production contract\n\nExecution: 46d09d97-39a9-482a-a290-646ba1d94c99. Source: 1cde2ff7a71bcf7aecb5d030917b577165135d38. Protocol: ee2521a5b966bd505cc95bd1c733e09e12f33531. Population: 4506 (desktop-web 532; app-session 1887; design-tui 2087).\n\nDispatch gate: the complete predecessor layer must have two valid decisions. This request is frozen before production and does not authorize premature dependent work."
+        },
+        {
+          "start_line": 12,
+          "end_line": 14,
+          "text": "## Inputs and authority\nAccepted predecessor bodies/coverage, their exact manifests and source captures supplied by the principal. Read local AGENTS and relevant maintenance skills. Additional source must use GitHub connector at the fixed baseline; persist original response and verify Git blob SHA/SHA256. Sources of another domain can be read, never silently modified. Recipe is this request plus the actual dispatched predecessor manifest.\n"
+        },
+        {
+          "start_line": 15,
+          "end_line": 18,
+          "text": "## Public criteria\nGO-A1..7, QS-1..6, CC-1..4/7, GO-I1..8; AC-01/04/05/06 parts belonging to produced knowledge. Semantic review is distinct from runtime binding, consumer or CI.\nEvery substantive statement has an exact repo path/source pin or accepted-predecessor section. State intent/observation/inference/gap. Do not infer universal guarantees, executed tests, runtime trust, bilingual coverage, visual accessibility or actual provider behavior from code alone. Cover every required need in the three units without repetitive per-file pages. Artifacts must allow source-free ownership use through Atlas. Level-two sections should be usable independently with enough context, because a routine query can return at most 16000 body bytes and a deep query 64000.\n"
+        }
+      ],
+      "excerpt_limit": "Exact complete paragraphs/sections relevant to recipe scope; appended predecessor bodies/manifests omitted. Full-file byte identity above still binds the complete source."
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-app-session-dispatch.md",
+      "byte_length": 8543,
+      "sha256": "0cd465cb782425a419f6c52e7056e6d775c28aaae7e7b45e4c94ae7d1f785e60",
+      "git_blob_sha": "6f7ea7bff01e77e59a240cfb7e7954efb50859be",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-app-session-dispatch.md",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 5,
+          "text": "# S2 L2: complete layer production contract\n\nExecution: 46d09d97-39a9-482a-a290-646ba1d94c99. Source: 1cde2ff7a71bcf7aecb5d030917b577165135d38. Protocol: ee2521a5b966bd505cc95bd1c733e09e12f33531. Population: 4506 (desktop-web 532; app-session 1887; design-tui 2087).\n\nDispatch gate: the complete predecessor layer must have two valid decisions. This request is frozen before production and does not authorize premature dependent work."
+        },
+        {
+          "start_line": 12,
+          "end_line": 14,
+          "text": "## Inputs and authority\nAccepted predecessor bodies/coverage, their exact manifests and source captures supplied by the principal. Read local AGENTS and relevant maintenance skills. Additional source must use GitHub connector at the fixed baseline; persist original response and verify Git blob SHA/SHA256. Sources of another domain can be read, never silently modified. Recipe is this request plus the actual dispatched predecessor manifest.\n"
+        },
+        {
+          "start_line": 15,
+          "end_line": 18,
+          "text": "## Public criteria\nGO-A1..7, QS-1..6, CC-1..4/7, GO-I1..8; AC-01/04/05/06 parts belonging to produced knowledge. Semantic review is distinct from runtime binding, consumer or CI.\nEvery substantive statement has an exact repo path/source pin or accepted-predecessor section. State intent/observation/inference/gap. Do not infer universal guarantees, executed tests, runtime trust, bilingual coverage, visual accessibility or actual provider behavior from code alone. Cover every required need in the three units without repetitive per-file pages. Artifacts must allow source-free ownership use through Atlas. Level-two sections should be usable independently with enough context, because a routine query can return at most 16000 body bytes and a deep query 64000.\n"
+        }
+      ],
+      "excerpt_limit": "Exact complete paragraphs/sections relevant to recipe scope; appended predecessor bodies/manifests omitted. Full-file byte identity above still binds the complete source."
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-design-tui-dispatch.md",
+      "byte_length": 8541,
+      "sha256": "bb772f04a0dafd521e20531c31865ce7dc9e999d36ba0b8026e8b63b8fc1af40",
+      "git_blob_sha": "2d68590b7756670cd557af964261ae2d23992ee5",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-design-tui-dispatch.md",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 5,
+          "text": "# S2 L2: complete layer production contract\n\nExecution: 46d09d97-39a9-482a-a290-646ba1d94c99. Source: 1cde2ff7a71bcf7aecb5d030917b577165135d38. Protocol: ee2521a5b966bd505cc95bd1c733e09e12f33531. Population: 4506 (desktop-web 532; app-session 1887; design-tui 2087).\n\nDispatch gate: the complete predecessor layer must have two valid decisions. This request is frozen before production and does not authorize premature dependent work."
+        },
+        {
+          "start_line": 12,
+          "end_line": 14,
+          "text": "## Inputs and authority\nAccepted predecessor bodies/coverage, their exact manifests and source captures supplied by the principal. Read local AGENTS and relevant maintenance skills. Additional source must use GitHub connector at the fixed baseline; persist original response and verify Git blob SHA/SHA256. Sources of another domain can be read, never silently modified. Recipe is this request plus the actual dispatched predecessor manifest.\n"
+        },
+        {
+          "start_line": 15,
+          "end_line": 18,
+          "text": "## Public criteria\nGO-A1..7, QS-1..6, CC-1..4/7, GO-I1..8; AC-01/04/05/06 parts belonging to produced knowledge. Semantic review is distinct from runtime binding, consumer or CI.\nEvery substantive statement has an exact repo path/source pin or accepted-predecessor section. State intent/observation/inference/gap. Do not infer universal guarantees, executed tests, runtime trust, bilingual coverage, visual accessibility or actual provider behavior from code alone. Cover every required need in the three units without repetitive per-file pages. Artifacts must allow source-free ownership use through Atlas. Level-two sections should be usable independently with enough context, because a routine query can return at most 16000 body bytes and a deep query 64000.\n"
+        }
+      ],
+      "excerpt_limit": "Exact complete paragraphs/sections relevant to recipe scope; appended predecessor bodies/manifests omitted. Full-file byte identity above still binds the complete source."
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-desktop-web-dispatch.md",
+      "byte_length": 8597,
+      "sha256": "ff214eb6c55241300affe3932ca99403ad9913302804bffc04c64f367e7a1f7e",
+      "git_blob_sha": "b20f4efcf07366ea6953a52c03fade50b8f1bdd5",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-desktop-web-dispatch.md",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 5,
+          "text": "# S2 L3: complete layer production contract\n\nExecution: 46d09d97-39a9-482a-a290-646ba1d94c99. Source: 1cde2ff7a71bcf7aecb5d030917b577165135d38. Protocol: ee2521a5b966bd505cc95bd1c733e09e12f33531. Population: 4506 (desktop-web 532; app-session 1887; design-tui 2087).\n\nDispatch gate: the complete predecessor layer must have two valid decisions. This request is frozen before production and does not authorize premature dependent work."
+        },
+        {
+          "start_line": 12,
+          "end_line": 14,
+          "text": "## Inputs and authority\nAccepted predecessor bodies/coverage, their exact manifests and source captures supplied by the principal. Read local AGENTS and relevant maintenance skills. Additional source must use GitHub connector at the fixed baseline; persist original response and verify Git blob SHA/SHA256. Sources of another domain can be read, never silently modified. Recipe is this request plus the actual dispatched predecessor manifest.\n"
+        },
+        {
+          "start_line": 15,
+          "end_line": 18,
+          "text": "## Public criteria\nGO-A1..7, QS-1..6, CC-1..4/7, GO-I1..8; AC-01/04/05/06 parts belonging to produced knowledge. Semantic review is distinct from runtime binding, consumer or CI.\nEvery substantive statement has an exact repo path/source pin or accepted-predecessor section. State intent/observation/inference/gap. Do not infer universal guarantees, executed tests, runtime trust, bilingual coverage, visual accessibility or actual provider behavior from code alone. Cover every required need in the three units without repetitive per-file pages. Artifacts must allow source-free ownership use through Atlas. Level-two sections should be usable independently with enough context, because a routine query can return at most 16000 body bytes and a deep query 64000.\n"
+        }
+      ],
+      "excerpt_limit": "Exact complete paragraphs/sections relevant to recipe scope; appended predecessor bodies/manifests omitted. Full-file byte identity above still binds the complete source."
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-app-session-dispatch.md",
+      "byte_length": 8597,
+      "sha256": "125f7a8c157d2dfc76f0f118babba54aa4a1896416efa2d307d51be683964f20",
+      "git_blob_sha": "3176fd12a7b79730afe50afb168ac50e1f6f9768",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-app-session-dispatch.md",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 5,
+          "text": "# S2 L3: complete layer production contract\n\nExecution: 46d09d97-39a9-482a-a290-646ba1d94c99. Source: 1cde2ff7a71bcf7aecb5d030917b577165135d38. Protocol: ee2521a5b966bd505cc95bd1c733e09e12f33531. Population: 4506 (desktop-web 532; app-session 1887; design-tui 2087).\n\nDispatch gate: the complete predecessor layer must have two valid decisions. This request is frozen before production and does not authorize premature dependent work."
+        },
+        {
+          "start_line": 12,
+          "end_line": 14,
+          "text": "## Inputs and authority\nAccepted predecessor bodies/coverage, their exact manifests and source captures supplied by the principal. Read local AGENTS and relevant maintenance skills. Additional source must use GitHub connector at the fixed baseline; persist original response and verify Git blob SHA/SHA256. Sources of another domain can be read, never silently modified. Recipe is this request plus the actual dispatched predecessor manifest.\n"
+        },
+        {
+          "start_line": 15,
+          "end_line": 18,
+          "text": "## Public criteria\nGO-A1..7, QS-1..6, CC-1..4/7, GO-I1..8; AC-01/04/05/06 parts belonging to produced knowledge. Semantic review is distinct from runtime binding, consumer or CI.\nEvery substantive statement has an exact repo path/source pin or accepted-predecessor section. State intent/observation/inference/gap. Do not infer universal guarantees, executed tests, runtime trust, bilingual coverage, visual accessibility or actual provider behavior from code alone. Cover every required need in the three units without repetitive per-file pages. Artifacts must allow source-free ownership use through Atlas. Level-two sections should be usable independently with enough context, because a routine query can return at most 16000 body bytes and a deep query 64000.\n"
+        }
+      ],
+      "excerpt_limit": "Exact complete paragraphs/sections relevant to recipe scope; appended predecessor bodies/manifests omitted. Full-file byte identity above still binds the complete source."
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-design-tui-r2-correction.md",
+      "byte_length": 3465,
+      "sha256": "15d91eb9a18a571488e912a56970783de61eb7d28fef8fce6e138a840d299274",
+      "git_blob_sha": "ebfad3693f656f80bf83fa09a85c0b263ad093af",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-design-tui-r2-correction.md",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 19,
+          "text": "# L3 design/TUI revision2 — bounded mandatory correction\n\nExecution46d09d97-39a9-482a-a290-646ba1d94c99; source1cde2ff7a71bcf7aecb5d030917b577165135d38; protocol ee2521a5b966bd505cc95bd1c733e09e12f33531.\n\nBoth persistent judges issued the same concrete mandatory finding on the current design/TUI L3 body, SHA256860f76fc65c807a4c96e4c5c21d73683cf50ada8d75b0acb53c15f218f1408c5,15143bytes. Desktop/web and app/session L3 bodies received PASS from both and must remain unchanged. Whole L3 is not accepted; no L4 work is authorized yet.\n\n## Precise public correction\n\nIn `Language and appearance cross app and host contracts`, add one concise, attributed explanation of the typed copy path: app uses `language.t(...)` and `language.plural(...)`; native desktop uses shared typed translation bundles consumed by `nativeT(...)`. Locale selection, plural resolution, fallback and interpolation belong in shared modules. Feature/native callsites must not branch on locale, select plural categories themselves, or concatenate grammatical fragments. Preserve existing English keys/text and the already documented hardcoded-English startup exception.\n\nThe prior body already covers dictionaries, fallback, plural arguments, complete phrases and native propagation. The required change makes the precise callsite and ownership contract usable within the L3 body. No new mechanism or product execution is requested. Existing captured support suffices: own L3 decisive evidence S10; `packages/app-shell/AGENTS.md:23–28`; public accepted L2 desktop decisive evidence E10 and captured `apps/desktop/AGENTS.md:5–9`. Read those exact primary captures as needed through canonical sources manifests. Do not infer all hardcoded native strings were fixed.\n\n## Inputs, scope and outputs\n\nWorkspace `/workspace/scratch/7b5d6430f420/genesis-s2`. Read own immutable `later-producers/design-tui/l3/` files, the named public accepted evidence, and canonical source captures needed for this correction. Accepted L1 manifest hash8bb7bb5298f42eefe3fb34246a8303ad974947ef54ac99f1390ed40e276644c8 and L2 hash27db0efc4d2495a7666117abe57907d2bd9e46c1e9bbef3b27ca23140c2ae36c remain exact inputs. No oracle, judge-only packet, full review response, closure-work, peer response or list_agents access. This request supplies only the precise mandatory public findings, not reserved questions or answer keys.\n\nExclusive new output: `later-producers/design-tui/l3-r2/`. Preserve all r1 files byte-for-byte; do not edit canonical deliverable or another actor area. Deliver all five files: `body.md`, `sources.json`, `dependencies.json`, `decisive-evidence.md`, `response.md`. Retain all unrelated accepted statements and prior evidence; minimally add exact support/source entries actually used. Build/navigation rationale and manifest pins remain truthful; declare any factual dependency actually added. Provide `body.diff` and a small `delta.md` containing exact prior/current body SHA256/byte counts, old/new changed region and bounded relevant primary excerpts. Confirm unrelated body regions unchanged. Keep section/whole-body budgets if possible without removing required content. Do not issue a semantic verdict.\n\nNo product tests, runtime, CI, GitHub writes, source edits or L4. End after complete concrete files and hashes; do not contact judges until the principal freezes a literal transport packet. Both same judges will reevaluate the corrected body; their prior vetoes remain preserved."
+        }
+      ],
+      "excerpt_limit": "Exact complete paragraphs/sections relevant to recipe scope; appended predecessor bodies/manifests omitted. Full-file byte identity above still binds the complete source."
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-desktop-web-dispatch.md",
+      "byte_length": 9363,
+      "sha256": "2dd13862d3ede895dabea2269bc8d4ec3254e05350042a2ba52c535feb4a3c38",
+      "git_blob_sha": "665946d34fb93c061c3d439b9be522ed87512e8b",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-desktop-web-dispatch.md",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 5,
+          "text": "# S2 L4: complete layer production contract\n\nExecution: 46d09d97-39a9-482a-a290-646ba1d94c99. Source: 1cde2ff7a71bcf7aecb5d030917b577165135d38. Protocol: ee2521a5b966bd505cc95bd1c733e09e12f33531. Population: 4506 (desktop-web 532; app-session 1887; design-tui 2087).\n\nDispatch gate: the complete predecessor layer must have two valid decisions. This request is frozen before production and does not authorize premature dependent work."
+        },
+        {
+          "start_line": 12,
+          "end_line": 14,
+          "text": "## Inputs and authority\nAccepted predecessor bodies/coverage, their exact manifests and source captures supplied by the principal. Read local AGENTS and relevant maintenance skills. Additional source must use GitHub connector at the fixed baseline; persist original response and verify Git blob SHA/SHA256. Sources of another domain can be read, never silently modified. Recipe is this request plus the actual dispatched predecessor manifest.\n"
+        },
+        {
+          "start_line": 15,
+          "end_line": 18,
+          "text": "## Public criteria\nGO-A1..7, QS-1..6, CC-1..4/7, GO-I1..8; AC-01/04/05/06 parts belonging to produced knowledge. Semantic review is distinct from runtime binding, consumer or CI.\nEvery substantive statement has an exact repo path/source pin or accepted-predecessor section. State intent/observation/inference/gap. Do not infer universal guarantees, executed tests, runtime trust, bilingual coverage, visual accessibility or actual provider behavior from code alone. Cover every required need in the three units without repetitive per-file pages. Artifacts must allow source-free ownership use through Atlas. Level-two sections should be usable independently with enough context, because a routine query can return at most 16000 body bytes and a deep query 64000.\n"
+        }
+      ],
+      "excerpt_limit": "Exact complete paragraphs/sections relevant to recipe scope; appended predecessor bodies/manifests omitted. Full-file byte identity above still binds the complete source."
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-design-tui-dispatch.md",
+      "byte_length": 9361,
+      "sha256": "8aa7d8c7838111adb949ed2612d6beb44e4e2fd37fb91931c7f7d3aeeb958aec",
+      "git_blob_sha": "ad3d47c4566c10b7b6b339ca50820a0d64b5f425",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-design-tui-dispatch.md",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 5,
+          "text": "# S2 L4: complete layer production contract\n\nExecution: 46d09d97-39a9-482a-a290-646ba1d94c99. Source: 1cde2ff7a71bcf7aecb5d030917b577165135d38. Protocol: ee2521a5b966bd505cc95bd1c733e09e12f33531. Population: 4506 (desktop-web 532; app-session 1887; design-tui 2087).\n\nDispatch gate: the complete predecessor layer must have two valid decisions. This request is frozen before production and does not authorize premature dependent work."
+        },
+        {
+          "start_line": 12,
+          "end_line": 14,
+          "text": "## Inputs and authority\nAccepted predecessor bodies/coverage, their exact manifests and source captures supplied by the principal. Read local AGENTS and relevant maintenance skills. Additional source must use GitHub connector at the fixed baseline; persist original response and verify Git blob SHA/SHA256. Sources of another domain can be read, never silently modified. Recipe is this request plus the actual dispatched predecessor manifest.\n"
+        },
+        {
+          "start_line": 15,
+          "end_line": 18,
+          "text": "## Public criteria\nGO-A1..7, QS-1..6, CC-1..4/7, GO-I1..8; AC-01/04/05/06 parts belonging to produced knowledge. Semantic review is distinct from runtime binding, consumer or CI.\nEvery substantive statement has an exact repo path/source pin or accepted-predecessor section. State intent/observation/inference/gap. Do not infer universal guarantees, executed tests, runtime trust, bilingual coverage, visual accessibility or actual provider behavior from code alone. Cover every required need in the three units without repetitive per-file pages. Artifacts must allow source-free ownership use through Atlas. Level-two sections should be usable independently with enough context, because a routine query can return at most 16000 body bytes and a deep query 64000.\n"
+        }
+      ],
+      "excerpt_limit": "Exact complete paragraphs/sections relevant to recipe scope; appended predecessor bodies/manifests omitted. Full-file byte identity above still binds the complete source."
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-app-session-dispatch.md",
+      "byte_length": 9363,
+      "sha256": "0d0932d214322396b93b998dc7665718be7d0e880a87253a5f918f258bdaef4f",
+      "git_blob_sha": "ec5a4781415ea16dd9e3ee3f2479b3a9b94a5abb",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-app-session-dispatch.md",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 5,
+          "text": "# S2 L4: complete layer production contract\n\nExecution: 46d09d97-39a9-482a-a290-646ba1d94c99. Source: 1cde2ff7a71bcf7aecb5d030917b577165135d38. Protocol: ee2521a5b966bd505cc95bd1c733e09e12f33531. Population: 4506 (desktop-web 532; app-session 1887; design-tui 2087).\n\nDispatch gate: the complete predecessor layer must have two valid decisions. This request is frozen before production and does not authorize premature dependent work."
+        },
+        {
+          "start_line": 12,
+          "end_line": 14,
+          "text": "## Inputs and authority\nAccepted predecessor bodies/coverage, their exact manifests and source captures supplied by the principal. Read local AGENTS and relevant maintenance skills. Additional source must use GitHub connector at the fixed baseline; persist original response and verify Git blob SHA/SHA256. Sources of another domain can be read, never silently modified. Recipe is this request plus the actual dispatched predecessor manifest.\n"
+        },
+        {
+          "start_line": 15,
+          "end_line": 18,
+          "text": "## Public criteria\nGO-A1..7, QS-1..6, CC-1..4/7, GO-I1..8; AC-01/04/05/06 parts belonging to produced knowledge. Semantic review is distinct from runtime binding, consumer or CI.\nEvery substantive statement has an exact repo path/source pin or accepted-predecessor section. State intent/observation/inference/gap. Do not infer universal guarantees, executed tests, runtime trust, bilingual coverage, visual accessibility or actual provider behavior from code alone. Cover every required need in the three units without repetitive per-file pages. Artifacts must allow source-free ownership use through Atlas. Level-two sections should be usable independently with enough context, because a routine query can return at most 16000 body bytes and a deep query 64000.\n"
+        }
+      ],
+      "excerpt_limit": "Exact complete paragraphs/sections relevant to recipe scope; appended predecessor bodies/manifests omitted. Full-file byte identity above still binds the complete source."
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-entry-r2-correction.md",
+      "byte_length": 3192,
+      "sha256": "0dff7a29abe4560a5e4a6eb222cc97d56314a72ed0fc8050b3671d05ca3bfc53",
+      "git_blob_sha": "82f440d3b1d8f5033b57598895370f9509ff036b",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-entry-r2-correction.md",
+      "excerpts": [
+        {
+          "start_line": 1,
+          "end_line": 19,
+          "text": "# Bounded L4 entry r2 correction\n\nExecution 46d09d97-39a9-482a-a290-646ba1d94c99; source 1cde2ff7a71bcf7aecb5d030917b577165135d38; protocol ee2521a5b966bd505cc95bd1c733e09e12f33531.\n\nBoth persistent reviewers request the same bounded correction, findings J1-L4-ENTRY-01 and ENTRY-L4-J2-F1. The three L4 maintenance guides have actual semantic PASS from both; the whole layer is not yet accepted. This request exposes only the necessary public correction, not a reserved question, oracle or complete review.\n\n## Required change\n\nIn s2.l4.entry, H2 `Verification and boundaries`, add a short explicit out-of-scope evidence route. S2 cannot establish distributed/clustered Session ownership, crash continuation or exactly-once provider execution. Direct these questions to the S1/backend session-execution owner for its current coordination/continuation/provider-retry design and supporting implementation and failure-recovery evidence. State that S2 reconnect/admission observations do not supply that proof. Preserve the existing process-local limitation. Naming this campaign/backend owner is sufficient; do not invent a destination artifact key, implemented recovery mechanism or passing test.\n\nSupport already exists: your entry decisive evidence E04, captured root AGENTS.md:209–216 (especially214–216), and accepted app L3 decisive evidence E03. This is an explicit routing clarification under the public entry requirement for actionable abstention, not a new product claim or a source investigation request.\n\n## Immutable inputs and narrow output\n\nOriginal entry body: later-producers/app-session/l4-entry/body.md,5305 bytes,SHA256 5a91d69ebe975b4c6dff50ad7cb1e76102ed8c35a4d1d43931737d52d6187c67. Keep ALL existing body text byte-identical; insert only the necessary concise paragraph in the named H2. Keep the navigation table, all twelve destinations, nine accepted build keys, one existing direct source record and the three accepted manifest pins unchanged. Do not consume a peer L4 body or alter the separately authored app guide.\n\nWrite a new isolated directory later-producers/app-session/l4-entry-r2/ with the five required files body.md, sources.json, dependencies.json, decisive-evidence.md and response.md, plus body.diff, delta.md and mechanical hash/check records. Preserve the original authored files and canonical/package/accepted files. Keep original decisive excerpts and mappings intact; explain any strictly necessary evidence/rationale addition. Do not add unused source records. Produce a concise delta containing exact old/new identities, insertion text and bounded supporting excerpts so the same pair can evaluate the change without retransmitting all unchanged evidence.\n\nRead only your own L4-entry producer files, the named public correction, accepted L1–L3 manifests/bodies/evidence needed, and named existing source captures. No oracles, judgment responses, closure files, list_agents, review-ref following, unrelated producer searches or writes. No local product tests, runtime, CI, remote writes or reviewer contact. Root will reconcile, freeze and separately authorize literal transport. Stop with complete concrete files/hashes and actual limits."
+        }
+      ],
+      "excerpt_limit": "Exact complete paragraphs/sections relevant to recipe scope; appended predecessor bodies/manifests omitted. Full-file byte identity above still binds the complete source."
+    }
+  ],
+  "s2_metadata_sources": [
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/native-production-plan.json",
+      "byte_length": 1884,
+      "sha256": "c143e65c43fe9fd8816c8f4ca3f636b019e1fec0c3f02a7d5701f4b1bf082ea0",
+      "git_blob_sha": "7fb9deffd6037781056750dafdd379222d2cdafc",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/native-production-plan.json",
+      "full_text": "{\n  \"schema\": \"genesis-s2-resumed-finite-plan/v1\",\n  \"execution_id\": \"46d09d97-39a9-482a-a290-646ba1d94c99\",\n  \"recorded_at\": \"2026-11-11T17:51:16.993924+00:00\",\n  \"prior_layer_gate\": \"Both persistent independent judges must accept every required artifact in the complete predecessor layer before dispatch.\",\n  \"producer_assignments\": {\n    \"desktop-web\": \"one isolated native producer reused for L2-L4\",\n    \"app-session\": \"fresh-context app producer for L2-L4 and entry; prior correction actor is now support/transport only\",\n    \"design-tui\": \"one isolated native producer reused for L2-L4\"\n  },\n  \"reserved_dispatches\": {\n    \"L2\": 3,\n    \"L3\": 3,\n    \"L4\": 3,\n    \"semantic_judge_evaluations\": 6,\n    \"literal_transport_waves\": 3\n  },\n  \"correction_policy\": \"One bounded correction/reevaluation round per layer initially; replan any additional necessary correction visibly, never drop mandatory findings or replace judge veto.\",\n  \"reason\": \"Three disjoint domain producers run concurrently after complete layer acceptance; same two tool-free judges review all units independently, preserving acceptance gates.\",\n  \"remaining_runtime_consumers\": \"Execute only with compatible pinned actual runtime and real publication/binding; no substitute markdown reads. Frozen cases remain reserved from producers.\",\n  \"provider_usage\": {\n    \"tokens\": \"UNKNOWN\",\n    \"billing\": \"UNKNOWN\",\n    \"internal_attempts\": \"UNKNOWN\",\n    \"paid_external_route\": \"NOT_USED\"\n  },\n  \"amendment\": {\n    \"recorded_at\": \"2026-11-11T18:28:30.958131+00:00\",\n    \"reason\": \"After freezing r3, correction actor called list_agents for status; tool unexpectedly included completed public J2 L1 app decision. No frozen semantic artifact changed. Use fresh app author for later layers to keep future inputs clean; persistent judge pair unchanged.\",\n    \"evidence\": \"corrections/l1-r3-app/exposure-note.json\"\n  }\n}\n"
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/runtime-compatibility-note.md",
+      "byte_length": 2348,
+      "sha256": "3eb64069905e66df00f39ba372b609b9a7422b4d7c05bb4773f385b2654621b8",
+      "git_blob_sha": "81d2f6538103a9bca5bddaabde21356c2a1bd8fb",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/runtime-compatibility-note.md",
+      "full_text": "# S2 feedback for the shared S4 runtime\n\nBaseline: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. S4 release inspected at `b42d14978c8b727310369920d4bfaf86145a2b80`; runtime candidate `e3a8ab8cf56dbff1ee91272df51ffa398d882aa1`. This is a local proposal to the runtime owner, not an applied patch, remote message or passing execution.\n\n## Concrete incompatibility\n\nS2 owns the generated `schema/tui.json`: 1,131,057 bytes, Git blob `9250e2ec0c6e433ade0d5a172e8156087022f217`, SHA256 `16c4dd2d51f4b32b397cb9effa31cfc9c48dd7aa546f28b149f106e64d01d0e2`. Exact bytes have been recovered and verified. It remains a declared source/input and one of 4,506 accounted paths.\n\nThe r1 adapter reads every source reference and observed file input with `readNativeFile(..., 256000)` in `packages/adapter-io/src/genesis-native.ts`; `ownership-input.ts` independently retains its 256,000-byte observation cap. Raising only the adapter read would still fail live observations/read validation. The r1 CLI has no permitted size override.\n\nS4 must choose and verify a bounded representation or limit policy that can observe this legitimate source consistently during preparation, binding, publication, reads and updates. Keep real exact-byte source identity and changed-input refusal. Do not omit this source, truncate it, reclassify an observation error as absence, use a transport SHA as kernel version, or synthesize an observed input. A compatibility change requires a new pinned S4 release and the relevant real gates; S2 will rebind the affected candidate.\n\n## S2-owned transport normalization\n\nThe recovered draft encoded evidence references as objects while r1 expects evidence:string[]. S2 preserves each reference losslessly as canonical JSON text and adds the actual recipe file to `input_keys`. These are transport-shape repairs, not source removal or semantic approval. Actual two-judge decisions, all required layers, roots and links remain required before prepare.\n\n## Required evidence before closing\n\nA real complete S2 prepare must admit the exact source, and real current reads must observe it consistently. A deliberate content change must invalidate the affected design/TUI build closure; a source above the chosen bound and unsafe path/symlink cases must still be refused. Semantic approval does not supply runtime binding or publication authority.\n"
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/runtime-compatibility-after-native-failure.md",
+      "byte_length": 4237,
+      "sha256": "5058caeb2706c1cb630f0e838880379457cd386fa16bf6bf9fe651947f1d04fc",
+      "git_blob_sha": "579358acca04ff6c424bbb0d152697614f142be1",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/runtime-compatibility-after-native-failure.md",
+      "full_text": "# S2 → S4: observed full-package preparation blocker\n\nThis is a concrete local request for the shared runtime owner. It is not an applied S4 patch, a remote message, a successful import or permission to publish. It supplements the earlier `runtime-compatibility-note.md`, whose historical evidence remains unchanged.\n\n## Exact attempted package and observed result\n\nS2's thirteen required bodies now have actual PASS decisions from the same J1/J2 pair, with all four layer manifests preserved. The final package is 332,594 bytes, SHA256 `9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b`. Its root is `{\"entry\":\"s2.l4.entry\"}`.\n\nThe isolated native implementation was candidate `e3a8ab8cf56dbff1ee91272df51ffa398d882aa1`, discovered through release `20261111-v3-fresh-s4-r3`. The latest pre-operation discovery was S4 commit `c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c`, release SHA256 `6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016`. No Git checkout or observed local HEAD is invented.\n\nOne actual `prepare` ran from 2026-11-11T20:48:51.158507Z to 20:48:52.041873Z and exited **1**. Complete stderr:\n\n```json\n{\"kind\":\"error\",\"error\":\"native-input-unavailable: file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/inputs/app-session-tree.json\"}\n```\n\nThe operation produced no candidate output or binding. Thirteen partial CAS files remain preserved. There was no automatic retry, cleanup, publish, consumer execution or update. The actual receipt is `evidence/native-final-prepare/prepare-execution-receipt.json`, SHA256 `234d2a18c572b19bbc6cdc1df01a3e89f4e911ab446a403ff6905c01eb91a410`; complete source/staging/CAS bytes are archived with a hash-verified preservation manifest.\n\n## Required complete inputs and the two different limits\n\n| Required input | Actual bytes | SHA256 |\n|---|---:|---|\n| S2 `inputs/app-session-tree.json` | 369,462 | `3eac99a7e7873be6d75df40bd8f0d40ce0b1b54a2aca2be246efe60a14377cd6` |\n| S2 `inputs/design-tui-tree.json` | 390,775 | `371c3bc1b43acf10ab06d87c9128ea4e5caf6b612e682da2e78c84aece1521d9` |\n| `schema/tui.json` | 1,131,057 | `16c4dd2d51f4b32b397cb9effa31cfc9c48dd7aa546f28b149f106e64d01d0e2` |\n\nThe native document reader's general **8 MiB** allowance does not resolve the independent **256,000-byte** direct-source/live-input limit. The pinned observer returns `unavailable` when its accumulated read exceeds that limit; the adapter also supplies 256000 to direct source and file-input reads. All three inputs exist and their complete hashes were verified. Only the first row was observed as the failing input in this actual invocation; the latter two are remaining static incompatibilities, not separately executed failures. Exact code excerpts and their hashes are in `evidence/native-final-input-cap-diagnosis.json`.\n\n## Exact requested unblock condition\n\nS4 must provide a new pinned compatible implementation and release whose source/input observation and native source reads consistently admit all three legitimate complete inputs across preparation, binding, publication, current reads and updates, while retaining bounded reads, immutable content identity, race checks, unsafe-path/symlink refusal and a real distinction between absent and unavailable. A valid S4 solution may choose its bounded policy, but it cannot silently omit, truncate, reclassify or replace these S2 inputs with transport digests or synthetic observations.\n\nS2 will preserve this failed attempt and use a new isolated operation for the compatible implementation. Required local work after that dependency is available remains: complete preparation and binding, actual Atlas index/read consumers with the frozen budgets, S2-U1 update/restoration/reuse, compatible control bindings, and applicable CI. Public GitHub payload publication also has a separate unresolved automatic approval rejection; changing the runtime does not authorize disclosure.\n\nThe successful common-controls CI run at `7102f2e3a1a9a3822bcd0ae054b36ecffe9da553` does not change the native candidate retained in this release or supply a successful S2 import. Both the historical native-candidate CI failure and current scoped common-controls success remain visible in the final evidence.\n"
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/native-transport-compatibility.json",
+      "byte_length": 1520,
+      "sha256": "8e60871e3a4a45266a3128210ecb65db11fe70a189cbcbfe6b8291fcd47e9dc5",
+      "git_blob_sha": "42dd34fa5bb0cb1447797944e1ad76f98bf6173f",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/native-transport-compatibility.json",
+      "full_text": "{\n  \"schema\": \"genesis-s2-transport-compatibility/v1\",\n  \"candidate_revision\": \"e3a8ab8cf56dbff1ee91272df51ffa398d882aa1\",\n  \"old_package_sha256\": \"d0bf942164e6b69c3cd89e9d4a0808a5f4ddcbb450d6c40045b2d0952c9aa0cd\",\n  \"new_package_sha256\": \"9dacfc3c7837655b1de7b16adf953465c481e207ddc8df8afda74baea342f8ff\",\n  \"changes\": [\n    {\n      \"key\": \"s2.l1.desktop-web\",\n      \"change\": \"Evidence reference objects preserved losslessly as canonical JSON strings required by pinned S4 r1 evidence:string[]. No source/bodies/reviews changed.\"\n    },\n    {\n      \"key\": \"s2.l1.desktop-web\",\n      \"change\": \"Declare actual recipe file as observed input; payload reference remains exact.\"\n    },\n    {\n      \"key\": \"s2.l1.app-session\",\n      \"change\": \"Evidence reference objects preserved losslessly as canonical JSON strings required by pinned S4 r1 evidence:string[]. No source/bodies/reviews changed.\"\n    },\n    {\n      \"key\": \"s2.l1.app-session\",\n      \"change\": \"Declare actual recipe file as observed input; payload reference remains exact.\"\n    },\n    {\n      \"key\": \"s2.l1.design-tui\",\n      \"change\": \"Evidence reference objects preserved losslessly as canonical JSON strings required by pinned S4 r1 evidence:string[]. No source/bodies/reviews changed.\"\n    },\n    {\n      \"key\": \"s2.l1.design-tui\",\n      \"change\": \"Declare actual recipe file as observed input; payload reference remains exact.\"\n    }\n  ],\n  \"not_runtime_evidence\": true,\n  \"semantic_review_state\": \"pending\",\n  \"full_validator_or_prepare_run\": false\n}\n"
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/final-local-gates.json",
+      "byte_length": 7237,
+      "sha256": "048339c263babefcd20f66e04ce48670d684f33333679ccef7235efaeb592336",
+      "git_blob_sha": "249e89e1ad0b774576922416f55a48c8483c3a46",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/final-local-gates.json",
+      "full_text": "{\n  \"schema\": \"genesis-s2-final-local-gates/v1\",\n  \"recorded_at\": \"2026-11-11T21:33:48.987115+00:00\",\n  \"gates\": [\n    {\n      \"id\": \"G-LAYERS\",\n      \"state\": \"PASS_CONTENT_ONLY\",\n      \"applicability\": \"All thirteen assigned artifacts.\",\n      \"existing_evidence\": [\n        \"accepted/l1.json\",\n        \"accepted/l2.json\",\n        \"accepted/l3.json\",\n        \"accepted/l4.json\",\n        \"evidence/final-semantic-reconciliation.json\"\n      ],\n      \"remaining\": \"None for exact accepted bodies. Operational obligations below remain separate.\",\n      \"blocked_by\": []\n    },\n    {\n      \"id\": \"G-RUNTIME\",\n      \"state\": \"FAIL\",\n      \"applicability\": \"Complete exact S2 native package and mandatory inputs.\",\n      \"existing_evidence\": [\n        \"evidence/native-final-prepare/prepare-execution-receipt.json\",\n        \"evidence/native-final-input-cap-diagnosis.json\",\n        \"evidence/final-return-remote-recheck/readback-receipt.json\"\n      ],\n      \"remaining\": \"Authorized pinned compatible S4 implementation with relevant proof; new isolated exact-package prepare. Preserve mandatory complete inputs, failed attempt and partial CAS. Establish current input/membership observation without fabricated Git HEAD.\",\n      \"blocked_by\": [\n        \"B-RUNTIME\"\n      ]\n    },\n    {\n      \"id\": \"G-BINDING\",\n      \"state\": \"NOT_RUN\",\n      \"applicability\": \"Exact native candidate, independent binding decisions and governed Atlas reader publication.\",\n      \"existing_evidence\": [\n        \"evidence/native-final-prepare/prepare-execution-receipt.json\"\n      ],\n      \"remaining\": \"Actual candidate_id/binding_id, both exact same-pair runtime binding decisions and authorized publication receipts. No candidate exists from the failed prepare.\",\n      \"blocked_by\": [\n        \"B-RUNTIME\"\n      ]\n    },\n    {\n      \"id\": \"G-CONSUMERS\",\n      \"state\": \"NOT_RUN\",\n      \"applicability\": \"All fourteen frozen S2-C and S2-I consumer cases.\",\n      \"existing_evidence\": [\n        \"requests/consumer-question-deck.json\",\n        \"oracles/ownership-v1.json\",\n        \"oracles/layers-addendum.json\"\n      ],\n      \"remaining\": \"Fresh Atlas-only contexts, actual index/read traces, exact versions, bounded reads and independent evaluation; preserve consumer isolation from source/oracles.\",\n      \"blocked_by\": [\n        \"B-RUNTIME\",\n        \"G-BINDING\"\n      ]\n    },\n    {\n      \"id\": \"G-UPDATE\",\n      \"state\": \"NOT_RUN_EXPECTATION_VALIDATED_ONLY\",\n      \"applicability\": \"S2-U1 and compatible local-use maintenance controls.\",\n      \"existing_evidence\": [\n        \"oracles/update-final-graph-expectation.json\",\n        \"evidence/u1-final-binding/receipt.json\",\n        \"judgments/final-closure-r1/j1.json\",\n        \"judgments/final-closure-r1/j2.json\"\n      ],\n      \"remaining\": \"Actual mutation, invalidation, restoration, reuse and proposer-call comparison. Bind existing frozen intent and explicitly missing concrete mutation/observable definitions before execution. Validate expected potential closure without assuming nine interpretation calls. Bind common controls for add/remove, intent/recipe, missing input/edge, authority/validity/gap, receipt refresh and unchanged-result stopping.\",\n      \"blocked_by\": [\n        \"B-RUNTIME\",\n        \"G-BINDING\"\n      ]\n    },\n    {\n      \"id\": \"G-RECOVERY\",\n      \"state\": \"HOLD\",\n      \"applicability\": \"S2 coherence, stale-current refusal, rollback, durable resume and independent valid scope.\",\n      \"existing_evidence\": [\n        \"evidence/final-closure-support/s4-observations-full.json\",\n        \"evidence/s4-discovery-r3/support/ci-summary.json\"\n      ],\n      \"remaining\": \"Relevant compatible common-control bindings and S2 local-use proof on an actual exact candidate. S4 sample is not S2 execution.\",\n      \"blocked_by\": [\n        \"B-RUNTIME\",\n        \"G-BINDING\"\n      ]\n    },\n    {\n      \"id\": \"G-CI\",\n      \"state\": \"HOLD\",\n      \"applicability\": \"Required S2 final-payload remote gates; exact implementation compatibility.\",\n      \"existing_evidence\": [\n        \"evidence/ci-final-readbacks/run-43065851373.json\",\n        \"evidence/ci-final-readbacks/run-43077975153.json\",\n        \"evidence/guards-remote-plan.json\",\n        \"verification/guards.test.ts\"\n      ],\n      \"remaining\": \"Actual authorized S2 payload and applicable GitHub Actions results. S4 run43065851373 failed at e3a; run43077975153 passed at7102. Neither is S2 final-payload CI. Do not transfer the different candidate verdict.\",\n      \"blocked_by\": [\n        \"B-RUNTIME\",\n        \"B-PUBLICATION\"\n      ]\n    },\n    {\n      \"id\": \"G-PROVENANCE\",\n      \"state\": \"LOCAL_RECORDS_RECONCILED_WITH_DECLARED_LIMITS\",\n      \"applicability\": \"Current observable requests/responses, transport corrections, source/body provenance and accounting.\",\n      \"existing_evidence\": [\n        \"evidence/final-usage-delta/reconciled-01/observable-usage-delta.json\",\n        \"evidence/final-closure-response-preservation.json\",\n        \"evidence/original-preservation-final.json\",\n        \"execution-ledger.jsonl\"\n      ],\n      \"remaining\": \"Retain missing original activation envelopes, nonexhaustive source/support/provider totals, UNKNOWN telemetry and historical GLOBAL_UNRECONCILED. Applicable shared route/reservation/adapter guarantee remains unevidenced; current scoped bookkeeping is complete through the named receipts.\",\n      \"blocked_by\": [\n        \"B-SHARED-ACCOUNTING-GUARANTEE\"\n      ]\n    },\n    {\n      \"id\": \"G-PUBLICATION\",\n      \"state\": \"BLOCKED_AUTOMATIC_APPROVAL\",\n      \"applicability\": \"Public GitHub payload P, separate handoff seal H, leased branch update and exact readback.\",\n      \"existing_evidence\": [\n        \"evidence/archive-publication-rejection.json\",\n        \"evidence/remote-publication-rejection.json\",\n        \"evidence/final-repository-metadata.json\"\n      ],\n      \"remaining\": \"Explicit informed authorization for the complete concrete public-disclosure package, or an authorized safer destination. Then fresh HEAD B, P descendant of B, H descendant of P, expected_sha=B/force:false, exact readback. No retry before authorization.\",\n      \"blocked_by\": [\n        \"B-PUBLICATION\"\n      ]\n    },\n    {\n      \"id\": \"G-CLOSURE\",\n      \"state\": \"INCOMPLETE_BLOCKED\",\n      \"applicability\": \"All eight local completion requirements in pinned completion.md.\",\n      \"existing_evidence\": [\n        \"evidence/final-criterion-matrix.json\",\n        \"evidence/final-closure-response-preservation.json\",\n        \"work.md\",\n        \"handoff.json\",\n        \"evidence/final-record-correction-resolution.json\"\n      ],\n      \"remaining\": \"Operational gates remain open. Both actual record corrections are satisfied; exact complete export is verified by the external receipt. DELIVERY_COMPLETE remains false.\",\n      \"blocked_by\": [\n        \"B-RUNTIME\",\n        \"B-PUBLICATION\",\n        \"B-SHARED-ACCOUNTING-GUARANTEE\"\n      ]\n    }\n  ],\n  \"limits\": \"No open item becomes N/A because the runtime or permission is absent.\",\n  \"record_correction_resolution\": {\n    \"path\": \"evidence/final-record-correction-resolution.json\",\n    \"byte_length\": 1719,\n    \"sha256\": \"fc3de552313eed260fd1a484b3564a56555bb7616d6fe6949beeba594704a17b\"\n  },\n  \"final_record_synchronized_at\": \"2026-11-11T21:47:44.251236+00:00\"\n}\n"
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/final-criterion-matrix.json",
+      "byte_length": 108664,
+      "sha256": "131278c71dd42659f760137a733aa1a21f1f622d84135df4ff93619bd348ec20",
+      "git_blob_sha": "0091ddee1b5aa727e9a442413e9329538ce233fe",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/final-criterion-matrix.json",
+      "identity_fields": {
+        "recorded_at": "2026-11-11T21:33:48.981909+00:00",
+        "execution_id": "46d09d97-39a9-482a-a290-646ba1d94c99",
+        "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+        "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+        "normative_registry": {
+          "path": "/workspace/scratch/7b5d6430f420/genesis-s2/protocol/references/criteria.json",
+          "byte_length": 4001,
+          "sha256": "8f86bdd36949185df39f729a2de16c5ea7166ccd1638f74b197cad60d1551116"
+        },
+        "normative_source": {
+          "path": "/workspace/scratch/7b5d6430f420/genesis-s2/corpus/modules/atlas/docs/design/genesis-ownership-plan.md",
+          "byte_length": 28267,
+          "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+          "git_blob_sha": "b45a73f17c34341097a8c8725a1df6260cd273b5"
+        }
+      },
+      "criterion_extracts": [
+        {
+          "id": "AC-01",
+          "normative_line": "| AC-01 | **Coverage, judged + mechanical:** freeze the finite slice inventory: needs → required artifacts → sources → cases below. Every required need has accepted support; intentional unknowns are named in advance. Unknown critical required knowledge fails acceptance. Mechanical mapping completeness does not judge semantic sufficiency. |",
+          "normative_source_line": 138,
+          "local_obligation": "Account for 4506 paths/156 families and all 13 required keys.",
+          "local_status": "PASS",
+          "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+          "judge_decisions": {
+            "j1": {
+              "status": "PASS",
+              "group_pointer": "/criterion_groups/0",
+              "response": {
+                "path": "judgments/final-closure-r1/j1.json",
+                "byte_length": 22520,
+                "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+              }
+            },
+            "j2": {
+              "status": "PASS",
+              "group_pointer": "/criterion_groups/0",
+              "response": {
+                "path": "judgments/final-closure-r1/j2.json",
+                "byte_length": 19521,
+                "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+              }
+            }
+          },
+          "scope_difference": false,
+          "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+          "related_gate_refs": [
+            "G-CLOSURE"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "status": "DEFERRED_TO_INTEGRATION",
+            "proof": "Review coverage union and cross-domain flow sufficiency."
+          }
+        },
+        {
+          "id": "AC-02",
+          "normative_line": "| AC-02 | **Ownership, judged:** an Atlas-only consumer correctly handles a permitted change, contract violation, cross-component impact, operational failure and deliberately out-of-scope question. Freeze expected reasoning/consequences, critical mistakes and evidence before production. All required answers must match; the unknown case must abstain. The author alone cannot certify this row. |",
+          "normative_source_line": 139,
+          "local_obligation": "Run five frozen ownership cases with independent Atlas-only consumers.",
+          "local_status": "HOLD",
+          "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+          "judge_decisions": {
+            "j1": {
+              "status": "HOLD",
+              "group_pointer": "/criterion_groups/1",
+              "response": {
+                "path": "judgments/final-closure-r1/j1.json",
+                "byte_length": 22520,
+                "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+              }
+            },
+            "j2": {
+              "status": "HOLD",
+              "group_pointer": "/criterion_groups/2",
+              "response": {
+                "path": "judgments/final-closure-r1/j2.json",
+                "byte_length": 19521,
+                "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+              }
+            }
+          },
+          "scope_difference": false,
+          "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+          "related_gate_refs": [
+            "G-CONSUMERS",
+            "G-CLOSURE"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "status": "DEFERRED_TO_INTEGRATION",
+            "proof": "Run ownership cases for integrated cross-domain use."
+          }
+        },
+        {
+          "id": "AC-03",
+          "normative_line": "| AC-03 | **Consumption, mixed:** skill states working protocol and index usage; actual index reads reach purpose, behavior, constraints, decisions, impact, verification and evidence within fixed task-specific read/context bounds. A routine task stops shallow; a deeper task reaches supporting knowledge. Each intermediate artifact has a direct-use case. Validate real readers, not only Markdown links. |",
+          "normative_source_line": 140,
+          "local_obligation": "Run nine direct-use cases plus bounded ownership navigation.",
+          "local_status": "HOLD",
+          "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+          "judge_decisions": {
+            "j1": {
+              "status": "HOLD",
+              "group_pointer": "/criterion_groups/1",
+              "response": {
+                "path": "judgments/final-closure-r1/j1.json",
+                "byte_length": 22520,
+                "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+              }
+            },
+            "j2": {
+              "status": "HOLD",
+              "group_pointer": "/criterion_groups/2",
+              "response": {
+                "path": "judgments/final-closure-r1/j2.json",
+                "byte_length": 19521,
+                "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+              }
+            }
+          },
+          "scope_difference": false,
+          "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+          "related_gate_refs": [
+            "G-CONSUMERS",
+            "G-CLOSURE"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "status": "DEFERRED_TO_INTEGRATION",
+            "proof": "Validate integrated progressive use and union navigation."
+          }
+        },
+        {
+          "id": "AC-04",
+          "normative_line": "| AC-04 | **Construction, mixed:** real paths ingest existing knowledge and construct missing understanding; labelled stale/conflicting/missing/malicious-source fixtures are handled without inventing intent, hiding conflict, granting authority or publishing unsupported required content. A canned final document cannot satisfy the producer test. |",
+          "normative_source_line": 141,
+          "local_obligation": "Preserve real native construction and prove exact import/source authority handling.",
+          "local_status": "HOLD",
+          "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+          "judge_decisions": {
+            "j1": {
+              "status": "HOLD",
+              "group_pointer": "/criterion_groups/4",
+              "response": {
+                "path": "judgments/final-closure-r1/j1.json",
+                "byte_length": 22520,
+                "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+              }
+            },
+            "j2": {
+              "status": "HOLD",
+              "group_pointer": "/criterion_groups/4",
+              "response": {
+                "path": "judgments/final-closure-r1/j2.json",
+                "byte_length": 19521,
+                "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+              }
+            }
+          },
+          "scope_difference": false,
+          "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+          "related_gate_refs": [
+            "G-RUNTIME",
+            "G-BINDING",
+            "G-CLOSURE"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "status": "DEFERRED_TO_INTEGRATION",
+            "proof": "Check five-package compatibility and union authority controls."
+          }
+        },
+        {
+          "id": "AC-05",
+          "normative_line": "| AC-05 | **Reuse, mechanical:** identical inputs/recipe produce a cache hit with zero proposer calls; an independent edit preserves unrelated result identities and call counts. Equal prose with changed authority/validity/gaps MUST propagate; a receipt-only change refreshes bindings without new downstream interpretation. An unchanged validated consumer-visible result stops downstream rebuild. Build dependency edits invalidate dependents, unlike navigation-only links. |",
+          "normative_source_line": 142,
+          "local_obligation": "Prove reuse, independent identity preservation and result/receipt semantics.",
+          "local_status": "HOLD",
+          "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+          "judge_decisions": {
+            "j1": {
+              "status": "HOLD",
+              "group_pointer": "/criterion_groups/2",
+              "response": {
+                "path": "judgments/final-closure-r1/j1.json",
+                "byte_length": 22520,
+                "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+              }
+            },
+            "j2": {
+              "status": "HOLD",
+              "group_pointer": "/criterion_groups/3",
+              "response": {
+                "path": "judgments/final-closure-r1/j2.json",
+                "byte_length": 19521,
+                "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+              }
+            }
+          },
+          "scope_difference": false,
+          "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+          "related_gate_refs": [
+            "G-UPDATE",
+            "G-CLOSURE"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "status": "DEFERRED_TO_INTEGRATION",
+            "proof": "Prove cross-domain independence and propagation stopping."
+          }
+        },
+        {
+          "id": "AC-06",
+          "normative_line": "| AC-06 | **Incremental correctness, mixed:** behavior edit, added/removed source, intent-doc change and recipe change produce the independently expected affected set. Rebuilds restore required knowledge; mutation controls omit an edge/input and must fail. Detecting staleness alone is insufficient. |",
+          "normative_source_line": 143,
+          "local_obligation": "Prove expected affected set and actual knowledge restoration.",
+          "local_status": "HOLD",
+          "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+          "judge_decisions": {
+            "j1": {
+              "status": "HOLD",
+              "group_pointer": "/criterion_groups/2",
+              "response": {
+                "path": "judgments/final-closure-r1/j1.json",
+                "byte_length": 22520,
+                "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+              }
+            },
+            "j2": {
+              "status": "HOLD",
+              "group_pointer": "/criterion_groups/3",
+              "response": {
+                "path": "judgments/final-closure-r1/j2.json",
+                "byte_length": 19521,
+                "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+              }
+            }
+          },
+          "scope_difference": false,
+          "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+          "related_gate_refs": [
+            "G-UPDATE",
+            "G-CLOSURE"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "status": "DEFERRED_TO_INTEGRATION",
+            "proof": "Prove cross-domain impacted closure and rebuilt union."
+          }
+        },
+        {
+          "id": "AC-07",
+          "normative_line": "| AC-07 | **Publication/recovery, mechanical:** inject failure between generation and activation, interrupt/resume, and concurrent reads. A separate reader observes only a complete accepted manifest valid for current inputs/contracts or HOLD. A failed rebuild after source drift cannot fall back to stale knowledge as current. Resume reuses durable completions; rollback rejects incompatible source bindings; historical reads are labelled. |",
+          "normative_source_line": 144,
+          "local_obligation": "Prove coherent local accepted reads or HOLD during recovery.",
+          "local_status": "HOLD",
+          "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+          "judge_decisions": {
+            "j1": {
+              "status": "HOLD",
+              "group_pointer": "/criterion_groups/3",
+              "response": {
+                "path": "judgments/final-closure-r1/j1.json",
+                "byte_length": 22520,
+                "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+              }
+            },
+            "j2": {
+              "status": "HOLD",
+              "group_pointer": "/criterion_groups/4",
+              "response": {
+                "path": "judgments/final-closure-r1/j2.json",
+                "byte_length": 19521,
+                "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+              }
+            }
+          },
+          "scope_difference": false,
+          "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+          "related_gate_refs": [
+            "G-BINDING",
+            "G-RECOVERY",
+            "G-CLOSURE"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "status": "DEFERRED_TO_INTEGRATION",
+            "proof": "Prove union concurrency, failure recovery and independent scopes."
+          }
+        },
+        {
+          "id": "AC-08",
+          "normative_line": "| AC-08 | **Economy, mechanical + approval:** one run ledger/reservation governs production, evaluation, retries and concurrent calls. Synthetic checks precede real calls. If real adapter conformance requires a paid call, it needs a bounded explicit authorization first, charged to the same global envelope. Only a conforming route may run the real slice. Report limits, usage and unsettled calls; no bytes-to-token or call-count-to-dollar fiction. |",
+          "normative_source_line": 145,
+          "local_obligation": "Report all new observable usage and true native-route limits.",
+          "local_status": "HOLD",
+          "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+          "judge_decisions": {
+            "j1": {
+              "status": "HOLD",
+              "group_pointer": "/criterion_groups/5",
+              "response": {
+                "path": "judgments/final-closure-r1/j1.json",
+                "byte_length": 22520,
+                "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+              }
+            },
+            "j2": {
+              "status": "HOLD",
+              "group_pointer": "/criterion_groups/5",
+              "response": {
+                "path": "judgments/final-closure-r1/j2.json",
+                "byte_length": 19521,
+                "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+              }
+            }
+          },
+          "scope_difference": false,
+          "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+          "related_gate_refs": [
+            "G-PROVENANCE",
+            "G-CLOSURE"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "status": "DEFERRED_TO_INTEGRATION",
+            "proof": "Reconcile common adapter guarantee, aggregate envelope and history."
+          }
+        },
+        {
+          "id": "AC-09",
+          "normative_line": "| AC-09 | **Git/CI/host, mechanical:** changed declared input, new input under registered scope, missing artifact, broken index reference, incompatible dependency version and invalid generation are rejected at intended gates/readers. A local invalid unit holds its required closure while an independent valid scope remains readable; shared manifest corruption holds its dependent reads. Known-good/bad controls use actual entry points. Report workflow scope and branch-protection enforcement separately. |",
+          "normative_source_line": 146,
+          "local_obligation": "Verify S2 component gates and actual invalid-state reader controls.",
+          "local_status": "HOLD",
+          "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+          "judge_decisions": {
+            "j1": {
+              "status": "HOLD",
+              "group_pointer": "/criterion_groups/3",
+              "response": {
+                "path": "judgments/final-closure-r1/j1.json",
+                "byte_length": 22520,
+                "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+              }
+            },
+            "j2": {
+              "status": "HOLD",
+              "group_pointer": "/criterion_groups/4",
+              "response": {
+                "path": "judgments/final-closure-r1/j2.json",
+                "byte_length": 19521,
+                "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+              }
+            }
+          },
+          "scope_difference": false,
+          "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+          "related_gate_refs": [
+            "G-CI",
+            "G-BINDING",
+            "G-RECOVERY",
+            "G-CLOSURE"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "status": "DEFERRED_TO_INTEGRATION",
+            "proof": "Run integrated gates; report actual branch protection and scope isolation."
+          }
+        },
+        {
+          "id": "AC-10",
+          "normative_line": "| AC-10 | **Preservation/migration, mechanical + review:** baseline inventory of protected campaign objects remains exact; old producers cannot publish into the new accepted scope accidentally. Stage new outputs without consumer authority, activate explicitly, preserve old accepted state for rollback and keep unrelated scopes usable. Generated boundaries change only through their generators. |",
+          "normative_source_line": 147,
+          "local_obligation": "Preserve S2 protected objects and generated boundaries; stage without authority.",
+          "local_status": "HOLD",
+          "status_scope": "RECORDED_INTERSECTION_OF_ACTUAL_SCOPED_CLOSURE_DECISIONS",
+          "judge_decisions": {
+            "j1": {
+              "status": "HOLD",
+              "group_pointer": "/criterion_groups/3",
+              "response": {
+                "path": "judgments/final-closure-r1/j1.json",
+                "byte_length": 22520,
+                "sha256": "30077918fe71b06884042a4255cfd867c8a7684adadf7d7f80ae5b2b4fca6339"
+              }
+            },
+            "j2": {
+              "status": "HOLD",
+              "group_pointer": "/criterion_groups/4",
+              "response": {
+                "path": "judgments/final-closure-r1/j2.json",
+                "byte_length": 19521,
+                "sha256": "22b99eb550488aec3ec2d3db1be4d1d99a3459346e24647f71ad86761d05bc27"
+              }
+            }
+          },
+          "scope_difference": false,
+          "scope_note": "Exact satisfied and outstanding portions are retained in both original criterion groups.",
+          "related_gate_refs": [
+            "G-PROVENANCE",
+            "G-RECOVERY",
+            "G-PUBLICATION",
+            "G-CLOSURE"
+          ],
+          "global_complement": {
+            "owner": "ROOT",
+            "status": "DEFERRED_TO_INTEGRATION",
+            "proof": "Reconcile full historical preservation, migration and activation."
+          }
+        }
+      ]
+    }
+  ],
+  "package_oracle_identity": {
+    "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/oracles/ownership-v1.json",
+    "byte_length": 12869,
+    "sha256": "87a571d85c09dbcc02df7c5360bde9cdca933768fe8bd81e00f044f33eed5ff1",
+    "git_blob_sha": "ab8ce49c9db4ff091b17022d4d4943c1b48513c2",
+    "verified_against_public_tree": true,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/oracles/ownership-v1.json",
+    "top_level_keys": [
+      "schema",
+      "scope",
+      "source_revision",
+      "freeze_stage",
+      "authority",
+      "read_limits",
+      "cases",
+      "impact_case",
+      "limits"
+    ],
+    "hash_matches_package_contract_ref": true,
+    "note": "Reserved answer content omitted from this provenance report; whole file inspected only to locate criterion/binding specialization fields."
+  },
+  "searched_files": [
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/corrections/l1-r2/producer-request.md",
+      "byte_length": 6670,
+      "sha256": "96c5504f18d269435b60a34e625cd6b40194eabc3be97dc38b20b0eeca2e5a36",
+      "git_blob_sha": "4afdec54ee57582f6bf239ba79807637b6e81a4f",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/corrections/l1-r2/producer-request.md",
+      "matching_lines": [
+        10,
+        34
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/corrections/l1-r3-app/producer-request.md",
+      "byte_length": 3110,
+      "sha256": "d21728c386a707bc7d9147f4f74617912032c2bda4e58e1d73e52d7084cd10dd",
+      "git_blob_sha": "c0972c91e8c079c90218e6d4b43f2e6b080bc652",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/corrections/l1-r3-app/producer-request.md",
+      "matching_lines": [
+        13
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/final-criterion-matrix.json",
+      "byte_length": 108664,
+      "sha256": "131278c71dd42659f760137a733aa1a21f1f622d84135df4ff93619bd348ec20",
+      "git_blob_sha": "0091ddee1b5aa727e9a442413e9329538ce233fe",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/final-criterion-matrix.json",
+      "matching_lines": [
+        10,
+        56,
+        66,
+        90,
+        91,
+        114,
+        115,
+        137,
+        138,
+        139,
+        146,
+        148,
+        155,
+        161,
+        182,
+        212,
+        213,
+        264,
+        287,
+        303,
+        304,
+        310,
+        314,
+        326,
+        327,
+        348,
+        349,
+        350,
+        351,
+        360,
+        368,
+        375,
+        436,
+        556,
+        558,
+        595,
+        624,
+        705,
+        717,
+        757,
+        796,
+        824,
+        837,
+        871,
+        876,
+        915,
+        954,
+        982,
+        994,
+        996,
+        1029,
+        1033,
+        1034,
+        1071,
+        1072,
+        1110,
+        1111,
+        1149,
+        1150,
+        1179,
+        1189,
+        1190,
+        1192,
+        1228,
+        1229,
+        1267,
+        1268,
+        1296,
+        1307,
+        1308,
+        1346,
+        1347,
+        1376,
+        1387,
+        1388,
+        1429,
+        1468,
+        1507,
+        1546,
+        1586,
+        1614,
+        1626,
+        1665,
+        1705,
+        1744,
+        1783,
+        1861,
+        1889,
+        2046,
+        2058,
+        2060,
+        2379
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/final-local-gates.json",
+      "byte_length": 7237,
+      "sha256": "048339c263babefcd20f66e04ce48670d684f33333679ccef7235efaeb592336",
+      "git_blob_sha": "249e89e1ad0b774576922416f55a48c8483c3a46",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/final-local-gates.json",
+      "matching_lines": [
+        14,
+        34,
+        36,
+        40,
+        57,
+        66,
+        73,
+        84,
+        87
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/native-transport-compatibility.json",
+      "byte_length": 1520,
+      "sha256": "8e60871e3a4a45266a3128210ecb65db11fe70a189cbcbfe6b8291fcd47e9dc5",
+      "git_blob_sha": "42dd34fa5bb0cb1447797944e1ad76f98bf6173f",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/native-transport-compatibility.json",
+      "matching_lines": [
+        33
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/handoff.json",
+      "byte_length": 20489,
+      "sha256": "c194bdcdb7d0cce584e96a2a18b87acc22966c168a27df3ac6002b07fb4fd6f1",
+      "git_blob_sha": "1825683bbb669f036d2c8c8be50b9f427a5be82d",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/handoff.json",
+      "matching_lines": [
+        80,
+        93,
+        239,
+        240,
+        261,
+        263,
+        267,
+        284,
+        293,
+        300,
+        311,
+        314,
+        524
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/oracles/ownership-v1.json",
+      "byte_length": 12869,
+      "sha256": "87a571d85c09dbcc02df7c5360bde9cdca933768fe8bd81e00f044f33eed5ff1",
+      "git_blob_sha": "ab8ce49c9db4ff091b17022d4d4943c1b48513c2",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/oracles/ownership-v1.json",
+      "matching_lines": [
+        250,
+        260
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/consumer-question-deck.json",
+      "byte_length": 5228,
+      "sha256": "51dacb110d80dd3e3f0fcf6cb3aa87ebb8a4c8d47e18abf76891d8bef430b356",
+      "git_blob_sha": "f069e31775a19b8b5f09ad99ca01e8b1349d36b2",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/consumer-question-deck.json",
+      "matching_lines": []
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l1-app-session-supplements.json",
+      "byte_length": 1446,
+      "sha256": "477f778589bae0d401b01e8d6e445a7cbc85e3e4e731c943de28fecb96d9bc60",
+      "git_blob_sha": "f21fcc909d356d249f76b346b53217a054bf07b3",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l1-app-session-supplements.json",
+      "matching_lines": []
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l1-app-session-transport.md",
+      "byte_length": 1472,
+      "sha256": "7054e74ab1b4ad05917b38dfb3a9230eca26475d28e81eac161aad75b125f539",
+      "git_blob_sha": "0ebb7f8cc15fa0ebf16d52ee624c17f8e1896756",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l1-app-session-transport.md",
+      "matching_lines": [
+        1
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l1-app-session.md",
+      "byte_length": 4330,
+      "sha256": "e0f3417d5b226c60a1f2ac9d5f439ac5e2469b23ff1f13e167e643bd6ea8fd75",
+      "git_blob_sha": "1182106e91a333b637ef5b07fea16bb66b9406f7",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l1-app-session.md",
+      "matching_lines": [
+        3,
+        4,
+        10
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l1-design-tui-supplements.json",
+      "byte_length": 1933,
+      "sha256": "fc59509cb5267bbe371055f1463dc1262cc19f3f1b5ac349e7b6300ba5b94389",
+      "git_blob_sha": "e23c26036b96aeaf38cc29ffd429df1b5a187174",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l1-design-tui-supplements.json",
+      "matching_lines": [
+        5,
+        7,
+        8
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l1-design-tui-transport.md",
+      "byte_length": 1468,
+      "sha256": "8b2ff3fd7445cacca4b1338ec4365151d1233a7fdc50e54a24d2663d4f65c77c",
+      "git_blob_sha": "fed312cce471a04e92fc3d4f85a8f61c62264285",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l1-design-tui-transport.md",
+      "matching_lines": [
+        1
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l1-design-tui.md",
+      "byte_length": 4303,
+      "sha256": "19bcbd487c1b21b53c81cdd180dc051d428a10bc0acbefeef2fb45ffc9306d00",
+      "git_blob_sha": "404c4c76ffbbd264c3ea8a8d364628246bbbc526",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l1-design-tui.md",
+      "matching_lines": [
+        3,
+        4,
+        10
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l1-desktop-web-supplements.json",
+      "byte_length": 1051,
+      "sha256": "300e137349396cabf3078e252345570ed979e7af1d029ecb77d4606beb7f0500",
+      "git_blob_sha": "77b5853df3ebb0acfe5800d792386f375868bcf2",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l1-desktop-web-supplements.json",
+      "matching_lines": []
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l1-desktop-web-transport.md",
+      "byte_length": 1472,
+      "sha256": "9795a50f2af09736a1176dcb7e5164cd229d6dfd281126a5ff523a1e92507ef4",
+      "git_blob_sha": "081f701469f0ba25f9f6813a1c8908dc610d7dbb",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l1-desktop-web-transport.md",
+      "matching_lines": [
+        1
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l1-desktop-web.md",
+      "byte_length": 4289,
+      "sha256": "f7115bf61eeb22895b57f0813fd1855b979bd4c8c7106a3f03745ee449563f5d",
+      "git_blob_sha": "68fa120d5dd40a4c5d9c7d3b6e60e4d646f449c6",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l1-desktop-web.md",
+      "matching_lines": [
+        3,
+        4,
+        10
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-app-session-dispatch.md",
+      "byte_length": 8543,
+      "sha256": "0cd465cb782425a419f6c52e7056e6d775c28aaae7e7b45e4c94ae7d1f785e60",
+      "git_blob_sha": "6f7ea7bff01e77e59a240cfb7e7954efb50859be",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-app-session-dispatch.md",
+      "matching_lines": [
+        15,
+        16
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-complete.md",
+      "byte_length": 3759,
+      "sha256": "56d2c142b0f5f10f79eed024373b2547c3cd707de77b06d6913a6110ebd1c458",
+      "git_blob_sha": "7498713a85be8c4a9b8c7ff87cc30afa2e30407b",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-complete.md",
+      "matching_lines": [
+        15,
+        16
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-design-tui-dispatch.md",
+      "byte_length": 8541,
+      "sha256": "bb772f04a0dafd521e20531c31865ce7dc9e999d36ba0b8026e8b63b8fc1af40",
+      "git_blob_sha": "2d68590b7756670cd557af964261ae2d23992ee5",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-design-tui-dispatch.md",
+      "matching_lines": [
+        15,
+        16
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-desktop-web-dispatch.md",
+      "byte_length": 8543,
+      "sha256": "35ac19160905bd95fddede62be0e9e1d569e20425eb8e15493421ed7a53c8f5c",
+      "git_blob_sha": "cd54dc3ade054492f490b45dac3f44f8ad76a01f",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-desktop-web-dispatch.md",
+      "matching_lines": [
+        15,
+        16
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-app-session-dispatch.md",
+      "byte_length": 8597,
+      "sha256": "125f7a8c157d2dfc76f0f118babba54aa4a1896416efa2d307d51be683964f20",
+      "git_blob_sha": "3176fd12a7b79730afe50afb168ac50e1f6f9768",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-app-session-dispatch.md",
+      "matching_lines": [
+        15,
+        16
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-complete.md",
+      "byte_length": 3691,
+      "sha256": "9899051a8db6cf82b63886c7c6ee54f4ddccd4c2dd5e4cda9d27650e19a99342",
+      "git_blob_sha": "0222ba4883e5de320b611ec1ff61f194f2f8684f",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-complete.md",
+      "matching_lines": [
+        15,
+        16
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-design-tui-dispatch.md",
+      "byte_length": 8595,
+      "sha256": "325383a663ac0c275419653f7b12c5836ed3c47efb8f066408bc25898b524949",
+      "git_blob_sha": "d549e50697a714c789b4e3a713035e908c804ba2",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-design-tui-dispatch.md",
+      "matching_lines": [
+        15,
+        16
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-design-tui-r2-correction.md",
+      "byte_length": 3465,
+      "sha256": "15d91eb9a18a571488e912a56970783de61eb7d28fef8fce6e138a840d299274",
+      "git_blob_sha": "ebfad3693f656f80bf83fa09a85c0b263ad093af",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-design-tui-r2-correction.md",
+      "matching_lines": [
+        17
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-desktop-web-dispatch.md",
+      "byte_length": 8597,
+      "sha256": "ff214eb6c55241300affe3932ca99403ad9913302804bffc04c64f367e7a1f7e",
+      "git_blob_sha": "b20f4efcf07366ea6953a52c03fade50b8f1bdd5",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-desktop-web-dispatch.md",
+      "matching_lines": [
+        15,
+        16
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-app-session-dispatch.md",
+      "byte_length": 9363,
+      "sha256": "0d0932d214322396b93b998dc7665718be7d0e880a87253a5f918f258bdaef4f",
+      "git_blob_sha": "ec5a4781415ea16dd9e3ee3f2479b3a9b94a5abb",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-app-session-dispatch.md",
+      "matching_lines": [
+        15,
+        16
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-complete.md",
+      "byte_length": 3987,
+      "sha256": "7d6cfd9b0115b07ca49753df9030476c3235694b3c7ba9c3c6d0309026598b8c",
+      "git_blob_sha": "b36166c402f5b8b9f1497cdbbc3e73a6b5ddf900",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-complete.md",
+      "matching_lines": [
+        15,
+        16
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-design-tui-dispatch.md",
+      "byte_length": 9361,
+      "sha256": "8aa7d8c7838111adb949ed2612d6beb44e4e2fd37fb91931c7f7d3aeeb958aec",
+      "git_blob_sha": "ad3d47c4566c10b7b6b339ca50820a0d64b5f425",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-design-tui-dispatch.md",
+      "matching_lines": [
+        15,
+        16
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-desktop-web-dispatch.md",
+      "byte_length": 9363,
+      "sha256": "2dd13862d3ede895dabea2269bc8d4ec3254e05350042a2ba52c535feb4a3c38",
+      "git_blob_sha": "665946d34fb93c061c3d439b9be522ed87512e8b",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-desktop-web-dispatch.md",
+      "matching_lines": [
+        15,
+        16
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-entry-dispatch.md",
+      "byte_length": 9490,
+      "sha256": "77249172b64d05aad8b344bce1d6dbadca80901b01579c67ed0137623d836b68",
+      "git_blob_sha": "da98f619a7f75aec871a362292a96624a0e0ad91",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-entry-dispatch.md",
+      "matching_lines": [
+        15,
+        16
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-entry-r2-correction.md",
+      "byte_length": 3192,
+      "sha256": "0dff7a29abe4560a5e4a6eb222cc97d56314a72ed0fc8050b3671d05ca3bfc53",
+      "git_blob_sha": "82f440d3b1d8f5033b57598895370f9509ff036b",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l4-entry-r2-correction.md",
+      "matching_lines": [
+        5
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/native-production-plan.json",
+      "byte_length": 1884,
+      "sha256": "c143e65c43fe9fd8816c8f4ca3f636b019e1fec0c3f02a7d5701f4b1bf082ea0",
+      "git_blob_sha": "7fb9deffd6037781056750dafdd379222d2cdafc",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/native-production-plan.json",
+      "matching_lines": [
+        15,
+        20,
+        29
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/runtime-compatibility-after-native-failure.md",
+      "byte_length": 4237,
+      "sha256": "5058caeb2706c1cb630f0e838880379457cd386fa16bf6bf9fe651947f1d04fc",
+      "git_blob_sha": "579358acca04ff6c424bbb0d152697614f142be1",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/runtime-compatibility-after-native-failure.md",
+      "matching_lines": [
+        17,
+        31,
+        33
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/runtime-compatibility-note.md",
+      "byte_length": 2348,
+      "sha256": "3eb64069905e66df00f39ba372b609b9a7422b4d7c05bb4773f385b2654621b8",
+      "git_blob_sha": "81d2f6538103a9bca5bddaabde21356c2a1bd8fb",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/runtime-compatibility-note.md",
+      "matching_lines": [
+        11,
+        15,
+        19
+      ]
+    },
+    {
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/work.md",
+      "byte_length": 28278,
+      "sha256": "5fe1959e7615b035175d303227f81df1a465925e81c004bc1d91c6b7f2001ca1",
+      "git_blob_sha": "78cca60d416741018ea73b5754eb4eb321e0fb6d",
+      "verified_against_public_tree": true,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/work.md",
+      "matching_lines": [
+        3,
+        9,
+        10,
+        69,
+        77,
+        79,
+        92,
+        99,
+        103,
+        104,
+        105,
+        106,
+        107,
+        108,
+        109,
+        110,
+        111,
+        112,
+        113,
+        130,
+        146,
+        149,
+        171,
+        177,
+        183
+      ]
+    }
+  ],
+  "search_method": {
+    "tool": "rg",
+    "pattern": "AC-0[1-9]|AC-10|binding|transformation|transforma|criteria|critério|semantic|semântic|consumer authority",
+    "search_paths": [
+      "corrections/l1-r2/producer-request.md",
+      "corrections/l1-r3-app/producer-request.md",
+      "evidence/final-criterion-matrix.json",
+      "evidence/final-local-gates.json",
+      "evidence/native-transport-compatibility.json",
+      "handoff.json",
+      "oracles/ownership-v1.json",
+      "requests/consumer-question-deck.json",
+      "requests/l1-app-session-supplements.json",
+      "requests/l1-app-session-transport.md",
+      "requests/l1-app-session.md",
+      "requests/l1-design-tui-supplements.json",
+      "requests/l1-design-tui-transport.md",
+      "requests/l1-design-tui.md",
+      "requests/l1-desktop-web-supplements.json",
+      "requests/l1-desktop-web-transport.md",
+      "requests/l1-desktop-web.md",
+      "requests/l2-app-session-dispatch.md",
+      "requests/l2-complete.md",
+      "requests/l2-design-tui-dispatch.md",
+      "requests/l2-desktop-web-dispatch.md",
+      "requests/l3-app-session-dispatch.md",
+      "requests/l3-complete.md",
+      "requests/l3-design-tui-dispatch.md",
+      "requests/l3-design-tui-r2-correction.md",
+      "requests/l3-desktop-web-dispatch.md",
+      "requests/l4-app-session-dispatch.md",
+      "requests/l4-complete.md",
+      "requests/l4-design-tui-dispatch.md",
+      "requests/l4-desktop-web-dispatch.md",
+      "requests/l4-entry-dispatch.md",
+      "requests/l4-entry-r2-correction.md",
+      "requests/native-production-plan.json",
+      "requests/runtime-compatibility-after-native-failure.md",
+      "requests/runtime-compatibility-note.md",
+      "work.md"
+    ],
+    "exit_code": 0,
+    "matching_output_lines": 197,
+    "stderr": "",
+    "searched_bytes_are_frozen_public_blobs": true,
+    "new_binding_reviews_read": false,
+    "oracle_answers_exported": false
+  },
+  "subsequent_distinct_protocol": {
+    "discovery_basis": "Root identified this additional route after the original scoped search; checked separately on db9b423.",
+    "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "not_retroactive_package_rule": true,
+    "package_protocol_ref_still_points_to_original_transport": true,
+    "documented_distinction": "evaluation-admission.md defines a separate finite isolated evaluation phase, immutable original obligations with status PENDING_FINAL_EVIDENCE and four separately defined ADMIT criteria; it explicitly says admission is not an AC PASS/final acceptance. CLI contains prepare/init-store/admit/admit-target/read/index modes and no ordinary publish/promotion command.",
+    "sources": [
+      {
+        "commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+        "path": "modules/atlas/docs/design/evaluation-admission.md",
+        "byte_length": 7386,
+        "sha256": "1ec5b3e0deb36a0b793621b75263f36fed4e4e94889ae56951de36c66e2c29e3",
+        "git_blob_sha": "974736437d308736eb508423bc22564d358bd3f3",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/evaluation-admission.md",
+        "full_text": "# Ownership evaluation admission protocol v1\n\nThis protocol adds a finite isolated evaluation phase. It does not redefine the acceptance criteria, grant operational authority, or mark a campaign complete.\n\n## Immutable obligations and acyclic identity order\n\n1. Preserve the original source package, candidate, contract, criteria definitions, frozen oracles and semantic decisions. The obligation set references these exact objects and retains all final duties. Its status is PENDING_FINAL_EVIDENCE.\n2. Fix the evaluation plan: source materialization, finite consumer IDs and per-case modes/read limits, maintenance controls, semantic applicability and limitations per entry, isolated root and implementation pins. It contains no reserved answers.\n3. Compute the plan and obligation-set CAS identities. Compute each admission contract from these references and the four separately defined ADMIT criteria. Contracts never refer to the new candidate.\n4. Compute the complete candidate from actual inputs/results/dependencies, source observations, plan, contracts and executing runtime identity. No decision, receipt or manifest is in this preimage.\n5. Fix a generation independently of objects that will reference it. For initial admission it may be chosen after the candidate. For rebuild it must be fixed before the target plan, which includes it.\n6. Obtain two new distinct exact admission decisions for the complete candidate and every required entry. Decisions bind contract, input/dependency hash and result. They are not final AC verdicts.\n7. Persist reviews from those exact decisions, then receipts, artifacts and manifest. Each v2 authority envelope is evaluation-only and binds the plan/obligations; all except contracts additionally bind candidate. The manifest binds generation. No backward hash dependency is introduced.\n\nChanged source, membership, recipe, result authority, validity, gaps, applicability or implementation creates new identities and invalidates affected proofs. Equal prose does not imply equal result identity. Historical semantic evidence is never silently converted into a new admission decision.\n\n## Isolation and real readers\n\nPrepare is CAS-only. Initialization is explicit and refuses a pre-existing active/staged store, policy or descriptor. The evaluation source root cannot be the original root, an ancestor or its descendant. Mutable state cannot use symlinks or hardlink aliases. A marker records canonical root/device/inode, original root and CAS-only initialization. Policy is a separate strict versioned document, bound to exact plan/candidate/generation/scope, actor, operations and optional finite consumer case. The marker is not itself permission.\n\nOperational composition defaults to refusal on evaluation stores. The existing composed ownership reader and governed writer remain the only serving/admission path. The closed ownership predicate slot is retained, with a distinct evaluation-only claim bound to candidate identity. Manifest/contract/receipt/review v2 discriminants, not the spelling of a path or claim alone, enforce the phase.\n\nSelection and attachment verify exact candidate mapping and current inputs, with all required entries checked. Generic query, node and export doors cannot disclose ownership CAS objects as accepted facts. Direct node resolution is not a bypass around projection/phase checks. Replay cannot apply or stage evaluation carriers into ordinary authority. Explicit evaluation output retains phase/generation/candidate labels; unavailable, drifted or unapproved state returns HOLD.\n\nConsumer policy names a case and its frozen mode. A persistent per-candidate/generation/case ledger bounds index calls, read calls and delivered body bytes. Lock contention, stale partial budget files and exhaustion refuse rather than silently resetting. Consumer contexts receive questions and permitted reader access only, not source access, producer context or reserved answers. Mechanism tests do not establish that real consumer cases passed.\n\n## Maintenance without promotion\n\nLegacy v1 rebuild explicitly refuses v2. Evaluation rebuild has two stages: capture/plan/produce a complete private target, then receive two new exact target decisions and finalize a private v2 graph. Identical captured inputs/recipe return reuse with zero producer calls. A changed result requires fresh result-specific semantic evidence. Captured bytes and membership are checked before and after production; missing inputs/edges or stale reviews refuse.\n\nA target may be materialized in a fresh isolated root. Target admission is a distinct lineage-checked route, not an exemption from the original native prepare equality check. It requires actual current source/runtime checks, preserved obligation identity and exact new decisions. Existing active state is not overwritten by bootstrap; operational activation is not provided. Recovery of interrupted/contended state must remain explicit and cannot return stale data as current.\n\n## Final acceptance and evidence\n\nAll original AC, criterion matrix, frozen cases and DoD remain mandatory at their proper local/global scopes. Admission is neither an AC PASS nor final acceptance. Final evidence must separately include actual consumers, maintenance controls and required CI, evaluated by the required independent reviewers. A future accepted-phase publication requires a new exact candidate and separately authorized operational policy, not changing an evaluation flag in place.\n\nLocal actor strings and editable policy are not authenticated identity or protection against the same OS user rewriting code and all records. The implemented boundary is deterministic refusal through supported runtime doors, not an OS sandbox guarantee. CI fixtures and synthetic votes are test data only. Typecheck, generated-boundary verification, CI, candidate admission and campaign acceptance are separate results.\n\n## Runtime coverage and operational doors\n\nRuntime identity includes the adapter execution tree, package manifest, mandatory Atlas packages (contracts, genesis, grounding, index, kernel, knowledge, memory, persist, retrieval and tools), and their declared runtime dependency closure. Dependencies, present optional dependencies and peer dependencies are traversed package by package, not by scanning unrelated node_modules. An absent optional package is recorded explicitly; missing mandatory dependencies and conflicting resolved versions refuse. Resolved Atlas execution trees and complete external package files bind code and dynamically loaded assets, with node_modules traversed only through declarations. Engine versions are bound separately. This is coverage of the installed declared runtime, not a claim to authenticate the operating system or undeclared host executables.\n\nEvaluation composition exposes only the bounded ownership reader and the guarded admission/check path. Other operational methods and tools, including link, reconciliation, promotion, memory and relation producers, refuse before execution. Special emit families cannot branch around evaluation authorization. Direct public assembler selection applies the same phase boundary. Generic CAS export/import and the UI surface explicitly refuse evaluation state or copied evaluation graphs/carriers, rather than dropping part of a bundle and reporting success. Legacy v1 bulk transfer remains distinct.\n",
+        "introduction_history": [
+          {
+            "commit": "658edba90e2b7b32df72664f312bb9a4a9550d81",
+            "authored_at": "2026-11-12T20:24:53-03:00",
+            "committed_at": "2026-11-12T20:24:53-03:00",
+            "subject": "feat(atlas): add explicit isolated ownership evaluation admission"
+          }
+        ]
+      },
+      {
+        "commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+        "path": "modules/atlas/scripts/genesis-evaluation.ts",
+        "byte_length": 3558,
+        "sha256": "3f7477b37400c1ffeea550ca0d48b328b16dedcea4deb015ad190128ff63b94c",
+        "git_blob_sha": "960d6d651242ea1ce7dde77d095e0604337c718b",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/blob/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/scripts/genesis-evaluation.ts",
+        "full_text": "// Isolated evaluation only. No policy creation, ordinary publish, or promotion command.\nimport { writeFileSync } from \"node:fs\"\nimport { resolve, dirname, basename } from \"node:path\"\nimport { isOwnershipNeed } from \"@atlas/knowledge\"\nimport { prepareEvaluation, admitEvaluation, admitEvaluationRebuildTarget } from \"../packages/adapter-io/src/genesis-evaluation.js\"\nimport { loadEvaluationAccess, initializeEvaluationStore } from \"../packages/adapter-io/src/ownership-evaluation-policy.js\"\nimport { nativeRoot, readNativeFile, decodeNativeUtf8 } from \"../packages/adapter-io/src/genesis-native-io.js\"\nimport { nativePath, nativeRecord, nativeKeys, nativeText, validateNativeReadQuery } from \"../packages/adapter-io/src/genesis-native-format.js\"\n\nasync function main() {\n  const [mode, repo, first, second, ...extra] = process.argv.slice(2)\n  if (!repo || !first || extra.length || ![\"prepare\", \"init-store\", \"admit\", \"admit-target\", \"read\", \"index\"].includes(mode ?? \"\") ||\n    ((mode === \"prepare\" || mode === \"init-store\" || mode === \"admit\" || mode === \"admit-target\") ? !second : second !== undefined)) throw new Error(\"evaluation: prepare|admit root input output-or-approval; read|index root query\")\n  const root = nativeRoot(repo)\n  const control = (path: string) => { const file = resolve(path); return JSON.parse(decodeNativeUtf8(readNativeFile(nativeRoot(dirname(file)), nativePath(basename(file))))) }\n  if (mode === \"prepare\") {\n    const prepared = prepareEvaluation(root, first), output = resolve(second!)\n    nativeRoot(dirname(output)); nativePath(basename(output))\n    writeFileSync(output, JSON.stringify(prepared, null, 2) + \"\\n\", { flag: \"wx\" })\n    console.log(JSON.stringify(prepared)); return\n  }\n  if (mode === \"init-store\") {\n    const prepared = nativeRecord(control(first), \"prepared\")\n    if (prepared.schema !== \"genesis-native-prepared/v2\") throw new Error(\"evaluation-prepared-schema\")\n    initializeEvaluationStore(root, nativeText(prepared.candidate_id, \"candidate\") as import(\"@atlas/contracts\").Hash, second! as import(\"@atlas/contracts\").Hash)\n    console.log(JSON.stringify({ kind: \"evaluation-store-initialized\", policy: \"NOT_CREATED\", admission: \"NOT_RUN\" })); return\n  }\n  if (mode === \"admit\" || mode === \"admit-target\") {\n    const result = mode === \"admit\" ? await admitEvaluation(root, control(first), second!) : await admitEvaluationRebuildTarget(root, control(first), second!)\n    console.log(JSON.stringify(result))\n    if (result.kind === \"hold\" || !result.emission.ok || nativeRecord(result.emission.data, \"emission\").emitted !== true) process.exitCode = 2\n    return\n  }\n  const query = nativeRecord(control(first), \"query\"), access = loadEvaluationAccess(root)\n  const { composeRuntime } = await import(\"../packages/adapter-io/src/compose.js\")\n  const runtime = composeRuntime(root, access)\n  if (mode === \"index\") {\n    nativeKeys(query, [\"scope\", \"need\"], \"index query\")\n    if (!isOwnershipNeed(query.need)) throw new Error(\"evaluation-query-need\")\n    const result = runtime.ownership.index(nativeText(query.scope, \"scope\"), query.need)\n    console.log(JSON.stringify(result)); if (result.kind === \"hold\") process.exitCode = 2\n    return\n  }\n  const result = runtime.ownership.read(validateNativeReadQuery(query))\n  console.log(JSON.stringify(result)); if (result.kind === \"hold\") process.exitCode = 2\n}\nawait main().catch((error: unknown) => { console.error(JSON.stringify({ kind: \"error\", phase: \"evaluation\", error: error instanceof Error ? error.message : String(error) })); process.exitCode = 1 })\n",
+        "introduction_history": [
+          {
+            "commit": "658edba90e2b7b32df72664f312bb9a4a9550d81",
+            "authored_at": "2026-11-12T20:24:53-03:00",
+            "committed_at": "2026-11-12T20:24:53-03:00",
+            "subject": "feat(atlas): add explicit isolated ownership evaluation admission"
+          }
+        ]
+      }
+    ],
+    "limit": "Documentation and CLI identity/history were inspected. No operation was executed, no route capability was qualified, no approval or admission verdict is provided, and no claim is made that package 9356cef already binds this later protocol."
+  },
+  "mutations": {
+    "contracts": false,
+    "code": false,
+    "remote": false,
+    "output_only": "/workspace/scratch/5cfbb6c803f1/s2-investigation/binding/contract-provenance-search.json"
+  },
+  "new_judgments": [],
+  "product_tests_executed": false,
+  "runtime_operations_executed": false
+}

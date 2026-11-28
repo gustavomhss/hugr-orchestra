@@ -18,7 +18,13 @@
     "independent-complete-mapping-check",
     "record-review-two-new-judges",
     "local-guards-on-committed-payload",
-    "remote-local-full-S2-prepare-comparison"
+    "remote-local-full-S2-prepare-comparison",
+    "dual-independent-v1-contract-scope-HOLD-preserved",
+    "separate-evaluation-v2-plan-and-materialization",
+    "original-CLI-evaluation-prepare02",
+    "independent-v2-byte-and-transformation-audit",
+    "S4-release-fixed-and-compatibility-supplement",
+    "complete-evaluation-prepare02-archive-verified"
   ],
   "historical_r4_recovered": false,
   "new_prepare": {
@@ -49,8 +55,8 @@
       "judgments/record-r1/j2-response.json"
     ]
   },
-  "binding_review": "PRECONDITIONS_AND_CONTRACT_SCOPE_UNDER_REVIEW",
-  "own_ci": "NOT_RUN",
+  "binding_review": "NEW_V2_ADMIT_PACKET_BEING_FINALIZED; NO_VOTE_OR_ADMISSION_YET",
+  "own_ci": "NO_NEW_PRODUCT_CODE; COMMON_EXACT_RUNTIME_CI_REUSE_RECORDED; FINAL_APPLICABLE_GATES_PENDING",
   "local_guards": {
     "state": "PASS_WITH_WARNINGS",
     "tested_payload": "8858e56a0a8e7824798a593e893ac56a46dac4a3",
@@ -60,13 +66,12 @@
     "errors": 0
   },
   "open": [
-    "S4 compatible release",
-    "Exact independent binding",
-    "Governed isolated publication",
+    "Two exact v2 ADMIT decisions including disclosed runtime coverage limit",
+    "Explicit isolated initialization/policy and governed admission",
     "Actual index/read and first fresh consumer",
-    "All 14 frozen cases",
-    "S2-U1 and local recovery",
-    "S2 payload Actions/guards",
+    "All14 frozen cases",
+    "S2-U1 target plan/maintenance/local recovery",
+    "Final applicable S2 guards and compatible CI evidence",
     "Final S2 operational judgments and seal"
   ],
   "global": {
@@ -80,13 +85,46 @@
     "billing": "UNKNOWN",
     "historical_accounting": "GLOBAL_UNRECONCILED"
   },
-  "updated_at": "2026-11-28T06:15:48.729495+00:00",
+  "updated_at": "2026-11-28T06:49:03.108222+00:00",
   "common_runtime_qualification": {
     "run_id": 46114652347,
     "harness_revision": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
     "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
     "conclusion": "success",
     "details": "runtime-followup/release-followup.json",
-    "release_manifest": "STILL_R3_AT_OBSERVED_HEAD"
+    "release_manifest": "20261128-s4-runtime-db9b423-prepare-v1",
+    "release_revision": "e171783482d0a44974d6056cd9e144a7e33406a7",
+    "compatibility": "runtime-followup/release-e171/compatibility-assessment.json"
+  },
+  "new_evaluation_prepare": {
+    "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+    "prepared_sha256": "bb3ee09693ef1ddfb89e548f3f5e0d38c4abaee5e6d253f129c7c6c1a9dbda0e",
+    "receipt": "evaluation-v2/prepare-02/receipt.json",
+    "root": "/workspace/scratch/5cfbb6c803f1/s2-evaluation",
+    "observed_head": null,
+    "entries": 13,
+    "observations": 690,
+    "input_files": 716,
+    "CAS_objects": 92,
+    "inputs_unchanged": true,
+    "archive": "evaluation-prepare-02-evidence.zip"
+  },
+  "native_v1_scope": {
+    "candidate_id": "4a36e1210acf6a4bb460846b717d446e6c259f80a78fd73cfce8b5a6e445f522",
+    "verdicts": [
+      "HOLD_PROCESSUAL",
+      "HOLD_PROCESSUAL"
+    ],
+    "evidence": "judgments/binding-scope/",
+    "reason": "All original AC criteria cannot truthfully be PASS before consumer/maintenance evidence. No v1 binding approval was created."
+  },
+  "runtime_coverage": {
+    "intrinsic_keys": 925,
+    "static_comparisons": 22752,
+    "transformation_divergences": 0,
+    "status": "STATIC_RECONCILIATION_WITH_MATERIAL_COVERAGE_GAP",
+    "gap": "Workspace-root @noble/hashes dependency omitted from intrinsic collector. Current247installedfiles match locked tarball; proposed external1170-file before/after invocation lock does not modify intrinsic runtime identity.",
+    "evidence": "evaluation-v2/audit/report.json",
+    "supplement": "evaluation-v2/proposed-authority/runtime-coverage-supplement.json"
   }
 }

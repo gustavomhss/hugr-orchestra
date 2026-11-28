@@ -1,0 +1,221 @@
+{
+  "schema": "genesis-s2-release-compatibility-assessment/v1",
+  "recorded_at": "2026-11-28T06:38:23.541Z",
+  "kind": "READ_ONLY_FACTUAL_ASSESSMENT_NOT_DOMAIN_BINDING",
+  "repository": "gustavomhss/hugr-orchestra",
+  "release": {
+    "branch": "genesis-runtime-resume",
+    "observed_head": "e171783482d0a44974d6056cd9e144a7e33406a7",
+    "seal_parent": "da9800f55f31926f33c41a5ca2fd88bf26fcaccc",
+    "payload_parent": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+    "runtime": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "runtime_tree": "3c93c4636c1e4c4b704f8be9314e22b2149e5609",
+    "id": "20261128-s4-runtime-db9b423-prepare-v1",
+    "manifest_blob": "ac4f5f46ce2044ded044e4c9a4e35220558bae22",
+    "manifest_sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1",
+    "handoff_blob": "d9cc3d678753ba573649544bce78c748d89df170",
+    "handoff_sha256": "9c66610362fcb806314c3f89958087ab7a2561e87573824d04d3c860ea6bffbf",
+    "scope": "Runtime S4/R09 preparation qualification only",
+    "completion": "DELIVERY_COMPLETE within this narrow scope",
+    "new_code_delta": "None in payload/seal: da980 adds/updates documentary evidence; e171 adds only handoff.json."
+  },
+  "conclusion": {
+    "release_available": true,
+    "explicit_v2_qualification_in_s4_manifest": false,
+    "domain_NOT_RUN_is_not_missing_common_capability": true,
+    "requires_s4_to_execute_s2_domain": false,
+    "mandatory_second_s4_manifest_for_existing_same_code_v2_found": false,
+    "latter_is": "Interpretation of the actual user instruction, S2/S4 briefings and runtime.md; not an additional release approval or new ADMIT vote.",
+    "compatible_code_reuse_supported": "The selected release now fixes db9, the same immutable code containing the documented evaluation route and its 54 exact-code CI controls. S2 may document that compatibility and execute its own authorized domain steps after their real prerequisites.",
+    "current_admission_ready": false,
+    "readiness_reason": "No initialized evaluation store or actual policies at inspection; new exact ADMIT judgments remain a separate requirement and are not supplied by this assessment.",
+    "prohibited_inference": "Do not say S4 release proved v2 domain admission, index/read, 14 cases or S2-U1. Do not treat generic CI 278 PASS as these outcomes.",
+    "recommended_record": "A separate S2 compatibility supplement, anchored to sealed S4 release, db9 source blobs,54 namedCI cases, actual prepare02 receipt and environment, with per-operation statuses. Keep S4 manifest and historical receipts unchanged."
+  },
+  "normative_analysis": [
+    {
+      "id": "N1",
+      "source": "runtime-contract.md",
+      "section": "S4: liberar a capacidade compartilhada cedo",
+      "rule": "Release records actual version, entrypoints, authority prerequisites and separated capability states/receipts. PROVEN applies only to named cases/limits; sessions pin exact compatible code.",
+      "implication": "Do not expand the release claim; compatibility must be demonstrated from exact code/config/evidence, not assumed from a green run."
+    },
+    {
+      "id": "N2",
+      "source": "runtime-contract.md",
+      "section": "Binding, atualização e consumo",
+      "rule": "Independent pair receives exact transformation/candidate and execution evidence; real policy/store/projection are explicit preconditions; consumers use actual index/read under fixed limits.",
+      "implication": "These are S2 execution prerequisites. Release qualification judgments are not domain bindings."
+    },
+    {
+      "id": "N3",
+      "source": "S2-INTERFACES.md",
+      "section": "Primeira execução steps3-4",
+      "rule": "S4front01 supplies common capability; S2 supplies binding/publication/consumer outcomes andS2-U1, reusing compatible common controls.",
+      "implication": "NOT_RUN for those domain outcomes is expected before S2 execution and not a demand that S4 execute them."
+    },
+    {
+      "id": "N4",
+      "source": "../S4-RUNTIME.md",
+      "section": "Primeira execução3-4 and Entrega esperada",
+      "rule": "Reuse exact compatible common regressions and qualify only uncovered delta/case; distinguish qualified prepare from each domain binding/publication.",
+      "implication": "No blanket rerun or S4 full-domain proof may be invented as a prerequisite."
+    },
+    {
+      "id": "N5",
+      "source": "../evaluation-route/sources/modules/atlas/docs/design/evaluation-admission.md",
+      "section": "Immutable obligations; Isolation and real readers; Final acceptance",
+      "rule": "Existing db9 protocol explicitly supplies finite isolated evaluation, preserves original AC obligations PENDING_FINAL_EVIDENCE and requires two new exact ADMIT decisions.",
+      "implication": "A v2 supplement documents an already present route; it must not reinterpret v1 ACs or convert historical votes."
+    }
+  ],
+  "operation_matrix": [
+    {
+      "operation": "native v1 prepare",
+      "s4_release": "PROVEN",
+      "s4_evidence": "entrypoints[0], capabilities.native_import, package_results[S2], run46114652347",
+      "common_code_evidence": "db9 native CLI and candidate-specific CI",
+      "s2_observation": "Existing local prepare01 preserved; hosted/local equivalence previously established",
+      "next_requirement": "Use actual local candidate/root, not the hosted candidate ID"
+    },
+    {
+      "operation": "evaluation v2 prepare",
+      "s4_release": "NOT_DECLARED_AS_V2",
+      "s4_evidence": "Only listed entrypoint invokes genesis-native.ts and outputs genesis-native-prepared/v1",
+      "common_code_evidence": "Protocol/CLI/prepareEvaluation at db9; composed evaluation fixture in run43343953480",
+      "s2_observation": "Original evaluation-prepare02 exit0; v2 candidate d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30;13 entries690 observations925 runtime identity members",
+      "next_requirement": "Exact new ADMIT judgments; retain original obligations and actual environment"
+    },
+    {
+      "operation": "evaluation init-store",
+      "s4_release": "NOT_DECLARED",
+      "s4_evidence": "No init-store entrypoint or capability in manifest",
+      "common_code_evidence": "Explicit CLI and initializeEvaluationStore in composed fixture; duplicate initialization, active state, root and alias refusal controls",
+      "s2_observation": "NOT_RUN; .atlas contains cas only at inspection",
+      "next_requirement": "Explicit exact candidate/generation marker under actual S2 authority; marker creates no policy/admission"
+    },
+    {
+      "operation": "evaluation admit",
+      "s4_release": "NOT_DECLARED_AS_V2; domain binding/publication explicitly NOT_RUN",
+      "s4_evidence": "capabilities.runtime_binding and governed_publication are owned by consuming domains",
+      "common_code_evidence": "Actual governed admission API exercised by synthetic composed fixture; exact fourADMIT validator and isolation controls",
+      "s2_observation": "NOT_RUN; no marker or policies at inspection",
+      "next_requirement": "Two new actual exact ADMIT decisions for all13 entries; matching actor/scope/ratifier and strict evaluation policy; unchanged candidate/source/runtime"
+    },
+    {
+      "operation": "evaluation index",
+      "s4_release": "DOMAIN_NOT_RUN",
+      "s4_evidence": "capabilities.index: requires domain publication and actual query",
+      "common_code_evidence": "Real composed ownership.index and persistent case budget controls in same db9 CI",
+      "s2_observation": "NOT_RUN",
+      "next_requirement": "Successful isolated admission, case-bound reader policy, frozen case/mode/budget, actual query/response"
+    },
+    {
+      "operation": "evaluation read",
+      "s4_release": "DOMAIN_NOT_RUN",
+      "s4_evidence": "capabilities.read: requires domain publication and independent consumer",
+      "common_code_evidence": "Real composed ownership.read, phase labels, source drift/HOLD and budgets in same db9 CI",
+      "s2_observation": "NOT_RUN",
+      "next_requirement": "Independent consumer context, actual served version trace and bounded body bytes; no source/oracle fallback"
+    },
+    {
+      "operation": "evaluation maintenance/rebuild/target admission",
+      "s4_release": "NOT_DECLARED_AS_V2; only common synthetic controls claimed",
+      "s4_evidence": "common_cache_reuse_and_affected_rebuild/common_failure_resume_and_history do not prove S2-U1",
+      "common_code_evidence": "7 evaluation-rebuild controls plus composed target admission at db9",
+      "s2_observation": "NOT_RUN; initial S2 plan excludes evaluation-maintenance",
+      "next_requirement": "Concrete frozen S2-U1 target plan/recipes/recovery; result-specific semantic evidence and two new target decisions; actual local receipts. Does not block independent initial consumer traversal"
+    }
+  ],
+  "ci_reuse": {
+    "run": 43343953480,
+    "job": 131618674434,
+    "code": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "tests": 278,
+    "files": 27,
+    "evaluation_tests": 54,
+    "evaluation_suites": [
+      {
+        "file": "genesis-evaluation.test.ts",
+        "cases": 1
+      },
+      {
+        "file": "evaluation-boundaries.test.ts",
+        "cases": 29
+      },
+      {
+        "file": "ownership-evaluation.test.ts",
+        "cases": 17
+      },
+      {
+        "file": "evaluation-rebuild.test.ts",
+        "cases": 7
+      }
+    ],
+    "exact_source_and_nominal_case_evidence": "../evaluation-route-readiness.json",
+    "valid_claim": "Mechanism coverage at exact code/configuration, with synthetic fixture decisions and bounded test scope.",
+    "limits": [
+      "No independent S2 answer or domain approval supplied by fixtures",
+      "CLI wrapper not exercised by these54 tests, although local prepare02 now exercised the real wrapper for prepare",
+      "CommonCI Node24.22.2;new prepare Node24.22.3/Bun1.3.14. Versions are recorded separately, no CI run on new Node version is inferred.",
+      "Runtime/dependency/engine identity at actual local v2 candidate must remain fixed; any relevant drift invalidates candidate proofs."
+    ],
+    "qualification": {
+      "run": 46114652347,
+      "harness": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+      "scope": "Full frozen package v1 prepare and real EACCES refusal; not v2 admission."
+    }
+  },
+  "local_candidate": {
+    "path": "/workspace/scratch/5cfbb6c803f1/s2-execution/evaluation-prepare-02/prepared.json",
+    "candidate": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+    "prepared_sha256": "bb3ee09693ef1ddfb89e548f3f5e0d38c4abaee5e6d253f129c7c6c1a9dbda0e",
+    "receipt_sha256": "6bcfc052fad8533cd2433c7faf910301ea55fb277d1ed59638068baa56a4a6fe",
+    "entries": 13,
+    "observations": 690,
+    "runtime_identity_members": 925,
+    "exit_code": 0,
+    "actual_source_root": "/workspace/scratch/5cfbb6c803f1/s2-evaluation",
+    "observed_head": null,
+    "inspection_record": "local-prepare-observation.json",
+    "interpretation": "Successful original local v2 diagnostic preparation. S4 release disclosure changed outside the candidate/source/runtime; no new code introduced by the release seal.",
+    "preserve_history": "Original receipt records the earlier r3/09a observation as UNPROMOTED_SOURCE_DIAGNOSTIC_ONLY. Do not rewrite it retroactively. Add new compatibility/reuse evidence separately.",
+    "candidate_reuse": "No reason found to reprepare solely because of the documentation-only release seal, if actual inputs,plan,candidate root/runtime closure remain unchanged. New actual votes must bind this exact d1 candidate.",
+    "no_candidate_change_for_supplement": "Keep the supplemental compatibility note outside the pinned evaluation inputs. If plan/obligations/implementation/source bytes are changed, create a new candidate and new exact decisions instead."
+  },
+  "remaining_technical_or_normative_requirements": [
+    "Exact independent ADMIT decisions for current candidate/all13 entries and adequacy of the frozen initial plan; no synthetic or historical vote substitution.",
+    "Explicit isolated initialization/generation and actual actor/scope/ratifier policies, strict candidate/plan/obligation bindings and mutable-state isolation.",
+    "Unchanged source and runtime closure when admit re-prepares and compares the candidate.",
+    "Actual admission receipt before served index/read; each frozen case gets actual traces under its persistent budget and independent context.",
+    "Separate S2-U1 concrete target plan/recipes/recovery, new semantic evidence for changed results and new target decisions; final original AC/DoD remain pending."
+  ],
+  "no_new_gate_invented": [
+    "Absence of v2 entrypoint in the narrow prepare release alone is not treated as an execution prohibition.",
+    "NOT_RUN domain operations are not treated as absent runtime implementation.",
+    "No requirement that S4 execute S2 consumers orS2-U1 before S2 may execute them.",
+    "No new blanketCI or production activation.",
+    "This assessment never approves a binding or policy."
+  ],
+  "evidence": {
+    "directory": "/workspace/scratch/5cfbb6c803f1/s2-investigation/runtime/latest-release",
+    "source_manifest": "source-manifest.json",
+    "byte_verified_sources": 8,
+    "all_match": true,
+    "branch_query": "head-query.json",
+    "seal_commit": "seal-commit.json",
+    "payload_commit": "payload-commit.json",
+    "earlier_reports_preserved": true
+  },
+  "subtask_actions": {
+    "remote_read_only": true,
+    "local_reports_and_captures_only": true,
+    "product_tests": false,
+    "prepare": false,
+    "initialization": false,
+    "policy": false,
+    "admission": false,
+    "publication": false
+  },
+  "correction": "Earlier absence-of-v2-manifest observations remain true. Any inference that a mandatory second S4 manifest is itself a hard gate is superseded by this direct normative reading; no such requirement was found."
+}

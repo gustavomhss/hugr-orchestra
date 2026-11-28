@@ -1,0 +1,91 @@
+[
+  {
+    "filename": "runtime-release.json",
+    "repo_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+    "ref": "e171783482d0a44974d6056cd9e144a7e33406a7",
+    "git_blob": "ac4f5f46ce2044ded044e4c9a4e35220558bae22",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/e171783482d0a44974d6056cd9e144a7e33406a7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+    "bytes": 19736,
+    "sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1",
+    "computed_blob": "ac4f5f46ce2044ded044e4c9a4e35220558bae22",
+    "blob_match": true
+  },
+  {
+    "filename": "handoff.json",
+    "repo_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/handoff.json",
+    "ref": "e171783482d0a44974d6056cd9e144a7e33406a7",
+    "git_blob": "d9cc3d678753ba573649544bce78c748d89df170",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/e171783482d0a44974d6056cd9e144a7e33406a7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/handoff.json",
+    "bytes": 34693,
+    "sha256": "9c66610362fcb806314c3f89958087ab7a2561e87573824d04d3c860ea6bffbf",
+    "computed_blob": "d9cc3d678753ba573649544bce78c748d89df170",
+    "blob_match": true
+  },
+  {
+    "filename": "S4-README.md",
+    "repo_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/README.md",
+    "ref": "e171783482d0a44974d6056cd9e144a7e33406a7",
+    "git_blob": "cb1ca44f0346490854345a3e7e4d0648de5e6bb4",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/e171783482d0a44974d6056cd9e144a7e33406a7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/README.md",
+    "bytes": 10428,
+    "sha256": "959fdbbdd8f78a5aadc63eb4117bd7722f5670ec6d940d46dbff476ae451cfb6",
+    "computed_blob": "cb1ca44f0346490854345a3e7e4d0648de5e6bb4",
+    "blob_match": true
+  },
+  {
+    "filename": "S4-work.md",
+    "repo_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/work.md",
+    "ref": "e171783482d0a44974d6056cd9e144a7e33406a7",
+    "git_blob": "556957a32602c5806da42287d34e988c236551ee",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/e171783482d0a44974d6056cd9e144a7e33406a7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/work.md",
+    "bytes": 5268,
+    "sha256": "86bafb121fd57e16a756ad111745fea5684ba01ebfdb2eae6e3ff407d2a1afaa",
+    "computed_blob": "556957a32602c5806da42287d34e988c236551ee",
+    "blob_match": true
+  },
+  {
+    "filename": "judgments-acceptance.json",
+    "repo_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/acceptance.json",
+    "ref": "e171783482d0a44974d6056cd9e144a7e33406a7",
+    "git_blob": "d6b7740a743255bbc8af54a0500050a198c5e205",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/e171783482d0a44974d6056cd9e144a7e33406a7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/acceptance.json",
+    "bytes": 8826,
+    "sha256": "ad16053eb6349988cfdfb208d68c20f66f072435a555ece7de7049455bf5f984",
+    "computed_blob": "d6b7740a743255bbc8af54a0500050a198c5e205",
+    "blob_match": true
+  },
+  {
+    "filename": "qualification-plan.json",
+    "repo_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/qualification-plan.json",
+    "ref": "e171783482d0a44974d6056cd9e144a7e33406a7",
+    "git_blob": "82356462aac54c7e2936ff2429e63d605a235181",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/e171783482d0a44974d6056cd9e144a7e33406a7/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/qualification-plan.json",
+    "bytes": 5850,
+    "sha256": "d7c85c3bd8e2d15e7e5bf3d34a191d927891c53e8ca03676ff8c2c0d2e49f50c",
+    "computed_blob": "82356462aac54c7e2936ff2429e63d605a235181",
+    "blob_match": true
+  },
+  {
+    "filename": "S2-INTERFACES.md",
+    "repo_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/S2-INTERFACES.md",
+    "ref": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+    "git_blob": "b2d1511880e59fa95f9c70abb817b0192d36cfdd",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/S2-INTERFACES.md",
+    "bytes": 6602,
+    "sha256": "87645552a1e1dbd235c912b71b43ed9e85481bf3fadc2d4a63d0d238ae27822a",
+    "computed_blob": "b2d1511880e59fa95f9c70abb817b0192d36cfdd",
+    "blob_match": true
+  },
+  {
+    "filename": "runtime-contract.md",
+    "repo_path": ".orchestra/skills/execute-genesis/references/runtime.md",
+    "ref": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "git_blob": "0e0f1607003ff49946ed7a155c268b31239930e6",
+    "url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/runtime.md",
+    "capture_origin": "Prior exact GitHub capture, reread for this assessment",
+    "bytes": 10217,
+    "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+    "computed_blob": "0e0f1607003ff49946ed7a155c268b31239930e6",
+    "blob_match": true
+  }
+]

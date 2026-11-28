@@ -1,66 +1,72 @@
-# S2 Interfaces — retomada 2026-11-28
+# S2 Interfaces — retomada de 28 de novembro de 2026
 
-Estado: IN_PROGRESS. O prepare novo está comprovado; a travessia completa permanece aberta por dependência do release S4 compatível. `delivery_complete=false`.
+Estado: **IN_PROGRESS**, `delivery_complete=false`. O pacote e os 13 corpos aceitos permanecem intactos. Há dois preparos novos preservados, com candidatos diferentes. A admissão isolada v2 está em preparação para julgamento; index/read, consumidores e manutenção continuam **NOT_RUN**.
 
-## Identidade e resultado
+## Identidades e custódia
 
-- Execução local: `846d4f9c-fb77-4e21-aff6-1fffccc3132b`; branch `genesis-interfaces-resume`.
-- HEAD inicial: `bb2a931301d541692b11e5a7f1eab234cd9ed2fd`. O diff inicial acrescentava somente S2-INTERFACES.md sobre `d1e635ed5e316b8d5d59650432268e3e81d8aff0`.
-- Fonte: `1cde2ff7a71bcf7aecb5d030917b577165135d38`; protocolo: `ee2521a5b966bd505cc95bd1c733e09e12f33531`.
-- Pacote: SHA-256 `9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b`, 332.594 bytes, 13 artefatos L1–L4.
-- Código efetivamente executado: `db9b4235022c4df32fe3bfd4faeea8adcd69abb7`, sem alterações.
-- Corpus: checkout Git real `bb2a931301d541692b11e5a7f1eab234cd9ed2fd`. Nunca se atribuiu ao corpus o HEAD histórico da fonte.
-- Prepare novo: exit 0; 13 artefatos; 626 observações; 667 arquivos consumidos sem drift; stderr vazio; 69 objetos CAS.
-- Candidate ID novo: `4a36e1210acf6a4bb460846b717d446e6c259f80a78fd73cfce8b5a6e445f522`.
-- Preparado: 344.738 bytes, SHA-256 `476891f3bf1edf24f7d2c486a1218bab5b0cd5b2b36b8295c3892917724c2b4a`.
-- Comprovação: `prepare-01/receipt.json`, `prepared.json`, `stdout.json`, `stderr.txt` e `integrity.json`; pacote completo de evidência em `prepare-01-evidence.zip`.
+Execução `846d4f9c-fb77-4e21-aff6-1fffccc3132b`, branch exclusiva `genesis-interfaces-resume`, HEAD inicial `bb2a931301d541692b11e5a7f1eab234cd9ed2fd`. Fonte `1cde2ff7a71bcf7aecb5d030917b577165135d38`; protocolo `ee2521a5b966bd505cc95bd1c733e09e12f33531`. O runtime executado é `db9b4235022c4df32fe3bfd4faeea8adcd69abb7`, sem alterações de código.
 
-## Custódia histórica
+O pacote público tem 332.594 bytes e SHA-256 `9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b`. A conferência encontrou os 13 corpos exatos, os 26 usos das decisões semânticas e os 1.109 arquivos originais preservados. Os pareceres antigos conservam suas rodadas, FIX-FIRST e limites; não foram convertidos em votos novos.
 
-`custody-search.json` registra as fontes consultadas, branches, árvores sem truncamento, CI e busca em 3.072 conteúdos da preservação, incluindo ZIPs. Os 1.109 arquivos originais foram conferidos contra os blobs públicos. O preparado r4, o stdout r4 e o recibo integral original continuam não recuperados. O mínimo de exportação original está no relatório, com as identidades fixas.
+A busca delimitada pelo prepare r4 histórico terminou sem recuperar o candidato preparado, stdout e recibo integral originais. `custody-search.json` conserva fontes consultadas, resultados, identidades e o pedido mínimo de exportação. O candidato histórico `f310ec9b3844d6833ea5a867f9ed14ce099669492c66d8b133116642310310dd` e o preparado SHA-256 `a4946200211c54cdf7f94a26e659cdc285e65d5775a8e1e2f56cf2d9c9d2f207` continuam reportados apenas pelo resumo derivado. Nenhum preparo novo foi atribuído a essa execução antiga.
 
-Esta execução é `NEW_EXECUTION_NOT_RECOVERED_R4`. O candidato histórico `f310ec9b…` e o preparado histórico `a4946200…` permanecem somente reportados pelo resumo derivado. A tentativa antiga falha e os pareceres históricos continuam intactos.
+## Preparos efetivamente executados
 
-## Fila e limites
-
-| Unidade | Estado atual | Evidência ou condição |
+| Operação | Resultado e identidade | Evidência |
 |---|---|---|
-| Busca original r4 | Busca concluída; original pendente | custody-search.json |
-| Bytes dos 13 e suas fontes | Conferidos | byte-verification-summary.json + relatórios integrais no ZIP |
-| Prepare novo db9 | PREPARE_SUCCEEDED; diagnóstico não promovido | prepare-01/receipt.json |
-| Release S4 compatível | Ainda não encontrado nos pontos de descoberta | runtime-status.json |
-| Binding e publicação isolada | NOT_RUN | Exigem release e decisões novas exatas; nenhuma aprovação histórica foi convertida |
-| Primeira travessia index/read/consumidor | NOT_RUN | Exige candidato publicado governadamente |
-| 14 casos S2-C/S2-I | 0/14 executados | frozen-cases-status.json; perguntas e limites intactos |
-| S2-U1 | NOT_RUN | Oracle intacto; nove alcançáveis são expectativa de grafo, não nove interpretações |
-| Revisão desta unidade | PASS dos dois juízes | /root/s2_j1 e /root/s2_j2; custódia/diagnóstico em 8858e56, sem binding nem conclusão S2 |
-| Gates S2 e fechamento | Parcial | Guards locais no payload 8858e56: exit 0, 0 gates/erros, 204 avisos; CI de qualificação S4 separado; fechamento operacional aberto |
+| Prepare nativo v1, operação01 | Exit0; 13 entradas, 626 observações, 667 arquivos sem drift, 69 CAS. Candidato `4a36e1210acf6a4bb460846b717d446e6c259f80a78fd73cfce8b5a6e445f522`; preparado SHA-256 `476891f3bf1edf24f7d2c486a1218bab5b0cd5b2b36b8295c3892917724c2b4a`. | `prepare-01/` e `prepare-01-evidence.zip` |
+| Prepare de avaliação v2, operação02 | Exit0; 13 entradas, 690 observações, 716 arquivos sem drift, 92 CAS. Candidato `d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30`; preparado SHA-256 `bb3ee09693ef1ddfb89e548f3f5e0d38c4abaee5e6d253f129c7c6c1a9dbda0e`. | `evaluation-v2/prepare-02/` e `evaluation-prepare-02-evidence.zip` |
 
-Os três inputs acima do teto liberado histórico são `schema/tui.json` (1.131.057 bytes), `s2/inputs/app-session-tree.json` (369.462) e `s2/inputs/design-tui-tree.json` (390.775). O novo prepare observou os inputs completos sob o teto de 2 MiB do código db9. O release encontrado ainda anuncia r3/256.000 bytes e a amostra nativa de uma unidade.
+O primeiro corpus é um checkout Git real no HEAD inicial. A segunda raiz é uma materialização distinta, sem Git; seu `observed_head` verdadeiro é `null`. Os recibos registram argv/cwd, tempos, streams integrais e estados efetivamente observados. As duas operações escreveram CAS e arquivos de saída. Nenhuma criou política, projeção ou aprovação.
 
-## Retomada executável
+O arquivo de evidência da operação02 tem 5.654.997 bytes, SHA-256 `3afd80a4f6b48aba51b7df90d4837a446b53346b58cca2084f121a5dc492ead1`. Seus 1.114 membros foram verificados: inclui os 716 arquivos materializados, 92 objetos CAS, recibo original, verificador, relatórios completos e propostas separadas. O CAS arquivado não constitui store servido nem autorização de publicação. O inventário interno separa o recorder realmente usado das revisões propostas para operações futuras.
 
-1. Reler o release S4 nas branches `genesis-runtime-resume` e `genesis-fresh-s4`, fixando commit, bytes, candidato e capacidades. Conferir compatibilidade com os recibos desta execução.
-2. Se o candidato/corpus/raiz/bytes continuarem exatos e o release autorizar essa capacidade, preparar o pacote de binding para o par independente. Mudança de qualquer identidade exige prepare/recibo novos. O adapter inclui raiz e HEAD no candidate ID e recalcula no publish.
-3. Depois dos dois bindings válidos, configurar somente a política do estado isolado autorizada pela missão atual e executar a CLI original publish → index/read. O arquivo histórico de política S4 não é uma concessão S2.
-4. Despachar primeiro consumidor fresco com uma pergunta congelada e somente respostas reais index/read. Preservar versões, chamadas e bytes; julgar com o mesmo par. Completar os 14 casos e depois S2-U1/recuperação/gates.
+## Por que a rota v1 ficou em HOLD
 
-Comandos reais e análise da rota Actions: `runtime-readiness.md`. Para reproduzir prepare, criar checkouts novos nos dois SHAs acima, `npm ci` e `bun typecheck` em `modules/atlas`, e executar `record-prepare.py` com diretórios exclusivos. O recibo guarda argv/cwd efetivos; diretório diferente pode produzir outro candidate ID. O ZIP preserva CAS como evidência, sem conceder autoridade de projeção ou store servido.
+Os mesmos dois juízes independentes, `/root/s2_j1` e `/root/s2_j2`, receberam o contrato original, critérios e fontes normativas literais. Ambos emitiram **HOLD_PROCESSUAL**: o contrato v1 exige PASS em AC01–AC10 e runtime-import-binding, enquanto consumidores, manutenção e demais provas ainda não existem. Um propósito de transformação não redefine esses critérios. Nenhuma aprovação v1 foi criada.
 
-## Contabilidade e isolamento
+Os pedidos e respostas integrais estão em `judgments/binding-scope/`. O PASS anterior em `judgments/record-r1/` cobre exclusivamente o registro de custódia/diagnóstico do payload `8858e56a0a8e7824798a593e893ac56a46dac4a3`; não é binding nem conclusão S2.
 
-Sem testes de produto locais, alteração do runtime, modificação dos artefatos aceitos ou dos casos congelados. O prepare escreveu apenas CAS na raiz isolada e saídas fora dela. A conferência pós-execução encontrou 780 comparações coincidentes: candidato/stdout, 69 endereços CAS, 13 corpos/resultados, 626 observações e 40 referências preservadas. Não houve política, binding, publicação, index/read, consumidor ou manutenção.
+O código db9 já contém o protocolo distinto de admissão de avaliação. A operação02 usa esse protocolo com quatro critérios ADMIT, mantendo o candidato/contrato anteriores e todos os 11 deveres finais em `PENDING_FINAL_EVIDENCE`. O plano, obligation set e receituário estão em `evaluation-v2/plan/`. A rota não muda os corpos nem transforma aprovação semântica histórica em admissão atual.
 
-Uso do provedor, tentativas físicas e cobrança: UNKNOWN; histórico: GLOBAL_UNRECONCILED. As tarefas `/root/s2_custody_search`, `/root/s4_compatibility` e `/root/s2_byte_audit` produziram buscas/verificações; nenhuma conta como consumidor ou juiz. Integração global e ativação permanecem com ROOT/Gustavo.
+## Compatibilidade do runtime
 
-## Atualização de qualificação e auditoria
+O release S4 `20261128-s4-runtime-db9b423-prepare-v1`, selado em `e171783482d0a44974d6056cd9e144a7e33406a7`, fixa o mesmo código db9. Seu manifesto tem blob `ac4f5f46ce2044ded044e4c9a4e35220558bae22` e SHA-256 `2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1`.
 
-A S4 publicou a campanha de qualificação `genesis-runtime-qualification` em `09a4c4afc7aab2f9a153eb059d13df0ecf15595c`. O run `46114652347` terminou com sucesso executando o runtime `db9b423` em checkout separado. O artifact de prepare foi conferido integralmente: ZIP SHA-256 `f1747366c2312c80ff6cd071aea15693ceb14962b3e974f6614ddf450ac14606`, 23/23 membros do índice. O candidato S2 remoto difere do local somente em `repo_root` e `observed_head`; essas diferenças permanecem no ID de cada execução. Todos os demais campos são idênticos. O manifesto S4 lido nesse HEAD ainda é o r3, blob `7513fcca63664ca02094e9ed9b8fab090c20295d`. Ver `runtime-followup/`.
+Ele qualifica prepare v1 completo para S1-03/S2, incluindo os inputs grandes e recusa real por permissão. Não declara execução v2 nem resultados locais S2 de binding, publicação ou consumo. O suplemento `runtime-followup/release-e171/` documenta o reúso do código exato e dos 54 controles v2 da CI comum, preservando esse limite. A responsabilidade de executar e provar as portas locais continua com a S2; a ausência de resultado de domínio no release não é tratada como proibição automática.
 
-A conferência independente `binding-preflight/independent-mapping-check.json` encontrou 4.752 comparações coincidentes: 13 entries completas, 818 vínculos de input, 626 observações, 40 referências de 67 usos, 32 dependências, 30 navegações e 69 objetos CAS. Ela não é voto de binding nem leitor Atlas. A projeção explícita preserva metadata e relações sem inventar novas interpretações.
+CI comum: run `43343953480`, SHA db9, 278 testes/27 arquivos, incluindo 54 controles v2. Qualificação de pacotes completos: run `46114652347`, runtime db9, harness `09a4c4afc7aab2f9a153eb059d13df0ecf15595c`. O candidato S2 desse run mantém sua própria raiz/HEAD e seu próprio ID; não foi transplantado. O recibo original da operação02 mantém sua observação anterior do release; o vínculo ao release novo é um suplemento posterior.
 
-O par persistente está examinando a aplicabilidade do contrato de binding. O contrato herdado contém AC-01..AC-10; consumo e manutenção continuam não executados. Nenhuma interpretação do formato será usada para fabricar cumprimento dessas obrigações.
+## Auditoria v2 e limite de cobertura
 
-O executor comum de manutenção exige sua própria receita nos inputs e ordem definida dos inputs. A manutenção S2-U1 exigirá uma preparação adicional identificada, sem alterar o pacote congelado ou atribuir sua execução ao candidato 4a36. O oracle continua intacto.
+A auditoria independente terminou com **22.752 comparações e zero divergências** de transformação/bytes. Conferiu os 92 CAS, 13 entradas, 818 vínculos de input, 690 observações, 40 referências, 32 dependências, 30 navegações e toda a materialização. O relatório e o verificador estão em `evaluation-v2/audit/`; os detalhes e cada comparação estão no ZIP.
 
-Os guards foram executados também sobre o payload Git já publicado, incluindo o ZIP. Os 204 avisos se dividem em 203 fora desta retomada e um `binary-added` do arquivo de evidência intencional; nenhuma regra foi relaxada. O recibo em `gates/receipt.json` delimita esse resultado local.
+O resultado é `STATIC_RECONCILIATION_WITH_MATERIAL_COVERAGE_GAP`, e não um voto ADMIT. As 925 chaves de `runtime_identity` reproduzem exatamente o coletor. Ele omite `@noble/hashes@1.8.0`, importado pelo kernel e declarado apenas no manifesto raiz do workspace. Manifesto e lock estão entre os pins do plano, mas esses pins não incorporam automaticamente os bytes instalados à identidade intrínseca.
+
+Os 247 arquivos instalados dessa dependência, 1.145.416 bytes, foram comparados integralmente ao tarball local cuja integridade está no lock. Todos coincidiram. O tarball de 155.326 bytes tem SHA-256 `e8a765d92c04faaccba8776411c5038cb195f812ee629fce07e1d2e6aec80ea0`. Essa observação posterior e a recomputação dos IDs não fabricam um snapshot anterior ao prepare.
+
+Para as próximas operações foi proposto um controle externo sobre 1.170 arquivos: os 922 arquivos físicos da identidade declarada, os 247 de `@noble/hashes` e o executável Bun. O recorder recusa a invocação quando o lock diverge e conserva bytes antes/depois. A proposta não altera o runtime nem corrige sua cobertura intrínseca; sua adequação precisa ser julgada pelo par. Ver `evaluation-v2/proposed-authority/runtime-coverage-supplement.json`.
+
+## Fila corrente
+
+| Obrigação | Estado |
+|---|---|
+| Busca histórica e preservação pública | Concluídas no escopo documentado; original r4 ainda indisponível |
+| Novo prepare nativo e novo prepare v2 | Executados e preservados separadamente |
+| V1 binding | HOLD processual dos dois juízes; aprovação não criada |
+| V2 ADMIT exato dos 13 | Dossiê em finalização, sem voto ou admissão |
+| Inicialização, políticas e publicação governada v2 | NOT_RUN; propostas fora da raiz servida |
+| Primeira travessia com consumidor novo | NOT_RUN |
+| Casos S2-C/S2-I | 0/14; perguntas, modos e limites intactos |
+| S2-U1 | NOT_RUN; oracle intacto, exige plano concreto/target e provas próprias |
+| Gates locais e fechamento | Parciais; guardas finais do payload e julgamento operacional pendentes |
+
+A geração `694110e9b70b62ca59fe3a0edf91157066f991bb79fcaab27a1b005320bc3488` foi fixada depois do candidato e antes de decisões/manifesto. As propostas usam o actor nominal `genesis-s2-resume-846d4f9c`, sem alegação de identidade autenticada. A política inicial é somente de admissão; cada caso terá sua própria política finita de index/read e um consumidor novo `fork:none`. Não se concede manutenção no plano inicial. Nenhuma dessas políticas foi instalada.
+
+Depois dos dois ADMIT exatos e da avaliação das limitações, executar a CLI original para inicializar/admitir no estado isolado. O primeiro consumidor recebe apenas sua pergunta e as respostas reais das portas Atlas. Preservar consulta, corpo, versões, orçamento, resposta e julgamento; entregar essa travessia antes de completar os outros 13 casos. A manutenção exige um plano específico posterior e não usa o executor legado v1.
+
+## Gates e limites globais
+
+Guardas já executadas sobre o payload `8858e56`: exit0, 78 regras, zero gates/erros e 204 avisos; 203 fora desta retomada e um aviso esperado do ZIP preservado. Essa prova não é atribuída automaticamente aos arquivos posteriores. Os recibos completos estão em `gates/`. Não houve testes de produto locais, alteração do motor ou relaxamento de regras.
+
+Tokens, tentativas físicas e cobrança do provedor permanecem UNKNOWN. O histórico é GLOBAL_UNRECONCILED. Agentes de pesquisa/auditoria não contam como consumidores ou julgadores. Integração global, merge e ativação continuam com ROOT/Gustavo.

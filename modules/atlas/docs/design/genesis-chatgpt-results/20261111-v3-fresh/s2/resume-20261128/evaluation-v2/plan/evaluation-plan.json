@@ -1,0 +1,336 @@
+{
+  "schema": "genesis-evaluation-plan/v1",
+  "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json",
+  "original_prepared": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/original/prepared.json",
+    "sha256": "476891f3bf1edf24f7d2c486a1218bab5b0cd5b2b36b8295c3892917724c2b4a"
+  },
+  "obligations": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/obligation-set.json",
+    "sha256": "3533555bc7ced4ec21d236493bfafe98238643f989278fc07b9fab428e746229"
+  },
+  "entries": [
+    {
+      "key": "s2.l1.desktop-web",
+      "semantic_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/resume-l1/desktop-design-r2-j1.json",
+          "sha256": "af77c091d0ce15342402991674d041a77507843ae455780c4cbc49d5818b93a8"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/resume-l1/desktop-design-r2-j2.md",
+          "sha256": "44a86cb5541cb7d56bb949a09e42314bc8a61c311608cefda0d47bd416c9e7f0"
+        }
+      ],
+      "applicability": "Historical semantic evidence is reused only for the unchanged accepted s2.l1.desktop-web body: SHA-256 757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338, 29075 bytes, source revision 1cde2ff7a71bcf7aecb5d030917b577165135d38, original native package SHA-256 9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b, and original v1 result 75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58. This plan does not create a new semantic decision.",
+      "limits": "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts. Original AC-01 through AC-10 and runtime-import-binding remain pending final evidence in the obligation set. A separate new isolated-evaluation-admission decision is required. Changed source, result metadata, applicability or implementation requires new identities and affected review; no historical decision is transplanted to a changed result."
+    },
+    {
+      "key": "s2.l1.app-session",
+      "semantic_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/resume-l1/app-session-r3-j1.json",
+          "sha256": "7507d5d7b5a893750f7a341e930bfae5af9be4d1d08482d8bfdf41a0f3321e2e"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/resume-l1/app-session-r3-j2.json",
+          "sha256": "89e853a37f7001fd37cc612217d330db8e8a18a3497de48ccb56b2c178f3c0f4"
+        }
+      ],
+      "applicability": "Historical semantic evidence is reused only for the unchanged accepted s2.l1.app-session body: SHA-256 67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e, 42047 bytes, source revision 1cde2ff7a71bcf7aecb5d030917b577165135d38, original native package SHA-256 9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b, and original v1 result bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384. This plan does not create a new semantic decision.",
+      "limits": "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts. Original AC-01 through AC-10 and runtime-import-binding remain pending final evidence in the obligation set. A separate new isolated-evaluation-admission decision is required. Changed source, result metadata, applicability or implementation requires new identities and affected review; no historical decision is transplanted to a changed result."
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "semantic_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/resume-l1/desktop-design-r2-j1.json",
+          "sha256": "af77c091d0ce15342402991674d041a77507843ae455780c4cbc49d5818b93a8"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/resume-l1/desktop-design-r2-j2.md",
+          "sha256": "44a86cb5541cb7d56bb949a09e42314bc8a61c311608cefda0d47bd416c9e7f0"
+        }
+      ],
+      "applicability": "Historical semantic evidence is reused only for the unchanged accepted s2.l1.design-tui body: SHA-256 fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da, 36964 bytes, source revision 1cde2ff7a71bcf7aecb5d030917b577165135d38, original native package SHA-256 9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b, and original v1 result 7baaa859ebb117874e48253430260b915f4a711a26764d694039de68fba7b031. This plan does not create a new semantic decision.",
+      "limits": "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts. Original AC-01 through AC-10 and runtime-import-binding remain pending final evidence in the obligation set. A separate new isolated-evaluation-admission decision is required. Changed source, result metadata, applicability or implementation requires new identities and affected review; no historical decision is transplanted to a changed result."
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "semantic_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l2-r1/j1.json",
+          "sha256": "f4731133e7ca3bbfcb07dfdd995e15ebfcdaf116d13a7a37d6cb72f804a6b850"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l2-r1/j2.json",
+          "sha256": "bcd5a21c804ba5b572de28b645c60fcf23adc9ea63f2ca46684c48897d86bdfd"
+        }
+      ],
+      "applicability": "Historical semantic evidence is reused only for the unchanged accepted s2.l2.desktop-web body: SHA-256 03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457, 18440 bytes, source revision 1cde2ff7a71bcf7aecb5d030917b577165135d38, original native package SHA-256 9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b, and original v1 result ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c. This plan does not create a new semantic decision.",
+      "limits": "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts. Original AC-01 through AC-10 and runtime-import-binding remain pending final evidence in the obligation set. A separate new isolated-evaluation-admission decision is required. Changed source, result metadata, applicability or implementation requires new identities and affected review; no historical decision is transplanted to a changed result."
+    },
+    {
+      "key": "s2.l2.app-session",
+      "semantic_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l2-r1/j1.json",
+          "sha256": "f4731133e7ca3bbfcb07dfdd995e15ebfcdaf116d13a7a37d6cb72f804a6b850"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l2-r1/j2.json",
+          "sha256": "bcd5a21c804ba5b572de28b645c60fcf23adc9ea63f2ca46684c48897d86bdfd"
+        }
+      ],
+      "applicability": "Historical semantic evidence is reused only for the unchanged accepted s2.l2.app-session body: SHA-256 302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7, 24434 bytes, source revision 1cde2ff7a71bcf7aecb5d030917b577165135d38, original native package SHA-256 9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b, and original v1 result 387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5. This plan does not create a new semantic decision.",
+      "limits": "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts. Original AC-01 through AC-10 and runtime-import-binding remain pending final evidence in the obligation set. A separate new isolated-evaluation-admission decision is required. Changed source, result metadata, applicability or implementation requires new identities and affected review; no historical decision is transplanted to a changed result."
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "semantic_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l2-r1/j1.json",
+          "sha256": "f4731133e7ca3bbfcb07dfdd995e15ebfcdaf116d13a7a37d6cb72f804a6b850"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l2-r1/j2.json",
+          "sha256": "bcd5a21c804ba5b572de28b645c60fcf23adc9ea63f2ca46684c48897d86bdfd"
+        }
+      ],
+      "applicability": "Historical semantic evidence is reused only for the unchanged accepted s2.l2.design-tui body: SHA-256 21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1, 21535 bytes, source revision 1cde2ff7a71bcf7aecb5d030917b577165135d38, original native package SHA-256 9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b, and original v1 result 1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664. This plan does not create a new semantic decision.",
+      "limits": "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts. Original AC-01 through AC-10 and runtime-import-binding remain pending final evidence in the obligation set. A separate new isolated-evaluation-admission decision is required. Changed source, result metadata, applicability or implementation requires new identities and affected review; no historical decision is transplanted to a changed result."
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "semantic_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l3-r1/j1.json",
+          "sha256": "fdf53d507ac57bbb4b41529164a43a01dd657e65cf838f59fd200d99aef6ce9a"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l3-r1/j2.json",
+          "sha256": "ba1d64e8d2ec61f481ecabb82e62005933f9b55a50fbbac20acc8bd3f184b46c"
+        }
+      ],
+      "applicability": "Historical semantic evidence is reused only for the unchanged accepted s2.l3.desktop-web body: SHA-256 fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e, 14715 bytes, source revision 1cde2ff7a71bcf7aecb5d030917b577165135d38, original native package SHA-256 9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b, and original v1 result ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1. This plan does not create a new semantic decision.",
+      "limits": "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts. Original AC-01 through AC-10 and runtime-import-binding remain pending final evidence in the obligation set. A separate new isolated-evaluation-admission decision is required. Changed source, result metadata, applicability or implementation requires new identities and affected review; no historical decision is transplanted to a changed result."
+    },
+    {
+      "key": "s2.l3.app-session",
+      "semantic_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l3-r1/j1.json",
+          "sha256": "fdf53d507ac57bbb4b41529164a43a01dd657e65cf838f59fd200d99aef6ce9a"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l3-r1/j2.json",
+          "sha256": "ba1d64e8d2ec61f481ecabb82e62005933f9b55a50fbbac20acc8bd3f184b46c"
+        }
+      ],
+      "applicability": "Historical semantic evidence is reused only for the unchanged accepted s2.l3.app-session body: SHA-256 7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7, 14334 bytes, source revision 1cde2ff7a71bcf7aecb5d030917b577165135d38, original native package SHA-256 9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b, and original v1 result 95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0. This plan does not create a new semantic decision.",
+      "limits": "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts. Original AC-01 through AC-10 and runtime-import-binding remain pending final evidence in the obligation set. A separate new isolated-evaluation-admission decision is required. Changed source, result metadata, applicability or implementation requires new identities and affected review; no historical decision is transplanted to a changed result."
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "semantic_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l3-r2/j1.json",
+          "sha256": "2a5102a2be7dc1acd065c75c75df6d558985a25ef15720221c792ec9b12f6741"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l3-r2/j2.json",
+          "sha256": "fc9edf21cf505d0b0e4fc535e68269e39e540ab2246d67e47bbdc376974f43e0"
+        }
+      ],
+      "applicability": "Historical semantic evidence is reused only for the unchanged accepted s2.l3.design-tui body: SHA-256 cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730, 15780 bytes, source revision 1cde2ff7a71bcf7aecb5d030917b577165135d38, original native package SHA-256 9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b, and original v1 result 3f77baa25cad0ef21847bff3f325478dba06f69c23dae9094c6ee02e83c2d509. This plan does not create a new semantic decision.",
+      "limits": "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts. Original AC-01 through AC-10 and runtime-import-binding remain pending final evidence in the obligation set. A separate new isolated-evaluation-admission decision is required. Changed source, result metadata, applicability or implementation requires new identities and affected review; no historical decision is transplanted to a changed result."
+    },
+    {
+      "key": "s2.l4.desktop-web",
+      "semantic_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r1/j1.json",
+          "sha256": "f7ace34ba0721f1b3e24f7a54e9c7dc5f725676e32ea8a4fef3a735997bb1458"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r1/j2.json",
+          "sha256": "14f52c0d412b4f9a7136aea25b4096e2a271ad7bb6458f9bfada2fa9adb42299"
+        }
+      ],
+      "applicability": "Historical semantic evidence is reused only for the unchanged accepted s2.l4.desktop-web body: SHA-256 108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa, 11183 bytes, source revision 1cde2ff7a71bcf7aecb5d030917b577165135d38, original native package SHA-256 9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b, and original v1 result 26ba4e10f4ead5c9443b7d9804b7b7c8aa9d7166350e08f3453748e0695a3199. This plan does not create a new semantic decision.",
+      "limits": "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts. Original AC-01 through AC-10 and runtime-import-binding remain pending final evidence in the obligation set. A separate new isolated-evaluation-admission decision is required. Changed source, result metadata, applicability or implementation requires new identities and affected review; no historical decision is transplanted to a changed result."
+    },
+    {
+      "key": "s2.l4.design-tui",
+      "semantic_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r1/j1.json",
+          "sha256": "f7ace34ba0721f1b3e24f7a54e9c7dc5f725676e32ea8a4fef3a735997bb1458"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r1/j2.json",
+          "sha256": "14f52c0d412b4f9a7136aea25b4096e2a271ad7bb6458f9bfada2fa9adb42299"
+        }
+      ],
+      "applicability": "Historical semantic evidence is reused only for the unchanged accepted s2.l4.design-tui body: SHA-256 95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c, 11783 bytes, source revision 1cde2ff7a71bcf7aecb5d030917b577165135d38, original native package SHA-256 9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b, and original v1 result 7a0e27eedc2a116172417159aedfdddf428f2609db8b9104c55012a0926f6629. This plan does not create a new semantic decision.",
+      "limits": "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts. Original AC-01 through AC-10 and runtime-import-binding remain pending final evidence in the obligation set. A separate new isolated-evaluation-admission decision is required. Changed source, result metadata, applicability or implementation requires new identities and affected review; no historical decision is transplanted to a changed result."
+    },
+    {
+      "key": "s2.l4.app-session",
+      "semantic_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r1/j1.json",
+          "sha256": "f7ace34ba0721f1b3e24f7a54e9c7dc5f725676e32ea8a4fef3a735997bb1458"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r1/j2.json",
+          "sha256": "14f52c0d412b4f9a7136aea25b4096e2a271ad7bb6458f9bfada2fa9adb42299"
+        }
+      ],
+      "applicability": "Historical semantic evidence is reused only for the unchanged accepted s2.l4.app-session body: SHA-256 ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3, 11220 bytes, source revision 1cde2ff7a71bcf7aecb5d030917b577165135d38, original native package SHA-256 9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b, and original v1 result 8e0368888768de4c6c1e134e47cdc60d12f544fe311152bfb9f4621a264dac0a. This plan does not create a new semantic decision.",
+      "limits": "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts. Original AC-01 through AC-10 and runtime-import-binding remain pending final evidence in the obligation set. A separate new isolated-evaluation-admission decision is required. Changed source, result metadata, applicability or implementation requires new identities and affected review; no historical decision is transplanted to a changed result."
+    },
+    {
+      "key": "s2.l4.entry",
+      "semantic_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r2/j1.json",
+          "sha256": "81e9685a5fdd63170aa8a5dfafe40bdfe9d8ad2ef36e2580b06ce68f45f7d817"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/judgments/l4-r2/j2.json",
+          "sha256": "5fb4008812cbe7e5f384aaed31ad4fb8bbbd99b738754b2759c9cd2f7e5cdf7d"
+        }
+      ],
+      "applicability": "Historical semantic evidence is reused only for the unchanged accepted s2.l4.entry body: SHA-256 e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1, 5849 bytes, source revision 1cde2ff7a71bcf7aecb5d030917b577165135d38, original native package SHA-256 9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b, and original v1 result 060600df54eb14bab6b17a278bd952afdb1b6bb8999e0dbe2d889d97401a7ff1. This plan does not create a new semantic decision.",
+      "limits": "Semantic acceptance is scoped to the captured baseline and the documented evidence limits. Runtime binding, publication, actual consumers and applicable CI require separate receipts. Original AC-01 through AC-10 and runtime-import-binding remain pending final evidence in the obligation set. A separate new isolated-evaluation-admission decision is required. Changed source, result metadata, applicability or implementation requires new identities and affected review; no historical decision is transplanted to a changed result."
+    }
+  ],
+  "consumer_ids": [
+    "S2-C1",
+    "S2-C2",
+    "S2-C3",
+    "S2-C4",
+    "S2-C5",
+    "S2-I1D",
+    "S2-I1A",
+    "S2-I1U",
+    "S2-I2D",
+    "S2-I2A",
+    "S2-I2U",
+    "S2-I3D",
+    "S2-I3A",
+    "S2-I3U"
+  ],
+  "consumer_modes": {
+    "S2-C1": "deep",
+    "S2-C2": "deep",
+    "S2-C3": "deep",
+    "S2-C4": "deep",
+    "S2-C5": "routine",
+    "S2-I1D": "routine",
+    "S2-I1A": "routine",
+    "S2-I1U": "routine",
+    "S2-I2D": "routine",
+    "S2-I2A": "routine",
+    "S2-I2U": "routine",
+    "S2-I3D": "routine",
+    "S2-I3A": "deep",
+    "S2-I3U": "routine"
+  },
+  "read_limits": {
+    "routine": {
+      "index_calls": 2,
+      "read_calls": 2,
+      "body_bytes_total": 16000
+    },
+    "deep": {
+      "index_calls": 6,
+      "read_calls": 5,
+      "body_bytes_total": 64000
+    }
+  },
+  "maintenance": {
+    "case": "S2-U1",
+    "status": "FROZEN_NOT_RUN_PENDING_DISTINCT_TARGET_PLAN",
+    "initial_phase": "The initial isolated evaluation phase covers only the 14 frozen consumer cases through the real bounded index/read ports. Case IDs are budget identities, not host agent IDs; actual fresh consumer identities will be recorded separately.",
+    "initial_policy_operation_intent": [
+      "admit",
+      "index",
+      "read"
+    ],
+    "initial_policy_excludes": [
+      "evaluation-maintenance"
+    ],
+    "policy_created": false,
+    "question_deck_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/consumer-question-deck.json",
+      "sha256": "51dacb110d80dd3e3f0fcf6cb3aa87ebb8a4c8d47e18abf76891d8bef430b356"
+    },
+    "frozen_case_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/oracles/ownership-v1.json",
+      "sha256": "87a571d85c09dbcc02df7c5360bde9cdca933768fe8bd81e00f044f33eed5ff1"
+    },
+    "frozen_graph_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/oracles/update-final-graph-expectation.json",
+      "sha256": "716f9f06506a34556ec8b56978048f5e31b401d43aae1bdeb0fdd2de476c954f"
+    },
+    "changed_input": "file:apps/desktop/src/main/owned-serve.ts",
+    "controls": [
+      "identical inputs/recipe reuse",
+      "navigation-only link does not rebuild",
+      "missing declared input and omitted dependency reject",
+      "recipe or authority/validity/gaps change propagates even equal prose",
+      "restore exact source and rebind, no stale fallback"
+    ],
+    "required_before_maintenance": [
+      "Freeze a distinct target plan before target production, including the concrete behavior edit, its expected observable consequences, producer recipe, identity and exact source/runtime pins.",
+      "Preserve the original obligation set and frozen S2-U1 graph; distinguish affected graph reachability from actual interpretation and recipe call counts.",
+      "Use the evaluation v2 rebuild path; legacy v1 maintenance cannot be used for v2 authority envelopes.",
+      "Obtain fresh result-specific semantic evidence for changed results and two new exact target admission decisions before any target admission.",
+      "Provide a separately reviewed evaluation-maintenance policy only after its prerequisites are satisfied; initial policy must not grant it.",
+      "Record invalidation, rebuild, current-reader refusal/restoration, reuse and recovery; do not relabel S2-U1 as executed, passed or not applicable before those observations."
+    ],
+    "not_yet_fixed": [
+      "concrete behavior patch",
+      "target producer recipe",
+      "mutation-specific expected observables",
+      "exact target/recovery operation commands"
+    ],
+    "acceptance": "No ADMIT criterion or final AC verdict is asserted by this plan. The adequacy of the initial-phase boundary and later target-plan sequence remains subject to the two independent admission reviewers."
+  },
+  "implementation": {
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/scripts/genesis-evaluation.ts": "3f7477b37400c1ffeea550ca0d48b328b16dedcea4deb015ad190128ff63b94c",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/scripts/genesis-native.ts": "18dc473b79c9bf986f07677bdba728d38490e0df36e6a39763f3765f422af3ce",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/src/genesis-evaluation.ts": "f7b9eb3f3163788d11b4f9eace24a361e7e3e7e37f2f6daab816c81d558ed1b0",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/src/genesis-evaluation-binding.ts": "44cd65c861254fb0b349767c69df9a7b9a013b10d0184f1149aa132953b1c9ac",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/src/ownership-evaluation-policy.ts": "cb59a6c0befa1563d1aa90f858028d2d1bb7f2c7506951c3b4263ec2ca36ffdb",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/src/evaluation-runtime-identity.ts": "ecdc39431c4e94735099295958af871636edab0bb204f3947a0f20d624ccd013",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/src/evaluation-read-budget.ts": "83183525ba94a45128e777dbe6542151beb70a9db27c03b871dd787eeafb2d83",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/src/evaluation-state-io.ts": "0765038123585bc707c5369add97727cac8a603362ffa8ffe1cf970d6d549388",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/src/evaluation-manifest-binding.ts": "ed6c4a178c4f720b4db662cb1566252ac2ea885e48faa6548ff1b9b75ea0cee0",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/src/store-evaluation-identity.ts": "f8ba09da56a1e117ddd0447a9334bceea20d41458a7da640f49cfa47d16f5552",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/src/evaluation-rebuild.ts": "1e511bd090ab303f0ee9cb8c69c1d6289a5a5c5cabbe5cd96c56833ad6a52a9e",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/src/genesis-native.ts": "07c8103ef3809ff6d91e8678fa4193e397706a93f7705fc990aaa29d32d44a84",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/src/genesis-native-format.ts": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/src/genesis-native-io.ts": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/src/genesis-native-binding.ts": "ef424a0b5bdb9590f48b8b21b418de1aa033189578790c0bb93a92e1c1d38021",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/src/ownership-input.ts": "9cb3d220d5f2de83e34c0303e5e6744c83e08a22e5ffdf5f5151355d88056f36",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/src/ownership-access.ts": "b7c401180b3e9f6d634e6c2de0bb920751dcb2a0072887902cd6e1e9ccd60308",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/src/compose.ts": "67f656ca04776648f53cfed6cbeb8e153aa52fa0105592efc19d9b8bab51e81a",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/src/store.ts": "bd4bd82db6fef939920af834f643da53f8049bbd59066d7fe27315db602efd80",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/adapter-io/package.json": "fbc7951f42ce0465ed53211516ee396aacaf66a0f43b500325330a0aa8c40132",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/knowledge/src/ownership/evaluation.ts": "de9c2580da14f7c8f289a987b751f6513ae6c2fe60ab77a314eab3e0048ac567",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/knowledge/src/ownership/read.ts": "3489e4b680a53b32bc03456d7bdaea2334a72141ba772189aed561abd5fd3404",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/knowledge/src/ownership/shape.ts": "1301342b6072c619a378bfefdc04bea0db66c9bab1464dea18571aa75cd50214",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/knowledge/src/ownership/types.ts": "3a4bc25ab34d55a771582cb7d5ecbdc274c0763eabefcc9390d46e15bc8c19c7",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/kernel/src/canonical.ts": "53239bdd1a7ccf81cae476d1d12d456215ec1f94b66f980e12f7c28d0574ef5f",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/packages/kernel/src/encoder.ts": "9fe7d781f1d2e70614419483e4abb51ebf036fd0420baef332b77dce5e4c07ad",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/package.json": "168380cb630bd0aba6a2504d6b207b449153e084c01785c6f76eb84fd667c605",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/implementation/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/package-lock.json": "b3c505a0227808e04acf49138a1acccfd3e1a0e9b5476a5f9748fccd84e1a06f"
+  },
+  "isolation": {
+    "root": "/workspace/scratch/5cfbb6c803f1/s2-evaluation",
+    "original_root": "/workspace/scratch/5cfbb6c803f1/s2-corpus"
+  }
+}

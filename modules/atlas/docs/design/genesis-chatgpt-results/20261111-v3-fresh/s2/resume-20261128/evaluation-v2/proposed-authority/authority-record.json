@@ -1,0 +1,29 @@
+{
+  "schema": "genesis-s2-isolated-authority-record/v1",
+  "state": "PROPOSED_NOT_INSTALLED",
+  "created_at": "2026-11-28T06:35:07.864686+00:00",
+  "authority_source": "User assignment: prove prepare → binding → isolated publication → index/read → independent consumer in own branch; integration and production activation remain ROOT/Gustavo.",
+  "actor": "genesis-s2-resume-846d4f9c",
+  "actor_semantics": "Nominal execution responsibility string, not authenticated identity; no human credential or ratification token is asserted.",
+  "generation": "694110e9b70b62ca59fe3a0edf91157066f991bb79fcaab27a1b005320bc3488",
+  "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "operations_staging": [
+    "Initialize fresh evaluation store after exact new dual admission decisions and compatibility review.",
+    "Install exact scope-specific governance policy and admit-only evaluation policy.",
+    "Run original genesis-evaluation.ts admit; preserve actual check/emission.",
+    "For each frozen consumer case, replace only evaluation policy with the predeclared exact case/mode and read/index operations; preserve every revision; never reset budget files."
+  ],
+  "excluded_operations": [
+    "evaluation-maintenance in initial plan",
+    "ordinary accepted-phase publication",
+    "global activation",
+    "merge"
+  ],
+  "preconditions": [
+    "two original exact ADMIT decisions covering all 13 entries",
+    "unchanged candidate sources/runtime",
+    "compatible fixed runtime capability",
+    "new root still CAS-only at init"
+  ],
+  "current_state": "No policy or marker created in s2-evaluation; drafts outside served root."
+}

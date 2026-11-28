@@ -26,7 +26,8 @@
     "Fresh native consumer context; do not inspect sources, producer work, reserved oracles, expected answers or judge decisions.",
     "Use actual ownership.index and ownership.read only through an authorized prepared/published isolated manifest.",
     "Record each real tool call, selected component ID, returned section and body byte count; abstain if current authorized evidence is unavailable.",
-    "Never substitute raw Markdown file access for Atlas reader evidence."
+    "Never substitute raw Markdown file access for Atlas reader evidence.",
+    "Use one new fork:none consumer context per case; original limits and durable per-case budget are preserved."
   ],
   "cases": [
     {
@@ -38,9 +39,8 @@
       "trace": null,
       "judge_decisions": [],
       "blocked_by": [
-        "S4_COMPATIBLE_RELEASE",
-        "EXACT_BINDING",
-        "ISOLATED_PUBLICATION"
+        "EXACT_V2_ADMISSION_DECISIONS",
+        "ISOLATED_GOVERNED_ADMISSION"
       ]
     },
     {
@@ -52,9 +52,8 @@
       "trace": null,
       "judge_decisions": [],
       "blocked_by": [
-        "S4_COMPATIBLE_RELEASE",
-        "EXACT_BINDING",
-        "ISOLATED_PUBLICATION"
+        "EXACT_V2_ADMISSION_DECISIONS",
+        "ISOLATED_GOVERNED_ADMISSION"
       ]
     },
     {
@@ -66,9 +65,8 @@
       "trace": null,
       "judge_decisions": [],
       "blocked_by": [
-        "S4_COMPATIBLE_RELEASE",
-        "EXACT_BINDING",
-        "ISOLATED_PUBLICATION"
+        "EXACT_V2_ADMISSION_DECISIONS",
+        "ISOLATED_GOVERNED_ADMISSION"
       ]
     },
     {
@@ -80,9 +78,8 @@
       "trace": null,
       "judge_decisions": [],
       "blocked_by": [
-        "S4_COMPATIBLE_RELEASE",
-        "EXACT_BINDING",
-        "ISOLATED_PUBLICATION"
+        "EXACT_V2_ADMISSION_DECISIONS",
+        "ISOLATED_GOVERNED_ADMISSION"
       ]
     },
     {
@@ -94,9 +91,8 @@
       "trace": null,
       "judge_decisions": [],
       "blocked_by": [
-        "S4_COMPATIBLE_RELEASE",
-        "EXACT_BINDING",
-        "ISOLATED_PUBLICATION"
+        "EXACT_V2_ADMISSION_DECISIONS",
+        "ISOLATED_GOVERNED_ADMISSION"
       ]
     },
     {
@@ -109,9 +105,8 @@
       "trace": null,
       "judge_decisions": [],
       "blocked_by": [
-        "S4_COMPATIBLE_RELEASE",
-        "EXACT_BINDING",
-        "ISOLATED_PUBLICATION"
+        "EXACT_V2_ADMISSION_DECISIONS",
+        "ISOLATED_GOVERNED_ADMISSION"
       ]
     },
     {
@@ -124,9 +119,8 @@
       "trace": null,
       "judge_decisions": [],
       "blocked_by": [
-        "S4_COMPATIBLE_RELEASE",
-        "EXACT_BINDING",
-        "ISOLATED_PUBLICATION"
+        "EXACT_V2_ADMISSION_DECISIONS",
+        "ISOLATED_GOVERNED_ADMISSION"
       ]
     },
     {
@@ -139,9 +133,8 @@
       "trace": null,
       "judge_decisions": [],
       "blocked_by": [
-        "S4_COMPATIBLE_RELEASE",
-        "EXACT_BINDING",
-        "ISOLATED_PUBLICATION"
+        "EXACT_V2_ADMISSION_DECISIONS",
+        "ISOLATED_GOVERNED_ADMISSION"
       ]
     },
     {
@@ -154,9 +147,8 @@
       "trace": null,
       "judge_decisions": [],
       "blocked_by": [
-        "S4_COMPATIBLE_RELEASE",
-        "EXACT_BINDING",
-        "ISOLATED_PUBLICATION"
+        "EXACT_V2_ADMISSION_DECISIONS",
+        "ISOLATED_GOVERNED_ADMISSION"
       ]
     },
     {
@@ -169,9 +161,8 @@
       "trace": null,
       "judge_decisions": [],
       "blocked_by": [
-        "S4_COMPATIBLE_RELEASE",
-        "EXACT_BINDING",
-        "ISOLATED_PUBLICATION"
+        "EXACT_V2_ADMISSION_DECISIONS",
+        "ISOLATED_GOVERNED_ADMISSION"
       ]
     },
     {
@@ -184,9 +175,8 @@
       "trace": null,
       "judge_decisions": [],
       "blocked_by": [
-        "S4_COMPATIBLE_RELEASE",
-        "EXACT_BINDING",
-        "ISOLATED_PUBLICATION"
+        "EXACT_V2_ADMISSION_DECISIONS",
+        "ISOLATED_GOVERNED_ADMISSION"
       ]
     },
     {
@@ -199,9 +189,8 @@
       "trace": null,
       "judge_decisions": [],
       "blocked_by": [
-        "S4_COMPATIBLE_RELEASE",
-        "EXACT_BINDING",
-        "ISOLATED_PUBLICATION"
+        "EXACT_V2_ADMISSION_DECISIONS",
+        "ISOLATED_GOVERNED_ADMISSION"
       ]
     },
     {
@@ -214,9 +203,8 @@
       "trace": null,
       "judge_decisions": [],
       "blocked_by": [
-        "S4_COMPATIBLE_RELEASE",
-        "EXACT_BINDING",
-        "ISOLATED_PUBLICATION"
+        "EXACT_V2_ADMISSION_DECISIONS",
+        "ISOLATED_GOVERNED_ADMISSION"
       ]
     },
     {
@@ -229,9 +217,8 @@
       "trace": null,
       "judge_decisions": [],
       "blocked_by": [
-        "S4_COMPATIBLE_RELEASE",
-        "EXACT_BINDING",
-        "ISOLATED_PUBLICATION"
+        "EXACT_V2_ADMISSION_DECISIONS",
+        "ISOLATED_GOVERNED_ADMISSION"
       ]
     }
   ],
@@ -248,5 +235,8 @@
       "Concrete mutation/observable definitions remain to be fixed before execution; do not equate nine reachable artifacts with nine interpretations."
     ]
   },
-  "frozen_bytes_modified": false
+  "frozen_bytes_modified": false,
+  "current_candidate": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "current_phase": "evaluation",
+  "runtime_release": "20261128-s4-runtime-db9b423-prepare-v1"
 }

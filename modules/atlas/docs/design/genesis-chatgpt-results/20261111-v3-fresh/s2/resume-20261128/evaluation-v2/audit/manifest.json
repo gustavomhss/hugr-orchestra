@@ -1,0 +1,61 @@
+{
+  "schema": "genesis-s2-evaluation-audit-manifest/v1",
+  "recorded_at": "2026-11-28T06:42:24.644Z",
+  "files": [
+    {
+      "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-audit/verify-evaluation.mjs",
+      "byte_length": 52676,
+      "sha256": "5a1ea48e9a3cab879f64331a443d33228dd15cf2502026a3da4b56809f5ddef5"
+    },
+    {
+      "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-audit/report.json",
+      "byte_length": 75576,
+      "sha256": "ba77fa8ecc3df1d34311e48c9afdc9ad81ad5a8d7c6283f3cb6a6167d6868371"
+    },
+    {
+      "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-audit/checks.jsonl",
+      "byte_length": 5567898,
+      "sha256": "82f2bfdd73f96e04ab42a1231fddcc40bbdd3accb821b71416719248a637ea6a"
+    },
+    {
+      "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-audit/entries.json",
+      "byte_length": 225517,
+      "sha256": "819581c3821f1b0e911f72d1d016a44159711111b66ae210aa8e50795a9a4281"
+    },
+    {
+      "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-audit/observations.json",
+      "byte_length": 624641,
+      "sha256": "6901de89decd0caf98ae532d8e70031f252ccf656e03fb3cd01ebb14018bc11a"
+    },
+    {
+      "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-audit/references.json",
+      "byte_length": 91809,
+      "sha256": "47c5e587ece580f5176ef5a09e76dd545795b581c5f532432987d01587e8e823"
+    },
+    {
+      "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-audit/cas.json",
+      "byte_length": 68392,
+      "sha256": "b08dd60cd00b0d9c090191f5c9f449954fb00f932724190e40a07c44ce0c6eba"
+    },
+    {
+      "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-audit/materialization.json",
+      "byte_length": 1045944,
+      "sha256": "679a5b635c25773941c91f67988a82b71415e954a7f8ebe53390e9bfc816f80d"
+    },
+    {
+      "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-audit/runtime-identity.json",
+      "byte_length": 747939,
+      "sha256": "e8004f5fa3a0e42f746ae9d66e9a520b3527b7648b2541eabe3e2eb1a3df4fe4"
+    },
+    {
+      "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-audit/field-deltas.json",
+      "byte_length": 56448,
+      "sha256": "47448bff110ad578cf8bcd0eda6f760848d215e5d303cda34dda0b496fca56a1"
+    },
+    {
+      "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-audit/README.md",
+      "byte_length": 10309,
+      "sha256": "11ec478a67e03a286120eb66b979d7a2acd998afe01ee8fcfcd506efafdc18b6"
+    }
+  ]
+}

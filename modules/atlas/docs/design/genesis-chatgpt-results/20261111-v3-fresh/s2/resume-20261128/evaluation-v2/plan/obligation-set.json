@@ -1,0 +1,99 @@
+{
+  "schema": "genesis-obligation-set/v1",
+  "original_candidate": "4a36e1210acf6a4bb460846b717d446e6c259f80a78fd73cfce8b5a6e445f522",
+  "original_contract": "9f3829c9ebdd70aa303b9eb1f167bda77adf2f3b1988e98a973205d712ddfce2",
+  "criteria": [
+    "AC-01",
+    "AC-02",
+    "AC-03",
+    "AC-04",
+    "AC-05",
+    "AC-06",
+    "AC-07",
+    "AC-08",
+    "AC-09",
+    "AC-10",
+    "runtime-import-binding"
+  ],
+  "normative_refs": [
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/original/contract.json",
+      "sha256": "f451d729594e53b75766b659e7bff08f49d39f08a64bc00f2f6c31ed06f56a3f"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/normative/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-ownership-plan.md",
+      "sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/normative/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-update-plan-contract.md",
+      "sha256": "5f0eb376cd9d61b23550bebf639f9a4a312cda4f1750e1399a30e55afbaaf3b1"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/normative/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-economy-control-contract.md",
+      "sha256": "bccb68976c96d2c1d97dbd3523ca05121359507e2efac00467cd223dcfa830a5"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/normative/1cde2ff7a71bcf7aecb5d030917b577165135d38/modules/atlas/docs/design/genesis-global-completion-plan.md",
+      "sha256": "b528c1003d8ed38d64475970b335b565fbef1ce4ebb4324ae4be402ce70d1108"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/normative/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/transport.md",
+      "sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/normative/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/runtime.md",
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/normative/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/judging.md",
+      "sha256": "c820270ed2d777777be8794980658f3fcfe6e59cfa05ccac197280c56035f0bb"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/normative/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/completion.md",
+      "sha256": "087428f9cd8e4acfe26ee71e9b97a5db291b1d361fe763d92245b978cada4ffd"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/normative/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/campaign.md",
+      "sha256": "b3cb6324c348ca3fbe92ccf73b2a5e17d36d0822aa3cddeec84c0a9bb2a907bb"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/normative/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/fatia-2.md",
+      "sha256": "716620ec26a7a253ae77760940ff74a871ea83f08d77a6321c3de73482b390eb"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/normative/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/principles.md",
+      "sha256": "f724520d864fff48e11951fa97d54a362517a863ef518bb7b3cb3606b01f3230"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/normative/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/criteria.json",
+      "sha256": "8f86bdd36949185df39f729a2de16c5ea7166ccd1638f74b197cad60d1551116"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/normative/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/S2-INTERFACES.md",
+      "sha256": "87645552a1e1dbd235c912b71b43ed9e85481bf3fadc2d4a63d0d238ae27822a"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/normative/db9b4235022c4df32fe3bfd4faeea8adcd69abb7/modules/atlas/docs/design/evaluation-admission.md",
+      "sha256": "1ec5b3e0deb36a0b793621b75263f36fed4e4e94889ae56951de36c66e2c29e3"
+    }
+  ],
+  "oracle_refs": [
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/oracles/ownership-v1.json",
+      "sha256": "87a571d85c09dbcc02df7c5360bde9cdca933768fe8bd81e00f044f33eed5ff1"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/oracles/layers-addendum.json",
+      "sha256": "3fe0f7a3d118fab05fba99f9348a7b434b23418cbc8a0e003ed46f80279d2a8f"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/oracles/update-final-graph-expectation.json",
+      "sha256": "716f9f06506a34556ec8b56978048f5e31b401d43aae1bdeb0fdd2de476c954f"
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/consumer-question-deck.json",
+      "sha256": "51dacb110d80dd3e3f0fcf6cb3aa87ebb8a4c8d47e18abf76891d8bef430b356"
+    }
+  ],
+  "status": "PENDING_FINAL_EVIDENCE"
+}

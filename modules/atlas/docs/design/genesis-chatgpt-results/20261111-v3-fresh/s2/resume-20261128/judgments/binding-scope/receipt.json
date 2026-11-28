@@ -1,0 +1,32 @@
+{
+  "schema": "genesis-s2-binding-scope-review/v1",
+  "recorded_at": "2026-11-28T06:23:28.973644+00:00",
+  "candidate_id": "4a36e1210acf6a4bb460846b717d446e6c259f80a78fd73cfce8b5a6e445f522",
+  "contract": "9f3829c9ebdd70aa303b9eb1f167bda77adf2f3b1988e98a973205d712ddfce2",
+  "request_packet_sha256": "f711d3f2b2cd8615ff9143115d403e59723d25a728506ae659e207874c44b6b1",
+  "responses": [
+    {
+      "reviewer": "/root/s2_j1",
+      "file": "scope-j1-response.md",
+      "byte_length": 7565,
+      "sha256": "ccf92d98b9bd7658d1f4cb2d3b4a5526ec0a6411bc04d2402a2e11805c58a95d",
+      "verdict": "HOLD_PROCESSUAL",
+      "purpose": "normative-admissibility-only",
+      "final_binding_decision": false,
+      "record_source": "Visible host-returned final response copied with one terminal LF; no host message ID exposed."
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "file": "scope-j2-response.md",
+      "byte_length": 7333,
+      "sha256": "a83da0f2d199dc64496107a313d2e12be58802feca29d333d594eabf2a423829",
+      "verdict": "HOLD_PROCESSUAL",
+      "purpose": "normative-admissibility-only",
+      "final_binding_decision": false,
+      "record_source": "Visible host-returned final response copied with one terminal LF; no host message ID exposed."
+    }
+  ],
+  "outcome": "No v1 all-AC PASS authorization. Original candidate, contract and artifacts remain unchanged. A distinct pre-existing v2 evaluation-admission route is under investigation, not a reinterpretation of these votes.",
+  "binding_created": false,
+  "publication_attempted": false
+}

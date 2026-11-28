@@ -1,0 +1,11 @@
+{
+  "schema": "genesis-s2-plan-preparation-amendment/v1",
+  "reason": "Bind the public frozen question-deck as an observed reference before any runtime prepare; no question, answer, criterion, original package or source changed.",
+  "at": "2026-11-28T06:28:21.632882+00:00",
+  "previous_plan_sha256": "d561314d4841affd34a271a47fe6fe04a9e22e1a3025d2b15ada220269d74cd0",
+  "new_plan_sha256": "b49e58fad813cf5a6bbbc68a605cfbaf216eb8cc11575d0e3b8bf78b99870e63",
+  "previous_obligation_sha256": "c761abcef0b137c0ea8b4df8307185d63c2b3eadf14daba5757714a38f189741",
+  "new_obligation_sha256": "3533555bc7ced4ec21d236493bfafe98238643f989278fc07b9fab428e746229",
+  "runtime_preparation_before_amendment": false,
+  "previous_outputs_preserved": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-plan/history/initial-proposal-before-deck-binding"
+}

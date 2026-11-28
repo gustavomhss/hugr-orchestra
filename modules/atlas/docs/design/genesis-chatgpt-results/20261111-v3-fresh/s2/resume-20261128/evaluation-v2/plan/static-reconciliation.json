@@ -1,0 +1,74 @@
+{
+  "schema": "genesis-s2-evaluation-plan-static-reconciliation/v1",
+  "operation": "JSON/reference byte inspection only; no Atlas runtime executed",
+  "plan_top_level_keys": [
+    "schema",
+    "package_path",
+    "original_prepared",
+    "obligations",
+    "entries",
+    "consumer_ids",
+    "consumer_modes",
+    "read_limits",
+    "maintenance",
+    "implementation",
+    "isolation"
+  ],
+  "original_criteria_preserved": true,
+  "normative_ref_count": 15,
+  "oracle_ref_count": 4,
+  "semantic_reference_uses": 26,
+  "entries": 13,
+  "case_ids": [
+    "S2-C1",
+    "S2-C2",
+    "S2-C3",
+    "S2-C4",
+    "S2-C5",
+    "S2-I1D",
+    "S2-I1A",
+    "S2-I1U",
+    "S2-I2D",
+    "S2-I2A",
+    "S2-I2U",
+    "S2-I3D",
+    "S2-I3A",
+    "S2-I3U"
+  ],
+  "case_modes": {
+    "S2-C1": "deep",
+    "S2-C2": "deep",
+    "S2-C3": "deep",
+    "S2-C4": "deep",
+    "S2-C5": "routine",
+    "S2-I1D": "routine",
+    "S2-I1A": "routine",
+    "S2-I1U": "routine",
+    "S2-I2D": "routine",
+    "S2-I2A": "routine",
+    "S2-I2U": "routine",
+    "S2-I3D": "routine",
+    "S2-I3A": "deep",
+    "S2-I3U": "routine"
+  },
+  "read_limits": {
+    "routine": {
+      "index_calls": 2,
+      "read_calls": 2,
+      "body_bytes_total": 16000
+    },
+    "deep": {
+      "index_calls": 6,
+      "read_calls": 5,
+      "body_bytes_total": 64000
+    }
+  },
+  "implementation_pins": 28,
+  "derived_expected_unique_observations": 690,
+  "observation_versions_computed": false,
+  "all_referenced_payload_bytes_match": true,
+  "initial_policy_created": false,
+  "maintenance_not_run": true,
+  "atlas_state_present": false,
+  "git_state_present": false
+}

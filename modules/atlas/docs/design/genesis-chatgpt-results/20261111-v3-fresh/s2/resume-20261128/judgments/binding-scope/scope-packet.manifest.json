@@ -1,0 +1,121 @@
+{
+  "schema": "genesis-s2-scope-packet-composition/v1",
+  "composed_at": "2026-11-28T06:15:42.134643+00:00",
+  "packet_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/binding/scope-packet.txt",
+  "packet_byte_length": 28352,
+  "packet_sha256": "f711d3f2b2cd8615ff9143115d403e59723d25a728506ae659e207874c44b6b1",
+  "composition_command": "python3 build_scope_packet.py",
+  "source_excerpts": [
+    {
+      "label": "Contexto literal do briefing — missão e 13 artefatos aceitos",
+      "repository": "gustavomhss/hugr-orchestra",
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/S2-INTERFACES.md",
+      "selection": "lines 3-7",
+      "source_sha256": "87645552a1e1dbd235c912b71b43ed9e85481bf3fadc2d4a63d0d238ae27822a",
+      "excerpt_byte_length": 1496,
+      "excerpt_sha256": "13c0c8645d3d5b6f73fe0c13720a998c2219fa3a27bd942ce7cd06a0ff4723fa"
+    },
+    {
+      "label": "Contexto literal do briefing — sequenciamento e entrega",
+      "repository": "gustavomhss/hugr-orchestra",
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/S2-INTERFACES.md",
+      "selection": "lines 17-27",
+      "source_sha256": "87645552a1e1dbd235c912b71b43ed9e85481bf3fadc2d4a63d0d238ae27822a",
+      "excerpt_byte_length": 3439,
+      "excerpt_sha256": "bc1b6c9000b18d537191674f717fa9d9df8b2caab50129cc82f0747f9859403f"
+    },
+    {
+      "label": "Contrato CAS real integral",
+      "path": "/workspace/scratch/5cfbb6c803f1/s2-corpus/.atlas/cas/9f/9f3829c9ebdd70aa303b9eb1f167bda77adf2f3b1988e98a973205d712ddfce2",
+      "cas_id": "9f3829c9ebdd70aa303b9eb1f167bda77adf2f3b1988e98a973205d712ddfce2",
+      "byte_length": 159,
+      "sha256": "f451d729594e53b75766b659e7bff08f49d39f08a64bc00f2f6c31ed06f56a3f",
+      "selection": "complete raw CAS object"
+    },
+    {
+      "label": "AC-01..AC-10 integrais e contexto imediato",
+      "repository": "gustavomhss/hugr-orchestra",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/atlas/docs/design/genesis-ownership-plan.md",
+      "selection": "lines 130-154",
+      "source_sha256": "6164db5c520fd86f12f36b0165bae8cd5b4091a62d7b80596b77774f9a26d697",
+      "excerpt_byte_length": 5042,
+      "excerpt_sha256": "db634c7de65a8eb64a4d403ec170445f95036e75a428a2ecc15438a0ff01a00a"
+    },
+    {
+      "label": "Protocolo comum — adaptação determinística",
+      "repository": "gustavomhss/hugr-orchestra",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/transport.md",
+      "selection": "section Adaptação determinística aos tipos existentes",
+      "source_sha256": "02dbf78b9eb76c894d07c9e498704d2260157b7b10d5e1d159a0fd1037e73e3c",
+      "excerpt_byte_length": 1392,
+      "excerpt_sha256": "70dea9eb09dbc0ca63205408bd22ddb4ad34081c49b061f84070f86771c498ee"
+    },
+    {
+      "label": "Protocolo comum — binding, atualização e consumo",
+      "repository": "gustavomhss/hugr-orchestra",
+      "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "selection": "section Binding, atualização e consumo",
+      "source_sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+      "excerpt_byte_length": 1172,
+      "excerpt_sha256": "74d346506d3653c36bbf174139d860e38cf4ae61a56fbc96b42a6e52af1c2cd6"
+    },
+    {
+      "label": "Despacho semântico S2 — l3-complete.md",
+      "repository": "gustavomhss/hugr-orchestra",
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-complete.md",
+      "selection": "lines 12-20",
+      "source_sha256": "9899051a8db6cf82b63886c7c6ee54f4ddccd4c2dd5e4cda9d27650e19a99342",
+      "excerpt_byte_length": 1714,
+      "excerpt_sha256": "5613afd432a0061bca67a934bfc1b97af019d15dc86e05c511373790f1828b97"
+    },
+    {
+      "label": "Despacho semântico S2 — l3-design-tui-dispatch.md",
+      "repository": "gustavomhss/hugr-orchestra",
+      "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-design-tui-dispatch.md",
+      "selection": "lines 12-20",
+      "source_sha256": "325383a663ac0c275419653f7b12c5836ed3c47efb8f066408bc25898b524949",
+      "excerpt_byte_length": 1714,
+      "excerpt_sha256": "5613afd432a0061bca67a934bfc1b97af019d15dc86e05c511373790f1828b97"
+    },
+    {
+      "label": "Exemplo S4 — identidade, propósito e critérios",
+      "repository": "gustavomhss/hugr-orchestra",
+      "commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/package-binding.json",
+      "selection": "lines 1-20",
+      "source_sha256": "b1e1f6ff8fc7fb22ca716c2b9b61cd2ece6f61991ae12fa35642d242017e6d04",
+      "excerpt_byte_length": 684,
+      "excerpt_sha256": "f6279bcce9370dbf811ba01bd39e35fc6507e3f00785e31f2f6f5cc2d13c7601"
+    },
+    {
+      "label": "Exemplo S4 — cláusula PB-contract literal",
+      "repository": "gustavomhss/hugr-orchestra",
+      "commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/package-binding.json",
+      "selection": "lines 63-67",
+      "source_sha256": "b1e1f6ff8fc7fb22ca716c2b9b61cd2ece6f61991ae12fa35642d242017e6d04",
+      "excerpt_byte_length": 347,
+      "excerpt_sha256": "d56bf320936c0037a0517cff3d7d77ea413aa7f77d0fe9d4bba0796a7e6e7051"
+    },
+    {
+      "label": "Formato e validação de binding no candidato db9b423",
+      "repository": "gustavomhss/hugr-orchestra",
+      "commit": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+      "selection": "whole file",
+      "source_sha256": "ef424a0b5bdb9590f48b8b21b418de1aa033189578790c0bb93a92e1c1d38021",
+      "excerpt_byte_length": 5198,
+      "excerpt_sha256": "ef424a0b5bdb9590f48b8b21b418de1aa033189578790c0bb93a92e1c1d38021"
+    }
+  ],
+  "purpose": "Normative scope admissibility only; no final binding vote requested",
+  "no_consumer_answers_or_new_judge_decisions_included": true,
+  "host_message_ids": "NOT_EXPOSED"
+}
