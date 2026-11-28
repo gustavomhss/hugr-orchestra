@@ -1,0 +1,243 @@
+{
+  "schema": "genesis-s2-custody-search/v1",
+  "recorded_at": "2026-11-28 05:52:11 UTC",
+  "author": "S2 custody search subagent",
+  "result": "ORIGINAL_R4_NOT_RECOVERED_IN_INSPECTED_SURFACES",
+  "repository": "gustavomhss/hugr-orchestra",
+  "task_head": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+  "original_identity": {
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "runtime_revision": "22815b6821dce26562624b4711c705c7cd786268",
+    "native_package_sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+    "candidate_id": "f310ec9b3844d6833ea5a867f9ed14ce099669492c66d8b133116642310310dd",
+    "prepared_sha256": "a4946200211c54cdf7f94a26e659cdc285e65d5775a8e1e2f56cf2d9c9d2f207",
+    "prepared_bytes": 344725,
+    "stdout_sha256": "82ad17ac4cdf0fde9fb94c5eebe5361014e199fee603e19b8a2f8269477b65d0",
+    "stdout_bytes": 268550,
+    "integral_receipt_sha256": null,
+    "identity_basis": "Derived public summary only; prepared bytes, receipt and stdout r4 not independently recovered."
+  },
+  "sources": [
+    {
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/receipt-recovery-20261114/INDEX.md",
+      "blob_sha": "48d74cc02cdb7800ce824234f8c20fb3975d388b",
+      "result": "Index explicitly distinguishes failed original prepare from derived r4 summary and locates missing custody."
+    },
+    {
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/receipt-recovery-20261114/HANDOFF.md",
+      "blob_sha": "250b679d1f2243c77235e2282c969bd184143143",
+      "result": "PARTIAL; no integral receipt supplied."
+    },
+    {
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/recovery-prepare-r4/public-summary.json",
+      "blob_sha": "72a104c694c78fdfecd5c5a552c05dc992669abf",
+      "result": "DERIVED_REDACTED_SUMMARY_NOT_VERBATIM_EXECUTION_RECEIPT; internal argv, ledger, prepared candidate and source-derived reference inventory explicitly omitted."
+    },
+    {
+      "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/trees/060750d88cd2d0af669f67124cb4e85f0aed01e6?recursive=1",
+      "tree_sha": "060750d88cd2d0af669f67124cb4e85f0aed01e6",
+      "truncated": false,
+      "result": "Exactly one file: public-summary.json."
+    },
+    {
+      "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/trees/ab9e54c83efbed2e88e62dcecfd570e28e183d90?recursive=1",
+      "tree_sha": "ab9e54c83efbed2e88e62dcecfd570e28e183d90",
+      "truncated": false,
+      "entries": 1312,
+      "files": 1115,
+      "result": "No loose blob with declared prepared or stdout byte lengths; no r4 receipt/prepared path beyond summary."
+    },
+    {
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/c73238fd2bc2a841691be09b4e07678c9d30dbed/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261114/recovery-prepare-reconciliation.md",
+      "blob_sha": "cd84f8da06ce580a93f23d37115609b890908315",
+      "result": "Documentary reconciliation; no missing original supplied. Path absent at task HEAD but read successfully at pinned original commit."
+    },
+    {
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/6d49a6a821c3bcb153f794326ab757346f87bcf6/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261114/handoff.md",
+      "blob_sha": "f34f3a7b2941fb17355090b8f5a9fdceb47989fc",
+      "result": "Documentary handoff PARTIAL; original still missing."
+    },
+    {
+      "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/trees/b002e7c36f544dbd9ba84f22d3ebcbb010a35b61?recursive=1",
+      "tree_sha": "b002e7c36f544dbd9ba84f22d3ebcbb010a35b61",
+      "truncated": false,
+      "entries": 1311,
+      "result": "Prior c732 S2 tree also has only summary for r4; no declared prepared/stdout-size blob."
+    },
+    {
+      "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/commits?sha=genesis-fresh-s2&per_page=30",
+      "result": "Last S2 commit 7c8905a0e833f057bca359bb8debd548440bc23e is redacted summary introduction, 2026-11-12T22:37:13Z."
+    },
+    {
+      "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/commits?path=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/recovery-prepare-r4&sha=genesis-interfaces-resume&per_page=100",
+      "result": "Only one returned history commit: 7c8905a0e833f057bca359bb8debd548440bc23e."
+    },
+    {
+      "url": "https://github.com/gustavomhss/hugr-orchestra/blob/bb2a931301d541692b11e5a7f1eab234cd9ed2fd/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/evidence/native-final-prepare/prepare-execution-receipt.json",
+      "blob_sha": "be5fc3cb24858fb97546c851921d4a7dd9a1ac33",
+      "result": "Integral receipt is real but belongs to earlier failed prepare at e3a8ab8cf56dbff1ee91272df51ffa398d882aa1, exit 1, null candidate_id. Must not relabel as r4."
+    }
+  ],
+  "branch_heads": [
+    {
+      "branch": "genesis-s2-publish",
+      "commit": "b5e02be4c5be46be5dd9c001e411683561f9cb47",
+      "commit_date": "2026-11-12T14:05:36Z",
+      "source": "https://api.github.com/repos/gustavomhss/hugr-orchestra/branches/genesis-s2-publish"
+    },
+    {
+      "branch": "genesis-s2-resume-unit-20261114",
+      "commit": "6d49a6a821c3bcb153f794326ab757346f87bcf6",
+      "commit_date": "2026-11-14T10:47:15Z",
+      "source": "https://api.github.com/repos/gustavomhss/hugr-orchestra/branches/genesis-s2-resume-unit-20261114"
+    },
+    {
+      "branch": "genesis-s2-receipt-recovery-20261114",
+      "commit": "d1e635ed5e316b8d5d59650432268e3e81d8aff0",
+      "commit_date": "2026-11-14T15:23:08Z",
+      "source": "https://api.github.com/repos/gustavomhss/hugr-orchestra/branches/genesis-s2-receipt-recovery-20261114"
+    }
+  ],
+  "searches": [
+    {
+      "surface": "GitHub branches",
+      "query": "s2",
+      "results": [
+        "genesis-chatgpt-s2",
+        "genesis-fresh-s2",
+        "genesis-s2-publish",
+        "genesis-s2-receipt-recovery-20261114",
+        "genesis-s2-resume-unit-20261114"
+      ],
+      "limit": "Name search, not every branch content."
+    },
+    {
+      "surface": "GitHub default-branch code search",
+      "query": "f310ec9b3844d6833ea5a867f9ed14ce099669492c66d8b133116642310310dd",
+      "results": 0,
+      "limit": "Default branch only; not absence across all refs."
+    },
+    {
+      "surface": "GitHub default-branch code search",
+      "query": "a4946200211c54cdf7f94a26e659cdc285e65d5775a8e1e2f56cf2d9c9d2f207",
+      "results": 0,
+      "limit": "Default branch only; not absence across all refs."
+    },
+    {
+      "surface": "GitHub issues",
+      "query": "\"f310ec9b3844d6833ea5a867f9ed14ce099669492c66d8b133116642310310dd\"",
+      "results": 0,
+      "limit": "Search result, not exhaustive issue-comment byte scan."
+    },
+    {
+      "surface": "Library exact title search",
+      "queries": [
+        "\"prepared.json\"",
+        "\"prepare-execution-receipt.json\"",
+        "\"recovery-prepare-r4\"",
+        "\"prepare.stdout\""
+      ],
+      "exact_results": 0,
+      "limit": "Supplemental fuzzy title candidates were unrelated or the old export receipt; no original r4 identified."
+    },
+    {
+      "surface": "Library S2 title search",
+      "query": "\"genesis-s2\"",
+      "results": 6,
+      "result": "Recovered preservation kit containing 1,109 original files and five old sidecars. No r4 original located."
+    },
+    {
+      "surface": "Personal Context",
+      "result": "UNAVAILABLE_FOR_THIS_CONVERSATION"
+    },
+    {
+      "surface": "Historical failed-prepare workspace",
+      "result": "Documented earlier workspace is absent in the current executor.",
+      "limit": "This is the known earlier failed execution workspace, not a proven r4 workspace location."
+    }
+  ],
+  "r4_code_ci": {
+    "run_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43154719978",
+    "run_id": 43154719978,
+    "workflow": "atlas-pilot",
+    "head_sha": "22815b6821dce26562624b4711c705c7cd786268",
+    "branch": "genesis-fresh-s4",
+    "status": "completed",
+    "conclusion": "success",
+    "created_at": "2026-11-12T04:25:36Z",
+    "updated_at": "2026-11-12T04:27:46Z",
+    "head_sha_run_query": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/runs?head_sha=22815b6821dce26562624b4711c705c7cd786268&per_page=100",
+    "matching_runs": 1,
+    "job_id": 130971863434,
+    "logs_available": true,
+    "identity_literals_found_in_decoded_logs": [],
+    "artifacts_currently_returned": [],
+    "historic_artifact": {
+      "id": 13915012528,
+      "name": "ownership-runtime-22815b6821dce26562624b4711c705c7cd786268",
+      "size": 431898,
+      "sha256": "44a4b2b8fa833c1117f4498d1be71283f054200c63aacdb5ddb67ee4fdc91d9a",
+      "retention_days": 7,
+      "paths": [
+        "modules/atlas/ownership-*.json",
+        "runner temporary ownership-guards.log",
+        "modules/atlas/boundary/src/generated"
+      ],
+      "download_now": "404 NOT_FOUND"
+    },
+    "limit": "CI proves its own code suite, not historical 13-artifact S2 prepare. S2 package/candidate/prepared identities absent from job logs. Artifact unavailable; expiry is plausible from retention but exact deletion reason not asserted."
+  },
+  "preservation_corpus": {
+    "archive_name": "genesis-s2-preservation-kit.zip",
+    "archive_bytes": 36835943,
+    "archive_sha256": "aded620f65b0e918b2de1921b7e02af5c0f16d15938f26332f219d3ce1931f8a",
+    "bundle_name": "genesis-s2-preservation.bundle",
+    "bundle_bytes": 36819104,
+    "bundle_sha256": "2d2d7c220b0aa212822f60f3b9b956ea6797211a2402af4c0e908837357885aa",
+    "snapshot_commit": "9b93a4d33c75a78552ec01d1c73937754bb9a967",
+    "exact_public_original_blob_and_size_matches": 1109,
+    "old_sidecars": 5,
+    "unique_contents_scanned_including_nested_archives": 3072,
+    "searched_identities": [
+      "f310ec9b3844d6833ea5a867f9ed14ce099669492c66d8b133116642310310dd",
+      "a4946200211c54cdf7f94a26e659cdc285e65d5775a8e1e2f56cf2d9c9d2f207",
+      "82ad17ac4cdf0fde9fb94c5eebe5361014e199fee603e19b8a2f8269477b65d0"
+    ],
+    "identity_matches": [],
+    "scan_limits_triggered": [],
+    "source_root_archive": {
+      "public_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/archives/native-final-preparation-and-source-root.zip",
+      "git_blob": "33d7f3e9fc39744ea236b41451b0e6b177d610f3",
+      "sha256": "85167f57e8c723fa9ac6ed07d98fd6681341613be840534477385adcb89759c8",
+      "bytes": 12414662,
+      "entries": 2454
+    },
+    "limit": "Transport snapshot is not task branch HEAD. Exactly 1,109 original bytes were compared with current public tree; five old sidecars must not replace current metadata. Read-only byte search is not runtime or product testing."
+  },
+  "minimum_custody_export": [
+    "Verbatim original r4 execution receipt and execution ledger, with original start/end timestamps, exit code, actual argv/cwd, runtime/source/protocol revisions and recorded environment identities. Do not reconstruct missing fields.",
+    "Prepared candidate exact 344725 bytes with SHA256 a4946200211c54cdf7f94a26e659cdc285e65d5775a8e1e2f56cf2d9c9d2f207 and candidate ID f310ec9b3844d6833ea5a867f9ed14ce099669492c66d8b133116642310310dd.",
+    "Original stdout exact 268550 bytes with SHA256 82ad17ac4cdf0fde9fb94c5eebe5361014e199fee603e19b8a2f8269477b65d0, and original stderr/status record (summary reports zero stderr bytes).",
+    "Complete original input/observation manifest for all 626 observations and 13 artifacts, including full source-derived references and the package binding to SHA256 9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b.",
+    "CAS objects and before/after inventory referenced by the prepared candidate and receipts, plus any original preflight/post-operation-integrity records needed to reproduce verification.",
+    "Authorized export manifest naming each original file, byte length and SHA256 and identifying its custodial origin. Keep private evidence at its authorized origin; do not publish omitted internal data without permission."
+  ],
+  "stop_point": "All inspected public refs, available CI data and recovered authorized preservation corpus lack the original r4 candidate/receipt/stdout. Original r4 custodian session/workspace remains unidentified and unavailable. This is a bounded recovery outcome, not proof that no original exists elsewhere.",
+  "next_route": "The current user explicitly permits a new prepare in an authorized isolated environment. If selected by root/S4, retain this historical gap and create a new runtime SHA/candidate/receipt linked to the exact recovered package; do not label it recovered r4.",
+  "retrieval_failures": [
+    {
+      "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/git/trees/c73238fd2bc2a841691be09b4e07678c9d30dbed?recursive=1",
+      "result": "Transport closed",
+      "resolution": "Switched to bounded S2 subtree b002e7c36f544dbd9ba84f22d3ebcbb010a35b61; successful non-truncated read. No absence inferred from failed full-tree request."
+    },
+    {
+      "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/actions/artifacts?per_page=100",
+      "result": "400 endpoint not allowed by connector",
+      "resolution": "Used supported per-run artifact listing and exact known artifact download. No repository-wide artifact census claimed."
+    }
+  ],
+  "remote_mutations": [],
+  "product_tests_executed": false,
+  "runtime_executed": false
+}

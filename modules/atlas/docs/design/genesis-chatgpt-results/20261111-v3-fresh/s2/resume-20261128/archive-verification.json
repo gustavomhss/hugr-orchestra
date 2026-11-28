@@ -1,0 +1,12 @@
+{
+  "archive": "prepare-01-evidence.zip",
+  "byte_length": 939917,
+  "sha256": "696ae8de4c6a0fe9270099701007f5c9b3a88472a124d4c46a85ec4bccfbea2a",
+  "members": 90,
+  "verified_members": 89,
+  "state": "PASS_ARCHIVE_BYTE_INTEGRITY_ONLY",
+  "limits": [
+    "Contains original new-run evidence, not a recovered historical r4 run.",
+    "CAS is evidence; restoring files into a Git-tracked served store does not grant publication trust."
+  ]
+}

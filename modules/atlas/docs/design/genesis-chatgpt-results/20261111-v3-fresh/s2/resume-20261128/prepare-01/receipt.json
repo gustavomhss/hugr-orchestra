@@ -1,0 +1,96 @@
+{
+  "schema": "genesis-s2-new-prepare-receipt/v1",
+  "execution_id": "846d4f9c-fb77-4e21-aff6-1fffccc3132b",
+  "operation_id": "s2-prepare-db9b423-20261128-01",
+  "operation": "prepare",
+  "record_kind": "ORIGINAL_EXECUTION_RECEIPT",
+  "relationship_to_r4": "NEW_EXECUTION_NOT_RECOVERED_R4",
+  "release_status": "UNPROMOTED_SOURCE_DIAGNOSTIC_ONLY",
+  "started_at": "2026-11-28T05:53:11.664712+00:00",
+  "ended_at": "2026-11-28T05:53:14.484890+00:00",
+  "duration_seconds": 2.8201543179966393,
+  "command_argv": [
+    "/workspace/scratch/5cfbb6c803f1/s2-tools/node_modules/@oven/bun-linux-x64-baseline/bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/workspace/scratch/5cfbb6c803f1/s2-corpus",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json",
+    "/workspace/scratch/5cfbb6c803f1/s2-execution/prepare-01/prepared.json"
+  ],
+  "cwd": "/workspace/scratch/5cfbb6c803f1/s2-runtime/modules/atlas",
+  "runtime_code_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "corpus_revision": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+  "corpus_root": "/workspace/scratch/5cfbb6c803f1/s2-corpus",
+  "runtime_code_modified": false,
+  "runtime_versions": {
+    "bun": "1.3.14",
+    "node": "v24.22.3",
+    "npm": "11.19.1",
+    "typescript": "5.9.3"
+  },
+  "package": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json",
+    "byte_length": 332594,
+    "sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b"
+  },
+  "package_lock": {
+    "path": "modules/atlas/package-lock.json",
+    "byte_length": 93193,
+    "sha256": "b3c505a0227808e04acf49138a1acccfd3e1a0e9b5476a5f9748fccd84e1a06f"
+  },
+  "exit_code": 0,
+  "state": "PREPARE_SUCCEEDED",
+  "candidate_id": "4a36e1210acf6a4bb460846b717d446e6c259f80a78fd73cfce8b5a6e445f522",
+  "artifact_count": 13,
+  "observations": 626,
+  "prepared": {
+    "path": "prepared.json",
+    "byte_length": 344738,
+    "sha256": "476891f3bf1edf24f7d2c486a1218bab5b0cd5b2b36b8295c3892917724c2b4a"
+  },
+  "stdout": {
+    "path": "stdout.json",
+    "byte_length": 268563,
+    "sha256": "88b09903d9d5c6274ede881956d36dc746357c6630cad5b66daf6884a3e31e0b"
+  },
+  "stderr": {
+    "path": "stderr.txt",
+    "byte_length": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "input_manifest_before": {
+    "path": "inputs.before.json",
+    "byte_length": 119816,
+    "sha256": "bc4aee58ac4d6f3e3a74b64aca7f3cfc90100e01ee597a22947ad9eb9a4ab8dc"
+  },
+  "input_manifest_after": {
+    "path": "inputs.after.json",
+    "byte_length": 119816,
+    "sha256": "bc4aee58ac4d6f3e3a74b64aca7f3cfc90100e01ee597a22947ad9eb9a4ab8dc"
+  },
+  "input_file_count": 667,
+  "source_bytes_unchanged": true,
+  "cas_manifest": {
+    "path": "cas-manifest.json",
+    "byte_length": 14483,
+    "sha256": "ec8437279d8b38ca7ff8f44ac1f78e7aad648b46521fc84194532cdd8ecd922f"
+  },
+  "cas_object_count": 69,
+  "corpus_tracked_changes_after": [],
+  "runtime_tracked_changes_after": [],
+  "policy_or_actor_created": false,
+  "binding_executed": false,
+  "publish_executed": false,
+  "index_read_executed": false,
+  "consumers_executed": false,
+  "maintenance_executed": false,
+  "product_tests_executed_locally": false,
+  "delivery_complete": false,
+  "limits": [
+    "This operation does not recover the historical r4 receipt or promote a release.",
+    "Reference hashes and this checkout are recorded; original external commit capture remains a distinct provenance obligation.",
+    "Runtime policy, binding, publication, consumer and maintenance are separate obligations."
+  ]
+}

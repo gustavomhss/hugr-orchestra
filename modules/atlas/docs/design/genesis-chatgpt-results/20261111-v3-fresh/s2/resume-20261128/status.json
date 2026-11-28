@@ -1,0 +1,56 @@
+{
+  "schema": "genesis-s2-resume-status/v1",
+  "execution_id": "846d4f9c-fb77-4e21-aff6-1fffccc3132b",
+  "started_at": "2026-11-28T05:49:13.045469+00:00",
+  "repository": "gustavomhss/hugr-orchestra",
+  "branch": "genesis-interfaces-resume",
+  "initial_head": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "state": "IN_PROGRESS",
+  "delivery_complete": false,
+  "completed": [
+    "bounded-original-r4-search",
+    "public-byte-custody-verification",
+    "real-source-preflight",
+    "new-isolated-original-cli-prepare",
+    "prepared-cas-integrity-verification"
+  ],
+  "historical_r4_recovered": false,
+  "new_prepare": {
+    "candidate_id": "4a36e1210acf6a4bb460846b717d446e6c259f80a78fd73cfce8b5a6e445f522",
+    "prepared_sha256": "476891f3bf1edf24f7d2c486a1218bab5b0cd5b2b36b8295c3892917724c2b4a",
+    "receipt": "prepare-01/receipt.json"
+  },
+  "first_traversal": "NOT_RUN",
+  "consumer_cases": {
+    "total": 14,
+    "executed": 0
+  },
+  "S2-U1": "NOT_RUN",
+  "review": "PENDING_NEW_PAIR_RECORD_REVIEW",
+  "binding_review": "NOT_RUN",
+  "own_ci": "NOT_RUN",
+  "local_guards": "PENDING",
+  "open": [
+    "S4 compatible release",
+    "Exact independent binding",
+    "Governed isolated publication",
+    "Actual index/read and first fresh consumer",
+    "All 14 frozen cases",
+    "S2-U1 and local recovery",
+    "S2 payload Actions/guards",
+    "Final S2 operational judgments and seal"
+  ],
+  "global": {
+    "owner": "ROOT/Gustavo",
+    "integration": "NOT_RUN",
+    "activation": "NOT_RUN"
+  },
+  "usage": {
+    "provider_tokens": "UNKNOWN",
+    "physical_attempts": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "historical_accounting": "GLOBAL_UNRECONCILED"
+  }
+}

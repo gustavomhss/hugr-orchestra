@@ -1,0 +1,158 @@
+{
+  "schema": "genesis-s2-prepared-integrity/v1",
+  "operation": "Read-only checksum verification using the executed candidate kernel; not a product test or runtime binding decision",
+  "recorded_at": "2026-11-28T05:54:17.361Z",
+  "command_argv": [
+    "/workspace/scratch/5cfbb6c803f1/s2-tools/node_modules/@oven/bun-linux-x64-baseline/bin/bun",
+    "/workspace/scratch/5cfbb6c803f1/s2-investigation/verify-prepared.mjs",
+    "/workspace/scratch/5cfbb6c803f1/s2-runtime",
+    "/workspace/scratch/5cfbb6c803f1/s2-corpus",
+    "/workspace/scratch/5cfbb6c803f1/s2-execution/prepare-01"
+  ],
+  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "candidate_id": "4a36e1210acf6a4bb460846b717d446e6c259f80a78fd73cfce8b5a6e445f522",
+  "prepared_sha256": "476891f3bf1edf24f7d2c486a1218bab5b0cd5b2b36b8295c3892917724c2b4a",
+  "state": "PASS_PREPARED_INTEGRITY_ONLY",
+  "cas_objects_checked": 69,
+  "artifacts_checked": 13,
+  "observations_checked": 626,
+  "references_checked": 40,
+  "checks_total": 780,
+  "failed_checks": [],
+  "artifacts": [
+    {
+      "key": "s2.l1.desktop-web",
+      "result": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58",
+      "inputs_id": "cc244398ac5cd6d52f1a17272a565d8fb9ecf2c0acbc1d41a70c9327951d57da",
+      "body_sha256": "757d20f85f8bd63ad68f1dc73ab408d26f8e8e129639bbda156c69dfed3cf338",
+      "byte_length": 29075,
+      "body_matches": true,
+      "result_metadata_matches": true,
+      "inputs_id_matches": true
+    },
+    {
+      "key": "s2.l1.app-session",
+      "result": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384",
+      "inputs_id": "d2340538beccaee1f20d74a5e5a5ca22ba053e54307af8ba9f74218ad9529053",
+      "body_sha256": "67a2787d0813738c8930a23253c9d185933cc228e997d530056cd4fa98b0b16e",
+      "byte_length": 42047,
+      "body_matches": true,
+      "result_metadata_matches": true,
+      "inputs_id_matches": true
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "result": "7baaa859ebb117874e48253430260b915f4a711a26764d694039de68fba7b031",
+      "inputs_id": "6ecb0462e50fc590111e063dbb13d6bbf42a0fcff0c61a2e4f0f01a4174d5778",
+      "body_sha256": "fefce66dcc6d6df262369be203b0b3d780a47c7f299a3a83100c16afe168b7da",
+      "byte_length": 36964,
+      "body_matches": true,
+      "result_metadata_matches": true,
+      "inputs_id_matches": true
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "result": "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c",
+      "inputs_id": "b1d7bc1e201e7ae4db16cd34520d505b5823dcf707755bab22ea482b91283fdb",
+      "body_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+      "byte_length": 18440,
+      "body_matches": true,
+      "result_metadata_matches": true,
+      "inputs_id_matches": true
+    },
+    {
+      "key": "s2.l2.app-session",
+      "result": "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5",
+      "inputs_id": "a536cac3cee463e780083cef85e1393a0bbb6a0b7dd6335ddd5b214b936514fd",
+      "body_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "byte_length": 24434,
+      "body_matches": true,
+      "result_metadata_matches": true,
+      "inputs_id_matches": true
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "result": "1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664",
+      "inputs_id": "d8a7e9c1498969e5cd4a811372368fb7708b6b3bc638c55954b67095f3dff46d",
+      "body_sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+      "byte_length": 21535,
+      "body_matches": true,
+      "result_metadata_matches": true,
+      "inputs_id_matches": true
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "result": "ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1",
+      "inputs_id": "cd18c6f0d1de3b328bba07d9b2085a79ccf80ab74c48de948ce3367470e154a8",
+      "body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+      "byte_length": 14715,
+      "body_matches": true,
+      "result_metadata_matches": true,
+      "inputs_id_matches": true
+    },
+    {
+      "key": "s2.l3.app-session",
+      "result": "95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0",
+      "inputs_id": "c6680c649a4a1caa6d5ee70ab00b389d339de1ef35c2134aaa3b2196f9446b96",
+      "body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+      "byte_length": 14334,
+      "body_matches": true,
+      "result_metadata_matches": true,
+      "inputs_id_matches": true
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "result": "3f77baa25cad0ef21847bff3f325478dba06f69c23dae9094c6ee02e83c2d509",
+      "inputs_id": "eab1aa549bb255d19fe6dee6fec301c67998c65523c2987043b324e1a0e76ac4",
+      "body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+      "byte_length": 15780,
+      "body_matches": true,
+      "result_metadata_matches": true,
+      "inputs_id_matches": true
+    },
+    {
+      "key": "s2.l4.desktop-web",
+      "result": "26ba4e10f4ead5c9443b7d9804b7b7c8aa9d7166350e08f3453748e0695a3199",
+      "inputs_id": "23a6829e9fa51658580b4238afdb295d627617b5eacbfc3c003b81044c9f025a",
+      "body_sha256": "108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa",
+      "byte_length": 11183,
+      "body_matches": true,
+      "result_metadata_matches": true,
+      "inputs_id_matches": true
+    },
+    {
+      "key": "s2.l4.design-tui",
+      "result": "7a0e27eedc2a116172417159aedfdddf428f2609db8b9104c55012a0926f6629",
+      "inputs_id": "fda86129d6a69aa98cbcebeac647168cb21509e112a643e0b08d7ec361a378cd",
+      "body_sha256": "95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c",
+      "byte_length": 11783,
+      "body_matches": true,
+      "result_metadata_matches": true,
+      "inputs_id_matches": true
+    },
+    {
+      "key": "s2.l4.app-session",
+      "result": "8e0368888768de4c6c1e134e47cdc60d12f544fe311152bfb9f4621a264dac0a",
+      "inputs_id": "276c5511b37bbd0c908d930c25c37d945b23f98ce46c067c8e626b40c304832d",
+      "body_sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3",
+      "byte_length": 11220,
+      "body_matches": true,
+      "result_metadata_matches": true,
+      "inputs_id_matches": true
+    },
+    {
+      "key": "s2.l4.entry",
+      "result": "060600df54eb14bab6b17a278bd952afdb1b6bb8999e0dbe2d889d97401a7ff1",
+      "inputs_id": "16c85ef8321f4ea64b9670e6335d7272ae708397d37e7f990af1915342d8518f",
+      "body_sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1",
+      "byte_length": 5849,
+      "body_matches": true,
+      "result_metadata_matches": true,
+      "inputs_id_matches": true
+    }
+  ],
+  "limits": [
+    "No policy, binding, publication, reader or consumer was executed.",
+    "This checksum audit does not qualify an S4 release or replace independent judgment."
+  ]
+}

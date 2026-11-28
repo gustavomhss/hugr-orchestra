@@ -1,0 +1,35 @@
+{
+  "schema": "genesis-s2-byte-verification-summary/v1",
+  "package": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/native-package.json",
+    "relative_path": "native-package.json",
+    "commit": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+    "byte_length": 332594,
+    "sha256": "9356cefcb4a1db413e67869a855fd082536476fb18ff7784dde39f051e9b407b",
+    "git_blob_sha": "b869729c4a4e8bd817e8f987264ae2c579c9e992",
+    "returned_git_blob_sha": "b869729c4a4e8bd817e8f987264ae2c579c9e992",
+    "git_blob_matches": true
+  },
+  "artifacts": 13,
+  "body_count": 13,
+  "historical_review_links": 26,
+  "distinct_review_files": 14,
+  "source_paths": 596,
+  "file_inputs": 626,
+  "all_consumed_files": 667,
+  "source_preflight_state": "PASS_SOURCE_PREFLIGHT_ONLY",
+  "new_prepare_integrity_state": "PASS_PREPARED_INTEGRITY_ONLY",
+  "full_reports": [
+    {
+      "archive_member": "byte-audit/verification.json",
+      "sha256": "be138637ed785c521734f928733e021a4c56805b6d19cec0fe94fe3e5c80e360"
+    },
+    {
+      "archive_member": "byte-audit/source-preflight.json",
+      "sha256": "51b91eecab81cc7a71607167a81eaf8aacccdb0ec1b2262e960e8b9ad26e3778"
+    }
+  ],
+  "limits": [
+    "Historical semantic acceptances are preserved; this is not new semantic or runtime-binding approval."
+  ]
+}
