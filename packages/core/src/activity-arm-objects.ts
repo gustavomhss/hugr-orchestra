@@ -1,5 +1,6 @@
 export * as ActivityArmObjects from "./activity-arm-objects"
 
+import { appendFileSync } from "node:fs"
 import { createHash } from "node:crypto"
 import { lstat, realpath } from "node:fs/promises"
 import path from "node:path"
@@ -14,6 +15,7 @@ import { Database } from "./database/database"
 import type { AppProcess } from "./process"
 import { ProjectDirectoryTable, ProjectTable } from "./project/sql"
 
+const diag = (...data: unknown[]) => appendFileSync(process.env.ARM_TRACE!, JSON.stringify(data) + "\n")
 const names = [".turbo", "node_modules"] as const
 const prefix = "arm-worktree:"
 const maxWorktrees = 8
@@ -47,33 +49,33 @@ export function make(database: Database.Interface, processService: AppProcess.In
       kind: "object", label, owner: candidate.projectID, members: [candidate.registrationID],
       identity: null, dirty: null, eligible: [],
     }
-    const status = yield* Effect.tryPromise(() => lstat(label)).pipe(
+    diag("sample", candidate.name); const status = yield* Effect.tryPromise(() => lstat(label)).pipe(
       Effect.catch((error) => Effect.succeed((error.cause as NodeJS.ErrnoException)?.code === "ENOENT" ? "missing" as const : undefined)),
     )
-    if (status === "missing") return { observation, partial: false }
+    diag("lstat", typeof status, status && typeof status !== "string" && status.isDirectory()); if (status === "missing") return { observation, partial: false }
     if (!status?.isDirectory() || label.length > 384 || candidate.projectID.length > 384 || candidate.root === candidate.directory)
       return { observation, partial: true }
     const canonical = yield* Effect.tryPromise(() => Promise.all([realpath(candidate.root), realpath(candidate.directory)]))
       .pipe(Effect.orElseSucceed(() => undefined))
-    if (canonical?.[0] !== candidate.root || canonical[1] !== candidate.directory) return { observation, partial: true }
+    diag("canonical", canonical?.[0] === candidate.root, canonical?.[1] === candidate.directory); if (canonical?.[0] !== candidate.root || canonical[1] !== candidate.directory) return { observation, partial: true }
 
     const registered = yield* git(candidate.root, ["worktree", "list", "--porcelain", "-z"])
     const entry = registered?.exitCode === 0 ? worktreeEntry(registered.stdout, candidate.directory) : undefined
-    if (!entry) return { observation, partial: true }
+    diag("worktree entry", !!entry, registered?.exitCode); if (!entry) return { observation, partial: true }
     const common = yield* git(candidate.root, ["rev-parse", "--path-format=absolute", "--git-common-dir"])
     const placement = () => git(candidate.directory, ["rev-parse", "--path-format=absolute", "--show-toplevel", "--git-common-dir", "HEAD"])
     const head = entry.split("\0").find((field) => field.startsWith("HEAD "))?.slice(5)
-    if (common?.exitCode !== 0 || !head) return { observation, partial: true }
+    diag("common", common?.exitCode, !!head); if (common?.exitCode !== 0 || !head) return { observation, partial: true }
     const expected = candidate.directory + "\n" + common.stdout.toString("utf8") + head + "\n"
     const placed = yield* placement()
-    if (placed?.exitCode !== 0 || placed.stdout.toString("utf8") !== expected) return { observation, partial: true }
+    diag("placed", placed?.exitCode, placed?.stdout.toString("utf8") === expected); if (placed?.exitCode !== 0 || placed.stdout.toString("utf8") !== expected) return { observation, partial: true }
     const tracked = yield* git(candidate.directory, ["ls-files", "-v", "-z"])
-    if (tracked?.exitCode !== 0) return { observation, partial: true }
+    diag("tracked", tracked?.exitCode); if (tracked?.exitCode !== 0) return { observation, partial: true }
     // A tracked file or a suppressed index entry cannot establish a clean, disposable copy.
     if (tracked.stdout.toString("utf8").split("\0").some((line) => /^[a-zS] /.test(line) ||
       line.slice(2) === candidate.name || line.slice(2).startsWith(candidate.name + "/"))) return { observation, partial: false }
     const ignored = yield* git(candidate.directory, ["check-ignore", "--no-index", "--", candidate.name + "/"])
-    if (ignored?.exitCode !== 0) return { observation, partial: ignored?.exitCode !== 1 }
+    diag("ignored", ignored?.exitCode, ignored?.exitCode && ignored.stderr.toString("utf8")); if (ignored?.exitCode !== 0) return { observation, partial: ignored?.exitCode !== 1 }
     const dirt = () => git(candidate.directory, ["status", "--porcelain=v1", "-z", "--untracked-files=no", "--ignore-submodules=none"])
     const before = yield* dirt()
     if (before?.exitCode !== 0) return { observation, partial: true }
@@ -83,6 +85,7 @@ export function make(database: Database.Interface, processService: AppProcess.In
       worktree: candidate.directory, name: candidate.name,
     }, signal))
       .pipe(Effect.timeoutOption("4 seconds"))
+    diag("proof", proof._tag, proof._tag === "Some" && proof.value?.idle);
     const after = yield* dirt()
     const final = yield* placement()
     const current = yield* registrations().where(and(gitWorktree, eq(ProjectDirectoryTable.registration_id, candidate.registrationID))).get()

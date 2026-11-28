@@ -1,5 +1,6 @@
 export * as ActivityArmProof from "./activity-arm-proof"
 
+import { appendFileSync } from "node:fs"
 import { createHash } from "node:crypto"
 import { constants } from "node:fs"
 import type { BigIntStats } from "node:fs"
@@ -7,6 +8,7 @@ import { lstat, open, opendir, readlink, realpath, stat } from "node:fs/promises
 import path from "node:path"
 import { ActivityObjectProof } from "./activity-object-proof"
 
+const diag = (...data: unknown[]) => appendFileSync(process.env.ARM_TRACE!, JSON.stringify(data) + "\n")
 const maxEntries = 10_000
 const kernelThread = 0x00200000
 
@@ -15,20 +17,20 @@ export async function inspect(input: { worktree: string; name: ".turbo" | "node_
   const uid = process.geteuid?.()
   if (process.platform !== "linux" || uid === undefined || !path.isAbsolute(input.worktree) ||
     (input.name !== ".turbo" && input.name !== "node_modules")) return undefined
-  try {
+  diag("probe start"); try {
     signal?.throwIfAborted()
     const worktree = await realpath(input.worktree)
     if (worktree !== input.worktree) return undefined
     const object = path.join(worktree, input.name)
     const root = await lstat(worktree, { bigint: true })
     const tree = await captureTree(object, root, BigInt(uid), signal)
-    if (!tree) return undefined
+    diag("tree", !!tree); if (!tree) return undefined
     const scan = () => captureUse(worktree, object, tree.inodes, tree.lockPids, signal).catch((error: NodeJS.ErrnoException) => {
-      if (error.code !== "ENOENT" && error.code !== "ESRCH") throw error
+      diag("scan", error.code, error.name, error.syscall); if (error.code !== "ENOENT" && error.code !== "ESRCH") throw error
       return undefined
     })
     const use = await scan() ?? await scan() ?? await scan()
-    if (!use) return undefined
+    diag("use", use); if (!use) return undefined
     if (!tree.matches(await lstat(worktree, { bigint: true }))) return undefined
     for (const [file, signature] of tree.entries) {
       signal?.throwIfAborted()
@@ -47,7 +49,8 @@ export async function inspect(input: { worktree: string; name: ".turbo" | "node_
       ],
     })
     return { fingerprint: tree.fingerprint, idle: proof.state === "idle" }
-  } catch {
+  } catch (error) {
+    diag("probe error", (error as NodeJS.ErrnoException)?.code, (error as Error)?.name);
     return undefined
   }
 }
@@ -113,13 +116,14 @@ async function captureUse(worktree: string, object: string, inodes: ReadonlySet<
   if (!proc || !proc.includes(" - proc ") || /\b(hidepid=[^0,\s]|subset=pid)/.test(proc)) return undefined
   const usage = { cwd: false, git: false, open: false, lock: false, claimant: false }
   const pids = await numbers("/proc")
+  diag("pids", pids.length)
   if (!pids.length || pids.length > 1024) return undefined
   let tasks = 0
   let descriptors = 0
   for (const pid of pids) {
     signal?.throwIfAborted()
     const base = `/proc/${pid}`
-    const first = await processStat(base, signal)
+    diag("pid", pid); const first = await processStat(base, signal)
     if (first.state === "Z" || first.state === "X" || (first.flags & kernelThread) !== 0) continue
     usage.lock ||= lockPids.has(pid)
     const threads = await numbers(`${base}/task`)

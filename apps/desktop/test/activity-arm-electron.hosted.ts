@@ -80,7 +80,7 @@ async function child() {
   const rendererURL = `http://127.0.0.1:${address.port}`
   const owned = await startOwnedServe({
     command: [process.env.ACTIVITY_ARM_BUN!, process.env.ACTIVITY_ARM_CLI!], cwd: root,
-    env: { PATH: process.env.PATH ?? "", HOME: join(root, "home"), ORCHESTRA_TEST_HOME: join(root, "home"), ORCHESTRA_DB: databasePath, ORCHESTRA_CONFIG_DIR: join(root, "config"), ORCHESTRA_DISABLE_MODELS_FETCH: "1", ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "true", ORCHESTRA_INHERIT_CREDENTIALS: "0", ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict", HUGR_OMNI_ADDON: process.env.HUGR_OMNI_ADDON ?? "", HUGR_OMNI_SUPERVISOR: process.env.HUGR_OMNI_SUPERVISOR ?? "" },
+    env: { ARM_TRACE: join(root, "trace"), PATH: process.env.PATH ?? "", HOME: join(root, "home"), ORCHESTRA_TEST_HOME: join(root, "home"), ORCHESTRA_DB: databasePath, ORCHESTRA_CONFIG_DIR: join(root, "config"), ORCHESTRA_DISABLE_MODELS_FETCH: "1", ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "true", ORCHESTRA_INHERIT_CREDENTIALS: "0", ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict", HUGR_OMNI_ADDON: process.env.HUGR_OMNI_ADDON ?? "", HUGR_OMNI_SUPERVISOR: process.env.HUGR_OMNI_SUPERVISOR ?? "" },
     privateActivityApproval: true, logger: { log() {}, error() {} }, write() {},
   })
   let window: InstanceType<typeof BrowserWindow> | undefined
@@ -115,6 +115,7 @@ async function child() {
     const inspect = async () => await window!.webContents.executeJavaScript(`window.api.inspectActivityArm(${JSON.stringify(owned.url)})`) as { ready: Array<{ targetID: string; generation: string; label: string }> }
     const inspected = await inspect()
     const target = inspected.ready.find((item) => item.label.includes(".turbo"))
+    if (!target) console.error(await readFile(join(root, "trace"), "utf8").catch(() => "No trace"));
     assert.ok(target, `registered worktree did not produce a ready target: ${JSON.stringify(inspected)}`)
     process.stderr.write("Live object qualified\n")
     assert.equal((await plan()).ready.some((item) => item.targetID === target.targetID), true)
