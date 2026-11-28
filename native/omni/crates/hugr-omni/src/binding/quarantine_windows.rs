@@ -181,6 +181,21 @@ fn open_with_share(
     Ok(Some(result))
 }
 
+fn require_regular_single_link(handle: Handle) -> Result<(), String> {
+    let mut attributes = [0u8; 8];
+    query(handle, 35, &mut attributes)?;
+    let flags = u32::from_le_bytes(attributes[..4].try_into().map_err(|_| "invalid attribute data")?);
+    if flags & (0x01 | 0x10 | 0x40 | 0x400) != 0 {
+        return Err("read-only file, directory, device or reparse point".into());
+    }
+    let mut standard = [0u8; 24];
+    query(handle, 5, &mut standard)?;
+    if u32::from_le_bytes(standard[16..20].try_into().map_err(|_| "invalid link count data")?) != 1 {
+        return Err("hard links are not supported".into());
+    }
+    Ok(())
+}
+
 fn parse(path: &str) -> Result<(String, Vec<String>), String> {
     let value = path.replace('/', "\\");
     let bytes = value.as_bytes();
@@ -256,6 +271,15 @@ fn parents(root: &Owned, parts: &[String], final_access: u32) -> Result<Vec<Owne
 
 /// Operates only on paths supplied by a trusted host; this primitive does not authorize paths.
 pub fn operate(source: &str, destination: Option<&str>, expected: Option<&str>) -> Result<String, String> {
+    operate_inner(source, destination, expected, false)
+}
+
+/// Renames a single-link regular file while exclusively holding its source handle.
+pub fn rename_exclusive(source: &str, destination: &str, expected: &str) -> Result<String, String> {
+    operate_inner(source, Some(destination), Some(expected), true)
+}
+
+fn operate_inner(source: &str, destination: Option<&str>, expected: Option<&str>, exclusive: bool) -> Result<String, String> {
     let (drive, source_parts) = parse(source)?;
     let (dest_drive, dest_parts) = match destination {
         Some(path) => {
@@ -270,12 +294,18 @@ pub fn operate(source: &str, destination: Option<&str>, expected: Option<&str>) 
     let root = acquire_root(&drive, 0)?;
     let source_parents = parents(&root, &source_parts[..source_parts.len() - 1], 0)?;
     let source_parent = source_parents.last().map_or(root.0, |h| h.0);
-    let source_handle = open(
+    let source_handle = open_with_share(
         source_parent,
         &source_parts[source_parts.len() - 1],
         false,
         destination.is_some(),
-    )?;
+        false,
+        0,
+        if exclusive { 0 } else { 3 },
+    )?.ok_or("missing source")?;
+    if exclusive {
+        require_regular_single_link(source_handle.0)?;
+    }
     let current = identity(source_handle.0)?;
     if destination.is_none() {
         return Ok(current);

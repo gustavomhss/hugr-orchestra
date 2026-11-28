@@ -363,6 +363,18 @@ function quarantineRename(source, destination, expectedIdentity) {
   });
 }
 
+function quarantineRenameExclusive(source, destination, expectedIdentity) {
+  return Promise.resolve().then(() => {
+    const native = load();
+    if (typeof native.quarantineRenameExclusive !== "function") throw new Error("Windows quarantine exclusive rename unavailable");
+    return native.quarantineRenameExclusive(source, destination, expectedIdentity);
+  });
+}
+
+function quarantineRenameExclusiveAvailable() {
+  return typeof load().quarantineRenameExclusive === "function";
+}
+
 function quarantineDispose(source, expectedIdentity) {
   return later(() => {
     const native = load();
@@ -390,5 +402,5 @@ function quarantineDisposeBatchAvailable() {
 module.exports = {
   quarantineDisposeBatch, quarantineDisposeBatchAvailable,
   run, spawn, configure, OmniError, quarantineIdentity, quarantineInspect, quarantineRename,
-  quarantineDispose, quarantineDisposeAvailable,
+  quarantineDispose, quarantineDisposeAvailable, quarantineRenameExclusive, quarantineRenameExclusiveAvailable,
 };
