@@ -200,13 +200,6 @@ export function ActivityPlan(props: { query: string }) {
       <Show when={state.inspectFailed}>
         <p class="activity-error" role="alert">{language.t("orchestra.monitor.planVerifyFailed")}</p>
       </Show>
-      <Show when={state.verified}>
-        {(snapshot) => <p class="mx-note" role="status">{language.t("orchestra.monitor.planVerified", {
-          ready: snapshot().ready.length,
-          armed: snapshot().approvals.reduce((count, item) => count + (item.changed ? 0 : item.receipt.targets.length), 0),
-          refused: snapshot().approvals.reduce((count, item) => count + (item.changed ? item.receipt.targets.length : 0), 0),
-        })}</p>}
-      </Show>
       <Show when={state.verified ?? state.snapshot} fallback={
         <div class="mx-empty" role={state.failed ? "alert" : "status"}>
           <strong>{language.t(state.busy ? "orchestra.monitor.planLoading" : "orchestra.monitor.planUnread")}</strong>

@@ -47,7 +47,12 @@ async function parent() {
     done = true
     await dialogs
     assert.equal(status, 0, `Electron fixture failed:\n${await stderr}\n${await stdout}`)
-    process.stdout.write(await stdout)
+    const report = await readFile(join(root, "report.json"), "utf8")
+    assert.deepEqual(JSON.parse(report), {
+      status: "pass", openFileRefused: true, nativeCancel: true, identityMismatch: true, staleRefused: true,
+      signedReceipt: true, durableReceipt: true, sourceUntouched: true,
+    })
+    process.stdout.write(report + "\n")
   } finally {
     await rm(root, { recursive: true, force: true })
   }
@@ -68,6 +73,7 @@ async function child() {
   await mkdir(join(root, "electron"))
   app.setPath("userData", join(root, "electron"))
   app.commandLine.appendSwitch("disable-gpu")
+  app.on("window-all-closed", () => {})
   await app.whenReady()
   const page = createServer((_req, response) => response.writeHead(200, { "content-type": "text/html" }).end("<!doctype html><title>Activity arm fixture</title>"))
   await new Promise<void>((resolve, reject) => { page.once("error", reject); page.listen(0, "127.0.0.1", resolve) })
@@ -150,12 +156,14 @@ async function child() {
     assert.equal((await plan()).approvals.length, 1)
     assert.equal(await readFile(join(source, "payload"), "utf8"), "untouched fixture\n")
     db.close()
-    process.stdout.write(JSON.stringify({ status: "pass", openFileRefused: true, nativeCancel: true, identityMismatch: true, staleRefused: true, signedReceipt: true, durableReceipt: true, sourceUntouched: true }) + "\n")
+    await writeFile(join(root, "report.json"), JSON.stringify({
+      status: "pass", openFileRefused: true, nativeCancel: true, identityMismatch: true, staleRefused: true,
+      signedReceipt: true, durableReceipt: true, sourceUntouched: true,
+    }))
   } finally {
     window?.destroy()
     page.close()
     await owned.listener.stop()
-    app.quit()
   }
 }
 
@@ -190,6 +198,10 @@ async function run(command: string, args: string[]) {
 }
 
 if (process.argv.includes("--activity-arm-child"))
-  void child().catch(async (error) => { console.error(error); (await import("electron")).app.exit(1) })
+  void child().then(async () => (await import("electron")).app.exit(0), async (error) => {
+    console.error(error)
+    const { app } = await import("electron")
+    app.exit(1)
+  })
 else
   void parent().catch((error) => { console.error(error); process.exitCode = 1 })

@@ -43,14 +43,14 @@ test("partial and failed reads stay explicit and a same-scope failure retains th
     await until("partial plan row", () => text(app.panel()).includes("ready-a"))
     expect(text(app.panel())).toContain("reading is partial")
     expect(text(app.panel())).not.toContain("Ready: 1")
-    expect([...app.panel().querySelectorAll("button")].map(text)).not.toContain("Arm")
+    expect([...app.panel().querySelectorAll("button")].map(text)).not.toContain("Arm quarantine…")
 
     button(app, "Refresh").click()
     await until("same-scope refresh starts", () => app.calls.length === 2)
     app.calls[1]!.fail(new Error("ledger unavailable"))
     await until("read failure appears", () => text(app.panel()).includes("could not be read"))
     expect(text(app.panel())).toContain("ready-a")
-    expect([...app.panel().querySelectorAll("button")].map(text)).not.toContain("Arm")
+    expect([...app.panel().querySelectorAll("button")].map(text)).not.toContain("Arm quarantine…")
   } finally {
     app.dispose()
   }
@@ -77,7 +77,7 @@ test("a web server displays Ready rows without an arm control", async () => {
     await until("initial plan read", () => app.calls.length === 1)
     app.calls[0]!.respond(snapshot())
     await until("ready target appears", () => text(app.panel()).includes("ready-a"))
-    expect([...app.panel().querySelectorAll("button")].map(text)).not.toContain("Arm")
+    expect([...app.panel().querySelectorAll("button")].map(text)).not.toContain("Arm quarantine…")
     expect(app.arms).toEqual([])
   } finally {
     app.dispose()
@@ -110,7 +110,7 @@ test("only a Ready target on the desktop base sidecar reaches the native arm bri
     expect(app.calls.length).toBe(1)
     app.inspections[0]!.respond(snapshot({ ready: [approved] }))
     await until("verified target becomes armable", () => text(app.panel()).includes("Verified objects"))
-    const armButton = button(app, "Arm")
+    const armButton = button(app, "Arm quarantine…")
     expect(armButton.classList.contains("primary")).toBe(false)
     armButton.click()
     await until("native bridge is called", () => nativeCalls === 1)
