@@ -85,7 +85,7 @@ export async function acquire(input: Readable, signal: AbortSignal, arm?: Activi
       const receipt: Option.Option<ActivityArm.Preview | ActivityArm.Receipt> = endpoint === ActivityPrivateChannel.previewPath
         ? ActivityArm.decodePreview(result)
         : ActivityArm.decodeReceipt(result)
-      if (Option.isNone(receipt)) return new Response(null, { status: 409, headers: { "cache-control": "no-store" } })
+      if (receipt._tag === "None") return new Response(null, { status: 409, headers: { "cache-control": "no-store" } })
       const json = JSON.stringify(receipt.value)
       return new Response(json, { status: 200, headers: {
         "cache-control": "no-store", "content-type": "application/json",
