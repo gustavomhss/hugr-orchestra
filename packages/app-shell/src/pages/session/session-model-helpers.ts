@@ -1,110 +1,126 @@
-import { createEffect, on } from "solid-js"
+import { createEffect, untrack } from "solid-js"
+import type { ModelKey, useLocal } from "@/context/local"
+import type { PromptSession } from "@/context/prompt-state"
 import type { UserMessage } from "@/v2-wire"
-
+import type { SessionModelRef } from "@/utils/session-model-execution"
 
 type Local = {
   session: {
     reset(): void
-    restore(msg: UserMessage): void
+    restore(msg: UserMessage, inherited?: true): void
   }
 }
 
-type ModelSelection = {
-  model: {
-    current(): { id: string; provider: { id: string } } | undefined
-    list?(): readonly { id: string; provider: { id: string } }[]
-    set(model: { providerID: string; modelID: string }): void
-    variant: {
-      current(): string | undefined
-      set(variant: string | undefined): void
-    }
+type LocalModel = ReturnType<typeof useLocal>["model"]
+type Intent = { model: Pick<LocalModel, "current" | "intent"> }
+type Restore = {
+  session: {
+    inherited(): boolean
+    restoreModel(model: ModelKey, variant: string | null | undefined, inherited?: true): void
   }
 }
-
-type PromptState = {
-  model: {
-    current(): { providerID: string; modelID: string; variant?: string | null } | undefined
-    set(model: { providerID: string; modelID: string; variant?: string | null }): void
-  }
-}
+type PromptState = Pick<PromptSession, "model">
 
 export const resetSessionModel = (local: Local) => {
   local.session.reset()
 }
 
 export const syncSessionModel = (local: Local, msg: UserMessage) => {
-  local.session.restore(msg)
+  local.session.restore(msg, true)
 }
 
-/**
- * The composer follows the Session: the model of its last user message when it has no choice of its own, and a model
- * the server switched the Session to (a command's own model, another client). Only a change of the Session's recorded
- * model moves it, never a pick in the composer.
- */
+const sameSessionModel = (left: SessionModelRef | undefined, right: SessionModelRef) =>
+  left?.providerID === right.providerID && left.id === right.id && left.variant === right.variant
+
 export const followSessionModel = (
-  local: Local & ModelSelection,
+  local: Local & Restore & Intent & {
+    session: Pick<ReturnType<typeof useLocal>["session"], "ready" | "selectingModel">
+  },
   session: {
     lastUserMessage: () => UserMessage | undefined
-    model: () => { providerID: string; id: string } | undefined
+    info: () => { model?: SessionModelRef } | undefined
+    editor: () => PromptState | undefined
     sessionID: () => string | undefined
   },
 ) => {
-  createEffect(
-    on(
-      () => session.lastUserMessage()?.id,
-      () => {
-        const msg = session.lastUserMessage()
-        if (!msg) return
-        syncSessionModel(local, msg)
-      },
-    ),
-  )
-  createEffect(
-    on(
-      () => {
-        const model = session.model()
-        return model ? { sessionID: session.sessionID(), providerID: model.providerID, id: model.id } : undefined
-      },
-      (next, previous) => {
-        if (!next || !previous || next.sessionID !== previous.sessionID) return
-        if (next.providerID === previous.providerID && next.id === previous.id) return
-        const current = local.model.current()
-        if (current?.provider.id === next.providerID && current.id === next.id) return
-        local.model.set({ providerID: next.providerID, modelID: next.id })
-      },
-      { defer: true },
-    ),
-  )
+  let previous: { id: string; editor: PromptState; model?: SessionModelRef } | undefined
+  createEffect(() => {
+    const id = session.sessionID()
+    const editor = session.editor()
+    const info = session.info()
+    if (previous?.id !== id) previous = undefined
+    if (!id || !editor || !info || !local.session.ready()) return
+    const model = info.model && { providerID: info.model.providerID, id: info.model.id, variant: info.model.variant }
+    const message = model ? undefined : session.lastUserMessage()
+    const initial = previous?.id !== id || previous.editor !== editor
+    const lastModel = previous?.model
+    previous = { id, editor, model }
+    untrack(() => {
+      if (initial) restorePromptModel(local, editor)
+      if (model && initial) {
+        restoreStoredSessionModel(local, model)
+        return
+      }
+      if (model && !sameSessionModel(lastModel, model) && !local.session.selectingModel(id, model)) {
+        const intent = local.model.intent()
+        if (intent.model?.providerID === model.providerID && intent.model.modelID === model.id &&
+          intent.variant !== undefined && (intent.variant ?? undefined) === model.variant) return
+        local.session.restoreModel({ providerID: model.providerID, modelID: model.id }, model.variant ?? null, true)
+        if (editor.model.current()) editor.model.set(undefined)
+      }
+      if (message) syncSessionModel(local, message)
+    })
+    if (!local.session.inherited()) syncPromptModel(local, editor)
+  })
 }
 
-export const syncPromptModel = (local: ModelSelection, prompt: PromptState) => {
-  const model = local.model.current()
+export function restoreStoredSessionModel(
+  local: { model: Pick<LocalModel, "intent"> } & Restore,
+  model: SessionModelRef | undefined,
+) {
+  if (!model) return
+  const intent = local.model.intent()
+  if (!local.session.inherited() && (intent.model || intent.variant !== undefined)) return
+  // Omission on an exact stored ref must bypass the agent and saved default variant.
+  if (intent.model?.providerID === model.providerID && intent.model.modelID === model.id && intent.variant === (model.variant ?? null))
+    return
+  local.session.restoreModel({ providerID: model.providerID, modelID: model.id }, model.variant ?? null, true)
+}
+
+export const syncPromptModel = (local: Intent, prompt: PromptState) => {
+  const intent = local.model.intent()
+  const current = prompt.model.current()
+  if (!intent.model && intent.variant === undefined) {
+    if (current) prompt.model.set(undefined)
+    return
+  }
+  const displayed = intent.model ? undefined : local.model.current()
+  const model = intent.model ?? (displayed && { providerID: displayed.provider.id, modelID: displayed.id })
   if (!model) return
   const next = {
-    providerID: model.provider.id,
-    modelID: model.id,
-    variant: local.model.variant.current(),
+    providerID: model.providerID,
+    modelID: model.modelID,
+    variant: intent.variant,
   }
-  const current = prompt.model.current()
   if (current?.providerID === next.providerID && current.modelID === next.modelID && current.variant === next.variant)
     return
   prompt.model.set(next)
 }
 
-export const restorePromptModel = (local: ModelSelection, prompt: PromptState) => {
+export const restorePromptModel = (
+  local: { model: Pick<LocalModel, "intent">; session: Pick<Restore["session"], "restoreModel"> & Partial<Pick<Restore["session"], "inherited">> },
+  prompt: PromptState,
+) => {
   const model = prompt.model.current()
   if (!model) return false
-  const choices = local.model.list?.()
-  if (choices && !choices.some((item) => item.provider.id === model.providerID && item.id === model.modelID))
-    return false
-  const current = local.model.current()
+  const current = local.model.intent()
   if (
-    current?.provider.id === model.providerID &&
-    current.id === model.modelID &&
-    local.model.variant.current() === (model.variant ?? undefined)
+    current.model?.providerID === model.providerID &&
+    current.model.modelID === model.modelID &&
+    current.variant === model.variant &&
+    !local.session.inherited?.()
   )
     return true
-  local.model.set({ providerID: model.providerID, modelID: model.modelID })
-  local.model.variant.set(model.variant ?? undefined)
+  local.session.restoreModel({ providerID: model.providerID, modelID: model.modelID }, model.variant)
   return true
 }

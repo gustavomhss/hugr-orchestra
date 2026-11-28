@@ -13,6 +13,7 @@ import { blobDataUrl } from "@/utils/draft-store"
 import { buildRequestParts } from "./build-request-parts"
 import { makeModelExecutionQuery } from "@orchestra/client"
 import { modelExecutionForSession } from "@/utils/session-model-execution"
+import { pathKey } from "@/utils/path-key"
 import type { AdmissionRequest, FollowupSendInput } from "./submission-types"
 import type { ModelExecution } from "@orchestra/schema/model-execution"
 
@@ -194,21 +195,32 @@ export async function waitForSubmissionWorktree(input: {
   return true
 }
 
+export function knownSlashCommand(text: string, commands: readonly { name: string }[]) {
+  if (!text.startsWith("/")) return
+  const name = text.split(" ", 1)[0]?.slice(1)
+  return name && commands.some((command) => command.name === name) ? name : undefined
+}
+
 /** Prepare attachments between two policy barriers; a successful HTTP admission remains successful after departure. */
 export async function sendFollowupRequest(input: FollowupSendInput) {
   const current = () => !input.signal?.aborted && input.runtime?.current() !== false && input.currentSource?.current() !== false
   if (!current()) return false
   if (input.request?.admitted) return true
   const text = input.draft.prompt.map((part) => ("content" in part ? part.content : "")).join("")
+  const [, ...tail] = text.split(" ")
+  const cmd = input.request?.preparation || input.request?.kind === "prompt" ? undefined
+    : input.request?.commandName ?? input.request?.command?.command ??
+      (input.command === undefined ? knownSlashCommand(text, input.sync.data.command) : input.command ?? undefined)
   const images = input.draft.prompt.filter((part): part is ImageAttachmentPart => part.type === "image")
+  const busyStatus: { release?: VoidFunction } = {}
   const setBusy = () => {
-    if (!input.optimisticBusy || !current()) return
-    input.serverSync.session.set("session_status", input.draft.sessionID, { type: "busy" })
+    if (!input.optimisticBusy || !current() || busyStatus.release) return
+    busyStatus.release = input.serverSync.session.optimisticBusy?.(input.draft.sessionID)
   }
 
   const setIdle = () => {
-    if (!input.optimisticBusy || !current()) return
-    input.serverSync.session.set("session_status", input.draft.sessionID, { type: "idle" })
+    busyStatus.release?.()
+    busyStatus.release = undefined
   }
 
   const wait = async () => {
@@ -220,16 +232,12 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
   }
   if (!(await wait())) return false
   if (!(input.request?.kind === "prompt" && input.request.admissionAttempted) && !(input.preflight ? input.preflight() : await assessModelExecution({
-    api: input.api, directory: input.draft.sessionDirectory, sessionID: input.draft.sessionID,
-    agent: input.draft.agent, model: input.draft.model, variant: input.draft.variant, current, signal: input.signal,
+    api: input.api, directory: input.draft.sessionDirectory, workspaceID: input.draft.workspaceID,
+    sessionID: input.draft.sessionID, command: cmd, agent: input.draft.agent, model: input.draft.model, variant: input.draft.variant, current, signal: input.signal,
     onUnavailable: input.onUnavailable,
   }))) return false
 
-  const [head, ...tail] = text.split(" ")
-  const cmd = head?.startsWith("/") ? head.slice(1) : undefined
-  if (cmd && !input.request?.preparation && (input.request?.kind
-    ? input.request.kind === "command"
-    : input.request?.command || input.sync.data.command.find((item) => item.name === cmd))) {
+  if (cmd) {
     if (!(await wait())) return false
     const files = input.request?.command?.files ?? await Promise.all(images.map(async (attachment) => ({
       uri: await blobDataUrl(attachment.blob, attachment.mime), name: attachment.filename,
@@ -265,7 +273,7 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
       }
       if (input.dispatch) {
         const sent = await input.dispatch(send)
-        if (!sent && current()) setIdle()
+        if (!sent) setIdle()
         return sent
       }
       setBusy()
@@ -273,8 +281,9 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
         setIdle()
         return false
       }
-      await send()
-      return true
+      const sent = await send()
+      if (sent === false) setIdle()
+      return sent !== false
     } catch (err) {
       setIdle()
       throw err
@@ -300,7 +309,7 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
     sessionDirectory: input.draft.sessionDirectory,
   })
   if (input.request) input.request.preparation = preparation
-  const prepared = { request: input.request, value: preparation }
+  const prepared = { request: input.request, value: preparation, optimisticID: undefined as string | undefined }
 
   const message: Message = {
     id: messageID,
@@ -311,20 +320,25 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
     model: { ...input.draft.model, variant: input.draft.variant },
   }
 
-  const add = () =>
+  const add = () => {
+    prepared.optimisticID = prepared.request?.id ?? messageID
     input.sync.session.optimistic.add({
       directory: input.draft.sessionDirectory,
       sessionID: input.draft.sessionID,
-      message: { ...message, id: prepared.request?.id ?? messageID },
+      message: { ...message, id: prepared.optimisticID },
       parts: prepared.value.optimisticParts,
     })
+  }
 
-  const remove = () =>
+  const remove = () => {
+    if (!prepared.optimisticID) return
     input.sync.session.optimistic.remove({
       directory: input.draft.sessionDirectory,
       sessionID: input.draft.sessionID,
-      messageID: prepared.request?.id ?? messageID,
+      messageID: prepared.optimisticID,
     })
+    prepared.optimisticID = undefined
+  }
 
   batch(() => {
     if (input.pending || input.dispatch) return
@@ -336,7 +350,7 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
     if (!(await wait())) {
       batch(() => {
         setIdle()
-        if (current()) remove()
+        remove()
       })
       return false
     }
@@ -360,7 +374,7 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
         })
       }
       if (!ready()) {
-        if (current()) batch(() => { setIdle(); remove() })
+        batch(() => { setIdle(); remove() })
         return Promise.resolve(false)
       }
       const requestParts = prepared.value.requestParts
@@ -402,15 +416,16 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
     }
     if (input.dispatch) {
       const sent = await input.dispatch(send)
-      if (!sent && current()) batch(() => { setIdle(); remove() })
+      if (!sent) batch(() => { setIdle(); remove() })
       return sent
     }
-    await send(input.request)
-    return true
+    const sent = await send(input.request)
+    if (sent === false) batch(() => { setIdle(); remove() })
+    return sent !== false
   } catch (err) {
     batch(() => {
       setIdle()
-      if (current()) remove()
+      remove()
     })
     throw err
   }
@@ -420,7 +435,9 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
 export async function assessModelExecution(input: {
   api: object
   directory: string
+  workspaceID?: string
   sessionID?: string
+  command?: string
   agent: string
   model: { providerID: string; modelID: string }
   variant?: string
@@ -436,20 +453,23 @@ export async function assessModelExecution(input: {
   }) })
   try {
     const response = await query.load(input, {
-      location: { directory: input.directory },
+      location: { directory: input.directory, ...(input.workspaceID === undefined ? {} : { workspace: input.workspaceID }) },
       context: input.sessionID ? { type: "session", sessionID: input.sessionID, agentID: input.agent }
         : { type: "draft", agentID: input.agent },
       model: { providerID: input.model.providerID, id: input.model.modelID, variant: input.variant },
+      ...(input.command === undefined ? {} : { command: input.command }),
     })
     const selected = response?.data.selection
     const current = input.current() && !input.signal?.aborted
-    const exact = selected?.ref.providerID === input.model.providerID && selected.ref.id === input.model.modelID &&
-      selected.ref.variant === input.variant
-    const ready = current && selected?.status === "ready" && exact
+    const location = response?.location
+    const placed = location && pathKey(location.directory) === pathKey(input.directory) && location.workspaceID === input.workspaceID
+    const exact = input.command !== undefined || (selected?.ref.providerID === input.model.providerID &&
+      selected.ref.id === input.model.modelID && selected.ref.variant === input.variant)
+    const ready = current && !!placed && selected?.status === "ready" && exact
     if (current && !ready) {
       const entry = response?.data.models.find((item) => item.model.providerID === input.model.providerID && item.model.id === input.model.modelID)
-      input.onUnavailable?.(exact && selected?.status !== "ready" ? selected?.reason
-        : entry && entry.status !== "ready" ? entry.reason : undefined)
+      input.onUnavailable?.(placed && exact && selected?.status !== "ready" ? selected?.reason
+        : placed && entry && entry.status !== "ready" ? entry.reason : undefined)
     }
     return ready
   } finally { query.dispose() }

@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, ErrorBoundary, For, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, ErrorBoundary, For, onCleanup, Show } from "solid-js"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { Message } from "@orchestra/session-ui/message-part"
 import { PromptInputV2Composer, usePromptInputV2Controller } from "@/components/prompt-input-v2"
@@ -18,6 +18,7 @@ import { createPromptModelSelection } from "@/pages/session/composer/prompt-mode
 import type { ServerConnection } from "@/context/server"
 import { SessionRouteKey, SessionStateKey } from "@/utils/server-scope"
 import { normalizeSessionInfo } from "@/utils/session"
+import { isSessionNotFoundError } from "@/utils/server-errors"
 import type { JanitorReport } from "@/utils/janitor-report"
 import { agentKey } from "@/context/agent-identity"
 
@@ -28,6 +29,7 @@ export function JanitorPocketChat(props: {
   onSessionID?: (sessionID: string) => void
 }) {
   const language = useLanguage()
+  const [sessionID, setSessionID] = createSignal<string>()
   return (
     <ErrorBoundary
       fallback={(error) => {
@@ -46,12 +48,16 @@ export function JanitorPocketChat(props: {
               <SDKProvider directory={props.directory}>
                 <DirectoryDataProvider directory={props.directory} server={props.server}>
                   <FileProvider>
-                    <PromptProvider>
+                    <PromptProvider sessionID={sessionID}>
                       <CommentsProvider>
                         <PocketComposer
                           directory={props.directory}
                           report={props.report}
-                          onSessionID={props.onSessionID}
+                          sessionID={sessionID}
+                          onSessionID={(id) => {
+                            setSessionID(id)
+                            props.onSessionID?.(id)
+                          }}
                         />
                       </CommentsProvider>
                     </PromptProvider>
@@ -69,7 +75,8 @@ export function JanitorPocketChat(props: {
 function PocketComposer(props: {
   directory: () => string
   report: JanitorReport
-  onSessionID?: (sessionID: string) => void
+  sessionID: () => string | undefined
+  onSessionID: (sessionID: string) => void
 }) {
   const language = useLanguage()
   const prompt = usePrompt()
@@ -78,78 +85,89 @@ function PocketComposer(props: {
   const serverSync = useServerSync()
   const comments = useComments()
   const local = useLocal()
-  const model = createPromptModelSelection({ agent: () => local.agent.current() })
-  const [sessionID, setSessionID] = createSignal<string>()
+  const sessionID = props.sessionID
   const [creating, setCreating] = createSignal(false)
+  const [checkedKey, setCheckedKey] = createSignal<string>()
   const [attemptedKey, setAttemptedKey] = createSignal<string>()
   const [failedKey, setFailedKey] = createSignal<string>()
   const [retryNonce, setRetryNonce] = createSignal(0)
   let generation = 0
+  onCleanup(() => { generation++ })
   const storageKey = createMemo(
     () => `orchestra.janitor.session.${serverSDK().scope}.${base64Encode(props.directory())}`,
   )
   const sessionKey = createMemo(() =>
     SessionStateKey.from(serverSDK().scope, SessionRouteKey.fromRoute(base64Encode(props.directory()), sessionID())),
   )
-  const adoptSession = (id: string) => {
-    setSessionID(id)
-    props.onSessionID?.(id)
+
+  const sessionInfo = () => {
+    const id = sessionID()
+    return id ? serverSync().session.get(id) : undefined
   }
+  const model = createPromptModelSelection({
+    agent: local.agent.current,
+    session: {
+      server: serverSDK,
+      id: sessionID,
+      info: sessionInfo,
+      ready: () => sessionID() ? !!sessionInfo() : checkedKey() === storageKey(),
+    },
+  })
 
   createEffect(() => {
     retryNonce()
-    const agent = local.agent.current()
-    const selected = model.current()
     const key = storageKey()
-    if (!agent || !selected || sessionID() || creating() || attemptedKey() === key || failedKey() === key) return
+    if (sessionID() || creating() || attemptedKey() === key || failedKey() === key) return
+    const checked = checkedKey() === key
+    const agent = local.agent.current()
+    const selected = model.execution.input().model
+    if (checked && (!agent || !selected || !model.execution.ready())) return
     const directory = props.directory()
     const scope = serverSDK().scope
     const runID = ++generation
     setCreating(true)
-    setAttemptedKey(key)
+    if (checked) setAttemptedKey(key)
     const isCurrent = () =>
       runID === generation && storageKey() === key && props.directory() === directory && serverSDK().scope === scope
     void (async () => {
-      let stored: string | null = null
-      try {
-        stored = localStorage.getItem(key)
-      } catch {
-        stored = null
-      }
-      if (stored) {
+      if (!checked) {
+        let stored: string | null = null
         try {
-          await serverSync().session.sync(stored)
-          if (isCurrent() && serverSync().session.get(stored)?.directory === directory) {
-            adoptSession(stored)
+          stored = localStorage.getItem(key)
+        } catch {
+          stored = null
+        }
+        if (stored) {
+          const existing = await serverSync().session.resolve(stored, { force: true }).catch((error: unknown) => {
+            if (!isSessionNotFoundError(error, stored)) throw error
+          })
+          if (!isCurrent()) return
+          if (existing?.directory === directory) {
+            props.onSessionID(stored)
             return
           }
-        } catch {
-          try {
-            localStorage.removeItem(key)
-          } catch {
-            // Storage may be unavailable; continue with a new session.
-          }
         }
+        if (isCurrent()) setCheckedKey(key)
+        return
       }
 
-      if (!isCurrent()) return
+      if (!isCurrent() || !agent || !selected) return
       const currentSync = serverSync().ensureDirSyncContext(directory)
       const created = await sdk()
         .api.session.create({
           agent: agentKey(agent),
-          model: { id: selected.id, providerID: selected.provider.id },
-          location: { directory: props.directory() },
+          model: selected,
+          location: { directory },
         })
         .then((result) => normalizeSessionInfo(result))
-      currentSync.session.remember(created)
-      await currentSync.session.sync(created.id)
       if (!isCurrent()) return
+      currentSync.session.remember(created)
       try {
         localStorage.setItem(key, created.id)
       } catch {
         // Session remains usable for this mount even if persistence is unavailable.
       }
-      adoptSession(created.id)
+      props.onSessionID(created.id)
     })()
       .catch((error) => {
         if (isCurrent()) setFailedKey(key)
@@ -173,6 +191,8 @@ function PocketComposer(props: {
     model,
   })
   const input = usePromptInputV2Controller({
+    sessionID,
+    pendingKey: sessionKey,
     get controls() {
       return controls()
     },
@@ -203,7 +223,10 @@ function PocketComposer(props: {
             </Show>
           }
         >
-          <PromptInputV2Composer controller={input} />
+          <PromptInputV2Composer
+            controller={input}
+            class="[&_[data-slot=prompt-input-v2-toolbar]]:h-auto [&_[data-slot=prompt-input-v2-toolbar]]:min-h-11 [&_[data-slot=prompt-input-v2-toolbar]]:py-2 [&_[data-slot=prompt-input-v2-controls]]:flex-wrap"
+          />
         </Show>
       </div>
     </div>
@@ -212,25 +235,48 @@ function PocketComposer(props: {
 
 function PocketTimeline(props: { sessionID: () => string | undefined }) {
   const sync = useServerSync()
+  const language = useLanguage()
+  const [failed, setFailed] = createSignal(false)
+  const [retry, setRetry] = createSignal(0)
+  createEffect(() => {
+    retry()
+    const id = props.sessionID()
+    if (!id) return
+    let active = true
+    onCleanup(() => { active = false })
+    setFailed(false)
+    void sync().session.sync(id).catch((error: unknown) => {
+      if (!active) return
+      setFailed(true)
+      console.error("[janitor-pocket] history", error)
+    })
+  })
   const messages = createMemo(() => {
     const id = props.sessionID()
     return id ? (sync().session.data.message[id] ?? []) : []
   })
 
   return (
-    <Show when={messages().length > 0}>
-      <div class="min-h-0 max-h-[38dvh] overflow-y-auto px-1 py-2">
-        <For each={messages()}>
-          {(message) => (
-            <Message
-              message={message}
-              parts={sync().session.data.part[message.id] ?? []}
-              showReasoningSummaries
-              useV2Actions
-            />
-          )}
-        </For>
-      </div>
-    </Show>
+    <>
+      <Show when={failed()}>
+        <button type="button" class="self-start px-4 py-2 text-[13px] underline" onClick={() => setRetry((value) => value + 1)}>
+          {language.t("janitor.pocket.retry")}
+        </button>
+      </Show>
+      <Show when={messages().length > 0}>
+        <div class="min-h-0 max-h-[38dvh] overflow-y-auto px-1 py-2">
+          <For each={messages()}>
+            {(message) => (
+              <Message
+                message={message}
+                parts={sync().session.data.part[message.id] ?? []}
+                showReasoningSummaries
+                useV2Actions
+              />
+            )}
+          </For>
+        </div>
+      </Show>
+    </>
   )
 }

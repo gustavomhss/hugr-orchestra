@@ -7,7 +7,7 @@ import type { Platform } from "@/context/platform"
 import { createStore } from "solid-js/store"
 import { Persist, persisted } from "@/utils/persist"
 
-export type QueuedPromptIdentity = { serverScopeKey: ServerScope; directory: string; sessionID: string }
+export type QueuedPromptIdentity = { serverScopeKey: ServerScope; directory: string; workspaceID?: string; sessionID: string }
 export type QueuedPromptSource = QueuedPromptIdentity & { version: 1; runtimeSourceToken?: string }
 export type QueuedPromptRuntime = QueuedPromptIdentity & {
   api: DirectorySDK["api"]["session"]
@@ -39,7 +39,7 @@ export function createQueuedPromptSources() {
     capture(runtime: QueuedPromptRuntime, owner: object): QueuedPromptSource {
       const runtimeSourceToken = `${epoch}:${crypto.randomUUID()}`
       runtimes.set(runtimeSourceToken, { runtime, owner })
-      return { version: 1, serverScopeKey: runtime.serverScopeKey, directory: runtime.directory, sessionID: runtime.sessionID, runtimeSourceToken }
+      return { version: 1, serverScopeKey: runtime.serverScopeKey, directory: runtime.directory, ...(runtime.workspaceID === undefined ? {} : { workspaceID: runtime.workspaceID }), sessionID: runtime.sessionID, runtimeSourceToken }
     },
     releaseOwner(owner: object) {
       runtimes.forEach((entry, token) => { if (entry.owner === owner) runtimes.delete(token) })
@@ -47,7 +47,7 @@ export function createQueuedPromptSources() {
     release(source: QueuedPromptSource) {
       if (source.runtimeSourceToken) runtimes.delete(source.runtimeSourceToken)
     },
-    resolve(source: unknown, payload: Pick<FollowupDraft, "sessionID" | "sessionDirectory">, current?: QueuedPromptRuntime, deliberate = false) {
+    resolve(source: unknown, payload: Pick<FollowupDraft, "sessionID" | "sessionDirectory" | "workspaceID">, current?: QueuedPromptRuntime, deliberate = false) {
       const identity = queuedPromptSource(source, payload)
       if (!identity) return
       const token = identity.runtimeSourceToken
@@ -66,27 +66,29 @@ export function createQueuedPromptSources() {
 export const queuedPromptSources = createQueuedPromptSources()
 
 function sameIdentity(left: QueuedPromptIdentity, right: QueuedPromptIdentity) {
-  return left.serverScopeKey === right.serverScopeKey && left.directory === right.directory && left.sessionID === right.sessionID
+  return left.serverScopeKey === right.serverScopeKey && left.directory === right.directory && left.workspaceID === right.workspaceID && left.sessionID === right.sessionID
 }
 
 /** Accept old serialized source identity, but discard every old capability/property. */
-export function queuedPromptSource(source: unknown, payload: Pick<FollowupDraft, "sessionID" | "sessionDirectory">): QueuedPromptSource | undefined {
+export function queuedPromptSource(source: unknown, payload: Pick<FollowupDraft, "sessionID" | "sessionDirectory" | "workspaceID">): QueuedPromptSource | undefined {
   if (!source || typeof source !== "object" || Array.isArray(source)) return
   if ("version" in source && source.version !== 1) return
   const scope = "serverScopeKey" in source ? source.serverScopeKey : "scope" in source ? source.scope : undefined
   const directory = "directory" in source ? source.directory : payload.sessionDirectory
   const sessionID = "sessionID" in source ? source.sessionID : payload.sessionID
+  const workspaceID = "workspaceID" in source ? source.workspaceID : undefined
   if (typeof scope !== "string" || typeof directory !== "string" || typeof sessionID !== "string" ||
-    directory !== payload.sessionDirectory || sessionID !== payload.sessionID) return
+    directory !== payload.sessionDirectory || workspaceID !== payload.workspaceID || sessionID !== payload.sessionID) return
   const token = "runtimeSourceToken" in source ? source.runtimeSourceToken : undefined
   if (token !== undefined && (typeof token !== "string" || !token)) return
-  return { version: 1, serverScopeKey: scope as ServerScope, directory, sessionID, ...(token ? { runtimeSourceToken: token } : {}) }
+  return { version: 1, serverScopeKey: scope as ServerScope, directory, sessionID, ...(payload.workspaceID === undefined ? {} : { workspaceID: payload.workspaceID }), ...(token ? { runtimeSourceToken: token } : {}) }
 }
 
 /** The actual followup store writes this allow-listed DTO, not the submission's runtime object graph. */
 export function queuedPromptPayload(draft: FollowupDraft, id: string, legacyOwner?: QueuedPromptIdentity): QueuedPrompt {
   return {
     id, sessionID: draft.sessionID, sessionDirectory: draft.sessionDirectory,
+    ...(draft.workspaceID === undefined ? {} : { workspaceID: draft.workspaceID }),
     prompt: draft.prompt, context: draft.context, agent: draft.agent, model: draft.model,
     variant: draft.variant, delivery: draft.delivery,
     source: queuedPromptSource(draft.source ?? legacyOwner, draft),
@@ -99,7 +101,8 @@ export function migrateQueuedPromptStore(value: unknown, serverScopeKey: ServerS
     Array.isArray(items) ? items.flatMap((item: unknown) => {
       if (!item || typeof item !== "object" || !("id" in item) || typeof item.id !== "string" ||
         !("sessionID" in item) || item.sessionID !== sessionID || !("sessionDirectory" in item) ||
-        typeof item.sessionDirectory !== "string" || !("prompt" in item) || !Array.isArray(item.prompt) ||
+        typeof item.sessionDirectory !== "string" || ("workspaceID" in item && item.workspaceID !== undefined && typeof item.workspaceID !== "string") ||
+        !("prompt" in item) || !Array.isArray(item.prompt) ||
         !("context" in item) || !Array.isArray(item.context) || !("agent" in item) || typeof item.agent !== "string" ||
         !("model" in item) || !item.model || typeof item.model !== "object") return []
       return [queuedPromptPayload(item as FollowupDraft, item.id, {
