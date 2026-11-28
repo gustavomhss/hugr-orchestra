@@ -1,0 +1,121 @@
+name: genesis-s3-runtime
+
+# Operational S3 evidence only. No existing gate or product workflow is changed.
+on:
+  push:
+    branches: ["genesis-s3-resume"]
+    paths:
+      - ".github/workflows/genesis-s3-runtime.yml"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/s3-runtime/run-plan.json"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/s3-runtime/runner.py"
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: genesis-s3-runtime-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  S3_RUNNER_PATH: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/s3-runtime
+
+jobs:
+  operation:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Require the immutable selected inputs
+        run: python3 "$S3_RUNNER_PATH/runner.py" plan --repository "$GITHUB_WORKSPACE" --plan "$S3_RUNNER_PATH/run-plan.json"
+      - uses: ./.github/actions/setup-bun
+      - name: Restore the exact prior operational archive
+        if: env.S3_MODE != 'prepare'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          artifact-ids: ${{ env.S3_STATE_ARTIFACT_ID }}
+          run-id: ${{ env.S3_STATE_RUN_ID }}
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/s3-restored
+          merge-multiple: true
+      - name: Materialize the pinned runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          git cat-file -e "$S3_RUNTIME_SHA^{commit}"
+          git worktree add --detach "$RUNNER_TEMP/s3-runtime" "$S3_RUNTIME_SHA"
+          test "$(git -C "$RUNNER_TEMP/s3-runtime" rev-parse HEAD)" = "$S3_RUNTIME_SHA"
+      - name: Install the pinned Atlas dependencies
+        working-directory: ${{ runner.temp }}/s3-runtime/modules/atlas
+        run: npm ci
+      - name: Build and typecheck the pinned runtime
+        working-directory: ${{ runner.temp }}/s3-runtime/modules/atlas
+        run: bun typecheck
+      - name: Execute the original Atlas operation
+        run: |
+          python3 "$S3_RUNNER_PATH/runner.py" run \
+            --repository "$GITHUB_WORKSPACE" \
+            --plan "$S3_RUNNER_PATH/run-plan.json" \
+            --runtime "$RUNNER_TEMP/s3-runtime" \
+            --restore "$RUNNER_TEMP/s3-restored" \
+            --output "$RUNNER_TEMP/s3-evidence"
+      - name: Preserve exact receipts, candidate and state
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: genesis-s3-state-${{ github.sha }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/s3-evidence
+          if-no-files-found: error
+          retention-days: 30
+
+  guards:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Check the current branch against dev
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir "$RUNNER_TEMP/genesis-s3-guards"
+          export GUARD_BASE_SHA="$(git rev-parse origin/dev)"
+          set +e
+          bun run check:guards --base origin/dev > "$RUNNER_TEMP/genesis-s3-guards/guards.log" 2>&1
+          GUARD_EXIT="$?"
+          set -e
+          export GUARD_EXIT
+          cat "$RUNNER_TEMP/genesis-s3-guards/guards.log"
+          python3 - <<'PY'
+          import hashlib, json, os, pathlib
+          root = pathlib.Path(os.environ["RUNNER_TEMP"]) / "genesis-s3-guards"
+          raw = (root / "guards.log").read_bytes()
+          receipt = {
+              "schema": "genesis-s3-guards/v1",
+              "candidate_revision": os.environ["GITHUB_SHA"],
+              "base_ref": "origin/dev",
+              "base_sha": os.environ["GUARD_BASE_SHA"],
+              "argv": ["bun", "run", "check:guards", "--base", "origin/dev"],
+              "exit_code": int(os.environ["GUARD_EXIT"]),
+              "log_sha256": hashlib.sha256(raw).hexdigest(),
+              "log_bytes": len(raw),
+          }
+          (root / "receipt.json").write_text(json.dumps(receipt, indent=2) + "\n")
+          print("GENESIS_S3_GUARDS_JSON=" + json.dumps(receipt, sort_keys=True))
+          PY
+          exit "$GUARD_EXIT"
+      - name: Preserve actual guard result
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: genesis-s3-guards-${{ github.sha }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          path: ${{ runner.temp }}/genesis-s3-guards
+          retention-days: 30
+

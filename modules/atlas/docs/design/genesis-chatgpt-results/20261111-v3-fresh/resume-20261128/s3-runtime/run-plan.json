@@ -1,0 +1,79 @@
+{
+  "schema": "genesis-s3-operation-plan/v1",
+  "state": "READY",
+  "operation": "prepare",
+  "execution_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "scope": "orchestra.s3.agents",
+  "runtime": {
+    "revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "tree": "3c93c4636c1e4c4b704f8be9314e22b2149e5609",
+    "release": {
+      "commit": "da9800f55f31926f33c41a5ca2fd88bf26fcaccc",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+      "sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1",
+      "git_blob_sha": "ac4f5f46ce2044ded044e4c9a4e35220558bae22",
+      "byte_length": 19736
+    }
+  },
+  "package": {
+    "commit": "caae29c9ae560d49859b67c52c81e66c2a3b078e",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/native-package.json",
+    "sha256": "4bcee3f8e534dc6a191cee647e27b5a6faf98a4a7e1f3ed09e9fda7488d64c86",
+    "artifact_keys": [
+      "s3-l1-maestro",
+      "s3-l1-relay",
+      "s3-l1-integrations",
+      "s3-l2-maestro",
+      "s3-l2-relay",
+      "s3-l2-integrations",
+      "s3-l3-flows",
+      "s3-l4-entry",
+      "s3-l4-ownership",
+      "s3-l4-maintenance",
+      "s3-l4-operational"
+    ],
+    "git_blob_sha": "87585cb5cd3ee802b77662ea8dd7f0ce2d0f107c",
+    "byte_length": 1164632
+  },
+  "input_lock": {
+    "commit": "e2cf5356d8093acf563c75d50bb186d2e8599b95",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/s3-runtime/input-lock.json",
+    "sha256": "963ce86867ae7ce3e345298425c577e836364a165cffab825390d1eb50ba54dd",
+    "git_blob_sha": "c330ad0eefa4dbb3d270ae6ffb14333d3a553d0b",
+    "byte_length": 1673114
+  },
+  "restore": {
+    "run_id": null,
+    "artifact_id": null,
+    "archive_sha256": null,
+    "candidate_id": null,
+    "ownership_manifest": null
+  },
+  "binding": {
+    "commit": null,
+    "path": null,
+    "sha256": null,
+    "files": []
+  },
+  "authority": {
+    "actor": "/root",
+    "ratifier": "/root",
+    "authorization": {
+      "commit": "e2cf5356d8093acf563c75d50bb186d2e8599b95",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/s3-runtime/authorization.md",
+      "sha256": "14b0442c916cfc2123435a7d227c663eea0bb85447928db0c9e3c795833f07c4",
+      "git_blob_sha": "47db98f5a5a8c517ae112319fb8a9ed3a6bdd2e7",
+      "byte_length": 2320
+    },
+    "policy": {
+      "commit": "e2cf5356d8093acf563c75d50bb186d2e8599b95",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/s3-runtime/policy.json",
+      "sha256": "3d8aa4ac48f64b09a9ede9717e32f2adb7d97741443c4fa04308cc7d6c66a3a2",
+      "git_blob_sha": "5d9c75cf775255f649d62e70bf8bd521ab229d3d",
+      "byte_length": 207
+    }
+  },
+  "queries": []
+}
