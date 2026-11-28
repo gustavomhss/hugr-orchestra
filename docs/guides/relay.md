@@ -71,7 +71,7 @@ files by relative path. Relay refuses missing files, symlinks, and paths outside
 The workflow editor reports the configured backend. Each ballot verifies the connection, model, variant, and evidence
 before requesting a verdict. The Messages API backend uses its separately configured key.
 
-Package verification runs Bun in the authority Session's directory. On a GitHub Actions Linux runner, the subprocess receives the runner's CI marker for repository test guards without inheriting the host's credentials.
+For a governed workflow, include its exact test files in the approved write paths. Package verification runs those files in their package and checks that every file contributed a JUnit test case. An empty or ambiguous selection holds the workflow. On GitHub Actions Linux, the subprocess receives the runner's CI marker for repository test guards without inheriting the host's credentials.
 
 ### The ledger
 

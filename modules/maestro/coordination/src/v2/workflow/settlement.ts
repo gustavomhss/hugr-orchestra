@@ -287,11 +287,6 @@ export const coldReview = Effect.fn("WorkflowSettlementV2.coldReview")(function*
     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_STALE" })
 })
 
-/** Identifies named Bun tests in a workflow's approved worktree-relative paths. */
-export function verificationFiles(writePaths: readonly string[]) {
-  return [...new Set(writePaths.filter((entry) => /[._](?:test|spec)\.(?:[jt]sx?|[cm][jt]s)\/*$/.test(entry)))]
-}
-
 /**
  * The global package-verification check: the fixed native Bun test runner in the placement, sandboxed, with a JUnit
  * report whose counts must agree with its cases; a zero exit alone is not execution evidence. `authorize` asks for the
@@ -306,7 +301,7 @@ export const verification = Effect.fn("WorkflowSettlementV2.verification")(
     const fs = yield* FSUtil.Service
     const processes = yield* AppProcess.Service
     const refused = (status: "missing" | "acquisition-error", reason: string) => ({ outcome: { status }, reason })
-    const files = scope ? verificationFiles(scope.writePaths) : []
+    const files = [...new Set(scope?.writePaths.filter((entry) => /[._](?:test|spec)\.(?:[jt]sx?|[cm][jt]s)\/*$/.test(entry)))]
     if (scope && !files.length) return refused("acquisition-error", "RUNNER_TEST_SELECTION_EMPTY")
     const selection = scope ? verificationSelection(fs, scope.worktree, files) : undefined
     const focused = selection ? yield* selection : undefined

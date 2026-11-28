@@ -149,10 +149,10 @@ const layer = Layer.effect(
                       resources: [command],
                       metadata: { completionCheck: true },
                     }),
-                  WorkflowSettlementV2.verificationFiles(writePaths).length ? {
+                  {
                     worktree: location.project.directory === "/" ? location.directory : location.project.directory,
                     writePaths,
-                  } : undefined,
+                  },
                 ).pipe(
                   Effect.map((verified) => verified.outcome),
                   Effect.provideService(FSUtil.Service, fs),
