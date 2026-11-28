@@ -33,8 +33,8 @@ jobs:
         shell: bash
         env:
           SELECTION: ${{ matrix.selection }}
-          RUNTIME_REVISION: e3a8ab8cf56dbff1ee91272df51ffa398d882aa1
-          RELEASE_COMMIT: 09a4c4afc7aab2f9a153eb059d13df0ecf15595c
+          RUNTIME_REVISION: db9b4235022c4df32fe3bfd4faeea8adcd69abb7
+          RELEASE_COMMIT: e171783482d0a44974d6056cd9e144a7e33406a7
         run: |
           set -euo pipefail
           EVIDENCE_ROOT="$RUNNER_TEMP/genesis-core-native-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-$SELECTION"
