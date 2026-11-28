@@ -86,3 +86,24 @@ test("historical terminal cards do not manufacture a receipt from current measur
   expect(reopened.textContent).toContain("No receipt was recorded at closure")
   expect(reopened.textContent).not.toContain("USD 42")
 })
+
+test("a terminal card displays a missing attempt closure as unrecorded", () => {
+  const attempt = {
+    n: 1, seat: "backend", sessionID: null, branch: null, prNumber: null,
+    startedAt: 100, endedAt: null, outcome: null, cause: null, models: [], participants: [], metrics,
+  } satisfies ExecutionReport["attempts"][number]
+  const report: ExecutionReport = {
+    ref: "OLD-1", asOf: 1000, creator: null, models: [], participants: [], metrics, leadTimeMs: 1000,
+    attempts: [attempt, { ...attempt, n: 2, endedAt: 500, outcome: "merged" }],
+    receipts: [], unattributedSessions: [], unassignedSessions: [],
+  }
+  for (const stage of ["shipped", "cut", "building"] as const) {
+    const page = { issue: { id: "issue", stage }, notes: [] } as Page
+    const host = mount(() => createComponent(IssueExecutions, { page, report, failed: false, time: String, retry() {} }))
+    const label = stage === "building" ? "In progress" : "Not recorded"
+    expect(host.querySelector('[data-attempt="1"] summary')?.textContent).toContain(label)
+    expect(host.querySelectorAll('[data-attempt="1"] .board-execution-facts dd')[1]?.textContent).toBe(label)
+    expect(host.querySelector('[data-attempt="2"] summary')?.textContent).toContain("Merged")
+    expect(host.querySelectorAll('[data-attempt="2"] .board-execution-facts dd')[1]?.textContent).toBe("500")
+  }
+})
