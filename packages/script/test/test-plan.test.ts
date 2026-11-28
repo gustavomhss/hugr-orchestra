@@ -272,6 +272,18 @@ describe("test shard planner", () => {
     expect(heavy.length).toBeGreaterThan(2)
     expect(heavy.flatMap((bin) => bin.names).toSorted()).toEqual(files)
     expect(heavy.slice(1).every((bin) => bin.names.length > 0)).toBe(true)
+    expect(fitsWindowsTarget(timings, bins.slice(1))).toBe(true)
+    expect(bins[0]?.seconds).toBeGreaterThanOrEqual(180)
+    const heavyNames = files.filter((file) => file !== currency).slice(0, 4)
+    const crowded = {
+      ...timings,
+      files: { ...timings.files, [`${directory}:windows`]: Object.fromEntries(files.map((file) => [file, heavyNames.includes(file) ? 120 : file === currency ? 1 : 0.05])) },
+      reserves: { ...timings.reserves, [`${directory}:windows`]: {} },
+      totals: { ...timings.totals, [directory]: { windows: 0 } },
+    }
+    const packed = plannedBins(crowded, directory, "windows")
+    expect(fitsWindowsTarget(crowded, packed.slice(1))).toBe(true)
+    for (const name of heavyNames) expect(packed.find((bin) => bin.names.includes(name))?.names.filter((file) => heavyNames.includes(file))).toEqual([name])
   })
 
   test("Windows Maestro lanes keep the package command, exact paths and unchanged execution budgets", () => {
@@ -498,3 +510,7 @@ describe("test shard planner", () => {
     expect(suiteTimes(`<testsuite name="C:\\repo\\apps\\desktop\\src\\main\\owned-serve.test.ts" time="65.5"/><testsuite name="apps/desktop/scripts/stage-claude.test.ts" time="2"/><testsuite name="electron-builder.config.test.ts" time="0.2"/>`)).toEqual([["src/main/owned-serve.test.ts", 65.5], ["scripts/stage-claude.test.ts", 2], ["electron-builder.config.test.ts", 0.2]])
   })
 })
+
+function fitsWindowsTarget(timings: Timings, bins: { seconds: number; names: string[] }[]) {
+  return bins.every((bin) => bin.names.length <= 1 || bin.seconds * timings.overhead.windows * timings.margin <= timings.target.windows)
+}

@@ -80,7 +80,11 @@ it.live.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")(
     const records = ActivityMonitor.snapshot().records
     expect(records.find((record) => record.recordID === matched)?.footprint?.hypothesis).toBe("compatible-with-logical-leak")
     expect(records.find((record) => record.recordID === unmatched)?.footprint?.hypothesis).toBe("insufficient")
-    expect(held[0]).toBeTruthy()
+    const tree = yield* Effect.promise(() => {
+      const read = Reflect.get(held[0], "observeTree") as () => Promise<{ footprintIdentity?: string }>
+      return read()
+    })
+    expect(tree.footprintIdentity).toBe("stable-test-tree")
   }),
   30_000,
 )

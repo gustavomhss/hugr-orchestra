@@ -109,15 +109,23 @@ function maestroWindowsBins(timings: Timings) {
   const currency = weights.find((entry) => entry.name === "test/v2-reservation-currency.test.ts")
   const remaining = weights.filter((entry) => entry !== currency)
   if (!currency || remaining.length === 0) throw new Error("Windows Maestro requires currency and a nonempty complement")
-  const seconds = remaining.reduce((sum, entry) => sum + entry.weight, 0)
-  const complement = Math.min(
-    remaining.length,
-    shardCount(seconds * timings.overhead.windows, timings.target.windows, timings.margin),
-  )
   return [
     { seconds: currency.weight, names: [currency.name] },
-    ...balance(remaining, complement),
+    ...packComplement(remaining, timings),
   ]
+}
+
+// The raw shard count can still leave one bin over the Windows target after longest-first packing.
+// Add bins until every multi-file bin fits. A single file heavier than the target stays alone.
+function packComplement(remaining: { name: string; weight: number }[], timings: Timings) {
+  const seconds = remaining.reduce((sum, entry) => sum + entry.weight, 0)
+  const start = Math.min(remaining.length, shardCount(seconds * timings.overhead.windows, timings.target.windows, timings.margin))
+  const counts = Array.from({ length: remaining.length - start + 1 }, (_, extra) => start + extra)
+  for (const count of counts) {
+    const bins = balance(remaining, count)
+    if (bins.every((bin) => bin.names.length <= 1 || bin.seconds * timings.overhead.windows * timings.margin <= timings.target.windows)) return bins
+  }
+  return balance(remaining, remaining.length)
 }
 
 export function weigh(
