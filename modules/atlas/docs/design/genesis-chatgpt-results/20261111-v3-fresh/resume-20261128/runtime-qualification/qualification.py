@@ -14,8 +14,8 @@ import sys
 import time
 from datetime import datetime, timezone
 
-RUNTIME = "db9b4235022c4df32fe3bfd4faeea8adcd69abb7"
-RUNTIME_TREE = "3c93c4636c1e4c4b704f8be9314e22b2149e5609"
+RUNTIME = "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10"
+RUNTIME_TREE = "77b84e9358c80ae14b98be329ebf2407dfd83fa4"
 SOURCE = "1cde2ff7a71bcf7aecb5d030917b577165135d38"
 PROTOCOL = "ee2521a5b966bd505cc95bd1c733e09e12f33531"
 EXPECTED = {
@@ -378,8 +378,8 @@ def run(args, summary):
         "versions": {"bun": command(["bun", "--revision"], runtime, env=env).stdout.decode().strip(),
                      "node": command(["node", "--version"], runtime, env=env).stdout.decode().strip(), "python": sys.version},
         "limits": {"ownership_input_bytes": 2097152, "native_transport_bytes": 8388608},
-        "reused_common_gate": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43343953480",
-        "fresh_scope": "Full S1-03 and S2 prepares, exact input materialization, and real EACCES refusal only",
+        "historical_common_gate_before_noble_binding": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43343953480",
+        "fresh_scope": "Full S1-03 and S2 native prepares under the Noble-bound kernel, exact input materialization, and real EACCES refusal",
         "binding": "NOT_ATTEMPTED", "publication": "NOT_ATTEMPTED", "independent_runtime_acceptance": "SEPARATE",
     })
     cache = {}

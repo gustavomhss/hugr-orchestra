@@ -18,7 +18,7 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  RUNTIME_SHA: db9b4235022c4df32fe3bfd4faeea8adcd69abb7
+  RUNTIME_SHA: 9b0188b2be5ea69638dff8a44e3e931b4d6d8b10
   QUALIFICATION_PATH: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification
 
 jobs:
@@ -48,6 +48,39 @@ jobs:
       - name: Build and typecheck the pinned runtime
         working-directory: ${{ env.QUALIFICATION_ROOT }}/runtime/modules/atlas
         run: bun typecheck
+      - name: Verify installed hashing dependency drift is refused
+        working-directory: ${{ env.QUALIFICATION_ROOT }}/runtime/modules/atlas
+        shell: bash
+        run: |
+          set -euo pipefail
+          CONTROL_DIR="$QUALIFICATION_ROOT/noble-control"
+          mkdir "$CONTROL_DIR"
+          export ATLAS_ISOLATED_NOBLE_CONTROL=1
+          export ATLAS_NOBLE_CONTROL_RUNTIME="$RUNTIME_SHA"
+          export ATLAS_NOBLE_CONTROL_RECEIPT="$CONTROL_DIR/receipt.json"
+          TEST=packages/adapter-io/test/evaluation-runtime-noble.test.ts
+          KERNEL_MANIFEST=packages/kernel/package.json
+          cp "$KERNEL_MANIFEST" "$CONTROL_DIR/kernel.corrected.json"
+          trap 'cp "$CONTROL_DIR/kernel.corrected.json" "$KERNEL_MANIFEST"' EXIT
+          git show db9b4235022c4df32fe3bfd4faeea8adcd69abb7:modules/atlas/packages/kernel/package.json > "$KERNEL_MANIFEST"
+          set +e
+          npx --no-install vitest run "$TEST" --reporter=json --outputFile="$CONTROL_DIR/baseline.json"
+          baseline_status=$?
+          set -e
+          test "$baseline_status" -eq 1
+          node - "$CONTROL_DIR/baseline.json" <<'NODE'
+          const fs = require('node:fs')
+          const report = JSON.parse(fs.readFileSync(process.argv[2], 'utf8'))
+          const failures = report.testResults.flatMap((file) => file.assertionResults).filter((test) => test.status === 'failed')
+          if (failures.length !== 1 || !failures[0].failureMessages.some((message) => message.includes('installed Noble bytes must be bound'))) {
+            throw new Error('Baseline did not fail the installed dependency binding assertion')
+          }
+          NODE
+          cp "$CONTROL_DIR/kernel.corrected.json" "$KERNEL_MANIFEST"
+          trap - EXIT
+          npx --no-install vitest run "$TEST" --reporter=default --reporter=json --outputFile="$CONTROL_DIR/corrected.json"
+          test -s "$ATLAS_NOBLE_CONTROL_RECEIPT"
+          git diff --exit-code HEAD -- "$KERNEL_MANIFEST"
       - name: Qualify the complete packages through the original CLI
         shell: bash
         run: |
@@ -64,7 +97,9 @@ jobs:
         with:
           name: genesis-runtime-prepare-${{ github.sha }}-${{ github.run_attempt }}
           if-no-files-found: error
-          path: ${{ env.QUALIFICATION_ROOT }}/evidence
+          path: |
+            ${{ env.QUALIFICATION_ROOT }}/evidence
+            ${{ env.QUALIFICATION_ROOT }}/noble-control
           retention-days: 30
 
   guards:
@@ -81,7 +116,8 @@ jobs:
         run: |
           set -euo pipefail
           mkdir "$RUNNER_TEMP/genesis-runtime-guards"
-          export GUARD_BASE_SHA="$(git rev-parse origin/dev)"
+          GUARD_BASE_SHA="$(git rev-parse origin/dev)"
+          export GUARD_BASE_SHA
           set +e
           bun run check:guards --base origin/dev > "$RUNNER_TEMP/genesis-runtime-guards/guards.log" 2>&1
           GUARD_EXIT="$?"

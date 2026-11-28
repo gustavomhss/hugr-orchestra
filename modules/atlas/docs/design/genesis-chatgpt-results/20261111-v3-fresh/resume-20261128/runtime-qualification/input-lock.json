@@ -1,6 +1,6 @@
 {
   "schema": "genesis-s4-runtime-source-manifest/v1",
-  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "runtime_revision": "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
   "provenance_rule": "Each file is read with git show <commit>:<path>; SHA256 is checked before write. The data worktree HEAD is the source baseline, while this manifest records every overlay. Runtime code is a separate worktree at runtime_revision.",
