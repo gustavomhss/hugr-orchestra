@@ -1,0 +1,146 @@
+[
+  {
+    "path": "modules/maestro/coordination/src/approval.ts",
+    "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "byte_length": 9452,
+    "sha256": "70bb260f4e7ffb20844042f8c12934ce10398779d9ff4916b0ced9c5917cd8d4",
+    "git_blob": "4181f5cefc9b1541fc2b73b4fcaca7e1a349b12e",
+    "git_blob_expected": "4181f5cefc9b1541fc2b73b4fcaca7e1a349b12e",
+    "git_blob_match": true
+  },
+  {
+    "path": "modules/maestro/coordination/src/v2/governance.ts",
+    "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "byte_length": 27278,
+    "sha256": "7ab5f454b0443a311f8671b4153d64f83f0d9f18997d913d166911823757885c",
+    "git_blob": "acab0bd78caa6e4810b08a2fbabf9bc9ff437ba7",
+    "git_blob_expected": "acab0bd78caa6e4810b08a2fbabf9bc9ff437ba7",
+    "git_blob_match": true
+  },
+  {
+    "path": "modules/maestro/coordination/src/v2/governance/dispatch.ts",
+    "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "byte_length": 8908,
+    "sha256": "5f13bf85bf3bd74ba3e17caf4e6899dd2fd19503430b262976b57a82e53f7300",
+    "git_blob": "63af3a2e95eb280dfe0a98f22fd51079e1323819",
+    "git_blob_expected": "63af3a2e95eb280dfe0a98f22fd51079e1323819",
+    "git_blob_match": true
+  },
+  {
+    "path": "modules/maestro/coordination/src/v2/governance/reservation.ts",
+    "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "byte_length": 13426,
+    "sha256": "f22d10e5ab86bf5289c9b9e58ebde6f3df702b566887725a88b2685ec24ff1a4",
+    "git_blob": "b3885aab1cd5f9c9a2bb71db90b1e8044edf933a",
+    "git_blob_expected": "b3885aab1cd5f9c9a2bb71db90b1e8044edf933a",
+    "git_blob_match": true
+  },
+  {
+    "path": "modules/maestro/coordination/src/seat-skill-content.ts",
+    "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "byte_length": 8797,
+    "sha256": "7aaebead2a68c47dd89f2e86541d53114039d5a1b38cb00ec6c455827fcb087f",
+    "git_blob": "ee9de21c4aeceb1c9b014cdae2b710efb9d0360a",
+    "git_blob_expected": "ee9de21c4aeceb1c9b014cdae2b710efb9d0360a",
+    "git_blob_match": true
+  },
+  {
+    "path": "modules/maestro/coordination/src/seat-skill-root.ts",
+    "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "byte_length": 10150,
+    "sha256": "804a7ec1d341ba32e074d1badd3cbce8612b218d105b61660beae44340dd705c",
+    "git_blob": "c01632881ed8e61ee0b008fb41d36ef8ceba8afd",
+    "git_blob_expected": "c01632881ed8e61ee0b008fb41d36ef8ceba8afd",
+    "git_blob_match": true
+  },
+  {
+    "path": "modules/maestro/coordination/src/seat-skills-module.ts",
+    "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "byte_length": 2018,
+    "sha256": "f468d2d52a9d5c7007dd938ad7d41fe9f9b312637c2ba173f1a447de4ab88d11",
+    "git_blob": "19f7786d82aa7043213a95a3e3e5eb8cb505d573",
+    "git_blob_expected": "19f7786d82aa7043213a95a3e3e5eb8cb505d573",
+    "git_blob_match": true
+  },
+  {
+    "path": "modules/relay/src/arm/settlement.ts",
+    "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "byte_length": 4384,
+    "sha256": "dc2491de96dbfcc334ad57355addcf9db9506f1ddf83de61afa5d70b31dd39d7",
+    "git_blob": "5a2c95f1b902a76f63c4b7620112875bc63fa46f",
+    "git_blob_expected": "5a2c95f1b902a76f63c4b7620112875bc63fa46f",
+    "git_blob_match": true
+  },
+  {
+    "path": "modules/relay/src/arm/evaluate.ts",
+    "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "byte_length": 41405,
+    "sha256": "a404c11fc270299ecc76def0fb40ad4ff2a146f4dc817a030394d33f4e0b064c",
+    "git_blob": "3e4675d89217e12c1b852f7bc50ff49c3aa59983",
+    "git_blob_expected": "3e4675d89217e12c1b852f7bc50ff49c3aa59983",
+    "git_blob_match": true
+  },
+  {
+    "path": "modules/relay/src/gate/control.ts",
+    "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "byte_length": 16574,
+    "sha256": "71d27c1b7189edc2038198ac0dfdb5b9155eb5224a2d413bd00ec4e43373567d",
+    "git_blob": "094077ca84e3b394c32e813402feb8ae63272892",
+    "git_blob_expected": "094077ca84e3b394c32e813402feb8ae63272892",
+    "git_blob_match": true
+  },
+  {
+    "path": "modules/relay/src/audit.ts",
+    "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "byte_length": 34332,
+    "sha256": "3261c023115c5b642a136328faa824e10289d412207c877f07596a37ce5b8e47",
+    "git_blob": "75a97f45b5b5c7cb52110de2206b68457c524e92",
+    "git_blob_expected": "75a97f45b5b5c7cb52110de2206b68457c524e92",
+    "git_blob_match": true
+  },
+  {
+    "path": "packages/core/src/relay.ts",
+    "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "byte_length": 30225,
+    "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+    "git_blob": "25fb509203f933a2e8b0f311c3fc8f9476d53e16",
+    "git_blob_expected": "25fb509203f933a2e8b0f311c3fc8f9476d53e16",
+    "git_blob_match": true
+  },
+  {
+    "path": "modules/engine-adapters/claude-code/src/v2/host.ts",
+    "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "byte_length": 41462,
+    "sha256": "630e68e234e862cdd5d2b6d33732e3e7072fe0145b60d0a476c985a379bd6e1e",
+    "git_blob": "fa5708ad05b2e77d7b08074cf6b84f031e274b96",
+    "git_blob_expected": "fa5708ad05b2e77d7b08074cf6b84f031e274b96",
+    "git_blob_match": true
+  },
+  {
+    "path": "modules/app-dock/src/app-dock.ts",
+    "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "byte_length": 55918,
+    "sha256": "e70b35aea0b041ab27f01823ecee2893d0738b657a4de1f67121ac016dc8e980",
+    "git_blob": "ad81a43b726abe216e5dc7cf45768698aaf59c03",
+    "git_blob_expected": "ad81a43b726abe216e5dc7cf45768698aaf59c03",
+    "git_blob_match": true
+  },
+  {
+    "path": "modules/app-dock/src/socket-transport.ts",
+    "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "byte_length": 1687,
+    "sha256": "545f1026e03420188cffa85cd0514608e6b1ae579a46bce009d67c5853c63afd",
+    "git_blob": "bdb749fdb2707e486b57e85d5921faa1c122ac20",
+    "git_blob_expected": "bdb749fdb2707e486b57e85d5921faa1c122ac20",
+    "git_blob_match": true
+  },
+  {
+    "path": "modules/janitor/src/scan.ts",
+    "ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "byte_length": 13691,
+    "sha256": "9ed10a9066296f67c8eafac4168cd3dd39fe6f5fc4fdf6afff7dace11cede4bf",
+    "git_blob": "e4512251b7db3fc10981766565ba5e47918bf513",
+    "git_blob_expected": "e4512251b7db3fc10981766565ba5e47918bf513",
+    "git_blob_match": true
+  }
+]

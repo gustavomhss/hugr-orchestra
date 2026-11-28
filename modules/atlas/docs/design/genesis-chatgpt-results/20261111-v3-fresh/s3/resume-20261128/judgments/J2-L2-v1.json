@@ -1,0 +1,184 @@
+{
+  "judge_id": "/root/s3_j2",
+  "role": "J2 — completude e utilidade, com revisão de todos os critérios obrigatórios",
+  "execution_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "unit": "L2-all",
+  "body_hashes": {
+    "s3-l2-maestro": "7505522f3e92fa25dfda8dac896a2717d6eac71d9bd3a928d0bf4ae5e5b08d7e",
+    "s3-l2-relay": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+    "s3-l2-integrations": "5b65c606ab258eea521adbf0cdf4bdf43b0755ec2ec0a7be5a2efc25545ce0c3"
+  },
+  "overall_verdict": "FIX-FIRST",
+  "criteria": [
+    {
+      "id": "L2-PREDECESSORS-AND-CUSTODY",
+      "verdict": "PASS",
+      "evidence": [
+        "O pacote identifica os três hashes L1 aceitos e informa a conferência dos seis pareceres históricos.",
+        "A referência de custódia dos predecessores é 19b909ef3bf27e0332f24fc30e3a5c471ea37d78.",
+        "A correção de transporte de s3-l2-integrations §1 repõe o espaço em “autenticado, qualificado”, sem alterar o arquivo-fonte ou seu hash declarado."
+      ],
+      "reason": "Os predecessores foram tratados como aceitos, sem novo julgamento ou herança de identidade dos juízes históricos. Os hashes e tamanhos são os fornecidos pelo pacote; não realizei cálculo, leitura de arquivo ou verificação por ferramenta."
+    },
+    {
+      "id": "L2-A1",
+      "verdict": "PASS",
+      "evidence": [
+        "s3-l2-maestro §2 exige a revisão atual, a primeira resposta genuína do owner após a apresentação, os vínculos de contexto/policy/task, a child Session reservada e o permission snapshot.",
+        "s3-l2-maestro §2 prevê recusa/HOLD por mismatch e revalidação ou consumo em beforeTurn.",
+        "A1, approval.ts L131–159: apresentação atual, resposta direta, não sintética, na mesma Session e imediata; ambiguidade não aprova.",
+        "A2, dispatch.ts L53–69; A3, reservation.ts L59–79, L111–131 e L254–261; A4, governance.ts L323–330 e L390–396."
+      ],
+      "reason": "O corpo responde ao caso sem ampliar a aprovação para outro prompt, seat, child ou conjunto de permissões. Também preserva a distinção entre Task governada e Task normal. A formulação HOLD/recusa não transforma todas as recusas de dispatch em um único status literal."
+    },
+    {
+      "id": "L2-A2",
+      "verdict": "PASS",
+      "evidence": [
+        "s3-l2-maestro §3 inclui membership, bytes, nomes portáveis, arquivos regulares, UTF-8, proibição de symlink/escape, geração do módulo virtual e cache por versão/digest.",
+        "s3-l2-maestro §3 separa a árvore embarcada das skills de manutenção em .orchestra/skills/ e identifica os responsáveis por conteúdo e empacotamento.",
+        "A5, seat-skill-content.ts L112–147; A6, seat-skills-module.ts L6–18 e L40–42; A7, seat-skill-root.ts L90–128 e L175–181.",
+        "O predecessor L1 Maestro L85 foi fornecido como evidência aceita do contrato de packaging."
+      ],
+      "reason": "A adição do companion é explicada como alteração de membership e conteúdo da árvore existente, com consequências no módulo gerado e no digest da cópia extraída. Não cria seat, grant novo, autoridade de implementação de produto ou autoaceite para Maestro."
+    },
+    {
+      "id": "L2-B1",
+      "verdict": "PASS",
+      "evidence": [
+        "s3-l2-relay §1 separa efeito externo, disposição, receipt/ledger durável e aplicação de estado.",
+        "s3-l2-relay §2 recusa garantias de rollback ou exactly-once, exige proveniência antes de repetir e bloqueia repetição automática de unknown-effect.",
+        "B1, settlement.ts L13–20, L45–60 e L63–67: responsabilidades, receipt antes da aplicação e repair sob run lock com nomes seguros.",
+        "B2, evaluate.ts L67–70; B3, relay.ts L382–416 e L491–498.",
+        "O predecessor L1 Relay L96–98 fornece o contrato aceito de ordenação e recuperação de lock."
+      ],
+      "reason": "A resposta mantém separados o que pode ter acontecido externamente e o que foi registrado. Release não é apresentado como reversão, audit não é apresentado como execução e o caminho de settlement nativo não pode ser substituído por evaluate simples. As instruções sobre lock e nomes seguros são compatíveis com os contratos fornecidos."
+    },
+    {
+      "id": "L2-B2",
+      "verdict": "PASS",
+      "evidence": [
+        "s3-l2-relay §3 separa compilação de suporte do driver, exige IDs globalmente únicos, reconhece blocking:false como advisory e trata stdout vazio como ambíguo.",
+        "s3-l2-relay §3 diferencia integridade do audit, comparação com sprint atual e execução dos controles.",
+        "B4, control.ts L261–287: advisory, indisponibilidade e ausência de independência mecânica.",
+        "B5, audit.ts L206–215 e L335–346: not-run sem comparação, not-run por registros inutilizáveis e invalid para sprint alcançável ilegível ou inválido.",
+        "B5, audit.ts L528–529: total null quando custo não foi medido.",
+        "s3-l2-relay §§3 e 5 preservam a distinção entre YAML autoral, JSON compilado, fixtures/goldens e evidência histórica."
+      ],
+      "reason": "O corpo não promove compilação, silêncio do hook, advisory ou exit 0 de audit a prova de conclusão. A fronteira not-run/invalid está expressa corretamente, e custo ausente não é convertido em zero."
+    },
+    {
+      "id": "L2-C1",
+      "verdict": "PASS",
+      "evidence": [
+        "s3-l2-integrations §§1–2 distinguem catálogo data-only, qualificação pendente, conexão e autorização.",
+        "s3-l2-integrations §2 mantém o preset estrutural claude_code, contexto por additionalContext, recusa Agent/Task e encaminha delegação pela task do Orchestra.",
+        "C1, host.ts L38–49 e L158–178: controle de load por Session, exceções nomeadas, recusa de subagentes e encaminhamento à autorização do host.",
+        "C1, host.ts L580–588: execução no registry e registro do load somente após resultado sem erro.",
+        "O predecessor L1 integrations L81 informa que o catálogo não está carregado pelas raízes dos seats."
+      ],
+      "reason": "O corpo nega ambas as premissas incorretas do caso: catalogação não significa integração live e Agent/Task não é um caminho alternativo de delegação. O load do playbook e suas exceções permanecem separados de aprovação, permissões e reservation."
+    },
+    {
+      "id": "L2-C2",
+      "verdict": "FIX-FIRST",
+      "evidence": [
+        "s3-l2-integrations §3: “stale-not-dispatched: a regra específica pode permitir no máximo o retry delimitado”.",
+        "s3-l2-integrations §3: “unknown/uncertain: a ação pode ter sido despachada; não repetir automaticamente quando duplicação é perigosa”.",
+        "C3, app-dock.ts L357–360: unknown outcomes nunca são replayed.",
+        "C3, app-dock.ts L380–390: retry condicionado a stale-ref, outcome not-dispatched e attempt inferior a 1.",
+        "C2, socket-transport.ts L5–24: canal desktop, URL e token por launch.",
+        "C4, scan.ts L7–10 e L201–209: scanner read-only e falha como indisponibilidade.",
+        "s3-l2-integrations §3 e predecessor L1 integrations L101: não há composição scanner→sink→UI demonstrada."
+      ],
+      "reason": "Canal real, separação entre hook direto e MCP, indisponibilidade do scanner, ausência de auto-clean e limite da composição estão cobertos. Dois requisitos do retry não estão: o corpo omite o limite explícito de uma nova tentativa e condiciona a proibição de repetição de unknown à avaliação de perigo de duplicação. A fonte fornecida não estabelece essa exceção para unknown."
+    },
+    {
+      "id": "L2-CRITICAL-NORMATIVE-ENFORCEMENT",
+      "verdict": "PASS",
+      "evidence": [
+        "s3-l2-maestro §1 separa intenção/plano, identidade/autorização, execução e aceite.",
+        "s3-l2-maestro §§2 e 5 não tratam prompt, allow rule ou roster textual como concessão de capacidade.",
+        "s3-l2-integrations §§1–2 distinguem conteúdo, adapters, composição real e gates."
+      ],
+      "reason": "Não foi identificada promoção de prosa normativa, nome de agente, catálogo ou playbook a enforcement mecânico. A divergência do retry Dock é registrada como defeito de fidelidade e completude em L2-C2."
+    },
+    {
+      "id": "L2-CRITICAL-RUNTIME-PROOF",
+      "verdict": "PASS",
+      "evidence": [
+        "Os três corpos declaram o caráter estático do entendimento e negam execução dos respectivos componentes.",
+        "s3-l2-maestro §5 e s3-l2-relay §6 preservam NOT_RUN para runtime/CI.",
+        "s3-l2-integrations §6 e seu fechamento não afirmam ativação de provider, Dock, Janitor ou validação live de presets.",
+        "O pacote informa explicitamente que runtime, publicação, index/read, consumidores e CI S3 estão NOT_RUN."
+      ],
+      "reason": "Aceite semântico local não foi apresentado como prova de execução, integração, CI ou publicação. Os recortes de código foram tratados como evidência estática."
+    },
+    {
+      "id": "L2-CRITICAL-REQUIRED-CONTRACTS",
+      "verdict": "FIX-FIRST",
+      "evidence": [
+        "Os seis casos do oracle têm seções próprias nos corpos.",
+        "L2-C2 exige literalmente unknown action not auto-repeat e only stale not-dispatched max1 retry.",
+        "As formulações observadas em s3-l2-integrations §3 não preservam integralmente esses dois limites."
+      ],
+      "reason": "As famílias obrigatórias estão presentes, mas a presença da seção não supre a omissão do limite numérico nem a restrição indevida da regra para unknown. Aplicam-se os findings F-C2-01 e F-C2-02."
+    },
+    {
+      "id": "L2-CRITICAL-NAVIGATION-DEPENDENCY",
+      "verdict": "PASS",
+      "evidence": [
+        "s3-l2-maestro §3 distingue links de navegação de consumo efetivo de bytes e recusa rebuild/invalidação de Relay independente.",
+        "s3-l2-relay §5 afirma que docs/skills de navegação não viram dependências de build automaticamente."
+      ],
+      "reason": "Não foi encontrada conversão de referência de navegação em dependência mecânica de rebuild."
+    },
+    {
+      "id": "L2-BODY-LIMITS",
+      "verdict": "PASS",
+      "evidence": [
+        "Tamanho fornecido para s3-l2-maestro: 6733 bytes.",
+        "Tamanho fornecido para s3-l2-relay: 7235 bytes.",
+        "Tamanho fornecido para s3-l2-integrations: 6833 bytes.",
+        "Limite congelado do oracle: 14000 bytes por corpo."
+      ],
+      "reason": "Todos os tamanhos declarados ficam abaixo do limite. Esta conclusão usa a conferência externa informada no pacote; não representa medição independente por este juiz."
+    },
+    {
+      "id": "L2-FIDELITY-AND-UTILITY",
+      "verdict": "FIX-FIRST",
+      "evidence": [
+        "Os corpos apresentam modelos locais, decisões de manutenção, falhas e passos de diagnóstico vinculados aos casos do oracle.",
+        "s3-l2-relay preserva evidência ausente como NOT_RUN ou UNKNOWN.",
+        "s3-l2-integrations §3 contém as duas divergências delimitadas nos findings F-C2-01 e F-C2-02."
+      ],
+      "reason": "A organização permite aplicar os contratos aos cenários propostos. A orientação sobre recuperação Dock ainda permite uma interpretação operacional incompatível com a fonte e precisa ser corrigida antes do aceite conjunto."
+    },
+    {
+      "id": "L2-REVIEW-SCOPE",
+      "verdict": "PASS",
+      "evidence": [
+        "A avaliação foi solicitada como revisão estática local de L2-all.",
+        "Não foram usadas ferramentas, navegação, arquivos, delegação, edição ou testes.",
+        "O pacote mantém publicação, binding, consumidores e CI fora do resultado desta revisão."
+      ],
+      "reason": "Este parecer é exclusivamente um voto semântico local sobre os corpos identificados. Não constitui binding, publicação, execução de testes ou aceite de runtime."
+    }
+  ],
+  "mandatory_findings": [
+    {
+      "id": "F-C2-01",
+      "expected": "O caso L2-C2 deve explicitar que a exceção de retry automático é restrita a stale-ref certamente não despachado e permite, no máximo, uma nova tentativa.",
+      "observed": "s3-l2-integrations §3 menciona somente “no máximo o retry delimitado”, sem informar o limite de uma tentativa. C3, app-dock.ts L380–390, recusa nova recursão quando attempt >= 1 e exige stale-ref com outcome not-dispatched.",
+      "required_fix": "Explicitar o limite de uma nova tentativa e as condições stale-ref e not-dispatched no contrato de recuperação Dock. Não estender a regra a todo failure ou resultado incerto."
+    },
+    {
+      "id": "F-C2-02",
+      "expected": "Resultado unknown/uncertain do Dock não deve ser repetido automaticamente; C3 declara que unknown outcomes nunca são replayed.",
+      "observed": "s3-l2-integrations §3 restringe a proibição a situações em que “duplicação é perigosa”. Essa condição deixa uma exceção para unknown que não consta do contrato fornecido.",
+      "required_fix": "Remover a condição baseada no perigo de duplicação e preservar a proibição de replay automático para unknown/uncertain, mantendo separada a exceção estrita de stale-ref certamente não despachado."
+    }
+  ],
+  "evidence_requests": [],
+  "optional_suggestions": []
+}

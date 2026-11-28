@@ -1,0 +1,54 @@
+{
+  "schema": "genesis-s3-semantic-layer-release/v1",
+  "execution_record_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "layer": "L2",
+  "revision": "L2-v2",
+  "decision": "ACCEPTED",
+  "verified_by": "/root",
+  "reviewer_ids": [
+    "/root/s3_j1",
+    "/root/s3_j2"
+  ],
+  "created_at": "2026-11-28T06:21:31.313321+00:00",
+  "bodies": [
+    {
+      "key": "s3-l2-maestro",
+      "sha256": "5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012",
+      "bytes": 6979
+    },
+    {
+      "key": "s3-l2-relay",
+      "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+      "bytes": 7235
+    },
+    {
+      "key": "s3-l2-integrations",
+      "sha256": "90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259",
+      "bytes": 6968
+    }
+  ],
+  "decisions": [
+    {
+      "reviewer_id": "/root/s3_j1",
+      "path": "s3-resume-work/judgments/J1-L2-v2.json",
+      "sha256": "9f096355bf30ab98c259bab5e8bed75bc94febc3b0896a2c6b079d6b2c5724e3",
+      "bytes": 8332
+    },
+    {
+      "reviewer_id": "/root/s3_j2",
+      "path": "s3-resume-work/judgments/J2-L2-v2.json",
+      "sha256": "4b24168d4033d6c5695f3e260b056558bdc1d3697cbee833547e6eb529470741",
+      "bytes": 8015
+    }
+  ],
+  "mandatory_findings_open": 0,
+  "predecessor_state": "3 L1 original bodies and 6 final judgments verified at custody checkpoint f083a29eaf6fd96a634a02cce8252bd1d13e9e6f",
+  "release_scope": "Enables L3 production/review. Semantic only; runtime binding and publication not performed.",
+  "transcription": "Judge responses transcribed from complete visible host response, UTF-8 with one terminal LF. Host opaque message IDs unavailable. J2 transport typo and correction preserved separately.",
+  "original_upper_acceptances": "ABSENT; no inheritance",
+  "usage": {
+    "tokens": "UNKNOWN",
+    "cost": "UNKNOWN",
+    "physical_attempts": "UNKNOWN"
+  }
+}

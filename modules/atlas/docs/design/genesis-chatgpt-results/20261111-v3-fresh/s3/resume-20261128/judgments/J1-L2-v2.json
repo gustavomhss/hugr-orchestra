@@ -1,0 +1,150 @@
+{
+  "reviewer": "/root/s3_j1",
+  "role": "J1 — fidelidade e autoridade, incluindo todos os critérios obrigatórios",
+  "execution_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "revision": "L2-v2",
+  "unit": "L2-all",
+  "hashes_declared": {
+    "verification": "Hashes e tamanhos declarados como verificados pelo orquestrador; não recalculados por este juiz.",
+    "s3-l2-maestro": {
+      "bytes": 6979,
+      "sha256": "5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012"
+    },
+    "s3-l2-relay": {
+      "bytes": 7235,
+      "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037"
+    },
+    "s3-l2-integrations": {
+      "bytes": 6968,
+      "sha256": "90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259"
+    }
+  },
+  "decision": "PASS",
+  "finding_closure": [
+    {
+      "id": "L2-A1-IMMEDIATE-OWNER-REPLY",
+      "status": "CLOSED",
+      "evidence": [
+        "Maestro §2, item 2, agora exige resposta genuína com role=user, na mesma Session, posterior à apresentação e sem qualquer mensagem role=user intermediária, inclusive sintética.",
+        "A redação distingue reply-synthetic de reply-not-immediate, conforme approval.ts L131–146."
+      ],
+      "reason": "A correção preserva a imediaticidade implementada e elimina a interpretação de que mensagens intermediárias poderiam ser ignoradas."
+    },
+    {
+      "id": "L2-C2-UNKNOWN-NO-AUTO-REPLAY",
+      "status": "CLOSED",
+      "evidence": [
+        "Integrações §3: unknown/uncertain implica “nunca repetir automaticamente”.",
+        "app-dock.ts L357–360: resultados desconhecidos nunca são reproduzidos."
+      ],
+      "reason": "A proibição deixou de depender do perigo percebido de duplicação."
+    },
+    {
+      "id": "L2-C2-EXPLICIT-MAXIMUM-ONE-RETRY",
+      "status": "CLOSED",
+      "evidence": [
+        "Integrações §3 explicita no máximo uma repetição, condicionada a NativeRPCError, code stale-ref, outcome not-dispatched e attempt < 1.",
+        "app-dock.ts L380–390 limita a recuperação precisamente a essas condições."
+      ],
+      "reason": "O limite e a condição aplicável estão explícitos, sem extensão a outros erros stale ou falhas."
+    }
+  ],
+  "cases": [
+    {
+      "id": "L2-A1",
+      "verdict": "PASS",
+      "evidence": [
+        "Maestro §2 preserva revisão/contexto/policy/task atuais, resposta genuína imediata, reservation da child Session, permission snapshot, beforeTurn e recusa de mismatch.",
+        "approval.ts L131–146 e L158–159; governance/dispatch.ts L53–69; governance/reservation.ts L59–79, L111–113, L128–131 e L254–261; governance.ts L323–330 e L390–396."
+      ],
+      "reason": "A autorização permanece vinculada ao trabalho aprovado. Mudança de prompt, seat, child ou permissões não amplia silenciosamente o binding."
+    },
+    {
+      "id": "L2-A2",
+      "verdict": "PASS",
+      "evidence": [
+        "Maestro §3 inclui membership e bytes como inputs, árvore declarada, nomes portáveis, UTF-8, arquivos regulares e ausência de symlinks/escape.",
+        "seat-skill-content.ts L112–118 e L135–147; seat-skills-module.ts L6–18 e L40–42; seat-skill-root.ts L90–105, L118–128 e L175–181.",
+        "Maestro §3 mantém gerador, extração/cache, manutenção repo-only e ownership distintos."
+      ],
+      "reason": "A adição do companion alcança módulo virtual e digest/cache. Não exige edição manual do gerado nem concede implementação de produto ou autoaceite a Maestro."
+    },
+    {
+      "id": "L2-B1",
+      "verdict": "PASS",
+      "evidence": [
+        "Relay §§1–2 separa efeito, disposição assinada/proveniente, receipt durável e aplicação de estado; exige nomes seguros, lock e evidência antes de retry.",
+        "arm/settlement.ts L13–20, L45–60 e L63–67; arm/evaluate.ts L67–70.",
+        "packages/core/src/relay.ts L382–384, L406–416 e L491–498."
+      ],
+      "reason": "Release e audit não são apresentados como rollback ou exactly-once. Unknown-effect bloqueia repetição automática, e avaliação direta não substitui settlement nativo."
+    },
+    {
+      "id": "L2-B2",
+      "verdict": "PASS",
+      "evidence": [
+        "Relay §3 distingue compilação de suporte do driver, conserva conflitos de IDs, identifica judges advisory e rejeita stdout vazio como completion.",
+        "gate/control.ts L261–266 e L272–287; audit.ts L206–215, L335–346 e L528–529.",
+        "Relay §§3 e 5 preserva fonte YAML, compilados, fixtures/goldens e evidência histórica."
+      ],
+      "reason": "Audit não prova execução dos gates nem validade atual dos artefatos. Not-run e invalid permanecem distintos, e custo ausente permanece não medido."
+    },
+    {
+      "id": "L2-C1",
+      "verdict": "PASS",
+      "evidence": [
+        "Integrações §§1–2 mantém catálogo data-only e qualificação pendente; recusa Agent/Task e usa Orchestra task para child Session.",
+        "claude-code/src/v2/host.ts L38–42, L49, L158–178 e L580–588.",
+        "Integrações §2 preserva preset estrutural, authorize/execute, load bem-sucedido por Session e alcance limitado das exceções de load."
+      ],
+      "reason": "Catalogação e carregamento de playbook não concedem conexão, live acceptance, owner approval ou autoridade geral para ferramentas."
+    },
+    {
+      "id": "L2-C2",
+      "verdict": "PASS",
+      "evidence": [
+        "Integrações §3 distingue hooks de MCP/RPC, exige canal real e URL/token por launch, proíbe repetição automática de unknown e delimita uma repetição para stale-ref/not-dispatched.",
+        "socket-transport.ts L5–17 e L24; app-dock.ts L357–360 e L380–390.",
+        "Integrações §§1 e 3 mantém Janitor read-only, scanner failure como unavailable e composição desktop/store não presumida.",
+        "janitor/src/scan.ts L7–10 e L201–209; trecho aceito de L1 integrations L101."
+      ],
+      "reason": "O corpo não transforma ação incerta em autorização para replay nem falha de scanner em ausência de órfãos. Não atribui delete/kill ao Janitor ou presume ligação ativa com o desktop."
+    }
+  ],
+  "critical_criteria": [
+    {
+      "id": "normative-prose-not-mechanical-enforcement",
+      "verdict": "PASS",
+      "evidence": "Maestro separa intenção, autorização, execução e aceite; Relay distingue arquivos editáveis de autenticação; integrações distingue catálogo, texto e playbook de autoridade."
+    },
+    {
+      "id": "semantic-acceptance-not-runtime-proof",
+      "verdict": "PASS",
+      "evidence": "Os três corpos declaram escopo estático e mantêm execução, runtime e CI como NOT_RUN quando não exercitados."
+    },
+    {
+      "id": "required-family-contracts",
+      "verdict": "PASS",
+      "evidence": "Os seis casos obrigatórios foram reavaliados nos corpos completos. Aprovação, packaging, recuperação Relay, audit/policy, Claude/catalog e Dock/Janitor estão contemplados."
+    },
+    {
+      "id": "navigation-not-rebuild-dependency",
+      "verdict": "PASS",
+      "evidence": "Maestro §3 e Relay §5 distinguem navegação de consumo real de bytes e de dependência de build."
+    },
+    {
+      "id": "body-size-and-local-utility",
+      "verdict": "PASS",
+      "evidence": "Os tamanhos declarados de 6979, 7235 e 6968 bytes estão abaixo de 14000 bytes por corpo. Os textos identificam baseline, predecessores, casos, responsabilidades e limites operacionais."
+    }
+  ],
+  "evidence_requests": [],
+  "findings": [],
+  "limitations": [
+    "Parecer semântico estático dos três corpos de recuperação L2-v2 fornecidos, usando o oracle L2-all e as evidências literais conservadas de L2-v1.",
+    "Não foram usadas ferramentas, leitura de arquivos, execução de testes ou recomputação de hashes.",
+    "Os predecessores L1 foram tratados como previamente aceitos conforme a custódia informada; não foram reavaliados.",
+    "Este PASS não aceita originais históricos ausentes e não constitui binding, publicação, index/read, validação de consumidores ou resultado de CI.",
+    "Runtime, publicação, index/read, consumidores e CI S3 permanecem NOT_RUN; custos, tokens e tentativas físicas não observados permanecem UNKNOWN."
+  ]
+}

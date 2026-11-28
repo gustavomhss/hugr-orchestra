@@ -1,0 +1,283 @@
+{
+  "dossier_sha256": "d1a31fae0dfb0e41a074680f44b25fd023e33b304bb4b921ad4590e9ecf7e223",
+  "dossier_bytes": 30264,
+  "checks": [
+    {
+      "path": "bodies/l1-maestro.md",
+      "line": 69,
+      "substring_exact": true
+    },
+    {
+      "path": "bodies/l1-maestro.md",
+      "line": 85,
+      "substring_exact": true
+    },
+    {
+      "path": "bodies/l1-relay.md",
+      "line": 96,
+      "substring_exact": true
+    },
+    {
+      "path": "bodies/l1-relay.md",
+      "line": 98,
+      "substring_exact": true
+    },
+    {
+      "path": "bodies/l1-integrations.md",
+      "line": 81,
+      "substring_exact": true
+    },
+    {
+      "path": "bodies/l1-integrations.md",
+      "line": 101,
+      "substring_exact": true
+    },
+    {
+      "path": "modules/maestro/coordination/src/approval.ts",
+      "first": 131,
+      "last": 146,
+      "exact": true
+    },
+    {
+      "path": "modules/maestro/coordination/src/approval.ts",
+      "first": 158,
+      "last": 159,
+      "exact": true
+    },
+    {
+      "path": "modules/maestro/coordination/src/v2/governance/dispatch.ts",
+      "first": 53,
+      "last": 69,
+      "exact": true
+    },
+    {
+      "path": "modules/maestro/coordination/src/v2/governance/reservation.ts",
+      "first": 59,
+      "last": 79,
+      "exact": true
+    },
+    {
+      "path": "modules/maestro/coordination/src/v2/governance/reservation.ts",
+      "first": 111,
+      "last": 113,
+      "exact": true
+    },
+    {
+      "path": "modules/maestro/coordination/src/v2/governance/reservation.ts",
+      "first": 128,
+      "last": 131,
+      "exact": true
+    },
+    {
+      "path": "modules/maestro/coordination/src/v2/governance/reservation.ts",
+      "first": 254,
+      "last": 261,
+      "exact": true
+    },
+    {
+      "path": "modules/maestro/coordination/src/v2/governance.ts",
+      "first": 323,
+      "last": 330,
+      "exact": true
+    },
+    {
+      "path": "modules/maestro/coordination/src/v2/governance.ts",
+      "first": 390,
+      "last": 396,
+      "exact": true
+    },
+    {
+      "path": "modules/maestro/coordination/src/seat-skill-content.ts",
+      "first": 112,
+      "last": 118,
+      "exact": true
+    },
+    {
+      "path": "modules/maestro/coordination/src/seat-skill-content.ts",
+      "first": 135,
+      "last": 147,
+      "exact": true
+    },
+    {
+      "path": "modules/maestro/coordination/src/seat-skills-module.ts",
+      "first": 6,
+      "last": 18,
+      "exact": true
+    },
+    {
+      "path": "modules/maestro/coordination/src/seat-skills-module.ts",
+      "first": 40,
+      "last": 42,
+      "exact": true
+    },
+    {
+      "path": "modules/maestro/coordination/src/seat-skill-root.ts",
+      "first": 90,
+      "last": 100,
+      "exact": true
+    },
+    {
+      "path": "modules/maestro/coordination/src/seat-skill-root.ts",
+      "first": 103,
+      "last": 105,
+      "exact": true
+    },
+    {
+      "path": "modules/maestro/coordination/src/seat-skill-root.ts",
+      "first": 118,
+      "last": 119,
+      "exact": true
+    },
+    {
+      "path": "modules/maestro/coordination/src/seat-skill-root.ts",
+      "first": 125,
+      "last": 128,
+      "exact": true
+    },
+    {
+      "path": "modules/maestro/coordination/src/seat-skill-root.ts",
+      "first": 175,
+      "last": 181,
+      "exact": true
+    },
+    {
+      "path": "modules/relay/src/arm/settlement.ts",
+      "first": 13,
+      "last": 20,
+      "exact": true
+    },
+    {
+      "path": "modules/relay/src/arm/settlement.ts",
+      "first": 45,
+      "last": 60,
+      "exact": true
+    },
+    {
+      "path": "modules/relay/src/arm/settlement.ts",
+      "first": 63,
+      "last": 67,
+      "exact": true
+    },
+    {
+      "path": "modules/relay/src/arm/evaluate.ts",
+      "first": 67,
+      "last": 70,
+      "exact": true
+    },
+    {
+      "path": "packages/core/src/relay.ts",
+      "first": 382,
+      "last": 384,
+      "exact": true
+    },
+    {
+      "path": "packages/core/src/relay.ts",
+      "first": 406,
+      "last": 416,
+      "exact": true
+    },
+    {
+      "path": "packages/core/src/relay.ts",
+      "first": 491,
+      "last": 498,
+      "exact": true
+    },
+    {
+      "path": "modules/relay/src/gate/control.ts",
+      "first": 261,
+      "last": 266,
+      "exact": true
+    },
+    {
+      "path": "modules/relay/src/gate/control.ts",
+      "first": 272,
+      "last": 287,
+      "exact": true
+    },
+    {
+      "path": "modules/relay/src/audit.ts",
+      "first": 206,
+      "last": 215,
+      "exact": true
+    },
+    {
+      "path": "modules/relay/src/audit.ts",
+      "first": 335,
+      "last": 346,
+      "exact": true
+    },
+    {
+      "path": "modules/relay/src/audit.ts",
+      "first": 528,
+      "last": 529,
+      "exact": true
+    },
+    {
+      "path": "modules/engine-adapters/claude-code/src/v2/host.ts",
+      "first": 38,
+      "last": 42,
+      "exact": true
+    },
+    {
+      "path": "modules/engine-adapters/claude-code/src/v2/host.ts",
+      "first": 49,
+      "last": 49,
+      "exact": true
+    },
+    {
+      "path": "modules/engine-adapters/claude-code/src/v2/host.ts",
+      "first": 158,
+      "last": 178,
+      "exact": true
+    },
+    {
+      "path": "modules/engine-adapters/claude-code/src/v2/host.ts",
+      "first": 580,
+      "last": 588,
+      "exact": true
+    },
+    {
+      "path": "modules/app-dock/src/socket-transport.ts",
+      "first": 5,
+      "last": 17,
+      "exact": true
+    },
+    {
+      "path": "modules/app-dock/src/socket-transport.ts",
+      "first": 24,
+      "last": 24,
+      "exact": true
+    },
+    {
+      "path": "modules/app-dock/src/app-dock.ts",
+      "first": 357,
+      "last": 360,
+      "exact": true
+    },
+    {
+      "path": "modules/app-dock/src/app-dock.ts",
+      "first": 380,
+      "last": 390,
+      "exact": true
+    },
+    {
+      "path": "modules/janitor/src/scan.ts",
+      "first": 7,
+      "last": 10,
+      "exact": true
+    },
+    {
+      "path": "modules/janitor/src/scan.ts",
+      "first": 201,
+      "last": 209,
+      "exact": true
+    },
+    {
+      "path": "modules/janitor/src/scan.ts",
+      "first": 347,
+      "last": 350,
+      "exact": true
+    }
+  ],
+  "all_exact": true
+}

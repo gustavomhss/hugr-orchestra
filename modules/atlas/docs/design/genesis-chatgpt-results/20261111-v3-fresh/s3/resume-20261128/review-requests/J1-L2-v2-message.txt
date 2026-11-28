@@ -1,0 +1,223 @@
+J1: reavalie L2-v2 com TODOS os mesmos seis casos L2-A1/A2/B1/B2/C1/C2, critérios críticos, oracle e evidências literais de L2-v1 que você confirmou conservar. Nenhuma ferramenta. Este é o envio completo dos três corpos. Mudanças autorizadas: só Maestro §2 item2 e dois bullets Dock §3; Relay igual. Hashes verificados pelo orquestrador: Maestro 6979 bytes SHA256 5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012; Relay 7235 bytes ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037; Integrações 6968 bytes 90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259. Não afirme recomputação própria. Semântica apenas, não binding/runtime. Entregue JSON sucinto mas completo (reviewer, revision, hashes declarados, decision, fechamento de findings, seis casos com evidência, critical_criteria, evidence_requests, findings, limitations). Sem emitir aceites para originais históricos ausentes. CORPOS INTEGRAIS:
+
+BEGIN l2-maestro.md
+# Maestro — entendimento local L2: autoridade, aprovação e skills
+
+Fonte fixa: `gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38`. Predecessor aceito: `s3-l1-maestro`; fronteiras de skills/adapters também consultam `s3-l1-integrations`. Oracle congelado: `oracles/L2-all.json`, casos L2-A1 e L2-A2. Este corpo explica contratos locais observados; não declara execução do produto, aprovação de runtime nem publicação Atlas.
+
+## 1. Modelo mental mínimo
+
+Maestro é o conductor e integrador. Ele escolhe seats, prepara contexto, mantém vínculos entre plano, aprovação, dispatch e resultado e usa as portas governadas. Não se torna executor central de Sessions, implementador de produto ou aprovador do próprio trabalho. A autoridade efetiva nasce da composição do host, da identidade persistida e dos gates; nome de agente, prosa do prompt, label configurável ou um ID copiado não a concedem.
+
+A identidade operacional relevante é o `ComposedActor` do baseline: `projectId + sessionId + memberId`. O `memberId` canônico permanece `maestro`, `backend`, `archie`, `jimmy` etc.; labels são apresentação. A Task lógica e a child Session são identidades relacionadas, não substitutas. O host percorre Sessions persistidas, recusa ciclo, projeto diferente ou ausência e aplica o profile/seat nativo antes das permissões adicionais.
+
+Há quatro camadas que precisam ser separadas em qualquer diagnóstico:
+
+1. **Intenção e plano:** playbooks, guides e work package dizem o que se pretende fazer.
+2. **Identidade e autorização:** actor, revisão, aprovação, reservation e permission snapshot dizem quem pode tentar.
+3. **Execução:** Core cria/retoma a child Session e o execution host traduz turns e ferramentas.
+4. **Aceite:** recibos, cold review, checks e decisão do owner dizem o que foi observado; nenhum deles é produzido apenas porque o plano existe.
+
+## 2. Aprovação existente, mas prompt ou child mudou — caso L2-A1
+
+Uma aprovação governada não é uma permissão genérica para “qualquer tarefa parecida”. O caminho permitido é:
+
+1. O plano/contexto/policy/task atuais são materializados e hasheados. A apresentação ao owner deve ser a revisão exata, na mesma Session.
+2. A resposta selecionada do owner deve ser genuína, ter `role=user`, pertencer à mesma Session e ser posterior à apresentação. Não pode existir qualquer mensagem intermediária com `role=user` (inclusive sintética) entre a apresentação e essa resposta. Resposta sintética, ambígua, anterior ou em outra Session não aprova; `reply-synthetic` e `reply-not-immediate` são recusas distintas.
+3. A autorização preserva revisão, validação, contexto, policy e task hashes. Alterar o prompt, escopo, intent hash, seat ou permissão torna o binding incompatível.
+4. Antes de criar o trabalho, o host compara o seat e a intenção pedidos com a autorização. Um mismatch deve recusar sem reservar outro child.
+5. A reservation é write-once para a child Session exata e guarda o permission snapshot. Antes do primeiro provider turn, `beforeTurn` revalida ou consome a autorização.
+6. Resume estrito só continua trabalho retido do mesmo projeto/member e filho direto esperado.
+
+Portanto, se o prompt ou a child Session proposta mudou, o sistema não deve ampliar a autorização nem reaproveitar silenciosamente a approval. O resultado correto é HOLD/recusa com o mismatch; o operador volta à revisão/aprovação correspondente. Repetir o mesmo token ou renomear a ferramenta não muda o binding.
+
+A cadeia não transforma toda Task em governada: `governed` é um modo explícito. Quando usado, porém, nenhuma allow rule do provider ou texto do modelo substitui os gates Orchestra.
+
+## 3. Novo companion UTF-8 em uma skill — caso L2-A2
+
+O arquivo autoral entra sob a árvore declarada, por exemplo `modules/specialists/backend/skills/backend-implement/...`. O impacto local correto é:
+
+- O membership da raiz e os bytes do novo arquivo tornam-se inputs. Nome precisa ser portável, arquivo regular, UTF-8 e sem symlink/escape.
+- `SeatSkillContent` valida a árvore e o contrato de conteúdo. O grant é da root seat-scoped e cobre seus descendentes; adicionar companion não cria novo seat nem nova autoridade.
+- `seatSkillsModule`/`seatSkillsFiles` lê as árvores declaradas e regenera o módulo virtual `orchestra-seat-skills.gen.ts` para os builds Bun e Node. O gerado não é editado manualmente.
+- Em execução de fonte, a árvore é lida no lugar. Em build compilado/sidecar, `SeatSkillRoot` exige o embed, valida membership e extrai cache por versão/digest. Cópia íntegra pode ser reutilizada; parcial ou adulterada é reconstruída sob lock.
+- Uma orientação que precisa estar disponível ao seat em runtime deve estar na árvore embarcada. Uma skill de manutenção em `.orchestra/skills/` pode orientar contribuidores, mas não substitui o payload do seat.
+- O owner da árvore mantém o texto. O owner do gerador/empacotamento mantém validação, virtual module e extração. Maestro coordena a mudança; não ganha implementação de produto ou autoaceite.
+
+Links para Relay ou outros componentes são navegação até que o conteúdo desses resultados consuma realmente os bytes. Navegação não deve provocar rebuild/invalidação de um resultado Relay independente.
+
+## 4. Decisões locais de manutenção
+
+| Mudança | Fonte de verdade | Não fazer | Evidência mínima |
+| --- | --- | --- | --- |
+| Label de seat | config `agent.<id>.name` / `labelEnv`, com validação | renomear ID canônico, hardcodear label em routing | resolver mostra ID estável e label esperado |
+| Novo seat/role | roster + definição + profile/gates | copiar ID de seat nativo em agente customizado | composição, permissão e teste negativo de caller |
+| Novo tool governado | registry/schema + owner gate + ToolSafety + playbook sincronizado | achar que descrição/prompt autoriza | owner correto passa; caller errado e estado incompleto recusam |
+| Mudança de approval | objetos versionados e hashes atuais | aceitar reply antiga ou reservation diferente | revisão, reply, child e permission snapshot vinculados |
+| Mudança de skill | árvore autoral + gerador + extraction | editar `*.gen.ts` ou apenas docs repo-only | membership/bytes, build e cache extraído coerentes |
+
+## 5. Falhas e limites
+
+Se a Location abre com warning e sem seats nativos, o roster textual não prova disponibilidade. Se o profile nega shell/edit/publish, uma instrução de prompt não reabre a capacidade. Se `writePaths` está vazio, o trabalho é read-only; path absoluto, `..` e symlink escape são recusados. No Windows, não presumir a mesma garantia adicional de read sandbox observada em macOS/Linux.
+
+Este L2 é estático. Não prova que uma approval foi exercitada, que o módulo virtual foi reconstruído, que um binário extraiu a árvore ou que CI passou. Esses estados permanecem `NOT_RUN` até recibo real.
+END l2-maestro.md
+
+BEGIN l2-relay.md
+# Relay — entendimento local L2: execução, recuperação e evidência
+
+Fonte fixa: `gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38`. Predecessor aceito: `s3-l1-relay`. Oracle congelado: `oracles/L2-all.json`, casos L2-B1 e L2-B2. Este corpo reúne contratos locais do motor nativo, drivers shell e integração Python; não declara um run executado.
+
+## 1. Modelo local: plano, controles, efeitos e estado
+
+Sprint é o plano ordenado; WP é a unidade estável; checklist é o conjunto de controles daquela WP. O array decide a ordem. Um controle pode observar, julgar ou executar um comando, mas o resultado de um controle não equivale automaticamente ao estado durável do arm, ao settlement do workflow ou à validade de todos os artefatos atuais.
+
+Quatro fatos devem ser mantidos separados:
+
+1. **Efeito externo:** o comando pode ter alterado algo fora do Relay.
+2. **Disposição do controle:** pass/fail/erro foi produzido para um oracle e uma proveniência.
+3. **Recibo/ledger durável:** o caller conseguiu registrar a observação na cadeia correta.
+4. **Aplicação de estado:** posição, retry, completion ou settlement foi persistido.
+
+A ordenação feliz costuma ser efeito → disposição → registro → aplicação. Crash entre passos cria resultado incerto; integridade do ledger não volta no tempo nem desfaz o efeito.
+
+## 2. Processo morreu depois do efeito — caso L2-B1
+
+Não se pode afirmar rollback nem exactly-once. `release` registra a intervenção e permite refazer a mesma WP, mas não reverte um comando já executado. Repetição sem evidência pode duplicar publicação, mensagem, cobrança ou escrita externa.
+
+Procedimento seguro:
+
+1. Identificar arm/token/WP e conferir nomes seguros, lock e estado atual. Não apagar lock ou editar JSON por conveniência.
+2. Ler ledger/receipts, stderr e artefatos atuais. Procurar disposição assinada/proveniente, receipt do caller e evento de aplicação separadamente.
+3. Inspecionar o alvo externo por uma porta idempotente/observável quando o contrato permitir. Ausência de receipt não prova ausência de efeito.
+4. Classificar: `observed-applied`, `observed-not-applied`, `stale-not-dispatched`, `unknown-effect` ou `corrupt/unavailable`.
+5. Só repetir automaticamente quando o próprio contrato prova que o trabalho não foi despachado ou quando a operação é idempotente e a chave de idempotência foi realmente usada. `unknown-effect` bloqueia repetição automática.
+6. Em workflow governado, concluir pelo caminho de settlement do host. Chamar `ArmEvaluate` diretamente não substitui o receipt/settlement que a integração exige.
+7. Registrar tentativa e desconhecidos. Contagem física, custo e billing permanecem `UNKNOWN` quando não expostos.
+
+Lock repair precisa preservar o diagnóstico; arquivo de release, plan ou state editável pelo mesmo usuário do SO não é autenticação humana.
+
+## 3. Policy compilou, judges são advisory e stdout está vazio — caso L2-B2
+
+O que foi estabelecido é limitado:
+
+- A compilação prova que o profile/policy passou pelo compilador correspondente. Não prova que o driver selecionado implementa todos os kinds/fields emitidos.
+- IDs de controles precisam continuar globalmente únicos depois do merge. Conflito preservado é defeito; compilar não o apaga.
+- Judge com `blocking:false` é advisory. Falha semântica pode ser registrada sem bloquear avanço; maioria/independência não deve ser inferida do texto “independent auditor”.
+- `stdout` vazio é ambíguo. O hook pode ter concluído, recusado, escalado, falhado antes do JSON ou simplesmente não produzido texto. Consulte `arm state`, stderr e `relay verify`.
+- `relay verify`/audit exit 0 prova a integridade/consistência que o comando de audit realmente checou. Não executa os gates, não comprova artefatos atuais e não transforma `oracle_recheck.status=not-run` em `ok`.
+- A distinção do recheck é estrutural. Com cadeia íntegra e registros utilizáveis, `not-run` significa que nenhum sprint atual foi fornecido ou descoberto; para cadeia/registro quebrado há outro `not-run` com nota explícita de que a comparação não rodou. Depois que existe um path de sprint alcançável, falha de leitura, UTF-8, JSON ou schema é `invalid` — o próprio código fixa que sprint alcançável ilegível é “invalid, never not-run”.
+- Portanto, quando comparação do plano é exigida, `not-run` é evidência ausente e `invalid` é evidência negativa de sprint ilegível/malformado. Nenhum dos dois equivale a `ok`.
+- Custo ausente também não é zero: o audit retorna `total: null` e a nota `this run recorded no cost data — not zero cost, unmeasured`. Billing, tokens e tentativas continuam `UNKNOWN` sem medição.
+- YAML de profile é fonte e JSON vizinho é compilado; fixtures/goldens são exemplos e oracles agrupados. Não editar um failing golden para fabricar verde sem alterar conscientemente o contrato e seus casos.
+
+## 4. Drivers não são intercambiáveis
+
+| Superfície | Identidade/posição | Regressão e conclusão | Limite |
+| --- | --- | --- | --- |
+| Arm TS | token e WP ID | checklist e controles anteriores aplicáveis; `complete` remove HOLD | host checks/judge/locks seguem contratos nativos |
+| Arm shell | token/marcador e WP ID | stdout/exit têm disposições próprias | mesmo usuário pode editar arquivos; sem auth por si |
+| `relay-gate eval/check` | counter ou posição nomeada | `eval` inclui DoD/regressão; `check` não avança/registre | check ainda executa efeitos |
+| Benchmark hook | counter | contrato próprio de DoD/regressão | evidência experimental, não runtime geral |
+| LangGraph | edges instrumentadas e ledger externo | approval/check/retry do wrapper | ledger autorrelatado e distinto do arm nativo |
+
+Migrar de stop hook para outra superfície exige mapear posição, lifecycle, campos e receipt; não basta reproduzir exit code.
+
+## 5. Golden/fixtures e corpus de 3.700 entradas
+
+A maioria das entradas serve a famílias de contrato: quoting/JSON, lifecycle, migration, audit, profiles/policies, spec/design/research tools, LangGraph e campanhas. Elas não são 3.700 necessidades semânticas independentes.
+
+- **Fonte autoral:** TS/shell/Python, YAML de profiles/policies e specs.
+- **Gerado/compilado:** JSON derivado de YAML e snapshots produzidos por ferramentas.
+- **Fixture/golden:** input/output esperado de um contrato; mudança exige justificativa e revisão do oracle.
+- **Evidência histórica:** benchmark/results/traces; data e ambiente importam.
+- **Navegação:** docs/skills catalogam superfícies, mas não viram dependências de build automaticamente.
+
+## 6. Diagnóstico mínimo
+
+Para blank output ou aparente completion: localizar token/WP, conferir state, stderr, ledger/verify e a prova dos artefatos atuais. Para busy: não contornar lock. Para revision drift: comparar bytes/revisão vinculados. Para judge unavailable: registrar indisponibilidade; stub/calibração não substitui revisão. Para host_check ausente ou schema inválido: falha nomeada, não pass.
+
+Este L2 não executou arm, gate, audit ou workflow. Todo status runtime/CI continua `NOT_RUN`; custos não observados continuam `UNKNOWN`.
+END l2-relay.md
+
+BEGIN l2-integrations.md
+# Especialistas e integrações — entendimento local L2
+
+Fonte fixa: `gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38`. Predecessor aceito: `s3-l1-integrations`; relações de seats usam também `s3-l1-maestro`. Oracle congelado: `oracles/L2-all.json`, casos L2-C1 e L2-C2. Este corpo descreve contratos locais; não ativa providers, presets, Dock ou Janitor.
+
+## 1. Três tipos de coisa que não podem ser confundidos
+
+1. **Assets de capacidade e skills:** texto, manifestos, presets e árvores embarcáveis. Podem descrever uma integração sem fornecer credencial, conexão ou grant.
+2. **Adapters de execução:** traduzem turns e ferramentas entre Core e um provider, preservando Session, autorização e lifetime.
+3. **Integrações de host/desktop:** dependem de transportes, canais, tokens e estado fornecidos pela composição real.
+
+Um catálogo torna um item descobrível e preserva proveniência. Não o torna conectado, autenticado, qualificado ou aprovado ao vivo. Um adapter existente não dá autoridade ao modelo para atravessar tools. Um módulo com nome de desktop não prova que seu estado in-memory está ligado ao store do app.
+
+## 2. Novo preset e tentativa de usar Claude Agent/Task — caso L2-C1
+
+Adicionar um preset em `capability-assets` é uma mudança de dados. O item continua `source-qualified`/candidato até passar a qualificação e integração específicas. Não há conexão, credencial, live acceptance ou grant apenas porque o catálogo o lista.
+
+Na execução Claude:
+
+- `ExecutionHost` e Core continuam donos da Session. O adapter recebe `Turn` com history, context, tools filtradas, `execute`, `authorize`, estado e steers.
+- O system prompt precisa permanecer no preset estrutural `claude_code`; contexto Orchestra entra por `additionalContext`. Um cast ou preset de catálogo não autoriza prompt arbitrário.
+- Claude `Agent`/`Task`, `ListAgents`, `SendMessage`, `RemoteTrigger` e `PushNotification` são recusados. Delegação permitida usa `mcp__orchestra__task`, que cria a child Session durável.
+- Built-ins passam por `turn.authorize`/ToolSafety. Tools Orchestra passam por `turn.execute` no registry. `ToolSearch` carrega schema; não autoriza a operação.
+- `PreToolUse` e `canUseTool` compartilham a decisão por tool-use id para não divergir, mas uma allow rule local do provider não é bypass do host.
+- Tools `maestro_*` exigem que `maestro-run-governed` seja carregado com sucesso pela tool `skill` do MCP Orchestra naquela Session. O Set é in-memory e se perde no restart.
+- `maestro_arsenal_*` e `maestro_workflows` são exceções apenas ao pré-requisito de load; continuam sujeitos às próprias permissões e contratos.
+- Carregar playbook não equivale a owner approval, reservation ou permission snapshot.
+
+Logo, nem o preset fica “live” por catalogação nem Agent/Task é um caminho alternativo. O caminho correto preserva child Session, gates e tools Orchestra.
+
+## 3. Dock incerto e Janitor indisponível — caso L2-C2
+
+O Dock tem duas superfícies de permissão diferentes:
+
+- **Hooks diretos:** checam host/permission e handler na ordem definida pelo contrato da interface.
+- **MCP/interface RPC:** depende de interface registrada, tool/capability permitida e do canal real. Não herda automaticamente a ordem ou a authority do hook direto.
+
+No desktop, o transport relevante usa Electron main e loopback WebSocket com URL/token por launch. `fromEnv` ausente significa que o processo não recebeu a configuração; não se inventa token nem se reutiliza credencial de outro launch. Fora do desktop, sem canal, a integração está indisponível.
+
+Resultado de ação deve ser distinguido:
+
+- `success/failure` observado: seguir o receipt.
+- `stale-not-dispatched`: admite no máximo uma repetição automática, somente quando o erro é uma instância de `NativeRPCError`, com `code === "stale-ref"`, `outcome === "not-dispatched"` e `attempt < 1`; não se aplica a outros erros stale ou falhas.
+- `unknown/uncertain`: a ação pode ter sido despachada; nunca repetir automaticamente.
+- `channel-unavailable`: corrigir a composição/transport, não simular sucesso.
+
+O reaper Linux ligado a Session deletion pertence ao lifetime do Dock; não concede a Janitor o poder de matar processos.
+
+Janitor é scanner/read-only. Ele detecta órfãos/candidatos e emite report por sink fornecido pelo host. Não remove, mata, reinicia, limpa credenciais ou resolve ações Dock incertas. Falha de scanner é `unavailable`, não “nenhum órfão”. Há state/scheduler no módulo, mas o consumo pelo desktop/store precisa de composição observada; nome semelhante não é prova.
+
+## 4. Especialistas e assets
+
+`backend`, `archie` e `jimmy` têm IDs canônicos e contratos diferentes. Skills próprias são assets declarados e embarcados; o seat recebe somente roots e tools compatíveis com seu profile. Documentos históricos de Jimmy, charter e handoff preservam contexto datado; a implementação atual usa duas skills e Session filha via `task`. Conflito documental não deve ser apagado nem promovido a bloqueio universal.
+
+Capability assets reservam nomes/destinos e preservam fonte/licença. Até prova contrária:
+
+- catálogo é data-only;
+- provider/destination reservado não é conexão;
+- texto adaptado não é autoridade executável;
+- itens não carregados por um seat não estão disponíveis a ele;
+- dependency integrity, conformance e live acceptance pendentes continuam pendentes;
+- economia/custo não observado é `UNKNOWN`, não zero.
+
+## 5. Lifetime e recuperação Claude
+
+O adapter reutiliza/deriva session ID estável e mantém tails por Session. Antes de novo turn, fecha a tail anterior; trabalho background pode reter query até notificar, terminar ou atingir o limite. `processLifetime.join()` espera exit real; `Query.return` ou abort não são recibos de processo encerrado. Conta é consultada sem prompt; falha preserva último signed-in observado e não prova sign-out. Login explícito tem slot próprio e não deve ser iniciado como recuperação automática.
+
+SDK e executable têm versões pinadas e targets próprios. Não transferir a matriz de suporte do backend toolkit para Claude nem vice-versa.
+
+## 6. Checklist local de diagnóstico
+
+1. Identifique Session, seat canônico, engine e owner real.
+2. Confirme tool visível e qual porta a executa (`authorize`, `execute`, hook ou MCP).
+3. Para governed tools, confirme load naquela Session e bindings de approval separados.
+4. Para Dock, confirme desktop/channel/URL/token reais antes de qualquer ação.
+5. Classifique resultado certo, failure, stale-not-dispatched, unknown ou unavailable.
+6. Para Janitor, leia scanner/report/sink; nunca use-o como cleaner.
+7. Preserve conflitos históricos e marque runtime/CI/live acceptance como `NOT_RUN` quando não exercitados.
+
+Este L2 não conectou provider, não abriu Dock, não executou Janitor e não validou presets ao vivo.
+END l2-integrations.md

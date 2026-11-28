@@ -1,0 +1,168 @@
+{
+  "judge_id": "/root/s3_j1",
+  "role": "J1 — fidelidade e autoridade, com avaliação de todos os critérios obrigatórios",
+  "execution_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "unit": "L2-all",
+  "body_hashes": {
+    "s3-l2-maestro": "7505522f3e92fa25dfda8dac896a2717d6eac71d9bd3a928d0bf4ae5e5b08d7e",
+    "s3-l2-relay": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+    "s3-l2-integrations": "5b65c606ab258eea521adbf0cdf4bdf43b0755ec2ec0a7be5a2efc25545ce0c3"
+  },
+  "overall_verdict": "FIX-FIRST",
+  "criteria": [
+    {
+      "id": "L2-PRECONDITION",
+      "verdict": "PASS",
+      "evidence": [
+        "O pacote informa três predecessores L1 aceitos, com hashes conferidos e seis pareceres finais históricos verificados.",
+        "Cada corpo identifica seus predecessores aceitos e a fonte fixa 1cde2ff7a71bcf7aecb5d030917b577165135d38."
+      ],
+      "reason": "A precondição foi recebida como fato de custódia. Os predecessores e os pareceres históricos não foram reavaliados nem usados como votos nesta revisão."
+    },
+    {
+      "id": "L2-A1",
+      "verdict": "FIX-FIRST",
+      "evidence": [
+        "s3-l2-maestro, seção 2, descreve revisão/contexto/policy/task hashes, reservation da child Session, permission snapshot, beforeTurn e recusa de mismatch.",
+        "s3-l2-maestro, seção 2, item 2: “A primeira resposta genuína do owner depois da apresentação é interpretada.”",
+        "modules/maestro/coordination/src/approval.ts, L131–146, recusa reply sintética e também qualquer reply selecionada que tenha outra mensagem role=user entre a apresentação e ela.",
+        "modules/maestro/coordination/src/v2/governance/reservation.ts, L59–79, L111–113 e L254–261; modules/maestro/coordination/src/v2/governance.ts, L323–330 e L390–396."
+      ],
+      "reason": "Os bindings e as recusas exigidos estão presentes. A formulação sobre a resposta do owner, entretanto, não conserva explicitamente a imediaticidade verificada pelo código: selecionar a primeira resposta genuína pode sugerir que mensagens sintéticas intermediárias são ignoradas. O teste de reply-not-immediate considera qualquer mensagem intermediária com role=user."
+    },
+    {
+      "id": "L2-A2",
+      "verdict": "PASS",
+      "evidence": [
+        "s3-l2-maestro, seção 3, inclui membership e bytes do companion como inputs, validação de nomes/UTF-8/entradas regulares, ausência de symlinks/escape, geração do módulo virtual e cache por versão/digest.",
+        "modules/maestro/coordination/src/seat-skill-content.ts, L112–118 e L135–147.",
+        "modules/maestro/coordination/src/seat-skills-module.ts, L6–18 e L40–42.",
+        "modules/maestro/coordination/src/seat-skill-root.ts, L90–105, L118–128 e L175–181.",
+        "s3-l2-maestro, seção 3, separa manutenção repo-only, conteúdo embarcado, ownership autoral, packaging e coordenação de Maestro."
+      ],
+      "reason": "O corpo explica as consequências da adição, mantém o gerador como fonte da saída gerada e não atribui a Maestro implementação de produto ou autoaceite. Também preserva a distinção entre navegação e dependência real de bytes."
+    },
+    {
+      "id": "L2-B1",
+      "verdict": "PASS",
+      "evidence": [
+        "s3-l2-relay, seções 1 e 2, separa efeito externo, disposição, receipt durável e aplicação do estado.",
+        "modules/relay/src/arm/settlement.ts, L13–20, L45–60 e L63–67, distingue responsabilidades, ordenação e reparo sob lock com nomes seguros.",
+        "modules/relay/src/arm/evaluate.ts, L67–70, descreve release e nova avaliação da mesma WP.",
+        "packages/core/src/relay.ts, L382–384 e L406–416, delimita recuperação de lock; L491–498 exige settlement nativo para arms vinculados a workflow.",
+        "s3-l2-relay, seção 2, exige evidência antes de retry e bloqueia repetição automática de unknown-effect."
+      ],
+      "reason": "O corpo rejeita rollback e exactly-once, preserva lock e diagnóstico, não confunde ausência de receipt com ausência de efeito e não permite substituir settlement do host por avaliação direta. Custos e tentativas não observados permanecem UNKNOWN."
+    },
+    {
+      "id": "L2-B2",
+      "verdict": "PASS",
+      "evidence": [
+        "s3-l2-relay, seção 3, distingue compilação de suporte do driver, exige IDs únicos após merge e identifica blocking:false como advisory.",
+        "modules/relay/src/gate/control.ts, L261–266 e L272–287, mostra o tratamento de blocking, indisponibilidade e resultado não independente.",
+        "s3-l2-relay, seção 3, rejeita stdout vazio como prova de conclusão e audit exit 0 como prova de gates executados ou artefatos atuais.",
+        "modules/relay/src/audit.ts, L206–215 e L335–346, separa not-run por comparação ausente ou registros inutilizáveis de invalid para sprint alcançável ilegível/malformado.",
+        "modules/relay/src/audit.ts, L528–529, retorna total:null para custo não medido.",
+        "s3-l2-relay, seções 3 e 5, distingue fonte YAML, compilados, fixtures/goldens e evidência histórica."
+      ],
+      "reason": "Todos os resultados exigidos pelo caso estão preservados. O corpo não promove compilação, advisory judges, saída vazia ou integridade do ledger a aceite semântico ou execução comprovada."
+    },
+    {
+      "id": "L2-C1",
+      "verdict": "PASS",
+      "evidence": [
+        "s3-l2-integrations, seções 1 e 2, mantém catálogo data-only e qualificação pendente, sem conexão, credencial, grant ou live acceptance implícitos.",
+        "s3-l2-integrations, seção 2, recusa Claude Agent/Task, preserva child Session via mcp__orchestra__task e distingue turn.authorize de turn.execute.",
+        "modules/engine-adapters/claude-code/src/v2/host.ts, L38–42, L49 e L158–178.",
+        "modules/engine-adapters/claude-code/src/v2/host.ts, L580–588, associa o carregamento governado à execução bem-sucedida da skill.",
+        "s3-l2-integrations, seção 2, preserva o preset estrutural, o estado de load por Session e o alcance limitado das exceções maestro_arsenal_* e maestro_workflows."
+      ],
+      "reason": "O corpo conserva a separação entre descoberta, execução e autoridade. As exceções de carregamento não são apresentadas como exceções gerais de permissão, e o load da skill não substitui approval ou reservation."
+    },
+    {
+      "id": "L2-C2",
+      "verdict": "FIX-FIRST",
+      "evidence": [
+        "s3-l2-integrations, seção 3, distingue hooks diretos de MCP/interface RPC, exige canal real e descreve URL/token por launch.",
+        "modules/app-dock/src/socket-transport.ts, L5–17 e L24.",
+        "s3-l2-integrations, seção 3: “stale-not-dispatched: a regra específica pode permitir no máximo o retry delimitado.”",
+        "s3-l2-integrations, seção 3: “unknown/uncertain: a ação pode ter sido despachada; não repetir automaticamente quando duplicação é perigosa.”",
+        "modules/app-dock/src/app-dock.ts, L357–360, determina que resultados desconhecidos nunca são reproduzidos; L380–390 limita a repetição a NativeRPCError stale-ref com outcome not-dispatched e attempt inferior a 1.",
+        "modules/janitor/src/scan.ts, L7–10 e L201–209; predecessor L1 integrations, fragmento L101, sobre composição scanner→sink→UI não demonstrada."
+      ],
+      "reason": "Canal, superfícies de permissão, indisponibilidade do scanner, natureza read-only do Janitor e ausência de composição demonstrada estão corretamente preservados. Há duas falhas no contrato de retry: a proibição para unknown/uncertain foi condicionada ao perigo percebido de duplicação, e o limite explícito de no máximo uma repetição não aparece."
+    },
+    {
+      "id": "L2-CRITICAL-NORMATIVE-ENFORCEMENT",
+      "verdict": "PASS",
+      "evidence": [
+        "s3-l2-maestro, seções 1 e 2, separa intenção/plano, autorização, execução e aceite.",
+        "s3-l2-relay, seções 2 e 3, rejeita arquivos editáveis pelo mesmo usuário como autenticação humana e texto de independência como prova de independência.",
+        "s3-l2-integrations, seções 1, 2 e 4, afirma que catálogo, texto adaptado, preset e load de playbook não concedem autoridade por si."
+      ],
+      "reason": "Não foi identificada promoção de prosa normativa a enforcement mecânico. As divergências específicas de approval e retry estão registradas nos critérios correspondentes."
+    },
+    {
+      "id": "L2-CRITICAL-STATIC-RUNTIME",
+      "verdict": "PASS",
+      "evidence": [
+        "Os três corpos declaram explicitamente seu caráter estático e os limites de execução.",
+        "s3-l2-maestro, seção 5, mantém approval exercitada, build, extração e CI como NOT_RUN sem receipt.",
+        "s3-l2-relay, encerramento, mantém arm, gate, audit, workflow e CI como NOT_RUN.",
+        "s3-l2-integrations, encerramento, declara ausência de conexão de provider, execução de Dock/Janitor e validação ao vivo de presets.",
+        "O pacote informa runtime, publicação, index/read, consumidores e CI S3 como NOT_RUN."
+      ],
+      "reason": "Nenhum aceite semântico foi convertido em prova de runtime. Este parecer avalia somente os contratos estáticos e não constitui binding, publicação, validação de consumidores ou resultado de CI."
+    },
+    {
+      "id": "L2-CRITICAL-FAMILY-COVERAGE",
+      "verdict": "PASS",
+      "evidence": [
+        "Os seis casos do oracle aparecem nos corpos correspondentes: A1/A2 em Maestro, B1/B2 em Relay e C1/C2 em integrações.",
+        "Relay inclui diferenças entre superfícies de execução, lifecycle, recuperação e classes de evidência.",
+        "Integrações inclui catálogo, adapter, host/desktop e Janitor."
+      ],
+      "reason": "Não há omissão de uma família obrigatória. As correções exigidas são localizadas em contratos já abordados."
+    },
+    {
+      "id": "L2-CRITICAL-NAVIGATION-DEPENDENCY",
+      "verdict": "PASS",
+      "evidence": [
+        "s3-l2-maestro, seção 3, distingue links de navegação de consumo real de bytes e rejeita rebuild/invalidação de resultado Relay independente por navegação.",
+        "s3-l2-relay, seção 5, afirma que docs/skills de navegação não se tornam dependências de build automaticamente."
+      ],
+      "reason": "A distinção exigida está explícita e não foi contradita pelos demais corpos."
+    },
+    {
+      "id": "L2-LIMITS-AND-UTILITY",
+      "verdict": "PASS",
+      "evidence": [
+        "Metadados fornecidos: Maestro 6733 bytes, Relay 7235 bytes e integrações 6833 bytes; limite do oracle: 14000 bytes por corpo.",
+        "Os corpos identificam baseline, predecessor, casos e limites, além de oferecer procedimentos de diagnóstico e divisões de responsabilidade."
+      ],
+      "reason": "Os tamanhos informados estão abaixo do limite. Os textos são úteis como explicações de contratos locais, sujeitos às correções obrigatórias identificadas. Os hashes e tamanhos foram recebidos do pacote; não foram recalculados por este juiz."
+    }
+  ],
+  "mandatory_findings": [
+    {
+      "id": "L2-A1-IMMEDIATE-OWNER-REPLY",
+      "expected": "A resposta selecionada deve ser genuína, posterior à apresentação, da mesma Session e imediata no sentido implementado: nenhuma outra mensagem role=user pode estar entre a apresentação e ela.",
+      "observed": "A seção 2 de Maestro exige a “primeira resposta genuína”, mas não explicita que uma mensagem role=user intermediária, inclusive sintética, impede aceitar uma resposta posterior. approval.ts L140–146 aplica esse bloqueio sem filtrar mensagens intermediárias por synthetic.",
+      "required_fix": "Explicitar a condição de ausência de qualquer mensagem role=user intermediária e manter separada a exigência de que a própria resposta selecionada não seja sintética. Não permitir interpretação de que se pode pular uma resposta intermediária e aceitar a primeira genuína posterior."
+    },
+    {
+      "id": "L2-C2-UNKNOWN-NO-AUTO-REPLAY",
+      "expected": "Ação Dock com resultado unknown/uncertain não deve ser repetida automaticamente; o contrato apresentado diz que resultados desconhecidos nunca são reproduzidos.",
+      "observed": "A seção 3 de integrações condiciona a proibição a “quando duplicação é perigosa”, introduzindo uma possível exceção ausente de app-dock.ts L357–360 e do oracle.",
+      "required_fix": "Remover a condição baseada no perigo percebido da duplicação e estabelecer a proibição de repetição automática de resultado unknown/uncertain para a superfície Dock descrita."
+    },
+    {
+      "id": "L2-C2-EXPLICIT-MAXIMUM-ONE-RETRY",
+      "expected": "Somente a condição específica stale-ref com outcome not-dispatched permite no máximo uma repetição automática, conforme app-dock.ts L380–390.",
+      "observed": "A seção 3 de integrações menciona “no máximo o retry delimitado”, sem informar o limite de uma repetição e sem delimitar explicitamente a condição stale-ref do contrato apresentado.",
+      "required_fix": "Declarar o limite de no máximo uma repetição e vinculá-lo à condição específica stale-ref/not-dispatched demonstrada, sem generalizar a permissão para qualquer falha stale ou resultado desconhecido."
+    }
+  ],
+  "evidence_requests": [],
+  "optional_suggestions": []
+}

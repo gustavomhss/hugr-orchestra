@@ -1,0 +1,9 @@
+{
+  "execution_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "id_origin": "locally generated record identifier; not a host conversation or agent ID",
+  "started_at": "2026-11-28T06:01:34.916726+00:00",
+  "branch": "genesis-s3-resume",
+  "initial_head": "19b909ef3bf27e0332f24fc30e3a5c471ea37d78",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531"
+}

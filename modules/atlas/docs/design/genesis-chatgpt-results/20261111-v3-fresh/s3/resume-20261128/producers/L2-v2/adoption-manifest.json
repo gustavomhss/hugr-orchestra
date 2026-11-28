@@ -1,0 +1,192 @@
+{
+  "schema_version": "s3-l2-adoption-manifest.v1",
+  "revision": "L2-v2",
+  "status": "REVIEW_REQUIRED",
+  "execution_record_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "repository": "gustavomhss/hugr-orchestra",
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "agent_id": "/root/s3_l2_revision",
+  "agent_id_kind": "host-canonical-agent-name",
+  "created_at_utc": "2026-11-28T06:13:34Z",
+  "provenance_kind": "new-adoption-and-bounded-correction",
+  "historical_originals": "ABSENT",
+  "historical_authorship_claimed": false,
+  "adoption_receipt": {
+    "created_at_utc": "2026-11-28T06:13:34Z",
+    "agent_id": "/root/s3_l2_revision",
+    "execution_record_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+    "statement": "Adoto nesta execução os três corpos alternativos já existentes da recuperação, preservo integralmente Relay e aplico exclusivamente as três correções delimitadas em Maestro e Integrações. Este recibo é proveniência nova de adoção/correção; não recupera nem atribui autoria, prompts ou pareceres históricos ausentes.",
+    "status": "REVIEW_REQUIRED"
+  },
+  "body_adoptions": [
+    {
+      "body": "maestro",
+      "path": "bodies/l2-maestro.md",
+      "origin": {
+        "path": "/workspace/scratch/0666cc914bd1/s3-provenance/files/bodies/l2-maestro.md",
+        "kind": "pre-existing-recovery-alternative",
+        "historical_original": "ABSENT",
+        "historical_authorship": "NOT_CLAIMED"
+      },
+      "handling": "adoption with bounded substitutions",
+      "before": {
+        "sha256": "7505522f3e92fa25dfda8dac896a2717d6eac71d9bd3a928d0bf4ae5e5b08d7e",
+        "bytes": 6733,
+        "encoding": "UTF-8"
+      },
+      "after": {
+        "sha256": "5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012",
+        "bytes": 6979,
+        "encoding": "UTF-8"
+      },
+      "byte_delta": 246,
+      "change_ids": [
+        "L2-v2-01"
+      ],
+      "all_other_bytes_preserved": true
+    },
+    {
+      "body": "relay",
+      "path": "bodies/l2-relay.md",
+      "origin": {
+        "path": "/workspace/scratch/0666cc914bd1/s3-provenance/files/bodies/l2-relay.md",
+        "kind": "pre-existing-recovery-alternative",
+        "historical_original": "ABSENT",
+        "historical_authorship": "NOT_CLAIMED"
+      },
+      "handling": "byte-for-byte adoption",
+      "before": {
+        "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+        "bytes": 7235,
+        "encoding": "UTF-8"
+      },
+      "after": {
+        "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+        "bytes": 7235,
+        "encoding": "UTF-8"
+      },
+      "byte_delta": 0,
+      "change_ids": [],
+      "all_other_bytes_preserved": true
+    },
+    {
+      "body": "integrations",
+      "path": "bodies/l2-integrations.md",
+      "origin": {
+        "path": "/workspace/scratch/0666cc914bd1/s3-provenance/files/bodies/l2-integrations.md",
+        "kind": "pre-existing-recovery-alternative",
+        "historical_original": "ABSENT",
+        "historical_authorship": "NOT_CLAIMED"
+      },
+      "handling": "adoption with bounded substitutions",
+      "before": {
+        "sha256": "5b65c606ab258eea521adbf0cdf4bdf43b0755ec2ec0a7be5a2efc25545ce0c3",
+        "bytes": 6833,
+        "encoding": "UTF-8"
+      },
+      "after": {
+        "sha256": "90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259",
+        "bytes": 6968,
+        "encoding": "UTF-8"
+      },
+      "byte_delta": 135,
+      "change_ids": [
+        "L2-v2-02",
+        "L2-v2-03"
+      ],
+      "all_other_bytes_preserved": true
+    }
+  ],
+  "artifacts": [
+    {
+      "path": "bodies/l2-maestro.md",
+      "sha256": "5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012",
+      "bytes": 6979,
+      "encoding": "UTF-8"
+    },
+    {
+      "path": "bodies/l2-relay.md",
+      "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+      "bytes": 7235,
+      "encoding": "UTF-8"
+    },
+    {
+      "path": "bodies/l2-integrations.md",
+      "sha256": "90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259",
+      "bytes": 6968,
+      "encoding": "UTF-8"
+    },
+    {
+      "path": "request.md",
+      "sha256": "22d8ff9b243a0d87230f74c52445e52535a9a25fc1ff716522afcdf55c5ed1c1",
+      "bytes": 3252,
+      "encoding": "UTF-8"
+    },
+    {
+      "path": "response.json",
+      "sha256": "c04a244fbe8b79e64a4bdfe83a617367f24bafcea0de3310d6a6f662bd794b25",
+      "bytes": 8809,
+      "encoding": "UTF-8"
+    },
+    {
+      "path": "changes.diff",
+      "sha256": "61f47b0e6dd191e7d12bee87d604502b3804384ed3c6fbb308a879857fe376dd",
+      "bytes": 2340,
+      "encoding": "UTF-8"
+    }
+  ],
+  "artifact_inventory_note": "This manifest indexes the six other delivered files; its own bytes are not self-hashed.",
+  "changes": [
+    {
+      "id": "L2-v2-01",
+      "body": "maestro",
+      "section": "§2, item 2",
+      "source": {
+        "path": "modules/maestro/coordination/src/approval.ts",
+        "lines": "131–146"
+      }
+    },
+    {
+      "id": "L2-v2-02",
+      "body": "integrations",
+      "section": "§3, resultado unknown/uncertain",
+      "source": {
+        "path": "modules/app-dock/src/app-dock.ts",
+        "lines": "357–360"
+      }
+    },
+    {
+      "id": "L2-v2-03",
+      "body": "integrations",
+      "section": "§3, resultado stale-not-dispatched",
+      "source": {
+        "path": "modules/app-dock/src/app-dock.ts",
+        "lines": "388–390"
+      }
+    }
+  ],
+  "limits": {
+    "scope": "L2-v2 only; three localized substitutions and byte-for-byte Relay adoption",
+    "max_utf8_bytes_per_body": 14000,
+    "runtime": "NOT_RUN",
+    "tests": "NOT_RUN",
+    "ci": "NOT_RUN",
+    "live_acceptance": "NOT_RUN",
+    "runtime_or_test_claims": "NONE",
+    "new_authority": "NONE",
+    "l1_changes": 0,
+    "l3": "NOT_STARTED",
+    "l4": "NOT_STARTED",
+    "github_writes": 0,
+    "oracle_files_read": 0,
+    "judgment_files_read": 0,
+    "reserved_responses_read": 0,
+    "historical_prompts_or_judgments_reconstructed": false,
+    "costs_tokens_physical_attempts": "UNKNOWN",
+    "source_commit_and_protocol_reference": "Provided by the visible parent request; no remote fetch or protocol file read was performed.",
+    "static_evidence_limit": "Hash and byte checks plus inspection of authorized pinned-source copies do not constitute product runtime or test execution.",
+    "independent_review": "REQUIRED; this producer neither judges nor grants acceptance."
+  },
+  "acceptance": "REVIEW_REQUIRED"
+}

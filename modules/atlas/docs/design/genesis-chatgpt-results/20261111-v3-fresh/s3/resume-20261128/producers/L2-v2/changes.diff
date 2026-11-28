@@ -1,0 +1,24 @@
+--- a/bodies/l2-maestro.md
++++ b/bodies/l2-maestro.md
+@@ -20,7 +20,7 @@
+ Uma aprovação governada não é uma permissão genérica para “qualquer tarefa parecida”. O caminho permitido é:
+ 
+ 1. O plano/contexto/policy/task atuais são materializados e hasheados. A apresentação ao owner deve ser a revisão exata, na mesma Session.
+-2. A primeira resposta genuína do owner depois da apresentação é interpretada. Resposta sintética, ambígua, anterior ou em outra Session não aprova.
++2. A resposta selecionada do owner deve ser genuína, ter `role=user`, pertencer à mesma Session e ser posterior à apresentação. Não pode existir qualquer mensagem intermediária com `role=user` (inclusive sintética) entre a apresentação e essa resposta. Resposta sintética, ambígua, anterior ou em outra Session não aprova; `reply-synthetic` e `reply-not-immediate` são recusas distintas.
+ 3. A autorização preserva revisão, validação, contexto, policy e task hashes. Alterar o prompt, escopo, intent hash, seat ou permissão torna o binding incompatível.
+ 4. Antes de criar o trabalho, o host compara o seat e a intenção pedidos com a autorização. Um mismatch deve recusar sem reservar outro child.
+ 5. A reservation é write-once para a child Session exata e guarda o permission snapshot. Antes do primeiro provider turn, `beforeTurn` revalida ou consome a autorização.
+--- a/bodies/l2-integrations.md
++++ b/bodies/l2-integrations.md
+@@ -39,8 +39,8 @@
+ Resultado de ação deve ser distinguido:
+ 
+ - `success/failure` observado: seguir o receipt.
+-- `stale-not-dispatched`: a regra específica pode permitir no máximo o retry delimitado.
+-- `unknown/uncertain`: a ação pode ter sido despachada; não repetir automaticamente quando duplicação é perigosa.
++- `stale-not-dispatched`: admite no máximo uma repetição automática, somente quando o erro é uma instância de `NativeRPCError`, com `code === "stale-ref"`, `outcome === "not-dispatched"` e `attempt < 1`; não se aplica a outros erros stale ou falhas.
++- `unknown/uncertain`: a ação pode ter sido despachada; nunca repetir automaticamente.
+ - `channel-unavailable`: corrigir a composição/transport, não simular sucesso.
+ 
+ O reaper Linux ligado a Session deletion pertence ao lifetime do Dock; não concede a Janitor o poder de matar processos.
