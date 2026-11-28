@@ -9,6 +9,7 @@ import { ResearchProcess } from "../research-toolkit/process"
 import { confined } from "../lsp/launch"
 import { LSPReadDiagnostics } from "../lsp/read-diagnostics"
 import type { ReviewAnalyze } from "./analyze"
+import { ReviewEngagementEvidence } from "./engagement-evidence"
 
 // The project's own typescript-language-server, resolved inside the scratch copy. No download, no host binary.
 // A symlink whose target leaves the copy is absence: the review must not run a tool the repository did not ship.
@@ -49,6 +50,7 @@ export const analyze = Effect.fnUntraced(function* (input: ReviewAnalyze.RunInpu
   if (input.lane !== "build" || !input.trusted) return []
   const files = Object.keys(input.changed).filter(sourceFile).sort()
   if (files.length === 0) return []
+  if (input.evidence) return [ReviewEngagementEvidence.unavailable({ id: "lsp", pack: "lsp", version: "project", lane: "build" })]
   const head = yield* context.head
   if ("failed" in head) return []
   const report = yield* reader({ root: head.snapshot.root, files })
