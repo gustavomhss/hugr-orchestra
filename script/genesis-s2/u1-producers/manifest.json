@@ -24,6 +24,16 @@
         "script/genesis-s2/u1-producers/l2-desktop-web-j1.json",
         "script/genesis-s2/u1-producers/l2-desktop-web-j2.json"
       ]
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "snapshot_sha256": "e1e84baf8e1b61c9e3ac0ba82526b5334d8476d7d8b906687e918d1034a32641",
+      "producer_id": "/root/s2_content_delta_luna",
+      "response": "script/genesis-s2/u1-producers/l3-desktop-web-response.json",
+      "decisions": [
+        "script/genesis-s2/u1-producers/l3-desktop-web-j1.json",
+        "script/genesis-s2/u1-producers/l3-desktop-web-j2.json"
+      ]
     }
   ],
   "retention_review": "script/genesis-s2/u1-producers/retention-review.json"

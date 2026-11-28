@@ -1,0 +1,76 @@
+{
+  "schema": "s2-u1-producer-evidence/v1",
+  "author": "/root/s2_content_delta_luna",
+  "run": 46170096399,
+  "key": "s2.l3.desktop-web",
+  "draftBodyPath": "body.md",
+  "outputPath": "output.json",
+  "outputBodySha256": "9b32ba16c56b6488d2a27c869ba45b95853fac54eb0d1d0fec0d613e6bd60b62",
+  "baseline": {
+    "result": "ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1",
+    "bodySha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+    "bytes": 14715
+  },
+  "change": {
+    "before": "120-second timeout",
+    "after": "150-second timeout",
+    "occurrences": 1,
+    "allOtherBodyBytesPreserved": true
+  },
+  "actualSnapshot": {
+    "sha256": "e1e84baf8e1b61c9e3ac0ba82526b5334d8476d7d8b906687e918d1034a32641",
+    "targetCheckpointSha256": "e1e84baf8e1b61c9e3ac0ba82526b5334d8476d7d8b906687e918d1034a32641",
+    "sealedProducerSha256": "e1e84baf8e1b61c9e3ac0ba82526b5334d8476d7d8b906687e918d1034a32641",
+    "key": "s2.l3.desktop-web",
+    "recipeInputKey": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l3-desktop-web-dispatch.md",
+    "recipeVersion": "53d4b0043f554966b71fb87e31a04a1d77c921ff52f9a299ada9ac261c4e9dad"
+  },
+  "sourceCapture": {
+    "path": "apps/desktop/src/main/owned-serve.ts",
+    "sha256": "9e1d1a2b77d329251082352b6e66d7f8e9cccd0d339a534999714b9f2f6dcb08",
+    "version": "28122bb812879a0d74055dfa877571edd7d3b8ab8cce137ee743fb680b388fd2",
+    "observedSetting": "const READY_TIMEOUT = 150_000"
+  },
+  "dependencies": [
+    [
+      "s2.l2.app-session",
+      "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5"
+    ],
+    [
+      "s2.l2.design-tui",
+      "1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664"
+    ],
+    [
+      "s2.l2.desktop-web",
+      "6acaaa257b85ec42ced3e2ee88dfe57accd4839b5b73647739d203ace9e74aee"
+    ]
+  ],
+  "callbackEvents": [
+    {
+      "event": "semantic-evidence",
+      "key": "s2.l2.desktop-web",
+      "result": "6acaaa257b85ec42ced3e2ee88dfe57accd4839b5b73647739d203ace9e74aee",
+      "reviewers": [
+        "/root/s2_admission_j1",
+        "/root/s2_admission_j2"
+      ],
+      "ids": [
+        "707e50ed1335cdd15fe98edb896ec7f2b49d645193c82cdb2cadc9ca2ab6214c",
+        "fdf714732e971285892ba3b6bac9824d084eae50720c0ac3135e1b05f8142cce"
+      ]
+    },
+    {
+      "event": "callback-enter",
+      "key": "s2.l3.desktop-web",
+      "snapshot_sha256": "e1e84baf8e1b61c9e3ac0ba82526b5334d8476d7d8b906687e918d1034a32641"
+    },
+    {
+      "event": "callback-hold",
+      "key": "s2.l3.desktop-web",
+      "snapshot_sha256": "e1e84baf8e1b61c9e3ac0ba82526b5334d8476d7d8b906687e918d1034a32641",
+      "reason": "sealed-producer-output-required",
+      "matches": 0
+    }
+  ],
+  "reviewClaim": null
+}

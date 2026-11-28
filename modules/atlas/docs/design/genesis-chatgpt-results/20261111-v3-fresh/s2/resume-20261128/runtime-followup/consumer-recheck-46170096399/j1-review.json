@@ -1,0 +1,8 @@
+{
+  "reviewer": "/root/s2_admission_j1",
+  "case": "S2-I2U",
+  "run_id": 46170096399,
+  "attempt": 2,
+  "verdict": "HOLD",
+  "reason": "The retry body and both ready responses confirm agent then model selection, followed by synthetic context with `resume:false` before the final prompt. But the frozen oracle also requires that session selection controls the model. The answer and addendum explicitly limit their claims to adapter ordering and say they do not confirm live server outcomes; they do not establish that required relationship. The TS operation names are present in the L1 cited body, so that is not the remaining gap."
+}

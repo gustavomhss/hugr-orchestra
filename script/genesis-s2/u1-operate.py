@@ -225,8 +225,26 @@ def main():
         if target and target.get('kind') == 'hold' and any('sealed-producer-output-required:' in x or 'new-semantic-evidence-required' in x for x in target.get('evidence', [])):
             ledger.update({'status': 'AWAITING_REAL_PRODUCER_OR_SEMANTIC_EVIDENCE', 'target_hold': target})
         elif target_run.returncode == 0 and target and target.get('kind') == 'prepared-evaluation-update':
+            require(args.producer_manifest is not None and staged_result['status'] == 'READY_FOR_EXACT_PREPARE', 'complete producer registry required')
+            exact_target = out / 'target-checkpoint/result.json'
+            require(json.loads(exact_target.read_bytes()) == target, 'durable target differs from stdout')
+            verification = invoke('verify-complete-prepare', {**seal_request,
+                'output_dir': str(out / 'verified-producers'), 'prepared_run_file': str(exact_target),
+                'prepared_callbacks_file': str(out / 'target-checkpoint/callbacks.jsonl')}, sealer)
+            require(verification.returncode == 0 and json.loads(verification.stdout)['actual_prepare_verification']
+                    == 'MATCHED_OBSERVED_CALLBACKS_AND_RESULTS', 'target callbacks and results differ')
+            baseline_entries = {entry['key']: entry for entry in baseline['candidate']['entries']}
+            target_entries = {entry['key']: entry for entry in target['prepared']['candidate']['entries']}
+            require(set(baseline_entries) == set(target_entries), 'target coverage differs')
+            for key in actual['unaffected']:
+                before, after = baseline_entries[key], target_entries[key]
+                require(before['artifact']['result'] == after['artifact']['result']
+                        and all(before[field] == after[field] for field in ('inputs', 'inputs_id', 'dependencies'))
+                        and key not in target['calls'], 'unaffected entry changed: ' + key)
             ledger.update({'status': 'TARGET_PREPARED_REQUIRES_FRESH_ADMIT_BINDING', 'target_candidate': target['prepared']['candidate_id'],
-                           'target_generation': target['targetGeneration'], 'affected': target['affected'], 'calls': target['calls']})
+                           'target_generation': target['targetGeneration'], 'affected': target['affected'], 'calls': target['calls'],
+                           'target_sha256': sha(exact_target.read_bytes()), 'unchanged_outside_closure': actual['unaffected'],
+                           'observed_recipe_verification': 'MATCHED_OBSERVED_CALLBACKS_AND_RESULTS'})
         else:
             raise ValueError('changed preparation refused unexpectedly; inspect receipt')
         require(sha((root / source_rel).read_bytes()) == BASE_SHA and projection == {p.name: sha(p.read_bytes()) for p in sorted((root / '.atlas').glob('projection*.json'))}, 'admitted baseline changed')

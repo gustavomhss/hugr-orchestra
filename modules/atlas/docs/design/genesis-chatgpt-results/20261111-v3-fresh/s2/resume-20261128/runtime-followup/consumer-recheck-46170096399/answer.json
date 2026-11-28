@@ -1,0 +1,8 @@
+{
+  "case": "S2-I2U",
+  "attempt": 2,
+  "run": 46170096399,
+  "consumer": "/root/s2_case_i2u",
+  "literal_first_answer": "The TUI adapter selects agent, then model, on session state before prompt or command; these are not fields embedded in the final prompt. A truthy editor context adds an awaited synthetic request with `resume: false` before the final prompt. The protocol defines prompt success as durable input admission, not completed provider execution. The awaits document order within one call, not an atomic operation or cross-caller lock. These are documented adapter and protocol behaviors; this evidence does not confirm live server outcomes or runtime execution. Source: `s2.l2.design-tui`, “V2 actions and prompt admission”; manifest `5cbb56e9…c7bbf`, result `1f89cc85…9db664`.",
+  "literal_citation_addendum": "O L1 explicita que a seleção envia `{ agent }` e depois `{ model: { providerID, id, variant } }` para o estado da sessão; `modelID` do adaptador vira `id`. O contexto do editor é enviado separadamente como texto sintético com `resume: false`, antes do prompt final, cuja aceitação significa admissão durável, não execução concluída. Isso documenta o payload e a ordem, mas não confirma resultados em servidor ativo. Fontes: `s2.l2.design-tui`, “V2 actions and prompt admission” (manifest `5cbb56e9…c7bbf`, result `1f89cc85…9db664`) e `s2.l1.design-tui`, “V2 session action boundary” (manifest `5cbb56e9…c7bbf`, result `7baaa859…7b031`). Já havia lido o segundo stdout nesta rodada."
+}

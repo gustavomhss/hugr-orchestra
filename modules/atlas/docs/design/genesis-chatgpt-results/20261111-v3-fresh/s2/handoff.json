@@ -304,7 +304,7 @@
   ],
   "update": {
     "case": "S2-U1",
-    "state": "NOT_RUN",
+    "state": "PARTIAL_BASELINE_REUSE_DRIFT_AND_FOUR_CALLBACKS_OBSERVED",
     "expectation": "PASS_DECLARED_GRAPH_EXPECTATION_ONLY_BOTH_JUDGES",
     "frozen_specification_binding": {
       "path": "evidence/u1-final-binding/receipt.json",
@@ -625,12 +625,16 @@
     },
     "ordinary_publication": "NOT_RUN_IN_EVALUATION_SCOPE",
     "u1_latest_recipe_progress": {
-      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/u1-run-46169481071/checkpoint.json",
-      "sha256": "2969ff0968162839ef6bc3d740e64a6867f1ef96973052e176c4ebdc090f2c9f"
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/u1-run-46170096399/checkpoint.json",
+      "sha256": "e51aeebb081ad7eb8417d26a5bb33f6f7f51b4e99301556cf24438af2a6f52bd"
     },
     "u1_producer_manifest": {
       "path": "script/genesis-s2/u1-producers/manifest.json",
-      "sha256": "842cbd2e79170ddaf651d125e0e7350372b93944967c3bb833f40fa38c830d61"
+      "sha256": "50f3c2c08869e82738c605951535b5e3e7e97239b1367bb57c73c6ea5d13345b"
+    },
+    "consumer_recheck": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumer-recheck-46170096399/checkpoint.json",
+      "sha256": "c97c7c2c373fd4accb32e8915a663ac78e47e551ec2dd2113f5780c9d07d54b0"
     }
   }
 }

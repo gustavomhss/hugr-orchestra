@@ -1,0 +1,9 @@
+{
+  "reviewer": "/root/s2_admission_j1",
+  "purpose": "s2-u1-semantic-result",
+  "key": "s2.l3.desktop-web",
+  "snapshot_sha256": "e1e84baf8e1b61c9e3ac0ba82526b5334d8476d7d8b906687e918d1034a32641",
+  "result_id": "f2885f6d9cf24702935080a454f2a780bea513e8517b19572df074e3f2d2f65c",
+  "verdict": "PASS",
+  "reason": "The supplied evidence binds the L3 output to the actual snapshot and source capture, which records `READY_TIMEOUT = 150_000`. It reports one wording change from `120-second timeout` to `150-second timeout` and preserves all other body bytes. I verified the local output body matches the accompanying draft and its reported SHA256. I did not independently verify the hosted source capture or recompute the result ID. This judgment covers only this exact semantic change."
+}

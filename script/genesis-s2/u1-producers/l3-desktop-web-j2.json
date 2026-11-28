@@ -1,0 +1,9 @@
+{
+  "reviewer": "/root/s2_admission_j2",
+  "purpose": "s2-u1-semantic-result",
+  "key": "s2.l3.desktop-web",
+  "snapshot_sha256": "e1e84baf8e1b61c9e3ac0ba82526b5334d8476d7d8b906687e918d1034a32641",
+  "result_id": "f2885f6d9cf24702935080a454f2a780bea513e8517b19572df074e3f2d2f65c",
+  "verdict": "PASS",
+  "reason": "O corpo examinado descreve o limite de 150 segundos na corrida de readiness. A evidência associa o resultado à captura cujo READY_TIMEOUT é 150000 ms e registra uma única substituição; o hash do corpo produzido confere. Não comparei diretamente o corpo anterior nem recalculei o result ID. O parecer cobre somente a interpretação estática desta mudança, sem ADMIT, prova de tempo em execução ou julgamento de qualquer outro resultado."
+}
