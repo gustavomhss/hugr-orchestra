@@ -34,7 +34,7 @@ export function make(database: Database.Interface, processService: AppProcess.In
   const gitWorktree = and(eq(ProjectTable.vcs, "git"), eq(ProjectDirectoryTable.strategy, "git_worktree"))
   const gitEnvironment = Object.fromEntries(Object.entries(process.env).filter(([key]) => !/^GIT_/i.test(key)))
   const git = (cwd: string, args: readonly string[]) => processService.run(ChildProcess.make("git", [
-    "--no-optional-locks", "--literal-pathspecs", "-c", "core.fsmonitor=false", "-c", "core.untrackedCache=false",
+    "--no-optional-locks", "-c", "core.fsmonitor=false", "-c", "core.untrackedCache=false",
     ...args,
   ], { cwd, env: gitEnvironment, extendEnv: false, stdin: "ignore" }), {
     timeout: "2 seconds", maxOutputBytes: 128 * 1024, maxErrorBytes: 4 * 1024,
