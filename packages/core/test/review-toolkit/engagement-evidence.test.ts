@@ -10,6 +10,7 @@ import { ResearchProcess } from "../../src/research-toolkit/process"
 import { Probe } from "../../src/research-toolkit/probe/types"
 import { ReviewCatalog } from "../../src/review/catalog"
 import { ReviewAnalyze } from "../../src/review-toolkit/analyze"
+import type { ReviewImpactCache } from "../../src/review-toolkit/impact-cache"
 import { ReviewPackOxlint } from "../../src/review-toolkit/packs/oxlint"
 import { ReviewOxlintInput } from "../../src/review-toolkit/packs/oxlint-input"
 import { ToolSafetySandboxRuntime } from "../../src/tool-safety-sandbox-runtime"
@@ -212,8 +213,8 @@ it.live(native
         argv: [
           { kind: "runtime" }, { kind: "literal", value: "--config" }, { kind: "config", path: ".host/oxlint.json" },
           ...["--disable-nested-config", "--no-ignore", "--allow", "all", "--deny", "eslint/no-debugger",
-            "--deny", "typescript/no-explicit-any", "--format", "sarif", "--"].map((value) => ({ kind: "literal", value })),
-          ...event.inputs.map((input) => ({ kind: "source", path: input.path })),
+            "--deny", "typescript/no-explicit-any", "--format", "sarif", "--"].map((value) => ({ kind: "literal" as const, value })),
+          ...event.inputs.map((input) => ({ kind: "source" as const, path: input.path })),
         ],
         cwd: "projection", environment: "oxlint-host-sanitized-v1", network: false, repositoryExecution: false, write: [],
       },
@@ -334,10 +335,11 @@ it.live("engagement blocks eligible Deep and LSP readers while omission preserve
   expectSpawn(import.meta.path)
   const made = yield* repository()
   const calls = { impact: 0, diagnostics: 0 }
-  const impact = () => Effect.sync(() => {
+  const impact: typeof ReviewImpactCache.read = (context) => Effect.gen(function* () {
     calls.impact++
+    const uri = yield* context.write("impact-control.json", JSON.stringify({ ranges: {}, queries: 0 }))
     return { ranges: {}, check: { id: "repo:blast-radius", pack: "repo", version: "review-v2", lane: "no-build",
-      status: "pass" as const, workspaceExecuted: false } }
+      status: "pass" as const, workspaceExecuted: false as const, uri } }
   })
   const diagnostics = () => Effect.sync(() => {
     calls.diagnostics++
