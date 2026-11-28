@@ -718,6 +718,23 @@ describe("check", () => {
 })
 
 describe("parity exceptions", () => {
+  test("managed judge diffs use literal paths and ignore project diff helpers", async () => {
+    const env = await scratch()
+    const [baseRef] = await repo(env, [{ "literal[1].txt": "before\n", "literal1.txt": "before\n" }])
+    await write(env.work, { "literal[1].txt": "authorized change\n", "literal1.txt": "outside literal scope\n" })
+    const configured = await git(env.work, env.home, "config", "diff.external", "echo external-helper-output")
+    expect(configured.exitCode).toBe(0)
+    const result = await Effect.runPromise(
+      GateDiff.compute({
+        workdir: env.work, baseRef, pathspec: "literal[1].txt", worktreeEvidence: true,
+      }).pipe(Effect.provide(ports(env.home))),
+    )
+    const patch = Option.getOrElse(result, () => "")
+    expect(patch).toContain("+authorized change")
+    expect(patch).not.toContain("outside literal scope")
+    expect(patch).not.toContain("external-helper-output")
+  })
+
   test("WP3-1: a check sees PATH, HOME and params, never the hook's variables", async () => {
     const env = await scratch()
     const hook = ["RUN_DIR", "SPRINT", "LEDGER", "i", "wp_id"]

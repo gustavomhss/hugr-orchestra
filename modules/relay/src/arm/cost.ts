@@ -60,7 +60,9 @@ export const corroborate = (
     const sha = createHash("sha256").update(claim).digest("hex")
     const judge = yield* JudgeConfig.Service
     const git = yield* GateShell.Git
-    const computeDiff = GateDiff.compute({ workdir, baseRef, pathspec: "" }).pipe(Effect.provideService(GateShell.Git, git))
+    const computeDiff = GateDiff.compute({
+      workdir, baseRef, pathspec: "", worktreeEvidence: judge.requiresWorktreeEvidence,
+    }).pipe(Effect.provideService(GateShell.Git, git))
     const diff = judge.requiresWorktreeEvidence ? undefined : yield* computeDiff
     if (diff && Option.isNone(diff)) return { text, sha, corroborated: "unavailable", graded_by: "judge:unavailable" }
     const response: Readonly<Record<string, unknown>> = yield* judge.judge({

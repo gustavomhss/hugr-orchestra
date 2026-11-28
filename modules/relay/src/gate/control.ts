@@ -267,8 +267,13 @@ const grade = (input: ChecklistInput, control: unknown, j: number) =>
     const scopePaths = substitution(expandParams(scope, input.params))
     const names = contextNames(field(control, "context")).map((name) => substitution(expandParams(name, input.params)))
     const wantsDiff = raw(field(control, "diff")) === "true"
-    const computeDiff = GateDiff.compute({ workdir: input.workdir, baseRef: input.baseRef, pathspec: scopePaths })
     const judge = yield* JudgeConfig.Service
+    const computeDiff = GateDiff.compute({
+      workdir: input.workdir,
+      baseRef: input.baseRef,
+      pathspec: scopePaths,
+      worktreeEvidence: judge.requiresWorktreeEvidence,
+    })
     const result = (response: JudgeConfig.Response, artifact: Option.Option<string>) => {
       // Exactly a pass/fail verdict with a NUL-free string backend; anything else is unavailable, never a pass.
       const backend = response.verdict === "pass" || response.verdict === "fail" ? text(response.backend) : undefined

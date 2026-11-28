@@ -14,17 +14,21 @@ export const compute = (input: {
   readonly baseRef?: string
   // Whitespace-split pathspec; empty means everything.
   readonly pathspec: string
+  /** Managed judge evidence accepts only Git's own diff of the bound checkout and literal paths. */
+  readonly worktreeEvidence?: boolean
 }): Effect.Effect<Option.Option<string>, never, GateShell.Git> =>
   Effect.gen(function* () {
     const baseRef = input.baseRef
     if (!baseRef) return Option.none()
     const git = yield* GateShell.Git
-    const run = (args: ReadonlyArray<string>) => git.run(input.workdir, args)
+    const run = (args: ReadonlyArray<string>) =>
+      git.run(input.workdir, input.worktreeEvidence ? ["--literal-pathspecs", ...args] : args)
     // Word splitting only: bash also globbed these words against the hook's cwd (PARITY-EXCEPTIONS WP3-2).
     const pathspec = words(input.pathspec)
     if ((yield* run(["rev-parse", "--git-dir"])).exitCode !== 0) return Option.none()
     if ((yield* run(["cat-file", "-e", `${baseRef}^{commit}`])).exitCode !== 0) return Option.none()
-    const tracked = yield* run(["diff", baseRef, "--", ...pathspec])
+    const diffOptions = input.worktreeEvidence ? ["--no-ext-diff", "--no-textconv"] : []
+    const tracked = yield* run(["diff", ...diffOptions, baseRef, "--", ...pathspec])
     if (tracked.exitCode !== 0) return Option.none()
     // `git diff` shows tracked changes only, and a new file is the most common shape of new work. Each `ls-files` line
     // is passed back verbatim, so a name git had to quote fails its no-index diff and is skipped, exactly as in bash.
@@ -32,7 +36,8 @@ export const compute = (input: {
     const untracked = yield* Effect.forEach(
       decoder.decode(others.stdout).split("\n").slice(0, -1).filter(Boolean),
       // --no-index exits 1 when the files differ, which is the normal case here.
-      (file) => run(["diff", "--no-index", "--", "/dev/null", file]).pipe(Effect.map((result) => result.stdout)),
+      (file) => run(["diff", "--no-index", ...diffOptions, "--", "/dev/null", file])
+        .pipe(Effect.map((result) => result.stdout)),
     )
     return utf8(Buffer.concat([tracked.stdout, ...untracked]))
   }).pipe(Effect.catchTag("GateShell.Unavailable", () => Effect.succeed(Option.none<string>())))
