@@ -115,3 +115,18 @@ Two bounded native producers are finalizing four L4 guides from the complete acc
 Entry (4921 bytes), ownership (9489), maintenance (9478) and operational (9481) are frozen with exact metadata and bounded literal review packets. Primary corrections clarified CWD, authoring-time NOT_RUN and the balanced optional route. The route uses 60752 returned body bytes at current sizes, within the pre-frozen 62000-byte cap; no reader execution is inferred. Both persistent judges still decide the complete L4 layer.
 
 The independent source-pin reconciliation confirmed 199/199 exact associations for the eleven accepted predecessors; all seventeen authorized L4 source identities were also checked against exact captured GitHub evidence. The canonical R2 overlay is preserved separately from the latest public runtime release.
+
+
+## 2026-11-28 knowledge resumption — recovered J1 and composed 15-artifact package
+
+Current branch: `genesis-knowledge-resume`, starting at `81d7a103b444d82abb3ad594805d80b346bc5799`. Recovery execution: `8137f1b9-a534-478b-bc67-2031114d43dc` (local UUID). The historic review remains `0a451b91-c4e7-4573-9958-fed60817f299`; no judge was re-created or asked to vote again.
+
+Recovered `judgments/l4-root/responses/j1-canonical-r2.json` from the original executor's canonical review folder, with two identical preserved copies and the original preserver's hash records. Its 13,503 bytes have SHA-256 `5090541410eee055861100506801e8229ca6a91068fc47596d75f4a0a34b02ba`. The response explicitly follows part-05, resolves J1-E02, and returns PASS for all 15 criteria and six cases with no mandatory body correction. The unchanged J2 r1 and addendum remain PASS for the same four body identities.
+
+The recovery closes the historical semantic L4 obligation. `l4-acceptance.json` records exact scope and the five status-only metadata corrections. The original 11 artifact objects, 15 body files and producer metadata files are preserved. `native-package.json` now includes 15 artifacts, seven roots and 37 acyclic ordered build edges; no required key is missing. Package SHA-256: `443caac944c273a6066927caddc7b275ef66c037b3125e42c0fe5b620aa6d69b`. Full-package runtime binding, publication, consumers and own maintenance remain open.
+
+Custody limitation: the native host message envelope/IDs were not located. The evidence is the preserved authored response, matching supplemental literal, original preservation records and exact neighboring public files. Retained mtimes and declared historical timestamps are corroboration, not authenticated host timestamps. No synthetic dispatcher fixture is used as the historical verdict.
+
+Runtime is owned separately by `genesis-runtime-resume`. The observed head `09a4c4afc7aab2f9a153eb059d13df0ecf15595c` has a successful qualification run `46114652347`, while the discovery release still describes older sample/control scope. Pin a compatible delivered release and execute the S4-specific chain before completion. The recovered semantic PASS explicitly excludes the new 2 MiB behavior.
+
+Remaining queue: fix the release and operational input binding; prepare the complete package; obtain exact runtime binding decisions; isolated governed publish/index/read; five independent consumer cases and direct use of all eleven intermediates; own affected/reuse/rebuild/maintenance cases; final evidence reconciliation and seal. Original historical source/materialization gaps remain evidence to reconcile, not proof that source has vanished. No product tests were run locally. No merge or production activation is authorized.

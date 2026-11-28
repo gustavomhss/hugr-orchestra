@@ -1,0 +1,53 @@
+name: genesis-knowledge-recovery
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["genesis-knowledge-resume"]
+    paths:
+      - ".github/workflows/genesis-knowledge-recovery.yml"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package.json"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/l4-acceptance.json"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/verify-knowledge.py"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j1-canonical-r2.json"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: genesis-knowledge-recovery-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  integrity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Verify recovered bytes and complete package
+        shell: bash
+        run: |
+          set -euo pipefail
+          S4_PATH=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4
+          EVIDENCE_DIR="$RUNNER_TEMP/genesis-knowledge-$GITHUB_RUN_ID"
+          mkdir "$EVIDENCE_DIR"
+          git show "81d7a103b444d82abb3ad594805d80b346bc5799:$S4_PATH/native-package.json" > "$EVIDENCE_DIR/base-package.json"
+          git show "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c:$S4_PATH/runtime/maintenance-operation.mjs" > "$EVIDENCE_DIR/historical-driver.mjs"
+          python3 "$S4_PATH/verify-knowledge.py" --repository "$GITHUB_WORKSPACE" \
+            --base-package "$EVIDENCE_DIR/base-package.json" \
+            --historical-driver "$EVIDENCE_DIR/historical-driver.mjs" \
+            --output "$EVIDENCE_DIR/integrity-receipt.json"
+      - name: Check repository guards
+        run: bun run check:guards --base origin/dev
+      - name: Preserve integrity receipt
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: genesis-knowledge-integrity-${{ github.sha }}
+          if-no-files-found: error
+          path: ${{ runner.temp }}/genesis-knowledge-${{ github.run_id }}/integrity-receipt.json
+          retention-days: 30
