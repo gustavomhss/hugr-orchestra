@@ -156,10 +156,10 @@ function services<A, E>(
       }) as unknown as LLMClientShape["stream"],
     }),
   )
-  const profiled = {
-    ...ToolRegistry.nativeNode,
+  const profiled = <A, E, T extends LayerNode.Tag | undefined>(node: LayerNode.Node<A, E, T>) => ({
+    ...node,
     implementation: Layer.provide(
-      ToolRegistry.nativeNode.implementation as Layer.Layer<ToolRegistry.Service>,
+      node.implementation as Layer.Layer<A>,
       Layer.effect(
         ToolSafety.RuntimeProfileLoader,
         Effect.gen(function* () {
@@ -172,8 +172,8 @@ function services<A, E>(
         }),
       ),
     ),
-    dependencies: [...ToolRegistry.nativeNode.dependencies, FSUtil.node],
-  }
+    dependencies: [...node.dependencies, FSUtil.node],
+  })
   const directory = AbsolutePath.make(dirs.work)
   return body(requests).pipe(
     Effect.provide(
@@ -203,7 +203,8 @@ function services<A, E>(
           [PermissionV2.node, PermissionFixture.normalLayer],
           [ToolOutputStore.node, ToolOutputStore.nodeWithoutConfig],
           [Global.node, Global.layerWith({ data: dirs.data, home: dirs.home })],
-          [ToolRegistry.node, profiled],
+          [ToolRegistry.node, profiled(ToolRegistry.nativeNode)],
+          [ToolRegistry.toolsNode, profiled(ToolRegistry.nativeToolsNode)],
           [
             ToolSafety.node,
             Layer.effect(
