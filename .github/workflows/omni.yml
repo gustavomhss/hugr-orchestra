@@ -155,7 +155,6 @@ jobs:
           Environment=HUGR_OMNI_ISOLATION_EXECUTABLES=/usr/bin/cat
           EOF
           sudo systemctl daemon-reload
-
           sudo systemctl start "$unit.socket"
           test -S "$socket"
       - name: Verify the supervisor's independent executable policy
@@ -177,8 +176,6 @@ jobs:
           done
           sudo rm -f "/run/systemd/system/$ACTIVITY_OMNI_UNIT.socket" "/run/systemd/system/$ACTIVITY_OMNI_UNIT@.service" "/usr/local/libexec/$ACTIVITY_OMNI_UNIT"
           sudo systemctl daemon-reload
-
-
   desktop-activity-arm:
     if: github.event_name == 'workflow_dispatch' && inputs.desktop_activity_arm
     runs-on: ubuntu-24.04

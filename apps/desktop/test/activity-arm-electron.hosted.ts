@@ -1,6 +1,6 @@
 import assert from "node:assert/strict"
 import { createServer } from "node:http"
-import { chmod, mkdir, mkdtemp, readFile, rename, rm, writeFile } from "node:fs/promises"
+import { chmod, mkdir, mkdtemp, open, readFile, rename, rm, writeFile } from "node:fs/promises"
 import { createRequire } from "node:module"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
@@ -98,7 +98,14 @@ async function child() {
     const unsigned = await fetch(`${owned.url}/_orchestra-activity/v1/arm-inspect`, { method: "POST", headers: { authorization, "content-type": "application/json" }, body: "{}" })
     assert.equal(unsigned.status, 403)
     assert.equal((await plan()).ready.length, 0, "passive GET must not discover the target")
-    registerActivityArmIpc({ ipcMain, BrowserWindow, dialog, rendererDevURL: rendererURL, getOwned: () => owned })
+    const nativeDialog = {
+      ...dialog,
+      showMessageBox: (async (parent: InstanceType<typeof BrowserWindow>, options: Parameters<typeof dialog.showMessageBox>[1]) => {
+        await rename(join(root, "next-dialog.json"), join(root, "dialog.json"))
+        return dialog.showMessageBox(parent, options)
+      }) as typeof dialog.showMessageBox,
+    }
+    registerActivityArmIpc({ ipcMain, BrowserWindow, dialog: nativeDialog, rendererDevURL: rendererURL, getOwned: () => owned })
     window = new BrowserWindow({ show: true, webPreferences: { preload: process.env.ACTIVITY_ARM_PRELOAD!, sandbox: true, nodeIntegration: false, contextIsolation: true } })
     await window.loadURL(rendererURL)
     const inspect = async () => await window!.webContents.executeJavaScript(`window.api.inspectActivityArm(${JSON.stringify(owned.url)})`) as { ready: Array<{ targetID: string; generation: string; label: string }> }
@@ -106,10 +113,18 @@ async function child() {
     const target = inspected.ready.find((item) => item.label.includes(".turbo"))
     assert.ok(target, `registered worktree did not produce a ready target: ${JSON.stringify(inspected)}`)
     assert.equal((await plan()).ready.some((item) => item.targetID === target.targetID), true)
-    const request = { targets: [{ targetID: target.targetID, generation: target.generation }] }
+    const handle = await open(join(source, "payload"), "r")
+    try {
+      assert.equal((await inspect()).ready.length, 0, "an open file prevents qualification")
+    } finally {
+      await handle.close()
+    }
+    const idle = (await inspect()).ready.find((item) => item.targetID === target.targetID)
+    assert.ok(idle && idle.generation !== target.generation, "verified idleness must acquire a new generation")
+    const request = { targets: [{ targetID: idle.targetID, generation: idle.generation }] }
     let step = 0
     const arm = async (mode: "cancel" | "change" | "confirm") => {
-      await writeFile(join(root, "dialog.json"), JSON.stringify({ step: ++step, mode, source }))
+      await writeFile(join(root, "next-dialog.json"), JSON.stringify({ step: ++step, mode, source }))
       return await window!.webContents.executeJavaScript(`window.api.armActivityQuarantine(${JSON.stringify(owned.url)}, ${JSON.stringify(request)})`)
     }
     assert.equal(await arm("cancel"), undefined)
@@ -128,7 +143,7 @@ async function child() {
     const current = refreshed.ready.find((item) => item.targetID === target.targetID)
     assert.ok(current)
     const currentRequest = { targets: [{ targetID: current.targetID, generation: current.generation }] }
-    await writeFile(join(root, "dialog.json"), JSON.stringify({ step: ++step, mode: "confirm", source }))
+    await writeFile(join(root, "next-dialog.json"), JSON.stringify({ step: ++step, mode: "confirm", source }))
     const receipt = await window.webContents.executeJavaScript(`window.api.armActivityQuarantine(${JSON.stringify(owned.url)}, ${JSON.stringify(currentRequest)})`) as { approvalID: string; targets: unknown[] } | undefined
     assert.ok(receipt?.approvalID, "native confirmation must return an authenticated receipt")
     assert.equal(receipts().length, 1)
@@ -136,7 +151,7 @@ async function child() {
     assert.equal((await plan()).approvals.length, 1)
     assert.equal(await readFile(join(source, "payload"), "utf8"), "untouched fixture\n")
     db.close()
-    process.stdout.write(JSON.stringify({ status: "pass", nativeCancel: true, identityMismatch: true, staleRefused: true, signedReceipt: true, durableReceipt: true, sourceUntouched: true }) + "\n")
+    process.stdout.write(JSON.stringify({ status: "pass", openFileRefused: true, nativeCancel: true, identityMismatch: true, staleRefused: true, signedReceipt: true, durableReceipt: true, sourceUntouched: true }) + "\n")
   } finally {
     window?.destroy()
     page.close()
