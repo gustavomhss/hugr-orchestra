@@ -69,13 +69,13 @@ for (const variant of [undefined, "default"] as const) {
             { id: ModelV2.VariantID.make("default"), headers: { "x-selection": "literal-default" }, body: {} },
           ] })
         const selected = yield* ModelExecutionOptions.selectVariant(catalog, parent.model?.variant)
-        expect(selected.variant?.id).toBe(variant ?? "preferred")
+        expect(selected.variant?.id).toBe(ModelV2.VariantID.make(variant ?? "preferred"))
         expect(selected.model.request.headers["x-selection"]).toBe(variant === undefined ? "preferred" : "literal-default")
         const unavailable = yield* ModelExecutionOptions.selectVariant({ ...catalog,
           variants: catalog.variants.filter((entry) => entry.id !== "default") }, ModelV2.VariantID.make("default"))
           .pipe(Effect.match({ onSuccess: () => undefined, onFailure: (error) => error }))
         expect(unavailable).toBeInstanceOf(ModelExecutionOptions.VariantUnavailableError)
-        expect(unavailable?.variant).toBe("default")
+        expect(unavailable?.variant).toBe(ModelV2.VariantID.make("default"))
 
         const identity = ReviewEngagementStoreV2.identity(parent, input)
         const lead = yield* host.sessions.create({ id: identity.leadID, parentID: parent.id,
@@ -218,7 +218,7 @@ test("historical state-v1 normalized default replays immutable bytes for an abse
     yield* root.open((host) => Effect.gen(function* () {
       const record = yield* saved(host, original.report.sessionID)
       expect(record.value.schema).toBe("review-engagement-state-v1")
-      expect(record.value.model?.variant).toBe("default")
+      expect(record.value.model?.variant).toBe(ModelV2.VariantID.make("default"))
       expect(Object.hasOwn((yield* host.sessions.get(original.report.sessionID)).model ?? {}, "variant")).toBe(false)
       const inputs = yield* host.db.select().from(SessionInputTable).all().pipe(Effect.orDie)
       const before = gitCalls
