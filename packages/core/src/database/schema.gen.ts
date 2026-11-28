@@ -6,6 +6,13 @@ export default {
   up(tx) {
     return Effect.gen(function* () {
       yield* tx.run(`
+        CREATE TABLE \`activity_action_ledger\` (
+          \`target_id\` text PRIMARY KEY,
+          \`generation\` text NOT NULL,
+          \`observation\` text NOT NULL
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`workspace\` (
           \`id\` text PRIMARY KEY,
           \`type\` text NOT NULL,
