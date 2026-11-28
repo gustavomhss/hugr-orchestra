@@ -28,7 +28,7 @@ type Ctx = { kv: ReturnType<typeof useKV>; project: ReturnType<typeof useProject
 export async function mount(
   override?: FetchHandler,
   state?: string,
-  args?: { auto?: boolean },
+  args?: { auto?: boolean; continue?: boolean },
   transport?: { url: string },
   options?: {
     waitComplete?: boolean
@@ -85,7 +85,7 @@ export async function mount(
 
   const app = await testRender(() => (
     <TestTuiContexts paths={state ? { state } : undefined}>
-      <ArgsProvider auto={args?.auto}>
+      <ArgsProvider auto={args?.auto} continue={args?.continue}>
         <KVProvider>
           <SDKProvider
             url={transport?.url ?? "http://test"}
