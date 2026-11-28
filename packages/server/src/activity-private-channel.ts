@@ -2,8 +2,10 @@ export * as ActivityPrivateChannelServer from "./activity-private-channel"
 
 import type { ActivityArmLedger } from "@orchestra/core/activity-arm"
 import type { ActivityStopService } from "@orchestra/core/activity-stop-service"
+import type { ActivityQuarantineCustody } from "@orchestra/core/activity-quarantine-custody"
 import { ActivityArm } from "@orchestra/schema/activity-arm"
 import { ActivityStop } from "@orchestra/schema/activity-stop"
+import { ActivityEmpty } from "@orchestra/schema/activity-empty"
 import { Effect, Option } from "effect"
 import { ActivityPrivateChannel } from "@orchestra/schema/activity-private-channel"
 import type { Readable } from "node:stream"
@@ -15,6 +17,7 @@ export async function acquire(
   signal: AbortSignal,
   arm?: ActivityArmLedger.Interface,
   stop?: ActivityStopService.Interface,
+  custody?: ActivityQuarantineCustody.Interface,
 ): Promise<HttpExtension> {
   const frame = new Uint8Array(ActivityPrivateChannel.frameBytes)
   const key = await new Promise<Uint8Array>((resolve, reject) => {
@@ -80,8 +83,9 @@ export async function acquire(
       const endpoint = url.pathname
       const armPath = endpoint === ActivityPrivateChannel.previewPath || endpoint === ActivityPrivateChannel.confirmPath
       const stopPath = endpoint === ActivityPrivateChannel.stopPreviewPath || endpoint === ActivityPrivateChannel.stopConfirmPath
-      if (!armPath && !stopPath) return forbidden()
-      if ((armPath && !arm) || (stopPath && !stop)) return forbidden()
+      const emptyPath = endpoint === ActivityPrivateChannel.emptyPreviewPath || endpoint === ActivityPrivateChannel.emptyConfirmPath
+      if (!armPath && !stopPath && !emptyPath) return forbidden()
+      if ((armPath && !arm) || (stopPath && !stop) || (emptyPath && !custody)) return forbidden()
       const body = await readBody(request)
       if (body === undefined || !nonce || !await signer.verifyArm("arm-request", endpoint, nonce, mac, body)) return forbidden()
       const decoded = parseBody(body)
@@ -94,6 +98,10 @@ export async function acquire(
         endpoint === ActivityPrivateChannel.stopPreviewPath
           ? run(decoded, ActivityStop.decodeRequest, stop.preview, ActivityStop.decodePreview)
           : run(decoded, ActivityStop.decodeConfirm, stop.confirm, ActivityStop.decodeReceipt)
+      ) : emptyPath && custody ? (
+        endpoint === ActivityPrivateChannel.emptyPreviewPath
+          ? run(decoded, ActivityEmpty.decodeRequest, () => custody.preview(), ActivityEmpty.decodePreview)
+          : run(decoded, ActivityEmpty.decodeConfirm, custody.confirm, ActivityEmpty.decodeReceipt)
       ) : undefined
       if (!operation) return forbidden()
       const json = await Effect.runPromise(operation, { signal: request.signal }).catch(() => undefined)

@@ -94,12 +94,14 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
     )
     const { ActivityArmLedger } = yield* Effect.promise(() => import("@orchestra/core/activity-arm"))
     const { ActivityStopService } = yield* Effect.promise(() => import("@orchestra/core/activity-stop-service"))
+    const { ActivityQuarantineCustody } = yield* Effect.promise(() => import("@orchestra/core/activity-quarantine-custody"))
     const scope = yield* Layer.build(AppNodeBuilder.build(Database.node))
     const database = Context.get(scope, Database.Service)
     const arm = ActivityArmLedger.make(database)
     const stop = process.platform === "win32" ? ActivityStopService.make(database) : undefined
+    const custody = process.platform === "win32" ? ActivityQuarantineCustody.make(database) : undefined
     return yield* Effect.tryPromise({
-      try: (signal) => ActivityPrivateChannelServer.acquire(process.stdin, signal, arm, stop),
+      try: (signal) => ActivityPrivateChannelServer.acquire(process.stdin, signal, arm, stop, custody),
       catch: () => new Error("Activity private channel startup failed"),
     })
   }) : undefined
