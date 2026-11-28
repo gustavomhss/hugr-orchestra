@@ -17,6 +17,7 @@ export type ActivityStopClient = {
 
 export type ActivityEmptyClient = {
   isCurrent(): boolean
+  read(request: ActivityEmpty.Request, signal?: AbortSignal): Promise<ActivityEmpty.Snapshot | undefined>
   preview(request: ActivityEmpty.Request, signal?: AbortSignal): Promise<ActivityEmpty.Preview | undefined>
   confirm(request: ActivityEmpty.Confirm, signal?: AbortSignal): Promise<ActivityEmpty.Receipt | undefined>
 }
@@ -75,6 +76,36 @@ export function registerActivityArmIpc(deps: {
       const receipt = await client.confirm({ previewID: preview.previewID }, controller.signal)
       if (!current() || !receipt || JSON.stringify(receipt.targets) !== JSON.stringify(preview.targets)) return undefined
       return receipt
+    } catch {
+      return undefined
+    } finally {
+      event.sender.removeListener("did-start-navigation", invalidate)
+      event.sender.removeListener("destroyed", invalidate)
+      pending.delete(event.sender.id)
+    }
+  })
+  deps.ipcMain.handle("activity-read-quarantine", async (event: IpcMainInvokeEvent, serverURL: unknown) => {
+    const owned = deps.getOwned()
+    const win = deps.BrowserWindow.fromWebContents(event.sender)
+    const frame = event.senderFrame
+    if (!owned || typeof serverURL !== "string" || serverURL !== owned.url ||
+      !win || win.isDestroyed() || win.webContents !== event.sender || !frame || frame !== event.sender.mainFrame ||
+      !isRendererOrigin(frame.url, deps.rendererDevURL) || pending.has(event.sender.id)) return undefined
+    const client = owned.openActivityEmpty()
+    if (!client) return undefined
+    pending.add(event.sender.id)
+    const controller = new AbortController()
+    const invalidate = () => controller.abort()
+    const frameURL = frame.url
+    event.sender.on("did-start-navigation", invalidate)
+    event.sender.on("destroyed", invalidate)
+    const current = () => !controller.signal.aborted && client.isCurrent() && !win.isDestroyed() && !event.sender.isDestroyed() &&
+      deps.BrowserWindow.fromWebContents(event.sender) === win && win.webContents === event.sender &&
+      event.sender.mainFrame === frame && frame.url === frameURL && isRendererOrigin(frame.url, deps.rendererDevURL) &&
+      deps.getOwned() === owned
+    try {
+      const snapshot = await client.read({}, controller.signal)
+      return current() ? snapshot : undefined
     } catch {
       return undefined
     } finally {
