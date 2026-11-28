@@ -1,0 +1,29 @@
+{
+  "operation": {
+    "kind": "list",
+    "format": "tar.gz",
+    "archive": "/tmp/orchestra-core-test-TQbZJ8/archives/darwin-arm64/kubeconform-darwin-arm64.tar.gz"
+  },
+  "command": "tar",
+  "args": [
+    "-tzf",
+    "/tmp/orchestra-core-test-TQbZJ8/archives/darwin-arm64/kubeconform-darwin-arm64.tar.gz"
+  ],
+  "exitCode": 0,
+  "durationMs": 78,
+  "timedOut": false,
+  "overflow": false,
+  "memoryExceeded": false,
+  "stdout": {
+    "bytes": 20,
+    "retainedBytes": 20,
+    "truncated": false,
+    "sha256": "f26453519753c57a4ba39a3c47a66f61a4aacdc59f5829ac829d8a64f4ba8fd5"
+  },
+  "stderr": {
+    "bytes": 0,
+    "retainedBytes": 0,
+    "truncated": false,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

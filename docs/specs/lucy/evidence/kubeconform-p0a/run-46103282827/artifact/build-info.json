@@ -1,0 +1,92 @@
+{
+	"GoVersion": "go1.26.3",
+	"Path": "github.com/yannh/kubeconform/cmd/kubeconform",
+	"Main": {
+		"Path": "github.com/yannh/kubeconform",
+		"Version": "v0.8.0"
+	},
+	"Deps": [
+		{
+			"Path": "github.com/hashicorp/go-cleanhttp",
+			"Version": "v0.5.2"
+		},
+		{
+			"Path": "github.com/hashicorp/go-retryablehttp",
+			"Version": "v0.7.8"
+		},
+		{
+			"Path": "github.com/santhosh-tekuri/jsonschema/v6",
+			"Version": "v6.0.2"
+		},
+		{
+			"Path": "go.yaml.in/yaml/v2",
+			"Version": "v2.4.4"
+		},
+		{
+			"Path": "golang.org/x/text",
+			"Version": "v0.37.0"
+		},
+		{
+			"Path": "k8s.io/kube-openapi",
+			"Version": "v0.0.0-20260603220949-865597e52e25"
+		},
+		{
+			"Path": "k8s.io/utils",
+			"Version": "v0.0.0-20260210185600-b8788abfbbc2"
+		},
+		{
+			"Path": "sigs.k8s.io/yaml",
+			"Version": "v1.6.0"
+		}
+	],
+	"Settings": [
+		{
+			"Key": "-buildmode",
+			"Value": "exe"
+		},
+		{
+			"Key": "-compiler",
+			"Value": "gc"
+		},
+		{
+			"Key": "-tags",
+			"Value": "netgo"
+		},
+		{
+			"Key": "-trimpath",
+			"Value": "true"
+		},
+		{
+			"Key": "CGO_ENABLED",
+			"Value": "0"
+		},
+		{
+			"Key": "GOARCH",
+			"Value": "amd64"
+		},
+		{
+			"Key": "GOOS",
+			"Value": "linux"
+		},
+		{
+			"Key": "GOAMD64",
+			"Value": "v1"
+		},
+		{
+			"Key": "vcs",
+			"Value": "git"
+		},
+		{
+			"Key": "vcs.revision",
+			"Value": "02374e583d700721f57300fae78e11acd27ee539"
+		},
+		{
+			"Key": "vcs.time",
+			"Value": "2026-06-04T20:02:50Z"
+		},
+		{
+			"Key": "vcs.modified",
+			"Value": "false"
+		}
+	]
+}

@@ -1,0 +1,30 @@
+{
+  "operation": {
+    "kind": "build-info",
+    "file": "/tmp/orchestra-core-test-TQbZJ8/toolkit/engines/kubeconform/0.8.0-darwin-x64/kubeconform"
+  },
+  "command": "/tmp/orchestra-core-test-TQbZJ8/go-reader/bin/go",
+  "args": [
+    "version",
+    "-m",
+    "-json",
+    "/tmp/orchestra-core-test-TQbZJ8/toolkit/engines/kubeconform/0.8.0-darwin-x64/kubeconform"
+  ],
+  "exitCode": 0,
+  "durationMs": 6,
+  "timedOut": false,
+  "overflow": false,
+  "memoryExceeded": false,
+  "stdout": {
+    "bytes": 1470,
+    "retainedBytes": 1470,
+    "truncated": false,
+    "sha256": "cf7a2cea813a13d1987a13054232b044c7c4d6d30d5a9235af4b67f0f933ca97"
+  },
+  "stderr": {
+    "bytes": 0,
+    "retainedBytes": 0,
+    "truncated": false,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

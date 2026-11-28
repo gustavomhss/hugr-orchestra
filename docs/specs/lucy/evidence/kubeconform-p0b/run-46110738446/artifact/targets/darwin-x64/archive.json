@@ -1,0 +1,9 @@
+{
+  "assetID": 438612679,
+  "name": "kubeconform-darwin-amd64.tar.gz",
+  "url": "https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-darwin-amd64.tar.gz",
+  "format": "tar.gz",
+  "bytes": 7762426,
+  "sha256": "71dbc87ac9f24099a62b93570e65aa06312ba6ac8aea63b7f86e9d999edf5a92",
+  "integrity": "sha256-cdvIesnyQJmmK5NXDmWqBjErpqyK6mO3+G6dmZ7fWpI="
+}

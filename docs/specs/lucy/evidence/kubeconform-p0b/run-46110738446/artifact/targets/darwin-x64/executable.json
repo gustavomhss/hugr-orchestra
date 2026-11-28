@@ -1,0 +1,13 @@
+{
+  "sha256": "2138fc51a0b15efe827f49c1ded8eb63da049d59864ae74a9384715f9ab6f94d",
+  "bytes": 14225136,
+  "header": {
+    "format": "macho",
+    "class": 64,
+    "endianness": "little",
+    "magic": 4277009103,
+    "cpuType": 16777223,
+    "fileType": 2,
+    "universalPermitted": false
+  }
+}

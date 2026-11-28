@@ -1,0 +1,123 @@
+{
+  "target": "darwin-x64",
+  "origin": {
+    "kind": "this-run",
+    "workflowSHA": "cb188f6dcb5cf3d0830fb6b46d08634b875faa6d",
+    "runID": "46110738446",
+    "attempt": "1"
+  },
+  "archive": {
+    "url": "https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-darwin-amd64.tar.gz",
+    "sha256": "71dbc87ac9f24099a62b93570e65aa06312ba6ac8aea63b7f86e9d999edf5a92",
+    "bytes": 7762426
+  },
+  "executable": {
+    "sha256": "2138fc51a0b15efe827f49c1ded8eb63da049d59864ae74a9384715f9ab6f94d",
+    "bytes": 14225136
+  },
+  "buildInfo": {
+    "GoVersion": "go1.26.3",
+    "Path": "github.com/yannh/kubeconform/cmd/kubeconform",
+    "Main": {
+      "Path": "github.com/yannh/kubeconform",
+      "Version": "v0.8.0"
+    },
+    "Deps": [
+      {
+        "Path": "github.com/hashicorp/go-cleanhttp",
+        "Version": "v0.5.2"
+      },
+      {
+        "Path": "github.com/hashicorp/go-retryablehttp",
+        "Version": "v0.7.8"
+      },
+      {
+        "Path": "github.com/santhosh-tekuri/jsonschema/v6",
+        "Version": "v6.0.2"
+      },
+      {
+        "Path": "go.yaml.in/yaml/v2",
+        "Version": "v2.4.4"
+      },
+      {
+        "Path": "golang.org/x/text",
+        "Version": "v0.37.0"
+      },
+      {
+        "Path": "k8s.io/kube-openapi",
+        "Version": "v0.0.0-20260603220949-865597e52e25"
+      },
+      {
+        "Path": "k8s.io/utils",
+        "Version": "v0.0.0-20260210185600-b8788abfbbc2"
+      },
+      {
+        "Path": "sigs.k8s.io/yaml",
+        "Version": "v1.6.0"
+      }
+    ],
+    "Settings": [
+      {
+        "Key": "-buildmode",
+        "Value": "exe"
+      },
+      {
+        "Key": "-compiler",
+        "Value": "gc"
+      },
+      {
+        "Key": "-tags",
+        "Value": "netgo"
+      },
+      {
+        "Key": "-trimpath",
+        "Value": "true"
+      },
+      {
+        "Key": "CGO_ENABLED",
+        "Value": "0"
+      },
+      {
+        "Key": "GOARCH",
+        "Value": "amd64"
+      },
+      {
+        "Key": "GOOS",
+        "Value": "darwin"
+      },
+      {
+        "Key": "GOAMD64",
+        "Value": "v1"
+      },
+      {
+        "Key": "vcs",
+        "Value": "git"
+      },
+      {
+        "Key": "vcs.revision",
+        "Value": "02374e583d700721f57300fae78e11acd27ee539"
+      },
+      {
+        "Key": "vcs.time",
+        "Value": "2026-06-04T20:02:50Z"
+      },
+      {
+        "Key": "vcs.modified",
+        "Value": "false"
+      }
+    ]
+  },
+  "distributedNotices": [
+    {
+      "member": "LICENSE",
+      "bytes": 11346,
+      "sha256": "1294f9be73faeda3987cb554c1597f599641eebdcd4d4fa88f97bdb6241be275",
+      "artifact": "targets/darwin-x64/notices/0.txt"
+    }
+  ],
+  "buildInfoArtifact": {
+    "path": "targets/darwin-x64/build-info.json",
+    "sha256": "cf7a2cea813a13d1987a13054232b044c7c4d6d30d5a9235af4b67f0f933ca97",
+    "bytes": 1470
+  }
+}

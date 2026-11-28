@@ -1,0 +1,31 @@
+{
+  "operation": {
+    "kind": "executable-member",
+    "format": "zip",
+    "archive": "/tmp/orchestra-core-test-TQbZJ8/archives/win32-x64/kubeconform-windows-amd64.zip",
+    "member": "kubeconform.exe"
+  },
+  "command": "unzip",
+  "args": [
+    "-p",
+    "/tmp/orchestra-core-test-TQbZJ8/archives/win32-x64/kubeconform-windows-amd64.zip",
+    "kubeconform.exe"
+  ],
+  "exitCode": 0,
+  "durationMs": 89,
+  "timedOut": false,
+  "overflow": false,
+  "memoryExceeded": false,
+  "stdout": {
+    "bytes": 14132224,
+    "retainedBytes": 14132224,
+    "truncated": false,
+    "sha256": "642bf8ea0d614a8c75d2bd012eb6042a90589ff846c69f04863afa446b30f2c1"
+  },
+  "stderr": {
+    "bytes": 0,
+    "retainedBytes": 0,
+    "truncated": false,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

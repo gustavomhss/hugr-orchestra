@@ -1,0 +1,9 @@
+{
+  "assetID": 438612680,
+  "name": "kubeconform-darwin-arm64.tar.gz",
+  "url": "https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-darwin-arm64.tar.gz",
+  "format": "tar.gz",
+  "bytes": 7276844,
+  "sha256": "f84f4dfbebf4a6b0b230385fa065a39ea35e02608c2b50d025dcf64775a69d67",
+  "integrity": "sha256-+E9N++v0prCyMDhfoGWjnqNeAmCMK1DQJdz2R3WmnWc="
+}

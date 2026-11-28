@@ -1,0 +1,10 @@
+[
+  {
+    "engine": "kubeconform",
+    "version": "0.8.0",
+    "target": "win32-x64",
+    "status": "ready",
+    "directory": "/tmp/orchestra-core-test-TQbZJ8/toolkit/engines/kubeconform/0.8.0-win32-x64",
+    "executable": "/tmp/orchestra-core-test-TQbZJ8/toolkit/engines/kubeconform/0.8.0-win32-x64/kubeconform.exe"
+  }
+]

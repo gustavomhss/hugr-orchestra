@@ -1,0 +1,26 @@
+{
+  "command": "/tmp/orchestra-core-test-TC7ALm/go-reader/bin/go",
+  "args": [
+    "version",
+    "-m",
+    "-json",
+    "/tmp/orchestra-core-test-TC7ALm/toolkit/engines/kubeconform/0.8.0-linux-x64/kubeconform"
+  ],
+  "exitCode": 0,
+  "durationMs": 6,
+  "timedOut": false,
+  "overflow": false,
+  "memoryExceeded": false,
+  "stdout": {
+    "bytes": 1469,
+    "retainedBytes": 1469,
+    "truncated": false,
+    "sha256": "86e5cf17d9900e3573f2cf23eced205c753f61b8b83d54380745c261196fc1f4"
+  },
+  "stderr": {
+    "bytes": 0,
+    "retainedBytes": 0,
+    "truncated": false,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}

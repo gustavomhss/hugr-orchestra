@@ -1,0 +1,9 @@
+{
+  "assetID": 438612685,
+  "name": "kubeconform-linux-arm64.tar.gz",
+  "url": "https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-arm64.tar.gz",
+  "format": "tar.gz",
+  "bytes": 6901136,
+  "sha256": "1f53fc8e81258197a35e8603054162a5af1de8c5af13746c71ab680d9534ed87",
+  "integrity": "sha256-H1P8joElgZejXoYDBUFipa8d6MWvE3RscatoDZU07Yc="
+}

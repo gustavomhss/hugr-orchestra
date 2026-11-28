@@ -1,0 +1,23 @@
+{
+  "sha256": "457722b36e98d7bdbc91525e594951ef5d7ea3a29da2d13b9b28a2fb8a5097b7",
+  "bytes": 13944911,
+  "magic": "7f454c46",
+  "machine": 62,
+  "floor": {
+    "file": "kubeconform",
+    "format": "elf",
+    "needs": {},
+    "notes": [
+      "static"
+    ]
+  },
+  "enginePin": {
+    "version": "0.8.0",
+    "target": "linux-x64",
+    "url": "https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-amd64.tar.gz",
+    "bytes": 7534236,
+    "sha256": "9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883",
+    "integrity": "sha256-m8K/+/cfJhEoUz7a+RIVOUi3/yOPmlMa5tNEZuwoeIM=",
+    "member": "kubeconform"
+  }
+}

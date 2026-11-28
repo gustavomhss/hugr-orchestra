@@ -1,0 +1,623 @@
+{
+  "schema": "kubeconform-p0b-discovery-v1",
+  "observations": [
+    {
+      "target": "linux-x64",
+      "origin": {
+        "kind": "p0a2",
+        "source": "432c8415bb657c0041fd6b0fba084fa8e1d7a07d",
+        "snapshot": "a82102da6f1e531821ab6d5ac31f0b6eacc51633",
+        "runID": 46103282827,
+        "artifactID": 15246202661
+      },
+      "archive": {
+        "url": "https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-amd64.tar.gz",
+        "sha256": "9bc2bffbf71f261128533edaf912153948b7ff238f9a531ae6d34466ec287883",
+        "bytes": 7534236
+      },
+      "executable": {
+        "sha256": "457722b36e98d7bdbc91525e594951ef5d7ea3a29da2d13b9b28a2fb8a5097b7",
+        "bytes": 13944911
+      },
+      "buildInfoArtifact": {
+        "path": "prior-linux/build-info.json",
+        "sha256": "86e5cf17d9900e3573f2cf23eced205c753f61b8b83d54380745c261196fc1f4",
+        "bytes": 1469
+      },
+      "buildInfo": {
+        "GoVersion": "go1.26.3",
+        "Path": "github.com/yannh/kubeconform/cmd/kubeconform",
+        "Main": {
+          "Path": "github.com/yannh/kubeconform",
+          "Version": "v0.8.0"
+        },
+        "Deps": [
+          {
+            "Path": "github.com/hashicorp/go-cleanhttp",
+            "Version": "v0.5.2"
+          },
+          {
+            "Path": "github.com/hashicorp/go-retryablehttp",
+            "Version": "v0.7.8"
+          },
+          {
+            "Path": "github.com/santhosh-tekuri/jsonschema/v6",
+            "Version": "v6.0.2"
+          },
+          {
+            "Path": "go.yaml.in/yaml/v2",
+            "Version": "v2.4.4"
+          },
+          {
+            "Path": "golang.org/x/text",
+            "Version": "v0.37.0"
+          },
+          {
+            "Path": "k8s.io/kube-openapi",
+            "Version": "v0.0.0-20260603220949-865597e52e25"
+          },
+          {
+            "Path": "k8s.io/utils",
+            "Version": "v0.0.0-20260210185600-b8788abfbbc2"
+          },
+          {
+            "Path": "sigs.k8s.io/yaml",
+            "Version": "v1.6.0"
+          }
+        ],
+        "Settings": [
+          {
+            "Key": "-buildmode",
+            "Value": "exe"
+          },
+          {
+            "Key": "-compiler",
+            "Value": "gc"
+          },
+          {
+            "Key": "-tags",
+            "Value": "netgo"
+          },
+          {
+            "Key": "-trimpath",
+            "Value": "true"
+          },
+          {
+            "Key": "CGO_ENABLED",
+            "Value": "0"
+          },
+          {
+            "Key": "GOARCH",
+            "Value": "amd64"
+          },
+          {
+            "Key": "GOOS",
+            "Value": "linux"
+          },
+          {
+            "Key": "GOAMD64",
+            "Value": "v1"
+          },
+          {
+            "Key": "vcs",
+            "Value": "git"
+          },
+          {
+            "Key": "vcs.revision",
+            "Value": "02374e583d700721f57300fae78e11acd27ee539"
+          },
+          {
+            "Key": "vcs.time",
+            "Value": "2026-06-04T20:02:50Z"
+          },
+          {
+            "Key": "vcs.modified",
+            "Value": "false"
+          }
+        ]
+      },
+      "distributedNotices": [
+        {
+          "member": "LICENSE",
+          "bytes": 11346,
+          "sha256": "1294f9be73faeda3987cb554c1597f599641eebdcd4d4fa88f97bdb6241be275",
+          "artifact": "prior-linux/release-notices/0.txt"
+        }
+      ]
+    },
+    {
+      "target": "darwin-arm64",
+      "origin": {
+        "kind": "this-run",
+        "workflowSHA": "cb188f6dcb5cf3d0830fb6b46d08634b875faa6d",
+        "runID": "46110738446",
+        "attempt": "1"
+      },
+      "archive": {
+        "url": "https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-darwin-arm64.tar.gz",
+        "sha256": "f84f4dfbebf4a6b0b230385fa065a39ea35e02608c2b50d025dcf64775a69d67",
+        "bytes": 7276844
+      },
+      "executable": {
+        "sha256": "858ceb584915c256262090195eda2579299149050c5c6a9788d0985076832313",
+        "bytes": 13356018
+      },
+      "buildInfo": {
+        "GoVersion": "go1.26.3",
+        "Path": "github.com/yannh/kubeconform/cmd/kubeconform",
+        "Main": {
+          "Path": "github.com/yannh/kubeconform",
+          "Version": "v0.8.0"
+        },
+        "Deps": [
+          {
+            "Path": "github.com/hashicorp/go-cleanhttp",
+            "Version": "v0.5.2"
+          },
+          {
+            "Path": "github.com/hashicorp/go-retryablehttp",
+            "Version": "v0.7.8"
+          },
+          {
+            "Path": "github.com/santhosh-tekuri/jsonschema/v6",
+            "Version": "v6.0.2"
+          },
+          {
+            "Path": "go.yaml.in/yaml/v2",
+            "Version": "v2.4.4"
+          },
+          {
+            "Path": "golang.org/x/text",
+            "Version": "v0.37.0"
+          },
+          {
+            "Path": "k8s.io/kube-openapi",
+            "Version": "v0.0.0-20260603220949-865597e52e25"
+          },
+          {
+            "Path": "k8s.io/utils",
+            "Version": "v0.0.0-20260210185600-b8788abfbbc2"
+          },
+          {
+            "Path": "sigs.k8s.io/yaml",
+            "Version": "v1.6.0"
+          }
+        ],
+        "Settings": [
+          {
+            "Key": "-buildmode",
+            "Value": "exe"
+          },
+          {
+            "Key": "-compiler",
+            "Value": "gc"
+          },
+          {
+            "Key": "-tags",
+            "Value": "netgo"
+          },
+          {
+            "Key": "-trimpath",
+            "Value": "true"
+          },
+          {
+            "Key": "CGO_ENABLED",
+            "Value": "0"
+          },
+          {
+            "Key": "GOARCH",
+            "Value": "arm64"
+          },
+          {
+            "Key": "GOOS",
+            "Value": "darwin"
+          },
+          {
+            "Key": "GOARM64",
+            "Value": "v8.0"
+          },
+          {
+            "Key": "vcs",
+            "Value": "git"
+          },
+          {
+            "Key": "vcs.revision",
+            "Value": "02374e583d700721f57300fae78e11acd27ee539"
+          },
+          {
+            "Key": "vcs.time",
+            "Value": "2026-06-04T20:02:50Z"
+          },
+          {
+            "Key": "vcs.modified",
+            "Value": "false"
+          }
+        ]
+      },
+      "distributedNotices": [
+        {
+          "member": "LICENSE",
+          "bytes": 11346,
+          "sha256": "1294f9be73faeda3987cb554c1597f599641eebdcd4d4fa88f97bdb6241be275",
+          "artifact": "targets/darwin-arm64/notices/0.txt"
+        }
+      ],
+      "buildInfoArtifact": {
+        "path": "targets/darwin-arm64/build-info.json",
+        "sha256": "c6bc3662998c348212242f202436a66461c8e51c8247234911491dfb2bbe0d8f",
+        "bytes": 1472
+      }
+    },
+    {
+      "target": "darwin-x64",
+      "origin": {
+        "kind": "this-run",
+        "workflowSHA": "cb188f6dcb5cf3d0830fb6b46d08634b875faa6d",
+        "runID": "46110738446",
+        "attempt": "1"
+      },
+      "archive": {
+        "url": "https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-darwin-amd64.tar.gz",
+        "sha256": "71dbc87ac9f24099a62b93570e65aa06312ba6ac8aea63b7f86e9d999edf5a92",
+        "bytes": 7762426
+      },
+      "executable": {
+        "sha256": "2138fc51a0b15efe827f49c1ded8eb63da049d59864ae74a9384715f9ab6f94d",
+        "bytes": 14225136
+      },
+      "buildInfo": {
+        "GoVersion": "go1.26.3",
+        "Path": "github.com/yannh/kubeconform/cmd/kubeconform",
+        "Main": {
+          "Path": "github.com/yannh/kubeconform",
+          "Version": "v0.8.0"
+        },
+        "Deps": [
+          {
+            "Path": "github.com/hashicorp/go-cleanhttp",
+            "Version": "v0.5.2"
+          },
+          {
+            "Path": "github.com/hashicorp/go-retryablehttp",
+            "Version": "v0.7.8"
+          },
+          {
+            "Path": "github.com/santhosh-tekuri/jsonschema/v6",
+            "Version": "v6.0.2"
+          },
+          {
+            "Path": "go.yaml.in/yaml/v2",
+            "Version": "v2.4.4"
+          },
+          {
+            "Path": "golang.org/x/text",
+            "Version": "v0.37.0"
+          },
+          {
+            "Path": "k8s.io/kube-openapi",
+            "Version": "v0.0.0-20260603220949-865597e52e25"
+          },
+          {
+            "Path": "k8s.io/utils",
+            "Version": "v0.0.0-20260210185600-b8788abfbbc2"
+          },
+          {
+            "Path": "sigs.k8s.io/yaml",
+            "Version": "v1.6.0"
+          }
+        ],
+        "Settings": [
+          {
+            "Key": "-buildmode",
+            "Value": "exe"
+          },
+          {
+            "Key": "-compiler",
+            "Value": "gc"
+          },
+          {
+            "Key": "-tags",
+            "Value": "netgo"
+          },
+          {
+            "Key": "-trimpath",
+            "Value": "true"
+          },
+          {
+            "Key": "CGO_ENABLED",
+            "Value": "0"
+          },
+          {
+            "Key": "GOARCH",
+            "Value": "amd64"
+          },
+          {
+            "Key": "GOOS",
+            "Value": "darwin"
+          },
+          {
+            "Key": "GOAMD64",
+            "Value": "v1"
+          },
+          {
+            "Key": "vcs",
+            "Value": "git"
+          },
+          {
+            "Key": "vcs.revision",
+            "Value": "02374e583d700721f57300fae78e11acd27ee539"
+          },
+          {
+            "Key": "vcs.time",
+            "Value": "2026-06-04T20:02:50Z"
+          },
+          {
+            "Key": "vcs.modified",
+            "Value": "false"
+          }
+        ]
+      },
+      "distributedNotices": [
+        {
+          "member": "LICENSE",
+          "bytes": 11346,
+          "sha256": "1294f9be73faeda3987cb554c1597f599641eebdcd4d4fa88f97bdb6241be275",
+          "artifact": "targets/darwin-x64/notices/0.txt"
+        }
+      ],
+      "buildInfoArtifact": {
+        "path": "targets/darwin-x64/build-info.json",
+        "sha256": "cf7a2cea813a13d1987a13054232b044c7c4d6d30d5a9235af4b67f0f933ca97",
+        "bytes": 1470
+      }
+    },
+    {
+      "target": "linux-arm64",
+      "origin": {
+        "kind": "this-run",
+        "workflowSHA": "cb188f6dcb5cf3d0830fb6b46d08634b875faa6d",
+        "runID": "46110738446",
+        "attempt": "1"
+      },
+      "archive": {
+        "url": "https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-linux-arm64.tar.gz",
+        "sha256": "1f53fc8e81258197a35e8603054162a5af1de8c5af13746c71ab680d9534ed87",
+        "bytes": 6901136
+      },
+      "executable": {
+        "sha256": "7e77b104b3ae696389f91971c60fd58c72f1f3dc218f139df67a1b070959c012",
+        "bytes": 12953083
+      },
+      "buildInfo": {
+        "GoVersion": "go1.26.3",
+        "Path": "github.com/yannh/kubeconform/cmd/kubeconform",
+        "Main": {
+          "Path": "github.com/yannh/kubeconform",
+          "Version": "v0.8.0"
+        },
+        "Deps": [
+          {
+            "Path": "github.com/hashicorp/go-cleanhttp",
+            "Version": "v0.5.2"
+          },
+          {
+            "Path": "github.com/hashicorp/go-retryablehttp",
+            "Version": "v0.7.8"
+          },
+          {
+            "Path": "github.com/santhosh-tekuri/jsonschema/v6",
+            "Version": "v6.0.2"
+          },
+          {
+            "Path": "go.yaml.in/yaml/v2",
+            "Version": "v2.4.4"
+          },
+          {
+            "Path": "golang.org/x/text",
+            "Version": "v0.37.0"
+          },
+          {
+            "Path": "k8s.io/kube-openapi",
+            "Version": "v0.0.0-20260603220949-865597e52e25"
+          },
+          {
+            "Path": "k8s.io/utils",
+            "Version": "v0.0.0-20260210185600-b8788abfbbc2"
+          },
+          {
+            "Path": "sigs.k8s.io/yaml",
+            "Version": "v1.6.0"
+          }
+        ],
+        "Settings": [
+          {
+            "Key": "-buildmode",
+            "Value": "exe"
+          },
+          {
+            "Key": "-compiler",
+            "Value": "gc"
+          },
+          {
+            "Key": "-tags",
+            "Value": "netgo"
+          },
+          {
+            "Key": "-trimpath",
+            "Value": "true"
+          },
+          {
+            "Key": "CGO_ENABLED",
+            "Value": "0"
+          },
+          {
+            "Key": "GOARCH",
+            "Value": "arm64"
+          },
+          {
+            "Key": "GOOS",
+            "Value": "linux"
+          },
+          {
+            "Key": "GOARM64",
+            "Value": "v8.0"
+          },
+          {
+            "Key": "vcs",
+            "Value": "git"
+          },
+          {
+            "Key": "vcs.revision",
+            "Value": "02374e583d700721f57300fae78e11acd27ee539"
+          },
+          {
+            "Key": "vcs.time",
+            "Value": "2026-06-04T20:02:50Z"
+          },
+          {
+            "Key": "vcs.modified",
+            "Value": "false"
+          }
+        ]
+      },
+      "distributedNotices": [
+        {
+          "member": "LICENSE",
+          "bytes": 11346,
+          "sha256": "1294f9be73faeda3987cb554c1597f599641eebdcd4d4fa88f97bdb6241be275",
+          "artifact": "targets/linux-arm64/notices/0.txt"
+        }
+      ],
+      "buildInfoArtifact": {
+        "path": "targets/linux-arm64/build-info.json",
+        "sha256": "2d0ae66c5494da7d24e91d02a03262096e9965141e1dabab947ae7b1f77c6dec",
+        "bytes": 1471
+      }
+    },
+    {
+      "target": "win32-x64",
+      "origin": {
+        "kind": "this-run",
+        "workflowSHA": "cb188f6dcb5cf3d0830fb6b46d08634b875faa6d",
+        "runID": "46110738446",
+        "attempt": "1"
+      },
+      "archive": {
+        "url": "https://github.com/yannh/kubeconform/releases/download/v0.8.0/kubeconform-windows-amd64.zip",
+        "sha256": "e3f56102bcf4f50b034a567e2482a1c5330799983ddd655952310211aef73d93",
+        "bytes": 7615744
+      },
+      "executable": {
+        "sha256": "642bf8ea0d614a8c75d2bd012eb6042a90589ff846c69f04863afa446b30f2c1",
+        "bytes": 14132224
+      },
+      "buildInfo": {
+        "GoVersion": "go1.26.3",
+        "Path": "github.com/yannh/kubeconform/cmd/kubeconform",
+        "Main": {
+          "Path": "github.com/yannh/kubeconform",
+          "Version": "v0.8.0"
+        },
+        "Deps": [
+          {
+            "Path": "github.com/hashicorp/go-cleanhttp",
+            "Version": "v0.5.2"
+          },
+          {
+            "Path": "github.com/hashicorp/go-retryablehttp",
+            "Version": "v0.7.8"
+          },
+          {
+            "Path": "github.com/santhosh-tekuri/jsonschema/v6",
+            "Version": "v6.0.2"
+          },
+          {
+            "Path": "go.yaml.in/yaml/v2",
+            "Version": "v2.4.4"
+          },
+          {
+            "Path": "golang.org/x/text",
+            "Version": "v0.37.0"
+          },
+          {
+            "Path": "k8s.io/kube-openapi",
+            "Version": "v0.0.0-20260603220949-865597e52e25"
+          },
+          {
+            "Path": "k8s.io/utils",
+            "Version": "v0.0.0-20260210185600-b8788abfbbc2"
+          },
+          {
+            "Path": "sigs.k8s.io/yaml",
+            "Version": "v1.6.0"
+          }
+        ],
+        "Settings": [
+          {
+            "Key": "-buildmode",
+            "Value": "exe"
+          },
+          {
+            "Key": "-compiler",
+            "Value": "gc"
+          },
+          {
+            "Key": "-tags",
+            "Value": "netgo"
+          },
+          {
+            "Key": "-trimpath",
+            "Value": "true"
+          },
+          {
+            "Key": "CGO_ENABLED",
+            "Value": "0"
+          },
+          {
+            "Key": "GOARCH",
+            "Value": "amd64"
+          },
+          {
+            "Key": "GOOS",
+            "Value": "windows"
+          },
+          {
+            "Key": "GOAMD64",
+            "Value": "v1"
+          },
+          {
+            "Key": "vcs",
+            "Value": "git"
+          },
+          {
+            "Key": "vcs.revision",
+            "Value": "02374e583d700721f57300fae78e11acd27ee539"
+          },
+          {
+            "Key": "vcs.time",
+            "Value": "2026-06-04T20:02:50Z"
+          },
+          {
+            "Key": "vcs.modified",
+            "Value": "false"
+          }
+        ]
+      },
+      "distributedNotices": [
+        {
+          "member": "LICENSE",
+          "bytes": 11346,
+          "sha256": "1294f9be73faeda3987cb554c1597f599641eebdcd4d4fa88f97bdb6241be275",
+          "artifact": "targets/win32-x64/notices/0.txt"
+        }
+      ],
+      "buildInfoArtifact": {
+        "path": "targets/win32-x64/build-info.json",
+        "sha256": "d22b6a1d751c299706d49cfc998c809123bc3581860512b5cd1761efacfd4dd3",
+        "bytes": 1471
+      }
+    }
+  ],
+  "unresolved": [],
+  "complete": false
+}
