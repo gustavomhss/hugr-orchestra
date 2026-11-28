@@ -1,0 +1,832 @@
+{
+  "kind": "FINAL_EVALUATION_ADMISSION_REVIEW",
+  "purpose": "isolated-evaluation-admission",
+  "reviewer": "/root/s2_j2",
+  "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "global_verdict": "HOLD",
+  "entries": [
+    {
+      "key": "s2.l1.desktop-web",
+      "contract": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "result": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58",
+      "inputs": "cc244398ac5cd6d52f1a17272a565d8fb9ecf2c0acbc1d41a70c9327951d57da",
+      "criteria": [
+        {
+          "id": "ADMIT-EXACT-TRANSFORM",
+          "verdict": "PASS",
+          "reason": "O mapeamento apresentado e a reconciliação registrada preservam o corpo referido de 29075 bytes, o resultado, os metadados e os inputs desta entry, sem acrescentar dependências de construção ou navegação. A transformação V2 acrescenta contrato de admissão e referências semânticas sem converter aceitação histórica em aprovação operacional.",
+          "evidence": [
+            "A020: entry s2.l1.desktop-web e índices ordenados de inputs",
+            "A021: objeto completo do resultado",
+            "A023 e A025: transformação V2 e reconstrução nativa",
+            "A080 e A081: comparações de campos, bytes de corpos e serialização CAS",
+            "A087: identidades finais"
+          ]
+        },
+        {
+          "id": "ADMIT-SOURCE-BINDINGS",
+          "verdict": "HOLD",
+          "reason": "Os vínculos de fontes e protocolo são rastreáveis, mas a lacuna comum F02 impede PASS: a dependência executada @noble/hashes não integra a identidade intrínseca verificada pelos caminhos suportados. O guard externo observado não torna obrigatória a recusa de alteração dessa implementação.",
+          "evidence": [
+            "A019, A020 e A022: universo e associação de fontes",
+            "A030 e A034: universo intrínseco e sua verificação",
+            "A069, A077 e A081: omissão de @noble/hashes e limites do guard",
+            "F02 e M01"
+          ]
+        },
+        {
+          "id": "ADMIT-SEMANTIC-SCOPE",
+          "verdict": "PASS",
+          "reason": "Os dois pareceres históricos aplicáveis ao corpo aceito de desktop-web estão apresentados integralmente e mantêm suas fronteiras de evidência. A017 limita sua reutilização ao corpo e resultado inalterados; A018 preserva as obrigações finais. Isso sustenta a aplicabilidade semântica, sem produzir os dois novos votos de admissão necessários.",
+          "evidence": [
+            "R007 e R008: decisões históricas aplicáveis à unidade desktop-web",
+            "A017: applicability e limits de s2.l1.desktop-web",
+            "A018: obrigações originais pendentes",
+            "A024: exigência de dois novos julgamentos exatos"
+          ]
+        },
+        {
+          "id": "ADMIT-ISOLATED-PLAN",
+          "verdict": "PASS",
+          "reason": "A entry permanece sob a autoridade de avaliação, o plano finito e os controles de fase e estado examinados em F04. O marker e a política admit-only foram instalados com vínculos explícitos. Este PASS sobre delimitação e isolamento do plano não elimina o HOLD de implementação em ADMIT-SOURCE-BINDINGS.",
+          "evidence": [
+            "A017, A018 e A031–A054: plano e controles de isolamento",
+            "B001–B013: sequência e setup efetivo",
+            "E002: ponte futura com gate de captura",
+            "F04"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "s2.l1.app-session",
+      "contract": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "result": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384",
+      "inputs": "d2340538beccaee1f20d74a5e5a5ca22ba053e54307af8ba9f74218ad9529053",
+      "criteria": [
+        {
+          "id": "ADMIT-EXACT-TRANSFORM",
+          "verdict": "PASS",
+          "reason": "A entry preserva o corpo aceito de 42047 bytes e seu objeto de resultado, inclusive autoridade, validade, lacunas e evidência. O mapeamento conserva inputs e inputs_id, sem dependências ou navegação acrescentadas. As verificações registradas abrangem os campos completos, além das identidades canônicas.",
+          "evidence": [
+            "A020 e A021: entry e resultado completos",
+            "A022: associação de fontes e referências de app-session",
+            "A023, A025 e A080: regras e reconciliação da transformação",
+            "A081 e A087: resultados registrados e identidades"
+          ]
+        },
+        {
+          "id": "ADMIT-SOURCE-BINDINGS",
+          "verdict": "HOLD",
+          "reason": "A fonte desta entry está associada ao universo declarado, mas utiliza o mesmo código de identidade afetado por F02. A estabilidade externa observada no prepare03 não demonstra recusa obrigatória de mudança de @noble/hashes pelos caminhos diretos do runtime.",
+          "evidence": [
+            "A019, A020 e A022",
+            "A030, A034 e A056",
+            "A069–A077 e A081",
+            "F02 e M01"
+          ]
+        },
+        {
+          "id": "ADMIT-SEMANTIC-SCOPE",
+          "verdict": "PASS",
+          "reason": "R009 e R010 sustentam a versão corrigida r3 de app-session, com seus limites explícitos. A exposição anterior do produtor ao parecer público r2 permanece registrada e não é convertida em alegação de cegamento. A reutilização se restringe ao corpo e resultado aceitos, sem provar consumidores atuais.",
+          "evidence": [
+            "R009 e R010: pareceres r3 e ressalvas históricas",
+            "A017: applicability e limits de s2.l1.app-session",
+            "A018: obrigações finais preservadas",
+            "A024: decisões novas exigidas para admissão"
+          ]
+        },
+        {
+          "id": "ADMIT-ISOLATED-PLAN",
+          "verdict": "PASS",
+          "reason": "O plano delimita casos, modos e orçamento persistente sem conceder autoridade operacional à entry. O setup efetivo fixa candidato, plano, obrigações e geração; os caminhos examinados preservam a fase evaluation. Os resultados dos consumidores e da manutenção continuam fora deste PASS.",
+          "evidence": [
+            "A017 e A031–A054",
+            "B001–B013",
+            "B015, B016, B018 e B019",
+            "E002 e F04"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "s2.l1.design-tui",
+      "contract": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "result": "7baaa859ebb117874e48253430260b915f4a711a26764d694039de68fba7b031",
+      "inputs": "6ecb0462e50fc590111e063dbb13d6bbf42a0fcff0c61a2e4f0f01a4174d5778",
+      "criteria": [
+        {
+          "id": "ADMIT-EXACT-TRANSFORM",
+          "verdict": "PASS",
+          "reason": "O corpo referido de 36964 bytes, os metadados e o resultado permanecem associados à mesma entry e aos mesmos inputs. Não foram acrescentadas arestas de construção ou navegação. A reconciliação registrada verifica preservação de campos e bytes, sem usar somente igualdade de IDs.",
+          "evidence": [
+            "A020, A021 e A022",
+            "A023 e A025",
+            "A080 e A081",
+            "A087"
+          ]
+        },
+        {
+          "id": "ADMIT-SOURCE-BINDINGS",
+          "verdict": "HOLD",
+          "reason": "Os vínculos específicos de design-tui não removem a deficiência compartilhada F02: o coletor e a checagem corrente omitem uma dependência efetivamente executada. Os snapshots externos de prepare03 não estabelecem a recusa dessa alteração em todos os caminhos suportados que podem usar a identidade.",
+          "evidence": [
+            "A019, A020 e A022",
+            "A030, A034 e A056",
+            "A069, A077 e A081",
+            "F02 e M01"
+          ]
+        },
+        {
+          "id": "ADMIT-SEMANTIC-SCOPE",
+          "verdict": "PASS",
+          "reason": "Os pareceres históricos aplicáveis de R007 e R008 sustentam a unidade design-tui aceita, com limites de plugins, lifecycle e evidência de testes preservados. Decisões relativas a outras unidades ou escopos globais não são convertidas em votos sobre esta entry. A017 mantém a aplicabilidade exata.",
+          "evidence": [
+            "R007 e R008: escopos e decisões por unidade",
+            "A017: applicability e limits de s2.l1.design-tui",
+            "A018",
+            "A024"
+          ]
+        },
+        {
+          "id": "ADMIT-ISOLATED-PLAN",
+          "verdict": "PASS",
+          "reason": "A autoridade de avaliação e as políticas examinadas mantêm esta entry dentro do plano finito, com leitura limitada por caso e recusa dos caminhos operacionais incompatíveis. A política atual permite somente admit. A deficiência comum de implementação permanece separadamente bloqueante em ADMIT-SOURCE-BINDINGS.",
+          "evidence": [
+            "A017 e A031–A054",
+            "B008–B013",
+            "E002",
+            "F04"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "contract": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "result": "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c",
+      "inputs": "b1d7bc1e201e7ae4db16cd34520d505b5823dcf707755bab22ea482b91283fdb",
+      "criteria": [
+        {
+          "id": "ADMIT-EXACT-TRANSFORM",
+          "verdict": "PASS",
+          "reason": "A transformação conserva o corpo de 18440 bytes, os metadados e a dependência de construção sobre o resultado L1 desktop-web. Os dois links de navegação entre pares L2 permanecem distintos da dependência de construção. Inputs, sua ordem e inputs_id são preservados pela reconciliação apresentada.",
+          "evidence": [
+            "A020: dependência, navegação e inputs da entry",
+            "A021 e A022",
+            "A023, A025, A080 e A081",
+            "A087"
+          ]
+        },
+        {
+          "id": "ADMIT-SOURCE-BINDINGS",
+          "verdict": "HOLD",
+          "reason": "A associação ao predecessor e às fontes está documentada, mas o vínculo de implementação utilizado para formar e verificar essas identidades permanece incompleto conforme F02. O controle externo observado não supre a ausência de recusa obrigatória para drift da dependência executada omitida.",
+          "evidence": [
+            "A019, A020 e A022",
+            "A030, A034 e A056",
+            "A069–A077 e A081",
+            "F02 e M01"
+          ]
+        },
+        {
+          "id": "ADMIT-SEMANTIC-SCOPE",
+          "verdict": "PASS",
+          "reason": "R011 e R012 cobrem a unidade L2 desktop-web aceita e suas dependências declaradas. A017 restringe o reaproveitamento ao corpo e resultado inalterados; os pareceres não são apresentados como execução dos consumidores I2 nem como cumprimento das obrigações operacionais.",
+          "evidence": [
+            "R011 e R012: decisões L2",
+            "A017: applicability e limits de s2.l2.desktop-web",
+            "A018",
+            "A024"
+          ]
+        },
+        {
+          "id": "ADMIT-ISOLATED-PLAN",
+          "verdict": "PASS",
+          "reason": "Os vínculos de fase e política alcançam esta entry e sua dependência sem promoção para autoridade operacional. O plano define a população e os limites dos consumidores, e mantém S2-U1 pendente de plano alvo distinto. O setup comprovado não é tratado como publicação.",
+          "evidence": [
+            "A017, A018 e A031–A054",
+            "B001–B013",
+            "E002",
+            "F04"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "s2.l2.app-session",
+      "contract": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "result": "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5",
+      "inputs": "a536cac3cee463e780083cef85e1393a0bbb6a0b7dd6335ddd5b214b936514fd",
+      "criteria": [
+        {
+          "id": "ADMIT-EXACT-TRANSFORM",
+          "verdict": "PASS",
+          "reason": "A entry preserva o corpo de 24434 bytes, o resultado e a dependência do resultado L1 app-session. Os dois links de navegação L2 permanecem navegação. O mapeamento completo de campos e a reconciliação registrada sustentam a preservação dos inputs e metadados.",
+          "evidence": [
+            "A020, A021 e A022",
+            "A023 e A025",
+            "A080 e A081",
+            "A087"
+          ]
+        },
+        {
+          "id": "ADMIT-SOURCE-BINDINGS",
+          "verdict": "HOLD",
+          "reason": "Há evidência de associação e estabilidade dos inputs observados, porém F02 permanece aplicável a esta entry e ao seu predecessor. O runtime verifica o universo declarado de implementação sem incluir @noble/hashes; usar o recorder externo continua sendo escolha do chamador.",
+          "evidence": [
+            "A019, A020 e A022",
+            "A030 e A034",
+            "A069, A077, A081 e B014",
+            "F02 e M01"
+          ]
+        },
+        {
+          "id": "ADMIT-SEMANTIC-SCOPE",
+          "verdict": "PASS",
+          "reason": "Os dois pareceres L2 apresentados cobrem app-session no corpo aceito, e o plano explicita sua correspondência ao resultado original. A evidência histórica é suficiente para essa aplicabilidade delimitada; os consumidores, os efeitos de alterações e a aceitação final continuam sem PASS.",
+          "evidence": [
+            "R011 e R012",
+            "A017: applicability e limits de s2.l2.app-session",
+            "A018",
+            "A024"
+          ]
+        },
+        {
+          "id": "ADMIT-ISOLATED-PLAN",
+          "verdict": "PASS",
+          "reason": "A separação entre avaliação e operação é mantida pelos contratos, marker, políticas e portas examinados. O orçamento é persistente por caso e modo, e a ponte prevista preserva consultas e respostas originais. Nenhuma execução futura é inferida desse código preparado.",
+          "evidence": [
+            "A017 e A031–A054",
+            "B008–B016",
+            "E001 e E002",
+            "F04 e F05"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "contract": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "result": "1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664",
+      "inputs": "d8a7e9c1498969e5cd4a811372368fb7708b6b3bc638c55954b67095f3dff46d",
+      "criteria": [
+        {
+          "id": "ADMIT-EXACT-TRANSFORM",
+          "verdict": "PASS",
+          "reason": "O corpo de 21535 bytes, o resultado, os metadados e a dependência L1 design-tui permanecem preservados. Os dois links L2 não foram convertidos em dependências. A verificação registrada compara os campos completos e a ordenação dos inputs, além dos IDs.",
+          "evidence": [
+            "A020, A021 e A022",
+            "A023 e A025",
+            "A080 e A081",
+            "A087"
+          ]
+        },
+        {
+          "id": "ADMIT-SOURCE-BINDINGS",
+          "verdict": "HOLD",
+          "reason": "O vínculo específico com fontes e predecessor é apresentado, mas o código de identidade comum continua afetado por F02. A prova de estabilidade externa da execução prepare03 não estabelece que uma alteração da dependência omitida será recusada pelos chamadores diretos suportados.",
+          "evidence": [
+            "A019, A020 e A022",
+            "A030, A034 e A056",
+            "A069–A077 e A081",
+            "F02 e M01"
+          ]
+        },
+        {
+          "id": "ADMIT-SEMANTIC-SCOPE",
+          "verdict": "PASS",
+          "reason": "R011 e R012 sustentam a unidade L2 design-tui na versão aceita. A correspondência ao corpo e resultado original e os limites de reutilização são explícitos em A017. Nenhuma conclusão sobre uso efetivo por consumidores ou manutenção foi transportada como aprovação.",
+          "evidence": [
+            "R011 e R012",
+            "A017: applicability e limits de s2.l2.design-tui",
+            "A018",
+            "A024"
+          ]
+        },
+        {
+          "id": "ADMIT-ISOLATED-PLAN",
+          "verdict": "PASS",
+          "reason": "A entry está submetida ao mesmo contexto de avaliação e às verificações de fase, estado, publicação e leitura delimitadas em F04. O setup efetivo é compatível com a sequência emendada, e a manutenção permanece excluída da política inicial.",
+          "evidence": [
+            "A017, A018 e A031–A054",
+            "B001–B013",
+            "E002",
+            "F04"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "s2.l3.desktop-web",
+      "contract": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "result": "ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1",
+      "inputs": "cd18c6f0d1de3b328bba07d9b2085a79ccf80ab74c48de948ce3367470e154a8",
+      "criteria": [
+        {
+          "id": "ADMIT-EXACT-TRANSFORM",
+          "verdict": "PASS",
+          "reason": "O corpo de 14715 bytes e seus metadados permanecem associados às três dependências L2 por resultado, sem navegação acrescentada. A transformação mantém a distinção entre identidade de inputs, resultados predecessores e o novo contrato de admissão.",
+          "evidence": [
+            "A020: três dependências e navegação da entry",
+            "A021 e A022",
+            "A023, A025, A080 e A081",
+            "A087"
+          ]
+        },
+        {
+          "id": "ADMIT-SOURCE-BINDINGS",
+          "verdict": "HOLD",
+          "reason": "As fontes e as três dependências são rastreáveis, mas a cadeia de identidade comum depende de @noble/hashes fora do universo intrínseco conferido. F02 permanece bloqueante: o guard externo não é imposto aos caminhos diretos de execução.",
+          "evidence": [
+            "A019, A020 e A022",
+            "A030, A034 e A056",
+            "A069, A077 e A081",
+            "F02 e M01"
+          ]
+        },
+        {
+          "id": "ADMIT-SEMANTIC-SCOPE",
+          "verdict": "PASS",
+          "reason": "R013 e R014 aceitam a unidade L3 desktop-web no corpo aplicável. O FIX-FIRST registrado para outra unidade L3 não é transferido a esta, nem apagado. A017 preserva a correspondência exata e mantém separadas as obrigações de consumidores e execução.",
+          "evidence": [
+            "R013 e R014: decisões por unidade L3",
+            "A017: applicability e limits de s2.l3.desktop-web",
+            "A018",
+            "A024"
+          ]
+        },
+        {
+          "id": "ADMIT-ISOLATED-PLAN",
+          "verdict": "PASS",
+          "reason": "O plano e o leitor examinado exigem o contexto de avaliação e a consistência das entries requeridas, conservando as dependências desta unidade dentro desse contexto. Os mecanismos de fase e política não convertem a avaliação em operação aceita.",
+          "evidence": [
+            "A017, A031, A034, A036 e A053",
+            "A037–A050: demais portas de estado e publicação",
+            "B001–B013",
+            "F04"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "s2.l3.app-session",
+      "contract": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "result": "95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0",
+      "inputs": "c6680c649a4a1caa6d5ee70ab00b389d339de1ef35c2134aaa3b2196f9446b96",
+      "criteria": [
+        {
+          "id": "ADMIT-EXACT-TRANSFORM",
+          "verdict": "PASS",
+          "reason": "O mapeamento preserva o corpo de 14334 bytes, as três dependências L2 e a dependência adicional L1 app-session, mantendo os dois links de navegação L3. A reconciliação registrada cobre o resultado completo e os inputs ordenados da entry.",
+          "evidence": [
+            "A020: quatro dependências e navegação",
+            "A021 e A022",
+            "A023, A025, A080 e A081",
+            "A087"
+          ]
+        },
+        {
+          "id": "ADMIT-SOURCE-BINDINGS",
+          "verdict": "HOLD",
+          "reason": "As associações de fontes e predecessores são apresentadas, mas dependem da implementação comum cuja vinculação tem a lacuna F02. A estabilidade observada em prepare03 não impede que o universo intrínseco permaneça igual após mudança dos bytes omitidos de @noble/hashes.",
+          "evidence": [
+            "A019, A020 e A022",
+            "A030, A034 e A056",
+            "A069–A077 e A081",
+            "F02 e M01"
+          ]
+        },
+        {
+          "id": "ADMIT-SEMANTIC-SCOPE",
+          "verdict": "PASS",
+          "reason": "Os pareceres R013 e R014 aplicáveis a L3 app-session estão preservados integralmente. A017 vincula sua reutilização à versão aceita e mantém as ressalvas sobre evidência operacional e consumidores. Não há substituição dos novos julgamentos de admissão por esses pareceres.",
+          "evidence": [
+            "R013 e R014",
+            "A017: applicability e limits de s2.l3.app-session",
+            "A018",
+            "A024"
+          ]
+        },
+        {
+          "id": "ADMIT-ISOLATED-PLAN",
+          "verdict": "PASS",
+          "reason": "A entry e suas dependências permanecem sob o contexto de avaliação verificado, com autorização explícita e leitura limitada por caso. A configuração inicial não autoriza manutenção nem promoção de fase. Os consumidores preparados continuam sem execução atribuída.",
+          "evidence": [
+            "A017 e A031–A054",
+            "B001–B016 e B018",
+            "E002",
+            "F04"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "contract": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "result": "3f77baa25cad0ef21847bff3f325478dba06f69c23dae9094c6ee02e83c2d509",
+      "inputs": "eab1aa549bb255d19fe6dee6fec301c67998c65523c2987043b324e1a0e76ac4",
+      "criteria": [
+        {
+          "id": "ADMIT-EXACT-TRANSFORM",
+          "verdict": "PASS",
+          "reason": "A transformação usa o corpo corrigido aceito de 15780 bytes e preserva suas três dependências L2, dois links de navegação e metadados. O resultado mapeado corresponde à versão corrigida, sem reutilizar a identidade do corpo anterior que recebeu FIX-FIRST.",
+          "evidence": [
+            "A020, A021 e A022",
+            "R015 e R016: identificação da versão corrigida",
+            "A023, A025, A080 e A081",
+            "A087"
+          ]
+        },
+        {
+          "id": "ADMIT-SOURCE-BINDINGS",
+          "verdict": "HOLD",
+          "reason": "A correção semântica e a associação às fontes não resolvem o vínculo incompleto da implementação comum. A030 e A034 não cobrem @noble/hashes, e os próprios registros declaram que o controle externo pode ser contornado por outros chamadores suportados.",
+          "evidence": [
+            "A019, A020 e A022",
+            "A030, A034, A069 e A077",
+            "A081 e E001",
+            "F02 e M01"
+          ]
+        },
+        {
+          "id": "ADMIT-SEMANTIC-SCOPE",
+          "verdict": "PASS",
+          "reason": "A decisão se apoia em R015 e R016 para o corpo corrigido, incluindo a correção de localização e cópia tipada. O FIX-FIRST anterior de R013/R014 permanece histórico e não é convertido em aprovação. O alcance continua sem prova de consumidores efetivos.",
+          "evidence": [
+            "R013 e R014: FIX-FIRST da versão anterior",
+            "R015 e R016: decisões da versão corrigida",
+            "A017: applicability e limits de s2.l3.design-tui",
+            "A018 e A024"
+          ]
+        },
+        {
+          "id": "ADMIT-ISOLATED-PLAN",
+          "verdict": "PASS",
+          "reason": "O plano mantém a versão corrigida dentro do mesmo contexto limitado de avaliação, com política, geração e orçamento explícitos. A semântica histórica não confere autoridade de publicação operacional, e o runtime apresentado conserva essa separação de fase.",
+          "evidence": [
+            "A017 e A031–A054",
+            "B001–B013",
+            "E002",
+            "F04"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "s2.l4.desktop-web",
+      "contract": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "result": "26ba4e10f4ead5c9443b7d9804b7b7c8aa9d7166350e08f3453748e0695a3199",
+      "inputs": "23a6829e9fa51658580b4238afdb295d627617b5eacbfc3c003b81044c9f025a",
+      "criteria": [
+        {
+          "id": "ADMIT-EXACT-TRANSFORM",
+          "verdict": "PASS",
+          "reason": "A entry conserva o corpo de 11183 bytes, as dependências L1 desktop-web e L3 desktop-web e os dois links de navegação L4. Os metadados e inputs_id permanecem preservados no mapeamento e na reconciliação registrada.",
+          "evidence": [
+            "A020: duas dependências e navegação",
+            "A021 e A022",
+            "A023, A025, A080 e A081",
+            "A087"
+          ]
+        },
+        {
+          "id": "ADMIT-SOURCE-BINDINGS",
+          "verdict": "HOLD",
+          "reason": "A entry possui associação explícita às fontes e resultados predecessores, mas usa a mesma implementação de identidade afetada por F02. Os controles externos observados não estabelecem recusa obrigatória da alteração da dependência executada omitida.",
+          "evidence": [
+            "A019, A020 e A022",
+            "A030, A034 e A056",
+            "A069, A077 e A081",
+            "F02 e M01"
+          ]
+        },
+        {
+          "id": "ADMIT-SEMANTIC-SCOPE",
+          "verdict": "PASS",
+          "reason": "R017 e R018 aceitam o guia L4 desktop-web em sua versão aplicável. A017 preserva a correspondência ao corpo e resultado sem acrescentar conclusão de execução ou consumo. O FIX-FIRST da antiga entry de entrada é uma decisão sobre outra unidade.",
+          "evidence": [
+            "R017 e R018: decisões por unidade L4",
+            "A017: applicability e limits de s2.l4.desktop-web",
+            "A018",
+            "A024"
+          ]
+        },
+        {
+          "id": "ADMIT-ISOLATED-PLAN",
+          "verdict": "PASS",
+          "reason": "O guia L4 não recebe autoridade operacional por sua posição no grafo. Contratos, políticas e verificações de leitura mantêm sua fase evaluation e seus vínculos exatos; o plano finito e a manutenção posterior permanecem delimitados conforme F04.",
+          "evidence": [
+            "A017, A018 e A031–A054",
+            "B001–B013",
+            "E002",
+            "F04"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "s2.l4.design-tui",
+      "contract": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "result": "7a0e27eedc2a116172417159aedfdddf428f2609db8b9104c55012a0926f6629",
+      "inputs": "fda86129d6a69aa98cbcebeac647168cb21509e112a643e0b08d7ec361a378cd",
+      "criteria": [
+        {
+          "id": "ADMIT-EXACT-TRANSFORM",
+          "verdict": "PASS",
+          "reason": "O corpo de 11783 bytes, as três dependências L3 e os três links de navegação permanecem preservados. A ordem de artifacts e a ordem de required_artifact_keys foram conservadas separadamente; sua diferença documentada não representa omissão desta entry.",
+          "evidence": [
+            "A020, A021 e A022",
+            "A025 e A026: regras de ordem e dependências",
+            "A080–A082: reconciliação e distinção das ordens",
+            "A087"
+          ]
+        },
+        {
+          "id": "ADMIT-SOURCE-BINDINGS",
+          "verdict": "HOLD",
+          "reason": "O mapeamento das fontes e dependências desta entry está disponível, mas a deficiência de vinculação da implementação compartilhada permanece. A evidência externa atual não impõe aos caminhos suportados a detecção de mudança de @noble/hashes exigida para encerrar F02.",
+          "evidence": [
+            "A019, A020 e A022",
+            "A030, A034 e A056",
+            "A069–A077 e A081",
+            "F02 e M01"
+          ]
+        },
+        {
+          "id": "ADMIT-SEMANTIC-SCOPE",
+          "verdict": "PASS",
+          "reason": "Os pareceres R017 e R018 sustentam o guia L4 design-tui no corpo aceito. O plano explicita o resultado original e limita a aplicabilidade histórica. Esse suporte não é convertido em conclusão sobre consumidores atuais ou sobre as obrigações operacionais originais.",
+          "evidence": [
+            "R017 e R018",
+            "A017: applicability e limits de s2.l4.design-tui",
+            "A018",
+            "A024"
+          ]
+        },
+        {
+          "id": "ADMIT-ISOLATED-PLAN",
+          "verdict": "PASS",
+          "reason": "A entry permanece na população fechada do candidato e no contexto de avaliação, com política explícita, limites persistentes e verificações dos leitores e escritores apresentados. O estado instalado não contém evidência de admissão, consumo ou manutenção já realizados.",
+          "evidence": [
+            "A017 e A031–A054",
+            "B002, B005 e B008–B013",
+            "E002",
+            "F04"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "s2.l4.app-session",
+      "contract": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "result": "8e0368888768de4c6c1e134e47cdc60d12f544fe311152bfb9f4621a264dac0a",
+      "inputs": "276c5511b37bbd0c908d930c25c37d945b23f98ce46c067c8e626b40c304832d",
+      "criteria": [
+        {
+          "id": "ADMIT-EXACT-TRANSFORM",
+          "verdict": "PASS",
+          "reason": "O corpo de 11220 bytes permanece associado às três dependências L3 e às dependências L2 app-session e L1 app-session, com três links de navegação. Os metadados completos, a ordem dos inputs e as identidades de resultado são preservados na reconciliação apresentada.",
+          "evidence": [
+            "A020: cinco dependências e navegação",
+            "A021 e A022",
+            "A023, A025, A080 e A081",
+            "A087"
+          ]
+        },
+        {
+          "id": "ADMIT-SOURCE-BINDINGS",
+          "verdict": "HOLD",
+          "reason": "A cadeia de fontes e predecessores é explicitada, mas depende do mesmo código de identidade com cobertura incompleta. F02 impede PASS porque os snapshots externos não estabelecem a recusa de drift da dependência omitida pelos caminhos diretos de execução.",
+          "evidence": [
+            "A019, A020 e A022",
+            "A030, A034 e A056",
+            "A069, A077, A081 e B014",
+            "F02 e M01"
+          ]
+        },
+        {
+          "id": "ADMIT-SEMANTIC-SCOPE",
+          "verdict": "PASS",
+          "reason": "R017 e R018 cobrem o guia L4 app-session aceito, e A017 fixa a aplicabilidade ao corpo e resultado inalterados. O alcance desses pareceres permanece histórico e semântico; não estabelece publicação, execução dos casos ou cumprimento final dos ACs.",
+          "evidence": [
+            "R017 e R018",
+            "A017: applicability e limits de s2.l4.app-session",
+            "A018",
+            "A024"
+          ]
+        },
+        {
+          "id": "ADMIT-ISOLATED-PLAN",
+          "verdict": "PASS",
+          "reason": "As dependências adicionais não ampliam a autoridade da entry. O contexto de avaliação, as políticas instaladas e os controles das portas preservam a separação de fase e os limites do plano inicial. A manutenção continua condicionada ao plano alvo e às decisões posteriores exigidas.",
+          "evidence": [
+            "A017, A018 e A031–A054",
+            "B001–B013",
+            "E002",
+            "F04"
+          ]
+        }
+      ]
+    },
+    {
+      "key": "s2.l4.entry",
+      "contract": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "result": "060600df54eb14bab6b17a278bd952afdb1b6bb8999e0dbe2d889d97401a7ff1",
+      "inputs": "16c85ef8321f4ea64b9670e6335d7272ae708397d37e7f990af1915342d8518f",
+      "criteria": [
+        {
+          "id": "ADMIT-EXACT-TRANSFORM",
+          "verdict": "PASS",
+          "reason": "A raiz usa o corpo corrigido aceito de 5849 bytes, preserva nove dependências de construção L1–L3 e doze links de navegação. A transformação não confunde alcance navegável com dependências de construção nem recupera a identidade do corpo anterior rejeitado.",
+          "evidence": [
+            "A020: raiz, nove dependências e doze links",
+            "A021 e A022",
+            "A023, A025, A080 e A081",
+            "A087"
+          ]
+        },
+        {
+          "id": "ADMIT-SOURCE-BINDINGS",
+          "verdict": "HOLD",
+          "reason": "O alcance completo da raiz e seus vínculos estão apresentados, mas a raiz utiliza a mesma implementação de identidade omitida parcialmente do controle intrínseco. A estabilidade de prepare03 não resolve a ausência de recusa obrigatória descrita em F02, aplicável às treze entries.",
+          "evidence": [
+            "A019, A020 e A022",
+            "A030, A034 e A056",
+            "A069–A077 e A081",
+            "F02 e M01"
+          ]
+        },
+        {
+          "id": "ADMIT-SEMANTIC-SCOPE",
+          "verdict": "PASS",
+          "reason": "R019 e R020 sustentam a entry corrigida, incluindo o encaminhamento ao proprietário S1 e a ausência de garantia indevida de exactly-once. O FIX-FIRST anterior de R017/R018 é preservado para o corpo antigo. A aplicabilidade não se estende a resultados ou execução futuros.",
+          "evidence": [
+            "R017 e R018: decisão sobre a entry anterior",
+            "R019 e R020: decisões sobre a entry corrigida",
+            "A017: applicability e limits de s2.l4.entry",
+            "A018 e A024"
+          ]
+        },
+        {
+          "id": "ADMIT-ISOLATED-PLAN",
+          "verdict": "PASS",
+          "reason": "A raiz permanece uma raiz de avaliação para o conjunto finito, sem transformar navegação em autorização operacional. Os leitores verificam o contexto e as entries requeridas; políticas e orçamento limitam os casos previstos. Esse isolamento não autoriza superar o HOLD comum de implementação.",
+          "evidence": [
+            "A017, A031, A034, A036 e A053",
+            "A037–A050",
+            "B001–B013 e E002",
+            "F04"
+          ]
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "F00",
+      "severity": "REVIEW_SCOPE",
+      "finding": "Recebi o FECHAMENTO DO PEDIDO ADMIT R1 e a repetição literal de A087. Este é o parecer final independente de /root/s2_j2 para o candidato indicado. Os ACKs anteriores eram somente recebimento e achados parciais. O resultado global é HOLD porque ADMIT-SOURCE-BINDINGS permanece HOLD nas treze entries.",
+      "evidence": [
+        "Mensagem de fechamento e sua ativação",
+        "A087 repetido no fechamento"
+      ]
+    },
+    {
+      "id": "F01",
+      "severity": "SUPPORTED",
+      "finding": "O material permite julgar a transformação exata sem atribuir ao juiz execução criptográfica. Foram apresentados os treze mapeamentos, objetos de resultado, associação ordenada de 818 inputs, 32 dependências, 30 links de navegação e 40 referências, junto do código decisivo e do verificador integral. A reconciliação registrada compara campos completos, corpos e serialização CAS; isso é relevante porque o ID canônico exclui recursivamente status, grounding e freshness. As 22752 comparações reportadas não são, por si, aprovação nem prova de ausência de lacunas de cobertura.",
+      "evidence": [
+        "A019–A029",
+        "A055 e A056",
+        "A080 e A081",
+        "A086, A087 e D006"
+      ]
+    },
+    {
+      "id": "F02",
+      "severity": "BLOCKER",
+      "applies_to": "ADMIT-SOURCE-BINDINGS de todas as treze entries",
+      "finding": "A dependência @noble/hashes é executada pelo código que produz e verifica identidades, mas seus bytes instalados não integram candidate.runtime_identity. A030 coleta a clausura declarada a partir dos manifests selecionados; A034 verifica esse mesmo universo. A069/A081 identificam a dependência omitida, e A077/B013/E001 declaram que outros chamadores do CLI podem ignorar o guard externo. Prepare03 fornece evidência nova e útil de estabilidade dos bytes observados naquela execução, inclusive noble e Bun; não estabelece a recusa obrigatória de uma alteração dessa implementação pelos caminhos suportados. Uma mudança nos bytes omitidos pode manter o universo runtime_identity igual, e o material não exclui uma implementação alterada que preserve os valores calculados na preparação. Essa é uma inferência do alcance do código apresentado, não resultado de um teste de mutação executado por mim. O impedimento não decorre de as tabelas uniformes terem sido omitidas nem de o controle ser denominado externo: decorre de faltar o vínculo efetivo entre mudança da dependência executada, recusa do uso corrente e nova identidade/revisão quando exigida. O lock de declaração e integridade esperado não equivale à checagem obrigatória dos bytes instalados.",
+      "evidence": [
+        "R001: regras de mudança de implementação e nova identidade/revisão",
+        "A030: evaluationRuntimeIdentity",
+        "A034: verificação corrente do candidato",
+        "A056: imports de @noble/hashes pelo encoder",
+        "A069–A077: cobertura, lock e execução prepare03",
+        "A080 e A081: gap material explicitamente não corrigido",
+        "B013 e B014: alcance externo dos controles",
+        "E001 e E002: limite de bypass preservado"
+      ]
+    },
+    {
+      "id": "F03",
+      "severity": "SUPPORTED_WITH_EXPLICIT_SCOPE",
+      "finding": "Os quatorze pareceres históricos integrais sustentam a aplicabilidade semântica das versões aceitas indicadas no plano. As versões corrigidas de L3 design-tui e L4 entry são tratadas por seus pareceres posteriores, preservando os FIX-FIRST anteriores. A exposição histórica do produtor de L1 app-session ao parecer público r2 continua sendo uma limitação registrada. Nenhum desses pareceres é um voto atual ADMIT. O requisito de dois novos julgamentos exatos permanece no mecanismo de binding; este parecer individual, com HOLD, não satisfaz esse gate nem afirma que ele já esteja cumprido.",
+      "evidence": [
+        "R007–R020",
+        "A017 e A018",
+        "A024"
+      ]
+    },
+    {
+      "id": "F04",
+      "severity": "SUPPORTED_WITH_SEPARATE_BLOCKER",
+      "finding": "ADMIT-ISOLATED-PLAN recebe PASS quanto à delimitação e separação de fase e estado demonstradas: autoridade de avaliação persistente; marker ligado ao root, plano, obrigações, candidato e geração; políticas explícitas; orçamento por caso; leitor limitado; controles de publicação, composição, replay, importação, exportação, link, memória e promoção. O código apresentado mantém a recusa dos caminhos operacionais incompatíveis. A emenda B001 precedeu o init e substituiu apenas a sequência operacional proposta. B002–B013 documentam init e instalação da política admit-only, sem admissão ou consumidores. O plano inicial de quatorze casos é finito; S2-U1 permanece obrigatório e condicionado a plano alvo distinto, sem ser marcado executado ou dispensado. Esse julgamento da separação de fase não resolve a deficiência de vinculação de implementação de F02, que continua impedindo a admissão global.",
+      "evidence": [
+        "A017 e A018",
+        "A031–A054, incluindo A044 corrigido",
+        "A057–A063",
+        "B001–B016",
+        "E002"
+      ]
+    },
+    {
+      "id": "F05",
+      "severity": "STATIC_CORRECTION_ACCEPTED",
+      "finding": "E002 corrige no código preparado o caminho concreto identificado em B017: reader-response.txt somente é criado após verificar consistência da captura, identidade da operação, wrapper e recorder, inventários antes/depois, códigos de saída e guard. A captura da admissão anterior também é exigida e fixada nos inputs da operação futura. Captura ausente ou malformada interrompe a ponte antes do encaminhamento; inconsistências enumeradas geram registro de recusa. Uma recusa real do CLI com captura consistente continua sendo encaminhada literalmente. Esta conclusão é de leitura estática; nenhuma das duas versões da ponte foi executada nos materiais apresentados, e a correção não fecha F02.",
+      "evidence": [
+        "B017: helper anterior preservado",
+        "A067: comportamento do wrapper",
+        "E001 e E002",
+        "E003 corrigido"
+      ]
+    },
+    {
+      "id": "F06",
+      "severity": "TEMPORAL_SCOPE",
+      "finding": "Prepare02 e prepare03 são execuções distintas com igualdade de prepared e stdout reportada e vinculada por registros explícitos. A cobertura externa do prepare03 vale para suas próprias observações; não é retroativa ao prepare02. A inicialização e a instalação de políticas são eventos posteriores com recibos próprios. Nenhum desses eventos estabelece admit, publicação, index/read, consumidor ou manutenção.",
+      "evidence": [
+        "A071–A077",
+        "B000–B013",
+        "D006"
+      ]
+    },
+    {
+      "id": "F07",
+      "severity": "CLARIFIED",
+      "finding": "D004 distingue a observação shell node --version v24.22.3 do prepare01 da execução do CLI por Bun e da observação posterior process.versions.node=24.3.0 nesse Bun. D005 distingue o manifesto observado com onze linhas da fórmula de dez linhas do verificador: a linha README é complemento documental externo, cuja autoria e chamada histórica não foram recuperadas. Não atribuo essa linha ao verificador nem trato a reconstrução de dez linhas como saída histórica recuperada. Essas clarificações delimitam a evidência; não corrigem a cobertura intrínseca de noble.",
+      "evidence": [
+        "A069, A080, A081, A083 e A084",
+        "D004 e D005"
+      ]
+    },
+    {
+      "id": "F08",
+      "severity": "LIMITED_REUSE",
+      "finding": "D002 e D003 apresentam o release e handoff primários de qualificação S4/R09 de preparação, com runtime, harness e commits documentais distintos. Seus PASS de qualificação e controles comuns não são decisões ADMIT sobre este candidato nem prova dos casos de domínio. Não imponho uma segunda qualificação S4 ou uma repetição geral de CI como condição adicional; o bloqueio deste parecer é o vínculo específico de implementação descrito em F02.",
+      "evidence": [
+        "A084 e A085",
+        "D001–D003"
+      ]
+    },
+    {
+      "id": "F09",
+      "severity": "TRANSPORT_SCOPE",
+      "finding": "As projeções e omissões são explícitas e julgáveis dentro dos limites declarados. Não considerei lidas as linhas uniformes arquivadas de versões, hashes, proveniência ou comparações. C001 permite classificar as duas ocorrências de import com reticências como texto de comentário, sem removê-las dos registros históricos do scanner e sem confundi-las com os imports efetivos de noble. As correções de A044, de B020 source.path e de E003 são aplicadas somente às representações corrigidas, preservando as tentativas anteriores.",
+      "evidence": [
+        "A086 e D006",
+        "C001",
+        "Retirada e retransmissão de A044",
+        "Errata de B020 source.path",
+        "Retirada e retransmissão integral de E003"
+      ]
+    }
+  ],
+  "limitations": [
+    "Não usei ferramentas, executei código, li arquivos externos ou recomputei hashes. Os comprimentos e digests de transporte são identidades declaradas; as verificações executadas são as registradas nos recibos e relatórios apresentados, cujo código pertinente foi examinado.",
+    "As projeções não permitem reconstruir autonomamente todas as tabelas omitidas sem os arquivos arquivados. Em particular, não alego leitura das 690 versões, 626 campos SHA, 925 valores de runtime_identity, 247 linhas uniformes noble ou 667 linhas uniformes de proveniência somente referenciadas.",
+    "A independência do verificador A080 é de reconstrução em relação à execução do mapeamento do runtime. Seu autor também materializou o plano; não lhe atribuo independência organizacional nem autoridade semântica ou de admissão.",
+    "Igualdade de IDs canônicos não basta para preservar todos os metadados. A avaliação de transformação considerou o código de comparação de campos completos, hashes de bytes e serialização CAS, sem inferir que o juiz executou essas comparações.",
+    "Prepare03 não altera a história do prepare02. Observações antes/depois e comparação posterior não demonstram ausência de corridas, não impedem ou desfazem efeitos já realizados e não autenticam o administrador do filesystem.",
+    "B001 altera apenas a sequência operacional proposta. B002–B013 demonstram setup; não demonstram admissão. Identidade nominal do ator, identidade declarada do consumidor e geração não são autenticação criptográfica.",
+    "B017 permanece histórico e NOT_RUN. E002, SHA-256 955031da137d2052e333d495096a660369246b9ed92707f1e72745d729a252e5, é a versão preparada aplicável somente a operações futuras e também permanece NOT_RUN. Seu código não integrou retroativamente o guard de prepare03.",
+    "A primeira representação A044 retirada não é a fonte vigente. Para B020 vale o source.path corrigido para dispatch-admit-r1. A primeira representação incompleta de E003 não é uma íntegra sob o hash declarado; vale a retransmissão corrigida. Não atribuo a esses acertos qualquer execução nova.",
+    "A existência de quatorze pacotes preparados não prova criação de agentes, isolamento de contexto efetivamente realizado, consultas ou respostas. As execuções futuras precisarão de seus próprios registros originais e aplicação dos limites persistentes.",
+    "S2-U1 continua obrigatório e não executado. A aceitação da delimitação inicial não substitui seu plano alvo concreto, receita, efeitos esperados, recuperação, nova evidência semântica e novos julgamentos exigidos antes da manutenção.",
+    "AC-01, AC-02, AC-03, AC-04, AC-05, AC-06, AC-07, AC-08, AC-09, AC-10 e runtime-import-binding permanecem PENDING_FINAL_EVIDENCE. O HOLD V1 anterior permanece integralmente preservado. Nenhum PASS parcial deste parecer é promoção operacional, aprovação de consumidor, manutenção, release de domínio ou campanha.",
+    "Nenhuma opinião atual do outro juiz foi usada. Este parecer não pode ser convertido em all-PASS, completar o par de aprovações exigido ou ser transplantado para outro candidato, resultado, contrato ou conjunto de inputs."
+  ],
+  "missing_or_unreadable": [
+    {
+      "id": "M01",
+      "type": "BLOCKING_REQUIRED_INVARIANT_NOT_ESTABLISHED",
+      "criterion": "ADMIT-SOURCE-BINDINGS",
+      "applies_to": "Todas as treze entries listadas neste parecer",
+      "transport_status": "Não é falta de uma tabela uniforme nem fragmento ilegível; o material apresentado explicita a lacuna.",
+      "missing": "Evidência de vinculação efetiva e recusa de mudança dos bytes instalados de @noble/hashes nos caminhos suportados que executam o código de identidade ou usam a admissão e leitura de avaliação. O guard externo apresentado é opcional para os demais chamadores do CLI e não estabelece esse invariante.",
+      "request": [
+        "Apresentar a fonte literal do mecanismo que inclua a dependência efetivamente executada na identidade verificada, ou de um controle externo obrigatório nos caminhos suportados, com o encadeamento de chamadas que demonstre onde a divergência é recusada antes de usar a autoridade ou servir a leitura.",
+        "Apresentar evidência focal correspondente de que uma mudança desses bytes instalados é detectada e recusada pelo caminho suportado, sem depender de o operador escolher o wrapper opcional. Não é solicitado rerun geral de CI ou execução antecipada dos consumidores.",
+        "Se o atendimento exigir alteração do coletor, runtime, plano ou outro material vinculado, apresentar o novo prepared, candidato, recibo de preparação e tabela exata das treze bindings para novos julgamentos. Não conservar artificialmente a identidade atual nem transplantar votos para a revisão alterada."
+      ],
+      "insufficient_substitutes": [
+        "Reapresentar somente os hashes ou totais das tabelas já arquivadas.",
+        "Atribuir retroativamente o guard do prepare03 ao prepare02.",
+        "Declarar intenção de usar a ponte externa como se ela já fosse requisito dos caminhos diretos suportados.",
+        "Tratar o lock de pacote, a reconciliação pós-execução, o PASS S4 ou a contagem de comparações como recusa intrínseca de drift."
+      ]
+    }
+  ]
+}

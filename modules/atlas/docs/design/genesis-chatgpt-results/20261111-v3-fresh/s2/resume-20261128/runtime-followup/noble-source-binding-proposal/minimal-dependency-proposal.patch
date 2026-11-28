@@ -1,0 +1,26 @@
+diff --git a/modules/atlas/packages/kernel/package.json b/modules/atlas/packages/kernel/package.json
+--- a/modules/atlas/packages/kernel/package.json
++++ b/modules/atlas/packages/kernel/package.json
+@@ -12,7 +12,8 @@
+     }
+   },
+   "dependencies": {
+-    "@atlas/contracts": "*"
++    "@atlas/contracts": "*",
++    "@noble/hashes": "^1.8.0"
+   },
+   "scripts": {
+     "build": "tsc -b",
+diff --git a/modules/atlas/package-lock.json b/modules/atlas/package-lock.json
+--- a/modules/atlas/package-lock.json
++++ b/modules/atlas/package-lock.json
+@@ -2702,7 +2702,8 @@
+       "name": "@atlas/kernel",
+       "version": "0.0.0",
+       "dependencies": {
+-        "@atlas/contracts": "*"
++        "@atlas/contracts": "*",
++        "@noble/hashes": "^1.8.0"
+       }
+     },
+     "packages/knowledge": {

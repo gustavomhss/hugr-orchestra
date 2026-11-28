@@ -1,0 +1,22 @@
+{
+  "label": "release-kernel",
+  "path": "modules/atlas/packages/kernel/package.json",
+  "ref": "e171783482d0a44974d6056cd9e144a7e33406a7",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "{\n  \"name\": \"@atlas/kernel\",\n  \"version\": \"0.0.0\",\n  \"private\": true,\n  \"type\": \"module\",\n  \"main\": \"./dist/src/index.js\",\n  \"types\": \"./dist/src/index.d.ts\",\n  \"exports\": {\n    \".\": {\n      \"types\": \"./dist/src/index.d.ts\",\n      \"default\": \"./dist/src/index.js\"\n    }\n  },\n  \"dependencies\": {\n    \"@atlas/contracts\": \"*\"\n  },\n  \"scripts\": {\n    \"build\": \"tsc -b\",\n    \"typecheck\": \"tsc -b\"\n  }\n}\n",
+      "encoding": "utf-8",
+      "sha": "1799fc90de0718d074ea15e054ab3d4ea280e213",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/e171783482d0a44974d6056cd9e144a7e33406a7/modules/atlas/packages/kernel/package.json",
+      "display_title": "package.json"
+    },
+    "isError": false
+  }
+}
+

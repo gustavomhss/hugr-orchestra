@@ -1,0 +1,467 @@
+{
+  "status": "fulfilled",
+  "value": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "repository_full_name": "gustavomhss/hugr-orchestra",
+      "base": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "head": "e171783482d0a44974d6056cd9e144a7e33406a7",
+      "status": "ahead",
+      "ahead_by": 5,
+      "behind_by": 0,
+      "total_commits": 5,
+      "too_large": null,
+      "base_commit": {
+        "sha": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+        "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/commits/db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/commit/db9b4235022c4df32fe3bfd4faeea8adcd69abb7"
+      },
+      "merge_base_commit": {
+        "sha": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+        "url": "https://api.github.com/repos/gustavomhss/hugr-orchestra/commits/db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+        "html_url": "https://github.com/gustavomhss/hugr-orchestra/commit/db9b4235022c4df32fe3bfd4faeea8adcd69abb7"
+      },
+      "files": [
+        {
+          "filename": ".github/workflows/genesis-runtime-qualification.yml",
+          "status": "added",
+          "additions": 116,
+          "deletions": 0,
+          "changes": 116,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/S4-RUNTIME.md",
+          "status": "added",
+          "additions": 28,
+          "deletions": 0,
+          "changes": 28,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/README.md",
+          "status": "added",
+          "additions": 199,
+          "deletions": 0,
+          "changes": 199,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/attempt-1/guards/guards.log",
+          "status": "added",
+          "additions": 10,
+          "deletions": 0,
+          "changes": 10,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/attempt-1/guards/receipt.json",
+          "status": "added",
+          "additions": 16,
+          "deletions": 0,
+          "changes": 16,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/attempt-1/prepare.zip",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0,
+          "changes": 0,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/attempt-1/summary.json",
+          "status": "added",
+          "additions": 149,
+          "deletions": 0,
+          "changes": 149,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/common-ci.capture.json",
+          "status": "added",
+          "additions": 40,
+          "deletions": 0,
+          "changes": 40,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/common-ci.log",
+          "status": "added",
+          "additions": 1181,
+          "deletions": 0,
+          "changes": 1181,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/common-controls-excerpts.md",
+          "status": "added",
+          "additions": 163,
+          "deletions": 0,
+          "changes": 163,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/harness-correction.json",
+          "status": "added",
+          "additions": 32,
+          "deletions": 0,
+          "changes": 32,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/input-capture.json",
+          "status": "added",
+          "additions": 434,
+          "deletions": 0,
+          "changes": 434,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/manifest-reference-audit.json",
+          "status": "added",
+          "additions": 165,
+          "deletions": 0,
+          "changes": 165,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/reused-ci.json",
+          "status": "added",
+          "additions": 454,
+          "deletions": 0,
+          "changes": 454,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46114652347/actions-metadata.json",
+          "status": "added",
+          "additions": 238,
+          "deletions": 0,
+          "changes": 238,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46114652347/audit-api.json",
+          "status": "added",
+          "additions": 486,
+          "deletions": 0,
+          "changes": 486,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46114652347/audit-final-evidence.json",
+          "status": "added",
+          "additions": 240,
+          "deletions": 0,
+          "changes": 240,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46114652347/audit_s4_final_evidence.py",
+          "status": "added",
+          "additions": 229,
+          "deletions": 0,
+          "changes": 229,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46114652347/evidence-index.json",
+          "status": "added",
+          "additions": 117,
+          "deletions": 0,
+          "changes": 117,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46114652347/guards.zip",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0,
+          "changes": 0,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46114652347/guards/guards.log",
+          "status": "added",
+          "additions": 12,
+          "deletions": 0,
+          "changes": 12,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46114652347/guards/receipt.json",
+          "status": "added",
+          "additions": 16,
+          "deletions": 0,
+          "changes": 16,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46114652347/prepare.zip",
+          "status": "added",
+          "additions": 0,
+          "deletions": 0,
+          "changes": 0,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46114652347/s1-03/receipt.json",
+          "status": "added",
+          "additions": 48,
+          "deletions": 0,
+          "changes": 48,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46114652347/s2-permission-refusal/receipt.json",
+          "status": "added",
+          "additions": 44,
+          "deletions": 0,
+          "changes": 44,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46114652347/s2-permission-refusal/stderr.txt",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0,
+          "changes": 1,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46114652347/s2/receipt.json",
+          "status": "added",
+          "additions": 48,
+          "deletions": 0,
+          "changes": 48,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46114652347/summary.json",
+          "status": "added",
+          "additions": 230,
+          "deletions": 0,
+          "changes": 230,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/runtime-audit.json",
+          "status": "added",
+          "additions": 240,
+          "deletions": 0,
+          "changes": 240,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/execution-ledger.jsonl",
+          "status": "added",
+          "additions": 14,
+          "deletions": 0,
+          "changes": 14,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/handoff.json",
+          "status": "added",
+          "additions": 671,
+          "deletions": 0,
+          "changes": 671,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/input-lock.json",
+          "status": "added",
+          "additions": 15525,
+          "deletions": 0,
+          "changes": 15525,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/acceptance.json",
+          "status": "added",
+          "additions": 175,
+          "deletions": 0,
+          "changes": 175,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/acknowledgements.json",
+          "status": "added",
+          "additions": 35,
+          "deletions": 0,
+          "changes": 35,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j1-bootstrap-request.txt",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0,
+          "changes": 1,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j1-reassessment-request.txt",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0,
+          "changes": 1,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j1-response-1.json",
+          "status": "added",
+          "additions": 106,
+          "deletions": 0,
+          "changes": 106,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j1-response-2.json",
+          "status": "added",
+          "additions": 122,
+          "deletions": 0,
+          "changes": 122,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j1-response-3.json",
+          "status": "added",
+          "additions": 112,
+          "deletions": 0,
+          "changes": 112,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j2-bootstrap-request.txt",
+          "status": "added",
+          "additions": 1,
+          "deletions": 0,
+          "changes": 1,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j2-response-1.json",
+          "status": "added",
+          "additions": 118,
+          "deletions": 0,
+          "changes": 118,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/j2-response-2.json",
+          "status": "added",
+          "additions": 115,
+          "deletions": 0,
+          "changes": 115,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/manifest-before-path-correction.json",
+          "status": "added",
+          "additions": 422,
+          "deletions": 0,
+          "changes": 422,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/path-correction-request.txt",
+          "status": "added",
+          "additions": 13,
+          "deletions": 0,
+          "changes": 13,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/request-part-1.txt",
+          "status": "added",
+          "additions": 425,
+          "deletions": 0,
+          "changes": 425,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/request-part-2.txt",
+          "status": "added",
+          "additions": 202,
+          "deletions": 0,
+          "changes": 202,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/request-part-3.txt",
+          "status": "added",
+          "additions": 392,
+          "deletions": 0,
+          "changes": 392,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/review-packet-final.txt",
+          "status": "added",
+          "additions": 1035,
+          "deletions": 0,
+          "changes": 1035,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/judgments/review-packet.txt",
+          "status": "added",
+          "additions": 1021,
+          "deletions": 0,
+          "changes": 1021,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/qualification-plan.json",
+          "status": "added",
+          "additions": 127,
+          "deletions": 0,
+          "changes": 127,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/qualification.py",
+          "status": "added",
+          "additions": 460,
+          "deletions": 0,
+          "changes": 460,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/work.md",
+          "status": "added",
+          "additions": 84,
+          "deletions": 0,
+          "changes": 84,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+          "status": "modified",
+          "additions": 345,
+          "deletions": 415,
+          "changes": 760,
+          "previous_filename": null
+        },
+        {
+          "filename": "modules/atlas/docs/design/genesis-native-runtime.md",
+          "status": "modified",
+          "additions": 12,
+          "deletions": 7,
+          "changes": 19,
+          "previous_filename": null
+        }
+      ]
+    },
+    "isError": false
+  }
+}
+

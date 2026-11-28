@@ -1,0 +1,22 @@
+{
+  "label": "protocol-s2",
+  "path": ".orchestra/skills/execute-genesis/references/fatia-2.md",
+  "ref": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "# S2 — Interfaces: desktop, web, app-shell, UI e TUI\n\n## Sua identidade\n\nVocê é a orquestradora **S2** em uma conversa nova. Branch `genesis-fresh-s2`;\nnamespace `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/`. Fonte `1cde2ff7a71bcf7aecb5d030917b577165135d38`;\nprotocolo `parallel-v3-fresh`. Não selecionar outro domínio nem herdar papel de conversa antiga.\n\nSua população é de **4506 entradas Git**, hash de caminhos\n`8b70f96dcbb623bdd1cc2a48b61d51d255d9d9ce90836efc9a5cd05f1fc5a582`. O [mapa exato](parallel-partition.json) decide ownership;\nesta descrição não substitui suas regras. As outras quatro fatias não são pré-requisitos de início.\n\n## Missão concreta\n\nComponentes principais: apps/desktop, web, storybook; packages/app-shell, ui, session-ui, tui; assets, temas, traduções, schemas e documentação atribuídos.\n\nNecessidades de entendimento: Fluxos de interação, estado da interface, composição de sessão, transporte/API, acessibilidade, tematização, i18n, desktop lifecycle e fronteiras com o backend.\n\n- Mapear jornadas do usuário e vínculo entre estado, componentes, contratos de backend e persistência.\n- Classificar assets/fixtures/i18n por família e fonte/gerador, mantendo todos os caminhos contabilizados sem documentos repetidos.\n- Produzir orientação de manutenção da UI/desktop/TUI, regressões pertinentes e diagnósticos de falhas observáveis.\n\n## Organizar a produção\n\nPreparar a primeira unidade finita com necessidade, fontes, output, dependências e\ncritério; congelar seu oracle independente antes de enviar ao produtor. Delegar\nessa produção real enquanto refina o restante do inventário. Cobrir toda a população\nna união, sem exigir o inventário semântico inteiro antes do primeiro L1 útil.\n\nL1: base verificável e limites. L2: explicações locais fundamentadas. L3: relações,\ncontratos e impactos. L4: skills/docs de ownership e manutenção que permitem agir.\nNão produzir quatro documentos por arquivo. Cada artefato deve responder uma necessidade.\n\nLer o código de vizinhos no baseline para entender fronteiras. Alteração necessária\nfora de sua propriedade segue proposta ao dono; não criar edição concorrente.\nNão tratar evidência externa não revisada como aceite local automático.\n\n## Critérios no seu domínio\n\nHerdar [axiomas, QS, CC, SC, invariants e DoD](principles.md); especializar por tarefa.\nA barra é compreensão útil, evidência e consumo real, com duas revisões independentes.\nCasos candidatos para concretizar/fixar antes da produção: mudança de fluxo de sessão, violação de contrato UI/API, impacto entre componentes, erro de inicialização desktop e comportamento fora de escopo.\nNão usar esses rótulos genéricos como casos executados ou oracle já pronto.\n\nAmbos os juízes cobrem a versão final. Corrigir defeitos obrigatórios e reavaliar\nnos mesmos IDs. Aplicar [judging.md](judging.md) e [orchestration.md](orchestration.md).\nUsar [transport.md](transport.md) desde a primeira produção, com corpos exatos.\n\n## Executar e entregar\n\nConduzir consumidores e casos próprios pelas portas reais, usando o release exato\nde S4 quando necessário. Controles comuns compatíveis podem ser referenciados;\nnão implementar todo o motor Atlas novamente. Gates específicos de código alterado\nseguem `AGENTS.md`; nenhuma ausência de execução pode ser marcada como PASS.\n\nPersistir resultados, código necessário, decisões, correções, evidências e uso.\nAplicar [completion.md](completion.md) e [handoffs.md](handoffs.md). Só terminar com\nDELIVERY_COMPLETE após cumprir tudo que pertence à fatia. Impedimento demonstrado\ncontinua INCOMPLETE_BLOCKED, depois de esgotar trabalho independente.\n\nROOT recebe seu handoff e integra em `genesis-fresh-final`, com par próprio. Não\nrealizar a integração das cinco, nem empurrar suas obrigações locais para ROOT.\n",
+      "encoding": "utf-8",
+      "sha": "75eb60566ac43b84f9fc90de3506cb1c8c6fe51d",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/ee2521a5b966bd505cc95bd1c733e09e12f33531/.orchestra/skills/execute-genesis/references/fatia-2.md",
+      "display_title": "fatia-2.md"
+    },
+    "isError": false
+  }
+}
+

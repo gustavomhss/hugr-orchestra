@@ -1,0 +1,10 @@
+{
+  "exit_code": 1,
+  "rules": 78,
+  "files": 1985,
+  "warnings": 227,
+  "gates": 4,
+  "errors": [],
+  "inputs_unchanged": true,
+  "staged_payload_tree": "b4e876f8681bf4ab0871df63dbd3cca78a151580"
+}

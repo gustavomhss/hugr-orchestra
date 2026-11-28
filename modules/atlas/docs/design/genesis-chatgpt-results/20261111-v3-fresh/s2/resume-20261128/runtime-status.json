@@ -39,7 +39,7 @@
   },
   "first_traversal": {
     "state": "NOT_RUN",
-    "next_precondition": "Two exact final v2 ADMIT decisions on d1, then binding and original governed admit. Marker and admit-only policies already installed with separate receipts. Index/read and independent consumer remain NOT_RUN."
+    "next_precondition": "Resolve S4-owned source-binding blocker F02/M01. A changed runtime requires new prepare/candidate and exact new judgments by the same pair; no binding/admit/index/read is authorized by the current split pair."
   },
   "binding": "NOT_RUN",
   "publication": "NOT_RUN",
@@ -120,11 +120,79 @@
     },
     "sequencing_amendment": "evaluation-v2/setup-sequencing/sequencing-amendment-before-init.json",
     "admission": "NOT_RUN",
-    "final_ADMIT_decisions": "PENDING",
+    "final_ADMIT_decisions": "RECEIVED_SPLIT_PAIR_ADMISSION_HOLD",
     "index_read": "NOT_RUN",
     "consumer_cases_executed": 0,
     "consumer_cases_total": 14,
-    "S2-U1": "NOT_RUN"
+    "S2-U1": "NOT_RUN",
+    "binding": "NOT_CREATED"
   },
-  "checkpoint_updated_at": "2026-11-28T07:26:00.627453+00:00"
+  "checkpoint_updated_at": "2026-11-28T09:44:49.241839+00:00",
+  "current_state": "INCOMPLETE_BLOCKED",
+  "admission_review": {
+    "state": "ADMISSION_HOLD",
+    "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+    "purpose": "isolated-evaluation-admission",
+    "reviewers": [
+      {
+        "reviewer": "/root/s2_j1",
+        "global_verdict": "PASS",
+        "criterion_counts": {
+          "PASS": 52
+        },
+        "response": "evaluation-v2/admission-r1/final-reviews/j1-response.txt",
+        "response_sha256": "9354131a19ddd0cefbd77c45efd1a3d6de35bda79c0ef653756e5fa16636c5dc"
+      },
+      {
+        "reviewer": "/root/s2_j2",
+        "global_verdict": "HOLD",
+        "criterion_counts": {
+          "PASS": 39,
+          "HOLD": 13
+        },
+        "response": "evaluation-v2/admission-r1/final-reviews/j2-response.txt",
+        "response_sha256": "93778e0e6a839953536aaad0f2e39c4e2e14687d6ac69a2d1baa1b388aae201b"
+      }
+    ],
+    "binding": "NOT_CREATED",
+    "admit": "NOT_RUN",
+    "publication": "NOT_RUN",
+    "index_read": "NOT_RUN",
+    "consumer_cases": {
+      "executed": 0,
+      "total": 14
+    },
+    "S2-U1": "NOT_RUN",
+    "blocker": {
+      "reviewer": "/root/s2_j2",
+      "finding": "F02",
+      "request": "M01",
+      "criterion": "ADMIT-SOURCE-BINDINGS",
+      "entries": 13,
+      "summary": "Installed @noble/hashes bytes are outside the intrinsic identity checked by supported paths. The optional operator wrapper does not establish mandatory refusal of implementation drift.",
+      "resolution_owner": "S4",
+      "changed_runtime_requires_new_prepare_candidate_and_reviews": true
+    },
+    "original_v1_HOLD_preserved": true,
+    "review_response_bytes_modified": false
+  },
+  "s4_source_binding_followup": {
+    "recorded_at": "2026-11-28T09:50:42.674147+00:00",
+    "state": "PROPOSAL_READY_RUNTIME_FIX_PENDING",
+    "request": "handoff-s2-to-s4.json",
+    "handoff": "runtime-followup/noble-source-binding-proposal/HANDOFF.md",
+    "patch_sha256": "abc88bcd7127fff8a00ccf5de108fdfae97a76f0fa51269ed93046aa4698978b",
+    "runtime_applied": false,
+    "focal_test_executed": false,
+    "new_prepare_executed_after_fix": false
+  },
+  "latest_source_binding_recheck": {
+    "branch": "genesis-runtime-resume",
+    "head": "e171783482d0a44974d6056cd9e144a7e33406a7",
+    "runtime": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "fix_in_queried_ref": false,
+    "scope": "Only recorded S4 ref, release and branch searches; not universal absence",
+    "evidence": "runtime-followup/noble-source-binding-proposal/report.json",
+    "admission_compatibility": "BLOCKED_F02_M01"
+  }
 }

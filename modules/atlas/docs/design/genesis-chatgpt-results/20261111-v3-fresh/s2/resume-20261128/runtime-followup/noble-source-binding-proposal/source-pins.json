@@ -1,0 +1,269 @@
+{
+  "schema": "s2-noble-binding-source-pins/v1",
+  "captured_at": "2026-11-28T09:40:13.409Z",
+  "runtime_head": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "sources": [
+    {
+      "path": "AGENTS.md",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "ef3b523b0c00aed722582b870c1919188edc4c4f",
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "bytes": 16501,
+      "capture": "sources/db9/AGENTS.md"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "bytes": 8143,
+      "capture": "sources/db9/.orchestra/skills/execute-genesis/SKILL.md"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+      "bytes": 10217,
+      "capture": "sources/db9/.orchestra/skills/execute-genesis/references/runtime.md"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/fatia-2.md",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "75eb60566ac43b84f9fc90de3506cb1c8c6fe51d",
+      "sha256": "716620ec26a7a253ae77760940ff74a871ea83f08d77a6321c3de73482b390eb",
+      "bytes": 3921,
+      "capture": "sources/db9/.orchestra/skills/execute-genesis/references/fatia-2.md"
+    },
+    {
+      "path": "modules/atlas/package.json",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "49cf8584beca5e4c4a4a79e7f5e5468c506817d4",
+      "sha256": "168380cb630bd0aba6a2504d6b207b449153e084c01785c6f76eb84fd667c605",
+      "bytes": 1670,
+      "capture": "sources/db9/modules/atlas/package.json"
+    },
+    {
+      "path": "modules/atlas/package-lock.json",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "52385ecfa7a9ee21c5ce3918790029687cddfcd0",
+      "sha256": "b3c505a0227808e04acf49138a1acccfd3e1a0e9b5476a5f9748fccd84e1a06f",
+      "bytes": 93193,
+      "capture": "sources/db9/modules/atlas/package-lock.json"
+    },
+    {
+      "path": "modules/atlas/packages/kernel/package.json",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "1799fc90de0718d074ea15e054ab3d4ea280e213",
+      "sha256": "206932b96e640ace3b7e7591aa7854b74b990a76f2c965172252436011b1371d",
+      "bytes": 398,
+      "capture": "sources/db9/modules/atlas/packages/kernel/package.json"
+    },
+    {
+      "path": "modules/atlas/packages/kernel/src/encoder.ts",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "e6ab4f03ab3cc4c658a1455d555e1d868280cb67",
+      "sha256": "9fe7d781f1d2e70614419483e4abb51ebf036fd0420baef332b77dce5e4c07ad",
+      "bytes": 1642,
+      "capture": "sources/db9/modules/atlas/packages/kernel/src/encoder.ts"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/package.json",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "a18f668a4aa10741bc8d9244425cf2c210423336",
+      "sha256": "fbc7951f42ce0465ed53211516ee396aacaf66a0f43b500325330a0aa8c40132",
+      "bytes": 749,
+      "capture": "sources/db9/modules/atlas/packages/adapter-io/package.json"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/evaluation-runtime-identity.ts",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "6c4c04598588519cd7512263e8d5c28ce51c6750",
+      "sha256": "ecdc39431c4e94735099295958af871636edab0bb204f3947a0f20d624ccd013",
+      "bytes": 5598,
+      "capture": "sources/db9/modules/atlas/packages/adapter-io/src/evaluation-runtime-identity.ts"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/evaluation-manifest-binding.ts",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "245aaaa6819395ace1b73b7c1a81fcd442bfc2e0",
+      "sha256": "ed6c4a178c4f720b4db662cb1566252ac2ea885e48faa6548ff1b9b75ea0cee0",
+      "bytes": 3164,
+      "capture": "sources/db9/modules/atlas/packages/adapter-io/src/evaluation-manifest-binding.ts"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-evaluation.ts",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "8e7157b0b0624d1f7f7bb603a30df1fe5b0a25b9",
+      "sha256": "f7b9eb3f3163788d11b4f9eace24a361e7e3e7e37f2f6daab816c81d558ed1b0",
+      "bytes": 18114,
+      "capture": "sources/db9/modules/atlas/packages/adapter-io/src/genesis-evaluation.ts"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/evaluation-rebuild.ts",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "0b4cd068242e89c5780087ca1c5abe1e36581faf",
+      "sha256": "1e511bd090ab303f0ee9cb8c69c1d6289a5a5c5cabbe5cd96c56833ad6a52a9e",
+      "bytes": 23553,
+      "capture": "sources/db9/modules/atlas/packages/adapter-io/src/evaluation-rebuild.ts"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "d1fbb41a7c009f9a0709ba29af601d6424c2c008",
+      "sha256": "b7c401180b3e9f6d634e6c2de0bb920751dcb2a0072887902cd6e1e9ccd60308",
+      "bytes": 4582,
+      "capture": "sources/db9/modules/atlas/packages/adapter-io/src/ownership-access.ts"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-attachment.ts",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "538fdc7c8356c2f4f5800131b9663435e6206f83",
+      "sha256": "924b0e058b1577d326efba827a863c5dba35c7dc5baa568c37e2e84d73da1b0f",
+      "bytes": 3247,
+      "capture": "sources/db9/modules/atlas/packages/adapter-io/src/ownership-attachment.ts"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/evaluation-boundaries.test.ts",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "36132aee55f5d09e679c6398507a3a6573e1df1a",
+      "sha256": "ef5769de70dca81ffe81aba076054d408ae889ea42a36322c79ae46dee62291b",
+      "bytes": 27768,
+      "capture": "sources/db9/modules/atlas/packages/adapter-io/test/evaluation-boundaries.test.ts"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/genesis-evaluation.test.ts",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "46187d0fd1eae9377ddb43192bbbcc82794a9f5b",
+      "sha256": "40c8ff865358b4b609ba01c2ec2af97380f972ae78592dc6a2101782b8043989",
+      "bytes": 26852,
+      "capture": "sources/db9/modules/atlas/packages/adapter-io/test/genesis-evaluation.test.ts"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/evaluation-rebuild.test.ts",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "82c4105c13d60f94615302c6975cb2bbd125ecc7",
+      "sha256": "0dfb9a23fb59a906077ca75c010bcf17ea58e39f7e9e93486fa91defff8b3516",
+      "bytes": 11211,
+      "capture": "sources/db9/modules/atlas/packages/adapter-io/test/evaluation-rebuild.test.ts"
+    },
+    {
+      "path": ".github/workflows/atlas-pilot.yml",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "e4a3036ffecd684d52c70a4c8cd346be9601e5c3",
+      "sha256": "780a8fba411ea7d8c80b8068824bd559861fe774a862c1334bec7878625946a9",
+      "bytes": 14193,
+      "capture": "sources/db9/.github/workflows/atlas-pilot.yml"
+    },
+    {
+      "path": ".github/workflows/test-ci.yml",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "7ef187cb83504a617a758b1e00b7c65a42c72639",
+      "sha256": "a9ad1ff8997778fe6e04686284bf492edcb7f48b6e33576ca462bbda7119e768",
+      "bytes": 15352,
+      "capture": "sources/db9/.github/workflows/test-ci.yml"
+    },
+    {
+      "path": "script/test-ci.ts",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "511e50e93b647009b683daa9bcacbdd0c89d50c3",
+      "sha256": "055d935a1a26adacb3eeda1e5ff772eeb75b83837b99911c645060b6465135b6",
+      "bytes": 19342,
+      "capture": "sources/db9/script/test-ci.ts"
+    },
+    {
+      "path": "script/test-ci-request.ts",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "4d5d06476a902c66d13191bc89d3358c6d889c88",
+      "sha256": "9948e4ea327c92e5cd8042cf12cf9efc313edf97e86ec0c2a5404bf9a41a64be",
+      "bytes": 16774,
+      "capture": "sources/db9/script/test-ci-request.ts"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/SKILL.md",
+      "ref": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "852e1d66539be5df895ba4cdbd2f9ab6e2331877",
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029",
+      "bytes": 8143,
+      "capture": "sources/remote/protocol-skill.md",
+      "via": "GitHub MCP"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/fatia-2.md",
+      "ref": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "75eb60566ac43b84f9fc90de3506cb1c8c6fe51d",
+      "sha256": "716620ec26a7a253ae77760940ff74a871ea83f08d77a6321c3de73482b390eb",
+      "bytes": 3921,
+      "capture": "sources/remote/protocol-s2.md",
+      "via": "GitHub MCP"
+    },
+    {
+      "path": ".orchestra/skills/execute-genesis/references/runtime.md",
+      "ref": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+      "git_blob_sha": "0e0f1607003ff49946ed7a155c268b31239930e6",
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237",
+      "bytes": 10217,
+      "capture": "sources/remote/protocol-runtime.md",
+      "via": "GitHub MCP"
+    },
+    {
+      "path": "modules/atlas/packages/kernel/package.json",
+      "ref": "e171783482d0a44974d6056cd9e144a7e33406a7",
+      "git_blob_sha": "1799fc90de0718d074ea15e054ab3d4ea280e213",
+      "sha256": "206932b96e640ace3b7e7591aa7854b74b990a76f2c965172252436011b1371d",
+      "bytes": 398,
+      "capture": "sources/remote/release-kernel.json",
+      "via": "GitHub MCP"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/evaluation-runtime-identity.ts",
+      "ref": "e171783482d0a44974d6056cd9e144a7e33406a7",
+      "git_blob_sha": "6c4c04598588519cd7512263e8d5c28ce51c6750",
+      "sha256": "ecdc39431c4e94735099295958af871636edab0bb204f3947a0f20d624ccd013",
+      "bytes": 5598,
+      "capture": "sources/remote/release-collector.ts",
+      "via": "GitHub MCP"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+      "ref": "e171783482d0a44974d6056cd9e144a7e33406a7",
+      "git_blob_sha": "ac4f5f46ce2044ded044e4c9a4e35220558bae22",
+      "sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1",
+      "bytes": 19736,
+      "capture": "sources/remote/runtime-release.json",
+      "via": "GitHub MCP"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "8ef732cc135b72478840e543dae3ed8fd71688b9",
+      "sha256": "8d687cb301f038b51f8bec0c50dff789f08d9e6596a72ea0c3e17dd5e8a82d85",
+      "bytes": 4485,
+      "capture": "sources/db9/modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts"
+    },
+    {
+      "path": "modules/atlas/vitest.config.ts",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "e59214d9ce2afa286449d3858226df4c101e3d1b",
+      "sha256": "e06dcc93aefffa16fde2f33efaa808b85a28103b68daf804283d6597a178d6e3",
+      "bytes": 2133,
+      "capture": "sources/db9/modules/atlas/vitest.config.ts"
+    },
+    {
+      "path": ".github/actions/setup-bun/action.yml",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "e2cda5b54676d4d1c35785aaef7aa69d66944597",
+      "sha256": "953b03f7962743a1d3d510a576f1b005c832a0d39801ad1509200c9482a3387d",
+      "bytes": 6665,
+      "capture": "sources/db9/.github/actions/setup-bun/action.yml"
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/ownership-evaluation-policy.ts",
+      "ref": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+      "git_blob_sha": "7b89172973c13013704240be70ce66dbc691094e",
+      "sha256": "cb59a6c0befa1563d1aa90f858028d2d1bb7f2c7506951c3b4263ec2ca36ffdb",
+      "bytes": 12532,
+      "capture": "sources/db9/modules/atlas/packages/adapter-io/src/ownership-evaluation-policy.ts"
+    }
+  ]
+}

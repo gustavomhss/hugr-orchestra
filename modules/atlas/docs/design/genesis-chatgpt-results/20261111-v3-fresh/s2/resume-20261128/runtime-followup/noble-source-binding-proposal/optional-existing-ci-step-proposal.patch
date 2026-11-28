@@ -1,0 +1,10 @@
+diff --git a/.github/workflows/atlas-pilot.yml b/.github/workflows/atlas-pilot.yml
+--- a/.github/workflows/atlas-pilot.yml
++++ b/.github/workflows/atlas-pilot.yml
+@@ -34,1 +34,6 @@
++      - name: Check installed hash dependency binding in isolation
++        working-directory: modules/atlas
++        run: |
++          npx --no-install vitest run packages/adapter-io/test/evaluation-runtime-noble.test.ts \
++            --reporter=default --reporter=json --outputFile=ownership-noble-results.json
+       - name: Grouped ownership and existing door regressions

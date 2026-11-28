@@ -1,0 +1,130 @@
+{
+  "schema": "genesis-s2-runtime-dependency/v1",
+  "observed_at": "2026-11-28T05:54:21Z",
+  "branches": {
+    "genesis-runtime-resume": "af0ed426b8caf0d95772e1fb174d34bab86399c4",
+    "genesis-fresh-s4": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7"
+  },
+  "discovery_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+  "release_found": {
+    "release_id": "20261111-v3-fresh-s4-r3",
+    "code_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "git_blob_sha": "7513fcca63664ca02094e9ed9b8fab090c20295d",
+    "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+    "native_sample_artifacts": 1,
+    "source_input_ceiling": 256000
+  },
+  "candidate_diagnostic": {
+    "revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "source_input_ceiling": 2097152,
+    "prepare_receipt": "prepare-01/receipt.json",
+    "artifact_count": 13,
+    "state": "PREPARE_SUCCEEDED_UNPROMOTED"
+  },
+  "existing_code_ci": {
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43343953480",
+    "run_id": 43343953480,
+    "head_sha": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "state": "success",
+    "scope": "Existing S4 code gate; not a new S2 payload gate, binding or consumer proof."
+  },
+  "local_execution_surface": {
+    "state": "AVAILABLE_AND_EXECUTED",
+    "code_checkout": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "corpus_checkout": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+    "bun": "1.3.14",
+    "npm_ci_exit": 0,
+    "bun_typecheck_exit": 0,
+    "product_tests_local": false
+  },
+  "first_traversal": {
+    "state": "NOT_RUN",
+    "next_precondition": "Two exact final v2 ADMIT decisions on d1, then binding and original governed admit. Marker and admit-only policies already installed with separate receipts. Index/read and independent consumer remain NOT_RUN."
+  },
+  "binding": "NOT_RUN",
+  "publication": "NOT_RUN",
+  "index_read": "NOT_RUN",
+  "consumer": "NOT_RUN",
+  "latest_followup": {
+    "recorded_at": "2026-11-28T06:49:03.108222+00:00",
+    "genesis_runtime_resume": "e171783482d0a44974d6056cd9e144a7e33406a7",
+    "release_blob": "ac4f5f46ce2044ded044e4c9a4e35220558bae22",
+    "release_sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1",
+    "release_id": "20261128-s4-runtime-db9b423-prepare-v1",
+    "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "state": "FIXED_RUNTIME_COMPATIBILITY_SUPPLEMENT_RECORDED",
+    "details": "runtime-followup/release-e171/compatibility-assessment.json",
+    "scope": "Release qualifies complete v1 prepare. S2 reuses same-code54common v2 CI controls and records own v2 prepare; no S4 domain admission/read/maintenance claim is inferred."
+  },
+  "historical_fields_note": "Top-level initial discovery retained as historical observations; latest_followup controls current release selection.",
+  "new_evaluation_candidate": {
+    "operation_id": "s2-evaluation-prepare-db9b423-20261128-03",
+    "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+    "prepared_sha256": "bb3ee09693ef1ddfb89e548f3f5e0d38c4abaee5e6d253f129c7c6c1a9dbda0e",
+    "receipt": "evaluation-v2/prepare-03/receipt.json",
+    "root": "/workspace/scratch/5cfbb6c803f1/s2-evaluation",
+    "observed_head": null,
+    "entries": 13,
+    "observations": 690,
+    "source_materialization_files": 716,
+    "runtime_lock_files": 1170,
+    "guarded_inputs": 1890,
+    "CAS_objects": 92,
+    "inputs_unchanged": true,
+    "external_byte_guard_matched": true,
+    "archive": "evaluation-prepare-03-evidence.zip",
+    "comparison_to_02": "evaluation-v2/prepare-03/comparison-to-02.json",
+    "prepared_byte_identical_to_02": true,
+    "guard_not_attributed_to_02": true,
+    "started_at": "2026-11-28T07:14:06.118420+00:00",
+    "ended_at": "2026-11-28T07:14:10.661705+00:00"
+  },
+  "previous_evaluation_candidates": [
+    {
+      "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+      "prepared_sha256": "bb3ee09693ef1ddfb89e548f3f5e0d38c4abaee5e6d253f129c7c6c1a9dbda0e",
+      "receipt": "evaluation-v2/prepare-02/receipt.json",
+      "root": "/workspace/scratch/5cfbb6c803f1/s2-evaluation",
+      "observed_head": null,
+      "entries": 13,
+      "observations": 690,
+      "input_files": 716,
+      "CAS_objects": 92,
+      "inputs_unchanged": true,
+      "archive": "evaluation-prepare-02-evidence.zip"
+    }
+  ],
+  "isolated_setup": {
+    "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+    "generation": "694110e9b70b62ca59fe3a0edf91157066f991bb79fcaab27a1b005320bc3488",
+    "initialization": {
+      "state": "EXECUTED",
+      "operation_id": "s2-evaluation-init-store-db9b423-20261128-01",
+      "exit_code": 0,
+      "receipt": "evaluation-v2/init-store-01/receipt.json",
+      "guarded_inputs": 1896,
+      "inputs_unchanged": true,
+      "external_byte_guard_matched": true,
+      "marker_sha256": "b191a34d21a16337044e5a30f41fba19338feb3123dd606bf3d9e945e7158497",
+      "archive": "init-store-01-evidence.zip"
+    },
+    "policy_installation": {
+      "state": "EXECUTED",
+      "receipt": "evaluation-v2/install-policy-admit-01/receipt.json",
+      "operations": [
+        "admit"
+      ],
+      "consumer": null,
+      "actor": "genesis-s2-resume-846d4f9c",
+      "budgets_modified": false
+    },
+    "sequencing_amendment": "evaluation-v2/setup-sequencing/sequencing-amendment-before-init.json",
+    "admission": "NOT_RUN",
+    "final_ADMIT_decisions": "PENDING",
+    "index_read": "NOT_RUN",
+    "consumer_cases_executed": 0,
+    "consumer_cases_total": 14,
+    "S2-U1": "NOT_RUN"
+  },
+  "checkpoint_updated_at": "2026-11-28T07:26:00.627453+00:00"
+}

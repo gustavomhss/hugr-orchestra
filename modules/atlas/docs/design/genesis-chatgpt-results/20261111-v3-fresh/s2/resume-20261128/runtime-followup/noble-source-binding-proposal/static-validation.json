@@ -1,0 +1,68 @@
+{
+  "schema": "s2-noble-proposal-static-validation/v1",
+  "captured_at": "2026-11-28T09:44:46.075Z",
+  "runtime_head": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "checks": [
+    {
+      "file": "minimal-dependency-proposal.patch",
+      "argv": [
+        "git",
+        "apply",
+        "--check",
+        "/workspace/scratch/5cfbb6c803f1/s2-investigation/runtime/noble-binding-followup/minimal-dependency-proposal.patch"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "file": "focal-control-proposal.patch",
+      "argv": [
+        "git",
+        "apply",
+        "--check",
+        "/workspace/scratch/5cfbb6c803f1/s2-investigation/runtime/noble-binding-followup/focal-control-proposal.patch"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "file": "candidate-proposal.patch",
+      "argv": [
+        "git",
+        "apply",
+        "--check",
+        "/workspace/scratch/5cfbb6c803f1/s2-investigation/runtime/noble-binding-followup/candidate-proposal.patch"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    },
+    {
+      "file": "optional-existing-ci-step-proposal.patch",
+      "argv": [
+        "git",
+        "apply",
+        "--check",
+        "/workspace/scratch/5cfbb6c803f1/s2-investigation/runtime/noble-binding-followup/optional-existing-ci-step-proposal.patch"
+      ],
+      "exit_code": 0,
+      "stdout": "",
+      "stderr": ""
+    }
+  ],
+  "syntax": {
+    "method": "TypeScript createSourceFile parser only",
+    "compiler_version": "5.9.3",
+    "test_path": "modules/atlas/packages/adapter-io/test/evaluation-runtime-noble.test.ts",
+    "parse_diagnostics": [],
+    "typecheck_run": false,
+    "emit_run": false
+  },
+  "runtime_paths_unchanged": true,
+  "test_file_absent_from_runtime": true,
+  "product_tests_executed": false,
+  "Atlas_operations_executed": false,
+  "patches_applied": false
+}

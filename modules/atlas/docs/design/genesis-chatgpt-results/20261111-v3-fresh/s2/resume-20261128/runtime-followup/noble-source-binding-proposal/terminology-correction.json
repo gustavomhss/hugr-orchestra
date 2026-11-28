@@ -1,0 +1,9 @@
+{
+  "schema": "s2-documentary-terminology-correction/v1",
+  "recorded_at": "2026-11-28T09:54:49.839925+00:00",
+  "scope": "Unexecuted S2-to-S4 proposal prose only; no test, patch, runtime or original review changed.",
+  "reason": "J1 issued a final PASS on all 52 ADMIT criteria for candidate d1. The pair remains HOLD because J2 issued 13 SOURCE-BINDINGS HOLD and 39 PASS.",
+  "old_versions": "history/before-J1-terminology-correction",
+  "original_j1_response_sha256": "9354131a19ddd0cefbd77c45efd1a3d6de35bda79c0ef653756e5fa16636c5dc",
+  "no_vote_reuse_for_new_candidate": true
+}

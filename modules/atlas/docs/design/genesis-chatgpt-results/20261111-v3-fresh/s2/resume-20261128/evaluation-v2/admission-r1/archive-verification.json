@@ -1,0 +1,68 @@
+{
+  "schema": "genesis-s2-hold-checkpoint-archives-verification/v1",
+  "recorded_at": "2026-11-28T09:44:49.241839+00:00",
+  "archives": [
+    {
+      "name": "dossier-and-transport",
+      "archive": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/admission-hold-checkpoint/dossier-and-transport-evidence.zip",
+        "byte_length": 9528147,
+        "sha256": "ee90b677c2272d69dfa6ccc191154796487004e344243d8b47c7b2f84b2840a7"
+      },
+      "publication_path": "evaluation-v2/admission-r1/archives/dossier-and-transport-evidence.zip",
+      "manifest": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/admission-hold-checkpoint/dossier-and-transport-manifest.json",
+        "byte_length": 331922,
+        "sha256": "92b88fcf0636dcdf6e6b8b68d30f63fe4a190beb7991877e129e9ee8b3b8a08b"
+      },
+      "payload_members": 788,
+      "members_including_manifest": 789,
+      "all_payload_members_equal_source_bytes": true,
+      "duplicate_or_extra_members": [],
+      "CRC_check": "NO_INVALID_MEMBER",
+      "state": "HISTORICAL_DOSSIER_TRANSPORT_AND_FINAL_SPLIT_REVIEWS"
+    },
+    {
+      "name": "operator-preparation",
+      "archive": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/admission-hold-checkpoint/operator-preparation-evidence.zip",
+        "byte_length": 152493,
+        "sha256": "95b92e7e6863db55323b4718d4386a89aea3bf51de539536d3c3132b2b2d9085"
+      },
+      "publication_path": "evaluation-v2/admission-r1/archives/operator-preparation-evidence.zip",
+      "manifest": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/admission-hold-checkpoint/operator-preparation-manifest.json",
+        "byte_length": 15829,
+        "sha256": "ab8df1cefc405b52bdffe7f02fc527a6a09a2041f36a0687bf8efee16df223ed"
+      },
+      "payload_members": 41,
+      "members_including_manifest": 42,
+      "all_payload_members_equal_source_bytes": true,
+      "duplicate_or_extra_members": [],
+      "CRC_check": "NO_INVALID_MEMBER",
+      "state": "OPERATOR_EVIDENCE_WITH_CONSUMER_PREPARATION_NOT_RUN"
+    },
+    {
+      "name": "maintenance-not-run",
+      "archive": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/admission-hold-checkpoint/maintenance-not-run-evidence.zip",
+        "byte_length": 485127,
+        "sha256": "9d2d327054cfec3b7904d56ffaefbb87287f55642b46d300121db3c2a75365dd"
+      },
+      "publication_path": "evaluation-v2/admission-r1/archives/maintenance-not-run-evidence.zip",
+      "manifest": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/admission-hold-checkpoint/maintenance-not-run-manifest.json",
+        "byte_length": 64258,
+        "sha256": "97778eda1fdccdd90d0e4acc45f79e85bd9381da332e850855159fabb58d3a03"
+      },
+      "payload_members": 157,
+      "members_including_manifest": 158,
+      "all_payload_members_equal_source_bytes": true,
+      "duplicate_or_extra_members": [],
+      "CRC_check": "NO_INVALID_MEMBER",
+      "state": "PROPOSALS_AND_STATIC_RECORDS_ONLY_ATLAS_MAINTENANCE_NOT_RUN"
+    }
+  ],
+  "all_payload_members_compared_to_original_snapshot": true,
+  "new_judgment": null
+}

@@ -1,6 +1,6 @@
 # S2 Interfaces — retomada de 28 de novembro de 2026
 
-Estado: **IN_PROGRESS**, `delivery_complete=false`. O pacote e os 13 corpos aceitos permanecem intactos. Há três operações de prepare preservadas: v1/01 e v2/02–03, sendo o 03 uma execução original com guard externo e bytes preparados idênticos ao 02. O store isolado foi inicializado e as políticas somente de admissão foram instaladas. ADMIT ainda não tem decisões finais nem execução; index/read, consumidores (0/14) e S2-U1 continuam **NOT_RUN**.
+Estado: **INCOMPLETE_BLOCKED**, `delivery_complete=false`; candidato d1 em **ADMISSION_HOLD**. O pacote e os 13 corpos aceitos permanecem intactos. Há três operações de prepare preservadas: v1/01 e v2/02–03, sendo o 03 uma execução original com guard externo e bytes preparados idênticos ao 02. O store isolado foi inicializado e as políticas somente de admissão foram instaladas. Os pareceres ADMIT finais foram recebidos: J1 declarou PASS nos52 critérios e J2 declarou HOLD nos13 SOURCE-BINDINGS e PASS nos39 restantes. A admissão permanece bloqueada e não foi executada; index/read, consumidores (0/14) e S2-U1 continuam **NOT_RUN**.
 
 ## Identidades e custódia
 
@@ -55,12 +55,12 @@ O controle externo proposto sobre 1.170 arquivos foi efetivamente usado no prepa
 | Busca histórica e preservação pública | Concluídas no escopo documentado; original r4 ainda indisponível |
 | Preparos v1/01 e v2/02–03 | Executados e preservados separadamente; o 03 é a evidência primária guardada |
 | V1 binding | HOLD processual dos dois juízes; aprovação não criada |
-| V2 ADMIT exato dos 13 | Em revisão, sem decisões finais e sem admissão |
+| V2 ADMIT exato dos 13 | ADMISSION_HOLD: J1 PASS52; J2 PASS39/HOLD13 SOURCE-BINDINGS; sem binding ou admissão |
 | Inicialização e políticas v2 | Init-store01 executado; políticas exatas de admissão instaladas |
-| Publicação/admissão governada v2 | NOT_RUN; depende das duas decisões finais exatas |
+| Publicação/admissão governada v2 | NOT_RUN; o par atual não satisfaz o gate de duas aprovações exatas |
 | Primeira travessia com consumidor novo | NOT_RUN |
 | Casos S2-C/S2-I | 0/14; perguntas, modos e limites intactos |
-| S2-U1 | NOT_RUN; plano estático e patch proposto preservados, sem aplicação; driver/produção/targets e provas pendentes |
+| S2-U1 | NOT_RUN; plano, drivers e operadores em rascunho, auditoria/correção mecânica e proposta M0 preservados; sem target, produção, manutenção ou testemunha executados |
 | Gates locais e fechamento | Parciais; guardas finais do payload e julgamento operacional pendentes |
 
 A geração `694110e9b70b62ca59fe3a0edf91157066f991bb79fcaab27a1b005320bc3488` foi fixada depois do candidato e antes de decisões/manifesto. As propostas usam o actor nominal `genesis-s2-resume-846d4f9c`, sem alegação de identidade autenticada. A política inicial é somente de admissão; cada caso terá sua própria política finita de index/read e um consumidor novo `fork:none`. Não se concede manutenção no plano inicial. As duas políticas de admissão foram instaladas em install-policy-admit-01; políticas de consumidores e manutenção não foram instaladas por essa operação.
@@ -89,3 +89,33 @@ Guardas do HEAD `8a5fd8230d0ada0c4c510fa6221562726d5c1722`: exit0, 78 regras, 1.
 Guardas já executadas sobre o payload `8858e56`: exit0, 78 regras, zero gates/erros e 204 avisos; 203 fora desta retomada e um aviso esperado do ZIP preservado. Essa prova não é atribuída automaticamente aos arquivos posteriores. Os recibos completos estão em `gates/`. Não houve testes de produto locais, alteração do motor ou relaxamento de regras.
 
 Tokens, tentativas físicas e cobrança do provedor permanecem UNKNOWN. O histórico é GLOBAL_UNRECONCILED. Agentes de pesquisa/auditoria não contam como consumidores ou julgadores. Integração global, merge e ativação continuam com ROOT/Gustavo.
+
+## Checkpoint: pareceres finais e bloqueio de admissão
+
+Em `2026-11-28T09:44:49.241839+00:00`, este checkpoint documental preserva o candidato `d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30` em **ADMISSION_HOLD** e a frente em **INCOMPLETE_BLOCKED**. Não é conclusão da missão. Os dois pareceres são originais integrais em `evaluation-v2/admission-r1/final-reviews/`: J1 `9354131a19ddd0cefbd77c45efd1a3d6de35bda79c0ef653756e5fa16636c5dc` (54.704 bytes) e J2 `93778e0e6a839953536aaad0f2e39c4e2e14687d6ac69a2d1baa1b388aae201b` (48.952 bytes). J1 declara PASS nos52 critérios; J2 declara HOLD em ADMIT-SOURCE-BINDINGS das13 entradas e PASS nos39 critérios restantes. Nenhum voto foi convertido, removido ou transplantado.
+
+O impedimento F02/M01 de J2 é específico: os bytes instalados de `@noble/hashes`, usados pelo código de identidade, ficam fora da identidade intrínseca verificada pelos caminhos suportados. A evidência externa do prepare03 permanece válida para suas capturas, mas o wrapper opcional não torna obrigatória a recusa de drift para outros chamadores. A correção pertence à frente S4; nenhuma edição concorrente ou execução para contornar o HOLD integra este checkpoint. Uma mudança em runtime ou inputs vinculados exige novo prepare, candidato e recibo próprios, seguidos de novos julgamentos exatos pelo mesmo par.
+
+Os pedidos completos efetivamente recebidos estão selados em `evaluation-v2/admission-r1/final-requests/`, com a confirmação literal extraída de `/findings/0` de cada resposta e a reconstrução exata: transcript confirmado até39 + fechamento + gatilho final. Os arquivos pendentes e tentativas anteriores continuam intactos. A primeira onda36 indisponível de J1 foi excluída da vista confirmada; sua retransmissão, os gatilhos recebidos e todas as retiradas/erratas reais permanecem no histórico. Os hashes externos não autenticam a serialização do host ou a identidade pessoal dos revisores.
+
+A conferência documental compara as13 identidades completas e os4 critérios de cada entry, sem reavaliar o mérito: 104 campos de identidade e26 conjuntos de critérios, sem divergências. Os ZIPs em `evaluation-v2/admission-r1/archives/` preservam o dossiê completo, transporte, pareceres, preparação dos operadores e14 consumer packets, além das propostas/auditorias estáticas U1. Cada ZIP tem MANIFEST.json e foi reaberto para comparar cada membro com os bytes de origem. A ausência de execução de consumidores/U1 não é preenchida por preparação documental.
+
+Continuam **NOT_RUN**: binding/admit, publicação isolada, index/read, primeira travessia,14 casos (0/14) eS2-U1. Os helpers de consumidores e manutenção são preservados com suas versões e escopos; a correção estática E002 não é prova de execução. O arquivo `evaluation-v2/admission-r1/archives/maintenance-not-run-evidence.zip` inclui maintenance-plan, maintenance-mechanical-audit, maintenance-mechanical-fix-01, maintenance-m0-proposal e maintenance-u1-operator-draft, todos sem execução Atlas de manutenção.
+
+Os quatro arquivos de estado anteriores foram copiados integralmente para `history/before-admission-r1-hold/`. Nenhum Atlas, teste de produto, gate, commit, push ou chamada GitHub foi executado para montar este checkpoint. A proposta S2→S4 em preparação permanece fora desta captura base e será acrescentada pelo root depois de fixada.
+
+## Proposta concreta S2 → S4
+
+Em `2026-11-28T09:50:42.674147+00:00`, o root acrescentou a proposta finalizada em [runtime-followup/noble-source-binding-proposal/HANDOFF.md](runtime-followup/noble-source-binding-proposal/HANDOFF.md), com os 52 arquivos inventariados e seu manifesto. O pedido estruturado está em [handoff-s2-to-s4.json](handoff-s2-to-s4.json). O patch combinado tem SHA-256 `abc88bcd7127fff8a00ccf5de108fdfae97a76f0fa51269ed93046aa4698978b`. A captura base documental anterior permanece descrita na seção precedente; esta é a integração posterior da proposta.
+
+A releitura da branch `genesis-runtime-resume` encontrou o mesmo HEAD `e171783482d0a44974d6056cd9e144a7e33406a7`, com runtime `db9b4235022c4df32fe3bfd4faeea8adcd69abb7`. O kernel importa Noble, mas não o declara no próprio manifesto; o agregador não é raiz do coletor. A proposta acrescenta a declaração no kernel e no registro correspondente do lock. O controle focal proposto altera fisicamente os arquivos BLAKE3 CJS/ESM por comentário, exige nova identidade e recusa pelo admit direto e pelos leitores compostos, e restaura os bytes.
+
+A verificação realizada é estática: `git apply --check` e parsing TypeScript. O patch não foi aplicado e o teste não foi executado. A regra de propriedade de `fatia-2.md` exige encaminhar ao dono alterações fora da S2, sem edição concorrente. Portanto, o runtime permanece intacto e a admissão permanece bloqueada. O próximo release precisará de evidência focal própria; a S2 fará novo prepare e novos julgamentos exatos pelo mesmo par antes da primeira travessia. Não há novo candidato, binding, admit, publicação isolada, index/read, consumidor ou S2-U1 nesta integração.
+
+## Gate deste payload documental
+
+A execução em `2026-11-28T09:51:20.575771+00:00`–`2026-11-28T09:51:59.292197+00:00`, sobre a árvore staged `b4e876f8681bf4ab0871df63dbd3cca78a151580` e base `3aaa5e0645f99940b66ee90d28aef93166f09ab1`, terminou com **exit 1: 78 regras, 1985 caminhos, quatro gates, 227 avisos e zero erros de configuração**. Recibo, streams e inventário integral estão em [gates/guards-admission-hold-proposal/receipt.json](gates/guards-admission-hold-proposal/receipt.json). A árvore e os inputs permaneceram estáveis durante o comando. Nenhum teste de produto foi executado.
+
+As três ocorrências `tls-verify-off` correspondem a um parâmetro local de comparação de arquivos, sem controle TLS nessa chamada. A ocorrência `dep-lifecycle-script` está na captura literal do manifesto Atlas db9, conservada como evidência. A análise e as propostas ao dono estão em [gates/guard-findings-admission-hold.json](gates/guard-findings-admission-hold.json). A classificação por inspeção não limpa o gate: nenhum ignore, aprovação, mudança de regra, relocação evasiva ou edição dos helpers preservados foi aplicado. Este checkpoint continua bloqueado e não representa mudança concluída ou qualificada.
+
+Depois desse gate, corrigiu-se somente a descrição do voto de J1 no handoff: foi **PASS final nos 52 critérios para d1**, sem autorização de reutilização em candidato novo. As versões textuais anteriores e a correção estão no histórico da proposta. O gate citado não é atribuído aos metadados do próprio recibo ou a essa correção textual posterior.

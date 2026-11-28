@@ -1,0 +1,219 @@
+{
+  "schema": "genesis-s2-resume-status/v1",
+  "execution_id": "846d4f9c-fb77-4e21-aff6-1fffccc3132b",
+  "started_at": "2026-11-28T05:49:13.045469+00:00",
+  "repository": "gustavomhss/hugr-orchestra",
+  "branch": "genesis-interfaces-resume",
+  "initial_head": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "state": "IN_PROGRESS",
+  "delivery_complete": false,
+  "completed": [
+    "bounded-original-r4-search",
+    "public-byte-custody-verification",
+    "real-source-preflight",
+    "new-isolated-original-cli-prepare",
+    "prepared-cas-integrity-verification",
+    "independent-complete-mapping-check",
+    "record-review-two-new-judges",
+    "local-guards-on-committed-payload",
+    "remote-local-full-S2-prepare-comparison",
+    "dual-independent-v1-contract-scope-HOLD-preserved",
+    "separate-evaluation-v2-plan-and-materialization",
+    "original-CLI-evaluation-prepare02",
+    "independent-v2-byte-and-transformation-audit",
+    "S4-release-fixed-and-compatibility-supplement",
+    "complete-evaluation-prepare02-archive-verified",
+    "original-CLI-guarded-evaluation-prepare03",
+    "explicit-isolated-init-store01",
+    "exact-admit-only-policy-installation01",
+    "guards-on-8a5fd823",
+    "static-S2-U1-plan-preserved-NOT_RUN"
+  ],
+  "historical_r4_recovered": false,
+  "new_prepare": {
+    "candidate_id": "4a36e1210acf6a4bb460846b717d446e6c259f80a78fd73cfce8b5a6e445f522",
+    "prepared_sha256": "476891f3bf1edf24f7d2c486a1218bab5b0cd5b2b36b8295c3892917724c2b4a",
+    "receipt": "prepare-01/receipt.json"
+  },
+  "first_traversal": "NOT_RUN",
+  "consumer_cases": {
+    "total": 14,
+    "executed": 0
+  },
+  "S2-U1": "NOT_RUN",
+  "review": {
+    "purpose": "custody-and-diagnostic-record-only",
+    "reviewed_payload": "8858e56a0a8e7824798a593e893ac56a46dac4a3",
+    "judges": [
+      "/root/s2_j1",
+      "/root/s2_j2"
+    ],
+    "verdicts": [
+      "PASS",
+      "PASS"
+    ],
+    "binding": false,
+    "responses": [
+      "judgments/record-r1/j1-response.json",
+      "judgments/record-r1/j2-response.json"
+    ]
+  },
+  "binding_review": "IN_PROGRESS_NO_FINAL_ADMIT_DECISIONS; ADMISSION_NOT_RUN",
+  "own_ci": "NO_NEW_PRODUCT_CODE; COMMON_EXACT_RUNTIME_CI_REUSE_RECORDED; FINAL_APPLICABLE_GATES_PENDING",
+  "local_guards": {
+    "schema": "genesis-s2-checkpoint-guard-summary/v1",
+    "tested_head": "8a5fd8230d0ada0c4c510fa6221562726d5c1722",
+    "base_sha": "3aaa5e0645f99940b66ee90d28aef93166f09ab1",
+    "rules": 78,
+    "changed_paths": 1851,
+    "gate_findings": 0,
+    "warnings": 208,
+    "errors": 0,
+    "exit_code": 0,
+    "receipt": "gates/guards-8a5fd823/receipt.json",
+    "new_checkpoint_covered": false,
+    "limit": "Existing gate on the named committed HEAD only; no gate ran on this new documentary checkpoint.",
+    "state": "PASS_WITH_WARNINGS",
+    "tested_payload": "8a5fd8230d0ada0c4c510fa6221562726d5c1722"
+  },
+  "open": [
+    "Two exact final v2 ADMIT decisions on d1 including the disclosed runtime coverage limit and actual setup",
+    "Construct exact binding and run governed admission after both final decisions",
+    "Actual index/read and first fresh independent consumer",
+    "All14 frozen cases; current count0/14",
+    "S2-U1 maintenance scope, reviewed driver/producer bridge, target plans and actual recovery evidence",
+    "Applicable gates for subsequent payloads and final S2 operational judgments/seal"
+  ],
+  "global": {
+    "owner": "ROOT/Gustavo",
+    "integration": "NOT_RUN",
+    "activation": "NOT_RUN"
+  },
+  "usage": {
+    "provider_tokens": "UNKNOWN",
+    "physical_attempts": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "historical_accounting": "GLOBAL_UNRECONCILED"
+  },
+  "updated_at": "2026-11-28T07:26:00.627453+00:00",
+  "common_runtime_qualification": {
+    "run_id": 46114652347,
+    "harness_revision": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+    "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "conclusion": "success",
+    "details": "runtime-followup/release-followup.json",
+    "release_manifest": "20261128-s4-runtime-db9b423-prepare-v1",
+    "release_revision": "e171783482d0a44974d6056cd9e144a7e33406a7",
+    "compatibility": "runtime-followup/release-e171/compatibility-assessment.json"
+  },
+  "new_evaluation_prepare": {
+    "operation_id": "s2-evaluation-prepare-db9b423-20261128-03",
+    "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+    "prepared_sha256": "bb3ee09693ef1ddfb89e548f3f5e0d38c4abaee5e6d253f129c7c6c1a9dbda0e",
+    "receipt": "evaluation-v2/prepare-03/receipt.json",
+    "root": "/workspace/scratch/5cfbb6c803f1/s2-evaluation",
+    "observed_head": null,
+    "entries": 13,
+    "observations": 690,
+    "source_materialization_files": 716,
+    "runtime_lock_files": 1170,
+    "guarded_inputs": 1890,
+    "CAS_objects": 92,
+    "inputs_unchanged": true,
+    "external_byte_guard_matched": true,
+    "archive": "evaluation-prepare-03-evidence.zip",
+    "comparison_to_02": "evaluation-v2/prepare-03/comparison-to-02.json",
+    "prepared_byte_identical_to_02": true,
+    "guard_not_attributed_to_02": true,
+    "started_at": "2026-11-28T07:14:06.118420+00:00",
+    "ended_at": "2026-11-28T07:14:10.661705+00:00"
+  },
+  "native_v1_scope": {
+    "candidate_id": "4a36e1210acf6a4bb460846b717d446e6c259f80a78fd73cfce8b5a6e445f522",
+    "verdicts": [
+      "HOLD_PROCESSUAL",
+      "HOLD_PROCESSUAL"
+    ],
+    "evidence": "judgments/binding-scope/",
+    "reason": "All original AC criteria cannot truthfully be PASS before consumer/maintenance evidence. No v1 binding approval was created."
+  },
+  "runtime_coverage": {
+    "intrinsic_keys": 925,
+    "static_comparisons": 22752,
+    "transformation_divergences": 0,
+    "status": "STATIC_RECONCILIATION_WITH_MATERIAL_COVERAGE_GAP",
+    "gap": "Workspace-root @noble/hashes remains omitted from intrinsic collector. The external1170-file lock was actually used in prepare03 and init-store01 with unchanged inputs; it does not modify intrinsic runtime identity or transfer guard evidence to prepare02.",
+    "evidence": "evaluation-v2/audit/report.json",
+    "supplement": "evaluation-v2/proposed-authority/runtime-coverage-supplement.json",
+    "actual_guard_receipts": [
+      "evaluation-v2/prepare-03/receipt.json",
+      "evaluation-v2/init-store-01/receipt.json"
+    ]
+  },
+  "previous_evaluation_prepares": [
+    {
+      "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+      "prepared_sha256": "bb3ee09693ef1ddfb89e548f3f5e0d38c4abaee5e6d253f129c7c6c1a9dbda0e",
+      "receipt": "evaluation-v2/prepare-02/receipt.json",
+      "root": "/workspace/scratch/5cfbb6c803f1/s2-evaluation",
+      "observed_head": null,
+      "entries": 13,
+      "observations": 690,
+      "input_files": 716,
+      "CAS_objects": 92,
+      "inputs_unchanged": true,
+      "archive": "evaluation-prepare-02-evidence.zip"
+    }
+  ],
+  "isolated_setup": {
+    "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+    "generation": "694110e9b70b62ca59fe3a0edf91157066f991bb79fcaab27a1b005320bc3488",
+    "initialization": {
+      "state": "EXECUTED",
+      "operation_id": "s2-evaluation-init-store-db9b423-20261128-01",
+      "exit_code": 0,
+      "receipt": "evaluation-v2/init-store-01/receipt.json",
+      "guarded_inputs": 1896,
+      "inputs_unchanged": true,
+      "external_byte_guard_matched": true,
+      "marker_sha256": "b191a34d21a16337044e5a30f41fba19338feb3123dd606bf3d9e945e7158497",
+      "archive": "init-store-01-evidence.zip"
+    },
+    "policy_installation": {
+      "state": "EXECUTED",
+      "receipt": "evaluation-v2/install-policy-admit-01/receipt.json",
+      "operations": [
+        "admit"
+      ],
+      "consumer": null,
+      "actor": "genesis-s2-resume-846d4f9c",
+      "budgets_modified": false
+    },
+    "sequencing_amendment": "evaluation-v2/setup-sequencing/sequencing-amendment-before-init.json",
+    "admission": "NOT_RUN",
+    "final_ADMIT_decisions": "PENDING",
+    "index_read": "NOT_RUN",
+    "consumer_cases_executed": 0,
+    "consumer_cases_total": 14,
+    "S2-U1": "NOT_RUN"
+  },
+  "local_guards_history": [
+    {
+      "state": "PASS_WITH_WARNINGS",
+      "tested_payload": "8858e56a0a8e7824798a593e893ac56a46dac4a3",
+      "receipt": "gates/receipt.json",
+      "warnings": 204,
+      "gates": 0,
+      "errors": 0
+    }
+  ],
+  "maintenance_static_plan": {
+    "state": "PROPOSED_STATIC_ONLY_NOT_EXECUTED",
+    "execution": "NOT_RUN",
+    "plan": "evaluation-v2/maintenance-static-plan/S2-U1-PLAN.md",
+    "driver": "NOT_IMPLEMENTED_OR_EXECUTED",
+    "oracle_unchanged": true
+  }
+}

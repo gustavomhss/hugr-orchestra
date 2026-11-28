@@ -1,0 +1,256 @@
+{
+  "schema": "s2-noble-binding-followup/v1",
+  "captured_at": "2026-11-28T09:47:36.769Z",
+  "purpose": "Read-only factual investigation and S2-to-S4 correction proposal; no admission judgment",
+  "status": "PROPOSAL_ONLY_NOT_APPLIED_OR_EXECUTED",
+  "admission_decision": null,
+  "constraints": {
+    "remote_mutations": false,
+    "runtime_mutations": false,
+    "Atlas_operations": false,
+    "product_tests": false,
+    "reviewer_contacts": false,
+    "owner_or_third_party_messages": false,
+    "syntax_check": true,
+    "git_apply_check_only": true
+  },
+  "repository": "gustavomhss/hugr-orchestra",
+  "scope_branch": "genesis-interfaces-resume",
+  "runtime_head": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "remote": {
+    "recorded_ref_source": "../latest-release/recheck-ref-0836.json",
+    "observed_branch": "genesis-runtime-resume",
+    "observed_head": "e171783482d0a44974d6056cd9e144a7e33406a7",
+    "foundation_search_results": [],
+    "release_id": "20261128-s4-runtime-db9b423-prepare-v1",
+    "release_blob": "ac4f5f46ce2044ded044e4c9a4e35220558bae22",
+    "release_candidate": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "commits_since_db9": 5,
+    "fix_in_queried_ref": false,
+    "absence_scope": "Only the inspected recorded S4 ref and branch searches; no universal repository absence claim",
+    "evidence": [
+      "github/recorded-ref-query.json",
+      "github/runtime-branch-search.json",
+      "github/foundation-branch-search.json",
+      "github/db9-to-release-compare.json",
+      "github/release-query.json",
+      "github/release-kernel-capture.json",
+      "github/release-collector-capture.json"
+    ]
+  },
+  "existing_candidate": {
+    "path": "/workspace/scratch/5cfbb6c803f1/s2-execution/evaluation-prepare-02/prepared.json",
+    "sha256": "bb3ee09693ef1ddfb89e548f3f5e0d38c4abaee5e6d253f129c7c6c1a9dbda0e",
+    "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+    "runtime_identity_count": 925,
+    "noble_runtime_identity_keys": [],
+    "unchanged": true,
+    "historical_review_constraints": "Preserve previous J1 partial PASS and J2 HOLD exactly. Neither is reused as a new decision; same two persistent reviewers must reassess the new candidate."
+  },
+  "root_cause": {
+    "imports": [
+      "@noble/hashes/blake3",
+      "@noble/hashes/utils"
+    ],
+    "importer": "modules/atlas/packages/kernel/src/encoder.ts",
+    "missing_dependency_owner": "modules/atlas/packages/kernel/package.json",
+    "aggregate_declaration": "modules/atlas/package.json",
+    "installation_lock": "modules/atlas/package-lock.json",
+    "collector": "modules/atlas/packages/adapter-io/src/evaluation-runtime-identity.ts",
+    "collector_roots_exclude_aggregate_manifest": true,
+    "observed_noble_files": 247,
+    "observed_identity_noble_keys": 0,
+    "installed_version": "1.8.0",
+    "observation_kind": "static bytes/manifests/prepared JSON; no collector execution",
+    "external_optional_guard_does_not_change_supported_runtime_guards": true
+  },
+  "proposal": {
+    "dependency": "@noble/hashes",
+    "range": "^1.8.0",
+    "locked_version": "1.8.0",
+    "files": [
+      "modules/atlas/packages/kernel/package.json",
+      "modules/atlas/package-lock.json"
+    ],
+    "collector_source_change_proposed": false,
+    "reason": "Existing recursive manifest dependency traversal covers this package once its actual importer declares it; direct external-root hardcode would duplicate ownership.",
+    "minimal_patch": {
+      "path": "minimal-dependency-proposal.patch",
+      "bytes": 796,
+      "sha256": "b8f5d069096997464caec51d95b6392583bb0d2c5b3fee6b1ba03fb0daba5c1b"
+    },
+    "focal_test": {
+      "path": "proposed-tests/evaluation-runtime-noble.test.ts",
+      "bytes": 13320,
+      "sha256": "e811869327d90a8377595e8e4de4e13fa777aa4d506f766f371a9096b14781c4"
+    },
+    "focal_test_patch": {
+      "path": "focal-control-proposal.patch",
+      "bytes": 13790,
+      "sha256": "2b4268aa475659b727a5ac4c426b1e7d15ee899e7228449ceee02fd6b90897bd"
+    },
+    "combined_patch": {
+      "path": "candidate-proposal.patch",
+      "bytes": 14586,
+      "sha256": "abc88bcd7127fff8a00ccf5de108fdfae97a76f0fa51269ed93046aa4698978b"
+    },
+    "optional_workflow_patch": {
+      "path": "optional-existing-ci-step-proposal.patch",
+      "bytes": 559,
+      "sha256": "bf7c60b97122860ec175868372a5aeb4935058f39856a14fa1347858d3b10d59"
+    },
+    "applied": false
+  },
+  "control": {
+    "state": "PROPOSED_NOT_RUN",
+    "test_path": "modules/atlas/packages/adapter-io/test/evaluation-runtime-noble.test.ts",
+    "fixture": "Existing ownershipFixture plus minimal synthetic native/evaluation package and explicitly synthetic exact-decision fixtures",
+    "physical_mutations": [
+      "installed @noble/hashes/blake3.js append comment",
+      "installed @noble/hashes/esm/blake3.js append comment"
+    ],
+    "mathematical_hash_preserved_assertion": true,
+    "no_node_fs_mock": true,
+    "no_external_guard": true,
+    "ports": [
+      "prepareEvaluation",
+      "admitEvaluation direct",
+      "composeRuntime(...).ownership.index",
+      "composeRuntime(...).ownership.read"
+    ],
+    "expected_refusals": {
+      "admit": "evaluation-candidate-drift",
+      "index_read": {
+        "kind": "hold",
+        "reason": "ownership-untrusted",
+        "evidence": [
+          "evaluation-runtime-drift"
+        ]
+      }
+    },
+    "required_restore": "finally writes original byte buffers; post-restore identity, candidate and reader checks",
+    "predicted_outcomes_are_not_evidence": true,
+    "assertions": [
+      "Kernel declares installed dependency",
+      "Noble 1.8.0 package contains expected 247 members including CJS/ESM critical files",
+      "Baseline actual prepare/admit/index/read",
+      "Physical comment changes dependency bytes but not a hash probe",
+      "Fresh prepare has new candidate and runtime identity with same source observations and entry bindings",
+      "Old candidate refused by direct admit before new projection",
+      "Composed index/read refuse runtime drift",
+      "Exact restoration restores original identity/candidate and composed reads"
+    ],
+    "receipt_name": "ownership-noble-drift-receipt.json",
+    "vitest_report": "ownership-noble-results.json",
+    "receipt_files_generated_now": false
+  },
+  "ci": {
+    "state": "NOT_RUN",
+    "cwd": "modules/atlas at future reviewed runtime candidate",
+    "commands": [
+      [
+        "npm",
+        "ci"
+      ],
+      [
+        "bun",
+        "typecheck"
+      ],
+      [
+        "npx",
+        "--no-install",
+        "vitest",
+        "run",
+        "packages/adapter-io/test/evaluation-runtime-noble.test.ts",
+        "--reporter=default",
+        "--reporter=json",
+        "--outputFile=ownership-noble-results.json"
+      ]
+    ],
+    "existing_workflow": ".github/workflows/atlas-pilot.yml",
+    "trigger_source": {
+      "workflow_dispatch": true,
+      "push_branches": [
+        "pilot-check-*",
+        "genesis-fresh-s4"
+      ],
+      "s2_branch_push_triggers_workflow": false
+    },
+    "isolation": "Run focal file as own step before other tests; disposable npm-ci checkout; no parallel use of mutated installed files.",
+    "upload_existing_pattern": "modules/atlas/ownership-*.json",
+    "test_ci_runner_vitest_exists": false,
+    "gh_uploader_used": false,
+    "guard_command": [
+      "bun",
+      "run",
+      "check:guards",
+      "--base",
+      "origin/dev"
+    ],
+    "base_sha_must_be_recorded_on_execution": true
+  },
+  "ownership": {
+    "protocol": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "s2_rule": "Necessary changes outside S2 ownership follow a proposal to the owner without concurrent editing.",
+    "allowed_deliverable": "Principal S2 may transport this exact proposal and evidence in S2 namespace on genesis-interfaces-resume; no integration or S4 branch editing by this subtask.",
+    "owner_application_pending": true,
+    "global_integration": false,
+    "no_new_requirement_that_s4_execute_s2_domain_cases": true
+  },
+  "new_preparation": {
+    "required": true,
+    "state": "NOT_RUN",
+    "reason": "Kernel manifest bytes and the intrinsic runtime closure change; old prepared candidate is preserved, not retrofitted.",
+    "runtime_candidate_commit": null,
+    "prepare_cli": [
+      "bun",
+      "scripts/genesis-evaluation.ts",
+      "prepare",
+      "<new-isolated-S2-root>",
+      "<new-relative-plan>",
+      "<new-external-prepared.json>"
+    ],
+    "required_evidence": [
+      "New exact runtime commit/release/candidate selection",
+      "Updated helper and byte-lock pins tied to actual bytes",
+      "Full identity member/hash comparison, not count equality",
+      "New CAS-only prepare candidate and integral receipt",
+      "Preserved native package and historical evidence",
+      "Two new decisions by the same persistent independent reviewers on the corrected exact candidate"
+    ],
+    "actual_new_candidate_id": null,
+    "actual_new_runtime_identity_count": null,
+    "prospective_arithmetic": {
+      "baseline_count": 925,
+      "observed_missing_package_files": 247,
+      "arithmetic_sum": 1172,
+      "state": "PROSPECTIVE_ONLY",
+      "assumptions": [
+        "Other runtime members and installation remain unchanged",
+        "No duplicate/new/resolved membership effects beyond observed missing package"
+      ],
+      "not_an_observation": true
+    },
+    "external_helper_count_1170_note": "Parent reported existing helper/byte-lock count. No count equality substitutes for byte/path/hash equality; these pins must be revised after the runtime change."
+  },
+  "static_validation": {
+    "path": "static-validation.json",
+    "bytes": 1925,
+    "sha256": "7931044330c96205d2226964c5387ed5d963e00d7e63de180ce4b67ed3f4bbac"
+  },
+  "source_pins": {
+    "path": "source-pins.json",
+    "bytes": 12592,
+    "sha256": "954aabce1e9c6a7aaa0ab8e003faad729075afbb7121b45ab71713d7892cf363"
+  },
+  "installed_dependency": {
+    "path": "installed-dependency.json",
+    "bytes": 45504,
+    "sha256": "05d71a04ae662748044df278849665f0cb1055dd5bbfe6ef2c18afe2c5af28c2"
+  },
+  "handoff": {
+    "path": "HANDOFF.md",
+    "bytes": 14531,
+    "sha256": "600feb92d574923fb543fcc1da17d68180aa2c658a9359bfe6ce63dd5068c2ab"
+  }
+}

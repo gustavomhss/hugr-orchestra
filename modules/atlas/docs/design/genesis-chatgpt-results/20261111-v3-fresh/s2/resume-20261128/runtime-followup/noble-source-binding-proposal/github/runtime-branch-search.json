@@ -1,0 +1,21 @@
+{
+  "status": "fulfilled",
+  "value": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "branches": [
+        {
+          "branch": "genesis-runtime-resume"
+        }
+      ],
+      "cursor": "MQ"
+    },
+    "isError": false
+  }
+}
+

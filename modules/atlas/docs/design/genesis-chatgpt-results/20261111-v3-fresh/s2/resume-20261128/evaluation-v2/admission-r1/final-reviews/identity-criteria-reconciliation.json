@@ -1,0 +1,1410 @@
+{
+  "schema": "genesis-s2-final-review-identity-reconciliation/v1",
+  "recorded_at": "2026-11-28T09:44:49.241839+00:00",
+  "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "method": "Hash literal original responses; parse JSON; compare all 13 keys/contract/result/inputs with pinned A087; compare each exact four-criterion membership and order with pinned A015. Count declared verdicts only. No response rewriting or new judgment.",
+  "table": {
+    "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-dossier/dispatch-admit-r1/amendment-01/13-entry-final-id-table.json",
+    "byte_length": 3437,
+    "sha256": "43949ea911bd36018f1eab5194aabf4e00c6d08de5b69ff48f15550eb8ee92b1"
+  },
+  "contract": {
+    "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-dossier/sources/local/v2-cas/contract-eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c.json",
+    "byte_length": 350,
+    "sha256": "60d84edec1acc8f74b655753fdab62ef603c4901a17de16a5c839d3f13c9c7d7"
+  },
+  "reviewers": [
+    {
+      "reviewer": "/root/s2_j1",
+      "source": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-dossier/dispatch-admit-r1/final-reviews/j1-response.txt",
+        "byte_length": 54704,
+        "sha256": "9354131a19ddd0cefbd77c45efd1a3d6de35bda79c0ef653756e5fa16636c5dc"
+      },
+      "declared_global_verdict": "PASS",
+      "entry_count": 13,
+      "entry_order_equals_A087": true,
+      "criterion_verdict_counts": {
+        "PASS": 52
+      },
+      "per_criterion_counts": {
+        "ADMIT-EXACT-TRANSFORM": {
+          "PASS": 13
+        },
+        "ADMIT-SOURCE-BINDINGS": {
+          "PASS": 13
+        },
+        "ADMIT-SEMANTIC-SCOPE": {
+          "PASS": 13
+        },
+        "ADMIT-ISOLATED-PLAN": {
+          "PASS": 13
+        }
+      },
+      "new_judgment": null
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "source": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-dossier/dispatch-admit-r1/final-reviews/j2-response.txt",
+        "byte_length": 48952,
+        "sha256": "93778e0e6a839953536aaad0f2e39c4e2e14687d6ac69a2d1baa1b388aae201b"
+      },
+      "declared_global_verdict": "HOLD",
+      "entry_count": 13,
+      "entry_order_equals_A087": true,
+      "criterion_verdict_counts": {
+        "PASS": 39,
+        "HOLD": 13
+      },
+      "per_criterion_counts": {
+        "ADMIT-EXACT-TRANSFORM": {
+          "PASS": 13
+        },
+        "ADMIT-SOURCE-BINDINGS": {
+          "HOLD": 13
+        },
+        "ADMIT-SEMANTIC-SCOPE": {
+          "PASS": 13
+        },
+        "ADMIT-ISOLATED-PLAN": {
+          "PASS": 13
+        }
+      },
+      "new_judgment": null
+    }
+  ],
+  "comparisons": [
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/0/key",
+      "entry": "s2.l1.desktop-web",
+      "expected": "s2.l1.desktop-web",
+      "observed": "s2.l1.desktop-web",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/0/contract",
+      "entry": "s2.l1.desktop-web",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/0/result",
+      "entry": "s2.l1.desktop-web",
+      "expected": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58",
+      "observed": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/0/inputs",
+      "entry": "s2.l1.desktop-web",
+      "expected": "cc244398ac5cd6d52f1a17272a565d8fb9ecf2c0acbc1d41a70c9327951d57da",
+      "observed": "cc244398ac5cd6d52f1a17272a565d8fb9ecf2c0acbc1d41a70c9327951d57da",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/0/criteria",
+      "entry": "s2.l1.desktop-web",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/1/key",
+      "entry": "s2.l1.app-session",
+      "expected": "s2.l1.app-session",
+      "observed": "s2.l1.app-session",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/1/contract",
+      "entry": "s2.l1.app-session",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/1/result",
+      "entry": "s2.l1.app-session",
+      "expected": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384",
+      "observed": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/1/inputs",
+      "entry": "s2.l1.app-session",
+      "expected": "d2340538beccaee1f20d74a5e5a5ca22ba053e54307af8ba9f74218ad9529053",
+      "observed": "d2340538beccaee1f20d74a5e5a5ca22ba053e54307af8ba9f74218ad9529053",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/1/criteria",
+      "entry": "s2.l1.app-session",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/2/key",
+      "entry": "s2.l1.design-tui",
+      "expected": "s2.l1.design-tui",
+      "observed": "s2.l1.design-tui",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/2/contract",
+      "entry": "s2.l1.design-tui",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/2/result",
+      "entry": "s2.l1.design-tui",
+      "expected": "7baaa859ebb117874e48253430260b915f4a711a26764d694039de68fba7b031",
+      "observed": "7baaa859ebb117874e48253430260b915f4a711a26764d694039de68fba7b031",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/2/inputs",
+      "entry": "s2.l1.design-tui",
+      "expected": "6ecb0462e50fc590111e063dbb13d6bbf42a0fcff0c61a2e4f0f01a4174d5778",
+      "observed": "6ecb0462e50fc590111e063dbb13d6bbf42a0fcff0c61a2e4f0f01a4174d5778",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/2/criteria",
+      "entry": "s2.l1.design-tui",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/3/key",
+      "entry": "s2.l2.desktop-web",
+      "expected": "s2.l2.desktop-web",
+      "observed": "s2.l2.desktop-web",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/3/contract",
+      "entry": "s2.l2.desktop-web",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/3/result",
+      "entry": "s2.l2.desktop-web",
+      "expected": "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c",
+      "observed": "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/3/inputs",
+      "entry": "s2.l2.desktop-web",
+      "expected": "b1d7bc1e201e7ae4db16cd34520d505b5823dcf707755bab22ea482b91283fdb",
+      "observed": "b1d7bc1e201e7ae4db16cd34520d505b5823dcf707755bab22ea482b91283fdb",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/3/criteria",
+      "entry": "s2.l2.desktop-web",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/4/key",
+      "entry": "s2.l2.app-session",
+      "expected": "s2.l2.app-session",
+      "observed": "s2.l2.app-session",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/4/contract",
+      "entry": "s2.l2.app-session",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/4/result",
+      "entry": "s2.l2.app-session",
+      "expected": "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5",
+      "observed": "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/4/inputs",
+      "entry": "s2.l2.app-session",
+      "expected": "a536cac3cee463e780083cef85e1393a0bbb6a0b7dd6335ddd5b214b936514fd",
+      "observed": "a536cac3cee463e780083cef85e1393a0bbb6a0b7dd6335ddd5b214b936514fd",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/4/criteria",
+      "entry": "s2.l2.app-session",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/5/key",
+      "entry": "s2.l2.design-tui",
+      "expected": "s2.l2.design-tui",
+      "observed": "s2.l2.design-tui",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/5/contract",
+      "entry": "s2.l2.design-tui",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/5/result",
+      "entry": "s2.l2.design-tui",
+      "expected": "1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664",
+      "observed": "1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/5/inputs",
+      "entry": "s2.l2.design-tui",
+      "expected": "d8a7e9c1498969e5cd4a811372368fb7708b6b3bc638c55954b67095f3dff46d",
+      "observed": "d8a7e9c1498969e5cd4a811372368fb7708b6b3bc638c55954b67095f3dff46d",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/5/criteria",
+      "entry": "s2.l2.design-tui",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/6/key",
+      "entry": "s2.l3.desktop-web",
+      "expected": "s2.l3.desktop-web",
+      "observed": "s2.l3.desktop-web",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/6/contract",
+      "entry": "s2.l3.desktop-web",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/6/result",
+      "entry": "s2.l3.desktop-web",
+      "expected": "ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1",
+      "observed": "ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/6/inputs",
+      "entry": "s2.l3.desktop-web",
+      "expected": "cd18c6f0d1de3b328bba07d9b2085a79ccf80ab74c48de948ce3367470e154a8",
+      "observed": "cd18c6f0d1de3b328bba07d9b2085a79ccf80ab74c48de948ce3367470e154a8",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/6/criteria",
+      "entry": "s2.l3.desktop-web",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/7/key",
+      "entry": "s2.l3.app-session",
+      "expected": "s2.l3.app-session",
+      "observed": "s2.l3.app-session",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/7/contract",
+      "entry": "s2.l3.app-session",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/7/result",
+      "entry": "s2.l3.app-session",
+      "expected": "95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0",
+      "observed": "95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/7/inputs",
+      "entry": "s2.l3.app-session",
+      "expected": "c6680c649a4a1caa6d5ee70ab00b389d339de1ef35c2134aaa3b2196f9446b96",
+      "observed": "c6680c649a4a1caa6d5ee70ab00b389d339de1ef35c2134aaa3b2196f9446b96",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/7/criteria",
+      "entry": "s2.l3.app-session",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/8/key",
+      "entry": "s2.l3.design-tui",
+      "expected": "s2.l3.design-tui",
+      "observed": "s2.l3.design-tui",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/8/contract",
+      "entry": "s2.l3.design-tui",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/8/result",
+      "entry": "s2.l3.design-tui",
+      "expected": "3f77baa25cad0ef21847bff3f325478dba06f69c23dae9094c6ee02e83c2d509",
+      "observed": "3f77baa25cad0ef21847bff3f325478dba06f69c23dae9094c6ee02e83c2d509",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/8/inputs",
+      "entry": "s2.l3.design-tui",
+      "expected": "eab1aa549bb255d19fe6dee6fec301c67998c65523c2987043b324e1a0e76ac4",
+      "observed": "eab1aa549bb255d19fe6dee6fec301c67998c65523c2987043b324e1a0e76ac4",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/8/criteria",
+      "entry": "s2.l3.design-tui",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/9/key",
+      "entry": "s2.l4.desktop-web",
+      "expected": "s2.l4.desktop-web",
+      "observed": "s2.l4.desktop-web",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/9/contract",
+      "entry": "s2.l4.desktop-web",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/9/result",
+      "entry": "s2.l4.desktop-web",
+      "expected": "26ba4e10f4ead5c9443b7d9804b7b7c8aa9d7166350e08f3453748e0695a3199",
+      "observed": "26ba4e10f4ead5c9443b7d9804b7b7c8aa9d7166350e08f3453748e0695a3199",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/9/inputs",
+      "entry": "s2.l4.desktop-web",
+      "expected": "23a6829e9fa51658580b4238afdb295d627617b5eacbfc3c003b81044c9f025a",
+      "observed": "23a6829e9fa51658580b4238afdb295d627617b5eacbfc3c003b81044c9f025a",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/9/criteria",
+      "entry": "s2.l4.desktop-web",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/10/key",
+      "entry": "s2.l4.design-tui",
+      "expected": "s2.l4.design-tui",
+      "observed": "s2.l4.design-tui",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/10/contract",
+      "entry": "s2.l4.design-tui",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/10/result",
+      "entry": "s2.l4.design-tui",
+      "expected": "7a0e27eedc2a116172417159aedfdddf428f2609db8b9104c55012a0926f6629",
+      "observed": "7a0e27eedc2a116172417159aedfdddf428f2609db8b9104c55012a0926f6629",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/10/inputs",
+      "entry": "s2.l4.design-tui",
+      "expected": "fda86129d6a69aa98cbcebeac647168cb21509e112a643e0b08d7ec361a378cd",
+      "observed": "fda86129d6a69aa98cbcebeac647168cb21509e112a643e0b08d7ec361a378cd",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/10/criteria",
+      "entry": "s2.l4.design-tui",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/11/key",
+      "entry": "s2.l4.app-session",
+      "expected": "s2.l4.app-session",
+      "observed": "s2.l4.app-session",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/11/contract",
+      "entry": "s2.l4.app-session",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/11/result",
+      "entry": "s2.l4.app-session",
+      "expected": "8e0368888768de4c6c1e134e47cdc60d12f544fe311152bfb9f4621a264dac0a",
+      "observed": "8e0368888768de4c6c1e134e47cdc60d12f544fe311152bfb9f4621a264dac0a",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/11/inputs",
+      "entry": "s2.l4.app-session",
+      "expected": "276c5511b37bbd0c908d930c25c37d945b23f98ce46c067c8e626b40c304832d",
+      "observed": "276c5511b37bbd0c908d930c25c37d945b23f98ce46c067c8e626b40c304832d",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/11/criteria",
+      "entry": "s2.l4.app-session",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/12/key",
+      "entry": "s2.l4.entry",
+      "expected": "s2.l4.entry",
+      "observed": "s2.l4.entry",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/12/contract",
+      "entry": "s2.l4.entry",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/12/result",
+      "entry": "s2.l4.entry",
+      "expected": "060600df54eb14bab6b17a278bd952afdb1b6bb8999e0dbe2d889d97401a7ff1",
+      "observed": "060600df54eb14bab6b17a278bd952afdb1b6bb8999e0dbe2d889d97401a7ff1",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/12/inputs",
+      "entry": "s2.l4.entry",
+      "expected": "16c85ef8321f4ea64b9670e6335d7272ae708397d37e7f990af1915342d8518f",
+      "observed": "16c85ef8321f4ea64b9670e6335d7272ae708397d37e7f990af1915342d8518f",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j1",
+      "json_pointer": "/entries/12/criteria",
+      "entry": "s2.l4.entry",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/0/key",
+      "entry": "s2.l1.desktop-web",
+      "expected": "s2.l1.desktop-web",
+      "observed": "s2.l1.desktop-web",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/0/contract",
+      "entry": "s2.l1.desktop-web",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/0/result",
+      "entry": "s2.l1.desktop-web",
+      "expected": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58",
+      "observed": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/0/inputs",
+      "entry": "s2.l1.desktop-web",
+      "expected": "cc244398ac5cd6d52f1a17272a565d8fb9ecf2c0acbc1d41a70c9327951d57da",
+      "observed": "cc244398ac5cd6d52f1a17272a565d8fb9ecf2c0acbc1d41a70c9327951d57da",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/0/criteria",
+      "entry": "s2.l1.desktop-web",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/1/key",
+      "entry": "s2.l1.app-session",
+      "expected": "s2.l1.app-session",
+      "observed": "s2.l1.app-session",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/1/contract",
+      "entry": "s2.l1.app-session",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/1/result",
+      "entry": "s2.l1.app-session",
+      "expected": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384",
+      "observed": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/1/inputs",
+      "entry": "s2.l1.app-session",
+      "expected": "d2340538beccaee1f20d74a5e5a5ca22ba053e54307af8ba9f74218ad9529053",
+      "observed": "d2340538beccaee1f20d74a5e5a5ca22ba053e54307af8ba9f74218ad9529053",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/1/criteria",
+      "entry": "s2.l1.app-session",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/2/key",
+      "entry": "s2.l1.design-tui",
+      "expected": "s2.l1.design-tui",
+      "observed": "s2.l1.design-tui",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/2/contract",
+      "entry": "s2.l1.design-tui",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/2/result",
+      "entry": "s2.l1.design-tui",
+      "expected": "7baaa859ebb117874e48253430260b915f4a711a26764d694039de68fba7b031",
+      "observed": "7baaa859ebb117874e48253430260b915f4a711a26764d694039de68fba7b031",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/2/inputs",
+      "entry": "s2.l1.design-tui",
+      "expected": "6ecb0462e50fc590111e063dbb13d6bbf42a0fcff0c61a2e4f0f01a4174d5778",
+      "observed": "6ecb0462e50fc590111e063dbb13d6bbf42a0fcff0c61a2e4f0f01a4174d5778",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/2/criteria",
+      "entry": "s2.l1.design-tui",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/3/key",
+      "entry": "s2.l2.desktop-web",
+      "expected": "s2.l2.desktop-web",
+      "observed": "s2.l2.desktop-web",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/3/contract",
+      "entry": "s2.l2.desktop-web",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/3/result",
+      "entry": "s2.l2.desktop-web",
+      "expected": "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c",
+      "observed": "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/3/inputs",
+      "entry": "s2.l2.desktop-web",
+      "expected": "b1d7bc1e201e7ae4db16cd34520d505b5823dcf707755bab22ea482b91283fdb",
+      "observed": "b1d7bc1e201e7ae4db16cd34520d505b5823dcf707755bab22ea482b91283fdb",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/3/criteria",
+      "entry": "s2.l2.desktop-web",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/4/key",
+      "entry": "s2.l2.app-session",
+      "expected": "s2.l2.app-session",
+      "observed": "s2.l2.app-session",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/4/contract",
+      "entry": "s2.l2.app-session",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/4/result",
+      "entry": "s2.l2.app-session",
+      "expected": "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5",
+      "observed": "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/4/inputs",
+      "entry": "s2.l2.app-session",
+      "expected": "a536cac3cee463e780083cef85e1393a0bbb6a0b7dd6335ddd5b214b936514fd",
+      "observed": "a536cac3cee463e780083cef85e1393a0bbb6a0b7dd6335ddd5b214b936514fd",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/4/criteria",
+      "entry": "s2.l2.app-session",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/5/key",
+      "entry": "s2.l2.design-tui",
+      "expected": "s2.l2.design-tui",
+      "observed": "s2.l2.design-tui",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/5/contract",
+      "entry": "s2.l2.design-tui",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/5/result",
+      "entry": "s2.l2.design-tui",
+      "expected": "1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664",
+      "observed": "1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/5/inputs",
+      "entry": "s2.l2.design-tui",
+      "expected": "d8a7e9c1498969e5cd4a811372368fb7708b6b3bc638c55954b67095f3dff46d",
+      "observed": "d8a7e9c1498969e5cd4a811372368fb7708b6b3bc638c55954b67095f3dff46d",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/5/criteria",
+      "entry": "s2.l2.design-tui",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/6/key",
+      "entry": "s2.l3.desktop-web",
+      "expected": "s2.l3.desktop-web",
+      "observed": "s2.l3.desktop-web",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/6/contract",
+      "entry": "s2.l3.desktop-web",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/6/result",
+      "entry": "s2.l3.desktop-web",
+      "expected": "ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1",
+      "observed": "ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/6/inputs",
+      "entry": "s2.l3.desktop-web",
+      "expected": "cd18c6f0d1de3b328bba07d9b2085a79ccf80ab74c48de948ce3367470e154a8",
+      "observed": "cd18c6f0d1de3b328bba07d9b2085a79ccf80ab74c48de948ce3367470e154a8",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/6/criteria",
+      "entry": "s2.l3.desktop-web",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/7/key",
+      "entry": "s2.l3.app-session",
+      "expected": "s2.l3.app-session",
+      "observed": "s2.l3.app-session",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/7/contract",
+      "entry": "s2.l3.app-session",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/7/result",
+      "entry": "s2.l3.app-session",
+      "expected": "95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0",
+      "observed": "95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/7/inputs",
+      "entry": "s2.l3.app-session",
+      "expected": "c6680c649a4a1caa6d5ee70ab00b389d339de1ef35c2134aaa3b2196f9446b96",
+      "observed": "c6680c649a4a1caa6d5ee70ab00b389d339de1ef35c2134aaa3b2196f9446b96",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/7/criteria",
+      "entry": "s2.l3.app-session",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/8/key",
+      "entry": "s2.l3.design-tui",
+      "expected": "s2.l3.design-tui",
+      "observed": "s2.l3.design-tui",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/8/contract",
+      "entry": "s2.l3.design-tui",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/8/result",
+      "entry": "s2.l3.design-tui",
+      "expected": "3f77baa25cad0ef21847bff3f325478dba06f69c23dae9094c6ee02e83c2d509",
+      "observed": "3f77baa25cad0ef21847bff3f325478dba06f69c23dae9094c6ee02e83c2d509",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/8/inputs",
+      "entry": "s2.l3.design-tui",
+      "expected": "eab1aa549bb255d19fe6dee6fec301c67998c65523c2987043b324e1a0e76ac4",
+      "observed": "eab1aa549bb255d19fe6dee6fec301c67998c65523c2987043b324e1a0e76ac4",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/8/criteria",
+      "entry": "s2.l3.design-tui",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/9/key",
+      "entry": "s2.l4.desktop-web",
+      "expected": "s2.l4.desktop-web",
+      "observed": "s2.l4.desktop-web",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/9/contract",
+      "entry": "s2.l4.desktop-web",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/9/result",
+      "entry": "s2.l4.desktop-web",
+      "expected": "26ba4e10f4ead5c9443b7d9804b7b7c8aa9d7166350e08f3453748e0695a3199",
+      "observed": "26ba4e10f4ead5c9443b7d9804b7b7c8aa9d7166350e08f3453748e0695a3199",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/9/inputs",
+      "entry": "s2.l4.desktop-web",
+      "expected": "23a6829e9fa51658580b4238afdb295d627617b5eacbfc3c003b81044c9f025a",
+      "observed": "23a6829e9fa51658580b4238afdb295d627617b5eacbfc3c003b81044c9f025a",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/9/criteria",
+      "entry": "s2.l4.desktop-web",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/10/key",
+      "entry": "s2.l4.design-tui",
+      "expected": "s2.l4.design-tui",
+      "observed": "s2.l4.design-tui",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/10/contract",
+      "entry": "s2.l4.design-tui",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/10/result",
+      "entry": "s2.l4.design-tui",
+      "expected": "7a0e27eedc2a116172417159aedfdddf428f2609db8b9104c55012a0926f6629",
+      "observed": "7a0e27eedc2a116172417159aedfdddf428f2609db8b9104c55012a0926f6629",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/10/inputs",
+      "entry": "s2.l4.design-tui",
+      "expected": "fda86129d6a69aa98cbcebeac647168cb21509e112a643e0b08d7ec361a378cd",
+      "observed": "fda86129d6a69aa98cbcebeac647168cb21509e112a643e0b08d7ec361a378cd",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/10/criteria",
+      "entry": "s2.l4.design-tui",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/11/key",
+      "entry": "s2.l4.app-session",
+      "expected": "s2.l4.app-session",
+      "observed": "s2.l4.app-session",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/11/contract",
+      "entry": "s2.l4.app-session",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/11/result",
+      "entry": "s2.l4.app-session",
+      "expected": "8e0368888768de4c6c1e134e47cdc60d12f544fe311152bfb9f4621a264dac0a",
+      "observed": "8e0368888768de4c6c1e134e47cdc60d12f544fe311152bfb9f4621a264dac0a",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/11/inputs",
+      "entry": "s2.l4.app-session",
+      "expected": "276c5511b37bbd0c908d930c25c37d945b23f98ce46c067c8e626b40c304832d",
+      "observed": "276c5511b37bbd0c908d930c25c37d945b23f98ce46c067c8e626b40c304832d",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/11/criteria",
+      "entry": "s2.l4.app-session",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/12/key",
+      "entry": "s2.l4.entry",
+      "expected": "s2.l4.entry",
+      "observed": "s2.l4.entry",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/12/contract",
+      "entry": "s2.l4.entry",
+      "expected": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "observed": "eae556680c714f8f41ee201e2fc17061f801df9622b7c85d45d7e59731fa8d4c",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/12/result",
+      "entry": "s2.l4.entry",
+      "expected": "060600df54eb14bab6b17a278bd952afdb1b6bb8999e0dbe2d889d97401a7ff1",
+      "observed": "060600df54eb14bab6b17a278bd952afdb1b6bb8999e0dbe2d889d97401a7ff1",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/12/inputs",
+      "entry": "s2.l4.entry",
+      "expected": "16c85ef8321f4ea64b9670e6335d7272ae708397d37e7f990af1915342d8518f",
+      "observed": "16c85ef8321f4ea64b9670e6335d7272ae708397d37e7f990af1915342d8518f",
+      "equal": true
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "json_pointer": "/entries/12/criteria",
+      "entry": "s2.l4.entry",
+      "expected_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "observed_ids": [
+        "ADMIT-EXACT-TRANSFORM",
+        "ADMIT-SOURCE-BINDINGS",
+        "ADMIT-SEMANTIC-SCOPE",
+        "ADMIT-ISOLATED-PLAN"
+      ],
+      "same_membership": true,
+      "same_order": true
+    }
+  ],
+  "identity_field_comparisons": 104,
+  "criterion_set_comparisons": 26,
+  "divergences": [],
+  "new_judgment": null,
+  "operational_result": "ADMISSION_HOLD; no all-PASS independent pair exists for this candidate."
+}

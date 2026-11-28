@@ -1,0 +1,136 @@
+{
+  "schema": "genesis-s2-final-request-receipt-seal/v1",
+  "recorded_at": "2026-11-28T09:44:49.241839+00:00",
+  "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "confirmations": [
+    {
+      "reviewer": "/root/s2_j1",
+      "review_source": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-dossier/dispatch-admit-r1/final-reviews/j1-response.txt",
+        "byte_length": 54704,
+        "sha256": "9354131a19ddd0cefbd77c45efd1a3d6de35bda79c0ef653756e5fa16636c5dc"
+      },
+      "json_pointer": "/findings/0",
+      "representation": "Complete JSON value extraction from pinned original response; no paraphrase or vote conversion",
+      "extracted_confirmation": {
+        "id": "F01-CLOSING-RECEIVED",
+        "finding": "Recebi o FECHAMENTO DO PEDIDO ADMIT R1, sua ativação explícita e a repetição literal de A087. Este é meu parecer final independente sobre os quatro ADMIT nas treze entradas. Os ACK_PARTIAL anteriores eram registros de recebimento e análise parcial, sem valor de decisão final.",
+        "evidence": [
+          "Pedido FECHAMENTO DO PEDIDO ADMIT R1",
+          "Ativação de fechamento por /root",
+          "BEGIN_REPEAT A087 [0,3437]"
+        ]
+      },
+      "confirmed_scope": "Closing request, repeated A087 and explicit final activation as self-reported by this reviewer",
+      "full_request_source": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-dossier/dispatch-admit-r1/actual-requests/s2_j1-full-request-SENT-AWAITING-REVIEW.txt",
+        "byte_length": 1148823,
+        "sha256": "f4263c0a78ee6fccf94ac23368a10e01658353d935e2285426112a62c5eac438"
+      },
+      "sealed_literal_request": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/admission-hold-checkpoint/sealed-requests/j1-request.txt",
+        "byte_length": 1148823,
+        "sha256": "f4263c0a78ee6fccf94ac23368a10e01658353d935e2285426112a62c5eac438"
+      },
+      "publication_path": "evaluation-v2/admission-r1/final-requests/j1-request.txt",
+      "base_through39": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-dossier/dispatch-admit-r1/actual-requests/s2_j1-receipt-confirmed-through39.txt",
+        "byte_length": 1140948,
+        "sha256": "0795e6c7ae8496dd6155d324588407201212cf8a0a63348926b7b7d5b8f72f90"
+      },
+      "queued_closing": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-dossier/dispatch-admit-r1/closing-request.txt",
+        "byte_length": 7445,
+        "sha256": "8b413d65c692cde5873c8d312ef166c7d776fbededeb94b6cba946313489e940"
+      },
+      "activation": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-dossier/dispatch-admit-r1/root-captures/s2_j1-final-activation.txt",
+        "byte_length": 430,
+        "sha256": "b30bf324be925da5f4f325ec8e7f1a742660044cb9ed3880eaf43da42a20dcd3"
+      },
+      "activation_record": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-dossier/dispatch-admit-r1/root-captures/s2_j1-final-activation.json",
+        "byte_length": 612,
+        "sha256": "a85d3fb761ff3d893ec4632b5286f40f3eddc8af161be57fe96770fd62b64f05"
+      },
+      "concatenation_rule": "through39 + exact closing + exact actual final trigger; no bytes inserted",
+      "preserved_pending_source": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-dossier/dispatch-admit-r1/actual-requests/s2_j1-receipt-confirmed-plus-queued-closing.PENDING.txt",
+        "byte_length": 1148393,
+        "sha256": "4d02d3e731f335dc3e711b03395a32300dea78cde8873c43d844fcb6fc1571b1"
+      },
+      "host_message_id": null,
+      "host_timestamp": null,
+      "limits": [
+        "Reviewer-reported receipt is not cryptographic delivery authentication.",
+        "Old PENDING/NOT_SENT files and first unavailable J1wave36 remain historical; no file is retrospectively rewritten."
+      ]
+    },
+    {
+      "reviewer": "/root/s2_j2",
+      "review_source": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-dossier/dispatch-admit-r1/final-reviews/j2-response.txt",
+        "byte_length": 48952,
+        "sha256": "93778e0e6a839953536aaad0f2e39c4e2e14687d6ac69a2d1baa1b388aae201b"
+      },
+      "json_pointer": "/findings/0",
+      "representation": "Complete JSON value extraction from pinned original response; no paraphrase or vote conversion",
+      "extracted_confirmation": {
+        "id": "F00",
+        "severity": "REVIEW_SCOPE",
+        "finding": "Recebi o FECHAMENTO DO PEDIDO ADMIT R1 e a repetição literal de A087. Este é o parecer final independente de /root/s2_j2 para o candidato indicado. Os ACKs anteriores eram somente recebimento e achados parciais. O resultado global é HOLD porque ADMIT-SOURCE-BINDINGS permanece HOLD nas treze entries.",
+        "evidence": [
+          "Mensagem de fechamento e sua ativação",
+          "A087 repetido no fechamento"
+        ]
+      },
+      "confirmed_scope": "Closing request, repeated A087 and explicit final activation as self-reported by this reviewer",
+      "full_request_source": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-dossier/dispatch-admit-r1/actual-requests/s2_j2-full-request-SENT-AWAITING-REVIEW.txt",
+        "byte_length": 1197166,
+        "sha256": "fa2de394d5e038875109d101e1b8aaf4e7611fbbe951f40669857330704605ca"
+      },
+      "sealed_literal_request": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/admission-hold-checkpoint/sealed-requests/j2-request.txt",
+        "byte_length": 1197166,
+        "sha256": "fa2de394d5e038875109d101e1b8aaf4e7611fbbe951f40669857330704605ca"
+      },
+      "publication_path": "evaluation-v2/admission-r1/final-requests/j2-request.txt",
+      "base_through39": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-dossier/dispatch-admit-r1/actual-requests/s2_j2-receipt-confirmed-through39.txt",
+        "byte_length": 1189291,
+        "sha256": "c55be9b69c35af4031d8ae755e5b63b2acc1891f88be80d87691b5102ffe1620"
+      },
+      "queued_closing": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-dossier/dispatch-admit-r1/closing-request.txt",
+        "byte_length": 7445,
+        "sha256": "8b413d65c692cde5873c8d312ef166c7d776fbededeb94b6cba946313489e940"
+      },
+      "activation": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-dossier/dispatch-admit-r1/root-captures/s2_j2-final-activation.txt",
+        "byte_length": 430,
+        "sha256": "b30bf324be925da5f4f325ec8e7f1a742660044cb9ed3880eaf43da42a20dcd3"
+      },
+      "activation_record": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-dossier/dispatch-admit-r1/root-captures/s2_j2-final-activation.json",
+        "byte_length": 612,
+        "sha256": "36d9b8d1a9f2b95579161aa923d22338dc77b2dbbe4a519794cc135c6e52a68f"
+      },
+      "concatenation_rule": "through39 + exact closing + exact actual final trigger; no bytes inserted",
+      "preserved_pending_source": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-dossier/dispatch-admit-r1/actual-requests/s2_j2-receipt-confirmed-plus-queued-closing.PENDING.txt",
+        "byte_length": 1196736,
+        "sha256": "7c9c5a0f1df06d77be9bb79cc3123503ded55138874575d7dcc80018b8965410"
+      },
+      "host_message_id": null,
+      "host_timestamp": null,
+      "limits": [
+        "Reviewer-reported receipt is not cryptographic delivery authentication.",
+        "Old PENDING/NOT_SENT files and first unavailable J1wave36 remain historical; no file is retrospectively rewritten."
+      ]
+    }
+  ],
+  "response_bytes_modified": false,
+  "old_dossier_or_pending_files_modified": false,
+  "scope": "Transport receipt and exact identity reconciliation only; no admission or semantic approval by the recorder."
+}

@@ -1,0 +1,56 @@
+{
+  "schema": "genesis-s2-to-s4-source-binding-request/v1",
+  "recorded_at": "2026-11-28T09:50:42.674147+00:00",
+  "state": "CONCRETE_PROPOSAL_NOT_APPLIED_NOT_TESTED",
+  "repository": "gustavomhss/hugr-orchestra",
+  "requesting_front": "S2 Interfaces",
+  "implementation_owner": "S4 Runtime",
+  "publication_scope": "S2 namespace on genesis-interfaces-resume only",
+  "current_candidate": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "current_admission": "HOLD; original J1 PASS and J2 HOLD preserved; no binding/admit/read",
+  "blocker": {
+    "reviewer": "/root/s2_j2",
+    "finding": "F02",
+    "request": "M01",
+    "criterion": "ADMIT-SOURCE-BINDINGS",
+    "affected_entries": 13
+  },
+  "observed_s4": {
+    "branch": "genesis-runtime-resume",
+    "head": "e171783482d0a44974d6056cd9e144a7e33406a7",
+    "runtime": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "fix_in_queried_ref": false,
+    "scope": "Only recorded S4 ref, release and branch searches; not universal absence"
+  },
+  "requested_change": [
+    "Declare @noble/hashes ^1.8.0 in @atlas/kernel and the matching packages/kernel lock entry.",
+    "Run a focal CI control on the changed runtime demonstrating installed-byte identity change and refusal by direct admission and composed index/read, with restoration recorded.",
+    "Publish the exact corrected runtime revision, installed dependency/lock evidence, focal CI receipts and release/handoff."
+  ],
+  "proposal": {
+    "directory": "runtime-followup/noble-source-binding-proposal",
+    "handoff": "runtime-followup/noble-source-binding-proposal/HANDOFF.md",
+    "patch": "runtime-followup/noble-source-binding-proposal/candidate-proposal.patch",
+    "patch_sha256": "abc88bcd7127fff8a00ccf5de108fdfae97a76f0fa51269ed93046aa4698978b",
+    "artifact_manifest": "runtime-followup/noble-source-binding-proposal/artifact-manifest.json",
+    "artifact_manifest_sha256": "5d39e520b08d07403a20e303dd62e6f8b5f04620335d3d33828f71ae0a654885",
+    "static_validation": "runtime-followup/noble-source-binding-proposal/static-validation.json",
+    "test_state": "PROPOSED_NOT_RUN",
+    "runtime_changes_applied": false,
+    "terminology_correction": "runtime-followup/noble-source-binding-proposal/terminology-correction.json"
+  },
+  "s2_resumption": [
+    "Fix exact new runtime bytes and refresh affected helpers, byte-lock, plan pins and isolation.",
+    "Execute a new prepare with its own prepared object, candidate, receipt, streams and measured inventories.",
+    "Obtain two new exact decisions from /root/s2_j1 and /root/s2_j2; do not transplant prior votes.",
+    "Only after both approvals: bind, admit, publish in isolation, index/read and run a fresh independent consumer.",
+    "Deliver the first traversal with receipts before completing the remaining frozen cases and S2-U1."
+  ],
+  "ownership_basis": {
+    "revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "path": ".orchestra/skills/execute-genesis/references/fatia-2.md",
+    "rule": "Alteração necessária fora de sua propriedade segue proposta ao dono; não criar edição concorrente."
+  },
+  "no_external_person_directed_message_sent": true,
+  "no_operational_promotion_or_global_integration": true
+}

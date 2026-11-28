@@ -1,0 +1,1122 @@
+{
+  "schema": "genesis-s2-allowlisted-evidence-archive/v1",
+  "recorded_at": "2026-11-28T09:44:49.241839+00:00",
+  "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "state": "PROPOSALS_AND_STATIC_RECORDS_ONLY_ATLAS_MAINTENANCE_NOT_RUN",
+  "allowlist": {
+    "directories": [
+      "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-plan",
+      "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit",
+      "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-fix-01",
+      "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal",
+      "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-u1-operator-draft"
+    ],
+    "files": []
+  },
+  "files": [
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/README.md",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/README.md",
+      "byte_length": 8815,
+      "sha256": "05e0cfd5919928a25e04d3446be9e899d6b63801d15e23ab492d61e29ba77625",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/build_proposal.py",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/build_proposal.py",
+      "byte_length": 42912,
+      "sha256": "a0b2400168d5889355a8557c3c5243ebcb298cc12abadc0b9202ac94b84c4603",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/index.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/index.json",
+      "byte_length": 37805,
+      "sha256": "9dc5bddb1c78d8d81586261c2a06f5b6c959111393adbd9e55f21ea19f5f6533",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/m0-admit-01.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/m0-admit-01.command-request.template.json",
+      "byte_length": 677,
+      "sha256": "b1c8675d95f63094938fef0494ad2083010b78398512e909d432ff51949c0dd5",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/m0-init-store-01.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/m0-init-store-01.command-request.template.json",
+      "byte_length": 633,
+      "sha256": "e44888e19d9c5724c720a9511cfee31db86c9d9a748d7fc2111732544401f050",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/m0-prepare-01.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/m0-prepare-01.command-request.template.json",
+      "byte_length": 669,
+      "sha256": "999d021d18c9b340b93c2e5347d69b826c263638b16b787291133fa1a2999a97",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/m0-reuse-capture-01.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/m0-reuse-capture-01.command-request.template.json",
+      "byte_length": 591,
+      "sha256": "e6cdbe38ac8951af35b6d83d3743c8f754a866136cc1801dd2056ec70a09b0ef",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/m0-reuse-prepare-01.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/m0-reuse-prepare-01.command-request.template.json",
+      "byte_length": 598,
+      "sha256": "e87e57789a2dccbec4b7b01083fc40213b177441e783a7f723ba9c3fa3db93e0",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/m1-admit-01.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/m1-admit-01.command-request.template.json",
+      "byte_length": 704,
+      "sha256": "ac09010cab6055f65b12f40e3d38ce0b8f063a81bbac2f4e5368731e2870660b",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/m1-build-native-context-{{EXCLUSIVE_OPERATION_SUFFIX}}.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/m1-build-native-context-{{EXCLUSIVE_OPERATION_SUFFIX}}.command-request.template.json",
+      "byte_length": 779,
+      "sha256": "aaec8ba37270708364e8cacfb3c3ebafc037c03662d5dcec5b267dd81c5c246a",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/m1-capture-01.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/m1-capture-01.command-request.template.json",
+      "byte_length": 561,
+      "sha256": "b9c9f738d67a061658a1c325344d4700120e7d41955409aeb4b160d6d44d2646",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/m1-finalize-01.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/m1-finalize-01.command-request.template.json",
+      "byte_length": 574,
+      "sha256": "ceb0d0d63ef761380cf42cce8af955e3be7ccb38ea15574f1dd44c56e33b7475",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/m1-init-store-01.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/m1-init-store-01.command-request.template.json",
+      "byte_length": 653,
+      "sha256": "8ffec6e21b04c3b2b1de4be065865088be5b70373a3c7e6585df7d90ada62986",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/m1-prepare-update-01.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/m1-prepare-update-01.command-request.template.json",
+      "byte_length": 603,
+      "sha256": "cf7ad4ae76efbdd6d1a49da98a391de1745f7e57628f7268a1831b39cdefecef",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/m2-admit-01.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/m2-admit-01.command-request.template.json",
+      "byte_length": 705,
+      "sha256": "9689bf30468082437bb6de69bec254affd8dfba591cb870623faeb75ce36c07d",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/m2-build-native-context-{{EXCLUSIVE_OPERATION_SUFFIX}}.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/m2-build-native-context-{{EXCLUSIVE_OPERATION_SUFFIX}}.command-request.template.json",
+      "byte_length": 778,
+      "sha256": "7a70f83356192ae028ee953a95cdb7d97439df2a541b94d7e31760b5f76cfe04",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/m2-capture-01.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/m2-capture-01.command-request.template.json",
+      "byte_length": 560,
+      "sha256": "e369f2e5765d12cdf70a8267fc30f2cded86f1fd6b5e12ade0226731abb7a3f0",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/m2-finalize-01.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/m2-finalize-01.command-request.template.json",
+      "byte_length": 573,
+      "sha256": "260a0358baddfb1add22f298cb41a7a531e72e7600b93ffad45d07902521e33a",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/m2-init-store-01.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/m2-init-store-01.command-request.template.json",
+      "byte_length": 654,
+      "sha256": "a2282960c25771ebd3d9cd09aaf465d58075f345916574546ff00c84e29b8d1b",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/m2-prepare-update-01.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/m2-prepare-update-01.command-request.template.json",
+      "byte_length": 602,
+      "sha256": "1ca79c036370116a3d34b52a05ea59ea4ebdf13dc91eb96d5f93631a1a6fb27d",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/m2-reuse-capture-01.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/m2-reuse-capture-01.command-request.template.json",
+      "byte_length": 591,
+      "sha256": "3c240382c7ea80e9547ce3cbd050e822ca9d87a636516f5efc98fb96cf40bcf4",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/m2-reuse-prepare-01.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/m2-reuse-prepare-01.command-request.template.json",
+      "byte_length": 598,
+      "sha256": "3954a188ce2f1963c5552fe91caf7b2776cb6bc4a5ad34d22e887602f741713d",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w0-01-index.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w0-01-index.command-request.template.json",
+      "byte_length": 577,
+      "sha256": "e13261f1ed931a00c7283ef73a007e7568d6fec11ea4df1db1c6749ec4ff3dc1",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w0-02-read.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w0-02-read.command-request.template.json",
+      "byte_length": 572,
+      "sha256": "efb374bbb2514fa9053404ba723946d4b1b56f67dd8bebc9c737787d297c75bd",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w0-03-read.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w0-03-read.command-request.template.json",
+      "byte_length": 572,
+      "sha256": "26362dfd744506ca52058474e3128b5c567439c40f768fbdf3ff2f04412494c5",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w1-01-index.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w1-01-index.command-request.template.json",
+      "byte_length": 577,
+      "sha256": "a95ebcc4b8d1ef5e5d2889c72f0f942a003b006ec4fe2305a322974df57326f3",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w1-02-read.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w1-02-read.command-request.template.json",
+      "byte_length": 572,
+      "sha256": "af3c42d139dc6fd8c679dc6723fc4d25139a257dc9e0b502b86972d9c94655ac",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w1-03-read.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w1-03-read.command-request.template.json",
+      "byte_length": 572,
+      "sha256": "0fb41c1e5a3585ed60957ecc4087005439fcacb57af51656b4a8ab5b8d5dc846",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w2-01-index.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w2-01-index.command-request.template.json",
+      "byte_length": 576,
+      "sha256": "6e09405bdfc01c1a4689792f5c557e582504a71a1c67734ec14eb9c491732204",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w2-02-read.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w2-02-read.command-request.template.json",
+      "byte_length": 571,
+      "sha256": "04272bab06d4a852d0726efae1f2ab04c6a260072a5d7074556d997b2acf7659",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w2-03-read.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w2-03-read.command-request.template.json",
+      "byte_length": 571,
+      "sha256": "ac01c36bbb83afb32e7f46bd9b0694b3af14836c90692b2691b185ad03ccd756",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w3-01-index.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w3-01-index.command-request.template.json",
+      "byte_length": 576,
+      "sha256": "0a5eeca869e82d6f859ea58793a2505f36c41435a0a7a89f62380b0e37f761c8",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w3-02-read.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w3-02-read.command-request.template.json",
+      "byte_length": 571,
+      "sha256": "a728b559f19eda38ea7fdeefe974fe0f456f026f9d28094a936626de266608c5",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w3-03-read.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w3-03-read.command-request.template.json",
+      "byte_length": 571,
+      "sha256": "b11859455361e60d543dca1440e5e414c0cba64bd119327d9fa116c163a13a15",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w4-01-index.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w4-01-index.command-request.template.json",
+      "byte_length": 577,
+      "sha256": "94d1f59f2abc02003644e0638aadb541c09531636017aa321922c98b879c0784",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w4-02-read.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w4-02-read.command-request.template.json",
+      "byte_length": 572,
+      "sha256": "018cd238848a16e99ff7a116c0b188719bca2924f9d38e933579aed8ec001213",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w4-03-read.command-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/command-templates/s2-u1-w4-03-read.command-request.template.json",
+      "byte_length": 572,
+      "sha256": "d1cc573f90cf1de7464af27c0bdd174bb3375f5aa0d92a2e2c27221536ee7177",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/evaluation-plan.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/evaluation-plan.json",
+      "byte_length": 36800,
+      "sha256": "b2c5e3146d5d028fbd6b90d0eac99303262af0debd93ed51d1d89fee82823bc1",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/manifest.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/manifest.json",
+      "byte_length": 29047,
+      "sha256": "8072b20bfc340ffffc80d2a0b86bfba1bbfe6d2ee6b6d7e18644b4e2a0d70250",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/materialization-proposal.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/materialization-proposal.json",
+      "byte_length": 749130,
+      "sha256": "a3b1d4740a842660c8bcca059db21417c61da9b8c0ecc2169caa912322c0ab1f",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/operation-templates/m0-reuse-capture-01.operation-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/operation-templates/m0-reuse-capture-01.operation-request.template.json",
+      "byte_length": 1039,
+      "sha256": "4b2a3740a2b2cc8259cd2b16bec0646b01f2adbcf85c68aa3c37bb040fb1d63d",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/operation-templates/m0-reuse-prepare-01.operation-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/operation-templates/m0-reuse-prepare-01.operation-request.template.json",
+      "byte_length": 1414,
+      "sha256": "11cd0063f96b237aef574f0c9b8abe462a72a1735c1bfecbc11fb4561205ba76",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/operation-templates/m1-build-native-context.operation-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/operation-templates/m1-build-native-context.operation-request.template.json",
+      "byte_length": 1484,
+      "sha256": "b6d3ca94f9f982a811ee358e66aaa0b3f9ccd51d706611699ae19705d758ae9c",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/operation-templates/m1-capture-01.operation-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/operation-templates/m1-capture-01.operation-request.template.json",
+      "byte_length": 1032,
+      "sha256": "a73811cb9661f87c7fb348384562b43a1fd64b2aeffe11fc7b4eeec8a50a8653",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/operation-templates/m1-finalize-01.operation-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/operation-templates/m1-finalize-01.operation-request.template.json",
+      "byte_length": 1462,
+      "sha256": "24595b87de756accf1c82f96cd1a5af92fd13554b4b64d80f2890c86b4b72b94",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/operation-templates/m1-prepare-update-01.operation-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/operation-templates/m1-prepare-update-01.operation-request.template.json",
+      "byte_length": 1490,
+      "sha256": "7e3d4d933123fb3b54e2dc5d6a5e2f2e472a554d35a53b4187d161d5ddc4fbe0",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/operation-templates/m2-build-native-context.operation-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/operation-templates/m2-build-native-context.operation-request.template.json",
+      "byte_length": 1504,
+      "sha256": "2a3cb5438cd5baf4aefcf2381a2cfc3677d4186c9194ed7d103a13e09f896265",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/operation-templates/m2-capture-01.operation-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/operation-templates/m2-capture-01.operation-request.template.json",
+      "byte_length": 1053,
+      "sha256": "00a44debe90b8b3a145c3ac1ad82ed934fd78f39c298c8da7caf623c47c31961",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/operation-templates/m2-finalize-01.operation-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/operation-templates/m2-finalize-01.operation-request.template.json",
+      "byte_length": 1484,
+      "sha256": "2088b2b5602808ad5bc0f5bf91769465a88d2858f07bcb4e8bea2c17b590aeb9",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/operation-templates/m2-prepare-update-01.operation-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/operation-templates/m2-prepare-update-01.operation-request.template.json",
+      "byte_length": 1512,
+      "sha256": "a3150205faed8af7018609e2d227cdadfb72a8343b1c8f56393b2ecc61cd12c6",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/operation-templates/m2-reuse-capture-01.operation-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/operation-templates/m2-reuse-capture-01.operation-request.template.json",
+      "byte_length": 1060,
+      "sha256": "e11f5f95a5401b0c23d579cc9b6fe677aeabf94e2cf1d089ff5253d2c34dda3c",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/operation-templates/m2-reuse-prepare-01.operation-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/operation-templates/m2-reuse-prepare-01.operation-request.template.json",
+      "byte_length": 1435,
+      "sha256": "4043a56d9ab9a107df0024d02d9092bcd9d20d9cc3500ecbef77959f3f9509c3",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/operator-plan.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/operator-plan.json",
+      "byte_length": 22993,
+      "sha256": "c70dafc9ef266f82ee207673791c2968b87bf6d13ca4c179ce373b7c86aec6aa",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/placeholder-catalog.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/placeholder-catalog.json",
+      "byte_length": 18534,
+      "sha256": "b2fa412df65014f9dc2822d74e65e1066a056a2042cf8919a3b6f60d3d50854f",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/policies/S2-U1-W0.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/policies/S2-U1-W0.template.json",
+      "byte_length": 562,
+      "sha256": "7a80c27c7b15e48c3273b86031c59a61a08a517d56a6f0801ea9baca5aba848e",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/policies/S2-U1-W1.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/policies/S2-U1-W1.template.json",
+      "byte_length": 565,
+      "sha256": "a9933471abea7e983885443c4a6c5ac71923877c18eb99094914c8ae0f68a518",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/policies/S2-U1-W2.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/policies/S2-U1-W2.template.json",
+      "byte_length": 561,
+      "sha256": "a920623cdb64c36558774995959e9ce357686f04f6edb9924f81cc9b663d931e",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/policies/S2-U1-W3.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/policies/S2-U1-W3.template.json",
+      "byte_length": 564,
+      "sha256": "b7f05be4359513829b27541adfd759ef488cdb48c19bcc87e71eddd1e90bac9a",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/policies/S2-U1-W4.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/policies/S2-U1-W4.template.json",
+      "byte_length": 562,
+      "sha256": "463215e4e133f49c172a86b3dc5df08fca251987ed8c88b16da43ca27498f776",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/policies/governance-policy.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/policies/governance-policy.template.json",
+      "byte_length": 163,
+      "sha256": "edc84d9c4809be52f1ccea1b72851aa54c11fa81777a890c988a05b00e97cf22",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/policies/m0-admit.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/policies/m0-admit.template.json",
+      "byte_length": 508,
+      "sha256": "6464eadf32fb29c0f5d802c98f0b559b61cf3d58b0ee096aee6418cf8f0a8b03",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/policies/m0-maintenance.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/policies/m0-maintenance.template.json",
+      "byte_length": 525,
+      "sha256": "282c97ada6e78857afb2f1c4bc535b19ebffac0f45a4386e73a0896dc19be6c9",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/policies/m1-admit.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/policies/m1-admit.template.json",
+      "byte_length": 507,
+      "sha256": "793d94b09ef22a414cf24efe7bac390412042e7360ce0cb3ea6616a7a7fd65c1",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/policies/m1-maintenance.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/policies/m1-maintenance.template.json",
+      "byte_length": 524,
+      "sha256": "2ce21ad17cf5d0105e70a6ef686e5ecde66e8b570509892f47eb36912ae1907b",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/policies/m2-admit.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/policies/m2-admit.template.json",
+      "byte_length": 508,
+      "sha256": "4721a03777d69f2c1655a39c2f031b636b8a850a05272bea4f3dc9cb5420da4b",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/policies/m2-maintenance.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/policies/m2-maintenance.template.json",
+      "byte_length": 525,
+      "sha256": "43a62f69b6498e0280df57548969ea522be5ae60da121df90d000701f5793f0f",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/policies/policy-transition-proposal.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/policies/policy-transition-proposal.json",
+      "byte_length": 2635,
+      "sha256": "3650e7bfd2d4f8877734856c4d2f73ee26bb230d97915af3fa0da701db85e463",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/proposal-summary.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/proposal-summary.json",
+      "byte_length": 2783,
+      "sha256": "0f61ef7d9d4c458daeda4553b7035c54a53e30d9565d0f261c72ddd4f784ff81",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/proposed-generations.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/proposed-generations.json",
+      "byte_length": 1452,
+      "sha256": "b9ff6660d8fba0621e8617b5da0bc005dd6cccb9ee7a3d72dd090af2e804c3d3",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W0-01.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W0-01.json",
+      "byte_length": 60,
+      "sha256": "78bf2fee349a7e0ad3129327f5373e1d622b8d8fe0e3a376e10fc38e712ec6ce",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W0-02.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W0-02.json",
+      "byte_length": 89,
+      "sha256": "d12564d3374896fe2c266e602648d506f3bac164d8f7984da244608f1890bcae",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W0-03.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W0-03.json",
+      "byte_length": 89,
+      "sha256": "09a2b573fe806c710c645a794b17cbbe16c3386d263b954e1239b42b7386494e",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W1-01.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W1-01.json",
+      "byte_length": 60,
+      "sha256": "78bf2fee349a7e0ad3129327f5373e1d622b8d8fe0e3a376e10fc38e712ec6ce",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W1-02.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W1-02.json",
+      "byte_length": 88,
+      "sha256": "29b5f17413b183814f12f3c240afb99a686612f72f1205b3cfc39af5585bc1bd",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W1-03.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W1-03.json",
+      "byte_length": 88,
+      "sha256": "0f3fe8aa92c437e052dbebf5b201eef4393b57f9c735097d6bb4d2c8329520cc",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W2-01.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W2-01.json",
+      "byte_length": 60,
+      "sha256": "78bf2fee349a7e0ad3129327f5373e1d622b8d8fe0e3a376e10fc38e712ec6ce",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W2-02.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W2-02.json",
+      "byte_length": 89,
+      "sha256": "d12564d3374896fe2c266e602648d506f3bac164d8f7984da244608f1890bcae",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W2-03.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W2-03.json",
+      "byte_length": 89,
+      "sha256": "09a2b573fe806c710c645a794b17cbbe16c3386d263b954e1239b42b7386494e",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W3-01.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W3-01.json",
+      "byte_length": 60,
+      "sha256": "78bf2fee349a7e0ad3129327f5373e1d622b8d8fe0e3a376e10fc38e712ec6ce",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W3-02.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W3-02.json",
+      "byte_length": 88,
+      "sha256": "29b5f17413b183814f12f3c240afb99a686612f72f1205b3cfc39af5585bc1bd",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W3-03.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W3-03.json",
+      "byte_length": 88,
+      "sha256": "0f3fe8aa92c437e052dbebf5b201eef4393b57f9c735097d6bb4d2c8329520cc",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W4-01.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W4-01.json",
+      "byte_length": 60,
+      "sha256": "78bf2fee349a7e0ad3129327f5373e1d622b8d8fe0e3a376e10fc38e712ec6ce",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W4-02.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W4-02.json",
+      "byte_length": 89,
+      "sha256": "d12564d3374896fe2c266e602648d506f3bac164d8f7984da244608f1890bcae",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W4-03.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/reader-queries/S2-U1-W4-03.json",
+      "byte_length": 89,
+      "sha256": "09a2b573fe806c710c645a794b17cbbe16c3386d263b954e1239b42b7386494e",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/static-schema-review.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/static-schema-review.json",
+      "byte_length": 3553,
+      "sha256": "4007aef77b6e9a1b68f33708f1caf0533e6c0a47cce5f4c66c9739b6f0eb9e21",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/witness-packets/S2-U1-W0.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/witness-packets/S2-U1-W0.json",
+      "byte_length": 1596,
+      "sha256": "8a3ff200384ca34bb8e7b7b627243d60828f923293c8ad0d64797c30b4c06a59",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/witness-packets/S2-U1-W1.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/witness-packets/S2-U1-W1.json",
+      "byte_length": 1551,
+      "sha256": "6a2a278ef38429ef5bbefad9aea7ada226d259e46d405d27380e5f5018b2ec29",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/witness-packets/S2-U1-W2.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/witness-packets/S2-U1-W2.json",
+      "byte_length": 1596,
+      "sha256": "54df5b23f3de2f67898467c5133d6f2c3092754db56f4a118d061fcc7c95d323",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/witness-packets/S2-U1-W3.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/witness-packets/S2-U1-W3.json",
+      "byte_length": 1551,
+      "sha256": "0b22c34096c41baa25c8e36ac0f1dc2f327ae80796a23d98d2f46c57850b4b38",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-m0-proposal/witness-packets/S2-U1-W4.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-m0-proposal/witness-packets/S2-U1-W4.json",
+      "byte_length": 1596,
+      "sha256": "28cd419b96ed7dd2d9abbe354419315d1fa54f6a65c0e495187ba57b4629e610",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/README.md",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/README.md",
+      "byte_length": 9049,
+      "sha256": "610f704658f5461a32451c7dab03f9fda1bf87d25c24c7e08d130ed303b389ea",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/collect_static_evidence.py",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/collect_static_evidence.py",
+      "byte_length": 18280,
+      "sha256": "dc7bf3d3c913add173f9742747d92b0b2402afee7ba92d6498a84cb37849cb52",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/manifest.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/manifest.json",
+      "byte_length": 8009,
+      "sha256": "efc4e7670fb9bf3403f489a228bdc8047d33b506e60ca125174aa953c9878d9e",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/report.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/report.json",
+      "byte_length": 98799,
+      "sha256": "497a1343eb591b4b6286adf88da0d86b56ecbd0c0c8a53f436ee957f8ea40d27",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/fixed-helpers/capture-state-operation.py",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/fixed-helpers/capture-state-operation.py",
+      "byte_length": 3569,
+      "sha256": "b7022b3205d04f02b6fceaee94d2f7912f15271be6ee4b2e4d7c62ba0013a441",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/fixed-helpers/record-operation.py",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/fixed-helpers/record-operation.py",
+      "byte_length": 8411,
+      "sha256": "0185ccf143d7a5d1112b573fd0405da899b27d112cb4c7b431e1cbb1da629b30",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/maintenance-plan/DRIVER-DRAFT.md",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/maintenance-plan/DRIVER-DRAFT.md",
+      "byte_length": 6700,
+      "sha256": "1e81ebb4aef53947a8088b2bcaafdd81ba83aa6a259823a8bb5bdda359845860",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/maintenance-plan/S2-U1-PLAN.md",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/maintenance-plan/S2-U1-PLAN.md",
+      "byte_length": 11595,
+      "sha256": "3175030f394be2f27e640035aa7b501e40539c61bd5049fd327c60e6e76f9fd0",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/maintenance-plan/build-native-request.mjs",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/maintenance-plan/build-native-request.mjs",
+      "byte_length": 16970,
+      "sha256": "f89b6f69f939e3a18850749a74d287fcc610fb3b2ce2fadf2c534a72e00ed410",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/maintenance-plan/build-operation-config.py",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/maintenance-plan/build-operation-config.py",
+      "byte_length": 14874,
+      "sha256": "c0b13b615b1a5c3b9db44459eefb450367975f3a265cad5ad231e0ce56db752a",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/maintenance-plan/draft-helper-inventory.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/maintenance-plan/draft-helper-inventory.json",
+      "byte_length": 2383,
+      "sha256": "fcfbf5e44f312a737e25b233c1ea9a7f880534474efeed31b06c4254c6453182",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/maintenance-plan/plan.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/maintenance-plan/plan.json",
+      "byte_length": 15542,
+      "sha256": "8947292539ce0ab0bec41631a03788c9dd1f2c8c7abe40ca43304b23f9c24ded",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/maintenance-plan/recipe-registry.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/maintenance-plan/recipe-registry.json",
+      "byte_length": 106803,
+      "sha256": "f21d937f79ca5da480f995b7461862d6635a761c180bddb024498b3c424af459",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/maintenance-plan/static-reconciliation.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/maintenance-plan/static-reconciliation.json",
+      "byte_length": 117305,
+      "sha256": "a62977f14122c8508ddf7a6fc6b49623333b619c442f177ff3d21610867b81f8",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/maintenance-plan/u1-evaluation-operation.mjs",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/maintenance-plan/u1-evaluation-operation.mjs",
+      "byte_length": 19364,
+      "sha256": "d1e19cbaad209d759c51f58735048244f1104dee13fc33477cbf360d9c47103e",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/runtime/modules/atlas/packages/adapter-io/src/evaluation-rebuild.ts",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/runtime/modules/atlas/packages/adapter-io/src/evaluation-rebuild.ts",
+      "byte_length": 23553,
+      "sha256": "1e511bd090ab303f0ee9cb8c69c1d6289a5a5c5cabbe5cd96c56833ad6a52a9e",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/runtime/modules/atlas/packages/adapter-io/src/genesis-evaluation-binding.ts",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/runtime/modules/atlas/packages/adapter-io/src/genesis-evaluation-binding.ts",
+      "byte_length": 3849,
+      "sha256": "44cd65c861254fb0b349767c69df9a7b9a013b10d0184f1149aa132953b1c9ac",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/runtime/modules/atlas/packages/adapter-io/src/genesis-evaluation.ts",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/runtime/modules/atlas/packages/adapter-io/src/genesis-evaluation.ts",
+      "byte_length": 18114,
+      "sha256": "f7b9eb3f3163788d11b4f9eace24a361e7e3e7e37f2f6daab816c81d558ed1b0",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/runtime/modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/runtime/modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "byte_length": 13356,
+      "sha256": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/runtime/modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/runtime/modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+      "byte_length": 4162,
+      "sha256": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/runtime/modules/atlas/packages/adapter-io/src/ownership-evaluation-policy.ts",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/runtime/modules/atlas/packages/adapter-io/src/ownership-evaluation-policy.ts",
+      "byte_length": 12532,
+      "sha256": "cb59a6c0befa1563d1aa90f858028d2d1bb7f2c7506951c3b4263ec2ca36ffdb",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/runtime/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/runtime/modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+      "byte_length": 21225,
+      "sha256": "4f38223d0d513b38fdd489aa7fea5a3cc818b1cc37a180973167f732f2494a18",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/runtime/modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/runtime/modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+      "byte_length": 7283,
+      "sha256": "de852f5091ed1c2f9589211a9fc1ad55c8fa8c04a40cebb9cfd2ad1980faf0d8",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-audit/snapshots/runtime/modules/atlas/scripts/genesis-evaluation.ts",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-audit/snapshots/runtime/modules/atlas/scripts/genesis-evaluation.ts",
+      "byte_length": 3558,
+      "sha256": "3f7477b37400c1ffeea550ca0d48b328b16dedcea4deb015ad190128ff63b94c",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-fix-01/after/DRIVER-DRAFT.md",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-fix-01/after/DRIVER-DRAFT.md",
+      "byte_length": 10666,
+      "sha256": "f522b7547036c951b83d4719eca2d2c19235c3174b8f7dce3fa2bc1e1ca263e5",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-fix-01/after/build-native-request.mjs",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-fix-01/after/build-native-request.mjs",
+      "byte_length": 19256,
+      "sha256": "d73b6136c2021566dbc8e6b395cbec9089469274c9a790d199676749e94c89f1",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-fix-01/after/build-operation-config.py",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-fix-01/after/build-operation-config.py",
+      "byte_length": 16112,
+      "sha256": "62d4ae06a2ae89812fd29b408f8c1631730dc9028c249c1c61642986adcee217",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-fix-01/after/draft-helper-inventory.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-fix-01/after/draft-helper-inventory.json",
+      "byte_length": 5332,
+      "sha256": "8db932935f515825cebf700d7a77e13fdaf0cd44991b60149849acbe180e9171",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-fix-01/after/recipe-registry.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-fix-01/after/recipe-registry.json",
+      "byte_length": 106803,
+      "sha256": "f21d937f79ca5da480f995b7461862d6635a761c180bddb024498b3c424af459",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-fix-01/after/u1-evaluation-operation.mjs",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-fix-01/after/u1-evaluation-operation.mjs",
+      "byte_length": 21525,
+      "sha256": "d17aa2d06d68a817a0fc9abcb1e605340972ffefe6e95fdccd966988e314aad8",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-fix-01/changes.patch",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-fix-01/changes.patch",
+      "byte_length": 32065,
+      "sha256": "64a996f30438c3b7ad7251dd52f7f3e8e1ab9a40b4a136a6c0847f7a39c4449c",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-fix-01/manifest.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-fix-01/manifest.json",
+      "byte_length": 2899,
+      "sha256": "0cce18aa8ac877f9e4ce954524e6a0e74f15668f2ca4667a194d2c6c969b52a3",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-fix-01/report.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-fix-01/report.json",
+      "byte_length": 33555,
+      "sha256": "ceab8c8dc60a243f384ebab94e859257c15be22b16c9c5b5bb074304b392d780",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-mechanical-fix-01/syntax-check-receipt.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-mechanical-fix-01/syntax-check-receipt.json",
+      "byte_length": 2174,
+      "sha256": "45195d465c1d9ee31ca4d8013971939329fa5034f854f343f7c6ff02e45a2a3e",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-plan/DRIVER-DRAFT.md",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-plan/DRIVER-DRAFT.md",
+      "byte_length": 10666,
+      "sha256": "f522b7547036c951b83d4719eca2d2c19235c3174b8f7dce3fa2bc1e1ca263e5",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-plan/S2-U1-PLAN.md",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-plan/S2-U1-PLAN.md",
+      "byte_length": 11595,
+      "sha256": "3175030f394be2f27e640035aa7b501e40539c61bd5049fd327c60e6e76f9fd0",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-plan/build-native-request.mjs",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-plan/build-native-request.mjs",
+      "byte_length": 19256,
+      "sha256": "d73b6136c2021566dbc8e6b395cbec9089469274c9a790d199676749e94c89f1",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-plan/build-operation-config.py",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-plan/build-operation-config.py",
+      "byte_length": 16112,
+      "sha256": "62d4ae06a2ae89812fd29b408f8c1631730dc9028c249c1c61642986adcee217",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-plan/common-controls-map.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-plan/common-controls-map.json",
+      "byte_length": 7640,
+      "sha256": "7ceb5c1dbc5b86014d49c204268dd9852586310ef34ac473e99e8a77f0c0d835",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-plan/draft-helper-inventory.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-plan/draft-helper-inventory.json",
+      "byte_length": 5332,
+      "sha256": "8db932935f515825cebf700d7a77e13fdaf0cd44991b60149849acbe180e9171",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-plan/history/20261128-mechanical-fix-01-before/DRIVER-DRAFT.md",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-plan/history/20261128-mechanical-fix-01-before/DRIVER-DRAFT.md",
+      "byte_length": 6700,
+      "sha256": "1e81ebb4aef53947a8088b2bcaafdd81ba83aa6a259823a8bb5bdda359845860",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-plan/history/20261128-mechanical-fix-01-before/build-native-request.mjs",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-plan/history/20261128-mechanical-fix-01-before/build-native-request.mjs",
+      "byte_length": 16970,
+      "sha256": "f89b6f69f939e3a18850749a74d287fcc610fb3b2ce2fadf2c534a72e00ed410",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-plan/history/20261128-mechanical-fix-01-before/build-operation-config.py",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-plan/history/20261128-mechanical-fix-01-before/build-operation-config.py",
+      "byte_length": 14874,
+      "sha256": "c0b13b615b1a5c3b9db44459eefb450367975f3a265cad5ad231e0ce56db752a",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-plan/history/20261128-mechanical-fix-01-before/draft-helper-inventory.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-plan/history/20261128-mechanical-fix-01-before/draft-helper-inventory.json",
+      "byte_length": 2383,
+      "sha256": "fcfbf5e44f312a737e25b233c1ea9a7f880534474efeed31b06c4254c6453182",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-plan/history/20261128-mechanical-fix-01-before/recipe-registry.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-plan/history/20261128-mechanical-fix-01-before/recipe-registry.json",
+      "byte_length": 106803,
+      "sha256": "f21d937f79ca5da480f995b7461862d6635a761c180bddb024498b3c424af459",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-plan/history/20261128-mechanical-fix-01-before/snapshot-manifest.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-plan/history/20261128-mechanical-fix-01-before/snapshot-manifest.json",
+      "byte_length": 3587,
+      "sha256": "fa9e4bfcba0fa8a5911d909615d79ec06e0a47d7c528e2ac87a85d386fd8beee",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-plan/history/20261128-mechanical-fix-01-before/u1-evaluation-operation.mjs",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-plan/history/20261128-mechanical-fix-01-before/u1-evaluation-operation.mjs",
+      "byte_length": 19364,
+      "sha256": "d1e19cbaad209d759c51f58735048244f1104dee13fc33477cbf360d9c47103e",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-plan/owned-serve-proposed.patch",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-plan/owned-serve-proposed.patch",
+      "byte_length": 166,
+      "sha256": "0cc596dc56a103fa7102d65668b5f2fb0498299d7420efb977f6520f4a026786",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-plan/plan.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-plan/plan.json",
+      "byte_length": 15542,
+      "sha256": "8947292539ce0ab0bec41631a03788c9dd1f2c8c7abe40ca43304b23f9c24ded",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-plan/recipe-registry.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-plan/recipe-registry.json",
+      "byte_length": 106803,
+      "sha256": "f21d937f79ca5da480f995b7461862d6635a761c180bddb024498b3c424af459",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-plan/static-reconciliation.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-plan/static-reconciliation.json",
+      "byte_length": 117305,
+      "sha256": "a62977f14122c8508ddf7a6fc6b49623333b619c442f177ff3d21610867b81f8",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-plan/u1-evaluation-operation.mjs",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-plan/u1-evaluation-operation.mjs",
+      "byte_length": 21525,
+      "sha256": "d17aa2d06d68a817a0fc9abcb1e605340972ffefe6e95fdccd966988e314aad8",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-u1-operator-draft/README.md",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-u1-operator-draft/README.md",
+      "byte_length": 6678,
+      "sha256": "a643567352842ab99ddfb11d413139bbc7fb3b2db0491c552336c933d7377d8c",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-u1-operator-draft/e002-reuse.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-u1-operator-draft/e002-reuse.json",
+      "byte_length": 714,
+      "sha256": "b879b292d7f136c8b2da103133d48d02398f7cc5033813d11cf8ccf3dc1f74bd",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-u1-operator-draft/install-u1-policy.py",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-u1-operator-draft/install-u1-policy.py",
+      "byte_length": 6586,
+      "sha256": "0806dcbee58a312d8814caabb76b16439746b34754098af0c4803c68a0b15124",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-u1-operator-draft/integration-amendment.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-u1-operator-draft/integration-amendment.json",
+      "byte_length": 9843,
+      "sha256": "7d829d384d0cd1f39e9dd4ae336e71e27826b5d258931d9508a8526a7fd0acf0",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-u1-operator-draft/manifest.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-u1-operator-draft/manifest.json",
+      "byte_length": 4583,
+      "sha256": "d5a623ad6d1f00c189d714197d65cabfa4337c748370b05aa48f0ac58a498265",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-u1-operator-draft/operator-scope.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-u1-operator-draft/operator-scope.json",
+      "byte_length": 4186,
+      "sha256": "d69821ff69dc866e07f21c06f333a11a431b98ecc4bc9d13758a15162d15898b",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-u1-operator-draft/proposed-integration/evaluation-plan.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-u1-operator-draft/proposed-integration/evaluation-plan.json",
+      "byte_length": 38610,
+      "sha256": "13d10d2f6ab16429fbd8d290431e37ab4882d3eb92ef4225696e9bf957639668",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-u1-operator-draft/proposed-integration/source-overlay.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-u1-operator-draft/proposed-integration/source-overlay.json",
+      "byte_length": 7440,
+      "sha256": "0960a6a37ef3fa9a8010bf5a303259d986b7eac14967d02ee6dd9fd47b35cd77",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-u1-operator-draft/reference/e002-run-reader-operation.py",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-u1-operator-draft/reference/e002-run-reader-operation.py",
+      "byte_length": 13779,
+      "sha256": "955031da137d2052e333d495096a660369246b9ed92707f1e72745d729a252e5",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-u1-operator-draft/run-u1-witness.py",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-u1-operator-draft/run-u1-witness.py",
+      "byte_length": 10806,
+      "sha256": "341352f92165b07b5596dc5d44fa4578f5fe3c37b959c6f43277c78d63d6f618",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-u1-operator-draft/static-reconciliation.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-u1-operator-draft/static-reconciliation.json",
+      "byte_length": 7847,
+      "sha256": "1eb0655ebc8458fd55fb3d298996fc46bd3f2e2f1a596ffbf4cda9fd7a412237",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-u1-operator-draft/syntax-only.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-u1-operator-draft/syntax-only.json",
+      "byte_length": 1801,
+      "sha256": "5e3084383775ceec31710686c2e6f0821e43e92f7e9c8b6c3d84f88f490e62ab",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-u1-operator-draft/templates/policy-install-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-u1-operator-draft/templates/policy-install-request.template.json",
+      "byte_length": 1418,
+      "sha256": "a53931d40d92ededd20d8ebad60d8da41bf08fc647225f5b46a8e39da525c289",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-u1-operator-draft/templates/witness-bridge-request.template.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-u1-operator-draft/templates/witness-bridge-request.template.json",
+      "byte_length": 1653,
+      "sha256": "c9060829c163e7460644c67f2d60b6ebbe23da7a944eae83ec8368b939173445",
+      "source_mode": "0o644"
+    },
+    {
+      "member": "s2-investigation/maintenance-u1-operator-draft/u1_operator_common.py",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/maintenance-u1-operator-draft/u1_operator_common.py",
+      "byte_length": 17372,
+      "sha256": "fe7924d60459b6649a85994fd335d3c696e3311c3e4a60e199e2c8478bc2e123",
+      "source_mode": "0o644"
+    }
+  ],
+  "file_count": 157,
+  "uncompressed_payload_bytes": 2459891,
+  "path_rule": "Workspace-relative original paths; exact original file bytes. ZIP timestamps/modes normalized, original source mode recorded.",
+  "private_custody_or_library_data_included": false,
+  "atlas_or_tests_executed_for_archiving": false
+}

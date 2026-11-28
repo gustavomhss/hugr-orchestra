@@ -7,7 +7,7 @@
   "initial_head": "bb2a931301d541692b11e5a7f1eab234cd9ed2fd",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
-  "state": "IN_PROGRESS",
+  "state": "INCOMPLETE_BLOCKED",
   "delivery_complete": false,
   "completed": [
     "bounded-original-r4-search",
@@ -29,7 +29,14 @@
     "explicit-isolated-init-store01",
     "exact-admit-only-policy-installation01",
     "guards-on-8a5fd823",
-    "static-S2-U1-plan-preserved-NOT_RUN"
+    "static-S2-U1-plan-preserved-NOT_RUN",
+    "39-review-waves-and-explicit-corrections-preserved",
+    "two-final-ADMIT-reviews-captured-with-split-verdicts",
+    "final-request-receipt-confirmed-and-sealed",
+    "13-entry-four-criterion-identities-mechanically-reconciled",
+    "consumer-packets-and-U1-drafts-preserved-NOT_RUN",
+    "S4-source-binding-cause-and-concrete-patch-CI-proposal-preserved",
+    "applicable-staged-payload-guards-executed-FAIL-preserved"
   ],
   "historical_r4_recovered": false,
   "new_prepare": {
@@ -60,7 +67,7 @@
       "judgments/record-r1/j2-response.json"
     ]
   },
-  "binding_review": "IN_PROGRESS_NO_FINAL_ADMIT_DECISIONS; ADMISSION_NOT_RUN",
+  "binding_review": "ADMISSION_HOLD; J1 PASS52; J2 PASS39/HOLD13_SOURCE_BINDINGS; NO_BINDING_OR_ADMISSION",
   "own_ci": "NO_NEW_PRODUCT_CODE; COMMON_EXACT_RUNTIME_CI_REUSE_RECORDED; FINAL_APPLICABLE_GATES_PENDING",
   "local_guards": {
     "schema": "genesis-s2-checkpoint-guard-summary/v1",
@@ -79,12 +86,13 @@
     "tested_payload": "8a5fd8230d0ada0c4c510fa6221562726d5c1722"
   },
   "open": [
-    "Two exact final v2 ADMIT decisions on d1 including the disclosed runtime coverage limit and actual setup",
-    "Construct exact binding and run governed admission after both final decisions",
-    "Actual index/read and first fresh independent consumer",
-    "All14 frozen cases; current count0/14",
-    "S2-U1 maintenance scope, reviewed driver/producer bridge, target plans and actual recovery evidence",
-    "Applicable gates for subsequent payloads and final S2 operational judgments/seal"
+    "S4-owned resolution of the mandatory runtime implementation binding/refusal described by J2 F02/M01; no concurrent S2 runtime edit or bypass of HOLD",
+    "If bound runtime inputs change: obtain compatible runtime, execute a new prepare with its own candidate/receipt, and submit exact bindings to the same independent pair",
+    "Construct binding and run governed admission only after both exact ADMIT approvals",
+    "Actual index/read and first independent consumer; frozen cases remain0/14",
+    "Complete the remaining frozen cases and S2-U1 with its own reviewed targets/recipes/producer bridge and evidence",
+    "Applicable later gates and final S2 operational judgments/seal; task is not complete",
+    "Local Guardrail: four unresolved gate findings on preserved helper/captured-manifest data, reported without waiver; no green final gate claimed."
   ],
   "global": {
     "owner": "ROOT/Gustavo",
@@ -97,7 +105,7 @@
     "billing": "UNKNOWN",
     "historical_accounting": "GLOBAL_UNRECONCILED"
   },
-  "updated_at": "2026-11-28T07:26:00.627453+00:00",
+  "updated_at": "2026-11-28T09:54:49.839925+00:00",
   "common_runtime_qualification": {
     "run_id": 46114652347,
     "harness_revision": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
@@ -143,14 +151,15 @@
     "intrinsic_keys": 925,
     "static_comparisons": 22752,
     "transformation_divergences": 0,
-    "status": "STATIC_RECONCILIATION_WITH_MATERIAL_COVERAGE_GAP",
+    "status": "MATERIAL_COVERAGE_GAP_BLOCKS_ADMISSION",
     "gap": "Workspace-root @noble/hashes remains omitted from intrinsic collector. The external1170-file lock was actually used in prepare03 and init-store01 with unchanged inputs; it does not modify intrinsic runtime identity or transfer guard evidence to prepare02.",
     "evidence": "evaluation-v2/audit/report.json",
     "supplement": "evaluation-v2/proposed-authority/runtime-coverage-supplement.json",
     "actual_guard_receipts": [
       "evaluation-v2/prepare-03/receipt.json",
       "evaluation-v2/init-store-01/receipt.json"
-    ]
+    ],
+    "current_review": "evaluation-v2/admission-r1/final-reviews/j2-response.txt"
   },
   "previous_evaluation_prepares": [
     {
@@ -193,11 +202,12 @@
     },
     "sequencing_amendment": "evaluation-v2/setup-sequencing/sequencing-amendment-before-init.json",
     "admission": "NOT_RUN",
-    "final_ADMIT_decisions": "PENDING",
+    "final_ADMIT_decisions": "RECEIVED_SPLIT_PAIR_ADMISSION_HOLD",
     "index_read": "NOT_RUN",
     "consumer_cases_executed": 0,
     "consumer_cases_total": 14,
-    "S2-U1": "NOT_RUN"
+    "S2-U1": "NOT_RUN",
+    "binding": "NOT_CREATED"
   },
   "local_guards_history": [
     {
@@ -210,10 +220,92 @@
     }
   ],
   "maintenance_static_plan": {
-    "state": "PROPOSED_STATIC_ONLY_NOT_EXECUTED",
+    "state": "DRAFTS_AND_STATIC_ANALYSIS_PRESERVED",
     "execution": "NOT_RUN",
-    "plan": "evaluation-v2/maintenance-static-plan/S2-U1-PLAN.md",
-    "driver": "NOT_IMPLEMENTED_OR_EXECUTED",
-    "oracle_unchanged": true
+    "driver": "DRAFT_PREPARED_NOT_RUN",
+    "target_roots": "NOT_CREATED",
+    "patch_applied": false,
+    "producers_or_witnesses_executed": false,
+    "archive": "evaluation-v2/admission-r1/archives/maintenance-not-run-evidence.zip",
+    "scope": "Includes proposals, mechanical audit/fix records and operator drafts; no target prepare, admission, maintenance, read or semantic judgment is inferred."
+  },
+  "admission_review": {
+    "state": "ADMISSION_HOLD",
+    "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+    "purpose": "isolated-evaluation-admission",
+    "reviewers": [
+      {
+        "reviewer": "/root/s2_j1",
+        "global_verdict": "PASS",
+        "criterion_counts": {
+          "PASS": 52
+        },
+        "response": "evaluation-v2/admission-r1/final-reviews/j1-response.txt",
+        "response_sha256": "9354131a19ddd0cefbd77c45efd1a3d6de35bda79c0ef653756e5fa16636c5dc"
+      },
+      {
+        "reviewer": "/root/s2_j2",
+        "global_verdict": "HOLD",
+        "criterion_counts": {
+          "PASS": 39,
+          "HOLD": 13
+        },
+        "response": "evaluation-v2/admission-r1/final-reviews/j2-response.txt",
+        "response_sha256": "93778e0e6a839953536aaad0f2e39c4e2e14687d6ac69a2d1baa1b388aae201b"
+      }
+    ],
+    "binding": "NOT_CREATED",
+    "admit": "NOT_RUN",
+    "publication": "NOT_RUN",
+    "index_read": "NOT_RUN",
+    "consumer_cases": {
+      "executed": 0,
+      "total": 14
+    },
+    "S2-U1": "NOT_RUN",
+    "blocker": {
+      "reviewer": "/root/s2_j2",
+      "finding": "F02",
+      "request": "M01",
+      "criterion": "ADMIT-SOURCE-BINDINGS",
+      "entries": 13,
+      "summary": "Installed @noble/hashes bytes are outside the intrinsic identity checked by supported paths. The optional operator wrapper does not establish mandatory refusal of implementation drift.",
+      "resolution_owner": "S4",
+      "changed_runtime_requires_new_prepare_candidate_and_reviews": true
+    },
+    "original_v1_HOLD_preserved": true,
+    "review_response_bytes_modified": false
+  },
+  "current_checkpoint": {
+    "state": "INCOMPLETE_BLOCKED",
+    "scope": "ADMISSION_HOLD preservation, concrete S4 proposal and failed local gate report",
+    "evidence": "evaluation-v2/admission-r1/README.md",
+    "S4_followup_proposal": "handoff-s2-to-s4.json; concrete owner proposal only, not applied or tested"
+  },
+  "s4_source_binding_followup": {
+    "recorded_at": "2026-11-28T09:50:42.674147+00:00",
+    "state": "PROPOSAL_READY_RUNTIME_FIX_PENDING",
+    "request": "handoff-s2-to-s4.json",
+    "handoff": "runtime-followup/noble-source-binding-proposal/HANDOFF.md",
+    "patch_sha256": "abc88bcd7127fff8a00ccf5de108fdfae97a76f0fa51269ed93046aa4698978b",
+    "runtime_applied": false,
+    "focal_test_executed": false,
+    "new_prepare_executed_after_fix": false
+  },
+  "latest_local_guard": {
+    "state": "FAIL_FINDINGS_REPORTED",
+    "exit_code": 1,
+    "base_sha": "3aaa5e0645f99940b66ee90d28aef93166f09ab1",
+    "tested_head": "87a7161952254e2cbbc36249c37467be81f521bb",
+    "staged_payload_tree": "b4e876f8681bf4ab0871df63dbd3cca78a151580",
+    "rules": 78,
+    "changed_paths": 1985,
+    "warnings": 227,
+    "gate_findings": 4,
+    "errors": 0,
+    "receipt": "gates/guards-admission-hold-proposal/receipt.json",
+    "findings_report": "gates/guard-findings-admission-hold.json",
+    "approvals_or_waivers": false,
+    "final_added_receipt_metadata_covered": false
   }
 }

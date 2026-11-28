@@ -1,0 +1,220 @@
+{
+  "schema": "genesis-s2-guard-findings-report/v1",
+  "recorded_at": "2026-11-28T09:54:49.839925+00:00",
+  "state": "GATE_FAILED_FINDINGS_REPORTED_NO_WAIVER",
+  "receipt": "gates/guards-admission-hold-proposal/receipt.json",
+  "exit_code": 1,
+  "rules": 78,
+  "changed_paths": 1985,
+  "warnings": 227,
+  "gate_findings": 4,
+  "errors": [],
+  "assessed_by": "S2 root, source inspection; not an independent semantic judgment or an approved exception",
+  "findings": [
+    {
+      "rule": "tls-verify-off",
+      "severity": "gate",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/operator-tools/history/before-primary-prepare-03/operation-config.py",
+      "line": 240,
+      "message": "TLS verification turned off. Fix the certificate or trust store instead of disabling the check.",
+      "excerpt": "        add(target_row, label + ':intended-target', verify=False)",
+      "match": [
+        52,
+        64
+      ],
+      "file_sha256": "75997a6a4bb7e77df2ccf9483efd6ce1c064ec28c171c572c6943bc7e39146cb",
+      "source_context": [
+        {
+          "line": 201,
+          "text": "    def add(row, category, verify=True):"
+        },
+        {
+          "line": 202,
+          "text": "        validate_row(row)"
+        },
+        {
+          "line": 203,
+          "text": "        key = row['path']"
+        },
+        {
+          "line": 204,
+          "text": "        if key in expected:"
+        },
+        {
+          "line": 205,
+          "text": "            require(expected[key] == row, 'conflicting expected bytes for ' + key)"
+        },
+        {
+          "line": 206,
+          "text": "        else:"
+        },
+        {
+          "line": 207,
+          "text": "            expected[key] = dict(row)"
+        },
+        {
+          "line": 208,
+          "text": "            order.append(key)"
+        },
+        {
+          "line": 209,
+          "text": "        categories.setdefault(key, []).append(category)"
+        },
+        {
+          "line": 210,
+          "text": "        if verify:"
+        },
+        {
+          "line": 211,
+          "text": "            require(stamp(key) == row, 'pinned bytes drifted: ' + key)"
+        }
+      ],
+      "assessment": "False positive for this call: verify controls a local stamp(key) comparison inside add, not an HTTP/TLS client. False bypass value is used for a declared intended target whose current contents will be replaced; original bytes and review pins remain unchanged.",
+      "owner_followup": "Guardrail owner: add this non-network call to a negative regression case and refine matching using call context. Do not rename or annotate the preserved historical files to erase this finding."
+    },
+    {
+      "rule": "tls-verify-off",
+      "severity": "gate",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/operator-tools/history/initial-before-native-path-fix/operation-config.py",
+      "line": 210,
+      "message": "TLS verification turned off. Fix the certificate or trust store instead of disabling the check.",
+      "excerpt": "        add(target_row, label + ':intended-target', verify=False)",
+      "match": [
+        52,
+        64
+      ],
+      "file_sha256": "6328fe066dc664e0c48d22a9717c640a4bb7166ef3be51cdd26a4a37fb55428f",
+      "source_context": [
+        {
+          "line": 174,
+          "text": "    def add(row, category, verify=True):"
+        },
+        {
+          "line": 175,
+          "text": "        validate_row(row)"
+        },
+        {
+          "line": 176,
+          "text": "        key = row['path']"
+        },
+        {
+          "line": 177,
+          "text": "        if key in expected:"
+        },
+        {
+          "line": 178,
+          "text": "            require(expected[key] == row, 'conflicting expected bytes for ' + key)"
+        },
+        {
+          "line": 179,
+          "text": "        else:"
+        },
+        {
+          "line": 180,
+          "text": "            expected[key] = dict(row)"
+        },
+        {
+          "line": 181,
+          "text": "            order.append(key)"
+        },
+        {
+          "line": 182,
+          "text": "        categories.setdefault(key, []).append(category)"
+        },
+        {
+          "line": 183,
+          "text": "        if verify:"
+        },
+        {
+          "line": 184,
+          "text": "            require(stamp(key) == row, 'pinned bytes drifted: ' + key)"
+        }
+      ],
+      "assessment": "False positive for this call: verify controls a local stamp(key) comparison inside add, not an HTTP/TLS client. False bypass value is used for a declared intended target whose current contents will be replaced; original bytes and review pins remain unchanged.",
+      "owner_followup": "Guardrail owner: add this non-network call to a negative regression case and refine matching using call context. Do not rename or annotate the preserved historical files to erase this finding."
+    },
+    {
+      "rule": "tls-verify-off",
+      "severity": "gate",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/operator-tools/operation-config.py",
+      "line": 315,
+      "message": "TLS verification turned off. Fix the certificate or trust store instead of disabling the check.",
+      "excerpt": "        add(target_row, label + ':intended-target', verify=False)",
+      "match": [
+        52,
+        64
+      ],
+      "file_sha256": "4e7d3bd974b43df6310c46e1a1b70cfab34d509adeff1f06d72735c775f51e82",
+      "source_context": [
+        {
+          "line": 276,
+          "text": "    def add(row, category, verify=True):"
+        },
+        {
+          "line": 277,
+          "text": "        validate_row(row)"
+        },
+        {
+          "line": 278,
+          "text": "        key = row['path']"
+        },
+        {
+          "line": 279,
+          "text": "        if key in expected:"
+        },
+        {
+          "line": 280,
+          "text": "            require(expected[key] == row, 'conflicting expected bytes for ' + key)"
+        },
+        {
+          "line": 281,
+          "text": "        else:"
+        },
+        {
+          "line": 282,
+          "text": "            expected[key] = dict(row)"
+        },
+        {
+          "line": 283,
+          "text": "            order.append(key)"
+        },
+        {
+          "line": 284,
+          "text": "        categories.setdefault(key, []).append(category)"
+        },
+        {
+          "line": 285,
+          "text": "        if verify:"
+        },
+        {
+          "line": 286,
+          "text": "            require(stamp(key) == row, 'pinned bytes drifted: ' + key)"
+        }
+      ],
+      "assessment": "False positive for this call: verify controls a local stamp(key) comparison inside add, not an HTTP/TLS client. False bypass value is used for a declared intended target whose current contents will be replaced; original bytes and review pins remain unchanged.",
+      "owner_followup": "Guardrail owner: add this non-network call to a negative regression case and refine matching using call context. Do not rename or annotate the preserved historical files to erase this finding."
+    },
+    {
+      "rule": "dep-lifecycle-script",
+      "severity": "gate",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/noble-source-binding-proposal/sources/db9/modules/atlas/package.json",
+      "line": 15,
+      "message": "Install-time script added. It runs code on every machine that installs this package; do the work in an explicit build step instead.",
+      "excerpt": "    \"postinstall\": \"node scripts/fix-scip-types.mjs\",",
+      "match": [
+        0,
+        18
+      ],
+      "file_sha256": "168380cb630bd0aba6a2504d6b207b449153e084c01785c6f76eb84fd667c605",
+      "assessment": "The postinstall is a literal db9 manifest capture under the evidence namespace. No npm workspace or install command was added for this capture. The actual Atlas manifest and lifecycle script remain unchanged.",
+      "owner_followup": "Guardrail owner: decide the general handling of immutable captured manifests as data. Preserve detection for real installable package manifests; no blanket exclusion or self-approval was applied."
+    }
+  ],
+  "protected_guard_rules_edited": false,
+  "ignore_comments_added": false,
+  "approval_labels_or_env_overrides_used": false,
+  "files_relocated_to_evade_rules": false,
+  "original_frozen_helper_bytes_modified": false,
+  "qualification": "This documentary checkpoint may be preserved as INCOMPLETE_BLOCKED. It is not a green gate, release approval, completed change, admission or merge request.",
+  "receipt_coverage": "The executed gate covers the named staged tree before this report and the J1 wording correction. The later additions are receipt/report metadata only; no second run is inferred."
+}

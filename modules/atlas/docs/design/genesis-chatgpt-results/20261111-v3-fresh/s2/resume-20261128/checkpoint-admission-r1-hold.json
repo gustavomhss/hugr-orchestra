@@ -1,0 +1,163 @@
+{
+  "schema": "genesis-s2-admission-hold-checkpoint/v1",
+  "recorded_at": "2026-11-28T09:44:49.241839+00:00",
+  "base_head": "87a7161952254e2cbbc36249c37467be81f521bb",
+  "state": "DOCUMENTARY_CHECKPOINT_INCOMPLETE_BLOCKED",
+  "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "admission_review": {
+    "state": "ADMISSION_HOLD",
+    "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+    "purpose": "isolated-evaluation-admission",
+    "reviewers": [
+      {
+        "reviewer": "/root/s2_j1",
+        "global_verdict": "PASS",
+        "criterion_counts": {
+          "PASS": 52
+        },
+        "response": "evaluation-v2/admission-r1/final-reviews/j1-response.txt",
+        "response_sha256": "9354131a19ddd0cefbd77c45efd1a3d6de35bda79c0ef653756e5fa16636c5dc"
+      },
+      {
+        "reviewer": "/root/s2_j2",
+        "global_verdict": "HOLD",
+        "criterion_counts": {
+          "PASS": 39,
+          "HOLD": 13
+        },
+        "response": "evaluation-v2/admission-r1/final-reviews/j2-response.txt",
+        "response_sha256": "93778e0e6a839953536aaad0f2e39c4e2e14687d6ac69a2d1baa1b388aae201b"
+      }
+    ],
+    "binding": "NOT_CREATED",
+    "admit": "NOT_RUN",
+    "publication": "NOT_RUN",
+    "index_read": "NOT_RUN",
+    "consumer_cases": {
+      "executed": 0,
+      "total": 14
+    },
+    "S2-U1": "NOT_RUN",
+    "blocker": {
+      "reviewer": "/root/s2_j2",
+      "finding": "F02",
+      "request": "M01",
+      "criterion": "ADMIT-SOURCE-BINDINGS",
+      "entries": 13,
+      "summary": "Installed @noble/hashes bytes are outside the intrinsic identity checked by supported paths. The optional operator wrapper does not establish mandatory refusal of implementation drift.",
+      "resolution_owner": "S4",
+      "changed_runtime_requires_new_prepare_candidate_and_reviews": true
+    },
+    "original_v1_HOLD_preserved": true,
+    "review_response_bytes_modified": false
+  },
+  "maintenance": {
+    "state": "DRAFTS_AND_STATIC_ANALYSIS_PRESERVED",
+    "execution": "NOT_RUN",
+    "driver": "DRAFT_PREPARED_NOT_RUN",
+    "target_roots": "NOT_CREATED",
+    "patch_applied": false,
+    "producers_or_witnesses_executed": false,
+    "archive": "evaluation-v2/admission-r1/archives/maintenance-not-run-evidence.zip",
+    "scope": "Includes proposals, mechanical audit/fix records and operator drafts; no target prepare, admission, maintenance, read or semantic judgment is inferred."
+  },
+  "archives": [
+    {
+      "name": "dossier-and-transport",
+      "archive": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/admission-hold-checkpoint/dossier-and-transport-evidence.zip",
+        "byte_length": 9528147,
+        "sha256": "ee90b677c2272d69dfa6ccc191154796487004e344243d8b47c7b2f84b2840a7"
+      },
+      "publication_path": "evaluation-v2/admission-r1/archives/dossier-and-transport-evidence.zip",
+      "manifest": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/admission-hold-checkpoint/dossier-and-transport-manifest.json",
+        "byte_length": 331922,
+        "sha256": "92b88fcf0636dcdf6e6b8b68d30f63fe4a190beb7991877e129e9ee8b3b8a08b"
+      },
+      "payload_members": 788,
+      "members_including_manifest": 789,
+      "all_payload_members_equal_source_bytes": true,
+      "duplicate_or_extra_members": [],
+      "CRC_check": "NO_INVALID_MEMBER",
+      "state": "HISTORICAL_DOSSIER_TRANSPORT_AND_FINAL_SPLIT_REVIEWS"
+    },
+    {
+      "name": "operator-preparation",
+      "archive": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/admission-hold-checkpoint/operator-preparation-evidence.zip",
+        "byte_length": 152493,
+        "sha256": "95b92e7e6863db55323b4718d4386a89aea3bf51de539536d3c3132b2b2d9085"
+      },
+      "publication_path": "evaluation-v2/admission-r1/archives/operator-preparation-evidence.zip",
+      "manifest": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/admission-hold-checkpoint/operator-preparation-manifest.json",
+        "byte_length": 15829,
+        "sha256": "ab8df1cefc405b52bdffe7f02fc527a6a09a2041f36a0687bf8efee16df223ed"
+      },
+      "payload_members": 41,
+      "members_including_manifest": 42,
+      "all_payload_members_equal_source_bytes": true,
+      "duplicate_or_extra_members": [],
+      "CRC_check": "NO_INVALID_MEMBER",
+      "state": "OPERATOR_EVIDENCE_WITH_CONSUMER_PREPARATION_NOT_RUN"
+    },
+    {
+      "name": "maintenance-not-run",
+      "archive": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/admission-hold-checkpoint/maintenance-not-run-evidence.zip",
+        "byte_length": 485127,
+        "sha256": "9d2d327054cfec3b7904d56ffaefbb87287f55642b46d300121db3c2a75365dd"
+      },
+      "publication_path": "evaluation-v2/admission-r1/archives/maintenance-not-run-evidence.zip",
+      "manifest": {
+        "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/admission-hold-checkpoint/maintenance-not-run-manifest.json",
+        "byte_length": 64258,
+        "sha256": "97778eda1fdccdd90d0e4acc45f79e85bd9381da332e850855159fabb58d3a03"
+      },
+      "payload_members": 157,
+      "members_including_manifest": 158,
+      "all_payload_members_equal_source_bytes": true,
+      "duplicate_or_extra_members": [],
+      "CRC_check": "NO_INVALID_MEMBER",
+      "state": "PROPOSALS_AND_STATIC_RECORDS_ONLY_ATLAS_MAINTENANCE_NOT_RUN"
+    }
+  ],
+  "historical_r4_recovered": false,
+  "first_traversal": "NOT_RUN",
+  "consumer_cases": "0/14",
+  "S2-U1": "NOT_RUN",
+  "source_drift": [],
+  "source_roots_or_old_dossier_modified": false,
+  "git_index_modified": false,
+  "private_custody_or_library_data_included": false,
+  "S4_followup_proposal_included": false,
+  "Atlas_tests_gates_commit_push_executed": false,
+  "s4_source_binding_followup": {
+    "recorded_at": "2026-11-28T09:50:42.674147+00:00",
+    "state": "PROPOSAL_READY_RUNTIME_FIX_PENDING",
+    "request": "handoff-s2-to-s4.json",
+    "handoff": "runtime-followup/noble-source-binding-proposal/HANDOFF.md",
+    "patch_sha256": "abc88bcd7127fff8a00ccf5de108fdfae97a76f0fa51269ed93046aa4698978b",
+    "runtime_applied": false,
+    "focal_test_executed": false,
+    "new_prepare_executed_after_fix": false
+  },
+  "root_integrated_proposal_at": "2026-11-28T09:50:42.674147+00:00",
+  "latest_local_guard": {
+    "state": "FAIL_FINDINGS_REPORTED",
+    "exit_code": 1,
+    "base_sha": "3aaa5e0645f99940b66ee90d28aef93166f09ab1",
+    "tested_head": "87a7161952254e2cbbc36249c37467be81f521bb",
+    "staged_payload_tree": "b4e876f8681bf4ab0871df63dbd3cca78a151580",
+    "rules": 78,
+    "changed_paths": 1985,
+    "warnings": 227,
+    "gate_findings": 4,
+    "errors": 0,
+    "receipt": "gates/guards-admission-hold-proposal/receipt.json",
+    "findings_report": "gates/guard-findings-admission-hold.json",
+    "approvals_or_waivers": false,
+    "final_added_receipt_metadata_covered": false
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "name": "@atlas/adapter-io",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "main": "./dist/src/index.js",
+  "types": "./dist/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/src/index.d.ts",
+      "default": "./dist/src/index.js"
+    }
+  },
+  "dependencies": {
+    "@atlas/contracts": "*",
+    "@atlas/genesis": "*",
+    "@atlas/grounding": "*",
+    "@atlas/index": "*",
+    "@atlas/kernel": "*",
+    "@atlas/knowledge": "*",
+    "@atlas/memory": "*",
+    "@atlas/persist": "*",
+    "@atlas/retrieval": "*",
+    "@atlas/tools": "*",
+    "@c4312/scip": "^0.1.0",
+    "tree-sitter-typescript": "^0.23.2",
+    "web-tree-sitter": "^0.23.2"
+  },
+  "scripts": {
+    "build": "tsc -b",
+    "typecheck": "tsc -b"
+  }
+}

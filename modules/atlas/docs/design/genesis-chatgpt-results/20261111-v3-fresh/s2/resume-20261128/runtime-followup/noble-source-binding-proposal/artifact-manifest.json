@@ -1,0 +1,286 @@
+{
+  "schema": "s2-noble-proposal-artifact-manifest/v1",
+  "created_at": "2026-11-28T09:54:49.839925+00:00",
+  "files": [
+    {
+      "path": "HANDOFF.md",
+      "bytes": 14568,
+      "sha256": "df10b25dcab67db653f89bea5ea15f0d34080ed3b3f22bc1ee2dd21676861869"
+    },
+    {
+      "path": "candidate-proposal.patch",
+      "bytes": 14586,
+      "sha256": "abc88bcd7127fff8a00ccf5de108fdfae97a76f0fa51269ed93046aa4698978b"
+    },
+    {
+      "path": "focal-control-proposal.patch",
+      "bytes": 13790,
+      "sha256": "2b4268aa475659b727a5ac4c426b1e7d15ee899e7228449ceee02fd6b90897bd"
+    },
+    {
+      "path": "github/db9-to-release-compare.json",
+      "bytes": 18731,
+      "sha256": "c346b87df3e385c92efc9e941d1a66733e26649092a723a1cf7f415371223af0"
+    },
+    {
+      "path": "github/foundation-branch-search.json",
+      "bytes": 245,
+      "sha256": "7642124628fe55c0e25a485d8d0d7de34daa44fd87f00801019fc8940a8fc53b"
+    },
+    {
+      "path": "github/protocol-runtime-capture.json",
+      "bytes": 11011,
+      "sha256": "e40e91d053e025cc432b8c54d3437b799505da7b17a66315aa0b109b283784b3"
+    },
+    {
+      "path": "github/protocol-s2-capture.json",
+      "bytes": 4622,
+      "sha256": "7d3071b5df4a1f883ca74ee119d3769194d404e53ee153f70d6aa26cce936b36"
+    },
+    {
+      "path": "github/protocol-skill-capture.json",
+      "bytes": 8882,
+      "sha256": "2eb8e3fda8e0a0677978a1b51243d247d0f1b16419dcc8c7f2296e971bafeb36"
+    },
+    {
+      "path": "github/recorded-ref-query.json",
+      "bytes": 1667,
+      "sha256": "8bdb08ad888f19a3baa66f636338a2066a359edb98bee1b3cfb31fdbc40892fd"
+    },
+    {
+      "path": "github/release-collector-capture.json",
+      "bytes": 6451,
+      "sha256": "edbb0e46fddc61e8f2c44b055efd9bc86f373a3e60da662d8526f71778e10211"
+    },
+    {
+      "path": "github/release-kernel-capture.json",
+      "bytes": 1087,
+      "sha256": "7de67e2e0fc5feab49bd63ecd372fc9a2ba9bc8776e364527ca3cc2ed7fb216d"
+    },
+    {
+      "path": "github/release-query.json",
+      "bytes": 21765,
+      "sha256": "095d117fb120417c73b97b451b6d0ccb1da45a9b54124892827693bc28ef70b7"
+    },
+    {
+      "path": "github/runtime-branch-search.json",
+      "bytes": 317,
+      "sha256": "780b0245dd0274af0f430f51e4992ac1d10b67a7e50b7781d1e37f54f50c1595"
+    },
+    {
+      "path": "history/before-J1-terminology-correction/HANDOFF.md",
+      "bytes": 14531,
+      "sha256": "600feb92d574923fb543fcc1da17d68180aa2c658a9359bfe6ce63dd5068c2ab"
+    },
+    {
+      "path": "history/before-J1-terminology-correction/artifact-manifest.json",
+      "bytes": 9478,
+      "sha256": "a87ae42d96d77dbcd845874a2a724f46e1d7cd81a692a6a8a1141a3f897c94b9"
+    },
+    {
+      "path": "history/before-J1-terminology-correction/report.json",
+      "bytes": 10253,
+      "sha256": "29ed5a092d898939c29c5e1052c3cff314db2970e897507240e2a4c4d682edf9"
+    },
+    {
+      "path": "installed-dependency.json",
+      "bytes": 45504,
+      "sha256": "05d71a04ae662748044df278849665f0cb1055dd5bbfe6ef2c18afe2c5af28c2"
+    },
+    {
+      "path": "minimal-dependency-proposal.patch",
+      "bytes": 796,
+      "sha256": "b8f5d069096997464caec51d95b6392583bb0d2c5b3fee6b1ba03fb0daba5c1b"
+    },
+    {
+      "path": "optional-existing-ci-step-proposal.patch",
+      "bytes": 559,
+      "sha256": "bf7c60b97122860ec175868372a5aeb4935058f39856a14fa1347858d3b10d59"
+    },
+    {
+      "path": "proposed-tests/evaluation-runtime-noble.test.ts",
+      "bytes": 13320,
+      "sha256": "e811869327d90a8377595e8e4de4e13fa777aa4d506f766f371a9096b14781c4"
+    },
+    {
+      "path": "report.json",
+      "bytes": 10285,
+      "sha256": "a3b0a740d9844cbfb1d41d8b2a577b8873a0c99777aba89e717b04eef6346c1f"
+    },
+    {
+      "path": "source-pins.json",
+      "bytes": 12592,
+      "sha256": "954aabce1e9c6a7aaa0ab8e003faad729075afbb7121b45ab71713d7892cf363"
+    },
+    {
+      "path": "sources/db9/.github/actions/setup-bun/action.yml",
+      "bytes": 6665,
+      "sha256": "953b03f7962743a1d3d510a576f1b005c832a0d39801ad1509200c9482a3387d"
+    },
+    {
+      "path": "sources/db9/.github/workflows/atlas-pilot.yml",
+      "bytes": 14193,
+      "sha256": "780a8fba411ea7d8c80b8068824bd559861fe774a862c1334bec7878625946a9"
+    },
+    {
+      "path": "sources/db9/.github/workflows/test-ci.yml",
+      "bytes": 15352,
+      "sha256": "a9ad1ff8997778fe6e04686284bf492edcb7f48b6e33576ca462bbda7119e768"
+    },
+    {
+      "path": "sources/db9/.orchestra/skills/execute-genesis/SKILL.md",
+      "bytes": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+    },
+    {
+      "path": "sources/db9/.orchestra/skills/execute-genesis/references/fatia-2.md",
+      "bytes": 3921,
+      "sha256": "716620ec26a7a253ae77760940ff74a871ea83f08d77a6321c3de73482b390eb"
+    },
+    {
+      "path": "sources/db9/.orchestra/skills/execute-genesis/references/runtime.md",
+      "bytes": 10217,
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237"
+    },
+    {
+      "path": "sources/db9/AGENTS.md",
+      "bytes": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f"
+    },
+    {
+      "path": "sources/db9/modules/atlas/package-lock.json",
+      "bytes": 93193,
+      "sha256": "b3c505a0227808e04acf49138a1acccfd3e1a0e9b5476a5f9748fccd84e1a06f"
+    },
+    {
+      "path": "sources/db9/modules/atlas/package.json",
+      "bytes": 1670,
+      "sha256": "168380cb630bd0aba6a2504d6b207b449153e084c01785c6f76eb84fd667c605"
+    },
+    {
+      "path": "sources/db9/modules/atlas/packages/adapter-io/package.json",
+      "bytes": 749,
+      "sha256": "fbc7951f42ce0465ed53211516ee396aacaf66a0f43b500325330a0aa8c40132"
+    },
+    {
+      "path": "sources/db9/modules/atlas/packages/adapter-io/src/evaluation-manifest-binding.ts",
+      "bytes": 3164,
+      "sha256": "ed6c4a178c4f720b4db662cb1566252ac2ea885e48faa6548ff1b9b75ea0cee0"
+    },
+    {
+      "path": "sources/db9/modules/atlas/packages/adapter-io/src/evaluation-rebuild.ts",
+      "bytes": 23553,
+      "sha256": "1e511bd090ab303f0ee9cb8c69c1d6289a5a5c5cabbe5cd96c56833ad6a52a9e"
+    },
+    {
+      "path": "sources/db9/modules/atlas/packages/adapter-io/src/evaluation-runtime-identity.ts",
+      "bytes": 5598,
+      "sha256": "ecdc39431c4e94735099295958af871636edab0bb204f3947a0f20d624ccd013"
+    },
+    {
+      "path": "sources/db9/modules/atlas/packages/adapter-io/src/genesis-evaluation.ts",
+      "bytes": 18114,
+      "sha256": "f7b9eb3f3163788d11b4f9eace24a361e7e3e7e37f2f6daab816c81d558ed1b0"
+    },
+    {
+      "path": "sources/db9/modules/atlas/packages/adapter-io/src/ownership-access.ts",
+      "bytes": 4582,
+      "sha256": "b7c401180b3e9f6d634e6c2de0bb920751dcb2a0072887902cd6e1e9ccd60308"
+    },
+    {
+      "path": "sources/db9/modules/atlas/packages/adapter-io/src/ownership-attachment.ts",
+      "bytes": 3247,
+      "sha256": "924b0e058b1577d326efba827a863c5dba35c7dc5baa568c37e2e84d73da1b0f"
+    },
+    {
+      "path": "sources/db9/modules/atlas/packages/adapter-io/src/ownership-evaluation-policy.ts",
+      "bytes": 12532,
+      "sha256": "cb59a6c0befa1563d1aa90f858028d2d1bb7f2c7506951c3b4263ec2ca36ffdb"
+    },
+    {
+      "path": "sources/db9/modules/atlas/packages/adapter-io/test/evaluation-boundaries.test.ts",
+      "bytes": 27768,
+      "sha256": "ef5769de70dca81ffe81aba076054d408ae889ea42a36322c79ae46dee62291b"
+    },
+    {
+      "path": "sources/db9/modules/atlas/packages/adapter-io/test/evaluation-rebuild.test.ts",
+      "bytes": 11211,
+      "sha256": "0dfb9a23fb59a906077ca75c010bcf17ea58e39f7e9e93486fa91defff8b3516"
+    },
+    {
+      "path": "sources/db9/modules/atlas/packages/adapter-io/test/genesis-evaluation.test.ts",
+      "bytes": 26852,
+      "sha256": "40c8ff865358b4b609ba01c2ec2af97380f972ae78592dc6a2101782b8043989"
+    },
+    {
+      "path": "sources/db9/modules/atlas/packages/adapter-io/test/harness/ownership-fixture.ts",
+      "bytes": 4485,
+      "sha256": "8d687cb301f038b51f8bec0c50dff789f08d9e6596a72ea0c3e17dd5e8a82d85"
+    },
+    {
+      "path": "sources/db9/modules/atlas/packages/kernel/package.json",
+      "bytes": 398,
+      "sha256": "206932b96e640ace3b7e7591aa7854b74b990a76f2c965172252436011b1371d"
+    },
+    {
+      "path": "sources/db9/modules/atlas/packages/kernel/src/encoder.ts",
+      "bytes": 1642,
+      "sha256": "9fe7d781f1d2e70614419483e4abb51ebf036fd0420baef332b77dce5e4c07ad"
+    },
+    {
+      "path": "sources/db9/modules/atlas/vitest.config.ts",
+      "bytes": 2133,
+      "sha256": "e06dcc93aefffa16fde2f33efaa808b85a28103b68daf804283d6597a178d6e3"
+    },
+    {
+      "path": "sources/db9/script/test-ci-request.ts",
+      "bytes": 16774,
+      "sha256": "9948e4ea327c92e5cd8042cf12cf9efc313edf97e86ec0c2a5404bf9a41a64be"
+    },
+    {
+      "path": "sources/db9/script/test-ci.ts",
+      "bytes": 19342,
+      "sha256": "055d935a1a26adacb3eeda1e5ff772eeb75b83837b99911c645060b6465135b6"
+    },
+    {
+      "path": "sources/remote/protocol-runtime.md",
+      "bytes": 10217,
+      "sha256": "c0f9c2422eea54343b006a683e788844bfc8d165c905afea8226aef7e98f0237"
+    },
+    {
+      "path": "sources/remote/protocol-s2.md",
+      "bytes": 3921,
+      "sha256": "716620ec26a7a253ae77760940ff74a871ea83f08d77a6321c3de73482b390eb"
+    },
+    {
+      "path": "sources/remote/protocol-skill.md",
+      "bytes": 8143,
+      "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+    },
+    {
+      "path": "sources/remote/release-collector.ts",
+      "bytes": 5598,
+      "sha256": "ecdc39431c4e94735099295958af871636edab0bb204f3947a0f20d624ccd013"
+    },
+    {
+      "path": "sources/remote/release-kernel.json",
+      "bytes": 398,
+      "sha256": "206932b96e640ace3b7e7591aa7854b74b990a76f2c965172252436011b1371d"
+    },
+    {
+      "path": "sources/remote/runtime-release.json",
+      "bytes": 19736,
+      "sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1"
+    },
+    {
+      "path": "static-validation.json",
+      "bytes": 1925,
+      "sha256": "7931044330c96205d2226964c5387ed5d963e00d7e63de180ce4b67ed3f4bbac"
+    },
+    {
+      "path": "terminology-correction.json",
+      "bytes": 583,
+      "sha256": "0331e56d46f8ad7ab7301ec0a0d5e147289f3d6b4096759c68a9447b9a4abdb1"
+    }
+  ]
+}
