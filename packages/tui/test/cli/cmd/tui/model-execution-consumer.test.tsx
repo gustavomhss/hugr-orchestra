@@ -2,9 +2,11 @@
 import { expect, spyOn, test } from "bun:test"
 import { reconcile } from "solid-js/store"
 import { Schema } from "effect"
+import { Command } from "@orchestra/schema/command"
+import { Model } from "@orchestra/schema/model"
 import { ModelExecution } from "@orchestra/schema/model-execution"
 import { json } from "../../../fixture/tui-sdk"
-import { decision, mount, ready, ref, wait } from "./model-execution-consumer.fixture"
+import { decision, model, mount, ready, ref, wait } from "./model-execution-consumer.fixture"
 
 // The rendered Prompt and model dialog consume real SDK/catalog/context implementations.
 // Controlled endpoint decisions prove consumption; backend eligibility is covered independently.
@@ -233,6 +235,40 @@ test("E6 TUI absent raw choice does not install a catalog default while canonica
 })
 
 
+test.each([false, true])("E6 TUI classifies slash input in the actual checkout; draft=%s", async (draft) => {
+  const directory = "/other/command-checkout"
+  const workspace = "wrk_commands"
+  const fixture = await ready({ draft, session: { location: { directory, workspaceID: workspace } } })
+  try {
+    fixture.control.commands = (url) => url.searchParams.get("location[directory]") === directory &&
+      url.searchParams.get("location[workspace]") === (draft ? null : workspace)
+        ? [Command.Info.make({ name: "scoped", template: "command in this checkout" })] : []
+    if (draft) fixture.context.home?.setDestination({ type: "directory", directory, subdirectory: false })
+    fixture.prompt.set({ input: "/scoped arguments", parts: [], mode: "normal" })
+    fixture.prompt.submit()
+    await wait(() => fixture.calls.some((call) => call.method === "POST" && call.path.endsWith("/command")), "checkout-specific command sent")
+    expect(fixture.queries().at(-1)?.body).toMatchObject({ command: "scoped" })
+    expect(fixture.admissions()).toEqual([])
+  } finally { await fixture.dispose() }
+})
+
+test("E6 TUI sends unknown slash text as a prompt and skips command lookup for ordinary text", async () => {
+  const fixture = await ready()
+  try {
+    const before = fixture.calls.filter((call) => call.path === "/api/command").length
+    fixture.prompt.set({ input: "/unknown checkout text", parts: [], mode: "normal" })
+    fixture.prompt.submit()
+    await wait(() => fixture.admissions().length === 1 && fixture.prompt.current.input === "", "unknown slash text sent as a prompt")
+    expect(fixture.admissions()[0]?.body).toMatchObject({ prompt: { text: "/unknown checkout text" } })
+    expect(fixture.queries().at(-1)?.body).not.toHaveProperty("command")
+    expect(fixture.calls.filter((call) => call.path === "/api/command")).toHaveLength(before + 1)
+    fixture.prompt.set({ input: "ordinary checkout text", parts: [], mode: "normal" })
+    fixture.prompt.submit()
+    await wait(() => fixture.admissions().length === 2, "ordinary text sent as a prompt")
+    expect(fixture.calls.filter((call) => call.path === "/api/command")).toHaveLength(before + 1)
+  } finally { await fixture.dispose() }
+})
+
 test("CONTROL E6 TUI ready known command preserves its actual selection RPC order", async () => {
   const fixture = await ready()
   try {
@@ -240,9 +276,41 @@ test("CONTROL E6 TUI ready known command preserves its actual selection RPC orde
     const checkpoint = fixture.calls.length
     fixture.prompt.set({ input: "/known value", parts: [], mode: "normal" })
     fixture.prompt.submit()
-    await wait(() => fixture.calls.slice(checkpoint).some((call) => call.path.endsWith("/command")), "actual ready known command POST")
+    await wait(() => fixture.calls.slice(checkpoint).some((call) => call.method === "POST" && call.path.endsWith("/command")), "actual ready known command POST")
     expect(fixture.admissions()).toEqual([])
     expect(fixture.calls.slice(checkpoint).filter((call) => call.method === "POST" && call.path !== "/api/model/execution").map((call) => call.path.split("/").at(-1))).toEqual(["agent", "model", "command"])
+  } finally { await fixture.dispose() }
+})
+
+test("E6 TUI keeps the execution selection published by a slash command for the next prompt", async () => {
+  const fixture = await ready({ session: { agent: "maestro", model: ref } })
+  const override = { ...ref, id: "override", variant: "" }
+  try {
+    fixture.control.reply = async (request) => {
+      const input = Schema.decodeUnknownSync(ModelExecution.Input)(await request.clone().json())
+      return json({ location: { directory: fixture.root }, data: { ...decision(),
+        selection: { status: "ready", engine: "orchestra", ref: input.command ? override : input.model ?? ref },
+      } })
+    }
+    fixture.control.before = async (path) => {
+      if (path !== "/api/session/session-1/command") return
+      fixture.events.emit({ directory: fixture.root, payload: { id: "command-agent", type: "session.next.agent.switched", data: {
+        sessionID: "session-1", timestamp: 1, messageID: "msg_command_agent", agent: "backend",
+      } } })
+      fixture.events.emit({ directory: fixture.root, payload: { id: "command-model", type: "session.next.model.switched", data: {
+        sessionID: "session-1", timestamp: 2, messageID: "msg_command_model", model: override,
+      } } })
+      await wait(() => fixture.context.sync.session.get("session-1")?.model?.id === override.id, "published command selection visible before its receipt")
+    }
+    fixture.prompt.set({ input: "/known with overrides", parts: [], mode: "normal" })
+    fixture.prompt.submit()
+    await wait(() => fixture.prompt.current.input === "", "admitted command clears its input even as the server switches selection")
+    await fixture.context.sync.session.refresh()
+    expect(fixture.context.sync.session.get("session-1")).toMatchObject({ agent: "backend", model: override })
+    fixture.prompt.set({ input: "continue with server selection", parts: [], mode: "normal" })
+    fixture.prompt.submit()
+    await wait(() => fixture.admissions().length === 1, "next prompt submitted with the published selection")
+    expect(fixture.queries().at(-1)?.body).toMatchObject({ context: { agentID: "backend" }, model: override })
   } finally { await fixture.dispose() }
 })
 
@@ -255,13 +323,151 @@ test("E6 TUI unavailable known command requires a NEW canonical query before any
     fixture.control.reply = () => json({ location: { directory: fixture.owner.directory }, data: decision("unavailable") })
     fixture.prompt.set({ input: "/known value", parts: [], mode: "normal" })
     fixture.prompt.submit()
-    await wait(() => fixture.queries().length > before || fixture.calls.slice(checkpoint).some((call) => call.path.endsWith("/command")), "NEW command preflight or baseline command POST")
+    await wait(() => fixture.queries().length > before || fixture.calls.slice(checkpoint).some((call) => call.method === "POST" && call.path.endsWith("/command")), "NEW command preflight or baseline command POST")
     expect(fixture.queries().length).toBeGreaterThan(before)
-    expect(fixture.queries().at(-1)?.body).toEqual({ context: { type: "session", sessionID: "session-1", agentID: "maestro" }, model: ref })
+    expect(fixture.queries().at(-1)?.body).toEqual({ context: { type: "session", sessionID: "session-1", agentID: "maestro" }, model: ref, command: "known" })
     await Bun.sleep(0)
     expect(fixture.calls.slice(checkpoint).filter((call) => call.method === "POST" && /\/(agent|model|command|prompt)$/.test(call.path))).toEqual([])
     expect(fixture.prompt.current.input).toBe("/known value")
   } finally { await fixture.dispose() }
+})
+
+test.each(["ready", "unavailable"] as const)("E6 TUI checks the server's %s slash command execution override", async (status) => {
+  const fixture = await ready()
+  try {
+    await wait(() => fixture.context.sync.data.command.some((command) => command.name === "known"), "real command catalog")
+    fixture.control.reply = () => json({ location: { directory: fixture.root }, data: {
+      ...decision(), selection: { status, ref: { ...ref, id: "override", variant: "" }, engine: "orchestra",
+        ...(status === "unavailable" ? { reason: "variant-unavailable" } : {}) },
+    } })
+    const checkpoint = fixture.calls.length
+    fixture.prompt.set({ input: "/known explicit override", parts: [], mode: "normal" })
+    fixture.prompt.submit()
+    await wait(() => status === "ready"
+      ? fixture.calls.slice(checkpoint).some((call) => call.method === "POST" && call.path.endsWith("/command"))
+      : fixture.context.toast.currentToast?.message === "Selected variant is unavailable", "command override was handled")
+    const posts = fixture.calls.slice(checkpoint).filter((call) => call.method === "POST")
+    expect(posts[0]?.body).toMatchObject({ model: ref, command: "known" })
+    expect(posts.slice(1).map((call) => call.path.split("/").at(-1))).toEqual(status === "ready" ? ["agent", "model", "command"] : [])
+  } finally { await fixture.dispose() }
+})
+
+test("E6 TUI releases a denied copy preflight and retries the prepared checkout", async () => {
+  const fixture = await ready({ draft: true })
+  try {
+    const copyPath = "/experimental/project/proj_test/copy"
+    const writes = (path: string) => fixture.calls.filter((call) => call.method === "POST" && call.path === path)
+    const submit = () => {
+      fixture.prompt.set({ input: "continue on the new copy", parts: [], mode: "normal" })
+      fixture.prompt.submit()
+    }
+    fixture.context.home?.setDestination({ type: "new" })
+    fixture.control.reply = () => json({ location: { directory: fixture.root }, data: decision("unavailable") })
+    submit()
+    await wait(() => fixture.context.toast.currentToast?.message === "Selected variant is unavailable", "source preflight denied")
+    expect(writes(copyPath)).toEqual([])
+    expect(writes("/api/session")).toEqual([])
+
+    fixture.control.reply = (request) => {
+      const directory = new URL(request.url).searchParams.get("location[directory]")
+      const data = directory === fixture.copyDirectory ? { ...decision(), selection: {
+        status: "unavailable", reason: "model-disabled", engine: "orchestra", ref,
+      } } : decision()
+      return json({ location: { directory }, data })
+    }
+    submit()
+    await wait(() => fixture.context.toast.currentToast?.message === "Model is disabled", "prepared destination preflight denied")
+    expect(writes(copyPath)).toHaveLength(1)
+    expect(writes("/api/session")).toEqual([])
+    expect(fixture.context.home?.destination()).toEqual({ type: "new" })
+    expect(fixture.prompt.current.input).toBe("continue on the new copy")
+
+    fixture.control.reply = (request) => json({ location: {
+      directory: new URL(request.url).searchParams.get("location[directory]"),
+    }, data: decision() })
+    const beforeRetry = fixture.queries().length
+    submit()
+    await wait(() => fixture.admissions().length === 1 && fixture.prompt.current.input === "", "retry admitted on the prepared copy")
+    expect(writes(copyPath)).toHaveLength(1)
+    expect(writes("/api/session").map((call) => call.body)).toEqual([{ agent: "maestro", model: ref, location: { directory: fixture.copyDirectory } }])
+    expect(fixture.queries().slice(beforeRetry, beforeRetry + 2).map((call) => call.url.searchParams.get("location[directory]")))
+      .toEqual([fixture.root, fixture.copyDirectory])
+  } finally { await fixture.dispose() }
+})
+
+test("E6 TUI abandons an in-flight draft check when the selected destination changes", async () => {
+  const fixture = await ready({ draft: true })
+  const release = Promise.withResolvers<void>()
+  try {
+    const entered = Promise.withResolvers<AbortSignal>()
+    fixture.control.reply = async (request) => {
+      entered.resolve(request.signal)
+      await release.promise
+      return json({ location: { directory: fixture.root }, data: decision() })
+    }
+    fixture.context.home?.setDestination({ type: "new" })
+    fixture.prompt.set({ input: "keep for the updated destination", parts: [], mode: "normal" })
+    fixture.prompt.submit()
+    const signal = await entered.promise
+    fixture.context.home?.setDestination({ type: "directory", directory: fixture.copyDirectory, subdirectory: false })
+    await wait(() => signal.aborted, "the old choice's check was canceled")
+    release.resolve()
+    await Bun.sleep(0)
+    expect(fixture.calls.filter((call) => call.method === "POST" && call.path !== "/api/model/execution")).toEqual([])
+  } finally { release.resolve(); await fixture.dispose() }
+})
+
+test("E6 TUI can select a canonical model missing from the legacy catalog after reconnect", async () => {
+  const fixture = await ready()
+  try {
+    const fresh = Model.Info.make({ ...model, id: Model.ID.make("fresh-model"), name: "Fresh checkout model" })
+    fixture.control.reply = async (request) => {
+      const input = Schema.decodeUnknownSync(ModelExecution.Input)(await request.clone().json())
+      return json({ location: { directory: fixture.root }, data: { ...decision(),
+        models: [...decision().models, { model: fresh, status: "ready", engine: "orchestra" }],
+        selection: { status: "ready", engine: "orchestra", ref: input.model ?? ref },
+      } })
+    }
+    expect(fixture.context.sync.data.provider[0]?.models[fresh.id]).toBeUndefined()
+    fixture.events.emit({ directory: fixture.root, workspace: undefined, payload: { id: "fresh-canonical-model", type: "server.connected", data: {} } })
+    fixture.showModels()
+    await wait(() => {
+      void fixture.app.renderOnce()
+      return fixture.app.renderer.currentFocusedRenderable?.id.startsWith("input-") === true &&
+        fixture.app.captureCharFrame().includes("Fresh checkout model")
+    }, "fresh canonical model row rendered and its picker is focused")
+    expect(fixture.context.local.model.execution.allows({ providerID: ref.providerID, modelID: fresh.id })).toBe(true)
+    await fixture.app.mockInput.pressArrow("down")
+    await fixture.app.renderOnce()
+    await fixture.app.mockInput.pressEnter()
+    await wait(() => fixture.context.local.model.current()?.modelID === fresh.id, "fresh canonical row was selectable")
+  } finally { await fixture.dispose() }
+})
+
+test("E6 TUI stops before the model write when placement changes during the agent write", async () => {
+  const fixture = await ready()
+  const release = Promise.withResolvers<void>()
+  try {
+    const entered = Promise.withResolvers<void>()
+    fixture.control.before = async (path) => {
+      if (path !== "/api/session/session-1/agent") return
+      entered.resolve()
+      await release.promise
+    }
+    fixture.prompt.set({ input: "keep after move", parts: [], mode: "normal" })
+    fixture.prompt.submit()
+    await entered.promise
+    fixture.events.emit({ directory: fixture.copyDirectory, workspace: "wrk_moved",
+      payload: { id: "move-during-switch-agent", type: "session.next.moved", data: {
+        sessionID: "session-1", timestamp: 1, location: { directory: fixture.copyDirectory, workspaceID: "wrk_moved" },
+      } } })
+    await wait(() => fixture.context.sync.session.get("session-1")?.location.workspaceID === "wrk_moved", "Sync applied the new placement")
+    release.resolve()
+    await Bun.sleep(0)
+    expect(fixture.calls.filter((call) => call.method === "POST" && call.path === "/api/session/session-1/model")).toEqual([])
+    expect(fixture.admissions()).toEqual([])
+    expect(fixture.prompt.current.input).toBe("keep after move")
+  } finally { release.resolve(); await fixture.dispose() }
 })
 
 test("E6 TUI rendered selector keeps NEW A after A to B to A and a late old A response", async () => {

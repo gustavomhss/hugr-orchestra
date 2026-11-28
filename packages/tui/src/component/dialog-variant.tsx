@@ -20,7 +20,7 @@ export function DialogVariant() {
       },
       ...local.model.variant.list().map((variant) => ({
         value: JSON.stringify(["variant", variant]),
-        title: variant,
+        title: variant === "" ? '""' : variant,
         onSelect: () => {
           if (!local.model.variant.list().includes(variant)) return
           dialog.clear()
@@ -29,7 +29,7 @@ export function DialogVariant() {
       })),
       ...(typeof raw === "string" && !local.model.variant.list().includes(raw) ? [{
         value: JSON.stringify(["variant", raw]),
-        title: raw, disabled: true,
+        title: raw === "" ? '""' : raw, disabled: true,
         footer: modelExecutionReason("variant-unavailable"), onSelect() {},
       }] : []),
     ]

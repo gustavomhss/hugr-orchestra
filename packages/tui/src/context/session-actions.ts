@@ -7,8 +7,10 @@ type Model = { providerID: string; modelID: string; variant?: string }
 // The V2 server serves these session actions under `/api/session/:id/*`. The legacy `/session/:id/*`
 // routes (abort, shell, command, summarize, revert, unrevert) are not served by it.
 export function createSessionActions(client: Client) {
-  async function select(input: { sessionID: string; agent: string; model: Model }) {
+  async function select(input: { sessionID: string; agent: string; model: Model }, beforeAdmission?: () => void) {
+    beforeAdmission?.()
     await client.sessions.switchAgent({ sessionID: input.sessionID, agent: input.agent })
+    beforeAdmission?.()
     await client.sessions.switchModel({
       sessionID: input.sessionID,
       model: { providerID: input.model.providerID, id: input.model.modelID, variant: input.model.variant },
@@ -35,7 +37,7 @@ export function createSessionActions(client: Client) {
       files: ReadonlyArray<Pick<TuiPromptFilePart, "url" | "filename" | "source">>
       agents: ReadonlyArray<Pick<TuiPromptAgentPart, "name" | "source">>
     }, beforeAdmission?: () => void) {
-      await select(input)
+      await select(input, beforeAdmission)
       beforeAdmission?.()
       if (input.context)
         await client.sessions.synthetic({ sessionID: input.sessionID, text: input.context, resume: false })
@@ -72,7 +74,7 @@ export function createSessionActions(client: Client) {
       model: Model
       files: ReadonlyArray<Pick<TuiPromptFilePart, "url" | "filename" | "source">>
     }, beforeAdmission?: () => void) {
-      await select(input)
+      await select(input, beforeAdmission)
       beforeAdmission?.()
       return client.sessions.command({
         sessionID: input.sessionID,

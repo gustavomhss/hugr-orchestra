@@ -157,3 +157,24 @@ test("E6 TUI invalid new preference entries do not erase a valid explicit defaul
     expect(named.variant).toEqual({ [key]: "high" })
   } finally { await fixture.dispose() }
 })
+
+test("E6 TUI can clear a historical empty-name variant when the model has no variants", async () => {
+  const metadata = Model.Info.make({ ...model, variants: [] })
+  const fixture = await mount({ session: { agent: "maestro", model: { ...ref, variant: "" } },
+    catalogModel: metadata, reply: readyReply(metadata) })
+  try {
+    await wait(() => fixture.context.local.model.variant.current() === "", "the literal empty variant from the Session is retained")
+    expect(fixture.context.local.model.variant.list()).toEqual([])
+    expect(fixture.context.local.model.variant.canSelect()).toBe(true)
+    fixture.showVariants()
+    await wait(() => { void fixture.app.renderOnce(); return fixture.app.captureCharFrame().includes("Selected variant is unavailable") }, "the unavailable variant is shown")
+    expect(fixture.app.captureCharFrame()).toContain("Model default")
+    await fixture.app.mockInput.pressArrow("up")
+    await fixture.app.mockInput.pressEnter()
+    await wait(() => fixture.context.local.model.variant.current() === undefined, "Model default clears the named variant")
+    fixture.prompt.set({ input: "use the model default", parts: [], mode: "normal" })
+    fixture.prompt.submit()
+    await wait(() => fixture.admissions().length === 1, "dispatch with Model default")
+    expect(fixture.calls.find((call) => call.path.endsWith("/model") && call.method === "POST")?.body).toEqual({ model: ref })
+  } finally { await fixture.dispose() }
+})

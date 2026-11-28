@@ -236,28 +236,6 @@ export function Prompt(props: PromptProps) {
     ),
   )
 
-  // Initialize agent/model/variant from last user message when session changes
-  let syncedSessionID: string | undefined
-  createEffect(() => {
-    const sessionID = props.sessionID
-    const msg = lastTurn()
-
-    if (sessionID !== syncedSessionID) {
-      if (!sessionID || !msg) return
-
-      syncedSessionID = sessionID
-
-      // Only set agent if it's a primary agent (not a subagent)
-      const isPrimaryAgent = local.agent.list().some((x) => agentKey(x) === msg.agent)
-      if (msg.agent && isPrimaryAgent) {
-        // Keep command line --agent if specified.
-        if (!args.agent) local.agent.set(msg.agent)
-        local.model.set({ providerID: msg.model.providerID, modelID: msg.model.id })
-        local.model.variant.set(msg.model.variant)
-      }
-    }
-  })
-
   const promptCommands = createMemo(() =>
     [
       {
@@ -844,14 +822,19 @@ export function Prompt(props: PromptProps) {
   const admissionLifetime = { disposed: false }
   const admissionQueries = new Set<ReturnType<typeof makeModelExecutionQuery>>()
   onCleanup(() => { admissionLifetime.disposed = true; admissionQueries.forEach((query) => query.dispose()); admissionQueries.clear() })
-  const admissionOwner = createMemo(() => {
+  const promptOwner = createMemo(() => {
     const binding = sdk.binding()
+    const placement = local.model.execution.location(props.sessionID)
+    const destination = props.sessionID ? undefined : move.destination()
     return { key: JSON.stringify({ sessionID: props.sessionID, route: route.data,
-      intent: local.model.intent(), agent: local.agent.current()?.id,
-      context: local.model.execution.context(),
+      context: local.model.execution.context(placement),
       epoch: sdk.connectionEpoch(), directory: binding.directory, url: binding.url,
-      headers: [...new Headers(binding.headers).entries()] }), fetch: binding.fetch }
-  }, undefined, { equals: (a, b) => !!a && a.key === b.key && a.fetch === b.fetch })
+      headers: [...new Headers(binding.headers).entries()] }), fetch: binding.fetch, placement, destination }
+  }, undefined, { equals: (a, b) => !!a && a.key === b.key && a.fetch === b.fetch && a.destination === b.destination })
+  const admissionOwner = createMemo(() => ({
+    prompt: promptOwner(),
+    selection: JSON.stringify([local.model.execution.choiceRevision(), local.agent.id(), local.model.execution.input().model]),
+  }), undefined, { equals: (a, b) => !!a && a.prompt === b.prompt && a.selection === b.selection })
   createComputed(() => {
     admissionOwner()
     // A genuine owner departure cancels this Prompt's admission work, independently of visual queries.
@@ -869,9 +852,13 @@ export function Prompt(props: PromptProps) {
     // to a freshly created session.
     if (submitting) return false
     submitting = true
+    const destination = promptOwner().destination
     try {
-      return await submitInner()
+      const submitted = await submitInner()
+      if (destination?.type === "new" && submitted) move.finishSubmit(destination, true)
+      return submitted
     } finally {
+      if (destination?.type === "new" && move.creating()) move.finishSubmit(destination, false)
       submitting = false
     }
   }
@@ -888,7 +875,7 @@ export function Prompt(props: PromptProps) {
     if (move.creating()) return false
     if (auto()?.visible) return false
     if (!store.prompt.input) return false
-    const agent = local.agent.current()
+    const agent = local.agent.id()
     if (!agent) return false
     if (store.mode !== "shell" && !local.model.ready) return false
     const trimmed = store.prompt.input.trim()
@@ -917,52 +904,76 @@ export function Prompt(props: PromptProps) {
     )
     const nonTextParts = store.prompt.parts.filter((part) => part.type !== "text")
     const currentMode = store.mode
-    const knownCommand = currentMode === "normal" && inputText.startsWith("/") &&
-      sync.data.command.some((command) => command.name === inputText.split("\n")[0].split(" ")[0].slice(1))
+    const slashName = currentMode === "normal" && inputText.startsWith("/")
+      ? inputText.split("\n")[0].split(" ")[0].slice(1)
+      : undefined
     const captured = admissionOwner()
-    const ownerCurrent = () => !admissionLifetime.disposed && sdk.binding().active && admissionOwner() === captured
-    const current = () => ownerCurrent() &&
-      JSON.stringify(store.prompt) === promptVersion && store.mode === currentMode
+    const placement = captured.prompt.placement
+    const ownerCurrent = () => !admissionLifetime.disposed && sdk.binding().active && promptOwner() === captured.prompt
+    let targetContext: { placement: NonNullable<typeof placement>; context: string } | undefined
+    const sameDraft = () => ownerCurrent() &&
+      JSON.stringify(store.prompt) === promptVersion && store.mode === currentMode &&
+      (!targetContext || targetContext.context === local.model.execution.context(targetContext.placement))
+    const current = () => sameDraft() && admissionOwner() === captured
     const guard = () => { if (!current()) throw new DOMException("", "AbortError") }
     let sessionID = props.sessionID
-    let finishMoveProgress = false
-    const directory = sessionID == null ? await move.getDirectory(store.prompt.input) : sdk.directory
-    if (!current() || (sessionID == null && move.pending() && !directory)) return false
-    if (store.mode !== "shell") {
+    let command: string | undefined
+
+    const preflight = async (location: NonNullable<typeof placement>) => {
+      if (slashName) {
+        const commands = await sdk.catalog.commands(location).catch((error: unknown) => {
+          if (current()) toast.show({ title: "Could not check commands", message: errorMessage(error), variant: "error" })
+        })
+        if (!commands || !current()) return false
+        command = commands.find((item) => item.name === slashName)?.name
+      }
       const query = makeModelExecutionQuery({ execute: sdk.api.models.execution })
       admissionQueries.add(query)
       const response = await query.load(captured, {
-        location: { directory: directory ?? sdk.directory },
-        context: sessionID ? { type: "session", sessionID, agentID: agentKey(agent) }
-          : { type: "draft", agentID: agentKey(agent) },
+        location,
+        context: sessionID ? { type: "session", sessionID, agentID: agent }
+          : { type: "draft", agentID: agent },
         model: { providerID: selectedModel.providerID, id: selectedModel.modelID, variant },
+        command,
       })
       query.dispose()
       admissionQueries.delete(query)
       const selection = response?.data.selection
       if (!current()) return false
-      if (selection?.status !== "ready" || selection.ref.providerID !== selectedModel.providerID ||
-        selection.ref.id !== selectedModel.modelID || selection.ref.variant !== variant) {
-        const entry = response?.data.models.find((item) => item.model.providerID === selectedModel.providerID && item.model.id === selectedModel.modelID)
-        const reason = selection?.ref.providerID === selectedModel.providerID && selection.ref.id === selectedModel.modelID &&
-          selection.ref.variant === variant && selection.status !== "ready" ? selection.reason
-          : entry && entry.status !== "ready" ? entry.reason : undefined
-        toast.show({ message: modelExecutionReason(reason), variant: "warning" })
-        return false
-      }
+      const matches = selection?.ref.providerID === selectedModel.providerID && selection.ref.id === selectedModel.modelID &&
+        selection.ref.variant === variant
+      if (selection?.status === "ready" && (command || matches)) return true
+      const entry = response?.data.models.find((item) => item.model.providerID === selectedModel.providerID && item.model.id === selectedModel.modelID)
+      const reason = selection && (command || matches) && selection.status !== "ready" ? selection.reason
+        : entry && entry.status !== "ready" ? entry.reason : undefined
+      toast.show({ message: modelExecutionReason(reason), variant: "warning" })
+      return false
     }
-    if (sessionID == null) {
-      finishMoveProgress = Boolean(move.progress())
 
+    if (currentMode !== "shell" && !placement) return false
+    const destination = captured.prompt.destination
+    if (destination?.type === "new" && currentMode !== "shell" && placement && !await preflight(placement)) return false
+    const directory = sessionID ? placement?.directory : await move.getDirectory({
+      destination,
+      context: store.prompt.input,
+      location: placement ?? {},
+      current,
+    })
+    if (!current() || (destination && !directory)) return false
+    const target = directory && directory !== placement?.directory ? { directory, workspace: undefined } : placement
+    if (target && target !== placement) targetContext = { placement: target, context: local.model.execution.context(target) }
+    if (currentMode !== "shell" && (!target || !await preflight(target))) return false
+
+    if (sessionID == null) {
       const created = await sdk.actions
         .create({
-          agent: agentKey(agent),
+          agent,
           model: { providerID: selectedModel.providerID, modelID: selectedModel.modelID, variant },
-          directory,
+          directory: target?.directory,
+          workspaceID: target?.workspace,
         })
         .catch((error: unknown) => {
           if (!current()) return undefined
-          if (finishMoveProgress) move.finishSubmit()
           console.log("Creating a session failed:", error)
 
           toast.show({
@@ -971,7 +982,7 @@ export function Prompt(props: PromptProps) {
           })
           return undefined
         })
-      if (!created) return true
+      if (!created) return false
       if (!current()) return false
 
       sessionID = created.id
@@ -986,8 +997,8 @@ export function Prompt(props: PromptProps) {
       Demo.run(demoCommand, {
         sessionID,
         text: inputText,
-        agent: agentKey(agent),
-        cwd: sdk.directory ?? process.cwd(),
+        agent,
+        cwd: target?.directory ?? sdk.directory ?? process.cwd(),
         sync,
         sdk,
         warn: (message) => toast.show({ message, variant: "warning" }),
@@ -999,31 +1010,32 @@ export function Prompt(props: PromptProps) {
         toast.show({ title: "Failed to run shell command", message: errorMessage(error), variant: "error" })
       })
       setStore("mode", "normal")
-    } else if (knownCommand) {
+    } else if (command) {
       move.startSubmit()
       // Parse command from first line, preserve multi-line content in arguments
       const firstLineEnd = inputText.indexOf("\n")
       const firstLine = firstLineEnd === -1 ? inputText : inputText.slice(0, firstLineEnd)
-      const [command, ...firstLineArgs] = firstLine.split(" ")
+      const firstLineArgs = firstLine.split(" ").slice(1)
       const restOfInput = firstLineEnd === -1 ? "" : inputText.slice(firstLineEnd + 1)
       const args = firstLineArgs.join(" ") + (restOfInput ? "\n" + restOfInput : "")
 
       const sent = await sdk.actions
         .command({
           sessionID,
-          command: command.slice(1),
+          command,
           arguments: args,
-          agent: agentKey(agent),
+          agent,
           model: { providerID: selectedModel.providerID, modelID: selectedModel.modelID, variant },
           files: nonTextParts.filter((x) => x.type === "file"),
         }, guard)
         .then(() => true)
         .catch((error) => {
-          if (!current()) return false
+          if (!sameDraft() || (error instanceof DOMException && error.name === "AbortError")) return false
           toast.show({ title: "Failed to run command", message: errorMessage(error), variant: "error" })
           return false
         })
-      if (!sent || !current()) return false
+      // A successful command can authoritatively switch the Session selection before its receipt arrives.
+      if (!sent || !sameDraft()) return false
     } else {
       move.startSubmit()
       const sent = await sdk.actions
@@ -1031,7 +1043,7 @@ export function Prompt(props: PromptProps) {
           sessionID,
           text: inputText,
           context: editorText,
-          agent: agentKey(agent),
+          agent,
           model: { providerID: selectedModel.providerID, modelID: selectedModel.modelID, variant },
           files: nonTextParts.filter((part) => part.type === "file"),
           agents: nonTextParts.filter((part) => part.type === "agent"),
@@ -1072,7 +1084,6 @@ export function Prompt(props: PromptProps) {
       }, 50)
     }
     input.clear()
-    if (finishMoveProgress) move.finishSubmit()
     return true
   }
 
@@ -1223,12 +1234,7 @@ export function Prompt(props: PromptProps) {
     return local.agent.color(agentKey(agent))
   })
 
-  const showVariant = createMemo(() => {
-    const variants = local.model.variant.list()
-    if (variants.length === 0) return false
-    const current = local.model.variant.current()
-    return !!current
-  })
+  const showVariant = createMemo(() => local.model.variant.current() !== undefined)
 
   const agentMetaAlpha = createFadeIn(() => !!local.agent.current(), animationsEnabled)
   const modelMetaAlpha = createFadeIn(() => !!local.agent.current() && store.mode === "normal", animationsEnabled)
@@ -1394,7 +1400,7 @@ export function Prompt(props: PromptProps) {
                             <text fg={PromptSupport.fadeColor(theme.textMuted, variantMetaAlpha())}>·</text>
                             <text>
                               <span style={{ fg: PromptSupport.fadeColor(theme.warning, variantMetaAlpha()), bold: true }}>
-                                {local.model.variant.current()}
+                                {local.model.variant.current() === "" ? '""' : local.model.variant.current()}
                               </span>
                             </text>
                           </Show>

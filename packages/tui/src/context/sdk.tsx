@@ -5,6 +5,7 @@ import type { GlobalEvent } from "../types"
 import { createSimpleContext } from "./helper"
 import { isDemoRequest } from "./demo"
 import { batch, createSignal, onCleanup, onMount } from "solid-js"
+import { createStore } from "solid-js/store"
 
 export type EventSource = {
   subscribe: (handler: (event: GlobalEvent) => void) => Promise<() => void>
@@ -31,7 +32,8 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
     // True while the event stream is down and being retried. Embedded event sources have no stream to observe.
     const [offline, setOffline] = createSignal(false)
     const [connectionEpoch, setConnectionEpoch] = createSignal(0)
-    const [modelExecutionEpoch, setModelExecutionEpoch] = createSignal(0)
+    const [globalModelEpoch, setGlobalModelEpoch] = createSignal(0)
+    const [modelEpochs, setModelEpochs] = createStore<Record<string, number>>({})
 
     const handlers = new Set<(event: GlobalEvent) => void>()
     const emitter = {
@@ -66,11 +68,15 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
       })
     }
 
-    const handleEvent = (event: GlobalEvent) => {
+    const handleEvent = (event: GlobalEvent, hasLocation = true) => {
       if (abort.signal.aborted) return
-      if ((event.payload.type === "catalog.updated" || event.payload.type === "integration.connection.updated") &&
-        event.workspace === undefined && (!event.directory || event.directory === "global" || event.directory === props.directory))
-        setModelExecutionEpoch((value) => value + 1)
+      if (event.payload.type === "catalog.updated" || event.payload.type === "integration.connection.updated") {
+        if (!hasLocation || (event.workspace === undefined && (!event.directory || event.directory === "global"))) {
+          setGlobalModelEpoch((value) => value + 1)
+        } else {
+          setModelEpochs(JSON.stringify([event.directory, event.workspace]), (value) => (value ?? 0) + 1)
+        }
+      }
       // Recovery owners may mount after this greeting, and all observers must see its new epoch.
       if (event.payload.type === "server.connected") setConnectionEpoch((value) => value + 1)
       queue.push(event)
@@ -104,7 +110,7 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
                 directory: event.location?.directory ?? props.directory ?? "",
                 workspace: event.location?.workspaceID,
                 payload: { id: event.id, type: event.type, data: event.data } as GlobalEvent["payload"],
-              })
+              }, event.location !== undefined)
             }
           })().catch(() => {})
           if (!abort.signal.aborted && !ctrl.signal.aborted) setOffline(true)
@@ -195,7 +201,9 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
       catalog,
       offline,
       connectionEpoch,
-      modelExecutionEpoch,
+      modelExecutionEpoch(location: { directory?: string; workspace?: string } = { directory: props.directory }) {
+        return globalModelEpoch() + (modelEpochs[JSON.stringify([location.directory, location.workspace])] ?? 0)
+      },
       binding: () => ({ url: props.url, directory: props.directory, headers: props.headers, fetch: props.fetch,
         active: props.url === transportBinding.url && props.directory === transportBinding.directory &&
           props.fetch === transportBinding.fetch && JSON.stringify([...new Headers(props.headers).entries()]) === transportBinding.headers }),

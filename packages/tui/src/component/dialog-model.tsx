@@ -1,6 +1,6 @@
 import { createMemo, createSignal } from "solid-js"
 import { modelExecutionReason, useLocal } from "../context/local"
-import { map, pipe, flatMap, entries, filter, sortBy, take } from "remeda"
+import { map, pipe, sortBy, take } from "remeda"
 import { DialogSelect } from "../ui/dialog-select"
 import { useDialog } from "../ui/dialog"
 import { createDialogProviderOptions, DialogProvider } from "./dialog-provider"
@@ -8,6 +8,7 @@ import { DialogVariant } from "./dialog-variant"
 import * as fuzzysort from "fuzzysort"
 import { useConnected } from "./use-connected"
 import { useSync } from "../context/sync"
+import { toModel } from "../context/catalog"
 
 export function DialogModel(props: { providerID?: string }) {
   const local = useLocal()
@@ -22,8 +23,10 @@ export function DialogModel(props: { providerID?: string }) {
 
   const options = createMemo(() => {
     const canonical = local.model.execution.read()
-    const listed = (providerID: string, modelID: string) => canonical.status !== "ready" ||
-      canonical.response.data.models.some((entry) => entry.model.providerID === providerID && entry.model.id === modelID)
+    const providersById = new Map(sync.data.provider_next.all.map((provider) => [provider.id, provider.name]))
+    const models = canonical.status === "ready" ? canonical.response.data.models.map((entry) => toModel(entry.model))
+      : sync.data.provider.flatMap((provider) => Object.values(provider.models))
+    const providerName = (id: string) => providersById.get(id) ?? id
     const unavailable = (providerID: string, modelID: string) => {
       if (canonical.status === "idle") return "Model availability has not been checked"
       if (canonical.status === "loading") return "Checking model availability"
@@ -42,23 +45,20 @@ export function DialogModel(props: { providerID?: string }) {
     function toOptions(items: typeof favorites, category: string) {
       if (!showSections) return []
       return items.flatMap((item) => {
-        if (!listed(item.providerID, item.modelID)) return []
-        const provider = sync.data.provider.find((provider) => provider.id === item.providerID)
-        if (!provider) return []
-        const model = provider.models[item.modelID]
+        const model = models.find((model) => model.providerID === item.providerID && model.id === item.modelID)
         if (!model) return []
+        const allowed = local.model.execution.allows(item)
         return [
           {
-            key: item,
-            value: { providerID: provider.id, modelID: model.id },
+            value: item,
             title: model.name ?? item.modelID,
-            description: provider.name,
+            description: providerName(item.providerID),
             category,
-            disabled: !local.model.execution.allows(item),
-            footer: !local.model.execution.allows(item) ? unavailable(item.providerID, item.modelID) :
-              model.cost?.input === 0 && provider.id === "opencode" ? "Free" : undefined,
+            disabled: !allowed,
+            footer: !allowed ? unavailable(item.providerID, item.modelID) :
+              model.cost?.input === 0 && item.providerID === "opencode" ? "Free" : undefined,
             onSelect: () => {
-              onSelect(provider.id, model.id)
+              onSelect(item.providerID, item.modelID)
             },
           },
         ]
@@ -73,56 +73,28 @@ export function DialogModel(props: { providerID?: string }) {
       "Recent",
     )
 
-    const providerOptions = pipe(
-      sync.data.provider,
-      sortBy(
-        (provider) => provider.id !== "opencode",
-        (provider) => provider.name,
-      ),
-      flatMap((provider) =>
-        pipe(
-          provider.models,
-          entries(),
-          filter(([_, info]) => info.status !== "deprecated"),
-          filter(([_, info]) => (props.providerID ? info.providerID === props.providerID : true)),
-          filter(([model]) => listed(provider.id, model)),
-          map(([model, info]) => ({
-            value: { providerID: provider.id, modelID: model },
-            title: info.name ?? model,
-            releaseDate: info.release_date,
-            description: favorites.some((item) => item.providerID === provider.id && item.modelID === model)
-              ? "(Favorite)"
-              : undefined,
-            category: connected() ? provider.name : undefined,
-            disabled: !local.model.execution.allows({ providerID: provider.id, modelID: model }),
-            footer: !local.model.execution.allows({ providerID: provider.id, modelID: model }) ? unavailable(provider.id, model) :
-              info.cost?.input === 0 && provider.id === "opencode" ? "Free" : undefined,
-            onSelect() {
-              onSelect(provider.id, model)
-            },
-          })),
-          filter((option) => {
-            if (!showSections) return true
-            if (
-              favorites.some(
-                (item) => item.providerID === option.value.providerID && item.modelID === option.value.modelID,
-              )
-            )
-              return false
-            if (
-              recents.some(
-                (item) => item.providerID === option.value.providerID && item.modelID === option.value.modelID,
-              )
-            )
-              return false
-            return true
-          }),
-          (options) => sortModelOptions(options, props.providerID !== undefined),
-        ),
-      ),
-    )
+    const sections = [...favoriteOptions, ...recentOptions]
+    const grouped = Object.groupBy(models, (model) => model.providerID)
+    const providerOptions = sortBy(Object.keys(grouped), (id) => id !== "opencode", providerName)
+      .filter((id) => !props.providerID || id === props.providerID)
+      .flatMap((id) => sortModelOptions((grouped[id] ?? []).flatMap((model) => {
+        const value = { providerID: id, modelID: model.id }
+        if (model.status === "deprecated" || sections.some((option) => option.value.providerID === id && option.value.modelID === model.id)) return []
+        const allowed = local.model.execution.allows(value)
+        return [{
+          value,
+          title: model.name ?? model.id,
+          releaseDate: model.release_date,
+          description: favorites.some((item) => item.providerID === id && item.modelID === model.id) ? "(Favorite)" : undefined,
+          category: connected() ? providerName(id) : undefined,
+          disabled: !allowed,
+          footer: !allowed ? unavailable(id, model.id) : model.cost?.input === 0 && id === "opencode" ? "Free" : undefined,
+          onSelect: () => onSelect(id, model.id),
+        }]
+      }), props.providerID !== undefined))
     const selected = local.model.intent().model
-    if (selected && !sync.data.provider.some((provider) => provider.id === selected.providerID && provider.models[selected.modelID])) {
+    if (selected && (!props.providerID || selected.providerID === props.providerID) &&
+      ![...sections, ...providerOptions].some((option) => option.value.providerID === selected.providerID && option.value.modelID === selected.modelID)) {
       const known = local.model.known(selected)
       providerOptions.push({ value: selected, title: known?.title ?? selected.modelID, releaseDate: "",
         description: undefined, category: known?.provider ?? selected.providerID, disabled: true,
@@ -150,7 +122,7 @@ export function DialogModel(props: { providerID?: string }) {
       ]
     }
 
-    return [...favoriteOptions, ...recentOptions, ...providerOptions, ...popularProviders]
+    return [...sections, ...providerOptions, ...popularProviders]
   })
 
   const provider = createMemo(() =>

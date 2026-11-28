@@ -32,6 +32,7 @@ import { ClipboardProvider } from "../../../../src/context/clipboard"
 import { PromptRefProvider } from "../../../../src/context/prompt"
 import { EditorContextProvider } from "../../../../src/context/editor"
 import { LocationProvider } from "../../../../src/context/location"
+import { HomeSessionDestinationProvider, useHomeSessionDestination } from "../../../../src/routes/home/session-destination"
 import { TuiConfigProvider } from "../../../../src/config"
 import { getOrchestraModeStack, OrchestraKeymapProvider, registerOrchestraKeymap } from "../../../../src/keymap"
 import { createPluginRuntime, PluginRuntimeProvider } from "../../../../src/plugin/runtime"
@@ -39,13 +40,14 @@ import { Prompt, type PromptRef } from "../../../../src/component/prompt"
 import { DialogModel } from "../../../../src/component/dialog-model"
 import { DialogVariant } from "../../../../src/component/dialog-variant"
 import { DialogProvider, useDialog } from "../../../../src/ui/dialog"
-import { ToastProvider } from "../../../../src/ui/toast"
+import { ToastProvider, useToast } from "../../../../src/ui/toast"
 import { PromptStashProvider } from "../../../../src/prompt/stash"
 import { FrecencyProvider } from "../../../../src/prompt/frecency"
 import { PromptHistoryProvider } from "../../../../src/prompt/history"
 import { TestTuiContexts } from "../../../fixture/tui-environment"
 import { createTuiResolvedConfig } from "../../../fixture/tui-runtime"
 import { createEventSource, createFetch, json, v2Session } from "../../../fixture/tui-sdk"
+import type { Session } from "../../../../src/types"
 
 export const ref = { providerID: "provider", id: "model" }
 export const model = Model.Info.make({
@@ -75,8 +77,9 @@ export async function wait(predicate: () => boolean, label: string, milliseconds
 // This is contract-consumption evidence, not a substitute for the backend describe HTTP gate.
 export async function mount(options: { draft?: boolean; initial?: ModelExecution.Response; reply?: (request: Request) => Response | Promise<Response>;
   preferences?: { variant?: Record<string, string>; variantIntent?: Record<string, unknown> };
-  catalogModel?: Model.Info; args?: Args } = {}) {
+  catalogModel?: Model.Info; args?: Args; session?: Partial<Pick<Session, "agent" | "model" | "location">> } = {}) {
   const root = await mkdtemp(path.join(tmpdir(), "orchestra-model-consumer-"))
+  const copyDirectory = path.join(root, "fixture-copy")
   const state = path.join(root, "state")
   await mkdir(state)
   await Bun.write(path.join(state, "kv.json"), "{}")
@@ -85,12 +88,16 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
   const calls: { path: string; method: string; body: unknown; authorization: string | null; url: URL; signal: AbortSignal }[] = []
   const control = { reply: options.reply ?? ((_request: Request) => json({ location: { directory: owner.directory }, data: options.initial ?? decision() })),
     before: async (_path: string) => {}, catalogModel: options.catalogModel ?? model,
+    commands: (_url: URL) => [Command.Info.make({ name: "known", template: "fixture command" })],
     catalogProviders: [Provider.Info.empty(Provider.ID.make(ref.providerID))],
     catalogAgents: [Agent.Info.make({ ...Agent.Info.empty(Agent.ID.make("maestro")), engine: "orchestra" }),
       Agent.Info.make({ ...Agent.Info.empty(Agent.ID.make("backend")), engine: "orchestra" })],
   }
   const events = createEventSource()
   const fallback = createFetch()
+  const session = (id: string) => id === "session-1"
+    ? { ...v2Session({ id, directory: root }), ...options.session }
+    : v2Session({ id, directory: root })
   const fetch: typeof Bun.fetch = Object.assign(async (...args: Parameters<typeof Bun.fetch>) => {
     const request = new Request(...args)
     const url = new URL(request.url)
@@ -100,21 +107,24 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
     if (url.pathname === "/api/model/execution") return control.reply(request)
     const envelope = (data: unknown) => json({ location: { directory: root }, data })
     if (["/api/integration", "/api/skill", "/api/reference"].includes(url.pathname)) return envelope([])
-    if (url.pathname === "/api/command") return envelope([Command.Info.make({ name: "known", template: "fixture command" })])
+    if (url.pathname === "/api/command") return envelope(control.commands(url))
     if (url.pathname === "/api/provider") return envelope(control.catalogProviders)
     if (url.pathname === "/api/model") return envelope([control.catalogModel, { ...model, id: Model.ID.make("blocked"), name: "Blocked model" }])
     if (url.pathname === "/api/model/default") return envelope(ref)
     if (url.pathname === "/api/agent") return envelope(control.catalogAgents)
     if (url.pathname === "/api/permission/request" || url.pathname === "/api/question/request") return json({ data: [] })
     if (url.pathname === "/api/mcp/resource") return envelope({ resources: [] })
-    if (url.pathname === "/api/location") return json({ directory: root, project: { id: "proj_test", directory: root } })
+    if (url.pathname === "/api/location") return json({ directory: url.searchParams.get("location[directory]") ?? root,
+      project: { id: "proj_test", directory: root } })
+    if (url.pathname === "/experimental/project/proj_test/copy/generate-name") return json({ name: "fixture-copy" })
+    if (url.pathname === "/experimental/project/proj_test/copy") return json({ directory: copyDirectory })
     // This exact route must precede the generic Session-detail route below.
     if (url.pathname === "/api/session/active") return json(Schema.encodeSync(Schema.Struct({
       data: Schema.Record(SessionID, Schema.Struct({ type: Schema.Literal("running") })),
     }))({ data: {} }))
     if (url.pathname === "/api/session") return request.method === "POST" ? json({ data: v2Session({ id: "ses_created_fixture", directory: root }) })
-      : json({ data: [v2Session({ id: "session-1", directory: root }), v2Session({ id: "session-2", directory: root })], cursor: {} })
-    if (/^\/api\/session\/[^/]+$/.test(url.pathname)) return json({ data: v2Session({ id: url.pathname.split("/").at(-1)!, directory: root }) })
+      : json({ data: [session("session-1"), session("session-2")], cursor: {} })
+    if (/^\/api\/session\/[^/]+$/.test(url.pathname)) return json({ data: session(url.pathname.split("/").at(-1)!) })
     if (url.pathname.endsWith("/todo")) return json({ data: [] })
     if (url.pathname.endsWith("/message")) return json({ data: [], cursor: {} })
     if (request.method === "POST" && /\/(agent|model|shell)$/.test(url.pathname)) return new Response(null, { status: 204 })
@@ -133,11 +143,13 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
     // Setup barrier only: the model consumer mounts after the initial greeting, so its later greeting is a real gap.
     return <Show when={sdk.connectionEpoch() > 0}>{props.children}</Show>
   }
-  let context!: { sdk: ReturnType<typeof useSDK>; sync: ReturnType<typeof useSync>; local: ReturnType<typeof useLocal>; route: ReturnType<typeof useRoute>; dialog: ReturnType<typeof useDialog> }
+  let context!: { sdk: ReturnType<typeof useSDK>; sync: ReturnType<typeof useSync>; local: ReturnType<typeof useLocal>; route: ReturnType<typeof useRoute>; dialog: ReturnType<typeof useDialog>;
+    home: ReturnType<typeof useHomeSessionDestination>; toast: ReturnType<typeof useToast> }
   const localOwners = new Set<ReturnType<typeof useLocal>>()
   let prompt: PromptRef | undefined
   function Probe() {
-    context = { sdk: useSDK(), sync: useSync(), local: useLocal(), route: useRoute(), dialog: useDialog() }
+    context = { sdk: useSDK(), sync: useSync(), local: useLocal(), route: useRoute(), dialog: useDialog(),
+      home: useHomeSessionDestination(), toast: useToast() }
     localOwners.add(context.local)
     onMount(() => {
       // Match app.tsx: apply CLI variant through the real setter, including before preference I/O completes.
@@ -161,9 +173,11 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
               <Show when={owner.generation} keyed>{(_generation) => <SDKProvider url={owner.url} directory={owner.directory} fetch={fetch} headers={{ authorization: owner.authorization }} events={events.source}>
                 <GreetingGate><PermissionProvider><ProjectProvider><SyncProvider><DataProvider>
                   <ThemeProvider mode="dark" source={{ discover: async () => ({}), subscribeRefresh: () => () => {} }}>
-                    <LocalProvider><PromptStashProvider><DialogProvider><FrecencyProvider><PromptHistoryProvider>
-                      <PromptRefProvider><EditorContextProvider><LocationProvider location={{ directory: owner.directory }}><Probe /></LocationProvider></EditorContextProvider></PromptRefProvider>
-                    </PromptHistoryProvider></FrecencyProvider></DialogProvider></PromptStashProvider></LocalProvider>
+                    <HomeSessionDestinationProvider><LocalProvider><PromptStashProvider><DialogProvider><FrecencyProvider><PromptHistoryProvider>
+                      <PromptRefProvider><EditorContextProvider><LocationProvider location={{ directory: owner.directory }}>
+                        <Probe />
+                      </LocationProvider></EditorContextProvider></PromptRefProvider>
+                    </PromptHistoryProvider></FrecencyProvider></DialogProvider></PromptStashProvider></LocalProvider></HomeSessionDestinationProvider>
                   </ThemeProvider>
                 </DataProvider></SyncProvider></ProjectProvider></PermissionProvider></GreetingGate>
               </SDKProvider>}</Show>
@@ -180,7 +194,7 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
     events.emit({ directory: root, workspace: undefined, payload: { id: `e6-greeting-${owner.generation}`, type: "server.connected", data: {} } })
     await sdkReady.promise
     await wait(() => context.sync.status === "complete" && prompt !== undefined, "real Sync bootstrap and Prompt ref")
-    return { app, calls, control, get context() { return context }, owner, setOwner, events, root,
+    return { app, calls, control, get context() { return context }, owner, setOwner, events, root, copyDirectory,
       client: Orchestra.make({ baseUrl: "http://consumer.fixture", fetch, headers: { authorization: "Basic Zml4dHVyZTpub25l" } }),
       get prompt() { if (!prompt) throw new Error("Prompt disposed"); return prompt },
       queries: () => calls.filter((call) => call.path === "/api/model/execution"),
@@ -243,7 +257,7 @@ export async function mount(options: { draft?: boolean; initial?: ModelExecution
 
 // Establish a real selected choice under a READY endpoint before a submit fault is installed.
 // Loading/bootstrap acceptance deliberately uses mount() instead of this prerequisite.
-export async function ready(options: { draft?: boolean; initial?: ModelExecution.Response } = {}) {
+export async function ready(options?: Parameters<typeof mount>[0]) {
   const fixture = await mount(options)
   try {
     await wait(() => fixture.context.local.model.current()?.modelID === ref.id, "READY real model choice")

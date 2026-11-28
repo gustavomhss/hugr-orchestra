@@ -263,6 +263,19 @@ export const {
       })
     }
 
+    function withLiveSelection(session: Session) {
+      const selection = store.session_selection[session.id]
+      const agent = selection?.agent && selection.agent.timestamp >= session.time.updated ? selection.agent : undefined
+      const model = selection?.model && selection.model.timestamp >= session.time.updated ? selection.model : undefined
+      if (!agent && !model) return session
+      return {
+        ...session,
+        agent: agent?.value ?? session.agent,
+        model: model ? { ...model.value } : session.model,
+        time: { ...session.time, updated: Math.max(session.time.updated, agent?.timestamp ?? 0, model?.timestamp ?? 0) },
+      }
+    }
+
     // A demo request's tool call is settled here: the server never heard of it.
     function settleDemo(sessionID: string, requestID: string, outcome: Parameters<typeof settle>[1]) {
       if (!isDemoRequest(requestID)) return
@@ -285,7 +298,9 @@ export const {
     function upsertSession(sessionID: string) {
       return sdk.catalog
         .session(sessionID)
-        .then((session) => {
+        .then((snapshot) => {
+          if (lifetime.disposed) return
+          const session = withLiveSelection(snapshot)
           const result = search(store.session, session.id, (s) => s.id)
           if (result.found) return setStore("session", result.index, reconcile(session))
           setStore(
@@ -422,6 +437,7 @@ export const {
             delete draft.todo[event.data.sessionID]
             delete draft.session_diff[event.data.sessionID]
             delete draft.session_status[event.data.sessionID]
+            delete draft.session_selection[event.data.sessionID]
           }))
           const result = search(store.session, event.data.sessionID, (s) => s.id)
           if (result.found) {
@@ -438,6 +454,25 @@ export const {
         case "session.next.renamed":
           void upsertSession(event.data.sessionID)
           break
+
+        case "session.next.agent.switched":
+        case "session.next.model.switched": {
+          const sessionID = event.data.sessionID
+          const revision = { id: event.id, timestamp: event.data.timestamp }
+          const previous = store.session_selection[sessionID]
+          batch(() => {
+            if (event.type === "session.next.agent.switched") {
+              if (previous?.agent && previous.agent.timestamp > revision.timestamp) return
+              setStore("session_selection", sessionID, { ...previous, agent: { ...revision, value: event.data.agent } })
+            } else {
+              if (previous?.model && previous.model.timestamp > revision.timestamp) return
+              setStore("session_selection", sessionID, { ...previous, model: { ...revision, value: event.data.model } })
+            }
+            const match = search(store.session, sessionID, (session) => session.id)
+            if (match.found) setStore("session", match.index, reconcile(withLiveSelection(store.session[match.index])))
+          })
+          break
+        }
 
         case "session.next.compaction.started":
           compacting.add(event.data.sessionID)
@@ -530,7 +565,7 @@ export const {
             setStore("agent", reconcile(catalog.agent))
             setStore("config", reconcile(catalog.config))
             setStore("catalogRevision", (value) => value + 1)
-            if (sessions !== undefined) setStore("session", reconcile(sessions))
+            if (sessions !== undefined) setStore("session", reconcile(sessions.map(withLiveSelection)))
           })
         })
         .then(() => {
@@ -538,7 +573,7 @@ export const {
           if (store.status !== "complete") setStore("status", "partial")
           // non-blocking
           void Promise.all([
-            ...(args.continue ? [] : [sessionListPromise.then((sessions) => setStore("session", reconcile(sessions)))]),
+            ...(args.continue ? [] : [sessionListPromise.then((sessions) => setStore("session", reconcile(sessions.map(withLiveSelection))))]),
             hydrateRequests({ directory: sdk.directory ?? project.data.instance.path.directory, workspaceID: workspace }),
             sdk.catalog.commands(location).then((x) => setStore("command", reconcile(x))),
             sdk.catalog.lsp(location).then((x) => setStore("lsp", reconcile(x))),
@@ -606,6 +641,9 @@ export const {
         return project.instance.path()
       },
       session: {
+        selection(sessionID: string) {
+          return store.session_selection[sessionID]
+        },
         get(sessionID: string) {
           const match = search(store.session, sessionID, (s) => s.id)
           if (match.found) return store.session[match.index]
@@ -616,7 +654,7 @@ export const {
         },
         async refresh() {
           const list = await listSessions()
-          setStore("session", reconcile(list))
+          setStore("session", reconcile(list.map(withLiveSelection)))
         },
         status(sessionID: string) {
           if (!result.session.get(sessionID)) return "idle"
@@ -669,10 +707,11 @@ export const {
                   ...live.filter((item) => !fetched.some((message) => message.id === item.id)),
                 ].toSorted((a, b) => b.time.created - a.time.created || b.id.localeCompare(a.id)),
               )
+              const snapshot = withLiveSelection(session.value)
               setStore(produce((draft) => {
                 const match = search(draft.session, sessionID, (s) => s.id)
-                if (match.found) draft.session[match.index] = session.value
-                if (!match.found) draft.session.splice(match.index, 0, session.value)
+                if (match.found) draft.session[match.index] = snapshot
+                if (!match.found) draft.session.splice(match.index, 0, snapshot)
                 draft.todo[sessionID] = todo.value
               }))
               projectHistory(sessionID)

@@ -39,6 +39,10 @@ export function createSyncStore() {
     }
     config: Config
     session: Session[]
+    session_selection: Record<string, {
+      agent?: { id: string; timestamp: number; value: string }
+      model?: { id: string; timestamp: number; value: NonNullable<Session["model"]> }
+    }>
     session_status: {
       [sessionID: string]: SessionStatus
     }
@@ -80,6 +84,7 @@ export function createSyncStore() {
     provider: [],
     provider_default: {},
     session: [],
+    session_selection: {},
     session_status: {},
     session_diff: {},
     todo: {},
