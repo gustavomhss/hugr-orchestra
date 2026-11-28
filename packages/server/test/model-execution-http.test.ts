@@ -13,7 +13,7 @@ import { Cause, Context, Deferred, Effect, Exit, Fiber, Schema } from "effect"
 import { FetchHttpClient } from "effect/unstable/http"
 import { OpenApi } from "effect/unstable/httpapi"
 import { tmpdir } from "@orchestra/core/test/fixture/tmpdir"
-import { promptServer } from "../../core/test/fixture/mcp-prompts"
+import { promptServer } from "@orchestra/core/test/fixture/mcp-prompts"
 import { Api } from "../src/api"
 import { ModelExecutionFixture } from "./model-execution-fixture"
 
