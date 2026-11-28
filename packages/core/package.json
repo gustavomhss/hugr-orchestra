@@ -281,7 +281,6 @@
     "./plugin/variant": "./src/plugin/variant.ts",
     "./policy": "./src/policy.ts",
     "./process": "./src/process.ts",
-    "./test/fixture/activity-worktree": "./test/fixture/activity-worktree.ts",
     "./test/fixture/omni-expect": "./test/fixture/omni-expect.ts",
     "./test/fixture/git": "./test/fixture/git.ts",
     "./test/fixture/activity-worktree": "./test/fixture/activity-worktree.ts",
