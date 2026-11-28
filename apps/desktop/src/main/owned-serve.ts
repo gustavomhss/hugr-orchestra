@@ -53,7 +53,7 @@ export async function startOwnedServe(options: {
   }
   const state = {
     child: undefined as DesktopOmni.Spawned | undefined,
-    activity: undefined as Promise<Awaited<ReturnType<typeof ActivityPrivateChannel.signer>>> | undefined,
+    activity: undefined as Promise<Awaited<ReturnType<typeof ActivityPrivateChannel.signer>> | undefined> | undefined,
     stopping: false,
     killed: false,
     failures: 0,
@@ -79,8 +79,10 @@ export async function startOwnedServe(options: {
     if (options.privateActivityApproval) {
       const secret = crypto.getRandomValues(new Uint8Array(32))
       const frame = ActivityPrivateChannel.frame(secret)
-      state.activity = ActivityPrivateChannel.signer(secret).finally(() => secret.fill(0))
-      child.stdin.end(frame, () => frame.fill(0))
+      state.activity = ActivityPrivateChannel.signer(secret).catch(() => undefined).finally(() => {
+        secret.fill(0)
+      })
+      child.stdin.end(frame, () => { frame.fill(0) })
     }
     // Created at launch so a stop that lands between "exit" and "close" still waits for the drain.
     state.closed = new Promise<void>((resolve) => child.once("close", () => resolve()))
@@ -102,10 +104,7 @@ export async function startOwnedServe(options: {
     // and the renderer never sees why the process did not start.
     const failed = new Promise<never>((_, reject) => {
       child.once("error", (error) => {
-        if (state.child === child) {
-          state.child = undefined
-          state.activity = undefined
-        }
+        if (state.child === child) state.activity = undefined
         options.logger.error("owned serve error", { message: error.message })
         reject(error instanceof Error ? error : new Error(String(error)))
       })
@@ -211,7 +210,7 @@ export async function startOwnedServe(options: {
     const current = () => state.child === child && state.activity === activity && !state.stopping && !deadline.aborted
     return (async () => {
       const signer = await activity
-      if (!current()) return false
+      if (!signer || !current()) return false
       const nonce = ActivityPrivateChannel.nonce()
       const mac = await signer.sign("probe-request", nonce)
       if (!current()) return false

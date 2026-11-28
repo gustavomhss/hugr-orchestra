@@ -89,9 +89,11 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
       (input.installation && Option.isSome(input.installation))) {
       return yield* Effect.fail(new Error("Activity private channel requires an unregistered loopback server and explicit port"))
     }
-    const { ActivityPrivateChannel } = yield* Effect.promise(() => import("@orchestra/server/activity-private-channel"))
+    const { ActivityPrivateChannelServer } = yield* Effect.promise(
+      () => import("@orchestra/server/activity-private-channel"),
+    )
     return yield* Effect.tryPromise({
-      try: (signal) => ActivityPrivateChannel.acquire(process.stdin, signal),
+      try: (signal) => ActivityPrivateChannelServer.acquire(process.stdin, signal),
       catch: () => new Error("Activity private channel startup failed"),
     })
   }) : undefined

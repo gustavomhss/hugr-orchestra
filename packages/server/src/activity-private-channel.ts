@@ -1,14 +1,12 @@
-export * as ActivityPrivateChannel from "./activity-private-channel"
+export * as ActivityPrivateChannelServer from "./activity-private-channel"
 
-import { ActivityPrivateChannel as Protocol } from "@orchestra/schema/activity-private-channel"
+import { ActivityPrivateChannel } from "@orchestra/schema/activity-private-channel"
 import type { Readable } from "node:stream"
 import type { HttpExtension } from "./http-extensions"
 
-export const option = Protocol.option
-
 /** Acquired only by the desktop-owned server before any listener or installation starts. */
 export async function acquire(input: Readable, signal: AbortSignal): Promise<HttpExtension> {
-  const frame = new Uint8Array(Protocol.frameBytes)
+  const frame = new Uint8Array(ActivityPrivateChannel.frameBytes)
   const key = await new Promise<Uint8Array>((resolve, reject) => {
     let size = 0
     let finished = false
@@ -36,7 +34,7 @@ export async function acquire(input: Readable, signal: AbortSignal): Promise<Htt
     }
     const end = () => {
       if (finished) return
-      const secret = size === frame.length ? Protocol.keyFromFrame(frame) : undefined
+      const secret = size === frame.length ? ActivityPrivateChannel.keyFromFrame(frame) : undefined
       frame.fill(0)
       if (!secret) return fail()
       finished = true
@@ -52,22 +50,22 @@ export async function acquire(input: Readable, signal: AbortSignal): Promise<Htt
     signal.addEventListener("abort", fail, { once: true })
     if (signal.aborted || input.destroyed) fail()
   })
-  const signer = await Protocol.signer(key).finally(() => key.fill(0))
+  const signer = await ActivityPrivateChannel.signer(key).finally(() => key.fill(0))
   return {
-    mount: Protocol.path,
+    mount: ActivityPrivateChannel.path,
     async handler(request) {
       const url = new URL(request.url)
-      if (request.method !== "POST" || url.pathname !== Protocol.path || url.search ||
+      if (request.method !== "POST" || url.pathname !== ActivityPrivateChannel.path || url.search ||
         request.headers.has("origin") || request.body !== null || request.headers.has("transfer-encoding") ||
         (request.headers.has("content-length") && request.headers.get("content-length") !== "0")) {
         return new Response(null, { status: 403, headers: { "cache-control": "no-store" } })
       }
-      const nonce = request.headers.get(Protocol.nonceHeader)
-      if (!await signer.verify("probe-request", nonce, request.headers.get(Protocol.macHeader)) || !nonce) {
+      const nonce = request.headers.get(ActivityPrivateChannel.nonceHeader)
+      if (!await signer.verify("probe-request", nonce, request.headers.get(ActivityPrivateChannel.macHeader)) || !nonce) {
         return new Response(null, { status: 403, headers: { "cache-control": "no-store" } })
       }
       return new Response(null, { status: 204, headers: {
-        "cache-control": "no-store", [Protocol.macHeader]: await signer.sign("probe-response", nonce),
+        "cache-control": "no-store", [ActivityPrivateChannel.macHeader]: await signer.sign("probe-response", nonce),
       } })
     },
   }
