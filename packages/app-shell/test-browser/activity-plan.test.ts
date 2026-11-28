@@ -86,13 +86,13 @@ test("a web server displays Ready rows without an arm control", async () => {
   }
 })
 
-test("apply uses only the cached ledger state, waits for a signed result, and replays Unknown", async () => {
+test.each(["Out", "Unknown"] as const)("apply waits for and replays persisted %s without a live scan", async (outcome) => {
   const ready = target("ready-a")
   const approval = { approvalID: "approval-1", targetID: ready.targetID, generation: ready.generation }
   const states: ActivityApply.State[] = [
     { available: true, partial: false, eligible: [approval], results: [] },
-    { available: true, partial: false, eligible: [], results: [{ ...approval, outcome: "Unknown" }] },
-    { available: true, partial: false, eligible: [], results: [{ ...approval, outcome: "Unknown" }] },
+    { available: true, partial: false, eligible: [], results: [{ ...approval, outcome }] },
+    { available: true, partial: false, eligible: [], results: [{ ...approval, outcome }] },
   ]
   let applyResult: ((value: ActivityApply.Receipt | undefined) => void) | undefined
   let stateIndex = 0
@@ -112,12 +112,13 @@ test("apply uses only the cached ledger state, waits for a signed result, and re
     expect(app.applies).toEqual([{ serverURL: "http://127.0.0.1:4777", request: approval }])
     expect(app.panel().querySelector("tbody")?.textContent).toContain("Armed")
     expect(app.panel().querySelector("tbody")?.textContent).not.toContain("Out")
-    applyResult!({ previewID: "preview-1", ...approval, outcome: "Unknown" })
-    await until("signed persisted Unknown appears", () => text(app.panel()).includes("Unknown: 1"))
+    applyResult!({ previewID: "preview-1", ...approval, outcome })
+    await until("signed persisted outcome appears", () => text(app.panel()).includes(`${outcome}: 1`))
     button(app, "Refresh").click()
     await until("cached plan reload plus persisted state replay", () => app.calls.length === 2 && app.applyStates.length === 3)
     app.calls[1]!.respond(snapshot({ ready: [], approvals: [{ receipt: { ...receipt(ready), approvalID: approval.approvalID }, changed: true }] }))
-    await until("replayed Unknown remains visible", () => app.panel().querySelector("tbody")?.textContent?.includes("Unknown") === true)
+    app.filter(outcome)
+    await until("replayed outcome remains visible under filtering", () => app.panel().querySelector("tbody")?.textContent?.includes(outcome) === true)
     expect(app.inspections).toHaveLength(0)
   } finally {
     app.dispose()
