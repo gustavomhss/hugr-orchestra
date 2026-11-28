@@ -1,0 +1,114 @@
+{
+  "agent_id": "/root/judge_j2",
+  "identity_role": "parallel-v3-fresh/S4/J2",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "purpose": "semantic-review",
+  "artifact_key": "S4:L1:host-boundaries",
+  "verdict": "PASS",
+  "identities": {
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "body_version": "v2",
+    "body_byte_length": 11972,
+    "body_sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a",
+    "artifact_v2_sha256": "a972bc6f6558191ac06d9b7c307e57bb571bf385b04fe4d15352965ff9203051",
+    "oracle_sha256": "7ce135a366945c132b56d0415a807d8bc838f412390bc6c78b6ca70f89a34708",
+    "transport_manifest_sha256": "f68675c49f1f348ba68e630c680cca06953a58c04217eee67baaa4c8c0c28032"
+  },
+  "criteria": [
+    {
+      "id": "QS-1",
+      "verdict": "PASS",
+      "evidence": "Corpo v2 e trechos literais de compaction.ts:277–329, runner/llm.ts:231–272, rag-studio-session.ts:18–134,239–275 e core/atlas.ts:103–147.",
+      "reason": "As ligações centrais correspondem ao código fornecido. O default de compaction está separado da contribuição Continuity; o ciclo RAG e seus conflitos são preservados; a ligação Atlas distingue import do bundle e origem declarada."
+    },
+    {
+      "id": "QS-2",
+      "verdict": "PASS",
+      "evidence": "Seções de manutenção dos três percursos; achados de trace, alocação de IDs, extração anterior ao gate e limites de hooks.",
+      "reason": "A unidade orienta onde alterar cada responsabilidade e explica consequências concretas. Os problemas identificados são descritos como constatações ou inferências estáticas, sem alegar reprodução executada."
+    },
+    {
+      "id": "CC-3",
+      "verdict": "PASS",
+      "evidence": "Seções Session/Continuity, HTTP RAG/SQLite e Atlas host/boundary.",
+      "reason": "O conteúdo cobre finalidade, sequência, persistência, contratos, impacto e manutenção. Distingue admissão, execução, recuperação, diagnóstico e autoridade."
+    },
+    {
+      "id": "CC-7",
+      "verdict": "PASS",
+      "evidence": "Localizadores, artifact-v2.json, recipe-v2.json e proveniência resumida; boundary/package.json e boundary/script/build.ts.",
+      "reason": "As fronteiras externas e as origens dos gerados permanecem rastreáveis. As 12 consultas externas não ampliam o censo atribuído nem viram uma alegação de compreensão integral do host."
+    },
+    {
+      "id": "GO-I2",
+      "verdict": "PASS",
+      "evidence": "Abertura do corpo; default e contribuição de compaction; inferências RAG; conflito entre checklist e fluxo implementado.",
+      "reason": "Código observado, intenção documental, inferência e integração desconhecida permanecem distintos. O texto não transforma declaração de contribuição em instalação efetiva."
+    },
+    {
+      "id": "GO-I5",
+      "verdict": "PASS",
+      "evidence": "Distinções de recall, indisponibilidade de arquivo RAG, estado empty do Atlas e exceções Unavailable.",
+      "reason": "Ausência, indisponibilidade, resultado vazio e mudança de hash não são colapsados. O possível uso de chunks antigos após falha de leitura é explicitado como inferência limitada."
+    },
+    {
+      "id": "GO-I7",
+      "verdict": "PASS",
+      "evidence": "Admissão RAG; modelos e autoridade Atlas; lacunas de middleware, autenticação e instalação global.",
+      "reason": "Validação, permissão, leitura de arquivo, identidade nominal e autorização HTTP são separadas. Chamadas diretas ao LLMClient não recebem por inferência os hooks ou permissões de Session."
+    },
+    {
+      "id": "GO-I8",
+      "verdict": "PASS",
+      "evidence": "Limites de SQLite, bundles, source_refs, testes e integração ao longo do corpo.",
+      "reason": "Schema, hashes, exports e fontes de implementação não são usados como prova de atomicidade, paridade, integração executada ou publicação."
+    }
+  ],
+  "oracle_cases": [
+    {
+      "id": "B-1",
+      "verdict": "PASS",
+      "evidence": "C:277–329; L:231–272,427–448,536–564; V/strategy.ts:257–300.",
+      "reason": "O default combina make com transform identidade e afterStep sem efeito. O runner usa hooks no percurso normal; o host recebe histórico diretamente. A contribuição substitutiva não é confundida com instalação global."
+    },
+    {
+      "id": "B-2",
+      "verdict": "PASS",
+      "evidence": "RS:18–134,139–169,239–275; D:34–70; seção HTTP RAG.",
+      "reason": "O corpo explica reconstrução e hidratação do memoryStore por Location, noteBytes, operação e regravação SQL, mantendo embedding desativado. A ausência de transação nesse adaptador não é apresentada como prova de inexistência de transação exterior."
+    },
+    {
+      "id": "B-3",
+      "verdict": "PASS",
+      "evidence": "R/ask.ts:9–29; R/trace.ts:3–6; R/proof.ts:4–25; RS:239–275.",
+      "reason": "O conflito revisionId versus questionId está preservado. O caminho de persistência mostrado não converte a chave, e o corpo não inventa uma correção."
+    },
+    {
+      "id": "B-4",
+      "verdict": "PASS",
+      "evidence": "RH:55–63; R/extract.ts:3–16; R/admit.ts:4–28; R/context.ts:150–183; RS:52–65.",
+      "reason": "A extração anterior a admit e a omissão de allowExternal são descritas corretamente. A recusa posterior não é apresentada como prova de que nenhuma leitura ocorreu; nenhuma exploração ou execução é alegada."
+    },
+    {
+      "id": "B-5",
+      "verdict": "PASS",
+      "evidence": "AH:19–71; AC:5–34,103–147,248–279; B/package.json:23–29 e B/script/build.ts:16–19.",
+      "reason": "O percurso Location/core/boundary e a seleção de modelo por catálogo estão explícitos. O ID usado no gateway não é tratado como criação de Session durável. Paridade dos gerados, chamadas pagas e ativação em produção não são alegadas."
+    }
+  ],
+  "metadata_and_bound": {
+    "verdict": "PASS",
+    "reason": "O corpo de 11972 bytes respeita o limite de 12000. A correção v2 acrescenta o default a partir da mesma fonte, conserva os 37 source_refs e registra pedido, resposta, receita, diff e preservação da v1. O principal informou correspondência source_ref/file input e máximo de 39006 bytes. Build dependencies continuam vazias; navegação não vira predecessor."
+  },
+  "mandatory_findings": [],
+  "optional_suggestions": [],
+  "limits": [
+    "Este PASS cobre somente o corpo e os metadados v2 identificados. Nenhuma aprovação da v1 foi presumida.",
+    "As verificações de hashes, Git blobs e medidas foram fornecidas pelo principal/courier; este juiz não usou ferramentas.",
+    "Instalação global, middleware, autenticação HTTP, interiores de Session Store/History/projetor, atomicidade externa e paridade dos bundles permanecem não demonstrados neste pacote.",
+    "Os conflitos de produto descritos não precisam ser corrigidos para aceitar esta descrição estática fiel; este parecer não afirma que o produto esteja correto nesses pontos.",
+    "Não emito runtime-import-binding, aprovação de publicação, conclusão de L1, L2 ou S4.",
+    "O finding de concorrência do pacote runtime permanece separado e não é encerrado por este parecer."
+  ]
+}

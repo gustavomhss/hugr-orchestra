@@ -1,0 +1,149 @@
+{
+  "agent_id": "/root/judge_j2",
+  "identity_role": "parallel-v3-fresh/S4/J2",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "purpose": "semantic-layer3-review",
+  "key": "S4:L3:system-flows",
+  "body_sha256": "9df212b46f057c9e8369df6ed30e2e931a8fa9bc7f72ef51afba9eb4ea79d642",
+  "body_bytes": 8952,
+  "metadata_sha256": "51f7f018a5a936dff7d95658437e407d5fba4317d1570405e41074bec49fe61e",
+  "predecessor_payload_commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+  "oracle_sha256": "4498bdbc3bfa2e6cf67c47bc61a96961ef04b02333e54f0924c2ad12874dcf16",
+  "verdict": "PASS",
+  "criteria": [
+    {
+      "id": "AC-01",
+      "verdict": "PASS",
+      "location": "Um host, três percursos de estado; percursos Session, RAG e autoria/publicação",
+      "reason": "Integra estado, transformação, decisão e uso dos três percursos, explicando suas fronteiras e pontos de recusa. Compartilhar host/Location não é apresentado como unificação de autoridade ou transações."
+    },
+    {
+      "id": "CC-2",
+      "verdict": "PASS",
+      "location": "Base aceita; source_refs e build_dependencies",
+      "reason": "Usa as três L2 completas aceitas e somente os L1 H/N adicionais declarados e pertinentes. Os predecessores e suas seções continuam identificados e alcançáveis."
+    },
+    {
+      "id": "CC-3",
+      "verdict": "PASS",
+      "location": "Citações por seção; sustentação E1–E8; cinco source_refs",
+      "reason": "As afirmações decisivas e a inferência de parada correspondem aos contratos herdados. H sustenta o rebuild preciso; N sustenta validação, binding, consumo e recuperação delimitada."
+    },
+    {
+      "id": "CC-7",
+      "verdict": "PASS",
+      "location": "Do turno à redução recuperável; Da requisição RAG; fronteira Atlas",
+      "reason": "Preserva diferenças de lifecycle, persistência e identidade entre host, Session, Continuity, Store e Atlas. Não atribui hooks de Session às chamadas diretas nem inventa convergência entre sessões."
+    },
+    {
+      "id": "QS-1",
+      "verdict": "PASS",
+      "location": "Mudanças propagam por resultados e vínculos",
+      "reason": "Corpo e resultado completo permanecem distintos. A parada por resultado igual é condicional à validade dos vínculos do dependente; não se conclui igualdade de autoridade ou validade pela igualdade da prosa."
+    },
+    {
+      "id": "QS-2",
+      "verdict": "PASS",
+      "location": "Diagnósticos de masking/RAG; Após falha; Manutenção",
+      "reason": "Oferece caminhos concretos de investigação e explica consequências operacionais: captura, reavaliação, receipts, leitura histórica, retomada e recusa. Evita a regra indiscriminada de refazer toda autoria."
+    },
+    {
+      "id": "QS-3",
+      "verdict": "PASS",
+      "location": "artifact-v2.json; sete H2; referências de receita/pedidos/resposta",
+      "reason": "Key, scope, layer 3 e need flow são coerentes. As cinco fontes possuem file inputs correspondentes; dependências estão explícitas. Corpo e suporte respeitam os limites declarados."
+    },
+    {
+      "id": "GO-I2",
+      "verdict": "PASS",
+      "location": "Abertura; inferências marcadas; gaps e alcance da evidência",
+      "reason": "Distingue inspeção herdada, inferência contratual e execução histórica reportada. A produção L3 não se apresenta como execução dos controles ou reprodução dos riscos RAG."
+    },
+    {
+      "id": "GO-I3",
+      "verdict": "PASS",
+      "location": "Mudanças propagam; E3–E5",
+      "reason": "Receita/input, resultado dos predecessores e vínculos próprios determinam impacto. Navegação não cria aresta de build; unidades independentes preservam identidades somente enquanto seus próprios vínculos seguem válidos."
+    },
+    {
+      "id": "GO-I4",
+      "verdict": "PASS",
+      "location": "Rebuild, parada condicional e retomada durável",
+      "reason": "Explica o uso dos mecanismos existentes e a reutilização de resultados sem inventar novo motor, regeneração universal ou telemetria de modelo a partir de callbacks."
+    },
+    {
+      "id": "GO-I5",
+      "verdict": "PASS",
+      "location": "Da autoria à leitura; Após falha",
+      "reason": "Aceite semântico, dois bindings exatos e publicação governada continuam separados. Retomada exige compatibilidade atual; candidato alterado exige novo binding e mantém os gates independentes."
+    },
+    {
+      "id": "GO-I7",
+      "verdict": "PASS",
+      "location": "Histórico, retomada, rollback e recibos A/G/N",
+      "reason": "Histórico não torna inputs antigos atuais. Correções não reescrevem recibos anteriores; CI e R2 permanecem presos às revisões e amostras registradas."
+    },
+    {
+      "id": "GO-I8",
+      "verdict": "PASS",
+      "location": "Limites de recuperação; gaps; Manutenção e alcance",
+      "reason": "Mantém limites de observação, composição, autenticação e atomicidade. Controles sintéticos não provam toda concorrência ou perda de energia; informações de uso não expostas permanecem UNKNOWN."
+    }
+  ],
+  "oracle_cases": [
+    {
+      "id": "L3-flows",
+      "verdict": "PASS",
+      "reason": "Liga autoria, preparação, CAS, binding, observação, emit e leitura publicada, junto aos percursos Session/Continuity e RAG/Store. Nomeia entradas, decisões e saídas sem promover circulação de contexto a autoridade."
+    },
+    {
+      "id": "L3-impact",
+      "verdict": "PASS",
+      "reason": "Mudança de receita/input exige reavaliação pertinente; autoridade/validade/gaps integram o resultado. Resultado completo validado igual pode interromper reinterpretação descendente sob condições explícitas, preservando receipts e unidades cujos vínculos não mudaram."
+    },
+    {
+      "id": "L3-failure",
+      "verdict": "PASS",
+      "reason": "Distingue present divergente, ausência corroborada e indisponibilidade. Não permite usar histórico como atual após drift. Explica retomada de candidato/CAS duráveis, binding atual e rollback compatível, sem presumir fence cronológico ou recuperação universal."
+    },
+    {
+      "id": "L3-host-limits",
+      "verdict": "PASS",
+      "reason": "Conserva busca RAG corrente, mismatch revisionId/questionId, risco de seq, extração anterior ao gate e isolamento SQL não demonstrado. Hosted/generate e Atlas direto não herdam lifecycle normal de Continuity."
+    },
+    {
+      "id": "L3-cumulative",
+      "verdict": "PASS",
+      "reason": "A/C/G permanecem a base completa; H/N dão suporte direto ao aprofundamento de impacto e falha. Todos constam nas dependências e nas referências exatas, com pontos de manutenção e sem edição de ownership externo."
+    }
+  ],
+  "primary_corrections": [
+    {
+      "id": "P1-01",
+      "disposition": "RESOLVED",
+      "location": "Mudanças propagam por resultados e vínculos",
+      "reason": "A v2 acrescenta propagação pelo resultado completo, condições para parada após revalidação, obrigação de atualizar vínculos efetivamente afetados e preservação dos independentes. Não confunde fronteira afetada com autorização para executar todas as receitas."
+    },
+    {
+      "id": "P1-02",
+      "disposition": "RESOLVED",
+      "location": "Após falha, separar recuperação de nova publicação",
+      "reason": "A v2 distingue seleção corrente e histórica, preparação e publicação, retomada durável e rollback. Vincula compatibilidade e decisões ao candidato atual e preserva os limites dos controles."
+    }
+  ],
+  "mandatory_findings": [],
+  "optional_suggestions": [
+    {
+      "location": "Da requisição RAG à evidência de seleção",
+      "suggestion": "Para maior precisão editorial, explicitar que noteBytes marca not_yet_read quando detecta mudança e que a ausência de texto integral se refere à fonte; chunks persistidos contêm texto e offsets. As qualificações estão nas fontes herdadas.",
+      "conditions_acceptance": false
+    }
+  ],
+  "limits": [
+    "PASS exclusivamente semântico para o corpo e metadata identificados. Não constitui binding, publicação, consumo, DoD ou conclusão de S4.",
+    "A parada descendente é inferência contratual condicionada, não execução demonstrada nesta L3. Exige resultado completo validado e preservação dos vínculos pertinentes.",
+    "Recuperação e preservação de scope independente são herdadas de controles delimitados; não provam snapshot global, concorrência universal, queda arbitrária ou autenticação.",
+    "A aceitação não amplia a profundidade seletiva dos predecessores nem elimina lacunas de integração, instalação global ou persistência externa.",
+    "As verificações mecânicas e de pertencimento aos commits são as fornecidas pelo principal. Este juiz não executou ferramentas, testes ou produto e não consultou o parecer do outro juiz."
+  ]
+}

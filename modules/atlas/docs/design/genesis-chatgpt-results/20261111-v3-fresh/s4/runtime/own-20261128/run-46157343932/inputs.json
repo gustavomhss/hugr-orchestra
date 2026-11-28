@@ -1,0 +1,14 @@
+{
+  "schema": "s4-full15-mechanical-input/v1",
+  "materialization_receipt_sha256": "3e2cfc5b82924f7e54ba148b026268a92fb4f8250bcce2ac81d40ee805c82f5c",
+  "semantic_package_sha256": "443caac944c273a6066927caddc7b275ef66c037b3125e42c0fe5b620aa6d69b",
+  "operational_transport_sha256": "38abeb0ea1b1fa0bd5470535214dbb9fd6e2d41e02eab7509ee56fc60568c638",
+  "transport_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package-full15-operational.json",
+  "file_count": 283,
+  "artifacts": 15,
+  "roots": 7,
+  "input_count": 251,
+  "observed_head": null,
+  "driver_sha256": "a6a579e6a3978daa9a67f01bce06fda56172334b0e34323e787cba4d5ab9f27f",
+  "scope": "mechanical derivation only; original body and metadata unchanged; composite is not a Git checkout"
+}

@@ -1,0 +1,422 @@
+S4 L1B — lote literal 2/4. Dados para os dois juízes persistentes; nenhum parecer do transportador. Oracle e encerramento serão fornecidos pelo principal. Não use ferramentas.
+Fonte dos trechos: gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38.
+
+<<<BEGIN EXACT BODY: atlas-host-genesis.md>>>
+# Atlas host, transports, and candidate Genesis
+
+`S4:L1:atlas-host-genesis` · source `gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38`; execution `a2095d5a-1464-4c38-a222-6376974fc9c9`. This is static L1 evidence. **Observed** means visible in pinned code; **intended** means a source contract or instruction; **inferred** consequences are identified. No product command, model, test, build, runtime observer or publication ran. `artifacts.json` provides revision/Git-blob/SHA-256 identities; `coverage.json` records the preserved population and inspection depth.
+
+Citation prefixes `A/`, `G/`, `L/`, `T/`, `S/` expand to `modules/atlas/packages/{adapter-io,genesis,cli,tools,mcp-server}/src/`; `B/` means `modules/atlas/boundary/`; `N/` means `modules/atlas/packages/knowledge/src/`. All line citations refer to the fixed baseline. Engine functions and contracts are explained by `S4:L1:atlas-engine`; historical transport and artifact identity are separately covered by accepted `S4:L1:ownership-boundaries`.
+
+## Purpose: bind a real repository to the pure engine without handing it authority
+
+The host composition root supplies filesystem/Git/SCIP/AST/model/store adapters to shared handlers and specialized CLI legs. Its practical job is to turn source relationships into inspectable results while keeping persisted candidates, published knowledge, actor policy and provenance distinct. `composeRuntime` creates the store, applies provenance, replays committed knowledge only under its permitted branch, and builds a shared read-access result. CLI initialization awaits the AST adapter and composes against the working directory. [A/compose.ts:128-174,233-282; L/bin.ts:16-44,52-127]
+
+The adapter package is substantially broader than one door: its preserved population includes verification, history/index/model input, ownership publication/rebuild, surface UI ports, native memory, durable logs and diagnostics. Selected consequential seams below have source inspection; uninspected files retain an explicit group/depth reason rather than an assertion that the entire adapter was proved correct.
+
+## Identity, policy and provenance: distinct controls with explicit limits
+
+CLI/MCP actor identity comes from `ATLAS_ACTOR`, else Git user email, else an empty string. Ratification comes from a separate environment value. The source expressly calls this caller-supplied identity and an anti-accident guardrail, not authentication. Keeping actor fields out of model payloads narrows an accidental channel; it does not stop a process owner from selecting environment values or Git configuration. [A/compose.ts:128-174; N/ratify/ratify.ts:94-107,129-145]
+
+Policy defaults have empty authorization scopes, denying writes when absent or unusable. Membership checks use scope declarations; scope selection follows the longest path-segment prefix. An absent/empty anchor binding imposes no additional anchor restriction, while a populated binding requires the exact anchor. A syntactically nonempty scope alone is not authorization. [A/policy.ts:55-105,236-271; N/write/authz.ts:58-60]
+
+| Provenance returned by source | Read/write consequence in captured composition |
+|---|---|
+| `trusted` | Use the gated local store; allow the composed write/replay path. |
+| `tracked-staging` | Refuse reads through the protected access result; no trusted write path. |
+| `tracked-provable` | Read only a projection and CAS view filtered through current re-proof; writes remain refused. |
+
+The classifier checks tracked `.atlas/cas/` and projection/staging sidecars, prioritizing staging. Committed logs and `blobs/` are a different population. `git ls-files` failure is caught as `trusted`, and the classification is cached for that constructed callback. This is a concrete limit: “trusted” does not prove an authenticated origin or that a copied store outside Git passed a door. Re-proof filtering is not permission to fall back to the raw store when it fails. [A/store-provenance.ts:94-104,127-155; A/read-access.ts:1-32,140-158,183-203; A/compose.ts:233-282]
+
+## Storage, governed emission and committed replay
+
+`createDiskStore` gives the canonical CAS a filesystem implementation. A read requires a 64-hex address, opens without following a symlink, requires a regular bounded file (64 MiB), checks containment, parses and re-hashes the object; invalid/unavailable objects return undefined. Writes derive identity before writing JSON. `commitProjection` executes its decision callback against the generation it will settle and can retry it; gates must be inside that callback. `commitStaging` uses the same protocol over a separate candidate sidecar. The older unconditional `persistProjection` remains last-writer-wins even if its individual replacement is atomic. [A/store.ts:121-148,180-229,240-287,301-325]
+
+Governed emission snapshots/validates the request, selects family-specific handling, recomputes truth and, inside the commit decision, checks the incumbent's authority and ownership attachments/ratification origin before choosing the new projection. CAS content is put before the projection references it. Contended, untrusted and unreadable commits have explicit refusal results. This is the shipped seam named by the reference-model ledger; isolated pure `tools/emit` or grounding helpers are not substitutes for these checks. [A/governed-emit.ts:169-214,246-308,354-378,395-402; modules/atlas/harness/gates/reference-model-guard.mjs:122-127]
+
+The logged-store wrapper appends changed/produced projection rows after a settled commit, with actor, time and optional card/attempt source. Each row references a CAS object copied into committed `blobs/` if absent. It does not log staging, and removed projection rows produce no deletion record. Reads require a structurally valid entry, an actor matching its sanitized member folder and a row key matching the event; rows are selected by their logged ordering. This folder agreement is not authentication: a person with repository write access can create such a folder. [A/knowledge-log.ts:49-83,91-120; .orchestra/skills/atlas-ownership/SKILL.md:40-45,66-70]
+
+Replay compares current/logged rows while ignoring `derivedAt`, resolves referenced blobs, then applies only facts with `seal: proven`, an actor in local policy scope and a successful supplied re-proof. Other resolved rows go to staging; missing blobs, rejected lines, unreadable folders and commit refusal remain reported. Restoration accepts an already-present valid local object before trying a committed blob, so a claim that every replayed object was freshly recovered from Git would exceed this implementation. Replay commits through the raw store to avoid logging the same outcome again. It is a separate trust path, not an invocation of every live emit gate. [A/knowledge-replay.ts:41-105; A/compose.ts:233-282]
+
+**Impact.** Even composing a read command can reconstruct local state through replay. A committed candidate log is portable evidence, not an approved projection; editing committed `.atlas` data does not create current ownership publication. Memory is different again: its durable adapter reads records directly and orders by sequence, while orientation's integrity key covers its payload. Do not generalize knowledge's replay rule to those logs. [.orchestra/skills/atlas-usage/SKILL.md:28-32; A/memory-store.ts:45-70; A/orientation-store.ts:59-76]
+
+## Ownership publication, observation and rebuild
+
+The host ownership accessor first searches a provenance-filtered projection for exactly one matching scoped advisory carrier with the required row tier, predicate slot and ownership claim/receipt. Retired carriers are skipped; no carrier is unpublished, multiple carriers are ambiguous. Only then does it invoke the low-level knowledge read/index operation. Storing artifact/result/review objects in the CAS is therefore insufficient to make them discoverable through the published door. [A/ownership-access.ts:18-48; N/ownership/read.ts:16,36-95]
+
+The host observer has three useful states: present with a version, absent only after corroborating a containing directory, and unavailable when observation cannot be justified. The older version callback loses the absent/unavailable distinction. It refuses `.atlas`/`.git` path segments, symlinks, and files over 256,000 bytes. These are observer constraints, not permission to remove such files from the S4 population. Input keys declare what is observed; transport SHA-256/Git-blob identities do not fabricate runtime kernel versions. [A/ownership-input.ts:21-190; S4:L1:ownership-boundaries]
+
+Rebuild uses `planOwnershipUpdate`, registered recipes and captured observations. It checks recipe identity/version, input/contract/predecessor declarations and complete membership; clones captured bytes/lists; and reobserves around work. Unavailable observations or missing mandatory input HOLD. It follows the affected topological order, can skip unchanged precise input/dependency hashes, invokes the registered recipe and evaluator, then reads the candidate graph again. An unchanged manifest returns a candidate with no calls. The result is a candidate, not activation. The source's default basis/evidence explicitly call its fixture recipe output “not semantic acceptance”; a supplied evaluator or pair of structurally valid reviews cannot be described as independent semantic judgment without evidence of that process. [A/ownership-rebuild.ts:1-300]
+
+The fresh native transport protocol at `ee2521a5b966bd505cc95bd1c733e09e12f33531` carries exact body files, source identity and bounded request/response/review references. That does not make this producer a runtime importer. The historical `scripts/ownership-pilot.ts` consumes a specific previous campaign corpus and reviewer/runtime-binding layout; it is not a generic adapter for these four L1 bodies. Its predecessor bindings cannot be silently reused. [modules/atlas/scripts/ownership-pilot.ts:1-158; .orchestra/skills/execute-genesis/references/transport.md:16-39,105-149; .orchestra/skills/execute-genesis/references/runtime.md:30-65,74-127]
+
+## Tools, CLI and MCP: shared dispatch does not mean identical surface
+
+The current handler's `GOVERNANCE_SURFACE` names six tools: init, query, emit, reconcile, link and memory-emit. `WRITE_PATHS` names three: emit, link and memory-emit. Read/planner entries separately include anchors, slots, draft, check, doctor, node and four memory reads. `atlas-diff` is explicitly declared unreached rather than silently counted as shipped. Older five/two prose must not override these arrays. Governed refusal, malformed call and internal failure have distinct handler envelopes; an internal fault is not attributed to caller syntax. [T/handler.ts:35-62,101-112,390-428]
+
+CLI adds command-specific paths beyond shared tools. It parses help/commands, refuses a failed composed read-access result except initialization, routes mining/specialized legs, then marshals common handler calls; init also writes the ignore rule. MCP declares schemas and dispatches shared handlers plus specialized reads, serving over stdio. The MCP README describes Orchestra integration as in-process through the boundary rather than through this standalone server. Source presence proves those entry points exist, not that an external client in this execution used either transport. [L/cli.ts:300-343,575-615; S/server.ts:44-55,262-316; modules/atlas/packages/mcp-server/README.md:6-17]
+
+For dependency/trigger query, the host rebuilds a retrieval model from current projection rows, excludes retired facts, maps all facts per anchor, computes reverse dependency closure, and keeps an empty trigger map in this construction. It uses current-node identity to locate returned facts before minting a pack. The shared bands function separates governing tiers from T2 advisory and enforces an advisory prefix cap of 2,000 measured **claim string units**; off-lattice tiers enter neither band. This is more precise than calling every cap model tokens or claiming the reference pack assembler is the live query path. [A/retrieval-model.ts:48-105,124-147; T/bands.ts:36-56,85-107]
+
+## Candidate Genesis: bounded extraction is not publication or semantic understanding
+
+The extraction loop sorts candidates by PageRank then rank, counts visited sites against a ceiling, and defaults to the smaller of the frontier and 200. A trailing window of 20 stops when fewer than four were admitted. A proposal collection must contain one to four entries; malformed and explicit abstentions remain abstentions. Admission depends on mechanical checks, not model self-confidence. The admit harness routes advisory, predicate, relation, negation, transition and test-vacuity shapes and exposes optional verifier ports; the exact supplied implementation matters to any soundness claim. [G/extract.ts:25-26,168-216; G/admit-harness.ts:132-163,216-239]
+
+The controller keeps pending state in its closure, drives a fresh run into counters/outcomes, and returns structured failure reports. Resume without a pending plan returns an empty report; otherwise it filters remaining rank and accumulates counts. Re-run takes changed buckets; handoff invokes an explicit callback. This in-process mechanism alone is not durable cross-process continuation. The separate checkpoint scripts and workflow supply a different orchestration layer, covered in `coverage-governance`. [G/run-controller.ts:246-365]
+
+Seeding does not invent ratified policy: missing T0 constitution/conventions or mission/terrain/ontology inputs produce explicit UN-SEEDED results; mission stub information is unratified. Mining binds separate `commitStaging` storage under reserved `atlas:mined`/T2. A tracked/unreadable/contended staging store has a concrete refusal and is not overwritten into apparent success. Staging/admission is not a semantic-review receipt, and promotion still crosses a governed door. [G/seed.ts:82-119; L/mine-staging.ts:15-46; modules/atlas/docs/adr/ADR-0008-mining-writes-to-staging-not-to-knowledge.md:50-71]
+
+Model configuration is resolved outside the analyzed repository; an in-repository command configuration is refused. An absent config means no model, while unreadable/invalid/malformed configurations have explicit errors. The config requires a `propose` command and argument array, integer timeout, and an exact integer ratio for cost caps. The command's version probe has a five-second bound and records unavailable output rather than inventing a version. Current CLI arm resolution includes advisory, dependency, count, definition and semantic; the captured legacy workflow's arm allowlist is narrower. Prompt files and claim parsers are inputs to candidate production, not authority sources. [A/model-config.ts:96-201; L/mine-proposer.ts:43-67,90-109; .github/workflows/atlas-genesis.yml:1107-1115]
+
+## The generated boundary is a host package with traceable owners
+
+The boundary exports checked-in JS and declaration bundles. Its build script maps each public subpath to a source entry, resolves Atlas packages to source, builds node-targeted ESM with Bun, generates declarations, and can compare exact output bytes with `--check`. No generation or parity check ran here. The two oversized bundles remain in coverage even though the ownership file observer refuses their size. [B/package.json:1-63; B/script/build.ts:1-85]
+
+| Public boundary subpath | Source entry |
+|---|---|
+| root | `retrieval/src/host-context.ts` |
+| `materialize` | `retrieval/src/own-snapshot.ts` |
+| `native-header` | `adapter-io/src/native-header.ts` |
+| `native-memory` | `adapter-io/src/native-bound.ts` |
+| `surface` | `adapter-io/src/surface/index.ts` |
+| `mine` | `cli/src/surface-mine.ts` |
+| `context` | `adapter-io/src/context-log.ts` |
+| `record` | `persist/src/host-adapter.ts` |
+| `record-log` | `adapter-io/src/record-log.ts` |
+
+All table entries are relative to `modules/atlas/packages/`. This mapping identifies the edit/regeneration starting point. A checked-in bundle is an executable consumer artifact, not independent proof of source parity or host invocation. The Continuity archive imports the context subpath, whose source is available here; external Orchestra Session/board authorization and lifecycle remain separate integration boundaries. [B/script/build.ts:1-85; modules/continuity/src/v2/archive.ts:7-13]
+
+## Maintenance and remaining uncertainty
+
+Start governance changes at `compose.ts`, policy, provenance/read-access, governed emit and the durable commit protocol together. Start portable knowledge changes at layout/log/replay plus ignore and migration rules. Start ownership changes at observer/access/rebuild and knowledge shape/read/update-plan, preserving unavailable/absent and candidate/published distinctions. Start model/mining changes at config, proposer parsers, controller/admission and staging; update the boundary source mapping when a host entry changes.
+
+Semantic gaps remain in uninspected verifier families, concurrency failure branches, full UI surface port behavior, generated/source parity, all model transport recovery variants, and external host enforcement. Recorded policies and exported factories do not prove that an uninspected host invokes them. The captured source permits precise bounded statements above; it does not establish a successful run, current source freshness, complete solver soundness, live authenticated ratification or completed S4 ownership. Build dependencies are empty because this is direct-source evidence; navigation to other L1 units is not an accepted predecessor for L2.
+<<<END EXACT BODY: atlas-host-genesis.md>>>
+
+TRECHOS LITERAIS DA FONTE
+
+<<<SOURCE modules/atlas/packages/adapter-io/src/store-provenance.ts:L94-L104>>>
+export function isDurableStorePath(p: string): boolean {
+  if (p.startsWith(".atlas/cas/")) return true
+  const m = /^\.atlas\/(projection|staging)(\.\d{1,15})?\.json$/.exec(p)
+  return m !== null
+}
+
+/** Is `p` the ADR-0008 candidate sidecar family — unratified LLM-proposed material that never passed a
+ *  door and carries no replayable witness. Narrower than {@link isDurableStorePath}: matches `staging`
+ *  ONLY, never `cas/` or `projection`, so the two families can be told apart without a second file walk. */
+function isStagingPath(p: string): boolean {
+  return /^\.atlas\/staging(\.\d{1,15})?\.json$/.test(p)
+<<<END SOURCE>>>
+
+<<<SOURCE modules/atlas/packages/adapter-io/src/store-provenance.ts:L127-L155>>>
+function classify(tracked: readonly string[]): StoreProvenance {
+  if (tracked.some(isStagingPath)) return "tracked-staging"
+  if (tracked.some(isProvableStorePath)) return "tracked-provable"
+  return "trusted"
+}
+
+/**
+ * The git-backed THREE-WAY provenance seam for a repo (TRAVEL-BY-REPROOF) — the canonical answer
+ * {@link gitSidecarTrust} below is a boolean projection of. Returns a MEMOIZED predicate: ONE `git ls-files`
+ * call for the life of the runtime, exactly like the boolean form (the two must never each pay their own
+ * call — see this module's header for why a caller that needs both derives the boolean from THIS function
+ * rather than constructing a second seam).
+ *
+ * TOTAL, same limits as {@link gitSidecarTrust}: `runGit` failure (no git / not a repo / any exec failure)
+ * reads as "no evidence of a commit" ⇒ `trusted`.
+ */
+export function gitStoreProvenance(repoPath: string): () => StoreProvenance {
+  let cached: StoreProvenance | undefined
+  return () => {
+    if (cached !== undefined) return cached
+    let out: string
+    try {
+      out = runGit(repoPath, ["ls-files", "-z", "--", ".atlas"])
+    } catch {
+      cached = "trusted"
+      return cached
+    }
+    const tracked = out.split("\0").filter((p) => p.length > 0)
+    cached = classify(tracked)
+<<<END SOURCE>>>
+
+<<<SOURCE modules/atlas/packages/adapter-io/src/policy.ts:L74-L105>>>
+   * THIS IS THE MECHANISM, NOT THE DECISION. ADR-0010 states the binding "needs a scope↔anchor mapping in
+   * `adapter-io/policy.ts` AND a decision about which scope owns which anchor prefix". The second half is an
+   * admin/owner judgement about a particular repository and is NOT invented here. Measured, and it is why a
+   * hard-coded rule was not shipped: the two vocabularies are not the same today — every fixture in this
+   * product declares governance scopes like `core` over anchors like `src/a.ts`, so requiring
+   * `underScope(anchor, scope)` unconditionally would refuse writes the product itself makes.
+   *
+   * ABSENT / EMPTY ⇒ NO BINDING, which is honest rather than convenient: the hole is NARROWED (an admin can
+   * now close it, per prefix, and the door enforces it), not CLOSED (an admin who declares nothing still has
+   * the unbound behaviour). Optional for the same reason `derivedTier` is optional on `RatifyContext`: a
+   * required field would force every existing policy to invent a value, and an invented derivation is the
+   * one thing ARCH-9 names as NOT satisfying the clause.
+   */
+  readonly anchors?: Record<string, string>
+}
+
+/** The admin-owned, versioned governance policy. Carries only DATA the governance seams consume — no code,
+ *  no judgement. Sourced from `<repoPath>/.atlas/policy.json`; resolves to {@link defaultPolicy} when absent
+ *  or malformed (fail-closed). */
+export interface AtlasPolicy {
+  readonly t0Heuristic: T0HeuristicPolicy
+  readonly authz: AuthzPolicy
+}
+
+// ── the conservative fail-closed default ───────────────────────────────────────────────────────────────
+
+/**
+ * The CONSERVATIVE fail-closed default (KNOW-11a / KNOW-15h floor). An absent or broken policy resolves
+ * here and must NEVER silently permit a write:
+ *   • `t0Heuristic.keywords: []` — the heuristic flags nothing on its own until an admin declares the set.
+ *   • `authz.scopes: {}` — NO actor is in ANY scope ⇒ NO write is authorized. Reads stay universal
+ *     (KNOW-11b), but a write requires an admin to have declared the scope membership first.
+<<<END SOURCE>>>
+
+<<<SOURCE modules/atlas/packages/adapter-io/src/ownership-access.ts:L18-L48>>>
+  const published = (scope: string) => {
+    const fail = (reason: OwnershipRefusal["reason"], evidence: readonly string[]): OwnershipRefusal => ({ kind: "hold", reason, evidence })
+    if (deps.access.refusal !== undefined) return fail("ownership-untrusted", [deps.access.refusal])
+    const projection = deps.access.store.loadProjection()
+    if (projection === undefined) return fail("ownership-store-unavailable", [scope])
+    const rows = [...projection.current.values()].filter((row) => row.scope === scope && row.claims.includes(ownershipClaim(scope)))
+    const refs = []
+    for (const row of rows) {
+      const prepared = prepareClaimReceipts(deps.access.store, row)
+      if ("rejected" in prepared) return fail("ownership-carrier", [prepared.rejected])
+      for (const entry of prepared.claims) {
+        const fact = entry.fact
+        if (fact.kind !== "advisory" || fact.claimNorm !== ownershipClaim(scope) || isRetired(fact)) continue
+        if (fact.scope !== scope || fact.tier !== row.tier || fact.predicateSlot !== "ownership" || fact.ownership === undefined)
+          return fail("ownership-carrier", [row.nodeKey])
+        refs.push(fact.ownership)
+      }
+    }
+    if (refs.length === 0) return fail("ownership-unpublished", [scope])
+    if (refs.length !== 1) return fail("ownership-ambiguous", [scope])
+    return { manifest: refs[0]! }
+  }
+
+  return {
+    read(query: OwnershipQuery): OwnershipRead {
+      const selected = published(query.scope)
+      return "kind" in selected ? selected : readOwnership(deps.access.store, selected.manifest, query, deps.current)
+    },
+    index(scope: string, need: OwnershipNeed): OwnershipIndex {
+      const selected = published(scope)
+      return "kind" in selected ? selected : indexOwnership(deps.access.store, selected.manifest, { scope, need }, deps.current)
+<<<END SOURCE>>>
+
+<<<SOURCE modules/atlas/packages/adapter-io/src/ownership-input.ts:L134-L170>>>
+      effective.push(raw)
+    }
+    try {
+      const stillThere = realLstat(dirAbs)
+      if (stillThere.isSymbolicLink || !stillThere.isDirectory) return { kind: "unavailable" }
+    } catch { return { kind: "unavailable" } }
+    effective.sort()
+    return { kind: "present", version: String(id({ kind: "ownership-membership", version: 2, bytes: Array.from(new TextEncoder().encode(effective.join("\0"))) })) }
+  }
+  const missingAncestor = ancestorAbsent(relPath)
+  if (missingAncestor === "unavailable") return { kind: "unavailable" }
+  if (missingAncestor === "absent") return corroborateAbsent(relPath)
+  const requested = resolve(root, relPath)
+  if (!isContainedIn(root, requested)) return { kind: "unavailable" }
+  let st: { size: number; isFile: boolean; isDirectory: boolean; isSymbolicLink: boolean }
+  try { st = lstat(requested) } catch (err) {
+    return codeOf(err) === "ENOENT" ? corroborateAbsent(relPath) : { kind: "unavailable" }
+  }
+  if (st.isSymbolicLink) return { kind: "unavailable" }
+  if (!st.isFile) return { kind: "unavailable" }
+  let before: ReturnType<typeof lstatSync>
+  try { before = lstatSync(requested) } catch { return { kind: "unavailable" } }
+  let bytes: Uint8Array
+  try {
+    if (seams.readBytes !== undefined) bytes = seams.readBytes(requested)
+    else {
+      const fd = openSync(requested, constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0))
+      try {
+        const file = fstatSync(fd)
+        if (!file.isFile()) return { kind: "unavailable" }
+        const chunks: Buffer[] = []
+        let total = 0
+        const probe = Buffer.alloc(8192)
+        for (;;) {
+          const n = readSync(fd, probe, 0, probe.length, null)
+          if (n === 0) break
+          chunks.push(Buffer.from(probe.subarray(0, n)))
+<<<END SOURCE>>>
+
+<<<SOURCE modules/atlas/packages/adapter-io/src/governed-emit.ts:L354-L378>>>
+        const next = retainClaimReceipt(upsert(projection, req).store, req)
+        // DEDUP may know these bytes but no longer retain this claim (e.g. after a replacement).
+        if (receipt !== undefined && !next.current.get(targetKey)?.claims.includes(claimNorm)) {
+          return { out: { emitted: false, rejected: REJECTED_CLAIM_RECEIPT } }
+        }
+
+        // 4. DURABLE PERSIST — the content-addressed bytes FIRST, then the projection sidecar that references
+        //    them (INVARIANT: the CAS bytes ARE the fact, so driftFacts/doctor can read them back). The order is
+        //    now enforced BY the commit rather than by two adjacent statements a later edit could swap: `put`
+        //    names the objects the protocol writes before it links the generation in. A failing `put`
+        //    (disk-full / permission) throws before any sidecar byte, so the sidecar can NEVER reference a
+        //    contentHash whose bytes are absent from CAS.
+        // AUTHOR-14 (ADDITIVE) — `targetKey` is the SAME minted identity the incumbent guard above already
+        // resolved and the WriteRequest's `nodeKey` above carries onto the durable row (one identity, one
+        // read — no re-mint). Stamped onto the receipt so the LINK door (`atlas-link`, which addresses a
+        // node BY nodeKey — see `governed-link.ts`'s `proj.current.get(a/b)`) can consume it with no
+        // separate query. Cast mirrors the existing `id: contentHash` line just above: `targetKey` is typed
+        // `string` here (ADR-0015 D2 — a relation's targetKey is a `relationKey`, not a `nodeKey`), while
+        // `EmitOut.nodeKey` is branded `NodeKey`; the door already trusts this value as an address (it is
+        // the live map key `projection.current` is keyed by), so the brand is asserted, not re-derived.
+        return {
+          out: { emitted: true, id: contentHash, nodeKey: targetKey as unknown as NodeKey },
+          next,
+          put: [node as CasObject],
+        }
+<<<END SOURCE>>>
+
+<<<SOURCE modules/atlas/packages/genesis/src/extract.ts:L168-L216>>>
+export function runExtract(cands: readonly Candidate[], budget: GenesisBudget, deps: ExtractDeps): ExtractResult {
+  const ranked = [...cands].sort(byPprDescending) // highest-PPR-first (GEN-2b), deterministic
+  const facts: Fact[] = []
+  const abstained: WhyNot[] = []
+  const window: boolean[] = [] // trailing admit-outcomes (GEN-2 marginal-value stop)
+  let visited = 0 // one bounded call per visited site — the GEN-2 spend counter
+
+  for (const cand of ranked) {
+    // GEN-2d hard ceiling: no call past the budget.
+    if (visited >= budget.ceiling) break
+    // GEN-2e marginal-value halt: once the trailing-20 window admits `< 4`, stop — do NOT drain the budget.
+    if (window.length >= MARGINAL_WINDOW && admitsIn(window) < MARGINAL_MIN_ADMITS) break
+
+    // GEN-2c: EXACTLY ONE bounded call per site (no self-consistency, no re-call).
+    const response = deps.proposer.propose(cand)
+    visited += 1
+
+    const proposals = response !== null && "proposals" in response ? response.proposals : [response]
+    // Refuse the whole collection before admission; truncation would silently lose proposed claims.
+    const bounded = proposals.length > 0 && proposals.length <= 4
+      ? proposals
+      : [{ abstain: "answer-malformed:proposal-count" }]
+    let admitted = false
+    for (const seed of bounded) {
+      if (seed === null) {
+        // GEN-12: abstention is first-class — a site that yields no proposal yields a grounded WhyNot.
+        abstained.push({ site: cand.site, reason: "model abstained: no grounded fact at site" })
+        continue
+      }
+      if ("abstain" in seed) {
+        // Keep the adapter's malformed-answer tag verbatim, distinct from a plain model abstention.
+        abstained.push({ site: cand.site, reason: seed.abstain })
+        continue
+      }
+      // Admission is mechanical; a later refused item never clears a productive site's earlier admit.
+      const verdict = deps.gate.emit(seed, cand)
+      if (!verdict.emitted) {
+        abstained.push(verdict.whyNot)
+        continue
+      }
+      facts.push(verdict.fact)
+      admitted = true
+    }
+
+    window.push(admitted)
+    if (window.length > MARGINAL_WINDOW) window.shift() // keep only the trailing 20
+  }
+
+  return { facts, abstained }
+<<<END SOURCE>>>
+
+<<<SOURCE modules/atlas/packages/tools/src/handler.ts:L35-L62>>>
+export const GOVERNANCE_SURFACE: readonly Tool[] = [
+  "atlas-init",
+  "atlas-query",
+  "atlas-emit",
+  "atlas-reconcile",
+  "atlas-link",
+  "atlas-memory-emit",
+]
+
+/** The write surface (TOOLS-1). [EXTENDED — WP-SAMEAS] `atlas-emit` (grounded fact admission) +
+ *  `atlas-link` (governed human sameAs assertion). [EXTENDED — WP-11.W8] `atlas-memory-emit` (governed
+ *  MEMORY admission, MEM-1..9) joins as a THIRD write door — THREE fail-closed governed mutations now; the
+ *  other three governance tools read/derive, and the read projections (diff / doctor / node) carry no write
+ *  authority (guarded structurally in `./guard.ts`). */
+export const WRITE_PATHS: readonly Tool[] = ["atlas-emit", "atlas-link", "atlas-memory-emit"]
+
+/** The token vocabulary for `READ_SURFACE` (WP-10.A5.TOOLS, ADR-0005 / ENTRY-MCP-3) — deliberately its OWN
+ *  closed union, NOT a widening of `Tool`. `Tool` names the `GOVERNANCE_SURFACE` members (ADR-0005 §Why
+ *  this does not weaken TOOLS-1: growing `Tool` to admit a read door would make `GOVERNANCE_SURFACE`'s own
+ *  count meaningless — see the ADR's rejected alternative (a)). A `ReadDoor` is
+ *  never accepted by `handle(tool, args)`; each is its OWN planner/projection function (`createAnchors` /
+ *  `createSlots` / `createDraft` / `createCheck` / `createDoctor` / `HandlerApi.resolveNode` /
+ *  the CAMPAIGN-11 memory read doors), never routed through this handler's `Tool` dispatch.
+ *
+ *  [OWNER-DECIDED 2026-08-24 — `atlas-diff` is NOT a member.] `diff.ts` is a declared ZERO-production-caller
+ *  reference model (`reference-model-guard.mjs`'s ledger; its own header states "no `atlas diff` CLI
+ *  command") — ARCH-5's advertised≡invocable property means an unwired door has no business in an
+ *  ADVERTISED surface. Re-add it only alongside real CLI/MCP wiring, in its own WP; see ADR-0005 (reconciled). */
+<<<END SOURCE>>>
+
+<<<SOURCE modules/atlas/boundary/script/build.ts:L11-L28>>>
+      ["materialize", "retrieval/src/own-snapshot.ts"],
+      // F3 A3: the bound Memory header read alone, for hosts that must not reach recall, fold or write.
+      ["native-header", "adapter-io/src/native-header.ts"],
+      // F3 A1/A3: the bound Memory composition (recall, exact fold, write, reconcile) for the backend seat's tools.
+      ["native-memory", "adapter-io/src/native-bound.ts"],
+      // The Atlas screen's read and write API over the composition root (specs/atlas-ui/build D1/D2).
+      ["surface", "adapter-io/src/surface/index.ts"],
+      // The screen's Genesis mining (specs/atlas-ui/build D39): the CLI's governed pass, driven by the host's models.
+      ["mine", "cli/src/surface-mine.ts"],
+      // A session's committed context-continuity archive (repo-layout design §3), for the continuity module.
+      ["context", "adapter-io/src/context-log.ts"],
+      // The PR record, the Attempt trailer and the GitHub PR writer (merge-queue spec §4.5), for the board host.
+      ["record", "persist/src/host-adapter.ts"],
+      // The record commit's writers (merge-queue spec §4.7): card, attempt, board, logbook and milestone, each redacted
+      // on a public repository.
+      ["record-log", "adapter-io/src/record-log.ts"],
+    ] as const
+  ).map(async ([name, file]) => {
+<<<END SOURCE>>>
+
+<<<SOURCE modules/atlas/packages/adapter-io/src/ownership-input.ts:L21-L33>>>
+/** Host-bound input oracle: the §1.1 adaptation of the tri-state observer
+ *  (`present → version`, `absent`/`unavailable → undefined`). Never the inverse. */
+export function ownershipInput(repoPath: string, key: string): string | undefined {
+  try {
+    return ownershipInputFromObservation(observeOwnershipInput(repoPath, key))
+  } catch {
+    return undefined
+  }
+}
+
+const isAllowedRel = (relPath: string): boolean =>
+  !(relPath.includes("\\") || relPath.startsWith("/") || /^[A-Za-z]:/.test(relPath) ||
+    relPath.split("/").some((part) => !part || part === "." || part === ".." || part === ".git" || part === ".atlas"))
+<<<END SOURCE>>>
+
+<<<SOURCE modules/atlas/packages/adapter-io/src/ownership-input.ts:L171-L190>>>
+          total += n
+          if (total > 256000) return { kind: "unavailable" }
+        }
+        bytes = Buffer.concat(chunks, total)
+      } finally { closeSync(fd) }
+    }
+  } catch { return { kind: "unavailable" } }
+  let after: ReturnType<typeof lstatSync>
+  try { after = lstatSync(requested) } catch { return { kind: "unavailable" } }
+  if (after.ino !== before.ino || after.size !== before.size) return { kind: "unavailable" }
+  if (bytes.length > 256000) return { kind: "unavailable" }
+  return { kind: "present", version: String(id({ kind: "ownership-source", version: 1, bytes: Array.from(bytes) })) }
+}
+
+/** Legacy projection of a tri-state observation: `present(v) → v`, `absent`/`unavailable → undefined`.
+ *  Must never be used to derive `absent` from the legacy oracle's `undefined` (that also covers
+ *  invalid keys, refused paths, oversize and read failures). */
+export function ownershipInputFromObservation(observation: OwnershipInputObservation): string | undefined {
+  return observation.kind === "present" ? observation.version : undefined
+}
+<<<END SOURCE>>>

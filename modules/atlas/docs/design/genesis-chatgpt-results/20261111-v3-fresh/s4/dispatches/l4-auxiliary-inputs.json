@@ -1,0 +1,59 @@
+{
+  "purpose": "Approved bounded input options, not a production dispatch",
+  "inputs": [
+    {
+      "commit": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+      "path": "modules/atlas/scripts/genesis-native.ts",
+      "local_path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/scripts/genesis-native.ts",
+      "sha256": "18dc473b79c9bf986f07677bdba728d38490e0df36e6a39763f3765f422af3ce",
+      "git_blob_sha": "70ae6794086c73e8178e574c61fbe95739d45a6c",
+      "byte_length": 3004,
+      "purpose": "CLI real; uso estático do candidato testado"
+    },
+    {
+      "commit": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "local_path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "sha256": "fe68c090812df6c15fc2dab9d36ec79315e8198908bc7e8570859454da600e21",
+      "git_blob_sha": "b12538b8da1aaf75f5f25784704a07b700513c3b",
+      "byte_length": 13356,
+      "purpose": "validateNativeReadQuery e validação de transporte"
+    },
+    {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/continuity/src/masking-rules.ts",
+      "local_path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/continuity/src/masking-rules.ts",
+      "sha256": "39b0c3ec61242f6d37846e4b419f3aa98349573a37304d6aff69c9a894358ab2",
+      "git_blob_sha": "9b79f34f071c3748dca0b1eed1d9173fe05bc97f",
+      "byte_length": 4423,
+      "purpose": "Lista nominal de ferramentas protegidas e constantes; extensão progressiva restrita"
+    },
+    {
+      "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+      "local_path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+      "sha256": "a6a579e6a3978daa9a67f01bce06fda56172334b0e34323e787cba4d5ab9f27f",
+      "git_blob_sha": "2eb786c3cf96387e0e48d7c558d0d56bdc5dd8f5",
+      "byte_length": 22051,
+      "purpose": "Reproducer composto, revisão estática aceita; execução própria ainda NOT_RUN"
+    },
+    {
+      "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/maintenance-driver/usage.md",
+      "local_path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/maintenance-driver/usage.md",
+      "sha256": "6213c40fd0abdaba119390dd84249c81d0cb69a6343f8fc141c3c6126570ecf4",
+      "git_blob_sha": "aaa09f3d853b75603d72c21f82cf1ac748f5d91e",
+      "byte_length": 12073,
+      "purpose": "Contrato de uso e limites do driver; exemplos de forma, não comandos executados"
+    },
+    {
+      "commit": "47eaa5322102910289cb56e2e07e9d3536ba1926",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+      "local_path": "/workspace/scratch/aff930d22ec7/s4/candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+      "sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330",
+      "git_blob_sha": "f8f310ed16db4258007a7e28e9f954da04125bf6",
+      "byte_length": 6997,
+      "purpose": "Recibo de CI exato do candidato 7102f2e; não prova operação dos corpos L3/L4"
+    }
+  ]
+}

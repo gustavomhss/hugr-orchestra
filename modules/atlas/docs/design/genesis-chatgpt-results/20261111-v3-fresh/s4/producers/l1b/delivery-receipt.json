@@ -1,0 +1,46 @@
+{
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "bodies": [
+    {
+      "key": "S4:L1:atlas-engine",
+      "path": "atlas-engine.md",
+      "byte_length": 17987,
+      "sha256": "c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e"
+    },
+    {
+      "key": "S4:L1:atlas-host-genesis",
+      "path": "atlas-host-genesis.md",
+      "byte_length": 17595,
+      "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+    },
+    {
+      "key": "S4:L1:continuity-rag",
+      "path": "continuity-rag.md",
+      "byte_length": 17429,
+      "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38"
+    },
+    {
+      "key": "S4:L1:coverage-governance",
+      "path": "coverage-governance.md",
+      "byte_length": 17988,
+      "sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381"
+    }
+  ],
+  "artifacts_sha256": "85e6c4697791dc476ea0d64ae3d4ee34b992294d471090fd558054445a78c859",
+  "coverage_sha256": "9d0473edc9de818e36111cd741928d5ab5be05ac063439aeac11719ac0fc9759",
+  "request_sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef",
+  "response_sha256": "ae8353b5d9504a6cf083cd6b90fb0fd322025bb450173f5eb04f534055bf9228",
+  "citation_path_range_count": 208,
+  "source_ref_counts": {
+    "S4:L1:atlas-engine": 329,
+    "S4:L1:atlas-host-genesis": 674,
+    "S4:L1:continuity-rag": 73,
+    "S4:L1:coverage-governance": 2226
+  },
+  "coverage_count": 2220,
+  "observer_limited_count": 8,
+  "l1a_unchanged": true,
+  "verification": "Evidence byte/hash/path/range integrity only; no product execution or semantic verdict."
+}

@@ -1,0 +1,229 @@
+{
+  "mechanical_summary_only": true,
+  "source_provenance": {
+    "path": "s4/producers/l1-boundary/source-provenance.json",
+    "byte_length": 37056,
+    "sha256": "2269506b716862099388f71b2598467474245dcb4070e65d51f2511951a311d0",
+    "schema": "genesis-static-source-provenance-v1",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "observed_head": null,
+    "population": {
+      "assigned_count": 2220,
+      "changed": false,
+      "external_read_only_references": 12,
+      "semantic_domain_files_used": 19,
+      "limit": "Não recenseia o host nem transforma referências externas em nova população atribuída. Não afirma compreensão de todos os ramos dos módulos."
+    },
+    "counts": {
+      "body_semantic_sources": 31,
+      "instruction_sources": 6,
+      "source_refs": 37,
+      "body_locators": 56
+    },
+    "capture_origins": [
+      {
+        "origin_path": "boundary-capture-receipt.json",
+        "sha256": "f814e8c99304ee3edd19bc56bde8283e2958752a3608f0eda7e560d14227c27d",
+        "byte_length": 3482,
+        "role": "Origem da captura dos 12 externos",
+        "native_file_input": false,
+        "reason": "Apenas proveniência da captura. Inputs são as fontes semânticas individuais e este registro compacto, não o recibo bruto."
+      },
+      {
+        "origin_path": "source-capture-receipt.json",
+        "sha256": "a41b96c8633c7f4381eb8c1c21e4db42651bdca4925e0222a0e0a2340cc5d00b",
+        "byte_length": 594072,
+        "role": "Origem da captura do domínio atribuído",
+        "native_file_input": false,
+        "reason": "Apenas proveniência da captura. Inputs são as fontes semânticas individuais e este registro compacto, não o recibo bruto."
+      }
+    ]
+  },
+  "primary_check": {
+    "file": {
+      "path": "s4/candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/primary-check.json",
+      "byte_length": 477,
+      "sha256": "6eb495fb6f77a4cba58e7aff2bfc10dbf77846e7dc70639ec2faab95ee20273f"
+    },
+    "content": {
+      "schema": "s4-primary-source-check/v1",
+      "unit": "S4:L1:host-boundaries",
+      "body_bytes": 11955,
+      "body_sha256": "c282b8edc6383dc3af07ed43fbcb75318bde5b581868eefdf606f40e245f6ef6",
+      "artifact_sha256": "cb312e867b96458a7e2e1c2d89e2287b223d25f4d33cbf69ae957759470ed6c8",
+      "source_refs": 37,
+      "all_source_bytes_and_git_blobs_match": true,
+      "source_ref_file_input_correspondence": true,
+      "max_source_bytes": 39006,
+      "errors": [],
+      "population_scope_unchanged": 2220
+    }
+  },
+  "integrity_receipt": {
+    "file": {
+      "path": "s4/candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/integrity-receipt.json",
+      "byte_length": 3335,
+      "sha256": "094211ad9152bb78adae123832c403cf990a9049171b41e8fed37cf089fff232"
+    },
+    "schema": "genesis-static-package-integrity-v1",
+    "artifact_key": "S4:L1:host-boundaries",
+    "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+    "result": "pass",
+    "meaning": "Conferência determinística de bytes, referências e limites deste pacote; não é julgamento semântico, importação nativa ou teste de produto.",
+    "checks": {
+      "body_utf8_and_byte_limit": true,
+      "source_sha256_and_git_blob_37": true,
+      "same_path_file_input_37": true,
+      "payload_reference_hashes": true,
+      "input_count": 44,
+      "largest_input_bytes": 39006,
+      "no_refused_atlas_data_or_oversize_input": true,
+      "all_12_external_sources_read": true,
+      "body_locators_checked_within_inspected_ranges": 56,
+      "assigned_population_unchanged": 2220,
+      "protected_prior_bodies_and_coverage_unchanged": true,
+      "build_dependencies_empty": true,
+      "semantic_review_and_runtime_receipts_pending": true
+    }
+  },
+  "boundary_capture_receipt": {
+    "file": {
+      "path": "s4/candidate-r1/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/boundary-capture-receipt.json",
+      "byte_length": 3482,
+      "sha256": "f814e8c99304ee3edd19bc56bde8283e2958752a3608f0eda7e560d14227c27d"
+    },
+    "source_count": 12
+  },
+  "transported_source_files": [
+    {
+      "path": "packages/core/src/session/runner/llm.ts",
+      "captured_file": "s4/boundary-source/packages/core/src/session/runner/llm.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "byte_length": 39006,
+      "sha256": "03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7",
+      "git_blob_sha": "c3ad8d87a58923d40797d38a77ff65367bbe66b6"
+    },
+    {
+      "path": "modules/continuity/src/v2/strategy.ts",
+      "captured_file": "s4/source/modules/continuity/src/v2/strategy.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "byte_length": 14666,
+      "sha256": "94ca1f1c82a0238132654d04f368a461d379c469253ad7be93ab41dd1c095121",
+      "git_blob_sha": "95a8648eb828779cfcedbc32868fb178bcf03876"
+    },
+    {
+      "path": "packages/server/src/handlers/rag-studio-session.ts",
+      "captured_file": "s4/boundary-source/packages/server/src/handlers/rag-studio-session.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "byte_length": 9807,
+      "sha256": "bd3250e5604650f6f80133d3f4e5c86653eaf1f42eddb40799f40afe22aab94b",
+      "git_blob_sha": "42a0cb7a6250df1edc566fa0409dde0463f29639"
+    },
+    {
+      "path": "modules/rag-studio/src/context.ts",
+      "captured_file": "s4/source/modules/rag-studio/src/context.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "byte_length": 7467,
+      "sha256": "f6d07d8da485a0e8119ec982b9a39b1ddfcf908673888c74f48ad69120fd17b6",
+      "git_blob_sha": "0fdf7227c4118e336c60ebabf8f0c509f04e5a9c"
+    },
+    {
+      "path": "modules/rag-studio/src/ask.ts",
+      "captured_file": "s4/source/modules/rag-studio/src/ask.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "byte_length": 1872,
+      "sha256": "73abef79077e73cbfbe9679d3e4662178c06ab94b67d7e1454f31bc1f20fe7f7",
+      "git_blob_sha": "629f9ae2cda44f9a936e864d9f8f3148a362cc3c"
+    },
+    {
+      "path": "modules/rag-studio/src/proof.ts",
+      "captured_file": "s4/source/modules/rag-studio/src/proof.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "byte_length": 1464,
+      "sha256": "f1d6f9b4d3407b19e80fc1705c4d4b829a4af79fe24b26ec65b6bd9cb9dbf622",
+      "git_blob_sha": "c5f37d7d6d096378146f7e32c82512399d21b8ec"
+    },
+    {
+      "path": "modules/rag-studio/src/trace.ts",
+      "captured_file": "s4/source/modules/rag-studio/src/trace.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "byte_length": 296,
+      "sha256": "4f5f20b9522b900a3170cf8258c163074816dc5042c7d5db7ed0cd32d28f0c33",
+      "git_blob_sha": "39c42039f59f3b0b947b45afbcb8cb9844ebe4ff"
+    },
+    {
+      "path": "modules/rag-studio/src/revision.ts",
+      "captured_file": "s4/source/modules/rag-studio/src/revision.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "byte_length": 2701,
+      "sha256": "7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0",
+      "git_blob_sha": "e7354836a52a5c3f2c4bc76655268a9077d745d1"
+    },
+    {
+      "path": "packages/server/src/handlers/rag-studio.ts",
+      "captured_file": "s4/boundary-source/packages/server/src/handlers/rag-studio.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "byte_length": 4883,
+      "sha256": "3a3143d5b3243ac78bc87bd5f9dbb56ae9ab080730dd9ac7060700809de4ef0e",
+      "git_blob_sha": "b91a9e061bb8f818a34756ea7e26e9f27dace4a7"
+    },
+    {
+      "path": "modules/rag-studio/src/extract.ts",
+      "captured_file": "s4/source/modules/rag-studio/src/extract.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "byte_length": 750,
+      "sha256": "b45b137f1a23432385312a6f5132a0622e68a31a83652c4a3efb69043f98a8d8",
+      "git_blob_sha": "f1eaafe9993154469b5c0fae4697424ceabdc297"
+    },
+    {
+      "path": "modules/rag-studio/src/admit.ts",
+      "captured_file": "s4/source/modules/rag-studio/src/admit.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "byte_length": 1518,
+      "sha256": "1ea61a8352cc98d7fb6c2d51b6d20f1e59d7b99e37a06b453a8f1f5265661b06",
+      "git_blob_sha": "30d3beb66b79c99a18acb949ac2436d3458855ed"
+    },
+    {
+      "path": "packages/server/src/handlers/atlas.ts",
+      "captured_file": "s4/boundary-source/packages/server/src/handlers/atlas.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "byte_length": 5875,
+      "sha256": "5eacbbeeea4ae154b77523f0f3bb14bd6921816ad4ebbb7ee5145050ab874267",
+      "git_blob_sha": "692afb828dc5c896339adfebbb5e33ef39876347"
+    },
+    {
+      "path": "packages/core/src/atlas.ts",
+      "captured_file": "s4/boundary-source/packages/core/src/atlas.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "byte_length": 16892,
+      "sha256": "4a80f71532a9766f0cfaa67e4a4474ae4d49dbe30a811033ce57a1fb9c58bec4",
+      "git_blob_sha": "f6718654785fb155e1bb1b2acb7e9985478b983b"
+    },
+    {
+      "path": "modules/atlas/boundary/package.json",
+      "captured_file": "s4/source/modules/atlas/boundary/package.json",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "byte_length": 1773,
+      "sha256": "66850f72af7afc962e030c3c5585a13c635507748cb43b9bbd4e2fe488d0f6bb",
+      "git_blob_sha": "055b46b9d32d765c3c2dc54468137d031bb3de90"
+    },
+    {
+      "path": "modules/atlas/boundary/script/build.ts",
+      "captured_file": "s4/source/modules/atlas/boundary/script/build.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "byte_length": 4743,
+      "sha256": "fd887babca14bcc1dc42d34238b299ebb01dad54a9e8a84d5a9617481e3ae53c",
+      "git_blob_sha": "df0a875e47e98e8803e00818d178166d0b1cb8dd"
+    },
+    {
+      "path": "packages/core/src/rag-studio/sql.ts",
+      "captured_file": "s4/boundary-source/packages/core/src/rag-studio/sql.ts",
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "byte_length": 2519,
+      "sha256": "e6c3580d95d86b307624fe8c58b5790f3a07ce17ed20e5cbe851b44667c7add9",
+      "git_blob_sha": "214ab3375acc34072ee74c3123501c80615bf488"
+    }
+  ],
+  "execution_by_courier": "No local/remote tests, build, product imports or GitHub writes; only literal transport and byte/hash recording."
+}

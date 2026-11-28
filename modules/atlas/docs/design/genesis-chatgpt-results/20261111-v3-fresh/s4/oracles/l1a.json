@@ -1,0 +1,50 @@
+{
+  "schema": "s4-oracle/v1",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "unit": "WP-L1A",
+  "frozen_before_producer": true,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "criteria": [
+    "QS-1",
+    "QS-2",
+    "CC-3",
+    "GO-I2",
+    "GO-I3",
+    "GO-I5",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "limits": {
+    "body_max_bytes": 18000
+  },
+  "cases": [
+    {
+      "id": "L1A-1",
+      "question": "Can SHA256 transport digest replace an observed OwnershipInput.version?",
+      "expected": "No. Kernel id of ownership-source bytes or ownership-membership v2 supplies runtime version; source SHA256 verifies captured bytes separately.",
+      "source": "modules/atlas/packages/adapter-io/src/ownership-input.ts"
+    },
+    {
+      "id": "L1A-2",
+      "question": "A source file exceeds 256000 bytes or lives under .atlas. Does an undefined legacy observation prove removal?",
+      "expected": "No; unavailable rather than absent. Keep assigned path, explicit gap, do not remove from population or serve current knowledge.",
+      "source": "modules/atlas/packages/adapter-io/src/ownership-input.ts"
+    },
+    {
+      "id": "L1A-3",
+      "question": "Can generic native package be published through historical pilot by replacing its reviewer IDs?",
+      "expected": "No. Pilot hardcoded scope/corpus/approval IDs; generic adaptation must preserve existing ports and get fresh exact binding approvals distinct from semantic acceptance.",
+      "source": "modules/atlas/scripts/ownership-pilot.ts"
+    },
+    {
+      "id": "L1A-4",
+      "question": "Does body equality imply result equality and freshness?",
+      "expected": "No: authority, validity, gaps, evidence and exact input/predecessor identities matter; stale/untrusted remain HOLD."
+    },
+    {
+      "id": "L1A-5",
+      "question": "What does index prove versus delivery?",
+      "expected": "Index/read observations concern exact selection and state; titles/hash/index availability alone do not prove semantic sufficiency, whole scope or consumer success."
+    }
+  ]
+}

@@ -1,0 +1,145 @@
+{
+  "candidate_revision": "a3f224843321f2c18fb9532ef275411c6a0f617e",
+  "run_id": 43077167418,
+  "job_id": 130719912965,
+  "artifact_id": 13882193769,
+  "artifact_sha256": "e3bfdeb203e26b6b5778c292afa20b2e62b8e9335c6089598035530fd17cf115",
+  "conclusion": "failure",
+  "tests": {
+    "numTotalTests": 220,
+    "numPassedTests": 220,
+    "numFailedTests": 0,
+    "numPendingTests": 0,
+    "success": true
+  },
+  "mutation_controls": 22,
+  "guards": {
+    "command": "bun run check:guards --base origin/dev",
+    "exitCode": 1,
+    "candidate": "a3f224843321f2c18fb9532ef275411c6a0f617e"
+  },
+  "guard_output": "$ bun run script/guards/run.ts --base origin/dev\nGATE modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r1/ownership-guards.log [agent-scratch] Scratch or tool-output file added. Delete it; do not commit agent working files.\nGATE modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r1b/ownership-guards.log [agent-scratch] Scratch or tool-output file added. Delete it; do not commit agent working files.\nWARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/artifacts.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.\nWARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.\nguards: 78 rules, 870 changed paths, 2 gate and 2 warn findings, 0 errors.\n::error file=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r1/ownership-guards.log,title=guard agent-scratch::Scratch or tool-output file added. Delete it; do not commit agent working files.\n::error file=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r1b/ownership-guards.log,title=guard agent-scratch::Scratch or tool-output file added. Delete it; do not commit agent working files.\n::warning file=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/artifacts.json,title=guard large-file::Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.\n::warning file=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage.json,title=guard large-file::Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.\nerror: script \"check:guards\" exited with code 1\n",
+  "recovery": [
+    {
+      "name": "Genesis native durable recovery and preservation NR1-01 interruption before activation leaves HOLD or the valid old manifest; resume reuses durable candidate/CAS",
+      "status": "passed",
+      "duration_ms": 1057.030474
+    },
+    {
+      "name": "Genesis native durable recovery and preservation NR1-02 failed activation after source drift serves HOLD; incompatible rollback is refused and historical reads stay explicit",
+      "status": "passed",
+      "duration_ms": 440.353521
+    },
+    {
+      "name": "Genesis native durable recovery and preservation NR1-03 stale transport, scope rebinding and old approval cannot replace the new accepted scope",
+      "status": "passed",
+      "duration_ms": 314.7842109999997
+    },
+    {
+      "name": "Genesis native durable recovery and preservation NR1-04 a separate reader overlaps real sidecar activation and sees only complete accepted manifests",
+      "status": "passed",
+      "duration_ms": 557.9948669999999
+    }
+  ],
+  "test_file_sha256": "8e33b9721ef0ea7b8979a696c9493c53d069483d727f64e327c4165341e7bcb4",
+  "test_source_commit": "a3f224843321f2c18fb9532ef275411c6a0f617e",
+  "generated_parity": [
+    {
+      "path": "modules/atlas/boundary/src/generated/record.d.ts",
+      "sha256": "8e5af0b61864596acdc0a2d0ceb4b920e515f7dd370147545204722e7590e17c",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/materialize.d.ts",
+      "sha256": "2b7c7c7f3e7ff95444b36b5d74153093fd9cc985ea4587dc0fabb92adfaba2d6",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/record.js",
+      "sha256": "7feadf685edef770f135cdef7cc1a10781647c123859ad4c61965e0647a9edba",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/surface.d.ts",
+      "sha256": "370ad667237cb1363477b00d25050763d6bc49f21715eb4488d211119a164a31",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/materialize.js",
+      "sha256": "c6fd7805709908c6ff16cd783e8ae49795c2f4f40d4f5e3e1b89a9230fc2f941",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/context.d.ts",
+      "sha256": "c3e29df2f450d9765a8226d6bb07d04c4ff9ce2a8a340b99d00ceaae6f342033",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/boundary.d.ts",
+      "sha256": "01441722ea7a0dcbb90f5f404f8566d8abb933597d20330bcbe7d98a85691db7",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/record-log.js",
+      "sha256": "9f04b337f01986217ecbaee14c0ef216b5b51eaff4c72967adeeec275a2d4e0d",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/mine.js",
+      "sha256": "baaf70640cd293a0dd1d299348bbbb1093c91c6bfd383439336b1d105bf8c010",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/boundary.js",
+      "sha256": "434f6ed8c9270e7aaa28ccd0dc1a52211c07d6aa90b994474747f6c779166892",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-memory.d.ts",
+      "sha256": "2403745211401bd33ca2be2d3a90280328b121d5d574567722a22c1e70cf285c",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/mine.d.ts",
+      "sha256": "cba581e8fdac262c36211b6bd8b89abc4bd2c1e6a51fc1a9fe11c950957976c0",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/record-log.d.ts",
+      "sha256": "7574d436eccbac6541bf1a54faef865588730eb9a863d41fd8454ff22391cd30",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-header.d.ts",
+      "sha256": "398c4a17cd5bc8a321f774b766e5ec0582b86d97e1966f886741f662fe4e30e7",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-memory.js",
+      "sha256": "69d7250076425f6c8530d0122469b8678ffc24bd5ad6ec277648bc47fcfd5a59",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/native-header.js",
+      "sha256": "40d34b651f88affdde4ba592c00ae31ef10b93ae92cba6b66d875f3021575dc1",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/surface.js",
+      "sha256": "ca8a653fe7fd5dd0d157a272c481fd18dc6b7def97716d2a2d551416c366e204",
+      "matches_candidate": true
+    },
+    {
+      "path": "modules/atlas/boundary/src/generated/context.js",
+      "sha256": "957b9a5a77a8a4069aeacec94f8259e2ffb1d13d1949faade9724ed936047950",
+      "matches_candidate": true
+    }
+  ],
+  "limits": [
+    "Synthetic fixtures in controls are not campaign semantic or runtime binding authority.",
+    "NR1-04 requires a main read invocation itself to overlap the post-barrier activation interval; one bounded Worker/writer execution only.",
+    "Exception seam is not arbitrary power-loss evidence.",
+    "The earlier green 673b90 control used a combined two-read envelope and did not prove the required main-read overlap; original receipts are preserved as superseded evidence.",
+    "Two large-file warnings are acknowledged mandatory archival/census evidence, not hidden or suppressed."
+  ]
+}

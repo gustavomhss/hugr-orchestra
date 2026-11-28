@@ -1,0 +1,175 @@
+[
+  {
+    "id": "continuity.entry",
+    "purpose": "Package exports, host contribution, ownership and build/test configuration.",
+    "paths": [
+      "modules/continuity/README.md",
+      "modules/continuity/bunfig.toml",
+      "modules/continuity/package.json",
+      "modules/continuity/src/v2/index.ts",
+      "modules/continuity/tsconfig.json"
+    ]
+  },
+  {
+    "id": "continuity.compaction",
+    "purpose": "Location state, background summaries, manual compaction, and fallback to masking.",
+    "paths": [
+      "modules/continuity/src/v2/strategy.ts"
+    ]
+  },
+  {
+    "id": "continuity.archive",
+    "purpose": "Content addressing, private disk archive, mask persistence, scrub/export/read boundary.",
+    "paths": [
+      "modules/continuity/src/v2/archive.ts"
+    ]
+  },
+  {
+    "id": "continuity.recall",
+    "purpose": "Permissioned own-history lookup, stable aliases, paging and lexical archive search.",
+    "paths": [
+      "modules/continuity/src/archive-search.ts",
+      "modules/continuity/src/v2/alias.ts",
+      "modules/continuity/src/v2/tools.ts"
+    ]
+  },
+  {
+    "id": "continuity.masking",
+    "purpose": "Candidate selection, protected outputs, media estimation and request-only substitutions.",
+    "paths": [
+      "modules/continuity/src/masking-rules.ts",
+      "modules/continuity/src/v2/masking.ts"
+    ]
+  },
+  {
+    "id": "continuity.verification",
+    "purpose": "Declared static test scenarios and fixtures; not executed.",
+    "paths": [
+      "modules/continuity/test/fixture.ts",
+      "modules/continuity/test/preload.ts",
+      "modules/continuity/test/v2-maintenance.test.ts",
+      "modules/continuity/test/v2-strategy.test.ts",
+      "modules/continuity/test/v2-tools.test.ts"
+    ]
+  },
+  {
+    "id": "rag.entry_store",
+    "purpose": "Exports, Store abstraction, AsyncLocalStorage, in-memory state and package configuration.",
+    "paths": [
+      "modules/rag-studio/README.md",
+      "modules/rag-studio/bunfig.toml",
+      "modules/rag-studio/package.json",
+      "modules/rag-studio/src/context.ts",
+      "modules/rag-studio/src/index.ts",
+      "modules/rag-studio/src/types.ts",
+      "modules/rag-studio/tsconfig.json"
+    ]
+  },
+  {
+    "id": "rag.admission",
+    "purpose": "Explicit source admission, path normalization, Location/project/permission boundaries.",
+    "paths": [
+      "modules/rag-studio/src/admit.ts",
+      "modules/rag-studio/src/context.ts",
+      "modules/rag-studio/src/refuse.ts"
+    ]
+  },
+  {
+    "id": "rag.extraction_lifecycle",
+    "purpose": "Extraction, parse, changed bytes, reparse, rechunk, removal and separated passes.",
+    "paths": [
+      "modules/rag-studio/src/extract.ts",
+      "modules/rag-studio/src/guard.ts",
+      "modules/rag-studio/src/isolate.ts",
+      "modules/rag-studio/src/orphan.ts",
+      "modules/rag-studio/src/parse.ts",
+      "modules/rag-studio/src/passes.ts",
+      "modules/rag-studio/src/rechunk.ts",
+      "modules/rag-studio/src/reparse.ts"
+    ]
+  },
+  {
+    "id": "rag.retrieval_diagnosis",
+    "purpose": "Substring retrieval, boundary/K cut, four lights, prompt data and trace recording.",
+    "paths": [
+      "modules/rag-studio/src/ask.ts",
+      "modules/rag-studio/src/lights.ts",
+      "modules/rag-studio/src/prompt.ts",
+      "modules/rag-studio/src/report.ts",
+      "modules/rag-studio/src/search.ts",
+      "modules/rag-studio/src/trace.ts"
+    ]
+  },
+  {
+    "id": "rag.revision_proof",
+    "purpose": "Snapshot/pipeline/fill identity, saved questions, proofs, comparison and source-span restrictions.",
+    "paths": [
+      "modules/rag-studio/src/compare.ts",
+      "modules/rag-studio/src/fill.ts",
+      "modules/rag-studio/src/proof.ts",
+      "modules/rag-studio/src/revision.ts",
+      "modules/rag-studio/src/span.ts",
+      "modules/rag-studio/src/trace.ts",
+      "modules/rag-studio/src/types.ts"
+    ]
+  },
+  {
+    "id": "rag.embedding_off",
+    "purpose": "Explicit refusal and no-op embedding maintenance behavior.",
+    "paths": [
+      "modules/rag-studio/src/embed-off.ts",
+      "modules/rag-studio/src/passes.ts"
+    ]
+  },
+  {
+    "id": "rag.verification",
+    "purpose": "Declared memory-store test scenarios; not executed.",
+    "paths": [
+      "modules/rag-studio/test/acceptance.test.ts",
+      "modules/rag-studio/test/admit.test.ts",
+      "modules/rag-studio/test/parse.test.ts",
+      "modules/rag-studio/test/proof.test.ts",
+      "modules/rag-studio/test/search.test.ts"
+    ]
+  },
+  {
+    "id": "rag.contract_docs",
+    "purpose": "Owned v1 contract, spec, generated seam, design, work packages and guide; authority/age differ.",
+    "paths": [
+      "docs/guides/rag-studio.md",
+      "docs/specs/rag-studio/ACCEPTANCE.md",
+      "docs/specs/rag-studio/CONTRACT.md",
+      "docs/specs/rag-studio/DESIGN.md",
+      "docs/specs/rag-studio/REQUIREMENTS.md",
+      "docs/specs/rag-studio/SPEC.md",
+      "docs/specs/rag-studio/TASKS.md",
+      "docs/specs/rag-studio/WAVE.md",
+      "docs/specs/rag-studio/seam.ts",
+      "docs/specs/rag-studio/work-packages.md"
+    ]
+  },
+  {
+    "id": "repository.constraints",
+    "purpose": "Shared instructions relevant to boundaries, shipped docs, generated code and testing.",
+    "paths": [
+      "AGENTS.md"
+    ]
+  },
+  {
+    "id": "continuity.atlas_boundary",
+    "purpose": "Follow-up resolving the nested Atlas context export/read/scrub implementation, generated entry mapping, visibility decision, path layout and durable-log integrity.",
+    "paths": [
+      "modules/atlas/boundary/package.json",
+      "modules/atlas/boundary/script/build.ts",
+      "modules/atlas/boundary/src/generated/context.d.ts",
+      "modules/atlas/boundary/src/generated/context.js",
+      "modules/atlas/packages/adapter-io/src/context-log.ts",
+      "modules/atlas/packages/adapter-io/src/durable-log.ts",
+      "modules/atlas/packages/adapter-io/src/layout.ts",
+      "modules/atlas/packages/adapter-io/src/repo-visibility.ts",
+      "modules/atlas/packages/persist/src/scrub-scan.ts",
+      "modules/atlas/packages/persist/src/scrub-shapes.ts",
+      "modules/atlas/packages/persist/src/scrub.ts"
+    ]
+  }
+]

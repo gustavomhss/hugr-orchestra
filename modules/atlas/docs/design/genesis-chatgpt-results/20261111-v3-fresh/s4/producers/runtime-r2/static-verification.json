@@ -1,0 +1,51 @@
+{
+  "task": "WP-R1 correction R1-J1-01",
+  "producer": "/root/producer_l1a",
+  "findings_targeted": [
+    "R1-J1-01",
+    "J2-R1-01"
+  ],
+  "second_finding_basis": "Mensagem literal do principal preservada em steering.md; nenhum segundo parecer foi aberto.",
+  "source_commit": "673b90d82b8b888d5d0184d2e17dec6d5d1b05f1",
+  "source_path": "modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+  "original": {
+    "path": "original/modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+    "byte_length": 23146,
+    "sha256": "79872860b0734aa1add07519cce558a0314014b5d472d3816857690f296dc387",
+    "git_blob_sha": "0270eef6bd8f5b8c0a02ac6d08fda2a302bb3df3"
+  },
+  "corrected": {
+    "path": "modules/atlas/packages/adapter-io/test/genesis-native-recovery.test.ts",
+    "byte_length": 23178,
+    "sha256": "8e33b9721ef0ea7b8979a696c9493c53d069483d727f64e327c4165341e7bcb4",
+    "git_blob_sha": "6afce21027c84af72c2e9e02bdda3142933c43a4",
+    "commit": null
+  },
+  "diff": {
+    "path": "change.diff",
+    "sha256": "8b87831783d2acdabf104a0fbc18218ddb933dddbb106e14a6637e93a069b51f"
+  },
+  "verification": "Comparação estática de texto e hashes, sem execução do teste, typecheck, build, guard, CI, engine ou pipeline.",
+  "checked_preservation": [
+    "Original capturado continua byte a byte igual ao SHA solicitado e à cópia preservada.",
+    "Somente o tipo Sample, os timestamps do sample e os campos usados na condição de overlap mudaram.",
+    "mainStarted/mainFinished estão imediatamente ao redor de runtime.ownership.read(workerData.query), antes da leitura independente.",
+    "A condição continua estrita: início de main anterior ao fim da ativação e fim de main posterior ao início da ativação.",
+    "Barreiras Atomics, waitFor, limites de tempo/amostras e todos os controles NR1-01/02/03 permanecem idênticos.",
+    "Map old/new, tratamento HOLD, verificação completa de main, scope independente, seen old/new e cleanup permanecem idênticos."
+  ],
+  "execution_status": "Não executado; commit, CI remoto e novo julgamento são responsabilidade do principal.",
+  "scope": "Um arquivo de teste isolado; nenhum engine, pipeline, corpo L1, metadata ou arquivo do candidato foi alterado.",
+  "request.md": {
+    "byte_length": 1624,
+    "sha256": "b1ac96827f406f92416ed77c42eeb139abde2f87df3de41159480d6da3f9bd8c"
+  },
+  "mandatory-finding.json": {
+    "byte_length": 1680,
+    "sha256": "842999b5e2ed1f6e708d73f224a87b38c890c64425fa7a4bff4e7d8dcc7aacc6"
+  },
+  "steering.md": {
+    "byte_length": 258,
+    "sha256": "dff057491b793e48579bfd34ee0bc43587621bfda9dfa7aff67bb40d209547d8"
+  }
+}

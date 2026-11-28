@@ -1,0 +1,99 @@
+{
+  "schema": "s4-package-binding-oracle/v1",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "frozen_utc": "2026-11-11T19:17:17.612654+00:00",
+  "frozen_before_complete_package_preparation_and_runtime_binding": true,
+  "purpose": "Composition and exact runtime transformation of the complete fifteen-artifact S4 package; existing frozen unit semantic cases and their original judgments remain separate evidence, not retroactively replaced.",
+  "criteria": [
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-5",
+    "CC-3",
+    "GO-I2",
+    "GO-I3",
+    "GO-I5",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "runtime_additional_criterion": "runtime-import-binding",
+  "semantic_oracles": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/l1a.json",
+      "sha256": "daddfd2171c59d210af9d39b9e489ea2e0e884bd6770c46e882290f12a9fd6cd"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/l1b.json",
+      "sha256": "94f980004f3ca5f88b59d24578848a6c84cc51faafa75c343b0c9451c5d5e15d"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/l1-boundary.json",
+      "sha256": "7ce135a366945c132b56d0415a807d8bc838f412390bc6c78b6ca70f89a34708"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/l2.json",
+      "sha256": "005c656b695f57d733d8368d6415ac6dbdcf686cd95bdfc13bb0cdddadce674c"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/l3.json",
+      "sha256": "4498bdbc3bfa2e6cf67c47bc61a96961ef04b02333e54f0924c2ad12874dcf16"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/l4.json",
+      "sha256": "ff39d9608b31a0d74abac2c66482a5c8489547efd0147d4801043efb93c9e6ce"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/runtime.json",
+      "sha256": "82fb83f85025e3fafeb02359914ebd758efdce27f5deddfa83f53867baeac8cb"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/runtime-controls.json",
+      "sha256": "d7ae8f97f8b78926b545ac4def549ecf44a9f68f626efa8b0b6f0250ca1cead4"
+    }
+  ],
+  "expected": [
+    {
+      "id": "PB-complete",
+      "expected": "Exactly seven L1, three L2, one L3, four L4 required keys. Complete predecessor layer accepted by both persistent judges before next production. No missing required key, cycles, broken source/recipe/body/reference binding or unreachable required artifact."
+    },
+    {
+      "id": "PB-bytes",
+      "expected": "Actual prepare maps exact accepted UTF-8 bodies and full authority/validity/gaps/evidence into existing CAS types; source bytes, Git blob, SHA256, kernel input version and transport identities remain distinct. Inspect actual candidate entries/result/input pairs and externally verified source pins, including multi-pin materialization with observed_head null."
+    },
+    {
+      "id": "PB-contract",
+      "expected": "Common semantic criteria are scoped to produced knowledge and traceability, not future consumer, maintenance or DoD completion. Native importer appends runtime-import-binding. Original per-unit criteria and cases remain preserved and covered; no fabricated PASS or third reviewer."
+    },
+    {
+      "id": "PB-inputs",
+      "expected": "Mechanical assembly sorts each unique file input list and explicitly binds protocol plus actual maintenance-operation.mjs before initial publication. This changes input/receipt identities transparently, not authored body/result content. Build dependencies preserve actual semantic predecessors; navigation remains consultation."
+    },
+    {
+      "id": "PB-decisions",
+      "expected": "Both real persistent judges explicitly evaluate exact candidate/contract and every result+inputs identity, all criteria. Preserve original requests/responses; response-sha256 decision IDs if host message ID unavailable. Semantic judgments alone do not substitute."
+    },
+    {
+      "id": "PB-publication",
+      "expected": "Only after exact bindings, actual normal check/atlas-emit using isolated authorized policy/actor/ratifier; prepare alone not activation. Record emitted and complete required index/read responses with exact body equality; do not mutate source corpus during observation."
+    },
+    {
+      "id": "PB-limits",
+      "expected": "Existing common controls only at their proven candidate and bounded scope. Tokens/billing/physical attempts unknown remain UNKNOWN. A valid publication is distinct from independent consumer or own maintenance proof, which remain separate frozen cases."
+    }
+  ],
+  "critical_errors": [
+    "fabricated exact identity or decision",
+    "lost original evidence",
+    "silent source substitution",
+    "stale/current or semantic/binding conflation",
+    "complete S4 asserted before own obligations"
+  ],
+  "reviewers": [
+    "/root/judge_j1",
+    "/root/judge_j2"
+  ],
+  "assembly_correction_before_use": {
+    "original_draft_sha256": "61eb41604ba29743ae988f80e6de147e17941ea652093fcc19b03b324c35b173",
+    "reason": "Corrected mistaken local filename runtime-r1.json to both existing frozen runtime and runtime-controls oracles; no production or evaluation consumed draft."
+  }
+}

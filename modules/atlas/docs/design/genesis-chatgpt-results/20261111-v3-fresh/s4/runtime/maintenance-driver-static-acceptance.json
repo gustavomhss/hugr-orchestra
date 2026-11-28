@@ -1,0 +1,23 @@
+{
+  "schema": "s4-static-operation-acceptance/v1",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "implementation_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+  "implementation_sha256": "a6a579e6a3978daa9a67f01bce06fda56172334b0e34323e787cba4d5ab9f27f",
+  "runtime_revision": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "verdict": "STATIC_PASS_BOTH",
+  "decisions": [
+    {
+      "agent_id": "/root/judge_j1",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/maintenance-driver/j1-response.json",
+      "sha256": "af169fb0afb2e25358df8c8d72c4112cf4045be366d2091a846366103429498f"
+    },
+    {
+      "agent_id": "/root/judge_j2",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/maintenance-driver/j2-response.json",
+      "sha256": "4b1e530fb29a40303af1f307cfbf808161946bd66f0813935951acef14b1a49e"
+    }
+  ],
+  "mandatory_findings_open": [],
+  "runtime_execution": "NOT_RUN",
+  "remaining": "Actual complete-package publication, no-op reuse, independently frozen native change and governed update with real decisions/reads."
+}

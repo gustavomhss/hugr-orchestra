@@ -1,0 +1,52 @@
+{
+  "schema": "s4-section-source-map/v1",
+  "unit": "l2b",
+  "revision": "v2",
+  "body_sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e",
+  "sections": {
+    "Responsabilidades e base": [
+      "CR",
+      "HB",
+      "RV",
+      "CP"
+    ],
+    "Session define quais hooks existem": [
+      "CR-C",
+      "HB-S"
+    ],
+    "Mascaramento preserva uma cauda recuperável": [
+      "CR-C",
+      "CR-M",
+      "HB-S"
+    ],
+    "RAG cruza leitura e persistência por requisição": [
+      "CR-R",
+      "HB-R"
+    ],
+    "Pipeline e revisão têm identidades distintas": [
+      "CR-R",
+      "RV:5-78"
+    ],
+    "Comparação exige uma mudança isolada": [
+      "CR-R",
+      "RV:42-63",
+      "CP:5-50"
+    ],
+    "Diagnóstico e percurso de manutenção": [
+      "CR-R",
+      "CR-M",
+      "HB-R"
+    ],
+    "Localizadores": [
+      "CR",
+      "HB",
+      "RV",
+      "CP"
+    ]
+  },
+  "aliases_resolved_in_body": true,
+  "direct_raw_sources_limited_to": [
+    "modules/rag-studio/src/revision.ts",
+    "modules/rag-studio/src/compare.ts"
+  ]
+}

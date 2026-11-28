@@ -1,0 +1,218 @@
+{
+  "schema": "genesis-producer-recipe-v1",
+  "version": "l2a-v2",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "producer": "/root/producer_l1a",
+  "scope": "atlas-continuity-rag-genesis",
+  "layer": 2,
+  "need": "component",
+  "request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/request.md",
+    "sha256": "e0532412b833ecbe33d5d7de1fe75a1568000877f8495b6b7c486cc637e10cba",
+    "byte_length": 3906
+  },
+  "input_manifest_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/input-manifest.json",
+    "sha256": "00812b16cc21f2520bf16d46747417917f3f4c069309b2bb11a170c1ecc1f3ca",
+    "byte_length": 12610
+  },
+  "source_payload_commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+  "baseline_documented_by_l1": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "runtime_code_candidate_named_by_manifest": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+  "public_criteria": [
+    "AC-01",
+    "CC-2",
+    "CC-3",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "GO-I2",
+    "GO-I3",
+    "GO-I5",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "body_limit_utf8_bytes": 8000,
+  "producer_metadata": {
+    "model_id": "UNKNOWN",
+    "model_version": "UNKNOWN",
+    "input_tokens": "UNKNOWN",
+    "output_tokens": "UNKNOWN",
+    "cost": "UNKNOWN",
+    "physical_model_attempts": "UNKNOWN",
+    "financial_guarantee": "NOT_ESTABLISHED"
+  },
+  "method": [
+    "Preservar pedido literal e manifesto byte exato; conferir hash/bytes e aceite dos predecessores nomeados.",
+    "Copiar e conferir corpos/evidências relevantes do manifesto por SHA-256, Git blob e tamanho, sem consultar fonte bruta ou pacote nativo mutável.",
+    "Relacionar propósito, sequência, contratos, decisões, impacto e manutenção; separar constatação L1, inferência, intenção e execução de recibo.",
+    "Tratar o release anterior como amostra histórica e o CI posterior como evidência de seu candidato/run, sem transferir binding ou publicar L2.",
+    "Produzir exatamente dois corpos portugueses, H2 únicos, cada um <=8000 bytes, com referências a chaves/seções L1 e paths herdados de manutenção.",
+    "Derivar source_refs e build_dependencies dos predecessores realmente citados; adicionar somente os recibos efetivamente usados. Navegação não é aresta de build.",
+    "Gerar metadados comuns, resposta original e recibo mecânico; manter semantic_review_refs/runtime_receipt_refs vazios e telemetria não exposta como UNKNOWN.",
+    "Aplicar somente WP-L2A-P1: preservar toda a v1, acrescentar o contrato de economia a Genesis a partir dos mesmos predecessores C/N e manter Atlas byte exato; conferir novamente tamanho, H2, fontes, deps e hashes dos arquivos finais."
+  ],
+  "artifacts": [
+    {
+      "key": "S4:L2:atlas-system",
+      "output_body_path": "producers/l2a/atlas-system.md",
+      "predecessor_keys": [
+        "S4:L1:ownership-boundaries",
+        "S4:L1:atlas-engine",
+        "S4:L1:atlas-host-genesis",
+        "S4:L1:native-runtime-delta",
+        "S4:L1:host-boundaries"
+      ],
+      "additional_evidence": [
+        "ci-r2b-receipt.json"
+      ],
+      "sources_used_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system-sources.json",
+        "sha256": "b03797e41c6112f3d8a6c73acf92a88684f6a8efe3b3507339df26737e065c0f",
+        "byte_length": 9923
+      },
+      "added_explanation": "Relaciona responsabilidades do motor/host, identidades e observações com consequências para revisão, consumo e manutenção. Explica por que igualdade da prosa, presença em CAS, atualidade, autoridade e leitura publicada não se substituem.",
+      "build_dependencies": [
+        {
+          "key": "S4:L1:ownership-boundaries",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:atlas-engine",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:atlas-host-genesis",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:native-runtime-delta",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:host-boundaries",
+          "same_package": true
+        }
+      ],
+      "navigation_only": [
+        "S4:L2:genesis-governance"
+      ],
+      "input_keys": [
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/body.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-engine.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/request.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/input-manifest.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/recipe-v2.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system-sources.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/primary-correction-request.md"
+      ]
+    },
+    {
+      "key": "S4:L2:genesis-governance",
+      "output_body_path": "producers/l2a/genesis-governance-v2.md",
+      "predecessor_keys": [
+        "S4:L1:ownership-boundaries",
+        "S4:L1:atlas-host-genesis",
+        "S4:L1:coverage-governance",
+        "S4:L1:native-runtime-delta"
+      ],
+      "additional_evidence": [
+        "ci-r2b-receipt.json",
+        "runtime-release.json"
+      ],
+      "sources_used_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2-sources.json",
+        "sha256": "0af4a4fa55285b22c7d2e4a26d427ffb648992a970782bd6cab1b56d58ec8129",
+        "byte_length": 10822
+      },
+      "added_explanation": "Explica cobertura/profundidade nas receitas, dependências cumulativas, autoridade e leitura temporal dos recibos; acrescenta a distinção operacional entre fila/tentativas visíveis, telemetria não exposta e garantia financeira, sem converter bytes ou callbacks em cobrança.",
+      "build_dependencies": [
+        {
+          "key": "S4:L1:ownership-boundaries",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:atlas-host-genesis",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:coverage-governance",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:native-runtime-delta",
+          "same_package": true
+        }
+      ],
+      "navigation_only": [
+        "S4:L2:atlas-system"
+      ],
+      "input_keys": [
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1a/body.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/coverage-governance.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-r2b/receipt.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/request.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/input-manifest.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/recipe-v2.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2-sources.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/primary-correction-request.md"
+      ]
+    }
+  ],
+  "limits": [
+    "Nenhuma execução de produto, teste, build, runtime, alteração de candidato/produto ou escrita GitHub.",
+    "Nenhum oracle foi aberto ou usado; nenhuma nova decisão de juiz é fabricada. Referências de aceite dos predecessores vêm somente do manifesto fixado.",
+    "Este procedimento produz arquivos de evidência, não kernel IDs, CAS objects, receipt IDs, binding ou publicação.",
+    "O aceite informado do predecessor não é aceite destes corpos L2. Não se solicita aprovação da fatia."
+  ],
+  "delivery": {
+    "steering_record": "steering-transport.md",
+    "review_packets": [
+      "review-packet-v2-01.txt",
+      "review-packet-v2-02.txt"
+    ],
+    "max_bytes_each": 32000,
+    "closure": "AGUARDAR FECHAMENTO DO PRINCIPAL",
+    "sent_to_judges": false
+  },
+  "correction_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/primary-correction-request.md",
+    "sha256": "d8952808b1db8ca5ff65b88e78f6fcb2e632d443376df09947d7d2ec1b8454d9",
+    "byte_length": 1445
+  },
+  "previous_version_refs": {
+    "recipe": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/recipe.json",
+      "sha256": "f19c56dca48f8ba0b826660631742451a457645ae303580d16633686273fbe7f",
+      "byte_length": 8647
+    },
+    "response": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/response.md",
+      "sha256": "1f27a82f630023cf6329c42fc606a5645239d7447fc821c69ace695c936a30e6",
+      "byte_length": 3323
+    },
+    "artifacts": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/artifacts.json",
+      "sha256": "a24b333d6e1fa77f801c27d1166f3eb30458bbe1c897f146ada40c7600307a02",
+      "byte_length": 15017
+    },
+    "preservation_receipt": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/integrity-receipt-v1.json",
+      "sha256": "f1e0e06a1f1667330d9a24cd632e7fdfcf87d280fd249fdaf46ab21265540a4e",
+      "byte_length": 4268
+    }
+  },
+  "correction_effect": {
+    "semantic_change": "Somente Genesis: seção de uso/economia e compactação local para manter <=8000 bytes.",
+    "atlas_system": "Corpo, chave, source_refs e build_dependencies inalterados. Apenas vínculos mecânicos com a receita e resposta compartilhadas v2 e o pedido de correção mudam.",
+    "source_refs": "Nenhuma fonte adicionada/removida em nenhum artefato.",
+    "review_state": "Sem novas decisões semânticas ou execução; refs correspondentes vazias."
+  }
+}

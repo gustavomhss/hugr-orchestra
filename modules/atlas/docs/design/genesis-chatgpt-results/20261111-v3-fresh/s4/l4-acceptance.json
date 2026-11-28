@@ -1,0 +1,168 @@
+{
+  "schema": "s4-layer-acceptance/v1",
+  "execution_id": "0a451b91-c4e7-4573-9958-fed60817f299",
+  "recovery_execution_id": "8137f1b9-a534-478b-bc67-2031114d43dc",
+  "layer": 4,
+  "state": "SEMANTICALLY_ACCEPTED",
+  "recorded_utc": "2026-11-28T06:10:55.456092+00:00",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "body_snapshot": "6f643bc05245ebe912d52cbdd8347ce1e5b0046e",
+  "historical_runtime_pin": "1b5a4801acfae03969f78ee766ca6f0b7d0f9013",
+  "driver_pin": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+  "artifacts": [
+    {
+      "key": "S4:L4:entry",
+      "body": {
+        "path": "producers/l4a/entry.md",
+        "encoding": "utf-8",
+        "byte_length": 4921,
+        "sha256": "ebcb68aba0c3ae5d5f7581c6b3ad7e0c6a6769af1bee1d425cadf4ecae4969c8"
+      },
+      "state": "SEMANTICALLY_ACCEPTED_HISTORICAL_BYTES"
+    },
+    {
+      "key": "S4:L4:ownership",
+      "body": {
+        "path": "producers/l4a/ownership.md",
+        "encoding": "utf-8",
+        "byte_length": 9489,
+        "sha256": "fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73"
+      },
+      "state": "SEMANTICALLY_ACCEPTED_HISTORICAL_BYTES"
+    },
+    {
+      "key": "S4:L4:maintenance",
+      "body": {
+        "path": "producers/l4b/maintenance.md",
+        "encoding": "utf-8",
+        "byte_length": 9478,
+        "sha256": "5d9da13538cfc032b61947395d1aa7aa44dafed50327adaf1deafc64856505be"
+      },
+      "state": "SEMANTICALLY_ACCEPTED_HISTORICAL_BYTES"
+    },
+    {
+      "key": "S4:L4:operational",
+      "body": {
+        "path": "producers/l4b/operational.md",
+        "encoding": "utf-8",
+        "byte_length": 9481,
+        "sha256": "d61c8697ecfe193a4caa9334dc80410952805b68140e20d734c34b7576cf6ee7"
+      },
+      "state": "SEMANTICALLY_ACCEPTED_HISTORICAL_BYTES"
+    }
+  ],
+  "judgments": [
+    {
+      "agent_id": "/root/local_j1",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j1-canonical-r2.json",
+      "sha256": "5090541410eee055861100506801e8229ca6a91068fc47596d75f4a0a34b02ba",
+      "verdict": "PASS"
+    },
+    {
+      "agent_id": "/root/local_j2",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j2-canonical-r1.json",
+      "sha256": "ceb6f47245ff6736c60fcb822b82bc4def418db8d4bf86358235427fb1a3cd4d",
+      "verdict": "PASS"
+    },
+    {
+      "agent_id": "/root/local_j2",
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j2-canonical-addendum.json",
+      "sha256": "321eec139f52ccfa82c422e1656220d334929c63b2a4027fb4c97d864c1b7f1f",
+      "verdict": "PASS"
+    }
+  ],
+  "judge_count": 2,
+  "request_ref": {
+    "commit": "81d7a103b444d82abb3ad594805d80b346bc5799",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/requests/manifest.json"
+  },
+  "oracle_ref": {
+    "commit": "81d7a103b444d82abb3ad594805d80b346bc5799",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/l4.json",
+    "sha256": "ff39d9608b31a0d74abac2c66482a5c8489547efd0147d4801043efb93c9e6ce"
+  },
+  "criteria_pass": [
+    "AC-01",
+    "AC-03",
+    "CC-2",
+    "CC-3",
+    "CC-7",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-6",
+    "GO-I2",
+    "GO-I3",
+    "GO-I4",
+    "GO-I5",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "oracle_cases_pass": [
+    "L4-entry",
+    "L4-ownership",
+    "L4-maintenance",
+    "L4-operational",
+    "L4-economy",
+    "L4-cumulative"
+  ],
+  "corrections_resolved": [
+    "J1-E01",
+    "J1-E02",
+    "J1-E03"
+  ],
+  "mandatory_findings_open": [],
+  "body_changes": 0,
+  "new_judge_dispatches": 0,
+  "previous_versions_retained": true,
+  "provenance_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/recovery-20261128/provenance.json",
+    "sha256": "c6fee3b700583abfc5c20d2246c32a8126599fedb82b7474db096fe2bbdd1f81"
+  },
+  "composed_manifest": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package.json",
+    "byte_length": 214050,
+    "sha256": "443caac944c273a6066927caddc7b275ef66c037b3125e42c0fe5b620aa6d69b",
+    "git_blob_sha": "2eea97b78066ff4f535e588cb9248286bb38fe38",
+    "artifacts": 15,
+    "unchanged_predecessor_objects": 11,
+    "state": "IN_PROGRESS"
+  },
+  "composed_metadata_status_reconciliation": [
+    {
+      "location": "known_limits[0]",
+      "before": "All seven L1, three L2 and one L3 accepted by the two persistent judges; four L4 artifacts remain.",
+      "after": "All seven L1, three L2, one L3 and four exact historical L4 bodies have the two original semantic acceptances. The recovered J1 post-supplement decision is preserved in judgments/l4-root/responses/j1-canonical-r2.json; composed metadata and runtime operations require their own binding.",
+      "basis": "Recovered exact J1-r2 PASS and unchanged J2-r1/addendum PASS; l4-acceptance.json records scope."
+    },
+    {
+      "location": "artifacts[S4:L4:entry].gaps[0]",
+      "before": "Aceite semântico, binding, publicação e consumidores L4 ainda pendentes; referências vazias não satisfazem o gate nativo de reviews.",
+      "after": "Aceite semântico histórico dos mesmos corpos registrado por J1-r2 e J2-r1/adendo. Binding do pacote composto, publicação, consumidores e recibos de operação própria permanecem pendentes; o PASS histórico não comprova essas operações nem a compatibilidade de outro runtime.",
+      "basis": "Status-only reconciliation; original producer metadata and all body bytes remain unchanged."
+    },
+    {
+      "location": "artifacts[S4:L4:ownership].gaps[0]",
+      "before": "Aceite semântico, binding, publicação e consumidores L4 ainda pendentes; referências vazias não satisfazem o gate nativo de reviews.",
+      "after": "Aceite semântico histórico dos mesmos corpos registrado por J1-r2 e J2-r1/adendo. Binding do pacote composto, publicação, consumidores e recibos de operação própria permanecem pendentes; o PASS histórico não comprova essas operações nem a compatibilidade de outro runtime.",
+      "basis": "Status-only reconciliation; original producer metadata and all body bytes remain unchanged."
+    },
+    {
+      "location": "artifacts[S4:L4:maintenance].gaps[4]",
+      "before": "Esta revisão ainda não tem seus dois pareceres semânticos nem binding/recibo de operação; refs correspondentes permanecem vazias.",
+      "after": "Aceite semântico histórico dos mesmos corpos registrado por J1-r2 e J2-r1/adendo. Binding do pacote composto, publicação, consumidores e recibos de operação própria permanecem pendentes; o PASS histórico não comprova essas operações nem a compatibilidade de outro runtime.",
+      "basis": "Status-only reconciliation; original producer metadata and all body bytes remain unchanged."
+    },
+    {
+      "location": "artifacts[S4:L4:operational].gaps[4]",
+      "before": "Esta revisão ainda não tem seus dois pareceres semânticos nem binding/recibo de operação; refs correspondentes permanecem vazias.",
+      "after": "Aceite semântico histórico dos mesmos corpos registrado por J1-r2 e J2-r1/adendo. Binding do pacote composto, publicação, consumidores e recibos de operação própria permanecem pendentes; o PASS histórico não comprova essas operações nem a compatibilidade de outro runtime.",
+      "basis": "Status-only reconciliation; original producer metadata and all body bytes remain unchanged."
+    }
+  ],
+  "original_producer_metadata_preserved": true,
+  "acceptance_scope": "Semântica dos quatro corpos históricos e adequação do procedimento descrito sob os pins examinados. Não constitui binding, autorização ou comprovação de execução.",
+  "composed_metadata_runtime_binding": "NOT_RUN; original body acceptance does not certify transformed metadata or a different runtime",
+  "runtime_binding_publication_consumer": "NOT_CLAIMED_BY_SEMANTIC_ACCEPTANCE"
+}

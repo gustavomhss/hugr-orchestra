@@ -1,0 +1,22 @@
+--- system-flows-v2.md
++++ system-flows-v3.md
+@@ -1,6 +1,6 @@
+ # Fluxos de dados, decisões e conhecimento na S4
+ 
+-Base aceita no payload `47eaa5322102910289cb56e2e07e9d3536ba1926`: A=`S4:L2:atlas-system`; C=`S4:L2:continuity-rag-operations`; G=`S4:L2:genesis-governance`; H=`S4:L1:atlas-host-genesis`; N=`S4:L1:native-runtime-delta`. Inspeção herdada; inferências marcadas; sem execução L3.
++Base aceita no payload `47eaa5322102910289cb56e2e07e9d3536ba1926`: A=`S4:L2:atlas-system`; C=`S4:L2:continuity-rag-operations`; G=`S4:L2:genesis-governance`; H=`S4:L1:atlas-host-genesis`; N=`S4:L1:native-runtime-delta`; HB=`S4:L1:host-boundaries`. Inspeção herdada; inferências marcadas; sem execução L3.
+ 
+ ## Um host, três percursos de estado
+ 
+@@ -20,9 +20,9 @@
+ 
+ ## Da requisição RAG à evidência de seleção
+ 
+-Com embedding desligado, o handler hidrata memoryStore, chama noteBytes/operação em withStore e apaga/reinsere estado da Location. SQL persiste metadados, sem texto integral. **Inferência:** leitura HTTP pode regravar estado; isolamento não foi demonstrado. Extração precede admissão: allowExternal omitido nega, mas recusa não prova ausência de leitura nem prefixo resolve symlink. [C § RAG cruza leitura e persistência por requisição]
++Sem embedding, o handler hidrata memoryStore, chama noteBytes/operação em withStore e regrava estado da Location. SQL guarda caminho/hash/status das fontes, sem seu texto integral; chunks guardam texto e offsets. **Inferência:** ler HTTP pode regravar estado; isolamento não demonstrado. Extração precede admissão; allowExternal omitido nega. Recusa não exclui leitura prévia; prefixo não resolve symlink. [HB § 2. HTTP RAG → Store por requisição → SQLite]
+ 
+-NoteBytes marca not_yet_read; reparse atualiza texto/hash/status; rechunk exige reparse compatível. Remover fonte deixa chunks. Revisão guarda parâmetros/membros/hashes, mas busca usa fontes/chunks atuais. setPipeline coage valores sem validação runtime; mudar strings parser/tokenizer não escolhe outra implementação inspecionada. Comparação exige proofSetId igual aos snapshots e um campo alterado; não executa passes. Flags falsos não provam equivalência/replay. Ask retém K sem modelo; trace por revisionId não coincide com prova por questionId, sem conversão no host. **Inferência:** seq reiniciado na hidratação arrisca colisão; conferir `modules/rag-studio/src/context.ts` e o handler. [C § Pipeline e revisão têm identidades distintas; C § Comparação exige uma mudança isolada; C § Diagnóstico e percurso de manutenção]
++noteBytes marca not_yet_read quando detecta conteúdo legível alterado; falha de leitura mantém a linha e pode conservar metadados/chunks antigos. Reparse atualiza texto/hash/status; rechunk exige reparse compatível; remover fonte deixa chunks. Revisão guarda parâmetros/membros/hashes; busca usa fontes/chunks atuais. setPipeline coage sem validar; strings parser/tokenizer não trocam a implementação inspecionada. Comparação exige proofSetId igual aos snapshots e um campo alterado, sem passes; flags falsos não provam equivalência/replay. Ask retém K sem modelo; trace usa revisionId, prova questionId, sem conversão no host. **Inferência:** hidratar sem avançar seq arrisca colisão. [C § Pipeline e revisão têm identidades distintas; C § Comparação exige uma mudança isolada; C § Diagnóstico e percurso de manutenção]
+ 
+ ## Da autoria à leitura de conhecimento governado
+ 

@@ -1,0 +1,17 @@
+{
+  "schema": "s4-primary-l3-conference/v1",
+  "version": "v3",
+  "recorded_utc": "2026-11-11T20:17:58.477365+00:00",
+  "body_bytes": 8995,
+  "body_sha256": "0648bf048642fcfb7f04df594bcd4a0877635acb2d363431e739bcd66ea973e7",
+  "metadata_bytes": 8632,
+  "metadata_sha256": "9c442d4229864655bee423a5fd56b6b4e58f38a022bf429d581a71617f55e1bd",
+  "recipe_sha256": "89ff009dc4cf735637aa03d7bff37b7a80765bdcb50802fe036d718b7880d2a9",
+  "response_sha256": "527ca890e8cafb3bfc5f49193d81955c0341fd3c49ad3129ae9b25edab259e1a",
+  "packet_bytes": 24929,
+  "packet_sha256": "8ead80a637746b65d0432cce47ab35682b3cf48c21fa1c061cbeb798dba3a7f0",
+  "source_refs_and_membership_checked": 6,
+  "literal_excerpts_checked": 3,
+  "diff_verified": true,
+  "primary_finding": "L3-J1-01 ready for reassessment; not a judge decision"
+}

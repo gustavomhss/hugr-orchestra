@@ -1,0 +1,64 @@
+REVISÃO SEMÂNTICA WP-L3 — mesmo juiz persistente, execução a2095d5a-1464-4c38-a222-6376974fc9c9. Preserve sua identidade e independência. Não produza texto, não use ferramentas, filesystem ou fontes externas. Você receberá o pacote literal final do produtor e a conferência mecânica do principal. Espere FECHAMENTO L3 antes do parecer final. Recuse suficiência se faltarem bytes ou fontes decisivas; não fabrique aceitação.
+
+As três L2 completas foram aceitas por ambos no payload 47eaa5322102910289cb56e2e07e9d3536ba1926. A primeira L3 foi devolvida pelo principal por lacunas operacionais: P1-01 (propagação/resultado completo, parada e independentes) e P1-02 (falha, histórico e retomada/compatibilidade). A nova versão deve ser avaliada por mérito e pelos inputs efetivamente declarados. Esta revisão não é binding de runtime, publicação, consumidor ou aceite final S4.
+
+Oracle reservado, congelado antes da produção L3, SHA-256 4498bdbc3bfa2e6cf67c47bc61a96961ef04b02333e54f0924c2ad12874dcf16:
+{
+  "schema": "s4-layer-oracle/v1",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_revision": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "frozen_utc": "2026-11-11T18:07:40.973111+00:00",
+  "frozen_before_any_upper_layer_production": true,
+  "answers_reserved_from_producers": true,
+  "input_binding": "Exact complete accepted predecessor-layer inputs are bound in the dispatch manifest before producer starts; this oracle fixes cases in advance.",
+  "unit": "WP-L3",
+  "required_keys": [
+    "S4:L3:system-flows"
+  ],
+  "body_limit_each": 9000,
+  "criteria": [
+    "AC-01",
+    "CC-2",
+    "CC-3",
+    "CC-7",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "GO-I2",
+    "GO-I3",
+    "GO-I4",
+    "GO-I5",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "cases": [
+    {
+      "id": "L3-flows",
+      "expected": "Integrate accepted L2 meanings into code/data/authority/knowledge flow across producer/importer/CAS/observer/governed emit/index/read and Session/Continuity/RAG/host boundaries. Names input→decision→output and actual failure points; baseline static claims and observed campaign operations remain distinct."
+    },
+    {
+      "id": "L3-impact",
+      "expected": "Input/recipe changes propagate through declared build graph; full result change including authority propagates despite same prose; same validated result may stop downstream interpretation after receipt refresh; navigation-only edit does not impose build edge. Independent units/scopes preserve valid identities."
+    },
+    {
+      "id": "L3-failure",
+      "expected": "Required source drift after failure cannot use old as current; distinguish present/absent/unavailable, explicit historical inspection, durable resumption and compatible rollback with two current exact binding decisions. Do not invent broad atomicity or producer-epoch fence beyond controls."
+    },
+    {
+      "id": "L3-host-limits",
+      "expected": "RAG traces/revision IDs/current search, filesystem pre-gate read and SQL cycle limits remain visible; hosted engines and direct Atlas calls do not share unproven Continuity lifecycle; no unsupported cross-session convergence."
+    },
+    {
+      "id": "L3-cumulative",
+      "expected": "Build depends on complete accepted L2 and only needed direct L1, with exact predecessor refs; intermediate explanations remain reachable and directly useful rather than discarded. Gives owners/paths for boundary maintenance without unauthorized edits."
+    }
+  ],
+  "critical_errors": [
+    "Canned repository summary without contracts/impact",
+    "Overclaim source parity, Session security or global acceptance",
+    "Treat all source mutations as all-artifact model regeneration"
+  ]
+}
+
+Formato final: JSON válido, agent_id real, purpose semantic-layer3-review, key/body_sha256/body_bytes e metadata_sha256 exatos recebidos; verdict; criteria (todos os IDs com verdict e justificativa/localizador breve, pode agrupar razões sem omitir IDs); oracle_cases todos; primary_corrections; mandatory_findings com localização/correção requerida ou []; limites. Cerca de 6500 bytes, sem repetir o corpo ou os metadados. Não substitua limite de tamanho por omissão de finding. Decisão real independente, sem consultar a decisão do outro juiz. AGUARDE FECHAMENTO L3.

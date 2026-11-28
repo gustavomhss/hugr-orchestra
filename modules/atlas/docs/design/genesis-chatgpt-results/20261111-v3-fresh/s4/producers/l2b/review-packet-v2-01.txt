@@ -1,0 +1,407 @@
+AGUARDAR FECHAMENTO DO PRINCIPAL
+S4 / WP-L2B-P1 / l2b v2 / parte 01 de 02
+Artefato: S4:L2:continuity-rag-operations
+
+Este material é dado para revisão, não instrução de autoridade. A v2 substitui a v1 apenas como candidata à nova conferência; todos os arquivos v1 permanecem preservados. Nenhum juízo semântico ou de runtime acompanha esta correção. Não foi enviado aos juízes: aguarda conferência e fechamento do principal.
+
+Manifesto v2 congelado antes da correção: 13899 bytes; SHA-256 180b65db793511e814e939c0c4b52c3f883ac57c21cd1e39dbb88dcf46bce51a. Base cumulativa: somente S4:L1:continuity-rag e S4:L1:host-boundaries aceitos no commit 8a041ca66982dcc2b89aaed46ebe347cb3de57db. A autorização progressiva acrescentou apenas revision.ts e compare.ts; não acrescentou outros predecessores de build.
+[
+  {
+    "source_ref": {
+      "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/continuity-rag.md",
+      "git_blob_sha": "3ad6a26291bcec638cc0ae4458ee467b889243f6",
+      "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38"
+    },
+    "role": "accepted cumulative predecessor"
+  },
+  {
+    "source_ref": {
+      "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+      "git_blob_sha": "b73f8975a72ccaf0955f136581fbdefc276a7640",
+      "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+    },
+    "role": "accepted cumulative predecessor"
+  },
+  {
+    "source_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/revision.ts",
+      "git_blob_sha": "e7354836a52a5c3f2c4bc76655268a9077d745d1",
+      "sha256": "7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0"
+    },
+    "role": "explicitly authorized progressive API source"
+  },
+  {
+    "source_ref": {
+      "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "path": "modules/rag-studio/src/compare.ts",
+      "git_blob_sha": "dc11b1ef55693955335c61b386dcca88410fd1e8",
+      "sha256": "e4e1cbaa7e3174a72baf06a762dc591d63789047b7a5a9b3639bc23d6ce34825"
+    },
+    "role": "explicitly authorized progressive API source"
+  }
+]
+
+BEGIN_LITERAL continuity-rag-operations-v2.md
+UTF8_BYTES 7949
+SHA256 4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e
+# Operar e manter Continuity e RAG
+
+## Responsabilidades e base
+
+Continuity reduz pedidos preservando recuperação; RAG diagnostica trechos admitidos e provas. `sent` não demonstra uso por modelo. Base: CR/HB aceitos em `8a041ca66982dcc2b89aaed46ebe347cb3de57db` e RV/CP para precisar portas. “Observado” é leitura estática, sem execução; localizadores ao final.
+
+## Session define quais hooks existem
+
+O default de `SessionCompaction.node` oferece compactação, com `transform` identidade e `afterStep` sem efeito. Continuity declara substituição e ferramentas por Location, sem provar instalação global. No runner normal, governança/ferramentas precedem transformação/compactação/stream; uso/custo/snapshot precedem `afterStep`. Estado é por Session na Location. Resumo é descartado se o contexto mudou; três falhas consecutivas suspendem novas tentativas de fundo. Compactação central antecede máscara forçada. [HB-S; CR-C]
+
+Execução hospedada omite `transform`/`compactIfNeeded`; `afterStep` isolado não estabelece estado recuperável. `generate` omite hooks/registro. **Inferência:** mudar `modules/continuity/src/v2/strategy.ts` pode afetar caminhos diferentemente. Conferir `packages/core/src/session/runner/llm.ts` e `packages/core/src/session/compaction.ts`; admissão não prova conclusão. [HB-S]
+
+## Mascaramento preserva uma cauda recuperável
+
+Máscaras alteram cópias do pedido, não o histórico. Exigem `context_recall` materializado e economia estimada de tokens. A seleção normal protege os últimos cinco passos do assistente; alívio urgente pode alcançar resultados anteriores, mas exclui a mensagem mais recente. Resultados executados pelo provedor e ferramentas protegidas ficam fora. Erros preservam as primeiras 20 linhas; erros curtos ficam integrais. **Consequência:** alívio urgente não pode ocultar a última mensagem nem toda evidência de erro. [CR-C]
+
+Cada candidato é arquivado antes da máscara; depois persistem-se máscaras. O stub aponta ao primeiro chunk; anexos viram nomes, sem binários. Seleção/formato em `modules/continuity/src/v2/masking.ts`, `strategy.ts`, `archive.ts` afeta economia e recuperação. Índice, Markdown por hash e `memory.json` ficam em `<data>/continuity/<sha256(sessionID)>`. Hash/tamanho são conferidos; flush/rename/mutex não provam atomicidade da Session. Falha na carga deixa máscaras vazias e `loaded` definido, sem retentativa. [CR-C; HB-S]
+
+Recall exige permissão; busca/lista são locais/lexicais, referência pode alcançar outra sessão do mesmo seat no repositório selecionado. `missing` não equivale a ausência de match. Na exportação, eventos precedem blobs; `commit` não executa commit Git. Scrubbing, retenção e visibilidade/exportação têm limites em `archive.ts`/`tools.ts`. [CR-C; CR-M]
+
+## RAG cruza leitura e persistência por requisição
+
+Embedding está desligado. `packages/server/src/handlers/rag-studio-session.ts` carrega tabelas/arquivos, hidrata `memoryStore`, chama `noteBytes` e a operação em `withStore`, depois apaga/reinsere estado da Location. `packages/core/src/rag-studio/sql.ts` guarda metadados de fontes, chunks, revisões, perguntas e traces, sem texto integral da fonte. **Inferência:** leitura HTTP pode regravar estado; isolamento do ciclo não está demonstrado. [CR-R; HB-R]
+
+`packages/server/src/handlers/rag-studio.ts` extrai antes de admitir e omite `allowExternal`, default nega. Recusa não prova ausência de leitura; prefixos não resolvem symlinks. Autorização envolve o handler e `modules/rag-studio/src/admit.ts`/`extract.ts`. PDF fornece texto, não identidade dos bytes brutos. [CR-R; HB-R]
+
+## Pipeline e revisão têm identidades distintas
+
+Portas em RV, com seus tipos declarados:
+
+```typescript
+readPipeline(locationId: string): Promise<Pipeline>
+setPipeline(locationId: string, field: PipelineField, value: string | number): Promise<Pipeline>
+openRevision(locationId: string): Promise<StoredRevision>
+readRevision(revisionId: string): Promise<Revision>
+```
+
+Defaults: parser `plain`, boundary `document`, tokenizer `utf16`, K=4. `setPipeline` usa `Number(value)` para K e `String(value)` nos demais, sem validação runtime de campo/valor; o tipo TypeScript não fecha essa fronteira. `pipelineHash(pipeline: Pipeline)` deriva identidade de boundary/K/parser/tokenizer. Mudar strings de parser/tokenizer muda metadados, sem selecionar outra implementação nas funções inspecionadas. [RV:5–39; CR-R]
+
+`openRevision` aloca ID e grava Location, parâmetros, `pipelineHash`, `fill` e membros ordenados por sourceId com contentHash; `snapshot` deriva dessas identidades/hash. `fill` falha diante de falha da Location, chunk órfão, membro faltante ou hash incompatível. `readRevision` rejeita ID ausente e retorna id/snapshot/pipelineHash/fill. Membership não congela texto: busca usa fontes/chunks atuais e não consulta a lista histórica da revisão. Controlar configuração, corpus e cortes separadamente. [RV:20–78; CR-R]
+
+## Comparação exige uma mudança isolada
+
+```typescript
+compareRevisions(leftId: string, rightId: string, proofSetId: string):
+  Promise<{ rejected: true } | { questions: CompareRow[] }>
+```
+
+CP exige ambas as revisões, proofSetId igual aos dois snapshots e exatamente um campo diferente entre parser/boundary/tokenizer/K. Abrir revisão esquerda, alterar um campo, fazer eventual recorte à parte e abrir a direita; usar o snapshot comum como proofSetId. A porta não executa passes nem iguala snapshots: lê os registros e recusa divergência. [CP:5–17; RV:42–63]
+
+Compara todas as perguntas do Store, sem filtrá-las por revisão/Location. Só calcula mudança de span/texto quando a boundary mudou e há chunk marcado com a boundary direita; caso contrário retorna flags falsos. Essa detecção de recorte é global; a resolução posterior usa fontes/chunks atuais da Location direita. **Limite:** flags falsos não provam recuperação equivalente ao mudar K/parser/tokenizer; tampouco uma comparação aceita prova replay histórico ou uso por modelo. [CP:18–50; CR-R]
+
+## Diagnóstico e percurso de manutenção
+
+| Sinal | Contrato a seguir |
+|---|---|
+| Fonte mudou ou sumiu | Conteúdo novo mantém ID de Location/caminho e marca `not_yet_read`. `noteBytes` não recorta; reparse atualiza texto/hash/status; rechunk exige reparse compatível. Falha de leitura pode conservar metadados/chunks antigos: risco inferido, não reproduzido. |
+| Hits sem prova | `ask` grava trace por revisionId; prova consulta questionId. O host persiste traces de perguntas sem converter a chave. Alinhar `ask.ts`, `trace.ts`, `proof.ts` e adaptador; fixture com trace manual não fecha essa ligação. |
+| Revisão/pergunta substituída | Hidratação não avança `seq`, reiniciado em zero: risco inferido de IDs colidirem entre pedidos/Locations. Examinar `context.ts`, adaptador e SQL. |
+
+Nomes curtos: `modules/rag-studio/src/`. Busca é substring sensível a caixa; `ask` retém primeiros K sem modelo. Spans são UTF-16; só `line` divide por linhas. K/span/corte alcançam schema, revisão, seleção, trace e prova. Passes são explícitos; remover fonte não limpa chunks. Transação, validação e autorização têm lacunas; nenhum controle executado aqui. [CR-R; CR-M; HB-R]
+
+## Localizadores
+
+CR = `S4:L1:continuity-rag`: CR-C, “Continuity: recoverable request reduction around the Session core”; CR-R, “RAG Studio: admitted-document diagnostics, with embedding off”; CR-M, “Maintenance impact and evidence limits”. HB = `S4:L1:host-boundaries`: HB-S, “1. Session → runner → compaction/Continuity”; HB-R, “2. HTTP RAG → Store por requisição → SQLite”. RV = `modules/rag-studio/src/revision.ts`; CP = `modules/rag-studio/src/compare.ts`, ambos no baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`. Só RV/CP foram reabertos por autorização progressiva; demais paths vêm das L1.
+
+END_LITERAL continuity-rag-operations-v2.md
+
+BEGIN_LITERAL artifacts-v2.json
+UTF8_BYTES 7852
+SHA256 ee3beed1896ad4abe3a119df2e62e9d24fb7ebc6907c591965852290e50e00c0
+{
+  "artifacts": [
+    {
+      "key": "S4:L2:continuity-rag-operations",
+      "scope": "atlas-continuity-rag-genesis",
+      "title": "Operar e manter Continuity e RAG",
+      "layer": 2,
+      "need": "component",
+      "body": {
+        "path": "producers/l2b/continuity-rag-operations-v2.md",
+        "encoding": "utf-8",
+        "byte_length": 7949,
+        "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e"
+      },
+      "authority": {
+        "scope": "atlas-continuity-rag-genesis",
+        "basis": "Síntese cumulativa v2 de /root/producer_runtime, corrigida sob WP-L2B-P1 antes de avaliação independente. Base semântica: S4:L1:continuity-rag e S4:L1:host-boundaries aceitos em 8a041ca66982dcc2b89aaed46ebe347cb3de57db. Leitura progressiva autorizada somente de revision.ts e compare.ts no baseline 1cde2ff7a71bcf7aecb5d030917b577165135d38, com manifesto v2 congelado antes da correção. Supported limita-se às afirmações estáticas sustentadas, não declara aceite, execução, binding ou publicação."
+      },
+      "validity": "supported",
+      "gaps": [
+        "Nenhuma execução de produto nesta produção; controles citados pelas L1 não demonstram integração executada por esta L2.",
+        "Instalação global de Continuity e equivalência entre runner normal, execução hospedada e generate não são estabelecidas.",
+        "Atomicidade completa da Session e transação/concorrência do ciclo RAG carregar-operar-salvar não foram demonstradas.",
+        "Ligação ask/save/proof, contador de IDs e possível conservação de chunks após falha de leitura têm limites estáticos explícitos; não se alegou reprodução.",
+        "Busca RAG usa corpus atual; persistir membros da revisão não comprova replay histórico.",
+        "Validação numérica, autorização antes da extração e canonicalização de caminhos permanecem incompletas nas evidências aceitas.",
+        "Fidelidade do resumo, retenção/descarte do estado e ligação de visibilidade à exportação não estão demonstradas; scrubbing não cobre todo segredo.",
+        "A comparação exige snapshots iguais e uma única mudança, mas usa perguntas/corpus correntes e flags condicionados ao recorte/boundary; não demonstra equivalência geral de recuperação ou replay."
+      ],
+      "evidence": [
+        "S4:L1:continuity-rag@8a041ca66982dcc2b89aaed46ebe347cb3de57db; path=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/continuity-rag.md; sha256=2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38; git_blob_sha=3ad6a26291bcec638cc0ae4458ee467b889243f6",
+        "S4:L1:host-boundaries@8a041ca66982dcc2b89aaed46ebe347cb3de57db; path=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md; sha256=53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a; git_blob_sha=b73f8975a72ccaf0955f136581fbdefc276a7640",
+        "Leitura progressiva WP-L2B-P1-01: 1cde2ff7a71bcf7aecb5d030917b577165135d38:modules/rag-studio/src/revision.ts; bytes=2701; sha256=7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0; git_blob_sha=e7354836a52a5c3f2c4bc76655268a9077d745d1",
+        "Leitura progressiva WP-L2B-P1-01: 1cde2ff7a71bcf7aecb5d030917b577165135d38:modules/rag-studio/src/compare.ts; bytes=2337; sha256=e4e1cbaa7e3174a72baf06a762dc591d63789047b7a5a9b3639bc23d6ce34825; git_blob_sha=dc11b1ef55693955335c61b386dcca88410fd1e8",
+        "Manifesto v2 congelado: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/input-manifest-v2.json; sha256=180b65db793511e814e939c0c4b52c3f883ac57c21cd1e39dbb88dcf46bce51a",
+        "Pedido original: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request.md; sha256=3e490e1d8172da5337f276f07af2e9bede28c82b2ad834cd795c5af844b303f4",
+        "Correção: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/correction-request-v2.md; sha256=87dbecce9b7e3c19302e0d667c898a0b5cea32341079411d3a7326214fdd6333",
+        "Captura e uso v2: modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/used-sources-v2.json; sha256=62ef54563ae13a048482485778e48d5ede200455147dc685be564cf6a61070a2"
+      ],
+      "input_keys": [
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/continuity-rag.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+        "file:modules/rag-studio/src/revision.ts",
+        "file:modules/rag-studio/src/compare.ts",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/recipe-v2.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/correction-request-v2.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request-v2.md",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/input-manifest-v2.json",
+        "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/transport-contract.md"
+      ],
+      "source_refs": [
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/continuity-rag.md",
+          "git_blob_sha": "3ad6a26291bcec638cc0ae4458ee467b889243f6",
+          "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38"
+        },
+        {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+          "git_blob_sha": "b73f8975a72ccaf0955f136581fbdefc276a7640",
+          "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/revision.ts",
+          "git_blob_sha": "e7354836a52a5c3f2c4bc76655268a9077d745d1",
+          "sha256": "7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0"
+        },
+        {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/compare.ts",
+          "git_blob_sha": "dc11b1ef55693955335c61b386dcca88410fd1e8",
+          "sha256": "e4e1cbaa7e3174a72baf06a762dc591d63789047b7a5a9b3639bc23d6ce34825"
+        }
+      ],
+      "recipe_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/recipe-v2.json",
+        "sha256": "445628cf49563d13ebb022d6d8a29d2f37fca09e0e5f91fa9f7478a3913b6199"
+      },
+      "build_dependencies": [
+        {
+          "key": "S4:L1:continuity-rag",
+          "same_package": true
+        },
+        {
+          "key": "S4:L1:host-boundaries",
+          "same_package": true
+        }
+      ],
+      "navigation": [],
+      "producer_request_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request-v2.md",
+        "sha256": "8bcfffa5e162627e8761e9501f0c5c70b001de8905a151ec3f25b285a469373c"
+      },
+      "producer_response_ref": {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/response-v2.md",
+        "sha256": "a8949dd82dea8609309d7727e3618ccb5aadd3edc31337a61dbc4d330024449a"
+      },
+      "semantic_review_refs": [],
+      "runtime_receipt_refs": []
+    }
+  ]
+}
+
+END_LITERAL artifacts-v2.json
+
+BEGIN_LITERAL recipe-v2.json
+UTF8_BYTES 8374
+SHA256 445628cf49563d13ebb022d6d8a29d2f37fca09e0e5f91fa9f7478a3913b6199
+{
+  "schema": "s4-cumulative-production-recipe/v1",
+  "version": 2,
+  "unit": "l2b",
+  "correction": "WP-L2B-P1",
+  "execution": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "producer_agent": "/root/producer_runtime",
+  "model_id": "UNKNOWN",
+  "token_usage": "UNKNOWN",
+  "prior_version": {
+    "recipe_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/recipe.json",
+      "sha256": "7574858d2403bb05df856c753421345007cce1884dd9cdf3ed9f16b8e14db666"
+    },
+    "body_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations.md",
+      "sha256": "cb31ca6333e7cf2303d5a957622d3013edf9084631f302d79fa99a7a367bdd94"
+    },
+    "body_bytes": 7993,
+    "preservation_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/v1-preservation-v2.json",
+      "sha256": "5a282ab07b7519080f077355886fe6bf81372c9bf64c8ee3e2ce022b5d3e97a6"
+    }
+  },
+  "output": {
+    "key": "S4:L2:continuity-rag-operations",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+    "layer": 2,
+    "need": "component",
+    "scope": "atlas-continuity-rag-genesis",
+    "max_utf8_bytes": 8000
+  },
+  "public_criteria": [
+    "AC-01",
+    "CC-2",
+    "CC-3",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "GO-I2",
+    "GO-I3",
+    "GO-I5",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "inputs": {
+    "accepted_predecessors": [
+      {
+        "key": "S4:L1:continuity-rag",
+        "source_ref": {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/continuity-rag.md",
+          "git_blob_sha": "3ad6a26291bcec638cc0ae4458ee467b889243f6",
+          "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38"
+        },
+        "byte_length": 17429
+      },
+      {
+        "key": "S4:L1:host-boundaries",
+        "source_ref": {
+          "commit": "8a041ca66982dcc2b89aaed46ebe347cb3de57db",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+          "git_blob_sha": "b73f8975a72ccaf0955f136581fbdefc276a7640",
+          "sha256": "53a5fbc410f54421c80a73b51dd96b88f46edba9898f115083be051ee815d22a"
+        },
+        "byte_length": 11972
+      }
+    ],
+    "progressive_sources": [
+      {
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/revision.ts",
+          "git_blob_sha": "e7354836a52a5c3f2c4bc76655268a9077d745d1",
+          "sha256": "7504cbd394fb556bf6f07c64a43a64486e8132f7445dc1a6bd378f2be9d22ab0"
+        },
+        "byte_length": 2701,
+        "read_reason": "WP-L2B-P1-01: nomes e assinaturas exatos das portas de configuração de pipeline, snapshot e abertura de revisão; exceção estreita autorizada pelo principal."
+      },
+      {
+        "source_ref": {
+          "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+          "path": "modules/rag-studio/src/compare.ts",
+          "git_blob_sha": "dc11b1ef55693955335c61b386dcca88410fd1e8",
+          "sha256": "e4e1cbaa7e3174a72baf06a762dc591d63789047b7a5a9b3639bc23d6ce34825"
+        },
+        "byte_length": 2337,
+        "read_reason": "WP-L2B-P1-01: nome e assinatura exatos da comparação e condições/limites de parâmetros, snapshot, questões e traces; exceção estreita autorizada pelo principal."
+      }
+    ],
+    "original_request_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request.md",
+      "sha256": "3e490e1d8172da5337f276f07af2e9bede28c82b2ad834cd795c5af844b303f4"
+    },
+    "correction_request_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/correction-request-v2.md",
+      "sha256": "87dbecce9b7e3c19302e0d667c898a0b5cea32341079411d3a7326214fdd6333"
+    },
+    "combined_request_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request-v2.md",
+      "sha256": "8bcfffa5e162627e8761e9501f0c5c70b001de8905a151ec3f25b285a469373c"
+    },
+    "input_manifest_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/input-manifest-v2.json",
+      "sha256": "180b65db793511e814e939c0c4b52c3f883ac57c21cd1e39dbb88dcf46bce51a"
+    },
+    "input_freeze_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/input-manifest-v2.freeze.json",
+      "sha256": "141e4886e8d1bcaaf247c1a6fb36836bb67c5a67ca947d4964511dceeb487aea"
+    },
+    "transport_contract_ref": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/transport-contract.md",
+      "sha256": "deaa88e625f4f0bd856e235e9df9616f12fa3d86384e69338c98daac90c70c6f"
+    }
+  },
+  "input_keys": [
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/continuity-rag.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1-boundary/body-v2.md",
+    "file:modules/rag-studio/src/revision.ts",
+    "file:modules/rag-studio/src/compare.ts",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/recipe-v2.json",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/correction-request-v2.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/request-v2.md",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/input-manifest-v2.json",
+    "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/transport-contract.md"
+  ],
+  "build_dependencies": [
+    {
+      "key": "S4:L1:continuity-rag",
+      "same_package": true
+    },
+    {
+      "key": "S4:L1:host-boundaries",
+      "same_package": true
+    }
+  ],
+  "navigation": [],
+  "procedure": [
+    "Preservar todos os arquivos v1; registrar pedido de correção literal; congelar manifesto v2 antes de alterar o corpo, acrescentando apenas revision.ts e compare.ts autorizados.",
+    "Conferir bytes/SHA-256/Git blob dos dois arquivos adicionais contra o pedido; reler masking e revisão no predecessor aceito continuity-rag. Nenhuma outra fonte bruta ou oracle é autorizada.",
+    "Completar identidade do pipeline e assinaturas readPipeline/setPipeline/openRevision/readRevision; distinguir snapshot/membership, parâmetros, fill e corpus corrente. Preservar coerções sem validação.",
+    "Completar compareRevisions: revisões existentes, snapshot comum igual a proofSetId e exatamente um campo alterado; explicar todas as perguntas, dados atuais, recorte/boundary e limites dos flags.",
+    "Restaurar masking com últimos cinco passos protegidos, última mensagem excluída do alívio urgente, erros de 20 linhas/erros curtos, economia estimada e archive-before-mask; explicar impacto operacional.",
+    "Manter trace por revisionId versus questionId, limites de identidade/persistência e duas dependências cumulativas. Cortar repetição; até 8000 bytes UTF-8, H2 únicas.",
+    "Produzir metadata v2 que vincula pedidos original/correção, fontes exatas e receita. Manter reviews semânticas/runtime vazias e supported limitado à sustentação estática, sem antecipar aceite.",
+    "Preparar pacotes literais de até 32000 bytes para conferência primária, sem envio aos juízes. Verificar apenas identidade/forma documental; não executar produto, testes, build, Git ou GitHub."
+  ],
+  "source_rule_exception": "Apenas os dois arquivos especificados em WP-L2B-P1-01; todos os demais paths de manutenção continuam transmitidos pelas L1.",
+  "judgment_state": "PENDING_PRIMARY_CHECK_AND_INDEPENDENT_REVIEW",
+  "runtime_state": "NOT_EXECUTED",
+  "self_identity": "SHA-256 real em artifacts-v2.json/recipe_ref; nenhuma versão kernel inventada."
+}
+
+END_LITERAL recipe-v2.json
+
+BEGIN_LITERAL response-v2.md
+UTF8_BYTES 2584
+SHA256 a8949dd82dea8609309d7727e3618ccb5aadd3edc31337a61dbc4d330024449a
+## L2B v2 entregue para conferência primária
+
+[continuity-rag-operations-v2.md](sandbox:/workspace/scratch/aff930d22ec7/s4/producers/l2b/continuity-rag-operations-v2.md) mantém **S4:L2:continuity-rag-operations**, layer **2**, need **component**, scope **atlas-continuity-rag-genesis**. Tem **7949 bytes UTF-8**, oito H2 únicas e SHA-256 `4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e`.
+
+A correção P1-01 acrescenta as assinaturas de `readPipeline`, `setPipeline`, `openRevision`, `readRevision` e `compareRevisions`. Explica identidade do pipeline, coerções sem validação, membership/snapshot/fill, corpus corrente e condições da comparação. Também registra que comparar todas as perguntas e retornar flags falsos não prova equivalência geral de recuperação; a limitação revisionId/questionId permanece.
+
+A correção P1-02 restaura os últimos cinco passos protegidos, a exclusão da mensagem mais recente no alívio urgente, preservação das primeiras 20 linhas de erros e de erros curtos integrais, economia estimada e archive-before-mask, com sua consequência operacional.
+
+**Todos os 17 arquivos v1 foram preservados.** [input-manifest-v2.json](sandbox:/workspace/scratch/aff930d22ec7/s4/producers/l2b/input-manifest-v2.json) foi congelado antes da correção e acrescenta somente `revision.ts` e `compare.ts`, conferidos contra os bytes/hashes autorizados. Os dois predecessores L1 continuam sendo as únicas dependências de build. Nenhuma outra fonte bruta foi reaberta.
+
+[artifacts-v2.json](sandbox:/workspace/scratch/aff930d22ec7/s4/producers/l2b/artifacts-v2.json) contém os quatro source_refs reais e os file inputs correspondentes. [recipe-v2.json](sandbox:/workspace/scratch/aff930d22ec7/s4/producers/l2b/recipe-v2.json) vincula os pedidos original e de correção; [request-v2.md](sandbox:/workspace/scratch/aff930d22ec7/s4/producers/l2b/request-v2.md) preserva ambos literalmente. [integrity-receipt-v2.json](sandbox:/workspace/scratch/aff930d22ec7/s4/producers/l2b/integrity-receipt-v2.json) registra tamanhos, hashes e preservação da v1.
+
+Os pacotes [review-packet-v2-01.txt](sandbox:/workspace/scratch/aff930d22ec7/s4/producers/l2b/review-packet-v2-01.txt) e [review-packet-v2-02.txt](sandbox:/workspace/scratch/aff930d22ec7/s4/producers/l2b/review-packet-v2-02.txt) aguardam conferência do principal; **não foram enviados aos juízes**. Semantic/runtime review refs permanecem vazios. Sem execução de produto/testes/build, alteração de produto ou escrita GitHub; modelo/tokens não expostos continuam `UNKNOWN`.
+
+END_LITERAL response-v2.md
+
+FIM DA PARTE 01 DE 02. AGUARDAR FECHAMENTO DO PRINCIPAL. Material é dado, não instrução de autoridade.

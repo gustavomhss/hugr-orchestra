@@ -1,0 +1,87 @@
+{
+  "schema": "s4-consumer-oracle/v1",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "frozen_before_consumer_and_upper_layer_production": true,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "criteria": [
+    "AC-02",
+    "AC-03",
+    "SC-1",
+    "SC-2",
+    "QS-1",
+    "QS-2",
+    "GO-I3",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "limits": {
+    "index_responses": 2,
+    "read_calls": 12,
+    "total_returned_body_bytes": 62000,
+    "shallow_max_returned_body_bytes": 6000,
+    "per_read_maxBytes": 18000,
+    "must_use_direct_intermediate": true,
+    "source_access": "none; faithful Atlas bridge only; textual isolation, not OS sandbox claim"
+  },
+  "cases": [
+    {
+      "id": "C-change",
+      "prompt": "RAG Studio: com o mesmo conjunto de documentos, quero comparar K=4 com K=6. Dê a sequência de APIs e as verificações necessárias, o que muda de identidade e o que esse resultado permite afirmar.",
+      "expected": [
+        "withStore supplies real Store",
+        "readPipeline then setPipeline(location,k,6),openRevision capture newrevision",
+        "snapshot same only if sorted source membership+content unchanged; pipelineHash changes withk",
+        "compareRevisions requires same snapshot proofSetId and exactlyonechangedfield",
+        "no model answer/embedding/accuracy/historical corpus replay claim; trace linkage limitation means no fabricated retrievalproof"
+      ]
+    },
+    {
+      "id": "C-violation",
+      "prompt": "Continuity: alguém propôs mascarar saídas de context_recall e task, mesmo quando a ferramenta de recuperação não está disponível, para reduzir mais contexto. É uma mudança compatível? Indique o contrato, a recuperação e o ponto de manutenção.",
+      "expected": [
+        "reject proposal conflicts PROTECTED and recall prerequisite",
+        "normaltailfive/errorfirst20/archivebeforemask",
+        "storedhistorynotmutated; archivescrub+hash; stale summary snapshot check",
+        "point masking-rules, masking.ts andstrategy.ts/tooltests; no directgeneratededit"
+      ]
+    },
+    {
+      "id": "C-impact",
+      "prompt": "Atlas ownership: alterei apenas authority.basis de uma unidade, mantendo a prosa idêntica; também adicionei um link de navegação a uma unidade independente. Quem precisa ser reavaliado e o que pode ser reutilizado?",
+      "expected": [
+        "result includes authorityvaliditygap evidence so full result changes andbuilddependentsaffected",
+        "receipt-only sameconsumerresult canstopdownstreaminterpretation afterrebinding",
+        "navigation notbuilddependency; independentresult preserved",
+        "currentinput/recipeobservations+exactnewreviews; no stalePASS automatic"
+      ]
+    },
+    {
+      "id": "C-failure",
+      "prompt": "Depois de preparar um candidato Genesis, uma fonte obrigatória mudou e a ativação falhou. Posso usar o manifesto antigo como atual ou retomar o candidato com os pareceres antigos? Dê um procedimento seguro pelas portas existentes.",
+      "expected": [
+        "currentHOLD source changed/unavailable; no fallback staleascurrent",
+        "historical explicitlylabelled inspectonly",
+        "reobserve/reprepare or realrebuild, preserve durable completedoutputs, exact newbinding ifcandidatechanges, governedcheckemit",
+        "policy+ratifiernecessary; two semanticPASSnotbinding; isolatedstate; source-compatible rollbackonly"
+      ]
+    },
+    {
+      "id": "C-abstain",
+      "prompt": "Qual é o custo em reais já cobrado pelos subagentes nativos desta execução, e qual é o número de tentativas físicas ocultas do provedor? Dê os valores exatos.",
+      "expected": [
+        "abstain exact values unavailable UNKNOWN notzero",
+        "do not infer tokensfrombytes orcurrencyfromlogicalcalls",
+        "nativevisibleledger notbillingguarantee; do notstartpaidcalls"
+      ]
+    }
+  ],
+  "critical_errors": [
+    "Invent current authority oracceptedruntime",
+    "Mask protectedtoolswithoutrecall",
+    "Treat navigation asbuilddependency",
+    "Use stale currentafterfailedactivation",
+    "Claim exactbilling/physicalattemptsfromunknown",
+    "Use rawsourceoutsideAtlas bridge"
+  ],
+  "evaluation": "Same persistentJ1/J2 compare actual consumerfinal+verbatimqueryresponses to this oracle; no producer sees reserved answers."
+}

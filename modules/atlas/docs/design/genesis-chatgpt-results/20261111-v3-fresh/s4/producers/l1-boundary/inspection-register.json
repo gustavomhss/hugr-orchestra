@@ -1,0 +1,429 @@
+[
+  {
+    "path": "packages/core/src/rag-studio/sql.ts",
+    "area": "external-boundary",
+    "ranges": [
+      [
+        1,
+        81
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "packages/schema/src/rag-studio.ts",
+    "area": "external-boundary",
+    "ranges": [
+      [
+        1,
+        182
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "packages/protocol/src/groups/rag-studio.ts",
+    "area": "external-boundary",
+    "ranges": [
+      [
+        1,
+        155
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "packages/server/src/handlers/rag-studio.ts",
+    "area": "external-boundary",
+    "ranges": [
+      [
+        1,
+        123
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "packages/server/src/handlers/rag-studio-session.ts",
+    "area": "external-boundary",
+    "ranges": [
+      [
+        1,
+        282
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "packages/core/src/session/compaction.ts",
+    "area": "external-boundary",
+    "ranges": [
+      [
+        1,
+        330
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "packages/core/src/session/runner/index.ts",
+    "area": "external-boundary",
+    "ranges": [
+      [
+        1,
+        53
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "packages/core/src/session.ts",
+    "area": "external-boundary",
+    "ranges": [
+      [
+        1,
+        764
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "packages/core/src/session/runner/llm.ts",
+    "area": "external-boundary",
+    "ranges": [
+      [
+        1,
+        390
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "packages/core/src/session/runner/llm.ts",
+    "area": "external-boundary",
+    "ranges": [
+      [
+        391,
+        767
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "packages/server/src/handlers/atlas.ts",
+    "area": "external-boundary",
+    "ranges": [
+      [
+        1,
+        117
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "packages/core/src/atlas.ts",
+    "area": "external-boundary",
+    "ranges": [
+      [
+        1,
+        347
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/continuity/src/v2/index.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        1,
+        17
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/continuity/src/v2/strategy.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        1,
+        324
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "packages/core/package.json",
+    "area": "external-boundary",
+    "ranges": [
+      [
+        1,
+        587
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "packages/core/package.json",
+    "area": "external-boundary",
+    "ranges": [
+      [
+        1,
+        125
+      ],
+      [
+        460,
+        587
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "packages/core/package.json",
+    "area": "external-boundary",
+    "ranges": [
+      [
+        126,
+        459
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/rag-studio/src/context.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        1,
+        256
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/rag-studio/src/extract.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        1,
+        16
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/rag-studio/src/trace.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        1,
+        6
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/rag-studio/src/reparse.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        1,
+        38
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/rag-studio/src/proof.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        1,
+        33
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/rag-studio/src/ask.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        1,
+        41
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/rag-studio/src/search.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        1,
+        26
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/surface/index.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        1,
+        178
+      ],
+      [
+        240,
+        276
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/surface/review.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        1,
+        145
+      ],
+      [
+        199,
+        280
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/atlas/packages/cli/src/surface-mine.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        1,
+        88
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/atlas/boundary/package.json",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        1,
+        63
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/surface/review.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        146,
+        198
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/review-answer.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        1,
+        98
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/atlas/boundary/script/build.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        1,
+        85
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/rag-studio/src/admit.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        1,
+        38
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/rag-studio/src/revision.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        1,
+        79
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/continuity/src/v2/tools.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        154,
+        219
+      ],
+      [
+        248,
+        340
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/continuity/src/v2/archive.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        76,
+        154
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/continuity/src/v2/tools.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        1,
+        153
+      ]
+    ],
+    "method": "static source read; no execution"
+  },
+  {
+    "path": "modules/continuity/src/v2/archive.ts",
+    "area": "assigned-domain",
+    "ranges": [
+      [
+        1,
+        75
+      ],
+      [
+        155,
+        185
+      ]
+    ],
+    "method": "static source read; no execution"
+  }
+]

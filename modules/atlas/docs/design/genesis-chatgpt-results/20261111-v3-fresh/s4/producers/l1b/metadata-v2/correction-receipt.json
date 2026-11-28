@@ -1,0 +1,131 @@
+{
+  "schema": "s4-l1b-metadata-v2-receipt",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "artifacts_v2": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/artifacts-v2.json",
+    "sha256": "6a1e451387b25dfec778f326bbdcd61fbbc95e90e819cfba7ce70da43493a058",
+    "byte_length": 93445
+  },
+  "observation_plan": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/observation-plan.md",
+    "sha256": "5d524469aaca067c456fa2cb09edd4bbcb652818f388993e08bab701bd57536b",
+    "byte_length": 16817
+  },
+  "population_snapshot": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/population-evidence.json",
+    "sha256": "de3889c64a35cfb1e658387c4528736e67b99dc9a625f4523e230673c8677aac",
+    "byte_length": 15568
+  },
+  "selection": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/source-selection.json",
+    "sha256": "f886a982678a214ddeeb795e9695356503643c96b10f04b008f11ab5c1eb1717",
+    "byte_length": 177641
+  },
+  "correction_response": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/correction-response.md",
+    "sha256": "46a97ffb240b5f62d86ce9bfd8a96092677db3eb44d9ac2d0c3791ffc93fa445",
+    "byte_length": 1968
+  },
+  "bodies_and_counts": [
+    {
+      "key": "S4:L1:atlas-engine",
+      "body": {
+        "path": "producers/l1b/atlas-engine.md",
+        "encoding": "utf-8",
+        "byte_length": 17987,
+        "sha256": "c0d39faabe422adcfb5a6b4e67b0d105931d90661b695fbcaa7571187b4f103e"
+      },
+      "selected_source_ref_count": 50,
+      "native_input_count": 59
+    },
+    {
+      "key": "S4:L1:atlas-host-genesis",
+      "body": {
+        "path": "producers/l1b/atlas-host-genesis.md",
+        "encoding": "utf-8",
+        "byte_length": 17595,
+        "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d"
+      },
+      "selected_source_ref_count": 45,
+      "native_input_count": 54
+    },
+    {
+      "key": "S4:L1:continuity-rag",
+      "body": {
+        "path": "producers/l1b/continuity-rag.md",
+        "encoding": "utf-8",
+        "byte_length": 17429,
+        "sha256": "2a286b2570b9967c1e78ee14b671f333957a6a54c97427dc24feaec7ccab5b38"
+      },
+      "selected_source_ref_count": 62,
+      "native_input_count": 71
+    },
+    {
+      "key": "S4:L1:coverage-governance",
+      "body": {
+        "path": "producers/l1b/coverage-governance.md",
+        "encoding": "utf-8",
+        "byte_length": 17988,
+        "sha256": "201b5cc97ba7ae5b1148b98377a174ba3d00c8f4d9d521b4fadc6c1d69a03381"
+      },
+      "selected_source_ref_count": 32,
+      "native_input_count": 41
+    }
+  ],
+  "all_v1_files_unchanged": true,
+  "v1_file_count": 20,
+  "preserved_population_count": 2220,
+  "observer_limited_origins_preserved": 8,
+  "same_source_ref_and_input_path": true,
+  "every_declared_input_at_most_256000_bytes": true,
+  "largest_selected_source_bytes": 84400,
+  "compact_inputs": [
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/request.txt",
+      "sha256": "e6f62278ffc033be47d1ea41a4a0c2a1d2c4a736110a87df54e7aa26db67dbef",
+      "byte_length": 2464
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/correction-request.txt",
+      "sha256": "671cece49048054a22836db0c89114c32b885e8de3a1ba961d604c6752c079d5",
+      "byte_length": 1692
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/build_coverage.py",
+      "sha256": "c39cbfa5c2c82e03c70d26788b0c33c25d18ef104d3d7af3d88e86f04baa161f",
+      "byte_length": 11405
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/observation-plan.md",
+      "sha256": "5d524469aaca067c456fa2cb09edd4bbcb652818f388993e08bab701bd57536b",
+      "byte_length": 16817
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/population-evidence.json",
+      "sha256": "de3889c64a35cfb1e658387c4528736e67b99dc9a625f4523e230673c8677aac",
+      "byte_length": 15568
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/source-selection.json",
+      "sha256": "f886a982678a214ddeeb795e9695356503643c96b10f04b008f11ab5c1eb1717",
+      "byte_length": 177641
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/recipe.json",
+      "sha256": "fd186916cba66d8daec897299f0a24d6ff853a93eff331922626d153a26a6aad",
+      "byte_length": 4137
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/schema-constraint.txt",
+      "sha256": "9b0ee9f3c138878a07c347378174432b51a7336293e1b9d75b2c7d9334d2a986",
+      "byte_length": 714
+    },
+    {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/metadata-v2/build_metadata_v2.py",
+      "sha256": "34a2b627345b776d8fbdc5cc3b23950818fb44530c651e03c19dbb78c7c88d6f",
+      "byte_length": 32078
+    }
+  ],
+  "runtime_observation": "not run",
+  "semantic_acceptance": "not asserted"
+}

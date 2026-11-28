@@ -1,0 +1,54 @@
+{
+  "schema": "s4-primary-l3-conference/v1",
+  "utc": "2026-11-11T20:00:55.795472+00:00",
+  "key": "S4:L3:system-flows",
+  "body_sha256": "9df212b46f057c9e8369df6ed30e2e931a8fa9bc7f72ef51afba9eb4ea79d642",
+  "body_bytes": 8952,
+  "metadata_sha256": "51f7f018a5a936dff7d95658437e407d5fba4317d1570405e41074bec49fe61e",
+  "packet_sha256": "170094c804e5bc230dc0fe3927b10042dd3c04d5587cc6c9b050b4095992b633",
+  "packet_bytes": 23869,
+  "sources": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/atlas-system.md",
+      "sha256": "cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc",
+      "git_blob_sha": "9e0320056c12bba1ff8b2b26a90f797c92fe5f3f"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2b/continuity-rag-operations-v2.md",
+      "sha256": "4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e",
+      "git_blob_sha": "ced7ae43342f5461a52666f455cb74d348e3270b"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l2a/genesis-governance-v2.md",
+      "sha256": "87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01",
+      "git_blob_sha": "dd0a52ada6bbeec778721bf948e9a613573d2f64"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/l1b/atlas-host-genesis.md",
+      "sha256": "97b3adc25e1a8754ebdbab0b27040403893e90d410df08a5c8f90520e3a0156d",
+      "git_blob_sha": "00d6c33271a0b92bf1fd9de86a3fdfb19fa82311"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/bodies/native-runtime-delta.md",
+      "sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8",
+      "git_blob_sha": "22f9844d4b8ef46c338d191a6b13e68d0f59bab3"
+    }
+  ],
+  "literal_excerpts_verified": 8,
+  "H2": [
+    "Um host, três percursos de estado",
+    "Do turno à redução recuperável do pedido",
+    "Da requisição RAG à evidência de seleção",
+    "Da autoria à leitura de conhecimento governado",
+    "Mudanças propagam por resultados e vínculos",
+    "Após falha, separar recuperação de nova publicação",
+    "Manutenção e alcance da evidência"
+  ],
+  "mandatory_primary_corrections": [
+    "L3-P1-01",
+    "L3-P1-02"
+  ],
+  "primary_verdict": "READY_FOR_INDEPENDENT_REVIEW",
+  "semantic_review_or_runtime_claim": false,
+  "source_git_blob_membership": "All five refs match current-s4-tree-47eaa.json, the connector-reconciled exact payload tree"
+}

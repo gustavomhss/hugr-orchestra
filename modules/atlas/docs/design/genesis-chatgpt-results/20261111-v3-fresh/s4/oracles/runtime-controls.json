@@ -1,0 +1,58 @@
+{
+  "schema": "s4-oracle/v1",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "unit": "WP-R1",
+  "frozen_before_producer": true,
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "candidate_predecessor": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "criteria": [
+    "AC-04",
+    "AC-05",
+    "AC-06",
+    "AC-07",
+    "AC-09",
+    "AC-10",
+    "CC-4",
+    "CC-5",
+    "QS-4",
+    "QS-5",
+    "GO-I3",
+    "GO-I4",
+    "GO-I5",
+    "GO-I7"
+  ],
+  "cases": [
+    {
+      "id": "R1-durable-before-activation",
+      "expected": "A real prepared native candidate and CAS survive producer interruption before activation. A separate composed reader does not serve unactivated new content. Resumption reconstructs identical IDs from durable original bytes; no reinterpreting native producer work."
+    },
+    {
+      "id": "R1-drift-failed-rebuild",
+      "expected": "With a real accepted manifest in isolated state, mutate required source then fail preparation/publication. Current read returns HOLD for changed/unavailable input; cannot fall back to old prose as current. Historical read explicitly historical may return the preserved body."
+    },
+    {
+      "id": "R1-concurrent",
+      "expected": "Separate concurrently active readers observe only an entire accepted manifest or HOLD while a real writer activates bounded updates. Assert actual overlap synchronization, not merely separate store after commit. Existing atomic store hooks are reused."
+    },
+    {
+      "id": "R1-rollback",
+      "expected": "Attempt to activate a previous candidate against incompatible source is refused; restoring exact compatible source permits its original binding only if all candidate/environment identity matches. No direct projection write to bypass doors."
+    },
+    {
+      "id": "R1-old-producer",
+      "expected": "Malformed/legacy package or old exact approval cannot publish into fresh accepted scope through native entrypoint; previous accepted projection remains byte/identity intact. Historical pilot scope stays its original constant; no reviewer rewriting."
+    },
+    {
+      "id": "R1-independent",
+      "expected": "An independent previously accepted scope remains readable while invalid local candidate holds. Shared corrupted referenced objects hold affected reads and are not silently ignored."
+    }
+  ],
+  "reuse_existing": [
+    "216 passing tests and22 rejected mutation controls observed in GitHub run43065851373 bind existing cache/rebuild/input cases; do not duplicate them without a concrete gap.",
+    "g3 tests cover disk reopen/no duplicate, postcommit read and foreign identity refusal but do not themselves prove source-compatible rollback or genuinely concurrent reads."
+  ],
+  "limits": [
+    "Remote synthetic authority fixtures exercise mechanics only; real campaign semantic/binding decisions and consumers remain separate.",
+    "No provider calls or production activation."
+  ]
+}

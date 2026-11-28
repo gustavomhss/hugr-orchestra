@@ -1,0 +1,385 @@
+{
+  "schema": "literal-review-transport-manifest/v1",
+  "work_package": "WP-R0",
+  "version": "V1",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "recipients": [
+    "/root/judge_j1",
+    "/root/judge_j2"
+  ],
+  "parts": [
+    {
+      "part": 1,
+      "path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-1.txt",
+      "bytes": 24586,
+      "sha256": "de5fd6306711a73775d1931676d219f6f1b3ee123098eb6cc544fdeccd6f373a",
+      "lines": 401,
+      "saved_before_send": true,
+      "files": [
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+          "bytes": 13377,
+          "sha256": "e7a3b3147cad680111edcf78031fa4ab881a822ef0684067bc2b9174b8baf349",
+          "lines": 218
+        },
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+          "bytes": 4162,
+          "sha256": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+          "lines": 88
+        },
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+          "bytes": 5211,
+          "sha256": "13161114324f43f97e81970c00c1ff2527b15879e6a43a770ff753f6d4315b19",
+          "lines": 75
+        }
+      ]
+    },
+    {
+      "part": 2,
+      "path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-2.txt",
+      "bytes": 27392,
+      "sha256": "84b625e554532703a8a1d868485af270eb3454c1b17a799948c926d1a92551a0",
+      "lines": 418,
+      "saved_before_send": true,
+      "files": [
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/packages/adapter-io/src/genesis-native.ts",
+          "bytes": 12376,
+          "sha256": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312",
+          "lines": 171
+        },
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/scripts/genesis-native.ts",
+          "bytes": 3004,
+          "sha256": "18dc473b79c9bf986f07677bdba728d38490e0df36e6a39763f3765f422af3ce",
+          "lines": 56
+        },
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-native-runtime.md",
+          "bytes": 10249,
+          "sha256": "b8a59c5e23e21137e6b3eb74144dd7bf273ddce683e7e2b2eb5d8db56d4132ec",
+          "lines": 171
+        }
+      ]
+    },
+    {
+      "part": 3,
+      "path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-3.txt",
+      "bytes": 34499,
+      "sha256": "bc035b9a079d3db1622afb2e2d88a7b736c01c2bc206074351bf9a6cf2edf7ed",
+      "lines": 648,
+      "saved_before_send": true,
+      "files": [
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/runtime-state/l1a-prepared-v1.json",
+          "bytes": 9467,
+          "sha256": "5e20bd84f016f2a40560cdaaa1834cc00a0b4a98f25f0c139a04816975cddd22",
+          "lines": 211
+        },
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-sample/native-package.json",
+          "bytes": 8886,
+          "sha256": "44e018b5327e742b96d92690916f79dcf8eff67dd18d17c8cfa3d644b3297312",
+          "lines": 176
+        },
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/candidate/.atlas/cas/8c/8c63bee07cdf75682c646bb2d524e09dd66308a56be2e32ae7dbbb5b9354759f",
+          "bytes": 1707,
+          "sha256": "cf4a4361153f249495a9d5e7284e912974fd0873aea31cce722c67681f21b3b7",
+          "lines": 1
+        },
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/candidate/.atlas/cas/e4/e4a13883dcfc3ca2e8eacef3d36ca69ac2c46e010ce886a4bf3df19ed54a07d2",
+          "bytes": 154,
+          "sha256": "e2019bba166b9ed9684e1f529ddccf609ba695d3ea39a95b90a8403676b0cf43",
+          "lines": 1
+        },
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/object-mapping-v1.json",
+          "bytes": 5457,
+          "sha256": "d21c898089ad5788a105e46d1c4a474659b0651308456060bba669e9dc4963b2",
+          "lines": 106
+        },
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/measurements.json",
+          "bytes": 5387,
+          "sha256": "4df3e40dbfd9915d9f6282293aaa343bc0e8a888b3901fbc3cc6d198037a6b7c",
+          "lines": 119
+        }
+      ]
+    },
+    {
+      "part": 4,
+      "path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-4.txt",
+      "bytes": 22407,
+      "sha256": "3e98c5aba5cb0eb8a415a7b281223b7a70e4c5bf4ea9da428c82ce763b1a1c9a",
+      "lines": 595,
+      "saved_before_send": true,
+      "files": [
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/prepare-receipt-v1.json",
+          "bytes": 2877,
+          "sha256": "c2fc43a3051ed3999d63fa5fb6d95e4b7d8a3e150123f5ca090c5e7661cc09c3",
+          "lines": 76
+        },
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/typecheck-v1.json",
+          "bytes": 2110,
+          "sha256": "c2ba11961d870bc2be74d8a584ab15866ce36952b5f553925e4e88b570b39833",
+          "lines": 60
+        },
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-v1/receipt.json",
+          "bytes": 1650,
+          "sha256": "ad3cd8613f88833c58061ae65399451d8763f5d085309ef85627ce6c55d3042c",
+          "lines": 54
+        },
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-v1/ownership-guards.json",
+          "bytes": 121,
+          "sha256": "c637f25134ae31292a3672af9572783b9ae12e4eb5c476f5732902198040b7f3",
+          "lines": 1
+        },
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/ci-v1/ownership-mutation-receipts.json",
+          "bytes": 4506,
+          "sha256": "18495897d604f91c47eb6edfd0c3b024042b1ec528fa3883c6c10cdc79f2a536",
+          "lines": 156
+        },
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/ci-summary.json",
+          "bytes": 7486,
+          "sha256": "b1f6a320a827e74e766fec8148fa60b2370a8b7aeb55d1e8d86068fbb23567d2",
+          "lines": 212
+        }
+      ]
+    },
+    {
+      "part": 5,
+      "path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-5.txt",
+      "bytes": 25931,
+      "sha256": "38f1f1748f638648b25e3e33dfd448d00d02d7ab3ea440e99969924d94ef26ba",
+      "lines": 239,
+      "saved_before_send": true,
+      "files": [
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/producers/l1a/body.md",
+          "bytes": 17959,
+          "sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c",
+          "lines": 105
+        },
+        {
+          "path": "/workspace/scratch/aff930d22ec7/s4/producers/l1a/artifact.json",
+          "bytes": 6450,
+          "sha256": "ba9611f3cd228e6e320e05317150ffc128650f848082b829c4ae2f8c54fda2c0",
+          "lines": 120
+        }
+      ],
+      "purpose": "New canonical complete L1A evidence delivery; not reconstruction of initial requests."
+    }
+  ],
+  "deliveries": [
+    {
+      "part": 1,
+      "recipient": "/root/judge_j1",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-1.txt",
+      "payload_sha256": "de5fd6306711a73775d1931676d219f6f1b3ee123098eb6cc544fdeccd6f373a",
+      "saved_before_send": true,
+      "payload_echo_available": false
+    },
+    {
+      "part": 1,
+      "recipient": "/root/judge_j2",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-1.txt",
+      "payload_sha256": "de5fd6306711a73775d1931676d219f6f1b3ee123098eb6cc544fdeccd6f373a",
+      "saved_before_send": true,
+      "payload_echo_available": false
+    },
+    {
+      "part": 2,
+      "recipient": "/root/judge_j1",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-2.txt",
+      "payload_sha256": "84b625e554532703a8a1d868485af270eb3454c1b17a799948c926d1a92551a0",
+      "saved_before_send": true,
+      "payload_echo_available": false
+    },
+    {
+      "part": 2,
+      "recipient": "/root/judge_j2",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-2.txt",
+      "payload_sha256": "84b625e554532703a8a1d868485af270eb3454c1b17a799948c926d1a92551a0",
+      "saved_before_send": true,
+      "payload_echo_available": false
+    },
+    {
+      "part": 3,
+      "recipient": "/root/judge_j1",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-3.txt",
+        "bytes": 34499,
+        "sha256": "bc035b9a079d3db1622afb2e2d88a7b736c01c2bc206074351bf9a6cf2edf7ed"
+      },
+      "saved_before_send": true,
+      "payload_echo_available": false
+    },
+    {
+      "part": 3,
+      "recipient": "/root/judge_j2",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-3-j2-transmitted-error.txt",
+        "bytes": 34507,
+        "sha256": "b7b7aae24392782cd20d0381093788f9226b151d0112e8eb91a8c49b1172c0fb"
+      },
+      "saved_before_send": false,
+      "payload_echo_available": false
+    },
+    {
+      "supplement": "part3_contract_replacement",
+      "recipient": "/root/judge_j1",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-3-contract-replacement.txt",
+      "payload_sha256": "c94e59243de54a1f000a17881e912652ccbbf1094dd334db74e5aa81dee0cfac",
+      "saved_before_send": true,
+      "payload_echo_available": false
+    },
+    {
+      "supplement": "part3_contract_replacement",
+      "recipient": "/root/judge_j2",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-3-contract-replacement.txt",
+      "payload_sha256": "c94e59243de54a1f000a17881e912652ccbbf1094dd334db74e5aa81dee0cfac",
+      "saved_before_send": true,
+      "payload_echo_available": false
+    },
+    {
+      "part": 4,
+      "recipient": "/root/judge_j1",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-4.txt",
+      "payload_sha256": "3e98c5aba5cb0eb8a415a7b281223b7a70e4c5bf4ea9da428c82ce763b1a1c9a",
+      "saved_before_send": true,
+      "payload_echo_available": false
+    },
+    {
+      "part": 4,
+      "recipient": "/root/judge_j2",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-4.txt",
+      "payload_sha256": "3e98c5aba5cb0eb8a415a7b281223b7a70e4c5bf4ea9da428c82ce763b1a1c9a",
+      "saved_before_send": true,
+      "payload_echo_available": false
+    },
+    {
+      "part": 5,
+      "recipient": "/root/judge_j1",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-5.txt",
+      "payload_sha256": "38f1f1748f638648b25e3e33dfd448d00d02d7ab3ea440e99969924d94ef26ba",
+      "saved_before_send": true,
+      "payload_echo_available": false
+    },
+    {
+      "part": 5,
+      "recipient": "/root/judge_j2",
+      "message_id": "UNKNOWN",
+      "tool": "collaboration.send_message",
+      "tool_return": "empty success",
+      "payload_path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-5.txt",
+      "payload_sha256": "38f1f1748f638648b25e3e33dfd448d00d02d7ab3ea440e99969924d94ef26ba",
+      "saved_before_send": true,
+      "payload_echo_available": false
+    }
+  ],
+  "status": "five_parts_and_literal_contract_replacement_delivered_to_both",
+  "verdict": "NOT_ISSUED_BY_COURIER",
+  "limits": [
+    "No oracle bodies read.",
+    "No message IDs or payload echoes available unless a later tool result exposes them.",
+    "Initial L1A requests were not exported as literal files according to principal; original votes/body persist. Part5 is a newly preserved request and does not supply historical request identity."
+  ],
+  "supplements": [
+    {
+      "path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-3-contract-replacement.txt",
+      "bytes": 886,
+      "sha256": "c94e59243de54a1f000a17881e912652ccbbf1094dd334db74e5aa81dee0cfac",
+      "saved_before_send": true,
+      "replaces": "part3 literal contract CAS object only"
+    }
+  ],
+  "transport_incidents": [
+    {
+      "part": 3,
+      "recipient": "/root/judge_j2",
+      "error": "One duplicated GO-I8 string in literal contract CAS JSON only.",
+      "actual_transmitted_payload": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-3-j2-transmitted-error.txt",
+        "bytes": 34507,
+        "sha256": "b7b7aae24392782cd20d0381093788f9226b151d0112e8eb91a8c49b1172c0fb"
+      },
+      "actual_error_payload_saved_before_send": false,
+      "correction": {
+        "path": "/workspace/scratch/aff930d22ec7/s4/review-packets/runtime-v1/request-part-3-contract-replacement.txt",
+        "bytes": 886,
+        "sha256": "c94e59243de54a1f000a17881e912652ccbbf1094dd334db74e5aa81dee0cfac"
+      }
+    }
+  ],
+  "delivered_message_count": 12,
+  "saved_packet_verification": [
+    {
+      "part": 1,
+      "packet_hash_and_bytes_match": true,
+      "all_listed_files_integral_in_packet": true
+    },
+    {
+      "part": 2,
+      "packet_hash_and_bytes_match": true,
+      "all_listed_files_integral_in_packet": true
+    },
+    {
+      "part": 3,
+      "packet_hash_and_bytes_match": true,
+      "all_listed_files_integral_in_packet": true
+    },
+    {
+      "part": 4,
+      "packet_hash_and_bytes_match": true,
+      "all_listed_files_integral_in_packet": true
+    },
+    {
+      "part": 5,
+      "packet_hash_and_bytes_match": true,
+      "all_listed_files_integral_in_packet": true
+    }
+  ]
+}

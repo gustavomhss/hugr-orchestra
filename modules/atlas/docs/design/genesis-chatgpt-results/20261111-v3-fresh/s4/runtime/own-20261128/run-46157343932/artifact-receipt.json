@@ -1,0 +1,396 @@
+{
+  "run_id": 46157343932,
+  "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46157343932",
+  "workflow_revision": "38b69053e872a87f7e7a255686a7d790e90c3679",
+  "conclusion": "success",
+  "artifact_id": 15268181408,
+  "artifact_sha256": "7e4be1a1d3f9617d1ef742cab4903ee59c09f066edad61ee585859c1e3ef182a",
+  "artifact_byte_length": 512706,
+  "cas_files": [
+    {
+      "path": "s4-source/.atlas/cas/00/004357aeb332e76c3e32822d4f7426c7201cf11f6145c5a1abb5a0401070f63a",
+      "sha256": "f12ee888b8859a6782b140684358a57e89b76fcfddf6cda8af17e3a1be52def1",
+      "byte_length": 7165
+    },
+    {
+      "path": "s4-source/.atlas/cas/10/10171ee9769ac7ce7013e8e16fbc5064e79a458a9cc65b80a503164e00306253",
+      "sha256": "35ab67a95e2a91cd23b4a07010061e77b828ab9a6bb4f01d0234fc1b00f6e741",
+      "byte_length": 150988
+    },
+    {
+      "path": "s4-source/.atlas/cas/14/146810cf4b52d5a3707845c6eb20cb89a90e269701fc40e0700440df41a61c04",
+      "sha256": "58d09499787f5f8f57c79ba8bbbfa298e72b002f9e4b8df347e259fb627fe32c",
+      "byte_length": 43927
+    },
+    {
+      "path": "s4-source/.atlas/cas/18/188071fa906c343aa06319823bf166456b02cc4d38f9a7d5fd7ae5d8cc729131",
+      "sha256": "628aacbfd3e7e7843c2c643b6472d2e85f4dc8dfdb9cd149ed2f204f31656aff",
+      "byte_length": 47523
+    },
+    {
+      "path": "s4-source/.atlas/cas/1a/1a7a99272992b93eb64494906a237db51e2d2a509df18bfaf2deed578c7734cd",
+      "sha256": "3f8d18fa616c5d6374a0504b5258d5d8f6818e6fc310096e2c7c3f621a35a788",
+      "byte_length": 14186
+    },
+    {
+      "path": "s4-source/.atlas/cas/1d/1de5c4577d207ca168953e777b8bbc51af75839b5f75cb667ba521ab3360a7e7",
+      "sha256": "c8c5508760b4e1ba0da94e52de51a342d663e3f0b94f274c486bac975d6698de",
+      "byte_length": 10445
+    },
+    {
+      "path": "s4-source/.atlas/cas/22/22bfaa02bca24b0c5cc1ff29a74fac34321ad2ed231c481bddd1ac8d202d863f",
+      "sha256": "ee67e84bf464e2d2e48a7c10e3a1e07cc2cea312d4e9bc52786e594df250a7c6",
+      "byte_length": 16611
+    },
+    {
+      "path": "s4-source/.atlas/cas/27/2758d338d9e2dcb7b5122b85e893da3f106946590b63788d471e564430c2aadb",
+      "sha256": "3508d5af8f038850921b8c6bfd42649144003e0b3559ecf44cc2171389d9e774",
+      "byte_length": 2524
+    },
+    {
+      "path": "s4-source/.atlas/cas/27/27d890df726c60dba1ec75fdaddc57b811cd639178529c2f28af0c89afb07dc8",
+      "sha256": "9e3d3ff46e065a579605fcf9215322d9337865ce593c00b4d290bf7dc4f222d3",
+      "byte_length": 26743
+    },
+    {
+      "path": "s4-source/.atlas/cas/2e/2e1ce7969c753f2cf0c50243b42b3c9a200c283e33e7ab22a749ffd45af5e9fb",
+      "sha256": "889688e329a14b677b3288d032eb460533bb0a0fda40dabd547bd26ab5f22ff4",
+      "byte_length": 26013
+    },
+    {
+      "path": "s4-source/.atlas/cas/2e/2e9ea58ed3ce225c5ab3fe9c74a53870d86168eb29bd432050251a3e5dd126be",
+      "sha256": "4ae763252d5157f481fd8218e3079f45cc83dc02481ad9c0954cdb70372f336b",
+      "byte_length": 9051
+    },
+    {
+      "path": "s4-source/.atlas/cas/30/307e563b1f4b7f7f0450dc0c92bf0c9693df515fb355612fea4a809d0e951b09",
+      "sha256": "a3dd5ce35616cb68bb89b9c0829a0944faa8f874a8298e2ac458d80cfed9de61",
+      "byte_length": 16631
+    },
+    {
+      "path": "s4-source/.atlas/cas/33/33ca3da15cc11e2f9ebe61c1f4160f7b771ccb8e8b8ac0e851e4e18485e0378e",
+      "sha256": "96f6963d4186168d8e16382176077b150edb526f1e15202c5a92015385acf196",
+      "byte_length": 22590
+    },
+    {
+      "path": "s4-source/.atlas/cas/34/3437cd3add737f8c8132795b9b71f6b7499b75b55785d901ac7f15bb78f547ed",
+      "sha256": "8c7bd15a0d40500988cc9ff79114fa86a6d29bb630e3ffae96d51d3c44f46527",
+      "byte_length": 32993
+    },
+    {
+      "path": "s4-source/.atlas/cas/35/3585498d51ea14a376935dd52ca7f09466052f673fbb7824849edccf333d4112",
+      "sha256": "ccd2a47dd83623706cc263ecc49bd28575525d3f43ddb14109eabcc7f85e3fd1",
+      "byte_length": 30535
+    },
+    {
+      "path": "s4-source/.atlas/cas/39/394be315ee5831db6481d9a1ce23f5b87ba6b9cb24bfab86c84753115eed0be0",
+      "sha256": "99490ed2b4e92a49c45781d295e8e0f5e97fc8946706780fae493caa701956a6",
+      "byte_length": 2617
+    },
+    {
+      "path": "s4-source/.atlas/cas/39/396b4093d5fabc2b55e1879179af32c8bf1e3bb2e826f455d46fa08dee8b184b",
+      "sha256": "10207c059123998d66a0f509bfa6c3eb6e238e2084f8c0025ce25bea95147d61",
+      "byte_length": 32454
+    },
+    {
+      "path": "s4-source/.atlas/cas/3a/3a6fc7cf2301d195c7f7c712b336a90494ea9133dd8b3db549173c09efb4e2f1",
+      "sha256": "22164f7a2518bd0ee234e9bade5d651d818859449b625208398ef2688907704f",
+      "byte_length": 4036
+    },
+    {
+      "path": "s4-source/.atlas/cas/40/4056e3fbfa7eb2e8fe66c511e7b3ba07d30ccdfc3d81a27e49da3e96eaa03334",
+      "sha256": "039a30d64194cba6c051c33ba915c10d6468a4ad1badda0315776802e1f5d488",
+      "byte_length": 57269
+    },
+    {
+      "path": "s4-source/.atlas/cas/42/4268fc0d04f523233a25ad46f110d77c9efb3bff7fadaa17074ee1d4cebf81b1",
+      "sha256": "f4d6e1290be5266afa546b34748125a39b23685ea71eba484062265da96ce000",
+      "byte_length": 63519
+    },
+    {
+      "path": "s4-source/.atlas/cas/46/468e3d7996cf427ae31863650d5537af39ec3bb6bd33a66dddb176656581a74c",
+      "sha256": "79c771be710a42ba97c257390edd3573d5b518c38921ce63c0232efe976cb4a4",
+      "byte_length": 34831
+    },
+    {
+      "path": "s4-source/.atlas/cas/47/4769753b3cb46e89e9191c54823c2a223037413f47b6f7e572c5f7b39f21039e",
+      "sha256": "4fcc40bc841feee7444a040bcefa8402a31cdef03f2589fb0ba0c7021fbeb40f",
+      "byte_length": 35420
+    },
+    {
+      "path": "s4-source/.atlas/cas/4b/4b01fb3d68137b33b68edb523f278076103e23d5a67fda76d9e62448eb03cb5e",
+      "sha256": "2158c43d1b82fc147b53c3b7f2973e17c5c0f65474ec99fd5902c6be783062fc",
+      "byte_length": 11636
+    },
+    {
+      "path": "s4-source/.atlas/cas/51/517c369a57d8212d9726d206c206d0bc7d2ccb79780b2a12306cad83ad3619de",
+      "sha256": "e77cff5b2b324e1d0562b47da0a567c1964977a4c7ce2c5f447a595c3d6739aa",
+      "byte_length": 8378
+    },
+    {
+      "path": "s4-source/.atlas/cas/52/5206dd7bb40cadcc847646b6add301ecfc9213959d1a8902227633df80f50feb",
+      "sha256": "3ef7e2149254fc864a543030e8d531babf1956d061dbe3b89c30aa86a9941291",
+      "byte_length": 37367
+    },
+    {
+      "path": "s4-source/.atlas/cas/56/568bf14dfbfcab94b0cb663f4955154fed05b5febf188d4a734843af223fa519",
+      "sha256": "22e04f6d4b77d3ba1d085c03e1309066a84d405017aac4b9fdd1172deed3ac1f",
+      "byte_length": 36840
+    },
+    {
+      "path": "s4-source/.atlas/cas/57/5759ab535a3bf54ac1131e26ca92321a85352874ddc9906ddc86a38bf6c9c787",
+      "sha256": "9cf42347f63e1f77720877cc802ec82e12084f7ea68fb144eb447c8acfe0ef16",
+      "byte_length": 39296
+    },
+    {
+      "path": "s4-source/.atlas/cas/57/57b15638bdc8723ffa7e8a671dc519fc46865a625fc7709c94bfe9184c632009",
+      "sha256": "37a8124c5cb5063ea43001315b11624218001b07e116e959619be095be724828",
+      "byte_length": 29209
+    },
+    {
+      "path": "s4-source/.atlas/cas/5a/5a2d367bdbdb7cdd0c13e7c2687bbc8d17b5d85615e2db3ad18d1f391f94cc30",
+      "sha256": "3129d5535ff099367158f538ad0e0214cceff85b485e9e57b48ceaba49160f01",
+      "byte_length": 29117
+    },
+    {
+      "path": "s4-source/.atlas/cas/5a/5ac3bb7d27fecea996618f85ed7c18c3128e926c115ebf147b4de6175b39b8bb",
+      "sha256": "69066c4c5ac994bf782171a6a6be93ba2409c2f69cb0980f95e928c2b35e1f4a",
+      "byte_length": 65735
+    },
+    {
+      "path": "s4-source/.atlas/cas/63/634a75f13514b5878be14bdf2952217db28a73f7135bea0fc5ade17cf3995c04",
+      "sha256": "561dba0db77e16eda8077f8bc96487486cd3f19b6c558e7392222643c3f89f5a",
+      "byte_length": 27052
+    },
+    {
+      "path": "s4-source/.atlas/cas/67/6706df3be2177f1ff8af7d2f98abfe83420d0146af85bd5f997c789c21ab43a4",
+      "sha256": "ac6a6cd7fdb1944c5e3a683178dd7b5f43873d42d485c49f5f2c6ef1bf2173b8",
+      "byte_length": 4015
+    },
+    {
+      "path": "s4-source/.atlas/cas/68/685b1023098f1ea6854c25d97f9294ee2b1024608b1bba28df29b781355378de",
+      "sha256": "a49ed4f49c1e8e1a6952296a7b0387ce400eb86bf6e92c8bfd842d25e3022903",
+      "byte_length": 43324
+    },
+    {
+      "path": "s4-source/.atlas/cas/68/68c3a894d305686eb9f8b07b62809ded9741ac7ecfdc0738ef4cce140c4273bc",
+      "sha256": "ff9bcc3a99e7a02ed123f987f95d101a5569b30afc3a460c6f276c1c8c0e0c09",
+      "byte_length": 34762
+    },
+    {
+      "path": "s4-source/.atlas/cas/6c/6c0b83cb2f98b889c4f4e36ad8dc1f9a68a88a0491c9ddabeaa80388ce7a8f9f",
+      "sha256": "f9a98ca705a646be3cfbca5b91092a130a104099424da72ac443b2fe97061999",
+      "byte_length": 34642
+    },
+    {
+      "path": "s4-source/.atlas/cas/6d/6d14dc09e5e7f9586894ef2b32142e46c609904face6a2c927702100cef42816",
+      "sha256": "2eb3d27792962718a7acdcdda1eddb12afd616f07bfc6c7b20d8f7f14e3d229b",
+      "byte_length": 9235
+    },
+    {
+      "path": "s4-source/.atlas/cas/6e/6e2769ae820155ee1b2839b98d5ac8f8b9d5da4f886ba7ae3f685a02b04435fa",
+      "sha256": "b9ffd0e4c08ec0c047ed29b18ea278332170e4b3fc85e11b2408e207e813c967",
+      "byte_length": 64418
+    },
+    {
+      "path": "s4-source/.atlas/cas/70/70e825e1713b445c118ad04949d901a450b94de68eb6ee8793f9cfb4c91714f1",
+      "sha256": "159ca3c3233a6e78dc40a72d632dc1d2617d2ccd460eb59053587da399083ee0",
+      "byte_length": 8553
+    },
+    {
+      "path": "s4-source/.atlas/cas/77/77faafdd5c8f2d5916c1d6f2634e7821d3970b280af8777347be87bf83d71348",
+      "sha256": "bcc8f53cc4749a613b97c6877fe93762b7062383a53a56803a8d2614e779f7f9",
+      "byte_length": 2584
+    },
+    {
+      "path": "s4-source/.atlas/cas/78/783d742f5e55924dd13705c336c1ec09b4f2a94d149227efeeb2ed038c628253",
+      "sha256": "20460e4dc6b0f544198a83763ecf8614a582f3fd4d6b7fb2c59dd6bcbdc0389b",
+      "byte_length": 31764
+    },
+    {
+      "path": "s4-source/.atlas/cas/79/79f50f5b9327258fc76ddbd215ad6a9b90afd068ffdc0aca5300a5003adc60a1",
+      "sha256": "5b9f77b92c85dd8094efcdaec809a4f9adcf9ea0d027a4fc141440d5467f0f13",
+      "byte_length": 53238
+    },
+    {
+      "path": "s4-source/.atlas/cas/7a/7acb7e2c32c26514bd8b63c490a6cb2e61545e8b9884160ab6e19914597f14dc",
+      "sha256": "6a6f519619268d53de7b04e130e321bba86107be599361f09380d9c27ea5db48",
+      "byte_length": 13026
+    },
+    {
+      "path": "s4-source/.atlas/cas/87/878b6849f1a7ff888af524dd3ebb9a14a5b7102f79f710726d3f7b0cf5097dbc",
+      "sha256": "dc6cf3021d127ffc75fd3cc09cd6e3b6a94accd0446530d3497bad28b61892bd",
+      "byte_length": 13637
+    },
+    {
+      "path": "s4-source/.atlas/cas/89/89cb377ad8a76a9036b17cbd5c76ec69e5a3de767c4666f1eefcc2b7178a19a8",
+      "sha256": "3dd79ed9d5b345fc0c7c589899b53bf9a5987f2936d282f08720a0384641290f",
+      "byte_length": 22713
+    },
+    {
+      "path": "s4-source/.atlas/cas/8c/8c63bee07cdf75682c646bb2d524e09dd66308a56be2e32ae7dbbb5b9354759f",
+      "sha256": "cf4a4361153f249495a9d5e7284e912974fd0873aea31cce722c67681f21b3b7",
+      "byte_length": 1707
+    },
+    {
+      "path": "s4-source/.atlas/cas/9a/9abcecde5a9507abed02c4098bb3ae258aa0cc19ad4397a71ad058a6cbc80555",
+      "sha256": "c60ceb543db88834c1233e8aff7d004461f51e6252573fc81092610536d440fb",
+      "byte_length": 65710
+    },
+    {
+      "path": "s4-source/.atlas/cas/a3/a31636dd81965a8ff1baf94a007b1df9fdcb152bbbdd1f563604c9f0bce4e7ec",
+      "sha256": "c6268f1b61d1edb0179a0e49acb7955b7380740adca4f09f3c3cde8daa5ccf81",
+      "byte_length": 7333
+    },
+    {
+      "path": "s4-source/.atlas/cas/a8/a806334e956ebdd1f5c3310d975fad27fe7792b0122c1fff73694a1782362247",
+      "sha256": "d3f01d594b550286d2f54f44a485f15c7a8b173a11aab65cf7a146c0652f40de",
+      "byte_length": 4090
+    },
+    {
+      "path": "s4-source/.atlas/cas/af/afd3e0efe647da9dea6ded937397bf88e93e40926ea58adb022aefa6d8886fe0",
+      "sha256": "652340e2b876c6f48171519e1ecc7337178c9b372bfad4487a1a8a4e3dfe7f18",
+      "byte_length": 28992
+    },
+    {
+      "path": "s4-source/.atlas/cas/b6/b63dec94120f8d333c2b4db7814da502950f0689c29ee045098971af4f76532a",
+      "sha256": "5b6b1c4a299954c2dccf338384d572f3d41cce7ab184db77213739630576b939",
+      "byte_length": 10791
+    },
+    {
+      "path": "s4-source/.atlas/cas/b6/b6d71941476206adeaf1b3413feceb88c78da1c960e1289bde8e780c01a51b26",
+      "sha256": "d7953e5ead2475b8cd75d00c9bc73313a4fa8e7332da8f5dd33fbc569bc30067",
+      "byte_length": 15316
+    },
+    {
+      "path": "s4-source/.atlas/cas/bd/bd364adcec8898357da6690b60d3268a5ef24a72a864edc6d73b011bdfb7fbd6",
+      "sha256": "259577e540b94bcb6418dcdf11507b96f61aafe69e8addb77c2ef33acf4171bd",
+      "byte_length": 2756
+    },
+    {
+      "path": "s4-source/.atlas/cas/be/be0c766d99eeee43189afa81564d3cf3cca222f46f12b4c89e3358db164377fa",
+      "sha256": "7a7a9804d39132d068f5a77f9284c40b471b5079f7fedb07ca680b9b2f6a89da",
+      "byte_length": 21288
+    },
+    {
+      "path": "s4-source/.atlas/cas/be/beb7895b120eb770d2eb20d1a4f7abe9c3decd1a81a558d66596c10fed92c58f",
+      "sha256": "984f3ea65a9c29e37f17c3af2ea99834e58028bc223b07c0b020e142b23ab425",
+      "byte_length": 26090
+    },
+    {
+      "path": "s4-source/.atlas/cas/be/bed07f339fc621a676bd662154397af94bd66d1190784ecdad0a91ffebc89d78",
+      "sha256": "b697c433763badbd42958c9b5a68d7c65d773a57f564a1af2c3a9dd99b134053",
+      "byte_length": 2372
+    },
+    {
+      "path": "s4-source/.atlas/cas/be/bee0cd0f266dc452ac7fb72706f153d133f420bec51011e809d0ff55dc34a98d",
+      "sha256": "33ad6ef737fddb1d134478ff6a72f089b810f52f26eecbbe4790a43d1572db6a",
+      "byte_length": 3535
+    },
+    {
+      "path": "s4-source/.atlas/cas/c0/c02b64b5c187eea90a57dcf9df50bd8ebd4169ae215a065cb63131955c37e131",
+      "sha256": "0dbf45d1c10f8f91d76f2698307292d7655b5679467d78cb8739bc733d1d2a86",
+      "byte_length": 1955
+    },
+    {
+      "path": "s4-source/.atlas/cas/c0/c0608039d1acee2fe2c1a9ceaa26fc3a10f78df999aae179bed7913fbd99cd27",
+      "sha256": "f64385738545c8f3f5e0d5fc8e51a1f17aa60c2cd28900f2667ace3ac4fce6b4",
+      "byte_length": 24113
+    },
+    {
+      "path": "s4-source/.atlas/cas/d5/d5a6216740c25d41d2868f4a8827fd93c3b203e4a876483818d0f684e49d0702",
+      "sha256": "dcd1832afad7ad853a3f1536defdd51c4891d38af2262d2f4e61c5605c4191d6",
+      "byte_length": 735419
+    },
+    {
+      "path": "s4-source/.atlas/cas/d5/d5e2d235f4add88ef2a6f210599b3ce60829b2211bc08ecf04d58ae26120a103",
+      "sha256": "40bc350472c8a58bc669c6dc94e0f3fced2c9904d27c99f98b328be6cb57a7a3",
+      "byte_length": 29138
+    },
+    {
+      "path": "s4-source/.atlas/cas/d6/d6f2f5709c7722512caa262c60bba9d29495d4b0a4fc96c585743130e813c0fa",
+      "sha256": "832505b70ba9eb5b33b64c20aef7ea2ac9233c65800a318887e002d9aa0779fd",
+      "byte_length": 46352
+    },
+    {
+      "path": "s4-source/.atlas/cas/d9/d9266bb28e6d08d4ce513e87e248d11cdcda0f3cb1c67047cba304587d5f40ea",
+      "sha256": "ca71783d1adea6e7e165b41f3f3faf1b569b45ab4bde8c2f4d3fb7e120b7f08a",
+      "byte_length": 14253
+    },
+    {
+      "path": "s4-source/.atlas/cas/de/de1845931c3a437b5186952e620d420fb3f3c965859a25db84da6f1d11143b11",
+      "sha256": "12b2f02e95010cc0eb0ff3b25394547320fadb24440e3be5d333bfb049e13c5e",
+      "byte_length": 3367
+    },
+    {
+      "path": "s4-source/.atlas/cas/df/df059187e3dac1099e76d4d137a27d89f6ef6354e67dd46c47dca5b82401f81b",
+      "sha256": "9b32d3e8512350608a14006b1c195f92b5d0bc2ba2fffda41cebb9d1d6b9fe60",
+      "byte_length": 64979
+    },
+    {
+      "path": "s4-source/.atlas/cas/e1/e176b01aba3ca94687f32a5e902aea39dbd7faf60dc44866660a4a895afcfc4e",
+      "sha256": "ecda936482eb6b1735d47aa3bfffeb4bc96dbc7eee20e51eb7d5a94ecb8d62a1",
+      "byte_length": 17806
+    },
+    {
+      "path": "s4-source/.atlas/cas/e1/e1f4cafd1b57ce658b3c1c237671831b5146b6e4fb30ae34813eabf10f62f0b0",
+      "sha256": "8d3785df4d501465303ceb545421325d084bf71df5c61b0ea74b96ba7ccdd2b7",
+      "byte_length": 4017
+    },
+    {
+      "path": "s4-source/.atlas/cas/e4/e4a13883dcfc3ca2e8eacef3d36ca69ac2c46e010ce886a4bf3df19ed54a07d2",
+      "sha256": "e2019bba166b9ed9684e1f529ddccf609ba695d3ea39a95b90a8403676b0cf43",
+      "byte_length": 154
+    },
+    {
+      "path": "s4-source/.atlas/cas/e7/e76cc552cd44e6156be266764f1b9a44a5059fe1341a0057dda2207a978e9ee1",
+      "sha256": "ccf2555494df503b163ba242108f39b706e190665702decd906625588615e4cf",
+      "byte_length": 3986
+    },
+    {
+      "path": "s4-source/.atlas/cas/eb/ebd80e0394229795b82134ef776695baa0168254541d95f5a8c2bc9b4afe9888",
+      "sha256": "5d0b6fd9ac34d890d5a45d09720d7d6cbd264e4148e52048cc111cee7e62a1d9",
+      "byte_length": 3777
+    },
+    {
+      "path": "s4-source/.atlas/cas/f2/f2bc38856dfbc39062ec5cff08b228ccfcf8b5305962c322399eaa3474015ab2",
+      "sha256": "c2adefab482c9b3c016d19320f21135dc3675eef70d4d388ad020516b9099f83",
+      "byte_length": 20394
+    },
+    {
+      "path": "s4-source/.atlas/cas/f4/f4199bbe37e39637b0dc29ef76519486fc7d79d54563d60a48f44535ecce45a7",
+      "sha256": "d0b0babad9a8db25e808315938f743d2ac4b0593652abf7e83cb01650a53e93b",
+      "byte_length": 1810
+    },
+    {
+      "path": "s4-source/.atlas/cas/f4/f48d4e3883a853b4b87f273954bdbf81ebe91090e49d0a3f95950b071df577e0",
+      "sha256": "79c31a27310d65a5839a190d065eff80511167d668847e368f5ef2664d9b273e",
+      "byte_length": 16699
+    },
+    {
+      "path": "s4-source/.atlas/cas/f5/f5680fe9869358771bc4a80047e8023eea363a8a0ff3398b7a28b3a741e4e41a",
+      "sha256": "8d84fa15b199a4e6b3dcfb0b1041f57b5f67f8894b71d69e9a0b0ac870436222",
+      "byte_length": 14036
+    },
+    {
+      "path": "s4-source/.atlas/cas/f9/f90bd4270ee98f51782783a197346beeb2d495af9126e77105796d2f1d6af020",
+      "sha256": "e6dc651573e7b128e20c958891e2a8de3ce426b8b00fb14f4d33aee2e55fdd89",
+      "byte_length": 9392
+    },
+    {
+      "path": "s4-source/.atlas/cas/f9/f9f1f9c09c7f26d6176690767d46344f85400931c07a6a9212bafaee1e5076f9",
+      "sha256": "0d2f538bc615500bc3d1df16cf3865cdd8281608ce3a4cd6e0392d5a0d579912",
+      "byte_length": 38917
+    },
+    {
+      "path": "s4-source/.atlas/cas/fb/fb8e638e4a079bd93bd6651d2f7542a1c242337848053bf7f50943879f51860f",
+      "sha256": "e98298ad3561623b51acee971940cd980c5b1a22509863953fdd406790bb4b2c",
+      "byte_length": 34291
+    },
+    {
+      "path": "s4-source/.atlas/cas/fc/fcdd6f2e30c8fb1d52ab33ebad8dabae633d9527db4549dea0bcffaf682dc2d6",
+      "sha256": "d6f008aad91f1388f22e67b9dac8b4720207d11459ef30df17eba0534bf01c52",
+      "byte_length": 7394
+    }
+  ]
+}

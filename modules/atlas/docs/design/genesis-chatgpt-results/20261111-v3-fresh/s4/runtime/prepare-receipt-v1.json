@@ -1,0 +1,76 @@
+{
+  "schema": "s4-execution-receipt/v1",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "operation": "native prepare bounded L1A",
+  "cwd": "/workspace/scratch/aff930d22ec7/s4/candidate/modules/atlas",
+  "argv": [
+    "/workspace/scratch/aff930d22ec7/s4/tools/node_modules/.bin/bun",
+    "scripts/genesis-native.ts",
+    "prepare",
+    "/workspace/scratch/aff930d22ec7/s4/candidate",
+    "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-sample/native-package.json",
+    "/workspace/scratch/aff930d22ec7/s4/runtime-state/l1a-prepared-v1.json"
+  ],
+  "exit_code": 0,
+  "host_exec_chunk": "7594d3",
+  "output_ref": "runtime/l1a-prepared-v1.json",
+  "output_sha256": "5e20bd84f016f2a40560cdaaa1834cc00a0b4a98f25f0c139a04816975cddd22",
+  "candidate_source_files": [
+    {
+      "path": "modules/atlas/scripts/genesis-native.ts",
+      "sha256": "18dc473b79c9bf986f07677bdba728d38490e0df36e6a39763f3765f422af3ce",
+      "bytes": 3004
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/test/genesis-native.test.ts",
+      "sha256": "d0997dd5d07cd178eedb912af64623456f01fcfc7b467fa5f8c324db7018e665",
+      "bytes": 15139
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-format.ts",
+      "sha256": "e7a3b3147cad680111edcf78031fa4ab881a822ef0684067bc2b9174b8baf349",
+      "bytes": 13377
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-binding.ts",
+      "sha256": "13161114324f43f97e81970c00c1ff2527b15879e6a43a770ff753f6d4315b19",
+      "bytes": 5211
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native.ts",
+      "sha256": "bb6b0c2bbcb8bc20f804344c9015c3f19dac86a3f60264ccb50fe023308de312",
+      "bytes": 12376
+    },
+    {
+      "path": "modules/atlas/packages/adapter-io/src/genesis-native-io.ts",
+      "sha256": "04d04c1ad64d5f8f916d5416df650d23e13aba997ad19baf78e6ec32e9397983",
+      "bytes": 4162
+    },
+    {
+      "path": "modules/atlas/packages/knowledge/src/index.ts",
+      "sha256": "fdb95e936dc86471ccf565ae0da870921e8e09574e8ca151adee7f4a4132fb26",
+      "bytes": 5567
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-native-runtime.md",
+      "sha256": "b8a59c5e23e21137e6b3eb74144dd7bf273ddce683e7e2b2eb5d8db56d4132ec",
+      "bytes": 10249
+    }
+  ],
+  "known_limits": [
+    "Real native producer artifact and semantic decisions; no binding/publish/read execution yet.",
+    "Reconstructed source copy, observed_head=null; no Git history or tracking claim.",
+    "Source/protocol association independently captured through GitHub connector."
+  ],
+  "attempts": [
+    {
+      "exit_code": 1,
+      "host_exec_chunk": "96ceb8",
+      "error": "Runtime-state output directory did not exist; fixed directory creation only."
+    },
+    {
+      "exit_code": 0,
+      "host_exec_chunk": "7594d3"
+    }
+  ]
+}

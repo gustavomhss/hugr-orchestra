@@ -1,0 +1,184 @@
+name: genesis-knowledge-recovery
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish_full15:
+        description: 'Publish the approved exact candidate in the disposable Actions corpus'
+        type: boolean
+        default: false
+      maintenance_reuse:
+        description: 'Publish the approved candidate and run the accepted private no-op rebuild'
+        type: boolean
+        default: false
+      maintenance_change_prepare:
+        description: 'Prepare the frozen changed-input candidate for fresh independent binding'
+        type: boolean
+        default: false
+      maintenance_change_execute:
+        description: 'Reprepare and activate the changed candidate only with fresh exact binding'
+        type: boolean
+        default: false
+  pull_request:
+    branches: ["dev"]
+    types: [opened, synchronize, reopened]
+    paths:
+      - ".github/workflows/genesis-knowledge-recovery.yml"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/**"
+  push:
+    branches: ["genesis-knowledge-resume", "genesis-knowledge-merge"]
+    paths:
+      - ".github/workflows/genesis-knowledge-recovery.yml"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package.json"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/l4-acceptance.json"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/verify-knowledge.py"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/verify-custody.py"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/operational-custody.json"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/consumed-runtime-release.json"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j1-canonical-r2.json"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/prepare-full15.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: genesis-knowledge-recovery-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  integrity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Verify S4 landing scope
+        if: github.head_ref == 'genesis-knowledge-merge' || github.ref_name == 'genesis-knowledge-merge'
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import subprocess
+          prefix = 'modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/'
+          paths = subprocess.check_output(['git', 'diff', '--name-only', '-z', 'origin/dev...HEAD']).decode().split('\0')
+          paths = [path for path in paths if path]
+          outside = [path for path in paths if not path.startswith(prefix) and path != '.github/workflows/genesis-knowledge-recovery.yml']
+          if outside:
+              raise SystemExit('Unexpected landing paths: ' + json.dumps(outside))
+          print('S4_LANDING_SCOPE=' + json.dumps({'state': 'PASS', 'files': len(paths), 'workflow_sha': os.environ['GITHUB_SHA'], 'head_ref': os.environ.get('GITHUB_HEAD_REF', '')}))
+          PY
+      - name: Verify recovered bytes and complete package
+        shell: bash
+        run: |
+          set -euo pipefail
+          S4_PATH=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4
+          EVIDENCE_DIR="$RUNNER_TEMP/genesis-knowledge-$GITHUB_RUN_ID"
+          mkdir "$EVIDENCE_DIR"
+          git show "81d7a103b444d82abb3ad594805d80b346bc5799:$S4_PATH/native-package.json" > "$EVIDENCE_DIR/base-package.json"
+          git show "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c:$S4_PATH/runtime/maintenance-operation.mjs" > "$EVIDENCE_DIR/historical-driver.mjs"
+          python3 "$S4_PATH/verify-knowledge.py" --repository "$GITHUB_WORKSPACE" \
+            --base-package "$EVIDENCE_DIR/base-package.json" \
+            --historical-driver "$EVIDENCE_DIR/historical-driver.mjs" \
+            --output "$EVIDENCE_DIR/integrity-receipt.json"
+      - name: Verify durable operational custody
+        run: |
+          python3 modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/verify-custody.py \
+            --repository "$GITHUB_WORKSPACE" \
+            --output "$RUNNER_TEMP/genesis-knowledge-$GITHUB_RUN_ID/custody-receipt.json"
+      - name: Check repository guards
+        run: bun run check:guards --base origin/dev
+      - name: Preserve integrity receipt
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: genesis-knowledge-integrity-${{ github.sha }}
+          if-no-files-found: error
+          path: |
+            ${{ runner.temp }}/genesis-knowledge-${{ github.run_id }}/integrity-receipt.json
+            ${{ runner.temp }}/genesis-knowledge-${{ github.run_id }}/custody-receipt.json
+          retention-days: 30
+
+  prepare-full15:
+    env:
+      RUNTIME_SHA: 9b0188b2be5ea69638dff8a44e3e931b4d6d8b10
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Pin runtime and install Atlas dependencies
+        run: |
+          set -euo pipefail
+          [[ "$RUNTIME_SHA" =~ ^[0-9a-f]{40}$ ]]
+          git cat-file -e "$RUNTIME_SHA^{commit}"
+          git worktree add --detach "$RUNNER_TEMP/s4-runtime" "$RUNTIME_SHA"
+          test "$(git -C "$RUNNER_TEMP/s4-runtime" rev-parse HEAD)" = "$RUNTIME_SHA"
+          cd "$RUNNER_TEMP/s4-runtime/modules/atlas"
+          npm ci
+          bun typecheck
+      - name: Materialize exact S4 and prepare
+        run: |
+          set -euo pipefail
+          python3 modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/prepare-full15.py \
+            --repository "$GITHUB_WORKSPACE" --runtime-root "$RUNNER_TEMP/s4-runtime" --runtime-sha "$RUNTIME_SHA" \
+            --source-root "$RUNNER_TEMP/s4-source" --output-dir "$RUNNER_TEMP/s4-evidence"
+      - name: Publish and verify the approved S4 candidate
+        if: github.event_name == 'workflow_dispatch' && (inputs.publish_full15 || inputs.maintenance_reuse || inputs.maintenance_change_prepare || inputs.maintenance_change_execute)
+        run: |
+          set -euo pipefail
+          S4_RUNTIME_DIR=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128
+          python3 "$S4_RUNTIME_DIR/publish-full15.py" \
+            --runtime "$RUNNER_TEMP/s4-runtime" --source "$RUNNER_TEMP/s4-source" \
+            --prepared "$RUNNER_TEMP/s4-evidence/prepared.json" \
+            --binding-directory "$S4_RUNTIME_DIR/binding-full15" --output "$RUNNER_TEMP/s4-publication"
+      - name: Verify private maintenance reuse
+        if: github.event_name == 'workflow_dispatch' && inputs.maintenance_reuse
+        run: |
+          set -euo pipefail
+          S4_RUNTIME_DIR=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128
+          python3 "$S4_RUNTIME_DIR/maintenance-reuse.py" \
+            --runtime "$RUNNER_TEMP/s4-runtime" --source "$RUNNER_TEMP/s4-source" \
+            --prepared "$RUNNER_TEMP/s4-evidence/prepared.json" --publication "$RUNNER_TEMP/s4-publication" \
+            --output "$RUNNER_TEMP/s4-maintenance"
+      - name: Prepare or execute the frozen maintenance change
+        if: github.event_name == 'workflow_dispatch' && (inputs.maintenance_change_prepare || inputs.maintenance_change_execute)
+        env:
+          S4_EXECUTE_CHANGE: ${{ inputs.maintenance_change_execute }}
+        run: |
+          set -euo pipefail
+          S4_RUNTIME_DIR=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128
+          python3 "$S4_RUNTIME_DIR/maintenance-change.py" \
+            --repository "$GITHUB_WORKSPACE" --runtime "$RUNNER_TEMP/s4-runtime" --source "$RUNNER_TEMP/s4-source" \
+            --prepared "$RUNNER_TEMP/s4-evidence/prepared.json" --publication "$RUNNER_TEMP/s4-publication" \
+            --oracle "$S4_RUNTIME_DIR/maintenance-change-oracle.json" --binding-directory "$S4_RUNTIME_DIR/binding-change" \
+            --output "$RUNNER_TEMP/s4-change"
+      - name: Preserve evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: s4-knowledge-prepare-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/s4-evidence
+            ${{ runner.temp }}/s4-source/.atlas/cas
+          if-no-files-found: error
+          retention-days: 30
+      - name: Preserve publication and reader receipts
+        if: always() && github.event_name == 'workflow_dispatch' && (inputs.publish_full15 || inputs.maintenance_reuse || inputs.maintenance_change_prepare || inputs.maintenance_change_execute)
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: s4-isolated-publication-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            ${{ runner.temp }}/s4-publication
+            ${{ runner.temp }}/s4-maintenance
+            ${{ runner.temp }}/s4-change
+            ${{ runner.temp }}/s4-source/.atlas
+          include-hidden-files: true
+          if-no-files-found: error
+          retention-days: 30

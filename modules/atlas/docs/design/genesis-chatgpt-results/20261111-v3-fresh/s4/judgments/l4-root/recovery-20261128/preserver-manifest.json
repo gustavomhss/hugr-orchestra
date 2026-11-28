@@ -1,0 +1,348 @@
+{
+  "schema": "s4-historical-index-integration-staging/v1",
+  "created_at_utc": "2026-11-12T04:35:34.850838+00:00",
+  "agent": "/root/preserve_l4_review",
+  "status": "COMPLETE_WITH_MATERIALIZATION_GAPS",
+  "scope": "Mechanical byte preservation, index transformation, structural inventory and textual limit scan only.",
+  "authorized_directory": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/preserve-l4-review/integration-staging",
+  "source_snapshot_as_supplied_by_root": "6f643bc05245ebe912d52cbdd8347ce1e5b0046e",
+  "not_a_semantic_verdict": true,
+  "not_a_runtime_binding": true,
+  "no_remote_write": true,
+  "no_r4_execution": true,
+  "no_product_tests": true,
+  "summary": {
+    "body_extractions": 4,
+    "body_extractions_equal_snapshot": 4,
+    "literal_blocks": 6,
+    "literal_blocks_equal_source": 6,
+    "supplement_equal_source": true,
+    "fifteen_body_hashes_equal_metadata": 15,
+    "projection_values_equal": true,
+    "source_files_modified": 0
+  },
+  "overlay": {
+    "path": "/workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/preserve-l4-review/integration-staging/overlay/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package.json",
+    "bytes": 213272,
+    "sha256": "2d521062d50ce0ecc26c2e6addf330164b3950c6436c5468b86b78d2a7ed9bdf"
+  },
+  "topology_summary": {
+    "artifact_count": 15,
+    "unique_artifact_key_count": 15,
+    "missing_required_artifact_keys": [],
+    "missing_dependency_keys": [],
+    "dependency_order_violations": [],
+    "roots_complete_overlay": {
+      "evidence": "S4:L1:ownership-boundaries",
+      "component": "S4:L2:atlas-system",
+      "flow": "S4:L3:system-flows",
+      "entry": "S4:L4:entry",
+      "ownership": "S4:L4:ownership",
+      "maintenance": "S4:L4:maintenance",
+      "operational": "S4:L4:operational"
+    },
+    "unresolved_topological_keys": []
+  },
+  "materialization_summary": {
+    "reference_occurrences": 845,
+    "missing_unique_path_count": 237,
+    "missing_unique_paths_external_to_s4_count": 182
+  },
+  "materialization_existing_hash_mismatch_occurrences": 2,
+  "limit_scan_summary": {
+    "pertinent_occurrence_count": 42,
+    "category_counts": {
+      "historical_observer_context": 4,
+      "historical_input_limit_literal": 6,
+      "read_budget_or_bound": 17,
+      "other_byte_limit": 5,
+      "historical_observer_oversize_reference": 5,
+      "historical_size_guard_report": 4,
+      "navigation_to_observer_limit_section": 1
+    },
+    "explicit_historical_threshold_line_count": 6,
+    "explicit_historical_threshold_token_count": 7,
+    "literal_threshold_variant_counts": {
+      "256,000": 4,
+      "256.000": 2,
+      "256000": 1
+    },
+    "exact_spelling_counts_case_insensitive": {
+      "256000": 1,
+      "256KB": 0,
+      "256 KB": 0,
+      "256,000": 4,
+      "256.000": 2,
+      "256_000": 0,
+      "256 000": 0,
+      "256 KiB": 0,
+      "262144": 0
+    },
+    "historical_limit_review_candidate_count": 11,
+    "all_15_body_hashes_match_declared": true,
+    "all_15_body_byte_lengths_match_declared": true,
+    "all_18_source_files_unchanged": true
+  },
+  "limits": [
+    "Source bodies and historical content fields were not edited.",
+    "The complete index does not constitute a complete materialized corpus.",
+    "Known_limits and gaps retain historical textual state; see overlay-change-record.json.",
+    "R4 candidate/CI context was supplied by ROOT and not independently refreshed.",
+    "The canonical source manifest dispatch field remains PREPARED_NOT_YET_SENT; no host transport receipt is inferred."
+  ],
+  "files": [
+    {
+      "path": "README-INTEGRATION.txt",
+      "bytes": 5495,
+      "sha256": "cdd845aadb8a59b7677eb6ef69fbf260580d3008fce613a6fd59793c535be4bc",
+      "origin": "New mechanical verification/reporting artifact by /root/preserve_l4_review"
+    },
+    {
+      "path": "build_integration.py",
+      "bytes": 28289,
+      "sha256": "5de4ea2bf10869f41027b7b945fa95d7d8c940ad5b107c9066e14f6dc2d13e69",
+      "origin": "New mechanical verification/reporting artifact by /root/preserve_l4_review"
+    },
+    {
+      "path": "decision-links.json",
+      "bytes": 6755,
+      "sha256": "6569e4a6b3687735f4604662ad3372caca9df54f2d028014d68b5cd3467c9394",
+      "origin": "New mechanical verification/reporting artifact by /root/preserve_l4_review"
+    },
+    {
+      "path": "dependencies-and-order.tsv",
+      "bytes": 1490,
+      "sha256": "a0b0a5a6496eb0ce18a78f5f8479d7bbadd1b2f013663de3250a9c07c02f789a",
+      "origin": "New mechanical verification/reporting artifact by /root/preserve_l4_review"
+    },
+    {
+      "path": "extracted-request-bodies/S4_L4_entry.md",
+      "bytes": 4921,
+      "sha256": "ebcb68aba0c3ae5d5f7581c6b3ad7e0c6a6769af1bee1d425cadf4ecae4969c8",
+      "origin": "Exact raw byte extraction from preserved canonical request files"
+    },
+    {
+      "path": "extracted-request-bodies/S4_L4_maintenance.md",
+      "bytes": 9478,
+      "sha256": "5d9da13538cfc032b61947395d1aa7aa44dafed50327adaf1deafc64856505be",
+      "origin": "Exact raw byte extraction from preserved canonical request files"
+    },
+    {
+      "path": "extracted-request-bodies/S4_L4_operational.md",
+      "bytes": 9481,
+      "sha256": "d61c8697ecfe193a4caa9334dc80410952805b68140e20d734c34b7576cf6ee7",
+      "origin": "Exact raw byte extraction from preserved canonical request files"
+    },
+    {
+      "path": "extracted-request-bodies/S4_L4_ownership.md",
+      "bytes": 9489,
+      "sha256": "fdae8ea1d976abce4681ac8587d5ca8f54ceb6b381e1078592e6c2e5b8ed5e73",
+      "origin": "Exact raw byte extraction from preserved canonical request files"
+    },
+    {
+      "path": "extracted-support/part-03-01-genesis-native.ts-full.txt",
+      "bytes": 3004,
+      "sha256": "18dc473b79c9bf986f07677bdba728d38490e0df36e6a39763f3765f422af3ce",
+      "origin": "Exact raw byte extraction from preserved canonical request files"
+    },
+    {
+      "path": "extracted-support/part-03-02-genesis-native-format.ts-lines24-57.txt",
+      "bytes": 1657,
+      "sha256": "889ad4ca189c98f45077990f4ac6aa0691bc44d30af3b5bc677b08b6680554a4",
+      "origin": "Exact raw byte extraction from preserved canonical request files"
+    },
+    {
+      "path": "extracted-support/part-03-03-genesis-native-io.ts-lines14-58.txt",
+      "bytes": 2221,
+      "sha256": "4862ed1c97e96f006dbff679ccd7e8aa903268dcc4fc15895683c8cc929f4dc0",
+      "origin": "Exact raw byte extraction from preserved canonical request files"
+    },
+    {
+      "path": "extracted-support/part-03-04-genesis-native.ts-lines111-130.txt",
+      "bytes": 1472,
+      "sha256": "0d90ade032686c46656b8766e7eab17ece1c8becf9d1e2e55d76237dd6d199ed",
+      "origin": "Exact raw byte extraction from preserved canonical request files"
+    },
+    {
+      "path": "extracted-support/part-04-01-maintenance-operation.mjs-lines1-118.txt",
+      "bytes": 7682,
+      "sha256": "21dccdb396d5681183cdb871ded308ba13daa1826a016c3baaedf80dd603dcb9",
+      "origin": "Exact raw byte extraction from preserved canonical request files"
+    },
+    {
+      "path": "extracted-support/part-04-02-maintenance-operation.mjs-lines194-317.txt",
+      "bytes": 8104,
+      "sha256": "586faee528a7d218fb6325d33437432147f683d83b2fe4018dfc36759d2b053c",
+      "origin": "Exact raw byte extraction from preserved canonical request files"
+    },
+    {
+      "path": "extracted-support/part-04-ci-projection-1.json",
+      "bytes": 2525,
+      "sha256": "1ddd5c3f528f8f5e0a8380db793fa8c4d974673cce0dfc5058963c1d139f480d",
+      "origin": "Exact raw byte extraction from preserved canonical request files"
+    },
+    {
+      "path": "extracted-support/part-04-ci-projection-2.json",
+      "bytes": 884,
+      "sha256": "539c727a7561304ad93cf8477716070376ea923dac440aefc777be0ebdb9f925",
+      "origin": "Exact raw byte extraction from preserved canonical request files"
+    },
+    {
+      "path": "extracted-support/part-05-driver-lines38-40-and143-152.txt",
+      "bytes": 837,
+      "sha256": "5cb7e29f3a0a6b4405c117713041ab9cd7c0e399ecd97c7f6903259910a63b36",
+      "origin": "Exact raw byte extraction from preserved canonical request files"
+    },
+    {
+      "path": "limit-scan/SHA256SUMS",
+      "bytes": 588,
+      "sha256": "350ae5791bdea33114c08e882d5290e89adaafe1cf6119ab96730c679825b1c2",
+      "origin": "Mechanical textual scan by /root/preserve_l4_review/scan_historical_limits; see limit-scan/scan.json"
+    },
+    {
+      "path": "limit-scan/bodies-inventory.json",
+      "bytes": 131043,
+      "sha256": "4ec38202fa4345fa0a763dc09f34a3d8bf382b9f12d4f0f22d8f0b631bfd5f75",
+      "origin": "Mechanical textual scan by /root/preserve_l4_review/scan_historical_limits; see limit-scan/scan.json"
+    },
+    {
+      "path": "limit-scan/rg-raw.jsonl",
+      "bytes": 113824,
+      "sha256": "20fdae8a444185cb9cff3efc6482522f640763ac6d126343269203ddac417762",
+      "origin": "Mechanical textual scan by /root/preserve_l4_review/scan_historical_limits; see limit-scan/scan.json"
+    },
+    {
+      "path": "limit-scan/rg-supplemental-command.json",
+      "bytes": 2178,
+      "sha256": "efecaa13d57b8c31cad354b86863a71f4fb64bc699092d952435d518c9cb4743",
+      "origin": "Mechanical textual scan by /root/preserve_l4_review/scan_historical_limits; see limit-scan/scan.json"
+    },
+    {
+      "path": "limit-scan/rg-supplemental.jsonl",
+      "bytes": 40402,
+      "sha256": "545e15843cc8ca0829d1ef43dbc5a8686a7870844674cefa46e31cdb86d8b204",
+      "origin": "Mechanical textual scan by /root/preserve_l4_review/scan_historical_limits; see limit-scan/scan.json"
+    },
+    {
+      "path": "limit-scan/scan.json",
+      "bytes": 138955,
+      "sha256": "c2fc0f26de46097ada8f5cfe292e61cc3839888a41aa6e39db4f4173bb8d7061",
+      "origin": "Mechanical textual scan by /root/preserve_l4_review/scan_historical_limits; see limit-scan/scan.json"
+    },
+    {
+      "path": "limit-scan/scan.txt",
+      "bytes": 42561,
+      "sha256": "d22a45954306ed63c667c94b9d96b4ee003fdda7729c52ec0507bd0cbbdd98f2",
+      "origin": "Mechanical textual scan by /root/preserve_l4_review/scan_historical_limits; see limit-scan/scan.json"
+    },
+    {
+      "path": "limit-scan/source-hashes.sha256",
+      "bytes": 3254,
+      "sha256": "1c43f855667457a9480f54ac51ded2f8ade2c4d4764b6273459bf10bb5592117",
+      "origin": "Mechanical textual scan by /root/preserve_l4_review/scan_historical_limits; see limit-scan/scan.json"
+    },
+    {
+      "path": "materialization-references.json",
+      "bytes": 739263,
+      "sha256": "579ddde0640d11cbf50e2ae98aa7c9abe1a1325b183ccc3f71c956c973a68000",
+      "origin": "New mechanical verification/reporting artifact by /root/preserve_l4_review"
+    },
+    {
+      "path": "missing-materialization.tsv",
+      "bytes": 53996,
+      "sha256": "6dbd09d0cc57dd07bfc3ee3d602801c36094a2a0788649d43237e179ff0f850a",
+      "origin": "New mechanical verification/reporting artifact by /root/preserve_l4_review"
+    },
+    {
+      "path": "overlay/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/requests/original-prepared-manifest.json",
+      "bytes": 1126,
+      "sha256": "058156e8ce0861009a5717075f9a2893b141101122e45968a720c52e3e346734",
+      "origin": "Byte-for-byte copy from ROOT canonical review files"
+    },
+    {
+      "path": "overlay/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/requests/part-01.txt",
+      "bytes": 17732,
+      "sha256": "29066a0782d69de14e23674422662cbd3fd86b5647b22d5f56d5f96ef54f161d",
+      "origin": "Byte-for-byte copy from ROOT canonical review files"
+    },
+    {
+      "path": "overlay/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/requests/part-02.txt",
+      "bytes": 19315,
+      "sha256": "5c0ea13a50e716fc0e9d11e328c0bf48f8bd9f3b7b1248dcef34d947c9ef6216",
+      "origin": "Byte-for-byte copy from ROOT canonical review files"
+    },
+    {
+      "path": "overlay/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/requests/part-03.txt",
+      "bytes": 9559,
+      "sha256": "d282184b376f5fe6899852b8b93d008f7f3eb8695f74c117b337c25bef166d80",
+      "origin": "Byte-for-byte copy from ROOT canonical review files"
+    },
+    {
+      "path": "overlay/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/requests/part-04.txt",
+      "bytes": 21185,
+      "sha256": "c3d936ab3d08de73c285ee2bafa1ab73f0c9ce4282cd7b057c873f9fae7e3f55",
+      "origin": "Byte-for-byte copy from ROOT canonical review files"
+    },
+    {
+      "path": "overlay/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/requests/part-05.txt",
+      "bytes": 1589,
+      "sha256": "eeaba5496df38e1900dd4cc980161805c8efb712348e3a2b5220222aee89cb0f",
+      "origin": "Byte-for-byte copy from ROOT canonical review files"
+    },
+    {
+      "path": "overlay/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j1-canonical-r1.json",
+      "bytes": 13756,
+      "sha256": "7a2d078b07543b48b8129322a410bfda3dc2bf84cada1ca1dc522953ada8ed4a",
+      "origin": "Byte-for-byte copy from ROOT canonical review files"
+    },
+    {
+      "path": "overlay/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j1-canonical-r2.json",
+      "bytes": 13503,
+      "sha256": "5090541410eee055861100506801e8229ca6a91068fc47596d75f4a0a34b02ba",
+      "origin": "Byte-for-byte copy from ROOT canonical review files"
+    },
+    {
+      "path": "overlay/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j2-canonical-addendum.json",
+      "bytes": 2051,
+      "sha256": "321eec139f52ccfa82c422e1656220d334929c63b2a4027fb4c97d864c1b7f1f",
+      "origin": "Byte-for-byte copy from ROOT canonical review files"
+    },
+    {
+      "path": "overlay/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/judgments/l4-root/responses/j2-canonical-r1.json",
+      "bytes": 13099,
+      "sha256": "ceb6f47245ff6736c60fcb822b82bc4def418db8d4bf86358235427fb1a3cd4d",
+      "origin": "Byte-for-byte copy from ROOT canonical review files"
+    },
+    {
+      "path": "overlay/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package.json",
+      "bytes": 213272,
+      "sha256": "2d521062d50ce0ecc26c2e6addf330164b3950c6436c5468b86b78d2a7ed9bdf",
+      "origin": "New JSON index serialization"
+    },
+    {
+      "path": "overlay-change-record.json",
+      "bytes": 2321,
+      "sha256": "4302e38c71bc5bf54516173621e0a4a31572344faf2e2300f67144e7ee8133fd",
+      "origin": "New mechanical verification/reporting artifact by /root/preserve_l4_review"
+    },
+    {
+      "path": "roots.tsv",
+      "bytes": 386,
+      "sha256": "e71dc2873f009af73ef893c4eb13a99fffcc70bfde09a425a4bfbccb418930d4",
+      "origin": "New mechanical verification/reporting artifact by /root/preserve_l4_review"
+    },
+    {
+      "path": "topology-and-order.json",
+      "bytes": 48304,
+      "sha256": "86d4117426ae9fac6b3fd09350b1b4ac6d9314c8204e3b74dde37d795ba418bd",
+      "origin": "New mechanical verification/reporting artifact by /root/preserve_l4_review"
+    },
+    {
+      "path": "verification.json",
+      "bytes": 48070,
+      "sha256": "7c9586a92394020422ca2b15a771625840eef35c8c28fdc7dce5abc26119d70c",
+      "origin": "New mechanical verification/reporting artifact by /root/preserve_l4_review"
+    }
+  ],
+  "self_hash_note": "SHA256SUMS contains the hash of this manifest. The manifest excludes itself and root SHA256SUMS from its file inventory."
+}

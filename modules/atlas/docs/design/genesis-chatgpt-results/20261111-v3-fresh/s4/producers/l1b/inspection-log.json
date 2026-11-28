@@ -1,0 +1,1291 @@
+[
+  {
+    "path": "modules/atlas/packages/kernel/src/canonical.ts",
+    "ranges": [
+      [
+        18,
+        115
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/kernel/src/encoder.ts",
+    "ranges": [
+      [
+        1,
+        34
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/kernel/src/store.ts",
+    "ranges": [
+      [
+        1,
+        50
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/persist/src/source.ts",
+    "ranges": [
+      [
+        1,
+        96
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/persist/src/reconstruct.ts",
+    "ranges": [
+      [
+        60,
+        151
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/persist/src/scrub.ts",
+    "ranges": [
+      [
+        1,
+        80
+      ],
+      [
+        150,
+        209
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/index/src/build.ts",
+    "ranges": [
+      [
+        1,
+        45
+      ],
+      [
+        173,
+        297
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/index/src/depgraph.ts",
+    "ranges": [
+      [
+        39,
+        95
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/index/src/coverage.ts",
+    "ranges": [
+      [
+        1,
+        61
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/grounding/src/gate.ts",
+    "ranges": [
+      [
+        1,
+        78
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/grounding/src/drift.ts",
+    "ranges": [
+      [
+        60,
+        115
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/grounding/src/freshness.ts",
+    "ranges": [
+      [
+        60,
+        121
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/knowledge/src/lifecycle/emit.ts",
+    "ranges": [
+      [
+        1,
+        71
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/knowledge/src/lifecycle/status.ts",
+    "ranges": [
+      [
+        33,
+        78
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/knowledge/src/write/authz.ts",
+    "ranges": [
+      [
+        1,
+        60
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/knowledge/src/write/router.ts",
+    "ranges": [
+      [
+        140,
+        220
+      ],
+      [
+        340,
+        412
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/knowledge/src/ratify/ratify.ts",
+    "ranges": [
+      [
+        68,
+        149
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+    "ranges": [
+      [
+        83,
+        179
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/knowledge/src/ownership/update-plan.ts",
+    "ranges": [
+      [
+        1,
+        107
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/knowledge/src/ownership/read.ts",
+    "ranges": [
+      [
+        1,
+        83
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/knowledge/src/write/router.ts",
+    "ranges": [
+      [
+        85,
+        148
+      ],
+      [
+        325,
+        378
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/retrieval/src/pack.ts",
+    "ranges": [
+      [
+        78,
+        180
+      ],
+      [
+        213,
+        264
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/retrieval/src/drop.ts",
+    "ranges": [
+      [
+        95,
+        208
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/retrieval/src/offatlas.ts",
+    "ranges": [
+      [
+        35,
+        84
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/memory/src/kinds.ts",
+    "ranges": [
+      [
+        35,
+        123
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/memory/src/inject.ts",
+    "ranges": [
+      [
+        65,
+        207
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/memory/src/rules.ts",
+    "ranges": [
+      [
+        120,
+        185
+      ],
+      [
+        260,
+        339
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/memory/src/portable.ts",
+    "ranges": [
+      [
+        65,
+        133
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/persist/src/transcript-store.ts",
+    "ranges": [
+      [
+        50,
+        115
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/retrieval/src/own.ts",
+    "ranges": [
+      [
+        210,
+        260
+      ],
+      [
+        320,
+        374
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/compose.ts",
+    "ranges": [
+      [
+        128,
+        175
+      ],
+      [
+        209,
+        285
+      ],
+      [
+        293,
+        313
+      ],
+      [
+        346,
+        385
+      ],
+      [
+        456,
+        485
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/policy.ts",
+    "ranges": [
+      [
+        180,
+        272
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+    "ranges": [
+      [
+        1,
+        51
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/tools/src/handler.ts",
+    "ranges": [
+      [
+        55,
+        130
+      ],
+      [
+        307,
+        365
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/read-access.ts",
+    "ranges": [
+      [
+        1,
+        50
+      ],
+      [
+        130,
+        190
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/tools/src/handler.ts",
+    "ranges": [
+      [
+        1,
+        54
+      ],
+      [
+        390,
+        448
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/policy.ts",
+    "ranges": [
+      [
+        53,
+        105
+      ],
+      [
+        220,
+        272
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/store.ts",
+    "ranges": [
+      [
+        121,
+        166
+      ],
+      [
+        180,
+        260
+      ],
+      [
+        292,
+        336
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+    "ranges": [
+      [
+        125,
+        175
+      ],
+      [
+        185,
+        245
+      ],
+      [
+        330,
+        405
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/read-access.ts",
+    "ranges": [
+      [
+        183,
+        203
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/store.ts",
+    "ranges": [
+      [
+        180,
+        291
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/governed-emit.ts",
+    "ranges": [
+      [
+        246,
+        329
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/ownership-rebuild.ts",
+    "ranges": [
+      [
+        1,
+        300
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/genesis/src/extract.ts",
+    "ranges": [
+      [
+        1,
+        232
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/genesis/src/run-controller.ts",
+    "ranges": [
+      [
+        246,
+        365
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/boundary/README.md",
+    "ranges": [
+      [
+        1,
+        49
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/boundary/package.json",
+    "ranges": [
+      [
+        1,
+        63
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/cli/src/cli.ts",
+    "ranges": [
+      [
+        300,
+        352
+      ],
+      [
+        575,
+        616
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/cli/src/bin.ts",
+    "ranges": [
+      [
+        1,
+        130
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/mcp-server/src/server.ts",
+    "ranges": [
+      [
+        1,
+        85
+      ],
+      [
+        260,
+        319
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/genesis/src/admit-harness.ts",
+    "ranges": [
+      [
+        1,
+        250
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/genesis/src/seed.ts",
+    "ranges": [
+      [
+        1,
+        120
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/knowledge/src/ownership/shape.ts",
+    "ranges": [
+      [
+        1,
+        76
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/retrieval/src/host-context.ts",
+    "ranges": [
+      [
+        1,
+        185
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/retrieval/src/own-artifact.ts",
+    "ranges": [
+      [
+        210,
+        285
+      ],
+      [
+        335,
+        391
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/retrieval/src/own-snapshot.ts",
+    "ranges": [
+      [
+        190,
+        263
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/memory/src/awareness.ts",
+    "ranges": [
+      [
+        230,
+        299
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/memory/src/orient.ts",
+    "ranges": [
+      [
+        150,
+        210
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "script/atlas-baseline.mjs",
+    "ranges": [
+      [
+        1,
+        23
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "script/atlas-genesis/index-reuse.mjs",
+    "ranges": [
+      [
+        1,
+        102
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "script/atlas-genesis/checkpoint.mjs",
+    "ranges": [
+      [
+        1,
+        246
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "script/atlas-genesis/publish-plan.mjs",
+    "ranges": [
+      [
+        70,
+        160
+      ],
+      [
+        180,
+        216
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/boundary/script/build.ts",
+    "ranges": [
+      [
+        1,
+        85
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "specs/atlas-ui/mock/extract.py",
+    "ranges": [
+      [
+        1,
+        104
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/continuity/src/v2/archive.ts",
+    "ranges": [
+      [
+        1,
+        64
+      ],
+      [
+        184,
+        253
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/harness/README.md",
+    "ranges": [
+      [
+        1,
+        67
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/harness/gates/reference-model-guard.mjs",
+    "ranges": [
+      [
+        1,
+        130
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "specs/atlas-ui/mock/README.md",
+    "ranges": [
+      [
+        1,
+        71
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": ".orchestra/skills/atlas-maintenance/SKILL.md",
+    "ranges": [
+      [
+        1,
+        141
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": ".orchestra/skills/atlas-ownership/SKILL.md",
+    "ranges": [
+      [
+        1,
+        70
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": ".orchestra/skills/atlas-usage/SKILL.md",
+    "ranges": [
+      [
+        1,
+        54
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/knowledge-replay.ts",
+    "ranges": [
+      [
+        41,
+        105
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/knowledge-log.ts",
+    "ranges": [
+      [
+        49,
+        122
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/store-provenance.ts",
+    "ranges": [
+      [
+        94,
+        110
+      ],
+      [
+        127,
+        155
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/memory-store.ts",
+    "ranges": [
+      [
+        45,
+        74
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/orientation-store.ts",
+    "ranges": [
+      [
+        59,
+        79
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/harness/gates/reference-model-guard.mjs",
+    "ranges": [
+      [
+        117,
+        260
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/docs/adr/ADR-0008-mining-writes-to-staging-not-to-knowledge.md",
+    "ranges": [
+      [
+        1,
+        100
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/docs/adr/ADR-0013-the-pack-has-two-bands-governing-and-advisory.md",
+    "ranges": [
+      [
+        1,
+        90
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/docs/adr/ADR-0011-the-model-is-an-operator-supplied-command.md",
+    "ranges": [
+      [
+        1,
+        80
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/docs/governance/policy-lock.md",
+    "ranges": [
+      [
+        1,
+        130
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": ".github/workflows/atlas-genesis.yml",
+    "ranges": [
+      [
+        1,
+        30
+      ],
+      [
+        79,
+        90
+      ],
+      [
+        1087,
+        1115
+      ],
+      [
+        1323,
+        1348
+      ],
+      [
+        1396,
+        1412
+      ],
+      [
+        1455,
+        1488
+      ],
+      [
+        1495,
+        1535
+      ],
+      [
+        1550,
+        1568
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": ".github/workflows/atlas-guard.yml",
+    "ranges": [
+      [
+        1,
+        30
+      ],
+      [
+        65,
+        79
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": ".github/workflows/atlas-worklist.yml",
+    "ranges": [
+      [
+        1,
+        24
+      ],
+      [
+        44,
+        71
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": ".github/workflows/atlas-pilot.yml",
+    "ranges": [
+      [
+        1,
+        38
+      ],
+      [
+        146,
+        164
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/.github/workflows/ci.yml",
+    "ranges": [
+      [
+        1,
+        65
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/.github/workflows/release.yml",
+    "ranges": [
+      [
+        1,
+        44
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "source-excerpt-inspection"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/retrieval-model.ts",
+    "ranges": [
+      [
+        1,
+        115
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/tools/src/bands.ts",
+    "ranges": [
+      [
+        1,
+        107
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/cli/src/mine-staging.ts",
+    "ranges": [
+      [
+        1,
+        46
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/retrieval-model.ts",
+    "ranges": [
+      [
+        108,
+        148
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/cli/src/mine.ts",
+    "ranges": [
+      [
+        1,
+        60
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/model-config.ts",
+    "ranges": [
+      [
+        1,
+        85
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/model-config.ts",
+    "ranges": [
+      [
+        90,
+        210
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/cli/src/mine-proposer.ts",
+    "ranges": [
+      [
+        1,
+        130
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/llm.ts",
+    "ranges": [
+      [
+        1,
+        120
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "script/atlas-genesis/checkpoint-continuation-policy.mjs",
+    "ranges": [
+      [
+        1,
+        70
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "script/atlas-genesis/realdata-evaluate.mjs",
+    "ranges": [
+      [
+        35,
+        72
+      ],
+      [
+        86,
+        135
+      ],
+      [
+        185,
+        238
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "script/atlas-genesis/judge.mjs",
+    "ranges": [
+      [
+        24,
+        43
+      ],
+      [
+        103,
+        151
+      ],
+      [
+        194,
+        212
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "script/atlas-genesis/secret-scan.mjs",
+    "ranges": [
+      [
+        1,
+        70
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/knowledge/src/lifecycle/status.ts",
+    "ranges": [
+      [
+        55,
+        78
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/adapter-io/src/ownership-access.ts",
+    "ranges": [
+      [
+        1,
+        51
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  },
+  {
+    "path": "modules/atlas/packages/grounding/src/drift.ts",
+    "ranges": [
+      [
+        60,
+        115
+      ]
+    ],
+    "reader": "/root/producer_l1a",
+    "mode": "code-lines-inspected"
+  }
+]

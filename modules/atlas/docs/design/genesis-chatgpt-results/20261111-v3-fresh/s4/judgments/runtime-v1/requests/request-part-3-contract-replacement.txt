@@ -1,0 +1,8 @@
+WP-R0 V1 — correction to literal transport part 3/4.
+The J2 message accidentally duplicated GO-I8 in the one-line literal contract CAS object. The saved intended packet, the candidate JSON and object-mapping-v1.json have no such duplication. This courier error changes no source file or candidate. Both judges receive this identical replacement.
+Replace ONLY the literal contract CAS object in part 3 with these exact 154 bytes; all other content is unchanged. No verdict is requested.
+Path: /workspace/scratch/aff930d22ec7/s4/candidate/.atlas/cas/e4/e4a13883dcfc3ca2e8eacef3d36ca69ac2c46e010ce886a4bf3df19ed54a07d2
+SHA256: e2019bba166b9ed9684e1f529ddccf609ba695d3ea39a95b90a8403676b0cf43
+BEGIN EXACT CONTRACT
+{"kind":"ownership-contract","version":1,"criteria":["QS-1","QS-2","QS-3","QS-5","CC-3","GO-I2","GO-I3","GO-I5","GO-I7","GO-I8","runtime-import-binding"]}
+END EXACT CONTRACT

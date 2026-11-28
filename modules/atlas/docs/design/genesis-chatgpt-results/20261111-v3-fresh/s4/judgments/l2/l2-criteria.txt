@@ -1,0 +1,22 @@
+AGUARDAR FECHAMENTO DO PRINCIPAL — WP-L2 completo, execução S4 a2095d5a-1464-4c38-a222-6376974fc9c9. Você mantém seu papel J1 ou J2 independente; sem ferramentas, delegação ou edição. O WP-MAINTENANCE-DRIVER é outro parecer, não confundir sua implementação com aceite do L2.
+
+L1 completa: sete unidades aceitas pelo mesmo par e persistidas/relidas no payload 8a041ca66982dcc2b89aaed46ebe347cb3de57db. Os corpos desta nova camada e os trechos decisivos estão sendo enviados literalmente pelos autores como transporte; eles não julgam. Versão final única:
+- S4:L2:atlas-system, 7954B, cc061470d976df7253db34d5ffebd4310de0bb7f4d3866723ed0746a5a99bbbc.
+- S4:L2:genesis-governance, 7971B, 87bee6742868daeb15f91f46c3b330896f97ada068b7b492b6c158205a13ab01.
+- S4:L2:continuity-rag-operations, 7949B, 4ed332b190be9bcbbd19a7360461b29bce836fb704015077978926376ae5bd2e.
+Metadata L2A v2: 15563B, 7d0ab864cadc5d19414e87ee6b72e6887d4539a938d669de3157ed11fcb31bf5; L2B v2: 7852B, ee3beed1896ad4abe3a119df2e62e9d24fb7ebc6907c591965852290e50e00c0. Layer2/need component/scope atlas-continuity-rag-genesis. H2 únicas e limite8000B conferidos. Semântico/runtime refs vazios nos originais serão preenchidos no pacote pelo principal após decisões reais.
+
+Correções primárias preservadas: L2B-P1-01 (portas/identidade de revisão e comparação), L2B-P1-02 (cauda/erros/arquivo antes da máscara), L2A-P1 (uso/economia). Nenhum veto de juiz é substituído por essa leitura primária. O manifesto v2 de L2B foi congelado antes da correção com apenas revision.ts e compare.ts no baseline, além dos dois L1 aceitos: complemento delimitado de assinaturas/evidência já coberta conceitualmente, sem descoberta de novo componente nem dependência de L1 incompleta. L2A continua só com predecessores/evidências aceitos. Release usado por L2A é a versão R2 exata em8a, não o R3 móvel.
+
+Oracle independente l2.json, congelado 2026-11-11T18:07:40.973111+00:00 antes de toda produção superior, 3051B, SHA005c656b695f57d733d8368d6415ac6dbdcf686cd95bdfc13bb0cdddadce674c. Critérios obrigatórios AC-01, CC-2, CC-3, QS-1, QS-2, QS-3, GO-I2, GO-I3, GO-I5, GO-I7, GO-I8, limitados a esta camada.
+
+Casos reservados para avaliação:
+L2-system: separar identidade CAS de versões do observador, atualidade de política/ratificação; consumo por index/read, indisponibilidade ou binding incompatível não vira current; identidade completa inclui autoridade/validade/gaps, build distinto de navegação.
+L2-context: substituição Continuity exige composição real do host; default transform identidade/afterStep noop distinto da estratégia instalada. Archive-before-mask com recall, ferramentas protegidas e cauda limitada; resumo assíncrono stale descartado; hosted/direct Atlas não herdam lifecycle normal sem prova.
+L2-rag: explicar Store/withStore, admissão/contentHash/status, pipeline/revisão/snapshot, comparação mesmo corpus/um campo; K afeta pipelineHash, lexical true/embedding false. Preservar mismatch revisionId/questionId, seq por pedido, limites SQL/extração antes do gate; schema/inspeção não prova execução/model answer.
+L2-genesis: legacy mine/staging distinto de native prepare→dois bindings exatos→check/emit normal→index/read. Pins de baseline/protocolo/código/payload distintos; aceitar conteúdo não transfere aprovação para candidato modificado. Fila nativa finita, uso UNKNOWN e ausência de garantia financeira/chamada paga externa.
+L2-cumulative: todos os predecessores semânticos reais em build_dependencies; navegação só consulta. Corpos L1 no commit imutável aceito; nenhuma sessão vizinha incompleta como requisito. Pontos de manutenção/verificação concretos.
+
+Erros críticos: inventar integração/autenticação habilitada; perder preocupação L1 obrigatória; usar hash de fonte como versão kernel; declarar S4 completa ou consumidor executado. Fonte pode sustentar inferência rotulada; sugestões opcionais não condicionam aceite.
+
+Após fechamento, retorne JSON compacto ≤7500B com agent_id, purpose semantic-layer2-review, artifacts (key/body_sha256/verdict), verdict geral, cada critério obrigatório com estado/localização/motivo conciso, casos L2-* e disposições P1, mandatory_findings (esperado/observado/correção) ou perguntas exatas se faltar evidência, limites. PASS da camada não implica binding/publicação/consumidor/DoD. Não exponha raciocínio privado.

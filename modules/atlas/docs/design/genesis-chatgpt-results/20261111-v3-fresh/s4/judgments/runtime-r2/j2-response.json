@@ -1,0 +1,129 @@
+{
+  "agent_id": "/root/judge_j2",
+  "identity_role": "parallel-v3-fresh/S4/J2",
+  "execution_id": "a2095d5a-1464-4c38-a222-6376974fc9c9",
+  "purpose": "semantic-and-runtime-controls-review",
+  "verdict_semantic_L1": "PASS",
+  "verdict_runtime_controls": "PASS",
+  "identities": {
+    "key": "S4:L1:native-runtime-delta",
+    "body_bytes": 11980,
+    "body_sha256": "398f61ce3af0a5a72871a8c3c381e542815e857dcf20bde08d34550a2650a3a8",
+    "metadata_v3_sha256": "9d52d55e90b3e81a4ae8b0df78b43d45e855efaed2a29a13b889841fd47f8660",
+    "corrected_test_commit": "a3f224843321f2c18fb9532ef275411c6a0f617e",
+    "corrected_test_sha256": "8e33b9721ef0ea7b8979a696c9493c53d069483d727f64e327c4165341e7bcb4",
+    "final_candidate_commit": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+    "run_id": 43077975153,
+    "job_id": 130722742703,
+    "ci_receipt_sha256": "56358fb679b28f9f06b15f6c06959058c5aa9a65aec13674fb148b964586f330",
+    "oracle_R1_sha256": "d7ae8f97f8b78926b545ac4def549ecf44a9f68f626efa8b0b6f0250ca1cead4"
+  },
+  "finding_dispositions": [
+    {
+      "id": "J2-R1-01",
+      "disposition": "RESOLVIDO",
+      "reason": "mainStarted e mainFinished agora envolvem somente runtime.ownership.read(workerData.query). A asserção exige a interseção desse intervalo principal com activation.start/end. A leitura independent deixou de poder satisfazer essa condição temporal. As verificações de respostas completas, old/new, HOLD e scope independente permanecem, e o controle corrigido passou no run final."
+    },
+    {
+      "id": "R1-J1-01",
+      "disposition": "RESOLVIDO_NO_ESCOPO_DESCRITO_NESTE_PEDIDO",
+      "reason": "A insuficiência de discriminação da leitura principal apresentada como finding comum está corrigida pelo mesmo diff e pela nova execução. Esta disposição resulta da minha avaliação independente do código corrigido; não atribui a J1 formulações adicionais cujo parecer literal não foi transcrito aqui."
+    }
+  ],
+  "criteria_semantic_L1": [
+    {
+      "ids": ["QS-1", "QS-5", "GO-I8"],
+      "verdict": "PASS",
+      "reason": "O controle corrigido passa a sustentar a descrição de NR1-04 no corpo inalterado. A conclusão usa o conteúdo da asserção e sua execução identificada, não apenas o resultado verde."
+    },
+    {
+      "ids": ["QS-2", "QS-3", "CC-3"],
+      "verdict": "PASS",
+      "reason": "Permanecem claras a transformação, as identidades, os comandos, as recusas e a manutenção. A correção ajusta o controle necessário sem acrescentar outro mecanismo de runtime."
+    },
+    {
+      "ids": ["GO-I2", "GO-I3"],
+      "verdict": "PASS",
+      "reason": "Baseline, código novo, versões intermediárias, correção e execução final estão separados. O NOT_RUN do produtor, os FIX-FIRST anteriores e os runs superados continuam históricos."
+    },
+    {
+      "ids": ["GO-I5", "GO-I7"],
+      "verdict": "PASS",
+      "reason": "Ausência, indisponibilidade, limites de observação e autoridade permanecem separados. Fixtures não se tornam reviewers ou autorização da campanha."
+    }
+  ],
+  "criteria_runtime_controls": [
+    {
+      "ids": ["AC-07", "QS-4", "QS-5", "GO-I4"],
+      "verdict": "PASS",
+      "reason": "NR1-04 mede agora a invocação principal e exige sobreposição posterior à barreira. O teste corrigido foi executado no candidato final, preservando as verificações de integridade das respostas."
+    },
+    {
+      "ids": ["AC-04", "AC-05", "AC-06", "CC-4", "CC-5"],
+      "verdict": "PASS",
+      "reason": "A evidência compatível de NR1-01/02/03 e dos controles RB/UP/TC permanece válida e foi reexecutada: retomada, reuso, invalidação, propagação por resultado completo e distinção entre dependência e navegação."
+    },
+    {
+      "ids": ["AC-09", "AC-10"],
+      "verdict": "PASS",
+      "reason": "Os controles preservam candidato, CAS, histórico e scope independente. A retirada dos dois logs da árvore corrente tem disposição explícita e preservação histórica; não enfraquece guards nem elimina população de baseline."
+    },
+    {
+      "ids": ["GO-I3", "GO-I5", "GO-I7"],
+      "verdict": "PASS",
+      "reason": "A identidade do teste corrigido coincide entre origem e candidato final conforme a conferência fornecida. Drift continua impedindo leitura stale como atual, e a autoridade dos testes permanece sintética."
+    }
+  ],
+  "oracle_cases": [
+    {
+      "case": 1,
+      "verdict": "PASS",
+      "evidence": "NR1-01: candidato/CAS preservados antes da ativação; interrupção mantém HOLD ou manifesto antigo válido; retomada não repete autoria sintética."
+    },
+    {
+      "case": 2,
+      "verdict": "PASS",
+      "evidence": "NR1-02: drift seguido de falha produz HOLD corrente; leitura histórica permanece identificada."
+    },
+    {
+      "case": 3,
+      "verdict": "PASS",
+      "evidence": "NR1-04 corrigido: intervalo exclusivo da leitura principal intersecta o intervalo de ativação; respostas ready são comparadas integralmente aos manifestos aceitos."
+    },
+    {
+      "case": 4,
+      "verdict": "PASS",
+      "evidence": "NR1-02 recusa fonte antiga, approval incompatível e rollback incompatível pelo emit. Não inventa proibição cronológica universal."
+    },
+    {
+      "case": 5,
+      "verdict": "PASS",
+      "evidence": "NR1-03 preservado: schema antigo, scope inconsistente, approval antigo, candidate_id trocado e relocalização não substituem a seleção aceita."
+    },
+    {
+      "case": 6,
+      "verdict": "PASS",
+      "evidence": "Scope independente continua verificado; controles sidecar/G3 compatíveis cobrem predecessor legível e recusa de escrita quando o store é ilegível."
+    },
+    {
+      "case": "Cache, rebuild e controles negativos existentes",
+      "verdict": "PASS",
+      "evidence": "Regressões preservadas e 22 mutantes rejeitados cobrem reuso sem chamadas, resultado completo, renovação de receipt, inputs/arestas omitidos, membership e consistência."
+    }
+  ],
+  "metadata_disposition": {
+    "verdict": "PASS",
+    "reason": "O delta v3 vincula o teste corrigido, troca a receita e registra a correção sem alterar o corpo ou os outros 19 source_refs. A comparação fornecida conserva autoria original, autoria da correção, versões e pareceres anteriores."
+  },
+  "mandatory_findings_remaining": [],
+  "optional_suggestions": [],
+  "limits": [
+    "PASS restrito à semântica desta unidade e à suficiência dos controles delimitados; não é runtime-import-binding.",
+    "O run final informa 220 testes aprovados, 22 mutantes rejeitados, paridade de 18 gerados e guards com exitCode 0. Os dois WARN large-file permanecem visíveis e justificados pela preservação dos arquivos completos.",
+    "O run anterior globalmente falho e o controle agregado superado não sustentam a conclusão atual.",
+    "Um Worker, um writer e exceção no seam não demonstram concorrência universal, power-loss ou queda arbitrária do processo.",
+    "Contagem de callback sintético não é telemetria de modelo ou custo; fixtures não fornecem decisões reais da campanha.",
+    "Não usei ferramentas nem executei verificações. As identidades e os resultados remotos foram fornecidos pelo principal.",
+    "Este parecer não conclui S4, não substitui consumidor ou binding do pacote completo e não altera o parecer de host-boundaries."
+  ]
+}

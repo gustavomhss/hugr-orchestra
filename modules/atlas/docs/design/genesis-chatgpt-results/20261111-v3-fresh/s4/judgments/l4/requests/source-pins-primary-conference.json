@@ -1,0 +1,41 @@
+{
+  "schema": "s4-source-pins-primary-conference/v1",
+  "recorded_utc": "2026-11-11T21:01:03.832711+00:00",
+  "producer": "/root/review_courier",
+  "integrity_files_verified": 26,
+  "pins_sha256": "af7d2de7e57e9451b8ced56e856c3039fb16fcdd6267a35d75e9fa668ccf0dd0",
+  "snapshot_sha256": "00e479d28eb3830c09722d4ad8629d751802d18ac84f9dfd85d93163c4952c92",
+  "source_summary": {
+    "by_commit": {
+      "1cde2ff7a71bcf7aecb5d030917b577165135d38": 170,
+      "47eaa5322102910289cb56e2e07e9d3536ba1926": 6,
+      "8a041ca66982dcc2b89aaed46ebe347cb3de57db": 9,
+      "9a2be7fa2d0d54b0000657a0060cb0a200e04bb0": 2,
+      "a3f224843321f2c18fb9532ef275411c6a0f617e": 1,
+      "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1": 6,
+      "ee2521a5b966bd505cc95bd1c733e09e12f33531": 5
+    },
+    "association_evidence_kinds": {
+      "baseline_inventory_and_capture": 157,
+      "github_fetch_file_at_fixed_ref": 19,
+      "boundary_capture": 12,
+      "exact_named_commit_tree_map": 6,
+      "protocol_capture": 5
+    },
+    "content_comparison_sources": {
+      "existing_local_capture_bytes": 174,
+      "exact_connector_content_decoded_from_base64": 19,
+      "local_materialization_verified_against_exact_commit_tree_blob": 6
+    },
+    "confirmed_associations": 199,
+    "byte_equal_final_corpus": 199,
+    "mechanical_matches": 199,
+    "unproven_associations": [],
+    "unresolved_checks": [],
+    "connector_calls": 19
+  },
+  "limits": [
+    "Mechanical source identity check; no semantic verdict or runtime operation.",
+    "L4 source pins require final delta conference; eleven-artifact source snapshot preserved."
+  ]
+}

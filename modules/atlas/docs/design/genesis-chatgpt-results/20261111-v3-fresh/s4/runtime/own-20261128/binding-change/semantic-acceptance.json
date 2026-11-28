@@ -1,0 +1,20 @@
+{
+  "candidate_id": "fcb16e410853afa4c36f2c250800d3312d50db95d87d9ab49bc169f6e1cd226d",
+  "source_sha256": "3c5aca47c708827142435492a520cced0d83a3cd0a86761929754ceb7509a2b8",
+  "decisions": [
+    {
+      "reviewer": "/root/s4_bind_j1",
+      "verdict": "PASS",
+      "response_file": "j1-response.json",
+      "response_sha256": "f81bdb141bbd4a8e23548153f363b5e22d5fc1db84450910a3e9fd1209503fd7",
+      "host_message": "amsg_01a222f0-1747-7153-afe5-79ef98798940"
+    },
+    {
+      "reviewer": "/root/s4_bind_j2",
+      "verdict": "PASS",
+      "response_file": "j2-response.json",
+      "response_sha256": "5be1a65da57d7575f02a9b8b94cb124cb68b1a0dc53e1d3582f0abfa0a899af9",
+      "host_message": "amsg_01a222f0-6792-71c1-ad49-5dac34e52b83"
+    }
+  ]
+}

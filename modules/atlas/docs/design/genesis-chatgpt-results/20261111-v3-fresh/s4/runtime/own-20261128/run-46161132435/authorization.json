@@ -1,0 +1,27 @@
+{
+  "root": "/home/runner/work/_temp/s4-source",
+  "actor": "/root",
+  "scope": "atlas-continuity-rag-genesis",
+  "policy": {
+    "t0Heuristic": {
+      "keywords": [
+        "auth",
+        "payments",
+        "secrets",
+        "kms",
+        "crypto",
+        "billing"
+      ]
+    },
+    "authz": {
+      "scopes": {
+        "atlas-continuity-rag-genesis": [
+          "/root"
+        ]
+      },
+      "anchors": {
+        ".": "atlas-continuity-rag-genesis"
+      }
+    }
+  }
+}

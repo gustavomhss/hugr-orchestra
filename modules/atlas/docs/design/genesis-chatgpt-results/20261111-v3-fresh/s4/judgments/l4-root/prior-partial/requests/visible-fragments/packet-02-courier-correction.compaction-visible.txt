@@ -1,0 +1,1 @@
+PACOTE 2/4 S4 L4. Ainda aguarde FECHAMENTO L4, sem decisão de camada. Nota do courier: na mensagem anterior os trechos CLI foram compactados em linhas; são transcrição reformatada, não bytes literais. O validateNativeReadQuery está integral. A formatação CLI original será fornecida no fechamento se decisiva; não atribua hash de arquivo à projeção compacta.

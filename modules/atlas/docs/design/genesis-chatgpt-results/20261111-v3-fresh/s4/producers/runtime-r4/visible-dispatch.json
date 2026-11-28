@@ -1,0 +1,34 @@
+{
+  "schema": "runtime-large-inputs-visible-dispatch/v1",
+  "producer": "/root/runtime_large_inputs",
+  "parent": "/root",
+  "messages": [
+    {
+      "kind": "initial_dispatch",
+      "sender": "/root",
+      "text": "Você é produtor técnico S4-R4 desta ROOT Genesis. Área exclusiva /workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/agents/runtime-large-inputs/. Repo gustavomhss/hugr-orchestra; código candidato base imutável 6f643bc05245ebe912d52cbdd8347ce1e5b0046e; baseline investigado 1cde2ff7a71bcf7aecb5d030917b577165135d38; skill .orchestra/skills/execute-genesis/SKILL.md + references/runtime.md,transport.md,principles.md no pin ee2521a5b966bd505cc95bd1c733e09e12f33531. Leia AGENTS e locais aplicáveis. Use apenas conector GitHub remoto, jamais gh/login/token/credenciais; não publique remoto. Testes produto só Actions, NÃO executar local nem rebatizar probe. Pode inspecionar código, parse e typecheck permitido quando ambiente disponível. ROOT é escritora remota.\n\nProblema concreto: ownership-input.ts limita file: a256000 bytes; genesis-native source_refs também têm teto256000. S2 tem inputs obrigatórios 369462,390775 e schema/tui.json1131057 bytes; S1 generated/types.ts462732. O pacote recuperado S2 é completo/aceito semanticamente e não deve perder fonte/deps nem ser truncado. O leitor genérico readNativeFile já tem teto próprio8MiB. Precisamos mínimo fix comum bounded para preparar/ler os arquivos completos e manter recusas/identidades. Oracle foi congelado ROOT antes deste despacho, não está no seu contexto; não leia root-oracles nem diretórios de consumidores.\n\nPrimeiro faça análise concreta do caminho, cópias/canonicalização/limites e recomende um teto explícito. Alvo inicial ROOT: 2097152 bytes (2MiB), suficiente às fontes conhecidas, não8MiB indiscriminados. Antes de implementar, envie resultado da análise com arquivos exatos a alterar, custo de memória/trabalho limitado, preservação dos antigos IDs e testes pertinentes; uma recomendação baseada no código basta, não faça benchmark local de produto. Caso2MiB inadequado, explique para revisão prospectiva do oracle ANTES de autorar código. Após orientação ROOT, implemente correção e testes no candidato isolado, preserve requests/responses visíveis, diff e hashes. Não mexa em dados S1–S5, oracle, thresholds para fabricar PASS, política/authority/reviewer/binding. Não adicione plataforma nova. Produto tem IDs kernel sobre bytes Array.from, distintos de SHA/Git blob. Reuse guardas de contenção/symlink/tri-state e prove sem truncamento. Dependências instaladas/caches não entram entrega. Entregue dados concretos, não só plano genérico."
+    },
+    {
+      "kind": "implementation_orientation",
+      "sender": "/root",
+      "text": "Orientação ROOT: fixe teto2097152 (2MiB) e implemente delta mínimo proposto. Resolução prospectiva congelada agora antes da autoria; nenhum oracle foi alterado após código. Conferi todos file inputs S2 no corpus recuperado: nenhum faltante; maior schema/tui.json1131057, depois390775 e369462. Preserve todos. Produza os dois arquivos + testes proporcionais com o kernel identity anterior. Excesso detectado antes de guardar chunk adicional. Sem testes locais; prepare validação remota pelos testes reais existentes. Capture análise/custos com UNKNOWN onde não medidos e adicione recurso observável ao teste do teto (por exemplo duração/maxRSS reportado pelo job/step, não promessa de RSS igual2MiB). Verifique se mudança afeta boundary gerado; não edite bundles à mão. Se geração depender Bun ausente, entregue os fontes e informe os outputs que CI deve gerar para ROOT recuperar legitimamente. Inspecione também maintenance-operation.mjs por ceiling hardcoded: apenas relate compatibilidade necessária e código exato, não modifique sem confirmar escopo. Preserve dispatch/response e hashes. Entregue patch/candidate local e dossier delimitado com código relevante/novos testes, sem avaliações de juiz."
+    },
+    {
+      "kind": "maintenance_path_authorization",
+      "sender": "/root",
+      "text": "Driver está no pin6f643bc em modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs (mesmos bytes em s4/producers/maintenance-driver/maintenance-operation.mjs). Leitura está autorizada; não contém oracle. Não é harness/ nem scripts/. Continue fontes+testes. Para bundling, ROOT recuperará outputs gerados por Actions se necessário, sem editar gerados manualmente."
+    },
+    {
+      "kind": "maintenance_change_authorization",
+      "sender": "/root",
+      "text": "ROOT autorizou prospectivamente também a correção mínima da captura no driver runtime/maintenance-operation.mjs, antes dessa autoria (addendum de oracle congelado). Use constante importada no readNativeFile dos inputs; preserve teto256000 do próprio driver. Não alterar cópia histórica producers/maintenance-driver, que deve continuar exata; documente delta. Versão nova exige driver input/recipe/binding próprios, sem alegar execução passada. Bun1.3.14 agora instalado pela ROOT via npm permitido, em /workspace/scratch/4d151507ca43/genesis-root-20261112T034839Z/tools/runtime/node_modules/@oven/bun-linux-x64/bin/bun. Estou preparando runtime/base com fontes6f643bc e dependências para typecheck/generate; não mexa ali. Termine patch/dossier em sua área exclusiva, sem teste local."
+    }
+  ],
+  "telemetry": {
+    "tokens": "UNKNOWN",
+    "physical_attempts": "UNKNOWN",
+    "billing": "UNKNOWN"
+  },
+  "reserved_oracle_accessed": false,
+  "consumer_directories_accessed": false
+}

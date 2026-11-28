@@ -1,0 +1,11 @@
+## L2B entregue — Continuity e RAG
+
+Produzi [continuity-rag-operations.md](sandbox:/workspace/scratch/aff930d22ec7/s4/producers/l2b/continuity-rag-operations.md), chave **S4:L2:continuity-rag-operations**, layer **2**, need **component**, scope **atlas-continuity-rag-genesis**. O corpo tem **7993 bytes UTF-8** e sete seções H2 únicas; SHA-256 `cb31ca6333e7cf2303d5a957622d3013edf9084631f302d79fa99a7a367bdd94`.
+
+A síntese explica o default de compactação e a contribuição de Continuity, diferenças entre os caminhos normal/hospedado, recuperação por arquivo e recall, exportação e privacidade. Para RAG, liga extração/admissão ao ciclo por requisição de Store/SQLite, e organiza diagnóstico por identidade de fonte, revisão, pergunta e trace. Os riscos de IDs reutilizados e chunks antigos após falha de leitura estão identificados como inferências estáticas, sem alegar reprodução.
+
+Usei exclusivamente os predecessores aceitos **S4:L1:continuity-rag** e **S4:L1:host-boundaries**, preservados no commit `8a041ca66982dcc2b89aaed46ebe347cb3de57db`, com bytes, SHA-256 e Git blob conferidos contra o manifesto. Ambos constam das dependências de build; navigation permanece vazio. O memo exploratório de manutenção não foi usado.
+
+[artifacts.json](sandbox:/workspace/scratch/aff930d22ec7/s4/producers/l2b/artifacts.json) contém a lista `artifacts` com um único artefato completo. [recipe.json](sandbox:/workspace/scratch/aff930d22ec7/s4/producers/l2b/recipe.json) preserva versão, inputs, critérios e procedimento. Pedido, manifesto copiado, fontes literais e complemento de transporte estão na mesma unidade; seus hashes constam do [integrity-receipt.json](sandbox:/workspace/scratch/aff930d22ec7/s4/producers/l2b/integrity-receipt.json).
+
+O pacote literal [review-packet-01.txt](sandbox:/workspace/scratch/aff930d22ec7/s4/producers/l2b/review-packet-01.txt) aguarda conferência do principal e **não foi enviado aos juízes**. `semantic_review_refs` e `runtime_receipt_refs` permanecem vazios; `supported` limita-se à sustentação das afirmações desta síntese. Não executei testes/build/runtime, não alterei produto, não escrevi GitHub e não li oráculos ou novas fontes brutas. Modelo/tokens não expostos estão registrados como `UNKNOWN`.

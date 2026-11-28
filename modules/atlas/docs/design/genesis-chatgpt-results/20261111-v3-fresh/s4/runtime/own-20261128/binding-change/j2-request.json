@@ -1,0 +1,71 @@
+{
+  "archive_kind": "operator record of inline review request and evidence; original response preserved separately",
+  "scope": "S4 isolated maintenance. Independently evaluate the semantic delta and all exact target-binding criteria. Assess supplied data without tools, coordination, transfer of earlier verdicts, or claims of completed rebuild, activation or consumption.",
+  "reviewer": "/root/s4_bind_j2",
+  "candidate_delta": {
+    "ledger": {
+      "schema": "s4-maintenance-change/v1",
+      "status": "PREPARED_NEEDS_FRESH_SEMANTIC_AND_BINDING",
+      "activation_attempted": false,
+      "baseline_candidate": "10171ee9769ac7ce7013e8e16fbc5064e79a458a9cc65b80a503164e00306253",
+      "baseline_manifest": "df2dae9de5931cb86f7572bb6c093fe3fdaef6a274ad8f4985db5c3c63a21afe",
+      "runtime": "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10",
+      "oracle_sha256": "297fa2befb7db25decceb3ec10abf64649dec52fef26cac64bd29d7558e3deb6",
+      "target_transport": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package-full15-maintenance.json",
+      "target_transport_sha256": "f67a248912dd228cdad08ea7f1cfb1fa20c161b06347e3a7d2b932054046e961",
+      "target_candidate": "fcb16e410853afa4c36f2c250800d3312d50db95d87d9ab49bc169f6e1cd226d",
+      "target_contract": "e4a13883dcfc3ca2e8eacef3d36ca69ac2c46e010ce886a4bf3df19ed54a07d2",
+      "prepared_sha256": "25c52690018194e6f49737a5a585befd8f3d503c321cb67625ecf156f4b3e51e",
+      "controls": "BOTH_REFUSED_SOURCE_DRIFT"
+    },
+    "criteria": [
+      "QS-1",
+      "QS-2",
+      "QS-3",
+      "QS-5",
+      "CC-3",
+      "GO-I2",
+      "GO-I3",
+      "GO-I5",
+      "GO-I7",
+      "GO-I8",
+      "runtime-import-binding"
+    ],
+    "direct_fields_changed": [
+      "inputs",
+      "inputs_id"
+    ],
+    "old_inputs_id": "bf318aa046cf1b45c71d5498233450641269a6d606e66b25a59b71d03847e4bf",
+    "new_inputs_id": "aaa2761d784f248809b641933144db4f97015b451ddbc4ca8dc6565cce4f4dc9",
+    "direct_result": "bee0cd0f266dc452ac7fb72706f153d133f420bec51011e809d0ff55dc34a98d",
+    "entry_vector_sha256": "e6b1fb1ca277f3ee9c3def7b79b4894127b28c3b9cf88d2e5d2fa464fe0cb086",
+    "direct_input": [
+      [
+        {
+          "key": "file:packages/protocol/src/groups/rag-studio.ts",
+          "version": "00bfc93fa009d99909143881b831248b6af7508b2a30f60e3d1558d7915dbeac"
+        },
+        {
+          "key": "file:packages/protocol/src/groups/rag-studio.ts",
+          "version": "ddd6a9d7c95415636fef9332fef50a116e39fece8a0aa3f6fe2c43d916cb65a2"
+        }
+      ]
+    ],
+    "source_diff": "diff --git a/packages/protocol/src/groups/rag-studio.ts b/packages/protocol/src/groups/rag-studio.ts\nindex d0abf2ac58..c71a76fdce 100644\n--- a/packages/protocol/src/groups/rag-studio.ts\n+++ b/packages/protocol/src/groups/rag-studio.ts\n@@ -8,7 +8,7 @@ import { LocationQuery, locationQueryOpenApi } from \"./location\"\n const sourceParams = Schema.Struct({ sourceId: Schema.String })\n const revisionParams = Schema.Struct({ revisionId: Schema.String })\n const questionParams = Schema.Struct({ questionId: Schema.String })\n-// Rag Studio over the requested Location. Embedding stays off. Project source is refused as Atlas.\n+// Rag Studio over the requested Location. Embedding stays off until a model is named. Project source is refused as Atlas.\n export const RagStudioGroup = HttpApiGroup.make(\"server.ragStudio\")\n   .add(\n     HttpApiEndpoint.get(\"ragStudio.sources\", \"/api/rag-studio/sources\", {\n",
+    "drift_control_errors": [
+      "{\"kind\":\"error\",\"error\":\"native-source-drift: packages/protocol/src/groups/rag-studio.ts\"}",
+      "{\"kind\":\"error\",\"error\":\"native-source-drift: packages/protocol/src/groups/rag-studio.ts\"}"
+    ],
+    "artifact_body_ref": null,
+    "changed_top_level_fields": [
+      "transport",
+      "observations",
+      "entries"
+    ]
+  },
+  "frontier_expectation": {
+    "affected_entries": 8,
+    "recipe_calls": 1,
+    "unchanged_artifacts": 14
+  }
+}

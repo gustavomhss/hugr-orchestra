@@ -1,0 +1,11 @@
+{
+  "purpose": "Pending literal source excerpt for author v2 transport, not courier judgment",
+  "source_path": "packages/core/src/session/compaction.ts",
+  "captured_file": "s4/boundary-source/packages/core/src/session/compaction.ts",
+  "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "first_line": 313,
+  "last_line": 330,
+  "source_sha256": "d6becda5c14c0679b6d5bf509a04631309518bd0ca0ba35d1b6f7e8296266d84",
+  "excerpt_bytes": 631,
+  "excerpt_sha256": "ca4368de58966f5f85a223a1d8147642c6e72b0f9d640675a03350893317af72"
+}
