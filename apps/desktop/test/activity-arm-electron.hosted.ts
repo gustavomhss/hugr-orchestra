@@ -236,11 +236,11 @@ async function child() {
     const state = await window!.webContents.executeJavaScript(`window.api.readActivityApply(${JSON.stringify(owned.url)})`) as ActivityApply.State
     assert.equal(state.available, true, "the configured root-owned profile must enable production Apply")
     assert.ok(state.eligible.some((item) => item.approvalID === request.approvalID && item.targetID === request.targetID && item.generation === request.generation))
-    const unsigned = await fetch(`${owned.url}/_orchestra-activity/v1/apply-confirm`, {
+    const unsignedConfirm = await fetch(`${owned.url}/_orchestra-activity/v1/apply-confirm`, {
       method: "POST", headers: { authorization, "content-type": "application/json" },
       body: JSON.stringify({ previewID: crypto.randomUUID() }),
     })
-    assert.equal(unsigned.status, 403, "an ordinary authenticated caller cannot submit private Apply confirmation")
+    assert.equal(unsignedConfirm.status, 403, "an ordinary authenticated caller cannot submit private Apply confirmation")
     const unsignedPreview = await fetch(`${owned.url}/_orchestra-activity/v1/apply-preview`, {
       method: "POST", headers: { authorization, "content-type": "application/json" }, body: JSON.stringify(request),
     })
