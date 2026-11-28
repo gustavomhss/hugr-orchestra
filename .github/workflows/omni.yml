@@ -91,6 +91,7 @@ jobs:
       ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: strict
       ORCHESTRA_OMNI_CONTROL: declared
       ORCHESTRA_ACTIVITY_SIDECAR_CI: "1"
+      ORCHESTRA_ACTIVITY_SIDECAR_WORKLOAD_UID: "62000"
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
         with:
@@ -145,7 +146,7 @@ jobs:
           StandardError=journal
           NoNewPrivileges=yes
           Environment=HUGR_OMNI_ISOLATION_ROOT=$cg
-          Environment=HUGR_OMNI_ISOLATION_UID=62000
+          Environment=HUGR_OMNI_ISOLATION_UID=$ORCHESTRA_ACTIVITY_SIDECAR_WORKLOAD_UID
           Environment=HUGR_OMNI_ISOLATION_GID=62001
           Environment=HUGR_OMNI_ISOLATION_EXECUTABLES=/usr/bin/cat
           EOF

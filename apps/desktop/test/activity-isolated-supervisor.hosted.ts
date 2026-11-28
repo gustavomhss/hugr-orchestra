@@ -8,7 +8,7 @@ test.skipIf(process.platform !== "linux" || process.env.ORCHESTRA_ACTIVITY_SIDEC
     expectSpawn(import.meta.path)
     const omni = await Omni.load()
     const options = { memberIsolation: true, cwd: "/tmp", inheritEnv: false, env: { CALLER_VARIABLE: "discard" } } as const
-    expect(() => omni.spawn("/bin/cat", [], options)).toThrow(/(?:authorized|allowlist|allowed|admitted)/i)
+    expect(() => omni.spawn("/usr/bin/true", [], options)).toThrow(/(?:authorized|allowlist|allowed|admitted)/i)
     const result = await omni.run("/usr/bin/cat", ["/proc/self/environ"], options)
     Omni.count("spawns")
     expect(result.exitCode).toBe(0)
