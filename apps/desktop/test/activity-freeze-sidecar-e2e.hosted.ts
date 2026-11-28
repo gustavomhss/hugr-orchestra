@@ -42,14 +42,18 @@ async function parent() {
     if (!preload.success || !preload.outputs[0]) throw new Error(`production preload bundle failed: ${preload.logs.map((log) => log.message).join("\n")}`)
     const hosted = await Bun.build({
       entrypoints: [source], outdir: build, naming: "activity-freeze-sidecar-e2e.cjs",
-      target: "node", format: "cjs", external: ["electron"],
+      target: "node", format: "cjs", external: ["electron", "node:sqlite"],
+      define: { "import.meta.env.ORCHESTRA_CHANNEL": '"dev"', "import.meta.env.ORCHESTRA_MAC_SIGNED": '"false"' },
     })
     if (!hosted.success || !hosted.outputs[0]) throw new Error(`Electron fixture bundle failed: ${hosted.logs.map((log) => log.message).join("\n")}`)
-    const electronPath = join(dirname(electron), "dist/electron")
+    // Match the Vite environment in the CJS bundle, including optional accesses in dependencies.
+    const entry = hosted.outputs[0].path
+    await writeFile(entry, (await readFile(entry, "utf8")).replaceAll(/import\.meta\??\.env/g, "({})"))
+    const electronPath = join(dirname(electron), "dist", (await readFile(join(dirname(electron), "path.txt"), "utf8")).trim())
     const bunPath = Bun.which("bun")
     if (!bunPath) throw new Error("Bun executable was not found on hosted PATH")
     const reportPath = join(root, "sidecar-report.json")
-    const child = Bun.spawn([electronPath, hosted.outputs[0]!.path, "--activity-freeze-sidecar-e2e-child"], {
+    const child = Bun.spawn([electronPath, entry, "--activity-freeze-sidecar-e2e-child"], {
       stdout: "pipe", stderr: "pipe",
       env: {
         ...process.env,
