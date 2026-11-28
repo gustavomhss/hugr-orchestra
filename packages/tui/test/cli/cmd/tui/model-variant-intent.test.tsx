@@ -163,7 +163,16 @@ test("E6 TUI evaluates a newly selected agent with that agent's configured model
   const fixture = await mount({
     session: { agent: "maestro", model: ref },
     backendModel: fallback,
-    reply: readyReply(model),
+    reply: async (request) => {
+      const input = Schema.decodeUnknownSync(ModelExecution.Input)(await request.json())
+      return json({
+        location: { directory: new URL(request.url).searchParams.get("location[directory]") },
+        data: {
+          models: decision().models,
+          ...(input.model ? { selection: { ref: input.model, status: "ready", engine: "orchestra" } } : {}),
+        },
+      })
+    },
   })
   try {
     await wait(() => fixture.context.local.model.current()?.modelID === ref.id, "persisted model is loaded")
