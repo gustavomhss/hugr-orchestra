@@ -21,6 +21,26 @@ pub const INFO_PIDFD_MEMBERS: u32 = 2;
 pub const INFO_OBSERVE: u32 = 4;
 /// `Ready.info` bit: macOS tree footprint observations are supported.
 pub const INFO_FOOTPRINT: u32 = 8;
+/// `Ready.info` bit: selective stop by verified process birth identity is supported.
+pub const INFO_SELECTIVE_STOP: u32 = 16;
+
+/// Observed state after a selective termination request.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SelectiveStopOutcome {
+    /// The pinned process handle was observed signalled.
+    Exited,
+    /// Exit was not confirmed; the request may still take effect.
+    Unknown,
+}
+
+/// A process identity used by selective stop.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ControlMember {
+    /// Process number within the supervisor-owned tree.
+    pub pid: u32,
+    /// Process creation identity used to reject a recycled process number.
+    pub birth: u64,
+}
 
 /// What a child gets on stdin or stderr (stdout is always a pipe).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -166,6 +186,22 @@ pub enum Msg {
         /// Tree id.
         id: u64,
     },
+    /// host → supervisor: list verified process identities for selective stop.
+    ControlList {
+        /// Request id.
+        req: u64,
+        /// Tree id.
+        id: u64,
+    },
+    /// host → supervisor: stop exactly the supplied process identities.
+    ControlStop {
+        /// Request id.
+        req: u64,
+        /// Tree id.
+        id: u64,
+        /// Exact member identities selected for termination.
+        members: Vec<ControlMember>,
+    },
     /// host → supervisor: the host dropped its handle; cleanup duty stays. Reply: `Ack`.
     Release {
         /// Request id.
@@ -240,6 +276,24 @@ pub enum Msg {
         footprint: Option<u64>,
         /// Opaque stable identity for the measured members.
         identity: Option<String>,
+    },
+    /// supervisor → host: process identities eligible for selective stop.
+    ControlMembers {
+        /// Request id.
+        req: u64,
+        /// Tree id.
+        id: u64,
+        /// Verified members of the tree at the time of the inventory.
+        members: Vec<ControlMember>,
+    },
+    /// supervisor → host: per-member termination outcome.
+    ControlResults {
+        /// Request id.
+        req: u64,
+        /// Tree id.
+        id: u64,
+        /// One outcome per selected member, ordered as in the request.
+        outcomes: Vec<SelectiveStopOutcome>,
     },
     /// supervisor → host: reply without data.
     Ack {

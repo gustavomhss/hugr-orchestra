@@ -8,7 +8,7 @@ use std::mem;
 use std::sync::Arc;
 use std::time::Instant;
 
-use omni_proto::{Exit, INFO_FOOTPRINT, INFO_OBSERVE, Msg, VERSION, decode};
+use omni_proto::{Exit, INFO_FOOTPRINT, INFO_OBSERVE, INFO_SELECTIVE_STOP, Msg, VERSION, decode};
 use tokio::sync::watch;
 
 use super::{Answer, Gen, Life, LifeTx, State, Waiter, Want, deliver};
@@ -139,6 +139,7 @@ impl Gen {
                     st.ready = true;
                     st.observes = info & INFO_OBSERVE != 0;
                     st.footprints = info & INFO_FOOTPRINT != 0;
+                    st.selective_stop = info & INFO_SELECTIVE_STOP != 0;
                     if let Some(hello) = st.hello.take() {
                         let _ = hello.try_send(());
                     }
@@ -197,6 +198,19 @@ impl Gen {
                 check(st, req, |w| w == Want::ObserveFootprint, Some(id))?;
                 (req, Answer::ObservedTree(list, footprint, identity), None)
             }
+            Msg::ControlMembers { req, id, members } => {
+                check(st, req, |w| w == Want::ControlList, Some(id))?;
+                (req, Answer::ControlMembers(members), None)
+            }
+            Msg::ControlResults { req, id, outcomes } => {
+                check(
+                    st,
+                    req,
+                    |w| matches!(w, Want::ControlStop { count } if count == outcomes.len()),
+                    Some(id),
+                )?;
+                (req, Answer::ControlResults(outcomes), None)
+            }
             Msg::Ready { .. } => return Err("it sent Ready twice".into()),
             other => return Err(format!("it sent {}, which only a host may send", kind(&other))),
         };
@@ -232,13 +246,21 @@ impl Gen {
                 st.dues.remove(&(at, req));
                 st.pending.get_mut(&req).and_then(|pending| {
                     let (_, budget) = pending.due.take()?;
-                    let waiter = matches!(pending.want, Want::ObserveList | Want::ObserveFootprint)
-                        .then(|| mem::replace(&mut pending.to, Waiter::Ignore));
+                    let waiter = matches!(
+                        pending.want,
+                        Want::ObserveList | Want::ObserveFootprint | Want::ControlList | Want::ControlStop { .. }
+                    )
+                    .then(|| mem::replace(&mut pending.to, Waiter::Ignore));
                     Some((pending.want, budget, waiter))
                 })
             };
-            if let Some((_, budget, Some(waiter))) = missed {
-                deliver(waiter, Err(Error::observation_timed_out(budget)));
+            if let Some((want, budget, Some(waiter))) = missed {
+                let error = if matches!(want, Want::ControlList | Want::ControlStop { .. }) {
+                    Error::selective_timed_out(budget)
+                } else {
+                    Error::observation_timed_out(budget)
+                };
+                deliver(waiter, Err(error));
                 continue;
             }
             if let Some((want, budget, None)) = missed {
@@ -276,6 +298,10 @@ fn kind(msg: &Msg) -> &'static str {
         Msg::Observe { .. } => "Observe",
         Msg::ObserveFootprint { .. } => "ObserveFootprint",
         Msg::ObservedTree { .. } => "ObservedTree",
+        Msg::ControlList { .. } => "ControlList",
+        Msg::ControlStop { .. } => "ControlStop",
+        Msg::ControlMembers { .. } => "ControlMembers",
+        Msg::ControlResults { .. } => "ControlResults",
         Msg::Release { .. } => "Release",
         Msg::Ready { .. } => "Ready",
         Msg::Spawned { .. } => "Spawned",

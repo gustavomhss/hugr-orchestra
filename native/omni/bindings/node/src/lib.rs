@@ -22,3 +22,6 @@ mod error;
 mod exec;
 mod run;
 mod teardown;
+
+#[cfg(windows)]
+mod quarantine_windows;

@@ -21,7 +21,7 @@ use std::time::{Duration, Instant};
 
 pub use kid::child_cmd;
 use kid::out;
-use omni_proto::{INFO_PIDFD_HOST, Msg, ProcEntry, VERSION};
+use omni_proto::{INFO_OBSERVE, INFO_PIDFD_HOST, INFO_SELECTIVE_STOP, Msg, ProcEntry, VERSION};
 pub use os::{Lines, Proc, T, pipe};
 use os::{check, overlapped, owned, write_watching};
 pub use spawn::{Prepared, Spec, Tree};
@@ -127,7 +127,7 @@ impl Host {
             Msg::Ready {
                 version: VERSION,
                 pid: host.sup.id(),
-                info: INFO_PIDFD_HOST | omni_proto::INFO_OBSERVE
+                info: INFO_PIDFD_HOST | INFO_OBSERVE | INFO_SELECTIVE_STOP
             }
         );
         host

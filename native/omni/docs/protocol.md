@@ -36,6 +36,8 @@ it sends `Ready`. The host refuses another `version`, and a forked copy of the h
 | 0x06 | `Release` | req u64 · id u64 |
 | 0x07 | `Observe` | req u64 · id u64 (only when bit 2 of `Ready.info` is set) |
 | 0x08 | `ObserveFootprint` | req u64 · id u64 (only when bit 3 of `Ready.info` is set) |
+| 0x09 | `ControlList` | req u64 · id u64 (only when bit 4 of `Ready.info` is set) |
+| 0x0a | `ControlStop` | req u64 · id u64 · members list<(pid u32 · birth u64)> (1..=256 entries) |
 | 0x81 | `Ready` | version u32 · pid u32 · info u32 (bit 0: event-based host watch — pidfd on Linux, kqueue on macOS, process handle on Windows; unset = `getppid` polling. bit 1: members signalled through pidfds. bit 2: independent membership observation; bit 3: macOS footprint observation) |
 | 0x82 | `Spawned` | req u64 · id u64 · pid u32 · pty_ends 2×u64 |
 | 0x83 | `SpawnFailed` | req u64 · code u8 (1 not found, 2 not executable, 3 bad cwd, 4 invalid, 5 io) · errno i32 · msg bytes |
@@ -43,6 +45,8 @@ it sends `Ready`. The host refuses another `version`, and a forked copy of the h
 | 0x85 | `Stopped` | req u64 · id u64 |
 | 0x86 | `Processes` | req u64 · id u64 · list<(pid u32 · ppid u32, 0 = parent not in list · name bytes)> |
 | 0x88 | `ObservedTree` | req u64 · id u64 · footprint present bool · footprint u64 (0 when absent) · identity bytes (empty when absent) · list<(pid u32 · ppid u32 · name bytes)> |
+| 0x89 | `ControlMembers` | req u64 · id u64 · members list<(pid u32 · birth u64)> (0..=256 entries) |
+| 0x8a | `ControlResults` | req u64 · id u64 · outcomes list<u8> (1..=256 entries; 0 unknown, 1 exited; aligned to requested members) |
 | 0x87 | `Ack` | req u64 · id u64 · result u8 (0 ok, 2 unknown, 3 error, 4 closed; 1 is reserved) |
 
 **Verbatim command line (v2, Windows).** With `verbatim` = 1, `argv` holds `argv[0]` alone, and the root's command line
@@ -63,6 +67,8 @@ released `id` gets `Ack unknown` for every request.
 | `Stop` | `Stopped` only once the tree is gone (at once if it already is); overlapping `Stop`s share the earliest deadline |
 | `Resize` | `Ack ok` / `closed` |
 | `List` | `Processes` (empty once gone), or `Ack error` if the inventory is incomplete |
+| `ControlList` | `ControlMembers` (empty once gone), or `Ack error` if unavailable |
+| `ControlStop` | `ControlResults`, one result per submitted identity |
 | `Observe` | `Processes`, or `Ack error` if a sample is occupied or unavailable |
 | `ObserveFootprint` | `ObservedTree`, or `Ack error` if a sample is occupied or unavailable |
 | `Release` | `Ack ok`; the supervisor keeps cleanup duty |
@@ -85,3 +91,5 @@ returns the members `Stop` would reach at the time of the scan, without the zomb
 the parent is listed. On host death every tree gets a `Stop` with its own `grace_ms`.
 
 The optional footprint is the sum of macOS `ri_phys_footprint` values for a verified, stable live session, not RSS or PSS. An incomplete aggregate carries neither a value nor an identity; membership remains available. The identity describes the sorted PID and native start identities and changes when membership changes. Old v2 peers omit bit 3 and never receive the new request.
+
+Selective control uses the native process birth identity alongside each PID so a PID reused between inventory and stop cannot target a different process. `ControlStop` and `ControlResults` must contain 1..=256 entries; `ControlMembers` may be empty. The codec rejects a count over 256 before allocating the list. `ControlResults.outcomes` is positional. Exited means the pinned process was observed exited; unknown means exit was not confirmed and the request may still take effect. Reconcile unknown outcomes by observation, never automatic retry.
