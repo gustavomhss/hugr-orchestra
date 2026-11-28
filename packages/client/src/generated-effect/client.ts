@@ -612,11 +612,16 @@ type Endpoint6_2Input = {
   readonly location?: Endpoint6_2Request["query"]["location"]
   readonly context: Endpoint6_2Request["payload"]["context"]
   readonly model?: Endpoint6_2Request["payload"]["model"]
+  readonly command?: Endpoint6_2Request["payload"]["command"]
 }
 const Endpoint6_2 = (raw: RawClient["server.model"]) => (input: Endpoint6_2Input) =>
   raw["model.execution"]({
     query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
-    payload: { context: input["context"], ...(input["model"] === undefined ? {} : { model: input["model"] }) },
+    payload: {
+      context: input["context"],
+      ...(input["model"] === undefined ? {} : { model: input["model"] }),
+      ...(input["command"] === undefined ? {} : { command: input["command"] }),
+    },
   }).pipe(Effect.mapError(mapClientError))
 
 const adaptGroup6 = (raw: RawClient["server.model"]) => ({
@@ -2162,10 +2167,10 @@ const Endpoint30_0 = (raw: RawClient["server.board"]) => (input: Endpoint30_0Inp
     params: { key: input["key"] },
     payload: {
       title: input["title"],
-      body: input["body"],
-      type: input["type"],
-      epic: input["epic"],
-      estimate: input["estimate"],
+      ...(input["body"] === undefined ? {} : { body: input["body"] }),
+      ...(input["type"] === undefined ? {} : { type: input["type"] }),
+      ...(input["epic"] === undefined ? {} : { epic: input["epic"] }),
+      ...(input["estimate"] === undefined ? {} : { estimate: input["estimate"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
