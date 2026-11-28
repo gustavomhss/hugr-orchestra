@@ -74,6 +74,7 @@ test("a delayed Session GET cannot undo a variant-only live selection", async ()
     id: "evt_variant",
     type: "session.model.selected",
     created: 2,
+    durable: { aggregateID: sessionID, seq: 1, version: 1 },
     location: { directory: "/repo" },
     data: { sessionID, model: info("", 2).model },
   })
