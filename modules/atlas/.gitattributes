@@ -20,3 +20,5 @@
 # `**/*.jsonl` covers the legacy single files (`.atlas/{memory,orientation,review}.jsonl`) and the tree
 # (`.atlas/project/*.jsonl`, `.atlas/members/<seat>/{memory,knowledge}/**/*.jsonl`, `packages/adapter-io/src/layout.ts`).
 .atlas/**/*.jsonl merge=union
+# Joint Memory/review receipts are create-only winners, not independent append records to union.
+.atlas/project/memory-decisions/*.jsonl merge

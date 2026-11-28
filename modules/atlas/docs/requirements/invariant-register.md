@@ -282,6 +282,15 @@ anchor: `reference/atlas-memory.md#mem-N`. _(Memory was out of D0's original Kno
 
 **MEM: 13/13 RATIFIED** (the 11 formerly-unhomed rows re-homed after the D0 extension — MEM-1/3/4/5/6/8/11/12/13→FR-11, MEM-9→FR-12, MEM-10→FR-8; row cells updated).
 
+New project-rule proposal decisions use one create-only joint receipt in
+`.atlas/project/memory-decisions/<proposal-id>.jsonl`. The receipt binds the original raw review proposal, the decision,
+and (for indexing) the actual governed Memory record and native reference. Review and Memory consume one shared
+validator: an invalid or conflicting receipt contributes neither projection and carries explicit diagnostics. Legacy
+records retain their existing meaning; no historic orphan is deleted or inferred to be an atomic decision. The raw
+review log is no longer the complete source of new Memory decisions. Append logs retain union merges; divergent
+same-proposal receipts require explicit conflict resolution. The local create-only winner does not add cross-proposal
+cap serialization, old-binary coordination, NFS or power-loss guarantees.
+
 ## Block PST — persist (16) · M-Kernel/Persistence (DP-7) · **FR-8** · consumes seams #2/#3; PERSIST-11 in formal `FSPEC-merge` core · standard
 
 anchor: `reference/atlas-persist.md#persist-N`.

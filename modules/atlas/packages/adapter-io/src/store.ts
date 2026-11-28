@@ -28,23 +28,14 @@
 // reader to learn from them and keeping them meant keeping a second, weaker way to write candidates.
 //
 // THE SIDECAR FORMAT MOVED TO `sidecar.ts`, ITS COMMIT PROTOCOL TO `sidecar-commit.ts`. Not a line-count
-// dodge: this file owns an IMMUTABLE content-addressed store, where a key's bytes never change and so
-// concurrency is free, while the sidecar is the one MUTABLE cell in the product and every governed door
-// read-modify-writes it. It was persisted by a bare in-place `writeFileSync`, which cost 1–5 lost nodes per
+// dodge: this file owns content-addressed values whose canonical content is fixed by the key; invalid
+// on-disk objects are repaired by complete publication. The sidecar is the MUTABLE projection every governed door
+// read-modify-writes. It was persisted by a bare in-place `writeFileSync`, which cost 1–5 lost nodes per
 // 8-writer race — every writer exiting 0 with `status: ok` — and turned any torn read into a total erasure
 // reported as success. See the `sidecar.ts` header for both measured legs and for why the commit is a
 // `link(2)` compare-and-swap over generation-named files.
 
-import {
-  closeSync,
-  constants as fsConstants,
-  existsSync,
-  fstatSync,
-  mkdirSync,
-  openSync,
-  readFileSync,
-  writeFileSync,
-} from "node:fs"
+import { closeSync, constants, fstatSync, openSync, readFileSync } from "node:fs"
 import { dirname, join } from "node:path"
 import type { Hash } from "@atlas/contracts"
 import { asHash, id } from "@atlas/kernel"
@@ -52,6 +43,7 @@ import type { CasObject, StoreApi } from "@atlas/kernel"
 import { emptyStore } from "@atlas/knowledge"
 import type { StoreProjection } from "@atlas/knowledge"
 import { isContainedIn } from "./containment.js"
+import { publishCas } from "./cas-publication.js"
 import { readSidecarSet } from "./sidecar.js"
 import type { SidecarTrust } from "./store-provenance.js"
 import { commitSidecar, persistSidecar } from "./sidecar-commit.js"
@@ -83,7 +75,7 @@ const MAX_CAS_BYTES = 64 * 1024 * 1024
  *  the checks re-opened the OOM; opening the final component with `O_NOFOLLOW` refuses it in one syscall.
  *  `O_NONBLOCK` → opening a FIFO returns immediately instead of blocking on a writer. Both exist on
  *  macOS+Linux (the CI targets); default to 0 defensively so the module still loads if ever absent. */
-const O_READ_NO_SYMLINK = fsConstants.O_RDONLY | (fsConstants.O_NOFOLLOW ?? 0) | (fsConstants.O_NONBLOCK ?? 0)
+const O_READ_NO_SYMLINK = constants.O_RDONLY | (constants.O_NOFOLLOW ?? 0) | (constants.O_NONBLOCK ?? 0)
 
 /** The sharded, content-addressed value path for `H`: `<casPath>/<H[0:2]>/<H>` (D4). */
 function valuePath(casPath: CasPath, h: Hash): string {
@@ -220,13 +212,10 @@ export function createDiskStore(
         // nothing, never throw. This is the contract `index/cas.ts` already codes against (`if (h)`).
         return EMPTY
       }
-      const path = valuePath(casPath, h)
-      // content-keyed dedup: equal content already on disk ⇒ store nothing new (idempotent).
-      if (!existsSync(path)) {
-        mkdirSync(dirname(path), { recursive: true })
-        writeFileSync(path, bytes, "utf8")
-      }
-      return h
+      // An existing name is not a successful write: only guarded, hash-validated bytes may be reused.
+      if (store.get(h) !== undefined) return h
+      if (!publishCas(casPath, valuePath(casPath, h), bytes)) return EMPTY
+      return store.get(h) !== undefined ? h : EMPTY
     },
 
     get(h: Hash): CasObject | undefined {
