@@ -498,6 +498,16 @@ it.live("API E6 wire: MCP command preflight lists only connected metadata and ca
     expect(unrelatedLists).toBe(0)
     expect(yield* mcp.prompts()).toEqual([{ server: "other", name: "hello" }])
 
+    mode = "ready"
+    const colliding = promptServer("wire_prompts", async () => {
+      throw new Error("WIRE_PRIVATE_COLLIDING_LIST_FAILURE")
+    })
+    ModelExecutionFixture.state.mcpServers.push(colliding.provided)
+    yield* mcp.ready()
+    expect(colliding.observed.connections).toBe(1)
+    expect((yield* fixture.request("/api/model/execution", input)).status).toBe(200)
+    expect((yield* fixture.request("/api/model/execution", { ...input, command: "wire_prompts:missing" })).status).toBe(503)
+
     cursors.length = 0
     mode = "waiting"
     const client = Orchestra.make({ baseUrl: fixture.baseUrl })

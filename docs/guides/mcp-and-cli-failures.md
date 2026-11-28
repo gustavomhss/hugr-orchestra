@@ -8,7 +8,7 @@
 
 ## MCP slash-command preflight
 
-Model execution preflight can inspect slash-command metadata once its MCP server is connected. Before the server connects, `/api/model/execution` returns HTTP 400 for its commands. If a connected server fails to list its prompts, the endpoint returns HTTP 503. Cancelling the check cancels the pending MCP prompt-list request.
+Model execution preflight can inspect slash-command metadata once its MCP server is connected. Before the server connects, `/api/model/execution` returns HTTP 400 for its commands. If a listing fails and preflight cannot confirm the command, the endpoint returns HTTP 503. Cancelling the check cancels the pending MCP prompt-list request.
 
 ## OAuth authority changes
 

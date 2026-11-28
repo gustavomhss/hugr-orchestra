@@ -104,8 +104,8 @@ export interface Interface {
   readonly readResource: (uri: string) => Effect.Effect<ReadResourceResult["contents"] | undefined, RequestError>
   /** The available prompts, skipping servers that cannot list them. */
   readonly prompts: (server?: string) => Effect.Effect<Prompt[]>
-  /** Lists one server's prompts without starting or reconnecting servers. */
-  readonly connectedPrompts: (server: string) => Effect.Effect<Prompt[], RequestError>
+  /** Finds a prompt for a command prefix without starting or reconnecting servers. */
+  readonly findConnectedPrompt: (server: string, accept: (prompt: Prompt) => boolean) => Effect.Effect<Prompt | undefined, RequestError>
   /** Renders a server's prompt with its arguments and returns the text of its messages. */
   readonly getPrompt: (
     server: string,
@@ -661,9 +661,18 @@ const layer = Layer.effect(
       return listed.flat()
     })
 
-    const connectedPrompts = Effect.fn("Mcp.connectedPrompts")(function* (server: string) {
-      const listed = yield* Effect.forEach(promptServers(server), listPrompts, { concurrency: "unbounded" })
-      return listed.flat()
+    const findConnectedPrompt = Effect.fn("Mcp.findConnectedPrompt")(function* (
+      server: string,
+      accept: (prompt: Prompt) => boolean,
+    ) {
+      const listed = yield* Effect.forEach(promptServers(server), (item) => listPrompts(item).pipe(Effect.result), {
+        concurrency: "unbounded",
+      })
+      // Several servers may share a sanitized prefix. A confirmed prompt takes precedence over a failed listing.
+      const found = listed.flatMap((result) => (result._tag === "Success" ? result.success : [])).find(accept)
+      if (found) return found
+      const failed = listed.find((result) => result._tag === "Failure")
+      if (failed?._tag === "Failure") return yield* failed.failure
     })
 
     const getPrompt = Effect.fn("Mcp.getPrompt")(function* (
@@ -909,7 +918,7 @@ const layer = Layer.effect(
       resources,
       readResource,
       prompts,
-      connectedPrompts,
+      findConnectedPrompt,
       getPrompt,
       startAuth,
       finishAuth,
