@@ -102,6 +102,7 @@ export const ACTIVITY_COPY = {
   "orchestra.monitor.registryLimit":
     "Registration does not verify that a directory still exists. Owners remain empty and use checks unproved. Readings do not establish unique or reclaimable space.",
   "orchestra.monitor.path": "Path",
+  "orchestra.monitor.quarantineArtifact": "Archive",
   "orchestra.monitor.project": "Project",
   "orchestra.monitor.logical": "Logical",
   "orchestra.monitor.unique": "Unique",
@@ -289,6 +290,7 @@ export const ACTIVITY_COPY_BR: Record<keyof typeof ACTIVITY_COPY, string> = {
   "orchestra.monitor.registryLimit":
     "O registro não confirma que o diretório ainda existe. O campo Dono permanece vazio e a verificação de uso continua não provada. As leituras não determinam espaço único nem recuperável.",
   "orchestra.monitor.path": "Caminho",
+  "orchestra.monitor.quarantineArtifact": "Pacote",
   "orchestra.monitor.project": "Projeto",
   "orchestra.monitor.logical": "Lógico",
   "orchestra.monitor.unique": "Único",

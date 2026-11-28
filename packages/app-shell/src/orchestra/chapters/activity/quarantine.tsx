@@ -19,6 +19,7 @@ export function ActivityQuarantine(props: { query: string }) {
     receipt: undefined as ActivityEmpty.Receipt | undefined,
   })
   let requestID = 0
+  let selectionID = 0
   let pending: AbortController | undefined
   const scope = () => {
     const current = server.current
@@ -29,7 +30,7 @@ export function ActivityQuarantine(props: { query: string }) {
     const needle = props.query.trim().toLowerCase()
     const rows = state.snapshot?.rows ?? []
     return needle
-      ? rows.filter((row) => `${row.owner}\n${row.originalPath}\n${row.phase}`.toLowerCase().includes(needle))
+      ? rows.filter((row) => `${row.label}\n${row.owner}\n${row.originalPath}\n${row.phase}`.toLowerCase().includes(needle))
       : rows
   })
 
@@ -61,23 +62,27 @@ export function ActivityQuarantine(props: { query: string }) {
     const serverURL = scope()
     const emptyQuarantine = platform.emptyActivityQuarantine
     const snapshot = state.snapshot
-    if (!serverURL || !emptyQuarantine || !supported() || !snapshot?.canEmpty || snapshot.rows.length === 0 || state.emptying) return
+    if (!serverURL || state.scope !== serverURL || !emptyQuarantine || !supported() || !snapshot?.canEmpty ||
+      snapshot.rows.length === 0 || state.emptying || state.busy || state.failed) return
+    const selection = selectionID
+    const current = () => scope() === serverURL && selectionID === selection
     setState({ emptying: true, emptyUnconfirmed: false, receipt: undefined })
     try {
       const receipt = await emptyQuarantine(serverURL)
-      if (scope() !== serverURL) return
+      if (!current()) return
       if (!receipt) setState("emptyUnconfirmed", true)
       else setState("receipt", receipt)
       await refresh()
-      if (scope() === serverURL && receipt) setState("receipt", receipt)
+      if (current() && receipt) setState("receipt", receipt)
     } catch {
-      if (scope() === serverURL) setState("emptyUnconfirmed", true)
+      if (current()) setState("emptyUnconfirmed", true)
     } finally {
-      if (scope() === serverURL) setState("emptying", false)
+      if (current()) setState("emptying", false)
     }
   }
 
   createEffect(on(scope, (serverURL) => {
+    selectionID++
     requestID++
     pending?.abort()
     pending = undefined
@@ -86,6 +91,7 @@ export function ActivityQuarantine(props: { query: string }) {
     if (serverURL && supported()) void refresh()
   }, { defer: false }))
   onCleanup(() => {
+    selectionID++
     requestID++
     pending?.abort()
   })
@@ -100,7 +106,8 @@ export function ActivityQuarantine(props: { query: string }) {
           <button type="button" class="mx-btn" disabled={state.busy || !supported() || !scope()} onClick={() => void refresh()}>
             {language.t("orchestra.monitor.refresh")}
           </button>
-          <button type="button" class="mx-btn" disabled={!state.snapshot?.canEmpty || state.snapshot.rows.length === 0 || state.busy || state.emptying || !supported()} onClick={() => void empty()}>
+          <button type="button" class="mx-btn" disabled={!state.snapshot?.canEmpty || state.snapshot.rows.length === 0 ||
+            state.scope !== scope() || state.busy || state.failed || state.emptying || !supported()} onClick={() => void empty()}>
             {language.t(state.emptying ? "orchestra.monitor.quarantineEmptying" : "orchestra.monitor.quarantineEmptyAction")}
           </button>
         </div>
@@ -129,7 +136,9 @@ export function ActivityQuarantine(props: { query: string }) {
           </details>
         </div>}
       </Show>
-      <Show when={state.snapshot} fallback={<div class="mx-empty" role="status"><strong>{language.t(state.busy ? "orchestra.monitor.quarantineLoading" : "orchestra.monitor.quarantineUnread")}</strong></div>}>
+      <Show when={state.snapshot} fallback={supported() && scope()
+        ? <div class="mx-empty" role="status"><strong>{language.t(state.busy ? "orchestra.monitor.quarantineLoading" : "orchestra.monitor.quarantineUnread")}</strong></div>
+        : undefined}>
         {(snapshot) => <>
           <p class="mx-note" role="status">
             {language.t("orchestra.monitor.quarantineCount", { count: snapshot().rows.length })}
@@ -145,11 +154,13 @@ export function ActivityQuarantine(props: { query: string }) {
             <div class="activity-table-scroll">
               <table class="activity-table">
                 <thead><tr>
+                  <th scope="col">{language.t("orchestra.monitor.quarantineArtifact")}</th>
                   <th scope="col">{language.t("orchestra.monitor.owner")}</th>
                   <th scope="col">{language.t("orchestra.monitor.path")}</th>
                   <th scope="col">{language.t("orchestra.monitor.state")}</th>
                 </tr></thead>
                 <tbody><For each={shown()}>{(row) => <tr>
+                  <td>{row.label}</td>
                   <td>{row.owner}</td>
                   <td class="activity-path"><code>{row.originalPath}</code></td>
                   <td>{language.t(`orchestra.monitor.quarantinePhase.${row.phase}`)}</td>
