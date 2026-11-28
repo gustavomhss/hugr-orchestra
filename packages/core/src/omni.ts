@@ -43,7 +43,7 @@ export function load() {
 export type Quarantine = {
   quarantineInspect: (path: string) => Promise<string | null>
   quarantineRename: (source: string, destination: string, identity: string) => Promise<string>
-  quarantineRenameExclusive?: (source: string, destination: string, identity: string) => Promise<string>
+  quarantineRenameExclusive?: (source: string, destination: string, identity: string) => Promise<string | null>
   quarantineDispose?: (path: string, identity: string) => Promise<void>
 }
 

@@ -48,8 +48,10 @@ export async function execute(
         return {
           facts: await reread(),
           claimant: "absent",
-          mutation: async () =>
-            await rename(source, destination, captured.identity) === captured.identity ? "accepted" : "unknown",
+          async mutation() {
+            const outcome = await rename(source, destination, captured.identity)
+            return outcome === null ? "refused" : outcome === captured.identity ? "accepted" : "unknown"
+          },
         }
       },
       reread,
