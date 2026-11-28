@@ -399,6 +399,107 @@ test("a delayed selection and rename notification cannot override a newer HTTP o
   }
 }, 15_000)
 
+test("a reconnect repairs an unopened Session title without replacing selection or reading history", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const original = {
+    ...v2Session({ id: sessionID, directory, title: "Before disconnect", subpath: "packages/tui" }),
+    agent: "maestro",
+    model: { providerID: "test", id: "exact-model", variant: "high" },
+    location: { directory, workspaceID: "wrk_exact" },
+    time: { created: 0, updated: 10 },
+  }
+  const changedListRow = {
+    ...original,
+    title: "Renamed while disconnected",
+    agent: "listed-agent",
+    model: { providerID: "test", id: "listed-model", variant: "low" },
+    location: { directory: "/tmp/listed-placement", workspaceID: "wrk_listed" },
+    subpath: "listed-subpath",
+    time: { created: 0, updated: 20 },
+  }
+  const heldList = Promise.withResolvers<Response>()
+  const streams: ReadableStreamDefaultController<Uint8Array>[] = []
+  const state = { listReads: 0, exactReads: 0, historyReads: 0, listed: original, exact: original }
+  const list = (row: typeof original) => json({ data: [row], cursor: {} })
+  const transport = createFetch(routes((url) => {
+    if (url.pathname === "/api/permission/request" || url.pathname === "/api/question/request") return json({ data: [] })
+    if (url.pathname === "/api/session") {
+      if (++state.listReads === 3) return heldList.promise
+      return list(state.listed)
+    }
+    if (url.pathname === `/api/session/${sessionID}`) {
+      state.exactReads++
+      return json({ data: state.exact })
+    }
+    if (url.pathname === `/api/session/${sessionID}/message`) state.historyReads++
+  }))
+  const server = Bun.serve({
+    port: 0, hostname: "127.0.0.1",
+    fetch(request) {
+      if (new URL(request.url).pathname === "/api/event")
+        return new Response(new ReadableStream<Uint8Array>({ start: (controller) => { streams.push(controller) } }), {
+          headers: { "content-type": "text/event-stream" },
+        })
+      return transport.fetch(request)
+    },
+  })
+  const mounted = await mount(undefined, tmp.path, undefined, { url: server.url.origin }).catch((error) => {
+    server.stop(true)
+    throw error
+  })
+  const sync = mounted.sync.session
+  const row = () => mounted.sync.data.session.find((entry) => entry.id === sessionID)
+  const send = (stream: ReadableStreamDefaultController<Uint8Array>, value: GlobalEvent["payload"]) => {
+    stream.enqueue(new TextEncoder().encode(`data: ${JSON.stringify({ ...value, location: { directory } })}\n\n`))
+  }
+  try {
+    await wait(() => streams.length === 1 && row()?.id === sessionID)
+    send(streams[0], connected(1).payload)
+    await wait(() => mounted.sdk.connectionEpoch() === 1)
+    send(streams[0], { id: "evt_title_seed", type: "session.next.renamed", data: {
+      sessionID, timestamp: original.time.updated, title: original.title,
+    } })
+    await wait(() => state.exactReads === 1 && sync.selectionReady(sessionID))
+    expect(state.historyReads).toBe(0)
+
+    streams[0].close()
+    await wait(() => mounted.sdk.offline())
+    state.listed = changedListRow
+    await wait(() => streams.length === 2, 5_000)
+    // The rename was lost in the disconnect. Only the catalog list can reveal it.
+    send(streams[1], connected(2).payload)
+    await wait(() => state.listReads === 2 && row()?.title === changedListRow.title)
+    for (const projected of [row(), sync.get(sessionID)]) expect(projected).toMatchObject({
+      title: changedListRow.title, agent: original.agent, model: original.model, location: original.location,
+      subpath: original.subpath,
+    })
+    expect(sync.selectionReady(sessionID)).toBe(false)
+    expect(state.exactReads).toBe(1)
+    expect(state.historyReads).toBe(0)
+
+    const old = sync.refresh()
+    await wait(() => state.listReads === 3)
+    state.exact = { ...original, title: "Newest live title", time: { created: 0, updated: 30 } }
+    send(streams[1], { id: "evt_title_live", type: "session.next.renamed", data: {
+      sessionID, timestamp: state.exact.time.updated, title: state.exact.title,
+    } })
+    await wait(() => state.exactReads === 2 && sync.selectionReady(sessionID))
+    heldList.resolve(list({ ...changedListRow, time: { created: 0, updated: 40 } }))
+    await old
+    for (const projected of [row(), sync.get(sessionID)]) expect(projected).toMatchObject({
+      title: state.exact.title, agent: original.agent, model: original.model, location: original.location,
+      subpath: original.subpath,
+    })
+    expect(sync.selectionReady(sessionID)).toBe(true)
+    expect(state.historyReads).toBe(0)
+  } finally {
+    heldList.resolve(list(original))
+    mounted.app.renderer.destroy()
+    server.stop(true)
+  }
+}, 15_000)
+
 test("an ordinary sync retries a failed forced history while retaining cached and live messages", async () => {
   await using tmp = await tmpdir()
   await Bun.write(`${tmp.path}/kv.json`, "{}")

@@ -276,13 +276,22 @@ export const {
       }
     }
 
-    function listSessions() {
-      const query = sessionListQuery()
-      return sdk.catalog.sessions({
+    async function listSessions() {
+      const input = {
         workspace: project.workspace.current(),
         project: project.data.project.id,
-        subpath: query.path || undefined,
-      })
+        subpath: sessionListQuery().path || undefined,
+      }
+      const epoch = statusEpoch()
+      const renames = new Map(titles)
+      const sessions = await sdk.catalog.sessions(input)
+      return {
+        sessions,
+        renames,
+        current: () => !lifetime.disposed && sdk.binding().active && statusEpoch() === epoch &&
+          project.workspace.current() === input.workspace && project.data.project.id === input.project &&
+          (sessionListQuery().path || undefined) === input.subpath,
+      }
     }
 
     function withLiveMetadata(session: Session, baseline?: { agent?: string; model?: string; placement?: string; title?: string }) {
@@ -311,10 +320,30 @@ export const {
       }
     }
 
-    function replaceSessionList(sessions: Session[]) {
-      if (lifetime.disposed) return
-      setStore("session", reconcile(sessions.map((session) =>
-        store.session_metadata[session.id]?.snapshot ?? withLiveMetadata(session))))
+    function replaceSessionList(read: Awaited<ReturnType<typeof listSessions>>, retained?: ReadonlySet<string>) {
+      if (!read.current()) return
+      const merge = (listed: Session) => {
+        const cached = store.session_metadata[listed.id]?.snapshot
+        if (!cached) return withLiveMetadata(listed)
+        // The list can repair a missed title only. Leave the exact selection, placement and authority epoch intact.
+        if (titles.get(listed.id) !== read.renames.get(listed.id) || metadataReads.has(listed.id) ||
+            listed.time.updated <= cached.time.updated || listed.title === cached.title) return cached
+        const snapshot = { ...cached, title: listed.title, time: { ...cached.time, updated: listed.time.updated } }
+        setStore("session_metadata", listed.id, "snapshot", reconcile(snapshot))
+        return snapshot
+      }
+      batch(() => {
+        if (!retained) {
+          setStore("session", reconcile(read.sessions.map(merge)))
+          return
+        }
+        // Recovery updates rows still present in the list without replacing the current list or opening their histories.
+        for (const session of read.sessions) {
+          if (!retained.has(session.id) || !store.session_metadata[session.id]) continue
+          const match = search(store.session, session.id, (item) => item.id)
+          if (match.found) setStore("session", match.index, reconcile(merge(session)))
+        }
+      })
     }
 
     function getSession(sessionID: string) {
@@ -890,8 +919,12 @@ export const {
         ...history.keys(), ...fullSyncedSessions, ...syncingSessions.keys(),
         ...hydratingSessions.keys(), ...pendingHistoryChanges.keys(), ...metadataReads.keys(),
       ])
+      const retained = new Set(epoch > 1
+        ? store.session.filter(({ id }) => store.session_metadata[id] && !sessions.has(id)).map(({ id }) => id)
+        : [])
       void Promise.allSettled([
         ...(epoch > 1 ? [readStatuses()] : []),
+        ...(retained.size > 0 ? [listSessions().then((read) => replaceSessionList(read, retained))] : []),
         ...[...sessions].map((sessionID) => {
           // A held history request must not delay the new epoch's metadata read.
           const metadata = refreshSelection(sessionID)
