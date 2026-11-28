@@ -1,0 +1,9 @@
+{
+  "run_id": 46158789822,
+  "result": "FAILED_NATIVE_TRANSPORT_VALIDATION",
+  "stderr": {
+    "kind": "error",
+    "error": "native-fields: contract"
+  },
+  "repair": "Use the previously executed v4 native transport format for contract, single-key roots and normalized L1 evidence. Preserve the v5r2 body and dependencies. No oracle or vote changes."
+}
