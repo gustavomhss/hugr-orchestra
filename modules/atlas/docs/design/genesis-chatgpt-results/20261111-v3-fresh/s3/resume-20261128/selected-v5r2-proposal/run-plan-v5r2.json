@@ -18,11 +18,11 @@
     }
   },
   "package": {
-    "commit": "666832e52850e816678c4f95232c2a64c2878f2d",
+    "commit": "61c7ce90d0d045d6d87a6e00c6a5c29ede925ad6",
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/selected-v5r2-proposal/native-package.v5r2-proposal.json",
-    "sha256": "c34179440f0640330f755f9d7b95f9a1d781e76eca9b5dbb2e94bf9cadfeddca",
-    "git_blob_sha": "6fc1632936b310121040e6edd9433a3aa5b61cc3",
-    "byte_length": 1167539,
+    "sha256": "dcc695f58740aa528da5bffb4724517d93fd905cf71a517bc74234348741bc3e",
+    "git_blob_sha": "0a0904045a762d42af526d630432e4f0caf9ddc4",
+    "byte_length": 1165526,
     "artifact_keys": [
       "s3-l1-maestro",
       "s3-l1-relay",
@@ -38,10 +38,10 @@
     ]
   },
   "input_lock": {
-    "commit": "127202778ff0f846674b70207322bdf35fd9bfd9",
+    "commit": "3efe68137a4414a35a74f530c6d8501e2e3326c2",
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/selected-v5r2-proposal/runtime-input-lock-v5r2.json",
-    "sha256": "1c69a5824ac5c593f61795ac9ea51e4b3bcbc1f32fda714f472b2ef12cefa7e5",
-    "git_blob_sha": "a2adc6d2c0ff22b06cf31c09924c3f57c0c136cf",
+    "sha256": "fa75003a444e9a818ea973f96165f3672e878b84e2a3f03d01c02e68408c18e6",
+    "git_blob_sha": "25c2cf512cab1bdc43e7cf5719402c71d2a2d989",
     "byte_length": 1673635
   },
   "restore": {
