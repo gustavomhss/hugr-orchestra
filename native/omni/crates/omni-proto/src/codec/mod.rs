@@ -5,7 +5,7 @@ mod wire;
 #[cfg(test)]
 mod tests;
 
-use crate::{Ack, Exit, FailCode, MAX_FRAME, Msg, ProcEntry, ProtoError, Slot, Spawn};
+use crate::{Ack, ControlMember, Exit, FailCode, MAX_FRAME, Msg, ProcEntry, ProtoError, Slot, Spawn};
 use wire::{Reader, Writer};
 
 const SPAWN: u8 = 0x01;
@@ -16,6 +16,8 @@ const LIST: u8 = 0x05;
 const RELEASE: u8 = 0x06;
 const OBSERVE: u8 = 0x07;
 const OBSERVE_FOOTPRINT: u8 = 0x08;
+const CONTROL_LIST: u8 = 0x09;
+const CONTROL_STOP: u8 = 0x0a;
 const READY: u8 = 0x81;
 const SPAWNED: u8 = 0x82;
 const SPAWN_FAILED: u8 = 0x83;
@@ -24,6 +26,9 @@ const STOPPED: u8 = 0x85;
 const PROCESSES: u8 = 0x86;
 const ACK: u8 = 0x87;
 const OBSERVED_TREE: u8 = 0x88;
+const CONTROL_MEMBERS: u8 = 0x89;
+const CONTROL_RESULTS: u8 = 0x8a;
+const MAX_CONTROL_MEMBERS: usize = 256;
 
 /// Appends one frame for `msg` to `out`. Fails (and appends nothing) if the frame would be malformed:
 /// over `MAX_FRAME`, a slot not allowed for its field, or a signal outside 1..=127.
@@ -66,6 +71,12 @@ pub fn encode(msg: &Msg, out: &mut Vec<u8>) -> Result<(), ProtoError> {
         Msg::List { req, id } => _ = w.u8(LIST).u64(*req).u64(*id),
         Msg::Observe { req, id } => _ = w.u8(OBSERVE).u64(*req).u64(*id),
         Msg::ObserveFootprint { req, id } => _ = w.u8(OBSERVE_FOOTPRINT).u64(*req).u64(*id),
+        Msg::ControlList { req, id } => _ = w.u8(CONTROL_LIST).u64(*req).u64(*id),
+        Msg::ControlStop { req, id, members } => {
+            validate_members(members.len())?;
+            w.u8(CONTROL_STOP).u64(*req).u64(*id).u32(len(members.len())?);
+            for member in members { w.u32(member.pid).u64(member.birth); }
+        }
         Msg::Release { req, id } => _ = w.u8(RELEASE).u64(*req).u64(*id),
         Msg::Ready { version, pid, info } => _ = w.u8(READY).u32(*version).u32(*pid).u32(*info),
         Msg::Spawned { req, id, pid, pty_ends } => {
@@ -123,6 +134,16 @@ pub fn encode(msg: &Msg, out: &mut Vec<u8>) -> Result<(), ProtoError> {
                     .bytes(p.name.as_deref().unwrap_or("").as_bytes())?;
             }
         }
+        Msg::ControlMembers { req, id, members } => {
+            if members.len() > MAX_CONTROL_MEMBERS { return Err(ProtoError("too many control members".into())); }
+            w.u8(CONTROL_MEMBERS).u64(*req).u64(*id).u32(len(members.len())?);
+            for member in members { w.u32(member.pid).u64(member.birth); }
+        }
+        Msg::ControlResults { req, id, exited } => {
+            validate_members(exited.len())?;
+            w.u8(CONTROL_RESULTS).u64(*req).u64(*id).u32(len(exited.len())?);
+            for result in exited { w.bool(*result); }
+        }
         Msg::Ack { req, id, result } => _ = w.u8(ACK).u64(*req).u64(*id).u8(ack(*result)),
     }
     let body = w.finish();
@@ -173,6 +194,14 @@ pub fn decode(buf: &[u8]) -> Result<Option<(Msg, usize)>, ProtoError> {
             req: r.u64()?,
             id: r.u64()?,
         },
+        CONTROL_LIST => Msg::ControlList { req: r.u64()?, id: r.u64()? },
+        CONTROL_STOP => {
+            let (req, id) = (r.u64()?, r.u64()?);
+            let count = control_count(&mut r, true)?;
+            let mut members = Vec::with_capacity(count);
+            for _ in 0..count { members.push(ControlMember { pid: r.u32()?, birth: r.u64()? }); }
+            Msg::ControlStop { req, id, members }
+        }
         LIST => Msg::List {
             req: r.u64()?,
             id: r.u64()?,
@@ -259,6 +288,20 @@ pub fn decode(buf: &[u8]) -> Result<Option<(Msg, usize)>, ProtoError> {
                 identity: present.then_some(identity),
             }
         }
+        CONTROL_MEMBERS => {
+            let (req, id) = (r.u64()?, r.u64()?);
+            let count = control_count(&mut r, false)?;
+            let mut members = Vec::with_capacity(count);
+            for _ in 0..count { members.push(ControlMember { pid: r.u32()?, birth: r.u64()? }); }
+            Msg::ControlMembers { req, id, members }
+        }
+        CONTROL_RESULTS => {
+            let (req, id) = (r.u64()?, r.u64()?);
+            let count = control_count(&mut r, true)?;
+            let mut exited = Vec::with_capacity(count);
+            for _ in 0..count { exited.push(r.bool()?); }
+            Msg::ControlResults { req, id, exited }
+        }
         ACK => Msg::Ack {
             req: r.u64()?,
             id: r.u64()?,
@@ -322,6 +365,24 @@ fn spawn(r: &mut Reader<'_>) -> Result<Spawn, ProtoError> {
         handles,
         verbatim: verbatim.then_some(tail),
     })
+}
+
+fn validate_members(count: usize) -> Result<(), ProtoError> {
+    if count == 0 || count > MAX_CONTROL_MEMBERS {
+        return Err(ProtoError(format!("control member count {count} outside 1..={MAX_CONTROL_MEMBERS}")));
+    }
+    Ok(())
+}
+
+fn control_count(r: &mut Reader<'_>, nonempty: bool) -> Result<usize, ProtoError> {
+    let count = r.u32()? as usize;
+    if count > MAX_CONTROL_MEMBERS || (nonempty && count == 0) {
+        return Err(ProtoError(format!("invalid control member count {count}")));
+    }
+    if count.saturating_mul(12) > r.remaining() {
+        return Err(ProtoError("control member list cannot fit in frame".into()));
+    }
+    Ok(count)
 }
 
 fn len(n: usize) -> Result<u32, ProtoError> {

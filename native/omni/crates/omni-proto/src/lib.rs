@@ -21,6 +21,15 @@ pub const INFO_PIDFD_MEMBERS: u32 = 2;
 pub const INFO_OBSERVE: u32 = 4;
 /// `Ready.info` bit: macOS tree footprint observations are supported.
 pub const INFO_FOOTPRINT: u32 = 8;
+/// `Ready.info` bit: selective stop by verified process birth identity is supported.
+pub const INFO_SELECTIVE_STOP: u32 = 16;
+
+/// A process identity used by selective stop.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ControlMember {
+    pub pid: u32,
+    pub birth: u64,
+}
 
 /// What a child gets on stdin or stderr (stdout is always a pipe).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -166,6 +175,10 @@ pub enum Msg {
         /// Tree id.
         id: u64,
     },
+    /// host → supervisor: list verified process identities for selective stop.
+    ControlList { req: u64, id: u64 },
+    /// host → supervisor: stop exactly the supplied process identities.
+    ControlStop { req: u64, id: u64, members: Vec<ControlMember> },
     /// host → supervisor: the host dropped its handle; cleanup duty stays. Reply: `Ack`.
     Release {
         /// Request id.
@@ -241,6 +254,10 @@ pub enum Msg {
         /// Opaque stable identity for the measured members.
         identity: Option<String>,
     },
+    /// supervisor → host: process identities eligible for selective stop.
+    ControlMembers { req: u64, id: u64, members: Vec<ControlMember> },
+    /// supervisor → host: per-member termination outcome.
+    ControlResults { req: u64, id: u64, exited: Vec<bool> },
     /// supervisor → host: reply without data.
     Ack {
         /// Request id.
