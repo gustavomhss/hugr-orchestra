@@ -144,15 +144,15 @@ for (const scenario of cases) {
         await page.locator('[data-suggestion-id="file:note.md"]').click()
         await expect(pill).toHaveText("@note.md")
         await editor.press("End")
-        await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: "see @note.md ", cursor: 13 })
+        await expect.poll(() => readCanonicalDraft(page, sessionID)).toEqual({ text: "see @note.md ", cursor: 13 })
         const identity = await pill.elementHandle()
         if (!identity) throw new Error("PROMPT_BYTES_PILL_IDENTITY_MISSING")
         if (scenario.mode === "undo-pill-history") {
           await page.keyboard.insertText("base")
-          await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: "see @note.md base", cursor: 17 })
+          await expect.poll(() => readCanonicalDraft(page, sessionID)).toEqual({ text: "see @note.md base", cursor: 17 })
           expect(await identity.evaluate((element) => element.isConnected)).toBe(true)
           await editor.press("Shift+Enter")
-          await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: "see @note.md base\n", cursor: 18 })
+          await expect.poll(() => readCanonicalDraft(page, sessionID)).toEqual({ text: "see @note.md base\n", cursor: 18 })
           expect(await identity.evaluate((element) => element.isConnected)).toBe(true)
           // Fixture selects the known typed word; replacement and history below use native keyboard actions.
           await editor.evaluate((element) => {
@@ -252,7 +252,7 @@ for (const scenario of cases) {
 
       const insertionCursor = "cursor" in scenario ? scenario.cursor : scenario.text.length
       const hasHistory = !!before || scenario.mode === "undo-pill-history"
-      await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: insertionCursor })
+      await expect.poll(() => readCanonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: insertionCursor })
       if (hasHistory) {
         const inserted = await canonicalDraft(page, sessionID)
         await info.attach("immediate-insertion-receipt.json", {
@@ -262,14 +262,14 @@ for (const scenario of cases) {
       if (scenario.mode === "undo-pill-history") {
         for (const text of ["see @note.md base\n", "see @note.md base", "see @note.md "]) {
           await editor.press(process.platform === "darwin" ? "Meta+Z" : "Control+Z")
-          await expect.poll(async () => (await canonicalDraft(page, sessionID)).text).toBe(text)
+          await expect.poll(async () => (await readCanonicalDraft(page, sessionID))?.text).toBe(text)
           expect(await pillIdentity!.evaluate((element) => element.isConnected)).toBe(true)
           const canonical = await canonicalDraft(page, sessionID)
           await info.attach(`history-undo-${text.length}.json`, { contentType: "application/json", body: JSON.stringify({ phase: "native-undo", canonical, ...receipt(canonical.text) }) })
         }
         for (const text of ["see @note.md base", "see @note.md base\n", scenario.text]) {
           await editor.press(process.platform === "darwin" ? "Meta+Shift+Z" : "Control+Shift+Z")
-          await expect.poll(async () => (await canonicalDraft(page, sessionID)).text).toBe(text)
+          await expect.poll(async () => (await readCanonicalDraft(page, sessionID))?.text).toBe(text)
           expect(await pillIdentity!.evaluate((element) => element.isConnected)).toBe(true)
           const canonical = await canonicalDraft(page, sessionID)
           await info.attach(`history-redo-${text.length}.json`, { contentType: "application/json", body: JSON.stringify({ phase: "native-redo", selectionPolicy: "browser-owned", canonical, ...receipt(canonical.text) }) })
@@ -278,7 +278,7 @@ for (const scenario of cases) {
       if (before) {
         if (pillIdentity) expect(await pillIdentity.evaluate((element) => element.isConnected)).toBe(true)
         await editor.press(process.platform === "darwin" ? "Meta+Z" : "Control+Z")
-        await expect.poll(async () => (await canonicalDraft(page, sessionID)).text).toBe(before)
+        await expect.poll(async () => (await readCanonicalDraft(page, sessionID))?.text).toBe(before)
         if (pillIdentity) expect(await pillIdentity.evaluate((element) => element.isConnected)).toBe(true)
         const undone = await canonicalDraft(page, sessionID)
         expect(undone.text).toBe(before)
@@ -288,7 +288,7 @@ for (const scenario of cases) {
         await editor.press(process.platform === "darwin" ? "Meta+Shift+Z" : "Control+Shift+Z")
         // Browser history owns Redo selection; our explicit post-insert caret move is outside its transaction.
         // Immediate insertion above still requires the exact logical offset, including cursor 2 for boundary edits.
-        await expect.poll(async () => (await canonicalDraft(page, sessionID)).text).toBe(scenario.text)
+        await expect.poll(async () => (await readCanonicalDraft(page, sessionID))?.text).toBe(scenario.text)
         if (pillIdentity) expect(await pillIdentity.evaluate((element) => element.isConnected)).toBe(true)
         const redone = await canonicalDraft(page, sessionID)
         await info.attach("native-redo-receipt.json", {
@@ -301,7 +301,7 @@ for (const scenario of cases) {
         await editor.press(process.platform === "darwin" ? "Meta+ArrowDown" : "Control+End")
         // Legacy persists navigation cursor on blur; use its normal focus lifecycle, never mutate draft storage.
         await editor.blur()
-        await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: finalCursor })
+        await expect.poll(() => readCanonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: finalCursor })
         const navigated = await canonicalDraft(page, sessionID)
         await info.attach("post-history-navigation-receipt.json", {
           contentType: "application/json", body: JSON.stringify({ phase: "explicit-end-navigation", expectedCursor: finalCursor, canonical: navigated, ...receipt(navigated.text) }),
@@ -312,7 +312,7 @@ for (const scenario of cases) {
         contentType: "application/json",
         body: JSON.stringify(await editor.evaluate((element) => ({ html: element.innerHTML, textContent: element.textContent }))),
       })
-      await expect.poll(() => canonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: finalCursor })
+      await expect.poll(() => readCanonicalDraft(page, sessionID)).toEqual({ text: scenario.text, cursor: finalCursor })
       const canonical = await canonicalDraft(page, sessionID)
       const dom = await editor.evaluate((element) => ({ html: element.innerHTML, textContent: element.textContent }))
       await expect(admission).toHaveAttribute("data-prompt-admitting", "false")
@@ -373,8 +373,14 @@ function receipt(text: string) {
 }
 
 async function canonicalDraft(page: Page, sessionID: string) {
+  const draft = await readCanonicalDraft(page, sessionID)
+  if (!draft) throw new Error("PROMPT_DRAFT_DOCUMENT_MISSING")
+  return draft
+}
+
+async function readCanonicalDraft(page: Page, sessionID: string) {
   return page.evaluate(async (id) => {
-    if (!(await indexedDB.databases()).some((db) => db.name === "orchestra-drafts")) throw new Error("PROMPT_DRAFT_DB_MISSING")
+    if (!(await indexedDB.databases()).some((db) => db.name === "orchestra-drafts")) return
     const db = await new Promise<IDBDatabase>((resolve, reject) => {
       const request = indexedDB.open("orchestra-drafts", 1)
       request.onsuccess = () => resolve(request.result)
@@ -382,18 +388,26 @@ async function canonicalDraft(page: Page, sessionID: string) {
     })
     try {
       const document = await new Promise<string | undefined>((resolve, reject) => {
-        const store = db.transaction("documents", "readonly").objectStore("documents")
+        const transaction = db.transaction("documents", "readonly")
+        const store = transaction.objectStore("documents")
+        let draft: string | undefined
+        transaction.oncomplete = () => resolve(draft)
+        transaction.onabort = () => reject(transaction.error ?? new Error("PROMPT_DRAFT_READ_ABORTED"))
         const keys = store.getAllKeys()
         keys.onerror = () => reject(keys.error)
         keys.onsuccess = () => {
           const matching = keys.result.filter((key) => String(key).endsWith(`:session:${id}:prompt`))
-          if (matching.length !== 1) return reject(new Error(`PROMPT_DRAFT_IDENTITY_COUNT:${matching.length}`))
+          if (matching.length === 0) return
+          if (matching.length > 1) return reject(new Error(`PROMPT_DRAFT_IDENTITY_COUNT:${matching.length}`))
           const value = store.get(matching[0]!)
-          value.onsuccess = () => resolve(value.result as string | undefined)
+          value.onsuccess = () => {
+            if (typeof value.result !== "string") return reject(new Error("PROMPT_DRAFT_DOCUMENT_MISSING"))
+            draft = value.result
+          }
           value.onerror = () => reject(value.error)
         }
       })
-      if (!document) throw new Error("PROMPT_DRAFT_DOCUMENT_MISSING")
+      if (document === undefined) return
       const state = JSON.parse(document) as { prompt: { type: string; content?: string }[]; cursor?: number }
       return { text: state.prompt.map((part) => part.content ?? "").join(""), cursor: state.cursor }
     } finally {
