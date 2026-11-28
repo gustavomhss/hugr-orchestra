@@ -2,6 +2,7 @@ import { Option } from "effect"
 import { ActivityArm } from "@orchestra/schema/activity-arm"
 import { ActivityEmpty } from "@orchestra/schema/activity-empty"
 import { ActivityStop } from "@orchestra/schema/activity-stop"
+import { ActivityFreeze } from "@orchestra/schema/activity-freeze"
 import type { IpcMainInvokeEvent } from "electron"
 import { isRendererOrigin } from "./renderer-origin"
 
@@ -22,6 +23,13 @@ export type ActivityEmptyClient = {
   confirm(request: ActivityEmpty.Confirm, signal?: AbortSignal): Promise<ActivityEmpty.Receipt | undefined>
 }
 
+export type ActivityFreezeClient = {
+  isCurrent(): boolean
+  read(request: ActivityFreeze.Read, signal?: AbortSignal): Promise<ActivityFreeze.State | undefined>
+  preview(request: ActivityFreeze.Request, signal?: AbortSignal): Promise<ActivityFreeze.Preview | undefined>
+  confirm(request: ActivityFreeze.Confirm, signal?: AbortSignal): Promise<ActivityFreeze.Receipt | undefined>
+}
+
 export function registerActivityArmIpc(deps: {
   ipcMain: typeof import("electron").ipcMain
   BrowserWindow: typeof import("electron").BrowserWindow
@@ -32,6 +40,7 @@ export function registerActivityArmIpc(deps: {
     openActivityArm: () => ActivityArmClient | undefined
     openActivityStop: () => ActivityStopClient | undefined
     openActivityEmpty: () => ActivityEmptyClient | undefined
+    openActivityFreeze: () => ActivityFreezeClient | undefined
   } | undefined
 }) {
   const pending = new Set<number>()
@@ -211,6 +220,84 @@ export function registerActivityArmIpc(deps: {
       if (!current() || !receipt || receipt.previewID !== previewID ||
         receipt.targets.length !== bindings.length || receipt.targets.some((target, index) =>
           target.targetID !== bindings[index]?.targetID || target.generation !== bindings[index]?.generation)) return undefined
+      return receipt
+    } catch {
+      return undefined
+    } finally {
+      event.sender.removeListener("did-start-navigation", invalidate)
+      event.sender.removeListener("destroyed", invalidate)
+      pending.delete(event.sender.id)
+    }
+  })
+  deps.ipcMain.handle("activity-read-freeze", async (event: IpcMainInvokeEvent, serverURL: unknown, request: unknown) => {
+    const owned = deps.getOwned()
+    const decoded = ActivityFreeze.decodeRead(request)
+    const win = deps.BrowserWindow.fromWebContents(event.sender)
+    const frame = event.senderFrame
+    if (!owned || typeof serverURL !== "string" || serverURL !== owned.url || Option.isNone(decoded) ||
+      !win || win.isDestroyed() || win.webContents !== event.sender || !frame || frame !== event.sender.mainFrame ||
+      !isRendererOrigin(frame.url, deps.rendererDevURL) || pending.has(event.sender.id)) return undefined
+    const client = owned.openActivityFreeze()
+    if (!client) return undefined
+    pending.add(event.sender.id)
+    const controller = new AbortController()
+    const invalidate = () => controller.abort()
+    const frameURL = frame.url
+    event.sender.on("did-start-navigation", invalidate)
+    event.sender.on("destroyed", invalidate)
+    const current = () => !controller.signal.aborted && client.isCurrent() && !win.isDestroyed() && !event.sender.isDestroyed() &&
+      deps.BrowserWindow.fromWebContents(event.sender) === win && win.webContents === event.sender &&
+      event.sender.mainFrame === frame && frame.url === frameURL && isRendererOrigin(frame.url, deps.rendererDevURL) &&
+      deps.getOwned() === owned
+    try {
+      const state = await client.read(decoded.value, controller.signal)
+      return current() ? state : undefined
+    } catch {
+      return undefined
+    } finally {
+      event.sender.removeListener("did-start-navigation", invalidate)
+      event.sender.removeListener("destroyed", invalidate)
+      pending.delete(event.sender.id)
+    }
+  })
+  deps.ipcMain.handle("activity-freeze-member", async (event: IpcMainInvokeEvent, serverURL: unknown, request: unknown) => {
+    const owned = deps.getOwned()
+    const decoded = ActivityFreeze.decodeRequest(request)
+    const win = deps.BrowserWindow.fromWebContents(event.sender)
+    const frame = event.senderFrame
+    if (process.platform !== "linux" || !owned || typeof serverURL !== "string" || serverURL !== owned.url || Option.isNone(decoded) ||
+      !win || win.isDestroyed() || win.webContents !== event.sender || !frame || frame !== event.sender.mainFrame ||
+      !isRendererOrigin(frame.url, deps.rendererDevURL) || pending.has(event.sender.id)) return undefined
+    const client = owned.openActivityFreeze()
+    if (!client) return undefined
+    pending.add(event.sender.id)
+    const controller = new AbortController()
+    const invalidate = () => controller.abort()
+    const frameURL = frame.url
+    event.sender.on("did-start-navigation", invalidate)
+    event.sender.on("destroyed", invalidate)
+    const current = () => !controller.signal.aborted && client.isCurrent() && !win.isDestroyed() && !event.sender.isDestroyed() &&
+      deps.BrowserWindow.fromWebContents(event.sender) === win && win.webContents === event.sender &&
+      event.sender.mainFrame === frame && frame.url === frameURL && isRendererOrigin(frame.url, deps.rendererDevURL) &&
+      deps.getOwned() === owned
+    try {
+      const preview = await client.preview(decoded.value, controller.signal)
+      if (!current() || !preview || preview.expiresAt <= Date.now() || preview.target.targetID !== decoded.value.recordID || preview.action !== decoded.value.action) return undefined
+      const result = await deps.dialog.showMessageBox(win, {
+        type: "warning",
+        title: preview.action === "suspend" ? "Suspend activity member" : "Resume activity member",
+        message: preview.action === "suspend" ? "Suspend this owned activity member?" : "Resume this owned activity member?",
+        detail: `Tree: ${literal(preview.treeID)}\nMember: ${literal(preview.member)}\nTarget: ${literal(preview.target.targetID)}\nBirth token: ${literal(preview.member.split(":")[1] ?? "") }\nOwner: ${literal(preview.target.owner)}\nTitle: ${literal(preview.target.label)}\nGeneration: ${literal(preview.target.generation)}`,
+        buttons: ["Cancel", preview.action === "suspend" ? "Suspend member" : "Resume member"],
+        defaultId: 0,
+        cancelId: 0,
+        noLink: true,
+      })
+      if (result.response !== 1 || !current() || preview.expiresAt <= Date.now()) return undefined
+      const receipt = await client.confirm({ previewID: preview.previewID }, controller.signal)
+      if (!current() || !receipt || receipt.phase === "unknown" || receipt.phase === "refused" ||
+        receipt.previewID !== preview.previewID || receipt.action !== preview.action || receipt.treeID !== preview.treeID ||
+        receipt.member !== preview.member || JSON.stringify(receipt.target) !== JSON.stringify(preview.target)) return undefined
       return receipt
     } catch {
       return undefined

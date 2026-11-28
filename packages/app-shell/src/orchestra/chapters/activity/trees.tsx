@@ -1,5 +1,6 @@
 import type { ActivityMonitor } from "@orchestra/schema/activity-monitor"
-import { For, Show, createMemo, onCleanup, onMount } from "solid-js"
+import type { ActivityFreeze } from "@orchestra/schema/activity-freeze"
+import { For, Show, createEffect, createMemo, onCleanup, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
@@ -24,6 +25,7 @@ export function ActivityTrees(props: { query: string }) {
     stopResult: undefined as { scope: string; uncertain: boolean } | undefined,
     receivedAt: performance.now(),
     now: performance.now(),
+    freeze: undefined as { scope: string; state?: ActivityFreeze.State; result?: string } | undefined,
   })
   const controller = new AbortController()
   const age = (sampledAt: number | undefined) => {
@@ -57,6 +59,10 @@ export function ActivityTrees(props: { query: string }) {
     const current = server.current
     return current?.type === "sidecar" && current.variant === "base" ? current.http.url : undefined
   }
+  createEffect(() => {
+    const scope = stopScope()
+    if (state.freeze && state.freeze.scope !== scope) setState("freeze", undefined)
+  })
 
   async function stop(recordID: string) {
     const scope = stopScope()
@@ -69,6 +75,32 @@ export function ActivityTrees(props: { query: string }) {
       if (receipt && !controller.signal.aborted && stopScope() === scope && sdk() === client) {
         setState("stopResult", { scope, uncertain: receipt.outcomes.some((outcome) => outcome.state === "unknown") })
         await refresh(recordID)
+      }
+    } finally {
+      if (!controller.signal.aborted) setState("stopping", false)
+    }
+  }
+
+  async function readFreeze(recordID: string) {
+    const scope = stopScope()
+    const read = platform.readActivityFreeze
+    if (!scope || !read || state.busy || state.stopping) return
+    setState("freeze", { scope })
+    const value = await read(scope, { recordID }).catch(() => undefined)
+    if (stopScope() === scope && !controller.signal.aborted) setState("freeze", { scope, state: value, result: state.freeze?.result })
+  }
+
+  async function freeze(recordID: string, action: ActivityFreeze.Action) {
+    const scope = stopScope()
+    const request = platform.freezeActivityMember
+    if (!scope || !request || state.busy || state.stopping || state.freeze?.scope !== scope || state.freeze.state?.recordID !== recordID) return
+    setState("stopping", true)
+    try {
+      const receipt = await request(scope, { recordID, action }).catch(() => undefined)
+      if (!controller.signal.aborted && stopScope() === scope) {
+        setState("freeze", { scope, result: receipt?.phase ?? "unknown" })
+        setState("stopping", false)
+        await readFreeze(recordID)
       }
     } finally {
       if (!controller.signal.aborted) setState("stopping", false)
@@ -201,6 +233,24 @@ export function ActivityTrees(props: { query: string }) {
                             <button type="button" class="mx-btn" disabled={state.busy || state.stopping} onClick={() => void stop(row.recordID)}>
                               {language.t("orchestra.monitor.stopMembers")}
                             </button>
+                          </Show>
+                          <Show when={platform.readActivityFreeze && platform.freezeActivityMember && stopScope() && row.supervisorID && row.members?.length && row.state === "alive" && !row.inspectionFailed}>
+                            <button type="button" class="mx-btn" disabled={state.busy || state.stopping} onClick={() => void readFreeze(row.recordID)}>
+                              Read member status
+                            </button>
+                          </Show>
+                          <Show when={state.freeze?.scope === stopScope() && state.freeze?.state?.recordID === row.recordID && state.freeze.state.next !== "blocked"}>
+                            {(freezeState) => (
+                              <>
+                                <p role="status">{freezeState().next === "resume" ? "Member suspended" : "Member not suspended"}</p>
+                                <button type="button" class="mx-btn" disabled={state.busy || state.stopping} onClick={() => void freeze(row.recordID, freezeState().next)}>
+                                  {freezeState().next === "resume" ? "Resume member" : "Suspend member"}
+                                </button>
+                              </>
+                            )}
+                          </Show>
+                          <Show when={state.freeze?.scope === stopScope() && state.freeze?.result}>
+                            <p role="status">{state.freeze?.result === "resumed" ? "Member resumed; it may remain stopped externally." : `Member action: ${state.freeze?.result}`}</p>
                           </Show>
                           <p>
                             {language.t(

@@ -18,6 +18,7 @@ import type { ResponseDownloadAPI } from "./response-download"
 import type { ActivityArm } from "@orchestra/schema/activity-arm"
 import type { ActivityStop } from "@orchestra/schema/activity-stop"
 import type { ActivityEmpty } from "@orchestra/schema/activity-empty"
+import type { ActivityFreeze } from "@orchestra/schema/activity-freeze"
 export type {
   WslDistroProbe,
   WslInstalledDistro,
@@ -131,6 +132,8 @@ export type ElectronAPI = import("@orchestra/app/app-dock-linux").AppDockLinuxAP
   stopActivityTree: (serverURL: string, request: ActivityStop.Request) => Promise<ActivityStop.Receipt | undefined>
   emptyActivityQuarantine: (serverURL: string) => Promise<ActivityEmpty.Receipt | undefined>
   readActivityQuarantine: (serverURL: string) => Promise<ActivityEmpty.Snapshot | undefined>
+  readActivityFreeze: (serverURL: string, request: ActivityFreeze.Read) => Promise<ActivityFreeze.State | undefined>
+  freezeActivityMember: (serverURL: string, request: ActivityFreeze.Request) => Promise<ActivityFreeze.Receipt | undefined>
   appDockOpen: (
     url: string,
     bounds: { x: number; y: number; width: number; height: number },
