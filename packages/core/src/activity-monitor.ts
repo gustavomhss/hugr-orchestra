@@ -58,8 +58,8 @@ export function make() {
     const timer = { id: undefined as ReturnType<typeof setTimeout> | undefined }
     entry.sampling = Promise.race([
       Promise.resolve().then(() => {
-        const tree = child as Child & { observeTree?: () => Promise<{ members: ActivityMonitor.Member[]; physicalFootprintBytes?: number }> }
-        return tree.observeTree ? tree.observeTree() : child.observeProcesses().then((members) => ({ members, physicalFootprintBytes: undefined }))
+        const tree = child as Child & { observeTree?: () => Promise<{ members: ActivityMonitor.Member[]; physicalFootprintBytes?: number; footprintIdentity?: string }> }
+        return tree.observeTree ? tree.observeTree() : child.observeProcesses().then((members) => ({ members, physicalFootprintBytes: undefined, footprintIdentity: undefined }))
       }),
       new Promise<never>((_, reject) => {
         timer.id = setTimeout(() => reject(new Error("Process observation timed out")), 2000)
@@ -76,8 +76,10 @@ export function make() {
             new Set(members.map((member) => member.pid)).size === members.length &&
             Number.isSafeInteger(bytes) && bytes !== undefined && bytes >= 0
           if (complete && bytes !== undefined) {
-            const identity = JSON.stringify(members.map((member) => [member.pid, member.parentPid]).sort((a, b) => (a[0] ?? 0) - (b[0] ?? 0)))
-            if (entry.footprintMembers !== identity || (entry.footprintSamples.at(-1)?.sampledAt ?? -1) >= sampledAt)
+            const identity = observation.footprintIdentity
+              ? JSON.stringify([observation.footprintIdentity, members.map((member) => [member.pid, member.parentPid]).sort((a, b) => (a[0] ?? 0) - (b[0] ?? 0))])
+              : undefined
+            if (!identity || entry.footprintMembers !== identity || (entry.footprintSamples.at(-1)?.sampledAt ?? -1) >= sampledAt
               entry.footprintSamples = []
             entry.footprintMembers = identity
             entry.footprintSamples.push({ source: "footprint", bytes, sampledAt })

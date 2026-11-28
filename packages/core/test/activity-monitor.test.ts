@@ -157,10 +157,10 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical fo
     const binding = await Omni.load()
     await using child = binding.spawn(process.execPath, ["-e", "process.stdin.resume()"], { stdin: "pipe" })
     Omni.count("spawns")
-    const sample = { bytes: 100, members: [{ pid: child.pid, parentPid: null, name: "runtime" }] }
+    const sample = { identity: "tree-a", bytes: 100, members: [{ pid: child.pid, parentPid: null, name: "runtime" }] }
     const observed = new Proxy(child, {
       get(target, key) {
-        if (key === "observeTree") return async () => ({ members: sample.members, physicalFootprintBytes: sample.bytes })
+        if (key === "observeTree") return async () => ({ members: sample.members, physicalFootprintBytes: sample.bytes, footprintIdentity: sample.identity })
         const value: unknown = Reflect.get(target, key, target)
         return typeof value === "function" ? value.bind(target) : value
       },
@@ -195,6 +195,7 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical fo
     sample.bytes = 600
     await monitor.inspect(id)
     expect(row()?.footprint?.hypothesis).toBe("insufficient")
+    sample.identity = "tree-b"
     sample.members = [{ pid: child.pid + 1, parentPid: null, name: "other" }]
     await Bun.sleep(2)
     await monitor.inspect(id)
