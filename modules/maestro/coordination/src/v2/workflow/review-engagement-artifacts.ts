@@ -31,6 +31,7 @@ export type Collector = Omit<ReviewEvidenceCollectorV2.Collector, "seal"> & {
 }
 export type Repository = {
   readonly collect: (context: ReviewEvidenceCollectorV2.Context) => Effect.Effect<Collector, never, Scope.Scope>
+  readonly fixReviewRecipes: (view: Terminal, findingIDs: ReadonlyArray<string>) => Effect.Effect<ReadonlyArray<{ readonly findingID: string; readonly proof: ReviewEvidenceSchemaV2.Proof; readonly recipe: typeof ReviewEvidenceSchemaV2.Recipe.Type }>, Tool.Failure>
   readonly replay: (view: Terminal) => Effect.Effect<string, Tool.Failure>
   readonly resolve: (view: Terminal, input: Input) => Effect.Effect<string, Tool.Failure>
 }
@@ -102,15 +103,16 @@ export function make(input: { readonly database: Database.Interface; readonly fs
       bound?: ReviewVariantValidationV2.Authority) => Effect.gen(function* () {
       const bodies = new Map(yield* Effect.forEach(receipt.artifacts, (artifact) => storage.read(artifact.sha256, artifact.bytes, artifact.mime)
         .pipe(Effect.map((bytes) => [artifact.artifactID, bytes] as const))))
-      yield* parse(() => {
-        ReviewEvidenceValidationV2.validate(receipt, report, bodies)
-        if (receipt.schema !== "review-engagement-evidence-v2") return
+      const context = yield* parse(() => {
+        const context = ReviewEvidenceValidationV2.validate(receipt, report, bodies)
+        if (receipt.schema !== "review-engagement-evidence-v2") return context
         if (!bound) throw ReviewEvidenceSchemaV2.failure("corrupt", "variant receipt has no durable authority")
         ReviewVariantValidationV2.validate(receipt, report, bodies, bound)
+        return context
       }).pipe(Effect.mapError((error) => receipt.schema === "review-engagement-evidence-v2" &&
         error.metadata?.reason === "engagement-report-invalid"
         ? ReviewEvidenceSchemaV2.failure("corrupt", error.message) : error))
-      return bodies
+      return { bodies, context }
     })
     const bounded = <A>(effect: Effect.Effect<A, Tool.Failure>) => effect.pipe(Effect.timeoutOrElse({ duration: "60 seconds",
       orElse: () => Effect.fail(ReviewEvidenceSchemaV2.failure("timeout", "evidence read exceeded its bounded deadline")) }))
@@ -138,6 +140,33 @@ export function make(input: { readonly database: Database.Interface; readonly fs
         }) }
         return result
       }),
+      fixReviewRecipes: (view, findingIDs) => bounded(Effect.gen(function* () {
+        const noRecipe = () => new Tool.Failure({ message: "engagement-fix-review-no-recipe: no uniquely qualified retained recipe",
+          metadata: { reason: "engagement-fix-review-no-recipe" } })
+        if (view.schema === "review-engagement-state-v1" || findingIDs.length === 0 || new Set(findingIDs).size !== findingIDs.length)
+          return yield* noRecipe()
+        const held = yield* retained(view)
+        const { context } = yield* complete(view.terminal, held.receipt, held.authority)
+        return yield* parse(() => findingIDs.map((findingID) => {
+          const matches = view.terminal.value.report?.findings.filter((finding) => finding.id === findingID) ?? []
+          const finding = matches[0]
+          if (matches.length !== 1 || !finding || finding.evidence.kind !== "tool") throw noRecipe()
+          const evidence = finding.evidence
+          const checks = context.operation.checks.filter((check) => check.pack === evidence.pack && check.version === evidence.version && check.uri === evidence.uri)
+          const proofs = context.proofs.filter((proof) => proof.analysisOperationID === context.operation.operationID &&
+            context.artifacts.find((artifact) => artifact.artifactID === proof.stdoutArtifactID)?.uri === evidence.uri)
+          if (checks.length !== 1 || proofs.length !== 1 || !checks[0].proofIDs.includes(proofs[0].proofID) ||
+            !checks[0].artifactIDs.includes(proofs[0].stdoutArtifactID) || !["pass", "fail"].includes(checks[0].status)) throw noRecipe()
+          const proof = ReviewEvidenceValidationV2.qualifiedTool(context, finding)
+          const recipe = context.recipes.get(proof.proofID)
+          if (!recipe || proof !== proofs[0] || proof.side !== "head" || proof.sourceSha256 !== context.source.sha256 ||
+            proof.runtime.target !== "linux-x64" || recipe.template !== "oxlint-host-sarif" ||
+            !recipe.files.some((file) => file.path === finding.path) || ![0, 1].includes(proof.outcome.exitCode ?? -1) ||
+            proof.outcome.timedOut || proof.outcome.overflow || proof.outcome.memoryExceeded || proof.outcome.failure ||
+            proof.outcome.stdout.truncated || proof.outcome.stderr.truncated) throw noRecipe()
+          return { findingID, proof, recipe }
+        }))
+      })),
       replay: (view) => {
         if (view.terminal.value.status !== "completed" || view.schema === "review-engagement-state-v1") return Effect.succeed(view.terminal.text)
         return bounded(Effect.gen(function* () {
@@ -173,7 +202,7 @@ export function make(input: { readonly database: Database.Interface; readonly fs
             !ReviewEvidenceSchemaV2.same(binding, identity)) throw new Error("cursor binding differs")
           return offset
         }, catch: () => ReviewEvidenceSchemaV2.failure("cursor-invalid", "cursor does not name this authorized page") })
-        const bodies = yield* complete(view.terminal, held.receipt, held.authority)
+        const { bodies } = yield* complete(view.terminal, held.receipt, held.authority)
         const bytes = request.artifactID === held.receiptID ? held.bytes : bodies.get(request.artifactID)
         if (!bytes) return yield* ReviewEvidenceSchemaV2.failure("corrupt", "required body is unavailable")
         const slice = bytes.subarray(offset, offset + ReviewEvidenceSchemaV2.limits.page)

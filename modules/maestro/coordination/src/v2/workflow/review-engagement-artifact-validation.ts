@@ -32,6 +32,7 @@ export type AnalysisContext = {
   readonly retained: typeof Retained.Type
   readonly artifacts: ReadonlyArray<ReviewEvidenceSchemaV2.Artifact>
   readonly proofs: ReadonlyArray<ReviewEvidenceSchemaV2.Proof>
+  readonly recipes: ReadonlyMap<string, typeof ReviewEvidenceSchemaV2.Recipe.Type>
 }
 
 export function read(bytes: Uint8Array, report: ReviewEngagementReportV2.Stored): ReviewEvidenceSchemaV2.Receipt {
@@ -170,6 +171,7 @@ export function validate(receipt: ReviewEvidenceSchemaV2.Receipt, report: Review
   for (const [index, citation] of receipt.citations.entries())
     ReviewEvidenceSchemaV2.require(Buffer.from(body(citation.artifactID)).equals(Buffer.from(report.value.citations[index].text)), "citation bytes differ")
   for (const finding of card.findings) if (finding.evidence.kind === "tool") qualifiedTool(context, finding)
+  return context
 }
 
 /** The same immutable analysis/proof boundary is available before a final card exists. */
@@ -204,6 +206,7 @@ export function analysisContext(input: AnalysisInput, bodies: ReviewEvidenceSche
   ReviewEvidenceSchemaV2.require(final && [...analyses.keys()].at(-1) === input.finalAnalysisOperationID, "final analysis binding differs")
   const seen = new Set<string>()
   const invocations = new Set<string>()
+  const recipes = new Map<string, typeof ReviewEvidenceSchemaV2.Recipe.Type>()
   for (const proof of input.hostProofs) {
     const { proofID, ...payload } = proof
     const analysis = analyses.get(proof.analysisOperationID)
@@ -222,13 +225,13 @@ export function analysisContext(input: AnalysisInput, bodies: ReviewEvidenceSche
         capture.truncated === (capture.bytes > capture.retainedBytes) && descriptor.complete === (!capture.truncated && !proof.outcome.overflow),
       "native output byte accounting differs")
     }
-    validateProof(proof, body, allowed, analysis.result.catalog)
+    recipes.set(proof.proofID, validateProof(proof, body, allowed, analysis.result.catalog))
     if (proof.outcome.timedOut || proof.outcome.overflow || proof.outcome.memoryExceeded || proof.outcome.failure)
       ReviewEvidenceSchemaV2.require(analysis.result.result.checks.every((check) => check.pack !== "oxlint" || check.status !== "pass"),
         "native failure was represented as a passing check")
   }
   return { source: input.source, final: final.result, operation: final.operation, retained: final.retained,
-    artifacts: input.artifacts, proofs: input.hostProofs }
+    artifacts: input.artifacts, proofs: input.hostProofs, recipes }
 }
 
 /** A model URI qualifies only through the observed final analysis, item and native invocation. */
@@ -296,6 +299,7 @@ function validateProof(proof: ReviewEvidenceSchemaV2.Proof, body: (id: string) =
   ReviewEvidenceSchemaV2.require(ReviewEvidenceSchemaV2.same(recipe.invocation.argv, expected), "native argv differs from the qualified recipe")
   ReviewEvidenceSchemaV2.require(proof.outcome.stdout.retainedBytes <= recipe.limits.maxBytes &&
     proof.outcome.stderr.retainedBytes <= recipe.limits.maxBytes, "native capture exceeded its recipe bound")
+  return recipe
 }
 
 function validatePaths(value: unknown, allowed: ReadonlyMap<string, unknown>) {

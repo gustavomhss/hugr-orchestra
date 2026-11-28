@@ -52,7 +52,20 @@ const failure = (reason: string, detail: string) => new Tool.Failure({ message: 
 /** In-process admission only. An unfinished record with no live owner never resumes a provider after reopening. */
 export const run = Effect.fn("ReviewEngagementRequestV2.run")(function* (params: ReviewEngagementPolicyV2.Input, input: Input) {
   if (params.profile === "compliance") return yield* failure("engagement-profile-unavailable", "compliance execution is not built")
-  if (params.fixReview !== undefined) return yield* failure("engagement-fix-review-unavailable", "fix review execution is not built")
+  const fixReview = params.fixReview
+  if (fixReview !== undefined) {
+    return yield* Effect.gen(function* () {
+      const parent = yield* input.services.store.get(input.sessionID)
+      const terminal = parent && (yield* ReviewEngagementStoreV2.make(input.database).lookup(parent, fixReview.reportID))
+      if (!terminal) return yield* failure("engagement-evidence-not-found", "no authorized terminal report")
+
+      const artifacts = yield* ReviewEngagementArtifactsV2.make({ database: input.database, fs: input.services.atlas.fs,
+        ...(input.global ? { global: input.global } : {}) })
+      yield* artifacts.fixReviewRecipes(terminal, fixReview.findingIDs)
+      return yield* failure("engagement-fix-review-unavailable", "fix review execution is not built")
+    }).pipe(Effect.timeoutOrElse({ duration: "60 seconds", orElse: () =>
+      Effect.fail(failure("engagement-evidence-timeout", "bounded fix review evidence read elapsed")) }))
+  }
   if (Option.isNone(input.sessions) || Option.isNone(input.execution))
     return yield* failure("session-execution-unavailable", "engagement requires native Session execution")
   const sessions = input.sessions.value
