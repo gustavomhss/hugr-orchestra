@@ -30,12 +30,22 @@ type FixtureChild = {
 }
 const output = new Map<string, { values: string[]; waiters: Array<(value: string) => void> }>()
 
-const nextOutput = (name: string) => new Promise<string>((resolve) => {
+function nextOutput(name: string): Promise<string | undefined> {
   const queue = output.get(name)!
   const value = queue.values.shift()
-  if (value !== undefined) return resolve(value)
-  queue.waiters.push(resolve)
-})
+  if (value !== undefined) return Promise.resolve(value)
+  return new Promise((resolve) => {
+    const received = (line: string) => {
+      clearTimeout(timer)
+      resolve(line)
+    }
+    const timer = setTimeout(() => {
+      queue.waiters = queue.waiters.filter((waiter) => waiter !== received)
+      resolve(undefined)
+    }, 750)
+    queue.waiters.push(received)
+  })
+}
 
 const fixture = serveForever({
   hostname: "127.0.0.1",
@@ -94,12 +104,11 @@ const fixture = serveForever({
       }
       const chunks: Buffer[] = []
       for await (const chunk of request) chunks.push(Buffer.from(chunk))
-      await Effect.runPromise(Stream.run(Stream.make(Buffer.concat(chunks)), target.handle.stdin))
-      const value = await Promise.race([
-        nextOutput(name).then((result) => ({ result })),
-        new Promise<{ timeout: true }>((resolve) => setTimeout(() => resolve({ timeout: true }), 750)),
-      ])
-      response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify(value))
+      if (chunks.length) await Effect.runPromise(Stream.run(Stream.make(Buffer.concat(chunks)), target.handle.stdin))
+      const result = await nextOutput(name)
+      response.writeHead(200, { "content-type": "application/json" }).end(JSON.stringify(
+        result === undefined ? { timeout: true } : { result },
+      ))
     })
     yield* Effect.promise(() => new Promise<void>((resolve, reject) => {
       control.once("error", reject)

@@ -77,6 +77,7 @@ async function parent() {
     assert.ok(result.selected)
     assert.ok(result.sibling)
     assert.equal(result.sameMark, true)
+    process.stdout.write(`${JSON.stringify(result)}\n`)
   } finally {
     await rm(root, { recursive: true, force: true })
   }
@@ -191,6 +192,16 @@ async function child() {
     const siblingRead = await window.webContents.executeJavaScript(`window.fixtureRead(${JSON.stringify(report.sibling.recordID)})`)
     assert.equal(siblingRead, undefined, "unlisted /bin/cat sibling must not receive a freeze control")
 
+    const { DatabaseSync } = await import("node:sqlite")
+    const journal = () => {
+      const database = new DatabaseSync(fixtureEnv.ORCHESTRA_DB, { readOnly: true })
+      try {
+        return database.prepare("SELECT mark_id, phase FROM activity_suspension_ledger WHERE tree_id = ?")
+          .get(report.selected.recordID)
+      } finally {
+        database.close()
+      }
+    }
     const selectedBefore = await control(report.controlPort, "selected", "before-freeze\n")
     assert.equal(selectedBefore.result, "before-freeze\n", "selected sidecar child made progress before freeze")
     const stateBefore = await window.webContents.executeJavaScript(`window.fixtureRead(${JSON.stringify(report.selected.recordID)})`)
@@ -198,6 +209,7 @@ async function child() {
 
     const cancelled = invokeFreeze(report.selected.recordID, "suspend", "default")
     assert.equal(await cancelled, undefined, "default native button must cancel without an effect")
+    assert.equal(journal(), undefined, "cancelling must leave no suspension mark")
     assert.notEqual((await readMemberIdentity(report.selected.pid)).state, "T", "default cancel must leave the selected process running")
     const afterCancel = await control(report.controlPort, "selected", "after-cancel\n")
     assert.equal(afterCancel.result, "after-cancel\n", "default cancel must leave member progress intact")
@@ -208,6 +220,9 @@ async function child() {
     assert.equal(suspended?.action, "suspend")
     assert.equal(suspended?.phase, "suspended")
     assert.ok(suspended?.markID)
+    const savedSuspension = journal()
+    assert.equal(savedSuspension?.mark_id, suspended.markID)
+    assert.equal(savedSuspension?.phase, "suspended")
     const blocked = await control(report.controlPort, "selected", "while-suspended\n")
     assert.equal(blocked.timeout, true, "selected process must stop making stdin/stdout progress while suspended")
     const siblingProgress = await control(report.controlPort, "sibling", "sibling-progress\n")
@@ -218,10 +233,13 @@ async function child() {
     assert.equal(resumed?.action, "resume")
     assert.equal(resumed?.phase, "resumed")
     assert.equal(resumed?.markID, suspended.markID, "resume must settle the same suspension mark")
+    const savedResume = journal()
+    assert.equal(savedResume?.mark_id, suspended.markID)
+    assert.equal(savedResume?.phase, "resumed")
+    const buffered = await control(report.controlPort, "selected", "")
+    assert.equal(buffered.result, "while-suspended\n", "buffered input must progress after same-mark resume")
     const selectedAfter = await control(report.controlPort, "selected", "after-resume\n")
-    assert.ok(selectedAfter.result?.includes("while-suspended\n"), "buffered input must progress after same-mark resume")
-    const selectedAfterSecond = await control(report.controlPort, "selected", "after-resume-second\n")
-    assert.equal(selectedAfterSecond.result, "after-resume-second\n", "selected process must make progress after same-mark resume")
+    assert.equal(selectedAfter.result, "after-resume\n", "selected process must make progress after same-mark resume")
 
     const result = {
       status: "pass",
@@ -230,6 +248,7 @@ async function child() {
       sameMark: suspended.markID === resumed.markID,
       defaultCancelNoop: true,
       signedPrivateChannel: true,
+      durableJournal: true,
       desktopUID: process.getuid?.(),
       sidecarUID: report.uid,
     }
