@@ -22,7 +22,7 @@ import { useLayout } from "@/context/layout"
 import { usePermission } from "@/context/permission"
 import { type ImageAttachmentPart, usePrompt } from "@/context/prompt"
 import { usePlatform } from "@/context/platform"
-import { useSDK } from "@/context/sdk"
+import { SDKProvider, useSDK } from "@/context/sdk"
 import { useSync } from "@/context/sync"
 import { createDraftSessionState, useDraftSessionKey } from "./prompt-input/draft-session"
 import { useServerReady } from "@/context/server-sdk"
@@ -30,6 +30,7 @@ import { createSessionTabs } from "@/pages/session/helpers"
 import { OrchestraComposeTools } from "@/pages/session/composer/orchestra-compose-tools"
 import { useSessionDelivery } from "@/pages/session/composer/delivery"
 import { showToast } from "@/utils/toast"
+import type { Session } from "@/v2-wire"
 import { PromptInputV2, type PromptInputV2Suggestion } from "@orchestra/session-ui/v2/prompt-input"
 import { agentKey, agentMention } from "@/context/agent-identity"
 import {
@@ -49,12 +50,14 @@ export type PromptInputV2ComposerProps = {
 
 export type PromptInputV2ControllerProps = Omit<PromptInputProps, "class" | "submission"> & {
   sessionID?: () => string | undefined
+  sessionInfo?: () => Pick<Session, "id" | "directory" | "workspaceID"> | undefined
   pendingKey?: () => string
 }
 export type PromptInputV2ComposerController = PromptInputV2Interaction & {
   readonly model: PromptInputProps["controls"]["model"]
   readonly pendingKey: () => string
   readonly sessionID?: () => string | undefined
+  readonly sessionDirectory?: () => string
   readonly submitting: () => boolean
 }
 
@@ -95,6 +98,12 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
     props.sessionID
       ? (Object.create(props.controller, { view: { value: view } }) as PromptInputV2ComposerController)
       : props.controller
+  const subagentModels = () => (
+    <PromptInputV2SubagentModelsControl
+      sessionID={props.sessionID ?? props.controller.sessionID?.()}
+      pendingKey={props.controller.pendingKey()}
+    />
+  )
 
   return (
     <div class="flex flex-col gap-3" data-prompt-admitting={String(props.controller.submitting())}>
@@ -110,10 +119,9 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
             <Show when={props.sessionID}>
               {(sessionID) => <OrchestraComposeTools controller={props.controller} sessionID={sessionID()} />}
             </Show>
-            <PromptInputV2SubagentModelsControl
-              sessionID={props.sessionID ?? props.controller.sessionID?.()}
-              pendingKey={props.controller.pendingKey()}
-            />
+            {props.controller.sessionDirectory ? (
+              <SDKProvider directory={props.controller.sessionDirectory}>{subagentModels()}</SDKProvider>
+            ) : subagentModels()}
           </>
         }
         modelControl={
@@ -168,7 +176,10 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
       return [...result, path]
     }, [])
   })
-  const info = createMemo(() => (props.controls.session.id ? sync().session.get(props.controls.session.id) : undefined))
+  const info = createMemo(() => {
+    if (props.sessionInfo) return props.sessionInfo()
+    if (props.controls.session.id) return sync().session.get(props.controls.session.id)
+  })
   const working = createMemo(() => sync().data.session_working(props.controls.session.id ?? ""))
   const attachments = createMemo(() =>
     prompt.current().filter((part): part is ImageAttachmentPart => part.type === "image"),
@@ -483,7 +494,13 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
       },
     },
   })
-  const composer = Object.assign(controller, { model: props.controls.model, pendingKey, sessionID: props.sessionID, submitting: submission.submitting })
+  const composer = Object.assign(controller, {
+    model: props.controls.model,
+    pendingKey,
+    sessionID: props.sessionID,
+    sessionDirectory: props.sessionInfo ? () => info()?.directory ?? sdk().directory : undefined,
+    submitting: submission.submitting,
+  })
   Object.defineProperty(composer, "model", { get: () => props.controls.model })
 
   command.register("prompt-input", () => [
