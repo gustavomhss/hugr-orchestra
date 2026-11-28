@@ -2,16 +2,16 @@
   "kind": "operator archive of requested final S2 review",
   "reviewer": "/root/s2_admission_j2",
   "response_alias": "/root/s2_admission_j2",
-  "run_id": 46177202438,
-  "artifact_id": 15275937523,
-  "candidate_id": "084d811e9af497ed6619efaa98117e00f6342258a91842b59890193d876e9a52",
-  "target_sha256": "4732ef6747521ac00ed927c3e3ee66b18eb0f6d2f629055365c5307f07d3b0d9",
-  "vector_sha256": "9c0e77612f3cc57d042888133bcf8a28860ecb92de3a9abd0c967b7d3c5797e0",
+  "run_id": 46178566723,
+  "artifact_id": 15276513699,
+  "candidate_id": "158157183989b67a7a9f90e9a5b6b0dba87780c690178ca0adf4d19b73720294",
+  "target_sha256": "f22ff9245bb22b57b0d09f3e63c43173c312050a0432d41fd1339c093b79876a",
+  "vector_sha256": "3418c2636b8019c70ac295909831a66db103a691f1402e4aafc71a39ce700aa5",
   "criteria": [
     "ADMIT-EXACT-TRANSFORM",
     "ADMIT-SOURCE-BINDINGS",
     "ADMIT-SEMANTIC-SCOPE",
     "ADMIT-ISOLATED-PLAN"
   ],
-  "scope": "All 13 final isolated target entries only. Only C1 and C4 retries to follow."
+  "scope": "All 13 final isolated target entries only. Only C1 retry to follow."
 }
