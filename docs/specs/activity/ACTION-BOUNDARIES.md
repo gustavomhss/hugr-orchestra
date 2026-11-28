@@ -10,7 +10,9 @@ A capture returns the whole selected set in its requested order if every binding
 
 ## Human confirmation
 
-The existing HTTP principal identifies a client. The Desktop-owned sidecar offers a separate boundary for a person to confirm an action. A proposed implementation establishes a per-launch capability over private child stdin, then authenticates loopback requests and responses. The Desktop main process fetches the canonical preview and shows its action, targets, and generations in a native dialog. Only main submits the approved binding. Ordinary HTTP credentials and agent preview requests cannot enter that flow.
+The existing HTTP principal identifies a client. The packaged Desktop's owned sidecar establishes a per-launch capability over private child stdin and authenticates loopback requests and responses. For arming quarantine, Desktop main fetches the canonical preview and shows its action, targets, and generations in a native dialog. Main submits the preview ID after an affirmative response from the dialog. Ordinary HTTP credentials and agent preview requests cannot enter that flow.
+
+The private channel authenticates the peer for an instance. The dialog supplies the human confirmation inside the trusted Desktop main process. The server consumes the preview once and revalidates the exact observed targets inside the same transaction that commits the receipt. A confirmed arm has no filesystem or process effect. The normal authenticated GET displays current and stale receipts. Runtime effects require their own authority and adapter.
 
 Arm and Apply are separate confirmations. Arm persists the selection and leaves the source in place. Apply consumes the exact confirmed binding and acquires a durable claim over the whole set before effects. A conflicting claim, changed evidence, expiry, or mismatched epoch refuses admission. An interrupted attempt that might have started an effect becomes Unknown. The executor will need restart and replay coverage before exposing either confirmation.
 
