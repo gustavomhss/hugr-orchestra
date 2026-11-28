@@ -75,8 +75,8 @@ jobs:
           curl -fsSL --retry 2 -o "$probe/cloudflared" https://github.com/cloudflare/cloudflared/releases/download/2026.11.2/cloudflared-linux-amd64
           (cd "$probe" && echo '56f13335143ec0e22772963290683a84a04114a35ec64cbc794a4d39ff9bb8cf  cloudflared' | sha256sum -c -)
           chmod 700 "$probe/cloudflared"
-          curl -fsSL --retry 2 https://api.github.com/users/gustavomhss/keys |
-            jq -er '.[] | select(.id == 131896369) | .key' > "$probe/authorized_keys"
+          # Owner public key 131896369, pinned to avoid unauthenticated API throttling.
+          printf '%s\n' 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDU+CAIqds9gkCXziD6G/5WKWZOFNBQewpo/hDbj/t7B' > "$probe/authorized_keys"
           chmod 600 "$probe/authorized_keys"
           ssh-keygen -lf "$probe/authorized_keys" | grep -F 'SHA256:grBP7UAeYUlzeyv9oe6TDk1OMADK0QrMOVfaIm9Zbwo'
           ssh-keygen -q -t ed25519 -N '' -f "$probe/host"
