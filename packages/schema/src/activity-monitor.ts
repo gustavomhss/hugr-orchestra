@@ -10,6 +10,14 @@ export const Member = Schema.Struct({
 }).annotate({ identifier: "ActivityMonitor.Member" })
 export interface Member extends Schema.Schema.Type<typeof Member> {}
 
+export const Footprint = Schema.Struct({
+  source: Schema.Literal("omni.darwin.phys-footprint"),
+  bytes: NonNegativeInt,
+  sampledAt: NonNegativeInt,
+  hypothesis: Schema.Literals(["insufficient", "compatible-with-logical-leak"]),
+}).annotate({ identifier: "ActivityMonitor.Footprint" })
+export type Footprint = typeof Footprint.Type
+
 export const Record = Schema.Struct({
   // A monitor record is not a supervisor address and never authorizes an action.
   recordID: Schema.String,
@@ -27,6 +35,7 @@ export const Record = Schema.Struct({
   source: optional(Schema.Literal("omni.processes")),
   sampledAt: optional(NonNegativeInt),
   members: optional(Schema.Array(Member)),
+  footprint: optional(Footprint),
 }).annotate({ identifier: "ActivityMonitor.Record" })
 export interface Record extends Schema.Schema.Type<typeof Record> {}
 
