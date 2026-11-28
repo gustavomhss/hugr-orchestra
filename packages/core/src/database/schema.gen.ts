@@ -23,6 +23,18 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`activity_suspension_ledger\` (
+          \`tree_id\` text PRIMARY KEY,
+          \`generation\` text NOT NULL,
+          \`mark_id\` text NOT NULL,
+          \`phase\` text NOT NULL,
+          \`suspended\` text NOT NULL,
+          \`uncertain\` text NOT NULL,
+          \`pending\` text,
+          \`owner_incarnation\` text
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`workspace\` (
           \`id\` text PRIMARY KEY,
           \`type\` text NOT NULL,

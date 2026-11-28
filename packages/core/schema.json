@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "c7aada81-687e-40d5-84b4-e3c6d64028b4",
+  "id": "60bd86c4-4a29-4f4c-8dc6-39c090794cbf",
   "prevIds": [
-    "5c07798e-fe92-4802-8591-66a99f83e026"
+    "c7aada81-687e-40d5-84b4-e3c6d64028b4"
   ],
   "ddl": [
     {
@@ -12,6 +12,10 @@
     },
     {
       "name": "activity_arm",
+      "entityType": "tables"
+    },
+    {
+      "name": "activity_suspension_ledger",
       "entityType": "tables"
     },
     {
@@ -379,6 +383,86 @@
       "name": "snapshot",
       "entityType": "columns",
       "table": "activity_arm"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "tree_id",
+      "entityType": "columns",
+      "table": "activity_suspension_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "generation",
+      "entityType": "columns",
+      "table": "activity_suspension_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "mark_id",
+      "entityType": "columns",
+      "table": "activity_suspension_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "phase",
+      "entityType": "columns",
+      "table": "activity_suspension_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "suspended",
+      "entityType": "columns",
+      "table": "activity_suspension_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "uncertain",
+      "entityType": "columns",
+      "table": "activity_suspension_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "pending",
+      "entityType": "columns",
+      "table": "activity_suspension_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "owner_incarnation",
+      "entityType": "columns",
+      "table": "activity_suspension_ledger"
     },
     {
       "type": "text",
@@ -8156,6 +8240,15 @@
       "nameExplicit": false,
       "name": "activity_action_ledger_pk",
       "table": "activity_action_ledger",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "tree_id"
+      ],
+      "nameExplicit": false,
+      "name": "activity_suspension_ledger_pk",
+      "table": "activity_suspension_ledger",
       "entityType": "pks"
     },
     {

@@ -40,6 +40,21 @@ export function load() {
   return loading
 }
 
+export type Quarantine = {
+  quarantineInspect: (path: string) => Promise<string | null>
+  quarantineRename: (source: string, destination: string, identity: string) => Promise<string>
+}
+
+/** Private hooks from the bundled Windows addon. A missing capability refuses the operation. */
+export async function quarantine(): Promise<Quarantine | undefined> {
+  if (process.platform !== "win32") return undefined
+  const binding = await load()
+  if ("quarantineInspect" in binding && typeof binding.quarantineInspect === "function" &&
+    "quarantineRename" in binding && typeof binding.quarantineRename === "function") {
+    return binding as Binding & Quarantine
+  }
+}
+
 async function open(): Promise<Binding> {
   const found = locate()
   const binding: Configurable = await import("hugr-omni").catch((cause: unknown) => {
