@@ -1,0 +1,55 @@
+{
+  "schema": "genesis-runtime-handoff/v1",
+  "completion_state": "DELIVERY_COMPLETE",
+  "completion_scope": "Native prepare qualification for S1-03 and S2, plus isolated evaluation dependency-identity regression. Separate use by the exact S4 package is recorded on the Knowledge branch.",
+  "release_id": "20261128-s4-runtime-noble-binding-v2",
+  "release": {
+    "commit": "2aa1c37af4d8db56ca6a814462d931e00cca55c8",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+    "sha256": "4b37d56c2beaa3c5e728cc16776ba30971d78db4d54207d698145e862841080a",
+    "byte_length": 11619
+  },
+  "candidate_revision": "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10",
+  "candidate_tree": "77b84e9358c80ae14b98be329ebf2407dfd83fa4",
+  "artifact_revision": "2aa1c37af4d8db56ca6a814462d931e00cca55c8",
+  "qualification_revision": "e7972ee6075cd839327c4b559ba0f5ca03b418f0",
+  "gate_refs": [
+    {
+      "run_id": 46157365177,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46157365177",
+      "harness_revision": "e7972ee6075cd839327c4b559ba0f5ca03b418f0",
+      "conclusion": "success",
+      "guards": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46157365177/guards-receipt.json",
+        "sha256": "f14af408ea33879e6b22b1a22ef417571688d298e8f1c15865e24d9448f10dfb",
+        "byte_length": 406
+      },
+      "prepare": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46157365177/prepare-summary.json",
+        "sha256": "6bce657a6d4e36358dfe830f4d01b4926e46ab6820554faf7da7067240fa6277",
+        "byte_length": 11366
+      },
+      "baseline_control": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46157365177/baseline-control.json",
+        "sha256": "70ae8bd0ba06219caa52fe1c728e29989fba3d9594dd371f3249ecc575e06dd9",
+        "byte_length": 2604
+      },
+      "corrected_control": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46157365177/corrected-control.json",
+        "sha256": "05a19bfd41ee2421a4e6570b14487272432297d91796a849956ad2a00c58861e",
+        "byte_length": 1148
+      }
+    }
+  ],
+  "judge_refs": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46157365177/release-reviews.json",
+    "sha256": "599fadd37698d7f661117ee7a74f808c547b59ff293a0736b49802030b3e3fe7",
+    "byte_length": 1931
+  },
+  "local_obligations_open": [],
+  "global_integration": {
+    "status": "NOT_REVIEWED",
+    "owner": "ROOT"
+  },
+  "domain_operation": "The separate S1/S2/S3/S4/S5 binding, governed publication, consumers and maintenance retain their own gates."
+}
