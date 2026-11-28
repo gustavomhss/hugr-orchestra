@@ -3,6 +3,7 @@ import { For, Show, createMemo, onCleanup, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { useServerSDK } from "@/context/server-sdk"
+import { bytes } from "@/orchestra/actions/format"
 import { readingAge } from "./reading"
 import { applySnapshot } from "./snapshot"
 
@@ -164,7 +165,13 @@ export function ActivityTrees(props: { query: string }) {
                           >
                             {language.t("orchestra.monitor.inspect")}
                           </button>
-                          <p>{language.t("orchestra.monitor.hypothesisInsufficient")}</p>
+                          <p>
+                            {language.t(
+                              row.footprint?.hypothesis === "compatible-with-logical-leak"
+                                ? "orchestra.monitor.hypothesisCompatible"
+                                : "orchestra.monitor.hypothesisInsufficient",
+                            )}
+                          </p>
                           <p>{language.t("orchestra.monitor.reachabilityUnread")}</p>
                           <Show when={row.source}>
                             <p class="mx-note">{row.source}</p>
@@ -194,7 +201,16 @@ export function ActivityTrees(props: { query: string }) {
                         <code>{row.supervisorID ?? language.t("orchestra.monitor.unread")}</code>
                       </td>
                       <td>{row.members === undefined ? language.t("orchestra.monitor.unread") : row.members.length}</td>
-                      <td>{language.t("orchestra.monitor.unread")}</td>
+                      <td>
+                        <Show when={row.footprint} fallback={language.t("orchestra.monitor.unread")}>
+                          {(footprint) => (
+                            <>
+                              <span>{bytes(footprint().bytes)}</span>{" "}
+                              <span class="mx-note">{footprint().source} · {language.t("orchestra.monitor.footprintAge", { age: age(footprint().sampledAt) })}</span>
+                            </>
+                          )}
+                        </Show>
+                      </td>
                       <td>{age(row.sampledAt)}</td>
                     </tr>
                   )}

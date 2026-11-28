@@ -62,6 +62,8 @@ export const ACTIVITY_COPY = {
   "orchestra.monitor.processSource": "Source: orchestra.omni.ledger",
   "orchestra.monitor.inspect": "Read members",
   "orchestra.monitor.hypothesisInsufficient": "Hypothesis: insufficient",
+  "orchestra.monitor.hypothesisCompatible": "Hypothesis: compatible with logical leak",
+  "orchestra.monitor.footprintAge": "Age {{age}}",
   "orchestra.monitor.reachabilityUnread": "Reachability: unread",
   "orchestra.monitor.inspectFailed":
     "The member reading could not be retrieved. The previous reading, if available, is still shown.",
@@ -85,7 +87,7 @@ export const ACTIVITY_COPY = {
   "orchestra.monitor.inspectionFailed":
     "Inspection failed. Previous members and their original reading age remain visible.",
   "orchestra.monitor.processCoverage":
-    "Includes pipe spawns through this server’s Omni spawner since startup. Native collection calls, terminals, desktop processes and pre-existing processes are not included. Per-process CPU and memory have not been measured.",
+    "Includes pipe spawns through this server’s Omni spawner since startup. Native collection calls, terminals, desktop processes and pre-existing processes are not included. Per-process CPU has not been measured. Footprint is shown only when measured.",
   "orchestra.monitor.registry":
     "Source: this server’s project directory registry. Age is time since that registry was read.",
   "orchestra.monitor.refresh": "Refresh",
@@ -203,6 +205,8 @@ export const ACTIVITY_COPY_BR: Record<keyof typeof ACTIVITY_COPY, string> = {
   "orchestra.monitor.processSource": "Fonte: orchestra.omni.ledger",
   "orchestra.monitor.inspect": "Ler membros",
   "orchestra.monitor.hypothesisInsufficient": "Hipótese: insuficiente",
+  "orchestra.monitor.hypothesisCompatible": "Hipótese: compatível com vazamento lógico",
+  "orchestra.monitor.footprintAge": "Idade {{age}}",
   "orchestra.monitor.reachabilityUnread": "Alcançabilidade: não lido",
   "orchestra.monitor.inspectFailed":
     "Não foi possível obter a leitura de membros. A leitura anterior, se disponível, continua visível.",
@@ -227,7 +231,7 @@ export const ACTIVITY_COPY_BR: Record<keyof typeof ACTIVITY_COPY, string> = {
   "orchestra.monitor.inspectionFailed":
     "A inspeção falhou. Os membros anteriores e a idade da leitura original continuam visíveis.",
   "orchestra.monitor.processCoverage":
-    "Inclui processos por pipe iniciados pelo spawner Omni desta instância do servidor. Chamadas de coleta nativa, terminais, processos do desktop e processos anteriores não são incluídos. CPU por processo e memória não foram medidas.",
+    "Inclui processos por pipe iniciados pelo spawner Omni desta instância do servidor. Chamadas de coleta nativa, terminais, processos do desktop e processos anteriores não são incluídos. CPU por processo não foi medida. O footprint é mostrado somente quando medido.",
   "orchestra.monitor.registry":
     "Fonte: registro de diretórios dos projetos deste servidor. A idade é o tempo desde a leitura do registro.",
   "orchestra.monitor.refresh": "Atualizar",
