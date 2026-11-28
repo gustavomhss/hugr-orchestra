@@ -11,8 +11,8 @@ import { Database } from "@orchestra/core/database/database"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { ActivityArm } from "@orchestra/schema/activity-arm"
 import { ActivityPrivateChannel } from "@orchestra/schema/activity-private-channel"
-import { registerActivityArmIpc } from "./activity-arm-ipc"
-import { startOwnedServe } from "./owned-serve"
+import { registerActivityArmIpc } from "../src/main/activity-arm-ipc"
+import { startOwnedServe } from "../src/main/owned-serve"
 
 type ArmHandler = (
   event: IpcMainInvokeEvent, url: string, input: ActivityArm.Request,
@@ -35,7 +35,7 @@ test("the owned source CLI persists only an explicit native arm of the exact cur
     })
   }).pipe(Effect.provide(Database.layerFromPath(database)), Effect.scoped))
   const target = await record(source)
-  const entry = fileURLToPath(new URL("../../../cli/src/index.ts", import.meta.url))
+  const entry = fileURLToPath(new URL("../../cli/src/index.ts", import.meta.url))
   const inherited = [
     "PATH", "SYSTEMROOT", "SYSTEMDRIVE", "WINDIR", "COMSPEC", "PATHEXT",
     "HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER",
