@@ -396,6 +396,11 @@ export function MessageTimeline(props: {
       })
     }
     resizeItem(index, size)
+    if (root && props.shouldAnchorBottom() && previous !== undefined && index === virtualizer.options.count - 1) {
+      const delta = size - previous
+      if (delta !== 0) virtualizer.scrollToOffset(virtualizer.scrollOffset + delta)
+      return
+    }
     if (root && props.shouldAnchorBottom()) anchorResizedBottom()
   }
   virtualizer.shouldAdjustScrollPositionOnItemSizeChange = (item) => {

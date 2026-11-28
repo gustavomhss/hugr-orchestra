@@ -65,7 +65,8 @@ impl Observation {
         };
         let (send, result) = sync_channel(1);
         let worker = Builder::new().name("omni-observe".into()).spawn(move || {
-            let _ = send.try_send(scan(pid, footprint, &known));
+            let deadline = Instant::now() + Duration::from_secs(2);
+            let _ = send.try_send(scan(pid, footprint, &known, deadline));
         });
         let Ok(worker) = worker else {
             return Some(ack(req, id, Ack::Error));
@@ -89,12 +90,13 @@ impl Observation {
     }
 }
 
-fn scan(pid: i32, footprint: bool, known: &[(i32, i32)]) -> Option<Sample> {
+fn scan(pid: i32, footprint: bool, known: &[(i32, i32)], deadline: Instant) -> Option<Sample> {
     // Keep SIGCHLD on the control thread even if the scan stalls.
     if !block_sigchld() || !isolate_fds() {
         return None;
     }
-    let inventory = procs::scan(&HashSet::from([pid]), true)?;
+    // The client gives up at 2s. Stop walking pids then, so the observe slot is not held by a dead waiter.
+    let inventory = procs::scan_until(&HashSet::from([pid]), true, Some(deadline))?;
     let mut sample = project(pid, &inventory)?;
     if footprint {
         sample.footprint = super::footprint::sample(pid, &inventory, known);

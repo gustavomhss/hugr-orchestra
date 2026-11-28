@@ -1,7 +1,7 @@
 import { Platform, usePlatform } from "@/context/platform"
 import { makePersisted, type AsyncStorage, type SyncStorage } from "@solid-primitives/storage"
 import { checksum } from "@orchestra/core/util/encode"
-import { createResource, type Accessor } from "solid-js"
+import { createResource, onCleanup, type Accessor } from "solid-js"
 import type { SetStoreFunction, Store } from "solid-js/store"
 import { pathKey } from "@/utils/path-key"
 import { ScopedKey, ServerScope, type ServerScope as ServerScopeValue } from "@/utils/server-scope"
@@ -22,6 +22,8 @@ type PersistTarget = {
   key: string
   legacy?: string[]
   migrate?: (value: unknown) => unknown
+  // Keystrokes update the store immediately. Storage waits until typing pauses, then flushes.
+  idleWriteMs?: number
 }
 
 const LEGACY_STORAGE = "default.dat"
@@ -648,9 +650,39 @@ export function persisted<T>(
       .filter((x) => !!x)
       .map(toAsyncStorage)
     let draftLatest: string | undefined
+    let idleKey: string | undefined
+    let idleValue: string | undefined
+    let idleTimer: ReturnType<typeof setTimeout> | undefined
+    const flushIdle = async () => {
+      if (idleTimer) clearTimeout(idleTimer)
+      idleTimer = undefined
+      if (idleKey === undefined || idleValue === undefined || !current) return
+      const key = idleKey
+      const value = idleValue
+      idleKey = undefined
+      idleValue = undefined
+      await current.setItem(key, value)
+    }
+    if (config.idleWriteMs) {
+      const hide = () => {
+        if (document.visibilityState === "hidden") flushIdle()
+      }
+      document.addEventListener("visibilitychange", hide)
+      window.addEventListener("pagehide", flushIdle)
+      try {
+        onCleanup(() => {
+          document.removeEventListener("visibilitychange", hide)
+          window.removeEventListener("pagehide", flushIdle)
+          flushIdle()
+        })
+      } catch {
+        // persisted() can run outside a component. The pagehide listener still flushes.
+      }
+    }
 
     const api: AsyncStorage = {
       getItem: async (key) => {
+        if (idleKey === key) await flushIdle()
         const value = await readCurrentAsync({ storage: current, key, defaults, migrate: config.migrate })
         if (value !== undefined) return value
         const migrated = await migrateLegacyAsync({
@@ -671,7 +703,14 @@ export function persisted<T>(
       },
       setItem: async (key, value) => {
         if (draft) draftLatest = value
-        await current.setItem(key, value)
+        if (!config.idleWriteMs) {
+          await current.setItem(key, value)
+          return
+        }
+        idleKey = key
+        idleValue = value
+        if (idleTimer) clearTimeout(idleTimer)
+        idleTimer = setTimeout(flushIdle, config.idleWriteMs)
       },
       removeItem: async (key) => {
         await current.removeItem(key)

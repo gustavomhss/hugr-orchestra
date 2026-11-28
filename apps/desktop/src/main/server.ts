@@ -8,7 +8,7 @@ import { credentialKeyEnv } from "./credential-key-env"
 import { MAC_SIGNED } from "./constants"
 import { getLogger } from "./logging"
 import { ripgrepEnv } from "./ripgrep-env"
-import { getUserShell, loadShellEnv } from "./shell-env"
+import { getUserShell, loadShellEnv, loadShellEnvAsync } from "./shell-env"
 import { getStore } from "./store"
 import { DEFAULT_SERVER_URL_KEY } from "./store-keys"
 
@@ -26,15 +26,36 @@ export function setDefaultServerUrl(url: string | null) {
   getStore().delete(DEFAULT_SERVER_URL_KEY)
 }
 
+function desktopEnv(userDataPath: string) {
+  return {
+    ORCHESTRA_EXPERIMENTAL_ICON_DISCOVERY: "true",
+    ORCHESTRA_EXPERIMENTAL_FILEWATCHER: "true",
+    ORCHESTRA_CLIENT: "desktop",
+    XDG_STATE_HOME: process.env.XDG_STATE_HOME ?? userDataPath,
+  }
+}
+
+export function applyDesktopEnv(userDataPath: string) {
+  Object.assign(process.env, desktopEnv(userDataPath))
+}
+
+// The login shell probe blocks the main thread when it is synchronous. Start it before the window,
+// and await it only on the path that spawns the server.
+export function loadDesktopShellEnv(userDataPath: string) {
+  const shell = process.platform === "win32" ? null : getUserShell()
+  const pending = shell ? loadShellEnvAsync(shell, getLogger()) : Promise.resolve(null)
+  return pending.then((shellEnv) => {
+    Object.assign(process.env, { ...shellEnv, ...desktopEnv(userDataPath) })
+    return shellEnv
+  })
+}
+
 export function preferAppEnv(userDataPath: string) {
   const shell = process.platform === "win32" ? null : getUserShell()
   const shellEnv = shell ? loadShellEnv(shell, getLogger()) : null
   Object.assign(process.env, {
     ...shellEnv,
-    ORCHESTRA_EXPERIMENTAL_ICON_DISCOVERY: "true",
-    ORCHESTRA_EXPERIMENTAL_FILEWATCHER: "true",
-    ORCHESTRA_CLIENT: "desktop",
-    XDG_STATE_HOME: process.env.XDG_STATE_HOME ?? userDataPath,
+    ...desktopEnv(userDataPath),
   })
   return shellEnv
 }

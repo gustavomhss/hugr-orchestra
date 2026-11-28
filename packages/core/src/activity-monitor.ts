@@ -18,6 +18,7 @@ type Entry = {
   rootSettled: boolean
   sampling?: Promise<void>
   inspections: number
+  callKey?: string
 }
 
 function invalidateFootprint(entry: Entry) {
@@ -30,6 +31,7 @@ function invalidateFootprint(entry: Entry) {
 /** An observer never owns a child or changes its I/O, stop policy, adoption or lifetime. */
 export function make(now: () => number = Date.now) {
   const entries = new Map<string, Entry>()
+  const calls = new Map<string, Entry>()
   const cpu = ActivityCPU.make()
   const status = { instanceID: crypto.randomUUID(), retired: 0, closure: 0 }
 
@@ -39,6 +41,7 @@ export function make(now: () => number = Date.now) {
       .sort((a, b) => (a.closed ?? 0) - (b.closed ?? 0))
     closed.slice(0, Math.max(0, closed.length - FINISHED_KEPT)).forEach((entry) => {
       entries.delete(entry.record.recordID)
+      if (entry.callKey) calls.delete(entry.callKey)
       collected.unregister(entry)
       status.retired++
     })
@@ -175,6 +178,13 @@ export function make(now: () => number = Date.now) {
         rootSettled: false,
         inspections: 0,
       }
+      const callKey = provenance?.sessionID && provenance.assistantMessageID && provenance.tool && provenance.callID
+        ? `${provenance.sessionID}\0${provenance.assistantMessageID}\0${provenance.tool}\0${provenance.callID}`
+        : undefined
+      if (callKey) {
+        entry.callKey = callKey
+        calls.set(callKey, entry)
+      }
       entries.set(entry.record.recordID, entry)
       collected.register(child, entry, entry)
       // Root exit is not tree exit. Membership remains an explicitly requested reading.
@@ -188,11 +198,9 @@ export function make(now: () => number = Date.now) {
     },
     complete(input: { sessionID: string; assistantMessageID: string; tool: string; callID: string; finishedAt: number }) {
       if (!Number.isFinite(input.finishedAt)) return
-      entries.forEach((entry) => {
-        if (entry.record.sessionID !== input.sessionID || entry.assistantMessageID !== input.assistantMessageID ||
-          entry.record.tool !== input.tool || entry.record.callID !== input.callID || entry.workFinishedAt !== undefined) return
-        entry.workFinishedAt = input.finishedAt
-      })
+      const entry = calls.get(`${input.sessionID}\0${input.assistantMessageID}\0${input.tool}\0${input.callID}`)
+      if (!entry || entry.workFinishedAt !== undefined) return
+      entry.workFinishedAt = input.finishedAt
     },
     async control(recordID: string) {
       const entry = entries.get(recordID)
