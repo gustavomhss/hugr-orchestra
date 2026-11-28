@@ -19,10 +19,22 @@ export async function appendText(filePath: string, content: string) {
   await appendFile(filePath, content)
 }
 
+const jsonWrites = new Map<string, Promise<void>>()
+
 export async function writeJsonAtomic(filePath: string, value: unknown) {
+  const content = JSON.stringify(value)
+  const previous = jsonWrites.get(filePath) ?? Promise.resolve()
+  const write = previous.catch(() => undefined).then(() => publishJson(filePath, content))
+  jsonWrites.set(filePath, write)
+  return write.finally(() => {
+    if (jsonWrites.get(filePath) === write) jsonWrites.delete(filePath)
+  })
+}
+
+async function publishJson(filePath: string, content: string) {
   await mkdir(path.dirname(filePath), { recursive: true })
   const temporary = `${filePath}.${process.pid}.${crypto.randomUUID()}.tmp`
-  await writeAndCloseTemporary(temporary, JSON.stringify(value))
+  await writeAndCloseTemporary(temporary, content)
   await publishTemporary(temporary, filePath).catch(async (error) => {
     await rm(temporary, { force: true }).catch(() => undefined)
     throw error

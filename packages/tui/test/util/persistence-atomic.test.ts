@@ -50,7 +50,9 @@ async function exercise(directory: string, scenario: typeof scenarios[number]) {
   if (!batchOutcome) throw new Error("Expected the owned writer batch outcome")
   const writers = batchOutcome.status === "fulfilled" ? batchOutcome.value : []
 
-  // Only this write, after all activity has joined, defines the required final order.
+  const lastIssued = await Bun.file(file).json()
+  expect(lastIssued).toEqual(records.at(-1))
+  // A separate write after the batch checks that the path remains usable.
   const sentinels = await Promise.allSettled([writeJsonAtomic(file, sentinel)])
   const final = await Promise.allSettled([Bun.file(file).json()])
   const siblings = await Promise.allSettled([readdir(directory)])

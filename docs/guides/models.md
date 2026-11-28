@@ -25,11 +25,13 @@ Before approval, project provider declarations may change only provider/model na
 
 The app and TUI check whether a model can run in the current Session before sending a prompt or known command. The check includes the selected agent, workspace and exact variant. Provider connection and agent settings changes refresh the check. A model can appear in the catalog while being unavailable in that context. Loading or a failed check keeps the draft unsent; shell commands keep their existing behavior.
 
+After the TUI reconnects or a Session moves to another checkout, send a draft once the TUI refreshes that Session’s metadata. If you try to send during the refresh, your draft stays in the composer.
+
 An explicit choice stays selected when it becomes unavailable or disappears from the catalog. Choose another available model or retry the check. Leaving the variant unset inherits the configured variant; choosing the default explicitly does not inherit a prior override. Automatic model selection waits for a successful execution check.
 
 In the TUI, “Model default” clears the variant override. A variant named `default` is a separate choice and keeps that exact name, including when it later disappears from the catalog.
 
-Older TUI preferences used the same stored `default` value for both choices. When known model metadata first becomes available, Orchestra records a separate intent: the literal variant if that model has a variant named `default`, otherwise “Model default”. This resolves the old ambiguity once; it cannot recover which choice was originally intended. The original stored variant values remain unchanged, and the recorded intent survives later catalog changes and reloads. Other explicit variant names, including an empty string, keep their exact values.
+Older TUI preferences used the same stored `default` value for both choices. When the execution check returns model metadata for the selected checkout, Orchestra records a separate intent. It records the literal variant if that model has a variant named `default` and “Model default” otherwise. The recorded intent survives later catalog changes and reloads. Other explicit variant names, including an empty string, keep their exact values.
 
 Queued prompts are checked when they are admitted. In the app, an existing Session prompt whose admission acknowledgement was lost can reconcile the same retained request from its live composer, even if a later model check fails. Editing its text or raw selection creates a fresh action. This does not extend retry identity across a composer remount or reload. The TUI currently uses English interface messages.
 
