@@ -3,12 +3,14 @@ export * as ActivityArmProof from "./activity-arm-proof"
 import { createHash } from "node:crypto"
 import { constants } from "node:fs"
 import type { BigIntStats } from "node:fs"
-import { lstat, open, opendir, readlink, realpath, stat } from "node:fs/promises"
+import { lstat, open, opendir, readlink, realpath, stat, statfs } from "node:fs/promises"
 import path from "node:path"
 import { ActivityObjectProof } from "./activity-object-proof"
 
 const maxEntries = 10_000
 const kernelThread = 0x00200000
+const initialPIDNamespace = "pid:[4026531836]" // Linux PID_NS_INIT_INO
+const localFilesystems = new Set([0xef53, 0x58465342, 0x9123683e, 0x01021994]) // ext, XFS, Btrfs, tmpfs
 
 // This observation expires at the boundary of the caller's decision. It does not reserve the object.
 export async function inspect(input: { worktree: string; name: ".turbo" | "node_modules" }, signal?: AbortSignal) {
@@ -29,12 +31,20 @@ export async function inspect(input: { worktree: string; name: ".turbo" | "node_
     })
     const use = await scan() ?? await scan() ?? await scan()
     if (!use) return undefined
-    if (!tree.matches(await lstat(worktree, { bigint: true }))) return undefined
-    for (const [file, signature] of tree.entries) {
-      signal?.throwIfAborted()
-      if (identity(await lstat(file, { bigint: true })) !== signature) return undefined
+    const isCurrent = async (currentSignal?: AbortSignal) => {
+      try {
+        currentSignal?.throwIfAborted()
+        if (!tree.matches(await lstat(worktree, { bigint: true }))) return false
+        for (const [file, signature] of tree.entries) {
+          currentSignal?.throwIfAborted()
+          if (identity(await lstat(file, { bigint: true })) !== signature) return false
+        }
+        return !currentSignal?.aborted
+      } catch {
+        return false
+      }
     }
-    signal?.throwIfAborted()
+    if (!await isCurrent(signal)) return undefined
     const proof = ActivityObjectProof.evaluate({
       objectID: object,
       matched: true,
@@ -46,7 +56,7 @@ export async function inspect(input: { worktree: string; name: ".turbo" | "node_
         { objectID: object, method: "live-lock", outcome: use.lock || tree.lock ? "holder" : "clear" },
       ],
     })
-    return { fingerprint: tree.fingerprint, idle: proof.state === "idle" }
+    return { fingerprint: tree.fingerprint, idle: proof.state === "idle", isCurrent }
   } catch {
     return undefined
   }
@@ -54,6 +64,7 @@ export async function inspect(input: { worktree: string; name: ".turbo" | "node_
 
 async function captureTree(object: string, root: BigIntStats, uid: bigint, signal?: AbortSignal) {
   if (!root.isDirectory() || root.uid !== uid) return undefined
+  if (!localFilesystems.has((await statfs(object)).type)) return undefined
   const mountInfo = await readProc("/proc/self/mountinfo", 512 * 1024, signal)
   if (mountInfo.split("\n").some((line) => {
     const point = line.split(" ")[4]?.replace(/\\([0-7]{3})/g, (_match, octal: string) => String.fromCharCode(parseInt(octal, 8)))
@@ -108,9 +119,13 @@ async function lockPID(file: string, entry: BigIntStats) {
 }
 
 async function captureUse(worktree: string, object: string, inodes: ReadonlySet<string>, lockPids: ReadonlySet<string>, signal?: AbortSignal) {
-  const proc = (await readProc("/proc/self/mountinfo", 512 * 1024, signal)).split("\n")
-    .find((line) => line.split(" ")[4] === "/proc")
+  const mounts = (await readProc("/proc/self/mountinfo", 512 * 1024, signal)).split("\n")
+  const proc = mounts.find((line) => line.split(" ")[4] === "/proc")
   if (!proc || !proc.includes(" - proc ") || /\b(hidepid=[^0,\s]|subset=pid)/.test(proc)) return undefined
+  // A nested procfs can omit live holders of the same filesystem objects.
+  if ((await statfs("/proc")).type !== 0x9fa0 || await readlink("/proc/1/ns/pid") !== initialPIDNamespace ||
+    await readlink("/proc/self/ns/pid") !== initialPIDNamespace ||
+    mounts.some((line) => /^\/proc\/(\d+|self|thread-self|locks)(\/|$)/.test(line.split(" ")[4] ?? ""))) return undefined
   const usage = { cwd: false, git: false, open: false, lock: false, claimant: false }
   const pids = await numbers("/proc")
   if (!pids.length || pids.length > 1024) return undefined
@@ -120,7 +135,12 @@ async function captureUse(worktree: string, object: string, inodes: ReadonlySet<
     signal?.throwIfAborted()
     const base = `/proc/${pid}`
     const first = await processStat(base, signal)
-    if (first.state === "Z" || first.state === "X" || (first.flags & kernelThread) !== 0) continue
+    if ((first.flags & kernelThread) !== 0) continue
+    if (first.state === "Z" || first.state === "X") {
+      // A dead leader can still have live threads holding files. Proc may hide that group's handles.
+      if (first.threads !== 1) return undefined
+      continue
+    }
     usage.lock ||= lockPids.has(pid)
     const threads = await numbers(`${base}/task`)
     tasks += threads.length
@@ -193,8 +213,9 @@ async function processStat(directory: string, signal?: AbortSignal) {
   const content = await readProc(`${directory}/stat`, 4096, signal)
   const end = content.lastIndexOf(")")
   const fields = content.slice(end + 2).split(" ")
-  if (end < 0 || !/^\d+$/.test(fields[6] ?? "") || !/^\d+$/.test(fields[19] ?? "")) throw new Error("Invalid process identity")
-  return { state: fields[0], flags: Number(fields[6]), birth: fields[19] }
+  if (end < 0 || !/^\d+$/.test(fields[6] ?? "") || !/^\d+$/.test(fields[17] ?? "") || !/^\d+$/.test(fields[19] ?? ""))
+    throw new Error("Invalid process identity")
+  return { state: fields[0], flags: Number(fields[6]), threads: Number(fields[17]), birth: fields[19] }
 }
 
 async function numbers(directory: string) {

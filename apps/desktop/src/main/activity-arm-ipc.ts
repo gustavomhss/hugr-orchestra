@@ -5,7 +5,7 @@ import { ActivityStop } from "@orchestra/schema/activity-stop"
 import { ActivityFreeze } from "@orchestra/schema/activity-freeze"
 import type { IpcMainInvokeEvent } from "electron"
 import { isRendererOrigin } from "./renderer-origin"
-import { nativeT } from "./native-translations"
+import { nativeLocale } from "./native-translations"
 
 export type ActivityArmClient = {
   isCurrent(): boolean
@@ -102,14 +102,17 @@ export function registerActivityArmIpc(deps: {
       if (!current() || !preview || preview.expiresAt <= Date.now() || preview.targets.length !== decoded.value.targets.length ||
         preview.targets.some((target, index) => target.targetID !== decoded.value.targets[index]?.targetID ||
           target.generation !== decoded.value.targets[index]?.generation)) return undefined
+      const copy = nativeLocale() === "br"
+        ? { title: "Armar quarentena", message: "Armar quarentena para estes alvos?", cancel: "Cancelar" }
+        : { title: "Arm quarantine", message: "Arm quarantine for these targets?", cancel: "Cancel" }
       const result = await deps.dialog.showMessageBox(win, {
         type: "warning",
-        title: nativeT("desktop.activity.arm.title"),
-        message: nativeT("desktop.activity.arm.message"),
+        title: copy.title,
+        message: copy.message,
         detail: preview.targets.map((target) =>
           `${literal(target.label)} — ${literal(target.owner)}\nID: ${literal(target.targetID)}\nGeneration: ${literal(target.generation)}`,
         ).join("\n\n"),
-        buttons: [nativeT("desktop.activity.arm.cancel"), nativeT("desktop.activity.arm.confirm")],
+        buttons: [copy.cancel, copy.title],
         defaultId: 0,
         cancelId: 0,
         noLink: true,

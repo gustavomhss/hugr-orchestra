@@ -19,6 +19,7 @@ type Options = {
   readonly inspect?: () => Effect.Effect<ActivityArm.PlanSnapshot, unknown>
   /** Checks current identity and eligibility through the authority for this exact object. */
   readonly verify?: (target: ActivityActionLedger.Target) => Effect.Effect<boolean, unknown>
+  readonly authorize?: (tx: Transaction, targets: readonly ActivityActionLedger.Target[]) => Effect.Effect<boolean, unknown>
 }
 
 /** An owner is constructed once per private Desktop channel incarnation. */
@@ -76,6 +77,8 @@ export function make(database: Database.Interface, options?: Options): Interface
           const existing = yield* Effect.forEach(entry.targets, (target) => tx.select().from(ActivityArmTable)
             .where(and(eq(ActivityArmTable.target_id, target.targetID), eq(ActivityArmTable.generation, target.generation))).get())
           if (existing.some(Boolean)) return undefined
+          if (options?.authorize && !(yield* options.authorize(tx, entry.targets))) return undefined
+          if (entry.expiresAt <= now()) return undefined
           const receipt = {
             approvalID: crypto.randomUUID(), action: "arm-quarantine" as const, approvedAt: now(),
             targets: structuredClone(entry.preview.targets),
@@ -127,7 +130,7 @@ export function plan(database: Database.Interface) {
   }))
 }
 
-type Transaction = Parameters<Parameters<Database.Interface["db"]["transaction"]>[0]>[0]
+export type Transaction = Parameters<Parameters<Database.Interface["db"]["transaction"]>[0]>[0]
 
 function approvalRows(database: Pick<Transaction, "select">) {
   return database.select({ arm: ActivityArmTable, current: ActivityActionLedgerTable }).from(ActivityArmTable)

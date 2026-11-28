@@ -129,7 +129,7 @@ The category names stay in English in both supported languages. Tab through the 
 
 **IN/OUT** reads the plan ledger. It displays qualified objects, arm receipts, and any receipts whose recorded evidence has changed. An empty ledger describes what the server has recorded. A partial read leaves the total open.
 
-In the owned Linux Desktop, select **Verify objects** to check direct `.turbo` and `node_modules` directories in registered Git worktrees. A candidate needs a complete process reading, a clean tracked worktree, and an ignored, same-volume copy. Links, active use and incomplete evidence keep the object out of **Ready**. Some Linux configurations restrict process visibility and can only return a partial result. Opening IN/OUT and selecting **Refresh** read the recorded plan.
+In the owned Linux Desktop, select **Verify objects** to check direct `.turbo` and `node_modules` directories in registered Git worktrees. A candidate needs a complete process reading, a clean tracked worktree, and an ignored copy on a supported local filesystem. Verification requires visibility from the host's initial Linux PID namespace. A standard Desktop account can receive only a partial result when Linux denies access to other processes. Links, active use and incomplete evidence keep the object out of **Ready**. Opening IN/OUT and selecting **Refresh** read the recorded plan.
 
 Select **Arm quarantine…** on a verified **Ready** row. The Desktop opens a native dialog with the exact object and generation. After you confirm, the sidecar checks the object again and records an **Armed** receipt if the evidence still matches. The object stays in its original location. If its evidence changes, verify it again before selecting **Arm quarantine…**.
 

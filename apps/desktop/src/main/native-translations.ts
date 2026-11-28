@@ -22,3 +22,7 @@ export function setNativeTranslations(next: DesktopNativeBundle) {
 export function nativeT(key: DesktopNativeKey, params?: Record<string, string | number>) {
   return formatDesktopNativeMessage(bundle.messages[key], params)
 }
+
+export function nativeLocale() {
+  return bundle.locale
+}
