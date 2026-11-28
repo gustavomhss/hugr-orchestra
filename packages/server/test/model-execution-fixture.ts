@@ -311,7 +311,8 @@ export const setup = Effect.gen(function* () {
     (server) => Effect.promise(() => server.stop(true)),
   )
   state.providerUrl = provider.url.origin
-  const location = Location.Ref.make({ directory })
+  // Match the middleware's cache key for a request without a workspace.
+  const location = Location.Ref.make({ directory, workspaceID: undefined })
   const locations = yield* LocationServiceMap.Service
   const context = yield* locations.contextEffect(location)
   const agents = Context.get(context, AgentV2.Service)

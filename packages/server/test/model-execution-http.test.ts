@@ -485,6 +485,7 @@ it.live("API E6 wire: MCP command preflight lists only connected metadata and ca
 
     const mcp = Context.get(fixture.context, Mcp.Service)
     yield* mcp.ready()
+    expect(target.observed.connections).toBe(1)
     expect((yield* fixture.request("/api/model/execution", input)).status).toBe(200)
     const missing = yield* fixture.request("/api/model/execution", { ...input, command: "wire_prompts:missing" })
     expect(missing.status).toBe(400)
