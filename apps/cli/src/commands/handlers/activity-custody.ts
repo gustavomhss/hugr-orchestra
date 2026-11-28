@@ -52,6 +52,7 @@ export async function launch(args: readonly string[]) {
   process.env.XDG_DATA_HOME = path.join(runtime, "data")
   process.env.XDG_CACHE_HOME = path.join(runtime, "cache")
   process.env.TMPDIR = path.join(runtime, "tmp")
+  process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER = "strict"
 
   const { runMain } = await import("@effect/platform-node/NodeRuntime")
   const { Context, Effect, Layer } = await import("effect")
@@ -71,7 +72,7 @@ export async function launch(args: readonly string[]) {
   const { ActivityArmObjects } = await import("@orchestra/core/activity-arm-objects")
   const { ActivityCustodyProvision } = await import("@orchestra/core/activity-custody-provision")
   const { ActivityPrivateChannelServer } = await import("@orchestra/server/activity-private-channel")
-  const { AppNodeBuilder } = await import("@orchestra/core/effect/app-node-builder")
+  const { LayerNode } = await import("@orchestra/core/effect/layer-node")
   const { AppProcess } = await import("@orchestra/core/process")
   const { Database } = await import("@orchestra/core/database/database")
 
@@ -79,7 +80,7 @@ export async function launch(args: readonly string[]) {
     const protection = yield* Effect.promise(() => ActivityApplyLinux.open(root))
     if (!protection) return yield* Effect.fail(new Error("Activity custody protected root is unavailable"))
 
-    const processContext = yield* Layer.build(AppNodeBuilder.build(AppProcess.node))
+    const processContext = yield* Layer.build(LayerNode.compile(AppProcess.node))
     const config = yield* ActivityCustodyProvision.read(root, Context.get(processContext, AppProcess.Service))
     const filename = yield* Effect.tryPromise(() => databaseFile(root))
     const context = yield* Layer.build(Database.layerFromPath(filename))
