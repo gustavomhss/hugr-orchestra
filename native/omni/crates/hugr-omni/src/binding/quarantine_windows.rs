@@ -204,7 +204,7 @@ fn acquire_root(drive: &str, additional_access: u32) -> Result<Owned, String> {
     let mapping = String::from_utf16(&target[..end]).map_err(|_| "invalid drive mapping")?;
     let pieces: Vec<&str> = mapping.split('\\').collect();
     if pieces.len() != 3
-        || pieces[0] != ""
+        || !pieces[0].is_empty()
         || pieces[1] != "Device"
         || !pieces[2].starts_with("HarddiskVolume")
         || !pieces[2][14..].bytes().all(|c| c.is_ascii_digit())
@@ -292,8 +292,8 @@ pub fn operate(source: &str, destination: Option<&str>, expected: Option<&str>) 
     let name: Vec<u16> = std::ffi::OsStr::new(&dest_parts[dest_parts.len() - 1])
         .encode_wide()
         .collect();
-    let length = 20 + name.len() * 2;
-    let mut storage = vec![0u64; (length + 7) / 8];
+    let length = (20 + name.len() * 2).max(24);
+    let mut storage = vec![0u64; length.div_ceil(8)];
     // SAFETY: storage is aligned and allocated for the documented FILE_RENAME_INFORMATION layout.
     let bytes = unsafe { std::slice::from_raw_parts_mut(storage.as_mut_ptr().cast::<u8>(), storage.len() * 8) };
     bytes[8..16].copy_from_slice(&(destination_parent as usize as u64).to_le_bytes());

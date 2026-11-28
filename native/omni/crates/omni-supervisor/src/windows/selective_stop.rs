@@ -102,6 +102,7 @@ fn pin(job: &OwnedHandle, member: &Member) -> io::Result<OwnedHandle> {
         return Err(io::Error::other("selective stop identity does not belong to the Job"));
     }
     // A wait failure is also refusal, not proof that the process is live.
+    // SAFETY: the pinned handle remains open and grants synchronize access.
     if unsafe { WaitForSingleObject(handle.as_raw_handle(), 0) } != windows_sys::Win32::Foundation::WAIT_TIMEOUT {
         return Err(io::Error::other("selective stop member is not known live"));
     }
