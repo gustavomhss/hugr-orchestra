@@ -15,12 +15,14 @@ const TolerantListToolsResultSchema = ListToolsResultSchema.extend({
 export async function paginate<T, R extends { nextCursor?: string }>(
   list: (cursor?: string) => Promise<R>,
   items: (result: R) => T[],
+  signal?: AbortSignal,
 ) {
   const result: T[] = []
   const cursors = new Set<string>()
   let cursor: string | undefined
 
   for (let page = 0; page < MAX_LIST_PAGES; page++) {
+    signal?.throwIfAborted()
     const page = await list(cursor)
     result.push(...items(page))
     if (page.nextCursor === undefined) return result
@@ -76,11 +78,12 @@ export function fetch<T extends { name: string }>(
 
 export const sanitize = (value: string) => value.replace(/[^a-zA-Z0-9_-]/g, "_")
 
-export function prompts(client: Client, timeout?: number) {
+export function prompts(client: Client, timeout: number, signal: AbortSignal) {
   if (!client.getServerCapabilities()?.prompts) return Promise.resolve([])
   return paginate(
-    (cursor) => client.listPrompts(cursor === undefined ? undefined : { cursor }, { timeout }),
+    (cursor) => client.listPrompts(cursor === undefined ? undefined : { cursor }, { timeout, signal }),
     (result) => result.prompts,
+    signal,
   )
 }
 

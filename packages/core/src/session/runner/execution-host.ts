@@ -212,9 +212,7 @@ export const engineForSelection = Effect.fn("ExecutionHost.engineForSelection")(
       return yield* new SessionSubagentModels.InvalidChainError({ sessionID, ancestorID: parentID, reason: "cycle" })
     seen.add(parentID)
     const parent = yield* store.get(parentID).pipe(
-      Effect.catchDefect((cause) =>
-        cause instanceof SessionSubagentModels.StorageError ? Effect.fail(cause) : Effect.die(cause),
-      ),
+      Effect.catchDefect((cause) => SessionSubagentModels.recoverStorageRead(parentID, cause)),
     )
     if (!parent)
       return yield* new SessionSubagentModels.InvalidChainError({ sessionID, ancestorID: parentID, reason: "missing-parent" })

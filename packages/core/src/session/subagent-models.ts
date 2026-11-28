@@ -99,21 +99,17 @@ export function fromStorage(sessionID: SessionSchema.ID, value: string | null) {
   return normalize(decoded.value)
 }
 
-function failStorage(sessionID: SessionSchema.ID, cause: unknown): Effect.Effect<never, Error> {
-  const error =
-    cause instanceof EffectDrizzleQueryError &&
+function storageCause(cause: unknown) {
+  return cause instanceof EffectDrizzleQueryError &&
     Cause.isCause(cause.cause) &&
     cause.cause.reasons.length === 1 &&
     !Cause.hasInterrupts(cause.cause)
       ? Cause.squash(cause.cause)
       : cause
-  if (
-    error instanceof NotFoundError ||
-    error instanceof InvalidChainError ||
-    error instanceof StorageError ||
-    error instanceof ModelDeniedError
-  )
-    return Effect.fail(error)
+}
+
+function storageReadFailure(sessionID: SessionSchema.ID, cause: unknown, error: unknown) {
+  if (error instanceof StorageError) return Effect.fail(error)
   // Bun and Node SQLite prepare failures escape the adapter's SqlError wrapper.
   if (
     isSqlError(error) ||
@@ -129,6 +125,18 @@ function failStorage(sessionID: SessionSchema.ID, cause: unknown): Effect.Effect
   )
     return Effect.fail(new StorageError({ sessionID, message: cause instanceof Error ? cause.message : String(cause) }))
   return Effect.die(error)
+}
+
+/** Recovers recognized storage defects from SessionStore.get without swallowing unexpected defects. */
+export function recoverStorageRead(sessionID: SessionSchema.ID, cause: unknown) {
+  return storageReadFailure(sessionID, cause, storageCause(cause))
+}
+
+function failStorage(sessionID: SessionSchema.ID, cause: unknown): Effect.Effect<never, Error> {
+  const error = storageCause(cause)
+  if (error instanceof NotFoundError || error instanceof InvalidChainError || error instanceof ModelDeniedError)
+    return Effect.fail(error)
+  return storageReadFailure(sessionID, cause, error)
 }
 
 const layer = Layer.effect(

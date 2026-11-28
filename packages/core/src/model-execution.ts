@@ -25,6 +25,7 @@ export class ContextError extends Schema.TaggedErrorClass<ContextError>()("Model
     "location-mismatch",
     "agent-missing",
     "command-missing",
+    "command-unavailable",
     "invalid-session-chain",
     "storage-unavailable",
   ]),
@@ -94,11 +95,8 @@ export const layer = Layer.effect(
     const location = yield* Location.Service
     const getSession = (sessionID: SessionSchema.ID) =>
       store.get(sessionID).pipe(
-        Effect.catchDefect((cause) =>
-          cause instanceof SessionSubagentModels.StorageError
-            ? Effect.fail(new ContextError({ reason: "storage-unavailable" }))
-            : Effect.die(cause),
-        ),
+        Effect.catchDefect((cause) => SessionSubagentModels.recoverStorageRead(sessionID, cause)),
+        Effect.mapError(() => new ContextError({ reason: "storage-unavailable" })),
       )
     const belongs = (session: SessionSchema.Info) =>
       session.location.directory === location.directory && session.location.workspaceID === location.workspaceID
@@ -113,9 +111,13 @@ export const layer = Layer.effect(
         if ((session && !belongs(session)) || (parent && !belongs(parent)))
           return yield* new ContextError({ reason: "location-mismatch" })
         const command = input.command === undefined ? undefined : yield* commands.get(input.command)
-        if (input.command !== undefined && !command &&
-          !(yield* SlashCommand.findPrompt(input.command, true).pipe(Effect.provideService(Mcp.Service, mcp))))
-          return yield* new ContextError({ reason: "command-missing" })
+        if (input.command !== undefined && !command) {
+          const prompt = yield* SlashCommand.findPrompt(input.command, true).pipe(
+            Effect.provideService(Mcp.Service, mcp),
+            Effect.mapError(() => new ContextError({ reason: "command-unavailable" })),
+          )
+          if (!prompt) return yield* new ContextError({ reason: "command-missing" })
+        }
         const target = command ? yield* SlashCommand.target(command).pipe(Effect.provideService(AgentV2.Service, agents)) : undefined
         const overrides = target?.subtask === false ? target : undefined
         const ref = overrides?.model ?? input.model

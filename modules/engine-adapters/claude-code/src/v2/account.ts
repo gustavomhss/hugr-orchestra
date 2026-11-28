@@ -4,7 +4,7 @@ import type { AccountInfo, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk
 import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
 import { makeGlobalNode } from "@orchestra/core/effect/app-node"
 import { AppProcess } from "@orchestra/core/process"
-import { Clock, Duration, Effect, Exit, Layer, Scope, Semaphore } from "effect"
+import { Cause, Clock, Duration, Effect, Exit, Layer, Scope, Semaphore } from "effect"
 import { ClaudeCodeExecutable } from "../executable"
 import { ClaudeHostOptions } from "../host/options"
 import { ClaudeCodeSDK } from "../sdk"
@@ -97,45 +97,44 @@ export const node = makeGlobalNode({
  * read itself failed, which is no answer about the sign-in.
  */
 function read(sdk: ClaudeCodeSDK.Interface, env: Parameters<typeof ClaudeHostOptions.environment>[0]) {
-  return Effect.gen(function* () {
+  return Effect.scoped(Effect.gen(function* () {
     const abort = new AbortController()
-    // An unavailable deployed or explicit executable throws here, like any failed status read.
-    const lifetime = yield* Effect.try({
-      try: () =>
-        ClaudeCodeSDK.processLifetime({
-          systemPrompt: { type: "preset", preset: "claude_code", append: "" },
-          env: ClaudeHostOptions.environment(env),
-          abortController: abort,
-          settingSources: ["project"],
-        }),
-      catch: (cause) => cause,
+    const lifetime = ClaudeCodeSDK.processLifetime({
+      systemPrompt: { type: "preset", preset: "claude_code", append: "" },
+      env: ClaudeHostOptions.environment(env),
+      abortController: abort,
+      settingSources: ["project"],
     })
-    return yield* Effect.acquireUseRelease(
-      Effect.sync(() =>
-        sdk.query({
-          options: lifetime.options,
-          prompt: (async function* (): AsyncGenerator<SDKUserMessage> {
-            if (!abort.signal.aborted)
-              await new Promise<void>((resolve) => abort.signal.addEventListener("abort", () => resolve(), { once: true }))
-          })(),
-        }),
+    let query: ReturnType<ClaudeCodeSDK.Interface["query"]> | undefined
+    // The SDK can start a process before query() throws. Register cleanup first.
+    yield* Effect.addFinalizer(() => Effect.promise(async () => {
+      abort.abort()
+      try {
+        query?.close()
+      } finally {
+        await lifetime.join()
+      }
+    }))
+    const active = sdk.query({
+      options: lifetime.options,
+      prompt: (async function* (): AsyncGenerator<SDKUserMessage> {
+        if (!abort.signal.aborted)
+          await new Promise<void>((resolve) => abort.signal.addEventListener("abort", () => resolve(), { once: true }))
+      })(),
+    })
+    query = active
+    return yield* Effect.tryPromise(() => active.accountInfo()).pipe(
+      Effect.map(
+        (info): ClaudeCodeAccount.Account =>
+          authenticated(info) ? { signedIn: true, email: info.email, subscription: info.subscriptionType } : { signedIn: false },
       ),
-      (query) =>
-        Effect.tryPromise(() => query.accountInfo()).pipe(
-          Effect.map(
-            (info): ClaudeCodeAccount.Account =>
-              authenticated(info) ? { signedIn: true, email: info.email, subscription: info.subscriptionType } : { signedIn: false },
-          ),
-          Effect.timeout("60 seconds"),
-        ),
-      (query) =>
-        Effect.promise(async () => {
-          abort.abort()
-          query.close()
-          await lifetime.join()
-        }),
+      Effect.timeout("60 seconds"),
     )
-  }).pipe(Effect.catch(() => Effect.succeed<ClaudeCodeAccount.Account | undefined>(undefined)))
+  })).pipe(
+    Effect.catchCause((cause) => Cause.hasInterrupts(cause)
+      ? Effect.failCause(cause).pipe(Effect.orDie)
+      : Effect.succeed(undefined)),
+  )
 }
 
 function authenticated(account: AccountInfo) {
