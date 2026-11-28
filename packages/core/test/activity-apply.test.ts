@@ -6,6 +6,7 @@ import { Database } from "@orchestra/core/database/database"
 import { ActivityActionLedger } from "../src/activity-action-ledger"
 import { ActivityArmLedger } from "../src/activity-arm"
 import { ActivityApplyService } from "../src/activity-apply"
+import { ActivityApplyTable } from "../src/activity-apply.sql"
 import { tmpdir } from "./fixture/tmpdir"
 
 test("confirmed apply reserves once and survives service restart", async () => {
@@ -104,9 +105,10 @@ test.each(["second-read", "revalidation"] as const)("%s settles safely and survi
     const second = yield* service.preview(request)
     if (!first || !second) throw new Error("missing previews")
     authorized = scenario !== "revalidation"
-    const result = yield* service.confirm({ previewID: first.previewID })
+    const [result, competing] = yield* Effect.all([service.confirm({ previewID: first.previewID }),
+      service.confirm({ previewID: second.previewID })], { concurrency: "unbounded" })
     expect(result?.outcome).toBe(scenario === "revalidation" ? "Refused" : "Unknown")
-    expect(yield* service.confirm({ previewID: second.previewID })).toBeUndefined()
+    expect(competing).toBeUndefined()
     expect(mutations).toBe(scenario === "revalidation" ? 0 : 1)
     const restarted = ActivityApplyService.make(database, { authority })
     expect((yield* restarted.state()).results[0]?.outcome).toBe(result?.outcome)
@@ -127,5 +129,20 @@ test.each(["second-read", "revalidation"] as const)("%s settles safely and survi
       expect(yield* restarted.preview({ approvalID: replacementApproval.approvalID, targetID: replacement.targetID, generation: replacement.generation })).toBeUndefined()
       expect((yield* restarted.state()).eligible).toEqual([])
     }
+  }).pipe(Effect.provide(Database.layerFromPath(path.join(directory.path, "activity.sqlite"))), Effect.scoped))
+})
+
+
+test("a reservation left Unknown by a stopped process blocks reuse after restart", async () => {
+  await using directory = await tmpdir()
+  await Effect.runPromise(Effect.gen(function* () {
+    const database = yield* Database.Service
+    yield* database.db.insert(ActivityApplyTable).values({ preview_id: "prior-preview", approval_id: "prior-approval",
+      target_id: "prior-target", generation: "1", source: directory.path, destination: path.join(directory.path, "out"),
+      identity: "native-identity", outcome: "Unknown" }).run()
+    const service = ActivityApplyService.make(database)
+    expect(yield* service.state()).toMatchObject({ available: false, results: [{ approvalID: "prior-approval",
+      targetID: "prior-target", generation: "1", outcome: "Unknown" }] })
+    expect(yield* service.confirm({ previewID: "prior-preview" })).toBeUndefined()
   }).pipe(Effect.provide(Database.layerFromPath(path.join(directory.path, "activity.sqlite"))), Effect.scoped))
 })
