@@ -1,5 +1,6 @@
 export * as HostFilesystem from "./host-filesystem"
 
+import { ClaudeCodeAccountFixture } from "./account"
 import path from "node:path"
 import fs from "node:fs/promises"
 import { mkdirSync, mkdtempSync, realpathSync, rmSync } from "node:fs"
@@ -106,6 +107,7 @@ export function make() {
     ExecutionHost.Service,
     ClaudeCodeHost.make.pipe(
       Effect.provide(sdk),
+      Effect.provide(ClaudeCodeAccountFixture.layer),
       Effect.provideService(ClaudeCodeSDK.Environment, {}),
       Effect.map((host) =>
         ExecutionHost.Service.of({

@@ -1,3 +1,4 @@
+import { ClaudeCodeAccountFixture } from "./fixture/account"
 import { expect, test } from "bun:test"
 import type { HookInput, Options, SDKMessage, SDKUserMessage, query } from "@anthropic-ai/claude-agent-sdk"
 import { AgentV2 } from "@orchestra/core/agent"
@@ -89,6 +90,7 @@ test("settles authorized built-ins exactly once with Claude Code's real callback
     ClaudeCodeHost.make.pipe(
       Effect.flatMap((host) => Stream.runCollect(host.stream(turn))),
       Effect.provide(sdk),
+      Effect.provide(ClaudeCodeAccountFixture.layer),
       Effect.provideService(ClaudeCodeSDK.Environment, {}),
     ),
   )
