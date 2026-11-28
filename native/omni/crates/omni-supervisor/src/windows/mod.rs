@@ -251,6 +251,43 @@ impl Supervisor {
                 let result = self.live(id).map_or(Ack::Unknown, |t| t.resize(cols, rows));
                 Msg::Ack { req, id, result }
             }
+            Msg::ControlList { req, id } => {
+                let result = self.live(id).map(|tree| {
+                    if tree.gone || tree.stop.is_some() {
+                        return Err(std::io::Error::other("tree is not available for control"));
+                    }
+                    selective_stop::list(tree.inventory_job()?)
+                });
+                match result {
+                    None => Msg::Ack { req, id, result: Ack::Unknown },
+                    Some(Err(_)) => Msg::Ack { req, id, result: Ack::Error },
+                    Some(Ok(members)) => Msg::ControlMembers {
+                        req, id,
+                        members: members.into_iter().map(|member| omni_proto::ControlMember {
+                            pid: member.pid, birth: member.birth,
+                        }).collect(),
+                    },
+                }
+            }
+            Msg::ControlStop { req, id, members } => {
+                let result = self.live(id).map(|tree| {
+                    if tree.gone || tree.stop.is_some() {
+                        return Err(std::io::Error::other("tree is not available for control"));
+                    }
+                    let selected: Vec<_> = members.into_iter().map(|member| selective_stop::Member {
+                        pid: member.pid, birth: member.birth,
+                    }).collect();
+                    selective_stop::stop(tree.inventory_job()?, &selected)
+                });
+                match result {
+                    None => Msg::Ack { req, id, result: Ack::Unknown },
+                    Some(Err(_)) => Msg::Ack { req, id, result: Ack::Error },
+                    Some(Ok(outcomes)) => Msg::ControlResults {
+                        req, id,
+                        exited: outcomes.into_iter().map(|outcome| outcome == selective_stop::Outcome::Exited).collect(),
+                    },
+                }
+            }
             Msg::List { req, id } => match self.live(id).map(|t| t.list()) {
                 None => Msg::Ack {
                     req,

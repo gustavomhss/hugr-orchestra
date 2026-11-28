@@ -12,7 +12,7 @@ use windows_sys::Win32::System::Threading::{
     WaitForSingleObject,
 };
 
-use super::inventory;
+use super::{inventory, job};
 
 /// Captured from a supervisor-owned Job snapshot, never from a caller's process number.
 #[derive(Clone, Copy, Debug)]
@@ -25,6 +25,23 @@ pub(super) struct Member {
 pub(super) enum Outcome {
     Exited,
     Unknown,
+}
+
+/// Read a complete bounded snapshot; any uninspectable or exiting member refuses the list.
+pub(super) fn list(job: &OwnedHandle) -> io::Result<Vec<Member>> {
+    job::bounded_member_pids(job, 256)?
+        .into_iter()
+        .map(|pid| {
+            let job::Probe::Member(handle) = job::probe(job, pid)? else {
+                return Err(io::Error::other("Job member changed during control snapshot"));
+            };
+            // SAFETY: the process handle is valid and has synchronize access.
+            if unsafe { WaitForSingleObject(handle.as_raw_handle(), 0) } != windows_sys::Win32::Foundation::WAIT_TIMEOUT {
+                return Err(io::Error::other("Job member is not known live"));
+            }
+            Ok(Member { pid, birth: inventory::created(&handle)? })
+        })
+        .collect()
 }
 
 /// All members are pinned and admitted before the first effect. A failed admission has no effects.
