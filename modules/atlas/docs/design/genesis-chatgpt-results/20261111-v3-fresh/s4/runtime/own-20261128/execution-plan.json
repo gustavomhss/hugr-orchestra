@@ -1,0 +1,484 @@
+{
+  "schema": "s4-own-runtime-execution-plan/v1",
+  "status": "INCOMPLETE_BLOCKED_WAITING_FOR_RUNTIME_RELEASE",
+  "recorded_utc": "2026-11-28T06:20:29.768482+00:00",
+  "scope": "Own S4 full15 prepare, exact binding, isolated publication/index/read, independent consumer and maintenance. Shared runtime qualification remains in genesis-runtime-resume.",
+  "semantic_input": {
+    "recovered_assembly_sha256": "2d521062d50ce0ecc26c2e6addf330164b3950c6436c5468b86b78d2a7ed9bdf",
+    "final_semantic_package_revision": "234df168e1191ec134941a4a2b490eb6e60cc32a",
+    "final_semantic_package_sha256": "443caac944c273a6066927caddc7b275ef66c037b3125e42c0fe5b620aa6d69b",
+    "note": "Phase1 is sealed. No input_keys, driver source or body changed by this planning/materialization task.",
+    "final_semantic_package_seal_revision": "70610957d0d3d2fef2fde3c5a9a23dcaa51ad8c4"
+  },
+  "runtime_dependency": {
+    "branch": "genesis-runtime-resume",
+    "observed_head": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+    "release_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+    "observed_release_id": "20261111-v3-fresh-s4-r3",
+    "observed_release_sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+    "observed_release_candidate": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+    "observed_common_controls_candidate": "7102f2e3a1a9a3822bcd0ae054b36ecffe9da553",
+    "release_rechecked_utc": "2026-11-28 06:19:32 UTC",
+    "compatible_new_release_sha": null,
+    "state": "COMPATIBLE_NEW_RELEASE_NOT_YET_PUBLISHED",
+    "limit": "The discovered release is historical r3 (one native L1A artifact at e3a8ab8, common controls at7102f2e). Branch09a4c4a contains ongoing S1-03/S2 qualification and fixes; it is not itself a released qualification.",
+    "qualification_plan": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/qualification-plan.json",
+      "execution_id": "6746cb98-f844-45ae-a604-c638ae7b8094",
+      "status_in_file": "NOT_RUN",
+      "supported_package_ids": [
+        "S1-03",
+        "S2"
+      ],
+      "s4_own_execution": "NOT_INCLUDED"
+    },
+    "release_reference": {
+      "commit": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+      "sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016"
+    },
+    "qualification_run": {
+      "id": 46114652347,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46114652347",
+      "head": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+      "conclusion": "success",
+      "scope": "Runtime qualification workflow for S1-03 and S2; not the S4 own-case execution or a new release manifest"
+    },
+    "unblock_condition": "A published immutable release from genesis-runtime-resume with candidate, capabilities, limits, receipts and compatibility sufficient for S4 own package; then execute the saved own-runtime plan."
+  },
+  "corpus": {
+    "unique_reference_files": 278,
+    "unique_live_file_inputs": 251,
+    "unique_source_ref_paths": 200,
+    "all_reference_bytes": 2847588,
+    "live_input_bytes": 2659835,
+    "maximum_input_bytes": 177641,
+    "inputs_above_historical256000": [],
+    "membership_inputs": [],
+    "same_path_conflicting_hashes": [],
+    "unresolved_byte_identities": [],
+    "input_only_paths_newly_pinned_to81d7a103": 32,
+    "body_files_verified": 15,
+    "historical_source_revisions": "Mixed immutable pins. Metadata permits multiple commits for one path only when bytes agree; runtime code checkout must remain separate from this historical data corpus.",
+    "legacy_archive": {
+      "root": "/workspace/scratch/22b9bf6d71cb/genesis-resume/runtime/s4",
+      "manifest_total": 278,
+      "local_recovery_manifest_rows": 135,
+      "missing_manifest_rows": 143,
+      "currently_matching_paths": 135,
+      "currently_absent_paths": 141,
+      "currently_wrong_version_paths": [
+        {
+          "path": ".github/workflows/atlas-pilot.yml",
+          "expected_sha256": "4933b81381b91a6732a6be5fc243c98f93ea0da74c6a9fe0645a990fb7fbaba0",
+          "observed_sha256": "d8a33929d5d92ace27a33a9bbff2f005aef4570ba30564455df5cd70ec512730",
+          "required_pins": [
+            "1cde2ff7a71bcf7aecb5d030917b577165135d38"
+          ]
+        },
+        {
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime-release.json",
+          "expected_sha256": "6e59f5ba8690fe7574d7e12f960aab120e20c942413c827a07d3bbf80d3cd38a",
+          "observed_sha256": "6de0b5f7a8911eb40c7fbcf74e74210805175ee580c0c8482249c016af1c0016",
+          "required_pins": [
+            "8a041ca66982dcc2b89aaed46ebe347cb3de57db"
+          ]
+        }
+      ],
+      "output_directory_state": "EMPTY",
+      "own_prepare_publish_read_receipts": "NONE_FOUND"
+    },
+    "rules": [
+      "Use the newly materialized isolated source_root above; it has no CAS or policy yet. Do not alter or reuse served historical state.",
+      "All278 locked references plus final semantic package and four acceptance records were materialized and rehashed. Preserve this composite identity and observed_head=null; do not initialize a fabricated original Git repository.",
+      "Add separately identified operational transport alongside semantic native-package.json; same relative directory preserves body.path semantics.",
+      "Keep outputs, logs and consumer bridge evidence outside corpus and runtime checkout; preserve source bytes throughout each prepare-binding-publish-read chain."
+    ],
+    "materialization": {
+      "status": "MATERIALIZED_AND_READBACK_VERIFIED",
+      "source_root": "/workspace/scratch/6451bd0ea949/operations/source",
+      "receipt_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/materialization-receipt.json",
+      "receipt_sha256": "3e2cfc5b82924f7e54ba148b026268a92fb4f8250bcce2ac81d40ee805c82f5c",
+      "composite_file_inventory_sha256": "a2bf5236ecfd4d76ea3338773f74e7ed44bd3f8b8a77984b38d42777b2932ec7",
+      "reference_files": 278,
+      "supplemental_files": 5,
+      "total_files": 283,
+      "observed_head": null,
+      "git_probe_exit_code": 128,
+      "git_identity": "No original Git HEAD; verified composite of exact source pins.",
+      "root_readback_verified_utc": "2026-11-28T06:20:29.768482+00:00",
+      "original_local_receipt_path": "/workspace/scratch/6451bd0ea949/operations/evidence/materialization/receipt.json"
+    },
+    "reference_inventory": {
+      "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/materialization-receipt.json",
+      "sha256": "3e2cfc5b82924f7e54ba148b026268a92fb4f8250bcce2ac81d40ee805c82f5c",
+      "selector": "files",
+      "scope": "All 278 source/evidence references plus final package and four acceptance records. Per-path SHA-256, Git blob SHA and source revisions are recorded here."
+    }
+  },
+  "operational_transport_derivation": {
+    "state": "NOT_RUN",
+    "proposed_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package-operational.json",
+    "precondition": "Final semantic package sealed plus compatible released runtime and explicit driver choice.",
+    "changes": "For every artifact, sort a unique input_keys list containing protocol and the exact executed driver path. No other artifact field changes from the final sealed semantic package.",
+    "current_driver_coverage": 2,
+    "required_driver_coverage": 15,
+    "current_protocol_coverage": 6,
+    "required_protocol_coverage": 15,
+    "driver_input": "file:modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/maintenance-operation.mjs",
+    "protocol_input": "file:.orchestra/skills/execute-genesis/references/transport.md",
+    "union_input_count_if_only_lists_change": 251,
+    "identity_consequence": "Input/receipt/candidate identities change. Original body semantic votes remain scoped to their exact bytes; exact new runtime binding is still required.",
+    "normative_excerpts": [
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/package-binding.json",
+        "selector": "expected[id=PB-inputs].expected",
+        "verbatim": "Mechanical assembly sorts each unique file input list and explicitly binds protocol plus actual maintenance-operation.mjs before initial publication. This changes input/receipt identities transparently, not authored body/result content. Build dependencies preserve actual semantic predecessors; navigation remains consultation."
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/maintenance-driver/usage.md",
+        "selector": "Invocação, before positional arguments",
+        "verbatim": "O mesmo caminho relativo deve existir no corpus e estar vinculado como input de **todas** as entries antes da primeira publicação. O script executado pode estar fora do corpus, desde que seus bytes coincidam com esse input; ambos são lidos e reobservados."
+      },
+      {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/maintenance-driver/usage.md",
+        "selector": "Pré-condições do pacote, order",
+        "verbatim": "Os arrays de inputs do target e do baseline devem ter a mesma ordem lexicográfica usada pelo rebuild. Inclua explicitamente o protocolo nessa ordem antes de preparar: o importador acrescenta o protocolo ao final somente se ele estiver ausente. O driver não ordena ou reescreve receipts existentes."
+      }
+    ]
+  },
+  "driver_selection": {
+    "state": "NOT_SELECTED_FOR_NEW_RELEASE",
+    "historical_pin": "c4a2992369f2309cbb5ffb8f166abbd7c3b81a4c",
+    "historical_sha256": "a6a579e6a3978daa9a67f01bce06fda56172334b0e34323e787cba4d5ab9f27f",
+    "observed_runtime_head": "09a4c4afc7aab2f9a153eb059d13df0ecf15595c",
+    "observed_runtime_driver_sha256": "aee73eedb6136b0c362a9386fd7928e8d91fbc243626f73134b3ac2a70148ea3",
+    "source_reference_constraint": "The two L4 metadata source_refs bind the historical driver at this exact corpus path. Replacing it with the current runtime driver silently would violate native-source-drift.",
+    "compatibility_option": "All251 current inputs are below256000; input size alone does not require changing historical driver. Evaluate explicit use of byte-exact historical driver against released runtime ports, or reconcile changed driver reference/metadata and affected reviews explicitly. No choice executed here.",
+    "same_graph_requirements": [
+      "same scope and roots",
+      "same ordered entry keys and artifact title/layer/need/navigation",
+      "same contract and ordered build-dependency keys",
+      "same lexicographically ordered file input keys",
+      "actual executed driver bytes equal observed driver input before and after operations"
+    ]
+  },
+  "preconditions": [
+    "Pin new runtime release and its code SHA/tree, versions, supported limits, gate receipts and release review; reuse only matching capabilities.",
+    "Seal complete semantic S4 package and recovery provenance; preserve historical judgments and all original producer bytes.",
+    "The 283-file composite source is materialized and rehashed; derive a separate operational transport only after selecting a compatible released runtime and driver. No missing/conflicting file inputs, members or symlink paths were observed.",
+    "Choose compatible driver bytes explicitly; derive sorted driver/protocol coverage for all15 before first preparation/publication.",
+    "Record actual isolated root/path/HEAD facts, initial empty state, dependency environment and commands without claiming a fabricated checkout.",
+    "Obtain original exact two runtime-binding decisions for candidate/contract/all15 result+inputs identities and criteria including runtime-import-binding.",
+    "Provide isolated policy and actual nominal actor/ratifier responsibility under user authorization; do not convert semantic PASS into authorization or binding.",
+    "After publication, verify all15 current ready bodies and seven roots before independent consumer; preserve actual manifests and emitted=true evidence.",
+    "For no-op maintenance, use the exact published full15 baseline and matching prepared/binding. For changed-domain maintenance, freeze a concrete case and expected affected keys against final graph before any new native production."
+  ],
+  "commands": [
+    {
+      "operation": "prepare-full15",
+      "state": "NOT_RUN",
+      "cwd": "$S4_RUNTIME_ROOT/modules/atlas",
+      "argv": [
+        "bun",
+        "scripts/genesis-native.ts",
+        "prepare",
+        "/workspace/scratch/6451bd0ea949/operations/source",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/native-package-operational.json",
+        "/workspace/scratch/6451bd0ea949/operations/evidence/initial/prepared.json"
+      ],
+      "output": "original stdout/stderr, receipt, complete prepared JSON, candidate_id, contract,251 observations,15 entries,7 roots; no binding/publication inference"
+    },
+    {
+      "operation": "binding",
+      "state": "NOT_RUN",
+      "mechanism": "Two actual independent judges receive exact prepared transformation, source integrity, full15 metadata and original semantic decisions. Preserve original requests/responses and construct validated approval. No CLI generates votes.",
+      "approval_relative_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/binding-initial.json"
+    },
+    {
+      "operation": "publish-full15",
+      "state": "NOT_RUN",
+      "cwd": "$S4_RUNTIME_ROOT/modules/atlas",
+      "argv": [
+        "bun",
+        "scripts/genesis-native.ts",
+        "publish",
+        "/workspace/scratch/6451bd0ea949/operations/source",
+        "/workspace/scratch/6451bd0ea949/operations/evidence/initial/prepared.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/binding-initial.json"
+      ],
+      "environment_declarations": {
+        "ATLAS_ACTOR": "actual authorized nominal actor",
+        "ATLAS_RATIFY_TOKEN": "actual authorized nominal ratifier"
+      },
+      "must_observe": "normal check gates and emission.ok=true plus emission.data.emitted=true; record returned manifest; exit0 alone insufficient"
+    },
+    {
+      "operation": "index",
+      "state": "NOT_RUN",
+      "cwd": "$S4_RUNTIME_ROOT/modules/atlas",
+      "argv": [
+        "bun",
+        "scripts/genesis-native.ts",
+        "index",
+        "/workspace/scratch/6451bd0ea949/operations/source",
+        "$S4_QUERY_JSON"
+      ],
+      "query_example": {
+        "scope": "atlas-continuity-rag-genesis",
+        "need": "entry"
+      }
+    },
+    {
+      "operation": "read",
+      "state": "NOT_RUN",
+      "cwd": "$S4_RUNTIME_ROOT/modules/atlas",
+      "argv": [
+        "bun",
+        "scripts/genesis-native.ts",
+        "read",
+        "/workspace/scratch/6451bd0ea949/operations/source",
+        "$S4_QUERY_JSON"
+      ],
+      "query_example": {
+        "scope": "atlas-continuity-rag-genesis",
+        "need": "entry",
+        "maxBytes": 5000
+      },
+      "body_readback": "Operator checks each of15 exact bodies with maxBytes18000; this is not the independent consumer budget/trace."
+    },
+    {
+      "operation": "maintenance-private-noop",
+      "state": "NOT_RUN",
+      "argv": [
+        "bun",
+        "$S4_SELECTED_DRIVER",
+        "rebuild",
+        "$S4_RUNTIME_ROOT/modules/atlas",
+        "/workspace/scratch/6451bd0ea949/operations/source",
+        "$S4_PUBLISHED_BASELINE_MANIFEST",
+        "/workspace/scratch/6451bd0ea949/operations/evidence/initial/prepared.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/binding-initial.json"
+      ],
+      "must_observe": "same private manifest; affected=[]; calls=[]; no native/model production. Capture guards and fresh read currentness."
+    },
+    {
+      "operation": "maintenance-private-change",
+      "state": "NOT_RUN",
+      "argv": [
+        "bun",
+        "$S4_SELECTED_DRIVER",
+        "rebuild",
+        "$S4_RUNTIME_ROOT/modules/atlas",
+        "/workspace/scratch/6451bd0ea949/operations/source",
+        "$S4_PUBLISHED_BASELINE_MANIFEST",
+        "/workspace/scratch/6451bd0ea949/operations/evidence/changed/prepared.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/binding-changed.json"
+      ],
+      "precondition": "New concrete domain oracle frozen before target native production; changed accepted outputs; exact new prepare/binding; same graph/layout."
+    },
+    {
+      "operation": "maintenance-publish-change",
+      "state": "NOT_RUN",
+      "argv": [
+        "bun",
+        "$S4_SELECTED_DRIVER",
+        "publish",
+        "$S4_RUNTIME_ROOT/modules/atlas",
+        "/workspace/scratch/6451bd0ea949/operations/source",
+        "$S4_PUBLISHED_BASELINE_MANIFEST",
+        "/workspace/scratch/6451bd0ea949/operations/evidence/changed/prepared.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128/binding-changed.json"
+      ],
+      "must_observe": "positive emission, published_manifest_matches_candidate=true, current readbacks, preserved independent IDs and expected affected/calls; activation_attempted accurately reported on failures."
+    }
+  ],
+  "own_oracles": {
+    "refs": [
+      {
+        "commit": "81d7a103b444d82abb3ad594805d80b346bc5799",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/consumer.json",
+        "sha256": "9c079b67f586108539ca151247c27ea648b8af47069e1d2bf40442c8d7b630ec",
+        "byte_length": 4331
+      },
+      {
+        "commit": "81d7a103b444d82abb3ad594805d80b346bc5799",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/consumer-direct-use-addendum.json",
+        "sha256": "1326c99cdb20b29c549e93477f951a290c9ba3668ca1422e209bd130780445be",
+        "byte_length": 2091
+      },
+      {
+        "commit": "81d7a103b444d82abb3ad594805d80b346bc5799",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/maintenance-driver.json",
+        "sha256": "c1d2f2b8b9f4be95b0a3087124f11b3e3a63b7128e82da2e8ead5ef3b4d544dc",
+        "byte_length": 2774
+      },
+      {
+        "commit": "81d7a103b444d82abb3ad594805d80b346bc5799",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/oracles/package-binding.json",
+        "sha256": "b1e1f6ff8fc7fb22ca716c2b9b61cd2ece6f61991ae12fa35642d242017e6d04",
+        "byte_length": 5382
+      },
+      {
+        "commit": "81d7a103b444d82abb3ad594805d80b346bc5799",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/producers/maintenance-driver/usage.md",
+        "sha256": "6213c40fd0abdaba119390dd84249c81d0cb69a6343f8fc141c3c6126570ecf4",
+        "byte_length": 12073
+      }
+    ],
+    "binding_case_ids": [
+      "PB-complete",
+      "PB-bytes",
+      "PB-contract",
+      "PB-inputs",
+      "PB-decisions",
+      "PB-publication",
+      "PB-limits"
+    ],
+    "maintenance_case_ids": [
+      "MD-identity",
+      "MD-capture",
+      "MD-registry",
+      "MD-reuse",
+      "MD-maintenance",
+      "MD-activation"
+    ],
+    "maintenance_domain_change_oracle": "NOT_SELECTED_OR_FROZEN; existing MD-maintenance explicitly requires later independently frozen concrete native change against final graph.",
+    "consumer": {
+      "state": "NOT_RUN",
+      "case_ids": [
+        "C-change",
+        "C-violation",
+        "C-impact",
+        "C-failure",
+        "C-abstain"
+      ],
+      "limits": {
+        "index_responses": 2,
+        "read_calls": 12,
+        "total_returned_body_bytes": 62000,
+        "shallow_max_returned_body_bytes": 6000,
+        "per_read_maxBytes": 18000,
+        "must_use_direct_intermediate": true,
+        "source_access": "none; faithful Atlas bridge only; textual isolation, not OS sandbox claim"
+      },
+      "phase1": "Shallow out-of-scope cost question after entry/index; record returned bytes and answer before deepening.",
+      "phase2": "Other four cases with direct use of all eleven required intermediates, section reads when sufficient. One entry read plus eleven intermediate reads fits existing twelve-call budget.",
+      "direct_intermediate_mapping": {
+        "S4:L1:ownership-boundaries": [
+          "C-impact"
+        ],
+        "S4:L1:atlas-engine": [
+          "C-impact",
+          "C-failure"
+        ],
+        "S4:L1:atlas-host-genesis": [
+          "C-failure"
+        ],
+        "S4:L1:continuity-rag": [
+          "C-change",
+          "C-violation"
+        ],
+        "S4:L1:coverage-governance": [
+          "C-failure"
+        ],
+        "S4:L1:native-runtime-delta": [
+          "C-failure"
+        ],
+        "S4:L1:host-boundaries": [
+          "C-change",
+          "C-violation"
+        ],
+        "S4:L2:atlas-system": [
+          "C-impact"
+        ],
+        "S4:L2:continuity-rag-operations": [
+          "C-change",
+          "C-violation"
+        ],
+        "S4:L2:genesis-governance": [
+          "C-failure"
+        ],
+        "S4:L3:system-flows": [
+          "C-impact",
+          "C-failure"
+        ]
+      },
+      "isolation": "Fresh fork_turns:none consumer, no oracle or raw source/body handoff; faithful actual Atlas query/response bridge only. Report textual isolation, not OS sandbox.",
+      "judging": "Two independently identified persistent runtime/consumer reviewers evaluate original trace and final answer; historic semantic votes cannot supply new consumer or binding judgments.",
+      "baseline_route_expected_body_bytes": 60752,
+      "baseline_route_reads": 12
+    }
+  },
+  "historical_evidence": {
+    "actual_one_artifact_sample": {
+      "candidate_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+      "candidate_id": "e4e5c8b0566bf1760707b45848d69b2f07aac61868c9bb0a496b473ac1d91284",
+      "manifest": "4d1a9e51f97fe7c78c9ae9fa56779705ea425eb193aaaed01ea2adc88d607a02",
+      "body_byte_length": 17959,
+      "body_sha256": "242de88e5cbb656b9752e231b2125e41733e449b19e6e887d1889830a1d5764c",
+      "receipts": [
+        {
+          "commit": "283b6e5efeadfef99f202f18eab72435ef7d9771",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/prepare-receipt-v1.json",
+          "sha256": "c2fc43a3051ed3999d63fa5fb6d95e4b7d8a3e150123f5ca090c5e7661cc09c3",
+          "byte_length": 2877,
+          "reuse_scope": "Historical actual one-artifact L1A sample only; no binding or publication transfer to full15 or a new runtime candidate."
+        },
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/verification.json",
+          "sha256": "61e7497e3de01f63b211ec1e5641270621610ef1f35314731ae0b19b22d3ea4a",
+          "byte_length": 1488,
+          "reuse_scope": "Historical actual one-artifact L1A sample only; no binding or publication transfer to full15 or a new runtime candidate."
+        },
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-publish-v1.receipt.json",
+          "sha256": "f696c5774ea2d1d88a108cae5a4a1f8f3a04958530ea097f472e4741e7ca2d02",
+          "byte_length": 977,
+          "reuse_scope": "Historical actual one-artifact L1A sample only; no binding or publication transfer to full15 or a new runtime candidate."
+        },
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-index-v1.receipt.json",
+          "sha256": "d8fbfd4722f6dbdd78916cda600b295af45554046ead97a08ae315b72b9b024e",
+          "byte_length": 694,
+          "reuse_scope": "Historical actual one-artifact L1A sample only; no binding or publication transfer to full15 or a new runtime candidate."
+        },
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-read-v1.receipt.json",
+          "sha256": "90a9478a6965bea7bc4c4eb0246c0c50d14d2b0198d1c1a8815b9e09ccf2cd15",
+          "byte_length": 693,
+          "reuse_scope": "Historical actual one-artifact L1A sample only; no binding or publication transfer to full15 or a new runtime candidate."
+        },
+        {
+          "commit": "6e43247103ac36e5adb635f2fccde2e61480c56d",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/operations-v1/sample-publish-v1.stdout.json",
+          "sha256": "f856953521dfd766accef8b4f909ff4326c201ed4d8666d9dd8aadd68f98a5e1",
+          "byte_length": 842,
+          "reuse_scope": "Historical actual one-artifact L1A sample only; no binding or publication transfer to full15 or a new runtime candidate."
+        }
+      ]
+    },
+    "common_controls": "Consume only newly released compatibility/gate evidence. Do not rerun or claim ownership of shared runtime qualification in this session.",
+    "archive_build_failure": {
+      "receipt": "/workspace/scratch/22b9bf6d71cb/genesis-resume/runtime/s4/evidence/build/receipt.json",
+      "exit_code": 1,
+      "scope": "Local source-only adapter build, not product test/full repository typecheck.",
+      "observed_errors": "TS2307 unresolved @atlas/index,@atlas/genesis,@atlas/tools,@atlas/knowledge,@atlas/contracts,@atlas/kernel; no usable runtime success inferred."
+    },
+    "new_full15_operational_receipts": "NOT_RUN",
+    "independent_consumer_receipts": "NOT_RUN",
+    "own_maintenance_receipts": "NOT_RUN"
+  },
+  "non_actions": [
+    "No runtime/product code changed.",
+    "No product tests run.",
+    "No new oracle or judgment created.",
+    "No new prepare, binding, publication, Atlas read, independent consumer or maintenance executed."
+  ],
+  "materialization_action": "Per ROOT delegation,283 files copied to a new isolated composite corpus and read back. Historical driver/release pins preserved, semantic payload frozen.",
+  "condition_to_resume": "A published immutable release from genesis-runtime-resume with candidate, capabilities, limits, receipts and compatibility sufficient for S4 own package; then execute the saved own-runtime plan."
+}
