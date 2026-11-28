@@ -408,13 +408,35 @@ export function Markdown(
   const activeCodeKeys = new Set<string>()
   const completedCode = new Map<string, Extract<RenderedBlock, { mode: "code" }>>()
   let streamed = false
+  const [frameText, setFrameText] = createSignal(local.text)
+  let frame: number | undefined
+  const cancelFrame = () => {
+    if (frame === undefined) return
+    cancelAnimationFrame(frame)
+    frame = undefined
+  }
+  onCleanup(cancelFrame)
+  createEffect(() => {
+    const text = local.text
+    const live = local.streaming ?? false
+    if (!live) {
+      cancelFrame()
+      setFrameText(text)
+      return
+    }
+    if (frame !== undefined) return
+    frame = requestAnimationFrame(() => {
+      frame = undefined
+      setFrameText(local.text)
+    })
+  })
   const [projection] = createResource(
     () => {
       if (isServer) return
       const live = local.streaming ?? false
       if (live) streamed = true
       if (!live && !streamed) return
-      return { key: owner, text: local.text, live }
+      return { key: owner, text: live ? frameText() : local.text, live }
     },
     (src) => projectMarkdown(src.key, src.text, src.live),
     { initialValue: pendingProjection("") },

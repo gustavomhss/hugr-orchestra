@@ -238,7 +238,11 @@ function createPromptStateValue(store: PromptStore, setStore: SetStoreFunction<P
 }
 
 function createPersistedPrompt(target: ReturnType<typeof promptTarget>, initial?: InitialPrompt, platform?: Platform) {
-  const [store, setStore, _, ready] = persisted(target, createStore<PromptStore>(promptStore(initial)), platform)
+  const [store, setStore, _, ready] = persisted(
+    { ...target, idleWriteMs: 200 },
+    createStore<PromptStore>(promptStore(initial)),
+    platform,
+  )
   return { ready, ...createPromptStateValue(store, setStore) }
 }
 

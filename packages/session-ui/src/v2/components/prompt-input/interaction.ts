@@ -106,13 +106,18 @@ export function createPromptInputV2Controller(input: {
     }
     attachments.pick(() => fileInput?.click())
   }
+  let contextSearch = 0
   const contextList = useFilteredList<PromptInputV2Suggestion>({
     items: async (query) => {
       const fixed = input.context().filter((item) => item.kind !== "file")
       const recent = input.context().filter((item) => item.kind === "file" && item.recent)
       if (!query.trim()) return [...fixed, ...recent]
+      const serial = ++contextSearch
+      await new Promise((resolve) => setTimeout(resolve, 120))
+      if (serial !== contextSearch) return [...fixed, ...recent]
       const seen = new Set(recent.map((item) => item.id))
       const files = (await input.searchContextFiles(query)).filter((item) => !seen.has(item.id))
+      if (serial !== contextSearch) return [...fixed, ...recent]
       return [...fixed, ...recent, ...files]
     },
     key: (item) => item.id,
