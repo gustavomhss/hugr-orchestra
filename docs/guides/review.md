@@ -18,6 +18,11 @@ During a review, `lucy` can search the captured source with `code_search`, consu
 while you continue editing your working folder. Every successful call returns retained evidence with a URI and
 SHA-256 digest. The URI and digest identify the retained bytes behind the tool result.
 
+A search preserves valid matches when a matching binary file was only partly searched or the binary coverage probe
+reaches its output ceiling, but reports incomplete coverage. A page cut by its result limit is also incomplete.
+Zero matches establish absence only within the selected scope when `coverage.complete` is true; a zero binary count
+from an incomplete probe is only a lower bound. A failed binary probe returns a named search error.
+
 A review that captures a tree without a semantic commit can still search and locate its code; index queries return
 `index_unavailable`. A missing or incompatible prepared index also stays unavailable. Locate can continue with
 lexical results and reports incomplete coverage when the index cannot serve it. Review CODE calls never download a
