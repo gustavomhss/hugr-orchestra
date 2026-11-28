@@ -3,6 +3,7 @@ import { Orchestra } from "@orchestra/client"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Credential } from "@orchestra/core/credential"
 import { Integration } from "@orchestra/core/integration"
+import { Mcp } from "@orchestra/core/mcp"
 import { ModelExecution } from "@orchestra/core/model-execution"
 import { SessionTable } from "@orchestra/core/session/sql"
 import { Location } from "@orchestra/schema/location"
@@ -12,6 +13,7 @@ import { Cause, Context, Deferred, Effect, Exit, Fiber, Schema } from "effect"
 import { FetchHttpClient } from "effect/unstable/http"
 import { OpenApi } from "effect/unstable/httpapi"
 import { tmpdir } from "@orchestra/core/test/fixture/tmpdir"
+import { promptServer } from "../../core/test/fixture/mcp-prompts"
 import { Api } from "../src/api"
 import { ModelExecutionFixture } from "./model-execution-fixture"
 
@@ -441,6 +443,109 @@ it.live("API E6 wire: both generated clients send the command and decode its eff
     const expected = { status: "ready", engine: "claude-code", ref: ref("anthropic", "wire-model", "high") } as const
     expect(promise.data.selection).toEqual(expected)
     expect(effect.data.selection).toEqual(expected)
+    untouched()
+  }),
+)
+
+it.live("API E6 wire: MCP command preflight lists only connected metadata and cancels a pending page", () =>
+  Effect.gen(function* () {
+    const fixture = yield* ModelExecutionFixture.setup
+    const before = yield* fixture.snapshot()
+    const cursors: (string | undefined)[] = []
+    let mode: "ready" | "failed" | "waiting" = "ready"
+    const entered = Promise.withResolvers<void>()
+    const aborted = Promise.withResolvers<void>()
+    const release = Promise.withResolvers<void>()
+    yield* Effect.addFinalizer(() => Effect.sync(() => release.resolve()))
+    const target = promptServer("wire.prompts", async (cursor, signal) => {
+      cursors.push(cursor)
+      if (cursor === undefined) return { prompts: [], nextCursor: "second" }
+      if (mode === "failed") throw new Error("WIRE_PRIVATE_MCP_LIST_FAILURE")
+      if (mode === "waiting") {
+        signal.addEventListener("abort", () => aborted.resolve(), { once: true })
+        entered.resolve()
+        await release.promise
+        return { prompts: [], nextCursor: "third" }
+      }
+      return { prompts: [{ name: "wire.greet" }] }
+    })
+    let unrelatedLists = 0
+    const unrelated = promptServer("other", async () => {
+      unrelatedLists++
+      return { prompts: [{ name: "hello" }] }
+    })
+    ModelExecutionFixture.state.mcpServers = [target.provided, unrelated.provided]
+    const command = "wire_prompts:wire_greet"
+    const input = { context: { type: "draft" as const }, model: ref(), command }
+    const cold = yield* fixture.request("/api/model/execution", input)
+    expect(cold.status).toBe(400)
+    expect(yield* json(cold)).toMatchObject({ _tag: "InvalidRequestError", field: "command" })
+    expect(target.observed.connections).toBe(0)
+    expect(unrelated.observed.connections).toBe(0)
+
+    const mcp = Context.get(fixture.context, Mcp.Service)
+    yield* mcp.ready()
+    expect((yield* fixture.request("/api/model/execution", input)).status).toBe(200)
+    const missing = yield* fixture.request("/api/model/execution", { ...input, command: "wire_prompts:missing" })
+    expect(missing.status).toBe(400)
+    expect(yield* json(missing)).toMatchObject({ _tag: "InvalidRequestError", field: "command" })
+    mode = "failed"
+    const failed = yield* fixture.request("/api/model/execution", input)
+    expect(failed.status).toBe(503)
+    const failure = yield* json(failed)
+    expect(failure).toMatchObject({ _tag: "ServiceUnavailableError", service: "model-execution" })
+    expect(JSON.stringify(failure)).not.toContain("WIRE_PRIVATE_MCP_LIST_FAILURE")
+    expect(unrelatedLists).toBe(0)
+    expect(yield* mcp.prompts()).toEqual([{ server: "other", name: "hello" }])
+
+    cursors.length = 0
+    mode = "waiting"
+    const client = Orchestra.make({ baseUrl: fixture.baseUrl })
+    const controller = new AbortController()
+    const cancelled = client.models.execution(
+      { ...input, location: { directory: fixture.directory } },
+      { signal: controller.signal },
+    ).then(
+      () => false,
+      () => true,
+    )
+    yield* Effect.promise(() => entered.promise).pipe(Effect.timeout("5 seconds"))
+    controller.abort()
+    expect(yield* Effect.promise(() => cancelled)).toBe(true)
+    yield* Effect.promise(() => aborted.promise).pipe(Effect.timeout("5 seconds"))
+    release.resolve()
+    yield* reachable(fixture)
+    expect(cursors).toEqual([undefined, "second"])
+    expect(target.observed).toEqual({ connections: 1, gets: 0 })
+    expect(unrelatedLists).toBe(1)
+    expect(yield* fixture.snapshot()).toEqual(before)
+    untouched()
+  }),
+  20_000,
+)
+
+it.live("API E6 wire: a SessionStore query failure becomes a redacted service error", () =>
+  Effect.gen(function* () {
+    const fixture = yield* ModelExecutionFixture.setup
+    yield* reachable(fixture)
+    const before = yield* fixture.snapshot()
+    const response = yield* Effect.gen(function* () {
+      yield* Effect.acquireRelease(
+        fixture.database.db.run("ALTER TABLE session RENAME TO unavailable_execution_session"),
+        () => fixture.database.db.run("ALTER TABLE unavailable_execution_session RENAME TO session").pipe(Effect.orDie),
+      )
+      return yield* fixture.request("/api/model/execution", {
+        context: { type: "session", sessionID: fixture.session.id },
+        model: ref(),
+      })
+    }).pipe(Effect.scoped)
+    expect(response.status).toBe(503)
+    expect(yield* json(response)).toEqual({
+      _tag: "ServiceUnavailableError",
+      message: "Model execution context is unavailable",
+      service: "model-execution",
+    })
+    expect(yield* fixture.snapshot()).toEqual(before)
     untouched()
   }),
 )

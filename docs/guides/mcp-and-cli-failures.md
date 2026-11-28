@@ -6,6 +6,10 @@
 - **A local server that exits or crashes** is `failed` with `Connection closed` (or the connect error), followed by `Last stderr lines:` and the last 20 lines it wrote. Use them to find why it stopped.
 - **`orchestra mcp logout <server>`** removes the stored OAuth credentials, disconnects the server and sets its status to `needs_auth`. Run `orchestra mcp auth <server>` to sign in again. Servers without OAuth are not changed.
 
+## MCP slash-command preflight
+
+Model execution preflight can inspect slash-command metadata once its MCP server is connected. Before the server connects, `/api/model/execution` returns HTTP 400 for its commands. If a connected server fails to list its prompts, the endpoint returns HTTP 503. Cancelling the check cancels the pending MCP prompt-list request.
+
 ## OAuth authority changes
 
 Each remote server's stored login is bound to its resource URL and the authorization server discovered during sign-in. Older logins without that binding, or a changed authorization server, show `needs_auth`. Authenticate that server again; other servers keep their logins.
