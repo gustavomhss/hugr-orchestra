@@ -57,3 +57,24 @@ impl Task for QuarantineInspectTask {
 pub fn quarantine_inspect(source: String) -> AsyncTask<QuarantineInspectTask> {
     AsyncTask::new(QuarantineInspectTask { source })
 }
+
+
+pub struct QuarantineDisposeTask {
+    source: String,
+    expected: String,
+}
+impl Task for QuarantineDisposeTask {
+    type Output = ();
+    type JsValue = ();
+    fn compute(&mut self) -> napi::Result<()> {
+        quarantine_windows::dispose(&self.source, &self.expected).map_err(napi::Error::from_reason)
+    }
+    fn resolve(&mut self, _: Env, _: ()) -> napi::Result<()> {
+        Ok(())
+    }
+}
+
+#[napi]
+pub fn quarantine_dispose(source: String, expected: String) -> AsyncTask<QuarantineDisposeTask> {
+    AsyncTask::new(QuarantineDisposeTask { source, expected })
+}
