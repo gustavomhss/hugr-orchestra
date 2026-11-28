@@ -35,10 +35,8 @@ async function parent() {
     const binary = join(dirname(electron), "dist", (await readFile(join(dirname(electron), "path.txt"), "utf8")).trim())
     const bun = process.execPath
     const child = Bun.spawn([binary, "--no-sandbox", "--disable-gpu", "--disable-software-rasterizer", entry, "--activity-arm-child"], {
-      stdout: "pipe", stderr: "pipe", env: { ...process.env, ACTIVITY_ARM_ROOT: root, ACTIVITY_ARM_PRELOAD: preload.outputs[0]!.path, ACTIVITY_ARM_BUN: bun, ACTIVITY_ARM_CLI: join(desktop, "../cli/src/index.ts") },
+      stdout: "inherit", stderr: "inherit", env: { ...process.env, ACTIVITY_ARM_ROOT: root, ACTIVITY_ARM_PRELOAD: preload.outputs[0]!.path, ACTIVITY_ARM_BUN: bun, ACTIVITY_ARM_CLI: join(desktop, "../cli/src/index.ts") },
     })
-    const stdout = new Response(child.stdout).text()
-    const stderr = new Response(child.stderr).text()
     let done = false
     const dialogs = handleDialogs(() => done, root)
     const timer = setTimeout(() => child.kill("SIGKILL"), 90_000)
@@ -46,7 +44,7 @@ async function parent() {
     clearTimeout(timer)
     done = true
     await dialogs
-    assert.equal(status, 0, `Electron fixture failed:\n${await stderr}\n${await stdout}`)
+    assert.equal(status, 0, "Electron fixture failed")
     const report = await readFile(join(root, "report.json"), "utf8")
     assert.deepEqual(JSON.parse(report), {
       status: "pass", openFileRefused: true, nativeCancel: true, identityMismatch: true, staleRefused: true,
