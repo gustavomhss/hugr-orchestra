@@ -2,12 +2,13 @@
 use std::ffi::CString;
 use std::fs::{self, File};
 use std::io::{self, Read, Write};
-use std::os::fd::{AsRawFd, BorrowedFd, FromRawFd, OwnedFd, RawFd};
+use std::os::fd::{AsFd, AsRawFd, BorrowedFd, FromRawFd, OwnedFd, RawFd};
 use std::os::unix::ffi::OsStrExt;
 use std::path::{Component, Path};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
 
+use super::isolated_bootstrap::Bootstraps;
 use super::spawn::{Fail, Prepared};
 use super::sys;
 use omni_proto::FailCode;
@@ -35,6 +36,7 @@ struct CloneArgs {
 }
 
 pub(super) struct Isolation {
+    pub(super) bootstraps: Bootstraps,
     root: OwnedFd,
     uid: u32,
     gid: u32,
@@ -43,7 +45,7 @@ pub(super) struct Member {
     root: OwnedFd,
     leaf: OwnedFd,
     name: CString,
-    pid: i32,
+    pub(super) pid: i32,
     frozen: Option<bool>,
 }
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -181,7 +183,12 @@ impl Isolation {
         {
             return Err(invalid());
         }
-        Ok(Some(Self { root: dir, uid, gid }))
+        Ok(Some(Self {
+            bootstraps: Bootstraps::default(),
+            root: dir,
+            uid,
+            gid,
+        }))
     }
     pub(super) fn spawn(
         &self,
@@ -189,7 +196,7 @@ impl Isolation {
         stdin: Option<BorrowedFd<'_>>,
         stdout: BorrowedFd<'_>,
         stderr: BorrowedFd<'_>,
-    ) -> Result<(i32, Member), Fail> {
+    ) -> Result<(Member, File), Fail> {
         let fail =
             |what: &str, e: io::Error| Fail::new(FailCode::Io, e.raw_os_error().unwrap_or(0), format!("{what}: {e}"));
         let name = CString::new(format!(
@@ -235,6 +242,7 @@ impl Isolation {
             }
         };
         let (err_r, err_w) = sys::pipe().map_err(|e| fail("error pipe", e))?;
+        sys::set_nonblock(err_r.as_fd()).map_err(|e| fail("error pipe", e))?;
         // Duplicate above stdio so simultaneous fd remapping cannot clobber another source.
         let dup = |fd: RawFd| -> io::Result<OwnedFd> {
             // SAFETY: fcntl duplicates a live descriptor.
@@ -293,46 +301,7 @@ impl Isolation {
             return Err(fail("clone3", io::Error::last_os_error()));
         }
         member.pid = pid;
-        drop(err_w);
-        drop(report_fd);
-        let mut report = [0u8; 5];
-        let mut reader = File::from(err_r);
-        let outcome = reader.read(&mut report);
-        match outcome {
-            // The clone already placed the child atomically; a successful short command may have exited.
-            Ok(0) => Ok((pid, member)),
-            other => {
-                // SAFETY: this is our direct, unreaped child from clone3.
-                unsafe {
-                    libc::kill(pid, libc::SIGKILL);
-                    while libc::waitpid(pid, std::ptr::null_mut(), 0) < 0 && *libc::__errno_location() == libc::EINTR {}
-                }
-                match other {
-                    Ok(5) => {
-                        let errno = i32::from_le_bytes([report[1], report[2], report[3], report[4]]);
-                        let code = match report[0] {
-                            5 => omni_proto::FailCode::BadCwd,
-                            7 => super::spawn::exec_code(errno),
-                            _ => omni_proto::FailCode::Io,
-                        };
-                        Err(super::spawn::Fail::new(
-                            code,
-                            errno,
-                            format!(
-                                "isolated child stage {}: {}",
-                                report[0],
-                                io::Error::from_raw_os_error(errno)
-                            ),
-                        ))
-                    }
-                    Ok(_) => Err(fail(
-                        "isolated child report",
-                        io::Error::other("incomplete report or lost membership"),
-                    )),
-                    Err(e) => Err(fail("isolated child report", e)),
-                }
-            }
-        }
+        Ok((member, File::from(err_r)))
     }
 }
 impl Member {
