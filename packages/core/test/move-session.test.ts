@@ -281,7 +281,8 @@ describe("MoveSession", () => {
       yield* Effect.promise(async () => {
         await fs.writeFile(path.join(source, "renamed.txt"), "initial rename\n")
         await fs.writeFile(path.join(source, "open-fd.txt"), "initial descriptor\n")
-        await $`git add renamed.txt open-fd.txt`.cwd(source).quiet()
+        await fs.writeFile(path.join(source, "stat-only.txt"), "unchanged content\n")
+        await $`git add renamed.txt open-fd.txt stat-only.txt`.cwd(source).quiet()
         await $`git commit -m writer-baseline`.cwd(source).quiet()
       })
       const destination = abs(`${root.path}-move-writer-destination`)
@@ -311,6 +312,10 @@ describe("MoveSession", () => {
         title: "move writer", version: "test", time_created: 1, time_updated: 1,
       }).run().pipe(Effect.orDie)
 
+      // Only stat information changes. Plain git diff can silently refresh it on disk.
+      yield* Effect.promise(() => fs.utimes(path.join(source, "stat-only.txt"), 1, 1))
+      const sourceIndex = path.join(source, ".git", "index")
+      const indexBytes = yield* Effect.promise(() => fs.readFile(sourceIndex))
       const writer = yield* MoveSessionWriter.start(source, control.path)
       expect(writer.ready.descriptorOpen).toBe(true)
       expect(writer.ready.pid).not.toBe(process.pid)
@@ -335,6 +340,7 @@ describe("MoveSession", () => {
       yield* move.moveSession({ sessionID, destination: { directory: moved }, moveChanges: true })
 
       expect(observed).toEqual({ projections: 1, acknowledged: true })
+      expect(yield* Effect.promise(() => fs.readFile(sourceIndex))).toEqual(indexBytes)
       const retained = yield* Effect.promise(() => Promise.all(Object.keys(MoveSessionWriter.contents).map(async (name) =>
         [name, await Bun.file(path.join(source, name)).exists() ? await Bun.file(path.join(source, name)).text() : null] as const)))
       expect(Object.fromEntries(retained)).toEqual(MoveSessionWriter.contents)
