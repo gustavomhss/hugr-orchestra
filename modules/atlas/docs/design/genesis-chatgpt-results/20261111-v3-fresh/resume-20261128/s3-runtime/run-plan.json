@@ -18,9 +18,9 @@
     }
   },
   "package": {
-    "commit": "caae29c9ae560d49859b67c52c81e66c2a3b078e",
+    "commit": "6c28b6da92a45d6c26490389b4813b8ba4849065",
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/native-package.json",
-    "sha256": "4bcee3f8e534dc6a191cee647e27b5a6faf98a4a7e1f3ed09e9fda7488d64c86",
+    "sha256": "e2bec9aadf58327d7ae72c991c581a03089ee6dce165595fa802e4923c58ccde",
     "artifact_keys": [
       "s3-l1-maestro",
       "s3-l1-relay",
@@ -34,15 +34,15 @@
       "s3-l4-maintenance",
       "s3-l4-operational"
     ],
-    "git_blob_sha": "87585cb5cd3ee802b77662ea8dd7f0ce2d0f107c",
-    "byte_length": 1164632
+    "git_blob_sha": "8eea7cc11e93ea37d5a427df1ca5630c1ee47b26",
+    "byte_length": 1164616
   },
   "input_lock": {
-    "commit": "e2cf5356d8093acf563c75d50bb186d2e8599b95",
+    "commit": "43132a623fc72d734b5ec4ae6c5f7a1db8f2daf3",
     "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/s3-runtime/input-lock.json",
-    "sha256": "963ce86867ae7ce3e345298425c577e836364a165cffab825390d1eb50ba54dd",
-    "git_blob_sha": "c330ad0eefa4dbb3d270ae6ffb14333d3a553d0b",
-    "byte_length": 1673114
+    "sha256": "ada53fd4d9712a09c37d9b29f8d1c00d813b9089bd5afb4ff4213ed1807b8704",
+    "git_blob_sha": "fe2677462beceb36223fd2de443e95fd49fe5807",
+    "byte_length": 1673102
   },
   "restore": {
     "run_id": null,
