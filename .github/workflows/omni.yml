@@ -1,80 +1,31 @@
-name: omni
-
-# hugr-omni's own gate (native/omni/scripts/ci.mjs) on Linux, Windows and macOS.
-# Run manually or for an epic-labeled PR; unlabeled PRs and pushes do not start this native suite.
-# Orchestra's test guard does not apply to it.
+name: exact Linux member isolation
 on:
-  push:
-    branches:
-      - dev
-    paths:
-      - "native/omni/**"
-  pull_request:
-    types: [opened, synchronize, reopened, labeled]
-    paths:
-      - "native/omni/**"
-      - ".github/workflows/omni.yml"
   workflow_dispatch:
-    inputs:
-      ref:
-        description: "Branch, tag or commit to run the gate on (default: the dispatched ref)"
-        type: string
-        default: ""
-      test_filter:
-        description: "Passed to cargo test (rerun one suspect test)"
-        type: string
-        default: ""
-
-concurrency:
-  # Non-epic label events skip the job; give them their own group so they cannot cancel a real run.
-  group: ${{ (github.event_name != 'pull_request' || github.event.action != 'labeled' || github.event.label.name == 'epic') && format('omni-{0}', github.event.pull_request.number || inputs.ref || github.ref) || format('omni-skip-{0}', github.run_id) }}
-  cancel-in-progress: true
-
 permissions:
   contents: read
-
 jobs:
-  gate:
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'pull_request' && contains(github.event.pull_request.labels.*.name, 'epic'))
-    name: gate (${{ matrix.os }})
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-24.04, windows-2022, macos-15]
-    runs-on: ${{ matrix.os }}
-    timeout-minutes: 45
-    env:
-      CARGO_TERM_COLOR: always
-      CARGO_INCREMENTAL: "0"
-      TEST_FILTER: ${{ inputs.test_filter }}
+  kernel:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
     defaults:
       run:
         shell: bash
         working-directory: native/omni
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
-        with:
-          ref: ${{ inputs.ref || '' }}
-
-      - name: Setup Node
-        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
-        with:
-          node-version: "22"
-
-      - name: Rust toolchain (rust-toolchain.toml)
-        run: rustup show active-toolchain || rustup toolchain install
-
-      # One cache per OS and lockfile; only dev saves it, so other refs read a warm cache without filling the quota.
-      - name: Rust cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: native/omni -> target
-          save-if: ${{ github.ref == 'refs/heads/dev' }}
-
-      - name: Linux PID-reuse test needs unprivileged user namespaces
-        if: runner.os == 'Linux'
-        run: sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
-
-      - name: Gate
-        run: node scripts/ci.mjs
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+      - name: Compile the scoped proof
+        run: |
+          rustup show active-toolchain || rustup toolchain install
+          cargo test -p omni-supervisor --test linux_member_isolation --no-run --message-format=json > "$RUNNER_TEMP/member-build.json"
+          exe=$(jq -er 'select(.target.name == "linux_member_isolation" and .executable != null) | .executable' "$RUNNER_TEMP/member-build.json")
+          printf 'MEMBER_TEST=%s\n' "$exe" >> "$GITHUB_ENV"
+      - name: Run one fixture in a disposable cgroup
+        run: |
+          uname -r
+          cg="/sys/fs/cgroup/omni-proof-${GITHUB_RUN_ID}-${GITHUB_RUN_ATTEMPT}"
+          sudo mkdir "$cg"
+          trap 'sudo rmdir "$cg"' EXIT
+          cat "$cg/cgroup.controllers"
+          printf '+pids\n' | sudo tee "$cg/cgroup.subtree_control" > /dev/null
+          sudo env HUGR_OMNI_ISOLATION_CI=1 HUGR_OMNI_ISOLATION_CGROUP_ROOT="$cg" \
+            "$MEMBER_TEST" --ignored --exact freezer_is_exact_for_a_supervisor_owned_single_task_member --nocapture
