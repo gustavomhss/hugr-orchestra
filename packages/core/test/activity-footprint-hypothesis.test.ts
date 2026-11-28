@@ -19,6 +19,12 @@ describe("footprint hypothesis evidence", () => {
     expect(ActivityFootprintHypothesis.evaluate({ workFinishedAt: 10, samples: [baseline, rise, stable, { ...higher, sampledAt: 30 }] })).toBe("insufficient")
   })
 
+  test("rejects a footprint series with unsorted, duplicate, or invalid observations", () => {
+    expect(ActivityFootprintHypothesis.evaluate({ workFinishedAt: 10, samples: [baseline, rise, higher, stable] })).toBe("insufficient")
+    expect(ActivityFootprintHypothesis.evaluate({ workFinishedAt: 10, samples: [baseline, { ...baseline, bytes: 110 }, rise, stable, higher] })).toBe("insufficient")
+    expect(ActivityFootprintHypothesis.evaluate({ workFinishedAt: 10, samples: [{ ...baseline, bytes: -1 }, rise, stable, higher] })).toBe("insufficient")
+  })
+
   test("a subsequent footprint decrease keeps the evidence insufficient even if it stays high", () => {
     expect(ActivityFootprintHypothesis.evaluate({ workFinishedAt: 10, samples: [baseline, rise, { ...stable, bytes: 110 }, higher, { ...higher, sampledAt: 50 }] })).toBe("insufficient")
     expect(ActivityFootprintHypothesis.evaluate({ workFinishedAt: 10, samples: [baseline, rise, stable, higher, { ...higher, sampledAt: 50, bytes: 125 }] })).toBe("insufficient")
