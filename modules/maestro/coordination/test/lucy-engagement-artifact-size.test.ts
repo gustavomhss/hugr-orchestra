@@ -7,6 +7,7 @@ import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { reply, run, sourcePath, sourceText, text, type Ctx } from "./fixture/lucy-engagement"
 import { cache, canonical, decoded, nativeCode, readAll, receipt, request } from "./fixture/lucy-engagement-artifacts"
 import { commit, failed, retained, steps } from "./fixture/lucy-engagement-artifact-limits"
+import { knownVariant, variantAdapter } from "./fixture/lucy-engagement-variant-adapter"
 
 const MiB = 1024 * 1024
 
@@ -119,6 +120,7 @@ test("22 real searches with valid large negative globs cannot seal a receipt bey
       expect(bodies[0].bytes.length).toBeLessThan(MiB)
       positive = true
     }).pipe(Effect.orDie))
+    const variants = variantAdapter(provider.stream)
     yield* root.open((current) => Effect.gen(function* () {
       host = current
       yield* Effect.addFinalizer(() => Effect.promise(() => fs.rm(cache(current, input), { recursive: true, force: true })))
@@ -128,9 +130,21 @@ test("22 real searches with valid large negative globs cannot seal a receipt bey
       const native = yield* nativeCode(current, [...provider.sessions][0])
       expect(native).toHaveLength(22)
       expect(native.every((call) => call.name === "code_search")).toBe(true)
-      //22 operations and at most22 tiny CODE bodies cannot hit128/256/16MiB/64MiB first.
+      expect(native.every((call) => call.status === "completed")).toBe(true)
+      expect(variants.proposals).toHaveLength(1)
+      expect(variants.verifiers).toEqual([])
+      const added = yield* nativeCode(current, variants.proposals[0].sessionID)
+      expect(added).toHaveLength(1)
+      expect(added[0]).toMatchObject({ name: "code_search", status: "completed" })
+      expect(added[0].providerExecuted).not.toBe(true)
+      expect(added[0].body).toContain("ENGAGEMENT-IN-SCOPE")
+      const bodies = yield* retained(current, input)
+      expect(bodies.length).toBeLessThanOrEqual(23)
+      expect(bodies.every((body) => body.bytes.length < MiB)).toBe(true)
+      expect(bodies.reduce((sum, body) => sum + body.bytes.length, 0)).toBeLessThan(64 * MiB)
+      //The22 lead inputs alone exceed1MiB; the later known-instance call is separate and all other quotas stay below their limits.
       yield* failed(current, root, input, output)
-    }), { stream: provider.stream }).pipe(
+    }), variants).pipe(
       Effect.provideService(BackendToolkit.Root, path.join(root.global.cache, "receipt-empty-toolkit")),
     )
   })))
@@ -152,6 +166,7 @@ test("an actual4096-byte captured citation is exactly one complete public page",
       expect(report.citations[0].text).toBe(line)
       expect(Buffer.byteLength(report.citations[0].text)).toBe(4096)
       const evidence = yield* receipt(host, report)
+      yield* knownVariant(host, input, evidence)
       const citation = evidence.value.artifacts.find((artifact) => artifact.kind === "citation")
       if (!citation) return yield* Effect.die("actual citation body missing from receipt")
       expect(citation.bytes).toBe(4096)
@@ -161,7 +176,7 @@ test("an actual4096-byte captured citation is exactly one complete public page",
       expect(body.pages[0].offset).toBe(0)
       expect(Buffer.from(body.pages[0].data, "base64").length).toBe(4096)
       expect(body.pages[0].next).toBeUndefined()
-    }), { stream: (log, modelRequest) => text(reply(log, modelRequest, { quote: true })) }).pipe(
+    }), variantAdapter((log, modelRequest) => text(reply(log, modelRequest, { quote: true })))).pipe(
       Effect.provideService(BackendToolkit.Root, path.join(root.global.cache, "page-empty-toolkit")),
     )
   })))

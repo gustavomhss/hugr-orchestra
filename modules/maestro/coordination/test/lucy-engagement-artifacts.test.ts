@@ -15,6 +15,7 @@ import { ReviewFanoutV2 } from "../src/v2/workflow/review-fanout"
 import { fence, outsidePath, outsideText, reply, run, sourcePath, sourceText, stage, text } from "./fixture/lucy-engagement"
 import { cache, canonical, codeCalls, codeStream, decoded, digest, nativeCode, pageBytes,
   readAll, reader, receipt, refused, request, required } from "./fixture/lucy-engagement-artifacts"
+import { knownVariant, variantAdapter } from "./fixture/lucy-engagement-variant-adapter"
 
 test("real CODE calls retain every body and distinguish repeated call IDs by their actual assistant messages", () => {
   expectSpawn(import.meta.path)
@@ -39,6 +40,7 @@ test("real CODE calls retain every body and distinguish repeated call IDs by the
 
       const evidence = yield* receipt(host, report)
       const operations = evidence.value.operations.filter((operation) => operation.kind === "code")
+        .filter((operation) => operation.sessionID === report.sessionID)
       expect(operations).toHaveLength(delivered.length)
       expect(new Set(operations.map((operation) => operation.operationID)).size).toBe(delivered.length)
       for (const operation of operations) {
@@ -63,7 +65,8 @@ test("real CODE calls retain every body and distinguish repeated call IDs by the
       }
       expect(report.report).not.toHaveProperty("verdict")
       expect(evidence.value.artifacts.every((artifact) => artifact.complete)).toBe(true)
-    }), { stream: provider.stream })
+      yield* knownVariant(host, input, evidence)
+    }), variantAdapter(provider.stream))
   }))
 }, 120_000)
 
@@ -83,7 +86,8 @@ test("public pages preserve original multibyte bytes and bind every cursor and a
       expect(native.every((call) => call.status === "completed")).toBe(true)
       expect(native.find((call) => call.name === "code_search")?.body).toContain("ARTIFACT-LINE-39")
       const evidence = yield* receipt(host, report)
-      const search = evidence.value.operations.find((operation) => operation.kind === "code" && operation.name === "code_search")
+      const search = evidence.value.operations.find((operation) => operation.kind === "code" && operation.name === "code_search" &&
+        operation.sessionID === report.sessionID)
       if (!search || search.kind !== "code") return yield* Effect.die("captured search missing")
       const artifact = evidence.value.artifacts.find((artifact) => artifact.artifactID === search.evidence.artifactID)
       if (!artifact) return yield* Effect.die("captured search descriptor missing")
@@ -119,14 +123,16 @@ test("public pages preserve original multibyte bytes and bind every cursor and a
         refused(denied, "engagement-evidence-not-found")
         expect(denied.text).not.toContain("ARTIFACT-LINE")
       }
-      const second = yield* receipt(host, decoded(yield* host.invoke({ ...request("other-paged-report"), revision })))
-      const secondSearch = second.value.operations.find((operation) => operation.kind === "code" && operation.name === "code_search")
+      const secondReport = decoded(yield* host.invoke({ ...request("other-paged-report"), revision }))
+      const second = yield* receipt(host, secondReport)
+      const secondSearch = second.value.operations.find((operation) => operation.kind === "code" && operation.name === "code_search" &&
+        operation.sessionID === secondReport.sessionID)
       if (!secondSearch || secondSearch.kind !== "code") return yield* Effect.die("second search missing")
       refused(yield* host.call(reader, { op: "read", reportID: second.index.reportID,
         artifactID: secondSearch.evidence.artifactID, cursor: token }), "engagement-evidence-cursor-invalid")
       // Refusals cannot revoke the original authorized read or alter its bytes.
       expect((yield* readAll(host, evidence.index, artifact)).bytes).toEqual(pages.bytes)
-    }), { stream: provider.stream })
+    }), variantAdapter(provider.stream))
   })))
 }, 150_000)
 
@@ -176,7 +182,7 @@ test("a real verifier cannot attach an unobserved tool URI to an otherwise confi
       refused(unavailable, "engagement-evidence-unavailable")
       expect(unavailable.text).toContain("terminal-status")
       expect((yield* receipt(host, positive)).value.citations).toHaveLength(1)
-    }), { stream: provider.stream })
+    }), variantAdapter(provider.stream))
   }))
 }, 150_000)
 
@@ -335,15 +341,13 @@ test("qualified oxlint retains both real analyses and native recipes; other host
           expect(mapping).toEqual({ version: "oxlint-projection-v1", paths: inputs.files.map((file) => ({ file: file.path, path: file.path })) })
         }
       }
-    }), {
-      stream: (log, modelRequest) => {
-        const output = stage(log.text) === "entry" ? fence(ReviewFanoutV2.TAGS.entry, {
-          status: "eligible", context: { intent: "nothing found", acceptance: "nothing found", invariants: "nothing found", assumptions: "nothing found" },
-          overlays: { confirmed: [], declined: [], added: [{ id: "data-migration", quote: `${migration}:1 ${sql.trim()}` }] }, slices: [],
-        }) : reply(log, modelRequest, { quote: true })
-        return text(output)
-      },
-    }).pipe(
+    }), variantAdapter((log, modelRequest) => {
+      const output = stage(log.text) === "entry" ? fence(ReviewFanoutV2.TAGS.entry, {
+        status: "eligible", context: { intent: "nothing found", acceptance: "nothing found", invariants: "nothing found", assumptions: "nothing found" },
+        overlays: { confirmed: [], declined: [], added: [{ id: "data-migration", quote: `${migration}:1 ${sql.trim()}` }] }, slices: [],
+      }) : reply(log, modelRequest, { quote: true })
+      return text(output)
+    })).pipe(
       Effect.provideService(BackendToolkit.Root, toolkit),
       Effect.provideService(ReviewOxlintInput.Copied, (file) => Effect.promise(async () => {
         copied.push({ path: path.relative(file.root, file.file).split(path.sep).join("/"), bytes: await fs.readFile(file.file, "utf8") })

@@ -24,6 +24,12 @@ const projected = (root: string) => ReviewScanProjection.create({ snapshot: snap
 const manifest = '[workspace]\nmembers=["crates/*", "shared"]\n'
 const packageManifest = (name: string, extra = "") => `[package]\nname=${JSON.stringify(name)}\nversion="0.1.0"\nedition="2021"\n${extra}`
 
+test("Cargo metadata accepts signed 64-bit integers", () => Effect.runPromise(Effect.scoped(Effect.gen(function* () {
+  const temp = yield* held()
+  yield* write(temp.path, { "Cargo.toml": packageManifest("metadata", "[package.metadata]\nlarge = 9223372036854775807\n") })
+  expect(yield* ReviewLocalCargoInput.check(yield* projected(temp.path))).toBeUndefined()
+}))))
+
 test("contained manifests, internal sibling paths and workspace globs pass preflight", () => Effect.runPromise(Effect.scoped(Effect.gen(function* () {
   const temp = yield* held()
   const root = temp.path

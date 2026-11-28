@@ -25,12 +25,12 @@ const withLedgers = <A, E>(
     actions: Effect.Success<typeof ActivityActionLedger.make>
     arms: ReturnType<typeof ActivityArmLedger.make>
   }) => Effect.Effect<A, E>,
-  now?: () => number,
+  options?: Parameters<typeof ActivityArmLedger.make>[1],
 ) =>
   Effect.gen(function* () {
     const database = yield* Database.Service
     const actions = yield* ActivityActionLedger.make
-    return yield* run({ database, actions, arms: ActivityArmLedger.make(database, { now }) })
+    return yield* run({ database, actions, arms: ActivityArmLedger.make(database, { verify: () => Effect.succeed(true), ...options }) })
   }).pipe(Effect.provide(Database.layerFromPath(filename)), Effect.scoped)
 
 test("previews exact eligible object targets in request order and confirms one durable receipt", async () => {
@@ -72,6 +72,28 @@ test("refuses the whole selection when any generation changed after preview", as
       expect(yield* arms.confirm({ previewID: preview.previewID })).toBeUndefined()
       expect(yield* ActivityArmLedger.list(database)).toEqual([])
     }),
+  ))
+})
+
+test("consumes a preview and refuses every receipt when live verification fails for one object", async () => {
+  await using directory = await tmpdir()
+  const verified: ActivityActionLedger.Target[] = []
+  await Effect.runPromise(withLedgers(path.join(directory.path, "activity.sqlite"), ({ actions, arms, database }) =>
+    Effect.gen(function* () {
+      const first = yield* actions.record(observation("object-a"))
+      const second = yield* actions.record(observation("object-b"))
+      const preview = yield* arms.preview({ targets: [first, second].map(({ targetID, generation }) => ({ targetID, generation })) })
+      if (!preview) throw new Error("expected preview")
+      expect(yield* arms.confirm({ previewID: preview.previewID })).toBeUndefined()
+      expect(yield* arms.confirm({ previewID: preview.previewID })).toBeUndefined()
+      expect(verified).toEqual([first, second])
+      expect(yield* ActivityArmLedger.list(database)).toEqual([])
+    }), {
+      verify: (target) => Effect.sync(() => {
+        verified.push(target)
+        return target.targetID === "object-a"
+      }),
+    },
   ))
 })
 
@@ -140,5 +162,5 @@ test("expires previews at the boundary", async () => {
       clock.now = preview.expiresAt
       expect(yield* arms.confirm({ previewID: preview.previewID })).toBeUndefined()
     }),
-  () => clock.now))
+  { now: () => clock.now }))
 })

@@ -1357,6 +1357,71 @@
     },
     "packages/core:windows": {
       "test/tool-safety-appcontainer-runtimes.test.ts": 240
+    },
+    "modules/maestro/coordination:windows": {
+      "test/advanced-review-binding.test.ts": 1,
+      "test/advanced-review-catalog.test.ts": 1,
+      "test/context-tool-plan.test.ts": 1,
+      "test/lucy-atlas-read.test.ts": 2,
+      "test/lucy-atlas-scope.test.ts": 8,
+      "test/lucy-audit-variant-witness.test.ts": 98,
+      "test/lucy-audit-variants.test.ts": 114,
+      "test/lucy-check-binding.test.ts": 2,
+      "test/lucy-check-policy.test.ts": 1,
+      "test/lucy-code-binding.test.ts": 2,
+      "test/lucy-code-globs.test.ts": 9,
+      "test/lucy-code-paths.test.ts": 8,
+      "test/lucy-code-pr.test.ts": 1,
+      "test/lucy-code-public.test.ts": 32,
+      "test/lucy-durable-fanout.test.ts": 3,
+      "test/lucy-engagement-artifact-bounds.test.ts": 27,
+      "test/lucy-engagement-artifact-count.test.ts": 36,
+      "test/lucy-engagement-artifact-lifecycle.test.ts": 78,
+      "test/lucy-engagement-artifact-size.test.ts": 81,
+      "test/lucy-engagement-artifacts.test.ts": 68,
+      "test/lucy-engagement-evidence.test.ts": 8,
+      "test/lucy-engagement-model-identity.test.ts": 28,
+      "test/lucy-engagement-persistence.test.ts": 16,
+      "test/lucy-engagement-public.test.ts": 33,
+      "test/lucy-engagement-source.test.ts": 3,
+      "test/lucy-engagement-timebox.test.ts": 7,
+      "test/lucy-engagement-variant-lifecycle.test.ts": 26,
+      "test/lucy-engagement-variant-replay.test.ts": 39,
+      "test/lucy-governed-checks.test.ts": 51,
+      "test/lucy-governed-round.test.ts": 12,
+      "test/lucy-outcome-binding.test.ts": 1,
+      "test/lucy-pr-concurrency.test.ts": 1,
+      "test/lucy-pr-entry.test.ts": 4,
+      "test/lucy-pr-evidence.test.ts": 6,
+      "test/lucy-pr-quote-range.test.ts": 6,
+      "test/lucy-pr-retry.test.ts": 3,
+      "test/lucy-pr-scope.test.ts": 1,
+      "test/lucy-precision-routing.test.ts": 2,
+      "test/lucy-privacy-scope.test.ts": 1,
+      "test/lucy-receipt.test.ts": 15,
+      "test/lucy-tools.test.ts": 1,
+      "test/release-request.test.ts": 1,
+      "test/review-samples.test.ts": 1,
+      "test/seat-scaffold.test.ts": 2,
+      "test/seat-skill-root.test.ts": 11,
+      "test/seat-skills-build.test.ts": 8,
+      "test/specialist-name-guard.test.ts": 1,
+      "test/upstream-proposal.test.ts": 2,
+      "test/v2-atlas-memory.test.ts": 3,
+      "test/v2-atlas-restore.test.ts": 1,
+      "test/v2-atlas.test.ts": 18,
+      "test/v2-background.test.ts": 1,
+      "test/v2-chain.test.ts": 15,
+      "test/v2-logical-task.test.ts": 1,
+      "test/v2-research-tools.test.ts": 3,
+      "test/v2-research.test.ts": 2,
+      "test/v2-reservation-currency.test.ts": 188,
+      "test/v2-review-fanout.test.ts": 3,
+      "test/v2-task-governance.test.ts": 1,
+      "test/v2-tools.test.ts": 1,
+      "test/v2-workflow-plan-e2e.test.ts": 2,
+      "test/v2-workflow-review.test.ts": 5,
+      "test/v2-workflow-transfer.test.ts": 24
     }
   },
   "provenance": {
@@ -1433,6 +1498,21 @@
         "test-browser/prompt-retry.test.ts": 3,
         "test-browser/model-execution-consumer.test.tsx": 2
       }
+    },
+    "modules/maestro/coordination": {
+      "runs": [
+        "46113766819"
+      ],
+      "jobs": [
+        "140882967722",
+        "140882968100",
+        "140882968306",
+        "140882968328",
+        "140882968361",
+        "140882968390",
+        "140882968429"
+      ],
+      "method": "Scheduling floors, not cold-run measurements. Wall seconds between Windows maestro file banners on the green epic 46113766819; the last file of a shard is closed by that shard's Ran line. A same-second file has no floor and uses the one-second untimed floor. Currency is included so its singleton is not a size estimate. work-contract.test.ts finished inside the same second, so the old 30-second guess is gone."
     }
   }
 }
