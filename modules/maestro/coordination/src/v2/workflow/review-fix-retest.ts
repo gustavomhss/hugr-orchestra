@@ -32,7 +32,7 @@ export function observe(input: { readonly inputHash: string; readonly findingID:
   const checks = input.analysis.checks.filter((item) => item.pack === "oxlint")
   if (checks.length > 1) throw new Tool.Failure({ message: "engagement-evidence-corrupt: ambiguous analyzer check", metadata: { reason: "engagement-evidence-corrupt" } })
   const check = checks[0]
-  if (!check || check.status === "not-run" || check.status === "acquisition-error") return process.platform !== "linux" || process.arch !== "x64" ? "native-runtime-unqualified" : "runtime-unavailable"
+  if (!check || check.status === "not-run" || check.status === "acquisition-error") return check?.reason?.includes("native-runtime-unqualified") ? "native-runtime-unqualified" : "runtime-unavailable"
   const proofs = input.hostProofs.filter((proof) => proof.analysisOperationID === input.analysis.operationID && check.proofIDs.includes(proof.proofID))
   const head = proofs.filter((proof) => proof.side === "head")
   const base = proofs.filter((proof) => proof.side === "base")

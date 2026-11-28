@@ -103,21 +103,23 @@ function buildOutput(input: Input, results: ReadonlyMap<string, { readonly exami
     return { findingID: item.finding.id, priorFindingSha256: item.priorFindingSha256,
       disposition: "not-examined" as const, reason: deferred.get(item.finding.id) ?? "independent-verification-unavailable" as const }
   })
-  const citations = [...new Map([...results.values()].flatMap((item) => item.examination.rawReturn.supporting.flatMap((support) => {
-    if (support.kind !== "quote") return []
-    const region = item.regions.find((entry) => entry.path === support.path && entry.startLine === support.startLine && entry.endLine === support.endLine)
-    if (!region) return []
+  const citations = new Map<string, ReviewEngagementReportV2.Citation>()
+  for (const item of results.values()) for (const support of item.examination.rawReturn.supporting) {
+    if (support.kind !== "quote") continue
+    const region = item.regions.find((entry) => entry.path === support.path && entry.startLine === support.startLine &&
+      entry.endLine === support.endLine)
+    if (!region) continue
     const citation = { path: region.path, oid: region.oid, startLine: region.startLine, endLine: region.endLine,
       text: region.text, sha256: region.textSha256 }
-    return [[ReviewEngagementReportV2.canonical(citation), { ...citation,
-      uri: `review-engagement://${input.sessionID}/citation/${ReviewEngagementReportV2.digest(citation)}` }]]
-  })).values()]
+    const uri = `review-engagement://${input.sessionID}/citation/${ReviewEngagementReportV2.digest(citation)}`
+    citations.set(uri, { ...citation, uri })
+  }
   const questions = dispositions.flatMap((item) => item.disposition === "question"
     ? [{ findingID: item.findingID, question: item.reason }] : [])
   const notExamined = dispositions.flatMap((item) => item.disposition === "not-examined"
     ? [{ item: item.findingID, reason: item.reason }] : [])
   if (input.previous.binding.profile === "artifact") notExamined.push({ item: "artifact:behavioral-eval", reason: "owner-permission" })
-  return { dispositions, citations, questions, notExamined,
+  return { dispositions, citations: [...citations.values()], questions, notExamined,
     observations: observations.filter((item) => usedObservationIDs.has(item.observationID)), examinations, regions, replies }
 }
 

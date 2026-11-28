@@ -14,7 +14,8 @@ import { ReviewFixSchemaV2 } from "./review-fix-schema"
 import { ReviewFixValidationV2 } from "./review-fix-validation"
 import { ReviewVariantValidationV2 } from "./review-variant-validation"
 
-const { require: ensure, failure, same, hash } = ReviewEvidenceSchemaV2
+const ensure: typeof ReviewEvidenceSchemaV2.require = ReviewEvidenceSchemaV2.require
+const { failure, same, hash } = ReviewEvidenceSchemaV2
 const { canonical, digest } = ReviewEngagementReportV2
 
 function checked<A>(read: () => A) {
@@ -135,7 +136,7 @@ function loadBodies(storage: ReviewEvidenceCollectorV2.Storage, receipt: ReviewF
         })
       } else ensure(view.schema === "review-engagement-state-v2", "imported v1 receipt has no v2 authority")
       const previous = ReviewFixPriorV2.prepare(view, value.inputHash, findings, { bytes, receipt: oldReceipt, receiptID, context })
-      ensure(same(previous.reference, receipt.prior) && previous.artifacts.every((item) => same(descriptors.get(item.artifactID), item)),
+      ensure(same(previous.reference, receipt.prior) && previous.artifacts.every((item) => same(descriptors.get(item.artifactID) ?? null, item)),
         "imported predecessor closure differs")
       ReviewFixValidationV2.validate(receipt, value, source, authority, previous, body)
     })

@@ -13,12 +13,13 @@ import type { ReviewFixSchemaV2 } from "./review-fix-schema"
 import { ReviewVariantSchemaV2 } from "./review-variant-schema"
 
 export type Body = (id: string, kind?: (typeof ReviewFixSchemaV2.FixArtifact.Type)["kind"]) => Uint8Array
-const { require: ensure, same, digest, hash } = ReviewEvidenceSchemaV2
+const ensure: typeof ReviewEvidenceSchemaV2.require = ReviewEvidenceSchemaV2.require
+const { same, digest, hash } = ReviewEvidenceSchemaV2
 
 export function validate(receipt: ReviewFixSchemaV2.FixReceipt, value: ReviewFixSchemaV2.FixResult,
   source: ReviewEngagementReportV2.Source, authority: ReviewFixAuthorityV2.FixAuthority,
   previous: ReturnType<typeof ReviewFixPriorV2.prepare>, body: Body): void {
-  ensure(same(authority.source, source) && same(authority.fix.prior, previous.binding) && same(value.prior, previous.binding), "fix source or prior authority differs")
+  ensure(same(authority.source ?? null, source) && same(authority.fix.prior ?? null, previous.binding) && same(value.prior ?? null, previous.binding), "fix source or prior authority differs")
   ensure(same(source.files.map((file) => file.path), previous.binding.requiredFiles), "fix source exceeds prior authority")
   const artifacts = receipt.artifacts.filter((artifact): artifact is ReviewEvidenceSchemaV2.Artifact =>
     artifact.kind !== "fix-prior-report" && artifact.kind !== "fix-prior-receipt" && artifact.kind !== "fix-prior-authority")
@@ -72,7 +73,7 @@ export function validate(receipt: ReviewFixSchemaV2.FixReceipt, value: ReviewFix
     operations: receipt.operations, artifacts, hostProofs: receipt.hostProofs }, bodies)
   ReviewEvidenceValidationV2.validateCode(receipt.operations, source, body)
   ensure(analysis.operation.catalogDigest === previous.binding.catalogDigest && digest(previous.tier) === previous.binding.tierSha256 &&
-    same(analysis.final.catalog.route.tiers.find((tier) => tier.id === previous.tier.id && tier.built), previous.tier) &&
+    same(analysis.final.catalog.route.tiers.find((tier) => tier.id === previous.tier.id && tier.built) ?? null, previous.tier) &&
     same(analysis.final.routing, previous.routing), "fix retained catalog, tier or routing differs")
   ensure(receipt.citations.length === value.citations.length, "fix citation count differs")
   for (const [index, citation] of receipt.citations.entries()) {
