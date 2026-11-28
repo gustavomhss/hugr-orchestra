@@ -211,3 +211,32 @@ test("commits the intent before native dispatch and blocks retry when the receip
   expect(replay).toBeUndefined()
   expect(seen).toHaveLength(1)
 })
+
+
+test("restart fences an interrupted resume without abandoning other proven members", async () => {
+  await using directory = await tmpdir()
+  const filename = path.join(directory.path, "activity.sqlite")
+  const mark = await Effect.runPromise(withLedgers(filename, "boot-a", (actions, marks) =>
+    Effect.gen(function* () {
+      const scope = yield* recordScope(actions)
+      const suspended = yield* ActivitySuspensionExecutor.execute(marks, async () => [
+        { memberID: "member-a", effect: "changed" },
+        { memberID: "member-b", effect: "changed" },
+      ], { action: "suspend", scope, members: ["member-a", "member-b"] })
+      if (!suspended) throw new Error("expected persisted suspension")
+      yield* marks.beginResume({ scope, markID: suspended.markID, members: ["member-a"] })
+      return suspended
+    }),
+  ))
+  await Effect.runPromise(withLedgers(filename, "boot-b", (_actions, marks) =>
+    Effect.gen(function* () {
+      expect(yield* marks.read(mark.scope.treeID)).toMatchObject({
+        markID: mark.markID, phase: "partial", suspended: ["member-b"], uncertain: ["member-a"],
+      })
+      expect(yield* marks.beginResume({ scope: mark.scope, markID: mark.markID, members: ["member-a"] })).toBeUndefined()
+      expect(yield* marks.beginResume({ scope: mark.scope, markID: mark.markID, members: ["member-b"] })).toMatchObject({
+        phase: "resuming",
+      })
+    }),
+  ))
+})
