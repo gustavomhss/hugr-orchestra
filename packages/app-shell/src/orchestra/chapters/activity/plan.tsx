@@ -91,7 +91,7 @@ export function ActivityPlan(props: { query: string }) {
     if (
       !serverURL || current?.type !== "sidecar" || current.variant !== "base" ||
       platform.platform !== "desktop" || platform.os !== "linux" || !approve || state.armTarget || state.busy || state.failed ||
-      scope() !== serverURL || ownedScope() !== serverURL || state.verifiedScope !== serverURL || !state.verified || state.verified.partial
+      scope() !== serverURL || ownedScope() !== serverURL || !armAvailable(target)
     ) return
     const currentSDK = sdk()
     setState({ armTarget: target.targetID, armFailed: false })
@@ -111,7 +111,7 @@ export function ActivityPlan(props: { query: string }) {
   async function inspect() {
     const serverURL = ownedScope()
     const inspectObjects = platform.inspectActivityArm
-    if (!serverURL || platform.platform !== "desktop" || platform.os !== "linux" || !inspectObjects || state.inspecting) return
+    if (!serverURL || platform.platform !== "desktop" || platform.os !== "linux" || !inspectObjects || state.inspecting || state.armTarget) return
     const client = sdk()
     const id = ++inspectID
     inspectController?.abort()
@@ -162,15 +162,17 @@ export function ActivityPlan(props: { query: string }) {
     inspectController?.abort()
   })
 
-  const completeEmpty = () =>
-    !props.query.trim() && (state.verified ?? state.snapshot) && !(state.verified ?? state.snapshot)!.partial &&
-    (state.verified ?? state.snapshot)!.ready.length === 0 && (state.verified ?? state.snapshot)!.approvals.length === 0
+  const completeEmpty = () => {
+    const plan = state.verified ?? state.snapshot
+    return !props.query.trim() && plan && !plan.partial && plan.ready.length === 0 && plan.approvals.length === 0
+  }
   const filterMiss = () => Boolean(props.query.trim()) && shown().length === 0
   const armAvailable = (target: ActivityArm.Target) => {
     const current = server.current
     return platform.platform === "desktop" && platform.os === "linux" && current?.type === "sidecar" && current.variant === "base" &&
-      Boolean(state.verified && state.verifiedScope === current.http.url && platform.armActivityQuarantine) &&
-      !state.verified?.partial && !state.busy && !state.failed && !state.armTarget && target.targetID.length > 0
+      state.verifiedScope === current.http.url && Boolean(platform.armActivityQuarantine) &&
+      !state.busy && !state.failed && !state.armTarget &&
+      state.verified?.ready.some((ready) => ready.targetID === target.targetID && ready.generation === target.generation)
   }
 
   return (
@@ -181,7 +183,7 @@ export function ActivityPlan(props: { query: string }) {
           {language.t("orchestra.monitor.refresh")}
         </button>
         <Show when={platform.platform === "desktop" && platform.os === "linux" && Boolean(ownedScope() && platform.inspectActivityArm)}>
-          <button type="button" class="mx-btn" disabled={state.inspecting || state.busy} onClick={() => void inspect()}>
+          <button type="button" class="mx-btn" disabled={state.inspecting || state.busy || Boolean(state.armTarget)} onClick={() => void inspect()}>
             {language.t(state.inspecting ? "orchestra.monitor.planVerifying" : "orchestra.monitor.planVerify")}
           </button>
         </Show>

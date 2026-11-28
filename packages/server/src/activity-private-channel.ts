@@ -86,23 +86,25 @@ export async function acquire(
         } })
       }
       const endpoint = url.pathname
-      const inspect = endpoint === ActivityPrivateChannel.inspectArmPath ? arm?.inspect : undefined
-      const armPath = endpoint === ActivityPrivateChannel.previewPath || endpoint === ActivityPrivateChannel.confirmPath
+      const armPath = endpoint === ActivityPrivateChannel.inspectArmPath ||
+        endpoint === ActivityPrivateChannel.previewPath || endpoint === ActivityPrivateChannel.confirmPath
       const stopPath = endpoint === ActivityPrivateChannel.stopPreviewPath || endpoint === ActivityPrivateChannel.stopConfirmPath
       const emptyPath = endpoint === ActivityPrivateChannel.emptyPreviewPath || endpoint === ActivityPrivateChannel.emptyConfirmPath ||
         endpoint === ActivityPrivateChannel.emptyStatePath
       const freezePath = endpoint === ActivityPrivateChannel.freezeStatePath || endpoint === ActivityPrivateChannel.freezePreviewPath ||
         endpoint === ActivityPrivateChannel.freezeConfirmPath
-      if (!inspect && !armPath && !stopPath && !emptyPath && !freezePath) return forbidden()
+      if (!armPath && !stopPath && !emptyPath && !freezePath) return forbidden()
       if ((armPath && !arm) || (stopPath && !stop) || (emptyPath && !custody) || (freezePath && !freeze)) return forbidden()
       const body = await readBody(request)
       if (body === undefined || !nonce || !await signer.verifyArm("arm-request", endpoint, nonce, mac, body)) return forbidden()
       const decoded = parseBody(body)
       if (request.signal.aborted) return forbidden()
-      const operation = inspect ? run(decoded, decodeInspect, inspect, ActivityArm.decodePlanSnapshot) : armPath && arm ? (
-        endpoint === ActivityPrivateChannel.previewPath
-          ? run(decoded, ActivityArm.decodeRequest, arm.preview, ActivityArm.decodePreview)
-          : run(decoded, ActivityArm.decodeConfirm, arm.confirm, ActivityArm.decodeReceipt)
+      const operation = armPath && arm ? (
+        endpoint === ActivityPrivateChannel.inspectArmPath
+          ? arm.inspect && run(decoded, decodeInspect, arm.inspect, ActivityArm.decodePlanSnapshot)
+          : endpoint === ActivityPrivateChannel.previewPath
+            ? run(decoded, ActivityArm.decodeRequest, arm.preview, ActivityArm.decodePreview)
+            : run(decoded, ActivityArm.decodeConfirm, arm.confirm, ActivityArm.decodeReceipt)
       ) : stopPath && stop ? (
         endpoint === ActivityPrivateChannel.stopPreviewPath
           ? run(decoded, ActivityStop.decodeRequest, stop.preview, ActivityStop.decodePreview)

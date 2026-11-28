@@ -141,7 +141,8 @@ export function make(database: Database.Interface, processService: AppProcess.In
         verified.delete(item.target_id)
       }
       const plan = yield* ActivityArmLedger.plan(database)
-      return { ...plan, partial: partial || plan.partial }
+      const ready = plan.ready.filter((target) => verified.get(target.targetID)?.generation === target.generation)
+      return { ...plan, ready, partial: partial || plan.partial || ready.length !== plan.ready.length }
     })),
     verify: (target: ActivityActionLedger.Target) => lock.withPermit(Effect.gen(function* () {
       const captured = verified.get(target.targetID)
