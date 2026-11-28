@@ -268,6 +268,20 @@ class Child {
     return this.#native.processes();
   }
 
+  controlMembers() {
+    return later(() => this.#native.controlMembers());
+  }
+
+  stopSelected(members) {
+    return later(() => {
+      if (!Array.isArray(members) || members.length < 1 || members.length > 256 ||
+          members.some((token) => typeof token !== "string" || !/^(0|[1-9][0-9]*):(0|[1-9][0-9]*)$/.test(token))) {
+        throw new TypeError("members must contain 1 to 256 canonical process identity tokens");
+      }
+      return this.#native.stopSelected(members);
+    });
+  }
+
   observeTree() {
     return later(() => typeof this.#native.observeTree === "function"
       ? this.#native.observeTree()
@@ -325,4 +339,28 @@ function run(command, args, options) {
   });
 }
 
-module.exports = { run, spawn, configure, OmniError };
+function quarantineIdentity(source) {
+  return later(() => {
+    const native = load();
+    if (typeof native.quarantineIdentity !== "function") throw new Error("Windows quarantine primitive unavailable");
+    return native.quarantineIdentity(source);
+  });
+}
+
+function quarantineInspect(source) {
+  return later(() => {
+    const native = load();
+    if (typeof native.quarantineInspect !== "function") throw new Error("Windows quarantine primitive unavailable");
+    return native.quarantineInspect(source);
+  });
+}
+
+function quarantineRename(source, destination, expectedIdentity) {
+  return later(() => {
+    const native = load();
+    if (typeof native.quarantineRename !== "function") throw new Error("Windows quarantine primitive unavailable");
+    return native.quarantineRename(source, destination, expectedIdentity);
+  });
+}
+
+module.exports = { run, spawn, configure, OmniError, quarantineIdentity, quarantineInspect, quarantineRename };

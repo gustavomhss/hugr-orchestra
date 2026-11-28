@@ -94,7 +94,7 @@ pub(super) fn scan(held: &PinnedMembers) -> io::Result<Vec<ProcEntry>> {
         .collect())
 }
 
-fn created(process: &OwnedHandle) -> io::Result<u64> {
+pub(super) fn created(process: &OwnedHandle) -> io::Result<u64> {
     let (mut c, mut e, mut k, mut u) = (
         FILETIME::default(),
         FILETIME::default(),

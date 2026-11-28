@@ -21,7 +21,7 @@ use std::sync::atomic::AtomicU64;
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::{Duration, Instant};
 
-use omni_proto::{Ack, Exit, FailCode, ProcEntry};
+use omni_proto::{Ack, ControlMember, Exit, FailCode, ProcEntry};
 use tokio::runtime::Runtime;
 use tokio::sync::{Notify, oneshot, watch};
 use tokio::task::AbortHandle;
@@ -46,6 +46,8 @@ pub(super) enum Want {
     List,
     ObserveList,
     ObserveFootprint,
+    ControlList,
+    ControlStop { count: usize },
     Release,
 }
 
@@ -59,6 +61,8 @@ impl Want {
             Want::List => "List",
             Want::ObserveList => "Observe",
             Want::ObserveFootprint => "ObserveFootprint",
+            Want::ControlList => "ControlList",
+            Want::ControlStop { .. } => "ControlStop",
             Want::Release => "Release",
         }
     }
@@ -99,6 +103,8 @@ pub(super) enum Answer {
     Stopped,
     Processes(Vec<ProcEntry>),
     ObservedTree(Vec<ProcEntry>, Option<u64>, Option<String>),
+    ControlMembers(Vec<ControlMember>),
+    ControlResults(Vec<crate::SelectiveStopOutcome>),
 }
 
 type Reply = Result<Answer, Error>;
@@ -130,6 +136,7 @@ struct State {
     ready: bool,
     observes: bool,
     footprints: bool,
+    selective_stop: bool,
     hello: Option<mpsc::SyncSender<()>>,
     pending: HashMap<u64, Pending>,
     /// Deadlines of the pending non-blocking requests, earliest first.

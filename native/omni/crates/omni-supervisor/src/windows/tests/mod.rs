@@ -24,6 +24,7 @@ use super::queues::{Inbox, MAX_REPLIES, Outbox};
 mod job_lifetime;
 mod members;
 mod observe;
+mod selective_stop;
 
 /// Polls `f` until it holds, for at most 10 s.
 fn until(mut f: impl FnMut() -> bool) -> bool {

@@ -16,6 +16,7 @@ mod footprint;
 mod fork;
 mod observe;
 mod procs;
+mod replies;
 mod setup;
 mod spawn;
 mod sweep;
@@ -233,6 +234,13 @@ impl Sup {
             // The grace starts when the request is handled, not when the loop last woke.
             Msg::Stop { req, id, grace_ms } => trees.stop(Some(req), id, grace_ms, Instant::now(), out),
             Msg::Resize { req, id, cols, rows } => trees.resize(req, id, (cols, rows), out),
+            Msg::ControlList { req, id } | Msg::ControlStop { req, id, .. } => {
+                out.push(Msg::Ack {
+                    req,
+                    id,
+                    result: Ack::Error,
+                });
+            }
             Msg::List { req, id } => trees.list(req, id, out),
             Msg::Observe { req, id } => out.extend(self.observation.start(req, id, trees)),
             Msg::ObserveFootprint { req, id } => out.extend(self.observation.start_with(req, id, trees, true)),
@@ -291,16 +299,6 @@ impl Sup {
             pty_ends,
         };
         self.chan.send(&msg, host_end).map_err(|e| Closed::Proto(e.0))
-    }
-
-    fn fail(&mut self, req: u64, f: Fail) -> Result<(), Closed> {
-        let msg = Msg::SpawnFailed {
-            req,
-            code: f.code,
-            errno: f.errno,
-            msg: f.msg,
-        };
-        self.chan.send(&msg, None).map_err(|e| Closed::Proto(e.0))
     }
 
     /// Queues pending messages and sends what fits.
