@@ -1,0 +1,25 @@
+{
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "omitted_runtime_directory": ".atlas",
+  "preserved_at": "/tmp/genesis-s3-15cc9853-0e71-4950-8813-0bfb66f82c8a/baseline-atlas-history",
+  "durable_original": "Git source revision, unchanged",
+  "history_files": [
+    {
+      "path": "members/orch/memory/logbook.jsonl",
+      "byte_length": 1908,
+      "sha256": "dba1dbc2dbd3232efed9e217b3f6e42d4718a08702778429aecc5de638a0364f"
+    },
+    {
+      "path": "project/board.jsonl",
+      "byte_length": 57364,
+      "sha256": "419ad67ce04d007da30d4e52b09b8ad3a8eeffce8027a337127ed0dbd0547525"
+    },
+    {
+      "path": "project/orientation.jsonl",
+      "byte_length": 2592,
+      "sha256": "342608b17792d34508639a92f4b9b886bd56bc209f921d20d50cff51d5d9648d"
+    }
+  ],
+  "git_index_unchanged": true,
+  "historical_source_not_replayed": true
+}

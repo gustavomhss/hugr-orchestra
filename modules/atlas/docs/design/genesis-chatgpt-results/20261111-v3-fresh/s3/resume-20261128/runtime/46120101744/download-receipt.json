@@ -1,0 +1,8 @@
+{
+  "artifact_id": 15253496857,
+  "run_id": 46120101744,
+  "zip_sha256": "d0d7bc77254d207d256343afcd6a6ef92a38ab22eee0572700f5133758836caf",
+  "bytes": 70389859,
+  "local_path": "/tmp/genesis-s3-evidence-15cc9853/46120101744/state-artifact.zip",
+  "extraction": "Metadata only extracted in workspace; archive held in temp filesystem to avoid duplicate workspace allocation."
+}

@@ -1,0 +1,22 @@
+{
+  "schema": "genesis-s3-operation-receipt/v1",
+  "operation": "prepare",
+  "started_at": "2026-11-28T07:13:50.180262+00:00",
+  "status": "FAILED",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "plan": {
+    "path": "/home/runner/work/hugr-orchestra/hugr-orchestra/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/s3-runtime/run-plan.json",
+    "byte_length": 2959,
+    "sha256": "5023749a5680a2d2e3944653ce3b9af07cda41f4e1af133c06249f8e7e9df83d"
+  },
+  "run_id": "46120101744",
+  "run_attempt": "1",
+  "harness_sha": "e987a12312b0758327e89b526fd5a9ac68da252e",
+  "consumer_verdict": "NOT_JUDGED",
+  "failure": {
+    "type": "RuntimeError",
+    "message": "Effective Git membership differs from the complete materialized tree"
+  },
+  "ended_at": "2026-11-28T07:14:10.597192+00:00"
+}

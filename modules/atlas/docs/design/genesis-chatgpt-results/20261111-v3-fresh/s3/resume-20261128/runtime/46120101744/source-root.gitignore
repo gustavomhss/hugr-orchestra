@@ -1,0 +1,54 @@
+.DS_Store
+node_modules
+.worktrees
+.env
+.env.local
+.idea
+.vscode
+.codex
+*~
+playground
+tmp
+dist
+ts-dist
+.turbo
+**/.serena
+.serena/
+**/.omo
+.omo/
+/result
+refs
+Session.vim
+/orchestra.json
+a.out
+target
+.scripts
+.direnv/
+
+# Local dev files
+orchestra-dev
+UPCOMING_CHANGELOG.md
+logs/
+*.bun-build
+tsconfig.tsbuildinfo
+
+# Build/pack leftovers
+/tooling/http-recorder/*.tgz
+/packages/sdk/js/openapi.json
+
+# Runtime logs written by the distribution provider
+distribution-logs/
+
+# Atlas: the store (`.atlas/cas/`, `projection*.json`, `staging*.json`) is local derived state and Atlas refuses
+# to serve a committed one. Only the admin policy and the append-only logs and blobs under `project/`,
+# `members/`, `cards/` and `blobs/` travel (`modules/atlas/packages/adapter-io/src/layout.ts`). `mine-exclude` is
+# the operator's genesis site-filter override, committed so the atlas-genesis runner applies it.
+/.atlas/*
+!/.atlas/project/
+!/.atlas/members/
+!/.atlas/blobs/
+!/.atlas/cards/
+!/.atlas/policy.json
+!/.atlas/mine-exclude
+**/.atlas/staging*.json
+

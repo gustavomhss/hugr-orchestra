@@ -1,0 +1,13 @@
+# First isolated S3 prepare attempt
+
+Run `46120101744`, job `140902518483`, harness `e987a12312b0758327e89b526fd5a9ac68da252e`, runtime `db9b4235022c4df32fe3bfd4faeea8adcd69abb7`.
+
+The operation stopped before invoking the native prepare CLI. The materializer returned `Effective Git membership differs from the complete materialized tree`. No candidate, binding, publication, consumer or maintenance result was produced. The complete source state was archived rather than discarded. Typecheck succeeded. The separate guard job `140902518230` returned exit 0: 78 rules, 963 changed paths, zero gate findings, seven size warnings, zero errors. Its actual `origin/dev` was `b0aa063868f657d7bedc172ddc822d3132a0d0ab`.
+
+The SOURCE `.orchestra/.gitignore` contains `references/`. The newly materialized protocol contains its `references/` directory, plus SKILL.md, agents/openai.yaml and scripts/check_partition.py as enumerated by the pinned tree. The authoritative tree contains 21 total files; the exact count of ignored entries will be recorded by the corrected job's real `git check-ignore` output. This inherited ignore rule explains why filesystem completeness did not imply effective Git membership completeness. The failed harness did not preserve the raw mismatched listing, so that exact listing is not claimed here.
+
+The correction retains the complete-tree equality check. After verifying every protocol byte/blob/mode against `ee2521a5b966bd505cc95bd1c733e09e12f33531`, it adds only those pinned objects to the isolated worktree index. It verifies the entire before/after index and proves that no existing entry was removed or replaced. HEAD remains SOURCE; ignore rules are not edited. Snapshot records the full index identity; restore recreates and verifies the same narrow overlay before native publication or read.
+
+This is an explicit change to source materialization bookkeeping, not an alteration of a product gate, source body, selected package, input lock, or S4 runtime. Earlier descriptions of an entirely unchanged index are superseded by this bounded protocol overlay. The revised authorization record states that distinction. A new Actions run is required; static parsing alone does not verify the correction.
+
+The state artifact is `15253496857`, ZIP SHA256 `d0d7bc77254d207d256343afcd6a6ef92a38ab22eee0572700f5133758836caf`, 70,389,859 bytes. Its inner state archive is SHA256 `b2bac86f066e6d18d749b15a1d736e5e568d155901503b76ef6e40cd1cb49fd9`, 69,753,645 bytes. The guard artifact is `15253236591`, ZIP SHA256 `c418a6e3d3748c8a9e626a9c62160917cb2bfd6ec5e90453152981351e68965c`.
