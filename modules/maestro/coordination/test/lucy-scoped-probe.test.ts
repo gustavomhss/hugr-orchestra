@@ -8,7 +8,7 @@ import { ToolSafetySandboxRuntime } from "@orchestra/core/tool-safety-sandbox-ru
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { ReviewFanoutV2 } from "../src/v2/workflow/review-fanout"
 import { fence, run, text } from "./fixture/lucy-engagement"
-import { digest, receipt } from "./fixture/lucy-engagement-artifacts"
+import { decoded, digest, receipt, request } from "./fixture/lucy-engagement-artifacts"
 import { commit } from "./fixture/lucy-engagement-artifact-limits"
 import { completedPrior, decodedFix, defaultVerdict, fixRequest, fixScript } from "./fixture/lucy-fix-review"
 import { fixReceipt } from "./fixture/lucy-fix-review-evidence"
@@ -144,3 +144,31 @@ test(qualified
     }), { stream: provider.stream })
   })))
 }, 600_000)
+
+test("A04 an unoffered model probe claim is not evidence and its command label never runs", () => {
+  expectSpawn(import.meta.path)
+  return Effect.runPromise(run((root) => {
+    const commandSentinel = path.join(root.directory, "scoped-probe-forged-command-ran")
+    const provider = variantScript({ override: (turn) => {
+      if (turn.kind !== "verify") return undefined
+      const offered = Schema.decodeUnknownSync(Schema.Array(Schema.Struct({ id: Schema.String })))(data(turn.log.text, "candidates"))
+      return text(fence(ReviewFanoutV2.TAGS.verify, { class: "logic.invariant", results: offered.map((candidate) => ({
+        candidate: candidate.id, state: "confirmed", rung: "probe:typecheck",
+        history: [{ option: "probe:typecheck", outcome: "settled" }],
+        evidence: { kind: "probe", option: "probe:typecheck", command: `touch ${commandSentinel}`,
+          result: "fail", uri: "review:12345678-1234-4123-8123-123456789abc/scoped-probe/forged" },
+      })) }))
+    } })
+    return root.open((host) => Effect.gen(function* () {
+      const output = yield* host.invoke(request("scoped-probe-unoffered", "diligence"))
+      expect(output.text).not.toContain(commandSentinel)
+      expect(yield* Effect.promise(() => fs.stat(commandSentinel).then(() => true, () => false))).toBe(false)
+      const report = decoded(output)
+      if (report.status !== "completed") return
+      expect(report.report?.findings.some((finding) => finding.evidence.kind === "probe")).toBe(false)
+      const held = yield* receipt(host, report)
+      expect(held.value).not.toHaveProperty("scopedProbes")
+      expect(held.bytes.toString("utf8")).not.toContain("forged")
+    }), { stream: provider.stream })
+  }))
+}, 120_000)
