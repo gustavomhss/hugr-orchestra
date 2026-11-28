@@ -1,6 +1,5 @@
 export * as HostFilesystem from "./host-filesystem"
 
-import { ClaudeCodeAccountFixture } from "./account"
 import path from "node:path"
 import fs from "node:fs/promises"
 import { mkdirSync, mkdtempSync, realpathSync, rmSync } from "node:fs"
@@ -30,6 +29,7 @@ import { LLMClient } from "@orchestra/llm"
 import { RequestExecutor } from "@orchestra/llm/route"
 import { ClaudeCodeSDK } from "../../src/sdk"
 import { ClaudeCodeHost } from "../../src/v2/host"
+import { ClaudeCodeAccountFixture } from "./account"
 import { ScriptedSDK } from "./scripted-sdk"
 
 export function make() {
