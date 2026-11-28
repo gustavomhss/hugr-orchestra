@@ -217,8 +217,9 @@ outcome. If the process ended before publishing one, the first retry fails close
 (or records expiry if the original deadline passed); it does not resume a provider with a fresh budget.
 
 The engagement route exposes captured CODE and scoped analyzer pages. Native file reads, Atlas context,
-history and executable verifier probes are unavailable here. Reports explicitly retain unexamined history and
-probes. Compliance requests refuse before source capture. Artifact behavioral evaluation remains unexamined
+history and general verifier probes remain outside engagement scope. Reports record their coverage gaps.
+Diligence reports can qualify a host-run TypeScript probe for an eligible contract finding.
+Compliance requests refuse before source capture. Artifact behavioral evaluation remains unexamined
 without owner permission. Those limits remain open even when an individual report completes successfully.
 
 ### Retesting findings after a fix
@@ -230,8 +231,11 @@ stop the request with a source error.
 
 The retest keeps the original review tier and returns a disposition for each selected finding. An independent
 verifier evaluates the current source and any matching analyzer observation. The native oxlint route requires
-a prepared Linux x64 runtime and equivalent execution settings. Unchanged source or unavailable evidence
-cannot establish resolution. Examine the result's questions and coverage gaps before relying on it.
+a prepared Linux x64 runtime and equivalent execution settings. The scoped TypeScript probe also requires a
+prepared Linux x64 runtime. It checks one captured TypeScript file with host compiler settings and retains
+the original diagnostic and the new compiler outcome. Source imports and directives that suppress diagnostics
+are outside this probe's authority. Unchanged source or unavailable evidence cannot establish resolution.
+Examine the result's questions and coverage gaps before relying on it.
 
 Keep the exact same input for a retry. A completed result has its own report ID and includes the original
 evidence closure in its receipt. Use the retained evidence reader below to inspect it after the review ends.

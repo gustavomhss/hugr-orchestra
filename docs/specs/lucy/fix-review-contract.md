@@ -537,3 +537,32 @@ The lead-authorized correction wraps only the two expected buffers in
 positive controls, fixtures and production bytes. No tests or typecheck were
 run locally; implementation remains blocked until a compiling hosted baseline
 reaches the intended assertions.
+
+## 13. Scoped TypeScript probe
+
+The bounded engagement producer covers diligence contract findings eligible for
+`probe:typecheck` on Linux x64. The verifier gets a host witness only when the
+compiler reports a diagnostic at the admitted finding's range. It can cite the
+witness but cannot select the compiler, command, configuration or executable.
+The producer invokes the existing closed TypeScript probe arguments on one
+captured regular file of at most 64 KiB. The isolated copy has a host-written
+configuration. Repository configuration, imports, reference directives and
+diagnostic-suppression directives are outside this scope.
+
+The runtime uses the prepared TypeScript research pack and pinned Node. It
+checks compiler and library identities before and after the confined execution.
+Runtime and sandbox acquisition are explicit preparation steps. Probe work
+leaves the captured CODE source available through the immutable Git reader.
+
+The ordinary and fix receipts can retain `scopedProbes` references. Their bodies
+contain the exact input bytes, source identity, compiler identity, diagnostics
+and process result. Their descriptors use the existing artifact quotas. Fix
+review checks the original finding and raw proof, compiles the matching new file
+with the same recipe, then gives the result to the independent verifier. The
+ordinary report stays available separately. Retained fix results replay from
+their own closed evidence after reopening, including when the original report's
+metadata is unavailable.
+
+Other probe runners and platforms require separate qualification. A missing
+runtime or sandbox is an unavailable probe. Timeout and cancellation release
+the execution scope and never publish a successful proof.
