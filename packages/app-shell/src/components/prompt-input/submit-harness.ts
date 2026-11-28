@@ -6,6 +6,7 @@ import { Worktree } from "@/utils/worktree"
 import { ServerScope } from "@/utils/server-scope"
 import { createApiForServer, type ServerApi } from "@/utils/server"
 import type { AdmissionOptions } from "@/server-api"
+import type { ModelsExecutionInput } from "@orchestra/client"
 import { inheritSessionModelExecution, registerSessionModelExecution } from "@/utils/session-model-execution"
 import type { SubagentModelPolicy } from "../subagent-model-rules"
 import { draftSessionKey } from "./draft-session"
@@ -77,7 +78,7 @@ export const storedSessions: Record<string, Array<{ id: string; title?: string }
 export const promoted: Array<{ directory: string; sessionID: string }> = []
 export const promotedAgents: Array<string | undefined> = []
 export const promotedSelections: Array<{ agent?: string; model?: { providerID: string; modelID: string }; variant?: string | null }> = []
-export const modelExecutionInputs: unknown[] = []
+export const modelExecutionInputs: ModelsExecutionInput[] = []
 export const sentShell: Array<{ sessionID: string; id?: string; command: string }> = []
 export const syncedDirectories: string[] = []
 export const promotedDrafts: Array<{ draftID: string; server: string; sessionId: string }> = []
