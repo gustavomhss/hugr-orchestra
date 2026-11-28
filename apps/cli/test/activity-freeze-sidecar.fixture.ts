@@ -9,8 +9,8 @@ import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { ProcessProvenance } from "@orchestra/core/process-provenance"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import { ChildProcess } from "effect/unstable/process"
-import { Daemon } from "../../cli/src/services/daemon"
-import { serveForever } from "../../cli/src/commands/handlers/serve"
+import { Daemon } from "../src/services/daemon"
+import { serveForever } from "../src/commands/handlers/serve"
 
 const reportPath = process.env.ORCHESTRA_ACTIVITY_E2E_REPORT
 const port = Number(process.argv[process.argv.indexOf("--port") + 1])

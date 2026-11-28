@@ -16,7 +16,7 @@ type FixtureReport = {
 
 const desktopRoot = process.cwd()
 const source = join(desktopRoot, "test/activity-freeze-sidecar-e2e.hosted.ts")
-const fixtureCLI = join(desktopRoot, "test/activity-freeze-sidecar-cli.fixture.ts")
+const fixtureCLI = join(desktopRoot, "../cli/test/activity-freeze-sidecar.fixture.ts")
 
 function requireHostedEnvironment() {
   const required = ["ORCHESTRA_ACTIVITY_SIDECAR_CI", "HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR", "ORCHESTRA_ACTIVITY_SIDECAR_WORKLOAD_UID"]
