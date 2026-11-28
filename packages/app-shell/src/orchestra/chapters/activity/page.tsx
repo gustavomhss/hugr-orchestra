@@ -10,6 +10,7 @@ import { ActivityWorktrees } from "./worktrees"
 import { ActivityTrees } from "./trees"
 import { ActivityDisk } from "./disk"
 import { ActivityDocker } from "./docker"
+import { ActivityExternalCaches } from "./external-caches"
 import "./activity.css"
 
 export default function ActivityPage(_props: ChapterPageProps) {
@@ -66,6 +67,9 @@ export default function ActivityPage(_props: ChapterPageProps) {
       <div id="activity-panel" role="tabpanel" aria-labelledby={`activity-tab-${tabs.indexOf(state.tab)}`} tabindex={0}>
         <Show when={diskRoot()} keyed>
           {(rootID) => <ActivityDisk rootID={rootID} query={state.query} />}
+        </Show>
+        <Show when={state.tab === "Cache"}>
+          <ActivityExternalCaches query={state.query} />
         </Show>
         <Show when={state.tab === "Trees"}>
           <ActivityTrees query={state.query} />

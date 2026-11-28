@@ -1,4 +1,11 @@
 export const ACTIVITY_COPY = {
+  "orchestra.monitor.externalTitle": "External caches",
+  "orchestra.monitor.externalName": "Name",
+  "orchestra.monitor.externalSource": "Source: {{source}} · operator-declared external caches",
+  "orchestra.monitor.externalUnread": "External caches have not been read.",
+  "orchestra.monitor.externalUnavailable": "External cache inventory is unavailable.",
+  "orchestra.monitor.externalEmpty": "No external caches configured.",
+  "orchestra.monitor.externalFailed": "The external cache request failed. Previous readings remain visible.",
   "orchestra.monitor.dockerContainer": "Container",
   "orchestra.monitor.dockerSource": "Container source",
   "orchestra.monitor.dockerRead": "Read containers",
@@ -119,6 +126,13 @@ export const ACTIVITY_COPY = {
 }
 
 export const ACTIVITY_COPY_BR: Record<keyof typeof ACTIVITY_COPY, string> = {
+  "orchestra.monitor.externalTitle": "Caches externos",
+  "orchestra.monitor.externalName": "Nome",
+  "orchestra.monitor.externalSource": "Fonte: {{source}} · caches externos declarados pelo operador",
+  "orchestra.monitor.externalUnread": "Os caches externos ainda não foram lidos.",
+  "orchestra.monitor.externalUnavailable": "O inventário de caches externos está indisponível.",
+  "orchestra.monitor.externalEmpty": "Nenhum cache externo configurado.",
+  "orchestra.monitor.externalFailed": "A solicitação de caches externos falhou. As leituras anteriores continuam visíveis.",
   "orchestra.monitor.dockerContainer": "Contêiner",
   "orchestra.monitor.dockerSource": "Fonte dos contêineres",
   "orchestra.monitor.dockerRead": "Ler contêineres",

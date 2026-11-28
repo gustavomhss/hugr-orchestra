@@ -607,6 +607,9 @@ import type {
   ActivityReadWorktreeOutput,
   ActivityDockerOutput,
   ActivityReadDockerOutput,
+  ActivityExternalCachesOutput,
+  ActivityReadExternalCacheInput,
+  ActivityReadExternalCacheOutput,
   ActivityDiskOutput,
   ActivityReadDiskInput,
   ActivityReadDiskOutput,
@@ -4784,6 +4787,28 @@ export function make(options: ClientOptions) {
             path: `/api/activity/docker/read`,
             successStatus: 200,
             declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      externalCaches: (requestOptions?: RequestOptions) =>
+        request<ActivityExternalCachesOutput>(
+          {
+            method: "GET",
+            path: `/api/activity/external-caches`,
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      readExternalCache: (input: ActivityReadExternalCacheInput, requestOptions?: RequestOptions) =>
+        request<ActivityReadExternalCacheOutput>(
+          {
+            method: "POST",
+            path: `/api/activity/external-caches/${encodeURIComponent(input.id)}/read`,
+            successStatus: 200,
+            declaredStatuses: [400, 409, 401],
             empty: false,
           },
           requestOptions,
