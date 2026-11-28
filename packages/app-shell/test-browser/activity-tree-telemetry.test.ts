@@ -124,16 +124,20 @@ function mount(locale: Locale) {
 
 const text = (element: Element) => element.textContent?.trim() ?? ""
 const cases = [
-  { locale: "en", unread: "unread", hypothesis: "Hypothesis: insufficient", reachability: "Reachability: unread", read: "Read members", refresh: "Refresh", window: "Window 2.0 s", pressure: "Machine memory pressure is unread." },
-  { locale: "br", unread: "não lido", hypothesis: "Hipótese: insuficiente", reachability: "Alcançabilidade: não lido", read: "Ler membros", refresh: "Atualizar", window: "Janela 2.0 s", pressure: "Pressão de memória da máquina não foi lida." },
+  { locale: "en", cpu: "Host CPU · non-idle time", unread: "unread", hypothesis: "Hypothesis: insufficient", reachability: "Reachability: unread", read: "Read members", refresh: "Refresh", window: "Window 2.0 s", pressure: "Machine memory pressure is unread." },
+  { locale: "br", cpu: "CPU da máquina · tempo não ocioso", unread: "não lido", hypothesis: "Hipótese: insuficiente", reachability: "Alcançabilidade: não lido", read: "Ler membros", refresh: "Atualizar", window: "Janela 2.0 s", pressure: "Pressão de memória da máquina não foi lida." },
 ] as const
 
 for (const labels of cases) {
   test(`tree telemetry is sourced, scoped and read only (${labels.locale})`, async () => {
     const app = mount(labels.locale)
     try {
-      expect(text(app.host.querySelector(".activity-cpu")!)).toContain(labels.unread)
-      ;(await app.call(0, "/api/activity")).respond(base)
+      const first = await app.call(0, "/api/activity")
+      await until("localized unread host CPU", () => {
+        const cpu = text(app.host.querySelector(".activity-cpu")!)
+        return cpu.includes(labels.cpu) && cpu.includes(labels.unread)
+      })
+      first.respond(base)
       await until("unread tree rows", () => app.host.querySelectorAll("tbody tr").length === 2)
       const rows = () => [...app.host.querySelectorAll<HTMLTableRowElement>("tbody tr")]
       const footprint = () => {
