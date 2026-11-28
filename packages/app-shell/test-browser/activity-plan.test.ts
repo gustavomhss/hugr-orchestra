@@ -89,10 +89,13 @@ test("a web server displays Ready rows without an arm control", async () => {
 test.each(["Out", "Unknown"] as const)("apply waits for and replays persisted %s without a live scan", async (outcome) => {
   const ready = target("ready-a")
   const approval = { approvalID: "approval-1", targetID: ready.targetID, generation: ready.generation }
+  const approved = { receipt: { ...receipt(ready), approvalID: approval.approvalID }, changed: false }
+  const custodyPlan = snapshot({ ready: [], approvals: [approved] })
   const states: ActivityApply.State[] = [
-    { available: true, partial: false, eligible: [approval], results: [] },
-    { available: true, partial: false, eligible: [], results: [{ ...approval, outcome }] },
-    { available: true, partial: false, eligible: [], results: [{ ...approval, outcome }] },
+    { available: true, partial: false, eligible: [approval], results: [], custodyPlan },
+    { available: true, partial: false, eligible: [], results: [{ ...approval, outcome }], custodyPlan },
+    { available: true, partial: false, eligible: [], results: [{ ...approval, outcome }],
+      custodyPlan: snapshot({ ready: [], approvals: [{ ...approved, changed: true }] }) },
   ]
   let applyResult: ((value: ActivityApply.Receipt | undefined) => void) | undefined
   let stateIndex = 0
@@ -104,7 +107,7 @@ test.each(["Out", "Unknown"] as const)("apply waits for and replays persisted %s
   })
   try {
     await until("cached public plan GET starts", () => app.calls.length === 1)
-    app.calls[0]!.respond(snapshot({ ready: [], approvals: [{ receipt: { ...receipt(ready), approvalID: approval.approvalID }, changed: false }] }))
+    app.calls[0]!.respond(snapshot({ ready: [], approvals: [] }))
     await until("signed apply state is read", () => app.applyStates.length === 1)
     await until("eligible Apply control", () => [...app.panel().querySelectorAll("button")].some((item) => text(item) === "Apply…"))
     expect(app.inspections).toHaveLength(0)
@@ -118,11 +121,32 @@ test.each(["Out", "Unknown"] as const)("apply waits for and replays persisted %s
     await until("signed persisted outcome appears", () => text(app.panel()).includes(`${outcome}: 1`))
     button(app, "Refresh").click()
     await until("cached plan reload starts", () => app.calls.length === 2)
-    app.calls[1]!.respond(snapshot({ ready: [], approvals: [{ receipt: { ...receipt(ready), approvalID: approval.approvalID }, changed: true }] }))
+    app.calls[1]!.respond(snapshot({ ready: [], approvals: [] }))
     await until("persisted state replay completes", () => app.applyStates.length === 3)
     app.filter(outcome)
     await until("replayed outcome remains visible under filtering", () => app.panel().querySelector("tbody")?.textContent?.includes(outcome) === true)
     expect(app.inspections).toHaveLength(0)
+  } finally {
+    app.dispose()
+  }
+})
+
+test("partial custody does not label an unread outcome as Armed or Refused", async () => {
+  const item = target("custody-old")
+  const app = await mount({
+    connection: { type: "sidecar", variant: "base", http: { url: "http://127.0.0.1:4777" } },
+    platform: { platform: "desktop", os: "linux", async openDirectoryPickerDialog() { return null } } as unknown as Platform,
+    applyState: async () => ({
+      available: true, partial: true, eligible: [], results: [],
+      custodyPlan: snapshot({ ready: [], approvals: [{ receipt: receipt(item), changed: true }] }),
+    }),
+  })
+  try {
+    await until("normal ledger read starts", () => app.calls.length === 1)
+    app.calls[0]!.respond(snapshot({ ready: [], approvals: [] }))
+    await until("custody outcome is unread", () => text(app.panel()).includes("Outcome unread"))
+    expect(app.panel().querySelector("tbody")?.textContent).not.toContain("Refused")
+    expect(app.applies).toEqual([])
   } finally {
     app.dispose()
   }

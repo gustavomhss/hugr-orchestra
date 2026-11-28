@@ -9,7 +9,7 @@ import { useServerSDK } from "@/context/server-sdk"
 
 type PlanRow = {
   target: ActivityArm.Target
-  state: "Ready" | "Armed" | ActivityApply.Result["outcome"]
+  state: "Ready" | "Armed" | "Unread" | ActivityApply.Result["outcome"]
   approvalID?: string
 }
 
@@ -45,23 +45,27 @@ export function ActivityPlan(props: { query: string }) {
     const current = server.current
     return current?.type === "sidecar" && current.variant === "base" ? current.http.url : undefined
   }
+  const custodyState = () => state.applyScope === scope() ? state.applyState : undefined
+  const currentPlan = () => state.verified ?? custodyState()?.custodyPlan ?? state.snapshot
   const rows = createMemo<PlanRow[]>(() => {
-    const snapshot = state.verified ?? state.snapshot
+    const snapshot = currentPlan()
     if (!snapshot) return []
-    const applied = state.applyScope === scope() ? state.applyState?.results : undefined
+    const custody = custodyState()
     return [
       ...snapshot.ready.map((target) => ({ target, state: "Ready" as const })),
       ...snapshot.approvals.flatMap(({ receipt, changed }) =>
-        receipt.targets.map((target) => {
-          const outcome = applied?.find((item) => item.approvalID === receipt.approvalID &&
-            item.targetID === target.targetID && item.generation === target.generation)?.outcome
-          return { target, approvalID: receipt.approvalID, state: outcome ?? (changed ? "Refused" as const : "Armed" as const) }
+        receipt.targets.map((target): PlanRow => {
+          const matches = (item: ActivityApply.Request) => item.approvalID === receipt.approvalID &&
+            item.targetID === target.targetID && item.generation === target.generation
+          const outcome = custody?.results.find(matches)?.outcome
+          const unread = custody?.partial && !custody.eligible.some(matches)
+          return { target, approvalID: receipt.approvalID, state: outcome ?? (unread ? "Unread" : changed ? "Refused" : "Armed") }
         }),
       ),
     ]
   })
   const counts = createMemo(() => {
-    const result = { Ready: 0, Armed: 0, Refused: 0, Out: 0, Unknown: 0 }
+    const result = { Ready: 0, Armed: 0, Refused: 0, Out: 0, Unknown: 0, Unread: 0 }
     for (const row of rows()) result[row.state]++
     return result
   })
@@ -102,7 +106,7 @@ export function ActivityPlan(props: { query: string }) {
       const [planSucceeded, { applyState, failed: applyFailed }] = await Promise.all([planRead, applyReadResult])
       if (request.signal.aborted || requestID !== id || scope() !== serverURL || ownedScope() !== ownedURL || sdk() !== currentSDK) return
       setState({ applyState, applyScope: applyState ? serverURL : undefined, applyFailed: Boolean(canReadApply && applyFailed) })
-      if (!planSucceeded) setState("failed", true)
+      if (!planSucceeded && !applyState?.custodyPlan) setState("failed", true)
     } catch {
       if (!request.signal.aborted && requestID === id && scope() === serverURL && sdk() === currentSDK) setState("failed", true)
     } finally {
@@ -189,7 +193,7 @@ export function ActivityPlan(props: { query: string }) {
       })
       if (!isCurrent()) return
       if (!receipt) return
-      if (receipt && (receipt.targetID !== binding.targetID || receipt.generation !== binding.generation || receipt.approvalID !== binding.approvalID)) {
+      if (receipt.targetID !== binding.targetID || receipt.generation !== binding.generation || receipt.approvalID !== binding.approvalID) {
         setState({ applyState: undefined, applyScope: undefined, applyFailed: true })
         return
       }
@@ -237,7 +241,7 @@ export function ActivityPlan(props: { query: string }) {
   })
 
   const completeEmpty = () => {
-    const plan = state.verified ?? state.snapshot
+    const plan = currentPlan()
     return !props.query.trim() && plan && !plan.partial && plan.ready.length === 0 && plan.approvals.length === 0
   }
   const filterMiss = () => Boolean(props.query.trim()) && shown().length === 0
@@ -269,7 +273,7 @@ export function ActivityPlan(props: { query: string }) {
           </button>
         </Show>
       </div>
-      <Show when={(state.verified ?? state.snapshot)?.partial || state.applyState?.partial}>
+      <Show when={currentPlan()?.partial || custodyState()?.partial}>
         <p class="mx-note" role="status">{language.t("orchestra.monitor.planPartial")}</p>
       </Show>
       <Show when={state.failed}>
@@ -284,7 +288,7 @@ export function ActivityPlan(props: { query: string }) {
       <Show when={state.applyFailed}>
         <p class="activity-error" role="alert">{language.t("orchestra.monitor.applyFailed")}</p>
       </Show>
-      <Show when={state.verified ?? state.snapshot} fallback={
+      <Show when={currentPlan()} fallback={
         <div class="mx-empty" role={state.failed ? "alert" : "status"}>
           <strong>{language.t(state.busy ? "orchestra.monitor.planLoading" : "orchestra.monitor.planUnread")}</strong>
         </div>
