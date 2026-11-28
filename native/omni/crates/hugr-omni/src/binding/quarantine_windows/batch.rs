@@ -1,10 +1,16 @@
 use super::{acquire_root, identity, open_with_share, parents, parse, query, status, IoStatus, NtSetInformationFile, Owned};
 
+struct ReservedFile {
+    source: Owned,
+    _ancestors: Vec<Owned>,
+    _root: Owned,
+}
+
 /// Reserves every trusted host path before disposing any of them. Directories are refused.
 pub fn dispose_batch(items: &[(String, String)]) -> &'static str {
-    fn reserve(items: &[(String, String)]) -> Result<Vec<(Owned, Vec<Owned>, Owned)>, String> {
-        if items.is_empty() {
-            return Err("empty batch".into());
+    fn reserve(items: &[(String, String)]) -> Result<Vec<ReservedFile>, String> {
+        if items.is_empty() || items.len() > 16 {
+            return Err("batch size outside 1 to 16".into());
         }
         let mut identities = std::collections::HashSet::new();
         let mut reserved = Vec::new();
@@ -23,25 +29,26 @@ pub fn dispose_batch(items: &[(String, String)]) -> &'static str {
             }
             let mut attributes = [0u8; 8];
             query(source.0, 35, &mut attributes)?;
-            if u32::from_le_bytes(attributes[..4].try_into().unwrap()) & (0x10 | 0x40 | 0x400) != 0 {
-                return Err("directory, device or reparse point".into());
+            let flags = u32::from_le_bytes(attributes[..4].try_into().map_err(|_| "invalid attribute data")?);
+            if flags & (0x01 | 0x10 | 0x40 | 0x400) != 0 {
+                return Err("read-only file, directory, device or reparse point".into());
             }
             // FILE_STANDARD_INFORMATION: NumberOfLinks is a ULONG at offset 16.
             let mut standard = [0u8; 24];
             query(source.0, 5, &mut standard)?;
-            if u32::from_le_bytes(standard[16..20].try_into().unwrap()) != 1 {
+            if u32::from_le_bytes(standard[16..20].try_into().map_err(|_| "invalid link count data")?) != 1 {
                 return Err("hard links are not supported".into());
             }
-            reserved.push((root, ancestors, source));
+            reserved.push(ReservedFile { source, _ancestors: ancestors, _root: root });
         }
         Ok(reserved)
     }
     let Ok(reserved) = reserve(items) else { return "refused"; };
     let disposition = 1u8;
-    for (_, _, source) in &reserved {
+    for item in &reserved {
         let mut io = IoStatus { status: 0, information: 0 };
         // SAFETY: the admission retains every handle and the synchronous buffer is live.
-        if status(unsafe { NtSetInformationFile(source.0, &mut io, (&disposition as *const u8).cast(), 1, 13) }).is_err() {
+        if status(unsafe { NtSetInformationFile(item.source.0, &mut io, (&disposition as *const u8).cast(), 1, 13) }).is_err() {
             return "unknown";
         }
     }
