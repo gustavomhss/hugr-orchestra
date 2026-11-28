@@ -13,13 +13,14 @@ test("confirmed apply reserves once and survives service restart", async () => {
   await using directory = await tmpdir()
   const origin = path.join(directory.path, "origin")
   const destination = path.join(directory.path, "quarantine")
+  const filename = path.join(directory.path, "activity.sqlite")
   const claims = new Set<string>()
   await mkdir(origin)
   await writeFile(path.join(origin, "fixture"), "owned")
   const original = await stat(origin, { bigint: true })
   const nativeIdentity = `${original.dev}:${original.ino}`
   let mutations = 0
-  await Effect.runPromise(Effect.gen(function* () {
+  const confirmed = await Effect.runPromise(Effect.gen(function* () {
     const database = yield* Database.Service
     const actions = yield* ActivityActionLedger.make
     const target = yield* actions.record({ targetID: "fixture", kind: "object", label: origin, owner: "test",
@@ -67,10 +68,15 @@ test("confirmed apply reserves once and survives service restart", async () => {
     expect(yield* Effect.promise(() => readFile(path.join(destination, "fixture"), "utf8"))).toBe("owned")
     expect(yield* Effect.promise(() => reading(origin))).toEqual({ state: "absent" })
     expect(mutations).toBe(1)
-  }).pipe(Effect.provide(Database.layerFromPath(path.join(directory.path, "activity.sqlite"))), Effect.scoped))
+    return request
+  }).pipe(Effect.provide(Database.layerFromPath(filename)), Effect.scoped))
+  await Effect.runPromise(Effect.gen(function* () {
+    const database = yield* Database.Service
+    expect((yield* ActivityApplyService.make(database).state()).results).toEqual([{ ...confirmed, outcome: "Out" }])
+  }).pipe(Effect.provide(Database.layerFromPath(filename)), Effect.scoped))
 })
 
-test.each(["second-read", "origin-remains", "revalidation"] as const)("%s settles safely and survives restart", async (scenario) => {
+test.each(["second-read", "origin-remains", "unregistered", "changed-object"] as const)("%s settles safely and survives restart", async (scenario) => {
   await using directory = await tmpdir()
   const source = path.join(directory.path, "source")
   const destination = path.join(directory.path, "destination")
@@ -93,7 +99,9 @@ test.each(["second-read", "origin-remains", "revalidation"] as const)("%s settle
     const authority: ActivityApplyService.Authority = {
       describe: () => destination,
       authorize: () => Effect.sync(() => authorized),
-      prepare: () => Effect.sync(() => {
+      prepare: () => Effect.gen(function* () {
+        const live = yield* Effect.promise(() => readFile(path.join(source, "fixture"), "utf8"))
+        if (live !== "owned") return undefined
         if (claims.has(source)) return undefined
         claims.add(source)
         return { identity: "native-fixture", release: async () => { claims.delete(source) }, adapter: {
@@ -115,20 +123,22 @@ test.each(["second-read", "origin-remains", "revalidation"] as const)("%s settle
     const first = yield* service.preview(request)
     const second = yield* service.preview(request)
     if (!first || !second) throw new Error("missing previews")
-    authorized = scenario !== "revalidation"
+    authorized = scenario !== "unregistered"
+    if (scenario === "changed-object") yield* Effect.promise(() => writeFile(path.join(source, "fixture"), "replacement"))
+    const expected = scenario === "unregistered" || scenario === "changed-object" ? "Refused" : "Unknown"
     const results = yield* Effect.all([service.confirm({ previewID: first.previewID }),
       service.confirm({ previewID: second.previewID })], { concurrency: "unbounded" })
     const successful = results.filter((result) => result !== undefined)
     expect(successful).toHaveLength(1)
     const result = successful[0]
     if (!result) throw new Error("result missing")
-    expect(result.outcome).toBe(scenario === "revalidation" ? "Refused" : "Unknown")
-    expect(mutations).toBe(scenario === "revalidation" ? 0 : 1)
+    expect(result.outcome).toBe(expected)
+    expect(mutations).toBe(expected === "Refused" ? 0 : 1)
     const restarted = ActivityApplyService.make(database, { authority })
     expect((yield* restarted.state()).results[0]?.outcome).toBe(result.outcome)
     expect((yield* restarted.confirm({ previewID: result.previewID }))?.outcome).toBe(result.outcome)
     expect(yield* restarted.preview(request)).toBeUndefined()
-    if (scenario !== "revalidation") {
+    if (expected === "Unknown") {
       const changed = yield* record("fixture", source + "/changed")
       const changedPreview = yield* arms.preview({ targets: [{ targetID: changed.targetID, generation: changed.generation }] })
       if (!changedPreview) throw new Error("missing new generation preview")
