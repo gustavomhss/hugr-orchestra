@@ -1,6 +1,6 @@
 {
   "schema": "lucy-resumption-todo-v2",
-  "as_of": "2026-11-28T14:28:57.335789-03:00",
+  "as_of": "2026-11-28T16:50:42-03:00",
   "timezone": "America/Sao_Paulo",
   "repository": "gustavomhss/hugr-orchestra",
   "integration_branch": "dev",
@@ -14,7 +14,10 @@
     "integration_baseline": "a959b3fffcbb9d1d2a36c0557f1de1b94c8a91a4",
     "tool_mechanism_audit": "156386010fe22cd7b61cd3b75fcbe62db657305b",
     "kube_preparation_production": "c6a16ad8165d1152a2815e2f3a6582243ca0aa6c",
-    "observed_later_dev": "f469755b33bb478693d2d1dae022c010c2e47ebc"
+    "observed_later_dev": "f469755b33bb478693d2d1dae022c010c2e47ebc",
+    "a05_integrated_candidate": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+    "a05_integrated_dev_parent": "8cf8407fbd4508a59ea8465d947d5b06e5c49296",
+    "recovered_todo_merge": "6aebf3a4ae40bf6c047463a46f56e459c14786de"
   },
   "canonical_sources": {
     "plan": "docs/specs/lucy/go-live-plan.md",
@@ -121,15 +124,16 @@
     {
       "id": "A05",
       "observation": "Existing context, variant, spec-map, diligence, forensics, controls, report, artifact and security/agents leaves are reachable only in appropriate Session scopes. ISO/SOC 2 remains labelled inferred; R20 behavioral evaluation is not examined without owner permission.",
-      "state": "implementation_in_progress_after_main_red",
+      "state": "focused_green_landing_blocked",
       "source": "docs/specs/lucy/go-live-plan.md#acceptance-spine",
-      "implementation_observed": "Draft #1684 main packet 235bee45 has qualified RED2 on all three hosts: types pass, 11 PASS/39 causal assertion failures per host, cleanup success. Evidence/scope work started at 14:23 America/Sao_Paulo. Core supplement 46169869338 also qualified all three hosts (1 PASS/1 causal failure each); Core implementation was authorized at 14:27. No production commit or GREEN is claimed.",
+      "implementation_observed": "Draft #1684 source 0076ad37 integrates dev 8cf8407f. Focused Core GREEN3 passed 65 Linux / 63 Windows / 62 macOS cases; Main GREEN3 passed all 59 cases on every host, including the corrected native-error observation, full-call deadline, later ACK and inherited Session placement. All selected types passed with zero skips/delegated. Preservation passed 122 cases on Linux/macOS; Windows had 121 PASS and one existing governed-round 5-second timeout. Landing remains blocked by source-directory authority across concurrent parent replacement and eager host enumeration before entry admission. A05 and final GO remain open.",
       "next_terminal_criteria": [
-        "Implement only the qualified main/Core contracts; preserve frozen acceptance bytes, tail-default behavior and existing source/evidence/scope boundaries.",
-        "Preserve corrected acceptance assertions and exact snapshot identity; failed RED1 preparation remains historical, not causal RED.",
-        "Implement captured-source/file-bound history, full safe-result retention and native settlement binding, shared CODE/history quota and original lifetime.",
-        "Qualify profile/role-specific skill reachability, off-route refusal and replay; preserve R20 owner permission and inferred ISO/SOC 2 labels.",
-        "Keep roster/native profile/global grants and existing PR/governed scopes unchanged; qualify real CLI/Desktop knowledge at the integrated gate."
+        "Resolve stable source-directory authority during object acquisition and bound host enumeration before admission. Freeze a deterministic hosted supplement against the existing contract before changing production; pathname checks after the read do not establish continuous authority.",
+        "Retain Core/Main GREEN3 and all earlier preparation/RED/failure observations at their exact source. Preserve the failed Windows 23-file gate and the unchanged-file base/candidate diagnosis; do not replace a timeout with causal RED or silently extend its limit.",
+        "Use engagement-profile-qualification.md to link missing native own-leaf and sibling-negative evidence for lens/verifier/security-agents/variant, audit-to-diligence, diligence-to-variant and artifact-to-audit/compliance, plus skill-load budgets and transcript isolation. Search existing evidence before adding acceptance.",
+        "Qualify complete per-profile reports with paths, time window, sources and limits for forensic observations and inferred ISO/SOC 2. Four history operators and a loaded leaf do not establish those semantics.",
+        "Preserve actual native variant generations/half-noise/budgets and zero diligence/artifact variants, existing PR/governed/Atlas routes, original grants and durable bytes; then inspect production CLI/Desktop knowledge and run final authenticated Grok/integrated epic at the final source.",
+        "Keep the separately suspended native Git interruption observation explicitly unproved. Artifact history N/A, role history refusal, no new forensic child, no live delivery ingestion and R20 owner permission remain accepted boundaries, not missing features."
       ],
       "linked_prs": [
         "https://github.com/gustavomhss/hugr-orchestra/pull/1684"
@@ -4199,6 +4203,11 @@
       "omni_spawns": 873,
       "delegated_spawns": 0,
       "test_skips": 0
+    },
+    {
+      "pr": 1688,
+      "merge": "6aebf3a4ae40bf6c047463a46f56e459c14786de",
+      "scope": "complete recoverable ToDo and source-linked mechanism reconciliation; no final GO"
     }
   ],
   "quality_findings": [
@@ -4303,6 +4312,101 @@
         50,
         59
       ]
+    },
+    {
+      "id": "E-14",
+      "severity": "qualification",
+      "finding": "Core2 selected matrix passed; Main2 remained 37 PASS/20 FAIL per host. Seventeen observation failures and three native child-placement failures are distinct. No complete A05 GREEN.",
+      "state": "runtime_candidate_partial_qualification",
+      "runs": [
+        46175626742,
+        46175630629
+      ],
+      "historical_observation": true,
+      "later_resolution": {
+        "source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+        "core_run": 46179990737,
+        "main_run": 46179992003,
+        "meaning": "Named failed observations now pass in GREEN3; earlier failures are not relabelled and landing remains blocked."
+      }
+    },
+    {
+      "id": "E-15",
+      "severity": "observation",
+      "finding": "Main2 native error text was empty because the adapter ignored state.error.message. A separately refrozen pre-runtime baseline established 14 PASS/43 causal FAIL on all three hosts; no production error content was fabricated.",
+      "state": "causal_red_qualified_runtime_green_pending",
+      "run": 46176934443,
+      "historical_observation": true,
+      "later_resolution": {
+        "source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+        "core_run": 46179990737,
+        "main_run": 46179992003,
+        "meaning": "Named failed observations now pass in GREEN3; earlier failures are not relabelled and landing remains blocked."
+      }
+    },
+    {
+      "id": "E-16",
+      "severity": "lifetime",
+      "finding": "Full-call deadline RED proves real CAS/admission can return successful native history after 31 seconds under a live 300-second engagement; the independent completed-call late ACK control passes. Repair GREEN pending.",
+      "state": "causal_red_qualified_runtime_green_pending",
+      "run": 46177720324,
+      "historical_observation": true,
+      "later_resolution": {
+        "source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+        "core_run": 46179990737,
+        "main_run": 46179992003,
+        "meaning": "Named failed observations now pass in GREEN3; earlier failures are not relabelled and landing remains blocked."
+      }
+    },
+    {
+      "id": "E-17",
+      "severity": "qualification",
+      "finding": "Parent-placement preparation failed all types before tests on seven wrong Session.Info.subdirectory reads. The repaired subpath packet later established types PASS and 2 PASS/5 causal FAIL per host; the invalid preparation is preserved separately and runtime GREEN remains pending.",
+      "state": "initial_setup_invalid_then_causal_red_qualified",
+      "runs": [
+        46178075785,
+        46178957084
+      ],
+      "historical_observation": true,
+      "later_resolution": {
+        "source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+        "core_run": 46179990737,
+        "main_run": 46179992003,
+        "meaning": "Named failed observations now pass in GREEN3; earlier failures are not relabelled and landing remains blocked."
+      }
+    },
+    {
+      "id": "E-18",
+      "severity": "resource_boundary",
+      "finding": "Bun eager Dir.read enumeration allocates before accepted-entry bounds; the Git child RSS cap does not bound host allocation. A proposed ls-files substitute was rejected for unsafe nested-repository discovery. No replacement is qualified.",
+      "state": "landing_blocker_open",
+      "additional_review": "The no-index directory alternative was also rejected; see engagement-history-open-findings.md. No replacement is qualified."
+    },
+    {
+      "id": "E-19",
+      "severity": "authority_boundary",
+      "finding": "Parent realpath before/after and final-component no-follow do not hold source-directory authority through concurrent replacement/restoration. Source finding only; no exploit/output leak demonstrated.",
+      "state": "landing_blocker_open",
+      "source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+      "document": "docs/specs/lucy/engagement-history-open-findings.md"
+    },
+    {
+      "id": "E-20",
+      "severity": "preservation",
+      "finding": "Windows selected preservation has 121 PASS and one 5000ms governed-round timeout. The unchanged isolated base also times out. No assertion RED or A05 attribution; original failed gate retained.",
+      "state": "failed_gate_diagnosis_recorded",
+      "run": 46180600651,
+      "diagnostic_runs": [
+        46181796099,
+        46181797487
+      ]
+    },
+    {
+      "id": "E-21",
+      "severity": "evidence_boundary",
+      "finding": "14 native H08 cases and 13 native variant cases do not establish all dynamic own-leaf/sibling-negative/load/transcript/report semantics. Direct registry, Session ports and loaders are classified separately.",
+      "state": "profile_evidence_reconciliation_open",
+      "document": "docs/specs/lucy/engagement-profile-qualification.md"
     }
   ],
   "limits": [
@@ -4311,7 +4415,7 @@
     "OPA, Kyverno, ORT and axe-core are additional C03 requirements, not substitutions into the original 83.",
     "Authenticated Grok, final integrated epic and shipping CLI/Desktop artifact inspection remain open.",
     "The tool mechanism audit fixes source at 156386 plus explicit Kube delta; later merges do not retroactively qualify those source snapshots.",
-    "A05 main and Core supplemental RED are qualified on all three hosts; implementation is in progress, with no production commit or GREEN claimed at this checkpoint.",
+    "Draft #1684 source 0076ad37 integrates dev 8cf8407f. Focused Core GREEN3 passed 65 Linux / 63 Windows / 62 macOS cases; Main GREEN3 passed all 59 cases on every host, including the corrected native-error observation, full-call deadline, later ACK and inherited Session placement. All selected types passed with zero skips/delegated. Preservation passed 122 cases on Linux/macOS; Windows had 121 PASS and one existing governed-round 5-second timeout. Landing remains blocked by source-directory authority across concurrent parent replacement and eager host enumeration before entry admission. A05 and final GO remain open.",
     "Release, promotion and owner app/server restart are outside the readiness work."
   ],
   "foundation_tasks": [
@@ -4376,18 +4480,11 @@
   ],
   "integration_baseline": "a959b3fffcbb9d1d2a36c0557f1de1b94c8a91a4",
   "observed_dev": {
-    "sha": "f469755b33bb478693d2d1dae022c010c2e47ebc",
-    "tree": "35b06ee13392dbb6e547b88a050dfa1681b99d0e",
-    "relationship": "Observed after the integration baseline; no Lucy path overlap in the two-file delta.",
-    "changed_paths": [
-      "packages/script/test/test-plan.test.ts",
-      "modules/capability-assets/requirements-dev.txt"
-    ],
-    "qualification_effect": "Use the current integrated source for the next hosted packet. This observation does not requalify previously tested source.",
-    "script_test_change": {
-      "commit": "885905c5bcfe77593d074ae10e64d6efa9d3c410",
-      "claim": "A later script test correction exists; the older script type error is not carried forward as an unresolved current defect without checking that correction."
-    }
+    "sha": "8cf8407fbd4508a59ea8465d947d5b06e5c49296",
+    "tree": "0707bd407cb541b93236c7c25827fb0b9caa569d",
+    "relationship": "Integrated as a parent of A05 source 0076ad37e7adb98746f63b0f95a8431a7a552b29",
+    "qualification_effect": "Only the named selections at source 0076ad37 are qualified; this is not final dev GO.",
+    "comparison_limit": "The 6a04-to-8cf compare returned exactly 300 paths and was treated as truncated. Commit/subtree identities and focused FS/Omni deltas were checked separately."
   },
   "canonical_source_blobs": [
     {
@@ -4421,7 +4518,10 @@
     "tool_specific_evidence_not_linked": "No specific implementation/proof has been linked in the inspected source set. This is not a finding of absence.",
     "final_integrated_preservation_pending": "Previously delivered behavior needs named evidence at the final integrated source.",
     "open_until_exact_integrated_evidence_attached": "A required acceptance observation has no final exact-source receipt attached.",
-    "not_run_or_unavailable": "An explicit limitation/refusal, not positive qualification or an owner scope cut."
+    "not_run_or_unavailable": "An explicit limitation/refusal, not positive qualification or an owner scope cut.",
+    "runtime_candidate_partial_qualification": "Production candidate and focused results exist, but observed failures and unqualified integrated preservation prevent A05/final closure; later causal supplements do not constitute runtime GREEN.",
+    "focused_green_landing_blocked": "Named Core/Main acceptance is GREEN at an integrated source, but source findings and incomplete broader preservation block landing; no A05/final closure.",
+    "selected_core_green_landing_blocked": "The named Core selection is GREEN; independent acquisition findings and incomplete broader preservation still block A05 landing."
   },
   "preserved_additional_foundations": [
     {
@@ -4446,7 +4546,7 @@
   ],
   "active_work_packages": {
     "A05": {
-      "state": "implementation_in_progress_after_main_red",
+      "state": "focused_green_landing_blocked",
       "pr": 1684,
       "url": "https://github.com/gustavomhss/hugr-orchestra/pull/1684",
       "draft": true,
@@ -4627,7 +4727,14 @@
       "known_test_scope_limits": [
         "The staged lifetime case does not by itself prove cancellation of a real Git process already in flight; preserve this limitation until separately demonstrated.",
         "Source review is not hosted compilation or behavioral qualification.",
-        "The tail-substitution test requires full safe-result binding to native settlement; rejection only from an incidental URI inconsistency is insufficient."
+        "The tail-substitution test requires full safe-result binding to native settlement; rejection only from an incidental URI inconsistency is insufficient.",
+        "Bun 1.3.14 Dir.read eagerly enumerates before entry admission; 16,384 accepted entries and 256 MiB copy limits do not bound earlier host allocation. Git child RSS does not bound that host memory. Proposed ls-files substitution was rejected, not qualified.",
+        "Main2 37/20 and Core selected GREEN are distinct observations. Adapter RED is on a pre-runtime source; counts must not be combined into a synthetic GREEN.",
+        "Deadline RED fails at native status (completed instead of error); following error-reason and unusable-receipt assertions were unobserved at RED and are observed in GREEN3. Second permit wait is inferred, not inspected.",
+        "Four Git operations and native forensics-leaf loading establish access/integrity only, not every hotspot/revert/concentration report or the full native profile/role matrix.",
+        "O_NOFOLLOW protects the final file component, not parent authority across awaits. Parent replacement/restoration can escape the originally checked directory; no exploit/output leak was executed or demonstrated.",
+        "The 23-file Windows preservation gate failed on a 5-second governed-round timeout. The unchanged isolated base also times out; this does not prove the candidate has no performance effect or close the original gate.",
+        "Profile crosswalk credits native execution separately from registry-direct, Session-port and loader tests; delivered variant leaf/held scope is not a dynamic skill invocation."
       ],
       "governance_invariants": {
         "review_records_source": "https://github.com/gustavomhss/hugr-orchestra/blob/a959b3fffcbb9d1d2a36c0557f1de1b94c8a91a4/modules/maestro/coordination/src/v2/tools/review-records.ts",
@@ -4637,7 +4744,7 @@
         "planned_change_boundary": "Binding.history and report-only profile/role scope selection are outside those hash projections. Preserve roster, seat/prompt metadata, historical profile alias/base, global grants, canonicalization and versions."
       },
       "core_capture_packet": {
-        "state": "causal_red_qualified_all_three_hosts_production_in_progress",
+        "state": "selected_core_green_landing_blocked",
         "source": "9c94adc2cae53a7b806552f213ce468d582bf142",
         "snapshot": "39a99997e328ab9f3afb0a282bed38871170094f",
         "run": 46169869338,
@@ -4693,9 +4800,1176 @@
           "result": "success"
         },
         "failure_observation": "Expected HEAD-CONTROL / received TAIL-CONTROL after real positive controls. The same assertion is logged twice by Effect and Bun; it remains one failing test per host.",
-        "evidence_level": "Root inspected all three hosted logs; source/snapshot identities remain fixed."
+        "evidence_level": "Root inspected all three hosted logs; source/snapshot identities remain fixed.",
+        "latest_qualification": {
+          "source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+          "snapshot": "a1d6cc5ba999fb971caf7f1cce3e7893749c992c",
+          "run": 46179990737,
+          "scope": "See active_work_packages.A05.latest_qualification.core_green3 for exact platform-specific selected cases and jobs. Prefix RED and authorization fields above remain historical.",
+          "final_closed": false,
+          "landing_allowed": false
+        },
+        "previous_qualification": {
+          "source": "c61824e868dc05464f3bad264f79d47df77d9606",
+          "snapshot": "ac4682fc770c24876b91a3d59d0c2349278c748b",
+          "run": 46175626742,
+          "scope": "See latest_qualification.core_selection for exact platform-specific cases and job evidence. Historical prefix RED and authorization fields above are preserved.",
+          "final_closed": false
+        }
       },
-      "next_gate": "Finish implementation of the main and Core contracts, complete independent cold review, then obtain hosted package types, GREEN and required preservation on the exact integrated source. Preserve the frozen tests and legacy behavior."
+      "next_gate": "Resolve stable source-directory authority during object acquisition and bound host enumeration before admission. Freeze a deterministic hosted supplement against the existing contract before changing production; pathname checks after the read do not establish continuous authority. Retain Core/Main GREEN3 and all earlier preparation/RED/failure observations at their exact source. Preserve the failed Windows 23-file gate and the unchanged-file base/candidate diagnosis; do not replace a timeout with causal RED or silently extend its limit. Use engagement-profile-qualification.md to link missing native own-leaf and sibling-negative evidence for lens/verifier/security-agents/variant, audit-to-diligence, diligence-to-variant and artifact-to-audit/compliance, plus skill-load budgets and transcript isolation. Search existing evidence before adding acceptance.",
+      "historical_checkpoint_note": "The existing *_at_checkpoint, pr_head_observed, contract and production authorization fields retain the initial RED2 checkpoint. They are historical observations, not the current PR head or a current absence-of-production claim. The later exact-source qualification records below supersede that status without rewriting earlier evidence.",
+      "latest_qualification": {
+        "observed_document_source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+        "qualification_document": "docs/specs/lucy/engagement-history-qualification.md",
+        "production_candidate_source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+        "production_candidate_tree": "ac7311841a3b15f950e2bca30e942ee057de2630",
+        "complete_green": false,
+        "summary": "Draft #1684 source 0076ad37 integrates dev 8cf8407f. Focused Core GREEN3 passed 65 Linux / 63 Windows / 62 macOS cases; Main GREEN3 passed all 59 cases on every host, including the corrected native-error observation, full-call deadline, later ACK and inherited Session placement. All selected types passed with zero skips/delegated. Preservation passed 122 cases on Linux/macOS; Windows had 121 PASS and one existing governed-round 5-second timeout. Landing remains blocked by source-directory authority across concurrent parent replacement and eager host enumeration before entry admission. A05 and final GO remain open.",
+        "chronology": [
+          "Original RED2 and prefix RED preceded their runtime implementation; imported-fix and deadline supplements have their separately disclosed later-local-candidate chronology.",
+          "Main2 exposed the native error observation defect and child placement failure; the adapter was then refrozen and run against pre-runtime parent 04deb51, not silently substituted into Main2.",
+          "The deadline supplement was authored after a local repair proposal, then frozen and executed against runtime without all three deadline deltas before remote publication.",
+          "Placement1 failed types. After the Info.subpath correction, repaired source afc80c242 passed hosted types and reached observed 2 PASS/5 causal FAIL on each host; only then was Session production authorized.",
+          "GREEN3 at integrated source 0076ad37 qualifies corrected adapter, native placement and complete-call deadline cases; earlier failed/invalid runs remain unchanged.",
+          "Post-GREEN source review narrows earlier source-PASS: directory authority and eager host allocation block landing. Windows preservation failed independently on one unchanged governed-round timeout."
+        ],
+        "core_selection": {
+          "source": "c61824e868dc05464f3bad264f79d47df77d9606",
+          "snapshot": "ac4682fc770c24876b91a3d59d0c2349278c748b",
+          "run": 46175626742,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46175626742",
+          "classification": "selected_matrix_green_only",
+          "paths": [
+            "packages/core/test/research-process-capture.test.ts",
+            "packages/core/test/review-toolkit/history.test.ts",
+            "packages/core/test/review-toolkit/local-read-process.test.ts",
+            "packages/core/test/review-toolkit/scoped-typecheck-concurrency.test.ts"
+          ],
+          "hosts": [
+            {
+              "host": "Linux x64",
+              "job": 141073514336,
+              "types": "success",
+              "pass": 10,
+              "fail": 0,
+              "assertions": 178,
+              "omni_spawns": 44,
+              "delegated_spawns": 0
+            },
+            {
+              "host": "Windows x64",
+              "job": 141073514092,
+              "types": "success",
+              "pass": 8,
+              "fail": 0,
+              "assertions": 93,
+              "omni_spawns": 14,
+              "delegated_spawns": 0
+            },
+            {
+              "host": "macOS ARM64",
+              "job": 141073514368,
+              "types": "success",
+              "pass": 7,
+              "fail": 0,
+              "assertions": 92,
+              "omni_spawns": 14,
+              "delegated_spawns": 0
+            }
+          ],
+          "cleanup": {
+            "job": 141074250748,
+            "result": "success"
+          },
+          "limit": "Platform-specific selected cases; not all Core, H10, all A05 or final campaign qualification."
+        },
+        "main2": {
+          "source": "c61824e868dc05464f3bad264f79d47df77d9606",
+          "snapshot": "87227ef058a5888ef58fa44837eb77639b9f333a",
+          "run": 46175630629,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46175630629",
+          "classification": "mixed_observation_and_runtime_failures_not_green",
+          "hosts": [
+            {
+              "platform": "linux",
+              "job": 141073526508,
+              "typecheck": "success",
+              "classification": "mixed_runtime_and_test_observation_failures",
+              "omni": 10921,
+              "delegated": 0,
+              "pass": 37,
+              "fail": 20,
+              "assertions": 13819,
+              "seconds": 258.5,
+              "skip": 0,
+              "failureGroups": {
+                "native_error_text_observation": 17,
+                "project_placement_mismatch": 3
+              },
+              "fullLogSha256": "2568c02f351e93c00776ec3eb430b73b1ed2ad6f6011da841e29c9b9ea48b996",
+              "fullLogLines": 2389
+            },
+            {
+              "platform": "macos",
+              "job": 141073526458,
+              "typecheck": "success",
+              "classification": "mixed_runtime_and_test_observation_failures",
+              "omni": 10904,
+              "delegated": 0,
+              "pass": 37,
+              "fail": 20,
+              "assertions": 13833,
+              "seconds": 420.22,
+              "skip": 0,
+              "failureGroups": {
+                "native_error_text_observation": 17,
+                "project_placement_mismatch": 3
+              },
+              "fullLogSha256": "96d2114f7e1bf1fe5d5928eecfdcfb4e7114a99e9f564f4af493ae2ec9cb519f",
+              "fullLogLines": 2603
+            },
+            {
+              "platform": "windows",
+              "job": 141073526283,
+              "typecheck": "success",
+              "classification": "mixed_runtime_and_test_observation_failures",
+              "omni": 10333,
+              "delegated": 0,
+              "pass": 37,
+              "fail": 20,
+              "assertions": 13833,
+              "seconds": 576.37,
+              "skip": 0,
+              "failureGroups": {
+                "native_error_text_observation": 17,
+                "project_placement_mismatch": 3
+              },
+              "fullLogSha256": "bab84a298354aa9dbcf8c6771929ec6b4e4f5898f42ff938930f435431d15b0f",
+              "fullLogLines": 2029
+            }
+          ],
+          "cleanup": {
+            "job": 141076716408,
+            "status": "completed",
+            "conclusion": "success"
+          },
+          "findings": [
+            "Normalizing Bun Dir.close allowed all formerly failing positive native history calls to complete. Positive history, retained-tail/native proof, zero-Git replay, quotas, lifetime and imported-fix cases now pass on all hosts.",
+            "Seventeen negative tests reach native error status, then fail because their observation adapter ignores native state.error.message and returns empty text. No production error-content fabrication is proposed.",
+            "Three overlay cases (replace/graft/shallow) fail at public engagement decoded() with engagement-record-invalid: child Session identity mismatch. Parent is investigating fresh Git-based project resolution during native child creation; these are not classified as the adapter error."
+          ]
+        },
+        "adapter_red": {
+          "source": "832b138dddbc3749f82c8d124d940e97a3603be3",
+          "baseline_parent": "04deb51aae9f417509b88315863854ee4b4ad004",
+          "snapshot": "b2040b0a420c5084da3f71190512f089f90bf11a",
+          "run": 46176934443,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46176934443",
+          "classification": "causal_assertion_red_all_three_hosts",
+          "fixture": {
+            "path": "modules/maestro/coordination/test/fixture/lucy-history.ts",
+            "git_blob": "21f8530c275480c644e34e520bd7cb5b9adf6229",
+            "sha256": "2d3cbc345cb239d0e301c52f993594c98ccdfae3afec0bbcf7fd50825ba0efa5",
+            "bytes": 10208,
+            "change": "Preserve existing textual content and concatenate the native state.error.message for error states."
+          },
+          "hosts": [
+            {
+              "host": "Linux",
+              "job_id": 141077641654,
+              "types": "PASS",
+              "pass": 14,
+              "fail": 43,
+              "cases": 57,
+              "files": 10,
+              "assertions": 766,
+              "skipped": 0,
+              "timeouts": 0,
+              "omni": 9889,
+              "delegated": 0,
+              "seconds": 101.57,
+              "log": "a05-adapter-red-linux.log",
+              "log_sha256": "fd1a60d947c129c8cff9f940b062d1fe5f43a4a3ff1661c662601fb0a6f5bc9a"
+            },
+            {
+              "host": "macOS",
+              "job_id": 141077641442,
+              "types": "PASS",
+              "pass": 14,
+              "fail": 43,
+              "cases": 57,
+              "files": 10,
+              "assertions": 766,
+              "skipped": 0,
+              "timeouts": 0,
+              "omni": 9898,
+              "delegated": 0,
+              "seconds": 193.84,
+              "log": "a05-adapter-red-macos.log",
+              "log_sha256": "7bb6ef4d470b220e43fff6cfa56965c4710ecf1d6aa1cf50e63274f8ab122a24"
+            },
+            {
+              "host": "Windows",
+              "job_id": 141077641643,
+              "types": "PASS",
+              "pass": 14,
+              "fail": 43,
+              "cases": 57,
+              "files": 10,
+              "assertions": 766,
+              "skipped": 0,
+              "timeouts": 0,
+              "omni": 9418,
+              "delegated": 0,
+              "seconds": 342.03,
+              "log": "a05-adapter-red-windows.log",
+              "log_sha256": "069d72f483b2bf1bbd43af0f8da184b5235a64d6093b44565ff9e05521dbc626"
+            }
+          ],
+          "failure_categories_per_host": [
+            {
+              "count": 36,
+              "cause": "Positive native review_history call returns error because tool is outside the old engagement scope.",
+              "observation": "Expected completed, received error; actual native error message now visible."
+            },
+            {
+              "count": 2,
+              "cause": "Positive native lucy-audit-forensics skill call returns error because skill is outside old lead scope.",
+              "observation": "Expected completed, received error."
+            },
+            {
+              "count": 1,
+              "cause": "Old ReviewTools binding ignores proposed history callback and invokes real Git.",
+              "observation": "H07 expected SCOPED-HISTORY-POSITIVE, received actual commit/diff."
+            },
+            {
+              "count": 4,
+              "cause": "Old report coverage retains engagement:history/not-built.",
+              "observation": "New audit/diligence coverage expects not-examined; artifact expects profile-not-applicable."
+            }
+          ],
+          "cleanup": {
+            "job_id": 141079585659,
+            "conclusion": "success",
+            "log_reviewed": true
+          },
+          "chronology": "Fixture repair was authored after Main2 exposed missing native error observation, and explicitly refrozen against pre-runtime source in this separate baseline.",
+          "limit": "At this pre-runtime RED, deep assertions behind the first failed expectation were unobserved. The same corrected frozen acceptance reaches and passes those observations in Main GREEN3 run 46179992003 at source 0076ad37; the earlier RED result remains unchanged."
+        },
+        "full_call_deadline_red": {
+          "source": "85df1f71dc5ca54743602f78b2dc3fe9212f2eda",
+          "snapshot": "00b61283b845a31fcacfbdaf8487667a2bc8d293",
+          "run": 46177720324,
+          "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46177720324",
+          "classification": "causal_assertion_red_all_three_hosts",
+          "hosts": [
+            {
+              "host": "Linux",
+              "jobID": 141080099639,
+              "types": "PASS",
+              "tests": {
+                "pass": 1,
+                "causalFail": 1,
+                "invalidFail": 0,
+                "skip": 0,
+                "assertions": 168
+              },
+              "omni": 289,
+              "delegated": 0,
+              "seconds": 9.47,
+              "log": "linux-job-141080099639.log",
+              "logSha256": "e30e2452ab6b2a1410f6225d806f4291f7b0ba5981cddbf5dff1f05e332ffb36",
+              "failureCountInLog": 1,
+              "passingAckCountInLog": 1
+            },
+            {
+              "host": "Windows",
+              "jobID": 141080099507,
+              "types": "PASS",
+              "tests": {
+                "pass": 1,
+                "causalFail": 1,
+                "invalidFail": 0,
+                "skip": 0,
+                "assertions": 168
+              },
+              "omni": 270,
+              "delegated": 0,
+              "seconds": 25.75,
+              "log": "windows-job-141080099507.log",
+              "logSha256": "884aa940f2c88dcef9f9c41552c8d28704dbe9b7dfe4088d175d498a4360e70e",
+              "failureCountInLog": 1,
+              "passingAckCountInLog": 1
+            },
+            {
+              "host": "macOS",
+              "jobID": 141080099701,
+              "types": "PASS",
+              "tests": {
+                "pass": 1,
+                "causalFail": 1,
+                "invalidFail": 0,
+                "skip": 0,
+                "assertions": 168
+              },
+              "omni": 288,
+              "delegated": 0,
+              "seconds": 10.85,
+              "log": "macos-job-141080099701.log",
+              "logSha256": "ae9d8e293a3c1eccd3d1ef2ae435f09229fd6891cbbf429640bc4e6eebb4d80e",
+              "failureCountInLog": 1,
+              "passingAckCountInLog": 1
+            }
+          ],
+          "cleanup": {
+            "jobID": 141080900103,
+            "conclusion": "success"
+          },
+          "failure": {
+            "file": "modules/maestro/coordination/test/lucy-history-admission-deadline.test.ts",
+            "line": 150,
+            "expected": "error",
+            "received": "completed",
+            "meaning": "An actual native history call was admitted as completed after the real CAS return was suspended past the 30-second call bound, while the original 300-second engagement remained alive."
+          },
+          "controls": [
+            "Real native positive history and CODE before the delayed pair.",
+            "All three real Core reader exits Success, bound to native message/call identity and expected current/ancestor source bytes.",
+            "Exactly one delayed real CAS link observed, second reader finished without second publication; permit wait inferred, not inspected.",
+            "TestClock advances exactly 31,000 ms while the original 300,000 ms budget remains alive and Session execution remains active before release.",
+            "Separate native history completed before the Clock advance and was retained after its ACK was delayed beyond 30 seconds: PASS on all 3 hosts."
+          ],
+          "limits": [
+            "The first case stops at the first late native completed assertion on the baseline; downstream error-reason/receipt-refusal assertions are not exercised there.",
+            "No assertion of zero physical writes; a CAS orphan is permitted.",
+            "No direct inspection of private collector maps or queue; no claim that each individual internal fence has a separately isolated causal test.",
+            "Tracer/FS observer and scripted provider transport are test seams; Git, native Session settlement, actual CAS and public retained evidence are real."
+          ],
+          "runtime_deltas_absent_at_baseline": [
+            {
+              "path": "modules/maestro/coordination/src/v2/tools/review-engagement.ts",
+              "blob": "d3abfcb33d684c922c275b5c2445ac76fadd422d"
+            },
+            {
+              "path": "modules/maestro/coordination/src/v2/workflow/review-engagement-artifact-collector.ts",
+              "blob": "d9d59d07ab69dc3a3f638cb14acc6e290ac70414"
+            },
+            {
+              "path": "modules/maestro/coordination/src/v2/workflow/review-history-evidence.ts",
+              "blob": "207d8b08ba1a1472f558d13ddc84d6323a0fa25b"
+            }
+          ],
+          "repair_green": true,
+          "repair_green_source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+          "repair_green_run": 46179992003
+        },
+        "parent_placement_preparation": {
+          "source": "27075b4189c0f32c6bdf18dec84c8d9b44f934ac",
+          "snapshot": "d3e668c9976e1b856c2e26bf38f72d3c14ac3a1e",
+          "run": 46178075785,
+          "files": [
+            {
+              "path": "packages/core/test/session-parent-placement.test.ts",
+              "bytes": 11333,
+              "sha256": "5805fbf5fb4f1649e25d9d9161e479aa065e3743cc273222dc05e9549899a8fc",
+              "gitBlob": "2dd4570481286332c7a0cede43bfa348c75ca883"
+            },
+            {
+              "path": "docs/specs/lucy/history-parent-placement-contract.md",
+              "bytes": 4382,
+              "sha256": "b64ca1beedfa4ed818a48883f2bc8227605a093fac916a77c7499c2673e3800a",
+              "gitBlob": "eb3c7ba8bf645763637b6d39fe25b909313e1a37"
+            }
+          ],
+          "status": "INVALID PREPARATION: package typing failed on all three hosts before behavioral tests; seven TS2339 observations incorrectly used Info.subdirectory. No RED gate or production authorization resulted.",
+          "jobs": {
+            "linux": 141081202201,
+            "macos": 141081202413,
+            "windows": 141081202440,
+            "cleanup": 141082466551
+          },
+          "cleanup": "success",
+          "classification": "typecheck_failed_tests_not_executed",
+          "behavioral_tests_executed": 0,
+          "causal_behavior_failures_established": 0,
+          "repaired_test": {
+            "path": "packages/core/test/session-parent-placement.test.ts",
+            "bytes": 11298,
+            "sha256": "0b9add39caa495db5d3a6b357f5960dddc27589e6186849ab5b4b01f191da350",
+            "gitBlob": "920fb4addb241e1b6a42a416320858b489ec4b3a"
+          },
+          "repair_scope": "Seven Info.subdirectory reads on five lines become existing Info.subpath; seven cases and expected values unchanged; Created.data.subdirectory is preserved.",
+          "repaired_hosted_gate": "qualified_separately_by_46178957084",
+          "does_not_establish": "No production authorization follows from first preparation failure or static review."
+        },
+        "parent_placement_red": {
+          "kind": "independent-hosted-baseline-review",
+          "status": "QUALIFIED_CAUSAL_RED",
+          "gate": "A05 host-only inherited parent placement",
+          "reviewer": "/root/audit_session_history",
+          "run_id": 46178957084,
+          "source": "afc80c2427d8a83045714c093652f034b42547ab",
+          "snapshot": "8d2b4adb1008079501bb1ce81a3a5e53b34915c7",
+          "production_baseline": "c61824e868dc05464f3bad264f79d47df77d9606",
+          "test_blob": "920fb4addb241e1b6a42a416320858b489ec4b3a",
+          "test_sha256": "0b9add39caa495db5d3a6b357f5960dddc27589e6186849ab5b4b01f191da350",
+          "request_blob": "316ecd4021b9b8727f21550dceb0b3684c1aa8df",
+          "source_delta": [
+            "packages/core/test/session-parent-placement.test.ts",
+            "docs/specs/lucy/history-parent-placement-contract.md"
+          ],
+          "snapshot_delta": [
+            ".ci-run.json",
+            ".github/workflows/test-ci.yml"
+          ],
+          "matrix": [
+            {
+              "host": "linux",
+              "job_id": 141083941579,
+              "types": "PASS",
+              "pass": 2,
+              "fail": 5,
+              "skip": 0,
+              "cases": 7,
+              "files": 1,
+              "seconds": 1.79,
+              "assertions": 129,
+              "omni": 186,
+              "delegated": 0,
+              "timeouts": 0,
+              "log": "a05-placement-red2-linux.log",
+              "log_sha256": "8a7a4f8d7fb3cd88c54bc46bd0dd81e25bca3f39c01d5c2682518e3bd711c7f5",
+              "case_results": [
+                {
+                  "status": "fail",
+                  "name": "parent placement survives a real shallow identity change while default creation still resolves live"
+                },
+                {
+                  "status": "fail",
+                  "name": "parent placement survives a real graft identity change while default creation still resolves live"
+                },
+                {
+                  "status": "fail",
+                  "name": "parent-placement opt-in refuses a root request before creating a row or event"
+                },
+                {
+                  "status": "pass",
+                  "name": "parent-placement opt-in refuses a missing parent without publishing a child"
+                },
+                {
+                  "status": "fail",
+                  "name": "parent-placement opt-in refuses a directory mismatch while default creation preserves that location"
+                },
+                {
+                  "status": "fail",
+                  "name": "parent-placement opt-in refuses a workspace mismatch while default creation preserves that location"
+                },
+                {
+                  "status": "pass",
+                  "name": "parent-placement opt-in keeps an existing Session ID's recorded identity and event"
+                }
+              ]
+            },
+            {
+              "host": "macos",
+              "job_id": 141083941804,
+              "types": "PASS",
+              "pass": 2,
+              "fail": 5,
+              "skip": 0,
+              "cases": 7,
+              "files": 1,
+              "seconds": 5.15,
+              "assertions": 129,
+              "omni": 186,
+              "delegated": 0,
+              "timeouts": 0,
+              "log": "a05-placement-red2-macos.log",
+              "log_sha256": "2ef787767e27044cf64c407623c6cb8c30870017e56982cea7b2b69168408834",
+              "case_results": [
+                {
+                  "status": "fail",
+                  "name": "parent placement survives a real shallow identity change while default creation still resolves live"
+                },
+                {
+                  "status": "fail",
+                  "name": "parent placement survives a real graft identity change while default creation still resolves live"
+                },
+                {
+                  "status": "fail",
+                  "name": "parent-placement opt-in refuses a root request before creating a row or event"
+                },
+                {
+                  "status": "pass",
+                  "name": "parent-placement opt-in refuses a missing parent without publishing a child"
+                },
+                {
+                  "status": "fail",
+                  "name": "parent-placement opt-in refuses a directory mismatch while default creation preserves that location"
+                },
+                {
+                  "status": "fail",
+                  "name": "parent-placement opt-in refuses a workspace mismatch while default creation preserves that location"
+                },
+                {
+                  "status": "pass",
+                  "name": "parent-placement opt-in keeps an existing Session ID's recorded identity and event"
+                }
+              ]
+            },
+            {
+              "host": "windows",
+              "job_id": 141083941826,
+              "types": "PASS",
+              "pass": 2,
+              "fail": 5,
+              "skip": 0,
+              "cases": 7,
+              "files": 1,
+              "seconds": 12.43,
+              "assertions": 129,
+              "omni": 186,
+              "delegated": 0,
+              "timeouts": 0,
+              "log": "a05-placement-red2-windows.log",
+              "log_sha256": "edc8cd63261b4b23b06927480549be593ed0dc40f2b27f6b02aa319fd28eb365",
+              "case_results": [
+                {
+                  "status": "fail",
+                  "name": "parent placement survives a real shallow identity change while default creation still resolves live"
+                },
+                {
+                  "status": "fail",
+                  "name": "parent placement survives a real graft identity change while default creation still resolves live"
+                },
+                {
+                  "status": "fail",
+                  "name": "parent-placement opt-in refuses a root request before creating a row or event"
+                },
+                {
+                  "status": "pass",
+                  "name": "parent-placement opt-in refuses a missing parent without publishing a child"
+                },
+                {
+                  "status": "fail",
+                  "name": "parent-placement opt-in refuses a directory mismatch while default creation preserves that location"
+                },
+                {
+                  "status": "fail",
+                  "name": "parent-placement opt-in refuses a workspace mismatch while default creation preserves that location"
+                },
+                {
+                  "status": "pass",
+                  "name": "parent-placement opt-in keeps an existing Session ID's recorded identity and event"
+                }
+              ]
+            }
+          ],
+          "failure_categories_per_host": [
+            {
+              "count": 2,
+              "case": "shallow/graft",
+              "line": 115,
+              "cause": "Opt-in child still resolves new live Project ID instead of inheriting captured parent Project ID."
+            },
+            {
+              "count": 1,
+              "case": "root request",
+              "line": 139,
+              "cause": "Old API ignores host option and succeeds without a parent instead of returning typed failure."
+            },
+            {
+              "count": 2,
+              "case": "directory/workspace mismatch",
+              "line": 179,
+              "cause": "Old API ignores host option and succeeds at a different location instead of returning typed failure."
+            }
+          ],
+          "positive_controls": [
+            "Real Git two-commit source and changed Project.resolve identity before overlay negative assertions.",
+            "Default, false and different-location creations preserve old live resolution before overlay assertion.",
+            "Missing-parent refusal and existing-ID retry pass."
+          ],
+          "cleanup": {
+            "job_id": 141085032460,
+            "status": "success",
+            "log_reviewed": true
+          },
+          "previous_attempt": {
+            "run_id": 46178075785,
+            "status": "INVALID_PREPARATION",
+            "cause": "Seven Info.subdirectory TS2339 observations; no behavior ran."
+          },
+          "limits": [
+            "Five failures are causal assertions, not setup/type/timeout failures.",
+            "Subsequent deep assertions on new successful child row/event still require GREEN.",
+            "Parent-move pre-transaction race is not directly exercised by this supplement.",
+            "No local typecheck or runtime tests executed."
+          ]
+        },
+        "next_integration_target": {
+          "dev": "8cf8407fbd4508a59ea8465d947d5b06e5c49296",
+          "qualification": "not_qualified_by_prior_runs",
+          "source_review": "Lead reports no Lucy path overlap; FS/Omni dependencies independently source-reviewed.",
+          "runtime_repairs": "local implementation after qualified gates; no GREEN or merge asserted.",
+          "historical": true,
+          "resolution": "Integrated in source 0076ad37; Core/Main GREEN3 and partial preservation are separately recorded. Not merged."
+        },
+        "focused_core_main_green": true,
+        "core_green3": {
+          "source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+          "snapshot": "a1d6cc5ba999fb971caf7f1cce3e7893749c992c",
+          "run": 46179990737,
+          "files": 9,
+          "types": "pass all three",
+          "hosts": [
+            {
+              "platform": "linux",
+              "job": 141087138061,
+              "pass": 65,
+              "fail": 0,
+              "skip": 0,
+              "assertions": 529,
+              "omni": 327,
+              "delegated": 0,
+              "seconds": 19.43
+            },
+            {
+              "platform": "windows",
+              "job": 141087138340,
+              "pass": 63,
+              "fail": 0,
+              "skip": 0,
+              "assertions": 444,
+              "omni": 297,
+              "delegated": 0,
+              "seconds": 28.1
+            },
+            {
+              "platform": "macos",
+              "job": 141087138255,
+              "pass": 62,
+              "fail": 0,
+              "skip": 0,
+              "assertions": 443,
+              "omni": 297,
+              "delegated": 0,
+              "seconds": 14.67
+            }
+          ],
+          "cleanup": {
+            "job": 141088575354,
+            "result": "success"
+          },
+          "limits": [
+            "R8 concurrent compiler and native read jail positive proof is Linux-specific; unsupported guards elsewhere are not equivalent.",
+            "Placement seven cases passed on all hosts; pre-transaction move race remains source-reviewed, not directly injected."
+          ]
+        },
+        "main_green3": {
+          "source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+          "snapshot": "5a1dfc8627f5abebfc6229e4332e0550649196b6",
+          "run": 46179992003,
+          "files": 11,
+          "types": "pass all three",
+          "hosts": [
+            {
+              "platform": "linux",
+              "job": 141087141817,
+              "pass": 59,
+              "fail": 0,
+              "skip": 0,
+              "assertions": 15366,
+              "omni": 6676,
+              "delegated": 0,
+              "seconds": 244.51
+            },
+            {
+              "platform": "macos",
+              "job": 141087142051,
+              "pass": 59,
+              "fail": 0,
+              "skip": 0,
+              "assertions": 15373,
+              "omni": 6637,
+              "delegated": 0,
+              "seconds": 226.77
+            },
+            {
+              "platform": "windows",
+              "job": 141087142138,
+              "pass": 59,
+              "fail": 0,
+              "skip": 0,
+              "assertions": 15380,
+              "omni": 6083,
+              "delegated": 0,
+              "seconds": 495.52
+            }
+          ],
+          "state": "Main eleven-file selection GREEN independently confirmed on all three; broader preservation separate",
+          "cleanup": {
+            "job": 141089932641,
+            "result": "success"
+          },
+          "limits": [
+            "Bun eager directory enumeration host allocation remains open.",
+            "H07 callback lifetime is proven with controlled seams; no separately suspended real Git child interruption claim.",
+            "Full-call deadline and later ACK assertions now observed GREEN on all three."
+          ]
+        },
+        "preservation_green3": {
+          "source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+          "snapshot": "e9ba40cedf386f4a0596a191cbebcbbc519d0cde",
+          "run": 46180600651,
+          "files": 23,
+          "types": "pass all three",
+          "hosts": [
+            {
+              "platform": "linux",
+              "job": 141089051360,
+              "pass": 122,
+              "fail": 0,
+              "skip": 0,
+              "assertions": 23973,
+              "omni": 13003,
+              "delegated": 0,
+              "seconds": 251.15
+            },
+            {
+              "platform": "macos",
+              "job": 141089051355,
+              "pass": 122,
+              "fail": 0,
+              "skip": 0,
+              "assertions": 21785,
+              "omni": 12878,
+              "delegated": 0,
+              "seconds": 421.34
+            },
+            {
+              "platform": "windows",
+              "job": 141089051103,
+              "pass": 121,
+              "fail": 1,
+              "skip": 0,
+              "assertions": 21758,
+              "omni": 10630,
+              "delegated": 0,
+              "seconds": 539.14,
+              "failure": "lucy-governed-round.test.ts default 5000ms timeout; 5000.88ms; no failing assertion observed"
+            }
+          ],
+          "cleanup": {
+            "job": 141091855509,
+            "result": "success"
+          },
+          "state": "Linux/macOS selected preservation GREEN; Windows original gate FAILED. Paired unchanged-file base/candidate runs both timed out; blocked await and additional candidate effect remain unresolved.",
+          "limits": [
+            "Native scoped TypeScript and oxlint positive analysis qualification is platform-specific; portable refusal controls elsewhere are not positive native proof.",
+            "No complete H10/A05/final GO claim."
+          ]
+        },
+        "guards_green3": [
+          {
+            "run": 46179962334,
+            "name": "atlas-guard",
+            "source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+            "conclusion": "success"
+          },
+          {
+            "run": 46179962338,
+            "name": "guards",
+            "source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+            "conclusion": "success"
+          }
+        ],
+        "production_files": [
+          {
+            "path": "modules/maestro/coordination/src/v2/tools/review-engagement.ts",
+            "bytes": 20076,
+            "sha256": "a55c882abc151a96c774cb2996f6a4cd1c908974cbfa18fde056b23188ca5e64",
+            "gitBlob": "57e0556bb31fbaaed05b69677d76ef02688bc5fc"
+          },
+          {
+            "path": "modules/maestro/coordination/src/v2/tools/review-engagement-evidence.ts",
+            "bytes": 3537,
+            "sha256": "97c7f9e808290f00303e48bbcda940f0bfbef0521d5992bfa4c2e1266abac865",
+            "gitBlob": "ef23c052e1ee571760d9c2acc2bcfd1a5392ad7d"
+          },
+          {
+            "path": "modules/maestro/coordination/src/v2/tools/review-fix-request.ts",
+            "bytes": 17978,
+            "sha256": "94ac245d05751dea20075870a78745ee0b6753f0d544605db86e768a32277269",
+            "gitBlob": "80d1b6a76f0fc3edc41f2ead26ed260edfffb65d"
+          },
+          {
+            "path": "modules/maestro/coordination/src/v2/workflow/review-fanout-support.ts",
+            "bytes": 12573,
+            "sha256": "7e73d47ee823d50641ddc1ad512a5db51c36aa0812e88452c5ab974b30c29053",
+            "gitBlob": "486d6b97620fa82ff5a39e42dfd81785da315d70"
+          },
+          {
+            "path": "modules/maestro/coordination/src/v2/workflow/review-fanout.ts",
+            "bytes": 43042,
+            "sha256": "97b155e6668d36bb5bdf01b8cc649a2d46013e45fa670ae2196b852a6b958d1d",
+            "gitBlob": "f79abe77d5f866828153ed6d35a23bb3eaeb94c7"
+          },
+          {
+            "path": "modules/maestro/coordination/src/v2/workflow/review-engagement-report.ts",
+            "bytes": 14108,
+            "sha256": "fd2155bde64bef7a590fb4775c6069644de11e40ff7337dfd0903fb40cb36587",
+            "gitBlob": "5f30390690774d333d2541b176d5e86e9a59a8b1"
+          },
+          {
+            "path": "modules/maestro/coordination/src/v2/workflow/review-history-evidence.ts",
+            "bytes": 10312,
+            "sha256": "7eb2a428faeaa098d3bdf741fc3ca6429d413f8778a3ef236db8f6cbaf7557e3",
+            "gitBlob": "caa5ff188a2729117edf7f300f1971e1d4bfbaf8"
+          },
+          {
+            "path": "modules/maestro/coordination/src/v2/workflow/review-engagement-artifact-schema.ts",
+            "bytes": 9829,
+            "sha256": "d44ce60a7bf0bd5306161c4c6ccee26ca909f518d8e0ae79169989257e4e362e",
+            "gitBlob": "4c5afb9f75a0b3032ca1d0ec0b17d9dd699594dd"
+          },
+          {
+            "path": "modules/maestro/coordination/src/v2/workflow/review-engagement-artifact-collector.ts",
+            "bytes": 41117,
+            "sha256": "6f0c6babf828d4c1a86485138e5182b405ac64b5aa01dbebaeee551f51c6ae69",
+            "gitBlob": "6f4c48a2f6dc54c2fa9701803dd88ac9b9e7752f"
+          },
+          {
+            "path": "modules/maestro/coordination/src/v2/workflow/review-engagement-artifact-validation.ts",
+            "bytes": 29844,
+            "sha256": "e50506a887820451bac21d765383f3f87c319451fa66f84f143498b09e885293",
+            "gitBlob": "f108f7bd38b52d9faef6ba27fcbda90e97504090"
+          },
+          {
+            "path": "modules/maestro/coordination/src/v2/workflow/review-engagement-artifacts.ts",
+            "bytes": 19548,
+            "sha256": "5c3a2f127df470a308624b4c5521638fd67125388ce76989f95b1b59e1ebc7ce",
+            "gitBlob": "79d5bf10e45ab2cb6870787ebc1815ca06d6e848"
+          },
+          {
+            "path": "modules/maestro/coordination/src/v2/workflow/review-fix-artifacts.ts",
+            "bytes": 9252,
+            "sha256": "f3004870d3b4458a3e0f3b9f4b25d016c33c03f8af0521b15b085c9c0e54e736",
+            "gitBlob": "ec8aa32ed8cfaaf4997ccef1688d59f7793bc7d9"
+          },
+          {
+            "path": "packages/core/src/review-toolkit/scoped-history.ts",
+            "bytes": 29285,
+            "sha256": "d06224addad7b2b6295ef4c551d41d8acfe62fe69c6db9ea4969635cf74f1424",
+            "gitBlob": "b82a4e19424699390ea4cce03c497e46754c9b5f"
+          },
+          {
+            "path": "packages/core/src/review/tools.ts",
+            "bytes": 12610,
+            "sha256": "98207fb0f985d8f0bf656ce723b7e7b4bf66e07b289875772484f59cae66c952",
+            "gitBlob": "d028f4b75863ec868e8da9d99e1a56235872cb58"
+          },
+          {
+            "path": "packages/core/src/review-toolkit/index.ts",
+            "bytes": 626,
+            "sha256": "2cc44ecf51c6fd41436415cdbda094d81819054b5054e46bca6f9049e35ad156",
+            "gitBlob": "0c7567634ae4be96a1836801a64ca544652c8c03"
+          },
+          {
+            "path": "packages/core/src/research-toolkit/process.ts",
+            "bytes": 7044,
+            "sha256": "ea9584f2f94708375ad9375ff7a117e2dfaf74971825646f690bbe289eb68ee5",
+            "gitBlob": "7ae3b2018de1e78f9579f46bf01771284d004d13"
+          },
+          {
+            "path": "packages/core/src/session.ts",
+            "bytes": 40508,
+            "sha256": "c2bf47268e09a61b8b3a676fb787b64d24010184bb1634cedb8c6282ff7dd2db",
+            "gitBlob": "f98c801357449916bb24186c349a42fc1fc3503c"
+          }
+        ],
+        "frozen_acceptance_files": [
+          {
+            "path": "modules/maestro/coordination/test/fixture/lucy-history.ts",
+            "bytes": 10208,
+            "sha256": "2d3cbc345cb239d0e301c52f993594c98ccdfae3afec0bbcf7fd50825ba0efa5",
+            "gitBlob": "21f8530c275480c644e34e520bd7cb5b9adf6229"
+          },
+          {
+            "path": "modules/maestro/coordination/test/lucy-history-boundaries.test.ts",
+            "bytes": 17117,
+            "sha256": "28a0cbf9dea0aa1793cc7307d69d093e3b20a299d2cde77aad5c9e5bf242d576",
+            "gitBlob": "00f4c00e5451412b50a42b18e9783d27dfb0bb71"
+          },
+          {
+            "path": "modules/maestro/coordination/test/lucy-history-bounds.test.ts",
+            "bytes": 6741,
+            "sha256": "443fd7dc6b07733ef555a3ef660566432efaca680e4573ee306757b5443a067e",
+            "gitBlob": "7e2f70ed44006c5214d1ee151a1301094e1c01fd"
+          },
+          {
+            "path": "modules/maestro/coordination/test/lucy-history-evidence.test.ts",
+            "bytes": 12280,
+            "sha256": "d3656fa736bceeb7abd09893301b8a684c4ed6457b26d9a3301dab18067a92dd",
+            "gitBlob": "84a42eede50101eabc0b88cfc0cf7fef67b28d3a"
+          },
+          {
+            "path": "modules/maestro/coordination/test/lucy-history-lifetime.test.ts",
+            "bytes": 6740,
+            "sha256": "3c3fdbbdc2e3945960ca27271441cd19a2627f222417e48cc801dabaedb85427",
+            "gitBlob": "12b2ca19d8195c51f86db158bebecfa516877e2c"
+          },
+          {
+            "path": "modules/maestro/coordination/test/lucy-history-public.test.ts",
+            "bytes": 10118,
+            "sha256": "8d10e27d67507598ae31c4ac4cd2aedb4ea7b86eca5540841cd7bccdf67a65a7",
+            "gitBlob": "96f9cba3f1acb1ca5e1c27261cb4b067ad2bcdcf"
+          },
+          {
+            "path": "modules/maestro/coordination/test/lucy-history-quota.test.ts",
+            "bytes": 7110,
+            "sha256": "2ca7aab0030e9e2521129764e141a8cc15fb4bb4e7e58a68d16f4b16ee4c6f8c",
+            "gitBlob": "5f2d74c192c33e304402d70eeb884fc40e1cda39"
+          },
+          {
+            "path": "modules/maestro/coordination/test/lucy-history-scopes.test.ts",
+            "bytes": 7024,
+            "sha256": "840fa81d009a87f7ad71e9f03e45c71bc6e909aaa171786ba6a7f591fea32284",
+            "gitBlob": "0c92e6468ef702b196b6288f13084a5ac67fe5bc"
+          },
+          {
+            "path": "modules/maestro/coordination/test/lucy-history-tail-proof.test.ts",
+            "bytes": 7392,
+            "sha256": "56d8a4f6fb361d5a0f4833e65ffd54153c56adcd7488cbb791155734c9c5680e",
+            "gitBlob": "2260556785ba1802a05ecc137ff900b5fb3489b7"
+          },
+          {
+            "path": "packages/core/test/research-process-capture.test.ts",
+            "bytes": 4501,
+            "sha256": "afd2f0f6f6b7c1c8a8ce03e1179045d68bc4145368e79aa9516faac8b36fa2ee",
+            "gitBlob": "98a4b9d5ada577b0e5a52b8d8e4bd44bd937960b"
+          },
+          {
+            "path": "modules/maestro/coordination/test/lucy-engagement-public.test.ts",
+            "bytes": 13311,
+            "sha256": "30db2be9123fc862b975a66981b16b9f8691fb52c5aa6375aa30c433dc8105a5",
+            "gitBlob": "2486d7d188075067cd12c70108900663bacb5d4e"
+          },
+          {
+            "path": "modules/maestro/coordination/test/lucy-history-fix-proof.test.ts",
+            "bytes": 9377,
+            "sha256": "6a07d144dbe511da8cbbb6ab010864167e98eb1e5e1c5a44518ffecbc6c3ff28",
+            "gitBlob": "988517698d13b11d47a8f1ddaf4c775a48d697d1"
+          },
+          {
+            "path": "modules/maestro/coordination/test/fixture/lucy-engagement.ts",
+            "bytes": 23463,
+            "sha256": "47e42d3ef0fa2739f2dbf41093cc023ce6fe3e139387634319be98e3d70e356c",
+            "gitBlob": "b18a5b94372de8df6c05ba22851e3bd870ad1b9e"
+          },
+          {
+            "path": "modules/maestro/coordination/test/lucy-history-admission-deadline.test.ts",
+            "bytes": 13844,
+            "sha256": "fe8bc3854a5349a7e38b9bb2c1b8126fcca1ae006fb933a8e596bbaa38b0bac2",
+            "gitBlob": "843984a62c4955078f71e0d95d003427456edb6b"
+          },
+          {
+            "path": "packages/core/test/session-parent-placement.test.ts",
+            "bytes": 11298,
+            "sha256": "0b9add39caa495db5d3a6b357f5960dddc27589e6186849ab5b4b01f191da350",
+            "gitBlob": "920fb4addb241e1b6a42a416320858b489ec4b3a"
+          }
+        ],
+        "landing_blockers": [
+          {
+            "id": "A05-DIRECTORY-AUTHORITY",
+            "state": "open",
+            "document": "docs/specs/lucy/engagement-history-open-findings.md",
+            "source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+            "blob": "b82a4e19424699390ea4cce03c497e46754c9b5f",
+            "classification": "source-derived concurrent parent replacement/restoration limitation; no exploit or output leak demonstrated"
+          },
+          {
+            "id": "A05-HOST-ENUMERATION",
+            "state": "open",
+            "document": "docs/specs/lucy/engagement-history-open-findings.md",
+            "source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+            "classification": "accepted-entry/copy bounds do not bound earlier eager host allocation; no OOM observed"
+          }
+        ],
+        "profile_crosswalk": {
+          "document": "docs/specs/lucy/engagement-profile-qualification.md",
+          "source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+          "main_native_h08_cases": 14,
+          "native_h08_own_leaf_positive_cases": 12,
+          "native_h08_child_code_positive_cases": 2,
+          "native_variant_preservation_cases": 13,
+          "scope_complete": false
+        },
+        "windows_timeout_diagnosis": {
+          "base": {
+            "classification": "VALID_EXECUTION_TIMEOUT_ON_UNMODIFIED_BASE_NOT_SETUP_OR_ASSERTION_RED",
+            "source": "8cf8407fbd4508a59ea8465d947d5b06e5c49296",
+            "snapshot": "2dd921cacbb8535c45d3dd07939cbcffdceb62cb",
+            "run_id": 46181796099,
+            "job_id": 141092791972,
+            "host": "Windows",
+            "setup": "PASS",
+            "types": "PASS",
+            "cases": 1,
+            "files": 1,
+            "pass": 0,
+            "fail": 1,
+            "timeouts": 1,
+            "skipped": 0,
+            "assertions": null,
+            "assertions_note": "Bun did not emit an expect() count in this isolated timeout log. No zero-count inference.",
+            "seconds": 8.19,
+            "omni_spawns": 128,
+            "delegated": 0,
+            "omni_control": "focused: no declaring test ran; actual spawn counts present, no declared fixture-positive claim",
+            "failure": {
+              "file": "modules/maestro/coordination/test/lucy-governed-round.test.ts",
+              "name": "registered plan APPROVE then code FIX_FIRST keeps the host round when the prior card is forged or absent",
+              "observed_ms": 5015.19,
+              "limit_ms": 5000,
+              "assertion_mismatch": false,
+              "stack_or_blocked_await": "not reported"
+            },
+            "test_identity": {
+              "git_blob": "178220b2841aca0a19d3b275ec9ba21ebd6c756e",
+              "sha256": "cc1058a4b66cdbffec6f4fa29cfcc4a659f5336ea8322a9ba51924c99828c316",
+              "bytes": 11765,
+              "independent_fetch_same_blob_and_content_at": [
+                "8cf8407fbd4508a59ea8465d947d5b06e5c49296",
+                "2dd921cacbb8535c45d3dd07939cbcffdceb62cb",
+                "0076ad37e7adb98746f63b0f95a8431a7a552b29"
+              ]
+            },
+            "request": {
+              "git_blob": "035f2963da46ee36c32ad3d5bb30932640c07cb7",
+              "args": [
+                "./test/lucy-governed-round.test.ts"
+              ],
+              "env": {}
+            },
+            "snapshot_delta": [
+              {
+                "path": ".ci-run.json",
+                "additions": 10,
+                "deletions": 0
+              },
+              {
+                "path": ".github/workflows/test-ci.yml",
+                "additions": 5,
+                "deletions": 0
+              }
+            ],
+            "log_sha256": "378257801d250daae369e03257026b2841d7b9c2088a3d35b20bc7f2b903a3d0",
+            "cleanup": {
+              "job_id": 141093249715,
+              "conclusion": "success"
+            },
+            "run_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46181796099",
+            "job_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46181796099/job/141092791972",
+            "limits": [
+              "No assertion mismatch or blocked await reported.",
+              "Same timeout occurs without A05; additional candidate effects are not excluded.",
+              "Original broad Windows preservation remains failed."
+            ]
+          },
+          "candidate": {
+            "classification": "VALID_CANDIDATE_EXECUTION_TIMEOUT_REPRODUCED_ON_UNMODIFIED_BASE",
+            "source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+            "snapshot": "9ef8d82486d1fb95b969175491e3395ff9d53f9d",
+            "run_id": 46181797487,
+            "job_id": 141092796222,
+            "host": "Windows",
+            "setup": "PASS",
+            "types": "PASS",
+            "cases": 1,
+            "files": 1,
+            "pass": 0,
+            "fail": 1,
+            "timeouts": 1,
+            "skipped": 0,
+            "assertions": null,
+            "assertions_note": "Bun did not emit an expect() count; no zero-count inference.",
+            "seconds": 7.51,
+            "omni_spawns": 149,
+            "delegated": 0,
+            "omni_control": "pass (focused: no declaring test ran); observed spawn count is not a declared fixture-positive qualification",
+            "failure": {
+              "file": "modules/maestro/coordination/test/lucy-governed-round.test.ts",
+              "name": "registered plan APPROVE then code FIX_FIRST keeps the host round when the prior card is forged or absent",
+              "observed_ms": 5009.68,
+              "limit_ms": 5000,
+              "assertion_mismatch_reported": false,
+              "stack_or_blocked_await": "not reported"
+            },
+            "test_identity": {
+              "git_blob": "178220b2841aca0a19d3b275ec9ba21ebd6c756e",
+              "bytes": 11765,
+              "sha256": "cc1058a4b66cdbffec6f4fa29cfcc4a659f5336ea8322a9ba51924c99828c316",
+              "sameContentAtSourceAndSnapshot": true
+            },
+            "request": {
+              "git_blob": "035f2963da46ee36c32ad3d5bb30932640c07cb7",
+              "args": [
+                "./test/lucy-governed-round.test.ts"
+              ],
+              "env": {},
+              "timeout_override": false
+            },
+            "snapshot_delta": [
+              {
+                "path": ".ci-run.json",
+                "additions": 10,
+                "deletions": 0
+              },
+              {
+                "path": ".github/workflows/test-ci.yml",
+                "additions": 5,
+                "deletions": 0
+              }
+            ],
+            "log_sha256": "3740d0a20b385b77114d1a0b32f84dd3a16f664a2806cf9bd6f5d23ef075f251",
+            "cleanup": {
+              "job_id": 141093175524,
+              "conclusion": "success",
+              "sha256": "de358ac59b51437010bf7b3f129f9e3445be8c77bbf3ad24cf158270b1d96c2e"
+            },
+            "run_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46181797487",
+            "job_url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46181797487/job/141092796222",
+            "limits": [
+              "No assertion mismatch or blocked await reported.",
+              "Same timeout occurs without A05; additional candidate effects are not excluded.",
+              "Original broad Windows preservation remains failed."
+            ]
+          }
+        }
+      },
+      "accepted_profile_boundaries": [
+        "History/forensics for audit and diligence lead only; artifact is profile-not-applicable.",
+        "Routed lenses, verifiers and variants do not inherit history/forensics; existing actually routed knowledge remains in scope.",
+        "Audit at most three variant generations and half-noise stop; diligence/artifact zero variants.",
+        "New independent engagements refuse Atlas; previously admitted routes remain preservation obligations.",
+        "No separate forensic child or live delivery/network ingestion is introduced. Delivery records are conditional on already authorized evidence.",
+        "R20 behavioral evaluation needs owner permission; ISO/SOC 2 stays inferred, with no certification or developer scoring."
+      ],
+      "remaining_after_focused_green": [
+        "Resolve stable source-directory authority during object acquisition and bound host enumeration before admission. Freeze a deterministic hosted supplement against the existing contract before changing production; pathname checks after the read do not establish continuous authority.",
+        "Retain Core/Main GREEN3 and all earlier preparation/RED/failure observations at their exact source. Preserve the failed Windows 23-file gate and the unchanged-file base/candidate diagnosis; do not replace a timeout with causal RED or silently extend its limit.",
+        "Use engagement-profile-qualification.md to link missing native own-leaf and sibling-negative evidence for lens/verifier/security-agents/variant, audit-to-diligence, diligence-to-variant and artifact-to-audit/compliance, plus skill-load budgets and transcript isolation. Search existing evidence before adding acceptance.",
+        "Qualify complete per-profile reports with paths, time window, sources and limits for forensic observations and inferred ISO/SOC 2. Four history operators and a loaded leaf do not establish those semantics.",
+        "Preserve actual native variant generations/half-noise/budgets and zero diligence/artifact variants, existing PR/governed/Atlas routes, original grants and durable bytes; then inspect production CLI/Desktop knowledge and run final authenticated Grok/integrated epic at the final source.",
+        "Keep the separately suspended native Git interruption observation explicitly unproved. Artifact history N/A, role history refusal, no new forensic child, no live delivery ingestion and R20 owner permission remain accepted boundaries, not missing features."
+      ],
+      "current_pr_head_observed": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+      "current_production_source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+      "focused_core_main_green": true,
+      "landing_allowed": false
     },
     "compliance": {
       "state": "open_contract_not_frozen",
@@ -5979,5 +7253,42 @@
     "coverage_matrix": 29,
     "original_tools": 83,
     "additional_compliance_tools": 4
+  },
+  "a05_evidence_update": {
+    "document_source": "0076ad37e7adb98746f63b0f95a8431a7a552b29",
+    "scope": "A05 current state, exact GREEN3, failed Windows preservation/diagnosis, source blockers and profile crosswalk; other qualification rows remain unchanged.",
+    "last_completed_run_recorded": 46181797487,
+    "other_ledger_as_of_preserved": "2026-11-28T14:28:57.335789-03:00",
+    "focused_core_main_green": true,
+    "complete_green": false,
+    "landing_allowed": false,
+    "final_go": false,
+    "recorded_at": "2026-11-28T16:50:42-03:00"
+  },
+  "observed_dev_history": [
+    {
+      "sha": "f469755b33bb478693d2d1dae022c010c2e47ebc",
+      "tree": "35b06ee13392dbb6e547b88a050dfa1681b99d0e",
+      "relationship": "Observed after the integration baseline; no Lucy path overlap in the two-file delta.",
+      "changed_paths": [
+        "packages/script/test/test-plan.test.ts",
+        "modules/capability-assets/requirements-dev.txt"
+      ],
+      "qualification_effect": "Use the current integrated source for the next hosted packet. This observation does not requalify previously tested source.",
+      "script_test_change": {
+        "commit": "885905c5bcfe77593d074ae10e64d6efa9d3c410",
+        "claim": "A later script test correction exists; the older script type error is not carried forward as an unresolved current defect without checking that correction."
+      }
+    }
+  ],
+  "later_dev_after_a05_qualification": {
+    "sha": "9ae228e403290533e184c2493f4dad32daf51b3e",
+    "tree": "d7f3f4428954c149c0de8910d98c8d52d9d5552c",
+    "parent": "8cf8407fbd4508a59ea8465d947d5b06e5c49296",
+    "changed_paths": [
+      "packages/app-shell/e2e/regression/prompt-input-bytes.spec.ts"
+    ],
+    "included_in_a05_candidate": false,
+    "qualified_by_a05_runs": false
   }
 }
