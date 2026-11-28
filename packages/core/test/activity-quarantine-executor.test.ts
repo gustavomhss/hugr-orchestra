@@ -65,4 +65,21 @@ describe("quarantine executor", () => {
     expect(await ActivityQuarantineExecutor.executeEmpty({ ...adapter, prepare: async (item) => item.id === "two" ? undefined : adapter.prepare(item, "empty") }, targets, rows)).toBe("Refused")
     expect(calls).toEqual(["prepare:one"])
   })
+
+  test("releases held handles for the whole batch when one preparation refuses", async () => {
+    const targets = [target, { ...target, id: "two" }]
+    const rows = targets.map((item) => ({ id: item.id, kind: "quarantine" as const, state: "ready" as const }))
+    const released: string[] = []
+    const adapter: ActivityQuarantineExecutor.Adapter = {
+      prepare: async (item) => ({
+        facts: after,
+        claimant: item.id === "one" ? "absent" : "unknown",
+        mutation: async () => { throw new Error("refused batch must not mutate") },
+        release: async () => { released.push(item.id) },
+      }),
+      reread: async () => after,
+    }
+    expect(await ActivityQuarantineExecutor.executeEmpty(adapter, targets, rows)).toBe("Refused")
+    expect(released).toEqual(["two", "one"])
+  })
 })
