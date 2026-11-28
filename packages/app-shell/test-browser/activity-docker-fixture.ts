@@ -17,11 +17,11 @@ mock.module(Bun.resolveSync("@/context/server-sdk", import.meta.dir) + "?activit
     return sdk
   },
 }))
+const { PlatformProvider }: typeof import("@/context/platform") = await load("@/context/platform")
+const { LanguageProvider, useLanguage }: typeof import("@/context/language") = await load("@/context/language")
 const { default: ActivityPage }: typeof import("@/orchestra/chapters/activity/page") = await load(
   "@/orchestra/chapters/activity/page",
 )
-const { LanguageProvider, useLanguage }: typeof import("@/context/language") = await load("@/context/language")
-const { PlatformProvider }: typeof import("@/context/platform") = await load("@/context/platform")
 
 export const cachePath = "/api/activity/docker"
 export const readPath = "/api/activity/docker/read"
