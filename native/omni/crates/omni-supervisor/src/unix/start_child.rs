@@ -34,31 +34,31 @@ impl Sup {
                     p.restrict();
                 }
                 match s.pty {
-                None => {
-                    let mut it = fds.iter().map(AsFd::as_fd);
-                    let stdin = if s.stdin == Slot::Pipe { it.next() } else { None };
-                    let (stdout, stderr) = (it.next(), it.next());
-                    let stdout = stdout.ok_or_else(|| Fail::new(FailCode::Invalid, 0, "no stdout".into()))?;
-                    #[cfg(target_os = "linux")]
-                    if let Some(isolation) = &self.isolation {
-                        let (pid, member) = isolation.spawn(&p, stdin, stdout, stderr.unwrap_or(stdout))?;
-                        return Ok((pid, None, Exec::Running, Some(member)));
+                    None => {
+                        let mut it = fds.iter().map(AsFd::as_fd);
+                        let stdin = if s.stdin == Slot::Pipe { it.next() } else { None };
+                        let (stdout, stderr) = (it.next(), it.next());
+                        let stdout = stdout.ok_or_else(|| Fail::new(FailCode::Invalid, 0, "no stdout".into()))?;
+                        #[cfg(target_os = "linux")]
+                        if let Some(isolation) = &self.isolation {
+                            let (pid, member) = isolation.spawn(&p, stdin, stdout, stderr.unwrap_or(stdout))?;
+                            return Ok((pid, None, Exec::Running, Some(member)));
+                        }
+                        let pid = spawn::spawn_pipe(&p, stdin, stdout, stderr.unwrap_or(stdout))?;
+                        Ok((pid, None, Exec::Running, None::<Member>))
                     }
-                    let pid = spawn::spawn_pipe(&p, stdin, stdout, stderr.unwrap_or(stdout))?;
-                    Ok((pid, None, Exec::Running, None::<Member>))
-                }
-                Some((cols, rows)) => {
-                    #[cfg(target_os = "linux")]
-                    if self.isolation.is_some() {
-                        return Err(Fail::new(
-                            FailCode::Invalid,
-                            0,
-                            "isolated mode does not admit PTY commands".into(),
-                        ));
+                    Some((cols, rows)) => {
+                        #[cfg(target_os = "linux")]
+                        if self.isolation.is_some() {
+                            return Err(Fail::new(
+                                FailCode::Invalid,
+                                0,
+                                "isolated mode does not admit PTY commands".into(),
+                            ));
+                        }
+                        let (pid, master, held) = fork::spawn_pty(&p, cols, rows)?;
+                        Ok((pid, Some(master), Exec::Held(held), None))
                     }
-                    let (pid, master, held) = fork::spawn_pty(&p, cols, rows)?;
-                    Ok((pid, Some(master), Exec::Held(held), None))
-                }
                 }
             })
         };

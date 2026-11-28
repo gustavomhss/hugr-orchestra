@@ -63,7 +63,9 @@ pub(super) fn excludes_group(gid: u32) -> std::io::Result<bool> {
         return Err(std::io::Error::last_os_error());
     }
     let bytes = len as usize;
-    if bytes > groups.len() * std::mem::size_of::<libc::gid_t>() || !bytes.is_multiple_of(std::mem::size_of::<libc::gid_t>()) {
+    if bytes > groups.len() * std::mem::size_of::<libc::gid_t>()
+        || !bytes.is_multiple_of(std::mem::size_of::<libc::gid_t>())
+    {
         return Err(std::io::Error::other("invalid peer groups"));
     }
     groups.truncate(bytes / std::mem::size_of::<libc::gid_t>());

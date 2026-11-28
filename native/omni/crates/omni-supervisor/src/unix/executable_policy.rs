@@ -46,7 +46,11 @@ impl ExecutablePolicy {
     }
 
     pub(super) fn admit(&self, program: &CStr) -> Result<(), Fail> {
-        if self.programs.iter().any(|allowed| allowed.as_slice() == program.to_bytes()) {
+        if self
+            .programs
+            .iter()
+            .any(|allowed| allowed.as_slice() == program.to_bytes())
+        {
             return Ok(());
         }
         Err(Fail::new(FailCode::Invalid, 0, "executable is not authorized".into()))

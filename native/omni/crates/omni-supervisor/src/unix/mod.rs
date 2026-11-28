@@ -11,9 +11,9 @@
 
 mod chan;
 mod diag;
-mod exits;
 #[cfg(target_os = "linux")]
 mod executable_policy;
+mod exits;
 mod footprint;
 mod fork;
 #[cfg(target_os = "linux")]
@@ -100,7 +100,10 @@ impl Sup {
         #[cfg(target_os = "linux")]
         let watch = peer::host_watch(args, isolation.as_ref())?;
         #[cfg(target_os = "linux")]
-        let executable_policy = args.isolated_peer_uid.map(|_| executable_policy::ExecutablePolicy::load()).transpose()?;
+        let executable_policy = args
+            .isolated_peer_uid
+            .map(|_| executable_policy::ExecutablePolicy::load())
+            .transpose()?;
         #[cfg(not(target_os = "linux"))]
         let watch = HostWatch::arm(i32::try_from(args.host_pid).map_err(std::io::Error::other)?);
         let chan = Chan::new(take_channel()?)?;
