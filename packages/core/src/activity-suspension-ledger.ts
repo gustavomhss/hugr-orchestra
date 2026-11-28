@@ -67,7 +67,7 @@ export function make(database: Database.Interface, ownerIncarnation: string): In
         target: ActivitySuspensionLedgerTable.tree_id,
         set: row,
       }).run()
-      return project(row, ownerIncarnation)
+      return project(row)
     }), { behavior: "immediate" })
   }
   return {
@@ -96,27 +96,40 @@ export function make(database: Database.Interface, ownerIncarnation: string): In
         const settled = { ...row, phase, suspended, uncertain, pending: null, owner_incarnation: null }
         yield* tx.update(ActivitySuspensionLedgerTable).set(settled)
           .where(eq(ActivitySuspensionLedgerTable.tree_id, input.scope.treeID)).run()
-        return project(settled, ownerIncarnation)
+        return project(settled)
       }), { behavior: "immediate" })
     },
     read(treeID) {
       return database.db.transaction((tx) => Effect.gen(function* () {
         const row = yield* tx.select().from(ActivitySuspensionLedgerTable)
           .where(eq(ActivitySuspensionLedgerTable.tree_id, treeID)).get()
-        return row ? project(row, ownerIncarnation) : undefined
+        if (!row) return undefined
+        const abandoned = row.pending
+        if (!abandoned || row.owner_incarnation === ownerIncarnation) return project(row)
+        // Persist the fence before treating this attempt as abandoned so a late receipt cannot settle it.
+        const settled = {
+          ...row,
+          phase: "unknown" as const,
+          suspended: row.suspended.filter((member) => !abandoned.members.includes(member)),
+          uncertain: [...row.uncertain, ...abandoned.members],
+          pending: null,
+          owner_incarnation: null,
+        }
+        yield* tx.update(ActivitySuspensionLedgerTable).set(settled)
+          .where(eq(ActivitySuspensionLedgerTable.tree_id, treeID)).run()
+        return project(settled)
       }), { behavior: "immediate" })
     },
   }
 }
 
-function project(row: typeof ActivitySuspensionLedgerTable.$inferSelect, ownerIncarnation: string): Record {
-  const abandoned = !!row.pending && row.owner_incarnation !== ownerIncarnation
+function project(row: typeof ActivitySuspensionLedgerTable.$inferSelect): Record {
   return {
     markID: row.mark_id,
     scope: { treeID: row.tree_id, generation: row.generation },
-    phase: abandoned ? "unknown" : row.phase,
-    suspended: abandoned ? row.suspended.filter((member) => !row.pending?.members.includes(member)) : row.suspended,
-    uncertain: abandoned ? [...row.uncertain, ...(row.pending?.members ?? [])] : row.uncertain,
-    ...(row.pending && !abandoned ? { pending: row.pending } : {}),
+    phase: row.phase,
+    suspended: row.suspended,
+    uncertain: row.uncertain,
+    ...(row.pending ? { pending: row.pending } : {}),
   }
 }

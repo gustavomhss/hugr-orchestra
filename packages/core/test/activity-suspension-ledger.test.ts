@@ -130,6 +130,17 @@ test("a restart with another owner incarnation returns unknown and cannot resume
     }),
   ))
   expect(afterRestart?.phase).toBe("unknown")
+  await Effect.runPromise(withLedgers(filename, "boot-a", (_actions, marks) =>
+    Effect.gen(function* () {
+      expect(yield* marks.settle({
+        scope: pending.scope,
+        markID: pending.record!.markID,
+        attemptID: pending.record!.pending!.id,
+        outcomes: [{ memberID: "member-a", effect: "changed" }],
+      })).toBeUndefined()
+      expect(yield* marks.read("tree-a")).toEqual(afterRestart)
+    }),
+  ))
 })
 
 test("rejects replayed, mismatched, incomplete, duplicate, or malformed native receipts", async () => {
