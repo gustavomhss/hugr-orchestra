@@ -188,6 +188,7 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical fo
     }
     expect(row()?.footprint?.hypothesis).toBe("compatible-with-logical-leak")
     const previous = row()?.footprint
+    if (!previous) throw new Error("Missing complete footprint before the invalid sample")
     sample.bytes = NaN
     await monitor.inspect(id)
     expect(row()?.footprint).toEqual({ ...previous, hypothesis: "insufficient" })
