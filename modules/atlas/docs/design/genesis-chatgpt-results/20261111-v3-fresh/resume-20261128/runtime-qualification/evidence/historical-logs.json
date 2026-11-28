@@ -1,0 +1,24 @@
+{
+  "schema": "genesis-runtime-historical-logs/v1",
+  "purpose": "Immutable Git references for historical raw CI logs",
+  "logs": [
+    {
+      "commit": "da9800f55f31926f33c41a5ca2fd88bf26fcaccc",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/attempt-1/guards/guards.log",
+      "bytes": 1817,
+      "sha256": "c8899d691cca78d9a44bce40d2d6fbd7c1499cc4377668ff0a25e1dab06f91a1"
+    },
+    {
+      "commit": "da9800f55f31926f33c41a5ca2fd88bf26fcaccc",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/common-ci.log",
+      "bytes": 125694,
+      "sha256": "efc3d912bc0ed3cd3d089c290e091bcf28c6d870737e675fd00d4088f0587778"
+    },
+    {
+      "commit": "da9800f55f31926f33c41a5ca2fd88bf26fcaccc",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/resume-20261128/runtime-qualification/evidence/run-46114652347/guards/guards.log",
+      "bytes": 2332,
+      "sha256": "71aee0c8823dc798fe598bc84d02b3d511149d634dcb0f78e5e5be6684291f62"
+    }
+  ]
+}
