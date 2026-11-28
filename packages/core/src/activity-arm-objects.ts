@@ -76,18 +76,15 @@ export function make(database: Database.Interface, processService: AppProcess.In
     if (inspectProtectedSource && protectedIdentity &&
       (yield* Effect.promise(() => inspectProtectedSource(label))) !== protectedIdentity)
       return { observation, partial: true }
-    return {
-      observation: {
-        ...observation,
-        identity: digest(protectedIdentity
-          ? [checkout.fingerprint, evidence.fingerprint, protectedIdentity]
-          : [checkout.fingerprint, evidence.fingerprint]),
-        dirty: false,
-        eligible: evidence.idle ? ["arm"] as const : [],
-      },
-      protectedIdentity,
-      partial: false,
+    const observed: ActivityActionLedger.Observation = {
+      ...observation,
+      identity: digest(protectedIdentity
+        ? [checkout.fingerprint, evidence.fingerprint, protectedIdentity]
+        : [checkout.fingerprint, evidence.fingerprint]),
+      dirty: false,
+      eligible: evidence.idle ? ["arm"] : [],
     }
+    return { observation: observed, protectedIdentity, partial: false }
   })
 
   return {
