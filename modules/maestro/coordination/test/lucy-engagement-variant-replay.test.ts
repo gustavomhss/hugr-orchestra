@@ -108,7 +108,7 @@ test("a real variant receipt rejects inconsistent journal, seed, counts and nati
       expect(canonical((yield* saved(host, report.sessionID)).row.metadata)).toBe(canonical(held.row.metadata))
       expect((yield* host.execution.active).size).toBe(0)
     }), { stream: provider.stream })
-  })))
+  }))
 }, 150_000)
 
 for (const version of ["v1", "v2"] as const) {
