@@ -17,11 +17,17 @@ mock.module(Bun.resolveSync("@/context/server-sdk", import.meta.dir) + "?activit
     return sdk
   },
 }))
-const { PlatformProvider }: typeof import("@/context/platform") = await load("@/context/platform")
-const { LanguageProvider, useLanguage }: typeof import("@/context/language") = await load("@/context/language")
-const { default: ActivityPage }: typeof import("@/orchestra/chapters/activity/page") = await load(
-  "@/orchestra/chapters/activity/page",
-)
+const providers = async () => {
+  const platform: typeof import("@/context/platform") = await load("@/context/platform")
+  const language: typeof import("@/context/language") = await load("@/context/language")
+  const page: typeof import("@/orchestra/chapters/activity/page") = await load("@/orchestra/chapters/activity/page")
+  return {
+    PlatformProvider: platform.PlatformProvider,
+    LanguageProvider: language.LanguageProvider,
+    useLanguage: language.useLanguage,
+    ActivityPage: page.default,
+  }
+}
 
 export const cachePath = "/api/activity/docker"
 export const readPath = "/api/activity/docker/read"
@@ -94,7 +100,8 @@ function intercepted(request: Request) {
   }
 }
 
-export function mount(initialLocale: Locale = "en") {
+export async function mount(initialLocale: Locale = "en") {
+  const { PlatformProvider, LanguageProvider, useLanguage, ActivityPage } = await providers()
   const attributes = ["lang", "dir"].map((name) => [name, document.documentElement.getAttribute(name)] as const)
   const storage = ["orchestra.global.dat:language", "language.v1"].map(
     (key) => [key, localStorage.getItem(key)] as const,
