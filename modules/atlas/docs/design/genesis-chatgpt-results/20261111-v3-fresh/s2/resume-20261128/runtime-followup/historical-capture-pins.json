@@ -1,0 +1,32 @@
+{
+  "purpose": "Exact historical snapshots for the old S2 operator and proposal",
+  "source_pin": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "records": [
+    {
+      "commit": "7d323273e6d2d4675cbc46104cb0f93bdc811894",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/operator-tools/operation-config.py",
+      "bytes": 28808,
+      "sha256": "4e7d3bd974b43df6310c46e1a1b70cfab34d509adeff1f06d72735c775f51e82"
+    },
+    {
+      "commit": "7d323273e6d2d4675cbc46104cb0f93bdc811894",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/operator-tools/history/before-primary-prepare-03/operation-config.py",
+      "bytes": 23652,
+      "sha256": "75997a6a4bb7e77df2ccf9483efd6ce1c064ec28c171c572c6943bc7e39146cb"
+    },
+    {
+      "commit": "7d323273e6d2d4675cbc46104cb0f93bdc811894",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/operator-tools/history/initial-before-native-path-fix/operation-config.py",
+      "bytes": 18014,
+      "sha256": "6328fe066dc664e0c48d22a9717c640a4bb7166ef3be51cdd26a4a37fb55428f"
+    },
+    {
+      "commit": "7d323273e6d2d4675cbc46104cb0f93bdc811894",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/noble-source-binding-proposal/sources/db9/modules/atlas/package.json",
+      "bytes": 1670,
+      "sha256": "168380cb630bd0aba6a2504d6b207b449153e084c01785c6f76eb84fd667c605"
+    }
+  ],
+  "current_operator_change": "Name the local on-disk byte check explicitly. It does not act on an HTTPS client or TLS policy. The original byte-guard plan and verdicts remain in historical revisions.",
+  "removed_copies": "Two historical variants of operation-config.py and a captured package.json remain in the pinned commit. The manifest also remains at its original runtime source commit."
+}

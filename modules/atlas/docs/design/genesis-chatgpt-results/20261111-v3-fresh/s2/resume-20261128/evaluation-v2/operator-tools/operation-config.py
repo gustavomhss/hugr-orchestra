@@ -273,7 +273,7 @@ def build(args):
     primary_evidence = validate_primary_evidence(receipt, lock, guarded_receipt_03, fixed, prepared)
     expected, categories, order, intended_sources = {}, {}, [], {}
 
-    def add(row, category, verify=True):
+    def add(row, category, check_current_bytes=True):
         validate_row(row)
         key = row['path']
         if key in expected:
@@ -282,7 +282,7 @@ def build(args):
             expected[key] = dict(row)
             order.append(key)
         categories.setdefault(key, []).append(category)
-        if verify:
+        if check_current_bytes:
             require(stamp(key) == row, 'pinned bytes drifted: ' + key)
 
     for row in receipt['input_files_before']:
@@ -312,7 +312,7 @@ def build(args):
         # The fixed recorder will require these exact intended bytes before any operation.
         if target.exists():
             regular(target)
-        add(target_row, label + ':intended-target', verify=False)
+        add(target_row, label + ':intended-target', check_current_bytes=False)
         if str(target) in intended_sources:
             previous_source = intended_sources[str(target)]
             require(previous_source.read_bytes() == source.read_bytes(), 'conflicting intended source bytes')
