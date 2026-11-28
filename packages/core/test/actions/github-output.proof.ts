@@ -2,6 +2,7 @@ import { createHash } from "node:crypto"
 import { strict as assert } from "node:assert"
 import { Actions } from "@orchestra/schema/actions"
 import { Effect, Stream } from "effect"
+import { ActionsError } from "../../src/actions/error"
 import { ActionsGitHubRead } from "../../src/actions/github"
 import { ActionsOutput } from "../../src/actions/output"
 import { ActionsTransport } from "../../src/actions/transport"
@@ -22,19 +23,33 @@ const proof = Effect.scoped(Effect.gen(function* () {
   const transport = yield* ActionsTransport.make({ directory: process.cwd() })
   const reader = ActionsGitHubRead.make({ transport })
   const output = ActionsOutput.make({ transport, reader })
-  const info = yield* output.info(binding, selection)
+  const report = (stage: string) => Effect.tapError((error: unknown) => Effect.sync(() => {
+    const allowed = ["not_authenticated", "permission_denied", "not_found", "rate_limited", "transport_failed",
+      "transfer_failed", "binding_stale", "invalid_input", "capability_unavailable", "metadata_truncated", "host_mismatch"]
+    console.error(`proof stage ${stage}: ${error instanceof ActionsError && allowed.includes(error.kind) ? error.kind : "other"}`)
+  }))
+  console.log("proof stage repository")
+  yield* transport.request(binding, { method: "GET", path: `repositories/${binding.projectID}` }).pipe(report("repository"))
+  console.log("proof stage run")
+  yield* reader.run(binding, selection.runID).pipe(report("run"))
+  console.log("proof stage metadata")
+  const info = yield* output.info(binding, selection).pipe(report("metadata"))
+  console.log("proof stage metadata assertions")
   assert.equal(info.filename, "test-scope.zip")
   assert.equal(info.contentType, "application/zip")
   assert.equal(info.size, 226)
   assert.equal(info.digest, digest)
   const chunks: Uint8Array[] = []
   const size = { value: 0 }
+  console.log("proof stage transfer")
   yield* output.read(binding, selection).pipe(Stream.runForEach((chunk) => Effect.sync(() => {
     size.value += chunk.byteLength
     assert.ok(size.value <= 64 * 1024, "artifact exceeds proof limit")
     chunks.push(chunk)
-  })))
+  })), report("transfer"))
+  console.log("proof stage archive assertions")
   const archive = Buffer.concat(chunks)
+  console.log(`proof bytes: ${archive.length}`)
   assert.equal(archive.length, 226)
   assert.equal(archive.subarray(0, 4).toString("hex"), "504b0304")
   assert.equal(`sha256:${createHash("sha256").update(archive).digest("hex")}`, digest)
