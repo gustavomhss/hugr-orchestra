@@ -169,3 +169,9 @@ This refreeze integrates `f469755b33bb478693d2d1dae022c010c2e47ebc` as the curre
 | `lucy-history-quota.test.ts` | `2ca7aab0030e9e2521129764e141a8cc15fb4bb4e7e58a68d16f4b16ee4c6f8c` |
 | `lucy-history-scopes.test.ts` | `840fa81d009a87f7ad71e9f03e45c71bc6e909aaa171786ba6a7f591fea32284` |
 | `lucy-history-tail-proof.test.ts` | `56d8a4f6fb361d5a0f4833e65ffd54153c56adcd7488cbb791155734c9c5680e` |
+
+## Bounded process prefix supplement
+
+The existing ResearchProcess sink retains the tail of a bounded stream. Confined history must retain the beginning of oversized source text instead. A separate Core tests-only supplement, `packages/core/test/research-process-capture.test.ts` (SHA-256 `afd2f0f6f6b7c1c8a8ce03e1179045d68bc4145368e79aa9516faac8b36fa2ee`), freezes two native cases: preserve the default and explicitly selected tail with exact stdout/stderr counts; and require a bounded prefix when real output crosses the capture limit, after a complete positive control and before a post-overflow child control. It is compiled against the unchanged API using a structurally assignable input variable. It imports no future implementation.
+
+This adds two Core cases to the 50 Maestro cases; it does not change their nine TypeScript hashes. Hosted Core typecheck and causal assertion RED must precede any new head-capture option. The proposed opt-in preserves the current process supervisor, cancellation, stream byte bound, memory limit and default tail semantics; no alternate process executor is authorized by this supplement.
