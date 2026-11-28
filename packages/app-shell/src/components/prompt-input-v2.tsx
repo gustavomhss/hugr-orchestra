@@ -47,10 +47,14 @@ export type PromptInputV2ComposerProps = {
   sessionID?: string
 }
 
-export type PromptInputV2ControllerProps = Omit<PromptInputProps, "class" | "submission">
+export type PromptInputV2ControllerProps = Omit<PromptInputProps, "class" | "submission"> & {
+  sessionID?: () => string | undefined
+  pendingKey?: () => string
+}
 export type PromptInputV2ComposerController = PromptInputV2Interaction & {
   readonly model: PromptInputProps["controls"]["model"]
   readonly pendingKey: () => string
+  readonly sessionID?: () => string | undefined
   readonly submitting: () => boolean
 }
 
@@ -107,7 +111,7 @@ export function PromptInputV2Composer(props: PromptInputV2ComposerProps) {
               {(sessionID) => <OrchestraComposeTools controller={props.controller} sessionID={sessionID()} />}
             </Show>
             <PromptInputV2SubagentModelsControl
-              sessionID={props.sessionID}
+              sessionID={props.sessionID ?? props.controller.sessionID?.()}
               pendingKey={props.controller.pendingKey()}
             />
           </>
@@ -142,7 +146,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
   const language = useLanguage()
   const platform = usePlatform()
   const prompt = props.state ?? usePrompt()
-  const pendingKey = useDraftSessionKey()
+  const pendingKey = props.pendingKey ?? useDraftSessionKey()
   let editor: HTMLDivElement | undefined
 
   const interaction = createPromptInputV2State()
@@ -250,6 +254,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
   const submission = createPromptSubmit({
     prompt,
     info,
+    sessionID: props.sessionID,
     pendingKey,
     imageAttachments: attachments,
     commentCount,
@@ -384,7 +389,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     return [
       { id: modelDefaultVariantID, label: language.t("model.variant.default"), value: undefined,
         disabled: false },
-      ...values.map((value) => ({ id: JSON.stringify(["variant", value]), label: value, value,
+      ...values.map((value) => ({ id: JSON.stringify(["variant", value]), label: value === "" ? language.t("model.variant.empty") : value, value,
         disabled: !known.includes(value) })),
     ]
   })
@@ -472,12 +477,13 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
       submit: {
         stopping,
         working: () => working() || admitting(),
+        allowEmpty: submission.canRecoverHandoff,
         onSubmit: () => void submission.handleSubmit(new Event("submit")),
         onStop: () => void submission.abort(),
       },
     },
   })
-  const composer = Object.assign(controller, { model: props.controls.model, pendingKey, submitting: submission.submitting })
+  const composer = Object.assign(controller, { model: props.controls.model, pendingKey, sessionID: props.sessionID, submitting: submission.submitting })
   Object.defineProperty(composer, "model", { get: () => props.controls.model })
 
   command.register("prompt-input", () => [

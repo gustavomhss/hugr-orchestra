@@ -48,7 +48,7 @@ describe("prompt submission state", () => {
     expect(destination.current()[0]).toMatchObject({ content: "mutated input" })
   })
 
-  test("failed restoration treats new context independently of text", () => {
+  test("failed restoration merges missing submitted context with new context", () => {
     const source = createPromptState({ prompt: "submitted" })
     const destination = createPromptState()
     source.context.add({ type: "file", path: "submitted.ts", comment: "old" })
@@ -61,7 +61,7 @@ describe("prompt submission state", () => {
     submission.clear("comments")
     destination.context.add({ type: "file", path: "later.ts", comment: "new" })
     expect(submission.restore()?.prompt[0]).toMatchObject({ content: "submitted" })
-    expect(destination.context.items().map((item) => item.path)).toEqual(["later.ts"])
+    expect(destination.context.items().map((item) => item.path)).toEqual(["later.ts", "submitted.ts"])
   })
 
   test("preserves a draft already typed into the created session", () => {

@@ -3,6 +3,8 @@ import { beforeAll, expect, test } from "bun:test"
 import { createRoot } from "solid-js"
 import { Schema } from "effect"
 import { ModelExecution } from "@orchestra/schema/model-execution"
+import { Model } from "@orchestra/schema/model"
+import { Provider } from "@orchestra/schema/provider"
 import { state } from "@/components/prompt-input/submit-harness"
 import { composer, decision, draftSelection, json, liveSDK, model, ref, selection, send, transport, wait, initializeModelExecutionConsumers } from "./model-execution-consumer.fixture"
 
@@ -151,7 +153,7 @@ test.each(["catalog.updated", "integration.connection.updated"] as const)("E6 Ap
   } finally { unsubscribe(); owner.dispose(); actual.dispose() }
 })
 
-test("E6 App semantic change aborts a held actual admission query before release and cannot POST", async () => {
+test.each(["integration", "ancestor policy"] as const)("E6 App %s updates abort a held actual admission query before release", async (change) => {
   const calls = transport()
   const actual = liveSDK(calls)
   const selected = selection(calls, "session-1", actual)
@@ -173,7 +175,13 @@ test("E6 App semantic change aborts a held actual admission query before release
     await wait(() => witness.signal !== undefined || calls.admissions().length > 0, "actual admission canonical request or POST entered")
     expect(witness.signal).toBeDefined()
     expect(calls.calls.slice(before).filter((call) => /\/(agent|model|prompt)$/.test(call.path))).toEqual([])
-    emit(calls, { id: "held-integration-change", type: "integration.connection.updated", data: { integrationID: "integration-1" }, location: { directory: calls.directory } })
+    emit(calls, change === "integration" ? {
+      id: "held-integration-change", type: "integration.connection.updated", data: { integrationID: "integration-1" }, location: { directory: calls.directory },
+    } : {
+      id: "held-parent-policy-change", type: "session.next.subagent.models.changed",
+      location: { directory: "/repo/moved-parent", workspaceID: "other-workspace" },
+      data: { sessionID: "parent-session", timestamp: Date.now(), policy: { mode: "allowlist", models: [] } },
+    })
     await wait(() => witness.signal?.aborted === true, "owned admission query is aborted before releasing its transport")
     release.resolve()
     expect(await pending).toBe(false)
@@ -247,4 +255,81 @@ test("E6 App actual directory SDK survives the first consumer, stops at last ref
     expect(calls.calls.find((call) => call.path === "/api/event")?.signal.aborted).toBe(true)
     expect(() => actual.sdk.ensureDirSdkContext(directory)).toThrow("Server SDK is closed")
   } finally { unsubscribe(); off(); disposers.forEach((dispose) => dispose()); actual.dispose() }
+})
+
+
+test.each(["session", "draft"] as const)("E6 App %s without a bootstrap Ref can select a model from canonical inventory", async (kind) => {
+  const calls = transport({ reply: async (request) => {
+    const input = Schema.decodeUnknownSync(ModelExecution.Input)(await request.json())
+    const result = decision()
+    return json({ location: { directory: calls.directory }, data: { ...result, selection: input.model ? result.selection : undefined } })
+  } })
+  const draft = kind === "draft" ? draftSelection(calls, false) : undefined
+  const source = draft?.source ?? selection(calls, "session-1", undefined, false)
+  const picker = draft?.model ?? source.local.model
+  try {
+    await wait(() => picker.execution.read().status === "ready", "canonical inventory loaded without a model")
+    expect(source.models.list()).toEqual([])
+    expect(picker.current()).toBeUndefined()
+    expect(calls.queries().at(-1)?.body).not.toHaveProperty("model")
+    const key = { providerID: ref.providerID, modelID: ref.id }
+    expect(picker.list().find((item) => item.id === ref.id)?.name).toBe("Consumer model")
+    expect(picker.execution.allows(key)).toBe(true)
+    picker.set(key)
+    await wait(() => picker.execution.ready(), "selection of inventory-only model assessed")
+    expect(picker.current()?.id).toBe(ref.id)
+    expect(picker.variant.list()).toEqual(["high"])
+    expect(calls.queries().at(-1)?.body).toHaveProperty("model", ref)
+  } finally { if (draft) draft.dispose(); else source.dispose() }
+})
+
+
+test("E6 App accepts a refreshed ready model while the provider catalog still omits it", async () => {
+  const calls = transport()
+  const actual = liveSDK(calls)
+  const owner = selection(calls, "session-1", actual)
+  const late = { providerID: "late-provider", modelID: "late-model" }
+  try {
+    await wait(() => actual.greetings.length === 1 && owner.local.model.execution.ready(), "initial inventory connected")
+    const before = calls.queries().length
+    calls.control.reply = () => {
+      const result = decision()
+      return json({ location: { directory: calls.directory }, data: {
+        ...result, models: [...result.models, { model: { ...model, providerID: Provider.ID.make(late.providerID),
+          id: Model.ID.make(late.modelID), name: "Late model" }, engine: "orchestra", status: "ready" }],
+      } })
+    }
+    emit(calls, { id: "late-model-catalog-event", type: "catalog.updated", data: {}, location: { directory: calls.directory } })
+    await wait(() => calls.queries().length > before && owner.local.model.execution.allows(late), "canonical refresh admits late metadata")
+    expect(owner.models.find(late)).toBeUndefined()
+    expect(owner.local.model.list().find((item) => item.id === late.modelID)?.name).toBe("Late model")
+  } finally { owner.dispose(); actual.dispose() }
+})
+
+test("E6 App changes in the inferred Ref invalidate a held admission with stable raw intent", async () => {
+  const calls = transport()
+  const selected = selection(calls, "session-1")
+  const owner = composer("held inferred model", { model: selected.local.model })
+  const release = Promise.withResolvers<void>()
+  const witness: { signal?: AbortSignal } = {}
+  try {
+    await wait(() => selected.local.model.execution.ready(), "initial inferred model evaluated")
+    const raw = selected.local.model.intent()
+    calls.control.reply = async (request) => {
+      witness.signal ??= request.signal
+      await release.promise
+      return json({ location: { directory: calls.directory }, data: decision() })
+    }
+    const pending = send(owner)
+    try {
+      await wait(() => witness.signal !== undefined, "inferred model admission query entered")
+      selected.setView("catalog", "defaultModel", { providerID: ref.providerID, modelID: "blocked" })
+      expect(selected.local.model.intent()).toEqual(raw)
+      expect(selected.local.model.execution.input().model?.id).toBe("blocked")
+      await wait(() => witness.signal?.aborted === true, "effective Ref changed while raw choice remained empty")
+    } finally { release.resolve(); await pending }
+    expect(await pending).toBe(false)
+    expect(calls.admissions()).toEqual([])
+    expect(owner.prompt.current()[0]).toMatchObject({ content: "held inferred model" })
+  } finally { release.resolve(); owner.dispose(); selected.dispose() }
 })

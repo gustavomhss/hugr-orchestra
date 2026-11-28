@@ -10,7 +10,7 @@ import type {
   SessionStageInput,
 } from "@/server-api"
 import { decode64 } from "@/utils/base64"
-import { registerSessionModelExecution } from "./session-model-execution"
+import { registerSessionModelExecution, trackSessionModelSelection } from "./session-model-execution"
 
 export function authTokenFromCredentials(input: { username?: string; password: string }) {
   return btoa(`${input.username ?? "orchestra"}:${input.password}`)
@@ -53,11 +53,20 @@ function buildServerApi(input: {
         }
       : undefined,
   })
-  const select = async (sessionID: string, value: object, requestOptions?: RequestOptions) => {
+  const select = async <T>(sessionID: string, value: object, requestOptions: RequestOptions | undefined, admit: () => Promise<T>): Promise<T> => {
     if ("agent" in value && typeof value.agent === "string" && value.agent)
       await orchestra.sessions.switchAgent({ sessionID, agent: value.agent }, requestOptions)
     const model = "model" in value ? selectedModel(value.model, "variant" in value ? value.variant : undefined) : undefined
-    if (model) await orchestra.sessions.switchModel({ sessionID, model }, requestOptions)
+    if (!model) return admit()
+    requestOptions?.signal?.throwIfAborted()
+    // Projection can publish the switch before the selector response or before the admission response.
+    const release = trackSessionModelSelection(api.session, sessionID, model)
+    try {
+      await orchestra.sessions.switchModel({ sessionID, model }, requestOptions)
+      return await admit()
+    } finally {
+      release()
+    }
   }
   const api = {
     health: orchestra.health,
@@ -92,15 +101,50 @@ function buildServerApi(input: {
         orchestra.sessions.move(value, requestOptions),
       prompt: async (value: SessionPromptInput, options?: AdmissionOptions) => {
         const requestOptions = options && { signal: options.signal, headers: options.headers }
-        await select(value.sessionID, value, requestOptions)
-        options?.beforeAdmission?.()
-        return orchestra.sessions
-          .prompt(
-            {
-              sessionID: value.sessionID,
-              id: value.id,
-              prompt: {
-                text: value.text,
+        return select(value.sessionID, value, requestOptions, () => {
+          options?.beforeAdmission?.()
+          return orchestra.sessions
+            .prompt(
+              {
+                sessionID: value.sessionID,
+                id: value.id,
+                prompt: {
+                  text: value.text,
+                  files: value.files?.map((file: { uri: string; name?: string; description?: string; mention?: { text: string; start: number; end: number } }) => ({
+                    uri: file.uri,
+                    name: file.name,
+                    description: file.description,
+                    source: file.mention,
+                  })),
+                  agents: value.agents?.map((agent: { name: string; mention?: { text: string; start: number; end: number } }) => ({ name: agent.name, source: agent.mention })),
+                },
+                delivery: value.delivery,
+                resume: value.resume,
+              },
+              options && { signal: options.admissionSignal ?? options.signal, headers: options.headers },
+            )
+            .then((admitted: Awaited<ReturnType<typeof orchestra.sessions.prompt>>) => ({
+              admittedSeq: admitted.admittedSeq,
+              id: admitted.id,
+              sessionID: admitted.sessionID,
+              timeCreated: admitted.timeCreated,
+              type: "user" as const,
+              data: { text: value.text },
+              delivery: admitted.delivery,
+            }))
+        })
+      },
+      command: async (value: SessionCommandInput, options?: AdmissionOptions) => {
+        const requestOptions = options && { signal: options.signal, headers: options.headers }
+        return select(value.sessionID, value, requestOptions, () => {
+          options?.beforeAdmission?.()
+          return orchestra.sessions
+            .command(
+              {
+                sessionID: value.sessionID,
+                id: value.id,
+                command: value.command,
+                arguments: value.arguments,
                 files: value.files?.map((file: { uri: string; name?: string; description?: string; mention?: { text: string; start: number; end: number } }) => ({
                   uri: file.uri,
                   name: file.name,
@@ -108,67 +152,35 @@ function buildServerApi(input: {
                   source: file.mention,
                 })),
                 agents: value.agents?.map((agent: { name: string; mention?: { text: string; start: number; end: number } }) => ({ name: agent.name, source: agent.mention })),
+                delivery: value.delivery,
+                resume: value.resume,
               },
-              delivery: value.delivery,
-              resume: value.resume,
-            },
-            options && { signal: options.admissionSignal ?? options.signal, headers: options.headers },
-          )
-          .then((admitted: Awaited<ReturnType<typeof orchestra.sessions.prompt>>) => ({
-            admittedSeq: admitted.admittedSeq,
-            id: admitted.id,
-            sessionID: admitted.sessionID,
-            timeCreated: admitted.timeCreated,
-            type: "user" as const,
-            data: { text: value.text },
-            delivery: admitted.delivery,
-          }))
-      },
-      command: async (value: SessionCommandInput, options?: AdmissionOptions) => {
-        const requestOptions = options && { signal: options.signal, headers: options.headers }
-        await select(value.sessionID, value, requestOptions)
-        options?.beforeAdmission?.()
-        return orchestra.sessions
-          .command(
-            {
-              sessionID: value.sessionID,
-              id: value.id,
-              command: value.command,
-              arguments: value.arguments,
-              files: value.files?.map((file: { uri: string; name?: string; description?: string; mention?: { text: string; start: number; end: number } }) => ({
-                uri: file.uri,
-                name: file.name,
-                description: file.description,
-                source: file.mention,
-              })),
-              agents: value.agents?.map((agent: { name: string; mention?: { text: string; start: number; end: number } }) => ({ name: agent.name, source: agent.mention })),
-              delivery: value.delivery,
-              resume: value.resume,
-            },
-            options && { signal: options.admissionSignal ?? options.signal, headers: options.headers },
-          )
-          .then((admitted: Awaited<ReturnType<typeof orchestra.sessions.command>>) => ({
-            admittedSeq: admitted.admittedSeq,
-            id: admitted.id,
-            sessionID: admitted.sessionID,
-            timeCreated: admitted.timeCreated,
-            type: "user" as const,
-            data: { text: `/${value.command} ${value.arguments ?? ""}`.trim() },
-            delivery: admitted.delivery,
-          }))
+              options && { signal: options.admissionSignal ?? options.signal, headers: options.headers },
+            )
+            .then((admitted: Awaited<ReturnType<typeof orchestra.sessions.command>>) => ({
+              admittedSeq: admitted.admittedSeq,
+              id: admitted.id,
+              sessionID: admitted.sessionID,
+              timeCreated: admitted.timeCreated,
+              type: "user" as const,
+              data: { text: `/${value.command} ${value.arguments ?? ""}`.trim() },
+              delivery: admitted.delivery,
+            }))
+        })
       },
       shell: (value: Parameters<typeof orchestra.sessions.shell>[0], requestOptions?: Parameters<typeof orchestra.sessions.shell>[1]) =>
         orchestra.sessions.shell(value, requestOptions),
       compact: async (value: SessionCompactInput, requestOptions?: RequestOptions) => {
-        await select(value.sessionID, value, requestOptions)
-        await orchestra.sessions.compact({ sessionID: value.sessionID }, requestOptions)
-        return {
-          admittedSeq: 0,
-          id: value.id ?? "",
-          sessionID: value.sessionID,
-          timeCreated: Date.now(),
-          type: "compaction" as const,
-        }
+        return select(value.sessionID, value, requestOptions, async () => {
+          await orchestra.sessions.compact({ sessionID: value.sessionID }, requestOptions)
+          return {
+            admittedSeq: 0,
+            id: value.id ?? "",
+            sessionID: value.sessionID,
+            timeCreated: Date.now(),
+            type: "compaction" as const,
+          }
+        })
       },
       revert: {
         stage: async (value: SessionStageInput, requestOptions?: RequestOptions) => {

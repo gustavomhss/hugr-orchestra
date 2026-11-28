@@ -4,14 +4,17 @@ import { Context, Effect, Layer, Schema } from "effect"
 import { Reason, Decision, Input, Response, Entry, Selection } from "@orchestra/schema/model-execution"
 import { AgentV2 } from "./agent"
 import { Catalog } from "./catalog"
+import { CommandV2 } from "./command"
 import { makeLocationNode } from "./effect/app-node"
 import { Location } from "./location"
+import { Mcp } from "./mcp"
 import { ModelV2 } from "./model"
 import { ModelExecutionOptions } from "./model-execution-options"
 import { ExecutionHost } from "./session/runner/execution-host"
 import { SessionSchema } from "./session/schema"
 import { SessionStore } from "./session/store"
 import { SessionSubagentModels } from "./session/subagent-models"
+import { SlashCommand } from "./slash-command"
 
 export { Reason, Decision, Input, Response, Entry, Selection }
 
@@ -21,6 +24,8 @@ export class ContextError extends Schema.TaggedErrorClass<ContextError>()("Model
     "parent-missing",
     "location-mismatch",
     "agent-missing",
+    "command-missing",
+    "command-unavailable",
     "invalid-session-chain",
     "storage-unavailable",
   ]),
@@ -82,23 +87,41 @@ export const layer = Layer.effect(
   Effect.gen(function* () {
     const catalog = yield* Catalog.Service
     const agents = yield* AgentV2.Service
+    const commands = yield* CommandV2.Service
+    const mcp = yield* Mcp.Service
     const store = yield* SessionStore.Service
     const policies = yield* SessionSubagentModels.Service
     const hosts = yield* ExecutionHost.Service
     const location = yield* Location.Service
+    const getSession = (sessionID: SessionSchema.ID) =>
+      store.get(sessionID).pipe(
+        Effect.catchDefect((cause) => SessionSubagentModels.recoverStorageRead(sessionID, cause)),
+        Effect.mapError(() => new ContextError({ reason: "storage-unavailable" })),
+      )
     const belongs = (session: SessionSchema.Info) =>
       session.location.directory === location.directory && session.location.workspaceID === location.workspaceID
     return Service.of({
       describe: Effect.fn("ModelExecution.describe")(function* (input: Input) {
-        const session = input.context.type === "session" ? yield* store.get(input.context.sessionID) : undefined
+        const session = input.context.type === "session" ? yield* getSession(input.context.sessionID) : undefined
         if (input.context.type === "session" && !session) return yield* new ContextError({ reason: "session-missing" })
         const parentID = input.context.type === "draft" ? input.context.parentID : session?.parentID
-        const parent = input.context.type === "draft" && parentID ? yield* store.get(parentID) : undefined
+        const parent = input.context.type === "draft" && parentID ? yield* getSession(parentID) : undefined
         if (input.context.type === "draft" && parentID && !parent)
           return yield* new ContextError({ reason: "parent-missing" })
         if ((session && !belongs(session)) || (parent && !belongs(parent)))
           return yield* new ContextError({ reason: "location-mismatch" })
-        const agent = yield* agents.select(input.context.agentID ?? session?.agent)
+        const command = input.command === undefined ? undefined : yield* commands.get(input.command)
+        if (input.command !== undefined && !command) {
+          const prompt = yield* SlashCommand.findPrompt(input.command, true).pipe(
+            Effect.provideService(Mcp.Service, mcp),
+            Effect.mapError(() => new ContextError({ reason: "command-unavailable" })),
+          )
+          if (!prompt) return yield* new ContextError({ reason: "command-missing" })
+        }
+        const target = command ? yield* SlashCommand.target(command).pipe(Effect.provideService(AgentV2.Service, agents)) : undefined
+        const overrides = target?.subtask === false ? target : undefined
+        const ref = overrides?.model ?? input.model
+        const agent = yield* agents.select(overrides?.agent ?? input.context.agentID ?? session?.agent)
         if (!agent.info) return yield* new ContextError({ reason: "agent-missing" })
         const ceilings = yield* (
           session ? policies.forSession(session.id) : parentID ? policies.forChild(parentID) : Effect.succeed([])
@@ -122,10 +145,17 @@ export const layer = Layer.effect(
         const available = new Set((yield* catalog.model.available()).map(key))
         const assess = Effect.fn(function* (ref: ModelV2.Ref, model?: ModelV2.Info) {
           const selectedEngine = yield* ExecutionHost.engineForSelection(agents, store, {
+            id: session?.id,
             agent: agent.id,
             model: ref,
             parentID,
-          })
+          }).pipe(
+            Effect.mapError((error) => new ContextError({
+              reason: error instanceof SessionSubagentModels.InvalidChainError
+                ? "invalid-session-chain"
+                : "storage-unavailable",
+            })),
+          )
           const engine = selectedEngine ?? "orchestra"
           const unavailable = (reason: Reason) => ({ engine, status: "unavailable" as const, reason })
           if (!model) return unavailable("model-missing")
@@ -148,16 +178,15 @@ export const layer = Layer.effect(
           )
         })
         const models = yield* Effect.forEach(
-          all.filter((model) => model.enabled || (input.model && key(model) === key(input.model))),
+          all.filter((model) => model.enabled || (ref && key(model) === key(ref))),
           (model) =>
             assess(
-              input.model && key(input.model) === key(model)
-                ? input.model
+              ref && key(ref) === key(model)
+                ? ref
                 : ModelV2.Ref.make({ providerID: model.providerID, id: model.id }),
               model,
-            ).pipe(Effect.map((decision) => ({ model, ...decision }))),
+            ).pipe(Effect.map((decision) => ({ model: publicModel(model), ...decision }))),
         )
-        const ref = input.model
         const selection = ref
           ? {
               ref,
@@ -218,5 +247,30 @@ export const layer = Layer.effect(
 export const node = makeLocationNode({
   service: Service,
   layer,
-  deps: [Catalog.node, AgentV2.node, SessionStore.node, SessionSubagentModels.node, ExecutionHost.node, Location.node],
+  deps: [
+    Catalog.node,
+    AgentV2.node,
+    CommandV2.node,
+    Mcp.node,
+    SessionStore.node,
+    SessionSubagentModels.node,
+    ExecutionHost.node,
+    Location.node,
+  ],
 })
+
+// Catalog bodies, headers, and endpoint settings can contain provider credentials.
+function publicModel(model: ModelV2.Info): ModelV2.Info {
+  return {
+    ...model,
+    api: model.api.type === "native"
+      ? { type: "native", id: model.api.id, settings: {} }
+      : { type: "aisdk", id: model.api.id, package: model.api.package },
+    request: {
+      headers: {},
+      body: {},
+      ...(model.request.variant === undefined ? {} : { variant: model.request.variant }),
+    },
+    variants: model.variants.map((variant) => ({ id: variant.id, headers: {}, body: {} })),
+  }
+}

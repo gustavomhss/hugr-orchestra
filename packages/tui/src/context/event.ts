@@ -1,9 +1,10 @@
-import type { Event } from "../types"
+import type { Event, GlobalEvent } from "../types"
 import { useSDK } from "./sdk"
 
 type EventMetadata = {
   directory: string
   workspace: string | undefined
+  durable?: GlobalEvent["durable"]
 }
 
 export function useEvent() {
@@ -11,7 +12,7 @@ export function useEvent() {
 
   function subscribe(handler: (event: Event, metadata: EventMetadata) => void) {
     return sdk.event.on("event", (event) => {
-      handler(event.payload, { directory: event.directory, workspace: event.workspace })
+      handler(event.payload, { directory: event.directory, workspace: event.workspace, durable: event.durable })
     })
   }
 

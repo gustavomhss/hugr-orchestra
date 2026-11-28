@@ -32,14 +32,14 @@ const globs = (paths: ReadonlyArray<string> = []) => [
   ...paths.map((glob) => `--glob=${glob.replace(/^(?:\.[\\/])+/u, "")}`),
 ]
 
-/** `binaries` lists the files that match only when binary files are searched too: the ones the main pass skipped. */
+/** `binaries` lists matching paths with binary search enabled, including paths only partly searched by the main pass. */
 export const argv = (input: CodeIndex.SearchInput, binaries = false) => {
   const limit = (input.limit ?? DEFAULT_LIMIT) + (input.offset ?? 0) + 1
   const mode = input.mode ?? "literal"
   return [
     "--no-config", "--no-messages", "--hidden", "--no-require-git",
     ...(binaries
-      ? ["--files-with-matches", "--binary"]
+      ? ["--files-with-matches", "--binary", "--null"]
       : [
           "--json", "--stats",
           // Stable order: offset pages must not shift between calls.
@@ -115,7 +115,7 @@ export const run = (input: CodeIndex.SearchInput, options: Options) =>
     // Exit 2 with some output is a partial search (unreadable files); it is reported as incomplete below.
     if (result.exitCode > 2) return yield* new Failure({ reason: "search_failed", message: stderr || `ripgrep exited ${result.exitCode}` })
 
-    // ripgrep skips binary files without a trace, so the files that match only as binary come from a second pass.
+    // A matching binary can be omitted or emit matches before detection. The second pass finds matching paths.
     const binaryPass = yield* process
       .run(ChildProcess.make(command, argv(input, true), { cwd: options.cwd, extendEnv: true, stdin: "ignore" }), {
         maxOutputBytes: MAX_STDOUT,
@@ -124,9 +124,36 @@ export const run = (input: CodeIndex.SearchInput, options: Options) =>
       })
       .pipe(Effect.mapError((cause) => new Failure({ reason: "search_failed", message: cause.message })))
 
+    if (binaryPass.exitCode !== 0 && binaryPass.exitCode !== 1) {
+      const detail = binaryPass.stderr.toString("utf8").trim()
+      return yield* new Failure({
+        reason: "search_failed",
+        message: `ripgrep binary coverage probe exited ${binaryPass.exitCode}${detail ? `: ${detail}` : ""}`,
+      })
+    }
+    const binaryIncomplete = binaryPass.stdoutTruncated || binaryPass.stderrTruncated || (binaryPass.outputTruncated ?? false)
     const parsed = parse(result.stdout.toString("utf8"), input.context ?? 0)
     const seen = new Set(parsed.matches.map((match) => match.path))
-    const binaryFiles = binaryPass.stdout.toString("utf8").split("\n").filter(Boolean).map(normalize)
+    // With an uncertified probe this is only a lower bound: matching files known to have stopped at a binary offset.
+    const unresolved = new Set([...parsed.binaries].filter((file) => seen.has(file)))
+    if (!binaryIncomplete) {
+      const binaryFiles = yield* Effect.try({
+        try: () => {
+          const text = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(binaryPass.stdout)
+          if (!text) return new Set<string>()
+          if (!text.endsWith("\0")) throw new Error("incomplete binary path list")
+          return new Set(text.slice(0, -1).split("\0").map((row) => {
+            if (!row) throw new Error("empty binary path")
+            return normalize(row)
+          }))
+        },
+        catch: () => new Failure({
+          reason: "search_failed",
+          message: "ripgrep binary coverage probe returned invalid NUL-framed UTF-8 paths",
+        }),
+      })
+      for (const file of binaryFiles) if (!seen.has(file)) unresolved.add(file)
+    }
     const offset = input.offset ?? 0
     const limit = input.limit ?? DEFAULT_LIMIT
     const page = parsed.matches.slice(offset, offset + limit)
@@ -147,15 +174,18 @@ export const run = (input: CodeIndex.SearchInput, options: Options) =>
         execution: { op: "code_search", ms: Date.now() - started },
         coverage: {
           documents: parsed.searched,
-          skipped: incomplete
-            ? [{ path: ".", reason: result.exitCode === 2 ? "ripgrep could not read some paths" : "output ceiling reached" }]
-            : [],
+          skipped: [
+            ...(incomplete
+              ? [{ path: ".", reason: result.exitCode === 2 ? "ripgrep could not read some paths" : "output ceiling reached" }]
+              : []),
+            ...(binaryIncomplete ? [{ path: ".", reason: "ripgrep binary coverage output ceiling reached" }] : []),
+          ],
           languagesMissing: [],
           opaqueSites: 0,
           // Absence is claimable only from a search that ran to its end; a page cut by limit does not count.
-          complete: !incomplete && !more,
+          complete: !incomplete && !more && !binaryIncomplete && unresolved.size === 0,
           ignoreRespected: true,
-          binariesSkipped: binaryFiles.filter((file) => !seen.has(file)).length,
+          binariesSkipped: unresolved.size,
         },
         freshness: "fresh" as const,
         bounds: { limit, truncated: more },
@@ -171,11 +201,13 @@ type Row = {
     line_number?: number
     lines?: { text?: string; bytes?: string }
     stats?: { searches: number }
+    binary_offset?: number | null
   }
 }
 
 function parse(stdout: string, context: number) {
   const matches: Array<{ path: string; line: number; text: string; before?: string[]; after?: string[] }> = []
+  const binaries = new Set<string>()
   let searched = 0
   // Context lines of the file being read, kept until the next match claims them as "before".
   let pending: Array<{ line: number; text: string }> = []
@@ -185,6 +217,12 @@ function parse(stdout: string, context: number) {
     if (!row) continue
     const event = JSON.parse(row) as Row
     if (event.type === "summary") searched = event.data.stats?.searches ?? 0
+    if (event.type === "end") {
+      const path = event.data.path?.text
+      const offset = event.data.binary_offset
+      if (path && typeof offset === "number" && Number.isSafeInteger(offset) && offset >= 0)
+        binaries.add(normalize(path))
+    }
     if (event.type === "begin") {
       file = event.data.path?.text ?? ""
       pending = []
@@ -204,7 +242,7 @@ function parse(stdout: string, context: number) {
       pending = []
     }
   }
-  return { matches, searched }
+  return { matches, searched, binaries }
 }
 
 const normalize = (file: string) => file.replace(/^(?:\.[\\/])+/u, "").replaceAll("\\", "/")

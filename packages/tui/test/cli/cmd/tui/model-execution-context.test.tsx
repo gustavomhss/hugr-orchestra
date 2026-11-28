@@ -19,6 +19,105 @@ async function readyReply(request: Request) {
     data: decision("ready", input.model?.variant) })
 }
 
+test("E6 TUI uses a resumed Session's workspace for visual, semantic and admission checks", async () => {
+  const directory = "/other/checkout"
+  const workspace = "wrk_resumed"
+  const fixture = await ready({ session: { location: { directory, workspaceID: workspace } }, reply: readyReply })
+  try {
+    const isPlacement = (url: URL) => url.searchParams.get("location[directory]") === directory &&
+      url.searchParams.get("location[workspace]") === workspace
+    await wait(() => fixture.queries().some((call) => isPlacement(call.url)), "the visual query uses the resumed Session's placement")
+    const before = fixture.queries().length
+    fixture.events.emit({ directory, workspace, payload: { id: "resumed-catalog", type: "catalog.updated", data: {} } })
+    await wait(() => fixture.queries().length > before, "semantic refresh for the resumed checkout")
+    expect(fixture.queries().slice(before).every((call) => isPlacement(call.url))).toBe(true)
+
+    fixture.control.reply = (request) => isPlacement(new URL(request.url))
+      ? readyReply(request)
+      : json({ _tag: "ModelExecutionContextNotFoundError", message: "wrong placement", reason: "session-missing" }, { status: 404 })
+    fixture.prompt.set({ input: "resume at the saved placement", parts: [], mode: "normal" })
+    fixture.prompt.submit()
+    await wait(() => fixture.admissions().length === 1, "the prompt reaches the known Session after preflight")
+    const query = fixture.queries().at(-1)
+    expect(query && isPlacement(query.url)).toBe(true)
+    expect(query?.body).toMatchObject({ context: { type: "session", sessionID: "session-1" } })
+  } finally { await fixture.dispose() }
+})
+
+test("E6 TUI can choose a canonical model for a persisted checkout-local agent", async () => {
+  const localAgent = "checkout-local"
+  const secondModel = Model.Info.make({ ...model, id: Model.ID.make("second-model"), name: "Second checkout model" })
+  const fixture = await mount({ session: { agent: localAgent, model: ref }, reply: async (request) => {
+    const input = Schema.decodeUnknownSync(ModelExecution.Input)(await request.clone().json())
+    if (input.context.agentID !== localAgent) return json({ message: "wrong agent" }, { status: 404 })
+    return json({ location: { directory: "/checkout" }, data: {
+      ...decision(), models: [...decision().models, { model: secondModel, status: "ready", engine: "orchestra" }],
+      selection: { status: "ready", engine: "orchestra", ref: input.model ?? ref },
+    } })
+  } })
+  try {
+    const choice = { providerID: ref.providerID, modelID: secondModel.id }
+    expect(fixture.context.local.agent.id()).toBe(localAgent)
+    expect(fixture.context.local.agent.current()).toBeUndefined()
+    await wait(() => fixture.context.local.model.execution.allows(choice), "canonical checkout approves model for persisted agent")
+    fixture.context.local.model.set(choice, { recent: true })
+    expect(fixture.context.local.model.current()).toEqual(choice)
+    expect(fixture.context.local.agent.id()).toBe(localAgent)
+  } finally { await fixture.dispose() }
+})
+
+test("E6 TUI model picker drops a late answer from the previous draft checkout", async () => {
+  const fixture = await ready({ draft: true })
+  const release = Promise.withResolvers<void>()
+  try {
+    const entered = Promise.withResolvers<AbortSignal>()
+    const previous = "/other/previous"
+    const next = "/other/next"
+    fixture.control.reply = async (request) => {
+      const directory = new URL(request.url).searchParams.get("location[directory]")
+      if (directory === previous) {
+        entered.resolve(request.signal)
+        await release.promise
+      }
+      const scoped = Model.Info.make({ ...model, name: directory === next ? "Next checkout model" : "Previous checkout model" })
+      return json({ location: { directory }, data: { ...decision(), models: [{ model: scoped, status: "ready", engine: "orchestra" }] } })
+    }
+    fixture.context.home?.setDestination({ type: "directory", directory: previous, subdirectory: false })
+    const oldRequest = await entered.promise
+    fixture.context.home?.setDestination({ type: "directory", directory: next, subdirectory: false })
+    await wait(() => oldRequest.aborted, "the prior draft checkout query was canceled")
+    fixture.showModels()
+    await wait(() => { void fixture.app.renderOnce(); return fixture.app.captureCharFrame().includes("Next checkout model") }, "the selected checkout's catalog is visible")
+    release.resolve()
+    await Bun.sleep(0)
+    await fixture.app.renderOnce()
+    expect(fixture.app.captureCharFrame()).toContain("Next checkout model")
+    expect(fixture.app.captureCharFrame()).not.toContain("Previous checkout model")
+  } finally { release.resolve(); await fixture.dispose() }
+})
+
+test("E6 TUI preserves a removed persisted model and agent even when the Session has no history", async () => {
+  const removed = { ...ref, id: "removed", variant: "" }
+  const fixture = await mount({ session: { agent: "backend", model: removed }, reply: () => json({ location: { directory: "/checkout" }, data: {
+    ...decision(), selection: { status: "unavailable", reason: "model-missing", engine: "orchestra", ref: removed },
+  } }) })
+  try {
+    await wait(() => fixture.queries().some((call) => JSON.stringify(call.body).includes("removed")), "read the persisted removed ref")
+    expect(fixture.context.sync.data.message["session-1"] ?? []).toHaveLength(0)
+    expect(fixture.context.local.agent.id()).toBe("backend")
+    expect(fixture.context.local.model.current()).toEqual({ providerID: ref.providerID, modelID: removed.id })
+    const before = fixture.queries().length
+    fixture.prompt.set({ input: "preserve the saved choice", parts: [], mode: "normal" })
+    fixture.prompt.submit()
+    await wait(() => fixture.context.toast.currentToast?.message === "Model is no longer available", "the saved model's refusal is shown")
+    expect(fixture.queries().slice(before).at(-1)?.body).toEqual({
+      context: { type: "session", sessionID: "session-1", agentID: "backend" }, model: removed,
+    })
+    expect(fixture.admissions()).toEqual([])
+    expect(fixture.prompt.current.input).toBe("preserve the saved choice")
+  } finally { await fixture.dispose() }
+})
+
 test.each(["provider connection", "provider options", "agent engine"] as const)("E6 TUI refreshes the same canonical ref after %s", async (change) => {
   const fixture = await ready()
   try {

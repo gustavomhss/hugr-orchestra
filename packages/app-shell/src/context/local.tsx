@@ -1,7 +1,7 @@
 import { createSimpleContext } from "@orchestra/ui/context"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { useParams } from "@solidjs/router"
-import { type Accessor, batch, createComputed, createEffect, createMemo, onCleanup, startTransition, untrack } from "solid-js"
+import { type Accessor, batch, createComputed, createEffect, createMemo, createSignal, onCleanup, startTransition, untrack } from "solid-js"
 import { makeModelExecutionQuery, type ModelExecutionState } from "@orchestra/client"
 import { createStore, type SetStoreFunction, type Store } from "solid-js/store"
 import { useModels } from "@/context/models"
@@ -15,13 +15,20 @@ import { useServerSDK } from "./server-sdk"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"
 import { agentKey } from "./agent-identity"
 import { modelSupportsExecution } from "@/hooks/model-execution"
+import { pathKey } from "@/utils/path-key"
+import { sessionModelSelectionPending, type SessionModelRef } from "@/utils/session-model-execution"
+import { normalizeCatalogModel } from "./global-sync/utils"
 
 export type ModelKey = { providerID: string; modelID: string; variant?: string }
+export const sameModelKey = (left: ModelKey | undefined, right: ModelKey | undefined) =>
+  left?.providerID === right?.providerID && left?.modelID === right?.modelID
+
 
 type State = {
   agent?: string
   model?: ModelKey
   variant?: string | null
+  inherited?: true
 }
 
 export type Saved = {
@@ -180,25 +187,18 @@ export function createLocal(deps: LocalDeps) {
 
   const intent = () => ({ model: scope()?.model, variant: scope()?.variant })
   const candidate = () => intent().model ?? agent.current()?.model ?? fallback()
-  const execution = createModelExecutionView({ sdk, server: serverSDK, sessionID: id, ready: () => savedReady() && models.ready(),
+  const placement = () => {
+    const sessionID = id()
+    return sessionID ? sync().session?.get?.(sessionID) : undefined
+  }
+  const execution = createModelExecutionView({ sdk, server: serverSDK, sessionID: id, placement, ready: () => savedReady() && models.ready(),
     metadata: () => ({ agents: sync().data.agent, config: sync().data.config, providers: [...providers.all()],
       connected: providers.connected().map((provider) => provider.id), semanticEpoch: sdk().modelExecutionEpoch() }),
     agentID: agent.key, agent: agent.current, intent, candidate,
     savedVariant: (key) => models.variant.get(key),
   })
-  const known = new Map<string, NonNullable<ReturnType<typeof models.find>>>()
-  const display = (key: ModelKey | undefined) => {
-    if (!key) return
-    const provider = providers.all().get(key.providerID)
-    const metadata = provider?.models[key.modelID]
-    const item = models.find(key) ?? (provider && metadata ? { ...metadata, provider,
-      name: metadata.name.replace("(latest)", "").trim(), latest: metadata.name.includes("(latest)") } : undefined)
-    const token = JSON.stringify([key.providerID, key.modelID])
-    const selected = intent().model ?? candidate()
-    if (item && selected?.providerID === key.providerID && selected.modelID === key.modelID) known.set(token, item)
-    return item ?? known.get(token)
-  }
-  const current = () => display(intent().model ?? (execution.ready() ? candidate() : undefined))
+  const display = createModelSelectionDisplay({ execution, providers, models, intent, candidate })
+  const current = display.current
 
   const configured = () => {
     const item = agent.current()
@@ -243,16 +243,7 @@ export function createLocal(deps: LocalDeps) {
     ready: Object.assign(() => savedReady() && models.ready(), { promise: models.ready.promise }),
     current,
     recent,
-    list: () => {
-      const response = execution.read()
-      const items = response.status === "ready" ? response.response.data.models.flatMap((entry) => {
-        const item = display({ providerID: entry.model.providerID, modelID: entry.model.id })
-        return item ? [item] : []
-      }) : models.list()
-      const selected = display(intent().model)
-      return selected && !items.some((item) => item.id === selected.id && item.provider.id === selected.provider.id)
-        ? [...items, selected] : items
-    },
+    list: display.list,
     cycle(direction: 1 | -1) {
       const items = recent()
       const item = current()
@@ -273,13 +264,14 @@ export function createLocal(deps: LocalDeps) {
     set(item: ModelKey | undefined, options?: { recent?: boolean }) {
       startTransition(() =>
         batch(() => {
+          const variant = item && sameModelKey(item, candidate()) ? selected() : undefined
           setStore("last", {
             type: "model",
             agent: agent.key(),
             model: item ?? null,
-            variant: selected(),
+            variant,
           })
-          write({ model: item })
+          write({ model: item, variant, inherited: undefined })
           if (!item) return
           models.setVisibility(item, true)
           if (!options?.recent) return
@@ -307,17 +299,17 @@ export function createLocal(deps: LocalDeps) {
       set(value: string | undefined) {
         startTransition(() =>
           batch(() => {
-            const model = current()
+            const item = candidate()
+            if (!item) return
+            const model = { providerID: item.providerID, modelID: item.modelID }
             setStore("last", {
               type: "variant",
               agent: agent.key(),
-              model: model ? { providerID: model.provider.id, modelID: model.id } : null,
+              model,
               variant: value ?? null,
             })
-            write({ variant: value ?? null })
-            if (model) {
-              models.variant.set({ providerID: model.provider.id, modelID: model.id }, value ?? undefined)
-            }
+            write({ model, variant: value ?? null, inherited: undefined })
+            models.variant.set(model, value)
           }),
         )
       },
@@ -357,7 +349,13 @@ export function createLocal(deps: LocalDeps) {
         setStore("promoting", next)
         setStore("draft", undefined)
       },
-      restore(msg: { sessionID: string; agent: string; model: ModelKey }) {
+      inherited: () => scope()?.inherited === true,
+      selectingModel: (sessionID: string, model: SessionModelRef) =>
+        sessionModelSelectionPending(serverSDK().currentApi.session, sessionID, model),
+      restoreModel(model: ModelKey, variant: string | null | undefined, inherited?: true) {
+        write({ model, variant, inherited })
+      },
+      restore(msg: { sessionID: string; agent: string; model: ModelKey }, inherited?: true) {
         const session = id()
         if (!session) return
         if (msg.sessionID !== session) return
@@ -367,7 +365,8 @@ export function createLocal(deps: LocalDeps) {
         setSaved("session", session, {
           agent: msg.agent,
           model: msg.model,
-          variant: msg.model?.variant ?? null,
+          variant: msg.model.variant ?? null,
+          inherited,
         })
       },
     },
@@ -377,11 +376,56 @@ export function createLocal(deps: LocalDeps) {
 
 export type ModelSelection = ReturnType<typeof useLocal>["model"]
 
+export function createModelSelectionDisplay(input: {
+  execution: ReturnType<typeof createModelExecutionView>
+  providers: Pick<ReturnType<typeof useProviders>, "all">
+  models: Pick<ReturnType<typeof useModels>, "find" | "list">
+  intent: () => { model: ModelKey | undefined }
+  candidate: () => ModelKey | undefined
+}) {
+  type Item = NonNullable<ReturnType<typeof input.models.find>>
+  const token = (providerID: string, modelID: string) => JSON.stringify([providerID, modelID])
+  const canonical = createMemo(() => {
+    const result = input.execution.read()
+    if (result.status !== "ready") return
+    return new Map(result.response.data.models.map(({ model }) => {
+      const provider = input.providers.all().get(model.providerID) ?? {
+        id: model.providerID, name: model.providerID, source: "custom" as const, env: [], options: {}, models: {},
+      }
+      const item = { ...normalizeCatalogModel(model, provider.id), provider,
+        name: model.name.replace("(latest)", "").trim(), latest: model.name.includes("(latest)") }
+      return [token(model.providerID, model.id), item] as const
+    }))
+  })
+  const known = new Map<string, Item>()
+  const display = (key: ModelKey | undefined) => {
+    if (!key) return
+    const provider = input.providers.all().get(key.providerID)
+    const metadata = provider?.models[key.modelID]
+    const id = token(key.providerID, key.modelID)
+    const item = canonical()?.get(id) ?? input.models.find(key) ?? (provider && metadata ? { ...metadata, provider,
+      name: metadata.name.replace("(latest)", "").trim(), latest: metadata.name.includes("(latest)") } : undefined)
+    if (item) known.set(id, item)
+    return item ?? known.get(id)
+  }
+  return {
+    current: () => display(input.intent().model ?? (input.execution.ready() ? input.candidate() : undefined)),
+    list: () => {
+      const inventory = canonical()
+      const items: Item[] = inventory ? [...inventory.values()] : input.models.list()
+      const selected = display(input.intent().model)
+      return selected && !items.some((item) => item.id === selected.id && item.provider.id === selected.provider.id)
+        ? [...items, selected] : items
+    },
+  }
+}
+
 /** One view owns its query; admissions always acquire independent query owners. */
 export function createModelExecutionView(input: {
   sdk: ReturnType<typeof useSDK>
   server?: ReturnType<typeof useServerSDK>
   sessionID: () => string | undefined
+  placement?: () => { directory?: string; workspaceID?: string } | undefined
   agentID: () => string | undefined
   agent: () => { model?: ModelKey; variant?: string } | undefined
   intent: () => { model: ModelKey | undefined; variant: string | null | undefined }
@@ -392,7 +436,21 @@ export function createModelExecutionView(input: {
 }) {
   const [view, setView] = createStore<{ value: ModelExecutionState }>({ value: { status: "idle" } })
   const lifetime = { disposed: false }
-  const context = createMemo(() => JSON.stringify(input.metadata()))
+  const directory = () => input.placement?.()?.directory ?? input.sdk().directory
+  const workspaceID = () => input.placement?.()?.workspaceID
+  const [locationEpoch, setLocationEpoch] = createSignal(0)
+  createComputed(() => {
+    const server = input.server?.()
+    const path = directory()
+    const workspace = workspaceID()
+    if (workspace === undefined && path === input.sdk().directory) return
+    const stop = server?.onModelExecutionChange?.(path, () => setLocationEpoch((value) => value + 1), workspace)
+    if (stop) onCleanup(stop)
+  })
+  const context = createMemo(() => JSON.stringify({
+    metadata: input.metadata(), locationEpoch: locationEpoch(),
+    policyEpoch: input.sessionID() ? input.server?.().modelExecutionPolicyEpoch?.() : undefined,
+  }))
   const version = () => {
     const id = input.sessionID()
     return id ? input.server?.().sessionManagement.subagentModelsWriteVersion?.(id) ?? 0 : 0
@@ -408,7 +466,7 @@ export function createModelExecutionView(input: {
         ? agent.variant : model ? input.savedVariant(model) : undefined
     const sessionID = input.sessionID()
     const request = {
-      location: { directory: sdk.directory },
+      location: { directory: directory(), workspace: workspaceID() },
       context: sessionID ? { type: "session" as const, sessionID, agentID: input.agentID() }
         : { type: "draft" as const, agentID: input.agentID() },
       model: model ? { providerID: model.providerID, id: model.modelID, variant } : undefined,
@@ -433,7 +491,9 @@ export function createModelExecutionView(input: {
       const response = await captured.client.models.execution(request, options)
       if (owner() !== captured || captured.version !== version() ||
         captured.credentials !== JSON.stringify(input.server?.().server?.http) ||
-        captured.sdk.transportCurrent?.() === false || captured.server?.transportCurrent?.() === false) throw new DOMException("", "AbortError")
+        captured.sdk.transportCurrent?.() === false || captured.server?.transportCurrent?.() === false ||
+        pathKey(response.location.directory) !== pathKey(request.location?.directory ?? captured.sdk.directory) ||
+        response.location.workspaceID !== request.location?.workspace) throw new DOMException("", "AbortError")
       return response
     },
   })
@@ -441,7 +501,7 @@ export function createModelExecutionView(input: {
     const captured = owner()
     const ready = input.ready?.() !== false
     untrack(() => {
-      if (!ready || !captured.request.model) { query.invalidate(); return }
+      if (!ready) { query.invalidate(); return }
       void query.load(captured, captured.request)
     })
   })

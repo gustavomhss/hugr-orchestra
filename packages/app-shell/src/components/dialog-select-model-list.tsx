@@ -51,6 +51,10 @@ export function ModelList(props: {
     const value = model.current()
     return value ? modelKey(value) : undefined
   }
+  const refusal = (item: ModelItem) => {
+    const key = { modelID: item.id, providerID: item.provider.id }
+    return model.execution.allows(key) ? undefined : language.t(modelExecutionReasonKey(model.execution.reason(key)))
+  }
   const select = (item: ModelItem | undefined) => {
     if (item && !model.execution.allows({ modelID: item.id, providerID: item.provider.id })) return
     model.set(item ? { modelID: item.id, providerID: item.provider.id } : undefined, { recent: true })
@@ -75,6 +79,12 @@ export function ModelList(props: {
     },
     onSelect: select,
   })
+  const activeLabel = () => {
+    const item = list.flat().find((model) => modelKey(model) === list.active())
+    if (!item) return ""
+    const reason = refusal(item)
+    return reason ? `${item.name}. ${reason}` : item.name
+  }
   const rows = createGroupedVirtualizer({
     groups: () => list.grouped.latest ?? [],
     key: modelKey,
@@ -132,7 +142,10 @@ export function ModelList(props: {
       class={`flex-1 px-3 min-h-0 [&_[data-slot=list-scroll]]:flex-1 [&_[data-slot=list-scroll]]:min-h-0 ${props.class ?? ""}`}
     >
       <Show when={!model.current() && model.intent().model}>{(key) =>
-        <div class="px-3 py-2" title={language.t("model.execution.unavailable")}>{key().modelID}</div>
+        <div class="px-3 py-2">
+          <div class="break-all">{key().providerID}/{key().modelID}</div>
+          <div class="text-12-regular text-text-weak">{language.t(modelExecutionReasonKey(model.execution.reason(key())))}</div>
+        </div>
       }</Show>
       <div data-slot="list-search-wrapper">
         <div
@@ -175,6 +188,7 @@ export function ModelList(props: {
         </div>
         {props.action}
       </div>
+      <div class="sr-only" role="status" aria-atomic="true" data-slot="model-picker-status">{activeLabel()}</div>
       <div ref={(el) => setStore("scroll", el)} data-slot="list-scroll">
         <Show
           when={list.flat().length > 0}
@@ -219,16 +233,18 @@ export function ModelList(props: {
                                     gutter={12}
                                     openDelay={0}
                                     value={
-                                      <ModelTooltip
-                                        model={item()}
-                                        latest={item().latest}
-                                        free={isFree(item().provider.id, item().cost)}
-                                      />
+                                      refusal(item()) ?? (
+                                        <ModelTooltip
+                                          model={item()}
+                                          latest={item().latest}
+                                          free={isFree(item().provider.id, item().cost)}
+                                        />
+                                      )
                                     }
                                   >
                                     <button
-                                      disabled={!model.execution.allows({ modelID: item().id, providerID: item().provider.id })}
-                                      title={!model.execution.allows({ modelID: item().id, providerID: item().provider.id }) ? language.t(modelExecutionReasonKey(model.execution.reason({ modelID: item().id, providerID: item().provider.id }))) : undefined}
+                                      disabled={!!refusal(item())}
+                                      aria-description={refusal(item())}
                                       data-slot="list-item"
                                       data-key={key}
                                       data-active={key === list.active()}
@@ -247,7 +263,10 @@ export function ModelList(props: {
                                       }}
                                     >
                                       <div class="w-full flex items-center gap-x-2 text-13-regular">
-                                        <span class="truncate">{item().name}</span>
+                                        <span class="min-w-0 truncate">{item().name}</span>
+                                        <Show when={refusal(item())}>
+                                          {(reason) => <span class="ml-auto min-w-0 max-w-[55%] truncate text-12-regular" aria-hidden="true">{reason()}</span>}
+                                        </Show>
                                         <Show when={isFree(item().provider.id, item().cost)}>
                                           <Tag>{language.t("model.tag.free")}</Tag>
                                         </Show>

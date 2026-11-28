@@ -3,12 +3,16 @@ import type { TuiPromptAgentPart, TuiPromptFilePart } from "@orchestra/plugin/tu
 
 type Client = ReturnType<typeof Orchestra.make>
 type Model = { providerID: string; modelID: string; variant?: string }
+export type SessionAdmissionStep = "agent" | "model" | "synthetic" | "admit"
+type BeforeAdmission = (step: SessionAdmissionStep) => void
 
 // The V2 server serves these session actions under `/api/session/:id/*`. The legacy `/session/:id/*`
 // routes (abort, shell, command, summarize, revert, unrevert) are not served by it.
 export function createSessionActions(client: Client) {
-  async function select(input: { sessionID: string; agent: string; model: Model }) {
+  async function select(input: { sessionID: string; agent: string; model: Model }, beforeAdmission?: BeforeAdmission) {
+    beforeAdmission?.("agent")
     await client.sessions.switchAgent({ sessionID: input.sessionID, agent: input.agent })
+    beforeAdmission?.("model")
     await client.sessions.switchModel({
       sessionID: input.sessionID,
       model: { providerID: input.model.providerID, id: input.model.modelID, variant: input.model.variant },
@@ -34,12 +38,13 @@ export function createSessionActions(client: Client) {
       model: Model
       files: ReadonlyArray<Pick<TuiPromptFilePart, "url" | "filename" | "source">>
       agents: ReadonlyArray<Pick<TuiPromptAgentPart, "name" | "source">>
-    }, beforeAdmission?: () => void) {
-      await select(input)
-      beforeAdmission?.()
-      if (input.context)
+    }, beforeAdmission?: BeforeAdmission) {
+      await select(input, beforeAdmission)
+      if (input.context) {
+        beforeAdmission?.("synthetic")
         await client.sessions.synthetic({ sessionID: input.sessionID, text: input.context, resume: false })
-      beforeAdmission?.()
+      }
+      beforeAdmission?.("admit")
       return client.sessions.prompt({
         sessionID: input.sessionID,
         prompt: {
@@ -71,9 +76,9 @@ export function createSessionActions(client: Client) {
       agent: string
       model: Model
       files: ReadonlyArray<Pick<TuiPromptFilePart, "url" | "filename" | "source">>
-    }, beforeAdmission?: () => void) {
-      await select(input)
-      beforeAdmission?.()
+    }, beforeAdmission?: BeforeAdmission) {
+      await select(input, beforeAdmission)
+      beforeAdmission?.("admit")
       return client.sessions.command({
         sessionID: input.sessionID,
         command: input.command,
