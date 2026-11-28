@@ -299,7 +299,12 @@
         "e14cf72118",
         "2ba68435ec",
         "f914f19c8042f8f1f6544d6254a4fb91702d7bec",
-        "1ea3a466a7ddaa5b5d1d5c9be1e9bf07f8826990"
+        "1ea3a466a7ddaa5b5d1d5c9be1e9bf07f8826990",
+        "432eeca5b182a0ce22b000d3c0ad74a05060c74c",
+        "de3568f7efdd87cd130a9292caeb108616bdfd9f",
+        "bbe3a84cbf7adeae2ecd4413a2fc0e63cbd7ae28",
+        "30a6fc47948bf5b94560d0b01cfc9592159407f5",
+        "8d2d484d68fe746f8f323c712df924603b6c6e26"
       ],
       "evidence": [
         {
@@ -467,9 +472,33 @@
             "43380610880"
           ],
           "result": "Both6passed,90PAGE+6BENCHMARK each, Linux/current/1worker/repeat3/retries0. Both ZIP digests and embedded HTML/runtime records match. AFTER108critical blobs exact. Effective selectedconfig equivalent; metadata and serializedgrepInvert differ, no causal performance claim. evidence/e6-benchmark-comparison.json."
+        },
+        {
+          "kind": "post_followup_dev_qualification",
+          "source": "8d2d484d68fe746f8f323c712df924603b6c6e26",
+          "runs": [
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46103853637",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46103854072",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46103853939",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46103854662",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46103853916",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46103848793",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46103854259"
+          ],
+          "result": "After #1463 and follow-ups #1633, #1637, #1635, #1644 and #1645 merged, focused Core/Relay, Server HTTP and generated clients, Claude adapter fixtures, App and TUI tests passed on Linux and Windows. TSGO passed for all 10 selected packages on dev. The official Client generator produced no diff. The test snapshots differ from the merged source only by the CI request and, for generation, the CI-only runner."
+        },
+        {
+          "kind": "post_followup_janitor_and_benchmark",
+          "source": "8d2d484d68fe746f8f323c712df924603b6c6e26",
+          "runs": [
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46102540569",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46102539461",
+            "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46102540431"
+          ],
+          "result": "The Janitor Chromium suite passed all five scenarios, including Send and reopen after a Session move. Its candidate tree and the production benchmark candidate tree match merged dev. The paired benchmark completed all six scenarios on current dev and the candidate, with 15 observations per scenario in each run. The earlier increase did not reproduce in the repeat."
         }
       ],
-      "remaining": "Closed for explicit model/variant identity and current App/TUI consumers under preserved preference storage compatibility. Legacy stored default intent cannot be recovered; first-known-model metadata performs documented one-time inference. No causal benchmark improvement or durable preference transaction guarantee; full epic remains final PR gate."
+      "remaining": "Closed for contextual model and variant eligibility and the App/TUI consumers on dev. Ambiguous legacy default intent uses the documented one-time inference. Benchmark timings vary between hosted runners, and the preference coverage is scoped to the verified persistence behavior. The authenticated Claude smoke remains pending in #1216 until account access returns."
     },
     {
       "id": "E7",
@@ -3813,16 +3842,27 @@
   "supplemental_candidates": [
     {
       "id": "G3-candidate",
-      "status": "runtime_fixture_only",
-      "title": "Imported emitter omits required empty Struct payload",
-      "scope": "Public generator fixture; productive endpoint not established",
+      "status": "fixed_verified",
+      "title": "Imported Effect and Promise emitters omit required empty Struct payload",
+      "scope": "Public generator fixtures. Regenerating the current SDK produces no file changes.",
       "severity": "unclassified",
       "evidence": {
         "run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43112615865",
         "snapshot_sha": "ea0afd36197790ecf053baa6b7fb70f696aeddee",
         "case": "optional-payload.test.ts empty (imported)"
       },
-      "disposition": "Recorded separately from original 65; no silent G1 scope expansion."
+      "qualification": {
+        "pull_request": "https://github.com/gustavomhss/hugr-orchestra/pull/1650",
+        "candidate_sha": "7399b897107f50d0c703e5b7eddad5d2f5be1ecc",
+        "reproduction_run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46104729173",
+        "generator_matrix_run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46104772911",
+        "generator_matrix_result": "142 passing tests on Linux. The empty payload regressions pass on Windows, where three existing assertions still fail in the header fixture comparison and generated-file paths.",
+        "focused_windows_run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46104921677",
+        "client_regressions_run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46104773438",
+        "sdk_regeneration_run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46104773416",
+        "typecheck_run": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/46104798675"
+      },
+      "disposition": "Both emitters send an empty JSON object when a zero-field payload is declared and omit the body when no payload is declared. Tracked separately from the original 65 findings."
     }
   ],
   "summary": {

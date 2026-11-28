@@ -13,6 +13,8 @@ type Client = {
   readonly probe: {
     readonly list: (input?: typeof Query.Type) => Effect.Effect<typeof Query.Type, ClientError>
     readonly required: (input: typeof RequiredQuery.Type) => Effect.Effect<typeof RequiredQuery.Type, ClientError>
+    readonly empty: () => Effect.Effect<object, ClientError>
+    readonly noPayload: () => Effect.Effect<string, ClientError>
   }
 }
 
@@ -22,6 +24,18 @@ const outputs = {
 }
 
 describe.each(["inline", "imported"] as const)("%s Effect optional payloads", (kind) => {
+  test("encodes a declared empty payload and omits an undeclared payload", async () => {
+    await withClient(kind, (client, requests, dispatched) =>
+      Effect.gen(function* () {
+        expect(yield* client.probe.noPayload()).toBe("no payload")
+        expect(requests).toEqual([undefined])
+        expect(yield* client.probe.empty()).toEqual({})
+        expect(requests).toEqual([undefined, {}])
+        expect(dispatched).toHaveLength(2)
+      }),
+    )
+  })
+
   test("omitted input and explicit undefined omit strict keys and leave defaults to schema", async () => {
     await withClient(kind, (client, requests, dispatched) =>
       Effect.gen(function* () {
@@ -88,7 +102,9 @@ async function withClient<E>(
         HttpApiBuilder.group(DefaultApi, "probe", (handlers) =>
           handlers
             .handle("list", ({ payload }) => Effect.succeed(payload))
-            .handle("required", ({ payload }) => Effect.succeed(payload)),
+            .handle("required", ({ payload }) => Effect.succeed(payload))
+            .handle("empty", ({ payload }) => Effect.succeed(payload))
+            .handle("noPayload", () => Effect.succeed("no payload")),
         ),
       ),
       Layer.provide(
@@ -103,7 +119,8 @@ async function withClient<E>(
     hostname: "127.0.0.1",
     port: 0,
     async fetch(request) {
-      requests.push(await request.clone().json())
+      const body = await request.clone().text()
+      requests.push(body === "" ? undefined : JSON.parse(body))
       return router.handler(request)
     },
   })
