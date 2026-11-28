@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
-import { cp, mkdir, readFile, rename, writeFile } from "node:fs/promises"
+import { cp, mkdir, readFile, rename, stat, writeFile } from "node:fs/promises"
 import { Effect } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { ActivityActionLedger } from "../src/activity-action-ledger"
@@ -16,20 +16,24 @@ test("confirmed apply reserves once and survives service restart", async () => {
   const claims = new Set<string>()
   await mkdir(origin)
   await writeFile(path.join(origin, "fixture"), "owned")
+  const original = await stat(origin, { bigint: true })
+  const nativeIdentity = `${original.dev}:${original.ino}`
   let mutations = 0
   await Effect.runPromise(Effect.gen(function* () {
     const database = yield* Database.Service
     const actions = yield* ActivityActionLedger.make
-    const target = yield* actions.record({ targetID: "fixture", kind: "object", label: "fixture", owner: "test",
+    const target = yield* actions.record({ targetID: "fixture", kind: "object", label: origin, owner: "test",
       identity: "fixture-identity", members: ["fixture"], dirty: false, eligible: ["arm"] })
     const arm = ActivityArmLedger.make(database, { verify: () => Effect.succeed(true) })
     const armPreview = yield* arm.preview({ targets: [{ targetID: target.targetID, generation: target.generation }] })
     if (!armPreview) throw new Error("missing arm preview")
     const approval = yield* arm.confirm({ previewID: armPreview.previewID })
     if (!approval) throw new Error("missing approval")
-    const reading = async (dir: string) => readFile(path.join(dir, "fixture"), "utf8")
-      .then(() => ({ state: "present" as const, identity: "fixture-identity" }))
-      .catch(() => ({ state: "absent" as const }))
+    const reading = async (dir: string) => stat(dir, { bigint: true })
+      .then((info) => ({ state: "present" as const, identity: `${info.dev}:${info.ino}` }))
+      .catch((error: NodeJS.ErrnoException) => error.code === "ENOENT"
+        ? { state: "absent" as const }
+        : { state: "unavailable" as const })
     const facts = async () => ({ original: await reading(origin), quarantine: await reading(destination) })
     const authority: ActivityApplyService.Authority = {
       describe: () => destination,
@@ -37,8 +41,10 @@ test("confirmed apply reserves once and survives service restart", async () => {
       prepare: () => Effect.sync(() => {
         if (claims.has("fixture")) return undefined
         claims.add("fixture")
-        return { identity: "fixture-identity", release: async () => { claims.delete("fixture") }, adapter: {
+        return { identity: nativeIdentity, release: async () => { claims.delete("fixture") }, adapter: {
           prepare: async () => ({ facts: await facts(), claimant: "absent" as const, mutation: async () => {
+            const reservation = await Effect.runPromise(database.db.select().from(ActivityApplyTable).get())
+            expect(reservation).toMatchObject({ identity: nativeIdentity, outcome: "Unknown", source: origin, destination })
             mutations++
             await rename(origin, destination)
             return "accepted" as const
@@ -58,6 +64,8 @@ test("confirmed apply reserves once and survives service restart", async () => {
     expect((yield* restarted.confirm({ previewID: preview.previewID }))?.outcome).toBe("Out")
     expect(yield* restarted.preview(request)).toBeUndefined()
     expect((yield* restarted.state()).results).toMatchObject([{ ...request, outcome: "Out" }])
+    expect(yield* Effect.promise(() => readFile(path.join(destination, "fixture"), "utf8"))).toBe("owned")
+    expect(yield* Effect.promise(() => reading(origin))).toEqual({ state: "absent" })
     expect(mutations).toBe(1)
   }).pipe(Effect.provide(Database.layerFromPath(path.join(directory.path, "activity.sqlite"))), Effect.scoped))
 })
@@ -108,14 +116,17 @@ test.each(["second-read", "origin-remains", "revalidation"] as const)("%s settle
     const second = yield* service.preview(request)
     if (!first || !second) throw new Error("missing previews")
     authorized = scenario !== "revalidation"
-    const [result, competing] = yield* Effect.all([service.confirm({ previewID: first.previewID }),
+    const results = yield* Effect.all([service.confirm({ previewID: first.previewID }),
       service.confirm({ previewID: second.previewID })], { concurrency: "unbounded" })
-    expect(result?.outcome).toBe(scenario === "revalidation" ? "Refused" : "Unknown")
-    expect(competing).toBeUndefined()
+    const successful = results.filter((result) => result !== undefined)
+    expect(successful).toHaveLength(1)
+    const result = successful[0]
+    if (!result) throw new Error("result missing")
+    expect(result.outcome).toBe(scenario === "revalidation" ? "Refused" : "Unknown")
     expect(mutations).toBe(scenario === "revalidation" ? 0 : 1)
     const restarted = ActivityApplyService.make(database, { authority })
-    expect((yield* restarted.state()).results[0]?.outcome).toBe(result?.outcome)
-    expect((yield* restarted.confirm({ previewID: first.previewID }))?.outcome).toBe(result?.outcome)
+    expect((yield* restarted.state()).results[0]?.outcome).toBe(result.outcome)
+    expect((yield* restarted.confirm({ previewID: result.previewID }))?.outcome).toBe(result.outcome)
     expect(yield* restarted.preview(request)).toBeUndefined()
     if (scenario !== "revalidation") {
       const changed = yield* record("fixture", source + "/changed")
@@ -141,7 +152,7 @@ test("a reservation left Unknown by a stopped process blocks reuse after restart
   await Effect.runPromise(Effect.gen(function* () {
     const database = yield* Database.Service
     yield* database.db.insert(ActivityApplyTable).values({ preview_id: "prior-preview", approval_id: "prior-approval",
-      target_id: "prior-target", generation: "1", source: directory.path, destination: path.join(directory.path, "out"),
+      target_id: "prior-target", generation: "1", confirmed_at: 1, source: directory.path, destination: path.join(directory.path, "out"),
       identity: "native-identity", outcome: "Unknown" }).run()
     const service = ActivityApplyService.make(database)
     expect(yield* service.state()).toMatchObject({ available: false, results: [{ approvalID: "prior-approval",

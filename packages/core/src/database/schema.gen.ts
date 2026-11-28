@@ -1042,7 +1042,7 @@ export default {
           CONSTRAINT \`fk_session_share_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
         );
       `)
-      yield* tx.run(`CREATE TABLE activity_apply (preview_id text PRIMARY KEY NOT NULL, approval_id text NOT NULL, target_id text NOT NULL, generation text NOT NULL, source text NOT NULL, destination text NOT NULL, identity text, outcome text NOT NULL);`)
+      yield* tx.run(`CREATE TABLE activity_apply (preview_id text PRIMARY KEY NOT NULL, approval_id text NOT NULL, target_id text NOT NULL, generation text NOT NULL, confirmed_at integer NOT NULL, source text NOT NULL, destination text NOT NULL, identity text, outcome text NOT NULL);`)
       yield* tx.run(`CREATE UNIQUE INDEX activity_apply_target_generation_idx ON activity_apply (target_id, generation);`)
       yield* tx.run(
         `CREATE UNIQUE INDEX \`activity_arm_target_generation_idx\` ON \`activity_arm\` (\`target_id\`,\`generation\`);`,

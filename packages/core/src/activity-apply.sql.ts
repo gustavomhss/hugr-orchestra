@@ -1,10 +1,11 @@
-import { sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
 export const ActivityApplyTable = sqliteTable("activity_apply", {
   preview_id: text().primaryKey(),
   approval_id: text().notNull(),
   target_id: text().notNull(),
   generation: text().notNull(),
+  confirmed_at: integer().notNull(),
   source: text().notNull(),
   destination: text().notNull(),
   identity: text(),
