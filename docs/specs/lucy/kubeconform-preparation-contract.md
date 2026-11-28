@@ -11,6 +11,14 @@ analyzer dispatch, schema policy, catalog capability, compliance result, durable
 producer receipt, variants or fix-review integration. Preparation is a named
 prerequisite, not delivery of the kubeconform qualification row.
 
+Predecessor correction: [Core RED1](https://github.com/gustavomhss/hugr-orchestra/actions/runs/46115232348)
+passed package types but its fourth artifact case stopped during preparation with
+`notice-invalid`: three destination filenames contained `_`, which the existing
+notice mapper rejects. Only those three fixture `filename` values change from
+`third_party` to `third-party`. URLs, upstream artifact paths, origins, content
+hashes, bytes and assertions stay unchanged. This setup failure is not assertion
+RED; the corrected predecessor must run again before production work.
+
 ## 1. Independent observed identities
 
 The immutable expectation is [kubeconform-preparation-sources.json](kubeconform-preparation-sources.json).

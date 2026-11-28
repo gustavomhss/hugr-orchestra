@@ -191,7 +191,7 @@
     {
       "component": "k8s.io/kube-openapi",
       "version": "v0.0.0-20260603220949-865597e52e25",
-      "filename": "kube-openapi-pkg-internal-third_party-govalidator-license.txt",
+      "filename": "kube-openapi-pkg-internal-third-party-govalidator-license.txt",
       "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/k8s.io/kube-openapi/pkg/internal/third_party/govalidator/LICENSE",
       "sha256": "012d0f6caf604aedba723982c0d8a28f664ecd957de5131bc22c87a0d36b7115",
       "bytes": 1080,
@@ -231,7 +231,7 @@
     {
       "component": "k8s.io/utils",
       "version": "v0.0.0-20260210185600-b8788abfbbc2",
-      "filename": "k8s-utils-internal-third_party-forked-golang-license.txt",
+      "filename": "k8s-utils-internal-third-party-forked-golang-license.txt",
       "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/k8s.io/utils/internal/third_party/forked/golang/LICENSE",
       "sha256": "dd26a7abddd02e2d0aba97805b31f248ef7835d9e10da289b22e3b8ab78b324d",
       "bytes": 1479,
@@ -241,7 +241,7 @@
     {
       "component": "k8s.io/utils",
       "version": "v0.0.0-20260210185600-b8788abfbbc2",
-      "filename": "k8s-utils-internal-third_party-forked-golang-patents.txt",
+      "filename": "k8s-utils-internal-third-party-forked-golang-patents.txt",
       "url": "https://raw.githubusercontent.com/yannh/kubeconform/02374e583d700721f57300fae78e11acd27ee539/vendor/k8s.io/utils/internal/third_party/forked/golang/PATENTS",
       "sha256": "96f408bfae65bf137fc2525d3ecb030271c50c1e90799f87abf8846d8dd505cc",
       "bytes": 1303,
