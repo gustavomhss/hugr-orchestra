@@ -279,8 +279,8 @@ describe("test shard planner", () => {
       ...timings,
       files: { ...timings.files, [`${directory}:windows`]: Object.fromEntries(files.map((file) => [file, heavyNames.includes(file) ? 120 : file === currency ? 1 : 0.05])) },
       reserves: { ...timings.reserves, [`${directory}:windows`]: {} },
-      totals: { ...timings.totals, [directory]: { windows: 0 } },
-    }
+      totals: { ...timings.totals, [directory]: { linux: timings.totals[directory]?.linux ?? 0, windows: 0 } },
+    } satisfies Timings
     const packed = plannedBins(crowded, directory, "windows")
     expect(fitsWindowsTarget(crowded, packed.slice(1))).toBe(true)
     for (const name of heavyNames) expect(packed.find((bin) => bin.names.includes(name))?.names.filter((file) => heavyNames.includes(file))).toEqual([name])
