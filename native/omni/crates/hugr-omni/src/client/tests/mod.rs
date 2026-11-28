@@ -58,6 +58,7 @@ fn block<F: Future>(fut: F) -> F::Output {
 
 fn spec(pty: bool) -> Spec {
     Spec {
+        member_isolation: false,
         program: "/bin/fixture".into(),
         argv: vec!["fixture".into(), "arg with space".into()],
         env: vec![("K".into(), "V".into())],

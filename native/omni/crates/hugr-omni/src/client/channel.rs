@@ -172,6 +172,15 @@ impl std::fmt::Debug for Gen {
 }
 
 impl Gen {
+    #[cfg(target_os = "linux")]
+    pub(super) fn isolated_channel(&self) -> bool {
+        self.chan.is_remote()
+    }
+
+    pub(super) fn member_freeze(&self) -> bool {
+        lock(&self.st).member_freeze
+    }
+
     /// The internal constructor: `make` builds the connected channel inside the runtime's context; then
     /// this waits (at most `bound`) for the supervisor's `Ready`. `bound` is also the deadline of every
     /// request of this generation (a `Stop` gets its grace on top).

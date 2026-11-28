@@ -15,7 +15,6 @@ import type { UpdaterState } from "@orchestra/app/updater"
 import type { DesktopNativeBundle } from "@orchestra/app/i18n/desktop-native"
 import type { NativeTitlebarFrame } from "@orchestra/app/native-titlebar"
 import type { ResponseDownloadAPI } from "./response-download"
-import type { ActivityArm } from "@orchestra/schema/activity-arm"
 import type { ActivityStop } from "@orchestra/schema/activity-stop"
 import type { ActivityEmpty } from "@orchestra/schema/activity-empty"
 import type { ActivityFreeze } from "@orchestra/schema/activity-freeze"
@@ -128,7 +127,6 @@ export type AppDockManifest = {
 export type AppDockManifestUpdate = { status: "updated" | "conflict"; manifest: AppDockManifest }
 
 export type ElectronAPI = import("@orchestra/app/app-dock-linux").AppDockLinuxAPI & {
-  armActivityQuarantine: (serverURL: string, request: ActivityArm.Request) => Promise<ActivityArm.Receipt | undefined>
   stopActivityTree: (serverURL: string, request: ActivityStop.Request) => Promise<ActivityStop.Receipt | undefined>
   emptyActivityQuarantine: (serverURL: string) => Promise<ActivityEmpty.Receipt | undefined>
   readActivityQuarantine: (serverURL: string) => Promise<ActivityEmpty.Snapshot | undefined>

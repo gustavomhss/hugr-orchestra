@@ -308,7 +308,7 @@ fn kill_session(root: i32, members: Option<&[Member]>, tx: &mut Signals<'_>) {
 }
 
 /// Reaps the root: from here on its numbers are free and never signalled again.
-fn reap(pid: i32) -> bool {
+pub(super) fn reap(pid: i32) -> bool {
     let mut status = 0;
     loop {
         // SAFETY: `status` is writable; WNOHANG never blocks.

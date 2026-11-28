@@ -43,6 +43,7 @@ pub(super) struct Chan {
     sock: UnixStream,
     sup: Option<Watch>,
     rt: Handle,
+    remote: bool,
 }
 
 impl Chan {
@@ -56,7 +57,12 @@ impl Chan {
             Ok((UnixStream::from_std(host)?, rt))
         })();
         match setup {
-            Ok((sock, rt)) => Ok(Chan { sock, sup, rt }),
+            Ok((sock, rt)) => Ok(Chan {
+                sock,
+                sup,
+                rt,
+                remote: false,
+            }),
             Err(e) => {
                 // It never served: do not leave it running (its keeper then reaps it).
                 if let Some(sup) = &sup {
@@ -65,6 +71,18 @@ impl Chan {
                 Err(e)
             }
         }
+    }
+
+    #[cfg(target_os = "linux")]
+    pub(super) fn isolated(host: StdStream) -> io::Result<Chan> {
+        let mut chan = Self::new(host, None)?;
+        chan.remote = true;
+        Ok(chan)
+    }
+
+    #[cfg(target_os = "linux")]
+    pub(super) fn is_remote(&self) -> bool {
+        self.remote
     }
 
     /// The socketpair is connected from the start.
@@ -110,7 +128,7 @@ impl Chan {
 
     /// Whether a supervisor stuck after `close` can be ended (false: no pidfd or no start time).
     pub(super) fn can_end(&self) -> bool {
-        self.sup.as_ref().is_none_or(Watch::can_end)
+        !self.remote && self.sup.as_ref().is_none_or(Watch::can_end)
     }
 
     /// Validates `Spawned.pty_ends` and takes the master that travelled with the frame.

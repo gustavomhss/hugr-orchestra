@@ -361,7 +361,15 @@ export const usesOmni = (spawner: ChildProcessSpawner["Service"]) => omniSpawner
  */
 export const makeWith = Effect.fnUntraced(function* (mode: typeof Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER, options?: { windowsHide?: boolean }) {
   const base = yield* legacy(options)
-  if (mode === "off") return makeSpawner(base.spawnCommand)
+  if (mode === "off") return makeSpawner((command) =>
+    OmniSpawner.activityIsolationRequested(command)
+      ? Effect.fail(PlatformError.badArgument({
+          module: "ChildProcess",
+          method: "spawn",
+          description: "Isolated Activity Monitor commands require Omni",
+        }))
+      : base.spawnCommand(command),
+  )
   const spawner = makeSpawner(yield* OmniSpawner.make({ mode, legacy: base.spawnCommand, cwd: base.cwd }))
   omniSpawners.add(spawner)
   return spawner
