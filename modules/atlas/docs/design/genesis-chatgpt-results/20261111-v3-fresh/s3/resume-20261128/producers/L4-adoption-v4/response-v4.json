@@ -1,0 +1,324 @@
+{
+  "schema": "s3-l4-adoption-response-v4-v1",
+  "response_kind": "ORIGINAL_CORRECTION",
+  "producer_identity": "/root/s3_l4_producer",
+  "execution_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "produced_at_utc": "2026-11-28T07:25:36Z",
+  "status_as_of_production": "REVIEW_REQUIRED",
+  "semantic_acceptance_granted": false,
+  "scope": "navigation accessibility metadata only, entry section 3",
+  "request": {
+    "path": "s3-l4-adoption/request-v4.md",
+    "bytes": 1391,
+    "sha256": "3a075ff3772c309017dd0c26d8c68726628f343b915ce773f035c0496069e5c8"
+  },
+  "api_behavior_basis": {
+    "source": "parent /root static observation recorded in request-v4.md",
+    "S4_pin_as_supplied": "db9b423",
+    "new_API_execution_by_producer": false
+  },
+  "sources_used": [
+    {
+      "path": "s3-provenance/files/bodies/l1-relay.md",
+      "bytes": 23932,
+      "sha256": "369d2610ba4507a0950bd16cfce045dede276b67dee05f5d0086ef9ea503ffcb",
+      "key": "s3-l1-relay",
+      "inspection": "H2 metadata extraction only for this correction",
+      "h2_headings": [
+        {
+          "source_line": 5,
+          "h2_line": "## 1. O que existe e quem decide",
+          "section": "1. O que existe e quem decide"
+        },
+        {
+          "source_line": 19,
+          "h2_line": "## 2. Mapa contratual das famílias",
+          "section": "2. Mapa contratual das famílias"
+        },
+        {
+          "source_line": 47,
+          "h2_line": "## 3. Entradas e semântica dos controles",
+          "section": "3. Entradas e semântica dos controles"
+        },
+        {
+          "source_line": 61,
+          "h2_line": "## 4. Drivers, execução e estado",
+          "section": "4. Drivers, execução e estado"
+        },
+        {
+          "source_line": 81,
+          "h2_line": "## 5. Auditoria, persistência e recuperação",
+          "section": "5. Auditoria, persistência e recuperação"
+        },
+        {
+          "source_line": 100,
+          "h2_line": "## 6. Authoring, hooks e material gerado",
+          "section": "6. Authoring, hooks e material gerado"
+        },
+        {
+          "source_line": 110,
+          "h2_line": "## 7. Integrações externas e evidência preservada",
+          "section": "7. Integrações externas e evidência preservada"
+        }
+      ]
+    },
+    {
+      "path": "s3-provenance/files/bodies/l1-integrations.md",
+      "bytes": 23985,
+      "sha256": "81685f16fb32aae6958671939413d121e4f5babaf01d3b9565b03a50f7842e8a",
+      "key": "s3-l1-integrations",
+      "inspection": "H2 metadata extraction only for this correction",
+      "h2_headings": [
+        {
+          "source_line": 7,
+          "h2_line": "## 1. População e necessidades",
+          "section": "1. População e necessidades"
+        },
+        {
+          "source_line": 23,
+          "h2_line": "## 2. Identidade e autoridade dos especialistas",
+          "section": "2. Identidade e autoridade dos especialistas"
+        },
+        {
+          "source_line": 35,
+          "h2_line": "## 3. Árvores de skills, geração e instalação",
+          "section": "3. Árvores de skills, geração e instalação"
+        },
+        {
+          "source_line": 45,
+          "h2_line": "## 4. Discovery: pacote documental versus host efetivo",
+          "section": "4. Discovery: pacote documental versus host efetivo"
+        },
+        {
+          "source_line": 53,
+          "h2_line": "## 5. Claude: integração, execução e recusas",
+          "section": "5. Claude: integração, execução e recusas"
+        },
+        {
+          "source_line": 65,
+          "h2_line": "## 6. Claude: identidade, lifetime, conta e distribuição",
+          "section": "6. Claude: identidade, lifetime, conta e distribuição"
+        },
+        {
+          "source_line": 75,
+          "h2_line": "## 7. Capability assets: proveniência não é runtime",
+          "section": "7. Capability assets: proveniência não é runtime"
+        },
+        {
+          "source_line": 83,
+          "h2_line": "## 8. Dock: duas superfícies e um receptor desktop",
+          "section": "8. Dock: duas superfícies e um receptor desktop"
+        },
+        {
+          "source_line": 95,
+          "h2_line": "## 9. Janitor: observação e notificação, sem limpeza automática",
+          "section": "9. Janitor: observação e notificação, sem limpeza automática"
+        },
+        {
+          "source_line": 103,
+          "h2_line": "## 10. Intenção, histórico e evidência de testes",
+          "section": "10. Intenção, histórico e evidência de testes"
+        },
+        {
+          "source_line": 113,
+          "h2_line": "## 11. Alcance e gaps que acompanham o resultado",
+          "section": "11. Alcance e gaps que acompanham o resultado"
+        }
+      ]
+    }
+  ],
+  "substitution": {
+    "artifact": "bodies/l4-entry.md",
+    "section": "3",
+    "before": "Abra a menor rota que sustente a decisão. O reader deve citar a autoridade/gap do próprio artefato; a existência dessas rotas não promove L2–L4 nem prova publicação Atlas.",
+    "after": "### Catálogo H2 dos intermediários L1\n\n`index(scope, need)` lista apenas headings da root daquele need e não aceita `key`. No need `evidence`, a root é `s3-l1-maestro`; os dois corpos abaixo são intermediários. Para `Read(key, section, maxBytes)`, use a chave correspondente e, em `section`, exatamente um dos textos H2 abaixo (o texto após `## `), preservando número, acentos e pontuação. Isso permite ler a seção do intermediário sem adquirir o corpo inteiro. `maxBytes` é limite de recusa, sem truncamento.\n\n**`s3-l1-relay` — textos exatos de `section`:**\n\n- `1. O que existe e quem decide`\n- `2. Mapa contratual das famílias`\n- `3. Entradas e semântica dos controles`\n- `4. Drivers, execução e estado`\n- `5. Auditoria, persistência e recuperação`\n- `6. Authoring, hooks e material gerado`\n- `7. Integrações externas e evidência preservada`\n\n**`s3-l1-integrations` — textos exatos de `section`:**\n\n- `1. População e necessidades`\n- `2. Identidade e autoridade dos especialistas`\n- `3. Árvores de skills, geração e instalação`\n- `4. Discovery: pacote documental versus host efetivo`\n- `5. Claude: integração, execução e recusas`\n- `6. Claude: identidade, lifetime, conta e distribuição`\n- `7. Capability assets: proveniência não é runtime`\n- `8. Dock: duas superfícies e um receptor desktop`\n- `9. Janitor: observação e notificação, sem limpeza automática`\n- `10. Intenção, histórico e evidência de testes`\n- `11. Alcance e gaps que acompanham o resultado`\n\nAbra a menor rota que sustente a decisão. O reader deve citar a autoridade/gap do próprio artefato; a existência dessas rotas não promove L2–L4 nem prova publicação Atlas.",
+    "inserted_text": "### Catálogo H2 dos intermediários L1\n\n`index(scope, need)` lista apenas headings da root daquele need e não aceita `key`. No need `evidence`, a root é `s3-l1-maestro`; os dois corpos abaixo são intermediários. Para `Read(key, section, maxBytes)`, use a chave correspondente e, em `section`, exatamente um dos textos H2 abaixo (o texto após `## `), preservando número, acentos e pontuação. Isso permite ler a seção do intermediário sem adquirir o corpo inteiro. `maxBytes` é limite de recusa, sem truncamento.\n\n**`s3-l1-relay` — textos exatos de `section`:**\n\n- `1. O que existe e quem decide`\n- `2. Mapa contratual das famílias`\n- `3. Entradas e semântica dos controles`\n- `4. Drivers, execução e estado`\n- `5. Auditoria, persistência e recuperação`\n- `6. Authoring, hooks e material gerado`\n- `7. Integrações externas e evidência preservada`\n\n**`s3-l1-integrations` — textos exatos de `section`:**\n\n- `1. População e necessidades`\n- `2. Identidade e autoridade dos especialistas`\n- `3. Árvores de skills, geração e instalação`\n- `4. Discovery: pacote documental versus host efetivo`\n- `5. Claude: integração, execução e recusas`\n- `6. Claude: identidade, lifetime, conta e distribuição`\n- `7. Capability assets: proveniência não é runtime`\n- `8. Dock: duas superfícies e um receptor desktop`\n- `9. Janitor: observação e notificação, sem limpeza automática`\n- `10. Intenção, histórico e evidência de testes`\n- `11. Alcance e gaps que acompanham o resultado`\n\n",
+    "expected_occurrences": 1,
+    "reason": "expose exact H2 section identifiers of non-root L1 intermediates for bounded Read navigation"
+  },
+  "entry_before": {
+    "path": "s3-l4-adoption/revisions/v3/bodies/l4-entry.md",
+    "bytes": 6250,
+    "sha256": "ae458ac87fa4542974e092641400c29f8904e37145dcb79cd553681a561443c0"
+  },
+  "entry_after": {
+    "path": "s3-l4-adoption/bodies/l4-entry.md",
+    "bytes": 7764,
+    "sha256": "a5e1bf88aa6c17470c2832c99049dba76867615279689db85d25e2fe8b39e9ef"
+  },
+  "lineage_receipts_preserved": [
+    {
+      "path": "s3-l4-adoption/response.json",
+      "bytes": 27266,
+      "sha256": "0c76b4f4a7874620321bbf8212541e0d58d522944fb30fe84eeb3472f0030393"
+    },
+    {
+      "path": "s3-l4-adoption/correction-response.json",
+      "bytes": 5893,
+      "sha256": "54bb5c2a099b35d164907433524937e330a2574dd3f60cce20be6dbe6e7b56bb"
+    },
+    {
+      "path": "s3-l4-adoption/correction-v3-response.json",
+      "bytes": 7187,
+      "sha256": "e390b3ffab25f3b3b8ca62111d53fd97b5fe3dc9ec788ef9daab6d3f772e049a"
+    }
+  ],
+  "archived_v3": [
+    {
+      "path": "s3-l4-adoption/revisions/v3/bodies/l4-entry.md",
+      "bytes": 6250,
+      "sha256": "ae458ac87fa4542974e092641400c29f8904e37145dcb79cd553681a561443c0"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v3/bodies/l4-ownership.md",
+      "bytes": 6934,
+      "sha256": "a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v3/bodies/l4-maintenance.md",
+      "bytes": 9724,
+      "sha256": "d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v3/bodies/l4-operational.md",
+      "bytes": 9757,
+      "sha256": "704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v3/request.md",
+      "bytes": 3827,
+      "sha256": "1b8e19051f1c9747e57c38ec71a8f47099c8a87d4aff682a828b1ba58334c5d3"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v3/response.json",
+      "bytes": 27266,
+      "sha256": "0c76b4f4a7874620321bbf8212541e0d58d522944fb30fe84eeb3472f0030393"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v3/recipe.md",
+      "bytes": 5471,
+      "sha256": "4b94e9a40ea0b5f160646600a8fee237fda5339962b92ae23996e4528acfc426"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v3/changes.diff",
+      "bytes": 13057,
+      "sha256": "8661785a504b48acdffb31b78898cd1f44f7101c25932c987bef67e0b36c4201"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v3/correction-request.md",
+      "bytes": 1095,
+      "sha256": "e83d691a40fb4858c2a128b4c5ed2b994ff161337f1e725bc0ea0b6313d176ec"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v3/correction-response.json",
+      "bytes": 5893,
+      "sha256": "54bb5c2a099b35d164907433524937e330a2574dd3f60cce20be6dbe6e7b56bb"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v3/recipe-v2.md",
+      "bytes": 2768,
+      "sha256": "193c7d86804a1abde6a256122a0292c26ff91cb498431f842a3dede80ce35648"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v3/changes-v2.diff",
+      "bytes": 860,
+      "sha256": "b9e4f7673841ddeaffee3f8be956518efb9378d400665288cd16ad306e5d007e"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v3/recipe-v3.md",
+      "bytes": 3401,
+      "sha256": "c87eecab4b261d0f399c7c5cf28cad7ffec800bbdc06446fa9998064b93a9395"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v3/correction-v3-request.md",
+      "bytes": 1025,
+      "sha256": "4d2d4f50531bc21dae7b7836b38127a0a94043c50e68972f8f33542f716bc6f8"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v3/correction-v3-response.json",
+      "bytes": 7187,
+      "sha256": "e390b3ffab25f3b3b8ca62111d53fd97b5fe3dc9ec788ef9daab6d3f772e049a"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v3/changes-v3.diff",
+      "bytes": 1424,
+      "sha256": "c978cae1636dea6b17f0ccfe16d0d858e8d93dc644f054da25081727911681ea"
+    }
+  ],
+  "active_bodies": [
+    {
+      "path": "s3-l4-adoption/bodies/l4-entry.md",
+      "bytes": 7764,
+      "sha256": "a5e1bf88aa6c17470c2832c99049dba76867615279689db85d25e2fe8b39e9ef",
+      "revision": "v4"
+    },
+    {
+      "path": "s3-l4-adoption/bodies/l4-ownership.md",
+      "bytes": 6934,
+      "sha256": "a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b",
+      "revision": "unchanged from v3 set"
+    },
+    {
+      "path": "s3-l4-adoption/bodies/l4-maintenance.md",
+      "bytes": 9724,
+      "sha256": "d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91",
+      "revision": "unchanged from v3 set"
+    },
+    {
+      "path": "s3-l4-adoption/bodies/l4-operational.md",
+      "bytes": 9757,
+      "sha256": "704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1",
+      "revision": "unchanged from v3 set"
+    }
+  ],
+  "checks": {
+    "v3_archive_written_before_entry_edit": true,
+    "archive_matches_v3_bytes": true,
+    "only_entry_section_3_changed": true,
+    "all_preexisting_entry_bytes_retained": true,
+    "metadata_headings_equal_sources_in_order": true,
+    "relay_heading_count": 7,
+    "integrations_heading_count": 11,
+    "other_three_bodies_unchanged": true,
+    "all_preexisting_records_unchanged": true,
+    "sources_unchanged": true,
+    "diff_reproduced": true,
+    "entry_within_16000_utf8_bytes": true,
+    "entry_below_10000_utf8_bytes": true
+  },
+  "supporting_artifacts": [
+    {
+      "path": "s3-l4-adoption/recipe-v4.md",
+      "bytes": 3226,
+      "sha256": "3bf5d7702cdf66db78da64218b3fc6a1f25d9869269183a84dd7660bc9717493"
+    },
+    {
+      "path": "s3-l4-adoption/changes-v4.diff",
+      "bytes": 2169,
+      "sha256": "e0f616bda0db7d6d09b535e39b8d7c6521fdbbb277150d8bce3c663732bf51c3"
+    }
+  ],
+  "access_boundary": {
+    "github_calls": 0,
+    "oracles_read": 0,
+    "reserved_cases_read": 0,
+    "judgments_read_in_this_correction": 0,
+    "consumer_outputs_read": 0
+  },
+  "execution_status": {
+    "product": "NOT_RUN",
+    "product_tests": "NOT_RUN",
+    "API": "NOT_RUN",
+    "build": "NOT_RUN",
+    "runtime": "NOT_RUN",
+    "CI": "NOT_RUN",
+    "live": "NOT_RUN",
+    "Atlas": "NOT_RUN"
+  },
+  "limits": [
+    "The API behavior is the parent static attestation, not a new runtime observation by this producer.",
+    "This revision extracts only H2 metadata from accepted L1 bodies and adds navigation guidance; no section body or expected consumer answer was rewritten.",
+    "Historical originals were not recovered or reconstructed.",
+    "The active set remains REVIEW_REQUIRED; future release is determined by external independent receipts."
+  ]
+}

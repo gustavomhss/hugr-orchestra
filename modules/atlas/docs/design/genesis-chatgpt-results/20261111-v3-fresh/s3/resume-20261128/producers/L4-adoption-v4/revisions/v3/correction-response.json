@@ -1,0 +1,165 @@
+{
+  "schema": "s3-l4-adoption-correction-response-v1",
+  "response_kind": "ORIGINAL_CORRECTION",
+  "producer_identity": "/root/s3_l4_producer",
+  "execution_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "corrected_at_utc": "2026-11-28T06:42:02Z",
+  "status_as_of_correction": "REVIEW_REQUIRED",
+  "semantic_acceptance_granted": false,
+  "finding_source": "documentary navigation finding from /root; not a semantic vote",
+  "request": {
+    "path": "s3-l4-adoption/correction-request.md",
+    "bytes": 1095,
+    "sha256": "e83d691a40fb4858c2a128b4c5ed2b994ff161337f1e725bc0ea0b6313d176ec"
+  },
+  "version_change": {
+    "entry": "v1 -> v2",
+    "other_three_bodies": "v1 unchanged"
+  },
+  "source_evidence": {
+    "basis": "parent attestation of exact inventory names and byte/hash verification",
+    "custody_refs_as_attested": [
+      "19b909e",
+      "f083a29"
+    ],
+    "judgment_files_opened": 0,
+    "verification_json_opened": false,
+    "github_calls": 0
+  },
+  "substitution": {
+    "artifact": "bodies/l4-entry.md",
+    "before": "- decisões J1/J2 L1: `judgments/judge-1-L1-A.json` ... `judgments/judge-2-L1-C.json`",
+    "after": "- decisões J1/J2 L1: `judgments/J1-L1-A-v1-final.md`; `judgments/J2-L1-A-v1-final.md`; `judgments/J1-L1-B-v2.json`; `judgments/J2-L1-B-v2.json`; `judgments/J1-L1-C-v3.json`; `judgments/J2-L1-C-v3.json`",
+    "expected_occurrences": 1,
+    "scope": "one navigation bullet in section 3 only",
+    "reason": "replace non-existent final-judgment paths with six attested real filenames"
+  },
+  "judgment_navigation_names": [
+    "J1-L1-A-v1-final.md",
+    "J2-L1-A-v1-final.md",
+    "J1-L1-B-v2.json",
+    "J2-L1-B-v2.json",
+    "J1-L1-C-v3.json",
+    "J2-L1-C-v3.json"
+  ],
+  "entry_before": {
+    "path": "s3-l4-adoption/revisions/v1/bodies/l4-entry.md",
+    "bytes": 6133,
+    "sha256": "5d046483ba15f0b2e49d57052bcaf1d6ef634b5e6658210fe280427f09db50f8"
+  },
+  "entry_after": {
+    "path": "s3-l4-adoption/bodies/l4-entry.md",
+    "bytes": 6250,
+    "sha256": "ae458ac87fa4542974e092641400c29f8904e37145dcb79cd553681a561443c0"
+  },
+  "original_response_preserved": {
+    "path": "s3-l4-adoption/response.json",
+    "bytes": 27266,
+    "sha256": "0c76b4f4a7874620321bbf8212541e0d58d522944fb30fe84eeb3472f0030393"
+  },
+  "original_recipe_preserved": {
+    "path": "s3-l4-adoption/recipe.md",
+    "bytes": 5471,
+    "sha256": "4b94e9a40ea0b5f160646600a8fee237fda5339962b92ae23996e4528acfc426"
+  },
+  "archived_v1": [
+    {
+      "path": "s3-l4-adoption/revisions/v1/bodies/l4-entry.md",
+      "bytes": 6133,
+      "sha256": "5d046483ba15f0b2e49d57052bcaf1d6ef634b5e6658210fe280427f09db50f8"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v1/bodies/l4-ownership.md",
+      "bytes": 6934,
+      "sha256": "a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v1/bodies/l4-maintenance.md",
+      "bytes": 9284,
+      "sha256": "3cf2c141796b17af55aae2b422b74e7347c949ffbc03aafeca6ff043c2b4db1b"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v1/bodies/l4-operational.md",
+      "bytes": 9757,
+      "sha256": "704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v1/request.md",
+      "bytes": 3827,
+      "sha256": "1b8e19051f1c9747e57c38ec71a8f47099c8a87d4aff682a828b1ba58334c5d3"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v1/response.json",
+      "bytes": 27266,
+      "sha256": "0c76b4f4a7874620321bbf8212541e0d58d522944fb30fe84eeb3472f0030393"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v1/recipe.md",
+      "bytes": 5471,
+      "sha256": "4b94e9a40ea0b5f160646600a8fee237fda5339962b92ae23996e4528acfc426"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v1/changes.diff",
+      "bytes": 13057,
+      "sha256": "8661785a504b48acdffb31b78898cd1f44f7101c25932c987bef67e0b36c4201"
+    }
+  ],
+  "active_bodies": [
+    {
+      "path": "s3-l4-adoption/bodies/l4-entry.md",
+      "bytes": 6250,
+      "sha256": "ae458ac87fa4542974e092641400c29f8904e37145dcb79cd553681a561443c0"
+    },
+    {
+      "path": "s3-l4-adoption/bodies/l4-ownership.md",
+      "bytes": 6934,
+      "sha256": "a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b"
+    },
+    {
+      "path": "s3-l4-adoption/bodies/l4-maintenance.md",
+      "bytes": 9284,
+      "sha256": "3cf2c141796b17af55aae2b422b74e7347c949ffbc03aafeca6ff043c2b4db1b"
+    },
+    {
+      "path": "s3-l4-adoption/bodies/l4-operational.md",
+      "bytes": 9757,
+      "sha256": "704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1"
+    }
+  ],
+  "checks": {
+    "archive_written_before_active_entry": true,
+    "archive_matches_original_v1_bytes": true,
+    "exactly_one_bullet_changed": true,
+    "other_entry_bytes_unchanged": true,
+    "other_three_bodies_unchanged": true,
+    "original_records_unchanged": true,
+    "diff_reproduced": true,
+    "entry_within_16000_utf8_bytes": true
+  },
+  "supporting_artifacts": [
+    {
+      "path": "s3-l4-adoption/recipe-v2.md",
+      "bytes": 2768,
+      "sha256": "193c7d86804a1abde6a256122a0292c26ff91cb498431f842a3dede80ce35648"
+    },
+    {
+      "path": "s3-l4-adoption/changes-v2.diff",
+      "bytes": 860,
+      "sha256": "b9e4f7673841ddeaffee3f8be956518efb9378d400665288cd16ad306e5d007e"
+    }
+  ],
+  "execution_status": {
+    "product": "NOT_RUN",
+    "tests": "NOT_RUN",
+    "build": "NOT_RUN",
+    "runtime": "NOT_RUN",
+    "CI": "NOT_RUN",
+    "live": "NOT_RUN",
+    "Atlas": "NOT_RUN"
+  },
+  "limits": [
+    "Navigation names come from the parent documentary finding; this producer did not read judgments or infer their decisions.",
+    "The original v1 response remains immutable and continues to describe v1; this correction receipt identifies the current active set.",
+    "External independent receipts over the four active hashes determine future release."
+  ]
+}

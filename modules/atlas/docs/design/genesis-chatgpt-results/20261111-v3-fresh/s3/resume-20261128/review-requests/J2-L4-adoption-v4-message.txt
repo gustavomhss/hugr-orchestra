@@ -1,0 +1,35 @@
+Reavalie L4-adoption-v4 pelo mesmo contrato/oracle e corpos/evidências que você já recebeu, sem ferramentas, arquivos, edição, testes ou delegação. Root verificou mecanicamente que SOMENTE entry §3 recebeu a inserção literal abaixo, de 1514 bytes, sem alterar nenhum byte anterior. Entry antes: ae458ac87fa4542974e092641400c29f8904e37145dcb79cd553681a561443c0 /6250. Entry agora: a5e1bf88aa6c17470c2832c99049dba76867615279689db85d25e2fe8b39e9ef /7764. Outros corpos byte-idênticos à v3 aceita: ownership a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b /6934; maintenance d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91 /9724; operational 704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1 /9757. A correção anterior do cache permanece intacta, e as correções explícitas anteriores de transporte entry/evidence continuam aplicáveis.
+
+Evidência da principal: código de read.ts e genesis-native.ts do runtime db9b4235022c4df32fe3bfd4faeea8adcd69abb7 obtido pelo conector mostra index com scope+need, sem key; read aceita key OU need, section exato e maxBytes com recusa em vez de truncamento. O pacote selecionado declara root evidence=s3-l1-maestro. Extraí e confrontei todas as linhas H2 dos dois L1 originais aceitos: Relay SHA369d2610ba4507a0950bd16cfce045dede276b67dee05f5d0086ef9ea503ffcb /23932 e integrações SHA81685f16fb32aae6958671939413d121e4f5babaf01d3b9565b03a50f7842e8a /23985. Os 18 títulos da inserção são cópias exatas, em ordem. Atestação de inspeção estática, não resultado de consumo. Produtor extraiu apenas H2, sem oracle/casos/outputs de consumidores.
+
+INSERÇÃO LITERAL em §3, imediatamente antes de 'Abra a menor rota que sustente a decisão.':
+### Catálogo H2 dos intermediários L1
+
+`index(scope, need)` lista apenas headings da root daquele need e não aceita `key`. No need `evidence`, a root é `s3-l1-maestro`; os dois corpos abaixo são intermediários. Para `Read(key, section, maxBytes)`, use a chave correspondente e, em `section`, exatamente um dos textos H2 abaixo (o texto após `## `), preservando número, acentos e pontuação. Isso permite ler a seção do intermediário sem adquirir o corpo inteiro. `maxBytes` é limite de recusa, sem truncamento.
+
+**`s3-l1-relay` — textos exatos de `section`:**
+
+- `1. O que existe e quem decide`
+- `2. Mapa contratual das famílias`
+- `3. Entradas e semântica dos controles`
+- `4. Drivers, execução e estado`
+- `5. Auditoria, persistência e recuperação`
+- `6. Authoring, hooks e material gerado`
+- `7. Integrações externas e evidência preservada`
+
+**`s3-l1-integrations` — textos exatos de `section`:**
+
+- `1. População e necessidades`
+- `2. Identidade e autoridade dos especialistas`
+- `3. Árvores de skills, geração e instalação`
+- `4. Discovery: pacote documental versus host efetivo`
+- `5. Claude: integração, execução e recusas`
+- `6. Claude: identidade, lifetime, conta e distribuição`
+- `7. Capability assets: proveniência não é runtime`
+- `8. Dock: duas superfícies e um receptor desktop`
+- `9. Janitor: observação e notificação, sem limpeza automática`
+- `10. Intenção, histórico e evidência de testes`
+- `11. Alcance e gaps que acompanham o resultado`
+
+FIM DA INSERÇÃO.
+Decida sobre o conjunto v4: quatro casos L4-E1/O1/M1/P1 e os mesmos seis erros críticos, limite16000/corpo. Não herde aceite do corpo entry anterior sem avaliar este delta e seus efeitos. JSON válido conciso, quatro hashes, cada critério/evidência/motivo, findings/evidence_requests/optional_suggestions/limitations. Preserve seus pareceres anteriores. Nenhum binding, publicação, execução, consumidor ou aceite histórico ausente é concedido.

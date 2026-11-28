@@ -1,0 +1,500 @@
+{
+  "schema": "s3-l4-adoption-production-response-v1",
+  "response_kind": "ORIGINAL",
+  "producer_identity": "/root/s3_l4_producer",
+  "execution_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "produced_at_utc": "2026-11-28T06:38:33Z",
+  "status_as_of_production": "REVIEW_REQUIRED",
+  "release_authority": "external independent receipts over exact output bytes; producer grants no acceptance",
+  "repository": "gustavomhss/hugr-orchestra",
+  "baseline": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "request": {
+    "path": "s3-l4-adoption/request.md",
+    "bytes": 3827,
+    "sha256": "1b8e19051f1c9747e57c38ec71a8f47099c8a87d4aff682a828b1ba58334c5d3"
+  },
+  "request_capture": {
+    "initial_request_verbatim": true,
+    "formatting_complement_verbatim": true,
+    "separator_added": "## Complemento de transporte recebido"
+  },
+  "provenance": {
+    "operation": "new adoption/correction of authorized alternative bodies",
+    "historical_originals": "NOT_RECOVERED",
+    "historical_prompts": "NOT_RECOVERED",
+    "historical_higher_level_acceptances": "NOT_RECOVERED",
+    "original_alternative_authorship_claimed": false,
+    "new_authorship_scope": "only adoption and localized corrections recorded here",
+    "predecessor_acceptance_basis": "parent /root attestation in request.md; acceptance files/judgments not read by this producer",
+    "l3_selection": {
+      "path": "s3-l3-adoption/bodies/l3-flows.md",
+      "bytes": 13637,
+      "sha256": "17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99"
+    },
+    "l3_attestation": {
+      "judges": [
+        "/root/s3_j1",
+        "/root/s3_j2"
+      ],
+      "four_cases": "PASS as attested by parent",
+      "six_critical_checks": "PASS as attested by parent",
+      "findings": [],
+      "evidence_requests": [],
+      "effect": "authorizes L4 production only"
+    },
+    "stale_predecessor_body_statuses": "historical production statements; external later receipts determine release"
+  },
+  "artifacts": [
+    {
+      "name": "l4-entry.md",
+      "input": {
+        "path": "s3-provenance/files/bodies/l4-entry.md",
+        "bytes": 5187,
+        "sha256": "43dfa1d4d82c7072c911f8e28e6abecce9686f0dea1be7d19077f3d2c27de871"
+      },
+      "output": {
+        "path": "s3-l4-adoption/bodies/l4-entry.md",
+        "bytes": 6133,
+        "sha256": "5d046483ba15f0b2e49d57052bcaf1d6ef634b5e6658210fe280427f09db50f8"
+      },
+      "byte_delta": 946,
+      "max_utf8_bytes": 16000,
+      "status_as_of_production": "REVIEW_REQUIRED",
+      "substitution_ids": [
+        "dated-production-state",
+        "new-adoption-provenance"
+      ]
+    },
+    {
+      "name": "l4-ownership.md",
+      "input": {
+        "path": "s3-provenance/files/bodies/l4-ownership.md",
+        "bytes": 5914,
+        "sha256": "6c27da488bf8a376b0153150b59584766abd2a8c420910ec9ed542b8c2d4bfa3"
+      },
+      "output": {
+        "path": "s3-l4-adoption/bodies/l4-ownership.md",
+        "bytes": 6934,
+        "sha256": "a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b"
+      },
+      "byte_delta": 1020,
+      "max_utf8_bytes": 16000,
+      "status_as_of_production": "REVIEW_REQUIRED",
+      "substitution_ids": [
+        "dated-production-state",
+        "new-adoption-provenance"
+      ]
+    },
+    {
+      "name": "l4-maintenance.md",
+      "input": {
+        "path": "s3-provenance/files/bodies/l4-maintenance.md",
+        "bytes": 7433,
+        "sha256": "31821e9ed5533a9e48fd590fad4bf94373c7a2241615e563038eb27c8b7d0cf8"
+      },
+      "output": {
+        "path": "s3-l4-adoption/bodies/l4-maintenance.md",
+        "bytes": 9284,
+        "sha256": "3cf2c141796b17af55aae2b422b74e7347c949ffbc03aafeca6ff043c2b4db1b"
+      },
+      "byte_delta": 1851,
+      "max_utf8_bytes": 16000,
+      "status_as_of_production": "REVIEW_REQUIRED",
+      "substitution_ids": [
+        "dated-production-state",
+        "new-adoption-provenance",
+        "approval-reply-boundary",
+        "dock-unknown-and-exact-retry"
+      ]
+    },
+    {
+      "name": "l4-operational.md",
+      "input": {
+        "path": "s3-provenance/files/bodies/l4-operational.md",
+        "bytes": 7014,
+        "sha256": "4f6a500ee4b575d9c06aa6c070ee8071f3b580c76c0f55da3871e567ebba7d81"
+      },
+      "output": {
+        "path": "s3-l4-adoption/bodies/l4-operational.md",
+        "bytes": 9757,
+        "sha256": "704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1"
+      },
+      "byte_delta": 2743,
+      "max_utf8_bytes": 16000,
+      "status_as_of_production": "REVIEW_REQUIRED",
+      "substitution_ids": [
+        "dated-production-state",
+        "new-adoption-provenance",
+        "approval-reply-boundary",
+        "unknown-effect-hold",
+        "arm-release-versus-lock-recovery",
+        "dock-exact-retry",
+        "dock-unknown-no-replay",
+        "predecessor-state-and-execution-limits"
+      ]
+    }
+  ],
+  "sources_used": [
+    {
+      "path": "s3-provenance/files/bodies/l1-maestro.md",
+      "bytes": 19752,
+      "sha256": "75b4438d79ebd9667db94f03a6fea884329cd5c72e2c69f649eff1047e7b1918",
+      "kind": "accepted predecessor body",
+      "inspection": "Corpo L1; identidade, ownership, approval, shipping e conflito Atlas; aceite atestado pela principal, sem ler judgments."
+    },
+    {
+      "path": "s3-provenance/files/bodies/l1-relay.md",
+      "bytes": 23932,
+      "sha256": "369d2610ba4507a0950bd16cfce045dede276b67dee05f5d0086ef9ea503ffcb",
+      "kind": "accepted predecessor body",
+      "inspection": "Corpo L1; drivers, audit, efeito/disposição/estado, release versus recover; aceite atestado pela principal."
+    },
+    {
+      "path": "s3-provenance/files/bodies/l1-integrations.md",
+      "bytes": 23985,
+      "sha256": "81685f16fb32aae6958671939413d121e4f5babaf01d3b9565b03a50f7842e8a",
+      "kind": "accepted predecessor body",
+      "inspection": "Corpo L1; especialistas, Claude, catálogo, Dock e Janitor; aceite atestado pela principal."
+    },
+    {
+      "path": "s3-l2-revision/bodies/l2-maestro.md",
+      "bytes": 6979,
+      "sha256": "5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012",
+      "kind": "accepted predecessor body",
+      "inspection": "Corpo L2 completo; approval exata, child e skills."
+    },
+    {
+      "path": "s3-l2-revision/bodies/l2-relay.md",
+      "bytes": 7235,
+      "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+      "kind": "accepted predecessor body",
+      "inspection": "Corpo L2 completo; incerteza, audit/recheck e drivers."
+    },
+    {
+      "path": "s3-l2-revision/bodies/l2-integrations.md",
+      "bytes": 6968,
+      "sha256": "90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259",
+      "kind": "accepted predecessor body",
+      "inspection": "Corpo L2 completo; gates Claude, Dock retry e scanner read-only."
+    },
+    {
+      "path": "s3-l3-adoption/bodies/l3-flows.md",
+      "bytes": 13637,
+      "sha256": "17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99",
+      "kind": "accepted predecessor body",
+      "inspection": "Corpo L3 completo; F1–F4 e matriz de decisão. Estados de revisão inscritos são históricos; aceite atual é atestado pela principal."
+    },
+    {
+      "path": "s3-provenance/l2-source-evidence.md",
+      "bytes": 30264,
+      "sha256": "d1a31fae0dfb0e41a074680f44b25fd023e33b304bb4b921ad4590e9ecf7e223",
+      "kind": "authorized public static evidence",
+      "inspection": "Suplemento completo; A1–A7, B1–B5, C1–C4. Seus recortes são evidência estática, não resultados de testes."
+    },
+    {
+      "path": "s3-provenance/l4-source-evidence.md",
+      "bytes": 30514,
+      "sha256": "312a35d735d2281ceb0dc965930fa4388ecab6353be1d665608d02ee58f235fa",
+      "kind": "authorized public static evidence",
+      "inspection": "Suplemento completo; labels, Atlas, roots, composição, assets e Janitor. Nenhum oracle/parecer/answer consultado."
+    },
+    {
+      "path": "s3-provenance/sources/AGENTS.md",
+      "bytes": 16501,
+      "sha256": "07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f",
+      "kind": "pinned documentation",
+      "inspection": "Documento de referência; política de testes Actions, fonte/gerados, shipping e identidade. Não executado."
+    },
+    {
+      "path": "s3-provenance/sources/modules/maestro/coordination/src/approval.ts",
+      "bytes": 9452,
+      "sha256": "70bb260f4e7ffb20844042f8c12934ce10398779d9ff4916b0ced9c5917cd8d4",
+      "kind": "pinned code excerpt",
+      "inspection": "Linhas 120–165 lidas diretamente; identidade integral de bytes calculada, código não executado."
+    },
+    {
+      "path": "s3-provenance/sources/modules/relay/src/arm/evaluate.ts",
+      "bytes": 41405,
+      "sha256": "a404c11fc270299ecc76def0fb40ad4ff2a146f4dc817a030394d33f4e0b064c",
+      "kind": "pinned code excerpt",
+      "inspection": "Linhas 60–95 lidas diretamente; identidade integral de bytes calculada, código não executado."
+    },
+    {
+      "path": "s3-provenance/sources/packages/core/src/relay.ts",
+      "bytes": 30225,
+      "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a",
+      "kind": "pinned code excerpt",
+      "inspection": "Linhas 370–425 e 505–525 lidas diretamente; identidade integral de bytes calculada, código não executado."
+    },
+    {
+      "path": "s3-provenance/sources/modules/app-dock/src/app-dock.ts",
+      "bytes": 55918,
+      "sha256": "e70b35aea0b041ab27f01823ecee2893d0738b657a4de1f67121ac016dc8e980",
+      "kind": "pinned code excerpt",
+      "inspection": "Linhas 345–395 lidas diretamente; identidade integral de bytes calculada, código não executado."
+    }
+  ],
+  "substitutions": [
+    {
+      "artifact": "bodies/l4-entry.md",
+      "id": "dated-production-state",
+      "before": "**Estado:** `CANDIDATE_UNRELEASED`; depende de L3 liberado, o que ainda não ocorreu nesta recuperação.",
+      "after": "**Estado no momento da produção (2026-11-28T06:38:33Z):** `CANDIDATE_UNRELEASED` / `REVIEW_REQUIRED`.",
+      "expected_occurrences": 1,
+      "reason": "Datagem explícita do estado de produção; remover a afirmação ultrapassada de que L3 ainda não fora liberado.",
+      "evidence": [
+        "request.md",
+        "parent attestation"
+      ]
+    },
+    {
+      "artifact": "bodies/l4-entry.md",
+      "id": "new-adoption-provenance",
+      "before": "\n\n## 1.",
+      "after": "\n\n**Proveniência no momento da produção (2026-11-28T06:38:33Z):** nova adoção/correção por `/root/s3_l4_producer`, execução `15cc9853-0e71-4950-8813-0bfb66f82c8a`, protocolo `ee2521a5b966bd505cc95bd1c733e09e12f33531`. O input é o alternativo `s3-provenance/files/bodies/l4-entry.md` (hash e bytes em `response.json`); os originais superiores, seus prompts e aceites históricos não foram recuperados. L1/L2 e L3-adoption-v1 estão liberados conforme atestado da principal nesta execução; o corpo L3 selecionado tem SHA-256 `17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99`. Estados antigos nos predecessores descrevem seu momento de produção; os recibos externos posteriores determinam sua liberação. Isso permite produzir L4, sem conceder aceite a este corpo. Recibos externos sobre seus bytes exatos determinarão sua liberação futura; o produtor não concede aceite. Runtime/CI/live nesta adoção: `NOT_RUN`.\n\n## 1.",
+      "expected_occurrences": 1,
+      "reason": "Registrar autoria nova, não reconstruir originais ausentes, separar liberação de predecessores e revisão futura de L4.",
+      "evidence": [
+        "request.md",
+        "s3-l3-adoption/bodies/l3-flows.md"
+      ]
+    },
+    {
+      "artifact": "bodies/l4-ownership.md",
+      "id": "dated-production-state",
+      "before": "**Estado:** `CANDIDATE_UNRELEASED`.",
+      "after": "**Estado no momento da produção (2026-11-28T06:38:33Z):** `CANDIDATE_UNRELEASED` / `REVIEW_REQUIRED`.",
+      "expected_occurrences": 1,
+      "reason": "Datagem explícita do estado de produção; remover a afirmação ultrapassada de que L3 ainda não fora liberado.",
+      "evidence": [
+        "request.md",
+        "parent attestation"
+      ]
+    },
+    {
+      "artifact": "bodies/l4-ownership.md",
+      "id": "new-adoption-provenance",
+      "before": "\n\n## 1.",
+      "after": "\n\n**Proveniência no momento da produção (2026-11-28T06:38:33Z):** nova adoção/correção por `/root/s3_l4_producer`, execução `15cc9853-0e71-4950-8813-0bfb66f82c8a`, protocolo `ee2521a5b966bd505cc95bd1c733e09e12f33531`. O input é o alternativo `s3-provenance/files/bodies/l4-ownership.md` (hash e bytes em `response.json`); os originais superiores, seus prompts e aceites históricos não foram recuperados. L1/L2 e L3-adoption-v1 estão liberados conforme atestado da principal nesta execução; o corpo L3 selecionado tem SHA-256 `17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99`. Estados antigos nos predecessores descrevem seu momento de produção; os recibos externos posteriores determinam sua liberação. Isso permite produzir L4, sem conceder aceite a este corpo. Recibos externos sobre seus bytes exatos determinarão sua liberação futura; o produtor não concede aceite. Runtime/CI/live nesta adoção: `NOT_RUN`.\n\n## 1.",
+      "expected_occurrences": 1,
+      "reason": "Registrar autoria nova, não reconstruir originais ausentes, separar liberação de predecessores e revisão futura de L4.",
+      "evidence": [
+        "request.md",
+        "s3-l3-adoption/bodies/l3-flows.md"
+      ]
+    },
+    {
+      "artifact": "bodies/l4-maintenance.md",
+      "id": "dated-production-state",
+      "before": "**Estado:** `CANDIDATE_UNRELEASED`.",
+      "after": "**Estado no momento da produção (2026-11-28T06:38:33Z):** `CANDIDATE_UNRELEASED` / `REVIEW_REQUIRED`.",
+      "expected_occurrences": 1,
+      "reason": "Datagem explícita do estado de produção; remover a afirmação ultrapassada de que L3 ainda não fora liberado.",
+      "evidence": [
+        "request.md",
+        "parent attestation"
+      ]
+    },
+    {
+      "artifact": "bodies/l4-maintenance.md",
+      "id": "new-adoption-provenance",
+      "before": "\n\n## 1.",
+      "after": "\n\n**Proveniência no momento da produção (2026-11-28T06:38:33Z):** nova adoção/correção por `/root/s3_l4_producer`, execução `15cc9853-0e71-4950-8813-0bfb66f82c8a`, protocolo `ee2521a5b966bd505cc95bd1c733e09e12f33531`. O input é o alternativo `s3-provenance/files/bodies/l4-maintenance.md` (hash e bytes em `response.json`); os originais superiores, seus prompts e aceites históricos não foram recuperados. L1/L2 e L3-adoption-v1 estão liberados conforme atestado da principal nesta execução; o corpo L3 selecionado tem SHA-256 `17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99`. Estados antigos nos predecessores descrevem seu momento de produção; os recibos externos posteriores determinam sua liberação. Isso permite produzir L4, sem conceder aceite a este corpo. Recibos externos sobre seus bytes exatos determinarão sua liberação futura; o produtor não concede aceite. Runtime/CI/live nesta adoção: `NOT_RUN`.\n\n## 1.",
+      "expected_occurrences": 1,
+      "reason": "Registrar autoria nova, não reconstruir originais ausentes, separar liberação de predecessores e revisão futura de L4.",
+      "evidence": [
+        "request.md",
+        "s3-l3-adoption/bodies/l3-flows.md"
+      ]
+    },
+    {
+      "artifact": "bodies/l4-maintenance.md",
+      "id": "approval-reply-boundary",
+      "before": "3. Mantenha caller/owner gate, profile floor, ToolSafety, permission snapshot e approval separados.",
+      "after": "3. Mantenha caller/owner gate, profile floor, ToolSafety, permission snapshot e approval separados. Quando a aprovação for exigida, a resposta selecionada do owner deve ser genuína, ter `role=user`, pertencer à mesma Session e ser posterior à apresentação. Não pode existir qualquer mensagem intermediária com `role=user` (inclusive sintética); `reply-synthetic` e `reply-not-immediate` são recusas distintas. [Fonte: `modules/maestro/coordination/src/approval.ts:135–146`; L3 F2.]",
+      "expected_occurrences": 1,
+      "reason": "A receita de alteração governada deve preservar a pré-condição exata já estabelecida no L3 aceito.",
+      "evidence": [
+        "s3-l3-adoption/bodies/l3-flows.md §3",
+        "s3-provenance/l2-source-evidence.md A1",
+        "modules/maestro/coordination/src/approval.ts:135–146"
+      ]
+    },
+    {
+      "artifact": "bodies/l4-maintenance.md",
+      "id": "dock-unknown-and-exact-retry",
+      "before": "- Para ação incerta, registre idempotência/receipt; somente `stale-not-dispatched` usa retry delimitado.",
+      "after": "- Para ação incerta, registre receipt/efeito e mantenha HOLD; `unknown/uncertain` nunca permite replay automático, mesmo se a ação parecer inofensiva ou idempotente. [Fonte: `modules/app-dock/src/app-dock.ts:357–360`; L3 F4.]\n- `stale-not-dispatched`: no máximo uma repetição automática, somente para uma instância de `NativeRPCError` com `code === \"stale-ref\"`, `outcome === \"not-dispatched\"` e `attempt < 1`; outros erros stale ou falhas não satisfazem essa regra. [Fonte: `modules/app-dock/src/app-dock.ts:388–390`; L3 F4.]",
+      "expected_occurrences": 1,
+      "reason": "Remover a abertura para replay de Dock unknown por idempotência aparente e explicitar todas as condições do único retry.",
+      "evidence": [
+        "s3-l3-adoption/bodies/l3-flows.md §5",
+        "s3-provenance/l2-source-evidence.md C3",
+        "modules/app-dock/src/app-dock.ts:357–360,388–390"
+      ]
+    },
+    {
+      "artifact": "bodies/l4-operational.md",
+      "id": "dated-production-state",
+      "before": "**Estado:** `CANDIDATE_UNRELEASED`.",
+      "after": "**Estado no momento da produção (2026-11-28T06:38:33Z):** `CANDIDATE_UNRELEASED` / `REVIEW_REQUIRED`.",
+      "expected_occurrences": 1,
+      "reason": "Datagem explícita do estado de produção; remover a afirmação ultrapassada de que L3 ainda não fora liberado.",
+      "evidence": [
+        "request.md",
+        "parent attestation"
+      ]
+    },
+    {
+      "artifact": "bodies/l4-operational.md",
+      "id": "new-adoption-provenance",
+      "before": "\n\n## 1.",
+      "after": "\n\n**Proveniência no momento da produção (2026-11-28T06:38:33Z):** nova adoção/correção por `/root/s3_l4_producer`, execução `15cc9853-0e71-4950-8813-0bfb66f82c8a`, protocolo `ee2521a5b966bd505cc95bd1c733e09e12f33531`. O input é o alternativo `s3-provenance/files/bodies/l4-operational.md` (hash e bytes em `response.json`); os originais superiores, seus prompts e aceites históricos não foram recuperados. L1/L2 e L3-adoption-v1 estão liberados conforme atestado da principal nesta execução; o corpo L3 selecionado tem SHA-256 `17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99`. Estados antigos nos predecessores descrevem seu momento de produção; os recibos externos posteriores determinam sua liberação. Isso permite produzir L4, sem conceder aceite a este corpo. Recibos externos sobre seus bytes exatos determinarão sua liberação futura; o produtor não concede aceite. Runtime/CI/live nesta adoção: `NOT_RUN`.\n\n## 1.",
+      "expected_occurrences": 1,
+      "reason": "Registrar autoria nova, não reconstruir originais ausentes, separar liberação de predecessores e revisão futura de L4.",
+      "evidence": [
+        "request.md",
+        "s3-l3-adoption/bodies/l3-flows.md"
+      ]
+    },
+    {
+      "artifact": "bodies/l4-operational.md",
+      "id": "approval-reply-boundary",
+      "before": "- `turn.authorize`/`turn.execute`, approval e permission snapshot quando aplicáveis;",
+      "after": "- `turn.authorize`/`turn.execute`, approval e permission snapshot quando aplicáveis;\n- Quando a aprovação for exigida, a resposta selecionada do owner deve ser genuína, ter `role=user`, pertencer à mesma Session e ser posterior à apresentação. Não pode existir qualquer mensagem intermediária com `role=user` (inclusive sintética); `reply-synthetic` e `reply-not-immediate` são recusas distintas. [Fonte: `modules/maestro/coordination/src/approval.ts:135–146`; L3 F2.]",
+      "expected_occurrences": 1,
+      "reason": "O diagnóstico de approval não pode aceitar reply sintética ou reply depois de outra user, inclusive sintética.",
+      "evidence": [
+        "s3-l3-adoption/bodies/l3-flows.md §3",
+        "s3-provenance/l2-source-evidence.md A1",
+        "modules/maestro/coordination/src/approval.ts:135–146"
+      ]
+    },
+    {
+      "artifact": "bodies/l4-operational.md",
+      "id": "unknown-effect-hold",
+      "before": "   - `unknown-effect`: HOLD/manual ou idempotência comprovada.",
+      "after": "   - `unknown-effect`: HOLD/manual; obtenha evidência do efeito. Não repita automaticamente enquanto desconhecido.",
+      "expected_occurrences": 1,
+      "reason": "Preservar HOLD enquanto o efeito permanece desconhecido, sem confundir a regra Relay com o retry estrito de Dock.",
+      "evidence": [
+        "s3-l3-adoption/bodies/l3-flows.md §4–§5",
+        "s3-l2-revision/bodies/l2-relay.md §2"
+      ]
+    },
+    {
+      "artifact": "bodies/l4-operational.md",
+      "id": "arm-release-versus-lock-recovery",
+      "before": "5. `release` de lock não reverte efeito nem prova exactly-once.",
+      "after": "5. `release` é do arm parked, pelo caminho do owner: escreve o arquivo `release` sob o run lock; a próxima avaliação registra `human-release` antes de consumi-lo, reinicia retry, round e claim do gate e reavalia a mesma WP, sem dispensar controles. Não reverte efeito externo nem prova exactly-once. Recuperar o run lock é outra operação: `recover` só remove diretório anterior ao processo e não detido por avaliação local, registrando `gate-recovered` antes da remoção. `Relay.release` tenta essa recuperação antes de chamar `ArmEvaluate.release`; isso não transforma a liberação do arm em liberação de lock. [Fontes: `modules/relay/src/arm/evaluate.ts:67–89`; `packages/core/src/relay.ts:374–418,517–520`; L3 F3.]",
+      "expected_occurrences": 1,
+      "reason": "Corrigir a identificação errada do objeto de release e manter as pré-condições e o registro de recover distintos.",
+      "evidence": [
+        "s3-l3-adoption/bodies/l3-flows.md §4",
+        "s3-provenance/l2-source-evidence.md B2–B3",
+        "modules/relay/src/arm/evaluate.ts:67–89",
+        "packages/core/src/relay.ts:374–418,517–520"
+      ]
+    },
+    {
+      "artifact": "bodies/l4-operational.md",
+      "id": "dock-exact-retry",
+      "before": "- `stale-not-dispatched`: retry delimitado do contrato;",
+      "after": "- `stale-not-dispatched`: no máximo uma repetição automática, somente para uma instância de `NativeRPCError` com `code === \"stale-ref\"`, `outcome === \"not-dispatched\"` e `attempt < 1`; outros erros stale ou falhas não satisfazem essa regra. [Fonte: `modules/app-dock/src/app-dock.ts:388–390`; L3 F4.]",
+      "expected_occurrences": 1,
+      "reason": "Explicitar o limite de uma repetição e a conjunção exata do erro admitido, sem ampliar stale genérico.",
+      "evidence": [
+        "s3-l3-adoption/bodies/l3-flows.md §5",
+        "modules/app-dock/src/app-dock.ts:388–390"
+      ]
+    },
+    {
+      "artifact": "bodies/l4-operational.md",
+      "id": "dock-unknown-no-replay",
+      "before": "- `unknown`: não repita quando duplicação é perigosa;",
+      "after": "- `unknown/uncertain`: nunca repetir automaticamente, mesmo se a ação parecer inofensiva ou idempotente. [Fonte: `modules/app-dock/src/app-dock.ts:357–360,388–390`; L3 F4.]",
+      "expected_occurrences": 1,
+      "reason": "Remover a condição subjetiva de perigo de duplicação: o contrato proíbe replay automático de todo unknown.",
+      "evidence": [
+        "s3-l3-adoption/bodies/l3-flows.md §5",
+        "modules/app-dock/src/app-dock.ts:357–360,388–390"
+      ]
+    },
+    {
+      "artifact": "bodies/l4-operational.md",
+      "id": "predecessor-state-and-execution-limits",
+      "before": "A falta de executor nesta recuperação é `NOT_RUN`, e a falta dos dois novos juízos mantém L2–L4 sem aceite.",
+      "after": "No momento da produção (2026-11-28T06:38:33Z), produto/runtime/CI/live não foram executados (`NOT_RUN`), e este L4 aguarda dois novos pareceres independentes (`REVIEW_REQUIRED`). L1/L2 e L3-adoption-v1 já estão liberados conforme atestado da principal; a liberação futura de L4 depende dos recibos externos sobre estes bytes.",
+      "expected_occurrences": 1,
+      "reason": "Atualizar o estado liberado dos predecessores e relatar não execução sem inventar ausência de capacidade ou aceite L4.",
+      "evidence": [
+        "request.md",
+        "parent attestation"
+      ]
+    }
+  ],
+  "preservation": {
+    "input_mutations": 0,
+    "outside_output_writes": 0,
+    "newline_or_whitespace_normalization": false,
+    "policy": "all bytes outside enumerated literal substitutions preserved",
+    "unrelated_rewrite": false
+  },
+  "document_checks": {
+    "utf8_roundtrip": true,
+    "all_bodies_end_with_newline": true,
+    "all_bodies_within_16000_bytes": true,
+    "input_identifiers_recomputed": true,
+    "l3_identifier_recomputed": true,
+    "substitution_counts_exactly_one": true,
+    "semantic_acceptance": "NOT_GRANTED"
+  },
+  "execution_status": {
+    "product_runtime": "NOT_RUN",
+    "product_tests": "NOT_RUN",
+    "typecheck": "NOT_RUN",
+    "build": "NOT_RUN",
+    "CI": "NOT_RUN",
+    "provider": "NOT_RUN",
+    "Dock": "NOT_RUN",
+    "Janitor": "NOT_RUN",
+    "live_acceptance": "NOT_RUN",
+    "Atlas_import": "NOT_RUN",
+    "Atlas_publish": "NOT_RUN",
+    "Atlas_read": "NOT_RUN"
+  },
+  "unmeasured": {
+    "cost": "UNKNOWN",
+    "billing": "UNKNOWN",
+    "tokens": "UNKNOWN",
+    "physical_calls": "UNKNOWN"
+  },
+  "access_boundary": {
+    "github_calls": 0,
+    "consumer_oracles_read": 0,
+    "consumer_judgments_read": 0,
+    "consumer_cases_read": 0,
+    "consumer_answers_read": 0,
+    "note": "Pre-existing references to reserved routes were preserved as text; their targets were not opened."
+  },
+  "limits": [
+    "Static evidence only; no product execution or independent semantic acceptance by this producer.",
+    "Historical higher-level originals, prompts and acceptance records were not recovered or reconstructed.",
+    "Source code files were read only at the ranges declared in sources_used; hashing an entire file is not a claim to inspect every branch.",
+    "L1/L2/L3 acceptance derives from parent attestation, not from reading reserved review artifacts.",
+    "Future L4 release requires external independent receipts over the exact output hashes."
+  ],
+  "supporting_artifacts": [
+    {
+      "path": "s3-l4-adoption/recipe.md",
+      "bytes": 5471,
+      "sha256": "4b94e9a40ea0b5f160646600a8fee237fda5339962b92ae23996e4528acfc426"
+    },
+    {
+      "path": "s3-l4-adoption/changes.diff",
+      "bytes": 13057,
+      "sha256": "8661785a504b48acdffb31b78898cd1f44f7101c25932c987bef67e0b36c4201"
+    }
+  ]
+}

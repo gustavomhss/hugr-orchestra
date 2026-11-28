@@ -7,7 +7,7 @@
     "git_blob_sha": "ec9009fc8c3ac15da93aff074fcdd999918011f3",
     "sha256": "cd19bf501df6ec40386b812725d38747707c00609afd612212e4b6c16feb5f4a"
   },
-  "output_sha256": "4bcee3f8e534dc6a191cee647e27b5a6faf98a4a7e1f3ed09e9fda7488d64c86",
+  "output_sha256": "e2bec9aadf58327d7ae72c991c581a03089ee6dce165595fa802e4923c58ccde",
   "L1_body_and_semantic_refs_unchanged": true,
   "L1_metadata_change": "Only evidence reference objects become canonical JSON strings. Parsing those strings restores the original evidence list; all other L1 artifact fields are identical.",
   "contract_fields_preserved_here": {
@@ -106,8 +106,8 @@
     {
       "key": "s3-l4-entry",
       "historical_body_sha256": "43dfa1d4d82c7072c911f8e28e6abecce9686f0dea1be7d19077f3d2c27de871",
-      "selected_body_sha256": "ae458ac87fa4542974e092641400c29f8904e37145dcb79cd553681a561443c0",
-      "byte_length": 6250,
+      "selected_body_sha256": "a5e1bf88aa6c17470c2832c99049dba76867615279689db85d25e2fe8b39e9ef",
+      "byte_length": 7764,
       "dependency_reason": "L3 cumulative predecessor; label resolution details also consume L1 Maestro. Other deep links are navigation.",
       "blockers": []
     },

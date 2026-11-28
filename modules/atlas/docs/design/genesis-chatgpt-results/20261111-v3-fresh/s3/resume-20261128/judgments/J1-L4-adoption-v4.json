@@ -1,0 +1,81 @@
+{
+  "reviewer":"/root/s3_j1",
+  "execution_id":"15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "unit":"L4-ownership",
+  "revision":"L4-adoption-v4",
+  "decision":"PASS",
+  "declared_bodies":{
+    "s3-l4-entry":{"bytes":7764,"sha256":"a5e1bf88aa6c17470c2832c99049dba76867615279689db85d25e2fe8b39e9ef"},
+    "s3-l4-ownership":{"bytes":6934,"sha256":"a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b"},
+    "s3-l4-maintenance":{"bytes":9724,"sha256":"d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91"},
+    "s3-l4-operational":{"bytes":9757,"sha256":"704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1"}
+  },
+  "delta_assessment":{
+    "verdict":"PASS",
+    "evidence":"Inserção integral em entry §3; atestado estático da principal sobre read.ts/genesis-native.ts no runtime db9b4235022c4df32fe3bfd4faeea8adcd69abb7 e os 18 H2 dos L1 aceitos.",
+    "reason":"Distingue index por scope/need de Read por key/section, fornece seletores exatos dos intermediários e explicita recusa por maxBytes. Não afirma consumo realizado nem altera ownership ou dependências."
+  },
+  "cases":[
+    {
+      "id":"L4-E1","verdict":"PASS",
+      "evidence":"Entry §§1–6 e novo catálogo H2 em §3.",
+      "reason":"Mantém seleção por componente/classe e leitura mínima. O delta permite aprofundar por seção sem carregar os intermediários inteiros; preserva pin, autoridade e abstenção."
+    },
+    {
+      "id":"L4-O1","verdict":"PASS",
+      "evidence":"Ownership §§1–7; L2/L3 aceitos; suplemento de fontes.",
+      "reason":"Fontes e fronteiras continuam separadas entre Maestro, especialistas, packaging, Core, Relay, Claude, Dock e Janitor. O catálogo de navegação não transfere autoridade."
+    },
+    {
+      "id":"L4-M1","verdict":"PASS",
+      "evidence":"Maintenance §§1–9; §2.8 corrigido; seat-skill-root.ts L90–128.",
+      "reason":"Preserva receitas, positivos/negativos, histórico, assets pendentes e invalidação por inputs reais. A correção do cache permanece íntegra e coerente."
+    },
+    {
+      "id":"L4-P1","verdict":"PASS",
+      "evidence":"Operational §§1–10; audit.ts, app-dock.ts e scan.ts conservados.",
+      "reason":"Identidade, estado, receipts e transporte precedem ação. Silêncio não conclui; unknown não autoriza replay; tokens não são inventados e scanner indisponível não significa clean."
+    }
+  ],
+  "critical_errors":[
+    {
+      "error":"runbook grants authority that code does not grant",
+      "verdict":"PASS","evidence":"Ownership §§1–4; Entry §3.",
+      "reason":"Seletores de leitura não concedem grants nem substituem gates."
+    },
+    {
+      "error":"generated or catalog data treated as live capability",
+      "verdict":"PASS","evidence":"Ownership §5; Maintenance §§2 e 6.",
+      "reason":"Catálogo, gerados e capacidade live continuam distintos."
+    },
+    {
+      "error":"unsafe retry or destructive cleanup suggested for an unknown result",
+      "verdict":"PASS","evidence":"Maintenance §7; Operational §§4–6.",
+      "reason":"Retry Dock permanece delimitado; unknown e limpeza Janitor continuam bloqueados."
+    },
+    {
+      "error":"fixture/golden edited merely to manufacture PASS",
+      "verdict":"PASS","evidence":"Maintenance §§1 e 5; Operational §3.",
+      "reason":"A proibição permanece explícita e não foi afetada pelo delta."
+    },
+    {
+      "error":"unexecuted gate, runtime, CI or cost reported as successful",
+      "verdict":"PASS","evidence":"Proveniência; Maintenance §9; Operational §10; Entry §3.",
+      "reason":"Contrato de leitura não é relato de execução. NOT_RUN/UNKNOWN permanecem."
+    },
+    {
+      "error":"ROOT/global integration work used to hide an unfinished local obligation",
+      "verdict":"PASS","evidence":"Proveniência dos quatro corpos; Maintenance §9.",
+      "reason":"Recibos locais continuam necessários; a nova navegação não declara consumidor aprovado."
+    }
+  ],
+  "limit":{"verdict":"PASS","max_body_bytes_each":16000,"evidence":"7764, 6934, 9724 e 9757 bytes declarados.","reason":"Todos abaixo do limite."},
+  "findings":[],
+  "evidence_requests":[],
+  "optional_suggestions":[],
+  "limitations":[
+    "Revisão estática de todos os obrigatórios, incluindo o delta e seus efeitos. Pareceres anteriores permanecem associados às respectivas versões.",
+    "Hashes, bytes, diff, extração dos H2 e inspeção do runtime são atestados da principal, sem recomputação ou inspeção própria. Nenhuma ferramenta, arquivo, edição, teste ou delegação utilizado.",
+    "PASS somente desta adoção v4; não concede aceite histórico ausente, binding, publicação, execução, CI ou consumidores. Operações não exercitadas permanecem NOT_RUN; custos e tentativas não observados, UNKNOWN."
+  ]
+}

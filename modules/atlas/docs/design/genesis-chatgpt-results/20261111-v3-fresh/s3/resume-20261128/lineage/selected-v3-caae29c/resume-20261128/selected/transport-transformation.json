@@ -1,0 +1,141 @@
+{
+  "schema": "s3-selected-transport-transformation/v1",
+  "operation": "Mechanical assembly and explicit lossless transport adaptation; no runtime execution or semantic judgment",
+  "original_package": {
+    "commit": "19b909ef3bf27e0332f24fc30e3a5c471ea37d78",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/native-package.json",
+    "git_blob_sha": "ec9009fc8c3ac15da93aff074fcdd999918011f3",
+    "sha256": "cd19bf501df6ec40386b812725d38747707c00609afd612212e4b6c16feb5f4a"
+  },
+  "output_sha256": "4bcee3f8e534dc6a191cee647e27b5a6faf98a4a7e1f3ed09e9fda7488d64c86",
+  "L1_body_and_semantic_refs_unchanged": true,
+  "L1_metadata_change": "Only evidence reference objects become canonical JSON strings. Parsing those strings restores the original evidence list; all other L1 artifact fields are identical.",
+  "contract_fields_preserved_here": {
+    "unit_oracle_refs": [
+      {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/oracles/L1-A.json",
+        "sha256": "8790bb33fa299e66fd846bb5815759e50ea3fc7f4a232e5fd8f824b9330aa642"
+      },
+      {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/oracles/L1-B.json",
+        "sha256": "fdfe2e9e61ba11f6d90885e92c397dc7d7e424032b46bc00f240691bc0098fce"
+      },
+      {
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/oracles/L1-C.json",
+        "sha256": "194cba10917f8e2d650237ca1f87f37229b868a270a67b6a3653e9721aa54e32"
+      }
+    ]
+  },
+  "original_roots": {
+    "evidence": [
+      "s3-l1-maestro",
+      "s3-l1-relay",
+      "s3-l1-integrations"
+    ]
+  },
+  "proposal_roots": {
+    "evidence": [
+      "s3-l1-maestro",
+      "s3-l1-relay",
+      "s3-l1-integrations"
+    ],
+    "component": [
+      "s3-l2-maestro",
+      "s3-l2-relay",
+      "s3-l2-integrations"
+    ],
+    "flow": [
+      "s3-l3-flows"
+    ],
+    "entry": [
+      "s3-l4-entry"
+    ],
+    "ownership": [
+      "s3-l4-ownership"
+    ],
+    "maintenance": [
+      "s3-l4-maintenance"
+    ],
+    "operational": [
+      "s3-l4-operational"
+    ]
+  },
+  "runtime_roots": {
+    "evidence": "s3-l1-maestro",
+    "component": "s3-l2-maestro",
+    "flow": "s3-l3-flows",
+    "entry": "s3-l4-entry",
+    "ownership": "s3-l4-ownership",
+    "maintenance": "s3-l4-maintenance",
+    "operational": "s3-l4-operational"
+  },
+  "root_rule": "One key per need as required by db9b423 parser. Entry navigation and cumulative build dependencies keep all 11 required keys reachable without editing any L1 navigation.",
+  "selected": [
+    {
+      "key": "s3-l2-maestro",
+      "historical_body_sha256": "7505522f3e92fa25dfda8dac896a2717d6eac71d9bd3a928d0bf4ae5e5b08d7e",
+      "selected_body_sha256": "5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012",
+      "byte_length": 6979,
+      "dependency_reason": "Body opening names L1 Maestro and L1 integrations; skills/adapters are substantive inputs.",
+      "blockers": []
+    },
+    {
+      "key": "s3-l2-relay",
+      "historical_body_sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+      "selected_body_sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+      "byte_length": 7235,
+      "dependency_reason": "Body opening names L1 Relay; other-component pointers remain navigation.",
+      "blockers": []
+    },
+    {
+      "key": "s3-l2-integrations",
+      "historical_body_sha256": "5b65c606ab258eea521adbf0cdf4bdf43b0755ec2ec0a7be5a2efc25545ce0c3",
+      "selected_body_sha256": "90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259",
+      "byte_length": 6968,
+      "dependency_reason": "Body opening names L1 integrations and L1 Maestro for seat relationships.",
+      "blockers": []
+    },
+    {
+      "key": "s3-l3-flows",
+      "historical_body_sha256": "d69898e99b6e6eb4d9309b46c9e1541059effdbbdcc59fd2efb29ddd860947b7",
+      "selected_body_sha256": "17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99",
+      "byte_length": 13637,
+      "dependency_reason": "Four integrated flows synthesize all three L2 bodies.",
+      "blockers": []
+    },
+    {
+      "key": "s3-l4-entry",
+      "historical_body_sha256": "43dfa1d4d82c7072c911f8e28e6abecce9686f0dea1be7d19077f3d2c27de871",
+      "selected_body_sha256": "ae458ac87fa4542974e092641400c29f8904e37145dcb79cd553681a561443c0",
+      "byte_length": 6250,
+      "dependency_reason": "L3 cumulative predecessor; label resolution details also consume L1 Maestro. Other deep links are navigation.",
+      "blockers": []
+    },
+    {
+      "key": "s3-l4-ownership",
+      "historical_body_sha256": "6c27da488bf8a376b0153150b59584766abd2a8c420910ec9ed542b8c2d4bfa3",
+      "selected_body_sha256": "a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b",
+      "byte_length": 6934,
+      "dependency_reason": "L3 cumulative predecessor plus L1 Maestro/integrations details on labels, Atlas Memory and assets.",
+      "blockers": []
+    },
+    {
+      "key": "s3-l4-maintenance",
+      "historical_body_sha256": "31821e9ed5533a9e48fd590fad4bf94373c7a2241615e563038eb27c8b7d0cf8",
+      "selected_body_sha256": "d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91",
+      "byte_length": 9724,
+      "dependency_reason": "L3 cumulative predecessor plus detailed label, Relay, assets and Atlas Memory maintenance from L1.",
+      "blockers": []
+    },
+    {
+      "key": "s3-l4-operational",
+      "historical_body_sha256": "4f6a500ee4b575d9c06aa6c070ee8071f3b580c76c0f55da3871e567ebba7d81",
+      "selected_body_sha256": "704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1",
+      "byte_length": 9757,
+      "dependency_reason": "L3 cumulative predecessor plus L1 details on Relay audit, Atlas Memory, assets and host boundaries.",
+      "blockers": []
+    }
+  ],
+  "unresolved_blockers": [],
+  "runtime_status": "NOT_RUN"
+}

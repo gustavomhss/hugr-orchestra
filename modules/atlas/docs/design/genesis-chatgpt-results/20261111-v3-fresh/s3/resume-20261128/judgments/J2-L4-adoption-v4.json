@@ -1,0 +1,90 @@
+{
+  "reviewer":"/root/s3_j2",
+  "role":"J2; revisão de todos os critérios",
+  "execution_id":"15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "unit":"L4-ownership",
+  "version":"L4-adoption-v4",
+  "decision":"PASS",
+  "hashes_declared":{
+    "s3-l4-entry":{"sha256":"a5e1bf88aa6c17470c2832c99049dba76867615279689db85d25e2fe8b39e9ef","bytes":7764},
+    "s3-l4-ownership":{"sha256":"a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b","bytes":6934},
+    "s3-l4-maintenance":{"sha256":"d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91","bytes":9724},
+    "s3-l4-operational":{"sha256":"704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1","bytes":9757}
+  },
+  "delta_review":{
+    "verdict":"PASS",
+    "evidence":"Inserção integral em entry §3; atestação estática da root sobre read.ts/genesis-native.ts no runtime db9b4235022c4df32fe3bfd4faeea8adcd69abb7 e 18 H2 dos L1 aceitos.",
+    "reason":"Distingue index da leitura por key, identifica a root de evidence e oferece seletores exatos dos intermediários. Explicita maxBytes como limite de recusa. Não afirma consumo executado.",
+    "previous_reviews":"Pareceres v2/v3 preservados; correção do cache permanece resolvida."
+  },
+  "cases":[
+    {
+      "id":"L4-E1","verdict":"PASS",
+      "evidence":"Entry §§1–6, incluindo o novo catálogo H2 em §3.",
+      "reason":"Mantém componente/classe, index e leitura mínima. O delta permite selecionar seções de Relay/integrações sem adquirir corpos inteiros; preserva frescor, abstenção e limites de autoridade."
+    },
+    {
+      "id":"L4-O1","verdict":"PASS",
+      "evidence":"Ownership §§1–7; L3 e suplemento conservados.",
+      "reason":"Responsabilidades continuam separadas entre fontes, skills, packaging, Core, Maestro, Claude, Relay, Dock e Janitor. A navegação nova não transfere ownership ou grants."
+    },
+    {
+      "id":"L4-M1","verdict":"PASS",
+      "evidence":"Maintenance §§1–9; §2.8 corrigido; SeatSkillRoot e AGENTS.",
+      "reason":"Preserva fontes, derivados, contratos, validações e negativos. Cache adulterado perde reutilização e pode ser reconstruído; histórico e assets pendentes continuam explícitos."
+    },
+    {
+      "id":"L4-P1","verdict":"PASS",
+      "evidence":"Operational §§1–10; fontes approval/audit/release/Dock/Janitor.",
+      "reason":"Mantém diagnóstico por identidade, estado, receipts e transporte. Silêncio não conclui, unknown não autoriza retry, tokens não são inventados e scanner indisponível não significa clean."
+    }
+  ],
+  "critical_errors":[
+    {
+      "id":"CE1","verdict":"PASS",
+      "evidence":"Entry §3; ownership §§1–4.",
+      "reason":"Orientação de leitura não concede autoridade além dos contratos."
+    },
+    {
+      "id":"CE2","verdict":"PASS",
+      "evidence":"Entry §3; maintenance §§2,6; operational §7.",
+      "reason":"Catálogo H2, gerados e assets não são apresentados como capacidade live."
+    },
+    {
+      "id":"CE3","verdict":"PASS",
+      "evidence":"Operational §§4–6; maintenance §7.",
+      "reason":"Não sugere retry inseguro ou limpeza destrutiva para unknown."
+    },
+    {
+      "id":"CE4","verdict":"PASS",
+      "evidence":"Maintenance §§1,5; operational §3.",
+      "reason":"Não permite editar fixture/golden apenas para fabricar PASS."
+    },
+    {
+      "id":"CE5","verdict":"PASS",
+      "evidence":"Proveniências; maintenance §§5,9; operational §10.",
+      "reason":"Código e seletores estáticos não são convertidos em execução, CI ou custo observado."
+    },
+    {
+      "id":"CE6","verdict":"PASS",
+      "evidence":"Ownership §7; maintenance §9; operational §10.",
+      "reason":"Obrigações locais permanecem explícitas; o novo índice não as oculta sob trabalho global."
+    }
+  ],
+  "limit":{
+    "verdict":"PASS",
+    "max_body_bytes_each":16000,
+    "evidence":"7764, 6934, 9724 e 9757 bytes declarados.",
+    "reason":"Todos abaixo do limite."
+  },
+  "findings":[],
+  "evidence_requests":[],
+  "optional_suggestions":[],
+  "limitations":[
+    "Avaliação dos corpos conservados com o delta integral v4 e as correções anteriores de transporte. L3 permanece predecessor aceito.",
+    "Hashes, tamanhos, diff e correspondência dos H2 são atestados pela root; não houve recomputação ou inspeção própria dos arquivos.",
+    "Sem ferramentas, arquivos, testes, edição ou delegação. O contrato index/read foi avaliado como evidência estática, sem execução de consumidor.",
+    "PASS semântico desta adoção; não constitui binding, publicação, runtime, CI, consumer ou aceite de originais ausentes.",
+    "Operações não exercitadas permanecem NOT_RUN; medições ausentes permanecem UNKNOWN."
+  ]
+}

@@ -1,0 +1,64 @@
+{
+  "schema": "genesis-s3-semantic-layer-release/v1",
+  "execution_record_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "layer": "L4",
+  "revision": "L4-adoption-v4",
+  "decision": "ACCEPTED",
+  "verified_by": "/root",
+  "reviewer_ids": [
+    "/root/s3_j1",
+    "/root/s3_j2"
+  ],
+  "recorded_at": "2026-11-28T07:30:40.158022+00:00",
+  "bodies": [
+    {
+      "key": "s3-l4-entry",
+      "sha256": "a5e1bf88aa6c17470c2832c99049dba76867615279689db85d25e2fe8b39e9ef",
+      "bytes": 7764
+    },
+    {
+      "key": "s3-l4-ownership",
+      "sha256": "a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b",
+      "bytes": 6934
+    },
+    {
+      "key": "s3-l4-maintenance",
+      "sha256": "d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91",
+      "bytes": 9724
+    },
+    {
+      "key": "s3-l4-operational",
+      "sha256": "704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1",
+      "bytes": 9757
+    }
+  ],
+  "decisions": [
+    {
+      "reviewer_id": "/root/s3_j1",
+      "path": "s3-resume-work/judgments/J1-L4-adoption-v4.json",
+      "sha256": "bdca866b628f399b35783ca339886f2aeb6ad5c91706fe07a06fd1777c18cf08",
+      "bytes": 4833
+    },
+    {
+      "reviewer_id": "/root/s3_j2",
+      "path": "s3-resume-work/judgments/J2-L4-adoption-v4.json",
+      "sha256": "216d1f335590509de8cfe008ff42efd2eee35b5941eb94bc5432386f569b10c1",
+      "bytes": 4769
+    }
+  ],
+  "mandatory_findings_open": 0,
+  "predecessor_release": "releases/L3-adoption-v1.json",
+  "release_scope": "Semantic acceptance of the four exact selected L4 bodies. Enables final selected-package assembly. Does not supply runtime binding, publication, consumers or maintenance.",
+  "resolved_findings": [
+    "L4-M1-CACHE-NEGATIVE"
+  ],
+  "transcription": "Complete visible JSON replies preserved UTF8 with terminal LF; unavailable opaque host IDs not invented. J2 entry/evidence transmission typos explicitly corrected and acknowledged before judgment.",
+  "review_method": "Previous complete bodies/oracle/evidence and exact v4 entry section 3 insertion. Same persistent pair; all mandatory cases and critical errors reviewed.",
+  "usage": {
+    "cost": "UNKNOWN",
+    "tokens": "UNKNOWN",
+    "physical_attempts": "UNKNOWN"
+  },
+  "previous_release": "releases/L4-adoption-v3.json",
+  "change": "18 exact H2 selectors for non-root L1 Relay and integrations; no other body change."
+}

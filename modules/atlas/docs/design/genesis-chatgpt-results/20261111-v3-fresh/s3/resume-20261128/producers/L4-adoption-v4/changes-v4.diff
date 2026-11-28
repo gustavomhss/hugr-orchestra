@@ -1,0 +1,37 @@
+--- s3-l4-adoption/revisions/v3/bodies/l4-entry.md
++++ s3-l4-adoption/bodies/l4-entry.md
+@@ -45,6 +45,34 @@
+ - fontes e cobertura integrações: `receipts/L1-C/sources.json`, `receipts/L1-C/coverage.json`
+ - decisões J1/J2 L1: `judgments/J1-L1-A-v1-final.md`; `judgments/J2-L1-A-v1-final.md`; `judgments/J1-L1-B-v2.json`; `judgments/J2-L1-B-v2.json`; `judgments/J1-L1-C-v3.json`; `judgments/J2-L1-C-v3.json`
+ 
++### Catálogo H2 dos intermediários L1
++
++`index(scope, need)` lista apenas headings da root daquele need e não aceita `key`. No need `evidence`, a root é `s3-l1-maestro`; os dois corpos abaixo são intermediários. Para `Read(key, section, maxBytes)`, use a chave correspondente e, em `section`, exatamente um dos textos H2 abaixo (o texto após `## `), preservando número, acentos e pontuação. Isso permite ler a seção do intermediário sem adquirir o corpo inteiro. `maxBytes` é limite de recusa, sem truncamento.
++
++**`s3-l1-relay` — textos exatos de `section`:**
++
++- `1. O que existe e quem decide`
++- `2. Mapa contratual das famílias`
++- `3. Entradas e semântica dos controles`
++- `4. Drivers, execução e estado`
++- `5. Auditoria, persistência e recuperação`
++- `6. Authoring, hooks e material gerado`
++- `7. Integrações externas e evidência preservada`
++
++**`s3-l1-integrations` — textos exatos de `section`:**
++
++- `1. População e necessidades`
++- `2. Identidade e autoridade dos especialistas`
++- `3. Árvores de skills, geração e instalação`
++- `4. Discovery: pacote documental versus host efetivo`
++- `5. Claude: integração, execução e recusas`
++- `6. Claude: identidade, lifetime, conta e distribuição`
++- `7. Capability assets: proveniência não é runtime`
++- `8. Dock: duas superfícies e um receptor desktop`
++- `9. Janitor: observação e notificação, sem limpeza automática`
++- `10. Intenção, histórico e evidência de testes`
++- `11. Alcance e gaps que acompanham o resultado`
++
+ Abra a menor rota que sustente a decisão. O reader deve citar a autoridade/gap do próprio artefato; a existência dessas rotas não promove L2–L4 nem prova publicação Atlas.
+ 
+ ## 4. Profundidade por objetivo

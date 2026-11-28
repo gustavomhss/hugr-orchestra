@@ -2,9 +2,9 @@
   "schema": "s3-selected-payload-assembly/v1",
   "status": "ASSEMBLED_FROM_REAL_ROOT_RELEASES",
   "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/native-package.json",
-  "package_sha256": "4bcee3f8e534dc6a191cee647e27b5a6faf98a4a7e1f3ed09e9fda7488d64c86",
-  "package_byte_length": 1164632,
-  "package_git_blob_sha": "87585cb5cd3ee802b77662ea8dd7f0ce2d0f107c",
+  "package_sha256": "e2bec9aadf58327d7ae72c991c581a03089ee6dce165595fa802e4923c58ccde",
+  "package_byte_length": 1164616,
+  "package_git_blob_sha": "8eea7cc11e93ea37d5a427df1ca5630c1ee47b26",
   "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
   "selected_artifacts": [
     {
@@ -153,37 +153,37 @@
     },
     {
       "key": "s3-l4-entry",
-      "producer_revision": "v2",
+      "producer_revision": "v4",
       "root_release": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v3.json",
-        "sha256": "416d37aa75de4f051fbe27674ab95fefc7c137a4a762cbd887f2eb7c9b05dd1f"
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v4.json",
+        "sha256": "8346500e7604876edadefab1af967bc2691cdc62355236bbefb0456b3be0639b"
       },
       "body": {
         "local_path": "/workspace/scratch/0666cc914bd1/s3-l4-adoption/bodies/l4-entry.md",
-        "sha256": "ae458ac87fa4542974e092641400c29f8904e37145dcb79cd553681a561443c0",
-        "git_blob_sha": "b16dd85d88e504c8b41275682e8e5adbffccc78c",
-        "byte_length": 6250
+        "sha256": "a5e1bf88aa6c17470c2832c99049dba76867615279689db85d25e2fe8b39e9ef",
+        "git_blob_sha": "92fedc6075648ea674155efc958532cd525b3d2c",
+        "byte_length": 7764
       },
       "recipe_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v3/recipe-v2.md",
-        "sha256": "193c7d86804a1abde6a256122a0292c26ff91cb498431f842a3dede80ce35648"
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/recipe-v4.md",
+        "sha256": "3bf5d7702cdf66db78da64218b3fc6a1f25d9869269183a84dd7660bc9717493"
       },
       "producer_request_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v3/correction-request.md",
-        "sha256": "e83d691a40fb4858c2a128b4c5ed2b994ff161337f1e725bc0ea0b6313d176ec"
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/request-v4.md",
+        "sha256": "3a075ff3772c309017dd0c26d8c68726628f343b915ce773f035c0496069e5c8"
       },
       "producer_response_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v3/correction-response.json",
-        "sha256": "54bb5c2a099b35d164907433524937e330a2574dd3f60cce20be6dbe6e7b56bb"
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/response-v4.json",
+        "sha256": "499d298313885c3be165c1b9ef4f02f9b3fbdf21091c56d10452923f1217bb2c"
       },
       "semantic_review_refs": [
         {
-          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J1-L4-adoption-v3.json",
-          "sha256": "0df7e3b5b74ecb3b736271286b500f21b47a84749f94a97d4cba50dd36f0f2ec"
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J1-L4-adoption-v4.json",
+          "sha256": "bdca866b628f399b35783ca339886f2aeb6ad5c91706fe07a06fd1777c18cf08"
         },
         {
-          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J2-L4-adoption-v3.json",
-          "sha256": "b8ccd817e3fc83ec74b72d188668fd6c3287da984bca06b19875f230f4c5bb4b"
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J2-L4-adoption-v4.json",
+          "sha256": "216d1f335590509de8cfe008ff42efd2eee35b5941eb94bc5432386f569b10c1"
         }
       ]
     },
@@ -191,8 +191,8 @@
       "key": "s3-l4-ownership",
       "producer_revision": "v1",
       "root_release": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v3.json",
-        "sha256": "416d37aa75de4f051fbe27674ab95fefc7c137a4a762cbd887f2eb7c9b05dd1f"
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v4.json",
+        "sha256": "8346500e7604876edadefab1af967bc2691cdc62355236bbefb0456b3be0639b"
       },
       "body": {
         "local_path": "/workspace/scratch/0666cc914bd1/s3-l4-adoption/bodies/l4-ownership.md",
@@ -201,25 +201,25 @@
         "byte_length": 6934
       },
       "recipe_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v3/recipe.md",
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/recipe.md",
         "sha256": "4b94e9a40ea0b5f160646600a8fee237fda5339962b92ae23996e4528acfc426"
       },
       "producer_request_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v3/request.md",
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/request.md",
         "sha256": "1b8e19051f1c9747e57c38ec71a8f47099c8a87d4aff682a828b1ba58334c5d3"
       },
       "producer_response_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v3/response.json",
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/response.json",
         "sha256": "0c76b4f4a7874620321bbf8212541e0d58d522944fb30fe84eeb3472f0030393"
       },
       "semantic_review_refs": [
         {
-          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J1-L4-adoption-v3.json",
-          "sha256": "0df7e3b5b74ecb3b736271286b500f21b47a84749f94a97d4cba50dd36f0f2ec"
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J1-L4-adoption-v4.json",
+          "sha256": "bdca866b628f399b35783ca339886f2aeb6ad5c91706fe07a06fd1777c18cf08"
         },
         {
-          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J2-L4-adoption-v3.json",
-          "sha256": "b8ccd817e3fc83ec74b72d188668fd6c3287da984bca06b19875f230f4c5bb4b"
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J2-L4-adoption-v4.json",
+          "sha256": "216d1f335590509de8cfe008ff42efd2eee35b5941eb94bc5432386f569b10c1"
         }
       ]
     },
@@ -227,8 +227,8 @@
       "key": "s3-l4-maintenance",
       "producer_revision": "v3",
       "root_release": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v3.json",
-        "sha256": "416d37aa75de4f051fbe27674ab95fefc7c137a4a762cbd887f2eb7c9b05dd1f"
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v4.json",
+        "sha256": "8346500e7604876edadefab1af967bc2691cdc62355236bbefb0456b3be0639b"
       },
       "body": {
         "local_path": "/workspace/scratch/0666cc914bd1/s3-l4-adoption/bodies/l4-maintenance.md",
@@ -237,25 +237,25 @@
         "byte_length": 9724
       },
       "recipe_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v3/recipe-v3.md",
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/recipe-v3.md",
         "sha256": "c87eecab4b261d0f399c7c5cf28cad7ffec800bbdc06446fa9998064b93a9395"
       },
       "producer_request_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v3/correction-v3-request.md",
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/correction-v3-request.md",
         "sha256": "4d2d4f50531bc21dae7b7836b38127a0a94043c50e68972f8f33542f716bc6f8"
       },
       "producer_response_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v3/correction-v3-response.json",
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/correction-v3-response.json",
         "sha256": "e390b3ffab25f3b3b8ca62111d53fd97b5fe3dc9ec788ef9daab6d3f772e049a"
       },
       "semantic_review_refs": [
         {
-          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J1-L4-adoption-v3.json",
-          "sha256": "0df7e3b5b74ecb3b736271286b500f21b47a84749f94a97d4cba50dd36f0f2ec"
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J1-L4-adoption-v4.json",
+          "sha256": "bdca866b628f399b35783ca339886f2aeb6ad5c91706fe07a06fd1777c18cf08"
         },
         {
-          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J2-L4-adoption-v3.json",
-          "sha256": "b8ccd817e3fc83ec74b72d188668fd6c3287da984bca06b19875f230f4c5bb4b"
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J2-L4-adoption-v4.json",
+          "sha256": "216d1f335590509de8cfe008ff42efd2eee35b5941eb94bc5432386f569b10c1"
         }
       ]
     },
@@ -263,8 +263,8 @@
       "key": "s3-l4-operational",
       "producer_revision": "v1",
       "root_release": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v3.json",
-        "sha256": "416d37aa75de4f051fbe27674ab95fefc7c137a4a762cbd887f2eb7c9b05dd1f"
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/releases/L4-adoption-v4.json",
+        "sha256": "8346500e7604876edadefab1af967bc2691cdc62355236bbefb0456b3be0639b"
       },
       "body": {
         "local_path": "/workspace/scratch/0666cc914bd1/s3-l4-adoption/bodies/l4-operational.md",
@@ -273,25 +273,25 @@
         "byte_length": 9757
       },
       "recipe_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v3/recipe.md",
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/recipe.md",
         "sha256": "4b94e9a40ea0b5f160646600a8fee237fda5339962b92ae23996e4528acfc426"
       },
       "producer_request_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v3/request.md",
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/request.md",
         "sha256": "1b8e19051f1c9747e57c38ec71a8f47099c8a87d4aff682a828b1ba58334c5d3"
       },
       "producer_response_ref": {
-        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v3/response.json",
+        "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/producers/L4-adoption-v4/response.json",
         "sha256": "0c76b4f4a7874620321bbf8212541e0d58d522944fb30fe84eeb3472f0030393"
       },
       "semantic_review_refs": [
         {
-          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J1-L4-adoption-v3.json",
-          "sha256": "0df7e3b5b74ecb3b736271286b500f21b47a84749f94a97d4cba50dd36f0f2ec"
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J1-L4-adoption-v4.json",
+          "sha256": "bdca866b628f399b35783ca339886f2aeb6ad5c91706fe07a06fd1777c18cf08"
         },
         {
-          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J2-L4-adoption-v3.json",
-          "sha256": "b8ccd817e3fc83ec74b72d188668fd6c3287da984bca06b19875f230f4c5bb4b"
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J2-L4-adoption-v4.json",
+          "sha256": "216d1f335590509de8cfe008ff42efd2eee35b5941eb94bc5432386f569b10c1"
         }
       ]
     }
@@ -346,26 +346,26 @@
       ]
     },
     "L4": {
-      "file": "/workspace/scratch/0666cc914bd1/s3-resume-work/releases/L4-adoption-v3.json",
-      "sha256": "416d37aa75de4f051fbe27674ab95fefc7c137a4a762cbd887f2eb7c9b05dd1f",
-      "git_blob_sha": "0804d5df34195c241dd5e648d0d2e7593b065857",
-      "byte_length": 2178,
+      "file": "/workspace/scratch/0666cc914bd1/s3-resume-work/releases/L4-adoption-v4.json",
+      "sha256": "8346500e7604876edadefab1af967bc2691cdc62355236bbefb0456b3be0639b",
+      "git_blob_sha": "a3042797b7c699a28920e66426914250b34d3293",
+      "byte_length": 2394,
       "decisions": [
         {
           "reviewer_id": "/root/s3_j1",
-          "local_path": "/workspace/scratch/0666cc914bd1/s3-resume-work/judgments/J1-L4-adoption-v3.json",
-          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J1-L4-adoption-v3.json",
-          "sha256": "0df7e3b5b74ecb3b736271286b500f21b47a84749f94a97d4cba50dd36f0f2ec",
-          "git_blob_sha": "51dd343962701b9ec0e4e00f42395adb8378e633",
-          "byte_length": 4573
+          "local_path": "/workspace/scratch/0666cc914bd1/s3-resume-work/judgments/J1-L4-adoption-v4.json",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J1-L4-adoption-v4.json",
+          "sha256": "bdca866b628f399b35783ca339886f2aeb6ad5c91706fe07a06fd1777c18cf08",
+          "git_blob_sha": "0827baa4cf71bb057c546bbd859987d6c672eeff",
+          "byte_length": 4833
         },
         {
           "reviewer_id": "/root/s3_j2",
-          "local_path": "/workspace/scratch/0666cc914bd1/s3-resume-work/judgments/J2-L4-adoption-v3.json",
-          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J2-L4-adoption-v3.json",
-          "sha256": "b8ccd817e3fc83ec74b72d188668fd6c3287da984bca06b19875f230f4c5bb4b",
-          "git_blob_sha": "c5a2c6b611aa9416cb7a97581d4f54f3905cd201",
-          "byte_length": 4427
+          "local_path": "/workspace/scratch/0666cc914bd1/s3-resume-work/judgments/J2-L4-adoption-v4.json",
+          "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/judgments/J2-L4-adoption-v4.json",
+          "sha256": "216d1f335590509de8cfe008ff42efd2eee35b5941eb94bc5432386f569b10c1",
+          "git_blob_sha": "bea1d3fff034d44cee548b4506cebbc8f5a83473",
+          "byte_length": 4769
         }
       ]
     }
