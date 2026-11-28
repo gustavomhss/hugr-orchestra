@@ -102,8 +102,10 @@ export interface Interface {
   readonly resources: () => Effect.Effect<Mcp.ResourceCatalog>
   /** Reads a resource by URI from the connected server that lists it; undefined when no connected server lists it. */
   readonly readResource: (uri: string) => Effect.Effect<ReadResourceResult["contents"] | undefined, RequestError>
-  /** The prompts of the connected servers. */
-  readonly prompts: (options?: { readonly connectedOnly?: boolean; readonly server?: string }) => Effect.Effect<Prompt[]>
+  /** The available prompts, skipping servers that cannot list them. */
+  readonly prompts: (server?: string) => Effect.Effect<Prompt[]>
+  /** Finds a prompt for a command prefix without starting or reconnecting servers. */
+  readonly findConnectedPrompt: (server: string, accept: (prompt: Prompt) => boolean) => Effect.Effect<Prompt | undefined, RequestError>
   /** Renders a server's prompt with its arguments and returns the text of its messages. */
   readonly getPrompt: (
     server: string,
@@ -640,18 +642,37 @@ const layer = Layer.effect(
       return result.contents
     })
 
-    const prompts = Effect.fn("Mcp.prompts")(function* (options?: Parameters<Interface["prompts"]>[0]) {
-      if (!options?.connectedOnly) yield* ready()
+    const promptServers = (server?: string) =>
+      connected().filter((item) => server === undefined || McpCatalog.sanitize(item.server) === server)
+
+    const listPrompts = (item: ReturnType<typeof connected>[number]) =>
+      Effect.tryPromise({
+        try: (signal) => McpCatalog.prompts(item.client, DEFAULT_TIMEOUT, signal),
+        catch: (error) => new RequestError({ message: messageOf(error) }),
+      }).pipe(Effect.map((found) => found.map((prompt) => ({ ...prompt, server: item.server }))))
+
+    const prompts = Effect.fn("Mcp.prompts")(function* (server?: string) {
+      yield* ready()
       const listed = yield* Effect.forEach(
-        connected().filter((item) => options?.server === undefined || McpCatalog.sanitize(item.server) === options.server),
-        (item) =>
-          Effect.tryPromise(() => McpCatalog.prompts(item.client, DEFAULT_TIMEOUT)).pipe(
-            Effect.map((found) => found.map((prompt) => ({ ...prompt, server: item.server }))),
-            Effect.orElseSucceed(() => []),
-          ),
+        promptServers(server),
+        (item) => listPrompts(item).pipe(Effect.orElseSucceed(() => [])),
         { concurrency: "unbounded" },
       )
       return listed.flat()
+    })
+
+    const findConnectedPrompt = Effect.fn("Mcp.findConnectedPrompt")(function* (
+      server: string,
+      accept: (prompt: Prompt) => boolean,
+    ) {
+      const listed = yield* Effect.forEach(promptServers(server), (item) => listPrompts(item).pipe(Effect.result), {
+        concurrency: "unbounded",
+      })
+      // Several servers may share a sanitized prefix. A confirmed prompt takes precedence over a failed listing.
+      const found = listed.flatMap((result) => (result._tag === "Success" ? result.success : [])).find(accept)
+      if (found) return found
+      const failed = listed.find((result) => result._tag === "Failure")
+      if (failed?._tag === "Failure") return yield* failed.failure
     })
 
     const getPrompt = Effect.fn("Mcp.getPrompt")(function* (
@@ -897,6 +918,7 @@ const layer = Layer.effect(
       resources,
       readResource,
       prompts,
+      findConnectedPrompt,
       getPrompt,
       startAuth,
       finishAuth,

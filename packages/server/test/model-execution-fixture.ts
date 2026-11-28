@@ -15,6 +15,7 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { Integration } from "@orchestra/core/integration"
 import { Location } from "@orchestra/core/location"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
+import { McpProvided } from "@orchestra/core/mcp/provided"
 import { ModelV2 } from "@orchestra/core/model"
 import { AppProcess } from "@orchestra/core/process"
 import { Prompt } from "@orchestra/core/session/prompt"
@@ -51,6 +52,7 @@ export const state = {
   materializations: 0,
   tools: 0,
   provider: 0,
+  mcpServers: [] as McpProvided.Server[],
   wait: undefined as
     | { entered: Deferred.Deferred<void>; interrupted: Deferred.Deferred<void>; release: Deferred.Deferred<void> }
     | undefined,
@@ -204,6 +206,7 @@ const services = Layer.unwrap(
         [Global.node, Global.layerWith(paths)],
         [Credential.node, Credential.layerFrom(undefined)],
         [ExecutionHost.node, hosts],
+        [McpProvided.node, Layer.succeed(McpProvided.Service, { servers: () => Effect.sync(() => state.mcpServers) })],
         [SessionExecution.node, SessionExecution.noopLayer],
       ],
       [seed],
@@ -288,6 +291,7 @@ export const setup = Effect.gen(function* () {
   state.materializations = 0
   state.tools = 0
   state.provider = 0
+  state.mcpServers = []
   state.wait = undefined
   const tmp = yield* Effect.acquireRelease(
     Effect.promise(() => tmpdir()),

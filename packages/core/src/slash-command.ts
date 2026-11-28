@@ -200,7 +200,10 @@ export const findPrompt = Effect.fn("SlashCommand.findPrompt")(function* (name: 
   const separator = name.indexOf(":")
   if (separator < 0) return undefined
   const mcp = yield* Mcp.Service
-  return (yield* mcp.prompts({ connectedOnly, server: name.slice(0, separator) })).find((item) => promptName(item) === name)
+  const server = name.slice(0, separator)
+  const matches = (prompt: Mcp.Prompt) => promptName(prompt) === name
+  if (connectedOnly) return yield* mcp.findConnectedPrompt(server, matches)
+  return (yield* mcp.prompts(server)).find(matches)
 })
 
 function promptName(prompt: Mcp.Prompt) {

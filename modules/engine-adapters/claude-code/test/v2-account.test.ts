@@ -258,6 +258,38 @@ test.skipIf(process.platform === "win32")("a failed status read keeps the last s
   expect(seen).toEqual([true, true, false])
 })
 
+test("a failed status process spawn keeps the last sign-in and is throttled", async () => {
+  await using fake = await cli()
+  const signedIn = { subscriptionType: "max", email: "owner@example.com", apiProvider: "firstParty" } satisfies AccountInfo
+  const probe = { reads: 0 }
+  const flaky = Layer.succeed(ClaudeCodeSDK.Service, ClaudeCodeSDK.Service.of({
+    query: ((input: Parameters<typeof query>[0]) => {
+      const read = ++probe.reads
+      if (read === 2) {
+        const child = input.options?.spawnClaudeCodeProcess?.({
+          command: path.join(path.dirname(fake.file), "missing-claude"),
+          args: [],
+          env: input.options.env ?? {},
+          signal: input.options.abortController?.signal ?? new AbortController().signal,
+        })
+        if (!child) throw new Error("Missing status process spawner")
+      }
+      return { accountInfo: async () => read === 1 ? signedIn : { tokenSource: "none", apiKeySource: "none" }, close() {} }
+    }) as unknown as typeof query,
+  }))
+  await withAccount({ ORCHESTRA_CLAUDE_CODE_EXECUTABLE: process.execPath }, (account) => Effect.gen(function* () {
+    const status = account.account.pipe(Effect.map((value) => value.signedIn))
+    expect(yield* status).toBe(true)
+    yield* TestClock.adjust(Duration.minutes(11))
+    expect(yield* status).toBe(true)
+    expect(yield* status).toBe(true)
+    expect(probe.reads).toBe(2)
+    yield* TestClock.adjust(Duration.seconds(31))
+    expect(yield* status).toBe(false)
+    expect(probe.reads).toBe(3)
+  }).pipe(Effect.provide(TestClock.layer())), flaky)
+})
+
 test("an interrupted status probe closes before a live caller retries and caches the result", async () => {
   const firstStarted = Promise.withResolvers<void>()
   const firstRead = Promise.withResolvers<AccountInfo>()
