@@ -453,7 +453,7 @@ it.live("ResearchProcess counts the actual overflowing chunk while retaining onl
     fs.writeFile(script, "process.stdout.write('x'.repeat(Number(process.argv[2])))\n"),
   ]))
   const run = (bytes: number) => ResearchProcess.run({
-    command: process.execPath, args: ["--no-env-file", "--config", config, script, String(bytes)], cwd: directory.path,
+    command: process.execPath, args: ["--no-env-file", `--config=${config}`, script, String(bytes)], cwd: directory.path,
     env: ResearchProcess.environment(), timeoutMs: 15_000, maxBytes: 1024,
   })
   const positive = yield* run(13)
