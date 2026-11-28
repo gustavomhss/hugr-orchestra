@@ -3,6 +3,7 @@ import { base64Encode } from "@orchestra/core/util/encode"
 import { fixture, pageMessages } from "./session-timeline.fixture"
 import { trackPageErrors, expectNoSmokeErrors } from "../utils/errors"
 import { mockOrchestraServer } from "../utils/mock-server"
+import { installSseTransport } from "../utils/sse-transport"
 import { expectAppVisible, expectSessionTitle } from "../utils/waits"
 
 const forbiddenText = ["Load details", "Show earlier steps"]
@@ -45,56 +46,68 @@ test.describe("smoke: session timeline", () => {
       beforeMessagesResponse: (request) => (request.before ? history.promise : Promise.resolve()),
       onMessages: (input) => requests.push({ before: input.before, phase: input.phase, at: performance.now() }),
     })
-    await configureSmokePage(page, fixture.directory)
-
-    await navigateToSession(page, fixture.directory, fixture.targetID, fixture.expected.targetTitle)
-    await waitForTimelineStable(page)
-    const scroller = timelineScroller(page)
-    await pointAtTimeline(page)
-    // Wheel until the app asks for the older page; the request is the condition, the poll interval only paces the wheel.
-    await expect
-      .poll(
-        async () => {
-          await page.mouse.wheel(0, -240)
-          return requests.some((request) => request.before && request.phase === "start")
-        },
-        { timeout: 120_000, intervals: [20] },
-      )
-      .toBe(true)
-    expect(requests.some((request) => request.before && request.phase === "end")).toBe(false)
-    for (let index = 0; index < 12; index++) await page.mouse.wheel(0, -120)
-    // Wheel scrolling finishes after the dispatch returns: measure the rows only once the timeline stopped moving.
-    await waitForTimelineStable(page)
-    const keys = await scroller.evaluate((element) => {
-      const view = element.getBoundingClientRect()
-      return [...element.querySelectorAll<HTMLElement>("[data-timeline-part-id]")]
-        .filter((row) => {
-          const rect = row.getBoundingClientRect()
-          return rect.bottom > view.top && rect.top < view.bottom
-        })
-        .map((row) => row.dataset.timelinePartId)
-        .filter((id): id is string => !!id)
-        .slice(0, 3)
+    const transport = await installSseTransport(page, {
+      server: `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`,
     })
-    expect(keys.length).toBeGreaterThan(0)
-    const positions = () =>
-      scroller.evaluate((element, keys) => {
-        const top = element.getBoundingClientRect().top
-        return Object.fromEntries(
-          keys.map((key) => {
-            const row = element.querySelector<HTMLElement>(`[data-timeline-part-id="${key}"]`)
-            if (!row) throw new Error(`Missing stable timeline key: ${key}`)
-            return [key, Math.round((row.getBoundingClientRect().top - top) * devicePixelRatio) / devicePixelRatio]
-          }),
-        )
-      }, keys)
-    const before = await positions()
-    expect(requests.some((request) => request.before && request.phase === "end")).toBe(false)
-    history.resolve()
+    try {
+      await configureSmokePage(page, fixture.directory)
 
-    await expect.poll(() => requests.some((request) => request.before && request.phase === "end")).toBe(true)
-    await waitForTimelineStable(page)
-    await expect.poll(positions).toEqual(before)
+      await navigateToSession(page, fixture.directory, fixture.targetID, fixture.expected.targetTitle)
+      await waitForTimelineStable(page)
+      const scroller = timelineScroller(page)
+      await pointAtTimeline(page)
+      // Wheel until the app asks for the older page; the request is the condition, the poll interval only paces the wheel.
+      await expect
+        .poll(
+          async () => {
+            await page.mouse.wheel(0, -240)
+            return requests.some((request) => request.before && request.phase === "start")
+          },
+          { timeout: 120_000, intervals: [20] },
+        )
+        .toBe(true)
+      expect(requests.some((request) => request.before && request.phase === "end")).toBe(false)
+      for (let index = 0; index < 12; index++) await page.mouse.wheel(0, -120)
+      // Wheel scrolling finishes after the dispatch returns: measure the rows only once the timeline stopped moving.
+      await waitForTimelineStable(page)
+      const keys = await scroller.evaluate((element) => {
+        const view = element.getBoundingClientRect()
+        return [...element.querySelectorAll<HTMLElement>("[data-timeline-part-id]")]
+          .filter((row) => {
+            const rect = row.getBoundingClientRect()
+            return rect.bottom > view.top && rect.top < view.bottom
+          })
+          .map((row) => row.dataset.timelinePartId)
+          .filter((id): id is string => !!id)
+          .slice(0, 3)
+      })
+      expect(keys.length).toBeGreaterThan(0)
+      const positions = () =>
+        scroller.evaluate((element, keys) => {
+          const top = element.getBoundingClientRect().top
+          return Object.fromEntries(
+            keys.map((key) => {
+              const row = element.querySelector<HTMLElement>(`[data-timeline-part-id="${key}"]`)
+              if (!row) throw new Error(`Missing stable timeline key: ${key}`)
+              return [key, Math.round((row.getBoundingClientRect().top - top) * devicePixelRatio) / devicePixelRatio]
+            }),
+          )
+        }, keys)
+      const before = await positions()
+      expect((await transport.connections()).map((connection) => ({ path: connection.path, endedAt: connection.endedAt })))
+        .toEqual([{ path: "/api/event", endedAt: undefined }])
+      expect(requests.some((request) => request.before && request.phase === "end")).toBe(false)
+      history.resolve()
+
+      await expect.poll(() => requests.some((request) => request.before && request.phase === "end")).toBe(true)
+      await waitForTimelineStable(page)
+      await expect.poll(positions).toEqual(before)
+      expect((await transport.connections()).map((connection) => ({ path: connection.path, endedAt: connection.endedAt })))
+        .toEqual([{ path: "/api/event", endedAt: undefined }])
+    } finally {
+      history.resolve()
+      await transport.close()
+    }
   })
 
   test("preserves the timeline gap above the composer", async ({ page }) => {

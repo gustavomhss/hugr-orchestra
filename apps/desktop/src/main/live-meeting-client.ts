@@ -1,3 +1,5 @@
+import { liveSessionRequest } from "./live-session-request"
+
 // The desktop side of the meeting API: start, append final segments, stop. Main has no SDK client, so this is plain
 // fetch with the owned server's Basic credentials. Appends queue and retry until they land; segment ids are chosen
 // here, so a retried append is idempotent on the server.
@@ -32,16 +34,13 @@ export function liveRequest(server: MeetingServer) {
 }
 
 // Renames a meeting while it runs or after it stopped; answers the stored title.
-export async function renameMeeting(server: MeetingServer, meetingID: string, title: string) {
-  const request = liveRequest(server)
-  const response = await fetch(request.endpoint("/api/meeting"), {
-    method: "PATCH",
-    headers: request.headers,
-    body: JSON.stringify({ meetingID, title }),
+export async function renameMeeting(server: MeetingServer, meetingID: string, title: string, signal?: AbortSignal) {
+  return liveSessionRequest(liveRequest(server), "/api/meeting", {
+    method: "PATCH", body: JSON.stringify({ meetingID, title }),
+  }, signal, async (response) => {
+    const body: { data: { title: string } } = await response.json()
+    return body.data.title
   })
-  if (!response.ok) throw new Error(`/api/meeting answered ${response.status}: ${await response.text()}`)
-  const body: { data: { title: string } } = await response.json()
-  return body.data.title
 }
 
 export function meetingClient(

@@ -249,7 +249,7 @@ describe("openSurface — the review writes", () => {
     const rules = createDurableMemory(dir).read().store
     expect(rules.map((r) => [r.owner, (r.entry as { rule: string }).rule])).toEqual([["backend", "run go vet before the handler tests"]])
     expect(ok(surface.review()).memoryProposals).toEqual([])
-    expect(ok(surface.memoryDecide({ proposalId: "nope", verdict: "indexed" })).rejected).toBe("no open memory proposal has id 'nope'")
+    expect(ok(surface.memoryDecide({ proposalId: "nope", verdict: "indexed" })).rejected).toBe("the memory proposal is no longer open for this decision")
   })
 
   it("declares a territory with a ratify token and no actor, with the CLI's refusals", () => {

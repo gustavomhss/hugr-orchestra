@@ -310,6 +310,13 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
     getPinchZoomEnabled: () => window.api.getPinchZoomEnabled(),
 
     liveSeat: {
+      recovery: {
+        snapshot: () => window.api.getLiveRecoverySnapshot(),
+        retry: (id) => window.api.retryLiveRecovery(id),
+        finish: (id) => window.api.finishLiveRecovery(id),
+        export: (id) => window.api.exportLiveRecovery(id),
+        discard: (id) => window.api.discardLiveRecovery(id),
+      },
       start: (title) => window.api.startLiveMeeting(title),
       stop: () => window.api.stopLiveMeeting(),
       running: () => window.api.getLiveMeetingRunning(),

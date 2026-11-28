@@ -5,6 +5,7 @@ export const collectBoundedResponseBody = (
   response: HttpClientResponse.HttpClientResponse,
   maximumBytes: number,
   tooLarge: () => Error,
+  charge?: (bytes: number) => Error | undefined,
 ) =>
   Effect.gen(function* () {
     const contentLength = response.headers["content-length"]
@@ -12,11 +13,24 @@ export const collectBoundedResponseBody = (
     const declaredSize =
       parsedSize !== undefined && Number.isSafeInteger(parsedSize) && parsedSize >= 0 ? parsedSize : undefined
     if (declaredSize !== undefined && declaredSize > maximumBytes) return yield* Effect.fail(tooLarge())
-    let body = Buffer.allocUnsafe(Math.min(maximumBytes, declaredSize || 64 * 1024))
+    return yield* collectBoundedBytes(response.stream, maximumBytes, tooLarge, charge)
+  })
+
+/** HTTP and cached files share the same pre-retention byte accounting. */
+export const collectBoundedBytes = <E, R>(
+  stream: Stream.Stream<Uint8Array, E, R>,
+  maximumBytes: number,
+  tooLarge: () => Error,
+  charge?: (bytes: number) => Error | undefined,
+) =>
+  Effect.gen(function* () {
+    let body = Buffer.allocUnsafe(Math.min(maximumBytes, 64 * 1024))
     let size = 0
-    yield* Stream.runForEach(response.stream, (chunk) => {
+    yield* Stream.runForEach(stream, (chunk) => {
       if (chunk.byteLength === 0) return Effect.void
       if (size + chunk.byteLength > maximumBytes) return Effect.fail(tooLarge())
+      const refused = charge?.(chunk.byteLength)
+      if (refused) return Effect.fail(refused)
       if (size + chunk.byteLength > body.byteLength) {
         const grown = Buffer.allocUnsafe(Math.min(maximumBytes, Math.max(size + chunk.byteLength, body.byteLength * 2)))
         body.copy(grown, 0, 0, size)

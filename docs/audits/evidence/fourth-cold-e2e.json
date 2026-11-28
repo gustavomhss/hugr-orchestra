@@ -1,0 +1,111 @@
+{
+  "run": "43492035272",
+  "source": "46530d548a6a7713231d9f30bc9bd1bc0321c01f",
+  "bins": [
+    {
+      "bin": 1,
+      "passed": 53,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "retryAttempts": 0,
+      "rawSHA256": "83b4a02e697b2a2e0ac1221fff34aa90c2013486f2ed846893ed8276b2c9d604"
+    },
+    {
+      "bin": 2,
+      "passed": 58,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "retryAttempts": 0,
+      "rawSHA256": "fd8f2b4e9366df2591248f515087658fe1f37932ae6eca786ad93ad84f2234e9"
+    },
+    {
+      "bin": 3,
+      "passed": 62,
+      "failed": 0,
+      "skipped": 1,
+      "flaky": 0,
+      "retryAttempts": 0,
+      "rawSHA256": "6952aa9c61e65f705055323cf2ffbf63ae78c06a74336bb7184d5b24e4b5d913"
+    },
+    {
+      "bin": 4,
+      "passed": 62,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "retryAttempts": 0,
+      "rawSHA256": "3792af322332d602cccd044347ae6fbb458e343e6bd14c145c70edc42d343045"
+    },
+    {
+      "bin": 5,
+      "passed": 115,
+      "failed": 0,
+      "skipped": 1,
+      "flaky": 1,
+      "retryAttempts": 1,
+      "rawSHA256": "52a53e4cabaea923f907c346ebdd6909aa537053892f821792b9569407d50147"
+    },
+    {
+      "bin": 6,
+      "passed": 88,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "retryAttempts": 0,
+      "rawSHA256": "e61bcbb0b28b2654ce6c7ebae8fa8895aa70168518fc9aaa9a71ce3d44f76628"
+    },
+    {
+      "bin": 7,
+      "passed": 72,
+      "failed": 0,
+      "skipped": 0,
+      "flaky": 0,
+      "retryAttempts": 0,
+      "rawSHA256": "187276bdd73e49ad8ee4fc6183f3ef0bff0e1a19b72134d4922b8d6c1064bf91"
+    },
+    {
+      "bin": 8,
+      "passed": 60,
+      "failed": 0,
+      "skipped": 1,
+      "flaky": 0,
+      "retryAttempts": 0,
+      "rawSHA256": "f3bb8883ce1b2e727d05228e217892d750e073d97b5af2985b71c710af899028"
+    }
+  ],
+  "totalPass": 570,
+  "totalFail": 0,
+  "totalSkip": 3,
+  "totalFlaky": 1,
+  "configuredRetries": 2,
+  "shardStepMinutes": 12,
+  "scope": "Fourth complete E2E, source46530; eight success bins, 570 passed, one flaky, three skips, configured two retries. Permission observer repair later qualifies only through scoped43496472513.",
+  "existingSession": {
+    "writes": [
+      "POST /api/session/ses_existing_admission/agent",
+      "POST /api/session/ses_existing_admission/model",
+      "POST /api/session/ses_existing_admission/prompt",
+      "POST /api/session/ses_existing_admission/agent",
+      "POST /api/session/ses_existing_admission/model",
+      "POST /api/session/ses_existing_admission/prompt"
+    ],
+    "prompts": [
+      "{\"id\":\"msg_1d669ddb40018e72g8Sa9LBodV\",\"prompt\":{\"text\":\"retain first existing Session turn\",\"files\":[],\"agents\":[]},\"delivery\":\"steer\"}",
+      "{\"id\":\"msg_1d669ddb40018e72g8Sa9LBodV\",\"prompt\":{\"text\":\"retain first existing Session turn\",\"files\":[],\"agents\":[]},\"delivery\":\"steer\"}"
+    ],
+    "reads": [
+      "/api/session/ses_existing_admission/message/msg_1d669ddb40018e72g8Sa9LBodV"
+    ],
+    "delivery": {
+      "deliveryID": 1,
+      "connectionID": 1,
+      "bytes": 348,
+      "chunkCount": 1,
+      "deliveredAt": 2770.8000000000175
+    },
+    "messageID": "msg_1d669ddb40018e72g8Sa9LBodV",
+    "boundary": "Controlled HTTP and SSE; no backend durability claim"
+  }
+}

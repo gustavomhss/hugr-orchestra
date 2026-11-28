@@ -1,0 +1,99 @@
+{
+  "version": 1,
+  "scope": "Official hosted Atlas generated-artifact refresh; no ledger closure.",
+  "run": {
+    "id": "43449908836",
+    "attempt": 1,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43449908836",
+    "jobID": 131969034595,
+    "snapshot": "cba8d942b56225540700fee375f60fad3a1c5756",
+    "conclusion": "success",
+    "platform": "linux",
+    "arch": "x64"
+  },
+  "artifact": {
+    "id": 14049024413,
+    "name": "atlas-generated-43449908836-1-cba8d942b56225540700fee375f60fad3a1c5756",
+    "apiArchiveDigest": "sha256:69dd5598829b7fdb0e256744adb4f8f77e3dd90de7ef1621e5e76a5abd73bafe",
+    "provenanceSHA256": "948bec50c2511dd3deac18534c0543f79081bac05135ee0714cc0ff16bd70c58",
+    "qualified": true,
+    "stage": "qualified",
+    "cleanupJoined": true
+  },
+  "hostedTest": {
+    "path": "packages/core/test/atlas-generated-artifact.test.ts",
+    "pass": 1,
+    "fail": 0,
+    "assertions": 67,
+    "omniDeclared": 1,
+    "omniSpawns": 7,
+    "delegated": 0,
+    "testBudgetMs": 900000
+  },
+  "runtimes": {
+    "bunRuntime": "1.3.14",
+    "bunNodeCompatibility": "24.3.0",
+    "bunCLI": "1.3.14",
+    "nodeCLI": "v24.22.2"
+  },
+  "commands": [
+    {"stage": "snapshot", "program": "git", "args": ["rev-parse", "HEAD"], "cwd": ".", "exitCode": 0, "status": "completed", "truncated": false},
+    {"stage": "bun-runtime", "program": "/home/runner/.bun/bin/bun", "args": ["--version"], "cwd": ".", "exitCode": 0, "status": "completed", "truncated": false},
+    {"stage": "node-runtime", "program": "node", "args": ["--version"], "cwd": ".", "exitCode": 0, "status": "completed", "truncated": false},
+    {"stage": "source-manifest", "program": "git", "args": ["ls-files", "-z", "--", "modules/atlas/packages"], "cwd": ".", "exitCode": 0, "status": "completed", "truncated": false},
+    {"stage": "generate-first", "program": "/home/runner/.bun/bin/bun", "args": ["run", "generate"], "cwd": "modules/atlas/boundary", "exitCode": 0, "status": "completed", "truncated": false},
+    {"stage": "generate-second", "program": "/home/runner/.bun/bin/bun", "args": ["run", "generate"], "cwd": "modules/atlas/boundary", "exitCode": 0, "status": "completed", "truncated": false},
+    {"stage": "check-generated", "program": "/home/runner/.bun/bin/bun", "args": ["run", "check:generated"], "cwd": "modules/atlas/boundary", "exitCode": 0, "status": "completed", "truncated": false}
+  ],
+  "identity": {
+    "comparedRoot": "8a8c7bb97acec51057cef86309bbbd8ae859e989",
+    "generatorSHA256": "fd887babca14bcc1dc42d34238b299ebb01dad54a9e8a84d5a9617481e3ae53c",
+    "sourceCount": 354,
+    "sourceManifestSHA256": "b1e765bf8c984b64d6058f64099a2f8d6fd41185373bec2aa02a479e1b2fc129",
+    "sourceManifestHashEncoding": "SHA256 of provenance.sources serialized with sorted object keys and JSON separators comma/colon, UTF-8",
+    "allManifestSourcesMatchCurrentRoot": true,
+    "locks": [
+      {"path": "bun.lock", "sha256": "2f17db8fac3fd523bc679d6b8eb95cb044e67b702d2a7249d5223c06f801824c", "bytes": 497782},
+      {"path": "modules/atlas/package-lock.json", "sha256": "b3c505a0227808e04acf49138a1acccfd3e1a0e9b5476a5f9748fccd84e1a06f", "bytes": 93193}
+    ],
+    "allLocksMatchCurrentRoot": true,
+    "beforeEqualsFirst": true,
+    "firstEqualsSecond": true,
+    "secondEqualsArtifact": true,
+    "all18ArtifactBytesMatchCurrentRoot": true,
+    "outputPrefix": "modules/atlas/boundary/",
+    "outputs": [
+      {"path": "src/generated/boundary.d.ts", "sha256": "01441722ea7a0dcbb90f5f404f8566d8abb933597d20330bcbe7d98a85691db7", "bytes": 4454},
+      {"path": "src/generated/boundary.js", "sha256": "434f6ed8c9270e7aaa28ccd0dc1a52211c07d6aa90b994474747f6c779166892", "bytes": 32016},
+      {"path": "src/generated/context.d.ts", "sha256": "c3e29df2f450d9765a8226d6bb07d04c4ff9ce2a8a340b99d00ceaae6f342033", "bytes": 2463},
+      {"path": "src/generated/context.js", "sha256": "957b9a5a77a8a4069aeacec94f8259e2ffb1d13d1949faade9724ed936047950", "bytes": 22119},
+      {"path": "src/generated/materialize.d.ts", "sha256": "83805bf94ef9a3d51f2a70f2ba1934f0266edc0c43ec2718a1f830e61353dca0", "bytes": 14665},
+      {"path": "src/generated/materialize.js", "sha256": "c6fd7805709908c6ff16cd783e8ae49795c2f4f40d4f5e3e1b89a9230fc2f941", "bytes": 22099},
+      {"path": "src/generated/mine.d.ts", "sha256": "cba581e8fdac262c36211b6bd8b89abc4bd2c1e6a51fc1a9fe11c950957976c0", "bytes": 968},
+      {"path": "src/generated/mine.js", "sha256": "303471689c93d0f088a3d58a330a5a603349b564b197e5e286a7fda62435d883", "bytes": 387078},
+      {"path": "src/generated/native-header.d.ts", "sha256": "398c4a17cd5bc8a321f774b766e5ec0582b86d97e1966f886741f662fe4e30e7", "bytes": 9534},
+      {"path": "src/generated/native-header.js", "sha256": "9b3d0662ca2d01e0f49ab5fa7185c8ce7c7abcc1511c615c2ca16111af733e95", "bytes": 58625},
+      {"path": "src/generated/native-memory.d.ts", "sha256": "895011c762657de54e5fed178bc25cd6ca222476691b02d7acb5bbcd35981579", "bytes": 24219},
+      {"path": "src/generated/native-memory.js", "sha256": "aacb3d15890eae37f1b4e82ede755b15fbd88dda101bf4c513018a5c9ce3734f", "bytes": 58307},
+      {"path": "src/generated/record-log.d.ts", "sha256": "7574d436eccbac6541bf1a54faef865588730eb9a863d41fd8454ff22391cd30", "bytes": 7449},
+      {"path": "src/generated/record-log.js", "sha256": "4fbeff0dff103c297812bd03672b7b73d3ebae4bac85d9743762416a7ef7ebae", "bytes": 36909},
+      {"path": "src/generated/record.d.ts", "sha256": "2a821156647f4d2c16ab0ac8ab631d6ea0ead4dae9f5041fed907346eeabdeae", "bytes": 10023},
+      {"path": "src/generated/record.js", "sha256": "2e49147b9d0a590416d17981db8fc31b925ec3b753c68f2d8fb0acc250c5945b", "bytes": 8443},
+      {"path": "src/generated/surface.d.ts", "sha256": "370ad667237cb1363477b00d25050763d6bc49f21715eb4488d211119a164a31", "bytes": 21840},
+      {"path": "src/generated/surface.js", "sha256": "71f59b745a18ccd02c42844753c8d681c717d373c0e591f77ccb171b1b427c94", "bytes": 548778}
+    ]
+  },
+  "installedMemory": {
+    "module": "modules/atlas/boundary/src/generated/native-memory.js",
+    "decisionId": "ea6cb5572acebea520afb5c2021ac1dfdfe9e916ef1e745319d26ec1816c7f5c",
+    "ref": {
+      "contentHash": "1d42e21eb7651cfd8579588aa3bc80d04d2d8c85abc1ea7d1f4d55d92fa04173",
+      "eventId": "f0f2f2d11ada1b2043b7021c88aedc45fed359f5433b35c212971f71a4d9533f"
+    },
+    "receiptSHA256": "4f58a8fa63b378fed08f454549dc906e541bf24f626b348a01cc1e2083a4e7b2",
+    "scansBeforeRetry": 2,
+    "scansAfterRetry": 2,
+    "refusal": "scanner-blocked"
+  },
+  "limits": ["Source identity covers the 354 recorded generator inputs and two locks, not the entire later Root tree.", "Linux x64 producer determinism, generated check and installed Memory qualification; not a full Atlas, Windows or epic suite gate.", "API archive digest is GitHub artifact metadata; extracted provenance and every output were independently SHA256 checked.", "No local generation, build, tests or typecheck; no source/generated recovery was necessary.", "Ledger remains Root-owned; this evidence does not change original 63/65 status."]
+}

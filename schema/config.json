@@ -810,6 +810,193 @@
       ],
       "additionalProperties": false
     },
+    "LLM.GenerationOptions": {
+      "type": "object",
+      "properties": {
+        "maxTokens": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "NaN"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "Infinity"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "-Infinity"
+              ]
+            }
+          ]
+        },
+        "temperature": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "NaN"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "Infinity"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "-Infinity"
+              ]
+            }
+          ]
+        },
+        "topP": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "NaN"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "Infinity"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "-Infinity"
+              ]
+            }
+          ]
+        },
+        "topK": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "NaN"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "Infinity"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "-Infinity"
+              ]
+            }
+          ]
+        },
+        "frequencyPenalty": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "NaN"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "Infinity"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "-Infinity"
+              ]
+            }
+          ]
+        },
+        "presencePenalty": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "NaN"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "Infinity"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "-Infinity"
+              ]
+            }
+          ]
+        },
+        "seed": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "string",
+              "enum": [
+                "NaN"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "Infinity"
+              ]
+            },
+            {
+              "type": "string",
+              "enum": [
+                "-Infinity"
+              ]
+            }
+          ]
+        },
+        "stop": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
     "ConfigV2.Model.Cost.Cache": {
       "type": "object",
       "properties": {
@@ -994,6 +1181,15 @@
               },
               "body": {
                 "type": "object"
+              },
+              "generation": {
+                "$ref": "#/$defs/LLM.GenerationOptions"
+              },
+              "providerOptions": {
+                "type": "object",
+                "additionalProperties": {
+                  "type": "object"
+                }
               }
             },
             "required": [

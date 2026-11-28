@@ -1,152 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import type { retry } from "@orchestra/core/util/retry"
-import type { MessageListOutput } from "@/server-api"
-import type { ClientEvent, SessionMessageInfo } from "@/session-types"
-import type { Message, Part, Session } from "@/v2-wire"
-import type { ServerApi } from "@/utils/server"
-import { sessionMessagePartID } from "@/utils/session-message"
-import { createServerSession, type ServerSession } from "./server-session"
-
-type SessionApi = Pick<ServerApi["session"], "get" | "message">
-type MessageApi = ServerApi["message"]
-type UserMessage = Extract<Message, { role: "user" }>
-type AssistantMessage = Extract<Message, { role: "assistant" }>
-type TextPart = Extract<Part, { type: "text" }>
-
-const session = (id: string, parentID?: string): Session => ({
-  id,
-  slug: id,
-  projectID: "project",
-  directory: "/repo",
-  title: id,
-  version: "1",
-  parentID,
-  time: { created: 1, updated: 1 },
-})
-
-// Current API message fixtures, as the message list returns them.
-const v2User = (id: string, created = 1, text = "text"): SessionMessageInfo => ({
-  id,
-  type: "user",
-  text,
-  time: { created },
-})
-
-const v2Assistant = (id: string, created: number, text?: string): SessionMessageInfo => ({
-  id,
-  type: "assistant",
-  agent: "build",
-  model: { id: "model", providerID: "provider" },
-  content: text === undefined ? [] : [{ type: "text", text }],
-  time: { created, completed: created },
-})
-
-// Wire-shaped messages, used for live events and optimistic input.
-const userMessage = (id: string, input: Partial<UserMessage> = {}): UserMessage => ({
-  id,
-  sessionID: "ses_child",
-  role: "user",
-  time: { created: 1 },
-  agent: "build",
-  model: { providerID: "provider", modelID: "model" },
-  ...input,
-})
-
-// A user message as the store projects it from a page with no preceding agent or model selection.
-const projectedUser = (id: string, created = 1): UserMessage => ({
-  id,
-  sessionID: "ses_child",
-  role: "user",
-  time: { created },
-  agent: "",
-  model: { providerID: "", modelID: "" },
-})
-
-const textPart = (messageID: string, input: Partial<TextPart> = {}): TextPart => ({
-  id: sessionMessagePartID(messageID, "text", 0),
-  sessionID: "ses_child",
-  messageID,
-  type: "text",
-  text: "text",
-  ...input,
-})
-
-// Fixtures list messages oldest first; the API returns each page newest first.
-const page = (data: SessionMessageInfo[] = [], next?: string): MessageListOutput => ({
-  data: data.toReversed(),
-  cursor: { next },
-})
-
-const deferredPage = () => Promise.withResolvers<MessageListOutput>()
-
-const ids = (store: ServerSession) => store.data.message.ses_child?.map((message) => message.id)
-
-function messageClient(...pages: Array<MessageListOutput | Promise<MessageListOutput>>) {
-  const requests: unknown[] = []
-  const messageRequests: unknown[] = []
-  const waiting = new Map<number, () => void>()
-  const sessionApi = {
-    get: async () => session("ses_child", "ses_root"),
-    message: async (input: unknown) => {
-      messageRequests.push(input)
-      throw new Error("single message endpoint called")
-    },
-  } as unknown as SessionApi
-  const messageApi = {
-    list: (input: unknown) => {
-      requests.push(input)
-      waiting.get(requests.length)?.()
-      waiting.delete(requests.length)
-      return pages[requests.length - 1]
-    },
-  } as unknown as MessageApi
-  return {
-    sessionApi,
-    messageApi,
-    requests,
-    messageRequests,
-    requested(count: number) {
-      if (requests.length >= count) return Promise.resolve()
-      return new Promise<void>((resolve) => waiting.set(count, resolve))
-    },
-  }
-}
-
-const create = (client: ReturnType<typeof messageClient>, options: { retry?: typeof retry } = {}) =>
-  createServerSession(client.sessionApi, client.messageApi, { ...options, todo: async () => [] })
-
-const retryImmediately: typeof retry = async (task, options = {}) => {
-  const attempts = options.attempts ?? 3
-  for (let attempt = 0; ; attempt++) {
-    try {
-      return await task()
-    } catch (error) {
-      if (attempt === attempts - 1) throw error
-    }
-  }
-}
-
-function setup(sessions: Record<string, Session>) {
-  const get: unknown[] = []
-  const messages: unknown[] = []
-  const sessionApi = {
-    get: async (input: { sessionID: string }) => {
-      get.push(input)
-      return sessions[input.sessionID]
-    },
-    message: async () => {
-      throw new Error("single message endpoint called")
-    },
-  } as unknown as SessionApi
-  const messageApi = {
-    list: async (input: unknown) => {
-      messages.push(input)
-      return page()
-    },
-  } as unknown as MessageApi
-  return { get, messages, store: createServerSession(sessionApi, messageApi, { todo: async () => [] }) }
-}
-
+import type { ClientEvent } from "@/session-types"
+import { createServerSession } from "./server-session"
+import { session, v2User, v2Assistant, userMessage, projectedUser, textPart, page, deferredPage, ids, messageClient, create, retryImmediately, setup, type AssistantMessage, type SessionApi, type MessageApi } from "./server-session-test.fixture"
 describe("server session", () => {
   test("projects V2 session events into current and wire message state", () => {
     const ctx = setup({ ses_child: session("ses_child") })
@@ -873,6 +729,43 @@ describe("server session", () => {
     await store.sync("ses_child", { force: true })
 
     expect(ids(store)).toEqual(["message-1", "message-2", "message-3"])
+  })
+
+  test("force waits for an actual history prepend and then reads one fresh page", async () => {
+    const older = deferredPage()
+    const fresh = deferredPage()
+    const client = messageClient(page([v2User("message-2", 2)], "older"), older.promise, fresh.promise)
+    const state = { active: 0, maximum: 0 }
+    const store = createServerSession(client.sessionApi, {
+      ...client.messageApi,
+      list: (input) => {
+        state.maximum = Math.max(state.maximum, ++state.active)
+        return Promise.resolve(client.messageApi.list(input)).finally(() => state.active--)
+      },
+    }, { todo: async () => [] })
+    await store.sync("ses_child")
+    const pagination = store.history.loadMore("ses_child", 7)
+    await client.requested(2)
+    const forced = store.sync("ses_child", { force: true })
+    const duplicate = store.sync("ses_child", { force: true })
+    try {
+      expect(client.requests[1]).toEqual({ sessionID: "ses_child", limit: 7, cursor: "older" })
+      expect(store.history.loading("ses_child")).toBe(true)
+      expect(client.requests).toHaveLength(2)
+      older.resolve(page([v2User("message-1")]))
+      await pagination
+      expect(ids(store)).toEqual(["message-1", "message-2"])
+      expect(await Promise.race([client.requested(3).then(() => true), Bun.sleep(2_000).then(() => false)])).toBe(true)
+      fresh.resolve(page([v2User("message-1"), v2User("message-2", 2), v2User("message-3", 3)]))
+      await Promise.all([forced, duplicate])
+      expect(client.requests).toHaveLength(3)
+      expect(state.maximum).toBe(1)
+      expect(ids(store)).toEqual(["message-1", "message-2", "message-3"])
+    } finally {
+      older.resolve(page())
+      fresh.resolve(page())
+      await Promise.allSettled([pagination, forced, duplicate])
+    }
   })
 
   test("preserves a part update for a message being loaded from history", async () => {

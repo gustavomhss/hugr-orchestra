@@ -19,6 +19,7 @@ export type LiveOverlayError =
   | { kind: "stt"; attempt: number; retryInSeconds: number; closeCode: number; reason: string; watermarkMs: number }
   | { kind: "hotkey"; accelerator: string }
   | { kind: "network"; offlineMs: number }
+  | { kind: "storage"; reason: "storage" | "quota"; incomplete: true }
   // The seat's reply failed before any text arrived; reason is the provider's own message.
   | { kind: "answer"; reason: string }
 

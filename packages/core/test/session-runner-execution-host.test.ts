@@ -41,6 +41,7 @@ const client = Layer.succeed(
 const host: ExecutionHost.Interface = {
   id: "claude-code",
   stateKey: "claudeCode",
+  describeModel: () => Effect.succeed({ status: "ready" as const }),
   stream: (turn) =>
     Stream.unwrap(
       Effect.gen(function* () {

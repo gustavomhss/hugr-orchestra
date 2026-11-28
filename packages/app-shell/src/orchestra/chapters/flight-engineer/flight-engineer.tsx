@@ -9,6 +9,7 @@ import { devMeetings } from "./dev"
 import { MeetingDetail } from "./detail"
 import { MeetingList } from "./meetings"
 import { Note } from "./parts"
+import { FlightRecovery } from "./recovery"
 import { useFlight } from "./run"
 import { runClaim } from "./run-state"
 import { Session } from "./session"
@@ -53,6 +54,9 @@ export default function FlightEngineer(props: ChapterPageProps) {
             )}
           </For>
         </nav>
+        <Show when={flight.seat()?.recovery} keyed>
+          {(port) => <FlightRecovery port={port} onSnapshot={(value) => flight.setRecovery(value, port)} />}
+        </Show>
         <Switch>
           <Match when={view() === "session"}>
             <Session flight={flight} openSettings={() => go("/settings")} />

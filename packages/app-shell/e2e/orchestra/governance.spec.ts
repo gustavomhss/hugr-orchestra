@@ -92,7 +92,10 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(dialog).toHaveCount(0)
     await expect(entry).toBeFocused()
     await expect(page).toHaveURL(new RegExp(`/session/${sessionID}$`))
-    expect(requests.slice(before).filter((request) => request.method !== "GET")).toEqual([])
+    // Model eligibility is a read-only query despite its POST transport; prompts/actions remain forbidden.
+    expect(requests.slice(before).filter((request) => request.method !== "GET" &&
+      !(request.method === "POST" && new URL(request.url).pathname === "/api/model/execution"),
+    )).toEqual([])
     // Positive control: the request observer sees the bootstrap reads.
     expect(requests.some((request) => new URL(request.url).pathname === "/api/agent")).toBe(true)
     // A dev-server dependency reload remounts the page mid-test; the records above must come from one load.

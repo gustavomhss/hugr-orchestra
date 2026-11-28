@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "epic_run": 43427741510,
+  "epic_source_sha": "0a38c2078c6f6fa65b9fdfa54bb6ad6d7ab87964",
+  "epic_status": "still_running_with_actual_failures",
+  "final_disposition": "pending_scoped_qualification",
+  "failures": [
+    {
+      "job": 131893928493,
+      "lane": "linux core6/15",
+      "cause": "Historical immutable fixture path/blob in component receipt needs exact existing rename-ledger protection; actual content-guard failure.",
+      "fix": "a8f55fad2c",
+      "oracle": "Whole-document scan remains active; exact path+blob only, new negative tests protect other paths, hashes and copy."
+    },
+    {
+      "job": 131893928461,
+      "lane": "linux core9/15",
+      "cause": "Deleted Session approval now yields Permission DeclinedError before CapabilityPolicy revalidates binding; target_denied incorrectly masks invocation binding mismatch.",
+      "fix": "407df55cfc",
+      "oracle": "Revalidate durable binding on declined approval before returning denied; original assertions unchanged, independent source review APPROVE."
+    },
+    {
+      "job": 131893928461,
+      "lane": "linux core9/15",
+      "cause": "Unavailable-model fixture uses unapproved project configuration, so disabled flag is intentionally ignored by current trust policy.",
+      "fixes": [
+        "fdcf0dcca5",
+        "d5b3db7804"
+      ],
+      "oracle": "Create isolated approved user config and owned Global paths plus separate in-memory database. Preserve disabled model and original ModelUnavailableError assertion; add disabled precondition."
+    },
+    {
+      "job": 131893928408,
+      "lane": "linux core7/15",
+      "cause": "Release fixture misses upstream SOURCE_SHA/REQUESTED_SOURCE environment and frozen-branch GET/query contract; actual shell exits before any immutable verification or mutation.",
+      "fix": "26dd271087",
+      "oracle": "Supply actual shell contract, model exact read-only branch query, retain immutable verification, add differing frozen source and missing reviewed dev source refusal controls."
+    },
+    {
+      "job": 131893928484,
+      "lane": "linux core15/15",
+      "cause": "Policy resolver fixture selects literal default variant without defining that variant after strict variant selection change.",
+      "fix": "8347262e04",
+      "oracle": "Seed actual default variant for model b only; original selected identity, policy and alias assertions unchanged."
+    },
+    {
+      "job": 131893928561,
+      "lane": "linux core13/15",
+      "cause": "SDK test declares own Omni spawn but package preload omits actual Omni positive control.",
+      "fix": "cf26255b5f",
+      "oracle": "Install existing actual test-omni-control preload alongside test guard; no guard exemption."
+    }
+  ],
+  "qualification": {
+    "core_seven_file_both": "pending /tmp/root-epic-core-repairs.log",
+    "sdk_whole_package_both": "pending /tmp/root-epic-sdk-control.log"
+  },
+  "raw_failure_logs": [
+    {
+      "job": 131893928493,
+      "sha256": "7f1157100d31fd40636737d844d021a213246a2dfad37618ab688c4979d1e437"
+    },
+    {
+      "job": 131893928461,
+      "sha256": "a9498cc415ff2dfaef39734beaaaec83a86462dd1ba6f799891080bac4ff1e30"
+    },
+    {
+      "job": 131893928408,
+      "sha256": "e1e0c36922077e7823f6281dab32cac0b7e6f92bcbf841845c7d578c4bf2a33f"
+    },
+    {
+      "job": 131893928484,
+      "sha256": "50d12311b8daa52fecefce87360d4d07e33de4a4f4267510dc412fd5316c756e"
+    },
+    {
+      "job": 131893928561,
+      "sha256": "5e5120d8a003a502463e5e26c36d766aa897fca7fbec4a7523df296edc82643d"
+    }
+  ],
+  "limits": [
+    "Epic has actual failures; no single full-green claim is made.",
+    "Fixture compatibility repairs do not relax original oracles or production trust/variant/release verification.",
+    "All tests remain hosted."
+  ]
+}

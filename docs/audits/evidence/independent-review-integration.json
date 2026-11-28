@@ -1,0 +1,2915 @@
+{
+  "version": 1,
+  "scope": "PR #1463: independent-review follow-up, current-dev integration and effective CI coverage",
+  "review_requested_head": "33466a9dbd944c3b190b981b397cddd8484f9ab4",
+  "published_head_before_integration": "756edb7888f4c1b6931ce2968e21a224893bc5c5",
+  "base_branch": "dev",
+  "dev_at_qualification": "5e0807b5ff953508f792b8a965883985b05a7066",
+  "historical_merge_base": "5804b4f794ba31f49890b79565cff62b65e37725",
+  "review_coverage": "Risk-prioritized independent sampling of the requested critical flows, followed by investigation of real integration failures. Subsequent direct readings are pinned independently and are not attributed retroactively to the original HEAD. No exhaustive re-audit of all65 findings is claimed.",
+  "f1": {
+    "evidence": "desktop-startup-cancellation.json",
+    "fix_commit": "317f85533614a4c73de2e31e27d84fe6e9600236",
+    "follow_up": "The later epic executed the Desktop startup tests on both platforms; it did not bootstrap all of Electron Main."
+  },
+  "initial_epic": {
+    "run": 43514304929,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43514304929",
+    "attempt": 1,
+    "event": "pull_request labeled epic",
+    "cold": false,
+    "metadata_head": "756edb7888f4c1b6931ce2968e21a224893bc5c5",
+    "actual_checkout": "46402cb5345aae9d333d2f93c5aabdc81b5d4172",
+    "checkout_parents": [
+      "5e0807b5ff953508f792b8a965883985b05a7066",
+      "756edb7888f4c1b6931ce2968e21a224893bc5c5"
+    ],
+    "checkout_tree": "5c5149d227928ef710373f58ea4b9210a35cb634",
+    "conclusion": "failure",
+    "jobs": {
+      "total": 70,
+      "success": 66,
+      "failure": 3,
+      "cancelled": 1
+    },
+    "failed_jobs": [
+      {
+        "id": 132192851297,
+        "lane": "Linux Core 11/15",
+        "failure": "MoveSession writer READY observer timed out before moveSession. The diagnostic showed READY published and present."
+      },
+      {
+        "id": 132192853635,
+        "lane": "Linux CLI, Server, clients",
+        "failure": "TUI live-hydration observer admitted the text-started event before the batched text delta."
+      },
+      {
+        "id": 132192855762,
+        "lane": "Linux gates, relay",
+        "failure": "Two new cross-package relative imports in the dev-added lucy-code-binding test violated existing module-boundary rules."
+      }
+    ],
+    "cancelled_job": {
+      "id": 132192851187,
+      "lane": "Windows Core 3/12",
+      "setup_bun_seconds": 282,
+      "pretest_seconds_approx": 302,
+      "test_step_seconds_approx": 305,
+      "last_observed_file": "test/tool-safety-appcontainer-runtimes.test.ts",
+      "main_files_planned": 62,
+      "main_file_start_markers_observed": 34,
+      "unobserved_main_files": 28,
+      "cause": "Unresolved. The log cannot distinguish first-scope cleanup, settled(), or the second execution after its last process line. The exhausted job budget and missing file starts are observed facts."
+    },
+    "maestro_coverage_gap": {
+      "job": 132192855650,
+      "filter_included_package": true,
+      "turbo_selected_test_task": false,
+      "reason": "turbo.json declared neither a generic test task nor @orchestra/maestro#test. A package filter did not cause its test script to execute.",
+      "disposition": "Register the task and qualify the actual whole package; isolate its Windows clock from the libs complement."
+    },
+    "desktop": {
+      "jobs": 8,
+      "conclusion": "all success",
+      "linux": {
+        "pass": 1099,
+        "skip": 17,
+        "fail": 0
+      },
+      "windows": {
+        "pass": 968,
+        "skip": 148,
+        "fail": 0
+      },
+      "f1_startup": {
+        "linux_pass": 14,
+        "windows_pass": 13,
+        "windows_posix_skip": 1
+      },
+      "execution": "All eight Desktop tasks were cache misses and executed. Platform-specific native tests remain skipped where their runtime is unavailable."
+    },
+    "e2e": {
+      "jobs": 8,
+      "platform": "Linux",
+      "pass": 571,
+      "skip": 3,
+      "fail": 0,
+      "flaky_reported": 0,
+      "test_retries_observed": 0,
+      "execution": "Actual Playwright execution in every shard; dependency/browser caches are not result replay."
+    },
+    "job_reruns": 0
+  },
+  "initial_other_workflows": [
+    {
+      "run": 43514304607,
+      "name": "typecheck",
+      "conclusion": "failure",
+      "detail": "review.ts Tool.execute returned Effect<string, ToolFailure, Scope> after the current dev PR-review scratch lifetime change."
+    },
+    {
+      "run": 43514304556,
+      "name": "guards",
+      "conclusion": "success",
+      "rules": 78,
+      "gate": 0,
+      "warnings": 25
+    },
+    {
+      "run": 43514304814,
+      "name": "native",
+      "conclusion": "success",
+      "jobs": 3
+    },
+    {
+      "run": 43514304504,
+      "name": "omni",
+      "conclusion": "success",
+      "jobs": 3,
+      "detail": "Standard three-platform CI, not a release build."
+    },
+    {
+      "run": 43514304688,
+      "name": "nix-toolchain",
+      "conclusion": "success",
+      "jobs": 6,
+      "detail": "Four native architectures and completion proofs, including 18 negative controls."
+    },
+    {
+      "run": 43514304906,
+      "name": "nix-eval",
+      "conclusion": "success",
+      "detail": "The optional packages.<system>.desktop attribute was absent; this is not Desktop qualification."
+    },
+    {
+      "run": 43514304698,
+      "name": "storybook",
+      "conclusion": "success"
+    },
+    {
+      "run": 43514304579,
+      "name": "omni-artifacts-proof",
+      "conclusion": "skipped",
+      "detail": "Different opt-in label; not a passed artifact proof."
+    }
+  ],
+  "scope_fix": {
+    "commit": "9bac70a36c8c44367af78896637a13f7681e979a",
+    "path": "modules/maestro/coordination/src/v2/tools/review.ts",
+    "blob": "f8608aad9d8574e9527ddb663efdf5fa760b3917",
+    "classification": "Confirmed integration defect with current dev.",
+    "correction": "Scope the complete ReviewPRRequestV2.run invocation, so scratch copies live through all child drains and are released after structured execution joins.",
+    "integration_commit": "bf6a76dd5689596f7f73caae2aa3a1e296c70bbc",
+    "integration_tree": "8669b17ab9f91fb63c3de42b87a1cff57a3ab9da",
+    "initial_qualification": {
+      "run": 43516093636,
+      "attempt": 1,
+      "source": "0333a47490af895d013bce2332077cd6d40bde3f",
+      "linux": {
+        "job": 132198299069,
+        "pass": 14,
+        "fail": 0,
+        "expects": 91,
+        "seconds": 3.44
+      },
+      "windows": {
+        "job": 132198299326,
+        "pass": 7,
+        "fail": 7,
+        "expects": 44,
+        "seconds": 13.6
+      },
+      "maestro_typecheck": "pass both",
+      "windows_failure": "Seven PR positives expected a private replay store deliberately unsupported on Windows. The refusal occurred before review execution."
+    }
+  },
+  "writer_fixture": {
+    "commit": "21ba7dc1f9f03b618e47e6f5ffe63aa2e68004b1",
+    "path": "packages/core/test/fixture/move-session-writer.ts",
+    "original_blob": "d4a1927cd0299d836330cf2bbb47a95823a2da13",
+    "qualified_blob": "a83cd7e479ace9ee9a3462132541098ee12738a9",
+    "unchanged_test_blob": "e785bb9d86fb20b3a6521fd0efabdbe8cbbd4795",
+    "correction": "Reconcile READY and release acknowledgement every 25ms as well as on fs.watch; clear reconciliation timers during existing cleanup. Keep the original 20s deadlines and all byte/descriptor/process/SQL assertions.",
+    "classification": "Confirmed fixture dependence on notifications without reconciliation. The exact mechanism that missed the original notification is not traced; no production MoveSession defect is established.",
+    "controls": "Silence watch callbacks and gate READY publication after the first absent read. Removing READY reconciliation must fail; removing release reconciliation must fail; keeping both must pass. Restore exact fixture bytes before running the unchanged full file.",
+    "linux": {
+      "run": 43516989989,
+      "job": 132201356762,
+      "attempt": 1,
+      "source": "0059e87f8297a5a9fe2c8249d4781729e66a4e2b",
+      "negative_controls_confirmed": 2,
+      "positive_control": {
+        "pass": 1,
+        "fail": 0,
+        "expects": 15
+      },
+      "restored_full_file": {
+        "pass": 7,
+        "fail": 0,
+        "expects": 47,
+        "seconds": 1.404
+      },
+      "core_typecheck": "pass",
+      "job_conclusion": "failure",
+      "non_test_failure": "Guardrail correctly rejected three generated control logs left untracked inside the checkout. No code guard failed; later harness logs use RUNNER_TEMP.",
+      "artifact": 14081096984
+    },
+    "first_windows_harness": {
+      "run": 43516989989,
+      "job": 132201356364,
+      "conclusion": "failure before tests",
+      "cause": "The temporary control script searched LF source seams in a CRLF checkout.",
+      "core_typecheck": "pass"
+    },
+    "windows": {
+      "run": 43518298592,
+      "job": 132205812886,
+      "attempt": 1,
+      "source": "a3c33a516f8246a2a755bd121c092f8819e1a5a8",
+      "conclusion": "success",
+      "harness_only_changes": "Normalize CRLF only for controls, restore original raw bytes, and keep logs outside the checkout.",
+      "negative_controls_confirmed": 2,
+      "positive_control": {
+        "pass": 1,
+        "fail": 0,
+        "expects": 15,
+        "seconds": 4.25
+      },
+      "restored_full_file": {
+        "pass": 7,
+        "fail": 0,
+        "expects": 47,
+        "seconds": 10.7
+      },
+      "core_typecheck": "pass",
+      "artifact": 14082416558
+    },
+    "production_modified": false,
+    "reruns": 0
+  },
+  "tui_observer": {
+    "commit": "a54bea022327e9f0b7797cf86008d066b659e878",
+    "path": "packages/tui/test/cli/cmd/tui/sync-live-hydration.test.tsx",
+    "original_blob": "e3da71c9b52abbb3ddfb377475243838c6874c1c",
+    "qualified_blob": "8f6c267cc85a1a23a2dc83d4f319303239d0a787",
+    "classification": "Confirmed weak test barrier: text-started produces an empty part before the SDK's batched delta. This does not establish permanent product data loss.",
+    "correction": "Wait for the full after-failure text; assert that text and one initial read before retry; preserve the original after-retry text and second-read assertions.",
+    "run": 43518465440,
+    "attempt": 1,
+    "source": "51c45f6339847711d1bcceb6680b0bdacc01a87e",
+    "jobs": {
+      "linux": 132206385788,
+      "windows": 132206385387
+    },
+    "both_platforms": {
+      "pass": 13,
+      "fail": 0,
+      "expects": 62,
+      "typecheck": "pass"
+    },
+    "omni_follow_up": {
+      "run": 43519292900,
+      "linux_seconds": 3.22,
+      "windows_seconds": 4.27,
+      "both_platforms": {
+        "pass": 13,
+        "fail": 0,
+        "expects": 62
+      },
+      "marker": "not applicable (focused: no declaring test ran)",
+      "meaning": "The explicit preload observed no spawn or delegation. This is not an Omni execution proof."
+    },
+    "production_modified": false,
+    "reruns": 0
+  },
+  "appcontainer_directed_qualification": {
+    "run": 43518137505,
+    "job": 132205265374,
+    "attempt": 1,
+    "source": "2f1869ac260d02508076f0edfabf5616f1a9d057",
+    "original_test_blob": "aa48ae965f0bd5a75fb88255d502b42d8db4f47b",
+    "instrumented_test_blob": "bb30795056919c0de9b3e8b4731cfa568a21f0be",
+    "difference": "Six timestamps only. Removing them reproduces the original test exactly; no assertion or timeout changed. The instrumented file does not enter the PR.",
+    "conclusion": "success",
+    "pass": 1,
+    "fail": 0,
+    "expects": 16,
+    "seconds": 114.45,
+    "first_scoped_ms": 642,
+    "settled_ms": 110768,
+    "second_scoped_ms": 2007,
+    "omni": {
+      "verdict": "pass",
+      "spawns": 3,
+      "delegated": 0
+    },
+    "limit": "One directed successful execution does not establish the original cancelled job's cause or cover its 28 files with no start marker. The final epic must close that coverage gap."
+  },
+  "maestro_initial_full": {
+    "run": 43519292900,
+    "attempt": 1,
+    "source": "1fe55daeeba88fbc1b9276bc94c4896f26f8340b",
+    "linux": {
+      "job": 132209188107,
+      "pass": 703,
+      "skip": 2,
+      "fail": 8,
+      "tests": 713,
+      "files": 92,
+      "expects": 4848,
+      "seconds": 92.78,
+      "omni_spawns": 9663
+    },
+    "windows": {
+      "job": 132209187710,
+      "pass": 679,
+      "skip": 24,
+      "fail": 11,
+      "tests": 714,
+      "files": 92,
+      "expects": 4517,
+      "seconds": 482.75,
+      "omni_spawns": 8761,
+      "setup_seconds": 355
+    },
+    "delegated_spawns": 0,
+    "types_and_turbo_task": "pass both",
+    "guards": {
+      "gate": 0,
+      "warn": 28,
+      "errors": 0
+    },
+    "boundaries": {
+      "new": 0,
+      "stale": 0
+    },
+    "corrections": [
+      "Explicit SQLite file per durable fixture; preserve exact counts and add initially-empty inbox assertions. The original two excess rows were not individually identified.",
+      "Explicit Deep-unbuilt to Deep-built fixture transition; preserve Standard retention and all routing assertions.",
+      "Add the actual catalog-selected property proof skill to the governed host fixture, preserving forged-finding refusals and P1 publication.",
+      "Restore strict literal skill inventories from design sections 9.1 and 10.2; do not derive expected values from the implementation.",
+      "Correct shipped guide coverage and tool map; retain guide/map tests unchanged.",
+      "Resolve the real public review/seat-tools import in the copied roster fixture before its registry validation.",
+      "Keep Unix private replay positives on Linux/Darwin and add Windows refusal and zero-side-effect/retry controls. Do not add unsupported private-store support.",
+      "Replace only the Windows POSIX fake scanner with a native fixture executable; retain actual memory binding/admission/reconciliation/recall assertions. This is not scanner detection-quality qualification.",
+      "Assert the existing platform-specific Windows write-root profile and unsupported read-root contract, while preserving all Unix assertions. This profile test does not execute a shell."
+    ],
+    "fix_commits": [
+      "4e610d4bcce67927be87713ea2007b69cec6ede7",
+      "8e89fe85bf7767b146ade0c34b855452d7b7209f"
+    ],
+    "reruns": 0
+  },
+  "historical_limits_unchanged": [
+    "The original cold run 43492035272 used 46530d548a6a7713231d9f30bc9bd1bc0321c01f. Attempt 1 had 68 successes and 2 failures; only those two jobs were rerun. Their original causes remain unknown.",
+    "The historical E2E 570 pass / 1 flaky / 3 skip result is not reinterpreted by a later clean run.",
+    "53 of 54 AFTER benchmark medians were higher. Neither causality nor healthy performance has been demonstrated here.",
+    "Physical audio hardware, native permission dialogs and the complete production Electron Main bootstrap remain outside the demonstrated qualification.",
+    "The Grok review did not complete; there is no Grok approval.",
+    "No merge, release publication, approval-bypass label or test-result rerun was performed."
+  ],
+  "recorded_at": "2026-11-13T23:43:27.127818+00:00",
+  "maestro_follow_up": {
+    "run": 43522392940,
+    "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43522392940",
+    "attempt": 1,
+    "source": "f45e1d35adae570bed07553199911f80a6e4d06d",
+    "candidate_parent": "8e89fe85bf7767b146ade0c34b855452d7b7209f",
+    "status": "completed",
+    "jobs": {
+      "linux": 132219656264,
+      "windows": 132219655715
+    },
+    "conclusion": "failure",
+    "linux": {
+      "job": 132219656264,
+      "pass": 710,
+      "skip": 4,
+      "fail": 1,
+      "tests": 715,
+      "files": 92,
+      "seconds": 94.43,
+      "omni_spawns": 9669
+    },
+    "windows": {
+      "job": 132219655715,
+      "pass": 689,
+      "skip": 26,
+      "fail": 1,
+      "tests": 716,
+      "files": 92,
+      "expects": 4642,
+      "seconds": 411.02,
+      "omni_spawns": 8808
+    },
+    "delegated_spawns": 0,
+    "types_and_turbo_task": "pass both",
+    "remaining_failures": [
+      "Linux v2-workflow-review: a same-size edited file was omitted from the copied-index snapshot. A deterministic racy-index control and production correction are being qualified separately.",
+      "Windows v2-guide: discovered paths retained native backslashes while guide identifiers use canonical slashes. The correction normalizes discovery output and preserves every coverage assertion."
+    ],
+    "reruns": 0
+  },
+  "windows_budget": {
+    "core": {
+      "overhead_before": 1.6,
+      "overhead_after": 1.8,
+      "appcontainer_measured_seconds_unchanged": 69.3,
+      "appcontainer_declared_floor_seconds": 240,
+      "basis": "Floor rounded above the 235.381-second incomplete file observation, not a measurement or timeout. The first directed successful execution took114.45s; original cancellation cause remains unresolved.",
+      "planned_core_shards_before": 12,
+      "planned_core_shards_after": 15,
+      "integrated_file_inventory": 703,
+      "earlier_static_inventory": 701
+    },
+    "maestro": {
+      "old_lane": "Windows libs, sequential Turbo execution",
+      "observation_run": 43519292900,
+      "whole_package_seconds": 482.75,
+      "currency_file_seconds": 243.93,
+      "complement_seconds_approx": 238.82,
+      "proposal": "Two Windows jobs with the existing default10-minute job/8-minute step limits; no file omitted or duplicated.",
+      "production_setup_reference": {
+        "run": 43514304929,
+        "job": 132192860651,
+        "pretest_seconds": 278,
+        "test_seconds": 80,
+        "job_seconds": 364,
+        "setup_bun_seconds": 235,
+        "omni_artifact_download_seconds": 2
+      },
+      "capacity_limit": "Adding observed test time to another runner setup is a planning estimate. Only the final epic can demonstrate the new lanes finish.",
+      "expected_actions_jobs": 75
+    },
+    "fix_commit": "041c2911138674a4e26e56b0d6aa970da1ee9545",
+    "qualified_equivalent_commit": "d99770c7c9c2a9cf0533d541c487fbf5d37bc12d",
+    "identical_tree": "cb25875dfb94640fc7314bab581593129b82d3ac",
+    "commit_message_note": "Only the commit subject changed to the AGENTS-approved chore type before final integration; parent and tree are identical."
+  },
+  "planner_initial_qualification": {
+    "run": 43523924511,
+    "attempt": 1,
+    "source": "d695d0f3ae22f996b6c81eb396659809e895e1b1",
+    "candidate_parent": "d99770c7c9c2a9cf0533d541c487fbf5d37bc12d",
+    "conclusion": "failure",
+    "linux": {
+      "job": 132224837925,
+      "conclusion": "success",
+      "pass": 27,
+      "fail": 0,
+      "skip": 0,
+      "expects": 329,
+      "milliseconds": 95,
+      "typecheck": "pass",
+      "guards": "pass",
+      "boundaries": "pass"
+    },
+    "windows": {
+      "job": 132224837675,
+      "conclusion": "failure",
+      "pass": 27,
+      "fail": 0,
+      "skip": 0,
+      "expects": 329,
+      "milliseconds": 198,
+      "typecheck": "pass"
+    },
+    "failure_cause": "The temporary identity check compared CRLF Windows checkout bytes to LF Git blob hashes. Static LF-to-CRLF conversion reproduces the observed hash. Planner assertions and tests passed before that harness failure.",
+    "plan_observed": {
+      "unit": 62,
+      "core_linux": 15,
+      "core_windows": 15,
+      "e2e": 8,
+      "fixed": 4,
+      "actions_including_plan": 75,
+      "core_files": 703,
+      "maestro_files": 92,
+      "maestro_partition": [
+        1,
+        91
+      ],
+      "appcontainer_singleton": true
+    },
+    "omni": "No marker in this first pure planner run; no claim of Omni qualification. The follow-up adds an explicit declared control preload.",
+    "artifacts": [
+      14084791059,
+      14084572403
+    ],
+    "reruns": 0
+  },
+  "planner_follow_up": {
+    "run": 43524951229,
+    "attempt": 1,
+    "source": "df4014fffc13eb263e3a5f17310288e1a69a0263",
+    "candidate_parent": "d99770c7c9c2a9cf0533d541c487fbf5d37bc12d",
+    "status": "completed",
+    "changes": "Temporary harness only: compare Git HEAD:path identities, preserve checkout encoding, and emit the declared Omni observer for the pure Script tests. Production, test oracles and timeouts are identical.",
+    "coverage": {
+      "unitJobs": 62,
+      "e2eJobs": 8,
+      "fixedJobs": 4,
+      "plannerJobs": 1,
+      "totalJobs": 75,
+      "windowsCoreShards": 15,
+      "coreTestFiles": 703,
+      "appContainer": {
+        "singleton": true,
+        "declaredFloorSeconds": 240,
+        "historicalMeasuredSeconds": 69.3
+      },
+      "overheadWindows": 1.8,
+      "maestroTestFiles": 92,
+      "maestroWindowsBins": [
+        1,
+        91
+      ],
+      "confirmedOn": [
+        "linux",
+        "win32"
+      ]
+    },
+    "omni": {
+      "observer": "test-omni-control.ts",
+      "scope": "declared",
+      "status": "not applicable",
+      "spawns": 0,
+      "delegated": 0,
+      "note": "No declaring test ran; this qualification proves no Omni process behavior."
+    },
+    "candidateIdentity": {
+      "method": "git rev-parse HEAD:path plus git diff --exit-code HEAD -- the five candidate inputs",
+      "result": "success on Linux and Windows",
+      "note": "Handles expected CRLF checkout normalization without weakening Git object identity."
+    },
+    "checkedBase": {
+      "branch": "dev",
+      "sha": "5e0807b5ff953508f792b8a965883985b05a7066"
+    },
+    "artifacts": [
+      {
+        "id": 14084857621,
+        "name": "planner-qualification-Windows-43524951229-1-df4014fffc13eb263e3a5f17310288e1a69a0263",
+        "size": 8419,
+        "digest": "sha256:d6672ad0f79123d436ed0d723870cfe5a5a35a7e384cae5cc421f377bc3004e4",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43524951229/artifacts/14084857621",
+        "expiresAt": "2026-11-20T23:14:29Z"
+      },
+      {
+        "id": 14083439590,
+        "name": "planner-qualification-Linux-43524951229-1-df4014fffc13eb263e3a5f17310288e1a69a0263",
+        "size": 8473,
+        "digest": "sha256:fbabe02ea760bdca54e13d7987fa5a2d4b22e3e17907c66c2d7b8862d6bc9efc",
+        "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43524951229/artifacts/14083439590",
+        "expiresAt": "2026-11-20T23:11:03Z"
+      }
+    ],
+    "conclusion": "success",
+    "run_result": {
+      "id": 43524951229,
+      "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43524951229",
+      "attempt": 1,
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "df4014fffc13eb263e3a5f17310288e1a69a0263",
+      "event": "push",
+      "createdAt": "2026-11-13T23:09:26Z",
+      "completedAt": "2026-11-13T23:14:41Z"
+    },
+    "platforms": {
+      "linux": {
+        "id": 132228279971,
+        "conclusion": "success",
+        "tests": {
+          "pass": 27,
+          "fail": 0,
+          "skip": 0,
+          "assertions": 329,
+          "files": 1,
+          "durationMs": 176
+        },
+        "typecheck": "success",
+        "guards": {
+          "rules": 78,
+          "changedPaths": 777,
+          "gates": 0,
+          "warnings": 28,
+          "errors": 0
+        },
+        "boundaries": {
+          "files": 5931,
+          "edges": 5586,
+          "violations": 91,
+          "ledgered": 91,
+          "new": 0,
+          "stale": 0
+        }
+      },
+      "windows": {
+        "id": 132228279524,
+        "conclusion": "success",
+        "tests": {
+          "pass": 27,
+          "fail": 0,
+          "skip": 0,
+          "assertions": 329,
+          "files": 1,
+          "durationMs": 492
+        },
+        "typecheck": "success"
+      },
+      "cleanup": {
+        "id": 132230527521,
+        "conclusion": "success",
+        "branchDeleted": true,
+        "branchReadback": "404 NOT_FOUND"
+      }
+    },
+    "fix_commit": "041c2911138674a4e26e56b0d6aa970da1ee9545"
+  },
+  "racy_index_finding": {
+    "classification": "Confirmed Linux production defect, reproduced by the original producer and repaired by the fixed producer in GitHub Actions. Windows baseline already passes; the final focused gate validates compatibility there.",
+    "path": "modules/maestro/coordination/src/v2/workflow/review.ts",
+    "original_blob": "8616c1246c178559b6a7ced5f207b0aead90a388",
+    "candidate_blob": "6bbb30a6ecf038699cd0add49ca4d301a26611db",
+    "mechanism": "On Linux, Bun fs.copyFile preserves cached index entries while assigning the clone a newer mtime. That can remove Git racy-entry content verification and omit a same-stat edit. Windows baseline passed; platform copy semantics are qualified separately rather than claiming a Windows defect.",
+    "consumers": [
+      "ReviewArtifactsV2.codeArtifact uses the incomplete tree and diff.",
+      "WorkflowReviewV2.verify recomputes with the same producer.",
+      "Workflow settlement accepts unchanged without a code-stage receipt; partial omission can instead bind review to an incomplete tree."
+    ],
+    "correction": "Read source-index mtime before copying, round down to a whole second, and apply it to the clone before read-tree -m. Own completion of this small IO group before cleanup. Refuse unavailable on discovery/copy/timestamp failures.",
+    "compatibility": "Keep read-tree -m and the existing staged/unmerged/index flags policy. Stage equal to worktree remains accepted; staged bytes with a separately modified worktree remain refused. No fresh-index rewrite. Artifact and receipt formats are unchanged; corrected trees do not match prior incomplete-tree receipt keys.",
+    "availability_change": "An absent or unreadable real index now refuses unavailable instead of silently reconstructing from a fresh index.",
+    "performance_limit": "The added stat/utimes and conservative rehash of recent files are not benchmark-qualified. No claim of healthy or unchanged performance.",
+    "primary_reference": "https://git-scm.com/docs/racy-git",
+    "fix_commit": "8e846a62d17815a19b1e5a2f5a553003e0e1f914"
+  },
+  "racy_index_initial_qualification": {
+    "run": 43525727663,
+    "attempt": 1,
+    "source": "76fdbece034f6168ea09d17bf5bea7bb646864c6",
+    "conclusion": "failure",
+    "linux": {
+      "job": 132230866617,
+      "causal_red": "original producer: 0 pass / 1 fail; exact same-stat missing-content oracle; 13 Omni spawns and positive control pass",
+      "fixed_green": "10 pass / 1 fail. Same-stat regression and all five guide cases pass; newly added staged-control expectation was wrong for preserved read-tree -m policy."
+    },
+    "windows": {
+      "job": 132230866002,
+      "baseline": "1 pass / 0 fail, 7 assertions, 15 Omni spawns. The original producer already passes this same-stat scenario on Windows. The Linux-only expected-failure harness rejected that result and did not run GREEN."
+    },
+    "correction": "Correct only the new staged fixture and temporary platform interpretation; retain production, the causal Linux oracle, all four original workflow-review cases and all five guide assertions. Observe actual copyFile timestamps on each OS; require staged baseline control pass on both.",
+    "reruns": 0
+  },
+  "racy_index_follow_up": {
+    "run": 43527267379,
+    "attempt": 1,
+    "source": "5cc0ccf1eec27b3ec3879aa9ad459ea28f4894b5",
+    "status": "completed",
+    "production_blob": "6bbb30a6ecf038699cd0add49ca4d301a26611db",
+    "guide_blob": "b30fc5d4a0f5dae6ba3bbc46990a833297627a37",
+    "jobs": {
+      "linux": 132236013523,
+      "windows": 132236014002
+    },
+    "reruns": 0,
+    "conclusion": "success",
+    "cleanup_job": 132239114210,
+    "linux": {
+      "pass": 11,
+      "fail": 0,
+      "omni_spawns": 134,
+      "delegated": 0,
+      "baseline_staged": "1 pass / 0 fail",
+      "baseline_racy": "0 pass / 1 fail, exact missing-content oracle",
+      "copy_mtime": "source946684800000 -> copied1794612576875.4636",
+      "assertions": 140,
+      "seconds": 2.53,
+      "artifact_id": 14086206328,
+      "artifact_sha256": "e0553565f2306ec2393ba2a2a869f119fdff6dfb461ca69519fb2c0ffda375cc",
+      "tests_executed": true,
+      "result_replay": false
+    },
+    "windows": {
+      "pass": 11,
+      "fail": 0,
+      "omni_spawns": 134,
+      "delegated": 0,
+      "baseline_staged": "1 pass / 0 fail",
+      "baseline_racy": "1 pass / 0 fail; existing Windows compatibility",
+      "copy_mtime": "source946684800000 -> copied946684800000",
+      "assertions": 140,
+      "seconds": 10.61,
+      "artifact_id": 14086595742,
+      "artifact_sha256": "501a1e132faa531276cd59391de9794e122da20504cfab65a46abc5e00a97ce9",
+      "tests_executed": true,
+      "result_replay": false
+    },
+    "types_and_turbo": "pass both",
+    "guards": "Linux78 rules/781 paths/0 gates/28 warnings/0 errors",
+    "boundaries": "Linux5931 files/5587 edges/91 ledgered/0 new/0 stale",
+    "environment": "Baseline and GREEN preserve existing test-ci GITHUB_ACTIONS=false wrapper; CI=true remains inherited, test guard and Omni nonce/positive controls remain active.",
+    "test_blob": "f84a4dc9f26067de8249616dfc9105bba163b263"
+  },
+  "complementary_code_review": {
+    "source": "d99770c7c9c2a9cf0533d541c487fbf5d37bc12d",
+    "integrated_dev": "5e0807b5ff953508f792b8a965883985b05a7066",
+    "scope": "Bounded direct reading of the original requested priority flows while qualification ran; no new65-finding campaign and no claim of exhaustive coverage.",
+    "desktop": {
+      "production": [
+        {
+          "path": "apps/desktop/src/main/live-senses.ts",
+          "sha": "691147d63870b951aa695db0c024ad4b3751010b",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-senses.ts",
+          "read": [
+            [
+              1,
+              246
+            ]
+          ],
+          "coverage": "full",
+          "finding_ids": "M11/M13"
+        },
+        {
+          "path": "apps/desktop/src/main/live-loop.ts",
+          "sha": "15ad4fcb53f4c1c205246d92c460551af082eb33",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-loop.ts",
+          "read": [
+            [
+              1,
+              554
+            ]
+          ],
+          "coverage": "full",
+          "finding_ids": "M11/M13"
+        },
+        {
+          "path": "apps/desktop/src/main/live-transcriber.ts",
+          "sha": "09853bc27052e7b343d03b9a3ffd311092d2e9f2",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-transcriber.ts",
+          "read": [
+            [
+              1,
+              185
+            ]
+          ],
+          "coverage": "full",
+          "finding_ids": "M12"
+        },
+        {
+          "path": "apps/desktop/src/main/live-capture.ts",
+          "sha": "cedefba574228cea6723e23e0718619e8ca5a1ea",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-capture.ts",
+          "read": [
+            [
+              1,
+              163
+            ]
+          ],
+          "coverage": "full",
+          "finding_ids": "unchanged dependency"
+        },
+        {
+          "path": "apps/desktop/src/main/live-outbox.ts",
+          "sha": "4a1c32bff1f44ec4430924e5b05b34ba1b08a17d",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-outbox.ts",
+          "read": [
+            [
+              1,
+              319
+            ]
+          ],
+          "coverage": "full",
+          "finding_ids": "M13"
+        },
+        {
+          "path": "apps/desktop/src/main/live-outbox-contract.ts",
+          "sha": "87fa8a8e25b107423750625bce34a3bde447ebf4",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-outbox-contract.ts",
+          "read": [
+            [
+              1,
+              58
+            ]
+          ],
+          "coverage": "full",
+          "finding_ids": "M13"
+        },
+        {
+          "path": "apps/desktop/src/main/live-delivery-manager.ts",
+          "sha": "984e890ba7bc1dc170d114bff9c724ab9f95dbee",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-delivery-manager.ts",
+          "read": [
+            [
+              1,
+              477
+            ]
+          ],
+          "coverage": "full",
+          "finding_ids": "M13"
+        },
+        {
+          "path": "apps/desktop/src/main/live-delivery-owner.ts",
+          "sha": "939ef7d8d55fcfee9d395803a5e7c90833eb0e75",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-delivery-owner.ts",
+          "read": [
+            [
+              1,
+              229
+            ]
+          ],
+          "coverage": "full",
+          "finding_ids": "M13"
+        },
+        {
+          "path": "apps/desktop/src/main/live-delivery-http.ts",
+          "sha": "a44428476cba6b279c9a477f6175248118d9e815",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-delivery-http.ts",
+          "read": [
+            [
+              1,
+              178
+            ]
+          ],
+          "coverage": "full",
+          "finding_ids": "M13"
+        },
+        {
+          "path": "apps/desktop/src/main/live-delivery-values.ts",
+          "sha": "8309098e003b3e6efa9f376be1a21c2b5a10b903",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-delivery-values.ts",
+          "read": [
+            [
+              1,
+              81
+            ]
+          ],
+          "coverage": "full",
+          "finding_ids": "M13"
+        },
+        {
+          "path": "apps/desktop/src/main/live-delivery-contract.ts",
+          "sha": "943191f8b936d0ab93b76a187f99915de83474c5",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-delivery-contract.ts",
+          "read": [
+            [
+              1,
+              66
+            ]
+          ],
+          "coverage": "full",
+          "finding_ids": "M13"
+        },
+        {
+          "path": "apps/desktop/src/main/draft-store.ts",
+          "sha": "e58fd51a9848ef504d6469c16f5eff1a448f6c39",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/draft-store.ts",
+          "read": [
+            [
+              1,
+              89
+            ]
+          ],
+          "coverage": "full",
+          "finding_ids": "M8"
+        },
+        {
+          "path": "apps/desktop/src/main/live-session-client.ts",
+          "sha": "1f1bd83fd83100385398996da1b283196034d836",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-session-client.ts",
+          "read": [
+            [
+              1,
+              109
+            ]
+          ],
+          "coverage": "full",
+          "finding_ids": "M11/M13"
+        },
+        {
+          "path": "apps/desktop/src/main/live-session-request.ts",
+          "sha": "c413b614069fd21d8870842226e4c225f954d14d",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-session-request.ts",
+          "read": [
+            [
+              1,
+              37
+            ]
+          ],
+          "coverage": "full",
+          "finding_ids": "M11/M13"
+        },
+        {
+          "path": "apps/desktop/src/main/live-meeting-client.ts",
+          "sha": "f67ff630f0e68b7c4ca5940ffe1d86839f953dc5",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-meeting-client.ts",
+          "read": [
+            [
+              1,
+              107
+            ]
+          ],
+          "coverage": "full",
+          "finding_ids": "M11/M13"
+        },
+        {
+          "path": "apps/desktop/src/main/live-ipc.ts",
+          "sha": "88bf6abe91a1ae9d8bbbd7c73961aa1fd4aaef35",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-ipc.ts",
+          "read": [
+            [
+              1,
+              71
+            ]
+          ],
+          "coverage": "full",
+          "finding_ids": "M13"
+        },
+        {
+          "path": "apps/desktop/src/main/ipc-trusted-sender.ts",
+          "sha": "abfffa83ea4e1d3f4ed3964a328be7a810944f6e",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/ipc-trusted-sender.ts",
+          "read": [
+            [
+              1,
+              10
+            ]
+          ],
+          "coverage": "full",
+          "finding_ids": "M13"
+        },
+        {
+          "path": "apps/desktop/src/main/live-recovery-export.ts",
+          "sha": "fc75d201b11a0e24e247335e16ed9fa5a9af1d2c",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-recovery-export.ts",
+          "read": [
+            [
+              1,
+              68
+            ]
+          ],
+          "coverage": "full",
+          "finding_ids": "M13"
+        },
+        {
+          "path": "apps/desktop/src/main/index.ts",
+          "read": [
+            [
+              209,
+              221
+            ],
+            [
+              285,
+              319
+            ],
+            [
+              333,
+              348
+            ],
+            [
+              362,
+              400
+            ],
+            [
+              401,
+              541
+            ]
+          ],
+          "focus": "Live owner creation, before-quit ordering, connection replacement; F1 incidental wiring not requalified",
+          "sha": "4309e27c4eb476620bd1b79fb932a1b08592e95e",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/index.ts",
+          "coverage": "partial"
+        },
+        {
+          "path": "apps/desktop/src/main/ipc.ts",
+          "read": [
+            [
+              74,
+              87
+            ],
+            [
+              99,
+              110
+            ],
+            [
+              201,
+              211
+            ],
+            [
+              349,
+              349
+            ]
+          ],
+          "focus": "trusted handle, draft lifecycle and Live registration",
+          "sha": "4d800a559ee7f021eca14e9b8330073bb3049638",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/ipc.ts",
+          "coverage": "partial"
+        },
+        {
+          "path": "apps/desktop/src/preload/index.ts",
+          "read": [
+            [
+              124,
+              132
+            ],
+            [
+              197,
+              231
+            ]
+          ],
+          "focus": "draft and Live IPC bridge",
+          "sha": "60b28e2440408d48765b24d608dccf665eb32c00",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/preload/index.ts",
+          "coverage": "partial"
+        }
+      ],
+      "tests": [
+        {
+          "path": "apps/desktop/src/main/draft-store.node.test.ts",
+          "sha": "1462ea31f0aa56d68676542aba4c5a7f2fbb6bc8",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/draft-store.node.test.ts",
+          "read": [
+            [
+              1,
+              198
+            ]
+          ],
+          "coverage": "full"
+        },
+        {
+          "path": "apps/desktop/src/main/live-transcriber.test.ts",
+          "sha": "01dbb2b8459de7e0b21439ba8dec13358368ae45",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-transcriber.test.ts",
+          "read": [
+            [
+              1,
+              155
+            ]
+          ],
+          "coverage": "full"
+        },
+        {
+          "path": "apps/desktop/src/main/live-senses-delivery.fixture.ts",
+          "sha": "5b2fca5a41b88517dc7f03cf946b7295744753de",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-senses-delivery.fixture.ts",
+          "read": [
+            [
+              1,
+              160
+            ]
+          ],
+          "coverage": "full"
+        },
+        {
+          "path": "apps/desktop/src/main/live-senses-delivery.node.test.ts",
+          "sha": "62f75c0b603a8b50ed4f77bcfac49c4a86ec1081",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-senses-delivery.node.test.ts",
+          "read": [
+            [
+              1,
+              149
+            ]
+          ],
+          "coverage": "full"
+        },
+        {
+          "path": "apps/desktop/src/main/live-delivery-quit.node.test.ts",
+          "sha": "4ab27ba651e2279a952a39a844d6889ed4a12bea",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-delivery-quit.node.test.ts",
+          "read": [
+            [
+              1,
+              102
+            ]
+          ],
+          "coverage": "full"
+        },
+        {
+          "path": "apps/desktop/src/main/live-delivery-manager.native.test.ts",
+          "sha": "4249ce68e8edadc48e75fa43b6665d2cd1563cfa",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-delivery-manager.native.test.ts",
+          "read": [
+            [
+              1,
+              182
+            ]
+          ],
+          "coverage": "full"
+        },
+        {
+          "path": "apps/desktop/src/main/live-delivery-manager.fixture.ts",
+          "sha": "159a460c46d7c605575463d559fe4604c1424297",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-delivery-manager.fixture.ts",
+          "read": [
+            [
+              1,
+              79
+            ]
+          ],
+          "coverage": "full"
+        },
+        {
+          "path": "apps/desktop/src/main/live-loop-delivery.node.test.ts",
+          "sha": "d1639650aeb130a15f50a9ea3cbbb2c4595cc648",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-loop-delivery.node.test.ts",
+          "read": [
+            [
+              1,
+              324
+            ]
+          ],
+          "coverage": "full"
+        },
+        {
+          "path": "apps/desktop/src/main/live-loop-delivery.fixture.ts",
+          "sha": "6270e4bf0d46582822c5f3b534ad63b225fbae76",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-loop-delivery.fixture.ts",
+          "read": [
+            [
+              1,
+              213
+            ]
+          ],
+          "coverage": "full"
+        },
+        {
+          "path": "apps/desktop/src/main/live-recovery-export.test.ts",
+          "sha": "b4a7f60bd7cb9d522162fe977bfcf750360878e3",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-recovery-export.test.ts",
+          "read": [
+            [
+              1,
+              77
+            ]
+          ],
+          "coverage": "full"
+        },
+        {
+          "path": "apps/desktop/src/main/live-recovery-ipc.node.test.ts",
+          "sha": "1b1f82d6ca246c0cf3e30fca369fe2d06a117778",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-recovery-ipc.node.test.ts",
+          "read": [
+            [
+              1,
+              141
+            ]
+          ],
+          "coverage": "full"
+        },
+        {
+          "path": "apps/desktop/src/main/live-delivery-manager-test.fixture.ts",
+          "sha": "01bff9662bb049be1be2943fa50293f2e202b7b4",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-delivery-manager-test.fixture.ts",
+          "read": [
+            [
+              1,
+              154
+            ]
+          ],
+          "coverage": "full"
+        },
+        {
+          "path": "apps/desktop/src/main/live-delivery-owner-test.fixture.ts",
+          "sha": "28306de50c8cbf6770e61052357a27e3a464a5b6",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-delivery-owner-test.fixture.ts",
+          "read": [
+            [
+              1,
+              45
+            ]
+          ],
+          "coverage": "full"
+        },
+        {
+          "path": "apps/desktop/src/main/live-delivery-manager-actions.fixture.ts",
+          "sha": "2578e05d4d226dcce4a3434a67269271b7d01289",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-delivery-manager-actions.fixture.ts",
+          "read": [
+            [
+              1,
+              21
+            ]
+          ],
+          "coverage": "full"
+        },
+        {
+          "path": "apps/desktop/src/main/live-recovery-ipc.fixture.ts",
+          "sha": "26984b55db9613b20682f423dbb354bad3b7753e",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-recovery-ipc.fixture.ts",
+          "read": [
+            [
+              1,
+              79
+            ]
+          ],
+          "coverage": "full"
+        },
+        {
+          "path": "apps/desktop/src/main/live-delivery-manager.node.test.ts",
+          "read": [
+            [
+              1,
+              40
+            ],
+            [
+              247,
+              291
+            ],
+            [
+              465,
+              591
+            ],
+            [
+              641,
+              700
+            ]
+          ],
+          "additional": "test titles enumerated across all 700 lines",
+          "sha": "516a74837dead2e86763ee888486b3f9c0a82d3c",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-delivery-manager.node.test.ts",
+          "coverage": "partial"
+        },
+        {
+          "path": "apps/desktop/src/main/live-delivery-owner.node.test.ts",
+          "read": [
+            [
+              38,
+              99
+            ],
+            [
+              152,
+              218
+            ]
+          ],
+          "additional": "test titles enumerated across full file",
+          "sha": "c94bce1df1cd0d77acbd4b9edd28fe13f282dabf",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-delivery-owner.node.test.ts",
+          "coverage": "partial"
+        },
+        {
+          "path": "apps/desktop/src/main/live-outbox.node.test.ts",
+          "read": [
+            [
+              116,
+              233
+            ],
+            [
+              401,
+              426
+            ]
+          ],
+          "additional": "test titles enumerated through line400; fixtures/other test bodies not read",
+          "sha": "be02c89ff7cdca56a0d3aef44f3850b646e76763",
+          "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/src/main/live-outbox.node.test.ts",
+          "coverage": "partial"
+        }
+      ],
+      "contracts_checked": [
+        "Capture acquisition and permission cancellation, final STT callbacks, cutter flush, durable append before acceptance, requestClose versus seal.",
+        "Committed exact ACK prefix, retained digests, repeated/lost ACK, old-epoch ACK and connection proof, bounded retries, recovered close intent, unsaved refusal and explicit finish.",
+        "Owner fences admission synchronously, joins starts/export/capture, closes Store after final append; foreground summary only after confirmed remote completion.",
+        "Draft buffer removed only after transaction commit; recovery export resolves opaque ID in Main, writes private sibling temp, syncs and renames; trusted Live handlers use shared Main wrapper.",
+        "Production Session create/prompt/rename deadlines cover bodies, SSE handoff keeps owner cancellation, Quit/rotation join Session IO."
+      ],
+      "limitations": [
+        "No tests, typechecks, workflows, GitHub writes or repository edits executed in this bounded review.",
+        "Audio capture/STT/permission tests use controlled native boundaries; actual physical devices, native media dialogs and full production Electron Main bootstrap were not qualified.",
+        "Actual-Core bridge uses real SessionMeeting/SQLite plus a fixture HTTP adapter; it does not independently qualify production Server routing.",
+        "Renderer recovery UI, screen-frame opacity M14, tray and overlay details, unrelated Desktop lifecycle/release files, Core migration and all65 audit findings were not rereviewed.",
+        "F1 bootstrap subprocess fix previously qualified; no new F1 review claim.",
+        "Non-admitted recent audio/volatile failed tail is outside durable guarantee as documented in live-meetings.md97-100; storage-error metadata persists. No new durability guarantee inferred.",
+        "Initial bulk tool outputs were truncated, so sources used here were reread in bounded ranges. No stated reviewed source interval remains unavailable; downloaded but unread files/ranges are excluded."
+      ],
+      "minimal_changed_inventory": {
+        "M8_drafts": [
+          "apps/desktop/src/main/draft-store.ts"
+        ],
+        "M11_M12_capture_and_shutdown": [
+          "apps/desktop/src/main/index.ts",
+          "apps/desktop/src/main/live-loop.ts",
+          "apps/desktop/src/main/live-senses.ts",
+          "apps/desktop/src/main/live-transcriber.ts"
+        ],
+        "M13_outbox_delivery": [
+          "apps/desktop/src/main/live-delivery-contract.ts",
+          "apps/desktop/src/main/live-delivery-error.ts",
+          "apps/desktop/src/main/live-delivery-http.ts",
+          "apps/desktop/src/main/live-delivery-id.ts",
+          "apps/desktop/src/main/live-delivery-manager.ts",
+          "apps/desktop/src/main/live-delivery-owner-contract.ts",
+          "apps/desktop/src/main/live-delivery-owner.ts",
+          "apps/desktop/src/main/live-delivery-values.ts",
+          "apps/desktop/src/main/live-outbox-contract.ts",
+          "apps/desktop/src/main/live-outbox.ts",
+          "apps/desktop/src/main/live-recovery-export.ts"
+        ],
+        "M13_transport_and_IPC": [
+          "apps/desktop/src/main/ipc-trusted-sender.ts",
+          "apps/desktop/src/main/ipc.ts",
+          "apps/desktop/src/main/live-ipc-contract.ts",
+          "apps/desktop/src/main/live-ipc.ts",
+          "apps/desktop/src/main/live-meeting-client.ts",
+          "apps/desktop/src/main/live-session-client.ts",
+          "apps/desktop/src/main/live-session-request.ts"
+        ],
+        "bridge_and_renderer_adjacent": [
+          "apps/desktop/src/preload/index.ts",
+          "apps/desktop/src/preload/types.ts",
+          "apps/desktop/src/renderer/index.tsx",
+          "apps/desktop/src/renderer/live/copy.ts",
+          "apps/desktop/src/renderer/live/index.tsx"
+        ],
+        "adjacent_not_read": [
+          "apps/desktop/src/main/live-frame.ts",
+          "apps/desktop/src/main/live-overlay-state.ts",
+          "apps/desktop/src/main/live-tray.ts"
+        ]
+      },
+      "downloaded_but_not_read": [
+        "packages/app-shell/src/live.ts"
+      ]
+    },
+    "isolation_release": {
+      "files": [
+        {
+          "path": ".github/workflows/release-cli.yml",
+          "blob": "fc0ecde2af1d18a55df530b3a9fce4403dc6fcf0",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/.github/workflows/release-cli.yml",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              332
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": ".github/workflows/release-desktop.yml",
+          "blob": "a1c47f008dcb099817eaeefad306bd7a25724e20",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/.github/workflows/release-desktop.yml",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              418
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": ".github/workflows/release-promote.yml",
+          "blob": "036af20fa860c7dab795b8ae58f5e57c544bbc74",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/.github/workflows/release-promote.yml",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              268
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "packages/script/src/release-artifact-identity.ts",
+          "blob": "ff4a6b2765fc98b428402f9f68b765943ac0bdb0",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/script/src/release-artifact-identity.ts",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              124
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "packages/script/src/desktop-feed.ts",
+          "blob": "e0c13aba052a32a46ebae8f5c7576f716e544b38",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/script/src/desktop-feed.ts",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              215
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "packages/script/test/release-artifact-identity.test.ts",
+          "blob": "76ef4d4b58183091f25eced7b46a2daeb964f696",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/script/test/release-artifact-identity.test.ts",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              336
+            ]
+          ],
+          "scope": "test-or-test-fixture",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "packages/script/test/desktop-feed.test.ts",
+          "blob": "2a26559437de0814de68c9d17543de2af9fcc036",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/script/test/desktop-feed.test.ts",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              236
+            ]
+          ],
+          "scope": "test-or-test-fixture",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "apps/desktop/scripts/finalize-latest-yml.ts",
+          "blob": "4e25a81c22aac19d0dcd7ef7cf47f5be8a954277",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/scripts/finalize-latest-yml.ts",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              124
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "apps/desktop/scripts/finalize-latest-yml.test.ts",
+          "blob": "b7937abbe15c246352e7ba876c1ca14384207a24",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/scripts/finalize-latest-yml.test.ts",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              306
+            ]
+          ],
+          "scope": "test-or-test-fixture",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "script/release-artifact-identity.ts",
+          "blob": "6a89071f2e7cc9e4ba23d01e9d3128ad272253d5",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/script/release-artifact-identity.ts",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              17
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/AGENTS.md",
+          "blob": "81348044513778d30da447ff17f510d55d818541",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/AGENTS.md",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              125
+            ]
+          ],
+          "scope": "instructions-or-contract",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/PLAN.md",
+          "blob": "f8a105e63117dfb8a5ad1c911210b3993c34e1ca",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/PLAN.md",
+          "readExtent": "partial",
+          "readRanges": [
+            [
+              154,
+              199
+            ],
+            [
+              429,
+              509
+            ],
+            [
+              529,
+              537
+            ]
+          ],
+          "scope": "instructions-or-contract",
+          "changedInSelectedBaseToHeadMap": false
+        },
+        {
+          "path": "native/omni/docs/api-contract.md",
+          "blob": "bd31bda2e13438c30cfe2d05d726ae1482be19fd",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/docs/api-contract.md",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              288
+            ]
+          ],
+          "scope": "instructions-or-contract",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/docs/adr/0005-supervisor.md",
+          "blob": "e105585bd4ee8981d09e08943f5196aeb5b222b9",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/docs/adr/0005-supervisor.md",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              270
+            ]
+          ],
+          "scope": "instructions-or-contract",
+          "changedInSelectedBaseToHeadMap": false
+        },
+        {
+          "path": "native/omni/docs/protocol.md",
+          "blob": "f99250870daa6cfa7ae5d34a4b41d1189f9b83e4",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/docs/protocol.md",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              80
+            ]
+          ],
+          "scope": "instructions-or-contract",
+          "changedInSelectedBaseToHeadMap": false
+        },
+        {
+          "path": "native/omni/conformance/SPEC.md",
+          "blob": "f52eec455505c2dfcd95c8e187178291178fb335",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/conformance/SPEC.md",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              103
+            ]
+          ],
+          "scope": "instructions-or-contract",
+          "changedInSelectedBaseToHeadMap": false
+        },
+        {
+          "path": "native/omni/conformance/FIXTURE.md",
+          "blob": "e29de10d290bce1c2b81e7c7f916604db7f39950",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/conformance/FIXTURE.md",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              50
+            ]
+          ],
+          "scope": "instructions-or-contract",
+          "changedInSelectedBaseToHeadMap": false
+        },
+        {
+          "path": "packages/core/test/release-promotion.test.ts",
+          "blob": "0214848812f873fc64d342bf479b6499ca9a1d2b",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/test/release-promotion.test.ts",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              552
+            ]
+          ],
+          "scope": "test-or-test-fixture",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "packages/core/test/fixture/release-command.ts",
+          "blob": "0a6fc557481b96ce701834bd76f7879a5b8279e7",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/test/fixture/release-command.ts",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              330
+            ]
+          ],
+          "scope": "test-or-test-fixture",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "packages/core/test/fixture/release-promotion.ts",
+          "blob": "05476537206ab02ae986286858b6ed14159c7078",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/test/fixture/release-promotion.ts",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              290
+            ]
+          ],
+          "scope": "test-or-test-fixture",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "docs/audits/remediation-release-backoff-plan.md",
+          "blob": "c811a834383681640c68c49a636e23c4a63e9d0d",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/docs/audits/remediation-release-backoff-plan.md",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              9
+            ]
+          ],
+          "scope": "instructions-or-contract",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/bindings/node/src/run.rs",
+          "blob": "749b9992b1ae335f6b0dac9c55cc0d54b2b563e5",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/bindings/node/src/run.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              32
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/bindings/node/src/teardown.rs",
+          "blob": "572b2180000c50b971a925706ac40e243ee7e814",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/bindings/node/src/teardown.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              89
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/life.rs",
+          "blob": "363272d892fe302919cd8835fc48d4f747cadfab",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/crates/hugr-omni/src/process/life.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              154
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/owned.rs",
+          "blob": "6c5cddcd79437a2353334258270919f19e8c41f4",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/crates/hugr-omni/src/process/owned.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              36
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/run.rs",
+          "blob": "408e3003ce294575104fcc55903aa67036456451",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/crates/hugr-omni/src/process/run.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              399
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/inventory_probe.rs",
+          "blob": "782f409ae9e7843f4a8620e9d23ce0dca48ec369",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/crates/hugr-omni/src/client/inventory_probe.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              264
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/mod.rs",
+          "blob": "e052a88183874991e9397921608860f5c2581146",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/crates/hugr-omni/src/client/mod.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              356
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/deadline.rs",
+          "blob": "b78e5febe3910a156dcf9b282a79f3e408e3ca89",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/crates/hugr-omni/src/process/deadline.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              222
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/memory.rs",
+          "blob": "fde55afc45f0c9d23970805081764ecd9656ff1e",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/crates/hugr-omni/src/process/memory.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              89
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/bindings/node/src/exec.rs",
+          "blob": "7919dda5105dee62e2872a3df24711880ba6697c",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/bindings/node/src/exec.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              174
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": false
+        },
+        {
+          "path": "native/omni/bindings/node/src/error.rs",
+          "blob": "a3f90fc0b728d5ce9a345b0a05aaf2d68faa8d18",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/bindings/node/src/error.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              116
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": false
+        },
+        {
+          "path": "native/omni/bindings/node/src/child.rs",
+          "blob": "678d3eefde47f9bf19b6a6385cb4e1aaf211351b",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/bindings/node/src/child.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              300
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": false
+        },
+        {
+          "path": "native/omni/bindings/node/test/worker-host.mjs",
+          "blob": "51ce6951a50e1904d0d10c48ade53d9d8e86fdb6",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/bindings/node/test/worker-host.mjs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              84
+            ]
+          ],
+          "scope": "test-or-test-fixture",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/bindings/node/test/worker.mjs",
+          "blob": "26dc91c42092236c751b2f8f68b47d6529c79212",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/bindings/node/test/worker.mjs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              27
+            ]
+          ],
+          "scope": "test-or-test-fixture",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/bindings/node/test/hardening.mjs",
+          "blob": "d21e7f56717793daa06ffc7ee4a60d415725f93a",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/bindings/node/test/hardening.mjs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              166
+            ]
+          ],
+          "scope": "test-or-test-fixture",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/binding.rs",
+          "blob": "7cfcfc7b89e5a52bdf2f83b8b90b9512a5a4bdff",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/crates/hugr-omni/src/binding.rs",
+          "readExtent": "partial",
+          "readRanges": [
+            [
+              1,
+              35
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/api/command.rs",
+          "blob": "13a34b2c1b548cf0b16471e7f357cd81d720d719",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/crates/hugr-omni/src/api/command.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              197
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/channel.rs",
+          "blob": "7e47de8854dd70471bdde4ed94974e53ab494583",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/crates/hugr-omni/src/client/channel.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              386
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": false
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/child.rs",
+          "blob": "431ba07ac85778f408c37a55d567db40890a0cee",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/crates/hugr-omni/src/process/child.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              247
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": false
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/tests/inventory.rs",
+          "blob": "765e72aaccfa959ff6ffeaacfe154d7cad349303",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/crates/hugr-omni/src/process/tests/inventory.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              60
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/tests/inventory/cases.rs",
+          "blob": "f31dbe37e39525e0ce9e21154212dc44ffa4db7a",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/crates/hugr-omni/src/process/tests/inventory/cases.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              98
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/tests/inventory/actor.rs",
+          "blob": "a868ec192e5126b8fa9b3110428be06799fd163c",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/crates/hugr-omni/src/process/tests/inventory/actor.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              54
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/tests/inventory/support.rs",
+          "blob": "5d8772d790517ee510e7a02efb0466b508986403",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/crates/hugr-omni/src/process/tests/inventory/support.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              356
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/bindings/node/test/pidlog.mjs",
+          "blob": "13cf2fc6cede1407c8e63940d109c316b3ca4af8",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/bindings/node/test/pidlog.mjs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              25
+            ]
+          ],
+          "scope": "test-or-test-fixture",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "apps/desktop/electron-builder.config.ts",
+          "blob": "9a195385c8d26025703eb9a236c36a2aeb37e6f5",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/apps/desktop/electron-builder.config.ts",
+          "readExtent": "partial",
+          "readRanges": [
+            [
+              113,
+              125
+            ],
+            [
+              129,
+              141
+            ],
+            [
+              248,
+              260
+            ],
+            [
+              302,
+              318
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": false
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/client/channel/route.rs",
+          "blob": "e1eddb04bc55bdfde9cb5ea70f84b0c21b3d40f8",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/crates/hugr-omni/src/client/channel/route.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              260
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": false
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/tests/mod.rs",
+          "blob": "6798a8ca9967937520c7c686c9f4ba5241670009",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/crates/hugr-omni/src/process/tests/mod.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              283
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/crates/hugr-omni/src/process/mod.rs",
+          "blob": "9e467431cddd18b8307eadd78374141b2e1948af",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/crates/hugr-omni/src/process/mod.rs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              57
+            ]
+          ],
+          "scope": "production-or-workflow",
+          "changedInSelectedBaseToHeadMap": true
+        },
+        {
+          "path": "native/omni/bindings/node/test/runner/os.mjs",
+          "blob": "45a20347fa80507cf334cf3f67da6e2984c1da7f",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/native/omni/bindings/node/test/runner/os.mjs",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              100
+            ]
+          ],
+          "scope": "test-or-test-fixture",
+          "changedInSelectedBaseToHeadMap": false
+        },
+        {
+          "path": "AGENTS.md",
+          "blob": "643ec9f8f960895b2e3294f7f2cc25db6f8488e4",
+          "githubUrl": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/AGENTS.md",
+          "readExtent": "full",
+          "readRanges": [
+            [
+              1,
+              223
+            ]
+          ],
+          "scope": "instructions-or-contract",
+          "changedInSelectedBaseToHeadMap": false
+        }
+      ],
+      "mechanisms": [
+        {
+          "area": "Release identity and publication",
+          "conclusion": "The three workflows, verifier and feed parser were traced through the actual publication caller. Build workflows reject direct publishing. Promotion validates reviewed source and producer evidence, verifies a fixed payload set and byte digests, rejects divergent existing npm/release assets, and checks a durable version/receipt floor before replacing mutable feed metadata.",
+          "anchors": [
+            {
+              "path": ".github/workflows/release-promote.yml",
+              "lines": [
+                45,
+                155
+              ]
+            },
+            {
+              "path": "packages/script/src/release-artifact-identity.ts",
+              "lines": [
+                48,
+                123
+              ]
+            },
+            {
+              "path": "packages/script/src/desktop-feed.ts",
+              "lines": [
+                28,
+                132
+              ]
+            },
+            {
+              "path": ".github/workflows/release-promote.yml",
+              "lines": [
+                161,
+                268
+              ]
+            }
+          ]
+        },
+        {
+          "area": "Release consumer and test oracles",
+          "conclusion": "The finalizer validates actual payload bytes before generating metadata; the consumer regression invokes electron-updater's real GenericProvider. Promotion tests execute actual workflow Bash with only gh/npm/sleep transport substituted. The finite backoff test requires all ten lookups and nine literal sleep-3 requests in order; simulated elapsed delay is explicitly excluded.",
+          "anchors": [
+            {
+              "path": "apps/desktop/scripts/finalize-latest-yml.ts",
+              "lines": [
+                8,
+                74
+              ]
+            },
+            {
+              "path": "apps/desktop/scripts/finalize-latest-yml.test.ts",
+              "lines": [
+                294,
+                305
+              ]
+            },
+            {
+              "path": "packages/core/test/fixture/release-promotion.ts",
+              "lines": [
+                232,
+                287
+              ]
+            },
+            {
+              "path": "packages/core/test/release-promotion.test.ts",
+              "lines": [
+                369,
+                421
+              ]
+            }
+          ]
+        },
+        {
+          "area": "Per-Env native run ownership",
+          "conclusion": "The actual RunHandle is registered during the first synchronous poll, after child acquisition and before the first suspension. Env teardown owns only that Env's weak registrations, starts forced stops and uses one aggregate bounded join budget. The worker control checks both worker PIDs dead and both parent PIDs alive before parent cleanup.",
+          "anchors": [
+            {
+              "path": "native/omni/bindings/node/src/run.rs",
+              "lines": [
+                21,
+                31
+              ]
+            },
+            {
+              "path": "native/omni/bindings/node/src/exec.rs",
+              "lines": [
+                67,
+                92
+              ]
+            },
+            {
+              "path": "native/omni/crates/hugr-omni/src/process/run.rs",
+              "lines": [
+                52,
+                79
+              ]
+            },
+            {
+              "path": "native/omni/bindings/node/src/teardown.rs",
+              "lines": [
+                30,
+                84
+              ]
+            },
+            {
+              "path": "native/omni/bindings/node/test/worker-host.mjs",
+              "lines": [
+                41,
+                72
+              ]
+            }
+          ]
+        },
+        {
+          "area": "Inventory failure continuity",
+          "conclusion": "Private retryable/terminal classification was checked against channel admission, route and generation-loss behavior. Retryable failures preserve cancellation, original timeout and RSS watcher lifetime; terminal failure is not a successful empty inventory. The injected AckError tests are Linux-only, use an actual supervisor, actual process identities and liveness before cleanup.",
+          "anchors": [
+            {
+              "path": "native/omni/crates/hugr-omni/src/client/mod.rs",
+              "lines": [
+                223,
+                270
+              ]
+            },
+            {
+              "path": "native/omni/crates/hugr-omni/src/client/channel.rs",
+              "lines": [
+                249,
+                317
+              ]
+            },
+            {
+              "path": "native/omni/crates/hugr-omni/src/process/deadline.rs",
+              "lines": [
+                86,
+                124
+              ]
+            },
+            {
+              "path": "native/omni/crates/hugr-omni/src/process/memory.rs",
+              "lines": [
+                33,
+                58
+              ]
+            },
+            {
+              "path": "native/omni/crates/hugr-omni/src/process/tests/inventory/support.rs",
+              "lines": [
+                253,
+                271
+              ]
+            }
+          ]
+        }
+      ],
+      "limits": [
+        "This is a bounded review at d99770c7..., not an exhaustive review of all 65 audit findings and not an assertion that all of original HEAD 33466... was independently retained/reviewed.",
+        "No tests were executed as part of this static reading. Existing scoped qualification and the final epic run must be reported separately by their exact source and result.",
+        "No real GitHub/npm release was published; signing, notarization, external service eventual consistency and real wall-clock retry behavior were not qualified by the transport fixture.",
+        "Physical hardware, native permission dialogs and complete Electron Main bootstrap were not qualified here.",
+        "Native Unix/Windows supervisor internals and every codemode/sandbox boundary were not exhaustively re-reviewed. The binding and client ownership boundaries listed in files are the actual sample.",
+        "Injected inventory AckError recovery controls are Linux-only; they do not prove identical native failure behavior on every OS.",
+        "Env teardown has a finite aggregate join deadline and does not promise universal reaping after terminal supervisor loss or errors.",
+        "inventory_probe documents a non-atomic check-before-prlimit window in a Linux-only test harness; this was not converted into a production defect."
+      ],
+      "beforeMergeFromThisSubreview": [
+        "No additional code change requested by this bounded review. Compose this reading with the final epic's actual source, full matrix and results; do not infer global approval from the absence of new findings here."
+      ]
+    },
+    "protocol_consumers": {
+      "files": [
+        {
+          "path": "docs/audits/remediation-existing-session-send-plan.md",
+          "reconstructed_source_blob": "bc3cecacb59b4c75b0da4463b9cc1e8995dec3eb",
+          "lines": 60
+        },
+        {
+          "path": "packages/app-shell/src/components/prompt-input/submission-admission.ts",
+          "reconstructed_source_blob": "827334123c5b64ea3351f47aabdb494df9f65abd",
+          "lines": 54
+        },
+        {
+          "path": "packages/app-shell/src/components/prompt-input/submission-execute.ts",
+          "reconstructed_source_blob": "833433155ce455348deec736e4ae3966c5865d9a",
+          "lines": 723
+        },
+        {
+          "path": "packages/app-shell/src/components/prompt-input/submission-pending.ts",
+          "reconstructed_source_blob": "e40c8753c1d54cdf70aec04adff51451dae219ff",
+          "lines": 80
+        },
+        {
+          "path": "packages/app-shell/src/components/prompt-input/submission-policy.ts",
+          "reconstructed_source_blob": "4383c6ebf2af86dd75ec474828a698b2c886f136",
+          "lines": 456
+        },
+        {
+          "path": "packages/app-shell/src/components/prompt-input/submission-transport.ts",
+          "reconstructed_source_blob": "1629c9dcdaf6811e146b9d00c0f3a8979cd50e9f",
+          "lines": 37
+        },
+        {
+          "path": "packages/app-shell/src/components/prompt-input/submit-admission.suite.ts",
+          "reconstructed_source_blob": "b3cd4088c5481afd4a108705b43557be9fdd4cc8",
+          "lines": 532
+        },
+        {
+          "path": "packages/app-shell/src/components/prompt-input/submit-receipt.suite.ts",
+          "reconstructed_source_blob": "a8a9be1cfcb130b764a5550ab9a3dbf6be465d7b",
+          "lines": 454
+        },
+        {
+          "path": "packages/app-shell/src/components/prompt-input/submit.ts",
+          "reconstructed_source_blob": "3745d33ad8b60b3957bf2f7cbd0f3ddc9131190d",
+          "lines": 335
+        },
+        {
+          "path": "packages/app-shell/src/context/server-sdk.tsx",
+          "reconstructed_source_blob": "2e35e3b7275e8372381ea9c13d9171aef82b088d",
+          "lines": 577
+        },
+        {
+          "path": "packages/app-shell/src/pages/session/composer/prompt-model-selection.ts",
+          "reconstructed_source_blob": "20b2d90105372149045774b965388bc3a37bc31f",
+          "lines": 194
+        },
+        {
+          "path": "packages/app-shell/src/utils/refcount.ts",
+          "reconstructed_source_blob": "49aa9a3c8c29980c9b27f190f77964d01e471ad1",
+          "lines": 37
+        },
+        {
+          "path": "packages/client/test/model-variants.test.ts",
+          "reconstructed_source_blob": "c95f6b59e1e8fe94b3a5a0cc24e69aefd9a6255e",
+          "lines": 62
+        },
+        {
+          "path": "packages/client/test/optional-payload.test.ts",
+          "reconstructed_source_blob": "fb7624691ce9606411d141cd66b9b6d6f63df341",
+          "lines": 44
+        },
+        {
+          "path": "packages/core/src/model-execution-options.ts",
+          "reconstructed_source_blob": "c84bb39da88778adc5b88174fc3219e8dcc917b6",
+          "lines": 117
+        },
+        {
+          "path": "packages/core/src/model-execution.ts",
+          "reconstructed_source_blob": "0f225b5401a2785872c46e5b43683e61a6a33d72",
+          "lines": 222
+        },
+        {
+          "path": "packages/llm/src/route/client.ts",
+          "reconstructed_source_blob": "08aa652d33468480883cd73ba4f13bf80c091b3a",
+          "lines": 458
+        },
+        {
+          "path": "packages/llm/src/route/transport/websocket.ts",
+          "reconstructed_source_blob": "256537fa1734fe269493868e01068e78a85d9eb8",
+          "lines": 310
+        },
+        {
+          "path": "packages/llm/test/terminal-stream.test.ts",
+          "reconstructed_source_blob": "9dca866676abdd0e20fecebb8a395fd159e9e960",
+          "lines": 255
+        },
+        {
+          "path": "packages/llm/test/transport-overflow.test.ts",
+          "reconstructed_source_blob": "84d724582411293338f4f0357ed1289a72bc06d7",
+          "lines": 114
+        },
+        {
+          "path": "packages/schema/src/model-execution.ts",
+          "reconstructed_source_blob": "8f80aed70cf82ebd0d4c1d02cccde08076b58f5d",
+          "lines": 56
+        },
+        {
+          "path": "packages/server/src/middleware/node-request-cancellation.ts",
+          "reconstructed_source_blob": "eedf3b98141f9290f336a51c6f4eb997fe592366",
+          "lines": 33
+        },
+        {
+          "path": "packages/server/src/node-server.ts",
+          "reconstructed_source_blob": "24a436d19f6efa0cdc15a906db1d76034a715bbd",
+          "lines": 45
+        },
+        {
+          "path": "packages/server/test/model-execution-http.test.ts",
+          "reconstructed_source_blob": "bcef69f374748564a991fd3c3a75963678ac6fbb",
+          "lines": 479
+        },
+        {
+          "path": "packages/server/test/node-request-cancellation.test.ts",
+          "reconstructed_source_blob": "934f8e6762e240979be5e5dd0de00c1e72d49a2c",
+          "lines": 267
+        },
+        {
+          "path": "packages/server/test/node-server.test.ts",
+          "reconstructed_source_blob": "0d0e199bac865e498b657342ac51fb316b4193e3",
+          "lines": 377
+        },
+        {
+          "path": "tooling/httpapi-codegen/src/effect-headers.ts",
+          "reconstructed_source_blob": "cd6db4e5b5128fe0464830b4e971b79d0cdaca5d",
+          "lines": 45
+        },
+        {
+          "path": "tooling/httpapi-codegen/test/optional-payload.test.ts",
+          "reconstructed_source_blob": "0dd7dbbaf7b30941c32c3cf62069adf18bf9dfb9",
+          "lines": 136
+        }
+      ],
+      "read_regions": {
+        "packages/schema/src/model-execution.ts": "complete",
+        "packages/core/src/model-execution.ts": "complete",
+        "packages/core/src/model-execution-options.ts": "complete",
+        "packages/server/src/node-server.ts": "complete",
+        "packages/server/src/middleware/node-request-cancellation.ts": "complete",
+        "packages/server/test/node-request-cancellation.test.ts": "complete",
+        "packages/server/test/node-server.test.ts": "assertion inventory; completed-body disconnect and native Node fallback cases270-377",
+        "packages/server/test/model-execution-http.test.ts": "assertion inventory; cancellation and wire facade403-479",
+        "packages/client/test/model-variants.test.ts": "complete",
+        "packages/client/test/optional-payload.test.ts": "complete",
+        "packages/app-shell/src/components/prompt-input/submit.ts": "complete",
+        "packages/app-shell/src/components/prompt-input/submission-admission.ts": "complete",
+        "packages/app-shell/src/components/prompt-input/submission-pending.ts": "complete",
+        "packages/app-shell/src/components/prompt-input/submission-transport.ts": "complete",
+        "packages/app-shell/src/components/prompt-input/submission-policy.ts": "complete",
+        "packages/app-shell/src/components/prompt-input/submission-execute.ts": "complete",
+        "packages/app-shell/src/pages/session/composer/prompt-model-selection.ts": "complete",
+        "packages/app-shell/src/utils/refcount.ts": "complete",
+        "packages/app-shell/src/context/server-sdk.tsx": "changed hunks; event adaptation and SDK transport/lifetime20-130,230-430",
+        "packages/app-shell/src/components/prompt-input/submit-receipt.suite.ts": "1-150; remaining case inventory",
+        "packages/app-shell/src/components/prompt-input/submit-admission.suite.ts": "240-290; remaining case inventory",
+        "docs/audits/remediation-existing-session-send-plan.md": "complete",
+        "packages/llm/src/route/client.ts": "changed hunks; streamPrepared250-335",
+        "packages/llm/src/route/transport/websocket.ts": "changed hunks; open/fromWebSocket110-260",
+        "packages/llm/test/terminal-stream.test.ts": "case inventory;76-212",
+        "packages/llm/test/transport-overflow.test.ts": "complete",
+        "tooling/httpapi-codegen/src/effect-headers.ts": "complete",
+        "tooling/httpapi-codegen/test/optional-payload.test.ts": "complete"
+      },
+      "additional_diff_reads": [
+        "packages/protocol/src/errors.ts",
+        "packages/protocol/src/groups/model.ts",
+        "packages/protocol/src/groups/session.ts",
+        "packages/server/src/handlers/model.ts",
+        "packages/server/src/handlers/session.ts",
+        "packages/server/src/location.ts",
+        "packages/server/src/routes.ts",
+        "packages/client/src/index.ts",
+        "packages/client/src/model-execution.ts",
+        "packages/client/src/generated/client.ts",
+        "packages/client/src/generated-effect/client.ts (selected hunks)",
+        "packages/client/src/generated/types.ts (model-execution and variants hunks)",
+        "packages/client/test/sse-attachment.test.ts",
+        "tooling/httpapi-codegen/src/index.ts"
+      ],
+      "accepted_limits": [
+        "Exact retry claim remains bounded to one live existing-Session normal-prompt owner; no reload/remount or exactly-once provider/tool guarantee.",
+        "Promise SSE frame ceiling removal is documented compatibility policy. No bounded-memory assurance.",
+        "Controlled fixtures and mocked descriptor seams are not proof of commercial provider behavior."
+      ],
+      "not_reviewed": [
+        "All generated Atlas bundles and all original65 paths",
+        "Every App/TUI rendering and persistence path",
+        "Every generic codegen endpoint"
+      ],
+      "patch_access": {
+        "enumerated": 756,
+        "missing_patches": 11,
+        "note": "Full API patch enumeration matched PR changed_files. Missing patches are large audit docs and generated Atlas JS; relevant source files were retrieved directly."
+      }
+    },
+    "new_confirmed_blockers": [],
+    "sessions_models": {
+      "reviewer": "session_model_review",
+      "source": "d99770c7c9c2a9cf0533d541c487fbf5d37bc12d",
+      "diffManifest": {
+        "head": "756edb7888f4c1b6931ce2968e21a224893bc5c5",
+        "mergeBase": "5804b4f794ba31f49890b79565cff62b65e37725",
+        "file": "review-context/diff-session.json"
+      },
+      "scope": "Leitura delimitada de admissão/retry/concorrência Session e ownership/cancelamento de modelos, com amostragem de testes e caminho LLM terminal/transporte. Não é nova auditoria65 nem revisão exaustiva.",
+      "conclusion": "Nenhum novo bloqueador confirmado na seleção. A qualificação global depende do epic final do root. Há risco de portabilidade do adapter WebSocket descrito separadamente.",
+      "inspected": [
+        {
+          "path": "packages/core/src/session/input.ts",
+          "sha": "ee37c2d692fb4d2e42b750ed98207bf5c198ec18",
+          "lines": 394,
+          "ranges": [
+            [
+              1,
+              393
+            ]
+          ],
+          "note": "Admissão, reconciliação histórica, id global, igualdade prompt+delivery, projeção/promoção e cutoff.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/src/session/input.ts"
+        },
+        {
+          "path": "packages/core/src/session.ts",
+          "sha": "60ddb9ef69647ad4707e9b3a9d3c7ddb8709f62d",
+          "lines": 820,
+          "ranges": [
+            [
+              1,
+              577
+            ],
+            [
+              631,
+              819
+            ]
+          ],
+          "note": "Interface, hooks, topo/closing, criação, remoção, prompt, exclusive/revert, shell/synthetic/generate/compact/resume e wiring global. Fork e início de move580–630 não revistos.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/src/session.ts"
+        },
+        {
+          "path": "packages/core/src/session/run-coordinator.ts",
+          "sha": "3cfc203b1aec833c94d115482aef48269da0782a",
+          "lines": 178,
+          "ranges": "full",
+          "note": "Owner process-local, waiter/joiner, pendingWake, owner-specific exclusive join, stop/discardPending e scope FiberSet.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/src/session/run-coordinator.ts"
+        },
+        {
+          "path": "packages/core/src/session/execution.ts",
+          "sha": "3ed950f9413ae75e7d4cacb0323a983097d37575",
+          "lines": 65,
+          "ranges": [
+            [
+              1,
+              64
+            ]
+          ],
+          "note": "Contrato global e recording-only seam.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/src/session/execution.ts"
+        },
+        {
+          "path": "packages/core/src/session/execution/local.ts",
+          "sha": "32064300b3f34fe88953413451bde82385d3501f",
+          "lines": 69,
+          "ranges": [
+            [
+              1,
+              68
+            ]
+          ],
+          "note": "Placement no começo do drain, missing explicit resume typed, advisory wake missing no-op, revert guard.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/src/session/execution/local.ts"
+        },
+        {
+          "path": "packages/core/src/session/lifecycle.ts",
+          "sha": "19773552f0896e097f7399b9d7c5a7f78ab47777",
+          "lines": 122,
+          "ranges": [
+            [
+              1,
+              121
+            ]
+          ],
+          "note": "withParent/withTree, recursive remove e stopped/exclusive.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/src/session/lifecycle.ts"
+        },
+        {
+          "path": "packages/core/src/event.ts",
+          "sha": "4c3d3bc780cfb3595617107d2ef8f53ca2b6cf99",
+          "lines": 748,
+          "ranges": [
+            [
+              149,
+              183
+            ],
+            [
+              207,
+              417
+            ]
+          ],
+          "note": "Commit/projectors no mesmo SQL transaction; beforeCommit; post-commit notifications após liberar lifecycle boundary. Restante EventV2 não auditado.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/src/event.ts"
+        },
+        {
+          "path": "packages/core/src/session/runner/llm.ts",
+          "sha": "44c44e4636e8cb8c4f55676985b547ebe0fdc644",
+          "lines": 762,
+          "ranges": [
+            [
+              61,
+              715
+            ]
+          ],
+          "note": "Fluxo central completo: promotion→eligibility→materialization→single stream; snapshot/tool fibers, governed calls, live steers, terminal accounting, interruption/cancel permissions/questions, continuation loop.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/src/session/runner/llm.ts"
+        },
+        {
+          "path": "packages/core/src/session/runner/auxiliary.ts",
+          "sha": "a5ac129253c2eac2b4cbebbe4c2fa42da53ec837",
+          "lines": 65,
+          "ranges": [
+            [
+              1,
+              64
+            ]
+          ],
+          "note": "Generate e compact usam real model resolver/LLM, sem recording de generate.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/src/session/runner/auxiliary.ts"
+        },
+        {
+          "path": "packages/core/src/session/runner/model.ts",
+          "sha": "45a93f905d5534453746d14c7cb36168d3b1b675",
+          "lines": 283,
+          "ranges": [
+            [
+              1,
+              282
+            ]
+          ],
+          "note": "Native resolver, catalog identity, explicit variants, policy ceilings, credentials e HTTP route lowering.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/src/session/runner/model.ts"
+        },
+        {
+          "path": "packages/core/src/model-execution.ts",
+          "sha": "0f225b5401a2785872c46e5b43683e61a6a33d72",
+          "lines": 223,
+          "ranges": [
+            [
+              1,
+              222
+            ]
+          ],
+          "note": "describe/assertHost eligibility e erros; nenhum provider prompt em descriptor.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/src/model-execution.ts"
+        },
+        {
+          "path": "packages/core/src/model-execution-options.ts",
+          "sha": "c84bb39da88778adc5b88174fc3219e8dcc917b6",
+          "lines": 118,
+          "ranges": [
+            [
+              1,
+              117
+            ]
+          ],
+          "note": "Literal variant vs omitted configured default; canonical options e overlay denylist.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/src/model-execution-options.ts"
+        },
+        {
+          "path": "packages/core/src/session/runner/execution-host.ts",
+          "sha": "b2f2eca3a120ad74c3f6372ce3c54e501567b659",
+          "lines": 237,
+          "ranges": [
+            [
+              13,
+              236
+            ]
+          ],
+          "note": "Turn ownership/API, notify que pode sobreviver ao turno, host registry/engine inheritance e persisted state.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/src/session/runner/execution-host.ts"
+        },
+        {
+          "path": "modules/engine-adapters/claude-code/src/v2/host.ts",
+          "sha": "1eaab660baca5e6be04ce5fd592d84ee7bfa5eb3",
+          "lines": 760,
+          "ranges": [
+            [
+              130,
+              193
+            ],
+            [
+              316,
+              557
+            ]
+          ],
+          "note": "Descriptor e finalização/steers/query handoff lidos; autorização/filesystem via patch e runner. Não leitura integral do SDK/processLifetime nem prova de binário Claude.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/modules/engine-adapters/claude-code/src/v2/host.ts"
+        },
+        {
+          "path": "packages/llm/src/route/client.ts",
+          "sha": "08aa652d33468480883cd73ba4f13bf80c091b3a",
+          "lines": 459,
+          "ranges": [
+            [
+              141,
+              458
+            ]
+          ],
+          "note": "Compile/streamPrepared, terminal finish/provider-error, interruption preserved, layer runtime e generate.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/llm/src/route/client.ts"
+        },
+        {
+          "path": "packages/llm/src/route/transport/http.ts",
+          "sha": "0c959b00f3fab8a49cf58ac04331a2f773434cc6",
+          "lines": 176,
+          "ranges": [
+            [
+              1,
+              175
+            ]
+          ],
+          "note": "Overlay denylist, idle timeout, response framing e mapped read errors.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/llm/src/route/transport/http.ts"
+        },
+        {
+          "path": "packages/llm/src/route/transport/websocket.ts",
+          "sha": "256537fa1734fe269493868e01068e78a85d9eb8",
+          "lines": 311,
+          "ranges": [
+            [
+              1,
+              310
+            ]
+          ],
+          "note": "waitOpen, bounded128 queue, terminal cause, close/finalizer, acquireRelease.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/llm/src/route/transport/websocket.ts"
+        },
+        {
+          "path": "packages/llm/test/transport-overflow.test.ts",
+          "sha": "84d724582411293338f4f0357ed1289a72bc06d7",
+          "lines": 115,
+          "ranges": [
+            [
+              1,
+              114
+            ]
+          ],
+          "note": "Real Bun129frame fail+code1011; race normal close;128frame all-preserved.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/llm/test/transport-overflow.test.ts"
+        },
+        {
+          "path": "packages/core/test/session-runner-stream-terminal.test.ts",
+          "sha": "b219d0d17385e78c0d36cba9e7debc7b1780cbde",
+          "lines": 293,
+          "ranges": [
+            [
+              1,
+              292
+            ]
+          ],
+          "note": "Real HTTP EOF/no terminal, replay partial text, already-settled local tool no retry, hosted pending tool error.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/test/session-runner-stream-terminal.test.ts"
+        },
+        {
+          "path": "packages/core/test/session-runner-stop.test.ts",
+          "sha": "9a62e7bc452443cbc592911b5d1b22c47ef62022",
+          "lines": 263,
+          "ranges": [
+            [
+              1,
+              262
+            ]
+          ],
+          "note": "Scripted stream+real runner: stop during local tool, normal finish, partial text, before output; exact terminal event counts/order.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/test/session-runner-stop.test.ts"
+        },
+        {
+          "path": "packages/core/test/session-run-coordinator-exclusive.test.ts",
+          "sha": "86c864eaf132614ec245ee1d5f9020bc44424edf",
+          "lines": 131,
+          "ranges": [
+            [
+              1,
+              130
+            ]
+          ],
+          "note": "Held exclusive successor wake and cleanup; barriers, exact forced flags/overlap.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/test/session-run-coordinator-exclusive.test.ts"
+        },
+        {
+          "path": "packages/core/test/session-run-coordinator.test.ts",
+          "sha": "d65f824c3cf0a783d70d02b303d03e6783e68b62",
+          "lines": 862,
+          "ranges": [
+            [
+              1,
+              81
+            ],
+            [
+              339,
+              413
+            ],
+            [
+              516,
+              704
+            ]
+          ],
+          "note": "Amostra: early interrupt before work; yield budgets; coalesced failure/interruption successor; starter cancellation vs joiner and successor. Outros casos inventariados por nomes.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/test/session-run-coordinator.test.ts"
+        },
+        {
+          "path": "packages/core/test/session-prompt.test.ts",
+          "sha": "b8db1c5aa16951e1a383432ad82eec05722bcb07",
+          "lines": 727,
+          "ranges": [
+            [
+              1,
+              549
+            ],
+            [
+              670,
+              726
+            ]
+          ],
+          "note": "Real DB/Event/projector with execution seam: exact/different/cross-session retries, concurrent admission/promotion, cutoff/replay, staged undo contention.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/test/session-prompt.test.ts"
+        },
+        {
+          "path": "packages/core/test/session-removal-admission.test.ts",
+          "sha": "093e50f215fcf1d1fbaa6b9bf4d82814a7ef48f3",
+          "lines": 620,
+          "ranges": [
+            [
+              115,
+              205
+            ],
+            [
+              265,
+              354
+            ],
+            [
+              413,
+              480
+            ]
+          ],
+          "note": "Amostra de child race/orphan/adoption, cancellation retains closing, missing-row resume before placement; fixture decora boundaries reais.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/test/session-removal-admission.test.ts"
+        },
+        {
+          "path": "packages/core/test/session-revert-concurrency.test.ts",
+          "sha": "b66327184df4f683b07835360228a38cbf8f2dd3",
+          "lines": 311,
+          "ranges": [
+            [
+              115,
+              199
+            ]
+          ],
+          "note": "Amostra caller detach vs explicit owner stop com held store boundary.",
+          "url": "https://github.com/gustavomhss/hugr-orchestra/blob/d99770c7c9c2a9cf0533d541c487fbf5d37bc12d/packages/core/test/session-revert-concurrency.test.ts"
+        }
+      ],
+      "patchesAdditionallyInspected": [
+        "packages/core/src/session/resolve-prompt.ts",
+        "packages/core/src/session/projector.ts",
+        "packages/core/src/session/runner/step-tools.ts",
+        "packages/core/test/session-runner-model.test.ts"
+      ],
+      "callersReviewed": [
+        "SessionV2.prompt → EventV2.transact/SessionInput.admit → durable SQL projection → SessionExecution.wake",
+        "SessionExecutionLocal → SessionRunCoordinator → LocationServiceMap → SessionRunner.run",
+        "SessionV2 create/remove/revert → topology/closing + lifecycle locks/exclusive owner",
+        "SessionRunner provider turn → ModelExecution.assertHost or SessionRunnerModel.resolve → LLMClient.stream or ExecutionHost.stream",
+        "LLMClient route stream → HTTP/WebSocket framing → normalized terminal/error → durable runner projection",
+        "Core app-node-platform.ts supplies HTTP RequestExecutor+LLMClient; default catalog resolver constructs HTTP routes.",
+        "SDK-next package.json/README/src/index.ts reviewed as entrypoints; no direct LLM/WS export. No global caller absence claimed."
+      ],
+      "evidenceAssessment": [
+        "input.equivalent compares Session/prompt/delivery; promptContext is server hook output and is intentionally retained from existing durable retry.",
+        "Prompt admission transaction keeps staged-revert commit and replacement admission atomic; exact retries precede staged-history mutation.",
+        "Coordinator exclusive joins its captured owner, while pending wake can reuse the entry; tests assert exclusive returns before held successor completes.",
+        "Explicit interruption joins owner cleanup; joiner cancellation cannot steal ownership. Process-local boundary is explicit.",
+        "The terminal stream tests retain exact request/tool counts and replay assertions; no weakened oracle identified in the inspected selection.",
+        "Changed native model test shifts rejection earlier to typed ModelUnavailableError; canonical generation moved out of forbidden raw body while expectations remain concrete."
+      ],
+      "plausibleRisk": [
+        {
+          "classification": "Risco plausível de uso do adapter exportado; não bloqueador produtivo confirmado nesta leitura",
+          "path": "packages/llm/src/route/transport/websocket.ts",
+          "lines": [
+            152,
+            180,
+            232
+          ],
+          "scenario": "Chamar fromWebSocket com WebSocket WHATWG/Node e exceder fila128. close(1011) pode lançar; closing=true é gravado antes e finalizer close(1000) então retorna cedo.",
+          "observed": "Código e tipo exportado confirmam o fluxo condicional; teste real existente é Bun e exige1011. Não houve execução Node deste cenário nesta sessão.",
+          "reach": "LLM é private:true com exports internos. Core default não registra WS e resolver só produz HTTP. Busca finita SDK/entrypoints não identificou caller Node produtivo; MCP search falhou em retornar inclusive símbolos conhecidos, tree recursiva falhou Transport closed. Não equivale a prova de ausência global.",
+          "decision": "Sem fix novo/campanha Node por instrução root; explicitar limite da qualificação Bun."
+        }
+      ],
+      "documentedLimits": [
+        "AGENTS e remediation-status L1/L8 limitam ownership ao processo, sem clustered execution/provider crash recovery ou cross-store atomicity.",
+        "Caller cancellation de revert apenas destaca waiter; holder interruption pode deixar filesystem/SQL parcialmente aplicados e depende retry exato.",
+        "Claude binary real/hostile symlink swap não qualificados pelo escopo conhecido; esta leitura não amplia essa garantia.",
+        "Nenhum teste local executado. Esta etapa é source review; gate Git/racy separado possui prova CI hospedada."
+      ],
+      "notReviewed": [
+        "Todos os65 achados ou todas as linhas do diff.",
+        "Session fork e início move; todos os testes/fixtures de Session; coleção integral de provider protocols/cassettes.",
+        "HTTP cancellation middleware/API consumers App/Protocol/Client/Server são responsabilidade root.",
+        "SDK Claude processLifetime completo, binário/provedor externo, reinício de processo real ou execução distribuída.",
+        "Testes Node do adapter WebSocket; performance/heap/hardware."
+      ],
+      "instructionsRead": [
+        "Root AGENTS.md",
+        "packages/llm/AGENTS.md",
+        "remediation-status.json relevant L1/L8 remaining limits"
+      ],
+      "generatedTests": false,
+      "localTests": false
+    }
+  },
+  "guide_path_fix": {
+    "commit": "959bc81f8fbb21084dd9fe536b9db9b51344c2d6",
+    "path": "modules/maestro/coordination/test/v2-guide.test.ts",
+    "blob": "b30fc5d4a0f5dae6ba3bbc46990a833297627a37",
+    "change": "Normalize discovered identifiers with slash after native directory discovery. All five original coverage assertions remain.",
+    "qualification_run": 43527267379
+  },
+  "source_identity": {
+    "qualified_source": "5cc0ccf1eec27b3ec3879aa9ad459ea28f4894b5",
+    "qualified_tree": "40f7f8144dcc59fa1ca266a1c9466fd7c390a234",
+    "clean_source": "959bc81f8fbb21084dd9fe536b9db9b51344c2d6",
+    "clean_tree": "d3c8ff5250898b83fb48801b833093bf35f68a51",
+    "method": "Git tree identity, descending only differing subtrees; all fetches untruncated",
+    "differences": [
+      {
+        "path": ".ci-run.json",
+        "qualified": "b0d0c196d80dca85de6a35521466ee30cd3f1c7c",
+        "final": null
+      },
+      {
+        "path": ".github/workflows/test-ci.yml",
+        "qualified": "9562dbbf19e0df2a8895b91ba92f4ae1add0a855",
+        "final": "5a150416421cff3b3f4886fc6304568d259256ba"
+      }
+    ],
+    "all_other_paths_identical": true,
+    "planner_message_note": "Qualified snapshots use d99770c7c9c2a9cf0533d541c487fbf5d37bc12d; clean history uses 041c2911138674a4e26e56b0d6aa970da1ee9545 with identical tree and parent, changing only commit subject to an allowed conventional type."
+  },
+  "clean_commits": {
+    "scope": "9bac70a36c8c44367af78896637a13f7681e979a",
+    "integration": "bf6a76dd5689596f7f73caae2aa3a1e296c70bbc",
+    "writer": "21ba7dc1f9f03b618e47e6f5ffe63aa2e68004b1",
+    "writerTree": "4325fafb50a6a39a8caa09b1ce99d5a1bdb3959f",
+    "tui": "a54bea022327e9f0b7797cf86008d066b659e878",
+    "tree": "d3c8ff5250898b83fb48801b833093bf35f68a51",
+    "maestro": "4e610d4bcce67927be87713ea2007b69cec6ede7",
+    "maestroWindows": "8e89fe85bf7767b146ade0c34b855452d7b7209f",
+    "planner": "041c2911138674a4e26e56b0d6aa970da1ee9545",
+    "plannerQualifiedSnapshotParent": "d99770c7c9c2a9cf0533d541c487fbf5d37bc12d",
+    "plannerMessageNote": "Same parent and identical cb25875 tree; subject uses AGENTS-approved chore type.",
+    "racyGit": "8e846a62d17815a19b1e5a2f5a553003e0e1f914",
+    "racyGitTree": "55c8285943e8d624e8b733179d1706d8adaa5a11",
+    "guide": "959bc81f8fbb21084dd9fe536b9db9b51344c2d6"
+  },
+  "final_composed_gate": {
+    "status": "required_after_publication",
+    "expected_jobs": 75,
+    "rerun_policy": "Do not rerun failed jobs blindly; retain original result and investigate source-specific failures.",
+    "scope": "Normal cache-aware full CI, not a cold execution; actual source, cache behavior and final result must be recorded separately."
+  }
+}

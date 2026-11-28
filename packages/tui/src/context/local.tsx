@@ -1,6 +1,7 @@
 import { createStore } from "solid-js/store"
 import { createSimpleContext } from "./helper"
-import { batch, createEffect, createMemo } from "solid-js"
+import { batch, createComputed, createEffect, createMemo, onCleanup, untrack } from "solid-js"
+import { makeModelExecutionQuery, type ModelExecutionState } from "@orchestra/client"
 import { useSync } from "./sync"
 import { useEvent } from "./event"
 import path from "path"
@@ -14,6 +15,24 @@ import { useToast } from "../ui/toast"
 import { useRoute } from "./route"
 import { usePermission } from "./permission"
 import { agentKey } from "../util/agent"
+import type { ModelExecution } from "@orchestra/schema/model-execution"
+
+export function modelExecutionReason(reason?: ModelExecution.Reason) {
+  if (!reason) return "This model is unavailable for this session. Choose an available model or try again."
+  return {
+    "model-missing": "Model is no longer available",
+    "model-disabled": "Model is disabled",
+    "connection-unavailable": "Connect this provider to use the model",
+    "model-denied": "Model is not allowed for this session",
+    "unsupported-api": "Model is not supported by this engine",
+    "invalid-options": "Model settings are invalid",
+    "variant-unavailable": "Selected variant is unavailable",
+    "host-unregistered": "Selected engine is not installed",
+    "host-unavailable": "Selected engine is unavailable",
+    "host-model-unsupported": "Model is not supported by this engine",
+    "host-options-unsupported": "Selected settings are not supported by this engine",
+  }[reason]
+}
 
 export type LocalTheme = {
   secondary: RGBA
@@ -62,17 +81,40 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
     const event = useEvent()
     const permission = usePermission()
 
+    const persistence = {
+      bootstrap: [] as Promise<void>[],
+      pending: new Set<Promise<void>>(),
+      failure: undefined as { error: unknown } | undefined,
+    }
+
+    function observeBootstrap(bootstrap: Promise<void>) {
+      persistence.bootstrap.push(bootstrap)
+      void bootstrap.catch((error: unknown) => {
+        persistence.failure ??= { error }
+        console.error("Failed to initialize Local state", { error })
+      })
+    }
+
+    function observeWrite(write: Promise<void>) {
+      const observed = write.then(() => undefined, (error: unknown) => {
+        persistence.failure ??= { error }
+        console.error("Failed to write Local state", { error })
+      }).finally(() => { persistence.pending.delete(observed) })
+      persistence.pending.add(observed)
+    }
+
+    async function flush() {
+      // Bootstrap finalizers can admit a pending preference write after owner disposal.
+      const bootstrap = await Promise.allSettled(persistence.bootstrap)
+      while (persistence.pending.size > 0) await Promise.allSettled(persistence.pending)
+      if (persistence.failure) throw persistence.failure.error
+      const failed = bootstrap.find((result) => result.status === "rejected")
+      if (failed?.status === "rejected") throw failed.reason
+    }
+
     function isModelValid(model: { providerID: string; modelID: string }) {
       const provider = sync.data.provider.find((item) => item.id === model.providerID)
       return !!provider?.models[model.modelID]
-    }
-
-    function getFirstValidModel(...modelFns: (() => { providerID: string; modelID: string } | undefined)[]) {
-      for (const modelFn of modelFns) {
-        const model = modelFn()
-        if (!model) continue
-        if (isModelValid(model)) return model
-      }
     }
 
     function createAgent() {
@@ -154,12 +196,14 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           modelID: string
         }[]
         variant: Record<string, string | undefined>
+        variantIntent: Record<string, string | null>
       }>({
         ready: false,
         model: {},
         recent: [],
         favorite: [],
         variant: {},
+        variantIntent: {},
       })
 
       const filePath = path.join(paths.state, "model.json")
@@ -173,14 +217,15 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           return
         }
         state.pending = false
-        void writeJsonAtomic(filePath, {
+        observeWrite(writeJsonAtomic(filePath, {
           recent: modelStore.recent,
           favorite: modelStore.favorite,
           variant: modelStore.variant,
-        })
+          variantIntent: modelStore.variantIntent,
+        }))
       }
 
-      readJson<unknown>(filePath)
+      observeBootstrap(readJson<unknown>(filePath)
         .then((x) => {
           if (!x || typeof x !== "object") return
           const value = x as Record<string, unknown>
@@ -188,38 +233,27 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           if (Array.isArray(value.favorite)) setModelStore("favorite", value.favorite)
           if (typeof value.variant === "object" && value.variant !== null)
             setModelStore("variant", value.variant as Record<string, string | undefined>)
+          if (typeof value.variantIntent === "object" && value.variantIntent !== null && !Array.isArray(value.variantIntent))
+            setModelStore("variantIntent", { ...Object.fromEntries(Object.entries(value.variantIntent).flatMap(([key, entry]) =>
+              typeof entry === "string" || entry === null ? [[key, entry] as const] : [])), ...modelStore.variantIntent })
         })
         .catch(() => {})
         .finally(() => {
           setModelStore("ready", true)
           if (state.pending) save()
-        })
+        }))
 
       const fallbackModel = createMemo(() => {
         if (args.model) {
-          const { providerID, modelID } = parseModel(args.model)
-          if (isModelValid({ providerID, modelID })) {
-            return {
-              providerID,
-              modelID,
-            }
-          }
+          return parseModel(args.model)
         }
 
         if (sync.data.config.model) {
-          const { providerID, modelID } = parseModel(sync.data.config.model)
-          if (isModelValid({ providerID, modelID })) {
-            return {
-              providerID,
-              modelID,
-            }
-          }
+          return parseModel(sync.data.config.model)
         }
 
         for (const item of modelStore.recent) {
-          if (isModelValid(item)) {
-            return item
-          }
+          return item
         }
 
         const provider = sync.data.provider[0]
@@ -234,18 +268,111 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         }
       })
 
-      const currentModel = createMemo(() => {
+      const chosen = () => {
         const a = agent.current()
-        return (
-          getFirstValidModel(
-            () => a && modelStore.model[agentKey(a)],
-            () => a && a.model,
-            fallbackModel,
-          ) ?? undefined
-        )
+        return (a && modelStore.model[agentKey(a)]) ?? (args.model ? parseModel(args.model) : undefined)
+      }
+      const candidate = () => chosen() ?? agent.current()?.model ?? fallbackModel()
+      const intent = () => {
+        const keyModel = chosen() ?? candidate()
+        const key = keyModel && `${keyModel.providerID}/${keyModel.modelID}`
+        const variant = key && key in modelStore.variantIntent ? modelStore.variantIntent[key]
+          : key ? modelStore.variant[key] : undefined
+        return { model: chosen(), variant }
+      }
+      const [view, setView] = createStore<{ value: ModelExecutionState }>({ value: { status: "idle" } })
+      const context = createMemo(() => JSON.stringify({ agents: sync.data.agent, config: sync.data.config,
+        provider: sync.data.provider, providerDefault: sync.data.provider_default, providerNext: sync.data.provider_next,
+        catalogRevision: sync.data.catalogRevision, semanticEpoch: sdk.modelExecutionEpoch() }))
+      const owner = createMemo(() => {
+        const model = candidate()
+        const a = agent.current()
+        const raw = intent()
+        const variant = typeof raw.variant === "string" ? raw.variant : raw.variant === null ? undefined
+          : model && a?.model?.providerID === model.providerID && a.model.modelID === model.modelID && a.variant !== undefined
+            ? a.variant : undefined
+        const sessionID = route.data.type === "session" ? route.data.sessionID : undefined
+        const binding = sdk.binding()
+        const request = { location: { directory: sdk.directory },
+          context: sessionID ? { type: "session" as const, sessionID, agentID: a && agentKey(a) }
+            : { type: "draft" as const, agentID: a && agentKey(a) },
+          model: model ? { providerID: model.providerID, id: model.modelID, variant: variant ?? undefined } : undefined }
+        return { key: JSON.stringify({ request, raw, context: context(), url: binding.url, directory: binding.directory,
+          headers: [...new Headers(binding.headers).entries()] }), fetch: binding.fetch,
+          epoch: sdk.connectionEpoch(), request }
+      }, undefined, { equals: (a, b) => !!a && a.key === b.key && a.epoch === b.epoch && a.fetch === b.fetch })
+      let readyOwner: ReturnType<typeof owner> | undefined
+      createEffect(() => {
+        if (!modelStore.ready || !sdk.binding().active) return
+        const selected = chosen() ?? candidate()
+        if (!selected) return
+        const key = `${selected.providerID}/${selected.modelID}`
+        if (key in modelStore.variantIntent || modelStore.variant[key] !== "default") return
+        const canonical = view.value
+        const assessed = canonical.status === "ready" && readyOwner === owner() ? canonical.response.data.models.find((entry) =>
+          entry.model.providerID === selected.providerID && entry.model.id === selected.modelID)?.model : undefined
+        const metadata = sync.data.provider.find((provider) => provider.id === selected.providerID)?.models[selected.modelID]
+        if (!assessed && !metadata) return
+        const named = assessed ? assessed.variants.some((variant) => variant.id === "default") : !!metadata?.variants && "default" in metadata.variants
+        setModelStore("variantIntent", key, named ? "default" : null)
+        save()
+      })
+      const lifetime = { disposed: false }
+      const executionQuery = makeModelExecutionQuery({ execute: async (input, options) => {
+        const captured = owner()
+        if (!sdk.binding().active) throw new DOMException("", "AbortError")
+        const response = await sdk.api.models.execution(input, options)
+        if (owner() !== captured || !sdk.binding().active) throw new DOMException("", "AbortError")
+        return response
+      },
+        changed: (value) => { readyOwner = value.status === "ready" ? owner() : undefined; setView("value", value) } })
+      createComputed(() => {
+        const captured = owner()
+        const ready = modelStore.ready
+        untrack(() => {
+          if (!ready || !captured.request.model) { executionQuery.invalidate(); return }
+          void executionQuery.load(captured, captured.request)
+        })
+      })
+      onCleanup(() => { lifetime.disposed = true; executionQuery.dispose() })
+      const execution = {
+        context,
+        read: () => lifetime.disposed ? executionQuery.read() : view.value,
+        input: () => owner().request,
+        allows(model: { providerID: string; modelID: string }) {
+          const value = view.value
+          if (lifetime.disposed || value.status !== "ready" || readyOwner !== owner()) return false
+          const requested = owner().request.model
+          const selection = value.response.data.selection
+          if (requested?.providerID === model.providerID && requested.id === model.modelID &&
+            (selection?.status !== "ready" || selection.ref.providerID !== requested.providerID ||
+              selection.ref.id !== requested.id || selection.ref.variant !== requested.variant)) return false
+          return value.response.data.models.some((entry) => entry.model.providerID === model.providerID && entry.model.id === model.modelID && entry.status === "ready")
+        },
+      }
+      const known = new Map<string, { title: string; provider: string }>()
+      createEffect(() => {
+        const selected = candidate()
+        if (!selected) return
+        const provider = sync.data.provider.find((item) => item.id === selected.providerID)
+        const model = provider?.models[selected.modelID]
+        if (provider && model) known.set(JSON.stringify([provider.id, model.id]), { title: model.name ?? model.id, provider: provider.name })
+      })
+      const currentModel = createMemo(() => {
+        const explicit = chosen()
+        if (explicit) return explicit
+        const value = view.value
+        if (value.status !== "ready" || readyOwner !== owner()) return
+        const selection = value.response.data.selection
+        const requested = owner().request.model
+        return selection?.status === "ready" && selection.ref.providerID === requested?.providerID &&
+          selection.ref.id === requested?.id && selection.ref.variant === requested?.variant ? candidate() : undefined
       })
 
       return {
+        intent,
+        execution,
+        known: (model: { providerID: string; modelID: string }) => known.get(JSON.stringify([model.providerID, model.modelID])),
         current: currentModel,
         get ready() {
           return modelStore.ready
@@ -269,7 +396,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           const info = provider?.models[value.modelID]
           return {
             provider: provider?.name ?? value.providerID,
-            model: info?.name ?? value.modelID,
+            model: info?.name ?? known.get(JSON.stringify([value.providerID, value.modelID]))?.title ?? value.modelID,
             reasoning: info?.capabilities?.reasoning ?? false,
           }
         }),
@@ -284,6 +411,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           if (next >= recent.length) next = 0
           const val = recent[next]
           if (!val) return
+          if (!execution.allows(val)) return
           const a = agent.current()
           if (!a) return
           setModelStore("model", agentKey(a), { ...val })
@@ -312,6 +440,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           }
           const next = favorites[index]
           if (!next) return
+          if (!execution.allows(next)) return
           const a = agent.current()
           if (!a) return
           setModelStore("model", agentKey(a), { ...next })
@@ -362,19 +491,13 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         },
         variant: {
           selected() {
-            const m = currentModel()
-            if (!m) return undefined
-            const key = `${m.providerID}/${m.modelID}`
-            return modelStore.variant[key]
+            return intent().variant
           },
           current() {
-            const v = this.selected()
-            if (!v) return undefined
-            if (!this.list().includes(v)) return undefined
-            return v
+            return owner().request.model?.variant
           },
           list() {
-            const m = currentModel()
+            const m = chosen() ?? candidate()
             if (!m) return []
             const provider = sync.data.provider.find((item) => item.id === m.providerID)
             const info = provider?.models[m.modelID]
@@ -382,10 +505,10 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
             return Object.keys(info.variants)
           },
           set(value: string | undefined) {
-            const m = currentModel()
+            const m = chosen() ?? candidate()
             if (!m) return
             const key = `${m.providerID}/${m.modelID}`
-            setModelStore("variant", key, value ?? "default")
+            setModelStore("variantIntent", key, value === undefined ? null : value)
             save()
           },
           cycle() {
@@ -429,12 +552,12 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
           return
         }
         state.pending = false
-        void writeJsonAtomic(filePath, {
+        observeWrite(writeJsonAtomic(filePath, {
           pinned: sessionStore.pinned,
-        })
+        }))
       }
 
-      readJson<unknown>(filePath)
+      observeBootstrap(readJson<unknown>(filePath)
         .then((x) => {
           if (!x || typeof x !== "object") return
           const pinned = (x as Record<string, unknown>).pinned
@@ -448,7 +571,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
         .finally(() => {
           setSessionStore("ready", true)
           if (state.pending) save()
-        })
+        }))
 
       const slots = createMemo(() => {
         const existing = new Set(sync.data.session.filter((x) => x.parentID === undefined).map((x) => x.id))
@@ -532,6 +655,7 @@ export const { use: useLocal, provider: LocalProvider } = createSimpleContext({
     })
 
     const result = {
+      flush,
       model,
       agent,
       mcp,

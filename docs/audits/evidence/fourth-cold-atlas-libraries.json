@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "scope": "Fourth cold assigned Atlas and libraries lanes only",
+  "run": 43492035272,
+  "url": "https://github.com/gustavomhss/hugr-orchestra/actions/runs/43492035272",
+  "source": "46530d548a6a7713231d9f30bc9bd1bc0321c01f",
+  "request": {"allPackages": true, "cold": true, "windowsE2E": false},
+  "atlas": {
+    "job": 132115660130, "conclusion": "success",
+    "typecheck": "pass", "guardsPassed": 13, "dedicatedOwnTestsPassed": 18,
+    "ownSnapshot": {"freshGenesisUnits": 1, "staticOwnFiles": 2},
+    "vitest": {"passed": 4529, "skipped": 17, "todo": 3, "failed": 0, "filesPassed": 589, "filesSkipped": 2},
+    "platform": "linux"
+  },
+  "libraries": {
+    "linux": {
+      "job": 132116387581, "conclusion": "success", "successfulTurboTasks": 11,
+      "totals": {"passed": 1849, "skipped": 31, "failed": 0, "assertions": 9224, "files": 144},
+      "actualBunTasks": [
+        {"task": "@orchestra/effect-drizzle-sqlite:test", "passed": 22, "skipped": 0, "failed": 0, "assertions": 258, "files": 2},
+        {"task": "@orchestra/httpapi-codegen:test", "passed": 139, "skipped": 0, "failed": 0, "assertions": 800, "files": 8},
+        {"task": "@orchestra/codemode:test", "passed": 419, "skipped": 0, "failed": 0, "assertions": 1420, "files": 12},
+        {"task": "@orchestra/http-recorder:test", "passed": 33, "skipped": 0, "failed": 0, "assertions": 52, "files": 1},
+        {"task": "@orchestra/ui:test", "passed": 27, "skipped": 0, "failed": 0, "assertions": 38, "files": 4},
+        {"task": "@orchestra/schema:test", "passed": 141, "skipped": 0, "failed": 0, "assertions": 1108, "files": 11},
+        {"task": "@orchestra/llm:test", "passed": 370, "skipped": 30, "failed": 0, "assertions": 960, "files": 36},
+        {"task": "@orchestra/script:test", "passed": 318, "skipped": 0, "failed": 0, "assertions": 1444, "files": 27},
+        {"task": "@orchestra/maestro-arsenal:test", "passed": 150, "skipped": 1, "failed": 0, "assertions": 1668, "files": 22},
+        {"task": "@orchestra/protocol:test", "passed": 31, "skipped": 0, "failed": 0, "assertions": 425, "files": 3},
+        {"task": "@orchestra/engine-claude-code:test", "passed": 199, "skipped": 0, "failed": 0, "assertions": 1051, "files": 18}
+      ]
+    },
+    "windows": {
+      "job": 132116392764, "conclusion": "success", "successfulTurboTasks": 9,
+      "totals": {"passed": 1382, "skipped": 41, "failed": 0, "assertions": 6951, "files": 109},
+      "actualBunTasks": [
+        {"task": "@orchestra/schema:test", "passed": 141, "skipped": 0, "failed": 0, "assertions": 1108, "files": 11},
+        {"task": "@orchestra/effect-drizzle-sqlite:test", "passed": 22, "skipped": 0, "failed": 0, "assertions": 258, "files": 2},
+        {"task": "@orchestra/ui:test", "passed": 27, "skipped": 0, "failed": 0, "assertions": 38, "files": 4},
+        {"task": "@orchestra/http-recorder:test", "passed": 33, "skipped": 0, "failed": 0, "assertions": 52, "files": 1},
+        {"task": "@orchestra/codemode:test", "passed": 419, "skipped": 0, "failed": 0, "assertions": 1420, "files": 12},
+        {"task": "@orchestra/protocol:test", "passed": 31, "skipped": 0, "failed": 0, "assertions": 425, "files": 3},
+        {"task": "@orchestra/maestro-arsenal:test", "passed": 150, "skipped": 1, "failed": 0, "assertions": 1652, "files": 22},
+        {"task": "@orchestra/llm:test", "passed": 370, "skipped": 30, "failed": 0, "assertions": 960, "files": 36},
+        {"task": "@orchestra/engine-claude-code:test", "passed": 189, "skipped": 10, "failed": 0, "assertions": 1038, "files": 18}
+      ]
+    }
+  },
+  "omniAttribution": {
+    "owner": "@orchestra/maestro-arsenal:test",
+    "linux": {"verdict": "pass", "mode": "suite", "ownSpawns": 2, "delegated": 0},
+    "windows": {"verdict": "pass", "mode": "suite", "ownSpawns": 2, "delegated": 0},
+    "limit": "These receipts belong only to Arsenal; no borrowed Omni verdict for Claude, CodeMode or other tasks."
+  },
+  "rawLogSha256": {"atlas": "10692b825c7fda6d4dc1bf760a71eeb156cf1f3476227ef3643adf23275d45d4", "libraries-linux": "2f6c4ec083eb1034250f9a65fd6910e8d256a885e597f98316eb4f8a65b98184", "libraries-windows": "b4d1cbc7b073b7bfb55b05c1dfed480d4a2aaa9ee30211c4c8a341ff666d0677"},
+  "limits": [
+    "Counts come from executed Bun task summaries, not the Turbo scope listing.",
+    "Windows has nine actual tasks; Linux additionally executes script and httpapi-codegen.",
+    "Claude Windows reports ten skips; CodeMode executes 419 passing tests on each OS.",
+    "No separate invented seat-name coverage label is inferred from checkout branch literals.",
+    "Atlas case-folding filesystem control explicitly reports NOT COVERED on Linux /tmp.",
+    "No whole-tree current-byte equality or other package result is claimed.",
+    "Overall run was still in progress at final assigned-lane API observation; this document does not assert full-run success.",
+    "No ledger closure, local tests, typecheck, generation, dispatch, rerun or source edits were performed for this evidence."
+  ]
+}

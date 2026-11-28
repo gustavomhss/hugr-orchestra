@@ -1,6 +1,7 @@
 import { createEffect, createMemo, createRoot, createSignal, onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { LiveHotkey, LiveReadiness, LiveRunState, LiveSeatPlatform, LiveSource } from "@/context/platform"
+import type { LiveRecoveryPort, LiveRecoverySnapshot } from "@/live"
 import { usePlatform } from "@/context/platform"
 import { useLanguage } from "@/context/language"
 import { showToast } from "@/utils/toast"
@@ -38,6 +39,17 @@ function create(seat: () => LiveSeatPlatform | undefined, t: ReturnType<typeof u
     stopBusy: false,
   })
   const [now, setNow] = createSignal(Date.now())
+  const [recovery, setRecoveryValue] = createSignal<LiveRecoverySnapshot>()
+  const recoveryOwner = { port: undefined as LiveRecoveryPort | undefined }
+  const setRecovery = (value: LiveRecoverySnapshot | undefined, port = seat()?.recovery) => {
+    if (seat()?.recovery !== port) return
+    recoveryOwner.port = port
+    setRecoveryValue(value)
+  }
+  const canStart = () => {
+    const port = seat()?.recovery
+    return !port || (recoveryOwner.port === port && recovery()?.state === "ready" && recovery()?.canStart === true)
+  }
   let protectionRead = 0
   let hotkeyRead = 0
   let renameWrite = 0
@@ -153,7 +165,9 @@ function create(seat: () => LiveSeatPlatform | undefined, t: ReturnType<typeof u
     showToast({
       variant: "error",
       title: t("live.start.failed"),
-      description: t(`live.start.reason.${reason}` as "live.start.reason.server"),
+      description: reason === "storage" ? t("orchestra.flightEngineer.recovery.storage")
+        : reason === "unavailable" ? t("orchestra.flightEngineer.recovery.unavailable")
+          : t(`live.start.reason.${reason}` as "live.start.reason.server"),
     })
 
   return {
@@ -161,20 +175,41 @@ function create(seat: () => LiveSeatPlatform | undefined, t: ReturnType<typeof u
     elapsed,
     available: () => seat() !== undefined,
     seat,
+    canStart,
+    setRecovery,
     readiness,
     hotkeys,
     setProtection: (value: boolean) => setStore("protection", value),
     // Consent is asked at every start, with no remembered answer.
-    requestStart: () => setStore("dialog", "consent"),
+    requestStart: () => {
+      if (store.starting) return
+      if (!canStart()) return fail("unavailable")
+      setStore("dialog", "consent")
+    },
     showPermissions,
     closeDialog: () => setStore({ dialog: "none", waiting: false }),
     async start(options: StartOptions) {
       const current = seat()
       if (!current || store.starting) return
       setStore("starting", true)
+      const port = current.recovery
+      if (port) {
+        const value = await Promise.resolve().then(() => port.snapshot()).catch(() => undefined)
+        if (seat() !== current || current.recovery !== port) {
+          setStore("starting", false)
+          return
+        }
+        setRecovery(value, port)
+        if (!value || value.state !== "ready" || !value.canStart) {
+          setStore({ starting: false, dialog: "none" })
+          fail(value?.state === "storage-error" ? "storage" : "unavailable")
+          return
+        }
+      }
       const start: StartWith = current.start.bind(current)
       const result = await start(undefined, options).catch(() => ({ ok: false, reason: "server" }) as const)
       setStore("starting", false)
+      if (seat() !== current) return
       if (result.ok) return setStore("dialog", "none")
       if (result.reason === "permission") return showPermissions()
       setStore("dialog", "none")

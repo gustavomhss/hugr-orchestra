@@ -118,6 +118,7 @@ per-entry cap. Append-only: a later entry **supersedes by link**, never by rewri
 .atlas/
   project/orientation.jsonl          shared Orientation events
   project/review.jsonl               shared review log (holds, proposals, decisions, answers)
+  project/memory-decisions/<proposalHash>.jsonl  one immutable joint Memory/review decision
   members/<seat>/memory/project.jsonl            the seat's project rules
   members/<seat>/memory/logbook.jsonl            logbook entries
   members/<seat>/memory/task/<taskId>.jsonl      one file per task
@@ -126,11 +127,33 @@ per-entry cap. Append-only: a later entry **supersedes by link**, never by rewri
   blobs/<h[0:2]>/<h>                             the CAS bytes each knowledge row names
 ```
 
-A file name is a shard hint, never identity: the fold is content-keyed over every file, and the legacy
+A file name in an append log is a shard hint, never identity: the fold is content-keyed over every file, and the legacy
 single files (`.atlas/memory.jsonl`, `orientation.jsonl`, `review.jsonl`) are still read first.
-`atlas migrate-layout` moves their lines into the tree byte for byte, so every event keeps its id. Every
-`.atlas/**/*.jsonl` merges by union (root `.gitattributes`); splitting by seat and task makes two
-branches rarely touch the same file at all.
+`atlas migrate-layout` moves their lines into the tree byte for byte, so every event keeps its id. Ordinary
+`.atlas/**/*.jsonl` append logs merge by union; splitting by seat and task makes two branches rarely touch
+the same file. Both the root and module `.gitattributes` override that driver for
+`.atlas/project/memory-decisions/*.jsonl`: receipts use normal text merge, so divergent decisions on the
+same proposal conflict rather than being unioned into two winners.
+
+### Joint project-rule decisions
+
+`layout.ts` names the receipt directory through `memoryDecisionsDir(repoPath)`. A new project-rule decision
+creates one receipt at `.atlas/project/memory-decisions/<proposalHash>.jsonl`, where the filename is the
+raw review proposal's content hash. `native-memory.ts` prepares an indexed candidate through the actual
+Memory emit gates as the proposal's member, then publishes the receipt once, without a second Memory or
+review append. A discarded receipt closes the proposal without a Memory record.
+
+`memory-decision-receipts.ts` is the shared validation boundary for `memory-store.ts` and `review-log.ts`.
+It checks the receipt against the actual raw proposal and validates its decision, indexed record and
+reference together. A malformed or conflicting receipt contributes neither half. `readReview` includes
+validated receipt decisions; reading only the raw review append log misses these new decisions.
+
+The first valid receipt wins. A retry with the same intent returns its original decision id and, for
+indexing, the exact Memory reference, including after restart, without rerunning scanner or cap admission.
+Conflicting intent is refused. Unknown or unreadable review/receipt state still refuses a retry; it is not
+bypassed by an existing winner. Legacy Memory records and review decisions remain readable unchanged:
+no receipt is inferred for an old entry, and an apparent orphan is neither deleted nor retroactively
+certified. This validation does not authenticate the writer or change the deferred signed-commit policy.
 
 The CAS (`cas/`) and the projection stay local. What travels for Knowledge is each door's outcome: one line per
 row a settled commit produced or changed, under the seat that wrote it, plus a copy of the row's CAS object under

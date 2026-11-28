@@ -20,6 +20,7 @@
     "./middleware/capability-authorization": "./src/middleware/capability-authorization.ts",
     "./middleware/schema-error": "./src/middleware/schema-error.ts",
     "./middleware/session-location": "./src/middleware/session-location.ts",
+    "./node-server": "./src/node-server.ts",
     "./operator": "./src/operator.ts",
     "./principal": "./src/principal.ts",
     "./routes": "./src/routes.ts",

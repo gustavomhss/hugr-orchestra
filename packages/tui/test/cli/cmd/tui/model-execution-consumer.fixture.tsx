@@ -1,0 +1,271 @@
+/** @jsxImportSource @opentui/solid */
+import { testRender, useRenderer } from "@opentui/solid"
+import { TextareaRenderable } from "@opentui/core"
+import { createDefaultOpenTuiKeymap } from "@opentui/keymap/opentui"
+import { createStore } from "solid-js/store"
+import { onCleanup, onMount, Show, type ParentProps } from "solid-js"
+import { mkdir, mkdtemp, rm } from "node:fs/promises"
+import path from "node:path"
+import { tmpdir } from "node:os"
+import { Orchestra } from "@orchestra/client"
+import { DateTime, Schema } from "effect"
+import { SessionID } from "@orchestra/schema/session-id"
+import { SessionInput } from "@orchestra/schema/session-input"
+import { SessionMessage } from "@orchestra/schema/session-message"
+import { Command } from "@orchestra/schema/command"
+import { Agent } from "@orchestra/schema/agent"
+import { Model } from "@orchestra/schema/model"
+import { Provider } from "@orchestra/schema/provider"
+import { ModelExecution } from "@orchestra/schema/model-execution"
+import { ArgsProvider, type Args } from "../../../../src/context/args"
+import { KVProvider } from "../../../../src/context/kv"
+import { SDKProvider, useSDK } from "../../../../src/context/sdk"
+import { ProjectProvider } from "../../../../src/context/project"
+import { SyncProvider, useSync } from "../../../../src/context/sync"
+import { DataProvider } from "../../../../src/context/data"
+import { PermissionProvider } from "../../../../src/context/permission"
+import { LocalProvider, useLocal } from "../../../../src/context/local"
+import { ExitProvider } from "../../../../src/context/exit"
+import { RouteProvider, useRoute } from "../../../../src/context/route"
+import { ThemeProvider } from "../../../../src/context/theme"
+import { ClipboardProvider } from "../../../../src/context/clipboard"
+import { PromptRefProvider } from "../../../../src/context/prompt"
+import { EditorContextProvider } from "../../../../src/context/editor"
+import { LocationProvider } from "../../../../src/context/location"
+import { TuiConfigProvider } from "../../../../src/config"
+import { getOrchestraModeStack, OrchestraKeymapProvider, registerOrchestraKeymap } from "../../../../src/keymap"
+import { createPluginRuntime, PluginRuntimeProvider } from "../../../../src/plugin/runtime"
+import { Prompt, type PromptRef } from "../../../../src/component/prompt"
+import { DialogModel } from "../../../../src/component/dialog-model"
+import { DialogVariant } from "../../../../src/component/dialog-variant"
+import { DialogProvider, useDialog } from "../../../../src/ui/dialog"
+import { ToastProvider } from "../../../../src/ui/toast"
+import { PromptStashProvider } from "../../../../src/prompt/stash"
+import { FrecencyProvider } from "../../../../src/prompt/frecency"
+import { PromptHistoryProvider } from "../../../../src/prompt/history"
+import { TestTuiContexts } from "../../../fixture/tui-environment"
+import { createTuiResolvedConfig } from "../../../fixture/tui-runtime"
+import { createEventSource, createFetch, json, v2Session } from "../../../fixture/tui-sdk"
+
+export const ref = { providerID: "provider", id: "model" }
+export const model = Model.Info.make({
+  ...Model.Info.empty(Provider.ID.make(ref.providerID), Model.ID.make(ref.id)), name: "Consumer model",
+  capabilities: { tools: true, input: ["text"], output: ["text"] },
+  variants: [{ id: Model.VariantID.make("high"), headers: {}, body: {} }],
+})
+export function decision(status: "ready" | "unsupported" | "unavailable" = "ready", variant?: string): ModelExecution.Response {
+  const selection = { ref: Model.Ref.make({ providerID: Provider.ID.make(ref.providerID), id: Model.ID.make(ref.id),
+    variant: variant === undefined ? undefined : Model.VariantID.make(variant) }), engine: "orchestra" }
+  return ModelExecution.Response.make({
+    models: [{ model, engine: "orchestra", status: "ready" }, {
+      model: { ...model, id: Model.ID.make("blocked"), name: "Blocked model" }, engine: "orchestra", status: "unsupported", reason: "model-denied",
+    }],
+    selection: status === "ready" ? { ...selection, status } : { ...selection, status, reason: "variant-unavailable" },
+  })
+}
+export async function wait(predicate: () => boolean, label: string, milliseconds = 2000) {
+  const until = Date.now() + milliseconds
+  while (!predicate()) {
+    if (Date.now() >= until) throw new Error(`Fixture deadline: ${label}`)
+    await Bun.sleep(10)
+  }
+}
+
+// One injected transport preserves the actual generated SDK, catalog adapter, providers and Prompt.
+// This is contract-consumption evidence, not a substitute for the backend describe HTTP gate.
+export async function mount(options: { draft?: boolean; initial?: ModelExecution.Response; reply?: (request: Request) => Response | Promise<Response>;
+  preferences?: { variant?: Record<string, string>; variantIntent?: Record<string, unknown> };
+  catalogModel?: Model.Info; args?: Args } = {}) {
+  const root = await mkdtemp(path.join(tmpdir(), "orchestra-model-consumer-"))
+  const state = path.join(root, "state")
+  await mkdir(state)
+  await Bun.write(path.join(state, "kv.json"), "{}")
+  if (options.preferences) await Bun.write(path.join(state, "model.json"), JSON.stringify(options.preferences))
+  const [owner, setOwner] = createStore({ sessionID: options.draft ? undefined : "session-1", directory: root, url: "http://consumer.fixture", authorization: "Basic Zml4dHVyZTpub25l", generation: 1 })
+  const calls: { path: string; method: string; body: unknown; authorization: string | null; url: URL; signal: AbortSignal }[] = []
+  const control = { reply: options.reply ?? ((_request: Request) => json({ location: { directory: owner.directory }, data: options.initial ?? decision() })),
+    before: async (_path: string) => {}, catalogModel: options.catalogModel ?? model,
+    catalogProviders: [Provider.Info.empty(Provider.ID.make(ref.providerID))],
+    catalogAgents: [Agent.Info.make({ ...Agent.Info.empty(Agent.ID.make("maestro")), engine: "orchestra" }),
+      Agent.Info.make({ ...Agent.Info.empty(Agent.ID.make("backend")), engine: "orchestra" })],
+  }
+  const events = createEventSource()
+  const fallback = createFetch()
+  const fetch: typeof Bun.fetch = Object.assign(async (...args: Parameters<typeof Bun.fetch>) => {
+    const request = new Request(...args)
+    const url = new URL(request.url)
+    calls.push({ path: url.pathname, method: request.method, body: request.method === "GET" ? undefined : await request.clone().json(),
+      authorization: request.headers.get("authorization"), url, signal: request.signal })
+    await control.before(url.pathname)
+    if (url.pathname === "/api/model/execution") return control.reply(request)
+    const envelope = (data: unknown) => json({ location: { directory: root }, data })
+    if (["/api/integration", "/api/skill", "/api/reference"].includes(url.pathname)) return envelope([])
+    if (url.pathname === "/api/command") return envelope([Command.Info.make({ name: "known", template: "fixture command" })])
+    if (url.pathname === "/api/provider") return envelope(control.catalogProviders)
+    if (url.pathname === "/api/model") return envelope([control.catalogModel, { ...model, id: Model.ID.make("blocked"), name: "Blocked model" }])
+    if (url.pathname === "/api/model/default") return envelope(ref)
+    if (url.pathname === "/api/agent") return envelope(control.catalogAgents)
+    if (url.pathname === "/api/permission/request" || url.pathname === "/api/question/request") return json({ data: [] })
+    if (url.pathname === "/api/mcp/resource") return envelope({ resources: [] })
+    if (url.pathname === "/api/location") return json({ directory: root, project: { id: "proj_test", directory: root } })
+    // This exact route must precede the generic Session-detail route below.
+    if (url.pathname === "/api/session/active") return json(Schema.encodeSync(Schema.Struct({
+      data: Schema.Record(SessionID, Schema.Struct({ type: Schema.Literal("running") })),
+    }))({ data: {} }))
+    if (url.pathname === "/api/session") return request.method === "POST" ? json({ data: v2Session({ id: "ses_created_fixture", directory: root }) })
+      : json({ data: [v2Session({ id: "session-1", directory: root }), v2Session({ id: "session-2", directory: root })], cursor: {} })
+    if (/^\/api\/session\/[^/]+$/.test(url.pathname)) return json({ data: v2Session({ id: url.pathname.split("/").at(-1)!, directory: root }) })
+    if (url.pathname.endsWith("/todo")) return json({ data: [] })
+    if (url.pathname.endsWith("/message")) return json({ data: [], cursor: {} })
+    if (request.method === "POST" && /\/(agent|model|shell)$/.test(url.pathname)) return new Response(null, { status: 204 })
+    if (request.method === "POST" && /\/(prompt|command)$/.test(url.pathname))
+      return admittedResponse(request, calls.filter((call) => call.method === "POST" && /\/(prompt|command)$/.test(call.path)).length)
+    if (request.method === "POST") return json({})
+    return fallback.fetch(request)
+  }, { preconnect: Bun.fetch.preconnect })
+  const sdkReady = Promise.withResolvers<void>()
+  const gateReady = Promise.withResolvers<void>()
+  let greetingSDK: ReturnType<typeof useSDK> | undefined
+  function GreetingGate(props: ParentProps) {
+    const sdk = useSDK()
+    greetingSDK = sdk
+    onMount(() => gateReady.resolve())
+    // Setup barrier only: the model consumer mounts after the initial greeting, so its later greeting is a real gap.
+    return <Show when={sdk.connectionEpoch() > 0}>{props.children}</Show>
+  }
+  let context!: { sdk: ReturnType<typeof useSDK>; sync: ReturnType<typeof useSync>; local: ReturnType<typeof useLocal>; route: ReturnType<typeof useRoute>; dialog: ReturnType<typeof useDialog> }
+  const localOwners = new Set<ReturnType<typeof useLocal>>()
+  let prompt: PromptRef | undefined
+  function Probe() {
+    context = { sdk: useSDK(), sync: useSync(), local: useLocal(), route: useRoute(), dialog: useDialog() }
+    localOwners.add(context.local)
+    onMount(() => {
+      // Match app.tsx: apply CLI variant through the real setter, including before preference I/O completes.
+      if (options.args?.variant !== undefined) context.local.model.variant.set(options.args.variant)
+      sdkReady.resolve()
+    })
+    return <Prompt sessionID={owner.sessionID} ref={(value) => { prompt = value }} />
+  }
+  const observation = { count: 0, mode: (): string | undefined => undefined }
+  function Harness() {
+    const renderer = useRenderer()
+    const keymap = createDefaultOpenTuiKeymap(renderer)
+    const config = createTuiResolvedConfig()
+    onCleanup(registerOrchestraKeymap(keymap, renderer, config))
+    observation.mode = () => getOrchestraModeStack(keymap).current()
+    return <TestTuiContexts directory={root} paths={{ home: root, state, worktree: root }}>
+      <ExitProvider exit={() => {}}><ClipboardProvider value={{ read: async () => undefined, write: async () => {} }}>
+        <OrchestraKeymapProvider keymap={keymap}><ArgsProvider {...options.args}><KVProvider><ToastProvider>
+          <RouteProvider initialRoute={options.draft ? { type: "home" } : { type: "session", sessionID: "session-1" }}>
+            <TuiConfigProvider config={config}><PluginRuntimeProvider value={createPluginRuntime()}>
+              <Show when={owner.generation} keyed>{(_generation) => <SDKProvider url={owner.url} directory={owner.directory} fetch={fetch} headers={{ authorization: owner.authorization }} events={events.source}>
+                <GreetingGate><PermissionProvider><ProjectProvider><SyncProvider><DataProvider>
+                  <ThemeProvider mode="dark" source={{ discover: async () => ({}), subscribeRefresh: () => () => {} }}>
+                    <LocalProvider><PromptStashProvider><DialogProvider><FrecencyProvider><PromptHistoryProvider>
+                      <PromptRefProvider><EditorContextProvider><LocationProvider location={{ directory: owner.directory }}><Probe /></LocationProvider></EditorContextProvider></PromptRefProvider>
+                    </PromptHistoryProvider></FrecencyProvider></DialogProvider></PromptStashProvider></LocalProvider>
+                  </ThemeProvider>
+                </DataProvider></SyncProvider></ProjectProvider></PermissionProvider></GreetingGate>
+              </SDKProvider>}</Show>
+            </PluginRuntimeProvider></TuiConfigProvider>
+          </RouteProvider>
+        </ToastProvider></KVProvider></ArgsProvider></OrchestraKeymapProvider>
+      </ClipboardProvider></ExitProvider>
+    </TestTuiContexts>
+  }
+  const lifecycle = { disposed: false }
+  const app = await testRender(() => <Harness />, { width: 120, height: 40, kittyKeyboard: true })
+  try {
+    await gateReady.promise
+    events.emit({ directory: root, workspace: undefined, payload: { id: `e6-greeting-${owner.generation}`, type: "server.connected", data: {} } })
+    await sdkReady.promise
+    await wait(() => context.sync.status === "complete" && prompt !== undefined, "real Sync bootstrap and Prompt ref")
+    return { app, calls, control, get context() { return context }, owner, setOwner, events, root,
+      client: Orchestra.make({ baseUrl: "http://consumer.fixture", fetch, headers: { authorization: "Basic Zml4dHVyZTpub25l" } }),
+      get prompt() { if (!prompt) throw new Error("Prompt disposed"); return prompt },
+      queries: () => calls.filter((call) => call.path === "/api/model/execution"),
+      admissions: () => calls.filter((call) => call.path.endsWith("/prompt")),
+      showModels() { context.dialog.replace(() => <DialogModel />) },
+      showVariants() { context.dialog.replace(() => <DialogVariant />) },
+      preferenceFile: path.join(state, "model.json"),
+      observe(label: string, detail: {
+        counters?: Record<string, number>;
+        dialog?: { filter: string; filtered: readonly { value: string; title: string; disabled?: boolean }[] };
+      } = {}) {
+        try {
+          if (observation.count >= 12) return
+          observation.count++
+          const focused = app.renderer.currentFocusedRenderable
+          console.error("E6 TUI input observation", JSON.stringify({
+            sequence: observation.count, label,
+            focus: focused ? { id: focused.id, type: focused.constructor.name, isFocused: focused.focused } : null,
+            textarea: focused instanceof TextareaRenderable ? { plainTextLength: focused.plainText.length,
+              visualCursorOffset: focused.visualCursor.offset } : undefined,
+            prompt: { focused: prompt?.focused, storedModeHint: prompt?.current.mode, inputLength: prompt?.current.input.length },
+            keymapMode: observation.mode(), dialogStackLength: context.dialog.stack.length,
+            counters: detail.counters,
+            dialog: detail.dialog && { filter: detail.dialog.filter.slice(0, 120),
+              filtered: detail.dialog.filtered.slice(0, 20).map((option) => ({ value: option.value,
+                title: option.title.slice(0, 120), disabled: option.disabled })) },
+            frame: app.captureCharFrame().split("\n").slice(0, 40).map((line) => line.slice(0, 120)).join("\n"),
+          }))
+        } catch { return }
+      },
+      async dispose() {
+        if (lifecycle.disposed) return
+        lifecycle.disposed = true
+        const destroyed = await Promise.allSettled([Promise.resolve().then(() => app.renderer.destroy())])
+        const cleanup = await Promise.allSettled([...localOwners].map((local) => local.flush()))
+        const failures = [...destroyed, ...cleanup].flatMap((result) => result.status === "rejected" ? [result.reason] : [])
+        if (failures.length > 0) throw new AggregateError(failures, "Failed to destroy fixture or flush Local owners")
+        await rm(root, { recursive: true, force: true })
+      },
+      async reload() {
+        const previous = greetingSDK
+        setOwner("generation", (value) => value + 1)
+        await wait(() => greetingSDK !== previous, "new SDK owner mounted")
+        events.emit({ directory: owner.directory, workspace: undefined, payload: { id: `e6-greeting-${owner.generation}`, type: "server.connected", data: {} } })
+        await wait(() => context.sdk === greetingSDK && prompt !== undefined, "consumer remounted after initial greeting")
+      },
+    }
+  } catch (error) {
+    const destroyed = await Promise.allSettled([Promise.resolve().then(() => app.renderer.destroy())])
+    const cleanup = await Promise.allSettled([...localOwners].map((local) => local.flush()))
+    const failures = [...destroyed, ...cleanup].flatMap((result) => result.status === "rejected" ? [result.reason] : [])
+    if (failures.length > 0) throw new AggregateError([error, ...failures], "Mount and Local cleanup failed")
+    const removed = await Promise.allSettled([rm(root, { recursive: true, force: true })])
+    const failed = removed.find((result) => result.status === "rejected")
+    if (failed?.status === "rejected") throw new AggregateError([error, failed.reason], "Mount and fixture removal failed")
+    throw error
+  }
+}
+
+
+// Establish a real selected choice under a READY endpoint before a submit fault is installed.
+// Loading/bootstrap acceptance deliberately uses mount() instead of this prerequisite.
+export async function ready(options: { draft?: boolean; initial?: ModelExecution.Response } = {}) {
+  const fixture = await mount(options)
+  try {
+    await wait(() => fixture.context.local.model.current()?.modelID === ref.id, "READY real model choice")
+    fixture.context.local.model.set({ providerID: ref.providerID, modelID: ref.id })
+    await wait(() => fixture.context.local.model.current()?.modelID === ref.id, "explicit real selected model")
+    await Bun.sleep(0)
+    return fixture
+  } catch (error) { await fixture.dispose(); throw error }
+}
+
+
+// Declared controlled HTTP successes only; these receipts do not claim Core/SQL admission.
+async function admittedResponse(request: Request, admittedSeq: number) {
+  const input = Schema.decodeUnknownSync(Schema.Struct({
+    id: Schema.optional(SessionMessage.ID), prompt: Schema.optional(SessionInput.Admitted.fields.prompt),
+    command: Schema.optional(Schema.String), arguments: Schema.optional(Schema.String),
+    delivery: Schema.optional(SessionInput.Delivery),
+  }))(await request.clone().json())
+  return json({ data: Schema.encodeSync(SessionInput.Admitted)(SessionInput.Admitted.make({
+    id: input.id ?? SessionMessage.ID.make(`msg_fixture_${admittedSeq}`),
+    sessionID: SessionID.make(decodeURIComponent(new URL(request.url).pathname.split("/")[3])),
+    admittedSeq, prompt: input.prompt ?? { text: `/${input.command} ${input.arguments ?? ""}`.trim() },
+    delivery: input.delivery ?? "steer", timeCreated: DateTime.makeUnsafe(1),
+  })) })
+}
