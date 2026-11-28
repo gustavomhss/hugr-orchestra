@@ -363,4 +363,19 @@ function quarantineRename(source, destination, expectedIdentity) {
   });
 }
 
-module.exports = { run, spawn, configure, OmniError, quarantineIdentity, quarantineInspect, quarantineRename };
+function quarantineDispose(source, expectedIdentity) {
+  return later(() => {
+    const native = load();
+    if (typeof native.quarantineDispose !== "function") throw new Error("Windows quarantine primitive unavailable");
+    return native.quarantineDispose(source, expectedIdentity);
+  });
+}
+
+function quarantineDisposeAvailable() {
+  return typeof load().quarantineDispose === "function";
+}
+
+module.exports = {
+  run, spawn, configure, OmniError, quarantineIdentity, quarantineInspect, quarantineRename,
+  quarantineDispose, quarantineDisposeAvailable,
+};
