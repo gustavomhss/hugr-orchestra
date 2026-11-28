@@ -11,6 +11,14 @@ on:
         description: 'Publish the approved candidate and run the accepted private no-op rebuild'
         type: boolean
         default: false
+      maintenance_change_prepare:
+        description: 'Prepare the frozen changed-input candidate for fresh independent binding'
+        type: boolean
+        default: false
+      maintenance_change_execute:
+        description: 'Reprepare and activate the changed candidate only with fresh exact binding'
+        type: boolean
+        default: false
   push:
     branches: ["genesis-knowledge-resume"]
     paths:
@@ -90,7 +98,7 @@ jobs:
             --repository "$GITHUB_WORKSPACE" --runtime-root "$RUNNER_TEMP/s4-runtime" --runtime-sha "$RUNTIME_SHA" \
             --source-root "$RUNNER_TEMP/s4-source" --output-dir "$RUNNER_TEMP/s4-evidence"
       - name: Publish and verify the approved S4 candidate
-        if: github.event_name == 'workflow_dispatch' && (inputs.publish_full15 || inputs.maintenance_reuse)
+        if: github.event_name == 'workflow_dispatch' && (inputs.publish_full15 || inputs.maintenance_reuse || inputs.maintenance_change_prepare || inputs.maintenance_change_execute)
         run: |
           set -euo pipefail
           S4_RUNTIME_DIR=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128
@@ -107,6 +115,18 @@ jobs:
             --runtime "$RUNNER_TEMP/s4-runtime" --source "$RUNNER_TEMP/s4-source" \
             --prepared "$RUNNER_TEMP/s4-evidence/prepared.json" --publication "$RUNNER_TEMP/s4-publication" \
             --output "$RUNNER_TEMP/s4-maintenance"
+      - name: Prepare or execute the frozen maintenance change
+        if: github.event_name == 'workflow_dispatch' && (inputs.maintenance_change_prepare || inputs.maintenance_change_execute)
+        env:
+          S4_EXECUTE_CHANGE: ${{ inputs.maintenance_change_execute }}
+        run: |
+          set -euo pipefail
+          S4_RUNTIME_DIR=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s4/runtime/own-20261128
+          python3 "$S4_RUNTIME_DIR/maintenance-change.py" \
+            --repository "$GITHUB_WORKSPACE" --runtime "$RUNNER_TEMP/s4-runtime" --source "$RUNNER_TEMP/s4-source" \
+            --prepared "$RUNNER_TEMP/s4-evidence/prepared.json" --publication "$RUNNER_TEMP/s4-publication" \
+            --oracle "$S4_RUNTIME_DIR/maintenance-change-oracle.json" --binding-directory "$S4_RUNTIME_DIR/binding-change" \
+            --output "$RUNNER_TEMP/s4-change"
       - name: Preserve evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -118,13 +138,14 @@ jobs:
           if-no-files-found: error
           retention-days: 30
       - name: Preserve publication and reader receipts
-        if: always() && github.event_name == 'workflow_dispatch' && (inputs.publish_full15 || inputs.maintenance_reuse)
+        if: always() && github.event_name == 'workflow_dispatch' && (inputs.publish_full15 || inputs.maintenance_reuse || inputs.maintenance_change_prepare || inputs.maintenance_change_execute)
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: s4-isolated-publication-${{ github.sha }}-${{ github.run_attempt }}
           path: |
             ${{ runner.temp }}/s4-publication
             ${{ runner.temp }}/s4-maintenance
+            ${{ runner.temp }}/s4-change
             ${{ runner.temp }}/s4-source/.atlas
           include-hidden-files: true
           if-no-files-found: error
