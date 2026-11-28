@@ -1,0 +1,10 @@
+{
+  "reviewer": "/root/s2_admission_j2",
+  "purpose": "s2-amendment-semantic",
+  "key": "s2.l2.app-session",
+  "body_sha256": "5b5248f706f5eb907b1a049c9dbadf60b6a76a0bcdf8672cb536a1f2eb409a8e",
+  "snapshot_sha256": "808e6abab5f304c981583fa6d2c2a9caae6815b79caf4271096d9faa33fccf79",
+  "result_id": "507ab0d635b0a2c3ef9de425e9205611a7a125845d6a9d0322a396b51ea672bf",
+  "verdict": "PASS",
+  "reason": "Corpo e resultado permanecem iguais aos da revisão anterior; o novo snapshot previsto depende de confronto no CI."
+}

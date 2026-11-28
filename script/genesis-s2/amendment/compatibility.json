@@ -1,0 +1,241 @@
+{
+  "schema": "genesis-s2-final-prior-pass-compatibility/v1",
+  "status": "STATIC_BODY_COMPARISON_ONLY_NOT_REVIEW_OR_ACCEPTANCE",
+  "hosted_reader_run": 46165708773,
+  "source_manifest": "5cbb56e97ad62901f5ec673d6bbf2559201cc54bc6f7faa33af92c4f825c7bbf",
+  "candidate_id": "ade18f60d8b143fc90fae24bc5c6cd1c14d1e56756800f14b65d19f7eacdf542",
+  "source_admission_run": 46162067144,
+  "baseline_commit": "529e24851cb7baa0b9ab017580e7295c656925bb",
+  "authored_manifest_sha256": "b638eae11be5bd7583bb27b158cc479e03aece1600bccbec2e8afb8db58fc5d7",
+  "authored_body_sha256": {
+    "s2.l2.app-session": "5b5248f706f5eb907b1a049c9dbadf60b6a76a0bcdf8672cb536a1f2eb409a8e",
+    "s2.l2.desktop-web": "9ed2486c60edad02dd03c8bb9e284907e45a1d6748d0f4e622b8a945c078d1f1",
+    "s2.l2.design-tui": "74870b6cafc9f810d51f126c0ed2c8e4717a2742a7ed5aff5642d3b2859b8555"
+  },
+  "method": "Matched each hosted stdout digest, reconstructed its original body from admitted result CAS, verified byte equality of the actual served section, then selected the same heading from the final authored body using the runtime heading/section boundaries. Unchanged artifact bodies use the original admitted CAS. No Atlas calls.",
+  "cases": [
+    {
+      "case": "S2-C3",
+      "reads": [
+        {
+          "key": "s2.l1.app-session",
+          "section": "Skills catalog, editing and ownership",
+          "old_body_sha256": "1a5b6f428d7af4515cc90603a1385dde1cb73420dd1832ded0f9f949f9d60941",
+          "final_body_sha256": "1a5b6f428d7af4515cc90603a1385dde1cb73420dd1832ded0f9f949f9d60941",
+          "old_bytes": 5976,
+          "final_bytes": 5976,
+          "identical": true,
+          "hosted_stdout_sha256": "13bdf7936ca6744824947b57f4ec88f388950e31621d7c09b680008ae3f4d996",
+          "hosted_stdout_path": "s2-consumer-46165708773-full/genesis-s2-prepare-ba4d2ed3368b5dd670b09df3372057243c1f6b66-1/consumer-routes/followup/S2-C3/01-read.stdout.json"
+        },
+        {
+          "key": "s2.l2.app-session",
+          "section": "Skills catalog, content and editing ownership",
+          "old_body_sha256": "5d78df26e79085a02fc54bb20af1472d0d13b206585cc5cc65b0f5d6e8fb6d8a",
+          "final_body_sha256": "5d78df26e79085a02fc54bb20af1472d0d13b206585cc5cc65b0f5d6e8fb6d8a",
+          "old_bytes": 2700,
+          "final_bytes": 2700,
+          "identical": true,
+          "hosted_stdout_sha256": "e9a5f5b3b54fc0a1da23a0eb9593ed1e19772f83cd94d652921dbc7f382d7a1f",
+          "hosted_stdout_path": "s2-consumer-46165708773-full/genesis-s2-prepare-ba4d2ed3368b5dd670b09df3372057243c1f6b66-1/consumer-routes/followup/S2-C3/02-read.stdout.json"
+        },
+        {
+          "key": "s2.l3.app-session",
+          "section": "Change settings and Skills under the original owner",
+          "old_body_sha256": "61922f41ecad02ea89ef6621a5070e98d751e8b579e6e14e30d786214423b1d8",
+          "final_body_sha256": "61922f41ecad02ea89ef6621a5070e98d751e8b579e6e14e30d786214423b1d8",
+          "old_bytes": 2031,
+          "final_bytes": 2031,
+          "identical": true,
+          "hosted_stdout_sha256": "528712577b3434778d03d3f09e0ef2879d81940102f9ea7385c5abb2e84dbe93",
+          "hosted_stdout_path": "s2-consumer-46165708773-full/genesis-s2-prepare-ba4d2ed3368b5dd670b09df3372057243c1f6b66-1/consumer-routes/followup/S2-C3/03-read.stdout.json"
+        },
+        {
+          "key": "s2.l3.app-session",
+          "section": "Route a change through its affected contracts",
+          "old_body_sha256": "456c29478c027ee4c528ba06a0638227d3f3077df3fff7b0e6de66a9bbd9519a",
+          "final_body_sha256": "456c29478c027ee4c528ba06a0638227d3f3077df3fff7b0e6de66a9bbd9519a",
+          "old_bytes": 1283,
+          "final_bytes": 1283,
+          "identical": true,
+          "hosted_stdout_sha256": "f6f6863daf51833133021f6669a3576f8e611750a11c32fc64e25744e071bf33",
+          "hosted_stdout_path": "s2-consumer-46165708773-full/genesis-s2-prepare-ba4d2ed3368b5dd670b09df3372057243c1f6b66-1/consumer-routes/followup/S2-C3/04-read.stdout.json"
+        }
+      ],
+      "all_served_bodies_identical": true
+    },
+    {
+      "case": "S2-C5",
+      "reads": [
+        {
+          "key": "s2.l4.entry",
+          "section": null,
+          "old_body_sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1",
+          "final_body_sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1",
+          "old_bytes": 5849,
+          "final_bytes": 5849,
+          "identical": true,
+          "hosted_stdout_sha256": "54e19cb097aa3388cb6be714452760a79028f10b2a2d5d9085ebaa95a4e90307",
+          "hosted_stdout_path": "s2-consumer-46165708773-full/genesis-s2-prepare-ba4d2ed3368b5dd670b09df3372057243c1f6b66-1/consumer-routes/followup/S2-C5/01-read.stdout.json"
+        },
+        {
+          "key": "s2.l3.app-session",
+          "section": "Recover the projection without inventing execution recovery",
+          "old_body_sha256": "df4f17f218cb38b5460a47dbde1c0f366d6cb083cb9974452b028cf8716214ff",
+          "final_body_sha256": "df4f17f218cb38b5460a47dbde1c0f366d6cb083cb9974452b028cf8716214ff",
+          "old_bytes": 1998,
+          "final_bytes": 1998,
+          "identical": true,
+          "hosted_stdout_sha256": "79b990df16f0f2638eb67e7325ed27e1a42dce6b27b69a9329dc97a4bc30dc7c",
+          "hosted_stdout_path": "s2-consumer-46165708773-full/genesis-s2-prepare-ba4d2ed3368b5dd670b09df3372057243c1f6b66-1/consumer-routes/followup/S2-C5/02-read.stdout.json"
+        }
+      ],
+      "all_served_bodies_identical": true
+    },
+    {
+      "case": "S2-I1D",
+      "reads": [
+        {
+          "key": "s2.l1.desktop-web",
+          "section": "1. Startup, readiness and shutdown",
+          "old_body_sha256": "efd693ceb11d7fc200b051f9fed78af7b6285ac79f0b4cfc5cfe33420335a817",
+          "final_body_sha256": "efd693ceb11d7fc200b051f9fed78af7b6285ac79f0b4cfc5cfe33420335a817",
+          "old_bytes": 4227,
+          "final_bytes": 4227,
+          "identical": true,
+          "hosted_stdout_sha256": "0db2d5840e2204a3971df36d2d6fa19ecb9a40a044b6ad5bb73a218019be3b1b",
+          "hosted_stdout_path": "s2-consumer-46165708773-full/genesis-s2-prepare-ba4d2ed3368b5dd670b09df3372057243c1f6b66-1/consumer-routes/followup/S2-I1D/01-read.stdout.json"
+        }
+      ],
+      "all_served_bodies_identical": true
+    },
+    {
+      "case": "S2-I1A",
+      "reads": [
+        {
+          "key": "s2.l1.app-session",
+          "section": "Skills catalog, editing and ownership",
+          "old_body_sha256": "1a5b6f428d7af4515cc90603a1385dde1cb73420dd1832ded0f9f949f9d60941",
+          "final_body_sha256": "1a5b6f428d7af4515cc90603a1385dde1cb73420dd1832ded0f9f949f9d60941",
+          "old_bytes": 5976,
+          "final_bytes": 5976,
+          "identical": true,
+          "hosted_stdout_sha256": "13bdf7936ca6744824947b57f4ec88f388950e31621d7c09b680008ae3f4d996",
+          "hosted_stdout_path": "s2-consumer-46165708773-full/genesis-s2-prepare-ba4d2ed3368b5dd670b09df3372057243c1f6b66-1/consumer-routes/followup/S2-C3/01-read.stdout.json"
+        }
+      ],
+      "all_served_bodies_identical": true
+    },
+    {
+      "case": "S2-I1U",
+      "reads": [
+        {
+          "key": "s2.l1.design-tui",
+          "section": "V2 session action boundary",
+          "old_body_sha256": "b6e55765117e64633199837184bdbc7d91a974d6d0a1e84d74f2fc1d907d0ab6",
+          "final_body_sha256": "b6e55765117e64633199837184bdbc7d91a974d6d0a1e84d74f2fc1d907d0ab6",
+          "old_bytes": 5817,
+          "final_bytes": 5817,
+          "identical": true,
+          "hosted_stdout_sha256": "c9a6a797d5b32b9c99cbd3c3e3de520ffa6df554ff78152141efd1ba8ef252f2",
+          "hosted_stdout_path": "s2-consumer-46165708773-full/genesis-s2-prepare-ba4d2ed3368b5dd670b09df3372057243c1f6b66-1/consumer-routes/followup/S2-I1U/01-read.stdout.json"
+        }
+      ],
+      "all_served_bodies_identical": true
+    },
+    {
+      "case": "S2-I2D",
+      "reads": [
+        {
+          "key": "s2.l2.desktop-web",
+          "section": "Persistence and recovery have several owners",
+          "old_body_sha256": "ac840982d24005d056f90a9300cd0f9b15c5e7dd01b27b19a4b61467b27990f5",
+          "final_body_sha256": "ac840982d24005d056f90a9300cd0f9b15c5e7dd01b27b19a4b61467b27990f5",
+          "old_bytes": 1916,
+          "final_bytes": 1916,
+          "identical": true,
+          "hosted_stdout_sha256": "ea16c8b9de11f0bff026ded0a8804e53a76117aec6dc665d86cc1574dbf7b477",
+          "hosted_stdout_path": "s2-consumer-46165708773-full/genesis-s2-prepare-ba4d2ed3368b5dd670b09df3372057243c1f6b66-1/consumer-routes/followup/S2-I2D/01-read.stdout.json"
+        }
+      ],
+      "all_served_bodies_identical": true
+    },
+    {
+      "case": "S2-I2A",
+      "reads": [
+        {
+          "key": "s2.l2.app-session",
+          "section": "Durable admission, optimistic state and draft storage",
+          "old_body_sha256": "94426ee2fa3d50d52053db0b899fb39eeddbe1e829cc6c329903d2deac85ca30",
+          "final_body_sha256": "94426ee2fa3d50d52053db0b899fb39eeddbe1e829cc6c329903d2deac85ca30",
+          "old_bytes": 2705,
+          "final_bytes": 2705,
+          "identical": true,
+          "hosted_stdout_sha256": "3878f2fa59434d58682a944cd50e04ae0925b4db8eccb3d05e56bef8211a467e",
+          "hosted_stdout_path": "s2-consumer-46165708773-full/genesis-s2-prepare-ba4d2ed3368b5dd670b09df3372057243c1f6b66-1/consumer-routes/followup/S2-C1/02-read.stdout.json"
+        }
+      ],
+      "all_served_bodies_identical": true
+    },
+    {
+      "case": "S2-I3D",
+      "reads": [
+        {
+          "key": "s2.l3.desktop-web",
+          "section": null,
+          "old_body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+          "final_body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+          "old_bytes": 14715,
+          "final_bytes": 14715,
+          "identical": true,
+          "hosted_stdout_sha256": "e1f07b9c15153e2cda46f3076c7fcf53d96e69c4c3396b15d7a063c1ad46d4ba",
+          "hosted_stdout_path": "s2-consumer-46165708773-full/genesis-s2-prepare-ba4d2ed3368b5dd670b09df3372057243c1f6b66-1/consumer-routes/followup/S2-C2/01-read.stdout.json"
+        }
+      ],
+      "all_served_bodies_identical": true
+    },
+    {
+      "case": "S2-I3A",
+      "reads": [
+        {
+          "key": "s2.l3.app-session",
+          "section": null,
+          "old_body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+          "final_body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+          "old_bytes": 14334,
+          "final_bytes": 14334,
+          "identical": true,
+          "hosted_stdout_sha256": "6fa4e4761a16be08e57ff29b616408c359874b967d46b911e8056f1360199d1c",
+          "hosted_stdout_path": "s2-consumer-46165708773-full/genesis-s2-prepare-ba4d2ed3368b5dd670b09df3372057243c1f6b66-1/consumer-routes/followup/S2-C1/01-read.stdout.json"
+        }
+      ],
+      "all_served_bodies_identical": true
+    },
+    {
+      "case": "S2-I3U",
+      "reads": [
+        {
+          "key": "s2.l3.design-tui",
+          "section": null,
+          "old_body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+          "final_body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+          "old_bytes": 15780,
+          "final_bytes": 15780,
+          "identical": true,
+          "hosted_stdout_sha256": "2c3e4f3b05e7112b1c4a514662de7496009be584eb089f24bad9f9d71e834b4c",
+          "hosted_stdout_path": "s2-consumer-46165708773-full/genesis-s2-prepare-ba4d2ed3368b5dd670b09df3372057243c1f6b66-1/consumer-routes/initial/S2-I3U/02-read.stdout.json"
+        }
+      ],
+      "all_served_bodies_identical": true
+    }
+  ],
+  "totals": {
+    "cases": 10,
+    "reads": 14,
+    "identical_reads": 14,
+    "changed_reads": 0
+  },
+  "envelope_limits": "Prospective final candidate/result/receipt/artifact/dependency/manifest identities, authorization, freshness and index/read behavior were not observed; equal body bytes do not establish current accessibility, identical envelopes, or transfer reviews.",
+  "descendant_semantic_retention": "Within the four final clarifications, comparison of the seven original L3/L4 bodies found no contradiction; retain their original semantic bodies only subject to actual input/dependency/result checks and fresh candidate-specific reviews, with no vote transfer.",
+  "descendant_evidence": "prior-pass-audit.json descendant_retention; the final C1 peer section preserves the original consumed-input restoration text."
+}

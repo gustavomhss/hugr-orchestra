@@ -1,0 +1,238 @@
+{
+  "schema": "s2-amendment-authored/v1",
+  "source_pin": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "source_pin_verified_against": {
+    "working_tree": "/private/tmp/orchestra-genesis-close-gmJ7bX/interfaces",
+    "observed_head": "529e24851cb7baa0b9ab017580e7295c656925bb",
+    "note": "The frozen question deck source_revision is this commit; every cited implementation/skill file was byte-compared with git show at the pin. Baseline body files are accepted CAS corpus artifacts checked by the stated SHA256s against the workspace copies; their presence as Git blobs at source_revision is not asserted."
+  },
+  "question_deck": {
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/consumer-question-deck.json",
+    "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "sha256": "51dacb110d80dd3e3f0fcf6cb3aa87ebb8a4c8d47e18abf76891d8bef430b356"
+  },
+  "original_body_hashes_verified": {
+    "app-session": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+    "desktop-web": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+    "design-tui": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1"
+  },
+  "bodies": [
+    {
+      "body": "app-session.md",
+      "hold": "S2-C1",
+      "baseline_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
+      "corrected_sha256": "5b5248f706f5eb907b1a049c9dbadf60b6a76a0bcdf8672cb536a1f2eb409a8e",
+      "baseline_bytes": 24434,
+      "corrected_bytes": 25234,
+      "change": "append peer section; preserve original Durable admission section byte-for-byte"
+    },
+    {
+      "body": "desktop-web.md",
+      "hold": "S2-C2/C4",
+      "baseline_sha256": "03cd2b45638ff7ce0061f03477dff3d2129dc11ddbdbbc9694e6040a5a70a457",
+      "corrected_sha256": "9ed2486c60edad02dd03c8bb9e284907e45a1d6748d0f4e622b8a945c078d1f1",
+      "baseline_bytes": 18440,
+      "corrected_bytes": 19855,
+      "change": "replace exactly the IPC and startup paragraphs; add one pinned preload/navigation sentence in the IPC paragraph"
+    },
+    {
+      "body": "design-tui.md",
+      "hold": "S2-I2U",
+      "baseline_sha256": "21a5416918430c88d13679611736bf89ee554c4c75fc49405bcd5fb3dca4c4b1",
+      "corrected_sha256": "74870b6cafc9f810d51f126c0ed2c8e4717a2742a7ed5aff5642d3b2859b8555",
+      "baseline_bytes": 21535,
+      "corrected_bytes": 21891,
+      "change": "replace exactly the V2 action paragraph"
+    }
+  ],
+  "preserved_served_overlap": [
+    {
+      "body": "app-session.md",
+      "served_section": "## Durable admission, optimistic state and draft storage",
+      "preserved_byte_for_byte": true,
+      "added_section": "## First-send cleanup after policy-write failure"
+    }
+  ],
+  "sources": {
+    "packages/app-shell/src/components/prompt-input/submit.ts": {
+      "sha256": "9fc3fde5e453fe6e36b92909488249be788189d640c132d83c9c7a5407b42c80",
+      "line_spans": [
+        455,
+        476,
+        547,
+        575,
+        583,
+        674
+      ]
+    },
+    "apps/desktop/src/main/ipc.ts": {
+      "sha256": "918fb622129d68d6654748697e68517d9ab21ef103cc08df06aaf19d1cc0c76c",
+      "line_spans": [
+        69,
+        82
+      ]
+    },
+    "apps/desktop/src/main/ipc-app-dock.ts": {
+      "sha256": "355a720d783ac9b40a85828ca26833839e32e4c498f66615bdce7b950a2430ed",
+      "line_spans": [
+        76,
+        76
+      ]
+    },
+    "apps/desktop/src/main/renderer-origin.ts": {
+      "sha256": "ddccb06fef155c7d2fa5edc2693ecc4b3da9694c911fd52c4c5ee4db6929ad0b",
+      "line_spans": [
+        7,
+        45
+      ]
+    },
+    "apps/desktop/src/main/owned-serve.ts": {
+      "sha256": "0970f4ddb99c1c004e200443abc54ed5ea38cec098e19ef9aa748b771238dfb5",
+      "line_spans": [
+        16,
+        18,
+        41,
+        48,
+        92,
+        102,
+        135,
+        147
+      ]
+    },
+    "apps/desktop/src/renderer/initialization.ts": {
+      "sha256": "1744203a548abe3187bba2a9086652cf959106c10dcb5dd8a70f8879dd2b0823",
+      "line_spans": [
+        3,
+        9,
+        12,
+        52
+      ]
+    },
+    "apps/desktop/src/main/index.ts": {
+      "sha256": "79e2de4c4f9e50a9b04cf78ad09b3d03585b1e49190943e230f1d45f49b08f11",
+      "line_spans": [
+        431,
+        475
+      ]
+    },
+    ".orchestra/skills/desktop-startup-maintenance/SKILL.md": {
+      "sha256": "6434f6ed07efb0c67275e3d1c30270c2a012aa77b46071239080ae8475dd42a9",
+      "line_spans": [
+        10,
+        26
+      ]
+    },
+    "packages/tui/src/context/session-actions.ts": {
+      "sha256": "e858f281b3b0a8ac722faadab2d0f7218d846b968e02f9ec06a0d32e958d82bd",
+      "line_spans": [
+        7,
+        16,
+        26,
+        28,
+        29,
+        63
+      ]
+    },
+    "packages/protocol/src/groups/session.ts": {
+      "sha256": "2dad331fa3b169d4eff2f870b70a4524f24497cb4a08dda3ee4a09cf3783af1f",
+      "line_spans": [
+        379,
+        394,
+        431,
+        443,
+        550,
+        582,
+        655,
+        665
+      ]
+    },
+    "apps/desktop/src/preload/index.ts": {
+      "sha256": "fa34bb74659b29838bfedc6d3d6e220c63e5a29769df7664a1986176c20e25ac",
+      "line_spans": [
+        254,
+        254
+      ]
+    },
+    "apps/desktop/src/main/windows.ts": {
+      "sha256": "2fc019484e93ef85b274c86a0e94b4a3ad20522582d3646de7811e1026d6b3f5",
+      "line_spans": [
+        324,
+        335
+      ]
+    }
+  },
+  "routes": {
+    "max_reads": 2,
+    "max_body_bytes": 16000,
+    "entries": [
+      {
+        "hold": "S2-C1",
+        "reads": [
+          {
+            "key": "s2.l2.app-session",
+            "section": "First-send cleanup after policy-write failure",
+            "bytes": 800
+          },
+          {
+            "key": "s2.l1.app-session",
+            "section": "Prompt admission and draft ownership",
+            "bytes": 4394
+          }
+        ]
+      },
+      {
+        "hold": "S2-C2",
+        "reads": [
+          {
+            "key": "s2.l2.desktop-web",
+            "section": "Privilege is checked at each request boundary",
+            "bytes": 2784
+          },
+          {
+            "key": "s2.l1.desktop-web",
+            "section": "2. Windows, persistence and IPC authority",
+            "bytes": 3309
+          }
+        ]
+      },
+      {
+        "hold": "S2-C4",
+        "reads": [
+          {
+            "key": "s2.l2.desktop-web",
+            "section": "Startup publishes readiness before the renderer proceeds",
+            "bytes": 2067
+          },
+          {
+            "key": "s2.l1.desktop-web",
+            "section": "1. Startup, readiness and shutdown",
+            "bytes": 4227
+          }
+        ]
+      },
+      {
+        "hold": "S2-I2U",
+        "reads": [
+          {
+            "key": "s2.l2.design-tui",
+            "section": "V2 actions and prompt admission",
+            "bytes": 3319
+          },
+          {
+            "key": "s2.l1.design-tui",
+            "section": "V2 session action boundary",
+            "bytes": 5817
+          }
+        ]
+      }
+    ]
+  },
+  "c2_preload_navigation_clarification": {
+    "sentence": "window.api is exposed by the app renderer preload; non-renderer navigation is denied or externalized, so arbitrary support-page content does not inherit the privileged renderer origin.",
+    "sources": [
+      "apps/desktop/src/preload/index.ts:254",
+      "apps/desktop/src/main/windows.ts:324–335",
+      "apps/desktop/src/main/renderer-origin.ts:7–22"
+    ]
+  }
+}

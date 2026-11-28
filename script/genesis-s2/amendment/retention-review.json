@@ -1,0 +1,62 @@
+{
+  "schema": "genesis-s2-u1-retention-review/v1",
+  "author": "/root/s2_u1_terra",
+  "baseline_manifest": "5cbb56e97ad62901f5ec673d6bbf2559201cc54bc6f7faa33af92c4f825c7bbf",
+  "source_sha256": "0970f4ddb99c1c004e200443abc54ed5ea38cec098e19ef9aa748b771238dfb5",
+  "review_scope": "Three L2 recipe deltas only; seven original L3/L4 outputs were compared against the final clarifications. The runtime independently verifies unchanged inputs, original bytes and result identities.",
+  "review_refs": {
+    "compatibility_sha256": "b287c301feac11fc880ab92b51959de7029a7d64aa99826b6142ab05e080eddf",
+    "authored_manifest_sha256": "b638eae11be5bd7583bb27b158cc479e03aece1600bccbec2e8afb8db58fc5d7"
+  },
+  "entries": [
+    {
+      "key": "s2.l3.desktop-web",
+      "baseline_result": "ad072b7556935a92b5711269629f5aee15b98e2dbfa2aa3b2134328fe89901f1",
+      "baseline_body_sha256": "fb0609ee88fddc8a87b36b16d584fcd5d074842052cf7d092cc7aaa9bd11f37e",
+      "verdict": "REUSE",
+      "rationale": "The independent retention review found no contradiction with the precise amendments. Its exact original bytes may be reused if direct inputs are unchanged and runtime verifies original result identity."
+    },
+    {
+      "key": "s2.l3.app-session",
+      "baseline_result": "95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0",
+      "baseline_body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+      "verdict": "REUSE",
+      "rationale": "The independent retention review found no contradiction with the precise amendments. Its exact original bytes may be reused if direct inputs are unchanged and runtime verifies original result identity."
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "baseline_result": "3f77baa25cad0ef21847bff3f325478dba06f69c23dae9094c6ee02e83c2d509",
+      "baseline_body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+      "verdict": "REUSE",
+      "rationale": "The independent retention review found no contradiction with the precise amendments. Its exact original bytes may be reused if direct inputs are unchanged and runtime verifies original result identity."
+    },
+    {
+      "key": "s2.l4.desktop-web",
+      "baseline_result": "26ba4e10f4ead5c9443b7d9804b7b7c8aa9d7166350e08f3453748e0695a3199",
+      "baseline_body_sha256": "108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa",
+      "verdict": "REUSE",
+      "rationale": "The independent retention review found no contradiction with the precise amendments. Its exact original bytes may be reused if direct inputs are unchanged and runtime verifies original result identity."
+    },
+    {
+      "key": "s2.l4.design-tui",
+      "baseline_result": "7a0e27eedc2a116172417159aedfdddf428f2609db8b9104c55012a0926f6629",
+      "baseline_body_sha256": "95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c",
+      "verdict": "REUSE",
+      "rationale": "The independent retention review found no contradiction with the precise amendments. Its exact original bytes may be reused if direct inputs are unchanged and runtime verifies original result identity."
+    },
+    {
+      "key": "s2.l4.app-session",
+      "baseline_result": "8e0368888768de4c6c1e134e47cdc60d12f544fe311152bfb9f4621a264dac0a",
+      "baseline_body_sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3",
+      "verdict": "REUSE",
+      "rationale": "The independent retention review found no contradiction with the precise amendments. Its exact original bytes may be reused if direct inputs are unchanged and runtime verifies original result identity."
+    },
+    {
+      "key": "s2.l4.entry",
+      "baseline_result": "060600df54eb14bab6b17a278bd952afdb1b6bb8999e0dbe2d889d97401a7ff1",
+      "baseline_body_sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1",
+      "verdict": "REUSE",
+      "rationale": "The independent retention review found no contradiction with the precise amendments. Its exact original bytes may be reused if direct inputs are unchanged and runtime verifies original result identity."
+    }
+  ]
+}

@@ -1,0 +1,62 @@
+[
+  {
+    "id": "S2-C1",
+    "reads": [
+      {
+        "key": "s2.l2.app-session",
+        "section": "First-send cleanup after policy-write failure",
+        "maxBytes": 8000
+      },
+      {
+        "key": "s2.l1.app-session",
+        "section": "Prompt admission and draft ownership",
+        "maxBytes": 8000
+      }
+    ]
+  },
+  {
+    "id": "S2-C2",
+    "reads": [
+      {
+        "key": "s2.l2.desktop-web",
+        "section": "Privilege is checked at each request boundary",
+        "maxBytes": 8000
+      },
+      {
+        "key": "s2.l1.desktop-web",
+        "section": "2. Windows, persistence and IPC authority",
+        "maxBytes": 8000
+      }
+    ]
+  },
+  {
+    "id": "S2-C4",
+    "reads": [
+      {
+        "key": "s2.l2.desktop-web",
+        "section": "Startup publishes readiness before the renderer proceeds",
+        "maxBytes": 8000
+      },
+      {
+        "key": "s2.l1.desktop-web",
+        "section": "1. Startup, readiness and shutdown",
+        "maxBytes": 8000
+      }
+    ]
+  },
+  {
+    "id": "S2-I2U",
+    "reads": [
+      {
+        "key": "s2.l2.design-tui",
+        "section": "V2 actions and prompt admission",
+        "maxBytes": 8000
+      },
+      {
+        "key": "s2.l1.design-tui",
+        "section": "V2 session action boundary",
+        "maxBytes": 8000
+      }
+    ]
+  }
+]

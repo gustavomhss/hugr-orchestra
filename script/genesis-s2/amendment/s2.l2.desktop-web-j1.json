@@ -1,0 +1,10 @@
+{
+  "reviewer": "J1",
+  "purpose": "s2-amendment-semantic",
+  "key": "s2.l2.desktop-web",
+  "body_sha256": "9ed2486c60edad02dd03c8bb9e284907e45a1d6748d0f4e622b8a945c078d1f1",
+  "snapshot_sha256": "64c03b3c95a58b0d2e30dbdb040317f296b2036453c27e8c7630553ef29f3900",
+  "result_id": "0e87752e06abf7f3666af2d7a2cbb4ef8dfa2c833a2dc24d37b5d1164e7cb58c",
+  "verdict": "PASS",
+  "reason": "The new text names `window.api` and the preload, cites main-process navigation denial for non-renderer pages, and states arbitrary support-page content does not inherit the privileged renderer origin. This resolves the missing IPC detail. It retains wrapper rejection/drop behavior, Dock versus Live/WSL boundaries, and partial CSP limits. I verified the local body hash; the snapshot/result remain projections for CI callback comparison."
+}

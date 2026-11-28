@@ -42,6 +42,11 @@ on:
         description: Finalize, resume and admit only a separately reviewed exact U1 M2 target
         type: boolean
         default: false
+      amendment_stage:
+        description: Prepare the isolated S2 correction or admit it and run four retries
+        type: choice
+        options: [off, prepare, admit]
+        default: off
   push:
     branches: ["genesis-interfaces-resume"]
     paths:
@@ -94,9 +99,9 @@ jobs:
           jq -e --arg candidate ade18f60d8b143fc90fae24bc5c6cd1c14d1e56756800f14b65d19f7eacdf542 \
             '.candidate_id == $candidate and .state == "PREPARED_NOT_ADMITTED"' "$S2_ROOT/evidence/run/verification.json"
       - name: Admit the exact reviewed candidate in isolated state
-        if: ${{ github.event_name == 'workflow_dispatch' && (inputs.admit_exact_candidate == true || inputs.run_consumer_routes == true || inputs.recheck_i2u == true) }}
+        if: ${{ github.event_name == 'workflow_dispatch' && (inputs.admit_exact_candidate == true || inputs.run_consumer_routes == true || inputs.recheck_i2u == true || inputs.amendment_stage == 'prepare' || inputs.amendment_stage == 'admit') }}
         env:
-          ADMIT_EXACT_CANDIDATE: ${{ inputs.admit_exact_candidate || inputs.run_consumer_routes || inputs.recheck_i2u }}
+          ADMIT_EXACT_CANDIDATE: ${{ inputs.admit_exact_candidate || inputs.run_consumer_routes || inputs.recheck_i2u || inputs.amendment_stage == 'prepare' || inputs.amendment_stage == 'admit' }}
         shell: bash
         run: |
           set -euo pipefail
@@ -106,6 +111,11 @@ jobs:
             --prepared "$S2_ROOT/evidence/run/prepared.json" \
             --binding-directory "$GITHUB_WORKSPACE/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/admission-ade18f60" \
             --output "$S2_ROOT/evidence/admission"
+      - name: Prepare or admit the exact S2 correction
+        if: ${{ github.event_name == 'workflow_dispatch' && (inputs.amendment_stage == 'prepare' || inputs.amendment_stage == 'admit') }}
+        env:
+          AMENDMENT_STAGE: ${{ inputs.amendment_stage }}
+        run: python3 script/genesis-s2/amend.py --stage "$AMENDMENT_STAGE"
       - name: Run the initial routed reader calls
         if: ${{ github.event_name == 'workflow_dispatch' && inputs.run_consumer_routes == true && inputs.recheck_i2u != true }}
         env:

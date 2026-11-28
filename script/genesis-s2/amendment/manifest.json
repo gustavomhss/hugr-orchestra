@@ -1,0 +1,55 @@
+{
+  "schema": "genesis-s2-amendment/v1",
+  "baseline_manifest": "5cbb56e97ad62901f5ec673d6bbf2559201cc54bc6f7faa33af92c4f825c7bbf",
+  "first_snapshot_sha256": "808e6abab5f304c981583fa6d2c2a9caae6815b79caf4271096d9faa33fccf79",
+  "deltas": [
+    {
+      "key": "s2.l2.app-session",
+      "recipe_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-app-session-dispatch.md",
+      "recipe_sha256_before": "0cd465cb782425a419f6c52e7056e6d775c28aaae7e7b45e4c94ae7d1f785e60",
+      "recipe_sha256_after": "5f739b8d0543fbc1bcfea721c49fe814aa227c339dc14d25ffe5f59ec450b523",
+      "recipe_version_after": "488a9415a33638895e079dc618e5fea24a5c563848091b3c730c30c697f12637",
+      "body_sha256": "5b5248f706f5eb907b1a049c9dbadf60b6a76a0bcdf8672cb536a1f2eb409a8e",
+      "original_result": "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5",
+      "corrected_result": "507ab0d635b0a2c3ef9de425e9205611a7a125845d6a9d0322a396b51ea672bf",
+      "snapshot_sha256": "808e6abab5f304c981583fa6d2c2a9caae6815b79caf4271096d9faa33fccf79",
+      "response": "s2.l2.app-session-response.json",
+      "decisions": [
+        "s2.l2.app-session-j1.json",
+        "s2.l2.app-session-j2.json"
+      ]
+    },
+    {
+      "key": "s2.l2.design-tui",
+      "recipe_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-design-tui-dispatch.md",
+      "recipe_sha256_before": "bb772f04a0dafd521e20531c31865ce7dc9e999d36ba0b8026e8b63b8fc1af40",
+      "recipe_sha256_after": "9d7aab86054f2a4a64417a4da025fe1e1455ca5c181959cb622d3a44c313f70f",
+      "recipe_version_after": "26bb858adf5ecaf192680f6e7ca468fcf1531a48c8ea021dce46b256231abd81",
+      "body_sha256": "74870b6cafc9f810d51f126c0ed2c8e4717a2742a7ed5aff5642d3b2859b8555",
+      "original_result": "1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664",
+      "corrected_result": "3cc5e2635468df6e73e1b1f592d0f7b706152354530402358181031f41aecd68",
+      "snapshot_sha256": "afdb46f43b2a548ace29e6cc0fedf10a5b96f43a2dc1d8f9ed58b1347f4ae79c",
+      "response": "s2.l2.design-tui-response.json",
+      "decisions": [
+        "s2.l2.design-tui-j1.json",
+        "s2.l2.design-tui-j2.json"
+      ]
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "recipe_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-desktop-web-dispatch.md",
+      "recipe_sha256_before": "35ac19160905bd95fddede62be0e9e1d569e20425eb8e15493421ed7a53c8f5c",
+      "recipe_sha256_after": "3225dce8949c8f6ec4a52befc7444cb150d55a750cb6f0784e62690a123012a8",
+      "recipe_version_after": "77dd1a858e6a2291c112d774e1898c1799f8b1b78166277496c8adb39d790892",
+      "body_sha256": "9ed2486c60edad02dd03c8bb9e284907e45a1d6748d0f4e622b8a945c078d1f1",
+      "original_result": "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c",
+      "corrected_result": "0e87752e06abf7f3666af2d7a2cbb4ef8dfa2c833a2dc24d37b5d1164e7cb58c",
+      "snapshot_sha256": "64c03b3c95a58b0d2e30dbdb040317f296b2036453c27e8c7630553ef29f3900",
+      "response": "s2.l2.desktop-web-response.json",
+      "decisions": [
+        "s2.l2.desktop-web-j1.json",
+        "s2.l2.desktop-web-j2.json"
+      ]
+    }
+  ]
+}
