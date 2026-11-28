@@ -104,7 +104,7 @@ export function make(context: Context | FixContext, storage: Storage): Effect.Ef
     const order: string[] = []
     const analyses: Analysis[] = []
     const proofs: ReviewEvidenceSchemaV2.Proof[] = []
-    const scoped = new Map<string, ReviewScopedProbeEvidenceV2.Reference>()
+    const scoped = new Map<string, { readonly reference: ReviewScopedProbeEvidenceV2.Reference; readonly proof: ReviewScopedProbeEvidenceV2.Proof }>()
     const codeInputs = new Map<string, string>()
     const settlements = new Set<string>()
     const gaps: ReviewEngagementReportV2.Result["notExamined"][number][] = []
@@ -250,14 +250,14 @@ export function make(context: Context | FixContext, storage: Storage): Effect.Ef
         })
         if (captured.length !== order.length) return yield* ReviewEvidenceSchemaV2.failure("corrupt", "operation did not complete")
         return { finalAnalysisOperationID: final.id, operations: captured, artifacts: [...artifacts.values()],
-          hostProofs: [...proofs], scopedProbes: [...scoped.values()], bodies: yield* currentBodies() }
+          hostProofs: [...proofs], scopedProbes: [...scoped.values()].map((item) => item.reference), bodies: yield* currentBodies() }
       })),
       scopedProbe: (proof) => checked(Effect.gen(function* () {
         if (scoped.has(proof.proofID)) return
         if (proof.sourceSha256 !== context.source.sha256 || scoped.size >= 64)
           return yield* ReviewEvidenceSchemaV2.failure("bound-exceeded", "scoped-probe")
         const artifact = yield* addJSON("scoped-probe", proof, ReviewScopedProbeEvidenceV2.uri(proof.proofID))
-        scoped.set(proof.proofID, { proofID: proof.proofID, artifactID: artifact.artifactID })
+        scoped.set(proof.proofID, { proof, reference: { proofID: proof.proofID, artifactID: artifact.artifactID } })
       })),
       analysis: (input) => checked(Effect.gen(function* () {
         const routing = yield* attempt(() => Schema.decodeUnknownSync(ReviewRouting.Record)(JSON.parse(JSON.stringify(input.routing)), ReviewEvidenceSchemaV2.strict))
@@ -395,6 +395,15 @@ export function make(context: Context | FixContext, storage: Storage): Effect.Ef
           // to its executed pack selection and final host facts, while retaining its original routing bytes.
           ReviewEvidenceSchemaV2.require(ReviewEvidenceSchemaV2.same(final.result?.routing.packs, JSON.parse(JSON.stringify(host.routing.packs))), "final host packs differ from observed analysis")
           if (!report.value.report) throw ReviewEvidenceSchemaV2.failure("corrupt", "completed card missing")
+          const observed = [...scoped.values()].map((item) => item.proof)
+          for (const finding of report.value.report.findings) if (finding.evidence.kind === "probe") {
+            try {
+              ReviewScopedProbeEvidenceV2.qualify(observed, finding)
+            } catch {
+              throw new Tool.Failure({ message: "engagement-report-invalid: finding has no matching scoped probe outcome",
+                metadata: { reason: "engagement-report-invalid" } })
+            }
+          }
           ReviewChecksV2.validate(report.value.report, host.checkFacts)
         })
         const citations = yield* Effect.forEach(report.value.citations, (citation) => Effect.gen(function* () {
@@ -408,7 +417,7 @@ export function make(context: Context | FixContext, storage: Storage): Effect.Ef
           operations: order.map((id) => { const operation = operations.get(id); if (!operation) throw ReviewEvidenceSchemaV2.failure("corrupt", "operation did not complete"); return operation }),
           artifacts: [...artifacts.values()].sort((a, b) => a.artifactID < b.artifactID ? -1 : a.artifactID > b.artifactID ? 1 : 0),
           citations, hostProofs: [...proofs], notExamined: report.value.notExamined,
-          ...(scoped.size ? { scopedProbes: [...scoped.values()].sort((a, b) => a.proofID < b.proofID ? -1 : 1) } : {}) }
+          ...(scoped.size ? { scopedProbes: [...scoped.values()].map((item) => item.reference).sort((a, b) => a.proofID < b.proofID ? -1 : 1) } : {}) }
         const bytes = yield* attempt(() => Buffer.from(ReviewEvidenceSchemaV2.canonical(receipt)))
         if (bytes.byteLength > ReviewEvidenceSchemaV2.limits.receipt) return yield* ReviewEvidenceSchemaV2.failure("bound-exceeded", "receipt")
         const validated = yield* attempt(() => ReviewEvidenceValidationV2.read(bytes, report))

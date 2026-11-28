@@ -5,7 +5,6 @@ import os from "os"
 import { createHash } from "crypto"
 import { mkdtemp, readFile, readdir, realpath, rm, writeFile } from "fs/promises"
 import { Effect } from "effect"
-import { preProcessFile } from "typescript"
 import { BackendToolkit } from "../backend-toolkit"
 import { ResearchToolkit } from "../research-toolkit"
 import { ResearchProcess } from "../research-toolkit/process"
@@ -23,7 +22,7 @@ export type Observation = {
   readonly diagnostics: readonly Diagnostic[]
 }
 
-const CONFIG = JSON.stringify({ compilerOptions: { strict: true, noEmit: true, noResolve: true, types: [] }, files: ["input.ts"] })
+const CONFIG = JSON.stringify({ compilerOptions: { strict: true, noEmit: true, noResolve: true, target: "ES2022", module: "ESNext", types: [] }, files: ["input.ts"] })
 const hash = (bytes: Uint8Array | string) => createHash("sha256").update(bytes).digest("hex")
 
 /** Accept only complete, file-local tsc diagnostics and their indented continuations. */
@@ -55,7 +54,7 @@ export const run = Effect.fn("ReviewScopedTypecheck.run")(function* (input: { re
   const source = yield* Effect.try({ try: () => text.decode(input.bytes), catch: () => "invalid-utf8" }).pipe(Effect.catch(() => Effect.succeed(undefined)))
   if (source === undefined) return refused("invalid-utf8")
   // This deliberately rejects more than module syntax, including escaped identifiers and all reference directives.
-  if (/\\|\b(?:import|require|declare|module|namespace)\b|\/\/\//.test(source)) return refused("external-syntax")
+  if (/@ts-(?:no(?:check)?|ignore|expect-error)\b/i.test(source) || /\\|\b(?:import|require|declare|module|namespace)\b|\/\/\//.test(source)) return refused("external-syntax")
   const state = (yield* ResearchToolkit.status("typescript"))[0]
   if (!state || state.status !== "ready" || state.version !== "6.0.3" || state.target !== "linux-x64") return refused("typescript-not-ready")
   const root = yield* ResearchToolkit.Root
@@ -90,6 +89,7 @@ export const run = Effect.fn("ReviewScopedTypecheck.run")(function* (input: { re
   }
   const identity = yield* Effect.promise(identify)
   if (!identity) return refused("tool-identity")
+  const { preProcessFile } = yield* Effect.promise(() => import("typescript"))
   const scan = preProcessFile(source, true, true)
   if (scan.importedFiles.length || scan.referencedFiles.length || scan.typeReferenceDirectives.length || scan.libReferenceDirectives.length || scan.isLibFile) return refused("external-syntax")
   return yield* Effect.scoped(Effect.gen(function* () {
