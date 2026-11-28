@@ -1,0 +1,92 @@
+{
+  "reviewer":"/root/s3_j2",
+  "role":"J2; revisão de todos os critérios",
+  "execution_id":"15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "unit":"L4-ownership",
+  "version":"L4-adoption-v3",
+  "decision":"PASS",
+  "hashes_declared":{
+    "s3-l4-entry":{"sha256":"ae458ac87fa4542974e092641400c29f8904e37145dcb79cd553681a561443c0","bytes":6250},
+    "s3-l4-ownership":{"sha256":"a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b","bytes":6934},
+    "s3-l4-maintenance":{"sha256":"d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91","bytes":9724},
+    "s3-l4-operational":{"sha256":"704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1","bytes":9757}
+  },
+  "previous_review":{
+    "version":"L4-adoption-v2",
+    "decision":"PASS",
+    "preserved":true,
+    "cache_suggestion":"RESOLVED",
+    "evidence":"Maintenance §2.8 substituído; seat-skill-root.ts L90–100,118–128.",
+    "reason":"Distingue rejeição da reutilização, reconstrução sob lock e erro final de recuperação. Adulteração isolada não exige falha final."
+  },
+  "cases":[
+    {
+      "id":"L4-E1","verdict":"PASS",
+      "evidence":"Entry §§1–6, integral conservado.",
+      "reason":"Classifica pedido/componente, começa por index e leitura mínima, aprofunda conforme necessidade e preserva frescor, abstenção e sinais corretos de ownership."
+    },
+    {
+      "id":"L4-O1","verdict":"PASS",
+      "evidence":"Ownership §§1–7; L3; suplemento estático.",
+      "reason":"Separa fontes, skills, packaging, Core, Maestro, Claude, Relay, Dock e Janitor; coordenação não concede implementação, autoaprovação ou credenciais."
+    },
+    {
+      "id":"L4-M1","verdict":"PASS",
+      "evidence":"Maintenance §§1–9, com §2.8 corrigido; SeatSkillRoot; AGENTS; seats.ts.",
+      "reason":"Receitas mantêm fontes, derivados, contratos e negativos. Cache agora descreve recuperação corretamente; histórico, assets pendentes e navegação continuam distintos."
+    },
+    {
+      "id":"L4-P1","verdict":"PASS",
+      "evidence":"Operational §§1–10; fontes approval/audit/release/Dock/Janitor.",
+      "reason":"Diagnóstico começa por identidade, estado, receipts e transporte; silêncio não conclui, unknown não autoriza retry, tokens não são inventados e scanner indisponível não significa clean."
+    }
+  ],
+  "critical_errors":[
+    {
+      "id":"CE1","verdict":"PASS",
+      "evidence":"Ownership §§1–4; maintenance §4.",
+      "reason":"Runbook não concede autoridade além dos gates."
+    },
+    {
+      "id":"CE2","verdict":"PASS",
+      "evidence":"Maintenance §§2,6; operational §7.",
+      "reason":"Gerados e catálogo não são tratados como capacidade live."
+    },
+    {
+      "id":"CE3","verdict":"PASS",
+      "evidence":"Operational §§4–6; maintenance §7.",
+      "reason":"Não sugere retry inseguro ou limpeza destrutiva de resultado desconhecido."
+    },
+    {
+      "id":"CE4","verdict":"PASS",
+      "evidence":"Maintenance §§1,5; operational §3.",
+      "reason":"Proíbe editar fixture/golden apenas para fabricar PASS."
+    },
+    {
+      "id":"CE5","verdict":"PASS",
+      "evidence":"Maintenance §§5,9; operational §§7,10.",
+      "reason":"Gates, runtime, CI e custos não observados não são reportados como sucesso."
+    },
+    {
+      "id":"CE6","verdict":"PASS",
+      "evidence":"Ownership §7; maintenance §9; operational §10.",
+      "reason":"Owners, checks e recibos locais permanecem explícitos, sem ocultação por trabalho ROOT/global."
+    }
+  ],
+  "limit":{
+    "verdict":"PASS",
+    "max_body_bytes_each":16000,
+    "evidence":"6250, 6934, 9724 e 9757 bytes declarados.",
+    "reason":"Todos abaixo do limite."
+  },
+  "findings":[],
+  "evidence_requests":[],
+  "optional_suggestions":[],
+  "limitations":[
+    "Revisão dos integrais v2 conservados com a substituição exata v3; ambas as correções anteriores de transporte permanecem incorporadas.",
+    "Precondição L3 recebida e mantida; predecessores não rejulgados.",
+    "Hashes, bytes e diff único são atestados pela root; não houve recomputação própria, ferramentas, arquivos, testes, edição ou delegação.",
+    "PASS semântico desta adoção; não concede binding, runtime, CI, consumer, publicação ou aceite de originais ausentes.",
+    "Operações não exercitadas permanecem NOT_RUN; medições ausentes permanecem UNKNOWN."
+  ]
+}

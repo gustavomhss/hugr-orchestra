@@ -1,0 +1,82 @@
+{
+  "reviewer":"/root/s3_j1",
+  "execution_id":"15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "unit":"L4-ownership",
+  "revision":"L4-adoption-v3",
+  "decision":"PASS",
+  "declared_bodies":{
+    "s3-l4-entry":{"bytes":6250,"sha256":"ae458ac87fa4542974e092641400c29f8904e37145dcb79cd553681a561443c0"},
+    "s3-l4-ownership":{"bytes":6934,"sha256":"a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b"},
+    "s3-l4-maintenance":{"bytes":9724,"sha256":"d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91"},
+    "s3-l4-operational":{"bytes":9757,"sha256":"704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1"}
+  },
+  "finding_closure":[{
+    "id":"L4-M1-CACHE-NEGATIVE",
+    "status":"CLOSED",
+    "evidence":"Maintenance §2.8 corrigido; seat-skill-root.ts L90–100 e L118–128.",
+    "reason":"Distingue rejeição da reutilização do cache adulterado de reconstrução verificada sob lock. Adulteração isolada não exige erro final. O parecer v2 permanece válido para seus bytes anteriores."
+  }],
+  "cases":[
+    {
+      "id":"L4-E1","verdict":"PASS",
+      "evidence":"Entry §§1–6; seats.ts L129–172.",
+      "reason":"Seleciona componente/classe, index e leitura mínima; aprofunda conforme necessidade. Explicita pin, autoridade, abstenção e sinais inadequados de ownership."
+    },
+    {
+      "id":"L4-O1","verdict":"PASS",
+      "evidence":"Ownership §§1–7; L2/L3 aceitos; atlas-source.ts L18–33.",
+      "reason":"Separa fontes e fronteiras de Maestro, especialistas, packaging, Core, Relay, Claude, Dock e Janitor, sem autoaprovação ou grants inferidos."
+    },
+    {
+      "id":"L4-M1","verdict":"PASS",
+      "evidence":"Maintenance §§1–9; correção §2.8; seat-skill-root.ts L90–128; AGENTS.md L150–154.",
+      "reason":"Receitas identificam fontes, derivados, compatibilidade, validações e negativos. Cache agora tem resultado coerente. Preserva histórico, assets pendentes e distinção build/navegação."
+    },
+    {
+      "id":"L4-P1","verdict":"PASS",
+      "evidence":"Operational §§1–10; audit.ts L206–215 e L335–346; app-dock.ts L357–390; scan.ts L201–209.",
+      "reason":"Diagnóstico começa por identidade, estado, receipts e transporte. Silêncio não conclui; unknown bloqueia replay; tokens não são inventados; scanner unavailable não é clean."
+    }
+  ],
+  "critical_errors":[
+    {
+      "error":"runbook grants authority that code does not grant",
+      "verdict":"PASS","evidence":"Ownership §§1–4; Operational §§1–2.",
+      "reason":"Gates e owners permanecem obrigatórios."
+    },
+    {
+      "error":"generated or catalog data treated as live capability",
+      "verdict":"PASS","evidence":"Ownership §5; Maintenance §§2 e 6.",
+      "reason":"Dados, gerados e conexão live permanecem distintos."
+    },
+    {
+      "error":"unsafe retry or destructive cleanup suggested for an unknown result",
+      "verdict":"PASS","evidence":"Maintenance §7; Operational §§4–6.",
+      "reason":"Unknown impede replay; Janitor continua read-only."
+    },
+    {
+      "error":"fixture/golden edited merely to manufacture PASS",
+      "verdict":"PASS","evidence":"Maintenance §§1 e 5; Operational §3.",
+      "reason":"Alterações para fabricar verde são proibidas."
+    },
+    {
+      "error":"unexecuted gate, runtime, CI or cost reported as successful",
+      "verdict":"PASS","evidence":"Maintenance §§5 e 9; Operational §10.",
+      "reason":"Execução e medição ausentes mantêm NOT_RUN/UNKNOWN."
+    },
+    {
+      "error":"ROOT/global integration work used to hide an unfinished local obligation",
+      "verdict":"PASS","evidence":"Proveniência dos quatro corpos; Maintenance §9.",
+      "reason":"Liberação dos predecessores não substitui evidência e aceite locais."
+    }
+  ],
+  "limit":{"verdict":"PASS","max_body_bytes_each":16000,"evidence":"6250, 6934, 9724 e 9757 bytes declarados.","reason":"Todos abaixo do limite."},
+  "findings":[],
+  "evidence_requests":[],
+  "optional_suggestions":[],
+  "limitations":[
+    "Revisão estática de todos os obrigatórios, usando corpos v2 completos e substituição exata v3. Diff, hashes e bytes foram atestados pela principal; não os recomputei.",
+    "Nenhuma ferramenta, leitura de arquivo, delegação, edição ou teste utilizado.",
+    "PASS somente para esta adoção v3. Não concede aceite histórico ausente, binding, publicação, runtime, CI ou consumidores. Operações não exercitadas permanecem NOT_RUN; custos e tentativas não observados, UNKNOWN."
+  ]
+}

@@ -1,0 +1,213 @@
+{
+  "schema_version": "s3-l2-recipe-supplement-response.v1",
+  "status": "SUPPLEMENT_RECORDED",
+  "created_at_utc": "2026-11-28T06:23:56Z",
+  "agent_id": "/root/s3_l2_revision",
+  "agent_id_kind": "host-canonical-agent-name",
+  "identity_evidence": "The same host agent previously observed through collaboration.list_agents; recorded unchanged in the original response.json.",
+  "role": "producer-provenance-supplement",
+  "execution_record_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "repository": "gustavomhss/hugr-orchestra",
+  "source_commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "purpose": "Completar a proveniência documental da receita real de adoção/correção L2-v2 já executada, sem nova produção, revisão ou transformação dos corpos.",
+  "temporal_provenance": {
+    "kind": "later-documentation-supplement",
+    "original_adoption_created_at_utc": "2026-11-28T06:13:34Z",
+    "recipe_existed_at_original_delivery": false,
+    "historical_authorship_or_artifact_recovery_claimed": false
+  },
+  "original_response": {
+    "path": "response.json",
+    "sha256": "c04a244fbe8b79e64a4bdfe83a617367f24bafcea0de3310d6a6f662bd794b25",
+    "bytes": 8809,
+    "encoding": "UTF-8",
+    "status_preserved": "REVIEW_REQUIRED",
+    "modified": false
+  },
+  "supplement_artifacts": [
+    {
+      "path": "request-supplement.md",
+      "sha256": "4472fb3d86928300547a5ecb0f509ca0f131007c8fd299402912b572399c5be0",
+      "bytes": 793,
+      "encoding": "UTF-8"
+    },
+    {
+      "path": "recipe.md",
+      "sha256": "418d37557229dd9f20b0f44a5d0cc46daf8bd35d262414e866f4451eb3fa301b",
+      "bytes": 10617,
+      "encoding": "UTF-8"
+    }
+  ],
+  "preserved_original_artifacts": [
+    {
+      "path": "request.md",
+      "before": {
+        "sha256": "22d8ff9b243a0d87230f74c52445e52535a9a25fc1ff716522afcdf55c5ed1c1",
+        "bytes": 3252,
+        "encoding": "UTF-8"
+      },
+      "after": {
+        "sha256": "22d8ff9b243a0d87230f74c52445e52535a9a25fc1ff716522afcdf55c5ed1c1",
+        "bytes": 3252,
+        "encoding": "UTF-8"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "response.json",
+      "before": {
+        "sha256": "c04a244fbe8b79e64a4bdfe83a617367f24bafcea0de3310d6a6f662bd794b25",
+        "bytes": 8809,
+        "encoding": "UTF-8"
+      },
+      "after": {
+        "sha256": "c04a244fbe8b79e64a4bdfe83a617367f24bafcea0de3310d6a6f662bd794b25",
+        "bytes": 8809,
+        "encoding": "UTF-8"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "adoption-manifest.json",
+      "before": {
+        "sha256": "ac7dced53d7a2b22fcd107e98bd8c88da77c22e328363b6c56bf43d582cacab9",
+        "bytes": 6640,
+        "encoding": "UTF-8"
+      },
+      "after": {
+        "sha256": "ac7dced53d7a2b22fcd107e98bd8c88da77c22e328363b6c56bf43d582cacab9",
+        "bytes": 6640,
+        "encoding": "UTF-8"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "changes.diff",
+      "before": {
+        "sha256": "61f47b0e6dd191e7d12bee87d604502b3804384ed3c6fbb308a879857fe376dd",
+        "bytes": 2340,
+        "encoding": "UTF-8"
+      },
+      "after": {
+        "sha256": "61f47b0e6dd191e7d12bee87d604502b3804384ed3c6fbb308a879857fe376dd",
+        "bytes": 2340,
+        "encoding": "UTF-8"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "bodies/l2-maestro.md",
+      "before": {
+        "sha256": "5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012",
+        "bytes": 6979,
+        "encoding": "UTF-8"
+      },
+      "after": {
+        "sha256": "5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012",
+        "bytes": 6979,
+        "encoding": "UTF-8"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "bodies/l2-relay.md",
+      "before": {
+        "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+        "bytes": 7235,
+        "encoding": "UTF-8"
+      },
+      "after": {
+        "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+        "bytes": 7235,
+        "encoding": "UTF-8"
+      },
+      "byte_identical": true
+    },
+    {
+      "path": "bodies/l2-integrations.md",
+      "before": {
+        "sha256": "90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259",
+        "bytes": 6968,
+        "encoding": "UTF-8"
+      },
+      "after": {
+        "sha256": "90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259",
+        "bytes": 6968,
+        "encoding": "UTF-8"
+      },
+      "byte_identical": true
+    }
+  ],
+  "input_body_hashes": [
+    {
+      "body": "maestro",
+      "origin": "/workspace/scratch/0666cc914bd1/s3-provenance/files/bodies/l2-maestro.md",
+      "sha256": "7505522f3e92fa25dfda8dac896a2717d6eac71d9bd3a928d0bf4ae5e5b08d7e",
+      "bytes": 6733,
+      "encoding": "UTF-8"
+    },
+    {
+      "body": "relay",
+      "origin": "/workspace/scratch/0666cc914bd1/s3-provenance/files/bodies/l2-relay.md",
+      "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+      "bytes": 7235,
+      "encoding": "UTF-8"
+    },
+    {
+      "body": "integrations",
+      "origin": "/workspace/scratch/0666cc914bd1/s3-provenance/files/bodies/l2-integrations.md",
+      "sha256": "5b65c606ab258eea521adbf0cdf4bdf43b0755ec2ec0a7be5a2efc25545ce0c3",
+      "bytes": 6833,
+      "encoding": "UTF-8"
+    }
+  ],
+  "existing_output_body_hashes": [
+    {
+      "body": "maestro",
+      "path": "bodies/l2-maestro.md",
+      "sha256": "5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012",
+      "bytes": 6979,
+      "encoding": "UTF-8"
+    },
+    {
+      "body": "relay",
+      "path": "bodies/l2-relay.md",
+      "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+      "bytes": 7235,
+      "encoding": "UTF-8"
+    },
+    {
+      "body": "integrations",
+      "path": "bodies/l2-integrations.md",
+      "sha256": "90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259",
+      "bytes": 6968,
+      "encoding": "UTF-8"
+    }
+  ],
+  "documented_substitutions": [
+    "L2-v2-01",
+    "L2-v2-02",
+    "L2-v2-03"
+  ],
+  "supplement_verification": {
+    "existing_files_byte_identical": true,
+    "existing_files_count": 7,
+    "new_files_count_including_this_response": 3,
+    "body_transformation_rerun": false,
+    "new_review_decision": "NONE"
+  },
+  "limits": {
+    "production_reopened": false,
+    "review_reopened": false,
+    "oracle_files_read": 0,
+    "judgment_files_read": 0,
+    "github_writes": 0,
+    "body_writes": 0,
+    "l1_changes": 0,
+    "l3_l4_executed": false,
+    "product_runtime": "NOT_RUN",
+    "tests": "NOT_RUN"
+  },
+  "self_hash_note": "This response indexes the other two supplemental files. Its own bytes are not self-hashed."
+}

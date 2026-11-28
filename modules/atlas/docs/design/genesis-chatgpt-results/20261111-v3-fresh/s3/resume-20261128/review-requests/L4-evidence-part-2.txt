@@ -1,0 +1,393 @@
+## A4 — Falha de aquisição é HOLD explícito
+
+Repository/provider/source ausente não se transforma em declaração de ausência de conhecimento.
+
+Path `modules/maestro/coordination/src/v2/atlas-source.ts` @ baseline comum. Git blob `5388417c92f33c2cfd0d06d58d04446c35631d42`; SHA-256 integral `62fea869ed3107fbffadedc9ac6b8121f0c580f2d63cd913c1ab805eda8becc3`; 16688 bytes.
+
+
+L122–L132:
+
+```typescript
+export const read = Effect.fn("MaestroAtlasV2.read")(
+  function* (services: Services, placement: Placement) {
+    const provider = yield* configured(services.config)
+    if (!provider) return yield* held("provider-unconfigured", [placement.projectID])
+    if (provider.projectID !== placement.projectID)
+      return yield* held("provider-project-mismatch", [provider.projectID, placement.projectID])
+    if (provider.directory !== "." && !canonicalPath(provider.directory))
+      return yield* held("provider-path-invalid", [provider.directory])
+    const top = yield* services.git.run(["rev-parse", "--show-toplevel"], { cwd: placement.directory })
+    if (top.exitCode !== 0 || top.truncated || !top.text().trim())
+      return yield* held("repository-unavailable", [placement.directory, top.stderr.toString()])
+```
+
+L299–L303:
+
+```typescript
+  const result = yield* services.git.run(["hash-object", "--no-filters", "--", file], { cwd: repository })
+  if (result.exitCode !== 0 || result.truncated || !gitHash.test(result.text().trim()))
+    return yield* held("source-blob-unavailable", [relative, result.stderr.toString()])
+  yield* fencedPath(services.fs, repository, relative, "File")
+  return [relative, result.text().trim()] as const
+```
+
+L345–L347:
+
+```typescript
+function normalize(error: unknown) {
+  return error instanceof Held ? error : held("atlas-source-unavailable", [String(error)])
+}
+```
+
+L210–L211:
+
+```typescript
+  Effect.catch((error) => Effect.fail(normalize(error))),
+  Effect.catchDefect((error) => Effect.fail(normalize(error))),
+```
+
+## A5 — Spec histórica preservada
+
+Texto documental no mesmo pin: path antigo e backend-only. Mantido ao lado do código dos quatro owners.
+
+Path `docs/specs/seat-framework/README.md` @ baseline comum. Git blob `67c2cefb21ad554cb4aed12051bba00a15a36a3e`; SHA-256 integral `26dbc42efbffb0ab11d34f582dabc7f51ff5fb8492b46631634d657eef8a7553`; 10883 bytes.
+
+L3–L3:
+
+```text
+Each native specialist has one definition in `packages/orchestra/src/maestro/seats/<id>.ts`, registered in `seats/index.ts`. Maestro keeps its fixed name. Specialist ids route work; labels are presentation (`agent.<id>.name`, optionally overridden by `labelEnv`). The backend default label lives only in `BACKEND_DEFAULT_LABEL` in `roster.ts`.
+```
+
+L51–L51:
+
+```text
+Atlas Memory's public boundary and durable receipts have one supported owner: backend. Definitions requesting it for another id fail. Exposure requires the native owner's capability; no new seat is bound to backend memory. Backend toolkit packs, runtimes and skill content remain backend-only; requesting that toolkit from another seat fails. Core derives its closed entry-skill type from the packaged directories via `bun script/toolkit-pack.ts skills` (run in `packages/core`). Core does not import orchestra.
+```
+
+
+## O1 — Skills autorais e roots
+
+Root autoral distingue modules/specialists de packages/*-specialist.
+
+Path `modules/maestro/coordination/src/seats/seat.ts` @ baseline comum. Git blob `c75b784297a5f0fe35fbc62dbae235c3ea1b11a7`; SHA-256 integral `69de5c93578764496eff9df937c8f0cc7cfe5f11a2f40156a0c091959c35662b`; 7196 bytes.
+
+L34–L36:
+
+```typescript
+  readonly labelEnv?: string
+  /** Root skills, one directory each under `skillSource(id)`, or under `sharedSource()` for a `team-*` root; each grants its whole tree. */
+  readonly skills: readonly string[]
+```
+
+L103–L114:
+
+```typescript
+// The authored skill tree of a seat. Running from source reads it in place; compiled builds embed it
+// (src/seat-skills-module.ts). `import.meta.dirname` works under Bun and the desktop Node sidecar.
+export function skillSource(id: string) {
+  if (id === "backend" || id === "archie")
+    return path.resolve(import.meta.dirname, "../../../../../modules/specialists", id, "skills")
+  return path.resolve(import.meta.dirname, "../../../../../packages", `${id}-specialist`, "skills")
+}
+
+// The shared skill trees (`team-*` roots), authored once for every seat that declares one of them.
+export function sharedSource() {
+  return path.resolve(import.meta.dirname, "../../../../../modules/specialists/team/skills")
+}
+```
+
+
+## O2 — Grants de árvore e skills alheias
+
+Grant da root inclui nós descendentes; não cria grants de outras superfícies.
+
+Path `modules/maestro/coordination/src/roster.ts` @ baseline comum. Git blob `979ea02edc7ebe24c511d2511ca41518ec21df14`; SHA-256 integral `5a75024571efbb7edcb37ea0b50c27174439f48c69c00fefe3caa16e3eea2627`; 11307 bytes.
+
+L126–L131:
+
+```typescript
+    ...(seat.skills.length > 0 ? {
+      // A root opens its whole tree: every node below it is named `<root>-<path>`.
+      skill: Object.freeze({
+        "*": "deny" as const,
+        ...Object.fromEntries(seat.skills.flatMap((name) => [[name, "allow" as const], [`${name}-*`, "allow" as const]])),
+      }),
+```
+
+
+## O3 — Playbooks reservados e fontes de skills
+
+Preserva diferença entre playbook reservado e árvore de seat; comentários descrevem semânticas distintas.
+
+Path `modules/maestro/coordination/src/v2/skill-sources.ts` @ baseline comum. Git blob `f69456425da16565b69b3b1f9b8385c4130c9330`; SHA-256 integral `34c92ead24c56beb877a845b226449a530c3b214bce4b2d3bb12acd681a78253`; 2161 bytes.
+
+
+L9–L12:
+
+```typescript
+/**
+ * Maestro's bundled playbooks (`SeatSkillRoot.playbooks`) as a skill source. Their names are reserved: a project or
+ * user skill named like a playbook or one of its nodes is dropped with a warning, so Maestro's procedures and its
+ * Orchestra guide always load as shipped.
+```
+
+L22–L24:
+
+```typescript
+/**
+ * Every native seat's skill tree (`SeatSkillRoot.roots`) as a skill source, so the `skill` tool can load a seat's own
+ * skills. Like the playbooks they go first: a same-name skill from configuration replaces one.
+```
+
+L37–L44:
+
+```typescript
+/** A seat's skills belong to that seat: every other agent, Maestro included, is denied loading them. */
+export function foreign(id: string): PermissionV2.Ruleset {
+  const own = Seats.find(id)?.skills ?? []
+  return Object.values(Seats.all)
+    .filter((seat) => seat.id !== id)
+    .flatMap((seat) => seat.skills.filter((name) => !own.includes(name)))
+    .flatMap((name) => [name, `${name}-*`])
+    .map((resource) => ({ action: "skill", resource, effect: "deny" as const }))
+```
+
+## O4 — Roster indisponível
+
+Sem carga do roster a coleção de seats é vazia e há warning; ID copiado não fabrica seat nativo.
+
+Path `modules/maestro/coordination/src/v2/seats-service.ts` @ baseline comum. Git blob `1b2dc4cd362ae2835ec2800cd7366af72f65b804`; SHA-256 integral `f2b6a0de1d2611e4820d1e3f45dcd87759ca169ba70f076888c5cdc773f19995`; 1480 bytes.
+
+
+L20–L30:
+
+```typescript
+/**
+ * Which agents are native seats, so seat-only tools can gate themselves on the seat rather than on an agent that merely
+ * reuses its id. The roster loads lazily (see `v2/seats.ts`): where it cannot load, no agent is a seat.
+ */
+const layer = Layer.effect(
+  Service,
+  Effect.gen(function* () {
+    const loaded = yield* Effect.tryPromise(() => import("../roster")).pipe(Effect.option)
+    if (loaded._tag === "None") {
+      yield* Effect.logWarning("native seats unavailable: the seat roster could not load")
+      return make([])
+```
+
+## O5 — Shipping e documentação de manutenção
+
+Norma de manutenção: conhecimento runtime deve estar em prompt ou skill distribuída.
+
+Path `AGENTS.md` @ baseline comum. Git blob `ef3b523b0c00aed722582b870c1919188edc4c4f`; SHA-256 integral `07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f`; 16501 bytes.
+
+
+L150–L154:
+
+```text
+- Ships: compiled code, including seat prompts (`modules/maestro/coordination/src/seats/prompt/*.txt`); the skill trees a seat lists in `seat.skills` (`Seats.skillSource`, embedded at build time by `modules/maestro/coordination/src/seat-skills-module.ts`); Maestro playbooks (`modules/maestro/coordination/playbooks`), including the Orchestra guide under `maestro-orchestra`; the `extraResources` in `apps/desktop/electron-builder.config.ts`; the CLI package's `bin`.
+- Repo-only: `.orchestra/skills/*` (maintenance, ownership and contributor usage skills, seen only when this repository is the open project), `docs/` (specs and guides), and this file.
+- Knowledge an agent needs at runtime goes in its prompt or a shipped seat skill, never only in `.orchestra/skills`.
+- Never add a maintenance or ownership skill to a seat's `skills`.
+- `docs/guides` is written for users but is not published yet; a user-facing change still updates its guide.
+```
+
+## O6 — Ownership da coordenação
+
+README de contrato/ownership, separado da composição de código abaixo.
+
+Path `modules/maestro/coordination/README.md` @ baseline comum. Git blob `8f5371033cbd85f21898ee4e6e2ec98eba3010ad`; SHA-256 integral `43acf1877fa81cdff8a06601e4e424fbc7af4f1a942ad40e1f33b96901bf252a`; 2933 bytes.
+
+
+L7–L9:
+
+```text
+- Seats are named by id, never by display name. `src/roster.ts` is the roster; `src/seats` defines each seat (`archie`, `backend`, `billy`, `frankie`, `jimmy`, `live`, `lucy`, `patty`, `rosie`) with its prompt in `src/seats/prompt`.
+- `src/v2` holds the V2 tools, seats service, workflow and governance code; `src/arsenal-*.ts` is the Arsenal contribution; `src/governed-task.ts`, `src/approval.ts` and `src/work-contract.ts` define governed work.
+- `playbooks` holds the Maestro playbooks (`maestro-orchestra`, `maestro-plan`, `maestro-run`, `maestro-repo`, `frame-request`).
+```
+
+L18–L18:
+
+```text
+Layer `product`: it may import foundation, native, library, contract, extension-api, module, platform and product packages, never composition or app packages.
+```
+
+L27–L27:
+
+```text
+- None of its own. `src/v2/governance/records.ts` reads governed-chain event rows through the core database and never writes them; the host owns persistence and process lifetime.
+```
+
+## O7 — Imports e exports da coordenação
+
+Manifesto de dependências/entradas; não demonstra execução.
+
+Path `modules/maestro/coordination/package.json` @ baseline comum. Git blob `97397b0bc609fcf842f654ecbad2f4dd66d8d8d4`; SHA-256 integral `5c7dd84d4f9cff1473ddd79cbc1a75462937ba23de14aafe32c1ce6051f7a155`; 1912 bytes.
+
+
+L17–L23:
+
+```json
+    "./roster": "./src/roster.ts",
+    "./route-grant": "./src/route-grant.ts",
+    "./seat-skill-content": "./src/seat-skill-content.ts",
+    "./seat-skill-root": "./src/seat-skill-root.ts",
+    "./seat-skills-module": "./src/seat-skills-module.ts",
+    "./seats": "./src/seats/index.ts",
+    "./seats/seat": "./src/seats/seat.ts",
+```
+
+L28–L30:
+
+```json
+    "./v2/seats": "./src/v2/seats.ts",
+    "./v2/seats-service": "./src/v2/seats-service.ts",
+    "./v2/skill-sources": "./src/v2/skill-sources.ts"
+```
+
+L36–L42:
+
+```json
+  "dependencies": {
+    "@orchestra/atlas-boundary": "workspace:*",
+    "@orchestra/core": "workspace:*",
+    "@orchestra/llm": "workspace:*",
+    "@orchestra/maestro-arsenal": "workspace:*",
+    "@orchestra/relay": "workspace:*",
+    "@orchestra/schema": "workspace:*",
+```
+
+## O10 — Composição real do host
+
+Contribuições declaradas; Dock é condicional ao canal recebido.
+
+Path `apps/cli/src/host.ts` @ baseline comum. Git blob `cc89adc3a11e2bd3e7d779642382ed86dfceab31`; SHA-256 integral `8ac600b520f90454eb6f0e1e2030ebdd8522df7290f7a0ab9d052a53f4a3e25e`; 1624 bytes.
+
+
+L21–L27:
+
+```typescript
+export function contributions(dock?: Parameters<typeof AppDockTools.contribution>[0]): ReadonlyArray<Host.Contribution> {
+  return [
+    MaestroSeatsV2.contribution,
+    ContinuityV2.contribution,
+    ClaudeCodeHost.contribution,
+    ...(dock ? [AppDockTools.contribution(dock)] : []),
+  ]
+```
+
+## O11 — Serviços reservados do Core
+
+Host.merge recusa contribuição que tome os serviços reservados.
+
+Path `packages/core/src/host.ts` @ baseline comum. Git blob `a0fc5bc9a36e50315b0ddddf4de3566555711250`; SHA-256 integral `9c20433f123ac8ea41773434faaceaecfe87787143689f6862ef28e05a87cb0f`; 3802 bytes.
+
+L39–L50:
+
+```typescript
+// One coordinator per process: these stay owned by the composition root.
+const reserved = [SessionExecution.node, SessionV2.node, LocationServiceMap.node, ScheduledTask.node, ScheduledTask.daemonNode]
+
+/** Flatten contributions in order; synchronous because it only validates data. */
+export function merge(contributions: ReadonlyArray<Contribution>) {
+  const duplicate = repeated(contributions.map((item) => item.id))
+  if (duplicate) throw new Error(`Host contribution id is not unique: ${duplicate}`)
+  const replacements = contributions.flatMap((item) => item.replacements ?? [])
+  const nodes = contributions.flatMap((item) => item.nodes ?? [])
+  const locationNodes = contributions.flatMap((item) => item.locationNodes ?? [])
+  const claimed = [...replacements.map(([source]) => source), ...nodes].find((node) => reserved.some((owned) => owned.name === node.name))
+  if (claimed) throw new Error(`Host contribution may not own ${claimed.name}`)
+```
+
+
+## C1 — Capability assets são dados
+
+Catálogo/presets, destinos e limites conforme contrato publicado.
+
+Path `modules/capability-assets/README.md` @ baseline comum. Git blob `c0c1f947e9ced6e7c67e5b113927272e2b2ec849`; SHA-256 integral `29b1e897388210be29292bbbb7ca06ecc577ec71c81d16430f634fd2c5679f7f`; 3317 bytes.
+
+
+L3–L5:
+
+```text
+Data-only source packages for Orchestra's built-in capabilities. It records, for each capability asset that was adapted
+from an upstream project (Hermes and OpenClaw, both MIT), where it came from, which native tool names it maps to, and
+where its adapted content lives. It is not a runtime package: nothing registers tools from it.
+```
+
+L19–L21:
+
+```text
+Only `assets/skills` exists on disk. The `destination` paths for providers and native sources are reserved names
+for later adaptations, not files. Provider `packID` values are semantic platform identifiers, and the provider presets are declarations: they
+are not connections, approvals or operation receipts. License blob SHAs are Git blob SHA-1s, not raw-file hashes.
+```
+
+L25–L28:
+
+```text
+No workspace imports the package. `packages/core/src/capability/mcp/index.ts` and the connection verifiers under
+`packages/core/src/capability/connection/verifiers` carry data transcribed from `src/providers.ts`; the provenance note is
+`packages/core/src/capability/service/PROVENANCE.md`. No seat or skill root loads `assets/skills` yet. To ship a skill
+tree to a seat, use the seat framework (`seatSkillsModule` in `modules/maestro/coordination/src/seat-skills-module.ts` and the seat's `skills` list), with seat-scoped names.
+```
+
+L40–L43:
+
+```text
+- Entries are `source-qualified`: pinned provenance has been inspected. Copied-file digests, dependency integrity,
+  operation conformance and live acceptance are pending.
+- Skill bodies are adapted text; their referenced scripts and companions need their own review before they are
+  relied on.
+```
+
+## C2 — Qualificação pendente explícita
+
+Manifesto não equivale a live acceptance.
+
+Path `modules/capability-assets/src/sources.ts` @ baseline comum. Git blob `c9823e4e18f9a405b72929a9dac472c75715729b`; SHA-256 integral `b4d75e9b463e74ed39bcf925d02a050ee79b72acc8a96400aced9090dfc54dda`; 1364 bytes.
+
+
+L19–L23:
+
+```typescript
+// Source qualification records provenance, not runtime or dependency qualification.
+export const manifest = {
+  status: "source-qualified",
+  plan: "specs/orchestra-capabilities/ASSET-MAP.md",
+  importedContent: "license notices and provider preset data only",
+```
+
+L29–L30:
+
+```typescript
+  pendingEvidence: ["copied-file digests", "dependency integrity/licenses", "operation conformance", "live acceptance"],
+} as const
+```
+
+## C4 — Janitor não tem consumidor ativo declarado
+
+Documento declara ausência de importadores e estado em memória; não é prova de scanner ativo.
+
+Path `modules/janitor/README.md` @ baseline comum. Git blob `98c7e605b2bc954f39eef51a97a18fa077ee7a3f`; SHA-256 integral `db87c67067b25140dc8301f2e21cd26b81740bf2ecf3317b274308a33346c2fe`; 2534 bytes.
+
+
+L13–L15:
+
+```text
+- Export keys `./bootstrap` (`startJanitorLoop(scope, sink, env)`, `enabled`, `configFromEnv`) and `./report-state` (`getLatestReport`).
+- The sink is a parameter; the module never imports a bus.
+- No package under `apps`, `packages` or `modules` imports it yet; only its own tests do.
+```
+
+L27–L28:
+
+```text
+- Nothing is written to disk. The latest report is held in process memory and cleared when the last loop user leaves its scope.
+- One loop runs per process, shared by every `startJanitorLoop` caller. `ORCHESTRA_JANITOR=0` disables it and `ORCHESTRA_JANITOR_INTERVAL_MIN` sets the interval.
+```
+
+## Limites desta coleta
+
+Os trechos de código são evidência estática; README/spec/AGENTS preservam sua natureza documental. Não houve build, teste de produto, execução de Session, Atlas, provider, Dock, Janitor ou CI. As verificações locais limitaram-se à identidade de bytes e fidelidade dos recortes. Fontes indisponíveis permanecem limitações; contratos documentais não são convertidos em prova de runtime.

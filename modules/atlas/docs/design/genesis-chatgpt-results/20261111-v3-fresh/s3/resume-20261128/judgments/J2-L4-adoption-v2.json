@@ -1,0 +1,59 @@
+{
+  "reviewer": "/root/s3_j2",
+  "role": "J2; todos os critérios obrigatórios",
+  "execution_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "unit": "L4-ownership",
+  "version": "L4-adoption-v2",
+  "payload_complete": true,
+  "decision": "PASS",
+  "precondition": "L3 liberado com os dois pareceres completos recebidos; predecessores não rejulgados.",
+  "hashes_declared": {
+    "s3-l4-entry": {"sha256":"ae458ac87fa4542974e092641400c29f8904e37145dcb79cd553681a561443c0","bytes":6250},
+    "s3-l4-ownership": {"sha256":"a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b","bytes":6934},
+    "s3-l4-maintenance": {"sha256":"3cf2c141796b17af55aae2b422b74e7347c949ffbc03aafeca6ff043c2b4db1b","bytes":9284},
+    "s3-l4-operational": {"sha256":"704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1","bytes":9757}
+  },
+  "cases": [
+    {
+      "id":"L4-E1","verdict":"PASS",
+      "evidence":"Entry §§1–6; suplemento seats.ts L129–172.",
+      "reason":"Classifica componente/pedido, começa por index e uma entrada/ownership e aprofunda conforme a necessidade. Explicita pin, frescor, abstenção e rotas L1; labels, gerados e volume de fixtures não determinam ownership."
+    },
+    {
+      "id":"L4-O1","verdict":"PASS",
+      "evidence":"Ownership §§1–7; L3 F1–F4; suplemento seat.ts, atlas-source.ts e capability-assets/README.",
+      "reason":"Separa fonte autoral, packaging, Core, Maestro, Claude, Relay, Dock e Janitor. Maestro não recebe implementação ou autoaprovação; Sessions permanecem Core, credenciais pertencem à composição real e Janitor permanece read-only."
+    },
+    {
+      "id":"L4-M1","verdict":"PASS",
+      "evidence":"Maintenance §§1–9; L2/L3 aceitos; seats.ts L129–172; AGENTS L150–154 e procedimento CI fornecido.",
+      "reason":"As receitas identificam fontes, derivados, compatibilidade e negativos. Preservam conflitos históricos, assets pendentes, regeneração e cache, distinguindo inputs de navegação. Não fabricam execução ou aceite."
+    },
+    {
+      "id":"L4-P1","verdict":"PASS",
+      "evidence":"Operational §§1–10; L3 F2–F4; recortes approval, audit, release/recover, Dock e Janitor.",
+      "reason":"Começa por identidade, porta, estado, receipts e transporte real. Não conclui por silêncio/exit 0, não repete unknown, não inventa tokens e não limpa via Janitor. Runtime/CI e custos ausentes mantêm NOT_RUN/UNKNOWN."
+    }
+  ],
+  "critical_errors": [
+    {"id":"CE1","error":"runbook grants authority that code does not grant","verdict":"PASS","evidence":"Ownership §§1–4; maintenance §4; operational §§1–2: gates e owners permanecem necessários."},
+    {"id":"CE2","error":"generated or catalog data treated as live capability","verdict":"PASS","evidence":"Maintenance §§2,6; ownership §5; operational §7: gerado e catálogo não provam disponibilidade live."},
+    {"id":"CE3","error":"unsafe retry or destructive cleanup suggested for an unknown result","verdict":"PASS","evidence":"Operational §§4–6; maintenance §7: unknown não permite replay; retry Dock estrito; Janitor read-only."},
+    {"id":"CE4","error":"fixture/golden edited merely to manufacture PASS","verdict":"PASS","evidence":"Maintenance §§1,5 e operational §3 proíbem alteração de fixture/golden para fabricar verde."},
+    {"id":"CE5","error":"unexecuted gate, runtime, CI or cost reported as successful","verdict":"PASS","evidence":"Proveniências; maintenance §§5,9; operational §§7,10 distinguem comandos, execução observada e medição."},
+    {"id":"CE6","error":"ROOT/global integration work used to hide an unfinished local obligation","verdict":"PASS","evidence":"Ownership §7; maintenance §9; operational §10 mantêm owners, checks e receipts locais explícitos; atestado anterior não aceita L4."}
+  ],
+  "limit":{"verdict":"PASS","max_body_bytes_each":16000,"basis":"Os quatro tamanhos declarados estão abaixo do limite."},
+  "findings":[],
+  "evidence_requests":[],
+  "optional_suggestions":[
+    "Clareza não bloqueante: em maintenance §2.8, explicitar que cache adulterado falha na verificação de integridade e segue a reconstrução descrita em §2.6, evitando leitura de que toda inicialização deve terminar com erro."
+  ],
+  "limitations":[
+    "Avaliei os quatro corpos completos com a linha de abstenção entry §4 corrigida e a linha corrigida de reader em atlas-source.ts.",
+    "Hashes/tamanhos são declarados pela root; não recomputei nem atesto igualdade automática dos bytes transportados.",
+    "Sem ferramentas, arquivos, edição, delegação ou testes. Fontes e comandos foram tratados como dados estáticos.",
+    "PASS desta nova adoção, sem aceite dos originais ausentes; não constitui binding, publicação, consumer, runtime ou CI.",
+    "Operações não exercitadas permanecem NOT_RUN; custos, tokens e tentativas físicas não observados permanecem UNKNOWN."
+  ]
+}

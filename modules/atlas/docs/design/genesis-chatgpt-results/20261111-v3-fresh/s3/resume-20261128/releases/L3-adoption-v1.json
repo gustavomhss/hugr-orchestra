@@ -1,0 +1,45 @@
+{
+  "schema": "genesis-s3-semantic-layer-release/v1",
+  "execution_record_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "layer": "L3",
+  "revision": "L3-adoption-v1",
+  "decision": "ACCEPTED",
+  "verified_by": "/root",
+  "reviewer_ids": [
+    "/root/s3_j1",
+    "/root/s3_j2"
+  ],
+  "recorded_at": "2026-11-28T06:34:18.565158+00:00",
+  "bodies": [
+    {
+      "key": "s3-l3-flows",
+      "sha256": "17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99",
+      "bytes": 13637
+    }
+  ],
+  "decisions": [
+    {
+      "reviewer_id": "/root/s3_j1",
+      "path": "s3-resume-work/judgments/J1-L3-adoption-v1.json",
+      "sha256": "7e2cbb9bfb6a3c14efe86e4672e6743053c9d3a69b6e3fd7bc9554ef7e32f035",
+      "bytes": 8838
+    },
+    {
+      "reviewer_id": "/root/s3_j2",
+      "path": "s3-resume-work/judgments/J2-L3-adoption-v1.json",
+      "sha256": "d0396f43d2cf9aafb698f1134b8bca40e6b0660926b97de8f781c89922e2b3a0",
+      "bytes": 8154
+    }
+  ],
+  "mandatory_findings_open": 0,
+  "predecessor_release": "releases/L2-v2.json",
+  "predecessor_commit": "4b39581e817fa9374c6dc34e768bed1b3feac35f",
+  "release_scope": "Enables L4 production/review after both actual decisions received and inspected. Semantic only; binding/publication remain separate.",
+  "scheduling_note": "Initial J2 followup rejected at thread limit; same J2 returned REQUEST_PAYLOAD; full original body/oracle/evidence resent before the actual decision. No substitute judge.",
+  "transcription": "Complete visible JSON replies preserved UTF8 with terminal LF; no opaque host message IDs exposed.",
+  "usage": {
+    "cost": "UNKNOWN",
+    "tokens": "UNKNOWN",
+    "physical_attempts": "UNKNOWN"
+  }
+}

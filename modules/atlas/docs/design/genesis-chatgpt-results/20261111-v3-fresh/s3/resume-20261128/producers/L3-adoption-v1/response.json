@@ -1,0 +1,270 @@
+{
+  "schema_version": "s3-l3-adoption-1",
+  "generated_at_utc": "2026-11-28T06:25:14.077998Z",
+  "execution_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "repository": "gustavomhss/hugr-orchestra",
+  "baseline_ref": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_ref": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+  "producer": {
+    "identity": "/root/s3_l3_producer",
+    "role": "produtor atual de nova adoção/correção L3",
+    "historical_authorship_claimed": false,
+    "historical_prompts_reconstructed": false,
+    "historical_acceptance_reconstructed": false,
+    "delegation": {
+      "requested_task_name": "release_source_check",
+      "result": "spawn failed: agent thread limit reached",
+      "helper_created": false,
+      "helper_contribution": false
+    }
+  },
+  "adoption": {
+    "kind": "new_adoption_correction_of_alternative_recovery_body",
+    "historical_superior_originals_recovered": false,
+    "input": {
+      "path": "s3-provenance/files/bodies/l3-flows.md",
+      "bytes": 11409,
+      "sha256": "d69898e99b6e6eb4d9309b46c9e1541059effdbbdcc59fd2efb29ddd860947b7"
+    },
+    "output": {
+      "path": "s3-l3-adoption/bodies/l3-flows.md",
+      "bytes": 13637,
+      "sha256": "17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99"
+    },
+    "byte_delta": 2228,
+    "exact_replacements": 9,
+    "equal_bytes_via_sequence_matcher": 10951,
+    "equal_input_bytes_percent_via_sequence_matcher": 95.986,
+    "preservation_method": "Nove substituições de texto em âncoras únicas; bytes fora das substituições preservados. O diff é a comparação integral antes/depois."
+  },
+  "predecessor_release": {
+    "reported_by": "/root",
+    "released_at_utc": "2026-11-28T06:21:31Z",
+    "status_reported": "L2-v2 released",
+    "independent_reviewers_reported": [
+      "/root/s3_j1",
+      "/root/s3_j2"
+    ],
+    "reported_verdict": "PASS nos seis casos, sem findings abertos",
+    "review_reports_read_by_producer": false,
+    "selected_body_hashes_verified": true,
+    "selected_bodies": [
+      {
+        "path": "s3-l2-revision/bodies/l2-maestro.md",
+        "bytes": 6979,
+        "sha256": "5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012"
+      },
+      {
+        "path": "s3-l2-revision/bodies/l2-relay.md",
+        "bytes": 7235,
+        "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037"
+      },
+      {
+        "path": "s3-l2-revision/bodies/l2-integrations.md",
+        "bytes": 6968,
+        "sha256": "90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259"
+      }
+    ]
+  },
+  "changes": [
+    {
+      "id": "L3-ADOPT-01",
+      "sections": [
+        "Cabeçalho",
+        "7"
+      ],
+      "change": "Registra a nova autoria de adoção, os predecessores L2-v2 aceitos segundo a principal, seus hashes, o protocolo e os limites candidate/review-required/NOT_RUN; remove alegação de reconstrução histórica e a antiga pendência de L2.",
+      "basis": [
+        "Solicitação integral em request.md",
+        "s3-l2-revision/bodies/l2-maestro.md",
+        "s3-l2-revision/bodies/l2-relay.md",
+        "s3-l2-revision/bodies/l2-integrations.md"
+      ]
+    },
+    {
+      "id": "L3-ADOPT-02",
+      "sections": [
+        "3 / Preparação e aprovação / item 2"
+      ],
+      "change": "Resposta do owner genuína, role=user, mesma Session, posterior à apresentação, sem qualquer role=user intermediária inclusive sintética; distingue as recusas.",
+      "basis": [
+        "s3-l2-revision/bodies/l2-maestro.md / seção 2",
+        "s3-provenance/sources/modules/maestro/coordination/src/approval.ts:135-146"
+      ]
+    },
+    {
+      "id": "L3-ADOPT-03",
+      "sections": [
+        "4 / Estado possível"
+      ],
+      "change": "Separa release de arm parked, sob run lock e com human-release na próxima avaliação, da recuperação/remoção de lock antigo com gate-recovered antes da remoção; explicita a composição Relay.release → recover → ArmEvaluate.release.",
+      "basis": [
+        "s3-provenance/sources/modules/relay/src/arm/evaluate.ts:67-89",
+        "s3-provenance/sources/packages/core/src/relay.ts:374-418",
+        "s3-provenance/sources/packages/core/src/relay.ts:517-520"
+      ]
+    },
+    {
+      "id": "L3-ADOPT-04",
+      "sections": [
+        "4 / Recuperação segura / item 5",
+        "6 / efeito desconhecido"
+      ],
+      "change": "Retira a condição baseada em perigo de duplicação para unknown-effect, alinha ao L2 Relay e impede que a regra geral amplie o contrato específico Dock.",
+      "basis": [
+        "s3-l2-revision/bodies/l2-relay.md / seção 2 / item 5",
+        "s3-l2-revision/bodies/l2-integrations.md / seção 3"
+      ]
+    },
+    {
+      "id": "L3-ADOPT-05",
+      "sections": [
+        "5 / Tratamento da ação / stale-not-dispatched"
+      ],
+      "change": "Especifica no máximo uma repetição automática somente para NativeRPCError, code stale-ref, outcome not-dispatched, attempt < 1; não amplia para outros stale/failures.",
+      "basis": [
+        "s3-l2-revision/bodies/l2-integrations.md / seção 3",
+        "s3-provenance/sources/modules/app-dock/src/app-dock.ts:388-390"
+      ]
+    },
+    {
+      "id": "L3-ADOPT-06",
+      "sections": [
+        "5 / Tratamento da ação / unknown/uncertain"
+      ],
+      "change": "Proíbe replay automático para unknown/uncertain sem exceção por aparência inofensiva ou idempotência.",
+      "basis": [
+        "s3-l2-revision/bodies/l2-integrations.md / seção 3",
+        "s3-provenance/sources/modules/app-dock/src/app-dock.ts:357-360",
+        "s3-provenance/sources/modules/app-dock/src/app-dock.ts:388-390"
+      ]
+    }
+  ],
+  "authorized_inputs_hashed": [
+    {
+      "path": "s3-provenance/files/bodies/l3-flows.md",
+      "bytes": 11409,
+      "sha256": "d69898e99b6e6eb4d9309b46c9e1541059effdbbdcc59fd2efb29ddd860947b7"
+    },
+    {
+      "path": "s3-l2-revision/bodies/l2-maestro.md",
+      "bytes": 6979,
+      "sha256": "5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012"
+    },
+    {
+      "path": "s3-l2-revision/bodies/l2-relay.md",
+      "bytes": 7235,
+      "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037"
+    },
+    {
+      "path": "s3-l2-revision/bodies/l2-integrations.md",
+      "bytes": 6968,
+      "sha256": "90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259"
+    },
+    {
+      "path": "s3-provenance/l2-source-evidence.md",
+      "bytes": 30264,
+      "sha256": "d1a31fae0dfb0e41a074680f44b25fd023e33b304bb4b921ad4590e9ecf7e223"
+    },
+    {
+      "path": "s3-provenance/sources/modules/relay/src/arm/evaluate.ts",
+      "bytes": 41405,
+      "sha256": "a404c11fc270299ecc76def0fb40ad4ff2a146f4dc817a030394d33f4e0b064c"
+    },
+    {
+      "path": "s3-provenance/sources/packages/core/src/relay.ts",
+      "bytes": 30225,
+      "sha256": "446774386bf8020528bdc2138a066fd9dc4b214d3288dc069cb5da9d3cef2b2a"
+    },
+    {
+      "path": "s3-provenance/sources/modules/maestro/coordination/src/approval.ts",
+      "bytes": 9452,
+      "sha256": "70bb260f4e7ffb20844042f8c12934ce10398779d9ff4916b0ced9c5917cd8d4"
+    },
+    {
+      "path": "s3-provenance/sources/modules/app-dock/src/app-dock.ts",
+      "bytes": 55918,
+      "sha256": "e70b35aea0b041ab27f01823ecee2893d0738b657a4de1f67121ac016dc8e980"
+    }
+  ],
+  "source_inspection": {
+    "dossier": "s3-provenance/l2-source-evidence.md",
+    "dossier_display_truncated": true,
+    "direct_source_ranges_read": {
+      "s3-provenance/sources/modules/relay/src/arm/evaluate.ts": [
+        "55-115"
+      ],
+      "s3-provenance/sources/packages/core/src/relay.ts": [
+        "360-425",
+        "480-520"
+      ],
+      "s3-provenance/sources/modules/maestro/coordination/src/approval.ts": [
+        "110-151"
+      ],
+      "s3-provenance/sources/modules/app-dock/src/app-dock.ts": [
+        "350-395"
+      ]
+    },
+    "source_paths_enumerated": "somente os 16 arquivos sob s3-provenance/sources e os três corpos sob s3-l2-revision/bodies"
+  },
+  "artifact_integrity": {
+    "utf8_strict_round_trip": true,
+    "body_byte_limit": 18000,
+    "body_bytes": 13637,
+    "body_within_limit": true,
+    "inputs_unchanged_by_before_after_hashes": true,
+    "scope": "integridade documental; não é teste nem execução do produto"
+  },
+  "status": {
+    "artifact": "CANDIDATE_UNRELEASED",
+    "review": "REVIEW_REQUIRED",
+    "producer_grants_pass": false,
+    "independent_judgments_required": 2,
+    "runtime": "NOT_RUN",
+    "product_tests": "NOT_RUN",
+    "ci": "NOT_RUN",
+    "l4_started": false,
+    "remote_write": false
+  },
+  "boundaries": {
+    "github_used": false,
+    "oracles_read": false,
+    "reserved_judgments_read": false,
+    "consumer_cases_read": false,
+    "protocol_opened": false,
+    "product_executed": false,
+    "product_tests_executed": false,
+    "other_artifacts_modified": false,
+    "allowed_output_root": "/workspace/scratch/0666cc914bd1/s3-l3-adoption",
+    "limits": [
+      "L2-v2 release is parent-attested; producer independently verified only selected body bytes.",
+      "Static code inspection does not demonstrate runtime behavior, CI, live providers, Dock, Janitor, settlement, Atlas import or publication.",
+      "No original historical L3/L4 authorship, request, response or acceptance is fabricated.",
+      "This response is the original production record for the current adoption, not a historical response.",
+      "Root remains the only remote writer; current producer provides local candidate bytes only."
+    ]
+  },
+  "artifacts": [
+    {
+      "path": "s3-l3-adoption/bodies/l3-flows.md",
+      "bytes": 13637,
+      "sha256": "17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99"
+    },
+    {
+      "path": "s3-l3-adoption/request.md",
+      "bytes": 2975,
+      "sha256": "36efe0d7cadf9682aa8e79600ce124714b8f5d8375e0960263c0df4dfd5ce225"
+    },
+    {
+      "path": "s3-l3-adoption/recipe.md",
+      "bytes": 9733,
+      "sha256": "6eebacaa9f3633b78930d3681b3342b24494284f64af27f5ad0cb299bbd17359"
+    },
+    {
+      "path": "s3-l3-adoption/changes.diff",
+      "bytes": 9295,
+      "sha256": "56a100b1e10aa493db1a9c1d1d538ef3a53178ab9d9e8583dd85470833eac047"
+    }
+  ],
+  "response_self_hash": "O SHA-256 desta resposta é entregue externamente após sua escrita; não há autorreferência de hash."
+}

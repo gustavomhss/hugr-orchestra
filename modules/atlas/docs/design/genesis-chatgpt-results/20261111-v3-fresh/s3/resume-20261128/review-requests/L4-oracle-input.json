@@ -1,0 +1,79 @@
+{
+  "schema": "s3-oracle/v1",
+  "unit": "L4-ownership",
+  "frozen_at": "2026-11-11T18:26:09.904615+00:00",
+  "recovery_execution_id": "e51ef44b-a6d6-47b0-a6ea-dd5aef7d7c3e",
+  "baseline": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "precondition": "s3-l3-flows accepted by both persistent S3 judges before L4 release",
+  "artifacts": [
+    "s3-l4-entry",
+    "s3-l4-ownership",
+    "s3-l4-maintenance",
+    "s3-l4-operational"
+  ],
+  "cases": [
+    {
+      "id": "L4-E1",
+      "artifact": "s3-l4-entry",
+      "question": "A maintainer has only an incident or change request. Can the entry artifact route them to the smallest useful knowledge without loading the whole S3 corpus?",
+      "expected": [
+        "choose component and failure/change class first",
+        "start with index and one entry/ownership read",
+        "deepen only to maintenance/operational or source evidence needed",
+        "state freshness/authority limits and abstain outside S3",
+        "do not use labels, generated files or fixture volume as ownership signals"
+      ]
+    },
+    {
+      "id": "L4-O1",
+      "artifact": "s3-l4-ownership",
+      "question": "Who owns a change spanning Maestro dispatch, a specialist skill, Relay settlement, Claude execution and Dock transport?",
+      "expected": [
+        "assign each authoritative source and runtime boundary separately",
+        "Maestro coordinates but does not gain product implementation or self-approval",
+        "specialist tree owners author skill bytes; generator/runtime owners maintain embedding/extraction",
+        "Relay owns workflow/gate/ledger semantics, not provider Sessions or Dock credentials",
+        "Claude adapter owns provider translation under Core Session authority",
+        "Dock owns its transport/interface contract and Janitor remains read-only"
+      ]
+    },
+    {
+      "id": "L4-M1",
+      "artifact": "s3-l4-maintenance",
+      "question": "Can a maintainer execute safe recipes for seat labels, skill companions, governed tools, Relay profiles/policies and integration catalogs?",
+      "expected": [
+        "recipes identify authoritative files, generated outputs and compatibility contracts",
+        "each recipe lists required validation and negative checks",
+        "historical conflicts and source-qualified assets remain explicit",
+        "membership/build dependencies drive invalidation while navigation does not",
+        "no manual edit to generated virtual modules or fabricated runtime acceptance"
+      ]
+    },
+    {
+      "id": "L4-P1",
+      "artifact": "s3-l4-operational",
+      "question": "Can an operator diagnose refusal, blank output, uncertain integration, missing credentials and scanner failure without destructive guessing?",
+      "expected": [
+        "diagnostic order starts with identity, state, receipts and real transport prerequisites",
+        "blank output and exit zero are not completion",
+        "unknown effect is not automatically retried",
+        "credentials/tokens are never invented",
+        "scanner unavailable is not clean and Janitor has no destructive action",
+        "runtime/CI/cost claims remain NOT_RUN or UNKNOWN unless evidenced"
+      ]
+    }
+  ],
+  "critical_errors": [
+    "runbook grants authority that code does not grant",
+    "generated or catalog data treated as live capability",
+    "unsafe retry or destructive cleanup suggested for an unknown result",
+    "fixture/golden edited merely to manufacture PASS",
+    "unexecuted gate, runtime, CI or cost reported as successful",
+    "ROOT/global integration work used to hide an unfinished local obligation"
+  ],
+  "limits": {
+    "max_body_bytes_each": 16000,
+    "consumer_cases_ref": "oracles/ownership-cases.json",
+    "evaluation": "operational ownership guidance for the pinned baseline; no production activation"
+  }
+}

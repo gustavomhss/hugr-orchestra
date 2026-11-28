@@ -1,0 +1,132 @@
+{
+  "reviewer": "/root/s3_j1",
+  "role": "J1 — fidelidade e autoridade, incluindo todos os critérios obrigatórios",
+  "execution_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "revision": "L3-adoption-v1",
+  "unit": "L3-flows",
+  "declared_artifact": {
+    "name": "s3-l3-flows",
+    "bytes": 13637,
+    "sha256": "17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99",
+    "verification": "Tamanho e hash declarados como recomputados pela principal; não recalculados por este juiz."
+  },
+  "decision": "PASS",
+  "precondition": {
+    "verdict": "PASS",
+    "evidence": "Os três corpos L2-v2 e os dois pareceres completos estão no contexto. Ambos os pareceres apresentam PASS nos seis casos, sem findings ou requisições abertos; a principal atestou a liberação de L2.",
+    "reason": "A precondição autoriza esta revisão, sem determinar seu resultado. Os predecessores não foram rejulgados."
+  },
+  "cases": [
+    {
+      "id": "L3-F1",
+      "verdict": "PASS",
+      "evidence": [
+        "L3 §2 mantém a fonte na root declarada do especialista e inclui membership e bytes capturados como inputs.",
+        "L3 §2 distingue geração por seatSkillsModule/seatSkillsFiles de edição manual do módulo virtual; mantém execução de fonte e extração compilada por versão/digest.",
+        "L3 §2 preserva identidade e grants e limita a propagação para Relay ao consumo efetivo dos bytes.",
+        "Predecessor L2-v2 Maestro §3; seat-skill-content.ts L112–118 e L135–147; seat-skills-module.ts L6–18 e L40–42; seat-skill-root.ts L90–105, L118–128 e L175–181."
+      ],
+      "reason": "O fluxo cobre as seis consequências obrigatórias e distingue presença no Git de disponibilidade efetivamente demonstrada no sidecar."
+    },
+    {
+      "id": "L3-F2",
+      "verdict": "PASS",
+      "evidence": [
+        "L3 §§1 e 3 mantém ComposedActor e ID canônico como raízes de autoridade.",
+        "L3 §3 vincula revisão, validação, contexto, policy e task à resposta genuína imediata, sem qualquer role=user intermediário.",
+        "L3 §3 preserva reservation write-once, child Session exata, permission snapshot, beforeTurn e recusa de mismatch.",
+        "L3 §3 recusa Claude Agent/Task, usa Orchestra task e distingue PreToolUse/canUseTool, turn.authorize e turn.execute.",
+        "L3 §3 exige settlement governado e receipt durável, sem substituição por evaluate ou exit code.",
+        "approval.ts L131–146; governance/dispatch.ts L53–69; governance/reservation.ts L59–79, L111–113 e L254–261; governance.ts L323–330 e L390–396; claude-code/src/v2/host.ts L38–49, L158–178 e L580–588; packages/core/src/relay.ts L491–498."
+      ],
+      "reason": "O fluxo conserva a cadeia entre identidade, aprovação, execução, autorização de ferramentas e settlement. Texto do modelo, allow rules e load do playbook não substituem os gates."
+    },
+    {
+      "id": "L3-F3",
+      "verdict": "PASS",
+      "evidence": [
+        "L3 §4 separa efeito externo, disposição assinada/proveniente, receipt durável e estado aplicado, incluindo diferentes pontos possíveis de interrupção.",
+        "L3 §4 exige inspeção de lock, state, ledger/receipts, stderr e artefatos atuais antes de retry.",
+        "L3 §4 distingue release do arm parked de recuperação do run lock e descreve human-release e gate-recovered em suas posições próprias.",
+        "arm/evaluate.ts L67–89; packages/core/src/relay.ts L382–384, L406–416 e L517–520; arm/settlement.ts L13–20 e L45–60.",
+        "L3 §§4 e 6 proíbe repetição automática enquanto unknown-effect, rejeita conclusão por silêncio e mantém settlement e audit distintos.",
+        "audit.ts L206–215, L335–346 e L528–529; L3 §4 mantém not-run/invalid e custo não medido como total:null/UNKNOWN."
+      ],
+      "reason": "A recuperação não promete rollback ou exactly-once. A nova precisão sobre release e lock corresponde aos recortes fornecidos. Exit code, stdout vazio e integridade do audit não substituem evidência de settlement ou de efeitos externos."
+    },
+    {
+      "id": "L3-F4",
+      "verdict": "PASS",
+      "evidence": [
+        "L3 §5 exige transporte real do desktop, URL/token por launch e canal/Session; distingue hooks diretos de RPC/MCP.",
+        "socket-transport.ts L5–17 e L24; predecessor L2-v2 integrações §3.",
+        "L3 §5 proíbe repetição automática de unknown/uncertain e restringe a uma repetição a condição NativeRPCError, stale-ref, not-dispatched e attempt < 1.",
+        "app-dock.ts L357–360 e L380–390.",
+        "L3 §5 mantém scanner failure como unavailable, Janitor read-only e composição in-memory/store dependente de ligação observada.",
+        "janitor/src/scan.ts L7–10 e L201–209; trecho aceito de L1 integrations L101."
+      ],
+      "reason": "A regra geral de recuperação Relay não amplia o retry Dock. Janitor não recebe poderes de limpeza, reinício ou fabricação de credenciais, e indisponibilidade não é apresentada como estado clean."
+    }
+  ],
+  "critical_errors": [
+    {
+      "id": "CE1",
+      "error": "model prose or a copied identifier treated as authority",
+      "verdict": "PASS",
+      "evidence": "L3 §1, itens 1–4, e §3 distinguem identidade canônica, objetos de autorização, ferramentas e texto do modelo.",
+      "reason": "O erro não está presente: labels, IDs copiados, prompts e allow rules não são promovidos a autoridade."
+    },
+    {
+      "id": "CE2",
+      "error": "navigation-only edge treated as a build dependency",
+      "verdict": "PASS",
+      "evidence": "L3 §2, Impacto e não impacto, condiciona dependência Relay ao consumo efetivo dos bytes alterados.",
+      "reason": "O erro não está presente: links documentais de navegação não provocam rebuild ou invalidação automática."
+    },
+    {
+      "id": "CE3",
+      "error": "release or audit claimed to roll back or prove exactly-once external effects",
+      "verdict": "PASS",
+      "evidence": "L3 §4 declara que release não desfaz efeitos nem prova exactly-once e limita audit/verify às propriedades verificadas.",
+      "reason": "O erro não está presente: release do arm, recuperação de lock, audit e efeito externo permanecem distintos."
+    },
+    {
+      "id": "CE4",
+      "error": "unknown integration result automatically repeated",
+      "verdict": "PASS",
+      "evidence": "L3 §§4–6 bloqueia repetição automática de resultado desconhecido; §5 explicita a única condição delimitada de retry Dock.",
+      "reason": "O erro não está presente: a incerteza não autoriza replay, inclusive quando a ação Dock parece inofensiva ou idempotente."
+    },
+    {
+      "id": "CE5",
+      "error": "historical/spec intent silently presented as current implementation",
+      "verdict": "PASS",
+      "evidence": "A abertura e §7 identificam a nova adoção, a fonte fixa e a ausência de originais/prompts/aceites históricos completos; §1 distingue fonte, gerado, fixture e histórico.",
+      "reason": "O erro não está presente: a adoção atual não reconstrói autoria ou aceite histórico e não usa intenção documental como prova de implementação."
+    },
+    {
+      "id": "CE6",
+      "error": "semantic review presented as runtime binding or publication proof",
+      "verdict": "PASS",
+      "evidence": "A abertura e §7 mantêm revisão independente pendente no corpo candidato e declaram runtime NOT_RUN, sem execução de produto, CI, importação, publicação ou leitura Atlas.",
+      "reason": "O erro não está presente: aceite dos predecessores e entendimento estático não são apresentados como binding, publicação ou consumo runtime."
+    }
+  ],
+  "limit": {
+    "verdict": "PASS",
+    "declared_body_bytes": 13637,
+    "max_body_bytes": 18000,
+    "evaluation": "Raciocínio estático integrado sobre predecessores aceitos e fontes fixas.",
+    "reason": "O tamanho declarado respeita o limite, e o corpo preserva runtime consumption como obrigação posterior."
+  },
+  "findings": [],
+  "evidence_requests": [],
+  "optional_suggestions": [],
+  "limitations": [
+    "PASS exclusivamente semântico para o corpo L3-adoption-v1 fornecido, associado ao hash declarado neste parecer.",
+    "Não foram usadas ferramentas, leitura de arquivos, delegação, edição, execução de testes ou recomputação própria de hashes.",
+    "Nenhum aceite é concedido a originais históricos ausentes.",
+    "Este parecer não constitui binding, publicação, index/read, validação de consumidores, execução do produto ou resultado de CI.",
+    "Runtime, publicação, index/read, consumidores e CI S3 permanecem NOT_RUN; custos, tokens e tentativas físicas não observados permanecem UNKNOWN."
+  ]
+}

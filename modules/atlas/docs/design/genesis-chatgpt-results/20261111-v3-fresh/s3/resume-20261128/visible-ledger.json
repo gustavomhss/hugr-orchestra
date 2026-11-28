@@ -1,7 +1,7 @@
 {
   "schema": "genesis-s3-visible-execution-ledger/v1",
   "execution_record_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
-  "updated_at": "2026-11-28T06:23:46.224366+00:00",
+  "updated_at": "2026-11-28T07:02:28.031230+00:00",
   "root": "/root",
   "remote_writer": "/root",
   "branch": "genesis-s3-resume",
@@ -42,7 +42,29 @@
     {
       "unit": "L3-flows",
       "producer": "/root/s3_l3_producer",
-      "state": "PRODUCTION_STARTED_AFTER_L2_RELEASE"
+      "state": "ACCEPTED",
+      "revision": "L3-adoption-v1",
+      "release": "releases/L3-adoption-v1.json",
+      "scheduling_event": "J2 initial followup rejected by thread limit; J2 requested actual payload and received full resend before judgment."
+    },
+    {
+      "unit": "L4-ownership",
+      "revision": "L4-adoption-v2",
+      "producer": "/root/s3_l4_producer",
+      "J1": "FIX-FIRST",
+      "J2": "PASS",
+      "release": "NOT_RELEASED",
+      "mandatory_finding": "L4-M1-CACHE-NEGATIVE",
+      "original_message_record": "review-requests/L4-input-record.json"
+    },
+    {
+      "unit": "L4-ownership",
+      "revision": "L4-adoption-v3",
+      "producer": "/root/s3_l4_producer",
+      "J1": "PASS",
+      "J2": "PASS",
+      "result": "ACCEPTED",
+      "release": "releases/L4-adoption-v3.json"
     }
   ],
   "identity_policy": "No claims of historical-original upper bodies, inherited original acceptance, unavailable host message IDs, provider billing or hidden attempts.",
@@ -57,6 +79,11 @@
     "run_id": 46114652347,
     "result": "PASS_PREPARE_QUALIFICATION",
     "archive_sha256": "f1747366c2312c80ff6cd071aea15693ceb14962b3e974f6614ddf450ac14606",
-    "scope": "S1-03/S2 real prepares, full input/kernel verification and EACCES refusal. No S3 prepare/binding/publication claim."
+    "scope": "S1-03/S2 real prepares, full input/kernel verification and EACCES refusal. No S3 prepare/binding/publication claim.",
+    "seal": "e171783482d0a44974d6056cd9e144a7e33406a7",
+    "payload": "da9800f55f31926f33c41a5ca2fd88bf26fcaccc",
+    "release_sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1",
+    "acceptance_verification": "s4-latest/acceptance-verification/verification.json",
+    "reference_checks": 106
   }
 }

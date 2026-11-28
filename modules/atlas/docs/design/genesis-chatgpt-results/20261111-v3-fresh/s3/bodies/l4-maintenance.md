@@ -1,6 +1,8 @@
 # S3 L4 — receitas de manutenção segura
 
-**Estado:** `CANDIDATE_UNRELEASED`. Fonte fixa: `gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38`. As receitas descrevem mudanças no pin e seus negativos; não declaram execução, CI, importação ou publicação.
+**Estado no momento da produção (2026-11-28T06:38:33Z):** `CANDIDATE_UNRELEASED` / `REVIEW_REQUIRED`. Fonte fixa: `gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38`. As receitas descrevem mudanças no pin e seus negativos; não declaram execução, CI, importação ou publicação.
+
+**Proveniência no momento da produção (2026-11-28T06:38:33Z):** nova adoção/correção por `/root/s3_l4_producer`, execução `15cc9853-0e71-4950-8813-0bfb66f82c8a`, protocolo `ee2521a5b966bd505cc95bd1c733e09e12f33531`. O input é o alternativo `s3-provenance/files/bodies/l4-maintenance.md` (hash e bytes em `response.json`); os originais superiores, seus prompts e aceites históricos não foram recuperados. L1/L2 e L3-adoption-v1 estão liberados conforme atestado da principal nesta execução; o corpo L3 selecionado tem SHA-256 `17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99`. Estados antigos nos predecessores descrevem seu momento de produção; os recibos externos posteriores determinam sua liberação. Isso permite produzir L4, sem conceder aceite a este corpo. Recibos externos sobre seus bytes exatos determinarão sua liberação futura; o produtor não concede aceite. Runtime/CI/live nesta adoção: `NOT_RUN`.
 
 ## 1. Formato obrigatório de uma mudança
 
@@ -15,7 +17,7 @@ Antes de editar, escreva: objetivo, fonte autoral, owner, consumers, tipo de are
 5. Regenere via `seatSkillsModule`/`seatSkillsFiles` para os targets Bun e Node. **Não edite** `orchestra-seat-skills.gen.ts` manualmente.
 6. Valide o embed e a extração de `SeatSkillRoot`: versão/digest, cache íntegro, reconstrução de cache parcial/adulterado e locks.
 7. Exercite source e pelo menos o target compilado realmente entregue. Confirme que o seat consegue descobrir a instrução shipped.
-8. Verifique negativos: arquivo fora da root, invalid UTF-8, symlink/escape, gerado manualmente divergente e cache adulterado devem falhar.
+8. Verifique negativos: arquivo fora da root, invalid UTF-8, symlink/escape e gerado manualmente divergente devem falhar. Para cache adulterado, a validação deve rejeitar a reutilização da cópia antiga; a extração deve reconstruir e validar uma cópia íntegra quando possível, sob o contrato de lock. A adulteração por si só não exige falha final da extração: erro final somente se a recuperação falhar, inclusive a aquisição do lock ou a verificação da cópia reconstruída. [Fonte: `modules/maestro/coordination/src/seat-skill-root.ts:90–100,118–128`.]
 9. Registre bytes/hashes e target. Um link para Relay é navigation; só declare dependência Relay se o resultado consumir os bytes.
 
 ## 3. Trocar o label de um seat
@@ -32,7 +34,7 @@ Antes de editar, escreva: objetivo, fonte autoral, owner, consumers, tipo de are
 
 1. Identifique registry/schema e owner real.
 2. Defina recursos/efeitos e a porta de execução. Texto do prompt não é grant.
-3. Mantenha caller/owner gate, profile floor, ToolSafety, permission snapshot e approval separados.
+3. Mantenha caller/owner gate, profile floor, ToolSafety, permission snapshot e approval separados. Quando a aprovação for exigida, a resposta selecionada do owner deve ser genuína, ter `role=user`, pertencer à mesma Session e ser posterior à apresentação. Não pode existir qualquer mensagem intermediária com `role=user` (inclusive sintética); `reply-synthetic` e `reply-not-immediate` são recusas distintas. [Fonte: `modules/maestro/coordination/src/approval.ts:135–146`; L3 F2.]
 4. Sincronize playbook/skill apenas quando forem parte do contrato; load de playbook não substitui approval.
 5. No Claude adapter, preserve `PreToolUse`/`canUseTool` por tool-use id e o caminho `turn.authorize`/`turn.execute`.
 6. Não crie alias para contornar recusa. `Agent`/`Task` continua recusado; delegação usa Orchestra task/child Session.
@@ -69,7 +71,8 @@ Antes de editar, escreva: objetivo, fonte autoral, owner, consumers, tipo de are
 - Preserve o transport desktop real: Electron main, loopback WebSocket e URL/token por launch.
 - Não copie token entre launches nem gere um valor arbitrário.
 - Diferencie hook direto de RPC/MCP e valide a ordem/permissão de cada porta.
-- Para ação incerta, registre idempotência/receipt; somente `stale-not-dispatched` usa retry delimitado.
+- Para ação incerta, registre receipt/efeito e mantenha HOLD; `unknown/uncertain` nunca permite replay automático, mesmo se a ação parecer inofensiva ou idempotente. [Fonte: `modules/app-dock/src/app-dock.ts:357–360`; L3 F4.]
+- `stale-not-dispatched`: no máximo uma repetição automática, somente para uma instância de `NativeRPCError` com `code === "stale-ref"`, `outcome === "not-dispatched"` e `attempt < 1`; outros erros stale ou falhas não satisfazem essa regra. [Fonte: `modules/app-dock/src/app-dock.ts:388–390`; L3 F4.]
 - Preserve o reaper Linux ligado ao lifetime da Session.
 
 ### Janitor

@@ -1,0 +1,221 @@
+Suplemento L4: recortes literais selecionados de fontes públicas em gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38. Complementam as evidências L2/L3 já no contexto. Código é prova estática; README/spec/AGENTS são documentos com sua própria autoridade, não execução. A spec backend-only abaixo é conflito histórico, preservado junto do código. O dossiê integral de 26 fontes e 49 recortes foi verificado por Git blob/bytes na root; seguem somente os recortes decisivos adicionais, sem instrução para executar.
+
+FONTE packages/core/src/config/plugin/agent.ts; SHA256 integral c147c373a924480fed6d2e3e947127b44dba3a4603d9c74d0de79996bad8f91b; 8816 bytes.
+L99–106:
+```
+            const agentID = AgentV2.ID.make(id)
+            // Every session runs on Maestro, so no configuration source (a JSON document or an agent file) may disable
+            // it or take it out of primary mode.
+            const maestro = agentID === AgentV2.defaultID
+            if (item.disabled && !maestro) {
+              draft.remove(agentID)
+              continue
+            }
+```
+L122–127:
+```
+              // Maestro's name is fixed: the app and other Sessions address the conductor by it.
+              if (item.name !== undefined && !maestro) agent.name = item.name
+              if (item.system !== undefined) agent.system = item.system
+              if (item.description !== undefined) agent.description = item.description
+              if (item.engine !== undefined) agent.engine = item.engine
+              if (item.mode !== undefined && !maestro) agent.mode = item.mode
+```
+
+FONTE modules/maestro/coordination/src/v2/seats.ts; SHA256 integral 4dd2acad909ce35909d82b3eac095a316c0f8695dd26ed0f9d627ea088641de6; 11640 bytes.
+L129–172:
+```
+ * A native seat's display label, as on the earlier runtime: its label variable (`HUGR_BACKEND_NAME`, `HUGR_UPSTREAM_NAME`), else
+ * `agent.<id>.name`, else the roster default. The label is presentation only; the id stays the address. An invalid label
+ * keeps the default and names the problem.
+ */
+export function label(
+  id: string,
+  fallback: string,
+  configured: string | undefined,
+  others: ReadonlyArray<AgentV2.Info>,
+) {
+  const variable = Seats.find(id)?.labelEnv
+  const value = variable ? process.env[variable] : undefined
+  const source =
+    value !== undefined
+      ? { path: variable, value }
+      : configured !== undefined
+        ? { path: `agent.${id}.name`, value: configured }
+        : undefined
+  if (!source) return { label: fallback }
+  const trimmed = source.value.trim()
+  const problem = labelProblem(
+    trimmed,
+    others.filter((agent) => agent.id !== id),
+  )
+  if (problem) return { label: fallback, path: source.path, problem }
+  return { label: trimmed }
+}
+
+const reservedLabels = new Set(["build", "plan", "general", "explore", "maestro", "title", "summary", "compaction"])
+
+// A label stays unambiguous against every other agent's id and label.
+function labelProblem(label: string, others: ReadonlyArray<AgentV2.Info>) {
+  if (!label) return "empty"
+  if ([...label].length > 40) return "longer than 40 characters"
+  if (/[\p{Cc}\p{Zl}\p{Zp}]/u.test(label)) return "contains a control character or line break"
+  const folded = fold(label)
+  if (reservedLabels.has(folded)) return "reserved agent id"
+  if (others.some((agent) => (agent.name !== undefined && fold(agent.name) === folded) || fold(agent.id) === folded))
+    return "already used by another agent"
+}
+
+function fold(value: string) {
+  return value.normalize("NFC").toLowerCase()
+}
+```
+
+FONTE modules/maestro/coordination/src/seats/seat.ts; SHA256 integral 69de5c93578764496eff9df937c8f0cc7cfe5f11a2f40156a0c091959c35662b; 7196 bytes.
+L65–66:
+```
+  if (seat.atlasMemory && seat.id !== "backend" && seat.id !== "jimmy" && seat.id !== "archie" && seat.id !== "live")
+    throw new Error(`Atlas Memory supports only backend, jimmy, archie and live owners: ${seat.id}`)
+```
+L103–114:
+```
+// The authored skill tree of a seat. Running from source reads it in place; compiled builds embed it
+// (src/seat-skills-module.ts). `import.meta.dirname` works under Bun and the desktop Node sidecar.
+export function skillSource(id: string) {
+  if (id === "backend" || id === "archie")
+    return path.resolve(import.meta.dirname, "../../../../../modules/specialists", id, "skills")
+  return path.resolve(import.meta.dirname, "../../../../../packages", `${id}-specialist`, "skills")
+}
+
+// The shared skill trees (`team-*` roots), authored once for every seat that declares one of them.
+export function sharedSource() {
+  return path.resolve(import.meta.dirname, "../../../../../modules/specialists/team/skills")
+}
+```
+
+FONTE modules/maestro/coordination/src/v2/atlas-source.ts; SHA256 integral 62fea869ed3107fbffadedc9ac6b8121f0c580f2d63cd913c1ab805eda8becc3; 16688 bytes.
+L18–33:
+```
+// The verified Atlas Own reader, over V2 services. Config comes from the Location's documents (`maestro.atlas`), Git from the process git command line, and
+// files through the Location's filesystem. Every failure is an explicit hold, never an absence claim.
+
+export type Owner = "backend" | "jimmy" | "archie" | "live"
+
+/** The Atlas Memory owner an agent is: a native seat of this Location whose seat definition carries Atlas Memory. */
+export function owner(id: string, seats: MaestroSeats.Interface): Owner | undefined {
+  if (!seats.has(id) || Seats.all[id]?.atlasMemory !== true) return undefined
+  return id === "backend" || id === "jimmy" || id === "archie" || id === "live" ? id : undefined
+}
+
+/** Atlas context reads (catalog, unit) also reach Maestro; anchor and the memory tools stay with the seats. */
+export function reader(id: string, seats: MaestroSeats.Interface): Owner | "maestro" | undefined {
+  if (id === AgentV2.defaultID) return "maestro") return "maestro"
+  return owner(id, seats)
+}
+```
+L122–132:
+```
+export const read = Effect.fn("MaestroAtlasV2.read")(
+  function* (services: Services, placement: Placement) {
+    const provider = yield* configured(services.config)
+    if (!provider) return yield* held("provider-unconfigured", [placement.projectID])
+    if (provider.projectID !== placement.projectID)
+      return yield* held("provider-project-mismatch", [provider.projectID, placement.projectID])
+    if (provider.directory !== "." && !canonicalPath(provider.directory))
+      return yield* held("provider-path-invalid", [provider.directory])
+    const top = yield* services.git.run(["rev-parse", "--show-toplevel"], { cwd: placement.directory })
+    if (top.exitCode !== 0 || top.truncated || !top.text().trim())
+      return yield* held("repository-unavailable", [placement.directory, top.stderr.toString()])
+```
+L345–347:
+```
+function normalize(error: unknown) {
+  return error instanceof Held ? error : held("atlas-source-unavailable", [String(error)])
+}
+```
+
+FONTE docs/specs/seat-framework/README.md; SHA256 integral 26dbc42efbffb0ab11d34f582dabc7f51ff5fb8492b46631634d657eef8a7553; 10883 bytes.
+L51–51:
+```
+Atlas Memory's public boundary and durable receipts have one supported owner: backend. Definitions requesting it for another id fail. Exposure requires the native owner's capability; no new seat is bound to backend memory. Backend toolkit packs, runtimes and skill content remain backend-only; requesting that toolkit from another seat fails. Core derives its closed entry-skill type from the packaged directories via `bun script/toolkit-pack.ts skills` (run in `packages/core`). Core does not import orchestra.
+```
+
+FONTE AGENTS.md; SHA256 integral 07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f; 16501 bytes.
+L150–154:
+```
+- Ships: compiled code, including seat prompts (`modules/maestro/coordination/src/seats/prompt/*.txt`); the skill trees a seat lists in `seat.skills` (`Seats.skillSource`, embedded at build time by `modules/maestro/coordination/src/seat-skills-module.ts`); Maestro playbooks (`modules/maestro/coordination/playbooks`), including the Orchestra guide under `maestro-orchestra`; the `extraResources` in `apps/desktop/electron-builder.config.ts`; the CLI package's `bin`.
+- Repo-only: `.orchestra/skills/*` (maintenance, ownership and contributor usage skills, seen only when this repository is the open project), `docs/` (specs and guides), and this file.
+- Knowledge an agent needs at runtime goes in its prompt or a shipped seat skill, never only in `.orchestra/skills`.
+- Never add a maintenance or ownership skill to a seat's `skills`.
+- `docs/guides` is written for users but is not published yet; a user-facing change still updates its guide.
+```
+
+FONTE modules/capability-assets/README.md; SHA256 integral 29b1e897388210be29292bbbb7ca06ecc577ec71c81d16430f634fd2c5679f7f; 3317 bytes.
+L3–5:
+```
+Data-only source packages for Orchestra's built-in capabilities. It records, for each capability asset that was adapted
+from an upstream project (Hermes and OpenClaw, both MIT), where it came from, which native tool names it maps to, and
+where its adapted content lives. It is not a runtime package: nothing registers tools from it.
+```
+L19–21:
+```
+Only `assets/skills` exists on disk. The `destination` paths for providers and native sources are reserved names
+for later adaptations, not files. Provider `packID` values are semantic platform identifiers, and the provider presets are declarations: they
+are not connections, approvals or operation receipts. License blob SHAs are Git blob SHA-1s, not raw-file hashes.
+```
+L25–28:
+```
+No workspace imports the package. `packages/core/src/capability/mcp/index.ts` and the connection verifiers under
+`packages/core/src/capability/connection/verifiers` carry data transcribed from `src/providers.ts`; the provenance note is
+`packages/core/src/capability/service/PROVENANCE.md`. No seat or skill root loads `assets/skills` yet. To ship a skill
+tree to a seat, use the seat framework (`seatSkillsModule` in `modules/maestro/coordination/src/seat-skills-module.ts` and the seat's `skills` list), with seat-scoped names.
+```
+L40–43:
+```
+- Entries are `source-qualified`: pinned provenance has been inspected. Copied-file digests, dependency integrity,
+  operation conformance and live acceptance are pending.
+- Skill bodies are adapted text; their referenced scripts and companions need their own review before they are
+  relied on.
+```
+
+FONTE modules/capability-assets/src/sources.ts; SHA256 integral b4d75e9b463e74ed39bcf925d02a050ee79b72acc8a96400aced9090dfc54dda; 1364 bytes.
+L19–23:
+```
+// Source qualification records provenance, not runtime or dependency qualification.
+export const manifest = {
+  status: "source-qualified",
+  plan: "specs/orchestra-capabilities/ASSET-MAP.md",
+  importedContent: "license notices and provider preset data only",
+```
+L29–30:
+```
+  pendingEvidence: ["copied-file digests", "dependency integrity/licenses", "operation conformance", "live acceptance"],
+} as const
+```
+
+FONTE modules/janitor/README.md; SHA256 integral db87c67067b25140dc8301f2e21cd26b81740bf2ecf3317b274308a33346c2fe; 2534 bytes.
+L13–15:
+```
+- Export keys `./bootstrap` (`startJanitorLoop(scope, sink, env)`, `enabled`, `configFromEnv`) and `./report-state` (`getLatestReport`).
+- The sink is a parameter; the module never imports a bus.
+- No package under `apps`, `packages` or `modules` imports it yet; only its own tests do.
+```
+L27–28:
+```
+- Nothing is written to disk. The latest report is held in process memory and cleared when the last loop user leaves its scope.
+- One loop runs per process, shared by every `startJanitorLoop` caller. `ORCHESTRA_JANITOR=0` disables it and `ORCHESTRA_JANITOR_INTERVAL_MIN` sets the interval.
+```
+
+FONTE apps/cli/src/host.ts; SHA256 integral 8ac600b520f90454eb6f0e1e2030ebdd8522df7290f7a0ab9d052a53f4a3e25e; 1624 bytes.
+L21–27:
+```
+export function contributions(dock?: Parameters<typeof AppDockTools.contribution>[0]): ReadonlyArray<Host.Contribution> {
+  return [
+    MaestroSeatsV2.contribution,
+    ContinuityV2.contribution,
+    ClaudeCodeHost.contribution,
+    ...(dock ? [AppDockTools.contribution(dock)] : []),
+  ]
+```
+
+Os quatro descriptors atuais capturados declaram atlasMemory:true: backend.ts L40, archie.ts L32, jimmy.ts L18, live.ts L23; o gate owner exige seats.has(id). O L1 Maestro aceito §conflito (L93) já preserva o texto backend-only antigo e os quatro owners de código. Nenhuma execução, conexão live, teste ou CI decorre destes recortes.

@@ -1,0 +1,62 @@
+{
+  "schema": "genesis-s3-semantic-layer-release/v1",
+  "execution_record_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "layer": "L4",
+  "revision": "L4-adoption-v3",
+  "decision": "ACCEPTED",
+  "verified_by": "/root",
+  "reviewer_ids": [
+    "/root/s3_j1",
+    "/root/s3_j2"
+  ],
+  "recorded_at": "2026-11-28T07:02:28.031230+00:00",
+  "bodies": [
+    {
+      "key": "s3-l4-entry",
+      "sha256": "ae458ac87fa4542974e092641400c29f8904e37145dcb79cd553681a561443c0",
+      "bytes": 6250
+    },
+    {
+      "key": "s3-l4-ownership",
+      "sha256": "a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b",
+      "bytes": 6934
+    },
+    {
+      "key": "s3-l4-maintenance",
+      "sha256": "d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91",
+      "bytes": 9724
+    },
+    {
+      "key": "s3-l4-operational",
+      "sha256": "704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1",
+      "bytes": 9757
+    }
+  ],
+  "decisions": [
+    {
+      "reviewer_id": "/root/s3_j1",
+      "path": "s3-resume-work/judgments/J1-L4-adoption-v3.json",
+      "sha256": "0df7e3b5b74ecb3b736271286b500f21b47a84749f94a97d4cba50dd36f0f2ec",
+      "bytes": 4573
+    },
+    {
+      "reviewer_id": "/root/s3_j2",
+      "path": "s3-resume-work/judgments/J2-L4-adoption-v3.json",
+      "sha256": "b8ccd817e3fc83ec74b72d188668fd6c3287da984bca06b19875f230f4c5bb4b",
+      "bytes": 4427
+    }
+  ],
+  "mandatory_findings_open": 0,
+  "predecessor_release": "releases/L3-adoption-v1.json",
+  "release_scope": "Semantic acceptance of the four exact selected L4 bodies. Enables final selected-package assembly. Does not supply runtime binding, publication, consumers or maintenance.",
+  "resolved_findings": [
+    "L4-M1-CACHE-NEGATIVE"
+  ],
+  "transcription": "Complete visible JSON replies preserved UTF8 with terminal LF; unavailable opaque host IDs not invented. J2 entry/evidence transmission typos explicitly corrected and acknowledged before judgment.",
+  "review_method": "Full v2 bodies/oracle/evidence followed by exact one-line v3 delta, same persistent pair.",
+  "usage": {
+    "cost": "UNKNOWN",
+    "tokens": "UNKNOWN",
+    "physical_attempts": "UNKNOWN"
+  }
+}

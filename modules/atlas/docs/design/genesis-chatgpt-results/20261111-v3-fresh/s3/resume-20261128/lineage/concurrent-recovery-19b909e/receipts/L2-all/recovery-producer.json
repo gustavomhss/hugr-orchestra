@@ -1,0 +1,82 @@
+{
+  "schema": "genesis-producer-receipt/v1",
+  "unit": "L2-all-recovery",
+  "recorded_at": "2026-11-11T18:44:23.945166+00:00",
+  "recovery_execution_id": "e51ef44b-a6d6-47b0-a6ea-dd5aef7d7c3e",
+  "producer": {
+    "role": "recovery principal",
+    "independent_from_orchestrator": false,
+    "reason": "The original L2 producer outputs were not durably persisted before the previous session failed, and this interface exposes no recoverable native subagent handle for that producer."
+  },
+  "inputs": [
+    {
+      "kind": "oracle",
+      "path": "oracles/L2-all.json",
+      "git_blob_sha": "4d3c922994166413fb7795808a13e9ad72f1682e",
+      "sha256": "83336a10722d23fbda496347940f0d1405dd7c9a44085bbd9adecff05bcaa003"
+    },
+    {
+      "kind": "accepted-predecessor",
+      "key": "s3-l1-maestro",
+      "path": "bodies/l1-maestro.md",
+      "git_blob_sha": "2771a4efb6ef054d647ceea8a356dc1c3a8afd89",
+      "semantic_state": "accepted-by-original-persistent-pair"
+    },
+    {
+      "kind": "accepted-predecessor",
+      "key": "s3-l1-relay",
+      "path": "bodies/l1-relay.md",
+      "git_blob_sha": "3b9788cb4cf709f80f663364cf4ca5874b9a8c8d",
+      "semantic_state": "accepted-by-original-persistent-pair"
+    },
+    {
+      "kind": "accepted-predecessor",
+      "key": "s3-l1-integrations",
+      "path": "bodies/l1-integrations.md",
+      "git_blob_sha": "42800afbd5bdd0ca51c4e0eab136e9de31f7673f",
+      "semantic_state": "accepted-by-original-persistent-pair"
+    },
+    {
+      "kind": "recovered-review-findings",
+      "path": "evidence/recovered-judge-findings.json",
+      "semantic_state": "summary-only-correction-input"
+    }
+  ],
+  "outputs": [
+    {
+      "key": "s3-l2-maestro",
+      "path": "bodies/l2-maestro.md",
+      "byte_length": 6733,
+      "sha256": "7505522f3e92fa25dfda8dac896a2717d6eac71d9bd3a928d0bf4ae5e5b08d7e"
+    },
+    {
+      "key": "s3-l2-relay",
+      "path": "bodies/l2-relay.md",
+      "byte_length": 7235,
+      "sha256": "ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037",
+      "previous_sha256": "db289b23c91e8e1dda820f81ed6c2b6a8ebb8844b3ba4d763fb549f363961b79"
+    },
+    {
+      "key": "s3-l2-integrations",
+      "path": "bodies/l2-integrations.md",
+      "byte_length": 6833,
+      "sha256": "5b65c606ab258eea521adbf0cdf4bdf43b0755ec2ec0a7be5a2efc25545ce0c3"
+    }
+  ],
+  "observability": {
+    "tokens": "UNKNOWN",
+    "physical_attempts": "UNKNOWN",
+    "cost": "UNKNOWN",
+    "paid_external_calls": 0
+  },
+  "acceptance": "NOT_JUDGED",
+  "note": "Corrected reconstruction persisted for renewed review. Principal authorship and PASS_STATIC_ONLY cannot substitute for two persistent independent judge decisions; no earlier acceptance is inherited.",
+  "revision": 2,
+  "corrections": [
+    {
+      "artifact": "s3-l2-relay",
+      "reason": "Recovered judge finding required exact not-run versus invalid sprint semantics and explicit null/UNKNOWN cost.",
+      "support": "evidence/recovery-source-excerpts.md"
+    }
+  ]
+}

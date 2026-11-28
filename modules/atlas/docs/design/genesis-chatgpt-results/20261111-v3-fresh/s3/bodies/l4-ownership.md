@@ -1,6 +1,8 @@
 # S3 L4 — ownership e fronteiras de mudança
 
-**Estado:** `CANDIDATE_UNRELEASED`. Fonte fixa: `gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38`. Este artefato atribui responsabilidade no pin; não cria grants, não substitui CODEOWNERS/owner approval e não prova composição em runtime.
+**Estado no momento da produção (2026-11-28T06:38:33Z):** `CANDIDATE_UNRELEASED` / `REVIEW_REQUIRED`. Fonte fixa: `gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38`. Este artefato atribui responsabilidade no pin; não cria grants, não substitui CODEOWNERS/owner approval e não prova composição em runtime.
+
+**Proveniência no momento da produção (2026-11-28T06:38:33Z):** nova adoção/correção por `/root/s3_l4_producer`, execução `15cc9853-0e71-4950-8813-0bfb66f82c8a`, protocolo `ee2521a5b966bd505cc95bd1c733e09e12f33531`. O input é o alternativo `s3-provenance/files/bodies/l4-ownership.md` (hash e bytes em `response.json`); os originais superiores, seus prompts e aceites históricos não foram recuperados. L1/L2 e L3-adoption-v1 estão liberados conforme atestado da principal nesta execução; o corpo L3 selecionado tem SHA-256 `17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99`. Estados antigos nos predecessores descrevem seu momento de produção; os recibos externos posteriores determinam sua liberação. Isso permite produzir L4, sem conceder aceite a este corpo. Recibos externos sobre seus bytes exatos determinarão sua liberação futura; o produtor não concede aceite. Runtime/CI/live nesta adoção: `NOT_RUN`.
 
 ## 1. Regra central
 

@@ -1,0 +1,28 @@
+Reavalie L4-adoption-v3 pelo mesmo contrato/oracle e materiais anteriores, sem ferramentas. O produtor corrigiu somente uma linha de maintenance §2.8; root conferiu diff único, hashes e bytes. Entry/ownership/operational continuam exatamente ae458ac87fa4542974e092641400c29f8904e37145dcb79cd553681a561443c0/6250, a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b/6934, 704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1/9757. Maintenance antigo 3cf2c141…/9284 agora d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91/9724. Todo o restante desse corpo é byte-idêntico ao integral v2 recebido.
+
+Substituição exata como dados:
+ANTES:
+8. Verifique negativos: arquivo fora da root, invalid UTF-8, symlink/escape, gerado manualmente divergente e cache adulterado devem falhar.
+DEPOIS:
+8. Verifique negativos: arquivo fora da root, invalid UTF-8, symlink/escape e gerado manualmente divergente devem falhar. Para cache adulterado, a validação deve rejeitar a reutilização da cópia antiga; a extração deve reconstruir e validar uma cópia íntegra quando possível, sob o contrato de lock. A adulteração por si só não exige falha final da extração: erro final somente se a recuperação falhar, inclusive a aquisição do lock ou a verificação da cópia reconstruída. [Fonte: `modules/maestro/coordination/src/seat-skill-root.ts:90–100,118–128`.]
+
+Fonte literal complementar, mesmo baseline e arquivo já recebido no dossiê L2:
+L90: export async function extract(id: string, files: Record<string, string>, cache: string, version: string) {
+L91:   SeatSkillContent.validate(id, files)
+L94:   const entries = Object.entries(files).map(([file, text]) => [file, new TextEncoder().encode(text)] as const)
+L95:   const expected = digest(entries)
+L100:   if (await readTree(dir).then((tree) => tree && digest(tree)) === expected) return canonical()
+L118:     // A competing start may have published while we acquired the lock. Never remove its valid tree.
+L119:     if (await readTree(dir).then((tree) => tree && digest(tree)) === expected) return canonical()
+L120–128:
+    await Promise.all(entries.map(async ([file, bytes]) => {
+      const target = path.join(temp, ...file.split("/"))
+      await fs.mkdir(path.dirname(target), { recursive: true })
+      await fs.writeFile(target, bytes)
+    }))
+    await fs.rm(dir, { recursive: true, force: true })
+    await place(temp, dir)
+    if (await readTree(dir).then((tree) => tree && digest(tree)) !== expected)
+      throw new SeatSkillContent.PackagingError(`Cannot verify extracted seat skill tree: ${id}`)
+
+Decida sobre o conjunto final v3: quatro casos, seis erros críticos, limite16000/corpo; confirme resolução do finding L4-M1-CACHE-NEGATIVE ou explique pendência. Preserve seu julgamento v2. JSON válido conciso <=4000 bytes, quatro hashes, cada critério/evidência/motivo breve, achados/pedidos/opcionais/limites. Nenhum runtime, binding, consumer ou aceite histórico ausente é concedido.

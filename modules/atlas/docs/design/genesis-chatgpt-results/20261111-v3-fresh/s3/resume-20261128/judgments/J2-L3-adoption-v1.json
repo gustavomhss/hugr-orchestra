@@ -1,0 +1,128 @@
+{
+  "reviewer": "/root/s3_j2",
+  "role": "J2 — completude e utilidade, com revisão de todos os critérios obrigatórios",
+  "execution_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "revision": "L3-adoption-v1",
+  "unit": "L3-flows",
+  "artifact": "s3-l3-flows",
+  "declared_body": {
+    "sha256": "17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99",
+    "bytes": 13637,
+    "verification": "Hash e tamanho declarados como medidos pela principal; não recalculados por este juiz."
+  },
+  "decision": "PASS",
+  "precondition": {
+    "verdict": "PASS",
+    "evidence": "Os três corpos L2-v2 e os pareceres completos de J1 e J2 estão no contexto. Ambos registram PASS nos seis casos, sem findings ou pedidos de evidência pendentes; a principal informou a liberação de L2.",
+    "reason": "Os predecessores foram usados como aceitos, sem reavaliação de L1/L2 e sem transferir seu aceite automaticamente a L3."
+  },
+  "cases": [
+    {
+      "id": "L3-F1",
+      "verdict": "PASS",
+      "evidence": [
+        "L3 §2 mantém o arquivo na árvore autoral declarada e distingue membership, bytes, validação, módulo virtual, embed e extração.",
+        "L2-v2 Maestro §3, previamente aceito.",
+        "Evidências conservadas A5, seat-skill-content.ts L112–147; A6, seat-skills-module.ts L6–18 e L40–42; A7, seat-skill-root.ts L90–128 e L175–181."
+      ],
+      "reason": "Explica a disponibilidade em source e compilado, a regeneração por seatSkillsModule/seatSkillsFiles e o cache por versão/digest. Preserva ID e grant do seat. Links para Relay permanecem navegação enquanto o resultado Relay não consumir os bytes alterados."
+    },
+    {
+      "id": "L3-F2",
+      "verdict": "PASS",
+      "evidence": [
+        "L3 §§1 e 3 vinculam autoridade ao ComposedActor e ao seat canônico, aprovação à revisão exata e reservation à child Session e permission snapshot.",
+        "L3 §3 exige resposta genuína, imediata e na mesma Session, sem mensagem intermediária role=user, inclusive sintética.",
+        "Evidências conservadas A1–A4 sobre approval, dispatch, reservation e beforeTurn.",
+        "L2-v2 Integrações §2 e evidência C1, host.ts L38–49, L158–178 e L580–588.",
+        "L2-v2 Relay §2 e evidência B3, relay.ts L491–498."
+      ],
+      "reason": "O fluxo conserva identidade, bindings, revalidação antes do primeiro turn, recusa de Agent/Task e criação de child Session pela task Orchestra. Autorizações de ferramentas permanecem nas portas do host. Settlement governado e registros duráveis não são substituídos por evaluate, texto, approval ou exit code."
+    },
+    {
+      "id": "L3-F3",
+      "verdict": "PASS",
+      "evidence": [
+        "L3 §4 separa os cortes entre efeito, disposição, receipt e aplicação de estado e exige inspeção de lock, revisão, driver, state, ledger, stderr e artefatos.",
+        "Evidência adicional literal de evaluate.ts L67–89 distingue release do arm parked de remoção do run lock.",
+        "Evidência adicional literal de relay.ts L382–384, L406–416 e L517–520 descreve recuperação do lock e a chamada de Relay.release.",
+        "Evidências conservadas B1, settlement.ts L13–20 e L45–67, e B5, audit.ts L206–215, L335–346 e L528–529.",
+        "L3 §6 rejeita conclusão por stdout vazio."
+      ],
+      "reason": "Release não desfaz efeitos nem prova exactly-once. O corpo diferencia release do arm e recuperação do lock, preservando gate-recovered antes da remoção. Unknown-effect bloqueia repetição automática. Audit, recheck e settlement mantêm escopos distintos; not-run/invalid não fecham a WP, e custos e tentativas não observados permanecem UNKNOWN."
+    },
+    {
+      "id": "L3-F4",
+      "verdict": "PASS",
+      "evidence": [
+        "L3 §5 exige transporte desktop real, URL/token por launch e canal/Session, mantendo distintas as portas de hooks e RPC/MCP.",
+        "L3 §5 limita retry a NativeRPCError com stale-ref, not-dispatched e attempt < 1, com no máximo uma repetição.",
+        "L3 §5 proíbe replay automático de unknown/uncertain, inclusive quando a ação parece inofensiva ou idempotente.",
+        "Evidências conservadas C2, socket-transport.ts L5–24; C3, app-dock.ts L357–390; C4, scan.ts L7–10 e L201–209.",
+        "L2-v2 Integrações §3, previamente aceito, preserva a distinção entre estado do módulo e composição desktop/store."
+      ],
+      "reason": "O fluxo não converte incerteza em autorização para replay. Falha de scanner permanece unavailable; Janitor continua read-only e não recebe poderes de limpeza, kill, restart, criação de credenciais ou resolução de ações Dock. A existência de módulos e estado não é tratada como prova de composição."
+    }
+  ],
+  "critical_errors": [
+    {
+      "error": "model prose or a copied identifier treated as authority",
+      "detected": false,
+      "verdict": "PASS",
+      "evidence": "L3 §1, invariantes 1–4, e §3.",
+      "reason": "Autoridade permanece no actor composto, no ID canônico e nos gates; prosa, labels e IDs copiados não os substituem."
+    },
+    {
+      "error": "navigation-only edge treated as a build dependency",
+      "detected": false,
+      "verdict": "PASS",
+      "evidence": "L3 §1, invariante 6, e §2, Impacto e não impacto.",
+      "reason": "A invalidação depende de consumo real de inputs; navegação para Relay não basta."
+    },
+    {
+      "error": "release or audit claimed to roll back or prove exactly-once external effects",
+      "detected": false,
+      "verdict": "PASS",
+      "evidence": "L3 §4, Estado possível e Recuperação segura.",
+      "reason": "O corpo nega essas garantias e distingue explicitamente release do arm, recuperação de lock, efeito externo e auditoria."
+    },
+    {
+      "error": "unknown integration result automatically repeated",
+      "detected": false,
+      "verdict": "PASS",
+      "evidence": "L3 §4, item 5; §5, Tratamento da ação; §6, linha efeito desconhecido.",
+      "reason": "Unknown bloqueia repetição automática. A regra geral de recuperação não amplia a exceção estrita do Dock."
+    },
+    {
+      "error": "historical/spec intent silently presented as current implementation",
+      "detected": false,
+      "verdict": "PASS",
+      "evidence": "Abertura, baseline fixo, referências aos L2-v2 aceitos e L3 §7.",
+      "reason": "A nova adoção é identificada como tal. Autoria, prompts e aceites históricos ausentes não são reconstruídos ou usados como prova de implementação ou liberação."
+    },
+    {
+      "error": "semantic review presented as runtime binding or publication proof",
+      "detected": false,
+      "verdict": "PASS",
+      "evidence": "Estado CANDIDATE_UNRELEASED/REVIEW_REQUIRED na abertura e limites em L3 §7.",
+      "reason": "O produtor não concede PASS, o aceite dos predecessores não libera L3 e execução, consumo, CI e publicação permanecem NOT_RUN."
+    }
+  ],
+  "limit": {
+    "max_body_bytes": 18000,
+    "declared_body_bytes": 13637,
+    "verdict": "PASS",
+    "reason": "O tamanho informado está abaixo do limite congelado. A avaliação permaneceu no escopo de raciocínio estático integrado."
+  },
+  "findings": [],
+  "evidence_requests": [],
+  "optional_suggestions": [],
+  "limitations": [
+    "Este voto avalia exclusivamente o corpo completo L3-adoption-v1 reenviado, adotado por /root/s3_l3_producer, e não os originais históricos ausentes.",
+    "Não usei ferramentas, arquivos, delegação, edição, testes ou recomputação de hashes.",
+    "Os recortes de código são evidência estática; não provam que os caminhos foram executados.",
+    "Nenhum voto J1 desta camada foi fornecido ou usado para orientar esta decisão.",
+    "Este PASS é semântico e local. Não constitui binding, publicação, importação, index/read, validação de consumidores, resultado de CI ou liberação unilateral de L3/L4.",
+    "Runtime e demais operações não exercitadas permanecem NOT_RUN; custos, tokens e tentativas físicas não observados permanecem UNKNOWN."
+  ]
+}

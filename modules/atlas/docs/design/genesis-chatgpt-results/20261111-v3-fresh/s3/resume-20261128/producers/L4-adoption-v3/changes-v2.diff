@@ -1,0 +1,11 @@
+--- s3-l4-adoption/revisions/v1/bodies/l4-entry.md
++++ s3-l4-adoption/bodies/l4-entry.md
+@@ -43,7 +43,7 @@
+ - fontes e cobertura Maestro: `receipts/L1-A/sources.json`, `receipts/L1-A/coverage.json`
+ - fontes e cobertura Relay: `receipts/L1-B/sources.json`, `receipts/L1-B/coverage.json`
+ - fontes e cobertura integrações: `receipts/L1-C/sources.json`, `receipts/L1-C/coverage.json`
+-- decisões J1/J2 L1: `judgments/judge-1-L1-A.json` ... `judgments/judge-2-L1-C.json`
++- decisões J1/J2 L1: `judgments/J1-L1-A-v1-final.md`; `judgments/J2-L1-A-v1-final.md`; `judgments/J1-L1-B-v2.json`; `judgments/J2-L1-B-v2.json`; `judgments/J1-L1-C-v3.json`; `judgments/J2-L1-C-v3.json`
+ 
+ Abra a menor rota que sustente a decisão. O reader deve citar a autoridade/gap do próprio artefato; a existência dessas rotas não promove L2–L4 nem prova publicação Atlas.
+ 

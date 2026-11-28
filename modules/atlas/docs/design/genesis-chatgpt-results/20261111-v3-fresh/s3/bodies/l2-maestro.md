@@ -20,7 +20,7 @@ Há quatro camadas que precisam ser separadas em qualquer diagnóstico:
 Uma aprovação governada não é uma permissão genérica para “qualquer tarefa parecida”. O caminho permitido é:
 
 1. O plano/contexto/policy/task atuais são materializados e hasheados. A apresentação ao owner deve ser a revisão exata, na mesma Session.
-2. A primeira resposta genuína do owner depois da apresentação é interpretada. Resposta sintética, ambígua, anterior ou em outra Session não aprova.
+2. A resposta selecionada do owner deve ser genuína, ter `role=user`, pertencer à mesma Session e ser posterior à apresentação. Não pode existir qualquer mensagem intermediária com `role=user` (inclusive sintética) entre a apresentação e essa resposta. Resposta sintética, ambígua, anterior ou em outra Session não aprova; `reply-synthetic` e `reply-not-immediate` são recusas distintas.
 3. A autorização preserva revisão, validação, contexto, policy e task hashes. Alterar o prompt, escopo, intent hash, seat ou permissão torna o binding incompatível.
 4. Antes de criar o trabalho, o host compara o seat e a intenção pedidos com a autorização. Um mismatch deve recusar sem reservar outro child.
 5. A reservation é write-once para a child Session exata e guarda o permission snapshot. Antes do primeiro provider turn, `beforeTurn` revalida ou consome a autorização.

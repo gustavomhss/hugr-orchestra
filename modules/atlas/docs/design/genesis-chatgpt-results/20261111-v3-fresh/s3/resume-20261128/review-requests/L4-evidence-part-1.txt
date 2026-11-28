@@ -1,0 +1,315 @@
+# S3 — suplemento estático L3/L4
+
+Repositório `gustavomhss/hugr-orchestra`; ref de todos os recortes de produto: `1cde2ff7a71bcf7aecb5d030917b577165135d38`. São fontes públicas do baseline, recuperadas pelo conector GitHub. Não foram consultados oracles, pareceres novos ou respostas de consumidores para preparar este suplemento.
+
+Complementa `l2-source-evidence.md` (SHA-256 `d1a31fae0dfb0e41a074680f44b25fd023e33b304bb4b921ad4590e9ecf7e223`). Approval/child/beforeTurn, geração/extração, Relay, Claude e retry Dock já cobertos ali não são repetidos. Este documento não julga nem modifica candidatos.
+
+## Predecessor aceito: conflito preservado
+
+Path de custódia `modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/bodies/l1-maestro.md`, ref `19b909ef3bf27e0332f24fc30e3a5c471ea37d78`, Git blob `2771a4efb6ef054d647ceea8a356dc1c3a8afd89`, SHA-256 `75b4438d79ebd9667db94f03a6fea884329cd5c72e2c69f649eff1047e7b1918`. Dois aceites estáticos já conferidos; L93:
+
+```text
+- **Conflito documental:** a spec de seat framework ainda afirma Atlas Memory somente para backend. `define`, as quatro definições e `MaestroAtlasSourceV2.Owner` permitem `backend`, `jimmy`, `archie`, `live`. Sua referência a `packages/orchestra/src/maestro` também é antiga. Para disponibilidade no pin, o código atual decide; a intenção histórica permanece visível. [B:docs/specs/seat-framework/README.md; C:seats/seat; C:v2/atlas-source]
+```
+
+
+## I1 — Configuração não renomeia Maestro
+
+Código de configuração; não é apenas regra de documentação.
+
+Path `packages/core/src/config/plugin/agent.ts` @ baseline comum. Git blob `5d95b5ffc582e6f841cb1245099d9c0b2b7c9b5b`; SHA-256 integral `c147c373a924480fed6d2e3e947127b44dba3a4603d9c74d0de79996bad8f91b`; 8816 bytes.
+
+
+L99–L106:
+
+```typescript
+            const agentID = AgentV2.ID.make(id)
+            // Every session runs on Maestro, so no configuration source (a JSON document or an agent file) may disable
+            // it or take it out of primary mode.
+            const maestro = agentID === AgentV2.defaultID
+            if (item.disabled && !maestro) {
+              draft.remove(agentID)
+              continue
+            }
+```
+
+L122–L127:
+
+```typescript
+              // Maestro's name is fixed: the app and other Sessions address the conductor by it.
+              if (item.name !== undefined && !maestro) agent.name = item.name
+              if (item.system !== undefined) agent.system = item.system
+              if (item.description !== undefined) agent.description = item.description
+              if (item.engine !== undefined) agent.engine = item.engine
+              if (item.mode !== undefined && !maestro) agent.mode = item.mode
+```
+
+## I2 — Seleção e validação de label
+
+A escolha da fonte precede validação. O warning usa o fallback do roster.
+
+Path `modules/maestro/coordination/src/v2/seats.ts` @ baseline comum. Git blob `f27ddca3b35551b16482f7032197af7cba25e3e6`; SHA-256 integral `4dd2acad909ce35909d82b3eac095a316c0f8695dd26ed0f9d627ea088641de6`; 11640 bytes.
+
+L129–L172:
+
+```typescript
+ * A native seat's display label, as on the earlier runtime: its label variable (`HUGR_BACKEND_NAME`, `HUGR_UPSTREAM_NAME`), else
+ * `agent.<id>.name`, else the roster default. The label is presentation only; the id stays the address. An invalid label
+ * keeps the default and names the problem.
+ */
+export function label(
+  id: string,
+  fallback: string,
+  configured: string | undefined,
+  others: ReadonlyArray<AgentV2.Info>,
+) {
+  const variable = Seats.find(id)?.labelEnv
+  const value = variable ? process.env[variable] : undefined
+  const source =
+    value !== undefined
+      ? { path: variable, value }
+      : configured !== undefined
+        ? { path: `agent.${id}.name`, value: configured }
+        : undefined
+  if (!source) return { label: fallback }
+  const trimmed = source.value.trim()
+  const problem = labelProblem(
+    trimmed,
+    others.filter((agent) => agent.id !== id),
+  )
+  if (problem) return { label: fallback, path: source.path, problem }
+  return { label: trimmed }
+}
+
+const reservedLabels = new Set(["build", "plan", "general", "explore", "maestro", "title", "summary", "compaction"])
+
+// A label stays unambiguous against every other agent's id and label.
+function labelProblem(label: string, others: ReadonlyArray<AgentV2.Info>) {
+  if (!label) return "empty"
+  if ([...label].length > 40) return "longer than 40 characters"
+  if (/[\p{Cc}\p{Zl}\p{Zp}]/u.test(label)) return "contains a control character or line break"
+  const folded = fold(label)
+  if (reservedLabels.has(folded)) return "reserved agent id"
+  if (others.some((agent) => (agent.name !== undefined && fold(agent.name) === folded) || fold(agent.id) === folded))
+    return "already used by another agent"
+}
+
+function fold(value: string) {
+  return value.normalize("NFC").toLowerCase()
+}
+```
+
+L86–L100:
+
+```typescript
+            const members = roster ? roster.roster.filter((member) => seats.has(member.memberId)) : []
+            for (const member of members) {
+              const id = AgentV2.ID.make(member.memberId)
+              const resolved = label(member.memberId, member.displayName, draft.get(id)?.name, draft.list())
+              if (resolved.problem)
+                yield* Effect.logWarning(
+                  `Invalid configuration ${resolved.path}: label ${resolved.problem}. Using "${member.displayName}".`,
+                )
+              draft.update(id, (agent) => {
+                const root = skillRoot?.SeatSkillRoot.roots[member.memberId]
+                const shared = Seats.all[member.memberId].skills.some((skill) => skill.startsWith("team-"))
+                  ? skillRoot?.SeatSkillRoot.shared
+                  : undefined
+                agent.name = resolved.label
+                agent.system ??= roster?.renderPrompt(member, resolved.label)
+```
+
+
+## I3 — ID estável, alias histórico e conductor
+
+O literal do default backend não é reproduzido; identidade e alias derivado permanecem visíveis.
+
+Path `modules/maestro/coordination/src/roster.ts` @ baseline comum. Git blob `979ea02edc7ebe24c511d2511ca41518ec21df14`; SHA-256 integral `5a75024571efbb7edcb37ea0b50c27174439f48c69c00fefe3caa16e3eea2627`; 11307 bytes.
+
+
+L20–L29:
+
+```typescript
+// Data written before the backend seat got its stable `backend` id carries its former id, which was the lowercased
+// default label. It is derived, never spelled, and only read: `canonicalMemberId` maps it to `backend` wherever a stored
+// or user-supplied member id enters, and every write uses `backend`.
+export const LEGACY_BACKEND_ID = BACKEND_DEFAULT_LABEL.toLowerCase()
+
+export function canonicalMemberId(id: string): string
+export function canonicalMemberId(id: string | undefined): string | undefined
+export function canonicalMemberId(id: string | undefined) {
+  return id === LEGACY_BACKEND_ID ? "backend" : id
+}
+```
+
+## I4 — Declaração backend
+
+ID, labelEnv e capacidade declarados.
+
+Path `modules/maestro/coordination/src/seats/backend.ts` @ baseline comum. Git blob `57b6c41492d6baec1704fb2bdc109bb4d656a457`; SHA-256 integral `443cece7cb51ff4f5424b7d475f8e072a81707615bb589d24c9f43de0ae496fb`; 1599 bytes.
+
+
+L5–L6:
+
+```typescript
+export default define({
+  id: "backend",
+```
+
+L25–L25:
+
+```typescript
+  labelEnv: "HUGR_BACKEND_NAME",
+```
+
+L40–L40:
+
+```typescript
+  atlasMemory: true,
+```
+
+## I5 — Declaração archie
+
+Profile de apresentação não muda o ID.
+
+Path `modules/maestro/coordination/src/seats/archie.ts` @ baseline comum. Git blob `82c7347a145df3858e83ca524d0837e546d0783f`; SHA-256 integral `433298d2c20210d91bbed8ba8c904aaae8a3ef5ae208ed7be2978cada841de52`; 1533 bytes.
+
+
+L4–L5:
+
+```typescript
+export default define({
+  id: "archie",
+```
+
+L25–L25:
+
+```typescript
+  labelEnv: "HUGR_UPSTREAM_NAME",
+```
+
+L32–L32:
+
+```typescript
+  atlasMemory: true,
+```
+
+## I6 — Declaração jimmy
+
+Capacidade declarada, não conexão exercitada.
+
+Path `modules/maestro/coordination/src/seats/jimmy.ts` @ baseline comum. Git blob `c4c2cc732cead0ff3e0d19e5edcc5a2c76beefeb`; SHA-256 integral `9d71eac80fb360de851df69e4d80b1906239660ed37200da8af5f30501b44025`; 1023 bytes.
+
+
+L4–L5:
+
+```typescript
+export default define({
+  id: "jimmy",
+```
+
+L18–L18:
+
+```typescript
+  atlasMemory: true,
+```
+
+## I7 — Declaração live
+
+Seat direct preserva identidade própria.
+
+Path `modules/maestro/coordination/src/seats/live.ts` @ baseline comum. Git blob `91cc7fb0aedab0a206dd3d61ef4633cd95dde518`; SHA-256 integral `54bbd0dccf540dc4474e3ce213b6c5ebc0af53d6e833e059f315dc5c646d8235`; 790 bytes.
+
+
+L4–L5:
+
+```typescript
+export default define({
+  id: "live",
+```
+
+L23–L23:
+
+```typescript
+  atlasMemory: true,
+```
+
+## A1 — Conjunto fechado de owners Memory
+
+Validação da definição; não concede capacidade a IDs arbitrários.
+
+Path `modules/maestro/coordination/src/seats/seat.ts` @ baseline comum. Git blob `c75b784297a5f0fe35fbc62dbae235c3ea1b11a7`; SHA-256 integral `69de5c93578764496eff9df937c8f0cc7cfe5f11a2f40156a0c091959c35662b`; 7196 bytes.
+
+
+L65–L66:
+
+```typescript
+  if (seat.atlasMemory && seat.id !== "backend" && seat.id !== "jimmy" && seat.id !== "archie" && seat.id !== "live")
+    throw new Error(`Atlas Memory supports only backend, jimmy, archie and live owners: ${seat.id}`)
+```
+
+## A2 — Knowledge/Own reader versus Memory owner
+
+Reader catalog/unit inclui Maestro; owner Memory exige seat nativo desta Location.
+
+Path `modules/maestro/coordination/src/v2/atlas-source.ts` @ baseline comum. Git blob `5388417c92f33c2cfd0d06d58d04446c35631d42`; SHA-256 integral `62fea869ed3107fbffadedc9ac6b8121f0c580f2d63cd913c1ab805eda8becc3`; 16688 bytes.
+
+L18–L33:
+
+```typescript
+// The verified Atlas Own reader, over V2 services. Config comes from the Location's documents (`maestro.atlas`), Git from the process git command line, and
+// files through the Location's filesystem. Every failure is an explicit hold, never an absence claim.
+
+export type Owner = "backend" | "jimmy" | "archie" | "live"
+
+/** The Atlas Memory owner an agent is: a native seat of this Location whose seat definition carries Atlas Memory. */
+export function owner(id: string, seats: MaestroSeats.Interface): Owner | undefined {
+  if (!seats.has(id) || Seats.all[id]?.atlasMemory !== true) return undefined
+  return id === "backend" || id === "jimmy" || id === "archie" || id === "live" ? id : undefined
+}
+
+/** Atlas context reads (catalog, unit) also reach Maestro; anchor and the memory tools stay with the seats. */
+export function reader(id: string, seats: MaestroSeats.Interface): Owner | "maestro" | undefined {
+  if (id === AgentV2.defaultID) return "maestro"
+  return owner(id, seats)
+}
+```
+
+
+## A3 — Porta Knowledge e chamada nativa
+
+Anchor é restrito a archie; leitura não promove Knowledge nem constitui approval.
+
+Path `modules/maestro/coordination/src/v2/tools/atlas.ts` @ baseline comum. Git blob `1989941d868187b7fc264559f0c90d11c9b1c4d3`; SHA-256 integral `b425ec5df03dcecad6cbcba83853a970fbd45793ea924b8e75d4aa8881183e86`; 14781 bytes.
+
+L62–L63:
+
+```typescript
+export const description =
+  'Read verified Atlas Knowledge/Own context: {"action":"catalog"} returns bounded unit/territory metadata, not bodies; {"action":"unit","unit":"exact ID"} loads complete, fresh, current verified bytes. The upstream seat may anchor exact selected units to proposed work: {"action":"anchor","target":{"kind":"assignment|work-package","id":"work ID"},"units":["exact ID"]}. Return reference binds verified bodies to this actual call; no approval or Knowledge promotion. No nearest-name selection or owner/root arguments. Holds block only claims dependent on missing context.'
+```
+
+L87–L106:
+
+```typescript
+            Effect.gen(function* () {
+              if (!context.agent || !context.toolCallID || !context.assistantMessageID)
+                return unavailable("missing-native-call-identity")
+              const agent = yield* agents.get(context.agent)
+              const member = MaestroAtlasSourceV2.reader(context.agent, seats)
+              if (!member || agent?.id !== context.agent) return unavailable("native-atlas-owner-required")
+              if (input.action === "anchor" && member !== "archie") return unavailable("native-archie-required")
+              yield* permission
+                .assert({
+                  action: name,
+                  resources: [member],
+                  save: [member],
+                  sessionID: context.sessionID,
+                  agent: context.agent,
+                  source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
+                })
+                .pipe(Effect.mapError((error) => new Tool.Failure({ message: "Atlas context was not permitted", error })))
+              const session = yield* sessions.get(context.sessionID)
+              if (!session) return unavailable("session-placement-unavailable")
+              const placement = { projectID: session.projectID, directory: session.location.directory }
+```

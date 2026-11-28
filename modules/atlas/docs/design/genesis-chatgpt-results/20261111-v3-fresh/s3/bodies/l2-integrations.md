@@ -39,8 +39,8 @@ No desktop, o transport relevante usa Electron main e loopback WebSocket com URL
 Resultado de ação deve ser distinguido:
 
 - `success/failure` observado: seguir o receipt.
-- `stale-not-dispatched`: a regra específica pode permitir no máximo o retry delimitado.
-- `unknown/uncertain`: a ação pode ter sido despachada; não repetir automaticamente quando duplicação é perigosa.
+- `stale-not-dispatched`: admite no máximo uma repetição automática, somente quando o erro é uma instância de `NativeRPCError`, com `code === "stale-ref"`, `outcome === "not-dispatched"` e `attempt < 1`; não se aplica a outros erros stale ou falhas.
+- `unknown/uncertain`: a ação pode ter sido despachada; nunca repetir automaticamente.
 - `channel-unavailable`: corrigir a composição/transport, não simular sucesso.
 
 O reaper Linux ligado a Session deletion pertence ao lifetime do Dock; não concede a Janitor o poder de matar processos.

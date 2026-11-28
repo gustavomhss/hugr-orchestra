@@ -1,0 +1,70 @@
+{
+  "frozen_at": "2026-11-11T16:38:28.301989+00:00",
+  "scope": "orchestra.s3.agents",
+  "required_artifacts": [
+    {
+      "key": "s3-l1-maestro",
+      "layer": 1,
+      "need": "evidence"
+    },
+    {
+      "key": "s3-l1-relay",
+      "layer": 1,
+      "need": "evidence"
+    },
+    {
+      "key": "s3-l1-integrations",
+      "layer": 1,
+      "need": "evidence"
+    },
+    {
+      "key": "s3-l2-maestro",
+      "layer": 2,
+      "need": "component"
+    },
+    {
+      "key": "s3-l2-relay",
+      "layer": 2,
+      "need": "component"
+    },
+    {
+      "key": "s3-l2-integrations",
+      "layer": 2,
+      "need": "component"
+    },
+    {
+      "key": "s3-l3-flows",
+      "layer": 3,
+      "need": "flow"
+    },
+    {
+      "key": "s3-l4-entry",
+      "layer": 4,
+      "need": "entry"
+    },
+    {
+      "key": "s3-l4-ownership",
+      "layer": 4,
+      "need": "ownership"
+    },
+    {
+      "key": "s3-l4-maintenance",
+      "layer": 4,
+      "need": "maintenance"
+    },
+    {
+      "key": "s3-l4-operational",
+      "layer": 4,
+      "need": "operational"
+    }
+  ],
+  "public_criteria": [
+    "purpose and installed behavior",
+    "explicit contracts and authority",
+    "decisions and current/historical distinction",
+    "dependency and navigation distinction",
+    "concrete safe maintenance and failure handling",
+    "source provenance and honest execution limits"
+  ],
+  "no_symmetry_per_file_required": true
+}

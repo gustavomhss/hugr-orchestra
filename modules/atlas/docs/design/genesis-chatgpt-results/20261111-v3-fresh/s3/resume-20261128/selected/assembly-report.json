@@ -1,0 +1,12 @@
+{
+  "status": "ASSEMBLED_FROM_ROOT_VERIFIED_BINDINGS",
+  "artifact_count": 11,
+  "unaccepted_upper_keys": [],
+  "package_sha256": "4bcee3f8e534dc6a191cee647e27b5a6faf98a4a7e1f3ed09e9fda7488d64c86",
+  "package_byte_length": 1164632,
+  "original_L1_package_sha256": "cd19bf501df6ec40386b812725d38747707c00609afd612212e4b6c16feb5f4a",
+  "runtime_not_executed": true,
+  "original_historical_prompt_response_status": "NOT_RECOVERED",
+  "remaining_materialization": "Original L1 payload refs, all source files/membership scopes, protocol and reserved oracle must be materialized separately with their fixed hashes. This assembler does not read the oracle or execute source code.",
+  "blockers": []
+}

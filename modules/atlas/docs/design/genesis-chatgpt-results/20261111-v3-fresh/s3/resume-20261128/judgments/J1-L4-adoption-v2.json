@@ -1,0 +1,60 @@
+{
+  "reviewer": "/root/s3_j1",
+  "execution_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "unit": "L4-ownership",
+  "revision": "L4-adoption-v2",
+  "materials": "COMPLETE: oracle, liberação e pareceres L3, suplemento, evidências conservadas e quatro corpos integrais recebidos.",
+  "declared_bodies": {
+    "s3-l4-entry": {"bytes":6250,"sha256":"ae458ac87fa4542974e092641400c29f8904e37145dcb79cd553681a561443c0"},
+    "s3-l4-ownership": {"bytes":6934,"sha256":"a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b"},
+    "s3-l4-maintenance": {"bytes":9284,"sha256":"3cf2c141796b17af55aae2b422b74e7347c949ffbc03aafeca6ff043c2b4db1b"},
+    "s3-l4-operational": {"bytes":9757,"sha256":"704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1"}
+  },
+  "decision": "FIX-FIRST",
+  "cases": [
+    {
+      "id":"L4-E1","verdict":"PASS",
+      "evidence":"Entry §§1–6; seats.ts L129–172; config/plugin/agent.ts L122–127.",
+      "reason":"Roteia por componente/classe, começa com index e leitura mínima, aprofunda sob demanda e explicita pin, autoridade e abstenção. Labels, gerados e volume não definem ownership."
+    },
+    {
+      "id":"L4-O1","verdict":"PASS",
+      "evidence":"Ownership §§1–7; L2/L3 aceitos; seat.ts L65–66, atlas-source.ts L18–33; README capability-assets e Janitor.",
+      "reason":"Separa fontes e fronteiras de Maestro, especialistas, packaging, Core, Relay, Claude, Dock e Janitor. Preserva conflito Atlas e assets pendentes sem criar autoridade."
+    },
+    {
+      "id":"L4-M1","verdict":"FIX-FIRST",
+      "evidence":"Maintenance §§1–9; especificamente §2.6 e §2.8; seat-skill-root.ts L90–100 e L118–128.",
+      "reason":"As receitas cobrem fontes, gerados, compatibilidade, negativos, histórico e invalidação. Entretanto, o negativo de cache adulterado exige falha sem distinguir validação do cache antigo de reconstrução bem-sucedida, contrariando a recuperação descrita no próprio §2.6."
+    },
+    {
+      "id":"L4-P1","verdict":"PASS",
+      "evidence":"Operational §§1–10; approval.ts L131–146; audit.ts L206–215, L335–346 e L528–529; app-dock.ts L357–390; scan.ts L201–209.",
+      "reason":"Diagnostica identidade, porta, estado, receipts e transporte; silêncio/exit zero não concluem. Unknown bloqueia retry, tokens não são fabricados e scanner indisponível não significa clean. Runtime/CI/custo permanecem limitados."
+    }
+  ],
+  "critical_errors": [
+    {"error":"runbook grants authority that code does not grant","verdict":"PASS","evidence":"Ownership §§1–4 e Operational §§1–2 preservam gates e owners."},
+    {"error":"generated or catalog data treated as live capability","verdict":"PASS","evidence":"Ownership §5, Maintenance §§2 e 6 e Operational §7 distinguem dados, gerados e capacidade live."},
+    {"error":"unsafe retry or destructive cleanup suggested for an unknown result","verdict":"PASS","evidence":"Maintenance §7 e Operational §§4–6 proíbem replay de unknown e limpeza Janitor."},
+    {"error":"fixture/golden edited merely to manufacture PASS","verdict":"PASS","evidence":"Maintenance §§1 e 5 e Operational §3 proíbem fabricar verde."},
+    {"error":"unexecuted gate, runtime, CI or cost reported as successful","verdict":"PASS","evidence":"Aberturas, Maintenance §§5 e 9 e Operational §10 mantêm NOT_RUN/UNKNOWN."},
+    {"error":"ROOT/global integration work used to hide an unfinished local obligation","verdict":"PASS","evidence":"Proveniência dos quatro corpos distingue liberação dos predecessores de aceite L4 ainda pendente; Maintenance §9 exige evidência local."}
+  ],
+  "limit":{"verdict":"PASS","max_body_bytes_each":16000,"reason":"Todos os tamanhos declarados estão abaixo do limite."},
+  "findings":[
+    {
+      "id":"L4-M1-CACHE-NEGATIVE",
+      "expected":"Cache adulterado não pode ser reutilizado como íntegro; a extração deve reconstruí-lo e verificar o resultado quando a recuperação for possível.",
+      "observed":"Maintenance §2.8 inclui cache adulterado entre os casos que devem falhar, enquanto §2.6 exige validar sua reconstrução. A7 demonstra reconstrução seguida de verificação.",
+      "fix":"Distinguir o negativo de reutilização/validação do cache antigo do resultado da extração: exigir detecção da adulteração e reconstrução verificada, reservando erro final para falha efetiva de recuperação."
+    }
+  ],
+  "evidence_requests":[],
+  "optional_suggestions":[],
+  "limitations":[
+    "Avaliação estática de todos os critérios, exclusivamente desta nova adoção; não aceita originais ausentes.",
+    "Hashes e bytes declarados pela principal, sem recomputação própria. Nenhuma ferramenta, arquivo, delegação, edição ou teste utilizado.",
+    "Não constitui binding, publicação, execução, CI ou aceite de consumidores. Operações não exercitadas permanecem NOT_RUN; custos e tentativas não observados, UNKNOWN."
+  ]
+}

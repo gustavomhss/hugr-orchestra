@@ -1,0 +1,184 @@
+{
+  "schema": "s3-l4-adoption-correction-v3-response-v1",
+  "response_kind": "ORIGINAL_CORRECTION",
+  "producer_identity": "/root/s3_l4_producer",
+  "execution_id": "15cc9853-0e71-4950-8813-0bfb66f82c8a",
+  "corrected_at_utc": "2026-11-28T06:59:38Z",
+  "status_as_of_correction": "REVIEW_REQUIRED",
+  "semantic_acceptance_granted": false,
+  "finding": "L4-M1-CACHE-NEGATIVE",
+  "finding_basis": "J1 finding transmitted by /root in the correction request",
+  "request": {
+    "path": "s3-l4-adoption/correction-v3-request.md",
+    "bytes": 1025,
+    "sha256": "4d2d4f50531bc21dae7b7836b38127a0a94043c50e68972f8f33542f716bc6f8"
+  },
+  "prior_v2_receipt_preserved": {
+    "path": "s3-l4-adoption/correction-response.json",
+    "bytes": 5893,
+    "sha256": "54bb5c2a099b35d164907433524937e330a2574dd3f60cce20be6dbe6e7b56bb"
+  },
+  "permitted_J1_reference": {
+    "path": "s3-resume-work/judgments/J1-L4-adoption-v2.json",
+    "opened": false
+  },
+  "sources_used": [
+    {
+      "path": "s3-provenance/sources/modules/maestro/coordination/src/seat-skill-root.ts",
+      "bytes": 10150,
+      "sha256": "804a7ec1d341ba32e074d1badd3cbce8612b218d105b61660beae44340dd705c",
+      "inspected_lines": "90–132",
+      "inspection": "static only; whole-file hash records identity, not execution"
+    }
+  ],
+  "substitution": {
+    "artifact": "bodies/l4-maintenance.md",
+    "section": "2.8",
+    "before": "8. Verifique negativos: arquivo fora da root, invalid UTF-8, symlink/escape, gerado manualmente divergente e cache adulterado devem falhar.",
+    "after": "8. Verifique negativos: arquivo fora da root, invalid UTF-8, symlink/escape e gerado manualmente divergente devem falhar. Para cache adulterado, a validação deve rejeitar a reutilização da cópia antiga; a extração deve reconstruir e validar uma cópia íntegra quando possível, sob o contrato de lock. A adulteração por si só não exige falha final da extração: erro final somente se a recuperação falhar, inclusive a aquisição do lock ou a verificação da cópia reconstruída. [Fonte: `modules/maestro/coordination/src/seat-skill-root.ts:90–100,118–128`.]",
+    "expected_occurrences": 1,
+    "reason": "distinguish failed reuse validation of corrupted old cache from final extraction failure; require reconstruction and verification when recovery succeeds"
+  },
+  "maintenance_before": {
+    "path": "s3-l4-adoption/revisions/v2/bodies/l4-maintenance.md",
+    "bytes": 9284,
+    "sha256": "3cf2c141796b17af55aae2b422b74e7347c949ffbc03aafeca6ff043c2b4db1b"
+  },
+  "maintenance_after": {
+    "path": "s3-l4-adoption/bodies/l4-maintenance.md",
+    "bytes": 9724,
+    "sha256": "d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91"
+  },
+  "archived_v2": [
+    {
+      "path": "s3-l4-adoption/revisions/v2/bodies/l4-entry.md",
+      "bytes": 6250,
+      "sha256": "ae458ac87fa4542974e092641400c29f8904e37145dcb79cd553681a561443c0"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v2/bodies/l4-ownership.md",
+      "bytes": 6934,
+      "sha256": "a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v2/bodies/l4-maintenance.md",
+      "bytes": 9284,
+      "sha256": "3cf2c141796b17af55aae2b422b74e7347c949ffbc03aafeca6ff043c2b4db1b"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v2/bodies/l4-operational.md",
+      "bytes": 9757,
+      "sha256": "704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v2/request.md",
+      "bytes": 3827,
+      "sha256": "1b8e19051f1c9747e57c38ec71a8f47099c8a87d4aff682a828b1ba58334c5d3"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v2/response.json",
+      "bytes": 27266,
+      "sha256": "0c76b4f4a7874620321bbf8212541e0d58d522944fb30fe84eeb3472f0030393"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v2/recipe.md",
+      "bytes": 5471,
+      "sha256": "4b94e9a40ea0b5f160646600a8fee237fda5339962b92ae23996e4528acfc426"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v2/changes.diff",
+      "bytes": 13057,
+      "sha256": "8661785a504b48acdffb31b78898cd1f44f7101c25932c987bef67e0b36c4201"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v2/correction-request.md",
+      "bytes": 1095,
+      "sha256": "e83d691a40fb4858c2a128b4c5ed2b994ff161337f1e725bc0ea0b6313d176ec"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v2/correction-response.json",
+      "bytes": 5893,
+      "sha256": "54bb5c2a099b35d164907433524937e330a2574dd3f60cce20be6dbe6e7b56bb"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v2/recipe-v2.md",
+      "bytes": 2768,
+      "sha256": "193c7d86804a1abde6a256122a0292c26ff91cb498431f842a3dede80ce35648"
+    },
+    {
+      "path": "s3-l4-adoption/revisions/v2/changes-v2.diff",
+      "bytes": 860,
+      "sha256": "b9e4f7673841ddeaffee3f8be956518efb9378d400665288cd16ad306e5d007e"
+    }
+  ],
+  "active_bodies": [
+    {
+      "path": "s3-l4-adoption/bodies/l4-entry.md",
+      "bytes": 6250,
+      "sha256": "ae458ac87fa4542974e092641400c29f8904e37145dcb79cd553681a561443c0",
+      "revision": "unchanged from v2 set"
+    },
+    {
+      "path": "s3-l4-adoption/bodies/l4-ownership.md",
+      "bytes": 6934,
+      "sha256": "a09dfcf8b6733c20b36be5228d2bd315533473983c4d20af3a9d2e60e4fc0c4b",
+      "revision": "unchanged from v2 set"
+    },
+    {
+      "path": "s3-l4-adoption/bodies/l4-maintenance.md",
+      "bytes": 9724,
+      "sha256": "d5d7a91cfd94691f7c3221e65d87f7042f586c40d0aca9bf7868e5e34da8bb91",
+      "revision": "v3"
+    },
+    {
+      "path": "s3-l4-adoption/bodies/l4-operational.md",
+      "bytes": 9757,
+      "sha256": "704d631906d268e2e326f23d85e9bb6dc80845a8e2191ef970bab1c24a8e34c1",
+      "revision": "unchanged from v2 set"
+    }
+  ],
+  "checks": {
+    "v2_archive_written_before_maintenance_edit": true,
+    "archive_matches_v2_bytes": true,
+    "only_section_2_8_changed": true,
+    "other_maintenance_bytes_unchanged": true,
+    "other_three_bodies_unchanged": true,
+    "all_preexisting_records_unchanged": true,
+    "source_file_unchanged": true,
+    "diff_reproduced": true,
+    "maintenance_within_16000_utf8_bytes": true
+  },
+  "supporting_artifacts": [
+    {
+      "path": "s3-l4-adoption/recipe-v3.md",
+      "bytes": 3401,
+      "sha256": "c87eecab4b261d0f399c7c5cf28cad7ffec800bbdc06446fa9998064b93a9395"
+    },
+    {
+      "path": "s3-l4-adoption/changes-v3.diff",
+      "bytes": 1424,
+      "sha256": "c978cae1636dea6b17f0ccfe16d0d858e8d93dc644f054da25081727911681ea"
+    }
+  ],
+  "access_boundary": {
+    "github_calls": 0,
+    "oracles_read": 0,
+    "J1_judgment_files_read": 0,
+    "J2_files_read": 0
+  },
+  "execution_status": {
+    "product": "NOT_RUN",
+    "tests": "NOT_RUN",
+    "runtime": "NOT_RUN",
+    "build": "NOT_RUN",
+    "CI": "NOT_RUN",
+    "live": "NOT_RUN",
+    "Atlas": "NOT_RUN"
+  },
+  "limits": [
+    "Only the one transmitted mandatory finding was addressed.",
+    "The producer grants no acceptance; the active set remains REVIEW_REQUIRED.",
+    "No claim is made about the independent J2 review of v2.",
+    "All previous responses, recipes and diffs remain immutable and describe their own versions."
+  ]
+}

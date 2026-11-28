@@ -1,0 +1,67 @@
+--- s3-provenance/files/bodies/l3-flows.md
++++ s3-l3-adoption/bodies/l3-flows.md
+@@ -1,6 +1,8 @@
+ # S3 L3 — fluxos integrados de autoridade, execução e recuperação
+ 
+-**Estado:** `CANDIDATE_UNRELEASED`. Fonte fixa: `gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38`. Oracle: `oracles/L3-flows.json`. Este corpo foi reconstruído depois da perda da sessão anterior. Os corpos L2 correspondentes estão persistidos, mas ainda não receberam dois novos pareceres independentes; portanto este L3 não está liberado, não entra como artefato aceito no pacote nativo e não autoriza L4.
++**Estado:** `CANDIDATE_UNRELEASED` / `REVIEW_REQUIRED`; runtime: `NOT_RUN`. Fonte fixa: `gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38`. Protocolo: `ee2521a5b966bd505cc95bd1c733e09e12f33531`. Oracle: `oracles/L3-flows.json` (referência preservada, não consultada nesta adoção). Nova adoção/correção do corpo alternativo de recuperação por `/root/s3_l3_producer`, sem reconstruir autoria, prompts ou aceites históricos ausentes.
++
++Os três predecessores L2-v2 foram liberados pela principal em `2026-11-28T06:21:31Z`, conforme seu atestado de dois pareceres independentes (`/root/s3_j1` e `/root/s3_j2`) nos seis casos, sem findings abertos. Seleção conferida por SHA-256: Maestro `5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012`; Relay `ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037`; Integrações `90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259`. Essa liberação não concede aceite a este L3: ele continua pendente de revisão independente, não entra como artefato aceito no pacote nativo e não autoriza L4.
+ 
+ ## 1. Invariantes que atravessam os quatro fluxos
+ 
+@@ -40,7 +42,7 @@
+ ### Preparação e aprovação
+ 
+ 1. Maestro mantém o plano e o contexto, mas a identidade de autoridade é o `ComposedActor`; o seat escolhido continua sendo o owner da execução.
+-2. A revisão apresentada ao owner vincula os hashes exatos de revisão, validação, contexto, policy e task. Só a primeira resposta genuína posterior, na mesma Session e não sintética, pode ser interpretada.
++2. A revisão apresentada ao owner vincula os hashes exatos de revisão, validação, contexto, policy e task. A resposta selecionada do owner deve ser genuína, ter `role=user`, pertencer à mesma Session e ser posterior à apresentação. Não pode existir qualquer mensagem intermediária com `role=user` (inclusive sintética) entre a apresentação e essa resposta. Resposta sintética e resposta não imediata são recusas distintas (`reply-synthetic` e `reply-not-immediate`). [Fonte: `modules/maestro/coordination/src/approval.ts:135–146`.]
+ 3. A decisão aprovada não é uma permissão ampla. A reservation write-once vincula uma child Session exata e o permission snapshot correspondente.
+ 4. Antes do primeiro provider turn, `beforeTurn` revalida/consome o vínculo. Alteração de prompt, intent, seat, child ou permissões exige nova revisão/autorização; mismatch produz HOLD/recusa.
+ 
+@@ -61,7 +63,9 @@
+ 
+ ### Estado possível
+ 
+-O processo pode morrer depois do efeito externo e antes de produzir disposição, antes do receipt durável ou antes da aplicação de estado. Esses cortes não são equivalentes. `release` de lock permite retomar a WP sob o contrato; não desfaz efeito externo e não prova exactly-once.
++O processo pode morrer depois do efeito externo e antes de produzir disposição, antes do receipt durável ou antes da aplicação de estado. Esses cortes não são equivalentes. `release` é do arm parked: o caminho do owner escreve o arquivo `release` sob o run lock. A próxima avaliação registra `human-release` antes de consumi-lo, reinicia retry, round e claim do gate e reavalia a mesma WP, sem dispensar controles. Não desfaz efeito externo e não prova exactly-once. [Fonte: `modules/relay/src/arm/evaluate.ts:67–89`.]
++
++A recuperação/remoção do run lock é uma operação distinta: no Core, `recover` só remove um diretório de lock anterior ao processo e não detido por avaliação local; registra `gate-recovered` antes da remoção. `Relay.release` tenta essa recuperação antes de chamar `ArmEvaluate.release`; isso não transforma release do arm em release de lock. [Fonte: `packages/core/src/relay.ts:374–418,517–520`.]
+ 
+ ### Recuperação segura
+ 
+@@ -69,7 +73,7 @@
+ 2. Ler state, ledger/receipts, stderr e artefatos atuais. Separar: efeito observado, disposição assinada/proveniente, receipt do caller e evento de aplicação.
+ 3. Observar o alvo externo somente por porta segura/idempotente quando o contrato oferecer essa leitura. Ausência de receipt não prova ausência de efeito.
+ 4. Classificar o resultado como `observed-applied`, `observed-not-applied`, `stale-not-dispatched`, `unknown-effect`, `corrupt` ou `unavailable`.
+-5. Repetir automaticamente apenas se o contrato prova `not-dispatched` ou se a operação foi realmente emitida com chave idempotente válida. `unknown-effect` bloqueia repetição quando duplicação é perigosa.
++5. Repetir automaticamente apenas se o contrato prova `not-dispatched` ou se a operação foi realmente emitida com chave idempotente válida. `unknown-effect` bloqueia repetição automática. Essa regra geral não amplia o retry específico do Dock em F4.
+ 6. Em workflow governado, concluir pelo settlement do host. Audit/verify confirma apenas as propriedades que de fato verificou; não executa checks nem valida automaticamente os artefatos correntes.
+ 7. No oracle recheck, cadeia íntegra sem sprint atual resulta em `not-run`; sprint fornecido/descoberto que é ilegível, UTF-8 inválido, JSON malformado ou schema inválido resulta em `invalid`, nunca em `not-run`. Cadeia ou registros quebrados têm seu próprio `not-run` com motivo de comparação não executada. Nenhum desses estados fecha a WP.
+ 8. Preservar tentativa e lacunas. O audit usa `total: null` quando nenhum custo foi registrado: não é custo zero, é não medido. Billing, tokens e número físico de chamadas continuam `UNKNOWN`.
+@@ -85,8 +89,8 @@
+ ### Tratamento da ação
+ 
+ - `success` ou `failure` observado: seguir receipt.
+-- `stale-not-dispatched`: usar somente a regra de retry delimitada do contrato.
+-- `unknown/uncertain`: não repetir automaticamente quando o efeito pode ter ocorrido.
++- `stale-not-dispatched`: no máximo uma repetição automática, somente para uma instância de `NativeRPCError` com `code === "stale-ref"`, `outcome === "not-dispatched"` e `attempt < 1`; outros erros stale ou falhas não satisfazem essa regra. [Fonte: `modules/app-dock/src/app-dock.ts:388–390`.]
++- `unknown/uncertain`: nunca repetir automaticamente; a incerteza não autoriza replay, mesmo se a ação parecer inofensiva ou idempotente. [Fonte: `modules/app-dock/src/app-dock.ts:357–360,388–390`.]
+ - `channel-unavailable`: corrigir a composição; não simular sucesso.
+ 
+ A exclusão da Session pode acionar o reaper Linux pertencente ao lifetime Dock. Isso não transfere poderes destrutivos ao Janitor.
+@@ -103,11 +107,11 @@
+ | approval mismatch | revisão, hashes, reservation e child | reabrir revisão/autorização | ampliar token antigo |
+ | tool Claude recusada | owner, skill load, authorize/execute | usar porta Orchestra correta | Agent/Task direto ou allow bypass |
+ | stdout vazio | state, stderr, ledger, recheck | classificar evidência | concluir WP por silêncio |
+-| efeito desconhecido | receipt + alvo externo observável | HOLD/manual/idempotência provada | retry cego |
++| efeito desconhecido | receipt + alvo externo observável | HOLD/manual; obter evidência do efeito | repetição automática enquanto desconhecido |
+ | Dock sem URL/token | composição desktop/channel | restaurar transport real | gerar credencial |
+ | Janitor falhou | scanner/report/sink | marcar unavailable | declarar clean ou limpar processos |
+ | asset catalogado | provenance, grant, connection e live acceptance | manter source-qualified/pending | afirmar integração live |
+ 
+-## 7. Limites desta reconstrução
++## 7. Limites desta adoção
+ 
+-A cobertura estática dos quatro casos do oracle pode ser verificada deterministicamente, mas este corpo não recebeu os dois novos pareceres independentes exigidos. Nenhuma Session, provider, workflow, build, cache, Dock, Janitor, CI, importação, publicação ou leitura Atlas foi executada por esta reconstrução. O histórico da conversa anterior registra que um L3 chegou a ser aceito, mas os pareceres e o corpo completos não estão duráveis; essa alegação não é usada como release.
++Este corpo cobre os quatro fluxos descritos, mas ainda exige dois novos pareceres independentes sobre seus bytes; o produtor não concede PASS. O aceite dos predecessores L2-v2 não libera este L3. Nenhuma Session do produto, provider, workflow, build, cache, Dock, Janitor, CI, importação, publicação ou leitura Atlas foi executada por esta adoção: runtime `NOT_RUN`. Os originais históricos superiores e seus prompts/aceites completos não foram recuperados. O alternativo anterior permanece preservado como input; esta nova autoria registra somente a adoção/correção realizada, sem usar alegação histórica como release.

@@ -1,0 +1,117 @@
+# S3 L3 — fluxos integrados de autoridade, execução e recuperação
+
+**Estado:** `CANDIDATE_UNRELEASED` / `REVIEW_REQUIRED`; runtime: `NOT_RUN`. Fonte fixa: `gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38`. Protocolo: `ee2521a5b966bd505cc95bd1c733e09e12f33531`. Oracle: `oracles/L3-flows.json` (referência preservada, não consultada nesta adoção). Nova adoção/correção do corpo alternativo de recuperação por `/root/s3_l3_producer`, sem reconstruir autoria, prompts ou aceites históricos ausentes.
+
+Os três predecessores L2-v2 foram liberados pela principal em `2026-11-28T06:21:31Z`, conforme seu atestado de dois pareceres independentes (`/root/s3_j1` e `/root/s3_j2`) nos seis casos, sem findings abertos. Seleção conferida por SHA-256: Maestro `5907c7745c2533529d3039f9d8635f76bd98aeefaa5612b8594723341d258012`; Relay `ebeef855436f687189c081b5a47ade29a2e716b0284613daaa0515f32d333037`; Integrações `90c2c94bf63580c676f88a7065fd3cadb4e6fd6332c99c9f9d9534d56086d259`. Essa liberação não concede aceite a este L3: ele continua pendente de revisão independente, não entra como artefato aceito no pacote nativo e não autoriza L4.
+
+## 1. Invariantes que atravessam os quatro fluxos
+
+1. **Identidade não é apresentação.** A autoridade parte do actor composto e do ID canônico do seat. Label, nome de tool, texto do modelo e Task ID copiado não substituem `projectId + sessionId + memberId`.
+2. **Plano não é autorização; autorização não é execução; execução não é aceite.** Cada transição exige seu próprio objeto e sua própria evidência.
+3. **A Session pertence ao Core/host.** Maestro coordena; adapters traduzem; providers não ganham uma segunda árvore de Sessions.
+4. **Permissões são cumulativas apenas dentro das portas declaradas.** Profile nativo, caller gate, owner gate, ToolSafety, approval e permission snapshot continuam aplicáveis mesmo quando um provider possui allow rules locais.
+5. **Efeito, disposição, receipt e estado aplicado são fatos distintos.** Uma falha entre eles deixa incerteza real.
+6. **Fonte autoral, gerado, fixture, histórico e navegação têm semânticas diferentes.** Apenas dependência de build/semântica declarada propaga invalidação.
+7. **Desconhecido permanece desconhecido.** Runtime, CI, billing, conexão live, resultado externo e consumo do desktop não são inferidos de texto estático.
+
+## 2. F1 — acrescentar um companion UTF-8 a uma skill de seat
+
+### Entrada
+
+Um mantenedor acrescenta um documento filho à árvore já declarada `backend-implement`, sob `modules/specialists/backend/skills`. A intenção é que o seat o leia tanto em execução de fonte quanto no binário/sidecar compilado.
+
+### Caminho de autoridade e build
+
+1. O owner da árvore autoral cria o arquivo dentro da root declarada. O nome precisa ser portável; o objeto deve ser arquivo regular UTF-8, sem symlink/escape e compatível com os contratos de conteúdo da árvore.
+2. O membership da root e os bytes capturados viram inputs. O grant é da root seat-scoped e cobre descendentes válidos; o arquivo novo não cria seat, ID, tool ou grant adicional.
+3. `SeatSkillContent` valida a árvore e seu conteúdo. Erro de encoding, frontmatter/link proibido ou saída da root é falha do input, não motivo para contornar a validação.
+4. `seatSkillsModule`/`seatSkillsFiles` regenera o módulo virtual `orchestra-seat-skills.gen.ts` para os targets Bun e Node. O gerado é consequência dos inputs; editá-lo manualmente produziria drift e perderia a fonte de verdade.
+5. Em source, a árvore autoral é lida no lugar. Em build compilado, `SeatSkillRoot` exige o embed e extrai cache por versão/digest, validando membership e bytes. Cache íntegro pode ser reutilizado; parcial ou adulterado precisa ser reconstruído sob o contrato de lock/digest.
+6. Uma orientação que precisa chegar ao seat em runtime deve estar na árvore shipped. Uma skill em `.orchestra/skills/` pode instruir contribuidores, mas não substitui o payload embarcado.
+
+### Impacto e não impacto
+
+O resultado Maestro/skills deve ser regenerado porque os bytes são input real. Um link documental para Relay é navegação enquanto o resultado Relay não consumir esses bytes como input. Navegação pode ajudar descoberta, porém não transforma a base Relay em dependência de build nem exige sua invalidação.
+
+### Evidência de manutenção
+
+O recibo útil contém: path autoral, membership observado, hashes dos bytes, resultado do gerador, digest do embed/cache, target exercitado e checks negativos. A existência do arquivo no Git isoladamente não prova disponibilidade no sidecar.
+
+## 3. F2 — Maestro despacha trabalho governado para Claude e o resultado participa de Relay
+
+### Preparação e aprovação
+
+1. Maestro mantém o plano e o contexto, mas a identidade de autoridade é o `ComposedActor`; o seat escolhido continua sendo o owner da execução.
+2. A revisão apresentada ao owner vincula os hashes exatos de revisão, validação, contexto, policy e task. A resposta selecionada do owner deve ser genuína, ter `role=user`, pertencer à mesma Session e ser posterior à apresentação. Não pode existir qualquer mensagem intermediária com `role=user` (inclusive sintética) entre a apresentação e essa resposta. Resposta sintética e resposta não imediata são recusas distintas (`reply-synthetic` e `reply-not-immediate`). [Fonte: `modules/maestro/coordination/src/approval.ts:135–146`.]
+3. A decisão aprovada não é uma permissão ampla. A reservation write-once vincula uma child Session exata e o permission snapshot correspondente.
+4. Antes do primeiro provider turn, `beforeTurn` revalida/consome o vínculo. Alteração de prompt, intent, seat, child ou permissões exige nova revisão/autorização; mismatch produz HOLD/recusa.
+
+### Execução Claude
+
+1. O Core cria ou retoma a child Session durável; o adapter Claude recebe um `Turn` filtrado e preserva history, context, tools, authorize/execute, estado e steers.
+2. O preset estrutural permanece `claude_code`; contexto Orchestra entra pela porta adicional prevista. Catálogo ou cast não autoriza system prompt arbitrário.
+3. Claude `Agent`/`Task` e superfícies equivalentes são recusados. Delegação permitida passa por `mcp__orchestra__task`, que cria a child Session Orchestra.
+4. Built-ins atravessam `turn.authorize`/ToolSafety. Tools Orchestra atravessam `turn.execute` no registry. `ToolSearch` carrega schema, não concede autoridade.
+5. `PreToolUse` e `canUseTool` compartilham a decisão pelo tool-use id para evitar divergência, mas uma allow rule local nunca bypassa o host.
+6. Tools `maestro_*` protegidas exigem o load bem-sucedido de `maestro-run-governed` naquela Session; o estado é in-memory e não sobrevive a restart. Exceções de load, como `maestro_arsenal_*` e `maestro_workflows`, preservam seus próprios gates.
+
+### Settlement Relay
+
+O workflow Relay precisa ser o caminho governado realmente configurado: definição, parâmetros, skills/âncoras, checks finais, arm/placement e receipt durável. Uma chamada isolada a `evaluate` ou um exit code não substitui settlement. O resultado pode ser aceito apenas depois de evidência de execução, revisão e conclusão apropriada; carregar playbook, produzir texto ou obter approval não fecha o workflow por si.
+
+## 4. F3 — efeito Relay possivelmente ocorreu, mas receipt/state não foram aplicados
+
+### Estado possível
+
+O processo pode morrer depois do efeito externo e antes de produzir disposição, antes do receipt durável ou antes da aplicação de estado. Esses cortes não são equivalentes. `release` é do arm parked: o caminho do owner escreve o arquivo `release` sob o run lock. A próxima avaliação registra `human-release` antes de consumi-lo, reinicia retry, round e claim do gate e reavalia a mesma WP, sem dispensar controles. Não desfaz efeito externo e não prova exactly-once. [Fonte: `modules/relay/src/arm/evaluate.ts:67–89`.]
+
+A recuperação/remoção do run lock é uma operação distinta: no Core, `recover` só remove um diretório de lock anterior ao processo e não detido por avaliação local; registra `gate-recovered` antes da remoção. `Relay.release` tenta essa recuperação antes de chamar `ArmEvaluate.release`; isso não transforma release do arm em release de lock. [Fonte: `packages/core/src/relay.ts:374–418,517–520`.]
+
+### Recuperação segura
+
+1. Identificar arm/token/WP, lock, revisão e driver. Não apagar lock ou editar state/golden para tornar o diagnóstico verde.
+2. Ler state, ledger/receipts, stderr e artefatos atuais. Separar: efeito observado, disposição assinada/proveniente, receipt do caller e evento de aplicação.
+3. Observar o alvo externo somente por porta segura/idempotente quando o contrato oferecer essa leitura. Ausência de receipt não prova ausência de efeito.
+4. Classificar o resultado como `observed-applied`, `observed-not-applied`, `stale-not-dispatched`, `unknown-effect`, `corrupt` ou `unavailable`.
+5. Repetir automaticamente apenas se o contrato prova `not-dispatched` ou se a operação foi realmente emitida com chave idempotente válida. `unknown-effect` bloqueia repetição automática. Essa regra geral não amplia o retry específico do Dock em F4.
+6. Em workflow governado, concluir pelo settlement do host. Audit/verify confirma apenas as propriedades que de fato verificou; não executa checks nem valida automaticamente os artefatos correntes.
+7. No oracle recheck, cadeia íntegra sem sprint atual resulta em `not-run`; sprint fornecido/descoberto que é ilegível, UTF-8 inválido, JSON malformado ou schema inválido resulta em `invalid`, nunca em `not-run`. Cadeia ou registros quebrados têm seu próprio `not-run` com motivo de comparação não executada. Nenhum desses estados fecha a WP.
+8. Preservar tentativa e lacunas. O audit usa `total: null` quando nenhum custo foi registrado: não é custo zero, é não medido. Billing, tokens e número físico de chamadas continuam `UNKNOWN`.
+
+## 5. F4 — Dock retorna ação incerta e Janitor está indisponível
+
+### Pré-condição de transporte
+
+Dock depende do transport real composto pelo desktop: Electron main, loopback WebSocket e URL/token por launch, associados ao canal/Session. `fromEnv` ausente fora dessa composição significa canal indisponível. Não se inventa token, não se reaproveita credencial de outro launch e não se interpreta um catálogo como conexão.
+
+Hooks diretos e RPC/MCP possuem ordens e superfícies de permissão próprias. Uma permissão em uma porta não deve ser projetada silenciosamente na outra.
+
+### Tratamento da ação
+
+- `success` ou `failure` observado: seguir receipt.
+- `stale-not-dispatched`: no máximo uma repetição automática, somente para uma instância de `NativeRPCError` com `code === "stale-ref"`, `outcome === "not-dispatched"` e `attempt < 1`; outros erros stale ou falhas não satisfazem essa regra. [Fonte: `modules/app-dock/src/app-dock.ts:388–390`.]
+- `unknown/uncertain`: nunca repetir automaticamente; a incerteza não autoriza replay, mesmo se a ação parecer inofensiva ou idempotente. [Fonte: `modules/app-dock/src/app-dock.ts:357–360,388–390`.]
+- `channel-unavailable`: corrigir a composição; não simular sucesso.
+
+A exclusão da Session pode acionar o reaper Linux pertencente ao lifetime Dock. Isso não transfere poderes destrutivos ao Janitor.
+
+### Fronteira Janitor
+
+Janitor é scanner/read-only: identifica candidatos/órfãos e entrega report a um sink fornecido pelo host. Falha do scanner é `unavailable`, não “clean”. Janitor não remove, mata, reinicia, limpa credenciais, cria transportes ou resolve uma ação Dock incerta. Estado/scheduler in-memory e store persistido do desktop só podem ser tratados como compostos quando a ligação real foi observada.
+
+## 6. Matriz de decisão integrada
+
+| Sinal | Próxima leitura | Ação permitida | Ação proibida |
+| --- | --- | --- | --- |
+| label mudou | actor/ID canônico e resolução de label | corrigir apresentação validada | rotear por label |
+| approval mismatch | revisão, hashes, reservation e child | reabrir revisão/autorização | ampliar token antigo |
+| tool Claude recusada | owner, skill load, authorize/execute | usar porta Orchestra correta | Agent/Task direto ou allow bypass |
+| stdout vazio | state, stderr, ledger, recheck | classificar evidência | concluir WP por silêncio |
+| efeito desconhecido | receipt + alvo externo observável | HOLD/manual; obter evidência do efeito | repetição automática enquanto desconhecido |
+| Dock sem URL/token | composição desktop/channel | restaurar transport real | gerar credencial |
+| Janitor falhou | scanner/report/sink | marcar unavailable | declarar clean ou limpar processos |
+| asset catalogado | provenance, grant, connection e live acceptance | manter source-qualified/pending | afirmar integração live |
+
+## 7. Limites desta adoção
+
+Este corpo cobre os quatro fluxos descritos, mas ainda exige dois novos pareceres independentes sobre seus bytes; o produtor não concede PASS. O aceite dos predecessores L2-v2 não libera este L3. Nenhuma Session do produto, provider, workflow, build, cache, Dock, Janitor, CI, importação, publicação ou leitura Atlas foi executada por esta adoção: runtime `NOT_RUN`. Os originais históricos superiores e seus prompts/aceites completos não foram recuperados. O alternativo anterior permanece preservado como input; esta nova autoria registra somente a adoção/correção realizada, sem usar alegação histórica como release.

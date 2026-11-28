@@ -1,0 +1,37 @@
+{
+  "schema": "s3-review-input-record/v1",
+  "unit": "L4-adoption-v2",
+  "reviewers": [
+    "/root/s3_j1",
+    "/root/s3_j2"
+  ],
+  "recording": "Visible agent-message content transcribed as UTF-8 with one terminal LF; body bytes preserved exactly. Original earlier oracle/predecessor outer prose was not exported verbatim.",
+  "inputs": {
+    "oracle": "L4-oracle-input.json",
+    "bodies": [
+      "L4-adoption-v2-body-1-message.txt",
+      "L4-adoption-v2-body-2-message.txt",
+      "L4-adoption-v2-body-3-message.txt",
+      "L4-adoption-v2-body-4-message.txt"
+    ],
+    "additional_source_evidence": "L4-additional-evidence.txt",
+    "predecessor_reviews": [
+      "../judgments/J1-L3-adoption-v1.json",
+      "../judgments/J2-L3-adoption-v1.json"
+    ]
+  },
+  "J2_transport_corrections": [
+    "J2-L4-entry-original-transmission.txt",
+    "J2-L4-entry-correction.txt",
+    "J2-L4-evidence-original-transmission.txt",
+    "J2-L4-evidence-correction.txt"
+  ],
+  "J1_evidence_delivery": "Confirmed complete by actual J1 v2 reply before FIX-FIRST; no missing payload remained.",
+  "technical_isolation": "instruction only; no claim tools technically disabled",
+  "host_message_ids": "NOT_EXPOSED",
+  "v3_requests": [
+    "J1-L4-adoption-v3-message.txt",
+    "J2-L4-adoption-v3-message.txt"
+  ],
+  "v3_differential_method": "Full v2 body bytes plus exact sole replacement; complete current bodies and original v2 archived, measured by root. Both reviewers acknowledged method."
+}

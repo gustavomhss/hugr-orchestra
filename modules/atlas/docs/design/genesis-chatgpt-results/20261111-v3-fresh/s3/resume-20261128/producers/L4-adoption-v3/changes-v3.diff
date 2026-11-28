@@ -1,0 +1,11 @@
+--- s3-l4-adoption/revisions/v2/bodies/l4-maintenance.md
++++ s3-l4-adoption/bodies/l4-maintenance.md
+@@ -17,7 +17,7 @@
+ 5. Regenere via `seatSkillsModule`/`seatSkillsFiles` para os targets Bun e Node. **Não edite** `orchestra-seat-skills.gen.ts` manualmente.
+ 6. Valide o embed e a extração de `SeatSkillRoot`: versão/digest, cache íntegro, reconstrução de cache parcial/adulterado e locks.
+ 7. Exercite source e pelo menos o target compilado realmente entregue. Confirme que o seat consegue descobrir a instrução shipped.
+-8. Verifique negativos: arquivo fora da root, invalid UTF-8, symlink/escape, gerado manualmente divergente e cache adulterado devem falhar.
++8. Verifique negativos: arquivo fora da root, invalid UTF-8, symlink/escape e gerado manualmente divergente devem falhar. Para cache adulterado, a validação deve rejeitar a reutilização da cópia antiga; a extração deve reconstruir e validar uma cópia íntegra quando possível, sob o contrato de lock. A adulteração por si só não exige falha final da extração: erro final somente se a recuperação falhar, inclusive a aquisição do lock ou a verificação da cópia reconstruída. [Fonte: `modules/maestro/coordination/src/seat-skill-root.ts:90–100,118–128`.]
+ 9. Registre bytes/hashes e target. Um link para Relay é navigation; só declare dependência Relay se o resultado consumir os bytes.
+ 
+ ## 3. Trocar o label de um seat

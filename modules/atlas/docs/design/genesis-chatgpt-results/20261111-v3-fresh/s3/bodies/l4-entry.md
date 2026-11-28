@@ -1,6 +1,8 @@
 # S3 L4 — entrada mínima para Maestro, Relay, especialistas e integrações
 
-**Estado:** `CANDIDATE_UNRELEASED`; depende de L3 liberado, o que ainda não ocorreu nesta recuperação. Fonte fixa: `gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38`. Este mapa serve para encontrar a menor leitura útil; não concede autoridade, não substitui os gates e não declara runtime.
+**Estado no momento da produção (2026-11-28T06:38:33Z):** `CANDIDATE_UNRELEASED` / `REVIEW_REQUIRED`. Fonte fixa: `gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38`. Este mapa serve para encontrar a menor leitura útil; não concede autoridade, não substitui os gates e não declara runtime.
+
+**Proveniência no momento da produção (2026-11-28T06:38:33Z):** nova adoção/correção por `/root/s3_l4_producer`, execução `15cc9853-0e71-4950-8813-0bfb66f82c8a`, protocolo `ee2521a5b966bd505cc95bd1c733e09e12f33531`. O input é o alternativo `s3-provenance/files/bodies/l4-entry.md` (hash e bytes em `response.json`); os originais superiores, seus prompts e aceites históricos não foram recuperados. L1/L2 e L3-adoption-v1 estão liberados conforme atestado da principal nesta execução; o corpo L3 selecionado tem SHA-256 `17c3d7fdd7f693d66eefc29df3928d5bda449387db77a016a9b7b1f3cc3f0b99`. Estados antigos nos predecessores descrevem seu momento de produção; os recibos externos posteriores determinam sua liberação. Isso permite produzir L4, sem conceder aceite a este corpo. Recibos externos sobre seus bytes exatos determinarão sua liberação futura; o produtor não concede aceite. Runtime/CI/live nesta adoção: `NOT_RUN`.
 
 ## 1. Escolha primeiro a classe do pedido
 
@@ -41,7 +43,7 @@ Estas são **rotas de navegação**, não dependências adicionais de build nem 
 - fontes e cobertura Maestro: `receipts/L1-A/sources.json`, `receipts/L1-A/coverage.json`
 - fontes e cobertura Relay: `receipts/L1-B/sources.json`, `receipts/L1-B/coverage.json`
 - fontes e cobertura integrações: `receipts/L1-C/sources.json`, `receipts/L1-C/coverage.json`
-- decisões J1/J2 L1: `judgments/judge-1-L1-A.json` ... `judgments/judge-2-L1-C.json`
+- decisões J1/J2 L1: `judgments/J1-L1-A-v1-final.md`; `judgments/J2-L1-A-v1-final.md`; `judgments/J1-L1-B-v2.json`; `judgments/J2-L1-B-v2.json`; `judgments/J1-L1-C-v3.json`; `judgments/J2-L1-C-v3.json`
 
 Abra a menor rota que sustente a decisão. O reader deve citar a autoridade/gap do próprio artefato; a existência dessas rotas não promove L2–L4 nem prova publicação Atlas.
 
