@@ -32,6 +32,8 @@ export interface Turn {
   readonly system: ReadonlyArray<string>
   /** The Context Epoch baseline and workflow instructions alone: `system` without the agent's own text. */
   readonly context: ReadonlyArray<string>
+  /** AGENTS files Orchestra supplies through the context, for native import deduplication. */
+  readonly instructionFiles?: ReadonlyArray<string>
   /** Projected history the runner reloaded for this turn. */
   readonly history: ReadonlyArray<SessionMessage.Message>
   /** The agent's permission-filtered Orchestra tools, narrowed to the Session's scope, for the host to offer its engine. */
@@ -50,7 +52,8 @@ export interface Turn {
    * Orchestra's decision on a call the engine runs itself: V2 permission first (an ask waits for the owner's reply, a
    * deny or decline fails), then, when `safety` names the call as Orchestra's tool would see it, the Location's
    * ToolSafety under the Session's profile: write roots, never-touch paths, protected writes, the dispatch charge and,
-   * for a shell command, the sandbox the profile requires. Any refusal fails the effect and the host must deny the call.
+   * for a shell command, the sandbox the profile requires, and the installed hooks' before step. Any refusal fails the
+   * effect and the host must deny the call.
    */
   readonly authorize: (input: {
     readonly callID: string
@@ -114,6 +117,8 @@ export interface Authorization {
   readonly input?: Readonly<Record<string, unknown>>
   /** The web domains the Session's dispatch binds its searches to; absent: unrestricted. The host applies them. */
   readonly domains?: ReadonlyArray<string>
+  /** Installed hooks to settle once the engine's built-in returns. The response is untrusted tool data. */
+  readonly after?: (outcome: ToolSafety.HostedOutcome) => Effect.Effect<ReadonlyArray<string>, ToolSafety.Denied>
 }
 
 /** A steer promoted into the Session while the turn ran. */

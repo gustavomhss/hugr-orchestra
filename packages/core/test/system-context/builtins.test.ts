@@ -106,6 +106,19 @@ describe("SystemContextBuiltIns", () => {
     }),
   )
 
+  it.effect("a hosted turn leaves the environment and the date to its engine, which gives them itself", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(timestamp)
+      const context = yield* SystemContextRegistry.Service
+      const hosted = yield* SystemContext.initialize(yield* context.load({ sessionID: "ses_hosted", agent: "maestro", hosted: true }))
+      const own = yield* SystemContext.initialize(yield* context.load({ sessionID: "ses_own", agent: "maestro" }))
+
+      expect(own.baseline).toContain("<env>")
+      expect(hosted.baseline).not.toContain("<env>")
+      expect(hosted.baseline).not.toContain("Today's date")
+    }),
+  )
+
   it.effect("reconciles the date without repeating unchanged environment context", () =>
     Effect.gen(function* () {
       yield* TestClock.setTime(timestamp)

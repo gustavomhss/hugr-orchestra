@@ -1,6 +1,6 @@
 import { expect } from "bun:test"
 import path from "path"
-import { Deferred, Effect, Fiber, Layer, Schema } from "effect"
+import { Cause, Deferred, Effect, Exit, Fiber, Layer, Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { AppNodeBuilder } from "../src/effect/app-node-builder"
 import { LayerNode } from "../src/effect/layer-node"
@@ -15,6 +15,7 @@ import { AppProcess } from "../src/process"
 import { FSUtil } from "../src/fs-util"
 import { AbsolutePath } from "../src/schema"
 import { SessionV2 } from "../src/session"
+import { hostedHooks } from "../src/session/runner/hosted-call"
 import { SessionTable } from "../src/session/sql"
 import { ToolSafety } from "../src/tool-safety"
 import { location } from "./fixture/location"
@@ -24,7 +25,7 @@ import { testEffect } from "./lib/effect"
 
 const it = testEffect(Layer.empty)
 
-it.live("askBefore push enters real native permission graph; model approval labels cannot satisfy it", () =>
+it.live("askBefore enters the real native and hosted permission graph; model labels cannot satisfy it", () =>
   Effect.gen(function* () {
     const tmp = yield* Effect.acquireRelease(Effect.promise(() => tmpdir()), (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()))
     yield* Effect.gen(function* () {
@@ -80,7 +81,51 @@ it.live("askBefore push enters real native permission graph; model approval labe
       if (!(rejected instanceof ToolSafety.Denied)) throw rejected
       expect(rejected.reason).toBe("native-permission-denied")
       expect(yield* fs.exists(path.join(tmp.path, "reached"))).toBe(false)
-    }).pipe(Effect.provide(AppNodeBuilder.build(LayerNode.group([ToolSafety.node, PermissionV2.node, AgentV2.node, EventV2.node, AppProcess.node, FSUtil.node, Database.node]), [
+
+      yield* agents.transform((editor) => editor.update(toolIdentity.agent, (agent) => {
+        agent.permissions = [{ action: "edit", resource: "*", effect: "allow" }]
+      }))
+      const live = yield* Location.Service
+      const approve = (callID: string) => Effect.promise((signal) => Effect.runPromiseExit(
+        safety.run({
+          ...invocation,
+          agent: toolIdentity.agent,
+          callID,
+          tool: "write",
+          args: { filePath: path.join(tmp.path, "result.txt") },
+        }, Effect.succeed("prepared"), () => Effect.void).pipe(
+          Effect.provideService(ToolSafety.RuntimeProfile, { askBefore: ["write"] }),
+          Effect.provideService(ToolSafety.HostedHooks, hostedHooks(permissions, {
+            sessionID, agent: toolIdentity.agent, location: live, fs, callID, action: "edit", resources: ["result.txt"],
+          })),
+        ),
+        { signal },
+      ))
+      for (const reply of ["once", "reject"] as const) {
+        const asked = yield* Deferred.make<PermissionV2.Request>()
+        const unsubscribe = yield* events.listen((event) => {
+          if (event.type !== PermissionV2.Event.Asked.type) return Effect.void
+          const request = Schema.decodeUnknownSync(PermissionV2.Request)(event.data)
+          return request.metadata?.callID === `hosted-${reply}` ? Deferred.succeed(asked, request).pipe(Effect.asVoid) : Effect.void
+        })
+        yield* Effect.addFinalizer(() => unsubscribe)
+        const pending = yield* approve(`hosted-${reply}`).pipe(Effect.forkScoped)
+        const request = yield* Effect.raceFirst(
+          Deferred.await(asked),
+          Fiber.join(pending).pipe(Effect.flatMap((exit) => Effect.die(exit))),
+        ).pipe(Effect.timeout("10 seconds"))
+        expect(request.action).toBe("edit")
+        expect(request.resources).toEqual(["result.txt"])
+        expect(request.source).toBeUndefined()
+        yield* permissions.reply({ requestID: request.id, reply })
+        const result = yield* Fiber.join(pending)
+        if (reply === "once") expect(result).toEqual(Exit.succeed("prepared"))
+        if (reply === "reject") {
+          expect(Exit.isFailure(result)).toBe(true)
+          if (Exit.isFailure(result)) expect(Cause.squash(result.cause)).toMatchObject({ reason: "approval-native-rejected" })
+        }
+      }
+    }).pipe(Effect.provide(AppNodeBuilder.build(LayerNode.group([ToolSafety.node, PermissionV2.node, AgentV2.node, EventV2.node, AppProcess.node, FSUtil.node, Database.node, Location.node]), [
       [Location.node, Layer.succeed(Location.Service, location({ directory: AbsolutePath.make(tmp.path) }))],
     ])))
   }),

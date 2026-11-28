@@ -133,7 +133,11 @@ test("one SDK query is one turn: tool calls surface provider-executed and the ne
     systemPrompt: { type: "preset", preset: "claude_code", append: ClaudeHostOptions.append("maestro") },
     // Seats are dispatched through Orchestra's `task`, so Claude Code's own subagent tool is not offered.
     disallowedTools: ["Agent", "Task"],
+    // The project's settings only: the owner's own ~/.claude settings, hooks and plugins never load.
+    settingSources: ["project"],
   })
+  // The note states the runtime it runs in.
+  expect(calls[0]?.options?.systemPrompt).toMatchObject({ append: expect.stringContaining("## Your runtime") })
   expect(calls[0]?.options?.resume).toBeUndefined()
   expect(first.map((event) => event.type)).toEqual([
     "step-start", "text-start", "text-delta", "text-end", "tool-call", "tool-result",

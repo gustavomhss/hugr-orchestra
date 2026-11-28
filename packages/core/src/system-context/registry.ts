@@ -18,6 +18,8 @@ export interface Interface {
 export interface TurnInfo {
   readonly sessionID: string
   readonly agent: string
+  /** The Claude Code host supplies its own environment and date. */
+  readonly hosted?: boolean
 }
 
 /**

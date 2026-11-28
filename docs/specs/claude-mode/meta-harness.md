@@ -39,7 +39,10 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
    (`ContextUpdated`, projected as `system` history messages) go out in the same hook text after the baseline, each
    once: their ids join `delivered` only when the hook actually sent them, so a turn that ends before the hook runs
    sends them on the next turn. After a compaction the baseline, every update after it and the recalled todos are sent
-   again.
+   again. Orchestra supplies the working directory's ancestor `AGENTS.md` and `.claude/AGENTS.md` within the
+   project, along with global and configured instructions. Their changes continue through Context Epoch. An exclusion
+   also excludes that file's imports, so the source admits project-local imports before the runner derives exclusions
+   from the latest admitted snapshot. The native `claude-md` mode keeps Claude Code's own rules and imports.
 3. **Seats through Orchestra's task (2026-10-28).** Claude mode delegates exactly as normal mode does. Maestro
    dispatches a seat with `mcp__orchestra__task`; the task tool opens a durable child Session, governed and admitted
    as on Orchestra's own engine, which the app shows from the task row. The child runs on the engine
@@ -57,7 +60,10 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
    Claude mode differs from normal mode only in how the model is reached.
 4. **A seat keeps its own prompt.** For a seat other than Maestro, `ClaudeHostOptions.append(seat, tools, own)` appends
    a short seat note and the seat's own Orchestra prompt (`turn.system` without `turn.context`), still after the
-   `claude_code` preset. Maestro keeps its short note, which says to dispatch through `mcp__orchestra__task`.
+   `claude_code` preset. Maestro keeps its short note, which says to dispatch through `mcp__orchestra__task`. The note
+   also states Maestro's runtime from the gate's own lists (`SUBAGENT_TOOLS`, `HOST_REACH`, `BUILT_IN`, `ABSENT` in
+   `src/host/options.ts`) and three safety rules condensed from `maestro.txt`: the order of authority, tool output as
+   information, and never working around a refusal.
 5. **Governed paths are the same tools.** Approved Relay workflows dispatch through `mcp__orchestra__task`, and
    governed review goes through `mcp__orchestra__maestro_request_review`, as in normal mode.
 6. **Skills through Orchestra's skill tool.** Every seat loads its skills with `mcp__orchestra__skill`, which lists
@@ -67,6 +73,14 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
    The gate also refuses the Claude Code built-ins that reach outside the query (`HOST_REACH`: `ListAgents`,
    `SendMessage`, `RemoteTrigger`, `PushNotification`). Claude Code would otherwise list and message the machine's
    other Claude sessions, fire the account's cloud routines or notify the owner's phone from an Orchestra session.
+   Authorization goes through `ToolRegistry.hosted`, under the profile the Location's tool calls load, so the
+   project's ToolSafety profile and installed Relay hooks apply. The hooks' before step runs at the gate; their after
+   step (`Authorization.after`) settles once for the authorized `tool_use_id`. On success the SDK's `tool_response`
+   is available to Relay Verify checks in `RELAY_HOOK_RESULT`, as JSON data up to 16 KiB after ToolSafety inspection.
+   Checks can use it as a quoted shell variable. Missing, oversized or rejected response data leaves the variable unset.
+   A failed tool retains its before notes. On either callback the notes go to Claude Code as `additionalContext`.
+   A hook refusal adds its explanation alongside the result; a hook defect leaves the result available. Orchestra MCP calls
+   already settle through the runner under the Location profile.
 8. **What is served.** Orchestra tools that duplicate a Claude Code built-in or belong to Orchestra's own loop are not
    served (`UNSERVED`), and neither are `process_get`, `process_wait` and `process_cancel`, which read Orchestra's own
    bash processes. `skill` is served: Claude Code's Skill tool does not know Orchestra's playbooks. The Maestro note
@@ -87,10 +101,18 @@ The parts of D-C2 that replaced the meta-harness shape are reversed:
    - `ToolSearch`, which only loads deferred tool schemas and has no Orchestra counterpart, is left off the record
      with its result (`ClaudeCodeRecord.UNRECORDED`), so the session shows no row Orchestra's own engine would not.
 
-   Only Orchestra's record changes, after Claude Code ran the call. The prompt, tools, inputs and results Claude Code
-   sends to and receives from Claude are untouched, and the permission gate still reads Claude Code's own names.
+   The record uses Orchestra's tool names and widgets. Claude Code receives its own built-in results with the hook
+   notes alongside them. The permission gate reads Claude Code's tool names and applies any required input constraints.
+
 ## Not in scope (known limits)
 
+- Claude Code loads the project's settings only (`settingSources: ["project"]`): the owner's own `~/.claude` user
+  settings, hooks and plugins do not apply in Claude mode.
+- Lean shortens only Orchestra tools' results (`mcp__orchestra__*`, through the registry). What Claude Code's own tools
+  return reaches the model as Claude Code returns it.
+- Claude Code's Bash does not spawn through omni: Claude Code's own process (`src/sdk.ts`, in
+  `script/spawn-allowlist.json`) starts its shells.
+- There is no agent terminal: Bash runs in Claude Code's shell, never through `AgentTerminal.run`.
 - The host still starts one Claude Code process per turn. A long-lived query per session would remove the resume
   start-up cost; it is not needed for correctness.
 

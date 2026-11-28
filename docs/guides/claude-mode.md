@@ -80,11 +80,14 @@ rules above require, is a defect.
   Session, which you open from the task row and follow live. A seat on a Claude model runs on Claude Code too; a seat
   on another provider's model runs as it would in normal mode.
 - **Seats.** Each seat works by its own Orchestra prompt and skills, under its own permissions.
-- **Permissions.** Every tool call is checked against Orchestra's permission rules before it runs.
+- **Permissions.** Every tool call is checked against Orchestra's permission rules before it runs. If the active
+  ToolSafety profile requires approval for an action, Orchestra waits for your reply before Claude Code can run it.
 - **Workflows, reviews and the board.** Governed workflows, review requests, Atlas and the board use Orchestra's own
   tools, exactly as in normal mode.
 - **Project context.** The project's context and the active workflow's instructions reach the model with your message.
-  They are sent again only when they change, and after the conversation is compacted.
+  Orchestra supplies global `AGENTS.md`, project `AGENTS.md` and `.claude/AGENTS.md`, configured instruction files
+  and their project-local imports. Claude Code loads `CLAUDE.md` and its rules. An explicit import of a path already
+  supplied by Orchestra uses the same copy. Orchestra sends context updates and restores them after compaction.
 
 ## What Claude Code requires
 
@@ -95,10 +98,17 @@ These follow from Claude Code running the model. None of them changes what you s
 - Built-in reading, editing and shell work still pass Orchestra's authorization gate. Orchestra-specific tools are served
   as `mcp__orchestra__*`, with their permissions settled by Orchestra's runner; selecting Claude Code is not permission
   bypass. See the [host's tool gate](../../modules/engine-adapters/claude-code/src/v2/host.ts#L152-L224).
-- Claude Code's own subagent tool is not used. Seats are always Orchestra Sessions.
+- Installed Orchestra hooks run around authorized Claude Code tool calls. After a successful call, a Relay Verify
+  check can read the tool response as JSON using `"$RELAY_HOOK_RESULT"`; Orchestra provides up to 16 KiB after checking
+  the response for credential-like data. Hook notes appear alongside the original result. Seats run as Orchestra Sessions.
 
 ## Known limits
 
+- Your own Claude Code settings in `~/.claude` (user settings, hooks and plugins) do not apply in Claude mode. Only
+  the project's Claude Code settings load.
+- Lean shortens only the results of Orchestra's own tools, not what Claude Code's built-in tools return.
+- Claude Code runs its shell commands itself, so they do not use Orchestra's process runner or its agent terminal.
+- Claude Code compacts the conversation itself. Orchestra's open todos come back right after a compaction.
 - Claude Code's tool calls show with Orchestra's usual widgets (shell, read, edit, todos, task, ...).
 - If Anthropic bills a turn as extra usage or refuses it, the app shows the provider's message. You can enable extra
   usage, use an API key, or pick another provider.

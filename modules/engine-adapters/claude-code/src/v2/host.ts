@@ -19,23 +19,14 @@ import { ClaudeCodeCatalog } from "./catalog"
 import { ClaudeCodeOutput } from "./output"
 import { ClaudeCodeRecord } from "./record"
 import { ClaudeCodeContext } from "./context"
+import { settleHook, type Decision } from "./tool-hooks"
 
 export const ID = "claude-code"
 /** The legacy `session.metadata` key (`host/session.ts`), so legacy Claude-hosted sessions resume on V2. */
 export const STATE_KEY = "claudeCode"
 /** The in-process MCP server that serves the Location's Orchestra tools to Claude Code. */
-export const MCP_SERVER = "orchestra"
+export const MCP_SERVER = ClaudeHostOptions.MCP_SERVER
 const MCP_PREFIX = `mcp__${MCP_SERVER}__`
-
-/**
- * Orchestra tools Claude Code has as built-ins, or that belong to Orchestra's own loop: never served. `process_*` read
- * Orchestra's own bash background processes, which Claude Code's Bash never starts. `skill` is served: Claude Code's
- * own Skill tool does not know Orchestra's playbooks and seat skills.
- */
-const UNSERVED = new Set([
-  "bash", "read", "write", "edit", "apply_patch", "grep", "glob", "webfetch", "websearch", "todowrite",
-  "question", "lsp", "invalid", "context_compact", "execute", "process_get", "process_wait", "process_cancel",
-])
 
 const GOVERNED_PLAYBOOK = "maestro-run-governed"
 const GOVERNED_DENIAL = `Load the ${GOVERNED_PLAYBOOK} playbook with \`mcp__${MCP_SERVER}__skill\` before governed Maestro tools.`
@@ -47,11 +38,6 @@ export const GOVERNED_SESSIONS = 256
 const isGoverned = (name: string) => name.startsWith("maestro_") && !name.startsWith("maestro_arsenal_") && name !== "maestro_workflows"
 
 const EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const
-/**
- * Claude Code's own subagent tool. A seat is dispatched through Orchestra's `task`, as in normal mode: its work is a
- * durable child Session the app shows the same way, and a seat on a Claude model runs on Claude Code there too.
- */
-const SUBAGENT_TOOLS = ["Agent", "Task"]
 const SUBAGENTS_REFUSED = "Dispatch a seat with `mcp__orchestra__task`: Orchestra runs it as its own Session."
 const QUESTION_DISMISSED = "The owner dismissed this question."
 /** A finished background task's process stays up this long waiting for the task to report; then it is let go. */
@@ -59,12 +45,6 @@ const BACKGROUND_PATIENCE = Duration.minutes(30)
 const UNCHECKED = "Orchestra could not check this call, so it is refused."
 /** Claude Code defers MCP tools behind this one; it only loads their schemas, so every call to it is allowed. */
 const TOOL_SEARCH = "ToolSearch"
-/**
- * Claude Code built-ins that reach past this query: other Claude sessions on the machine (`ListAgents`,
- * `SendMessage`), the account's cloud routines (`RemoteTrigger`) and the owner's phone (`PushNotification`). An
- * Orchestra session never sees or drives what lies outside it.
- */
-const HOST_REACH = new Set(["ListAgents", "SendMessage", "RemoteTrigger", "PushNotification"])
 const OUTSIDE = "This Claude Code tool reaches outside the Orchestra session, so Orchestra refuses it."
 /**
  * Built-ins Maestro keeps besides the ones in PERMISSIONS: its task list, plan mode and the output of its own background
@@ -98,11 +78,6 @@ const SCOPED_BUILTINS = [
 ]
 const SKILL = "Skill"
 const OUTSIDE_SCOPE = "This tool is outside this Session's scope. Continue with the tools you are allowed to use."
-
-/** One gate decision, shared by the PreToolUse hook and `canUseTool` so both settle a call the same way. */
-type Decision =
-  | { readonly allow: true; readonly input?: Record<string, unknown> }
-  | { readonly allow: false; readonly reason: string }
 
 /** How a Claude Code built-in maps to a V2 permission: its action and the input field that names the resource. */
 const PERMISSIONS: Readonly<Record<string, { action: string; field: string; path?: boolean }>> = {
@@ -167,7 +142,7 @@ export const make = Effect.gen(function* () {
           // billing) leaves the prompt to be sent again.
           const progress = { handed: false, answered: false, resulted: false }
           // `turn.tools` is already narrowed to the Session's scope by the runner.
-          const served = turn.tools.filter((tool) => !UNSERVED.has(tool.name))
+          const served = turn.tools.filter((tool) => !ClaudeHostOptions.UNSERVED.has(tool.name))
           const scope = turn.scope
           // The question never reaches `authorize`; Orchestra names it `question`.
           const outside = (tool: string) =>
@@ -204,10 +179,10 @@ export const make = Effect.gen(function* () {
             // Never rejects: a defect, a throw or an abort in Orchestra's own check refuses the call (fail closed).
             const made: Promise<Decision> = Promise.resolve()
               .then((): Decision | Promise<Decision> => {
-                if (SUBAGENT_TOOLS.includes(tool)) return { allow: false, reason: SUBAGENTS_REFUSED }
+                if (ClaudeHostOptions.SUBAGENT_TOOLS.includes(tool)) return { allow: false, reason: SUBAGENTS_REFUSED }
                 // An agent whose rules deny `*` still reaches the Orchestra tools it holds, which sit behind ToolSearch.
                 if (tool === TOOL_SEARCH) return { allow: true }
-                if (HOST_REACH.has(tool)) return { allow: false, reason: OUTSIDE }
+                if (ClaudeHostOptions.HOST_REACH.has(tool)) return { allow: false, reason: OUTSIDE }
                 if (tool === SKILL && outside(tool)) return { allow: false, reason: OUTSIDE_SCOPE }
                 if (tool.startsWith(MCP_PREFIX)) {
                   const name = tool.slice(MCP_PREFIX.length)
@@ -228,7 +203,7 @@ export const make = Effect.gen(function* () {
                     ...permission(tool, input, turn.session.location.directory),
                     safety: safetyCall(tool, input),
                   }).pipe(
-                    Effect.map((authorization): Decision => ({ allow: true, input: replacements(tool, authorization) })),
+                    Effect.map((authorization): Decision => ({ allow: true, tool, input: replacements(tool, authorization), after: authorization.after })),
                     Effect.catch((error) => Effect.succeed<Decision>({ allow: false, reason: denial(error) })),
                   ),
                   { signal },
@@ -280,6 +255,7 @@ export const make = Effect.gen(function* () {
               decision.allow ? { behavior: "allow" as const, updatedInput: { ...input, ...decision.input } } : { behavior: "deny" as const, message: decision.reason },
             )
           }
+          const settled = settleHook(decisions)
           // Claude Code's documented channel for context beside a prompt. The baseline goes when it changed since the
           // Claude Code session last received it, the updates it has not received after it, once per turn.
           const prompted: HookCallback = (input) => {
@@ -355,12 +331,15 @@ export const make = Effect.gen(function* () {
               ),
             },
             // A scoped Session's engine is offered only the built-ins its scope names.
-            disallowedTools: scope ? [...SUBAGENT_TOOLS, ...[...SCOPED_BUILTINS, SKILL].filter(outside)] : SUBAGENT_TOOLS,
-            settingSources: ["project"],
+            disallowedTools: scope ? [...ClaudeHostOptions.SUBAGENT_TOOLS, ...[...SCOPED_BUILTINS, SKILL].filter(outside)] : ClaudeHostOptions.SUBAGENT_TOOLS,
+            settingSources: [...ClaudeHostOptions.SETTING_SOURCES],
+            settings: ClaudeHostOptions.instructionSettings(turn.instructionFiles),
             permissionMode: "default",
             canUseTool,
             hooks: {
               PreToolUse: [{ hooks: [gate] }],
+              PostToolUse: [{ hooks: [settled] }],
+              PostToolUseFailure: [{ hooks: [settled] }],
               UserPromptSubmit: [{ hooks: [prompted] }],
               SessionStart: [{ matcher: "compact", hooks: [recall] }],
               PostCompact: [{ hooks: [archive] }],

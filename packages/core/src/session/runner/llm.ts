@@ -16,11 +16,14 @@ import { CapabilityInvocation } from "../../capability/invocation"
 import { Config } from "../../config"
 import { Database } from "../../database/database"
 import { EventV2 } from "../../event"
+import { InstructionContext } from "../../instruction-context"
 import { Location } from "../../location"
 import { ModelV2 } from "../../model"
 import { PermissionV2 } from "../../permission"
+import { Project } from "../../project"
 import { ProviderV2 } from "../../provider"
 import { QuestionV2 } from "../../question"
+import { Relay } from "../../relay"
 import { SystemContext } from "../../system-context/index"
 import { SystemContextRegistry } from "../../system-context/registry"
 import { SkillGuidance } from "../../skill/guidance"
@@ -53,7 +56,7 @@ import { toLLMMessages } from "./to-llm-message"
 import { SessionTitle } from "./title"
 import { ReadToolFileSystem } from "../../tool/read-filesystem"
 import { SessionDirectCommands } from "./direct-commands"
-import { hostedCall } from "./hosted-call"
+import { hostedCall, hostedHooks } from "./hosted-call"
 import { STEP_TOOL_REFUSAL, narrowStepTools } from "./step-tools"
 import { TurnTransitionError, continueAfterCompaction, continueAfterOverflowCompaction } from "./turn-transition"
 import { DEFAULT_MAX_STEPS, MAX_STEPS_PROMPT } from "./max-steps"
@@ -102,11 +105,11 @@ const layer = Layer.effect(
     const database = yield* Database.Service
     const hosts = yield* ExecutionHost.Service
     const permissions = yield* PermissionV2.Service
+    const relay = yield* Relay.Service
     const fs = yield* FSUtil.Service
     const appProcess = yield* AppProcess.Service
     const skills = yield* SkillV2.Service
     const questions = yield* QuestionV2.Service
-    const safety = yield* ToolSafety.Service
     // The process-global execution, for the wake a host's own event asks for; absent where nothing drains Sessions.
     const execution = Option.getOrUndefined(yield* Effect.serviceOption(SessionExecution.Service))
     const workflowHosts = yield* RelayWorkflowSession.Service
@@ -137,10 +140,10 @@ const layer = Layer.effect(
     const awaitToolFibers = (fibers: FiberSet.FiberSet<void, ToolOutputStore.Error>) =>
       Effect.raceFirst(FiberSet.join(fibers), FiberSet.awaitEmpty(fibers))
 
-    const loadSystemContext = (sessionID: SessionSchema.ID, agent: AgentV2.Selection) =>
+    const loadSystemContext = (sessionID: SessionSchema.ID, agent: AgentV2.Selection, hosted: boolean) =>
       Effect.all(
         [
-          systemContext.load({ sessionID, agent: agent.id }),
+          systemContext.load({ sessionID, agent: agent.id, hosted }),
           skillGuidance.load(agent, sessionID),
           referenceGuidance.load(),
           meetingContext.load(sessionID),
@@ -165,7 +168,10 @@ const layer = Layer.effect(
         ...(agent.info?.permissions.map((rule) => ({ ...rule })) ?? []),
         ...(yield* store.permissions(session.id)),
       ]
-      const initialized = yield* SessionContextEpoch.initialize(db, loadSystemContext(session.id, agent), session.id)
+      const engine = yield* engineOf(session)
+      const host = engine ? hosts.get(engine) : undefined
+      const systemContextForTurn = loadSystemContext(session.id, agent, host?.id === "claude-code")
+      const initialized = yield* SessionContextEpoch.initialize(db, systemContextForTurn, session.id)
       const toolFibers = yield* FiberSet.make<void, ToolOutputStore.Error>()
       let needsContinuation = false
       let currentStep = step
@@ -186,10 +192,7 @@ const layer = Layer.effect(
         }
       }
       const system =
-        initialized ?? (yield* SessionContextEpoch.prepare(db, events, loadSystemContext(session.id, agent), session.id))
-      // An agent whose engine names an execution host runs this provider turn through it (AGENTS "V2 Session Core").
-      const engine = yield* engineOf(session)
-      const host = engine ? hosts.get(engine) : undefined
+        initialized ?? (yield* SessionContextEpoch.prepare(db, events, systemContextForTurn, session.id))
       if (engine && !host)
         return yield* Effect.die(new Error(`No execution host is registered for engine ${engine} (agent ${agent.id})`))
       const model = host ? undefined : yield* models.resolve(session)
@@ -335,7 +338,11 @@ const layer = Layer.effect(
             .pipe(Effect.catchTag("Session.NotFoundError", (error) => Effect.die(error)))
           if (!input.safety) return {}
           const call = input.safety
-          return yield* safety.run(
+          const hooks = hostedHooks(permissions, {
+            sessionID: session.id, agent: agent.id, location, fs,
+            callID: input.callID, action: input.action, resources: input.resources,
+          })
+          const authorization = yield* tools.hosted(
             {
               tool: call.tool,
               args: call.args,
@@ -344,13 +351,15 @@ const layer = Layer.effect(
               agent: agent.id,
               directory: location.directory,
               projectID: location.project.id,
-              projectDirectory: location.project.directory === "/" ? location.directory : location.project.directory,
+              projectDirectory: Project.isRoot(location.project.directory) ? location.directory : location.project.directory,
             },
             hostedCall(call, location.directory, scope, fs),
-            () => Effect.void,
+          ).pipe(
+            Effect.provideService(ToolSafety.HostedHooks, hooks),
+            Effect.provideService(Relay.Service, relay),
           )
+          return hooks.after ? { ...authorization, after: hooks.after } : authorization
         })
-      // The Session's open todos, rendered for an engine that lost its context to its own compaction.
       const memory: ExecutionHost.Turn["memory"] = {
         recall: db
           .select()
@@ -428,6 +437,7 @@ const layer = Layer.effect(
               model: modelRef,
               system: systemText,
               context: contextText,
+              instructionFiles: InstructionContext.agentsPaths(system.snapshot),
               history: context,
               tools: toolMaterialization?.definitions ?? [],
               ...(scoped ? { scope: scoped.scope } : {}),
@@ -749,6 +759,7 @@ export const node = makeLocationNode({
     Snapshot.node,
     Database.node,
     RelayWorkflowSession.node,
+    Relay.node,
     ExecutionHost.node,
     TaskGovernance.node,
     SessionCompaction.node,

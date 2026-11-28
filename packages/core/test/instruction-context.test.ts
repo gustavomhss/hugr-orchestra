@@ -82,6 +82,7 @@ describe("InstructionContext", () => {
             ].join("\n\n"),
           )
           expect(initialized.baseline).not.toContain("outside")
+          expect(InstructionContext.agentsPaths(initialized.snapshot)).toEqual([globalFile, packageFile, projectFile])
 
           yield* Effect.promise(() => fs.writeFile(packageFile, "changed"))
           expect(yield* SystemContext.reconcile(yield* load, initialized.snapshot)).toMatchObject({
@@ -164,14 +165,14 @@ describe("InstructionContext", () => {
         ),
       )
 
-      expect(
-        yield* SystemContext.reconcile(context, {
-          "core/instructions": {
-            value: [{ path: "/repo/AGENTS.md", content: "old" }],
-            removed: "Previously loaded instructions no longer apply.",
-          },
-        }),
-      ).toEqual({ _tag: "Unchanged" })
+      const snapshot = {
+        "core/instructions": {
+          value: [{ path: "/repo/AGENTS.md", content: "old" }],
+          removed: "Previously loaded instructions no longer apply.",
+        },
+      }
+      expect(yield* SystemContext.reconcile(context, snapshot)).toEqual({ _tag: "Unchanged" })
+      expect(InstructionContext.agentsPaths(snapshot)).toEqual(["/repo/AGENTS.md"])
     }),
   )
 
@@ -324,6 +325,37 @@ describe("InstructionContext", () => {
     }),
   )
 
+  it.live("rejects configured instruction paths outside an unversioned hosted Location", () =>
+    Effect.gen(function* () {
+      const tmp = yield* Effect.acquireRelease(
+        Effect.promise(() => tmpdir()),
+        (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+      )
+      const directory = path.join(tmp.path, "workspace")
+      yield* Effect.promise(async () => {
+        await fs.mkdir(directory)
+        await fs.writeFile(path.join(tmp.path, "sibling.md"), "outside")
+      })
+      const context = yield* SystemContextRegistry.Service.use((service) =>
+        service.load({ sessionID: "ses_hosted_instructions", agent: "maestro", hosted: true }),
+      ).pipe(Effect.provide(instructionLayer({
+        config: path.join(tmp.path, "global"),
+        locationServiceLayer: Layer.succeed(Location.Service, location({ directory: AbsolutePath.make(directory) }, {
+          projectDirectory: AbsolutePath.make(path.parse(directory).root),
+        })),
+        entries: [new Config.Document({
+          type: "document",
+          path: AbsolutePath.make(path.join(directory, "orchestra.json")),
+          info: new Config.Info({ instructions: ["../sibling.md"] }),
+        })],
+      })))
+      expect(yield* Effect.flip(SystemContext.initialize(context))).toMatchObject({
+        _tag: "SystemContext.InitializationBlocked",
+        keys: ["core/instructions"],
+      })
+    }),
+  )
+
   it.live("loads configured instruction files relative to the config file and keeps project files inside the project", () =>
     Effect.acquireRelease(
       Effect.promise(() => tmpdir()),
@@ -396,13 +428,18 @@ it.live("refuses discovered AGENTS symlinks outside the physical project before 
         const project = path.join(tmp.path, "project")
         const global = path.join(tmp.path, "global")
         const external = path.join(tmp.path, "external-instructions.txt")
+        const globalAlias = path.join(global, "shared.md")
+        const localAlias = path.join(project, "rules.md")
         const readPaths: string[] = []
         yield* Effect.promise(async () => {
           await fs.mkdir(project)
           await fs.mkdir(global)
           await fs.writeFile(external, "EXTERNAL_INSTRUCTION_SENTINEL")
-          await fs.writeFile(path.join(project, "rules.md"), "legitimate configured")
-          await fs.writeFile(path.join(global, "AGENTS.md"), "legitimate global")
+          await fs.mkdir(path.join(project, "nested"))
+          await fs.writeFile(localAlias, "legitimate configured")
+          await fs.writeFile(globalAlias, "legitimate global")
+          await fs.symlink(globalAlias, path.join(global, "AGENTS.md"))
+          await fs.symlink(localAlias, path.join(project, "nested", "AGENTS.md"))
           await fs.symlink(external, path.join(project, "AGENTS.md"))
         })
         const observingFS = Layer.effect(
@@ -424,7 +461,7 @@ it.live("refuses discovered AGENTS symlinks outside the physical project before 
               config: global,
               entries: [new Config.Document({
                 type: "document", path: path.join(project, "orchestra.json"),
-                info: new Config.Info({ instructions: ["rules.md"] }),
+                info: new Config.Info({ instructions: ["nested/AGENTS.md"] }),
               })],
               filesystemLayer: observingFS,
               locationServiceLayer: Layer.succeed(
@@ -442,6 +479,7 @@ it.live("refuses discovered AGENTS symlinks outside the physical project before 
         expect(initial.baseline).toContain("legitimate global")
         expect(initial.baseline).toContain("legitimate configured")
         expect(initial.baseline).not.toContain("EXTERNAL_INSTRUCTION_SENTINEL")
+        expect(InstructionContext.agentsPaths(initial.snapshot)).toEqual([globalAlias, localAlias])
         yield* Effect.promise(() => fs.rm(path.join(project, "AGENTS.md")))
         yield* Effect.promise(() => fs.writeFile(path.join(project, "AGENTS.md"), "project rules"))
         expect((yield* SystemContext.initialize(yield* load)).baseline).toContain("legitimate global")

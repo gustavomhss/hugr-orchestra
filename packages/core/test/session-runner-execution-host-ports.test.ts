@@ -1,4 +1,5 @@
 import { afterAll, describe, expect } from "bun:test"
+import { createHash } from "node:crypto"
 import { mkdirSync, mkdtempSync, realpathSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
@@ -6,6 +7,7 @@ import { LLMClient, LLMEvent, type LLMClientShape } from "@orchestra/llm"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Database } from "@orchestra/core/database/database"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Global } from "@orchestra/core/global"
 import { ModelV2 } from "@orchestra/core/model"
@@ -13,6 +15,8 @@ import { PermissionV2 } from "@orchestra/core/permission"
 import { AppProcess } from "@orchestra/core/process"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { QuestionV2 } from "@orchestra/core/question"
+import { RelayHookInstall } from "@orchestra/core/relay-hook-install"
+import { RelayHook } from "@orchestra/schema/relay-hook"
 import { SessionV2 } from "@orchestra/core/session"
 import { Prompt } from "@orchestra/core/session/prompt"
 import { SessionMessage } from "@orchestra/core/session/message"
@@ -21,11 +25,13 @@ import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
 import { TodoTable } from "@orchestra/core/session/sql"
 import { SkillGuidance } from "@orchestra/core/skill/guidance"
 import { SystemContext } from "@orchestra/core/system-context"
+import { MaestroArsenal } from "@orchestra/core/tool/maestro-arsenal"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { Tool } from "@orchestra/core/tool/tool"
 import { AllowedDomains } from "@orchestra/core/tool/websearch"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { Cause, Effect, Exit, Fiber, Layer, Schema, Stream } from "effect"
+import { expectSpawn } from "./fixture/omni-expect"
 import { Harness, sessionID } from "./session-runner-harness"
 
 // The ports a Turn gives an execution host beyond streaming: Orchestra's decision on the engine's own calls (ToolSafety,
@@ -37,11 +43,14 @@ const inside = path.join(root, "inside")
 const outside = path.join(root, "outside")
 mkdirSync(inside)
 mkdirSync(outside)
+// The install writer keeps hooks.json in the project's ToolSafety state directory, which must exist.
+mkdirSync(MaestroArsenal.stateDirectory(path.join(root, "hooks"), "host-ports"), { recursive: true })
 afterAll(() => rmSync(root, { recursive: true, force: true }))
 
 const profile: { current: ToolSafety.Profile | undefined } = { current: undefined }
 const dispatch: { domains: ReadonlyArray<string> | undefined } = { domains: undefined }
 const asked: PermissionV2.AssertInput[] = []
+const approvals: PermissionV2.AssertInput[] = []
 const questions: QuestionV2.AskInput[] = []
 let script: (turn: ExecutionHost.Turn) => Effect.Effect<ReadonlyArray<LLMEvent>> = () => Effect.succeed([])
 let provider: ((session: Parameters<SessionRunnerModel.Interface["resolve"]>[0]) => ReturnType<SessionRunnerModel.Interface["resolve"]>) | undefined
@@ -105,6 +114,7 @@ const it = Harness.make({
   ),
   permissions: Layer.mock(PermissionV2.Service, {
     authorize: (input) => Effect.sync(() => void asked.push(input)),
+    askExplicit: (input) => Effect.sync(() => void approvals.push(input)),
   }),
   systemContext: Harness.systemContextLayer,
   skillGuidance: Layer.mock(SkillGuidance.Service, { load: () => Effect.succeed(SystemContext.empty) }),
@@ -112,6 +122,7 @@ const it = Harness.make({
   directory: root,
   replacements: [
     [ToolSafety.node, safetyNode],
+    [Global.node, Global.layerWith({ data: path.join(root, "hooks") })],
     [
       QuestionV2.node,
       Layer.mock(QuestionV2.Service, {
@@ -136,6 +147,7 @@ const hosted = Effect.gen(function* () {
   provider = undefined
   streamOf = undefined
   asked.length = 0
+  approvals.length = 0
   questions.length = 0
   const agents = yield* AgentV2.Service
   yield* agents.transform((draft) =>
@@ -154,6 +166,31 @@ const send = (sessions: SessionV2.Interface, text: string) =>
   })
 
 const refusal = (exit: Exit.Exit<unknown, unknown>) => (Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined)
+
+// One installed Relay hook whose trigger fires on `event` (`<operation>.<timing>`), straight into one action.
+const installed = (name: string, event: string, type: RelayHook.NodeType, message: string, check?: string) => {
+  const [operation, timing] = event.split(".")
+  const snapshot = {
+    schema: "relay.hook.v1",
+    name,
+    nodes: [
+      { id: "event", name: "Event", type: RelayHook.NodeType.trigger, position: [0, 0], parameters: { operation, timing } },
+      { id: "act", name: "Act", type, position: [0, 0], parameters: { message, ...(check === undefined ? {} : { check }) } },
+    ],
+    connections: [{ from: "event", port: 0, to: "act" }],
+    binding: "host-required",
+    installed: false,
+  }
+  return RelayHookInstall.install({
+    data: path.join(root, "hooks"),
+    projectID: "host-ports",
+    document: `doc-${name}`,
+    version: "v1",
+    snapshot,
+    sha256: createHash("sha256").update(JSON.stringify(snapshot)).digest("hex"),
+    principal: "user:test",
+  }).pipe(Effect.map((changed) => changed.install), Effect.provide(LayerNode.compile(FSUtil.node)))
+}
 
 describe("SessionRunner execution host ports", () => {
   it.effect("authorize enforces the Session's write roots, the sandbox its profile requires, and returns the dispatch's domains", () =>
@@ -200,6 +237,84 @@ describe("SessionRunner execution host ports", () => {
       expect(seen.open).toEqual(Exit.succeed({}))
       // Every call went through V2 permission first, ToolSafety or not.
       expect(asked.map((input) => input.action)).toEqual(["edit", "edit", "todowrite", "bash", "bash"])
+    }),
+  )
+
+  it.effect("installed hooks run before the engine's call at authorize, and after it only when the host reports it ended", () =>
+    Effect.gen(function* () {
+      const sessions = yield* hosted
+      const remind = yield* installed("Changelog", "write.after", RelayHook.NodeType.remind, "Update the changelog.")
+      const style = yield* installed("Style", "write.before", RelayHook.NodeType.remind, "Mind the style.")
+      const approve = yield* installed("Owner", "write.before", RelayHook.NodeType.approve, "Confirm the edit.")
+      const guard = yield* installed("Entry", "write.after", RelayHook.NodeType.repair, "Add an entry.")
+      const seen: Record<string, unknown> = {}
+      script = (turn) =>
+        Effect.gen(function* () {
+          const write = (callID: string) =>
+            turn.authorize({
+              callID,
+              tool: "Write",
+              action: "edit",
+              resources: ["inside/a.ts"],
+              safety: { tool: "write", args: { filePath: path.join(inside, "a.ts") } },
+            })
+          profile.current = ToolSafety.withHooks(undefined, [remind, style, approve])
+          const ran = yield* write("w1")
+          profile.current = ToolSafety.withHooks(undefined, [style])
+          seen.succeeded = yield* ran.after?.({ succeeded: true, response: { written: true } }) ?? Effect.succeed("no after step")
+          seen.failed = yield* (yield* write("w2")).after?.({ succeeded: false }) ?? Effect.succeed("no after step")
+          // A Repair after the call would refuse the authorization itself if the after step ran there.
+          profile.current = ToolSafety.withHooks(undefined, [guard])
+          const guarded = yield* write("w3").pipe(Effect.exit)
+          seen.guarded = guarded
+          seen.blocked = Exit.isSuccess(guarded) ? yield* (guarded.value.after?.({ succeeded: true, response: { written: true } }) ?? Effect.void).pipe(Effect.exit) : undefined
+          return answer()
+        }).pipe(Effect.orDie)
+      yield* send(sessions, "go")
+
+      expect(approvals).toMatchObject([{
+        sessionID, action: "relay_hook", resources: ["inside/a.ts"],
+        metadata: { action: "relay_hook", callID: "w1", tool: "write" },
+      }])
+      expect(seen.succeeded).toEqual(["Hook 'Style': Mind the style.", "Hook 'Changelog': Update the changelog."])
+      // A call that failed runs no after hook; the before step's notes still reach the model.
+      expect(seen.failed).toEqual(["Hook 'Style': Mind the style."])
+      expect(Exit.isSuccess(seen.guarded as Exit.Exit<unknown, unknown>)).toBe(true)
+      expect(refusal(seen.blocked as Exit.Exit<unknown, unknown>)).toMatchObject({
+        _tag: "ToolSafety.Denied",
+        reason: "relay-hook-repair",
+      })
+    }),
+  )
+
+  it.live("an SDK callback settles hosted Verify with the Location Relay and the real response", () =>
+    Effect.gen(function* () {
+      expectSpawn(import.meta.path)
+      const sessions = yield* hosted
+      const installedVerify = yield* installed("HostedVerify", "read.after", RelayHook.NodeType.verify, "Expected alpha.",
+        `test "\${RELAY_HOOK_RESULT}" = '{"text":"alpha"}'`)
+      const settled: Exit.Exit<ReadonlyArray<string>, ToolSafety.Denied>[] = []
+      script = (turn) =>
+        Effect.promise(async (signal) => {
+          profile.current = ToolSafety.withHooks(undefined, [installedVerify])
+          for (const text of ["alpha", "beta"]) {
+            const authorization = await Effect.runPromise(turn.authorize({
+              callID: `verify-${text}`,
+              tool: "Read",
+              action: "read",
+              resources: ["inside/a.ts"],
+              safety: { tool: "read", args: { filePath: path.join(inside, "a.ts") } },
+            }), { signal })
+            if (!authorization.after) throw new Error("Missing hosted result callback")
+            settled.push(await Effect.runPromiseExit(authorization.after({ succeeded: true, response: { text } }), { signal }))
+          }
+          return answer()
+        })
+      yield* send(sessions, "Verify results")
+
+      expect(settled).toHaveLength(2)
+      expect(settled[0]).toEqual(Exit.succeed([]))
+      expect(refusal(settled[1])).toMatchObject({ reason: "relay-hook-verify-failed" })
     }),
   )
 

@@ -1,3 +1,4 @@
+import { Permission } from "@orchestra/schema/permission"
 import { createStore } from "solid-js/store"
 import { dirname } from "node:path"
 import { createMemo, For, Match, Show, Switch } from "solid-js"
@@ -187,6 +188,24 @@ export function PermissionPrompt(props: { request: PermissionV2Request; director
         {(() => {
           const info = () => {
             const permission = props.request.action
+            if (Permission.requiresOwnerReply(props.request)) {
+              const action = props.request.metadata?.action
+              const message = props.request.metadata?.message
+              return {
+                icon: "→",
+                title: typeof action === "string" && action !== "relay_hook" ? `Approve ${action}` : "Approve hook",
+                body: (
+                  <box paddingLeft={1}>
+                    <Show when={typeof message === "string" ? message : undefined}>
+                      {(note) => <text fg={theme.text}>{note()}</text>}
+                    </Show>
+                    <For each={props.request.resources}>
+                      {(resource) => <text fg={theme.text}>{resource}</text>}
+                    </For>
+                  </box>
+                ),
+              }
+            }
             const data = input()
 
             if (permission === "edit") {
@@ -395,7 +414,11 @@ export function PermissionPrompt(props: { request: PermissionV2Request; director
               title="Permission required"
               header={header()}
               body={current.body}
-              options={{ once: "Allow once", always: "Allow always", reject: "Reject" }}
+              options={{
+                once: "Allow once",
+                ...(!Permission.requiresOwnerReply(props.request) ? { always: "Allow always" } : {}),
+                reject: "Reject",
+              }}
               escapeKey="reject"
               fullscreen
               onSelect={(option) => {

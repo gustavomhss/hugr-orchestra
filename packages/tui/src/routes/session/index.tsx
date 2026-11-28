@@ -1079,11 +1079,13 @@ export function Session() {
                 </For>
               </scrollbox>
               <box flexShrink={0}>
-                <Show when={permissions().length > 0}>
-                  <PermissionPrompt
-                    request={permissions()[0]}
-                    directory={sync.session.get(permissions()[0].sessionID)?.location.directory}
-                  />
+                <Show when={permissions()[0]} keyed>
+                  {(request) => (
+                    <PermissionPrompt
+                      request={request}
+                      directory={sync.session.get(request.sessionID)?.location.directory}
+                    />
+                  )}
                 </Show>
                 <Show when={permissions().length === 0 && questions().length > 0}>
                   <QuestionPrompt

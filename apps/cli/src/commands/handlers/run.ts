@@ -4,6 +4,7 @@ import { pathToFileURL } from "url"
 import * as Effect from "effect/Effect"
 import { Option } from "effect"
 import { Orchestra } from "@orchestra/client"
+import { PermissionV2 } from "@orchestra/core/permission"
 import { ServerAuth } from "@orchestra/server/auth"
 import { Commands } from "../commands"
 import { Runtime } from "../../framework/runtime"
@@ -230,11 +231,14 @@ export async function execute(client: Client, options: Options) {
     location,
     onEvent: render,
     onPermission: async (request) => {
-      if (options.auto) return "once"
+      const ownerReply = PermissionV2.requiresOwnerReply(request)
+      if (options.auto && !ownerReply) return "once"
       // Nobody can answer a headless prompt, so the request is rejected and the run is reported as blocked.
       state.blocked = true
       const resources = request.resources.join(", ")
-      warn(`! permission requested: ${request.action} (${resources}); auto-rejecting. Pass --auto to allow it.`)
+      warn(`! permission requested: ${request.action} (${resources}); ${ownerReply
+        ? "requires an owner reply in an interactive session."
+        : "auto-rejecting. Pass --auto to allow it."}`)
       return "reject"
     },
     submit: (signal) =>

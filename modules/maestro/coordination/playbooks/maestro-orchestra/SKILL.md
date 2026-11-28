@@ -27,6 +27,7 @@ dispatch the research seat.
 | `question` | Ask the owner something that blocks the run; it keeps the run waiting. |
 | `team_message` | Reach `live`, the meeting copilot, and read its notes. |
 | `maestro_workflows` | Resolve a published workflow before governed work. |
+| `maestro_prepare_review_checks` | Prepare the local review checks the owner explicitly requested. Follow `maestro-run-governed` and wait for the permission and result. |
 | `maestro_record_admission`, `maestro_record_context`, `maestro_catalog_context`, `maestro_record_plan_revision`, `maestro_present_approval`, `maestro_record_approval`, `maestro_grant_authorization`, `maestro_request_review`, `maestro_record_validation`, `maestro_record_result_decision` | Governed work only, in the order `maestro-run-governed` gives. |
 | `maestro_arsenal_catalog`, `maestro_arsenal_describe`, `maestro_arsenal_execute` | Repository and conflict maps, plan checks and wave scheduling for large work. |
 | `atlas_context` | The project's ownership and history before you route or review a change in an area you do not know. |
@@ -57,6 +58,29 @@ The `<team>` list in your context is the roster: each dispatchable seat by id, t
 | A cold review | the reviewer the team list names, or `explore` when none can be dispatched |
 | A desktop app, a terminal or files in the isolated Linux workspace | `linux`, in the desktop app |
 | A meeting | `live`; you only exchange notes with it |
+
+## On Claude Code
+
+In Claude mode Orchestra's tools are `mcp__orchestra__<name>`, and Claude Code's own tools do the work of these:
+
+| Orchestra | On Claude Code |
+|---|---|
+| `question` | AskUserQuestion |
+| `todowrite` | TaskCreate and TaskUpdate |
+| `bash` | Bash |
+| `read` | Read |
+| `glob` | Glob |
+| `grep` | Grep |
+| `edit` | Edit |
+| `write` | Write |
+| `apply_patch` | Edit |
+| `webfetch` | WebFetch |
+| `websearch` | WebSearch |
+| `context_compact` | none: Claude Code compacts its own context |
+| `process_get`, `process_wait`, `process_cancel` | none: use `process_control` |
+
+Orchestra refuses Claude Code's `Agent` and `Task` (dispatch with `task`), and `ListAgents`, `SendMessage`,
+`RemoteTrigger` and `PushNotification`, which reach outside the session.
 
 ## Counter-examples
 

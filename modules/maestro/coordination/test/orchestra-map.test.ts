@@ -16,6 +16,7 @@ import { Project } from "@orchestra/core/project"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
+import { ClaudeHostOptions } from "@orchestra/engine-claude-code/host/options"
 import { nativeProfiles } from "../src/roster"
 import { MaestroSeatsV2 } from "../src/v2/seats"
 import { MaestroToolsV2 } from "../src/v2/tools"
@@ -81,4 +82,24 @@ test("the maestro-orchestra map names exactly the Maestro and board tools Maestr
   expect(given).toContain("board_read")
   expect(given).toContain("maestro_workflows")
   expect(mapped.filter(owned).toSorted()).toEqual(given.toSorted())
+})
+
+test("every tool the map names that Claude mode does not serve has its Claude Code counterpart on the map", async () => {
+  const text = await Bun.file(path.join(import.meta.dir, "../playbooks/maestro-orchestra/SKILL.md")).text()
+  const [before = "", after = ""] = text.split("\n## On Claude Code\n")
+  const [claude = "", ...rest] = after.split("\n## ")
+  const named = new Set([...[before, ...rest].join("\n").matchAll(/`([a-z_]+)`/g)].map((match) => match[1]))
+  const mapped = new Map(claude.split("\n").flatMap((line) => {
+    if (!line.startsWith("| `")) return []
+    const [, tools, target] = line.split("|")
+    return [...tools!.matchAll(/`([^`]+)`/g)].map((match) => [match[1]!, target!.trim()] as const)
+  }))
+
+  const expected = new Map([
+    ...ClaudeHostOptions.BUILT_IN,
+    ...Object.entries(ClaudeHostOptions.ABSENT),
+  ].filter(([name]) => named.has(name)))
+  expect(expected.get("question")).toBe("AskUserQuestion")
+  expect(mapped).toEqual(expected)
+  for (const tool of [...ClaudeHostOptions.SUBAGENT_TOOLS, ...ClaudeHostOptions.HOST_REACH]) expect(claude).toContain(`\`${tool}\``)
 })

@@ -31,6 +31,7 @@ const RequestFields = {
 
 export const Request = Permission.Request
 export type Request = typeof Request.Type
+export const requiresOwnerReply = Permission.requiresOwnerReply
 
 export const Reply = Permission.Reply
 export type Reply = typeof Reply.Type

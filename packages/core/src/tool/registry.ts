@@ -46,6 +46,11 @@ export interface Interface {
   readonly session: (
     input: Pick<ToolSafety.SessionEvent, "operation" | "sessionID" | "agent" | "text" | "messageID">,
   ) => Effect.Effect<ReadonlyArray<string>, ToolSafety.Denied>
+  /**
+   * ToolSafety's run of a call a host's engine runs itself, over the profile this Location's tool calls load (its
+   * installed hooks included); `effect` prepares the engine's call. Nothing is observed: the host's stream records it.
+   */
+  readonly hosted: <A, E, R>(input: ToolSafety.Invocation, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E | ToolSafety.Denied, R>
 }
 
 export interface Materialization {
@@ -260,8 +265,19 @@ const registryLayer = Layer.effect(
         )
     })
 
+    const hosted: Interface["hosted"] = (input, effect) =>
+      Effect.gen(function* () {
+        const effectiveProfile = capturedProfile ?? (yield* ToolSafety.RuntimeProfile)
+        const effectiveLoader = profileLoader ?? (yield* ToolSafety.RuntimeProfileLoader)
+        return yield* safety.run(input, effect, () => Effect.void).pipe(
+          Effect.provideService(ToolSafety.RuntimeProfileLoader, effectiveLoader),
+          Effect.provideService(ToolSafety.RuntimeProfile, effectiveProfile),
+        )
+      })
+
     return Service.of({
       session,
+      hosted,
       currentRegistrationIdentity: (name) =>
         (local.get(name)?.at(-1)?.registration ?? applications.entries().get(name))?.identity,
       register: Effect.fn("ToolRegistry.register")(function* (tools) {

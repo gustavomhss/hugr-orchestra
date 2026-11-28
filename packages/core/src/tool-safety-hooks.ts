@@ -18,7 +18,7 @@ import { ToolSafetyCommands } from "./tool-safety-commands"
 
 // Installed Relay hooks on the tool path (relay-exec-spec H2, port plan §5). ToolSafety.run calls `before` once native
 // safety passed and `after` once the effect settled successfully, both over the snapshot it loaded at the call's start.
-// A host whose before and after are separate callbacks (Claude Code) uses ToolSafety.beforeHooked and `settle`.
+// A host whose before and after are separate callbacks (Claude Code) settles the hooks through its authorization.
 // Hooks only restrict: a Block, a Repair, a rejected Approve and a failed Verify deny; Remind, Record and Allow grant
 // nothing. Every matched action is first a durable `relay.hook.decided` event, then a receipt in the install's ledger,
 // but no outcome waits on either. Session events (`session-start`, `prompt`, `session-idle`) take the same path.
@@ -32,6 +32,7 @@ export interface Scope {
   // The native profile, without hooks: a check's sandbox follows it like the tool's own processes do.
   readonly profile: ToolSafety.Profile | undefined
   // A Session event's: the sha256 of the prompt text, or nothing.
+  readonly result?: string
   readonly subject?: string
   readonly messageID?: ToolSafety.SessionEvent["messageID"]
   readonly events?: EventV2.Interface
@@ -111,11 +112,29 @@ export const session = Effect.fn("ToolSafetyHooks.session")(function* (input: {
  * the model itself (Claude Code's PostToolUse). A failed check or a Repair is a denial, which carries the notes; the
  * effect itself is not undone.
  */
-export const settle = (hooked: Hooked, succeeded: boolean) =>
+export const settle = (hooked: Hooked, succeeded: boolean, response?: unknown) =>
   Effect.gen(function* () {
     if (!succeeded) return hooked.notes
     const notes = [...hooked.notes]
-    yield* enforce(hooked.scope, "after", notes).pipe(Effect.mapError((denied) => noted(denied, notes)))
+    // A Verify can inspect a bounded, credential-checked JSON response as data through its environment.
+    const result = response === undefined
+      ? undefined
+      : yield* Effect.try({
+          try: () => {
+            const json = JSON.stringify(response)
+            if (json === undefined || Buffer.byteLength(json, "utf8") > 16_384) return
+            return { json, data: JSON.parse(json) as unknown }
+          },
+          catch: () => new ToolSafety.Denied({ reason: "output-inspection-acquisition" }),
+        }).pipe(
+          Effect.flatMap((value) =>
+            value
+              ? ToolSafety.inspect(value.data, true).pipe(Effect.andThen(ToolSafety.inspect(value.json)), Effect.as(value.json))
+              : Effect.succeed(undefined),
+          ),
+          Effect.orElseSucceed(() => undefined),
+        )
+    yield* enforce({ ...hooked.scope, result }, "after", notes).pipe(Effect.mapError((denied) => noted(denied, notes)))
     return notes
   })
 
@@ -360,13 +379,15 @@ function ask(scope: Scope, timing: RelayHook.Timing, step: HookEvaluate.Step, me
       const started = yield* Clock.currentTimeMillis
       const decide = (outcome: RelayLedger.HookOutcome) => decided(scope, timing, step, outcome, started, "approve")
       const origin = { name: scope.installs.get(step.installID)!.snapshot.name, message: step.message }
+      const hosted = yield* ToolSafety.HostedHooks
       const host = yield* ToolSafety.NativeHost
-      if (!host) {
+      const approve = hosted?.approve ?? host?.ask
+      if (!approve) {
         yield* decide("rejected")
         return yield* deny("relay-hook-approve-native-binding-missing", message, origin)
       }
       const exit = yield* restore(
-        host.ask({
+        approve({
           action: "relay_hook",
           resources: resources(scope),
           invocation: scope.call,
@@ -415,6 +436,7 @@ function params(scope: Scope) {
     ...(scope.invocation.tool === undefined ? {} : { RELAY_HOOK_TOOL: scope.call.tool }),
     ...(paths.length > 0 ? { RELAY_HOOK_PATH: paths.join("\n") } : {}),
     ...(scope.invocation.command === undefined ? {} : { RELAY_HOOK_COMMAND: scope.invocation.command }),
+    ...(scope.result === undefined ? {} : { RELAY_HOOK_RESULT: scope.result }),
   }
 }
 

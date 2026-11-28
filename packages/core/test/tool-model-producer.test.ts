@@ -232,6 +232,7 @@ const withBash = <A, E, R>(options: {
         [ToolRegistry.node, Layer.merge(tools, Layer.succeed(ToolRegistry.Service, ToolRegistry.Service.of({
           register: () => Effect.die("use native Tools registration"),
           materialize: () => Effect.die("raw producer fixture does not bound output"), session: () => Effect.succeed([]),
+          hosted: () => Effect.die("raw producer fixture runs no hosted call"),
           currentRegistrationIdentity: () => undefined,
         })))],
         [Location.node, Layer.succeed(Location.Service, Location.Service.of(location({ directory: AbsolutePath.make(tmp.path) })))],

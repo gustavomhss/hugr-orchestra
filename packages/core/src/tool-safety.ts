@@ -162,6 +162,18 @@ export const HookedCall = Context.Reference<string | undefined>("@orchestra/Tool
   defaultValue: () => undefined,
 })
 
+export type HostedOutcome = { readonly succeeded: true; readonly response: unknown } | { readonly succeeded: false }
+
+export interface HostedCallHooks {
+  readonly approve?: (approval: Approval) => Effect.Effect<void, Denied>
+  after?: (outcome: HostedOutcome) => Effect.Effect<ReadonlyArray<string>, Denied>
+}
+
+/** Per-call binding for a host that prepares work here and executes it in its engine. */
+export const HostedHooks = Context.Reference<HostedCallHooks | undefined>("@orchestra/ToolSafety/HostedHooks", {
+  defaultValue: () => undefined,
+})
+
 // Second HOLD line, written for the model: the cause, that nothing ran, and the next step.
 // Only codes raised by the safety modules are listed; approval, completion and Maestro
 // profile-snapshot codes belong to their owners and keep the bare first line.
@@ -409,12 +421,14 @@ export const make = Effect.gen(function* () {
     const actions = command ? ToolSafetyCommands.actions(command) : [input.tool]
     const required = actions.filter((action) => profile.askBefore?.includes(action))
     if (required.length) {
+      const hosted = yield* HostedHooks
       const host = yield* NativeHost
-      if (!host) return yield* new Denied({ reason: "ask-before-native-binding-missing" })
+      const approve = hosted?.approve ?? host?.ask
+      if (!approve) return yield* new Denied({ reason: "ask-before-native-binding-missing" })
       yield* Effect.forEach(
         required,
         (action) =>
-          host.ask({
+          approve({
             action,
             resources: command ? [command] : [input.tool],
             invocation: input,
@@ -520,10 +534,12 @@ export const make = Effect.gen(function* () {
       const profile = native(loaded)
       yield* before(input).pipe(Effect.provideService(RuntimeProfile, profile))
       const outer = yield* HookedCall
-      const hooked =
+      const hosted = yield* HostedHooks
+      const beforeHooks =
         loaded?.hooks && outer !== input.callID
-          ? yield* ToolSafetyHooks.before({ installs: loaded.hooks, call: input, profile, resolve: canonical, ambient })
-          : undefined
+          ? ToolSafetyHooks.before({ installs: loaded.hooks, call: input, profile, resolve: canonical, ambient })
+          : Effect.succeed(undefined)
+      const hooked = hosted ? undefined : yield* beforeHooks
       yield* observe({ ...observation, outcome: "started" })
       const ran = effect.pipe(
         Effect.provideService(RuntimeProfile, profile),
@@ -535,10 +551,22 @@ export const make = Effect.gen(function* () {
         Effect.provideService(HookedCall, hooked ? input.callID : outer),
         sanitizeFailure,
       )
-      if (!hooked) return yield* ran
-      // A call that fails instead of returning a result still hands its `before` notes to the model.
-      const value = yield* ToolSafetyHooks.failing(hooked, ran)
-      return yield* ToolSafetyHooks.after(hooked, value, (outcome?.(value) ?? "success") === "success")
+      if (hooked) {
+        const value = yield* ToolSafetyHooks.failing(hooked, ran)
+        return yield* ToolSafetyHooks.after(hooked, value, (outcome?.(value) ?? "success") === "success")
+      }
+      const value = yield* ran
+      if (!hosted) return value
+      // A hosted effect only prepares the engine's call, including its sandbox. Run before hooks once preparation succeeds.
+      const prepared = yield* beforeHooks
+      if (prepared) {
+        const context = yield* Effect.context<never>()
+        hosted.after = (outcome) =>
+          ToolSafetyHooks.settle(prepared, outcome.succeeded, outcome.succeeded ? outcome.response : undefined).pipe(
+            Effect.provideContext(context),
+          )
+      }
+      return value
     }).pipe(
       Effect.onExit((exit) => {
         const shell = report.cell.fact
@@ -585,9 +613,9 @@ export const make = Effect.gen(function* () {
 })
 
 /** Stateless boundary usable by native producers before retention, including plugin producers. */
-export const inspect = (output: unknown) =>
+export const inspect = (output: unknown, includeKeys = false) =>
   Effect.try({
-    try: () => inspectValue(output),
+    try: () => inspectValue(output, includeKeys),
     catch: () => new Denied({ reason: "output-inspection-acquisition" }),
   }).pipe(Effect.flatMap((reason) => (reason ? Effect.fail(new Denied({ reason })) : Effect.void)))
 
@@ -652,7 +680,7 @@ const physical = Effect.fnUntraced(function* (fs: FSUtil.Interface, target: stri
 })
 
 /** Recognized credential shapes only. Encodings, binary attachments and unknown providers are not confinement. */
-function inspectValue(value: unknown, state = { seen: new Set<object>(), nodes: 0 }, depth = 0): string | undefined {
+function inspectValue(value: unknown, includeKeys: boolean, state = { seen: new Set<object>(), nodes: 0 }, depth = 0): string | undefined {
   state.nodes++
   if (depth > 64 || state.nodes > 10_000) return "output-inspection-budget"
   if (typeof value === "string") {
@@ -661,11 +689,11 @@ function inspectValue(value: unknown, state = { seen: new Set<object>(), nodes: 
   if (!value || typeof value !== "object" || state.seen.has(value)) return
   state.seen.add(value)
   if (value instanceof Error) {
-    const reason = inspectValue(value.message, state, depth + 1) ?? inspectValue(value.cause, state, depth + 1)
+    const reason = inspectValue(value.message, includeKeys, state, depth + 1) ?? inspectValue(value.cause, includeKeys, state, depth + 1)
     if (reason) return reason
   }
-  for (const child of Object.values(value)) {
-    const reason = inspectValue(child, state, depth + 1)
+  for (const [key, child] of Object.entries(value)) {
+    const reason = (includeKeys ? OutputInspector.reason(key) : undefined) ?? inspectValue(child, includeKeys, state, depth + 1)
     if (reason) return reason
   }
 }
