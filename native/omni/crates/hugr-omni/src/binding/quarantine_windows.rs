@@ -181,20 +181,6 @@ fn open_with_share(
     Ok(Some(result))
 }
 
-fn require_regular_single_link(handle: Handle) -> Result<(), String> {
-    let mut attributes = [0u8; 8];
-    query(handle, 35, &mut attributes)?;
-    let flags = u32::from_le_bytes(attributes[..4].try_into().map_err(|_| "invalid attribute data")?);
-    if flags & (0x01 | 0x10 | 0x40 | 0x400) != 0 {
-        return Err("read-only file, directory, device or reparse point".into());
-    }
-    let mut standard = [0u8; 24];
-    query(handle, 5, &mut standard)?;
-    if u32::from_le_bytes(standard[16..20].try_into().map_err(|_| "invalid link count data")?) != 1 {
-        return Err("hard links are not supported".into());
-    }
-    Ok(())
-}
 
 fn parse(path: &str) -> Result<(String, Vec<String>), String> {
     let value = path.replace('/', "\\");
@@ -271,15 +257,20 @@ fn parents(root: &Owned, parts: &[String], final_access: u32) -> Result<Vec<Owne
 
 /// Operates only on paths supplied by a trusted host; this primitive does not authorize paths.
 pub fn operate(source: &str, destination: Option<&str>, expected: Option<&str>) -> Result<String, String> {
-    operate_inner(source, destination, expected, false)
+    operate_inner(source, destination, expected, false, &mut false)
 }
 
 /// Renames a single-link regular file while exclusively holding its source handle.
-pub fn rename_exclusive(source: &str, destination: &str, expected: &str) -> Result<String, String> {
-    operate_inner(source, Some(destination), Some(expected), true)
+pub fn rename_exclusive(source: &str, destination: &str, expected: &str) -> Result<Option<String>, String> {
+    let mut entered = false;
+    match operate_inner(source, Some(destination), Some(expected), true, &mut entered) {
+        Ok(identity) => Ok(Some(identity)),
+        Err(_) if !entered => Ok(None),
+        Err(error) => Err(error),
+    }
 }
 
-fn operate_inner(source: &str, destination: Option<&str>, expected: Option<&str>, exclusive: bool) -> Result<String, String> {
+fn operate_inner(source: &str, destination: Option<&str>, expected: Option<&str>, exclusive: bool, entered: &mut bool) -> Result<String, String> {
     let (drive, source_parts) = parse(source)?;
     let (dest_drive, dest_parts) = match destination {
         Some(path) => {
@@ -349,6 +340,7 @@ fn operate_inner(source: &str, destination: Option<&str>, expected: Option<&str>
     };
     // ReplaceIfExists is zero. The pinned source and destination parent are kernel handles.
     // SAFETY: the aligned information buffer and handles remain live throughout the synchronous call.
+    *entered = true;
     status(unsafe { NtSetInformationFile(source_handle.0, &mut io, storage.as_ptr().cast(), length as u32, 10) })?;
     Ok(current)
 }
@@ -393,6 +385,9 @@ pub fn dispose(source: &str, expected: &str) -> Result<(), String> {
     drop(source);
     Ok(())
 }
+
+mod regular;
+use regular::require_regular_single_link;
 
 mod batch;
 pub use batch::dispose_batch;

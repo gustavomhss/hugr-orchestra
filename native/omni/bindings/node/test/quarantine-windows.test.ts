@@ -11,7 +11,7 @@ const quarantine: {
   quarantineIdentity(path: string): Promise<string>
   quarantineInspect(path: string): Promise<string | null>
   quarantineRenameExclusiveAvailable(): boolean
-  quarantineRenameExclusive(source: string, destination: string, identity: string): Promise<string>
+  quarantineRenameExclusive(source: string, destination: string, identity: string): Promise<string | null>
   quarantineRename(source: string, destination: string, identity: string): Promise<string>
 } = createRequire(import.meta.url)("../index.js")
 
@@ -137,14 +137,14 @@ test.skipIf(process.platform !== "win32")("exclusive rename refuses busy sources
     expect(quarantine.quarantineRenameExclusiveAvailable()).toBe(true)
     const busy = await open(source, "r")
     try {
-      await expect(quarantine.quarantineRenameExclusive(source, target, identity)).rejects.toThrow()
+      expect(await quarantine.quarantineRenameExclusive(source, target, identity)).toBeNull()
     } finally {
       await busy.close()
     }
     expect(await readFile(source, "utf8")).toBe("preserve")
     const alias = join(root, "alias")
     await link(source, alias)
-    await expect(quarantine.quarantineRenameExclusive(source, target, identity)).rejects.toThrow()
+    expect(await quarantine.quarantineRenameExclusive(source, target, identity)).toBeNull()
     await rm(alias)
     expect(await quarantine.quarantineRenameExclusive(source, target, identity)).toBe(identity)
     expect(await readFile(target, "utf8")).toBe("preserve")
