@@ -264,6 +264,10 @@ class Child {
     return later(() => this.#native.stop(options?.graceMs));
   }
 
+  freezeMember(member, action) {
+    return later(() => this.#native.freezeMember(member, action));
+  }
+
   processes() {
     return this.#native.processes();
   }

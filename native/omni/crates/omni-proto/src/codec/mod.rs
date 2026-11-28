@@ -69,6 +69,7 @@ pub fn encode(msg: &Msg, out: &mut Vec<u8>) -> Result<(), ProtoError> {
         Msg::ObserveFootprint { req, id } => _ = w.u8(OBSERVE_FOOTPRINT).u64(*req).u64(*id),
         Msg::ControlList { req, id } => selective::encode_list(&mut w, *req, *id),
         Msg::ControlStop { req, id, members } => selective::encode_stop(&mut w, *req, *id, members)?,
+        Msg::ControlFreeze { req, id, member, paused } => selective::encode_freeze(&mut w, *req, *id, *member, *paused),
         Msg::Release { req, id } => _ = w.u8(RELEASE).u64(*req).u64(*id),
         Msg::Ready { version, pid, info } => _ = w.u8(READY).u32(*version).u32(*pid).u32(*info),
         Msg::Spawned { req, id, pid, pty_ends } => {
@@ -128,6 +129,7 @@ pub fn encode(msg: &Msg, out: &mut Vec<u8>) -> Result<(), ProtoError> {
         }
         Msg::ControlMembers { req, id, members } => selective::encode_members(&mut w, *req, *id, members)?,
         Msg::ControlResults { req, id, outcomes } => selective::encode_results(&mut w, *req, *id, outcomes)?,
+        Msg::ControlFreezeResult { req, id, outcome } => selective::encode_freeze_result(&mut w, *req, *id, *outcome),
         Msg::Ack { req, id, result } => _ = w.u8(ACK).u64(*req).u64(*id).u8(ack(*result)),
     }
     let body = w.finish();
@@ -183,8 +185,10 @@ pub fn decode(buf: &[u8]) -> Result<Option<(Msg, usize)>, ProtoError> {
             id: r.u64()?,
         },
         selective::CONTROL_STOP => selective::decode_stop(&mut r)?,
+        selective::CONTROL_FREEZE => selective::decode_freeze(&mut r)?,
         selective::CONTROL_MEMBERS => selective::decode_members(&mut r)?,
         selective::CONTROL_RESULTS => selective::decode_results(&mut r)?,
+        selective::CONTROL_FREEZE_RESULT => selective::decode_freeze_result(&mut r)?,
         LIST => Msg::List {
             req: r.u64()?,
             id: r.u64()?,

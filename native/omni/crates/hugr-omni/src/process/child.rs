@@ -123,6 +123,11 @@ impl Child {
         self.inner.life.stop_selected(members).await
     }
 
+    /// Suspends or resumes one exact process identity without affecting its tree.
+    pub async fn freeze_member(&self, member: crate::ControlMember, paused: bool) -> Result<crate::FreezeOutcome, Error> {
+        self.inner.life.freeze_member(member, paused).await
+    }
+
     /// A best-effort membership sample. A missed observation deadline leaves the supervisor running.
     pub async fn observe_processes(&self) -> Result<Vec<ProcessInfo>, Error> {
         self.inner.life.observe_processes().await
