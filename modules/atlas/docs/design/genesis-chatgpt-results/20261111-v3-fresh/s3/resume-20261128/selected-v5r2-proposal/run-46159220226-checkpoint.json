@@ -1,0 +1,221 @@
+{
+  "schema": "genesis-s3-diagnostic-prepare-checkpoint/v1",
+  "state": "DIAGNOSTIC_PREPARE_PROVEN_ENTRY_REVIEW_PENDING",
+  "run_id": 46159220226,
+  "run_revision": "5e1e41722d164195e9d4a4af146553e16e0e2545",
+  "runtime_revision": "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10",
+  "artifact_id": 15269057563,
+  "artifact_sha256": "8f04f4fa73708320d24f1b2d40c67666ddb0d14c3d10c8cfa90a93d48d849a1b",
+  "candidate_id": "e5a2c4005e58a1d8d00d8adcf9739e6443ab24f6e088e729b972323e68e6a85d",
+  "package_sha256": "dcc695f58740aa528da5bffb4724517d93fd905cf71a517bc74234348741bc3e",
+  "contract": "9a242408e5f01bb3690036219a5d48f99416f84ff049383dd3b399376416f3f0",
+  "observation_count": 4647,
+  "records": [
+    {
+      "path": "summary.json",
+      "bytes": 842,
+      "sha256": "59619ecff738ee19fe8df1805c12ffdb1c624fca436852c82ffe3672bf5e0ac5"
+    },
+    {
+      "path": "prepare.receipt.json",
+      "bytes": 1082,
+      "sha256": "838a2af7e544d1373a3fba4b6c2ea333822973628040bb92491c1506cce70294"
+    },
+    {
+      "path": "prepared.json",
+      "bytes": 2617385,
+      "sha256": "a0eda47f565d9fe1da2297ff3cdc9e394c8a9af3418e8c63059bf51e5c1a28e1"
+    },
+    {
+      "path": "state.json",
+      "bytes": 2866413,
+      "sha256": "6490aa3d1ccc03e15133f6b123de9d3bdb5268b8523f2b4ed976a54d1fbf6ac9"
+    },
+    {
+      "path": "state.tar.gz",
+      "bytes": 71373750,
+      "sha256": "c3aca605b17fb3fa275eec5d520e170f16b41a39cceff8b032a0392becfb1f16"
+    }
+  ],
+  "entries": [
+    {
+      "key": "s3-l1-maestro",
+      "result": "9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49",
+      "inputs_id": "bb033a95793ef5f062ca78b3feb9d0abd2024184b850dcc8cb5cc5cf008a778e",
+      "dependencies": []
+    },
+    {
+      "key": "s3-l1-relay",
+      "result": "39ac849fbe289f700f64516e63b99d9a2ac8f27bf16cb3352e1b0fdefc7b655e",
+      "inputs_id": "6c38131a0d472293fcd7e3c9904f9699f793985ed67b442cf60a8637c63e945b",
+      "dependencies": []
+    },
+    {
+      "key": "s3-l1-integrations",
+      "result": "7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838",
+      "inputs_id": "fc2d0c8b2df7071d38a1c8357d993d9ec5066a5585319fa55ecb16c9de460729",
+      "dependencies": []
+    },
+    {
+      "key": "s3-l2-maestro",
+      "result": "44810f0a538e8364c22fac8433e5cd22376f81e0105ceaf326fc7af84576e7b3",
+      "inputs_id": "7526bddd5acb53debbe989ac1603db797a4767b530cf59d318bf157636b0174e",
+      "dependencies": [
+        {
+          "key": "s3-l1-maestro",
+          "result": "9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49"
+        },
+        {
+          "key": "s3-l1-integrations",
+          "result": "7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838"
+        }
+      ]
+    },
+    {
+      "key": "s3-l2-relay",
+      "result": "60f97bcbbe1a7552f85108092d8910e8312fd60eef722654ff771fcf07c378d8",
+      "inputs_id": "6c535f0963c6b598cb537ebba9639786d459110a4ff484450b9b0cbb332a9090",
+      "dependencies": [
+        {
+          "key": "s3-l1-relay",
+          "result": "39ac849fbe289f700f64516e63b99d9a2ac8f27bf16cb3352e1b0fdefc7b655e"
+        }
+      ]
+    },
+    {
+      "key": "s3-l2-integrations",
+      "result": "5a5cfd93b78eb84925dc37892ff3e27addb9e84cfb9566252a7399a882139fe2",
+      "inputs_id": "7526bddd5acb53debbe989ac1603db797a4767b530cf59d318bf157636b0174e",
+      "dependencies": [
+        {
+          "key": "s3-l1-maestro",
+          "result": "9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49"
+        },
+        {
+          "key": "s3-l1-integrations",
+          "result": "7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838"
+        }
+      ]
+    },
+    {
+      "key": "s3-l3-flows",
+      "result": "dbc2f61e96957105bf8ac41accdfc91eda260534c11631f15e07ff27967d1150",
+      "inputs_id": "61082310f993aab96932fd282a7603de3ab9449da70fba5359968d802f660931",
+      "dependencies": [
+        {
+          "key": "s3-l2-maestro",
+          "result": "44810f0a538e8364c22fac8433e5cd22376f81e0105ceaf326fc7af84576e7b3"
+        },
+        {
+          "key": "s3-l2-relay",
+          "result": "60f97bcbbe1a7552f85108092d8910e8312fd60eef722654ff771fcf07c378d8"
+        },
+        {
+          "key": "s3-l2-integrations",
+          "result": "5a5cfd93b78eb84925dc37892ff3e27addb9e84cfb9566252a7399a882139fe2"
+        }
+      ]
+    },
+    {
+      "key": "s3-l4-entry",
+      "result": "70c1fbdd2bb373a970ef6294c3a965f9c0c59bdacf602ad9565195be81b0ca24",
+      "inputs_id": "ea7d4439699610b4953d07f96e3432a4c4ff4f9de18d67caf7f9723c7cf69619",
+      "dependencies": [
+        {
+          "key": "s3-l3-flows",
+          "result": "dbc2f61e96957105bf8ac41accdfc91eda260534c11631f15e07ff27967d1150"
+        },
+        {
+          "key": "s3-l1-maestro",
+          "result": "9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49"
+        },
+        {
+          "key": "s3-l1-relay",
+          "result": "39ac849fbe289f700f64516e63b99d9a2ac8f27bf16cb3352e1b0fdefc7b655e"
+        },
+        {
+          "key": "s3-l1-integrations",
+          "result": "7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838"
+        }
+      ]
+    },
+    {
+      "key": "s3-l4-ownership",
+      "result": "2defd6d7054d07b3e650700ac62d2d16412f269de7a3c3eaed58a5b014ddda64",
+      "inputs_id": "524c307597583e2221d660bb9452cc3aa0e8a68ef04410716d4a547a018f67ed",
+      "dependencies": [
+        {
+          "key": "s3-l3-flows",
+          "result": "dbc2f61e96957105bf8ac41accdfc91eda260534c11631f15e07ff27967d1150"
+        },
+        {
+          "key": "s3-l1-maestro",
+          "result": "9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49"
+        },
+        {
+          "key": "s3-l1-integrations",
+          "result": "7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838"
+        }
+      ]
+    },
+    {
+      "key": "s3-l4-maintenance",
+      "result": "3635d25cb32f460d1bec16f406bd0a5ceb55737d390fe864f5e934f127ebda04",
+      "inputs_id": "46fddf1e89de844be890b0d390f203d8404a57e3e28b6a3b9b30c62180b711ce",
+      "dependencies": [
+        {
+          "key": "s3-l3-flows",
+          "result": "dbc2f61e96957105bf8ac41accdfc91eda260534c11631f15e07ff27967d1150"
+        },
+        {
+          "key": "s3-l1-maestro",
+          "result": "9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49"
+        },
+        {
+          "key": "s3-l1-relay",
+          "result": "39ac849fbe289f700f64516e63b99d9a2ac8f27bf16cb3352e1b0fdefc7b655e"
+        },
+        {
+          "key": "s3-l1-integrations",
+          "result": "7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838"
+        }
+      ]
+    },
+    {
+      "key": "s3-l4-operational",
+      "result": "8b0045d0d6b8cea3d32a6ef7eb01430b5f7dbe64a9fa85d750e87eecfb96f10f",
+      "inputs_id": "328642439e801c3d989d80d7c77ed9e3f4be030bb9a2e34ba7060e711c33e426",
+      "dependencies": [
+        {
+          "key": "s3-l3-flows",
+          "result": "dbc2f61e96957105bf8ac41accdfc91eda260534c11631f15e07ff27967d1150"
+        },
+        {
+          "key": "s3-l1-maestro",
+          "result": "9c0b955da1b742751db7d041d144614f1a977eb92e2fd24c129a9602e13c5e49"
+        },
+        {
+          "key": "s3-l1-relay",
+          "result": "39ac849fbe289f700f64516e63b99d9a2ac8f27bf16cb3352e1b0fdefc7b655e"
+        },
+        {
+          "key": "s3-l1-integrations",
+          "result": "7f3b30f4ea7cfbfc5cae14e5e2175e54dbddce7bde37219a1222192e0ffb4838"
+        }
+      ]
+    }
+  ],
+  "entry_semantic_review": {
+    "status": "PENDING",
+    "body_sha256": "956c65d3b4948c12bd93ebd749efec92ef383fb5088f89cfdef4727b780fd790",
+    "body_byte_length": 8318,
+    "historical_decisions_preserved": true
+  },
+  "next": [
+    "Original same-pair review of the exact entry and dependency delta",
+    "New supported candidate prepare and exact runtime binding",
+    "Governed isolated publish and index/read, seven consumers and M0\u2013M3"
+  ],
+  "publication_attempted": false,
+  "ownership_manifest": null
+}
