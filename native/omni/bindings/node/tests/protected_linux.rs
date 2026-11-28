@@ -49,12 +49,7 @@ fn protected_quarantine() {
     let symlink_destination = format!("{root}/quarantine/q-{}", "b".repeat(64));
     assert!(protected_linux::inspect(&root, &source).is_err());
     assert_eq!(
-        protected_linux::rename(
-            &root,
-            &source,
-            &symlink_destination,
-            &id
-        ),
+        protected_linux::rename(&root, &source, &symlink_destination, &id),
         "refused"
     );
     assert_eq!(protected_linux::inspect(&root, &destination).unwrap(), Some(id));
