@@ -190,7 +190,7 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical fo
     const previous = row()?.footprint
     sample.bytes = NaN
     await monitor.inspect(id)
-    expect(row()?.footprint).toEqual(previous)
+    expect(row()?.footprint).toEqual({ ...previous, hypothesis: "insufficient" })
     await Bun.sleep(2)
     sample.bytes = 600
     await monitor.inspect(id)

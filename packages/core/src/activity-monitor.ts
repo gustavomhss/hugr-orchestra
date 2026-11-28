@@ -9,7 +9,7 @@ import { ActivityFootprintHypothesis } from "./activity-footprint-hypothesis"
 const FINISHED_KEPT = 32
 type Entry = {
   child: WeakRef<Child>
-  record: ActivityMonitor.Record & { footprint?: { source: "omni.darwin.phys-footprint"; bytes: number; sampledAt: number; hypothesis: "insufficient" | "compatible-with-logical-leak" } }
+  record: ActivityMonitor.Record
   assistantMessageID?: string
   workFinishedAt?: number
   footprintMembers?: string
@@ -18,6 +18,13 @@ type Entry = {
   rootSettled: boolean
   sampling?: Promise<void>
   inspections: number
+}
+
+function invalidateFootprint(entry: Entry) {
+  entry.footprintMembers = undefined
+  entry.footprintSamples = []
+  if (entry.record.footprint?.hypothesis === "compatible-with-logical-leak")
+    entry.record = { ...entry.record, footprint: { ...entry.record.footprint, hypothesis: "insufficient" } }
 }
 
 /** An observer never owns a child or changes its I/O, stop policy, adoption or lifetime. */
@@ -40,6 +47,7 @@ export function make() {
   // Collection means the observation handle is unavailable, never proof that the native tree exited.
   // Retire such metadata even when no Monitor window is open; the observer must not accumulate dead handles.
   const collected = new FinalizationRegistry<Entry>((entry) => {
+    invalidateFootprint(entry)
     entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
     entry.closed ??= ++status.closure
     retire()
@@ -50,6 +58,7 @@ export function make() {
     const child = entry.child.deref()
     if (!child) {
       // Losing an observation handle does not prove the tree exited.
+      invalidateFootprint(entry)
       entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
       entry.closed ??= ++status.closure
       return Promise.resolve()
@@ -86,10 +95,7 @@ export function make() {
             entry.footprintSamples = entry.footprintSamples.slice(-64)
             entry.record = { ...entry.record, footprint: { source: "omni.darwin.phys-footprint", bytes, sampledAt,
               hypothesis: ActivityFootprintHypothesis.evaluate({ samples: entry.footprintSamples, workFinishedAt: entry.workFinishedAt }) } }
-          } else {
-            entry.footprintMembers = undefined
-            entry.footprintSamples = []
-          }
+          } else invalidateFootprint(entry)
           entry.record = {
             ...entry.record,
             state: members.length ? "alive" : "unknown",
@@ -101,8 +107,7 @@ export function make() {
           entry.closed = members.length === 0 && entry.rootSettled ? ++status.closure : undefined
         },
         () => {
-          entry.footprintMembers = undefined
-          entry.footprintSamples = []
+          invalidateFootprint(entry)
           // Inspection failure is unknown; preserve the last measured members and their timestamp.
           entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
           entry.closed = entry.rootSettled ? ++status.closure : undefined
@@ -119,6 +124,7 @@ export function make() {
     // A paint/refresh reads only the ledger and logical-CPU counters; it never enumerates OS processes.
     entries.forEach((entry) => {
       if (entry.closed === undefined && !entry.child.deref()) {
+        invalidateFootprint(entry)
         entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
         entry.closed = ++status.closure
       }
