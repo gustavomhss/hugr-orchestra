@@ -27,7 +27,6 @@ export const PriorBinding = Schema.Struct({
 }).annotate({ parseOptions: strict })
 export type PriorBinding = typeof PriorBinding.Type
 
-// A projection of existing facts into the actual report verifier prompt, not a new producer or authority token.
 export const AnalyzerEvidence = Schema.Array(Schema.Struct({ candidate: Text, item: ReviewItem.ToolItem,
   check: Schema.Struct({ ...ReviewEvidenceSchemaV2.Check.fields, uri: Text }),
 })).annotate({ parseOptions: strict })
@@ -88,6 +87,7 @@ export const FixArtifact = Schema.Struct({
   kind: Schema.Union([ReviewEvidenceSchemaV2.Artifact.fields.kind,
     Schema.Literals(["fix-prior-report", "fix-prior-receipt", "fix-prior-authority"])]),
 }).annotate({ parseOptions: strict })
+export type FixArtifact = typeof FixArtifact.Type
 export const FixReceipt = Schema.Struct({
   schema: Schema.Literal("review-engagement-fix-evidence-v1"),
   reportID: Digest, inputHash: Digest, sessionID: SessionSchema.ID, sourceSha256: Digest,

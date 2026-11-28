@@ -29,7 +29,16 @@ export type Terminal = TerminalValue & (
 export type Collector = Omit<ReviewEvidenceCollectorV2.Collector, "seal"> & {
   readonly seal: (report: ReviewEngagementReportV2.Stored, host: ReviewEvidenceCollectorV2.Host) => Effect.Effect<Sealed, Tool.Failure>
 }
+export type PriorData = {
+  readonly receipt: ReviewEvidenceSchemaV2.Receipt
+  readonly bytes: Uint8Array
+  readonly receiptID: string
+  readonly context: ReviewEvidenceValidationV2.AnalysisContext
+}
 export type Repository = {
+  readonly storage: ReviewEvidenceCollectorV2.Storage
+  readonly priorData: (view: Terminal) => Effect.Effect<PriorData, Tool.Failure>
+  readonly collectFix: (context: ReviewEvidenceCollectorV2.FixContext) => Effect.Effect<ReviewEvidenceCollectorV2.Collector, never, Scope.Scope>
   readonly collect: (context: ReviewEvidenceCollectorV2.Context) => Effect.Effect<Collector, never, Scope.Scope>
   readonly fixReviewRecipes: (view: Terminal, findingIDs: ReadonlyArray<string>) => Effect.Effect<ReadonlyArray<{ readonly findingID: string; readonly proof: ReviewEvidenceSchemaV2.Proof; readonly recipe: typeof ReviewEvidenceSchemaV2.Recipe.Type }>, Tool.Failure>
   readonly replay: (view: Terminal) => Effect.Effect<string, Tool.Failure>
@@ -117,6 +126,13 @@ export function make(input: { readonly database: Database.Interface; readonly fs
     const bounded = <A>(effect: Effect.Effect<A, Tool.Failure>) => effect.pipe(Effect.timeoutOrElse({ duration: "60 seconds",
       orElse: () => Effect.fail(ReviewEvidenceSchemaV2.failure("timeout", "evidence read exceeded its bounded deadline")) }))
     const repository: Repository = {
+      storage,
+      priorData: (view) => Effect.gen(function* () {
+        const held = yield* retained(view)
+        const { context } = yield* complete(view.terminal, held.receipt, held.authority)
+        return { receipt: held.receipt, bytes: held.bytes, receiptID: held.receiptID, context }
+      }),
+      collectFix: (context) => ReviewEvidenceCollectorV2.make(context, storage),
       collect: (context) => Effect.gen(function* () {
         const collector = yield* ReviewEvidenceCollectorV2.make(context, storage)
         const result: Collector = { ...collector, seal: (report, host) => Effect.gen(function* () {
@@ -178,41 +194,56 @@ export function make(input: { readonly database: Database.Interface; readonly fs
       resolve: (view, request) => bounded(Effect.gen(function* () {
         if (request.reportID !== view.terminal.value.reportID) return yield* ReviewEvidenceSchemaV2.failure("not-found", "report is unavailable")
         const held = yield* retained(view)
-        const manifest = { artifactID: held.receiptID, sha256: held.receiptID, bytes: held.bytes.byteLength, mime: "application/json" }
-        if (request.op === "manifest") {
-          yield* complete(view.terminal, held.receipt, held.authority)
-          return ReviewEvidenceSchemaV2.canonical({ schema: "review-engagement-evidence-index-v1", reportID: request.reportID,
-            receiptID: held.receiptID, manifest, counts: { operations: held.receipt.operations.length,
-              artifacts: held.receipt.artifacts.length, hostProofs: held.receipt.hostProofs.length } })
-        }
-        // Membership precedes every producer-body read. A digest or URI is not an authority.
-        const descriptor = request.artifactID === held.receiptID ? manifest
-          : held.receipt.artifacts.find((artifact) => artifact.artifactID === request.artifactID)
-        if (!descriptor) return yield* ReviewEvidenceSchemaV2.failure("not-found", "artifact is unavailable")
-        const identity = { schema: "review-engagement-evidence-cursor-v1" as const, reportID: request.reportID,
-          receiptID: held.receiptID, artifactID: descriptor.artifactID, sha256: descriptor.sha256 }
-        const offset = yield* Effect.try({ try: () => {
-          if (request.cursor === undefined) return 0
-          if (request.cursor.length > ReviewEvidenceSchemaV2.limits.cursor || !/^[A-Za-z0-9_-]+$/.test(request.cursor)) throw new Error("invalid encoding")
-          const bytes = Buffer.from(request.cursor, "base64url")
-          const cursor = Schema.decodeUnknownSync(ReviewEvidenceSchemaV2.Cursor)(ReviewEvidenceSchemaV2.json(bytes), ReviewEvidenceSchemaV2.strict)
-          const { offset, ...binding } = cursor
-          if (Buffer.from(ReviewEvidenceSchemaV2.canonical(cursor)).toString("base64url") !== request.cursor ||
-            offset % ReviewEvidenceSchemaV2.limits.page !== 0 || offset >= descriptor.bytes ||
-            !ReviewEvidenceSchemaV2.same(binding, identity)) throw new Error("cursor binding differs")
-          return offset
-        }, catch: () => ReviewEvidenceSchemaV2.failure("cursor-invalid", "cursor does not name this authorized page") })
-        const { bodies } = yield* complete(view.terminal, held.receipt, held.authority)
-        const bytes = request.artifactID === held.receiptID ? held.bytes : bodies.get(request.artifactID)
-        if (!bytes) return yield* ReviewEvidenceSchemaV2.failure("corrupt", "required body is unavailable")
-        const slice = bytes.subarray(offset, offset + ReviewEvidenceSchemaV2.limits.page)
-        const nextOffset = offset + slice.byteLength
-        return ReviewEvidenceSchemaV2.canonical({ schema: "review-engagement-evidence-page-v1", reportID: request.reportID,
-          receiptID: held.receiptID, artifactID: descriptor.artifactID, sha256: descriptor.sha256,
-          bytes: descriptor.bytes, mime: descriptor.mime, offset, encoding: "base64", data: Buffer.from(slice).toString("base64"),
-          ...(nextOffset < bytes.byteLength ? { next: Buffer.from(ReviewEvidenceSchemaV2.canonical({ ...identity, offset: nextOffset })).toString("base64url") } : {}) })
+        return yield* resolveEvidence(request, { ...held, bodies: complete(view.terminal, held.receipt, held.authority).pipe(
+          Effect.map((validated) => validated.bodies)) })
       })),
     }
     return repository
+  })
+}
+
+/** Membership precedes body validation for ordinary and fix evidence pages. */
+export function resolveEvidence(request: Input, held: {
+  readonly bytes: Uint8Array
+  readonly receiptID: string
+  readonly receipt: Pick<ReviewEvidenceSchemaV2.ReceiptV1, "operations" | "hostProofs"> & {
+    readonly artifacts: readonly { readonly artifactID: string; readonly sha256: string; readonly bytes: number; readonly mime: string }[]
+  }
+  readonly bodies: Effect.Effect<ReviewEvidenceSchemaV2.Bodies, Tool.Failure>
+}) {
+  return Effect.gen(function* () {
+    const manifest = { artifactID: held.receiptID, sha256: held.receiptID, bytes: held.bytes.byteLength, mime: "application/json" }
+    if (request.op === "manifest") {
+      yield* held.bodies
+      return ReviewEvidenceSchemaV2.canonical({ schema: "review-engagement-evidence-index-v1", reportID: request.reportID,
+        receiptID: held.receiptID, manifest, counts: { operations: held.receipt.operations.length,
+          artifacts: held.receipt.artifacts.length, hostProofs: held.receipt.hostProofs.length } })
+    }
+    // Membership precedes every producer-body read. A digest or URI is not an authority.
+    const descriptor = request.artifactID === held.receiptID ? manifest
+      : held.receipt.artifacts.find((artifact) => artifact.artifactID === request.artifactID)
+    if (!descriptor) return yield* ReviewEvidenceSchemaV2.failure("not-found", "artifact is unavailable")
+    const identity = { schema: "review-engagement-evidence-cursor-v1" as const, reportID: request.reportID,
+      receiptID: held.receiptID, artifactID: descriptor.artifactID, sha256: descriptor.sha256 }
+    const offset = yield* Effect.try({ try: () => {
+      if (request.cursor === undefined) return 0
+      if (request.cursor.length > ReviewEvidenceSchemaV2.limits.cursor || !/^[A-Za-z0-9_-]+$/.test(request.cursor)) throw new Error("invalid encoding")
+      const bytes = Buffer.from(request.cursor, "base64url")
+      const cursor = Schema.decodeUnknownSync(ReviewEvidenceSchemaV2.Cursor)(ReviewEvidenceSchemaV2.json(bytes), ReviewEvidenceSchemaV2.strict)
+      const { offset, ...binding } = cursor
+      if (Buffer.from(ReviewEvidenceSchemaV2.canonical(cursor)).toString("base64url") !== request.cursor ||
+        offset % ReviewEvidenceSchemaV2.limits.page !== 0 || offset >= descriptor.bytes ||
+        !ReviewEvidenceSchemaV2.same(binding, identity)) throw new Error("cursor binding differs")
+      return offset
+    }, catch: () => ReviewEvidenceSchemaV2.failure("cursor-invalid", "cursor does not name this authorized page") })
+    const bodies = yield* held.bodies
+    const bytes = request.artifactID === held.receiptID ? held.bytes : bodies.get(request.artifactID)
+    if (!bytes) return yield* ReviewEvidenceSchemaV2.failure("corrupt", "required body is unavailable")
+    const slice = bytes.subarray(offset, offset + ReviewEvidenceSchemaV2.limits.page)
+    const nextOffset = offset + slice.byteLength
+    return ReviewEvidenceSchemaV2.canonical({ schema: "review-engagement-evidence-page-v1", reportID: request.reportID,
+      receiptID: held.receiptID, artifactID: descriptor.artifactID, sha256: descriptor.sha256,
+      bytes: descriptor.bytes, mime: descriptor.mime, offset, encoding: "base64", data: Buffer.from(slice).toString("base64"),
+      ...(nextOffset < bytes.byteLength ? { next: Buffer.from(ReviewEvidenceSchemaV2.canonical({ ...identity, offset: nextOffset })).toString("base64url") } : {}) })
   })
 }

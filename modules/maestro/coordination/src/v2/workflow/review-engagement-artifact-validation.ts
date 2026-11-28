@@ -143,24 +143,10 @@ export function validate(receipt: ReviewEvidenceSchemaV2.Receipt, report: Review
   const source = report.value.source
   const card = report.value.report
   ReviewEvidenceSchemaV2.require(source && card, "completed source report is absent")
-  const allowed = new Map(source.files.map((file) => [file.path, file]))
   const body = bodyReader(receipt.artifacts, bodies)
   for (const descriptor of receipt.artifacts) body(descriptor.artifactID)
-  const captured = (value: typeof Source.Type) => ReviewEvidenceSchemaV2.require(value.commit === source.commit && value.scope.sha256 === source.sha256 &&
-    ReviewEvidenceSchemaV2.same(value.scope.files, source.files.map((file) => file.path)), "CODE captured source scope differs")
   const context = analysisContext({ ...receipt, source }, bodies)
-  for (const operation of receipt.operations) {
-    if (operation.kind === "code") {
-      const result = Schema.decodeUnknownSync(CodeBody)(ReviewEvidenceSchemaV2.json(body(operation.evidence.artifactID)), ReviewEvidenceSchemaV2.strict)
-      captured(result.source)
-      validatePaths(result.result, allowed)
-      for (const evidence of operation.snapshots) {
-        const snapshot = Schema.decodeUnknownSync(Snapshot)(ReviewEvidenceSchemaV2.json(body(evidence.artifactID)), ReviewEvidenceSchemaV2.strict)
-        captured(snapshot.source)
-        ReviewEvidenceSchemaV2.require(snapshot.snapshot === result.snapshot, "locate snapshot differs from the enclosing capture")
-      }
-    }
-  }
+  validateCode(receipt.operations, source, body)
   const final = context.final
   ReviewEvidenceSchemaV2.require(ReviewEvidenceSchemaV2.same(final.routing.packs, card.routing.packs), "final analysis differs from report routing")
   for (const check of final.result.checks) {
@@ -172,6 +158,25 @@ export function validate(receipt: ReviewEvidenceSchemaV2.Receipt, report: Review
     ReviewEvidenceSchemaV2.require(Buffer.from(body(citation.artifactID)).equals(Buffer.from(report.value.citations[index].text)), "citation bytes differ")
   for (const finding of card.findings) if (finding.evidence.kind === "tool") qualifiedTool(context, finding)
   return context
+}
+
+export function validateCode(operations: ReviewEvidenceSchemaV2.ReceiptV1["operations"],
+  source: ReviewEngagementReportV2.Source, body: (id: string) => Uint8Array) {
+  const allowed = new Map(source.files.map((file) => [file.path, file]))
+  const captured = (value: typeof Source.Type) => ReviewEvidenceSchemaV2.require(value.commit === source.commit && value.scope.sha256 === source.sha256 &&
+    ReviewEvidenceSchemaV2.same(value.scope.files, source.files.map((file) => file.path)), "CODE captured source scope differs")
+  for (const operation of operations) {
+    if (operation.kind === "code") {
+      const result = Schema.decodeUnknownSync(CodeBody)(ReviewEvidenceSchemaV2.json(body(operation.evidence.artifactID)), ReviewEvidenceSchemaV2.strict)
+      captured(result.source)
+      validatePaths(result.result, allowed)
+      for (const evidence of operation.snapshots) {
+        const snapshot = Schema.decodeUnknownSync(Snapshot)(ReviewEvidenceSchemaV2.json(body(evidence.artifactID)), ReviewEvidenceSchemaV2.strict)
+        captured(snapshot.source)
+        ReviewEvidenceSchemaV2.require(snapshot.snapshot === result.snapshot, "locate snapshot differs from the enclosing capture")
+      }
+    }
+  }
 }
 
 /** The same immutable analysis/proof boundary is available before a final card exists. */

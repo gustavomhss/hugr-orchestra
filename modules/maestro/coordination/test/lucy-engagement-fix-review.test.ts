@@ -21,7 +21,7 @@ test("fix review rejects an unknown report without admitting a Session or provid
     const requests = root.requests.length
     const result = yield* host.invoke(fixRequest("a".repeat(64), "C1"))
     expect(result.type).toBe("error")
-    expect(result.text).toContain("engagement-evidence-not-found")
+    expect(result.text).toContain("engagement-fix-prior-not-found")
     expect(root.requests.length).toBe(requests)
     expect(yield* host.db.select().from(SessionTable).all().pipe(Effect.orDie)).toEqual(before)
   }))))
@@ -45,14 +45,14 @@ test("fix review requires the retained report to belong to the invoking parent a
       const requests = root.requests.length
       const result = yield* host.invoke(fixRequest(report.reportID, findingID), "maestro", SessionSchema.ID.make(parent.id))
       expect(result.type).toBe("error")
-      expect(result.text).toContain("engagement-evidence-not-found")
+      expect(result.text).toContain("engagement-fix-prior-not-found")
       expect(root.requests.length).toBe(requests)
       expect(yield* host.db.select().from(SessionTable).all().pipe(Effect.orDie)).toEqual(before)
     }
   }), variantAdapter((log, modelRequest) => text(reply(log, modelRequest, { quote: true }))))))
 })
 
-test("a retained quote-only finding has no fix recipe and starts no work", () => {
+test("an unknown finding in an authorized quote report starts no work", () => {
   expectSpawn(import.meta.path)
   return Effect.runPromise(run((root) => root.open((host) => Effect.gen(function* () {
     const report = decoded(yield* host.invoke(request("quote-only-fix-review-source")))
@@ -61,9 +61,9 @@ test("a retained quote-only finding has no fix recipe and starts no work", () =>
     expect(finding.rungs).toEqual(["quote"])
     const before = yield* host.db.select().from(SessionTable).all().pipe(Effect.orDie)
     const requests = root.requests.length
-    const result = yield* host.invoke(fixRequest(report.reportID, finding.id))
+    const result = yield* host.invoke(fixRequest(report.reportID, finding.id + "-absent"))
     expect(result.type).toBe("error")
-    expect(result.text).toContain("engagement-fix-review-no-recipe")
+    expect(result.text).toContain("engagement-fix-finding-invalid")
     expect(root.requests.length).toBe(requests)
     expect(yield* host.db.select().from(SessionTable).all().pipe(Effect.orDie)).toEqual(before)
   }), variantAdapter((log, modelRequest) => text(reply(log, modelRequest, { quote: true }))))))

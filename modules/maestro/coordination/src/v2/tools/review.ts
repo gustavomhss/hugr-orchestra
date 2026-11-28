@@ -12,6 +12,7 @@ import { BoardProjectTable } from "@orchestra/core/board/sql"
 import { BoardThread } from "@orchestra/core/board/thread"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
+import type { PermissionV2 } from "@orchestra/core/permission"
 import type { Global } from "@orchestra/core/global"
 import { ReviewCatalog } from "@orchestra/core/review/catalog"
 import { ReviewPrecisionCatalog } from "@orchestra/core/review/precision-catalog"
@@ -136,6 +137,7 @@ const seatStages: ReviewFanoutV2.Stages = {
 export function tools(input: {
   readonly services: MaestroChainTools.Services
   readonly gate: MaestroToolGate.Gate
+  readonly permission: PermissionV2.Interface
   readonly sessions: Option.Option<SessionV2.Interface>
   readonly execution: Option.Option<SessionExecution.Interface>
   readonly database?: Database.Interface
@@ -211,7 +213,7 @@ export function tools(input: {
     }),
     [names.request]: Tool.make({
       description:
-        'Delegate one read-only cold review to the native cold reviewer (`lucy`). Maestro only. Stage "plan" (default) reviews the plan and its committed spec before approval; stage "code" reviews what the workers committed after it. Kind "pr" reviews local refs. Kind "engagement" requests an independent audit, diligence or artifact report over captured files with a request ID and host time box; it requires no validation and returns no merge verdict.',
+        'Delegate one read-only cold review to the native cold reviewer (`lucy`). Maestro only. Stage "plan" (default) reviews the plan and its committed spec before approval; stage "code" reviews what the workers committed after it. Kind "pr" reviews local refs. Kind "engagement" requests an independent audit, diligence or artifact report over captured files with a request ID and host time box; it requires no validation and returns no merge verdict. Set fixReview with an original report ID and its finding IDs to retest against a local revision.',
       input: RequestInput,
       output: Schema.String,
       execute: (params, context) =>
@@ -220,12 +222,16 @@ export function tools(input: {
           if ("kind" in params) {
             if (params.kind === "engagement") {
               const { ReviewEngagementRequestV2 } = yield* Effect.promise(() => import("./review-engagement"))
-              return yield* ReviewEngagementRequestV2.run(params, {
+              const engagement: ReviewEngagementRequestV2.Input = {
                 sessionID: context.sessionID, services, sessions: input.sessions, execution: input.execution,
                 database: input.database ?? { db: services.db }, analyze, stages, processes: input.processes,
                 ...(input.global ? { global: input.global } : {}),
                 settings: (projectID) => reviewSettings(services.db, projectID),
-              }).pipe(Effect.scoped)
+              }
+              if (params.fixReview === undefined || params.profile === "compliance")
+                return yield* ReviewEngagementRequestV2.run(params, engagement).pipe(Effect.scoped)
+              const { ReviewFixRequestV2 } = yield* Effect.promise(() => import("./review-fix-request"))
+              return yield* ReviewFixRequestV2.run(params, params.fixReview, engagement, input.permission, context).pipe(Effect.scoped)
             }
             return yield* ReviewPRRequestV2.run(params, {
               sessionID: context.sessionID, services, sessions: input.sessions, execution: input.execution,

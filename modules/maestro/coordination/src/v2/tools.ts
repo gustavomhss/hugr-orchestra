@@ -119,6 +119,7 @@ const layer = Layer.effectDiscard(
           database,
           global,
           gate,
+          permission,
           sessions: yield* GovernanceBackgroundV2.Sessions,
           execution: yield* MaestroReviewTools.Execution,
           processes: yield* AppProcess.Service,
