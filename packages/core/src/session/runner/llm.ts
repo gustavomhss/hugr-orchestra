@@ -173,7 +173,8 @@ const layer = Layer.effect(
         ...(yield* store.permissions(session.id)),
       ]
       const engine = yield* engineOf(session)
-      const host = engine ? hosts.get(engine) : undefined
+      const hostedTurn = engine ? yield* modelExecution.assertHost({ session, agent, engine }) : undefined
+      const host = hostedTurn?.host
       const systemContextForTurn = loadSystemContext(session.id, agent, host?.id === "claude-code")
       const initialized = yield* SessionContextEpoch.initialize(db, systemContextForTurn, session.id)
       const toolFibers = yield* FiberSet.make<void, ToolOutputStore.Error>()
@@ -200,7 +201,7 @@ const layer = Layer.effect(
       if (engine && !host)
         return yield* Effect.die(new Error(`No execution host is registered for engine ${engine} (agent ${agent.id})`))
       const model = host ? undefined : yield* models.resolve(session)
-      const modelRef = model ? SessionRunnerModel.reference(model) : hosted?.ref
+      const modelRef = model ? SessionRunnerModel.reference(model) : hostedTurn?.ref
       const entries = yield* SessionHistory.entriesForRunner(db, session.id, system.baselineSeq)
       const context = entries.map((entry) => entry.message)
       const workflow = yield* RelayWorkflowSession.current(session.id).pipe(Effect.provide(workflowContext), Effect.orDie)
