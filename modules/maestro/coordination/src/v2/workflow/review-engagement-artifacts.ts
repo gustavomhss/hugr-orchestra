@@ -11,13 +11,21 @@ import { ReviewEvidenceSchemaV2 } from "./review-engagement-artifact-schema"
 import { ReviewEvidenceValidationV2 } from "./review-engagement-artifact-validation"
 import { ReviewEvidenceCollectorV2 } from "./review-engagement-artifact-collector"
 import type { ReviewEngagementReportV2 } from "./review-engagement-report"
+import { ReviewVariantSchemaV2 } from "./review-variant-schema"
+import { ReviewVariantValidationV2 } from "./review-variant-validation"
 
 export const Input = ReviewEvidenceSchemaV2.Input
 export type Input = ReviewEvidenceSchemaV2.Input
 export const EvidenceState = ReviewEvidenceSchemaV2.EvidenceState
 export type EvidenceState = ReviewEvidenceSchemaV2.EvidenceState
 export type Sealed = { readonly receiptID: string; readonly bytes: number }
-export type Terminal = { readonly terminal: ReviewEngagementReportV2.Stored; readonly evidence?: EvidenceState }
+type TerminalValue = { readonly terminal: ReviewEngagementReportV2.Stored; readonly evidence?: EvidenceState }
+export type Terminal = TerminalValue & (
+  { readonly schema: "review-engagement-state-v1" | "review-engagement-state-v2" } |
+  { readonly schema: "review-engagement-state-v3"; readonly identity: { readonly key: string; readonly leadID: string };
+    readonly source?: ReviewVariantValidationV2.Authority["source"]; readonly variants: ReviewVariantSchemaV2.VariantJournal } &
+  Pick<ReviewVariantValidationV2.Authority, "input" | "budget" | "children">
+)
 export type Collector = Omit<ReviewEvidenceCollectorV2.Collector, "seal"> & {
   readonly seal: (report: ReviewEngagementReportV2.Stored, host: ReviewEvidenceCollectorV2.Host) => Effect.Effect<Sealed, Tool.Failure>
 }
@@ -26,12 +34,30 @@ export type Repository = {
   readonly replay: (view: Terminal) => Effect.Effect<string, Tool.Failure>
   readonly resolve: (view: Terminal, input: Input) => Effect.Effect<string, Tool.Failure>
 }
-const minted = new WeakMap<Sealed, string>()
+type Mint = { readonly reportText: string } & (
+  { readonly receiptSchema: "review-engagement-evidence-v1" } |
+  { readonly receiptSchema: "review-engagement-evidence-v2"; readonly journalSha256: string }
+)
+const minted = new WeakMap<Sealed, Mint>()
 
 /** Only a completed publication from this host can enter Store.finish; a structurally similar object is not a seal. */
-export function assertBinding(value: Sealed, report: ReviewEngagementReportV2.Stored): EvidenceState {
-  if (minted.get(value) !== report.text) throw ReviewEvidenceSchemaV2.failure("corrupt", "completion has no matching sealed evidence")
+export function assertBinding(value: Sealed, report: ReviewEngagementReportV2.Stored,
+  expectedJournal?: ReviewVariantSchemaV2.VariantJournal): EvidenceState {
+  const binding = minted.get(value)
+  if (!binding || binding.reportText !== report.text) throw ReviewEvidenceSchemaV2.failure("corrupt", "completion has no matching sealed evidence")
+  if (binding.receiptSchema === "review-engagement-evidence-v1" ? expectedJournal !== undefined
+    : expectedJournal === undefined || expectedJournal.phase !== "closed" ||
+      binding.journalSha256 !== ReviewVariantSchemaV2.digest(expectedJournal))
+    throw ReviewEvidenceSchemaV2.failure("corrupt", "sealed receipt version or closed variant journal differs")
   return { policy: "required-completed-v1", receiptID: value.receiptID, bytes: value.bytes }
+}
+
+function authority(view: Terminal, receipt: ReviewEvidenceSchemaV2.Receipt): ReviewVariantValidationV2.Authority | undefined {
+  if (view.schema === "review-engagement-state-v2" && receipt.schema === "review-engagement-evidence-v1") return undefined
+  if (view.schema !== "review-engagement-state-v3" || receipt.schema !== "review-engagement-evidence-v2" || !view.source)
+    throw ReviewEvidenceSchemaV2.failure("corrupt", "receipt version differs from its durable admission")
+  return { namespace: view.identity.key, leadID: view.identity.leadID, children: view.children,
+    input: view.input, budget: view.budget, source: view.source, journal: view.variants }
 }
 
 export function make(input: { readonly database: Database.Interface; readonly fs: FSUtil.Interface; readonly global?: Global.Interface }): Effect.Effect<Repository> {
@@ -62,18 +88,28 @@ export function make(input: { readonly database: Database.Interface; readonly fs
       catch: (error) => error instanceof Tool.Failure ? error : ReviewEvidenceSchemaV2.failure("corrupt", String(error)) })
     const retained = (view: Terminal) => Effect.gen(function* () {
       if (view.terminal.value.status !== "completed") return yield* ReviewEvidenceSchemaV2.failure("unavailable", "terminal-status")
-      if (!view.evidence) return yield* ReviewEvidenceSchemaV2.failure("unavailable", "legacy-record")
+      if (view.schema === "review-engagement-state-v1") return yield* ReviewEvidenceSchemaV2.failure("unavailable", "legacy-record")
+      if (!view.evidence) return yield* ReviewEvidenceSchemaV2.failure("missing", "completed record has no required evidence policy or reference")
       const reference = view.evidence
       if (!reference.receiptID || reference.bytes === undefined) return yield* ReviewEvidenceSchemaV2.failure("missing", "completed record has no required receipt reference")
       yield* parse(() => Schema.decodeUnknownSync(EvidenceState)(reference, ReviewEvidenceSchemaV2.strict))
       const bytes = yield* storage.read(reference.receiptID, reference.bytes, "application/json")
       const receipt = yield* parse(() => ReviewEvidenceValidationV2.read(bytes, view.terminal))
-      return { receipt, bytes, receiptID: reference.receiptID }
+      const bound = yield* parse(() => authority(view, receipt))
+      return { receipt, bytes, receiptID: reference.receiptID, authority: bound }
     })
-    const complete = (view: Terminal, receipt: ReviewEvidenceSchemaV2.Receipt) => Effect.gen(function* () {
+    const complete = (report: ReviewEngagementReportV2.Stored, receipt: ReviewEvidenceSchemaV2.Receipt,
+      bound?: ReviewVariantValidationV2.Authority) => Effect.gen(function* () {
       const bodies = new Map(yield* Effect.forEach(receipt.artifacts, (artifact) => storage.read(artifact.sha256, artifact.bytes, artifact.mime)
         .pipe(Effect.map((bytes) => [artifact.artifactID, bytes] as const))))
-      yield* parse(() => ReviewEvidenceValidationV2.validate(receipt, view.terminal, bodies))
+      yield* parse(() => {
+        ReviewEvidenceValidationV2.validate(receipt, report, bodies)
+        if (receipt.schema !== "review-engagement-evidence-v2") return
+        if (!bound) throw ReviewEvidenceSchemaV2.failure("corrupt", "variant receipt has no durable authority")
+        ReviewVariantValidationV2.validate(receipt, report, bodies, bound)
+      }).pipe(Effect.mapError((error) => receipt.schema === "review-engagement-evidence-v2" &&
+        error.metadata?.reason === "engagement-report-invalid"
+        ? ReviewEvidenceSchemaV2.failure("corrupt", error.message) : error))
       return bodies
     })
     const bounded = <A>(effect: Effect.Effect<A, Tool.Failure>) => effect.pipe(Effect.timeoutOrElse({ duration: "60 seconds",
@@ -90,19 +126,23 @@ export function make(input: { readonly database: Database.Interface; readonly fs
           // Verify the published receipt and all of its required bodies before the small terminal CAS.
           const published = yield* storage.read(receiptID, bytes.byteLength, "application/json")
           const verified = yield* parse(() => ReviewEvidenceValidationV2.read(published, report))
-          yield* complete({ terminal: report }, verified)
+          const bound = verified.schema === "review-engagement-evidence-v2" ? yield* context.authority : undefined
+          yield* complete(report, verified, bound)
           yield* context.active
           const value = Object.freeze({ receiptID, bytes: bytes.byteLength })
-          minted.set(value, report.text)
+          minted.set(value, verified.schema === "review-engagement-evidence-v1"
+            ? { reportText: report.text, receiptSchema: verified.schema }
+            : { reportText: report.text, receiptSchema: verified.schema,
+              journalSha256: ReviewVariantSchemaV2.digest(ReviewVariantSchemaV2.projectJournal(verified.variants)) })
           return value
         }) }
         return result
       }),
       replay: (view) => {
-        if (view.terminal.value.status !== "completed" || view.evidence === undefined) return Effect.succeed(view.terminal.text)
+        if (view.terminal.value.status !== "completed" || view.schema === "review-engagement-state-v1") return Effect.succeed(view.terminal.text)
         return bounded(Effect.gen(function* () {
           const held = yield* retained(view)
-          yield* complete(view, held.receipt)
+          yield* complete(view.terminal, held.receipt, held.authority)
           return view.terminal.text
         }))
       },
@@ -111,7 +151,7 @@ export function make(input: { readonly database: Database.Interface; readonly fs
         const held = yield* retained(view)
         const manifest = { artifactID: held.receiptID, sha256: held.receiptID, bytes: held.bytes.byteLength, mime: "application/json" }
         if (request.op === "manifest") {
-          yield* complete(view, held.receipt)
+          yield* complete(view.terminal, held.receipt, held.authority)
           return ReviewEvidenceSchemaV2.canonical({ schema: "review-engagement-evidence-index-v1", reportID: request.reportID,
             receiptID: held.receiptID, manifest, counts: { operations: held.receipt.operations.length,
               artifacts: held.receipt.artifacts.length, hostProofs: held.receipt.hostProofs.length } })
@@ -133,7 +173,7 @@ export function make(input: { readonly database: Database.Interface; readonly fs
             !ReviewEvidenceSchemaV2.same(binding, identity)) throw new Error("cursor binding differs")
           return offset
         }, catch: () => ReviewEvidenceSchemaV2.failure("cursor-invalid", "cursor does not name this authorized page") })
-        const bodies = yield* complete(view, held.receipt)
+        const bodies = yield* complete(view.terminal, held.receipt, held.authority)
         const bytes = request.artifactID === held.receiptID ? held.bytes : bodies.get(request.artifactID)
         if (!bytes) return yield* ReviewEvidenceSchemaV2.failure("corrupt", "required body is unavailable")
         const slice = bytes.subarray(offset, offset + ReviewEvidenceSchemaV2.limits.page)

@@ -11,6 +11,7 @@ import type { ReviewEngagementEvidenceV2 } from "../workflow/review-engagement-e
 import { ReviewEngagementPolicyV2 } from "../workflow/review-engagement-policy"
 import { ReviewEngagementReportV2 } from "../workflow/review-engagement-report"
 import { ReviewEngagementArtifactsV2 } from "../workflow/review-engagement-artifacts"
+import { ReviewVariantSchemaV2 } from "../workflow/review-variant-schema"
 
 const KEY = "lucyEngagementV1"
 const strict = { onExcessProperty: "error" } as const
@@ -30,12 +31,14 @@ const recordFields = {
   budget: ReviewEngagementReportV2.Budget, source: Schema.optional(ReviewEngagementReportV2.Source),
   children: Schema.Array(ChildSchema), state: Schema.Literals(["running", "terminal"]), output: Schema.optional(Schema.String),
 }
-const StoredRecord = Schema.Union([
-  Schema.Struct({ schema: Schema.Literal("review-engagement-state-v1"), ...recordFields }),
-  Schema.Struct({ schema: Schema.Literal("review-engagement-state-v2"), ...recordFields,
-    evidence: Schema.optional(ReviewEngagementArtifactsV2.EvidenceState) }),
-])
-type Common = Omit<typeof StoredRecord.Type, "state" | "output"> & { readonly evidence?: ReviewEngagementArtifactsV2.EvidenceState }
+const StateV1 = Schema.Struct({ schema: Schema.Literal("review-engagement-state-v1"), ...recordFields })
+const StateV2 = Schema.Struct({ schema: Schema.Literal("review-engagement-state-v2"), ...recordFields,
+  evidence: Schema.optional(ReviewEngagementArtifactsV2.EvidenceState) })
+const StateV3 = Schema.Struct({ schema: Schema.Literal("review-engagement-state-v3"), ...recordFields,
+  evidence: Schema.optional(ReviewEngagementArtifactsV2.EvidenceState), variants: ReviewVariantSchemaV2.VariantJournal })
+const StoredRecord = Schema.Union([StateV1, StateV2, StateV3])
+type Common = Omit<typeof StateV1.Type, "state" | "output"> | Omit<typeof StateV2.Type, "state" | "output"> |
+  Omit<typeof StateV3.Type, "state" | "output">
 export type Running = Common & { readonly state: "running" }
 export type Terminal = Common & { readonly state: "terminal"; readonly terminal: ReviewEngagementReportV2.Stored }
 export type Record = Running | Terminal
@@ -49,6 +52,9 @@ export type Interface = {
     model?: SessionSchema.Info["model"]) => Effect.Effect<Record, Tool.Failure>
   readonly capture: (ticket: Ticket, source: ReviewEngagementEvidenceV2.Prepared) => Effect.Effect<Record, Tool.Failure>
   readonly own: (ticket: Ticket, child: Child) => Effect.Effect<Record, Tool.Failure>
+  readonly reserveVariant: (ticket: Ticket, input: { readonly seed: ReviewVariantSchemaV2.SeedRef }) => Effect.Effect<Record, Tool.Failure>
+  readonly settleVariant: (ticket: Ticket, input: { readonly generation: ReviewVariantSchemaV2.GenerationRecord }) => Effect.Effect<Record, Tool.Failure>
+  readonly closeVariants: (ticket: Ticket, input: { readonly stop: ReviewVariantSchemaV2.VariantStop }) => Effect.Effect<Record, Tool.Failure>
   readonly finish: (ticket: Ticket, outcome: Outcome) => Effect.Effect<Terminal, Tool.Failure>
 }
 type Sql = Pick<Database.Interface["db"], "select" | "update">
@@ -57,6 +63,7 @@ type Row = typeof SessionTable.$inferSelect
 const same = (left: unknown, right: unknown) => ReviewEngagementReportV2.canonical(left) === ReviewEngagementReportV2.canonical(right)
 const failure = (reason: string, detail: string) => new Tool.Failure({ message: `${reason}: ${detail}`, metadata: { reason } })
 const invalid = (detail: string) => failure("engagement-record-invalid", detail)
+const corrupt = (detail: string) => failure("engagement-evidence-corrupt", detail)
 
 export function identity(parent: SessionSchema.Info, input: ReviewEngagementPolicyV2.Input): Identity {
   const location = { directory: parent.location.directory,
@@ -85,7 +92,7 @@ export function make(database: Database.Interface): Interface {
   })
   const stop = (tx: Sql, record: Running, status: ReviewEngagementReportV2.Stopped, reason?: string) => {
     const terminal: Terminal = { ...record, state: "terminal", terminal: ReviewEngagementReportV2.terminal({ ...context(record),
-      ...(record.schema === "review-engagement-state-v2" ? { notExamined: [{ item: "engagement:evidence-publication",
+      ...(record.schema !== "review-engagement-state-v1" ? { notExamined: [{ item: "engagement:evidence-publication",
         reason: status === "expired" ? "time-box" : status === "cancelled" ? "cancelled" : "failure" }] } : {}) }, status, reason) }
     return write(tx, terminal, record).pipe(Effect.as(terminal))
   }
@@ -135,7 +142,8 @@ export function make(database: Database.Interface): Interface {
       const now = yield* Clock.currentTimeMillis
       const budget = ReviewEngagementPolicyV2.createBudget(input, now)
       const model = normalizeModel(requestedModel)
-      const record: Running = { schema: "review-engagement-state-v2", evidence: { policy: "required-completed-v1" },
+      const record: Running = { schema: "review-engagement-state-v3", evidence: { policy: "required-completed-v1" },
+        variants: { policy: "audit-variants-v1", limit: input.profile === "audit" ? 3 : 0, reservations: [], phase: "open" },
         identity: id, input, owner, ...(model ? { model } : {}),
         budget: { startedAt: budget.startedAt, deadlineAt: budget.deadlineAt },
         children: [{ id: id.leadID, key: "lead", role: "lead" }], state: "running" }
@@ -171,8 +179,97 @@ export function make(database: Database.Interface): Interface {
       if (!row) return yield* invalid("owned child Session is unavailable")
       yield* verifySession(row, record.identity, child.role === "lead" ? record.identity.parentID : record.identity.leadID, record.model)
       if (previous) return record
+      if (record.schema === "review-engagement-state-v3" && child.key.startsWith("variant:")) {
+        if (child.role === "lead") return yield* corrupt("variant child cannot be the lead")
+        const pending = record.variants.reservations.at(-1)
+        if (!pending || pending.status !== "reserved" || record.variants.phase !== "open" ||
+          !(child.role === "lens" && child.key === pending.proposalKey || child.role === "verifier" &&
+            child.key.startsWith(`variant:${pending.ordinal}:verify:`) && child.key.length > `variant:${pending.ordinal}:verify:`.length) ||
+          child.id !== ReviewVariantSchemaV2.childID(record.identity.key, child.key, child.role))
+          return yield* corrupt("variant child has no matching pending reservation")
+      }
       yield* pristine(tx, row)
       const next: Running = { ...record, children: [...record.children, child] }
+      yield* write(tx, next, record)
+      return next
+    })),
+    reserveVariant: (ticket, input) => atomic((tx) => Effect.gen(function* () {
+      const record = yield* owned(tx, ticket)
+      if (record.state === "terminal") return record
+      const now = yield* Clock.currentTimeMillis
+      if (now >= record.budget.deadlineAt) return yield* stop(tx, record, "expired")
+      if (record.schema !== "review-engagement-state-v3" || !record.source || record.variants.phase !== "open")
+        return yield* corrupt("variant reservation is not open on a captured versioned request")
+      const seed = yield* Effect.try({ try: () => Schema.decodeUnknownSync(ReviewVariantSchemaV2.SeedRef)(input.seed, strict),
+        catch: () => corrupt("variant seed identity is invalid") })
+      const last = record.variants.reservations.at(-1)
+      if (last?.status === "reserved") {
+        if (!same(last.seed, seed)) return yield* corrupt("pending variant reservation was reused with another seed")
+        return record
+      }
+      if (record.variants.reservations.length >= record.variants.limit || last &&
+        (last.settlement.decision.type !== "continue" || !same(last.settlement.decision.nextSeed, seed)))
+        return yield* corrupt("variant reservation does not continue the preceding generation")
+      const ordinal = yield* Effect.try({ try: () => Schema.decodeUnknownSync(ReviewVariantSchemaV2.Ordinal)(record.variants.reservations.length + 1),
+        catch: () => corrupt("variant generation limit exceeded") })
+      const reservation: ReviewVariantSchemaV2.Reservation = {
+        generationID: ReviewVariantSchemaV2.generationID({ namespace: record.identity.key, inputHash: record.identity.inputHash,
+          sourceSha256: record.source.sha256, ordinal, seedID: seed.seedID }),
+        ordinal, sourceSha256: record.source.sha256, seed, reservedAt: now,
+        proposalKey: `variant:${ordinal}:proposal`, status: "reserved",
+      }
+      const next: Extract<Running, { readonly schema: "review-engagement-state-v3" }> = {
+        ...record, variants: { ...record.variants, reservations: [...record.variants.reservations, reservation] },
+      }
+      yield* Effect.try({ try: () => validateJournal(next), catch: (error) => error instanceof Tool.Failure ? error : corrupt(String(error)) })
+      yield* write(tx, next, record)
+      return next
+    })),
+    settleVariant: (ticket, input) => atomic((tx) => Effect.gen(function* () {
+      const record = yield* owned(tx, ticket)
+      if (record.state === "terminal") return record
+      if ((yield* Clock.currentTimeMillis) >= record.budget.deadlineAt) return yield* stop(tx, record, "expired")
+      if (record.schema !== "review-engagement-state-v3") return yield* corrupt("legacy request cannot settle variants")
+      const generation = yield* Effect.try({ try: () => Schema.decodeUnknownSync(ReviewVariantSchemaV2.GenerationRecord)(input.generation, strict),
+        catch: () => corrupt("variant settlement is malformed") })
+      const previous = record.variants.reservations[generation.ordinal - 1]
+      if (!previous || !same(reservationIdentity(previous), reservationIdentity(generation)))
+        return yield* corrupt("variant settlement does not belong to its reservation")
+      const settled: ReviewVariantSchemaV2.Reservation = { ...reservationIdentity(generation), status: "settled",
+        settlement: { sha256: ReviewVariantSchemaV2.digest(generation), decision: generation.decision,
+          ...(generation.search.status === "accepted" ? { counts: generation.search.counts } : {}) } }
+      if (previous.status === "settled") {
+        if (!same(previous, settled)) return yield* corrupt("settled generation cannot change")
+        return record
+      }
+      if (record.variants.phase !== "open" || generation.ordinal !== record.variants.reservations.length)
+        return yield* corrupt("variant settlement is not the pending generation")
+      if (generation.search.status === "accepted" && !same(generation.search.counts, ReviewVariantSchemaV2.countMatches(generation.search.matches)))
+        return yield* corrupt("variant settlement counts differ from its dispositions")
+      if (generation.search.status === "rejected" && !same(generation.decision, { type: "stop", reason: generation.search.reason,
+        ...(generation.search.detail === undefined ? {} : { detail: generation.search.detail }) }))
+        return yield* corrupt("rejected witness has a different settlement decision")
+      const next: Extract<Running, { readonly schema: "review-engagement-state-v3" }> = { ...record,
+        variants: { ...record.variants, reservations: record.variants.reservations.map((entry) => entry.ordinal === generation.ordinal ? settled : entry) } }
+      yield* Effect.try({ try: () => validateJournal(next), catch: (error) => error instanceof Tool.Failure ? error : corrupt(String(error)) })
+      yield* write(tx, next, record)
+      return next
+    })),
+    closeVariants: (ticket, input) => atomic((tx) => Effect.gen(function* () {
+      const record = yield* owned(tx, ticket)
+      if (record.state === "terminal") return record
+      if ((yield* Clock.currentTimeMillis) >= record.budget.deadlineAt) return yield* stop(tx, record, "expired")
+      if (record.schema !== "review-engagement-state-v3") return yield* corrupt("legacy request cannot close variants")
+      const reason = yield* Effect.try({ try: () => Schema.decodeUnknownSync(ReviewVariantSchemaV2.VariantStop)(input.stop),
+        catch: () => corrupt("variant stop is invalid") })
+      if (record.variants.phase === "closed") {
+        if (record.variants.stop !== reason) return yield* corrupt("closed variant journal cannot change")
+        return record
+      }
+      const next: Extract<Running, { readonly schema: "review-engagement-state-v3" }> = {
+        ...record, variants: { ...record.variants, phase: "closed", stop: reason },
+      }
+      yield* Effect.try({ try: () => validateJournal(next), catch: (error) => error instanceof Tool.Failure ? error : corrupt(String(error)) })
       yield* write(tx, next, record)
       return next
     })),
@@ -186,11 +283,17 @@ export function make(database: Database.Interface): Interface {
       const result = yield* ReviewEngagementReportV2.read(outcome.result.text)
       if (result.value.status !== "completed") return yield* invalid("completion contains no completed report")
       yield* matchesResult(record, result)
-      const evidence = yield* Effect.try({ try: () => ReviewEngagementArtifactsV2.assertBinding(outcome.evidence, result),
+      const evidence = yield* Effect.try({ try: () => {
+        if (record.schema === "review-engagement-state-v3") {
+          validateJournal(record, true)
+          return ReviewEngagementArtifactsV2.assertBinding(outcome.evidence, result, record.variants)
+        }
+        return ReviewEngagementArtifactsV2.assertBinding(outcome.evidence, result)
+      },
         catch: (error) => error instanceof Tool.Failure ? error : invalid(String(error)) })
       // Validation can suspend; the original deadline is checked again immediately before publication under this lock.
       if ((yield* Clock.currentTimeMillis) >= record.budget.deadlineAt) return yield* stop(tx, record, "expired")
-      const terminal: Terminal = { ...record, ...(record.schema === "review-engagement-state-v2" ? { evidence } : {}), state: "terminal", terminal: result }
+      const terminal: Terminal = { ...record, ...(record.schema !== "review-engagement-state-v1" ? { evidence } : {}), state: "terminal", terminal: result }
       yield* write(tx, terminal, record)
       return terminal
     })),
@@ -232,8 +335,10 @@ function decode(row: Row, expected: Identity): Effect.Effect<Record | undefined,
     const source = data.source
     if (source) yield* Effect.try({ try: () => validateCapture(data.input, source), catch: (error) => invalid(String(error)) })
     const { state, output, ...common } = data
-    const evidence = data.schema === "review-engagement-state-v2" ? data.evidence : undefined
-    if (data.schema === "review-engagement-state-v2" && evidence === undefined)
+    if (data.schema === "review-engagement-state-v3") yield* Effect.try({ try: () => validateJournal(data),
+      catch: (error) => error instanceof Tool.Failure ? error : invalid(String(error)) })
+    const evidence = data.schema === "review-engagement-state-v1" ? undefined : data.evidence
+    if (data.schema !== "review-engagement-state-v1" && evidence === undefined)
       return yield* failure("engagement-evidence-missing", "versioned record has no required evidence policy or reference")
     if (evidence !== undefined &&
       ((evidence.receiptID === undefined) !== (evidence.bytes === undefined)))
@@ -247,7 +352,9 @@ function decode(row: Row, expected: Identity): Effect.Effect<Record | undefined,
     if (output === undefined) return yield* invalid("terminal bytes are missing")
     const terminal = yield* ReviewEngagementReportV2.read(output)
     yield* matchesResult(common, terminal)
-    if (data.schema === "review-engagement-state-v2" && terminal.value.status !== "completed") {
+    if (data.schema === "review-engagement-state-v3" && terminal.value.status === "completed")
+      yield* Effect.try({ try: () => validateJournal(data, true), catch: (error) => error instanceof Tool.Failure ? error : invalid(String(error)) })
+    if (data.schema !== "review-engagement-state-v1" && terminal.value.status !== "completed") {
       if (evidence !== undefined && evidence.receiptID !== undefined) return yield* invalid("stopped record has a published evidence receipt")
       const reason = terminal.value.status === "expired" ? "time-box" : terminal.value.status === "cancelled" ? "cancelled" : "failure"
       if (!terminal.value.notExamined.some((gap) => gap.item === "engagement:evidence-publication" && gap.reason === reason))
@@ -259,7 +366,8 @@ function decode(row: Row, expected: Identity): Effect.Effect<Record | undefined,
 
 /** New durable integrity failures have evidence semantics; legacy admission/conflict behavior is preserved. */
 function storedFailure(value: unknown, error: Tool.Failure): Tool.Failure {
-  if (typeof value === "object" && value !== null && "schema" in value && value.schema === "review-engagement-state-v2" &&
+  if (typeof value === "object" && value !== null && "schema" in value &&
+    (value.schema === "review-engagement-state-v2" || value.schema === "review-engagement-state-v3") &&
     (error.metadata?.reason === "engagement-record-invalid" || error.metadata?.reason === "engagement-report-invalid"))
     return failure("engagement-evidence-corrupt", "versioned evidence record is unavailable or corrupt")
   return error
@@ -356,4 +464,67 @@ function write(db: Sql, record: Record, previous?: Running) {
 function common(record: Terminal): Common {
   const { state, terminal, ...value } = record
   return value
+}
+
+function reservationIdentity(value: ReviewVariantSchemaV2.ReservationIdentity): ReviewVariantSchemaV2.ReservationIdentity {
+  return { generationID: value.generationID, ordinal: value.ordinal, sourceSha256: value.sourceSha256,
+    seed: value.seed, reservedAt: value.reservedAt, proposalKey: value.proposalKey }
+}
+
+/** Structural owner-state checks only. Required bodies and native proof are validated before the sealed CAS. */
+function validateJournal(record: Extract<Common, { readonly schema: "review-engagement-state-v3" }>, completed = false) {
+  const journal = record.variants
+  if (journal.limit !== (record.input.profile === "audit" ? 3 : 0) || journal.reservations.length > journal.limit ||
+    completed && journal.phase !== "closed") throw corrupt("variant journal policy or phase differs")
+  for (const [index, entry] of journal.reservations.entries()) {
+    const previous = journal.reservations[index - 1]
+    if (!record.source || entry.ordinal !== index + 1 || entry.sourceSha256 !== record.source.sha256 ||
+      entry.reservedAt < record.budget.startedAt || entry.reservedAt >= record.budget.deadlineAt ||
+      entry.proposalKey !== `variant:${entry.ordinal}:proposal` || entry.generationID !== ReviewVariantSchemaV2.generationID({
+        namespace: record.identity.key, inputHash: record.identity.inputHash, sourceSha256: record.source.sha256,
+        ordinal: entry.ordinal, seedID: entry.seed.seedID,
+      }) || previous && (previous.status !== "settled" || previous.settlement.decision.type !== "continue" ||
+        !same(previous.settlement.decision.nextSeed, entry.seed))) throw corrupt("variant reservation identity or lineage differs")
+    if (entry.status === "reserved") {
+      if (index !== journal.reservations.length - 1) throw corrupt("variant journal has a nonfinal pending reservation")
+      continue
+    }
+    validateSettlement(entry.ordinal, entry.settlement)
+  }
+  if (journal.phase !== "closed") return
+  const last = journal.reservations.at(-1)
+  if (last) {
+    if (last.status !== "settled" || last.settlement.decision.type !== "stop" || last.settlement.decision.reason !== journal.stop)
+      throw corrupt("closed variant journal has no matching settled stop")
+    return
+  }
+  if (record.input.profile !== "audit" ? journal.stop !== "not-applicable"
+    : journal.stop !== "no-confirmed-seed" && journal.stop !== "independent-verification-unavailable")
+    throw corrupt("zero-generation journal has an invalid eligibility stop")
+}
+
+function validateSettlement(ordinal: ReviewVariantSchemaV2.Ordinal,
+  value: Extract<ReviewVariantSchemaV2.Reservation, { readonly status: "settled" }>["settlement"]) {
+  const decision = value.decision
+  const counts = value.counts
+  if (counts && (counts.matches > 200 || counts.matches !== counts.confirmed + counts.noise + counts.questions + counts.notExamined))
+    throw corrupt("variant settlement has invalid counts")
+  if (decision.type === "continue") {
+    if (!counts || ordinal === 3 || counts.confirmed === 0 || counts.questions || counts.notExamined || counts.noise * 2 >= counts.matches)
+      throw corrupt("variant settlement cannot continue")
+    return
+  }
+  if ((decision.reason === "stage-invalid") !== (decision.detail !== undefined)) throw corrupt("variant stop detail differs")
+  if (!counts) {
+    if (decision.reason !== "stage-invalid" && decision.reason !== "search-unavailable" && decision.reason !== "search-incomplete" && decision.reason !== "seed-not-matched")
+      throw corrupt("variant stop without counts is not a rejected witness")
+    return
+  }
+  if (decision.reason === "stage-invalid") {
+    if (counts.notExamined !== counts.matches) throw corrupt("invalid proposal discarded examined matches")
+    return
+  }
+  const expected = counts.questions || counts.notExamined ? "verification-incomplete" : counts.matches === 0 ? "no-new-matches"
+    : counts.noise * 2 >= counts.matches ? "half-noise" : ordinal === 3 ? "generation-limit" : undefined
+  if (!expected || decision.reason !== expected) throw corrupt("variant stop differs from bounded accounting")
 }

@@ -25,10 +25,13 @@ import { ReviewEngagementPolicyV2 } from "../workflow/review-engagement-policy"
 import { ReviewEngagementReportV2 } from "../workflow/review-engagement-report"
 import { ReviewEngagementSourceV2 } from "../workflow/review-engagement-source"
 import { ReviewFanoutV2 } from "../workflow/review-fanout"
+import type { ReviewVariantValidationV2 } from "../workflow/review-variant-validation"
+import { ReviewVariantsV2 } from "../workflow/review-variants"
 import type { MaestroChainTools } from "./chain"
 import type { MaestroReviewTools } from "./review"
 import { ReviewBindingV2 } from "./review-binding"
 import { ReviewEngagementStoreV2 } from "./review-engagement-store"
+import { ReviewEngagementVariantsV2 } from "./review-engagement-variants"
 
 type Input = {
   readonly sessionID: SessionSchema.ID
@@ -162,8 +165,19 @@ function perform(params: ReviewEngagementPolicyV2.Input, input: Input, parent: S
       if ((yield* Clock.currentTimeMillis) >= admitted.budget.deadlineAt)
         return yield* failure("engagement-expired", "the original evidence publication deadline elapsed")
     })
-    const collector = yield* artifacts.collect({ inputHash: identity.inputHash, sessionID: identity.leadID,
-      budget: admitted.budget, source, active })
+    const authority: Effect.Effect<ReviewVariantValidationV2.Authority, Tool.Failure> = Effect.gen(function* () {
+      const current = yield* store.read(identity)
+      if (!current || current.state !== "running" || current.owner !== admitted.owner)
+        return yield* failure("engagement-owner-lost", "variant evidence is no longer owned")
+      if (current.schema !== "review-engagement-state-v3" || current.source?.sha256 !== source.sha256)
+        return yield* failure("engagement-evidence-corrupt", "variant evidence lost its captured admission")
+      return { namespace: identity.key, leadID: identity.leadID, children: current.children,
+        input: current.input, budget: current.budget, source: current.source, journal: current.variants }
+    })
+    let variantPolicy: ReviewVariantsV2.Context | undefined
+    const collector = yield* artifacts.collect({ namespace: identity.key, inputHash: identity.inputHash, sessionID: identity.leadID,
+      budget: admitted.budget, source, active, authority, policy: Effect.suspend(() => variantPolicy ? Effect.succeed(variantPolicy)
+        : Effect.fail(failure("engagement-evidence-corrupt", "variant policy has not been pinned by the host"))) })
     const files = source.files.map((file) => file.path)
     const settings = yield* input.settings(parent.projectID)
     const batches = yield* ReviewPrecisionStore.history().pipe(Effect.provideService(Database.Service, input.database),
@@ -186,6 +200,8 @@ function perform(params: ReviewEngagementPolicyV2.Input, input: Input, parent: S
       observeCode: collector.code })
     const read = (path: string, startLine: number, endLine: number) =>
       ReviewEngagementSourceV2.read(git, { worktree, prepared: source, path, startLine, endLine })
+    const variants = ReviewEngagementVariantsV2.make({ ticket, store, collector, source, read })
+    const children = new Map<SessionSchema.ID, ReviewEngagementStoreV2.Child>([[lead, { id: lead, key: "lead", role: "lead" }]])
     const port: ReviewFanoutV2.Port = {
       create: (child) => Effect.gen(function* () {
         if (child.role === "lead" && child.key === "lead") return lead
@@ -197,6 +213,7 @@ function perform(params: ReviewEngagementPolicyV2.Input, input: Input, parent: S
         const claimed = yield* store.own(ticket, { ...child, id })
         if (claimed.state === "terminal") return yield* failure("engagement-expired", "child admission is closed")
         owned.add(id)
+        children.set(id, { ...child, id })
         return id
       }),
       run: (child, brief, turn) => Effect.gen(function* () {
@@ -212,9 +229,15 @@ function perform(params: ReviewEngagementPolicyV2.Input, input: Input, parent: S
         if (Option.isNone(drained)) return yield* failure("engagement-session-busy", "owned review Session is already running")
         const messages = yield* sessions.messages({ sessionID: child, order: "asc" }).pipe(
           Effect.mapError(() => failure("engagement-session-unavailable", "review messages are unavailable")))
-        yield* collector.acknowledge(child, messages)
-        return TaskTool.completedReply(messages, prompt)?.content.findLast(
-          (part): part is SessionMessage.AssistantText => part.type === "text")?.text ?? ""
+        const admission = children.get(child)
+        if (!admission) return yield* failure("engagement-child-invalid", "native turn has no owned child admission")
+        const reply = TaskTool.completedReply(messages, prompt)
+        const part = reply?.content.findLast((part): part is SessionMessage.AssistantText => part.type === "text")
+        yield* collector.acknowledge(child, messages, { promptMessageID: prompt, childKey: admission.key,
+          role: admission.role, turnKey: turn.key, ...(reply && part ? {
+            reply: { assistantMessageID: reply.id, textPartID: part.id, text: part.text },
+          } : {}) })
+        return part?.text ?? ""
       }),
       analyze: (step) => Effect.gen(function* () {
         const evidence = yield* collector.analysis({ routing: step.routing, catalog })
@@ -232,12 +255,17 @@ function perform(params: ReviewEngagementPolicyV2.Input, input: Input, parent: S
       request: { stage: "code", profile: params.profile, settings }, base: { files }, head: { files, changes: [] },
       catalog, stages: input.stages, skills: yield* input.services.atlas.skills.list(),
       fs: input.services.atlas.fs, store: input.services.store, verifierModel: "same", cache, reviewed: source.commit,
+      afterConfirmed: (context, stages) => Effect.gen(function* () {
+        if (variantPolicy) return yield* failure("engagement-evidence-corrupt", "variant policy was admitted twice")
+        variantPolicy = context
+        return yield* ReviewVariantsV2.run({ ...context, namespace: identity.key, inputHash: identity.inputHash, source }, stages, variants)
+      }),
       facts: { workCard: JSON.stringify({ requestID: params.requestID, profile: params.profile, brief: params.brief,
         source, scope }), diff: "", rules: [], scope, record: [] },
     }, port)
     if (ran.status !== "ran") return yield* failure("engagement-unaddressed", "unexpected first-round state")
     const report = yield* ReviewEngagementReportV2.completed({ input: params, inputHash: identity.inputHash,
-      sessionID: lead, budget: admitted.budget, source, notExamined: yield* collector.gaps() }, {
+      sessionID: lead, budget: admitted.budget, source, variantCoverage: "host", notExamined: yield* collector.gaps() }, {
       reply: ran.reply, expected: { routing: ran.routing, scope, checkFacts: ran.checkFacts,
         ...(ReviewRouting.tier(ran.routing) === "quick" ? {} : { confirmed: ran.confirmed }) }, read,
     })
