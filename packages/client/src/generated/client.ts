@@ -605,6 +605,8 @@ import type {
   ActivityWorktreesOutput,
   ActivityReadWorktreeInput,
   ActivityReadWorktreeOutput,
+  ActivityProveWorktreeUseInput,
+  ActivityProveWorktreeUseOutput,
   ActivityDockerOutput,
   ActivityReadDockerOutput,
   ActivityDiskOutput,
@@ -4760,6 +4762,17 @@ export function make(options: ClientOptions) {
           {
             method: "POST",
             path: `/api/activity/worktrees/${encodeURIComponent(input.recordID)}/read`,
+            successStatus: 200,
+            declaredStatuses: [400, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      proveWorktreeUse: (input: ActivityProveWorktreeUseInput, requestOptions?: RequestOptions) =>
+        request<ActivityProveWorktreeUseOutput>(
+          {
+            method: "POST",
+            path: `/api/activity/worktrees/${encodeURIComponent(input.recordID)}/use-proof`,
             successStatus: 200,
             declaredStatuses: [400, 409, 503, 401],
             empty: false,
