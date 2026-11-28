@@ -1,7 +1,7 @@
 //! Frame codec: the byte layout of `docs/protocol.md`. A pure function pair; every malformed frame is an error.
 
-mod wire;
 mod selective;
+mod wire;
 
 #[cfg(test)]
 mod tests;
@@ -178,7 +178,10 @@ pub fn decode(buf: &[u8]) -> Result<Option<(Msg, usize)>, ProtoError> {
             req: r.u64()?,
             id: r.u64()?,
         },
-        selective::CONTROL_LIST => Msg::ControlList { req: r.u64()?, id: r.u64()? },
+        selective::CONTROL_LIST => Msg::ControlList {
+            req: r.u64()?,
+            id: r.u64()?,
+        },
         selective::CONTROL_STOP => selective::decode_stop(&mut r)?,
         selective::CONTROL_MEMBERS => selective::decode_members(&mut r)?,
         selective::CONTROL_RESULTS => selective::decode_results(&mut r)?,

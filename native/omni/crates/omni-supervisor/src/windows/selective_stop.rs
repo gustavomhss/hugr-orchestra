@@ -117,15 +117,26 @@ impl super::Supervisor {
             list(tree.inventory_job()?)
         });
         match result {
-            None => omni_proto::Msg::Ack { req, id, result: omni_proto::Ack::Unknown },
-            Some(Err(_)) => omni_proto::Msg::Ack { req, id, result: omni_proto::Ack::Error },
+            None => omni_proto::Msg::Ack {
+                req,
+                id,
+                result: omni_proto::Ack::Unknown,
+            },
+            Some(Err(_)) => omni_proto::Msg::Ack {
+                req,
+                id,
+                result: omni_proto::Ack::Error,
+            },
             Some(Ok(members)) => omni_proto::Msg::ControlMembers {
                 req,
                 id,
-                members: members.into_iter().map(|member| omni_proto::ControlMember {
-                    pid: member.pid,
-                    birth: member.birth,
-                }).collect(),
+                members: members
+                    .into_iter()
+                    .map(|member| omni_proto::ControlMember {
+                        pid: member.pid,
+                        birth: member.birth,
+                    })
+                    .collect(),
             },
         }
     }
@@ -140,15 +151,26 @@ impl super::Supervisor {
             if tree.gone || tree.stop.is_some() {
                 return Err(io::Error::other("tree is not available for control"));
             }
-            let selected: Vec<_> = members.into_iter().map(|member| Member {
-                pid: member.pid,
-                birth: member.birth,
-            }).collect();
+            let selected: Vec<_> = members
+                .into_iter()
+                .map(|member| Member {
+                    pid: member.pid,
+                    birth: member.birth,
+                })
+                .collect();
             stop(tree.inventory_job()?, &selected)
         });
         match result {
-            None => omni_proto::Msg::Ack { req, id, result: omni_proto::Ack::Unknown },
-            Some(Err(_)) => omni_proto::Msg::Ack { req, id, result: omni_proto::Ack::Error },
+            None => omni_proto::Msg::Ack {
+                req,
+                id,
+                result: omni_proto::Ack::Unknown,
+            },
+            Some(Err(_)) => omni_proto::Msg::Ack {
+                req,
+                id,
+                result: omni_proto::Ack::Error,
+            },
             Some(Ok(outcomes)) => omni_proto::Msg::ControlResults { req, id, outcomes },
         }
     }
