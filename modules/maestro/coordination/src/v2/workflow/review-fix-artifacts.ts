@@ -75,7 +75,8 @@ export function publish(repository: ReviewEngagementArtifactsV2.Repository, inpu
       sourceSha256: value.source.sha256, budget: value.budget, prior: input.previous.reference,
       finalAnalysisOperationID: input.snapshot.finalAnalysisOperationID, operations: input.snapshot.operations,
       artifacts, citations: quotes.map((quote) => ({ uri: quote.uri, artifactID: quote.descriptor.artifactID })),
-      hostProofs: input.snapshot.hostProofs, observations: input.observations, examinations: input.examinations,
+      hostProofs: input.snapshot.hostProofs,
+      ...(input.snapshot.scopedProbes.length ? { scopedProbes: input.snapshot.scopedProbes } : {}), observations: input.observations, examinations: input.examinations,
       regions: input.regions, replies: input.replies, notExamined: value.notExamined }
     const bytes = Buffer.from(canonical(receipt))
     if (bytes.length > ReviewEvidenceSchemaV2.limits.receipt) return yield* failure("bound-exceeded", "receipt")

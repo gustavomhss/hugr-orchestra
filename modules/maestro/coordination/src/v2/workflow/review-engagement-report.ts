@@ -170,9 +170,13 @@ function ranges(card: ReviewResultV2.Card) {
 }
 
 function validatePaths(card: ReviewResultV2.Card, source: ReviewEngagementEvidenceV2.Prepared) {
-  // This route has no scoped executable probe. A quote rung cannot launder claimed probe evidence.
-  if (card.findings.some((finding) => finding.evidence.kind === "probe" || finding.rungs.some((rung) => rung.startsWith("probe:"))))
-    throw new Error("engagement probes are not built")
+  if (card.findings.some((finding) => {
+    const probeRungs = finding.rungs.filter((rung) => rung.startsWith("probe:"))
+    return finding.evidence.kind === "probe"
+      ? card.profile !== "diligence" || finding.evidence.option !== "probe:typecheck" ||
+        probeRungs.length !== 1 || probeRungs[0] !== "probe:typecheck"
+      : probeRungs.length > 0
+  })) throw new Error("engagement probe evidence is outside the qualified scope")
   const files = new Set(source.files.map((file) => file.path))
   if (card.findings.some((finding) => !files.has(finding.path) ||
     finding.cause !== undefined && !files.has(finding.cause.path) ||

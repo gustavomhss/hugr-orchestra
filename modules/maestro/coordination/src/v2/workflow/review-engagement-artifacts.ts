@@ -33,7 +33,7 @@ export type PriorData = {
   readonly receipt: ReviewEvidenceSchemaV2.Receipt
   readonly bytes: Uint8Array
   readonly receiptID: string
-  readonly context: ReviewEvidenceValidationV2.AnalysisContext
+  readonly context: ReturnType<typeof ReviewEvidenceValidationV2.validate>
 }
 export type Repository = {
   readonly storage: ReviewEvidenceCollectorV2.Storage

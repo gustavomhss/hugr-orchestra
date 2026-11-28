@@ -16,7 +16,7 @@ export type Evidence = {
   readonly finding: Finding
   readonly relatedFiles: readonly string[]
   readonly regions: readonly ReviewVariantSchemaV2.CapturedRegion[]
-  readonly observations: readonly ReviewFixSchemaV2.ToolObservation[]
+  readonly observations: readonly ReviewFixSchemaV2.Observation[]
 }
 
 const invalid = (detail: string): never => {
@@ -104,14 +104,14 @@ export function examine(input: Evidence & { readonly inputHash: string; readonly
   if (disposition === "resolved" && unchanged) {
     disposition = "open"
     reason = "unchanged-inputs"
-  } else if (disposition === "resolved" && finding.evidence.kind === "tool" &&
+  } else if (disposition === "resolved" && finding.evidence.kind !== "quote" &&
     input.observations.some((item) => offeredObservationIDs.includes(item.observationID) && item.result === "nonzero")) {
     disposition = "question"
-    reason = "native-results-remain"
+    reason = finding.evidence.kind === "probe" ? "probe-results-remain" : "native-results-remain"
   } else if (disposition === "resolved" && (finding.evidence.kind === "quote" ? !hasQuote : !hasTool)) {
     disposition = "question"
   } else if (disposition === "dismissed" && (!hasQuote ||
-    (finding.evidence.kind === "tool" && !hasTool))) {
+    (finding.evidence.kind !== "quote" && !hasTool))) {
     disposition = "question"
   } else if (rawReturn.supporting.length === 0) {
     disposition = "question"

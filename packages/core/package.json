@@ -347,6 +347,7 @@
     "./research/records": "./src/research/records.ts",
     "./research/seat-tools": "./src/research/seat-tools.ts",
     "./review-toolkit/analyze": "./src/review-toolkit/analyze.ts",
+    "./review-toolkit/scoped-typecheck": "./src/review-toolkit/scoped-typecheck.ts",
     "./review-toolkit/history": "./src/review-toolkit/history.ts",
     "./review-toolkit/git": "./src/review-toolkit/git.ts",
     "./review-toolkit/index": "./src/review-toolkit/index.ts",

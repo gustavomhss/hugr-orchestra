@@ -23,6 +23,7 @@ import { reorderDiff, sliceDiff } from "./review-diff"
 import { ReviewCandidatesV2 } from "./review-candidates"
 import { ReviewFanoutSupportV2 } from "./review-fanout-support"
 import { ReviewFanoutVerificationV2 } from "./review-fanout-verification"
+import type { ReviewScopedProbeV2 } from "./review-scoped-probe"
 import type { ReviewVariantsV2 } from "./review-variants"
 
 export { baseRules, changes, hunks, RULE_FILES, sliceDiff } from "./review-diff"
@@ -93,6 +94,7 @@ export type AnalyzeInput = {
 
 /** The Session work the host does for the fan-out; `tools/review.ts` binds it to the process's Session service. */
 export type Port = {
+  readonly scopedProbe?: ReviewScopedProbeV2.Run
   /** Creates the Session (a retried call adopts the one it created) and returns its id. */
   readonly create: (input: { readonly key: string; readonly role: Role }) => Effect.Effect<SessionSchema.ID, Tool.Failure>
   /** Admits the brief and drains the Session; the reply text of that turn. `finish` opens the record tool. */
@@ -334,7 +336,7 @@ export const run = Effect.fn("ReviewFanoutV2.run")(function* (input: Input, port
   }
   const verify = (request: ReviewFanoutVerificationV2.Request, routing: ReviewRouting.Record, intent: ReviewFanoutVerificationV2.Intent) =>
     ReviewFanoutVerificationV2.run({ catalog, routing, tier, intent, report, analysis, verifierModel: input.verifierModel,
-      reviewed: input.reviewed, teamStack, auditNodes, allowedNodes: (nodes) => allowedNodes(nodes, routing),
+      reviewed: input.reviewed, ...(port.scopedProbe ? { scopedProbe: port.scopedProbe } : {}), teamStack, auditNodes, allowedNodes: (nodes) => allowedNodes(nodes, routing),
       tools: stageTools(input.stages.verifier), create: port.create, run: runStage, region: port.region,
       bind: (child, offered) => bind(child, "verifier", { offered, cap: tier.probeAttempts, observeProbes }),
       narrow: (child, scope) => ReviewFanoutSupportV2.narrow(input.store, child, scope),

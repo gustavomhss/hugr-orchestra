@@ -42,6 +42,7 @@ export function make(candidate: string, source: ReviewEngagementReportV2.Source,
 }
 
 export function read(bytes: Uint8Array, source: ReviewEngagementReportV2.Source, expectedProofID: string): Proof {
+  if (bytes.byteLength > 512 * 1024) throw failure("scoped proof exceeds byte bound")
   const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes)
   const proof = Schema.decodeUnknownSync(Schema.fromJsonString(Proof))(text, strict)
   if (text !== ReviewEngagementReportV2.canonical(proof)) throw failure("scoped proof is not canonical")
@@ -51,7 +52,7 @@ export function read(bytes: Uint8Array, source: ReviewEngagementReportV2.Source,
   ReviewEngagementReportV2.validateSource(source)
   const file = source.files.filter((entry) => entry.path === proof.path)
   const input = Buffer.from(proof.input.data, "base64")
-  if (file.length !== 1 || file[0].oid !== proof.oid || file[0].size !== input.byteLength ||
+  if (!proof.path.endsWith(".ts") || proof.path.endsWith(".d.ts") || input.byteLength > 65536 || file.length !== 1 || file[0].oid !== proof.oid || file[0].size !== input.byteLength ||
     input.toString("base64") !== proof.input.data || proof.input.bytes !== input.byteLength ||
     createHash("sha256").update(input).digest("hex") !== proof.input.sha256 ||
     createHash(proof.oid.length === 40 ? "sha1" : "sha256").update(`blob ${input.byteLength}\0`).update(input).digest("hex") !== proof.oid)
@@ -64,7 +65,7 @@ export function read(bytes: Uint8Array, source: ReviewEngagementReportV2.Source,
 
 export function qualify(proofs: readonly Proof[], finding: ReviewResultV2.Finding): Proof {
   const evidence = finding.evidence
-  if (evidence.kind !== "probe" || evidence.option !== "probe:typecheck" || evidence.command !== command)
+  if (evidence.kind !== "probe" || evidence.option !== "probe:typecheck" || evidence.command !== command || evidence.result !== "fail" || finding.class !== "logic.contract")
     throw failure("finding does not name a scoped typecheck probe")
   const matches = proofs.filter((proof) => evidence.uri === uri(proof.proofID) && proof.candidate === finding.id &&
     proof.path === finding.path && proof.status === "fail" && proof.diagnostics.some((item) =>

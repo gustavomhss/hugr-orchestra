@@ -59,6 +59,7 @@ export type Request = {
   readonly regions: ReadonlyMap<string, ReviewVariantSchemaV2.CapturedRegion>
 })
 export type Context = {
+  readonly scopedProbe?: ReviewFanoutV2.Port["scopedProbe"]
   readonly catalog: ReviewCatalog.Catalog
   readonly routing: ReviewRouting.Record
   readonly tier: Tier
@@ -91,8 +92,16 @@ export function run(context: Context, request: Request): Effect.Effect<Batch, To
     const childKey = variant ? `variant:${request.ordinal}:verify:${request.class}` : `verify:${request.class}`
     const turnKey = variant ? `variant:${request.ordinal}:verify` : "verify"
     const child = yield* context.create({ key: childKey, role: "verifier" })
-    const optionsFor = (candidate: Candidate) => ReviewCandidatesV2.options(context.catalog, context.tier, context.routing, candidate)
-      .filter((option) => !context.report || !option.id.startsWith("probe:"))
+    const options = (candidate: Candidate) => ReviewCandidatesV2.options(context.catalog, context.tier, context.routing, candidate)
+    const probe = request.kind === "ordinary" && context.report ? context.scopedProbe : undefined
+    const witnesses = probe ? (yield* Effect.forEach(request.candidates.filter((candidate) =>
+      candidate.class === "logic.contract" && options(candidate).some((option) => option.id === "probe:typecheck"))
+      .slice(0, context.tier.probeAttempts), (candidate) => probe(candidate))).flatMap((entry) => entry ? [entry] : []) : []
+    context.observeProbes(witnesses.map((item) => ({ candidate: item.candidate, option: "probe:typecheck",
+      result: { status: item.status, uri: item.uri, tree: context.reviewed, durationMs: 0,
+        excerpt: item.diagnostics.map((diagnostic) => diagnostic.code).join(", ") } })))
+    const optionsFor = (candidate: Candidate) => options(candidate).filter((option) => !context.report ||
+      !option.id.startsWith("probe:") || option.id === "probe:typecheck" && witnesses.some((item) => item.candidate === candidate.id))
     const offered = Object.fromEntries(request.candidates.map((candidate) => [candidate.id, optionsFor(candidate).map((option) => option.id)]))
     const bound = yield* context.bind(child, offered)
     if (bound.probeUnavailable) {
@@ -143,6 +152,7 @@ export function run(context: Context, request: Request): Effect.Effect<Batch, To
       ...(request.kind === "variant" ? [ReviewFanoutSupportV2.data("seed rule", JSON.stringify(request.rule))] : []),
       ReviewFanoutSupportV2.data("candidates", JSON.stringify(candidates)),
       ...(context.report && request.kind === "ordinary" ? [ReviewFanoutSupportV2.data("analyzer evidence", JSON.stringify(analyzerEvidence))] : []),
+      ...(witnesses.length ? [ReviewFanoutSupportV2.data("scoped probe evidence", JSON.stringify(witnesses))] : []),
       "Reply with exactly one ```review-verify block holding your verifier return as JSON.",
     ].join("\n\n")
     const reply = yield* context.run(child, brief, { key: turnKey, finish: false })

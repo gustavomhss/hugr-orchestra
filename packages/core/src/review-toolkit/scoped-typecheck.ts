@@ -3,9 +3,9 @@ export * as ReviewScopedTypecheck from "./scoped-typecheck"
 import path from "path"
 import os from "os"
 import { createHash } from "crypto"
-import { mkdtemp, readFile, realpath, rm, writeFile } from "fs/promises"
-import { pathToFileURL } from "url"
+import { mkdtemp, readFile, readdir, realpath, rm, writeFile } from "fs/promises"
 import { Effect } from "effect"
+import { preProcessFile } from "typescript"
 import { BackendToolkit } from "../backend-toolkit"
 import { ResearchToolkit } from "../research-toolkit"
 import { ResearchProcess } from "../research-toolkit/process"
@@ -55,34 +55,48 @@ export const run = Effect.fn("ReviewScopedTypecheck.run")(function* (input: { re
   const source = yield* Effect.try({ try: () => text.decode(input.bytes), catch: () => "invalid-utf8" }).pipe(Effect.catch(() => Effect.succeed(undefined)))
   if (source === undefined) return refused("invalid-utf8")
   // This deliberately rejects more than module syntax, including escaped identifiers and all reference directives.
-  if (/\\|\b(?:import|export|require|declare|module|namespace)\b|\/\/\//.test(source)) return refused("external-syntax")
+  if (/\\|\b(?:import|require|declare|module|namespace)\b|\/\/\//.test(source)) return refused("external-syntax")
   const state = (yield* ResearchToolkit.status("typescript"))[0]
   if (!state || state.status !== "ready" || state.version !== "6.0.3" || state.target !== "linux-x64") return refused("typescript-not-ready")
   const root = yield* ResearchToolkit.Root
   const runtimes = yield* BackendToolkit.Runtimes
-  const node = path.join(root, "runtimes", "node", `${runtimes.node.version}-linux-x64`, runtimes.node.targets["linux-x64"].executable)
+  if (runtimes.node.version !== "22.23.2" || runtimes.node.targets["linux-x64"].executable !== "bin/node") return refused("node-version")
+  const node = path.join(root, "runtimes", "node", "22.23.2-linux-x64", "bin/node")
   const lib = path.join(state.directory, "node_modules", "typescript", "lib")
   const tsc = path.join(lib, "tsc.js")
   const implementation = path.join(lib, "_tsc.js")
-  const api = path.join(lib, "typescript.js")
-  const identity = yield* Effect.promise(async () => {
+  const identify = async () => {
     const base = await realpath(root).catch(() => undefined)
-    const paths = await Promise.all([node, tsc, implementation, api].map((file) => realpath(file).catch(() => undefined)))
-    if (!base || paths.some((file) => !file || !file.startsWith(`${base}${path.sep}`))) return undefined
-    const files = await Promise.all([node, tsc, implementation, api].map((file) => readFile(file).catch(() => undefined)))
-    if (files.some((file) => !file)) return undefined
-    return { runtime: hash(files[0]!), compiler: hash(Buffer.concat(files.slice(1) as Buffer[])) }
-  })
+    const library = await realpath(lib).catch(() => undefined)
+    const runtime = await realpath(path.join(root, "runtimes", "node", "22.23.2-linux-x64")).catch(() => undefined)
+    const engine = await realpath(state.directory).catch(() => undefined)
+    const names = await readdir(lib).catch(() => undefined)
+    if (!base || !library || !runtime || !engine || !runtime.startsWith(`${base}${path.sep}`) || !engine.startsWith(`${base}${path.sep}`) || !library.startsWith(`${engine}${path.sep}`) || !names) return undefined
+    const libraries = names.filter((name) => /^lib(?:\.[a-z0-9.]+)?\.d\.ts$/.test(name)).sort()
+    if (!libraries.includes("lib.d.ts")) return undefined
+    const files = [node, tsc, implementation, ...libraries.map((name) => path.join(lib, name))]
+    const paths = await Promise.all(files.map((file) => realpath(file).catch(() => undefined)))
+    if (paths.some((file) => !file || !file.startsWith(`${base}${path.sep}`))) return undefined
+    if (!paths[0]?.startsWith(`${runtime}${path.sep}`)) return undefined
+    if (paths.slice(1).some((file) => !file?.startsWith(`${library}${path.sep}`))) return undefined
+    const contents = await Promise.all(files.map((file) => readFile(file).catch(() => undefined)))
+    if (contents.some((file) => !file)) return undefined
+    const compiler = createHash("sha256")
+    files.slice(1).forEach((file, index) => {
+      const bytes = contents[index + 1]!
+      compiler.update(`${path.basename(file)}\0${bytes.length}\0`).update(bytes)
+    })
+    return { runtime: hash(contents[0]!), compiler: compiler.digest("hex") }
+  }
+  const identity = yield* Effect.promise(identify)
   if (!identity) return refused("tool-identity")
-  const parsed = yield* Effect.promise(async () => {
-    const ts: typeof import("typescript") = await import(pathToFileURL(api).href)
-    if (ts.version !== "6.0.3") return false
-    const scan = ts.preProcessFile(source, true, true)
-    return !scan.importedFiles.length && !scan.referencedFiles.length && !scan.typeReferenceDirectives.length && !scan.libReferenceDirectives.length && !scan.isLibFile
-  }).pipe(Effect.catchDefect(() => Effect.succeed(false)))
-  if (!parsed) return refused("external-syntax")
-  const scratch = yield* Effect.promise(() => mkdtemp(path.join(os.tmpdir(), "lucy-typecheck-")))
-  return yield* Effect.gen(function* () {
+  const scan = preProcessFile(source, true, true)
+  if (scan.importedFiles.length || scan.referencedFiles.length || scan.typeReferenceDirectives.length || scan.libReferenceDirectives.length || scan.isLibFile) return refused("external-syntax")
+  return yield* Effect.scoped(Effect.gen(function* () {
+    const scratch = yield* Effect.acquireRelease(
+      Effect.promise(() => mkdtemp(path.join(os.tmpdir(), "lucy-typecheck-"))),
+      (directory) => Effect.promise(() => rm(directory, { recursive: true, force: true })),
+    )
     yield* Effect.promise(() => Promise.all([writeFile(path.join(scratch, "input.ts"), input.bytes), writeFile(path.join(scratch, "tsconfig.json"), CONFIG)]))
     const argv = ProbeTypecheck.argv({ node, tsc, project: path.join(scratch, "tsconfig.json"), heapMiB: Probe.Limits.heapMiB })
     const env = { PATH: "", HOME: scratch, LANG: "C", LC_ALL: "C" }
@@ -90,10 +104,12 @@ export const run = Effect.fn("ReviewScopedTypecheck.run")(function* (input: { re
     if (!launch) return refused("sandbox-unavailable")
     const outcome = yield* ResearchProcess.run({ command: launch.command, args: launch.args, cwd: scratch, env: Object.fromEntries(Object.entries(launch.env).filter((entry): entry is [string, string] => entry[1] !== undefined)), timeoutMs: 30_000, maxBytes: Probe.Limits.outputBytes, maxRssBytes: Probe.Limits.rssBytes })
     if (outcome.timedOut || outcome.memoryExceeded || outcome.overflow || outcome.failure || outcome.stdout.truncated || outcome.stderr.truncated || outcome.exitCode === null) return refused("process-incomplete")
+    const after = yield* Effect.promise(identify)
+    if (!after || after.runtime !== identity.runtime || after.compiler !== identity.compiler) return refused("tool-identity-changed")
     const stdout = outcome.stdout.data.toString("utf8")
     const stderr = outcome.stderr.data.toString("utf8")
     const found = diagnostics(stdout, outcome.exitCode, stderr)
     if (!found) return refused("inconsistent-diagnostics")
     return { status: outcome.exitCode === 0 ? "pass" as const : "fail" as const, exitCode: outcome.exitCode, stdout, stderr, diagnostics: found, recipe: { template: "typescript-scoped-typecheck-v1" as const, version: "6.0.3" as const, target: "linux-x64" as const, runtimeSha256: identity.runtime, compilerSha256: identity.compiler, configSha256: hash(CONFIG) } }
-  }).pipe(Effect.ensuring(Effect.promise(() => rm(scratch, { recursive: true, force: true }))))
+  }))
 })
