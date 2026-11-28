@@ -47,7 +47,8 @@ export function read(bytes: Uint8Array, source: ReviewEngagementReportV2.Source,
   const proof = Schema.decodeUnknownSync(Schema.fromJsonString(Proof))(text, strict)
   if (text !== ReviewEngagementReportV2.canonical(proof)) throw failure("scoped proof is not canonical")
   const { proofID, ...value } = proof
-  if (proofID !== expectedProofID || proofID !== ReviewEngagementReportV2.digest(value) || source.sha256 !== proof.sourceSha256)
+  if (proofID !== expectedProofID || proofID !== ReviewEngagementReportV2.digest(value) || source.sha256 !== proof.sourceSha256 ||
+    proof.recipe.configSha256 !== ReviewScopedTypecheck.configSha256)
     throw failure("scoped proof identity mismatch")
   ReviewEngagementReportV2.validateSource(source)
   const file = source.files.filter((entry) => entry.path === proof.path)

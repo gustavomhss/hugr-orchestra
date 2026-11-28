@@ -56,8 +56,6 @@ it.live.skipIf(!linux)("pinned confined TypeScript diagnoses an inert mismatch a
   yield* provision(ResearchToolkit.ensure("typescript"))
   const broken = yield* provision(ReviewScopedTypecheck.run(input("export const count: string = 42\n")))
   const fixed = yield* provision(ReviewScopedTypecheck.run(input("export const count: string = '42'\n")))
-  expect(broken.status).toBe("fail")
-  expect(fixed.status).toBe("pass")
   if (broken.status !== "fail" || fixed.status !== "pass") throw new Error(`scoped typecheck unavailable: ${JSON.stringify({ broken, fixed })}`)
   expect(broken.diagnostics).toContainEqual({ line: 1, column: 14, code: "TS2322" })
   expect(fixed.diagnostics).toEqual([])

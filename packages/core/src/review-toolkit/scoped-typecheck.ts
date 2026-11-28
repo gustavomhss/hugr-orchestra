@@ -24,6 +24,7 @@ export type Observation = {
 
 const CONFIG = JSON.stringify({ compilerOptions: { strict: true, noEmit: true, noResolve: true, target: "ES2022", module: "ESNext", types: [] }, files: ["input.ts"] })
 const hash = (bytes: Uint8Array | string) => createHash("sha256").update(bytes).digest("hex")
+export const configSha256 = hash(CONFIG)
 
 /** Accept only complete, file-local tsc diagnostics and their indented continuations. */
 export function diagnostics(stdout: string, exitCode: number, stderr: string): readonly Diagnostic[] | undefined {
@@ -48,10 +49,11 @@ export const run = Effect.fn("ReviewScopedTypecheck.run")(function* (input: { re
   if (process.platform !== "linux" || process.arch !== "x64") return refused("unsupported-platform")
   if (!input.path.endsWith(".ts") || input.path.endsWith(".d.ts") || input.bytes.length > 65536) return refused("invalid-input")
   if (!/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(input.oid)) return refused("invalid-oid")
-  const oid = createHash(input.oid.length === 40 ? "sha1" : "sha256").update(`blob ${input.bytes.length}\0`).update(input.bytes).digest("hex")
+  const bytes = Uint8Array.from(input.bytes)
+  const oid = createHash(input.oid.length === 40 ? "sha1" : "sha256").update(`blob ${bytes.length}\0`).update(bytes).digest("hex")
   if (oid !== input.oid) return refused("input-identity")
   const text = new TextDecoder("utf-8", { fatal: true })
-  const source = yield* Effect.try({ try: () => text.decode(input.bytes), catch: () => "invalid-utf8" }).pipe(Effect.catch(() => Effect.succeed(undefined)))
+  const source = yield* Effect.try({ try: () => text.decode(bytes), catch: () => "invalid-utf8" }).pipe(Effect.catch(() => Effect.succeed(undefined)))
   if (source === undefined) return refused("invalid-utf8")
   // This deliberately rejects more than module syntax, including escaped identifiers and all reference directives.
   if (/@ts-(?:no(?:check)?|ignore|expect-error)\b/i.test(source) || /\\|\b(?:import|require|declare|module|namespace)\b|\/\/\//.test(source)) return refused("external-syntax")
@@ -97,10 +99,10 @@ export const run = Effect.fn("ReviewScopedTypecheck.run")(function* (input: { re
       Effect.promise(() => mkdtemp(path.join(os.tmpdir(), "lucy-typecheck-"))),
       (directory) => Effect.promise(() => rm(directory, { recursive: true, force: true })),
     )
-    yield* Effect.promise(() => Promise.all([writeFile(path.join(scratch, "input.ts"), input.bytes), writeFile(path.join(scratch, "tsconfig.json"), CONFIG)]))
+    yield* Effect.promise(() => Promise.all([writeFile(path.join(scratch, "input.ts"), bytes), writeFile(path.join(scratch, "tsconfig.json"), CONFIG)]))
     const argv = ProbeTypecheck.argv({ node, tsc, project: path.join(scratch, "tsconfig.json"), heapMiB: Probe.Limits.heapMiB })
-    const env = { PATH: "", HOME: scratch, LANG: "C", LC_ALL: "C" }
-    const launch = yield* ToolSafetySandbox.confine({ command: argv[0], args: argv.slice(1), cwd: scratch, env, write: [] }).pipe(Effect.match({ onFailure: () => undefined, onSuccess: (value) => value }))
+    const env = { PATH: "/usr/bin:/bin", HOME: scratch, LANG: "C", LC_ALL: "C" }
+    const launch = yield* ToolSafetySandbox.confine({ command: argv[0], args: argv.slice(1), cwd: scratch, env, write: [], acquire: false }).pipe(Effect.match({ onFailure: () => undefined, onSuccess: (value) => value }))
     if (!launch) return refused("sandbox-unavailable")
     const outcome = yield* ResearchProcess.run({ command: launch.command, args: launch.args, cwd: scratch, env: Object.fromEntries(Object.entries(launch.env).filter((entry): entry is [string, string] => entry[1] !== undefined)), timeoutMs: 30_000, maxBytes: Probe.Limits.outputBytes, maxRssBytes: Probe.Limits.rssBytes })
     if (outcome.timedOut || outcome.memoryExceeded || outcome.overflow || outcome.failure || outcome.stdout.truncated || outcome.stderr.truncated || outcome.exitCode === null) return refused("process-incomplete")
@@ -109,7 +111,7 @@ export const run = Effect.fn("ReviewScopedTypecheck.run")(function* (input: { re
     const stdout = outcome.stdout.data.toString("utf8")
     const stderr = outcome.stderr.data.toString("utf8")
     const found = diagnostics(stdout, outcome.exitCode, stderr)
-    if (!found) return refused("inconsistent-diagnostics")
-    return { status: outcome.exitCode === 0 ? "pass" as const : "fail" as const, exitCode: outcome.exitCode, stdout, stderr, diagnostics: found, recipe: { template: "typescript-scoped-typecheck-v1" as const, version: "6.0.3" as const, target: "linux-x64" as const, runtimeSha256: identity.runtime, compilerSha256: identity.compiler, configSha256: hash(CONFIG) } }
+    if (!found) return refused(`inconsistent-diagnostics:exit-${outcome.exitCode}:stdout-${outcome.stdout.bytes}:stderr-${outcome.stderr.bytes}`)
+    return { status: outcome.exitCode === 0 ? "pass" as const : "fail" as const, exitCode: outcome.exitCode, stdout, stderr, diagnostics: found, recipe: { template: "typescript-scoped-typecheck-v1" as const, version: "6.0.3" as const, target: "linux-x64" as const, runtimeSha256: identity.runtime, compilerSha256: identity.compiler, configSha256 } }
   }))
 })
