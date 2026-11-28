@@ -1,0 +1,33 @@
+Take over the native Orchestra qualification campaign for Gustavo's complete SOL rebuild proposal.
+
+Your immediate deliverable is one meaningful real execution that proves the entire native path: Maestro -> native planning seat -> worker -> Relay checks -> native independent review -> authorized integration -> source-bound Atlas evidence. The overall programme remains the whole SOL. This assignment does not authorize inventing SOL access, implementing a substitute product, or changing the proposal website/videos. No pricing.
+
+Read the attached SOL-Codex-Handoff-2026-11-28.zip: start with 00-START-HERE.md, 02-CODEX-HANDOFF.md and 03-RESUME-CONTEXT.json, then the reference-baseline evidence. If the attachment is unavailable, begin the read-only repository/access checks from the facts below and identify only the missing material you actually need.
+
+SOURCE OF TRUTH
+- Repository: https://github.com/gustavomhss/hugr-orchestra ; default branch: dev. This is not Orchestra-SF.
+- Tested baseline: ff7f50b591494aba05b3c917379d633cc2d7176e.
+- Last observed dev: 4f2aaca8d4420bf00e8b665add3d6c21f0b8a226, 94 commits ahead. Refresh dev and record your actual campaign revision; old CI does not qualify newer changes.
+- Core CI: https://github.com/gustavomhss/hugr-orchestra/actions/runs/46162430182 — 39 passed, 0 failed.
+- Maestro CI: https://github.com/gustavomhss/hugr-orchestra/actions/runs/46162432277 — 18 passed, 0 failed.
+- Those 57 selected tests contain fixtures. They do not establish live model execution, SOL acceptance or 40-agent capacity. The Maestro Omni count of 689 is instrumentation, not 689 agents.
+
+BEGIN NOW
+1. Read current AGENTS.md and applicable scoped instructions. Inspect current branches, PRs, worktrees and ownership. Use your own isolated branch/worktree; sol-native-proof is a suggested name, not an existing prepared branch. Preserve ongoing Genesis S1-S4, Atlas, lucy and Activity/Omni work. Prefer GitHub MCP. Do not reset or overwrite another session's work.
+2. Inspect the actual authorized host, supported model connections, native configuration, Atlas and published workflows available to you. The previous ChatGPT device was offline; that says nothing about your current access. Reuse valid capabilities without asking again for broad permission. Do not expose credentials or restart an existing runtime.
+3. Keep ALL tests in GitHub Actions on Linux, including tests launched indirectly by native package-verification. No local, Windows or macOS test runs and no local-test bypass. The inspected native gate runs tests in its own authority directory, so place the complete campaign host in authorized Linux Actions unless a supported compliant route has since been delivered and verified. Preserve a real owner-approval/resume path before launching an ephemeral host.
+4. Inspect the current governed playbook, workflow catalog/relay-arm contract, settlement implementation and relay.judge configuration. Use actual models for worker/planner/reviewer and required semantic checks. Relay judge credentials are configured separately from seat/provider authentication. A Claude Code OAuth token is not a Relay API key. A readiness response is not a model call.
+5. Have Maestro dispatch a real read-only planning task first. Select a meaningful bounded case on permitted materials with declared expected outcomes, a relevant negative control, exact paths, independent review, integration and Atlas verification. SOL remains UNRUN until its own authorized source/data/expectations exist. Do not stop after planning when the complete chain is executable.
+6. Follow the current native sequence: genuine admission, upstream attribution, published workflow, fresh Atlas/Own, plan/context/validation, native plan review, real relay-arm and presentation, actual owner reply, authorization and bound worker dispatch, Relay evaluations, code review, integration and Atlas evidence. Preserve actual returned IDs and raw records. Do not seed transcripts or write success receipts by hand.
+
+EXECUTION RULES
+- Inspect the current preconditions. The earlier governed contract required a clean tree and a meaningful committed delta; worker changes then stayed uncommitted until settlement. Distinguish those phases. Do not use empty/irrelevant commits, premature worker commits, weaker checks or larger timeouts to obtain green.
+- The user has authorized this campaign. If the product requires a specific owner reply after a concrete presentation, stop only at that actual step and give Gustavo the exact Session, presentation and safe resume instructions. Never send approve/aprovo for him or reuse an unrelated approval.
+- Fix necessary in-scope defects with focused changes, current Linux CI, independent review and the authorized PR/integration route. Respect applicable merge authority and current guards. Pending required review/integration remains partial. Do not take over broader Genesis/lucy work.
+- Continue useful authorized work around a blocker. If access, credentials or an owner action is genuinely unavailable, return the exact failed operation, evidence, smallest missing input and resume route. Do not stop with a generic plan.
+- Populate team facts only if supported. Unknown names/availability do not prevent technical preparation. Do not start a 40-agent load campaign without a proved native path and bound operating limits.
+
+RETURN CONTRACT
+Deliver CODEX-RETURN.md, receipt-index.json, sanitized evidence/ and SHA256SUMS.txt as CODEX-SOL-RETURN.zip, with durable links where available. Use 04-CODEX-RETURN-TEMPLATE.json. Include actual source/runtime/candidate/integration SHAs, branch and PRs, Actions run/job/attempt IDs, native Session/Task/model/gate/review/approval/integration/Atlas records, accepted output, negative-control outcome, failures, holds, unrun cases and the exact next action. Unknown values stay null.
+
+Use COMPLETE_NATIVE_QUALIFICATION only when the complete requested native chain has real evidence. Otherwise return PARTIAL, HOLD, WAITING_OWNER_APPROVAL or FAILED with the last confirmed stage and safe resume state. Keep SOL, team and capacity conclusions separate. Do a final independent evidence review with fresh context. Gustavo will return the package to ChatGPT so it can continue from your verified result.
