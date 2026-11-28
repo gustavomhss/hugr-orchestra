@@ -237,8 +237,9 @@ os.execv(sys.argv[4], sys.argv[4:])
     const db = new Database(join(root, "activity-custody.sqlite"), { readonly: true })
     try {
       assert.deepEqual(db.query("SELECT receipt FROM activity_arm").all().map((row) => JSON.parse(String((row as { receipt: string }).receipt))), [report.arm])
-      assert.deepEqual(db.query("SELECT identity, outcome, source, destination FROM activity_apply WHERE target_id = ? AND generation = ?")
-        .get(report.apply.targetID, report.apply.generation), {
+      const saved = db.query("SELECT identity, outcome, source, destination FROM activity_apply WHERE target_id = ? AND generation = ?")
+        .get(report.apply.targetID, report.apply.generation) as { identity: string; outcome: string; source: string; destination: string } | null
+      assert.deepEqual({ ...saved }, {
         identity: `${original.dev}:${original.ino}`, outcome: "Out", source, destination,
       })
     } finally {
