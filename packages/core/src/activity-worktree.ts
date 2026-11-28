@@ -3,6 +3,8 @@ export * as ActivityWorktree from "./activity-worktree"
 import type { ActivityMonitor } from "@orchestra/schema/activity-monitor"
 import type { ProjectDirectories } from "./project/directories"
 import { ActivityDisk } from "./activity-disk"
+import { ActivityObjectCwd } from "./activity-object-cwd"
+import { ActivityObjectProof } from "./activity-object-proof"
 import { ActivityWorktreeState } from "./activity-worktree-state"
 
 export interface Registration extends ProjectDirectories.Registration {
@@ -12,12 +14,14 @@ export interface Registration extends ProjectDirectories.Registration {
 export interface Source {
   readonly registrations: () => Promise<ReadonlyArray<Registration>>
   readonly measure?: typeof ActivityDisk.measure
+  readonly observeCwd?: typeof ActivityObjectCwd.readCwd
 }
 
 export interface Monitor {
   readonly snapshot: () => ActivityMonitor.WorktreeSnapshot
   readonly inventory: () => Promise<ActivityMonitor.WorktreeSnapshot>
   readonly read: (recordID: string) => Promise<ActivityMonitor.WorktreeSnapshot | undefined>
+  readonly proveUse: (recordID: string) => Promise<ActivityMonitor.WorktreeUseProof | undefined>
 }
 
 export class ReadCapacityError extends Error {
@@ -27,9 +31,17 @@ export class ReadCapacityError extends Error {
   }
 }
 
+export class ProofCapacityError extends Error {
+  constructor() {
+    super("The worktree proof reading slot is occupied")
+    this.name = "ActivityWorktreeProofCapacityError"
+  }
+}
+
 export function make(source: Source): Monitor {
   const state = ActivityWorktreeState.make()
   const inFlight = new Map<string, Promise<ActivityMonitor.WorktreeSnapshot | undefined>>()
+  const proofFlight = new Map<string, Promise<ActivityMonitor.WorktreeUseProof | undefined>>()
   let tail = Promise.resolve()
   let inventoryFlight: Promise<ActivityMonitor.WorktreeSnapshot> | undefined
 
@@ -57,6 +69,41 @@ export function make(source: Source): Monitor {
         inventoryFlight = undefined
       })
       return inventoryFlight
+    },
+    proveUse(recordID) {
+      const active = proofFlight.get(recordID)
+      if (active) return active
+      if (!state.get(recordID)) return Promise.resolve(undefined)
+      if (proofFlight.size) return Promise.reject(new ProofCapacityError())
+      const request = serial(async () => {
+        await refresh()
+        return state.get(recordID)
+      })
+        .then(async (record) => {
+          if (!record) return
+          const cwd = await (source.observeCwd ?? ActivityObjectCwd.readCwd)({
+            objectID: recordID,
+            directory: record.directory,
+          })
+          const sampledAt = Date.now()
+          return serial(async () => {
+            await refresh()
+            if (!state.get(recordID)) return
+            const proof = ActivityObjectProof.evaluate({ objectID: recordID, matched: true, claimant: "unknown", checks: [cwd] })
+            return {
+              recordID,
+              sampledAt,
+              state: proof.state,
+              checks: ActivityObjectProof.methods.map((method) => ({
+                method,
+                outcome: proof.checks.find((check) => check.method === method)?.outcome ?? "unavailable",
+              })),
+            } satisfies ActivityMonitor.WorktreeUseProof
+          })
+        })
+        .finally(() => proofFlight.delete(recordID))
+      proofFlight.set(recordID, request)
+      return request
     },
     read(recordID) {
       const active = inFlight.get(recordID)

@@ -38,6 +38,11 @@ export const activityScenarios: Scenario[] = [
     .at(() => ({ path: route("/api/activity/worktrees/{recordID}/read", { recordID: "httpapi-missing" }) }))
     .json(400, missingRecord, "status"),
   http.protected
+    .post("/api/activity/worktrees/{recordID}/use-proof", "activity.proveWorktreeUse")
+    .global()
+    .at(() => ({ path: route("/api/activity/worktrees/{recordID}/use-proof", { recordID: "httpapi-missing" }) }))
+    .json(400, missingRecord, "status"),
+  http.protected
     .get("/api/activity/docker", "activity.docker")
     .global()
     .json(200, (body) => Schema.decodeUnknownSync(ActivityMonitor.DockerSnapshot)(body), "status"),

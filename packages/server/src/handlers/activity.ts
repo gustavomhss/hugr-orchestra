@@ -66,6 +66,28 @@ export const ActivityHandler = HttpApiBuilder.group(Api, "server.activity", (han
           return snapshot
         }),
       )
+      .handle("activity.proveWorktreeUse", (ctx) =>
+        Effect.gen(function* () {
+          const report = yield* Effect.tryPromise({
+            try: () => worktrees.proveUse(ctx.params.recordID),
+            catch: (error) =>
+              error instanceof ActivityWorktree.ProofCapacityError
+                ? new ConflictError({
+                    message: "A worktree use proof reading is already in progress",
+                    resource: "activity.worktrees",
+                  })
+                : new ServiceUnavailableError({
+                    message: "Worktree use proof is temporarily unavailable",
+                    service: "activity.worktrees",
+                  }),
+          })
+          if (report) return report
+          return yield* new InvalidRequestError({
+            message: "Worktree observation is no longer available",
+            field: "recordID",
+          })
+        }),
+      )
       .handle("activity.docker", () => Effect.sync(docker.snapshot))
       .handle("activity.readDocker", () =>
         docker.read().pipe(

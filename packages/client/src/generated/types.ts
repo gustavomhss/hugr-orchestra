@@ -14312,6 +14312,18 @@ export type ActivityReadWorktreeOutput = {
   }>
 }
 
+export type ActivityProveWorktreeUseInput = { readonly recordID: { readonly recordID: string }["recordID"] }
+
+export type ActivityProveWorktreeUseOutput = {
+  readonly recordID: string
+  readonly sampledAt: number
+  readonly state: "held" | "idle"
+  readonly checks: ReadonlyArray<{
+    readonly method: "cwd" | "git-c" | "open-file" | "live-lock"
+    readonly outcome: "clear" | "holder" | "failed" | "partial" | "unavailable"
+  }>
+}
+
 export type ActivityDockerOutput =
   | {
       readonly instanceID: string

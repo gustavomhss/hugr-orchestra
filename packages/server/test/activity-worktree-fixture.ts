@@ -2,6 +2,7 @@ import { expect } from "bun:test"
 import { Orchestra } from "@orchestra/client"
 import { ActivityDisk } from "@orchestra/core/activity-disk"
 import type { ActivityExternalCache } from "@orchestra/core/activity-external-cache"
+import type { ActivityWorktree } from "@orchestra/core/activity-worktree"
 import { Database } from "@orchestra/core/database/database"
 import { AppProcess } from "@orchestra/core/process"
 import { setup } from "../../core/test/fixture/activity-worktree"
@@ -29,6 +30,7 @@ export function serve(
     dockerProcess?: AppProcess.Interface
     afterDockerPostDispatch?: () => void
     externalCaches?: ActivityExternalCache.Inventory
+    observeCwd?: ActivityWorktree.Source["observeCwd"]
   } = {},
 ) {
   return Effect.gen(function* () {
@@ -37,6 +39,7 @@ export function serve(
     const context = yield* Layer.build(
       ActivityWorktreeRegistry.layer({
         afterRegistryRead: input.afterRegistryRead,
+        ...(input.observeCwd !== undefined ? { observeCwd: input.observeCwd } : {}),
         measure: (directory, limits) => {
           calls.walks++
           return (input.measure ?? ActivityDisk.measure)(directory, limits)

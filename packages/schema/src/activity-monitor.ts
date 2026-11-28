@@ -144,6 +144,19 @@ export const WorktreeSnapshot = Schema.Struct({
 }).annotate({ identifier: "ActivityMonitor.WorktreeSnapshot" })
 export interface WorktreeSnapshot extends Schema.Schema.Type<typeof WorktreeSnapshot> {}
 
+const WorktreeUseCheck = Schema.Struct({
+  method: Schema.Literals(["cwd", "git-c", "open-file", "live-lock"]),
+  outcome: Schema.Literals(["clear", "holder", "failed", "partial", "unavailable"]),
+}).annotate({ identifier: "ActivityMonitor.WorktreeUseCheck" })
+
+export const WorktreeUseProof = Schema.Struct({
+  recordID: Schema.NonEmptyString,
+  sampledAt: NonNegativeInt,
+  state: Schema.Literals(["held", "idle"]),
+  checks: Schema.Array(WorktreeUseCheck).check(Schema.isMinLength(4), Schema.isMaxLength(4)),
+}).annotate({ identifier: "ActivityMonitor.WorktreeUseProof" })
+export type WorktreeUseProof = typeof WorktreeUseProof.Type
+
 export const dockerSource = "docker container ls --all --no-trunc --size --format json"
 export const dockerRowLimit = 1000
 
