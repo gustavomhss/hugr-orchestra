@@ -58,10 +58,10 @@ impl Observation {
         if self.pending() {
             return Some(ack(req, id, Ack::Error));
         }
-        let pid = t.pid;
+        let (pid, known) = (t.pid, footprint.then(|| t.known.clone()).unwrap_or_default());
         let (send, result) = sync_channel(1);
         let worker = Builder::new().name("omni-observe".into()).spawn(move || {
-            let _ = send.try_send(scan(pid, footprint));
+            let _ = send.try_send(scan(pid, footprint, &known));
         });
         let Ok(worker) = worker else {
             return Some(ack(req, id, Ack::Error));
@@ -85,7 +85,7 @@ impl Observation {
     }
 }
 
-fn scan(pid: i32, footprint: bool) -> Option<Sample> {
+fn scan(pid: i32, footprint: bool, known: &[(i32, i32)]) -> Option<Sample> {
     // Keep SIGCHLD on the control thread even if the scan stalls.
     if !block_sigchld() || !isolate_fds() {
         return None;
@@ -93,7 +93,7 @@ fn scan(pid: i32, footprint: bool) -> Option<Sample> {
     let inventory = procs::scan(&HashSet::from([pid]), true)?;
     let mut sample = project(pid, &inventory)?;
     if footprint {
-        sample.footprint = super::footprint::sample(pid, &inventory);
+        sample.footprint = super::footprint::sample(pid, &inventory, known);
     }
     Some(sample)
 }
