@@ -17,6 +17,7 @@ import type { NativeTitlebarFrame } from "@orchestra/app/native-titlebar"
 import type { ResponseDownloadAPI } from "./response-download"
 import type { ActivityArm } from "@orchestra/schema/activity-arm"
 import type { ActivityStop } from "@orchestra/schema/activity-stop"
+import type { ActivityEmpty } from "@orchestra/schema/activity-empty"
 export type {
   WslDistroProbe,
   WslInstalledDistro,
@@ -128,6 +129,7 @@ export type AppDockManifestUpdate = { status: "updated" | "conflict"; manifest: 
 export type ElectronAPI = import("@orchestra/app/app-dock-linux").AppDockLinuxAPI & {
   armActivityQuarantine: (serverURL: string, request: ActivityArm.Request) => Promise<ActivityArm.Receipt | undefined>
   stopActivityTree: (serverURL: string, request: ActivityStop.Request) => Promise<ActivityStop.Receipt | undefined>
+  emptyActivityQuarantine: (serverURL: string) => Promise<ActivityEmpty.Receipt | undefined>
   appDockOpen: (
     url: string,
     bounds: { x: number; y: number; width: number; height: number },

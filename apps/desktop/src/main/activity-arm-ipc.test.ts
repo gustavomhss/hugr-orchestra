@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { EventEmitter } from "node:events"
 import type { ActivityStop } from "@orchestra/schema/activity-stop"
+import type { ActivityEmpty } from "@orchestra/schema/activity-empty"
 import { registerActivityArmIpc } from "./activity-arm-ipc"
 
 test("stop IPC requires the owned frame and a current positive native decision", async () => {
@@ -59,4 +60,58 @@ test("stop IPC requires the owned frame and a current positive native decision",
   state.navigate = false
   expect(await stop(event, url, { recordID })).toMatchObject({ treeID: preview.treeID })
   expect(state.approvals).toBe(1)
+})
+
+test("empty quarantine defaults to Cancel and confirms only the fresh main-process preview", async () => {
+  const handlers = new Map<string, (...args: unknown[]) => Promise<unknown>>()
+  const url = "http://127.0.0.1:9999"
+  const frame = { url: "oc://renderer/index.html" }
+  const sender = Object.assign(new EventEmitter(), { id: 43, mainFrame: frame, isDestroyed: () => false })
+  const win = { webContents: sender, isDestroyed: () => false }
+  const event = { sender, senderFrame: frame }
+  const firstID = "22222222-2222-2222-2222-222222222222"
+  const secondID = "33333333-3333-3333-3333-333333333333"
+  const preview: ActivityEmpty.Preview = {
+    previewID: firstID,
+    action: "empty-quarantine",
+    expiresAt: Date.now() + 60_000,
+    targets: [{ targetID: "11111111-1111-1111-1111-111111111111", generation: "7", label: "Fixture", owner: "Session", originalPath: "/quarantine/original" }],
+  }
+  const state = { decision: 0, previews: 0, confirmations: [] as string[], owner: undefined as object | undefined }
+  const owned = {
+    url,
+    openActivityArm: () => undefined,
+    openActivityStop: () => undefined,
+    openActivityEmpty: () => ({
+      isCurrent: () => true,
+      preview: async () => ({ ...preview, previewID: state.previews++ === 0 ? firstID : secondID }),
+      confirm: async (request: ActivityEmpty.Confirm) => {
+        state.confirmations.push(request.previewID)
+        return { previewID: request.previewID, outcome: "Verified", targets: [{ targetID: preview.targets[0]!.targetID, generation: preview.targets[0]!.generation }] }
+      },
+    }),
+  }
+  state.owner = owned
+  registerActivityArmIpc({
+    ipcMain: { handle: (name: string, listener: (...args: unknown[]) => Promise<unknown>) => handlers.set(name, listener) },
+    BrowserWindow: { fromWebContents: () => win },
+    dialog: { showMessageBox: async (_window: unknown, prompt: { defaultId: number; detail: string }) => {
+      expect(prompt.defaultId).toBe(0)
+      expect(prompt.detail).toContain("Fixture")
+      expect(prompt.detail).toContain("Session")
+      expect(prompt.detail).toContain("/quarantine/original")
+      expect(prompt.detail).toContain(preview.targets[0]!.targetID)
+      expect(prompt.detail).toContain(preview.targets[0]!.generation)
+      return { response: state.decision }
+    } },
+    rendererDevURL: undefined,
+    getOwned: () => state.owner as typeof owned | undefined,
+  } as unknown as Parameters<typeof registerActivityArmIpc>[0])
+  const empty = handlers.get("activity-empty-quarantine")!
+  expect(await empty(event, url)).toBeUndefined()
+  expect(state.confirmations).toEqual([])
+  state.decision = 1
+  const receipt = await empty(event, url)
+  expect(receipt).toMatchObject({ previewID: secondID, outcome: "Verified" })
+  expect(state.confirmations).toEqual([secondID])
 })
