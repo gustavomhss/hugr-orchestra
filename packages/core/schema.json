@@ -1,11 +1,15 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "b5adafd5-2ef0-4f00-a0ce-e82e4dd9f02c",
+  "id": "5c07798e-fe92-4802-8591-66a99f83e026",
   "prevIds": [
-    "eb698716-65f1-46e5-be8b-5472d66abc68"
+    "b5adafd5-2ef0-4f00-a0ce-e82e4dd9f02c"
   ],
   "ddl": [
+    {
+      "name": "activity_action_ledger",
+      "entityType": "tables"
+    },
     {
       "name": "workspace",
       "entityType": "tables"
@@ -281,6 +285,36 @@
     {
       "name": "session_share",
       "entityType": "tables"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "target_id",
+      "entityType": "columns",
+      "table": "activity_action_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "generation",
+      "entityType": "columns",
+      "table": "activity_action_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "observation",
+      "entityType": "columns",
+      "table": "activity_action_ledger"
     },
     {
       "type": "text",
@@ -8050,6 +8084,15 @@
       "name": "todo_pk",
       "entityType": "pks",
       "table": "todo"
+    },
+    {
+      "columns": [
+        "target_id"
+      ],
+      "nameExplicit": false,
+      "name": "activity_action_ledger_pk",
+      "table": "activity_action_ledger",
+      "entityType": "pks"
     },
     {
       "columns": [
