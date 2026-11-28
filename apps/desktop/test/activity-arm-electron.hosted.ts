@@ -233,7 +233,7 @@ async function child() {
     await writeFile(fixtureSource, "private apply fixture\n")
     const preview: ActivityApply.Preview = {
       previewID: "activity-apply-preview", action: "apply-quarantine", expiresAt: Date.now() + 60_000,
-      approvalID: receipt.approvalID, target: current, destination: fixtureDestination,
+      approvalID: receipt.approvalID, target: { ...current, label: fixtureSource }, destination: fixtureDestination,
     }
     const applied: ActivityApply.Receipt = { previewID: preview.previewID, ...request, outcome: "Out" }
     let confirmations = 0
@@ -245,6 +245,8 @@ async function child() {
         if (input.previewID !== preview.previewID) return undefined
         confirmations++
         await rename(fixtureSource, fixtureDestination)
+        await assert.rejects(readFile(fixtureSource), { code: "ENOENT" })
+        assert.equal(await readFile(fixtureDestination, "utf8"), "private apply fixture\n")
         return applied
       },
     }
@@ -259,7 +261,7 @@ async function child() {
       assert.deepEqual(shown.options.buttons, ["Cancel", "Apply quarantine"])
       assert.equal(shown.options.defaultId, 0)
       assert.equal(shown.options.cancelId, 0)
-      assert.equal(shown.options.detail, `Approval: ${JSON.stringify(receipt.approvalID)}\nTarget: ${JSON.stringify(current.targetID)}\nPath: ${JSON.stringify(current.label)}\nGeneration: ${JSON.stringify(current.generation)}\nDestination: ${JSON.stringify(fixtureDestination)}`)
+      assert.equal(shown.options.detail, `Approval: ${JSON.stringify(receipt.approvalID)}\nTarget: ${JSON.stringify(current.targetID)}\nPath: ${JSON.stringify(fixtureSource)}\nGeneration: ${JSON.stringify(current.generation)}\nDestination: ${JSON.stringify(fixtureDestination)}`)
       return result
     }
     assert.equal(await apply("cancel"), undefined)

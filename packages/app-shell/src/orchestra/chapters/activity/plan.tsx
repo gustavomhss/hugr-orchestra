@@ -9,8 +9,8 @@ import { useServerSDK } from "@/context/server-sdk"
 
 type PlanRow = {
   target: ActivityArm.Target
-  state: "Ready" | "Armed" | "Refused"
-  armable: boolean
+  state: "Ready" | "Armed" | ActivityApply.Result["outcome"]
+  approvalID?: string
 }
 
 export function ActivityPlan(props: { query: string }) {
@@ -48,12 +48,22 @@ export function ActivityPlan(props: { query: string }) {
   const rows = createMemo<PlanRow[]>(() => {
     const snapshot = state.verified ?? state.snapshot
     if (!snapshot) return []
+    const applied = state.applyScope === scope() ? state.applyState?.results : undefined
     return [
-      ...snapshot.ready.map((target) => ({ target, state: "Ready" as const, armable: true })),
+      ...snapshot.ready.map((target) => ({ target, state: "Ready" as const })),
       ...snapshot.approvals.flatMap(({ receipt, changed }) =>
-        receipt.targets.map((target) => ({ target, state: changed ? "Refused" as const : "Armed" as const, armable: false })),
+        receipt.targets.map((target) => {
+          const outcome = applied?.find((item) => item.approvalID === receipt.approvalID &&
+            item.targetID === target.targetID && item.generation === target.generation)?.outcome
+          return { target, approvalID: receipt.approvalID, state: outcome ?? (changed ? "Refused" as const : "Armed" as const) }
+        }),
       ),
     ]
+  })
+  const counts = createMemo(() => {
+    const result = { Ready: 0, Armed: 0, Refused: 0, Out: 0, Unknown: 0 }
+    for (const row of rows()) result[row.state]++
+    return result
   })
   const shown = createMemo(() => {
     const needle = props.query.trim().toLowerCase()
@@ -64,7 +74,7 @@ export function ActivityPlan(props: { query: string }) {
 
   async function refresh() {
     const serverURL = scope()
-    if (!serverURL) return
+    if (!serverURL || state.applyingTarget) return
     inspectID++
     inspectController?.abort()
     inspectController = undefined
@@ -76,11 +86,10 @@ export function ActivityPlan(props: { query: string }) {
     const id = ++requestID
     const applyRead = platform.readActivityApply
     const ownedURL = ownedScope()
-    setState({ applyState: undefined, applyScope: undefined, applyFailed: false })
+    setState("applyFailed", false)
     if (applyRead && ownedURL === serverURL) {
-      const applyID = requestID
       void applyRead(serverURL).then((applyState) => {
-        if (applyState && requestID === applyID && scope() === serverURL && ownedScope() === serverURL && sdk() === currentSDK) {
+        if (applyState && requestID === id && scope() === serverURL && ownedScope() === serverURL && sdk() === currentSDK) {
           setState({ applyState, applyScope: serverURL })
         }
       }).catch(() => {})
@@ -159,21 +168,19 @@ export function ActivityPlan(props: { query: string }) {
     }
   }
 
-  async function apply(target: ActivityArm.Target, approvalID: string) {
-    const current = server.current
-    const serverURL = current?.http.url
+  async function apply(row: PlanRow) {
+    const serverURL = ownedScope()
     const applyObjects = platform.applyActivityQuarantine
-    const eligible = state.applyState?.eligible.some((item) => item.approvalID === approvalID && item.targetID === target.targetID && item.generation === target.generation)
-    if (!serverURL || current?.type !== "sidecar" || current.variant !== "base" || !applyObjects || !eligible || state.applyState?.partial ||
-      !state.applyState.available || state.applyingTarget) return
+    const binding = applyBinding(row)
+    if (!serverURL || !applyObjects || !binding || state.applyingTarget) return
     const currentSDK = sdk()
     const id = ++applyID
     const isCurrent = () => applyID === id && scope() === serverURL && ownedScope() === serverURL && sdk() === currentSDK
-    setState({ applyingTarget: target.targetID, applyFailed: false })
+    setState({ applyingTarget: binding.targetID, applyFailed: false })
     try {
-      const receipt = await applyObjects(serverURL, { approvalID, targetID: target.targetID, generation: target.generation })
+      const receipt = await applyObjects(serverURL, binding)
       if (!isCurrent()) return
-      if (!receipt || receipt.targetID !== target.targetID || receipt.generation !== target.generation || receipt.approvalID !== approvalID) {
+      if (receipt && (receipt.targetID !== binding.targetID || receipt.generation !== binding.generation || receipt.approvalID !== binding.approvalID)) {
         setState("applyFailed", true)
         return
       }
@@ -226,27 +233,30 @@ export function ActivityPlan(props: { query: string }) {
     const current = server.current
     return platform.platform === "desktop" && platform.os === "linux" && current?.type === "sidecar" && current.variant === "base" &&
       state.verifiedScope === current.http.url && Boolean(platform.armActivityQuarantine) &&
-      !state.busy && !state.failed && !state.armTarget &&
+      !state.busy && !state.failed && !state.armTarget && !state.applyingTarget &&
       state.verified?.ready.some((ready) => ready.targetID === target.targetID && ready.generation === target.generation)
   }
-  const applyResult = (target: ActivityArm.Target) => state.applyScope === scope()
-    ? state.applyState?.results.find((item) => item.targetID === target.targetID && item.generation === target.generation)
-    : undefined
+  function applyBinding(row: PlanRow) {
+    if (row.state !== "Armed" || state.busy || state.failed || state.inspecting || state.armTarget ||
+      !ownedScope() || state.applyScope !== ownedScope() || !state.applyState?.available || !platform.applyActivityQuarantine) return undefined
+    return state.applyState.eligible.find((item) => item.approvalID === row.approvalID &&
+      item.targetID === row.target.targetID && item.generation === row.target.generation)
+  }
 
   return (
     <section aria-busy={state.busy}>
       <div class="activity-section-heading">
         <p class="mx-note">{language.t(state.verified ? "orchestra.monitor.planVerifiedSource" : "orchestra.monitor.planSource")}</p>
-        <button type="button" class="mx-btn" disabled={state.busy} onClick={() => void refresh()}>
+        <button type="button" class="mx-btn" disabled={state.busy || Boolean(state.applyingTarget)} onClick={() => void refresh()}>
           {language.t("orchestra.monitor.refresh")}
         </button>
         <Show when={platform.platform === "desktop" && platform.os === "linux" && Boolean(ownedScope() && platform.inspectActivityArm)}>
-          <button type="button" class="mx-btn" disabled={state.inspecting || state.busy || Boolean(state.armTarget)} onClick={() => void inspect()}>
+          <button type="button" class="mx-btn" disabled={state.inspecting || state.busy || Boolean(state.armTarget || state.applyingTarget)} onClick={() => void inspect()}>
             {language.t(state.inspecting ? "orchestra.monitor.planVerifying" : "orchestra.monitor.planVerify")}
           </button>
         </Show>
       </div>
-      <Show when={(state.verified ?? state.snapshot)?.partial}>
+      <Show when={(state.verified ?? state.snapshot)?.partial || state.applyState?.partial}>
         <p class="mx-note" role="status">{language.t("orchestra.monitor.planPartial")}</p>
       </Show>
       <Show when={state.failed}>
@@ -268,12 +278,14 @@ export function ActivityPlan(props: { query: string }) {
       }>
         {(snapshot) => (
           <>
-            <Show when={!snapshot().partial}>
+            <Show when={!snapshot().partial && !state.applyState?.partial}>
               <p class="mx-note" role="status">
                 {language.t("orchestra.monitor.planCounts", {
-                  ready: snapshot().ready.length,
-                  armed: snapshot().approvals.reduce((count, item) => count + (item.changed ? 0 : item.receipt.targets.length), 0),
-                  refused: snapshot().approvals.reduce((count, item) => count + (item.changed ? item.receipt.targets.length : 0), 0),
+                  ready: counts().Ready,
+                  armed: counts().Armed,
+                  refused: counts().Refused,
+                  out: counts().Out,
+                  unknown: counts().Unknown,
                 })}
               </p>
             </Show>
@@ -301,19 +313,15 @@ export function ActivityPlan(props: { query: string }) {
                           <td><code>{row.target.targetID}</code></td>
                           <td class="activity-path" title={row.target.label}><code>{row.target.label}</code></td>
                           <td>{row.target.owner}</td>
-                          <td>{language.t(applyResult(row.target) ? `orchestra.monitor.applyState.${applyResult(row.target)?.outcome}` : `orchestra.monitor.planState.${row.state}`)}</td>
+                          <td>{language.t(`orchestra.monitor.planState.${row.state}`)}</td>
                           <td>
-                            <Show when={row.armable && armAvailable(row.target)}>
+                            <Show when={row.state === "Ready" && armAvailable(row.target)}>
                               <button type="button" class="mx-btn" disabled={Boolean(state.armTarget)} onClick={() => void arm(row.target)}>
                                 {language.t(state.armTarget === row.target.targetID ? "orchestra.monitor.planArming" : "orchestra.monitor.planArm")}
                               </button>
                             </Show>
-                            <Show when={state.applyScope === scope() && state.applyState?.available && !state.applyState.partial && Boolean(platform.applyActivityQuarantine) &&
-                              state.applyState.eligible.some((item) => item.targetID === row.target.targetID && item.generation === row.target.generation)}>
-                              <button type="button" class="mx-btn" disabled={Boolean(state.applyingTarget)} onClick={() => {
-                                const approval = state.applyState?.eligible.find((item) => item.targetID === row.target.targetID && item.generation === row.target.generation)
-                                if (approval) void apply(row.target, approval.approvalID)
-                              }}>
+                            <Show when={applyBinding(row)}>
+                              <button type="button" class="mx-btn" disabled={Boolean(state.applyingTarget)} onClick={() => void apply(row)}>
                                 {language.t(state.applyingTarget === row.target.targetID ? "orchestra.monitor.applying" : "orchestra.monitor.apply")}
                               </button>
                             </Show>

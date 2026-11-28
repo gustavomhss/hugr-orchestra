@@ -108,7 +108,7 @@ export function registerActivityArmIpc(deps: {
       deps.getOwned() === owned
     try {
       const state = await client.read(controller.signal)
-      if (!current() || !state?.available || state.partial || !state.eligible.some((item) => item.approvalID === decoded.value.approvalID &&
+      if (!current() || !state?.available || !state.eligible.some((item) => item.approvalID === decoded.value.approvalID &&
         item.targetID === decoded.value.targetID && item.generation === decoded.value.generation)) return undefined
       const preview = await client.preview(decoded.value, controller.signal)
       if (!current() || !preview || preview.expiresAt <= Date.now() || preview.approvalID !== decoded.value.approvalID ||
