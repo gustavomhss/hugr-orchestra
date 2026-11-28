@@ -46,7 +46,7 @@ export function packageShards(timings: Timings, directory: string, platform: Pla
   if (directory === "apps/desktop") return desktopAnchors.length
   if (directory === "packages/app-shell") return platform === "windows" ? appBrowserAnchors.length : 1
   if (directory === "modules/atlas/boundary") return platform === "windows" ? 2 : 1
-  if (directory === "modules/maestro/coordination") return platform === "windows" ? 2 : 1
+  if (directory === "modules/maestro/coordination") return platform === "windows" ? maestroWindowsBins(timings).length : 1
   const total = timings.totals[directory]?.[platform]
   if (total === undefined) return 1
   const weights = weigh(directory, timings.files[`${directory}:${platform}`] ?? {}, total, UNTIMED_FLOOR, timings.reserves?.[`${directory}:${platform}`])
@@ -83,6 +83,7 @@ export function plannedBins(timings: Timings, directory: string, platform: Platf
   if (directory === "apps/desktop") return desktopBins(timings, platform)
   if (directory === "packages/app-shell" && platform === "windows")
     return balance(weigh(directory, timings.files[`${directory}:${platform}`] ?? {}, 0, UNTIMED_FLOOR), appBrowserAnchors.length, appBrowserAnchors)
+  if (directory === "modules/maestro/coordination" && platform === "windows") return maestroWindowsBins(timings)
   const weights = weigh(
     directory,
     timings.files[`${directory}:${platform}`] ?? {},
@@ -90,18 +91,33 @@ export function plannedBins(timings: Timings, directory: string, platform: Platf
     UNTIMED_FLOOR,
     timings.reserves?.[`${directory}:${platform}`],
   )
-  // Currency consumed half the whole Windows Maestro run. Keep it alone; ordinary anchor balancing
-  // would add files to that bin, and a new file must join the complement without editing a list.
-  if (directory === "modules/maestro/coordination" && platform === "windows") {
-    const currency = weights.find((entry) => entry.name === "test/v2-reservation-currency.test.ts")
-    const remaining = weights.filter((entry) => entry !== currency)
-    if (!currency || remaining.length === 0) throw new Error("Windows Maestro requires currency and a nonempty complement")
-    return [
-      { seconds: currency.weight, names: [currency.name] },
-      { seconds: remaining.reduce((sum, entry) => sum + entry.weight, 0), names: remaining.map((entry) => entry.name) },
-    ]
-  }
   return balance(weights, packageShards(timings, directory, platform))
+}
+
+// Currency stays alone: ordinary anchor balancing would put later files into that bin.
+// The complement is packed by weight. One complement bin held every other file and the Windows
+// step died at 8 minutes (runs 46101527531 and 46108116756) after the Lucy engagement files landed.
+function maestroWindowsBins(timings: Timings) {
+  const directory = "modules/maestro/coordination"
+  const weights = weigh(
+    directory,
+    timings.files[`${directory}:windows`] ?? {},
+    timings.totals[directory]?.windows ?? 0,
+    UNTIMED_FLOOR,
+    timings.reserves?.[`${directory}:windows`],
+  )
+  const currency = weights.find((entry) => entry.name === "test/v2-reservation-currency.test.ts")
+  const remaining = weights.filter((entry) => entry !== currency)
+  if (!currency || remaining.length === 0) throw new Error("Windows Maestro requires currency and a nonempty complement")
+  const seconds = remaining.reduce((sum, entry) => sum + entry.weight, 0)
+  const complement = Math.min(
+    remaining.length,
+    shardCount(seconds * timings.overhead.windows, timings.target.windows, timings.margin),
+  )
+  return [
+    { seconds: currency.weight, names: [currency.name] },
+    ...balance(remaining, complement),
+  ]
 }
 
 export function weigh(
@@ -295,12 +311,13 @@ export function coreShards(name: Platform, host: string, count: number) {
 
 // Core is sharded by measured time above. Linux keeps its original package/proof lanes. Windows CLI, Server and
 // clients have separate clocks after cold 43453802489 exhausted the combined job before CLI started. Boundary's
-// dominant producer file gets one of two bins; Maestro's currency file has its own Windows bin, with all other
-// Maestro files in the second. Process-query and rollback have an independent lane. Package scopes
+// dominant producer file gets one of two bins; Maestro's currency file has its own Windows bin, and the
+// other Maestro files are packed into as many bins as their measured time needs. Process-query and rollback have an independent lane. Package scopes
 // stay disjoint except those explicit file partitions. The libs complement still owns future packages. Relay and
 // repo gates keep their existing lanes; neither shares a bulk package's clock.
 export function packageLanes(name: Platform, host: string) {
   const linux = name === "linux"
+  const maestroWindows = linux ? 0 : packageShards(readTimings(), "modules/maestro/coordination", "windows")
   const claimed = ["core", "cli", "app", "server", "sdk-next", "client", "tui", "session-ui", "atlas-boundary", "relay", "desktop", ...(linux ? [] : ["script", "maestro"])].map((entry) => `@orchestra/${entry}`)
   // httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.
   const excluded = name === "windows" ? [...claimed, "@orchestra/httpapi-codegen"] : claimed
@@ -337,7 +354,7 @@ export function packageLanes(name: Platform, host: string) {
     lane("relay", "relay", "--filter=@orchestra/relay"),
     ...[1, 2, 3].map((index) => lane(`desktop-bun-${index}`, `desktop Bun ${index}/3`, filters(["desktop"]), { desktop: "bun", desktopShard: `${index}/3`, electron: linux })),
     lane("desktop-node", "desktop Node", filters(["desktop"]), { desktop: "node", electron: linux }),
-    ...(linux ? [] : [1, 2].map((index) => lane(`maestro-${index}`, `maestro ${index}/2`, filters(["maestro"]), { maestroShard: `${index}/2` }))),
+    ...(linux ? [] : Array.from({ length: maestroWindows }, (_, index) => lane(`maestro-${index + 1}`, `maestro ${index + 1}/${maestroWindows}`, filters(["maestro"]), { maestroShard: `${index + 1}/${maestroWindows}` }))),
     // Windows script remains separate from the libs lane.
     ...(linux ? [] : [
       lane("script", "script", filters(["script"]), { budget: 15 }),

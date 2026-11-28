@@ -63,7 +63,7 @@ it.live.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")(
     const matched = ActivityMonitor.observe(observed, "runtime", "", provenance)
     const unmatched = ActivityMonitor.observe(observed, "runtime", "", { ...provenance, callID: "call-other" })
     yield* Effect.promise(() => Promise.all([ActivityMonitor.inspect(matched), ActivityMonitor.inspect(unmatched)]))
-    yield* Effect.promise(() => Bun.sleep(2))
+    yield* Effect.promise(() => waitForClock())
     yield* publisher.publish(LLMEvent.toolResult({
       id: "call-matched", name: "bash", result: { type: "text", value: "done" },
     }))
@@ -72,7 +72,7 @@ it.live.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")(
       sessionID, assistantMessageID, callID: "call-matched",
     })
     for (const bytes of [200, 300, 400]) {
-      yield* Effect.promise(() => Bun.sleep(2))
+      yield* Effect.promise(() => waitForClock())
       sample.bytes = bytes
       yield* Effect.promise(() => Promise.all([ActivityMonitor.inspect(matched), ActivityMonitor.inspect(unmatched)]))
     }
@@ -82,3 +82,8 @@ it.live.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")(
   }),
   30_000,
 )
+
+async function waitForClock() {
+  const seen = Date.now()
+  while (Date.now() <= seen) await Bun.sleep(5)
+}

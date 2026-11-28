@@ -176,13 +176,13 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical fo
     monitor.complete({ ...identity, assistantMessageID: "other", finishedAt: Date.now() })
     monitor.complete({ ...identity, tool: "other", finishedAt: Date.now() })
     monitor.complete({ ...identity, callID: "other", finishedAt: Date.now() })
-    await Bun.sleep(2)
+    await waitForClock()
     sample.bytes = 200
     await monitor.inspect(id)
     expect(row()?.footprint?.hypothesis).toBe("insufficient")
     monitor.complete({ ...identity, finishedAt: Date.now() })
     for (const bytes of [300, 400, 500]) {
-      await Bun.sleep(2)
+      await waitForClock()
       sample.bytes = bytes
       await monitor.inspect(id)
     }
@@ -192,24 +192,31 @@ describe.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")("physical fo
     sample.bytes = NaN
     await monitor.inspect(id)
     expect(row()?.footprint).toEqual({ ...previous, hypothesis: "insufficient" })
-    await Bun.sleep(2)
+    await waitForClock()
     sample.bytes = 600
     await monitor.inspect(id)
     expect(row()?.footprint?.hypothesis).toBe("insufficient")
     sample.identity = ""
     for (const bytes of [700, 800, 900]) {
-      await Bun.sleep(2)
+      await waitForClock()
       sample.bytes = bytes
       await monitor.inspect(id)
     }
     expect(row()?.footprint?.hypothesis).toBe("insufficient")
     sample.identity = "tree-b"
-    await Bun.sleep(2)
+    await waitForClock()
     await monitor.inspect(id)
     expect(row()?.footprint?.hypothesis).toBe("insufficient")
     sample.members = [{ pid: child.pid + 1, parentPid: null, name: "other" }]
-    await Bun.sleep(2)
+    await waitForClock()
     await monitor.inspect(id)
     expect(row()?.footprint?.hypothesis).toBe("insufficient")
   }, 30_000)
 })
+
+// Date.now() on a runner can stay on the same millisecond across a 2ms sleep. The ledger
+// only accepts a strictly later sample, so the test waits until the clock actually moves.
+async function waitForClock() {
+  const seen = Date.now()
+  while (Date.now() <= seen) await Bun.sleep(5)
+}
