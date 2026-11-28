@@ -10336,7 +10336,7 @@ export type RelayDocumentsPreviewOutput = {
       readonly wp: string | null
       readonly detail: string
     }>
-    readonly judge: "stub" | "api"
+    readonly judge: "stub" | "api" | "orchestra"
   }
 }
 
