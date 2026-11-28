@@ -1,3 +1,5 @@
+import type { ActivityMonitor } from "@orchestra/schema/activity-monitor"
+import { createStore } from "solid-js/store"
 import { For, Show, createEffect, createMemo, on, onCleanup } from "solid-js"
 import { useLanguage } from "@/context/language"
 import { useServerSDK } from "@/context/server-sdk"
@@ -26,6 +28,59 @@ export function ActivityWorktrees(props: { query: string }) {
     })
   })
   const state = () => controller().state
+  const proof = createMemo(() => {
+    const server = sdk()
+    const current = controller()
+    const [reports, setReports] = createStore({} as Record<string, {
+      proof?: ActivityMonitor.WorktreeUseProof
+      busy: boolean
+      failed: boolean
+      instanceID: string
+      registrationID: string
+    }>)
+    const pending = new Map<string, AbortController>()
+    function prune() {
+      const snapshot = current.state.snapshot
+      Object.entries(reports).forEach(([recordID, entry]) => {
+        const row = snapshot?.records.find((record) => record.recordID === recordID)
+        if (snapshot?.instanceID === entry.instanceID && row?.registrationID === entry.registrationID) return
+        pending.get(recordID)?.abort()
+        pending.delete(recordID)
+        setReports(recordID, undefined!)
+      })
+    }
+    async function read(recordID: string) {
+      const snapshot = current.state.snapshot
+      const row = snapshot?.records.find((record) => record.recordID === recordID)
+      if (!snapshot || !row || pending.has(recordID)) return
+      const request = new AbortController()
+      pending.set(recordID, request)
+      setReports(recordID, { ...reports[recordID], busy: true, failed: false, instanceID: snapshot.instanceID, registrationID: row.registrationID })
+      try {
+        await server.ready
+        request.signal.throwIfAborted()
+        const result = await server.orchestra.activity.proveWorktreeUse({ recordID }, { signal: request.signal })
+        const active = current.state.snapshot
+        if (request.signal.aborted || pending.get(recordID) !== request || result.recordID !== recordID ||
+          active?.instanceID !== snapshot.instanceID ||
+          !active.records.some((item) => item.recordID === recordID && item.registrationID === row.registrationID)) return
+        setReports(recordID, { proof: result, busy: false, failed: false, instanceID: snapshot.instanceID, registrationID: row.registrationID })
+      } catch {
+        if (!request.signal.aborted && pending.get(recordID) === request) setReports(recordID, "failed", true)
+      } finally {
+        if (pending.get(recordID) === request) {
+          pending.delete(recordID)
+          setReports(recordID, "busy", false)
+        }
+      }
+    }
+    return { reports, read, prune, dispose: () => pending.forEach((request) => request.abort()) }
+  })
+  createEffect(() => {
+    state().snapshot
+    proof().prune()
+  })
+  createEffect(on(proof, (current) => onCleanup(() => current.dispose())))
   const shown = createMemo(() => WorktreeReading.matching(state().snapshot?.records ?? [], props.query))
   function age(recordID: string, kind: "logical" | "attempt") {
     const value = controller().age(recordID, kind)
@@ -126,7 +181,38 @@ export function ActivityWorktrees(props: { query: string }) {
                         </div>
                       </td>
                       <td>{language.t("orchestra.monitor.notCollapsed")}</td>
-                      <td>{language.t("orchestra.monitor.unproved")}</td>
+                      <td>
+                        <Show when={proof().reports[row.recordID]?.proof} fallback={language.t("orchestra.monitor.unproved")}>
+                          {(report) => (
+                            <>
+                              <p>{language.t(`orchestra.monitor.useProof.${report().state}`)}</p>
+                              <Show when={Number.isFinite(new Date(report().sampledAt).getTime())}>
+                                <p>
+                                  {language.t("orchestra.monitor.useProofObservedAt")}: {" "}
+                                  <time dateTime={new Date(report().sampledAt).toISOString()}>
+                                    {new Date(report().sampledAt).toLocaleString(language.intl())}
+                                  </time>
+                                </p>
+                              </Show>
+                              <ul>
+                                <For each={report().checks}>
+                                  {(check) => (
+                                    <li>
+                                      {language.t(`orchestra.monitor.useMethod.${check.method}`)}: {language.t(`orchestra.monitor.useOutcome.${check.outcome}`)}
+                                    </li>
+                                  )}
+                                </For>
+                              </ul>
+                            </>
+                          )}
+                        </Show>
+                        <button type="button" class="mx-btn" disabled={proof().reports[row.recordID]?.busy} onClick={() => void proof().read(row.recordID)}>
+                          {language.t("orchestra.monitor.readUseProof")}
+                        </button>
+                        <Show when={proof().reports[row.recordID]?.failed}>
+                          <p class="activity-error" role="alert">{language.t("orchestra.monitor.useProofFailed")}</p>
+                        </Show>
+                      </td>
                       <td>
                         {row.attempt
                           ? language.t(

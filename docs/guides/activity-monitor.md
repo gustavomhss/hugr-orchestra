@@ -55,6 +55,10 @@ and establish the replacement through a fresh inventory request. Compare revisio
 exactly without converting them to JavaScript Number. These IDs grant no cleanup
 or process action.
 
+### Worktree use evidence
+
+Select **Read use proof** on a registered worktree to run the available check for that row. On Linux the server can detect a current working directory whose filesystem identity matches the registered directory. The report shows **Held** and lists each method. An unavailable or incomplete check stays unproved. The report carries no process ID or path from the check and offers no cleanup action.
+
 ## Trees
 
 **Trees** reads the ledger of pipe processes observed through this server process’s Omni spawner since startup. It refreshes the ledger and host CPU reading every two seconds while visible, without querying OS process membership. The initial inventory does not include processes already running before this server started, native collection calls, terminals or desktop processes.
