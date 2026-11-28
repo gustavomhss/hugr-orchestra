@@ -7,9 +7,9 @@ use std::sync::Arc;
 
 use tokio::runtime::Runtime;
 
+use super::REPLY_WITHIN;
 use super::channel::Gen;
 use super::unix::Chan;
-use super::REPLY_WITHIN;
 use crate::error::Error;
 
 pub(super) fn connect(rt: &Runtime, num: u64) -> Result<Arc<Gen>, Error> {
@@ -34,7 +34,13 @@ fn connect_root() -> io::Result<UnixStream> {
         *dest = byte as libc::c_char;
     }
     // SAFETY: socket creates a fresh CLOEXEC descriptor or returns an error.
-    let fd = unsafe { libc::socket(libc::AF_UNIX, libc::SOCK_STREAM | libc::SOCK_NONBLOCK | libc::SOCK_CLOEXEC, 0) };
+    let fd = unsafe {
+        libc::socket(
+            libc::AF_UNIX,
+            libc::SOCK_STREAM | libc::SOCK_NONBLOCK | libc::SOCK_CLOEXEC,
+            0,
+        )
+    };
     if fd < 0 {
         return Err(io::Error::last_os_error());
     }
@@ -66,7 +72,10 @@ fn connect_root() -> io::Result<UnixStream> {
             return Err(io::Error::last_os_error());
         }
         if len as usize != std::mem::size_of::<libc::ucred>() || peer.uid != 0 {
-            return Err(io::Error::new(io::ErrorKind::PermissionDenied, "isolated supervisor peer is not root"));
+            return Err(io::Error::new(
+                io::ErrorKind::PermissionDenied,
+                "isolated supervisor peer is not root",
+            ));
         }
     }
     Ok(UnixStream::from(fd))

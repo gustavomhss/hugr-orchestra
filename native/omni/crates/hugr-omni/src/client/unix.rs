@@ -350,4 +350,3 @@ pub(super) fn recv(sock: BorrowedFd<'_>, buf: &mut [u8], fds: &mut VecDeque<Owne
     }
     Ok(n)
 }
-

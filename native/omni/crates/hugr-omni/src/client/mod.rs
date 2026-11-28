@@ -9,10 +9,10 @@
 mod channel;
 mod hold;
 mod inventory;
-#[cfg(target_os = "linux")]
-mod isolation;
 #[cfg(all(test, target_os = "linux"))]
 pub(crate) mod inventory_probe;
+#[cfg(target_os = "linux")]
+mod isolation;
 #[cfg(unix)]
 mod keeper;
 mod start;
