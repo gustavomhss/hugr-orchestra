@@ -25,6 +25,8 @@ If a history read fails temporarily, reopening the Session retries it and retain
 
 After an event connection reconnects, the app and TUI refresh loaded Session history and running status without reopening the view. A refresh waits for an earlier history read to finish, then reads a new snapshot. Status events received during a snapshot read take precedence over that snapshot; deleted Sessions stay removed.
 
+The TUI also refreshes cached Session titles in the current list. A Session renamed during the disconnect shows its new title even if you have never opened it.
+
 ## Retrying a message
 
 If sending a normal message to an existing Session fails, retrying the same action in the same open composer reuses its request and prepared attachments. The server may already have admitted the message before the connection failed; an exact retry reconciles that admission. Simultaneous attempts of the same action share one send.
