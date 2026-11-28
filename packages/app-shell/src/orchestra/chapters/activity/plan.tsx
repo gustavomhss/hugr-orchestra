@@ -178,7 +178,9 @@ export function ActivityPlan(props: { query: string }) {
     const isCurrent = () => applyID === id && scope() === serverURL && ownedScope() === serverURL && sdk() === currentSDK
     setState({ applyingTarget: binding.targetID, applyFailed: false })
     try {
-      const receipt = await applyObjects(serverURL, binding)
+      const receipt = await applyObjects(serverURL, {
+        approvalID: binding.approvalID, targetID: binding.targetID, generation: binding.generation,
+      })
       if (!isCurrent()) return
       if (receipt && (receipt.targetID !== binding.targetID || receipt.generation !== binding.generation || receipt.approvalID !== binding.approvalID)) {
         setState("applyFailed", true)

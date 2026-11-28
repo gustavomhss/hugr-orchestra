@@ -1,13 +1,17 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "f30958d5-467d-4861-8210-0e5f073ffd72",
+  "id": "7c693e29-79a8-4a42-b0ae-aeb07701a97f",
   "prevIds": [
-    "60bd86c4-4a29-4f4c-8dc6-39c090794cbf"
+    "f30958d5-467d-4861-8210-0e5f073ffd72"
   ],
   "ddl": [
     {
       "name": "activity_action_ledger",
+      "entityType": "tables"
+    },
+    {
+      "name": "activity_apply",
       "entityType": "tables"
     },
     {
@@ -327,6 +331,96 @@
       "name": "observation",
       "entityType": "columns",
       "table": "activity_action_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "preview_id",
+      "entityType": "columns",
+      "table": "activity_apply"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "approval_id",
+      "entityType": "columns",
+      "table": "activity_apply"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "target_id",
+      "entityType": "columns",
+      "table": "activity_apply"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "generation",
+      "entityType": "columns",
+      "table": "activity_apply"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "confirmed_at",
+      "entityType": "columns",
+      "table": "activity_apply"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "source",
+      "entityType": "columns",
+      "table": "activity_apply"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "destination",
+      "entityType": "columns",
+      "table": "activity_apply"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "identity",
+      "entityType": "columns",
+      "table": "activity_apply"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "outcome",
+      "entityType": "columns",
+      "table": "activity_apply"
     },
     {
       "type": "text",
@@ -8338,6 +8432,15 @@
     },
     {
       "columns": [
+        "preview_id"
+      ],
+      "nameExplicit": false,
+      "name": "activity_apply_pk",
+      "table": "activity_apply",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
         "target_id"
       ],
       "nameExplicit": false,
@@ -8785,6 +8888,24 @@
       "name": "session_share_pk",
       "table": "session_share",
       "entityType": "pks"
+    },
+    {
+      "columns": [
+        {
+          "value": "target_id",
+          "isExpression": false
+        },
+        {
+          "value": "generation",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "activity_apply_target_generation_idx",
+      "entityType": "indexes",
+      "table": "activity_apply"
     },
     {
       "columns": [
