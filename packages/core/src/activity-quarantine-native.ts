@@ -9,12 +9,13 @@ export type Lease = Readonly<{
   originalPath: string
   quarantinePath: string
   state: "armed" | "verified"
+  disposable?: "file" | "empty-directory"
   release: () => Promise<void>
 }>
 
 export type Acquire = (
   target: ActivityQuarantineExecutor.Target,
-  transition: "apply" | "restore",
+  transition: "apply" | "restore" | "empty",
 ) => Promise<Lease | undefined>
 
 export async function execute(
@@ -53,6 +54,46 @@ export async function execute(
     }, captured, transition)
   } finally {
     await Promise.resolve().then(() => lease.release()).catch(() => undefined)
+  }
+}
+
+/** The provider validates generation and identity while excluding new claimants until release. */
+export async function executeEmpty(
+  acquire: Acquire,
+  targets: readonly ActivityQuarantineExecutor.Target[],
+  currentRows: Parameters<typeof ActivityQuarantine.emptyTargets>[0],
+) {
+  const native = await Omni.quarantine().catch(() => undefined)
+  if (!native?.quarantineDispose) return "Refused"
+  const dispose = native.quarantineDispose
+  const leases = new Map<string, Lease>()
+  try {
+    return await ActivityQuarantineExecutor.executeEmpty({
+      async prepare(target) {
+        const lease = await acquire(target, "empty").catch(() => undefined)
+        if (!lease) return undefined
+        leases.set(target.id, lease)
+        if (!lease.originalPath?.trim() || !lease.quarantinePath?.trim() || lease.state !== "verified" ||
+          (lease.disposable !== "file" && lease.disposable !== "empty-directory")) return undefined
+        return {
+          facts: { original: { state: "unavailable" }, quarantine: await inspect(native, lease.quarantinePath) },
+          claimant: "absent",
+          mutation: async () => {
+            await dispose(lease.quarantinePath, target.identity)
+            return "accepted"
+          },
+        }
+      },
+      async reread(target) {
+        const lease = leases.get(target.id)
+        return {
+          original: { state: "unavailable" },
+          quarantine: lease ? await inspect(native, lease.quarantinePath) : { state: "unavailable" },
+        }
+      },
+    }, targets, currentRows)
+  } finally {
+    await Promise.all([...leases.values()].map((lease) => Promise.resolve().then(() => lease.release()).catch(() => undefined)))
   }
 }
 

@@ -43,6 +43,7 @@ export function load() {
 export type Quarantine = {
   quarantineInspect: (path: string) => Promise<string | null>
   quarantineRename: (source: string, destination: string, identity: string) => Promise<string>
+  quarantineDispose?: (path: string, identity: string) => Promise<void>
 }
 
 /** Private hooks from the bundled Windows addon. A missing capability refuses the operation. */
@@ -51,7 +52,10 @@ export async function quarantine(): Promise<Quarantine | undefined> {
   const binding = await load()
   if ("quarantineInspect" in binding && typeof binding.quarantineInspect === "function" &&
     "quarantineRename" in binding && typeof binding.quarantineRename === "function") {
-    return binding as Binding & Quarantine
+    const native = binding as Binding & Quarantine & { quarantineDisposeAvailable?: () => boolean }
+    if (typeof native.quarantineDispose === "function" &&
+      typeof native.quarantineDisposeAvailable === "function" && native.quarantineDisposeAvailable()) return native
+    return { quarantineInspect: native.quarantineInspect, quarantineRename: native.quarantineRename }
   }
 }
 
