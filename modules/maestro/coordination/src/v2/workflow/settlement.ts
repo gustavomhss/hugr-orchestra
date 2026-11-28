@@ -300,7 +300,10 @@ export const verification = Effect.fn("WorkflowSettlementV2.verification")(
     const file = path.join(temporary, "junit.xml")
     const args = ["test", "--timeout", "30000", "--reporter=junit", `--reporter-outfile=${file}`]
     yield* authorize([process.execPath, ...args].map((item) => JSON.stringify(item)).join(" "))
-    const command = yield* ToolSafetySandbox.wrap(ChildProcess.make(process.execPath, args, { cwd: directory, extendEnv: false }))
+    // The compiled Orchestra CLI must invoke Bun, and the package guard needs GitHub's CI marker on Linux.
+    const actionsLinux = process.platform === "linux" && process.env.RUNNER_OS === "Linux" && process.env.GITHUB_RUN_ID
+    const env = { BUN_BE_BUN: "1", ...(actionsLinux && process.env.CI === "true" ? { CI: "true" } : {}) }
+    const command = yield* ToolSafetySandbox.wrap(ChildProcess.make(process.execPath, args, { cwd: directory, env, extendEnv: false }))
     const result = yield* processes.run(command, { timeout: "55 seconds", maxOutputBytes: 1024, maxErrorBytes: 1024 })
     const refused = (status: "missing" | "acquisition-error", reason: string) => ({ outcome: { status }, reason })
     if (result.stdoutTruncated || result.stderrTruncated) return refused("acquisition-error", "RUNNER_OUTPUT_OVERFLOW")

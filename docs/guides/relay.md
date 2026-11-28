@@ -63,6 +63,8 @@ A run is bound to a session. Each turn, the runner injects the current step into
 | `judge` | Asks a model. The built-in judge is a stub that does not evaluate the criterion; set `relay.judge.backend: "api"` for real judging |
 | Host checks | Package verification and cold review, run by the host rather than a command |
 
+Package verification runs Bun in the authority Session's directory. On a GitHub Actions Linux runner, the subprocess receives the runner's CI marker for repository test guards without inheriting the host's credentials.
+
 ### The ledger
 
 - One JSONL line per outcome under the app's data directory (`relay/<project>/`).
