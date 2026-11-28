@@ -156,7 +156,7 @@ test("F4 missing and corrupt current or imported required bodies fail replay wit
         if (!artifact) return yield* Effect.die("required selected descriptor missing")
         const filename = path.join(blobRoot(root, host), artifact.sha256)
         const original = required(evidence.bodies, id)
-        expect(yield* Effect.promise(() => fs.readFile(filename))).toEqual(original)
+        expect(yield* Effect.promise(() => fs.readFile(filename))).toEqual(Buffer.from(original))
         for (const damage of ["missing", "corrupt"] as const) {
           const calls = root.requests.length
           yield* Effect.gen(function* () {
