@@ -1,0 +1,35 @@
+{
+  "schema": "genesis-candidate-mechanical-verification/v1",
+  "candidate": "s1.subslice01.runtime-models-economy-completion",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "body": {
+    "path": "body.md",
+    "byte_length": 37774,
+    "sha256": "b508a88285219a8afac0066e5ef80eda06d8397c266dfb6e9294311d74fc659a"
+  },
+  "delta": {
+    "span_count": 5,
+    "untouched_byte_count": 34355,
+    "reconstruction_matches_body": true
+  },
+  "sources": {
+    "manifest_path": "source-manifest.json",
+    "manifest_sha256": "52aa832200326af34df9636fa3553f4d06d73957e21b39468fd6dec5ca73fc85",
+    "captured_sources_pinned_and_git_blob_verified": 9
+  },
+  "population": {
+    "coverage_rows": 235,
+    "selected_inventory_rows": 235,
+    "unique_and_matching_paths": true,
+    "disposition_counts": {
+      "contract-in-supplement": 139,
+      "grouped-document-context": 9,
+      "grouped-support-source": 4,
+      "grouped-test-source": 58,
+      "grouped-vendor-boundary": 25
+    },
+    "all_semantic_acceptance": "NOT_REVIEWED"
+  },
+  "semantic_review": "PENDING_INDEPENDENT_SAME_PAIR",
+  "runtime_validation": "NOT_RUN"
+}
