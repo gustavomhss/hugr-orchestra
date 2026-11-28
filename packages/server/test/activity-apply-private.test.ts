@@ -11,7 +11,7 @@ test("Apply uses separately signed endpoints and never accepts a renderer-suppli
   const snapshot = { available: true, eligible: [binding], results: [], partial: false }
   let reads = 0
   let confirms = 0
-  const channel = Reflect.apply(ActivityPrivateChannelServer.acquire, undefined, [
+  const channel = await ActivityPrivateChannelServer.acquire(
     Readable.from([Buffer.from(ActivityPrivateChannel.frame(secret))]), new AbortController().signal,
     undefined, undefined, undefined, undefined,
     {
@@ -29,7 +29,7 @@ test("Apply uses separately signed endpoints and never accepts a renderer-suppli
         return { previewID: "apply-1", ...binding, outcome: "Out" as const }
       }),
     },
-  ]) as ReturnType<typeof ActivityPrivateChannelServer.acquire>
+  )
   secret.fill(0)
   const post = async (route: string, body: unknown, signedFor = route, origin?: string) => {
     const endpoint = (ActivityPrivateChannel.mount + route) as ActivityPrivateChannel.ArmPath
@@ -42,7 +42,7 @@ test("Apply uses separately signed endpoints and never accepts a renderer-suppli
         : "",
     })
     if (origin) headers.set("origin", origin)
-    const result = await (await channel).handler(new Request("http://127.0.0.1" + endpoint, { method: "POST", headers, body: text }))
+    const result = await channel.handler(new Request("http://127.0.0.1" + endpoint, { method: "POST", headers, body: text }))
     if (result?.status !== 200) return { status: result?.status }
     const reply = await result.text()
     expect(result.headers.get("cache-control")).toBe("no-store")

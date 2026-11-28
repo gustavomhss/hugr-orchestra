@@ -1,10 +1,12 @@
 export * as ActivityPrivateChannelServer from "./activity-private-channel"
 
 import type { ActivityArmLedger } from "@orchestra/core/activity-arm"
+import type { ActivityApplyService } from "@orchestra/core/activity-apply"
 import type { ActivityFreezeService } from "@orchestra/core/activity-freeze-service"
 import type { ActivityStopService } from "@orchestra/core/activity-stop-service"
 import type { ActivityQuarantineCustody } from "@orchestra/core/activity-quarantine-custody"
 import { ActivityArm } from "@orchestra/schema/activity-arm"
+import { ActivityApply } from "@orchestra/schema/activity-apply"
 import { ActivityFreeze } from "@orchestra/schema/activity-freeze"
 import { ActivityStop } from "@orchestra/schema/activity-stop"
 import { ActivityEmpty } from "@orchestra/schema/activity-empty"
@@ -27,6 +29,7 @@ export async function acquire(
   stop?: ActivityStopService.Interface,
   custody?: ActivityQuarantineCustody.Interface,
   freeze?: ActivityFreezeService.Interface,
+  apply?: ActivityApplyService.Interface,
 ): Promise<HttpExtension> {
   const frame = new Uint8Array(ActivityPrivateChannel.frameBytes)
   const key = await new Promise<Uint8Array>((resolve, reject) => {
@@ -92,13 +95,16 @@ export async function acquire(
       const endpoint = url.pathname
       const armPath = endpoint === ActivityPrivateChannel.inspectArmPath ||
         endpoint === ActivityPrivateChannel.previewPath || endpoint === ActivityPrivateChannel.confirmPath
+      const applyPath = endpoint === ActivityPrivateChannel.applyStatePath ||
+        endpoint === ActivityPrivateChannel.applyPreviewPath || endpoint === ActivityPrivateChannel.applyConfirmPath
       const stopPath = endpoint === ActivityPrivateChannel.stopPreviewPath || endpoint === ActivityPrivateChannel.stopConfirmPath
       const emptyPath = endpoint === ActivityPrivateChannel.emptyPreviewPath || endpoint === ActivityPrivateChannel.emptyConfirmPath ||
         endpoint === ActivityPrivateChannel.emptyStatePath
       const freezePath = endpoint === ActivityPrivateChannel.freezeStatePath || endpoint === ActivityPrivateChannel.freezePreviewPath ||
         endpoint === ActivityPrivateChannel.freezeConfirmPath
-      if (!armPath && !stopPath && !emptyPath && !freezePath) return forbidden()
-      if ((armPath && !arm) || (stopPath && !stop) || (emptyPath && !custody) || (freezePath && !freeze)) return forbidden()
+      if (!armPath && !applyPath && !stopPath && !emptyPath && !freezePath) return forbidden()
+      if ((armPath && !arm) || (applyPath && !apply) || (stopPath && !stop) ||
+        (emptyPath && !custody) || (freezePath && !freeze)) return forbidden()
       const body = await readBody(request)
       if (body === undefined || !nonce || !await signer.verifyArm("arm-request", endpoint, nonce, mac, body)) return forbidden()
       const decoded = parseBody(body)
@@ -109,6 +115,12 @@ export async function acquire(
           : endpoint === ActivityPrivateChannel.previewPath
             ? run(decoded, ActivityArm.decodeRequest, arm.preview, ActivityArm.decodePreview)
             : run(decoded, ActivityArm.decodeConfirm, arm.confirm, ActivityArm.decodeReceipt)
+      ) : applyPath && apply ? (
+        endpoint === ActivityPrivateChannel.applyStatePath
+          ? run(decoded, decodeInspect, apply.state, ActivityApply.decodeState)
+          : endpoint === ActivityPrivateChannel.applyPreviewPath
+            ? run(decoded, ActivityApply.decodeRequest, apply.preview, ActivityApply.decodePreview)
+            : run(decoded, ActivityApply.decodeConfirm, apply.confirm, ActivityApply.decodeReceipt)
       ) : stopPath && stop ? (
         endpoint === ActivityPrivateChannel.stopPreviewPath
           ? run(decoded, ActivityStop.decodeRequest, stop.preview, ActivityStop.decodePreview)

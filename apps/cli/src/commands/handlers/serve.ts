@@ -96,10 +96,13 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
       () => import("@orchestra/server/activity-private-channel"),
     )
     const { ActivityArmLedger } = yield* Effect.promise(() => import("@orchestra/core/activity-arm"))
+    const { ActivityApplyService } = yield* Effect.promise(() => import("@orchestra/core/activity-apply"))
     const { ActivityStopService } = yield* Effect.promise(() => import("@orchestra/core/activity-stop-service"))
     const { ActivityQuarantineCustody } = yield* Effect.promise(() => import("@orchestra/core/activity-quarantine-custody"))
     const scope = yield* Layer.build(AppNodeBuilder.build(Database.node))
     const database = Context.get(scope, Database.Service)
+    // The current Linux worktree observer cannot reserve a directory entry against replacement.
+    const apply = ActivityApplyService.make(database)
     const arm = process.platform === "linux" ? yield* Effect.gen(function* () {
       const { ActivityArmObjects } = yield* Effect.promise(() => import("@orchestra/core/activity-arm-objects"))
       const { AppProcess } = yield* Effect.promise(() => import("@orchestra/core/process"))
@@ -119,7 +122,7 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
       return ActivityFreezeService.make(database)
     }) : undefined
     const extension = yield* Effect.tryPromise({
-      try: (signal) => ActivityPrivateChannelServer.acquire(process.stdin, signal, arm, stop, custody, freeze),
+      try: (signal) => ActivityPrivateChannelServer.acquire(process.stdin, signal, arm, stop, custody, freeze, apply),
       catch: () => new Error("Activity private channel startup failed"),
     })
     if (process.platform === "linux" && isolation !== undefined) {

@@ -15,6 +15,7 @@
   "exports": {
     "./activity-worktree": "./src/activity-worktree.ts",
     "./activity-arm": "./src/activity-arm.ts",
+    "./activity-apply": "./src/activity-apply.ts",
     "./activity-arm-objects": "./src/activity-arm-objects.ts",
     "./activity-quarantine-archive": "./src/activity-quarantine-archive.ts",
     "./activity-quarantine-custody": "./src/activity-quarantine-custody.ts",
