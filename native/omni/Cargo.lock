@@ -152,7 +152,6 @@ name = "hugr-omni-node"
 version = "0.1.0"
 dependencies = [
  "hugr-omni",
- "libc",
  "napi",
  "napi-build",
  "napi-derive",

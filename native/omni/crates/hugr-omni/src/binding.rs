@@ -143,3 +143,7 @@ mod tests {
 /// Internal host filesystem primitive; paths must already be authorized by the host.
 #[cfg(windows)]
 pub mod quarantine_windows;
+
+/// Internal protected Linux filesystem primitive for an explicitly provisioned privileged host.
+#[cfg(target_os = "linux")]
+pub mod quarantine_protected_linux;

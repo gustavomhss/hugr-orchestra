@@ -66,7 +66,9 @@ fn target<'a>(root_path: &str, path: &'a str) -> io::Result<Vec<&'a str>> {
     let components: Vec<_> = suffix.split('/').collect();
     if components.iter().any(|p| p.is_empty() || *p == "." || *p == ".." || p.as_bytes().contains(&0)) { return Err(error("invalid target")); }
     match components.as_slice() {
-        ["worktrees", _, ".turbo" | "node_modules"] | ["quarantine", _] => Ok(components),
+        ["worktrees", _, ".turbo" | "node_modules"] => Ok(components),
+        ["quarantine", name] if name.len() == 66 && name.starts_with("q-") &&
+            name.as_bytes()[2..].iter().all(|c| c.is_ascii_digit() || (b'a'..=b'f').contains(c)) => Ok(components),
         _ => Err(error("invalid target shape")),
     }
 }
@@ -80,12 +82,14 @@ fn identity(fd: &OwnedFd, dev: (u64, u64)) -> io::Result<String> {
     if mount(fd)? != dev.1 { return Err(error("mount boundary")); }
     Ok(format!("{}:{}", s.st_dev, s.st_ino))
 }
+/// Check whether the configured protected root is available to this privileged process.
 pub fn available(path: &str) -> io::Result<bool> {
     let (fd, dev) = root(path)?;
     child(&fd, "worktrees", dev)?;
     child(&fd, "quarantine", dev)?;
     Ok(true)
 }
+/// Inspect a protected source or destination, returning None only for a protected absence.
 pub fn inspect(root_path: &str, path: &str) -> io::Result<Option<String>> {
     let components = target(root_path, path)?;
     let (root, dev) = root(root_path)?;
@@ -96,25 +100,34 @@ pub fn inspect(root_path: &str, path: &str) -> io::Result<Option<String>> {
         Err(e) => Err(e),
     }
 }
+/// Move the pinned source to an unused protected destination, failing closed on uncertainty.
 pub fn rename(root_path: &str, source: &str, destination: &str, expected: &str) -> &'static str {
     match prepare(root_path, source, destination, expected) {
-        Ok((source_parent, source_name, destination_parent, destination_name, source_fd, dev)) => {
+        Ok(pin) => {
             // SAFETY: both directory descriptors and NUL-terminated names remain live throughout the syscall.
-            let rc = unsafe { libc::syscall(libc::SYS_renameat2, source_parent.as_raw_fd(), source_name.as_ptr(), destination_parent.as_raw_fd(), destination_name.as_ptr(), libc::RENAME_NOREPLACE) };
+            let rc = unsafe { libc::syscall(libc::SYS_renameat2, pin.source_parent.as_raw_fd(), pin.source_name.as_ptr(), pin.destination_parent.as_raw_fd(), pin.destination_name.as_ptr(), libc::RENAME_NOREPLACE) };
             if rc != 0 {
                 return match io::Error::last_os_error().raw_os_error() {
                     Some(libc::EEXIST | libc::ENOENT | libc::EXDEV | libc::EINVAL | libc::EACCES | libc::EPERM | libc::ENOTEMPTY | libc::ENOSYS) => "refused",
                     _ => "unknown",
                 };
             }
-            let verified = open(destination_parent.as_raw_fd(), destination_name.to_str().unwrap_or(""))
-                .and_then(|fd| Ok(identity(&fd, dev)? == identity(&source_fd, dev)?));
+            let verified = open(pin.destination_parent.as_raw_fd(), pin.destination_name.to_str().unwrap_or(""))
+                .and_then(|fd| Ok(identity(&fd, pin.dev)? == identity(&pin.source_fd, pin.dev)?));
             if matches!(verified, Ok(true)) { "accepted" } else { "unknown" }
         }
         Err(_) => "refused",
     }
 }
-fn prepare(root_path: &str, source: &str, destination: &str, expected: &str) -> io::Result<(OwnedFd, CString, OwnedFd, CString, OwnedFd, (u64, u64))> {
+struct RenamePin {
+    source_parent: OwnedFd,
+    source_name: CString,
+    destination_parent: OwnedFd,
+    destination_name: CString,
+    source_fd: OwnedFd,
+    dev: (u64, u64),
+}
+fn prepare(root_path: &str, source: &str, destination: &str, expected: &str) -> io::Result<RenamePin> {
     let src = target(root_path, source)?;
     let dst = target(root_path, destination)?;
     if src.len() != 3 || dst.len() != 2 { return Err(error("invalid rename shape")); }
@@ -123,5 +136,12 @@ fn prepare(root_path: &str, source: &str, destination: &str, expected: &str) -> 
     let dp = parent(&root, dev, &dst)?;
     let fd = open(sp.as_raw_fd(), src[2])?;
     if identity(&fd, dev)? != expected { return Err(error("identity mismatch")); }
-    Ok((sp, CString::new(src[2]).map_err(|_| error("invalid name"))?, dp, CString::new(dst[1]).map_err(|_| error("invalid name"))?, fd, dev))
+    Ok(RenamePin {
+        source_parent: sp,
+        source_name: CString::new(src[2]).map_err(|_| error("invalid name"))?,
+        destination_parent: dp,
+        destination_name: CString::new(dst[1]).map_err(|_| error("invalid name"))?,
+        source_fd: fd,
+        dev,
+    })
 }

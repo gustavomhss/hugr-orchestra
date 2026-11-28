@@ -1,16 +1,13 @@
 //! Protected quarantine exercises real Linux filesystem operations as the privileged sidecar.
 #![cfg(target_os = "linux")]
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
-#[path = "../src/protected_linux.rs"]
-mod protected_linux;
+use hugr_omni::binding::quarantine_protected_linux as protected_linux;
 use std::os::unix::fs::{symlink, PermissionsExt};
 
 #[test]
 #[ignore = "requires a root-owned fixture on a supported Linux filesystem"]
 fn protected_quarantine() {
-    // SAFETY: geteuid has no preconditions.
-    assert_eq!(unsafe { libc::geteuid() }, 0, "fixture must run as root");
-    let root = format!("/root/omni-quarantine-test-{}", std::process::id());
+    let root = format!("/var/lib/omni-quarantine-test-{}", std::process::id());
     let base = std::path::Path::new(&root);
     std::fs::create_dir(base).unwrap();
     std::fs::set_permissions(base, std::fs::Permissions::from_mode(0o700)).unwrap();
@@ -20,10 +17,15 @@ fn protected_quarantine() {
         std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o700)).unwrap();
     }
     let source = format!("{root}/worktrees/one/.turbo");
-    let destination = format!("{root}/quarantine/q-one");
+    let destination = format!("{root}/quarantine/q-{}", "a".repeat(64));
+    let invalid = format!("{root}/quarantine/q-one");
     assert!(protected_linux::available(&root).unwrap());
     assert_eq!(protected_linux::inspect(&root, &destination).unwrap(), None);
     let id = protected_linux::inspect(&root, &source).unwrap().unwrap();
+    assert_eq!(protected_linux::rename(&root, &source, &invalid, &id), "refused");
+    assert!(protected_linux::inspect(&root, &invalid).is_err());
+    let uppercase = format!("{root}/quarantine/q-{}", "A".repeat(64));
+    assert_eq!(protected_linux::rename(&root, &source, &uppercase, &id), "refused");
     assert_eq!(protected_linux::rename(&root, &source, &destination, "0:0"), "refused");
     std::fs::create_dir(&destination).unwrap();
     assert_eq!(protected_linux::rename(&root, &source, &destination, &id), "refused");
@@ -37,6 +39,6 @@ fn protected_quarantine() {
     assert_eq!(protected_linux::inspect(&root, &destination).unwrap(), Some(id));
     symlink(&destination, &source).unwrap();
     assert!(protected_linux::inspect(&root, &source).is_err());
-    assert_eq!(protected_linux::rename(&root, &source, &format!("{root}/quarantine/q-two"), "0:0"), "refused");
+    assert_eq!(protected_linux::rename(&root, &source, &format!("{root}/quarantine/q-{}", "b".repeat(64)), "0:0"), "refused");
     std::fs::remove_dir_all(base).unwrap();
 }

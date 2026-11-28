@@ -357,12 +357,24 @@ function quarantineOperation(name) {
   });
 }
 
-const quarantineProtectedAvailable = (root) => later(() => {
+const quarantineProtectedAvailable = (root) => later(async () => {
   const native = load();
-  return typeof native.quarantineProtectedAvailable === "function" ? native.quarantineProtectedAvailable(root) : false;
+  if (typeof native.quarantineProtectedAvailable !== "function") return false;
+  return (await native.quarantineProtectedAvailable(root)) === true;
 });
-const quarantineProtectedInspect = quarantineOperation("quarantineProtectedInspect");
-const quarantineProtectedRename = quarantineOperation("quarantineProtectedRename");
+const quarantineProtectedInspect = (root, path) => later(async () => {
+  const native = load();
+  if (typeof native.quarantineProtectedInspect !== "function") throw new Error("Quarantine primitive unavailable: quarantineProtectedInspect");
+  const value = await native.quarantineProtectedInspect(root, path);
+  if (value === null || (typeof value === "string" && /^[0-9]+:[0-9]+$/.test(value))) return value;
+  throw new Error("Invalid protected quarantine inspection result");
+});
+const quarantineProtectedRename = (root, source, destination, expected) => later(async () => {
+  const native = load();
+  if (typeof native.quarantineProtectedRename !== "function") return "unknown";
+  const value = await native.quarantineProtectedRename(root, source, destination, expected);
+  return value === "accepted" || value === "refused" ? value : "unknown";
+});
 
 const quarantineIdentity = quarantineOperation("quarantineIdentity");
 const quarantineInspect = quarantineOperation("quarantineInspect");

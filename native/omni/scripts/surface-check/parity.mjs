@@ -134,7 +134,10 @@ export function check(root) {
   const mapFile = "scripts/surface-check/parity.txt";
   const { declared, concepts } = glossary(read(root, contract), contract);
   const { excluded, rows } = parityMap(read(root, mapFile), mapFile);
-  const ts = tsSurface(read(root, "bindings/node/index.d.ts"), "bindings/node/index.d.ts");
+  const allTs = tsSurface(read(root, "bindings/node/index.d.ts"), "bindings/node/index.d.ts");
+  // Host-only filesystem authority, not a cross-language process capability in the glossary.
+  const hostOnly = ["quarantineProtectedAvailable", "quarantineProtectedInspect", "quarantineProtectedRename"];
+  const ts = allTs.filter((item) => !hostOnly.includes(item));
   const rust = rustSurface(root);
   const out = [];
 

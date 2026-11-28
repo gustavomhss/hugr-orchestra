@@ -27,6 +27,4 @@ mod teardown;
 mod quarantine_windows;
 
 #[cfg(target_os = "linux")]
-mod protected_linux;
-#[cfg(target_os = "linux")]
 mod quarantine_protected;
