@@ -5,7 +5,7 @@ import type { ActivityExternalCache } from "@orchestra/core/activity-external-ca
 import type { ActivityWorktree } from "@orchestra/core/activity-worktree"
 import { Database } from "@orchestra/core/database/database"
 import { AppProcess } from "@orchestra/core/process"
-import { setup } from "../../core/test/fixture/activity-worktree"
+import { setup } from "@orchestra/core/test/fixture/activity-worktree"
 import { ActivityMonitor } from "@orchestra/schema/activity-monitor"
 import { ActivityGroup } from "@orchestra/protocol/groups/activity"
 import { Authorization } from "@orchestra/protocol/middleware/authorization"
@@ -19,7 +19,7 @@ import { ServerAuth } from "../src/auth"
 import { authorizationLayer } from "../src/middleware/authorization"
 import { schemaErrorLayer } from "../src/middleware/schema-error"
 
-export { it, bounded, entered } from "../../core/test/fixture/activity-worktree"
+export { it, bounded, entered } from "@orchestra/core/test/fixture/activity-worktree"
 
 export function serve(
   input: {
