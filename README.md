@@ -23,7 +23,7 @@ Early release, builds not code signed yet. [Maturity and limits](docs/guides/lim
 | Who does the work | One agent researches, plans, codes and judges its own result | Separate seats for research, planning and code; the reviewer is never the author and never sees the author's reasoning |
 | When it is done | When the agent says so | When the step's checks pass; the agent's report does not count |
 | What proves it | The chat transcript | A hash-chained ledger sealed with HMAC that `relay verify` replays |
-| What stops a bad action | Rules in the prompt and permission prompts | An OS sandbox per seat; push, commit, merge, release, deploy and `rm` are refused by the host |
+| What stops a bad action | Rules in the prompt and permission prompts | OS sandboxing applies when a seat or project policy requires it. Host rules govern selected sensitive commands. See [SECURITY.md](SECURITY.md) for sandbox defaults. |
 | Long sessions | Compaction drops the detail that mattered | Summaries start early; old tool output becomes stubs the agent can recall word for word |
 | A crash mid-test | Orphan dev servers and test runners holding ports | A native supervisor stops every process tree the agent started |
 

@@ -40,12 +40,38 @@ test("symlinks cannot turn an external directory into measured coverage", async 
   expect(result.observedBytes).toBe(0)
   expect(result.issues.some((issue) => issue.reason === "symlink")).toBe(true)
   const link = path.join(root.directory, "escape")
-  for (const spelling of [link, link + path.sep, link + path.sep + "."]) {
+  for (const spelling of [
+    link,
+    link + path.sep,
+    link + path.sep + ".",
+    link + path.sep.repeat(2) + "." + path.sep.repeat(2),
+    link + path.sep + "." + path.sep + ".",
+  ]) {
     const attempt = await measure(spelling)
     expect(attempt.state).toBe("partial")
     expect(attempt.observedBytes).toBe(0)
     expect(attempt.issues).toContainEqual({ path: spelling, reason: "symlink" })
   }
+})
+
+test("terminal separators and dot segments trim without crossing the volume root", async () => {
+  await using root = await fixture()
+  await Bun.write(path.join(root.directory, "file"), "abc")
+  const spellings = [
+    root.directory + path.sep.repeat(3),
+    root.directory + path.sep + "." + path.sep + ".",
+    root.directory + path.sep.repeat(2) + "." + path.sep.repeat(2),
+  ]
+  for (const spelling of spellings) {
+    const attempt = await measure(spelling)
+    expect(attempt.state).toBe("complete")
+    expect(attempt.observedBytes).toBe(3)
+  }
+
+  const declaredRoot = path.parse(root.directory).root + path.sep.repeat(3)
+  const boundary = await measure(declaredRoot, { maxEntries: 0 })
+  expect(boundary.state).toBe("partial")
+  expect(boundary.issues).toContainEqual({ path: declaredRoot, reason: "limit" })
 })
 
 test.skipIf(process.platform !== "linux")("lossy directory names are explicit gaps", async () => {
