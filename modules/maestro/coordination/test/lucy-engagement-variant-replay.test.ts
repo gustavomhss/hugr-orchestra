@@ -200,6 +200,7 @@ for (const version of ["v1", "v2"] as const) {
         expect(canonical(checked.model ?? null)).toBe(original.frozen.model)
         if (version === "v2") {
           if (!original.index) return yield* Effect.die("frozen legacy index missing")
+          if (original.pages === undefined) return yield* Effect.die("frozen legacy pages missing")
           const evidence = yield* receipt(host, report)
           expect(evidence.value.schema).toBe("review-engagement-evidence-v1")
           expect(evidence.bytes).toEqual(original.frozen.receipt)

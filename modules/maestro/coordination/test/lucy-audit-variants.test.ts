@@ -82,7 +82,9 @@ test("three native generations preserve one deterministic lineage, distinct quot
         const original = source.files[region.path]
         if (original === undefined) return yield* Effect.die("a captured region escaped the fixture's original source files")
         expect(region.blobSha256).toBe(digest(original))
-        expect(region.oid).toBe(report.source?.files.find((file) => file.path === region.path)?.oid)
+        const captured = report.source?.files.find((file) => file.path === region.path)
+        if (!captured) return yield* Effect.die("region has no captured report file")
+        expect(region.oid).toBe(captured.oid)
       }
       for (const ordinal of [1, 2, 3]) {
         const { generation, search } = accepted(checked.value, ordinal)

@@ -23,13 +23,14 @@ export const observedVariants = (host: Ctx, input: unknown, delivered: Delivered
   expect(variants.namespace).toBe(identity.key)
   expect(variants.policy).toBe("audit-variants-v1")
   expect(variants.generations.length).toBeLessThanOrEqual(variants.limit)
-  expect(variants.generations.map((item) => item.ordinal)).toEqual(variants.generations.map((_, index) => index + 1))
+  expect(variants.generations.map<number>((item) => item.ordinal)).toEqual(variants.generations.map((_, index) => index + 1))
   const rows = yield* host.db.select().from(SessionTable).all().pipe(Effect.orDie)
   const lead = rows.find((row) => row.id === value.sessionID)
   expect(lead?.parent_id).toBe(host.parent.id)
   const stored = Schema.decodeUnknownSync(StateV3)(lead?.metadata?.lucyEngagementV1, { onExcessProperty: "error" })
   expect(stored.schema).toBe("review-engagement-state-v3")
   expect(stored.state).toBe("terminal")
+  if (!stored.source) return yield* Effect.die("completed variants receipt has no captured durable source")
   expect(stored.variants).toEqual({ policy: variants.policy, limit: variants.limit, phase: "closed", stop: variants.stop,
     reservations: variants.generations.map((generation) => ({
       generationID: generation.generationID, ordinal: generation.ordinal, sourceSha256: generation.sourceSha256,
@@ -63,7 +64,7 @@ export const observedVariants = (host: Ctx, input: unknown, delivered: Delivered
     expect(part?.id).toBe(reply.textPartID)
     expect(part?.text).toBe(reply.text)
     expect(assistant.time.completed).toBeDefined()
-    expect(rows.find((row) => row.id === reply.sessionID)?.parent_id).toBe(value.sessionID)
+    expect(rows.find((row) => row.id === reply.sessionID)?.parent_id).toBe(SessionSchema.ID.make(value.sessionID))
   }
   for (const seed of variants.seeds) {
     expect(seed.seedID).toBe(digest(canonical({ schema: "review-variant-seed-v1", sourceSha256: value.sourceSha256,
@@ -99,8 +100,9 @@ export const observedVariants = (host: Ctx, input: unknown, delivered: Delivered
       expect(attempt.sourceSha256).toBe(value.sourceSha256)
       const call = actual.find((item) => item.assistantMessageID === attempt.assistantMessageID && item.toolCallID === attempt.toolCallID)
       expect(call).toBeDefined()
-      expect(attempt.status).toBe(call?.status)
-      expect(attempt.providerExecuted).toBe(call?.providerExecuted)
+      if (!call) return yield* Effect.die("receipt attempt has no actual native search call")
+      expect(attempt.status).toBe(call.status)
+      expect(attempt.providerExecuted).toBe(call.providerExecuted)
       expect(attempt.attemptID).toBe(digest(canonical({ schema: "review-engagement-code-operation-v1", inputHash: value.inputHash,
         sessionID: attempt.sessionID, assistantMessageID: attempt.assistantMessageID, toolCallID: attempt.toolCallID,
         name: "code_search", sourceSha256: value.sourceSha256 })))
@@ -115,7 +117,7 @@ export const observedVariants = (host: Ctx, input: unknown, delivered: Delivered
     expect(operation.input).toMatchObject({ paths: ["**"], offset: 0, limit: 200, context: 0 })
     expect(operation.nativeSettlement).toEqual({ status: "completed", messageID: operation.assistantMessageID })
     const body = Schema.decodeUnknownSync(RetainedSearch)(JSON.parse(required(delivered.bodies, operation.evidence.artifactID).toString("utf8")))
-    expect(body.source.commit).toBe(stored.source?.commit)
+    expect(body.source.commit).toBe(stored.source.commit)
     expect(body.source.scope.sha256).toBe(value.sourceSha256)
     expect(body.result.basis.coverage.complete).toBe(true)
     expect(body.result.basis.coverage.binariesSkipped).toBe(0)

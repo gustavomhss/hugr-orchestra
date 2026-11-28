@@ -230,7 +230,8 @@ test("a variant and another audit's real lenses share the same two native execut
           Effect.raceFirst(Fiber.join(ownerA), Fiber.join(ownerB)).pipe(Effect.as(false)))).toBe(true)
         expect(yield* Deferred.isDone(secondLens)).toBe(false)
         expect(lensIDs).toHaveLength(1)
-        expect([...(yield* host.execution.active)].sort()).toEqual([variant.sessionID, lens.sessionID].sort())
+        expect([...(yield* host.execution.active)].sort()).toEqual(
+          [SessionSchema.ID.make(variant.sessionID), SessionSchema.ID.make(lens.sessionID)].sort())
         expect(Math.max(...snapshots.map((active) => active.length))).toBeLessThanOrEqual(2)
         yield* Deferred.succeed(releaseVariant, undefined)
         expect(yield* Effect.raceFirst(Deferred.await(secondLens).pipe(Effect.as(true)), Fiber.join(ownerB).pipe(Effect.as(false)))).toBe(true)
