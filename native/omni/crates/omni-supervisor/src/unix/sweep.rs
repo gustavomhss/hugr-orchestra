@@ -84,6 +84,10 @@ impl Trees {
             confirming |= t.empty_scans == 1;
             if t.empty_scans >= 2 && reap(t.pid) {
                 t.gone = true;
+                #[cfg(target_os = "linux")]
+                {
+                    t.member = None;
+                }
                 t.master = None;
                 exited_msg(id, t, out);
                 for req in t.stop.take().map(|s| s.waiters).unwrap_or_default() {
@@ -304,7 +308,7 @@ fn kill_session(root: i32, members: Option<&[Member]>, tx: &mut Signals<'_>) {
 }
 
 /// Reaps the root: from here on its numbers are free and never signalled again.
-fn reap(pid: i32) -> bool {
+pub(super) fn reap(pid: i32) -> bool {
     let mut status = 0;
     loop {
         // SAFETY: `status` is writable; WNOHANG never blocks.

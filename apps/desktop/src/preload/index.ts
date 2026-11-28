@@ -22,6 +22,11 @@ ipcRenderer.on("before-unload", (_: unknown, id: string) => {
 })
 
 const api: ElectronAPI = {
+  stopActivityTree: (serverURL, request) => ipcRenderer.invoke("activity-stop-tree", serverURL, request),
+  emptyActivityQuarantine: (serverURL) => ipcRenderer.invoke("activity-empty-quarantine", serverURL),
+  readActivityQuarantine: (serverURL) => ipcRenderer.invoke("activity-read-quarantine", serverURL),
+  readActivityFreeze: (serverURL, request) => ipcRenderer.invoke("activity-read-freeze", serverURL, request),
+  freezeActivityMember: (serverURL, request) => ipcRenderer.invoke("activity-freeze-member", serverURL, request),
   appDockLinuxOpen: (bounds, profile) => ipcRenderer.invoke("app-dock-linux-open", bounds, profile),
   appDockLinuxList: () => ipcRenderer.invoke("app-dock-linux-list"),
   appDockLinuxInstall: () => ipcRenderer.invoke("app-dock-linux-install"),

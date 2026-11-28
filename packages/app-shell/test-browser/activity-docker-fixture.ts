@@ -10,6 +10,7 @@ import { isolatedSolid } from "./orchestra/integrations-solid.fixture"
 
 const load = isolatedSolid("activity-docker")
 const sdkContext = createContext<Accessor<Pick<ServerSDK, "orchestra" | "ready">>>()
+const serverContext = createContext<Accessor<ServerConnection.Any | undefined>>()
 mock.module(Bun.resolveSync("@/context/server-sdk", import.meta.dir) + "?activity-docker", () => ({
   useServerSDK: () => {
     const sdk = useContext(sdkContext)
@@ -17,8 +18,16 @@ mock.module(Bun.resolveSync("@/context/server-sdk", import.meta.dir) + "?activit
     return sdk
   },
 }))
+mock.module(Bun.resolveSync("@/context/server", import.meta.dir) + "?activity-docker", () => ({
+  useServer: () => {
+    const current = useContext(serverContext)
+    if (!current) throw new Error("Activity fixture server missing")
+    return { get current() { return current() } }
+  },
+}))
 export const cachePath = "/api/activity/docker"
 export const readPath = "/api/activity/docker/read"
+export const planPath = "/api/activity/plan"
 export const source = "docker container ls --all --no-trunc --size --format json"
 
 export function row(containerID: string, name: string, sizeText?: string): ActivityMonitor.DockerContainer {
@@ -109,7 +118,8 @@ export async function mount(initialLocale: Locale = "en") {
       const pathname = new URL(request.url).pathname
       if (
         (pathname === cachePath && request.method === "GET") ||
-        (pathname === readPath && request.method === "POST")
+        (pathname === readPath && request.method === "POST") ||
+        (pathname === planPath && request.method === "GET")
       ) {
         const call = intercepted(request)
         calls.push(call)
@@ -154,11 +164,16 @@ export async function mount(initialLocale: Locale = "en") {
               return createComponent(sdkContext.Provider, {
                 value: active,
                 get children() {
-                  return createComponent(ActivityPage, {
-                    get server() {
-                      return active().connection
+                  return createComponent(serverContext.Provider, {
+                    value: () => active().connection,
+                    get children() {
+                      return createComponent(ActivityPage, {
+                        get server() {
+                          return active().connection
+                        },
+                        directory: "/fixture",
+                      })
                     },
-                    directory: "/fixture",
                   })
                 },
               })

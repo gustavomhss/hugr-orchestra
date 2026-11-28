@@ -39,6 +39,13 @@ impl Command {
         }
     }
 
+    /// Request a Linux isolated member through the provisioned root supervisor.
+    /// Fails closed when unavailable; PTYs are unsupported.
+    pub fn member_isolation(&mut self, enabled: bool) -> &mut Self {
+        self.req.member_isolation = enabled;
+        self
+    }
+
     /// Appends one argument, passed literally.
     pub fn arg(&mut self, arg: impl AsRef<OsStr>) -> &mut Self {
         self.req.args.push(arg.as_ref().to_os_string());

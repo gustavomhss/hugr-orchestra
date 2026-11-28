@@ -1,11 +1,27 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "b5adafd5-2ef0-4f00-a0ce-e82e4dd9f02c",
+  "id": "f30958d5-467d-4861-8210-0e5f073ffd72",
   "prevIds": [
-    "eb698716-65f1-46e5-be8b-5472d66abc68"
+    "60bd86c4-4a29-4f4c-8dc6-39c090794cbf"
   ],
   "ddl": [
+    {
+      "name": "activity_action_ledger",
+      "entityType": "tables"
+    },
+    {
+      "name": "activity_arm",
+      "entityType": "tables"
+    },
+    {
+      "name": "activity_quarantine_custody",
+      "entityType": "tables"
+    },
+    {
+      "name": "activity_suspension_ledger",
+      "entityType": "tables"
+    },
     {
       "name": "workspace",
       "entityType": "tables"
@@ -281,6 +297,266 @@
     {
       "name": "session_share",
       "entityType": "tables"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "target_id",
+      "entityType": "columns",
+      "table": "activity_action_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "generation",
+      "entityType": "columns",
+      "table": "activity_action_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "observation",
+      "entityType": "columns",
+      "table": "activity_action_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "approval_id",
+      "entityType": "columns",
+      "table": "activity_arm"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "target_id",
+      "entityType": "columns",
+      "table": "activity_arm"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "generation",
+      "entityType": "columns",
+      "table": "activity_arm"
+    },
+    {
+      "type": "integer",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "approved_at",
+      "entityType": "columns",
+      "table": "activity_arm"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "receipt",
+      "entityType": "columns",
+      "table": "activity_arm"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "snapshot",
+      "entityType": "columns",
+      "table": "activity_arm"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "target_id",
+      "entityType": "columns",
+      "table": "activity_quarantine_custody"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "generation",
+      "entityType": "columns",
+      "table": "activity_quarantine_custody"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "identity",
+      "entityType": "columns",
+      "table": "activity_quarantine_custody"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "label",
+      "entityType": "columns",
+      "table": "activity_quarantine_custody"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "owner",
+      "entityType": "columns",
+      "table": "activity_quarantine_custody"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "original_path",
+      "entityType": "columns",
+      "table": "activity_quarantine_custody"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "quarantine_path",
+      "entityType": "columns",
+      "table": "activity_quarantine_custody"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "phase",
+      "entityType": "columns",
+      "table": "activity_quarantine_custody"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "reservation_id",
+      "entityType": "columns",
+      "table": "activity_quarantine_custody"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "tree_id",
+      "entityType": "columns",
+      "table": "activity_suspension_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "generation",
+      "entityType": "columns",
+      "table": "activity_suspension_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "mark_id",
+      "entityType": "columns",
+      "table": "activity_suspension_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "phase",
+      "entityType": "columns",
+      "table": "activity_suspension_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "suspended",
+      "entityType": "columns",
+      "table": "activity_suspension_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": true,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "uncertain",
+      "entityType": "columns",
+      "table": "activity_suspension_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "pending",
+      "entityType": "columns",
+      "table": "activity_suspension_ledger"
+    },
+    {
+      "type": "text",
+      "notNull": false,
+      "autoincrement": false,
+      "default": null,
+      "generated": null,
+      "name": "owner_incarnation",
+      "entityType": "columns",
+      "table": "activity_suspension_ledger"
     },
     {
       "type": "text",
@@ -8053,6 +8329,33 @@
     },
     {
       "columns": [
+        "target_id"
+      ],
+      "nameExplicit": false,
+      "name": "activity_action_ledger_pk",
+      "table": "activity_action_ledger",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "target_id"
+      ],
+      "nameExplicit": false,
+      "name": "activity_quarantine_custody_pk",
+      "table": "activity_quarantine_custody",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
+        "tree_id"
+      ],
+      "nameExplicit": false,
+      "name": "activity_suspension_ledger_pk",
+      "table": "activity_suspension_ledger",
+      "entityType": "pks"
+    },
+    {
+      "columns": [
         "id"
       ],
       "nameExplicit": false,
@@ -8482,6 +8785,24 @@
       "name": "session_share_pk",
       "table": "session_share",
       "entityType": "pks"
+    },
+    {
+      "columns": [
+        {
+          "value": "target_id",
+          "isExpression": false
+        },
+        {
+          "value": "generation",
+          "isExpression": false
+        }
+      ],
+      "isUnique": true,
+      "where": null,
+      "origin": "manual",
+      "name": "activity_arm_target_generation_idx",
+      "entityType": "indexes",
+      "table": "activity_arm"
     },
     {
       "columns": [
@@ -9400,6 +9721,24 @@
       "name": "todo_session_idx",
       "entityType": "indexes",
       "table": "todo"
+    },
+    {
+      "columns": [
+        "identity"
+      ],
+      "nameExplicit": false,
+      "name": "activity_quarantine_custody_identity_unique",
+      "entityType": "uniques",
+      "table": "activity_quarantine_custody"
+    },
+    {
+      "columns": [
+        "quarantine_path"
+      ],
+      "nameExplicit": false,
+      "name": "activity_quarantine_custody_quarantine_path_unique",
+      "entityType": "uniques",
+      "table": "activity_quarantine_custody"
     },
     {
       "columns": [

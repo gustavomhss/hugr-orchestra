@@ -60,10 +60,11 @@ it.live.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")(
     yield* publisher.publish(LLMEvent.toolCall({ id: "call-matched", name: "bash", input: {} }))
     const assistantMessageID = yield* publisher.assistantMessageID("call-matched")
     const provenance = { sessionID, assistantMessageID, agentID: "backend", tool: "bash", callID: "call-matched" }
-    const matched = ActivityMonitor.observe(observed, "runtime", "", provenance)
-    const unmatched = ActivityMonitor.observe(observed, "runtime", "", { ...provenance, callID: "call-other" })
+    const held = [observed]
+    const matched = ActivityMonitor.observe(held[0], "runtime", "", provenance)
+    const unmatched = ActivityMonitor.observe(held[0], "runtime", "", { ...provenance, callID: "call-other" })
     yield* Effect.promise(() => Promise.all([ActivityMonitor.inspect(matched), ActivityMonitor.inspect(unmatched)]))
-    yield* Effect.promise(() => Bun.sleep(2))
+    yield* Effect.promise(() => waitForClock())
     yield* publisher.publish(LLMEvent.toolResult({
       id: "call-matched", name: "bash", result: { type: "text", value: "done" },
     }))
@@ -72,13 +73,23 @@ it.live.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")(
       sessionID, assistantMessageID, callID: "call-matched",
     })
     for (const bytes of [200, 300, 400]) {
-      yield* Effect.promise(() => Bun.sleep(2))
+      yield* Effect.promise(() => waitForClock())
       sample.bytes = bytes
       yield* Effect.promise(() => Promise.all([ActivityMonitor.inspect(matched), ActivityMonitor.inspect(unmatched)]))
     }
     const records = ActivityMonitor.snapshot().records
     expect(records.find((record) => record.recordID === matched)?.footprint?.hypothesis).toBe("compatible-with-logical-leak")
     expect(records.find((record) => record.recordID === unmatched)?.footprint?.hypothesis).toBe("insufficient")
+    const tree = yield* Effect.promise(() => {
+      const read = Reflect.get(held[0], "observeTree") as () => Promise<{ footprintIdentity?: string }>
+      return read()
+    })
+    expect(tree.footprintIdentity).toBe("stable-test-tree")
   }),
   30_000,
 )
+
+async function waitForClock() {
+  const seen = Date.now()
+  while (Date.now() <= seen) await Bun.sleep(5)
+}

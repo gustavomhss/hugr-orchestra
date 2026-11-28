@@ -264,8 +264,26 @@ class Child {
     return later(() => this.#native.stop(options?.graceMs));
   }
 
+  freezeMember(member, action) {
+    return later(() => this.#native.freezeMember(member, action));
+  }
+
   processes() {
     return this.#native.processes();
+  }
+
+  controlMembers() {
+    return later(() => this.#native.controlMembers());
+  }
+
+  stopSelected(members) {
+    return later(() => {
+      if (!Array.isArray(members) || members.length < 1 || members.length > 256 ||
+          members.some((token) => typeof token !== "string" || !/^(0|[1-9][0-9]*):(0|[1-9][0-9]*)$/.test(token))) {
+        throw new TypeError("members must contain 1 to 256 canonical process identity tokens");
+      }
+      return this.#native.stopSelected(members);
+    });
   }
 
   observeTree() {
@@ -313,6 +331,9 @@ class PtyChild extends Child {
 function spawn(command, args, options) {
   const native = load();
   started = true;
+  if (options != null && "memberIsolation" in Object(options) && native.supportsMemberIsolation?.() !== true) {
+    throw refused("member isolation requires a compatible native addon");
+  }
   const child = native.spawn(command, args ?? [], withEnv(options), cancelOf(options?.signal));
   return child.isPty ? new PtyChild(child) : new PipeChild(child);
 }
@@ -321,8 +342,34 @@ function run(command, args, options) {
   return later(() => {
     const native = load();
     started = true;
+    if (options != null && "memberIsolation" in Object(options) && native.supportsMemberIsolation?.() !== true) {
+      throw refused("member isolation requires a compatible native addon");
+    }
     return native.run(command, args ?? [], withEnv(options), cancelOf(options?.signal));
   });
 }
 
-module.exports = { run, spawn, configure, OmniError };
+function quarantineOperation(name) {
+  return (...args) => later(() => {
+    const native = load();
+    if (typeof native[name] !== "function") throw new Error("Windows quarantine primitive unavailable: " + name);
+    return native[name](...args);
+  });
+}
+
+const quarantineIdentity = quarantineOperation("quarantineIdentity");
+const quarantineInspect = quarantineOperation("quarantineInspect");
+const quarantineRename = quarantineOperation("quarantineRename");
+const quarantineRenameExclusive = quarantineOperation("quarantineRenameExclusive");
+const quarantineDispose = quarantineOperation("quarantineDispose");
+const quarantineDisposeBatch = quarantineOperation("quarantineDisposeBatch");
+
+const quarantineRenameExclusiveAvailable = () => typeof load().quarantineRenameExclusive === "function";
+const quarantineDisposeAvailable = () => typeof load().quarantineDispose === "function";
+const quarantineDisposeBatchAvailable = () => typeof load().quarantineDisposeBatch === "function";
+
+module.exports = {
+  quarantineDisposeBatch, quarantineDisposeBatchAvailable,
+  run, spawn, configure, OmniError, quarantineIdentity, quarantineInspect, quarantineRename,
+  quarantineDispose, quarantineDisposeAvailable, quarantineRenameExclusive, quarantineRenameExclusiveAvailable,
+};

@@ -21,7 +21,7 @@ use std::sync::atomic::AtomicU64;
 use std::sync::{Arc, Mutex, mpsc};
 use std::time::{Duration, Instant};
 
-use omni_proto::{Ack, Exit, FailCode, ProcEntry};
+use omni_proto::{Ack, ControlMember, Exit, FailCode, FreezeOutcome, ProcEntry};
 use tokio::runtime::Runtime;
 use tokio::sync::{Notify, oneshot, watch};
 use tokio::task::AbortHandle;
@@ -46,6 +46,9 @@ pub(super) enum Want {
     List,
     ObserveList,
     ObserveFootprint,
+    ControlList,
+    ControlStop { count: usize },
+    ControlFreeze,
     Release,
 }
 
@@ -59,6 +62,9 @@ impl Want {
             Want::List => "List",
             Want::ObserveList => "Observe",
             Want::ObserveFootprint => "ObserveFootprint",
+            Want::ControlList => "ControlList",
+            Want::ControlStop { .. } => "ControlStop",
+            Want::ControlFreeze => "ControlFreeze",
             Want::Release => "Release",
         }
     }
@@ -99,6 +105,9 @@ pub(super) enum Answer {
     Stopped,
     Processes(Vec<ProcEntry>),
     ObservedTree(Vec<ProcEntry>, Option<u64>, Option<String>),
+    ControlMembers(Vec<ControlMember>),
+    ControlResults(Vec<crate::SelectiveStopOutcome>),
+    ControlFreeze(FreezeOutcome),
 }
 
 type Reply = Result<Answer, Error>;
@@ -130,6 +139,8 @@ struct State {
     ready: bool,
     observes: bool,
     footprints: bool,
+    selective_stop: bool,
+    member_freeze: bool,
     hello: Option<mpsc::SyncSender<()>>,
     pending: HashMap<u64, Pending>,
     /// Deadlines of the pending non-blocking requests, earliest first.
@@ -161,6 +172,15 @@ impl std::fmt::Debug for Gen {
 }
 
 impl Gen {
+    #[cfg(target_os = "linux")]
+    pub(super) fn isolated_channel(&self) -> bool {
+        self.chan.is_remote()
+    }
+
+    pub(super) fn member_freeze(&self) -> bool {
+        lock(&self.st).member_freeze
+    }
+
     /// The internal constructor: `make` builds the connected channel inside the runtime's context; then
     /// this waits (at most `bound`) for the supervisor's `Ready`. `bound` is also the deadline of every
     /// request of this generation (a `Stop` gets its grace on top).

@@ -6,6 +6,48 @@ export default {
   up(tx) {
     return Effect.gen(function* () {
       yield* tx.run(`
+        CREATE TABLE \`activity_action_ledger\` (
+          \`target_id\` text PRIMARY KEY,
+          \`generation\` text NOT NULL,
+          \`observation\` text NOT NULL
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`activity_arm\` (
+          \`approval_id\` text NOT NULL,
+          \`target_id\` text NOT NULL,
+          \`generation\` text NOT NULL,
+          \`approved_at\` integer NOT NULL,
+          \`receipt\` text NOT NULL,
+          \`snapshot\` text NOT NULL
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`activity_quarantine_custody\` (
+          \`target_id\` text PRIMARY KEY,
+          \`generation\` text NOT NULL,
+          \`identity\` text NOT NULL UNIQUE,
+          \`label\` text NOT NULL,
+          \`owner\` text NOT NULL,
+          \`original_path\` text NOT NULL,
+          \`quarantine_path\` text NOT NULL UNIQUE,
+          \`phase\` text NOT NULL,
+          \`reservation_id\` text
+        );
+      `)
+      yield* tx.run(`
+        CREATE TABLE \`activity_suspension_ledger\` (
+          \`tree_id\` text PRIMARY KEY,
+          \`generation\` text NOT NULL,
+          \`mark_id\` text NOT NULL,
+          \`phase\` text NOT NULL,
+          \`suspended\` text NOT NULL,
+          \`uncertain\` text NOT NULL,
+          \`pending\` text,
+          \`owner_incarnation\` text
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`workspace\` (
           \`id\` text PRIMARY KEY,
           \`type\` text NOT NULL,
@@ -1000,6 +1042,9 @@ export default {
           CONSTRAINT \`fk_session_share_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
         );
       `)
+      yield* tx.run(
+        `CREATE UNIQUE INDEX \`activity_arm_target_generation_idx\` ON \`activity_arm\` (\`target_id\`,\`generation\`);`,
+      )
       yield* tx.run(
         `CREATE INDEX \`project_checkpoint_project_time_id_idx\` ON \`project_checkpoint\` (\`project_id\`,\`time_created\`,\`id\`);`,
       )

@@ -83,6 +83,9 @@ fn read_requests(io: &Overlapped, inbox: &Inbox) {
                         | Msg::Go { .. }
                         | Msg::Stop { .. }
                         | Msg::Resize { .. }
+                        | Msg::ControlFreeze { .. }
+                        | Msg::ControlList { .. }
+                        | Msg::ControlStop { .. }
                         | Msg::List { .. }
                         | Msg::Observe { .. }
                         | Msg::Release { .. }

@@ -103,6 +103,25 @@ impl Life {
         self.inventory().await.map_err(InventoryFailure::into_error)
     }
 
+    pub(super) async fn control_members(&self) -> Result<Vec<omni_proto::ControlMember>, Error> {
+        self.tree.control_members().await
+    }
+
+    pub(super) async fn stop_selected(
+        &self,
+        members: Vec<omni_proto::ControlMember>,
+    ) -> Result<Vec<crate::SelectiveStopOutcome>, Error> {
+        self.tree.stop_selected(members).await
+    }
+
+    pub(super) async fn freeze_member(
+        &self,
+        member: omni_proto::ControlMember,
+        paused: bool,
+    ) -> Result<crate::FreezeOutcome, Error> {
+        self.tree.freeze_member(member, paused).await
+    }
+
     pub(super) async fn observe_processes(&self) -> Result<Vec<ProcessInfo>, Error> {
         Ok(Self::process_info(self.tree.observe_processes().await?))
     }

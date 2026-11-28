@@ -93,6 +93,8 @@ export interface RunOptions extends CommonOptions {
   pty?: PtyOption;
 }
 export interface SpawnOptions extends CommonOptions {
+  /** Require the provisioned Linux isolated supervisor; fails closed when unavailable. */
+  memberIsolation?: boolean;
   /** Pipe mode only; default `"closed"` (end of input at once). */
   stdin?: "closed" | "pipe";
   /**
@@ -127,8 +129,14 @@ export interface Child<D = string | Uint8Array> extends AsyncDisposable {
   wait(): Promise<Exit>;
   /** Ends the whole tree with one deadline (graceful, then forced after `graceMs`); resolves once it is gone. */
   stop(options?: { graceMs?: number }): Promise<Exit>;
+  /** Suspends or resumes one exact canonical `pid:birth` identity. */
+  freezeMember(member: string, action: "suspend" | "resume"): Promise<"changed" | "refused" | "unknown">;
   /** The live processes `stop()` would end right now; `[]` once the tree is gone. */
   processes(): Promise<ProcessInfo[]>;
+  /** Identity tokens for selective process control, supported by the Windows supervisor. */
+  controlMembers(): Promise<string[]>;
+  /** Stops selected identities; a timeout leaves the effect unknown. */
+  stopSelected(members: readonly string[]): Promise<("exited" | "unknown")[]>;
   /** A membership sample whose deadline does not terminate the supervisor. */
   observeProcesses(): Promise<ProcessInfo[]>;
   observeTree?(): Promise<{ members: ProcessInfo[]; physicalFootprintBytes?: number; footprintIdentity?: string }>;

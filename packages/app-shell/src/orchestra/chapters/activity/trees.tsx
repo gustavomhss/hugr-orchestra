@@ -1,7 +1,10 @@
 import type { ActivityMonitor } from "@orchestra/schema/activity-monitor"
-import { For, Show, createMemo, onCleanup, onMount } from "solid-js"
+import type { ActivityFreeze } from "@orchestra/schema/activity-freeze"
+import { For, Show, createEffect, createMemo, onCleanup, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
+import { usePlatform } from "@/context/platform"
+import { useServer } from "@/context/server"
 import { useServerSDK } from "@/context/server-sdk"
 import { bytes } from "@/orchestra/actions/format"
 import { readingAge } from "./reading"
@@ -12,14 +15,25 @@ const columns = ["process", "owner", "state", "pid", "supervisorID", "members", 
 export function ActivityTrees(props: { query: string }) {
   const language = useLanguage()
   const sdk = useServerSDK()
+  const platform = usePlatform()
+  const server = useServer()
   const [state, setState] = createStore({
     snapshot: undefined as ActivityMonitor.Snapshot | undefined,
     busy: false,
     failure: undefined as "snapshot" | "inspection" | undefined,
+    stopping: false,
+    stopResult: undefined as { scope: string; uncertain: boolean } | undefined,
     receivedAt: performance.now(),
     now: performance.now(),
+    freeze: undefined as {
+      scope: string
+      recordID: string
+      state?: ActivityFreeze.State
+      result?: ActivityFreeze.Receipt["phase"]
+    } | undefined,
   })
   const controller = new AbortController()
+  let freezeRead = 0
   const age = (sampledAt: number | undefined) => {
     const value = readingAge({
       sampledAt,
@@ -46,6 +60,81 @@ export function ActivityTrees(props: { query: string }) {
     gone: "orchestra.monitor.state.gone",
     unknown: "orchestra.monitor.state.unknown",
   } as const
+
+  const stopScope = () => {
+    const current = server.current
+    return current?.type === "sidecar" && current.variant === "base" ? current.http.url : undefined
+  }
+  createEffect(() => {
+    const scope = stopScope()
+    if (state.freeze && state.freeze.scope !== scope) setState("freeze", undefined)
+  })
+
+  async function stop(recordID: string) {
+    const scope = stopScope()
+    const request = platform.stopActivityTree
+    if (!scope || !request || state.stopping || state.busy) return
+    const client = sdk()
+    setState({ stopping: true, stopResult: undefined })
+    try {
+      const receipt = await request(scope, { recordID }).catch(() => undefined)
+      if (receipt && !controller.signal.aborted && stopScope() === scope && sdk() === client) {
+        setState("stopResult", { scope, uncertain: receipt.outcomes.some((outcome) => outcome.state === "unknown") })
+        await refresh(recordID)
+      }
+    } finally {
+      if (!controller.signal.aborted) setState("stopping", false)
+    }
+  }
+
+  function memberAvailable(row: ActivityMonitor.Record) {
+    return row.supervisorID && row.members?.length === 1 && row.state === "alive" && !row.inspectionFailed
+  }
+
+  function memberControl(row: ActivityMonitor.Record) {
+    const control = state.freeze
+    if (control?.scope !== stopScope() || control?.recordID !== row.recordID || !memberAvailable(row)) return
+    return control
+  }
+
+  async function readFreeze(recordID: string, result?: ActivityFreeze.Receipt["phase"]) {
+    const scope = stopScope()
+    const read = platform.readActivityFreeze
+    const selected = state.snapshot?.records.find((row) => row.recordID === recordID)
+    if (!scope || !read || !selected || !memberAvailable(selected)) return
+    const client = sdk()
+    const attempt = ++freezeRead
+    setState("freeze", { scope, recordID, state: undefined, result })
+    const value = await read(scope, { recordID }).catch(() => undefined)
+    if (attempt !== freezeRead || sdk() !== client || stopScope() !== scope || controller.signal.aborted) return
+    if (value?.recordID === recordID && value.treeID === selected.supervisorID) {
+      setState("freeze", { scope, recordID, state: value, result })
+    }
+  }
+
+  async function freeze(recordID: string, action: ActivityFreeze.Action) {
+    const scope = stopScope()
+    const request = platform.freezeActivityMember
+    if (!scope || !request || state.busy || state.stopping || state.freeze?.scope !== scope ||
+      state.freeze.state?.recordID !== recordID || state.freeze.state.next !== action) return
+    const client = sdk()
+    setState("stopping", true)
+    try {
+      const receipt = await request(scope, { recordID, action }).catch(() => undefined)
+      if (!controller.signal.aborted && stopScope() === scope && sdk() === client) {
+        await readFreeze(recordID, receipt?.phase ?? "unknown")
+      }
+    } finally {
+      if (!controller.signal.aborted) setState("stopping", false)
+    }
+  }
+
+  async function readMembers(recordID: string) {
+    if (state.busy || state.stopping) return
+    const client = sdk()
+    await refresh(recordID)
+    if (sdk() === client && !controller.signal.aborted && state.failure !== "inspection") await readFreeze(recordID)
+  }
 
   async function refresh(recordID?: string) {
     if (state.busy || controller.signal.aborted) return
@@ -99,6 +188,9 @@ export function ActivityTrees(props: { query: string }) {
             state.failure === "inspection" ? "orchestra.monitor.inspectFailed" : "orchestra.monitor.processFailed",
           )}
         </p>
+      </Show>
+      <Show when={state.stopResult?.scope === stopScope() && state.stopResult}>
+        {(result) => <p role="status">{language.t(result().uncertain ? "orchestra.monitor.stopUncertain" : "orchestra.monitor.stopConfirmed")}</p>}
       </Show>
       <div class="activity-cpu">
         <span>{language.t("orchestra.monitor.cpuLabel")}</span>
@@ -160,11 +252,36 @@ export function ActivityTrees(props: { query: string }) {
                           <button
                             type="button"
                             class="mx-btn"
-                            disabled={state.busy}
-                            onClick={() => void refresh(row.recordID)}
+                            disabled={state.busy || state.stopping}
+                            onClick={() => void readMembers(row.recordID)}
                           >
                             {language.t("orchestra.monitor.inspect")}
                           </button>
+                          <Show when={platform.stopActivityTree && stopScope() && row.supervisorID && row.members?.length &&
+                            row.state === "alive" && !row.inspectionFailed}>
+                            <button type="button" class="mx-btn" disabled={state.busy || state.stopping} onClick={() => void stop(row.recordID)}>
+                              {language.t("orchestra.monitor.stopMembers")}
+                            </button>
+                          </Show>
+                          <Show when={memberControl(row)?.state}>
+                            {(freezeState) => (
+                              <Show when={freezeState().next === "suspend" || freezeState().next === "resume"}
+                                fallback={<p role="status">{language.t("orchestra.monitor.memberControlBlocked")}</p>}>
+                                <button type="button" class="mx-btn" disabled={state.busy || state.stopping}
+                                  onClick={() => {
+                                    const next = freezeState().next
+                                    if (next !== "blocked") void freeze(row.recordID, next)
+                                  }}>
+                                  {language.t(freezeState().next === "resume" ? "orchestra.monitor.resumeMember" : "orchestra.monitor.suspendMember")}
+                                </button>
+                              </Show>
+                            )}
+                          </Show>
+                          <Show when={memberControl(row)?.result}>
+                            {(result) => <p role="status">{language.t(result() === "resumed"
+                              ? "orchestra.monitor.memberResumed"
+                              : result() === "suspended" ? "orchestra.monitor.memberSuspended" : "orchestra.monitor.memberUnconfirmed")}</p>}
+                          </Show>
                           <p>
                             {language.t(
                               row.footprint?.hypothesis === "compatible-with-logical-leak"

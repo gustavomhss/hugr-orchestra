@@ -1,6 +1,14 @@
 import { randomUUID } from "node:crypto"
 import { createServer } from "node:net"
+import { request } from "node:http"
+import { Option } from "effect"
+import { ActivityArm } from "@orchestra/schema/activity-arm"
+import { ActivityStop } from "@orchestra/schema/activity-stop"
+import { ActivityEmpty } from "@orchestra/schema/activity-empty"
+import { ActivityFreeze } from "@orchestra/schema/activity-freeze"
+import type { ActivityArmClient, ActivityEmptyClient, ActivityFreezeClient, ActivityStopClient } from "./activity-arm-ipc"
 import type { Readable } from "node:stream"
+import { ActivityPrivateChannel } from "@orchestra/schema/activity-private-channel"
 import { DesktopOmni } from "./omni-process"
 
 // The desktop-owned V2 server: the bundled CLI as `orchestra serve`, a child of this app and its default server. It is
@@ -30,6 +38,7 @@ const OUTPUT_SEGMENT = 4096
 
 export async function startOwnedServe(options: {
   logger: Logger
+  privateActivityApproval?: boolean
   /** The CLI executable, then any arguments before `serve`. */
   command: [string, ...string[]]
   env: Record<string, string | undefined>
@@ -51,6 +60,7 @@ export async function startOwnedServe(options: {
   }
   const state = {
     child: undefined as DesktopOmni.Spawned | undefined,
+    activity: undefined as Promise<Awaited<ReturnType<typeof ActivityPrivateChannel.signer>> | undefined> | undefined,
     stopping: false,
     killed: false,
     failures: 0,
@@ -67,8 +77,20 @@ export async function startOwnedServe(options: {
   const launch = () => {
     const startedAt = Date.now()
     const args = [...options.command.slice(1), "serve", "--hostname", HOSTNAME, "--port", String(port)]
-    const child = DesktopOmni.spawn(options.command[0], args, { env, cwd: options.cwd, stdin: "closed", graceMs: TREE_GRACE })
+    if (options.privateActivityApproval) args.push(`--${ActivityPrivateChannel.option}`)
+    const child = DesktopOmni.spawn(options.command[0], args, {
+      env, cwd: options.cwd, stdin: options.privateActivityApproval ? "pipe" : "closed", graceMs: TREE_GRACE,
+    })
     state.child = child
+    state.activity = undefined
+    if (options.privateActivityApproval) {
+      const secret = crypto.getRandomValues(new Uint8Array(32))
+      const frame = ActivityPrivateChannel.frame(secret)
+      state.activity = ActivityPrivateChannel.signer(secret).catch(() => undefined).finally(() => {
+        secret.fill(0)
+      })
+      child.stdin.end(frame, () => { frame.fill(0) })
+    }
     // Created at launch so a stop that lands between "exit" and "close" still waits for the drain.
     state.closed = new Promise<void>((resolve) => child.once("close", () => resolve()))
     // An omni child learns its pid asynchronously, so the witness waits for the spawn event.
@@ -89,6 +111,7 @@ export async function startOwnedServe(options: {
     // and the renderer never sees why the process did not start.
     const failed = new Promise<never>((_, reject) => {
       child.once("error", (error) => {
+        if (state.child === child) state.activity = undefined
         options.logger.error("owned serve error", { message: error.message })
         reject(error instanceof Error ? error : new Error(String(error)))
       })
@@ -97,7 +120,10 @@ export async function startOwnedServe(options: {
     const exited = new Promise<void>((resolve) =>
       child.once("exit", (code, signal) => {
         resolve()
-        if (state.child === child) state.child = undefined
+        if (state.child === child) {
+          state.child = undefined
+          state.activity = undefined
+        }
         // The server answers the SIGTERM it was asked to stop on with the signal's exit status (143); that is an orderly
         // stop. A server that had to be killed, or that failed on its own, keeps its real status.
         const requested = state.stopping && !state.killed && (code === 143 || signal === "SIGTERM" || process.platform === "win32")
@@ -160,6 +186,7 @@ export async function startOwnedServe(options: {
 
   const stop = async () => {
     state.stopping = true
+    state.activity = undefined
     startup.abort()
     clearTimeout(state.restart)
     const child = state.child
@@ -182,7 +209,282 @@ export async function startOwnedServe(options: {
     child.kill("SIGKILL")
   }
 
-  return { url, username: "orchestra", password, listener: { stop }, health: { wait: health } }
+  const probeActivityApproval = async (signal?: AbortSignal) => {
+    const child = state.child
+    const activity = state.activity
+    if (!child || !activity || state.stopping) return false
+    const deadline = AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(3000)])
+    const current = () => state.child === child && state.activity === activity && !state.stopping && !deadline.aborted
+    return (async () => {
+      const signer = await activity
+      if (!signer || !current()) return false
+      const nonce = ActivityPrivateChannel.nonce()
+      const mac = await signer.sign("probe-request", nonce)
+      if (!current()) return false
+      const response = await fetch(new URL(ActivityPrivateChannel.path, url), {
+        method: "POST",
+        headers: {
+          [ActivityPrivateChannel.nonceHeader]: nonce,
+          [ActivityPrivateChannel.macHeader]: mac,
+        },
+        redirect: "error",
+        signal: deadline,
+      })
+      if (!current() || response.status !== 204) return false
+      const valid = await signer.verify("probe-response", nonce, response.headers.get(ActivityPrivateChannel.macHeader))
+      return current() && valid
+    })().catch(() => false)
+  }
+
+  const openActivityArm = (): ActivityArmClient | undefined => {
+    const child = state.child
+    const activity = state.activity
+    if (!child || !activity || state.stopping) return undefined
+    const current = () => state.child === child && state.activity === activity && !state.stopping
+    const post = async (endpoint: ActivityPrivateChannel.ArmPath, body: string, signal?: AbortSignal) => {
+      const deadline = AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(3000)])
+      const valid = () => current() && !deadline.aborted
+      return (async () => {
+        const signer = await activity
+        if (!signer || !valid() || Buffer.byteLength(body) > ActivityPrivateChannel.maxBodyBytes) return undefined
+        const nonce = ActivityPrivateChannel.nonce()
+        const mac = await signer.signArm("arm-request", endpoint, nonce, body)
+        if (!valid()) return undefined
+        const reply = await new Promise<{ body: string; mac: string | undefined }>((resolve, reject) => {
+          const req = request({ hostname: HOSTNAME, port, path: endpoint, method: "POST", agent: false, signal: deadline, headers: {
+            "content-type": "application/json", "content-length": Buffer.byteLength(body),
+            [ActivityPrivateChannel.nonceHeader]: nonce, [ActivityPrivateChannel.macHeader]: mac,
+          } }, (response) => {
+            if (response.statusCode !== 200) { response.destroy(); reject(new Error("Invalid response")); return }
+            const chunks: Buffer[] = []
+            let size = 0
+            response.on("data", (chunk: Buffer) => {
+              size += chunk.length
+              if (size > ActivityPrivateChannel.maxBodyBytes) { response.destroy(new Error("Response too large")); return }
+              chunks.push(chunk)
+            })
+            response.on("error", reject)
+            response.on("end", () => {
+              try {
+                resolve({ body: new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(Buffer.concat(chunks)), mac: response.headers[ActivityPrivateChannel.macHeader] as string | undefined })
+              } catch (error) { reject(error) }
+            })
+          })
+          req.on("error", reject)
+          req.end(body)
+        })
+        if (!valid() || !await signer.verifyArm("arm-response", endpoint, nonce, reply.mac ?? null, reply.body) || !valid()) return undefined
+        return JSON.parse(reply.body) as unknown
+      })().catch(() => undefined)
+    }
+    return {
+      async preview(input, signal) {
+        const decoded = ActivityArm.decodeRequest(input)
+        if (Option.isNone(decoded)) return undefined
+        const result = ActivityArm.decodePreview(await post(ActivityPrivateChannel.previewPath, JSON.stringify(decoded.value), signal))
+        return Option.isSome(result) && current() ? result.value : undefined
+      },
+      async confirm(input, signal) {
+        const decoded = ActivityArm.decodeConfirm(input)
+        if (Option.isNone(decoded)) return undefined
+        const result = ActivityArm.decodeReceipt(await post(ActivityPrivateChannel.confirmPath, JSON.stringify(decoded.value), signal))
+        return Option.isSome(result) && current() ? result.value : undefined
+      },
+    }
+  }
+
+  const openActivityStop = (): ActivityStopClient | undefined => {
+    if (process.platform !== "win32") return undefined
+    const child = state.child
+    const activity = state.activity
+    if (!child || !activity || state.stopping) return undefined
+    const current = () => state.child === child && state.activity === activity && !state.stopping
+    const post = async (endpoint: ActivityPrivateChannel.ArmPath, body: string, signal?: AbortSignal) => {
+      const deadline = AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(3000)])
+      const valid = () => current() && !deadline.aborted
+      return (async () => {
+        const signer = await activity
+        if (!signer || !valid() || Buffer.byteLength(body) > ActivityPrivateChannel.maxBodyBytes) return undefined
+        const nonce = ActivityPrivateChannel.nonce()
+        const mac = await signer.signArm("arm-request", endpoint, nonce, body)
+        if (!valid()) return undefined
+        const reply = await new Promise<{ body: string; mac: string | undefined }>((resolve, reject) => {
+          const req = request({ hostname: HOSTNAME, port, path: endpoint, method: "POST", agent: false, signal: deadline, headers: {
+            "content-type": "application/json", "content-length": Buffer.byteLength(body),
+            [ActivityPrivateChannel.nonceHeader]: nonce, [ActivityPrivateChannel.macHeader]: mac,
+          } }, (response) => {
+            if (response.statusCode !== 200) { response.destroy(); reject(new Error("Invalid response")); return }
+            const chunks: Buffer[] = []
+            let size = 0
+            response.on("data", (chunk: Buffer) => {
+              size += chunk.length
+              if (size > ActivityPrivateChannel.maxBodyBytes) { response.destroy(new Error("Response too large")); return }
+              chunks.push(chunk)
+            })
+            response.on("error", reject)
+            response.on("end", () => {
+              try {
+                resolve({ body: new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(Buffer.concat(chunks)), mac: response.headers[ActivityPrivateChannel.macHeader] as string | undefined })
+              } catch (error) { reject(error) }
+            })
+          })
+          req.on("error", reject)
+          req.end(body)
+        })
+        if (!valid() || !await signer.verifyArm("arm-response", endpoint, nonce, reply.mac ?? null, reply.body) || !valid()) return undefined
+        return JSON.parse(reply.body) as unknown
+      })().catch(() => undefined)
+    }
+    return {
+      async preview(input, signal) {
+        const decoded = ActivityStop.decodeRequest(input)
+        if (Option.isNone(decoded)) return undefined
+        const result = ActivityStop.decodePreview(await post(ActivityPrivateChannel.stopPreviewPath, JSON.stringify(decoded.value), signal))
+        return Option.isSome(result) && current() ? result.value : undefined
+      },
+      async confirm(input, signal) {
+        const decoded = ActivityStop.decodeConfirm(input)
+        if (Option.isNone(decoded)) return undefined
+        const result = ActivityStop.decodeReceipt(await post(ActivityPrivateChannel.stopConfirmPath, JSON.stringify(decoded.value), signal))
+        return Option.isSome(result) && current() ? result.value : undefined
+      },
+    }
+  }
+
+  const openActivityEmpty = (): ActivityEmptyClient | undefined => {
+    if (process.platform !== "win32") return undefined
+    const child = state.child
+    const activity = state.activity
+    if (!child || !activity || state.stopping) return undefined
+    const current = () => state.child === child && state.activity === activity && !state.stopping
+    const post = async (endpoint: ActivityPrivateChannel.ArmPath, body: string, signal?: AbortSignal) => {
+      const deadline = AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(3000)])
+      const valid = () => current() && !deadline.aborted
+      return (async () => {
+        const signer = await activity
+        if (!signer || !valid() || Buffer.byteLength(body) > ActivityPrivateChannel.maxBodyBytes) return undefined
+        const nonce = ActivityPrivateChannel.nonce()
+        const mac = await signer.signArm("arm-request", endpoint, nonce, body)
+        if (!valid()) return undefined
+        const reply = await new Promise<{ body: string; mac: string | undefined }>((resolve, reject) => {
+          const req = request({ hostname: HOSTNAME, port, path: endpoint, method: "POST", agent: false, signal: deadline, headers: {
+            "content-type": "application/json", "content-length": Buffer.byteLength(body),
+            [ActivityPrivateChannel.nonceHeader]: nonce, [ActivityPrivateChannel.macHeader]: mac,
+          } }, (response) => {
+            if (response.statusCode !== 200) { response.destroy(); reject(new Error("Invalid response")); return }
+            const chunks: Buffer[] = []
+            let size = 0
+            response.on("data", (chunk: Buffer) => {
+              size += chunk.length
+              if (size > ActivityPrivateChannel.maxBodyBytes) { response.destroy(new Error("Response too large")); return }
+              chunks.push(chunk)
+            })
+            response.on("error", reject)
+            response.on("end", () => {
+              try {
+                resolve({ body: new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(Buffer.concat(chunks)), mac: response.headers[ActivityPrivateChannel.macHeader] as string | undefined })
+              } catch (error) { reject(error) }
+            })
+          })
+          req.on("error", reject)
+          req.end(body)
+        })
+        if (!valid() || !await signer.verifyArm("arm-response", endpoint, nonce, reply.mac ?? null, reply.body) || !valid()) return undefined
+        return JSON.parse(reply.body) as unknown
+      })().catch(() => undefined)
+    }
+    return {
+      isCurrent: current,
+      async read(input, signal) {
+        const decoded = ActivityEmpty.decodeRequest(input)
+        if (Option.isNone(decoded)) return undefined
+        const reply = await post(ActivityPrivateChannel.emptyStatePath, JSON.stringify(decoded.value), signal)
+        const result = ActivityEmpty.decodeSnapshot(reply)
+        return Option.isSome(result) && current() ? result.value : undefined
+      },
+      async preview(input, signal) {
+        const decoded = ActivityEmpty.decodeRequest(input)
+        if (Option.isNone(decoded)) return undefined
+        const result = ActivityEmpty.decodePreview(await post(ActivityPrivateChannel.emptyPreviewPath, JSON.stringify(decoded.value), signal))
+        return Option.isSome(result) && current() ? result.value : undefined
+      },
+      async confirm(input, signal) {
+        const decoded = ActivityEmpty.decodeConfirm(input)
+        if (Option.isNone(decoded)) return undefined
+        const result = ActivityEmpty.decodeReceipt(await post(ActivityPrivateChannel.emptyConfirmPath, JSON.stringify(decoded.value), signal))
+        return Option.isSome(result) && current() ? result.value : undefined
+      },
+    }
+  }
+
+  const openActivityFreeze = (): ActivityFreezeClient | undefined => {
+    if (process.platform !== "linux") return undefined
+    const child = state.child
+    const activity = state.activity
+    if (!child || !activity || state.stopping) return undefined
+    const current = () => state.child === child && state.activity === activity && !state.stopping
+    const post = async (endpoint: ActivityPrivateChannel.ArmPath, body: string, signal?: AbortSignal) => {
+      // Confirmation can make three Omni requests, each with a 10-second reply deadline.
+      const timeout = endpoint === ActivityPrivateChannel.freezeConfirmPath ? 35_000 : 12_000
+      const deadline = AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(timeout)])
+      const valid = () => current() && !deadline.aborted
+      return (async () => {
+        const signer = await activity
+        if (!signer || !valid() || Buffer.byteLength(body) > ActivityPrivateChannel.maxBodyBytes) return undefined
+        const nonce = ActivityPrivateChannel.nonce()
+        const mac = await signer.signArm("arm-request", endpoint, nonce, body)
+        if (!valid()) return undefined
+        const reply = await new Promise<{ body: string; mac: string | undefined }>((resolve, reject) => {
+          const req = request({ hostname: HOSTNAME, port, path: endpoint, method: "POST", agent: false, signal: deadline, headers: {
+            "content-type": "application/json", "content-length": Buffer.byteLength(body),
+            [ActivityPrivateChannel.nonceHeader]: nonce, [ActivityPrivateChannel.macHeader]: mac,
+          } }, (response) => {
+            if (response.statusCode !== 200) { response.destroy(); reject(new Error("Invalid response")); return }
+            const chunks: Buffer[] = []
+            let size = 0
+            response.on("data", (chunk: Buffer) => {
+              size += chunk.length
+              if (size > ActivityPrivateChannel.maxBodyBytes) { response.destroy(new Error("Response too large")); return }
+              chunks.push(chunk)
+            })
+            response.on("error", reject)
+            response.on("end", () => {
+              try {
+                resolve({ body: new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(Buffer.concat(chunks)), mac: response.headers[ActivityPrivateChannel.macHeader] as string | undefined })
+              } catch (error) { reject(error) }
+            })
+          })
+          req.on("error", reject)
+          req.end(body)
+        })
+        if (!valid() || !await signer.verifyArm("arm-response", endpoint, nonce, reply.mac ?? null, reply.body) || !valid()) return undefined
+        return JSON.parse(reply.body) as unknown
+      })().catch(() => undefined)
+    }
+    return {
+      isCurrent: current,
+      async read(input, signal) {
+        const decoded = ActivityFreeze.decodeRead(input)
+        if (Option.isNone(decoded)) return undefined
+        const result = ActivityFreeze.decodeState(await post(ActivityPrivateChannel.freezeStatePath, JSON.stringify(decoded.value), signal))
+        return Option.isSome(result) && current() ? result.value : undefined
+      },
+      async preview(input, signal) {
+        const decoded = ActivityFreeze.decodeRequest(input)
+        if (Option.isNone(decoded)) return undefined
+        const result = ActivityFreeze.decodePreview(await post(ActivityPrivateChannel.freezePreviewPath, JSON.stringify(decoded.value), signal))
+        return Option.isSome(result) && current() ? result.value : undefined
+      },
+      async confirm(input, signal) {
+        const decoded = ActivityFreeze.decodeConfirm(input)
+        if (Option.isNone(decoded)) return undefined
+        const result = ActivityFreeze.decodeReceipt(await post(ActivityPrivateChannel.freezeConfirmPath, JSON.stringify(decoded.value), signal))
+        return Option.isSome(result) && current() ? result.value : undefined
+      },
+    }
+  }
+
+  return { url, username: "orchestra", password, listener: { stop }, health: { wait: health }, probeActivityApproval, openActivityArm, openActivityStop, openActivityEmpty, openActivityFreeze }
 }
 
 /** The server a launch uses, from `ORCHESTRA_SIDECAR`: the desktop-owned child unless "shared" asks for the shared daemon. */

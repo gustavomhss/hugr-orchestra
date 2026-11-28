@@ -110,4 +110,7 @@ impl<'a> Reader<'a> {
             Err(ProtoError(format!("{} trailing bytes", self.buf.len() - self.pos)))
         }
     }
+    pub(super) fn remaining(&self) -> usize {
+        self.buf.len() - self.pos
+    }
 }

@@ -28,7 +28,7 @@ function invalidateFootprint(entry: Entry) {
 }
 
 /** An observer never owns a child or changes its I/O, stop policy, adoption or lifetime. */
-export function make() {
+export function make(now: () => number = Date.now) {
   const entries = new Map<string, Entry>()
   const cpu = ActivityCPU.make()
   const status = { instanceID: crypto.randomUUID(), retired: 0, closure: 0 }
@@ -76,7 +76,7 @@ export function make() {
     ])
       .then(
         (observation) => {
-          const sampledAt = Date.now()
+          const sampledAt = now()
           const members = observation.members
           const bytes = observation.physicalFootprintBytes
           const complete = entry.record.supervisorID && members.length > 0 &&
@@ -88,13 +88,17 @@ export function make() {
             const identity = observation.footprintIdentity
               ? JSON.stringify([observation.footprintIdentity, members.map((member) => [member.pid, member.parentPid]).sort((a, b) => (a[0] ?? 0) - (b[0] ?? 0))])
               : undefined
-            if (!identity || entry.footprintMembers !== identity || (entry.footprintSamples.at(-1)?.sampledAt ?? -1) >= sampledAt)
-              entry.footprintSamples = []
+            if (!identity || entry.footprintMembers !== identity) entry.footprintSamples = []
+            const previousAt = entry.footprintSamples.at(-1)?.sampledAt ?? -1
             entry.footprintMembers = identity
-            entry.footprintSamples.push({ source: "footprint", bytes, sampledAt })
-            entry.footprintSamples = entry.footprintSamples.slice(-64)
-            entry.record = { ...entry.record, footprint: { source: "omni.darwin.phys-footprint", bytes, sampledAt,
-              hypothesis: ActivityFootprintHypothesis.evaluate({ samples: entry.footprintSamples, workFinishedAt: entry.workFinishedAt }) } }
+            // A second reading in the same millisecond is not a new point. Wiping the series
+            // drops the pre-completion baseline, and every later sample stays "insufficient".
+            if (sampledAt > previousAt) {
+              entry.footprintSamples.push({ source: "footprint", bytes, sampledAt })
+              entry.footprintSamples = entry.footprintSamples.slice(-64)
+              entry.record = { ...entry.record, footprint: { source: "omni.darwin.phys-footprint", bytes, sampledAt,
+                hypothesis: ActivityFootprintHypothesis.evaluate({ samples: entry.footprintSamples, workFinishedAt: entry.workFinishedAt }) } }
+            }
           } else invalidateFootprint(entry)
           entry.record = {
             ...entry.record,
@@ -190,6 +194,71 @@ export function make() {
         entry.workFinishedAt = input.finishedAt
       })
     },
+    async control(recordID: string) {
+      const entry = entries.get(recordID)
+      const child = entry?.child.deref()
+      const identity = entry?.record.supervisorID
+      if (!entry || !child || !identity || entry.rootSettled || child.treeId !== identity) return
+      const native = child as Child & {
+        controlMembers?: () => Promise<readonly string[]>
+        stopSelected?: (members: readonly string[]) => Promise<readonly ("exited" | "unknown")[]>
+      }
+      if (!native.controlMembers || !native.stopSelected) return
+      try {
+        const members = await native.controlMembers()
+        if (entries.get(recordID) !== entry || entry.child.deref() !== child || entry.rootSettled || child.treeId !== identity ||
+          !Array.isArray(members) || !members.length || members.length > 256 ||
+          members.some((member) => typeof member !== "string" || !/^[1-9][0-9]{0,9}:[1-9][0-9]{0,19}$/.test(member)) ||
+          new Set(members).size !== members.length) return
+        return {
+          identity,
+          label: entry.record.executable,
+          owner: entry.record.owner,
+          members,
+          stop: async (selected: readonly string[]) => {
+            if (entries.get(recordID) !== entry || entry.child.deref() !== child || entry.rootSettled || child.treeId !== identity)
+              return selected.map(() => "unknown" as const)
+            const result = await native.stopSelected!(selected)
+            // The approved stop can settle the root before its native receipt reaches us.
+            if (entries.get(recordID) !== entry || entry.child.deref() !== child || child.treeId !== identity)
+              return selected.map(() => "unknown" as const)
+            return result
+          },
+        }
+      } catch {
+        return
+      }
+    },
+    async freeze(recordID: string) {
+      const entry = entries.get(recordID)
+      const child = entry?.child.deref()
+      const identity = entry?.record.supervisorID
+      if (!entry || !child || !identity || entry.rootSettled || child.treeId !== identity) return
+      const native = child as Child & {
+        controlMembers?: () => Promise<readonly string[]>
+        freezeMember?: (member: string, action: "suspend" | "resume") => Promise<"changed" | "refused" | "unknown">
+      }
+      if (!native.controlMembers || !native.freezeMember) return
+      const live = () => entries.get(recordID) === entry && entry.child.deref() === child && !entry.rootSettled && child.treeId === identity
+      try {
+        const members = await native.controlMembers()
+        if (!live() || !Array.isArray(members) || members.length !== 1 ||
+          typeof members[0] !== "string" || !/^[1-9][0-9]{0,9}:[1-9][0-9]{0,19}$/.test(members[0])) return
+        const member = members[0]
+        return {
+          identity, label: entry.record.executable, owner: entry.record.owner, member,
+          apply: async (action: "suspend" | "resume") => {
+            if (!live()) return "unknown" as const
+            const current = await native.controlMembers!()
+            if (!live() || !Array.isArray(current) || current.length !== 1 || current[0] !== member) return "unknown" as const
+            const result = await native.freezeMember!(member, action)
+            return live() && (result === "changed" || result === "refused") ? result : "unknown" as const
+          },
+        }
+      } catch {
+        return
+      }
+    },
     async inspect(recordID: string) {
       const entry = entries.get(recordID)
       if (!entry) return
@@ -211,3 +280,6 @@ export const observe = monitor.observe
 export const snapshot = monitor.snapshot
 export const inspect = monitor.inspect
 export const complete = monitor.complete
+export const control = monitor.control
+
+export const freeze = monitor.freeze

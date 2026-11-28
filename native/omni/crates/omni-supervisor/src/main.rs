@@ -29,25 +29,43 @@ use std::process::ExitCode;
 pub(crate) struct Args {
     /// The host process to watch; its death stops every tree.
     pub host_pid: u32,
+    pub isolated_peer_uid: Option<u32>,
     /// Windows: the named pipe to connect to.
     pub pipe: Option<String>,
 }
 
 fn parse(mut it: impl Iterator<Item = String>) -> Result<Args, String> {
-    let (mut host_pid, mut pipe) = (None, None);
+    let (mut host_pid, mut pipe, mut isolated_peer_uid) = (None, None, None);
     while let Some(flag) = it.next() {
         let value = it.next().ok_or_else(|| format!("{flag} needs a value"))?;
         match flag.as_str() {
             "--host-pid" => host_pid = Some(value.parse::<u32>().map_err(|_| format!("bad --host-pid {value}"))?),
             "--pipe" => pipe = Some(value),
+            "--isolated-peer-uid" if isolated_peer_uid.is_none() => {
+                isolated_peer_uid = Some(value.parse::<u32>().map_err(|_| "bad isolated peer uid")?);
+            }
             _ => return Err(format!("unknown argument {flag}")),
         }
+    }
+    if isolated_peer_uid.is_some() {
+        if !cfg!(target_os = "linux") || host_pid.is_some() || pipe.is_some() || isolated_peer_uid == Some(0) {
+            return Err("invalid isolated peer configuration".into());
+        }
+        return Ok(Args {
+            host_pid: 0,
+            pipe: None,
+            isolated_peer_uid,
+        });
     }
     let host_pid = host_pid.ok_or("missing --host-pid")?;
     if cfg!(windows) && pipe.is_none() {
         return Err("missing --pipe".into());
     }
-    Ok(Args { host_pid, pipe })
+    Ok(Args {
+        host_pid,
+        pipe,
+        isolated_peer_uid,
+    })
 }
 
 fn main() -> ExitCode {

@@ -24,10 +24,12 @@ export const Source = Schema.Struct({
     mode: Schema.Literals(["100644", "100755"]), size: NonNegativeInt })),
   notExamined: Schema.Array(Schema.Struct({ path: Schema.NonEmptyString, reason: Schema.Literals(["symlink", "submodule"]) })),
 })
+export type Source = typeof Source.Type
 export const Citation = Schema.Struct({
   uri: Schema.NonEmptyString, path: Schema.NonEmptyString, oid: Oid,
   startLine: PositiveInt, endLine: PositiveInt, text: Schema.NonEmptyString, sha256: Digest,
 })
+export type Citation = typeof Citation.Type
 export const Result = Schema.Struct({
   schema: Schema.Literal("review-engagement-result-v1"), requestID: Schema.NonEmptyString,
   inputHash: Digest, sessionID: SessionSchema.ID,
@@ -168,9 +170,13 @@ function ranges(card: ReviewResultV2.Card) {
 }
 
 function validatePaths(card: ReviewResultV2.Card, source: ReviewEngagementEvidenceV2.Prepared) {
-  // This route has no scoped executable probe. A quote rung cannot launder claimed probe evidence.
-  if (card.findings.some((finding) => finding.evidence.kind === "probe" || finding.rungs.some((rung) => rung.startsWith("probe:"))))
-    throw new Error("engagement probes are not built")
+  if (card.findings.some((finding) => {
+    const probeRungs = finding.rungs.filter((rung) => rung.startsWith("probe:"))
+    return finding.evidence.kind === "probe"
+      ? card.profile !== "diligence" || finding.evidence.option !== "probe:typecheck" ||
+        probeRungs.length !== 1 || probeRungs[0] !== "probe:typecheck"
+      : probeRungs.length > 0
+  })) throw new Error("engagement probe evidence is outside the qualified scope")
   const files = new Set(source.files.map((file) => file.path))
   if (card.findings.some((finding) => !files.has(finding.path) ||
     finding.cause !== undefined && !files.has(finding.cause.path) ||

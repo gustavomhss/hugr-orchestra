@@ -90,6 +90,24 @@ impl Gen {
                     return Err(Error::observation_pending());
                 }
             }
+            if matches!(want, Want::ControlList | Want::ControlStop { .. } | Want::ControlFreeze) {
+                let supported = match want {
+                    Want::ControlStop { .. } => st.selective_stop,
+                    Want::ControlFreeze => st.member_freeze,
+                    _ => st.selective_stop || st.member_freeze,
+                };
+                if !supported {
+                    return Err(Error::selective_unavailable());
+                }
+                if st.pending.values().any(|p| {
+                    matches!(
+                        p.want,
+                        Want::ControlList | Want::ControlStop { .. } | Want::ControlFreeze
+                    )
+                }) {
+                    return Err(Error::selective_pending());
+                }
+            }
             let n = st.pending.len();
             if class == Class::Normal && n >= ADMIT_NORMAL {
                 return Err(Error::supervisor_saturated(n, ADMIT_NORMAL));

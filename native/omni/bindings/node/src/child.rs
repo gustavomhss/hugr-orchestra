@@ -63,6 +63,12 @@ pub fn spawn(
     Ok(NativeChild { kid })
 }
 
+/// Capability marker for the fail-closed isolated spawn option.
+#[napi]
+pub fn supports_member_isolation() -> bool {
+    true
+}
+
 /// The native half of a JS `Child`.
 #[napi]
 pub struct NativeChild {
@@ -165,11 +171,82 @@ impl NativeChild {
         exec::promise(env, stop, convert::exit)
     }
 
+    /// Suspends or resumes one exact `pid:birth` identity.
+    #[napi]
+    pub fn freeze_member<'env>(&self, env: &'env Env, member: String, action: String) -> napi::Result<Object<'env>> {
+        let (pid, birth) = member
+            .split_once(':')
+            .and_then(|(pid, birth)| {
+                let parsed = (pid.parse::<u32>().ok()?, birth.parse::<u64>().ok()?);
+                (parsed.0.to_string() == pid && parsed.1.to_string() == birth).then_some(parsed)
+            })
+            .filter(|(pid, birth)| *pid != 0 && *birth != 0)
+            .ok_or_else(|| napi::Error::from_reason("member must be a canonical pid:birth identity"))?;
+        let paused = match action.as_str() {
+            "suspend" => true,
+            "resume" => false,
+            _ => return Err(napi::Error::from_reason("action must be suspend or resume")),
+        };
+        let kid = Arc::clone(&self.kid);
+        exec::promise(
+            env,
+            async move { kid.freeze_member(hugr_omni::ControlMember { pid, birth }, paused).await },
+            |outcome| match outcome {
+                hugr_omni::FreezeOutcome::Changed => "changed",
+                hugr_omni::FreezeOutcome::Refused => "refused",
+                hugr_omni::FreezeOutcome::Unknown => "unknown",
+            },
+        )
+    }
+
     /// The live processes `stop()` would end now.
     #[napi]
     pub fn processes<'env>(&self, env: &'env Env) -> napi::Result<Object<'env>> {
         let kid = Arc::clone(&self.kid);
         exec::promise(env, async move { kid.processes().await }, convert::processes)
+    }
+
+    /// Lists identity tokens for selective process control.
+    #[napi(js_name = "controlMembers")]
+    pub fn control_members<'env>(&self, env: &'env Env) -> napi::Result<Object<'env>> {
+        let kid = Arc::clone(&self.kid);
+        exec::promise(env, async move { kid.control_members().await }, |members| {
+            members
+                .into_iter()
+                .map(|member| format!("{}:{}", member.pid, member.birth))
+                .collect::<Vec<_>>()
+        })
+    }
+
+    /// Stops exactly the requested identity tokens.
+    #[napi(js_name = "stopSelected")]
+    pub fn stop_selected<'env>(&self, env: &'env Env, tokens: Vec<String>) -> napi::Result<Object<'env>> {
+        if tokens.is_empty() || tokens.len() > 256 {
+            return Err(napi::Error::new(
+                napi::Status::InvalidArg,
+                "expected 1 to 256 control members",
+            ));
+        }
+        let members = tokens
+            .into_iter()
+            .map(|token| {
+                let (pid, birth) = token.split_once(':')?;
+                let pid = pid.parse::<u32>().ok()?;
+                let birth = birth.parse::<u64>().ok()?;
+                (token == format!("{pid}:{birth}")).then_some(hugr_omni::ControlMember { pid, birth })
+            })
+            .collect::<Option<Vec<_>>>()
+            .ok_or_else(|| napi::Error::new(napi::Status::InvalidArg, "invalid control member token"))?;
+        let kid = Arc::clone(&self.kid);
+        exec::promise(env, async move { kid.stop_selected(members).await }, |outcomes| {
+            outcomes
+                .into_iter()
+                .map(|outcome| match outcome {
+                    hugr_omni::SelectiveStopOutcome::Exited => "exited".to_string(),
+                    hugr_omni::SelectiveStopOutcome::Unknown => "unknown".to_string(),
+                })
+                .collect::<Vec<_>>()
+        })
     }
 
     #[napi(js_name = "observeTree")]

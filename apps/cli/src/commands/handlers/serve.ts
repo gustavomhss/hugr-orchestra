@@ -3,10 +3,11 @@ import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
 import { Credential } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { Flag } from "@orchestra/core/flag/flag"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { PermissionSaved } from "@orchestra/core/permission/saved"
 import { SessionV2 } from "@orchestra/core/session"
-import { Context, Effect, Layer, Option } from "effect"
+import { Context, Effect, Layer, Option, Scope } from "effect"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
 import { createServer } from "node:http"
 import { writeSync } from "node:fs"
@@ -27,18 +28,19 @@ import { ServeShutdown } from "./serve-shutdown"
 const SHUTDOWN_GRACE_MS = 2_000
 
 export default Runtime.handler(Commands.commands.serve, (input) =>
-  serveForever({ ...input, allowedHosts: input["allowed-host"] }),
+  serveForever({ ...input, activityApprovalStdin: input["activity-approval-stdin"], allowedHosts: input["allowed-host"] }),
 )
 
 export type ServeInput = {
   readonly hostname: string
+  readonly activityApprovalStdin?: boolean
   readonly port: Option.Option<number>
   readonly installation?: Option.Option<string>
   readonly register: boolean
   readonly cors?: ReadonlyArray<string>
   readonly allowedHosts?: ReadonlyArray<string>
-  /** Runs once the server answers, with the address it bound. */
-  readonly onListening?: (address: HttpServer.Address, webRoot: string | undefined) => Effect.Effect<void, unknown, ChildProcessSpawner>
+  /** Runs once the server answers, within the serving scope. */
+  readonly onListening?: (address: HttpServer.Address, webRoot: string | undefined) => Effect.Effect<void, unknown, ChildProcessSpawner | Scope.Scope>
 }
 
 /** The directory of the built web UI, when this install has one. */
@@ -80,8 +82,50 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
   )
   // Capture the per-launch credentials before an installation can start subprocesses.
   const launchPassword = process.env.ORCHESTRA_SERVER_PASSWORD
+  const isolation = Flag.ORCHESTRA_ACTIVITY_ISOLATED_EXECUTABLES
+  delete process.env.ORCHESTRA_ACTIVITY_ISOLATED_EXECUTABLES
   delete process.env.ORCHESTRA_SERVER_PASSWORD
   delete process.env.ORCHESTRA_SERVER_USERNAME
+  const privateExtension = input.activityApprovalStdin ? yield* Effect.gen(function* () {
+    if (input.hostname !== "127.0.0.1" || Option.isNone(input.port) || !Number.isInteger(input.port.value) ||
+      input.port.value < 1 || input.port.value > 65_535 || input.register ||
+      (input.installation && Option.isSome(input.installation))) {
+      return yield* Effect.fail(new Error("Activity private channel requires an unregistered loopback server and explicit port"))
+    }
+    const { ActivityPrivateChannelServer } = yield* Effect.promise(
+      () => import("@orchestra/server/activity-private-channel"),
+    )
+    const { ActivityArmLedger } = yield* Effect.promise(() => import("@orchestra/core/activity-arm"))
+    const { ActivityStopService } = yield* Effect.promise(() => import("@orchestra/core/activity-stop-service"))
+    const { ActivityQuarantineCustody } = yield* Effect.promise(() => import("@orchestra/core/activity-quarantine-custody"))
+    const scope = yield* Layer.build(AppNodeBuilder.build(Database.node))
+    const database = Context.get(scope, Database.Service)
+    const arm = ActivityArmLedger.make(database)
+    const stop = process.platform === "win32" ? ActivityStopService.make(database) : undefined
+    const custody = process.platform === "win32" ? ActivityQuarantineCustody.make(database) : undefined
+    if (custody) {
+      const { ActivityQuarantineArchive } = yield* Effect.promise(() => import("@orchestra/core/activity-quarantine-archive"))
+      const unbind = ActivityQuarantineArchive.bind(custody)
+      yield* Effect.addFinalizer(() => Effect.sync(unbind))
+    }
+    const freeze = process.platform === "linux" ? yield* Effect.gen(function* () {
+      const { ActivityFreezeService } = yield* Effect.promise(() => import("@orchestra/core/activity-freeze-service"))
+      return ActivityFreezeService.make(database)
+    }) : undefined
+    const extension = yield* Effect.tryPromise({
+      try: (signal) => ActivityPrivateChannelServer.acquire(process.stdin, signal, arm, stop, custody, freeze),
+      catch: () => new Error("Activity private channel startup failed"),
+    })
+    if (process.platform === "linux" && isolation !== undefined) {
+      const { OmniSpawner } = yield* Effect.promise(() => import("@orchestra/core/omni-spawner"))
+      const unbind = yield* Effect.try({
+        try: () => OmniSpawner.bindActivityIsolation(isolation),
+        catch: () => new Error("Invalid ORCHESTRA_ACTIVITY_ISOLATED_EXECUTABLES configuration"),
+      })
+      yield* Effect.addFinalizer(() => Effect.sync(unbind))
+    }
+    return extension
+  }) : undefined
   const start = (wait: Effect.Effect<void>) =>
     withInstallation(input, (httpExtensions) => Effect.gen(function* () {
       const daemon = yield* Daemon.Service
@@ -99,7 +143,8 @@ export const serveForever = Effect.fn("cli.serve")(function* (input: ServeInput)
       )
       const allowedHosts = listenerHosts(input.hostname, input.allowedHosts)
       const bindHost = httpExtensions && input.hostname === "localhost" ? "127.0.0.1" : input.hostname
-      const listening = yield* listen(bindHost, input.port, password, hosts(), root, allowedHosts, input.cors, httpExtensions)
+      const listening = yield* listen(bindHost, input.port, password, hosts(), root, allowedHosts, input.cors,
+        privateExtension ? [...(httpExtensions ?? []), privateExtension] : httpExtensions, httpExtensions !== undefined)
       const address = listening.address
       // Closing the server waits for every open connection, and the event stream never ends on its own. Scope
       // finalizers run in reverse, so this drops the connections before the server closes.
@@ -155,10 +200,11 @@ function listen(
   allowedHosts: ReadonlyArray<string>,
   cors?: ReadonlyArray<string>,
   httpExtensions?: readonly HttpExtension[],
+  installation = false,
 ) {
-  if (Option.isSome(port)) return bind(hostname, port.value, password, host, root, allowedHosts, cors, httpExtensions)
+  if (Option.isSome(port)) return bind(hostname, port.value, password, host, root, allowedHosts, cors, httpExtensions, installation)
   const next = (port: number): ReturnType<typeof bind> =>
-    bind(hostname, port, password, host, root, allowedHosts, cors, httpExtensions).pipe(
+    bind(hostname, port, password, host, root, allowedHosts, cors, httpExtensions, installation).pipe(
       Effect.catch((error) => (port === 65_535 || !addressInUse(error) ? Effect.fail(error) : next(port + 1))),
     )
   return next(4096)
@@ -173,9 +219,10 @@ function bind(
   allowedHosts: ReadonlyArray<string>,
   cors?: ReadonlyArray<string>,
   httpExtensions?: readonly HttpExtension[],
+  installation = false,
 ) {
   return Effect.gen(function* () {
-    const server = yield* serveTransport(httpExtensions !== undefined)
+    const server = yield* serveTransport(installation)
     return yield* Layer.build(
       HttpRouter.serve(createRoutes({ password, host, webRoot: root, cors, allowedHosts, httpExtensions }), {
         disableListenLog: true,

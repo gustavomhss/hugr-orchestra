@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { cachePath, complete, incomplete, mount, readPath, row, source, unread, until } from "./activity-docker-fixture"
+import { cachePath, complete, incomplete, mount, planPath, readPath, row, source, unread, until } from "./activity-docker-fixture"
 
 const labels = ["Trees", "Worktrees", "Cache", "Docker", "Temporary", "Logs", "IN/OUT", "Quarantine"]
 const manual = "Read containers"
@@ -19,16 +19,21 @@ function age(panel: HTMLElement, line: Element) {
   return Number.parseInt(seconds ?? "", 10)
 }
 
-test("A161/S16 uses the eight English tabs and leaves IN/OUT and Quarantine unavailable", async () => {
+test("A161/S16 uses the eight English tabs, reads IN/OUT, and keeps Quarantine unavailable on the web", async () => {
   const app = await mount()
   try {
     expect(app.tabs().map(text)).toEqual(labels)
-    for (const tab of ["IN/OUT", "Quarantine"]) {
-      app.select(tab)
-      expect(text(app.panel())).toContain(tab + ": collection unavailable")
-      expect(app.panel().querySelectorAll("button, form, meter, progress")).toHaveLength(0)
-    }
-    expect(app.calls).toHaveLength(0)
+    app.select("IN/OUT")
+    const plan = await app.call(0, "GET", planPath)
+    plan.respond({ ready: [], approvals: [], partial: false })
+    await until("complete plan empty state", () => text(app.panel()).includes("complete IN/OUT ledger has no entries"))
+    expect(app.panel().querySelectorAll("button")).toHaveLength(1)
+    expect(app.button("Refresh").disabled).toBe(false)
+    expect(app.panel().querySelectorAll("form, meter, progress")).toHaveLength(0)
+    app.select("Quarantine")
+    expect(text(app.panel())).toContain("Quarantine reading and emptying are supported on Windows desktop only.")
+    expect(app.panel().querySelectorAll("button, form, meter, progress")).toHaveLength(0)
+    expect(app.calls).toHaveLength(1)
   } finally {
     app.dispose()
   }
@@ -272,30 +277,33 @@ test("A09–A13/A153–A154 category and server changes abort old work and keep 
     const category = await app.call(1, "POST", readPath)
     app.select("IN/OUT")
     expect(category.request.signal.aborted).toBe(true)
-    expect(text(app.panel())).toContain("IN/OUT: collection unavailable")
+    const plan = await app.call(2, "GET", planPath)
+    plan.respond({ ready: [], approvals: [], partial: false })
+    await until("IN/OUT plan empty state", () => text(app.panel()).includes("complete IN/OUT ledger has no entries"))
     expect(text(app.panel())).not.toContain(alpha.name!)
-    expect(app.panel().querySelectorAll("button, a[href], form, [role='button']")).toHaveLength(0)
+    expect([...app.panel().querySelectorAll<HTMLButtonElement>("button")].map(text)).toEqual(["Refresh"])
+    expect(app.panel().querySelectorAll("a[href], form, [role='button']")).toHaveLength(0)
     app.select("Quarantine")
-    expect(text(app.panel())).toContain("Quarantine: collection unavailable")
+    expect(text(app.panel())).toContain("Quarantine reading and emptying are supported on Windows desktop only.")
     app.select("Docker")
     category.respond(complete("2", [alpha]))
     await Bun.sleep(20)
     expect(text(app.panel())).toContain(unreadText)
     expect(text(app.panel())).not.toContain(alpha.name!)
-    expect(app.calls).toHaveLength(2)
+    expect(app.calls).toHaveLength(3)
     app.button("Refresh").click()
-    ;(await app.call(2, "GET", cachePath)).respond(complete("2", [alpha]))
+    ;(await app.call(3, "GET", cachePath)).respond(complete("2", [alpha]))
     await until("cache row after tab round trip", () => text(app.panel()).includes(alpha.name!))
     expect(cells(rows(app.panel())[0]!)[1]).toBe("")
 
     app.button(manual).click()
-    const oldServer = await app.call(3, "POST", readPath)
+    const oldServer = await app.call(4, "POST", readPath)
     app.switchServer("second")
     await until("request aborted after server switch", () => oldServer.request.signal.aborted)
     expect(text(app.panel())).toContain(unreadText)
-    expect(app.calls).toHaveLength(4)
+    expect(app.calls).toHaveLength(5)
     app.button(manual).click()
-    const active = await app.call(4, "POST", readPath)
+    const active = await app.call(5, "POST", readPath)
     expect(active.url.hostname).toBe("second.test")
     oldServer.respond(complete("3", [alpha]))
     await Bun.sleep(20)
@@ -305,7 +313,7 @@ test("A09–A13/A153–A154 category and server changes abort old work and keep 
     active.respond(complete("1", [beta], { instanceID: "monitor-b" }))
     await until("new server sample rendered", () => text(app.panel()).includes(beta.name!))
     expect(cells(rows(app.panel())[0]!).slice(1, 5)).toEqual(["", "unread", "não colapsei", "unproved"])
-    expect(app.calls).toHaveLength(5)
+    expect(app.calls).toHaveLength(6)
   } finally {
     app.dispose()
   }

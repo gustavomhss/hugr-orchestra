@@ -78,6 +78,7 @@ export function serve(
       HttpApi.make("server").add(ActivityGroup).middleware(Authorization).middleware(SchemaErrorMiddleware),
     ).pipe(
       Layer.provide(ActivityHandler),
+      Layer.provide(Layer.succeed(Database.Service, fixture.database)),
       Layer.provide(Layer.succeed(ActivityWorktreeRegistry.Service, observed)),
       Layer.provide(
         input.dockerProcess

@@ -1,6 +1,5 @@
 export * as ReviewEngagementRequestV2 from "./review-engagement"
 
-import { randomUUID } from "node:crypto"
 import { Cause, Clock, Deferred, Duration, Effect, Exit, Option, Scope } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Database } from "@orchestra/core/database/database"
@@ -15,14 +14,13 @@ import { ReviewProbe } from "@orchestra/core/review-toolkit/probe"
 import { ReviewScratch } from "@orchestra/core/review-toolkit/scratch-copy"
 import { SessionSchema, type SessionV2 } from "@orchestra/core/session"
 import type { SessionExecution } from "@orchestra/core/session/execution"
-import { TaskTool } from "@orchestra/core/tool/task"
 import { Tool } from "@orchestra/core/tool/tool"
-import { SessionMessage } from "@orchestra/schema/session-message"
 import { ReviewResultV2 } from "../governance/review-result"
 import { ReviewEngagementEvidenceV2 } from "../workflow/review-engagement-evidence"
 import { ReviewEngagementArtifactsV2 } from "../workflow/review-engagement-artifacts"
 import { ReviewEngagementPolicyV2 } from "../workflow/review-engagement-policy"
 import { ReviewEngagementReportV2 } from "../workflow/review-engagement-report"
+import { ReviewScopedProbeV2 } from "../workflow/review-scoped-probe"
 import { ReviewEngagementSourceV2 } from "../workflow/review-engagement-source"
 import { ReviewFanoutV2 } from "../workflow/review-fanout"
 import type { ReviewVariantValidationV2 } from "../workflow/review-variant-validation"
@@ -31,9 +29,10 @@ import type { MaestroChainTools } from "./chain"
 import type { MaestroReviewTools } from "./review"
 import { ReviewBindingV2 } from "./review-binding"
 import { ReviewEngagementStoreV2 } from "./review-engagement-store"
+import { ReviewEngagementRuntimeV2 } from "./review-engagement-runtime"
 import { ReviewEngagementVariantsV2 } from "./review-engagement-variants"
 
-type Input = {
+export type Input = {
   readonly sessionID: SessionSchema.ID
   readonly services: MaestroChainTools.Services
   readonly sessions: Option.Option<SessionV2.Interface>
@@ -45,14 +44,11 @@ type Input = {
   readonly processes: AppProcess.Interface
   readonly settings: (projectID: SessionSchema.Info["projectID"]) => Effect.Effect<ReviewRoute.Request["settings"]>
 }
-type Owner = { readonly token: string; readonly inputHash: string; readonly done: Deferred.Deferred<void> }
-const owners = new Map<string, Owner>()
 const failure = (reason: string, detail: string) => new Tool.Failure({ message: `${reason}: ${detail}`, metadata: { reason } })
 
 /** In-process admission only. An unfinished record with no live owner never resumes a provider after reopening. */
 export const run = Effect.fn("ReviewEngagementRequestV2.run")(function* (params: ReviewEngagementPolicyV2.Input, input: Input) {
   if (params.profile === "compliance") return yield* failure("engagement-profile-unavailable", "compliance execution is not built")
-  if (params.fixReview !== undefined) return yield* failure("engagement-fix-review-unavailable", "fix review execution is not built")
   if (Option.isNone(input.sessions) || Option.isNone(input.execution))
     return yield* failure("session-execution-unavailable", "engagement requires native Session execution")
   const sessions = input.sessions.value
@@ -66,74 +62,56 @@ export const run = Effect.fn("ReviewEngagementRequestV2.run")(function* (params:
   // Durable terminal bytes precede source acquisition, settings, catalog, skills and Session creation.
   const retained = yield* store.read(identity)
   if (retained?.state === "terminal") return yield* artifacts.replay(retained)
-  const namespace = input.database.storageID
-  if (typeof namespace !== "string" || !namespace.trim())
-    return yield* failure("engagement-evidence-storage-unavailable", "a stable database identity is required")
-  const key = `${namespace}\0${identity.leadID}`
-  return yield* Effect.acquireUseRelease(
-    Effect.suspend(() => {
-      const existing = owners.get(key)
-      if (existing && existing.inputHash !== identity.inputHash)
-        return Effect.fail(failure("engagement-request-conflict", "request ID already owns a different accepted input"))
-      if (existing) return Effect.succeed({ entry: existing, owner: false })
-      const entry: Owner = { token: randomUUID(), inputHash: identity.inputHash, done: Deferred.makeUnsafe<void>() }
-      owners.set(key, entry)
-      return Effect.succeed({ entry, owner: true })
-    }),
-    (held) => Effect.gen(function* () {
-      if (!held.owner) {
-        // A cancelled waiter owns neither the provider drain nor the owner's registry entry.
-        yield* Deferred.await(held.entry.done)
-        const finished = yield* store.read(identity)
-        if (finished?.state === "terminal") return yield* artifacts.replay(finished)
-        return yield* failure("engagement-interrupted", "prior admission did not publish a terminal result")
+  return yield* ReviewEngagementRuntimeV2.withOwner(input.database.storageID, identity, (held) => Effect.gen(function* () {
+    if (!held.owner) {
+      // A cancelled waiter owns neither the provider drain nor the owner's registry entry.
+      yield* Deferred.await(held.entry.done)
+      const finished = yield* store.read(identity)
+      if (finished?.state === "terminal") return yield* artifacts.replay(finished)
+      return yield* failure("engagement-interrupted", "prior admission did not publish a terminal result")
+    }
+    const existing = yield* store.read(identity)
+    if (existing?.state === "terminal") return yield* artifacts.replay(existing)
+    if (existing?.state === "running") {
+      const stopped = yield* store.finish({ identity, owner: existing.owner }, { status: "failed", reason: "engagement-interrupted" })
+      if (stopped.terminal.value.status !== "failed") return yield* artifacts.replay(stopped)
+      return yield* failure("engagement-interrupted", "unfinished request has no live process owner")
+    }
+    // Native create is interruptible pre-admission setup. The store verifies an adopted ID is pristine before claim.
+    yield* sessions.create({ id: identity.leadID, parentID: parent.id, agent: AgentV2.ID.make("lucy"),
+      ...(parent.model ? { model: parent.model } : {}), location: parent.location }).pipe(
+      Effect.mapError(() => failure("engagement-session-unavailable", "lead Session is unavailable")),
+    )
+    return yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
+      const admitted = yield* store.admit(identity, params, held.entry.token, parent.model)
+      if (admitted.state === "terminal") return yield* restore(artifacts.replay(admitted))
+      if (admitted.owner !== held.entry.token) return yield* failure("engagement-owner-lost", "request is owned by another admission")
+      const ticket = { identity, owner: held.entry.token }
+      const owned = new Set<SessionSchema.ID>([identity.leadID])
+      const remaining = Math.max(0, admitted.budget.deadlineAt - (yield* Clock.currentTimeMillis))
+      // The yield gives Effect's timeout fiber a turn before any capture observer or provider can advance the clock.
+      const work = Effect.gen(function* () {
+        yield* Effect.yieldNow
+        return yield* perform(params, input, parent, sessions, execution, admitted, store, artifacts, owned)
+      }).pipe(Effect.scoped, Effect.timeoutOption(Duration.millis(remaining)))
+      const result = yield* (remaining === 0 ? Effect.succeed(Option.none<string>()) : restore(work)).pipe(Effect.exit)
+      const cleaned = yield* Effect.forEach([...owned], (child) => execution.interrupt(child, { discardPending: true }),
+        { concurrency: "unbounded", discard: true }).pipe(Effect.exit)
+      if (Exit.isFailure(result) || Exit.isFailure(cleaned)) {
+        const cause = Exit.isFailure(result) && Exit.isFailure(cleaned) ? Cause.combine(result.cause, cleaned.cause)
+          : Exit.isFailure(result) ? result.cause : Exit.isFailure(cleaned) ? cleaned.cause : Cause.empty
+        const stopped = yield* store.finish(ticket, { status: Cause.hasInterruptsOnly(cause) ? "cancelled" : "failed",
+          reason: Cause.hasInterruptsOnly(cause) ? "cancelled" : "engagement-failed" }).pipe(Effect.exit)
+        if (Exit.isFailure(stopped)) return yield* Effect.failCause(Cause.combine(cause, stopped.cause))
+        if (!Cause.hasDies(cause) && !Cause.hasInterrupts(cause) && stopped.value.terminal.value.status === "expired")
+          return yield* restore(artifacts.replay(stopped.value))
+        return yield* Effect.failCause(cause)
       }
-      const existing = yield* store.read(identity)
-      if (existing?.state === "terminal") return yield* artifacts.replay(existing)
-      if (existing?.state === "running") {
-        const stopped = yield* store.finish({ identity, owner: existing.owner }, { status: "failed", reason: "engagement-interrupted" })
-        if (stopped.terminal.value.status !== "failed") return yield* artifacts.replay(stopped)
-        return yield* failure("engagement-interrupted", "unfinished request has no live process owner")
-      }
-      // Native create is interruptible pre-admission setup. The store verifies an adopted ID is pristine before claim.
-      yield* sessions.create({ id: identity.leadID, parentID: parent.id, agent: AgentV2.ID.make("lucy"),
-        ...(parent.model ? { model: parent.model } : {}), location: parent.location }).pipe(
-        Effect.mapError(() => failure("engagement-session-unavailable", "lead Session is unavailable")),
-      )
-      return yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
-        const admitted = yield* store.admit(identity, params, held.entry.token, parent.model)
-        if (admitted.state === "terminal") return yield* restore(artifacts.replay(admitted))
-        if (admitted.owner !== held.entry.token) return yield* failure("engagement-owner-lost", "request is owned by another admission")
-        const ticket = { identity, owner: held.entry.token }
-        const owned = new Set<SessionSchema.ID>([identity.leadID])
-        const remaining = Math.max(0, admitted.budget.deadlineAt - (yield* Clock.currentTimeMillis))
-        // The yield gives Effect's timeout fiber a turn before any capture observer or provider can advance the clock.
-        const work = Effect.gen(function* () {
-          yield* Effect.yieldNow
-          return yield* perform(params, input, parent, sessions, execution, admitted, store, artifacts, owned)
-        }).pipe(Effect.scoped, Effect.timeoutOption(Duration.millis(remaining)))
-        const result = yield* (remaining === 0 ? Effect.succeed(Option.none<string>()) : restore(work)).pipe(Effect.exit)
-        const cleaned = yield* Effect.forEach([...owned], (child) => execution.interrupt(child, { discardPending: true }),
-          { concurrency: "unbounded", discard: true }).pipe(Effect.exit)
-        if (Exit.isFailure(result) || Exit.isFailure(cleaned)) {
-          const cause = Exit.isFailure(result) && Exit.isFailure(cleaned) ? Cause.combine(result.cause, cleaned.cause)
-            : Exit.isFailure(result) ? result.cause : Exit.isFailure(cleaned) ? cleaned.cause : Cause.empty
-          const stopped = yield* store.finish(ticket, { status: Cause.hasInterruptsOnly(cause) ? "cancelled" : "failed",
-            reason: Cause.hasInterruptsOnly(cause) ? "cancelled" : "engagement-failed" }).pipe(Effect.exit)
-          if (Exit.isFailure(stopped)) return yield* Effect.failCause(Cause.combine(cause, stopped.cause))
-          if (!Cause.hasDies(cause) && !Cause.hasInterrupts(cause) && stopped.value.terminal.value.status === "expired")
-            return yield* restore(artifacts.replay(stopped.value))
-          return yield* Effect.failCause(cause)
-        }
-        if (Option.isSome(result.value)) return result.value.value
-        const stopped = yield* store.finish(ticket, { status: "expired" })
-        return yield* restore(artifacts.replay(stopped))
-      }))
-    }),
-    (held) => held.owner ? Effect.sync(() => {
-      if (owners.get(key) === held.entry) owners.delete(key)
-    }).pipe(Effect.andThen(Deferred.succeed(held.entry.done, undefined))) : Effect.void,
-  )
+      if (Option.isSome(result.value)) return result.value.value
+      const stopped = yield* store.finish(ticket, { status: "expired" })
+      return yield* restore(artifacts.replay(stopped))
+    }))
+  }))
 })
 
 function perform(params: ReviewEngagementPolicyV2.Input, input: Input, parent: SessionSchema.Info,
@@ -143,14 +121,7 @@ function perform(params: ReviewEngagementPolicyV2.Input, input: Input, parent: S
     const identity = admitted.identity
     const ticket = { identity, owner: admitted.owner }
     const git = input.services.atlas.git
-    const root = yield* git.run(["rev-parse", "--show-toplevel"], { cwd: parent.location.directory,
-      env: { GIT_NO_REPLACE_OBJECTS: "1", GIT_NO_LAZY_FETCH: "1", GIT_ALLOW_PROTOCOL: "", GIT_TERMINAL_PROMPT: "0" },
-      maxOutputBytes: 64 * 1024, timeout: "30 seconds" }).pipe(
-      Effect.mapError(() => failure("engagement-root-unavailable", "Git root is unavailable")),
-    )
-    const worktree = root.text().replace(/\r?\n$/, "")
-    if (root.exitCode !== 0 || root.truncated || !worktree)
-      return yield* failure("engagement-root-unavailable", "Git root is unavailable")
+    const worktree = yield* ReviewEngagementRuntimeV2.root(git, parent.location.directory)
     const source = yield* ReviewEngagementEvidenceV2.prepare(git, { worktree,
       ...(params.revision === undefined ? {} : { revision: params.revision }),
       ...(params.paths === undefined ? {} : { paths: params.paths }) })
@@ -202,7 +173,9 @@ function perform(params: ReviewEngagementPolicyV2.Input, input: Input, parent: S
       ReviewEngagementSourceV2.read(git, { worktree, prepared: source, path, startLine, endLine })
     const variants = ReviewEngagementVariantsV2.make({ ticket, store, collector, source, read })
     const children = new Map<SessionSchema.ID, ReviewEngagementStoreV2.Child>([[lead, { id: lead, key: "lead", role: "lead" }]])
+    const runProbe = ReviewScopedProbeV2.make({ git, worktree, source, collector, processes: input.processes })
     const port: ReviewFanoutV2.Port = {
+      ...(params.profile !== "diligence" ? {} : { scopedProbe: runProbe.initial }),
       create: (child) => Effect.gen(function* () {
         if (child.role === "lead" && child.key === "lead") return lead
         if (child.role === "lead" || child.key === "lead") return yield* failure("engagement-child-invalid", "child role conflicts with lead")
@@ -218,26 +191,12 @@ function perform(params: ReviewEngagementPolicyV2.Input, input: Input, parent: S
       }),
       run: (child, brief, turn) => Effect.gen(function* () {
         if (!owned.has(child)) return yield* failure("engagement-child-invalid", "Session is not owned by this request")
-        const prompt = SessionMessage.ID.make(`msg_lucy_engagement_${ReviewEngagementReportV2.digest({ key: identity.key, child, turn: turn.key })}`)
-        yield* sessions.prompt({ id: prompt, sessionID: child, prompt: { text: brief }, delivery: "queue", resume: false }).pipe(
-          Effect.mapError(() => failure("engagement-prompt-refused", "review prompt was refused")))
-        const drained = yield* execution.exclusive(child,
-          execution.withRunner(child, (runner) => runner.run({ sessionID: child, force: true })), { discardPending: true }).pipe(
-          Effect.onInterrupt(() => execution.interrupt(child, { discardPending: true })),
-          Effect.mapError(() => failure("engagement-execution-failed", "review execution failed")),
-        )
-        if (Option.isNone(drained)) return yield* failure("engagement-session-busy", "owned review Session is already running")
-        const messages = yield* sessions.messages({ sessionID: child, order: "asc" }).pipe(
-          Effect.mapError(() => failure("engagement-session-unavailable", "review messages are unavailable")))
+        const native = yield* ReviewEngagementRuntimeV2.turn(sessions, execution, identity, child, brief, turn.key)
         const admission = children.get(child)
         if (!admission) return yield* failure("engagement-child-invalid", "native turn has no owned child admission")
-        const reply = TaskTool.completedReply(messages, prompt)
-        const part = reply?.content.findLast((part): part is SessionMessage.AssistantText => part.type === "text")
-        yield* collector.acknowledge(child, messages, { promptMessageID: prompt, childKey: admission.key,
-          role: admission.role, turnKey: turn.key, ...(reply && part ? {
-            reply: { assistantMessageID: reply.id, textPartID: part.id, text: part.text },
-          } : {}) })
-        return part?.text ?? ""
+        yield* collector.acknowledge(child, native.messages, { promptMessageID: native.prompt, childKey: admission.key,
+          role: admission.role, turnKey: turn.key, ...(native.reply ? { reply: native.reply } : {}) })
+        return native.reply?.text ?? ""
       }),
       analyze: (step) => Effect.gen(function* () {
         const evidence = yield* collector.analysis({ routing: step.routing, catalog })
