@@ -6,7 +6,6 @@ import { mkdirSync, mkdtempSync, realpathSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { afterAll, expect } from "bun:test"
 import type { HookInput, Options } from "@anthropic-ai/claude-agent-sdk"
-import { eq } from "drizzle-orm"
 import { Effect, Fiber, Layer, Queue, Schema } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Database } from "@orchestra/core/database/database"
@@ -22,7 +21,6 @@ import { SessionExecution } from "@orchestra/core/session/execution"
 import { Prompt } from "@orchestra/core/session/prompt"
 import { ExecutionHost } from "@orchestra/core/session/runner"
 import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
-import { SessionTable } from "@orchestra/core/session/sql"
 import { SkillGuidance } from "@orchestra/core/skill/guidance"
 import { SystemContext } from "@orchestra/core/system-context"
 import { Harness } from "@orchestra/core/test/session-runner-harness"
@@ -31,7 +29,6 @@ import { LLMClient } from "@orchestra/llm"
 import { RequestExecutor } from "@orchestra/llm/route"
 import { ClaudeCodeSDK } from "../../src/sdk"
 import { ClaudeCodeHost } from "../../src/v2/host"
-import { ClaudeCodeAccountFixture } from "./account"
 import { ScriptedSDK } from "./scripted-sdk"
 
 export function make() {
@@ -106,7 +103,6 @@ export function make() {
   const hosts = Layer.effect(
     ExecutionHost.Service,
     ClaudeCodeHost.make.pipe(
-      Effect.provide(ClaudeCodeAccountFixture.layer),
       Effect.provide(sdk),
       Effect.provideService(ClaudeCodeSDK.Environment, {}),
       Effect.map((host) =>
@@ -220,19 +216,14 @@ export function make() {
       )
       const sessions = yield* SessionV2.Service
       yield* sessions.switchAgent({ sessionID: Harness.sessionID, agent: agentID })
-      const database = yield* Database.Service
-      yield* database.db
-        .update(SessionTable)
-        .set({
-          permission: sessionRules.map((rule) => ({
-            permission: rule.action,
-            pattern: rule.resource,
-            action: rule.effect,
-          })),
-        })
-        .where(eq(SessionTable.id, Harness.sessionID))
-        .run()
-        .pipe(Effect.orDie)
+      yield* sessions.setPermission({
+        sessionID: Harness.sessionID,
+        permission: sessionRules.map((rule) => ({
+          permission: rule.action,
+          pattern: rule.resource,
+          action: rule.effect,
+        })),
+      })
       const permission = yield* PermissionV2.Service
       const execution = yield* SessionExecution.Service
       yield* Effect.addFinalizer(() =>

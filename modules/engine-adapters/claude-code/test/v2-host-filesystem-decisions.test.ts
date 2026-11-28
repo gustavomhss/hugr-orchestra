@@ -105,3 +105,59 @@ filesystem.it.live("an aborted hook decision is retryable with the same immutabl
     expect(input).toEqual(filesystem.fileInput("Write", filesystem.paths.outsideFile))
   }),
 )
+
+filesystem.it.live("askBefore uses the same file resource as the hosted action permission", () =>
+  Effect.gen(function* () {
+    yield* filesystem.setup(filesystem.allow, [], { askBefore: ["write"] })
+    const queue = yield* filesystem.requests
+    const input = Object.freeze(filesystem.fileInput("Write", filesystem.paths.insideFile))
+    filesystem.state.during = async (options) => {
+      await filesystem.gates(options, {
+        tool: "Write",
+        args: input,
+        id: "profile-approval",
+        effect: filesystem.write(filesystem.paths.insideFile),
+      })
+    }
+    const running = yield* filesystem.run.pipe(Effect.forkScoped)
+    const request = yield* filesystem.nextRequest(queue, running)
+    expect(request).toMatchObject({
+      action: "edit",
+      resources: ["inside.txt"],
+      metadata: { nativeSafety: true, action: "write", callID: "profile-approval" },
+    })
+    expect(filesystem.state.effects).toBe(0)
+    const permissions = yield* PermissionV2.Service
+    yield* permissions.reply({ requestID: request.id, reply: "once" })
+    yield* Fiber.join(running)
+    expect(filesystem.state.effects).toBe(1)
+  }),
+)
+
+
+filesystem.it.live("an owner decline of external access stops the hosted call before action approval", () =>
+  Effect.gen(function* () {
+    yield* filesystem.setup([
+      ...filesystem.allow,
+      { action: "external_directory", resource: "*", effect: "ask" },
+      { action: "edit", resource: "*", effect: "ask" },
+    ])
+    const queue = yield* filesystem.requests
+    filesystem.state.during = async (options) => {
+      await filesystem.gates(options, {
+        tool: "Write",
+        args: filesystem.fileInput("Write", filesystem.paths.outsideFile),
+        id: "external-reject",
+        effect: filesystem.write(filesystem.paths.outsideFile),
+      })
+    }
+    const running = yield* filesystem.run.pipe(Effect.forkScoped)
+    const first = yield* filesystem.nextRequest(queue, running)
+    expect(first.action).toBe("external_directory")
+    const permissions = yield* PermissionV2.Service
+    yield* permissions.reply({ requestID: first.id, reply: "reject" })
+    yield* Fiber.join(running).pipe(Effect.timeout("5 seconds"))
+    filesystem.allRefused()
+    expect(yield* Effect.promise(() => Bun.file(filesystem.paths.outsideFile).text())).toBe("OUTSIDE SENTINEL")
+  }),
+)

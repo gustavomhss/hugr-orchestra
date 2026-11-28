@@ -334,25 +334,27 @@ const layer = Layer.effect(
                 Effect.mapError(() => new ToolSafety.Denied({ reason: "hosted-filesystem-path" })),
               )
             : undefined
-          if (target?.externalDirectory)
-            yield* permissions
-              .authorize({
-                ...LocationMutation.externalDirectoryPermission(target.externalDirectory),
-                sessionID: session.id,
-                agent: agent.id,
-                metadata: { tool: input.tool, callID: input.callID },
-              })
-              .pipe(Effect.catchTag("Session.NotFoundError", (error) => Effect.die(error)))
-          const resources = target && input.filesystem?.resource === "path" ? [target.resource] : [...input.resources]
-          yield* permissions
-            .authorize({
+          const authorizePermission = Effect.fnUntraced(function* (
+            request: Pick<PermissionV2.AssertInput, "action" | "resources" | "save">,
+          ) {
+            // For hosted file access, a Session rule can narrow the seat's permission.
+            if (target) {
+              const rules = yield* store.permissions(session.id)
+              if (request.resources.some((resource) => PermissionV2.evaluate(request.action, resource, rules).effect === "deny"))
+                return yield* new PermissionV2.BlockedError({ rules })
+            }
+            return yield* permissions.authorize({
+              ...request,
               sessionID: session.id,
               agent: agent.id,
-              action: input.action,
-              resources,
               metadata: { tool: input.tool, callID: input.callID },
-            })
-            .pipe(Effect.catchTag("Session.NotFoundError", (error) => Effect.die(error)))
+            }).pipe(Effect.catchTag("Session.NotFoundError", (error) => Effect.die(error)))
+          })
+          if (target?.externalDirectory)
+            yield* authorizePermission(LocationMutation.externalDirectoryPermission(target.externalDirectory))
+          const fileResource = input.filesystem?.resource === "path" ? target?.resource : undefined
+          const resources = fileResource === undefined ? [...input.resources] : [fileResource]
+          yield* authorizePermission({ action: input.action, resources })
           if (!input.safety) return {}
           // The SDK keeps its input. Action permission and ToolSafety judge the same physical target.
           const call = target
@@ -366,7 +368,7 @@ const layer = Layer.effect(
             : input.safety
           const hooks = hostedHooks(permissions, {
             sessionID: session.id, agent: agent.id, location, fs,
-            callID: input.callID, action: input.action, resources,
+            callID: input.callID, action: input.action, resources, fileResource,
           })
           const authorization = yield* tools.hosted(
             {

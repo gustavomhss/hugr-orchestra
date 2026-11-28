@@ -61,8 +61,11 @@ for (const tool of ["Read", "Write"]) {
 filesystem.it.live("an internal file alias cannot bypass a deny on the canonical action resource", () =>
   Effect.gen(function* () {
     yield* filesystem.setup([...filesystem.allow, { action: "edit", resource: "restricted.txt", effect: "deny" }])
-    const alias = path.join(filesystem.paths.inside, "alias-restricted.txt")
-    yield* Effect.promise(() => fs.symlink(filesystem.paths.restricted, alias, "file"))
+    const aliasDirectory = path.join(filesystem.paths.inside, "alias-restricted")
+    yield* Effect.promise(() =>
+      fs.symlink(filesystem.paths.inside, aliasDirectory, process.platform === "win32" ? "junction" : "dir"),
+    )
+    const alias = path.join(aliasDirectory, path.basename(filesystem.paths.restricted))
     filesystem.state.during = async (options) => {
       await filesystem.gates(options, {
         tool: "Write",
@@ -233,8 +236,11 @@ filesystem.it.live(
   () =>
     Effect.gen(function* () {
       yield* filesystem.setup(filesystem.allow, [], { protectedWrites: [filesystem.paths.restricted] })
-      const alias = path.join(filesystem.paths.inside, "profile-alias.txt")
-      yield* Effect.promise(() => fs.symlink(filesystem.paths.restricted, alias, "file"))
+      const aliasDirectory = path.join(filesystem.paths.inside, "profile-alias")
+      yield* Effect.promise(() =>
+        fs.symlink(filesystem.paths.inside, aliasDirectory, process.platform === "win32" ? "junction" : "dir"),
+      )
+      const alias = path.join(aliasDirectory, path.basename(filesystem.paths.restricted))
       const input = Object.freeze(filesystem.fileInput("Write", alias))
       filesystem.state.during = async (options) => {
         await filesystem.gates(options, {
