@@ -15,6 +15,7 @@
   "exports": {
     "./activity-worktree": "./src/activity-worktree.ts",
     "./activity-arm": "./src/activity-arm.ts",
+    "./activity-quarantine-archive": "./src/activity-quarantine-archive.ts",
     "./activity-quarantine-custody": "./src/activity-quarantine-custody.ts",
     "./activity-stop-service": "./src/activity-stop-service.ts",
     "./activity-action-ledger": "./src/activity-action-ledger.ts",

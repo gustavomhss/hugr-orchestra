@@ -33,6 +33,8 @@ export async function execute(
   try {
     if (!lease.originalPath || !lease.quarantinePath ||
       lease.state !== (transition === "apply" ? "armed" : "verified")) return "Refused"
+    const rename = transition === "apply" && lease.disposable === "file" ? native.quarantineRenameExclusive : native.quarantineRename
+    if (!rename) return "Refused"
     const original = lease.originalPath
     const quarantine = lease.quarantinePath
     const source = transition === "apply" ? original : quarantine
@@ -47,7 +49,7 @@ export async function execute(
           facts: await reread(),
           claimant: "absent",
           mutation: async () =>
-            await native.quarantineRename(source, destination, captured.identity) === captured.identity ? "accepted" : "unknown",
+            await rename(source, destination, captured.identity) === captured.identity ? "accepted" : "unknown",
         }
       },
       reread,

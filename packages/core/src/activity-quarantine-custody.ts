@@ -22,6 +22,7 @@ export interface Interface {
     target: ActivityQuarantineExecutor.Target & { readonly label: string; readonly owner: string },
     acquire: ActivityQuarantineNative.Acquire,
   ) => Effect.Effect<ActivityEmpty.Outcome, unknown>
+  readonly state: () => Effect.Effect<ActivityEmpty.Snapshot | undefined, unknown>
   readonly preview: () => Effect.Effect<ActivityEmpty.Preview | undefined, unknown>
   readonly confirm: (input: ActivityEmpty.Confirm) => Effect.Effect<ActivityEmpty.Receipt | undefined, unknown>
 }
@@ -89,11 +90,22 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
         catch: (error) => error,
       })
     },
+    state() {
+      return Effect.gen(function* () {
+        const dispose = yield* Effect.promise(() => Omni.quarantineBatch().catch(() => undefined))
+        if (!dispose) return undefined
+        const rows = yield* activeRows(database.db)
+        const records = rows.slice(0, ActivityArm.maxTargets).flatMap((row) => {
+          const target = ActivityEmpty.decodeTarget(visibleTarget(row))
+          return Option.isSome(target) && row.phase !== "finished" ? [{ ...target.value, phase: row.phase }] : []
+        })
+        const partial = records.length !== rows.length
+        return { rows: records, partial, canEmpty: !partial && records.length > 0 && records.every((row) => row.phase === "ready") }
+      })
+    },
     preview() {
       const snapshot = database.db.transaction((tx) => Effect.gen(function* () {
-        const rows = yield* tx.select().from(ActivityQuarantineCustodyTable)
-          .where(ne(ActivityQuarantineCustodyTable.phase, "finished"))
-          .orderBy(asc(ActivityQuarantineCustodyTable.target_id)).limit(ActivityArm.maxTargets + 1).all()
+        const rows = yield* activeRows(tx)
         if (!rows.length || rows.length > ActivityArm.maxTargets || rows.some((row) =>
           row.phase !== "ready" || !row.target_id.trim() || !row.generation.trim() || !row.identity.trim() ||
           !row.original_path.trim())) return undefined
@@ -105,13 +117,7 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
           previewID: crypto.randomUUID(),
           action: "empty-quarantine" as const,
           expiresAt: time + 60_000,
-          targets: rows.map((row) => ({
-            targetID: row.target_id,
-            generation: row.generation,
-            label: row.label,
-            owner: row.owner,
-            originalPath: row.original_path,
-          })),
+          targets: rows.map(visibleTarget),
         }
         if (Option.isNone(ActivityEmpty.decodePreview(preview))) return undefined
         previews.set(preview.previewID, { expiresAt: preview.expiresAt, rows: structuredClone(rows), preview })
@@ -130,9 +136,7 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
         if (!entry || entry.expiresAt <= now()) return Effect.succeed(undefined)
         return database.db.transaction((tx) => Effect.gen(function* () {
           if (entry.expiresAt <= now()) return undefined
-          const rows = yield* tx.select().from(ActivityQuarantineCustodyTable)
-            .where(ne(ActivityQuarantineCustodyTable.phase, "finished"))
-            .orderBy(asc(ActivityQuarantineCustodyTable.target_id)).limit(ActivityArm.maxTargets + 1).all()
+          const rows = yield* activeRows(tx)
           if (rows.length !== entry.rows.length || rows.some((row, index) =>
             row.phase !== "ready" || !sameRow(row, entry.rows[index]))) return undefined
 
@@ -186,6 +190,22 @@ export function make(database: Database.Interface, options?: { readonly now?: ()
         }))
       })
     },
+  }
+}
+
+function activeRows(database: Pick<Database.Interface["db"], "select">) {
+  return database.select().from(ActivityQuarantineCustodyTable)
+    .where(ne(ActivityQuarantineCustodyTable.phase, "finished"))
+    .orderBy(asc(ActivityQuarantineCustodyTable.target_id)).limit(ActivityArm.maxTargets + 1).all()
+}
+
+function visibleTarget(row: CustodyRow) {
+  return {
+    targetID: row.target_id,
+    generation: row.generation,
+    label: row.label,
+    owner: row.owner,
+    originalPath: row.original_path,
   }
 }
 
