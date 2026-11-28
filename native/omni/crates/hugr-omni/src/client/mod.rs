@@ -174,11 +174,11 @@ impl InventoryFailure {
 impl Tree {
     /// Opaque host-local identity qualified by the supervisor generation and tree id.
     pub(crate) fn tree_id(&self) -> String {
-        if self.sup.num & (1 << 63) != 0 {
-            format!("isolated:{}:{}", self.sup.num, self.id)
-        } else {
-            format!("{}:{}", self.sup.num, self.id)
+        #[cfg(target_os = "linux")]
+        if self.sup.isolated_channel() {
+            return format!("isolated:{}:{}", self.sup.num, self.id);
         }
+        format!("{}:{}", self.sup.num, self.id)
     }
 
     /// Unix PTY roots: lets the held root exec, once the host's reader runs, and returns when exec

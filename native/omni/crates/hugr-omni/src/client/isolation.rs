@@ -14,7 +14,7 @@ use crate::error::Error;
 
 pub(super) fn connect(rt: &Runtime, num: u64) -> Result<Arc<Gen>, Error> {
     let stream = connect_root().map_err(|e| Error::supervisor_not_started("isolated supervisor socket", &e))?;
-    Gen::start(rt, num | (1 << 63), REPLY_WITHIN, move || Chan::isolated(stream))
+    Gen::start(rt, num, REPLY_WITHIN, move || Chan::isolated(stream))
 }
 
 fn connect_root() -> io::Result<UnixStream> {

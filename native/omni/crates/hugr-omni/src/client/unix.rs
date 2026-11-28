@@ -80,6 +80,11 @@ impl Chan {
         Ok(chan)
     }
 
+    #[cfg(target_os = "linux")]
+    pub(super) fn is_remote(&self) -> bool {
+        self.remote
+    }
+
     /// The socketpair is connected from the start.
     pub(super) async fn accept(&self) -> io::Result<()> {
         Ok(())

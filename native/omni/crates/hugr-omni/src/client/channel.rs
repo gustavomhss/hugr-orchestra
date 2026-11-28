@@ -172,6 +172,11 @@ impl std::fmt::Debug for Gen {
 }
 
 impl Gen {
+    #[cfg(target_os = "linux")]
+    pub(super) fn isolated_channel(&self) -> bool {
+        self.chan.is_remote()
+    }
+
     pub(super) fn member_freeze(&self) -> bool {
         lock(&self.st).member_freeze
     }
