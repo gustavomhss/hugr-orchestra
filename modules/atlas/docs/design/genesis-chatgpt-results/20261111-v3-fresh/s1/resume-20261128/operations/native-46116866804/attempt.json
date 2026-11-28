@@ -1,0 +1,24 @@
+{
+  "schema": "genesis-s1-operation-attempt/v1",
+  "run_id": 46116866804,
+  "workflow_revision": "3a5dd550ce3758fefce48793d6efbf21afeb2890",
+  "state": "BRIDGE_FAILED_BEFORE_ORIGINAL_CLI",
+  "reason": "Full baseline worktrees contain tracked .atlas/members and .atlas/project; overly strict bridge rejected their presence before invoking prepare. This is not a runtime failure or native-import result.",
+  "correction": "Verify and quarantine exact tracked baseline Atlas files outside each isolated execution root, then let the unchanged released CLI create its own state. Preserve quarantine and identities in the artifact.",
+  "runtime_release_id": "20261111-v3-fresh-s4-r3",
+  "runtime_revision": "e3a8ab8cf56dbff1ee91272df51ffa398d882aa1",
+  "jobs": [
+    {
+      "selection": "automation",
+      "job_id": 140892561221,
+      "conclusion": "failure",
+      "original_cli_executed": false
+    },
+    {
+      "selection": "api",
+      "job_id": 140892561528,
+      "conclusion": "failure",
+      "original_cli_executed": false
+    }
+  ]
+}

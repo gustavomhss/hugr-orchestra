@@ -85,11 +85,32 @@ def save(path, value):
         stream.write("\n")
 
 
-def materialize(repository, destination, spec, cache):
+def materialize(repository, destination, spec, cache, output):
     require(not destination.exists(), "Isolated data path already exists")
     git(repository, "worktree", "add", "--detach", str(destination), SOURCE)
     require(git(destination, "rev-parse", "HEAD").stdout.decode().strip() == SOURCE, "Wrong data HEAD")
-    require(not (destination / ".atlas").exists(), "Inherited Atlas state")
+    # A complete baseline checkout contains tracked Atlas project/member files.
+    # Preserve those bytes outside the execution root before opening a new CAS;
+    # neither historical state nor authority is reused as this execution's state.
+    inherited = destination / ".atlas"
+    isolated = {"baseline_atlas_present": inherited.exists(), "quarantined_files": [],
+                "execution_atlas_before_prepare": "absent", "authority_reused": False}
+    if inherited.exists():
+        require(inherited.is_dir() and not inherited.is_symlink(), "Unexpected baseline Atlas path")
+        for item in sorted(inherited.rglob("*")):
+            require(not item.is_symlink(), "Baseline Atlas contains a symlink")
+            if not item.is_file():
+                continue
+            path = item.relative_to(destination).as_posix()
+            # This verification is deliberately separate from public input paths:
+            # .atlas is never admitted as an artifact source input.
+            original = git(repository, "show", SOURCE + ":" + path).stdout
+            raw = item.read_bytes()
+            require(raw == original, "Baseline Atlas file differs from pinned Git bytes")
+            isolated["quarantined_files"].append({"path": path, "sha256": sha(raw),
+                                                 "git_blob_sha": blob(raw), "byte_length": len(raw)})
+        inherited.rename(output / "baseline-atlas-quarantine")
+    require(not inherited.exists(), "Execution Atlas state was not isolated")
     package_raw, _, _ = capture(repository, spec["commit"], spec["path"], cache)
     require(sha(package_raw) == spec["sha256"], "Original package changed")
     package = json.loads(package_raw)
@@ -147,7 +168,7 @@ def materialize(repository, destination, spec, cache):
                      "observed_head": git(destination, "rev-parse", "HEAD").stdout.decode().strip(),
                      "root": str(destination), "mode": "full-baseline-Git-worktree-with-exact-referenced-payloads",
                      "package": spec, "declared_input_count": len(declared), "files": list(files.values()),
-                     "reference_checks": checks, "membership": members, "initial_atlas_state": "absent"}
+                     "reference_checks": checks, "membership": members, "atlas_isolation": isolated}
 
 
 def main():
@@ -170,9 +191,9 @@ def main():
     require(capability["state"] == "PROVEN" and capability.get("candidate_revision", release["candidate_revision"]) == args.runtime_revision,
             "Runtime is not the pinned S4 native-import release")
     require(git(args.runtime, "rev-parse", "HEAD").stdout.decode().strip() == args.runtime_revision, "Runtime HEAD mismatch")
-    package, provenance = materialize(args.repository, args.root, SPECS[args.selection], cache)
-    save(args.output / "materialization.json", provenance)
     (args.output / "runtime-release.json").write_bytes(release_raw)
+    package, provenance = materialize(args.repository, args.root, SPECS[args.selection], cache, args.output)
+    save(args.output / "materialization.json", provenance)
     argv = ["bun", "scripts/genesis-native.ts", "prepare", str(args.root), SPECS[args.selection]["path"], str(args.output / "prepared.json")]
     started = time.time()
     result = subprocess.run(argv, cwd=args.runtime / "modules/atlas", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
