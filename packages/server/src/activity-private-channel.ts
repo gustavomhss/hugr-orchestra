@@ -83,7 +83,8 @@ export async function acquire(
       const endpoint = url.pathname
       const armPath = endpoint === ActivityPrivateChannel.previewPath || endpoint === ActivityPrivateChannel.confirmPath
       const stopPath = endpoint === ActivityPrivateChannel.stopPreviewPath || endpoint === ActivityPrivateChannel.stopConfirmPath
-      const emptyPath = endpoint === ActivityPrivateChannel.emptyPreviewPath || endpoint === ActivityPrivateChannel.emptyConfirmPath
+      const emptyPath = endpoint === ActivityPrivateChannel.emptyPreviewPath || endpoint === ActivityPrivateChannel.emptyConfirmPath ||
+        endpoint === ActivityPrivateChannel.emptyStatePath
       if (!armPath && !stopPath && !emptyPath) return forbidden()
       if ((armPath && !arm) || (stopPath && !stop) || (emptyPath && !custody)) return forbidden()
       const body = await readBody(request)
@@ -101,7 +102,9 @@ export async function acquire(
       ) : emptyPath && custody ? (
         endpoint === ActivityPrivateChannel.emptyPreviewPath
           ? run(decoded, ActivityEmpty.decodeRequest, () => custody.preview(), ActivityEmpty.decodePreview)
-          : run(decoded, ActivityEmpty.decodeConfirm, custody.confirm, ActivityEmpty.decodeReceipt)
+          : endpoint === ActivityPrivateChannel.emptyStatePath
+            ? run(decoded, ActivityEmpty.decodeRequest, () => custody.state(), ActivityEmpty.decodeSnapshot)
+            : run(decoded, ActivityEmpty.decodeConfirm, custody.confirm, ActivityEmpty.decodeReceipt)
       ) : undefined
       if (!operation) return forbidden()
       const json = await Effect.runPromise(operation, { signal: request.signal }).catch(() => undefined)

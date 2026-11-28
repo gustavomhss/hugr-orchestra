@@ -339,56 +339,27 @@ function run(command, args, options) {
   });
 }
 
-function quarantineIdentity(source) {
-  return later(() => {
+function quarantineOperation(name) {
+  return (...args) => later(() => {
     const native = load();
-    if (typeof native.quarantineIdentity !== "function") throw new Error("Windows quarantine primitive unavailable");
-    return native.quarantineIdentity(source);
+    if (typeof native[name] !== "function") throw new Error("Windows quarantine primitive unavailable: " + name);
+    return native[name](...args);
   });
 }
 
-function quarantineInspect(source) {
-  return later(() => {
-    const native = load();
-    if (typeof native.quarantineInspect !== "function") throw new Error("Windows quarantine primitive unavailable");
-    return native.quarantineInspect(source);
-  });
-}
+const quarantineIdentity = quarantineOperation("quarantineIdentity");
+const quarantineInspect = quarantineOperation("quarantineInspect");
+const quarantineRename = quarantineOperation("quarantineRename");
+const quarantineRenameExclusive = quarantineOperation("quarantineRenameExclusive");
+const quarantineDispose = quarantineOperation("quarantineDispose");
+const quarantineDisposeBatch = quarantineOperation("quarantineDisposeBatch");
 
-function quarantineRename(source, destination, expectedIdentity) {
-  return later(() => {
-    const native = load();
-    if (typeof native.quarantineRename !== "function") throw new Error("Windows quarantine primitive unavailable");
-    return native.quarantineRename(source, destination, expectedIdentity);
-  });
-}
-
-function quarantineDispose(source, expectedIdentity) {
-  return later(() => {
-    const native = load();
-    if (typeof native.quarantineDispose !== "function") throw new Error("Windows quarantine primitive unavailable");
-    return native.quarantineDispose(source, expectedIdentity);
-  });
-}
-
-function quarantineDisposeAvailable() {
-  return typeof load().quarantineDispose === "function";
-}
-
-function quarantineDisposeBatch(items) {
-  return later(() => {
-    const native = load();
-    if (typeof native.quarantineDisposeBatch !== "function") throw new Error("Windows quarantine batch primitive unavailable");
-    return native.quarantineDisposeBatch(items);
-  });
-}
-
-function quarantineDisposeBatchAvailable() {
-  return typeof load().quarantineDisposeBatch === "function";
-}
+const quarantineRenameExclusiveAvailable = () => typeof load().quarantineRenameExclusive === "function";
+const quarantineDisposeAvailable = () => typeof load().quarantineDispose === "function";
+const quarantineDisposeBatchAvailable = () => typeof load().quarantineDisposeBatch === "function";
 
 module.exports = {
   quarantineDisposeBatch, quarantineDisposeBatchAvailable,
   run, spawn, configure, OmniError, quarantineIdentity, quarantineInspect, quarantineRename,
-  quarantineDispose, quarantineDisposeAvailable,
+  quarantineDispose, quarantineDisposeAvailable, quarantineRenameExclusive, quarantineRenameExclusiveAvailable,
 };

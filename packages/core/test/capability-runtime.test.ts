@@ -8,9 +8,13 @@ import { BackendToolkit } from "../src/backend-toolkit"
 import { BackendToolkitManifest } from "../src/backend-toolkit/manifest"
 import { BackendToolkitTarget } from "../src/backend-toolkit/target"
 import { PinnedArtifact } from "../src/pinned-artifact"
+import { ActivityQuarantineArchive } from "../src/activity-quarantine-archive"
+import { ActivityQuarantineCustody } from "../src/activity-quarantine-custody"
+import { Database } from "../src/database/database"
 import { ToolkitInstall } from "../src/toolkit/install"
 import { ToolkitRuntime } from "../src/toolkit/runtime"
 import { it } from "./lib/effect"
+import { expectSpawn } from "./fixture/omni-expect"
 
 const windows = process.platform === "win32"
 const NAME = windows ? "interpreter.cmd" : "interpreter"
@@ -123,6 +127,34 @@ it.live("existing tiny archive fixture passes through authentic PinnedArtifact e
     const ready = yield* f.ensure({ ...spec, targets: { [host()]: archive } })
     expect(yield* Effect.promise(() => readFile(ready.executable, "utf8"))).toBe("#!/bin/sh\necho zipped\n")
     expect(f.hits).toEqual({ "/tool.zip": 1 })
+  }), 120_000,
+)
+
+it.live.skipIf(!windows)("retains only the verified installer archive in real quarantine custody", () =>
+  Effect.gen(function* () {
+    expectSpawn(import.meta.path)
+    const f = yield* fixture
+    yield* Effect.gen(function* () {
+      const database = yield* Database.Service
+      const custody = ActivityQuarantineCustody.make(database)
+      yield* Effect.acquireRelease(Effect.sync(() => ActivityQuarantineArchive.bind(custody)), (unbind) => Effect.sync(unbind))
+      yield* PinnedArtifact.install(f.directory(), [{
+        url: `http://127.0.0.1:${f.server.port}/tool.zip`, integrity: sri(f.zip), format: "zip",
+        entries: [{ from: "bin/tool", to: "bin/tool" }],
+      }])
+      const snapshot = yield* custody.state()
+      expect(snapshot).toMatchObject({ canEmpty: true, partial: false, rows: [
+        { label: "tool.zip", owner: "Pinned artifact installer", phase: "ready", generation: "1" },
+      ] })
+      expect(snapshot?.rows[0].originalPath.endsWith("archive.zip")).toBe(true)
+      const preview = yield* custody.preview()
+      if (!preview) throw new Error("the installed archive was not in custody")
+      expect(yield* custody.confirm({ previewID: preview.previewID })).toMatchObject({ outcome: "Verified" })
+      expect(yield* custody.state()).toMatchObject({ canEmpty: false, rows: [] })
+      expect(yield* Effect.promise(() => readFile(path.join(f.directory(), "bin", "tool"), "utf8")))
+        .toBe("#!/bin/sh\necho zipped\n")
+      expect(f.hits).toEqual({ "/tool.zip": 1 })
+    }).pipe(Effect.provide(Database.layerFromPath(path.join(f.root, "custody.sqlite"))))
   }), 120_000,
 )
 

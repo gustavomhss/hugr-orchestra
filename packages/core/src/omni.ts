@@ -43,6 +43,7 @@ export function load() {
 export type Quarantine = {
   quarantineInspect: (path: string) => Promise<string | null>
   quarantineRename: (source: string, destination: string, identity: string) => Promise<string>
+  quarantineRenameExclusive?: (source: string, destination: string, identity: string) => Promise<string | null>
   quarantineDispose?: (path: string, identity: string) => Promise<void>
 }
 
@@ -52,10 +53,20 @@ export async function quarantine(): Promise<Quarantine | undefined> {
   const binding = await load()
   if ("quarantineInspect" in binding && typeof binding.quarantineInspect === "function" &&
     "quarantineRename" in binding && typeof binding.quarantineRename === "function") {
-    const native = binding as Binding & Quarantine & { quarantineDisposeAvailable?: () => boolean }
-    if (typeof native.quarantineDispose === "function" &&
-      typeof native.quarantineDisposeAvailable === "function" && native.quarantineDisposeAvailable()) return native
-    return { quarantineInspect: native.quarantineInspect, quarantineRename: native.quarantineRename }
+    const native = binding as Binding & Quarantine & {
+      quarantineDisposeAvailable?: () => boolean
+      quarantineRenameExclusiveAvailable?: () => boolean
+    }
+    return {
+      quarantineInspect: native.quarantineInspect,
+      quarantineRename: native.quarantineRename,
+      ...(typeof native.quarantineDispose === "function" &&
+        typeof native.quarantineDisposeAvailable === "function" && native.quarantineDisposeAvailable()
+        ? { quarantineDispose: native.quarantineDispose } : {}),
+      ...(typeof native.quarantineRenameExclusive === "function" &&
+        typeof native.quarantineRenameExclusiveAvailable === "function" && native.quarantineRenameExclusiveAvailable()
+        ? { quarantineRenameExclusive: native.quarantineRenameExclusive } : {}),
+    }
   }
 }
 

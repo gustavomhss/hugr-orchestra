@@ -68,6 +68,16 @@ test.skipIf(process.platform !== "win32")("signed empty disposes only the confir
       const second = await setup("b")
       const foreign = path.join(directory.path, "foreign")
       await writeFile(foreign, "not registered")
+      const view = ActivityEmpty.decodeSnapshot((await post(ActivityPrivateChannel.emptyStatePath, {})).value)
+      expect(view).toMatchObject({ _tag: "Some", value: {
+        canEmpty: true, partial: false,
+        rows: [
+          { targetID: "a", originalPath: first.originalPath, phase: "ready" },
+          { targetID: "b", originalPath: second.originalPath, phase: "ready" },
+        ],
+      } })
+      expect((await post(ActivityPrivateChannel.emptyStatePath, {}, false)).status).toBe(403)
+      expect(await native.quarantineInspect(first.quarantinePath)).toBe(first.identity)
       expect((await post(ActivityPrivateChannel.emptyPreviewPath, { path: foreign })).status).toBe(403)
       expect((await post(ActivityPrivateChannel.emptyPreviewPath, {}, false)).status).toBe(403)
       expect((await confirm(stale.previewID)).status).toBe(409)
@@ -94,6 +104,8 @@ test.skipIf(process.platform !== "win32")("signed empty disposes only the confir
       expect(await readFile(foreign, "utf8")).toBe("not registered")
       expect((await confirm(ready.previewID)).status).toBe(409)
       expect(await Effect.runPromise(ActivityQuarantineCustody.make(database).preview())).toBeUndefined()
+      expect(ActivityEmpty.decodeSnapshot((await post(ActivityPrivateChannel.emptyStatePath, {})).value))
+        .toMatchObject({ _tag: "Some", value: { canEmpty: false, rows: [] } })
     })
   }).pipe(Effect.provide(Database.layerFromPath(path.join(directory.path, "activity.sqlite"))), Effect.scoped))
 }, 30_000)

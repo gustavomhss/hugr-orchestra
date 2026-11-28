@@ -83,7 +83,9 @@ The category names stay in English in both supported languages. Tab through the 
 
 When an owned Desktop sidecar has a **Ready** object, **Arm quarantine** opens a system dialog with the selected object, its recorded owner, ID and generation. Confirming records **Armed** in the ledger. Cancel leaves the ledger unchanged. Arming leaves the object in its original location.
 
-**Quarantine** shows **collection unavailable** while the filesystem capability is absent.
+**Quarantine** in the owned Windows Desktop shows archives the server kept after installing pinned tools. The tool's verified archive enters custody after extraction and the final use of the download. The list shows its owner, original path, and status. Refresh and filtering read the custody ledger. **Empty quarantine** opens a native confirmation for the entire recorded batch, including entries hidden by the filter.
+
+The installer keeps eligible compressed archives up to 16 MiB each while the ledger has capacity for up to 16 objects. It leaves other tool installation cleanup unchanged. If any object cannot be reserved, the batch is refused before removal. Exit or loss of a receipt after a possible effect leaves an unresolved record for inspection.
 
 In Trees on Windows, **Stop members…** on a row with a live member reading shows a native confirmation in the Desktop app. The owned sidecar rereads the supervisor's list and presents the exact member identities and generation. A changed list requires a fresh confirmation. After approval, the supervisor stops only those members. If the supervisor cannot confirm an exit, the outcome stays unconfirmed and you can read the members again.
 
