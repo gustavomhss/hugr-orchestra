@@ -1,5 +1,5 @@
-import { constants } from "node:fs"
-import { chmod, lstat, mkdir, open, statfs } from "node:fs/promises"
+import { constants, type Stats } from "node:fs"
+import { chmod, lstat, mkdir, open, readFile, statfs } from "node:fs/promises"
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http"
 import type { Socket } from "node:net"
 import path from "node:path"
@@ -28,7 +28,7 @@ export async function launch(args: readonly string[]) {
     throw new Error("Activity custody root must be restricted to its owner")
   if (!diskFilesystems.has((await statfs(root)).type))
     throw new Error("Activity custody requires a supported disk-backed filesystem")
-  if (await missingOrStat(socket)) throw new Error("Activity custody socket already exists")
+  if (await missingOrStat(socket)) throw new Error("Activity custody socket already exists. The service owner handles stale sockets.")
 
   // The privileged entry point does not load the ordinary CLI or its installation paths.
   process.umask(0o077)
@@ -188,15 +188,35 @@ async function respond(
 
 async function databaseFile(root: string) {
   const file = path.join(root, "activity-custody.sqlite")
-  for (const candidate of [file, file + "-wal", file + "-shm", file + "-journal"]) {
-    const info = await missingOrStat(candidate)
-    if (info && (!info.isFile() || info.uid !== 0 || (info.mode & 0o077) !== 0 || info.nlink !== 1))
-      throw new Error("Unprotected activity custody database file")
-  }
-  const handle = await open(file, constants.O_WRONLY | constants.O_CREAT | constants.O_NOFOLLOW, 0o600)
-  await handle.close()
   const directory = await open(root, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW)
   try {
+    const rootInfo = await directory.stat()
+    const files = new Set([file, file + "-wal", file + "-shm", file + "-journal"])
+    // A bind mount can report the same device as its parent. Check mountpoints as well as st_dev.
+    const mountInfo = await readFile("/proc/self/mountinfo", "utf8")
+    if (!mountInfo) throw new Error("Activity custody database mount information unavailable")
+    for (const line of mountInfo.trimEnd().split("\n")) {
+      const mountpoint = line.split(" ")[4]?.replace(/\\([0-7]{3})/g, (_match, octal: string) =>
+        String.fromCharCode(Number.parseInt(octal, 8)))
+      if (!mountpoint || files.has(mountpoint)) throw new Error("Activity custody database requires the custody root mount")
+    }
+    const requireProtected = (info: Stats) => {
+      if (!info.isFile() || info.uid !== 0 || (info.mode & 0o077) !== 0 || info.nlink !== 1 || info.dev !== rootInfo.dev)
+        throw new Error("Unprotected activity custody database file")
+    }
+    for (const candidate of files) {
+      const info = await missingOrStat(candidate)
+      if (info) requireProtected(info)
+    }
+    const handle = await open(file, constants.O_WRONLY | constants.O_CREAT | constants.O_NOFOLLOW | constants.O_NONBLOCK, 0o600)
+    try {
+      requireProtected(await handle.stat())
+    } finally {
+      await handle.close()
+    }
+    const current = await lstat(root)
+    if (current.dev !== rootInfo.dev || current.ino !== rootInfo.ino)
+      throw new Error("Activity custody root changed during database setup")
     await directory.sync()
   } finally {
     await directory.close()

@@ -48,7 +48,7 @@ export const read = Effect.fn("ActivityCustodyProvision.read")(function* (root: 
     return yield* Effect.fail(new Error("Activity custody registrations require at most eight distinct worktrees"))
 
   const repositories = new Map<string, string>()
-  const authorized = new Set<string>()
+  const authorized = new Map<string, { gitDir: string; common: string }>()
   const registrations = yield* Effect.forEach(manifest, (item) => Effect.gen(function* () {
     const repository = AbsolutePath.make(path.join(root, "repositories", item.repository))
     const worktree = AbsolutePath.make(path.join(root, "worktrees", item.worktree))
@@ -78,7 +78,7 @@ export const read = Effect.fn("ActivityCustodyProvision.read")(function* (root: 
       repositories.set(item.projectID, repository)
     }
 
-    yield* Effect.tryPromise(async () => {
+    const admin = yield* Effect.tryPromise(async () => {
       await requireDirectory(worktree)
       const dotGit = path.join(worktree, ".git")
       const link = /^gitdir: ([^\r\n]+)\n?$/.exec(await readProtectedFile(dotGit, 4096))?.[1]
@@ -91,25 +91,29 @@ export const read = Effect.fn("ActivityCustodyProvision.read")(function* (root: 
       if ((commonDir !== common && commonDir !== path.relative(admin, common)) ||
         (gitDir !== dotGit && gitDir !== path.relative(admin, dotGit)))
         throw new Error("Activity custody Git metadata links do not match the registered worktree")
+      return admin
     })
-    authorized.add(repository)
-    authorized.add(worktree)
+    authorized.set(repository, { gitDir: common, common })
+    authorized.set(worktree, { gitDir: admin, common })
     return {
       projectID: item.projectID, repository, worktree,
       registrationID: createHash("sha256").update(JSON.stringify([item.projectID, item.repository, item.worktree])).digest("hex"),
     }
   }))
 
-  // ActivityArmGit supplies its fixed inspection arguments. The broker admits only its protected directories.
+  // Bind inspection commands to the provisioned worktree and Git metadata before executing them as root.
   const git: AppProcess.Interface = {
     ...processService,
     run(command, options) {
-      if (command._tag !== "StandardCommand" || command.command !== "git" ||
-        typeof command.options.cwd !== "string" || !authorized.has(command.options.cwd))
+      if (command._tag !== "StandardCommand" || command.command !== "git" || typeof command.options.cwd !== "string")
         return Effect.die(new Error("Unregistered activity custody Git operation"))
+      const cwd = command.options.cwd
+      const binding = authorized.get(cwd)
+      if (!binding) return Effect.die(new Error("Unregistered activity custody Git operation"))
       return processService.run(ChildProcess.make(gitPath, [
+        `--git-dir=${binding.gitDir}`, `--work-tree=${cwd}`,
         "-c", "core.hooksPath=/dev/null", "-c", "core.attributesFile=/dev/null", "-c", "core.excludesFile=/dev/null", ...command.args,
-      ], { cwd: command.options.cwd, env: gitEnv, extendEnv: false, stdin: "ignore" }), options)
+      ], { cwd, env: { ...gitEnv, GIT_COMMON_DIR: binding.common }, extendEnv: false, stdin: "ignore" }), options)
     },
   }
   return { registrations, git }
@@ -187,6 +191,7 @@ async function verifyMetadata(common: string, device: number) {
       const entries = await opendir(file)
       for await (const entry of entries) {
         if (entry.name.includes("\uFFFD") || entry.name === "config.worktree" ||
+          (file === common && entry.name === "commondir") ||
           (file === path.join(common, "objects", "info") && ["alternates", "http-alternates"].includes(entry.name)))
           throw new Error("Unsupported activity custody Git metadata")
         pending.push(path.join(file, entry.name))
