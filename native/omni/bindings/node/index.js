@@ -375,7 +375,20 @@ function quarantineDisposeAvailable() {
   return typeof load().quarantineDispose === "function";
 }
 
+function quarantineDisposeBatch(items) {
+  return later(() => {
+    const native = load();
+    if (typeof native.quarantineDisposeBatch !== "function") throw new Error("Windows quarantine batch primitive unavailable");
+    return native.quarantineDisposeBatch(items);
+  });
+}
+
+function quarantineDisposeBatchAvailable() {
+  return typeof load().quarantineDisposeBatch === "function";
+}
+
 module.exports = {
+  quarantineDisposeBatch, quarantineDisposeBatchAvailable,
   run, spawn, configure, OmniError, quarantineIdentity, quarantineInspect, quarantineRename,
   quarantineDispose, quarantineDisposeAvailable,
 };
