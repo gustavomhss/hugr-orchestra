@@ -6,12 +6,12 @@ import { readdirSync } from "fs"
  * built-ins are imported, so build scripts and the desktop's main process can load it without the runtime.
  */
 export namespace RipgrepRelease {
-  export const VERSION = "15.2.0"
+  export const VERSION = "16.0.0"
   export const LICENSE = "MIT OR Unlicense"
   export const REPOSITORY = "https://github.com/BurntSushi/ripgrep"
 
-  // sha256 of each upstream release archive, keyed by `key()`, and of the rg executable inside it. Pinned 2026-10-14:
-  // archives fetched and matched to upstream's .sha256 files, executables independently extracted and hashed.
+  // sha256 of each upstream release archive, keyed by `key()`, and of the rg executable inside it. Pinned 2026-11-28:
+  // archives matched to upstream release metadata, executables independently extracted and hashed.
   // `bun run check:ripgrep-pins` re-checks archive checksums and the latest version in CI; bundle.ts checks both digests.
   // ripgrep-binary.test.ts guards the CI action's pins; the Linux sandbox runtime reads this table too.
   // arm64 Linux has separate glibc and musl builds; x64's static musl build serves both. Bun has no 32-bit Windows build.
@@ -19,44 +19,44 @@ export namespace RipgrepRelease {
     "arm64-darwin": {
       platform: "aarch64-apple-darwin",
       extension: "tar.gz",
-      sha256: "3750b2e93f37e0c692657da574d7019a101c0084da05a790c83fd335bad973e4",
-      executable: "a326a1fb48074202e9ad41e4cd1e389eeea372c8c6f7d7e80da81176d5d9430e",
+      sha256: "5a145656d5067144001bfce6648767fd3254599aa736f1ffdb7fb907760b8ca1",
+      executable: "de3a7aa933fb5f2ddfcbf6043b4276fe59d0df08bc91d9003e64050e834e4b24",
     },
     "arm64-linux": {
       platform: "aarch64-unknown-linux-gnu",
       extension: "tar.gz",
-      sha256: "a740b91c82eaf9914cfedd353572f2791cbe0162c84101ee0951058f4dcbc90d",
-      executable: "e36d0eb52e70696bdf1781392722e05a21bb91d3b7b762ef5ec20e5df2ec687b",
+      sha256: "0b0bddcfaf42be1f3c56bf929d70defd1a2d96f2577aecbd7029a3734ddb4740",
+      executable: "f27e3e91d65cb9c31bbc607444a9d315ad5657ac4f2794991832d5d1f9e8b2f7",
     },
     "arm64-linux-musl": {
       platform: "aarch64-unknown-linux-musl",
       extension: "tar.gz",
-      sha256: "800b1e7206afe799dfb5a6901f23147cfaabe0e52210538100f61e86e1740915",
-      executable: "c14cdb389f34e504d69e386cfc67d5c5d9a730a990de03ca6910b2a15e30386a",
+      sha256: "374f1886be881e8e8683d7107278f7af1b6017fda75eb97de71f5783f42b0110",
+      executable: "f2d163ba909715818890c754b4faef6cff0d67025b503577a4700f8177b8dc12",
     },
     "x64-darwin": {
       platform: "x86_64-apple-darwin",
       extension: "tar.gz",
-      sha256: "af7825fcc69a2afc7a7aea55fc9af90e26421d8f20fe59df32e233c0b8a231c1",
-      executable: "0c9a0066db0d26b640777db88045b0ccdd58509a746700e43e1c4ff8707a5ed0",
+      sha256: "aa9183b0e0bfac03c5818895ad18b75001c402d230063898abfe5a58cd413caa",
+      executable: "dabb6baa856f1c84690d87485618f536d13412fab097057390cce46988832cb4",
     },
     "x64-linux": {
       platform: "x86_64-unknown-linux-musl",
       extension: "tar.gz",
-      sha256: "33e15bcf1624b25cdd2a55813a47a2f95dbe126268203e76aa6a585d1e7b149c",
-      executable: "e62198eb19b136b88c330af83647b5a962cb99b6b1f066758568f12de1974849",
+      sha256: "54268ab4643c00a290a29b0086066d64b3f56236dd805ec64629a86f9bd29fd0",
+      executable: "a60f4ad2206cb0234c077d9789231fd8a0f9895ff2e2dbbb3d2c944dc14b2613",
     },
     "arm64-win32": {
       platform: "aarch64-pc-windows-msvc",
       extension: "zip",
-      sha256: "e4abca10c3a64ebea742667dd7009449d49403db5460dd6873e389fa2945360f",
-      executable: "d33a29a9ef03c9f4c03be9e8d88498e6e2d2e566d64cdbdef97f9afc8f13120c",
+      sha256: "3302ede09745d33ca2b287bf3c6434c54cb35c3b408a7d3a265939961add5a1a",
+      executable: "ce4647f65e8b7470eff4915df928d4a1760b5f6ed0a35e24d3b1e28b5db61eb9",
     },
     "x64-win32": {
       platform: "x86_64-pc-windows-msvc",
       extension: "zip",
-      sha256: "71b2fef860abe467217a538ff31de02f5258807c0129f771846f87bd029aafc5",
-      executable: "14231169855ec5205cf5a1b6f1db358ff4aed4247c86b69ce8aae647c77f6680",
+      sha256: "f418ae83e63046a94a7b5f3a44bf3a169f66e689164856ecee02547131c73931",
+      executable: "a140ac0ec5346e6aa59e13bdb09f001237632bafcede54c13b885e08efcecf64",
     },
   } as const
 
