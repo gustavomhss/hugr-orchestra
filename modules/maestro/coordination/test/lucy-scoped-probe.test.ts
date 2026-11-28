@@ -10,7 +10,7 @@ import { ToolSafetySandboxRuntime } from "@orchestra/core/tool-safety-sandbox-ru
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { ReviewFanoutV2 } from "../src/v2/workflow/review-fanout"
 import { fence, run, text } from "./fixture/lucy-engagement"
-import { decoded, digest, receipt, request } from "./fixture/lucy-engagement-artifacts"
+import { canonical, decoded, digest, receipt, request } from "./fixture/lucy-engagement-artifacts"
 import { commit } from "./fixture/lucy-engagement-artifact-limits"
 import { completedPrior, decodedFix, defaultVerdict, fixRequest, fixScript } from "./fixture/lucy-fix-review"
 import { fixReceipt, saved } from "./fixture/lucy-fix-review-evidence"
@@ -165,7 +165,7 @@ test(qualified
         expect(yield* host.db.select().from(SessionInputTable).all().pipe(Effect.orDie)).toEqual(original.inputs)
         const receipt = yield* fixReceipt(host, replay)
         expect(receipt.bytes).toEqual(original.fixed.bytes)
-        expect(receipt.priorReceipt).toEqual(original.original.value)
+        expect(canonical(receipt.priorReceipt)).toBe(original.original.bytes.toString("utf8"))
       }).pipe(Effect.ensuring(host.db.update(SessionTable).set({ metadata: original.oldMetadata })
         .where(eq(SessionTable.id, original.prior.report.sessionID)).run().pipe(Effect.orDie)))
       expect((yield* receipt(host, original.prior.report)).bytes).toEqual(original.original.bytes)
