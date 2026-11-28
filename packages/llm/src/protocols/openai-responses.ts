@@ -234,9 +234,9 @@ const OpenAIResponsesEvent = Schema.Struct({
       [Schema.Record(Schema.String, Schema.Unknown)],
     ),
   ),
-  code: Schema.optional(Schema.String),
+  code: optionalNull(Schema.String),
   message: Schema.optional(Schema.String),
-  param: Schema.optional(Schema.String),
+  param: optionalNull(Schema.String),
   error: optionalNull(OpenAIResponsesErrorPayload),
 })
 type OpenAIResponsesEvent = Schema.Schema.Type<typeof OpenAIResponsesEvent>
@@ -265,11 +265,11 @@ const invalid = ProviderShared.invalidRequest
 // =============================================================================
 // Request Lowering
 // =============================================================================
-const lowerTool = (tool: ToolDefinition, inputSchema: JsonSchema): typeof OpenAIResponsesFunction.Type => ({
+const lowerTool = (tool: ToolDefinition, inputSchema: JsonSchema, plan: boolean): typeof OpenAIResponsesFunction.Type => ({
   type: "function",
   name: tool.name,
   description: tool.description,
-  parameters: ToolSchemaProjection.openAI(inputSchema),
+  parameters: ToolSchemaProjection.openAI(inputSchema, plan),
   // TODO: Read this from OpenAI-specific tool options so direct LLM callers can opt into strict schemas.
   strict: false,
 })
@@ -500,7 +500,7 @@ const fromRequest = Effect.fn("OpenAIResponses.fromRequest")(function* (request:
   const definitions = selected ? request.tools.filter((tool) => tool.name === selected.name) : request.tools
   if (selected && definitions.length !== 1) return yield* invalid("Selected ChatGPT plan tool is unavailable")
   const tools = definitions.map((tool) =>
-    lowerTool(tool, ToolSchemaProjection.modelCompatibility(tool.inputSchema, toolSchemaCompatibility)),
+    lowerTool(tool, ToolSchemaProjection.modelCompatibility(tool.inputSchema, toolSchemaCompatibility), plan),
   )
   return {
     model: request.model.id,

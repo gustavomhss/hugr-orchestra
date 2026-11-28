@@ -82,7 +82,17 @@ describe("OpenAI Responses route", () => {
         generation: { maxTokens: 20, temperature: 0, topP: 0.5 },
         providerOptions: { openai: { chatGPTPlan: true, store: false, reasoningEffort: "xhigh", serviceTier: "priority" } },
         tools: [
-          { name: "read", description: "Read a file", inputSchema: { type: "object" } },
+          {
+            name: "read",
+            description: "Read a file",
+            inputSchema: {
+              $ref: "#/$defs/ReadInput",
+              $defs: { ReadInput: { anyOf: [
+                { type: "object", properties: { action: { enum: ["read"] }, path: { type: "string" } } },
+                { type: "object", properties: { action: { enum: ["list"] }, directory: { type: "string" } } },
+              ] } },
+            },
+          },
           { name: "list", description: "List files", inputSchema: { type: "object" } },
         ],
         toolChoice: "read",
@@ -93,7 +103,15 @@ describe("OpenAI Responses route", () => {
         store: false,
         stream: true,
         reasoning: { effort: "xhigh" },
-        tools: [{ type: "namespace", name: "orchestra", tools: [{ type: "function", name: "read" }] }],
+        tools: [{ type: "namespace", name: "orchestra", tools: [{
+          type: "function",
+          name: "read",
+          parameters: { type: "object", properties: {
+            action: { anyOf: [{ enum: ["read"] }, { enum: ["list"] }] },
+            path: { type: "string" },
+            directory: { type: "string" },
+          } },
+        }] }],
         tool_choice: "required",
         input: [
           { role: "user" },
@@ -103,6 +121,7 @@ describe("OpenAI Responses route", () => {
       })
       for (const key of ["max_output_tokens", "temperature", "top_p", "service_tier"])
         expect(prepared.body).not.toHaveProperty(key)
+      expect(prepared.body).not.toHaveProperty("tools.0.tools.0.parameters.$ref")
     }),
   )
 
@@ -1484,6 +1503,8 @@ describe("OpenAI Responses route", () => {
       const response = yield* LLMClient.generate(request).pipe(
         Effect.provide(fixedResponse(sseEvents({
           type: "error",
+          code: null,
+          param: null,
           error: { code: "unsupported_capability", message: "Tool shape unavailable", param: "tools" },
         }))),
       )

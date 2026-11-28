@@ -45,22 +45,35 @@ const moonshot = (schema: JsonSchema): JsonSchema => {
   return isRecord(projected) ? projected : {}
 }
 
-const openAI = (schema: JsonSchema): JsonSchema => {
-  const variants = Array.isArray(schema.anyOf) ? schema.anyOf.filter(isRecord) : []
+const openAI = (schema: JsonSchema, resolveRoot = false): JsonSchema => {
+  // Named Effect schemas point to their input shape through this root reference.
+  const reference = typeof schema.$ref === "string" ? /^#\/\$defs\/([^/]+)$/.exec(schema.$ref) : undefined
+  const definition = reference && isRecord(schema.$defs) ? schema.$defs[reference[1]] : undefined
+  const root = resolveRoot && isRecord(definition) && !("$ref" in definition)
+    ? { ...Object.fromEntries(Object.entries(schema).filter(([key]) => key !== "$ref")), ...definition }
+    : schema
+  const variants = Array.isArray(root.anyOf) ? root.anyOf.filter(isRecord) : []
+  const properties = variants.map((variant) => isRecord(variant.properties) ? variant.properties : {})
   const flattened =
     variants.length === 0
-      ? { ...schema, type: "object" }
+      ? { ...root, type: "object" }
       : {
-          ...Object.fromEntries(Object.entries(schema).filter(([key]) => key !== "anyOf")),
+          ...Object.fromEntries(Object.entries(root).filter(([key]) => key !== "anyOf")),
           type: "object",
-          properties: variants.reduce(
-            (properties, variant) => ({ ...(isRecord(variant.properties) ? variant.properties : {}), ...properties }),
-            {},
-          ),
+          properties: resolveRoot ? mergeOpenAIProperties(properties) : properties.reduce((merged, fields) => ({ ...fields, ...merged }), {}),
           additionalProperties: false,
         }
   const normalized = removeNullSchemas(flattened)
   return isRecord(normalized) ? normalized : { type: "object" }
+}
+
+function mergeOpenAIProperties(variants: ReadonlyArray<Record<string, unknown>>) {
+  const names = new Set(variants.flatMap((properties) => Object.keys(properties)))
+  return Object.fromEntries([...names].map((name) => {
+    const schemas = variants.flatMap((properties) => Object.hasOwn(properties, name) ? [properties[name]] : [])
+    const unique = [...new Map(schemas.map((schema) => [JSON.stringify(schema), schema])).values()]
+    return [name, unique.length === 1 ? unique[0] : { anyOf: unique }]
+  }))
 }
 
 const gemini = (schema: JsonSchema): JsonSchema => GeminiToolSchema.convert(schema) ?? {}
