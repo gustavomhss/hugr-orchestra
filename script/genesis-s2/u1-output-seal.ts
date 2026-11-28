@@ -18,6 +18,7 @@ type Request = {
   snapshot_file: string
   recipes: { key: string; recipe_input_key: string; recipe_version: string; required: string[] }[]
   producers: Producer[]
+  retention_review?: Evidence
   output_dir: string
   prepared_run_file?: string
   prepared_callbacks_file?: string
@@ -60,6 +61,17 @@ async function main() {
   const actualPlan = planOwnershipUpdate(store, request.manifest, baseline.candidate.scope, (key: string) => observeOwnershipInput(root, key), request.context)
   const savedPlan = json(request.planner_file)
   requireValue(actualPlan.kind === "ownership-update-plan" && JSON.stringify(actualPlan) === JSON.stringify(savedPlan), "planner-not-exact-current-result")
+  const retention = request.retention_review
+  const retentionReview = retention ? json(retention.path) as {
+    schema: string; author: string; baseline_manifest: string; source_sha256: string;
+    entries: { key: string; baseline_result: string; baseline_body_sha256: string; rationale: string; verdict: string }[]
+  } : undefined
+  if (retention && retentionReview) {
+    requireValue(isAbsolute(retention.path) && sha(readFileSync(retention.path)) === retention.sha256
+      && retentionReview.schema === "genesis-s2-u1-retention-review/v1" && retentionReview.baseline_manifest === request.manifest
+      && retentionReview.author.startsWith("/root/") && new Set(retentionReview.entries.map((row) => row.key)).size === retentionReview.entries.length
+      && sha(readFileSync(join(root, "apps/desktop/src/main/owned-serve.ts"))) === retentionReview.source_sha256, "retention-review-drift")
+  }
   const specs = new Map(request.recipes.map((spec) => [spec.key, spec]))
   const entries = new Map<string, typeof baseline.candidate.entries[number]>(baseline.candidate.entries.map((entry: { key: string }) => [entry.key, entry]))
   requireValue(specs.size === baseline.candidate.entries.length && entries.size === specs.size, "recipe-coverage")
@@ -116,6 +128,23 @@ async function main() {
     if (key === original.key) requireValue(snapshotBytes.equals(snapshotRaw), "first-snapshot-reconstruction-differs")
     save(join(output, `snapshot-${snapshotSha}.json`), snapshotBytes)
     const producerMatches = request.producers.filter((item) => item.key === key && item.snapshot_sha256 === snapshotSha)
+    const reuse = retentionReview?.entries.find((row) => row.key === key && row.verdict === "REUSE")
+    if (producerMatches.length === 0 && reuse && retentionReview) {
+      requireValue(!changedInputs && changedDeps && reuse.rationale.trim().length > 0 && previous.metadata.validity === "supported"
+        && previous.metadata.authority.scope === entry.artifact.scope && typeof previous.metadata.authority.basis === "string"
+        && reuse.baseline_result === previous.result && reuse.baseline_body_sha256 === sha(Buffer.from(previous.body)), `retained-result-drift:${key}`)
+      const retainedBody = { kind: "ownership-body", version: 1, bytes: Array.from(Buffer.from(previous.body, "utf8")) }
+      requireValue(id(retainedBody) === previous.metadata.body && id(previous.metadata) === previous.result, `retained-cas-drift:${key}`)
+      const raw = Buffer.from(JSON.stringify({ body: previous.body, validity: "supported", authorityBasis: previous.metadata.authority.basis,
+        gaps: previous.metadata.gaps, evidence: previous.metadata.evidence }))
+      const outputFile = join(output, `retained-${snapshotSha}.json`)
+      save(outputFile, raw)
+      records.push({ key, snapshot_sha256: snapshotSha, output_file: outputFile, output_sha256: sha(raw),
+        producer_id: `retained-cas:${retentionReview.author}` })
+      steps.push({ key, action: "replay-original-result", snapshot_sha256: snapshotSha, result_id: previous.result,
+        retention_review_sha256: retention?.sha256 })
+      continue
+    }
     if (producerMatches.length !== 1) {
       save(join(output, "pending-baseline-body.md"), Buffer.from(previous.body, "utf8"))
       pending = { key, snapshot_sha256: snapshotSha, reason: "actual-producer-output-required", baseline_result: previous.result,

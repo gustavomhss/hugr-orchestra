@@ -210,6 +210,8 @@ def main():
             sealed_dir = out / 'sealed-producers'
             seal_request = {**changed_request, 'planner_file': str(out / 'drift-plan.stdout.txt'), 'snapshot_file': str(snapshots[0]),
                 'checkpoint_dir': str(first_dir), 'producers': producers, 'output_dir': str(sealed_dir)}
+            if staged.get('retention_review'):
+                seal_request['retention_review'] = committed(staged['retention_review'])
             staged_result = invoke('seal-producers', seal_request, sealer)
             require(staged_result.returncode in (0, 2), 'producer evidence sealer refused; inspect receipt')
             staged_result = json.loads(staged_result.stdout)

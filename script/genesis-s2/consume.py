@@ -159,7 +159,7 @@ def main():
                         and type(query.get('maxBytes')) is int and 1 <= query['maxBytes'] <= 9007199254740991, 'invalid read query')
                 require('need' not in query or query['need'] in ('entry', 'ownership', 'maintenance', 'operational', 'flow', 'evidence', 'component'), 'invalid read need')
                 require('historical' not in query or query['historical'] is True, 'invalid historical')
-    if args.phase == 'initial':
+    if args.phase in ('initial', 'recheck'):
         out.mkdir()
     wave = out / args.phase
     wave.mkdir()

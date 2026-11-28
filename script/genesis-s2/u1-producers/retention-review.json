@@ -1,0 +1,63 @@
+{
+  "schema": "genesis-s2-u1-retention-review/v1",
+  "author": "/root/s2_content_delta_luna",
+  "baseline_manifest": "e13906119b19c912c2615d728f3a8363152de7f83a0ace63c6f9ba2c0a8618a3",
+  "source_sha256": "9e1d1a2b77d329251082352b6e66d7f8e9cccd0d339a534999714b9f2f6dcb08",
+  "baseline_source_sha256": "0970f4ddb99c1c004e200443abc54ed5ea38cec098e19ef9aa748b771238dfb5",
+  "source_variant_run": 46168692382,
+  "review_vector_sha256": "7bb79a2b74e4317494897c7b0c65fa48cc04428f0062c191cab946c5765a0c4e",
+  "graph_sha256": "716f9f06506a34556ec8b56978048f5e31b401d43aae1bdeb0fdd2de476c954f",
+  "source_patch_sha256": "d47ea4af10ec60d46b7b6b14ff6ee362100c413cb44a9add5e572de3669ecd8f",
+  "raw_review_sha256": "253de3de907d67ac6b87cc69439ffce240681c45c886cb3626ac6fc920baf79f",
+  "claim": "Static semantic retention review. Runtime may materialize only an exact result under unchanged direct inputs.",
+  "entries": [
+    {
+      "key": "s2.l3.app-session",
+      "baseline_result": "95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0",
+      "baseline_body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+      "implicated_claims": "Desktop-startup → shared-app table: child exit, health failure or timeout blocks readiness; healthy stored remote may be selected, which does not transfer process ownership. Also distinguishes desktop HTTP-success startup from shared-app healthy probing. No numeric ceiling.",
+      "rationale": "The only changed fact is the owned-child deadline magnitude. This body records failure categories and ownership/health predicates, all unchanged. Its L2 desktop-web dependency carries no conflicting numeric claim.",
+      "verdict": "REUSE"
+    },
+    {
+      "key": "s2.l3.design-tui",
+      "baseline_result": "3f77baa25cad0ef21847bff3f325478dba06f69c23dae9094c6ee02e83c2d509",
+      "baseline_body_sha256": "cbd099450a7072e72449b9fd3ef31b5032f171f64f7222405abfce0b88072730",
+      "implicated_claims": "Copy/localization section references main-process startup failures as a separate copy path and cites L2 desktop-web for host-specific copy. No readiness duration or numeric timeout.",
+      "rationale": "Startup-copy ownership and translation guidance do not depend on the readiness cap. No claim changes; retain exact bytes and result metadata.",
+      "verdict": "REUSE"
+    },
+    {
+      "key": "s2.l4.app-session",
+      "baseline_result": "8e0368888768de4c6c1e134e47cdc60d12f544fe311152bfb9f4621a264dac0a",
+      "baseline_body_sha256": "ebcce37651d55c9888bb23eab9fd4d9605482a75e3fa0f75a3b4c5393f10f0f3",
+      "implicated_claims": "Maintenance table covers reconnect/stale transcript/credential changes and asks to identify the failing health predicate, heartbeat, reread and policy fence; another row notes healthy-remote fallback is not local-child recovery. No numeric timeout.",
+      "rationale": "The increased ceiling changes neither health predicate nor remote/process ownership. The L3 desktop-web dependency is retained by the graph, but no quantitative assertion is inherited into this body.",
+      "verdict": "REUSE"
+    },
+    {
+      "key": "s2.l4.design-tui",
+      "baseline_result": "7a0e27eedc2a116172417159aedfdddf428f2609db8b9104c55012a0926f6629",
+      "baseline_body_sha256": "95df746317d4dae69e292f307602d6aa8da5f988a933645f542728458bc1592c",
+      "implicated_claims": "Blank/disconnected-view instruction separates readiness, location, hydration and projection; identifies desktop HTTP-success versus WSL authenticated health and shared-app health, and retains stable-exit discrepancy. References L3 desktop-web. No numeric cap.",
+      "rationale": "The source patch changes only the owned-child deadline, not these host-specific health predicates or restart discrepancy. Existing guidance remains accurate.",
+      "verdict": "REUSE"
+    },
+    {
+      "key": "s2.l4.desktop-web",
+      "baseline_result": "26ba4e10f4ead5c9443b7d9804b7b7c8aa9d7166350e08f3453748e0695a3199",
+      "baseline_body_sha256": "108d1e2b9a1e9d73ea32282a5b9268777088897f42ba8702b16b9b9400f28efa",
+      "implicated_claims": "Startup runbook asks for launch-stage timestamps, cold/warm behavior, first-child exit/deadline, and restart-after-stability evidence; startup guidance timings are explicitly historical. It names L3 desktop-web and startup source, but states no 120-second value.",
+      "rationale": "Generic deadline/runbook references remain correct after the cap increase; historical timings stay labelled historical. No literal or implicit claim gives the old magnitude, so bytes and metadata can be reused.",
+      "verdict": "REUSE"
+    },
+    {
+      "key": "s2.l4.entry",
+      "baseline_result": "060600df54eb14bab6b17a278bd952afdb1b6bb8999e0dbe2d889d97401a7ff1",
+      "baseline_body_sha256": "e816f0085875b72b53ed35f4fdba2d04efbfb8130ab13c21b11ca0ebf5dde0b1",
+      "implicated_claims": "Route/index maps L1/L2 desktop-web readiness sections and L3 desktop-web, plus all other L3/L4 components. It is navigational/section-oriented and has no timeout, deadline, latency or readiness-value assertion.",
+      "rationale": "Only navigation and section names are present; no semantic value inherits the old cap. Keep exact body and result metadata.",
+      "verdict": "REUSE"
+    }
+  ]
+}

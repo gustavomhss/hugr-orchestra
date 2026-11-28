@@ -53,7 +53,7 @@ concurrency:
 
 jobs:
   prepare:
-    if: github.event_name != 'workflow_dispatch' || inputs.prepare_s2_u1 != true
+    if: github.event_name != 'workflow_dispatch' || inputs.prepare_s2_u1 != true || inputs.recheck_i2u == true
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:

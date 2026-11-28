@@ -25,5 +25,6 @@
         "script/genesis-s2/u1-producers/l2-desktop-web-j2.json"
       ]
     }
-  ]
+  ],
+  "retention_review": "script/genesis-s2/u1-producers/retention-review.json"
 }

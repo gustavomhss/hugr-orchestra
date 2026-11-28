@@ -1,0 +1,55 @@
+{
+  "schema": "genesis-s2-u1-observed-recipe-progress/v1",
+  "run_id": 46169481071,
+  "run_head": "5d369783183f1aace8a9b874a3c18bf4a607b9fc",
+  "artifact_id": 15273600583,
+  "artifact_zip_sha256": "2b08720d7d58f2a28d755ae1ab31f6856b983d7ae577d12b94727baeb74136fe",
+  "m0_candidate": "d23f1d789f8b71ca2e1c9ac409da22d553f4f3baae11f655c6cb4bcd3265ae3b",
+  "m0_manifest": "e13906119b19c912c2615d728f3a8363152de7f83a0ace63c6f9ba2c0a8618a3",
+  "observed_status": "AWAITING_REAL_PRODUCER_OR_SEMANTIC_EVIDENCE",
+  "returned": [
+    {
+      "key": "s2.l1.desktop-web",
+      "action": "new-reviewed-result",
+      "snapshot_sha256": "79d3ca705fe53445cada5da2bc39f4fea6e9f3e34da2d59a86255203d722a9df",
+      "result_id": "052303821736745ec55800b537f3de5f37ff3c7c27734dc6e2ab808abb9b59d8"
+    },
+    {
+      "key": "s2.l2.desktop-web",
+      "action": "new-reviewed-result",
+      "snapshot_sha256": "1bd3f545ff2076e851f482e54550356c6727beaa81196dd992477a75a86256f6",
+      "result_id": "6acaaa257b85ec42ced3e2ee88dfe57accd4839b5b73647739d203ace9e74aee"
+    }
+  ],
+  "next_observed_callback": {
+    "key": "s2.l3.app-session",
+    "snapshot_sha256": "e9a6061fc7a6cd21923faa7177d4ec5d6429c08a58a69bc3ed83885482b087e6",
+    "reason": "actual-producer-output-required",
+    "baseline_result": "95268fdd6bff548362c5a6236a6b6dc16727852dd63b3ff1ddfd7c07331c3fd0",
+    "baseline_body_sha256": "7611e2ddfb015b2538a2d38a174d383e47bac7e2879e83f9622146ed30cf80b7",
+    "dependencies": [
+      {
+        "key": "s2.l2.app-session",
+        "result": "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5"
+      },
+      {
+        "key": "s2.l2.desktop-web",
+        "result": "6acaaa257b85ec42ced3e2ee88dfe57accd4839b5b73647739d203ace9e74aee"
+      },
+      {
+        "key": "s2.l2.design-tui",
+        "result": "1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664"
+      },
+      {
+        "key": "s2.l1.app-session",
+        "result": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384"
+      }
+    ]
+  },
+  "file_sha256": {
+    "ledger.json": "1e1686c8b8e5da2b3478b26d5fb5598e6505925570379d7ab52a5e09addd18e1",
+    "target-checkpoint/callbacks.jsonl": "7c8f5cbdca6f9243d682969284d31612c25c9b82d186492644be2cecc46bd7d7",
+    "changed-prepare.stdout.txt": "6db65408aef06a39c29587006b98bb33a46a24fc08e3a457d091c2be260ac544",
+    "target-checkpoint/snapshot-e9a6061fc7a6cd21923faa7177d4ec5d6429c08a58a69bc3ed83885482b087e6.json": "e9a6061fc7a6cd21923faa7177d4ec5d6429c08a58a69bc3ed83885482b087e6"
+  }
+}

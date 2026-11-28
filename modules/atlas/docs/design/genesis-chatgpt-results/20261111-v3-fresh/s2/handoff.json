@@ -623,10 +623,14 @@
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/u1-run-46167550086/checkpoint.json",
       "sha256": "23a038a842a88fd80388460de326bc80602b7a537333c54f79671d5d10b279f8"
     },
-    "u1_first_producer": {
-      "path": "script/genesis-s2/u1-producers/manifest.json",
-      "sha256": "8ba4bc0ecfc729e24d613ba814cd467d713b00ffa9f0ed642d30176828ce2761"
+    "ordinary_publication": "NOT_RUN_IN_EVALUATION_SCOPE",
+    "u1_latest_recipe_progress": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/u1-run-46169481071/checkpoint.json",
+      "sha256": "2969ff0968162839ef6bc3d740e64a6867f1ef96973052e176c4ebdc090f2c9f"
     },
-    "ordinary_publication": "NOT_RUN_IN_EVALUATION_SCOPE"
+    "u1_producer_manifest": {
+      "path": "script/genesis-s2/u1-producers/manifest.json",
+      "sha256": "842cbd2e79170ddaf651d125e0e7350372b93944967c3bb833f40fa38c830d61"
+    }
   }
 }
