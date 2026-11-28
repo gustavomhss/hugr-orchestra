@@ -129,7 +129,11 @@ fn report_result(report: &mut File, deadline: Instant, now: Instant) -> Option<R
             let os = io::Error::from_raw_os_error(errno);
             Err(Fail::new(code, errno, format!("isolated child stage {stage}: {os}")))
         }
-        (Ok(n), _) => Err(Fail::new(FailCode::Io, 0, format!("incomplete isolated child report ({n} bytes)"))),
+        (Ok(n), _) => Err(Fail::new(
+            FailCode::Io,
+            0,
+            format!("incomplete isolated child report ({n} bytes)"),
+        )),
         (Err(e), _) if matches!(e.kind(), io::ErrorKind::WouldBlock | io::ErrorKind::Interrupted) => {
             if now < deadline {
                 return None;

@@ -345,13 +345,21 @@ impl Sup {
 
         let now = Instant::now();
         #[cfg(target_os = "linux")]
-        let isolated = self.isolation.as_ref().and_then(|isolation| isolation.bootstraps.watch(&mut fds));
+        let isolated = self
+            .isolation
+            .as_ref()
+            .and_then(|isolation| isolation.bootstraps.watch(&mut fds));
         #[cfg(target_os = "macos")]
         let isolated = None;
-        let mut wake = [self.trees.next_wake(), self.exit_by, self.observation.next_wake(now), isolated]
-            .into_iter()
-            .flatten()
-            .min();
+        let mut wake = [
+            self.trees.next_wake(),
+            self.exit_by,
+            self.observation.next_wake(now),
+            isolated,
+        ]
+        .into_iter()
+        .flatten()
+        .min();
         if alive && !self.watch.evented() {
             wake = Some(wake.map_or(now + watch::PARENT_POLL, |w| w.min(now + watch::PARENT_POLL)));
         }

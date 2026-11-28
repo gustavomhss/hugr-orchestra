@@ -14,7 +14,9 @@ impl Sup {
     pub(super) fn isolated_count(&self) -> usize {
         #[cfg(target_os = "linux")]
         {
-            self.isolation.as_ref().map_or(0, |isolation| isolation.bootstraps.len())
+            self.isolation
+                .as_ref()
+                .map_or(0, |isolation| isolation.bootstraps.len())
         }
         #[cfg(target_os = "macos")]
         {

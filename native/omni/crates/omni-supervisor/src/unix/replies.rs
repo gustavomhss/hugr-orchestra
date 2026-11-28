@@ -16,7 +16,11 @@ impl Sup {
         let reserved = RESERVE_PER_WAITER * (self.trees.waiters() + usize::from(self.observation.pending()));
         #[cfg(target_os = "linux")]
         let reserved = reserved
-            + RESERVE_PER_BOOTSTRAP * self.isolation.as_ref().map_or(0, |isolation| isolation.bootstraps.reply_count());
+            + RESERVE_PER_BOOTSTRAP
+                * self
+                    .isolation
+                    .as_ref()
+                    .map_or(0, |isolation| isolation.bootstraps.reply_count());
         self.chan.backlogged(reserved)
     }
 
