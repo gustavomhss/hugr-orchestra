@@ -1,7 +1,11 @@
 import { expect, test } from "bun:test"
 import { createHash } from "crypto"
 import { readdir } from "fs/promises"
-import { Effect } from "effect"
+import { existsSync } from "fs"
+import path from "path"
+import { Deferred, Effect, Exit, Fiber } from "effect"
+import { ChildProcess } from "effect/unstable/process"
+import * as TestClock from "effect/testing/TestClock"
 import { LayerNode } from "../../src/effect/layer-node"
 import { AppProcess } from "../../src/process"
 import { ResearchToolkit } from "../../src/research-toolkit"
@@ -69,4 +73,45 @@ it.live.skipIf(!linux)("pinned confined TypeScript diagnoses an inert mismatch a
   }
   const foreign = input("const count: string = 'ok'\n")
   expect((yield* provision(ReviewScopedTypecheck.run({ ...foreign, oid: "0".repeat(40) }))).status).toBe("not-run")
+}), 300_000)
+
+
+it.effect.skipIf(!linux)("timeout and interruption release the real compiler scope and scratch", () => Effect.gen(function* () {
+  expect(jail, "conformance-missing: sandbox").toBeTruthy()
+  expectSpawn(import.meta.path)
+  const directory = yield* fixture
+  yield* ResearchToolkit.ensure("typescript").pipe(Effect.provideService(ResearchToolkit.Root, directory.path))
+  const processes = yield* AppProcess.Service
+  const source = input("const count: string = '42'\n")
+  for (const mode of ["timeout", "interrupt"] as const) {
+    const spawned = yield* Deferred.make<string>()
+    const observed = AppProcess.Service.of({
+      ...processes,
+      spawn: (command) => processes.spawn(command).pipe(
+        Effect.tap(() => Effect.gen(function* () {
+          if (!ChildProcess.isStandardCommand(command) || !command.options.cwd) return yield* Effect.die("missing compiler cwd")
+          yield* Deferred.succeed(spawned, command.options.cwd)
+          return yield* Effect.never
+        })),
+      ),
+    })
+    const fiber = yield* ReviewScopedTypecheck.run(source).pipe(
+      Effect.provideService(ResearchToolkit.Root, directory.path),
+      Effect.provideService(AppProcess.Service, observed),
+      Effect.forkScoped,
+    )
+    const scratch = yield* Deferred.await(spawned)
+    expect(path.basename(scratch).startsWith("lucy-typecheck-")).toBe(true)
+    expect(existsSync(scratch)).toBe(true)
+    if (mode === "timeout") {
+      yield* TestClock.adjust("30 seconds")
+      const result = yield* Fiber.join(fiber)
+      expect(result.status).toBe("not-run")
+    }
+    if (mode === "interrupt") {
+      const exit = yield* Fiber.interrupt(fiber)
+      expect(Exit.hasInterrupts(exit)).toBe(true)
+    }
+    expect(existsSync(scratch)).toBe(false)
+  }
 }), 300_000)
