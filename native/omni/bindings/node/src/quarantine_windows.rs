@@ -58,7 +58,6 @@ pub fn quarantine_inspect(source: String) -> AsyncTask<QuarantineInspectTask> {
     AsyncTask::new(QuarantineInspectTask { source })
 }
 
-
 pub struct QuarantineDisposeTask {
     source: String,
     expected: String,

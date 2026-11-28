@@ -340,7 +340,10 @@ pub fn dispose(source: &str, expected: &str) -> Result<(), String> {
         return Err("reparse point or device".into());
     }
     let disposition = 1u8;
-    let mut io = IoStatus { status: 0, information: 0 };
+    let mut io = IoStatus {
+        status: 0,
+        information: 0,
+    };
     // FileDispositionInformation acts on the pinned handle. The filesystem rejects
     // nonempty directories; no child is traversed or removed.
     // SAFETY: the information buffer and owned handle remain live during this synchronous call.
