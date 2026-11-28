@@ -17,6 +17,7 @@ const splitGroups = new Set([
   "actionsResources",
   "actionsTransfers",
   "actionsSource",
+  "activity",
 ])
 
 await Effect.runPromise(
