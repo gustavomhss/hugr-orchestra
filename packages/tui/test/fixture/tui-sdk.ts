@@ -41,6 +41,12 @@ export function createEventSource() {
       if (stream) return stream.enqueue(chunk)
       pending.push(chunk)
     },
+    streaming: () => stream !== undefined,
+    disconnect() {
+      const connection = stream
+      stream = undefined
+      connection?.close()
+    },
     response(signal?: AbortSignal) {
       return new Response(
         new ReadableStream<Uint8Array>({

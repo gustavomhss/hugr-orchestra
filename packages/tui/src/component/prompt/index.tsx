@@ -829,19 +829,25 @@ export function Prompt(props: PromptProps) {
   onCleanup(() => { admissionLifetime.disposed = true; admissionQueries.forEach((query) => query.dispose()); admissionQueries.clear() })
   const promptOwner = createMemo(() => {
     const binding = sdk.binding()
-    const placement = local.model.execution.location(props.sessionID)
-    const destination = props.sessionID ? undefined : move.destination()
-    return { key: JSON.stringify({ sessionID: props.sessionID, route: route.data, placement,
-      epoch: sdk.connectionEpoch(), directory: binding.directory, url: binding.url,
-      headers: [...new Headers(binding.headers).entries()] }), fetch: binding.fetch, placement, destination }
-  }, undefined, { equals: (a, b) => !!a && a.key === b.key && a.fetch === b.fetch && a.destination === b.destination })
+    return { key: JSON.stringify({ sessionID: props.sessionID, route: route.data,
+      directory: binding.directory, url: binding.url,
+      headers: [...new Headers(binding.headers).entries()] }), fetch: binding.fetch }
+  }, undefined, { equals: (a, b) => !!a && a.key === b.key && a.fetch === b.fetch })
   const draft = createMemo(() => ({ key: JSON.stringify(store.prompt), mode: store.mode, text: store.prompt.input }),
     undefined, { equals: (a, b) => !!a && a.key === b.key && a.mode === b.mode })
-  const admissionContext = createMemo(() => ({
-    prompt: promptOwner(),
-    ready: !props.sessionID || sync.session.selectionReady(props.sessionID),
-    key: local.model.execution.context(promptOwner().placement),
-  }), undefined, { equals: (a, b) => !!a && a.prompt === b.prompt && a.ready === b.ready && a.key === b.key })
+  const admissionContext = createMemo(() => {
+    const placement = local.model.execution.location(props.sessionID)
+    return {
+      prompt: promptOwner(),
+      placement,
+      destination: props.sessionID ? undefined : move.destination(),
+      epoch: sdk.connectionEpoch(),
+      ready: !props.sessionID || sync.session.selectionReady(props.sessionID),
+      key: local.model.execution.context(placement),
+    }
+  }, undefined, { equals: (a, b) => !!a && a.prompt === b.prompt && a.destination === b.destination &&
+    a.epoch === b.epoch && a.ready === b.ready && a.key === b.key &&
+    a.placement?.directory === b.placement?.directory && a.placement?.workspace === b.placement?.workspace })
   const admissionOwner = createMemo(() => {
     const session = props.sessionID ? sync.session.get(props.sessionID) : undefined
     const selection = props.sessionID ? sync.session.selection(props.sessionID) : undefined
@@ -877,7 +883,7 @@ export function Prompt(props: PromptProps) {
     // to a freshly created session.
     if (submitting) return false
     submitting = true
-    const destination = promptOwner().destination
+    const destination = admissionContext().destination
     try {
       const submitted = await submitInner()
       if (destination?.type === "new" && submitted) move.finishSubmit(destination, true)
@@ -939,9 +945,8 @@ export function Prompt(props: PromptProps) {
       ? inputText.split("\n")[0].split(" ")[0].slice(1)
       : undefined
     const captured = admissionOwner()
-    const owner = captured.context.prompt
-    const placement = owner.placement
-    const ownerCurrent = () => !admissionLifetime.disposed && sdk.binding().active && promptOwner() === owner
+    const placement = captured.context.placement
+    const ownerCurrent = () => !admissionLifetime.disposed && sdk.binding().active && promptOwner() === captured.context.prompt
     let targetContext: { placement: NonNullable<typeof placement>; context: string } | undefined
     const sameDraft = () => ownerCurrent() &&
       draft() === capturedDraft && !input.isDestroyed && input.plainText === capturedDraft.text
@@ -1012,9 +1017,10 @@ export function Prompt(props: PromptProps) {
     }
 
     if (currentMode !== "shell" && !placement) return false
-    const destination = owner.destination
+    const destination = captured.context.destination
     if (destination?.type === "new" && currentMode !== "shell" && placement &&
       !move.preparedDirectory(destination, placement) && !await preflight(placement)) return false
+    if (!current()) return false
     const directory = sessionID ? placement?.directory : await move.getDirectory({
       destination,
       context: store.prompt.input,

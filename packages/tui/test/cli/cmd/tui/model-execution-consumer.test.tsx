@@ -562,6 +562,31 @@ test.each([false, true])("E6 TUI consumes the admitted draft after a model SSE d
   } finally { release.resolve(); send.mockRestore(); await fixture.dispose() }
 })
 
+test("E6 TUI consumes a prompt receipt after the stream reconnects on the same binding", async () => {
+  const fixture = await ready({ sse: true, session: { agent: "maestro", model: ref } })
+  const release = Promise.withResolvers<void>()
+  const sdk = fixture.context.sdk
+  const epoch = sdk.connectionEpoch()
+  try {
+    fixture.control.before = async (path) => {
+      if (path === "/api/session/session-1/prompt") await release.promise
+    }
+    fixture.prompt.set({ input: "admitted across reconnect", parts: [], mode: "normal" })
+    fixture.prompt.submit()
+    await wait(() => fixture.admissions().length === 1, "prompt POST held before receipt")
+    fixture.events.disconnect()
+    await wait(() => sdk.offline(), "original SSE disconnected")
+    await wait(fixture.events.streaming, "new SSE connection on the same SDK")
+    fixture.events.emit({ directory: fixture.root, payload: { id: "evt_ack_reconnect", type: "server.connected", data: {} } })
+    await wait(() => sdk.connectionEpoch() > epoch && !sdk.offline(), "same binding accepted the reconnect greeting")
+    expect(fixture.context.sdk).toBe(sdk)
+    expect(fixture.prompt.current.input).toBe("admitted across reconnect")
+    release.resolve()
+    await wait(() => fixture.prompt.current.input === "", "receipt consumed the admitted draft after reconnect")
+    expect(fixture.admissions()).toHaveLength(1)
+  } finally { release.resolve(); await fixture.dispose() }
+})
+
 test("E6 TUI rendered selector keeps NEW A after A to B to A and a late old A response", async () => {
   const release = Promise.withResolvers<void>()
   const entered = Promise.withResolvers<void>()

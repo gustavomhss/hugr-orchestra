@@ -131,6 +131,50 @@ test("a reconnect forces a Session whose first history hydration is still pendin
   }
 }, 15_000)
 
+test("the first greeting fences cached and in-flight pre-subscription Session metadata", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const previous = Promise.withResolvers<Response>()
+  const current = Promise.withResolvers<Response>()
+  const state = { metadataReads: 0, historyReads: 0 }
+  const original = { ...v2Session({ id: sessionID, directory }), agent: "maestro" }
+  const fresh = { ...original, agent: "backend", model: { providerID: "provider", id: "current-model" } }
+  const mounted = await mount(routes((url) => {
+    if (url.pathname === `/api/session/${sessionID}/message`) state.historyReads++
+    if (url.pathname !== `/api/session/${sessionID}`) return
+    state.metadataReads++
+    if (state.metadataReads === 2) return previous.promise
+    if (state.metadataReads === 3) return current.promise
+    return json({ data: original })
+  }), tmp.path)
+  const sync = mounted.sync.session
+  try {
+    await sync.refreshSelection(sessionID)
+    expect(mounted.sdk.connectionEpoch()).toBe(0)
+    expect(sync.selectionReady(sessionID)).toBe(true)
+    const priorRead = sync.refreshSelection(sessionID)
+    await wait(() => state.metadataReads === 2)
+    await emit(mounted, connected(1))
+    await wait(() => state.metadataReads === 3)
+    expect(sync.selectionReady(sessionID)).toBe(false)
+    expect(sync.get(sessionID)?.agent).toBe("maestro")
+
+    previous.resolve(json({ data: { ...original, agent: "old-pending-agent" } }))
+    expect(await priorRead).toBeUndefined()
+    expect(sync.selectionReady(sessionID)).toBe(false)
+    expect(sync.get(sessionID)?.agent).toBe("maestro")
+
+    current.resolve(json({ data: fresh }))
+    await wait(() => sync.selectionReady(sessionID))
+    expect(sync.get(sessionID)).toMatchObject({ agent: fresh.agent, model: fresh.model })
+    expect(state.historyReads).toBe(0)
+  } finally {
+    previous.resolve(json({ data: original }))
+    current.resolve(json({ data: fresh }))
+    mounted.app.renderer.destroy()
+  }
+}, 15_000)
+
 test("reconnect replaces exact Session selection before held history and survives a failed todo read", async () => {
   await using tmp = await tmpdir()
   await Bun.write(`${tmp.path}/kv.json`, "{}")
@@ -155,12 +199,13 @@ test("reconnect replaces exact Session selection before held history and survive
       return Promise.reject(new Error("Reconnect todo failed"))
   }), tmp.path)
   const sync = mounted.sync.session
-  const started = observe(sync.sync(sessionID))
+  let started: ReturnType<typeof observe> | undefined
   let pending: ReturnType<typeof observe> | undefined
   try {
+    await emit(mounted, connected(1))
+    started = observe(sync.sync(sessionID))
     await started
     expect(sync.selectionReady(sessionID)).toBe(true)
-    await emit(mounted, connected(1))
     pending = observe(sync.sync(sessionID, { force: true }))
     await wait(() => state.historyReads === 2 && state.metadataReads === 2)
     await emit(mounted, connected(2))
@@ -199,12 +244,14 @@ test("move confirmation fences held Session metadata and durable sequence orders
   const arrival = { metadataReads: 0 }
   const original = { ...v2Session({ id: sessionID, directory }), agent: "maestro", time: { created: 0, updated: 100 } }
   const moved = { ...original, location: { directory: "/tmp/moved-placement", workspaceID: "wrk_moved" } }
+  const current = { ...moved, agent: "backend", title: "Renamed during hydration",
+    location: { directory: "/tmp/live-placement", workspaceID: "wrk_live" } }
   const mounted = await mount(routes((url) => {
     if (url.pathname !== `/api/session/${sessionID}`) return
     arrival.metadataReads++
     if (arrival.metadataReads === 2) return stale.promise
     if (arrival.metadataReads === 4) return late.promise
-    return json({ data: arrival.metadataReads === 1 ? original : moved })
+    return json({ data: arrival.metadataReads === 1 ? original : arrival.metadataReads === 3 ? moved : current })
   }), tmp.path)
   const sync = mounted.sync.session
   try {
@@ -224,11 +271,11 @@ test("move confirmation fences held Session metadata and durable sequence orders
 
     const beforeEvents = sync.refreshSelection(sessionID)
     await wait(() => arrival.metadataReads === 4)
-    const location = { directory: "/tmp/live-placement", workspaceID: "wrk_live" }
     await emit(mounted, {
-      ...event({ id: "evt_latest_move", type: "session.next.moved", data: { sessionID, timestamp: 50, location } }),
+      ...event({ id: "evt_latest_move", type: "session.next.moved", data: { sessionID, timestamp: 50, location: current.location } }),
       durable: { aggregateID: sessionID, seq: 5 },
     })
+    expect(sync.selectionReady(sessionID)).toBe(false)
     await emit(mounted, {
       ...event({ id: "evt_latest_agent", type: "session.next.agent.switched", data: {
         sessionID, timestamp: 49, agent: "backend", messageID: "msg_latest_agent",
@@ -247,12 +294,66 @@ test("move confirmation fences held Session metadata and durable sequence orders
       } }),
       durable: { aggregateID: sessionID, seq: 6 },
     })
+    await emit(mounted, {
+      ...event({ id: "evt_latest_title", type: "session.next.renamed", data: { sessionID, timestamp: 48, title: current.title } }),
+      durable: { aggregateID: sessionID, seq: 8 },
+    })
     late.resolve(json({ data: moved }))
     await beforeEvents
-    expect(sync.get(sessionID)).toMatchObject({ agent: "backend", location })
+    expect(arrival.metadataReads).toBe(5)
+    expect(sync.selectionReady(sessionID)).toBe(true)
+    expect(sync.get(sessionID)).toMatchObject({ agent: current.agent, location: current.location, title: current.title })
   } finally {
     stale.resolve(json({ data: original }))
     late.resolve(json({ data: moved }))
+    mounted.app.renderer.destroy()
+  }
+}, 15_000)
+
+test("a delayed selection and rename notification cannot override a newer HTTP observation", async () => {
+  await using tmp = await tmpdir()
+  await Bun.write(`${tmp.path}/kv.json`, "{}")
+  const inFlight = Promise.withResolvers<Response>()
+  const confirmed = Promise.withResolvers<Response>()
+  const state = { metadataReads: 0 }
+  const original = { ...v2Session({ id: sessionID, directory }), agent: "maestro" }
+  const latest = { ...original, agent: "backend", title: "Confirmed title", time: { created: 0, updated: 30 } }
+  const mounted = await mount(routes((url) => {
+    if (url.pathname !== `/api/session/${sessionID}`) return
+    state.metadataReads++
+    if (state.metadataReads === 2) return inFlight.promise
+    if (state.metadataReads === 3) return confirmed.promise
+    return json({ data: original })
+  }), tmp.path)
+  const sync = mounted.sync.session
+  try {
+    await sync.refreshSelection(sessionID)
+    const metadata = sync.refreshSelection(sessionID)
+    await wait(() => state.metadataReads === 2)
+    await emit(mounted, {
+      ...event({ id: "evt_delayed_title", type: "session.next.renamed", data: {
+        sessionID, timestamp: 10, title: "Intermediate title",
+      } }),
+      durable: { aggregateID: sessionID, seq: 1 },
+    })
+    expect(sync.selectionReady(sessionID)).toBe(true)
+    await emit(mounted, {
+      ...event({ id: "evt_delayed_switch", type: "session.next.agent.switched", data: {
+        sessionID, timestamp: 20, agent: "reviewer", messageID: "msg_delayed_switch",
+      } }),
+      durable: { aggregateID: sessionID, seq: 2 },
+    })
+    expect(sync.selectionReady(sessionID)).toBe(false)
+    inFlight.resolve(json({ data: latest }))
+    await wait(() => state.metadataReads === 3)
+    expect(sync.selectionReady(sessionID)).toBe(false)
+    confirmed.resolve(json({ data: latest }))
+    await metadata
+    expect(sync.selectionReady(sessionID)).toBe(true)
+    expect(sync.get(sessionID)).toMatchObject({ agent: latest.agent, title: latest.title })
+  } finally {
+    inFlight.resolve(json({ data: latest }))
+    confirmed.resolve(json({ data: latest }))
     mounted.app.renderer.destroy()
   }
 }, 15_000)

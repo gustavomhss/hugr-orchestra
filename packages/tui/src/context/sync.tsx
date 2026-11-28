@@ -41,6 +41,13 @@ function isNewer(revision: SessionRevision, previous?: SessionRevision) {
   return revision.timestamp >= previous.timestamp
 }
 
+function sameSelectionContext(left: Session, right: Session) {
+  return left.agent === right.agent && left.model?.providerID === right.model?.providerID &&
+    left.model?.id === right.model?.id && left.model?.variant === right.model?.variant &&
+    left.location.directory === right.location.directory && left.location.workspaceID === right.location.workspaceID &&
+    left.subpath === right.subpath
+}
+
 export const {
   context: SyncContext,
   use: useSync,
@@ -64,9 +71,10 @@ export const {
     const metadataReads = new Map<string, { epoch: number; task: Promise<Session | undefined> }>()
     const pendingMoves = new Map<string, Set<object>>()
     const placements = new Map<string, SessionRevision & Pick<Session, "location" | "subpath">>()
+    const titles = new Map<string, SessionRevision & Pick<Session, "title">>()
     const statusReads = new Set<Set<string>>()
     const lifetime = { disposed: false }
-    const recoveryEpoch = () => Math.max(0, sdk.connectionEpoch() - 1)
+    const statusEpoch = () => Math.max(0, sdk.connectionEpoch() - 1)
     const statusChanged = (sessionID: string) => statusReads.forEach((touched) => touched.add(sessionID))
     // Message IDs that live events changed while a Session's history was being fetched.
     const hydratingSessions = new Map<string, Set<string>>()
@@ -83,6 +91,7 @@ export const {
       metadataReads.clear()
       pendingMoves.clear()
       placements.clear()
+      titles.clear()
       syncingSessions.clear()
       trailing.clear()
       hydratingSessions.clear()
@@ -94,12 +103,12 @@ export const {
 
     async function readStatuses() {
       if (lifetime.disposed) return
-      const epoch = recoveryEpoch()
+      const epoch = statusEpoch()
       const touched = new Set<string>()
       statusReads.add(touched)
       try {
         const active = await sdk.catalog.status()
-        if (lifetime.disposed || recoveryEpoch() !== epoch) return
+        if (lifetime.disposed || statusEpoch() !== epoch) return
         batch(() => {
           for (const sessionID of Object.keys(store.session_status)) {
             if (!touched.has(sessionID) && !active[sessionID])
@@ -276,24 +285,28 @@ export const {
       })
     }
 
-    function withLiveMetadata(session: Session, baseline?: { agent?: string; model?: string; placement?: string }) {
+    function withLiveMetadata(session: Session, baseline?: { agent?: string; model?: string; placement?: string; title?: string }) {
       const selection = store.session_selection[session.id]
       const placement = placements.get(session.id)
+      const renamed = titles.get(session.id)
       const changed = (revision: SessionRevision | undefined, previous: string | undefined) =>
         revision && (baseline ? revision.id !== previous : revision.timestamp >= session.time.updated)
       const agent = changed(selection?.agent, baseline?.agent) ? selection?.agent : undefined
       const model = changed(selection?.model, baseline?.model) ? selection?.model : undefined
       const moved = changed(placement, baseline?.placement) ? placement : undefined
-      if (!agent && !model && !moved) return session
+      const title = changed(renamed, baseline?.title) ? renamed : undefined
+      if (!agent && !model && !moved && !title) return session
       return {
         ...session,
         agent: agent?.value ?? session.agent,
         model: model ? { ...model.value } : session.model,
         location: moved ? { ...moved.location } : session.location,
         subpath: moved ? moved.subpath : session.subpath,
+        title: title?.title ?? session.title,
         time: {
           ...session.time,
-          updated: Math.max(session.time.updated, agent?.timestamp ?? 0, model?.timestamp ?? 0, moved?.timestamp ?? 0),
+          updated: Math.max(session.time.updated, agent?.timestamp ?? 0, model?.timestamp ?? 0,
+            moved?.timestamp ?? 0, title?.timestamp ?? 0),
         },
       }
     }
@@ -324,22 +337,46 @@ export const {
 
     function selectionReady(sessionID: string) {
       return !lifetime.disposed && !sdk.offline() && sdk.binding().active &&
-        store.session_metadata[sessionID]?.epoch === recoveryEpoch()
+        store.session_metadata[sessionID]?.epoch === sdk.connectionEpoch()
+    }
+
+    function invalidateSelection(sessionID: string) {
+      if (store.session_metadata[sessionID]?.epoch !== undefined)
+        setStore("session_metadata", sessionID, "epoch", undefined)
     }
 
     function refreshSelection(sessionID: string): Promise<Session | undefined> {
       if (lifetime.disposed || pendingMoves.has(sessionID)) return Promise.resolve(undefined)
-      const epoch = recoveryEpoch()
+      const epoch = sdk.connectionEpoch()
       const pending = metadataReads.get(sessionID)
       if (pending?.epoch === epoch) return pending.task
-      const selection = store.session_selection[sessionID]
-      // The HTTP snapshot has no sequence. Preserve each field changed by live events during its read.
-      const baseline = { agent: selection?.agent?.id, model: selection?.model?.id, placement: placements.get(sessionID)?.id }
-      const task = sdk.catalog.session(sessionID).then((snapshot) => {
-        if (lifetime.disposed || recoveryEpoch() !== epoch || metadataReads.get(sessionID)?.task !== task) return
-        const session = withLiveMetadata(snapshot, baseline)
-        publishSession(session, epoch)
-        return session
+      const current = (): boolean =>
+        !lifetime.disposed && sdk.connectionEpoch() === epoch && metadataReads.get(sessionID)?.task === task
+      async function read(confirmConflict: boolean): Promise<Session | undefined> {
+        const selection = store.session_selection[sessionID]
+        const baseline = {
+          agent: selection?.agent?.id,
+          model: selection?.model?.id,
+          placement: placements.get(sessionID)?.id,
+          title: titles.get(sessionID)?.id,
+        }
+        const snapshot = await sdk.catalog.session(sessionID)
+        if (!current()) return
+        const live = withLiveMetadata(snapshot, baseline)
+        const sameContext = sameSelectionContext(live, snapshot)
+        // Commit and event publication can straddle the read. A fresh read after the conflicting event
+        // verifies the result without treating either the arrival order or the wall clock as a snapshot cursor.
+        if (!sameContext || live.title !== snapshot.title) {
+          if (sameContext) publishSession(live, epoch)
+          if (!sameContext) invalidateSelection(sessionID)
+          if (confirmConflict) return read(false)
+          return sameContext ? live : undefined
+        }
+        publishSession(snapshot, epoch)
+        return snapshot
+      }
+      const task = read(true).catch((error) => {
+        if (current()) throw error
       }).finally(() => {
         if (metadataReads.get(sessionID)?.task === task) metadataReads.delete(sessionID)
       })
@@ -354,7 +391,7 @@ export const {
       pendingMoves.set(sessionID, moves)
       // The move returns no Session body. Reopen selection only after its confirmation read.
       metadataReads.delete(sessionID)
-      if (store.session_metadata[sessionID]) setStore("session_metadata", sessionID, "epoch", undefined)
+      invalidateSelection(sessionID)
       return () => {
         if (lifetime.disposed || pendingMoves.get(sessionID) !== moves || !moves.delete(move) || moves.size > 0)
           return Promise.resolve(undefined)
@@ -497,6 +534,7 @@ export const {
           metadataReads.delete(event.data.sessionID)
           pendingMoves.delete(event.data.sessionID)
           placements.delete(event.data.sessionID)
+          titles.delete(event.data.sessionID)
           syncingSessions.delete(event.data.sessionID)
           trailing.delete(event.data.sessionID)
           hydratingSessions.delete(event.data.sessionID)
@@ -523,9 +561,21 @@ export const {
           break
         }
         case "session.next.created":
-        case "session.next.renamed":
           void refreshSelection(event.data.sessionID).catch(() => undefined)
           break
+
+        case "session.next.renamed": {
+          const { sessionID, title, timestamp } = event.data
+          const revision = { id: event.id, timestamp, seq: durable?.aggregateID === sessionID ? durable.seq : undefined, title }
+          if (!isNewer(revision, titles.get(sessionID))) break
+          titles.set(sessionID, revision)
+          const session = getSession(sessionID)
+          if (session) publishSession({
+            ...session, title, time: { ...session.time, updated: Math.max(session.time.updated, timestamp) },
+          })
+          void refreshSelection(sessionID).catch(() => undefined)
+          break
+        }
 
         case "session.next.agent.switched":
         case "session.next.model.switched": {
@@ -545,6 +595,7 @@ export const {
               if (!isNewer(revision, previous?.model)) return
               setStore("session_selection", sessionID, { ...previous, model: { ...revision, value: event.data.model } })
             }
+            if (metadataReads.get(sessionID)?.epoch === sdk.connectionEpoch()) invalidateSelection(sessionID)
             if (session) publishSession({
               ...session, ...fields, time: { ...session.time, updated: Math.max(session.time.updated, revision.timestamp) },
             })
@@ -566,6 +617,7 @@ export const {
             location: { ...location }, subpath: subdirectory }
           if (!isNewer(revision, placements.get(sessionID))) break
           placements.set(sessionID, revision)
+          if (metadataReads.get(sessionID)?.epoch === sdk.connectionEpoch()) invalidateSelection(sessionID)
           const session = getSession(sessionID)
           if (session) publishSession({
             ...session, location: revision.location, subpath: subdirectory,
@@ -820,16 +872,21 @@ export const {
       bootstrap,
     }
     createEffect(on(sdk.connectionEpoch, (epoch) => {
-      if (epoch <= 1 || lifetime.disposed) return
-      const sessions = new Set([
+      if (epoch === 0 || lifetime.disposed) return
+      // An exact read before the first greeting may have missed a commit before subscription.
+      // Initial status and history hydration continue as usual.
+      const sessions = new Set(epoch === 1 ? [
+        ...Object.keys(store.session_metadata), ...metadataReads.keys(),
+      ] : [
         ...history.keys(), ...fullSyncedSessions, ...syncingSessions.keys(),
         ...hydratingSessions.keys(), ...pendingHistoryChanges.keys(), ...metadataReads.keys(),
       ])
       void Promise.allSettled([
-        readStatuses(),
+        ...(epoch > 1 ? [readStatuses()] : []),
         ...[...sessions].map((sessionID) => {
           // A held history request must not delay the new epoch's metadata read.
           const metadata = refreshSelection(sessionID)
+          if (epoch === 1) return metadata
           return Promise.allSettled([metadata, result.session.sync(sessionID, { force: true }, metadata)]).then(
             ([selection, hydration]) => {
               if (selection.status === "rejected") throw selection.reason
