@@ -65,7 +65,7 @@ it.live.skipIf(!linux)("pinned confined TypeScript diagnoses an inert mismatch a
   for (const source of [
     "import { x } from './outside'\nconst count: string = x\n",
     "/// <reference path='./outside.d.ts' />\nconst count: string = 'ok'\n",
-    "// @ts-nocheck\nconst count: string = 42\n",
+    ...["nocheck", "expect-error", "ignore"].map((directive) => `// @ts-${directive}\nconst count: string = 42\n`),
   ]) {
     expect((yield* provision(ReviewScopedTypecheck.run(input(source)))).status).toBe("not-run")
   }

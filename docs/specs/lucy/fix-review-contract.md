@@ -1,20 +1,10 @@
-# Lucy fix-review — partial A04 contract
+# Lucy fix-review (A04)
 
-**Status: frozen contract and tests-only predecessor, source review approved.**
-Production work remains gated on hosted package types and the intended baseline
-assertion failures. Source review alone does not authorize implementation or
-qualify runtime behavior.
-
-Baseline: qualified integrated source `2ec8b95d499b6bca3b25094ff388b04b659f557e`,
-tree `ca30822f4e55b47262807374886003cc6e53ac53`. Merge
-`2a9a60c0695e6bae5aaccf02000179307632faec` has identical source bytes.
-The public entry already accepts the `fixReview` input shape; the controller and
-Store currently refuse it. This contract gives that existing route a bounded,
-persisted retest. Implementation requires a compiling hosted assertion RED.
-
-This is a partial A04 delivery. Scoped engagement probes remain unqualified and
-require a separate real predecessor/execution/retention gate. This phase neither
-closes that obligation nor declares the wider Lucy go-live complete.
+The public `fixReview` route persists a bounded retest for retained findings.
+The first delivery, merged in #1670, covers captured source evidence and the
+qualified analyzer retest. Section 13 defines the scoped TypeScript extension
+and its Linux x64 runtime boundary. Sections 11 and 12 preserve the original
+qualification criteria and baseline record.
 
 ## 1. Public route and authority
 
