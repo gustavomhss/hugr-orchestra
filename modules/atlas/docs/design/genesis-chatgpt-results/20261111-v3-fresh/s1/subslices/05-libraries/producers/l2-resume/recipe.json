@@ -1,0 +1,189 @@
+{
+  "schema": "genesis-l2-production-recipe/v1",
+  "version": 1,
+  "producer_id": "/root/produce_libraries",
+  "model_label": "GPT-6 Astra Pro (developer-provided label); actual host model identifier UNKNOWN",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "protocol_ref": {
+    "commit": "ee2521a5b966bd505cc95bd1c733e09e12f33531",
+    "path": ".orchestra/skills/execute-genesis/SKILL.md",
+    "sha256": "f86523d16180ce06376c1635e1ee2f51f61bf80f620466fdd2cf9821ff720029"
+  },
+  "public_contract_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/05-libraries/producers/l2-resume/public-contract-read.json",
+    "sha256": "71c1b8bd15c28f6fda9cb51a823d380cfe1963a6ceccc1cb9b8e06ccd66c9c91"
+  },
+  "canonical_public_contract_ref": {
+    "commit": "4fd2b5e7690a486e87fba0abe2daedcdbfd26c88",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/05-libraries/public-contract.json",
+    "sha256": "1cd73b1018832e313632e6803b8ccc433bbd6fbfd795632e0f9bd34b772566ce"
+  },
+  "request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/05-libraries/producers/l2-resume/request.txt",
+    "sha256": "47a1000624192d94c5509546c7b613a36cfd48ca2fade6154a1a2e167665bdec"
+  },
+  "transport_assembler_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/05-libraries/producers/l2-resume/assemble.py",
+    "sha256": "8f12f17bed7a7b94d3d5ecda2ffe94f9c0c7503adc04a3f0bc9cdff9e55ce357"
+  },
+  "required_keys": [
+    "s1.subslice05.llm-contracts.l2",
+    "s1.subslice05.extension-contracts.l2",
+    "s1.subslice05.storage-evidence.l2",
+    "s1.subslice05.intent-authority.l2"
+  ],
+  "criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I3",
+    "GO-I4",
+    "GO-I5",
+    "GO-I6",
+    "GO-I7",
+    "GO-I8",
+    "AC-01",
+    "AC-02",
+    "AC-03",
+    "AC-04",
+    "AC-05",
+    "AC-06",
+    "AC-07",
+    "AC-08",
+    "AC-09",
+    "AC-10",
+    "CC-1",
+    "CC-2",
+    "CC-3",
+    "CC-4",
+    "CC-5",
+    "CC-6",
+    "CC-7",
+    "SC-1",
+    "SC-2",
+    "SC-3",
+    "SC-4",
+    "SC-5",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "DOD-1",
+    "DOD-2",
+    "DOD-3",
+    "DOD-4",
+    "DOD-5",
+    "DOD-6",
+    "DOD-7"
+  ],
+  "method": [
+    "Reuse exact accepted C L1 once, without reapproval or broad source mining.",
+    "Add only accepted Core predecessors supporting explicit bounded claims.",
+    "Read tool.ts and tool-runtime.ts at the pin only for success-schema failure conversion.",
+    "Author useful cumulative local L2; preserve blocked external claims and N03/X01.",
+    "Compute transport identities and reconcile paths; no product tests, runtime proof, remote writes or credential access."
+  ],
+  "predecessor_bindings_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/05-libraries/producers/l2-resume/predecessor-bindings.json",
+    "sha256": "55753fd912b3b1a00c4543851f1c2a86f0de6e7a81f7e4bb8a28b164ff3407f9"
+  },
+  "coverage_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/05-libraries/producers/l2-resume/coverage-preservation.json",
+    "sha256": "56023eea5c1a43becad296f022dbd99c6d978062267d8a74d4a607f4d589e8f5"
+  },
+  "read_record_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/05-libraries/producers/l2-resume/reads-and-limits.json",
+    "sha256": "b279c8384c79713e75ee0701970f934c6ae1b1b5bdd3896fafa9a4b03f2921fb"
+  },
+  "source_manifest_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/05-libraries/producers/l2-resume/evidence/source-manifest.json",
+    "sha256": "1d9824e4ddfe9df3d466c8c4f7ae281b8a04fc82b13daabbb23d63539c24e85c"
+  },
+  "artifact_contracts": [
+    {
+      "slug": "llm-contracts",
+      "need": "component",
+      "c": [
+        "s1.runtime.llm_turns.l1",
+        "s1.runtime.llm_providers.l1"
+      ],
+      "core": [
+        "s1.core.session-execution"
+      ],
+      "raw": [
+        "packages/llm/src/tool.ts",
+        "packages/llm/src/tool-runtime.ts"
+      ],
+      "basis": "Synthesis of accepted bounded LLM L1, accepted source-only Session runner boundary, and two pinned source reads for schema-failure settlement. Core routing, Tools authority and unresolved completions are excluded.",
+      "gaps": [
+        "C-N01-host remains pending; accepted runner facts do not certify Tools authorization or all Session continuation claims.",
+        "C-N02 route adoption remains pending for Models/Runtime; no remote-provider compatibility is established.",
+        "N03: no provider, tool, CI, Atlas or consumer execution receipt; N04/N06/X01 remain bounded."
+      ]
+    },
+    {
+      "slug": "extension-contracts",
+      "need": "component",
+      "c": [
+        "s1.runtime.plugin.l1",
+        "s1.runtime.codemode.l1",
+        "s1.runtime.codemode_openapi.l1"
+      ],
+      "core": [],
+      "raw": [],
+      "basis": "Local synthesis of accepted package declarations, selected interpreter boundaries and OpenAPI adapter behavior. Host/Tools policy and lifecycle claims remain excluded pending accepted suppliers.",
+      "gaps": [
+        "C-N01-host remains pending; no loader, host permission or installation execution claim.",
+        "N04 preserves selected interpreter/operator coverage; N06 preserves unread large OpenAPI and other metadata-only fixtures.",
+        "N03: no network, tool, replay, CI or Atlas execution. X01 preserves output-envelope, Promise, redirect and response-schema limits."
+      ]
+    },
+    {
+      "slug": "storage-evidence",
+      "need": "operational",
+      "c": [
+        "s1.runtime.effect_sqlite.l1",
+        "s1.runtime.http_recorder.l1",
+        "s1.runtime.llm_recording.l1"
+      ],
+      "core": [
+        "s1.core.persistence"
+      ],
+      "raw": [],
+      "basis": "Operational synthesis of accepted generic adapters and recording contracts, with exact accepted Core persistence mechanism used only where explicitly attributed. No restore, driver-adoption or execution qualification.",
+      "gaps": [
+        "C-N02 is only partially available: accepted persistence does not establish driver adoption, absence of consumers, restore or pending Models/Runtime completions.",
+        "N03: no database, migration, replay, build, CI, provider or Atlas execution receipt.",
+        "N04/N06 retain depth and unread fixtures; X01 retains unimplemented Node streaming and different public/internal socket chronology."
+      ]
+    },
+    {
+      "slug": "intent-authority",
+      "need": "maintenance",
+      "c": [
+        "s1.runtime.guides_intent.l1",
+        "s1.runtime.maintenance_intent.l1"
+      ],
+      "core": [
+        "s1.core.configuration",
+        "s1.subslice01.config-project-supplement"
+      ],
+      "raw": [],
+      "basis": "Synthesis of accepted documentary intent with exact accepted Core decoder/publisher comparison. The specific C-N05 claim is bound; whole-R2 closeout, generated freshness, regeneration and runtime guarantees are excluded.",
+      "gaps": [
+        "N05 runtime regeneration/equality/freshness remain unexecuted despite the accepted source-only decoder/publisher comparison.",
+        "C-N01-host and unaccepted parts of C-N02/completions remain pending; no general host-policy or restore assertion.",
+        "N03: M1-M3, import/binding/publication and consumption remain NOT_RUN; N04/N06/X01 retained."
+      ]
+    }
+  ],
+  "membership": "Inherited 323-path coverage/population remains fixed and bound; future source membership changes require the existing ownership observation/rebuild workflow. No runtime membership observation is asserted."
+}

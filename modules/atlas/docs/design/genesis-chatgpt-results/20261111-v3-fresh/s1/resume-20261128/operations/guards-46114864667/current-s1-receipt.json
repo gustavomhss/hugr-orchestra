@@ -1,0 +1,29 @@
+{
+  "schema": "genesis-s1-original-guard/v1",
+  "candidate_revision": "234552a3c9deb058dcba3714a8013abf52045d4c",
+  "base_ref": "origin/dev",
+  "base_revision": "3aaa5e0645f99940b66ee90d28aef93166f09ab1",
+  "argv": [
+    "bun",
+    "run",
+    "check:guards",
+    "--base",
+    "origin/dev"
+  ],
+  "exit_code": 0,
+  "log_sha256": "a8a7e5777aadc8d59605877a8ffa31b4da79decde4c7a21c1d8981bbfb562371",
+  "log_bytes": 1943,
+  "binary_recovery": {
+    "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip",
+    "git_blob_sha": "d83941a9d836a23e466ca09ecba1f21d423094cb",
+    "computed_git_blob_sha": "d83941a9d836a23e466ca09ecba1f21d423094cb",
+    "sha256": "429f82f075aaf8aacff755137015d9bce0623c6ad9746b86fe8eae4bcd9726d4",
+    "bytes": 1339105,
+    "state": "EXACT_GIT_BYTES_RECOVERED"
+  },
+  "run_id": "46114864667",
+  "run_attempt": "1",
+  "workflow_revision": "234552a3c9deb058dcba3714a8013abf52045d4c",
+  "guard_modified": false
+}

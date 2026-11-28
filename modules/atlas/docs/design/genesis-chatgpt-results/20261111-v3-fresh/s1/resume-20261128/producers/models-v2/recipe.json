@@ -1,0 +1,103 @@
+{
+  "schema": "genesis-l1-correction-recipe/v1",
+  "version": 2,
+  "artifact_key": "s1.core.models",
+  "layer": 1,
+  "need": "component",
+  "scope": "orchestra.s1",
+  "producer_id": "/root/produce_libraries",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/models-v2/request.txt",
+    "sha256": "d4557ed54fe0533b11e5591ec839f933bd1cee62441ebacb07151d497fa7aea5"
+  },
+  "original_body": {
+    "local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_sessions/bodies/models.md",
+    "byte_length": 3987,
+    "sha256": "4af060adbf07f6e7e759bd8574793155c5676fd87fbef77125c70cc618ffdcfe"
+  },
+  "sources_read": [
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/reviews/evidence/models-session_model.json",
+      "wrapper_identity": {
+        "byte_length": 9881,
+        "sha256": "b6841b690671f9e0b764155e71f443a9494e5089d3d99e2258ad618646ca8cf5"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/session/runner/model.ts",
+        "git_blob_sha": "188abc7053f9a02b8dd84ce7bdc30e0e7c001b3b"
+      },
+      "literal_excerpt": {
+        "start_line": 132,
+        "end_line": 338,
+        "byte_length": 9015,
+        "sha256": "c5b3897412226c51072c213ea3f7e97dfd6fd3df9690bccf90781da5d2e6a2c2"
+      },
+      "read_depth": "selected route/resolve/support/credential sections from literal code excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/runner/model.ts",
+      "identity_note": "Git blob identifies whole source; SHA-256 values identify the local GitHub-response wrapper and literal excerpt, not an unseen full source file."
+    },
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/reviews/evidence/models-aisdk_a.json",
+      "wrapper_identity": {
+        "byte_length": 3807,
+        "sha256": "14ac400a98a53c6b49c3d454d42106f46fe890b31d63ad6acadfd1e4441f3b31"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/aisdk.ts",
+        "git_blob_sha": "c5f21baea562c0a8eeeb568929d7971f4c80a3dd"
+      },
+      "literal_excerpt": {
+        "start_line": 27,
+        "end_line": 122,
+        "byte_length": 3125,
+        "sha256": "f0506ae5522d2a8501ee53493f0aee390cda818dba4e5627d080740d1c442837"
+      },
+      "read_depth": "full literal code excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/aisdk.ts",
+      "identity_note": "Git blob identifies whole source; SHA-256 values identify the local GitHub-response wrapper and literal excerpt, not an unseen full source file."
+    },
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/reviews/evidence/models-aisdk_b.json",
+      "wrapper_identity": {
+        "byte_length": 3729,
+        "sha256": "549c8a42d481472869ced0e6f00659c83442b28c57f3cfb20e295ec493c4994d"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/aisdk.ts",
+        "git_blob_sha": "c5f21baea562c0a8eeeb568929d7971f4c80a3dd"
+      },
+      "literal_excerpt": {
+        "start_line": 149,
+        "end_line": 234,
+        "byte_length": 3074,
+        "sha256": "f13a85feb3f46fd70adb40b96803ccfd520fae72068c13a75e85fdb982b0df2e"
+      },
+      "read_depth": "full literal code excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/aisdk.ts",
+      "identity_note": "Git blob identifies whole source; SHA-256 values identify the local GitHub-response wrapper and literal excerpt, not an unseen full source file."
+    }
+  ],
+  "changes_requested": [
+    "F01: URL condition shared by all three OpenAI-compatible alternatives",
+    "F02: include providerID in SDK cache key",
+    "Limit native route cadence to execution of resolve; no caller inspection claimed"
+  ],
+  "method": "Three exact single-occurrence text replacements. Original remaining bytes and source anchors preserved. Read no oracle or judge request/response; only the explicit literal-code evidence files and original body.",
+  "not_run": [
+    "product tests",
+    "provider/model execution",
+    "runtime proofs",
+    "remote writes",
+    "commits"
+  ],
+  "semantic_state": "REVIEW",
+  "usage": {
+    "tokens": "UNKNOWN",
+    "physical_model_attempts": "UNKNOWN",
+    "billing": "UNKNOWN"
+  }
+}

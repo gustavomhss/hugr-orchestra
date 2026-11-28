@@ -1,0 +1,37 @@
+{
+  "schema": "genesis-pinned-source-capture/v1",
+  "repository": "gustavomhss/hugr-orchestra",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "fetch_file_calls": 2,
+  "captured_utf8_bytes": 12664,
+  "entries": [
+    {
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/llm/src/tool.ts",
+        "git_blob_sha": "11ed9854ca38a9ef648705d1091aaa35e1660da0",
+        "sha256": "5a15723f7efb2d01c49fff1fd510cd72ece0c7544a89b37622f4c6c151ff5103"
+      },
+      "local_path": "evidence/source/tool.ts",
+      "byte_length": 9667,
+      "sha256": "5a15723f7efb2d01c49fff1fd510cd72ece0c7544a89b37622f4c6c151ff5103",
+      "method": "GitHub fetch_file at exact pin",
+      "purpose": "Narrow additional source read: input/success schema error mapping and settlement projection; no L1 re-mining or re-approval",
+      "depth": "full file read"
+    },
+    {
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/llm/src/tool-runtime.ts",
+        "git_blob_sha": "d69bbb9d478ca532a1481e8d7502c8e5c2b55dc6",
+        "sha256": "da324a868e54e4f884ca4255ea8d8e34ee080d05daef0afbf11aebe3bdc18e1f"
+      },
+      "local_path": "evidence/source/tool-runtime.ts",
+      "byte_length": 2997,
+      "sha256": "da324a868e54e4f884ca4255ea8d8e34ee080d05daef0afbf11aebe3bdc18e1f",
+      "method": "GitHub fetch_file at exact pin",
+      "purpose": "Narrow additional source read: input/success schema error mapping and settlement projection; no L1 re-mining or re-approval",
+      "depth": "full file read"
+    }
+  ]
+}

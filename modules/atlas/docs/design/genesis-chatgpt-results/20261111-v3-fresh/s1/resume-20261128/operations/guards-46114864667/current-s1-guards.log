@@ -1,0 +1,10 @@
+$ bun run script/guards/run.ts --base origin/dev
+WARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip [binary-added] Binary file added outside the usual media and fixture locations. Check it belongs in git.
+WARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/c-l1-evidence-v1/c-l1-evidence-v1.tar.gz [binary-added] Binary file added outside the usual media and fixture locations. Check it belongs in git.
+WARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.
+WARN modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/coverage.json [large-file] Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.
+guards: 78 rules, 1250 changed paths, 0 gate and 4 warn findings, 0 errors.
+::warning file=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip,title=guard binary-added::Binary file added outside the usual media and fixture locations. Check it belongs in git.
+::warning file=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/revisions/c-l1-evidence-v1/c-l1-evidence-v1.tar.gz,title=guard binary-added::Binary file added outside the usual media and fixture locations. Check it belongs in git.
+::warning file=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/evidence/source-captures.zip,title=guard large-file::Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.
+::warning file=modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/coverage.json,title=guard large-file::Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.

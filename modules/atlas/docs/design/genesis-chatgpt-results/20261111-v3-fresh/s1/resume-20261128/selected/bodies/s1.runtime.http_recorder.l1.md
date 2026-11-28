@@ -1,0 +1,17 @@
+# HTTP and socket recording: deterministic fixtures with bounded claims
+
+**L1 authority:** recorder implementation and package/export scripts at the source pin. Excerpts C34–C39 show the mode, replay, refusal and packaging rules. Reading a cassette or test never establishes a runtime pass.
+
+The public namespace provides `http` and `socket`. Automatic mode replays an existing local cassette, records a missing local cassette, and forces replay when CI is set to a nonempty value other than `false` or `0`. Thus using the public layer with a missing local cassette can call a real service. LLM's harness instead supplies explicit internal record/replay mode. Source: `src/effect.ts`, `src/recorder.ts`, `src/internal-effect.ts` (C34).
+
+HTTP recordings buffer complete responses and preserve request-start ordering using a deferred append chain. Replay claims interactions sequentially only after request matching. Default matching checks method, URL, allowed headers and canonicalized JSON, sorting object keys but retaining array order. Callers can provide a custom matcher. Missing/mismatched/exhausted interactions fail. The scope finalizer checks unused interactions after at least one was consumed; a cassette with zero consumed interactions is expressly exempt. Source: `src/internal-effect.ts`, `src/matching.ts`, `src/recorder.ts` (C34–C35).
+
+Cassette names reject absolute Unix/Windows paths, parent traversal and lexical escape from the configured directory. Recording redacts configured and known sensitive headers, URL credentials/query keys and JSON fields. A prewrite scan refuses likely secrets and writes through a temporary file then rename. This is a lexical/path-and-pattern boundary: there is no demonstrated symlink defense or complete secret-detection guarantee, and base64 binary payloads are not decoded for secret scanning. Source: `src/cassette.ts`, `src/redaction.ts`, `src/redactor.ts` (C37).
+
+The public socket wrapper replays the interleaved event sequence: it delivers server events until a client write is required and checks that write before continuing. Concurrent runs and mismatched client frames are refused; close checks remaining client traffic. Failed/interrupted recordings do not become ordinary successful transcripts. It records application frames, not complete timing, cancellation, backpressure or terminal close-code semantics. Source: `src/socket.ts`, `README.md` (C38).
+
+The internal `makeWebSocketExecutor` is a different API. Replay filters client and server event lists separately and exposes a stream of server events, so it does not preserve interleaved chronology like the public socket wrapper. The LLM test adapter uses this internal API. Source: `src/websocket.ts` (C36), `packages/llm/test/recorded-websocket.ts`.
+
+Workspace `package.json` exposes `./internal`; the pack script deletes that export and rewrites public paths to dist. The build retains a small public declaration set. The package declares Node >=22 and exact Effect peer version `4.0.0-beta.83`; the verification script describes a packed-consumer check but was not run. Source: `package.json`, `script/build.ts`, `script/pack.ts` (C39), `script/verify-package.ts`.
+
+**Boundary and gaps.** Buffering is not a bounded-memory or network-fidelity guarantee. The selected two-interaction cassette is supporting fixture data, and the retry fixture remains unread. No package build, install, replay or public export smoke test was executed.

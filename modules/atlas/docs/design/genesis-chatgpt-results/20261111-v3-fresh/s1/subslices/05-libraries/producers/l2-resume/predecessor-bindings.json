@@ -1,0 +1,592 @@
+{
+  "schema": "genesis-l2-predecessor-bindings/v1",
+  "producer": "/root/produce_libraries",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "predecessors": [
+    {
+      "key": "s1.runtime.llm_turns.l1",
+      "package_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.c-r1-v2.json",
+        "sha256": "6fb6ce93ba167d667f97e987032c9a3d4d8e293653848e2d924c992121ed2060"
+      },
+      "body_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/bodies/llm-turns.md",
+        "sha256": "c2dacdb2638ff47ffa60a7bb2d7f3e3403f574c0470fc853d45983020d66b831"
+      },
+      "body_identity": {
+        "byte_length": 3025,
+        "sha256": "c2dacdb2638ff47ffa60a7bb2d7f3e3403f574c0470fc853d45983020d66b831"
+      },
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_tools_libraries/materialized/producers/c/bodies/llm-turns.md",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "acceptance_basis": "Accepted bounded C L1 supplied by the principal; exact inherited reviews preserved, no new approval",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j1.md",
+          "sha256": "04afb713dffce7764a161aeeadd9d774de6f9b2da43242d3edef179431490228"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j2.md",
+          "sha256": "fdeaf3a22ce75dd557932f07a92e1750fd5ddfd0ec2fa1849df0c056c06cccc8"
+        }
+      ],
+      "acceptance_index_ref": null,
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "retained_gaps": [
+        "No provider or product execution receipt.",
+        "Selected schema/reducer inspection does not certify every variant.",
+        "Session persistence, authorization and continuation require Core evidence."
+      ]
+    },
+    {
+      "key": "s1.runtime.llm_providers.l1",
+      "package_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.c-r1-v2.json",
+        "sha256": "6fb6ce93ba167d667f97e987032c9a3d4d8e293653848e2d924c992121ed2060"
+      },
+      "body_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/bodies/provider-routes.md",
+        "sha256": "5847b8777ad56f974685bf956a2fcf5ea0b189a6aae14721e544336871e1360f"
+      },
+      "body_identity": {
+        "byte_length": 4043,
+        "sha256": "5847b8777ad56f974685bf956a2fcf5ea0b189a6aae14721e544336871e1360f"
+      },
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_tools_libraries/materialized/producers/c/bodies/provider-routes.md",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "acceptance_basis": "Accepted bounded C L1 supplied by the principal; exact inherited reviews preserved, no new approval",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j1.md",
+          "sha256": "04afb713dffce7764a161aeeadd9d774de6f9b2da43242d3edef179431490228"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j2.md",
+          "sha256": "fdeaf3a22ce75dd557932f07a92e1750fd5ddfd0ec2fa1849df0c056c06cccc8"
+        }
+      ],
+      "acceptance_index_ref": null,
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "retained_gaps": [
+        "Remote compatibility and Core route admission are not established by facade source.",
+        "Protocol and multimodal helpers were not exhaustively audited."
+      ]
+    },
+    {
+      "key": "s1.core.session-execution",
+      "package_ref": {
+        "commit": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/native-package.json",
+        "sha256": "7541d67c8a4c3183429b9600ec6ea947a8b7035bbc6d0e83f7bb2d910b7fc030"
+      },
+      "body_ref": {
+        "commit": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/bodies/session-execution.md",
+        "sha256": "470ddb1eacfe7294071893968d7de999c90ea98cb0fd48c48e0730ded51d1663"
+      },
+      "body_identity": {
+        "byte_length": 4574,
+        "sha256": "470ddb1eacfe7294071893968d7de999c90ea98cb0fd48c48e0730ded51d1663"
+      },
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_sessions/bodies/session-execution.md",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "acceptance_basis": "ACCEPTED_BY_SAME_NATIVE_PAIR in exact acceptance index",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j1.json",
+          "sha256": "a32b7bec928315cdd77f7fdb32909f5ee5d316eb576816a1cce9985b632d8ff7"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j2.json",
+          "sha256": "fd2dd0e2d76379e7d4e128b1fa1e77ce81cf95dd8bc5ef18051475f641187349"
+        }
+      ],
+      "acceptance_index_ref": {
+        "commit": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/acceptance-index.json",
+        "sha256": "814d3767f780b5ebcecc42d963f27c4e4100e9fd9a3cb10bfdfa8899cc44de43"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned repository implementation and explicitly distinguished repository normative documentation; source inspection only. No product execution or test result is asserted."
+      },
+      "validity": "supported",
+      "retained_gaps": [
+        "Durable multi-node ownership and automatic post-crash provider recovery are explicitly not implemented by this local coordinator.",
+        "ExecutionHost internals are a separate owner boundary; only the Core port and invocation path are inspected.",
+        "No runtime or product test result was obtained."
+      ]
+    },
+    {
+      "key": "s1.runtime.plugin.l1",
+      "package_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.c-r1-v2.json",
+        "sha256": "6fb6ce93ba167d667f97e987032c9a3d4d8e293653848e2d924c992121ed2060"
+      },
+      "body_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/bodies/plugin-contracts.md",
+        "sha256": "9c3110e3b15b35e85285cab7f9440b6711110aaac8a1ca936c7ca86263c1e382"
+      },
+      "body_identity": {
+        "byte_length": 3392,
+        "sha256": "9c3110e3b15b35e85285cab7f9440b6711110aaac8a1ca936c7ca86263c1e382"
+      },
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_tools_libraries/materialized/producers/c/bodies/plugin-contracts.md",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "acceptance_basis": "Accepted bounded C L1 supplied by the principal; exact inherited reviews preserved, no new approval",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j1.md",
+          "sha256": "04afb713dffce7764a161aeeadd9d774de6f9b2da43242d3edef179431490228"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j2.md",
+          "sha256": "fdeaf3a22ce75dd557932f07a92e1750fd5ddfd0ec2fa1849df0c056c06cccc8"
+        }
+      ],
+      "acceptance_index_ref": null,
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "retained_gaps": [
+        "Host loader, ordering, cleanup, installation and permission implementation not established by package types.",
+        "Plan, current declarations and frozen compatibility types must remain distinct."
+      ]
+    },
+    {
+      "key": "s1.runtime.codemode.l1",
+      "package_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.c-r1-v2.json",
+        "sha256": "6fb6ce93ba167d667f97e987032c9a3d4d8e293653848e2d924c992121ed2060"
+      },
+      "body_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/bodies/codemode-interpreter.md",
+        "sha256": "be8899d897dec584e7e74c597483dff9417dd1511e00e757e86a05378248487f"
+      },
+      "body_identity": {
+        "byte_length": 3480,
+        "sha256": "be8899d897dec584e7e74c597483dff9417dd1511e00e757e86a05378248487f"
+      },
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_tools_libraries/materialized/producers/c/bodies/codemode-interpreter.md",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "acceptance_basis": "Accepted bounded C L1 supplied by the principal; exact inherited reviews preserved, no new approval",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j1.md",
+          "sha256": "04afb713dffce7764a161aeeadd9d774de6f9b2da43242d3edef179431490228"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j2.md",
+          "sha256": "fdeaf3a22ce75dd557932f07a92e1750fd5ddfd0ec2fa1849df0c056c06cccc8"
+        }
+      ],
+      "acceptance_index_ref": null,
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "retained_gaps": [
+        "Selected interpreter paths and supporting structural scans do not establish full language conformance.",
+        "Host adapters and leaf-tool authorization remain external to this implementation proof.",
+        "Result-envelope bytes may exceed configured value/log payload budget."
+      ]
+    },
+    {
+      "key": "s1.runtime.codemode_openapi.l1",
+      "package_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.c-r1-v2.json",
+        "sha256": "6fb6ce93ba167d667f97e987032c9a3d4d8e293653848e2d924c992121ed2060"
+      },
+      "body_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/bodies/codemode-openapi.md",
+        "sha256": "0f906322c8952eb43396870be8fea15b2d47146df43a9d604cfd39c9cb293977"
+      },
+      "body_identity": {
+        "byte_length": 2698,
+        "sha256": "0f906322c8952eb43396870be8fea15b2d47146df43a9d604cfd39c9cb293977"
+      },
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_tools_libraries/materialized/producers/c/bodies/codemode-openapi.md",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "acceptance_basis": "Accepted bounded C L1 supplied by the principal; exact inherited reviews preserved, no new approval",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j1.md",
+          "sha256": "04afb713dffce7764a161aeeadd9d774de6f9b2da43242d3edef179431490228"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j2.md",
+          "sha256": "fdeaf3a22ce75dd557932f07a92e1750fd5ddfd0ec2fa1849df0c056c06cccc8"
+        }
+      ],
+      "acceptance_index_ref": null,
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "retained_gaps": [
+        "Response-schema validation and adapter-enforced redirect policy are documented future work.",
+        "Large reference fixture remains unobserved; no network or test execution."
+      ]
+    },
+    {
+      "key": "s1.runtime.effect_sqlite.l1",
+      "package_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.c-r1-v2.json",
+        "sha256": "6fb6ce93ba167d667f97e987032c9a3d4d8e293653848e2d924c992121ed2060"
+      },
+      "body_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/bodies/sqlite-adapters.md",
+        "sha256": "b1dc22165fbdcee0a5811dc983548ac26f1189adc311e9855cfc22763b7d9597"
+      },
+      "body_identity": {
+        "byte_length": 3558,
+        "sha256": "b1dc22165fbdcee0a5811dc983548ac26f1189adc311e9855cfc22763b7d9597"
+      },
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_tools_libraries/materialized/producers/c/bodies/sqlite-adapters.md",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "acceptance_basis": "Accepted bounded C L1 supplied by the principal; exact inherited reviews preserved, no new approval",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j1.md",
+          "sha256": "04afb713dffce7764a161aeeadd9d774de6f9b2da43242d3edef179431490228"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j2.md",
+          "sha256": "fdeaf3a22ce75dd557932f07a92e1750fd5ddfd0ec2fa1849df0c056c06cccc8"
+        }
+      ],
+      "acceptance_index_ref": null,
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "retained_gaps": [
+        "Generic adapter source does not establish Core startup, backup, restoration or after-commit policies.",
+        "Query-builder parity and Node package consumer absence are not independently proved.",
+        "Node executeStream is explicitly unimplemented."
+      ]
+    },
+    {
+      "key": "s1.runtime.http_recorder.l1",
+      "package_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.c-r1-v2.json",
+        "sha256": "6fb6ce93ba167d667f97e987032c9a3d4d8e293653848e2d924c992121ed2060"
+      },
+      "body_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/bodies/http-recorder.md",
+        "sha256": "4857371404625869016238e6ac23fbf7aad5ab0c7538f64df2ebfe91f1935fe7"
+      },
+      "body_identity": {
+        "byte_length": 3464,
+        "sha256": "4857371404625869016238e6ac23fbf7aad5ab0c7538f64df2ebfe91f1935fe7"
+      },
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_tools_libraries/materialized/producers/c/bodies/http-recorder.md",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "acceptance_basis": "Accepted bounded C L1 supplied by the principal; exact inherited reviews preserved, no new approval",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j1.md",
+          "sha256": "04afb713dffce7764a161aeeadd9d774de6f9b2da43242d3edef179431490228"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j2.md",
+          "sha256": "fdeaf3a22ce75dd557932f07a92e1750fd5ddfd0ec2fa1849df0c056c06cccc8"
+        }
+      ],
+      "acceptance_index_ref": null,
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "retained_gaps": [
+        "No build, packed-consumer, replay or network execution receipt.",
+        "Recordings do not establish timing, backpressure, cancellation or bounded-memory fidelity.",
+        "Internal WebSocket helper has different chronology from public socket replay."
+      ]
+    },
+    {
+      "key": "s1.runtime.llm_recording.l1",
+      "package_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.c-r1-v2.json",
+        "sha256": "6fb6ce93ba167d667f97e987032c9a3d4d8e293653848e2d924c992121ed2060"
+      },
+      "body_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/bodies/recorded-evidence.md",
+        "sha256": "28e1d579f17b5463c58c701c8f98c0b131bef0b1bbb2390317d30655c837519d"
+      },
+      "body_identity": {
+        "byte_length": 3042,
+        "sha256": "28e1d579f17b5463c58c701c8f98c0b131bef0b1bbb2390317d30655c837519d"
+      },
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_tools_libraries/materialized/producers/c/bodies/recorded-evidence.md",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "acceptance_basis": "Accepted bounded C L1 supplied by the principal; exact inherited reviews preserved, no new approval",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j1.md",
+          "sha256": "04afb713dffce7764a161aeeadd9d774de6f9b2da43242d3edef179431490228"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j2.md",
+          "sha256": "fdeaf3a22ce75dd557932f07a92e1750fd5ddfd0ec2fa1849df0c056c06cccc8"
+        }
+      ],
+      "acceptance_index_ref": null,
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "retained_gaps": [
+        "Thirty-nine assigned fixture/media sources are metadata-only in this unit.",
+        "No declared test or fixture replay was executed.",
+        "Large OpenAPI fixture exceeds documented observer file-size limit."
+      ]
+    },
+    {
+      "key": "s1.core.persistence",
+      "package_ref": {
+        "commit": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/native-package.json",
+        "sha256": "7541d67c8a4c3183429b9600ec6ea947a8b7035bbc6d0e83f7bb2d910b7fc030"
+      },
+      "body_ref": {
+        "commit": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/bodies/persistence.md",
+        "sha256": "0b43f9bd316aca25361f934e63723f2aa6220a3deb97a4447266fbbc5d350762"
+      },
+      "body_identity": {
+        "byte_length": 5290,
+        "sha256": "0b43f9bd316aca25361f934e63723f2aa6220a3deb97a4447266fbbc5d350762"
+      },
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_sessions/bodies/persistence.md",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "acceptance_basis": "ACCEPTED_BY_SAME_NATIVE_PAIR in exact acceptance index",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j1.json",
+          "sha256": "a32b7bec928315cdd77f7fdb32909f5ee5d316eb576816a1cce9985b632d8ff7"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/a1-config-v1-j2.json",
+          "sha256": "fd2dd0e2d76379e7d4e128b1fa1e77ce81cf95dd8bc5ef18051475f641187349"
+        }
+      ],
+      "acceptance_index_ref": {
+        "commit": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/acceptance-index.json",
+        "sha256": "814d3767f780b5ebcecc42d963f27c4e4100e9fd9a3cb10bfdfa8899cc44de43"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned repository implementation and explicitly distinguished repository normative documentation; source inspection only. No product execution or test result is asserted."
+      },
+      "validity": "supported",
+      "retained_gaps": [
+        "Historical migrations and driver implementations have grouped inventory disposition; they were not exhaustively read or executed.",
+        "Projector registration is not yet keyed by exact durable type plus version.",
+        "Seals do not establish authentication or Session execution ownership."
+      ]
+    },
+    {
+      "key": "s1.runtime.guides_intent.l1",
+      "package_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.c-r1-v2.json",
+        "sha256": "6fb6ce93ba167d667f97e987032c9a3d4d8e293653848e2d924c992121ed2060"
+      },
+      "body_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/bodies/user-guides.md",
+        "sha256": "22303bf38d880468d845ec54732c2138f293243058d8cf8f1c6b9152c2587488"
+      },
+      "body_identity": {
+        "byte_length": 3362,
+        "sha256": "22303bf38d880468d845ec54732c2138f293243058d8cf8f1c6b9152c2587488"
+      },
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_tools_libraries/materialized/producers/c/bodies/user-guides.md",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "acceptance_basis": "Accepted bounded C L1 supplied by the principal; exact inherited reviews preserved, no new approval",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j1.md",
+          "sha256": "04afb713dffce7764a161aeeadd9d774de6f9b2da43242d3edef179431490228"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j2.md",
+          "sha256": "fdeaf3a22ce75dd557932f07a92e1750fd5ddfd0ec2fa1849df0c056c06cccc8"
+        }
+      ],
+      "acceptance_index_ref": null,
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "retained_gaps": [
+        "Host implementation of guide claims was not read in this unit.",
+        "Config unknown-key behavior differs in documentary/schema surfaces and needs decoder evidence."
+      ]
+    },
+    {
+      "key": "s1.runtime.maintenance_intent.l1",
+      "package_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.c-r1-v2.json",
+        "sha256": "6fb6ce93ba167d667f97e987032c9a3d4d8e293653848e2d924c992121ed2060"
+      },
+      "body_ref": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/c/bodies/maintenance-intent.md",
+        "sha256": "98d6626bcf2ae923fb8a905cef874bc3e086a42a71abc129a2e9471c0864bcb8"
+      },
+      "body_identity": {
+        "byte_length": 3852,
+        "sha256": "98d6626bcf2ae923fb8a905cef874bc3e086a42a71abc129a2e9471c0864bcb8"
+      },
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_tools_libraries/materialized/producers/c/bodies/maintenance-intent.md",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "acceptance_basis": "Accepted bounded C L1 supplied by the principal; exact inherited reviews preserved, no new approval",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j1.md",
+          "sha256": "04afb713dffce7764a161aeeadd9d774de6f9b2da43242d3edef179431490228"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/judgments/l1-c-v1-supplement-j2.md",
+          "sha256": "fdeaf3a22ce75dd557932f07a92e1750fd5ddfd0ec2fa1849df0c056c06cccc8"
+        }
+      ],
+      "acceptance_index_ref": null,
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+      },
+      "validity": "supported",
+      "retained_gaps": [
+        "Historical acceptance commands and completed labels are not current execution evidence.",
+        "Generated schema publisher and Core migration implementation are outside this source subset.",
+        "No L2–L4, semantic verdict or Atlas runtime object is produced here."
+      ]
+    },
+    {
+      "key": "s1.core.configuration",
+      "package_ref": {
+        "commit": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/native-package.json",
+        "sha256": "7541d67c8a4c3183429b9600ec6ea947a8b7035bbc6d0e83f7bb2d910b7fc030"
+      },
+      "body_ref": {
+        "commit": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/bodies/configuration.md",
+        "sha256": "eed22f8ddd9f3fdad18b39cfb8e52ca5f412bad8b21de10fef58ce113ba60ab1"
+      },
+      "body_identity": {
+        "byte_length": 4414,
+        "sha256": "eed22f8ddd9f3fdad18b39cfb8e52ca5f412bad8b21de10fef58ce113ba60ab1"
+      },
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_sessions/bodies/configuration.md",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "acceptance_basis": "ACCEPTED_BY_SAME_NATIVE_PAIR in exact acceptance index",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/config-v2-j1.json",
+          "sha256": "53172bb65049c344b0af72a6bc0c063a78207bf73e8feedc79f8ce8971096d63"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/config-v2-j2.json",
+          "sha256": "dfde36a7c76031d4364703b4e8971d8d20828932656efe0ad4cea60d9c9a29f0"
+        }
+      ],
+      "acceptance_index_ref": {
+        "commit": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/acceptance-index.json",
+        "sha256": "814d3767f780b5ebcecc42d963f27c4e4100e9fd9a3cb10bfdfa8899cc44de43"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "Pinned repository implementation and explicitly distinguished repository normative documentation; source inspection only. No product execution or test result is asserted."
+      },
+      "validity": "supported",
+      "retained_gaps": [
+        "Project configuration remains an open-time snapshot while globals refresh per entries call.",
+        "Legacy upgrade helpers and consumer-specific policies are not exhaustively inspected.",
+        "No Location eviction/reload or trust transition was executed."
+      ]
+    },
+    {
+      "key": "s1.subslice01.config-project-supplement",
+      "package_ref": {
+        "commit": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/native-package.json",
+        "sha256": "7541d67c8a4c3183429b9600ec6ea947a8b7035bbc6d0e83f7bb2d910b7fc030"
+      },
+      "body_ref": {
+        "commit": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/producers/config-project/bodies/config-project-supplement-v2.md",
+        "sha256": "555549f9971e6b6d8c8edd4799841e3f54259c9289b399da0eeb84336a896b13"
+      },
+      "body_identity": {
+        "byte_length": 18797,
+        "sha256": "555549f9971e6b6d8c8edd4799841e3f54259c9289b399da0eeb84336a896b13"
+      },
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_sessions/producers/config-project/bodies/config-project-supplement-v2.md",
+      "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+      "acceptance_basis": "ACCEPTED_BY_SAME_NATIVE_PAIR in exact acceptance index",
+      "semantic_review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/config-v2-j1.json",
+          "sha256": "53172bb65049c344b0af72a6bc0c063a78207bf73e8feedc79f8ce8971096d63"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/config-v2-j2.json",
+          "sha256": "dfde36a7c76031d4364703b4e8971d8d20828932656efe0ad4cea60d9c9a29f0"
+        }
+      ],
+      "acceptance_index_ref": {
+        "commit": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/judgments/acceptance-index.json",
+        "sha256": "814d3767f780b5ebcecc42d963f27c4e4100e9fd9a3cb10bfdfa8899cc44de43"
+      },
+      "authority": {
+        "scope": "orchestra.s1",
+        "basis": "S1-01 assigned configuration/project implementation; exact baseline source inspection and explicit cross-owner boundaries. No product execution."
+      },
+      "validity": "supported",
+      "retained_gaps": [
+        "Source-only limits and partial reads remain explicit; all product and Atlas operations by this producer are NOT_RUN.",
+        "Runtime input versions, binding/publication and consumption receipts remain the principal's responsibility."
+      ]
+    }
+  ]
+}

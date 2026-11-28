@@ -1,0 +1,13 @@
+# OpenAPI tool planning, credentials and bounded response handling
+
+**L1 authority:** `packages/codemode/src/openapi` implementation plus its explicit TODO. Excerpts C25–C28 show represented and refused behavior. This record does not certify arbitrary OpenAPI specifications or external endpoints.
+
+`OpenAPI.fromSpec` plans representable operations, emits tools and retains precise skipped-operation reasons. The planner checks supported input/output/security shapes instead of treating every operation as callable. Base URL selection follows explicit options, operation, path, then document servers; URLs must be absolute HTTP(S), without unsupported query/fragment or unresolved server templates. Serialization supports particular path/header/query shapes, including supported form/deepObject query cases; unsupported cookie, body, encoding or response semantics are skipped. Source: `openapi/spec.ts`, `openapi/index.ts` (C25).
+
+Generated tools carry JSON Schema signatures. Consequently the interpreter's Effect Schema validation contract is not automatically available to these tools. The HTTP adapter still validates its own required fields, value shapes and serialization before invoking credential resolution. Path segments are encoded and empty, `.` or `..` segments are refused; unresolved placeholders are errors. Source: `openapi/runtime.ts`, `src/tool.ts` (C26).
+
+Security requirements implement alternatives across requirement objects and conjunction within one requirement. A resolver returning no credential permits trying another alternative; resolver failure aborts. Conflicting header/query credentials are refused, and resolved credential headers are applied after model-provided headers. Credentials remain a host capability rather than fields advertised to the model. Source: `openapi/runtime.ts` security and request construction (C26).
+
+Response reading has a fixed 50 MiB cap, checked against a declared content length and again while consuming chunks. JSON parse failures produce tool errors; non-success status handling limits the body summary. The UTF-8 decoding and JSON parser do not constitute response-schema validation. Source: `openapi/runtime.ts` (C27).
+
+**Boundary and gaps.** The TODO explicitly retains redirect constraints, complete malformed-security handling, response validation and configurable size controls as remaining work (C28). This does not support an all-OpenAPI or all-HTTP security guarantee. The captured happy-path specimen was structurally inspected; the much larger `opencode-v2-openapi.json` specimen remains metadata-only, with its size and blob recorded. No generated tool, network request, OpenAPI test or fixture replay was executed.

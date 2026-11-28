@@ -1,0 +1,52 @@
+{
+  "schema": "genesis-s1-reconciled-oracle-index/v1",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "purpose": "Index existing frozen obligations; no oracle is backdated or replaced by this transport index.",
+  "review_isolation": "Producers and independent consumers do not receive reserved oracle answers.",
+  "refs": [
+    {
+      "owner": "01-sessions",
+      "reference": {
+        "commit": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/oracles/semantic-bundle-v1.json",
+        "sha256": "ebfd89e4e6fb97230ac1c27eafe5478853e2835d272585b0c493031d7510f995"
+      }
+    },
+    {
+      "owner": "03-automation",
+      "reference": {
+        "commit": "2e5b1ff067c85c66647492a9d27af5d535d4cd7e",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/03-automation/oracles/consumer-maintenance-v1.json",
+        "sha256": "f1cc16fcd73e17fa1aff015e30e7facacaabf0dc2b195c0603f9f30a1f875ccb"
+      }
+    },
+    {
+      "owner": "04-api",
+      "reference": {
+        "commit": "d81a973d98ebe9b1f6db779bfc78af5152f14041",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/04-api/oracles/reserved.json",
+        "sha256": "d6966c3eb500b6c2061cef8ced0cb57de3ab253bc1744ee83cf1489f3ad63023"
+      }
+    },
+    {
+      "owner": "05-libraries",
+      "reference": {
+        "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/oracles/l1.json",
+        "sha256": "01689e1afd57acd85eb0fbdb967e8853821e38a5a21c52994882eeb68d07d42f"
+      }
+    },
+    {
+      "owner": "02-tools",
+      "commit": "dea8dd6842260e9d6dd79f7203d5aceda5deafa6",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/02-tools/oracles/evaluation-v1.json",
+      "local_evidence": "tools_oracle.json"
+    },
+    {
+      "owner": "05-libraries-upper",
+      "commit": "4fd2b5e7690a486e87fba0abe2daedcdbfd26c88",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/05-libraries/oracles/evaluation-v1.json",
+      "local_evidence": "libs_oracle.json"
+    }
+  ]
+}

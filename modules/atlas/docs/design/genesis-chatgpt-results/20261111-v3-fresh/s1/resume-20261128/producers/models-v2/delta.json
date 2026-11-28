@@ -1,0 +1,137 @@
+{
+  "schema": "genesis-l1-correction-delta/v1",
+  "version": 2,
+  "artifact_key": "s1.core.models",
+  "producer_id": "/root/produce_libraries",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "state": "REVIEW",
+  "old_body": {
+    "local_path": "/workspace/scratch/dd08f46a3e40/agents/recover_sessions/bodies/models.md",
+    "byte_length": 3987,
+    "sha256": "4af060adbf07f6e7e759bd8574793155c5676fd87fbef77125c70cc618ffdcfe"
+  },
+  "body": {
+    "path": "resume-20261128/producers/models-v2/body.md",
+    "encoding": "utf-8",
+    "byte_length": 4200,
+    "sha256": "5a789d39a00798ca0f99384f38315b58a1bbe7dbe0e0d3f9366104a1d0b98091"
+  },
+  "replacement_count": 3,
+  "changes": [
+    {
+      "id": "F01",
+      "before": "The native Session adapter supports OpenAI Responses for `@ai-sdk/openai`, Anthropic Messages for `@ai-sdk/anthropic`, and OpenAI-compatible chat for native endpoint models or the specified compatible/OpenRouter packages.",
+      "after": "The native Session adapter supports OpenAI Responses for `@ai-sdk/openai` and Anthropic Messages for `@ai-sdk/anthropic`. Its OpenAI-compatible chat branch requires `model.api.url !== undefined` for every permitted alternative: `api.type === \"native\"`, `@ai-sdk/openai-compatible`, and `@openrouter/ai-sdk-provider`.",
+      "source": "packages/core/src/session/runner/model.ts",
+      "source_lines": [
+        217,
+        270
+      ]
+    },
+    {
+      "id": "F02",
+      "before": "It caches language objects by provider/model/variant and SDKs by serialized API/options, installs scoped hooks and errors if no plugin returns an SDK.",
+      "after": "It caches language objects by provider/model/variant and SDKs by the serialized `{ providerID, api, options }` key, installs scoped hooks and errors if no plugin returns an SDK.",
+      "source": "packages/core/src/aisdk.ts",
+      "source_lines": [
+        198,
+        227
+      ]
+    },
+    {
+      "id": "CALLER_BOUNDARY",
+      "before": "Its caches also have a different identity/lifetime from per-turn native route construction.",
+      "after": "Its caches also have a different identity/lifetime from native route construction performed when `resolve` executes; the caller cadence is not established by this inspected function.",
+      "source": "packages/core/src/session/runner/model.ts",
+      "source_lines": [
+        217,
+        258
+      ]
+    }
+  ],
+  "unchanged_remainder": "All bytes outside the three recorded replacement spans were preserved; original body file was not modified.",
+  "sources_read": [
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/reviews/evidence/models-session_model.json",
+      "wrapper_identity": {
+        "byte_length": 9881,
+        "sha256": "b6841b690671f9e0b764155e71f443a9494e5089d3d99e2258ad618646ca8cf5"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/session/runner/model.ts",
+        "git_blob_sha": "188abc7053f9a02b8dd84ce7bdc30e0e7c001b3b"
+      },
+      "literal_excerpt": {
+        "start_line": 132,
+        "end_line": 338,
+        "byte_length": 9015,
+        "sha256": "c5b3897412226c51072c213ea3f7e97dfd6fd3df9690bccf90781da5d2e6a2c2"
+      },
+      "read_depth": "selected route/resolve/support/credential sections from literal code excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/runner/model.ts",
+      "identity_note": "Git blob identifies whole source; SHA-256 values identify the local GitHub-response wrapper and literal excerpt, not an unseen full source file."
+    },
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/reviews/evidence/models-aisdk_a.json",
+      "wrapper_identity": {
+        "byte_length": 3807,
+        "sha256": "14ac400a98a53c6b49c3d454d42106f46fe890b31d63ad6acadfd1e4441f3b31"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/aisdk.ts",
+        "git_blob_sha": "c5f21baea562c0a8eeeb568929d7971f4c80a3dd"
+      },
+      "literal_excerpt": {
+        "start_line": 27,
+        "end_line": 122,
+        "byte_length": 3125,
+        "sha256": "f0506ae5522d2a8501ee53493f0aee390cda818dba4e5627d080740d1c442837"
+      },
+      "read_depth": "full literal code excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/aisdk.ts",
+      "identity_note": "Git blob identifies whole source; SHA-256 values identify the local GitHub-response wrapper and literal excerpt, not an unseen full source file."
+    },
+    {
+      "local_path": "/workspace/scratch/dd08f46a3e40/reviews/evidence/models-aisdk_b.json",
+      "wrapper_identity": {
+        "byte_length": 3729,
+        "sha256": "549c8a42d481472869ced0e6f00659c83442b28c57f3cfb20e295ec493c4994d"
+      },
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/aisdk.ts",
+        "git_blob_sha": "c5f21baea562c0a8eeeb568929d7971f4c80a3dd"
+      },
+      "literal_excerpt": {
+        "start_line": 149,
+        "end_line": 234,
+        "byte_length": 3074,
+        "sha256": "f13a85feb3f46fd70adb40b96803ccfd520fae72068c13a75e85fdb982b0df2e"
+      },
+      "read_depth": "full literal code excerpt",
+      "source_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/aisdk.ts",
+      "identity_note": "Git blob identifies whole source; SHA-256 values identify the local GitHub-response wrapper and literal excerpt, not an unseen full source file."
+    }
+  ],
+  "recipe_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/models-v2/recipe.json",
+    "sha256": "75a09ccbc7851bbbaaf8f90c4407f638fc411ca97eb3de0744024fc4469c6757"
+  },
+  "producer_request_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/models-v2/request.txt",
+    "sha256": "d4557ed54fe0533b11e5591ec839f933bd1cee62441ebacb07151d497fa7aea5"
+  },
+  "producer_response_ref": {
+    "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/models-v2/response.md",
+    "sha256": "a828501143de091c807b674bc42dbfbee258a86206066a4b21203bdcb75b31da"
+  },
+  "semantic_review_refs": [],
+  "runtime_receipt_refs": [],
+  "limits": [
+    "Caller of resolve not read; no per-turn cadence assertion.",
+    "Existing unchanged claims and source limits retained without new requalification.",
+    "No product tests, provider execution, remote writes or commits."
+  ]
+}

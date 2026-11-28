@@ -1,0 +1,54 @@
+{
+  "schema": "genesis-producer-transport-check/v1",
+  "producer": "/root/produce_libraries",
+  "check_kind": "Deterministic byte, identity and membership reconciliation only; not product/Atlas tests or semantic approval",
+  "four_required_L2_present": true,
+  "body_hashes": [
+    {
+      "key": "s1.subslice05.llm-contracts.l2",
+      "native_body_path": "subslices/05-libraries/producers/l2-resume/bodies/llm-contracts.md",
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/produce_libraries/bodies/llm-contracts.md",
+      "byte_length": 8399,
+      "sha256": "5a65c4a80bf142d54a5e7eab30718090975d7d0e8d10cd6119340dfc134ed814"
+    },
+    {
+      "key": "s1.subslice05.extension-contracts.l2",
+      "native_body_path": "subslices/05-libraries/producers/l2-resume/bodies/extension-contracts.md",
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/produce_libraries/bodies/extension-contracts.md",
+      "byte_length": 9532,
+      "sha256": "59a9f41829855df521efcaf45ff42026f4bf0ff5c227a99a42624808e399d00e"
+    },
+    {
+      "key": "s1.subslice05.storage-evidence.l2",
+      "native_body_path": "subslices/05-libraries/producers/l2-resume/bodies/storage-evidence.md",
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/produce_libraries/bodies/storage-evidence.md",
+      "byte_length": 10414,
+      "sha256": "00d7d75ec6663c382bc8655c6b993d9da29dc4a205691a5f5158c882e1672d40"
+    },
+    {
+      "key": "s1.subslice05.intent-authority.l2",
+      "native_body_path": "subslices/05-libraries/producers/l2-resume/bodies/intent-authority.md",
+      "local_path": "/workspace/scratch/dd08f46a3e40/agents/produce_libraries/bodies/intent-authority.md",
+      "byte_length": 10351,
+      "sha256": "6a11153074477b25fcc7e10bb40946ef36208449cee279b061bb71dd5880d6f9"
+    }
+  ],
+  "verified_predecessor_bodies": 14,
+  "accepted_C_predecessors_reused": 10,
+  "accepted_Core_predecessors_used": 4,
+  "c_population": 323,
+  "metadata_only": 39,
+  "additional_source_bytes": 12664,
+  "new_semantic_review_count": 0,
+  "runtime_receipt_count": 0,
+  "artifact_validity_meaning": "supported only within explicitly bounded source-based local claims; candidate review remains pending",
+  "fragment_identity": {
+    "byte_length": 32768,
+    "sha256": "cc02b21cc8c3615506f1d5f0e874b7c60736ba01f031ea269c42d81f016c26e6"
+  },
+  "response_identity": {
+    "byte_length": 2899,
+    "sha256": "66e44e265d4692080bdb9ca57fe347d293773664898b6de94e0fc083cd1d162d"
+  },
+  "package_assembly_or_publication_executed": false
+}
