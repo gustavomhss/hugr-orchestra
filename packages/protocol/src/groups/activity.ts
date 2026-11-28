@@ -24,6 +24,13 @@ export const ActivityGroup = HttpApiGroup.make("server.activity")
     ),
   )
   .add(
+    HttpApiEndpoint.post("activity.proveWorktreeUse", "/api/activity/worktrees/:recordID/use-proof", {
+      params: { recordID: Schema.NonEmptyString },
+      success: ActivityMonitor.WorktreeUseProof,
+      error: [InvalidRequestError, ConflictError, ServiceUnavailableError],
+    }).annotateMerge(OpenApi.annotations({ summary: "Read use evidence for one registered worktree" })),
+  )
+  .add(
     HttpApiEndpoint.get("activity.docker", "/api/activity/docker", {
       success: ActivityMonitor.DockerSnapshot,
     }).annotateMerge(OpenApi.annotations({ summary: "Read the cached Docker container inventory" })),

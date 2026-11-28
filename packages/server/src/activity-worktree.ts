@@ -11,12 +11,15 @@ export class Service extends Context.Service<Service, ActivityWorktree.Monitor>(
   "@orchestra/server/ActivityWorktreeRegistry",
 ) {}
 
-export function layer(input: { measure?: typeof ActivityDisk.measure; afterRegistryRead?: () => Promise<void> } = {}) {
+export function layer(input: Pick<ActivityWorktree.Source, "measure" | "observeCwd"> & {
+  afterRegistryRead?: () => Promise<void>
+} = {}) {
   return Layer.effect(
     Service,
     Effect.gen(function* () {
       const database = yield* Database.Service
       return ActivityWorktree.make({
+        ...(input.observeCwd !== undefined ? { observeCwd: input.observeCwd } : {}),
         ...(input.measure !== undefined ? { measure: input.measure } : {}),
         registrations: async () => {
           const rows = await Effect.runPromise(
