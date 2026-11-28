@@ -117,3 +117,9 @@ Each walk admits up to 10,000 entries, depth 64 and a cooperative two-second bud
 **Logical** holds only the last complete sum of regular-file lengths per path; hardlink paths each contribute their length. Empty, successfully read directories can produce zero. A partial retry shows its observed bytes separately and preserves the prior complete value with its original age. Before any complete reading, Logical and Age remain **unread**. These are metadata reading windows, not atomic filesystem snapshots or cleanup proofs. Changes racing metadata calls cannot be treated as a stable file identity for an action.
 
 Owner stays empty, Unique stays **not collapsed** and Use check stays **unproved**. These measurements do not establish allocated, unique or reclaimable space. They do not cover external caches, unregistered roots or other temporary files, and do not offer cleanup. The memory ceiling does not see these paths.
+
+### External caches
+
+Set `ORCHESTRA_ACTIVITY_EXTERNAL_CACHES` on the server host before launching Orchestra to declare up to 16 local cache directories. Use a JSON array with a `name` and an absolute `directory` per entry. For example, `[{"name":"Build cache","directory":"/srv/tooling/build-cache"}]` declares one dedicated cache directory. An unset or invalid declaration shows the external inventory as unavailable. Use `[]` to declare an empty inventory.
+
+The Cache tab shows each declared name with an unread size until you select **Read disk usage** for that cache. Each reading measures only the selected directory. A partial attempt preserves the last complete logical size and its original age. Unique space is uncollapsed, and use remains unproved.
