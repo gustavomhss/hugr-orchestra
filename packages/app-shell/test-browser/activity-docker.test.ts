@@ -20,7 +20,7 @@ function age(panel: HTMLElement, line: Element) {
 }
 
 test("A161/S16 uses the eight English tabs and leaves IN/OUT and Quarantine unavailable", async () => {
-  const app = mount()
+  const app = await mount()
   try {
     expect(app.tabs().map(text)).toEqual(labels)
     for (const tab of ["IN/OUT", "Quarantine"]) {
@@ -35,7 +35,7 @@ test("A161/S16 uses the eight English tabs and leaves IN/OUT and Quarantine unav
 })
 
 test("A02–A04/A162–A171/A176/A316 Docker mounts unread and Refresh uses only the cache GET", async () => {
-  const app = mount()
+  const app = await mount()
   try {
     app.select("Docker")
     expect(text(app.panel())).toContain(unreadText)
@@ -57,7 +57,7 @@ test("A02–A04/A162–A171/A176/A316 Docker mounts unread and Refresh uses only
 })
 
 test("A01–A13/A83–A88/A152–A160/A216/A218/A345–A348 only manual POST reads and the tab shows server observations", async () => {
-  const app = mount()
+  const app = await mount()
   try {
     app.select("Docker")
     app.button(manual).click()
@@ -124,7 +124,7 @@ test("A01–A13/A83–A88/A152–A160/A216/A218/A345–A348 only manual POST rea
 })
 
 test("A172–A174/A219 errors without a sample stay unread while a complete zero-line response is empty", async () => {
-  const app = mount()
+  const app = await mount()
   try {
     app.select("Docker")
     const attempts = [
@@ -153,7 +153,7 @@ test("A172–A174/A219 errors without a sample stay unread while a complete zero
 })
 
 test("A01/A162–A174/A219 unsuccessful retries retain rows and last complete age across process and HTTP failures", async () => {
-  const app = mount()
+  const app = await mount()
   try {
     app.select("Docker")
     app.button(manual).click()
@@ -197,7 +197,7 @@ test("A01/A162–A174/A219 unsuccessful retries retain rows and last complete ag
 })
 
 test("Docker orders concurrent, older and equal revisions without resetting the sample age", async () => {
-  const app = mount()
+  const app = await mount()
   try {
     app.select("Docker")
     app.button("Refresh").click()
@@ -232,7 +232,7 @@ test("Docker orders concurrent, older and equal revisions without resetting the 
 })
 
 test("Docker trusts a fresh cache handshake after an instance mismatch and fences the retired flight", async () => {
-  const app = mount()
+  const app = await mount()
   try {
     app.select("Docker")
     app.button(manual).click()
@@ -260,7 +260,7 @@ test("Docker trusts a fresh cache handshake after an instance mismatch and fence
 })
 
 test("A09–A13/A153–A154 category and server changes abort old work and keep the new tab unread", async () => {
-  const app = mount()
+  const app = await mount()
   try {
     app.select("Docker")
     app.button(manual).click()
@@ -312,7 +312,7 @@ test("A09–A13/A153–A154 category and server changes abort old work and keep 
 })
 
 test("A83–A88/A153/A161/A216 Portuguese still displays the literal unique observation and English categories", async () => {
-  const app = mount("br")
+  const app = await mount("br")
   try {
     app.select("Docker")
     await until("Portuguese read label", () =>
