@@ -509,8 +509,8 @@ The baseline files fixing these boundaries are:
 - docs/specs/lucy/go-live-plan.md, build-plan.md, go-live-coverage.md and Lucy maintenance/
   review skills: A04, preservation, R20 and source/evidence requirements.
 
-Engagement probe remains explicitly probe-unqualified/not-built. A later packet
-must first produce a real permitted predecessor through the public route, then
+At the #1670 baseline, engagement probes were explicitly unqualified. A scoped
+producer must first produce a real permitted predecessor through the public route, then
 qualify exact admitted dependencies/config, no-acquire runtime/sandbox, actual
 typed recipe/outcome/raw observation and equivalent retest. It must use an
 existing closed runner, separate mutable scratch from immutable CODE, retain

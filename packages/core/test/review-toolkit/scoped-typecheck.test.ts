@@ -104,11 +104,11 @@ it.effect.skipIf(!linux)("timeout and interruption release the real compiler sco
     if (mode === "timeout") {
       yield* TestClock.adjust("30 seconds")
       const result = yield* Fiber.join(fiber)
-      expect(result.status).toBe("not-run")
+      expect(result).toMatchObject({ status: "not-run", reason: "process-incomplete" })
     }
     if (mode === "interrupt") {
-      const exit = yield* Fiber.interrupt(fiber)
-      expect(Exit.hasInterrupts(exit)).toBe(true)
+      yield* Fiber.interrupt(fiber)
+      expect(Exit.hasInterrupts(yield* Fiber.await(fiber))).toBe(true)
     }
     expect(existsSync(scratch)).toBe(false)
   }
