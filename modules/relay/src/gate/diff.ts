@@ -22,7 +22,9 @@ export const compute = (input: {
     if (!baseRef) return Option.none()
     const git = yield* GateShell.Git
     const run = (args: ReadonlyArray<string>) =>
-      git.run(input.workdir, input.worktreeEvidence ? ["--literal-pathspecs", ...args] : args)
+      input.worktreeEvidence
+        ? git.run(input.workdir, ["--literal-pathspecs", ...args], { repositoryConfigOnly: true })
+        : git.run(input.workdir, args)
     // Word splitting only: bash also globbed these words against the hook's cwd (PARITY-EXCEPTIONS WP3-2).
     const pathspec = words(input.pathspec)
     if ((yield* run(["rev-parse", "--git-dir"])).exitCode !== 0) return Option.none()
@@ -46,9 +48,10 @@ export const compute = (input: {
     if (!names) return Option.none()
     const untracked: Uint8Array[] = []
     for (const file of names) {
-      // --no-index exits 1 when the files differ, which is the normal case here.
-      const patch = yield* run(["diff", "--no-index", ...diffOptions, "--", "/dev/null", file])
-      if (input.worktreeEvidence && patch.exitCode !== 0 && patch.exitCode !== 1) return Option.none()
+      const operand = input.worktreeEvidence ? `./${file}` : file
+      const patch = yield* run(["diff", "--no-index", ...diffOptions, "--", "/dev/null", operand])
+      // An enumerated addition needs an actual patch. Git can exit 1 without one if the file vanished.
+      if (input.worktreeEvidence && (patch.exitCode !== 1 || !patch.stdout.length)) return Option.none()
       untracked.push(patch.stdout)
     }
     return utf8(Buffer.concat([tracked.stdout, ...untracked]))

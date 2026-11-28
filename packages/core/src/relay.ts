@@ -3,6 +3,7 @@ export * as Relay from "./relay"
 import path from "path"
 import { randomBytes, randomUUID } from "crypto"
 import { chmodSync, linkSync, lstatSync, mkdirSync, readFileSync, rmdirSync, rmSync, writeFileSync } from "fs"
+import { devNull } from "node:os"
 import which from "which"
 import { Clock, Context, Duration, Effect, Layer, Option, Redacted, Result, Schema, Semaphore } from "effect"
 import { ChildProcess } from "effect/unstable/process"
@@ -268,7 +269,7 @@ const layer = Layer.effect(
     // The sandboxed git helper of arsenal-completion: no optional locks, fsmonitor off, a timeout and an output cap.
     // GIT_* placement variables (GIT_DIR, GIT_EXTERNAL_DIFF, …) are dropped so a diff reads the workdir's own repository.
     const git = GateShell.Git.of({
-      run: (cwd, args) =>
+      run: (cwd, args, options) =>
         processes
           .run(
             ChildProcess.make("git", ["--no-optional-locks", "-C", cwd, "-c", "core.fsmonitor=false", ...args], {
@@ -278,6 +279,7 @@ const layer = Layer.effect(
                   Object.entries(ToolSafetySandbox.environment()).filter((entry) => !entry[0].startsWith("GIT_")),
                 ),
                 GIT_OPTIONAL_LOCKS: "0",
+                ...(options?.repositoryConfigOnly ? { GIT_CONFIG_NOSYSTEM: "1", GIT_CONFIG_GLOBAL: devNull } : {}),
               },
               extendEnv: false,
               stdin: "ignore",

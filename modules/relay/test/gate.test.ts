@@ -72,9 +72,16 @@ async function write(dir: string, files: Files) {
 }
 
 async function git(cwd: string, home: string, ...args: string[]) {
+  return runGit(cwd, home, args)
+}
+
+async function runGit(cwd: string, home: string, args: readonly string[], options?: GateShell.GitOptions) {
   const proc = Bun.spawn(["git", "-c", "core.fsmonitor=false", ...args], {
     cwd,
-    env: { PATH, HOME: home, GIT_OPTIONAL_LOCKS: "0", GIT_CONFIG_NOSYSTEM: "1", ...PINNED },
+    env: {
+      PATH, HOME: home, GIT_OPTIONAL_LOCKS: "0", GIT_CONFIG_NOSYSTEM: "1", ...PINNED,
+      ...(options?.repositoryConfigOnly ? { GIT_CONFIG_GLOBAL: os.devNull } : {}),
+    },
     stdin: "ignore",
     stdout: "pipe",
     stderr: "ignore",
@@ -118,7 +125,7 @@ function ports(home: string, judge: Layer.Layer<JudgeConfig.Service> = stub()) {
         catch: () => new GateShell.Unavailable({ reason: "spawn" }),
       }).pipe(Effect.map((exitCode) => ({ exitCode }))),
   })
-  const sandboxed = GateShell.Git.of({ run: (cwd, args) => Effect.promise(() => git(cwd, home, ...args)) })
+  const sandboxed = GateShell.Git.of({ run: (cwd, args, options) => Effect.promise(() => runGit(cwd, home, args, options)) })
   return Layer.mergeAll(Layer.succeed(GateShell.Service, shell), Layer.succeed(GateShell.Git, sandboxed), judge)
 }
 
@@ -735,6 +742,24 @@ describe("parity exceptions", () => {
     expect(patch).not.toContain("external-helper-output")
   })
 
+  test("managed judge diffs ignore an inherited filter while retaining repository configuration", async () => {
+    const env = await scratch()
+    const [baseRef] = await repo(env, [{ ".gitattributes": "artifact.txt filter=proof\n", "artifact.txt": "before\n" }])
+    await write(env.work, { "artifact.txt": "after\n" })
+    const homeConfig = path.join(env.home, ".gitconfig")
+    expect((await git(
+      env.work, env.home, "config", "--file", homeConfig, "filter.proof.clean", "touch filter-executed; cat",
+    )).exitCode).toBe(0)
+    expect((await git(env.work, env.home, "config", "--get", "filter.proof.clean")).exitCode).toBe(0)
+    const result = await Effect.runPromise(
+      GateDiff.compute({
+        workdir: env.work, baseRef, pathspec: "artifact.txt", worktreeEvidence: true,
+      }).pipe(Effect.provide(ports(env.home))),
+    )
+    expect(Option.getOrElse(result, () => "")).toContain("+after")
+    expect(existsSync(path.join(env.work, "filter-executed"))).toBe(false)
+  })
+
   test.each(["clean", "smudge", "process"])("managed judge refuses an effective %s filter before computing the diff", async (kind) => {
     const env = await scratch()
     const [baseRef] = await repo(env, [{ ".gitattributes": "artifact.txt filter=proof\n", "artifact.txt": "before\n" }])
@@ -756,25 +781,28 @@ describe("parity exceptions", () => {
   test("managed judge refuses partial Git output and accepts NUL-delimited untracked paths", async () => {
     const env = await scratch()
     const [baseRef] = await repo(env, [{ "artifact.txt": "before\n" }])
-    await write(env.work, { "artifact.txt": "after\n", "new\tfile.txt": "new bytes\n" })
+    await write(env.work, { "artifact.txt": "after\n", "new\tfile.txt": "new bytes\n", "-": "dash bytes\n" })
     const compute = GateDiff.compute({ workdir: env.work, baseRef, pathspec: "", worktreeEvidence: true })
     const complete = await Effect.runPromise(compute.pipe(Effect.provide(ports(env.home))))
     expect(Option.getOrElse(complete, () => "")).toContain("+new bytes")
+    expect(Option.getOrElse(complete, () => "")).toContain("+dash bytes")
     expect(Option.getOrElse(complete, () => "")).toContain("+after")
 
     const failAt = (subcommand: "config" | "ls-files" | "--no-index", exitCode: number, stdout: string) =>
       compute.pipe(
         Effect.provideService(GateShell.Git, GateShell.Git.of({
-          run: (directory, args) =>
+          run: (directory, args, options) =>
             args.includes(subcommand)
               ? Effect.succeed({ exitCode, stdout: new TextEncoder().encode(stdout) })
-              : Effect.promise(() => git(directory, env.home, ...args)),
+              : Effect.promise(() => runGit(directory, env.home, args, options)),
         })),
       )
     expect(await Effect.runPromise(failAt("config", 2, ""))).toEqual(Option.none())
     expect(await Effect.runPromise(failAt("ls-files", 2, "new\tfile.txt\0"))).toEqual(Option.none())
     expect(await Effect.runPromise(failAt("ls-files", 0, "new\tfile.txt"))).toEqual(Option.none())
     expect(await Effect.runPromise(failAt("--no-index", 2, "+partial patch"))).toEqual(Option.none())
+    expect(await Effect.runPromise(failAt("--no-index", 1, ""))).toEqual(Option.none())
+    expect(await Effect.runPromise(failAt("--no-index", 0, "+partial patch"))).toEqual(Option.none())
   })
 
   test("WP3-1: a check sees PATH, HOME and params, never the hook's variables", async () => {

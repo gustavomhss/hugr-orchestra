@@ -51,7 +51,12 @@ export interface GitResult {
 
 // Sandboxed git: no optional locks, fsmonitor off, a timeout and an output cap. Used for diffs and HEAD reads.
 export interface GitInterface {
-  readonly run: (cwd: string, args: ReadonlyArray<string>) => Effect.Effect<GitResult, Unavailable>
+  readonly run: (cwd: string, args: ReadonlyArray<string>, options?: GitOptions) => Effect.Effect<GitResult, Unavailable>
+}
+
+export interface GitOptions {
+  /** Managed evidence keeps repository configuration and excludes inherited global and system configuration. */
+  readonly repositoryConfigOnly: true
 }
 
 export class Git extends Context.Service<Git, GitInterface>()("@orchestra/relay/Git") {}
