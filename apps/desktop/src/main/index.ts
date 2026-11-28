@@ -51,6 +51,7 @@ import { cleanupStoreFiles } from "./store-cleanup"
 import { resolveCliBinary, startBackgroundCli } from "./background-cli"
 import { sidecarMode, startOwnedServe } from "./owned-serve"
 import { registerActivityArmIpc } from "./activity-arm-ipc"
+import { activityCustodyConfigured, loadActivityCustody } from "./activity-custody"
 import { startDockChannel } from "./dock-channel"
 import { readWslExpectedVersion } from "./cli-version"
 import { nativeT, setNativeTranslations } from "./native-translations"
@@ -181,8 +182,12 @@ const main = Effect.gen(function* () {
   if (onboardingTestRoot) app.setPath("sessionData", join(onboardingTestRoot, "session"))
   initializeOldLayoutEligibility(app.getPath("userData"))
   logger = initLogging()
-  initCrashReporter()
   OmniBoot.setup()
+  const custodyRequired = activityCustodyConfigured()
+  const custody = yield* Effect.promise(() => loadActivityCustody(app.isPackaged && SIDECAR_MODE === "owned"))
+  if (custodyRequired && !custody) logger.warn("activity custody unavailable")
+  // Crashpad can capture this process's memory when an Activity custody key is present.
+  if (!custody) initCrashReporter()
 
   applyDiskCacheCap(app.commandLine)
   const wslVersion = yield* Effect.promise(() =>
@@ -496,6 +501,8 @@ const main = Effect.gen(function* () {
           return startOwnedServe({
             logger,
             privateActivityApproval: app.isPackaged,
+            custody,
+            custodyRequired,
             command: [binary.value],
             env: { ...env.value, ...dock.env },
             cwd,

@@ -40,6 +40,14 @@ export function load() {
   return loading
 }
 
+/** Private Linux host hook for processes that hold a custody credential. */
+export async function protectProcessMemory() {
+  if (process.platform !== "linux") return false
+  const binding = await load()
+  return "protectProcessMemory" in binding && typeof binding.protectProcessMemory === "function" &&
+    binding.protectProcessMemory() === true
+}
+
 export type Quarantine = {
   quarantineInspect: (path: string) => Promise<string | null>
   quarantineRename: (source: string, destination: string, identity: string) => Promise<string>

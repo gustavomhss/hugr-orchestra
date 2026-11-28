@@ -10,6 +10,7 @@ import { ActivityApply } from "@orchestra/schema/activity-apply"
 import type { ActivityApplyClient, ActivityArmClient, ActivityEmptyClient, ActivityFreezeClient, ActivityStopClient } from "./activity-arm-ipc"
 import type { Readable } from "node:stream"
 import { ActivityPrivateChannel } from "@orchestra/schema/activity-private-channel"
+import { clearActivityCustodyEnvironment, type ActivityCustody } from "./activity-custody"
 import { DesktopOmni } from "./omni-process"
 
 // The desktop-owned V2 server: the bundled CLI as `orchestra serve`, a child of this app and its default server. It is
@@ -40,6 +41,8 @@ const OUTPUT_SEGMENT = 4096
 export async function startOwnedServe(options: {
   logger: Logger
   privateActivityApproval?: boolean
+  custody?: ActivityCustody
+  custodyRequired?: boolean
   /** The CLI executable, then any arguments before `serve`. */
   command: [string, ...string[]]
   env: Record<string, string | undefined>
@@ -59,9 +62,11 @@ export async function startOwnedServe(options: {
     ORCHESTRA_SERVER_USERNAME: "orchestra",
     ORCHESTRA_SERVER_PASSWORD: password,
   }
+  clearActivityCustodyEnvironment(env)
   const state = {
     child: undefined as DesktopOmni.Spawned | undefined,
-    activity: undefined as Promise<Awaited<ReturnType<typeof ActivityPrivateChannel.signer>> | undefined> | undefined,
+    activity: undefined as Promise<ActivityCustody["signer"] | undefined> | undefined,
+    activitySession: undefined as object | undefined,
     stopping: false,
     killed: false,
     failures: 0,
@@ -83,6 +88,7 @@ export async function startOwnedServe(options: {
       env, cwd: options.cwd, stdin: options.privateActivityApproval ? "pipe" : "closed", graceMs: TREE_GRACE,
     })
     state.child = child
+    state.activitySession = {}
     state.activity = undefined
     if (options.privateActivityApproval) {
       const secret = crypto.getRandomValues(new Uint8Array(32))
@@ -112,7 +118,10 @@ export async function startOwnedServe(options: {
     // and the renderer never sees why the process did not start.
     const failed = new Promise<never>((_, reject) => {
       child.once("error", (error) => {
-        if (state.child === child) state.activity = undefined
+        if (state.child === child) {
+          state.activity = undefined
+          state.activitySession = undefined
+        }
         options.logger.error("owned serve error", { message: error.message })
         reject(error instanceof Error ? error : new Error(String(error)))
       })
@@ -124,6 +133,7 @@ export async function startOwnedServe(options: {
         if (state.child === child) {
           state.child = undefined
           state.activity = undefined
+          state.activitySession = undefined
         }
         // The server answers the SIGTERM it was asked to stop on with the signal's exit status (143); that is an orderly
         // stop. A server that had to be killed, or that failed on its own, keeps its real status.
@@ -188,6 +198,7 @@ export async function startOwnedServe(options: {
   const stop = async () => {
     state.stopping = true
     state.activity = undefined
+    state.activitySession = undefined
     startup.abort()
     clearTimeout(state.restart)
     const child = state.child
@@ -237,125 +248,122 @@ export async function startOwnedServe(options: {
     })().catch(() => false)
   }
 
-  const openActivityArm = (): ActivityArmClient | undefined => {
-    const child = state.child
+  const openCustodyActivity = (kind: "arm" | "apply") => {
+    const session = state.activitySession
     const activity = state.activity
-    if (!child || !activity || state.stopping) return undefined
-    const current = () => state.child === child && state.activity === activity && !state.stopping
-    const post = async (endpoint: ActivityPrivateChannel.ArmPath, body: string, signal?: AbortSignal) => {
-      const deadline = AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(endpoint === ActivityPrivateChannel.inspectArmPath ? 25_000 : 12_000)])
+    const custody = options.custody
+    if (!session || state.stopping || (!custody && (options.custodyRequired || !activity))) return undefined
+    const current = () => state.activitySession === session && !state.stopping
+    const address = custody ? { socketPath: custody.socketPath } : { hostname: HOSTNAME, port }
+    const post = (endpoint: ActivityPrivateChannel.ArmPath, body: string, signal?: AbortSignal) => {
+      const deadline = AbortSignal.any([
+        ...(signal ? [signal] : []),
+        AbortSignal.timeout(endpoint === ActivityPrivateChannel.inspectArmPath ? 25_000 : 12_000),
+      ])
       const valid = () => current() && !deadline.aborted
       return (async () => {
-        const signer = await activity
-        if (!signer || !valid() || Buffer.byteLength(body) > ActivityPrivateChannel.maxBodyBytes) return undefined
-        const nonce = ActivityPrivateChannel.nonce()
+        const signer = custody ? custody.signer : await activity
+        const length = Buffer.byteLength(body)
+        if (!signer || !valid() || length > ActivityPrivateChannel.maxBodyBytes) return undefined
+        const nonce = kind === "apply" ? ActivityPrivateChannel.applyNonce() : ActivityPrivateChannel.nonce()
         const mac = await signer.signArm("arm-request", endpoint, nonce, body)
         if (!valid()) return undefined
-        const reply = await new Promise<{ body: string; mac: string | undefined }>((resolve, reject) => {
-          const req = request({ hostname: HOSTNAME, port, path: endpoint, method: "POST", agent: false, signal: deadline, headers: {
-            "content-type": "application/json", "content-length": Buffer.byteLength(body),
-            [ActivityPrivateChannel.nonceHeader]: nonce, [ActivityPrivateChannel.macHeader]: mac,
-          } }, (response) => {
-            if (response.statusCode !== 200) { response.destroy(); reject(new Error("Invalid response")); return }
+        const reply = await new Promise<{ body: string; mac: string | string[] | undefined }>((resolve, reject) => {
+          const req = request({
+            ...address,
+            path: endpoint,
+            method: "POST",
+            agent: false,
+            signal: deadline,
+            headers: {
+              "content-type": "application/json",
+              "content-length": length,
+              [ActivityPrivateChannel.nonceHeader]: nonce,
+              [ActivityPrivateChannel.macHeader]: mac,
+            },
+          }, (response) => {
+            if (response.statusCode !== 200) {
+              response.destroy()
+              reject(new Error("Invalid response"))
+              return
+            }
             const chunks: Buffer[] = []
             let size = 0
             response.on("data", (chunk: Buffer) => {
               size += chunk.length
-              if (size > ActivityPrivateChannel.maxBodyBytes) { response.destroy(new Error("Response too large")); return }
+              if (size > ActivityPrivateChannel.maxBodyBytes) {
+                response.destroy(new Error("Response too large"))
+                return
+              }
               chunks.push(chunk)
             })
             response.on("error", reject)
             response.on("end", () => {
               try {
-                resolve({ body: new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(Buffer.concat(chunks)), mac: response.headers[ActivityPrivateChannel.macHeader] as string | undefined })
-              } catch (error) { reject(error) }
+                resolve({
+                  body: new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(Buffer.concat(chunks)),
+                  mac: response.headers[ActivityPrivateChannel.macHeader],
+                })
+              } catch (error) {
+                reject(error)
+              }
             })
           })
           req.on("error", reject)
           req.end(body)
         })
-        if (!valid() || !await signer.verifyArm("arm-response", endpoint, nonce, reply.mac ?? null, reply.body) || !valid()) return undefined
+        if (!valid() || typeof reply.mac !== "string" ||
+          !await signer.verifyArm("arm-response", endpoint, nonce, reply.mac, reply.body) || !valid()) return undefined
         return JSON.parse(reply.body) as unknown
       })().catch(() => undefined)
     }
+    return { current, post }
+  }
+
+  const openActivityArm = (): ActivityArmClient | undefined => {
+    const client = openCustodyActivity("arm")
+    if (!client) return undefined
     return {
-      isCurrent: current,
+      isCurrent: client.current,
       async inspect(signal) {
-        const result = ActivityArm.decodePlanSnapshot(await post(ActivityPrivateChannel.inspectArmPath, "{}", signal))
-        return Option.isSome(result) && current() ? result.value : undefined
+        const result = ActivityArm.decodePlanSnapshot(await client.post(ActivityPrivateChannel.inspectArmPath, "{}", signal))
+        return Option.isSome(result) && client.current() ? result.value : undefined
       },
       async preview(input, signal) {
         const decoded = ActivityArm.decodeRequest(input)
         if (Option.isNone(decoded)) return undefined
-        const result = ActivityArm.decodePreview(await post(ActivityPrivateChannel.previewPath, JSON.stringify(decoded.value), signal))
-        return Option.isSome(result) && current() ? result.value : undefined
+        const result = ActivityArm.decodePreview(await client.post(ActivityPrivateChannel.previewPath, JSON.stringify(decoded.value), signal))
+        return Option.isSome(result) && client.current() ? result.value : undefined
       },
       async confirm(input, signal) {
         const decoded = ActivityArm.decodeConfirm(input)
         if (Option.isNone(decoded)) return undefined
-        const result = ActivityArm.decodeReceipt(await post(ActivityPrivateChannel.confirmPath, JSON.stringify(decoded.value), signal))
-        return Option.isSome(result) && current() ? result.value : undefined
+        const result = ActivityArm.decodeReceipt(await client.post(ActivityPrivateChannel.confirmPath, JSON.stringify(decoded.value), signal))
+        return Option.isSome(result) && client.current() ? result.value : undefined
       },
     }
   }
 
   const openActivityApply = (): ActivityApplyClient | undefined => {
-    const child = state.child
-    const activity = state.activity
-    if (!child || !activity || state.stopping) return undefined
-    const current = () => state.child === child && state.activity === activity && !state.stopping
-    const post = async (endpoint: ActivityPrivateChannel.ArmPath, body: string, signal?: AbortSignal) => {
-      const deadline = AbortSignal.any([...(signal ? [signal] : []), AbortSignal.timeout(12_000)])
-      const valid = () => current() && !deadline.aborted
-      return (async () => {
-        const signer = await activity
-        if (!signer || !valid() || Buffer.byteLength(body) > ActivityPrivateChannel.maxBodyBytes) return undefined
-        const nonce = ActivityPrivateChannel.nonce()
-        const mac = await signer.signArm("arm-request", endpoint, nonce, body)
-        if (!valid()) return undefined
-        const reply = await new Promise<{ body: string; mac: string | undefined }>((resolve, reject) => {
-          const req = request({ hostname: HOSTNAME, port, path: endpoint, method: "POST", agent: false, signal: deadline, headers: {
-            "content-type": "application/json", "content-length": Buffer.byteLength(body),
-            [ActivityPrivateChannel.nonceHeader]: nonce, [ActivityPrivateChannel.macHeader]: mac,
-          } }, (response) => {
-            if (response.statusCode !== 200) { response.destroy(); reject(new Error("Invalid response")); return }
-            const chunks: Buffer[] = []
-            let size = 0
-            response.on("data", (chunk: Buffer) => {
-              size += chunk.length
-              if (size > ActivityPrivateChannel.maxBodyBytes) { response.destroy(new Error("Response too large")); return }
-              chunks.push(chunk)
-            })
-            response.on("error", reject)
-            response.on("end", () => {
-              try { resolve({ body: new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(Buffer.concat(chunks)), mac: response.headers[ActivityPrivateChannel.macHeader] as string | undefined }) }
-              catch (error) { reject(error) }
-            })
-          })
-          req.on("error", reject)
-          req.end(body)
-        })
-        if (!valid() || !await signer.verifyArm("arm-response", endpoint, nonce, reply.mac ?? null, reply.body) || !valid()) return undefined
-        return JSON.parse(reply.body) as unknown
-      })().catch(() => undefined)
-    }
+    const client = openCustodyActivity("apply")
+    if (!client) return undefined
     return {
-      isCurrent: current,
+      isCurrent: client.current,
       async read(signal) {
-        const result = ActivityApply.decodeState(await post(ActivityPrivateChannel.applyStatePath, "{}", signal))
-        return Option.isSome(result) && current() ? result.value : undefined
+        const result = ActivityApply.decodeState(await client.post(ActivityPrivateChannel.applyStatePath, "{}", signal))
+        return Option.isSome(result) && client.current() ? result.value : undefined
       },
       async preview(input, signal) {
         const decoded = ActivityApply.decodeRequest(input)
         if (Option.isNone(decoded)) return undefined
-        const result = ActivityApply.decodePreview(await post(ActivityPrivateChannel.applyPreviewPath, JSON.stringify(decoded.value), signal))
-        return Option.isSome(result) && current() ? result.value : undefined
+        const result = ActivityApply.decodePreview(await client.post(ActivityPrivateChannel.applyPreviewPath, JSON.stringify(decoded.value), signal))
+        return Option.isSome(result) && client.current() ? result.value : undefined
       },
       async confirm(input, signal) {
         const decoded = ActivityApply.decodeConfirm(input)
         if (Option.isNone(decoded)) return undefined
-        const result = ActivityApply.decodeReceipt(await post(ActivityPrivateChannel.applyConfirmPath, JSON.stringify(decoded.value), signal))
-        return Option.isSome(result) && current() ? result.value : undefined
+        const result = ActivityApply.decodeReceipt(await client.post(ActivityPrivateChannel.applyConfirmPath, JSON.stringify(decoded.value), signal))
+        return Option.isSome(result) && client.current() ? result.value : undefined
       },
     }
   }

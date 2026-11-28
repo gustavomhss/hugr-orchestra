@@ -26,6 +26,12 @@ pub fn supervisor(path: impl Into<std::path::PathBuf>) -> Result<(), Error> {
     crate::client::configure_supervisor(path.into())
 }
 
+/// Disables default Linux process dumps and same-UID inspection before the host reads a custody credential.
+#[cfg(target_os = "linux")]
+pub fn protect_process_memory() -> bool {
+    crate::client::protect_process_memory::protect()
+}
+
 /// The largest `timeoutMs` / `graceMs` (the protocol carries them as u32 milliseconds).
 const MAX_MS: f64 = 4_294_967_295.0;
 /// 2^64: every integral `f64` below it fits a `u64` exactly.

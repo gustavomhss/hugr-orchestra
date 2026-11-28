@@ -386,8 +386,10 @@ const quarantineDisposeBatch = quarantineOperation("quarantineDisposeBatch");
 const quarantineRenameExclusiveAvailable = () => typeof load().quarantineRenameExclusive === "function";
 const quarantineDisposeAvailable = () => typeof load().quarantineDispose === "function";
 const quarantineDisposeBatchAvailable = () => typeof load().quarantineDisposeBatch === "function";
+const protectProcessMemory = () => load().protectProcessMemory?.() === true;
 
 module.exports = {
+  protectProcessMemory,
   quarantineProtectedAvailable, quarantineProtectedInspect, quarantineProtectedRename,
   quarantineDisposeBatch, quarantineDisposeBatchAvailable,
   run, spawn, configure, OmniError, quarantineIdentity, quarantineInspect, quarantineRename,
