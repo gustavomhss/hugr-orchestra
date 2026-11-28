@@ -72,6 +72,8 @@ export const {
     const pendingMoves = new Map<string, Set<object>>()
     const placements = new Map<string, SessionRevision & Pick<Session, "location" | "subpath">>()
     const titles = new Map<string, SessionRevision & Pick<Session, "title">>()
+    const listedTitleReads = new Map<string, number>()
+    let listReadSequence = 0
     const statusReads = new Set<Set<string>>()
     const lifetime = { disposed: false }
     const statusEpoch = () => Math.max(0, sdk.connectionEpoch() - 1)
@@ -92,6 +94,7 @@ export const {
       pendingMoves.clear()
       placements.clear()
       titles.clear()
+      listedTitleReads.clear()
       syncingSessions.clear()
       trailing.clear()
       hydratingSessions.clear()
@@ -276,13 +279,26 @@ export const {
       }
     }
 
-    function listSessions() {
-      const query = sessionListQuery()
-      return sdk.catalog.sessions({
+    async function listSessions() {
+      const input = {
         workspace: project.workspace.current(),
         project: project.data.project.id,
-        subpath: query.path || undefined,
-      })
+        subpath: sessionListQuery().path || undefined,
+      }
+      const epoch = sdk.connectionEpoch()
+      const status = statusEpoch()
+      const sequence = ++listReadSequence
+      const renames = new Map(titles)
+      const sessions = await sdk.catalog.sessions(input)
+      return {
+        sessions,
+        epoch,
+        sequence,
+        renames,
+        current: () => !lifetime.disposed && sdk.binding().active && statusEpoch() === status &&
+          project.workspace.current() === input.workspace && project.data.project.id === input.project &&
+          (sessionListQuery().path || undefined) === input.subpath,
+      }
     }
 
     function withLiveMetadata(session: Session, baseline?: { agent?: string; model?: string; placement?: string; title?: string }) {
@@ -311,10 +327,51 @@ export const {
       }
     }
 
-    function replaceSessionList(sessions: Session[]) {
-      if (lifetime.disposed) return
-      setStore("session", reconcile(sessions.map((session) =>
-        store.session_metadata[session.id]?.snapshot ?? withLiveMetadata(session))))
+    function replaceSessionList(read: Awaited<ReturnType<typeof listSessions>>, retained?: ReadonlySet<string>) {
+      if (!read.current()) return
+      const merge = (listed: Session) => {
+        const metadata = store.session_metadata[listed.id]
+        if (!metadata) return withLiveMetadata(listed)
+        const cached = metadata.snapshot
+        // The list can repair a missed title only. Leave the exact selection, placement and authority epoch intact.
+        if (read.sequence < (listedTitleReads.get(listed.id) ?? 0) ||
+            titles.get(listed.id) !== read.renames.get(listed.id) || metadataReads.has(listed.id)) return cached
+        // Across a reconnect the current list can be newer than an exact read with the same or higher wall-clock time.
+        // If the Session got another exact read in the meantime, its title already had a current source.
+        if (retained ? metadata.epoch === undefined || metadata.epoch >= read.epoch
+          : listed.title !== cached.title && listed.time.updated <= cached.time.updated) return cached
+        // An agreeing list result also fences an older in-flight title observation.
+        listedTitleReads.set(listed.id, read.sequence)
+        if (listed.title === cached.title) return cached
+        const snapshot = {
+          ...cached,
+          title: listed.title,
+          time: { ...cached.time, updated: Math.max(cached.time.updated, listed.time.updated) },
+        }
+        setStore("session_metadata", listed.id, "snapshot", reconcile(snapshot))
+        return snapshot
+      }
+      batch(() => {
+        if (!retained) {
+          setStore("session", reconcile(read.sessions.map(merge)))
+          return
+        }
+        // Recovery updates rows still present in the list without replacing the current list or opening their histories.
+        for (const session of read.sessions) {
+          if (!retained.has(session.id) || !store.session_metadata[session.id]) continue
+          const match = search(store.session, session.id, (item) => item.id)
+          if (match.found) setStore("session", match.index, reconcile(merge(session)))
+        }
+      })
+    }
+
+    async function applyInitialSessionList(pending: ReturnType<typeof listSessions>) {
+      let read = await pending
+      while (!read.current()) {
+        if (lifetime.disposed || !sdk.binding().active) return
+        read = await listSessions()
+      }
+      replaceSessionList(read)
     }
 
     function getSession(sessionID: string) {
@@ -540,6 +597,7 @@ export const {
           pendingMoves.delete(event.data.sessionID)
           placements.delete(event.data.sessionID)
           titles.delete(event.data.sessionID)
+          listedTitleReads.delete(event.data.sessionID)
           syncingSessions.delete(event.data.sessionID)
           trailing.delete(event.data.sessionID)
           hydratingSessions.delete(event.data.sessionID)
@@ -693,7 +751,8 @@ export const {
         .then(async () => {
           if (lifetime.disposed) return
           const catalog = await catalogPromise
-          const sessions = args.continue ? await sessionListPromise : undefined
+          if (args.continue) await applyInitialSessionList(sessionListPromise)
+          if (lifetime.disposed) return
           batch(() => {
             setStore("provider", reconcile(catalog.provider))
             setStore("provider_default", reconcile(catalog.default))
@@ -703,7 +762,6 @@ export const {
             setStore("agent", reconcile(catalog.agent))
             setStore("config", reconcile(catalog.config))
             setStore("catalogRevision", (value) => value + 1)
-            if (sessions !== undefined) replaceSessionList(sessions)
           })
         })
         .then(() => {
@@ -711,7 +769,7 @@ export const {
           if (store.status !== "complete") setStore("status", "partial")
           // non-blocking
           void Promise.all([
-            ...(args.continue ? [] : [sessionListPromise.then(replaceSessionList)]),
+            ...(args.continue ? [] : [applyInitialSessionList(sessionListPromise)]),
             hydrateRequests({ directory: sdk.directory ?? project.data.instance.path.directory, workspaceID: workspace }),
             sdk.catalog.commands(location).then((x) => setStore("command", reconcile(x))),
             sdk.catalog.lsp(location).then((x) => setStore("lsp", reconcile(x))),
@@ -890,8 +948,12 @@ export const {
         ...history.keys(), ...fullSyncedSessions, ...syncingSessions.keys(),
         ...hydratingSessions.keys(), ...pendingHistoryChanges.keys(), ...metadataReads.keys(),
       ])
+      const retained = new Set(epoch > 1
+        ? store.session.filter(({ id }) => store.session_metadata[id] && !sessions.has(id)).map(({ id }) => id)
+        : [])
       void Promise.allSettled([
         ...(epoch > 1 ? [readStatuses()] : []),
+        ...(retained.size > 0 ? [listSessions().then((read) => replaceSessionList(read, retained))] : []),
         ...[...sessions].map((sessionID) => {
           // A held history request must not delay the new epoch's metadata read.
           const metadata = refreshSelection(sessionID)
