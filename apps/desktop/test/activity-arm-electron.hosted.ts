@@ -6,6 +6,7 @@ import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { setTimeout as delay } from "node:timers/promises"
 import type { ActivityArm } from "@orchestra/schema/activity-arm"
+import type { ActivityApply } from "@orchestra/schema/activity-apply"
 import type { MessageBoxOptions } from "electron"
 
 const desktop = process.cwd()
@@ -68,7 +69,8 @@ async function parent() {
     assert.deepEqual(JSON.parse(report), {
       status: "pass", openFileRefused: true, nativeCancel: true, identityMismatch: true, staleRefused: true,
       signedReceipt: true, durableReceipt: true, sourceUntouched: true, nestedNamespaceRefused: true,
-      wrongGitDirectoryRefused: true, cleanFilterNotRun: true,
+      wrongGitDirectoryRefused: true, cleanFilterNotRun: true, productionApplyRefused: true,
+      applyCancel: true, applyConfirm: true,
     })
     process.stdout.write(report + "\n")
   } finally {
@@ -129,6 +131,10 @@ async function child() {
       "desktop.activity.arm.message": "Renderer-supplied message",
       "desktop.activity.arm.cancel": "Renderer-supplied cancel",
       "desktop.activity.arm.confirm": "Renderer-supplied confirm",
+      "desktop.activity.apply.title": "Renderer-supplied Apply title",
+      "desktop.activity.apply.message": "Renderer-supplied Apply message",
+      "desktop.activity.apply.cancel": "Renderer-supplied Apply cancel",
+      "desktop.activity.apply.confirm": "Renderer-supplied Apply confirm",
     }
     setNativeTranslations({ locale: "en", messages })
     const nativeResponses: { options: MessageBoxOptions; response: number }[] = []
@@ -143,7 +149,9 @@ async function child() {
         return result
       }) as typeof dialog.showMessageBox,
     }
-    registerActivityArmIpc({ ipcMain, BrowserWindow, dialog: nativeDialog, rendererDevURL: rendererURL, getOwned: () => owned })
+    let applyClient = owned.openActivityApply()
+    const ownedFixture = { ...owned, openActivityApply: () => applyClient }
+    registerActivityArmIpc({ ipcMain, BrowserWindow, dialog: nativeDialog, rendererDevURL: rendererURL, getOwned: () => ownedFixture })
     window = new BrowserWindow({ show: true, webPreferences: { preload: process.env.ACTIVITY_ARM_PRELOAD!, sandbox: true, nodeIntegration: false, contextIsolation: true } })
     await window.loadURL(rendererURL)
     const inspect = async () => await window!.webContents.executeJavaScript(`window.api.inspectActivityArm(${JSON.stringify(owned.url)})`) as ActivityArm.PlanSnapshot
@@ -209,12 +217,67 @@ async function child() {
     assert.deepEqual(JSON.parse(String(receipts()[0]!.receipt)), receipt)
     assert.equal((await plan()).approvals.length, 1)
     assert.equal(await readFile(join(source, "payload"), "utf8"), "untouched fixture\n")
+    const request = { approvalID: receipt.approvalID, targetID: current.targetID, generation: current.generation }
+    assert.ok(applyClient, "owned production Apply client must be available")
+    const state = await applyClient.read()
+    assert.equal(state?.available, false, "production Linux Apply must fail closed")
+    assert.equal(await applyClient.preview(request), undefined, "signed production preview must refuse")
+    assert.equal(await window!.webContents.executeJavaScript(`window.api.applyActivityQuarantine(${JSON.stringify(owned.url)}, ${JSON.stringify(request)})`), undefined)
+    assert.equal(nativeResponses.length, step, "refused production preview must not open a dialog")
+    assert.equal(await readFile(join(source, "payload"), "utf8"), "untouched fixture\n")
+
+    // Exercise the same real BrowserWindow and native bridge with private fixture files.
+    // Production Linux is deliberately unavailable; this client is not its mutation adapter.
+    const fixtureSource = join(root, "apply-source")
+    const fixtureDestination = join(root, "apply-destination")
+    await writeFile(fixtureSource, "private apply fixture\n")
+    const preview: ActivityApply.Preview = {
+      previewID: "activity-apply-preview", action: "apply-quarantine", expiresAt: Date.now() + 60_000,
+      approvalID: receipt.approvalID, target: current, destination: fixtureDestination,
+    }
+    const applied: ActivityApply.Receipt = { previewID: preview.previewID, ...request, outcome: "Out" }
+    let confirmations = 0
+    applyClient = {
+      isCurrent: () => true,
+      read: async () => ({ available: true, eligible: [request], results: [], partial: false }),
+      preview: async (input) => JSON.stringify(input) === JSON.stringify(request) ? preview : undefined,
+      confirm: async (input) => {
+        if (input.previewID !== preview.previewID) return undefined
+        confirmations++
+        await rename(fixtureSource, fixtureDestination)
+        return applied
+      },
+    }
+    const apply = async (mode: "cancel" | "confirm") => {
+      await writeFile(join(root, "next-dialog.json"), JSON.stringify({ step: ++step, mode, source, title: "Apply quarantine" }))
+      const result = await window!.webContents.executeJavaScript(`window.api.applyActivityQuarantine(${JSON.stringify(owned.url)}, ${JSON.stringify(request)})`) as ActivityApply.Receipt | undefined
+      assert.equal(nativeResponses.length, step, `native Apply dialog did not return for ${mode}`)
+      const shown = nativeResponses[step - 1]!
+      assert.equal(shown.response, mode === "cancel" ? 0 : 1)
+      assert.equal(shown.options.title, "Apply quarantine")
+      assert.equal(shown.options.message, "Apply quarantine to this object?")
+      assert.deepEqual(shown.options.buttons, ["Cancel", "Apply quarantine"])
+      assert.equal(shown.options.defaultId, 0)
+      assert.equal(shown.options.cancelId, 0)
+      assert.equal(shown.options.detail, `Approval: ${JSON.stringify(receipt.approvalID)}\nTarget: ${JSON.stringify(current.targetID)}\nPath: ${JSON.stringify(current.label)}\nGeneration: ${JSON.stringify(current.generation)}\nDestination: ${JSON.stringify(fixtureDestination)}`)
+      return result
+    }
+    assert.equal(await apply("cancel"), undefined)
+    assert.equal(confirmations, 0)
+    assert.equal(await readFile(fixtureSource, "utf8"), "private apply fixture\n")
+    await assert.rejects(readFile(fixtureDestination), { code: "ENOENT" })
+    assert.deepEqual(await apply("confirm"), applied)
+    assert.equal(confirmations, 1)
+    assert.equal(await readFile(fixtureDestination, "utf8"), "private apply fixture\n")
+    await assert.rejects(readFile(fixtureSource), { code: "ENOENT" })
+    assert.equal(await readFile(join(source, "payload"), "utf8"), "untouched fixture\n")
     await assert.rejects(readFile(join(worktree, ".activity-filter-ran")), { code: "ENOENT" })
     db.close()
     await writeFile(join(root, "report.json"), JSON.stringify({
       status: "pass", openFileRefused: true, nativeCancel: true, identityMismatch: true, staleRefused: true,
       signedReceipt: true, durableReceipt: true, sourceUntouched: true, nestedNamespaceRefused: true,
-      wrongGitDirectoryRefused: true, cleanFilterNotRun: true,
+      wrongGitDirectoryRefused: true, cleanFilterNotRun: true, productionApplyRefused: true,
+      applyCancel: true, applyConfirm: true,
     }))
   } finally {
     window?.destroy()
@@ -226,9 +289,9 @@ async function child() {
 async function handleDialogs(done: () => boolean, root: string) {
   let handled = 0
   while (!done()) {
-    const request = await readFile(join(root, "dialog.json"), "utf8").then((text) => JSON.parse(text) as { step: number; mode: "cancel" | "change" | "confirm"; source: string }).catch(() => undefined)
+    const request = await readFile(join(root, "dialog.json"), "utf8").then((text) => JSON.parse(text) as { step: number; mode: "cancel" | "change" | "confirm"; source: string; title?: string }).catch(() => undefined)
     if (request && request.step > handled) {
-      const search = Bun.spawn(["xdotool", "search", "--name", "Arm quarantine"], { stdout: "pipe", stderr: "ignore" })
+      const search = Bun.spawn(["xdotool", "search", "--name", request.title ?? "Arm quarantine"], { stdout: "pipe", stderr: "ignore" })
       const output = await new Response(search.stdout).text()
       const status = await search.exited
       const id = status === 0 ? output.trim().split("\n").at(-1) : undefined
