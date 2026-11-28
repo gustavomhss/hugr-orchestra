@@ -1,0 +1,15 @@
+{
+  "reviewer": "/root/s2_admission_j2",
+  "run_id": 46177698221,
+  "manifest": "6083402b6c28f8322fa93b0a8ba1b06b00396077407c3d76874f428c843b1331",
+  "case_verdicts": {
+    "S2-C1": {
+      "verdict": "PASS",
+      "reason": "A resposta corrigida limita a limpeza à falha de policy write antes do despacho, preserva a identidade para retry e as edições não enviadas, e inclui as rechecagens, i18n, regressão hospedada e benchmark exigidos. Os limites de evidência estática são explícitos."
+    },
+    "S2-C4": {
+      "verdict": "PASS",
+      "reason": "A resposta cobre a corrida de readiness, a ordem de inicialização, recuperação condicionada à saúde, diagnóstico sem reinício e o conflito do diálogo em inglês com a instrução de i18n. Não afirma observação ou execução das verificações."
+    }
+  }
+}

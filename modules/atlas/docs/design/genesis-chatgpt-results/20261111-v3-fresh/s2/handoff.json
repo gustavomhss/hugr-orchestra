@@ -103,15 +103,18 @@
       "state": "HOLD",
       "trace_refs": [
         "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json",
-        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/checkpoint.json"
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/checkpoint.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46177698221/checkpoint.json"
       ],
       "evaluation_refs": [
         "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
         "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json",
         "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/j1-review.json",
-        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/j2-review.json"
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/j2-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46177698221/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46177698221/j2-review.json"
       ],
-      "remaining_proof": "Dispatch-time source ownership checks need explicit captured server credentials, scope and directory binding, and focused remote regression for a change in behavior."
+      "remaining_proof": "Explicitly tie server, credential, scope and directory checks to the actual API-call dispatch predicate."
     },
     {
       "id": "S2-C2",
@@ -147,18 +150,20 @@
       "id": "S2-C4",
       "kind": "operational-failure",
       "depth": "deep",
-      "state": "HOLD",
+      "state": "PASS_IN_ISOLATED_EVALUATION",
       "trace_refs": [
         "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/tool-traces.json",
-        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/checkpoint.json"
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/checkpoint.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46177698221/checkpoint.json"
       ],
       "evaluation_refs": [
         "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j1-review.json",
         "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/j2-review.json",
         "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/j1-review.json",
-        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/j2-review.json"
-      ],
-      "remaining_proof": "Exact Dock then parallel CLI/environment startup order and the documented literal English early dialog clash with i18n."
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/j2-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46177698221/j1-review.json",
+        "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46177698221/j2-review.json"
+      ]
     },
     {
       "id": "S2-C5",
@@ -618,10 +623,9 @@
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/checkpoint.json",
       "sha256": "8012a3d506cd45477caa0e48571cfc965d6fbeac72f52bd596dbbb92cf5b6ae1"
     },
-    "dual_pass_count": 12,
+    "dual_pass_count": 13,
     "consumer_holds": [
-      "S2-C1",
-      "S2-C4"
+      "S2-C1"
     ],
     "consumer_fix_proposal": {
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/consumers-run-46165708773/proposed-knowledge-corrections.md",
@@ -650,19 +654,21 @@
     },
     "u1_scope_state": "PASS_ISOLATED_FROZEN_CONTROL_PLAN",
     "consumer_remaining": {
-      "next_required_state": "MINIMAL_SECOND_AMENDMENT",
+      "next_required_state": "EXPLICIT_API_CALL_GUARD_RETRY",
       "required_cases": [
-        "S2-C1",
-        "S2-C4"
+        "S2-C1"
       ],
       "material_gaps": {
-        "S2-C1": "Dispatch-time source ownership checks need explicit captured server credentials, scope and directory binding, and focused remote regression for a change in behavior.",
-        "S2-C4": "Exact Dock then parallel CLI/environment startup order and the documented literal English early dialog clash with i18n."
+        "S2-C1": "Explicitly tie server, credential, scope and directory checks to the actual API-call dispatch predicate."
       }
     },
     "first_amended_consumer_run": {
       "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46175962646/checkpoint.json",
       "sha256": "f914c69926f49d50a30a26859ef2bb1cc818a9d02a7637aef65489c39ab91682"
+    },
+    "second_amended_consumer_run": {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46177698221/checkpoint.json",
+      "sha256": "447fc96307b1f7194443640e78ab3c45da180c2e100756cd11d4d9ef52328be5"
     }
   }
 }

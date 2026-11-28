@@ -13,20 +13,5 @@
         "maxBytes": 8000
       }
     ]
-  },
-  {
-    "id": "S2-C4",
-    "reads": [
-      {
-        "key": "s2.l2.desktop-web",
-        "section": "Startup publishes readiness before the renderer proceeds",
-        "maxBytes": 8000
-      },
-      {
-        "key": "s2.l1.desktop-web",
-        "section": "1. Startup, readiness and shutdown",
-        "maxBytes": 8000
-      }
-    ]
   }
 ]

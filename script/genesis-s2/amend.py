@@ -232,22 +232,28 @@ def admit_and_read(repo, root, receipts, request, target, corrected, summary, in
     retained = set()
     if (scope_files / 'retained-retry-cases.json').exists():
         carry = json.loads(committed(scope_files / 'retained-retry-cases.json'))
-        require(carry['schema'] == 'genesis-s2-retained-retry-cases/v1' and carry['prior_run'] == 46175962646
-                and carry['prior_manifest'] == '42aa03d5913551c7129b0f2091a40a6a455de35ad70c955204bafe2abb805b19',
-                'retained retry evidence identity mismatch')
+        require(carry['schema'] == 'genesis-s2-retained-retry-cases/v2', 'retained retry evidence identity mismatch')
         expected_bodies = {row['key']: row['body_sha256'] for row in load(scope_files / 'manifest.json')['deltas']}
         require(carry['corrected_body_sha256'] == expected_bodies, 'retained retry evidence body mismatch')
-        archive = repo / Path(PREFIX).parent / 'runtime-followup/amendment-retries-46175962646'
-        prior_bytes = committed(archive / 'checkpoint.json')
-        prior = json.loads(prior_bytes)
-        require(sha(prior_bytes) == carry['prior_checkpoint_sha256'] and prior['manifest'] == carry['prior_manifest'], 'prior retry receipts drifted')
+        prior_cases = {}
+        for source in carry['prior_runs']:
+            run_id = source['run_id']
+            require(type(run_id) is int and run_id > 0, 'invalid retained run ID')
+            archive = repo / Path(PREFIX).parent / f'runtime-followup/amendment-retries-{run_id}'
+            prior_bytes = committed(archive / 'checkpoint.json')
+            prior = json.loads(prior_bytes)
+            require(sha(prior_bytes) == source['checkpoint_sha256'] and prior['manifest'] == source['manifest']
+                    and prior['run_id'] == run_id, 'prior retry receipts drifted')
+            for case, receipt in prior['cases'].items():
+                if receipt['status'] == 'PASS':
+                    prior_cases[(run_id, case)] = receipt
         retained = {row['id'] for row in carry['cases']}
-        require(retained < CASES and len(retained) == len(carry['cases'])
-                and all(row['verdicts'] == ['PASS', 'PASS'] and row['served_bodies_identical']
-                        and prior['cases'][row['id']]['status'] == 'PASS'
-                        and sorted(item['body_sha256'] for item in row['reads'])
-                            == sorted(item['body_sha256'] for item in prior['cases'][row['id']]['reads']) for row in carry['cases']),
-                'retained retries require exact prior dual PASS and byte-identical evidence')
+        require(retained < CASES and len(retained) == len(carry['cases']), 'invalid retained retry scope')
+        for row in carry['cases']:
+            previous = prior_cases.get((row['run_id'], row['id']))
+            require(previous and row['verdicts'] == ['PASS', 'PASS'] and row['served_bodies_identical']
+                    and sorted(item['body_sha256'] for item in row['reads']) == sorted(item['body_sha256'] for item in previous['reads']),
+                    'retained retries require exact prior dual PASS and byte-identical evidence')
     require(len(routes) == len(CASES - retained) and {row['id'] for row in routes} == CASES - retained, 'consumer scope mismatch')
     received = {}
     try:

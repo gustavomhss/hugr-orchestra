@@ -1,0 +1,117 @@
+{
+  "schema": "genesis-s2-amended-consumers/v1",
+  "run_id": 46177698221,
+  "run_head": "861f5b9dde8b3e4769e89ad708b51b779290c1fd",
+  "artifact_id": 15275738569,
+  "artifact_zip_sha256": "a7f152e98fd8c96029518464d4a337ba541f270f4cde7a9e615ad154149f2020",
+  "candidate_id": "084d811e9af497ed6619efaa98117e00f6342258a91842b59890193d876e9a52",
+  "manifest": "6083402b6c28f8322fa93b0a8ba1b06b00396077407c3d76874f428c843b1331",
+  "generation": "2793c20851941e47464478f77a039de3ff886f2d6be0475438f7625b8fe366e7",
+  "emission": {
+    "ok": true,
+    "data": {
+      "emitted": true,
+      "id": "f8be8bc7f1b9fbeb91e5135a95365d21db9b25b13fe6d17912bfa7d5553e9d4d",
+      "nodeKey": "eaa787d42a89d3d145951a0b1b84299067d2229528c0894ecdcce9f4c7da8a86"
+    },
+    "guidance": {
+      "next": "a rejected write did not re-derive at source@sha — fix the citation and re-emit",
+      "invariant": "TOOLS-1/7: atlas-emit is a governed fail-closed write door (WRITE_PATHS: atlas-emit, atlas-link — ADR-0003)"
+    }
+  },
+  "prepare_and_admission_sha256": "b857b0d94ac09f4160b74d027212e0da3f95a54d2ec1e8429477b10f18af38dc",
+  "judgments": [
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46177698221/j1-review.json",
+      "sha256": "b5b598b15c4a761be3f01e58e68687fa452970e2797f9aa4c7b7d143b7f39e0a"
+    },
+    {
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46177698221/j2-review.json",
+      "sha256": "471e40537bad0443c23d92ba062289fc94e0a1e3961f12d059e6e9cc130811b4"
+    }
+  ],
+  "cases": {
+    "S2-C1": {
+      "consumer": "/root/s2_final_c1_terra",
+      "status": "HOLD_SPLIT_REVIEW",
+      "answer": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46177698221/S2-C1.md",
+        "sha256": "6c9f32419d701839264d8ae1423dfeaf8e1d131809caced901154f9ba5ab0619"
+      },
+      "reads": [
+        {
+          "key": "s2.l2.app-session",
+          "result": "1282b429acf4d369776037cf92d1a0a8268c4a744f5397f0e318e0693c922d18",
+          "section": "First-send cleanup after policy-write failure",
+          "bytes": 1544,
+          "read_sha256": "ef36f446e5b61df6bedbae1874be1a6076ba4e92d116b06603d87af36c837670",
+          "body_sha256": "3c902cf9f9027963a8961475d772b23d723d997a2c4a2c7a66be5fa55d39dcc5"
+        },
+        {
+          "key": "s2.l1.app-session",
+          "result": "bd941c743b39c01f52b2d089cff1feb71ee8780bc1235ca09920c3227bc62384",
+          "section": "Prompt admission and draft ownership",
+          "bytes": 4394,
+          "read_sha256": "1d7db8e6e7f929dafc71e313132548fca8f68e362558a2f92aa36f81d653dcbb",
+          "body_sha256": "70eaeb43054b38233dfe94386a3cc6a83ecdd789c06ca913e46cf595d6b321d1"
+        }
+      ],
+      "budget": {
+        "schema": "evaluation-read-budget/v1",
+        "candidate": "084d811e9af497ed6619efaa98117e00f6342258a91842b59890193d876e9a52",
+        "generation": "2793c20851941e47464478f77a039de3ff886f2d6be0475438f7625b8fe366e7",
+        "consumer": "S2-C1",
+        "mode": "deep",
+        "index_calls": 0,
+        "read_calls": 2,
+        "body_bytes_total": 5938
+      },
+      "budget_sha256": "ae2309f7eec0ce2663946d8d5e204758e03b73410bd960665e2ee22ec9329dfb"
+    },
+    "S2-C4": {
+      "consumer": "/root/s2_final_c4_terra",
+      "status": "PASS",
+      "answer": {
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/runtime-followup/amendment-retries-46177698221/S2-C4.md",
+        "sha256": "df310479ed27a4f1543245e0abd3f513a0349afb28aaa4ba75ebbb003b665210"
+      },
+      "reads": [
+        {
+          "key": "s2.l2.desktop-web",
+          "result": "28aa83fe8b1b8008a3fe0ea41772bff56eda35ff781628b0456b24135a225393",
+          "section": "Startup publishes readiness before the renderer proceeds",
+          "bytes": 3355,
+          "read_sha256": "9e3a26472e2246b31ea2f87d476184b771c851234e4d850fbbf6913e7aa35c4b",
+          "body_sha256": "42f0bd646a3db4ed2b858e7837a70c9d5fef1bc73587b3d4f81411de487a39f6"
+        },
+        {
+          "key": "s2.l1.desktop-web",
+          "result": "75c3347283b89766e28058b6618ea5cec5588e0a9d1b011e2b2b3b8bade9ab58",
+          "section": "1. Startup, readiness and shutdown",
+          "bytes": 4227,
+          "read_sha256": "c352a18412de00653186ad78eb70546164e1f0b9e18597f608202926b51b7a34",
+          "body_sha256": "efd693ceb11d7fc200b051f9fed78af7b6285ac79f0b4cfc5cfe33420335a817"
+        }
+      ],
+      "budget": {
+        "schema": "evaluation-read-budget/v1",
+        "candidate": "084d811e9af497ed6619efaa98117e00f6342258a91842b59890193d876e9a52",
+        "generation": "2793c20851941e47464478f77a039de3ff886f2d6be0475438f7625b8fe366e7",
+        "consumer": "S2-C4",
+        "mode": "deep",
+        "index_calls": 0,
+        "read_calls": 2,
+        "body_bytes_total": 7582
+      },
+      "budget_sha256": "efc7a871c92ef6c77bf0b5b9fef5ee590926a65e96545d21ee45ee4885af978c"
+    }
+  },
+  "prior_passes_preserved": 12,
+  "prior_u1_run": 46173202455,
+  "new_dual_pass": [
+    "S2-C4"
+  ],
+  "remaining_holds": [
+    "S2-C1"
+  ]
+}

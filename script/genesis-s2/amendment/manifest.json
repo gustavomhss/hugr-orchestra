@@ -1,18 +1,18 @@
 {
   "schema": "genesis-s2-amendment/v1",
   "baseline_manifest": "5cbb56e97ad62901f5ec673d6bbf2559201cc54bc6f7faa33af92c4f825c7bbf",
-  "first_snapshot_sha256": "caecf5c73e13fff70435baac00930d77dd4f0c98d63066c4e484defbb07d9dee",
+  "first_snapshot_sha256": "f5ebfb92cefce944245678fbf39d29a4da42b2ccadc5ee21babf142dc84648ea",
   "deltas": [
     {
       "key": "s2.l2.app-session",
       "recipe_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/requests/l2-app-session-dispatch.md",
       "recipe_sha256_before": "0cd465cb782425a419f6c52e7056e6d775c28aaae7e7b45e4c94ae7d1f785e60",
-      "recipe_sha256_after": "093e429a0df0f26ce3b3d7ea50bfc7229b31b65602f231ab4c44167457053a12",
-      "recipe_version_after": "1a9a1d7d7757471095d786118482fc02b0939f08936cd3938fed9e3f0bcd3b83",
-      "body_sha256": "91724ed3cbce2c48272a8342f2e53f3e2a35b3b90f334fd885ba18fd28d2ff05",
+      "recipe_sha256_after": "6da0ed5b427a54ba6d51183535e239e5fc66fea306393f4262c609bbf9ab0769",
+      "recipe_version_after": "5154584d484df8295de100a0fc8c321674692ea93fa5e062994980f5478152b1",
+      "body_sha256": "af02ef01b1b79af95c71465f55d23019b8fc71971a74aef9e9eea9e43256706e",
       "original_result": "387d7f73ffe8a1d8fdb2b01db02afa1b27a41b106df2fb8adb94a512b3a8f0a5",
-      "corrected_result": "1282b429acf4d369776037cf92d1a0a8268c4a744f5397f0e318e0693c922d18",
-      "snapshot_sha256": "caecf5c73e13fff70435baac00930d77dd4f0c98d63066c4e484defbb07d9dee",
+      "corrected_result": "2ed52ec5baba4777c763e17aedf3460a8ea6df4c3717d94a05852c6da0482a25",
+      "snapshot_sha256": "f5ebfb92cefce944245678fbf39d29a4da42b2ccadc5ee21babf142dc84648ea",
       "response": "s2.l2.app-session-response.json",
       "decisions": [
         "s2.l2.app-session-j1.json",
@@ -28,7 +28,7 @@
       "body_sha256": "74870b6cafc9f810d51f126c0ed2c8e4717a2742a7ed5aff5642d3b2859b8555",
       "original_result": "1f89cc8575c8e6e2c517d62f45a72a440067b52c570f0ae72d510ded739db664",
       "corrected_result": "3cc5e2635468df6e73e1b1f592d0f7b706152354530402358181031f41aecd68",
-      "snapshot_sha256": "6ed2e2bf84ebfa81d4893249d41faf02e6c2037c6ba9f9e6ba4c557ec13002b1",
+      "snapshot_sha256": "a40c6fae156975467a6df8f8d0cd36e5c24aaf79add832248fd3379ea7711c8d",
       "response": "s2.l2.design-tui-response.json",
       "decisions": [
         "s2.l2.design-tui-j1.json",
@@ -44,7 +44,7 @@
       "body_sha256": "756adad2afd82e84728671dbf63274eace6189a0a1099b6bd3ef3052863acfc7",
       "original_result": "ced00bf47a56d239d07118dd97f641a6238e15a0e3ef25a8f07699a89258d90c",
       "corrected_result": "28aa83fe8b1b8008a3fe0ea41772bff56eda35ff781628b0456b24135a225393",
-      "snapshot_sha256": "41eddd0ee9fd2893ec675d43f02bbb84427b71c479532a91220c20051da64618",
+      "snapshot_sha256": "94d41490a103bae3ab5e88828c5ab974bc8c1eb4f340ecb91d6325c71ec5c957",
       "response": "s2.l2.desktop-web-response.json",
       "decisions": [
         "s2.l2.desktop-web-j1.json",

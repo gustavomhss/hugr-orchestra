@@ -2,9 +2,9 @@
   "reviewer": "J1",
   "purpose": "s2-amendment-semantic",
   "key": "s2.l2.app-session",
-  "body_sha256": "91724ed3cbce2c48272a8342f2e53f3e2a35b3b90f334fd885ba18fd28d2ff05",
-  "snapshot_sha256": "caecf5c73e13fff70435baac00930d77dd4f0c98d63066c4e484defbb07d9dee",
-  "result_id": "1282b429acf4d369776037cf92d1a0a8268c4a744f5397f0e318e0693c922d18",
+  "body_sha256": "af02ef01b1b79af95c71465f55d23019b8fc71971a74aef9e9eea9e43256706e",
+  "snapshot_sha256": "f5ebfb92cefce944245678fbf39d29a4da42b2ccadc5ee21babf142dc84648ea",
+  "result_id": "2ed52ec5baba4777c763e17aedf3460a8ea6df4c3717d94a05852c6da0482a25",
   "verdict": "PASS",
-  "reason": "The added text explicitly rechecks owner, selected server and serialized credentials, scope, project directory, Session/draft identity, and prompt; it also places owner and acknowledged-policy checks immediately before dispatch. It specifies focused hosted regressions, i18n, and before/after benchmarks. I verified the response body hash."
+  "reason": "The revised text ties the recheck of owner, server credentials, scope, directory, Session/draft identity, and prompt to the API call, and separately requires owner and acknowledged-policy revision checks immediately before dispatch. This resolves the identified gap. The body hash matches the review-pack response."
 }

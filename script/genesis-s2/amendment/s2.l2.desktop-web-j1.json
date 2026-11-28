@@ -3,8 +3,8 @@
   "purpose": "s2-amendment-semantic",
   "key": "s2.l2.desktop-web",
   "body_sha256": "756adad2afd82e84728671dbf63274eace6189a0a1099b6bd3ef3052863acfc7",
-  "snapshot_sha256": "41eddd0ee9fd2893ec675d43f02bbb84427b71c479532a91220c20051da64618",
+  "snapshot_sha256": "94d41490a103bae3ab5e88828c5ab974bc8c1eb4f340ecb91d6325c71ec5c957",
   "result_id": "28aa83fe8b1b8008a3fe0ea41772bff56eda35ff781628b0456b24135a225393",
   "verdict": "PASS",
-  "reason": "The added startup text states Dock channel, parallel CLI/environment resolution, then spawn; names main.log and server.log; discloses the literal English dialog's conflict with native i18n guidance; and specifies focused remote-health regression plus first/warm launch comparison. The existing 120-second, exit-race, and remote-health limits remain accurately scoped. I verified the response body hash."
+  "reason": "The body and result remain unchanged and retain the corrected IPC and startup facts. The global snapshot was recalculated."
 }

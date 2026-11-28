@@ -21,10 +21,11 @@
       "body": "app-session.md",
       "hold": "S2-C1",
       "baseline_sha256": "302011411d509ca96abf0fc538425a2d0db7c73d49186f1ac45f83db5d2e3de7",
-      "corrected_sha256": "91724ed3cbce2c48272a8342f2e53f3e2a35b3b90f334fd885ba18fd28d2ff05",
+      "corrected_sha256": "af02ef01b1b79af95c71465f55d23019b8fc71971a74aef9e9eea9e43256706e",
       "baseline_bytes": 24434,
-      "corrected_bytes": 25978,
-      "change": "append peer section; preserve original Durable admission section byte-for-byte; C1 adds owner/server/credential/scope/directory and dispatch policy guards plus focused regression/i18n/benchmark guidance"
+      "corrected_bytes": 26327,
+      "change": "Specify that the captured server/credentials/scope/directory checks are in the API dispatch predicate; use exact ownsSource and send callback source pin.",
+      "previous_corrected_sha256": "91724ed3cbce2c48272a8342f2e53f3e2a35b3b90f334fd885ba18fd28d2ff05"
     },
     {
       "body": "desktop-web.md",
@@ -281,5 +282,16 @@
       "design-tui.md: V2 actions and prompt admission (I2U)",
       "all other source body spans, including material served to the ten PASS results"
     ]
+  },
+  "final_pinning": {
+    "author": "/root",
+    "changed_bodies": [
+      "s2.l2.app-session"
+    ],
+    "evidence": "packages/app-shell/src/components/prompt-input/submit.ts:283–302,525–538",
+    "scope": "One sentence in the previously added C1 section. C4, C2, I2U and all previously served sections remain byte-for-byte unchanged."
+  },
+  "producer_ids": {
+    "s2.l2.app-session": "/root"
   }
 }

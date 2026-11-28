@@ -6,9 +6,9 @@
   "candidate_id": "ade18f60d8b143fc90fae24bc5c6cd1c14d1e56756800f14b65d19f7eacdf542",
   "source_admission_run": 46162067144,
   "baseline_commit": "529e24851cb7baa0b9ab017580e7295c656925bb",
-  "authored_manifest_sha256": "6686335a649b06ddc3242f80953eee5da262335e72aa0dcc71fb4c7bf93e5bae",
+  "authored_manifest_sha256": "7b84b81c1a6c514c66b57eb85c56bc2175fba578b788b952d9221f8fc211f1ac",
   "authored_body_sha256": {
-    "s2.l2.app-session": "91724ed3cbce2c48272a8342f2e53f3e2a35b3b90f334fd885ba18fd28d2ff05",
+    "s2.l2.app-session": "af02ef01b1b79af95c71465f55d23019b8fc71971a74aef9e9eea9e43256706e",
     "s2.l2.desktop-web": "756adad2afd82e84728671dbf63274eace6189a0a1099b6bd3ef3052863acfc7",
     "s2.l2.design-tui": "74870b6cafc9f810d51f126c0ed2c8e4717a2742a7ed5aff5642d3b2859b8555"
   },

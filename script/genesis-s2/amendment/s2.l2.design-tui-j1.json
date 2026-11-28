@@ -3,8 +3,8 @@
   "purpose": "s2-amendment-semantic",
   "key": "s2.l2.design-tui",
   "body_sha256": "74870b6cafc9f810d51f126c0ed2c8e4717a2742a7ed5aff5642d3b2859b8555",
-  "snapshot_sha256": "6ed2e2bf84ebfa81d4893249d41faf02e6c2037c6ba9f9e6ba4c557ec13002b1",
+  "snapshot_sha256": "a40c6fae156975467a6df8f8d0cd36e5c24aaf79add832248fd3379ea7711c8d",
   "result_id": "3cc5e2635468df6e73e1b1f592d0f7b706152354530402358181031f41aecd68",
   "verdict": "PASS",
-  "reason": "The body and result are unchanged: it states agent then model selection, selected-Session model use, and synthetic context before the prompt. I verified the response body hash; the snapshot was recalculated globally."
+  "reason": "The body and result remain unchanged: it states agent then model selection, selected-Session model use, and synthetic context before the prompt. The global snapshot was recalculated."
 }
