@@ -59,7 +59,7 @@ for (const scenario of cases) {
           "aria-expanded",
           "true",
         )
-        for (const name of ["Maestro", "Flight Engineer", "Workflows", "Atlas", "Rag Studio", "MCP"]) {
+        for (const name of ["Maestro", "Flight Engineer", "Workflows", "Atlas", "Rag Studio", "Monitor", "MCP"]) {
           await page.keyboard.press("Tab")
           await expect(sidebar.getByRole("button", { name, exact: true })).toBeFocused()
         }

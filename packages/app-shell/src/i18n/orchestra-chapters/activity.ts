@@ -1,4 +1,11 @@
 export const ACTIVITY_COPY = {
+  "orchestra.monitor.externalTitle": "External caches",
+  "orchestra.monitor.externalName": "Name",
+  "orchestra.monitor.externalSource": "Source: {{source}} · operator-declared external caches",
+  "orchestra.monitor.externalUnread": "External caches have not been read.",
+  "orchestra.monitor.externalUnavailable": "External cache inventory is unavailable.",
+  "orchestra.monitor.externalEmpty": "No external caches configured.",
+  "orchestra.monitor.externalFailed": "The external cache request failed. Previous readings remain visible.",
   "orchestra.monitor.dockerContainer": "Container",
   "orchestra.monitor.dockerSource": "Container source",
   "orchestra.monitor.dockerRead": "Read containers",
@@ -54,6 +61,10 @@ export const ACTIVITY_COPY = {
   "orchestra.monitor.tabs": "Categories",
   "orchestra.monitor.processSource": "Source: orchestra.omni.ledger",
   "orchestra.monitor.inspect": "Read members",
+  "orchestra.monitor.hypothesisInsufficient": "Hypothesis: insufficient",
+  "orchestra.monitor.hypothesisCompatible": "Hypothesis: compatible with logical leak",
+  "orchestra.monitor.footprintAge": "Age {{age}}",
+  "orchestra.monitor.reachabilityUnread": "Reachability: unread",
   "orchestra.monitor.inspectFailed":
     "The member reading could not be retrieved. The previous reading, if available, is still shown.",
   "orchestra.monitor.inspectionHint": "Member lists are read on request. Expand a process and select Read members.",
@@ -76,7 +87,7 @@ export const ACTIVITY_COPY = {
   "orchestra.monitor.inspectionFailed":
     "Inspection failed. Previous members and their original reading age remain visible.",
   "orchestra.monitor.processCoverage":
-    "Includes pipe spawns through this server’s Omni spawner since startup. Native collection calls, terminals, desktop processes and pre-existing processes are not included. Per-process CPU and memory have not been measured.",
+    "Includes pipe spawns through this server’s Omni spawner since startup. Native collection calls, terminals, desktop processes and pre-existing processes are not included. Per-process CPU has not been measured. Footprint is shown only when measured.",
   "orchestra.monitor.registry":
     "Source: this server’s project directory registry. Age is time since that registry was read.",
   "orchestra.monitor.refresh": "Refresh",
@@ -92,6 +103,20 @@ export const ACTIVITY_COPY = {
   "orchestra.monitor.logical": "Logical",
   "orchestra.monitor.unique": "Unique",
   "orchestra.monitor.proof": "Use check",
+  "orchestra.monitor.readUseProof": "Read use proof",
+  "orchestra.monitor.useProofFailed": "The use check failed. Previous evidence remains visible.",
+  "orchestra.monitor.useProofObservedAt": "Observed at",
+  "orchestra.monitor.useProof.held": "Held",
+  "orchestra.monitor.useProof.idle": "Idle",
+  "orchestra.monitor.useMethod.cwd": "Working directory",
+  "orchestra.monitor.useMethod.git-c": "git -C",
+  "orchestra.monitor.useMethod.open-file": "Open files",
+  "orchestra.monitor.useMethod.live-lock": "Live process locks",
+  "orchestra.monitor.useOutcome.holder": "in use",
+  "orchestra.monitor.useOutcome.clear": "clear",
+  "orchestra.monitor.useOutcome.failed": "unproved",
+  "orchestra.monitor.useOutcome.partial": "unproved",
+  "orchestra.monitor.useOutcome.unavailable": "unproved",
   "orchestra.monitor.notCollapsed": "not collapsed",
   "orchestra.monitor.unproved": "unproved",
   "orchestra.monitor.seconds": "{{count}} s",
@@ -117,6 +142,13 @@ export const ACTIVITY_COPY = {
 }
 
 export const ACTIVITY_COPY_BR: Record<keyof typeof ACTIVITY_COPY, string> = {
+  "orchestra.monitor.externalTitle": "Caches externos",
+  "orchestra.monitor.externalName": "Nome",
+  "orchestra.monitor.externalSource": "Fonte: {{source}} · caches externos declarados pelo operador",
+  "orchestra.monitor.externalUnread": "Os caches externos ainda não foram lidos.",
+  "orchestra.monitor.externalUnavailable": "O inventário de caches externos está indisponível.",
+  "orchestra.monitor.externalEmpty": "Nenhum cache externo configurado.",
+  "orchestra.monitor.externalFailed": "A solicitação de caches externos falhou. As leituras anteriores continuam visíveis.",
   "orchestra.monitor.dockerContainer": "Contêiner",
   "orchestra.monitor.dockerSource": "Fonte dos contêineres",
   "orchestra.monitor.dockerRead": "Ler contêineres",
@@ -172,6 +204,10 @@ export const ACTIVITY_COPY_BR: Record<keyof typeof ACTIVITY_COPY, string> = {
   "orchestra.monitor.tabs": "Categorias",
   "orchestra.monitor.processSource": "Fonte: orchestra.omni.ledger",
   "orchestra.monitor.inspect": "Ler membros",
+  "orchestra.monitor.hypothesisInsufficient": "Hipótese: insuficiente",
+  "orchestra.monitor.hypothesisCompatible": "Hipótese: compatível com vazamento lógico",
+  "orchestra.monitor.footprintAge": "Idade {{age}}",
+  "orchestra.monitor.reachabilityUnread": "Alcançabilidade: não lido",
   "orchestra.monitor.inspectFailed":
     "Não foi possível obter a leitura de membros. A leitura anterior, se disponível, continua visível.",
   "orchestra.monitor.inspectionHint":
@@ -195,7 +231,7 @@ export const ACTIVITY_COPY_BR: Record<keyof typeof ACTIVITY_COPY, string> = {
   "orchestra.monitor.inspectionFailed":
     "A inspeção falhou. Os membros anteriores e a idade da leitura original continuam visíveis.",
   "orchestra.monitor.processCoverage":
-    "Inclui processos por pipe iniciados pelo spawner Omni desta instância do servidor. Chamadas de coleta nativa, terminais, processos do desktop e processos anteriores não são incluídos. CPU por processo e memória não foram medidas.",
+    "Inclui processos por pipe iniciados pelo spawner Omni desta instância do servidor. Chamadas de coleta nativa, terminais, processos do desktop e processos anteriores não são incluídos. CPU por processo não foi medida. O footprint é mostrado somente quando medido.",
   "orchestra.monitor.registry":
     "Fonte: registro de diretórios dos projetos deste servidor. A idade é o tempo desde a leitura do registro.",
   "orchestra.monitor.refresh": "Atualizar",
@@ -211,6 +247,20 @@ export const ACTIVITY_COPY_BR: Record<keyof typeof ACTIVITY_COPY, string> = {
   "orchestra.monitor.logical": "Lógico",
   "orchestra.monitor.unique": "Único",
   "orchestra.monitor.proof": "Verificação de uso",
+  "orchestra.monitor.readUseProof": "Ler prova de uso",
+  "orchestra.monitor.useProofFailed": "A verificação de uso falhou. A evidência anterior continua visível.",
+  "orchestra.monitor.useProofObservedAt": "Observado em",
+  "orchestra.monitor.useProof.held": "Em uso",
+  "orchestra.monitor.useProof.idle": "Ocioso",
+  "orchestra.monitor.useMethod.cwd": "Diretório de trabalho",
+  "orchestra.monitor.useMethod.git-c": "git -C",
+  "orchestra.monitor.useMethod.open-file": "Arquivos abertos",
+  "orchestra.monitor.useMethod.live-lock": "Bloqueios de processos ativos",
+  "orchestra.monitor.useOutcome.holder": "em uso",
+  "orchestra.monitor.useOutcome.clear": "livre",
+  "orchestra.monitor.useOutcome.failed": "não provado",
+  "orchestra.monitor.useOutcome.partial": "não provado",
+  "orchestra.monitor.useOutcome.unavailable": "não provado",
   "orchestra.monitor.notCollapsed": "não colapsei",
   "orchestra.monitor.unproved": "não provado",
   "orchestra.monitor.seconds": "{{count}} s",

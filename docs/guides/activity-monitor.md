@@ -55,15 +55,25 @@ and establish the replacement through a fresh inventory request. Compare revisio
 exactly without converting them to JavaScript Number. These IDs grant no cleanup
 or process action.
 
+### Worktree use evidence
+
+Select **Read use proof** on a registered worktree to run the available check for that row. On Linux the server can detect a current working directory whose filesystem identity matches the registered directory. The report shows **Held** and lists each method. An unavailable or incomplete check stays unproved. The report carries no process ID or path from the check and offers no cleanup action.
+
 ## Trees
 
 **Trees** reads the ledger of pipe processes observed through this server process’s Omni spawner since startup. It refreshes the ledger and host CPU reading every two seconds while visible, without querying OS process membership. The initial inventory does not include processes already running before this server started, native collection calls, terminals or desktop processes.
 
 Each row shows the executable, recorded owner when available, observed state, root PID, member count and reading age. Expand the executable and select **Read members** to request the PIDs and names from the supervisor. This is an explicit OS inventory query; automatic refresh keeps its last result and age. Membership comes from the supervisor. The monitor uses the binding's observation request, whose timeout leaves the supervisor running. An empty sample can be refreshed while its observation handle is available. Root exit alone does not mean the tree is gone. After root exit, a reading with live members reports **alive**. An empty sample leaves the state **unknown** because the observation does not confirm that the supervisor retired the tree.
 
+Expanding a row shows **Hypothesis: insufficient** and **Reachability: unread** while these measurements are unavailable. Expanding alone does not read members; use **Read members** for that explicit request.
+
 The spawner reads the stored session title at process creation through the tool registry’s captured session store and records that name with the process. Later selection or renaming does not rewrite the recorded owner. Without recorded provenance, Owner stays empty.
 
-Per-process CPU, footprint and machine memory pressure have not been measured. The **Tree id** column shows the native identity when the installed binding exposes it. A missing identity stays **unread**. Root PID, native tree id and observation UUID remain separate; stop and suspend are not offered. The API also identifies the server observation lifetime with `instanceID`, so a host restart cannot reuse an old address unnoticed. An older binding without the observation request also leaves membership unavailable. Inspection failure displays **unknown** and preserves any previous members with their original reading age. Failed HTTP refreshes also preserve the previous snapshot. The observer keeps the last 32 finished or unavailable observations and reports how many older records it retired.
+On macOS, **Read members** can also measure the sum of the live tree members' physical footprints through Omni. The **Footprint** column shows the value, source `omni.darwin.phys-footprint`, and its own reading age. The sum is not a deduplicated total. Linux, Windows, and older bindings leave footprint **unread**. A failed or incomplete repeat preserves the last complete value and its timestamp.
+
+The hypothesis is **insufficient** until there is a baseline for the same set of processes, a rise after the associated tool's recorded completion, and two further readings without a decrease. A complete series can show **compatible with a logical leak**. Missing evidence or a changed set of processes makes the hypothesis insufficient. Per-process CPU and machine memory pressure remain unread.
+
+The **Tree id** column shows the native identity when the installed binding exposes it. A missing identity stays **unread**. Root PID, native tree ID and observation UUID remain separate. The API identifies the server observation lifetime with `instanceID`, so a host restart cannot reuse an old address unnoticed. An older binding without the observation request leaves membership unavailable. Inspection failure displays **unknown** and preserves previous members with their original reading age. Failed HTTP refreshes preserve the previous snapshot. The observer keeps the last 32 finished or unavailable observations and reports how many older records it retired.
 
 The **IN/OUT** and **Quarantine** tabs currently show **collection unavailable** in the Monitor.
 
@@ -117,3 +127,9 @@ Each walk admits up to 10,000 entries, depth 64 and a cooperative two-second bud
 **Logical** holds only the last complete sum of regular-file lengths per path; hardlink paths each contribute their length. Empty, successfully read directories can produce zero. A partial retry shows its observed bytes separately and preserves the prior complete value with its original age. Before any complete reading, Logical and Age remain **unread**. These are metadata reading windows, not atomic filesystem snapshots or cleanup proofs. Changes racing metadata calls cannot be treated as a stable file identity for an action.
 
 Owner stays empty, Unique stays **not collapsed** and Use check stays **unproved**. These measurements do not establish allocated, unique or reclaimable space. They do not cover external caches, unregistered roots or other temporary files, and do not offer cleanup. The memory ceiling does not see these paths.
+
+### External caches
+
+Set `ORCHESTRA_ACTIVITY_EXTERNAL_CACHES` on the server host before launching Orchestra to declare up to 16 local cache directories. Use a JSON array with a `name` and an absolute `directory` per entry. For example, `[{"name":"Build cache","directory":"/srv/tooling/build-cache"}]` declares one dedicated cache directory. An unset or invalid declaration shows the external inventory as unavailable. Use `[]` to declare an empty inventory.
+
+The Cache tab shows each declared name with an unread size until you select **Read disk usage** for that cache. Each reading measures only the selected directory. A partial attempt preserves the last complete logical size and its original age. Unique space is uncollapsed, and use remains unproved.

@@ -38,6 +38,11 @@ export const activityScenarios: Scenario[] = [
     .at(() => ({ path: route("/api/activity/worktrees/{recordID}/read", { recordID: "httpapi-missing" }) }))
     .json(400, missingRecord, "status"),
   http.protected
+    .post("/api/activity/worktrees/{recordID}/use-proof", "activity.proveWorktreeUse")
+    .global()
+    .at(() => ({ path: route("/api/activity/worktrees/{recordID}/use-proof", { recordID: "httpapi-missing" }) }))
+    .json(400, missingRecord, "status"),
+  http.protected
     .get("/api/activity/docker", "activity.docker")
     .global()
     .json(200, (body) => Schema.decodeUnknownSync(ActivityMonitor.DockerSnapshot)(body), "status"),
@@ -55,6 +60,18 @@ export const activityScenarios: Scenario[] = [
       },
       "status",
     ),
+  http.protected
+    .get("/api/activity/external-caches", "activity.externalCaches")
+    .global()
+    .json(200, (body) => Schema.decodeUnknownSync(ActivityMonitor.ExternalCacheSnapshot)(body), "status"),
+  http.protected
+    .post("/api/activity/external-caches/{id}/read", "activity.readExternalCache")
+    .global()
+    .at(() => ({ path: route("/api/activity/external-caches/{id}/read", { id: "httpapi-missing" }) }))
+    .json(400, (body) => {
+      const error = Schema.decodeUnknownSync(InvalidRequestError)(body)
+      check(error.field === "id", "the external cache must have a known opaque ID")
+    }, "status"),
   http.protected
     .get(diskSnapshotPath, "activity.disk")
     .global()

@@ -234,7 +234,7 @@ a blocked entry or a review without a confirmed finding records that no confirme
 A proposal makes exactly one native `code_search` attempt over the complete captured authority, using
 `paths:["**"]`, `offset:0`, `limit:200` and `context:0`. That same generalized search must find the known seed at
 its primary path and line. Explicit paths can include admitted files excluded by repository ignore rules; they
-cannot expand the captured authority. Pagination, omitted files, binary files or another incomplete search stop
+cannot expand the captured authority. Pagination, omitted files, reported skipped binaries or another incomplete search stop
 the generation. A successful tool display alone is insufficient: the host requires the captured operation and
 its matching native completion.
 
@@ -248,7 +248,7 @@ questions remain separate from confirmed findings.
 Variant expansion stops when verification is incomplete, no new matches remain, noise is at least half the new
 matches, or the third generation settles. Exactly half noise stops expansion. Counts come from native matches
 and verified dispositions. One original deadline and the existing two-Session running limit cover the whole
-engagement, including variants and final publication. Stopped requests publish no partial report or evidence receipt.
+engagement, including variants and final publication. Cancelled, expired or failed requests publish no partial report or evidence receipt.
 
 The report's host-owned `audit:variants` coverage records the actual stop, unexpanded initial seeds and unexamined
 matches. Newly completed evidence receipts also retain the generation journal, native replies and captured regions.

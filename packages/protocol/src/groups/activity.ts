@@ -24,6 +24,13 @@ export const ActivityGroup = HttpApiGroup.make("server.activity")
     ),
   )
   .add(
+    HttpApiEndpoint.post("activity.proveWorktreeUse", "/api/activity/worktrees/:recordID/use-proof", {
+      params: { recordID: Schema.NonEmptyString },
+      success: ActivityMonitor.WorktreeUseProof,
+      error: [InvalidRequestError, ConflictError, ServiceUnavailableError],
+    }).annotateMerge(OpenApi.annotations({ summary: "Read use evidence for one registered worktree" })),
+  )
+  .add(
     HttpApiEndpoint.get("activity.docker", "/api/activity/docker", {
       success: ActivityMonitor.DockerSnapshot,
     }).annotateMerge(OpenApi.annotations({ summary: "Read the cached Docker container inventory" })),
@@ -33,6 +40,18 @@ export const ActivityGroup = HttpApiGroup.make("server.activity")
       success: ActivityMonitor.DockerSnapshot,
       error: ServiceUnavailableError,
     }).annotateMerge(OpenApi.annotations({ summary: "Request a bounded Docker container inventory reading" })),
+  )
+  .add(
+    HttpApiEndpoint.get("activity.externalCaches", "/api/activity/external-caches", {
+      success: ActivityMonitor.ExternalCacheSnapshot,
+    }).annotateMerge(OpenApi.annotations({ summary: "Read the cached inventory of operator-declared external caches" })),
+  )
+  .add(
+    HttpApiEndpoint.post("activity.readExternalCache", "/api/activity/external-caches/:id/read", {
+      params: { id: Schema.NonEmptyString },
+      success: ActivityMonitor.ExternalCacheSnapshot,
+      error: [InvalidRequestError, ConflictError],
+    }).annotateMerge(OpenApi.annotations({ summary: "Measure one declared external cache by its opaque ID" })),
   )
   .add(
     HttpApiEndpoint.get("activity.disk", "/api/activity/disk", {

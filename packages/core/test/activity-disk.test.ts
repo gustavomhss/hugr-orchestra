@@ -185,3 +185,18 @@ test("bounded issue details retain the full gap count and do not modify files", 
   expect(await Bun.file(path.join(outside.directory, "keep")).text()).toBe("untouched")
   expect(await fs.readdir(root.directory)).toHaveLength(40)
 })
+
+
+test("a root whose checked identity changed is not walked", async () => {
+  await using root = await fixture()
+  await using alternate = await fixture()
+  await Bun.write(path.join(alternate.directory, "private"), "unreachable")
+  const checked = await fs.stat(root.directory, { bigint: true })
+  const result = await measure(alternate.directory, {
+    expectedRoot: { canonical: await fs.realpath(root.directory), device: checked.dev, inode: checked.ino },
+  })
+  expect(result.state).toBe("partial")
+  expect(result.observedBytes).toBe(0)
+  expect(result.entries).toBe(0)
+  expect(result.issues).toContainEqual({ path: alternate.directory, reason: "changed" })
+})

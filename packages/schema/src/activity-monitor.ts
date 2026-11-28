@@ -10,6 +10,14 @@ export const Member = Schema.Struct({
 }).annotate({ identifier: "ActivityMonitor.Member" })
 export interface Member extends Schema.Schema.Type<typeof Member> {}
 
+export const Footprint = Schema.Struct({
+  source: Schema.Literal("omni.darwin.phys-footprint"),
+  bytes: NonNegativeInt,
+  sampledAt: NonNegativeInt,
+  hypothesis: Schema.Literals(["insufficient", "compatible-with-logical-leak"]),
+}).annotate({ identifier: "ActivityMonitor.Footprint" })
+export type Footprint = typeof Footprint.Type
+
 export const Record = Schema.Struct({
   // A monitor record is not a supervisor address and never authorizes an action.
   recordID: Schema.String,
@@ -27,6 +35,7 @@ export const Record = Schema.Struct({
   source: optional(Schema.Literal("omni.processes")),
   sampledAt: optional(NonNegativeInt),
   members: optional(Schema.Array(Member)),
+  footprint: optional(Footprint),
 }).annotate({ identifier: "ActivityMonitor.Record" })
 export interface Record extends Schema.Schema.Type<typeof Record> {}
 
@@ -91,6 +100,32 @@ export interface DiskSnapshot extends Schema.Schema.Type<typeof DiskSnapshot> {}
 
 const decimalRevision = Schema.isPattern(/^(0|[1-9][0-9]*)(?![\s\S])/)
 
+const ExternalCacheRow = Schema.Struct({
+  id: Schema.NonEmptyString,
+  name: Schema.NonEmptyString,
+  owner: Schema.Literal(""),
+  useProof: Schema.Literal("unproved"),
+  unique: Schema.Literal("not-collapsed"),
+  attempt: optional(Schema.Struct({
+    state: Schema.Literals(["complete", "partial"]),
+    startedAt: NonNegativeInt,
+    sampledAt: NonNegativeInt,
+    issueCount: NonNegativeInt,
+  })),
+  logical: optional(Schema.Struct({ bytes: NonNegativeInt, sampledAt: NonNegativeInt })),
+}).annotate({ identifier: "ActivityMonitor.ExternalCacheRow" })
+
+export const ExternalCacheSnapshot = Schema.Struct({
+  instanceID: Schema.NonEmptyString,
+  snapshotRevision: Schema.String.check(decimalRevision),
+  readAt: NonNegativeInt,
+  source: Schema.Literal("node.fs.lstat"),
+  coverage: Schema.Literal("operator-declared-external-caches"),
+  status: Schema.Literals(["unavailable", "ready"]),
+  records: Schema.Array(ExternalCacheRow).check(Schema.isMaxLength(16)),
+}).annotate({ identifier: "ActivityMonitor.ExternalCacheSnapshot" })
+export type ExternalCacheSnapshot = typeof ExternalCacheSnapshot.Type
+
 export const WorktreeRevision = Schema.String.annotate({ identifier: "ActivityMonitor.WorktreeRevision" }).check(
   decimalRevision,
 )
@@ -117,6 +152,19 @@ export const WorktreeSnapshot = Schema.Struct({
   records: Schema.Array(WorktreeRecord),
 }).annotate({ identifier: "ActivityMonitor.WorktreeSnapshot" })
 export interface WorktreeSnapshot extends Schema.Schema.Type<typeof WorktreeSnapshot> {}
+
+const WorktreeUseCheck = Schema.Struct({
+  method: Schema.Literals(["cwd", "git-c", "open-file", "live-lock"]),
+  outcome: Schema.Literals(["clear", "holder", "failed", "partial", "unavailable"]),
+}).annotate({ identifier: "ActivityMonitor.WorktreeUseCheck" })
+
+export const WorktreeUseProof = Schema.Struct({
+  recordID: Schema.NonEmptyString,
+  sampledAt: NonNegativeInt,
+  state: Schema.Literals(["held", "idle"]),
+  checks: Schema.Array(WorktreeUseCheck).check(Schema.isMinLength(4), Schema.isMaxLength(4)),
+}).annotate({ identifier: "ActivityMonitor.WorktreeUseProof" })
+export type WorktreeUseProof = typeof WorktreeUseProof.Type
 
 export const dockerSource = "docker container ls --all --no-trunc --size --format json"
 export const dockerRowLimit = 1000

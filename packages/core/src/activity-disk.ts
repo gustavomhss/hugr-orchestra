@@ -7,7 +7,7 @@ import type { ActivityMonitor } from "@orchestra/schema/activity-monitor"
 // Budgets are cooperative between filesystem calls, not an OS I/O timeout.
 export async function measure(
   directory: string,
-  limits: { maxEntries?: number; maxMs?: number; maxDepth?: number } = {},
+  limits: { maxEntries?: number; maxMs?: number; maxDepth?: number; expectedRoot?: { canonical: string; device: bigint; inode: bigint } } = {},
 ): Promise<ActivityMonitor.DiskAttempt> {
   const startedAt = Date.now()
   const start = performance.now()
@@ -32,6 +32,8 @@ export async function measure(
   }
   async function queueRoot() {
     if (!initial) return unread(directory, "unavailable")
+    if (limits.expectedRoot && (initial.dev !== limits.expectedRoot.device || initial.ino !== limits.expectedRoot.inode))
+      return unread(directory, "changed")
     if (initial.isSymbolicLink()) return unread(directory, "symlink")
     if (!initial.isDirectory()) return unread(directory, "unsupported")
 
@@ -40,6 +42,7 @@ export async function measure(
       canonical === undefined ? undefined : await fs.lstat(canonical, { bigint: true }).catch(() => undefined)
     if (
       canonical === undefined ||
+      (limits.expectedRoot !== undefined && canonical !== limits.expectedRoot.canonical) ||
       !verified?.isDirectory() ||
       verified.dev !== initial.dev ||
       verified.ino !== initial.ino

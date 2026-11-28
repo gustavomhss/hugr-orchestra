@@ -21,7 +21,9 @@ export const RequiredQuery = Schema.Struct({
 export const Api = HttpApi.make("optional-payload").add(
   HttpApiGroup.make("probe")
     .add(HttpApiEndpoint.post("list", "/list", { payload: Query, success: Query }))
-    .add(HttpApiEndpoint.post("required", "/required", { payload: RequiredQuery, success: RequiredQuery })),
+    .add(HttpApiEndpoint.post("required", "/required", { payload: RequiredQuery, success: RequiredQuery }))
+    .add(HttpApiEndpoint.post("empty", "/empty", { payload: Schema.Struct({}), success: Schema.Struct({}) }))
+    .add(HttpApiEndpoint.post("noPayload", "/no-payload", { success: Schema.String })),
 )
 
 export const DefaultApi = Api

@@ -240,6 +240,11 @@
         { "path": "src/github-copilot", "kind": "collection", "status": "vendored" }
       ],
       "domains": {
+        "activity-monitor": {
+          "kind": "platform",
+          "entry": "src/activity-monitor.ts",
+          "patterns": ["src/activity-*"]
+        },
         "atlas": { "kind": "platform", "entry": "src/atlas.ts", "patterns": ["src/atlas.ts"] },
         "session": { "kind": "platform", "entry": "src/session.ts", "patterns": ["src/session/", "src/session.ts", "src/session-process.ts"] },
         "agent": { "kind": "platform", "entry": "src/agent.ts", "patterns": ["src/agent/", "src/agent.ts"] },
@@ -330,6 +335,7 @@
             "src/pty/",
             "src/pty.ts",
             "src/tcp-proxy.ts",
+            "src/process-provenance.ts",
             "src/omni.ts",
             "src/omni-*",
             "src/codemode-native-regex.ts",

@@ -47,6 +47,7 @@ interface Child extends AsyncDisposable {       // what pipe and PTY children sh
   stop(options?: { graceMs?: number }): Promise<Exit>;         // whole tree gone (see §5)
   processes(): Promise<ProcessInfo[]>;          // live processes stop() would end now (see §5)
   observeProcesses(): Promise<ProcessInfo[]>;   // best-effort read with a nonfatal observation deadline
+  observeTree?(): Promise<{ members: ProcessInfo[]; physicalFootprintBytes?: number; footprintIdentity?: string }>;
 }
 interface PipeChild extends Child { closeStdin(): Promise<void>; }
 interface PtyChild extends Child { resize(cols: number, rows: number): void; }
@@ -311,3 +312,5 @@ control requests retain their existing deadlines. An empty response is a sample 
 The worker refuses observations above 256 members. Linux requires a private descriptor table for its
 worker. Windows holds verified process handles while collecting metadata and keeps the Job handle on
 the control owner.
+
+`observeTree` optionally returns the complete sum of macOS per-process physical footprints, with an opaque identity of the measured members. The metric and identity are absent when unavailable; the members remain independently useful. This is not RSS or PSS.

@@ -1,6 +1,8 @@
 import { expect } from "bun:test"
 import { Orchestra } from "@orchestra/client"
 import { ActivityDisk } from "@orchestra/core/activity-disk"
+import type { ActivityExternalCache } from "@orchestra/core/activity-external-cache"
+import type { ActivityWorktree } from "@orchestra/core/activity-worktree"
 import { Database } from "@orchestra/core/database/database"
 import { AppProcess } from "@orchestra/core/process"
 import { setup } from "@orchestra/core/test/fixture/activity-worktree"
@@ -12,7 +14,7 @@ import { Context, Effect, Fiber, Layer, Option, Schema } from "effect"
 import { HttpRouter, HttpServer, HttpServerRequest } from "effect/unstable/http"
 import { HttpApi, HttpApiBuilder } from "effect/unstable/httpapi"
 import { ActivityWorktreeRegistry } from "../src/activity-worktree"
-import { ActivityHandler } from "../src/handlers/activity"
+import { ActivityHandler, ExternalCacheInventory } from "../src/handlers/activity"
 import { ServerAuth } from "../src/auth"
 import { authorizationLayer } from "../src/middleware/authorization"
 import { schemaErrorLayer } from "../src/middleware/schema-error"
@@ -27,6 +29,8 @@ export function serve(
     afterReadAdmission?: () => void
     dockerProcess?: AppProcess.Interface
     afterDockerPostDispatch?: () => void
+    externalCaches?: ActivityExternalCache.Inventory
+    observeCwd?: ActivityWorktree.Source["observeCwd"]
   } = {},
 ) {
   return Effect.gen(function* () {
@@ -35,6 +39,7 @@ export function serve(
     const context = yield* Layer.build(
       ActivityWorktreeRegistry.layer({
         afterRegistryRead: input.afterRegistryRead,
+        ...(input.observeCwd !== undefined ? { observeCwd: input.observeCwd } : {}),
         measure: (directory, limits) => {
           calls.walks++
           return (input.measure ?? ActivityDisk.measure)(directory, limits)
@@ -81,6 +86,7 @@ export function serve(
             Layer.succeedContext(Context.makeUnsafe<AppProcess.Service>(new Map())),
       ),
       Layer.provide(observeDockerPost),
+      Layer.provide(Layer.succeed(ExternalCacheInventory, input.externalCaches)),
       Layer.provide(authorizationLayer),
       Layer.provide(schemaErrorLayer),
       Layer.provide(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.some("activity-test") })),

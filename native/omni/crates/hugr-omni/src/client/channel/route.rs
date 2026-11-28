@@ -8,7 +8,7 @@ use std::mem;
 use std::sync::Arc;
 use std::time::Instant;
 
-use omni_proto::{Exit, INFO_OBSERVE, Msg, VERSION, decode};
+use omni_proto::{Exit, INFO_FOOTPRINT, INFO_OBSERVE, Msg, VERSION, decode};
 use tokio::sync::watch;
 
 use super::{Answer, Gen, Life, LifeTx, State, Waiter, Want, deliver};
@@ -138,6 +138,7 @@ impl Gen {
                 } => {
                     st.ready = true;
                     st.observes = info & INFO_OBSERVE != 0;
+                    st.footprints = info & INFO_FOOTPRINT != 0;
                     if let Some(hello) = st.hello.take() {
                         let _ = hello.try_send(());
                     }
@@ -186,6 +187,16 @@ impl Gen {
                 check(st, req, |w| matches!(w, Want::List | Want::ObserveList), Some(id))?;
                 (req, Answer::Processes(list), None)
             }
+            Msg::ObservedTree {
+                req,
+                id,
+                list,
+                footprint,
+                identity,
+            } => {
+                check(st, req, |w| w == Want::ObserveFootprint, Some(id))?;
+                (req, Answer::ObservedTree(list, footprint, identity), None)
+            }
             Msg::Ready { .. } => return Err("it sent Ready twice".into()),
             other => return Err(format!("it sent {}, which only a host may send", kind(&other))),
         };
@@ -221,8 +232,8 @@ impl Gen {
                 st.dues.remove(&(at, req));
                 st.pending.get_mut(&req).and_then(|pending| {
                     let (_, budget) = pending.due.take()?;
-                    let waiter =
-                        (pending.want == Want::ObserveList).then(|| mem::replace(&mut pending.to, Waiter::Ignore));
+                    let waiter = matches!(pending.want, Want::ObserveList | Want::ObserveFootprint)
+                        .then(|| mem::replace(&mut pending.to, Waiter::Ignore));
                     Some((pending.want, budget, waiter))
                 })
             };
@@ -263,6 +274,8 @@ fn kind(msg: &Msg) -> &'static str {
         Msg::Resize { .. } => "Resize",
         Msg::List { .. } => "List",
         Msg::Observe { .. } => "Observe",
+        Msg::ObserveFootprint { .. } => "ObserveFootprint",
+        Msg::ObservedTree { .. } => "ObservedTree",
         Msg::Release { .. } => "Release",
         Msg::Ready { .. } => "Ready",
         Msg::Spawned { .. } => "Spawned",

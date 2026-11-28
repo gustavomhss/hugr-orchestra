@@ -12,6 +12,7 @@
 mod chan;
 mod diag;
 mod exits;
+mod footprint;
 mod fork;
 mod observe;
 mod procs;
@@ -103,6 +104,11 @@ impl Sup {
             diag: Diag::default(),
         };
         let info = INFO_OBSERVE
+            | if cfg!(target_os = "macos") {
+                omni_proto::INFO_FOOTPRINT
+            } else {
+                0
+            }
             | if sup.watch.evented() { INFO_PIDFD_HOST } else { 0 }
             | if pidfd { INFO_PIDFD_MEMBERS } else { 0 };
         let pid = std::process::id();
@@ -229,6 +235,7 @@ impl Sup {
             Msg::Resize { req, id, cols, rows } => trees.resize(req, id, (cols, rows), out),
             Msg::List { req, id } => trees.list(req, id, out),
             Msg::Observe { req, id } => out.extend(self.observation.start(req, id, trees)),
+            Msg::ObserveFootprint { req, id } => out.extend(self.observation.start_with(req, id, trees, true)),
             Msg::Release { req, id } => trees.release(req, id, out),
             other => return Err(Closed::Proto(format!("unexpected message from the host: {other:?}"))),
         }

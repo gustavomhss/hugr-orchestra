@@ -1,6 +1,8 @@
 import { ActivityMonitor } from "@orchestra/core/activity-monitor"
 import { ActivityDisk } from "@orchestra/core/activity-disk"
 import { ActivityDocker } from "@orchestra/core/activity-docker"
+import { ActivityExternalCache } from "@orchestra/core/activity-external-cache"
+import { Flag } from "@orchestra/core/flag/flag"
 import { ActivityWorktree } from "@orchestra/core/activity-worktree"
 import { Global } from "@orchestra/core/global"
 import { AppProcess } from "@orchestra/core/process"
@@ -9,6 +11,11 @@ import { Context, Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"
 import { ActivityWorktreeRegistry } from "../activity-worktree"
+
+export const ExternalCacheInventory = Context.Reference<ActivityExternalCache.Inventory | undefined>(
+  "@orchestra/server/ExternalCacheInventory",
+  { defaultValue: () => undefined },
+)
 
 const disk = ActivityDisk.make([
   { id: "cache", path: Global.Path.cache },
@@ -20,6 +27,8 @@ export const ActivityHandler = HttpApiBuilder.group(Api, "server.activity", (han
   Effect.gen(function* () {
     const worktrees = yield* ActivityWorktreeRegistry.Service
     const docker = ActivityDocker.make()
+    const externalCaches = (yield* ExternalCacheInventory) ??
+      ActivityExternalCache.make(ActivityExternalCache.parseDeclaration(Flag.ORCHESTRA_ACTIVITY_EXTERNAL_CACHES))
     const processContext = yield* Effect.context<AppProcess.Service>().pipe(
       Effect.map(Context.pick(AppProcess.Service)),
     )
@@ -57,6 +66,28 @@ export const ActivityHandler = HttpApiBuilder.group(Api, "server.activity", (han
           return snapshot
         }),
       )
+      .handle("activity.proveWorktreeUse", (ctx) =>
+        Effect.gen(function* () {
+          const report = yield* Effect.tryPromise({
+            try: () => worktrees.proveUse(ctx.params.recordID),
+            catch: (error) =>
+              error instanceof ActivityWorktree.ProofCapacityError
+                ? new ConflictError({
+                    message: "A worktree use proof reading is already in progress",
+                    resource: "activity.worktrees",
+                  })
+                : new ServiceUnavailableError({
+                    message: "Worktree use proof is temporarily unavailable",
+                    service: "activity.worktrees",
+                  }),
+          })
+          if (report) return report
+          return yield* new InvalidRequestError({
+            message: "Worktree observation is no longer available",
+            field: "recordID",
+          })
+        }),
+      )
       .handle("activity.docker", () => Effect.sync(docker.snapshot))
       .handle("activity.readDocker", () =>
         docker.read().pipe(
@@ -69,6 +100,22 @@ export const ActivityHandler = HttpApiBuilder.group(Api, "server.activity", (han
               }),
           ),
         ),
+      )
+      .handle("activity.externalCaches", () => Effect.sync(externalCaches.snapshot))
+      .handle("activity.readExternalCache", (ctx) =>
+        Effect.gen(function* () {
+          const result = yield* Effect.promise(() => externalCaches.read(ctx.params.id))
+          if (result.status === "observed") return result.snapshot
+          if (result.status === "busy")
+            return yield* new ConflictError({
+              message: "An external cache reading is already in progress",
+              resource: "activity.external-caches",
+            })
+          return yield* new InvalidRequestError({
+            message: "Unknown external cache observation",
+            field: "id",
+          })
+        }),
       )
       .handle("activity.disk", () => Effect.sync(() => disk.snapshot()))
       .handle("activity.readDisk", (ctx) =>

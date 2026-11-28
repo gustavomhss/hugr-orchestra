@@ -268,6 +268,12 @@ class Child {
     return this.#native.processes();
   }
 
+  observeTree() {
+    return later(() => typeof this.#native.observeTree === "function"
+      ? this.#native.observeTree()
+      : this.#native.observeProcesses().then((members) => ({ members })));
+  }
+
   observeProcesses() {
     return later(() => this.#native.observeProcesses());
   }

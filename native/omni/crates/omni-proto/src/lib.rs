@@ -19,6 +19,8 @@ pub const INFO_PIDFD_HOST: u32 = 1;
 pub const INFO_PIDFD_MEMBERS: u32 = 2;
 /// `Ready.info` bit: membership observations are supported outside the control loop.
 pub const INFO_OBSERVE: u32 = 4;
+/// `Ready.info` bit: macOS tree footprint observations are supported.
+pub const INFO_FOOTPRINT: u32 = 8;
 
 /// What a child gets on stdin or stderr (stdout is always a pipe).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -157,6 +159,13 @@ pub enum Msg {
         /// Tree id.
         id: u64,
     },
+    /// host → supervisor: independently sample membership and optional physical footprint.
+    ObserveFootprint {
+        /// Request id.
+        req: u64,
+        /// Tree id.
+        id: u64,
+    },
     /// host → supervisor: the host dropped its handle; cleanup duty stays. Reply: `Ack`.
     Release {
         /// Request id.
@@ -218,6 +227,19 @@ pub enum Msg {
         id: u64,
         /// The live processes, in no particular order.
         list: Vec<ProcEntry>,
+    },
+    /// supervisor → host: observed membership and optional sum of macOS process footprints.
+    ObservedTree {
+        /// Request id.
+        req: u64,
+        /// Tree id.
+        id: u64,
+        /// Live members.
+        list: Vec<ProcEntry>,
+        /// Complete sum, or unavailable.
+        footprint: Option<u64>,
+        /// Opaque stable identity for the measured members.
+        identity: Option<String>,
     },
     /// supervisor → host: reply without data.
     Ack {

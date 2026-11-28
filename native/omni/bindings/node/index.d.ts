@@ -131,6 +131,7 @@ export interface Child<D = string | Uint8Array> extends AsyncDisposable {
   processes(): Promise<ProcessInfo[]>;
   /** A membership sample whose deadline does not terminate the supervisor. */
   observeProcesses(): Promise<ProcessInfo[]>;
+  observeTree?(): Promise<{ members: ProcessInfo[]; physicalFootprintBytes?: number; footprintIdentity?: string }>;
 }
 export interface PipeChild<D = string | Uint8Array> extends Child<D> {
   /** Waits for queued writes, then closes stdin; idempotent. */

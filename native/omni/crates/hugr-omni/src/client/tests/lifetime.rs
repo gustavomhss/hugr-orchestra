@@ -118,6 +118,25 @@ fn a_stalled_observation_preserves_the_generation_and_validates_its_late_reply()
 }
 
 #[test]
+fn tree_observation_falls_back_to_the_v2_observation_request() {
+    let (sup, mut peer, spawned) = tree_within(Duration::from_secs(2));
+    let observer = std::thread::spawn(move || block(spawned.tree.observe_tree()));
+    let Msg::Observe { req, id: 1 } = peer.recv() else {
+        panic!("older supervisor must receive Observe");
+    };
+    peer.send(&Msg::Processes {
+        req,
+        id: 1,
+        list: Vec::new(),
+    });
+    let (members, footprint, identity) = observer.join().unwrap().unwrap();
+    assert!(members.is_empty());
+    assert!(footprint.is_none());
+    assert!(identity.is_none());
+    assert!(sup.alive());
+}
+
+#[test]
 fn observation_refuses_an_older_supervisor_without_sending_a_request() {
     let ready = Msg::Ready {
         version: omni_proto::VERSION,

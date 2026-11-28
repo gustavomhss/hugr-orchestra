@@ -107,6 +107,11 @@ impl Life {
         Ok(Self::process_info(self.tree.observe_processes().await?))
     }
 
+    pub(super) async fn observe_tree(&self) -> Result<(Vec<ProcessInfo>, Option<u64>, Option<String>), Error> {
+        let (list, footprint, identity) = self.tree.observe_tree().await?;
+        Ok((Self::process_info(list), footprint, identity))
+    }
+
     /// The same member mapping, retaining the private recoverable/terminal distinction for resource watches.
     pub(super) async fn inventory(&self) -> Result<Vec<ProcessInfo>, InventoryFailure> {
         Ok(Self::process_info(self.tree.inventory().await?))

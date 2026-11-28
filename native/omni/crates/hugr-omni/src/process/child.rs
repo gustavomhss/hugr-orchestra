@@ -115,6 +115,11 @@ impl Child {
         self.inner.life.observe_processes().await
     }
 
+    /// Samples membership and, on macOS when complete, the sum of physical footprints.
+    pub async fn observe_tree(&self) -> Result<(Vec<ProcessInfo>, Option<u64>, Option<String>), Error> {
+        self.inner.life.observe_tree().await
+    }
+
     /// Wires a started tree to its output and input; on failure the tree is killed before the error returns. With
     /// an input, a task settles it with `Closed` once the root exited (contract §9).
     fn start(rt: &Handle, spawned: Spawned, text: bool, grace: Duration) -> Result<Child, Error> {

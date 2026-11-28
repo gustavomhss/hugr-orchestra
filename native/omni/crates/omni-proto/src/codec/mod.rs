@@ -15,6 +15,7 @@ const RESIZE: u8 = 0x04;
 const LIST: u8 = 0x05;
 const RELEASE: u8 = 0x06;
 const OBSERVE: u8 = 0x07;
+const OBSERVE_FOOTPRINT: u8 = 0x08;
 const READY: u8 = 0x81;
 const SPAWNED: u8 = 0x82;
 const SPAWN_FAILED: u8 = 0x83;
@@ -22,6 +23,7 @@ const EXITED: u8 = 0x84;
 const STOPPED: u8 = 0x85;
 const PROCESSES: u8 = 0x86;
 const ACK: u8 = 0x87;
+const OBSERVED_TREE: u8 = 0x88;
 
 /// Appends one frame for `msg` to `out`. Fails (and appends nothing) if the frame would be malformed:
 /// over `MAX_FRAME`, a slot not allowed for its field, or a signal outside 1..=127.
@@ -63,6 +65,7 @@ pub fn encode(msg: &Msg, out: &mut Vec<u8>) -> Result<(), ProtoError> {
         Msg::Resize { req, id, cols, rows } => _ = w.u8(RESIZE).u64(*req).u64(*id).u16(*cols).u16(*rows),
         Msg::List { req, id } => _ = w.u8(LIST).u64(*req).u64(*id),
         Msg::Observe { req, id } => _ = w.u8(OBSERVE).u64(*req).u64(*id),
+        Msg::ObserveFootprint { req, id } => _ = w.u8(OBSERVE_FOOTPRINT).u64(*req).u64(*id),
         Msg::Release { req, id } => _ = w.u8(RELEASE).u64(*req).u64(*id),
         Msg::Ready { version, pid, info } => _ = w.u8(READY).u32(*version).u32(*pid).u32(*info),
         Msg::Spawned { req, id, pid, pty_ends } => {
@@ -91,6 +94,29 @@ pub fn encode(msg: &Msg, out: &mut Vec<u8>) -> Result<(), ProtoError> {
         Msg::Stopped { req, id } => _ = w.u8(STOPPED).u64(*req).u64(*id),
         Msg::Processes { req, id, list } => {
             w.u8(PROCESSES).u64(*req).u64(*id).u32(len(list.len())?);
+            for p in list {
+                w.u32(p.pid)
+                    .u32(p.ppid.unwrap_or(0))
+                    .bytes(p.name.as_deref().unwrap_or("").as_bytes())?;
+            }
+        }
+        Msg::ObservedTree {
+            req,
+            id,
+            list,
+            footprint,
+            identity,
+        } => {
+            if footprint.is_some() != identity.is_some() {
+                return Err(ProtoError("footprint identity mismatch".into()));
+            }
+            w.u8(OBSERVED_TREE)
+                .u64(*req)
+                .u64(*id)
+                .bool(footprint.is_some())
+                .u64(footprint.unwrap_or(0))
+                .bytes(identity.as_deref().unwrap_or("").as_bytes())?
+                .u32(len(list.len())?);
             for p in list {
                 w.u32(p.pid)
                     .u32(p.ppid.unwrap_or(0))
@@ -140,6 +166,10 @@ pub fn decode(buf: &[u8]) -> Result<Option<(Msg, usize)>, ProtoError> {
             rows: r.u16()?,
         },
         OBSERVE => Msg::Observe {
+            req: r.u64()?,
+            id: r.u64()?,
+        },
+        OBSERVE_FOOTPRINT => Msg::ObserveFootprint {
             req: r.u64()?,
             id: r.u64()?,
         },
@@ -201,6 +231,33 @@ pub fn decode(buf: &[u8]) -> Result<Option<(Msg, usize)>, ProtoError> {
                 });
             }
             Msg::Processes { req, id, list }
+        }
+        OBSERVED_TREE => {
+            let (req, id, present, value) = (r.u64()?, r.u64()?, r.bool()?, r.u64()?);
+            if (!present && value != 0) || value > 9_007_199_254_740_991 {
+                return Err(ProtoError("invalid footprint".into()));
+            }
+            let identity = r.string()?;
+            if present == identity.is_empty() {
+                return Err(ProtoError("footprint identity mismatch".into()));
+            }
+            let mut list = Vec::new();
+            for _ in 0..r.count(12)? {
+                let (pid, ppid) = (r.u32()?, r.u32()?);
+                let name = r.string()?;
+                list.push(ProcEntry {
+                    pid,
+                    ppid: (ppid != 0).then_some(ppid),
+                    name: (!name.is_empty()).then_some(name),
+                });
+            }
+            Msg::ObservedTree {
+                req,
+                id,
+                list,
+                footprint: present.then_some(value),
+                identity: present.then_some(identity),
+            }
         }
         ACK => Msg::Ack {
             req: r.u64()?,

@@ -8,6 +8,7 @@
   "actionsSource.ts",
   "actionsTransfers.ts",
   "actionsWorkflows.ts",
+  "activity.ts",
   "client-error.ts",
   "client.ts",
   "index.ts",

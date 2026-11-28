@@ -4,15 +4,27 @@ import type { ActivityMonitor } from "@orchestra/schema/activity-monitor"
 import type { Child } from "./omni"
 import type { ProcessProvenance } from "./process-provenance"
 import { ActivityCPU } from "./activity-cpu"
+import { ActivityFootprintHypothesis } from "./activity-footprint-hypothesis"
 
 const FINISHED_KEPT = 32
 type Entry = {
   child: WeakRef<Child>
   record: ActivityMonitor.Record
+  assistantMessageID?: string
+  workFinishedAt?: number
+  footprintMembers?: string
+  footprintSamples: ActivityFootprintHypothesis.Sample[]
   closed?: number
   rootSettled: boolean
   sampling?: Promise<void>
   inspections: number
+}
+
+function invalidateFootprint(entry: Entry) {
+  entry.footprintMembers = undefined
+  entry.footprintSamples = []
+  if (entry.record.footprint?.hypothesis === "compatible-with-logical-leak")
+    entry.record = { ...entry.record, footprint: { ...entry.record.footprint, hypothesis: "insufficient" } }
 }
 
 /** An observer never owns a child or changes its I/O, stop policy, adoption or lifetime. */
@@ -35,6 +47,7 @@ export function make() {
   // Collection means the observation handle is unavailable, never proof that the native tree exited.
   // Retire such metadata even when no Monitor window is open; the observer must not accumulate dead handles.
   const collected = new FinalizationRegistry<Entry>((entry) => {
+    invalidateFootprint(entry)
     entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
     entry.closed ??= ++status.closure
     retire()
@@ -45,6 +58,7 @@ export function make() {
     const child = entry.child.deref()
     if (!child) {
       // Losing an observation handle does not prove the tree exited.
+      invalidateFootprint(entry)
       entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
       entry.closed ??= ++status.closure
       return Promise.resolve()
@@ -52,24 +66,48 @@ export function make() {
     // Older installed bindings cannot safely perform this observation.
     const timer = { id: undefined as ReturnType<typeof setTimeout> | undefined }
     entry.sampling = Promise.race([
-      Promise.resolve().then(() => child.observeProcesses()),
+      Promise.resolve().then(() => {
+        const tree = child as Child & { observeTree?: () => Promise<{ members: ActivityMonitor.Member[]; physicalFootprintBytes?: number; footprintIdentity?: string }> }
+        return tree.observeTree ? tree.observeTree() : child.observeProcesses().then((members) => ({ members, physicalFootprintBytes: undefined, footprintIdentity: undefined }))
+      }),
       new Promise<never>((_, reject) => {
         timer.id = setTimeout(() => reject(new Error("Process observation timed out")), 2000)
       }),
     ])
       .then(
-        (members) => {
+        (observation) => {
+          const sampledAt = Date.now()
+          const members = observation.members
+          const bytes = observation.physicalFootprintBytes
+          const complete = entry.record.supervisorID && members.length > 0 &&
+            members.every((member) => Number.isSafeInteger(member.pid) && member.pid > 0 &&
+              (member.parentPid === null || Number.isSafeInteger(member.parentPid) && member.parentPid > 0)) &&
+            new Set(members.map((member) => member.pid)).size === members.length &&
+            Number.isSafeInteger(bytes) && bytes !== undefined && bytes >= 0
+          if (complete && bytes !== undefined) {
+            const identity = observation.footprintIdentity
+              ? JSON.stringify([observation.footprintIdentity, members.map((member) => [member.pid, member.parentPid]).sort((a, b) => (a[0] ?? 0) - (b[0] ?? 0))])
+              : undefined
+            if (!identity || entry.footprintMembers !== identity || (entry.footprintSamples.at(-1)?.sampledAt ?? -1) >= sampledAt)
+              entry.footprintSamples = []
+            entry.footprintMembers = identity
+            entry.footprintSamples.push({ source: "footprint", bytes, sampledAt })
+            entry.footprintSamples = entry.footprintSamples.slice(-64)
+            entry.record = { ...entry.record, footprint: { source: "omni.darwin.phys-footprint", bytes, sampledAt,
+              hypothesis: ActivityFootprintHypothesis.evaluate({ samples: entry.footprintSamples, workFinishedAt: entry.workFinishedAt }) } }
+          } else invalidateFootprint(entry)
           entry.record = {
             ...entry.record,
             state: members.length ? "alive" : "unknown",
             inspectionFailed: false,
             source: "omni.processes",
-            sampledAt: Date.now(),
+            sampledAt,
             members,
           }
           entry.closed = members.length === 0 && entry.rootSettled ? ++status.closure : undefined
         },
         () => {
+          invalidateFootprint(entry)
           // Inspection failure is unknown; preserve the last measured members and their timestamp.
           entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
           entry.closed = entry.rootSettled ? ++status.closure : undefined
@@ -86,6 +124,7 @@ export function make() {
     // A paint/refresh reads only the ledger and logical-CPU counters; it never enumerates OS processes.
     entries.forEach((entry) => {
       if (entry.closed === undefined && !entry.child.deref()) {
+        invalidateFootprint(entry)
         entry.record = { ...entry.record, state: "unknown", inspectionFailed: true }
         entry.closed = ++status.closure
       }
@@ -127,6 +166,8 @@ export function make() {
           state: "alive",
           inspectionFailed: false,
         },
+        assistantMessageID: provenance?.assistantMessageID,
+        footprintSamples: [],
         rootSettled: false,
         inspections: 0,
       }
@@ -135,10 +176,19 @@ export function make() {
       // Root exit is not tree exit. Membership remains an explicitly requested reading.
       const rootExited = () => {
         entry.rootSettled = true
+        invalidateFootprint(entry)
         entry.record = { ...entry.record, state: "unknown" }
       }
       void child.wait().then(rootExited, rootExited)
       return entry.record.recordID
+    },
+    complete(input: { sessionID: string; assistantMessageID: string; tool: string; callID: string; finishedAt: number }) {
+      if (!Number.isFinite(input.finishedAt)) return
+      entries.forEach((entry) => {
+        if (entry.record.sessionID !== input.sessionID || entry.assistantMessageID !== input.assistantMessageID ||
+          entry.record.tool !== input.tool || entry.record.callID !== input.callID || entry.workFinishedAt !== undefined) return
+        entry.workFinishedAt = input.finishedAt
+      })
     },
     async inspect(recordID: string) {
       const entry = entries.get(recordID)
@@ -160,3 +210,4 @@ const monitor = make()
 export const observe = monitor.observe
 export const snapshot = monitor.snapshot
 export const inspect = monitor.inspect
+export const complete = monitor.complete

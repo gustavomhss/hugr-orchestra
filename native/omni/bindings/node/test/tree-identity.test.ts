@@ -41,3 +41,29 @@ async function ready(child: Child) {
   }
   throw new Error("Output ended before the READY marker")
 }
+
+
+test.skipIf(process.platform !== "darwin")("observes the physical footprint of a real live tree", async () => {
+  await using child = spawn(process.execPath, ["-e", `
+    const { spawn } = require("node:child_process")
+    const descendant = spawn(process.execPath, ["-e", "console.log('READY'); setInterval(() => {}, 1000)"], { stdio: ["ignore", "pipe", "ignore"] })
+    descendant.stdout.once("data", () => console.log("READY " + descendant.pid))
+    setInterval(() => {}, 1000)
+  `])
+  const lines = child.lines()[Symbol.asyncIterator]()
+  const marker = await lines.next()
+  const descendant = Number(/^READY (\d+)$/.exec(marker.value?.text ?? "")?.[1])
+  expect(descendant).toBeGreaterThan(0)
+  expect(child.observeTree).toBeDefined()
+  const sample = await child.observeTree!()
+  expect(sample.members.map((member) => member.pid)).toContain(child.pid)
+  expect(sample.members.map((member) => member.pid)).toContain(descendant)
+  expect(Number.isSafeInteger(sample.physicalFootprintBytes)).toBe(true)
+  expect(sample.physicalFootprintBytes!).toBeGreaterThan(0)
+  expect(sample.footprintIdentity).toBeTruthy()
+  expect((await child.observeTree!()).footprintIdentity).toBe(sample.footprintIdentity)
+  await child.stop({ graceMs: 0 })
+  const stopped = await child.observeTree!()
+  expect(stopped.members).toEqual([])
+  expect(stopped.physicalFootprintBytes).toBeUndefined()
+}, 30_000)

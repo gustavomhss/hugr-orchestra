@@ -117,6 +117,17 @@ it.live.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")(
         (child) => Effect.promise(() => child.stop({ graceMs: 0 })).pipe(Effect.asVoid),
       )
       const recordID = observe(child, "runtime", "HTTP session")
+      const cached = () =>
+        HttpClientRequest.get("/api/activity").pipe(
+          HttpClientRequest.setHeader("Authorization", `Basic ${btoa("orchestra:activity-test")}`),
+          HttpClient.execute,
+          Effect.flatMap((response) => response.json),
+          Effect.map((json) => Schema.decodeUnknownSync(ActivityMonitor.Snapshot)(json)),
+          Effect.map((snapshot) => snapshot.records.find((record) => record.recordID === recordID)),
+        )
+      const before = yield* cached()
+      expect(before?.recordID).toBe(recordID)
+      expect(before?.footprint).toBeUndefined()
       const denied = yield* HttpClient.execute(HttpClientRequest.get(`/api/activity/${recordID}/inspection`))
       expect(denied.status).toBe(401)
       const response = yield* HttpClientRequest.get(`/api/activity/${recordID}/inspection`).pipe(
@@ -134,6 +145,16 @@ it.live.skipIf(Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off")(
       expect(row?.state).toBe("alive")
       expect(row?.source).toBe("omni.processes")
       expect(row?.members?.some((member) => member.pid === child.pid)).toBe(true)
+      if (process.platform === "darwin") {
+        expect(row?.footprint?.source).toBe("omni.darwin.phys-footprint")
+        expect(row?.footprint?.bytes).toBeGreaterThan(0)
+        expect(row?.footprint?.sampledAt).toBe(row?.sampledAt)
+        expect(row?.footprint?.hypothesis).toBe("insufficient")
+      } else {
+        expect(row?.footprint).toBeUndefined()
+      }
+      const after = yield* cached()
+      expect(after?.footprint).toEqual(row?.footprint)
     }),
   30_000,
 )

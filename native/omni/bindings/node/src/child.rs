@@ -172,6 +172,12 @@ impl NativeChild {
         exec::promise(env, async move { kid.processes().await }, convert::processes)
     }
 
+    #[napi(js_name = "observeTree")]
+    pub fn observe_tree<'env>(&self, env: &'env Env) -> napi::Result<Object<'env>> {
+        let kid = self.kid.clone();
+        exec::promise(env, async move { kid.observe_tree().await }, convert::observed_tree)
+    }
+
     #[napi(js_name = "observeProcesses")]
     pub fn observe_processes<'env>(&self, env: &'env Env) -> napi::Result<Object<'env>> {
         let kid = self.kid.clone();
