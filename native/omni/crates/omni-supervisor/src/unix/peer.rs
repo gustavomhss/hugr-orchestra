@@ -2,7 +2,24 @@
 
 use std::os::fd::OwnedFd;
 
-pub(super) fn authenticate(uid: u32) -> std::io::Result<(libc::ucred, OwnedFd)> {
+use super::isolated::Isolation;
+use super::watch::HostWatch;
+
+pub(super) fn host_watch(args: &crate::Args, isolation: Option<&Isolation>) -> std::io::Result<HostWatch> {
+    let Some(uid) = args.isolated_peer_uid else {
+        return Ok(HostWatch::arm(
+            i32::try_from(args.host_pid).map_err(std::io::Error::other)?,
+        ));
+    };
+    let (peer, fd) = authenticate(uid)?;
+    let isolation = isolation.ok_or_else(|| std::io::Error::other("missing isolation provisioning"))?;
+    if !isolation.distinct_from(peer.uid, peer.gid)? {
+        return Err(std::io::Error::other("isolation identity overlaps desktop peer"));
+    }
+    HostWatch::remote(fd)
+}
+
+fn authenticate(uid: u32) -> std::io::Result<(libc::ucred, OwnedFd)> {
     use std::os::fd::FromRawFd;
     // SAFETY: geteuid and getsockopt use a valid fd and writable credential storage.
     unsafe {

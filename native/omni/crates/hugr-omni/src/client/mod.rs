@@ -9,6 +9,8 @@
 mod channel;
 mod hold;
 mod inventory;
+#[cfg(target_os = "linux")]
+mod isolation;
 #[cfg(all(test, target_os = "linux"))]
 pub(crate) mod inventory_probe;
 #[cfg(unix)]
@@ -114,7 +116,7 @@ pub(crate) fn spawn(spec: &Spec) -> Result<Spawned, Error> {
         }
         #[cfg(target_os = "linux")]
         {
-            ISOLATED.get(|num| sys::connect_isolated(rt, num))?
+            ISOLATED.get(|num| isolation::connect(rt, num))?
         }
         #[cfg(not(target_os = "linux"))]
         {

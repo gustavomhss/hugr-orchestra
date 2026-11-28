@@ -92,36 +92,14 @@ impl Sup {
         sys::fill_stdio()?;
         sys::close_inherited()?;
         #[cfg(target_os = "linux")]
-        let peer = args.isolated_peer_uid.map(peer::authenticate).transpose()?;
-        let chan = Chan::new(take_channel()?)?;
-        let (sigchld, sigchld_w) = signals()?;
-        #[cfg(target_os = "linux")]
-        let host = peer
-            .as_ref()
-            .map_or(i32::try_from(args.host_pid).map_err(std::io::Error::other)?, |p| {
-                p.0.pid
-            });
-        #[cfg(not(target_os = "linux"))]
-        let host = i32::try_from(args.host_pid).map_err(std::io::Error::other)?;
-        #[cfg(target_os = "linux")]
-        let watch = match peer.as_ref() {
-            Some((_, fd)) => HostWatch::remote(fd.try_clone()?)?,
-            None => HostWatch::arm(host),
-        };
-        #[cfg(not(target_os = "linux"))]
-        let watch = HostWatch::arm(host);
-        let pidfd = watch::pidfd_available();
-        #[cfg(target_os = "linux")]
         let isolation = isolated::Isolation::load()?;
         #[cfg(target_os = "linux")]
-        if let Some((peer, _)) = peer {
-            let isolation = isolation
-                .as_ref()
-                .ok_or_else(|| std::io::Error::other("missing isolation provisioning"))?;
-            if !isolation.distinct_from(peer.uid, peer.gid)? {
-                return Err(std::io::Error::other("isolation identity overlaps desktop peer"));
-            }
-        }
+        let watch = peer::host_watch(args, isolation.as_ref())?;
+        #[cfg(not(target_os = "linux"))]
+        let watch = HostWatch::arm(i32::try_from(args.host_pid).map_err(std::io::Error::other)?);
+        let chan = Chan::new(take_channel()?)?;
+        let (sigchld, sigchld_w) = signals()?;
+        let pidfd = watch::pidfd_available();
         #[cfg(target_os = "linux")]
         if isolation.is_some() && !pidfd {
             return Err(std::io::Error::other("isolated member freeze requires pidfd"));
