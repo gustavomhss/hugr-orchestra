@@ -6,6 +6,7 @@ import { Worktree } from "@/utils/worktree"
 import { ServerScope } from "@/utils/server-scope"
 import { createApiForServer, type ServerApi } from "@/utils/server"
 import type { AdmissionOptions } from "@/server-api"
+import type { ModelsExecutionInput } from "@orchestra/client"
 import { inheritSessionModelExecution, registerSessionModelExecution } from "@/utils/session-model-execution"
 import type { SubagentModelPolicy } from "../subagent-model-rules"
 import { draftSessionKey } from "./draft-session"
@@ -43,6 +44,7 @@ type FixtureSDK = {
 type ReactiveOwner = { read?: () => { sdk: FixtureSDK; server: FixtureServer } }
 export const canonicalPolicies = new Map<string, SubagentModelPolicy>()
 const policyVersions = new Map<string, number>()
+const statusReads = new Set<{ touched: Set<string>; removed: Set<string> }>()
 const roots: VoidFunction[] = []
 const disposeSubmitHarness = () => roots.splice(0).forEach((dispose) => dispose())
 export const [reactiveOwner, setReactiveOwner]: [Store<ReactiveOwner>, SetStoreFunction<ReactiveOwner>] = createStore<ReactiveOwner>({})
@@ -77,7 +79,7 @@ export const storedSessions: Record<string, Array<{ id: string; title?: string }
 export const promoted: Array<{ directory: string; sessionID: string }> = []
 export const promotedAgents: Array<string | undefined> = []
 export const promotedSelections: Array<{ agent?: string; model?: { providerID: string; modelID: string }; variant?: string | null }> = []
-export const modelExecutionInputs: unknown[] = []
+export const modelExecutionInputs: ModelsExecutionInput[] = []
 export const sentShell: Array<{ sessionID: string; id?: string; command: string }> = []
 export const syncedDirectories: string[] = []
 export const promotedDrafts: Array<{ draftID: string; server: string; sessionId: string }> = []
@@ -105,12 +107,37 @@ export function holdSendAfterClear(release: Promise<void>, armed = false) {
   return { entered: hold.entered.promise, setPopover: () => void (hold.cleared = true) }
 }
 
+export function holdShellWire() {
+  const entered = Promise.withResolvers<Request>()
+  const release = Promise.withResolvers<number>()
+  const requests: Request[] = []
+  const fetcher: typeof fetch = Object.assign(async (...args: Parameters<typeof fetch>) => {
+    const request = new Request(...args)
+    request.signal.throwIfAborted()
+    requests.push(request)
+    const cancelled = Promise.withResolvers<never>()
+    const abort = () => cancelled.reject(request.signal.reason)
+    request.signal.addEventListener("abort", abort, { once: true })
+    entered.resolve(request)
+    const status = await Promise.race([release.promise, cancelled.promise])
+      .finally(() => request.signal.removeEventListener("abort", abort))
+    return status === 204 ? new Response(null, { status }) : Response.json({ message: "shell refused" }, { status })
+  }, { preconnect: fetch.preconnect })
+  const wire = createApiForServer({ server: { url: "http://shell.fixture" }, fetch: fetcher })
+  const api = policyFixture.sdk.api
+  const session = { ...api.session, shell: wire.session.shell }
+  inheritSessionModelExecution(api.session, session)
+  policyFixture.sdk = { ...policyFixture.sdk, api: { ...api, session } }
+  return { entered: entered.promise, release: release.resolve, requests }
+}
+
 export const state = {
   // How many messages the server reports for a Session; undefined makes the read fail, as an unreachable server would.
   messageCount: undefined as number | undefined,
   removeFailure: false,
   // What the server reports as running; undefined makes the read fail, as an unreachable server would.
   active: undefined as Record<string, { type: string }> | undefined,
+  beforeActiveRead: undefined as (() => Promise<void>) | undefined,
   serverSessionSyncs: 0,
   params: {} as { id?: string },
   search: {} as { draftId?: string },
@@ -139,9 +166,11 @@ export const state = {
   promoteStarted: Promise.withResolvers<void>(),
   promoteProbe: undefined as VoidFunction | undefined,
   promoteDraftHook: () => {},
+  beforeAdmissionHook: undefined as (() => Promise<void>) | undefined,
   sendHook: async (_input: unknown) => {},
   statusObserved: (_args: unknown[]) => {},
   modelID: "model",
+  readModelID: undefined as (() => string) | undefined,
   currentModelMissing: false,
   agentID: "backend",
   agentConfig: undefined as { model?: { providerID: string; modelID: string }; variant?: string } | undefined,
@@ -214,6 +243,7 @@ export const clientFor = (directory: string) => {
         }
       },
       prompt: async (input: unknown, options?: AdmissionOptions) => {
+        if (state.beforeAdmissionHook) await state.beforeAdmissionHook()
         options?.beforeAdmission?.()
         sentPrompts.push(directory)
         promptInputs.push(input)
@@ -221,6 +251,7 @@ export const clientFor = (directory: string) => {
         return { data: undefined }
       },
       command: async (input: unknown, options?: AdmissionOptions) => {
+        if (state.beforeAdmissionHook) await state.beforeAdmissionHook()
         options?.beforeAdmission?.()
         sentCommands.push(input)
         await state.sendHook(input)
@@ -233,6 +264,7 @@ export const clientFor = (directory: string) => {
         interrupts.push(input.sessionID)
       },
       active: async () => {
+        await state.beforeActiveRead?.()
         if (!state.active) throw new Error("active sessions unavailable")
         return state.active
       },
@@ -347,13 +379,14 @@ beforeAll(async () => {
     checksum,
   }))
 
+  const modelID = () => state.readModelID?.() ?? state.modelID
   mock.module("@/context/local", () => ({
     useLocal: () => state.localOverride ?? ({
       model: {
         execution: { context: () => "controlled-submit-fixture-metadata",
-          input: () => ({ model: { providerID: "provider", id: state.modelID, variant: state.variant ?? undefined } }) },
-        intent: () => ({ model: { providerID: "provider", modelID: state.modelID }, variant: state.variant }),
-        current: () => state.currentModelMissing ? undefined : ({ id: state.modelID, provider: { id: "provider" } }),
+          input: () => ({ model: { providerID: "provider", id: modelID(), variant: state.variant ?? undefined } }) },
+        intent: () => ({ model: { providerID: "provider", modelID: modelID() }, variant: state.variant }),
+        current: () => state.currentModelMissing ? undefined : ({ id: modelID(), provider: { id: "provider" } }),
         variant: { current: () => state.variant ?? undefined },
       },
       agent: {
@@ -458,6 +491,19 @@ beforeAll(async () => {
       data: { project: profileProjects },
       session: {
         remember: () => undefined,
+        optimisticBusy(sessionID: string) {
+          this.setStatus(sessionID, { type: "busy" })
+          return () => this.setStatus(sessionID, { type: "idle" })
+        },
+        setStatus(sessionID: string, status: { type: string }) {
+          statusReads.forEach((read) => read.touched.add(sessionID))
+          this.set("session_status", sessionID, status)
+        },
+        captureStatusChanges() {
+          const read = { touched: new Set<string>(), removed: new Set<string>() }
+          statusReads.add(read)
+          return { ...read, release: () => { statusReads.delete(read) } }
+        },
         set: (field: string, sessionID: string, status: { type: string }) => {
           if (field === "session_status") statusWrites.push({ sessionID, type: status.type })
           if (field === "session_status") statusUpdates.push([field, sessionID, status])
@@ -572,11 +618,13 @@ function resetSubmitHarness() {
   state.createStarted = Promise.withResolvers<void>()
   interrupts.length = 0
   statusWrites.length = 0
+  statusReads.clear()
   sdkReads.length = 0
   removedSessions.length = 0
   state.messageCount = undefined
   state.removeFailure = false
   state.active = undefined
+  state.beforeActiveRead = undefined
   state.waiting = 0
   state.waitersReady = Promise.withResolvers<void>()
   state.serverSessionSyncs = 0
@@ -586,9 +634,11 @@ function resetSubmitHarness() {
   state.promoteStarted = Promise.withResolvers<void>()
   state.promoteProbe = undefined
   state.promoteDraftHook = () => {}
+  state.beforeAdmissionHook = undefined
   state.sendHook = async () => {}
   state.statusObserved = () => {}
   state.modelID = "model"
+  state.readModelID = undefined
   state.currentModelMissing = false
   state.agentID = "backend"
   state.agentConfig = undefined

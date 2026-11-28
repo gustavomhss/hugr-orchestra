@@ -7,7 +7,7 @@ import { followSessionModel } from "@/pages/session/session-model-helpers"
 import { createStore, reconcile, unwrap } from "solid-js/store"
 import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 import { ModelExecution } from "@orchestra/schema/model-execution"
-import { createFollowupSender, followupInput, commands, state, toasts, optimistic, optimisticRemovals, promptInputs, sentCommands, sentShell, sdkFor, serverFor, setReactiveOwner } from "@/components/prompt-input/submit-harness"
+import { createFollowupSender, followupInput, commands, state, toasts, optimistic, optimisticRemovals, statusWrites, promptInputs, sentCommands, sentShell, sdkFor, serverFor, setReactiveOwner } from "@/components/prompt-input/submit-harness"
 import { createPromptState } from "@/context/prompt-state"
 import { ServerScope } from "@/utils/server-scope"
 import { ServerConnection } from "@/context/server"
@@ -225,15 +225,61 @@ test("CONTROL E6 App shell keeps its semantics without a fresh model preflight",
   } finally { owner.dispose() }
 })
 
-test("CONTROL E6 App ready known command preserves actual adapter order", async () => {
-  const calls = transport()
+test("CONTROL E6 App known command uses the server’s effective model and preserves actual adapter order", async () => {
+  const target = { ...ref, id: "command-model", variant: "default" }
+  const calls = transport({ reply: () => json({ location: { directory: "/repo/main" }, data:
+    Schema.decodeUnknownSync(ModelExecution.Response)({ ...decision(), selection: { status: "ready", ref: target, engine: "orchestra" } }),
+  }) })
   bind(calls)
   commands.push({ name: "known" })
-  const owner = composer("/known value")
+  const owner = composer("/known value", { onSubmit: () => { commands.length = 0 } })
   try {
     expect(await send(owner)).toBe(true)
+    expect(calls.queries().at(-1)?.body).toMatchObject({
+      context: { type: "session", sessionID: "session-1", agentID: "backend" }, model: ref, command: "known",
+    })
     expect(calls.calls.filter((call) => call.path !== "/api/model/execution").map((call) => call.path.split("/").at(-1))).toEqual(["agent", "model", "command"])
     expect(sentCommands).toEqual([])
+  } finally { owner.dispose() }
+})
+
+test("E6 App final check uses the moved Session’s directory and workspace and rejects a mismatched reply", async () => {
+  const placement = { id: "session-1", directory: "/repo/moved", workspaceID: "workspace-1" }
+  const calls = transport()
+  bind(calls)
+  const owner = composer("prompt for moved session", { info: () => placement })
+  try {
+    calls.control.reply = () => json({ location: { directory: placement.directory, workspaceID: "other" }, data: decision() })
+    expect(await send(owner)).toBe(false)
+    expect(calls.admissions()).toEqual([])
+    expect(owner.prompt.current()).toEqual(text("prompt for moved session"))
+    const query = calls.queries().at(-1)
+    expect(query?.url.searchParams.get("location[directory]")).toBe(placement.directory)
+    expect(query?.url.searchParams.get("location[workspace]")).toBe(placement.workspaceID)
+
+    calls.control.reply = () => json({ location: { directory: placement.directory, workspaceID: placement.workspaceID }, data: decision() })
+    expect(await send(owner)).toBe(true)
+    expect(calls.admissions()).toHaveLength(1)
+  } finally { owner.dispose() }
+})
+
+test("E6 App embedded composer assesses and sends only to its explicit Session", async () => {
+  const sessionID = "ses_pocket"
+  state.params.id = "ses_outer"
+  state.search.draftId = "outer-draft"
+  const calls = transport()
+  bind(calls)
+  const owner = composer("embedded Session prompt", {
+    sessionID: () => sessionID,
+    info: () => ({ id: sessionID, directory: calls.directory }),
+  })
+  try {
+    const sent = await send(owner)
+    expect(calls.queries().at(-1)?.body).toMatchObject({
+      context: { type: "session", sessionID, agentID: "backend" }, model: ref,
+    })
+    expect(calls.admissions().map((call) => call.path)).toEqual([`/api/session/${sessionID}/prompt`])
+    expect(sent).toBe(true)
   } finally { owner.dispose() }
 })
 
@@ -248,7 +294,7 @@ test("E6 App unavailable known command requires a fresh canonical query before a
   try {
     expect(await send(owner)).toBe(false)
     expect(calls.queries().length).toBeGreaterThan(queries)
-    expect(calls.queries().at(-1)?.body).toMatchObject({ context: { type: "session", sessionID: "session-1", agentID: "backend" }, model: ref })
+    expect(calls.queries().at(-1)?.body).toMatchObject({ context: { type: "session", sessionID: "session-1", agentID: "backend" }, model: ref, command: "known" })
     expect(calls.calls.slice(checkpoint).filter((call) => call.method === "POST" && /\/(agent|model|command|prompt)$/.test(call.path))).toEqual([])
     expect(owner.prompt.current()).toEqual(text("/known value"))
   } finally { owner.dispose() }
@@ -301,7 +347,7 @@ test("CONTROL E6 App real model popover renders catalog rows through its product
   const owner = selection(calls, "session-1")
   const view = await selectorDOM(owner)
   try {
-    expect(view.rows().map((row) => row.textContent)).toContain("Consumer model")
+    expect(view.rows().some((row) => row.textContent?.includes("Consumer model"))).toBe(true)
     expect(view.rows().some((row) => row.textContent?.includes("Blocked model"))).toBe(true)
   } finally { view.dispose(); owner.dispose() }
 })
@@ -331,6 +377,19 @@ test("E6 App one canonical context query disables an unsupported rendered row wi
     expect(row, "real selector must retain the catalog entry").toBeDefined()
     expect(calls.queries()).toHaveLength(1)
     expect(row?.getAttribute("aria-disabled")).toBe("true")
+    expect(row?.getAttribute("aria-description")).toBe("Model is not allowed for this session")
+    expect(row?.textContent).toContain("Model is not allowed for this session")
+    const search = document.querySelector<HTMLInputElement>('[role="menu"] input')!
+    const status = document.querySelector('[data-slot="model-picker-status"]')
+    expect(status?.getAttribute("role")).toBe("status")
+    search.focus()
+    const refusal = "Blocked model. Model is not allowed for this session"
+    for (let step = 0; step < 4; step++) {
+      search.dispatchEvent(new KeyboardEvent("keydown", { key: "ArrowDown", bubbles: true, cancelable: true }))
+      if (status?.textContent === refusal) break
+    }
+    expect(document.activeElement).toBe(search)
+    expect(status?.textContent).toBe(refusal)
     row?.click()
     await new Promise<void>((resolve) => setTimeout(resolve, 0))
     expect(owner.local.model.current()?.id).not.toBe("blocked")
@@ -518,9 +577,12 @@ test.each(["Session", "raw model", "policy", "credentials"])("E6 App rechecks %s
     expect(calls.admissions()).toEqual([])
     expect(calls.queries()).toHaveLength(1)
     expect(owner.prompt.current()).toEqual(text("canonical prompt"))
-    if (change === "raw model" || change === "policy") expect(optimisticRemovals).toContainEqual({
-      directory: calls.directory, sessionID: "session-1", messageID: capturedOptimistic!.message.id,
-    })
+    if (change === "raw model" || change === "policy") {
+      expect(optimisticRemovals).toContainEqual({
+        directory: calls.directory, sessionID: "session-1", messageID: capturedOptimistic!.message.id,
+      })
+      expect(statusWrites.at(-1)).toEqual({ sessionID: "session-1", type: "idle" })
+    }
   } finally { release.resolve(); await pending; owner.dispose() }
 })
 
@@ -614,7 +676,7 @@ test("E6 App rendered selector keeps NEW A after A to B to A and a late old A re
 function firstUser(id: string, model: UserMessage["model"] = { providerID: ref.providerID, modelID: ref.id }): UserMessage {
   return { id, sessionID: "session-1", role: "user", agent: "maestro", model, time: { created: 1 } }
 }
-function firstSendOwner(options: { variant?: string; value?: string;
+function firstSendOwner(options: { variant?: string; value?: string; loading?: boolean;
   input?: (source: ReturnType<typeof selection>) => NonNullable<Parameters<typeof composer>[1]> } = {}) {
   state.params.id = "session-1"
   const calls = transport({ reply: async (request) => {
@@ -625,14 +687,22 @@ function firstSendOwner(options: { variant?: string; value?: string;
   if (options.variant !== undefined) source.setMetadata("agent", (agents) => agents.map((agent) => agent.id === "maestro"
     ? { ...agent, model: { providerID: ref.providerID, modelID: ref.id }, variant: options.variant } : agent))
   state.localOverride = source.local
-  const follower = createRoot((dispose) => {
-    const [history, setHistory] = createStore<{ last?: UserMessage; remote?: { providerID: string; id: string } }>({})
-    const last = () => history.last
-    followSessionModel(source.local, { lastUserMessage: last, model: () => history.remote, sessionID: () => "session-1" })
-    return { dispose, last, setLast: (value: UserMessage) => setHistory("last", reconcile(value)),
-      setRemote: (value: { providerID: string; id: string }) => setHistory("remote", reconcile(value)) }
-  })
   const editor = composer(options.value ?? "first Send", options.input?.(source))
+  const follower = createRoot((dispose) => {
+    type StoredModel = { providerID: string; id: string; variant?: string }
+    const [history, setHistory] = createStore<{ last?: UserMessage; remote?: StoredModel; loaded: boolean }>({
+      loaded: options.loading !== true,
+    })
+    const last = () => history.last
+    followSessionModel(source.local, {
+      lastUserMessage: last,
+      info: () => history.loaded ? { model: history.remote } : undefined,
+      editor: () => editor.prompt,
+      sessionID: () => "session-1",
+    })
+    return { dispose, last, setLast: (value: UserMessage) => setHistory("last", reconcile(value)),
+      setRemote: (value: StoredModel) => setHistory({ remote: { ...value, variant: value.variant }, loaded: true }) }
+  })
   return { calls, source, follower, editor,
     observe(value: (typeof optimistic)[number]) {
       expect(optimistic.at(-1)).toBe(value)
@@ -723,6 +793,90 @@ test("E1 real Session follower still restores loaded history and follows a remot
     owner.follower.setRemote({ ...ref, id: "blocked" })
     await wait(() => owner.source.local.model.intent().model?.modelID === "blocked", "actual follower applied remote Session model")
     expect(owner.calls.admissions()).toEqual([])
+  } finally { owner.dispose() }
+})
+
+test.each([undefined, "", "default"])("App hydrates stored Session variant %p before cached message history", async (variant) => {
+  const owner = firstSendOwner({ loading: true, variant: "high" })
+  try {
+    owner.follower.setLast(firstUser("cached-user", { providerID: ref.providerID, modelID: "blocked", variant: "high" }))
+    expect(owner.source.local.model.intent().model).toBeUndefined()
+    owner.follower.setRemote({ ...ref, variant })
+    await wait(() => owner.source.local.model.intent().variant === (variant ?? null), "stored Session intent")
+    expect(owner.source.local.model.execution.input().model).toEqual({ ...ref, variant })
+    expect(owner.editor.prompt.model.current()).toBeUndefined()
+  } finally { owner.dispose() }
+})
+
+test("App follows variant-only Session switches and keeps a new variant bound to its model", async () => {
+  const owner = firstSendOwner({ loading: true })
+  try {
+    owner.follower.setRemote({ ...ref, variant: "default" })
+    await wait(() => owner.source.local.model.intent().variant === "default", "initial stored default")
+    owner.follower.setRemote({ ...ref, variant: "" })
+    await wait(() => owner.source.local.model.intent().variant === "", "variant-only switch")
+    owner.source.local.model.variant.set("high")
+    await wait(() => owner.source.local.model.intent().variant === "high", "explicit reasoning change")
+    owner.source.local.model.set({ providerID: ref.providerID, modelID: "blocked" })
+    await wait(() => owner.source.local.model.intent().model?.modelID === "blocked", "explicit model switch")
+    expect(owner.source.local.model.intent().variant).toBeUndefined()
+  } finally { owner.dispose() }
+})
+
+test("App records a remote Session model that matches the implicit candidate before defaults change", async () => {
+  const owner = firstSendOwner({ variant: "high" })
+  try {
+    await wait(() => owner.source.local.model.execution.ready(), "implicit candidate ready before external switch")
+    expect(owner.source.local.model.intent()).toEqual({ model: undefined, variant: undefined })
+    expect(owner.source.local.model.execution.input().model).toEqual({ ...ref, variant: "high" })
+    owner.follower.setRemote({ ...ref, variant: "high" })
+    await wait(() => owner.source.local.model.intent().variant === "high", "external switch persisted exact intent")
+    owner.source.setMetadata("agent", (agents) => agents.map((agent) => agent.id === "maestro"
+      ? { ...agent, model: { providerID: ref.providerID, modelID: "blocked" }, variant: "default" } : agent))
+    expect(owner.source.local.model.execution.input().model).toEqual({ ...ref, variant: "high" })
+    expect(owner.calls.admissions()).toHaveLength(0)
+  } finally { owner.dispose() }
+})
+
+test("App preserves an implicit choice when the known command's selector echoes before its POST", async () => {
+  commands.push({ name: "fixture-known" })
+  const owner = firstSendOwner({ value: "/fixture-known raw", variant: "high" })
+  try {
+    await wait(() => owner.source.local.model.execution.ready(), "implicit command choice ready")
+    let selectorEchoed = false
+    owner.calls.control.after = async (path) => {
+      if (path !== "/api/session/session-1/model") return
+      owner.follower.setRemote({ ...ref, variant: "high" })
+      await Promise.resolve()
+      expect(owner.source.local.model.intent()).toEqual({ model: undefined, variant: undefined })
+      selectorEchoed = true
+    }
+    expect(await send(owner.editor)).toBe(true)
+    expect(selectorEchoed).toBe(true)
+    expect(owner.calls.calls.filter((call) => call.path.endsWith("/command"))).toHaveLength(1)
+  } finally { owner.dispose() }
+})
+
+test("App preserves the intentional model and its inherited variant when its selector echoes during Send", async () => {
+  const owner = firstSendOwner({ loading: true, variant: "high" })
+  try {
+    owner.source.local.model.set({ providerID: ref.providerID, modelID: ref.id })
+    await wait(() => owner.source.local.model.intent().model?.modelID === ref.id, "explicit model pinned")
+    owner.follower.setRemote({ ...ref, id: "blocked", variant: "default" })
+    await wait(() => owner.editor.prompt.model.current()?.modelID === ref.id, "explicit choice preserved at hydrate")
+    expect(owner.source.local.model.intent().variant).toBeUndefined()
+    expect(owner.source.local.model.execution.input().model).toEqual({ ...ref, variant: "high" })
+    const observed = { echo: false }
+    owner.calls.control.after = async (path) => {
+      if (path !== "/api/session/session-1/model") return
+      owner.follower.setRemote({ ...ref, variant: "high" })
+      await Promise.resolve()
+      expect(owner.source.local.model.intent().variant).toBeUndefined()
+      observed.echo = true
+    }
+    expect(await send(owner.editor)).toBe(true)
+    expect(observed.echo).toBe(true)
+    expect(owner.calls.admissions()).toHaveLength(1)
   } finally { owner.dispose() }
 })
 

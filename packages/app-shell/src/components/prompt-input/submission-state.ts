@@ -11,36 +11,31 @@ export function createPromptSubmissionState(input: {
   const initial = input.target
   const revision = initial.current()
   const version = JSON.stringify(revision)
-  const contextRevision = initial.context.items()
-  const contextVersion = JSON.stringify(contextRevision)
   const submittedPrompt = structuredClone(unwrap(input.prompt))
   const submittedContext = structuredClone(unwrap(input.context))
+  const submittedByKey = new Map(submittedContext.map((item) => [item.key, JSON.stringify(item)]))
   let target = input.target
   let targetRevision = revision
   let targetVersion = version
-  let targetContextRevision = contextRevision
-  let targetContextVersion = contextVersion
+  let destinationKeys: Set<string> | undefined
   let cleared: Prompt | undefined
   let clearedVersion: string | undefined
   let edited = false
-  let contextEdited = false
-  let clearedContext: ReturnType<PromptTarget["context"]["items"]> | undefined
-  let clearedContextVersion: string | undefined
-  let consumed: typeof submittedContext = []
+  const consumed = new Set<string>()
 
   return {
     prompt: submittedPrompt,
     context: submittedContext,
     target: () => target,
     clear(context: "none" | "comments" | "all" = "none") {
-      contextEdited ||=
-        target.context.items() !== targetContextRevision ||
-        JSON.stringify(target.context.items()) !== targetContextVersion
-      if (context !== "none" && !contextEdited) {
-        consumed = submittedContext.filter((item) => context === "all" || !!item.comment?.trim())
-        consumed.forEach((item) => target.context.remove(item.key))
-        clearedContext = target.context.items()
-        clearedContextVersion = JSON.stringify(clearedContext)
+      if (context !== "none") {
+        const submitted = (item: typeof submittedContext[number]) =>
+          (context === "all" || !!item.comment?.trim()) && submittedByKey.get(item.key) === JSON.stringify(item)
+        target.context.items().filter((item) => !destinationKeys?.has(item.key) && submitted(item)).forEach((item) => {
+          consumed.add(item.key)
+          target.context.remove(item.key)
+        })
+        if (initial !== target) initial.context.items().filter(submitted).forEach((item) => initial.context.remove(item.key))
       }
       if (initial !== target && initial.current() === revision && JSON.stringify(initial.current()) === version)
         initial.reset()
@@ -54,11 +49,11 @@ export function createPromptSubmissionState(input: {
       return true
     },
     retarget(next: PromptTarget) {
-      contextEdited ||=
-        initial.context.items() !== contextRevision ||
-        JSON.stringify(initial.context.items()) !== contextVersion ||
-        (next !== initial && next.context.items().length > 0)
-      initial.context.items().forEach(next.context.add)
+      // A context item already in the Session belongs to its own composer.
+      destinationKeys = next === initial ? undefined : new Set(next.context.items().map((item) => item.key))
+      if (next !== initial) {
+        initial.context.items().forEach(next.context.add)
+      }
       const occupied = next !== initial && next.dirty()
       if (occupied) edited = true
       if (initial.current() !== revision || JSON.stringify(initial.current()) !== version) {
@@ -68,19 +63,14 @@ export function createPromptSubmissionState(input: {
       target = next
       targetRevision = next.current()
       targetVersion = JSON.stringify(next.current())
-      targetContextRevision = next.context.items()
-      targetContextVersion = JSON.stringify(next.context.items())
     },
     current: (value: PromptTarget) => target === value,
     restore() {
-      if (
-        !contextEdited &&
-        clearedContext !== undefined &&
-        target.context.items() === clearedContext &&
-        JSON.stringify(target.context.items()) === clearedContextVersion
-      ) {
-        consumed.forEach(target.context.add)
-        clearedContext = undefined
+      if (consumed.size > 0) {
+        const currentKeys = new Set(target.context.items().map((item) => item.key))
+        const missing = submittedContext.filter((item) => consumed.has(item.key) && !currentKeys.has(item.key))
+        consumed.clear()
+        missing.forEach(target.context.add)
       }
       if (edited) return
       if (

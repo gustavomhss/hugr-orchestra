@@ -49,6 +49,33 @@ test.each([false, true])("E6 TUI legacy default pins once from the actual known 
   } finally { await fixture.dispose() }
 })
 
+test("E6 TUI legacy default uses the Session checkout assessment instead of the global catalog", async () => {
+  const checkout = "/project/session-copy"
+  const release = Promise.withResolvers<void>()
+  const fixture = await mount({
+    session: { location: { directory: checkout, workspaceID: "wrk_session_copy" } },
+    preferences: { variant: { [key]: "default" } },
+    catalogModel: namedDefault,
+    reply: async (request) => {
+      await release.promise
+      return readyReply(model)(request)
+    },
+  })
+  try {
+    await wait(() => fixture.queries().length > 0, "held canonical checkout assessment")
+    expect(fixture.queries()[0]?.url.searchParams.get("location[directory]")).toBe(checkout)
+    const legacy = await Bun.file(fixture.preferenceFile).json()
+    expect(legacy.variantIntent).toBeUndefined()
+    release.resolve()
+    expect((await preferences(fixture.preferenceFile, (value) => value.variantIntent?.[key] === null))
+      .variantIntent?.[key]).toBeNull()
+    expect(fixture.context.local.model.intent().variant).toBeNull()
+  } finally {
+    release.resolve()
+    await fixture.dispose()
+  }
+})
+
 test("E6 TUI pinned named default stays literal after catalog removal and reload", async () => {
   const fixture = await mount({ preferences: { variant: { [key]: "default" } }, catalogModel: namedDefault, reply: readyReply(namedDefault) })
   try {
@@ -155,5 +182,50 @@ test("E6 TUI invalid new preference entries do not erase a valid explicit defaul
     const named = await preferences(fixture.preferenceFile, (value) => value.variantIntent?.[key] === "default")
     expect(named.variantIntent).toEqual({ [key]: "default" })
     expect(named.variant).toEqual({ [key]: "high" })
+  } finally { await fixture.dispose() }
+})
+
+test("E6 TUI evaluates a newly selected agent with that agent's configured model", async () => {
+  const fallback = Model.Ref.make({ providerID: model.providerID, id: Model.ID.make("backend-choice") })
+  const fixture = await mount({
+    session: { agent: "maestro", model: ref },
+    backendModel: fallback,
+    reply: async (request) => {
+      const input = Schema.decodeUnknownSync(ModelExecution.Input)(await request.json())
+      return json({
+        location: { directory: new URL(request.url).searchParams.get("location[directory]") },
+        data: {
+          models: decision().models,
+          ...(input.model ? { selection: { ref: input.model, status: "ready", engine: "orchestra" } } : {}),
+        },
+      })
+    },
+  })
+  try {
+    await wait(() => fixture.context.local.model.current()?.modelID === ref.id, "persisted model is loaded")
+    fixture.context.local.agent.set("backend")
+    await wait(() => fixture.context.local.model.current()?.modelID === fallback.id, "selected agent model replaces the old preference")
+    expect(fixture.context.local.model.current()?.providerID).toBe(fallback.providerID)
+  } finally { await fixture.dispose() }
+})
+
+test("E6 TUI can clear a historical empty-name variant when the model has no variants", async () => {
+  const metadata = Model.Info.make({ ...model, variants: [] })
+  const fixture = await mount({ session: { agent: "maestro", model: { ...ref, variant: "" } },
+    catalogModel: metadata, reply: readyReply(metadata) })
+  try {
+    await wait(() => fixture.context.local.model.variant.current() === "", "the literal empty variant from the Session is retained")
+    expect(fixture.context.local.model.variant.list()).toEqual([])
+    expect(fixture.context.local.model.variant.canSelect()).toBe(true)
+    fixture.showVariants()
+    await wait(() => { void fixture.app.renderOnce(); return fixture.app.captureCharFrame().includes("Selected variant is unavailable") }, "the unavailable variant is shown")
+    expect(fixture.app.captureCharFrame()).toContain("Model default")
+    await fixture.app.mockInput.pressArrow("up")
+    await fixture.app.mockInput.pressEnter()
+    await wait(() => fixture.context.local.model.variant.current() === undefined, "Model default clears the named variant")
+    fixture.prompt.set({ input: "use the model default", parts: [], mode: "normal" })
+    fixture.prompt.submit()
+    await wait(() => fixture.admissions().length === 1, "dispatch with Model default")
+    expect(fixture.calls.find((call) => call.path.endsWith("/model") && call.method === "POST")?.body).toEqual({ model: ref })
   } finally { await fixture.dispose() }
 })

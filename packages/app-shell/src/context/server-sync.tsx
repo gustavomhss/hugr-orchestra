@@ -186,13 +186,14 @@ export function createServerSyncContextInner(
     try {
       const active = await serverSDK.api.session.active()
       if (lifetime.disposed || recoveryEpoch.current !== epoch) return active
+      const touched = changes.touched
       if (recover) {
-        void resyncAfterReconnect(session, active, changes.touched, changes.removed)
+        void resyncAfterReconnect(session, active, touched, changes.removed)
         return active
       }
-      seedActiveSessionStatuses(session, active, changes.touched)
+      seedActiveSessionStatuses(session, active, touched)
       for (const sessionID of Object.keys(active)) {
-        if (!changes.touched.has(sessionID)) void session.resolve(sessionID).catch(() => undefined)
+        if (!touched.has(sessionID)) void session.resolve(sessionID).catch(() => undefined)
       }
       return active
     } catch (error) {

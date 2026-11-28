@@ -64,6 +64,13 @@ describe("model variant", () => {
     expect(value).toBe("xhigh")
   })
 
+  test("uses the exact empty-string variant in resolution and cycling", () => {
+    const variants = ["", "high"]
+    expect(resolveModelVariant({ variants, selected: "", configured: "high" })).toBe("")
+    expect(cycleModelVariant({ variants, selected: "", configured: undefined })).toBe("high")
+    expect(cycleModelVariant({ variants, selected: undefined, configured: "" })).toBe("high")
+  })
+
   test("wraps from configured last variant to first", () => {
     const value = cycleModelVariant({
       variants: ["low", "high", "xhigh"],

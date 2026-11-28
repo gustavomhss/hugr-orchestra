@@ -171,7 +171,7 @@ export function createCatalog(client: Client) {
   }
 }
 
-function toModel(model: V2Model): Provider["models"][string] {
+export function toModel(model: V2Model): Provider["models"][string] {
   const cost = model.cost.find((item) => item.tier === undefined) ?? model.cost.at(0)
   const input = new Set(model.capabilities.input)
   const output = new Set(model.capabilities.output)

@@ -3,6 +3,7 @@ import type { Session } from "@/v2-wire"
 
 import type { SubagentModelPolicy } from "../subagent-model-rules"
 import type { FailedPolicyWrite } from "./submission-policy"
+import type { createPromptSubmissionState } from "./submission-state"
 import type { AdmissionRequest } from "./submission-types"
 
 export type Admission = {
@@ -15,6 +16,8 @@ export type Admission = {
   cleanup?: VoidFunction
   abort?: AbortController
   request?: AdmissionRequest
+  attempted?: boolean
+  admittedSubmission?: ReturnType<typeof createPromptSubmissionState>
   promoted?: boolean
 }
 
