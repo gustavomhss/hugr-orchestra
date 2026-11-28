@@ -1,0 +1,50 @@
+name: SOL Claude Code connection probe
+on:
+  push:
+    branches: [sol-host-probe]
+    paths: [.github/workflows/sol-claude-probe.yml]
+permissions:
+  contents: read
+jobs:
+  probe:
+    if: github.repository == 'gustavomhss/hugr-orchestra' && github.actor == 'gustavomhss' && github.triggering_actor == 'gustavomhss'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          ref: 885905c5bcfe77593d074ae10e64d6efa9d3c410
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Verify the configured Claude Code credential with one text-only turn
+        shell: bash
+        env:
+          CLAUDE_CODE_OAUTH_TOKEN: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
+          DISABLE_AUTOUPDATER: '1'
+        run: |
+          set -euo pipefail
+          umask 077
+          if [[ -z "$CLAUDE_CODE_OAUTH_TOKEN" ]]; then
+            echo 'Claude Code credential is not set.'
+            exit 1
+          fi
+          claude=$(bun -e 'import { ClaudeCodeExecutable } from "./modules/engine-adapters/claude-code/src/executable.ts"; console.log(ClaudeCodeExecutable.command())')
+          export CLAUDE_CONFIG_DIR="$RUNNER_TEMP/sol-claude-config"
+          mkdir -m 700 "$CLAUDE_CONFIG_DIR"
+          cd "$RUNNER_TEMP"
+          result=$(mktemp)
+          errors=$(mktemp)
+          trap 'rm -f "$result" "$errors"' EXIT
+          if timeout 90 "$claude" -p --model sonnet --strict-mcp-config --tools '' --max-turns 1 --output-format json 'Reply with the word READY.' >"$result" 2>"$errors" &&
+             jq -e '.type == "result" and .subtype == "success" and (.result | ascii_upcase | contains("READY"))' "$result" >/dev/null; then
+            echo 'Claude Code made a successful one-turn model call.'
+            exit 0
+          fi
+          if grep -Eqi 'authentication_failed|authentication error|invalid.*token|401|not logged in|please run /login|oauth.*expir' "$result" "$errors"; then
+            echo 'Claude Code rejected the configured credential.'
+          elif grep -Eqi 'billing|credit|quota|usage.limit|rate.limit' "$result" "$errors"; then
+            echo 'Claude Code returned a billing or usage refusal.'
+          else
+            echo 'Claude Code did not complete the text-only turn.'
+          fi
+          exit 1
