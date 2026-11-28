@@ -1,8 +1,8 @@
 import assert from "node:assert/strict"
 import { createServer } from "node:http"
-import { chmod, mkdir, mkdtemp, open, readFile, rename, rm, utimes, writeFile } from "node:fs/promises"
+import { chmod, lstat, mkdir, open, readFile, rename, rm, utimes, writeFile } from "node:fs/promises"
+import { createHash } from "node:crypto"
 import { createRequire } from "node:module"
-import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 import { setTimeout as delay } from "node:timers/promises"
 import type { ActivityArm } from "@orchestra/schema/activity-arm"
@@ -12,13 +12,21 @@ import type { MessageBoxOptions } from "electron"
 const desktop = process.cwd()
 
 async function parent() {
-  if (process.platform !== "linux" || process.env.CI !== "true" || process.getuid?.() !== 0 || !Bun.which("xdotool"))
-    throw new Error("Activity arm proof requires the hosted root Linux/Xvfb fixture and xdotool")
-  const root = await mkdtemp(join(tmpdir(), "activity-arm-electron-"))
+  if (process.platform !== "linux" || process.env.CI !== "true" || process.getuid?.() !== 0 || !Bun.which("xdotool") ||
+    !Bun.which("runuser") || !await Bun.file("/usr/bin/python3").exists())
+    throw new Error("Activity Apply proof requires the hosted root Linux/Xvfb fixture, xdotool, runuser, and Python")
+  const root = join("/var/lib", `orchestra-activity-apply-${process.pid}-${crypto.randomUUID()}`)
+  await mkdir(root, { mode: 0o700 })
+  await chmod(root, 0o700)
   try {
     const main = join(root, "repository")
-    const worktree = join(root, "worktree")
-    const sibling = join(root, "sibling")
+    const worktrees = join(root, "worktrees")
+    const quarantine = join(root, "quarantine")
+    const outside = join(root, "outside")
+    const worktree = join(worktrees, "worktree")
+    const sibling = join(outside, "sibling")
+    await Promise.all([mkdir(worktrees, { mode: 0o700 }), mkdir(quarantine, { mode: 0o700 }), mkdir(outside, { mode: 0o700 })])
+    await Promise.all([chmod(worktrees, 0o700), chmod(quarantine, 0o700), chmod(outside, 0o700)])
     await mkdir(main)
     await run("git", ["init", "-q", main])
     await run("git", ["-C", main, "config", "user.email", "fixture@example.invalid"])
@@ -33,8 +41,13 @@ async function parent() {
     await run("git", ["-C", main, "config", "filter.activity.clean", "tee .activity-filter-ran"])
     await utimes(join(worktree, "tracked.fixture"), new Date(), new Date(Date.now() + 30_000))
     await chmod(worktree, 0o700)
-    await mkdir(join(worktree, ".turbo"))
+    await mkdir(join(worktree, ".turbo"), { mode: 0o700 })
+    await chmod(join(worktree, ".turbo"), 0o700)
+    await mkdir(join(sibling, ".turbo"), { mode: 0o700 })
+    await chmod(join(sibling, ".turbo"), 0o700)
     await writeFile(join(worktree, ".turbo", "payload"), "untouched fixture\n")
+    await writeFile(join(sibling, ".turbo", "payload"), "outside fixture\n")
+    await chmod(join(worktree, ".turbo", "payload"), 0o600)
     const handle = await open(join(worktree, ".turbo", "payload"), "r")
     try {
       const source = JSON.stringify(join(desktop, "../../packages/core/src/activity-arm-proof.ts"))
@@ -88,7 +101,7 @@ async function child() {
   assert.ok(process.versions.electron)
   const root = process.env.ACTIVITY_ARM_ROOT!
   const main = join(root, "repository")
-  const worktree = join(root, "worktree")
+  const worktree = join(root, "worktrees", "worktree")
   const source = join(worktree, ".turbo")
   const databasePath = join(root, "activity.sqlite")
   await mkdir(join(root, "home"))
@@ -104,7 +117,7 @@ async function child() {
   const rendererURL = `http://127.0.0.1:${address.port}`
   const owned = await startOwnedServe({
     command: [process.env.ACTIVITY_ARM_BUN!, process.env.ACTIVITY_ARM_CLI!], cwd: root,
-    env: { PATH: process.env.PATH ?? "", HOME: join(root, "home"), ORCHESTRA_TEST_HOME: join(root, "home"), ORCHESTRA_DB: databasePath, ORCHESTRA_CONFIG_DIR: join(root, "config"), ORCHESTRA_DISABLE_MODELS_FETCH: "1", ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "true", ORCHESTRA_INHERIT_CREDENTIALS: "0", ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict", HUGR_OMNI_ADDON: process.env.HUGR_OMNI_ADDON ?? "", HUGR_OMNI_SUPERVISOR: process.env.HUGR_OMNI_SUPERVISOR ?? "" },
+    env: { PATH: process.env.PATH ?? "", HOME: join(root, "home"), ORCHESTRA_TEST_HOME: join(root, "home"), ORCHESTRA_DB: databasePath, ORCHESTRA_CONFIG_DIR: join(root, "config"), ORCHESTRA_DISABLE_MODELS_FETCH: "1", ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: "true", ORCHESTRA_INHERIT_CREDENTIALS: "0", ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict", HUGR_OMNI_ADDON: process.env.HUGR_OMNI_ADDON ?? "", HUGR_OMNI_SUPERVISOR: process.env.HUGR_OMNI_SUPERVISOR ?? "", ORCHESTRA_ACTIVITY_APPLY_ROOT: root },
     privateActivityApproval: true, logger: { log() {}, error() {} }, write() {},
   })
   let window: InstanceType<typeof BrowserWindow> | undefined
@@ -162,7 +175,7 @@ async function child() {
     assert.equal((await plan()).ready.some((item) => item.targetID === target.targetID), true)
     const marker = join(worktree, ".git")
     const pointer = await readFile(marker)
-    await writeFile(marker, await readFile(join(root, "sibling", ".git")))
+    await writeFile(marker, await readFile(join(root, "outside", "sibling", ".git")))
     try {
       assert.ok((await plan()).ready.some((item) => item.targetID === target.targetID), "passive GET retains its cached projection")
       assert.equal((await inspect()).ready.length, 0, "a different Git admin directory cannot qualify the worktree")
@@ -181,7 +194,7 @@ async function child() {
     let step = 0
     const arm = async (mode: "cancel" | "change" | "confirm", target: ActivityArm.Target) => {
       const request = { targets: [{ targetID: target.targetID, generation: target.generation }] }
-      await writeFile(join(root, "next-dialog.json"), JSON.stringify({ step: ++step, mode, source }))
+      await writeFile(join(root, "next-dialog.json"), JSON.stringify({ step: ++step, mode, source: target.label }))
       const receipt = await window!.webContents.executeJavaScript(`window.api.armActivityQuarantine(${JSON.stringify(owned.url)}, ${JSON.stringify(request)})`) as ActivityArm.Receipt | undefined
       assert.equal(nativeResponses.length, step, `native dialog did not return for ${mode}`)
       const shown = nativeResponses[step - 1]!
@@ -191,7 +204,7 @@ async function child() {
       assert.deepEqual(shown.options.buttons, ["Cancel", "Arm quarantine"])
       assert.equal(shown.options.defaultId, 0)
       assert.equal(shown.options.cancelId, 0)
-      assert.equal(shown.options.detail, `${JSON.stringify(source)} — "activity-fixture"\nID: ${JSON.stringify(target.targetID)}\nGeneration: ${JSON.stringify(target.generation)}`)
+      assert.equal(shown.options.detail, `${JSON.stringify(target.label)} — "activity-fixture"\nID: ${JSON.stringify(target.targetID)}\nGeneration: ${JSON.stringify(target.generation)}`)
       return receipt
     }
     assert.equal(await arm("cancel", idle), undefined)
@@ -219,39 +232,41 @@ async function child() {
     assert.equal(await readFile(join(source, "payload"), "utf8"), "untouched fixture\n")
     const request = { approvalID: receipt.approvalID, targetID: current.targetID, generation: current.generation }
     assert.ok(applyClient, "owned production Apply client must be available")
-    const state = await applyClient.read()
-    assert.equal(state?.available, false, "production Linux Apply must fail closed")
-    assert.equal(await applyClient.preview(request), undefined, "signed production preview must refuse")
-    assert.equal(await window!.webContents.executeJavaScript(`window.api.applyActivityQuarantine(${JSON.stringify(owned.url)}, ${JSON.stringify(request)})`), undefined)
-    assert.equal(nativeResponses.length, step, "refused production preview must not open a dialog")
-    assert.equal(await readFile(join(source, "payload"), "utf8"), "untouched fixture\n")
-
-    // Exercise the same real BrowserWindow and native bridge with private fixture files.
-    // Production Linux is deliberately unavailable; this client is not its mutation adapter.
-    const fixtureSource = join(root, "apply-source")
-    const fixtureDestination = join(root, "apply-destination")
-    await writeFile(fixtureSource, "private apply fixture\n")
-    const preview: ActivityApply.Preview = {
-      previewID: "activity-apply-preview", action: "apply-quarantine", expiresAt: Date.now() + 60_000,
-      approvalID: receipt.approvalID, target: { ...current, label: fixtureSource }, destination: fixtureDestination,
+    const state = await window!.webContents.executeJavaScript(`window.api.readActivityApply(${JSON.stringify(owned.url)})`) as ActivityApply.State
+    assert.equal(state.available, true, "the configured root-owned profile must enable production Apply")
+    assert.ok(state.eligible.some((item) => item.approvalID === request.approvalID && item.targetID === request.targetID && item.generation === request.generation))
+    const unsigned = await fetch(`${owned.url}/_orchestra-activity/v1/apply-confirm`, {
+      method: "POST", headers: { authorization, "content-type": "application/json" },
+      body: JSON.stringify({ previewID: crypto.randomUUID() }),
+    })
+    assert.equal(unsigned.status, 403, "an ordinary authenticated caller cannot submit private Apply confirmation")
+    const unsignedPreview = await fetch(`${owned.url}/_orchestra-activity/v1/apply-preview`, {
+      method: "POST", headers: { authorization, "content-type": "application/json" }, body: JSON.stringify(request),
+    })
+    assert.equal(unsignedPreview.status, 403, "an ordinary authenticated caller cannot submit private Apply preview")
+    const preview = await applyClient.preview(request)
+    assert.ok(preview, "the real signed production client must produce an Apply preview")
+    assert.equal(preview.target.label, source)
+    const expectedDestination = join(root, "quarantine", `q-${createHash("sha256").update(JSON.stringify([current.targetID, current.generation])).digest("hex")}`)
+    assert.equal(preview.destination, expectedDestination)
+    const original = await lstat(source, { bigint: true })
+    assert.equal(original.isDirectory(), true)
+    assert.equal(original.isSymbolicLink(), false)
+    assert.equal(original.uid, 0n)
+    for (const directory of [root, join(root, "worktrees"), worktree, source, join(root, "quarantine")]) {
+      const info = await lstat(directory, { bigint: true })
+      assert.equal(info.uid, 0n, `${directory} must be administrator-owned`)
+      assert.equal(info.isSymbolicLink(), false, `${directory} must not resolve through a symlink`)
+      assert.equal(Number(info.mode & 0o777n), 0o700, `${directory} must be inaccessible to ordinary users`)
     }
-    const applied: ActivityApply.Receipt = { previewID: preview.previewID, ...request, outcome: "Out" }
-    let confirmations = 0
-    applyClient = {
-      isCurrent: () => true,
-      read: async () => ({ available: true, eligible: [request], results: [], partial: false }),
-      preview: async (input) => JSON.stringify(input) === JSON.stringify(request) ? preview : undefined,
-      confirm: async (input) => {
-        if (input.previewID !== preview.previewID) return undefined
-        confirmations++
-        await rename(fixtureSource, fixtureDestination)
-        await assert.rejects(readFile(fixtureSource), { code: "ENOENT" })
-        assert.equal(await readFile(fixtureDestination, "utf8"), "private apply fixture\n")
-        return applied
-      },
+    for (const ancestor of ["/", "/var", "/var/lib"]) {
+      const info = await lstat(ancestor, { bigint: true })
+      assert.equal(info.uid, 0n, `${ancestor} must be administrator-owned`)
+      assert.equal(info.isSymbolicLink(), false, `${ancestor} must not be a symlink`)
+      assert.equal(info.mode & 0o022n, 0n, `${ancestor} must not be writable by ordinary users`)
     }
     const apply = async (mode: "cancel" | "confirm") => {
-      await writeFile(join(root, "next-dialog.json"), JSON.stringify({ step: ++step, mode, source, title: "Apply quarantine" }))
+      await writeFile(join(root, "next-dialog.json"), JSON.stringify({ step: ++step, mode, source, title: "Apply quarantine", attack: mode === "confirm" }))
       const result = await window!.webContents.executeJavaScript(`window.api.applyActivityQuarantine(${JSON.stringify(owned.url)}, ${JSON.stringify(request)})`) as ActivityApply.Receipt | undefined
       assert.equal(nativeResponses.length, step, `native Apply dialog did not return for ${mode}`)
       const shown = nativeResponses[step - 1]!
@@ -261,25 +276,50 @@ async function child() {
       assert.deepEqual(shown.options.buttons, ["Cancel", "Apply quarantine"])
       assert.equal(shown.options.defaultId, 0)
       assert.equal(shown.options.cancelId, 0)
-      assert.equal(shown.options.detail, `Approval: ${JSON.stringify(receipt.approvalID)}\nTarget: ${JSON.stringify(current.targetID)}\nPath: ${JSON.stringify(fixtureSource)}\nGeneration: ${JSON.stringify(current.generation)}\nDestination: ${JSON.stringify(fixtureDestination)}`)
+      assert.equal(shown.options.detail, `Approval: ${JSON.stringify(receipt.approvalID)}\nTarget: ${JSON.stringify(current.targetID)}\nPath: ${JSON.stringify(source)}\nGeneration: ${JSON.stringify(current.generation)}\nDestination: ${JSON.stringify(expectedDestination)}`)
       return result
     }
     assert.equal(await apply("cancel"), undefined)
-    assert.equal(confirmations, 0)
-    assert.equal(await readFile(fixtureSource, "utf8"), "private apply fixture\n")
-    await assert.rejects(readFile(fixtureDestination), { code: "ENOENT" })
-    assert.deepEqual(await apply("confirm"), applied)
-    assert.equal(confirmations, 1)
-    assert.equal(await readFile(fixtureDestination, "utf8"), "private apply fixture\n")
-    await assert.rejects(readFile(fixtureSource), { code: "ENOENT" })
-    assert.equal(await readFile(join(source, "payload"), "utf8"), "untouched fixture\n")
+    assert.equal(await lstat(source, { bigint: true }).then((info) => `${info.dev}:${info.ino}`), `${original.dev}:${original.ino}`, "native cancellation must keep the original inode at source")
+    await assert.rejects(lstat(expectedDestination), { code: "ENOENT" })
+    const applied = await apply("confirm")
+    assert.ok(applied)
+    assert.deepEqual(applied, { previewID: preview.previewID, ...request, outcome: "Out" })
+    const attack = JSON.parse(await readFile(join(root, "attack-result.json"), "utf8")) as { uid: number; errno?: string; renamed: boolean; sentinel: boolean }
+    assert.equal(attack.uid, 65_534, "the replacement attempt must run as the ordinary nobody UID")
+    assert.ok(attack.errno === "EACCES" || attack.errno === "EPERM", `kernel must deny source substitution: ${JSON.stringify(attack)}`)
+    assert.equal(attack.renamed, false, "the ordinary same-UID process must not rename the protected source")
+    assert.equal(attack.sentinel, false, "the ordinary same-UID process must not plant a replacement sentinel")
+    const reread = await window!.webContents.executeJavaScript(`window.api.readActivityApply(${JSON.stringify(owned.url)})`) as ActivityApply.State
+    assert.equal(reread.results.find((item) => item.targetID === request.targetID && item.generation === request.generation)?.outcome, "Out", "the genuine production reread must report Out")
+    await assert.rejects(lstat(source), { code: "ENOENT" })
+    const moved = await lstat(expectedDestination, { bigint: true })
+    assert.equal(moved.isDirectory(), true)
+    assert.equal(moved.isSymbolicLink(), false)
+    assert.equal(`${moved.dev}:${moved.ino}`, `${original.dev}:${original.ino}`, "quarantine must contain the exact inode captured before confirmation")
+    assert.equal(await readFile(join(expectedDestination, "payload"), "utf8"), "untouched fixture\n")
+    const saved = db.prepare("SELECT identity, outcome, source, destination FROM activity_apply WHERE target_id = ? AND generation = ?").get(request.targetID, request.generation) as { identity: string; outcome: string; source: string; destination: string } | undefined
+    assert.deepEqual(saved, { identity: `${original.dev}:${original.ino}`, outcome: "Out", source, destination: expectedDestination }, "SQLite must persist the pinned native identity and verified Out receipt")
+    const outsideSource = join(root, "outside", "sibling", ".turbo")
+    db.prepare("INSERT INTO project_directory (project_id, directory, registration_id, type, strategy, time_created) VALUES (?, ?, ?, 'git_worktree', 'git_worktree', ?)").run("activity-fixture", join(root, "outside", "sibling"), "outside-registration", now)
+    const outsideTarget = (await inspect()).ready.find((item) => item.label === outsideSource)
+    assert.ok(outsideTarget, "a real registered target outside the configured worktrees directory must remain armable")
+    const outsideArm = await arm("confirm", outsideTarget)
+    assert.ok(outsideArm?.approvalID)
+    assert.equal(receipts().length, 2)
+    const outsideRequest = { approvalID: outsideArm.approvalID, targetID: outsideTarget.targetID, generation: outsideTarget.generation }
+    assert.equal(await applyClient.preview(outsideRequest), undefined, "production Apply must refuse an already Armed source outside the configured protected root")
+    assert.equal(await window!.webContents.executeJavaScript(`window.api.applyActivityQuarantine(${JSON.stringify(owned.url)}, ${JSON.stringify(outsideRequest)})`), undefined)
+    assert.equal(nativeResponses.length, step, "an outside-root refusal must not prompt for native Apply confirmation")
+    assert.equal(await readFile(join(outsideSource, "payload"), "utf8"), "outside fixture\n")
     await assert.rejects(readFile(join(worktree, ".activity-filter-ran")), { code: "ENOENT" })
     db.close()
     await writeFile(join(root, "report.json"), JSON.stringify({
       status: "pass", openFileRefused: true, nativeCancel: true, identityMismatch: true, staleRefused: true,
       signedReceipt: true, durableReceipt: true, sourceUntouched: true, nestedNamespaceRefused: true,
-      wrongGitDirectoryRefused: true, cleanFilterNotRun: true, productionApplyRefused: true,
-      applyCancel: true, applyConfirm: true,
+      wrongGitDirectoryRefused: true, cleanFilterNotRun: true, unsignedApplyRefused: true, unsignedApplyPreviewRefused: true,
+      applyCancel: true, protectedSourceDenied: true, applyConfirm: true, inodePreserved: true, rereadOut: true,
+      outsideRootArmed: true, outsideRootApplyRefused: true,
     }))
   } finally {
     window?.destroy()
@@ -291,7 +331,7 @@ async function child() {
 async function handleDialogs(done: () => boolean, root: string) {
   let handled = 0
   while (!done()) {
-    const request = await readFile(join(root, "dialog.json"), "utf8").then((text) => JSON.parse(text) as { step: number; mode: "cancel" | "change" | "confirm"; source: string; title?: string }).catch(() => undefined)
+    const request = await readFile(join(root, "dialog.json"), "utf8").then((text) => JSON.parse(text) as { step: number; mode: "cancel" | "change" | "confirm"; source: string; title?: string; attack?: boolean }).catch(() => undefined)
     if (request && request.step > handled) {
       const search = Bun.spawn(["xdotool", "search", "--name", request.title ?? "Arm quarantine"], { stdout: "pipe", stderr: "ignore" })
       const output = await new Response(search.stdout).text()
@@ -304,6 +344,7 @@ async function handleDialogs(done: () => boolean, root: string) {
           await mkdir(request.source)
           await writeFile(join(request.source, "payload"), "replacement\n")
         }
+        if (request.attack) await writeFile(join(root, "attack-result.json"), JSON.stringify(await sourceSwapAsNobody(request.source)))
         await run("xdotool", ["windowfocus", id])
         await run("xdotool", request.mode === "cancel" ? ["key", "Return"] : ["key", "Tab", "Return"])
         handled = request.step
@@ -311,6 +352,27 @@ async function handleDialogs(done: () => boolean, root: string) {
     }
     await delay(100)
   }
+}
+
+async function sourceSwapAsNobody(source: string) {
+  const script = `import errno, json, os, sys
+source = sys.argv[1]
+moved = source + ".attacker"
+sentinel = os.path.join(source, "sentinel")
+try:
+    os.rename(source, moved)
+    os.mkdir(source)
+    with open(sentinel, "w", encoding="utf-8") as output:
+        output.write("attacker replacement")
+    result = {"uid": os.getuid(), "renamed": True, "sentinel": os.path.exists(sentinel)}
+except OSError as error:
+    result = {"uid": os.getuid(), "errno": errno.errorcode.get(error.errno, str(error.errno)), "renamed": os.path.exists(moved), "sentinel": os.path.exists(sentinel)}
+print(json.dumps(result))`
+  const child = Bun.spawn(["runuser", "-u", "nobody", "--", "/usr/bin/python3", "-c", script, source], { stdout: "pipe", stderr: "pipe" })
+  const stdout = new Response(child.stdout).text()
+  const stderr = new Response(child.stderr).text()
+  assert.equal(await child.exited, 0, `the same-UID source swap attempt failed to run: ${await stderr}`)
+  return JSON.parse(await stdout) as { uid: number; errno?: string; renamed: boolean; sentinel: boolean }
 }
 
 async function run(command: string, args: string[]) {
