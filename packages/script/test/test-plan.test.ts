@@ -191,7 +191,9 @@ describe("test shard planner", () => {
 
   test("Windows CLI, Server and clients have disjoint owners without changing package wrappers", () => {
     const lanes = packageLanes("windows", "fixture-host") as { part: string; filters?: string; turbo?: boolean; budget?: number }[]
-    expect(lanes).toHaveLength(19)
+    const maestroWindows = packageShards(JSON.parse(readFileSync(new URL("../src/test-timings.json", import.meta.url), "utf8")) as Timings, "modules/maestro/coordination", "windows")
+    // Seventeen lanes besides Maestro. Maestro's own count follows the measured complement.
+    expect(lanes).toHaveLength(17 + maestroWindows)
     const expected = [
       { name: "windows", host: "fixture-host", part: "windows-cli", label: "cli", turbo: true, filters: "--filter=@orchestra/cli" },
       { name: "windows", host: "fixture-host", part: "windows-server", label: "server", turbo: true, filters: "--filter=@orchestra/server" },
