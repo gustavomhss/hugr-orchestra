@@ -50,7 +50,7 @@ def main():
     parser.add_argument('--admission', required=True, type=Path)
     parser.add_argument('--routing', required=True, type=Path)
     parser.add_argument('--output', required=True, type=Path)
-    parser.add_argument('--phase', choices=('initial', 'followup'), default='initial')
+    parser.add_argument('--phase', choices=('initial', 'followup', 'recheck'), default='initial')
     parser.add_argument('--wait-followup', action='store_true')
     args = parser.parse_args()
     require(os.environ.get('GITHUB_ACTIONS') == 'true' and os.environ.get('GITHUB_EVENT_NAME') == 'workflow_dispatch'
@@ -82,7 +82,7 @@ def main():
     require(all(marker.get(k) == v for k, v in {'root': str(root), 'evaluationPlan': PLAN, 'obligationSet': OBLIGATIONS, 'evaluationCandidate': CANDIDATE, 'generation': GENERATION, 'scope': SCOPE}.items()), 'marker differs')
     original_policy = json.loads((root / '.atlas/evaluation-policy.json').read_bytes())
     require(original_policy['operations'] == ['admit'] and original_policy['consumer'] is None, 'admission policy mismatch')
-    if args.phase == 'initial' and not args.wait_followup:
+    if args.phase in ('initial', 'recheck') and not args.wait_followup:
         require(not ledgers(root), 'fresh per-case ledgers required')
     plan = json.loads((root / PREFIX / 'evaluation-plan.json').read_bytes())
     modes = plan['consumer_modes']
@@ -91,7 +91,8 @@ def main():
     require(subprocess.check_output(['git', '-C', str(repository), 'rev-parse', 'HEAD'], text=True).strip() == os.environ['GITHUB_SHA'], 'checkout head differs')
     routing_path = args.routing.resolve(strict=True)
     relative = routing_path.relative_to(repository).as_posix()
-    require(relative == 'script/genesis-s2/consumer-routing.json', 'unexpected routing location')
+    expected_routing = 'consumer-recheck.json' if args.phase == 'recheck' else 'consumer-routing.json'
+    require(relative == 'script/genesis-s2/' + expected_routing, 'unexpected routing location')
     routing_bytes = routing_path.read_bytes()
     require(routing_bytes == subprocess.check_output(['git', '-C', str(repository), 'show', 'HEAD:' + relative]), 'routing differs from committed source')
     routing_hash = digest(routing_bytes)
@@ -124,7 +125,7 @@ def main():
             return
         write(out / 'followup-routing.json', accepted)
         return
-    if args.phase == 'initial':
+    if args.phase in ('initial', 'recheck'):
         route_data = routing_bytes
     else:
         require((out / 'initial/summary.json').is_file(), 'initial wave incomplete')
@@ -134,10 +135,17 @@ def main():
     routing = json.loads(route_data)
     if args.phase == 'initial':
         require(set(routing) == {'schema', 'candidate_id', 'cases'} and routing['schema'] == 'genesis-s2-consumer-routing/v1' and routing['candidate_id'] == CANDIDATE, 'routing schema/candidate mismatch')
+    elif args.phase == 'recheck':
+        require(set(routing) == {'schema', 'candidate_id', 'prior_run', 'prior_checkpoint_sha256', 'cases'}
+                and routing['schema'] == 'genesis-s2-consumer-recheck/v1' and routing['candidate_id'] == CANDIDATE
+                and routing['prior_run'] == 46165708773, 'recheck routing identity mismatch')
+        prior = repository / PREFIX / '../runtime-followup/consumers-run-46165708773/checkpoint.json'
+        require(digest(prior.read_bytes()) == routing['prior_checkpoint_sha256'], 'prior attempt drift')
+        require(len(routing['cases']) == 1 and routing['cases'][0]['id'] == 'S2-I2U', 'recheck must be limited to S2-I2U')
     else:
         require(set(routing) == {'schema', 'candidate_id', 'initial_route_sha256', 'run_id', 'cases'} and routing['schema'] == 'genesis-s2-consumer-followup/v1' and routing['candidate_id'] == CANDIDATE and routing['initial_route_sha256'] == routing_hash and str(routing['run_id']) == os.environ['GITHUB_RUN_ID'], 'followup binding mismatch')
     cases = routing['cases']
-    require(isinstance(cases, list) and len({case['id'] for case in cases}) == len(cases) and {case['id'] for case in cases} <= set(plan['consumer_ids']) and (args.phase == 'followup' or len(cases) == 14), 'routing cases mismatch')
+    require(isinstance(cases, list) and len({case['id'] for case in cases}) == len(cases) and {case['id'] for case in cases} <= set(plan['consumer_ids']) and (args.phase != 'initial' or len(cases) == 14), 'routing cases mismatch')
     for case in cases:
         require(set(case) == {'id', 'mode', 'calls'} and case['mode'] == modes[case['id']] and isinstance(case['calls'], list) and 1 <= len(case['calls']) <= 12, 'case mode/calls mismatch')
         for call in case['calls']:
@@ -165,7 +173,7 @@ def main():
             case_out = wave / case['id']
             case_out.mkdir()
             before_case = ledgers(root)
-            if args.phase == 'initial':
+            if args.phase in ('initial', 'recheck'):
                 require(all(json.loads(raw)['consumer'] != case['id'] for raw in before_case.values()), 'case ledger already exists')
             policy = {**original_policy, 'actor': '/root', 'operations': ['index', 'read'], 'consumer': {'id': case['id'], 'mode': case['mode']}}
             policy_path.write_bytes(encoded(policy))

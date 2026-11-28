@@ -1,0 +1,32 @@
+{
+  "schema": "genesis-s2-consumer-recheck/v1",
+  "candidate_id": "ade18f60d8b143fc90fae24bc5c6cd1c14d1e56756800f14b65d19f7eacdf542",
+  "prior_run": 46165708773,
+  "prior_checkpoint_sha256": "8012a3d506cd45477caa0e48571cfc965d6fbeac72f52bd596dbbb92cf5b6ae1",
+  "cases": [
+    {
+      "id": "S2-I2U",
+      "mode": "routine",
+      "calls": [
+        {
+          "operation": "read",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "key": "s2.l2.design-tui",
+            "section": "V2 actions and prompt admission",
+            "maxBytes": 3319
+          }
+        },
+        {
+          "operation": "read",
+          "query": {
+            "scope": "orchestra.interfaces",
+            "key": "s2.l1.design-tui",
+            "section": "V2 session action boundary",
+            "maxBytes": 6000
+          }
+        }
+      ]
+    }
+  ]
+}
