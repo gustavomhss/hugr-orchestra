@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
-          ref: 317e05bcd49e68d47f055e60f7b5c691722242a8
+          ref: 328100eb374515dd7e6b11f5ed4fcdcfb0d920fa
           fetch-depth: 0
           persist-credentials: false
       - uses: ./.github/actions/setup-bun
