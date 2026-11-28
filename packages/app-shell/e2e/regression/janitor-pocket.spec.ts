@@ -4,6 +4,7 @@ import type {} from "../../../../apps/desktop/src/renderer/env"
 import { currentSession } from "../utils/mock-server"
 import {
   directory,
+  projectID,
   sessionID as routeSessionID,
   session,
   setupTimeline,
@@ -205,6 +206,122 @@ test("Janitor uses the adopted Session model and policy while a draft tab is ope
   await expect(draftChip).toHaveText("Subagents · 1")
   await expect(draftInput).toHaveText("Unsent draft text")
   await expect(page).toHaveURL(`/new-session?draftId=${draftID}`)
+})
+
+test("Janitor keeps the same Session and sends from its new workspace after a move", async ({ page }) => {
+  const model = { providerID: "opencode", id: "claude-opus-4-6", variant: "default" }
+  const janitor = session({ id: janitorSessionID, title: "Janitor chat", model })
+  const destination = { directory: `${directory}-copy`, workspaceID: "wrk_janitor_destination" }
+  const prompts: Array<{ sessionID: string; body: unknown }> = []
+  const assessmentLocations: Array<{ directory: string | null; workspace: string | null }> = []
+  const expectedQuery = { directory: destination.directory, workspace: destination.workspaceID }
+  const key = `orchestra.janitor.session.local.${base64Encode(directory)}`
+  await page.addInitScript(({ report, key, id }) => {
+    Object.assign(window, {
+      api: {
+        janitor: {
+          getReport: async () => ({ report, source: null }),
+          publish: async () => true,
+          snooze: async () => true,
+          dismiss: async () => true,
+          onReport: () => () => {},
+        },
+      } satisfies Pick<Window["api"], "janitor">,
+    })
+    localStorage.setItem(key, id)
+  }, { report, key, id: janitorSessionID })
+  const timeline = await setupTimeline(page, {
+    settings: { janitorEnabled: true },
+    sessions: [session(), janitor],
+    variants: ["default"],
+    onPrompt: (input) => prompts.push(input),
+  })
+
+  let moved = false
+  let creates = 0
+  const headers = { "access-control-allow-origin": "*" }
+  const timestamp = Date.now()
+  let policy = { mode: "allowlist", models: [] }
+  page.on("request", (request) => {
+    if (request.method() === "POST" && new URL(request.url()).pathname === "/api/session") creates++
+  })
+  await page.route((url) => url.pathname === `/api/session/${janitorSessionID}`, (route) => {
+    if (route.request().method() !== "GET") return route.fallback()
+    const data = currentSession(moved ? { ...janitor, ...destination, time: { ...janitor.time, updated: timestamp } } : janitor)
+    return route.fulfill({ headers, json: { data: { ...data, subagentModels: policy } } })
+  })
+  await page.route((url) => url.pathname === `/api/session/${janitorSessionID}/subagent-models`, (route) => {
+    if (route.request().method() !== "POST") return route.fallback()
+    policy = route.request().postDataJSON().policy
+    return route.fulfill({ headers, json: { data: policy } })
+  })
+  await page.route((url) => url.pathname === "/api/model/execution", (route) => {
+    const request = route.request()
+    if (!moved || request.method() !== "POST" || request.postDataJSON().context.sessionID !== janitorSessionID)
+      return route.fallback()
+    const params = new URL(request.url()).searchParams
+    const location = { directory: params.get("location[directory]"), workspace: params.get("location[workspace]") }
+    assessmentLocations.push(location)
+    if (location.directory !== destination.directory || location.workspace !== destination.workspaceID)
+      return route.fulfill({ headers, status: 409, json: { message: "Session moved" } })
+    return route.fulfill({
+      headers,
+      json: {
+        location: { ...destination, project: { id: projectID, directory } },
+        data: { models: [], selection: { status: "ready", engine: "orchestra", ref: model } },
+      },
+    })
+  })
+
+  const pocket = page.getByRole("complementary", { name: "Janitor report" })
+  const open = pocket.getByRole("button", { name: "Open janitor report" })
+  await open.click()
+  const prompt = pocket.getByRole("textbox", { name: "Prompt" })
+  const send = pocket.getByRole("button", { name: "Send", exact: true })
+  await expect(prompt).toBeEditable()
+  await expect(pocket.getByText("Build the timeline stability matrix.", { exact: true })).toBeVisible()
+  await prompt.fill("Continue in the new workspace")
+  await expect(send).toBeEnabled()
+  moved = true
+  await timeline.transport.writeRaw(`data: ${JSON.stringify({
+    id: "evt_janitor_moved",
+    type: "session.next.moved",
+    created: timestamp,
+    location: destination,
+    durable: { aggregateID: janitorSessionID, seq: 1, version: 1 },
+    data: { sessionID: janitorSessionID, timestamp, location: destination },
+  })}\n\n`)
+  await expect.poll(() => assessmentLocations).toContainEqual(expectedQuery)
+  await expect(prompt).toHaveText("Continue in the new workspace")
+  await expect(pocket.getByText("Build the timeline stability matrix.", { exact: true })).toBeVisible()
+
+  await pocket.locator('[data-action="prompt-subagent-models"]').click()
+  const dialog = page.getByRole("dialog", { name: "Subagent models" })
+  await expect(dialog.locator('[data-status="none-allowed"]')).toBeVisible()
+  await dialog.getByRole("button", { name: "Inherit", exact: true }).click()
+  await expect.poll(() => policy.mode).toBe("inherit")
+  await page.keyboard.press("Escape")
+  await expect(dialog).toHaveCount(0)
+
+  await expect(send).toBeEnabled()
+  const beforeSend = assessmentLocations.length
+  await send.click()
+  await expect.poll(() => prompts).toEqual([{
+    sessionID: janitorSessionID,
+    body: expect.objectContaining({ prompt: expect.objectContaining({ text: "Continue in the new workspace" }) }),
+  }])
+  expect(assessmentLocations.slice(beforeSend)).toContainEqual(expectedQuery)
+  expect(assessmentLocations.every((location) => location.directory === destination.directory &&
+    location.workspace === destination.workspaceID)).toBe(true)
+
+  await pocket.getByRole("button", { name: "Collapse janitor report" }).click()
+  const reopens = assessmentLocations.length
+  await open.click()
+  await expect.poll(() => assessmentLocations.slice(reopens)).toContainEqual(expectedQuery)
+  await expect(prompt).toBeEditable()
+  await expect(pocket.getByText("Build the timeline stability matrix.", { exact: true })).toBeVisible()
+  await expect.poll(() => page.evaluate((key) => localStorage.getItem(key), key)).toBe(janitorSessionID)
+  expect(creates).toBe(0)
 })
 
 for (const viewport of [
