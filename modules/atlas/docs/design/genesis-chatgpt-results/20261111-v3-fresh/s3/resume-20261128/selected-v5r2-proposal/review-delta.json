@@ -3,14 +3,14 @@
   "state": "READY_FOR_INDEPENDENT_SEMANTIC_DELTA_REVIEW",
   "base_body_sha256": "a5e1bf88aa6c17470c2832c99049dba76867615279689db85d25e2fe8b39e9ef",
   "base_body_bytes": 7764,
-  "candidate_body_sha256": "3f35fc7202dbcfea963235cf9382356c7dd26751564f1a0103e22ee029c51868",
-  "candidate_body_bytes": 8219,
+  "candidate_body_sha256": "956c65d3b4948c12bd93ebd749efec92ef383fb5088f89cfdef4727b780fd790",
+  "candidate_body_bytes": 8318,
   "declared_prior_v5_body_sha256": "17786a03a9572ec4a96233ec0fafba40b2f0945f33361b8cf3c52fae87b748da",
   "declared_prior_v5_body_bytes": 8040,
   "prior_v5_body_recovered": false,
   "changed_location": "§3, one paragraph immediately before the L1 routes",
   "old_paragraph": "Estas são **rotas de navegação**, não dependências adicionais de build nem aceite transitivo:",
-  "new_paragraph": "As rotas abaixo são referências de navegação e consulta. Separadamente, o vínculo de build deste entry declara dependências diretas para `s3-l3-flows`, `s3-l1-maestro`, `s3-l1-relay` e `s3-l1-integrations`; alterações nesses predecessores invalidam este binding e exigem nova preparação. Esses vínculos controlam os inputs da construção, não concedem ownership, autoridade nem aceite semântico transitivo. As rotas e o catálogo abaixo continuam sendo navegação; a existência de uma rota não prova leitura, publicação ou execução.",
+  "new_paragraph": "As rotas abaixo são referências de navegação e consulta. O catálogo H2 foi copiado dos corpos `s3-l1-relay` e `s3-l1-integrations`; por isso, esses dois predecessores são dependências diretas de build e invalidam este entry mesmo quando `s3-l3-flows` não muda. O vínculo de build também declara `s3-l3-flows` e `s3-l1-maestro` como dependências diretas. Alterações em qualquer dos quatro predecessores exigem nova preparação. Esses vínculos controlam os inputs da construção, não concedem ownership, autoridade nem aceite semântico transitivo. A existência de uma rota de navegação não prova leitura, publicação ou execução.",
   "all_other_entry_bytes_unchanged": true,
   "build_dependencies": [
     {
@@ -35,5 +35,6 @@
   "18_H2_unchanged": true,
   "judgments": "NONE_COPIED_OR_CLAIMED",
   "runtime_prepare": "NOT_PERFORMED",
-  "binding": "NOT_PERFORMED"
+  "binding": "NOT_PERFORMED",
+  "build_dependency_rationale": "H2 catalogue was copied from s3-l1-relay and s3-l1-integrations, so either changing invalidates entry even if L3 is unchanged; s3-l3-flows and s3-l1-maestro remain the other direct build dependencies."
 }

@@ -11946,8 +11946,8 @@
       "body": {
         "path": "bodies/l4-entry.md",
         "encoding": "utf-8",
-        "byte_length": 8219,
-        "sha256": "3f35fc7202dbcfea963235cf9382356c7dd26751564f1a0103e22ee029c51868"
+        "byte_length": 8318,
+        "sha256": "956c65d3b4948c12bd93ebd749efec92ef383fb5088f89cfdef4727b780fd790"
       },
       "authority": {
         "scope": "orchestra.s3.agents",
@@ -13815,7 +13815,7 @@
       ],
       "recipe_ref": {
         "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s3/resume-20261128/selected-v5r2-proposal/recipe-v5r2.md",
-        "sha256": "ae3a994a774f508e7c233df51203096158f548a79703f76ccf6c9aa3877817bf"
+        "sha256": "1e08b4817474b41db63bc2c43e9b78f16ec5d127ac4f6ce4a75429c1d8b5ba85"
       },
       "build_dependencies": [
         {

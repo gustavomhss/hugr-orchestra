@@ -34,7 +34,7 @@ Portanto: mudar apresentação pode ser permitido; renomear a autoridade, hardco
 
 ## 3. Rotas diretas para a evidência L1
 
-As rotas abaixo são referências de navegação e consulta. Separadamente, o vínculo de build deste entry declara dependências diretas para `s3-l3-flows`, `s3-l1-maestro`, `s3-l1-relay` e `s3-l1-integrations`; alterações nesses predecessores invalidam este binding e exigem nova preparação. Esses vínculos controlam os inputs da construção, não concedem ownership, autoridade nem aceite semântico transitivo. As rotas e o catálogo abaixo continuam sendo navegação; a existência de uma rota não prova leitura, publicação ou execução.
+As rotas abaixo são referências de navegação e consulta. O catálogo H2 foi copiado dos corpos `s3-l1-relay` e `s3-l1-integrations`; por isso, esses dois predecessores são dependências diretas de build e invalidam este entry mesmo quando `s3-l3-flows` não muda. O vínculo de build também declara `s3-l3-flows` e `s3-l1-maestro` como dependências diretas. Alterações em qualquer dos quatro predecessores exigem nova preparação. Esses vínculos controlam os inputs da construção, não concedem ownership, autoridade nem aceite semântico transitivo. A existência de uma rota de navegação não prova leitura, publicação ou execução.
 
 - Maestro: `bodies/l1-maestro.md`
 - Relay: `bodies/l1-relay.md`

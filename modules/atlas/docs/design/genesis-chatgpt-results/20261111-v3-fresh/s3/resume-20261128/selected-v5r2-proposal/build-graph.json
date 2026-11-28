@@ -1,0 +1,38 @@
+{
+  "schema": "s3-v5r2-build-graph/v1",
+  "candidate": "s3-l4-entry",
+  "state": "BLOCKED_PENDING_REVIEW_AND_PREPARE",
+  "dependencies": [
+    {
+      "key": "s3-l3-flows",
+      "same_package": true,
+      "reason": "Cumulative flow predecessor."
+    },
+    {
+      "key": "s3-l1-maestro",
+      "same_package": true,
+      "reason": "Identity/root context read by entry."
+    },
+    {
+      "key": "s3-l1-relay",
+      "same_package": true,
+      "reason": "Source of copied Relay H2 catalogue titles."
+    },
+    {
+      "key": "s3-l1-integrations",
+      "same_package": true,
+      "reason": "Source of copied integrations H2 catalogue titles."
+    }
+  ],
+  "navigation_keys": [
+    "s3-l1-relay",
+    "s3-l1-integrations",
+    "s3-l2-maestro",
+    "s3-l2-relay",
+    "s3-l2-integrations",
+    "s3-l4-ownership",
+    "s3-l4-maintenance",
+    "s3-l4-operational"
+  ],
+  "acceptance_transfer": "NONE"
+}
