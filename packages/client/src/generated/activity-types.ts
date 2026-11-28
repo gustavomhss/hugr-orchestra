@@ -346,6 +346,12 @@ export type ActivitySnapshotOutput = {
       readonly parentPid: number | null
       readonly name: string | null
     }>
+    readonly footprint?: {
+      readonly source: "omni.darwin.phys-footprint"
+      readonly bytes: number
+      readonly sampledAt: number
+      readonly hypothesis: "insufficient" | "compatible-with-logical-leak"
+    }
   }>
 }
 
@@ -383,5 +389,11 @@ export type ActivityInspectOutput = {
       readonly parentPid: number | null
       readonly name: string | null
     }>
+    readonly footprint?: {
+      readonly source: "omni.darwin.phys-footprint"
+      readonly bytes: number
+      readonly sampledAt: number
+      readonly hypothesis: "insufficient" | "compatible-with-logical-leak"
+    }
   }>
 }
