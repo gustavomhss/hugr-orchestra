@@ -109,3 +109,43 @@ test.skipIf(process.platform !== "win32")("signed empty disposes only the confir
     })
   }).pipe(Effect.provide(Database.layerFromPath(path.join(directory.path, "activity.sqlite"))), Effect.scoped))
 }, 30_000)
+
+test.skipIf(process.platform !== "win32")("another custody instance cannot empty persisted rows or a mixed batch", async () => {
+  await using directory = await tmpdir()
+  const filename = path.join(directory.path, "activity.sqlite")
+  await Effect.runPromise(Effect.gen(function* () {
+    const owner = ActivityQuarantineCustody.make(yield* Database.Service)
+    const native = yield* Effect.promise(Omni.quarantine)
+    if (!native) throw new Error("missing native quarantine")
+    const move = async (custody: ActivityQuarantineCustody.Interface, id: string) => {
+      const originalPath = path.join(directory.path, id + "-original")
+      const quarantinePath = path.join(directory.path, id + "-quarantined")
+      await writeFile(originalPath, id)
+      const identity = await native.quarantineInspect(originalPath)
+      if (!identity) throw new Error("fixture has no identity")
+      const result = await Effect.runPromise(custody.move(
+        { id, generation: "1", identity, label: id, owner: "fixture" },
+        async () => ({ originalPath, quarantinePath, state: "armed", disposable: "file", release: async () => {} }),
+      ))
+      expect(result).toBe("Verified")
+      return quarantinePath
+    }
+    const first = yield* Effect.promise(() => move(owner, "first"))
+    const preview = yield* owner.preview()
+    if (!preview) throw new Error("original custody did not produce a preview")
+
+    const second = yield* Effect.gen(function* () {
+      const other = ActivityQuarantineCustody.make(yield* Database.Service)
+      expect(yield* other.preview()).toBeUndefined()
+      expect(yield* other.confirm({ previewID: preview.previewID })).toBeUndefined()
+      const moved = yield* Effect.promise(() => move(other, "second"))
+      expect(yield* other.preview()).toBeUndefined()
+      return moved
+    }).pipe(Effect.provide(Database.layerFromPath(filename)), Effect.scoped)
+
+    expect(yield* owner.confirm({ previewID: preview.previewID })).toBeUndefined()
+    expect(yield* owner.preview()).toBeUndefined()
+    expect(yield* Effect.promise(() => readFile(first, "utf8"))).toBe("first")
+    expect(yield* Effect.promise(() => readFile(second, "utf8"))).toBe("second")
+  }).pipe(Effect.provide(Database.layerFromPath(filename)), Effect.scoped))
+}, 30_000)
