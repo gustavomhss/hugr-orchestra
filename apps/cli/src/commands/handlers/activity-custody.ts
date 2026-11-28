@@ -53,7 +53,7 @@ export async function launch(args: readonly string[]) {
   process.env.XDG_CACHE_HOME = path.join(runtime, "cache")
   process.env.TMPDIR = path.join(runtime, "tmp")
 
-  const { NodeRuntime } = await import("@effect/platform-node")
+  const { runMain } = await import("@effect/platform-node/NodeRuntime")
   const { Context, Effect, Layer } = await import("effect")
   const { Omni } = await import("@orchestra/core/omni")
   const native = Omni.locate()
@@ -135,7 +135,7 @@ export async function launch(args: readonly string[]) {
       })
     })).pipe(Effect.uninterruptible)
     return yield* Effect.never
-  }).pipe(Effect.scoped, NodeRuntime.runMain)
+  }).pipe(Effect.scoped, runMain)
 }
 
 async function respond(
