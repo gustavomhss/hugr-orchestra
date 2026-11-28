@@ -142,7 +142,7 @@ function PocketComposer(props: {
             if (!isSessionNotFoundError(error, stored)) throw error
           })
           if (!isCurrent()) return
-          if (existing?.directory === directory) {
+          if (existing) {
             props.onSessionID(stored)
             return
           }
@@ -192,6 +192,7 @@ function PocketComposer(props: {
   })
   const input = usePromptInputV2Controller({
     sessionID,
+    sessionInfo,
     pendingKey: sessionKey,
     get controls() {
       return controls()
@@ -242,10 +243,15 @@ function PocketTimeline(props: { sessionID: () => string | undefined }) {
     retry()
     const id = props.sessionID()
     if (!id) return
+    const session = sync().session
     let active = true
-    onCleanup(() => { active = false })
+    session.pin(id)
+    onCleanup(() => {
+      active = false
+      session.unpin(id)
+    })
     setFailed(false)
-    void sync().session.sync(id).catch((error: unknown) => {
+    void session.sync(id).catch((error: unknown) => {
       if (!active) return
       setFailed(true)
       console.error("[janitor-pocket] history", error)

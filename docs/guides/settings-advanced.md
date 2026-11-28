@@ -9,7 +9,7 @@
 | **Language** | "Change the display language for HuGR Orchestra". |
 | **Auto-accept permissions** | Approves permission requests automatically in the open session only. Other sessions are not affected. With no session open the row is off and says "Open a session to turn this on. It applies to that session only." See [Permissions](permissions.md). |
 | **Terminal shell** | The shell used by the terminal and by agent tools. **Auto (Default)** picks one for you. A shell the agent tools cannot use is listed as "<name> (terminal only)". If the list cannot load, the row says "Could not load the shells on this server." with **Try again**. |
-| **Janitor assistant** | Shows Janitor findings and notifications. Off by default; turn it on when you want proactive maintenance advice. |
+| **Janitor assistant** | Shows Janitor findings and notifications. Off by default; turn it on when you want proactive maintenance advice. When you move the chat session to another workspace, the Janitor report keeps the same conversation and sends new messages to that workspace. |
 | **Show reasoning summaries** | "Display model reasoning summaries in the timeline". |
 | **Expand shell tool parts** | Opens shell tool blocks in the chat timeline by default. |
 | **Expand edit tool parts** | Opens edit tool blocks in the chat timeline by default. |
