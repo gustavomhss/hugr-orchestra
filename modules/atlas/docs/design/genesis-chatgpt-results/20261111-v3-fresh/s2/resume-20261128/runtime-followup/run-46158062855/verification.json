@@ -1,0 +1,13 @@
+{
+  "state": "PREPARED_NOT_ADMITTED",
+  "candidate_id": "ade18f60d8b143fc90fae24bc5c6cd1c14d1e56756800f14b65d19f7eacdf542",
+  "old_candidate": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "inputs_unchanged": true,
+  "historical_inputs_unchanged": true,
+  "cas_before": 0,
+  "cas_after": 92,
+  "non_cas_state_files": 0,
+  "runtime_symlinks_unchanged": true,
+  "admission": "NOT_RUN",
+  "review": "NOT_RUN"
+}

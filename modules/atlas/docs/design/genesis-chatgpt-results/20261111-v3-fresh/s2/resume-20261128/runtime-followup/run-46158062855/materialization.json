@@ -1,0 +1,13 @@
+{
+  "runtime_revision": "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10",
+  "historical_input_count": 716,
+  "historical_inputs": "/home/runner/work/_temp/genesis-s2-46158062855-1/evidence/run/historical-inputs",
+  "refreshed_plan": {
+    "path": "/home/runner/work/_temp/genesis-s2-46158062855-1/evidence/run/corpus/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/resume-20261128/evaluation-v2/evaluation-plan.json",
+    "byte_length": 33636,
+    "sha256": "ebac326229b6dbcb2b33c42c1d1f85044e9486bbcd3249d35364e22e9b379f34"
+  },
+  "implementation_count": 28,
+  "old_candidate": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "state": "MATERIALIZED_NOT_ADMITTED"
+}

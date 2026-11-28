@@ -29,7 +29,8 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ROOT="$RUNNER_TEMP/genesis-s2-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          # Candidate identity includes the corpus root; replay the verified prepare at its bound path.
+          ROOT="$RUNNER_TEMP/genesis-s2-46158062855-1"
           echo "S2_ROOT=$ROOT" >> "$GITHUB_ENV"
           mkdir -p "$ROOT/evidence"
           git cat-file -e '9b0188b2be5ea69638dff8a44e3e931b4d6d8b10^{commit}'
@@ -49,6 +50,8 @@ jobs:
             --repository "$GITHUB_WORKSPACE" \
             --runtime "$S2_ROOT/runtime" \
             --output "$S2_ROOT/evidence/run"
+          jq -e --arg candidate ade18f60d8b143fc90fae24bc5c6cd1c14d1e56756800f14b65d19f7eacdf542 \
+            '.candidate_id == $candidate and .state == "PREPARED_NOT_ADMITTED"' "$S2_ROOT/evidence/run/verification.json"
       - name: Preserve evidence even on failure
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

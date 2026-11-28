@@ -1,0 +1,60 @@
+{
+  "schema": "genesis-s2-corrected-prepare-checkpoint/v1",
+  "state": "PREPARED_NOT_ADMITTED",
+  "run_id": 46158062855,
+  "workflow_revision": "70328c2089c3cc2f3fb810e82f1ff0e3aead7ec4",
+  "runtime_commit": "9b0188b2be5ea69638dff8a44e3e931b4d6d8b10",
+  "runtime_release_commit": "c4f1a608495fc26927bc16e5c5d5ea4ad8e5b324",
+  "candidate_id": "ade18f60d8b143fc90fae24bc5c6cd1c14d1e56756800f14b65d19f7eacdf542",
+  "original_candidate": "4a36e1210acf6a4bb460846b717d446e6c259f80a78fd73cfce8b5a6e445f522",
+  "prior_hold_candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "candidate_root": "/home/runner/work/_temp/genesis-s2-46158062855-1/evidence/run/corpus",
+  "artifact_id": 15268980713,
+  "artifact_sha256": "f68e35bd50323f7a6cffc56d322ae263ce50df6410e7fee9cf27c5a06d3be71b",
+  "artifact_byte_length": 11070191,
+  "checks": {
+    "noble_members_in_intrinsic_identity": 247,
+    "entries": 13,
+    "observations": 690,
+    "historical_input_bytes": 716,
+    "cas_objects_created": 92,
+    "non_cas_files_created": 0
+  },
+  "refs": [
+    {
+      "artifact_path": "command.json",
+      "byte_length": 9385979,
+      "sha256": "d7013901dda4c034ce10534bd49a8abbdc71412202817da63c974c2f477fdba0"
+    },
+    {
+      "artifact_path": "materialization.json",
+      "byte_length": 705,
+      "sha256": "f57cf7156498151f98607bd0737a78847cbb365ed4479ba97b940190f26c2624"
+    },
+    {
+      "artifact_path": "prepared.json",
+      "byte_length": 501352,
+      "sha256": "9570cd95aed8803e3198dd897f0c8845e84aa88d7c3d6cd7b9b107c6ec0accbd"
+    },
+    {
+      "artifact_path": "verification.json",
+      "byte_length": 432,
+      "sha256": "ca4727af4cf0877e2aa1db22f6e5150923217f3e679191faeccbef0da2253397"
+    },
+    {
+      "artifact_path": "runtime-byte-lock.json",
+      "byte_length": 6103943,
+      "sha256": "923794d86c9d4a563b376788902a17016358f083ce4d249ab35a9d1fee60f8b1"
+    },
+    {
+      "artifact_path": "operation/receipt.json",
+      "byte_length": 12631627,
+      "sha256": "c2dfccadb55ba68b57b5cbb23ef1959dd4e3605a42060865ba798bf12f9bce8b"
+    }
+  ],
+  "required_next": [
+    "Reproduce exact candidate and its bound absolute corpus root",
+    "Obtain two exact decisions for this new candidate; previous PASS and HOLD remain attached to d1",
+    "After binding and governed admission, execute initial traverse, 14 consumers and S2-U1"
+  ]
+}
