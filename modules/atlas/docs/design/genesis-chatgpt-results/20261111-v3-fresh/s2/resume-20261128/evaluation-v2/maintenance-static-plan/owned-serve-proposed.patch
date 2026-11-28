@@ -1,0 +1,5 @@
+--- a/apps/desktop/src/main/owned-serve.ts
++++ b/apps/desktop/src/main/owned-serve.ts
+@@ -18,1 +18,1 @@
+-const READY_TIMEOUT = 120_000
++const READY_TIMEOUT = 150_000

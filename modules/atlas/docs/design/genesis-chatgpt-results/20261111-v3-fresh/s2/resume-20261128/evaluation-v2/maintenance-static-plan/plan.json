@@ -1,0 +1,213 @@
+{
+  "schema": "genesis-s2-u1-proposed-execution-plan/v1",
+  "state": "PROPOSED_STATIC_ONLY_NOT_EXECUTED",
+  "ordering": "Only after the first traversal and all14 frozen consumer cases. This subtask authorizes no U1 execution.",
+  "case": "S2-U1",
+  "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+  "initial_candidate": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "source_patch": {
+    "file": "apps/desktop/src/main/owned-serve.ts",
+    "baseline_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+    "baseline_sha256": "0970f4ddb99c1c004e200443abc54ed5ea38cec098e19ef9aa748b771238dfb5",
+    "baseline_blob": "31d70c15aafdc91ebccc1c5cd25da153cfac84ed",
+    "bytes": 8511,
+    "unique_line": 18,
+    "before": "const READY_TIMEOUT = 120_000",
+    "after": "const READY_TIMEOUT = 150_000",
+    "prospective_sha256": "9e1d1a2b77d329251082352b6e66d7f8e9cccd0d339a534999714b9f2f6dcb08",
+    "prospective_blob": "36746cb9d09f1fea4435d2d51822ebb1a4218b37",
+    "artifact": "owned-serve-proposed.patch",
+    "applied": false,
+    "intended_behavior": "Only the readiness cap for a still-alive child that never becomes healthy increases120s to150s; the interpolated timeout error follows150000ms. Early child exit remains an immediate competing rejection. Stop/backoff/health-poll/remote configuration remain untouched.",
+    "evidence_limit": "Static consequence of the proposed source edit, not an observed desktop execution or newly produced knowledge.",
+    "restore": "Restore the exact8511 baseline bytes and SHA256, not an equivalent edit or a reconstructed body."
+  },
+  "frozen_oracle": {
+    "path": "s2-investigation/byte-audit/materialized/oracles/update-final-graph-expectation.json",
+    "sha256": "716f9f06506a34556ec8b56978048f5e31b401d43aae1bdeb0fdd2de476c954f",
+    "changed": false,
+    "case_oracle": "s2-corpus/modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s2/oracles/ownership-v1.json#impact_case"
+  },
+  "graph": {
+    "direct": [
+      "s2.l1.desktop-web",
+      "s2.l2.desktop-web"
+    ],
+    "closure": [
+      "s2.l1.desktop-web",
+      "s2.l2.desktop-web",
+      "s2.l3.app-session",
+      "s2.l3.design-tui",
+      "s2.l3.desktop-web",
+      "s2.l4.app-session",
+      "s2.l4.design-tui",
+      "s2.l4.desktop-web",
+      "s2.l4.entry"
+    ],
+    "outside": [
+      "s2.l1.app-session",
+      "s2.l1.design-tui",
+      "s2.l2.app-session",
+      "s2.l2.design-tui"
+    ],
+    "frontier": [
+      "s2.l1.desktop-web"
+    ],
+    "build_edges": 32,
+    "navigation_edges": 30,
+    "static_matches_frozen": true,
+    "runtime_comparison": "Compare sets and declared edges, record actual dependency order. Do not supply a precomputed affected set to the product API."
+  },
+  "phase_scope": {
+    "initial_phase_remains_unchanged": true,
+    "observed_api_constraint": "prepareEvaluationUpdate copies originalPlan.maintenance/consumer_ids/consumer_modes/read_limits and accepts no new maintenance-plan field in EvaluationRebuildRequest.",
+    "consequence": "A new concrete maintenance scope is not installed merely by adding operations to an old policy. Its exact plan/driver/recipe provenance must be fixed and independently reviewed.",
+    "proposed_route": "Conservative existing-API route: after14 cases, prepare a distinct maintenance baseline M0 in a sibling root using the unchanged package/original obligation set, a concrete maintenance plan and pinned driver; obtain new exact ADMIT decisions. Preserve R1. This is a planning choice, not a claim that a second baseline is a universal mandatory product gate.",
+    "later_review": "A different binding of the concrete target plan to the existing lineage would need explicit proof and reviewer acceptance; no such route is silently assumed here.",
+    "roots_proposed_not_created": {
+      "M0": "/workspace/scratch/5cfbb6c803f1/s2-u1-baseline",
+      "M1": "/workspace/scratch/5cfbb6c803f1/s2-u1-changed",
+      "M2": "/workspace/scratch/5cfbb6c803f1/s2-u1-restored"
+    },
+    "required_scope_before_run": [
+      "Concrete patch and exact revert bytes",
+      "Frozen graph and original obligation identity",
+      "Driver bytes/hash and recipe registry over all13 entries",
+      "Finite maintenance witness IDs/budgets fixed separately from original14 cases",
+      "Actual baseline candidate/manifest/generation/actor/ratifier and authorized maintenance policy",
+      "Fixed target generations before their target plans",
+      "Capture/producer/semantic/admission/resume ledger formats"
+    ]
+  },
+  "recipe_contract": {
+    "all13_original_recipe_refs_are_bound": true,
+    "registry": "Use exact recipeInputKey/recipeVersion/declaredInputs/mandatoryInputs/required recorded in static-reconciliation.json. All current inputs are file:; no members: keys were found.",
+    "do_not_reinterpret": "The bound recipes are native producer prompts. A new executable driver is not automatically identified by those prompt hashes; pin the driver separately in the reviewed maintenance plan.",
+    "synchronous_run": "OwnershipRecipe.run(input:OwnershipRecipeInput):OwnershipRecipeOutput is synchronous; do not pretend it awaits native agent dispatch.",
+    "native_production_bridge": "Future orchestration must preserve actual native producer request/response records on exact captured input/dependency/recipe identities. A synchronous callback may only materialize an already sealed matching result, with separate replay/callback/native-call counters. It must refuse unmatched snapshots or absent outputs, not return canned prose.",
+    "unchanged_outside": "No actual producer or recipe call for the4 outside main closure. Preserve their content result, inputs and dependency bindings.",
+    "semantic": "Any result differing from the current baseline requires at least2 new, distinct, result-specific semantic evidence objects before prepareEvaluationUpdate can complete. Historical refs or invented PASS do not satisfy this.",
+    "admission": "After complete target candidate exists, obtain2 new exact ADMIT decisions for all13 entries; distinct from pre-target semantic evidence."
+  },
+  "stages": [
+    {
+      "id": "U1-00",
+      "name": "Prerequisites and baseline",
+      "action": "After14 cases, freeze maintenance scope and driver. Prepare/admit M0 with unchanged source and new exact plan, or prove an alternative compatible scoped lineage. Record baseline manifest, generation, full13 bindings and source bytes.",
+      "expected": "Ready baseline via authorized real reader; R1/oracles/question deck unchanged."
+    },
+    {
+      "id": "U1-01",
+      "name": "Exact reuse",
+      "action": "Call prepareEvaluationUpdate with baseline M0, identical actual inputs/recipes, same targetRepoRoot as M0 and a distinct proposed targetGeneration.",
+      "expected": "evaluation-reuse, exact baseline candidate/manifest, affected=[],calls=[],native producer calls0. No projection replacement."
+    },
+    {
+      "id": "U1-02",
+      "name": "Mutation and invalidation",
+      "action": "Apply the one-line patch only in disposable maintenance materialization. Observe actual source; call planOwnershipUpdate through the real API and real tri-state observer. For an admitted maintenance root deliberately drifted in this control, query current composed reader.",
+      "expected": "2 direct changes,9 closure,4 outside, frontier1. Composed reader/index refuses candidate-wide evaluation-input-drift, including outside-key queries; this does not mean outside artifacts rebuilt."
+    },
+    {
+      "id": "U1-03",
+      "name": "Changed target",
+      "action": "Materialize M1 from exact captured changed sources and copy CAS by verified regular bytes, no policy/projection. Preserve actual native outputs and semantic judgments; prepareEvaluationUpdate targets M1. Obtain exact target ADMIT decisions and finalize private graph.",
+      "expected": "Complete v2 candidate, preserved obligationSet, only actual changed-input/result-dependent callbacks execute; results requiring new semantics have them. Outside result/inputs/deps unchanged."
+    },
+    {
+      "id": "U1-04",
+      "name": "Controlled stop/resume",
+      "action": "Stop deliberately after durable target/prepared/CAS and decisions/private-finalization output, before init/admission. Resume in a fresh process with the same engine/deps and bytes; do not redo native production. Verify source/runtime and all durable hashes, then continue.",
+      "expected": "Resume uses exact target candidate/generation;0 new native producer calls and0 new recipe callbacks if resuming from persisted complete target. No power-loss guarantee inferred."
+    },
+    {
+      "id": "U1-05",
+      "name": "Target admission and read",
+      "action": "Explicit init-store on fresh M1, exact policies/ratification and existing CLI admit-target. Use emitted manifest returned by admission, then real bounded index/read.",
+      "expected": "Current150s evidence, correct target labels, no old120s body served as current. Finalize private manifest hash may differ from admission manifest because review provenance differs; compare candidate/mappings/generation, not forced manifest equality."
+    },
+    {
+      "id": "U1-06",
+      "name": "Exact restoration and rebind",
+      "action": "Restore baseline8511 source bytes in a maintenance control copy; reader for a now-drifted changed candidate must HOLD. Prepare a restored M2 target from M1 using unchanged graph, fresh result-specific semantic evidence and exact new target ADMIT decisions; admit only in fresh M2.",
+      "expected": "Restored source SHA equals original; current reader serves120s under restored candidate. No switch to an old manifest as fallback. Fresh result hashes need not equal historical prose hashes unless actual bytes/metadata match. Rebind is real."
+    },
+    {
+      "id": "U1-07",
+      "name": "Negative and identity controls",
+      "action": "Use disjoint disposable captures for missing mandatory source, omitted required dependency, stale recipe version, recipe identity change, metadata-only result identity, and blocked validity. Keep primary source-only oracle separate.",
+      "expected": "Missing source/edge/stale recipe refuse; actual recipe/authority/gaps changes cannot be hidden behind equal prose; blocked validity returnsHOLD. Existing compatible db9 control evidence may be reused with explicit scope; novel domain executions require their own receipts."
+    },
+    {
+      "id": "U1-08",
+      "name": "Final reuse and restoration audit",
+      "action": "On admitted restored M2, repeat exact-input reuse and restart reader. Compare R1,oracle,questions,baseline source, graph and outside artifact bindings against saved hashes.",
+      "expected": "Reuse0 calls, valid current reads, no ambiguous activation or stale fallback; record actual usage and all held/failed attempts."
+    }
+  ],
+  "counts": {
+    "direct_input_artifacts": 2,
+    "graph_reachability": 9,
+    "outside": 4,
+    "main_recipe_callbacks": "At most9 successful callbacks in one successful main source-change pass; direct changed inputs require their recipes. Downstream callbacks depend on actual prerequisite RESULT identity changes, not reachability alone. Do not predeclare9 calls.",
+    "native_interpretations": "Count actual native agent production request/response pairs separately; changed results/driver callback counts are not model-call counts.",
+    "callback_attempts": "Durable entry before calling recipe.run; durable exit/outcome after. API pushes calls only after run returns and HOLD may omit partial calls; HOLD never implies0.",
+    "durable_replays": "Count separately when callback materializes a previously sealed matching native output.",
+    "judges": "Separate semantic judgments, ADMIT target decisions and consumer judgments from producer calls.",
+    "economics": "Tokens/physical internal attempts/billing UNKNOWN when not observed. No inferred global savings from9-node reachability."
+  },
+  "api_surface": {
+    "planner": "planOwnershipUpdate(store,manifestRef,scope,observe,context?) -> OwnershipUpdatePlan",
+    "prepare": "prepareEvaluationUpdate(request:EvaluationRebuildRequest) -> OwnershipRefusal | PreparedEvaluationUpdate | evaluation-reuse",
+    "request_fields": [
+      "store",
+      "baseline",
+      "manifest",
+      "context",
+      "targetGeneration",
+      "targetRepoRoot?",
+      "recipes",
+      "observe",
+      "readCapturedBytes",
+      "listMembers",
+      "semanticEvidence"
+    ],
+    "finalize": "finalizeEvaluationUpdate({store,target,binding,current,readReference}) -> OwnershipRefusal | {kind:private-evaluation-candidate,prepared,manifest,context}",
+    "target_admit": "admitEvaluationRebuildTarget(repoPath,value,approvalPath) — exposed by existing genesis-evaluation.ts admit-target",
+    "observe": "observeOwnershipInput(repoPath,key) tri-state; ownershipInput(repoPath,key) for current version. Do not infer absent from undefined.",
+    "capture": "Retain exact bytes corresponding to the present observation, verify kernel ownership-source identity and real observations before/after capture. readCapturedBytes returns those retained bytes; recipe must not reopen live paths. Stable checks must continue consulting real observations.",
+    "memberships": "No members: keys in this baseline. listMembers must reject unexpected membership requests, not invent [] for unavailable input.",
+    "cli_exists": [
+      "bun scripts/genesis-evaluation.ts prepare <root> <plan-relative> <new-prepared-file>",
+      "bun scripts/genesis-evaluation.ts init-store <root> <prepared-file> <generation>",
+      "bun scripts/genesis-evaluation.ts admit-target <root> <target-prepared-file> <approval-relative>",
+      "bun scripts/genesis-evaluation.ts index <root> <query-file>",
+      "bun scripts/genesis-evaluation.ts read <root> <query-file>"
+    ],
+    "missing_cli": "No rebuild/finalize mode exists in genesis-evaluation.ts. Legacy maintenance-operation.mjs calls v1 rebuild and v1 refuses v2.",
+    "driver_required_not_written": "A reviewed API driver outside the runtime source tree is still needed. Proposed invocation shape only: bun <new-reviewed-u1-v2-driver.ts> <request.json>. No such executable is claimed to exist.",
+    "resume_limit": "admit-target refuses a store with an existing projection. If admission outcome is uncertain, inspect actual receipts/state before retry; do not repeatedly call it as though idempotent."
+  },
+  "material_blockers": [
+    "First traversal and all14 cases must finish before U1 execution, by parent instruction.",
+    "Concrete maintenance plan must be bound and accepted for the maintenance phase; initial phase excludes maintenance and API copies that plan.",
+    "No v2 API driver/producer-output bridge has been implemented or qualified for this S2 scenario.",
+    "Actual maintenance baseline manifest/generation/policies, target generations and new semantic/ADMIT evidence do not exist in this plan.",
+    "Recipe/prose/result propagation expectations require actual outputs; static graph cannot provide call counts or semantic acceptance."
+  ],
+  "preservation": {
+    "source_patch_applied": false,
+    "oracle_changed": false,
+    "questions_changed": false,
+    "source_or_evaluation_roots_written": false,
+    "atlas_executed": false,
+    "tests_executed": false,
+    "new_knowledge_produced": false,
+    "votes_issued": false
+  },
+  "files": [
+    "static-reconciliation.json",
+    "owned-serve-proposed.patch",
+    "S2-U1-PLAN.md"
+  ]
+}

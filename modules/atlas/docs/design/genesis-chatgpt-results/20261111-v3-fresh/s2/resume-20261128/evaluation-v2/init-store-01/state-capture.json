@@ -1,0 +1,19 @@
+{
+  "schema": "genesis-s2-runtime-state-capture/v1",
+  "operation_id": "s2-evaluation-init-store-db9b423-20261128-01",
+  "wrapper_sha256": "b7022b3205d04f02b6fceaee94d2f7912f15271be6ee4b2e4d7c62ba0013a441",
+  "recorder_sha256": "0185ccf143d7a5d1112b573fd0405da899b27d112cb4c7b431e1cbb1da629b30",
+  "recorder_exit_code": 0,
+  "original_runtime_receipt_exists": true,
+  "before_matches_original_recorder_inventory": true,
+  "after_matches_original_recorder_inventory": true,
+  "state_before": [],
+  "state_after": [
+    {
+      "path": ".atlas/evaluation-store.json",
+      "byte_length": 583,
+      "sha256": "b191a34d21a16337044e5a30f41fba19338feb3123dd606bf3d9e945e7158497"
+    }
+  ],
+  "limit": "File snapshots accompany the original CLI streams. They are not substitute reader output and do not claim race freedom or OS isolation."
+}

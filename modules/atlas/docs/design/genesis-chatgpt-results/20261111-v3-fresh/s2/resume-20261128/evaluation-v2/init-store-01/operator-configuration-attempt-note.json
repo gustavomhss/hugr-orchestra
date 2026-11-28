@@ -1,0 +1,11 @@
+{
+  "schema": "genesis-s2-operator-attempt-note/v1",
+  "recorded_at": "2026-11-28T07:23:29.552939+00:00",
+  "stage": "init-store-01 configuration generation",
+  "source": "Root observed exec_command output in this session; this is an operator note, not a runtime receipt.",
+  "attempt": "First invocation supplied literal PLACEHOLDER as the extra sequencing-amendment SHA-256. Builder rejected it with ValueError: invalid intended SHA-256 for the amendment path.",
+  "exit_code": 1,
+  "runtime_invoked": false,
+  "configuration_created_by_rejected_attempt": false,
+  "correction": "Subsequent invocation used actual SHA-256 05aa688fd2b634995a9847e0383bbbbfbdaab99120f52ec2da3a6aeb9f3b931a and created init-store-01-command.json; original runtime init then ran successfully under its separate receipt."
+}

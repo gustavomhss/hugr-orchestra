@@ -1,0 +1,9 @@
+{
+  "schema": "genesis-s2-external-byte-guard/v1",
+  "observed_at": "2026-11-28T07:22:10.569597+00:00",
+  "expected_files": 1896,
+  "matched": true,
+  "mismatches": [],
+  "runtime_executed_at_check": false,
+  "limit": "External invocation precondition, not a change to intrinsic Atlas runtime_identity coverage."
+}

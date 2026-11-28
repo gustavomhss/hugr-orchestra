@@ -1,0 +1,11 @@
+{
+  "schema": "genesis-s2-u1-checkpoint-state/v1",
+  "case": "S2-U1",
+  "state": "NOT_RUN",
+  "plan_state": "PROPOSED_STATIC_ONLY_NOT_EXECUTED",
+  "patch_applied": false,
+  "target_or_recipe_driver_executed": false,
+  "new_results_or_votes": false,
+  "required_before_execution": "Complete the first traversal and 14 frozen cases; fix/review maintenance scope, driver and actual producer bridge, target generations/policies and fresh semantic/admission evidence.",
+  "oracle_sha256": "716f9f06506a34556ec8b56978048f5e31b401d43aae1bdeb0fdd2de476c954f"
+}

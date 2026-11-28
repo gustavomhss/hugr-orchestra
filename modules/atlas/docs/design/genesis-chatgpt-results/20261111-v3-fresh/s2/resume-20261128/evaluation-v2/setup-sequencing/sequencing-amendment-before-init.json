@@ -1,0 +1,28 @@
+{
+  "schema": "genesis-s2-authority-sequencing-amendment/v1",
+  "recorded_at": "2026-11-28T07:21:55.769794+00:00",
+  "state": "AUTHORIZED_SETUP_PLANNED_BEFORE_ADMIT_DECISIONS",
+  "authority": "User mandate authorizes isolated publication and required reversible preparation; no new human permission is claimed.",
+  "amends_proposal": {
+    "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/evaluation-authority/authority-record.json",
+    "sha256": "38e66ad4818139e9eb23ab7fc38d30d343f0af76f5c5adafc06b75ebd5b5c04c",
+    "original_preserved": true
+  },
+  "normative_basis": {
+    "path": "/workspace/scratch/5cfbb6c803f1/s2-runtime/modules/atlas/docs/design/evaluation-admission.md",
+    "sha256": "1ec5b3e0deb36a0b793621b75263f36fed4e4e94889ae56951de36c66e2c29e3",
+    "scope": "Protocol steps 6-7 require the two new exact decisions before persisting reviews, receipts, artifacts and manifest. Explicit CAS-only store initialization and separately configured policy are preparatory operations; the protocol does not require admission decisions before creating marker/policy."
+  },
+  "change": "Initialize the exact evaluation store and install the already pinned admit-only policies before final ADMIT judgment, allowing the judges to examine actual setup receipts. This replaces only the operator-proposed sequencing; it changes no candidate, source, plan, obligations, criteria or votes.",
+  "sequence": [
+    "Guarded original CLI init-store over exact prepared03/candidate/generation, starting CAS-only.",
+    "Install byte-exact already declared governance/admit policy, without changing budgets or running admit.",
+    "Supply actual setup evidence to both persistent judges.",
+    "Only after two exact ADMIT PASS decisions construct binding and run original governed admit."
+  ],
+  "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "generation": "694110e9b70b62ca59fe3a0edf91157066f991bb79fcaab27a1b005320bc3488",
+  "publication_at_this_step": "NOT_RUN",
+  "judgment_gate_unchanged": true,
+  "operational_promotion_authorized": false
+}

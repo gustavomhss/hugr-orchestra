@@ -1,0 +1,43 @@
+{
+  "schema": "genesis-s2-policy-installation-invocation/v1",
+  "argv": [
+    "/opt/codex/runtimes/codex-primary-runtime/dependencies/python/bin/python",
+    "/workspace/scratch/5cfbb6c803f1/s2-investigation/install-evaluation-policy.py",
+    "admit",
+    "/workspace/scratch/5cfbb6c803f1/s2-execution/install-policy-admit-01"
+  ],
+  "cwd": "/workspace/scratch/5cfbb6c803f1",
+  "started_at": "2026-11-28T07:22:24.976348+00:00",
+  "ended_at": "2026-11-28T07:22:25.023529+00:00",
+  "exit_code": 0,
+  "installer": {
+    "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/install-evaluation-policy.py",
+    "byte_length": 5646,
+    "sha256": "bcc872714754ee469ab6ab337288e9f0994a5f64e902fc6d8d2a869395b9c4cb"
+  },
+  "receipt": {
+    "path": "/workspace/scratch/5cfbb6c803f1/s2-execution/install-policy-admit-01/receipt.json",
+    "byte_length": 1472,
+    "sha256": "1d884b13038912604d4d5672dccf5300edd90a37ef251b5e5e671817dc3dc2e0"
+  },
+  "stdout": {
+    "path": "/workspace/scratch/5cfbb6c803f1/s2-execution/install-policy-admit-01/stdout.txt",
+    "byte_length": 124,
+    "sha256": "9f26578c51b584b0dd24fa1aca25a36e9ccdaf0532556b57d74dda94dd2b3e2f"
+  },
+  "stderr": {
+    "path": "/workspace/scratch/5cfbb6c803f1/s2-execution/install-policy-admit-01/stderr.txt",
+    "byte_length": 0,
+    "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "cas_count_before": 92,
+  "cas_count_after": 92,
+  "cas_inventory_unchanged": true,
+  "atlas_top_level": [
+    "cas",
+    "evaluation-policy.json",
+    "evaluation-store.json",
+    "policy.json"
+  ],
+  "runtime_admit_executed": false
+}

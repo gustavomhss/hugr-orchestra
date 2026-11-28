@@ -1,0 +1,68 @@
+{
+  "schema": "genesis-s2-init-archive-verification/v1",
+  "archive": "init-store-01-evidence.zip",
+  "byte_length": 338872,
+  "sha256": "786200a0bd9b974210fc2cc62119c970b22dd4d815ff1083a9d89616f0e3ea37",
+  "git_blob_sha": "8bb0879874810088f644e179653d1cea7709e2f6",
+  "members": 9,
+  "all_payload_members_equal_original_bytes": true,
+  "member_records": [
+    {
+      "member": "command.json",
+      "visible_path": "evaluation-v2/init-store-01/command.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-execution/init-store-01/command.json",
+      "byte_length": 993824,
+      "sha256": "3f4afb7652f405ed083ce6b89c0b172131e3e72b65a6e4431a7ae14447a30367"
+    },
+    {
+      "member": "operator-configuration-attempt-note.json",
+      "visible_path": "evaluation-v2/init-store-01/operator-configuration-attempt-note.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-execution/init-store-01/operator-configuration-attempt-note.json",
+      "byte_length": 804,
+      "sha256": "3bf4807da1bf0b5b771b20a83421eb086cef618d2a4f309265f565b032d17f63"
+    },
+    {
+      "member": "precondition.json",
+      "visible_path": "evaluation-v2/init-store-01/precondition.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-execution/init-store-01/precondition.json",
+      "byte_length": 315,
+      "sha256": "5df742f16d0c745fe1271d5412d7af605f7b821d3e887aa85a2be744f61a0e3e"
+    },
+    {
+      "member": "receipt.json",
+      "visible_path": "evaluation-v2/init-store-01/receipt.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-execution/init-store-01/receipt.json",
+      "byte_length": 976302,
+      "sha256": "03c2937cc78bfcaa31438eef332cea482d602a3c7e7a3820ac63d4a4224b49b4"
+    },
+    {
+      "member": "state-after/.atlas/evaluation-store.json",
+      "visible_path": "evaluation-v2/init-store-01/state-after/evaluation-store.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-execution/init-store-01/state-after/.atlas/evaluation-store.json",
+      "byte_length": 583,
+      "sha256": "b191a34d21a16337044e5a30f41fba19338feb3123dd606bf3d9e945e7158497"
+    },
+    {
+      "member": "state-capture.json",
+      "visible_path": "evaluation-v2/init-store-01/state-capture.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-execution/init-store-01/state-capture.json",
+      "byte_length": 837,
+      "sha256": "cb347319f3fa86992ef235279fba9c64965d8208c5803e4637db9b421281826f"
+    },
+    {
+      "member": "stderr.txt",
+      "visible_path": "evaluation-v2/init-store-01/stderr.txt",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-execution/init-store-01/stderr.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "member": "stdout.json",
+      "visible_path": "evaluation-v2/init-store-01/stdout.json",
+      "source_path": "/workspace/scratch/5cfbb6c803f1/s2-execution/init-store-01/stdout.json",
+      "byte_length": 85,
+      "sha256": "8e47c003b08da93676d1371d5ad514b0f47634f4b7650d77346b7a5ce24f3cf7"
+    }
+  ],
+  "limit": "The visible marker copy omits the .atlas directory segment for Git transport; the ZIP preserves the complete original relative tree and bytes."
+}

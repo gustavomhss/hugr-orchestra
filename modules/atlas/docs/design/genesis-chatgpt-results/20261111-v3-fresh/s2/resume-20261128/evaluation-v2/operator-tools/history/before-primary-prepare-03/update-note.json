@@ -1,0 +1,22 @@
+{
+  "schema": "genesis-s2-operation-config-primary-evidence-update/v1",
+  "recorded_at": "2026-11-28T07:16:09.564621+00:00",
+  "state": "SUPERSEDED_PREPARED_PATH_FOR_FUTURE_OPERATIONS",
+  "reason": "Root performed original prepare-03 through fixed recorder and capture wrapper, with external byte guard. Its prepared bytes equal prepare-02, but the primary operational evidence is now prepare-03.",
+  "new_primary_receipt": "/workspace/scratch/5cfbb6c803f1/s2-execution/evaluation-prepare-03/receipt.json",
+  "new_primary_receipt_sha256": "36c3c2e6506b2ff9b260d932bdf3cf85e9e8d60600197c43b516c49626a4e3ea",
+  "baseline_receipt_scope": "prepare-02 supplies the exact original 716 source-input rows; no external byte guard is attributed to that earlier execution.",
+  "files": [
+    {
+      "path": "operation-config.py",
+      "byte_length": 23652,
+      "sha256": "75997a6a4bb7e77df2ccf9483efd6ce1c064ec28c171c572c6943bc7e39146cb"
+    },
+    {
+      "path": "operation-config.README.md",
+      "byte_length": 6085,
+      "sha256": "41fb2a7f6e55d564f886aa8a4e37b6205a2f7e7b5064906d132b43ada2ee1b0e"
+    }
+  ],
+  "child_runtime_operation_executed": false
+}

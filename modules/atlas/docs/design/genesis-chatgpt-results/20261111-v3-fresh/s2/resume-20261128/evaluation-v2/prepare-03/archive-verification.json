@@ -1,0 +1,9 @@
+{
+  "schema": "genesis-s2-guarded-prepare-archive-verification/v1",
+  "archive": "evaluation-prepare-03-evidence.zip",
+  "byte_length": 605332,
+  "sha256": "df4d915955cd1e22c2eee0acd67563783fa229f182e5565c26befda3f84d2296",
+  "git_blob_sha": "752f6b718f919d0d781c1167b45e202d07bc8931",
+  "members": 11,
+  "all_members_verified": true
+}

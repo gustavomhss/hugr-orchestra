@@ -1,0 +1,154 @@
+{
+  "schema": "genesis-s2-documentary-checkpoint/v1",
+  "recorded_at": "2026-11-28T07:26:00.627453+00:00",
+  "base_head": "8a5fd8230d0ada0c4c510fa6221562726d5c1722",
+  "state": "STAGED_DOCUMENTS_ONLY_NOT_COMMITTED",
+  "primary_prepare": {
+    "operation_id": "s2-evaluation-prepare-db9b423-20261128-03",
+    "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+    "prepared_sha256": "bb3ee09693ef1ddfb89e548f3f5e0d38c4abaee5e6d253f129c7c6c1a9dbda0e",
+    "receipt": "evaluation-v2/prepare-03/receipt.json",
+    "root": "/workspace/scratch/5cfbb6c803f1/s2-evaluation",
+    "observed_head": null,
+    "entries": 13,
+    "observations": 690,
+    "source_materialization_files": 716,
+    "runtime_lock_files": 1170,
+    "guarded_inputs": 1890,
+    "CAS_objects": 92,
+    "inputs_unchanged": true,
+    "external_byte_guard_matched": true,
+    "archive": "evaluation-prepare-03-evidence.zip",
+    "comparison_to_02": "evaluation-v2/prepare-03/comparison-to-02.json",
+    "prepared_byte_identical_to_02": true,
+    "guard_not_attributed_to_02": true,
+    "started_at": "2026-11-28T07:14:06.118420+00:00",
+    "ended_at": "2026-11-28T07:14:10.661705+00:00"
+  },
+  "setup": {
+    "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+    "generation": "694110e9b70b62ca59fe3a0edf91157066f991bb79fcaab27a1b005320bc3488",
+    "initialization": {
+      "state": "EXECUTED",
+      "operation_id": "s2-evaluation-init-store-db9b423-20261128-01",
+      "exit_code": 0,
+      "receipt": "evaluation-v2/init-store-01/receipt.json",
+      "guarded_inputs": 1896,
+      "inputs_unchanged": true,
+      "external_byte_guard_matched": true,
+      "marker_sha256": "b191a34d21a16337044e5a30f41fba19338feb3123dd606bf3d9e945e7158497",
+      "archive": "init-store-01-evidence.zip"
+    },
+    "policy_installation": {
+      "state": "EXECUTED",
+      "receipt": "evaluation-v2/install-policy-admit-01/receipt.json",
+      "operations": [
+        "admit"
+      ],
+      "consumer": null,
+      "actor": "genesis-s2-resume-846d4f9c",
+      "budgets_modified": false
+    },
+    "sequencing_amendment": "evaluation-v2/setup-sequencing/sequencing-amendment-before-init.json",
+    "admission": "NOT_RUN",
+    "final_ADMIT_decisions": "PENDING",
+    "index_read": "NOT_RUN",
+    "consumer_cases_executed": 0,
+    "consumer_cases_total": 14,
+    "S2-U1": "NOT_RUN"
+  },
+  "guards": {
+    "schema": "genesis-s2-checkpoint-guard-summary/v1",
+    "tested_head": "8a5fd8230d0ada0c4c510fa6221562726d5c1722",
+    "base_sha": "3aaa5e0645f99940b66ee90d28aef93166f09ab1",
+    "rules": 78,
+    "changed_paths": 1851,
+    "gate_findings": 0,
+    "warnings": 208,
+    "errors": 0,
+    "exit_code": 0,
+    "receipt": "gates/guards-8a5fd823/receipt.json",
+    "new_checkpoint_covered": false,
+    "limit": "Existing gate on the named committed HEAD only; no gate ran on this new documentary checkpoint."
+  },
+  "maintenance": {
+    "state": "PROPOSED_STATIC_ONLY_NOT_EXECUTED",
+    "execution": "NOT_RUN",
+    "plan": "evaluation-v2/maintenance-static-plan/S2-U1-PLAN.md",
+    "driver": "NOT_IMPLEMENTED_OR_EXECUTED",
+    "oracle_unchanged": true
+  },
+  "historical_r4_recovered": false,
+  "first_traversal": "NOT_RUN",
+  "consumer_cases": {
+    "executed": 0,
+    "total": 14
+  },
+  "source_originals_modified": false,
+  "private_custody_provenance_included": false,
+  "prepare03_archive_member_verification": [
+    {
+      "member": "command.json",
+      "byte_length": 680363,
+      "sha256": "087b768fbd6b8fdc6f92ad08f8bb176bef468f668d52043e638d44edd78d4de0",
+      "source_exact": true
+    },
+    {
+      "member": "comparison-to-02.json",
+      "byte_length": 2913,
+      "sha256": "7e5f72e3eaf28291b685666b0f863b513e2e7c9c3959339d045de4fe16279fa0",
+      "source_exact": true
+    },
+    {
+      "member": "precondition.json",
+      "byte_length": 315,
+      "sha256": "9ba9956ee63e0d263b1627acb3f2ca4aa2c015d5db3b173aa0dbb0d4e9fe9a80",
+      "source_exact": true
+    },
+    {
+      "member": "prepared.json",
+      "byte_length": 475213,
+      "sha256": "bb3ee09693ef1ddfb89e548f3f5e0d38c4abaee5e6d253f129c7c6c1a9dbda0e",
+      "source_exact": true
+    },
+    {
+      "member": "receipt.json",
+      "byte_length": 973659,
+      "sha256": "36c3c2e6506b2ff9b260d932bdf3cf85e9e8d60600197c43b516c49626a4e3ea",
+      "source_exact": true
+    },
+    {
+      "member": "recorder-used.py",
+      "byte_length": 8411,
+      "sha256": "0185ccf143d7a5d1112b573fd0405da899b27d112cb4c7b431e1cbb1da629b30",
+      "source_exact": true
+    },
+    {
+      "member": "state-capture.json",
+      "byte_length": 664,
+      "sha256": "8b27d573ea7e264b6615e1c4d014d6b3d0cc66a06cd02658ddc2db04c2094f73",
+      "source_exact": true
+    },
+    {
+      "member": "state-wrapper-used.py",
+      "byte_length": 3569,
+      "sha256": "b7022b3205d04f02b6fceaee94d2f7912f15271be6ee4b2e4d7c62ba0013a441",
+      "source_exact": true
+    },
+    {
+      "member": "stderr.txt",
+      "byte_length": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "source_exact": true
+    },
+    {
+      "member": "stdout.json",
+      "byte_length": 388799,
+      "sha256": "499ddd3ca331ece8d76c6caa5f9460ee026390986a0f0542191fa7ced91449e6",
+      "source_exact": true
+    }
+  ],
+  "commit_executed": false,
+  "push_executed": false,
+  "gates_executed": false
+}

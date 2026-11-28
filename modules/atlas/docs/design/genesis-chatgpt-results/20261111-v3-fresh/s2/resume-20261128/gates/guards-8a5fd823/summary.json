@@ -1,0 +1,14 @@
+{
+  "schema": "genesis-s2-checkpoint-guard-summary/v1",
+  "tested_head": "8a5fd8230d0ada0c4c510fa6221562726d5c1722",
+  "base_sha": "3aaa5e0645f99940b66ee90d28aef93166f09ab1",
+  "rules": 78,
+  "changed_paths": 1851,
+  "gate_findings": 0,
+  "warnings": 208,
+  "errors": 0,
+  "exit_code": 0,
+  "receipt": "gates/guards-8a5fd823/receipt.json",
+  "new_checkpoint_covered": false,
+  "limit": "Existing gate on the named committed HEAD only; no gate ran on this new documentary checkpoint."
+}

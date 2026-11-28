@@ -1,0 +1,21 @@
+{
+  "schema": "genesis-s2-operation-config-correction/v1",
+  "recorded_at": "2026-11-28T07:10:11.461974+00:00",
+  "state": "ERROR_FOUND_BEFORE_FIRST_OPERATIONAL_USE",
+  "reported_by": "/root",
+  "error": "Initial builder restricted additional approval targets to .atlas and README illustrated .atlas/binding.json. The pinned original CLI uses nativePath, which rejects every .atlas path segment; admit could not consume that binding.",
+  "effect": "No operation config, Atlas call, policy, root mutation or runtime output was produced by this builder before correction. Syntax-only validation did not catch this integration mismatch.",
+  "correction": "Keep policies/marker in .atlas; place binding/request/response evidence in the exclusive evaluation-v2/binding namespace accepted by nativePath. Validate native relative path rules without changing the CLI. Compare reader metadata against exact intended/installed consumer policy.",
+  "files": [
+    {
+      "path": "operation-config.py",
+      "byte_length": 18014,
+      "sha256": "6328fe066dc664e0c48d22a9717c640a4bb7166ef3be51cdd26a4a37fb55428f"
+    },
+    {
+      "path": "operation-config.README.md",
+      "byte_length": 4006,
+      "sha256": "07fcaeab8866574800b14c6914d1d4820156cc5477d2bf4fed55cbc74640939c"
+    }
+  ]
+}

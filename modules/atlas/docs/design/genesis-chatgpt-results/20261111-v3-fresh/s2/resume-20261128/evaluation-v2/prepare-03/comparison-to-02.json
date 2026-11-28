@@ -1,0 +1,56 @@
+{
+  "schema": "genesis-s2-guarded-prepare-comparison/v1",
+  "recorded_at": "2026-11-28T07:16:20.490475+00:00",
+  "state": "NEW_EXECUTION_SAME_CONTENT_ADDRESSED_CANDIDATE",
+  "operation_id": "s2-evaluation-prepare-db9b423-20261128-03",
+  "original_cli_exit_code": 0,
+  "started_at": "2026-11-28T07:14:06.118420+00:00",
+  "ended_at": "2026-11-28T07:14:10.661705+00:00",
+  "duration_seconds": 4.543303357997502,
+  "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "prepared": {
+    "byte_length": 475213,
+    "sha256": "bb3ee09693ef1ddfb89e548f3f5e0d38c4abaee5e6d253f129c7c6c1a9dbda0e",
+    "byte_identical_to_prepare02": true,
+    "new_exclusive_output_file": true
+  },
+  "stdout_byte_identical_to_prepare02": true,
+  "input_file_counts": {
+    "all": 1890,
+    "original_source_materialization": 716,
+    "runtime_lock_including_Bun": 1170,
+    "additional_controls": 4
+  },
+  "coverage_reconciliation": {
+    "original716_exact_subset": true,
+    "runtime1170_exact_subset": true,
+    "expected_before_after_exact_equality": true,
+    "all247_noble_files_in_current_pre_and_post_capture": true,
+    "cas92_before_after_exact_equality": true,
+    "non_cas_state_before_after_empty": true
+  },
+  "guard_implementation": {
+    "path": "/workspace/scratch/5cfbb6c803f1/s2-investigation/record-operation.py",
+    "byte_length": 8411,
+    "sha256": "0185ccf143d7a5d1112b573fd0405da899b27d112cb4c7b431e1cbb1da629b30"
+  },
+  "release_pin": {
+    "state": "FIXED_RUNTIME_WITH_S2_V2_COMPATIBILITY_SUPPLEMENT",
+    "release_id": "20261128-s4-runtime-db9b423-prepare-v1",
+    "release_revision": "e171783482d0a44974d6056cd9e144a7e33406a7",
+    "runtime_revision": "db9b4235022c4df32fe3bfd4faeea8adcd69abb7",
+    "release_manifest_sha256": "2922f769ea2b533d06748a4c10471b19deba3fd0c41b8f1bf7930512eaa75af1"
+  },
+  "reused_audit": {
+    "report_sha256": "ba77fa8ecc3df1d34311e48c9afdc9ad81ad5a8d7c6283f3cb6a6167d6868371",
+    "original_prepared_sha256": "bb3ee09693ef1ddfb89e548f3f5e0d38c4abaee5e6d253f129c7c6c1a9dbda0e",
+    "basis": "Exact byte equality of prepared files and CLI stdout; no new claim that the22752-check audit was rerun."
+  },
+  "limits": [
+    "This is a distinct original CLI invocation. Its content-addressed candidate equals prepare02 because all preimages remained equal; no identity was forced or borrowed.",
+    "Prepare02 retains its original lack of a separate noble pre/post snapshot. This record does not amend that historical receipt.",
+    "Intrinsic runtime_identity still omits the workspace-root noble dependency. External controls were actually used for this invocation only, not installed as a general runtime door.",
+    "A post-operation mismatch would invalidate a success claim, not undo an operation already performed. No mismatch occurred.",
+    "No policy, marker, binding, governed admission, reader, consumer or maintenance was executed."
+  ]
+}

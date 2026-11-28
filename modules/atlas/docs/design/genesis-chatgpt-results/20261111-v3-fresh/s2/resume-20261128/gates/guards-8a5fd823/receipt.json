@@ -1,0 +1,31 @@
+{
+  "schema": "genesis-s2-local-guard-receipt/v1",
+  "argv": [
+    "/workspace/scratch/5cfbb6c803f1/s2-tools/node_modules/@oven/bun-linux-x64-baseline/bin/bun",
+    "run",
+    "check:guards",
+    "--base",
+    "origin/dev"
+  ],
+  "cwd": "/workspace/scratch/5cfbb6c803f1/s2-delivery",
+  "head": "8a5fd8230d0ada0c4c510fa6221562726d5c1722",
+  "base_ref": "origin/dev",
+  "base_sha": "3aaa5e0645f99940b66ee90d28aef93166f09ab1",
+  "started_at": "2026-11-28T07:11:22.299048+00:00",
+  "ended_at": "2026-11-28T07:11:57.159175+00:00",
+  "duration_seconds": 34.860165648002294,
+  "exit_code": 0,
+  "PATH_prepend": "/workspace/scratch/5cfbb6c803f1/s2-tools/node_modules/@oven/bun-linux-x64-baseline/bin",
+  "tracked_and_untracked_clean_before": true,
+  "product_tests_executed": false,
+  "streams": {
+    "stdout.json": {
+      "byte_length": 53829,
+      "sha256": "6b0fa5521b5efc88904b665acb70d08fa23ca330bcd138891b6051b365821236"
+    },
+    "stderr.txt": {
+      "byte_length": 49,
+      "sha256": "b700ae49ae0cff3d8e1d465ed0d5182ea2583d9c9b81d3d0efa238f1d68591ce"
+    }
+  }
+}

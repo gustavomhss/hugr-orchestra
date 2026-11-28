@@ -1,0 +1,41 @@
+{
+  "schema": "genesis-s2-explicit-policy-installation/v1",
+  "recorded_at": "2026-11-28T07:22:25.019637+00:00",
+  "case": "admit",
+  "candidate_id": "d1c8478b155b2085df1289ef91edfeaa4834e9300d651c0b953e6e2978aa5d30",
+  "generation": "694110e9b70b62ca59fe3a0edf91157066f991bb79fcaab27a1b005320bc3488",
+  "actor": "genesis-s2-resume-846d4f9c",
+  "operations": [
+    "admit"
+  ],
+  "consumer": null,
+  "marker_before": {
+    "byte_length": 583,
+    "sha256": "b191a34d21a16337044e5a30f41fba19338feb3123dd606bf3d9e945e7158497"
+  },
+  "revisions": [
+    {
+      "path": "/workspace/scratch/5cfbb6c803f1/s2-evaluation/.atlas/policy.json",
+      "before": null,
+      "after": {
+        "byte_length": 163,
+        "sha256": "edc84d9c4809be52f1ccea1b72851aa54c11fa81777a890c988a05b00e97cf22"
+      },
+      "changed": true
+    },
+    {
+      "path": "/workspace/scratch/5cfbb6c803f1/s2-evaluation/.atlas/evaluation-policy.json",
+      "before": null,
+      "after": {
+        "byte_length": 591,
+        "sha256": "2e2afec9425fe047cad8e52b2b75b8a43f5bbd0b5800e7aaa4bff73c9f6977c4"
+      },
+      "changed": true
+    }
+  ],
+  "installer_sha256": "bcc872714754ee469ab6ab337288e9f0994a5f64e902fc6d8d2a869395b9c4cb",
+  "runtime_command_executed": false,
+  "judge_decision_created": false,
+  "budget_files_modified": false,
+  "authority_limit": "Explicit user-authorized local configuration; actor is nominal and unauthenticated. No global activation or accepted-phase promotion."
+}
