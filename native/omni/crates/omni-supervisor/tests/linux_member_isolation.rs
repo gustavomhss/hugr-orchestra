@@ -15,7 +15,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant};
 
-const CLONE_INTO_CGROUP: u64 = 0x2000_0000_0;
+const CLONE_INTO_CGROUP: u64 = 0x0002_0000_0000;
 const NOBODY: u32 = 65_534;
 const WAIT: Duration = Duration::from_secs(5);
 
@@ -35,10 +35,9 @@ struct CloneArgs {
 }
 
 #[test]
+#[ignore = "requires an explicitly delegated Linux cgroup v2 and disposable fixture credentials"]
 fn freezer_is_exact_for_a_supervisor_owned_single_task_member() {
-    if std::env::var("HUGR_OMNI_ISOLATION_CI").as_deref() != Ok("1") {
-        return;
-    }
+    assert_eq!(std::env::var("HUGR_OMNI_ISOLATION_CI").as_deref(), Ok("1"));
     let root = std::env::var_os("HUGR_OMNI_ISOLATION_CGROUP_ROOT")
         .expect("the opt-in Linux isolation test needs a delegated ephemeral cgroup v2 root");
     let root = PathBuf::from(root);
@@ -64,6 +63,7 @@ fn freezer_is_exact_for_a_supervisor_owned_single_task_member() {
 
     let cgroup = fs::File::open(&leaf).expect("open the owned cgroup directory");
     let mut member = Worker::spawn(Some(cgroup.as_raw_fd()));
+    assert!(has_progress(&mut member.pipe, WAIT), "the member must drop credentials and start before the freezer assertion");
     assert_eq!(fs::read_to_string(leaf.join("cgroup.procs")).unwrap().trim(), member.pid.to_string());
     assert_eq!(fs::read_to_string(leaf.join("pids.current")).unwrap().trim(), "1");
     assert_eq!(
@@ -78,12 +78,12 @@ fn freezer_is_exact_for_a_supervisor_owned_single_task_member() {
     );
 
     let mut outsider = Worker::spawn(None);
-    assert!(has_progress(&mut member.pipe, WAIT), "the member must start before the freezer assertion");
     assert!(has_progress(&mut outsider.pipe, WAIT), "the unrelated fixture must start outside the leaf");
 
     fs::write(leaf.join("cgroup.freeze"), "1").unwrap();
     wait_frozen(&leaf, true);
     drain(&mut member.pipe);
+    drain(&mut outsider.pipe);
     std::thread::sleep(Duration::from_millis(200));
     assert!(!has_progress(&mut member.pipe, Duration::from_millis(50)), "a confirmed-frozen member made progress");
     assert!(has_progress(&mut outsider.pipe, WAIT), "freezing the member stopped an unrelated process");
@@ -101,6 +101,7 @@ fn freezer_is_exact_for_a_supervisor_owned_single_task_member() {
     fs::write(leaf.join("cgroup.freeze"), "0").unwrap();
     wait_frozen(&leaf, false);
     drain(&mut member.pipe);
+    drain(&mut outsider.pipe);
     std::thread::sleep(Duration::from_millis(200));
     assert!(!has_progress(&mut member.pipe, Duration::from_millis(50)), "thaw incorrectly resumed an externally stopped member");
     assert!(has_progress(&mut outsider.pipe, WAIT), "the unrelated fixture must keep running during both transitions");
@@ -174,6 +175,24 @@ impl Worker {
             if uid != NOBODY || gid != NOBODY {
                 // SAFETY: _exit terminates only this fixture child without running inherited destructors.
                 unsafe { libc::_exit(90) };
+            }
+            if let Some(fd) = cgroup_fd {
+                // SAFETY: validate the permissions of the fixture's own cgroup through its inherited directory fd.
+                let freezer = unsafe { libc::openat(fd, c"cgroup.freeze".as_ptr(), libc::O_WRONLY | libc::O_CLOEXEC) };
+                // SAFETY: validate migration permissions in the same fixture-owned cgroup.
+                let migration = unsafe { libc::openat(fd, c"cgroup.procs".as_ptr(), libc::O_WRONLY | libc::O_CLOEXEC) };
+                if freezer >= 0 || migration >= 0 {
+                    // SAFETY: exits only the fixture child and closes any opened descriptors.
+                    unsafe { libc::_exit(91) };
+                }
+                // SAFETY: the fixture expects the pids controller to block sibling tasks. On unexpected success
+                // both branches exit, so the fixture never leaves a stray worker running.
+                let extra = unsafe { libc::fork() };
+                // SAFETY: this accesses the thread-local errno immediately following the failed fork.
+                if extra != -1 || unsafe { *libc::__errno_location() } != libc::EAGAIN {
+                    // SAFETY: exits only this fixture worker, with no inherited destructors.
+                    unsafe { libc::_exit(92) };
+                }
             }
             loop {
                 let byte = [1_u8];
