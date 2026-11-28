@@ -196,19 +196,17 @@ const layer = Layer.effect(
       }
       const system =
         initialized ?? (yield* SessionContextEpoch.prepare(db, events, systemContextForTurn, session.id))
+      const workflow = yield* RelayWorkflowSession.current(session.id).pipe(Effect.provide(workflowContext), Effect.orDie)
+      if (workflow?.view.pending) return { needsContinuation: yield* RelayWorkflowSession.reconcile(workflow).pipe(
+        Effect.provide(workflowContext), Effect.map((next) => next === true), Effect.orDie), step: currentStep }
+      if (workflow?.view.state === "complete") return { needsContinuation: false, step: currentStep }
       const hosted = engine ? yield* modelExecution.assertHost({ session, agent, engine }) : undefined
       const host = hosted?.host
       const model = host ? undefined : yield* models.resolve(session)
       const modelRef = model ? SessionRunnerModel.reference(model) : hosted?.ref
       yield* subagentModels.assert(session.id, modelRef)
-      // Title generation can send the admitted prompt to a provider, so schedule it only after eligibility passes.
-      if (promoted > 0) yield* nameSession(session.id)
       const entries = yield* SessionHistory.entriesForRunner(db, session.id, system.baselineSeq)
       const context = entries.map((entry) => entry.message)
-      const workflow = yield* RelayWorkflowSession.current(session.id).pipe(Effect.provide(workflowContext), Effect.orDie)
-      if (workflow?.view.pending) return { needsContinuation: yield* RelayWorkflowSession.reconcile(workflow).pipe(
-        Effect.provide(workflowContext), Effect.map((next) => next === true), Effect.orDie), step: currentStep }
-      if (workflow?.view.state === "complete") return { needsContinuation: false, step: currentStep }
       // A scoped Session (SessionScope) whose tool call budget is spent gets this turn as its last.
       const scoped = yield* store.scope(session.id)
       const isLastStep =
@@ -275,6 +273,10 @@ const layer = Layer.effect(
       const publish = (event: LLMEvent, outputPaths: ReadonlyArray<string> = []) =>
         withPublication(publisher.publish(event, outputPaths))
       let overflowFailure: ProviderErrorEvent | undefined
+      // MCP preparation and snapshot capture may outlive a change to the ancestor's model policy.
+      yield* subagentModels.assert(session.id, modelRef)
+      // Title generation can send the admitted prompt to a provider, so wait until the turn is eligible.
+      if (promoted > 0) yield* nameSession(session.id)
       const invoke = (call: ToolCall, assistantMessageID: SessionMessage.ID, materialization: ToolRegistry.Materialization) =>
         CapabilityInvocation.withContext(
           {
