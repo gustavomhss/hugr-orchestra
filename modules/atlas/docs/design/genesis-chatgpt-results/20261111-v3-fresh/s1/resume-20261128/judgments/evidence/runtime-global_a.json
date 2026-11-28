@@ -1,0 +1,22 @@
+{
+  "id": "global_a",
+  "path": "packages/core/src/global.ts",
+  "start_line": 10,
+  "end_line": 43,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "const app = \"orchestra\"\nconst data = path.join(xdgData!, app)\nconst cache = path.join(xdgCache!, app)\nconst config = path.join(xdgConfig!, app)\nconst state = path.join(xdgState!, app)\nconst tmp = path.join(os.tmpdir(), app)\n\nconst paths = {\n  get home() {\n    return process.env.ORCHESTRA_TEST_HOME ?? os.homedir()\n  },\n  data,\n  bin: path.join(cache, \"bin\"),\n  log: path.join(data, \"log\"),\n  repos: path.join(data, \"repos\"),\n  cache,\n  config,\n  state,\n  tmp,\n}\n\nexport const Path = paths\n\nFlock.setGlobal({ state })\n\nawait Promise.all([\n  fs.mkdir(Path.data, { recursive: true }),\n  fs.mkdir(Path.config, { recursive: true }),\n  fs.mkdir(Path.state, { recursive: true }),\n  fs.mkdir(Path.tmp, { recursive: true }),\n  fs.mkdir(Path.log, { recursive: true }),\n  fs.mkdir(Path.bin, { recursive: true }),\n  fs.mkdir(Path.repos, { recursive: true }),\n])",
+      "encoding": "utf-8",
+      "sha": "ba7790536b60c6075ff37854c4db14909b779183",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/global.ts",
+      "display_title": "global.ts"
+    },
+    "isError": false
+  }
+}

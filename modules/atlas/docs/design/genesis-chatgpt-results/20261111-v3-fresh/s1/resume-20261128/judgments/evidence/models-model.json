@@ -1,0 +1,22 @@
+{
+  "id": "model",
+  "path": "packages/core/src/model.ts",
+  "start_line": 1,
+  "end_line": 42,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "import { Types } from \"effect\"\nimport { Model } from \"@orchestra/schema/model\"\nimport { ProviderV2 } from \"./provider\"\n\nexport const ID = Model.ID\nexport type ID = typeof ID.Type\n\nexport const VariantID = Model.VariantID\nexport type VariantID = typeof VariantID.Type\n\n// Grouping of models, eg claude opus, claude sonnet\nexport const Family = Model.Family\nexport type Family = Model.Family\n\nexport const Capabilities = Model.Capabilities\nexport type Capabilities = Model.Capabilities\n\nexport const Cost = Model.Cost\nexport type Cost = Model.Cost\n\nexport const Ref = Model.Ref\nexport type Ref = typeof Ref.Type\n\nexport const Api = Model.Api\nexport type Api = Model.Api\n\nexport const Info = Model.Info\nexport type Info = Model.Info\n\nexport type MutableInfo = Omit<Types.DeepMutable<Info>, \"api\"> & {\n  api: ProviderV2.MutableApi<Api>\n}\n\nexport function parse(input: string): { providerID: ProviderV2.ID; modelID: ID } {\n  const [providerID, ...modelID] = input.split(\"/\")\n  return {\n    providerID: ProviderV2.ID.make(providerID),\n    modelID: ID.make(modelID.join(\"/\")),\n  }\n}\n\nexport * as ModelV2 from \"./model\"",
+      "encoding": "utf-8",
+      "sha": "085800e0480c60a70f989469ba7c0dc09aa758eb",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/model.ts",
+      "display_title": "model.ts"
+    },
+    "isError": false
+  }
+}

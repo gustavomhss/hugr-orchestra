@@ -1,0 +1,513 @@
+C01 — fontes literais adicionais, parte 04. Mesmo pin, mesmo corpo.
+
+### E02 — Composição/ligação LLM: `packages/core/src/effect/app-node-platform.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `3238fc642c5124e9de82de23d4c6a8bbb0107f00`; SHA-256 `3607751ac0c9cfeb54d3d94f13eb66175d58c3e1dd648328d22d63f85e954ffe`.
+Linhas 9–18; hash do trecho UTF-8 original `a270bb2961e41ab81e1390befb1cb9d6ab53d32235ad3a9d17483664d00575f4`.
+````text
+9: export const path = makeGlobalNode({ service: Path.Path, layer: NodePath.layer, deps: [] })
+10: export const httpClient = makeGlobalNode({ service: HttpClient.HttpClient, layer: FetchHttpClient.layer, deps: [] })
+11: export const requestExecutor = makeGlobalNode({
+12:   service: RequestExecutor.Service,
+13:   layer: RequestExecutor.layer,
+14:   deps: [httpClient],
+15: })
+16: export const llmClient = makeGlobalNode({ service: LLMClient.Service, layer: LLMClient.layer, deps: [requestExecutor] })
+17: 
+18: export * as LayerNodePlatform from "./app-node-platform"
+````
+
+### E03 — Composição: `packages/core/src/effect/app-node-builder.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `f81f07cd9f4876742c1e8039f4453bf31fd55f58`; SHA-256 `753fe1a4b14d038ad93836eb92a9a9e28458c9fdf73e61a56804bf5477dc2c0e`.
+Linhas 12–42; hash do trecho UTF-8 original `44398eb2552ea3a390de0a805b31d993519509b9e0d5dbfbe639f6f975cbd783`.
+````text
+12: ) {
+13:   return Layer.suspend(() => {
+14:     const globalContext = Deferred.makeUnsafe<Context.Context<never>>()
+15:     let allReplacements = replacements
+16: 
+17:     // Only build the location service map if it's actually needed
+18:     if (LayerNode.hasUnbound(root, LocationServiceMap.node) && !hasReplacement(replacements, LocationServiceMap.node)) {
+19:       const locationMap = buildLocationServiceMap(replacements, locationNodes)
+20:       const locationMapNode = makeGlobalNode({ service: LocationServiceMap.Service, layer: locationMap, deps: [] })
+21:       allReplacements = replacements.concat([[LocationServiceMap.node, locationMapNode]])
+22:     }
+23: 
+24:     return LayerNode.compile(root, allReplacements, {
+25:       // Bind after replacement resolution so concrete maps and explicit replacements
+26:       // captured by constructors share the same completed application exports.
+27:       transformLayer: (layer, node) =>
+28:         node.name === LocationServiceMap.node.name
+29:           ? LocationServiceMap.withGlobalContext(layer, Deferred.await(globalContext))
+30:           : layer,
+31:     }).pipe(
+32:       // Startup forks may acquire Locations while the root is still building.
+33:       Layer.tap((context) => Deferred.succeed(globalContext, context)),
+34:     )
+35:   })
+36: }
+37: 
+38: function hasReplacement(replacements: LayerNode.Replacements, node: LayerNode.Node<unknown, unknown, any>) {
+39:   return replacements.some(([source]) => source.name === node.name)
+40: }
+41: 
+42: export * as AppNodeBuilder from "./app-node-builder"
+````
+
+### E04 — Composição: `packages/core/src/effect/layer-node.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `ca703af7aa7ad50217eead2d5b34030a0d6e4e33`; SHA-256 `012e5e57b186ee0ec13451edcc4f9205d3a3a793f050d56fa040e443567795f4`.
+Linhas 284–310; hash do trecho UTF-8 original `e802b79687d530d3e5f27fbc70bb16a95c971d9acf51ce1fbb5ac8c727d40bd2`.
+````text
+284:     }, new Map<string, AnyNode>()) ?? new Map<string, AnyNode>()
+285:   )
+286: }
+287: 
+288: function rewriteReplacementDependencies(root: AnyNode, replacements: ReadonlyMap<string, AnyNode>) {
+289:   if (replacements.size === 0) return root
+290:   const cache = new Map<AnyNode, AnyNode>()
+291:   const visiting = new Set<AnyNode>()
+292:   const stack: AnyNode[] = []
+293: 
+294:   const recur = (node: AnyNode, isRoot = false): AnyNode => {
+295:     const target = isRoot ? node : (replacements.get(node.name) ?? node)
+296:     const cached = cache.get(target)
+297:     if (cached !== undefined || cache.has(target)) return cached!
+298:     if (visiting.has(target)) {
+299:       const start = stack.indexOf(target)
+300:       throw new Error(
+301:         `Cycle detected in layer tree: ${[...stack.slice(start), target].map((item) => item.name).join(" -> ")}`,
+302:       )
+303:     }
+304: 
+305:     visiting.add(target)
+306:     stack.push(target)
+307:     try {
+308:       const dependencies = target.dependencies.map((dependency) => recur(dependency))
+309:       const result = dependencies.every((dependency, index) => dependency === target.dependencies[index])
+310:         ? target
+````
+
+### E06 — Ligação nativa auxiliar: `packages/core/src/session/runner/llm.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `c3ad8d87a58923d40797d38a77ff65367bbe66b6`; SHA-256 `03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7`.
+Linhas 117–130; hash do trecho UTF-8 original `f2cfc8323e0cc19a14d3ed072ea79e609f8913bab4e218f92eea6b4c481d3f83`.
+````text
+117: const layer = Layer.effect(
+118:   Service,
+119:   Effect.gen(function* () {
+120:     const events = yield* EventV2.Service
+121:     const llm = yield* LLMClient.Service
+122:     const agents = yield* AgentV2.Service
+123:     const tools = yield* ToolRegistry.Service
+124:     const mcp = yield* Mcp.Service
+125:     const reader = yield* ReadToolFileSystem.Service
+126:     const models = yield* SessionRunnerModel.Service
+127:     const subagentModels = yield* SessionSubagentModels.Service
+128:     const store = yield* SessionStore.Service
+129:     const location = yield* Location.Service
+130:     const systemContext = yield* SystemContextRegistry.Service
+````
+Linhas 427–448; hash do trecho UTF-8 original `acd2ba39f442ac7be09279773359974b18b8c8fe6eb47a1ea17b8b1c502ee56d`.
+````text
+427:       const source = request
+428:         ? llm.stream(request)
+429:         : host && agent.info
+430:           ? host.stream({
+431:               session,
+432:               agent: agent.info,
+433:               model: modelRef,
+434:               system: systemText,
+435:               context: contextText,
+436:               history: context,
+437:               tools: toolMaterialization?.definitions ?? [],
+438:               execute,
+439:               authorize,
+440:               question: (input) => questions.ask({ sessionID: session.id, questions: input.questions }),
+441:               memory,
+442:               steers,
+443:               consumed: (id) => Effect.sync(() => void liveSteers.delete(id)),
+444:               notify,
+445:               todos: (list) => SessionTodo.write(db, events, { sessionID: session.id, todos: list }),
+446:               state: ExecutionHost.state(db, session.id, host.stateKey),
+447:             })
+448:           : Stream.die("SessionRunner: no provider for this turn")
+````
+Linhas 731–745; hash do trecho UTF-8 original `b7a17b2caa50f17d98f6004935a36b4d7314e6f431e56a88df2a1057ab7d36ae`.
+````text
+731: export const node = makeLocationNode({
+732:   service: Service,
+733:   layer,
+734:   deps: [
+735:     EventV2.node,
+736:     llmClient,
+737:     AgentV2.node,
+738:     ToolRegistry.node,
+739:     Mcp.node,
+740:     ReadToolFileSystem.node,
+741:     SessionRunnerModel.node,
+742:     SessionSubagentModels.node,
+743:     SessionStore.node,
+744:     Location.node,
+745:     SystemContextRegistry.node,
+````
+
+### E08 — Ingestão: `packages/core/src/models-dev.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `881ba850d9a6b8c67896cface5cffab15d5ebd0e`; SHA-256 `b7ba76f7f8439345a77cec56357971aa36c3dfd9370797b5368e0e0c4a33e535`.
+Linhas 159–199; hash do trecho UTF-8 original `9c3ee8e237d9ede17c36ba1e6dc0e054e6c5401a2d1c2aff97829ffe638c42e0`.
+````text
+159:           schedule: Schedule.exponential(200).pipe(Schedule.jittered),
+160:         }),
+161:       ),
+162:     )
+163: 
+164:     const source = Flag.ORCHESTRA_MODELS_URL || DEFAULT_SOURCE
+165:     const filepath = path.join(
+166:       Global.Path.cache,
+167:       source === DEFAULT_SOURCE ? "models.json" : `models-${Hash.fast(source)}.json`,
+168:     )
+169:     const ttl = Duration.minutes(5)
+170:     const lockKey = `models-dev:${filepath}`
+171: 
+172:     const fresh = Effect.fnUntraced(function* () {
+173:       const stat = yield* fs.stat(filepath).pipe(Effect.catch(() => Effect.succeed(undefined)))
+174:       if (!stat) return false
+175:       const mtime = Option.getOrElse(stat.mtime, () => new Date(0)).getTime()
+176:       return Date.now() - mtime < Duration.toMillis(ttl)
+177:     })
+178: 
+179:     const fetchApi = Effect.fn("ModelsDev.fetchApi")(function* () {
+180:       return yield* HttpClientRequest.get(`${source}/api.json`).pipe(
+181:         HttpClientRequest.setHeader("User-Agent", USER_AGENT),
+182:         http.execute,
+183:         Effect.flatMap((res) => res.text),
+184:         Effect.timeout("10 seconds"),
+185:       )
+186:     })
+187: 
+188:     const loadFromDisk = fs.readJson(Flag.ORCHESTRA_MODELS_PATH ?? filepath).pipe(
+189:       Effect.catch((error) => {
+190:         if (
+191:           Flag.ORCHESTRA_MODELS_PATH === undefined &&
+192:           error._tag === "FileSystemError" &&
+193:           error.method === "readJson"
+194:         ) {
+195:           return fs.remove(filepath, { force: true }).pipe(Effect.ignore, Effect.as(undefined))
+196:         }
+197:         return Effect.succeed(undefined)
+198:       }),
+199:       Effect.map((v) => v as Record<string, Provider> | undefined),
+````
+Linhas 217–240; hash do trecho UTF-8 original `bf45debd95947b75e5649b2505cb1770f054211f20962bfda7ea11c46d96549e`.
+````text
+217:       )
+218:       return text
+219:     })
+220: 
+221:     const populate = Effect.gen(function* () {
+222:       const fromDisk = yield* loadFromDisk
+223:       if (fromDisk) return fromDisk
+224:       const snapshot = yield* loadSnapshot
+225:       if (snapshot) return snapshot
+226:       if (Flag.ORCHESTRA_DISABLE_MODELS_FETCH) return {}
+227:       // Flock is cross-process: concurrent Orchestra CLIs can race on this cache file.
+228:       const text = yield* Effect.scoped(
+229:         Effect.gen(function* () {
+230:           yield* Flock.effect(lockKey)
+231:           return yield* fetchAndWrite()
+232:         }),
+233:       )
+234:       return JSON.parse(text) as Record<string, Provider>
+235:     }).pipe(Effect.withSpan("ModelsDev.populate"), Effect.orDie)
+236: 
+237:     const [cachedGet, invalidate] = yield* Effect.cachedInvalidateWithTTL(populate, Duration.infinity)
+238: 
+239:     const get = (): Effect.Effect<Record<string, Provider>> => cachedGet
+240: 
+````
+
+### E12 — Registro providers: `packages/core/src/plugin/provider.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `1749b474ed338579cef78d6f86bb8b98068f93d2`; SHA-256 `4541bd8b36b68838aa1e19114bd2a40e111bcd763fd92b88a12911eb89c08f7f`.
+Linhas 34–71; hash do trecho UTF-8 original `c9e5153f6b27f38e705f25c93c122e6dc08f0885f3981d68523a564f4b4e49a8`.
+````text
+34: import type { Scope } from "effect"
+35: 
+36: export const ProviderPlugins: PluginInternal.Plugin<PluginInternal.Requirements | Scope.Scope>[] = [
+37:   AlibabaPlugin,
+38:   AmazonBedrockPlugin,
+39:   AnthropicPlugin,
+40:   AzureCognitiveServicesPlugin,
+41:   AzurePlugin,
+42:   CerebrasPlugin,
+43:   CloudflareAIGatewayPlugin,
+44:   CloudflareWorkersAIPlugin,
+45:   CoherePlugin,
+46:   DeepInfraPlugin,
+47:   GatewayPlugin,
+48:   GithubCopilotPlugin,
+49:   GitLabPlugin,
+50:   GooglePlugin,
+51:   GoogleVertexAnthropicPlugin,
+52:   GoogleVertexPlugin,
+53:   GroqPlugin,
+54:   KiloPlugin,
+55:   LLMGatewayPlugin,
+56:   MistralPlugin,
+57:   NvidiaPlugin,
+58:   OpencodePlugin,
+59:   SnowflakeCortexPlugin,
+60:   OpenAICompatiblePlugin,
+61:   OpenAIPlugin,
+62:   OpenRouterPlugin,
+63:   PerplexityPlugin,
+64:   SapAICorePlugin,
+65:   TogetherAIPlugin,
+66:   VercelPlugin,
+67:   VenicePlugin,
+68:   XAIPlugin,
+69:   ZenmuxPlugin,
+70:   DynamicProviderPlugin,
+71: ]
+````
+
+### E13 — Providers: `packages/core/src/plugin/provider/dynamic.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `c84a6ed51f895f7972b907a2f32113c4f412ce5e`; SHA-256 `0438bb6937de48275dcc6569531a44c796fbf22d77fd3ec067fdba39018b9c6c`.
+Linhas 13–31; hash do trecho UTF-8 original `b7e1a06b72ba398bbaf5c4fdf92b1335aad359f11380ff6678059d091952aa6d`.
+````text
+13: 
+14:         const installedPath = evt.package.startsWith("file://")
+15:           ? evt.package
+16:           : (yield* npm.add(evt.package).pipe(Effect.orDie)).entrypoint
+17:         if (!installedPath) throw new Error(`Package ${evt.package} has no import entrypoint`)
+18: 
+19:         const mod = yield* Effect.promise(async () => {
+20:           return (await import(
+21:             installedPath.startsWith("file://") ? installedPath : pathToFileURL(installedPath).href
+22:           )) as Record<string, (options: any) => any>
+23:         }).pipe(Effect.orDie)
+24:         const match = Object.keys(mod).find((name) => name.startsWith("create"))
+25:         if (!match) throw new Error(`Package ${evt.package} has no provider factory export`)
+26: 
+27:         evt.sdk = mod[match](evt.options)
+28:       }),
+29:     )
+30:   }),
+31: })
+````
+
+### E14 — Providers: `packages/core/src/plugin/provider/github-copilot.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `356768a5afe9c3619b57d12297d4986cfdfdfe0a`; SHA-256 `16c95e95ae49a44e41312860f952733367e0c0705511cfa4e6efe65fc641d064`.
+Linhas 24–52; hash do trecho UTF-8 original `a90318cba0b8638ee3ed402d295ed2577c3cde20bff62614923aedafc2ffbefd`.
+````text
+24:         evt.sdk = mod.createOpenaiCompatible(evt.options)
+25:       }),
+26:     )
+27:     yield* ctx.aisdk.language(
+28:       Effect.fn(function* (evt) {
+29:         if (evt.model.providerID !== ProviderV2.ID.githubCopilot) return
+30:         if (evt.sdk.responses === undefined && evt.sdk.chat === undefined) {
+31:           evt.language = evt.sdk.languageModel(evt.model.api.id)
+32:           return
+33:         }
+34:         if (evt.options.endpoint === "responses" && evt.sdk.responses) {
+35:           evt.language = evt.sdk.responses(evt.model.api.id)
+36:           return
+37:         }
+38:         if (evt.options.endpoint === "chat" && evt.sdk.chat) {
+39:           evt.language = evt.sdk.chat(evt.model.api.id)
+40:           return
+41:         }
+42:         const match = /^gpt-(\d+)/.exec(evt.model.api.id)
+43:         // Copilot supports Responses for GPT-5 class models, except mini variants
+44:         // which still need the chat-completions endpoint.
+45:         evt.language =
+46:           match && Number(match[1]) >= 5 && !evt.model.api.id.startsWith("gpt-5-mini") && evt.sdk.responses
+47:             ? evt.sdk.responses(evt.model.api.id)
+48:             : evt.sdk.chat(evt.model.api.id)
+49:       }),
+50:     )
+51:   }),
+52: }
+````
+
+### E15 — Providers: `packages/core/src/plugin/provider/cloudflare-ai-gateway.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `7024fd12b2df81e2b8f79f21b66cfba119ce057e`; SHA-256 `d6687653eae0f8cbda25e671fe23b48f2e704079db609814f5a4d1d338c3555f`.
+Linhas 71–106; hash do trecho UTF-8 original `bf2593fae620ca1f1e71ee71585e3ed8c25a9a4a29be06f9dd8fd1120986f93f`.
+````text
+71:   gatewayId: string
+72:   apiKey: string
+73: }
+74: 
+75: const decodeJson = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)
+76: 
+77: function gatewayConfig(options: Record<string, unknown>): GatewayConfig | undefined {
+78:   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID ?? stringOption(options, "accountId")
+79:   // Credential projection copies key metadata into options. The prompt stores the
+80:   // gateway as gatewayId, while older config examples may use gateway.
+81:   const gatewayId =
+82:     process.env.CLOUDFLARE_GATEWAY_ID ?? stringOption(options, "gatewayId") ?? stringOption(options, "gateway")
+83:   const apiKey = process.env.CLOUDFLARE_API_TOKEN ?? process.env.CF_AIG_TOKEN ?? stringOption(options, "apiKey")
+84:   if (!accountId || !gatewayId || !apiKey) return undefined
+85: 
+86:   return { accountId, gatewayId, apiKey }
+87: }
+88: 
+89: function gatewayMetadata(options: Record<string, unknown>) {
+90:   // Preserve the legacy cf-aig-metadata header escape hatch for gateway logging
+91:   // metadata, but prefer the typed metadata option when present.
+92:   if (options.metadata !== undefined) return options.metadata
+93:   const raw = (options.headers as Record<string, string> | undefined)?.["cf-aig-metadata"]
+94:   return raw ? Option.getOrUndefined(decodeJson(raw)) : undefined
+95: }
+96: 
+97: function gatewayOptions(options: Record<string, unknown>, metadata: unknown) {
+98:   return {
+99:     metadata,
+100:     cacheTtl: options.cacheTtl,
+101:     cacheKey: options.cacheKey,
+102:     skipCache: options.skipCache,
+103:     collectLog: options.collectLog,
+104:     headers: {
+105:       "User-Agent": `orchestra/${InstallationVersion} cloudflare-ai-gateway (${os.platform()} ${os.release()}; ${os.arch()})`,
+106:     },
+````
+
+### E16 — Providers: `packages/core/src/plugin/provider/snowflake-cortex.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `788ac63eb0370f89461a1acecfd018b72729bfa4`; SHA-256 `6d098714050bc9208313932e8dc3c633ef8c1cb414355dbea1173d6340379487`.
+Linhas 43–89; hash do trecho UTF-8 original `a3adbe23c3e2bb261ab9f2b1fcf77e3ed9a7112eb919ff03752a531ab411ef46`.
+````text
+43:       const encoder = new TextEncoder()
+44:       const decoder = new TextDecoder()
+45:       const stream = new ReadableStream({
+46:         async pull(ctrl) {
+47:           const { done, value } = await reader.read()
+48:           if (done) {
+49:             ctrl.close()
+50:             return
+51:           }
+52:           ctrl.enqueue(
+53:             encoder.encode(decoder.decode(value, { stream: true }).replace(/"role"\s*:\s*""/g, '"role":"assistant"')),
+54:           )
+55:         },
+56:         cancel() {
+57:           reader.cancel()
+58:         },
+59:       })
+60:       return new Response(stream, { headers: response.headers, status: response.status })
+61:     }
+62: 
+63:     return response
+64:   }
+65: }
+66: 
+67: export const SnowflakeCortexPlugin = define({
+68:   id: "snowflake-cortex",
+69:   effect: Effect.fn(function* (ctx) {
+70:     yield* ctx.aisdk.sdk(
+71:       Effect.fn(function* (evt) {
+72:         if (evt.model.providerID !== ProviderV2.ID.make("snowflake-cortex")) return
+73:         const token =
+74:           process.env.SNOWFLAKE_CORTEX_TOKEN ??
+75:           process.env.SNOWFLAKE_CORTEX_PAT ??
+76:           (typeof evt.options.token === "string" ? evt.options.token : undefined) ??
+77:           (typeof evt.options.apiKey === "string" ? evt.options.apiKey : undefined)
+78:         const upstream = typeof evt.options.fetch === "function" ? (evt.options.fetch as FetchLike) : undefined
+79:         if (evt.options.includeUsage !== false) evt.options.includeUsage = true
+80:         const mod = yield* Effect.promise(() => import("@ai-sdk/openai-compatible"))
+81:         evt.sdk = mod.createOpenAICompatible({
+82:           ...evt.options,
+83:           ...(token ? { apiKey: token } : {}),
+84:           fetch: cortexFetch(upstream) as typeof fetch,
+85:         } as any)
+86:       }),
+87:     )
+88:   }),
+89: })
+````
+
+### E17 — Vendor: `packages/core/src/github-copilot/README.md`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `d1051a4da0411e6f4ae288144154e755320b84cd`; SHA-256 `62969b3ac55adab013546f90667ff48924880bfe07cd2504de0d40a3e6eb0aa0`.
+Linhas 1–5; hash do trecho UTF-8 original `62969b3ac55adab013546f90667ff48924880bfe07cd2504de0d40a3e6eb0aa0`.
+````text
+1: This is a temporary package used primarily for GitHub Copilot compatibility.
+2: 
+3: These DO NOT apply for openai-compatible providers or majority of providers supporting completions/responses apis. THIS IS ONLY FOR GITHUB COPILOT!!!
+4: 
+5: Avoid making edits to these files
+````
+
+### E18 — Vendor: `packages/core/src/github-copilot/chat/openai-compatible-prepare-tools.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `ac907f52542666905181160d17f6096b1b751b62`; SHA-256 `dd61ebd4aeb11b6b84fd132039e555e65af8fea4dfaf76420797cf32ecce29be`.
+Linhas 41–53; hash do trecho UTF-8 original `ef31be7b56ee098157a2a511851e4dc4379e96fd58326e4214e2b6fa138c6679`.
+````text
+41:   for (const tool of tools) {
+42:     if (tool.type === "provider") {
+43:       toolWarnings.push({ type: "unsupported", feature: `tool type: ${tool.type}` })
+44:     } else {
+45:       openaiCompatTools.push({
+46:         type: "function",
+47:         function: {
+48:           name: tool.name,
+49:           description: tool.description,
+50:           parameters: tool.inputSchema,
+51:         },
+52:       })
+53:     }
+````
+
+### E19 — Vendor: `packages/core/src/github-copilot/chat/openai-compatible-chat-language-model.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `280970c41b4f2dace7a49db86735da20144b1f92`; SHA-256 `375c0bca4fb26709b007300219bb9ba9701deeede09caa3458e029915ac7d7ea`.
+Linhas 468–478; hash do trecho UTF-8 original `c29c6874cf8232673c4cfb7177aaf013e5dbb04817c42eb7e6251ccb8093fc4c`.
+````text
+468:             // Capture reasoning_opaque for Copilot multi-turn reasoning
+469:             if (delta.reasoning_opaque) {
+470:               if (reasoningOpaque != null) {
+471:                 throw new InvalidResponseDataError({
+472:                   data: delta,
+473:                   message:
+474:                     "Multiple reasoning_opaque values received in a single response. Only one thinking part per response is supported.",
+475:                 })
+476:               }
+477:               reasoningOpaque = delta.reasoning_opaque
+478:             }
+````
+
+### E20 — Vendor: `packages/core/src/github-copilot/responses/openai-responses-language-model.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `8df1dcedadb3bcc4878cb538f5324d34d8113756`; SHA-256 `ba074469423956aa690e084485c49f266f479195ae050b97ea6b54b37b2bfb13`.
+Linhas 1261–1276; hash do trecho UTF-8 original `c4541506431a4ea8d421e03a81e0b8fe712b796091fe2cad5ae645501fb06441`.
+````text
+1261:             } else if (isResponseFinishedChunk(value)) {
+1262:               finishReason = {
+1263:                 unified: mapOpenAIResponseFinishReason({
+1264:                   finishReason: value.response.incomplete_details?.reason,
+1265:                   hasFunctionCall,
+1266:                 }),
+1267:                 raw: value.response.incomplete_details?.reason ?? undefined,
+1268:               }
+1269:               usage.inputTokens = value.response.usage.input_tokens
+1270:               usage.outputTokens = value.response.usage.output_tokens
+1271:               usage.totalTokens = value.response.usage.input_tokens + value.response.usage.output_tokens
+1272:               usage.reasoningTokens = value.response.usage.output_tokens_details?.reasoning_tokens ?? undefined
+1273:               usage.cachedInputTokens = value.response.usage.input_tokens_details?.cached_tokens ?? undefined
+1274:               if (typeof value.response.service_tier === "string") {
+1275:                 serviceTier = value.response.service_tier
+1276:               }
+````
+Linhas 1379–1386; hash do trecho UTF-8 original `1ae3f25fce2b8e6a30416336a51b1f0b207efe6ad92bb2b3cd33bf8a4d616e73`.
+````text
+1379: const responseFinishedChunkSchema = z.object({
+1380:   type: z.enum(["response.completed", "response.incomplete"]),
+1381:   response: z.object({
+1382:     incomplete_details: z.object({ reason: z.string() }).nullish(),
+1383:     usage: usageSchema,
+1384:     service_tier: z.string().nullish(),
+1385:   }),
+1386: })
+````
+Linhas 1594–1597; hash do trecho UTF-8 original `ccd66a432a16a4e1c60823cb2defef44604e6364107d070b5431ffa77f5da079`.
+````text
+1594: function isResponseFinishedChunk(
+1595:   chunk: z.infer<typeof openaiResponsesChunkSchema>,
+1596: ): chunk is z.infer<typeof responseFinishedChunkSchema> {
+1597:   return chunk.type === "response.completed" || chunk.type === "response.incomplete"
+````
+
+
+Continua; aguarde FIM C01.

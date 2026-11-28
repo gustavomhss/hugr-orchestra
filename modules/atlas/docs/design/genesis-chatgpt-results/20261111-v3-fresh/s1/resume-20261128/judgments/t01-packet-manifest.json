@@ -1,0 +1,61 @@
+{
+  "body_sources": "four exact original candidates with native metadata",
+  "source_dossier_sha256": "f61c1c3acf34da20b9b78d0a809e5aa23044d5e0f50c983a5f41715d563d77bf",
+  "parts": [
+    {
+      "path": "reviews/requests/t01-part-01.txt",
+      "bytes": 7507,
+      "sha256": "be9b7ab0eb527920723524c42f41ae74dca1b596e41f6022c7c6e27361df3b72",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/t01-part-02.txt",
+      "bytes": 8921,
+      "sha256": "7cb23b87eb73965ff7f40a388e5120c90152bd1338c25661a6705dbadeee82d9",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/t01-part-03.txt",
+      "bytes": 5977,
+      "sha256": "76f0eb9d9f8c699cb2ca7ad598229b699ee23e728fec1010464daf492b6a1356",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/t01-part-04.txt",
+      "bytes": 6367,
+      "sha256": "1b775396d08cf20cf1c3008d9e575e3f27f6789ac522e34fd84a76cb7d2489d2",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/t01-part-05.txt",
+      "bytes": 31514,
+      "sha256": "6df22d28b9f1526d5192e617d386853f4b96e18a02fbd1d2c4dd2998f11d7826",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/t01-part-06.txt",
+      "bytes": 21069,
+      "sha256": "c918603d19bbdcf10b7443264724647f3b36abdf288e38434cedd571f6505cd6",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/t01-part-07.txt",
+      "bytes": 20975,
+      "sha256": "196680097475a143450500d900bcabaa2d40310a7f430b96f47e1ee6b0fc8352",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/t01-part-08.txt",
+      "bytes": 22574,
+      "sha256": "bee2c3098b1af5d5fe0e6c148f2d4f75324b152b0070de3a99760435db98a07b",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/t01-part-09.txt",
+      "bytes": 12378,
+      "sha256": "af63fceb2e44b22fcf9aa564d932224ba8cb1ad0c8cd482c890ec2b7dc391924",
+      "state": "PREPARED_NOT_SENT"
+    }
+  ],
+  "excluded_from_semantic_evidence": "Mechanical 1441-membership census; original family dispositions and explicit gaps retained."
+}

@@ -1,0 +1,22 @@
+{
+  "id": "pty_ring",
+  "path": "packages/core/src/pty.ts",
+  "start_line": 74,
+  "end_line": 108,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "export type CreateOptions = {\n  // Starts zsh or bash with marks the caller can trust (ShellMarks). Off unless asked or ORCHESTRA_SHELL_INTEGRATION is\n  // set; other shells ignore it.\n  readonly shellIntegration?: boolean\n  // Runs command and args as given with only the given env (plus TERM and ORCHESTRA_TERMINAL): no login flag, nothing\n  // inherited from the server process. For a caller that already built a confined command.\n  readonly exact?: boolean\n  // Called from the data and exit paths themselves, so a command that ends right after spawn is still seen whole,\n  // which attach cannot offer once the session has exited.\n  readonly observe?: {\n    readonly onData: (chunk: string) => void\n    readonly onExit: (exitCode: number) => void\n  }\n}\n\nexport type AttachInput = {\n  // Absolute output cursor to replay from. -1 tails from the current end; omitted replays the full retained buffer.\n  readonly cursor?: number\n  // Callbacks fire synchronously from the native PTY data path; keep them non-blocking.\n  readonly onData: (chunk: string) => void\n  // Fired once when the session stops producing output: process exit (exitCode set), removal, or service teardown.\n  readonly onEnd: (event: { exitCode?: number }) => void\n}\n\nexport type Attachment = {\n  // Retained output from the requested cursor to the current end.\n  readonly replay: string\n  // Absolute output cursor after replay.\n  readonly cursor: number\n  // The nonce this session's shell marks carry, when it was created with shellIntegration.\n  readonly shellNonce?: string\n  readonly write: (data: string) => void\n  // Starts live delivery after the caller has applied replay and cursor metadata.\n  readonly activate: () => void\n  readonly detach: () => void",
+      "encoding": "utf-8",
+      "sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "display_title": "pty.ts"
+    },
+    "isError": false
+  }
+}

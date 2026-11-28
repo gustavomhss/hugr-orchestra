@@ -1,0 +1,16 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Action completed."
+    }
+  ],
+  "structuredContent": {
+    "content": "// @orchestra/core — src/economy/admission.ts (G1 / F2)\n//\n// Shared physical-attempt admission authority over `Database.Service` (contract:\n// modules/atlas/docs/design/genesis-g1-contract.md §1–§4, Astra decision 2026-11-09).\n//\n// Frozen semantics implemented here:\n// - Bootstrap admission (§2.1): `seedEnvelope` registers an immutable envelope; `reserve`\n//   never creates one — unexpected absence is a HOLD (CE-8), never an empty-budget fallback.\n// - Ambient transaction refusal (§4.2): admission inside an ambient transaction is refused\n//   before any forward; detection goes through `Database.Interface.inTransaction`.\n// - Indivisible reserve (§1.4): identity check, authoritative envelope, occupied-vector\n//   decision, insert and COMMIT happen in one `behavior: \"immediate\"` transaction; the\n//   consumable grant exists only after the transaction resolves. A repeat of the same key\n//   under the same sealed identity reconciles — it never obtains another forward.\n// - Occupied vector (§1.3): settled attempts contribute confirmed usage, unresolved\n//   attempts contribute their reserved bound; `attempts` is its own dimension; a possibly\n//   forwarded attempt keeps its position even after settlement.\n// - Sealed request identity (§4.1): fingerprint covers body digest, endpoint, protocol,\n//   route, snapshot, bound, envelope and policy — one digest for reserve and send.\n// - Retry lineage (§1.5): every attempt after the first is authorized only by the frozen\n//   policy plus the recorded evidence of the named predecessor attempt.\n// - Terminal held (§1.5): sufficient terminal evidence releases the in-flight slot while\n//   keeping the reservation economically held; usage settlement happens separately.\n// - Settlement (§1.6): idempotent on the full evidence (digest, breakdown, provenance);\n//   conflicting settlement is refused, not rewritten; confirmed usage above the bound is\n//   stored whole and blocks new admissions (capacity breach); semantic refusal never\n//   refunds physical usage.\n// - Storage boundary (§2.2): corruption predictions are converted to typed outcomes; the\n//   envelope's storage authority identity is verified, never recreated.\n\nimport { Database } from \"../database/database\"\nimport { EffectDrizzleQueryError } from \"drizzle-orm/effect-core/errors\"\nimport { and, eq } from \"drizzle-orm\"\nimport { createHash } from \"crypto\"\nimport { Context, Effect, Layer } from \"effect\"\nimport { SqlError } from \"effect/unstable/sql/SqlError\"\nimport { EconomyAttemptTable, EconomyEnvelopeTable } from \"./sql\"\n\nexport type Tx = Parameters<Parameters<Database.Interface[\"db\"][\"transaction\"]>[0]>[0]\n",
+    "encoding": "utf-8",
+    "sha": "914a0b925dd282e264292b2247189c549c993a3f",
+    "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/economy/admission.ts",
+    "display_title": "admission.ts"
+  },
+  "isError": false
+}

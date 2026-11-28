@@ -1,0 +1,9 @@
+{
+  "execution_id": "2ccbd15d-4f66-44a3-b2e1-8326abce0bef",
+  "J1": "/root/review_coordinator/judge_j1",
+  "J2": "/root/review_coordinator/judge_j2",
+  "isolation": "fork_turns:none; textual no-tools instruction; no technical restriction claimed",
+  "model": "UNKNOWN",
+  "tokens": "UNKNOWN",
+  "physical_usage": "UNKNOWN"
+}

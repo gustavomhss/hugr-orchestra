@@ -1,0 +1,22 @@
+{
+  "id": "catalog_top",
+  "path": "packages/core/src/catalog.ts",
+  "start_line": 1,
+  "end_line": 83,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "export * as Catalog from \"./catalog\"\n\nimport { makeLocationNode } from \"./effect/app-node\"\nimport { Array, Context, Effect, Layer, Option, Order, pipe, Schema } from \"effect\"\nimport { Catalog } from \"@orchestra/schema/catalog\"\nimport { Credential } from \"./credential\"\nimport { ModelV2 } from \"./model\"\nimport { ProviderV2 } from \"./provider\"\nimport { EventV2 } from \"./event\"\nimport { Policy } from \"./policy\"\nimport { State } from \"./state\"\nimport { Integration } from \"./integration\"\n\nexport const VIRTUAL_SEPARATOR = \"#\"\n\nexport const parseVirtualID = (id: ProviderV2.ID) => {\n  const index = id.indexOf(VIRTUAL_SEPARATOR)\n  if (index === -1) return undefined\n  return {\n    base: id.slice(0, index) as ProviderV2.ID,\n    credentialID: id.slice(index + 1),\n  }\n}\n\nexport type ProviderRecord = {\n  provider: ProviderV2.MutableInfo\n  models: Map<ModelV2.ID, ModelV2.MutableInfo>\n}\n\nexport type DefaultModel = { providerID: ProviderV2.ID; modelID: ModelV2.ID }\n\nexport const PolicyActions = Schema.Literals([\"provider.use\"])\n\nexport const Event = Catalog.Event\n\ntype Data = {\n  providers: Map<ProviderV2.ID, ProviderRecord>\n  defaultModel?: DefaultModel\n}\n\nexport type Draft = {\n  provider: {\n    list: () => readonly ProviderRecord[]\n    get: (providerID: ProviderV2.ID) => ProviderRecord | undefined\n    update: (providerID: ProviderV2.ID, fn: (provider: ProviderV2.MutableInfo) => void) => void\n    remove: (providerID: ProviderV2.ID) => void\n  }\n  model: {\n    get: (providerID: ProviderV2.ID, modelID: ModelV2.ID) => ModelV2.Info | undefined\n    update: (providerID: ProviderV2.ID, modelID: ModelV2.ID, fn: (model: ModelV2.MutableInfo) => void) => void\n    remove: (providerID: ProviderV2.ID, modelID: ModelV2.ID) => void\n    default: {\n      get: () => DefaultModel | undefined\n      set: (providerID: ProviderV2.ID, modelID: ModelV2.ID) => void\n    }\n  }\n}\n\nexport interface Interface extends State.Transformable<Draft> {\n  readonly provider: {\n    readonly get: (providerID: ProviderV2.ID) => Effect.Effect<ProviderV2.Info | undefined>\n    readonly all: () => Effect.Effect<ProviderV2.Info[]>\n    readonly available: () => Effect.Effect<ProviderV2.Info[]>\n  }\n  readonly model: {\n    readonly get: (providerID: ProviderV2.ID, modelID: ModelV2.ID) => Effect.Effect<ModelV2.Info | undefined>\n    readonly all: () => Effect.Effect<ModelV2.Info[]>\n    readonly available: () => Effect.Effect<ModelV2.Info[]>\n    readonly default: () => Effect.Effect<ModelV2.Info | undefined>\n    readonly small: (providerID: ProviderV2.ID) => Effect.Effect<ModelV2.Info | undefined>\n  }\n}\n\nexport class Service extends Context.Service<Service, Interface>()(\"@orchestra/v2/Catalog\") {}\n\nconst layer = Layer.effect(\n  Service,\n  Effect.gen(function* () {\n    const events = yield* EventV2.Service\n    const policy = yield* Policy.Service\n    const integrations = yield* Integration.Service\n    const credentials = yield* Credential.Service\n",
+      "encoding": "utf-8",
+      "sha": "86acb93f550bc2b941e85d42cc4d62d73cbf64ba",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/catalog.ts",
+      "display_title": "catalog.ts"
+    },
+    "isError": false
+  }
+}

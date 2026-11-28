@@ -1,0 +1,451 @@
+R01 — parte 02, fonte literal no pin; corpo e critérios inalterados.
+
+BEGIN SOURCE packages/core/src/omni.ts 25–46 blob 94a19789cef782806a80432c9a86f28bccbdecac
+let injected: Paths = {}
+let loading: Promise<Binding> | undefined
+
+/** Hands the loader explicit addon and supervisor paths (D-L8). Must run before the first load(). */
+export function configure(paths: Paths) {
+  if (loading) throw new Error("Omni.configure() must run before the first Omni.load().")
+  injected = { ...injected, ...paths }
+}
+
+/**
+ * Loads hugr-omni once. Rejects, loudly and with every place it looked, when the addon or the supervisor is
+ * missing; callers that asked for omni (the flag is on) must never fall back silently.
+ */
+export function load() {
+  loading ??= open()
+  return loading
+}
+
+async function open(): Promise<Binding> {
+  const found = locate()
+  const binding: Configurable = await import("hugr-omni").catch((cause: unknown) => {
+    throw new Error(`hugr-omni could not load its native addon ${found.addon}: ${String(cause)}`, { cause })
+END SOURCE
+
+### E28 — Omni: `packages/core/src/omni.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `94a19789cef782806a80432c9a86f28bccbdecac`; SHA-256 `b032344ff11c078ecdc062bd796a5ad75ccb046a319d674ab7faba659d84b3ab`.
+Linhas 47–112; hash do trecho UTF-8 original `15939851dbfbffc7e6d97fc250c4d0b9b8ca213f53c544397e4d7fd0d27f52f0`.
+````text
+47:   })
+48:   if (typeof binding.configure === "function") {
+49:     binding.configure(found)
+50:     return binding
+51:   }
+52:   // Without configure() the native side finds the supervisor next to the addon, or through a real (process-start)
+53:   // HUGR_OMNI_SUPERVISOR. A process.env write under Bun never reaches native code (H4), so nothing else works.
+54:   const native = process.env.HUGR_OMNI_SUPERVISOR
+55:   if (path.dirname(found.supervisor) === path.dirname(found.addon) || native === found.supervisor) return binding
+56:   throw new Error(
+57:     `hugr-omni: the supervisor ${found.supervisor} is not next to the addon ${found.addon}, and this hugr-omni has no configure().`,
+58:   )
+59: }
+60: 
+61: /**
+62:  * Where the addon and the supervisor are, in this order: the paths given to configure(), then HUGR_OMNI_ADDON and
+63:  * HUGR_OMNI_SUPERVISOR (CI). An explicit addon requires its sibling supervisor unless explicitly overridden; it
+64:  * never borrows a supervisor from another candidate. Otherwise look next to realpath(process.execPath) (the
+65:  * CLI), then in ../omni from there (the desktop's CLI, run standalone from Resources/cli), then
+66:  * process.resourcesPath/omni (the desktop), then this checkout's native/omni/target/{release,debug}.
+67:  * A non-explicit location counts only when it holds both files, so a release addon never pairs a debug supervisor.
+68:  */
+69: export function locate(given: Paths = injected): Found {
+70:   const explicit = {
+71:     addon: given.addon ?? process.env.HUGR_OMNI_ADDON,
+72:     supervisor: given.supervisor ?? process.env.HUGR_OMNI_SUPERVISOR,
+73:   }
+74:   if (explicit.addon !== undefined) {
+75:     const found = { addon: explicit.addon, supervisor: explicit.supervisor ?? sibling(explicit.addon, SUPERVISOR) }
+76:     const missing = Object.entries(found).filter(([, file]) => !existsSync(file))
+77:     if (missing.length > 0)
+78:       throw new Error(
+79:         `hugr-omni: the configured ${missing.map(([kind, file]) => `${kind} ${file} does not exist`).join("; ")}.`,
+80:       )
+81:     return found
+82:   }
+83:   if (explicit.supervisor !== undefined && !existsSync(explicit.supervisor))
+84:     throw new Error(`hugr-omni: the configured supervisor ${explicit.supervisor} does not exist.`)
+85:   const resources = "resourcesPath" in process && typeof process.resourcesPath === "string" ? process.resourcesPath : ""
+86:   const target = path.join(import.meta.dirname, "..", "..", "..", "native", "omni", "target")
+87:   const binary = path.dirname(realpath(process.execPath))
+88:   const locations = [
+89:     { addon: path.join(binary, SHIPPED_ADDON), supervisor: path.join(binary, SUPERVISOR) },
+90:     { addon: path.join(binary, "..", "omni", SHIPPED_ADDON), supervisor: path.join(binary, "..", "omni", SUPERVISOR) },
+91:     ...(resources
+92:       ? [{ addon: path.join(resources, "omni", SHIPPED_ADDON), supervisor: path.join(resources, "omni", SUPERVISOR) }]
+93:       : []),
+94:     ...["release", "debug"].map((profile) => ({
+95:       addon: path.join(target, profile, BUILT_ADDON),
+96:       supervisor: path.join(target, profile, SUPERVISOR),
+97:     })),
+98:   ]
+99:   const pair = locations.find(
+100:     (entry) => existsSync(entry.addon) && (explicit.supervisor !== undefined || existsSync(entry.supervisor)),
+101:   )
+102:   const addon = pair?.addon
+103:   const supervisor = explicit.supervisor ?? pair?.supervisor
+104:   if (addon && supervisor) return { addon, supervisor }
+105:   throw new Error(
+106:     [
+107:       `hugr-omni is required (ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) but its ${locations.some((entry) => existsSync(entry.addon)) ? "supervisor" : "addon"} was not found. Looked at:`,
+108:       ...locations.map((entry) => `  ${entry.addon} + ${entry.supervisor}`),
+109:       "Build it with `bun run omni:build`, or set HUGR_OMNI_ADDON and HUGR_OMNI_SUPERVISOR.",
+110:     ].join("\n"),
+111:   )
+112: }
+````
+
+
+BEGIN SOURCE packages/core/src/omni.ts 139–174 blob 94a19789cef782806a80432c9a86f28bccbdecac
+ * The positive control for a test run (D-L1): a run with the flag on that made no omni spawn proved nothing about
+ * omni, and a strict run must not have delegated. `expected` false (a focused run in which no test declared an omni
+ * spawn, script/test-omni-control.ts) still fails a run that delegated without any omni spawn: it did spawn, just never
+ * through omni. Undefined means the run passes.
+ */
+export function verdict(mode: "off" | "on" | "strict", counts: { spawns: number; delegations: number }, expected = true) {
+  if (mode === "off") return
+  if (counts.spawns === 0 && (expected || counts.delegations > 0))
+    return `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=${mode === "on" ? "1" : mode}, but this run made no omni spawn${
+      counts.delegations > 0 ? ` and delegated ${counts.delegations} spawn(s) to legacy` : ""
+    }.`
+  if (mode === "strict" && counts.delegations > 0)
+    return `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict, but this run delegated ${counts.delegations} spawn(s) to legacy.`
+}
+
+/**
+ * The environment of an omni child (D-L3), always used with inheritEnv:false: `base` (process.env unless given), then
+ * `extra`, with undefined values dropped and HUGR_OMNI_* removed from the final object. On Windows names are
+ * case-insensitive: a later layer's `Path` replaces an earlier `PATH`, and only one key survives.
+ */
+export function childEnv(extra?: Record<string, string | undefined>, base: Record<string, string | undefined> = process.env) {
+  const env: Record<string, string> = {}
+  const names = new Map<string, string>()
+  for (const layer of [base, extra ?? {}]) {
+    for (const [key, value] of Object.entries(layer)) {
+      const folded = process.platform === "win32" ? key.toUpperCase() : key
+      const previous = names.get(folded)
+      if (previous !== undefined) delete env[previous]
+      names.delete(folded)
+      if (value === undefined || key.toUpperCase().startsWith("HUGR_OMNI_")) continue
+      names.set(folded, key)
+      env[key] = value
+    }
+  }
+  return env
+}
+END SOURCE
+
+### E33 — PTY: `packages/core/src/pty.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `fc08cb64d832f77b145c4c9702d417d7db49c14f`; SHA-256 `03f62b4e17ac231291eb4c726d92415f63fa4b08eb66ced6d5c60cb9a3d0b4be`.
+Linhas 23–39; hash do trecho UTF-8 original `a58681ecc906ad3e8bb8e35a929b81bb5d4f8d683def1988df6863c0958c1f9a`.
+````text
+23: // Exited sessions stay observable (status, exit code, retained output) until removed explicitly.
+24: // Cap retention so abandoned terminals do not accumulate unbounded buffers.
+25: const EXITED_LIMIT = 25
+26: const pty = lazy(() => import("#pty"))
+27: const omniPty = lazy(() => import("./pty/omni").then((mod) => mod.load()))
+28: // How long an omni tree gets to wind down when its session goes, and how long the layer finalizer waits for every
+29: // pending stop: above ConPTY's declared 6 s close (integration plan, WP2).
+30: const STOP_GRACE_MS = 2000
+31: const FINALIZE_CAP = "7 seconds"
+32: 
+33: type Subscriber = {
+34:   readonly onData: (chunk: string) => void
+35:   readonly onEnd: (event: { exitCode?: number }) => void
+36:   active: boolean
+37:   detached: boolean
+38:   pending: string[]
+39:   end?: { exitCode?: number }
+````
+Linhas 229–270; hash do trecho UTF-8 original `ed55db90cfed5e7cd641e880b1fdee0d95cc38ab1562cae3febffd776020fd23`.
+````text
+229:     const create = Effect.fn("Pty.create")(function* (input: CreateInput, options?: CreateOptions) {
+230:       const id = PtyID.ascending()
+231:       const command = input.command || Shell.preferred(Config.latest(yield* config.entries(), "shell"))
+232:       const given =
+233:         !options?.exact && Shell.login(command) ? [...(input.args ?? []), "-l"] : [...(input.args ?? [])]
+234:       const cwd = input.cwd || location.directory
+235:       const base = {
+236:         ...(options?.exact ? {} : process.env),
+237:         ...input.env,
+238:         TERM: "xterm-256color",
+239:         ORCHESTRA_TERMINAL: "1",
+240:       } as Record<string, string>
+241:       const integration = (options?.shellIntegration ?? (!options?.exact && Flag.ORCHESTRA_SHELL_INTEGRATION))
+242:         ? yield* Effect.promise(() => ShellIntegration.prepare({ command, args: given, env: base }))
+243:         : undefined
+244:       const args = integration?.args ?? given
+245:       const env = integration ? { ...base, ...integration.env } : base
+246:       if (process.platform === "win32") {
+247:         env.LC_ALL = "C.UTF-8"
+248:         env.LC_CTYPE = "C.UTF-8"
+249:         env.LANG = "C.UTF-8"
+250:       }
+251:       // Only given sizes reach the backend, so a create without them stays what it was.
+252:       const size = {
+253:         ...(input.cols === undefined ? {} : { cols: clampSize(input.cols) }),
+254:         ...(input.rows === undefined ? {} : { rows: clampSize(input.rows) }),
+255:       }
+256:       const backend = Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off" ? "legacy" : "omni"
+257:       // Argv and cwd can carry secrets and private paths: log the executable and the argument count only.
+258:       yield* Effect.logInfo("creating session", { id, cmd: command.split(/[\\/]/).pop(), args: args.length, backend })
+259:       const omni =
+260:         backend === "omni"
+261:           ? yield* Effect.gen(function* () {
+262:               const { spawn } = yield* Effect.promise(() => omniPty())
+263:               const proc = yield* Effect.sync(() => spawn(command, args, { name: "xterm-256color", cwd, env, ...size }))
+264:               const service = Option.getOrUndefined(yield* Effect.serviceOption(OmniAdoption.Service))
+265:               const registry = Option.getOrUndefined(yield* Effect.serviceOption(OmniAdoption.Registry))
+266:               return { proc, ...(service ? { adoption: { service, registry } } : {}) }
+267:             })
+268:           : undefined
+269:       const proc =
+270:         omni?.proc ??
+````
+Linhas 370–423; hash do trecho UTF-8 original `1fd6a6d5a48d2054a87ae072d652fd1c9ebe9dac4d1f2d538268dc29262c441d`.
+````text
+370:       const subscriber: Subscriber = {
+371:         onData: input.onData,
+372:         onEnd: input.onEnd,
+373:         active: false,
+374:         detached: false,
+375:         pending: [],
+376:       }
+377:       // An exited session still serves its retained output: the client gets the replay, then the end.
+378:       if (session.info.status === "running") session.subscribers.set(token, subscriber)
+379:       else subscriber.end = { exitCode: session.info.exitCode }
+380:       const start = session.bufferCursor
+381:       const end = session.cursor
+382:       const from =
+383:         input.cursor === -1
+384:           ? end
+385:           : typeof input.cursor === "number" && Number.isSafeInteger(input.cursor)
+386:             ? Math.max(0, input.cursor)
+387:             : 0
+388:       // The ring dropped output this client never saw, so the replay starts mid-stream: reset the terminal rather than
+389:       // paint garbage over its old screen, and nudge the program to redraw once the replay is queued.
+390:       const gap = from < start
+391:       const replay = (() => {
+392:         if (!session.buffer || from >= end) return ""
+393:         if (gap) return GAP_RESET + PtyProtocol.afterFirstLine(session.buffer)
+394:         const offset = Math.max(0, from - start)
+395:         if (offset >= session.buffer.length) return ""
+396:         return session.buffer.slice(offset)
+397:       })()
+398:       return {
+399:         replay,
+400:         cursor: end,
+401:         ...(session.shellNonce ? { shellNonce: session.shellNonce } : {}),
+402:         write: (data: string) => {
+403:           if (session.info.status === "running") session.process.write(data)
+404:         },
+405:         activate: () => {
+406:           if (subscriber.active || subscriber.detached) return
+407:           subscriber.active = true
+408:           if (gap && session.info.status === "running") repaint(session)
+409:           try {
+410:             for (const chunk of subscriber.pending) subscriber.onData(chunk)
+411:             subscriber.pending.length = 0
+412:             if (subscriber.end) subscriber.onEnd(subscriber.end)
+413:           } catch {
+414:             session.subscribers.delete(token)
+415:           }
+416:         },
+417:         detach: () => {
+418:           subscriber.detached = true
+419:           subscriber.pending.length = 0
+420:           subscriber.end = undefined
+421:           session.subscribers.delete(token)
+422:         },
+423:       }
+````
+
+
+BEGIN SOURCE packages/core/src/pty.ts 74–108 blob fc08cb64d832f77b145c4c9702d417d7db49c14f
+export type CreateOptions = {
+  // Starts zsh or bash with marks the caller can trust (ShellMarks). Off unless asked or ORCHESTRA_SHELL_INTEGRATION is
+  // set; other shells ignore it.
+  readonly shellIntegration?: boolean
+  // Runs command and args as given with only the given env (plus TERM and ORCHESTRA_TERMINAL): no login flag, nothing
+  // inherited from the server process. For a caller that already built a confined command.
+  readonly exact?: boolean
+  // Called from the data and exit paths themselves, so a command that ends right after spawn is still seen whole,
+  // which attach cannot offer once the session has exited.
+  readonly observe?: {
+    readonly onData: (chunk: string) => void
+    readonly onExit: (exitCode: number) => void
+  }
+}
+
+export type AttachInput = {
+  // Absolute output cursor to replay from. -1 tails from the current end; omitted replays the full retained buffer.
+  readonly cursor?: number
+  // Callbacks fire synchronously from the native PTY data path; keep them non-blocking.
+  readonly onData: (chunk: string) => void
+  // Fired once when the session stops producing output: process exit (exitCode set), removal, or service teardown.
+  readonly onEnd: (event: { exitCode?: number }) => void
+}
+
+export type Attachment = {
+  // Retained output from the requested cursor to the current end.
+  readonly replay: string
+  // Absolute output cursor after replay.
+  readonly cursor: number
+  // The nonce this session's shell marks carry, when it was created with shellIntegration.
+  readonly shellNonce?: string
+  readonly write: (data: string) => void
+  // Starts live delivery after the caller has applied replay and cursor metadata.
+  readonly activate: () => void
+  readonly detach: () => void
+END SOURCE
+
+BEGIN SOURCE packages/core/src/pty.ts 139–197 blob fc08cb64d832f77b145c4c9702d417d7db49c14f
+    const stopping = new Set<Promise<void>>()
+
+    function notifyEnd(session: Active, event: { exitCode?: number }) {
+      for (const subscriber of session.subscribers.values()) {
+        if (!subscriber.active) {
+          subscriber.end = event
+          continue
+        }
+        try {
+          subscriber.onEnd(event)
+        } catch {}
+      }
+      session.subscribers.clear()
+    }
+
+    // `adopt`: the user closed the session, so a tree with live descendants may go to the adoption registry. Eviction
+    // and the layer's end always stop what is left of the tree (for omni, also after the root exited).
+    function teardown(session: Active, adopt: boolean) {
+      for (const listener of session.listeners) listener.dispose()
+      session.listeners.length = 0
+      if (session.omni) {
+        const pending = close(session.omni, session.info.title, adopt)
+        stopping.add(pending)
+        void pending.finally(() => stopping.delete(pending))
+      }
+      if (!session.omni && session.info.status === "running") {
+        try {
+          session.process.kill()
+        } catch {}
+      }
+      notifyEnd(session, {})
+    }
+
+    async function close(omni: NonNullable<Active["omni"]>, title: string, adopt: boolean) {
+      const adoption = adopt ? omni.adoption : undefined
+      if (!adoption || !(await descendants(omni.proc))) return omni.proc.stop(STOP_GRACE_MS)
+      // The adopted tree's output goes to the registry's ring from now on (R2-4), not to the closed session.
+      const sink = OmniBackground.sink(omni.proc.child)
+      omni.proc.redirect((data) => sink.write(data))
+      const release = OmniAdoption.release(omni.proc.child, Exit.void, { title, graceMs: STOP_GRACE_MS }).pipe(
+        Effect.provideService(OmniAdoption.Service, adoption.service),
+      )
+      return runPromise(
+        adoption.registry ? release.pipe(Effect.provideService(OmniAdoption.Registry, adoption.registry)) : release,
+      ).catch(() => omni.proc.stop(STOP_GRACE_MS))
+    }
+
+    yield* Effect.addFinalizer(() =>
+      Effect.gen(function* () {
+        for (const session of sessions.values()) teardown(session, false)
+        sessions.clear()
+        exitOrder.length = 0
+        if (stopping.size === 0) return
+        yield* Effect.promise(() => Promise.allSettled([...stopping])).pipe(
+          Effect.timeoutOption(FINALIZE_CAP),
+          Effect.asVoid,
+        )
+      }),
+    )
+END SOURCE
+
+BEGIN SOURCE packages/core/src/pty.ts 271–329 blob fc08cb64d832f77b145c4c9702d417d7db49c14f
+        (yield* Effect.gen(function* () {
+          const { spawn } = yield* Effect.promise(() => pty())
+          // A short command can exit right after spawn, and the backends only notify listeners attached when an event
+          // fires (bun-pty 0.4.9 starts reading on a microtask; 0.4.8 read inside spawn and dropped such exits). Attach
+          // onData and onExit below without an async step in between, or the session never leaves "running".
+          return yield* Effect.sync(() => spawn(command, args, { name: "xterm-256color", cwd, env, ...size }))
+        }))
+      const info: Info = {
+        id,
+        title: input.title || `Terminal ${id.slice(-4)}`,
+        command,
+        args,
+        cwd,
+        status: "running",
+        pid: proc.pid,
+      }
+      const announcements = ShellCwd.parser()
+      const session: Active = {
+        info,
+        process: proc,
+        buffer: "",
+        bufferCursor: 0,
+        cursor: 0,
+        size: { cols: size.cols ?? 80, rows: size.rows ?? 24 },
+        ...(integration ? { shellNonce: integration.nonce } : {}),
+        subscribers: new Map(),
+        listeners: [],
+        ...(omni ? { omni } : {}),
+      }
+      sessions.set(id, session)
+      session.listeners.push(
+        proc.onData((chunk) => {
+          session.cursor += chunk.length
+          // The shell's own report of where it is, so a new terminal can start there. Info.cwd follows it.
+          const announced = announcements.push(chunk)
+          if (announced) session.info.cwd = announced
+          options?.observe?.onData(chunk)
+          for (const [token, subscriber] of session.subscribers.entries()) {
+            if (!subscriber.active) {
+              subscriber.pending.push(chunk)
+              continue
+            }
+            try {
+              subscriber.onData(chunk)
+            } catch {
+              session.subscribers.delete(token)
+            }
+          }
+          session.buffer += chunk
+          if (session.buffer.length <= BUFFER_LIMIT) return
+          // Never keep half of a surrogate pair at the start of the ring.
+          const excess = PtyProtocol.cut(session.buffer, session.buffer.length - BUFFER_LIMIT)
+          session.buffer = session.buffer.slice(excess)
+          session.bufferCursor += excess
+        }),
+        proc.onExit(({ exitCode }) => {
+          if (session.info.status === "exited") return
+          session.info.status = "exited"
+          session.info.exitCode = exitCode
+END SOURCE
+
+BEGIN SOURCE .orchestra/skills/terminal-maintenance/SKILL.md 10–29 blob 610fa93e3ec385790509b0c7fd0181fd30adc727
+## Ownership
+
+| Piece | Owner file | Rule |
+|---|---|---|
+| Session, ring buffer, replay gap, repaint | `packages/core/src/pty.ts` | One implementation serves both HTTP surfaces (legacy handlers and `@orchestra/server`); change both or neither |
+| Wire framing (meta frame, cut, afterFirstLine) | `packages/core/src/pty/protocol.ts` | A protocol change needs `bun run generate` in `packages/client` |
+| Shell marks (OSC 133) | `pty/shell-marks.ts`, `pty/shell-integration.ts` | Marks count only with the session nonce; zsh and bash on posix; opt-in per create |
+| Shell cwd (OSC 7) | `pty/shell-cwd.ts`, `Info.cwd` in `pty.ts` | A hint, never a boundary: no nonce, any output can print one; the new-terminal default only |
+| Agent command in a tab | `packages/core/src/tool/agent-terminal.ts` | Behind `ORCHESTRA_AGENT_TERMINAL`; only the foreground block of the V2 `bash.ts`. The app's chat reaches it through V2 by default; the V1 shell tool (legacy sidecar fallback only) is deliberately not wired |
+| Client write path (sync output 2026) | `packages/app-shell/src/utils/terminal-writer.ts` | Holds a DEC 2026 frame until it closes or 250 ms pass |
+| Emulator | `ghostty-web`, pinned fork | Swap only behind the plan's plan B, after a failing Phase 1 test |
+
+## Invariants
+
+- The agent runner never loosens the bash tool: permissions, git safety, `ToolSafetySandbox.wrap`, `OutputInspector`, the 1 MiB cap, timeout and kill-on-abort stay identical. A divergence between the two runners blocks the change.
+- `Pty.create` with `exact: true` never reads `process.env` and never adds `-l`. The default path is unchanged.
+- Model-facing terminal text goes through `AgentTerminal.sanitize` (no CSI/OSC incl. OSC 52, `\r` overwrite, no control characters). Terminal output is data, never instruction.
+- Spawn only through the existing PTY service/omni; `bun run check:spawn-imports` must stay green.
+- The `claude-code` engine runs its own Bash outside `bash.ts`, so it never gets an agent tab (decision D-4, recorded in `docs/specs/terminal/agent-terminal-approval.md`). The plugin `shell.env` hook is not applied to the agent's environment; keep it that way unless the sandbox scrubs the result.
+- Known limit: a WebSocket client that stops reading grows server memory (`ws.send` never awaits; `writableLength` reads 0 under Bun). Not solved; do not add a bound that cannot trigger.
+END SOURCE
+
+Continua; aguarde FIM R01.

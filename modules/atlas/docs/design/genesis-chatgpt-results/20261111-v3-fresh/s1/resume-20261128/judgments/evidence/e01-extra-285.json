@@ -1,0 +1,21 @@
+{
+  "path": "packages/core/src/economy/admission.ts",
+  "start_line": 285,
+  "end_line": 336,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "}\n\nconst policyDigest = (envelope: EconomyEnvelope) => `${envelope.scope}:${envelope.provider}:${envelope.model}:${envelope.route}`\n\ninterface EnvelopeRow {\n  envelope_id: string\n  authority_id: string\n  storage_id: string\n  policy_digest: string\n  scope: string\n  provider: string\n  model: string\n  route: string\n  stages_json: string\n  limits_json: string\n  retry_json: string\n  blocked: number\n}\n\nconst envelopeMatches = (row: EnvelopeRow, storageID: string, envelope: EconomyEnvelope): boolean =>\n  row.authority_id === envelope.authorityId && row.storage_id === storageID &&\n  row.policy_digest === policyDigest(envelope) &&\n  row.scope === envelope.scope && row.provider === envelope.provider && row.model === envelope.model &&\n  row.route === envelope.route &&\n  row.stages_json === JSON.stringify(envelope.stages) &&\n  row.limits_json === JSON.stringify(envelope.limits) &&\n  row.retry_json === JSON.stringify(envelope.retryPolicy)\n\nconst isStorageError = (error: unknown) => error instanceof SqlError || error instanceof EffectDrizzleQueryError\n// Attempt 1 reconciles on the host key; each named retry attempt reconciles on its derived\n// key (`${key}#${ordinal}`), so a retry never folds onto the committed first attempt.\nconst derivedAdmissionKey = (key: string, ordinal: number): AttemptKey =>\n  ordinal === 1 ? key : `${key}#${ordinal}`\nconst isAbort = (error: unknown): error is EconomyAborted =>\n  typeof error === \"object\" && error !== null && \"kind\" in error &&\n  ((error as EconomyRefusal).kind === \"economy-refusal\" || (error as EconomyHold).kind === \"economy-hold\")\n\nconst toRecord = (row: typeof EconomyAttemptTable.$inferSelect): AttemptRecord => ({\n  envelopeId: row.envelope_id,\n  logicalRequestId: row.logical_request_id,\n  ordinal: row.ordinal,\n  admissionKey: row.admission_key,\n  fingerprint: row.fingerprint,\n  bodyDigest: row.body_digest,\n  snapshot: row.snapshot,\n  route: row.route,\n  endpoint: row.endpoint,\n  protocol: row.protocol,\n  ...(row.predecessor === null ? {} : { predecessor: row.predecessor }),\n  state: row.state as AttemptRecord[\"state\"],\n  forwardIntent: row.forward_intent === 1,\n  forwardObserved: row.forward_observed === 1,",
+      "encoding": "utf-8",
+      "sha": "914a0b925dd282e264292b2247189c549c993a3f",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/economy/admission.ts",
+      "display_title": "admission.ts"
+    },
+    "isError": false
+  }
+}

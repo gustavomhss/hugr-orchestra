@@ -1,0 +1,16 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Action completed."
+    }
+  ],
+  "structuredContent": {
+    "content": "export const recoverEnvelopeAttempts = (\n  envelopeId: string,\n): Effect.Effect<ReadonlyArray<AttemptRecord> | AttemptOutcome, never, Database.Service> =>\n  Effect.gen(function* () {\n    const database = yield* Database.Service\n    if (database.inTransaction !== undefined && (yield* database.inTransaction)) return refusal(\"ambient\", [envelopeId])\n    return yield* database.db\n      .transaction(\n        (tx) =>\n          Effect.gen(function* () {\n            const envelopeRow = yield* tx.select().from(EconomyEnvelopeTable).where(envelopeWhere(envelopeId)).get()\n            if (envelopeRow === undefined) return hold(\"authority\", [\"envelope-missing\", envelopeId])\n            const rows = yield* tx.select().from(EconomyAttemptTable).where(foundEnvelopeWhere(envelopeId)).all()\n            return rows.map(toRecord)\n          }),\n        { behavior: \"immediate\" },\n      )\n      .pipe(\n        Effect.catchIf(isStorageError, (error) => Effect.succeed(hold(\"authority\", [\"corrupt\", String(error), envelopeId]))),\n      )\n  })\n\nexport const lookupAttempt = (\n  attempt: AttemptId,\n): Effect.Effect<AttemptRecord | AttemptOutcome, never, Database.Service> =>\n  Effect.gen(function* () {\n    const database = yield* Database.Service\n    if (database.inTransaction !== undefined && (yield* database.inTransaction)) return refusal(\"ambient\", [attemptKey(attempt)])\n    return yield* database.db\n      .transaction(\n        (tx) =>\n          Effect.gen(function* () {\n            const row = yield* tx.select().from(EconomyAttemptTable).where(attemptWhere(attempt)).get()\n            return row === undefined ? refusal(\"usage\", [attemptKey(attempt), \"missing\"]) : toRecord(row)\n          }),\n        { behavior: \"immediate\" },\n      )\n      .pipe(\n        Effect.catchIf(isStorageError, (error) => Effect.succeed(hold(\"authority\", [\"corrupt\", String(error), attemptKey(attempt)]))),\n      )\n  })",
+    "encoding": "utf-8",
+    "sha": "914a0b925dd282e264292b2247189c549c993a3f",
+    "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/economy/admission.ts",
+    "display_title": "admission.ts"
+  },
+  "isError": false
+}

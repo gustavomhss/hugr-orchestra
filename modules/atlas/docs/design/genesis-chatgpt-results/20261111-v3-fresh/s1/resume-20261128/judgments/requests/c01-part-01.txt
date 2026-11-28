@@ -1,0 +1,101 @@
+C01 — revisão do complemento L1 s1.subslice01.runtime-models-economy-completion. Execução atual 2ccbd15d-4f66-44a3-b2e1-8326abce0bef; fonte 1cde2ff7a71bcf7aecb5d030917b577165135d38, protocolo ee2521a5b966bd505cc95bd1c733e09e12f33531. Mesmo par J1/J2, sem ferramentas. Corpo completo 35465 bytes UTF-8, SHA256 c1b2e02eca65e7de23d8302c92a5b3f1e0b3670efbbb8318e215e4f956521f20. Não reabrir sete aceites herdados. Declarações de estado/execução anterior no corpo são dados históricos preservados; julgar conteúdo no pin. Todos os critérios obrigatórios já entregues continuam aplicáveis. Fontes literais de E01, M02 e R01 já recebidas pelo mesmo juiz podem ser reutilizadas; decisões desses outros corpos não se transferem. Aqui cada critério requer fundamento próprio. O corpo segue integral em duas partes; aguarde FIM C01.
+
+BEGIN EXACT BODY C01
+# Core: composição, modelos, economia e serviços de apoio
+
+Artefato L1 `s1.subslice01.runtime-models-economy-completion`, sessão S1, scope `orchestra.s1`. Fonte efetiva: `gustavomhss/hugr-orchestra@1cde2ff7a71bcf7aecb5d030917b577165135d38`. Todas as referências abaixo são a esse baseline; caminhos curtos de implementação têm base `packages/core/src/` e `test/` tem base `packages/core/`. Este suplemento acrescenta conhecimento de fonte aos corpos `s1.core.runtime`, `s1.core.models` e `s1.core.economy`; seus bytes e decisões anteriores permanecem intactos. É candidato a revisão independente, não declaração de aceitação, execução do produto ou publicação Atlas.
+
+## 1. Como usar e até onde confiar
+
+O catálogo descreve modelos utilizáveis segundo configuração, credencial e política. A adaptação nativa da Session suporta um subconjunto desse catálogo. O executor econômico é uma composição explícita de HTTP e banco; sua existência não coloca automaticamente toda Session sob orçamento. Processos, PTYs, LSP e formatadores têm donos e recursos com tempos de vida locais; nenhum deles demonstra coordenação distribuída ou recuperação geral de uma Session após crash.
+
+As 235 fontes atribuídas recebem uma linha em `source-coverage.jsonl`, com necessidade, disposição, trechos efetivamente retornados, hash e limite da inferência. Leitura integral, leitura de trechos, declaração de teste e disposição por família são estados diferentes. A cobertura de uma família explica sua fronteira de manutenção e não certifica cada ramo de uma folha parcialmente lida. Testes são evidência de intenção executável: todos permanecem **NOT_RUN nesta produção**. Captura e igualdade de hash demonstram identidade de bytes, não compreensão nem sucesso operacional.
+
+O corpo prioriza decisões de manutenção. Para mudar um comportamento, começar pela seção correspondente e pelos arquivos citados; consultar a linha individual da matriz antes de assumir que o ramo necessário foi examinado. Nomes de provider, preços do catálogo, releases e relatos históricos aqui são dados do baseline, sem consulta a serviços atuais.
+
+## 2. Composição e ownership dos recursos
+
+`Host.merge` combina contribuições ordenadas, rejeita IDs e nós repetidos e reserva os coordenadores Session, SessionExecution, LocationServiceMap e ScheduledTask. Contribuições podem substituir nós permitidos e fornecer referências; isso não transfere a coordenação da Session ao host. `AppNode` distingue nós globais e de Location. `AppNodeBuilder` só materializa o mapa de Location quando o grafo o exige; a ligação diferida recebe o contexto global. `LayerNode` resolve substituições, dependências e hoisting, detecta ciclos/conflitos e recusa referências não preenchidas. O memo map compartilha aquisições dentro dessa composição, não entre servidores. [Fontes: `packages/core/src/host.ts:1–64`; `effect/app-node.ts:1–14`, `effect/app-node-builder.ts:1–42`, `effect/layer-node.ts:1–335`.]
+
+`makeRuntime` cria `ManagedRuntime` preguiçosamente com memo map e observabilidade. `service-use` adapta acesso/métodos de serviços para efeitos e conserva proxies; `KeyedMutex` serializa por chave em memória e remove a entrada quando cessam detentores/esperas. `State` materializa estado inicial, transforms ativos e finalizer sob semáforo; somente então troca a versão disponível. Remoção de transform por scope recompõe o estado; batch adia reload. Isso explica por que catálogo e hooks dependem da Location e de sua aquisição, sem prometer persistência do cache ou mutex distribuído. [Fontes: `effect/runtime.ts:1–21`, `effect/memo-map.ts:1–3`, `effect/service-use.ts:1–43`, `effect/keyed-mutex.ts:1–45`; `state.ts:1–131`.]
+
+**Fronteira LLM efetiva.** O grafo global padrão monta `FetchHttpClient.layer → RequestExecutor.layer → LLMClient.layer`; não inclui `makeAdmissionGuard`. O runner resolve `LLMClient` e chama `llm.stream(request)` ou o override `executionHost.stream`. Há portanto uma ligação nativa de Session com LLM, mas nenhuma adoção universal da economia demonstrada por esse grafo. O teste econômico constrói outra composição explicitamente, com o mesmo banco passado ao guard e ao executor. Alterações de host ou da composição precisam ser verificadas no ponto de montagem, não inferidas do registro do serviço. [Fontes: `effect/app-node-platform.ts:9–16`; `session/runner/llm.ts:117–130,427–448,731–745` — leitura auxiliar fora das 235; `test/economy/executor.test.ts:72–100`.]
+
+## 3. Catálogo, credencial e modelo realmente selecionado
+
+### 3.1 Ingestão e disponibilidade
+
+`ModelsDev` combina cache em disco, snapshot incorporado e download; a origem configurada participa do nome do cache. Usa atualização com TTL, exclusão por lock e invalidação após refresh bem sucedido. Falha de refresh é registrada e preserva o cache anterior. Os schemas expostos descrevem o formato, porém os caminhos observados de disco e rede usam casts de JSON: não equivalem a uma decodificação estrita de cada catálogo carregado. O plugin models-dev converte metadados, custos/capacidades, integrações e modos em entradas do catálogo; a conversão não executa uma requisição ao modelo. [Fontes: `models-dev.ts:1–270`; `plugin/models-dev.ts:1–191`; `plugin/variant.ts:1–79`.]
+
+`Catalog` possui estado por Location, resolve API do modelo/provider e normaliza opções de URL. Disponibilidade combina enabled, integração e conexão/credencial; não é um health check de rede. Credenciais nomeadas produzem providers virtuais `provider#credential`; lookup precisa conservar essa identidade e resolver a credencial exata. A finalização avalia `provider.use` depois das transforms e remove providers negados, evitando que um plugin posterior ao carregamento reintroduza o provider filtrado. Os facades `provider.ts` e `model.ts` reexportam schemas compartilhados; `ModelV2.parse` apenas separa o primeiro segmento `/` e conserva o restante como ID, sem provar que o modelo existe. [Fontes: `catalog.ts:1–386`; `provider.ts:1–25`; `model.ts:1–42`.]
+
+### 3.2 API nativa não é registro de SDK
+
+O adaptador `SessionRunnerModel` é a autoridade operacional para seleção e conversão nativas deste baseline. Seleção explícita inexistente, indisponível ou fora do teto falha; não troca silenciosamente por outro modelo. Sem seleção explícita, procura default suportado e então o primeiro disponível suportado. Variant explícita inexistente falha; a seleção default pode usar o overlay configurado. Modelo, provider/credencial e variant são identidades diferentes: a ID enviada à API pode ser `api.id`, enquanto a referência selecionada permanece associada ao objeto convertido.
+
+| Ramo observado em `session/runner/model.ts` | Conversão nativa |
+| --- | --- |
+| `@ai-sdk/openai` | Responses, autenticação bearer |
+| `@ai-sdk/anthropic` | Messages, autenticação `x-api-key` |
+| URL explícita com API nativa, `@ai-sdk/openai-compatible` ou `@openrouter/ai-sdk-provider` | Chat compatível, bearer |
+| Demais APIs sem ramo suportado | `UnsupportedApiError` |
+
+Essa tabela não atribui ao ramo Chat recursos exclusivos de OpenRouter ou qualquer SDK. O adaptador valida opções canônicas de geração, combina corpo/headers, resolve chave ou OAuth e remove `apiKey` das opções do corpo HTTP. Um plugin SDK registrado não acrescenta por si só um ramo à tabela. A especificação `docs/specs/v2/provider-model.md:276–292` conserva nomes e formatos históricos; para uma mudança neste baseline, conferir o código acima em vez de copiar sua enumeração como contrato corrente. [Fonte principal: `session/runner/model.ts:1–344`.]
+
+`SessionSubagentModels` normaliza e deduplica referências por provider/model e intersecta tetos dos ancestrais. `forSession` não aplica o teto de saída da própria Session; `forChild` aplica. Leitura consistente usa transação de consulta; ancestral faltante, ciclo e payload inválido falham. SQL NULL representa herança; JSON `null` não deve ser tratado como o mesmo valor. Sem teto, uma referência ainda desconhecida pode circular; isso não antecipa sucesso na seleção final. A estimativa de custo usa metadados por milhão de tokens e faixas de prompt; preço ausente resulta em zero estimado, nunca prova de custo real zero. [Fonte: `session/subagent-models.ts:1–250`; cálculo em `session/runner/model.ts`.]
+
+### 3.3 AISDK e providers: donos e diferenças que importam
+
+`AISDK` é o caminho de aquisição de SDK/modelo por hooks. Seus caches dependem de API/opções, provider/model e variant; erro de aquisição não é seleção nativa bem sucedida. O fetch pode impor timeout entre chunks SSE e combinar sinais de aborto. Essa composição continua distinta da adaptação `SessionRunnerModel`. [Fonte: `aisdk.ts:1–235`.]
+
+Todos os 33 arquivos atribuídos em `plugin/provider.ts` e `plugin/provider/` foram lidos integralmente. A disposição abaixo permite localizar o comportamento sem criar um artefato por registro:
+
+| Família | Comportamento observado e limite |
+| --- | --- |
+| Registros simples: Alibaba, Cohere, Deepinfra, Gateway, Google, Groq, Mistral, Perplexity, TogetherAI, Venice | Instalam a factory correspondente no hook. Registro não comprova conectividade, semântica remota ou adoção pela Session nativa. |
+| Headers/opções: Anthropic, Cerebras, Kilo, LLMGateway, Nvidia, Vercel, Zenmux | Ajustam identificação, opções ou headers no catálogo/SDK. Alterar exige conferir precedência entre defaults e configuração, sem generalizar o header de um provider aos outros. |
+| OpenAI, xAI, OpenAI-compatible, Dynamic | OpenAI seleciona Responses e tem autenticação OAuth com PKCE/state e caminhos browser/headless; xAI seleciona Responses no SDK. Compatible inclui usage por padrão salvo override. Dynamic é fallback tardio, instala/importa package ou file URL e procura factory `create*` quando outro hook não preencheu SDK. |
+| Bedrock, Azure, Vertex | Bedrock usa credenciais AWS/região/prefixos, com ramo Mantle; Azure varia factory/endpoint e `useCompletionUrls`; Vertex resolve projeto/localização e ADC, inclusive fetch para API compatível. Nada disso prova assinatura AWS/ADC/endpoint Azure no runner nativo. |
+| Cloudflare Workers AI e AI Gateway | Workers exige conta/endpoint/token; Gateway diferencia token de Cloudflare para Workers de BYOK para upstreams. Não transportar automaticamente um segredo de gateway como credencial de todo provider. |
+| GitHub Copilot, GitLab, OpenCode, SAP, Snowflake, OpenRouter | Copilot escolhe Chat/Responses por metadados/ID e usa vendor próprio; GitLab diferencia workflow/agentic; OpenCode descobre entradas remotas removendo credenciais/headers de opções; SAP carrega SDK/service key; Snowflake reescreve `max_tokens`, trata resposta específica de conversação encerrada e normaliza role em SSE; OpenRouter instala seu SDK e atribuição. Cada ramo tem efeito específico, não licença para generalização a outro SDK. |
+
+Referências exatas por provider e sua prova de leitura estão em `source-coverage.jsonl`; o agregador é `packages/core/src/plugin/provider.ts`; os plugins citados estão em `packages/core/src/plugin/provider/{dynamic,openai-compatible,openai,amazon-bedrock,azure,google-vertex,cloudflare-ai-gateway,cloudflare-workers-ai,github-copilot,gitlab,opencode,sap-ai-core,snowflake-cortex,openrouter,...}.ts`.
+
+O diretório `github-copilot/` é vendor dedicado, conforme seu README; não é infraestrutura geral dos demais providers. Chat converte mensagens, aceita arquivos de imagem e preserva `reasoning_opaque` sob namespace Copilot. A preparação Chat ignora tool de provider com warning; Responses mapeia seis tools tipados e seus argumentos. `github-copilot/responses/tool/local-shell.ts` é schema/factory de tool, não implementação de execução de shell local nem evidência de autoridade de sandbox. Schemas numéricos variam: image generation impõe limites inteiros explícitos; comentário de faixa em outro tool não cria a validação equivalente.
+
+As classes de streaming foram lidas em trechos de entrada/saída, não integralmente: Chat rejeita segundo `reasoning_opaque`, fecha partes no flush e emite usage; Responses acompanha reasoning por `output_index`, preserva namespace Copilot e seu predicate de fechamento cobre completed/incomplete. Não transferir essa regra para o parser da economia, que também trata failed. Ramos intermediários de codec e streams multimodais continuam fora da especificação folha a folha deste suplemento. Mudança nesses ramos exige leitura e testes próprios. [Fontes: `github-copilot/README.md:1–5`, `github-copilot/copilot-provider.ts:1–100`; `github-copilot/chat/convert-to-openai-compatible-chat-messages.ts:1–170`, `github-copilot/chat/openai-compatible-prepare-tools.ts:1–83`, `github-copilot/chat/openai-compatible-chat-language-model.ts:53–192,305–335,455–485,647–725`; `github-copilot/responses/openai-responses-prepare-tools.ts:1–173`, `github-copilot/responses/openai-responses-language-model.ts:131–210,777–841,1260–1395,1594–1597`; seis `github-copilot/responses/tool/*.ts` integrais.]
+
+## 4. Economia: obrigação durável, despacho e fechamento
+
+### 4.1 O que é necessário para um envio coberto
+
+`makeAdmissionGuard` decora um HttpClient. Cada abertura HTTP passa pela autorização; retries do RequestExecutor atravessam essa mesma fronteira quando essa camada foi realmente composta. O serviço `uncovered` recusa WebSocket quando também foi composto — não é uma interceptação automática de qualquer transporte da aplicação. O teste usa HTTP sintético e banco fixture compartilhado, e não um provider remoto. [Fontes: `economy/executor.ts:1–429`; `test/economy/executor.test.ts:20–35,72–100,193–218`.]
+
+Antes do despacho, o guard lê o corpo final e vincula fingerprint aos bytes e à identidade: provider OpenAI, route HTTP, sufixo de endpoint, protocolo esperado e modelo do JSON precisam coincidir. Para bound de saída, Responses usa `max_output_tokens`, Chat usa `max_tokens`; um alias de outro protocolo não substitui o campo. Sem bound nativo há no máximo o bound de uma tentativa; envelope que exige dimensão de tokens sem prova adequada recusa. O guard não deriva um teto de input a partir da estimativa textual. Confundir metadata de modelo ou argumento anterior ao serialize com o corpo final rompe a garantia. [Fonte: `economy/executor.ts:58–137,245–340`.]
+
+`reserve` exige armazenamento identificável e transação própria durável; uma transação ambiente não serve como ack de reserva. Reserva verifica envelope, authority, estágio, identidade, capacidade e chave. A intenção fica durável antes de um grant consumível. Repetir chave não concede outro envio: pode devolver estado já existente, completion recuperável ou hold. Ordinais e chaves derivadas de retry distinguem tentativas do mesmo pedido lógico; limite de tentativas e slots usa obrigações existentes, não só respostas aceitas. Restrições SQL reforçam identidade única, mas não acrescentam um coordenador distribuído de Session. [Fontes: `economy/admission.ts:180–588`; `economy/sql.ts:1–75`.]
+
+### 4.2 Transporte, terminal e settlement são fatos distintos
+
+| Observação | Efeito econômico demonstrado |
+| --- | --- |
+| Transporte sem resposta completa | Evidência de erro/ambiguidade; reserva e slot permanecem. Não se conclui custo zero nem retry seguro. |
+| HTTP ≥400, inclusive status elegível para retry | Executor chama `noteTransportError`. O comentário inicial que menciona `observeTerminal` é impreciso; o ramo executável não libera o slot. |
+| Responses completed/incomplete/failed canônico | Primeiro fechamento canônico delimita a observação; eventos posteriores não substituem sua usage. |
+| Chat com primeiro `finish_reason` não vazio | Marca fechamento; usage pode vir no chunk seguinte. `[DONE]` sozinho não basta; usage anterior ao fechamento não é settlement. |
+| Terminal sem usage suficiente | Libera slot pela observação terminal, mas conserva obrigação de tokens não comprovada. |
+| Usage completa e válida vinculada à tentativa | Settlement idempotente; conflito é distinguido. Valores precisam ser inteiros seguros não negativos, com cached≤input e reasoning≤output. |
+| Uso reportado maior que bound | Preserva valor reportado e registra breach, em vez de truncar para caber; impede novas admissões conforme o ledger. |
+
+O retry após status exige evidência observada do predecessor, política/status congelados, fingerprint compatível, ordinal permitido e saldo/slot para outra reserva. A primeira obrigação não é devolvida porque o provider respondeu 503. O teste fonte explicita duas tentativas: primeira `reserved` sem usage, segunda `settled`; não foi executado nesta sessão. `recordForward` acontece após obter a resposta, portanto uma falha antes dessa observação continua potencialmente exposta, sem certificado de ausência de envio. [Fontes: `economy/executor.ts:139–244,340–429`; `economy/admission.ts:336–588,615–750`; `test/economy/executor.test.ts:221–244`.]
+
+O guard aguarda `response.text` para inspecionar o corpo completo e reconstruir a resposta. Não se deve descrevê-lo como transmissão incremental transparente de SSE. Também não se deve tratar o `finish` emitido por um adaptador AISDK como prova de settlement deste guard: são parsers e donos distintos.
+
+### 4.3 Completion, replay e limites de recuperação
+
+Settlement de usage não grava sozinho um resultado semântico completo. `recordCompletion` conserva referência e corpo; aceitação/rejeição semântica não reembolsa uso. Uma referência sem corpo disponível não permite ao guard reconstruir a resposta: `replayOrHold` exige completion e payload completo, ou conserva hold. Lookup/recover lê estado durável; não é autorização para repetir rede após crash ou lost ack. Os fault points e testes de cutpoints representam cenários de fonte, não uma execução real de crash/restart desta produção. Não há inferência de billing físico do provider, tokenização perfeita, failover de host ou ownership distribuído. [Fontes: `economy/admission.ts:589–614,751–823`; `economy/executor.ts:375–399`; `test/economy/admission.test.ts` — declarações e disposição de família, corpo não integralmente analisado.]
+
+O corpo B15 de `s1.core.economy` continua candidato sem juízo; este suplemento não herda nem cria um PASS para ele.
+
+
+CONTINUA O MESMO CORPO NA PARTE 02; nenhum parecer ainda.

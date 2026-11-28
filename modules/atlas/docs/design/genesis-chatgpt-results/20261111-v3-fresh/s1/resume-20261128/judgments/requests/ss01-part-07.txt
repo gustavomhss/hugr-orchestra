@@ -1,0 +1,388 @@
+SS01 — fontes literais, parte 07; mesmo pin/corpo.
+
+### packages/core/src/database/migration/20260510033149_session_usage.ts
+```text
+18:             SELECT sum(coalesce(json_extract(message.data, '$.cost'), 0))
+19:             FROM message
+20:             WHERE message.session_id = session.id
+21:               AND json_extract(message.data, '$.role') = 'assistant'
+22:           ), 0),
+23:           tokens_input = coalesce((
+24:             SELECT sum(coalesce(json_extract(message.data, '$.tokens.input'), 0))
+25:             FROM message
+26:             WHERE message.session_id = session.id
+27:               AND json_extract(message.data, '$.role') = 'assistant'
+28:           ), 0),
+29:           tokens_output = coalesce((
+30:             SELECT sum(coalesce(json_extract(message.data, '$.tokens.output'), 0))
+31:             FROM message
+32:             WHERE message.session_id = session.id
+33:               AND json_extract(message.data, '$.role') = 'assistant'
+34:           ), 0),
+35:           tokens_reasoning = coalesce((
+36:             SELECT sum(coalesce(json_extract(message.data, '$.tokens.reasoning'), 0))
+37:             FROM message
+38:             WHERE message.session_id = session.id
+39:               AND json_extract(message.data, '$.role') = 'assistant'
+40:           ), 0),
+41:           tokens_cache_read = coalesce((
+42:             SELECT sum(coalesce(json_extract(message.data, '$.tokens.cache.read'), 0))
+43:             FROM message
+44:             WHERE message.session_id = session.id
+45:               AND json_extract(message.data, '$.role') = 'assistant'
+46:           ), 0),
+47:           tokens_cache_write = coalesce((
+48:             SELECT sum(coalesce(json_extract(message.data, '$.tokens.cache.write'), 0))
+49:             FROM message
+50:             WHERE message.session_id = session.id
+51:               AND json_extract(message.data, '$.role') = 'assistant'
+52:           ), 0)
+53:       `)
+54:     })
+55:   },
+56: } satisfies DatabaseMigration.Migration
+```
+
+### packages/core/src/session/context-epoch.ts
+```text
+111: export const reset = Effect.fn("SessionContextEpoch.reset")(function* (
+112:   db: DatabaseService,
+113:   sessionID: SessionSchema.ID,
+114: ) {
+115:   yield* db
+116:     .delete(SessionContextEpochTable)
+117:     .where(eq(SessionContextEpochTable.session_id, sessionID))
+118:     .run()
+119:     .pipe(Effect.orDie)
+120: })
+```
+
+### packages/core/src/session/todo.ts
+```text
+58: /** Replaces the Session's todo list and announces it; for a caller that holds the services but not this one. */
+59: export function write(
+60:   db: Database.Interface["db"],
+61:   events: EventV2.Interface,
+62:   input: { readonly sessionID: SessionSchema.ID; readonly todos: ReadonlyArray<Info> },
+63: ) {
+64:   return Effect.gen(function* () {
+65:     yield* db
+66:       .transaction((tx) =>
+67:         Effect.gen(function* () {
+68:           yield* tx.delete(TodoTable).where(eq(TodoTable.session_id, input.sessionID)).run()
+69:           if (input.todos.length === 0) return
+70:           yield* tx
+71:             .insert(TodoTable)
+72:             .values(
+73:               input.todos.map((todo, position) => ({
+74:                 session_id: input.sessionID,
+75:                 content: todo.content,
+76:                 status: todo.status,
+77:                 priority: todo.priority,
+78:                 position,
+79:               })),
+80:             )
+81:             .run()
+82:         }),
+83:       )
+84:       .pipe(Effect.orDie)
+85:     yield* events.publish(Event.Updated, input)
+86:   })
+```
+
+### packages/core/src/session-process.ts
+```text
+61: type Status = "running" | "completed" | "error" | "cancelled"
+63: type Entry = {
+64:   readonly id: string
+65:   readonly sessionID: string
+66:   // Captured from the launching caller: the registry is global and must not require the Session service to build.
+67:   readonly sessions: Option.Option<SessionV2.Interface>
+68:   title: string
+69:   readonly started: number
+70:   readonly pid: number
+71:   readonly handle: ChildProcessHandle
+72:   readonly ring: OmniBackground.Ring
+73:   readonly inspection: ReturnType<typeof OutputInspector.make>
+74:   // Latched once the output shows a recognized secret: no tail of it leaves the registry afterwards.
+75:   withheld?: string
+76:   readonly scope: Scope.Closeable
+77:   readonly processes: ReadonlyArray<ProcessInfo>
+78:   readonly done: Deferred.Deferred<Info>
+79:   finished: boolean
+80:   status: Status
+81:   exitCode: number | null
+82:   error?: string
+83: }
+85: const make = Effect.gen(function* () {
+86:   const appProcess = yield* AppProcess.Service
+87:   const events = yield* EventV2.Service
+… omitted original lines …
+104:     output: output(entry, RING_BYTES),
+105:     written: entry.ring.written,
+106:   })
+108:   const finish = Effect.fn("SessionProcess.finish")(function* (
+109:     entry: Entry,
+110:     status: Exclude<Status, "running" | "cancelled">,
+111:     exitCode: number | null,
+112:     error: string | undefined,
+113:   ) {
+114:     if (entry.finished) return
+115:     entry.finished = true
+116:     entry.status = status
+117:     entry.exitCode = exitCode
+118:     entry.error = error
+119:     entry.withheld ??= entry.inspection.finish()
+120:     const info = snapshot(entry)
+121:     yield* Deferred.succeed(entry.done, info).pipe(Effect.ignore)
+122:     const text =
+123:       status === "completed"
+124:         ? `Background process "${entry.title}" exited with code ${exitCode ?? 0}.\n\n${output(entry, 4096)}`
+125:         : `Background process "${entry.title}" failed: ${error ?? "unknown"}.\n\n${output(entry, 4096)}`
+126:     if (Option.isSome(entry.sessions))
+127:       yield* deliver(entry.sessions.value, SessionV2.ID.make(entry.sessionID), text).pipe(Effect.forkIn(scope))
+128:     yield* retire(entry)
+129:   })
+131:   // Finished jobs stay readable until newer ones push them out; a job's scope closes once its process is gone.
+132:   const retire = Effect.fnUntraced(function* (entry: Entry) {
+133:     const finished = [...entries.values()].filter((item) => item.finished)
+134:     finished.slice(0, Math.max(0, finished.length - FINISHED_KEPT)).forEach((item) => entries.delete(item.id))
+135:     // Forked: the exit watcher that calls this runs inside the scope being closed.
+136:     yield* Scope.close(entry.scope, Exit.void).pipe(Effect.forkIn(scope))
+137:   })
+… omitted original lines …
+179:         )
+180:       : base
+181:     const handle = yield* appProcess.spawn(command).pipe(Effect.provideService(Scope.Scope, procScope))
+182:     const entry: Entry = {
+183:       id,
+184:       sessionID: input.sessionID,
+185:       sessions,
+186:       title,
+187:       started,
+188:       pid: Number(handle.pid),
+189:       handle,
+190:       ring,
+191:       inspection: OutputInspector.make(),
+192:       scope: procScope,
+193:       processes: [{ pid: Number(handle.pid), parentPid: null, name: null }],
+194:       done,
+195:       finished: false,
+196:       status: "running",
+197:       exitCode: null,
+198:     }
+199:     entries.set(id, entry)
+200:     const reader = yield* Stream.runForEach(handle.all, (chunk) =>
+201:       Effect.sync(() => {
+202:         entry.withheld ??= entry.inspection.push(chunk)
+203:         ring.write(chunk)
+204:       }),
+205:     ).pipe(Effect.ignore).pipe(Effect.forkIn(procScope))
+206:     yield* Effect.gen(function* () {
+207:       const code = yield* Effect.orElseSucceed(handle.exitCode, () => null)
+208:       // The exit can land before the pipe drains; bounded because a grandchild may keep the pipe open.
+209:       yield* Fiber.await(reader).pipe(Effect.timeout(DRAIN_TIMEOUT), Effect.ignore)
+210:       if (entry.finished) return
+211:       yield* finish(entry, code === 0 ? "completed" : "error", code, code === 0 ? undefined : `exit ${code}`)
+212:     }).pipe(Effect.ignore, Effect.forkIn(procScope))
+213:     return { ...snapshot(entry), processID: id }
+214:   })
+… omitted original lines …
+256:     const data = event.data as { sessionID?: unknown }
+257:     if (event.type !== "session.next.deleted") return Effect.void
+258:     if (typeof data?.sessionID !== "string") return Effect.void
+259:     return stopSession(data.sessionID).pipe(Effect.ignore)
+260:   })
+261:   yield* Effect.addFinalizer(() => off)
+263:   return Service.of({ launch, list, get, wait, cancel, stopSession })
+264: })
+266: // A Session refuses a synthetic message while a turn runs; the notice waits for that turn to settle and tries again,
+267: // so it reaches the agent at the next boundary instead of being dropped.
+268: function deliver(sessions: SessionV2.Interface, sessionID: SessionV2.ID, text: string): Effect.Effect<void> {
+269:   return sessions.synthetic({ sessionID, text, resume: true }).pipe(
+270:     Effect.asVoid,
+271:     Effect.catchTag("Session.BusyError", () =>
+272:       sessions.wait(sessionID).pipe(Effect.andThen(Effect.suspend(() => deliver(sessions, sessionID, text)))),
+273:     ),
+274:     Effect.ignore,
+275:   )
+276: }
+278: const layer = Layer.effect(Service, make)
+280: export const node = makeGlobalNode({ service: Service, layer, deps: [AppProcess.node, EventV2.node] })
+```
+
+### packages/core/src/session/lean-profile-preferences.ts
+```text
+22: const MAX_BYTES = 4096
+23: const Stored = Schema.fromJsonString(Schema.Struct({
+24:   version: Schema.Literal(1),
+25:   enabled: Schema.optional(Schema.Boolean),
+26:   items: Schema.Record(Schema.String, Schema.Boolean),
+27: }))
+28: const decode = Schema.decodeUnknownSync(Stored, { onExcessProperty: "error" })
+29: const unavailable = (cause: unknown) => new Unavailable({ message: `Lean profile preferences unavailable: ${String(cause)}` })
+31: const locate = Effect.fnUntraced(function* (owner: Owner, fs: FSUtil.Interface, global: Global.Interface) {
+32:   // Native context owns canonical identity. Never rebind it through the current filesystem.
+33:   if (!owner.projectID || !owner.directory || !path.isAbsolute(owner.directory))
+34:     return yield* new Unavailable({ message: "Invalid native Lean preference owner" })
+35:   const directory = owner.directory
+36:   const profileID = createHash("sha256").update(JSON.stringify([owner.projectID, directory])).digest("hex")
+37:   return {
+… omitted original lines …
+46:   const stored = yield* Effect.scoped(Effect.gen(function* () {
+47:     const file = yield* location.fs.open(path.join(location.root, `${location.scope.profileID}.json`), { flag: "r" })
+48:     const chunks: Uint8Array[] = []
+49:     let size = 0
+50:     while (size <= MAX_BYTES) {
+51:       const chunk = yield* file.readAlloc(MAX_BYTES + 1 - size)
+52:       if (Option.isNone(chunk)) break
+53:       size += chunk.value.length
+54:       chunks.push(chunk.value)
+55:     }
+56:     if (size > MAX_BYTES) return yield* new Unavailable({ message: "Lean preferences exceed byte limit" })
+57:     return yield* Effect.try({
+58:       try: () => {
+59:         const value = decode(new TextDecoder("utf-8", { fatal: true }).decode(Buffer.concat(chunks)))
+60:         if (Object.keys(value.items).some((id) => !LeanCoverage.ids.includes(id as LeanCoverage.ItemID)))
+61:           throw new Error("Unknown Lean preference item")
+62:         return value
+63:       },
+64:       catch: unavailable,
+… omitted original lines …
+91:       const previous = yield* load(location)
+92:       const next: State = value.itemID === undefined
+93:         ? { ...previous, enabled: value.enabled }
+94:         : { ...previous, items: { ...previous.items, [value.itemID]: value.enabled } }
+95:       yield* location.fs.makeDirectory(location.root, { recursive: true, mode: 0o700 })
+96:       const temp = path.join(location.root, `${location.scope.profileID}.${randomUUID()}.tmp`)
+97:       yield* Effect.acquireUseRelease(
+98:         Effect.gen(function* () {
+99:           const scope = yield* Scope.make()
+100:           const file = yield* location.fs.open(temp, { flag: "wx", mode: 0o600 }).pipe(
+101:             Effect.provideService(Scope.Scope, scope),
+102:             Effect.onExit((exit) => Exit.isFailure(exit) ? Scope.close(scope, exit) : Effect.void),
+103:           )
+104:           return { scope, file }
+105:         }),
+106:         (handle) => Effect.gen(function* () {
+107:           yield* handle.file.writeAll(new TextEncoder().encode(JSON.stringify({ version: 1, enabled: next.enabled, items: next.items })))
+108:           yield* Scope.close(handle.scope, Exit.void)
+109:           yield* location.fs.rename(temp, path.join(location.root, `${location.scope.profileID}.json`))
+110:         }),
+111:         (handle, exit) => Effect.gen(function* () {
+112:           const closed = yield* Scope.close(handle.scope, exit).pipe(Effect.exit)
+113:           const removed = yield* location.fs.remove(temp).pipe(
+114:             Effect.catchReason("PlatformError", "NotFound", () => Effect.void), Effect.exit,
+115:           )
+116:           const failures = [closed, removed].filter(Exit.isFailure)
+117:           if (failures.length) return yield* Effect.die(new Error(
+118:             [exit, ...failures].filter(Exit.isFailure).map((failure) => Cause.pretty(failure.cause)).join("\nLean preference cleanup failure:\n"),
+119:           ))
+120:         }),
+121:       )
+122:       return next
+123:     }))
+124:   },
+125:   Effect.catchCause((cause) => Effect.fail(unavailable(Cause.pretty(cause)))),
+126: )
+127: export function make(fs: FSUtil.Interface, global: Global.Interface) {
+```
+
+### packages/core/src/session/lean-project.ts
+```text
+63:     .limit(Math.min(MAX_PARTS, Math.max(1, limit)) + 1).all()
+64:     .pipe(Effect.mapError((error) => new LeanProfilePreferences.Unavailable({ message: String(error) })))
+65:   const bound = Math.min(MAX_PARTS, Math.max(1, limit))
+66:   const legacy = rows.slice(0, bound).map((row) => ({
+67:     ...row,
+68:     revert: row.hasRevert ? { messageID: row.revertMessageID ?? "", ...(row.revertPartID === null ? {} : { partID: row.revertPartID }) } : null,
+69:   }))
+70:   const current = yield* sessionMessageRows(database, scope, bound, latest)
+71:   // A call recorded in both stores counts once, from its legacy part.
+72:   const recorded = new Set(legacy.map((row) => JSON.stringify([row.sessionID, row.callID])))
+73:   const merged = [...legacy, ...current.rows.filter((row) => !recorded.has(JSON.stringify([row.sessionID, row.callID])))]
+74:     .toSorted((a, b) => latest
+75:       ? Number(b.time) - Number(a.time) || b.created - a.created || compareID(b.messageID, a.messageID) || compareID(b.partID, a.partID)
+76:       : a.created - b.created || compareID(a.messageID, b.messageID) || compareID(a.partID, b.partID))
+77:   return projectRows(scope, merged.slice(0, bound), rows.length <= bound && current.complete && merged.length <= bound)
+… omitted original lines …
+119:       AND ${SessionMessageTable.type} = 'assistant'
+120:       AND json_extract(part.value, '$.type') = 'tool' AND json_type(part.value, '$.state.metadata.lean') IS NOT NULL
+121:     ORDER BY ${latest ? sql`time DESC, ${SessionMessageTable.seq} DESC, part.key DESC` : sql`${SessionMessageTable.seq} ASC, part.key ASC`}
+122:     LIMIT ${bound + 1}`)
+123:     .pipe(Effect.mapError((error) => new LeanProfilePreferences.Unavailable({ message: String(error) })))
+124:   const kept = rows.slice(0, bound)
+125:   return {
+126:     complete: rows.length <= bound && !kept.some((row) => row.hasRevert && row.boundarySeq === null),
+127:     rows: kept.flatMap((row): Row[] => row.hasRevert && (row.boundarySeq === null || row.seq >= row.boundarySeq) ? [] : [{
+… omitted original lines …
+155: /** Ownership is checked before grouping original executions; conflicting retries remove the whole call. */
+156: export function projectRows(scope: LeanDashboard.Scope, rows: readonly Row[], complete: boolean) {
+157:   const calls = new Map<string, { signature: string; execution: LeanDashboard.Execution } | null>()
+158:   const coverage = { complete }
+159:   for (const row of rows.toSorted((a, b) => a.created - b.created || compareID(a.messageID, b.messageID) || compareID(a.partID, b.partID))) {
+160:     if (row.metricsOverbound || (row.revert && (row.boundaryTime === null || (row.revert.partID !== undefined && row.boundaryPart === null))))
+161:       coverage.complete = false
+162:     if (!visible(row) || (row.status !== "completed" && row.status !== "error") || typeof row.callID !== "string") continue
+163:     const metrics = decodeMetrics(row.metrics)
+164:     if (!metrics || metrics.owner.projectID !== scope.projectID || metrics.owner.location !== scope.directory
+165:       || metrics.owner.sessionID !== row.sessionID || metrics.owner.callID !== row.callID) continue
+166:     const truncated = row.commandLength !== null && row.commandLength > COMMAND_LIMIT
+167:     const profileItem = metrics.filterProfile ? LeanCoverage.forProfile(metrics.filterProfile) : undefined
+168:     const commandItem = !truncated && (row.tool ?? "bash") === "bash" && typeof row.command === "string" ? LeanProcessor.identify(row.command) : undefined
+169:     const itemID = metrics.itemID ?? profileItem ?? commandItem
+170:     if ((metrics.itemID && profileItem && metrics.itemID !== profileItem) || (commandItem && itemID && commandItem !== itemID)) continue
+171:     if (!itemID || typeof row.command !== "string" || !integer(row.time) || row.time < 0) continue
+172:     const execution: LeanDashboard.Execution = {
+173:       sessionID: row.sessionID, messageID: row.messageID, partID: row.partID, callID: row.callID, itemID,
+174:       command: row.command, commandTruncated: truncated, status: row.status,
+175:       exit: integer(row.exit) ? row.exit : null, time: row.time,
+176:       bytesSaved: metrics.bytes.saved,
+177:       tokensSaved: metrics.tokens.kind === "estimated" ? metrics.tokens.saved : null,
+178:     }
+179:     const key = JSON.stringify([row.sessionID, row.messageID, row.callID])
+180:     const signature = JSON.stringify([metrics, execution.command, execution.commandTruncated, execution.status, execution.exit, execution.time, itemID])
+181:     const previous = calls.get(key)
+182:     if (previous === null) continue
+183:     if (previous && previous.signature !== signature) { calls.set(key, null); continue }
+184:     if (!previous) calls.set(key, { signature, execution })
+185:   }
+186:   return { complete: coverage.complete, executions: [...calls.values()].flatMap((call) => call ? [call.execution] : []) }
+187: }
+189: // Missing revert boundaries make the session uncertain. Keep only a proven prefix.
+190: function visible(row: Row) {
+191:   if (!row.revert) return true
+192:   if (row.boundaryTime === null) return false
+193:   if (row.created !== row.boundaryTime) return row.created < row.boundaryTime
+194:   if (row.messageID !== row.revert.messageID) return row.messageID < row.revert.messageID
+195:   return row.revert.partID !== undefined && row.boundaryPart !== null && row.partID < row.revert.partID
+196: }
+… omitted original lines …
+207:     return LeanMetrics.decode(JSON.parse(text))
+208:   } catch {
+209:     return undefined
+210:   }
+211: }
+213: export function savings(executions: readonly LeanDashboard.Execution[]): LeanDashboard.Savings {
+214:   const bytes = executions.reduce((sum, execution) => sum + BigInt(execution.bytesSaved ?? 0), 0n)
+215:   const tokens = executions.reduce((sum, execution) => sum + BigInt(execution.tokensSaved ?? 0), 0n)
+216:   const safe = (value: bigint) => value >= BigInt(Number.MIN_SAFE_INTEGER) && value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : null
+217:   const tokenCalls = executions.filter((execution) => execution.tokensSaved !== null).length
+218:   return {
+219:     bytesSaved: executions.some((execution) => execution.bytesSaved === null) ? null : safe(bytes),
+220:     tokensSaved: tokenCalls === executions.length ? safe(tokens) : null,
+221:     calls: executions.length, tokenCalls,
+222:   }
+… omitted original lines …
+253:   const result = yield* collect(scope, MAX_PARTS, true)
+254:   return historyResult(scope, itemID, result)
+255: })
+257: export function historyResult(scope: LeanDashboard.Scope, itemID: LeanCoverage.ItemID, result: ReturnType<typeof projectRows>): LeanDashboard.History {
+258:   const executions = result.executions.filter((execution) => execution.itemID === itemID)
+259:     .toSorted((a, b) => b.time - a.time || compareID(b.messageID, a.messageID) || compareID(b.partID, a.partID))
+260:   return { scope, itemID, complete: result.complete && executions.length <= 50, executions: executions.slice(0, 50) }
+261: }
+```
+
+
+Aguarde a disposição e FIM SS01.

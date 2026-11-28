@@ -1,0 +1,466 @@
+T01 — fontes literais decisivas, parte08. Todos no pin já informado.
+
+### AEX041
+
+**Artifacts:** `s1.core.security`.
+
+**Claim/limit supported:** Environment scrub is limited to tool children and recognized patterns; discovery alone does not establish confinement.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/tool-safety-sandbox.ts:61a252c15cc35fa534593413045a6f54a15b6665`, lines 24–47.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `bbf5091b282f9fbeea862f3ebc3d9365a87a59fb414197eb6524268fbc32478a`; **excerpt SHA256:** `9a7106a9a342184ee35c180abd873c30d9fb08dfc94d26488b6c7126a6e86d18` (1396 bytes).
+
+````text
+/** Tool-child environment only. Never applied to provider adapters or the server process. */
+export function environment(input: NodeJS.ProcessEnv = process.env) {
+  return Object.fromEntries(Object.entries(input).filter(([name, value]) =>
+    value !== undefined && !/(?:TOKEN|SECRET|PASSWORD|PASSWD|PRIVATE_KEY|API_KEY|ACCESS_KEY|CREDENTIAL)/i.test(name) &&
+    !["SSH_AUTH_SOCK", "SSH_ASKPASS", "GIT_ASKPASS", "ORCHESTRA_AUTH_CONTENT"].includes(name) &&
+    !/\b(?:AKIA|ASIA)[A-Z0-9]{16}\b|\bgh[pousr]_[A-Za-z0-9]{36,}\b|\bsk_live_[A-Za-z0-9]{20,}\b/.test(value)))
+}
+
+/** The macOS seatbelt launcher. A host without it (or with this pointed elsewhere) has no seatbelt sandbox. */
+export const Seatbelt = Context.Reference<string>("@orchestra/ToolSafetySandbox/Seatbelt", {
+  defaultValue: () => "/usr/bin/sandbox-exec",
+})
+
+/** Discovery performs filesystem checks only; confinement starts when the caller spawns the command. */
+export const available = (executable?: string) => Effect.gen(function* () {
+  const seatbelt = yield* Seatbelt
+  return yield* Effect.tryPromise({
+    try: async () => {
+      const binary = await which(executable ?? "srt", { nothrow: true })
+      if (binary || executable || process.platform !== "darwin") return binary
+      return which(seatbelt, { nothrow: true })
+    },
+    catch: () => new ToolSafety.Denied({ reason: "sandbox-binary-acquisition" }),
+  })
+````
+
+
+### AEX042
+
+**Artifacts:** `s1.core.security`.
+
+**Claim/limit supported:** Agent terminal is opt-in, excludes Windows/verbatim command paths and takes an already confined command.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/tool/agent-terminal.ts:d8cbde3d8436081eb9c3815bea334915e6efef0b`, lines 36–44.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `a869ee14c21054a21d7f7adbe289588655f49d3c1cad7d21b6d4f22a30000fc4`; **excerpt SHA256:** `db4250f446e1abe7840677cdbf1a1256ea0f54ac86d9a97558a65b30b4cb52b7` (653 bytes).
+
+````text
+export function enabled(command: ChildProcess.StandardCommand) {
+  // cmd.exe parses its own command line and needs omni's verbatim form, which a PTY spawn cannot take.
+  return Flag.ORCHESTRA_AGENT_TERMINAL && process.platform !== "win32" && OmniSpawner.program(command).verbatim === undefined
+}
+
+/**
+ * Runs an already confined command in a PTY of its own so the owner sees it in a tab and can answer it. The caller
+ * keeps the sandbox scope open until this returns. Resolves undefined on timeout, fails Denied when the output shows a
+ * recognized secret, and kills the process on either. A finished command's tab stays, as an exited terminal does.
+````
+
+
+### AEX043
+
+**Artifacts:** `s1.core.security`.
+
+**Claim/limit supported:** Cipher implementation uses AES-256-GCM with a random 12-byte IV and auth tag.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/credential/cipher.ts:829dd497e04ee5729a6ab45cd5164bee9430a641`, lines 27–37.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `599393f98c4a3dbc80ccaaf14bbdaee62417a557dc1425f77fd4781dc8e7edd7`; **excerpt SHA256:** `2b32b9c003c4820d511b3f1b0defe5dc7af350482bf958e35c91231fc9c28a9c` (587 bytes).
+
+````text
+export function seal(plain: string, key = keys()[0]) {
+  const iv = randomBytes(12)
+  const cipher = createCipheriv("aes-256-gcm", key, iv)
+  const data = Buffer.concat([cipher.update(plain, "utf8"), cipher.final()])
+  return PREFIX + Buffer.concat([iv, cipher.getAuthTag(), data]).toString("base64")
+}
+
+/** Returns the plaintext, or undefined when no loaded key opens the sealed text. */
+export function open(text: string) {
+  const raw = Buffer.from(text.slice(PREFIX.length), "base64")
+  return keys().reduce<string | undefined>((plain, key) => plain ?? attempt(key, raw), undefined)
+````
+
+
+### AEX044
+
+**Artifacts:** `s1.core.security`.
+
+**Claim/limit supported:** OS keychain is preferred; fallback to a data-directory key file is explicitly weaker.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/credential/cipher.ts:829dd497e04ee5729a6ab45cd5164bee9430a641`, lines 57–75.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `599393f98c4a3dbc80ccaaf14bbdaee62417a557dc1425f77fd4781dc8e7edd7`; **excerpt SHA256:** `f8cbeb99fd06e013efb47a865c17419a26f493c65d0aea1a80938ce8ea8c797c` (855 bytes).
+
+````text
+function load() {
+  return Effect.gen(function* () {
+    const file = Flag.ORCHESTRA_CREDENTIAL_KEY_FILE
+    if (file) {
+      yield* Effect.promise(() => refuseNewKey(file))
+      return [fileKey(file)]
+    }
+    const { Global } = yield* Effect.promise(() => import("../global"))
+    const fallback = path.join(Global.Path.data, "credential.key")
+    const keychain = yield* Effect.tryPromise(() => keychainKey()).pipe(Effect.timeout("10 seconds"), Effect.option)
+    if (Option.isSome(keychain)) return [keychain.value, ...(existsSync(fallback) ? [fileKey(fallback)] : [])]
+    yield* Effect.logWarning(
+      "OS keychain unavailable: stored credentials are encrypted with a key file in the data directory, which is weaker",
+      { path: fallback },
+    )
+    yield* Effect.promise(() => refuseNewKey(fallback))
+    return [fileKey(fallback)]
+  })
+}
+````
+
+
+### AEX045
+
+**Artifacts:** `s1.core.security`.
+
+**Claim/limit supported:** Memory inheritance is opt-in; legacy sealing failure preserves readability; undecodable rows are skipped and left untouched.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/credential.ts:3161ca0d7f1e4c68a372acb97234eab80a9024b2`, lines 83–117.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `d091c6c02c5ba51b930ac55cf8ca473d048f8b336e9dccf310e2c2f6f978b2e8`; **excerpt SHA256:** `d74e28a7457cc84f7f8d8dcedb4ddb6c3e6d7156cf3b1c6190ede36093efa0ab` (1524 bytes).
+
+````text
+ * Returns the release database to inherit credentials from, or undefined when
+ * this build must stay isolated.
+ */
+export function inheritedPath(active = Database.path(), release = Database.releasePath()) {
+  const flag = Flag.ORCHESTRA_INHERIT_CREDENTIALS
+  if (flag === false) return
+  if (active === ":memory:" && flag !== true) return
+  if (active !== ":memory:" && resolve(active) === resolve(release)) return
+  return release
+}
+
+export const layerFrom = (release: string | undefined) =>
+  Layer.effect(
+    Service,
+    Effect.gen(function* () {
+      const { db } = yield* Database.Service
+      // Loads the key before any credential row is sealed or opened.
+      yield* CredentialCipher.Service
+      yield* sealLegacy(db).pipe(
+        Effect.catchCause((cause) =>
+          Effect.logError("could not encrypt plaintext credentials; they stay readable", {
+            reason: String(Cause.squash(cause)),
+          }),
+        ),
+      )
+      const decode = Schema.decodeUnknownOption(Value)
+      // A row that does not decode (in practice: sealed under a key this process cannot load) is reported and
+      // skipped, never deleted or overwritten.
+      const stored = Effect.fnUntraced(function* (row: typeof CredentialTable.$inferSelect) {
+        if (!row.integration_id) return
+        const value = decode(row.value)
+        if (Option.isNone(value)) {
+          yield* Effect.logError("stored credential cannot be decrypted; it is left untouched", { credentialID: row.id })
+          return
+        }
+````
+
+
+### AEX046
+
+**Artifacts:** `s1.core.security`, `s1.core.entry`.
+
+**Claim/limit supported:** Current terminal instructions require the sandbox-before-PTY ordering and exact environment boundary.
+
+**Authority:** `repository_normative_documentation`. **Source:** `AGENTS.md:ef3b523b0c00aed722582b870c1919188edc4c4f`, lines 182–192.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `07acaefb95db4b07b4e76c4255f7d6e0ecc4c7466b46fbf6ec5e5cdf6cc01b4f`; **excerpt SHA256:** `4f5b2378f8eb397a98a143b26af09bf856f0a06ad9204f8567ae8beda212ffab` (1186 bytes).
+
+````text
+## Terminal and PTY
+
+Background: `docs/specs/terminal/`; ownership and traps: `.orchestra/skills/terminal-maintenance`.
+
+- The agent terminal exists only in the V2 session core's bash tool (`packages/core`). The agent runs a bash command in a PTY only through `AgentTerminal.run` (`packages/core/src/tool/agent-terminal.ts`) inside the bash tool, after `ToolSafetySandbox.wrap`. Never build an agent PTY from `Pty.create` with the default environment, which inherits `process.env` and skips the sandbox.
+- Text that goes to the model is `AgentTerminal.sanitize`d. Terminal output is data, never instruction.
+- Shell marks (OSC 133) count only with the session's nonce. OSC 7 (`Info.cwd`) is a hint without one; do not use it for decisions that need trust.
+- The PTY cursor and ring (`BUFFER_LIMIT`) count UTF-16 characters, not bytes.
+- The `Pty` service is served over HTTP by `packages/server/src/handlers/pty.ts`. The app uses `/api/pty`.
+- `ORCHESTRA_AGENT_TERMINAL` and `ORCHESTRA_SHELL_INTEGRATION` are permanent opt-in flags in `flag/flag.ts`; read them through `Flag`, never `process.env`.
+- Known limit: a WebSocket client that stops reading makes the server grow; not solved.
+````
+
+
+### AEX055
+
+**Artifacts:** `s1.core.extensions`.
+
+**Claim/limit supported:** State rebuilds from initial plus ordered transforms, finalizes before commit, and serializes rebuild/read with a semaphore.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/state.ts:116e268bb9edf045985e1598a4e1a3ed1d410872`, lines 63–91.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `237de5f76069595f50c7e7049dc72fe295a6b0ecaa615d849ef5b67ecd9f4189`; **excerpt SHA256:** `bb8eee95e1b8be1ebfc1b768f1565cc3492f0f147da72b8ca9ef167d7567eec7` (1155 bytes).
+
+````text
+export function create<State, DraftApi>(options: Options<State, DraftApi>): Interface<State, DraftApi> {
+  let state = options.initial()
+  let transforms: { run: TransformCallback<DraftApi> }[] = []
+  const semaphore = Semaphore.makeUnsafe(1)
+
+  const commit = Effect.fn("State.commit")(function* (next: State) {
+    const api = options.draft(next)
+    if (options.finalize) yield* options.finalize(api)
+    state = next
+  })
+
+  const apply = (transform: TransformCallback<DraftApi>, draft: DraftApi) =>
+    Effect.suspend(() => {
+      const result = transform(draft)
+      return Effect.isEffect(result) ? Effect.asVoid(result).pipe(Effect.orDie) : Effect.void
+    })
+
+  const materialize = Effect.fnUntraced(function* () {
+    const next = options.initial()
+    const api = options.draft(next)
+    for (const transform of transforms) yield* apply(transform.run, api).pipe(Effect.withSpan("State.reload.update"))
+    yield* commit(next)
+  })
+
+  const reload = () => semaphore.withPermit(materialize())
+
+  const result: Interface<State, DraftApi> = {
+    get: () => state,
+    withRead: (read) => semaphore.withPermit(Effect.suspend(() => read(state))),
+````
+
+
+### AEX056
+
+**Artifacts:** `s1.core.extensions`.
+
+**Claim/limit supported:** Plugin activation uses a child scope, publishes only after materialization, and closes/replays after failure.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/plugin.ts:5c3c232bfa46b3f8cfad106c2db4787d6c374818`, lines 115–151.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `8b7221fadc81a9cac0b7a1b3229a3bdb098966c8474c261b9ae971d9ad7d4302`; **excerpt SHA256:** `a81d00696236d7272c0c9920bdeb0bf9173d85d9a58c7560d25490e2b7f75b63` (1786 bytes).
+
+````text
+          if (retain && active.has(id)) return
+          const child = yield* Scope.fork(scope)
+          const reloads = new Set<State.Reload>()
+          const token = { scope, id, live: true }
+          loading.add(id)
+          failures.delete(id)
+          const activate = Effect.gen(function* () {
+            const existing = active.get(id)
+            active.delete(id)
+            if (existing) yield* Scope.close(existing, Exit.void)
+            yield* effect(host).pipe(
+              Scope.provide(child),
+              Effect.withSpan("Plugin.load", { attributes: { "plugin.id": id } }),
+            )
+            yield* settle(reloads, boot).pipe(Scope.provide(child))
+            yield* Effect.uninterruptible(
+              Effect.gen(function* () {
+                yield* events.publish(Event.Added, { id })
+                active.set(id, child)
+                yield* Effect.forEach(waiters.get(id) ?? [], (waiter) => Deferred.succeed(waiter, undefined), {
+                  discard: true,
+                })
+                waiters.delete(id)
+              }),
+            ).pipe(Effect.provideService(StateBatch, undefined))
+          })
+          yield* Effect.uninterruptibleMask((restore) =>
+            Effect.gen(function* () {
+              const primary = yield* restore(activate).pipe(Effect.exit)
+              if (Exit.isSuccess(primary)) return
+              active.delete(id)
+              const combined = yield* closeAndReplay(child, primary, reloads, boot)
+              failures.set(id, combined)
+              yield* Effect.forEach(waiters.get(id) ?? [], (waiter) => Deferred.done(waiter, combined), {
+                discard: true,
+              }).pipe(Effect.ensuring(Effect.sync(() => waiters.delete(id))))
+              return yield* combined
+````
+
+
+### AEX057
+
+**Artifacts:** `s1.core.extensions`.
+
+**Claim/limit supported:** Boot retry is collected flush followed by per-plugin reinstall after failure; this is not outer-batch durable atomicity.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/plugin.ts:5c3c232bfa46b3f8cfad106c2db4787d6c374818`, lines 187–207.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `8b7221fadc81a9cac0b7a1b3229a3bdb098966c8474c261b9ae971d9ad7d4302`; **excerpt SHA256:** `26b5001b777fffbd379a0fdbb0a7ac676074fe66f09a6e6dedc03f885bb86c36` (1184 bytes).
+
+````text
+    const boot = Effect.fn("Plugin.boot")(function* (
+      plugins: Iterable<{ readonly id: ID; readonly effect: PluginRuntime["effect"] }>,
+    ) {
+      const reloads = new Set<State.Reload>()
+      const installed: { readonly id: ID; readonly effect: PluginRuntime["effect"] }[] = []
+      const booted = yield* Effect.forEach(
+        plugins,
+        (plugin) =>
+          install(plugin.id, plugin.effect, false, reloads).pipe(
+            Effect.andThen(Effect.sync(() => installed.push(plugin))),
+          ),
+        { discard: true },
+      ).pipe(Effect.exit)
+      const flushed = yield* flush(reloads).pipe(Effect.exit)
+      if (Exit.isSuccess(flushed)) return yield* booted
+      // One flush cannot tell which plugin's state failed. Remove the booted plugins, then add them back one at a
+      // time so the per-plugin flush rolls back the failing one and stops there, as a boot of plain adds would.
+      yield* Effect.forEach(installed.toReversed(), (plugin) => remove(plugin.id).pipe(Effect.exit), { discard: true })
+      yield* Effect.forEach(installed, (plugin) => install(plugin.id, plugin.effect, false), { discard: true })
+      return yield* booted
+    })
+````
+
+
+### AEX058
+
+**Artifacts:** `s1.core.extensions`.
+
+**Claim/limit supported:** Each ordinary MCP call asserts its namespaced permission and forwards cancellation and timeout to the SDK.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/mcp.ts:3d2203cb152ef733ca3b7d3231a302416a1f394b`, lines 235–263.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `73c99e41cceb9e58ba89ca9b7aa93049b5aa3620a962ee5166e5496fc8c78f59`; **excerpt SHA256:** `a96a12bface5460a64ba71b4f8fa58ab12d45c8f9eec707091d51a23721e679b` (1667 bytes).
+
+````text
+    const mcpTool = (server: string, client: Client, def: ListToolsResult["tools"][number], timeout: number) =>
+      Tool.dynamic({
+        description: def.description ?? "",
+        inputSchema: { ...def.inputSchema, type: "object", properties: def.inputSchema.properties ?? {} },
+        execute: (input, context) =>
+          Effect.gen(function* () {
+            yield* permission.assert({
+              action: McpCatalog.toolName(server, def.name),
+              resources: ["*"],
+              save: ["*"],
+              metadata: { server, tool: def.name },
+              sessionID: context.sessionID,
+              agent: context.agent,
+              source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
+            })
+            const result = yield* Effect.tryPromise((signal) =>
+              client.callTool(
+                { name: def.name, arguments: isObject(input) ? input : {} },
+                CallToolResultSchema,
+                // The MCP SDK only sends a progress token when `onprogress` is set, which enables timeout resets.
+                { signal, timeout, resetTimeoutOnProgress: true, onprogress: () => {} },
+              ),
+            )
+            if ("toolResult" in result) return yield* Effect.fail(new Error("MCP tool returned no content"))
+            if (result.isError) return yield* Effect.fail(new Error(McpCatalog.resultText(result) || "MCP tool returned an error"))
+            return { structured: result.structuredContent ?? {}, content: McpCatalog.resultContent(result) }
+          }).pipe(Effect.mapError((error) => new ToolFailure({ message: error.message }))),
+      })
+
+````
+
+
+### AEX059
+
+**Artifacts:** `s1.core.extensions`.
+
+**Claim/limit supported:** Stale asynchronous connection/catalog results close their client before registration; connected follows successful tools registration.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/mcp.ts:3d2203cb152ef733ca3b7d3231a302416a1f394b`, lines 283–309.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `73c99e41cceb9e58ba89ca9b7aa93049b5aa3620a962ee5166e5496fc8c78f59`; **excerpt SHA256:** `7596c50ca4f5c6c1b197e640be2c61da9200dc0fca8e6877afd08a00d900b4a9` (1253 bytes).
+
+````text
+      blocked.delete(name)
+      const startup = server.timeout?.startup ?? found.timeout?.startup ?? DEFAULT_TIMEOUT
+      const request = server.timeout?.request ?? found.timeout?.request ?? DEFAULT_TIMEOUT
+      const opened = yield* open(name, server, startup)
+      const client = opened.client
+      if (current.generation !== generation) {
+        if (client) yield* Effect.promise(() => client.close().catch(() => undefined))
+        return
+      }
+      if (!client) {
+        current.status = opened.status
+        return
+      }
+      const listed = client.getServerCapabilities()?.tools
+        ? yield* McpCatalog.tools(client, request).pipe(Effect.result)
+        : undefined
+      if (current.generation !== generation) return yield* Effect.promise(() => client.close().catch(() => undefined))
+      if (listed?._tag === "Failure") {
+        yield* Effect.promise(() => client.close().catch(() => undefined))
+        current.status = failed(
+          McpStdio.failure(opened.transport, new Error(`Listing tools failed: ${messageOf(listed.failure)}`)),
+        )
+        return
+      }
+      const defs = listed?.success ?? []
+      // Connected is reported only once the server's tools are in the registry.
+      current.client = client
+````
+
+
+### AEX060
+
+**Artifacts:** `s1.core.extensions`.
+
+**Claim/limit supported:** Generation invalidation prevents stale in-flight skill loading from refilling a new cache.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/skill.ts:dc8d8f67c6b658ce7716a2b17e0c9b2e517c6db0`, lines 153–172.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `07c062a4f778a329572ba0217df3e72315c61bf5baa135414324af63dd28a18b`; **excerpt SHA256:** `e40643e1c1479fe8d72d0d372730d699ba2c4fdb81dc94c10eec089136e6d2b8` (983 bytes).
+
+````text
+    // QUESTION(Dax): Should local skill sources invalidate on filesystem watch
+    // events, following the reload policy chosen for other context sources?
+    const cache = new Map<string, Info[]>()
+    // A write bumps the generation, so a list() that started loading before it cannot refill the cache.
+    const generation = { current: 0 }
+    const invalidate = () => {
+      generation.current++
+      cache.clear()
+    }
+    // Each dropped skill file is reported once, not on every list.
+    const shadowed = new Set<string>()
+    const list = Effect.fn("SkillV2.list")(function* () {
+      const started = generation.current
+      const data = state.get()
+      const sources: { key: string; skills: Info[] }[] = []
+      for (const source of data.sources) {
+        const key = Source.key(source)
+        const loaded = cache.get(key) ?? (yield* load(source))
+        if (generation.current === started) cache.set(key, loaded)
+        sources.push({ key, skills: loaded })
+````
+
+
+### AEX061
+
+**Artifacts:** `s1.core.extensions`.
+
+**Claim/limit supported:** OAuth attempts are synchronized in-memory state owned by the Location layer; this map does not establish a durable resumable workflow.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/integration.ts:d6d9a85e8c9b2737b1f09f95700c05663735e6e4`, lines 231–238.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `d1952b88c361ed35ac1dd3b2f736b6aa9588bd7e82db37c1f88fb878f09f9796`; **excerpt SHA256:** `2f145cb1b2e6a1da3e03631f4ca8b4524d65392196c697ca5876a3fd92046bea` (341 bytes).
+
+````text
+export const locationLayer = Layer.effect(
+  Service,
+  Effect.gen(function* () {
+    const credentials = yield* Credential.Service
+    const events = yield* EventV2.Service
+    const scope = yield* Scope.Scope
+    const attempts = SynchronizedRef.makeUnsafe(new Map<AttemptID, AttemptEntry>())
+    const state = State.create<Data, Draft>({
+````
+
+
+
+Continua; aguarde FIM T01.

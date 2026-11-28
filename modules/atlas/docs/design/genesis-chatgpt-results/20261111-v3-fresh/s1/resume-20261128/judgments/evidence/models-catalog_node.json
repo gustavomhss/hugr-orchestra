@@ -1,0 +1,21 @@
+{
+  "path": "packages/core/src/catalog.ts",
+  "start_line": 371,
+  "end_line": 400,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "    return Service.of(result)\n  }),\n)\n\nconst SMALL_MODEL_RE = /\\b(nano|flash|lite|mini|haiku|small|fast)\\b/\n\nexport const locationLayer = layer.pipe(\n  Layer.provideMerge(Integration.locationLayer),\n  Layer.provideMerge(Policy.locationLayer),\n)\n\nexport const node = makeLocationNode({\n  service: Service,\n  layer,\n  deps: [EventV2.node, Policy.node, Integration.node, Credential.node],\n})",
+      "encoding": "utf-8",
+      "sha": "86acb93f550bc2b941e85d42cc4d62d73cbf64ba",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/catalog.ts",
+      "display_title": "catalog.ts"
+    },
+    "isError": false
+  }
+}

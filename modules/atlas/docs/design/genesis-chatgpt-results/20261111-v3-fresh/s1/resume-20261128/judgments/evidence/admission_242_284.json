@@ -1,0 +1,16 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Action completed."
+    }
+  ],
+  "structuredContent": {
+    "content": "export const sealRequest = (request: SealedRequest): { fingerprint: string; bodyDigest: string } => {\n  const bodyDigest = sha256(request.body)\n  const fingerprint = sha256(JSON.stringify({\n    envelopeId: request.envelope.envelopeId,\n    authorityId: request.envelope.authorityId,\n    scope: request.envelope.scope,\n    provider: request.envelope.provider,\n    model: request.envelope.model,\n    route: request.envelope.route,\n    stages: [...request.envelope.stages],\n    limits: request.envelope.limits,\n    retryPolicy: request.envelope.retryPolicy,\n    logicalRequestId: request.logical.logicalRequestId,\n    snapshot: request.logical.snapshot,\n    stage: request.logical.stage,\n    dispatchRoute: request.route,\n    endpoint: request.endpoint,\n    protocol: request.protocol,\n    bodyDigest,\n    bound: request.bound,\n  }))\n  return { fingerprint, bodyDigest }\n}\n\n/**\n * Per-attempt bounds sealed from the final request bytes (§1.2). A dimension the envelope\n * admits is mandatory; bound exposure beyond an envelope dimension is refused.\n */\nexport const validateBound = (bound: AttemptBound, envelope: EconomyEnvelope, evidence: readonly string[]): AttemptOutcome | undefined => {\n  for (const dimension of [\"outputTokens\", \"inputTokens\"] as const) {\n    const value = bound[dimension]\n    if (value === undefined) {\n      if (envelope.limits[dimension] !== undefined) return refusal(\"bound\", [...evidence, dimension])\n      continue\n    }\n    if (typeof value !== \"number\" || !Number.isSafeInteger(value) || value <= 0) {\n      return refusal(\"bound\", [...evidence, dimension])\n    }\n    if (envelope.limits[dimension] !== undefined && value > envelope.limits[dimension]) {\n      return refusal(\"bound\", [...evidence, dimension])\n    }\n  }\n  return undefined",
+    "encoding": "utf-8",
+    "sha": "914a0b925dd282e264292b2247189c549c993a3f",
+    "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/economy/admission.ts",
+    "display_title": "admission.ts"
+  },
+  "isError": false
+}

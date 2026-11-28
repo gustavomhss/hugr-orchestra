@@ -1,0 +1,428 @@
+C01 — fontes literais adicionais, parte 06. Mesmo pin, mesmo corpo.
+
+### E29 — Omni fallback: `packages/core/src/omni-spawner.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `ff176729415c15d4644c69cac19e23ad5559f196`; SHA-256 `9e3bd1a3156903ec2717ba347ba6c31c8076eaeebdee7243b035186e0568f53f`.
+Linhas 79–135; hash do trecho UTF-8 original `65060cb5c6a067159084534d9b92466a31625d2f4868643e08ff700ae903ce14`.
+````text
+79:   const spawn: Spawn = Effect.fnUntraced(function* (command) {
+80:     const reason = unsupported(command)
+81:     if (reason === undefined && command._tag === "StandardCommand")
+82:       return yield* start(omni, command, yield* input.cwd(command.options))
+83:     if (input.mode === "strict")
+84:       return yield* PlatformError.badArgument({
+85:         module: "ChildProcess",
+86:         method: "spawn",
+87:         description: `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict runs ${reason} nowhere: omni does not support it and strict never delegates to legacy (${describe(command)})`,
+88:       })
+89:     Omni.count("delegations")
+90:     yield* Effect.logDebug("omni delegation", { event: "omni.delegation", reason, command: summarize(command) })
+91:     return yield* input.legacy(command)
+92:   })
+93:   return spawn
+94: })
+95: 
+96: /** Why omni cannot run this command as asked, or undefined when it can. */
+97: export function unsupported(command: ChildProcess.Command) {
+98:   if (command._tag === "PipedCommand") return "a piped command (pipeTo)"
+99:   const opts = command.options
+100:   const inherited = (["stdin", "stdout", "stderr"] as const).find((key) => kind(opts[key]) === "inherit")
+101:   if (inherited) return `${inherited}: "inherit"`
+102:   if (opts.additionalFds && Object.keys(opts.additionalFds).length > 0) return "additionalFds"
+103:   // SIGKILL means "no grace" and omni's stop with graceMs 0 gives exactly that; any other signal has no equivalent.
+104:   if (opts.killSignal !== undefined && opts.killSignal !== "SIGTERM" && opts.killSignal !== "SIGKILL")
+105:     return `killSignal ${opts.killSignal}`
+106:   return undefined
+107: }
+108: 
+109: /**
+110:  * The program omni runs: the command itself, or `shell: true | string` made explicit by Shell.invocation (D-L4).
+111:  * cmd.exe (where Shell.invocation gives undefined) parses its own command line, so it gets ComSpec with no arguments
+112:  * and the tail Node builds, `/d /s /c "<joined>"`, verbatim (WP8b).
+113:  */
+114: export function program(command: ChildProcess.StandardCommand): { file: string; args: string[]; verbatim?: string } {
+115:   const shell = command.options.shell
+116:   if (!shell) return { file: command.command, args: [...command.args] }
+117:   const explicit = Shell.invocation(shell, command.command, command.args)
+118:   if (explicit) return explicit
+119:   const file = shell === true ? (process.env.ComSpec ?? "cmd.exe") : shell
+120:   return { file, args: [], verbatim: `/d /s /c "${[command.command, ...command.args].join(" ")}"` }
+121: }
+122: 
+123: /**
+124:  * The child's environment, always passed with inheritEnv:false (D-L3): process.env under `env` when the command
+125:  * inherits (extendEnv, or no env at all, as Node does), otherwise `env` alone. HUGR_OMNI_* never reaches a child.
+126:  */
+127: export function environment(opts: ChildProcess.CommandOptions) {
+128:   if (opts.extendEnv || opts.env === undefined) return Omni.childEnv(opts.env)
+129:   return Object.fromEntries(
+130:     Object.entries(opts.env).filter(
+131:       (entry): entry is [string, string] => entry[1] !== undefined && !entry[0].toUpperCase().startsWith("HUGR_OMNI_"),
+132:     ),
+133:   )
+134: }
+135: 
+````
+
+### E30 — Omni saída: `packages/core/src/omni-output.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `1410c5bf73c9e76225b0fbe1e7290096073854e1`; SHA-256 `d768e4ab31a1f3765f47f4f2b7c3d0e0a59c2c26e6c29a2a7a88f24219fab7cf`.
+Linhas 1–29; hash do trecho UTF-8 original `4cd1b75c53deca8e6485423d154db855cf5442469f4b97c57cfafbe3a915184c`.
+````text
+1: // The host side of one omni child's output (integration plan D-L5, D-L6, R2-1, R2-4): the pump that moves omni's
+2: // items into two host queues, the readers, the HIGH_WATER backpressure and the drain grace. omni-spawner.ts wires
+3: // it to a spawned child; see its header for the whole design.
+4: 
+5: import { Cause, Effect, Stream } from "effect"
+6: import type * as Arr from "effect/Array"
+7: import * as PlatformError from "effect/PlatformError"
+8: import { toError } from "./child-process-common"
+9: import { OmniBackground } from "./omni-background"
+10: 
+11: /** After the root exits, how long descendants may hold the output open before the host streams end (D-L6). */
+12: export const DRAIN_GRACE_MS = 2_000
+13: /** Host-side bytes per stream nobody took yet; above it the pump stops pulling and omni's backpressure takes over. */
+14: const HIGH_WATER = 8 * 1024 * 1024
+15: 
+16: export type Kind = "stdout" | "stderr"
+17: export type Item = { stream: "stdout" | "stderr" | "pty"; data: Uint8Array; lostBefore?: number }
+18: 
+19: /**
+20:  * The host side of one child's output: the pump, the two queues, the readers and the drain grace. Plain JS, driven
+21:  * by omni's promises; readers wait on it through Effect callbacks.
+22:  */
+23: export function drain(
+24:   source: AsyncIterator<Item>,
+25:   input: {
+26:     policy: "fail" | "marker"
+27:     /** Where output goes once the host streams ended, while the tree may still be adopted (R2-4). */
+28:     overflow?: () => OmniBackground.Sink
+29:     ignored: Record<Kind, boolean>
+````
+Linhas 116–146; hash do trecho UTF-8 original `3cd49d3a14e96f647dea64bb61fc65b5b803581805ff62580633a9fd6c943f64`.
+````text
+116:           `fromOmni(${key})`,
+117:           `${key} was not read before the drain grace ended`,
+118:         )
+119:     if (!force) spill = input.overflow?.()
+120:     resume()
+121:     finish()
+122:   }
+123: 
+124:   function resume() {
+125:     const wakeup = paused
+126:     paused = undefined
+127:     wakeup?.()
+128:     if (graceDue) {
+129:       graceDue = false
+130:       arm()
+131:     }
+132:   }
+133: 
+134:   function arm() {
+135:     clearTimeout(grace)
+136:     if (!ended) grace = setTimeout(() => expire(false), DRAIN_GRACE_MS)
+137:   }
+138: 
+139:   function take(kinds: readonly Kind[]) {
+140:     const lists = kinds.map((key) => queues[key].items)
+141:     const batch =
+142:       lists.length === 1
+143:         ? (lists[0] ?? []).map((item) => item.data)
+144:         : [...(lists[0] ?? []), ...(lists[1] ?? [])].toSorted((a, b) => a.seq - b.seq).map((item) => item.data)
+145:     for (const key of kinds) queues[key] = { items: [], bytes: 0 }
+146:     if (paused && full().length === 0) resume()
+````
+
+### E31 — Background: `packages/core/src/omni-adoption.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `a62284d5809aa4dfec83476ae5c0228f72427d7e`; SHA-256 `7b37501b9a24294a2390d48fa800e2e4425c525d5b6fcf9109f49848fdacb5b6`.
+Linhas 29–56; hash do trecho UTF-8 original `3859180f2be39ebcb050cf24b5d29b5b3c61100cc9d6aec67b1ad029e8e597d0`.
+````text
+29: export interface Interface {
+30:   /** Takes ownership of a live child. It must stop the child at the latest when the session ends. */
+31:   readonly register: (child: Child, input: RegisterInput) => Effect.Effect<void>
+32: }
+33: 
+34: export class Registry extends Context.Service<Registry, Interface>()("@orchestra/OmniAdoptionRegistry") {}
+35: 
+36: /** The registry until WP11: it adopts nothing and stops the child at once. */
+37: export const stub: Interface = {
+38:   register: (child) => Effect.promise(() => child.stop()).pipe(Effect.asVoid),
+39: }
+40: 
+41: /**
+42:  * The release of a spawn scope. Adopts only when the scope closed with success and the adoption service is present
+43:  * with policy `tool`; an interrupt, a failure, or no service stops the child, bounded by `graceMs`.
+44:  */
+45: export const release = Effect.fn("OmniAdoption.release")(function* (
+46:   child: Child,
+47:   exit: Exit.Exit<unknown, unknown>,
+48:   input: { title: string; graceMs: number },
+49: ) {
+50:   const adoption = Option.getOrUndefined(yield* Effect.serviceOption(Service))
+51:   if (Exit.isSuccess(exit) && adoption?.policy === "tool") {
+52:     const registry = Option.getOrElse(yield* Effect.serviceOption(Registry), () => stub)
+53:     return yield* registry.register(child, { sessionID: adoption.sessionID, title: input.title })
+54:   }
+55:   yield* Effect.promise(() => child.stop({ graceMs: input.graceMs })).pipe(Effect.asVoid)
+56: })
+````
+
+### E32 — Background: `packages/core/src/omni-background.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `5799ec268ca459f673a40a7fc868dbffca106269`; SHA-256 `27e5fec693ecd407ee0f9efcc5ea617cfcacccac5e325e746f851024d7e06d2e`.
+Linhas 33–65; hash do trecho UTF-8 original `84e20338b3d90d20808e325e1ef2ad48ba52f3af5115669c45dbf84e427bf72a`.
+````text
+33: export type Listed = {
+34:   id: string
+35:   pid: number
+36:   title: string
+37:   started: number
+38:   processes: ProcessInfo[]
+39:   output: string
+40:   /** Bytes of output written since adoption began, including the ones the ring no longer holds. */
+41:   written: number
+42: }
+43: 
+44: /** Where the spawner's pump writes an adoptable child's output after the drain grace (R2-4). Never blocks. */
+45: export interface Sink {
+46:   readonly write: (data: string | Uint8Array) => void
+47: }
+48: 
+49: /** The last `limit` bytes of a byte stream. */
+50: export class Ring implements Sink {
+51:   private chunks: Uint8Array[] = []
+52:   private size = 0
+53:   written = 0
+54: 
+55:   constructor(readonly limit = RING_BYTES) {}
+56: 
+57:   /** Bytes the ring holds now; never more than `limit`. */
+58:   get held() {
+59:     return this.size
+60:   }
+61: 
+62:   /** Arrays the ring holds now: small writes merge, so this stays near `held / MERGE_BYTES`, never one per write. */
+63:   get pieces() {
+64:     return this.chunks.length
+65:   }
+````
+Linhas 129–151; hash do trecho UTF-8 original `52fdfd81f9357e841795ecf10b3559bf2cf73067a84e91f6a3bb324928376d69`.
+````text
+129: }
+130: 
+131: export interface Interface extends OmniAdoption.Interface {
+132:   /** The session's running adopted trees, each with its live processes and the last `tail` bytes of output. */
+133:   readonly list: (sessionID: string, tail?: number) => Effect.Effect<Listed[]>
+134:   /** Stops one adopted tree of the session; false when the session has no such running tree. */
+135:   readonly stop: (sessionID: string, id: string) => Effect.Effect<boolean>
+136:   /** Stops every adopted tree of the session (session removal). */
+137:   readonly stopSession: (sessionID: string) => Effect.Effect<void>
+138: }
+139: 
+140: type Entry = { child: Child; ring: Ring }
+141: 
+142: /** A registry over `jobs`. Job ids are unique, so one registry serves every instance the jobs service routes to. */
+143: export function make(jobs: BackgroundJob.Interface, options: { pollMs?: number } = {}): Interface {
+144:   const entries = new Map<string, Entry>()
+145:   const pollMs = options.pollMs ?? POLL_MS
+146: 
+147:   const adopt = Effect.fnUntraced(function* (child: Child, input: OmniAdoption.RegisterInput) {
+148:     // A tree that is already gone (killed by an abort, or it simply ended) is not worth a job.
+149:     if ((yield* processes(child)).length === 0) {
+150:       yield* stopChild(child)
+151:       return
+````
+
+### E35 — PTY backend: `packages/core/src/pty/omni.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `0fe80b0947866958b287078e12c4d9db407965f3`; SHA-256 `fb35d0452c4a02cc2c19277125cb2fc39f427f6b8784fe22e6b6c80441076be0`.
+Linhas 114–159; hash do trecho UTF-8 original `3c75724f56ebca56df9084e02f8d87856485369a6c9350d6a03c942af5732732`.
+````text
+114:     write(data) {
+115:       child.write(data).catch(() => undefined)
+116:     },
+117:     resize(cols, rows) {
+118:       try {
+119:         child.resize(clampSize(cols), clampSize(rows))
+120:       } catch {
+121:         // CLOSED: the terminal is gone; a resize then has nothing to do.
+122:       }
+123:     },
+124:     kill() {
+125:       void stop()
+126:     },
+127:     stop,
+128:     redirect(sink) {
+129:       state.sink = sink
+130:     },
+131:   }
+132: }
+133: 
+134: /** The output's end, or DRAIN_MS, whichever comes first. */
+135: async function drained(ended: Promise<void>) {
+136:   const timer = { id: undefined as ReturnType<typeof setTimeout> | undefined }
+137:   await Promise.race([ended, new Promise<void>((resolve) => (timer.id = setTimeout(resolve, DRAIN_MS)))])
+138:   clearTimeout(timer.id)
+139: }
+140: 
+141: /** exitCode, or 128 + the signal's number for a Unix child ended by a signal (a shell's convention). */
+142: function exitCode(exit: { exitCode: number | null; signal: string | null } | undefined) {
+143:   if (!exit) return 1
+144:   if (exit.exitCode !== null) return exit.exitCode
+145:   const signals: Record<string, number | undefined> = os.constants.signals
+146:   return 128 + (signals[exit.signal ?? ""] ?? 0)
+147: }
+148: 
+149: function dispose<T>(set: Set<T>, listener: T): Disp {
+150:   return { dispose: () => void set.delete(listener) }
+151: }
+152: 
+153: function call<T>(listener: (value: T) => void, value: T) {
+154:   try {
+155:     listener(value)
+156:   } catch {
+157:     // A listener's failure is its own; the pump and the other listeners go on.
+158:   }
+159: }
+````
+
+### E36 — PTY ticket: `packages/core/src/pty/ticket.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `aaa22ac97bb5577b4379127dabe39c8fff747ee8`; SHA-256 `86a9f97dafadd648f1c548f880dcb0fa77adb3eece06947ead6b2c1be960fd93`.
+Linhas 19–56; hash do trecho UTF-8 original `11a086e9ef6d683c8fed2f72a2dcb9151ea6040a6a283ad1c937d8c77a388569`.
+````text
+19: 
+20: export interface Interface {
+21:   issue(input: Scope): Effect.Effect<typeof ConnectToken.Type>
+22:   consume(input: Scope & { readonly ticket: string }): Effect.Effect<boolean>
+23: }
+24: 
+25: export class Service extends Context.Service<Service, Interface>()("@orchestra/PtyTicket") {}
+26: 
+27: function matches(record: Scope, input: Scope) {
+28:   return (
+29:     record.ptyID === input.ptyID && record.directory === input.directory && record.workspaceID === input.workspaceID
+30:   )
+31: }
+32: 
+33: // Tickets are inserted via Cache.set and removed atomically via invalidateWhen. The lookup is
+34: // never invoked; it dies if it ever is, which would signal a misuse of the Service interface.
+35: const noLookup = () => Effect.die("PtyTicket cache must be used via set/invalidateWhen, never get")
+36: 
+37: // Visible for tests so the TTL can be shortened. Production uses `layer` with the default TTL.
+38: export const make = (ttl: Duration.Input = DEFAULT_TTL) =>
+39:   Effect.gen(function* () {
+40:     const cache = yield* Cache.make<string, Scope>({ capacity: CAPACITY, lookup: noLookup, timeToLive: ttl })
+41:     const expiresIn = Math.max(1, Math.round(Duration.toSeconds(Duration.fromInputUnsafe(ttl))))
+42:     return Service.of({
+43:       issue: Effect.fn("PtyTicket.issue")(function* (input) {
+44:         const ticket = crypto.randomUUID()
+45:         yield* Cache.set(cache, ticket, input)
+46:         return { ticket, expires_in: expiresIn }
+47:       }),
+48:       consume: Effect.fn("PtyTicket.consume")(function* (input) {
+49:         return yield* Cache.invalidateWhen(cache, input.ticket, (stored) => matches(stored, input))
+50:       }),
+51:     })
+52:   })
+53: 
+54: const layer = Layer.effect(Service, make())
+55: 
+56: export const node = makeGlobalNode({ service: Service, layer: layer, deps: [] })
+````
+
+### E37 — PTY limites históricos: `docs/specs/terminal/plan.md`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `0d54e8d122fbc6aff2391c7176b60f3cd73aacd0`; SHA-256 `1de81397aa0ec298798f2bbcd33baf50340ffc4dbc968ea9fe9f8038b6040ac5`.
+Linhas 27–47; hash do trecho UTF-8 original `2947d3e393de490d09ebaa88af425388768f75f883a37d078b1c8e98d1e1d865`.
+````text
+27: ## 1.1 Enxugamento após a Fase 0 (prevalece sobre as seções abaixo)
+28: 
+29: Decisões e evidências em [adr-phase0.md](adr-phase0.md). Por pedido do dono ("sem overengineering"), a v1 corta:
+30: 
+31: - **Segundo emulador e interface para dois**: fica `ghostty-web`, com patches no fork (modo 2026, loop de render oculto). Fase 1 vira: fork ou vendor próprio, patches, testes, higiene, scrollback em linhas, OSC 52 testado, Alt e copiar/colar testados.
+32: - **`ScreenState` no servidor, snapshot, protocolo v2 com versão, histórico em disco, `terminal.v2`**: cortados. Fase 2 vira: attach com lacuna (servidor manda reset e força repaint). Outbox limitado e teto de PTYs ficaram de fora: o writer do WebSocket (`ws.send`, `Socket.ts:742`) não espera o TCP, então um limite na fila nunca dispara; backpressure real exige o `bufferedAmount` do WebSocket, que o Effect esconde; `request.source.socket.writableLength` lê 0 sob Bun (medido). Um cliente que para de ler faz o servidor crescer (RSS passou de 1,6 GB em 40 s de `yes`): risco conhecido, fora deste épico.
+33: - **Corpus gravado, orçamentos numéricos, soak de 1 h como gates**: cortados. Ficam testes diretos de cada comportamento e uma validação manual de Claude Code e Codex.
+34: - **Shell integration**: zsh e bash primeiro; fish e PowerShell só se houver alvo que os exija.
+35: - **Remoção de `bun-pty`/`node-pty`**: fora deste épico.
+36: - **Busca no scrollback e links `arquivo:linha`**: fora (o emulador não os oferece e não são necessários para o valor).
+37: - **Texto para o modelo**: saída entre marcas OSC 133, sem escapes, tratamento simples de `\r`; sem emulador.
+38: 
+39: Permanecem como estão: confinamento e paridade com o `bash`, spec e aprovação da Fase 4, nonce, política OSC 52, estado na aba, cwd herdado, docs e `AGENTS.md`.
+40: 
+41: ## 2. Fatos conferidos e correções à primeira versão
+42: 
+43: - O ring tem `BUFFER_LIMIT = 1024 * 1024 * 2` **em caracteres UTF-16**, não bytes, e o cursor também conta caracteres (`packages/core/src/pty.ts:20,262-290`) **[verificado]**. Qualquer protocolo novo define o cursor na mesma unidade.
+44: - **Correção**: a reconexão com cursor absoluto não corrompe estado enquanto o cliente continua conectado (`pty.ts:350-360`). O replay só começa no meio de uma sequência quando o ring estoura e o cursor do cliente fica abaixo de `bufferCursor` (é cortado para o início), ou num attach novo (`cursor: 0`) depois do estouro. A Fase 0 reproduz exatamente essas duas condições.
+45: - `subscriber.pending` só cresce **antes** de `activate()` (`pty.ts:277,363-372`); o crescimento ilimitado real é o `Queue.unbounded` do outbox, no handler de PTY do V1 (removido) e em `packages/server/src/handlers/pty.ts:179`.
+46: - As **duas superfícies de servidor existem**: `packages/server/src/handlers.ts:18,64` importa `PtyHandler` de `./handlers/pty` **[verificado]** e o handler de PTY do V1 (removido) era importado pelo servidor V1. Os testes `httpapi-pty` e `httpapi-v2-pty` as cobrem separadamente.
+47: - **Gap de segurança verificado**: `Pty.create` monta o ambiente com `{...process.env, ...input.env}` sem limpar credenciais e sem sandbox (`pty.ts:216-220`) **[verificado]**. O `bash` usa `ToolSafetySandbox.wrap(...)` e `ToolSafetySandbox.environment()` (`bash.ts:210,223,235`), além de `permission.assert` por comando, checagem de diretório externo e `workdir` (`bash.ts:173-186`) **[verificado]**. Um PTY de agente construído sobre `Pty.create` como está **perderia** tudo isso.
+````
+
+### E38 — PTY status histórico: `docs/specs/terminal/status.md`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `199f9fc5cea367d2d653305683c8ada505f89bef`; SHA-256 `13c3d793076427965dbe015434d69b5d6f7cf26814eed731861d4874d1db4730`.
+Linhas 18–35; hash do trecho UTF-8 original `39bc783af6aab9edb0f3a445a82cc8468162b28b92e23f4beea87be31b9bc86b`.
+````text
+18: ## Flags (permanentes, opt-in)
+19: 
+20: | Flag | Liga | Por que fica desligada |
+21: |---|---|---|
+22: | `ORCHESTRA_AGENT_TERMINAL` | comando do agente em PTY visível (só sessões V2) | sem modelo real verificado |
+23: | `ORCHESTRA_SHELL_INTEGRATION` | marcas OSC 133 e cwd OSC 7 nos terminais da UI | substitui um `trap DEBUG` do usuário no bash em vez de encadear |
+24: 
+25: Rollback: desligar a flag volta ao comportamento anterior; nada é migrado.
+26: 
+27: ## Limites conhecidos
+28: 
+29: - Cliente que para de ler faz o servidor crescer (medido; não resolvido).
+30: - A aba do agente só nasce de `pty.created` com a UI conectada; comandos de quando ela estava fechada não ganham aba.
+31: - O cwd herdado exige a shell integration ligada (ou um shell que emita OSC 7) e é só uma dica.
+32: - Abas de shell não avisam fim de comando longo (o cliente não lê as marcas).
+33: - Engine `claude-code`: sem aba do agente.
+34: - Fallback V1 (`ORCHESTRA_SIDECAR_V2=legacy`/`0`): sem aba do agente.
+35: - Não verificados: backend omni, Linux, Windows (excluído do runner do agente), notificação da plataforma, verificação manual de Claude Code e Codex em TUI.
+````
+
+### E39 — PTY marcas: `packages/core/src/pty/shell-marks.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `fbb66a3444c631f956fb5d53827ebc23937fd9c8`; SHA-256 `3e5b4902f2a8cbcf2aadd61f10acdab2ffebe0859a40e6fe70aa15aef67a73e3`.
+Linhas 28–67; hash do trecho UTF-8 original `a90e9eb47140864ccf4c759ec5b9a81ca95fbc19ef7dff14e24086343c0b00e8`.
+````text
+28:         const bel = body.indexOf("\x07")
+29:         const st = body.indexOf("\x1b\\")
+30:         const end = bel === -1 ? st : st === -1 ? bel : Math.min(bel, st)
+31:         if (end === -1) {
+32:           if (body.length <= LIMIT) pending = data.slice(at)
+33:           else rejected++
+34:           break
+35:         }
+36:         const mark = read(body.slice(0, end), nonce)
+37:         if (mark) marks.push(mark)
+38:         else rejected++
+39:         data = body.slice(end + (end === bel ? 1 : 2))
+40:       }
+41:       return marks
+42:     },
+43:     // Marks that carried a different nonce, or none, or were malformed.
+44:     get rejected() {
+45:       return rejected
+46:     },
+47:   }
+48: }
+49: 
+50: function read(body: string, nonce: string): Mark | undefined {
+51:   const fields = body.split(";")
+52:   const kind = KINDS[fields[0] as keyof typeof KINDS]
+53:   const tag = fields.at(-1)
+54:   if (!kind || !tag?.startsWith("orchestra=")) return undefined
+55:   const [given, seq] = tag.slice("orchestra=".length).split(":")
+56:   if (given !== nonce || !/^\d+$/.test(seq ?? "")) return undefined
+57:   if (kind !== "end") return fields.length === 2 ? { kind, seq: Number(seq) } : undefined
+58:   if (fields.length !== 3 || !/^\d+$/.test(fields[1])) return undefined
+59:   return { kind, seq: Number(seq), exit: Number(fields[1]) }
+60: }
+61: 
+62: // The tail of `data` that could be the beginning of START cut by the end of the chunk.
+63: function partialStart(data: string) {
+64:   for (let size = Math.min(START.length - 1, data.length); size > 0; size--)
+65:     if (data.endsWith(START.slice(0, size))) return data.slice(-size)
+66:   return ""
+67: }
+````
+
+
+Continua; aguarde FIM C01.

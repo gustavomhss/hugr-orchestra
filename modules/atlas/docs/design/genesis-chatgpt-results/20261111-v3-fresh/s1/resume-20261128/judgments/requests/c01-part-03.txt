@@ -1,0 +1,359 @@
+C01 — contrato público histórico, disposição declarada pelo produtor e oracles congelados. Não são novos PASS nem evidência de execução.
+
+## Contrato público integral
+
+````json
+
+{
+  "schema": "genesis-s1-01-public-contract/v1",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "inventory": "555 exact paths in sources.jsonl",
+  "evaluation_scope": "New source-grounded supplements and cumulative local L2–L4; original bodies retain their immutable provenance. Reuse decisions only for identical accepted bytes.",
+  "criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "AC-01",
+    "AC-02",
+    "AC-03",
+    "CC-1",
+    "CC-2",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "requirements": [
+    "Explain real source behavior, authority, meaningful limits, safe change and diagnostics without invented runtime success.",
+    "Cover every assigned source row by honest evidence depth/disposition; grouped implementation/helper/test/fixture/vendor treatment requires explicit family rationale and required-needs mapping.",
+    "Config/project supplement: current/legacy decoder, global setting publisher/cache, policy/trust admission, Location identity/lifetime and graph, canonical file mutation, project checkpoint/copy/snapshot/Git/repository-cache boundaries; cross-owner handoff only for unowned code.",
+    "Models/runtime/economy supplement: catalog versus native Session provider adoption, API/protocol distinctions, economy caller binding and terminal/uncertainty semantics, process/OS/PTY limits, supporting LSP/format/plugin/install/utility family ownership and checks.",
+    "Session/persistence/context supplement if required: admission/execution/store/replay/context code, driver composition, migration backup/restore and post-commit boundaries; no distributed ownership or crash recovery claim.",
+    "L2–L4 later depend only on accepted predecessors; freeze exact dependency closure and maintenance expected sets before evaluation.",
+    "Tests described as source evidence; no product execution claimed. Gates per AGENTS; root sole remote writer."
+  ],
+  "output": "Useful concise body files plus exact source references/excerpts and coverage deltas; preserve original candidate texts, requests and responses. No protected oracle access."
+}
+
+````
+
+## Disposições de família (todas NOT_REVIEWED)
+
+### terminal-docs — 7 fontes
+
+Decisões e limites históricos do terminal; seção 1.1 do plano prevalece sobre fases aspiracionais. Não são recibos desta sessão.
+
+Usar código do baseline para comportamento; datas/medições/testes relatados ficam atribuídos aos documentos. Mantidos docs menores integrais e plano por trechos.
+
+### models-catalog — 11 fontes
+
+Ingestão, estado disponível, identidade/credencial, variante, seleção e teto de subagente. Distingue dados do catálogo, SDK e ramo nativo.
+
+Implementações integrais lidas. Docs de desenho por trechos, com deriva de schema/nomes explicitada. Availability não é conectividade.
+
+### pty-process — 31 fontes
+
+Aquisição/lifetime, captura, backend OS, PTY, background, busca/binários e broker. Limites pertencem ao recurso específico.
+
+Contratos por implementação ou trechos decisivos; ramos ausentes declarados. Não extrapolar ring a fila WebSocket, exit a árvore inteira, ou cache local a recovery.
+
+### economy — 3 fontes
+
+Envelope/authority, reserva durável, cada despacho, terminal/usage e replay. Todas as três fontes de produto lidas integralmente.
+
+Guard opt-in no HTTP; default Core não o monta. HTTP>=400 retém slot. Completion exige corpo para replay. Não há receipt de billing físico.
+
+### composition-state — 12 fontes
+
+Nós globais/Location, substituições, reservas de coordenadores, cache/mutex e materialização de estado.
+
+Implementações integrais lidas; compartilhar uma layer em um grafo não estabelece ownership entre hosts.
+
+### lsp-format — 16 fontes
+
+Serviços por Location que selecionam/adquirem processos e transformam diagnóstico/arquivo. Receitas de servidor variam em root e instalação.
+
+Dispatch/lifetime/formatter e helpers lidos; client/receitas por trechos. Comportamento das receitas não lidas não é herdado da interface comum.
+
+### copilot-vendor — 25 fontes
+
+Compatibilidade dedicada a Copilot; schemas, tools e mapeamentos agrupados por protocolo. Não é base universal da Session nativa.
+
+Helpers e seis tools integrais; classes extensas e Responses input por trechos. Não se certificam ramos de stream não vistos, nem se executam os tools definidos.
+
+### install-observability — 7 fontes
+
+Diretórios, detecção/upgrade e observabilidade configurada; efeitos de filesystem/processo distintos de recibos de sucesso.
+
+Sete fontes integrais; nenhuma rede/instalação/exportação real realizada. Cap de log verificado no startup não é rotação contínua.
+
+### utilities-schema — 28 fontes
+
+Helpers pequenos agrupados por contrato real; npm e imagens têm aquisição/efeitos próprios e receberam leitura integral.
+
+Integrais salvo dois locks por trechos. Hash/token estimate/timeout/lock não implicam segurança, contabilização ou recovery que não implementam.
+
+### provider-plugins — 33 fontes
+
+33 registros/plugins lidos integralmente; diferenças de auth/endpoint/factory/fetch expressas no corpo e propósito individual.
+
+Disponibilizar SDK, adicionar catálogo ou transformar headers não adiciona ramo ao SessionRunnerModel. Nenhuma chamada de provider executada.
+
+### tests — 58 fontes
+
+Fontes de teste relacionadas ao dono de produto. Leitura integral de amostra crítica e inspeção de declarações dos demais; não há resultado de execução.
+
+Nome/declaração revela intenção do teste, não que a asserção foi lida ou passou. Não reproduzir oracles; selecionar gate futuro conforme AGENTS vigente.
+
+### test-support — 4 fontes
+
+Quatro fixtures/probes/smoke lidos integralmente; montam spawners, streams, árvore e runtime Node/Bun.
+
+Suporte de execução separado do produto; probe declara exclusão da descoberta de testes. Nenhum módulo foi executado.
+
+
+## Frozen oracle data
+
+BEGIN oracles/l1-inherited.json
+{
+  "schema": "genesis-s1-oracle/v1",
+  "frozen_at": "2026-11-11T16:24:54.415843+00:00",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "layer": 1,
+  "units": [
+    "S1-L1-A",
+    "S1-L1-B",
+    "S1-L1-C"
+  ],
+  "cases": [
+    {
+      "id": "L1-FIDELITY",
+      "question": "Can every material fact be traced to bytes captured at the source pin?",
+      "expected": "Commit/blob/hash and source excerpts agree; distinguish source reads from executions; no runtime success inferred from code."
+    },
+    {
+      "id": "L1-POPULATION",
+      "question": "Does every assigned entry have an honest depth/disposition?",
+      "expected": "2236 unique entries, path hash 67d80c0e398b495140ef3b9fd4d0a8058036290919856635298b9007ed153889; generated/test/fixture/support rows do not imply individual semantic review; each family retains an explicit follow-up need."
+    },
+    {
+      "id": "L1-SESSION",
+      "question": "Does baseline support crash recovery, queue and exact-retry claims?",
+      "expected": "AGENTS mandates durable admission separate from wake, admit-only resume:false, exact retry matching session/prompt/delivery, safe-boundary steer and idle queue, process-local ownership and no automatic crash continuation. Source discrepancies must stay visible."
+    },
+    {
+      "id": "L1-ARCH",
+      "question": "Which packages are contract authorities and generated clients?",
+      "expected": "Schema feeds Core/Protocol then Server; Client runtime may depend on Schema/Protocol, never Core/Server; SDK composes; public Protocol/HttpApi changes require client generation; no direct generated edits."
+    },
+    {
+      "id": "L1-RUNTIME",
+      "question": "Can provider/tool/runtime support be treated uniformly?",
+      "expected": "Do not equate provider event stream, external execution host and Orchestra tools. Enforce one explicit provider-turn stream, governed tools and process spawning boundaries; document unavailable details as gaps."
+    }
+  ],
+  "public_criteria": [
+    "QS-1",
+    "QS-2",
+    "QS-4",
+    "QS-5",
+    "CC-1",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "reserved": true
+}
+END oracles/l1-inherited.json
+
+BEGIN oracles/s1-01-oracle-v1.json
+{
+  "schema": "genesis-s1-01-oracle/v1",
+  "execution_id": "6e9b2070-17eb-4e92-bba6-64ce616d6116",
+  "frozen_at": "2026-11-14T22:44:38.921307+00:00",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "status": "FROZEN_BEFORE_NEW_BODY_PRODUCTION",
+  "reserved": true,
+  "inherited_regressions": [
+    "L1-FIDELITY",
+    "L1-POPULATION specialized to the 555 assigned paths",
+    "L1-SESSION",
+    "L1-ARCH",
+    "L1-RUNTIME",
+    "S1-O1",
+    "S1-O2",
+    "S1-O4",
+    "S1-O5"
+  ],
+  "public_criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "AC-01",
+    "AC-02",
+    "AC-03",
+    "CC-1",
+    "CC-2",
+    "CC-3",
+    "CC-7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I7",
+    "GO-I8"
+  ],
+  "cases": [
+    {
+      "id": "S101-N1",
+      "kind": "config-change",
+      "question": "A saved global provider setting is visible but an edit to project orchestra.jsonc is not visible in the already open Location. Which lifetimes and update boundaries explain this, and what maintenance is safe?",
+      "expected": [
+        "Config.entries rereads globals and reloads policies; direct project and supplementary project data retain open-time snapshot",
+        "updateGlobal chooses highest-priority existing orchestra.jsonc then json, writes atomically and invalidates readGlobal cache",
+        "Do not promise all config hot reload; reopen affected Location only through authorized lifecycle; do not restart user app",
+        "Schema decode and legacy migration do not prove every consumer applies a field"
+      ],
+      "critical": [
+        "All config live",
+        "Manual generated schema edits",
+        "Local product tests presented as allowed"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 60000
+      }
+    },
+    {
+      "id": "S101-N2",
+      "kind": "project-trust",
+      "question": "Can a project self-approve local commands with trusted_projects, or can path canonicalization alone authorize an external directory?",
+      "expected": [
+        "Only user-owned global/pathless trust entries count",
+        "Project cannot trust itself; absolute external canonical path is an approval resource, not permission",
+        "Revocation of own entry can still leave inherited parent trust",
+        "Canonicalization/digest validity is distinct from authorization"
+      ],
+      "critical": [
+        "Self-trust from project configuration",
+        "canonicalization grants permission"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 60000
+      }
+    },
+    {
+      "id": "S101-N3",
+      "kind": "runtime-limits",
+      "question": "A new provider appears in the catalog and process output is bounded by a PTY replay ring. What can be promised about native Session adoption, billing caps, and slow readers?",
+      "expected": [
+        "Catalog existence requires explicit native adapter composition before Session support is claimed",
+        "OS/native adapters and caller options can differ; source inspection not execution",
+        "PTY replay retention does not bound unread WebSocket client's memory",
+        "Economy guard scope/protocol routes and unknown physical usage are explicit"
+      ],
+      "critical": [
+        "Uniform provider support",
+        "Bounded ring solves slow WebSocket-client memory",
+        "Universal hard billing guarantee"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 5,
+        "body_bytes": 70000
+      }
+    },
+    {
+      "id": "S101-N4",
+      "kind": "economy-terminal",
+      "question": "An HTTP gateway error responds to an economy-guarded attempt. Does it prove remote terminus or make retry/billing universally safe?",
+      "expected": [
+        "HTTP answered distinct from canonical protocol terminal",
+        "Gateway >=400 recorded as transport error retains reservation, retry chain constraints still apply",
+        "Only actual configured guarded routes composed through context layer are covered; unknown remote/physical usage remains unknown",
+        "Old unsupported body claims corrected without rewriting historical decisions"
+      ],
+      "critical": [
+        "HTTP failure implies remote work never happened",
+        "Timeout frees cost reservation",
+        "Every provider globally guarded"
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 3,
+        "body_bytes": 40000
+      }
+    },
+    {
+      "id": "S101-N5",
+      "kind": "persistence-replay",
+      "question": "On event replay, which checks precede a redundant sequence no-op and why do seals not grant distributed Session execution ownership?",
+      "expected": [
+        "Verify actual replay verification order from EventV2 source, including durable definition and seal/owner verification before sequence redundant path",
+        "Preserve exact mismatch/sequence failures and duplicate semantics",
+        "Seal integrity/provenance not authentication/distributed scheduler lock",
+        "Backup/restore and post-commit policies require driver and SQLite composed evidence"
+      ],
+      "critical": [
+        "Duplicate bypasses verification",
+        "seal grants distributed ownership"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 60000
+      }
+    }
+  ],
+  "maintenance": [
+    {
+      "id": "S101-M1",
+      "change": "Modify observed admission source input and then persistence source input",
+      "expected": "Artifact owning changed file and reverse build closure become affected. Navigation-only and independent artifacts preserve results. Expected set must be calculated independently from frozen package dependency map before execution; exact runtime results separately observed.",
+      "critical": [
+        "Only detect stale without rebuilding",
+        "Make unavailable into absent",
+        "Include all navigation neighbors in build set"
+      ]
+    },
+    {
+      "id": "S101-M2",
+      "change": "Same source/recipe replay, then config recipe change, then receipt-only result-preserving renewal",
+      "expected": "Unchanged valid inputs/recipe reuse without new producer; changed recipe cannot be cache-hit under old receipt; canonical unchanged full result may stop propagation while receipt/version binding renews. Equal prose with changed authority/gaps/validity must propagate.",
+      "critical": [
+        "Cost saving inferred from token guesses",
+        "Equal prose equated with full result",
+        "Synthetic callbacks labelled native model"
+      ]
+    }
+  ],
+  "intermediate_direct_use": "Before independent consumer, freeze one direct-use question per accepted artifact; this is new use evaluation, not retroactive semantic acceptance.",
+  "isolation": "Producer sees public need/criteria and baseline source only, not expected answers. Consumers see faithful real Atlas replies only. Textual isolation must not be described as technical sandbox."
+}
+END oracles/s1-01-oracle-v1.json
+
+
+Aguarde fontes adicionais e FIM C01.

@@ -1,0 +1,462 @@
+M02 — continuação de fontes literais. Corpo e critérios da parte 01 permanecem inalterados.
+
+BEGIN SOURCE packages/core/src/session/runner/model.ts 132–338 blob 188abc7053f9a02b8dd84ce7bdc30e0e7c001b3b
+export const sessionHeaders = (model: Model, sessionID: string, parentID?: string) => ({
+  "x-session-affinity": sessionID,
+  "X-Session-Id": sessionID,
+  ...(parentID ? { "x-parent-session-id": parentID } : {}),
+  // OpenCode Go refuses a call without its own session header (400 MissingSessionID); Zen takes the same header.
+  ...(model.provider === "opencode" || model.provider === "opencode-go" ? { "x-opencode-session": sessionID } : {}),
+})
+
+const apiKey = (model: ModelV2.Info, credential?: Credential.Value) => {
+  if (credential?.type === "key") return Auth.value(credential.key)
+  if (credential?.type === "oauth") return Auth.value(credential.access)
+  const value = model.request.body.apiKey ?? model.api.settings?.apiKey
+  if (typeof value === "string") return Auth.value(value)
+}
+
+const withDefaults = (model: ModelV2.Info, route: AnyRoute, generation: GenerationOptions) => {
+  const body = model.request.body
+  const httpBody = Object.hasOwn(body, "apiKey")
+    ? Object.fromEntries(Object.entries(body).filter(([key]) => key !== "apiKey"))
+    : body
+  return route.with({
+    provider: model.providerID,
+    endpoint: model.api.url === undefined ? undefined : { baseURL: model.api.url },
+    headers: model.request.headers,
+    http: { body: httpBody },
+    limits: {
+      context: model.limit.context,
+      ...(model.limit.input === undefined ? {} : { input: model.limit.input }),
+      output: model.limit.output,
+    },
+    generation,
+  })
+}
+
+const withVariant = (
+  model: ModelV2.Info,
+  variantID: ModelV2.VariantID | undefined,
+): Effect.Effect<ModelV2.Info, VariantUnavailableError> => {
+  const id = variantID === "default" || variantID === undefined ? model.request.variant : variantID
+  const variant = model.variants.find((item) => item.id === id)
+  if (!variant && variantID !== undefined && variantID !== "default")
+    return Effect.fail(
+      new VariantUnavailableError({
+        providerID: model.providerID,
+        modelID: model.id,
+        variant: variantID,
+      }),
+    )
+  return Effect.succeed(
+    variant
+      ? produce(model, (draft) => {
+          Object.assign(draft.request.headers, variant.headers)
+          Object.assign(draft.request.body, variant.body)
+        })
+      : model,
+  )
+}
+
+const apiName = (model: ModelV2.Info) =>
+  model.api.type === "aisdk" ? `${model.api.type}:${model.api.package}` : model.api.type
+
+export const fromCatalogModel = (
+  model: ModelV2.Info,
+  credential?: Credential.Value,
+): Effect.Effect<Model, UnsupportedApiError | ModelUnavailableError> => {
+  // Native V2 api.settings.generation uses canonical LLM options, not http.body.
+  // Strict decoding rejects misspellings/coercion; absence keeps empty defaults.
+  const generation = Schema.decodeUnknownOption(GenerationOptions, { onExcessProperty: "error" })(
+    model.api.settings?.generation === undefined ? {} : model.api.settings.generation,
+  )
+  if (Option.isNone(generation))
+    return Effect.fail(
+      new ModelUnavailableError({
+        providerID: model.providerID,
+        modelID: model.id,
+        cause: "Invalid api.settings.generation: expected canonical GenerationOptions",
+      }),
+    )
+  const resolved =
+    credential?.type !== "key" || credential.metadata === undefined
+      ? model
+      : produce(model, (draft) => {
+          Object.assign(draft.request.body, credential.metadata)
+        })
+  const key = apiKey(resolved, credential)
+  if (resolved.api.type === "aisdk" && resolved.api.package === "@ai-sdk/openai") {
+    return Effect.succeed(
+      withDefaults(resolved, OpenAIResponses.route, generation.value)
+        .with({ auth: key === undefined ? Auth.none : Auth.bearer(key) })
+        .model({ id: resolved.api.id }),
+    ).pipe(Effect.map((value) => withPrices(withReference(value, model), model)))
+  }
+  if (resolved.api.type === "aisdk" && resolved.api.package === "@ai-sdk/anthropic") {
+    return Effect.succeed(
+      withDefaults(resolved, AnthropicMessages.route, generation.value)
+        .with({ auth: key === undefined ? Auth.none : Auth.header("x-api-key", key) })
+        .model({ id: resolved.api.id }),
+    ).pipe(Effect.map((value) => withPrices(withReference(value, model), model)))
+  }
+  if (openAICompatible(resolved)) {
+    return Effect.succeed(
+      withDefaults(resolved, OpenAICompatibleChat.route, generation.value)
+        .with({ auth: key === undefined ? Auth.none : Auth.bearer(key) })
+        .model({ id: resolved.api.id }),
+    ).pipe(Effect.map((value) => withPrices(withReference(value, model), model)))
+  }
+  return Effect.fail(
+    new UnsupportedApiError({
+      providerID: resolved.providerID,
+      modelID: resolved.id,
+      api: apiName(resolved),
+    }),
+  )
+}
+
+const withPrices = (value: Model, model: ModelV2.Info) => {
+  prices.set(value, model.cost)
+  return value
+}
+
+export const resolve = (session: SessionSchema.Info, model: ModelV2.Info, credential?: Credential.Value) =>
+  withVariant(model, session.model?.variant).pipe(
+    Effect.flatMap((model) => fromCatalogModel(model, credential)),
+    Effect.map((value) =>
+      withReference(value, { id: model.id, providerID: model.providerID, variant: session.model?.variant }),
+    ),
+  )
+
+export const supported = (model: ModelV2.Info) =>
+  openAICompatible(model) ||
+  (model.api.type === "aisdk" && (model.api.package === "@ai-sdk/openai" || model.api.package === "@ai-sdk/anthropic"))
+
+// A native model with an endpoint and no package speaks the OpenAI-compatible chat API, the earlier runtime's default
+// package. OpenRouter's own AI SDK package is a client for the same chat API.
+const openAICompatible = (model: ModelV2.Info) =>
+  model.api.url !== undefined &&
+  (model.api.type === "native" ||
+    model.api.package === "@ai-sdk/openai-compatible" ||
+    model.api.package === "@openrouter/ai-sdk-provider")
+
+/** Resolves models from the catalog belonging to the current Location runtime. */
+export const locationLayer = Layer.effect(
+  Service,
+  Effect.gen(function* () {
+    const catalog = yield* Catalog.Service
+    const integrations = yield* Integration.Service
+    const policies = yield* SessionSubagentModels.Service
+    return Service.of({
+      resolve: Effect.fn("SessionRunnerModel.resolve")(function* (session) {
+        // Location plugins populate and filter the catalog asynchronously during layer startup.
+        const ceilings = yield* policies.forSession(session.id)
+        if (session.model && !SessionSubagentModels.permits(ceilings, session.model))
+          return yield* new SessionSubagentModels.ModelDeniedError({
+            sessionID: session.id,
+            model: session.model,
+            reason: "not-allowed",
+          })
+        const candidates = (yield* catalog.model.available()).filter((model) =>
+          SessionSubagentModels.permits(ceilings, model),
+        )
+        const defaultModel = session.model || candidates.length === 0 ? undefined : yield* catalog.model.default()
+        const selected = session.model
+          ? candidates.find((model) => model.providerID === session.model?.providerID && model.id === session.model.id)
+          : (candidates.find(
+              (model) =>
+                model.providerID === defaultModel?.providerID && model.id === defaultModel.id && supported(model),
+            ) ?? candidates.find(supported))
+        if (!selected && session.model)
+          return yield* new ModelUnavailableError({
+            providerID: session.model.providerID,
+            modelID: session.model.id,
+          })
+        if (!selected) return yield* new ModelNotSelectedError({ sessionID: session.id })
+        return yield* resolve(session, selected, yield* credential(catalog, integrations, selected))
+      }),
+    })
+  }),
+)
+
+/**
+ * The credential a catalog model runs with: a virtual provider's own credential connection, else the provider's
+ * active connection. Also used to run a model outside any Session (the Atlas screen's one-shot model calls).
+ */
+export const credential = Effect.fn("SessionRunnerModel.credential")(function* (
+  catalog: Catalog.Interface,
+  integrations: Integration.Interface,
+  selected: ModelV2.Info,
+) {
+  const provider = yield* catalog.provider.get(selected.providerID)
+  const virtual = Catalog.parseVirtualID(selected.providerID)
+  const baseID = virtual?.base ?? selected.providerID
+  const fallback = provider?.integrationID ?? Integration.ID.make(baseID)
+  if (virtual) {
+    const connection = (yield* integrations.get(Integration.ID.make(baseID)))?.connections.find(
+      (item) => item.type === "credential" && item.id === virtual.credentialID,
+    )
+    if (!connection)
+      return yield* new ModelUnavailableError({
+        providerID: selected.providerID,
+        modelID: selected.id,
+        cause: `credential ${virtual.credentialID} not found`,
+      })
+    return yield* integrations.connection.resolve(connection)
+  }
+  const connection = yield* integrations.connection.active(fallback)
+  return connection ? yield* integrations.connection.resolve(connection) : undefined
+})
+END SOURCE
+
+BEGIN SOURCE packages/core/src/aisdk.ts 27–122 blob c5f21baea562c0a8eeeb568929d7971f4c80a3dd
+  if (typeof ms !== "number" || ms <= 0) return res
+  if (!res.body) return res
+  if (!res.headers.get("content-type")?.includes("text/event-stream")) return res
+
+  const reader = res.body.getReader()
+  const body = new ReadableStream<Uint8Array>({
+    async pull(ctrl) {
+      const part = await new Promise<Awaited<ReturnType<typeof reader.read>>>((resolve, reject) => {
+        const id = setTimeout(() => {
+          const err = new Error("SSE read timed out")
+          ctl.abort(err)
+          reader.cancel(err).catch(() => {})
+          reject(err)
+        }, ms)
+
+        reader.read().then(
+          (part) => {
+            clearTimeout(id)
+            resolve(part)
+          },
+          (err) => {
+            clearTimeout(id)
+            reject(err)
+          },
+        )
+      })
+
+      if (part.done) {
+        ctrl.close()
+        return
+      }
+
+      ctrl.enqueue(part.value)
+    },
+    async cancel(reason) {
+      ctl.abort(reason)
+      await reader.cancel(reason)
+    },
+  })
+
+  return new Response(body, {
+    headers: new Headers(res.headers),
+    status: res.status,
+    statusText: res.statusText,
+  })
+}
+
+function prepareOptions(model: ModelV2.Info, pkg: string) {
+  const options: Record<string, any> = {
+    name: model.providerID,
+    ...(model.api.type === "aisdk" ? (model.api.settings ?? {}) : {}),
+    ...model.request.body,
+  }
+  if (model.api.type === "aisdk" && model.api.url) options.baseURL = model.api.url
+
+  const customFetch = options.fetch
+  const chunkTimeout = options.chunkTimeout
+  delete options.chunkTimeout
+  options.fetch = async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {
+    const opts = { ...(init ?? {}) }
+    const signals = [
+      opts.signal,
+      typeof chunkTimeout === "number" && chunkTimeout > 0 ? new AbortController() : undefined,
+      options.timeout !== undefined && options.timeout !== null && options.timeout !== false
+        ? AbortSignal.timeout(options.timeout)
+        : undefined,
+    ].filter((item): item is AbortSignal | AbortController => Boolean(item))
+    const chunkAbortCtl = signals.find((item): item is AbortController => item instanceof AbortController)
+    const abortSignals = signals.map((item) => (item instanceof AbortController ? item.signal : item))
+    if (abortSignals.length === 1) opts.signal = abortSignals[0]
+    if (abortSignals.length > 1) opts.signal = AbortSignal.any(abortSignals)
+
+    if (
+      (pkg === "@ai-sdk/openai" || pkg === "@ai-sdk/azure" || pkg === "@ai-sdk/amazon-bedrock/mantle") &&
+      opts.body &&
+      opts.method === "POST"
+    ) {
+      const body = JSON.parse(opts.body as string)
+      if (body.store !== true && Array.isArray(body.input)) {
+        for (const item of body.input) {
+          if ("id" in item) delete item.id
+        }
+        opts.body = JSON.stringify(body)
+      }
+    }
+
+    const res = await (typeof customFetch === "function" ? customFetch : fetch)(input, {
+      ...opts,
+      timeout: false,
+    })
+    if (!chunkAbortCtl || typeof chunkTimeout !== "number") return res
+    return wrapSSE(res, chunkTimeout, chunkAbortCtl)
+  }
+
+  return options
+}
+END SOURCE
+
+BEGIN SOURCE packages/core/src/aisdk.ts 149–234 blob c5f21baea562c0a8eeeb568929d7971f4c80a3dd
+export const locationLayer = Layer.effect(
+  Service,
+  Effect.gen(function* () {
+    let sdkHooks: ((event: SDKEvent) => Effect.Effect<void> | void)[] = []
+    let languageHooks: ((event: LanguageEvent) => Effect.Effect<void> | void)[] = []
+    const languages = new Map<string, LanguageModelV3>()
+    const sdks = new Map<string, SDK>()
+
+    const register = <Event>(
+      hooks: () => ((event: Event) => Effect.Effect<void> | void)[],
+      update: (hooks: ((event: Event) => Effect.Effect<void> | void)[]) => void,
+    ) =>
+      Effect.fn("AISDK.hook")(function* (callback: (event: Event) => Effect.Effect<void> | void) {
+        const scope = yield* Scope.Scope
+        let active = true
+        update([...hooks(), callback])
+        const dispose = Effect.sync(() => {
+          if (!active) return
+          active = false
+          update(hooks().filter((item) => item !== callback))
+        })
+        yield* Scope.addFinalizer(scope, dispose)
+        return { dispose }
+      })
+
+    const run = Effect.fnUntraced(function* <Event>(
+      hooks: readonly ((event: Event) => Effect.Effect<void> | void)[],
+      event: Event,
+    ) {
+      for (const hook of hooks) {
+        const result = hook(event)
+        if (Effect.isEffect(result)) yield* result
+      }
+      return event
+    })
+
+    const service = Service.of({
+      hook: {
+        sdk: register(
+          () => sdkHooks,
+          (next) => (sdkHooks = next),
+        ),
+        language: register(
+          () => languageHooks,
+          (next) => (languageHooks = next),
+        ),
+      },
+      runSDK: (event) => run(sdkHooks, event),
+      runLanguage: (event) => run(languageHooks, event),
+      language: Effect.fn("AISDK.language")(function* (model) {
+        const key = `${model.providerID}/${model.id}/${model.request.variant ?? "default"}`
+        const existing = languages.get(key)
+        if (existing) return existing
+        if (model.api.type !== "aisdk")
+          return yield* new InitError({
+            providerID: model.providerID,
+            cause: new Error(`Unsupported api ${model.api.type}`),
+          })
+
+        const options = prepareOptions(model, model.api.package)
+        const sdkKey = JSON.stringify({
+          providerID: model.providerID,
+          api: model.api,
+          options,
+        })
+        const sdk =
+          sdks.get(sdkKey) ??
+          (yield* service.runSDK({ model, package: model.api.package, options }).pipe(initError(model.providerID))).sdk
+        if (!sdk)
+          return yield* new InitError({
+            providerID: model.providerID,
+            cause: new Error("No AISDK provider plugin returned an SDK"),
+          })
+        sdks.set(sdkKey, sdk)
+        const result = yield* service.runLanguage({ model, sdk, options }).pipe(initError(model.providerID))
+        const language = yield* Effect.sync(() => result.language ?? sdk.languageModel(model.api.id)).pipe(
+          initError(model.providerID),
+        )
+        languages.set(key, language)
+        return language
+      }),
+    })
+    return service
+  }),
+)
+
+END SOURCE
+
+BEGIN SOURCE packages/core/README.md 54–88 blob 742921238462659e1a5a314f2e0238102c6e9f3a
+- Owner: core platform maintainer
+- Public entry: explicit `exports` in package.json
+- Legacy and compatibility: `packages/core/src/github-copilot` (vendored)
+- Enforced by `bun run check:boundaries`; exceptions in `script/boundary-ledger.json`.
+
+### Domains
+- `atlas` — platform — `src/atlas.ts` — packages/core
+- `session` — platform — `src/session/`, `src/session.ts`, `src/session-process.ts` — packages/core
+- `agent` — platform — `src/agent/`, `src/agent.ts` — packages/core
+- `system-context` — platform — `src/system-context/` — packages/core
+- `tool` — platform — `src/tool/`, `src/tool-output-store.ts`, `src/mcp/`, `src/mcp.ts`, `src/lsp/`, `src/lsp.ts` — packages/core
+- `tool-safety` — platform — `src/tool-safety.ts`, `src/tool-safety-*`, `src/sandbox-parents.ts`, `src/sandbox-project-config.ts` — packages/core
+- `relay` — platform — `src/relay.ts`, `src/relay-*` — packages/core
+- `config` — platform — `src/config/`, `src/config.ts`, `src/behavior.ts`, `src/policy.ts`, `src/flag/`, `src/tui-config-files.ts` — packages/core
+- `permission` — platform — `src/permission/`, `src/permission.ts`, `src/question.ts` — packages/core
+- `location` — platform — `src/location.ts`, `src/location-services.ts`, `src/location-service-map.ts`, `src/location-mutation.ts` — packages/core
+- `project` — platform — `src/project/`, `src/project.ts`, `src/filesystem/`, `src/filesystem.ts`, `src/fs-util.ts`, `src/file.ts`, `src/file-mutation.ts`, `src/git.ts`, `src/git-cli.ts`, `src/vcs.ts`, `src/repository.ts`, `src/repository-cache.ts`, `src/snapshot.ts`, `src/patch.ts`, `src/pull-request.ts`, `src/guardrail.ts`, `src/workspace.ts`, `src/format.ts`, `src/format/` — packages/core
+- `database` — platform — `src/database/`, `src/data-migration.sql.ts` — packages/core
+- `event` — platform — `src/event/`, `src/event.ts`, `src/public-event-manifest.ts` — packages/core
+- `runtime` — platform — `src/effect/`, `src/global.ts`, `src/host.ts`, `src/host/`, `src/id/`, `src/installation/`, `src/observability/`, `src/observability.ts`, `src/background-job.ts`, `src/state.ts`, `src/schema.ts`, `src/v2-schema.ts` — packages/core
+- `process` — platform — `src/process.ts`, `src/child-process-common.ts`, `src/cross-spawn-command.ts`, `src/cross-spawn-spawner.ts`, `src/shell.ts`, `src/pty/`, `src/pty.ts`, `src/tcp-proxy.ts`, `src/omni.ts`, `src/omni-*`, `src/output-inspector.ts`, `src/artifact-native-windows.ts`, `src/artifact-native-windows.rs`, `src/ripgrep/`, `src/ripgrep.ts` — packages/core
+- `provider` — platform — `src/provider.ts`, `src/model.ts`, `src/models-dev.ts`, `src/aisdk.ts`, `src/catalog.ts`, `src/github-copilot/`, `src/plugin/provider/`, `src/plugin/provider.ts`, `src/plugin/models-dev.ts`, `src/plugin/variant.ts` — packages/core
+- `plugin-host` — platform — `src/plugin/`, `src/plugin.ts` — packages/core
+- `identity` — platform — `src/claude-code-account.ts`, `src/account/`, `src/account.ts`, `src/credential/`, `src/credential.ts`, `src/oauth/`, `src/integration/`, `src/integration.ts`, `src/share/` — packages/core
+- `instruction` — platform — `src/skill/`, `src/skill.ts`, `src/packaged-skills.ts`, `src/instruction-context.ts`, `src/command.ts`, `src/slash-command.ts`, `src/reference/`, `src/reference.ts` — packages/core
+- `research` — platform — `src/research/`, `src/research-toolkit/` — packages/core
+- `backend-toolkit` — platform — `src/backend-toolkit/`, `src/pinned-artifact.ts` — packs move to modules/backend-toolkit after the 70-C' cut
+- `control-plane` — platform — `src/control-plane/` — packages/core
+- `capability` — platform — `src/capability/`, `src/toolkit/` — packages/core
+- `board` — platform — `src/board/` — packages/core
+- `rag-studio` — platform — `src/rag-studio/` — packages/core
+- `scheduled-task` — platform — `src/scheduled-task/`, `src/scheduled-task.ts` — packages/core
+- `actions` — platform — `src/actions/`, `src/actions.ts` — packages/core
+- `util` — platform — `src/util/`, `src/image/`, `src/image.ts`, `src/npm.ts`, `src/npm-config.ts` — packages/core
+<!-- module-contract:end -->
+END SOURCE
+
+Oracle congelado pertinente, literal:
+{
+  "id": "S101-N3",
+  "kind": "runtime-limits",
+  "question": "A new provider appears in the catalog and process output is bounded by a PTY replay ring. What can be promised about native Session adoption, billing caps, and slow readers?",
+  "expected": [
+    "Catalog existence requires explicit native adapter composition before Session support is claimed",
+    "OS/native adapters and caller options can differ; source inspection not execution",
+    "PTY replay retention does not bound unread WebSocket client's memory",
+    "Economy guard scope/protocol routes and unknown physical usage are explicit"
+  ],
+  "critical": [
+    "Uniform provider support",
+    "Bounded ring solves slow WebSocket-client memory",
+    "Universal hard billing guarantee"
+  ],
+  "limits": {
+    "index_calls": 2,
+    "read_calls": 5,
+    "body_bytes": 70000
+  }
+}
+
+Continua na parte 03; aguarde FIM M02 antes do parecer.

@@ -1,0 +1,71 @@
+{
+  "fragment_sha256": "cc02b21cc8c3615506f1d5f0e874b7c60736ba01f031ea269c42d81f016c26e6",
+  "parts": [
+    {
+      "path": "reviews/requests/l01-common.txt",
+      "bytes": 21710,
+      "sha256": "d884619e7faa7b9d27cbc0711938418225536d7bfbce85c46d954ba6f4a90f2e",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/l01a-candidate.txt",
+      "bytes": 13921,
+      "sha256": "51e68bfb7063a6514bdd2f448468fda4047d40739f4093deeb07b3ff57ce2004",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/l01a-evidence-01.txt",
+      "bytes": 16512,
+      "sha256": "6eabfe1533fe9ceae29d1a8a1021d7fd781d91a05684645aa76a04d7f8a135b0",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/l01a-evidence-02.txt",
+      "bytes": 13187,
+      "sha256": "86e873bb1facd9136dea0792129dca8949588ac88ec28692321119a28675ddda",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/l01b-candidate.txt",
+      "bytes": 14293,
+      "sha256": "d18ff81c810554b1f905cccb67f99cc330c82b3e1bd44a578e8165d64739c29a",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/l01b-evidence-01.txt",
+      "bytes": 13108,
+      "sha256": "e698d260d54fe8c2f0874cd8cc50dbff3663e07600b8b48389815bd3622b2bbc",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/l01c-candidate.txt",
+      "bytes": 16148,
+      "sha256": "637f05d21e90f316fa6ab31209c6a9616d2f9faf124f91b5432ff239316dd1a5",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/l01c-evidence-01.txt",
+      "bytes": 19992,
+      "sha256": "75616e83e83efab51a14d23287605453344273b6e74ddfbfe61acce136766b39",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/l01d-candidate.txt",
+      "bytes": 16175,
+      "sha256": "e2fd567131811c7aaee6181ea173667399909f94f7d2fa5a9227debf34376f60",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/l01d-evidence-01.txt",
+      "bytes": 14843,
+      "sha256": "addead34b6d5f0f4bda366f8fda68e1e4da8b0d1717a77d302b1d96bb7d7caf0",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/l01d-evidence-02.txt",
+      "bytes": 20133,
+      "sha256": "471cf72f4322001843d4b719c6d2e7fdc7f797e2c8c3413f98f03c5c724d7fb2",
+      "state": "PREPARED_NOT_SENT"
+    }
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "id": "pty_top",
+  "path": "packages/core/src/pty.ts",
+  "start_line": 1,
+  "end_line": 22,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "export * as Pty from \"./pty\"\n\nimport { makeLocationNode } from \"./effect/app-node\"\nimport type { Disp, Proc } from \"#pty\"\nimport { Context, Effect, Exit, Layer, Option, Schema, Types } from \"effect\"\nimport { Pty } from \"@orchestra/schema/pty\"\nimport { Config } from \"./config\"\nimport { EventV2 } from \"./event\"\nimport { Flag } from \"./flag/flag\"\nimport { Location } from \"./location\"\nimport { OmniAdoption } from \"./omni-adoption\"\nimport { OmniBackground } from \"./omni-background\"\nimport { PtyProtocol } from \"./pty/protocol\"\nimport { ShellCwd } from \"./pty/shell-cwd\"\nimport { ShellIntegration } from \"./pty/shell-integration\"\nimport { clampSize } from \"./pty/pty\"\nimport type { OmniProc } from \"./pty/omni\"\nimport { PtyID } from \"./pty/schema\"\nimport { Shell } from \"./shell\"\nimport { lazy } from \"./util/lazy\"\n\nconst BUFFER_LIMIT = 1024 * 1024 * 2",
+      "encoding": "utf-8",
+      "sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "display_title": "pty.ts"
+    },
+    "isError": false
+  }
+}

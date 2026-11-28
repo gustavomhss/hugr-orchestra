@@ -1,0 +1,22 @@
+{
+  "id": "pty_pending",
+  "path": "packages/core/src/pty.ts",
+  "start_line": 271,
+  "end_line": 329,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "        (yield* Effect.gen(function* () {\n          const { spawn } = yield* Effect.promise(() => pty())\n          // A short command can exit right after spawn, and the backends only notify listeners attached when an event\n          // fires (bun-pty 0.4.9 starts reading on a microtask; 0.4.8 read inside spawn and dropped such exits). Attach\n          // onData and onExit below without an async step in between, or the session never leaves \"running\".\n          return yield* Effect.sync(() => spawn(command, args, { name: \"xterm-256color\", cwd, env, ...size }))\n        }))\n      const info: Info = {\n        id,\n        title: input.title || `Terminal ${id.slice(-4)}`,\n        command,\n        args,\n        cwd,\n        status: \"running\",\n        pid: proc.pid,\n      }\n      const announcements = ShellCwd.parser()\n      const session: Active = {\n        info,\n        process: proc,\n        buffer: \"\",\n        bufferCursor: 0,\n        cursor: 0,\n        size: { cols: size.cols ?? 80, rows: size.rows ?? 24 },\n        ...(integration ? { shellNonce: integration.nonce } : {}),\n        subscribers: new Map(),\n        listeners: [],\n        ...(omni ? { omni } : {}),\n      }\n      sessions.set(id, session)\n      session.listeners.push(\n        proc.onData((chunk) => {\n          session.cursor += chunk.length\n          // The shell's own report of where it is, so a new terminal can start there. Info.cwd follows it.\n          const announced = announcements.push(chunk)\n          if (announced) session.info.cwd = announced\n          options?.observe?.onData(chunk)\n          for (const [token, subscriber] of session.subscribers.entries()) {\n            if (!subscriber.active) {\n              subscriber.pending.push(chunk)\n              continue\n            }\n            try {\n              subscriber.onData(chunk)\n            } catch {\n              session.subscribers.delete(token)\n            }\n          }\n          session.buffer += chunk\n          if (session.buffer.length <= BUFFER_LIMIT) return\n          // Never keep half of a surrogate pair at the start of the ring.\n          const excess = PtyProtocol.cut(session.buffer, session.buffer.length - BUFFER_LIMIT)\n          session.buffer = session.buffer.slice(excess)\n          session.bufferCursor += excess\n        }),\n        proc.onExit(({ exitCode }) => {\n          if (session.info.status === \"exited\") return\n          session.info.status = \"exited\"\n          session.info.exitCode = exitCode",
+      "encoding": "utf-8",
+      "sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "display_title": "pty.ts"
+    },
+    "isError": false
+  }
+}

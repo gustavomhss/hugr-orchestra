@@ -1,0 +1,119 @@
+{
+  "body_sha256": "c1b2e02eca65e7de23d8302c92a5b3f1e0b3670efbbb8318e215e4f956521f20",
+  "reused_exact_sources_from": [
+    "E01 economy",
+    "M02 models",
+    "R01 runtime"
+  ],
+  "new_original_excerpt_ids": [
+    "E02",
+    "E03",
+    "E04",
+    "E06",
+    "E08",
+    "E12",
+    "E13",
+    "E14",
+    "E15",
+    "E16",
+    "E17",
+    "E18",
+    "E19",
+    "E20",
+    "E21",
+    "E22",
+    "E23",
+    "E25",
+    "E26",
+    "E29",
+    "E30",
+    "E31",
+    "E32",
+    "E35",
+    "E36",
+    "E37",
+    "E38",
+    "E39",
+    "E40",
+    "E41",
+    "E42",
+    "E43",
+    "E44",
+    "E45",
+    "E47",
+    "E48",
+    "E49",
+    "E50",
+    "E51",
+    "E52",
+    "E53",
+    "E55",
+    "E57",
+    "E58",
+    "E60",
+    "E61",
+    "E62",
+    "E63",
+    "E64",
+    "E65",
+    "E66",
+    "E67",
+    "E68"
+  ],
+  "parts": [
+    {
+      "path": "reviews/requests/c01-part-01.txt",
+      "bytes": 19631,
+      "sha256": "9b8909374066f271480082bbd724af62b36a3813281427f38a526504e4c8bb7d",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/c01-part-02.txt",
+      "bytes": 16937,
+      "sha256": "20c42412be2375b9c4ccc65c1ab4a83d2338cec68403824d75c05ca49ef5b534",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/c01-part-03.txt",
+      "bytes": 15734,
+      "sha256": "93469fb6567dd24bf0dff4136ce0ccff458014cef495b4298fe605f83eaa9e80",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/c01-part-04.txt",
+      "bytes": 24001,
+      "sha256": "1385bb6978b4c9c6d3d441b7ce630ac7174be34cdef286422e65b48b4db7614a",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/c01-part-05.txt",
+      "bytes": 22035,
+      "sha256": "34863a470e577d5a0a8af45efb8af5d9e847de1eb0da14ded8809e25e11b1e10",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/c01-part-06.txt",
+      "bytes": 23162,
+      "sha256": "1990dc742cff94e7e4a31f084410df117b8486040b6f34439d96232b005c01d2",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/c01-part-07.txt",
+      "bytes": 23264,
+      "sha256": "075ce1a04070da682f245605fe9e104790a13f203bb8e0230fa4bd86db88808d",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/c01-part-08.txt",
+      "bytes": 21746,
+      "sha256": "534706530a170c7c93717a1ddb8e1bbebd3ff62a2b83e5d0a92a20e735a5b9a0",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/c01-part-09.txt",
+      "bytes": 11483,
+      "sha256": "137ec281a5e332042067ec3616e8b3bfa2147e99e2594b05dbb30f89d96ceaca",
+      "state": "PREPARED_NOT_SENT"
+    }
+  ]
+}

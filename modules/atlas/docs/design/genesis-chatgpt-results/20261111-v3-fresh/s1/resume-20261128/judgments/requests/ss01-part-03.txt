@@ -1,0 +1,488 @@
+SS01 — fontes literais, parte 03; mesmo pin/corpo.
+
+## New decisive source excerpts
+
+All paths below are under `packages/core/src/` unless written with an explicit `packages/` or `docs/` prefix. Original source line numbers are retained; blank lines omitted. Hashes and original bytes are separately preserved in capture/excerpt manifests.
+
+### packages/core/src/session/projector.ts
+```text
+101:           }
+102:           if (legacy) {
+103:             const author = Schema.decodeUnknownSync(SessionLegacyTranscript.Info)({ ...legacy.data, id: legacy.id, sessionID: legacy.session_id })
+104:             if (legacy.session_id !== child.id || author.role !== "assistant" || author.agent !== child.agent || author.time.completed === undefined) return false
+105:           }
+106:           // Replay origin is supplied only by EventV2's internal commit path, never event payload or metadata.
+107:           const location = replay ? fromRow(parent).location : input.location
+108:           return location?.directory === parent.directory && (location?.workspaceID ?? null) === parent.workspace_id
+109:         })
+110:       },
+111:       getCurrentAssistant() {
+112:         return Effect.gen(function* () {
+113:           // A newer turn supersedes stale incomplete rows; never resume an older assistant projection.
+114:           const row = yield* db
+115:             .select()
+116:             .from(SessionMessageTable)
+117:             .where(
+118:               and(eq(SessionMessageTable.session_id, event.data.sessionID), eq(SessionMessageTable.type, "assistant")),
+119:             )
+120:             .orderBy(desc(SessionMessageTable.seq))
+121:             .limit(1)
+122:             .get()
+123:             .pipe(Effect.orDie)
+124:           if (!row) return
+125:           const message = decodeRow(row)
+126:           return message.type === "assistant" && !message.time.completed ? message : undefined
+127:         })
+128:       },
+129:       getAssistant(messageID) {
+130:         return Effect.gen(function* () {
+131:           const row = yield* db
+132:             .select()
+133:             .from(SessionMessageTable)
+134:             .where(
+135:               and(
+136:                 eq(SessionMessageTable.id, messageID),
+137:                 eq(SessionMessageTable.session_id, event.data.sessionID),
+138:                 eq(SessionMessageTable.type, "assistant"),
+139:               ),
+140:             )
+141:             .get()
+142:             .pipe(Effect.orDie)
+143:           if (!row) return
+144:           const message = decodeRow(row)
+145:           return message.type === "assistant" ? message : undefined
+… omitted original lines …
+170: function insertMessage(db: DatabaseService, event: SessionEvent.Event, message: SessionMessage.Message) {
+171:   if (event.durable === undefined) return Effect.die("Durable Session event is missing aggregate sequence")
+172:   const encoded = encodeMessage(message)
+173:   const { id, type, ...data } = encoded
+174:   return db
+175:     .insert(SessionMessageTable)
+176:     .values({
+177:       id: SessionMessage.ID.make(id),
+178:       session_id: event.data.sessionID,
+179:       type,
+180:       seq: event.durable.seq,
+181:       time_created: DateTime.toEpochMillis(message.time.created),
+182:       data,
+183:     })
+184:     .run()
+185:     .pipe(Effect.orDie)
+… omitted original lines …
+237:     yield* events.project(SessionEvent.Moved, (event) =>
+238:       Effect.gen(function* () {
+239:         yield* db
+240:           .update(SessionTable)
+241:           .set({
+242:             directory: event.data.location.directory,
+243:             path: event.data.subdirectory,
+244:             workspace_id: event.data.location.workspaceID ? WorkspaceV2.ID.make(event.data.location.workspaceID) : null,
+245:             time_updated: DateTime.toEpochMillis(event.data.timestamp),
+246:           })
+247:           .where(eq(SessionTable.id, event.data.sessionID))
+248:           .run()
+249:           .pipe(Effect.orDie)
+250:       }),
+… omitted original lines …
+283:     yield* events.project(SessionEvent.Prompted, (event) =>
+284:       Effect.gen(function* () {
+285:         if (event.durable === undefined) return yield* Effect.die("Durable Session event is missing aggregate sequence")
+286:         yield* SessionInput.projectPrompted(db, {
+287:           id: event.data.messageID,
+288:           sessionID: event.data.sessionID,
+289:           prompt: event.data.prompt,
+290:           promptContext: event.data.promptContext,
+291:           delivery: event.data.delivery,
+292:           timeCreated: event.data.timestamp,
+293:           promotedSeq: event.durable.seq,
+294:         })
+295:         yield* run(db, event)
+296:       }),
+297:     )
+298:     yield* events.project(SessionEvent.PromptAdmitted, (event) =>
+299:       Effect.gen(function* () {
+300:         if (event.durable === undefined) return yield* Effect.die("Durable Session event is missing aggregate sequence")
+301:         yield* SessionInput.projectAdmitted(db, {
+302:           admittedSeq: event.durable.seq,
+303:           id: event.data.messageID,
+304:           sessionID: event.data.sessionID,
+305:           prompt: event.data.prompt,
+306:           promptContext: event.data.promptContext,
+307:           delivery: event.data.delivery,
+308:           timeCreated: event.data.timestamp,
+309:         })
+310:       }),
+311:     )
+312:     yield* events.project(SessionEvent.ContextUpdated, (event) => run(db, event))
+313:     yield* events.project(SessionEvent.Synthetic, (event) => run(db, event))
+314:     yield* events.project(SessionEvent.Shell.Started, (event) => run(db, event))
+315:     yield* events.project(SessionEvent.Shell.Ended, (event) => run(db, event))
+316:     yield* events.project(SessionEvent.Step.Started, (event) => run(db, event))
+317:     yield* events.project(SessionEvent.Step.Ended, (event) => run(db, event))
+318:     yield* events.project(SessionEvent.Step.Failed, (event) => run(db, event))
+319:     yield* events.project(SessionEvent.Text.Started, (event) => run(db, event))
+320:     yield* events.project(SessionEvent.Text.Ended, (event) => run(db, event))
+321:     yield* events.project(SessionEvent.Tool.Input.Started, (event) => run(db, event))
+322:     yield* events.project(SessionEvent.Tool.Input.Ended, (event) => run(db, event))
+323:     yield* events.project(SessionEvent.Tool.Called, (event) => run(db, event))
+324:     yield* events.project(SessionEvent.Tool.Progress, (event, origin) => run(db, event, origin.replay))
+325:     yield* events.project(SessionEvent.Tool.Success, (event) => run(db, event))
+326:     yield* events.project(SessionEvent.Tool.Failed, (event) => run(db, event))
+327:     yield* events.project(SessionEvent.Reasoning.Started, (event) => run(db, event))
+328:     yield* events.project(SessionEvent.Reasoning.Ended, (event) => run(db, event))
+329:     // yield* events.project(SessionEvent.Retried, (event) => run(db, event))
+330:     yield* events.project(SessionEvent.Compaction.Ended, (event) => run(db, event))
+331:     yield* events.project(SessionEvent.RevertEvent.Staged, (event) =>
+… omitted original lines …
+350:     yield* events.project(SessionEvent.RevertEvent.Committed, (event) =>
+351:       Effect.gen(function* () {
+352:         const boundary = yield* db
+353:           .select({ seq: SessionMessageTable.seq })
+354:           .from(SessionMessageTable)
+355:           .where(
+356:             and(
+357:               eq(SessionMessageTable.session_id, event.data.sessionID),
+358:               eq(SessionMessageTable.id, event.data.messageID),
+359:             ),
+360:           )
+361:           .get()
+362:           .pipe(Effect.orDie)
+363:         if (!boundary) return yield* Effect.die(`Revert boundary message not found: ${event.data.messageID}`)
+364:         yield* db
+365:           .delete(SessionMessageTable)
+366:           .where(
+367:             and(eq(SessionMessageTable.session_id, event.data.sessionID), gt(SessionMessageTable.seq, boundary.seq)),
+368:           )
+369:           .run()
+370:           .pipe(Effect.orDie)
+371:         yield* db
+372:           .delete(SessionInputTable)
+373:           .where(
+374:             and(
+375:               eq(SessionInputTable.session_id, event.data.sessionID),
+376:               or(gt(SessionInputTable.admitted_seq, boundary.seq), gt(SessionInputTable.promoted_seq, boundary.seq)),
+377:             ),
+378:           )
+379:           .run()
+380:           .pipe(Effect.orDie)
+381:         yield* db
+382:           .update(SessionTable)
+383:           .set({ revert: null, time_updated: DateTime.toEpochMillis(event.data.timestamp) })
+384:           .where(eq(SessionTable.id, event.data.sessionID))
+385:           .run()
+386:           .pipe(Effect.orDie)
+387:       }),
+```
+
+### packages/core/src/session/message-updater.ts
+```text
+208:   const updateOwnedAssistant = (messageID: SessionMessage.ID, recipe: (draft: DraftAssistant) => void) =>
+209:     Effect.gen(function* () {
+210:       const assistant = yield* adapter.getAssistant(messageID)
+211:       if (assistant) yield* adapter.updateAssistant(produce(assistant, recipe))
+212:     })
+… omitted original lines …
+346:       "session.next.step.failed": (event) => {
+347:         return updateOwnedAssistant(event.data.assistantMessageID, (draft) => {
+348:           draft.time.completed = event.data.timestamp
+349:           draft.finish = "error"
+350:           draft.error = event.data.error
+351:         })
+352:       },
+353:       "session.next.text.started": (event) => {
+354:         return updateOwnedAssistant(event.data.assistantMessageID, (draft) => {
+355:           draft.content.push(
+356:             castDraft(SessionMessage.AssistantText.make({ type: "text", id: event.data.textID, text: "" })),
+357:           )
+358:         })
+359:       },
+360:       "session.next.text.delta": (event) => {
+361:         return updateOwnedAssistant(event.data.assistantMessageID, (draft) => {
+362:           const match = latestText(draft, event.data.textID)
+363:           if (match) match.text += event.data.delta
+364:         })
+365:       },
+366:       "session.next.text.ended": (event) => {
+367:         return updateOwnedAssistant(event.data.assistantMessageID, (draft) => {
+368:           const match = latestText(draft, event.data.textID)
+369:           if (match) match.text = event.data.text
+370:         })
+```
+
+### packages/core/src/session/archive.ts
+```text
+18: export const set = Effect.fn("SessionArchive.set")(function* (
+19:   _db: Database.Interface["db"],
+20:   events: EventV2.Interface,
+21:   input: { readonly sessionID: SessionSchema.ID; readonly archived: boolean },
+22: ) {
+23:   const timestamp = yield* DateTime.now
+24:   // EventV2 owns the write transaction and notifies only after COMMIT; the projector decides local no-ops atomically.
+25:   return yield* events
+26:     .publish(SessionEvent.ArchiveChanged, {
+27:       sessionID: input.sessionID,
+28:       timestamp,
+29:       archived: input.archived ? timestamp : null,
+30:     })
+31:     .pipe(
+32:       Effect.as(true),
+33:       Effect.catchDefect((defect) => {
+34:         if (defect instanceof Unchanged) return Effect.succeed(true)
+35:         if (defect instanceof NotFound) return Effect.succeed(false)
+36:         return Effect.die(defect)
+37:       }),
+38:     )
+… omitted original lines …
+41: /** Visibility is a SQL predicate, applied before pagination rather than trimming projected pages. */
+42: export const list = Effect.fn("SessionArchive.list")(function* (db: Database.Interface["db"], input: ListInput = {}) {
+43:   const direction = input.anchor?.direction ?? "next"
+44:   const requestedOrder = input.order ?? "desc"
+45:   const order = direction === "previous" ? (requestedOrder === "asc" ? "desc" : "asc") : requestedOrder
+46:   const sortColumn = SessionTable.time_created
+47:   const conditions: Array<SQL | undefined> = []
+48:   if (!input.includeArchived) conditions.push(isNull(SessionTable.time_archived))
+49:   if ("directory" in input) conditions.push(eq(SessionTable.directory, input.directory))
+50:   if (input.workspaceID) conditions.push(eq(SessionTable.workspace_id, input.workspaceID))
+51:   if ("project" in input) {
+52:     conditions.push(eq(SessionTable.project_id, input.project))
+53:     if (input.subpath)
+54:       conditions.push(
+55:         or(
+56:           eq(SessionTable.path, input.subpath),
+57:           sql`substr(${SessionTable.path}, 1, ${input.subpath.length + 1}) = ${`${input.subpath}/`}`,
+58:         ),
+59:       )
+60:   }
+61:   if (input.search) conditions.push(like(SessionTable.title, `%${input.search}%`))
+62:   if (input.anchor)
+63:     conditions.push(
+64:       order === "asc"
+65:         ? or(
+66:             gt(sortColumn, input.anchor.time),
+67:             and(eq(sortColumn, input.anchor.time), gt(SessionTable.id, input.anchor.id)),
+68:           )
+69:         : or(
+70:             lt(sortColumn, input.anchor.time),
+71:             and(eq(sortColumn, input.anchor.time), lt(SessionTable.id, input.anchor.id)),
+72:           ),
+73:     )
+74:   const query = db
+75:     .select()
+76:     .from(SessionTable)
+77:     .where(and(...conditions))
+78:     .orderBy(
+79:       order === "asc" ? asc(sortColumn) : desc(sortColumn),
+80:       order === "asc" ? asc(SessionTable.id) : desc(SessionTable.id),
+81:     )
+82:   const rows = yield* (input.limit === undefined ? query.all() : query.limit(input.limit).all()).pipe(Effect.orDie)
+83:   return (direction === "previous" ? rows.toReversed() : rows).map(fromRow)
+… omitted original lines …
+90:     yield* events.project(SessionEvent.ArchiveChanged, (event, origin) =>
+91:       Effect.gen(function* () {
+92:         const row = yield* database.db
+93:           .select({ archived: SessionTable.time_archived })
+94:           .from(SessionTable)
+95:           .where(eq(SessionTable.id, event.data.sessionID))
+96:           .get()
+97:           .pipe(Effect.orDie)
+98:         if (!row) return yield* Effect.die(new NotFound())
+99:         // Replay is authoritative even when the boolean state matches: retain its timestamp, sequence and seal.
+100:         if (!origin.replay && (row.archived !== null) === (event.data.archived !== null))
+101:           return yield* Effect.die(new Unchanged())
+102:         const updated = yield* database.db
+103:           .update(SessionTable)
+104:           .set({
+105:             time_archived: event.data.archived === null ? null : DateTime.toEpochMillis(event.data.archived),
+106:             time_updated: DateTime.toEpochMillis(event.data.timestamp),
+107:           })
+108:           .where(eq(SessionTable.id, event.data.sessionID))
+109:           .returning({ id: SessionTable.id })
+110:           .get()
+111:           .pipe(Effect.orDie)
+112:         if (!updated) return yield* Effect.die(new NotFound())
+113:       }),
+```
+
+### packages/core/src/session/lifecycle.ts
+```text
+29: })
+31: /** Deletes the Session and its children. Messages, parts and inputs cascade with the row. Returns false when missing. */
+32: export const remove: (
+33:   db: Database.Interface["db"],
+34:   events: EventV2.Interface,
+35:   sessionID: SessionSchema.ID,
+36: ) => Effect.Effect<boolean> = Effect.fn("SessionLifecycle.remove")(function* (db, events, sessionID) {
+37:   if (!(yield* exists(db, sessionID))) return false
+38:   const children = yield* db
+39:     .select({ id: SessionTable.id })
+40:     .from(SessionTable)
+41:     .where(eq(SessionTable.parent_id, sessionID))
+42:     .all()
+43:     .pipe(Effect.orDie)
+44:   yield* Effect.forEach(children, (child) => remove(db, events, child.id), { discard: true })
+45:   yield* events.publish(SessionEvent.Deleted, { sessionID, timestamp: yield* DateTime.now })
+46:   yield* events.remove(sessionID)
+47:   return true
+48: })
+50: function exists(db: Database.Interface["db"], sessionID: SessionSchema.ID) {
+51:   return db
+52:     .select({ id: SessionTable.id })
+53:     .from(SessionTable)
+54:     .where(eq(SessionTable.id, sessionID))
+55:     .get()
+56:     .pipe(
+57:       Effect.orDie,
+58:       Effect.map((row) => row !== undefined),
+59:     )
+60: }
+```
+
+### packages/core/src/session.ts
+```text
+519:       fork: Effect.fn("V2Session.fork")(function* (input) {
+520:         const source = yield* result.get(input.sessionID)
+521:         const rows = yield* db
+522:           .select()
+523:           .from(SessionMessageTable)
+524:           .where(eq(SessionMessageTable.session_id, source.id))
+525:           .orderBy(asc(SessionMessageTable.seq))
+526:           .all()
+527:           .pipe(Effect.orDie)
+528:         const target = input.messageID ? rows.findIndex((row) => row.id === input.messageID) : rows.length
+529:         if (target < 0) return yield* new MessageNotFoundError({ sessionID: source.id, messageID: input.messageID! })
+530:         const reverted = source.revert ? rows.findIndex((row) => row.id === source.revert?.messageID) : -1
+531:         const kept = rows.slice(0, reverted < 0 ? target : Math.min(target, reverted))
+532:         const forked = yield* result.create({ location: source.location, agent: source.agent, model: source.model })
+533:         yield* SessionLifecycle.rename(db, events, { sessionID: forked.id, title: forkedTitle(source.title) })
+534:         // As the legacy import does: copied rows take negative sequences below every event the fork will project.
+535:         yield* db
+536:           .transaction(
+537:             () =>
+538:               Effect.forEach(
+539:                 kept,
+540:                 (row, index) =>
+541:                   decode(row).pipe(
+542:                     Effect.orDie,
+543:                     Effect.flatMap((message) => {
+544:                       const { id, type, ...data } = encodeMessage({
+545:                         ...message,
+546:                         id: SessionMessage.ID.create(),
+547:                         ...(message.type === "synthetic" ? { sessionID: forked.id } : {}),
+548:                       })
+549:                       return db
+550:                         .insert(SessionMessageTable)
+551:                         .values({
+552:                           id: SessionMessage.ID.make(id),
+553:                           session_id: forked.id,
+554:                           type,
+555:                           seq: index - kept.length,
+556:                           time_created: row.time_created,
+557:                           data,
+558:                         })
+559:                         .run()
+560:                     }),
+561:                   ),
+562:                 { discard: true },
+563:               ),
+564:             { behavior: "immediate" },
+565:           )
+566:           .pipe(Effect.orDie)
+567:         return yield* result.get(forked.id)
+568:       }),
+569:       move: Effect.fn("V2Session.move")(function* (input) {
+570:         const session = yield* result.get(input.sessionID)
+571:         const project = yield* projects.resolve(input.location.directory)
+572:         if (project.id !== session.projectID)
+573:           return yield* new MoveError({ sessionID: session.id, directory: input.location.directory })
+574:         const subdirectory = path.relative(project.directory, input.location.directory).replaceAll("\\", "/")
+575:         yield* exclusive(
+576:           session,
+577:           Effect.gen(function* () {
+578:             yield* events.publish(
+579:               SessionEvent.Moved,
+580:               {
+581:                 sessionID: session.id,
+582:                 timestamp: yield* DateTime.now,
+583:                 location: input.location,
+584:                 ...(subdirectory ? { subdirectory: RelativePath.make(subdirectory) } : {}),
+585:               },
+586:               { location: input.location },
+587:             )
+588:           }),
+589:         )
+590:       }),
+… omitted original lines …
+625:       generate: Effect.fn("V2Session.generate")(function* (input) {
+626:         const session = yield* result.get(input.sessionID)
+627:         return yield* runner(session, (runner) => runner.generate({ sessionID: session.id, prompt: input.prompt })).pipe(
+628:           Effect.mapError((error) => new RunFailedError({ sessionID: session.id, message: messageOf(error) })),
+629:         )
+630:       }),
+```
+
+### packages/core/src/session/revert.ts
+```text
+112: export const stage = Effect.fn("SessionRevert.stage")(function* (input: {
+113:   readonly session: SessionSchema.Info
+114:   readonly messageID: SessionMessage.ID
+115:   readonly files?: boolean
+116: }) {
+117:   const snapshot = yield* Snapshot.Service
+118:   const events = yield* EventV2.Service
+119:   const original = input.session.revert?.snapshot
+120:     ? Snapshot.ID.make(input.session.revert.snapshot)
+121:     : yield* snapshot.capture()
+122:   const next = yield* plan({ sessionID: input.session.id, messageID: input.messageID })
+123:   const restore = new Map<RelativePath, Snapshot.ID>()
+124:   if (original) {
+125:     for (const file of input.session.revert?.files ?? []) restore.set(file.path, original)
+126:   }
+127:   if (input.files !== false) for (const [file, tree] of next) restore.set(file, tree)
+128:   if (restore.size) yield* snapshot.restore({ files: restore })
+129:   const paths = input.files === false ? [] : Array.from(next.keys())
+130:   const files = original
+131:     ? yield* snapshot.diff({ from: original, to: (yield* snapshot.capture()) ?? original, paths })
+132:     : []
+133:   const revert = {
+134:     messageID: input.messageID,
+135:     snapshot: original,
+136:     diff: files
+137:       .map((file) => file.patch)
+138:       .join("")
+139:       .trim(),
+140:     files,
+141:   } satisfies SessionSchema.Info["revert"]
+142:   yield* events.publish(SessionEvent.RevertEvent.Staged, {
+143:     sessionID: input.session.id,
+144:     timestamp: yield* DateTime.now,
+145:     revert,
+146:   })
+147:   return revert
+148: })
+150: export const clear = Effect.fn("SessionRevert.clear")(function* (session: SessionSchema.Info) {
+151:   if (!session.revert) return
+152:   const snapshot = yield* Snapshot.Service
+153:   const original = session.revert.snapshot ? Snapshot.ID.make(session.revert.snapshot) : undefined
+154:   if (original)
+155:     yield* snapshot.restore({
+156:       files: new Map((session.revert.files ?? []).map((file) => [file.path, original])),
+157:     })
+158:   const events = yield* EventV2.Service
+159:   yield* events.publish(SessionEvent.RevertEvent.Cleared, {
+160:     sessionID: session.id,
+161:     timestamp: yield* DateTime.now,
+162:   })
+163: })
+165: export const commit = Effect.fn("SessionRevert.commit")(function* (session: SessionSchema.Info) {
+166:   if (!session.revert) return
+167:   const events = yield* EventV2.Service
+168:   yield* events.publish(SessionEvent.RevertEvent.Committed, {
+169:     sessionID: session.id,
+170:     messageID: session.revert.messageID,
+171:     timestamp: yield* DateTime.now,
+172:   })
+173: })
+```
+
+
+Aguarde a disposição e FIM SS01.

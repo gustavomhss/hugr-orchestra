@@ -1,0 +1,22 @@
+{
+  "id": "process_options",
+  "path": "packages/core/src/process.ts",
+  "start_line": 25,
+  "end_line": 65,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "export interface RunOptions {\n  /** Optional producer-owned hook; runs on raw chunks before capture limits. */\n  readonly inspect?: (chunk: Uint8Array) => void\n  readonly combineOutput?: boolean\n  readonly maxOutputBytes?: number\n  readonly maxErrorBytes?: number\n  readonly signal?: AbortSignal\n  readonly timeout?: Duration.Input\n  /**\n   * Memory cap for the whole process tree in resident bytes. Under omni the tree is killed above it and the call fails\n   * with `OmniSpawner.MemoryExceeded` as the cause; the legacy spawner does not enforce it.\n   */\n  readonly maxRssBytes?: number\n  readonly stdin?: string | Uint8Array | Stream.Stream<Uint8Array, PlatformError>\n}\n\nexport interface RunStreamOptions {\n  readonly signal?: AbortSignal\n  readonly includeStderr?: boolean\n  readonly okExitCodes?: ReadonlyArray<number>\n  readonly maxErrorBytes?: number\n}\n\nexport interface RunResult {\n  readonly command: string\n  readonly exitCode: number\n  readonly output?: Buffer\n  readonly stdout: Buffer\n  readonly stderr: Buffer\n  readonly outputTruncated?: boolean\n  readonly stdoutTruncated: boolean\n  readonly stderrTruncated: boolean\n}\n\nexport type Interface = ChildProcessSpawner[\"Service\"] & {\n  readonly run: (command: ChildProcess.Command, options?: RunOptions) => Effect.Effect<RunResult, AppProcessError>\n  readonly runStream: (\n    command: ChildProcess.Command,\n    options?: RunStreamOptions,\n  ) => Stream.Stream<string, AppProcessError>\n}",
+      "encoding": "utf-8",
+      "sha": "a2c29d4a18c44ff407e6055b27830fade5d43f20",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/process.ts",
+      "display_title": "process.ts"
+    },
+    "isError": false
+  }
+}

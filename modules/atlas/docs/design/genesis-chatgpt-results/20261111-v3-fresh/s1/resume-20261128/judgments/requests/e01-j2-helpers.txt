@@ -1,0 +1,56 @@
+E01 — definições auxiliares literais. Mesmo corpo s1.core.economy SHA256 74a59d062ae560dc633abd7561b1a763a7a9982db587d5c0076b8fc8f4a9b6bf. Fonte GitHub MCP no pin 1cde2ff7a71bcf7aecb5d030917b577165135d38, packages/core/src/economy/admission.ts, blob 914a0b925dd282e264292b2247189c549c993a3f.
+
+BEGIN SOURCE
+155: export type AttemptOutcome = {
+156:   readonly kind: "economy-grant"
+157:   readonly attempt: AttemptId
+158:   readonly key: string
+159:   readonly consumable: boolean
+160:   readonly completionRef?: string
+161: } | {
+162:   readonly kind: "economy-hold"
+163:   readonly reason: EconomyHold["reason"]
+164:   readonly evidence: readonly string[]
+165: } | {
+166:   readonly kind: "economy-settled"
+167:   readonly attempt: AttemptId
+168:   readonly capacityBreach?: boolean
+169: } | {
+170:   readonly kind: "economy-refusal"
+171:   readonly reason: EconomyRefusalReason
+172:   readonly evidence: readonly string[]
+173: }
+174: 
+175: const grant = (attempt: AttemptId, key: string, consumable: boolean, completionRef?: string): AttemptOutcome =>
+176:   ({ kind: "economy-grant", attempt, key, consumable, ...(completionRef === undefined ? {} : { completionRef }) })
+END SOURCE
+
+BEGIN SOURCE
+287: const policyDigest = (envelope: EconomyEnvelope) => `${envelope.scope}:${envelope.provider}:${envelope.model}:${envelope.route}`
+288: 
+289: interface EnvelopeRow {
+290:   envelope_id: string
+291:   authority_id: string
+292:   storage_id: string
+293:   policy_digest: string
+294:   scope: string
+295:   provider: string
+296:   model: string
+297:   route: string
+298:   stages_json: string
+299:   limits_json: string
+300:   retry_json: string
+301:   blocked: number
+302: }
+303: 
+304: const envelopeMatches = (row: EnvelopeRow, storageID: string, envelope: EconomyEnvelope): boolean =>
+305:   row.authority_id === envelope.authorityId && row.storage_id === storageID &&
+306:   row.policy_digest === policyDigest(envelope) &&
+307:   row.scope === envelope.scope && row.provider === envelope.provider && row.model === envelope.model &&
+308:   row.route === envelope.route &&
+309:   row.stages_json === JSON.stringify(envelope.stages) &&
+310:   row.limits_json === JSON.stringify(envelope.limits) &&
+311:   row.retry_json === JSON.stringify(envelope.retryPolicy)
+END SOURCE
+
+Os ramos de reserva/terminal/settlement/recuperação virão na próxima mensagem. Aguarde FIM E01 antes do parecer.

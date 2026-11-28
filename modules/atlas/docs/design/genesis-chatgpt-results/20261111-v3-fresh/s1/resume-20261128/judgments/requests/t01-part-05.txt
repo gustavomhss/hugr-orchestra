@@ -1,0 +1,538 @@
+T01 — contrato público, oracle congelado e lacunas/disposições originais. Não promovem inventário/metadata a aceite.
+
+BEGIN PUBLIC CONTRACT
+{
+  "schema": "genesis-s1-02-evaluation/v1",
+  "execution_id": "facc2a57-5e94-4cea-92bd-49b1dd218cb4",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "public_bar": [
+    "Trace each substantive behavioral assertion to exact pinned evidence; separate intent, observed implementation and unexecuted claims.",
+    "Reconcile all 424 assigned sources by meaningful need and depth without treating a census as understanding.",
+    "Close the specific leaf-reading gaps, capture provenance and independently review every required artifact.",
+    "Use only accepted required predecessors for L2, then L3, then L4.",
+    "Publish/import/read/consumer/maintenance evidence is separate from semantic acceptance; unknown usage stays UNKNOWN."
+  ],
+  "cases": [
+    {
+      "id": "S1-02-C1",
+      "kind": "permitted-change",
+      "question": "Precisamos acrescentar uma ferramenta tipada e sob demanda, com efeito de escrita. Onde registrar e validar, onde autorizar e o que deve acontecer quando o registro muda durante uma chamada já materializada?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 65000
+      }
+    },
+    {
+      "id": "S1-02-C2",
+      "kind": "contract-violation",
+      "question": "Um plugin fornece JSON com Session, agente e call ID e pede capacidade nativa. Esses IDs bastam? Como reconhecer os limites da autorização e da persistência?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 65000
+      }
+    },
+    {
+      "id": "S1-02-C3",
+      "kind": "cross-component-impact",
+      "question": "Uma mudança na declaração/política de ferramenta e outra no contrato de plugin/capacidade foram propostas. Quais artefatos precisam ser reavaliados e como evitar reutilizar binding desatualizado preservando os independentes?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 5,
+        "body_bytes": 85000
+      }
+    },
+    {
+      "id": "S1-02-C4",
+      "kind": "operational-failure",
+      "question": "Uma instalação de plugin falha após registrar contribuições, um OAuth fica pendente e uma mutação MCP é interrompida. Como orientar diagnóstico e recuperação sem criar garantias inexistentes?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 5,
+        "body_bytes": 85000
+      }
+    },
+    {
+      "id": "S1-02-C5",
+      "kind": "out-of-scope-abstention",
+      "question": "Podemos garantir que qualquer plugin, ferramenta ou capacidade está sempre sandboxed, validado localmente e protegido em todos os sistemas operacionais?",
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 3,
+        "body_bytes": 50000
+      }
+    },
+    {
+      "id": "S1-02-DIRECT-L1",
+      "kind": "direct-intermediate-use",
+      "question": "Distingua perda de captura do produtor, truncamento genérico e projeção Lean; qual evidência mantém o original e quais limites impedem prometer sua recuperação integral?",
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 35000
+      }
+    },
+    {
+      "id": "S1-02-DIRECT-L2",
+      "kind": "direct-intermediate-use",
+      "question": "Como localizar a autoridade real de uma chamada antes de decidir se catálogo, aprovação ou contexto permite um efeito?",
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 35000
+      }
+    },
+    {
+      "id": "S1-02-DIRECT-L3",
+      "kind": "direct-intermediate-use",
+      "question": "Qual é a interface de responsabilidade de host/plugins/capacidades para a necessidade N01 de S1-05?",
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 3,
+        "body_bytes": 50000
+      }
+    }
+  ],
+  "maintenance": [
+    {
+      "id": "S1-02-M1",
+      "question": "Change tool declaration/policy input in isolated observed source; inspect impact and rejection of old binding; restore exact bytes and show compatible reuse."
+    },
+    {
+      "id": "S1-02-M2",
+      "question": "Change plugin/capability contract input in isolated source; verify scope independence and stale binding rejection."
+    }
+  ]
+}
+
+END PUBLIC CONTRACT
+
+BEGIN FROZEN ORACLE
+{
+  "schema": "genesis-s1-02-evaluation/v1",
+  "execution_id": "facc2a57-5e94-4cea-92bd-49b1dd218cb4",
+  "status": "FROZEN_BEFORE_NEW_PRODUCTION",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "inherited": {
+    "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+    "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/oracles/consumer-v1.json",
+    "lead": [
+      "S1-O9"
+    ],
+    "support": [
+      "S1-O6"
+    ],
+    "status": "KNOWN_REGRESSION"
+  },
+  "public_bar": [
+    "Trace each substantive behavioral assertion to exact pinned evidence; separate intent, observed implementation and unexecuted claims.",
+    "Reconcile all 424 assigned sources by meaningful need and depth without treating a census as understanding.",
+    "Close the specific leaf-reading gaps, capture provenance and independently review every required artifact.",
+    "Use only accepted required predecessors for L2, then L3, then L4.",
+    "Publish/import/read/consumer/maintenance evidence is separate from semantic acceptance; unknown usage stays UNKNOWN."
+  ],
+  "cases": [
+    {
+      "id": "S1-02-C1",
+      "kind": "permitted-change",
+      "question": "Precisamos acrescentar uma ferramenta tipada e sob demanda, com efeito de escrita. Onde registrar e validar, onde autorizar e o que deve acontecer quando o registro muda durante uma chamada já materializada?",
+      "expected": [
+        "Canonical Tool.make with input/output schemas; process ApplicationTools or Location Tools registration according to placement.",
+        "Catalog/on-demand filtering does not authorize execution; leaf captures permission service and canonical source identity.",
+        "Captured registration identity must not silently dispatch replaced tool; stale settlement refusal, scope disposal reveals previous registration."
+      ],
+      "critical_errors": [
+        "Registry centrally authorizes all execution",
+        "On-demand inclusion grants permission",
+        "Replaced tool silently runs under stale definition"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 65000
+      }
+    },
+    {
+      "id": "S1-02-C2",
+      "kind": "contract-violation",
+      "question": "Um plugin fornece JSON com Session, agente e call ID e pede capacidade nativa. Esses IDs bastam? Como reconhecer os limites da autorização e da persistência?",
+      "expected": [
+        "Host-issued private context frame, matching invocation and placement is required; model JSON is not authority.",
+        "Persisted live tool part and current permission validation belongs to CapabilityPolicy; root frame alone is insufficient.",
+        "Recheck after approval and at governed commit; restrictions cannot be widened by later allows."
+      ],
+      "critical_errors": [
+        "Trust model-supplied IDs as issued authority",
+        "Extend capability guarantees to all arbitrary plugins"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 65000
+      }
+    },
+    {
+      "id": "S1-02-C3",
+      "kind": "cross-component-impact",
+      "question": "Uma mudança na declaração/política de ferramenta e outra no contrato de plugin/capacidade foram propostas. Quais artefatos precisam ser reavaliados e como evitar reutilizar binding desatualizado preservando os independentes?",
+      "expected": [
+        "Separate catalog declaration from leaf permission and host capability authorization; follow exact source/recipe/build edges, not all navigation links.",
+        "Source, policy, body, recipe or authority changes create new binding candidate; old approval cannot bind it.",
+        "Identify unchanged source/recipe/results for reuse; preserve old evidence and distinguish source impact from unobserved operation."
+      ],
+      "critical_errors": [
+        "Reuse runtime binding across changed candidate or source root",
+        "Invalidate every navigational neighbor unconditionally",
+        "Invent runtime input versions from transport hashes"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 5,
+        "body_bytes": 85000
+      }
+    },
+    {
+      "id": "S1-02-C4",
+      "kind": "operational-failure",
+      "question": "Uma instalação de plugin falha após registrar contribuições, um OAuth fica pendente e uma mutação MCP é interrompida. Como orientar diagnóstico e recuperação sem criar garantias inexistentes?",
+      "expected": [
+        "Scoped activation cleanup and state rematerialization, explicit boundaries of batch rollback/cycle detection.",
+        "OAuth attempt in-memory with lifetime/expiry; no claim of crash-resumable flow.",
+        "Distinguish SDK MCP from native bounded transport; interrupted ambiguous mutation cannot be asserted not executed; preserve outcome_unknown where implemented."
+      ],
+      "critical_errors": [
+        "Automatic durable OAuth retry promised",
+        "DELETE/abort proves remote mutation did not execute",
+        "Complete plugin batch atomicity inferred"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 5,
+        "body_bytes": 85000
+      }
+    },
+    {
+      "id": "S1-02-C5",
+      "kind": "out-of-scope-abstention",
+      "question": "Podemos garantir que qualquer plugin, ferramenta ou capacidade está sempre sandboxed, validado localmente e protegido em todos os sistemas operacionais?",
+      "expected": [
+        "Refuse universal claim; mandatory wrapper is not unconditional confinement; dynamic schemas not automatically local validation.",
+        "Different surfaces own permission; observed implementation/tests as source do not establish executed cross-platform protection.",
+        "Give exact evidence needed and authorized owner without weakening guards."
+      ],
+      "critical_errors": [
+        "Guarantee universal sandbox/JSON validation",
+        "Count unexecuted source tests as runtime proof"
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 3,
+        "body_bytes": 50000
+      }
+    },
+    {
+      "id": "S1-02-DIRECT-L1",
+      "kind": "direct-intermediate-use",
+      "question": "Distingua perda de captura do produtor, truncamento genérico e projeção Lean; qual evidência mantém o original e quais limites impedem prometer sua recuperação integral?",
+      "expected": [
+        "Each loss/bound/projection boundary separately explained, original capture may already be incomplete.",
+        "Attestation/provenance controls and actual retention/recall constraints cited; no universal reconstructability."
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 35000
+      }
+    },
+    {
+      "id": "S1-02-DIRECT-L2",
+      "kind": "direct-intermediate-use",
+      "question": "Como localizar a autoridade real de uma chamada antes de decidir se catálogo, aprovação ou contexto permite um efeito?",
+      "expected": [
+        "Map path-specific decision boundaries and required evidence; avoid equivalence between visibility and authority."
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 35000
+      }
+    },
+    {
+      "id": "S1-02-DIRECT-L3",
+      "kind": "direct-intermediate-use",
+      "question": "Qual é a interface de responsabilidade de host/plugins/capacidades para a necessidade N01 de S1-05?",
+      "expected": [
+        "Concrete host/plugin authority and lifecycle contract, cross-scope implementation citations distinguished from accepted dependent artifacts; named complement to S1-05."
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 3,
+        "body_bytes": 50000
+      }
+    }
+  ],
+  "maintenance": [
+    {
+      "id": "S1-02-M1",
+      "question": "Change tool declaration/policy input in isolated observed source; inspect impact and rejection of old binding; restore exact bytes and show compatible reuse.",
+      "expected": [
+        "Affected tools lineage becomes stale or refused through actual Atlas observation/read; independent extensions evidence remains compatible if inputs unchanged; restore is not invented new approval."
+      ]
+    },
+    {
+      "id": "S1-02-M2",
+      "question": "Change plugin/capability contract input in isolated source; verify scope independence and stale binding rejection.",
+      "expected": [
+        "Affected extension/capability downstream dependency graph is explicit; unchanged unrelated scope/result preserved; no approval transferred to changed candidate."
+      ]
+    }
+  ],
+  "limitations": [
+    "Expected implementation details require pinned decisive support, never treating oracle text as source.",
+    "No case grants product-test, policy, credential or external-service permission."
+  ]
+}
+
+END FROZEN ORACLE
+
+# Coverage and unresolved needs
+
+# Complemento de evidência L1 A — população, necessidades e dependentes
+
+**Identidade:** `a-l1-evidence-v1`; scope `orchestra.s1`; fonte `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+
+Esta é uma projeção do candidato L1 congelado, não uma revisão dos seus corpos. Todos os campos originais `need`, `gaps`, `input_keys`, `validity`, `build_dependencies`, classificações e razões permanecem exatamente preservados no JSON acompanhante. As explicações de fronteira e uso bloqueado abaixo foram escritas nesta revisão e são identificadas como tal. Não constituem aceite semântico, criação de L2–L4 ou recategorização retroativa.
+
+O dossiê da principal foi informado como `output/producers/a/review-dossier.md`, SHA256 `cf7676f527067c7b2aa3fc4bd0d4629e8fa2afa5b843ddc70f857dacc0abffbc`. Seu conteúdo não foi lido e seu hash não foi verificado por este produtor; as projeções usam diretamente os próprios arquivos congelados. Nenhum oracle foi acessado.
+
+## O que as 1.340 entradas não lidas significam
+
+A reconciliação exata cobre 1.441 caminhos: 94 leituras decisivas no registro congelado, sete capturas de orientação e 1.340 entradas não lidas. As 599 implementações substantivas não lidas continuam fora da autoridade de afirmações específicas. As outras 741 entradas têm disposição agrupada de validação, história, documentação, gerados, vendor ou suporte. Essa disposição explica por que não se exigiu uma narrativa por arquivo no L1; ela não substitui leitura quando o conteúdo é premissa de uma necessidade obrigatória.
+
+| Profundidade original das entradas não lidas | Quantidade | Alcance e obrigação preservada |
+| --- | ---: | --- |
+| `representative_family_boundary` | 599 | Fronteira/coordenador lido; sem aceite da implementação de cada leaf. Ler o leaf e seus contratos antes de afirmação ou mudança que dependa dele. |
+| `grouped_validation_inventory` | 584 | Inventário de testes, fixtures e suporte; nenhum resultado executado. Selecionar fontes e gate pertinente quando a afirmação exigir validação. |
+| `grouped_history_contract` | 72 | Migração histórica retida como contrato de dados. Mudança/upgrade exige leitura da transformação e predecessors afetados. |
+| `grouped_vendor_boundary` | 27 | Autoridade upstream distinta; host boundary não valida internals. Ler contrato/vendor/licença/update quando pertinente. |
+| `grouped_documentation_disposition` | 26 | Documento/história retido; sem inferir implementação ou qualificação por título. Ler e confrontar fonte quando usado como requisito. |
+| `grouped_support_contract` | 28 | Prompt/pin/script/asset/configuração é input sensível a mudança, não suporte descartável. Ler quando seu conteúdo ou geração afeta a necessidade. |
+| `grouped_generated_contract` | 4 | Arquivo gerado retido e ligado ao dono/gerador. Fonte geradora e comparação de bytes são exigidas em manutenção pertinente. |
+
+As sete orientações capturadas permanecem orientações no congelado: `docs/guides/agents.md`, `docs/guides/session-requests.md`, `docs/specs/v2/tools.md`, `packages/core/src/board/tools.ts`, `packages/core/src/session/README.md`, `packages/core/src/session/runner/execution-host.ts` e `packages/core/src/session/runner/index.ts`. Um trecho complementar eventualmente lido agora não apaga esse estado histórico.
+
+**Lacuna obrigatória:** se uma pergunta L1 exigida depende de um leaf não lido, a lacuna permanece aberta nesse ponto. Não se presume que o requisito possa ser adiado por conveniência. O mesmo vale para a família util, sem fonte própria lida, e para documentos históricos ainda não confrontados. A suficiência do conjunto continua sujeita aos dois juízes da principal.
+
+
+### `s1.core.tools` — `component`
+
+Corpo congelado: `bodies/tools.md`, SHA256 `ed668009ad400bf61adee3f1d497c59f91c9932b1730642816659ddbf2978e23`. Validade original: `supported`.
+
+**Gaps originais, verbatim:**
+
+- Plugin canonical tool registration, Session-scoped MCP registration and opaque managed-output references are documented future work.
+- The older Session spec overstates arbitrary binary read support.
+- Other leaf implementations and Lean attestation internals need targeted source reads before behavior-specific modifications.
+
+**Inputs originais:** `file:packages/core/src/tool/tool.ts`, `file:packages/core/src/tool/application-tools.ts`, `file:packages/core/src/tool/registry.ts`, `file:packages/core/src/tool/AGENTS.md`, `file:packages/core/src/tool-output-store.ts`, `file:packages/core/src/tool/read.ts`, `file:packages/core/src/tool/apply-patch.ts`, `file:docs/specs/v2/session.md`.
+
+**Explicitação nova nesta revisão:** Representação canônica, identidade capturada, settlement e limites de output. Outra folha, Lean, output/atestado e plataforma de mutação exigem leitura; os designs futuros do AGENTS não são comportamento disponível.
+
+**Uso dependente bloqueado:** Claims sobre cada tool, rollback multi-file, input validation dinâmica ou cap total de mídia ficam bloqueados; a fronteira de registry não os prova.
+
+
+### `s1.core.security` — `evidence`
+
+Corpo congelado: `bodies/security.md`, SHA256 `dd6e7372b2c26c8c05435db8a55dfa05cd42813a9f105f48dc8b5d702bacbbcf`. Validade original: `supported`.
+
+**Gaps originais, verbatim:**
+
+- Per-Session rules are consumed differently by materialization/capability context and ordinary PermissionV2.configured; universal enforcement is not established.
+- The Session spec contains an overbroad unsandboxed-Bash statement.
+- Confinement and secret recognition were inspected but not exercised on any OS.
+- Fallback credential key-file storage and readable legacy plaintext are explicit implementation limits.
+
+**Inputs originais:** `file:packages/core/src/permission.ts`, `file:packages/core/src/question.ts`, `file:packages/core/src/session/runner/llm.ts`, `file:packages/core/src/tool-safety.ts`, `file:packages/core/src/tool/bash.ts`, `file:packages/core/src/tool-safety-sandbox.ts`, `file:packages/core/src/tool/agent-terminal.ts`, `file:packages/core/src/credential/cipher.ts`, `file:packages/core/src/credential.ts`, `file:docs/specs/v2/session.md`, `file:AGENTS.md`, `file:.orchestra/skills/session-requests-usage/SKILL.md`.
+
+**Explicitação nova nesta revisão:** Permissões, regra da Session por caminho, sandbox condicional e segredos. Rastrear o leaf antes de afirmar aplicação de Session rules; manter conflitos com docs; backend/OS e secret recognition precisam de prova específica.
+
+**Uso dependente bloqueado:** Enforcamento universal, sandbox universal, proteção keychain universal e rejeição individual uniforme permanecem bloqueados.
+
+
+### `s1.core.capability` — `component`
+
+Corpo congelado: `bodies/capability.md`, SHA256 `a5d40d013b3976a612a53acb7999ea498c32c71bff5f7acb276f1ddc3be95e7a`. Validade original: `supported`.
+
+**Gaps originais, verbatim:**
+
+- Leaf capability behavior is represented by the actual invocation/policy/registration boundary; vendor and leaf-specific algorithms need deeper reads when consumed.
+- Native MCP transport bounds and mutation ambiguity are documented contract, not a newly executed protocol qualification.
+
+**Inputs originais:** `file:packages/core/src/capability/invocation.ts`, `file:packages/core/src/capability/policy.ts`, `file:packages/core/src/capability/tools.ts`, `file:packages/core/src/scheduled-task/port.ts`, `file:packages/core/src/capability/mcp/README.md`, `file:docs/guides/artifacts-and-processes.md`.
+
+**Explicitação nova nesta revisão:** Frame emitido, autorização persistida e commit de permit nativo. Ler a operação e vendor exatos; o README MCP é contrato normativo e não prova código de limites/qualificação executada.
+
+**Uso dependente bloqueado:** Uso remoto que conclua nonexecution após abort ou autoridade inferida do JSON/registro fica bloqueado; semântica de cada leaf permanece obrigatória.
+
+
+### `s1.core.extensions` — `component`
+
+Corpo congelado: `bodies/extensions.md`, SHA256 `1adfea6dc88bb969fb2c9232c82b81ae917e8112a9d0993273733450891984d4`. Validade original: `supported`.
+
+**Gaps originais, verbatim:**
+
+- Individual plugin/provider/OAuth implementations and live MCP operation were not exercised.
+- OAuth attempts and plugin activations are scoped in-memory state, not durable resumable workflows.
+
+**Inputs originais:** `file:packages/core/src/state.ts`, `file:packages/core/src/plugin.ts`, `file:packages/core/src/integration.ts`, `file:packages/core/src/mcp.ts`, `file:packages/core/src/skill.ts`, `file:packages/core/src/agent.ts`, `file:packages/core/src/plugin/README.md`.
+
+**Explicitação nova nesta revisão:** Lifecycle in-memory de State/plugin/integration/MCP/skills. Ler provider/plugin/OAuth específico e obter evidência de operação quando necessária; tentativas OAuth/ativação não sobrevivem por contrato ao processo.
+
+**Uso dependente bloqueado:** Resumabilidade durável, disponibilidade live de MCP e compatibilidade de todo plugin ficam bloqueadas.
+
+
+
+## Family dispositions relevant to this batch
+
+The exact family counts below refer to the original whole family; the membership groups further below partition only this packet’s assigned keys.
+
+### agent — 10 entradas
+
+**Profundidades originais:** `decisive_source_read`=1, `grouped_support_contract`=6, `grouped_validation_inventory`=1, `orientation_read`=1, `representative_family_boundary`=1.
+
+**Read status original:** `captured_targeted_orientation_only`=1, `not_read`=8, `semantically_read_decisive_ranges`=1.
+
+**Rota original:** `s1.core.extensions`. **Artefatos que de fato citam fontes da família:** `s1.core.extensions`.
+
+**Fontes decisivas listadas no original:** `packages/core/src/agent.ts`.
+
+**Razões originais aplicáveis:** R008, R027, R040, R073, R102.
+
+**Alcance sustentado (explicitação):** A seleção de agente e o fallback deny-all estão observados em agent.ts. O guia de agentes é somente orientação capturada no congelado.
+
+**Obrigação/lacuna retida (explicitação):** Prompts empacotados, composição do agente e o guia não são automaticamente instruções de runtime aceitas. Mudança de agente, seleção ou prompt exige ler os membros exatos e seu carregamento.
+
+
+### capability — 170 entradas
+
+**Profundidades originais:** `decisive_source_read`=5, `grouped_documentation_disposition`=2, `grouped_support_contract`=1, `grouped_validation_inventory`=73, `representative_family_boundary`=89.
+
+**Read status original:** `not_read`=165, `semantically_read_decisive_ranges`=5.
+
+**Rota original:** `s1.core.capability`. **Artefatos que de fato citam fontes da família:** `s1.core.capability`.
+
+**Fontes decisivas listadas no original:** `docs/guides/artifacts-and-processes.md`, `packages/core/src/capability/invocation.ts`, `packages/core/src/capability/mcp/README.md`, `packages/core/src/capability/policy.ts`, `packages/core/src/capability/tools.ts`.
+
+**Razões originais aplicáveis:** R003, R032, R043, R076, R104.
+
+**Alcance sustentado (explicitação):** Frames emitidos, revalidação persistida e commit de permits sustentam a fronteira de autoridade nativa. Registro de nomes não prova comportamento de cada leaf.
+
+**Obrigação/lacuna retida (explicitação):** Os 89 leaves não lidos retêm obrigações de compartilhamento, conteúdo, vendor schemas, processos e demais operações. O README de MCP sustenta intenção normativa; prova da implementação de limites do transporte requer seu código.
+
+
+### identity — 15 entradas
+
+**Profundidades originais:** `decisive_source_read`=3, `grouped_validation_inventory`=5, `representative_family_boundary`=7.
+
+**Read status original:** `not_read`=12, `semantically_read_decisive_ranges`=3.
+
+**Rota original:** `s1.core.extensions`, `s1.core.security`. **Artefatos que de fato citam fontes da família:** `s1.core.extensions`, `s1.core.security`.
+
+**Fontes decisivas listadas no original:** `packages/core/src/credential.ts`, `packages/core/src/credential/cipher.ts`, `packages/core/src/integration.ts`.
+
+**Razões originais aplicáveis:** R008, R015, R049, R050, R082.
+
+**Alcance sustentado (explicitação):** credential/cipher/integration sustentam armazenamento, fallback, herança e ciclo de conexão observado.
+
+**Obrigação/lacuna retida (explicitação):** Account, integração específica, OAuth page, share e credential SQL permanecem leaves próprios. Criptografia do valor não prova todo fluxo de login nem que todo segredo passa pela mesma proteção.
+
+
+### instruction — 21 entradas
+
+**Profundidades originais:** `decisive_source_read`=1, `grouped_documentation_disposition`=1, `grouped_validation_inventory`=11, `representative_family_boundary`=8.
+
+**Read status original:** `not_read`=20, `semantically_read_decisive_ranges`=1.
+
+**Rota original:** `s1.core.extensions`. **Artefatos que de fato citam fontes da família:** `s1.core.extensions`.
+
+**Fontes decisivas listadas no original:** `packages/core/src/skill.ts`.
+
+**Razões originais aplicáveis:** R008, R034, R051, R083.
+
+**Alcance sustentado (explicitação):** skill.ts sustenta nomes reservados, descoberta, permissões e invalidação do cache. O consumo de instruções tem evidência separada em context.
+
+**Obrigação/lacuna retida (explicitação):** O documento não lido e os oito leaves não lidos retêm obrigações de autoria/carga/visibilidade. Texto de skill não se torna autoridade executável por registro.
+
+
+### permission — 9 entradas
+
+**Profundidades originais:** `decisive_source_read`=3, `grouped_validation_inventory`=3, `orientation_read`=1, `representative_family_boundary`=2.
+
+**Read status original:** `captured_targeted_orientation_only`=1, `not_read`=5, `semantically_read_decisive_ranges`=3.
+
+**Rota original:** `s1.core.security`. **Artefatos que de fato citam fontes da família:** `s1.core.security`.
+
+**Fontes decisivas listadas no original:** `.orchestra/skills/session-requests-usage/SKILL.md`, `packages/core/src/permission.ts`, `packages/core/src/question.ts`.
+
+**Razões originais aplicáveis:** R015, R028, R053, R085.
+
+**Alcance sustentado (explicitação):** O serviço e question.ts, junto ao skill de uso, sustentam avaliação, pending maps e o conflito preservado entre rejeição individual descrita e fan-out implementado.
+
+**Obrigação/lacuna retida (explicitação):** Os dois leaves não lidos e o guia somente orientado permanecem necessários para seus detalhes. A diferença Session rules/materialization versus configured impede afirmar enforcamento universal sem rastrear o leaf.
+
+
+### plugin-host — 63 entradas
+
+**Profundidades originais:** `decisive_source_read`=2, `grouped_documentation_disposition`=1, `grouped_support_contract`=2, `grouped_validation_inventory`=46, `representative_family_boundary`=12.
+
+**Read status original:** `not_read`=61, `semantically_read_decisive_ranges`=2.
+
+**Rota original:** `s1.core.extensions`. **Artefatos que de fato citam fontes da família:** `s1.core.extensions`.
+
+**Fontes decisivas listadas no original:** `packages/core/src/plugin.ts`, `packages/core/src/plugin/README.md`.
+
+**Razões originais aplicáveis:** R008, R035, R054, R086, R106.
+
+**Alcance sustentado (explicitação):** Plugin e README, com State de runtime, sustentam escopos, rebuild, rollback local e limites de ciclo/batch.
+
+**Obrigação/lacuna retida (explicitação):** Doze implementações, documento e suporte não lidos incluem fronteiras SDK/host e carregamento. Ativação em memória não prova durability, compatibilidade de cada plugin ou ordem global atômica.
+
+
+### tool — 114 entradas
+
+**Profundidades originais:** `decisive_source_read`=11, `grouped_documentation_disposition`=2, `grouped_support_contract`=4, `grouped_validation_inventory`=43, `orientation_read`=1, `representative_family_boundary`=53.
+
+**Read status original:** `captured_targeted_orientation_only`=1, `not_read`=102, `semantically_read_decisive_ranges`=11.
+
+**Rota original:** `s1.core.extensions`, `s1.core.runtime`, `s1.core.tools`. **Artefatos que de fato citam fontes da família:** `s1.core.extensions`, `s1.core.runtime`, `s1.core.security`, `s1.core.tools`.
+
+**Fontes decisivas listadas no original:** `packages/core/src/lsp/lsp.ts`, `packages/core/src/mcp.ts`, `packages/core/src/tool-output-store.ts`, `packages/core/src/tool/AGENTS.md`, `packages/core/src/tool/agent-terminal.ts`, `packages/core/src/tool/application-tools.ts`, `packages/core/src/tool/apply-patch.ts`, `packages/core/src/tool/bash.ts`, `packages/core/src/tool/read.ts`, `packages/core/src/tool/registry.ts`, `packages/core/src/tool/tool.ts`.
+
+**Razões originais aplicáveis:** R008, R014, R015, R021, R030, R038, R067, R068, R069, R097, R109.
+
+**Alcance sustentado (explicitação):** Tool/registry/output e folhas representativas sustentam identidade, settlement, permissões locais, output e o contraste do read. MCP/LSP/terminal são usados por outros artefatos.
+
+**Obrigação/lacuna retida (explicitação):** 53 leaves não lidos, orientação do spec, docs e suporte não validam cada ferramenta. Lean/attestation, outras mutações, parsing e payloads devem ser lidos antes de prometer esse comportamento; caminhos de output continuam expostos.
+
+
+### tool-safety — 36 entradas
+
+**Profundidades originais:** `decisive_source_read`=2, `grouped_validation_inventory`=22, `representative_family_boundary`=12.
+
+**Read status original:** `not_read`=34, `semantically_read_decisive_ranges`=2.
+
+**Rota original:** `s1.core.security`. **Artefatos que de fato citam fontes da família:** `s1.core.security`.
+
+**Fontes decisivas listadas no original:** `packages/core/src/tool-safety-sandbox.ts`, `packages/core/src/tool-safety.ts`.
+
+**Razões originais aplicáveis:** R015, R070, R096.
+
+**Alcance sustentado (explicitação):** Safety e sandbox sustentam checks, scrub heurístico, wrapper e recusa/fallback condicionais; bash é evidência da chamada após permissões.
+
+**Obrigação/lacuna retida (explicitação):** Doze leaves não lidos de perfis/backends/recognizers retêm obrigações específicas. Confinamento efetivo e completude de reconhecimento de segredo exigem qualificação; wrapper descoberto não equivale a processo confinado observado.
+
+
+
+
+Continua; aguarde FIM T01.

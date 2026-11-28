@@ -102,7 +102,8 @@
   ],
   "summary": {
     "REUSED_EXACT_BODY_ACCEPTANCE": 32,
-    "UNREVIEWED_EXACT_BODY": 10,
+    "UNREVIEWED_EXACT_BODY": 8,
+    "NEW_TWO_JUDGE_EXACT_BODY_ACCEPTANCE": 2,
     "REUSED_BOUNDED_BODY_ACCEPTANCE": 10,
     "NO_ORIGINAL_EXACT_ACCEPTANCE_FOUND": 7,
     "NEW_BODY_AWAITING_TWO_JUDGES": 4
@@ -1263,9 +1264,18 @@
         "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/native-package.json",
         "package_sha256": "b78833339a84b805a3a51d9d9cf1291a77d479a6167fd0ae0ba57a29564bf1d6"
       },
-      "acceptance_state": "UNREVIEWED_EXACT_BODY",
-      "acceptance_scope": "No exact semantic acceptance claimed",
-      "acceptance_refs": [],
+      "acceptance_state": "NEW_TWO_JUDGE_EXACT_BODY_ACCEPTANCE",
+      "acceptance_scope": "New semantic L1 only; runtime binding and operational criteria remain separate",
+      "acceptance_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/responses/e01-m01-j1-v2.md",
+          "sha256": "6933443623f54aa067f2cd24e057bcd42599af1abce2aada6ceaa71c1c38a90a"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/responses/e01-j2-v1.md",
+          "sha256": "3e4017f6ad944bcb4c90a993bb560464da53b922208f273fc838d3ccf3fa4022"
+        }
+      ],
       "versions": [
         {
           "body_sha256": "0413cc550f9037ababcc8cbb706cee3a19c55b35480396b381f0f6c4272096f4",
@@ -1302,11 +1312,10 @@
       ],
       "build_dependencies": [],
       "navigation": [],
-      "validity": "blocked",
+      "validity": "supported",
       "gaps": [
         "Provider/executor integration was not exhaustively read; universal economic enforcement is not asserted.",
         "Product economy code is not a receipt for this producer execution; token/attempt/billing usage is UNKNOWN.",
-        "B15 impact-2 correction is incorporated in this isolated candidate; independent J1 and J2 decisions for this exact candidate version are not present.",
         "Historical impact findings and NO_CHANGE dispositions are provenance only; they are not transferable semantic or binding approvals for this revised body."
       ]
     },
@@ -1403,17 +1412,25 @@
       "layer": 1,
       "selection": "SELECTED_CANDIDATE",
       "selected_version": {
-        "owner": "01-sessions",
-        "commit": "9fd024a34e76d2e9328e1f793ef1f69fbf606e51",
-        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/bodies/models.md",
-        "sha256": "4af060adbf07f6e7e759bd8574793155c5676fd87fbef77125c70cc618ffdcfe",
-        "byte_length": 3987,
-        "package_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/subslices/01-sessions/native-package.json",
-        "package_sha256": "b78833339a84b805a3a51d9d9cf1291a77d479a6167fd0ae0ba57a29564bf1d6"
+        "owner": "S1-resume",
+        "commit": "f314e0db7a6eff590e267e6ec72dbbf1027ae17a",
+        "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/models-v2/body.md",
+        "sha256": "5a789d39a00798ca0f99384f38315b58a1bbe7dbe0e0d3f9366104a1d0b98091",
+        "byte_length": 4200,
+        "version": 2
       },
-      "acceptance_state": "UNREVIEWED_EXACT_BODY",
-      "acceptance_scope": "No exact semantic acceptance claimed",
-      "acceptance_refs": [],
+      "acceptance_state": "NEW_TWO_JUDGE_EXACT_BODY_ACCEPTANCE",
+      "acceptance_scope": "New semantic L1 only; runtime binding and operational criteria remain separate",
+      "acceptance_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/responses/m02-j1-v1.md",
+          "sha256": "518e36316658f42fce2887218a6c63208d52ab70455777c3c8ec54933e66fe33"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/responses/m02-j2-v1.md",
+          "sha256": "40083a9ec73cc0f05af086abc85ffc85c8993bc34b06fbf0ed862e958b466d06"
+        }
+      ],
       "versions": [
         {
           "body_sha256": "4af060adbf07f6e7e759bd8574793155c5676fd87fbef77125c70cc618ffdcfe",
@@ -1439,11 +1456,32 @@
             }
           ],
           "acceptance_refs": []
+        },
+        {
+          "body_sha256": "5a789d39a00798ca0f99384f38315b58a1bbe7dbe0e0d3f9366104a1d0b98091",
+          "byte_length": 4200,
+          "origins": [
+            {
+              "owner": "S1-resume",
+              "commit": "f314e0db7a6eff590e267e6ec72dbbf1027ae17a",
+              "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/models-v2/body.md",
+              "sha256": "5a789d39a00798ca0f99384f38315b58a1bbe7dbe0e0d3f9366104a1d0b98091",
+              "byte_length": 4200,
+              "version": 2
+            }
+          ],
+          "acceptance_refs": [],
+          "supersedes_body_sha256": "4af060adbf07f6e7e759bd8574793155c5676fd87fbef77125c70cc618ffdcfe",
+          "delta_ref": {
+            "commit": "f314e0db7a6eff590e267e6ec72dbbf1027ae17a",
+            "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/models-v2/delta.json",
+            "sha256": "f9ae070956ad5e17ea8c34f506f43374b179b09e86d27c159facd287c8a1951c"
+          }
         }
       ],
       "build_dependencies": [],
       "navigation": [],
-      "validity": "blocked",
+      "validity": "supported",
       "gaps": [
         "The native Session adapter has a narrower supported API set than the full catalog/SDK plugin surface.",
         "Vendor adapters, pricing accuracy and current provider availability were not exercised."
@@ -4375,7 +4413,7 @@
   ],
   "selected_package": {
     "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/native-package.json",
-    "sha256": "929e07648bdd6c443f49440ff95c4f9ac7bfcc2043583e84e953507ee503b68d",
+    "sha256": "6821a3b6102c4a5088452432a5e9db5034202ce7a6a041beb07c354328021c80",
     "artifact_count": 55,
     "state": "IN_PROGRESS_NOT_PUBLICATION_READY"
   }

@@ -1,0 +1,71 @@
+{
+  "body_sha256": "2621a48ba336ad17db711b556ee65a62fe527221052b1736452460bbe661efa7",
+  "parts": [
+    {
+      "path": "reviews/requests/ss01-part-01.txt",
+      "bytes": 15320,
+      "sha256": "920a6626b1d67790f94c6fc545484a63e625f41b216b669c92f4e06502f3e443",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/ss01-part-02.txt",
+      "bytes": 10911,
+      "sha256": "973ae3c8daa7d094b62b82972afcfe66172bfe124e8d672768a48eac04865020",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/ss01-part-03.txt",
+      "bytes": 23011,
+      "sha256": "dfd6a74c8e717d0c5677f542e57ae1627bfd363e66d877c0122be6252c00e73b",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/ss01-part-04.txt",
+      "bytes": 22550,
+      "sha256": "d57930749f17d963961146b2cfade0e8ad9354e0ac6c28e471abf1f979b6e0ae",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/ss01-part-05.txt",
+      "bytes": 21062,
+      "sha256": "39fe2dff8d587aef5f16c5e2f1de3fc33e2db69d2946bcfc6618126e8d0a4cf0",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/ss01-part-06.txt",
+      "bytes": 23720,
+      "sha256": "b143208adba5a41584b47f37d874c7fbfd10965b1f83672e7cedd79d861225f6",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/ss01-part-07.txt",
+      "bytes": 20617,
+      "sha256": "7f329bf6c56aa8355e5d34f7b289fc44a214d36c8ada9d9ab53703b68526c102",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/ss01-part-08.txt",
+      "bytes": 23762,
+      "sha256": "ad79aca1b4d4a839898dda8728479ea6605e70d6dc6316978c886abe3f36f6e2",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/ss01-part-09.txt",
+      "bytes": 23823,
+      "sha256": "11f12e315f51f105bdd1b4c27164239fc35a525fbcc5b76eafb03c81a1399abc",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/ss01-part-10.txt",
+      "bytes": 6385,
+      "sha256": "213732cb1cbf8fe998568feef4459a37de0c0af898854ccfc3af2e5a31ac5cda",
+      "state": "PREPARED_NOT_SENT"
+    },
+    {
+      "path": "reviews/requests/ss01-part-11.txt",
+      "bytes": 19430,
+      "sha256": "0d77283fc55c6575d57ba35899622ddd3a22ec42408cb54efce67d21e3aebac9",
+      "state": "PREPARED_NOT_SENT"
+    }
+  ]
+}

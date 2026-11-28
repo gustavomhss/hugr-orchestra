@@ -1,0 +1,58 @@
+{
+  "schema": "genesis-s1-new-semantic-acceptances/v1",
+  "artifacts": [
+    {
+      "key": "s1.core.economy",
+      "body_sha256": "74a59d062ae560dc633abd7561b1a763a7a9982db587d5c0076b8fc8f4a9b6bf",
+      "body_bytes": 3288,
+      "state": "TWO_JUDGE_PASS_SEMANTIC_L1",
+      "judge_ids": [
+        "/root/review_coordinator/judge_j1",
+        "/root/review_coordinator/judge_j2"
+      ],
+      "review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/responses/e01-m01-j1-v2.md",
+          "sha256": "6933443623f54aa067f2cd24e057bcd42599af1abce2aada6ceaa71c1c38a90a"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/responses/e01-j2-v1.md",
+          "sha256": "3e4017f6ad944bcb4c90a993bb560464da53b922208f273fc838d3ccf3fa4022"
+        }
+      ],
+      "open_mandatory_findings": [],
+      "operational_criteria": {
+        "AC-02": "HOLD_PHASE_OWN",
+        "AC-03": "HOLD_PHASE_OWN",
+        "CC-2 operational": "PENDING"
+      }
+    },
+    {
+      "key": "s1.core.models",
+      "body_sha256": "5a789d39a00798ca0f99384f38315b58a1bbe7dbe0e0d3f9366104a1d0b98091",
+      "body_bytes": 4200,
+      "state": "TWO_JUDGE_PASS_SEMANTIC_L1",
+      "judge_ids": [
+        "/root/review_coordinator/judge_j1",
+        "/root/review_coordinator/judge_j2"
+      ],
+      "review_refs": [
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/responses/m02-j1-v1.md",
+          "sha256": "518e36316658f42fce2887218a6c63208d52ab70455777c3c8ec54933e66fe33"
+        },
+        {
+          "payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/responses/m02-j2-v1.md",
+          "sha256": "40083a9ec73cc0f05af086abc85ffc85c8993bc34b06fbf0ed862e958b466d06"
+        }
+      ],
+      "open_mandatory_findings": [],
+      "operational_criteria": {
+        "AC-02": "HOLD_PHASE_OWN",
+        "AC-03": "HOLD_PHASE_OWN",
+        "CC-2 operational": "PENDING"
+      }
+    }
+  ],
+  "scope": "Only the exact bodies and local semantic obligations explicitly covered by both original responses. No binding or operational acceptance."
+}

@@ -1,0 +1,22 @@
+{
+  "id": "omni_init",
+  "path": "packages/core/src/omni.ts",
+  "start_line": 25,
+  "end_line": 46,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "let injected: Paths = {}\nlet loading: Promise<Binding> | undefined\n\n/** Hands the loader explicit addon and supervisor paths (D-L8). Must run before the first load(). */\nexport function configure(paths: Paths) {\n  if (loading) throw new Error(\"Omni.configure() must run before the first Omni.load().\")\n  injected = { ...injected, ...paths }\n}\n\n/**\n * Loads hugr-omni once. Rejects, loudly and with every place it looked, when the addon or the supervisor is\n * missing; callers that asked for omni (the flag is on) must never fall back silently.\n */\nexport function load() {\n  loading ??= open()\n  return loading\n}\n\nasync function open(): Promise<Binding> {\n  const found = locate()\n  const binding: Configurable = await import(\"hugr-omni\").catch((cause: unknown) => {\n    throw new Error(`hugr-omni could not load its native addon ${found.addon}: ${String(cause)}`, { cause })",
+      "encoding": "utf-8",
+      "sha": "94a19789cef782806a80432c9a86f28bccbdecac",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/omni.ts",
+      "display_title": "omni.ts"
+    },
+    "isError": false
+  }
+}

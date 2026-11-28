@@ -1,0 +1,490 @@
+T01 — fontes literais decisivas, parte06. Todos no pin já informado.
+
+## C020
+
+`packages/core/src/tool/registry.ts:ab6a6dc2f8c993aec804ebdfc73d89885e8a1453` — lines 97–108.
+
+```typescript
+    const settleWith = Effect.fn("ToolRegistry.settle")(function* (input: ExecuteInput, advertised?: object) {
+      const registration =
+        local.get(input.call.name)?.at(-1)?.registration ?? applications.entries().get(input.call.name)
+      if (!registration)
+        return {
+          result: {
+            type: "error" as const,
+            value: advertised ? `Stale tool call: ${input.call.name}` : `Unknown tool: ${input.call.name}`,
+          },
+        }
+      if (advertised && registration.identity !== advertised)
+        return { result: { type: "error" as const, value: `Stale tool call: ${input.call.name}` } }
+```
+
+
+## C021
+
+`packages/core/src/tool/AGENTS.md:98ab3e6cc58259a418b7ab80d939295a21eeba2e` — lines 43–49.
+
+```text
+## Permissions
+
+The registry has no `PermissionV2.Service` dependency and performs no execution authorization. An internal built-in-only operation attaches a permission action solely to preserve whole-tool definition filtering; it is not part of public `Tool.make`. Most tools default to their registered name; `edit`, `write`, and `apply_patch` declare the shared `edit` action.
+
+Definition filtering is catalog visibility, not execution authorization. A call still executes the captured leaf policy if it reaches settlement.
+
+Built-in `Tool.withOnDemand` marks catalog metadata only. These tools stay eligible in captured definition/identity lookup and canonical settlement, but default model advertisement omits them. An explicit host-owned `advertisedNames` projection may include them; it never grants execution permission.
+```
+
+
+## C022
+
+`packages/core/src/tool/read.ts:1e38e74b7231691a31d2ba217267326e74189558` — lines 17–29.
+
+```typescript
+export const name = "read"
+const SUPPORTED_IMAGE_MIMES = new Set(["image/jpeg", "image/png", "image/gif", "image/webp"])
+const LocationInput = Schema.Struct({
+  path: Schema.String,
+  offset: ReadToolFileSystem.PageInput.fields.offset.annotate({
+    description: "The 1-based directory entry or text line offset to start reading from",
+  }),
+  limit: ReadToolFileSystem.PageInput.fields.limit.annotate({
+    description: "The maximum number of directory entries or text lines to read",
+  }),
+})
+const Input = LocationInput
+const Output = Schema.Union([FileSystem.Content, ReadToolFileSystem.TextPage, ReadToolFileSystem.ListPage])
+```
+
+
+## C023
+
+`packages/core/src/tool/apply-patch.ts:c8ba6c68abbd121db47475f17163d72c381f55f9` — lines 204–219.
+
+```typescript
+                )
+                return { applied, files: patchFiles }
+              }).pipe(Effect.mapError((error) => (error instanceof ToolFailure ? error : fail("patch"))))
+            },
+          }),
+          "edit",
+        ),
+      })
+      .pipe(Effect.orDie)
+  }),
+)
+
+export const node = makeLocationNode({
+  name: "tool/apply-patch",
+  layer,
+  deps: [ToolRegistry.node, LocationMutation.node, FileMutation.node, FSUtil.node, PermissionV2.node],
+```
+
+
+## C024
+
+`docs/specs/v2/session.md:e3574b87bc3b12c0eca603f96821a16ec89399fc` — lines 193–200.
+
+````text
+The first built-in contribution is bounded `read`:
+
+```text
+resolve one path relative to the Location or a named project reference
+-> reject absolute paths, path escapes, and symlink escapes
+-> authorize read against the canonical resource identity
+-> for a file: return UTF-8 text or base64 binary content; page oversized UTF-8 text by bounded line ranges
+-> for a directory: return direct children in directory-first alphabetical order
+````
+
+
+## C025
+
+`packages/core/src/permission.ts:2e3d29d3f1ec1fe805d21af091029721c9fa738e` — lines 130–141.
+
+```typescript
+        discard: true,
+      }).pipe(
+        EffectRuntime.ensuring(
+          EffectRuntime.sync(() => {
+            pending.clear()
+          }),
+        ),
+      ),
+    )
+
+    const savedRules = EffectRuntime.fnUntraced(function* () {
+      return (yield* saved.list({ projectID: location.project.id })).map(
+```
+
+
+## C026
+
+`packages/core/src/permission.ts:2e3d29d3f1ec1fe805d21af091029721c9fa738e` — lines 282–298.
+
+```typescript
+          if (input.reply === "reject") {
+            yield* Deferred.fail(
+              existing.deferred,
+              input.message ? new CorrectedError({ feedback: input.message }) : new DeclinedError(),
+            )
+            pending.delete(input.requestID)
+            for (const [id, item] of pending) {
+              if (item.request.sessionID !== existing.request.sessionID) continue
+              yield* events.publish(Event.Replied, {
+                sessionID: item.request.sessionID,
+                requestID: item.request.id,
+                reply: "reject",
+              })
+              yield* Deferred.fail(item.deferred, new DeclinedError())
+              pending.delete(id)
+            }
+            return
+```
+
+
+## C027
+
+`packages/core/src/tool-safety-sandbox.ts:61a252c15cc35fa534593413045a6f54a15b6665` — lines 103–105.
+
+```typescript
+  const reads = profile?.sandbox?.readRoots
+  if (!profile?.requireSandbox && !profile?.sandbox?.enabled && grants.length === 0 && endpointGrants.length === 0 && !reads) return ordinary
+  // Exact endpoint/socket capabilities never permit unconfined fallback, including during runtime acquisition.
+```
+
+
+## C028
+
+`packages/core/src/tool-safety-sandbox.ts:61a252c15cc35fa534593413045a6f54a15b6665` — lines 122–130.
+
+```typescript
+  if (discovered?.kind === "none") {
+    if (reads) return yield* new ToolSafety.Denied({ reason: `shell-read-sandbox-unavailable: ${discovered.reason}` })
+    if (!profile?.sandbox?.unconfinedFallback) return yield* new ToolSafety.Denied({
+      reason: process.platform === "darwin" || process.platform === "linux"
+        ? "required-process-sandbox-unavailable" : "sandbox-platform-unavailable",
+    })
+    // Owner fallback remains available only without an exact network capability.
+    yield* ToolSafety.reportShell({ shellWrites: "unenforced", shellSandbox: { kind: "none", reason: discovered.reason } })
+    return ordinary
+```
+
+
+## C029
+
+`packages/core/src/credential/cipher.ts:829dd497e04ee5729a6ab45cd5164bee9430a641` — lines 107–120.
+
+```typescript
+function keys() {
+  if (loaded) return loaded
+  const file = Flag.ORCHESTRA_CREDENTIAL_KEY_FILE
+  if (!file) throw new Error("The credential key is not loaded; build the CredentialCipher layer first")
+  loaded = [fileKey(file)]
+  return loaded
+}
+
+async function keychainKey() {
+  if (typeof Bun === "undefined") throw new Error("The OS keychain needs the Bun runtime")
+  // Linux keychains are the Secret Service on the D-Bus session bus; without a bus (headless, CI, bare WSL) the
+  // native lookup can stall for a long time before it fails, so skip it and use the key file.
+  if (process.platform === "linux" && !process.env.DBUS_SESSION_BUS_ADDRESS) throw new Error("No Secret Service session bus")
+  const stored = await Bun.secrets.get(KEYCHAIN)
+```
+
+
+## C030
+
+`docs/specs/v2/session.md:e3574b87bc3b12c0eca603f96821a16ec89399fc` — lines 204–204.
+
+```text
+V2 `bash` uses the normal permission semantics: configured agent rules plus saved project approvals, with `ask` as the default when no rule matches. Bash is not sandboxed: the spawned shell runs with the host user's filesystem, process, and network authority. Structured external `workdir` resolution remains an enforced `external_directory` authority check. Best-effort scans of absolute command arguments produce advisory warnings only; they are not sandbox boundaries and do not request or enforce `external_directory` approval.
+```
+
+
+## C031
+
+`.orchestra/skills/session-requests-usage/SKILL.md:681da4ff9bd3ae17e8181a7d5ed588aa33d4e1e3` — lines 15–19.
+
+```text
+## What Stop does
+
+- The active turn is interrupted. The turn ends, and the tool it waited on does not run.
+- Every open permission and question of the session is settled as rejected. Clients receive `permission.v2.replied` (reject) and `question.v2.rejected`, so the docks clear.
+- Deny, Dismiss and Escape reject one request. Stop rejects all of them. Nothing is approved by Stop.
+```
+
+
+## C039
+
+`packages/core/src/plugin.ts:5c3c232bfa46b3f8cfad106c2db4787d6c374818` — lines 23–26.
+
+```typescript
+/**
+ * Live activations fail fast on another in-flight activation target with PLUGIN_DEPENDENCY_BLOCKED.
+ * Independent callers queue; retired ancestry is ignored. Own live ancestry retains the load-cycle failure.
+ * This is a conservative dependency policy, not a general wait-for graph or cycle proof.
+```
+
+
+## C040
+
+`packages/core/src/plugin.ts:5c3c232bfa46b3f8cfad106c2db4787d6c374818` — lines 69–78.
+
+```typescript
+    const checkAccess = Effect.fnUntraced(function* (id: ID, operation: "install" | "wait" | "remove") {
+      const ancestry = (yield* LoadingAncestry).filter((entry) => entry.live)
+      if (ancestry.some((entry) => entry.scope === scope && entry.id === id))
+        return yield* Effect.die(
+          operation === "remove"
+            ? `Cannot remove plugin ${id} while it is loading`
+            : `Plugin load cycle detected for ${id}`,
+        )
+      if (ancestry.length > 0 && loading.has(id)) return yield* Effect.die(`PLUGIN_DEPENDENCY_BLOCKED: ${id}`)
+      return ancestry
+```
+
+
+## C041
+
+`packages/core/src/mcp.ts:3d2203cb152ef733ca3b7d3231a302416a1f394b` — lines 269–281.
+
+```typescript
+      const generation = ++current.generation
+      yield* release(current)
+      if (server.disabled) {
+        blocked.delete(name)
+        current.status = { status: "disabled" }
+        return
+      }
+      if (server.type === "local" && found.unapproved.has(name)) {
+        blocked.add(name)
+        current.status = failed(
+          `Not started: this project's config declares a local command for this server. ${ConfigTrust.approveHint(location.directory)}`,
+        )
+        return
+```
+
+
+## C042
+
+`packages/core/src/skill.ts:dc8d8f67c6b658ce7716a2b17e0c9b2e517c6db0` — lines 174–188.
+
+```typescript
+      const owners = new Map(
+        sources
+          .filter((source) => data.reserved.includes(source.key))
+          .flatMap((source) => source.skills.map((skill) => [skill.name, source.key] as const)),
+      )
+      const skills = new Map<string, Info>()
+      for (const source of sources) {
+        for (const skill of source.skills) {
+          const owner = owners.get(skill.name)
+          if (owner === undefined || owner === source.key) {
+            skills.set(skill.name, skill)
+            continue
+          }
+          if (!shadowed.has(skill.location))
+            yield* Effect.logWarning(`Ignoring skill ${skill.location}: the name ${skill.name} is reserved by a bundled skill`)
+```
+
+
+## C043
+
+`packages/core/src/agent.ts:53870dcf9d34423ab49a1241e88ec5c5db0985cf` — lines 69–84.
+
+```typescript
+    const selectable = (agent: Info | undefined) =>
+      agent && agent.mode !== "subagent" && !agent.hidden ? agent : undefined
+    // Maestro is the default unless configuration names another selectable agent. No other agent becomes the
+    // default implicitly, so without Maestro an omitted-agent Session resolves to no agent.
+    const selectedDefault = () => {
+      const data = state.get()
+      const configured = data.default ? selectable(data.agents.get(data.default)) : undefined
+      return configured ?? selectable(data.agents.get(defaultID))
+    }
+
+    return Service.of({
+      transform: state.transform,
+      reload: state.reload,
+      withPermissions: (id, use) => state.withRead((data) => use(
+        data.agents.get(id)?.permissions ?? [{ action: "*", resource: "*", effect: "deny" }],
+      )),
+```
+
+
+## C044
+
+`packages/core/src/integration.ts:d6d9a85e8c9b2737b1f09f95700c05663735e6e4` — lines 367–384.
+
+```typescript
+    const scrub = Effect.fnUntraced(function* () {
+      const now = yield* Clock.currentTimeMillis
+      const expired = yield* SynchronizedRef.modify(attempts, (current) => {
+        const next = new Map(current)
+        const scopes: Scope.Closeable[] = []
+        for (const [id, attempt] of current) {
+          if (attempt.status === "pending" && attempt.time.expires <= now) {
+            scopes.push(attempt.scope)
+            next.set(id, {
+              status: "expired",
+              integrationID: attempt.integrationID,
+              time: attempt.time,
+              removeAt: now + terminalRetention,
+            })
+            continue
+          }
+          if (attempt.status !== "pending" && attempt.removeAt <= now) next.delete(id)
+        }
+```
+
+
+## C045
+
+`packages/core/src/capability/invocation.ts:e2ddcb3e3f0da61b8d9d5fe8c7c74436b844e890` — lines 88–101.
+
+```typescript
+  return Effect.gen(function* () {
+    const current = yield* Current
+    if (!current || current[issued] !== true || !proof || !matches(parentContext, current.invocation) ||
+      proof.parentCallID !== current.invocation.callID || !Number.isSafeInteger(proof.ordinal) ||
+      proof.ordinal < 1 || proof.ordinal > 64 || current.lineage.length >= 8 ||
+      proof.callID !== childID(current.invocation, proof.ordinal) ||
+      typeof proof.toolName !== "string" || !/^[A-Za-z][A-Za-z0-9_-]{0,63}(?![\s\S])/.test(proof.toolName) ||
+      typeof proof.requestHash !== "string" || !/^[0-9a-f]{64}(?![\s\S])/.test(proof.requestHash)) return yield* mismatch()
+    const frame: Frame = Object.freeze({
+      ...current,
+      invocation: Object.freeze({ ...current.invocation, callID: proof.callID }),
+      lineage: Object.freeze([...current.lineage, Object.freeze({
+        callID: proof.callID, parentCallID: proof.parentCallID, ordinal: proof.ordinal,
+        toolName: proof.toolName, requestHash: proof.requestHash,
+```
+
+
+## C046
+
+`packages/core/src/capability/policy.ts:d75718a6ac8d6d3e36c5b791301a68a728be26b0` — lines 104–110.
+
+```typescript
+    // Native floor is restrict-only: later allow/ask rules cannot erase any captured deny.
+    const floor = binding.nativeDenyFloor.filter((rule) => rule.effect === "deny")
+    const effects = input.resources.map((resource) => {
+      if (PermissionV2.evaluate(input.action, resource, floor).effect === "deny") return "deny"
+      return PermissionV2.evaluate(input.action, resource, binding.effectiveRules).effect
+    })
+    if (effects.includes("deny")) return yield* denied()
+```
+
+
+## C047
+
+`packages/core/src/capability/policy.ts:d75718a6ac8d6d3e36c5b791301a68a728be26b0` — lines 141–165.
+
+```typescript
+  const commitMany = <A, E, R>(supplied: readonly Permit[], write: (tx: Transaction) => Effect.Effect<A, E, R>) =>
+    Effect.gen(function* () {
+      const pending = [...supplied]
+      const permit = pending[0]
+      if (!permit || pending.length > 16 || pending.some((item) => !item || item[approved] !== true ||
+        !permits.has(item) || item.binding !== permit.binding)) return yield* mismatch()
+      if (!database.inTransaction) return yield* Effect.die("Capability commit requires SQL transaction identity")
+      if (yield* database.inTransaction) return yield* mismatch()
+      // Lock ordering is actor state -> SQLite writer. Approval never happens under either lock.
+      return yield* agents.withPermissions(permit.context.agent, () => database.db.transaction((tx) => Effect.gen(function* () {
+        const current = yield* CapabilityInvocation.require(permit.context, {
+          projectID: location.project.id,
+          location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
+        })
+        if (current !== permit.binding) return yield* mismatch()
+        yield* validate(current)
+        yield* Effect.forEach(pending, (item) => Effect.gen(function* () {
+          const request = { sessionID: item.context.sessionID, agent: item.context.agent,
+            action: item.action, resources: [...item.resources] }
+          if ((yield* permissions.evaluate(request).pipe(
+            Effect.catchTag("Session.NotFoundError", () => Effect.fail(mismatch())),
+          )) === "deny") return yield* denied()
+        }))
+        return yield* write(tx)
+      }), { behavior: "immediate" }))
+```
+
+
+## C048
+
+`packages/core/src/capability/mcp/README.md:95f3154aef1625eaac3cd8feb500504996eb074f` — lines 94–106.
+
+```text
+## Deliberate limits and caller responsibilities
+
+- POST Streamable HTTP only: no GET listener, reconnection, resumability, retry,
+  legacy SSE/stdio fallback, OAuth refresh/discovery, tasks, roots or sampling.
+- A disconnect before a response fails. HTTP 404 invalidates the current session;
+  a later explicit host operation can open a new one. A call is never reposted.
+- Aborting local fetch or deleting a session does not prove a remote mutation was
+  cancelled. Callers must retain durable intent and reconcile ambiguous failures;
+  post-dispatch loss without a definitive correlated result/error reports
+  `outcome_unknown`, including disconnect, body loss, malformed results, ambiguous
+  HTTP errors and timeout. Definitive HTTP 401/403/404 and correlated protocol
+  errors retain typed failures. Interruption retains its Effect cause and still
+  requires reconciliation; neither abort nor DELETE proves remote nonexecution.
+```
+
+
+
+# Supplemental exact source spans
+
+## Preserved conflicts and mandatory limits
+
+- Session rules: the runner merges Session rules (AEX009) while ordinary PermissionV2.configured returns selected-agent permissions. Both executable branches are included. No universal enforcement/ignoring claim is substituted.
+- Bash: original C030 preserves the old unsandboxed wording. Added foreground/background permission→wrapper branches and the current AGENTS requirement preserve the actual conditional confinement boundary. C027/C028 preserve no-requirement/fallback cases.
+- Permission rejection: original C026 and C031 retain implementation fan-out versus one-request guide wording. No source here resolves that conflict by fiat.
+- Binary read: original C022 and C024 preserve the current supported-image restriction versus the earlier broad binary description.
+- Native MCP bounds remain normative README authority. The transport implementation was not captured/read here; behavioral guarantees beyond the inspected policy/registration boundary remain mandatory gaps.
+- 599 unread implementation leaves, seven orientation-only frozen entries and external engine/OS/provider boundaries remain outside exhaustive semantic acceptance. This revision supplies material source context; it does not certify those members or qualify runtime.
+
+
+### AEX009
+
+**Artifacts:** `s1.core.session-execution`, `s1.core.security`, `s1.core.context`.
+
+**Claim/limit supported:** Stored placement and governance precede promotion; agent and Session rules are materialized; missing context is initialized before input visibility and new input resets the step allowance.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/session/runner/llm.ts:c3ad8d87a58923d40797d38a77ff65367bbe66b6`, lines 185–215.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `03b1068354e6bc049f2f30125f413f2b2a966817ac59e69e98bce561c87305c7`; **excerpt SHA256:** `40a74fe87d62c5123691e911ff20e4b37e59b8e4d3d30ed7c6cfeeb3cee56802` (1724 bytes).
+
+````text
+    const runTurnAttempt = Effect.fn("SessionRunner.runTurn")(function* (
+      sessionID: SessionSchema.ID,
+      promotion: SessionInput.Delivery | undefined,
+      step: number,
+      recoverOverflow?: typeof compaction.compactAfterOverflow,
+    ) {
+      const session = yield* getSession(sessionID)
+      if (session.location.directory !== location.directory || session.location.workspaceID !== location.workspaceID)
+        return yield* Effect.interrupt
+      // Before agent selection and promotion: a refused turn leaves pending input pending.
+      yield* governance.beforeTurn(session)
+      const agent = yield* agents.select(session.agent)
+      // A Session's own permission rules, after its agent's as the earlier runtime merged them, so a Session rule wins over the agent's.
+      const effectiveRules = [
+        ...(agent.info?.permissions.map((rule) => ({ ...rule })) ?? []),
+        ...(yield* store.permissions(session.id)),
+      ]
+      const initialized = yield* SessionContextEpoch.initialize(db, loadSystemContext(session.id, agent), session.id)
+      const toolFibers = yield* FiberSet.make<void, ToolOutputStore.Error>()
+      let needsContinuation = false
+      let currentStep = step
+      if (promotion) {
+        const cutoff = yield* EventV2.latestSequence(db, session.id)
+        let promoted = 0
+        if (promotion === "steer") promoted = yield* SessionInput.promoteSteers(db, events, session.id, cutoff)
+        if (promotion === "queue") {
+          promoted += Number(yield* SessionInput.promoteNextQueued(db, events, session.id))
+          promoted += yield* SessionInput.promoteSteers(db, events, session.id, cutoff)
+        }
+        if (promoted > 0) {
+          currentStep = 1
+````
+
+
+
+Continua; aguarde FIM T01.

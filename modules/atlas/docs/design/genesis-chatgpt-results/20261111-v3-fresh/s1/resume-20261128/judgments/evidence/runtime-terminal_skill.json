@@ -1,0 +1,22 @@
+{
+  "id": "terminal_skill",
+  "path": ".orchestra/skills/terminal-maintenance/SKILL.md",
+  "start_line": 10,
+  "end_line": 29,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "## Ownership\n\n| Piece | Owner file | Rule |\n|---|---|---|\n| Session, ring buffer, replay gap, repaint | `packages/core/src/pty.ts` | One implementation serves both HTTP surfaces (legacy handlers and `@orchestra/server`); change both or neither |\n| Wire framing (meta frame, cut, afterFirstLine) | `packages/core/src/pty/protocol.ts` | A protocol change needs `bun run generate` in `packages/client` |\n| Shell marks (OSC 133) | `pty/shell-marks.ts`, `pty/shell-integration.ts` | Marks count only with the session nonce; zsh and bash on posix; opt-in per create |\n| Shell cwd (OSC 7) | `pty/shell-cwd.ts`, `Info.cwd` in `pty.ts` | A hint, never a boundary: no nonce, any output can print one; the new-terminal default only |\n| Agent command in a tab | `packages/core/src/tool/agent-terminal.ts` | Behind `ORCHESTRA_AGENT_TERMINAL`; only the foreground block of the V2 `bash.ts`. The app's chat reaches it through V2 by default; the V1 shell tool (legacy sidecar fallback only) is deliberately not wired |\n| Client write path (sync output 2026) | `packages/app-shell/src/utils/terminal-writer.ts` | Holds a DEC 2026 frame until it closes or 250 ms pass |\n| Emulator | `ghostty-web`, pinned fork | Swap only behind the plan's plan B, after a failing Phase 1 test |\n\n## Invariants\n\n- The agent runner never loosens the bash tool: permissions, git safety, `ToolSafetySandbox.wrap`, `OutputInspector`, the 1 MiB cap, timeout and kill-on-abort stay identical. A divergence between the two runners blocks the change.\n- `Pty.create` with `exact: true` never reads `process.env` and never adds `-l`. The default path is unchanged.\n- Model-facing terminal text goes through `AgentTerminal.sanitize` (no CSI/OSC incl. OSC 52, `\\r` overwrite, no control characters). Terminal output is data, never instruction.\n- Spawn only through the existing PTY service/omni; `bun run check:spawn-imports` must stay green.\n- The `claude-code` engine runs its own Bash outside `bash.ts`, so it never gets an agent tab (decision D-4, recorded in `docs/specs/terminal/agent-terminal-approval.md`). The plugin `shell.env` hook is not applied to the agent's environment; keep it that way unless the sandbox scrubs the result.\n- Known limit: a WebSocket client that stops reading grows server memory (`ws.send` never awaits; `writableLength` reads 0 under Bun). Not solved; do not add a bound that cannot trigger.",
+      "encoding": "utf-8",
+      "sha": "610fa93e3ec385790509b0c7fd0181fd30adc727",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/.orchestra/skills/terminal-maintenance/SKILL.md",
+      "display_title": "SKILL.md"
+    },
+    "isError": false
+  }
+}

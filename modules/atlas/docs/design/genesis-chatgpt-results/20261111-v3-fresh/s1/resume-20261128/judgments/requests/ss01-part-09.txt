@@ -1,0 +1,383 @@
+SS01 — fontes literais, parte 09; mesmo pin/corpo.
+
+### packages/core/src/session/meeting-handoff.ts
+```text
+39:       const rows = yield* latest(
+40:         database.db,
+41:         and(eq(MeetingItemTable.meeting_id, meeting.id), inArray(MeetingItemTable.id, ids)),
+42:       )
+43:       if (rows.length !== ids.length || !rows.every(allowed))
+44:         return yield* new SessionMeeting.MeetingError({ reason: "missing_item" })
+45:       const people = yield* peopleMap(database.db)
+46:       const send = deliver({
+47:         db: database.db,
+48:         sessions,
+49:         projectID: location.project.id,
+50:         from: "live",
+51:         to: AgentV2.defaultID,
+52:         text: message(meeting, rows, people),
+53:         // Handed items are notes for the owner's next conversation with Maestro, not work to start unasked.
+54:         resume: false,
+55:       })
+56:       // The owner chose to hand off: with no Maestro conversation in the project, open one to receive it.
+57:       yield* send.pipe(
+58:         Effect.catchIf(
+59:           (reason) => reason === "no_conversation",
+60:           () =>
+61:             sessions
+62:               .create({ agent: AgentV2.defaultID, location: { directory: location.directory } })
+63:               .pipe(Effect.andThen(send)),
+64:         ),
+65:         Effect.mapError(() => new SessionMeeting.MeetingError({ reason: "unavailable" })),
+66:       )
+67:       yield* database.db
+68:         .transaction(() =>
+69:           Effect.forEach(
+70:             rows,
+71:             (row) =>
+72:               database.db
+73:                 .insert(MeetingItemTable)
+74:                 .values({ ...row, revision: row.revision + 1, sent_to_maestro: true })
+75:                 .run(),
+76:             { discard: true },
+77:           ),
+78:         )
+79:         .pipe(Effect.orDie)
+80:       return { sent: ids }
+81:     })
+83:     return Service.of({ handoff })
+84:   }),
+85: )
+87: export const node = makeLocationNode({
+88:   service: Service,
+89:   layer,
+90:   deps: [Database.node, Location.node, globalSessions],
+91: })
+93: // Dismissed items and suggestions meant for the owner never leave the card.
+94: function allowed(row: ItemRow) {
+95:   if (row.status === "dismissed") return false
+96:   return row.kind !== "suggestion" || row.for === "maestro"
+97: }
+99: function message(
+100:   meeting: typeof MeetingTable.$inferSelect,
+101:   rows: ItemRow[],
+102:   people: Map<string, typeof MeetingPersonTable.$inferSelect>,
+103: ) {
+104:   const who = (code: string) =>
+105:     code === "me" ? "me" : code.startsWith("unknown:") ? "unknown speaker" : (people.get(code)?.name ?? code)
+106:   const date = new Date(meeting.time_started).toISOString().slice(0, 10)
+107:   return [
+108:     `From the meeting "${meeting.title}" on ${date}, the owner chose these items for you:`,
+109:     ...rows.map((row) => `- ${row.kind}: ${row.text} (${who(row.asserter)}) [meeting ${meeting.id} item ${row.id}]`),
+110:     "Keep them in mind and bring them up with the owner. Do not start work on any of them until the owner asks.",
+111:   ].join("\n")
+112: }
+```
+
+### packages/core/src/session/meeting-consolidation.txt
+```text
+1: You turn the transcript of one finished meeting into its card.
+3: Each transcript line is `[start_ms] speaker: text`. The speaker "me" is the owner of this record; "them" is everyone else on the call. Tell people on the "them" track apart only when the transcript names them.
+5: Reply with one JSON object and nothing else: no prose, no Markdown, no code fence.
+7: {
+8:   "summary": "two or three sentences on what the meeting was about and how it ended",
+9:   "items": [
+10:     {
+11:       "kind": "decision" | "commitment" | "question" | "suggestion",
+```
+
+### packages/core/test/session-archive.test.ts
+```text
+64:         const reader = yield* Layer.build(Layer.fresh(Database.layerFromPath(filename)))
+65:         const readerDatabase = yield* Database.Service.pipe(Effect.provideContext(reader))
+66:         const observed: unknown[] = []
+67:         const unsubscribe = yield* events.listen((event) =>
+68:           Effect.gen(function* () {
+69:             if (!Schema.is(SessionEvent.ArchiveChanged)(event) || event.data.sessionID !== created.id) return
+70:             // Drop the publisher's transaction context: this independent connection sees only committed state.
+71:             const row = yield* readerDatabase.db
+72:               .select({ archived: SessionTable.time_archived })
+73:               .from(SessionTable)
+74:               .where(eq(SessionTable.id, created.id))
+75:               .get()
+76:               .pipe(Effect.provideContext(reader), Effect.orDie)
+77:             observed.push({
+78:               data: event.data,
+79:               archived: row?.archived,
+80:               seq: yield* EventV2.latestSequence(readerDatabase.db, created.id).pipe(Effect.provideContext(reader)),
+81:             })
+82:           }),
+… omitted original lines …
+87:         yield* database.db.run(sql`
+88:           CREATE TABLE archive_deferred_fk (
+89:             id text PRIMARY KEY,
+90:             session_id text REFERENCES session(id) DEFERRABLE INITIALLY DEFERRED
+91:           )
+92:         `)
+93:         const dependency = SessionV2.ID.make("ses_archive_commit_dependency")
+94:         yield* events.project(SessionEvent.ArchiveChanged, (event) =>
+95:           event.data.archived === null
+96:             ? Effect.void
+97:             : database.db
+98:                 .run(sql`INSERT INTO archive_deferred_fk VALUES ('archive', ${dependency})`)
+99:                 .pipe(Effect.asVoid, Effect.orDie),
+100:         )
+102:         const failed = yield* session.archive({ sessionID: created.id, archived: true }).pipe(Effect.exit)
+103:         expect(failed._tag).toBe("Failure")
+104:         if (failed._tag !== "Failure") return yield* Effect.die("Expected deferred foreign-key COMMIT failure")
+105:         expect(failed.cause.reasons.map((reason) => reason._tag)).toEqual(["Die"])
+106:         expect(yield* database.db.select().from(SessionTable).where(eq(SessionTable.id, created.id)).get()).toEqual(
+107:           before,
+108:         )
+109:         expect(yield* rows(database.db, created.id)).toEqual(log)
+110:         expect(yield* database.db.all(sql`SELECT * FROM archive_deferred_fk`)).toEqual([])
+111:         expect(yield* EventV2.latestSequence(database.db, created.id)).toBe(0)
+112:         expect(observed).toEqual([])
+114:         yield* session.create({ id: dependency, location })
+115:         yield* session.archive({ sessionID: created.id, archived: true })
+116:         const committed = (yield* rows(database.db, created.id))[1]
+117:         expect(observed).toEqual([
+118:           {
+119:             data: Schema.decodeUnknownSync(SessionEvent.ArchiveChanged.data)(committed.data),
+120:             archived: committed.data.archived,
+121:             seq: 1,
+122:           },
+123:         ])
+124:         expect(yield* database.db.all(sql`SELECT * FROM archive_deferred_fk`)).toEqual([
+125:           { id: "archive", session_id: dependency },
+126:         ])
+127:         yield* session.archive({ sessionID: created.id, archived: true })
+128:         expect(observed).toHaveLength(1)
+129:         expect(yield* rows(database.db, created.id)).toHaveLength(2)
+```
+
+### packages/core/test/session-persistence.test.ts
+```text
+39: const execution = Layer.succeed(
+40:   SessionExecution.Service,
+41:   SessionExecution.Service.of({
+42:     active: Effect.succeed(new Set()),
+43:     exclusive: (_, effect) => Effect.asSome(effect),
+44:     withRunner: () => Effect.die("unused"),
+45:     resume: () => Effect.die("ADMIT_ONLY_RESUMED"),
+46:     wake: () => Effect.die("ADMIT_ONLY_WOKE_EXECUTION"),
+47:     interrupt: () => Effect.void,
+48:   }),
+… omitted original lines …
+132:     // This exercises the current source and schema, not a cross-version or packaged rollback.
+133:     const seeded = yield* openDatabase(source, tmp.path, Effect.gen(function* () {
+134:       const database = yield* Database.Service
+135:       const db = database.db
+136:       const session = yield* SessionV2.Service
+137:       const events = yield* EventV2.Service
+138:       const store = yield* SessionStore.Service
+139:       expect(yield* db.all<{ id: string }>(sql`SELECT id FROM migration`).pipe(Effect.orDie)).not.toHaveLength(0)
+140:       expect(yield* db.get(sql`PRAGMA journal_mode`).pipe(Effect.orDie)).toEqual({ journal_mode: "wal" })
+141:       yield* db.insert(ProjectTable)
+142:         .values({ id: ProjectV2.ID.global, worktree: location.directory, sandboxes: [] })
+143:         .run().pipe(Effect.orDie)
+144:       yield* db.run("PRAGMA wal_autocheckpoint = 0").pipe(Effect.orDie)
+145:       expect(yield* db.get(sql`PRAGMA wal_autocheckpoint`).pipe(Effect.orDie)).toEqual({ wal_autocheckpoint: 0 })
+… omitted original lines …
+198:       // All commits finished; this sole connection stays open and quiescent throughout the copies. No racing writer.
+199:       expect((yield* Effect.promise(() => Bun.file(`${source}-wal`).arrayBuffer())).byteLength).toBeGreaterThan(32)
+200:       yield* Effect.promise(async () => {
+201:         await fs.copyFile(source, mainOnly)
+202:         await fs.copyFile(source, restored)
+203:         await fs.copyFile(`${source}-wal`, `${restored}-wal`)
+204:       })
+205:       expect(yield* Effect.promise(() => Bun.file(`${restored}-shm`).exists())).toBe(false)
+206:       expect(yield* Effect.promise(() => Bun.file(`${mainOnly}-wal`).exists())).toBe(false)
+207:       return state
+208:     }))
+209:     // Closing each fresh layer must release SQLite before another connection opens the same filename.
+210:     expect(yield* Effect.promise(() => Bun.file(`${source}-wal`).exists())).toBe(false)
+… omitted original lines …
+223:     yield* Effect.forEach([source, restored], (filename, index) => Effect.gen(function* () {
+224:       const newID = SessionMessage.ID.make(`msg_wal_new_${index}`)
+225:       const newPrompt = Prompt.make({ text: `New admission ${index}` })
+226:       const extended = yield* openDatabase(filename, tmp.path, Effect.gen(function* () {
+227:         const session = yield* SessionV2.Service
+228:         expect(yield* persistedState(sessionID)).toEqual(seeded)
+229:         expect(seeded.session).toEqual(yield* session.create({ id: sessionID, location }))
+230:         yield* Effect.forEach(inputs, (input, position) => Effect.gen(function* () {
+231:           const retry = { id: input.id, sessionID, prompt: input.prompt, delivery: input.delivery, resume: false }
+232:           expect(seeded.admitted[position]).toEqual(yield* session.prompt(retry))
+233:           expect(yield* session.prompt({
+234:             ...retry, delivery: input.delivery === "steer" ? "queue" : "steer",
+235:           }).pipe(Effect.flip)).toMatchObject({
+236:             _tag: "Session.PromptConflictError", sessionID, messageID: input.id,
+237:           })
+```
+
+### packages/core/test/database-sqlite-preparation.test.ts
+```text
+1: import { expect, test } from "bun:test"
+2: import { Database, SQLiteError } from "bun:sqlite"
+3: import path from "path"
+4: import { Cause, Effect, Exit, Fiber } from "effect"
+5: import { SqlClient } from "effect/unstable/sql"
+6: import { SqlError } from "effect/unstable/sql/SqlError"
+7: import { sql } from "drizzle-orm"
+8: import { EffectDrizzleQueryError } from "drizzle-orm/effect-core/errors"
+9: import { EffectDrizzleSqlite } from "@orchestra/effect-drizzle-sqlite"
+10: import { layer } from "@orchestra/core/database/sqlite.bun"
+11: import { Sqlite } from "@orchestra/core/database/sqlite"
+12: import { tmpdir } from "./fixture/tmpdir"
+14: const run = <A, E>(effect: Effect.Effect<A, E, SqlClient.SqlClient | Sqlite.Native>, filename = ":memory:") =>
+15:   Effect.runPromise(effect.pipe(Effect.provide(layer({ filename })), Effect.scoped))
+… omitted original lines …
+17: function failure(exit: Exit.Exit<unknown, unknown>) {
+18:   expect(Exit.isFailure(exit)).toBe(true)
+19:   if (!Exit.isFailure(exit)) throw new Error("Expected failure")
+20:   expect(exit.cause.reasons).toHaveLength(1)
+21:   const reason = exit.cause.reasons[0]
+22:   expect(reason?._tag).toBe("Fail")
+23:   if (reason?._tag !== "Fail") throw new Error("Expected typed failure, not defect or interruption")
+24:   return reason.error
+25: }
+27: function expectSqlError(error: unknown, errno: number, tag: SqlError["reason"]["_tag"]) {
+28:   expect(error).toBeInstanceOf(SqlError)
+29:   if (!(error instanceof SqlError)) throw new Error("Expected SqlError")
+30:   expect(error.message).toBe("Failed to execute statement")
+31:   expect(error.reason._tag).toBe(tag)
+32:   expect(error.reason.operation).toBe("execute")
+33:   expect(error.reason.message).toBe("Failed to execute statement")
+34:   expect(error.reason.cause).toBeInstanceOf(SQLiteError)
+35:   if (!(error.reason.cause instanceof SQLiteError)) throw new Error("Expected native SQLiteError")
+36:   expect(error.reason.cause.errno).toBe(errno)
+37: }
+… omitted original lines …
+118:     test(`EffectDrizzle ${mode}: native preparation failure stays in typed error channel: ${query}`, () =>
+119:       run(Effect.gen(function* () {
+120:         const db = yield* EffectDrizzleSqlite.makeWithDefaults()
+121:         const error = failure(yield* (mode === "values" ? db.values(sql.raw(query)) : db.all(sql.raw(query))).pipe(Effect.exit))
+122:         expect(error).toBeInstanceOf(EffectDrizzleQueryError)
+123:         if (!(error instanceof EffectDrizzleQueryError)) throw new Error("Expected EffectDrizzleQueryError")
+124:         if (!Cause.isCause(error.cause)) throw new Error("Expected wrapped SQL Cause")
+125:         expectSqlError(failure(Exit.failCause(error.cause)), 1, "UnknownError")
+126:         expect(yield* (mode === "values" ? db.values(sql`SELECT 42 AS value`) : db.all(sql`SELECT 42 AS value`)))
+127:           .toEqual(mode === "values" ? [[42]] : [{ value: 42 }])
+128:       })),
+129:     )
+```
+
+### packages/core/test/session-runner-harness.ts
+```text
+63: export function make(input: {
+64:   client: Layer.Layer<LLMClientService>
+65:   models: Layer.Layer<SessionRunnerModel.Service>
+66:   echo: Layer.Layer<never, Tool.RegistrationError, ToolRegistry.Service>
+67:   systemContext: Layer.Layer<SystemContextRegistry.Service>
+68:   skillGuidance: Layer.Layer<SkillGuidance.Service>
+69:   /** Execution hosts the runner may select by agent engine; default none. */
+70:   hosts?: Layer.Layer<ExecutionHost.Service>
+71:   /** Replaces the fail-closed permission fixture. */
+72:   permissions?: Layer.Layer<PermissionV2.Service>
+73:   /** Replaces the compaction-only config, for example to configure MCP servers. */
+74:   config?: Layer.Layer<Config.Service>
+75:   /** Further node replacements, applied to the runner and to the application graph. */
+76:   replacements?: LayerNode.Replacements
+77:   /** Real tool nodes (and what they need) added to the application graph, for a test that runs one end to end. */
+78:   nodes?: ReadonlyArray<LayerNode.Node<unknown, unknown, any>>
+79:   /** The Location's directory; default `/project`, which does not exist on disk. Sessions must be set up there too. */
+80:   directory?: string
+81: }) {
+```
+
+### packages/core/test/session-runner-governance.test.ts
+```text
+94: describe("SessionRunner with Location governance and compaction", () => {
+95:   governed.effect("a refused turn stops before any input is promoted or any provider call", () =>
+96:     Effect.gen(function* () {
+97:       const session = yield* setup
+98:       refusal = "turn refused by governance"
+99:       yield* session.prompt({ sessionID, prompt: Prompt.make({ text: "held prompt" }), resume: false })
+100:       const exit = yield* session.resume(sessionID).pipe(Effect.exit)
+101:       expect(Exit.isFailure(exit)).toBe(true)
+102:       expect(requests).toHaveLength(0)
+103:       const messages = yield* session.messages({ sessionID, order: "asc" })
+104:       expect(messages.filter((message) => message.type === "user")).toHaveLength(0)
+105:       const { db } = yield* Database.Service
+106:       const inputs = yield* db
+107:         .select()
+108:         .from(SessionInputTable)
+109:         .where(eq(SessionInputTable.session_id, sessionID))
+110:         .all()
+111:         .pipe(Effect.orDie)
+112:       expect(inputs).toHaveLength(1)
+113:       expect(inputs[0].promoted_seq).toBeNull()
+115:       // Once the governance allows turns again, the same pending input runs.
+116:       refusal = undefined
+117:       yield* session.resume(sessionID)
+118:       expect(userTexts(requests[0])).toContain("held prompt")
+119:     }),
+```
+
+### docs/specs/v2/session.md
+```text
+82: Agent and model selection are provider-turn scoped. A switch admitted after the current safe provider-turn boundary applies to the next provider turn without restarting the current turn or replacing the baseline. Agent-specific skill guidance remains a Context Source, so changed guidance is admitted as a chronological System message. A completed compaction causes the next provider attempt to render a fresh baseline directly from current complete context. A Session move clears the epoch so the destination Location initializes a complete baseline on its next run.
+… omitted original lines …
+101: Current Context Epoch follow-ups:
+103: - Add configured, remote, and nested instruction sources with explicit precedence and removal semantics.
+104: - Add durable post-crash continuation recovery for promoted or provider-dispatched work.
+105: - Add explicit manual compaction on top of automatic request-budget compaction.
+106: - Add operational metrics for observation latency, unavailable sources, contention, baseline size, and chronological-update growth.
+107: - Consider watcher-backed per-file caching only if measurements show direct safe-boundary observation is too expensive.
+108: - Expose plugin-defined Context Sources only after plugin reload and scoped cleanup semantics are designed.
+109: - Add clustered Session execution ownership and stale-runtime fencing.
+… omitted original lines …
+135: | Durable Context Source     | Selected-agent available skill guidance and skill-body loading           | partial  | Guidance and body exposure are permission-filtered; remove globally denied skill definitions during request-time tool materialization. |
+136: | Per-turn request assembly  | Placement, selected model, chronological history, and canonical lowering | complete | None.                                                                                                                                  |
+137: | Per-turn request assembly  | Selected agent, agent prompt, and effective permissions                  | partial  | V2 uses selected-agent permissions for skill guidance and tool authorization; still apply the agent system prompt and request policy.  |
+138: | Per-turn request assembly  | Provider/model-specific base instructions                                | missing  | Select the provider-family baseline unless the effective agent overrides it.                                                           |
+139: | Per-turn request assembly  | Policy-filtered built-in, MCP, plugin, and structured-output tools       | partial  | Materialize definitions for the effective agent and request.                                                                           |
+140: | Per-turn request assembly  | Per-prompt system text and tool overrides                                | missing  | Design admission and durable replay semantics before exposing them.                                                                    |
+141: | Per-turn request assembly  | Steering and final-step reminders                                        | missing  | Add only reminders whose behavior remains part of V2.                                                                                  |
+142: | Per-turn request assembly  | Plugin message, system, parameter, and header transforms                 | missing  | Design V2 plugin hooks and lifecycle semantics.                                                                                        |
+143: | Per-turn request assembly  | Model variants and request settings                                      | partial  | Apply effective agent options and future plugin-mutated request settings.                                                              |
+144: | Per-turn request assembly  | Structured-output policy                                                 | missing  | Add prompt format, generated tool, tool choice, and model-visible policy together.                                                     |
+145: | Per-turn request assembly  | Automatic/context-pressure compaction                                    | complete | V2 initiates automatic and overflow-triggered compaction, then rebuilds the baseline from the completed checkpoint.                    |
+146: | Prompt/reference expansion | Durable typed prompt attachments                                         | complete | None.                                                                                                                                  |
+147: | Prompt/reference expansion | Native template and `@` mention expansion                                | missing  | Parse and resolve native V2 prompt input before durable admission.                                                                     |
+148: | Prompt/reference expansion | File, directory, media, and MCP-resource materialization                 | partial  | Materialize and normalize sources instead of lowering unresolved attachment metadata.                                                  |
+149: | Prompt/reference expansion | Agent-reference expansion                                                | missing  | Produce permission-aware model-visible task guidance.                                                                                  |
+150: | Prompt/reference expansion | Configured-reference expansion                                           | missing  | Resolve aliases and emit durable model-visible reference context or failures.                                                          |
+151: | Prompt/reference expansion | Native synthetic expansion replay                                        | partial  | V2 replays synthetic messages but only the V1 compatibility path creates them.                                                         |
+```
+
+### Cross-source packages/effect-drizzle-sqlite/src/effect-sqlite/driver.ts
+```text
+46:  * );
+47:  * ```
+48:  */
+49: export const make = Effect.fn("SQLiteDrizzle.make")(function* <TRelations extends AnyRelations = EmptyRelations>(
+50:   config: EffectDrizzleSQLiteConfig<TRelations> = {},
+51: ) {
+52:   const client = yield* SqlClient
+53:   const cache = yield* EffectCache
+54:   const logger = yield* EffectLogger
+56:   const dialect = new SQLiteAsyncDialect()
+57:   const relations = config.relations ?? ({} as TRelations)
+58:   const session = new EffectSQLiteSession(client, dialect, relations, {
+59:     logger,
+60:     cache,
+61:     useJitMappers: jitCompatCheck(config.jit),
+62:   })
+63:   const db = new EffectSQLiteDatabase(dialect, session, relations) as EffectSQLiteDatabase<TRelations> & {
+64:     $client: SqlClient
+65:   }
+66:   db.$client = client
+67:   db.$cache.invalidate = cache.onMutate
+69:   return db
+70: })
+72: /**
+73:  * Convenience function that creates an EffectSQLiteDatabase with `DefaultServices` already provided.
+74:  */
+75: export const makeWithDefaults = <TRelations extends AnyRelations = EmptyRelations>(
+76:   config: EffectDrizzleSQLiteConfig<TRelations> = {},
+77: ) => make(config).pipe(Effect.provide(DefaultServices))
+```
+
+
+Aguarde a disposição e FIM SS01.

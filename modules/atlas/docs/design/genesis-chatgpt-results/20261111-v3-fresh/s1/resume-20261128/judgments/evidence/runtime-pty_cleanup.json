@@ -1,0 +1,22 @@
+{
+  "id": "pty_cleanup",
+  "path": "packages/core/src/pty.ts",
+  "start_line": 139,
+  "end_line": 197,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "    const stopping = new Set<Promise<void>>()\n\n    function notifyEnd(session: Active, event: { exitCode?: number }) {\n      for (const subscriber of session.subscribers.values()) {\n        if (!subscriber.active) {\n          subscriber.end = event\n          continue\n        }\n        try {\n          subscriber.onEnd(event)\n        } catch {}\n      }\n      session.subscribers.clear()\n    }\n\n    // `adopt`: the user closed the session, so a tree with live descendants may go to the adoption registry. Eviction\n    // and the layer's end always stop what is left of the tree (for omni, also after the root exited).\n    function teardown(session: Active, adopt: boolean) {\n      for (const listener of session.listeners) listener.dispose()\n      session.listeners.length = 0\n      if (session.omni) {\n        const pending = close(session.omni, session.info.title, adopt)\n        stopping.add(pending)\n        void pending.finally(() => stopping.delete(pending))\n      }\n      if (!session.omni && session.info.status === \"running\") {\n        try {\n          session.process.kill()\n        } catch {}\n      }\n      notifyEnd(session, {})\n    }\n\n    async function close(omni: NonNullable<Active[\"omni\"]>, title: string, adopt: boolean) {\n      const adoption = adopt ? omni.adoption : undefined\n      if (!adoption || !(await descendants(omni.proc))) return omni.proc.stop(STOP_GRACE_MS)\n      // The adopted tree's output goes to the registry's ring from now on (R2-4), not to the closed session.\n      const sink = OmniBackground.sink(omni.proc.child)\n      omni.proc.redirect((data) => sink.write(data))\n      const release = OmniAdoption.release(omni.proc.child, Exit.void, { title, graceMs: STOP_GRACE_MS }).pipe(\n        Effect.provideService(OmniAdoption.Service, adoption.service),\n      )\n      return runPromise(\n        adoption.registry ? release.pipe(Effect.provideService(OmniAdoption.Registry, adoption.registry)) : release,\n      ).catch(() => omni.proc.stop(STOP_GRACE_MS))\n    }\n\n    yield* Effect.addFinalizer(() =>\n      Effect.gen(function* () {\n        for (const session of sessions.values()) teardown(session, false)\n        sessions.clear()\n        exitOrder.length = 0\n        if (stopping.size === 0) return\n        yield* Effect.promise(() => Promise.allSettled([...stopping])).pipe(\n          Effect.timeoutOption(FINALIZE_CAP),\n          Effect.asVoid,\n        )\n      }),\n    )",
+      "encoding": "utf-8",
+      "sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "display_title": "pty.ts"
+    },
+    "isError": false
+  }
+}

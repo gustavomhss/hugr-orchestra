@@ -1,0 +1,73 @@
+name: genesis-core-native
+
+on:
+  workflow_dispatch:
+  push:
+    branches: ["genesis-core-resume"]
+    paths:
+      - ".github/workflows/genesis-core-native.yml"
+      - "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/operations/native.py"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: genesis-core-native-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  original-native:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        selection: [automation, api]
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: ./.github/actions/setup-bun
+      - name: Prepare isolated exact released runtime
+        shell: bash
+        env:
+          SELECTION: ${{ matrix.selection }}
+          RUNTIME_REVISION: e3a8ab8cf56dbff1ee91272df51ffa398d882aa1
+          RELEASE_COMMIT: 09a4c4afc7aab2f9a153eb059d13df0ecf15595c
+        run: |
+          set -euo pipefail
+          EVIDENCE_ROOT="$RUNNER_TEMP/genesis-core-native-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-$SELECTION"
+          RUNTIME_ROOT="$RUNNER_TEMP/genesis-core-runtime-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT-$SELECTION"
+          echo "EVIDENCE_ROOT=$EVIDENCE_ROOT" >> "$GITHUB_ENV"
+          echo "RUNTIME_ROOT=$RUNTIME_ROOT" >> "$GITHUB_ENV"
+          echo "RUNTIME_REVISION=$RUNTIME_REVISION" >> "$GITHUB_ENV"
+          echo "RELEASE_COMMIT=$RELEASE_COMMIT" >> "$GITHUB_ENV"
+          test ! -e "$EVIDENCE_ROOT"
+          test ! -e "$RUNTIME_ROOT"
+          git worktree add --detach "$RUNTIME_ROOT" "$RUNTIME_REVISION"
+          npm ci --prefix "$RUNTIME_ROOT/modules/atlas"
+      - name: Execute original prepare with complete accepted package
+        shell: bash
+        env:
+          SELECTION: ${{ matrix.selection }}
+        run: |
+          set -euo pipefail
+          DATA_ROOT="/tmp/genesis-s1-native/$SELECTION"
+          test ! -e "$DATA_ROOT"
+          python3 modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/operations/native.py \
+            --repository "$GITHUB_WORKSPACE" \
+            --runtime "$RUNTIME_ROOT" \
+            --runtime-revision "$RUNTIME_REVISION" \
+            --release-commit "$RELEASE_COMMIT" \
+            --selection "$SELECTION" \
+            --root "$DATA_ROOT" \
+            --output "$EVIDENCE_ROOT"
+      - name: Preserve exact materialization and original CLI receipts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: genesis-core-native-${{ matrix.selection }}-${{ github.sha }}-${{ github.run_attempt }}
+          if-no-files-found: error
+          path: ${{ env.EVIDENCE_ROOT }}
+          retention-days: 30

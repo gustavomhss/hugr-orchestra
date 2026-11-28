@@ -1,0 +1,16 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Action completed."
+    }
+  ],
+  "structuredContent": {
+    "content": "export interface EconomyEnvelope {\n  readonly envelopeId: string\n  readonly authorityId: string\n  readonly scope: string\n  readonly provider: string\n  readonly model: string\n  readonly route: string\n  readonly stages: readonly string[]\n  readonly limits: {\n    readonly attempts: number\n    readonly outputTokens?: number\n    readonly inputTokens?: number\n    readonly inFlight: number\n  }\n  readonly retryPolicy: { readonly maxRetries: number; readonly statuses: readonly number[] }\n}\n\nexport interface LogicalRequest {\n  readonly logicalRequestId: string\n  readonly stage: string\n  readonly snapshot: string\n}\n\nexport interface AttemptId {\n  readonly envelopeId: string\n  readonly logicalRequestId: string\n  readonly ordinal: number\n}\n\nexport type AttemptKey = string\n\nexport interface AttemptUsage {\n  readonly inputTokens?: number\n  readonly outputTokens?: number\n  readonly cachedInputTokens?: number\n  readonly reasoningTokens?: number\n}\n\nexport interface AttemptBound {\n  readonly attempts: number\n  readonly outputTokens?: number\n  readonly inputTokens?: number\n}\n\n/** Sealed immutable request: one bytes copy behind fingerprint, reserve and send (§4.1). */\nexport interface SealedRequest {\n  readonly envelope: EconomyEnvelope\n  readonly logical: LogicalRequest\n  readonly key: string\n  readonly route: string\n  readonly endpoint: string\n  readonly protocol: string\n  readonly body: string\n  readonly bound: AttemptBound\n  readonly prior?: AttemptId\n}\n\nexport interface TerminalEvidence {\n  readonly evidenceDigest: string\n  readonly evidence: string\n}\n\nexport interface AttemptRecord extends AttemptId {\n  readonly admissionKey: string\n  readonly fingerprint: string\n  readonly bodyDigest: string\n  readonly snapshot: string\n  readonly route: string\n  readonly endpoint: string\n  readonly protocol: string",
+    "encoding": "utf-8",
+    "sha": "914a0b925dd282e264292b2247189c549c993a3f",
+    "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/economy/admission.ts",
+    "display_title": "admission.ts"
+  },
+  "isError": false
+}

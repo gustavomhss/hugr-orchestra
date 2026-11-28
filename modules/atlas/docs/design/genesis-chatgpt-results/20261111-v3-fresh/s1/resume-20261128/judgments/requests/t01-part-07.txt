@@ -1,0 +1,449 @@
+T01 — fontes literais decisivas, parte07. Todos no pin já informado.
+
+### AEX028
+
+**Artifacts:** `s1.core.tools`.
+
+**Claim/limit supported:** Canonical Tool.make decodes input and encodes/validates output, mapping violations to ToolFailure.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/tool/tool.ts:2ecde42373ef59b1bf2352e6272141a610feea16`, lines 102–122.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `69633b1e0a9932a7b6d7126f7f9c86a2147869544c295416dfae817e4639643e`; **excerpt SHA256:** `380555d95b7ae4aa1f43c17dd1e3d97d50dcdcd172f5e10cab8509d8eca4387e` (1071 bytes).
+
+````text
+    settle: (call, context) =>
+      Schema.decodeUnknownEffect(config.input)(call.input).pipe(
+        Effect.mapError((error) => new ToolFailure({ message: `Invalid tool input: ${error.message}` })),
+        Effect.flatMap((input) =>
+          config.execute(input, context).pipe(
+            Effect.flatMap((output) =>
+              Schema.encodeEffect(config.output)(output).pipe(
+                Effect.flatMap((output) => {
+                  if (!config.structured || !config.toStructuredOutput)
+                    return Effect.succeed({ output, structured: output })
+                  return Schema.encodeEffect(config.structured)(config.toStructuredOutput({ input, output })).pipe(
+                    Effect.map((structured) => ({ output, structured })),
+                  )
+                }),
+                Effect.mapError(
+                  (error) =>
+                    new ToolFailure({
+                      message: `Tool returned an invalid value for its output schema: ${error.message}`,
+                    }),
+                ),
+              ),
+````
+
+
+### AEX029
+
+**Artifacts:** `s1.core.tools`.
+
+**Claim/limit supported:** Tool.dynamic passes input undecoded to its external owner; local JSON Schema decoding must not be inferred.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/tool/tool.ts:2ecde42373ef59b1bf2352e6272141a610feea16`, lines 156–177.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `69633b1e0a9932a7b6d7126f7f9c86a2147869544c295416dfae817e4639643e`; **excerpt SHA256:** `a3c4679c3514d44d563ddbc8a1dd38567f4d3b4bd5ee3a4ccc2f75aa50729be1` (896 bytes).
+
+````text
+/**
+ * A tool whose input contract is a JSON Schema owned by another system, such as an MCP server. The input reaches
+ * `execute` undecoded: the owner validates it.
+ */
+export function dynamic(config: {
+  readonly description: string
+  readonly inputSchema: JsonSchema.JsonSchema
+  readonly execute: (input: unknown, context: Context) => Effect.Effect<ToolOutput, ToolFailure>
+}): AnyTool {
+  const tool = Object.freeze({}) as AnyTool
+  const definitions = new Map<string, ToolDefinition>()
+  runtimes.set(tool, {
+    definition: (name) => {
+      const cached = definitions.get(name)
+      if (cached) return cached
+      const definition = new ToolDefinition({ name, description: config.description, inputSchema: config.inputSchema })
+      definitions.set(name, definition)
+      return definition
+    },
+    settle: (call, context) => config.execute(call.input, context),
+  })
+  return tool
+````
+
+
+### AEX030
+
+**Artifacts:** `s1.core.tools`.
+
+**Claim/limit supported:** Safety inspection precedes contextual bounding; Lean projection is selected only when generic bounding has not already retained a full file.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/tool/registry.ts:ab6a6dc2f8c993aec804ebdfc73d89885e8a1453`, lines 145–173.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `276f5d6bc32ca3020058a0e8acb429301a834d77d0a4382c09c3ebe8b647f085`; **excerpt SHA256:** `0901e6b8ed67a3034c6981bf0958916ed8ee2b375e1bad68f10c9ef83f99bdc8` (1635 bytes).
+
+````text
+          const output = attempted.value
+          yield* safety.inspect(output)
+          const bounded = yield* resources.bound({ sessionID: input.sessionID, toolCallID: input.call.id, output })
+          // Lean selects the model view of a complete result only; a bounded result already points at its full file.
+          const projected = bounded.outputPaths.length
+            ? ToolSafetyOutput.nudge(bounded.output, bounded.outputPaths, yield* resources.limits())
+            : location ? yield* lean(input, output, bounded.output, location) : bounded.output
+          const result = ToolOutput.toResultValue(projected)
+          if (result.type === "error")
+            return bounded.outputPaths.length > 0 ? { result, outputPaths: bounded.outputPaths } : { result }
+          return bounded.outputPaths.length > 0
+            ? { result, output: projected, outputPaths: bounded.outputPaths }
+            : { result, output: projected }
+        })
+      return yield* safety.run(
+        invocation,
+        acquire ? acquire(invocation, settlement) : settlement,
+        (observation) => events ? Effect.gen(function* () {
+          yield* events.publish(SessionEvent.Tool.Progress, {
+            timestamp: yield* DateTime.now,
+            sessionID: input.sessionID,
+            assistantMessageID: input.assistantMessageID,
+            callID: input.call.id,
+            structured: { toolSafety: observation },
+            content: [],
+          }, { location })
+        }) : Effect.void,
+        (settlement) => settlement.result.type === "error" ? "failure" : ToolSafetyOutput.outcome(settlement.output),
+      ).pipe(
+````
+
+
+### AEX031
+
+**Artifacts:** `s1.core.tools`.
+
+**Claim/limit supported:** Scoped cleanup removes its own registrations, and latest local entries overlay process registrations during materialization.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/tool/registry.ts:ab6a6dc2f8c993aec804ebdfc73d89885e8a1453`, lines 243–274.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `276f5d6bc32ca3020058a0e8acb429301a834d77d0a4382c09c3ebe8b647f085`; **excerpt SHA256:** `a06a94b6ef1b38598f48b9c325a65f0c13b2d57c50944b79c9b8664ef5a7bf91` (1630 bytes).
+
+````text
+      register: Effect.fn("ToolRegistry.register")(function* (tools) {
+        const entries = Object.entries(tools)
+        if (entries.length === 0) return
+        yield* Effect.forEach(entries, ([name]) => validateName(name), { discard: true })
+        yield* Effect.uninterruptible(
+          Effect.gen(function* () {
+            const token = {}
+            for (const [name, tool] of entries)
+              local.set(name, [...(local.get(name) ?? []), { token, registration: { identity: {}, tool } }])
+            yield* Effect.addFinalizer(() =>
+              Effect.sync(() => {
+                for (const [name] of entries) {
+                  const registrations = local.get(name)?.filter((registration) => registration.token !== token) ?? []
+                  if (registrations.length > 0) local.set(name, registrations)
+                  else local.delete(name)
+                }
+              }),
+            )
+          }),
+        )
+      }),
+      materialize: Effect.fn("ToolRegistry.materialize")(function* (permissions = [], options) {
+        const registrations = new Map(applications.entries())
+        for (const [name, entries] of local) {
+          const registration = entries.at(-1)?.registration
+          if (registration) registrations.set(name, registration)
+        }
+        for (const [name, registration] of registrations)
+          if (whollyDisabled(permission(registration.tool, name), permissions)) registrations.delete(name)
+        const definitions = new Map(
+          Array.from(registrations, ([name, registration]) => [name, definition(name, registration.tool)] as const),
+        )
+````
+
+
+### AEX032
+
+**Artifacts:** `s1.core.tools`.
+
+**Claim/limit supported:** Registry composition depends on safety/output, not PermissionV2; ordinary action/resource authorization remains a leaf boundary.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/tool/registry.ts:ab6a6dc2f8c993aec804ebdfc73d89885e8a1453`, lines 321–334.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `276f5d6bc32ca3020058a0e8acb429301a834d77d0a4382c09c3ebe8b647f085`; **excerpt SHA256:** `ea906471c29ba8d9454c854588d40127e924f466947419a325441a6b21f95891` (646 bytes).
+
+````text
+export const node = makeLocationNode({
+  service: Service,
+  layer,
+  deps: [ApplicationTools.node, ToolOutputStore.node, ToolSafety.node],
+})
+
+/** Native host composition replacements: captures real Location/Event services while constructing the registry. */
+export const nativeNode = makeLocationNode({
+  service: Service, layer: nativeLayer,
+  deps: [ApplicationTools.node, ToolOutputStore.node, ToolSafety.node, Location.node, EventV2.node],
+})
+export const nativeToolsNode = makeLocationNode({
+  service: Tools.Service, layer: nativeLayer,
+  deps: [ApplicationTools.node, ToolOutputStore.node, ToolSafety.node, Location.node, EventV2.node],
+````
+
+
+### AEX033
+
+**Artifacts:** `s1.core.tools`.
+
+**Claim/limit supported:** The generic bound limits contextual text but preserves structured output and media; managed paths remain observable.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/tool-output-store.ts:605a99e72e0482a998e2521a26f025589f81da68`, lines 165–200.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `179b486daca21ebf7aa9302cd7c5135f8afd0d2df1d719ad9826da0fdcbb50d8`; **excerpt SHA256:** `fd4f3b8d80a50b0ffa17b119cfdcb14d0f873db6e8f3bc2dd2b762c1543a9ed9` (1374 bytes).
+
+````text
+    const bound = Effect.fn("ToolOutputStore.bound")(function* (input: BoundInput) {
+      const outputLimits = yield* limits()
+      const media = input.output.content.filter((item) => item.type === "file")
+      const text = input.output.content.filter((item) => item.type === "text")
+      const contextual =
+        input.output.content.length === 0
+          ? yield* Effect.try({
+              try: () => JSON.stringify(input.output.structured, null, 2) ?? String(input.output.structured),
+              catch: (cause) => new StorageError({ operation: "encode", cause }),
+            })
+          : text.map((item) => item.text).join("")
+      if (
+        lineCount(contextual) <= outputLimits.maxLines &&
+        Buffer.byteLength(contextual, "utf-8") <= outputLimits.maxBytes
+      )
+        return {
+          output: input.output,
+          outputPaths: [],
+        }
+
+      const outputPath = yield* write(contextual)
+      const marker = `... output truncated; full content saved to ${outputPath} ...`
+
+      return {
+        output: {
+          structured: input.output.structured,
+          content: [
+            {
+              type: "text" as const,
+              text: boundedPreview(contextual, marker, outputLimits.maxLines, outputLimits.maxBytes),
+            },
+            ...media,
+          ],
+        },
+        outputPaths: [outputPath],
+      }
+````
+
+
+### AEX034
+
+**Artifacts:** `s1.core.tools`.
+
+**Claim/limit supported:** Default contextual limits and retained-output lifetime are fixed constants.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/tool-output-store.ts:605a99e72e0482a998e2521a26f025589f81da68`, lines 16–19.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `179b486daca21ebf7aa9302cd7c5135f8afd0d2df1d719ad9826da0fdcbb50d8`; **excerpt SHA256:** `d10720a05d25042b0f1f41c05ecdc646a0ca177c6ccc58abb767d63e212f0cc8` (109 bytes).
+
+````text
+export const MAX_LINES = 2_000
+export const MAX_BYTES = 50 * 1024
+export const RETENTION = Duration.days(7)
+
+````
+
+
+### AEX035
+
+**Artifacts:** `s1.core.tools`.
+
+**Claim/limit supported:** Retention deletes only old tool_* files; capture/body state is not inferred from a model preview.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/tool-output-store.ts:605a99e72e0482a998e2521a26f025589f81da68`, lines 203–215.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `179b486daca21ebf7aa9302cd7c5135f8afd0d2df1d719ad9826da0fdcbb50d8`; **excerpt SHA256:** `3997df78515c887ddd9c50c542c8edc0ff10b38a0d475e050ed83dff1b14db94` (716 bytes).
+
+````text
+    const cleanup = Effect.fn("ToolOutputStore.cleanup")(function* () {
+      const entries = yield* fs.readDirectory(directory).pipe(Effect.catch(() => Effect.succeed([])))
+      const cutoff = Date.now() - Duration.toMillis(RETENTION)
+      for (const entry of entries) {
+        if (!entry.startsWith("tool_")) continue
+        const file = path.join(directory, entry)
+        const info = yield* fs.stat(file).pipe(Effect.catch(() => Effect.void))
+        const modified = info?.mtime.pipe(
+          Option.map((date) => date.getTime()),
+          Option.getOrElse(() => 0),
+        )
+        if (modified !== undefined && modified < cutoff) yield* fs.remove(file).pipe(Effect.catch(() => Effect.void))
+      }
+````
+
+
+### AEX036
+
+**Artifacts:** `s1.core.security`.
+
+**Claim/limit supported:** Rule evaluation is last-match with default ask.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/permission.ts:2e3d29d3f1ec1fe805d21af091029721c9fa738e`, lines 76–85.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `19e4a3668e1689c0b9565cb4d09444e155e1a06a571484e37e642d3cff3857d6`; **excerpt SHA256:** `216c5fe263c3dafe28825e350af01962771cab5b94c2c0d2666360c6b48c3911` (328 bytes).
+
+````text
+export function evaluate(action: string, resource: string, ...rulesets: Permission.Ruleset[]): Permission.Rule {
+  return (
+    rulesets
+      .flat()
+      .findLast((rule) => Wildcard.match(action, rule.action) && Wildcard.match(resource, rule.resource)) ?? {
+      action,
+      resource: "*",
+      effect: "ask",
+    }
+  )
+````
+
+
+### AEX037
+
+**Artifacts:** `s1.core.security`.
+
+**Claim/limit supported:** Ordinary configured authorization resolves agent permissions, and configured deny precedes saved project allow; compare Session rules in the runner excerpt.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/permission.ts:2e3d29d3f1ec1fe805d21af091029721c9fa738e`, lines 140–170.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `19e4a3668e1689c0b9565cb4d09444e155e1a06a571484e37e642d3cff3857d6`; **excerpt SHA256:** `f13c5dc4f2aa57b618ce0741c79c05b9a6bed23961e40415570768adaf648a07` (1545 bytes).
+
+````text
+    const savedRules = EffectRuntime.fnUntraced(function* () {
+      return (yield* saved.list({ projectID: location.project.id })).map(
+        (item): Permission.Rule => ({ action: item.action, resource: item.resource, effect: "allow" }),
+      )
+    })
+
+    const configured = EffectRuntime.fn("PermissionV2.configured")(function* (
+      sessionID: SessionV2.ID,
+      agentID?: AgentV2.ID,
+    ) {
+      const session = yield* sessions.get(sessionID)
+      if (!session) return yield* new SessionV2.NotFoundError({ sessionID })
+      const agent = yield* agents.resolve(agentID ?? session.agent)
+      return agent?.permissions ?? missingAgentPermissions
+    })
+
+    function denied(input: AssertInput, rules: Permission.Ruleset) {
+      return input.resources.some((resource) => evaluate(input.action, resource, rules).effect === "deny")
+    }
+
+    function relevant(input: AssertInput, rules: Permission.Ruleset) {
+      return rules.filter((rule) => Wildcard.match(input.action, rule.action))
+    }
+
+    const evaluateInput = EffectRuntime.fnUntraced(function* (input: AssertInput) {
+      const rules = yield* configured(input.sessionID, input.agent)
+      if (denied(input, rules)) return { effect: "deny" as const, rules }
+      const all = [...rules, ...(yield* savedRules())]
+      const effects = input.resources.map((resource) => evaluate(input.action, resource, all).effect)
+      const effect: Permission.Effect = effects.includes("deny") ? "deny" : effects.includes("ask") ? "ask" : "allow"
+      return { effect, rules: all }
+````
+
+
+### AEX038
+
+**Artifacts:** `s1.core.security`.
+
+**Claim/limit supported:** Bash permission precedes profile handling; read-only agents require confinement without fallback; confined background launches are refused.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/tool/bash.ts:6f047c8ba423c3656bbd03ef12f5f41ea6b0c68b`, lines 193–217.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `e16afdfbf390d4350be701b010c5c6be44e36c313deffd2a4761ee827a618473`; **excerpt SHA256:** `ca224d3de695daab052a1baf8ca3b9cddb40374c061036784a06171793c72f06` (1391 bytes).
+
+````text
+              yield* permission.assert({
+                action: name,
+                resources: [input.command],
+                save: [input.command],
+                sessionID: context.sessionID,
+                agent: context.agent,
+                source,
+              })
+
+              if ((yield* fs.stat(target.canonical)).type !== "Directory")
+                return yield* Effect.fail(new Error(`Working directory is not a directory: ${target.canonical}`))
+
+              const project = yield* ToolSafety.RuntimeProfile
+              // A read-only agent's shell runs inside the OS sandbox with no write root; a host without one refuses the command.
+              const profile = context.agent && READ_ONLY_SHELL.has(context.agent)
+                ? {
+                    ...project,
+                    writeRoots: [],
+                    requireSandbox: true,
+                    sandbox: { ...project?.sandbox, enabled: true, scratch: true, unconfinedFallback: false },
+                  } satisfies ToolSafety.Profile
+                : project
+              // A background process outlives the call, so a profile that confines shells refuses it.
+              if (input.background && (profile?.requireSandbox || profile?.sandbox?.enabled || profile?.sandbox?.readRoots))
+                return yield* new ToolSafety.Denied({ reason: "background-process-sandbox-unbound" })
+````
+
+
+### AEX039
+
+**Artifacts:** `s1.core.security`.
+
+**Claim/limit supported:** Background launch preparation uses the same sandbox wrapper with its lifetime bound to the process.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/tool/bash.ts:6f047c8ba423c3656bbd03ef12f5f41ea6b0c68b`, lines 233–245.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `e16afdfbf390d4350be701b010c5c6be44e36c313deffd2a4761ee827a618473`; **excerpt SHA256:** `a912a5db0b6c45314424b6f18fe663b87a9a5df12cdee88f70d37b22bfd7d668` (789 bytes).
+
+````text
+              if (input.background) {
+                if (Option.isNone(sessionProcess))
+                  return yield* new ToolFailure({ message: "Session process registry is unavailable" })
+                // The same confinement and environment scrub as a foreground call, kept open for the process's life.
+                const launched = yield* sessionProcess.value.launch({
+                  sessionID: context.sessionID,
+                  command,
+                  title: input.command,
+                  prepare: (command) =>
+                    ToolSafetySandbox.wrap(command, { prepareParents: true }).pipe(
+                      Effect.provideService(FSUtil.Service, fs),
+                      Effect.provideService(ToolSafety.RuntimeProfile, profile),
+                    ),
+````
+
+
+### AEX040
+
+**Artifacts:** `s1.core.security`.
+
+**Claim/limit supported:** Foreground execution wraps before agent-terminal launch; this is the actual order needed to interpret the older unsandboxed claim.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/tool/bash.ts:6f047c8ba423c3656bbd03ef12f5f41ea6b0c68b`, lines 255–267.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `e16afdfbf390d4350be701b010c5c6be44e36c313deffd2a4761ee827a618473`; **excerpt SHA256:** `69e73d0d28d4e608c9b67c5ea24fcbd984e13128d076a6223a3e4155d8e413de` (825 bytes).
+
+````text
+              const result = yield* Effect.scoped(Effect.gen(function* () {
+                const inspector = OutputInspector.make()
+                const wrapped = yield* ToolSafetySandbox.wrap(command, { prepareParents: true }).pipe(
+                  Effect.provideService(FSUtil.Service, fs),
+                  Effect.provideService(ToolSafety.RuntimeProfile, profile),
+                )
+                // Same confinement and inspection, but the command runs in a terminal tab the owner can see and answer.
+                if (wrapped._tag === "StandardCommand" && AgentTerminal.enabled(wrapped)) {
+                  const ran = yield* AgentTerminal.run(pty, {
+                    command: wrapped,
+                    title: input.command,
+                    timeout,
+                    maxChars: MAX_CAPTURE_BYTES,
+````
+
+
+
+Continua; aguarde FIM T01.

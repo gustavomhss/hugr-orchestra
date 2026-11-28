@@ -1,0 +1,22 @@
+{
+  "id": "aisdk_b",
+  "path": "packages/core/src/aisdk.ts",
+  "start_line": 149,
+  "end_line": 234,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "export const locationLayer = Layer.effect(\n  Service,\n  Effect.gen(function* () {\n    let sdkHooks: ((event: SDKEvent) => Effect.Effect<void> | void)[] = []\n    let languageHooks: ((event: LanguageEvent) => Effect.Effect<void> | void)[] = []\n    const languages = new Map<string, LanguageModelV3>()\n    const sdks = new Map<string, SDK>()\n\n    const register = <Event>(\n      hooks: () => ((event: Event) => Effect.Effect<void> | void)[],\n      update: (hooks: ((event: Event) => Effect.Effect<void> | void)[]) => void,\n    ) =>\n      Effect.fn(\"AISDK.hook\")(function* (callback: (event: Event) => Effect.Effect<void> | void) {\n        const scope = yield* Scope.Scope\n        let active = true\n        update([...hooks(), callback])\n        const dispose = Effect.sync(() => {\n          if (!active) return\n          active = false\n          update(hooks().filter((item) => item !== callback))\n        })\n        yield* Scope.addFinalizer(scope, dispose)\n        return { dispose }\n      })\n\n    const run = Effect.fnUntraced(function* <Event>(\n      hooks: readonly ((event: Event) => Effect.Effect<void> | void)[],\n      event: Event,\n    ) {\n      for (const hook of hooks) {\n        const result = hook(event)\n        if (Effect.isEffect(result)) yield* result\n      }\n      return event\n    })\n\n    const service = Service.of({\n      hook: {\n        sdk: register(\n          () => sdkHooks,\n          (next) => (sdkHooks = next),\n        ),\n        language: register(\n          () => languageHooks,\n          (next) => (languageHooks = next),\n        ),\n      },\n      runSDK: (event) => run(sdkHooks, event),\n      runLanguage: (event) => run(languageHooks, event),\n      language: Effect.fn(\"AISDK.language\")(function* (model) {\n        const key = `${model.providerID}/${model.id}/${model.request.variant ?? \"default\"}`\n        const existing = languages.get(key)\n        if (existing) return existing\n        if (model.api.type !== \"aisdk\")\n          return yield* new InitError({\n            providerID: model.providerID,\n            cause: new Error(`Unsupported api ${model.api.type}`),\n          })\n\n        const options = prepareOptions(model, model.api.package)\n        const sdkKey = JSON.stringify({\n          providerID: model.providerID,\n          api: model.api,\n          options,\n        })\n        const sdk =\n          sdks.get(sdkKey) ??\n          (yield* service.runSDK({ model, package: model.api.package, options }).pipe(initError(model.providerID))).sdk\n        if (!sdk)\n          return yield* new InitError({\n            providerID: model.providerID,\n            cause: new Error(\"No AISDK provider plugin returned an SDK\"),\n          })\n        sdks.set(sdkKey, sdk)\n        const result = yield* service.runLanguage({ model, sdk, options }).pipe(initError(model.providerID))\n        const language = yield* Effect.sync(() => result.language ?? sdk.languageModel(model.api.id)).pipe(\n          initError(model.providerID),\n        )\n        languages.set(key, language)\n        return language\n      }),\n    })\n    return service\n  }),\n)\n",
+      "encoding": "utf-8",
+      "sha": "c5f21baea562c0a8eeeb568929d7971f4c80a3dd",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/aisdk.ts",
+      "display_title": "aisdk.ts"
+    },
+    "isError": false
+  }
+}

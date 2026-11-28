@@ -1,0 +1,22 @@
+{
+  "id": "omni_controls",
+  "path": "packages/core/src/omni.ts",
+  "start_line": 139,
+  "end_line": 174,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": " * The positive control for a test run (D-L1): a run with the flag on that made no omni spawn proved nothing about\n * omni, and a strict run must not have delegated. `expected` false (a focused run in which no test declared an omni\n * spawn, script/test-omni-control.ts) still fails a run that delegated without any omni spawn: it did spawn, just never\n * through omni. Undefined means the run passes.\n */\nexport function verdict(mode: \"off\" | \"on\" | \"strict\", counts: { spawns: number; delegations: number }, expected = true) {\n  if (mode === \"off\") return\n  if (counts.spawns === 0 && (expected || counts.delegations > 0))\n    return `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=${mode === \"on\" ? \"1\" : mode}, but this run made no omni spawn${\n      counts.delegations > 0 ? ` and delegated ${counts.delegations} spawn(s) to legacy` : \"\"\n    }.`\n  if (mode === \"strict\" && counts.delegations > 0)\n    return `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict, but this run delegated ${counts.delegations} spawn(s) to legacy.`\n}\n\n/**\n * The environment of an omni child (D-L3), always used with inheritEnv:false: `base` (process.env unless given), then\n * `extra`, with undefined values dropped and HUGR_OMNI_* removed from the final object. On Windows names are\n * case-insensitive: a later layer's `Path` replaces an earlier `PATH`, and only one key survives.\n */\nexport function childEnv(extra?: Record<string, string | undefined>, base: Record<string, string | undefined> = process.env) {\n  const env: Record<string, string> = {}\n  const names = new Map<string, string>()\n  for (const layer of [base, extra ?? {}]) {\n    for (const [key, value] of Object.entries(layer)) {\n      const folded = process.platform === \"win32\" ? key.toUpperCase() : key\n      const previous = names.get(folded)\n      if (previous !== undefined) delete env[previous]\n      names.delete(folded)\n      if (value === undefined || key.toUpperCase().startsWith(\"HUGR_OMNI_\")) continue\n      names.set(folded, key)\n      env[key] = value\n    }\n  }\n  return env\n}",
+      "encoding": "utf-8",
+      "sha": "94a19789cef782806a80432c9a86f28bccbdecac",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/omni.ts",
+      "display_title": "omni.ts"
+    },
+    "isError": false
+  }
+}

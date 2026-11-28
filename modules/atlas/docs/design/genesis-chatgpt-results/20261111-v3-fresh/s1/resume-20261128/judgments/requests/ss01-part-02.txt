@@ -1,0 +1,63 @@
+SS01 — continuação exata do corpo.
+
+## 5. Event compaction and integrity windows
+
+Event replay checks the snapshot-compaction marker before normal replay conflict handling and refuses continuation into such a store. Public history filters permitted durable event types before finite pagination, so public sequence gaps need not mean corruption. The durable tail registers its single sliding dirty signal before reading history and re-queries stored rows on wake; the signal coalesces notifications rather than storing event payloads. This process-local wake arrangement is not evidence that inserts by arbitrary other processes wake a subscriber. Live-only fragments and `persist:false` projection do not create durable rows or advance aggregate sequence. [E1]
+
+Seals link canonical encoded row content to the preceding local hash; legacy hash-domain compatibility is accepted where implemented. Window verification validates bounds and optional anchors, limits acquisition to 2,048 rows and eight MiB, checks malformed metadata, sequence/high-water consistency and links, and reports named acquisition/overflow/window errors. `VERIFIED_WINDOW` certifies the inspected window; `historyComplete` additionally requires the complete retained history from zero through the head. Empty, unsealed or compaction-affected incomplete histories can be `UNKNOWN`; edited content, invalid metadata or inconsistent retained sequence/link evidence is `BROKEN`. A known compaction marker does not excuse arbitrary corruption or force every intact window to be unknown. This is local integrity evidence, not authentication of an external writer or proof of history outside the window. [E2]
+
+## 6. Context and supporting Session leaves
+
+`SystemContext` distinguishes absent sources from temporarily unavailable observation. Initialization requires a complete observation; reconciliation preserves admitted snapshots while unavailable and uses stored removal text for confirmed removals. Incompatible snapshots or removals without text request a replacement, which waits if needed sources are unavailable. Registry registration is scoped and key-ordered. Built-ins describe Location/environment and host-local calendar date. Instruction discovery has separate global/project authority and project containment; observation failure is not permission to revoke previously admitted instructions. Epoch updates advance their structured snapshot through the event's local commit hook; completed compaction can establish a new baseline, while a blocked replacement retains the prior baseline. [C1]
+
+The compactor retains complete serialized messages in an approximately token-bounded tail, summarizes the prefix with any prior rolling summary, and publishes a completed checkpoint only for a nonempty successful response. Its default transform is identity and default `afterStep` is a no-op; replacements are explicit Location services. **Only completed tool-output serialization** is shortened to a 2,000-UTF-16-code-unit prefix plus `\n[truncated]`; arguments and error messages are not capped by that helper. This is neither an exact token limit nor a universal model-visible tool-content cap. The corrected context body preserves its original bytes separately and records the one-sentence delta. [C2]
+
+Documentation is evidence of intent, not a blanket runtime verdict. In particular, the Session spec says a move clears the epoch, but this pin's `move` and `Moved` projector only publish/update placement; those paths do not call the exported epoch reset. The same document has historical parity/follow-up entries for behavior now visible in the runner, such as final-step reminders and manual compaction. Resolve those claims at the implementation boundary before reusing the checklist. [S5, C1, P2]
+
+Several supporting leaves have independent persistence and privacy boundaries. Todos replace their ordered rows in a transaction and publish an update afterward. Background processes live in a process-local map, retain a bounded finished history, can defer completion notification until the Session becomes available, and withhold captured output once a recognized secret is detected; they do not survive restart as running jobs. Lean profile preferences are small versioned files keyed to native project/directory ownership, updated under a profile lock through an exclusive temporary file and rename. Lean metrics accept owned native metadata, reject conflicting identities and report incompleteness at scan/boundary limits; missing or unsafe totals stay unknown. Activity merges legacy/current rows, calculates finite reported token usage and unions completed root-turn intervals, so active time is not summed concurrent wall time and tokens are not a billing receipt. [U1, U2]
+
+Meetings are stored independently enough to survive Session deletion through a nullable foreign key. Start checks for an existing running meeting, but the schema does not supply a uniqueness constraint proving a cross-connection single-start guarantee. Segment IDs are deduplicated by conflict-ignore, not by exact-content retry validation. Memory reads latest item revisions, hides dismissed items, follows bounded person-merge pointers and preserves explicit verdict history. Live context exposes a bounded untrusted transcript tail; the briefing uses recent meetings/open commitments and a bounded text representation. Consolidation makes one schema-constrained model call, records success/failure, and removes ephemeral transcript text after either outcome; schema acceptance does not prove factual accuracy. Its in-flight set is process-local, and stopped pending work found on restart is marked interrupted rather than silently retried. Handoff queues selected item text without quotes/transcript using `resume:false`, then records sent revisions in a separate transaction; duplicate external delivery is not ruled out by that order. The bundled consolidation prompt is a runtime instruction asset, not evidence that a call succeeded. [U3]
+
+## 7. Verification routes and exact dispositions
+
+The 52 test files and harness are retained as **test source, not execution results**. Their declaration index gives a reviewer targeted routes: admission/conflict and coordinator races; projector/history/fork/archive behavior; runner stream/tool/host/governance/policy behavior; context/reminder/compaction; migrations/backup/preparation; seal bounds/corruption; meetings/process/todo. Selected assertions were read for real-COMMIT archive rollback, WAL scope, Bun preparation and governance-before-promotion. The harness accepts injected LLM/model layers and supplies synthetic fragment fixtures; those fixtures are not observations of a live provider. Product tests remain for the authorized GitHub Actions route under `AGENTS.md`. [T1, T2, P1]
+
+Every population row has a candidate semantic disposition: implementation contract, historical migration purpose, generated structure, documentation comparison, test intent, fixture role or bundled instruction role. A disposition is not a passing test and is not a judge verdict. Tests and migrations are grouped because their purpose is shared, with individual path/object/line evidence preserved; no leaf is accepted merely because a parent facade exists. Remaining review work is concrete: the same two independent judges must assess this exact supplement and its evidence; the root must reconcile their findings and only then advance dependent L2–L4 artifacts and final closure. No product execution, paid API, Git mutation or remote publication occurred in this producer. [P1]
+
+## Source anchors
+
+All paths below are at the pinned source revision; numbered excerpts in `evidence/` preserve the original lines and per-file hashes. `P1` is the complete population/disposition/capture ledger, not a behavioral source.
+
+- **S1:** `session.ts:152–264`; `session/{schema,event,message,prompt}.ts`; `public-event-manifest.ts`.
+- **S2:** `session/store.ts:23–105`; `session/projector.ts:34–187,192–387`; `session/sql.ts`.
+- **S3:** `session/message-updater.ts:23–574`; `session/runner/publish-llm-event.ts:40–228,300–507`.
+- **S4:** `session/archive.ts:18–118`; `session/lifecycle.ts:29–60`; `session.ts:418–435`; `test/session-archive.test.ts:52–133,276–391`.
+- **S5:** `session.ts:519–590`; `session/projector.ts:237–250`.
+- **S6:** `session/revert.ts:27–173`; `session/projector.ts:350–387`.
+- **S7:** `session/legacy-import.ts:19–288`; `session/legacy-transcript.ts:3–4,259–355,398–437`.
+- **R1:** `session/runner/llm.ts:174–305,427–682,697–767`.
+- **R2:** `session/runner/step-tools.ts:1–48`; `session/runner/max-steps.ts`; `session/runner/turn-transition.ts`.
+- **R3:** `session/runner/execution-host.ts:1–191`; `session/runner/hosted-call.ts`; `session/runner/llm.ts:306–426`.
+- **R4:** `session/runner/publish-llm-event.ts:229–299,300–507`; `session/message-updater.ts`.
+- **R5:** `session/runner/direct-commands.ts:1–139`; `session/runner/llm.ts:449–580,616–682`.
+- **R6:** `session/runner/{to-llm-message,mentions,title}.ts`.
+- **D1:** `database/database.ts:19–67`; `database/sqlite.bun.ts:49–233`; `database/sqlite.node.ts:47–178`; `database/{path,schema.sql,sqlite}.ts`.
+- **D2:** cross-source `packages/effect-drizzle-sqlite/src/effect-sqlite/{driver.ts:24–77,session.ts:100–261}`.
+- **D3:** `database/migration.ts:23–169`; `database/README.md`; `database/migration.gen.ts`; `database/schema.gen.ts:685–704,858–970,1033–1068`.
+- **D4:** `evidence/migration-outline.json` and the individually keyed 72 migration rows; decisive full migrations are retained in the evidence set.
+- **E1:** `event.ts:69–114,222–435,442–501,564–619,637–700`; `event/{compaction,sql}.ts`.
+- **E2:** `event/seal.ts:1–379`; `public-event-manifest.ts`.
+- **C1:** `system-context/{index,registry,builtins}.ts`; `instruction-context.ts`; `session/{context-epoch,history,error}.ts`.
+- **C2:** `session/compaction.ts:89–179,197–281,284–330`; `context-correction.json`.
+- **U1:** `session/todo.ts:32–89`; `session-process.ts:27–280`.
+- **U2:** `session/{lean-profile-preferences,lean-project,activity}.ts`.
+- **U3:** `session/meeting*.ts`; `session/meeting-consolidation.txt`; meeting migration `20261026232319_meeting_memory.ts`.
+- **T1:** `test/session-persistence.test.ts:29–48,97–280`; `test/database-sqlite-preparation.test.ts:1–48,118–150`; `test/session-archive.test.ts:52–133`.
+- **T2:** `evidence/test-source-index.json`; `test/session-runner-harness.ts:43–81,211–270`; `test/session-runner-governance.test.ts:94–142`.
+- **P2:** `docs/specs/v2/session.md:82,101–109,123–153,212–219`; `session/README.md`.
+
+Unless explicitly prefixed otherwise, source anchors start at `packages/core/src/`; `test/` anchors start at `packages/core/`.
+
+END EXACT BODY SS01
+
+Aguarde as fontes e FIM SS01.

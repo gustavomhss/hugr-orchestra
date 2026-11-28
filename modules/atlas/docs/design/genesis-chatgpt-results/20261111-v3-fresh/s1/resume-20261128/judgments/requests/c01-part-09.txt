@@ -1,0 +1,239 @@
+C01 — fontes literais adicionais, parte 09. Mesmo pin, mesmo corpo.
+
+### E63 — Utilities lock: `packages/core/src/util/flock.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `958bd9fd1da6dfd472e3a0ab7aec8038dca7a6f0`; SHA-256 `205c59f5d56dd10145393627e6d3bb81a069674422c3ca835d2c9f8a9ff7ef85`.
+Linhas 225–264; hash do trecho UTF-8 original `8e96e7329b721a965b89af046f055b4860c3cd1ff925f17adf7de1cd4e2f027a`.
+````text
+225:     const startHeartbeat = (intervalMs = Math.max(100, Math.floor(opts.staleMs / 3))) => {
+226:       if (timer) return
+227:       // Heartbeat prevents long critical sections from being evicted as stale.
+228:       timer = setInterval(() => {
+229:         const t = new Date()
+230:         void utimes(heartbeatPath, t, t).catch(() => undefined)
+231:       }, intervalMs)
+232:       timer.unref?.()
+233:     }
+234: 
+235:     const release = async () => {
+236:       if (timer) {
+237:         clearInterval(timer)
+238:         timer = undefined
+239:       }
+240: 
+241:       const current = await readFile(metaPath, "utf8")
+242:         .then((raw) => {
+243:           const parsed = JSON.parse(raw)
+244:           if (!parsed || typeof parsed !== "object") return {}
+245:           return {
+246:             token: "token" in parsed && typeof parsed.token === "string" ? parsed.token : undefined,
+247:           }
+248:         })
+249:         .catch((err) => {
+250:           const errCode = code(err)
+251:           if (errCode === "ENOENT" || errCode === "ENOTDIR") {
+252:             throw new Error("Refusing to release: lock is compromised (metadata missing).")
+253:           }
+254:           if (err instanceof SyntaxError) {
+255:             throw new Error("Refusing to release: lock is compromised (metadata invalid).")
+256:           }
+257:           throw err
+258:         })
+259:       // Token check prevents deleting a lock that was re-acquired by another process.
+260:       if (current.token !== token) {
+261:         throw new Error("Refusing to release: lock token mismatch (not the owner).")
+262:       }
+263: 
+264:       await rm(lockDir, { recursive: true, force: true })
+````
+Linhas 326–342; hash do trecho UTF-8 original `68d63b87638b95123dc76cf5d3234c9c870f7608b506aedac05d1d768ea492e8`.
+````text
+326:         onWait: input.onWait,
+327:         signal: input.signal,
+328:       },
+329:       cfg,
+330:     )
+331:     lock.startHeartbeat()
+332: 
+333:     const release = () => lock.release()
+334:     return {
+335:       release,
+336:       [Symbol.asyncDispose]() {
+337:         return release()
+338:       },
+339:     }
+340:   }
+341: 
+342:   export async function withLock<T>(key: string, fn: () => Promise<T>, input: Options = {}) {
+````
+
+### E64 — Utilities lock: `packages/core/src/util/effect-flock.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `b85900118a38d9bb000ed2beff9add8f41e222d9`; SHA-256 `926d0d566e1101ae4374576781f6015a33ae42ad5fd161286539ec6f284a15cf`.
+Linhas 244–284; hash do trecho UTF-8 original `1667e765d5afbee9282426b8ca5f0fed80741c8a0a8f48c8aab149417d2c52c0`.
+````text
+244:           }).pipe(Effect.orDie)
+245: 
+246:           if (parsed.token !== handle.token) return yield* Effect.die(new ReleaseError({ detail: "token mismatch" }))
+247: 
+248:           yield* forceRemove(handle.lockDir)
+249:         })
+250: 
+251:       // -- build service --
+252: 
+253:       const acquire = Effect.fn("EffectFlock.acquire")(function* (key: string, dir?: string) {
+254:         const lockDir = dir ?? lockRoot
+255:         yield* ensureDir(lockDir)
+256: 
+257:         const lockfile = path.join(lockDir, Hash.fast(key) + ".lock")
+258: 
+259:         // acquireRelease: acquire is uninterruptible, release is guaranteed
+260:         const handle = yield* Effect.acquireRelease(acquireHandle(lockfile, key), (handle) => release(handle))
+261: 
+262:         // Heartbeat fiber — scoped, so it's interrupted before release runs
+263:         yield* fs
+264:           .utimes(handle.heartbeatPath, new Date(), new Date())
+265:           .pipe(Effect.ignore, Effect.repeat(Schedule.spaced(HEARTBEAT_MS)), Effect.forkScoped)
+266:       })
+267: 
+268:       const withLock: Interface["withLock"] = Function.dual(
+269:         (args) => Effect.isEffect(args[0]),
+270:         <A, E, R>(body: Effect.Effect<A, E, R>, key: string, dir?: string): Effect.Effect<A, E | LockError, R> =>
+271:           Effect.scoped(
+272:             Effect.gen(function* () {
+273:               yield* acquire(key, dir)
+274:               return yield* body
+275:             }),
+276:           ),
+277:       )
+278: 
+279:       return Service.of({ acquire, withLock })
+280:     }),
+281:   )
+282: 
+283:   export const node = makeGlobalNode({ service: Service, layer: layer, deps: [Global.node, FSUtil.node] })
+284: }
+````
+
+### E65 — Imagem: `packages/core/src/image/photon.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `097894d3a4da52246ab8c3e92ed79bee698ec066`; SHA-256 `20ab783408a8718092d0b18b74ca6f5d27dbf707fefe4e743dd804df6d0be922`.
+Linhas 40–70; hash do trecho UTF-8 original `721411f05fb852292a63a18cb151aefbe87c2285d0c727e75218644c179c351c`.
+````text
+40:       if (!limits.autoResize)
+41:         return yield* new SizeError({
+42:           resource,
+43:           width,
+44:           height,
+45:           bytes,
+46:           maxWidth: limits.maxWidth,
+47:           maxHeight: limits.maxHeight,
+48:           maxBytes: limits.maxBase64Bytes,
+49:         })
+50:       const scale = Math.min(1, limits.maxWidth / width, limits.maxHeight / height)
+51:       const sizes = Array.from({ length: 32 }).reduce<Array<{ width: number; height: number }>>((acc) => {
+52:         const previous = acc.at(-1) ?? {
+53:           width: Math.max(1, Math.round(width * scale)),
+54:           height: Math.max(1, Math.round(height * scale)),
+55:         }
+56:         const next =
+57:           acc.length === 0
+58:             ? previous
+59:             : {
+60:                 width: previous.width === 1 ? 1 : Math.max(1, Math.floor(previous.width * 0.75)),
+61:                 height: previous.height === 1 ? 1 : Math.max(1, Math.floor(previous.height * 0.75)),
+62:               }
+63:         return acc.some((item) => item.width === next.width && item.height === next.height) ? acc : [...acc, next]
+64:       }, [])
+65:       for (const size of sizes) {
+66:         const resized = photon.resize(decoded, size.width, size.height, photon.SamplingFilter.Lanczos3)
+67:         try {
+68:           const encoders: Array<readonly [mime: string, encode: () => Uint8Array]> = [
+69:             ["image/png", () => resized.get_bytes()],
+70:             ...JPEG_QUALITIES.map((quality) => ["image/jpeg", () => resized.get_bytes_jpeg(quality)] as const),
+````
+
+### E66 — Teste fonte: `packages/core/test/format.test.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `bb7545f92d8124d723b54ea5e97561591061a6e5`; SHA-256 `95ab421c55cbc858d8a7acc3007a9bb421e1f6ed4c414bb70b70d557abdc963c`.
+Linhas 38–64; hash do trecho UTF-8 original `6ab9565d39a49d456f85f16ca26cc36a32d5e731682bf86ac4ac544f88f6d6b2`.
+````text
+38:   it.live("merges config overrides over the built-ins", () =>
+39:     Effect.gen(function* () {
+40:       const format = yield* Format.Service
+41:       const status = yield* format.status()
+42:       const names = status.map((item) => item.name)
+43: 
+44:       expect(status.find((item) => item.name === "house")).toEqual({
+45:         name: "house",
+46:         extensions: [".house"],
+47:         enabled: true,
+48:       })
+49:       // Disabling ruff disables uv too.
+50:       expect(names).not.toContain("ruff")
+51:       expect(names).not.toContain("uv")
+52:       expect(names).not.toContain("gofmt")
+53:       expect(names).toContain("prettier")
+54:       expect(status.find((item) => item.name === "prettier")?.extensions).toContain(".ts")
+55:       expect(status.every((item) => typeof item.enabled === "boolean")).toBe(true)
+56:     }).pipe(
+57:       withFormat({
+58:         ruff: { disabled: true },
+59:         gofmt: { disabled: true },
+60:         house: { command: ["house-fmt", "$FILE"], extensions: [".house"] },
+61:       }),
+62:     ),
+63:   )
+64: })
+````
+
+### E67 — Teste fonte: `packages/core/test/lsp-stdio.test.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `79a3c7bb7c8a6464913bdbe475eeb27f65202a83`; SHA-256 `5a5c342e1584a1f77bb1fb1f99ba03b30c5043fd966b721fdc93eb71e6eef870`.
+Linhas 42–58; hash do trecho UTF-8 original `ab22538f0396d10b4073a5b9a2c03801052fc88b55a7e44626c0074993a2fd88`.
+````text
+42: describe("LSP over stdio", () => {
+43:   it.live("connects a configured language server and reports it connected", () =>
+44:     Effect.acquireUseRelease(
+45:       Effect.promise(() => tmpdir()),
+46:       (tmp) =>
+47:         Effect.gen(function* () {
+48:           expectSpawn(import.meta.path)
+49:           const lsp = yield* LSP.Service
+50:           const file = path.join(tmp.path, "sample.stdio")
+51:           yield* Effect.promise(() => fs.writeFile(file, "sample\n"))
+52:           yield* lsp.touchFile(file)
+53:           expect(yield* lsp.status()).toEqual([{ id: "stdio", name: "stdio", root: "", status: "connected" }])
+54:         }).pipe(Effect.provide(layer(tmp.path))),
+55:       (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+56:     ),
+57:   )
+58: })
+````
+
+### E68 — Probe fonte: `packages/core/test/omni-worker.probe.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `bc474819d7dfd15254cb5b5645bfde438483b36a`; SHA-256 `a7548a0726674c5f9d446cbcc8d0b2e4be731c5b05e967d325ecdd4cf24b10aa`.
+Linhas 1–9; hash do trecho UTF-8 original `23422431b248ea06c9940a43583b080f9c73703d91dfce25cf15886c690f3765`.
+````text
+1: // Probe (d), integration plan §7 / H1. Not a test: `bun test` does not pick up *.probe.ts. A Worker loads hugr-omni
+2: // through the core loader and starts a nonce tree, then the host terminates the Worker. The probe prints what it saw
+3: // and exits; the shell reports the host's exit code (Bun aborted with 134 when this was written).
+4: //
+5: //   bun test/omni-worker.probe.ts
+6: //   node --experimental-strip-types test/omni-worker.probe.ts
+7: //
+8: // Needs a built addon and supervisor (bun run omni:build). WP-H turns this into an omni test that must exit 0 with
+9: // the Worker's tree gone.
+````
+Linhas 14–25; hash do trecho UTF-8 original `d57041f1c7b27b981377a4702cdd81b70ff12b42f22e9e01c6f308538ddbfb00`.
+````text
+14: if (isMainThread) {
+15:   const worker = new Worker(new URL(import.meta.url))
+16:   const nonce = await new Promise<string>((resolve, reject) => {
+17:     worker.once("message", resolve)
+18:     worker.once("error", reject)
+19:   })
+20:   console.log(`probe(d): worker tree ${nonce} up, ${await alive(nonce)} processes alive`)
+21:   const code = await worker.terminate()
+22:   console.log(`probe(d): worker terminated (code ${code})`)
+23:   const left = await gone(nonce, 5_000)
+24:   console.log(`probe(d): ${left} tree processes alive 5 s after terminate (${left === 0 ? "PASS" : "FAIL"})`)
+25:   await reap(nonce)
+````
+
+FIM C01. Julgue todos os critérios aplicáveis para o corpo integral. Não transfira PASS de outros corpos nem transforme declaração de cobertura em leitura semântica. Se faltar fonte decisiva, indique exatamente caminho/range/afirmação necessária; FIX-FIRST para divergência demonstrada. Critério/resultado/evidência concisos, até 1200 palavras, sem raciocínio privado.

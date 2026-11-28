@@ -1,0 +1,22 @@
+{
+  "id": "format_trust",
+  "path": "packages/core/src/format/format.ts",
+  "start_line": 46,
+  "end_line": 62,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "            Effect.map((result) => ({ code: result.exitCode, text: result.stdout.toString() })),\n            Effect.catch(() => Effect.succeed({ code: 1, text: \"\" })),\n          ),\n        ),\n    }\n\n    // A project's formatter commands are code the repository chose to run: they apply only once the user trusts the project.\n    let warned = false\n    const entries = Effect.fnUntraced(function* () {\n      const all = yield* config.entries()\n      const allowed = ConfigTrust.runnable(all, global.config, location.directory)\n      if (!warned && all.some((entry) => !allowed.includes(entry) && entry.type === \"document\" && entry.info.formatter !== undefined)) {\n        warned = true\n        yield* Effect.logWarning(`Project formatter config ignored. ${ConfigTrust.approveHint(location.directory)}`)\n      }\n      return allowed\n    })",
+      "encoding": "utf-8",
+      "sha": "0198f9c0d4aa4a9e1452339ca5c3302611478aba",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/format/format.ts",
+      "display_title": "format.ts"
+    },
+    "isError": false
+  }
+}

@@ -1,0 +1,16 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Action completed."
+    }
+  ],
+  "structuredContent": {
+    "content": "  })\n\nconst attemptIdOf = (record: AttemptRecord): AttemptId =>\n  ({ envelopeId: record.envelopeId, logicalRequestId: record.logicalRequestId, ordinal: record.ordinal })\n\nconst canonicalUsage = (usage: AttemptUsage | undefined): string =>\n  JSON.stringify(Object.fromEntries(Object.entries(usage ?? {}).filter((entry) => entry[1] !== undefined)))\n\nconst validUsage = (usage: AttemptUsage, evidence: readonly string[]): AttemptOutcome | undefined => {\n  for (const [name, value] of Object.entries(usage)) {\n    if (value === undefined) continue\n    if (typeof value !== \"number\" || !Number.isFinite(value) || !Number.isInteger(value) || value < 0) {\n      return refusal(\"usage\", [...evidence, name])\n    }\n  }\n  if (usage.cachedInputTokens !== undefined && usage.inputTokens === undefined) return refusal(\"usage\", [...evidence, \"inputTokens\"])\n  if (usage.reasoningTokens !== undefined && usage.outputTokens === undefined) return refusal(\"usage\", [...evidence, \"outputTokens\"])\n  if (usage.cachedInputTokens !== undefined && usage.cachedInputTokens > (usage.inputTokens ?? 0)) {\n    return refusal(\"usage\", [...evidence, \"cachedInputTokens\"])\n  }\n  if (usage.reasoningTokens !== undefined && usage.reasoningTokens > (usage.outputTokens ?? 0)) {\n    return refusal(\"usage\", [...evidence, \"reasoningTokens\"])\n  }\n  return undefined\n}\n\n/** Records a consumed HTTP error without calling it remote terminus or releasing the slot. */\nexport const noteTransportError = (\n  attempt: AttemptId,\n  evidence: TerminalEvidence,\n): Effect.Effect<AttemptOutcome, never, Database.Service> =>\n  attemptWrite(attempt, (record) => {\n    if (record.evidenceDigest !== undefined && record.evidenceDigest !== evidence.evidenceDigest) {\n      return Effect.succeed({ patch: {}, result: refusal(\"conflict\", [attemptKey(attempt)]) })\n    }\n    return Effect.succeed({\n      patch: { evidence_digest: evidence.evidenceDigest, evidence_json: evidence.evidence },\n      result: settled(attempt),\n    })\n  })\n",
+    "encoding": "utf-8",
+    "sha": "914a0b925dd282e264292b2247189c549c993a3f",
+    "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/economy/admission.ts",
+    "display_title": "admission.ts"
+  },
+  "isError": false
+}

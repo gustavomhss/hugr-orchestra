@@ -1,0 +1,514 @@
+SS01 — fontes literais, parte 06; mesmo pin/corpo.
+
+### packages/core/src/database/sqlite.node.ts
+```text
+56:     const run = (query: string, params: ReadonlyArray<unknown> = []) =>
+57:       Effect.withFiber<Array<Record<string, unknown>>, SqlError>((fiber) => {
+58:         const statement = native.prepare(query)
+59:         statement.setReadBigInts(Context.get(fiber.context, Client.SafeIntegers))
+60:         try {
+61:           return Effect.succeed(statement.all(...(params as SQLInputValue[])) as Array<Record<string, unknown>>)
+62:         } catch (cause) {
+63:           return Effect.fail(
+64:             new SqlError({
+65:               reason: classifySqliteError(cause, { message: "Failed to execute statement", operation: "execute" }),
+66:             }),
+67:           )
+68:         }
+69:       })
+71:     const runValues = (query: string, params: ReadonlyArray<unknown> = []) =>
+72:       Effect.withFiber<ReadonlyArray<ReadonlyArray<unknown>>, SqlError>((fiber) => {
+73:         const statement = native.prepare(query)
+74:         statement.setReadBigInts(Context.get(fiber.context, Client.SafeIntegers))
+75:         statement.setReturnArrays(true)
+76:         try {
+77:           return Effect.succeed(
+78:             statement.all(...(params as SQLInputValue[])) as unknown as ReadonlyArray<ReadonlyArray<unknown>>,
+79:           )
+80:         } catch (cause) {
+81:           return Effect.fail(
+82:             new SqlError({
+83:               reason: classifySqliteError(cause, { message: "Failed to execute statement", operation: "execute" }),
+84:             }),
+85:           )
+86:         }
+87:       })
+89:     const connection = identity<SqliteConnection>({
+90:       execute(query, params, transformRows) {
+91:         return transformRows ? Effect.map(run(query, params), transformRows) : run(query, params)
+92:       },
+93:       executeRaw(query, params) {
+94:         return run(query, params)
+95:       },
+96:       executeValues(query, params) {
+97:         return runValues(query, params)
+98:       },
+99:       executeUnprepared(query, params, transformRows) {
+100:         return this.execute(query, params, transformRows)
+101:       },
+102:       executeStream() {
+103:         return Stream.die("executeStream not implemented")
+104:       },
+… omitted original lines …
+118:       const fiber = Fiber.getCurrent()!
+119:       const scope = Context.getUnsafe(fiber.context, Scope.Scope)
+120:       return Effect.as(
+121:         Effect.tap(restore(semaphore.take(1)), () => Scope.addFinalizer(scope, semaphore.release(1))),
+122:         connection,
+123:       )
+124:     })
+126:     const client = Object.assign(
+127:       (yield* Client.make({
+128:         acquirer,
+129:         compiler,
+130:         transactionAcquirer,
+131:         spanAttributes: [
+132:           ...(options.spanAttributes ? Object.entries(options.spanAttributes) : []),
+133:           [ATTR_DB_SYSTEM_NAME, "sqlite"],
+134:         ],
+135:         transformRows,
+136:       })) as SqliteClient,
+137:       {
+138:         [TypeId]: TypeId,
+139:         config: options,
+140:         loadExtension: (path: string) => Effect.flatMap(acquirer, (_) => _.loadExtension(path)),
+141:       },
+142:     )
+144:     return client
+```
+
+### packages/core/src/event.ts
+```text
+442:       function publishEvent<D extends Definition>(
+443:         definition: D,
+444:         event: Payload<D>,
+445:         commit?: PublishOptions["commit"],
+446:         persist = true,
+447:       ) {
+448:         return Effect.gen(function* () {
+449:           if (!persist && commit)
+450:             return yield* Effect.die(
+451:               new InvalidDurableEventError({
+452:                 type: event.type,
+453:                 message: "Local commit hooks cannot be combined with persist:false",
+454:               }),
+455:             )
+456:           if (!definition?.durable && commit)
+457:             return yield* Effect.die(
+458:               new InvalidDurableEventError({
+459:                 type: event.type,
+460:                 message: "Local commit hooks require a durable event",
+461:               }),
+462:             )
+463:           if (definition?.durable) {
+464:             const committed = yield* commitDurableEvent(definition, event as Payload, undefined, commit, persist)
+465:             if (committed) {
+466:               event = {
+467:                 ...event,
+468:                 durable: {
+469:                   aggregateID: committed.aggregateID,
+470:                   seq: committed.seq,
+471:                   version: definition.durable.version,
+472:                 },
+473:               }
+474:               yield* notify(event as Payload, true)
+475:               return event
+476:             }
+477:           }
+478:           yield* notify(event as Payload, false)
+479:           return event
+480:         })
+481:       }
+483:       const observe = (event: Payload, observer: (event: Payload) => Effect.Effect<void>) =>
+484:         Effect.suspend(() => observer(event)).pipe(
+485:           Effect.catchCauseIf(
+486:             (cause) => !Cause.hasInterrupts(cause),
+487:             (cause) => Effect.logError("Event listener failed", { eventID: event.id, eventType: event.type, cause }),
+488:           ),
+489:         )
+491:       function notify(event: Payload, isolateListeners: boolean) {
+492:         return Effect.gen(function* () {
+493:           yield* Effect.forEach(
+494:             listeners,
+495:             (listener) => (isolateListeners ? observe(event, listener) : listener(event)),
+496:             { discard: true },
+497:           )
+498:           const typed = pubsub.typed.get(event.type)
+499:           if (typed) yield* PubSub.publish(typed, event)
+500:           yield* PubSub.publish(pubsub.all, event)
+501:         })
+… omitted original lines …
+564:       function replayAll(
+565:         events: SerializedEvent[],
+566:         options?: { readonly publish?: boolean; readonly ownerID?: string; readonly strictOwner?: boolean },
+567:       ) {
+568:         return Effect.gen(function* () {
+569:           const source = events[0]?.aggregateID
+570:           if (!source) return undefined
+571:           if (events.some((event) => event.aggregateID !== source)) {
+572:             yield* Effect.die(
+573:               new InvalidDurableEventError({
+574:                 type: events[0]?.type ?? "unknown",
+575:                 message: "Replay events must belong to the same aggregate",
+576:               }),
+577:             )
+578:           }
+579:           const committed = yield* db
+580:             .transaction(
+581:               () =>
+582:                 Effect.gen(function* () {
+583:                   const start = events[0]?.seq ?? 0
+584:                   for (const [index, event] of events.entries()) {
+585:                     const seq = start + index
+586:                     if (event.seq !== seq) {
+587:                       yield* Effect.die(
+588:                         new InvalidDurableEventError({
+589:                           type: event.type,
+590:                           message: `Replay sequence mismatch at index ${index}: expected ${seq}, got ${event.seq}`,
+591:                         }),
+592:                       )
+593:                     }
+594:                   }
+595:                   return yield* Effect.forEach(events, (event) => replay(event, { ...options, publish: false }))
+596:                 }),
+597:               { behavior: "immediate" },
+598:             )
+599:             .pipe(Effect.orDie)
+600:           if (options?.publish)
+601:             yield* Effect.forEach(
+602:               committed.filter((event): event is Payload => event !== undefined),
+603:               (event) => notify(event, true),
+604:               { discard: true },
+605:             )
+606:           return source
+607:         })
+```
+
+### packages/core/src/event/seal.ts
+```text
+239: function verifyRows(
+240:   input: SealWindowInput,
+241:   rows: readonly (Row & Seal)[],
+242:   predecessor: (Seal & { seq: number }) | undefined,
+243:   headSeq: number | null,
+244:   compacted: boolean,
+245:   tailSeq: number | null,
+246: ): SealWindowResult {
+247:   const reasons = new Set<typeof Reason.Type>()
+248:   const broken = new Set<typeof Reason.Type>()
+249:   const fail = (reason: typeof Reason.Type) => {
+250:     reasons.add(reason)
+251:     broken.add(reason)
+252:   }
+253:   const missing = () => {
+254:     reasons.add("MISSING_EVENT")
+255:     if (compacted) reasons.add("COMPACTED_HISTORY")
+256:   }
+257:   if (headSeq !== null && (!Number.isSafeInteger(headSeq) || headSeq < 0)) fail("MISSING_EVENT")
+258:   if (tailSeq !== null && (tailSeq < 0 || headSeq === null || (headSeq >= 0 && tailSeq > headSeq)))
+259:     fail("HEAD_SEQUENCE_MISMATCH")
+260:   const rangeComplete =
+261:     rows.length === input.toSeq - input.fromSeq + 1 && rows.every((row, index) => row.seq === input.fromSeq + index)
+262:   const recordedRows = headSeq === null ? 0 : Math.max(0, Math.min(headSeq, input.toSeq) - input.fromSeq + 1)
+263:   if (!rangeComplete) missing()
+264:   if (rows.length !== recordedRows || rows.some((row, index) => row.seq !== input.fromSeq + index)) {
+265:     missing()
+266:     if (!compacted) broken.add("MISSING_EVENT")
+267:   }
+268:   if (input.fromSeq > 0) reasons.add("PREFIX_OUTSIDE_WINDOW")
+269:   if (input.toSeq < Math.max(headSeq ?? -1, tailSeq ?? -1)) reasons.add("TAIL_OUTSIDE_WINDOW")
+270:   if (rows.some((row) => !Number.isSafeInteger(row.seq) || row.seq < 0)) fail("MISSING_EVENT")
+271:   rows.forEach((row, index) => {
+272:     if (unsealed(row)) {
+273:       reasons.add("UNSEALED_HISTORY")
+274:       return
+275:     }
+276:     if (!isSealed(row)) {
+277:       fail("MALFORMED_SEAL")
+278:       return
+279:     }
+280:     if (hashRow(row, row.seal_prev) !== row.seal_hash && hashRow(row, row.seal_prev, LEGACY_DOMAIN) !== row.seal_hash)
+281:       fail("HASH_MISMATCH")
+282:     const previous = index ? rows[index - 1] : predecessor
+283:     if (row.seq === 0) {
+284:       if (row.seal_prev !== GENESIS) fail("LINK_MISMATCH")
+285:       return
+286:     }
+287:     if (!previous || previous.seq !== row.seq - 1) {
+288:       missing()
+289:       if (!compacted) broken.add("MISSING_EVENT")
+290:       return
+291:     }
+292:     if (unsealed(previous)) {
+293:       reasons.add("UNSEALED_HISTORY")
+294:       if (row.seal_prev !== GENESIS) fail("LINK_MISMATCH")
+295:       return
+296:     }
+297:     if (!isSealed(previous)) {
+298:       fail("MALFORMED_SEAL")
+299:       return
+300:     }
+301:     if (row.seal_prev !== previous.seal_hash) fail("LINK_MISMATCH")
+302:   })
+303:   const first = rows[0]
+304:   const last = rows.at(-1)
+305:   const previousHash = first && isHash(first.seal_prev) ? first.seal_prev : null
+306:   const tipHash = last && isHash(last.seal_hash) ? last.seal_hash : null
+307:   if (previousHash !== null && input.expectedPreviousHash !== undefined && previousHash !== input.expectedPreviousHash)
+308:     fail("EXPECTED_ANCHOR_MISMATCH")
+309:   if (tipHash !== null && input.expectedTipHash !== undefined && tipHash !== input.expectedTipHash)
+310:     fail("EXPECTED_TIP_MISMATCH")
+311:   const status = broken.size
+312:     ? "BROKEN"
+313:     : !rangeComplete || !rows.length || reasons.has("UNSEALED_HISTORY") || reasons.has("COMPACTED_HISTORY")
+314:       ? "UNKNOWN"
+315:       : "VERIFIED_WINDOW"
+316:   return {
+317:     status,
+318:     algorithm: "sha256-native-event-v1",
+319:     aggregateID: input.aggregateID,
+320:     fromSeq: input.fromSeq,
+321:     toSeq: input.toSeq,
+322:     rows: rows.length,
+323:     headSeq: headSeq !== null && Number.isSafeInteger(headSeq) && headSeq >= 0 ? headSeq : null,
+324:     previousHash,
+325:     tipHash,
+326:     anchor:
+327:       previousHash === null
+328:         ? "historical-unknown"
+329:         : input.expectedPreviousHash !== undefined
+330:           ? "caller"
+331:           : input.fromSeq === 0
+332:             ? "genesis"
+333:             : predecessor && isSealed(predecessor)
+334:               ? "stored-predecessor"
+335:               : "historical-unknown",
+336:     rangeComplete,
+337:     historyComplete: status === "VERIFIED_WINDOW" && input.fromSeq === 0 && input.toSeq === headSeq,
+338:     reasons: [...reasons].sort(),
+339:   }
+340: }
+```
+
+### packages/core/src/event/compaction.ts
+```text
+1: export * as EventCompaction from "./compaction"
+3: // Recorded in `data_migration` when durable rows were deleted from the event log, leaving sequence gaps. Seal
+4: // verification then reports the history as compacted instead of broken, and workspace sync refuses to replay it.
+5: export const SNAPSHOT_COMPACTION_MARKER = "event_snapshot_compaction"
+```
+
+### packages/core/src/database/migration/20260603040000_session_message_projection_order.ts
+```text
+1: import { Effect } from "effect"
+2: import type { DatabaseMigration } from "../migration"
+4: export default {
+5:   id: "20260603040000_session_message_projection_order",
+6:   up(tx) {
+7:     return Effect.gen(function* () {
+8:       // Pre-launch Session projections were written before durable event persistence
+9:       // became unconditional, so they cannot be assigned truthful aggregate order.
+10:       yield* tx.run(`DELETE FROM \`session_message\`;`)
+11:       yield* tx.run(`ALTER TABLE \`session_message\` ADD COLUMN \`seq\` integer NOT NULL;`)
+12:       yield* tx.run(`DROP INDEX IF EXISTS \`session_message_session_type_time_created_id_idx\`;`)
+13:       yield* tx.run(`CREATE INDEX \`session_message_session_seq_idx\` ON \`session_message\` (\`session_id\`,\`seq\`);`)
+14:       yield* tx.run(
+15:         `CREATE INDEX \`session_message_session_type_seq_idx\` ON \`session_message\` (\`session_id\`,\`type\`,\`seq\`);`,
+16:       )
+17:     })
+18:   },
+19: } satisfies DatabaseMigration.Migration
+```
+
+### packages/core/src/database/migration/20260604172448_event_sourced_session_input.ts
+```text
+1: import { Effect } from "effect"
+2: import type { DatabaseMigration } from "../migration"
+4: export default {
+5:   id: "20260604172448_event_sourced_session_input",
+6:   up(tx) {
+7:     return Effect.gen(function* () {
+8:       yield* tx.run(`DELETE FROM \`session_input\`;`)
+9:       yield* tx.run(`DELETE FROM \`session_message\`;`)
+10:       yield* tx.run(`DELETE FROM \`event\`;`)
+11:       yield* tx.run(`DELETE FROM \`event_sequence\`;`)
+12:       yield* tx.run(`UPDATE \`session\` SET \`workspace_id\` = NULL;`)
+13:       yield* tx.run(`DELETE FROM \`workspace\`;`)
+14:       yield* tx.run(`DROP INDEX IF EXISTS \`event_aggregate_seq_idx\`;`)
+15:       yield* tx.run(`CREATE UNIQUE INDEX \`event_aggregate_seq_idx\` ON \`event\` (\`aggregate_id\`,\`seq\`);`)
+16:       yield* tx.run(`DROP INDEX IF EXISTS \`session_message_session_seq_idx\`;`)
+17:       yield* tx.run(
+18:         `CREATE UNIQUE INDEX \`session_message_session_seq_idx\` ON \`session_message\` (\`session_id\`,\`seq\`);`,
+19:       )
+20:       yield* tx.run(`PRAGMA foreign_keys=OFF;`)
+21:       yield* tx.run(`
+22:         CREATE TABLE \`__new_session_input\` (
+23:           \`id\` text PRIMARY KEY,
+24:           \`session_id\` text NOT NULL,
+25:           \`prompt\` text NOT NULL,
+26:           \`delivery\` text NOT NULL,
+27:           \`admitted_seq\` integer NOT NULL,
+28:           \`promoted_seq\` integer,
+29:           \`time_created\` integer NOT NULL,
+30:           CONSTRAINT \`fk_session_input_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE CASCADE
+31:         );
+32:       `)
+33:       yield* tx.run(`DROP TABLE \`session_input\`;`)
+34:       yield* tx.run(`ALTER TABLE \`__new_session_input\` RENAME TO \`session_input\`;`)
+35:       yield* tx.run(`PRAGMA foreign_keys=ON;`)
+36:       yield* tx.run(
+37:         `CREATE INDEX \`session_input_session_pending_delivery_seq_idx\` ON \`session_input\` (\`session_id\`,\`promoted_seq\`,\`delivery\`,\`admitted_seq\`);`,
+38:       )
+39:       yield* tx.run(
+40:         `CREATE UNIQUE INDEX \`session_input_session_admitted_seq_idx\` ON \`session_input\` (\`session_id\`,\`admitted_seq\`);`,
+41:       )
+42:       yield* tx.run(
+43:         `CREATE UNIQUE INDEX \`session_input_session_promoted_seq_idx\` ON \`session_input\` (\`session_id\`,\`promoted_seq\`);`,
+44:       )
+45:     })
+46:   },
+47: } satisfies DatabaseMigration.Migration
+```
+
+### packages/core/src/database/migration/20260622170816_reset_v2_session_state.ts
+```text
+1: import { Effect } from "effect"
+2: import type { DatabaseMigration } from "../migration"
+4: export default {
+5:   id: "20260622170816_reset_v2_session_state",
+6:   up(tx) {
+7:     return Effect.gen(function* () {
+8:       yield* tx.run(`DELETE FROM \`session_context_epoch\`;`)
+9:       yield* tx.run(`DELETE FROM \`session_input\`;`)
+10:       yield* tx.run(`DELETE FROM \`session_message\`;`)
+11:       yield* tx.run(`DELETE FROM \`event\`;`)
+12:       yield* tx.run(`DELETE FROM \`event_sequence\`;`)
+13:       yield* tx.run(`UPDATE \`session\` SET \`workspace_id\` = NULL WHERE \`workspace_id\` IS NOT NULL;`)
+14:       yield* tx.run(`DELETE FROM \`workspace\`;`)
+15:     })
+16:   },
+17: } satisfies DatabaseMigration.Migration
+```
+
+### packages/core/src/database/migration/20260622202450_simplify_session_input.ts
+```text
+1: import { Effect } from "effect"
+2: import type { DatabaseMigration } from "../migration"
+4: export default {
+5:   id: "20260622202450_simplify_session_input",
+6:   up(tx) {
+7:     return Effect.gen(function* () {
+8:       yield* tx.run(`DELETE FROM \`session_context_epoch\`;`)
+9:       yield* tx.run(`DELETE FROM \`session_input\`;`)
+10:       yield* tx.run(`DELETE FROM \`session_message\`;`)
+11:       yield* tx.run(`DELETE FROM \`event\`;`)
+12:       yield* tx.run(`DELETE FROM \`event_sequence\`;`)
+13:       yield* tx.run(`UPDATE \`session\` SET \`workspace_id\` = NULL WHERE \`workspace_id\` IS NOT NULL;`)
+14:       yield* tx.run(`DELETE FROM \`workspace\`;`)
+15:     })
+16:   },
+17: } satisfies DatabaseMigration.Migration
+```
+
+### packages/core/src/database/migration/20261002195730_event_seals.ts
+```text
+1: import { Effect } from "effect"
+2: import type { DatabaseMigration } from "../migration"
+4: export default {
+5:   id: "20261002195730_event_seals",
+6:   up(tx) {
+7:     return Effect.gen(function* () {
+8:       yield* tx.run(`ALTER TABLE \`event\` ADD \`seal_version\` integer;`)
+9:       yield* tx.run(`ALTER TABLE \`event\` ADD \`seal_prev\` text;`)
+10:       yield* tx.run(`ALTER TABLE \`event\` ADD \`seal_hash\` text;`)
+11:     })
+12:   },
+13: } satisfies DatabaseMigration.Migration
+```
+
+### packages/core/src/database/migration/20261026013700_retire_legacy_session_events.ts
+```text
+1: import { Effect } from "effect"
+2: import type { DatabaseMigration } from "../migration"
+4: // Durable rows written by the retired legacy session lifecycle and transcript events. No schema decodes them any
+5: // more, so a durable read would fail on them. Their state already lives in the `session`, `message` and `part`
+6: // tables, which the legacy transcript import reads, so the rows are deleted rather than rewritten: rewriting would
+7: // need new seal hashes, and that would forge the tamper-evident chain. Deleting leaves sequence gaps, so the
+8: // snapshot compaction marker is recorded, which makes seal verification report the history as compacted and makes
+9: // workspace sync refuse to replay it.
+10: const types = [
+11:   "session.created.1",
+12:   "session.updated.1",
+13:   "session.deleted.1",
+14:   "message.updated.1",
+15:   "message.removed.1",
+16:   "message.part.updated.1",
+17:   "message.part.removed.1",
+18: ]
+20: export default {
+21:   id: "20261026013700_retire_legacy_session_events",
+22:   up(tx) {
+23:     return Effect.gen(function* () {
+24:       // A database that lost its `event` table holds no legacy rows to retire.
+25:       const table = yield* tx.all<{ name: string }>(
+26:         `SELECT \`name\` FROM \`sqlite_master\` WHERE \`type\` = 'table' AND \`name\` = 'event'`,
+27:       )
+28:       if (table.length === 0) return
+29:       const list = types.map((type) => `'${type}'`).join(", ")
+30:       const found = yield* tx.all<{ id: string }>(`SELECT \`id\` FROM \`event\` WHERE \`type\` IN (${list}) LIMIT 1`)
+31:       if (found.length === 0) return
+32:       yield* tx.run(`DELETE FROM \`event\` WHERE \`type\` IN (${list})`)
+33:       yield* tx.run(
+34:         `INSERT OR REPLACE INTO \`data_migration\` (\`name\`, \`time_completed\`) VALUES ('event_snapshot_compaction', ${Date.now()})`,
+35:       )
+36:     })
+37:   },
+38: } satisfies DatabaseMigration.Migration
+```
+
+### packages/core/src/database/migration/20261026232319_meeting_memory.ts
+```text
+46:           CONSTRAINT \`fk_meeting_proposal_meeting_id_meeting_id_fk\` FOREIGN KEY (\`meeting_id\`) REFERENCES \`meeting\`(\`id\`) ON DELETE CASCADE,
+47:           CONSTRAINT \`fk_meeting_proposal_merge_with_meeting_person_id_fk\` FOREIGN KEY (\`merge_with\`) REFERENCES \`meeting_person\`(\`id\`) ON DELETE SET NULL
+48:         );
+49:       `)
+50:       yield* tx.run(`ALTER TABLE \`meeting\` ADD \`retention\` text DEFAULT 'kept' NOT NULL;`)
+51:       yield* tx.run(`ALTER TABLE \`meeting\` ADD \`consent\` text DEFAULT 'unknown' NOT NULL;`)
+52:       yield* tx.run(`ALTER TABLE \`meeting\` ADD \`card_status\` text DEFAULT 'pending' NOT NULL;`)
+53:       yield* tx.run(`ALTER TABLE \`meeting\` ADD \`card_error\` text;`)
+54:       yield* tx.run(`ALTER TABLE \`meeting\` ADD \`card_summary\` text DEFAULT '' NOT NULL;`)
+55:       // PRAGMA foreign_keys is a no-op inside the migration transaction, so dropping `meeting` would cascade into
+56:       // `meeting_segment`. Keep the segments aside and put them back after the rebuild.
+57:       yield* tx.run(`CREATE TABLE \`__meeting_segment_keep\` AS SELECT * FROM \`meeting_segment\`;`)
+58:       yield* tx.run(`
+59:         CREATE TABLE \`__new_meeting\` (
+60:           \`id\` text PRIMARY KEY,
+61:           \`session_id\` text,
+62:           \`title\` text NOT NULL,
+63:           \`time_started\` integer NOT NULL,
+64:           \`time_ended\` integer,
+65:           \`retention\` text DEFAULT 'kept' NOT NULL,
+66:           \`consent\` text DEFAULT 'unknown' NOT NULL,
+67:           \`card_status\` text DEFAULT 'pending' NOT NULL,
+68:           \`card_error\` text,
+69:           \`card_summary\` text DEFAULT '' NOT NULL,
+70:           CONSTRAINT \`fk_meeting_session_id_session_id_fk\` FOREIGN KEY (\`session_id\`) REFERENCES \`session\`(\`id\`) ON DELETE SET NULL
+71:         );
+72:       `)
+73:       yield* tx.run(
+74:         `INSERT INTO \`__new_meeting\`(\`id\`, \`session_id\`, \`title\`, \`time_started\`, \`time_ended\`) SELECT \`id\`, \`session_id\`, \`title\`, \`time_started\`, \`time_ended\` FROM \`meeting\`;`,
+75:       )
+76:       yield* tx.run(`DROP TABLE \`meeting\`;`) // guardrail-ignore: migration-destructive rows were copied into __new_meeting above
+77:       yield* tx.run(`ALTER TABLE \`__new_meeting\` RENAME TO \`meeting\`;`)
+78:       yield* tx.run(`INSERT INTO \`meeting_segment\` SELECT * FROM \`__meeting_segment_keep\`;`)
+79:       yield* tx.run(`DROP TABLE \`__meeting_segment_keep\`;`) // guardrail-ignore: migration-destructive scratch copy, its rows were restored to meeting_segment above
+80:       yield* tx.run(`CREATE INDEX \`meeting_session_idx\` ON \`meeting\` (\`session_id\`);`)
+81:       yield* tx.run(`CREATE INDEX \`meeting_item_meeting_idx\` ON \`meeting_item\` (\`meeting_id\`);`)
+82:       yield* tx.run(`CREATE INDEX \`meeting_proposal_meeting_idx\` ON \`meeting_proposal\` (\`meeting_id\`);`)
+83:     })
+84:   },
+85: } satisfies DatabaseMigration.Migration
+```
+
+
+Aguarde a disposição e FIM SS01.

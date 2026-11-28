@@ -1,0 +1,223 @@
+M02 — parte 03, fontes adicionais, mesmo corpo SHA256 5a789d39a00798ca0f99384f38315b58a1bbe7dbe0e0d3f9366104a1d0b98091.
+
+BEGIN SOURCE packages/core/src/catalog.ts 1–23 blob 86acb93f550bc2b941e85d42cc4d62d73cbf64ba
+1: export * as Catalog from "./catalog"
+2: 
+3: import { makeLocationNode } from "./effect/app-node"
+4: import { Array, Context, Effect, Layer, Option, Order, pipe, Schema } from "effect"
+5: import { Catalog } from "@orchestra/schema/catalog"
+6: import { Credential } from "./credential"
+7: import { ModelV2 } from "./model"
+8: import { ProviderV2 } from "./provider"
+9: import { EventV2 } from "./event"
+10: import { Policy } from "./policy"
+11: import { State } from "./state"
+12: import { Integration } from "./integration"
+13: 
+14: export const VIRTUAL_SEPARATOR = "#"
+15: 
+16: export const parseVirtualID = (id: ProviderV2.ID) => {
+17:   const index = id.indexOf(VIRTUAL_SEPARATOR)
+18:   if (index === -1) return undefined
+19:   return {
+20:     base: id.slice(0, index) as ProviderV2.ID,
+21:     credentialID: id.slice(index + 1),
+22:   }
+23: }
+END SOURCE
+
+BEGIN SOURCE packages/core/src/catalog.ts 74–82 blob 86acb93f550bc2b941e85d42cc4d62d73cbf64ba
+74: export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/Catalog") {}
+75: 
+76: const layer = Layer.effect(
+77:   Service,
+78:   Effect.gen(function* () {
+79:     const events = yield* EventV2.Service
+80:     const policy = yield* Policy.Service
+81:     const integrations = yield* Integration.Service
+82:     const credentials = yield* Credential.Service
+END SOURCE
+
+BEGIN SOURCE packages/core/src/catalog.ts 371–386 blob 86acb93f550bc2b941e85d42cc4d62d73cbf64ba
+371:     return Service.of(result)
+372:   }),
+373: )
+374: 
+375: const SMALL_MODEL_RE = /\b(nano|flash|lite|mini|haiku|small|fast)\b/
+376: 
+377: export const locationLayer = layer.pipe(
+378:   Layer.provideMerge(Integration.locationLayer),
+379:   Layer.provideMerge(Policy.locationLayer),
+380: )
+381: 
+382: export const node = makeLocationNode({
+383:   service: Service,
+384:   layer,
+385:   deps: [EventV2.node, Policy.node, Integration.node, Credential.node],
+386: })
+END SOURCE
+
+BEGIN SOURCE packages/core/src/state.ts 63–131 blob 116e268bb9edf045985e1598a4e1a3ed1d410872
+63: export function create<State, DraftApi>(options: Options<State, DraftApi>): Interface<State, DraftApi> {
+64:   let state = options.initial()
+65:   let transforms: { run: TransformCallback<DraftApi> }[] = []
+66:   const semaphore = Semaphore.makeUnsafe(1)
+67: 
+68:   const commit = Effect.fn("State.commit")(function* (next: State) {
+69:     const api = options.draft(next)
+70:     if (options.finalize) yield* options.finalize(api)
+71:     state = next
+72:   })
+73: 
+74:   const apply = (transform: TransformCallback<DraftApi>, draft: DraftApi) =>
+75:     Effect.suspend(() => {
+76:       const result = transform(draft)
+77:       return Effect.isEffect(result) ? Effect.asVoid(result).pipe(Effect.orDie) : Effect.void
+78:     })
+79: 
+80:   const materialize = Effect.fnUntraced(function* () {
+81:     const next = options.initial()
+82:     const api = options.draft(next)
+83:     for (const transform of transforms) yield* apply(transform.run, api).pipe(Effect.withSpan("State.reload.update"))
+84:     yield* commit(next)
+85:   })
+86: 
+87:   const reload = () => semaphore.withPermit(materialize())
+88: 
+89:   const result: Interface<State, DraftApi> = {
+90:     get: () => state,
+91:     withRead: (read) => semaphore.withPermit(Effect.suspend(() => read(state))),
+92:     transform: Effect.fn("State.transform")(function* (update) {
+93:       const scope = yield* Scope.Scope
+94:       return yield* Effect.uninterruptible(
+95:         Effect.gen(function* () {
+96:           const transform = { run: update }
+97:           let active = true
+98:           const dispose = Effect.uninterruptible(
+99:             semaphore.withPermit(
+100:               Effect.suspend(() => {
+101:                 if (!active) return Effect.void
+102:                 active = false
+103:                 transforms = transforms.filter((item) => item !== transform)
+104:                 return Effect.gen(function* () {
+105:                   const batch = yield* CurrentBatch
+106:                   if (batch) {
+107:                     batch.add(reload)
+108:                     return
+109:                   }
+110:                   yield* materialize()
+111:                 })
+112:               }),
+113:             ),
+114:           )
+115:           yield* semaphore.withPermit(
+116:             Effect.sync(() => {
+117:               transforms = [...transforms, transform]
+118:             }),
+119:           )
+120:           yield* Scope.addFinalizer(scope, dispose)
+121:           const batch = yield* CurrentBatch
+122:           if (batch) batch.add(reload)
+123:           else yield* reload()
+124:           return { dispose }
+125:         }),
+126:       )
+127:     }),
+128:     reload,
+129:   }
+130:   return result
+131: }
+END SOURCE
+
+BEGIN SOURCE packages/core/src/session/subagent-models.ts 16–20 blob 18c24ee3248a7f3de398077d44c4282e80214041
+16: export const Policy = SessionSubagentModels.Policy
+17: export type Policy = typeof Policy.Type
+18: export const inherit = SessionSubagentModels.inherit
+19: /** Restrictive outgoing policies, nearest ancestor first. An empty list is unconstrained. */
+20: export type Ceilings = readonly Policy[]
+END SOURCE
+
+BEGIN SOURCE packages/core/src/session/subagent-models.ts 84–100 blob 18c24ee3248a7f3de398077d44c4282e80214041
+84: export const permits = (ceilings: Ceilings, ref: ModelV2.Ref | undefined) =>
+85:   ceilings.every(
+86:     (policy) =>
+87:       policy.mode === "inherit" ||
+88:       (ref !== undefined &&
+89:         policy.models.some((allowed) => allowed.providerID === ref.providerID && allowed.id === ref.id)),
+90:   )
+91: 
+92: const storedPolicy = Schema.fromJsonString(Policy)
+93: 
+94: /** SQL NULL alone means inherited; JSON null and every malformed value fail closed. */
+95: export function fromStorage(sessionID: SessionSchema.ID, value: string | null) {
+96:   if (value === null) return undefined
+97:   const decoded = Schema.decodeUnknownOption(storedPolicy)(value)
+98:   if (decoded._tag === "None") throw new StorageError({ sessionID, message: "Invalid stored subagent model policy" })
+99:   return normalize(decoded.value)
+100: }
+END SOURCE
+
+BEGIN SOURCE packages/core/src/session/subagent-models.ts 175–211 blob 18c24ee3248a7f3de398077d44c4282e80214041
+175:     const ceilings = Effect.fn("SessionSubagentModels.ceilings")(
+176:       function* (sessionID: SessionSchema.ID, includeOwn: boolean) {
+177:         // One read transaction holds a consistent snapshot for the entire parent chain.
+178:         return yield* db
+179:           .transaction((tx) =>
+180:             Effect.gen(function* () {
+181:               const result: Policy[] = []
+182:               const seen = new Set<SessionSchema.ID>()
+183:               let current: SessionSchema.ID | null = sessionID
+184:               while (current !== null) {
+185:                 if (seen.has(current))
+186:                   return yield* new InvalidChainError({ sessionID, ancestorID: current, reason: "cycle" })
+187:                 seen.add(current)
+188:                 const row:
+189:                   | { id: SessionSchema.ID; parent: SessionSchema.ID | null; policy: string | null }
+190:                   | undefined = yield* tx
+191:                   .select({ id: SessionTable.id, parent: SessionTable.parent_id, policy: SessionTable.subagent_models })
+192:                   .from(SessionTable)
+193:                   .where(eq(SessionTable.id, current))
+194:                   .get()
+195:                 if (!row)
+196:                   return yield* current === sessionID
+197:                     ? new NotFoundError({ sessionID })
+198:                     : new InvalidChainError({ sessionID, ancestorID: current, reason: "missing-parent" })
+199:                 if (includeOwn || current !== sessionID) {
+200:                   const policy = fromStorage(current, row.policy)
+201:                   if (policy?.mode === "allowlist") result.push(policy)
+202:                 }
+203:                 current = row.parent
+204:               }
+205:               return result
+206:             }),
+207:           )
+208:           .pipe(Effect.catch((cause) => failStorage(sessionID, cause)))
+209:       },
+210:       (effect, sessionID) => effect.pipe(Effect.catchDefect((cause) => failStorage(sessionID, cause))),
+211:     )
+END SOURCE
+
+BEGIN SOURCE packages/core/src/session/subagent-models.ts 231–250 blob 18c24ee3248a7f3de398077d44c4282e80214041
+231:     const assert = Effect.fn("SessionSubagentModels.assert")(function* (
+232:       sessionID: SessionSchema.ID,
+233:       ref: ModelV2.Ref | undefined,
+234:       includeOwn: boolean,
+235:     ) {
+236:       if (permits(yield* ceilings(sessionID, includeOwn), ref)) return
+237:       return yield* new ModelDeniedError({ sessionID, model: ref, reason: ref ? "not-allowed" : "unknown-identity" })
+238:     })
+239:     return Service.of({
+240:       get,
+241:       set,
+242:       forSession: (id) => ceilings(id, false),
+243:       forChild: (id) => ceilings(id, true),
+244:       assert: (id, ref) => assert(id, ref, false),
+245:       assertChild: (id, ref) => assert(id, ref, true),
+246:     })
+247:   }),
+248: )
+249: 
+250: export const node = makeGlobalNode({ service: Service, layer, deps: [Database.node, EventV2.node] })
+END SOURCE
+
+FIM M02. Julgue o corpo v2 completo e emita PASS/FIX-FIRST/HOLD/REQUEST_EVIDENCE por critério aplicável e vínculo exato. Fases operacionais continuam separadas; não inferir consumidores/gates. Até 600 palavras se não houver defeito material; não exponha raciocínio privado.

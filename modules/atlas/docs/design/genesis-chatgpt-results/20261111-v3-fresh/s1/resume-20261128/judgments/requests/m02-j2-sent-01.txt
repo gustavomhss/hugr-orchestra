@@ -1,0 +1,338 @@
+M02 — s1.core.models. Mesma execução/fonte/protocolo e mesmos critérios obrigatórios de E01. Corpo L1 completo: 4200 bytes UTF-8, SHA256 5a789d39a00798ca0f99384f38315b58a1bbe7dbe0e0d3f9366104a1d0b98091. Revisão semântica deste artefato apenas; demais aceites e fases operacionais não são reabertos nem inferidos. Não use ferramentas.
+
+BEGIN EXACT BODY s1.core.models
+# Core catalog and current Session model adapter boundary
+
+Layer: **L1 — pinned factual basis**. Need: `component`. Scope: `orchestra.s1`.
+Source revision: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+
+## Observed implementation
+
+Core ProviderV2 and ModelV2 primarily re-export schema contracts; `ModelV2.parse` splits a provider prefix from the remaining slash-containing model ID. The catalog is Location-scoped, starts empty and receives ordered State transforms. Finalization removes providers denied by `provider.use` policy. Availability checks enabled/disabled state and configured credentials/integration connections; it does not ping a provider. Model projections merge provider/model API settings, headers and request bodies. Labeled non-default key credentials create virtual provider IDs with a `#credentialID` suffix; their model projections retain that distinct selected identity. [1,2,3]
+
+A Session-selected model must be present among available candidates and satisfy inherited subagent-model ceilings. An explicit unavailable selection fails rather than falling back. Without one, the runner tries the configured/default candidate if supported, then the first supported candidate. An unknown explicit variant fails; absent/default variant may use the model request default. Credential resolution chooses the exact virtual-provider credential or the base integration's active connection. [4]
+
+The native Session adapter supports OpenAI Responses for `@ai-sdk/openai` and Anthropic Messages for `@ai-sdk/anthropic`. Its OpenAI-compatible chat branch requires `model.api.url !== undefined` for every permitted alternative: `api.type === "native"`, `@ai-sdk/openai-compatible`, and `@openrouter/ai-sdk-provider`. Other API packages return `UnsupportedApiError`, even if the broader catalog knows them. Canonical generation options are strictly decoded; API keys are separated from HTTP request body before the route is constructed. The adapter carries context/input/output limits and catalog prices, but does not establish live protocol compatibility or measured billing. [4]
+
+The separate AISDK service lets registered plugin hooks supply SDK/language instances. It caches language objects by provider/model/variant and SDKs by the serialized `{ providerID, api, options }` key, installs scoped hooks and errors if no plugin returns an SDK. It wraps optional SSE chunk timeouts and combined abort signals. This dynamic SDK mechanism must not be used to infer that the current native Session adapter accepts every plugin package. Its caches also have a different identity/lifetime from native route construction performed when `resolve` executes; the caller cadence is not established by this inspected function. [5]
+
+## Normative intent and limits
+
+Core's README assigns provider/model/catalog and provider plugins to the platform boundary, with the Copilot directory explicitly vendored. This body covers the catalog-to-Session decision point; transport codecs, model package internals, catalog synchronization and vendor-specific authentication belong to their owning packages/families. Catalog presence, a price record and successful source decoding are not operational availability, billing evidence or a successful model turn. No provider request or model test ran. [6]
+
+## Source anchors
+
+- **1.** `packages/core/src/provider.ts:56a8629db307e3d904c355789db9e5b8256e644f` — schema aliases, lines 1–25.
+- **2.** `packages/core/src/model.ts:085800e0480c60a70f989469ba7c0dc09aa758eb` — model aliases and parse, lines 1–42.
+- **3.** `packages/core/src/catalog.ts:86acb93f550bc2b941e85d42cc4d62d73cbf64ba` — materialization, policy, availability and virtual credentials, lines 84–122,124–188,191–312.
+- **4.** `packages/core/src/session/runner/model.ts:188abc7053f9a02b8dd84ce7bdc30e0e7c001b3b` — variant, route support, selection and credential binding, lines 132–338.
+- **5.** `packages/core/src/aisdk.ts:c5f21baea562c0a8eeeb568929d7971f4c80a3dd` — SDK hooks, caches and timeout wrapping, lines 27–122,149–234.
+- **6.** `packages/core/README.md:742921238462659e1a5a314f2e0238102c6e9f3a` — module/domain contract and vendored compatibility, lines 54–88.
+END EXACT BODY s1.core.models
+
+BEGIN SOURCE packages/core/src/provider.ts 1–25 blob 56a8629db307e3d904c355789db9e5b8256e644f
+export * as ProviderV2 from "./provider"
+
+import { Types } from "effect"
+import { Provider } from "@orchestra/schema/provider"
+
+export const ID = Provider.ID
+export type ID = typeof ID.Type
+
+export const AISDK = Provider.AISDK
+
+export const Native = Provider.Native
+
+export const Api = Provider.Api
+export type Api = Provider.Api
+export type MutableApi<T extends Api = Api> = T extends Api
+  ? Omit<Types.DeepMutable<T>, "settings"> & (undefined extends T["settings"] ? { settings?: any } : { settings: any })
+  : never
+
+export const Request = Provider.Request
+export type Request = Provider.Request
+
+export const Info = Provider.Info
+export type Info = Provider.Info
+
+export type MutableInfo = Omit<Types.DeepMutable<Info>, "api"> & { api: MutableApi }
+END SOURCE
+
+BEGIN SOURCE packages/core/src/model.ts 1–42 blob 085800e0480c60a70f989469ba7c0dc09aa758eb
+import { Types } from "effect"
+import { Model } from "@orchestra/schema/model"
+import { ProviderV2 } from "./provider"
+
+export const ID = Model.ID
+export type ID = typeof ID.Type
+
+export const VariantID = Model.VariantID
+export type VariantID = typeof VariantID.Type
+
+// Grouping of models, eg claude opus, claude sonnet
+export const Family = Model.Family
+export type Family = Model.Family
+
+export const Capabilities = Model.Capabilities
+export type Capabilities = Model.Capabilities
+
+export const Cost = Model.Cost
+export type Cost = Model.Cost
+
+export const Ref = Model.Ref
+export type Ref = typeof Ref.Type
+
+export const Api = Model.Api
+export type Api = Model.Api
+
+export const Info = Model.Info
+export type Info = Model.Info
+
+export type MutableInfo = Omit<Types.DeepMutable<Info>, "api"> & {
+  api: ProviderV2.MutableApi<Api>
+}
+
+export function parse(input: string): { providerID: ProviderV2.ID; modelID: ID } {
+  const [providerID, ...modelID] = input.split("/")
+  return {
+    providerID: ProviderV2.ID.make(providerID),
+    modelID: ID.make(modelID.join("/")),
+  }
+}
+
+export * as ModelV2 from "./model"
+END SOURCE
+
+BEGIN SOURCE packages/core/src/catalog.ts 84–312 blob 86acb93f550bc2b941e85d42cc4d62d73cbf64ba
+    const available = (provider: ProviderV2.Info, integration: Integration.Info | undefined) => {
+      if (provider.disabled) return false
+      const key = provider.request.body.apiKey ?? provider.api.settings?.apiKey
+      if (typeof key === "string" && (provider.id !== ProviderV2.ID.opencode || (key.length > 0 && key !== "public")))
+        return true
+      if (integration?.connections.length) return true
+      if (provider.id === ProviderV2.ID.opencode) return false
+      return provider.integrationID === undefined && !integration
+    }
+
+    const projectModel = (model: ModelV2.Info, provider: ProviderV2.Info) => {
+      // A model without its own package takes the provider's, and its own URL when it has one.
+      const api =
+        model.api.type === "native" && Object.keys(model.api.settings).length === 0 && provider.api.type === "aisdk"
+          ? { ...provider.api, id: model.api.id, url: model.api.url ?? provider.api.url }
+          : model.api.type === "native" && !model.api.url && Object.keys(model.api.settings).length === 0
+          ? { ...provider.api, id: model.api.id }
+          : model.api.type === "aisdk" && provider.api.type === "aisdk" && !model.api.url
+            ? { ...model.api, url: provider.api.url, settings: { ...provider.api.settings, ...model.api.settings } }
+            : model.api.type === "aisdk" && provider.api.type === "aisdk"
+              ? { ...model.api, settings: { ...provider.api.settings, ...model.api.settings } }
+              : model.api
+      const request = {
+        headers: { ...provider.request.headers, ...model.request.headers },
+        body: { ...provider.request.body, ...model.request.body },
+        variant: model.request.variant,
+      }
+      return ModelV2.Info.make({
+        ...model,
+        api,
+        request,
+      })
+    }
+
+    const normalizeApi = (item: ProviderV2.MutableInfo | ModelV2.MutableInfo) => {
+      if (typeof item.request.body.baseURL !== "string") return
+      item.api.url = item.request.body.baseURL
+      delete item.request.body.baseURL
+    }
+
+    const state = State.create<Data, Draft>({
+      initial: () => ({ providers: new Map() }),
+      draft: (draft) => {
+        const result: Draft = {
+          provider: {
+            list: () => Array.fromIterable(draft.providers.values()) as ProviderRecord[],
+            get: (providerID) => draft.providers.get(providerID),
+            update: (providerID, fn) => {
+              let current = draft.providers.get(providerID)
+              if (!current) {
+                current = {
+                  provider: ProviderV2.Info.empty(providerID) as ProviderV2.MutableInfo,
+                  models: new Map<ModelV2.ID, ModelV2.MutableInfo>(),
+                }
+                draft.providers.set(providerID, current)
+              }
+              fn(current.provider)
+              normalizeApi(current.provider)
+            },
+            remove: (providerID) => {
+              draft.providers.delete(providerID)
+            },
+          },
+          model: {
+            get: (providerID, modelID) => draft.providers.get(providerID)?.models.get(modelID),
+            update: (providerID, modelID, fn) => {
+              let record = draft.providers.get(providerID)
+              if (!record) {
+                record = {
+                  provider: ProviderV2.Info.empty(providerID) as ProviderV2.MutableInfo,
+                  models: new Map<ModelV2.ID, ModelV2.MutableInfo>(),
+                }
+                draft.providers.set(providerID, record)
+              }
+              const model =
+                record.models.get(modelID) ?? (ModelV2.Info.empty(providerID, modelID) as ModelV2.MutableInfo)
+              if (!record.models.has(modelID)) record.models.set(modelID, model)
+              fn(model)
+              model.id = modelID
+              model.providerID = providerID
+              normalizeApi(model)
+            },
+            remove: (providerID, modelID) => {
+              draft.providers.get(providerID)?.models.delete(modelID)
+            },
+            default: {
+              get: () => draft.defaultModel,
+              set: (providerID, modelID) => {
+                draft.defaultModel = { providerID, modelID }
+              },
+            },
+          },
+        }
+        return result
+      },
+      finalize: Effect.fn("CatalogV2.finalize")(function* (catalog) {
+        if (policy.hasStatements()) {
+          for (const record of [...catalog.provider.list()]) {
+            if ((yield* policy.evaluate("provider.use", record.provider.id, "allow")) === "deny") {
+              catalog.provider.remove(record.provider.id)
+            }
+          }
+        }
+        yield* events.publish(Event.Updated, {})
+      }),
+    })
+
+    // Projects one virtual provider per labeled API-key credential so each
+    // key is independently selectable. Unlabeled credentials keep the legacy
+    // behavior of merging into the base provider entry.
+    const virtualEntries = Effect.fn("CatalogV2.virtuals")(function* () {
+      const keyed = (yield* credentials.all()).filter(
+        (credential) => credential.value.type === "key" && credential.label !== "default",
+      )
+      if (keyed.length === 0) return [] as ProviderRecord[]
+      const records = state.get().providers
+      const byIntegration = new Map<string, ProviderRecord[]>()
+      for (const record of records.values()) {
+        const owner = record.provider.integrationID ?? record.provider.id
+        const list = byIntegration.get(owner) ?? []
+        list.push(record)
+        byIntegration.set(owner, list)
+      }
+      const entries: ProviderRecord[] = []
+      for (const credential of keyed) {
+        for (const record of byIntegration.get(credential.integrationID) ?? []) {
+          const id = `${record.provider.id}${VIRTUAL_SEPARATOR}${credential.id}` as ProviderV2.ID
+          entries.push({
+            provider: {
+              ...record.provider,
+              id,
+              name: `${record.provider.name} (${credential.label})`,
+              integrationID: record.provider.integrationID ?? Integration.ID.make(record.provider.id),
+            },
+            models: record.models,
+          })
+        }
+      }
+      return entries
+    })
+
+    // These take the virtual entries as input so one request reads credentials once
+    // instead of once per helper (credentials.all hits the DB and decrypts).
+    const availableProviders = Effect.fn("CatalogV2.provider.availableWith")(function* (virtuals: ProviderRecord[]) {
+      const virtualIDs = new Set(virtuals.map((entry) => entry.provider.id))
+      const active = new Map((yield* integrations.list()).map((integration) => [integration.id, integration]))
+      const base = Array.fromIterable(state.get().providers.values()).map((record) => record.provider)
+      return [...base, ...virtuals.map((entry) => entry.provider)].filter((provider) => {
+        if (virtualIDs.has(provider.id)) return !provider.disabled
+        return available(provider, active.get(provider.integrationID ?? Integration.ID.make(provider.id)))
+      })
+    })
+
+    const projectModels = (virtuals: ProviderRecord[]) =>
+      pipe(
+        [...Array.fromIterable(state.get().providers.values()), ...virtuals],
+        Array.flatMap((record) => {
+          const parsed = parseVirtualID(record.provider.id)
+          return Array.fromIterable(record.models.values()).map((model) =>
+            projectModel(parsed ? { ...model, providerID: record.provider.id } : model, record.provider),
+          )
+        }),
+        Array.sortWith((item) => item.time.released, Order.flip(Order.Number)),
+      )
+
+    const result: Interface = {
+      transform: state.transform,
+      reload: state.reload,
+
+      provider: {
+        get: Effect.fn("CatalogV2.provider.get")(function* (providerID) {
+          const hit = state.get().providers.get(providerID)?.provider
+          if (hit) return hit
+          if (!parseVirtualID(providerID)) return undefined
+          return (yield* virtualEntries()).find((entry) => entry.provider.id === providerID)?.provider
+        }),
+
+        all: Effect.fn("CatalogV2.provider.all")(function* () {
+          const base = Array.fromIterable(state.get().providers.values()).map((record) => record.provider)
+          const virtual = (yield* virtualEntries()).map((entry) => entry.provider.id)
+          return [...base, ...virtual]
+        }),
+
+        available: Effect.fn("CatalogV2.provider.available")(function* () {
+          return yield* availableProviders(yield* virtualEntries())
+        }),
+      },
+
+      model: {
+        get: Effect.fn("CatalogV2.model.get")(function* (providerID, modelID) {
+          const parsed = parseVirtualID(providerID)
+          const record = state.get().providers.get(parsed?.base ?? providerID)
+          if (!record) return
+          const model = record.models.get(modelID)
+          if (!model) return
+          if (!parsed) return projectModel(model, record.provider)
+          const virtual = (yield* virtualEntries()).some((entry) => entry.provider.id === providerID)
+          if (!virtual) return
+          return projectModel({ ...model, providerID }, record.provider)
+        }),
+
+        all: Effect.fn("CatalogV2.model.all")(function* () {
+          return projectModels(yield* virtualEntries())
+        }),
+
+        available: Effect.fn("CatalogV2.model.available")(function* () {
+          const virtuals = yield* virtualEntries()
+          const providers = new Set((yield* availableProviders(virtuals)).map((provider) => provider.id))
+          return projectModels(virtuals).filter((model) => providers.has(model.providerID) && model.enabled)
+        }),
+
+        default: Effect.fn("CatalogV2.model.default")(function* () {
+          const defaultModel = state.get().defaultModel
+          const models = yield* result.model.available()
+          if (defaultModel) {
+            const model = models.find(
+              (item) => item.providerID === defaultModel.providerID && item.id === defaultModel.modelID,
+            )
+            if (model) return model
+          }
+
+          return Option.getOrUndefined(
+            pipe(
+              models,
+              Array.sortWith((item) => item.time.released, Order.flip(Order.Number)),
+              Array.head,
+            ),
+          )
+        }),
+END SOURCE
+
+Continua nas partes 02 e 03; aguarde FIM M02 antes do parecer.

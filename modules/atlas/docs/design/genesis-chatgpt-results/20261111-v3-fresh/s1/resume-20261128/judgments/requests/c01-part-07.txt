@@ -1,0 +1,455 @@
+C01 — fontes literais adicionais, parte 07. Mesmo pin, mesmo corpo.
+
+### E40 — Shell: `packages/core/src/shell.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `39a461317e0ef3a2d0e4cec2292698808ad46d11`; SHA-256 `e01fa329fdf8f606ff9f2fbbc0da69b46a62e6175d9bd3ee2077657ef8ad16cb`.
+Linhas 31–60; hash do trecho UTF-8 original `4e3a088e05d4f280de78858db5ba453814d72ab4de87874bcce3f5b27eaeec00`.
+````text
+31: export async function killTree(proc: ChildProcess, opts?: { exited?: () => boolean }): Promise<void> {
+32:   const pid = proc.pid
+33:   if (!pid || opts?.exited?.()) return
+34: 
+35:   if (process.platform === "win32") {
+36:     await new Promise<void>((resolve) => {
+37:       const killer = spawn("taskkill", ["/pid", String(pid), "/f", "/t"], {
+38:         stdio: "ignore",
+39:         windowsHide: true,
+40:       })
+41:       killer.once("exit", () => resolve())
+42:       killer.once("error", () => resolve())
+43:     })
+44:     return
+45:   }
+46: 
+47:   try {
+48:     process.kill(-pid, "SIGTERM")
+49:     await sleep(SIGKILL_TIMEOUT_MS)
+50:     if (!opts?.exited?.()) {
+51:       process.kill(-pid, "SIGKILL")
+52:     }
+53:   } catch {
+54:     proc.kill("SIGTERM")
+55:     await sleep(SIGKILL_TIMEOUT_MS)
+56:     if (!opts?.exited?.()) {
+57:       proc.kill("SIGKILL")
+58:     }
+59:   }
+60: }
+````
+Linhas 202–221; hash do trecho UTF-8 original `ea489f1e29460f27a46c17cebf24c3e85253611e9dbaf5041ceabd1f3005f77b`.
+````text
+202: /**
+203:  * The explicit program and arguments for a `shell: true | string` spawn option, the way Node joins them: the command
+204:  * and its arguments joined by single spaces, unquoted, handed to the shell's command flag. `true` means /bin/sh on
+205:  * Unix. PowerShell gets `-NoProfile -Command`, every other shell `-c`. It never adds Shell.args' login and rc-file
+206:  * wrapping. cmd.exe (and `true` on Windows, which means cmd.exe) gives undefined: its quoting rules differ, and the
+207:  * caller delegates that spawn.
+208:  */
+209: export function invocation(
+210:   shell: true | string,
+211:   command: string,
+212:   args: readonly string[],
+213: ): { file: string; args: string[] } | undefined {
+214:   const joined = [command, ...args].join(" ")
+215:   if (shell === true) {
+216:     if (process.platform === "win32") return
+217:     return { file: "/bin/sh", args: ["-c", joined] }
+218:   }
+219:   if (name(shell) === "cmd") return
+220:   if (ps(shell)) return { file: shell, args: ["-NoProfile", "-Command", joined] }
+221:   return { file: shell, args: ["-c", joined] }
+````
+
+### E41 — TCP: `packages/core/src/tcp-proxy.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `b07f1e36c85f3f9913a77f6eeccddd2cfb8e303c`; SHA-256 `878ebb3148202870032da1f5a7aed0950770488fd7bb098dcdaa9a05bb67db5d`.
+Linhas 16–27; hash do trecho UTF-8 original `94b3c9f80d5c066286136a8f09951c406f730c5d08d2ee90a84782d9a177dd21`.
+````text
+16: /** Host services for owned route-adapted clients, not transparent TCP. Keep Scope open through child exit. */
+17: export const open = (ports: readonly number[], deny: readonly string[] = []) => openScoped(Array.from(ports), Array.from(deny))
+18: 
+19: const openScoped = Effect.fn("TcpProxy.open")(function* (snapshot: readonly number[], deny: readonly string[]) {
+20:   yield* requirePorts(snapshot)
+21:   if (process.platform !== "darwin")
+22:     return yield* new ToolSafety.Denied({ reason: "sandbox-loopback-endpoint-exact-policy-unsupported" })
+23:   const reserved = yield* plan(snapshot, deny)
+24:   const sockets = yield* broker(snapshot, reserved)
+25:   return { sockets, env: { [ROUTES]: snapshot.map((port, index) =>
+26:     `${port}:${Buffer.from(sockets[index], "utf8").toString("hex")}`).join(";") } satisfies Record<string, string> }
+27: })
+````
+Linhas 129–133; hash do trecho UTF-8 original `5f9494be9c92c524fa83a879494688d541282f56581ea30b336ebd6fcba4f71e`.
+````text
+129: function requirePorts(ports: readonly number[]) {
+130:   return ports.length < 1 || ports.length > 32 || new Set(ports).size !== ports.length ||
+131:     ports.some((port) => !Number.isSafeInteger(port) || port < 1 || port > 65535)
+132:     ? Effect.fail(new ToolSafety.Denied({ reason: "sandbox-tcp-proxy-invalid-ports" }))
+133:     : Effect.void
+````
+Linhas 154–174; hash do trecho UTF-8 original `3c142e52fda4f9e7ed4a5dee42b09d0542c3b1cbeaea3e60fd3aec4588f635ce`.
+````text
+154: Promise.all(routes.map(route => new Promise((resolve, reject) => {
+155:   const server = net.createServer({ allowHalfOpen: true }, client => {
+156:     client.on("error", () => client.destroy())
+157:     if (closing || active.size >= 64) { client.destroy(); return }
+158:     const upstream = net.createConnection({ host: "127.0.0.1", port: route.port, allowHalfOpen: true })
+159:     const pair = { client, upstream }
+160:     active.add(pair)
+161:     const destroy = () => { client.destroy(); upstream.destroy() }
+162:     const closed = () => { if (client.closed && upstream.closed) active.delete(pair) }
+163:     client.on("error", destroy)
+164:     upstream.on("error", destroy)
+165:     client.on("close", () => { if (!client.readableEnded) destroy(); closed() })
+166:     upstream.on("close", () => { if (!upstream.readableEnded) destroy(); closed() })
+167:     client.pipe(upstream)
+168:     upstream.pipe(client)
+169:   })
+170:   servers.push(server)
+171:   server.on("error", error => { reject(error); process.exitCode = 1; close() })
+172:   server.listen(route.socket, () => { fs.chmodSync(route.socket, 0o600); resolve() })
+173: }))).then(() => { if (!closing) process.stdout.write("READY\n") }, () => close())
+174: `
+````
+
+### E42 — Busca: `packages/core/src/ripgrep.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `1528fd5571644d622b6f0847ab4d1275df747da6`; SHA-256 `4a3931ef91ecc7dfbf51421f2bf7d191c90e2ba383d762ccf7cd9cdcae37ad01`.
+Linhas 130–175; hash do trecho UTF-8 original `7f7bc0a213354d3485dd7dd9a55a0807800719b809da5b7bdcbe9564c44812bf`.
+````text
+130:             }),
+131:             Stream.take(input.limit + 1),
+132:             Stream.runCollect,
+133:             Effect.map((chunk) => [...chunk]),
+134:           )
+135:           const truncated = rows.length > input.limit
+136:           if (truncated) return { items: rows.slice(0, input.limit), truncated, partial: false }
+137: 
+138:           const code = yield* handle.exitCode
+139:           const stderr = yield* Fiber.join(stderrFiber)
+140:           if (input.pattern && code === 2 && isInvalidPattern(stderr)) {
+141:             return yield* new InvalidPatternError({ pattern: input.pattern, message: stderr.trim() })
+142:           }
+143:           if (code !== 0 && code !== 1 && code !== 2) {
+144:             return yield* failure(stderr.trim() || `ripgrep failed with code ${code}`)
+145:           }
+146:           return { items: code === 1 ? [] : rows, truncated: false, partial: code === 2 }
+147:         }),
+148:       )
+149:       const abortable = input.signal ? program.pipe(Effect.raceFirst(waitForAbort(input.signal))) : program
+150:       return abortable.pipe(
+151:         Effect.mapError((cause) =>
+152:           cause instanceof Error || cause instanceof InvalidPatternError
+153:             ? cause
+154:             : failure("ripgrep execution failed", cause),
+155:         ),
+156:       )
+157:     }
+158: 
+159:     return Service.of({
+160:       glob: (input) =>
+161:         run<string>({
+162:           cwd: input.cwd,
+163:           limit: input.limit,
+164:           signal: input.signal,
+165:           args: [
+166:             "--no-config",
+167:             "--files",
+168:             ...(input.hidden ? ["--hidden"] : []),
+169:             ...(input.follow ? ["--follow"] : []),
+170:             `--glob=${input.pattern}`,
+171:             "--glob=!**/.git/**",
+172:             ".",
+173:           ],
+174:           parse: (line) =>
+175:             Effect.succeed(
+````
+Linhas 224–238; hash do trecho UTF-8 original `1cb6ea578e41a5d3365f36b5af9b01ff857b38d310b5f0c973d9422dcaaf4d4e`.
+````text
+224:         run<RawMatchData>({
+225:           ...input,
+226:           args: [
+227:             "--no-config",
+228:             "--json",
+229:             "--hidden",
+230:             "--no-messages",
+231:             ...(input.include ? [`--glob=${input.include}`] : []),
+232:             "--glob=!**/.git/**",
+233:             "--",
+234:             input.pattern,
+235:             input.file ?? ".",
+236:           ],
+237:           parse: (line) =>
+238:             (Buffer.byteLength(line, "utf8") > MAX_RECORD_BYTES
+````
+
+### E43 — Binário: `packages/core/src/ripgrep/binary.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `cd98a7b533a35192829df8c73c31316aea227831`; SHA-256 `ba0d4f83dfcd29fc41a36f31d034a424da6410d83ed2ebb6096a68fe2fa5c379`.
+Linhas 157–195; hash do trecho UTF-8 original `fd68f22ceb143c7bd30a737b6f8f88aa3345069fe7c5db17659fbc7e692c5a52`.
+````text
+157:     const fetchArchive = Effect.fnUntraced(function* (release: Release) {
+158:       const response = yield* http.execute(HttpClientRequest.get(release.url)).pipe(
+159:         Effect.mapError((cause) => unavailable(`ripgrep download failed: ${cause.message}`, true)),
+160:         Effect.timeoutOrElse({
+161:           duration: options.connectTimeout,
+162:           orElse: () =>
+163:             Effect.fail(
+164:               unavailable(`ripgrep download got no response within ${label(options.connectTimeout)}`, true),
+165:             ),
+166:         }),
+167:       )
+168:       if (response.status !== 200)
+169:         return yield* unavailable(
+170:           `ripgrep download failed: HTTP ${response.status} from ${release.url}`,
+171:           response.status >= 500 || response.status === 408 || response.status === 429,
+172:         )
+173:       return new Uint8Array(
+174:         yield* response.arrayBuffer.pipe(
+175:           Effect.mapError((cause) => unavailable(`ripgrep download failed: ${cause.message}`, true)),
+176:         ),
+177:       )
+178:     })
+179: 
+180:     const install = Effect.fnUntraced(function* (release: Release, bytes: Uint8Array) {
+181:       const digest = createHash("sha256").update(bytes).digest("hex")
+182:       if (digest !== release.sha256)
+183:         return yield* unavailable(
+184:           `ripgrep archive failed its integrity check: expected sha256 ${release.sha256}, got ${digest} from ${release.url}`,
+185:         )
+186:       const dir = yield* fs.makeTempDirectoryScoped({ directory: options.directory, prefix: TEMP })
+187:       const archive = path.join(dir, `archive.${release.extension}`)
+188:       yield* fs.writeFile(archive, bytes)
+189:       const out = path.join(dir, "out")
+190:       yield* fs.makeDirectory(out)
+191:       if (release.extension === "zip") {
+192:         const tar =
+193:           process.platform === "win32"
+194:             ? which("tar.exe", { Path: path.join(process.env.SystemRoot ?? "C:\\Windows", "System32") })
+195:             : which("tar")
+````
+Linhas 309–337; hash do trecho UTF-8 original `03c543943e5b3e1e18129db23ee678fe6017fdbc9d850ec43ffe274fe15ea695`.
+````text
+309:         ? unavailable("ripgrep download was interrupted", true)
+310:         : unavailable(`ripgrep download failed: ${defect(Cause.squash(cause))}`))
+311: 
+312:     // Regular files only: a symlink in place of the shipped or downloaded rg is refused.
+313:     const regular = (file: string) =>
+314:       Effect.promise(() =>
+315:         lstat(file).then(
+316:           (stat) => stat.isFile(),
+317:           () => false,
+318:         ),
+319:       )
+320:     const refuse = Effect.fnUntraced(function* (message: string) {
+321:       const error = unavailable(message)
+322:       yield* Effect.logWarning(error.message)
+323:       return yield* error
+324:     })
+325: 
+326:     const locate = Effect.gen(function* () {
+327:       const system = options.system()
+328:       if (options.bundled !== undefined) {
+329:         const shipped = path.join(options.bundled, executable)
+330:         if (yield* regular(shipped)) return shipped
+331:         if (system && (yield* fs.isFile(system))) return system
+332:         return yield* refuse(
+333:           `ripgrep (rg) is missing from this packaged build (${shipped} is not a regular file) and is not on PATH; packaged builds never download it, so reinstall Orchestra or install ripgrep (rg) on PATH`,
+334:         )
+335:       }
+336:       if (system && (yield* fs.isFile(system))) return system
+337:       if (yield* regular(target)) return target
+````
+
+### E44 — Bundle: `packages/core/src/ripgrep/bundle.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `72d1b057fbdc9e8ba38fa5ffb00687a91c592762`; SHA-256 `271f4018fe2b9bb8afd22db1fa1afafb95d6767bcd2d44bc464a125c4cb71f4e`.
+Linhas 54–85; hash do trecho UTF-8 original `d94efe9bc25cf1e1ccdd3cf014fbaea1140b19c846419d1693f63b132ec9cfce`.
+````text
+54:     const archive = input.archive ?? RipgrepRelease.archive(input.key)
+55:     if (!archive) throw new Error(`ripgrep ${RipgrepRelease.VERSION} publishes no build for ${input.key}`)
+56:     const bytes = await acquire(archive, input.archives)
+57:     if (sha256(bytes) !== archive.sha256)
+58:       throw new Error(
+59:         `ripgrep archive failed its integrity check: expected sha256 ${archive.sha256}, got ${sha256(bytes)} from ${archive.url}`,
+60:       )
+61:     const executable = RipgrepRelease.executable(platform(input.key))
+62:     const files = unpack(bytes, archive, [executable, ...LICENSES])
+63:     if (sha256(files.get(executable)!) !== archive.executable)
+64:       throw new Error(
+65:         `ripgrep archive ${archive.url} holds an executable with sha256 ${sha256(files.get(executable)!)}, not the pinned ${archive.executable}`,
+66:       )
+67:     const manifest: Manifest = {
+68:       name: "ripgrep",
+69:       version: RipgrepRelease.VERSION,
+70:       license: RipgrepRelease.LICENSE,
+71:       repository: RipgrepRelease.REPOSITORY,
+72:       key: input.key,
+73:       archive: { url: archive.url, sha256: archive.sha256 },
+74:       executable: { path: executable, sha256: sha256(files.get(executable)!) },
+75:       materials: LICENSES.map((name) => ({ path: name, sha256: sha256(files.get(name)!) })),
+76:       modifications:
+77:         "None: the executable and license texts are the archive's bytes. Signed macOS and Windows builds sign the executable, which changes its bytes but not its code; verify then checks that signature instead.",
+78:     }
+79:     await mkdir(path.dirname(input.directory), { recursive: true })
+80:     const staging = await mkdtemp(path.join(path.dirname(input.directory), ".ripgrep-stage-"))
+81:     // mkdtemp makes the directory private; the shipped one is readable like the rest of the package.
+82:     return chmod(staging, 0o755)
+83:       .then(() =>
+84:         Promise.all(
+85:           [...files].map(([name, content]) =>
+````
+Linhas 116–147; hash do trecho UTF-8 original `6c49a673435bb0a51bfc197194c9b30bdbcba0c89b8612969122fd59bb44b199`.
+````text
+116:   ) {
+117:     const archive = options.archive ?? RipgrepRelease.archive(key)
+118:     const manifest = (await readFile(path.join(directory, MANIFEST), "utf8")
+119:       .then(JSON.parse)
+120:       .catch(() => undefined)) as Manifest | undefined
+121:     if (!manifest) throw new Error(`ripgrep bundle missing: ${path.join(directory, MANIFEST)} is not readable JSON`)
+122:     if (
+123:       !archive ||
+124:       manifest.name !== "ripgrep" ||
+125:       manifest.version !== RipgrepRelease.VERSION ||
+126:       manifest.license !== RipgrepRelease.LICENSE ||
+127:       manifest.key !== key ||
+128:       manifest.archive?.url !== archive.url ||
+129:       manifest.archive?.sha256 !== archive.sha256 ||
+130:       manifest.executable?.sha256 !== archive.executable
+131:     )
+132:       throw new Error(`ripgrep bundle in ${directory} is not the pinned ripgrep ${RipgrepRelease.VERSION} for ${key}`)
+133:     const executable = path.join(directory, RipgrepRelease.executable(platform(key)))
+134:     const stat = await lstat(executable).catch(() => undefined)
+135:     if (!stat?.isFile() || manifest.executable?.path !== path.basename(executable))
+136:       throw new Error(`ripgrep bundle missing its executable: ${executable}`)
+137:     if (platform(key) !== "win32" && process.platform !== "win32" && (stat.mode & 0o111) !== 0o111)
+138:       throw new Error(`ripgrep bundle executable is not executable: ${executable}`)
+139:     const pinned = sha256(await readFile(executable)) === archive.executable
+140:     if (pinned && options.signed === "required")
+141:       throw new Error(`ripgrep bundle executable is unsigned where this build signs: ${executable}`)
+142:     if (!pinned && !options.signature)
+143:       throw new Error(`ripgrep bundle executable differs from the pinned archive's: ${executable}`)
+144:     if (!pinned && !(await options.signature!(executable)))
+145:       throw new Error(
+146:         `ripgrep bundle executable differs from the pinned archive's and has no valid signature: ${executable}`,
+147:       )
+````
+
+### E45 — ABI Windows: `packages/core/src/artifact-native-windows.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `53c097c3c87399edb764d3a0ce8a40ed518bd7e4`; SHA-256 `15a6ebb45c9af009f2753ab25a9abe8ef1bb1a0c156af93ecf7d0bc218ae48b9`.
+Linhas 11–35; hash do trecho UTF-8 original `689f82f8b72a8b83f4efee60cea3b2c0e58ed9f2d64c0d0141584e3df4e714ee`.
+````text
+11: // Producer-only shim for Bun builds without TinyCC. No filesystem operations
+12: // live here: the CLI retains its existing handle-relative NT implementation.
+13: // The std-only Rust DLL binds the Windows 64-bit system ABI, with integer/pointer
+14: // arguments only. N-API is resolved from the running executable, not node.lib.
+15: type Owner = { directory: string; module: string; lifetime: "process" }
+16: type Scalar = number | bigint | null
+17: type Symbol = "NtCreateFile" | "NtQueryInformationFile" | "NtReadFile" | "NtWriteFile" | "NtQueryDirectoryFile" |
+18:   "NtSetInformationFile" | "NtClose" | "QueryDosDeviceW" | "GetFinalPathNameByHandleW" | "CompareStringOrdinal"
+19: type Attestation = { arch: NodeJS.Architecture; processMachine: number; nativeMachine: number; moduleMachine: number; invalidHandleStatus: number }
+20: export type CompilerReceipt = {
+21:   boundary: "omni"
+22:   pid: number | null
+23:   stopped: boolean
+24:   osClosed: boolean
+25:   outputSettled: boolean
+26:   outputClosed: boolean
+27:   treeEmpty: boolean
+28:   exitCode: number | null
+29:   telemetry: { spawns: number; delegations: number }
+30: }
+31: export type Native = {
+32:   ptr(buffer: Uint8Array): Pointer
+33:   attest(cpu?: NodeJS.Architecture, processHandle?: bigint): Attestation
+34:   attestation: Attestation
+35:   ownership: Owner
+````
+Linhas 172–214; hash do trecho UTF-8 original `ac42689e18a4eba00108e9776a498252ec868110e0aa68e4525af9361373d08c`.
+````text
+172:         const proof = { arch: cpu, processMachine: processMachine.readUInt16LE(), nativeMachine: nativeMachine.readUInt16LE(),
+173:           moduleMachine: native.invoke(11), invalidHandleStatus: native.invoke(6, 0n) >>> 0 }
+174:         requireMachine(cpu, proof.processMachine, proof.nativeMachine, proof.moduleMachine)
+175:         if (proof.invalidHandleStatus !== 0xc0000008) throw new Error("ARTIFACT_WINDOWS_NATIVE_NTSTATUS_CONTROL_FAILED")
+176:         return proof
+177:       } finally { pending.clear() }
+178:     }
+179:     const attestation = attest()
+180:     console.error(`ARTIFACT_WINDOWS_NATIVE_ABI ${JSON.stringify(attestation)}`)
+181:     return { ptr, attest, attestation, ownership: owner, compiler, leases: () => ({ pendingBuffers: pending.size }),
+182:       dlopen: (library: string, definitions: Record<string, unknown>) => {
+183:         const lease = { closed: false }
+184:         const call = (id: number, args: (number | bigint | null)[]) => {
+185:           try {
+186:             if (lease.closed) throw new Error("ARTIFACT_WINDOWS_NATIVE_LIBRARY_CLOSED")
+187:             return native.invoke(id, ...args)
+188:           } finally { pending.clear() }
+189:         }
+190:         const symbols = {
+191:           NtCreateFile: (...args: (number | bigint | null)[]) => call(0, args),
+192:           NtQueryInformationFile: (...args: (number | bigint | null)[]) => call(1, args),
+193:           NtReadFile: (...args: (number | bigint | null)[]) => call(2, args),
+194:           NtWriteFile: (...args: (number | bigint | null)[]) => call(3, args),
+195:           NtQueryDirectoryFile: (...args: (number | bigint | null)[]) => call(4, args),
+196:           NtSetInformationFile: (...args: (number | bigint | null)[]) => call(5, args),
+197:           NtClose: (...args: (number | bigint | null)[]) => call(6, args),
+198:           QueryDosDeviceW: (...args: (number | bigint | null)[]) => call(7, args),
+199:           GetFinalPathNameByHandleW: (...args: (number | bigint | null)[]) => call(8, args),
+200:           CompareStringOrdinal: (...args: (number | bigint | null)[]) => call(9, args),
+201:         }
+202:         const allowed = library === "ntdll.dll" ? Object.keys(symbols).slice(0, 7)
+203:           : library === "kernel32.dll" ? Object.keys(symbols).slice(7) : []
+204:         if (!Object.keys(definitions).length || Object.keys(definitions).some((name) => !allowed.includes(name))) {
+205:           pending.clear()
+206:           throw new Error("ARTIFACT_WINDOWS_NATIVE_SYMBOL_UNSUPPORTED")
+207:         }
+208:         // N-API module stays mapped; closing this lease forbids further calls.
+209:         return { symbols, close: () => { lease.closed = true; pending.clear() } }
+210:       },
+211:     }
+212:   } catch (cause) {
+213:     const error = cause instanceof Error ? cause : new Error("ARTIFACT_WINDOWS_NATIVE_BUILD_UNKNOWN_FAILURE", { cause })
+214:     if (!lifecycle.mapped && lifecycle.compilerJoined) {
+````
+
+### E47 — LSP ownership: `packages/core/src/lsp/ownership.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `7bf14b7659a6cd02f33e58a56b6e3e92d5659172`; SHA-256 `18bcb8a1625473dae25aba4ab04a2e18e264e900ba945bd2326935867b14fa95`.
+Linhas 39–77; hash do trecho UTF-8 original `46f6f6a7d07ecd04ecdb9dc0c8265c3daa1620942b321f9e7f73a0143b6b566c`.
+````text
+39:     .catch(() => {
+40:       s.broken.add(key)
+41:       return undefined
+42:     })
+43: 
+44:   if (!handle) return undefined
+45:   if (s.closing) {
+46:     await stop(handle.process)
+47:     return undefined
+48:   }
+49:   const client = await LSPClient.create({
+50:     serverID: server.id,
+51:     server: handle,
+52:     root,
+53:     directory: ctx.directory,
+54:     instance: ctx,
+55:   }).catch(async () => {
+56:     s.broken.add(key)
+57:     await stop(handle.process)
+58:     return undefined
+59:   })
+60: 
+61:   if (!client) return undefined
+62:   if (s.closing) {
+63:     await client.shutdown()
+64:     return undefined
+65:   }
+66: 
+67:   const existing = s.clients.find((x) => x.root === root && x.serverID === server.id && x.connected)
+68:   if (existing) {
+69:     await stop(handle.process)
+70:     return existing
+71:   }
+72: 
+73:   s.clients.push(client)
+74:   return client
+75: }
+76: 
+77: export * as LSPOwnership from "./ownership"
+````
+
+
+Continua; aguarde FIM C01.

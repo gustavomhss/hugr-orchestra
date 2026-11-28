@@ -1,0 +1,22 @@
+{
+  "id": "app_node",
+  "path": "packages/core/src/effect/app-node.ts",
+  "start_line": 1,
+  "end_line": 14,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "import { LayerNode } from \"./layer-node\"\n\nexport const tags = LayerNode.tags({\n  location: [\"global\"],\n  global: [],\n})\n\nexport type GlobalNode<A, E = never> = LayerNode.Node<A, E, (typeof tags.values)[\"global\"]>\nexport type LocationNode<A, E = never> = LayerNode.Node<A, E, (typeof tags.values)[\"location\"]>\n\nexport const makeGlobalNode = tags.make(\"global\")\nexport const makeLocationNode = tags.make(\"location\")\n\nexport * as Node from \"./app-node\"",
+      "encoding": "utf-8",
+      "sha": "e8112f921ad7a7dcefbf6985c24995df1855c96b",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/effect/app-node.ts",
+      "display_title": "app-node.ts"
+    },
+    "isError": false
+  }
+}

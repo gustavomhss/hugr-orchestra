@@ -1,0 +1,215 @@
+T01 — fontes literais decisivas, parte09. Todos no pin já informado.
+
+### AEX062
+
+**Artifacts:** `s1.core.capability`.
+
+**Claim/limit supported:** The issued-frame symbol is private and the host boundary expressly does not prove persisted Session/tool-part existence.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/capability/invocation.ts:e2ddcb3e3f0da61b8d9d5fe8c7c74436b844e890`, lines 34–50.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `6f7d95bbb07aa7d3e12c63d56dbf8458bde5b7053aaf51f97b078c41a2da53ae`; **excerpt SHA256:** `a2ae78bd0dff991cf5b4361aaca7432b3a7bd56e284e6f130f3ebedb502b2b8f` (664 bytes).
+
+````text
+const issued = Symbol("CapabilityInvocation.issued")
+type Frame = Binding & { readonly [issued]: true }
+const Current = Context.Reference<Frame | undefined>("@orchestra/core/CapabilityInvocation", {
+  defaultValue: () => undefined,
+})
+const Input = Schema.Struct({
+  issuer: Schema.Literals(["app", "core", "sdk"]),
+  owner: Capability.Owner,
+  invocation: Capability.InvocationRef,
+  rootToolName: Schema.NonEmptyString,
+  effectiveRules: Permission.Ruleset,
+  nativeDenyFloor: Permission.Ruleset,
+})
+
+/** Trusted host boundary only: validates caller claims, not persisted Session/tool-part existence. */
+export function withContext<A, E, R>(
+  input: HostInput,
+````
+
+
+### AEX063
+
+**Artifacts:** `s1.core.capability`.
+
+**Claim/limit supported:** Persisted validation rechecks placement, current root pending/running tool and the exact running child lineage.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/capability/policy.ts:d75718a6ac8d6d3e36c5b791301a68a728be26b0`, lines 35–78.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `9ae8ac1edc77785058071356c0927b1d8c1a019a2b6be5cdf564c3b0dad65022`; **excerpt SHA256:** `ed0cf6e1c4a25ec2b18050e5d5837504dc00fe09d64a29d3194f9e2fb828a196` (2701 bytes).
+
+````text
+  const validate = Effect.fn("CapabilityPolicy.validate")(function* (binding: CapabilityInvocation.Binding) {
+    const session = yield* sessions.get(binding.owner.sessionID)
+    const stored = yield* sessions.message(binding.rootInvocation.assistantMessageID)
+    if (
+      !session ||
+      session.id !== binding.owner.sessionID ||
+      session.projectID !== binding.owner.projectID ||
+      session.location.directory !== binding.owner.location.directory ||
+      session.location.workspaceID !== binding.owner.location.workspaceID ||
+      !stored ||
+      stored.sessionID !== binding.rootInvocation.sessionID ||
+      stored.message.id !== binding.rootInvocation.assistantMessageID ||
+      stored.message.type !== "assistant" ||
+      stored.message.agent !== binding.rootInvocation.agentID ||
+      !stored.message.content.some(
+        (part) =>
+          part.type === "tool" &&
+          part.id === binding.rootInvocation.callID &&
+          part.name === binding.rootToolName &&
+          (part.state.status === "pending" || part.state.status === "running"),
+      )
+    )
+      return yield* mismatch()
+    if (binding.lineage.length > 8) return yield* mismatch()
+    yield* Effect.forEach(binding.lineage, (proof, index) => Effect.gen(function* () {
+      const parentCallID = index === 0 ? binding.rootInvocation.callID : binding.lineage[index - 1]?.callID
+      const row = yield* database.db.select().from(CapabilityChildTable)
+        .where(eq(CapabilityChildTable.id, proof.callID)).get().pipe(
+          Effect.catchIf((error) => error instanceof SqlError || error instanceof EffectDrizzleQueryError,
+            () => Effect.fail(mismatch())),
+        )
+      if (!row || proof.parentCallID !== parentCallID || !Number.isSafeInteger(proof.ordinal) ||
+        proof.ordinal < 1 || proof.ordinal > 64 || proof.callID !== CapabilityInvocation.childID({
+          ...binding.rootInvocation, callID: proof.parentCallID,
+        }, proof.ordinal) || row.id !== proof.callID || row.session_id !== binding.owner.sessionID ||
+        row.agent_id !== binding.owner.agentID || row.assistant_message_id !== binding.rootInvocation.assistantMessageID ||
+        row.root_call_id !== binding.rootInvocation.callID || row.root_tool_name !== binding.rootToolName ||
+        row.parent_call_id !== proof.parentCallID || row.ordinal !== proof.ordinal || row.depth !== index + 1 ||
+        row.tool_name !== proof.toolName || row.request_hash !== proof.requestHash || row.state !== "running")
+        return yield* mismatch()
+    }), { discard: true })
+    if (binding.invocation.callID !== (binding.lineage.at(-1)?.callID ?? binding.rootInvocation.callID))
+      return yield* mismatch()
+  })
+````
+
+
+### AEX064
+
+**Artifacts:** `s1.core.capability`.
+
+**Claim/limit supported:** Leaf construction/registration is Location-owned and lazy vendor I/O stays first-use; a failed noninterrupt startup sweep is logged.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/capability/tools.ts:1103ab0c8eb3d9d79cc5ff295cb267847eab629e`, lines 36–68.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `7704b7d8c7742deece88da2fd87f6fb2064eb580659548d159565f10893d3b46`; **excerpt SHA256:** `1f073ebdbe1ec722b474dc85fea55007e56ef2d6ae722d8c121a7b2c605f442c` (2436 bytes).
+
+````text
+// Stable canonical leaves are registered once per Location. Account resolution and vendor I/O stay first-use.
+export const node = makeLocationNode({
+  name: "capability/tools",
+  layer: Layer.effectDiscard(Effect.gen(function* () {
+    const tools = yield* Tools.Service
+    const connections = yield* CapabilityConnections.make
+    const jobs = yield* CapabilityJobs.make
+    const location = yield* Location.Service
+    const registry = yield* CapabilityProcessRegistry.Service
+    // Startup-only evidence: rows this host never held are lost. A sweep failure must not block the Location.
+    yield* CapabilityProcessSweep.run({ jobs, live: registry.live(), startedAt: registry.startedAt,
+      placement: { projectID: location.project.id,
+        location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }) } }).pipe(
+      Effect.catchCauseIf((cause) => !Cause.hasInterrupts(cause), (cause) => Effect.logWarning("process sweep failed", { cause })))
+    const processControl = yield* CapabilityProcessControl.make({ jobs })
+    const schedule = yield* CapabilitySchedule.make()
+    const artifacts = yield* CapabilityArtifacts.make()
+    const channels = yield* CapabilityChannels.make({ connections, jobs, artifacts })
+    const media = yield* CapabilityMedia.make()
+    const documents = yield* CapabilityDocuments.make()
+    const sheets = yield* CapabilitySheets.make()
+    const transport = CapabilityMcp.make()
+    const discovery = yield* CapabilityDiscovery.make({ source: { listTools: (selection) => transport.listTools(selection).pipe(
+      Effect.map((catalog) => CapabilityServiceProviders.filterCatalog(selection.connection.provider, catalog)),
+    ) } })
+    const execute = yield* CapabilityServiceExecution.make({ transport, discovery, connections, jobs, artifacts,
+      filterCatalog: CapabilityServiceProviders.filterCatalog })
+    const services = yield* CapabilityServices.make({ discovery, execute })
+    yield* tools.register({ ...channels.tools, ...media.tools, ...documents, ...sheets, ...services.tools, ...processControl.tools, ...schedule.tools }).pipe(Effect.orDie)
+  }).pipe(Effect.orDie)),
+  deps: [ToolRegistry.node, EventV2.node, AgentV2.node, Credential.node, Database.node, Location.node,
+    PermissionV2.node, SessionStore.node, Global.node, FSUtil.node,
+    CapabilityProcessRegistry.node, LocationMutation.node, AppProcess.node, ScheduledTaskPort.node],
+````
+
+
+### AEX065
+
+**Artifacts:** `s1.core.capability`.
+
+**Claim/limit supported:** The host binds scheduler process state and an absent binding defects explicitly.
+
+**Authority:** `observed_implementation`. **Source:** `packages/core/src/scheduled-task/port.ts:8ea347436e18a93f8dc43926c7fb84108fc0a20c`, lines 7–26.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `5fb969a9e8a030b02e31ff1678e1e0c2887c4e30c3078a5016642131de95ead7`; **excerpt SHA256:** `3e4e3ec6645c53013117f41f8dcdf0041ce290b35a0d91c481b07edd5f70ea5c` (1002 bytes).
+
+````text
+// Capability tools reach the scheduler through this port so the Location graph never imports the
+// Session graph (Session -> LocationServiceMap -> capability tools would close a type cycle). Location
+// graphs hoist their own global nodes, so the running scheduler binds itself here for the process.
+export class Service extends Context.Service<Service, ScheduledTaskCapability.Interface>()("@orchestra/v2/ScheduledTaskPort") {}
+
+const state: { bound?: ScheduledTaskCapability.Interface } = {}
+
+/** Called by the scheduler layer; the previous binding is restored when that layer's Scope closes. */
+export const bind = (api: ScheduledTaskCapability.Interface) => Effect.acquireRelease(
+  Effect.sync(() => {
+    const previous = state.bound
+    state.bound = api
+    return previous
+  }),
+  (previous) => Effect.sync(() => {
+    state.bound = previous
+  }),
+)
+
+const current = Effect.suspend(() => state.bound ? Effect.succeed(state.bound) : Effect.die("schedule_manage requires the host scheduler"))
+````
+
+
+### AEX066
+
+**Artifacts:** `s1.core.capability`.
+
+**Claim/limit supported:** Transport catalog/session bounds are documented by the native MCP owner; this is normative intent, not a newly observed implementation run.
+
+**Authority:** `repository_normative_documentation`. **Source:** `packages/core/src/capability/mcp/README.md:95f3154aef1625eaac3cd8feb500504996eb074f`, lines 43–70.
+
+**Source commit:** `1cde2ff7a71bcf7aecb5d030917b577165135d38`; **full source SHA256:** `f9b7b9df6645714b942f2adc46c9c1a727def9ea39a1f9e33782519bb14ca662`; **excerpt SHA256:** `dad31b1ba08d4e1cef714ba7f71b284c5b63f5573f4dbbb87bccc912ea80a47b` (1967 bytes).
+
+````text
+## Bounds and lifecycle
+
+Defaults: 4 MiB aggregate catalog envelopes (including initialization and all read
+SSE framing/notifications), 256 tools, 16 pages, 4 MiB call response envelopes,
+256 KiB encoded requests, 30 seconds total acquisition/call, four scoped sessions
+per factory, 512 generation identities, and 64 JSON-RPC SSE messages per acquisition
+or call. UTF-8 bytes are counted before decoding/buffering/parsing. JSON nesting
+is bounded at 64, cursor bytes at 4096, session IDs at 256 visible ASCII characters,
+tool names at 256 characters, descriptions at 2048, and credential headers at 16384.
+Positive integer options are required; timeout must fit a native timer.
+Incoming HTTP headers are subject to native fetch's bounds, not a custom aggregate
+header-byte quota. Only the assigned session-ID value has the transport's explicit header bound.
+
+Catalog acquisition returns complete coverage only after the terminal page.
+Duplicates, cursor cycles and all exhausted budgets fail. `byteLength` measures
+response body bytes, including full envelopes and read SSE framing, not HTTP header
+or compressed wire bytes. SSE acquisition ends at the correlated response and cancels
+its reader; later unsolicited traffic is not read or included. Repeat session lists
+include the original initialization byte cost in their catalog budget.
+
+Generations increase monotonically within a factory. Keys bind Connection/Target
+references and generations, owner and approved endpoint; values hash all sorted raw
+tools, including schemas, descriptions and metadata. Identical catalogs reuse their
+generation. A full identity map fails closed rather than evicting and reusing history.
+Create one host factory for the required generation lifetime; generations are not
+persisted or deterministic across host restarts: numeric generations depend on each
+factory's acquisition order. Credential rotation always requires an explicit new
+open; sessions are never shared or pooled.
+````
+
+
+FIM T01. Julgue quatro corpos/hash separadamente, cada critério obrigatório, não só exemplos do oracle. Declarar eventual insuficiência de fonte com range/claim; ausência de aceite dos complementos/folhas não impede decisão estritamente delimitada destes quatro corpos, mas impede fechar o subslice/camada. Nenhuma execução inferida. Resultados/evidências/findings concisos, sem raciocínio privado.

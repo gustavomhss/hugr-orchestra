@@ -1,0 +1,370 @@
+Transporte por /root do pedido original reviews/requests/r01-part-01.txt, sem alterar candidato. A menção a oracle recebido em M01 pertence ao roteiro original; enviarei S101-N3 explicitamente antes do fechamento. Ainda aguarde as partes 02 e 03 antes do parecer.
+
+R01 — s1.core.runtime. Mesma execução/fonte/protocolo e critérios obrigatórios de E01, oracle S101-N3 recebido em M01. Corpo completo L1: 5451 bytes UTF-8, SHA256 331d26e17158e0770af02c8772bd01a421dbda1a0bc82802da825f3666fba534. Revisão semântica local; NOT_RUN permanece para produto, OS, provider, testes e gates. Não use ferramentas.
+
+BEGIN EXACT BODY s1.core.runtime
+# Host composition and native process infrastructure
+
+Layer: **L1 — pinned factual basis**. Need: `component`. Scope: `orchestra.s1`.
+Source revision: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+
+## Observed implementation
+
+`Host.merge` validates contribution IDs, extra node names and Location additions, refusing contributions that own reserved SessionExecution, Session, LocationServiceMap or scheduler nodes. Built-in Location nodes can change only through replacements. `app-node` tags allow Location nodes to depend on global nodes and keep the converse boundary closed. Global paths use Orchestra's XDG data/cache/config/state roots; the module creates required directories at import. These are product data locations, not arbitrary cache names. [1,2,3]
+
+`AppProcess` centralizes spawn, collected output and stream output. Optional collectors cap retained bytes while continuing to drain input and set truncation flags. Inspectors see raw chunks before capture limits. Timeouts and caller AbortSignals terminate the scoped collection path. Memory-tree caps are documented and supplied to Omni; the legacy spawner does not enforce them. Native collection is selected only for eligible commands/options, otherwise the configured spawner path runs. No universal output or timeout bound exists unless the caller supplies one. [4]
+
+Omni loads once, accepts explicit paths only before first load, requires an addon/supervisor pair and throws when requested native components cannot load. It does not silently fall back during acquisition. Lookup checks configured paths, environment overrides, shipped binary locations and checkout targets. Its test-control predicate rejects an enabled run with no native spawn and a strict run with any delegation; reading this predicate is not running that control. Child environment assembly removes `HUGR_OMNI_*` and folds Windows variable names. [5]
+
+PTY sessions keep a bounded retained output ring and at most 25 exited sessions. `exact:true` uses supplied environment plus terminal defaults and adds no login argument; on Windows locale defaults are also added. Attachment returns replay/cursor before live activation. A replay gap sends terminal reset plus a cleaned first-line boundary and requests repaint. Inactive subscribers accumulate pending chunks until activation; synchronous callbacks and a bounded replay ring do not establish network backpressure. Teardown stops or explicitly adopts Omni descendants, and layer finalization waits only up to seven seconds for pending stops. The maintenance skill separately records the unresolved non-reading WebSocket client memory limit. [6,7]
+
+LSP and formatter project commands pass through ConfigTrust. LSP filters files outside active/project roots and shares in-flight launches per root/server. Workspace-code commands use confinement; trusted system commands may use the ordinary launch path. Formatter execution similarly confines workspace-code commands and limits allowed writes; logged spawn/format failure is distinct from successful formatting. Installation lookup falls back to the running version on release-query failure, so an unchanged “latest” value can reflect unavailable observation. OTLP logs/traces initialize only with a configured endpoint. [8,9,10,11]
+
+## Normative intent and gaps
+
+Core owns platform composition; product modules contribute through its ports. Native Rust, OS-specific spawners, PTY adapters, language servers, formatter packages and telemetry exporters remain separate implementations. No process was spawned through product code, no upgrade occurred and no native or network test ran. Source contracts about limits should be rechecked against the exact backend when runtime verification is needed.
+
+## Source anchors
+
+- **1.** `packages/core/src/host.ts:a0fc5bc9a36e50315b0ddddf4de3566555711250` — contribution merge and reserved nodes, lines 15–63.
+- **2.** `packages/core/src/effect/app-node.ts:e8112f921ad7a7dcefbf6985c24995df1855c96b` — scope dependency tags, lines 1–14.
+- **3.** `packages/core/src/global.ts:ba7790536b60c6075ff37854c4db14909b779183` — XDG data roots and overrides, lines 10–43,59–85.
+- **4.** `packages/core/src/process.ts:a2c29d4a18c44ff407e6055b27830fade5d43f20` — capture, cancellation and native selection, lines 25–65,131–217,221–272,319–324.
+- **5.** `packages/core/src/omni.ts:94a19789cef782806a80432c9a86f28bccbdecac` — native acquisition and control predicate, lines 25–112,139–174.
+- **6.** `packages/core/src/pty.ts:fc08cb64d832f77b145c4c9702d417d7db49c14f` — retention, exact creation, replay and teardown, lines 23–39,74–108,139–197,229–329,370–423.
+- **7.** `.orchestra/skills/terminal-maintenance/SKILL.md:610fa93e3ec385790509b0c7fd0181fd30adc727` — terminal ownership, invariants and WebSocket limit, lines 10–29.
+- **8.** `packages/core/src/lsp/lsp.ts:7848ef568344421190171962367fe2836170d084` — trust, confinement and shared launch, lines 149–215,223–282.
+- **9.** `packages/core/src/format/format.ts:0198f9c0d4aa4a9e1452339ca5c3302611478aba` — trust, command cache and confinement, lines 46–62,73–158.
+- **10.** `packages/core/src/installation/service.ts:4a75cd0fdf8467866c10c692987769751edd0f42` — latest lookup and explicit upgrade commands, lines 156–196.
+- **11.** `packages/core/src/observability/otlp.ts:4d403d30bded809a37d426a8c56361ca8d66ddf7` — configured OTLP startup, lines 7–18,36–76.
+END EXACT BODY s1.core.runtime
+
+### E01 — Composição: `packages/core/src/host.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `a0fc5bc9a36e50315b0ddddf4de3566555711250`; SHA-256 `9c20433f123ac8ea41773434faaceaecfe87787143689f6862ef28e05a87cb0f`.
+Linhas 23–63; hash do trecho UTF-8 original `6cc5dd7d8b903b98c20afd1d02c7fcad2dd2435d1826a3e45113c953700f4d43`.
+````text
+23:  * What a product module hands a composition root. A root applies all contributions once, to its single
+24:  * application graph (AGENTS "V2 Session Core": one process-local SessionExecution, one Location map).
+25:  */
+26: export interface Contribution {
+27:   /** Stable module id ("maestro", "app-dock", ...). Duplicates are a composition error. */
+28:   readonly id: string
+29:   /** Node replacements for the root graph; AppNodeBuilder also applies them to every Location map it builds. */
+30:   readonly replacements?: LayerNode.Replacements
+31:   /** Extra global nodes owned by the module. They must not fail: the root's error type does not grow. */
+32:   readonly nodes?: ReadonlyArray<Node.GlobalNode<unknown>>
+33:   /** Extra Location-scoped nodes appended to `locationServices` in every Location map the root builds. */
+34:   readonly locationNodes?: ReadonlyArray<Node.LocationNode<unknown, LocationError>>
+35:   /** Context.Reference overrides (core/host/* references), provided to the API layer. */
+36:   readonly references?: Layer.Layer<never, never, ReferenceServices>
+37: }
+38: 
+39: // One coordinator per process: these stay owned by the composition root.
+40: const reserved = [SessionExecution.node, SessionV2.node, LocationServiceMap.node, ScheduledTask.node, ScheduledTask.daemonNode]
+41: 
+42: /** Flatten contributions in order; synchronous because it only validates data. */
+43: export function merge(contributions: ReadonlyArray<Contribution>) {
+44:   const duplicate = repeated(contributions.map((item) => item.id))
+45:   if (duplicate) throw new Error(`Host contribution id is not unique: ${duplicate}`)
+46:   const replacements = contributions.flatMap((item) => item.replacements ?? [])
+47:   const nodes = contributions.flatMap((item) => item.nodes ?? [])
+48:   const locationNodes = contributions.flatMap((item) => item.locationNodes ?? [])
+49:   const claimed = [...replacements.map(([source]) => source), ...nodes].find((node) => reserved.some((owned) => owned.name === node.name))
+50:   if (claimed) throw new Error(`Host contribution may not own ${claimed.name}`)
+51:   const node = repeated(nodes.map((item) => item.name))
+52:   if (node) throw new Error(`Host contribution node is not unique: ${node}`)
+53:   // A contributed Location node may not shadow a built-in one either; changing a built-in is a replacement.
+54:   const builtIn = new Set(locationServices.dependencies.map((item) => item.name))
+55:   const location = repeated(locationNodes.map((item) => item.name)) ?? locationNodes.find((item) => builtIn.has(item.name))?.name
+56:   if (location) throw new Error(`Host contribution Location node is not unique: ${location}`)
+57:   const [first, ...rest] = contributions.flatMap((item) => (item.references ? [item.references] : []))
+58:   const references: Layer.Layer<never, never, ReferenceServices> = !first ? Layer.empty : rest.length === 0 ? first : Layer.mergeAll(first, ...rest)
+59:   return { replacements, nodes, locationNodes, references }
+60: }
+61: 
+62: function repeated(names: ReadonlyArray<string>) {
+63:   return names.find((name, index) => names.indexOf(name) !== index)
+````
+
+
+BEGIN SOURCE packages/core/src/effect/app-node.ts 1–14 blob e8112f921ad7a7dcefbf6985c24995df1855c96b
+import { LayerNode } from "./layer-node"
+
+export const tags = LayerNode.tags({
+  location: ["global"],
+  global: [],
+})
+
+export type GlobalNode<A, E = never> = LayerNode.Node<A, E, (typeof tags.values)["global"]>
+export type LocationNode<A, E = never> = LayerNode.Node<A, E, (typeof tags.values)["location"]>
+
+export const makeGlobalNode = tags.make("global")
+export const makeLocationNode = tags.make("location")
+
+export * as Node from "./app-node"
+END SOURCE
+
+BEGIN SOURCE packages/core/src/global.ts 10–43 blob ba7790536b60c6075ff37854c4db14909b779183
+const app = "orchestra"
+const data = path.join(xdgData!, app)
+const cache = path.join(xdgCache!, app)
+const config = path.join(xdgConfig!, app)
+const state = path.join(xdgState!, app)
+const tmp = path.join(os.tmpdir(), app)
+
+const paths = {
+  get home() {
+    return process.env.ORCHESTRA_TEST_HOME ?? os.homedir()
+  },
+  data,
+  bin: path.join(cache, "bin"),
+  log: path.join(data, "log"),
+  repos: path.join(data, "repos"),
+  cache,
+  config,
+  state,
+  tmp,
+}
+
+export const Path = paths
+
+Flock.setGlobal({ state })
+
+await Promise.all([
+  fs.mkdir(Path.data, { recursive: true }),
+  fs.mkdir(Path.config, { recursive: true }),
+  fs.mkdir(Path.state, { recursive: true }),
+  fs.mkdir(Path.tmp, { recursive: true }),
+  fs.mkdir(Path.log, { recursive: true }),
+  fs.mkdir(Path.bin, { recursive: true }),
+  fs.mkdir(Path.repos, { recursive: true }),
+])
+END SOURCE
+
+BEGIN SOURCE packages/core/src/global.ts 59–85 blob ba7790536b60c6075ff37854c4db14909b779183
+export function make(input: Partial<Interface> = {}): Interface {
+  return {
+    home: Path.home,
+    data: Path.data,
+    cache: Path.cache,
+    config: Flag.ORCHESTRA_CONFIG_DIR ?? Path.config,
+    state: Path.state,
+    tmp: Path.tmp,
+    bin: Path.bin,
+    log: Path.log,
+    repos: Path.repos,
+    ...input,
+  }
+}
+
+const layer = Layer.effect(
+  Service,
+  Effect.sync(() => Service.of(make())),
+)
+
+export const node = makeGlobalNode({ service: Service, layer: layer, deps: [] })
+
+export const layerWith = (input: Partial<Interface>) =>
+  Layer.effect(
+    Service,
+    Effect.sync(() => Service.of(make(input))),
+  )
+END SOURCE
+
+BEGIN SOURCE packages/core/src/process.ts 25–65 blob a2c29d4a18c44ff407e6055b27830fade5d43f20
+export interface RunOptions {
+  /** Optional producer-owned hook; runs on raw chunks before capture limits. */
+  readonly inspect?: (chunk: Uint8Array) => void
+  readonly combineOutput?: boolean
+  readonly maxOutputBytes?: number
+  readonly maxErrorBytes?: number
+  readonly signal?: AbortSignal
+  readonly timeout?: Duration.Input
+  /**
+   * Memory cap for the whole process tree in resident bytes. Under omni the tree is killed above it and the call fails
+   * with `OmniSpawner.MemoryExceeded` as the cause; the legacy spawner does not enforce it.
+   */
+  readonly maxRssBytes?: number
+  readonly stdin?: string | Uint8Array | Stream.Stream<Uint8Array, PlatformError>
+}
+
+export interface RunStreamOptions {
+  readonly signal?: AbortSignal
+  readonly includeStderr?: boolean
+  readonly okExitCodes?: ReadonlyArray<number>
+  readonly maxErrorBytes?: number
+}
+
+export interface RunResult {
+  readonly command: string
+  readonly exitCode: number
+  readonly output?: Buffer
+  readonly stdout: Buffer
+  readonly stderr: Buffer
+  readonly outputTruncated?: boolean
+  readonly stdoutTruncated: boolean
+  readonly stderrTruncated: boolean
+}
+
+export type Interface = ChildProcessSpawner["Service"] & {
+  readonly run: (command: ChildProcess.Command, options?: RunOptions) => Effect.Effect<RunResult, AppProcessError>
+  readonly runStream: (
+    command: ChildProcess.Command,
+    options?: RunStreamOptions,
+  ) => Stream.Stream<string, AppProcessError>
+}
+END SOURCE
+
+### E27 — Processo: `packages/core/src/process.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `a2c29d4a18c44ff407e6055b27830fade5d43f20`; SHA-256 `7bfd3adf7274bd90bfe4cf1d7fd3f4bb256f6914dbd74cea00127e33704a6875`.
+Linhas 131–169; hash do trecho UTF-8 original `f43db745a1abc38a0246dcd9d99eb2a10891421ca46021685f88dcf677a8c5b5`.
+````text
+131: export const collectStream = <E>(stream: Stream.Stream<Uint8Array, E>, maxOutputBytes: number | undefined) =>
+132:   Stream.runFold(
+133:     stream,
+134:     () => ({ chunks: [] as Uint8Array[], bytes: 0, truncated: false }),
+135:     (acc, chunk) => {
+136:       if (maxOutputBytes === undefined) {
+137:         acc.chunks.push(chunk)
+138:         acc.bytes += chunk.length
+139:         return acc
+140:       }
+141:       const remaining = maxOutputBytes - acc.bytes
+142:       if (remaining > 0) acc.chunks.push(remaining >= chunk.length ? chunk : chunk.slice(0, remaining))
+143:       acc.bytes += chunk.length
+144:       acc.truncated = acc.truncated || acc.bytes > maxOutputBytes
+145:       return acc
+146:     },
+147:   ).pipe(Effect.map((x) => ({ buffer: Buffer.concat(x.chunks), truncated: x.truncated })))
+148: 
+149: /**
+150:  * AppProcess over the spawner in context, for a mode of ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: with omni on, run()
+151:  * collects through omni itself where it can (R2-1).
+152:  */
+153: export const layerWith = (mode: typeof Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) => Layer.effect(
+154:   Service,
+155:   Effect.gen(function* () {
+156:     const spawner = yield* ChildProcessSpawner
+157:     const omni = mode === "off" ? undefined : yield* Effect.promise(() => Omni.load())
+158: 
+159:     const runCommand = (command: ChildProcess.Command, options?: RunOptions) => {
+160:       const description = describeCommand(command)
+161:       const inspected = (stream: Stream<Uint8Array, PlatformError>) => options?.inspect
+162:         ? stream.pipe(Stream.tap((chunk) => Effect.try({
+163:             try: () => options.inspect?.(chunk),
+164:             catch: (cause) => wrapError(description, cause),
+165:           }))) : stream
+166:       const collect = Effect.scoped(
+167:         Effect.gen(function* () {
+168:           const handle = yield* spawner
+169:             .spawn(command)
+````
+Linhas 221–272; hash do trecho UTF-8 original `0567b841a9554b54610fa6a9f69ed6ea720e897c7f779229fd49b8bcb50b0ed4`.
+````text
+221:     const collect = (omni: OmniSpawner.Binding, command: ChildProcess.StandardCommand, options?: RunOptions) => {
+222:       const description = describeCommand(command)
+223:       const stdin = options?.stdin
+224:       return OmniSpawner.collect(omni, command, {
+225:         combineOutput: options?.combineOutput,
+226:         signal: options?.signal,
+227:         timeout: options?.timeout,
+228:         maxRssBytes: options?.maxRssBytes,
+229:         stdin: typeof stdin === "string" || stdin instanceof Uint8Array ? stdin : undefined,
+230:       }).pipe(
+231:         Effect.map((result) =>
+232:           options?.combineOutput
+233:             ? ({
+234:                 command: description,
+235:                 exitCode: result.exitCode,
+236:                 output: result.stdout,
+237:                 stdout: Buffer.alloc(0),
+238:                 stderr: Buffer.alloc(0),
+239:                 outputTruncated: false,
+240:                 stdoutTruncated: false,
+241:                 stderrTruncated: false,
+242:               } satisfies RunResult)
+243:             : ({
+244:                 command: description,
+245:                 exitCode: result.exitCode,
+246:                 stdout: result.stdout,
+247:                 stderr: result.stderr,
+248:                 stdoutTruncated: false,
+249:                 stderrTruncated: false,
+250:               } satisfies RunResult),
+251:         ),
+252:         Effect.catch((cause) =>
+253:           Effect.fail(wrapError(description, options?.signal?.aborted ? abortError(options.signal) : cause)),
+254:         ),
+255:       )
+256:     }
+257: 
+258:     const run = Effect.fn("AppProcess.run")(function* (command: ChildProcess.Command, options?: RunOptions) {
+259:       if (omni && OmniSpawner.collectable(command, options)) return yield* collect(omni, command, options)
+260:       if (options?.stdin === undefined) return yield* runCommand(command, options)
+261:       if (command._tag !== "StandardCommand") {
+262:         return yield* new AppProcessError({
+263:           command: describeCommand(command),
+264:           cause: new Error("stdin option only supports StandardCommand; received PipedCommand"),
+265:         })
+266:       }
+267:       const next = ChildProcess.make(command.command, command.args, {
+268:         ...command.options,
+269:         stdin: normalizeStdin(options.stdin),
+270:       })
+271:       return yield* runCommand(next, options)
+272:     })
+````
+
+
+BEGIN SOURCE packages/core/src/process.ts 170–217 blob a2c29d4a18c44ff407e6055b27830fade5d43f20
+            .pipe(Effect.provideService(OmniSpawner.MemoryCap, options?.maxRssBytes))
+          if (options?.combineOutput) {
+            const [output, exitCode] = yield* Effect.all(
+              [collectStream(inspected(handle.all), options.maxOutputBytes), handle.exitCode],
+              { concurrency: "unbounded" },
+            )
+            return {
+              command: description,
+              exitCode,
+              output: output.buffer,
+              stdout: Buffer.alloc(0),
+              stderr: Buffer.alloc(0),
+              outputTruncated: output.truncated,
+              stdoutTruncated: false,
+              stderrTruncated: false,
+            } satisfies RunResult
+          }
+          const [stdout, stderr, exitCode] = yield* Effect.all(
+            [
+              collectStream(inspected(handle.stdout), options?.maxOutputBytes),
+              collectStream(inspected(handle.stderr), options?.maxErrorBytes),
+              handle.exitCode,
+            ],
+            { concurrency: "unbounded" },
+          )
+          return {
+            command: description,
+            exitCode,
+            stdout: stdout.buffer,
+            stderr: stderr.buffer,
+            stdoutTruncated: stdout.truncated,
+            stderrTruncated: stderr.truncated,
+          } satisfies RunResult
+        }),
+      )
+      const timed = options?.timeout
+        ? Effect.timeoutOrElse(collect, {
+            duration: options.timeout,
+            orElse: () => Effect.fail(new AppProcessError({ command: description, cause: new Error("Timed out") })),
+          })
+        : collect
+      const aborted = options?.signal
+        ? timed.pipe(
+            Effect.raceFirst(
+              waitForAbort(options.signal).pipe(Effect.mapError((cause) => wrapError(description, cause))),
+            ),
+          )
+        : timed
+END SOURCE
+
+Continua; aguarde FIM R01.

@@ -1,0 +1,22 @@
+{
+  "id": "catalog_bottom",
+  "path": "packages/core/src/catalog.ts",
+  "start_line": 313,
+  "end_line": 370,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "\n        small: Effect.fn(\"CatalogV2.model.small\")(function* (providerID) {\n          const record = state.get().providers.get(providerID)\n          if (!record) return\n          const provider = record.provider\n          const models = (yield* result.model.available()).filter((model) => model.providerID === providerID)\n\n          // TODO: Remove these provider-specific assumptions once model syncing reliably reports available deployments.\n          if (providerID === ProviderV2.ID.azure || providerID === ProviderV2.ID.make(\"azure-cognitive-services\")) {\n            return\n          }\n\n          if (providerID === ProviderV2.ID.opencode) {\n            const gpt5Nano = models.find((model) => model.id === ModelV2.ID.make(\"gpt-5-nano\"))\n            if (gpt5Nano?.enabled && gpt5Nano.status === \"active\") return projectModel(gpt5Nano, provider)\n          }\n\n          const candidates = pipe(\n            models,\n            Array.filter(\n              (model) =>\n                model.providerID === providerID &&\n                model.enabled &&\n                model.status === \"active\" &&\n                model.capabilities.input.some((item) => item.startsWith(\"text\")) &&\n                model.capabilities.output.some((item) => item.startsWith(\"text\")),\n            ),\n            Array.map((model) => ({\n              model,\n              cost: model.cost[0] ? model.cost[0].input + model.cost[0].output : 999,\n              age: (Date.now() - model.time.released) / (1000 * 60 * 60 * 24 * 30),\n              small: SMALL_MODEL_RE.test(`${model.id} ${model.family ?? \"\"} ${model.name}`.toLowerCase()),\n            })),\n            Array.filter((item) => item.cost > 0 && item.age <= 18),\n          )\n\n          const pick = (items: typeof candidates) => {\n            const maxCost = Math.max(...items.map((item) => item.cost), 0.01)\n            const maxAge = Math.max(...items.map((item) => item.age), 0.01)\n            return pipe(\n              items,\n              Array.sortWith((item) => (item.cost / maxCost) * 0.8 + (item.age / maxAge) * 0.2, Order.Number),\n              Array.map((item) => projectModel(item.model, provider)),\n              Array.head,\n            )\n          }\n\n          return Option.getOrUndefined(\n            pipe(\n              candidates,\n              Array.filter((item) => item.small),\n              (items) => (items.length > 0 ? pick(items) : pick(candidates)),\n            ),\n          )\n        }),\n      },\n    }\n",
+      "encoding": "utf-8",
+      "sha": "86acb93f550bc2b941e85d42cc4d62d73cbf64ba",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/catalog.ts",
+      "display_title": "catalog.ts"
+    },
+    "isError": false
+  }
+}

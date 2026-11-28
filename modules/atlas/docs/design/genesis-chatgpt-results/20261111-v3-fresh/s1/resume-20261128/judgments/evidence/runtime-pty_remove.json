@@ -1,0 +1,22 @@
+{
+  "id": "pty_remove",
+  "path": "packages/core/src/pty.ts",
+  "start_line": 198,
+  "end_line": 228,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "\n    const requireSession = Effect.fn(\"Pty.requireSession\")(function* (id: PtyID) {\n      const session = sessions.get(id)\n      if (!session) return yield* new NotFoundError({ ptyID: id })\n      return session\n    })\n\n    const removeSession = Effect.fnUntraced(function* (id: PtyID, adopt = false) {\n      const session = sessions.get(id)\n      if (!session) return\n      sessions.delete(id)\n      const index = exitOrder.indexOf(id)\n      if (index !== -1) exitOrder.splice(index, 1)\n      yield* Effect.logInfo(\"removing session\", { id })\n      teardown(session, adopt)\n      yield* events.publish(Event.Deleted, { id: session.info.id })\n    })\n\n    const remove = Effect.fn(\"Pty.remove\")(function* (id: PtyID) {\n      yield* requireSession(id)\n      yield* removeSession(id, true)\n    })\n\n    const list = Effect.fn(\"Pty.list\")(function* () {\n      return Array.from(sessions.values()).map((session) => session.info)\n    })\n\n    const get = Effect.fn(\"Pty.get\")(function* (id: PtyID) {\n      return (yield* requireSession(id)).info\n    })\n",
+      "encoding": "utf-8",
+      "sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "display_title": "pty.ts"
+    },
+    "isError": false
+  }
+}

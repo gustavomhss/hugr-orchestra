@@ -1,0 +1,22 @@
+{
+  "id": "process_collection",
+  "path": "packages/core/src/process.ts",
+  "start_line": 170,
+  "end_line": 217,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "            .pipe(Effect.provideService(OmniSpawner.MemoryCap, options?.maxRssBytes))\n          if (options?.combineOutput) {\n            const [output, exitCode] = yield* Effect.all(\n              [collectStream(inspected(handle.all), options.maxOutputBytes), handle.exitCode],\n              { concurrency: \"unbounded\" },\n            )\n            return {\n              command: description,\n              exitCode,\n              output: output.buffer,\n              stdout: Buffer.alloc(0),\n              stderr: Buffer.alloc(0),\n              outputTruncated: output.truncated,\n              stdoutTruncated: false,\n              stderrTruncated: false,\n            } satisfies RunResult\n          }\n          const [stdout, stderr, exitCode] = yield* Effect.all(\n            [\n              collectStream(inspected(handle.stdout), options?.maxOutputBytes),\n              collectStream(inspected(handle.stderr), options?.maxErrorBytes),\n              handle.exitCode,\n            ],\n            { concurrency: \"unbounded\" },\n          )\n          return {\n            command: description,\n            exitCode,\n            stdout: stdout.buffer,\n            stderr: stderr.buffer,\n            stdoutTruncated: stdout.truncated,\n            stderrTruncated: stderr.truncated,\n          } satisfies RunResult\n        }),\n      )\n      const timed = options?.timeout\n        ? Effect.timeoutOrElse(collect, {\n            duration: options.timeout,\n            orElse: () => Effect.fail(new AppProcessError({ command: description, cause: new Error(\"Timed out\") })),\n          })\n        : collect\n      const aborted = options?.signal\n        ? timed.pipe(\n            Effect.raceFirst(\n              waitForAbort(options.signal).pipe(Effect.mapError((cause) => wrapError(description, cause))),\n            ),\n          )\n        : timed",
+      "encoding": "utf-8",
+      "sha": "a2c29d4a18c44ff407e6055b27830fade5d43f20",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/process.ts",
+      "display_title": "process.ts"
+    },
+    "isError": false
+  }
+}

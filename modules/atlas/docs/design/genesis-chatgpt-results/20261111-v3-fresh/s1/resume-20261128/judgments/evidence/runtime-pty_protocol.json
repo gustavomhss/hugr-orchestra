@@ -1,0 +1,22 @@
+{
+  "id": "pty_protocol",
+  "path": "packages/core/src/pty/protocol.ts",
+  "start_line": 1,
+  "end_line": 100,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "export * as PtyProtocol from \"./protocol\"\n\n// Wire protocol for PTY websocket transports. The PTY domain service is transport-free; server\n// routes adapt Pty.attach to websockets with these helpers so every surface speaks one protocol.\n//\n// Outbound frames are raw UTF-8 terminal chunks. One control frame — a 0x00 byte followed by\n// UTF-8 JSON — carries the absolute output cursor after replay so clients can resume later.\n\nconst encoder = new TextEncoder()\nconst decoder = new TextDecoder(\"utf-8\", { fatal: true })\n\n// Replay can be megabytes; send it in bounded frames.\nexport const REPLAY_CHUNK = 64 * 1024\n\nexport function metaFrame(cursor: number) {\n  const bytes = encoder.encode(JSON.stringify({ cursor }))\n  const out = new Uint8Array(bytes.length + 1)\n  out[0] = 0\n  out.set(bytes, 1)\n  return out\n}\n\nexport function chunks(data: string) {\n  const out: string[] = []\n  for (let i = 0; i < data.length; ) {\n    const end = Math.min(data.length, i + REPLAY_CHUNK)\n    const safe = cut(data, end)\n    const next = safe > i ? safe : end\n    out.push(data.slice(i, next))\n    i = next\n  }\n  return out\n}\n\n// A split point that does not separate a surrogate pair: one unit earlier when `index` falls between a high and a\n// low surrogate, so the pair stays together on the far side of the split.\nexport function cut(data: string, index: number) {\n  if (index <= 0 || index >= data.length) return index\n  const high = data.charCodeAt(index - 1)\n  const low = data.charCodeAt(index)\n  return high >= 0xd800 && high <= 0xdbff && low >= 0xdc00 && low <= 0xdfff ? index - 1 : index\n}\n\n// The ring is cut at an arbitrary character, so its first line may begin inside an escape sequence; drop it.\nexport function afterFirstLine(buffer: string) {\n  const newline = buffer.indexOf(\"\\n\")\n  return newline >= 0 && newline < 4096 ? buffer.slice(newline + 1) : buffer\n}\n\n// Inbound client frames are UTF-8 text or binary; invalid UTF-8 input is dropped.\nexport function decodeInput(message: string | Uint8Array | ArrayBuffer) {\n  if (typeof message === \"string\") return message\n  try {\n    return decoder.decode(message instanceof ArrayBuffer ? new Uint8Array(message) : message)\n  } catch {\n    return undefined\n  }\n}",
+      "encoding": "utf-8",
+      "sha": "cca1266bd0235f21bbac04454824c04b5c839aeb",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty/protocol.ts",
+      "display_title": "protocol.ts"
+    },
+    "isError": false
+  }
+}

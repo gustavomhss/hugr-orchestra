@@ -1,0 +1,16 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "Action completed."
+    }
+  ],
+  "structuredContent": {
+    "content": "export const recordCompletion = (\n  attempt: AttemptId,\n  completionRef: string,\n  completionBody?: string,\n): Effect.Effect<AttemptOutcome, never, Database.Service> =>\n  attemptWrite(attempt, (record) => {\n    if (completionBody === undefined || completionBody.length === 0) {\n      return Effect.succeed({ patch: {}, result: hold(\"response-unavailable\", [attemptKey(attempt), \"completion-body\"]) })\n    }\n    if (record.completionRef === undefined) {\n      return Effect.succeed({\n        patch: { completion_ref: completionRef, completion_body: completionBody },\n        result: settled(attempt),\n      })\n    }\n    const same = record.completionRef === completionRef && record.completionBody === completionBody\n    return Effect.succeed({ patch: {}, result: same ? settled(attempt) : refusal(\"conflict\", [attemptKey(attempt)]) })\n  })\n\n/**\n * Semantic outcome is preserved apart from the physical usage (EA-26); no refund path\n * exists — confirmed usage and held obligations stay as they were.\n */\nexport const recordSemantic = (\n  attempt: AttemptId,\n  semantic: \"accepted\" | \"refused\",\n): Effect.Effect<AttemptOutcome, never, Database.Service> =>\n  attemptWrite(attempt, () => Effect.succeed({ patch: { semantic }, result: settled(attempt) }))\n\n/** Durable observation of a physical dispatch (§4.4); never inferred from other states. */\nexport const recordForward = (attempt: AttemptId): Effect.Effect<AttemptOutcome, never, Database.Service> =>\n  attemptWrite(attempt, (record) =>\n    Effect.succeed({ patch: record.forwardObserved ? {} : { forward_observed: 1 }, result: settled(attempt) }),\n  )",
+    "encoding": "utf-8",
+    "sha": "914a0b925dd282e264292b2247189c549c993a3f",
+    "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/economy/admission.ts",
+    "display_title": "admission.ts"
+  },
+  "isError": false
+}

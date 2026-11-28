@@ -1,0 +1,473 @@
+SS01 — fontes literais, parte 04; mesmo pin/corpo.
+
+### packages/core/src/session/legacy-import.ts
+```text
+19: // Legacy and V2 share the `session` table, but legacy keeps transcripts in `message`/`part` and V2 reads `session_message`.
+20: // This copies each legacy transcript into V2 once: only Sessions with legacy messages and no V2 message are touched, legacy rows
+21: // are never changed, and a rerun is a no-op. Imported rows take negative sequences, below every durable event
+22: // sequence a later V2 turn on the same Session will project. Subtask, compaction and patch parts and tool-result
+23: // attachments map onto their V2 shapes (user text and mentions, compaction messages, the assistant's snapshot).
+25: const decode = Schema.decodeUnknownOption(SessionMessage.Message)
+26: const encode = Schema.encodeSync(SessionMessage.Message)
+28: /**
+29:  * Imports every pending legacy transcript; returns how many Sessions actually gained V2 messages. A Session whose
+30:  * messages all fail to decode stays pending (and is not counted), so it is retried, cheaply, on the next call.
+31:  * Callers must finish this before anything can prompt a Session: eligibility is "no V2 message yet".
+… omitted original lines …
+77:   const converted = rows.flatMap((row) =>
+78:     Option.toArray(
+79:       decode(row.info.role === "user" ? user(row.info, row.parts, rows) : assistant(row.info, row.parts, rows, session?.directory)),
+80:     ),
+81:   )
+82:   if (converted.length === 0) return false
+83:   yield* db
+84:     .transaction(
+85:       () =>
+86:         Effect.forEach(
+87:           converted,
+88:           (message, index) => {
+89:             const { id, type, ...data } = encode(message)
+90:             return db
+91:               .insert(SessionMessageTable)
+92:               .values({
+93:                 id: SessionMessage.ID.make(id),
+94:                 session_id: sessionID,
+95:                 type,
+96:                 seq: index - converted.length,
+97:                 time_created: data.time.created,
+98:                 data,
+99:               })
+100:               .onConflictDoNothing()
+101:               .run()
+102:           },
+103:           { discard: true },
+104:         ),
+105:       { behavior: "immediate" },
+106:     )
+107:     .pipe(Effect.orDie)
+108:   return true
+… omitted original lines …
+113: function user(info: Extract<Info, { role: "user" }>, parts: ReadonlyArray<Part>, rows: ReadonlyArray<Row>) {
+114:   const compaction = parts.find((part): part is CompactionPart => part.type === "compaction")
+115:   if (compaction) return checkpoint(info, compaction, rows)
+116:   // A subtask is the owner's request for a subagent: its prompt joins the text and its agent the mentions.
+117:   const subtasks = parts.filter((part): part is SubtaskPart => part.type === "subtask")
+118:   const text = [
+119:     ...parts.flatMap((part) => (part.type === "text" && !part.ignored ? [part.text] : [])),
+120:     ...subtasks.map((part) => part.prompt),
+121:   ].join("\n\n")
+122:   const files = parts.flatMap((part) => (part.type === "file" ? [attachment(part)] : []))
+123:   const agents = [
+124:     ...parts.flatMap((part) =>
+125:       part.type === "agent"
+126:         ? [{ name: part.name, ...(part.source ? { source: { start: part.source.start, end: part.source.end, text: part.source.value } } : {}) }]
+127:         : [],
+128:     ),
+129:     ...subtasks.map((part) => ({ name: part.agent })),
+130:   ]
+131:   if (!text && files.length === 0) return undefined
+132:   return {
+133:     type: "user",
+134:     id: info.id,
+135:     time: { created: info.time.created },
+136:     text,
+137:     ...(files.length ? { files } : {}),
+138:     ...(agents.length ? { agents } : {}),
+139:   }
+140: }
+142: /**
+143:  * A legacy compaction is a user message with a compaction part answered by a summary assistant message. On V2 it is one
+144:  * compaction message whose summary is that answer and whose recent context is the tail legacy kept verbatim; the summary
+145:  * assistant is folded into it. A compaction that never produced a summary restores nothing.
+146:  */
+147: function checkpoint(info: Extract<Info, { role: "user" }>, part: CompactionPart, rows: ReadonlyArray<Row>) {
+148:   const answer = rows.find((row) => row.info.role === "assistant" && row.info.summary && row.info.parentID === info.id)
+149:   const summary = answer ? textOf(answer.parts) : ""
+150:   if (!summary) return undefined
+151:   const self = rows.findIndex((row) => row.info.id === info.id)
+152:   const tail = part.tail_start_id ? rows.findIndex((row) => row.info.id === part.tail_start_id) : -1
+153:   const recent = (tail === -1 ? [] : rows.slice(tail, self))
+154:     .flatMap((row) => {
+155:       const text = textOf(row.parts)
+156:       return text ? [`${row.info.role === "user" ? "User" : "Assistant"}: ${text}`] : []
+157:     })
+158:     .join("\n\n")
+159:   return {
+160:     type: "compaction",
+161:     id: info.id,
+162:     reason: part.auto ? "auto" : "manual",
+163:     summary,
+164:     recent,
+165:     time: { created: info.time.created },
+166:   }
+… omitted original lines …
+175:   if (info.summary && rows.some((row) => row.info.id === info.parentID && row.parts.some((part) => part.type === "compaction")))
+176:     return undefined
+177:   return {
+178:     type: "assistant",
+179:     id: info.id,
+180:     agent: info.agent,
+181:     model: { id: info.modelID, providerID: info.providerID, ...(info.variant ? { variant: info.variant } : {}) },
+182:     content: parts.flatMap((part): unknown[] => {
+183:       if (part.type === "text") return [{ type: "text", id: part.id, text: part.text }]
+184:       if (part.type === "reasoning")
+185:         return [
+186:           {
+187:             type: "reasoning",
+188:             id: part.id,
+189:             text: part.text,
+190:             time: { created: part.time.start, ...(part.time.end ? { completed: part.time.end } : {}) },
+191:           },
+192:         ]
+193:       if (part.type === "tool") return [tool(part, info.time.created)]
+194:       return []
+195:     }),
+196:     ...snapshot(parts, directory),
+197:     ...(info.finish ? { finish: info.finish } : {}),
+198:     cost: info.cost,
+199:     tokens: {
+200:       input: info.tokens.input,
+201:       output: info.tokens.output,
+202:       reasoning: info.tokens.reasoning,
+203:       cache: info.tokens.cache,
+204:     },
+205:     ...(info.error ? { error: { type: "unknown", message: errorMessage(info.error) } } : {}),
+206:     time: { created: info.time.created, ...(info.time.completed ? { completed: info.time.completed } : {}) },
+… omitted original lines …
+250: function tool(part: ToolPart, created: number) {
+251:   const state = part.state
+252:   const time = {
+253:     created: "time" in state ? state.time.start : created,
+254:     ...(state.status === "completed" || state.status === "error" ? { completed: state.time.end } : {}),
+255:   }
+256:   const base = { type: "tool", id: part.callID, name: part.tool, time }
+257:   if (state.status === "pending") return { ...base, state: { status: "pending", input: state.raw } }
+258:   if (state.status === "running")
+259:     return { ...base, state: { status: "running", input: state.input, structured: state.metadata ?? {}, content: [] } }
+260:   if (state.status === "completed")
+261:     return {
+262:       ...base,
+263:       state: {
+264:         status: "completed",
+265:         input: state.input,
+266:         ...(state.attachments?.length ? { attachments: state.attachments.map(attachment) } : {}),
+267:         content: [{ type: "text", text: state.output }],
+268:         structured: state.metadata,
+269:       },
+270:     }
+271:   return {
+272:     ...base,
+273:     state: {
+274:       status: "error",
+275:       input: state.input,
+276:       content: [],
+277:       structured: state.metadata ?? {},
+278:       error: { type: "unknown", message: state.error },
+279:     },
+280:   }
+```
+
+### packages/core/src/session/legacy-transcript.ts
+```text
+1: export * as SessionLegacyTranscript from "./legacy-transcript"
+3: // Decode schemas for the transcripts older databases keep in the `message` and `part` tables. Only the legacy
+4: // importer and the readers that must still recognize those rows use them; nothing writes this shape any more.
+```
+
+### packages/core/src/session/runner/llm.ts
+```text
+271:       if (model && request && (yield* compaction.compactIfNeeded({ sessionID: session.id, entries, model, request })))
+272:         return yield* Effect.die(continueAfterCompaction(currentStep))
+273:       const startSnapshot = yield* snapshots.capture()
+274:       const publisher = createLLMEventPublisher(events, {
+275:         sessionID: session.id,
+276:         agent: agent.id,
+277:         model: {
+278:           id: model ? ModelV2.ID.make(model.id) : (modelRef?.id ?? ModelV2.ID.make("default")),
+279:           providerID: model ? ProviderV2.ID.make(model.provider) : (modelRef?.providerID ?? ProviderV2.ID.make("anthropic")),
+280:           ...(session.model?.variant === undefined ? {} : { variant: session.model.variant }),
+281:         },
+282:         snapshot: startSnapshot,
+283:       })
+284:       const withPublication = Semaphore.makeUnsafe(1).withPermit
+285:       const publish = (event: LLMEvent, outputPaths: ReadonlyArray<string> = []) =>
+286:         withPublication(publisher.publish(event, outputPaths))
+287:       let overflowFailure: ProviderErrorEvent | undefined
+288:       yield* subagentModels.assert(session.id, modelRef)
+… omitted original lines …
+358:       // The Session's open todos, rendered for an engine that lost its context to its own compaction.
+359:       const memory: ExecutionHost.Turn["memory"] = {
+360:         recall: db
+361:           .select()
+362:           .from(TodoTable)
+363:           .where(eq(TodoTable.session_id, session.id))
+364:           .orderBy(asc(TodoTable.position))
+365:           .all()
+366:           .pipe(
+367:             Effect.orDie,
+368:             Effect.map((rows) => rows.filter((row) => row.status !== "completed" && row.status !== "cancelled")),
+369:             Effect.map((open) =>
+370:               open.length === 0
+371:                 ? undefined
+372:                 : ["# Orchestra working memory (after the engine's compaction)", "## Todos", ...open.map((row) => `- [${row.status}] ${row.content}`)].join("\n"),
+373:             ),
+374:           ),
+375:         archive: (input) =>
+376:           Effect.gen(function* () {
+377:             yield* events.publish(SessionEvent.Synthetic, {
+378:               sessionID: session.id,
+379:               messageID: SessionMessage.ID.create(),
+380:               timestamp: yield* DateTime.now,
+381:               text: `Engine compaction summary (${input.trigger}):\nNative owner: ${input.nativeSessionID}\n\n${input.summary}`,
+382:             })
+383:           }),
+384:       }
+385:       // Steers promoted live and not yet reported consumed; any left when the host stream ends get a turn of their own.
+386:       const liveSteers = new Set<string>()
+387:       const steers: ExecutionHost.Turn["steers"] = Stream.callback<void>(
+388:         (queue) =>
+389:           Effect.gen(function* () {
+390:             const stop = yield* events.listen((event) => {
+391:               const data = event.data as { sessionID?: unknown; delivery?: unknown }
+392:               return event.type === SessionEvent.PromptAdmitted.type &&
+393:                 data.sessionID === session.id &&
+394:                 data.delivery === "steer"
+395:                 ? Queue.offer(queue, undefined).pipe(Effect.asVoid)
+396:                 : Effect.void
+397:             })
+398:             yield* Effect.addFinalizer(() => stop)
+399:             // Steers admitted since the drain's last promotion, now that none can slip between it and the listener.
+400:             yield* Queue.offer(queue, undefined)
+401:           }),
+402:         { bufferSize: 1, strategy: "sliding" },
+403:       ).pipe(
+404:         Stream.mapEffect(() =>
+405:           Effect.gen(function* () {
+406:             const before = yield* EventV2.latestSequence(db, session.id)
+407:             yield* SessionInput.promoteSteers(db, events, session.id, before)
+408:             const promoted = yield* SessionInput.promotedAfter(db, session.id, before)
+409:             if (promoted.length === 0) return []
+410:             // New user input resets the agent's provider-turn allowance (AGENTS "V2 Session Core").
+411:             currentStep = 1
+412:             yield* SessionDirectCommands.readMentions({ events, reader, mcp, fs }, session.id, promoted)
+413:             promoted.forEach((input) => liveSteers.add(input.id))
+414:             return promoted.map((input) => ({ id: input.id, text: input.prompt.text }))
+415:           }),
+416:         ),
+417:         Stream.flatMap((items) => Stream.fromIterable(items)),
+418:       )
+419:       // An event the host's engine sends on its own, after the turn: a steer prompt that wakes the Session.
+420:       const notify: ExecutionHost.Turn["notify"] = (event) =>
+421:         SessionInput.admit(db, events, {
+422:           id: SessionMessage.ID.make(event.id.startsWith("msg_") ? event.id : `msg_${event.id}`),
+423:           sessionID: session.id,
+424:           prompt: Prompt.make({ text: event.text }),
+425:           delivery: "steer",
+426:         }).pipe(Effect.andThen(execution ? execution.wake(session.id) : Effect.void))
+```
+
+### packages/core/src/session/runner/step-tools.ts
+```text
+1: import { Permission } from "@orchestra/schema/permission"
+2: import { RelaySprint } from "@orchestra/schema/relay-sprint"
+3: import { McpCatalog } from "../../mcp/catalog"
+4: import { PermissionV2 } from "../../permission"
+5: import { ToolRegistry } from "../../tool/registry"
+7: export const STEP_TOOL_REFUSAL: ToolRegistry.Settlement = {
+8:   result: { type: "error", value: "This workflow step does not allow this tool or command" },
+9: }
+11: /**
+12:  * A workflow step narrows its agent's tools: `hidden` keeps denied MCP servers and an emptied bash out of the
+13:  * materialized definitions, and `refuses` checks every call, local or hosted, since bash and MCP permission checks
+14:  * read only the agent's rules. Listed patterns only narrow: an allowed command still passes the agent's own rules.
+15:  * `servers` is the connected MCP catalog, needed only when the step lists MCP servers.
+16:  */
+17: export function narrowStepTools(
+18:   step: RelaySprint.StepTools | undefined,
+19:   servers: Readonly<Record<string, readonly string[]>>,
+20: ) {
+21:   const deniedMcp = new Set(
+22:     Object.entries(servers)
+23:       .filter(([server]) => !step?.mcp?.includes(server))
+24:       .flatMap(([server, names]) => names.map((name) => McpCatalog.toolName(server, name))),
+25:   )
+26:   const bash: Permission.Ruleset = step?.bash
+27:     ? [
+28:         { action: "bash", resource: "*", effect: "deny" },
+29:         ...step.bash.map((pattern) => ({ action: "bash", resource: pattern, effect: "allow" as const })),
+30:       ]
+31:     : []
+32:   return {
+33:     bash,
+34:     hidden: [
+35:       ...[...deniedMcp].map((name) => ({ action: name, resource: "*", effect: "deny" as const })),
+36:       ...(step?.bash?.length === 0 ? bash : []),
+37:     ],
+38:     refuses: (name: string, input: unknown) =>
+39:       deniedMcp.has(name) ||
+40:       (name === "bash" && bash.length > 0 && PermissionV2.evaluate("bash", commandOf(input), bash).effect === "deny"),
+41:   }
+42: }
+44: function commandOf(input: unknown) {
+45:   return typeof input === "object" && input !== null && "command" in input && typeof input.command === "string"
+46:     ? input.command
+47:     : ""
+48: }
+```
+
+### packages/core/src/session/runner/execution-host.ts
+```text
+147: /**
+148:  * A Session's engine: its agent's own, else the engine its parent Session ran on, so a seat a Claude-mode lead
+149:  * dispatches on a Claude model runs on Claude Code too. A child on another provider's model runs on Orchestra's
+150:  * own loop, as in normal mode. `orchestra` names no host.
+151:  */
+152: export function engineOf(agents: AgentV2.Interface, store: SessionStore.Interface) {
+153:   const of: (session: SessionSchema.Info) => Effect.Effect<string | undefined> = Effect.fn("ExecutionHost.engineOf")(
+154:     function* (session: SessionSchema.Info) {
+155:       const own = (yield* agents.select(session.agent)).info?.engine
+156:       if (own) return own === "orchestra" ? undefined : own
+157:       if (session.model && session.model.providerID !== ProviderV2.ID.anthropic) return undefined
+158:       const parent = session.parentID ? yield* store.get(session.parentID) : undefined
+159:       return parent ? yield* of(parent) : undefined
+160:     },
+161:   )
+162:   return of
+163: }
+165: /** Read-modify-write of one `session.metadata` key; other keys are kept. The Session's drain serializes writers. */
+166: export function state(db: Database.Interface["db"], sessionID: SessionSchema.ID, key: string): Turn["state"] {
+167:   const read = db
+168:     .select({ metadata: SessionTable.metadata })
+169:     .from(SessionTable)
+170:     .where(eq(SessionTable.id, sessionID))
+171:     .get()
+172:     .pipe(
+173:       Effect.orDie,
+174:       Effect.map((row) => row?.metadata ?? {}),
+175:     )
+176:   return {
+177:     get: read.pipe(Effect.map((metadata) => metadata[key])),
+178:     update: (fn) =>
+179:       read.pipe(
+180:         Effect.flatMap((metadata) =>
+181:           db
+182:             .update(SessionTable)
+183:             .set({ metadata: { ...metadata, [key]: fn(metadata[key]) } })
+184:             .where(eq(SessionTable.id, sessionID))
+185:             .run()
+186:             .pipe(Effect.orDie),
+187:         ),
+188:         Effect.asVoid,
+189:       ),
+190:   }
+191: }
+```
+
+### packages/core/src/session/runner/hosted-call.ts
+```text
+13:  */
+14: export const hostedCall = Effect.fnUntraced(function* (
+15:   call: { readonly tool: string; readonly args: Readonly<Record<string, unknown>> },
+16:   directory: string,
+17:   scope: Scope.Scope,
+18:   fs: FSUtil.Interface,
+19: ) {
+20:   const domains = yield* AllowedDomains
+21:   const profile = yield* ToolSafety.RuntimeProfile
+22:   const command = call.tool === "bash" && typeof call.args.command === "string" ? call.args.command : undefined
+23:   const confined =
+24:     command === undefined || !confines(profile)
+25:       ? undefined
+26:       : yield* ToolSafetySandbox.wrap(ChildProcess.make("/bin/sh", ["-c", command], { cwd: directory })).pipe(
+27:           Effect.provideService(ToolSafety.RuntimeProfile, {
+28:             ...profile,
+29:             requireSandbox: true,
+30:             sandbox: { ...profile?.sandbox, enabled: true, unconfinedFallback: false },
+31:           }),
+32:           Effect.provideService(FSUtil.Service, fs),
+33:           Scope.provide(scope),
+34:         )
+35:   if (confined && confined._tag !== "StandardCommand") return yield* new ToolSafety.Denied({ reason: "sandbox-pipeline-unbound" })
+36:   return {
+37:     ...(confined ? { input: { command: shellLine(confined) } } : {}),
+38:     ...(domains ? { domains } : {}),
+39:   } satisfies ExecutionHost.Authorization
+40: })
+42: /** Any restriction on a shell requires the jail, whether or not the profile set `requireSandbox`. */
+43: function confines(profile: ToolSafety.Profile | undefined) {
+44:   return Boolean(
+45:     profile?.requireSandbox ||
+46:       profile?.sandbox?.enabled ||
+47:       profile?.writeRoots !== undefined ||
+48:       profile?.sandbox?.readRoots !== undefined ||
+49:       profile?.neverTouch?.length ||
+50:       profile?.managedPaths?.length ||
+51:       profile?.protectedWrites?.length ||
+52:       profile?.sandbox?.denyPaths?.length ||
+53:       profile?.sandbox?.allowedUnixSockets?.length ||
+54:       profile?.sandbox?.allowedLoopbackEndpoints?.length,
+55:   )
+56: }
+58: /** The jailed command as one shell line, keeping the environment the jail built for it. */
+59: function shellLine(command: ChildProcess.StandardCommand) {
+60:   const env = command.options.env ?? {}
+61:   const unset = Object.keys(process.env).filter((name) => !(name in env)).flatMap((name) => ["-u", name])
+62:   const set = Object.entries(env).flatMap(([name, value]) =>
+63:     value !== undefined && process.env[name] !== value ? [`${name}=${value}`] : [],
+64:   )
+65:   return ["/usr/bin/env", ...unset, ...set, command.command, ...command.args]
+66:     .map((word) => `'${word.replaceAll("'", `'\\''`)}'`)
+67:     .join(" ")
+68: }
+```
+
+### packages/core/src/session/runner/publish-llm-event.ts
+```text
+255:   // A superseded attempt leaves no content behind: the ended-boundary event restates the block as empty, which the
+256:   // history translation already skips, and a call still unsettled is failed. A call that ran keeps its outcome.
+257:   const retract = Effect.fnUntraced(function* (ids: ReadonlyArray<string>) {
+258:     for (const id of ids) {
+259:       const block = blocks.get(id)
+260:       if (block) retracted.add(id)
+261:       if (block?.kind === "text") {
+262:         text.drop(id)
+263:         yield* events.publish(SessionEvent.Text.Ended, {
+264:           sessionID: input.sessionID,
+265:           assistantMessageID: block.assistantMessageID,
+266:           timestamp: yield* timestamp,
+267:           textID: id,
+268:           text: "",
+269:         })
+270:       }
+271:       if (block?.kind === "reasoning") {
+272:         reasoning.drop(id)
+273:         yield* events.publish(SessionEvent.Reasoning.Ended, {
+274:           sessionID: input.sessionID,
+275:           assistantMessageID: block.assistantMessageID,
+276:           timestamp: yield* timestamp,
+277:           reasoningID: id,
+278:           text: "",
+279:         })
+280:       }
+281:       const tool = tools.get(id)
+282:       if (tool && !tool.settled) {
+283:         toolInput.drop(id)
+284:         tool.settled = true
+285:         yield* events.publish(SessionEvent.Tool.Failed, {
+286:           sessionID: input.sessionID,
+287:           timestamp: yield* timestamp,
+288:           assistantMessageID: tool.assistantMessageID,
+289:           callID: id,
+290:           error: { type: "unknown", message: "Retracted: the attempt that made this call was superseded" },
+291:           provider: {
+292:             executed: tool.providerExecuted,
+293:             ...(tool.providerMetadata === undefined ? {} : { metadata: tool.providerMetadata }),
+294:           },
+295:         })
+296:       }
+297:     }
+298:   })
+```
+
+
+Aguarde a disposição e FIM SS01.

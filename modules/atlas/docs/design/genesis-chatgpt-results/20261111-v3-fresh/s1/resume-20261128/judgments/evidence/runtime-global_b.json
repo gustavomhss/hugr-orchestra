@@ -1,0 +1,22 @@
+{
+  "id": "global_b",
+  "path": "packages/core/src/global.ts",
+  "start_line": 59,
+  "end_line": 85,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "export function make(input: Partial<Interface> = {}): Interface {\n  return {\n    home: Path.home,\n    data: Path.data,\n    cache: Path.cache,\n    config: Flag.ORCHESTRA_CONFIG_DIR ?? Path.config,\n    state: Path.state,\n    tmp: Path.tmp,\n    bin: Path.bin,\n    log: Path.log,\n    repos: Path.repos,\n    ...input,\n  }\n}\n\nconst layer = Layer.effect(\n  Service,\n  Effect.sync(() => Service.of(make())),\n)\n\nexport const node = makeGlobalNode({ service: Service, layer: layer, deps: [] })\n\nexport const layerWith = (input: Partial<Interface>) =>\n  Layer.effect(\n    Service,\n    Effect.sync(() => Service.of(make(input))),\n  )",
+      "encoding": "utf-8",
+      "sha": "ba7790536b60c6075ff37854c4db14909b779183",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/global.ts",
+      "display_title": "global.ts"
+    },
+    "isError": false
+  }
+}

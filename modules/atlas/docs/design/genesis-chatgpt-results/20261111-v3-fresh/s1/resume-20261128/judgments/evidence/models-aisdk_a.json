@@ -1,0 +1,22 @@
+{
+  "id": "aisdk_a",
+  "path": "packages/core/src/aisdk.ts",
+  "start_line": 27,
+  "end_line": 122,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "  if (typeof ms !== \"number\" || ms <= 0) return res\n  if (!res.body) return res\n  if (!res.headers.get(\"content-type\")?.includes(\"text/event-stream\")) return res\n\n  const reader = res.body.getReader()\n  const body = new ReadableStream<Uint8Array>({\n    async pull(ctrl) {\n      const part = await new Promise<Awaited<ReturnType<typeof reader.read>>>((resolve, reject) => {\n        const id = setTimeout(() => {\n          const err = new Error(\"SSE read timed out\")\n          ctl.abort(err)\n          reader.cancel(err).catch(() => {})\n          reject(err)\n        }, ms)\n\n        reader.read().then(\n          (part) => {\n            clearTimeout(id)\n            resolve(part)\n          },\n          (err) => {\n            clearTimeout(id)\n            reject(err)\n          },\n        )\n      })\n\n      if (part.done) {\n        ctrl.close()\n        return\n      }\n\n      ctrl.enqueue(part.value)\n    },\n    async cancel(reason) {\n      ctl.abort(reason)\n      await reader.cancel(reason)\n    },\n  })\n\n  return new Response(body, {\n    headers: new Headers(res.headers),\n    status: res.status,\n    statusText: res.statusText,\n  })\n}\n\nfunction prepareOptions(model: ModelV2.Info, pkg: string) {\n  const options: Record<string, any> = {\n    name: model.providerID,\n    ...(model.api.type === \"aisdk\" ? (model.api.settings ?? {}) : {}),\n    ...model.request.body,\n  }\n  if (model.api.type === \"aisdk\" && model.api.url) options.baseURL = model.api.url\n\n  const customFetch = options.fetch\n  const chunkTimeout = options.chunkTimeout\n  delete options.chunkTimeout\n  options.fetch = async (input: Parameters<typeof fetch>[0], init?: RequestInit) => {\n    const opts = { ...(init ?? {}) }\n    const signals = [\n      opts.signal,\n      typeof chunkTimeout === \"number\" && chunkTimeout > 0 ? new AbortController() : undefined,\n      options.timeout !== undefined && options.timeout !== null && options.timeout !== false\n        ? AbortSignal.timeout(options.timeout)\n        : undefined,\n    ].filter((item): item is AbortSignal | AbortController => Boolean(item))\n    const chunkAbortCtl = signals.find((item): item is AbortController => item instanceof AbortController)\n    const abortSignals = signals.map((item) => (item instanceof AbortController ? item.signal : item))\n    if (abortSignals.length === 1) opts.signal = abortSignals[0]\n    if (abortSignals.length > 1) opts.signal = AbortSignal.any(abortSignals)\n\n    if (\n      (pkg === \"@ai-sdk/openai\" || pkg === \"@ai-sdk/azure\" || pkg === \"@ai-sdk/amazon-bedrock/mantle\") &&\n      opts.body &&\n      opts.method === \"POST\"\n    ) {\n      const body = JSON.parse(opts.body as string)\n      if (body.store !== true && Array.isArray(body.input)) {\n        for (const item of body.input) {\n          if (\"id\" in item) delete item.id\n        }\n        opts.body = JSON.stringify(body)\n      }\n    }\n\n    const res = await (typeof customFetch === \"function\" ? customFetch : fetch)(input, {\n      ...opts,\n      timeout: false,\n    })\n    if (!chunkAbortCtl || typeof chunkTimeout !== \"number\") return res\n    return wrapSSE(res, chunkTimeout, chunkAbortCtl)\n  }\n\n  return options\n}",
+      "encoding": "utf-8",
+      "sha": "c5f21baea562c0a8eeeb568929d7971f4c80a3dd",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/aisdk.ts",
+      "display_title": "aisdk.ts"
+    },
+    "isError": false
+  }
+}

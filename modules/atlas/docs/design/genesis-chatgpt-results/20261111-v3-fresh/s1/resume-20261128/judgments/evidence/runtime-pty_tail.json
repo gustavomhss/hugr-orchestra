@@ -1,0 +1,22 @@
+{
+  "id": "pty_tail",
+  "path": "packages/core/src/pty.ts",
+  "start_line": 424,
+  "end_line": 470,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "    })\n\n    return Service.of({ list, get, create, update, remove, write, attach })\n  }),\n)\n\n// RIS: a full terminal reset, sent ahead of a replay that does not continue what the client already has.\nconst GAP_RESET = \"\\x1bc\"\n\n// A resize signals the program in the foreground, and full-screen programs redraw on it. The size changes and changes\n// back, since the kernel only signals when it differs.\nfunction repaint(session: Active) {\n  const { cols, rows } = session.size\n  session.process.resize(cols > 1 ? cols - 1 : cols + 1, rows)\n  session.process.resize(cols, rows)\n}\n\n// Whether anything besides the root is alive in the tree, such as a background job the shell left behind.\nasync function descendants(proc: OmniProc) {\n  const alive = await proc.child.processes().catch(() => [])\n  return alive.some((entry) => entry.pid !== proc.pid)\n}\n\nexport const locationLayer = layer.pipe(Layer.provide(Config.locationLayer))\n\nexport const node = makeLocationNode({ service: Service, layer, deps: [EventV2.node, Location.node, Config.node] })",
+      "encoding": "utf-8",
+      "sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "display_title": "pty.ts"
+    },
+    "isError": false
+  }
+}

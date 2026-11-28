@@ -1,0 +1,22 @@
+{
+  "id": "subagent_bottom",
+  "path": "packages/core/src/session/subagent-models.ts",
+  "start_line": 230,
+  "end_line": 300,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "\n    const assert = Effect.fn(\"SessionSubagentModels.assert\")(function* (\n      sessionID: SessionSchema.ID,\n      ref: ModelV2.Ref | undefined,\n      includeOwn: boolean,\n    ) {\n      if (permits(yield* ceilings(sessionID, includeOwn), ref)) return\n      return yield* new ModelDeniedError({ sessionID, model: ref, reason: ref ? \"not-allowed\" : \"unknown-identity\" })\n    })\n    return Service.of({\n      get,\n      set,\n      forSession: (id) => ceilings(id, false),\n      forChild: (id) => ceilings(id, true),\n      assert: (id, ref) => assert(id, ref, false),\n      assertChild: (id, ref) => assert(id, ref, true),\n    })\n  }),\n)\n\nexport const node = makeGlobalNode({ service: Service, layer, deps: [Database.node, EventV2.node] })",
+      "encoding": "utf-8",
+      "sha": "18c24ee3248a7f3de398077d44c4282e80214041",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/session/subagent-models.ts",
+      "display_title": "subagent-models.ts"
+    },
+    "isError": false
+  }
+}

@@ -1,0 +1,252 @@
+{
+  "execution_id": "2ccbd15d-4f66-44a3-b2e1-8326abce0bef",
+  "semantics_only": true,
+  "decisions": [
+    {
+      "key": "s1.core.economy",
+      "body_sha256": "74a59d062ae560dc633abd7561b1a763a7a9982db587d5c0076b8fc8f4a9b6bf",
+      "body_bytes": 3288,
+      "state": "TWO_JUDGE_PASS_SEMANTIC_L1",
+      "criteria": {
+        "GO-A1": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-A2": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-A3": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-A4": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-A5": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "QS-1": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "QS-2": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "QS-3": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "QS-4": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "QS-5": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "QS-6": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "CC-1": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "CC-2": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "CC-3": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "CC-7": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-I1": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-I2": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-I7": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-I8": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "AC-01": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        }
+      },
+      "operational_criteria": {
+        "AC-02": "HOLD_PHASE_OWN",
+        "AC-03": "HOLD_PHASE_OWN",
+        "CC-2 operational": "PENDING"
+      },
+      "J1": {
+        "path": "reviews/responses/e01-m01-j1-v2.md",
+        "bytes": 11342,
+        "sha256": "6933443623f54aa067f2cd24e057bcd42599af1abce2aada6ceaa71c1c38a90a"
+      },
+      "J1_prior": {
+        "path": "reviews/responses/e01-j1-v1.md",
+        "bytes": 8815,
+        "sha256": "8aa48bcecadbf9276dac8ad763ff68a599c647aab2741aef9315c62ff629041e"
+      },
+      "J2": {
+        "path": "reviews/responses/e01-j2-v1.md",
+        "bytes": 7782,
+        "sha256": "3e4017f6ad944bcb4c90a993bb560464da53b922208f273fc838d3ccf3fa4022"
+      },
+      "open_mandatory_findings": []
+    },
+    {
+      "key": "s1.core.models",
+      "body_sha256": "4af060adbf07f6e7e759bd8574793155c5676fd87fbef77125c70cc618ffdcfe",
+      "state": "FIX_FIRST_J1",
+      "findings": [
+        "J1-M01-F01",
+        "J1-M01-F02",
+        "J1-M01-F03",
+        "J1-M01-F04"
+      ],
+      "replacement_candidate": "5a789d39a00798ca0f99384f38315b58a1bbe7dbe0e0d3f9366104a1d0b98091"
+    },
+    {
+      "key": "s1.core.runtime",
+      "body_sha256": "331d26e17158e0770af02c8772bd01a421dbda1a0bc82802da825f3666fba534",
+      "state": "FIX_FIRST_BOTH_JUDGES",
+      "responses": [
+        "reviews/responses/r01-j1-v1.md",
+        "reviews/responses/r01-j1-v2.md",
+        "reviews/responses/r01-j2-v1.md"
+      ],
+      "open_mandatory_findings": [
+        "J1-R01-F01",
+        "J1-R01-F02",
+        "J1-R01-F03",
+        "J1-R01-F04",
+        "J2-R01-F01",
+        "J2-R01-F02",
+        "J2-R01-F03"
+      ]
+    },
+    {
+      "key": "s1.core.models",
+      "body_sha256": "5a789d39a00798ca0f99384f38315b58a1bbe7dbe0e0d3f9366104a1d0b98091",
+      "state": "TWO_JUDGE_PASS_SEMANTIC_L1",
+      "J1_response": "reviews/responses/m02-j1-v1.md",
+      "open_mandatory_findings_J1": [],
+      "body_bytes": 4200,
+      "criteria": {
+        "GO-A1": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-A2": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-A3": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-A4": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-A5": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "QS-1": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "QS-2": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "QS-3": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "QS-4": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "QS-5": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "QS-6": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "CC-1": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "CC-2": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "CC-3": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "CC-7": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-I1": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-I2": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-I7": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "GO-I8": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        },
+        "AC-01": {
+          "J1": "PASS_LOCAL_SEMANTIC",
+          "J2": "PASS_LOCAL_SEMANTIC"
+        }
+      },
+      "operational_criteria": {
+        "AC-02": "HOLD_PHASE_OWN",
+        "AC-03": "HOLD_PHASE_OWN",
+        "CC-2 operational": "PENDING"
+      },
+      "open_mandatory_findings": [],
+      "J1": {
+        "path": "reviews/responses/m02-j1-v1.md",
+        "bytes": 3971,
+        "sha256": "518e36316658f42fce2887218a6c63208d52ab70455777c3c8ec54933e66fe33"
+      },
+      "J2": {
+        "path": "reviews/responses/m02-j2-v1.md",
+        "bytes": 4125,
+        "sha256": "40083a9ec73cc0f05af086abc85ffc85c8993bc34b06fbf0ed862e958b466d06"
+      }
+    }
+  ]
+}

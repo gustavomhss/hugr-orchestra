@@ -1,0 +1,88 @@
+R01 — complemento de evidência literal para retenção e replay, sem alteração do corpo s1.core.runtime SHA256 331d26e17158e0770af02c8772bd01a421dbda1a0bc82802da825f3666fba534. Mesma fonte 1cde2ff7a71bcf7aecb5d030917b577165135d38.
+
+BEGIN SOURCE packages/core/src/pty.ts 22–22 blob fc08cb64d832f77b145c4c9702d417d7db49c14f
+22: const BUFFER_LIMIT = 1024 * 1024 * 2
+END SOURCE
+
+BEGIN SOURCE packages/core/src/pty.ts 330–344 blob fc08cb64d832f77b145c4c9702d417d7db49c14f
+330:           notifyEnd(session, { exitCode })
+331:           options?.observe?.onExit(exitCode)
+332:           exitOrder.push(id)
+333:           runFork(
+334:             Effect.gen(function* () {
+335:               yield* Effect.logInfo("session exited", { id, exitCode })
+336:               yield* events.publish(Event.Exited, { id, exitCode })
+337:               while (exitOrder.length > EXITED_LIMIT) {
+338:                 const oldest = exitOrder[0]
+339:                 if (!oldest) break
+340:                 yield* removeSession(oldest)
+341:               }
+342:             }),
+343:           )
+344:         }),
+END SOURCE
+
+BEGIN SOURCE packages/core/src/pty.ts 198–227 blob fc08cb64d832f77b145c4c9702d417d7db49c14f
+198: 
+199:     const requireSession = Effect.fn("Pty.requireSession")(function* (id: PtyID) {
+200:       const session = sessions.get(id)
+201:       if (!session) return yield* new NotFoundError({ ptyID: id })
+202:       return session
+203:     })
+204: 
+205:     const removeSession = Effect.fnUntraced(function* (id: PtyID, adopt = false) {
+206:       const session = sessions.get(id)
+207:       if (!session) return
+208:       sessions.delete(id)
+209:       const index = exitOrder.indexOf(id)
+210:       if (index !== -1) exitOrder.splice(index, 1)
+211:       yield* Effect.logInfo("removing session", { id })
+212:       teardown(session, adopt)
+213:       yield* events.publish(Event.Deleted, { id: session.info.id })
+214:     })
+215: 
+216:     const remove = Effect.fn("Pty.remove")(function* (id: PtyID) {
+217:       yield* requireSession(id)
+218:       yield* removeSession(id, true)
+219:     })
+220: 
+221:     const list = Effect.fn("Pty.list")(function* () {
+222:       return Array.from(sessions.values()).map((session) => session.info)
+223:     })
+224: 
+225:     const get = Effect.fn("Pty.get")(function* (id: PtyID) {
+226:       return (yield* requireSession(id)).info
+227:     })
+END SOURCE
+
+BEGIN SOURCE packages/core/src/pty.ts 430–439 blob fc08cb64d832f77b145c4c9702d417d7db49c14f
+430: // RIS: a full terminal reset, sent ahead of a replay that does not continue what the client already has.
+431: const GAP_RESET = "\x1bc"
+432: 
+433: // A resize signals the program in the foreground, and full-screen programs redraw on it. The size changes and changes
+434: // back, since the kernel only signals when it differs.
+435: function repaint(session: Active) {
+436:   const { cols, rows } = session.size
+437:   session.process.resize(cols > 1 ? cols - 1 : cols + 1, rows)
+438:   session.process.resize(cols, rows)
+439: }
+END SOURCE
+
+BEGIN SOURCE packages/core/src/pty/protocol.ts 35–48 blob cca1266bd0235f21bbac04454824c04b5c839aeb
+35: // A split point that does not separate a surrogate pair: one unit earlier when `index` falls between a high and a
+36: // low surrogate, so the pair stays together on the far side of the split.
+37: export function cut(data: string, index: number) {
+38:   if (index <= 0 || index >= data.length) return index
+39:   const high = data.charCodeAt(index - 1)
+40:   const low = data.charCodeAt(index)
+41:   return high >= 0xd800 && high <= 0xdbff && low >= 0xdc00 && low <= 0xdfff ? index - 1 : index
+42: }
+43: 
+44: // The ring is cut at an arbitrary character, so its first line may begin inside an escape sequence; drop it.
+45: export function afterFirstLine(buffer: string) {
+46:   const newline = buffer.indexOf("\n")
+47:   return newline >= 0 && newline < 4096 ? buffer.slice(newline + 1) : buffer
+48: }
+END SOURCE
+
+FIM R01 evidência adicional. Julgue o fechamento factual de F03 com essas definições; preserve findings de conteúdo e pareceres anteriores, sem emitir PASS global por este complemento. Se a evidência revelar condição material omitida no corpo, relate-a de forma concisa para correção pelo autor. Não use ferramentas nem exponha raciocínio privado.

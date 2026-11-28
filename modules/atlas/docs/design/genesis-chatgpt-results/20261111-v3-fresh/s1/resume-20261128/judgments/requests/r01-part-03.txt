@@ -1,0 +1,429 @@
+R01 — parte 03, fonte literal no pin; corpo e critérios inalterados.
+
+### E46 — LSP: `packages/core/src/lsp/lsp.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `7848ef568344421190171962367fe2836170d084`; SHA-256 `e7500203a6b6dc05949917252e32d6e50a605b80d186f7b596c7a294654cb3f6`.
+Linhas 149–176; hash do trecho UTF-8 original `f660c46826da1cba87f4e64b777b70f74ae42f7c955c44a3d6830d652cad0fc4`.
+````text
+149:     const ctx = { directory: location.directory, worktree: location.project.directory, project: location.project }
+150: 
+151:     const flags = { experimentalLspTy: process.env.ORCHESTRA_EXPERIMENTAL_LSP_TY === "true", disableLspDownload: process.env.ORCHESTRA_DISABLE_LSP_DOWNLOAD === "true" }
+152: 
+153:     // A project's LSP commands are code the repository chose to run: they apply only once the user trusts the project.
+154:     const entries = Effect.fnUntraced(function* () {
+155:       const all = yield* config.entries()
+156:       const allowed = ConfigTrust.runnable(all, global.config, location.directory)
+157:       if (all.some((entry) => !allowed.includes(entry) && entry.type === "document" && entry.info.lsp !== undefined))
+158:         yield* Effect.logWarning(`Project LSP config ignored. ${ConfigTrust.approveHint(location.directory)}`)
+159:       return allowed
+160:     })
+161: 
+162:     const state = yield* Effect.acquireRelease(
+163:       Effect.gen(function* () {
+164:         const cfg = { lsp: Config.latest(yield* entries(), "lsp") }
+165: 
+166:         const servers: Record<string, LSPServer.Info> = {}
+167: 
+168:         if (!cfg.lsp) {
+169:           yield* Effect.logInfo("all LSPs are disabled")
+170:         } else {
+171:           for (const server of Object.values(LSPServer)) {
+172:             servers[server.id] = server
+173:           }
+174: 
+175:           filterExperimentalServers(servers, flags)
+176: 
+````
+Linhas 223–282; hash do trecho UTF-8 original `bbc98b01fad6f28747801d04c235932572397faa2a136a542ba379137e2d892b`.
+````text
+223:     const getClients = Effect.fnUntraced(function* (file: string) {
+224:       const ctx = { directory: location.directory, worktree: location.project.directory, project: location.project }
+225:       if (!FSUtil.contains(ctx.directory, file) && !FSUtil.contains(ctx.project.directory, file)) return [] as LSPClient.Info[]
+226:       const s = state
+227:       const clients = yield* Effect.promise(async () => {
+228:         const extension = path.parse(file).ext || file
+229:         const result: LSPClient.Info[] = []
+230:         let updated = 0
+231: 
+232:         await LSPOwnership.prune(s)
+233:         if (s.closing) return { result, updated }
+234:         for (const server of Object.values(s.servers)) {
+235:           if (server.extensions.length && !server.extensions.includes(extension)) continue
+236: 
+237:           const root = await server.root(file, ctx)
+238:           if (s.closing) break
+239:           if (!root) continue
+240:           if (s.broken.has(root + server.id)) continue
+241: 
+242:           const match = s.clients.find((x) => x.root === root && x.serverID === server.id)
+243:           if (match?.connected) {
+244:             result.push(match)
+245:             continue
+246:           }
+247: 
+248:           const inflight = s.spawning.get(root + server.id)
+249:           if (inflight) {
+250:             const client = await inflight
+251:             if (!client) continue
+252:             result.push(client)
+253:             continue
+254:           }
+255: 
+256:           // The cleanup is part of the awaited task, so a rejected spawn leaves no orphaned rejection behind.
+257:           const task: Promise<LSPClient.Info | undefined> = LSPOwnership.schedule(s, {
+258:             server,
+259:             root,
+260:             key: root + server.id,
+261:             ctx,
+262:             flags,
+263:           }).finally(() => {
+264:             if (s.spawning.get(root + server.id) === task) {
+265:               s.spawning.delete(root + server.id)
+266:             }
+267:           })
+268:           s.spawning.set(root + server.id, task)
+269: 
+270:           const client = await task
+271:           if (!client) continue
+272: 
+273:           result.push(client)
+274:           updated++
+275:         }
+276: 
+277:         return { result, updated }
+278:       })
+279:       yield* Effect.forEach(Array.from({ length: clients.updated }), () => events.publish(Event.Updated, {}), {
+280:         discard: true,
+281:       })
+282:       return clients.result
+````
+Linhas 444–470; hash do trecho UTF-8 original `dd31c0bed777fa5f0f158dfe7c80ec9cebfe0204e4f136ccf93783b7995ad575`.
+````text
+444:     ) {
+445:       const results = yield* run(input.file, async (client) => {
+446:         const items = await client.connection
+447:           .sendRequest<unknown[] | null>("textDocument/prepareCallHierarchy", {
+448:             textDocument: { uri: pathToFileURL(input.file).href },
+449:             position: { line: input.line, character: input.character },
+450:           })
+451:           .catch(() => [] as unknown[])
+452:         if (!items?.length) return []
+453:         return client.connection.sendRequest(direction, { item: items[0] }).catch(() => [])
+454:       })
+455:       return results.flat().filter(Boolean)
+456:     })
+457: 
+458:     const incomingCalls = Effect.fn("LSP.incomingCalls")(function* (input: LocInput) {
+459:       return yield* callHierarchyRequest(input, "callHierarchy/incomingCalls")
+460:     })
+461: 
+462:     const outgoingCalls = Effect.fn("LSP.outgoingCalls")(function* (input: LocInput) {
+463:       return yield* callHierarchyRequest(input, "callHierarchy/outgoingCalls")
+464:     })
+465: 
+466:     return Service.of({
+467:       init,
+468:       status,
+469:       hasClients,
+470:       touchFile,
+````
+
+
+BEGIN SOURCE packages/core/src/lsp/lsp.ts 177–215 blob 7848ef568344421190171962367fe2836170d084
+          if (cfg.lsp && cfg.lsp !== true) {
+            for (const [name, item] of Object.entries(cfg.lsp)) {
+              const existing = servers[name]
+              const entry = item as { disabled?: boolean; command?: string[]; extensions?: string[]; env?: Record<string,string>; initialization?: Record<string, unknown> }
+              if (entry.disabled) {
+                yield* Effect.logInfo(`LSP server ${name} is disabled`)
+                delete servers[name]
+                continue
+              }
+              servers[name] = {
+                ...existing,
+                id: name,
+                root: existing?.root ?? (async (_file, ctx) => ctx.directory),
+                extensions: entry.extensions ?? existing?.extensions ?? [],
+                // A configured command is trusted like any configured program, unless it runs workspace code: the program
+                // lives in the workspace, is a runner (npx, uv run, ...) or is a version-manager shim.
+                spawn: async (root) => ({
+                  process: (await ToolSafetySandbox.runsWorkspaceCode(ctx.directory, entry.command![0], entry.command!.slice(1), root))
+                    ? await confined(entry.command![0], entry.command!.slice(1), { cwd: root, env: { ...process.env, ...entry.env } })
+                    : await lspspawn(entry.command![0], entry.command!.slice(1), { cwd: root, env: { ...process.env, ...entry.env } }),
+                  initialization: entry.initialization,
+                }),
+              }
+            }
+          }
+
+          yield* Effect.logInfo("enabled LSP servers", {
+            serverIds: Object.values(servers)
+              .map((server) => server.id)
+              .join(", "),
+          })
+        }
+
+        const s: State = {
+          closing: false,
+          clients: [],
+          servers,
+          broken: new Set(),
+          spawning: new Map(),
+END SOURCE
+
+BEGIN SOURCE packages/core/src/format/format.ts 46–62 blob 0198f9c0d4aa4a9e1452339ca5c3302611478aba
+            Effect.map((result) => ({ code: result.exitCode, text: result.stdout.toString() })),
+            Effect.catch(() => Effect.succeed({ code: 1, text: "" })),
+          ),
+        ),
+    }
+
+    // A project's formatter commands are code the repository chose to run: they apply only once the user trusts the project.
+    let warned = false
+    const entries = Effect.fnUntraced(function* () {
+      const all = yield* config.entries()
+      const allowed = ConfigTrust.runnable(all, global.config, location.directory)
+      if (!warned && all.some((entry) => !allowed.includes(entry) && entry.type === "document" && entry.info.formatter !== undefined)) {
+        warned = true
+        yield* Effect.logWarning(`Project formatter config ignored. ${ConfigTrust.approveHint(location.directory)}`)
+      }
+      return allowed
+    })
+END SOURCE
+
+### E54 — Format: `packages/core/src/format/format.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `0198f9c0d4aa4a9e1452339ca5c3302611478aba`; SHA-256 `1a9918459995534b16242fcdd18c576de735fdac63a87603e0ad3ca215b036fd`.
+Linhas 73–109; hash do trecho UTF-8 original `71e3bf2d6bd86684fdb48220ff92a253aacade57ebc60e88e6ed77096a13eb67`.
+````text
+73:     // Probing a formatter can resolve or install its package, so an enabled command is kept for the Location's life.
+74:     const commands = new Map<string, string[]>()
+75:     const command = (formatter: Info) =>
+76:       Effect.promise(async () => {
+77:         const cached = commands.get(formatter.name)
+78:         if (cached) return cached
+79:         const found = await formatter.enabled(context).catch(() => false as const)
+80:         if (found) commands.set(formatter.name, found)
+81:         return found
+82:       })
+83: 
+84:     const file = Effect.fn("Format.file")(function* (filepath: string) {
+85:       const extension = path.extname(filepath)
+86:       const formatters = configured(Config.latest(yield* entries(), "formatter")).filter((item) =>
+87:         item.extensions.includes(extension),
+88:       )
+89:       const matched = (yield* Effect.forEach(formatters, (item) =>
+90:         command(item).pipe(Effect.map((cmd) => (cmd ? { item, cmd } : undefined))),
+91:       )).filter((entry) => entry !== undefined)
+92:       if (!matched.length) return false
+93:       yield* Effect.forEach(matched, (entry) => run(entry.item, entry.cmd, filepath), { discard: true })
+94:       return true
+95:     })
+96: 
+97:     const run = Effect.fnUntraced(function* (item: Info, cmd: string[], filepath: string) {
+98:       const replaced = cmd.map((part) => part.replace("$FILE", filepath))
+99:       const directory = location.directory
+100:       // A trusted formatter still runs workspace code when its program resolves into the workspace, is a runner
+101:       // (npx, uv run, ...) or is a version-manager shim.
+102:       const confine =
+103:         item.confine ??
+104:         ((yield* Effect.promise(() =>
+105:           ToolSafetySandbox.runsWorkspaceCode(directory, replaced[0]!, replaced.slice(1), directory),
+106:         ))
+107:           ? "file"
+108:           : undefined)
+109:       const source = confine === "stdin" ? yield* Effect.promise(() => readSource(filepath, directory)) : undefined
+````
+Linhas 122–158; hash do trecho UTF-8 original `5f2469ae38c23a217a45b3780c7850784ba60c641e3ae00cd9ee4c8c73873cea`.
+````text
+122:                 stdout: "ignore",
+123:                 stderr: "ignore",
+124:               }),
+125:             )
+126:           const launch = yield* ToolSafetySandbox.confine({
+127:             command: replaced[0]!,
+128:             args: replaced.slice(1),
+129:             cwd: directory,
+130:             env: { ...process.env, ...item.environment },
+131:             write: input ? [] : [filepath],
+132:           })
+133:           return yield* appProcess.run(
+134:             ChildProcess.make(launch.command, launch.args, {
+135:               cwd: directory,
+136:               env: launch.env,
+137:               extendEnv: false,
+138:               stdin: "ignore",
+139:               stdout: input ? "pipe" : "ignore",
+140:               stderr: "ignore",
+141:             }),
+142:             input ? { stdin: input } : undefined,
+143:           )
+144:         }),
+145:       ).pipe(
+146:         Effect.catch((error) =>
+147:           Effect.logError("failed to format file", {
+148:             error: error instanceof ToolSafety.Denied ? "sandbox refused" : "spawn failed",
+149:             command: cmd,
+150:             file: filepath,
+151:           }).pipe(Effect.as(undefined)),
+152:         ),
+153:       )
+154:       if (result && result.exitCode !== 0) yield* Effect.logError("failed", { command: cmd, file: filepath })
+155:       // Empty output for a non-empty file is a formatter that wrote nothing, never a formatted result.
+156:       if (result?.exitCode === 0 && source && result.stdout.length > 0 && !result.stdout.equals(source.content))
+157:         yield* Effect.promise(() => writeBack(source, result.stdout))
+158:     })
+````
+Linhas 184–218; hash do trecho UTF-8 original `06a8b6746ea9663f9561938988a2aff9468001926f37d67669dbff56dc2046a7`.
+````text
+184:           name,
+185:           {
+186:             name,
+187:             extensions: [...(item.extensions ?? builtIn?.extensions ?? [])],
+188:             environment: { ...builtIn?.environment, ...item.environment },
+189:             enabled: builtIn && !command ? builtIn.enabled : async () => (command ? [...command] : false),
+190:             confine: builtIn && !command ? builtIn.confine : builtIn?.confine && "file",
+191:           } satisfies Info,
+192:         ]
+193:       }),
+194:   )
+195:   return Object.values({ ...byName, ...merged }).filter((item) => !removed.has(item.name))
+196: }
+197: 
+198: // A stdin formatter's input is one physical file inside the workspace; its output goes back into that same file and
+199: // never through a symlink or a different file swapped in while the formatter ran.
+200: async function readSource(filepath: string, directory: string) {
+201:   const file = await fs.realpath(filepath)
+202:   if (!FSUtil.contains(await fs.realpath(directory), file)) return undefined
+203:   return { file, stat: await fs.stat(file), content: await fs.readFile(file) }
+204: }
+205: 
+206: async function writeBack(source: { file: string; stat: Stats }, output: Buffer) {
+207:   const handle = await fs.open(source.file, constants.O_WRONLY | constants.O_NOFOLLOW).catch(() => undefined)
+208:   if (!handle) return
+209:   await handle
+210:     .stat()
+211:     .then((now) =>
+212:       now.dev === source.stat.dev && now.ino === source.stat.ino
+213:         ? handle.truncate(0).then(() => handle.writeFile(output))
+214:         : undefined,
+215:     )
+216:     .finally(() => handle.close())
+217: }
+218: 
+````
+
+
+### E56 — Install: `packages/core/src/installation/service.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `4a75cd0fdf8467866c10c692987769751edd0f42`; SHA-256 `4d8978f8734107e6f9bb57b5025bf75b1cd0f2320cf3a3f6aad8c8165ad79aed`.
+Linhas 156–196; hash do trecho UTF-8 original `a03e5915ed65620d0ab1f9a44bfe3cc49cfcc9f141c3d647bb55c5d6fe3dbda6`.
+````text
+156:       }),
+157:       latest: Effect.fn("Installation.latest")(
+158:         function* () {
+159:           const response = yield* http.execute(
+160:             HttpClientRequest.get("https://api.github.com/repos/gustavomhss/hugr-orchestra/releases/latest").pipe(
+161:               HttpClientRequest.acceptJson,
+162:             ),
+163:           )
+164:           const data = yield* HttpClientResponse.schemaBodyJson(GitHubRelease)(response)
+165:           return data.tag_name.replace(/^v/, "")
+166:         },
+167:         // A failed lookup must never break startup or the update notice: report the running version.
+168:         Effect.catchCause(() => Effect.succeed(InstallationVersion)),
+169:       ),
+170:       upgrade: Effect.fn("Installation.upgrade")(function* (method: Method, target: string) {
+171:         const command = upgradeCommand(method, target)
+172:         if (typeof command === "string") return yield* new UpgradeFailedError({ stderr: command })
+173:         const outcome = yield* run(command)
+174:         if (outcome.code === 0) return
+175:         return yield* new UpgradeFailedError({
+176:           stderr: outcome.stderr.trim() || `${command.join(" ")} failed (exit code ${outcome.code}).`,
+177:         })
+178:       }),
+179:     }
+180: 
+181:     return Service.of(result)
+182:   }),
+183: )
+184: 
+185: // The argv that upgrades this install, or the instruction to show when Orchestra cannot upgrade it itself.
+186: export function upgradeCommand(method: Method, target: string): string[] | string {
+187:   if (method === "npm") return ["npm", "install", "-g", `${PACKAGE}@${target}`]
+188:   if (method === "pnpm") return ["pnpm", "add", "-g", `${PACKAGE}@${target}`]
+189:   if (method === "bun") return ["bun", "add", "-g", `${PACKAGE}@${target}`]
+190:   if (method === "yarn") return ["yarn", "global", "add", `${PACKAGE}@${target}`]
+191:   if (method === "curl")
+192:     return "Download the release archive from https://github.com/gustavomhss/hugr-orchestra/releases and run its install.sh."
+193:   if (method === "desktop") return "This CLI belongs to the Orchestra desktop app. Update the desktop app instead."
+194:   if (method === "scoop" || method === "choco")
+195:     return `Orchestra has no ${method} package. Reinstall with npm i -g ${PACKAGE}.`
+196:   return "Orchestra could not tell how it was installed. Reinstall with npm i -g @humanguardrail/cli."
+````
+
+
+### E59 — OTLP: `packages/core/src/observability/otlp.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `4d403d30bded809a37d426a8c56361ca8d66ddf7`; SHA-256 `4a76113bce60f765e3d431eb6c5c46e3d224d889da83a8cfd00143d1c52a3003`.
+Linhas 7–18; hash do trecho UTF-8 original `d8159f942607767abf435c4d6c7a3aa20cf505931df328af680985f2858b1b15`.
+````text
+7: const endpoint = Flag.OTEL_EXPORTER_OTLP_ENDPOINT
+8: 
+9: const headers = Flag.OTEL_EXPORTER_OTLP_HEADERS
+10:   ? Flag.OTEL_EXPORTER_OTLP_HEADERS.split(",").reduce(
+11:       (acc, entry) => {
+12:         const [key, ...value] = entry.split("=")
+13:         acc[key] = value.join("=")
+14:         return acc
+15:       },
+16:       {} as Record<string, string>,
+17:     )
+18:   : undefined
+````
+Linhas 68–76; hash do trecho UTF-8 original `c9170cad6a6251318af61d01050b536336fd5f73836903d40785ff380b6841e0`.
+````text
+68:   return NodeSdk.layer(() => ({
+69:     resource: resource(),
+70:     spanProcessor: new SdkBase.BatchSpanProcessor(
+71:       new OTLP.OTLPTraceExporter({
+72:         url: `${endpoint}/v1/traces`,
+73:         headers,
+74:       }),
+75:     ),
+76:   }))
+````
+
+
+BEGIN SOURCE packages/core/src/observability/otlp.ts 36–67 blob 4d403d30bded809a37d426a8c56361ca8d66ddf7
+export function resource(): { serviceName: string; serviceVersion: string; attributes: Record<string, string> } {
+  return {
+    serviceName: "orchestra",
+    serviceVersion: InstallationVersion,
+    attributes: {
+      ...resourceAttributes(),
+      "deployment.environment.name": InstallationChannel,
+      "orchestra.client": Flag.ORCHESTRA_CLIENT,
+      "orchestra.run": runID,
+      "service.instance.id": runID,
+    },
+  }
+}
+
+export function loggers() {
+  if (!endpoint) return []
+  return [OtlpLogger.make({ url: `${endpoint}/v1/logs`, resource: resource(), headers })]
+}
+
+export async function tracingLayer() {
+  if (!endpoint) return Layer.empty
+  const NodeSdk = await import("@effect/opentelemetry/NodeSdk")
+  const OTLP = await import("@opentelemetry/exporter-trace-otlp-http")
+  const SdkBase = await import("@opentelemetry/sdk-trace-base")
+  const { AsyncLocalStorageContextManager } = await import("@opentelemetry/context-async-hooks")
+  const { context } = await import("@opentelemetry/api")
+
+  // The Effect Node SDK does not register a global context manager, but the AI SDK uses it to parent spans.
+  const manager = new AsyncLocalStorageContextManager()
+  manager.enable()
+  context.setGlobalContextManager(manager)
+
+END SOURCE
+
+FIM R01. Retorne parecer original para s1.core.runtime vinculado ao SHA256 acima, cobrindo todos os critérios obrigatórios pertinentes e oracle. Até 600 palavras se não houver defeito material; agrupe IDs com evidência comum. Use PASS/FIX-FIRST/HOLD/REQUEST_EVIDENCE, localização e motivo conciso, com pergunta/range exatos para lacunas. Mantenha AC-02/03 e gates operacionais pendentes da fase própria, sem convertê-los em veto artificial à semântica L1. Não exponha raciocínio privado.

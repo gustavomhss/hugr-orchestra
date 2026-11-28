@@ -1,0 +1,122 @@
+SS01 — fontes literais, parte 10; mesmo pin/corpo.
+
+### Cross-source packages/effect-drizzle-sqlite/src/effect-sqlite/session.ts
+```text
+111:   private isInTransaction() {
+112:     return Effect.serviceOption(this.client.transactionService).pipe(Effect.map((option) => option._tag === "Some"))
+113:   }
+115:   private executeTransactionStatement(connection: Effect.Success<SqlClient["reserve"]>, query: string) {
+116:     return connection.executeUnprepared(query, [], undefined).pipe(Effect.asVoid)
+117:   }
+119:   private withTransaction<A, E, R>(effect: Effect.Effect<A, E, R>, config: SQLiteTransactionConfig | undefined) {
+120:     return Effect.uninterruptibleMask((restore) =>
+121:       Effect.withFiber<A, E | SqlError, R>((fiber) => {
+122:         const services = fiber.context
+123:         const connectionOption = Context.getOption(services, this.client.transactionService)
+124:         const connection: Effect.Effect<
+125:           readonly [Scope.Closeable | undefined, Effect.Success<SqlClient["reserve"]>],
+126:           SqlError
+127:         > =
+128:           connectionOption._tag === "Some"
+129:             ? Effect.succeed([undefined, connectionOption.value[0]] as const)
+130:             : Scope.make().pipe(
+131:                 Effect.flatMap((scope) =>
+132:                   Scope.provide(this.client.reserve, scope).pipe(
+133:                     Effect.exit,
+134:                     Effect.flatMap((exit) =>
+135:                       Exit.isSuccess(exit)
+136:                         ? Effect.succeed([scope, exit.value] as const)
+137:                         : Scope.close(scope, exit).pipe(
+138:                             Effect.exit,
+139:                             Effect.flatMap((closed) => finalizedExit(exit, closed)),
+140:                           ),
+141:                     ),
+142:                   ),
+143:                 ),
+144:               )
+145:         const id = connectionOption._tag === "Some" ? connectionOption.value[1] + 1 : 0
+147:         return connection.pipe(
+148:           Effect.flatMap(([scope, connection]) => {
+149:             const transaction = this.executeTransactionStatement(
+150:               connection,
+151:               id === 0 ? `begin ${config?.behavior ?? "deferred"}` : `savepoint effect_sql_${id}`,
+152:             ).pipe(
+153:               Effect.flatMap(() =>
+154:                 Effect.provideContext(
+155:                   restore(effect),
+156:                   Context.add(services, this.client.transactionService, [connection, id]),
+157:                 ).pipe(
+158:                   Effect.exit,
+159:                   Effect.flatMap((exit) => {
+160:                     return Effect.gen({ self: this }, function* () {
+161:                       if (Exit.isSuccess(exit)) {
+162:                         const committed = yield* Effect.exit(
+163:                           this.executeTransactionStatement(
+164:                             connection,
+165:                             id === 0 ? "commit" : `release savepoint effect_sql_${id}`,
+166:                           ),
+167:                         )
+168:                         if (Exit.isSuccess(committed)) return yield* exit
+169:                         // Failed commits can leave SQLite transactions open, including fatal exits.
+170:                         const rolledBack = yield* Effect.exit(
+171:                           this.executeTransactionStatement(
+172:                             connection,
+173:                             id === 0 ? "rollback" : `rollback to savepoint effect_sql_${id}`,
+174:                           ),
+175:                         )
+176:                         const failed = finalizedExit(committed, rolledBack)
+177:                         if (id === 0) return yield* failed
+178:                         const released = yield* Effect.exit(
+179:                           this.executeTransactionStatement(connection, `release savepoint effect_sql_${id}`),
+180:                         )
+181:                         return yield* finalizedExit(failed, released)
+182:                       }
+184:                       const rolledBack = yield* Effect.exit(
+185:                         this.executeTransactionStatement(
+186:                           connection,
+187:                           id === 0 ? "rollback" : `rollback to savepoint effect_sql_${id}`,
+188:                         ),
+189:                       )
+190:                       const failed = finalizedExit(exit, rolledBack)
+191:                       if (id === 0) return yield* failed
+192:                       // A failed ROLLBACK TO must not prevent best-effort savepoint release.
+193:                       const released = yield* Effect.exit(
+194:                         this.executeTransactionStatement(connection, `release savepoint effect_sql_${id}`),
+195:                       )
+196:                       return yield* finalizedExit(failed, released)
+197:                     })
+198:                   }),
+199:                 ),
+200:               ),
+201:             )
+203:             return scope === undefined
+204:               ? transaction
+205:               : transaction.pipe(
+206:                   Effect.exit,
+207:                   Effect.flatMap((exit) =>
+208:                     Scope.close(scope, exit).pipe(
+209:                       Effect.exit,
+210:                       Effect.flatMap((closed) => finalizedExit(exit, closed)),
+211:                     ),
+212:                   ),
+213:                 )
+214:           }),
+215:         )
+216:       }),
+217:     )
+218:   }
+… omitted original lines …
+237: function finalizedExit<A, E, E2>(original: Exit.Failure<A, E>, cleanup: Exit.Exit<unknown, E2>): Exit.Exit<never, E | E2>
+238: function finalizedExit<A, E, E2>(original: Exit.Exit<A, E>, cleanup: Exit.Exit<unknown, E2>): Exit.Exit<A, E | E2>
+239: function finalizedExit<A, E, E2>(original: Exit.Exit<A, E>, cleanup: Exit.Exit<unknown, E2>): Exit.Exit<A, E | E2> {
+240:   if (Exit.isSuccess(cleanup)) return original
+241:   // Cause.combine deduplicates equal reasons; distinct cleanup attempts must all survive.
+242:   return Exit.failCause<E | E2>(
+243:     Exit.isFailure(original)
+244:       ? Cause.fromReasons<E | E2>([...original.cause.reasons, ...cleanup.cause.reasons])
+245:       : cleanup.cause,
+246:   )
+```
+
+
+Aguarde a disposição e FIM SS01.

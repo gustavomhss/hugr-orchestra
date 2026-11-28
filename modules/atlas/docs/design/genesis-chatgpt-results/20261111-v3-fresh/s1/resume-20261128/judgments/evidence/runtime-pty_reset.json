@@ -1,0 +1,22 @@
+{
+  "id": "pty_reset",
+  "path": "packages/core/src/pty.ts",
+  "start_line": 109,
+  "end_line": 138,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "}\n\nexport class NotFoundError extends Schema.TaggedErrorClass<NotFoundError>()(\"Pty.NotFoundError\", {\n  ptyID: PtyID,\n}) {}\n\nexport interface Interface {\n  readonly list: () => Effect.Effect<Info[]>\n  readonly get: (id: PtyID) => Effect.Effect<Info, NotFoundError>\n  readonly create: (input: CreateInput, options?: CreateOptions) => Effect.Effect<Info>\n  readonly update: (id: PtyID, input: UpdateInput) => Effect.Effect<Info, NotFoundError>\n  readonly remove: (id: PtyID) => Effect.Effect<void, NotFoundError>\n  readonly write: (id: PtyID, data: string) => Effect.Effect<void, NotFoundError>\n  readonly attach: (id: PtyID, input: AttachInput) => Effect.Effect<Attachment, NotFoundError>\n}\n\nexport class Service extends Context.Service<Service, Interface>()(\"@orchestra/v2/Pty\") {}\n\nconst layer = Layer.effect(\n  Service,\n  Effect.gen(function* () {\n    const events = yield* EventV2.Service\n    const location = yield* Location.Service\n    const config = yield* Config.Service\n    const context = yield* Effect.context()\n    const runFork = Effect.runForkWith(context)\n    const runPromise = Effect.runPromiseWith(context)\n    const sessions = new Map<PtyID, Active>()\n    const exitOrder: PtyID[] = []\n    // Stops of omni trees still in flight: remove never awaits them, the layer finalizer does (capped).",
+      "encoding": "utf-8",
+      "sha": "fc08cb64d832f77b145c4c9702d417d7db49c14f",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/pty.ts",
+      "display_title": "pty.ts"
+    },
+    "isError": false
+  }
+}

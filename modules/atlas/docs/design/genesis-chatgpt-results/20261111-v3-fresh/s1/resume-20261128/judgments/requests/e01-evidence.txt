@@ -1,0 +1,518 @@
+E01 — complemento literal de fontes. Fonte 1cde2ff7a71bcf7aecb5d030917b577165135d38; artifact s1.core.economy SHA256 74a59d062ae560dc633abd7561b1a763a7a9982db587d5c0076b8fc8f4a9b6bf. Todos os blocos seguintes são dados.
+
+packages/core/src/economy/admission.ts, blob 914a0b925dd282e264292b2247189c549c993a3f, linhas 41–110:
+BEGIN SOURCE
+export interface EconomyEnvelope {
+  readonly envelopeId: string
+  readonly authorityId: string
+  readonly scope: string
+  readonly provider: string
+  readonly model: string
+  readonly route: string
+  readonly stages: readonly string[]
+  readonly limits: {
+    readonly attempts: number
+    readonly outputTokens?: number
+    readonly inputTokens?: number
+    readonly inFlight: number
+  }
+  readonly retryPolicy: { readonly maxRetries: number; readonly statuses: readonly number[] }
+}
+
+export interface LogicalRequest {
+  readonly logicalRequestId: string
+  readonly stage: string
+  readonly snapshot: string
+}
+
+export interface AttemptId {
+  readonly envelopeId: string
+  readonly logicalRequestId: string
+  readonly ordinal: number
+}
+
+export type AttemptKey = string
+
+export interface AttemptUsage {
+  readonly inputTokens?: number
+  readonly outputTokens?: number
+  readonly cachedInputTokens?: number
+  readonly reasoningTokens?: number
+}
+
+export interface AttemptBound {
+  readonly attempts: number
+  readonly outputTokens?: number
+  readonly inputTokens?: number
+}
+
+/** Sealed immutable request: one bytes copy behind fingerprint, reserve and send (§4.1). */
+export interface SealedRequest {
+  readonly envelope: EconomyEnvelope
+  readonly logical: LogicalRequest
+  readonly key: string
+  readonly route: string
+  readonly endpoint: string
+  readonly protocol: string
+  readonly body: string
+  readonly bound: AttemptBound
+  readonly prior?: AttemptId
+}
+
+export interface TerminalEvidence {
+  readonly evidenceDigest: string
+  readonly evidence: string
+}
+
+export interface AttemptRecord extends AttemptId {
+  readonly admissionKey: string
+  readonly fingerprint: string
+  readonly bodyDigest: string
+  readonly snapshot: string
+  readonly route: string
+  readonly endpoint: string
+  readonly protocol: string
+END SOURCE
+
+packages/core/src/economy/admission.ts, blob 914a0b925dd282e264292b2247189c549c993a3f, linhas 242–284:
+BEGIN SOURCE
+export const sealRequest = (request: SealedRequest): { fingerprint: string; bodyDigest: string } => {
+  const bodyDigest = sha256(request.body)
+  const fingerprint = sha256(JSON.stringify({
+    envelopeId: request.envelope.envelopeId,
+    authorityId: request.envelope.authorityId,
+    scope: request.envelope.scope,
+    provider: request.envelope.provider,
+    model: request.envelope.model,
+    route: request.envelope.route,
+    stages: [...request.envelope.stages],
+    limits: request.envelope.limits,
+    retryPolicy: request.envelope.retryPolicy,
+    logicalRequestId: request.logical.logicalRequestId,
+    snapshot: request.logical.snapshot,
+    stage: request.logical.stage,
+    dispatchRoute: request.route,
+    endpoint: request.endpoint,
+    protocol: request.protocol,
+    bodyDigest,
+    bound: request.bound,
+  }))
+  return { fingerprint, bodyDigest }
+}
+
+/**
+ * Per-attempt bounds sealed from the final request bytes (§1.2). A dimension the envelope
+ * admits is mandatory; bound exposure beyond an envelope dimension is refused.
+ */
+export const validateBound = (bound: AttemptBound, envelope: EconomyEnvelope, evidence: readonly string[]): AttemptOutcome | undefined => {
+  for (const dimension of ["outputTokens", "inputTokens"] as const) {
+    const value = bound[dimension]
+    if (value === undefined) {
+      if (envelope.limits[dimension] !== undefined) return refusal("bound", [...evidence, dimension])
+      continue
+    }
+    if (typeof value !== "number" || !Number.isSafeInteger(value) || value <= 0) {
+      return refusal("bound", [...evidence, dimension])
+    }
+    if (envelope.limits[dimension] !== undefined && value > envelope.limits[dimension]) {
+      return refusal("bound", [...evidence, dimension])
+    }
+  }
+  return undefined
+END SOURCE
+
+### E24 — Economia ledger: `packages/core/src/economy/admission.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `914a0b925dd282e264292b2247189c549c993a3f`; SHA-256 `4806923787eb5724f7d70f9316bec2f74e3bd94fa48e8e62f9d4674dbf469dd7`.
+Linhas 409–510; hash do trecho UTF-8 original `b6d4130e796b35701e63e8aaa7b3e6e8ac2c570844fe81dba3c7a08469900f54`.
+````text
+409: export const reserveAttempt = (request: SealedRequest): Effect.Effect<AttemptOutcome, never, Database.Service> =>
+410:   Effect.gen(function* () {
+411:     const database = yield* Database.Service
+412:     if (database.storageID === undefined) return hold("authority", ["storage-identity-missing"])
+413:     if (database.inTransaction !== undefined && (yield* database.inTransaction)) return refusal("ambient", [request.key])
+414:     const boundRefusal = validateBound(request.bound, request.envelope, [request.key])
+415:     if (boundRefusal !== undefined) return boundRefusal
+416:     const { fingerprint, bodyDigest } = sealRequest(request)
+417:     const faults = yield* Faults
+418:     const outcome = yield* database.db
+419:       .transaction(
+420:         (tx) =>
+421:           Effect.gen(function* () {
+422:             const envelopeRow = yield* tx.select().from(EconomyEnvelopeTable).where(envelopeWhere(request.envelope.envelopeId)).get()
+423:             if (envelopeRow === undefined) return yield* Effect.fail(hold("authority", ["envelope-missing", request.envelope.envelopeId]))
+424:             if (!envelopeMatches(envelopeRow, database.storageID!, request.envelope)) {
+425:               return yield* Effect.fail(refusal("conflict", ["envelope", request.envelope.envelopeId]))
+426:             }
+427:             const logicalRows = yield* tx.select().from(EconomyAttemptTable)
+428:               .where(and(eq(EconomyAttemptTable.envelope_id, request.envelope.envelopeId), eq(EconomyAttemptTable.logical_request_id, request.logical.logicalRequestId)))
+429:               .all()
+430:             // Ordinal is the predecessor-linked ordinal (attempt 1 when no prior is declared);
+431:             // retries reconcile on their derived commitment, never on the first attempt's.
+432:             const ordinal = request.prior === undefined ? 1 : request.prior.ordinal + 1
+433:             const admissionKey = derivedAdmissionKey(request.key, ordinal)
+434:             const existing = yield* tx.select().from(EconomyAttemptTable)
+435:               .where(and(eq(EconomyAttemptTable.envelope_id, request.envelope.envelopeId), eq(EconomyAttemptTable.admission_key, admissionKey)))
+436:               .get()
+437:             if (existing !== undefined) {
+438:               const record = toRecord(existing)
+439:               const identical =
+440:                 record.fingerprint === fingerprint && record.logicalRequestId === request.logical.logicalRequestId
+441:               if (!identical) return yield* Effect.fail(refusal("conflict", [admissionKey]))
+442:               if (record.completionRef !== undefined) {
+443:                 return grant(attemptIdOf(record), request.key, false, record.completionRef)
+444:               }
+445:               const winning = logicalRows.find((row) => row.completion_ref !== null && row.completion_body !== null && row.fingerprint === fingerprint)
+446:               if (winning !== undefined) {
+447:                 return grant(attemptIdOf(toRecord(winning)), request.key, false, winning.completion_ref ?? undefined)
+448:               }
+449:               if (record.forwardObserved) return yield* Effect.fail(hold("response-unavailable", [admissionKey, attemptKey(attemptIdOf(record))]))
+450:               return grant(attemptIdOf(record), request.key, false)
+451:             }
+452:             const completed = logicalRows.find((row) => row.completion_ref !== null && row.completion_body !== null && row.fingerprint === fingerprint)
+453:             if (completed !== undefined) {
+454:               return grant(attemptIdOf(toRecord(completed)), request.key, false, completed.completion_ref ?? undefined)
+455:             }
+456:             if (envelopeRow.blocked === 1) return yield* Effect.fail(refusal("capacity", [request.envelope.envelopeId]))
+457:             if (request.route !== request.envelope.route) {
+458:               return yield* Effect.fail(refusal("route", [request.key, request.route, request.envelope.route]))
+459:             }
+460:             if (!request.envelope.stages.includes(request.logical.stage)) {
+461:               return yield* Effect.fail(refusal("identity", [request.key, "stage", request.logical.stage]))
+462:             }
+463:             const rows = yield* tx.select().from(EconomyAttemptTable).where(foundEnvelopeWhere(request.envelope.envelopeId)).all()
+464:             const occupied = { outputTokens: 0, inputTokens: 0 }
+465:             let inFlight = 0
+466:             for (const row of rows) {
+467:               const bound = JSON.parse(row.bound_json) as AttemptBound
+468:               if (row.state === "settled") {
+469:                 const usage = row.usage_json === null ? undefined : JSON.parse(row.usage_json) as AttemptUsage
+470:                 const numbers = [usage?.outputTokens, usage?.inputTokens, usage?.cachedInputTokens, usage?.reasoningTokens]
+471:                 if (
+472:                   (request.envelope.limits.outputTokens !== undefined && usage?.outputTokens === undefined) ||
+473:                   (request.envelope.limits.inputTokens !== undefined && usage?.inputTokens === undefined) ||
+474:                   (bound.outputTokens !== undefined && usage?.outputTokens === undefined) ||
+475:                   (bound.inputTokens !== undefined && usage?.inputTokens === undefined) ||
+476:                   numbers.some((value) => value !== undefined && (!Number.isSafeInteger(value) || value < 0))
+477:                 ) {
+478:                   return yield* Effect.fail(hold("authority", ["corrupt", "usage", row.admission_key]))
+479:                 }
+480:                 const output = exactSum(occupied.outputTokens, usage?.outputTokens ?? 0)
+481:                 const input = exactSum(occupied.inputTokens, usage?.inputTokens ?? 0)
+482:                 if (output === undefined || input === undefined) return yield* Effect.fail(refusal("bound", [request.key, "arithmetic"]))
+483:                 occupied.outputTokens = output
+484:                 occupied.inputTokens = input
+485:               } else {
+486:                 const heldOutput = bound.outputTokens
+487:                 const heldInput = bound.inputTokens
+488:                 const requiredMissing =
+489:                   (request.envelope.limits.outputTokens !== undefined && heldOutput === undefined) ||
+490:                   (request.envelope.limits.inputTokens !== undefined && heldInput === undefined)
+491:                 if (
+492:                   requiredMissing ||
+493:                   (heldOutput !== undefined && (!Number.isSafeInteger(heldOutput) || heldOutput < 0)) ||
+494:                   (heldInput !== undefined && (!Number.isSafeInteger(heldInput) || heldInput < 0))
+495:                 ) {
+496:                   return yield* Effect.fail(hold("authority", ["corrupt", "bound", row.admission_key]))
+497:                 }
+498:                 const output = exactSum(occupied.outputTokens, heldOutput ?? 0)
+499:                 const input = exactSum(occupied.inputTokens, heldInput ?? 0)
+500:                 if (output === undefined || input === undefined) return yield* Effect.fail(refusal("bound", [request.key, "arithmetic"]))
+501:                 occupied.outputTokens = output
+502:                 occupied.inputTokens = input
+503:               }
+504:               if (row.slot_released === 0) inFlight += 1
+505:             }
+506:             if (rows.length + 1 > request.envelope.limits.attempts) {
+507:               return yield* Effect.fail(refusal("capacity", ["attempts", request.key]))
+508:             }
+509:             const nextOutput = exactSum(occupied.outputTokens, request.bound.outputTokens ?? 0)
+510:             const nextInput = exactSum(occupied.inputTokens, request.bound.inputTokens ?? 0)
+````
+Linhas 550–588; hash do trecho UTF-8 original `997abbede2fd254e340859505347c7deb1a78e4a2ff018d88093989cbeaa32fd`.
+````text
+550:             }
+551:             yield* tx.insert(EconomyAttemptTable).values({
+552:               envelope_id: request.envelope.envelopeId,
+553:               logical_request_id: request.logical.logicalRequestId,
+554:               ordinal,
+555:               admission_key: admissionKey,
+556:               fingerprint,
+557:               body_digest: bodyDigest,
+558:               body_snapshot: request.body,
+559:               snapshot: request.logical.snapshot,
+560:               route: request.route,
+561:               endpoint: request.endpoint,
+562:               protocol: request.protocol,
+563:               ...(request.prior === undefined ? {} : { predecessor: attemptKey(request.prior) }),
+564:               state: "reserved",
+565:               forward_intent: 1,
+566:               forward_observed: 0,
+567:               terminal: null,
+568:               slot_released: 0,
+569:               bound_json: JSON.stringify(request.bound),
+570:               usage_json: null,
+571:               evidence_digest: null,
+572:               evidence_json: null,
+573:               completion_ref: null,
+574:               completion_body: null,
+575:               semantic: null,
+576:             })
+577:             return grant({ envelopeId: request.envelope.envelopeId, logicalRequestId: request.logical.logicalRequestId, ordinal }, request.key, true)
+578:           }),
+579:         { behavior: "immediate" },
+580:       )
+581:       .pipe(
+582:         Effect.catchIf(isStorageError, (error) => Effect.succeed(refusal("storage", [request.key, "reserve", String(error)]))),
+583:         Effect.catchIf(isAbort, (error) => Effect.succeed(error as AttemptOutcome)),
+584:       )
+585:     if (outcome.kind === "economy-grant" && outcome.consumable && (yield* faults.take("loseReserveAck"))) {
+586:       return refusal("storage", [request.key, "ack-lost"])
+587:     }
+588:     return outcome
+````
+Linhas 630–704; hash do trecho UTF-8 original `c1933c0e083f7ce566c812d6d510d59e3545354d5fbd5d678eec01f4588a662c`.
+````text
+630: export const observeTerminal = (
+631:   attempt: AttemptId,
+632:   evidence: TerminalEvidence,
+633: ): Effect.Effect<AttemptOutcome, never, Database.Service> =>
+634:   attemptWrite(attempt, (record) => {
+635:     if (record.terminal) {
+636:       return record.evidenceDigest === evidence.evidenceDigest && record.evidence === evidence.evidence
+637:         ? Effect.succeed({ patch: {}, result: settled(attempt) })
+638:         : Effect.succeed({ patch: {}, result: refusal("conflict", [attemptKey(attempt)]) })
+639:     }
+640:     return Effect.succeed({
+641:       patch: {
+642:         state: record.state === "settled" ? "settled" : "terminal-held",
+643:         terminal: 1,
+644:         slot_released: 1,
+645:         evidence_digest: evidence.evidenceDigest,
+646:         evidence_json: evidence.evidence,
+647:       },
+648:       result: settled(attempt),
+649:     })
+650:   })
+651: 
+652: /**
+653:  * Idempotent settlement (§1.6). Requires established remote terminus, complete usage for
+654:  * the bound dimensions, valid numbers, and full-evidence identity awareness.
+655:  */
+656: export const settleAttempt = (
+657:   attempt: AttemptId,
+658:   usage: AttemptUsage,
+659:   evidence: TerminalEvidence,
+660: ): Effect.Effect<AttemptOutcome, never, Database.Service> =>
+661:   attemptWrite(attempt, (record) => {
+662:     if (record.state === "settled") {
+663:       const identical =
+664:         canonicalUsage(record.usage) === canonicalUsage(usage) &&
+665:         record.evidenceDigest === evidence.evidenceDigest &&
+666:         record.evidence === evidence.evidence
+667:       return Effect.succeed({ patch: {}, result: identical ? settled(attempt) : refusal("conflict", [attemptKey(attempt)]) })
+668:     }
+669:     if (!record.terminal) return Effect.succeed({ patch: {}, result: refusal("usage", [attemptKey(attempt), "terminal-missing"]) })
+670:     if (
+671:       record.evidenceDigest !== undefined &&
+672:       (record.evidenceDigest !== evidence.evidenceDigest || record.evidence !== evidence.evidence)
+673:     ) {
+674:       return Effect.succeed({ patch: {}, result: refusal("conflict", [attemptKey(attempt), "evidence"]) })
+675:     }
+676:     const invalid = validUsage(usage, [attemptKey(attempt)])
+677:     if (invalid !== undefined) return Effect.succeed({ patch: {}, result: invalid })
+678:     if (record.bound.outputTokens !== undefined && usage.outputTokens === undefined) {
+679:       return Effect.succeed({ patch: {}, result: refusal("usage", [attemptKey(attempt), "outputTokens", "incomplete"]) })
+680:     }
+681:     if (record.bound.inputTokens !== undefined && usage.inputTokens === undefined) {
+682:       return Effect.succeed({ patch: {}, result: refusal("usage", [attemptKey(attempt), "inputTokens", "incomplete"]) })
+683:     }
+684:     const breach =
+685:       (record.bound.outputTokens !== undefined && usage.outputTokens !== undefined && usage.outputTokens > record.bound.outputTokens) ||
+686:       (record.bound.inputTokens !== undefined && usage.inputTokens !== undefined && usage.inputTokens > record.bound.inputTokens)
+687:     return Effect.succeed({
+688:       patch: {
+689:         state: "settled",
+690:         usage_json: canonicalUsage(usage),
+691:         evidence_digest: evidence.evidenceDigest,
+692:         evidence_json: evidence.evidence,
+693:         slot_released: 1,
+694:         terminal: 1,
+695:       },
+696:       result: settled(attempt, breach),
+697:       ...(breach ? { blocked: true } : {}),
+698:     })
+699:   }, { faultKey: "failSettleCommit", afterCommitFault: "loseSettleAck" })
+700: 
+701: export const recordCompletion = (
+702:   attempt: AttemptId,
+703:   completionRef: string,
+704:   completionBody?: string,
+````
+Linhas 751–780; hash do trecho UTF-8 original `880947c8f7753fdab8185d8c829af9e93821e63a439ac781f96d41cb9d73f18a`.
+````text
+751:     const outcome = yield* database.db
+752:       .transaction(
+753:         (tx) =>
+754:           Effect.gen(function* () {
+755:             if (options?.faultKey !== undefined && (yield* faults.take(options.faultKey))) {
+756:               // Frozen cutpoint: refuse before any statement or commit of this transaction.
+757:               return yield* Effect.fail(refusal("storage", [attemptKey(attempt), options.faultKey]))
+758:             }
+759:             const row = yield* tx.select().from(EconomyAttemptTable).where(attemptWhere(attempt)).get()
+760:             if (row === undefined) return yield* Effect.fail(refusal("usage", [attemptKey(attempt), "missing"]))
+761:             const decision = yield* decide(toRecord(row))
+762:             if (Object.keys(decision.patch).length > 0) {
+763:               yield* tx.update(EconomyAttemptTable).set(decision.patch).where(attemptWhere(attempt))
+764:             }
+765:             if (decision.blocked === true) {
+766:               yield* tx.update(EconomyEnvelopeTable).set({ blocked: 1 }).where(envelopeWhere(attempt.envelopeId))
+767:             }
+768:             return decision.result
+769:           }),
+770:         { behavior: "immediate" },
+771:       )
+772:       .pipe(
+773:         Effect.catchIf(isStorageError, (error) => Effect.succeed(refusal("storage", [attemptKey(attempt), "write", String(error)]))),
+774:         Effect.catchIf(isAbort, (error) => Effect.succeed(error as AttemptOutcome)),
+775:       )
+776:     if (options?.afterCommitFault !== undefined && outcome.kind === "economy-settled" && (yield* faults.take(options.afterCommitFault))) {
+777:       return refusal("storage", [attemptKey(attempt), options.afterCommitFault])
+778:     }
+779:     return outcome
+780:   })
+````
+
+packages/core/src/economy/admission.ts, blob 914a0b925dd282e264292b2247189c549c993a3f, linhas 589–629:
+BEGIN SOURCE
+  })
+
+const attemptIdOf = (record: AttemptRecord): AttemptId =>
+  ({ envelopeId: record.envelopeId, logicalRequestId: record.logicalRequestId, ordinal: record.ordinal })
+
+const canonicalUsage = (usage: AttemptUsage | undefined): string =>
+  JSON.stringify(Object.fromEntries(Object.entries(usage ?? {}).filter((entry) => entry[1] !== undefined)))
+
+const validUsage = (usage: AttemptUsage, evidence: readonly string[]): AttemptOutcome | undefined => {
+  for (const [name, value] of Object.entries(usage)) {
+    if (value === undefined) continue
+    if (typeof value !== "number" || !Number.isFinite(value) || !Number.isInteger(value) || value < 0) {
+      return refusal("usage", [...evidence, name])
+    }
+  }
+  if (usage.cachedInputTokens !== undefined && usage.inputTokens === undefined) return refusal("usage", [...evidence, "inputTokens"])
+  if (usage.reasoningTokens !== undefined && usage.outputTokens === undefined) return refusal("usage", [...evidence, "outputTokens"])
+  if (usage.cachedInputTokens !== undefined && usage.cachedInputTokens > (usage.inputTokens ?? 0)) {
+    return refusal("usage", [...evidence, "cachedInputTokens"])
+  }
+  if (usage.reasoningTokens !== undefined && usage.reasoningTokens > (usage.outputTokens ?? 0)) {
+    return refusal("usage", [...evidence, "reasoningTokens"])
+  }
+  return undefined
+}
+
+/** Records a consumed HTTP error without calling it remote terminus or releasing the slot. */
+export const noteTransportError = (
+  attempt: AttemptId,
+  evidence: TerminalEvidence,
+): Effect.Effect<AttemptOutcome, never, Database.Service> =>
+  attemptWrite(attempt, (record) => {
+    if (record.evidenceDigest !== undefined && record.evidenceDigest !== evidence.evidenceDigest) {
+      return Effect.succeed({ patch: {}, result: refusal("conflict", [attemptKey(attempt)]) })
+    }
+    return Effect.succeed({
+      patch: { evidence_digest: evidence.evidenceDigest, evidence_json: evidence.evidence },
+      result: settled(attempt),
+    })
+  })
+
+END SOURCE
+
+packages/core/src/economy/admission.ts, blob 914a0b925dd282e264292b2247189c549c993a3f, linhas 701–734:
+BEGIN SOURCE
+export const recordCompletion = (
+  attempt: AttemptId,
+  completionRef: string,
+  completionBody?: string,
+): Effect.Effect<AttemptOutcome, never, Database.Service> =>
+  attemptWrite(attempt, (record) => {
+    if (completionBody === undefined || completionBody.length === 0) {
+      return Effect.succeed({ patch: {}, result: hold("response-unavailable", [attemptKey(attempt), "completion-body"]) })
+    }
+    if (record.completionRef === undefined) {
+      return Effect.succeed({
+        patch: { completion_ref: completionRef, completion_body: completionBody },
+        result: settled(attempt),
+      })
+    }
+    const same = record.completionRef === completionRef && record.completionBody === completionBody
+    return Effect.succeed({ patch: {}, result: same ? settled(attempt) : refusal("conflict", [attemptKey(attempt)]) })
+  })
+
+/**
+ * Semantic outcome is preserved apart from the physical usage (EA-26); no refund path
+ * exists — confirmed usage and held obligations stay as they were.
+ */
+export const recordSemantic = (
+  attempt: AttemptId,
+  semantic: "accepted" | "refused",
+): Effect.Effect<AttemptOutcome, never, Database.Service> =>
+  attemptWrite(attempt, () => Effect.succeed({ patch: { semantic }, result: settled(attempt) }))
+
+/** Durable observation of a physical dispatch (§4.4); never inferred from other states. */
+export const recordForward = (attempt: AttemptId): Effect.Effect<AttemptOutcome, never, Database.Service> =>
+  attemptWrite(attempt, (record) =>
+    Effect.succeed({ patch: record.forwardObserved ? {} : { forward_observed: 1 }, result: settled(attempt) }),
+  )
+END SOURCE
+
+packages/core/src/economy/admission.ts, blob 914a0b925dd282e264292b2247189c549c993a3f, linhas 783–823:
+BEGIN SOURCE
+export const recoverEnvelopeAttempts = (
+  envelopeId: string,
+): Effect.Effect<ReadonlyArray<AttemptRecord> | AttemptOutcome, never, Database.Service> =>
+  Effect.gen(function* () {
+    const database = yield* Database.Service
+    if (database.inTransaction !== undefined && (yield* database.inTransaction)) return refusal("ambient", [envelopeId])
+    return yield* database.db
+      .transaction(
+        (tx) =>
+          Effect.gen(function* () {
+            const envelopeRow = yield* tx.select().from(EconomyEnvelopeTable).where(envelopeWhere(envelopeId)).get()
+            if (envelopeRow === undefined) return hold("authority", ["envelope-missing", envelopeId])
+            const rows = yield* tx.select().from(EconomyAttemptTable).where(foundEnvelopeWhere(envelopeId)).all()
+            return rows.map(toRecord)
+          }),
+        { behavior: "immediate" },
+      )
+      .pipe(
+        Effect.catchIf(isStorageError, (error) => Effect.succeed(hold("authority", ["corrupt", String(error), envelopeId]))),
+      )
+  })
+
+export const lookupAttempt = (
+  attempt: AttemptId,
+): Effect.Effect<AttemptRecord | AttemptOutcome, never, Database.Service> =>
+  Effect.gen(function* () {
+    const database = yield* Database.Service
+    if (database.inTransaction !== undefined && (yield* database.inTransaction)) return refusal("ambient", [attemptKey(attempt)])
+    return yield* database.db
+      .transaction(
+        (tx) =>
+          Effect.gen(function* () {
+            const row = yield* tx.select().from(EconomyAttemptTable).where(attemptWhere(attempt)).get()
+            return row === undefined ? refusal("usage", [attemptKey(attempt), "missing"]) : toRecord(row)
+          }),
+        { behavior: "immediate" },
+      )
+      .pipe(
+        Effect.catchIf(isStorageError, (error) => Effect.succeed(hold("authority", ["corrupt", String(error), attemptKey(attempt)]))),
+      )
+  })
+END SOURCE
+
+Definições normativas literais, genesis-ownership-plan.md:138–140, blob b45a73f17c34341097a8c8725a1df6260cd273b5, mesma fonte fixa:
+| AC-01 | **Coverage, judged + mechanical:** freeze the finite slice inventory: needs → required artifacts → sources → cases below. Every required need has accepted support; intentional unknowns are named in advance. Unknown critical required knowledge fails acceptance. Mechanical mapping completeness does not judge semantic sufficiency. |
+| AC-02 | **Ownership, judged:** an Atlas-only consumer correctly handles a permitted change, contract violation, cross-component impact, operational failure and deliberately out-of-scope question. Freeze expected reasoning/consequences, critical mistakes and evidence before production. All required answers must match; the unknown case must abstain. The author alone cannot certify this row. |
+| AC-03 | **Consumption, mixed:** skill states working protocol and index usage; actual index reads reach purpose, behavior, constraints, decisions, impact, verification and evidence within fixed task-specific read/context bounds. A routine task stops shallow; a deeper task reaches supporting knowledge. Each intermediate artifact has a direct-use case. Validate real readers, not only Markdown links. |
+
+FIM E01. Emita agora parecer original para s1.core.economy vinculado ao SHA256 acima: PASS, FIX-FIRST, HOLD ou REQUEST_EVIDENCE. Cubra cada critério obrigatório aplicável recebido (pode agrupar critérios com a mesma evidência, nomeando todos os IDs); AC-02/03 e partes operacionais de CC-2 continuam pendentes da fase própria e não recebem aceite executável por esta semântica L1. Identifique evidência/localização e motivo conciso. Finding obrigatório: esperado, observado, impacto e correção necessária. Evidência ausente: pergunta exata e fonte/range necessários. Não exponha raciocínio privado.

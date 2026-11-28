@@ -1,0 +1,22 @@
+{
+  "id": "lsp_confinement",
+  "path": "packages/core/src/lsp/lsp.ts",
+  "start_line": 177,
+  "end_line": 215,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "          if (cfg.lsp && cfg.lsp !== true) {\n            for (const [name, item] of Object.entries(cfg.lsp)) {\n              const existing = servers[name]\n              const entry = item as { disabled?: boolean; command?: string[]; extensions?: string[]; env?: Record<string,string>; initialization?: Record<string, unknown> }\n              if (entry.disabled) {\n                yield* Effect.logInfo(`LSP server ${name} is disabled`)\n                delete servers[name]\n                continue\n              }\n              servers[name] = {\n                ...existing,\n                id: name,\n                root: existing?.root ?? (async (_file, ctx) => ctx.directory),\n                extensions: entry.extensions ?? existing?.extensions ?? [],\n                // A configured command is trusted like any configured program, unless it runs workspace code: the program\n                // lives in the workspace, is a runner (npx, uv run, ...) or is a version-manager shim.\n                spawn: async (root) => ({\n                  process: (await ToolSafetySandbox.runsWorkspaceCode(ctx.directory, entry.command![0], entry.command!.slice(1), root))\n                    ? await confined(entry.command![0], entry.command!.slice(1), { cwd: root, env: { ...process.env, ...entry.env } })\n                    : await lspspawn(entry.command![0], entry.command!.slice(1), { cwd: root, env: { ...process.env, ...entry.env } }),\n                  initialization: entry.initialization,\n                }),\n              }\n            }\n          }\n\n          yield* Effect.logInfo(\"enabled LSP servers\", {\n            serverIds: Object.values(servers)\n              .map((server) => server.id)\n              .join(\", \"),\n          })\n        }\n\n        const s: State = {\n          closing: false,\n          clients: [],\n          servers,\n          broken: new Set(),\n          spawning: new Map(),",
+      "encoding": "utf-8",
+      "sha": "7848ef568344421190171962367fe2836170d084",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/lsp/lsp.ts",
+      "display_title": "lsp.ts"
+    },
+    "isError": false
+  }
+}

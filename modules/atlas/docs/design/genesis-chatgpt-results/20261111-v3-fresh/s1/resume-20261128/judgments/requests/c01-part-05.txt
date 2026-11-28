@@ -1,0 +1,436 @@
+C01 — fontes literais adicionais, parte 05. Mesmo pin, mesmo corpo.
+
+### E21 — Vendor: `packages/core/src/github-copilot/responses/tool/local-shell.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `45230d5ce55d8cf66bd1ab3d8e71a6f8d2364c7c`; SHA-256 `b36380334c0f916b07dac6bfe0236ec9058ac95eca093118c161141737c52bc6`.
+Linhas 4–19; hash do trecho UTF-8 original `6e9a09039302d41ae55167139b727c70f45f5bf6a76ce9f07035ba3056b192cc`.
+````text
+4: export const localShellInputSchema = z.object({
+5:   action: z.object({
+6:     type: z.literal("exec"),
+7:     command: z.array(z.string()),
+8:     timeoutMs: z.number().optional(),
+9:     user: z.string().optional(),
+10:     workingDirectory: z.string().optional(),
+11:     env: z.record(z.string(), z.string()).optional(),
+12:   }),
+13: })
+14: 
+15: export const localShellOutputSchema = z.object({
+16:   output: z.string(),
+17: })
+18: 
+19: export const localShell = createProviderToolFactoryWithOutputSchema<
+````
+Linhas 59–64; hash do trecho UTF-8 original `4bf252a439c2d12062a0c906872c0ad0951f70db790a9bb68228e99c51f21a32`.
+````text
+59:   {}
+60: >({
+61:   id: "openai.local_shell",
+62:   inputSchema: localShellInputSchema,
+63:   outputSchema: localShellOutputSchema,
+64: })
+````
+
+### E22 — Economia vínculo: `packages/core/src/economy/executor.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `925984643e4a4cd5b844e02e9d48c473b8d3353c`; SHA-256 `cb5b65de77236a3203ac6bb9bde259057ca9b5e87b2428a4c5330fdeaa2a8b9e`.
+Linhas 1–19; hash do trecho UTF-8 original `e5d69053db23b81c01295460bdd1fff69902e3ccc7e65ab3458f360a5ac564ad`.
+````text
+1: // @orchestra/core — src/economy/executor.ts (G1 / F2)
+2: //
+3: // Scoped physical-attempt guard composed with `RequestExecutor.layer` (contract:
+4: // modules/atlas/docs/design/genesis-g1-contract.md §1, §2.2, Astra decision 2026-11-09).
+5: //
+6: // - Every controllable send passes through this guard: the wrapped HttpClient is what
+7: //   `RequestExecutor.layer` receives, so `retryStatusFailures` re-encounters the guard on
+8: //   each retry and every attempt reserves inside the retry frontier (§1.5, EA-08).
+9: // - The bound is sealed from the *final* request bytes: `max_output_tokens` must be a
+10: //   positive finite integer and is the bound sent to reserve; the same bytes are
+11: //   fingerprinted, reserved and forwarded — no re-serialization in between (§4.1, EA-05/06).
+12: // - The admission context is a per-dispatch object created by the host; there is no global
+13: //   "current attempt" (§2.2). The attempt chain (initial attempt and its retries) lives
+14: //   inside that context: each retry reserves with the previous attempt as its named
+15: //   predecessor, whose ≥400 response is recorded terminal evidence via `observeTerminal`
+16: //   before the retry is reserved (§1.5).
+17: // - Economic refusals keep a typed channel: the per-context outcome register (written
+18: //   before the response path ever runs) plus a typed fail value — never converted into a
+19: //   valid empty model response (EA-28).
+````
+Linhas 102–137; hash do trecho UTF-8 original `d2f77e99f1065f5994c916d9f57b152b4f8a15f7d5bfeb828e4d47c5d7782e2b`.
+````text
+102:   evidence: JSON.stringify({ status, body }),
+103: })
+104: 
+105: /** One native bound field per admitted protocol. Aliases of another protocol never substitute. */
+106: const NATIVE_BOUND_FIELD = {
+107:   responses: "max_output_tokens",
+108:   "openai-chat": "max_tokens",
+109: } as const
+110: 
+111: const PROTOCOL_PROVIDER = {
+112:   responses: "openai",
+113:   "openai-chat": "openai",
+114: } as const
+115: 
+116: type AdmittedProtocol = keyof typeof NATIVE_BOUND_FIELD
+117: 
+118: const isAdmittedProtocol = (protocol: string): protocol is AdmittedProtocol => protocol in NATIVE_BOUND_FIELD
+119: 
+120: const boundOf = (protocol: AdmittedProtocol, body: string): AttemptBound | "invalid" | "absent" => {
+121:   let parsed: unknown
+122:   try {
+123:     parsed = JSON.parse(body)
+124:   } catch {
+125:     return "absent"
+126:   }
+127:   const max = (parsed as Record<string, unknown>)[NATIVE_BOUND_FIELD[protocol]]
+128:   if (max === undefined) return { attempts: 1 }
+129:   if (typeof max !== "number" || !Number.isSafeInteger(max) || max <= 0) return "invalid"
+130:   return { attempts: 1, outputTokens: max }
+131: }
+132: 
+133: const modelOf = (body: string): string | undefined => {
+134:   try {
+135:     const model = (JSON.parse(body) as { readonly model?: unknown }).model
+136:     return typeof model === "string" && model.length > 0 ? model : undefined
+137:   } catch {
+````
+Linhas 278–313; hash do trecho UTF-8 original `b768cedc84eca36a051490bc9b86f75521c744f3606cf76a6fec93057ac5fc6a`.
+````text
+278:   submit: (request: HttpClientRequest.HttpClientRequest) => Effect.Effect<HttpClientResponse.HttpClientResponse, unknown>,
+279: ) {
+280:   if (input.route !== "http" || input.route !== input.envelope.route) {
+281:     const refusal: AttemptOutcome = { kind: "economy-refusal", reason: "route", evidence: [input.route, input.envelope.route] }
+282:     yield* Ref.update(outcomes, (list) => [...list, refusal])
+283:     return yield* Effect.fail(new EconomyDispatchRefused(refusal))
+284:   }
+285:   const effective = protocolOfUrl(request.url)
+286:   if (effective === undefined || effective !== input.protocol) {
+287:     const refusal: AttemptOutcome = { kind: "economy-refusal", reason: "route", evidence: [input.protocol, request.url] }
+288:     yield* Ref.update(outcomes, (list) => [...list, refusal])
+289:     return yield* Effect.fail(new EconomyDispatchRefused(refusal))
+290:   }
+291:   // §4.1: capture one copy of the final bytes; seal, reserve and send exactly from it.
+292:   if (!isAdmittedProtocol(input.protocol) || input.envelope.provider !== PROTOCOL_PROVIDER[input.protocol]) {
+293:     const refusal: AttemptOutcome = { kind: "economy-refusal", reason: "route", evidence: [input.protocol] }
+294:     yield* Ref.update(outcomes, (list) => [...list, refusal])
+295:     return yield* Effect.fail(new EconomyDispatchRefused(refusal))
+296:   }
+297:   const bytes = yield* requestBodyOf(request)
+298:   const operationModel = modelOf(bytes)
+299:   if (operationModel !== input.envelope.model) {
+300:     const refusal: AttemptOutcome = { kind: "economy-refusal", reason: "identity", evidence: [operationModel ?? "model-missing"] }
+301:     yield* Ref.update(outcomes, (list) => [...list, refusal])
+302:     return yield* Effect.fail(new EconomyDispatchRefused(refusal))
+303:   }
+304:   const bound = boundOf(input.protocol, bytes)
+305:   if (bound === "invalid" || bound === "absent") {
+306:     const refusal: AttemptOutcome = { kind: "economy-refusal", reason: "bound", evidence: [NATIVE_BOUND_FIELD[input.protocol]] }
+307:     yield* Ref.update(outcomes, (list) => [...list, refusal])
+308:     return yield* Effect.fail(new EconomyDispatchRefused(refusal))
+309:   }
+310:   const entries = yield* Ref.get(chain)
+311:   const prior = entries.at(-1)
+312:   if (prior !== undefined && !prior.answered) {
+313:     return yield* Effect.fail(new EconomyDispatchRefused({
+````
+
+### E23 — Economia fechamento: `packages/core/src/economy/executor.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `925984643e4a4cd5b844e02e9d48c473b8d3353c`; SHA-256 `cb5b65de77236a3203ac6bb9bde259057ca9b5e87b2428a4c5330fdeaa2a8b9e`.
+Linhas 139–253; hash do trecho UTF-8 original `7e82ea3b026c8487a5a22222541f54e0a539fdb5c2cf9a2a0547120d7f70166e`.
+````text
+139:   }
+140: }
+141: 
+142: interface ProtocolClose {
+143:   readonly terminal: boolean
+144:   readonly usage?: AttemptUsage
+145:   readonly invalid: boolean
+146: }
+147: 
+148: const counted = (value: unknown): number | undefined =>
+149:   typeof value === "number" && Number.isSafeInteger(value) && value >= 0 ? value : undefined
+150: 
+151: const usageOf = (
+152:   input: unknown,
+153:   output: unknown,
+154:   cached: unknown,
+155:   reasoning: unknown,
+156: ): AttemptUsage | "invalid" | undefined => {
+157:   if (input === undefined && output === undefined && cached === undefined && reasoning === undefined) return undefined
+158:   const inputTokens = input === undefined ? undefined : counted(input)
+159:   const outputTokens = output === undefined ? undefined : counted(output)
+160:   const cachedInputTokens = cached === undefined ? undefined : counted(cached)
+161:   const reasoningTokens = reasoning === undefined ? undefined : counted(reasoning)
+162:   if (
+163:     (input !== undefined && inputTokens === undefined) ||
+164:     (output !== undefined && outputTokens === undefined) ||
+165:     (cached !== undefined && cachedInputTokens === undefined) ||
+166:     (reasoning !== undefined && reasoningTokens === undefined)
+167:   ) return "invalid"
+168:   if (cachedInputTokens !== undefined && (inputTokens === undefined || cachedInputTokens > inputTokens)) return "invalid"
+169:   if (reasoningTokens !== undefined && (outputTokens === undefined || reasoningTokens > outputTokens)) return "invalid"
+170:   return {
+171:     ...(inputTokens === undefined ? {} : { inputTokens }),
+172:     ...(outputTokens === undefined ? {} : { outputTokens }),
+173:     ...(cachedInputTokens === undefined ? {} : { cachedInputTokens }),
+174:     ...(reasoningTokens === undefined ? {} : { reasoningTokens }),
+175:   }
+176: }
+177: 
+178: const responseTerminal = (type: unknown) =>
+179:   type === "response.completed" || type === "response.incomplete" || type === "response.failed"
+180: 
+181: const chatCloses = (choices: ReadonlyArray<{ readonly finish_reason?: unknown }> | undefined) =>
+182:   choices?.some((choice) => typeof choice.finish_reason === "string" && choice.finish_reason.length > 0) === true
+183: 
+184: /**
+185:  * Protocol close, matched to the consumer's terminal boundary.
+186:  * Chat may split finish_reason and the final usage chunk; usage before that finish is not a measurement.
+187:  * Responses stops at the first canonical terminal, including response.failed. A later event cannot replace it.
+188:  */
+189: const readClose = (protocol: AdmittedProtocol, text: string): ProtocolClose => {
+190:   let terminal = false
+191:   let invalid = false
+192:   let usage: AttemptUsage | undefined
+193:   for (const line of text.split("\n")) {
+194:     const payload = line.startsWith("data:") ? line.slice(5).trim() : ""
+195:     if (payload.length === 0 || payload === "[DONE]") continue
+196:     let parsed: unknown
+197:     try {
+198:       parsed = JSON.parse(payload)
+199:     } catch {
+200:       continue
+201:     }
+202:     const record = parsed as {
+203:       readonly choices?: ReadonlyArray<{ readonly finish_reason?: unknown }>
+204:       readonly usage?: { readonly prompt_tokens?: unknown; readonly completion_tokens?: unknown; readonly prompt_tokens_details?: { readonly cached_tokens?: unknown }; readonly completion_tokens_details?: { readonly reasoning_tokens?: unknown } } | null
+205:       readonly type?: unknown
+206:       readonly response?: { readonly usage?: { readonly input_tokens?: unknown; readonly output_tokens?: unknown } | null }
+207:     }
+208:     if (protocol === "responses") {
+209:       if (!responseTerminal(record.type)) continue
+210:       terminal = true
+211:       const responseUsage = record.response?.usage as {
+212:         readonly input_tokens?: unknown
+213:         readonly output_tokens?: unknown
+214:         readonly input_tokens_details?: { readonly cached_tokens?: unknown }
+215:         readonly output_tokens_details?: { readonly reasoning_tokens?: unknown }
+216:       } | null | undefined
+217:       const parsedUsage = responseUsage == null
+218:         ? undefined
+219:         : usageOf(responseUsage.input_tokens, responseUsage.output_tokens, responseUsage.input_tokens_details?.cached_tokens, responseUsage.output_tokens_details?.reasoning_tokens)
+220:       if (parsedUsage === "invalid") {
+221:         invalid = true
+222:         usage = undefined
+223:       } else {
+224:         usage = parsedUsage
+225:       }
+226:       break
+227:     }
+228:     const parsedUsage = record.usage == null
+229:       ? undefined
+230:       : usageOf(record.usage.prompt_tokens, record.usage.completion_tokens, record.usage.prompt_tokens_details?.cached_tokens, record.usage.completion_tokens_details?.reasoning_tokens)
+231:     if (!terminal) {
+232:       if (!chatCloses(record.choices)) continue
+233:       terminal = true
+234:       if (parsedUsage === "invalid") {
+235:         invalid = true
+236:         usage = undefined
+237:         continue
+238:       }
+239:       usage = parsedUsage
+240:       continue
+241:     }
+242:     // A second close is past the finish the consumer already recorded. The trailing usage chunk is not a close.
+243:     if (chatCloses(record.choices) || invalid) break
+244:     if (parsedUsage === undefined) continue
+245:     if (parsedUsage === "invalid") {
+246:       invalid = true
+247:       usage = undefined
+248:       continue
+249:     }
+250:     usage = parsedUsage
+251:   }
+252:   return { terminal, invalid, ...(usage === undefined ? {} : { usage }) }
+253: }
+````
+Linhas 321–370; hash do trecho UTF-8 original `d77275007906d06cdf199c27572c4bd2814b68d38dcd4ef90a8f1eabfbc8e015`.
+````text
+321:     bound,
+322:     ...(prior === undefined ? {} : { prior: prior.attempt }),
+323:   })
+324:   yield* Ref.update(outcomes, (list) => [...list, outcome])
+325:   if (outcome.kind !== "economy-grant") return yield* Effect.fail(new EconomyDispatchRefused(outcome))
+326:   if (!outcome.consumable) return yield* replayOrHold(request, outcome)
+327:   const attemptId = outcome.attempt
+328:   yield* Ref.update(chain, (list) => [...list, { attempt: attemptId, answered: false }])
+329:   const response = yield* submit(request)
+330:   // Observation follows a response, never a mere intention to send (CE-12).
+331:   const forward = yield* recordForward(attemptId)
+332:   if (forward.kind === "economy-hold" || forward.kind === "economy-refusal") {
+333:     return yield* Effect.fail(new EconomyDispatchRefused(forward))
+334:   }
+335:   const text = yield* response.text
+336:   if (text === undefined) return response
+337:   const rebuilt = HttpClientResponse.fromWeb(request, new Response(text, {
+338:     status: response.status,
+339:     headers: { "content-type": "text/event-stream" },
+340:   }))
+341:   yield* Ref.update(chain, (list) => list.map((entry) => entry.attempt === attemptId ? { ...entry, answered: true } : entry))
+342:   const evidence = terminalEvidence(response.status, text)
+343:   if (response.status >= 400) {
+344:     // A gateway error is an observed response, not upstream terminus, and does not free the slot.
+345:     const noted = yield* noteTransportError(attemptId, evidence)
+346:     if (noted.kind === "economy-hold" || noted.kind === "economy-refusal") {
+347:       return yield* Effect.fail(new EconomyDispatchRefused(noted))
+348:     }
+349:     return rebuilt
+350:   }
+351:   const close = readClose(input.protocol, text)
+352:   if (close.invalid) {
+353:     return yield* Effect.fail(new EconomyDispatchRefused({
+354:       kind: "economy-refusal", reason: "usage", evidence: [attemptKey(attemptId), "inconsistent"],
+355:     }))
+356:   }
+357:   if (!close.terminal) return rebuilt
+358:   const terminal = yield* observeTerminal(attemptId, evidence)
+359:   if (terminal.kind === "economy-hold" || terminal.kind === "economy-refusal") {
+360:     return yield* Effect.fail(new EconomyDispatchRefused(terminal))
+361:   }
+362:   if (close.usage !== undefined) {
+363:     const settled = yield* settleAttempt(attemptId, close.usage, evidence)
+364:     if (settled.kind === "economy-hold" || settled.kind === "economy-refusal") {
+365:       return yield* Effect.fail(new EconomyDispatchRefused(settled))
+366:     }
+367:   }
+368:   return rebuilt
+369: })
+370: 
+````
+Linhas 375–399; hash do trecho UTF-8 original `69b0a67603cc2cf03cc0cdc75ea1ef4e5ac4c84ded2bdd05b09dfcecac975b68`.
+````text
+375:   Effect.gen(function* () {
+376:     if (outcome.completionRef === undefined) {
+377:       return yield* Effect.fail(new EconomyDispatchRefused({
+378:         kind: "economy-hold", reason: "response-unavailable", evidence: [outcome.key],
+379:       }))
+380:     }
+381:     const found = yield* lookupAttempt(outcome.attempt)
+382:     if (typeof found === "object" && found !== null && "completionBody" in found && found.completionBody !== undefined) {
+383:       return HttpClientResponse.fromWeb(request, new Response(found.completionBody, {
+384:         status: 200,
+385:         headers: { "content-type": "text/event-stream" },
+386:       }))
+387:     }
+388:     return yield* Effect.fail(new EconomyDispatchRefused({
+389:       kind: "economy-hold", reason: "response-unavailable", evidence: [outcome.completionRef],
+390:     }))
+391:   })
+392: 
+393: /**
+394:  * Per-dispatch admission context: the chain and register live inside the returned object,
+395:  * never in global state (§2.2). `layer` decorates the ambient HttpClient so every send —
+396:  * including each retry executed by `RequestExecutor`'s `retryStatusFailures` — passes
+397:  * through the guard.
+398:  */
+399: export const makeAdmissionGuard = (attempt: EconomyDispatchInput): AttemptContext => {
+````
+
+### E25 — Economia schema: `packages/core/src/economy/sql.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `1e59043d1231ac888116d96c73b2c2671b989abd`; SHA-256 `3b9d5a5c27a6bb66ba8e771c9aebe32c11e699f97f094270b0e16cfa379a3ef4`.
+Linhas 49–75; hash do trecho UTF-8 original `bf530f70f79dda8c4de8a99f20a974d9e8551670805fe437ee9a081c9e457627`.
+````text
+49:     forward_intent: integer().notNull(),
+50:     forward_observed: integer().notNull(),
+51:     terminal: integer(),
+52:     slot_released: integer().notNull(),
+53:     bound_json: text().notNull(),
+54:     // Confirmed usage only; unobserved dimensions stay absent (never fabricated zeros — CE-14).
+55:     usage_json: text(),
+56:     evidence_digest: text(),
+57:     evidence_json: text(),
+58:     // Durable completion reference and the recoverable payload (EA-27). A ref without
+59:     // a payload is not a response the guard may replay.
+60:     completion_ref: text(),
+61:     completion_body: text(),
+62:     // Semantic evaluation outcome, kept apart from physical usage (EA-26).
+63:     semantic: text(),
+64:   },
+65:   (table) => [
+66:     primaryKey({ columns: [table.envelope_id, table.logical_request_id, table.ordinal] }),
+67:     uniqueIndex("economy_attempt_admission_key_idx").on(table.envelope_id, table.admission_key),
+68:     index("economy_attempt_envelope_idx").on(table.envelope_id),
+69:   ],
+70: )
+71: 
+72: export const EconomyLedger = {
+73:   EconomyEnvelopeTable,
+74:   EconomyAttemptTable,
+75: }
+````
+
+### E26 — Economia composição e teste fonte: `packages/core/test/economy/executor.test.ts`
+Baseline `1cde2ff7a71bcf7aecb5d030917b577165135d38`; Git blob `ec84047bc6a2064a35f88d2deac269f119f96bf2`; SHA-256 `f0d09baa7db5530605a7a4c71debca71897938809d9bdc295d081e43d21430e1`.
+Linhas 72–100; hash do trecho UTF-8 original `fe2adf0eba046f04942460ebbd983ab44165ac0e2d9d7973d2effafda1761401`.
+````text
+72: const chain = (
+73:   env: EconomyEnvelope,
+74:   input: { logicalRequestId?: string; route?: string; key?: string },
+75:   responses: ReadonlyArray<Response>,
+76: ): { guard: AttemptContext; hits: Ref.Ref<number>; app: Layer.Layer<unknown> } => {
+77:   const { layer, hits } = synthetic(responses)
+78:   const database = Database.layerFromPath(":memory:")
+79:   const guard = makeAdmissionGuard({
+80:     envelope: env,
+81:     logical: {
+82:       logicalRequestId: input.logicalRequestId ?? "req-1",
+83:       stage: "prod",
+84:       snapshot: `${input.key ?? "sha-1"}-snapshot`,
+85:     },
+86:     key: input.key ?? "k-chain",
+87:     route: input.route ?? "http",
+88:     protocol: "openai-chat",
+89:   })
+90:   // The guard's layer builder captures Database.Service at build; give it the same fixture
+91:   // database branch-merge, shared across the guard and the app wiring (one layer object →
+92:   // one layer build → one in-memory database).
+93:   const guarded = Layer.provide(guard.layer, Layer.mergeAll(layer, database))
+94:   const executor = RequestExecutor.layer.pipe(Layer.provide(guarded))
+95:   const app = Layer.mergeAll(
+96:     executor,
+97:     LLMClient.layer.pipe(Layer.provide(executor)),
+98:     database,
+99:   ) as Layer.Layer<unknown>
+100:   return { guard, hits, app }
+````
+Linhas 221–245; hash do trecho UTF-8 original `83228eee49465bfe8b7441e715dc303215cd1be9d0d3a4b0903a4c23425a351f`.
+````text
+221:   test("EA-08 status retry reserves every attempt inside the executor frontier", async () => {
+222:     const env = envelope({ attempts: 5, outputTokens: 100, inFlight: 5 })
+223:     const retrying = { ...env, retryPolicy: { maxRetries: 1, statuses: [503] } }
+224:     const busy = new Response("busy", { status: 503 })
+225:     const { guard, hits, app } = chain(retrying, { key: "k-retry" }, [busy, SUCCESS()])
+226:     const observed = await Effect.runPromise(Effect.gen(function* () {
+227:       yield* seedEnvelope(retrying)
+228:       const response = yield* LLMClient.generate(LLM.request({
+229:         model: model(),
+230:         prompt: "Say hello.",
+231:         generation: { maxTokens: 4 },
+232:       }))
+233:       const attempts = yield* guard.attempts
+234:       const first = yield* lookupAttempt(attempts[0]!)
+235:       const second = yield* lookupAttempt(attempts[1]!)
+236:       return { attempts, hits: hitsOf(hits), response, first, second }
+237:     }).pipe(Effect.provide(app)))
+238:     expect(observed.hits).toBe(2)
+239:     expect(observed.attempts).toHaveLength(2)
+240:     expect(observed.response.usage).toMatchObject({ inputTokens: 3, outputTokens: 2 })
+241:     expect(observed.first).toMatchObject({ state: "reserved" })
+242:     expect(observed.first).not.toHaveProperty("usage")
+243:     expect(observed.second).toMatchObject({ state: "settled", usage: { inputTokens: 3, outputTokens: 2 } })
+244:   })
+245: })
+````
+
+
+Continua; aguarde FIM C01.

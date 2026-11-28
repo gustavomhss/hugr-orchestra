@@ -1,0 +1,22 @@
+{
+  "id": "provider",
+  "path": "packages/core/src/provider.ts",
+  "start_line": 1,
+  "end_line": 25,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "export * as ProviderV2 from \"./provider\"\n\nimport { Types } from \"effect\"\nimport { Provider } from \"@orchestra/schema/provider\"\n\nexport const ID = Provider.ID\nexport type ID = typeof ID.Type\n\nexport const AISDK = Provider.AISDK\n\nexport const Native = Provider.Native\n\nexport const Api = Provider.Api\nexport type Api = Provider.Api\nexport type MutableApi<T extends Api = Api> = T extends Api\n  ? Omit<Types.DeepMutable<T>, \"settings\"> & (undefined extends T[\"settings\"] ? { settings?: any } : { settings: any })\n  : never\n\nexport const Request = Provider.Request\nexport type Request = Provider.Request\n\nexport const Info = Provider.Info\nexport type Info = Provider.Info\n\nexport type MutableInfo = Omit<Types.DeepMutable<Info>, \"api\"> & { api: MutableApi }",
+      "encoding": "utf-8",
+      "sha": "56a8629db307e3d904c355789db9e5b8256e644f",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/provider.ts",
+      "display_title": "provider.ts"
+    },
+    "isError": false
+  }
+}

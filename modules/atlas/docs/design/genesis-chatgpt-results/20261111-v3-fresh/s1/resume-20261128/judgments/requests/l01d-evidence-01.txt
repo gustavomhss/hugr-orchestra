@@ -1,0 +1,134 @@
+L01D — base aceita e fontes decisivas, mesmo candidato.
+
+PREDECESSOR ACEITO — só contexto; nenhum novo julgamento.
+{
+  "key": "s1.runtime.guides_intent.l1",
+  "body_identity": {
+    "byte_length": 3362,
+    "sha256": "22303bf38d880468d845ec54732c2138f293243058d8cf8f1c6b9152c2587488"
+  },
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "acceptance_basis": "Accepted bounded C L1 supplied by the principal; exact inherited reviews preserved, no new approval",
+  "authority": {
+    "scope": "orchestra.s1",
+    "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+  },
+  "validity": "supported",
+  "retained_gaps": [
+    "Host implementation of guide claims was not read in this unit.",
+    "Config unknown-key behavior differs in documentary/schema surfaces and needs decoder evidence."
+  ]
+}
+BEGIN EXACT ACCEPTED PREDECESSOR BODY
+# User-guide intent and the limits of documentary evidence
+
+**L1 authority:** the thirteen assigned `docs/guides` documents, read at the baseline. These are product explanations and operational intent. They are not independently established Core, server or UI execution facts in this unit. Excerpts C11 and C40–C44 preserve important boundaries.
+
+| Guide group | Documented contract or operator distinction |
+| --- | --- |
+| Models, Claude mode, limits | The guide separates model-layer protocols from session-core routes. Claude Code is described as a one-turn execution host with Orchestra retaining its outer orchestration; billing refusals are passed through without retries. Listed limitations are documentary scope, not test results. |
+| Permissions | Deny rejects waiting requests for the session; allow-once and always have different persistence/scope. Auto-accept is client session state and resolves allow-once requests, rather than writing saved project rules. |
+| Project trust and MCP/CLI failures | Project local MCP commands, code plugins, formatter and LSP config need trust. Remote MCP and global config differ. Only global `trusted_projects` counts, and a project cannot approve itself. Startup/status failures and headless prompt handling are documented separately. |
+| Credentials and integrations | Credentials guide describes encrypted local credential storage and key-file fallback; integration guide separates account/target/session binding, connection from catalog visibility, and local disconnect from upstream revocation. These are not claims that credentials were inspected. |
+| Database backups | Guide documents pre-migration backup, retention, refusal on backup failure or a newer database, and quit-before-restore procedure. Generic adapter code alone does not prove these Core policies. |
+| Hooks and plugins | Hook draft, publication and project installation are separate states. The plugins guide describes model behavior instructions and visible application state, distinct from the code plugin package. |
+| Tools and config errors | Tool availability, permission and tool-safety boundaries are described. Config errors distinguish parse/schema failures; the guide says unknown extra keys are ignored. |
+
+Source-to-claim mapping is explicit in `coverage.json`; each guide remains its own pinned source record. Exact sampled excerpts show protocol routing (C11), global trust and refusal (C40), permission persistence (C41), backup intent (C42), credential intent (C43), and behavior plugins (C44). Other guide content is captured in full and attributed as documentary intent.
+
+**Boundary and gaps.** None of these instructions was executed: no database restore, project trust change, credential read, permission reply, integration connection or paid Claude call took place. The implementation of these host-level policies belongs to other S1 production areas or other owners and needs its own evidence. A guide's recommendation, historical limitation or claim that a migration landed is not a substitute for that evidence. In particular, current config schema objects declare `additionalProperties: false`, while the config-error guide describes ignoring unknown keys; the runtime decoder/publisher relationship is unresolved here and should not be collapsed into either a runtime rejection guarantee or a defect assertion.
+END EXACT ACCEPTED PREDECESSOR BODY
+
+PREDECESSOR ACEITO — só contexto; nenhum novo julgamento.
+{
+  "key": "s1.runtime.maintenance_intent.l1",
+  "body_identity": {
+    "byte_length": 3852,
+    "sha256": "98d6626bcf2ae923fb8a905cef874bc3e086a42a71abc129a2e9471c0864bcb8"
+  },
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "acceptance_basis": "Accepted bounded C L1 supplied by the principal; exact inherited reviews preserved, no new approval",
+  "authority": {
+    "scope": "orchestra.s1",
+    "basis": "Pinned source implementation where identified; documentation is attributed intent only. Coverage explicitly distinguishes semantic, selected, structural and metadata-only depth. No host or runtime acceptance is implied."
+  },
+  "validity": "supported",
+  "retained_gaps": [
+    "Historical acceptance commands and completed labels are not current execution evidence.",
+    "Generated schema publisher and Core migration implementation are outside this source subset.",
+    "No L2–L4, semantic verdict or Atlas runtime object is produced here."
+  ]
+}
+BEGIN EXACT ACCEPTED PREDECESSOR BODY
+# Maintenance instructions, historical plans and generated configuration
+
+**L1 authority:** four assigned repository skills, six historical phase cards, three storage/database specs, generated config schema and package support files. Their content has been classified by purpose and date/authority rather than promoted uniformly to current runtime behavior. Excerpts C45–C49 support the distinctions.
+
+The Claude Code/Claude mode maintenance skills name execution-host ownership, governed skill loading, tool gates, context updates and billing refusal rules. The permission usage skill distinguishes UI replies, saved project rules and client auto-accept. The Effect skill supplies coding/research patterns. These are maintenance instructions and source pointers: following a pointer requires reading its implementation before asserting a host invariant. Root and package AGENTS plus bunfig files require tests through GitHub Actions; older skills/spec command examples do not authorize local product tests in this task. Source: `.orchestra/skills/*/SKILL.md`, captured root `AGENTS.md`, package AGENTS/bunfig (C45).
+
+The six `70-90-briefs` cards are mechanical plans tied to older baseline `7181942eaa733b9cc3f4ff6aef79231d0d1c2f93`, with historical branch/worktree paths and proposed acceptance commands. They identify migration intent for plugin facade/runtime, ACP, Claude host, database and Node SQLite. Their old absolute paths and commands are source data, not instructions executed by this producer. Source: `docs/architecture/phase-plans/70-90-briefs/{FAC-PLUGIN,RD-ACP,RD-CLAUDE,RD-DATABASE,RD-PLUGIN,RN-SQLITE}.md` (C46).
+
+The Effect SQLite package spec separates generic adapter ownership from application transaction context and after-commit hooks. The legacy database-removal spec reports its groups complete/superseded but retains descriptions of former inventory and usages. Those inventory counts must not be repeated as a current import census. The integrity follow-up explicitly marks deferred foreign-key work and explains why projection/replay and scheduled-task preallocated IDs complicate immediate constraints. Its report that indexes landed is documentary evidence; the named Core migration was not independently read in this unit. Source: `docs/specs/storage/*.md`, `docs/specs/database/integrity-followups.md` (C47–C48).
+
+`schema/config.json` is a draft-2020-12 document rooted at `$defs/Config.Info`, with comment/trailing-comma hints. The captured schema uses plural `agents`, `plugins`, `providers` and `permissions`; a plugin entry requires `package` and optional options. It defines local/remote MCP alternatives and describes `trusted_projects` as global-only. Many config objects, including the root, have `additionalProperties: false`. These are schema bytes, not proof of decoder behavior or successful regeneration. Source: `schema/config.json` (C49), structured schema inspection in `config-schema-scan.json`.
+
+Package manifests and tsconfig/bunfig files establish declared exports, dependencies and commands. They do not establish successful installation, compilation or tests. Examples and recording scripts are support material; scripts that touch credentials or make network calls were not executed. Generated README contract sections and copied Drizzle query support retain their original bytes and lower review depth where appropriate.
+
+**Boundary and gaps.** The current LLM design draft and V2 plugin plan contain proposed APIs beyond shipped declarations. They remain intention, with current code governing this L1 record. Source capture, classification coverage and hash checks do not imply semantic acceptance of every support file. No L2–L4 synthesis, two-judge verdict, Atlas import, runtime input observation, CAS artifact, manifest publication or consumer pass is manufactured by these files.
+END EXACT ACCEPTED PREDECESSOR BODY
+
+PREDECESSOR ACEITO — só contexto; nenhum novo julgamento.
+{
+  "key": "s1.core.configuration",
+  "body_identity": {
+    "byte_length": 4414,
+    "sha256": "eed22f8ddd9f3fdad18b39cfb8e52ca5f412bad8b21de10fef58ce113ba60ab1"
+  },
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "acceptance_basis": "ACCEPTED_BY_SAME_NATIVE_PAIR in exact acceptance index",
+  "authority": {
+    "scope": "orchestra.s1",
+    "basis": "Pinned repository implementation and explicitly distinguished repository normative documentation; source inspection only. No product execution or test result is asserted."
+  },
+  "validity": "supported",
+  "retained_gaps": [
+    "Project configuration remains an open-time snapshot while globals refresh per entries call.",
+    "Legacy upgrade helpers and consumer-specific policies are not exhaustively inspected.",
+    "No Location eviction/reload or trust transition was executed."
+  ]
+}
+BEGIN EXACT ACCEPTED PREDECESSOR BODY
+# Configuration precedence, trust and Location service lifetime
+
+Layer: **L1 — pinned factual basis**. Need: `component`. Scope: `orchestra.s1`.
+Source revision: `1cde2ff7a71bcf7aecb5d030917b577165135d38`.
+
+## Observed implementation
+
+Config is a Location service returning ordered documents and supplemental directories. It materializes required packaged skills before recoverable plugin boot. It reads `orchestra.json` then `orchestra.jsonc`, supports JSON comments/trailing commas, validates either current format or a migrated legacy format, and ignores excess properties through explicit decode options. Remote instruction URLs are rejected. General settings apply global documents, direct project files, then `.orchestra` files; nearer project configuration wins within discovered ordering. Experimental policies are loaded in the reverse document order so a global-user rule can override repository policy. [1]
+
+Project configuration is snapshotted when the Location opens. `entries()` rereads global documents and reloads policies so user settings changes can reach the next agent/catalog reload without reopening; it does not rediscover/reload every project file. Treating all config as live would be incorrect. The schema includes agents, providers, permissions, tools/output, attachments, MCP, references, instructions, plugins, compaction/continuity, Relay, research and Maestro static context settings, but the presence of a field is not proof of every consumer's behavior. [1]
+
+`ConfigTrust` distinguishes user-owned entries under the global configuration folder (or pathless documents) from repository entries. Only user-owned `trusted_projects` entries establish trust. `runnable` includes repository-declared commands only for a trusted directory; a project cannot trust itself. Approval canonicalizes an existing absolute directory and refuses a filesystem root. Revocation removes the folder's own entry; a trusted parent can continue to cover it. Trust is a command-admission boundary and does not replace tool permissions. [2]
+
+`buildLocationServiceMap` compiles a Location graph with supplied replacements and extra nodes, binds the concrete Location, and hoists global dependencies. It substitutes native ToolRegistry nodes, applies `Layer.fresh`, and caches with a 60-minute idle time to live. Relay hook recovery starts only after the entire Location graph succeeds and is scoped to that Location. `withGlobalContext` delays lazy acquisition until the completed application's global exports are available. [3,4]
+
+The default graph contains configuration, agent/catalog/provider support, plugins, filesystem and mutation, tools, permissions, questions, MCP/LSP/formatting, runner/model, context, snapshots, project-copy and product-facing adapters. Membership is useful dependency evidence; it is not proof that every integration is connected or has valid credentials. Session execution remains process-global and chooses the Location only when it drains a stored Session. [3]
+
+## Normative intent and limits
+
+The V2 config document is a field-review/decision record with pending/keep/remove/redesign labels, not a complete description of actual loading. The schema and loader are implementation authority for this pin. Old-format migration helpers are compatibility source and require source-specific examination before changing mappings; they must not be dismissed as unused generated files. [1,5]
+
+No config reload, trust transition or Location eviction was run. This L1 proves the visible ordering/lifetime code and identifies its boundary; OS paths, policy consumers and legacy-upgrade cases remain targeted follow-up reads before corresponding mutations.
+
+## Source anchors
+
+- **1.** `packages/core/src/config.ts:52985a1dfc3575efca662dcb0667d81a1ab6f1de` — Info and Location loader, lines 35–110,147–268.
+- **2.** `packages/core/src/config/trust.ts:a8b068f1fdb5c01e59ad43c56b9e6241ec3dfc78` — isUser, isTrusted, runnable, approve and revoke, lines 8–81.
+- **3.** `packages/core/src/location-services.ts:c754426dde31acad2dbbfd96459b32624cfdd2e4` — locationServices and buildLocationServiceMap, lines 58–171.
+- **4.** `packages/core/src/location-service-map.ts:2f9f70c7edf21ab9e8d57eb6966aacab13c47c33` — withGlobalContext, lines 18–43.
+- **5.** `docs/specs/v2/config.md:81353980473012b1b3d311f0a638e3d65ba8cbcd` — review labels and scope, lines 1–18,382–390.
+END EXACT ACCEPTED PREDECESSOR BODY
+
+
+Continua; aguarde FIM L01D.

@@ -1,0 +1,75 @@
+{
+  "schema": "genesis-selected-version-change/v1",
+  "key": "s1.core.models",
+  "old_body": {
+    "path": "resume-20261128/selected/bodies/s1.core.models.md",
+    "encoding": "utf-8",
+    "byte_length": 3987,
+    "sha256": "4af060adbf07f6e7e759bd8574793155c5676fd87fbef77125c70cc618ffdcfe"
+  },
+  "body": {
+    "path": "resume-20261128/producers/models-v2/body.md",
+    "encoding": "utf-8",
+    "byte_length": 4200,
+    "sha256": "5a789d39a00798ca0f99384f38315b58a1bbe7dbe0e0d3f9366104a1d0b98091"
+  },
+  "old_production_refs": {
+    "recipe_ref": {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/recipe.json",
+      "sha256": "79c21a0eb94bf9eb6927984134592a688d3b028c2213e5552bb1017ae50bd8fb"
+    },
+    "producer_request_ref": {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/request.txt",
+      "sha256": "5ade453a557acd559e6796cab8f6ed42d5141ddf668d3c6f06169e7ce8840d7d"
+    },
+    "producer_response_ref": {
+      "commit": "a8df22ae3a140c58c63f62ce2a634c84f415c943",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/producers/a/response.md",
+      "sha256": "79a01b28b5df5d99a60f8dfd5af2b223671aec009ec9e77ae755cf38096ff12d"
+    }
+  },
+  "new_production_refs": {
+    "recipe_ref": {
+      "commit": "f314e0db7a6eff590e267e6ec72dbbf1027ae17a",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/models-v2/recipe.json",
+      "sha256": "75a09ccbc7851bbbaaf8f90c4407f638fc411ca97eb3de0744024fc4469c6757"
+    },
+    "producer_request_ref": {
+      "commit": "f314e0db7a6eff590e267e6ec72dbbf1027ae17a",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/models-v2/request.txt",
+      "sha256": "d4557ed54fe0533b11e5591ec839f933bd1cee62441ebacb07151d497fa7aea5"
+    },
+    "producer_response_ref": {
+      "commit": "f314e0db7a6eff590e267e6ec72dbbf1027ae17a",
+      "path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/producers/models-v2/response.md",
+      "sha256": "a828501143de091c807b674bc42dbfbee258a86206066a4b21203bdcb75b31da"
+    }
+  },
+  "additional_validation_inputs": [
+    {
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/state.ts",
+        "git_blob_sha": "116e268bb9edf045985e1598a4e1a3ed1d410872",
+        "sha256": "237de5f76069595f50c7e7049dc72fe295a6b0ecaa615d849ef5b67ecd9f4189"
+      },
+      "byte_length": 4662,
+      "role": "validation support for existing State ordering and inherited subagent policy claims; not represented as a new producer read",
+      "wrapper_payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/evidence/models-full-state.json"
+    },
+    {
+      "source_ref": {
+        "commit": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+        "path": "packages/core/src/session/subagent-models.ts",
+        "git_blob_sha": "18c24ee3248a7f3de398077d44c4282e80214041",
+        "sha256": "d4a93874cee96eeb2c396f7588ab7b126d7643b41b8571ab762d28e6c86aaeba"
+      },
+      "byte_length": 10256,
+      "role": "validation support for existing State ordering and inherited subagent policy claims; not represented as a new producer read",
+      "wrapper_payload_path": "modules/atlas/docs/design/genesis-chatgpt-results/20261111-v3-fresh/s1/resume-20261128/judgments/evidence/models-full-subagent-models.json"
+    }
+  ],
+  "semantic_state": "Exact version receives explicit pair decisions through decision-index and sync_reviews.py; metadata does not fabricate binding."
+}

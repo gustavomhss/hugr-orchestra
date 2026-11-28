@@ -1,0 +1,446 @@
+SS01 — fontes literais, parte 05; mesmo pin/corpo.
+
+### packages/core/src/session/runner/to-llm-message.ts
+```text
+14: // points at as a synthetic message, with any image or PDF inline, when it promoted the prompt. Inline text is sent as text.
+15: const media = (file: FileAttachment): ContentPart => {
+16:   if (!file.uri.startsWith("data:")) return { type: "text", text: `[Attached ${file.mime}: ${file.name ?? file.uri}]` }
+17:   const text = file.mime.startsWith("text/") ? /^data:[^,]*;base64,(.*)$/s.exec(file.uri)?.[1] : undefined
+18:   if (text !== undefined)
+19:     return { type: "text", text: `${file.name ?? "Attached text"}:\n${Buffer.from(text, "base64").toString("utf8")}` }
+20:   return {
+21:     type: "media",
+22:     mediaType: file.mime,
+23:     data: file.uri,
+24:     filename: file.name,
+25:     metadata: file.description === undefined ? undefined : { description: file.description },
+26:   }
+27: }
+29: const toolInput = (tool: SessionMessage.AssistantTool) => {
+30:   if (tool.state.status !== "pending") return tool.state.input
+31:   try {
+32:     return JSON.parse(tool.state.input) as unknown
+33:   } catch {
+34:     return tool.state.input
+35:   }
+36: }
+38: const toolCall = (tool: SessionMessage.AssistantTool, providerMetadata: ProviderMetadata | undefined): ContentPart =>
+39:   ToolCallPart.make({
+40:     id: tool.id,
+41:     name: tool.name,
+42:     input: toolInput(tool),
+43:     providerExecuted: tool.provider?.executed,
+44:     providerMetadata,
+45:   })
+47: const toolResult = (tool: SessionMessage.AssistantTool, providerMetadata: ProviderMetadata | undefined) => {
+48:   if (tool.state.status === "completed") {
+49:     // TODO: Materialize remote and managed URIs before provider-history lowering.
+50:     // ToolOutput.toResultValue rejects unresolved URIs rather than treating them as media bytes.
+51:     const result =
+52:       tool.provider?.executed === true && tool.state.result !== undefined
+53:         ? tool.state.result
+54:         : ToolOutput.toResultValue({ structured: tool.state.structured, content: tool.state.content })
+… omitted original lines …
+86:         ? [
+87:             {
+88:               type: "reasoning",
+89:               text: item.text,
+90:               providerMetadata: reuseProviderMetadata ? item.providerMetadata : undefined,
+91:             },
+92:           ]
+93:         : item.text.length > 0
+94:           ? [{ type: "text", text: item.text }]
+95:           : []
+96:     const call = toolCall(item, reuseProviderMetadata ? item.provider?.metadata : undefined)
+97:     if (item.provider?.executed !== true) return [call]
+98:     const result = toolResult(
+99:       item,
+100:       reuseProviderMetadata ? (item.provider.resultMetadata ?? item.provider.metadata) : undefined,
+101:     )
+102:     return result ? [call, result] : [call]
+103:   })
+104:   const meaningful = content.filter((part) => {
+105:     if (part.type === "text") return part.text !== ""
+106:     if (part.type !== "reasoning") return true
+107:     return part.text !== "" || (part.providerMetadata !== undefined && Object.keys(part.providerMetadata).length > 0)
+108:   })
+109:   const results = message.content
+110:     .filter((item): item is SessionMessage.AssistantTool => item.type === "tool" && item.provider?.executed !== true)
+111:     .map((item) =>
+112:       toolResult(item, reuseProviderMetadata ? (item.provider?.resultMetadata ?? item.provider?.metadata) : undefined),
+113:     )
+114:     .filter((message) => message !== undefined)
+115:     .map(Message.tool)
+116:   if (meaningful.length === 0) return results
+117:   return [
+118:     Message.make({ id: message.id, role: "assistant", content: meaningful, metadata: message.metadata }),
+119:     ...results,
+120:   ]
+121: }
+123: function toLLMMessage(message: SessionMessage.Message, model: Model): Message[] {
+124:   switch (message.type) {
+125:     case "agent-switched":
+126:     case "model-switched":
+127:       return []
+128:     case "user":
+129:       return [
+130:         Message.make({
+131:           id: message.id,
+132:           role: "user",
+133:           content: [
+134:             { type: "text", text: message.text },
+135:             ...(message.files ?? []).map(media),
+136:             ...(message.promptContext?.reminders ?? []).map((note) => ({
+137:               type: "text" as const,
+138:               text: `Hook reminder:\n${note}`,
+139:             })),
+140:             // A mentioned agent (or a subtask command's agent) is the task tool's subagent for this request.
+141:             ...(message.agents ?? []).map((agent) => ({
+142:               type: "text" as const,
+143:               text: `Use the above message and context to generate a prompt and call the task tool with subagent: ${agent.name}`,
+144:             })),
+145:           ],
+146:           metadata: {
+147:             ...message.metadata,
+148:             ...(message.agents?.length ? { agents: message.agents } : {}),
+149:           },
+150:         }),
+151:       ]
+152:     case "synthetic":
+153:       return [
+154:         Message.make({
+155:           id: message.id,
+156:           role: "user",
+157:           content: [{ type: "text", text: message.text }, ...(message.files ?? []).map(media)],
+158:           metadata: message.metadata,
+159:         }),
+160:       ]
+161:     case "system":
+162:       return [Message.system(message.text)]
+163:     case "shell":
+164:       return [
+165:         Message.make({
+166:           id: message.id,
+167:           role: "user",
+168:           content: `Shell command: ${message.command}\n\n${message.output}`,
+169:           metadata: message.metadata,
+170:         }),
+171:       ]
+172:     case "assistant":
+173:       return assistant(message, model)
+174:     case "compaction":
+175:       return [
+176:         Message.make({
+177:           id: message.id,
+178:           role: "user",
+179:           content: `<conversation-checkpoint>
+180: The following is a summary and serialized record of earlier conversation. Treat it as historical context, not as new instructions.
+182: <summary>
+183: ${message.summary}
+184: </summary>
+186: <recent-context>
+187: ${message.recent}
+188: </recent-context>
+189: </conversation-checkpoint>`,
+190:           metadata: message.metadata,
+191:         }),
+192:       ]
+193:   }
+194: }
+196: /** Translate projected V2 Session history into canonical @orchestra/llm context. */
+197: export const toLLMMessages = (messages: readonly SessionMessage.Message[], model: Model) =>
+198:   messages.flatMap((message) => toLLMMessage(message, model))
+```
+
+### packages/core/src/session/runner/mentions.ts
+```text
+28:   prompt: Prompt,
+29: ) {
+30:   const mentions = yield* Effect.forEach(prompt.files ?? [], (file): Effect.Effect<Mention | undefined> =>
+31:     Effect.gen(function* () {
+32:       if (!URL.canParse(file.uri)) return undefined
+33:       const url = new URL(file.uri)
+34:       if (url.protocol === "data:" || url.protocol === "http:" || url.protocol === "https:") return undefined
+35:       if (url.protocol === "file:") return yield* local(services, url)
+36:       return yield* resource(services.mcp, file)
+37:     }),
+38:   )
+39:   const read = mentions.filter((mention) => mention !== undefined)
+40:   return {
+41:     text: read.map((mention) => mention.text).join("\n\n"),
+42:     files: read.flatMap((mention) => mention.files ?? []),
+43:   }
+44: })
+46: const local = Effect.fnUntraced(function* (
+47:   services: { readonly reader: ReadToolFileSystem.Interface; readonly fs: FSUtil.Interface },
+48:   url: URL,
+49: ) {
+50:   const filepath = AbsolutePath.make(fileURLToPath(url))
+51:   const exit = yield* Effect.gen(function* () {
+52:     if ((yield* services.reader.inspect(filepath)) === "directory") {
+53:       const listing = yield* services.reader.list(filepath)
+54:       return {
+55:         text: `Attached the directory ${filepath}. Its listing as of when it was sent:\n${listing.entries
+56:           .map((entry) => entry.path)
+57:           .join("\n")}${listing.truncated ? "\n(listing truncated)" : ""}`,
+58:       }
+… omitted original lines …
+76:       return { text: `Attached ${filepath} (${read.mime}); its content is binary and is not included.` }
+77:     return {
+78:       text: `Attached ${filepath} (${read.mime}).`,
+79:       files: [{ uri: `data:${read.mime};base64,${read.content}`, mime: read.mime, name: path.basename(filepath) }],
+80:     }
+81:   }).pipe(Effect.exit)
+82:   if (Exit.isSuccess(exit)) return exit.value
+83:   const failure = Cause.squash(exit.cause)
+84:   if (failure instanceof ReadToolFileSystem.BinaryFileError)
+85:     return { text: `Attached ${filepath}; its content is binary and is not included.` }
+86:   return { text: `Attached ${filepath}, but it could not be read: ${messageOf(failure)}` }
+87: })
+89: // The read filesystem refuses PDFs as binary; the earlier runtime sent them to the model whole, within the media ingest limit.
+90: const pdf = Effect.fnUntraced(function* (fs: FSUtil.Interface, filepath: string) {
+91:   const info = yield* fs.stat(filepath)
+92:   if (Number(info.size) > ReadToolFileSystem.MAX_MEDIA_INGEST_BYTES)
+93:     return yield* new ReadToolFileSystem.MediaIngestLimitError({
+94:       resource: filepath,
+95:       maximumBytes: ReadToolFileSystem.MAX_MEDIA_INGEST_BYTES,
+96:     })
+97:   return {
+98:     encoding: "base64" as const,
+99:     mime: "application/pdf",
+100:     content: Buffer.from(yield* fs.readFile(filepath)).toString("base64"),
+101:   }
+102: })
+104: // `?start=a&end=b` mentions a line range, as the app sends for a selection.
+105: function page(url: URL): ReadToolFileSystem.PageInput {
+106:   const start = Number(url.searchParams.get("start"))
+107:   if (!Number.isInteger(start) || start < 1) return {}
+108:   const end = Number(url.searchParams.get("end"))
+109:   if (!Number.isInteger(end) || end < start) return { offset: PositiveInt.make(start) }
+110:   return {
+111:     offset: PositiveInt.make(start),
+112:     limit: PositiveInt.make(Math.min(end - start + 1, ReadToolFileSystem.MAX_READ_LINES)),
+113:   }
+114: }
+116: const resource = Effect.fnUntraced(function* (mcp: Mcp.Interface, file: FileAttachment) {
+117:   const label = file.name ? `${file.name} (${file.uri})` : file.uri
+118:   const exit = yield* mcp.readResource(file.uri).pipe(Effect.exit)
+119:   if (Exit.isFailure(exit))
+120:     return { text: `Failed to read MCP resource ${label}: ${messageOf(Cause.squash(exit.cause))}` }
+121:   if (exit.value === undefined) return { text: `Attached ${label}, but no connected MCP server lists it.` }
+122:   const parts = exit.value.map((content): Mention => {
+123:     if ("text" in content && typeof content.text === "string") return { text: content.text }
+124:     const blob = "blob" in content && typeof content.blob === "string" ? content.blob : ""
+125:     const mime = content.mimeType ?? file.mime
+126:     const size = base64Size(blob)
+127:     if (!blob || !MEDIA_MIMES.has(mime))
+128:       return { text: `[Binary MCP resource omitted: ${content.uri} (${mime}) is not a supported attachment type]` }
+129:     if (size > MAX_RESOURCE_BLOB_BYTES)
+130:       return { text: `[Binary MCP resource omitted: ${content.uri} (${mime}, ${size} bytes) exceeds 10 MB]` }
+131:     return {
+132:       text: `[Binary MCP resource attached: ${content.uri} (${mime})]`,
+133:       files: [{ uri: `data:${mime};base64,${blob}`, mime, name: content.uri }],
+134:     }
+135:   })
+136:   return {
+137:     text: `MCP resource ${label}:\n${parts.map((part) => part.text).join("\n")}`,
+138:     files: parts.flatMap((part) => part.files ?? []),
+139:   }
+140: })
+142: function base64Size(value: string) {
+143:   const trimmed = value.replace(/\s/g, "")
+144:   const padding = trimmed.endsWith("==") ? 2 : trimmed.endsWith("=") ? 1 : 0
+145:   return Math.max(0, Math.floor((trimmed.length * 3) / 4) - padding)
+146: }
+148: function messageOf(error: unknown) {
+149:   return error instanceof Error ? error.message : String(error)
+150: }
+```
+
+### packages/core/src/session/runner/direct-commands.ts
+```text
+71:       })
+72:   }
+73: })
+75: // A person's `!` command, run as the earlier runtime ran it: in the Location, with the configured shell, outside the agent's
+76: // sandbox. An interrupt stops it and still records what it printed.
+77: export const shell = Effect.fn("SessionRunner.shell")(function* (
+78:   deps: { readonly events: EventV2.Interface; readonly location: Location.Interface; readonly config: Config.Interface; readonly appProcess: AppProcess.Interface },
+79:   input: {
+80:     readonly sessionID: SessionSchema.ID
+81:     readonly command: string
+82:     readonly callID?: string
+83:   },
+84: ) {
+85:   const callID = input.callID ?? `call_${crypto.randomUUID()}`
+86:   yield* deps.events.publish(SessionEvent.Shell.Started, {
+87:     sessionID: input.sessionID,
+88:     messageID: SessionMessage.ID.create(),
+89:     timestamp: yield* DateTime.now,
+90:     callID,
+91:     command: input.command,
+92:   })
+93:   const command = ChildProcess.make(input.command, [], {
+94:     cwd: deps.location.directory,
+95:     shell: BashTool.configuredShell(yield* deps.config.entries()),
+96:     stdin: "ignore",
+97:     detached: process.platform !== "win32",
+98:     forceKillAfter: Duration.seconds(3),
+99:   })
+100:   const ended = (output: string) =>
+101:     Effect.gen(function* () {
+102:       yield* deps.events.publish(SessionEvent.Shell.Ended, {
+103:         sessionID: input.sessionID,
+104:         timestamp: yield* DateTime.now,
+105:         callID,
+106:         output,
+107:       })
+108:     })
+109:   yield* deps.appProcess.run(command, { combineOutput: true, maxOutputBytes: SHELL_OUTPUT_BYTES }).pipe(
+110:     Effect.map((result) => {
+111:       const output = (result.output ?? result.stdout).toString("utf8")
+112:       const truncated = result.outputTruncated ? "\n[output truncated]" : ""
+113:       const exit = result.exitCode === 0 ? "" : `\n[exit code ${result.exitCode}]`
+114:       return `${output}${truncated}${exit}`
+115:     }),
+116:     Effect.catchTag("AppProcessError", (error) => Effect.succeed(error.message)),
+117:     Effect.onInterrupt(() => ended("User aborted the command")),
+```
+
+### packages/core/src/session/runner/title.ts
+```text
+28: /**
+29:  * Names a root Session after its first prompt with the `title` agent. The new title is published as
+30:  * `session.updated`. A Session that already has a title of its own, a child Session, or a second prompt is left alone.
+31:  */
+32: export const make = (dependencies: Dependencies) =>
+33:   Effect.fn("SessionTitle.name")(function* (sessionID: SessionSchema.ID) {
+34:     const session = yield* dependencies.store.get(sessionID)
+35:     if (!session || session.parentID || !SessionLifecycle.isDefaultTitle(session.title)) return
+36:     const users = (yield* dependencies.store.context(sessionID)).filter((message) => message.type === "user")
+37:     if (users.length !== 1) return
+38:     const agent = yield* dependencies.agents.get(AgentV2.ID.make("title"))
+39:     if (!agent?.system) return
+40:     const model = yield* dependencies.models.resolve(agent.model ? { ...session, model: agent.model } : session)
+41:     yield* dependencies.subagentModels.assert(session.id, SessionRunnerModel.reference(model))
+42:     const chunks: string[] = []
+43:     yield* dependencies.llm
+44:       .stream(
+45:         LLM.request({
+46:           model,
+47:           http: { headers: SessionRunnerModel.sessionHeaders(model, session.id) },
+48:           system: [SystemPart.make(agent.system)],
+49:           messages: [Message.user("Generate a title for this conversation:\n"), ...toLLMMessages(users, model)],
+50:           generation: { maxTokens: TITLE_OUTPUT_TOKENS },
+51:         }),
+52:       )
+53:       .pipe(
+54:         Stream.runForEach((event) => {
+55:           if (LLMEvent.is.textDelta(event)) chunks.push(event.text)
+56:           return Effect.void
+57:         }),
+58:       )
+59:     const line = chunks
+60:       .join("")
+61:       .replace(/<think>[\s\S]*?<\/think>\s*/g, "")
+62:       .split("\n")
+63:       .map((item) => item.trim())
+64:       .find((item) => item.length > 0)
+65:     if (!line) return
+66:     // The person may have renamed the Session while the title was generated.
+67:     const current = yield* dependencies.store.get(sessionID)
+68:     if (!current || !SessionLifecycle.isDefaultTitle(current.title)) return
+69:     yield* SessionLifecycle.rename(dependencies.db, dependencies.events, {
+70:       sessionID,
+71:       title: line.length > TITLE_MAX_CHARS ? `${line.slice(0, TITLE_MAX_CHARS - 3)}...` : line,
+72:     })
+73:   })
+```
+
+### packages/core/src/database/sqlite.bun.ts
+```text
+18: const ATTR_DB_SYSTEM_NAME = "db.system.name"
+19: // Distinct SQL texts kept compiled per connection. Generated `IN (...)` lists make one text per list length.
+20: const STATEMENT_LIMIT = 500
+… omitted original lines …
+58:     // Bun's `query` caches only the first 20 statements it compiles and leaves the rest to the garbage collector, and
+59:     // a statement still open keeps the database file open after `close` (Windows then refuses to remove it). The
+60:     // adapter therefore owns every statement it runs: it reuses them by SQL text, finalizes the least recently used one
+61:     // past STATEMENT_LIMIT, and finalizes all of them before the connection closes.
+62:     const statements = new Map<string, ReturnType<Database["prepare"]>>()
+63:     const prepare = (query: string) => {
+64:       const cached = statements.get(query)
+65:       // Map order is recency order: a reused statement moves to the end, so the first entry is the one to evict.
+66:       statements.delete(query)
+67:       const statement = cached ?? native.prepare(query)
+68:       statements.set(query, statement)
+69:       if (statements.size <= STATEMENT_LIMIT) return statement
+70:       const oldest = statements.entries().next().value
+71:       if (!oldest) return statement
+72:       statements.delete(oldest[0])
+73:       oldest[1].finalize()
+74:       return statement
+75:     }
+76:     yield* Effect.addFinalizer(() =>
+77:       Effect.sync(() => {
+78:         statements.forEach((statement) => statement.finalize())
+79:         statements.clear()
+80:       }).pipe(
+81:         // With every statement finalized the strict close succeeds and releases the file at once. A refusal means
+82:         // something outside the adapter left a statement open; the native layer's own close runs after this one.
+83:         Effect.andThen(
+84:           Effect.try({ try: () => native.close(true), catch: (cause) => cause }).pipe(
+85:             Effect.catch((cause) => Effect.logWarning("database closed with a statement still open", { cause })),
+86:           ),
+87:         ),
+88:       ),
+89:     )
+91:     const run = (query: string, params: ReadonlyArray<unknown> = []) =>
+92:       Effect.withFiber<Array<Record<string, unknown>>, SqlError>((fiber) =>
+93:         Effect.try({
+94:           try: () => {
+95:             const statement = prepare(query)
+96:             // @ts-ignore bun-types missing safeIntegers method, fixed in https://github.com/oven-sh/bun/pull/26627
+97:             statement.safeIntegers(Context.get(fiber.context, Client.SafeIntegers))
+98:             return (statement.all(...(params as Parameters<typeof statement.all>)) ?? []) as Array<Record<string, unknown>>
+99:           },
+100:           catch: (cause) => {
+101:             // Only native SQLite failures belong in the typed channel; programming errors remain defects.
+102:             if (!(cause instanceof SQLiteError)) throw cause
+103:             return new SqlError({
+104:               reason: classifySqliteError(cause, { message: "Failed to execute statement", operation: "execute" }),
+105:             })
+106:           },
+107:         }),
+108:       )
+… omitted original lines …
+143:       },
+144:       export: Effect.try({
+145:         try: () => native.serialize(),
+146:         catch: (cause) =>
+147:           new SqlError({
+148:             reason: classifySqliteError(cause, { message: "Failed to export database", operation: "export" }),
+149:           }),
+150:       }),
+151:       loadExtension: (path) =>
+152:         Effect.try({
+153:           try: () => native.loadExtension(path),
+154:           catch: (cause) =>
+155:             new SqlError({
+156:               reason: classifySqliteError(cause, { message: "Failed to load extension", operation: "loadExtension" }),
+157:             }),
+158:         }),
+159:     })
+161:     const semaphore = yield* Semaphore.make(1)
+162:     const acquirer = semaphore.withPermits(1)(Effect.succeed(connection))
+163:     const transactionAcquirer = Effect.uninterruptibleMask((restore) => {
+164:       const fiber = Fiber.getCurrent()!
+165:       const scope = Context.getUnsafe(fiber.context, Scope.Scope)
+166:       return Effect.as(
+167:         Effect.tap(restore(semaphore.take(1)), () => Scope.addFinalizer(scope, semaphore.release(1))),
+168:         connection,
+169:       )
+```
+
+
+Aguarde a disposição e FIM SS01.

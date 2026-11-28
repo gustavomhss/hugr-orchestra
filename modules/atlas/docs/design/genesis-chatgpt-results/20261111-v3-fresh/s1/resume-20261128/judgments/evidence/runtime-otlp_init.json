@@ -1,0 +1,22 @@
+{
+  "id": "otlp_init",
+  "path": "packages/core/src/observability/otlp.ts",
+  "start_line": 36,
+  "end_line": 67,
+  "response": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Action completed."
+      }
+    ],
+    "structuredContent": {
+      "content": "export function resource(): { serviceName: string; serviceVersion: string; attributes: Record<string, string> } {\n  return {\n    serviceName: \"orchestra\",\n    serviceVersion: InstallationVersion,\n    attributes: {\n      ...resourceAttributes(),\n      \"deployment.environment.name\": InstallationChannel,\n      \"orchestra.client\": Flag.ORCHESTRA_CLIENT,\n      \"orchestra.run\": runID,\n      \"service.instance.id\": runID,\n    },\n  }\n}\n\nexport function loggers() {\n  if (!endpoint) return []\n  return [OtlpLogger.make({ url: `${endpoint}/v1/logs`, resource: resource(), headers })]\n}\n\nexport async function tracingLayer() {\n  if (!endpoint) return Layer.empty\n  const NodeSdk = await import(\"@effect/opentelemetry/NodeSdk\")\n  const OTLP = await import(\"@opentelemetry/exporter-trace-otlp-http\")\n  const SdkBase = await import(\"@opentelemetry/sdk-trace-base\")\n  const { AsyncLocalStorageContextManager } = await import(\"@opentelemetry/context-async-hooks\")\n  const { context } = await import(\"@opentelemetry/api\")\n\n  // The Effect Node SDK does not register a global context manager, but the AI SDK uses it to parent spans.\n  const manager = new AsyncLocalStorageContextManager()\n  manager.enable()\n  context.setGlobalContextManager(manager)\n",
+      "encoding": "utf-8",
+      "sha": "4d403d30bded809a37d426a8c56361ca8d66ddf7",
+      "display_url": "https://github.com/gustavomhss/hugr-orchestra/blob/1cde2ff7a71bcf7aecb5d030917b577165135d38/packages/core/src/observability/otlp.ts",
+      "display_title": "otlp.ts"
+    },
+    "isError": false
+  }
+}

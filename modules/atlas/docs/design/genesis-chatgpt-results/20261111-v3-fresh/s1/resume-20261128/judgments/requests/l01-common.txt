@@ -1,0 +1,508 @@
+L01 — quatro novos candidatos L2 Bibliotecas. Execução 2ccbd15d-4f66-44a3-b2e1-8326abce0bef; fonte1cde2ff7a71bcf7aecb5d030917b577165135d38; protocoloee2521a5b966bd505cc95bd1c733e09e12f33531. Mesmo par independente J1/J2 sem ferramentas. Não reavaliar predecessores L1 aceitos; serão fornecidos integralmente como base para julgar síntese e preservação de limites. A autoria não recebeu oracle; este dossiê de avaliação contém o oracle congelado. Cada L2 deve receber resultado separado por chave/hash e todos os critérios obrigatórios pertinentes. Sem herdar sucesso de runtime/CI/Atlas/consumer ou fechar lacunas dos subslices por associação.
+
+BEGIN PUBLIC CONTRACT
+{
+  "schema": "genesis-s1-05-public-contract/v1",
+  "execution_id": "347b9fda-68c4-44e3-822b-51e792e0d801",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "need": "Transferable library understanding, exact inherited acceptance, scoped maintenance and Atlas consumption",
+  "layers": [
+    {
+      "key": "s1.subslice05.llm-contracts.l2",
+      "layer": 2,
+      "need": "component",
+      "predecessors": [
+        "s1.runtime.llm_turns.l1",
+        "s1.runtime.llm_providers.l1"
+      ]
+    },
+    {
+      "key": "s1.subslice05.extension-contracts.l2",
+      "layer": 2,
+      "need": "component",
+      "predecessors": [
+        "s1.runtime.plugin.l1",
+        "s1.runtime.codemode.l1",
+        "s1.runtime.codemode_openapi.l1"
+      ]
+    },
+    {
+      "key": "s1.subslice05.storage-evidence.l2",
+      "layer": 2,
+      "need": "operational",
+      "predecessors": [
+        "s1.runtime.effect_sqlite.l1",
+        "s1.runtime.http_recorder.l1",
+        "s1.runtime.llm_recording.l1"
+      ]
+    },
+    {
+      "key": "s1.subslice05.intent-authority.l2",
+      "layer": 2,
+      "need": "maintenance",
+      "predecessors": [
+        "s1.runtime.guides_intent.l1",
+        "s1.runtime.maintenance_intent.l1"
+      ]
+    },
+    {
+      "key": "s1.subslice05.integration.l3",
+      "layer": 3,
+      "need": "flow",
+      "predecessors": [
+        "s1.subslice05.llm-contracts.l2",
+        "s1.subslice05.extension-contracts.l2",
+        "s1.subslice05.storage-evidence.l2",
+        "s1.subslice05.intent-authority.l2"
+      ]
+    },
+    {
+      "key": "s1.subslice05.ownership.l4",
+      "layer": 4,
+      "need": "ownership",
+      "predecessors": [
+        "s1.subslice05.integration.l3"
+      ]
+    }
+  ],
+  "criteria": [
+    "GO-A1",
+    "GO-A2",
+    "GO-A3",
+    "GO-A4",
+    "GO-A5",
+    "GO-A6",
+    "GO-A7",
+    "GO-I1",
+    "GO-I2",
+    "GO-I3",
+    "GO-I4",
+    "GO-I5",
+    "GO-I6",
+    "GO-I7",
+    "GO-I8",
+    "AC-01",
+    "AC-02",
+    "AC-03",
+    "AC-04",
+    "AC-05",
+    "AC-06",
+    "AC-07",
+    "AC-08",
+    "AC-09",
+    "AC-10",
+    "CC-1",
+    "CC-2",
+    "CC-3",
+    "CC-4",
+    "CC-5",
+    "CC-6",
+    "CC-7",
+    "SC-1",
+    "SC-2",
+    "SC-3",
+    "SC-4",
+    "SC-5",
+    "QS-1",
+    "QS-2",
+    "QS-3",
+    "QS-4",
+    "QS-5",
+    "QS-6",
+    "DOD-1",
+    "DOD-2",
+    "DOD-3",
+    "DOD-4",
+    "DOD-5",
+    "DOD-6",
+    "DOD-7"
+  ],
+  "public_cases": [
+    {
+      "id": "S1-O6",
+      "kind": "provider-tool-failure",
+      "question": "Uma ferramenta tipada devolve valor incompatível com seu success schema. Qual camada transforma o erro, quem continua o modelo e que afirmação sobre loops automáticos seria incorreta?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 60000
+      }
+    },
+    {
+      "id": "S1-O7",
+      "kind": "codemode-boundary",
+      "question": "No CodeMode, um JSON Schema descritivo promete validar uma ferramenta; o script passa input inválido e depois sofre timeout. Que validação e observação realmente existem e que limite precisa ser explícito?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 60000
+      }
+    },
+    {
+      "id": "S1-O8",
+      "kind": "sqlite-limits",
+      "question": "Um mantenedor quer usar executeStream do adapter effect-sqlite-node e assumir que este é o driver produtivo atual. O pacote sustenta as duas afirmações?",
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 24000
+      }
+    },
+    {
+      "id": "S1-05-C1",
+      "kind": "permitted-change",
+      "question": "Precisamos configurar um endpoint/autenticação de provider sem adicionar persistência ou um loop na biblioteca LLM. Qual fronteira alterar e quais provas de adoção e execução ainda são necessárias?",
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 24000
+      }
+    },
+    {
+      "id": "S1-05-C2",
+      "kind": "contract-violation",
+      "question": "Uma integração pretende expor fetch e credenciais como globais no CodeMode e tratar seu JSON Schema como validação suficiente. Como decidir e manter a fronteira?",
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 24000
+      }
+    },
+    {
+      "id": "S1-05-C3",
+      "kind": "cross-component-impact",
+      "question": "Mudar o contrato de resultado/erro de ToolRuntime exige quais revisões locais e quais complementos do dono Core, sem reconstruir ramos independentes?",
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 60000
+      }
+    },
+    {
+      "id": "S1-05-C4",
+      "kind": "operational-failure",
+      "question": "O replay do recorder falha num pedido e um arquivo de cassette existe. O que verificar e o que essa existência não permite concluir?",
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 24000
+      }
+    },
+    {
+      "id": "S1-05-C5",
+      "kind": "out-of-scope-abstention",
+      "question": "Os guias, o schema gerado e a presença de adapters permitem garantir rejeição de toda chave extra, restauração Core ou streaming SQLite Node em produção?",
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 24000
+      }
+    }
+  ],
+  "maintenance_scenarios": [
+    {
+      "id": "S1-05-M1",
+      "kind": "source-change",
+      "mutation": "ToolRuntime error/result contract source change",
+      "proof": "real released Atlas, exact local candidate/inputs; a graph calculator is not runtime proof"
+    },
+    {
+      "id": "S1-05-M2",
+      "kind": "semantic-authority-change",
+      "mutation": "Adapter/adoption evidence changes authority or validity while body prose stays byte-identical",
+      "proof": "real released Atlas and bound exact artifacts; held unsupported branches remain HOLD"
+    },
+    {
+      "id": "S1-05-M3",
+      "kind": "non-code-and-membership",
+      "mutation": "Guide/intent edit, declared recipe edit, addition/removal of relevant source",
+      "proof": "real released Atlas controls reused only with exact capability/case identity"
+    }
+  ],
+  "direct_use": {
+    "rule": "Each of ten inherited L1 and six planned L2-L4 artifacts gets one public direct-use question, fresh consumer uses real index/read; no raw source/oracle; <=1 index + 1 read and 20000 UTF-8 body bytes per direct-use case.",
+    "questions": {
+      "s1.runtime.llm_turns.l1": "Quem decide o próximo provider turn e que erros o dispatcher consegue transformar?",
+      "s1.runtime.llm_providers.l1": "Como separam-se configuração, protocolo e transporte e onde termina a prova de adoção?",
+      "s1.runtime.llm_recording.l1": "Como distinguir cassette, ledger e prova de execução?",
+      "s1.runtime.plugin.l1": "Quais superfícies de plugin são atuais e que comportamento continua host-owned?",
+      "s1.runtime.codemode.l1": "Que capacidades e limites o programa possui por padrão?",
+      "s1.runtime.codemode_openapi.l1": "Quando uma operação é pulada e quando credenciais são resolvidas?",
+      "s1.runtime.effect_sqlite.l1": "Como falhas de cleanup e o streaming Node limitam o contrato?",
+      "s1.runtime.http_recorder.l1": "Como replay HTTP, socket público e helper interno diferem?",
+      "s1.runtime.guides_intent.l1": "Como consultar guias sem promover intenção para execução?",
+      "s1.runtime.maintenance_intent.l1": "Como distinguir plano, spec, schema gerado e implementação?",
+      "s1.subslice05.llm-contracts.l2": "Qual sequência liga request, provider turn e settlement de uma ferramenta?",
+      "s1.subslice05.extension-contracts.l2": "Que contrato deve um host respeitar para expor ferramenta e OpenAPI?",
+      "s1.subslice05.storage-evidence.l2": "Que diagnóstico de persistência/replay é sustentado pelas bibliotecas?",
+      "s1.subslice05.intent-authority.l2": "O que falta para transformar uma orientação documental em afirmação do produto?",
+      "s1.subslice05.integration.l3": "Como localizar impacto e dependências sem reabrir ramos independentes?",
+      "s1.subslice05.ownership.l4": "Que sequência de consulta, mudança, provas e abstenção deve seguir um mantenedor?"
+    }
+  },
+  "rules": [
+    "No oracle access for producer or consumer.",
+    "No required predecessor may be consumed before acceptance.",
+    "Do not remine accepted C L1; verify only needed delta and preserve 39 metadata-only dispositions.",
+    "Raw Core evidence is not an accepted external artifact; exact supplier identity and local review needed.",
+    "No product tests locally; no live paid calls.",
+    "Count actual calls and UTF-8 bytes, UNKNOWN for usage unavailable."
+  ]
+}
+
+END PUBLIC CONTRACT
+
+BEGIN FROZEN ORACLE
+{
+  "schema": "genesis-s1-05-oracle/v1",
+  "execution_id": "347b9fda-68c4-44e3-822b-51e792e0d801",
+  "source_revision": "1cde2ff7a71bcf7aecb5d030917b577165135d38",
+  "frozen_before": "producer dispatch for L2, L3, L4 and consumer cases",
+  "reserved": true,
+  "regressions": [
+    {
+      "id": "S1-O6",
+      "kind": "provider-tool-failure",
+      "question": "Uma ferramenta tipada devolve valor incompatível com seu success schema. Qual camada transforma o erro, quem continua o modelo e que afirmação sobre loops automáticos seria incorreta?",
+      "expected": [
+        "ToolRuntime.dispatch decodifica input, executa uma chamada, codifica success e transforma falha tipada de validação em eventos tool-error/tool-result de erro.",
+        "Não possui provider IO, persistência de Session, histórico, steps ou continuação; enclosing Core runner controla próximo turno.",
+        "Cada LLM stream/generate é um provider turn; defeito arbitrário não é automaticamente ToolFailure recuperável."
+      ],
+      "critical_errors": [
+        "Atribuir loop autônomo/persistência ao ToolRuntime",
+        "Dizer que qualquer defeito vira sucesso/erro recuperável"
+      ],
+      "sources": [
+        "packages/llm/src/tool-runtime.ts",
+        "packages/llm/AGENTS.md"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 60000
+      }
+    },
+    {
+      "id": "S1-O7",
+      "kind": "codemode-boundary",
+      "question": "No CodeMode, um JSON Schema descritivo promete validar uma ferramenta; o script passa input inválido e depois sofre timeout. Que validação e observação realmente existem e que limite precisa ser explícito?",
+      "expected": [
+        "JSON Schema é render-only; Effect Schema valida quando usada; não inferir validação de descrição.",
+        "Tool runtime resolve e decodifica antes de registrar chamada; chamadas admitidas registradas antes da execução.",
+        "Interrupção não dispara outcome success/failure no onToolCallEnd; timeout não prova conclusão.",
+        "Limites opcionais precisam ser configurados; undefined não constitui limite garantido. Dados cruzam fronteira sem capacidades/protótipos."
+      ],
+      "critical_errors": [
+        "Prometer validação por JSON Schema render-only",
+        "Contar timeout como sucesso ou falha settled",
+        "Supor limite default garantido"
+      ],
+      "sources": [
+        "packages/codemode/src/tool-runtime.ts",
+        "packages/codemode/AGENTS.md"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 60000
+      }
+    },
+    {
+      "id": "S1-O8",
+      "kind": "sqlite-limits",
+      "question": "Um mantenedor quer usar executeStream do adapter effect-sqlite-node e assumir que este é o driver produtivo atual. O pacote sustenta as duas afirmações?",
+      "expected": [
+        "executeStream é explicitamente não implementado e morre com executeStream not implemented.",
+        "Separar existência/export do pacote de uso no produto; uso efetivo exige dependência/composição capturada, não inferir pelo nome.",
+        "Descrever conexão/transaction/semaphore/WAL somente dentro do adapter; não extrapolar para todas configurações Core."
+      ],
+      "critical_errors": [
+        "Afirmar executeStream funcional",
+        "Assumir adoção produtiva pela existência do pacote"
+      ],
+      "sources": [
+        "packages/effect-sqlite-node/src/index.ts"
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 24000
+      }
+    }
+  ],
+  "additional_cases": [
+    {
+      "id": "S1-05-C1",
+      "kind": "permitted-change",
+      "question": "Precisamos configurar um endpoint/autenticação de provider sem adicionar persistência ou um loop na biblioteca LLM. Qual fronteira alterar e quais provas de adoção e execução ainda são necessárias?",
+      "expected": [
+        "Facade/configure selects endpoint/auth before model; route composes protocol endpoint auth framing transport",
+        "Keep single provider turn; continuation/auth/session ownership in Core",
+        "Use exact source-based contract and scoped CI; do not claim live result or full Core adoption from facade"
+      ],
+      "critical_errors": [
+        "tool loop implemented inside ToolRuntime",
+        "facade presence proves routing"
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 24000
+      }
+    },
+    {
+      "id": "S1-05-C2",
+      "kind": "contract-violation",
+      "question": "Uma integração pretende expor fetch e credenciais como globais no CodeMode e tratar seu JSON Schema como validação suficiente. Como decidir e manter a fronteira?",
+      "expected": [
+        "No ambient capabilities; host supplied schema-described tools with host authority",
+        "JSON Schema descriptive; Effect Schema validates or handler checks input",
+        "OpenAPI own serialization validates before resolving creds; no claim redirect or response schema enforcement"
+      ],
+      "critical_errors": [
+        "generic permission fabricated in CodeMode",
+        "automatic JSON Schema validation",
+        "credentials passed by model as ambient tokens"
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 24000
+      }
+    },
+    {
+      "id": "S1-05-C3",
+      "kind": "cross-component-impact",
+      "question": "Mudar o contrato de resultado/erro de ToolRuntime exige quais revisões locais e quais complementos do dono Core, sem reconstruir ramos independentes?",
+      "expected": [
+        "llm_turns.l1 -> llm-contracts.l2 -> integration.l3 -> ownership.l4 real build chain",
+        "Core consumer source artifacts exact pins; do not assert automatic adoption or accept missing external evidence",
+        "storage-evidence/extension-contracts not affected unless real shared source dependency; navigation alone no rebuild"
+      ],
+      "critical_errors": [
+        "all graph rebuild because navigation",
+        "Core accepted without binding"
+      ],
+      "limits": {
+        "index_calls": 2,
+        "read_calls": 4,
+        "body_bytes": 60000
+      }
+    },
+    {
+      "id": "S1-05-C4",
+      "kind": "operational-failure",
+      "question": "O replay do recorder falha num pedido e um arquivo de cassette existe. O que verificar e o que essa existência não permite concluir?",
+      "expected": [
+        "Check cursor/order and canonical request matching, filtered headers/body, record vs replay and ledger",
+        "Fixture existence/status not run evidence; internal websocket differs from public interleaving",
+        "No re-recording/live paid call automatically; tests authorized on GitHub Actions"
+      ],
+      "critical_errors": [
+        "cassette 200 means current provider pass",
+        "internal websocket preserves public chronology"
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 24000
+      }
+    },
+    {
+      "id": "S1-05-C5",
+      "kind": "out-of-scope-abstention",
+      "question": "Os guias, o schema gerado e a presença de adapters permitem garantir rejeição de toda chave extra, restauração Core ou streaming SQLite Node em produção?",
+      "expected": [
+        "No infer runtime decoder/host adoption from schema or guide alone; exact supplier evidence or abstain",
+        "Node executeStream unimplemented",
+        "Distinguish declared intended/observed/source/execution"
+      ],
+      "critical_errors": [
+        "Node executeStream works",
+        "unqualified config unknown-key or backup guarantee without source"
+      ],
+      "limits": {
+        "index_calls": 1,
+        "read_calls": 2,
+        "body_bytes": 24000
+      }
+    }
+  ],
+  "maintenance": [
+    {
+      "id": "S1-05-M1",
+      "kind": "source-change",
+      "mutation": "ToolRuntime error/result contract source change",
+      "expected_primary": [
+        "s1.runtime.llm_turns.l1"
+      ],
+      "expected_dependents": [
+        "s1.subslice05.llm-contracts.l2",
+        "s1.subslice05.integration.l3",
+        "s1.subslice05.ownership.l4"
+      ],
+      "preserve": [
+        "s1.subslice05.extension-contracts.l2",
+        "s1.subslice05.storage-evidence.l2",
+        "s1.subslice05.intent-authority.l2"
+      ],
+      "negative": "Omitting required edge/input must fail expected affected set; navigation-only edit must not produce same invalidation.",
+      "proof": "real released Atlas, exact local candidate/inputs; a graph calculator is not runtime proof"
+    },
+    {
+      "id": "S1-05-M2",
+      "kind": "semantic-authority-change",
+      "mutation": "Adapter/adoption evidence changes authority or validity while body prose stays byte-identical",
+      "expected": [
+        "result identity changes for changed authority/validity/gaps; dependent impacts propagate",
+        "a receipt-only refresh preserves result and stops unnecessary downstream interpretation",
+        "unchanged valid inputs/recipe cache reuse requires zero new proposer calls"
+      ],
+      "proof": "real released Atlas and bound exact artifacts; held unsupported branches remain HOLD"
+    },
+    {
+      "id": "S1-05-M3",
+      "kind": "non-code-and-membership",
+      "mutation": "Guide/intent edit, declared recipe edit, addition/removal of relevant source",
+      "expected": [
+        "input membership and intent/recipe changes enter impact",
+        "unavailable observation stays HOLD; not empty successful affected set",
+        "independent outputs preserved; compatible current read only"
+      ],
+      "proof": "real released Atlas controls reused only with exact capability/case identity"
+    }
+  ],
+  "direct_use": {
+    "rule": "Each of ten inherited L1 and six planned L2-L4 artifacts gets one public direct-use question, fresh consumer uses real index/read; no raw source/oracle; <=1 index + 1 read and 20000 UTF-8 body bytes per direct-use case.",
+    "questions": {
+      "s1.runtime.llm_turns.l1": "Quem decide o próximo provider turn e que erros o dispatcher consegue transformar?",
+      "s1.runtime.llm_providers.l1": "Como separam-se configuração, protocolo e transporte e onde termina a prova de adoção?",
+      "s1.runtime.llm_recording.l1": "Como distinguir cassette, ledger e prova de execução?",
+      "s1.runtime.plugin.l1": "Quais superfícies de plugin são atuais e que comportamento continua host-owned?",
+      "s1.runtime.codemode.l1": "Que capacidades e limites o programa possui por padrão?",
+      "s1.runtime.codemode_openapi.l1": "Quando uma operação é pulada e quando credenciais são resolvidas?",
+      "s1.runtime.effect_sqlite.l1": "Como falhas de cleanup e o streaming Node limitam o contrato?",
+      "s1.runtime.http_recorder.l1": "Como replay HTTP, socket público e helper interno diferem?",
+      "s1.runtime.guides_intent.l1": "Como consultar guias sem promover intenção para execução?",
+      "s1.runtime.maintenance_intent.l1": "Como distinguir plano, spec, schema gerado e implementação?",
+      "s1.subslice05.llm-contracts.l2": "Qual sequência liga request, provider turn e settlement de uma ferramenta?",
+      "s1.subslice05.extension-contracts.l2": "Que contrato deve um host respeitar para expor ferramenta e OpenAPI?",
+      "s1.subslice05.storage-evidence.l2": "Que diagnóstico de persistência/replay é sustentado pelas bibliotecas?",
+      "s1.subslice05.intent-authority.l2": "O que falta para transformar uma orientação documental em afirmação do produto?",
+      "s1.subslice05.integration.l3": "Como localizar impacto e dependências sem reabrir ramos independentes?",
+      "s1.subslice05.ownership.l4": "Que sequência de consulta, mudança, provas e abstenção deve seguir um mantenedor?"
+    }
+  },
+  "critical_errors": [
+    "invented runtime/CI/consumer success",
+    "downgrade unavailable to absent",
+    "silently lose any of 323 sources",
+    "erase original judgments",
+    "claim whole S1 complete"
+  ]
+}
+
+END FROZEN ORACLE
+
+Aguarde corpo e evidências de cada unidade L01a/b/c/d; parecer por unidade no respectivo FIM.
