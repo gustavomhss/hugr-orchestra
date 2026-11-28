@@ -17,6 +17,7 @@
     "./activity-arm": "./src/activity-arm.ts",
     "./activity-apply": "./src/activity-apply.ts",
     "./activity-apply-linux": "./src/activity-apply-linux.ts",
+    "./activity-custody-provision": "./src/activity-custody-provision.ts",
     "./activity-arm-objects": "./src/activity-arm-objects.ts",
     "./activity-quarantine-archive": "./src/activity-quarantine-archive.ts",
     "./activity-quarantine-custody": "./src/activity-quarantine-custody.ts",

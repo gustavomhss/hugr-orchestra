@@ -1,0 +1,82 @@
+import { NodeRuntime, NodeServices } from "@effect/platform-node"
+import { InstallationVersion } from "@orchestra/core/installation/version"
+import { Effect } from "effect"
+import { CliOutput } from "effect/unstable/cli"
+import { Commands } from "./commands/commands"
+import { Runtime } from "./framework/runtime"
+import { Daemon } from "./services/daemon"
+
+const Handlers = Runtime.handlers(Commands, {
+  $: () => import("./commands/handlers/default"),
+  api: () => import("./commands/handlers/api"),
+  debug: {
+    agents: () => import("./commands/handlers/debug/agents"),
+    symbols: () => import("./commands/handlers/debug/symbols"),
+    omni: () => import("./commands/handlers/debug/omni"),
+  },
+  session: {
+    list: () => import("./commands/handlers/session/list"),
+    delete: () => import("./commands/handlers/session/delete"),
+  },
+  models: () => import("./commands/handlers/models"),
+  upgrade: () => import("./commands/handlers/upgrade"),
+  uninstall: () => import("./commands/handlers/uninstall"),
+  pr: () => import("./commands/handlers/pr"),
+  db: {
+    query: () => import("./commands/handlers/db/query"),
+    path: () => import("./commands/handlers/db/path"),
+  },
+  export: () => import("./commands/handlers/export"),
+  import: () => import("./commands/handlers/import"),
+  service: {
+    start: () => import("./commands/handlers/service/start"),
+    restart: () => import("./commands/handlers/service/restart"),
+    status: () => import("./commands/handlers/service/status"),
+    stop: () => import("./commands/handlers/service/stop"),
+    password: () => import("./commands/handlers/service/password"),
+  },
+  serve: () => import("./commands/handlers/serve"),
+  run: () => import("./commands/handlers/run"),
+  attach: () => import("./commands/handlers/attach"),
+  web: () => import("./commands/handlers/web"),
+  acp: () => import("./commands/handlers/acp"),
+  plugin: () => import("./commands/handlers/plugin"),
+  toolkit: {
+    status: () => import("./commands/handlers/toolkit/status"),
+    osv: () => import("./commands/handlers/toolkit/osv"),
+    rustsec: () => import("./commands/handlers/toolkit/rustsec"),
+    prefetch: () => import("./commands/handlers/toolkit/prefetch"),
+  },
+  stats: () => import("./commands/handlers/stats"),
+  agent: {
+    list: () => import("./commands/handlers/agent/list"),
+    create: () => import("./commands/handlers/agent/create"),
+  },
+  mcp: {
+    list: () => import("./commands/handlers/mcp/list"),
+    add: () => import("./commands/handlers/mcp/add"),
+    auth: {
+      $: () => import("./commands/handlers/mcp/auth"),
+      list: () => import("./commands/handlers/mcp/auth-list"),
+    },
+    debug: () => import("./commands/handlers/mcp/debug"),
+    logout: () => import("./commands/handlers/mcp/logout"),
+  },
+  providers: {
+    list: () => import("./commands/handlers/providers/list"),
+    login: () => import("./commands/handlers/providers/login"),
+    logout: () => import("./commands/handlers/providers/logout"),
+  },
+})
+
+Runtime.run(Commands, Handlers, { version: InstallationVersion }).pipe(
+  // Artifact consumers require the exact version, without the CLI formatter's name/prefix.
+  Effect.provideService(CliOutput.Formatter, {
+    ...CliOutput.defaultFormatter(),
+    formatVersion: (_name, version) => version,
+  }),
+  Effect.provide(Daemon.layer),
+  Effect.provide(NodeServices.layer),
+  Effect.scoped,
+  NodeRuntime.runMain,
+)
